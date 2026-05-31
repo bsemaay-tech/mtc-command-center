@@ -44,3 +44,41 @@ Legacy QuantLens path mapping is separate from the `01_MASTER TEMPLATE_V2` MTC p
 | Legacy source path | Clean target path | Rule |
 |---|---|---|
 | `C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB` | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\03_QUANTLENS` | Rewrite QuantLens references directly to `MTC_COMMAND_CENTER\03_QUANTLENS`; do not inherit the `MTC_COMMAND_CENTER\01_MTC_PROJECT` mapping. |
+
+## Phase 4 Addendum — late-restored root scripts (2026-05-31)
+
+These six scripts were missed by the Phase 0 hardcoded-path scan and copied byte-identical from legacy after the AUTO_002 smoke run. None were rewritten in place; rewrite policy still pending Barış approval.
+
+### parity_test.py
+No hardcoded path hits. No rewrite needed.
+
+### run_2025_audit.py
+| Line | Matched path | Current text | Proposed clean mapping |
+|---|---|---|---|
+| 28 | `01_MASTER TEMPLATE_V2` | `V2_PYTHON_ROOT = REPO_ROOT / "01_MASTER TEMPLATE_V2/00_PYTHON"` | `MTC_COMMAND_CENTER\01_MTC_PROJECT` |
+| 29 | `01_MASTER TEMPLATE_V2` | `PINE_SOURCE = REPO_ROOT / "01_MASTER TEMPLATE_V2/01_PINE/MTC_V2.pine"` | `MTC_COMMAND_CENTER\01_MTC_PROJECT` |
+| 30 | `01_MASTER TEMPLATE_V2` | `TRACKER_WORKBOOK = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASE_TRACKER.xlsx"` | `MTC_COMMAND_CENTER\01_MTC_PROJECT` |
+| 31 | `01_MASTER TEMPLATE_V2` | `TRACKER_CSV = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASES.csv"` | `MTC_COMMAND_CENTER\01_MTC_PROJECT` |
+| 32 | `mtc_backtest` | `DATA_FILE = REPO_ROOT / "mtc_backtest/data/BTCUSDT_1h_20180701_20260308.parquet"` | `MTC_COMMAND_CENTER\02_MTC_BACKTEST\data` |
+
+### RUN_MTC_BACKTEST.ps1
+| Line | Matched path | Current text | Proposed clean mapping |
+|---|---|---|---|
+| 1 | `C:\LAB\tradingview-lab` + `mtc_backtest` | `Set-Location "C:\LAB\tradingview-lab\mtc_backtest"` | `Set-Location "C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\02_MTC_BACKTEST"` |
+
+ABSOLUTE legacy path — script will fail outright until rewritten.
+
+### run_pinets.mjs
+| Line | Matched path | Current text | Proposed clean mapping |
+|---|---|---|---|
+| 25 | `01_MASTER TEMPLATE_V2` | `const PINE_PATH = resolve(__dirname, '01_MASTER TEMPLATE_V2/01_PINE/MTC_V2.pine');` | `__dirname/../01_MTC_PROJECT/01_PINE/MTC_V2.pine` (script is now in `02_MTC_BACKTEST/`, so navigate up + sideways) |
+
+### run_tracker_ready_cases.py
+| Line | Matched path | Current text | Proposed clean mapping |
+|---|---|---|---|
+| 10 | `01_MASTER TEMPLATE_V2` | `TRACKER_CSV = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASES.csv"` | `MTC_COMMAND_CENTER\01_MTC_PROJECT` |
+
+### validate_syntax.mjs
+| Line | Matched path | Current text | Proposed clean mapping |
+|---|---|---|---|
+| 23 | `01_MASTER TEMPLATE_V2` | `const PINE_PATH = resolve(__dirname, '01_MASTER TEMPLATE_V2/01_PINE/MTC_V2.pine');` | `__dirname/../01_MTC_PROJECT/01_PINE/MTC_V2.pine` |

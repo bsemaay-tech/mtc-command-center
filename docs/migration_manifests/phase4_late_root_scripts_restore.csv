@@ -1,0 +1,7 @@
+script,bytes,src_sha256,dst_sha256,match,hardcoded_path_hits,last_write,notes
+parity_test.py,12688,89C5C7D398B01CC85A,89C5C7D398B01CC85A,true,0,2026-03-22,clean — no rewrite needed
+run_2025_audit.py,10632,072A2FAF6CA7097A,072A2FAF6CA7097A,true,5,2026-03-22,4x 01_MASTER TEMPLATE_V2 + 1x mtc_backtest
+RUN_MTC_BACKTEST.ps1,153,22905ACC53106A56,22905ACC53106A56,true,1,2026-02-10,ABSOLUTE legacy path Set-Location — broken until rewritten
+run_pinets.mjs,8393,081BEC3F27DB74DB,081BEC3F27DB74DB,true,1,2026-03-22,PINE_PATH __dirname-relative — script moved bucket so path now wrong
+run_tracker_ready_cases.py,1723,3D9DEE114CF01FEF,3D9DEE114CF01FEF,true,1,2026-03-22,TRACKER_CSV 01_MASTER TEMPLATE_V2 ref
+validate_syntax.mjs,7783,A0A2C1606CF43C47,A0A2C1606CF43C47,true,1,2026-03-22,PINE_PATH __dirname-relative — script moved bucket so path now wrong
