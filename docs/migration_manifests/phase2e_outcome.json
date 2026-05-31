@@ -1,0 +1,29 @@
+﻿{
+    "phase":  "PHASE_2E_RESTORE_PINE_TRADES_HELPER_AND_RERUN_SMOKE",
+    "generated_at":  "2026-05-31T15:11:11.0538602Z",
+    "status":  "PASS",
+    "helper_restore_summary":  "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase2e_pine_trades_restore_summary.json",
+    "helper_hash_match":  true,
+    "smoke_command":  "python parity_compare.py --fetch-fresh --tracker-case AUTO_061",
+    "smoke_exit_code":  0,
+    "smoke_log":  "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase2e_smoke_AUTO_061.log",
+    "parity_report":  "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\02_MTC_BACKTEST\\reports\\tracker_cases\\AUTO_061\\parity_compare.json",
+    "parity_verdict":  "PASS",
+    "strict_trade_pass":  true,
+    "pine_trades":  4,
+    "python_trades":  4,
+    "core_match_count":  4,
+    "metric_status":  "all OK in smoke log",
+    "tracker_workbook_warning":  "MTC_V2_PARITY_CASE_TRACKER.xlsx is missing; script warned but exited 0. CSV tracker row was available.",
+    "tracker_csv_auto061":  {
+                                "status":  "DONE",
+                                "llm_auto_status":  "PASS",
+                                "llm_last_run_utc":  "2026-05-31T15:10:11.923983+00:00",
+                                "parity_verdict":  "PASS"
+                            },
+    "pine_unchanged_against_phase1_manifest":  true,
+    "pine_mismatch_count":  0,
+    "legacy_modified_by_this_step":  false,
+    "pine_modified":  false,
+    "next_recommended_approval":  "APPROVE_PHASE_2F_REVIEW_GENERATED_ARTIFACTS_AND_COMMIT_CLEAN_REPO"
+}

@@ -1,0 +1,10 @@
+﻿{
+    "phase":  "PHASE_2E_SMOKE_AUTO_061",
+    "started_at":  "2026-05-31T15:10:01.8580283Z",
+    "ended_at":  "2026-05-31T15:10:12.1534583Z",
+    "duration_seconds":  10.295,
+    "working_directory":  "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\02_MTC_BACKTEST",
+    "command":  "python parity_compare.py --fetch-fresh --tracker-case AUTO_061",
+    "exit_code":  0,
+    "log_path":  "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase2e_smoke_AUTO_061.log"
+}

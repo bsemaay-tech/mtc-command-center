@@ -1,0 +1,13 @@
+﻿{
+    "generated_at":  "2026-05-31T15:09:42.9245064Z",
+    "action":  "verified existing pine_trades.py helper; no overwrite performed",
+    "source":  "C:\\LAB\\tradingview-lab\\pine_trades.py",
+    "target":  "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\02_MTC_BACKTEST\\pine_trades.py",
+    "source_exists":  true,
+    "target_exists":  true,
+    "source_size_bytes":  14082,
+    "target_size_bytes":  14082,
+    "source_sha256":  "D39F0687AC4CF495D14F87A310C9FEFB571C7A1A65351149C1CC7A7FED4472B9",
+    "target_sha256":  "D39F0687AC4CF495D14F87A310C9FEFB571C7A1A65351149C1CC7A7FED4472B9",
+    "hash_match":  true
+}
