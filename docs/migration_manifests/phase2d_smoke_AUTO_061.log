@@ -1,0 +1,24 @@
+﻿# Phase 2D AUTO_061 smoke
+Started UTC: 2026-05-31T14:53:57.3002786Z
+Command: python parity_compare.py --fetch-fresh --tracker-case AUTO_061
+Working directory: C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\02_MTC_BACKTEST
+
+=== MTC Bridge: Signal Extraction ===
+Symbol : BTCUSDT  TF: 1h  Bars: 1000
+Source : C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\01_MTC_PROJECT\01_PINE\MTC_V2.pine
+Output : C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\02_MTC_BACKTEST\data\mtc_signals.json
+
+Fetching Binance data and running PineTS...
+Done in 8.7s. Bars: 1000, Plots: 61
+
+--- Signal Summary ---
+Long  entries : 7
+Short entries : 8
+Exit  events  : 4
+
+Saved → C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\02_MTC_BACKTEST\data\mtc_signals.json  (1158 KB)
+C:\Python314\python.exe: can't open file 'C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\02_MTC_BACKTEST\\pine_trades.py': [Errno 2] No such file or directory
+>>> Running mtc_bridge.mjs...
+
+>>> Running pine_trades.py...
+pine_trades.py FAILED

@@ -1,0 +1,12 @@
+﻿{
+    "generated_at":  "2026-05-31T14:53:32.8563459Z",
+    "action":  "copied minimal pinets package only",
+    "source":  "C:\\LAB\\tradingview-lab\\node_modules\\pinets",
+    "target":  "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\02_MTC_BACKTEST\\node_modules\\pinets",
+    "source_file_count":  365,
+    "target_file_count":  365,
+    "manifest":  "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase2d_pinets_restore_manifest.csv",
+    "mismatch_count":  0,
+    "pinets_min_exists":  true,
+    "pinets_min_sha256":  "DB704D0DE1ADC6BF0D36FC297E60EF609CDE15F2F9729424230B5612247DACD3"
+}

@@ -1,0 +1,33 @@
+﻿{
+    "phase":  "PHASE_2C_RUN_SMOKE_AUTO_061",
+    "generated_at":  "2026-05-31T14:51:55.0916350Z",
+    "path_state_report":  "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase2c_path_state_before_smoke.json",
+    "smoke_log":  "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase2c_smoke_AUTO_061.log",
+    "smoke_summary":  "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase2c_smoke_AUTO_061_summary.json",
+    "command":  "python parity_compare.py --fetch-fresh --tracker-case AUTO_061",
+    "exit_code":  1,
+    "status":  "FAILED_STOPPED_NO_RETRY",
+    "failure":  "Node module not found: ./node_modules/pinets/dist/pinets.min.cjs required by mtc_bridge.mjs.",
+    "missing_module_path":  "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\02_MTC_BACKTEST\\node_modules\\pinets\\dist\\pinets.min.cjs",
+    "missing_module_exists":  false,
+    "package_files":  [
+                          {
+                              "path":  "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\02_MTC_BACKTEST\\package.json",
+                              "exists":  false,
+                              "sha256":  null
+                          },
+                          {
+                              "path":  "C:\\LAB\\Tradingview_LAB_CLEAN\\package.json",
+                              "exists":  false,
+                              "sha256":  null
+                          }
+                      ],
+    "pine_compare":  "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase2c_pine_only_sha256_compare.json",
+    "pine_unchanged_against_phase1_manifest":  true,
+    "pine_mismatch_count":  0,
+    "legacy_path":  "C:\\LAB\\tradingview-lab",
+    "archive_path":  "C:\\LAB\\tradingview-lab_ARCHIVE_2026-05-31",
+    "legacy_modified_by_this_step":  false,
+    "pine_modified":  false,
+    "next_recommended_approval":  "APPROVE_PHASE_2D_RESTORE_PINETS_DEPENDENCY_AND_RERUN_SMOKE"
+}

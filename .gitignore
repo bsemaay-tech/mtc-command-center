@@ -97,9 +97,11 @@ MTC_COMMAND_CENTER/03_QUANTLENS/research/**/reports/
 MTC_COMMAND_CENTER/03_QUANTLENS/**/__pycache__/
 
 # =============================================================================
-# Root-level parity bridge outputs (generated during parity runs)
+# Parity bridge runtime outputs (regenerated per smoke run)
+# These live under MTC_COMMAND_CENTER/02_MTC_BACKTEST/ in the clean tree.
 # =============================================================================
 
+# Legacy root-level patterns (in case scripts are run from repo root)
 data/mtc_signals.json
 data/parity_input_from_pinets.csv
 data/pine_trades.csv
@@ -111,6 +113,20 @@ reports/*.csv
 reports/*.json
 reports/*.log
 reports/traderspost_integration_logs/
+
+# Clean tree actual paths (scripts run from MTC_COMMAND_CENTER/02_MTC_BACKTEST)
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/data/mtc_signals.json
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/data/parity_input_from_pinets.csv
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/data/pine_trades.csv
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/data/pine_trades.json
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/reports/tracker_cases/
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/reports/manual_tw_futures_case_*.csv
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/reports/manual_tw_futures_case_*.json
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/reports/pine_input_overrides.json
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/reports/*.csv
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/reports/*.json
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/reports/*.log
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/reports/traderspost_integration_logs/
 
 # =============================================================================
 # Migration manifest CSVs are kept in git (audit trail)

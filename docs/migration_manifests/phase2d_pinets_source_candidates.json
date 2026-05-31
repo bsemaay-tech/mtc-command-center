@@ -1,0 +1,45 @@
+﻿{
+    "generated_at":  "2026-05-31T14:53:01.7453504Z",
+    "checked_paths":  [
+                          {
+                              "path":  "C:\\LAB\\tradingview-lab\\MTC_COMMAND_CENTER\\02_MTC_BACKTEST\\node_modules\\pinets\\dist\\pinets.min.cjs",
+                              "exists":  false,
+                              "length":  null,
+                              "last_write_time":  null,
+                              "sha256":  null
+                          },
+                          {
+                              "path":  "C:\\LAB\\tradingview-lab\\mtc_backtest\\node_modules\\pinets\\dist\\pinets.min.cjs",
+                              "exists":  false,
+                              "length":  null,
+                              "last_write_time":  null,
+                              "sha256":  null
+                          },
+                          {
+                              "path":  "C:\\LAB\\tradingview-lab\\node_modules\\pinets\\dist\\pinets.min.cjs",
+                              "exists":  true,
+                              "length":  474413,
+                              "last_write_time":  "2026-03-22T22:49:57.1076587+02:00",
+                              "sha256":  "DB704D0DE1ADC6BF0D36FC297E60EF609CDE15F2F9729424230B5612247DACD3"
+                          },
+                          {
+                              "path":  "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\node_modules\\pinets\\dist\\pinets.min.cjs",
+                              "exists":  false,
+                              "length":  null,
+                              "last_write_time":  null,
+                              "sha256":  null
+                          },
+                          {
+                              "path":  "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\02_MTC_BACKTEST\\node_modules\\pinets\\dist\\pinets.min.cjs",
+                              "exists":  false,
+                              "length":  null,
+                              "last_write_time":  null,
+                              "sha256":  null
+                          }
+                      ],
+    "found":  {
+                  "FullName":  "C:\\LAB\\tradingview-lab\\node_modules\\pinets\\dist\\pinets.min.cjs",
+                  "Length":  474413,
+                  "LastWriteTime":  "\/Date(1774212597107)\/"
+              }
+}

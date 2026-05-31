@@ -1,0 +1,23 @@
+﻿{
+    "phase":  "PHASE_2D_RESTORE_PINETS_DEPENDENCY_AND_RERUN_SMOKE",
+    "generated_at":  "2026-05-31T14:55:26.6249672Z",
+    "status":  "FAILED_STOPPED_NO_RETRY",
+    "dependency_restored":  "pinets package only",
+    "pinets_restore_summary":  "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase2d_pinets_restore_summary.json",
+    "pinets_file_count":  365,
+    "pinets_hash_mismatch_count":  0,
+    "smoke_command":  "python parity_compare.py --fetch-fresh --tracker-case AUTO_061",
+    "smoke_exit_code":  1,
+    "smoke_log":  "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase2d_smoke_AUTO_061.log",
+    "failure":  "pine_trades.py missing from clean backtest working directory after mtc_bridge.mjs succeeded.",
+    "expected_clean_pine_trades_path":  "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\02_MTC_BACKTEST\\pine_trades.py",
+    "expected_clean_pine_trades_exists":  false,
+    "legacy_pine_trades_candidate":  "C:\\LAB\\tradingview-lab\\pine_trades.py",
+    "legacy_pine_trades_candidate_exists":  true,
+    "pine_trades_candidates":  "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase2d_pine_trades_py_candidates.json",
+    "pine_unchanged_against_phase1_manifest":  true,
+    "pine_mismatch_count":  0,
+    "legacy_modified_by_this_step":  false,
+    "pine_modified":  false,
+    "next_recommended_approval":  "APPROVE_PHASE_2E_RESTORE_PINE_TRADES_HELPER_AND_RERUN_SMOKE"
+}

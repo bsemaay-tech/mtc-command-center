@@ -1,0 +1,13 @@
+﻿{
+    "generated_at":  "2026-05-31T14:54:28.6419074Z",
+    "expected_clean_path":  "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\02_MTC_BACKTEST\\pine_trades.py",
+    "expected_clean_path_exists":  false,
+    "clean_candidates":  {
+
+                         },
+    "legacy_candidates":  {
+                              "FullName":  "C:\\LAB\\tradingview-lab\\pine_trades.py",
+                              "Length":  14082,
+                              "LastWriteTime":  "\/Date(1774341533632)\/"
+                          }
+}

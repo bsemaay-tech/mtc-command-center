@@ -1,0 +1,12 @@
+﻿{
+    "generated_at":  "2026-05-31T14:54:48.8414821Z",
+    "baseline_manifest":  "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\pine_sha256_manifest.csv",
+    "current_manifest":  "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase2d_pine_only_sha256_after_smoke.csv",
+    "baseline_count":  24,
+    "current_pine_count":  24,
+    "mismatch_count":  0,
+    "pine_unchanged_against_phase1_manifest":  true,
+    "mismatches":  [
+
+                   ]
+}
