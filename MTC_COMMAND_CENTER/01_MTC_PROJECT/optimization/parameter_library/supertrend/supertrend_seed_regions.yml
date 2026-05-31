@@ -1,0 +1,292 @@
+# Supertrend Seed Regions
+Research seed only; not Pine default; not production parameter.
+
+regions:
+  - region_id: supertrend_BTCUSDT_15m_smoke_region_v1
+    strategy_id: MTC_V2
+    producer_id: Supertrend
+    asset: BTCUSDT
+    timeframe: 15m
+    confidence: LOW
+    evidence_count: 5
+    accepted_for_next_stage: true
+    seed_source_type: SMOKE_ASSET_TIMEFRAME_SEED
+    warning: Research seed only; not Pine default; not production parameter.
+    parameter_ranges:
+      st_factor:
+        observed_values: [2.5, 3.0, 3.5]
+        min: 2.5
+        max: 3.5
+      global_atr_length:
+        observed_values: [7.0, 10.0, 14.0, 21.0]
+        min: 7.0
+        max: 21.0
+      sl_atr_mult:
+        observed_values: [3.0]
+        min: 3.0
+        max: 3.0
+      tp_r_multiple:
+        observed_values: [2.0]
+        min: 2.0
+        max: 2.0
+      risk_long:
+        observed_values: [0.5]
+        min: 0.5
+        max: 0.5
+      risk_short:
+        observed_values: [0.5]
+        min: 0.5
+        max: 0.5
+      tp_mode:
+        observed_values: ['R']
+    center_params:
+      st_factor: "3.0"
+      global_atr_length: "10"
+      sl_atr_mult: "3.0"
+      tp_mode: "R"
+      tp_r_multiple: "2.0"
+      risk_long: "0.5"
+      risk_short: "0.5"
+    warnings:
+      - Research seed only; not Pine default; not production parameter.
+      - Smoke seeds prove schema/pipeline only; not final optimization conclusions.
+  - region_id: supertrend_BTCUSDT_1h_smoke_region_v1
+    strategy_id: MTC_V2
+    producer_id: Supertrend
+    asset: BTCUSDT
+    timeframe: 1h
+    confidence: LOW
+    evidence_count: 5
+    accepted_for_next_stage: true
+    seed_source_type: SMOKE_ASSET_TIMEFRAME_SEED
+    warning: Research seed only; not Pine default; not production parameter.
+    parameter_ranges:
+      st_factor:
+        observed_values: [2.5, 3.0, 3.5]
+        min: 2.5
+        max: 3.5
+      global_atr_length:
+        observed_values: [7.0, 10.0, 14.0, 21.0]
+        min: 7.0
+        max: 21.0
+      sl_atr_mult:
+        observed_values: [3.0]
+        min: 3.0
+        max: 3.0
+      tp_r_multiple:
+        observed_values: [2.0]
+        min: 2.0
+        max: 2.0
+      risk_long:
+        observed_values: [0.5]
+        min: 0.5
+        max: 0.5
+      risk_short:
+        observed_values: [0.5]
+        min: 0.5
+        max: 0.5
+      tp_mode:
+        observed_values: ['R']
+    center_params:
+      st_factor: "3.5"
+      global_atr_length: "10"
+      sl_atr_mult: "3.0"
+      tp_mode: "R"
+      tp_r_multiple: "2.0"
+      risk_long: "0.5"
+      risk_short: "0.5"
+    warnings:
+      - Research seed only; not Pine default; not production parameter.
+      - Smoke seeds prove schema/pipeline only; not final optimization conclusions.
+  - region_id: supertrend_BTCUSDT_4h_smoke_region_v1
+    strategy_id: MTC_V2
+    producer_id: Supertrend
+    asset: BTCUSDT
+    timeframe: 4h
+    confidence: LOW
+    evidence_count: 5
+    accepted_for_next_stage: true
+    seed_source_type: SMOKE_ASSET_TIMEFRAME_SEED
+    warning: Research seed only; not Pine default; not production parameter.
+    parameter_ranges:
+      st_factor:
+        observed_values: [2.5, 3.0]
+        min: 2.5
+        max: 3.0
+      global_atr_length:
+        observed_values: [7.0, 10.0, 14.0, 21.0]
+        min: 7.0
+        max: 21.0
+      sl_atr_mult:
+        observed_values: [3.0]
+        min: 3.0
+        max: 3.0
+      tp_r_multiple:
+        observed_values: [2.0]
+        min: 2.0
+        max: 2.0
+      risk_long:
+        observed_values: [0.5]
+        min: 0.5
+        max: 0.5
+      risk_short:
+        observed_values: [0.5]
+        min: 0.5
+        max: 0.5
+      tp_mode:
+        observed_values: ['R']
+    center_params:
+      st_factor: "2.5"
+      global_atr_length: "7"
+      sl_atr_mult: "3.0"
+      tp_mode: "R"
+      tp_r_multiple: "2.0"
+      risk_long: "0.5"
+      risk_short: "0.5"
+    warnings:
+      - Research seed only; not Pine default; not production parameter.
+      - Smoke seeds prove schema/pipeline only; not final optimization conclusions.
+  - region_id: supertrend_ETHUSDT_15m_smoke_region_v1
+    strategy_id: MTC_V2
+    producer_id: Supertrend
+    asset: ETHUSDT
+    timeframe: 15m
+    confidence: LOW
+    evidence_count: 5
+    accepted_for_next_stage: true
+    seed_source_type: SMOKE_ASSET_TIMEFRAME_SEED
+    warning: Research seed only; not Pine default; not production parameter.
+    parameter_ranges:
+      st_factor:
+        observed_values: [2.5, 3.0]
+        min: 2.5
+        max: 3.0
+      global_atr_length:
+        observed_values: [7.0, 14.0, 21.0]
+        min: 7.0
+        max: 21.0
+      sl_atr_mult:
+        observed_values: [3.0]
+        min: 3.0
+        max: 3.0
+      tp_r_multiple:
+        observed_values: [2.0]
+        min: 2.0
+        max: 2.0
+      risk_long:
+        observed_values: [0.5]
+        min: 0.5
+        max: 0.5
+      risk_short:
+        observed_values: [0.5]
+        min: 0.5
+        max: 0.5
+      tp_mode:
+        observed_values: ['R']
+    center_params:
+      st_factor: "2.5"
+      global_atr_length: "21"
+      sl_atr_mult: "3.0"
+      tp_mode: "R"
+      tp_r_multiple: "2.0"
+      risk_long: "0.5"
+      risk_short: "0.5"
+    warnings:
+      - Research seed only; not Pine default; not production parameter.
+      - Smoke seeds prove schema/pipeline only; not final optimization conclusions.
+  - region_id: supertrend_ETHUSDT_1h_smoke_region_v1
+    strategy_id: MTC_V2
+    producer_id: Supertrend
+    asset: ETHUSDT
+    timeframe: 1h
+    confidence: LOW
+    evidence_count: 5
+    accepted_for_next_stage: true
+    seed_source_type: SMOKE_ASSET_TIMEFRAME_SEED
+    warning: Research seed only; not Pine default; not production parameter.
+    parameter_ranges:
+      st_factor:
+        observed_values: [2.5, 3.0, 3.5]
+        min: 2.5
+        max: 3.5
+      global_atr_length:
+        observed_values: [7.0, 10.0, 14.0, 21.0]
+        min: 7.0
+        max: 21.0
+      sl_atr_mult:
+        observed_values: [3.0]
+        min: 3.0
+        max: 3.0
+      tp_r_multiple:
+        observed_values: [2.0]
+        min: 2.0
+        max: 2.0
+      risk_long:
+        observed_values: [0.5]
+        min: 0.5
+        max: 0.5
+      risk_short:
+        observed_values: [0.5]
+        min: 0.5
+        max: 0.5
+      tp_mode:
+        observed_values: ['R']
+    center_params:
+      st_factor: "3.5"
+      global_atr_length: "7"
+      sl_atr_mult: "3.0"
+      tp_mode: "R"
+      tp_r_multiple: "2.0"
+      risk_long: "0.5"
+      risk_short: "0.5"
+    warnings:
+      - Research seed only; not Pine default; not production parameter.
+      - Smoke seeds prove schema/pipeline only; not final optimization conclusions.
+  - region_id: supertrend_ETHUSDT_4h_smoke_region_v1
+    strategy_id: MTC_V2
+    producer_id: Supertrend
+    asset: ETHUSDT
+    timeframe: 4h
+    confidence: LOW
+    evidence_count: 5
+    accepted_for_next_stage: true
+    seed_source_type: SMOKE_ASSET_TIMEFRAME_SEED
+    warning: Research seed only; not Pine default; not production parameter.
+    parameter_ranges:
+      st_factor:
+        observed_values: [2.5, 3.0]
+        min: 2.5
+        max: 3.0
+      global_atr_length:
+        observed_values: [7.0, 10.0, 14.0, 21.0]
+        min: 7.0
+        max: 21.0
+      sl_atr_mult:
+        observed_values: [3.0]
+        min: 3.0
+        max: 3.0
+      tp_r_multiple:
+        observed_values: [2.0]
+        min: 2.0
+        max: 2.0
+      risk_long:
+        observed_values: [0.5]
+        min: 0.5
+        max: 0.5
+      risk_short:
+        observed_values: [0.5]
+        min: 0.5
+        max: 0.5
+      tp_mode:
+        observed_values: ['R']
+    center_params:
+      st_factor: "2.5"
+      global_atr_length: "10"
+      sl_atr_mult: "3.0"
+      tp_mode: "R"
+      tp_r_multiple: "2.0"
+      risk_long: "0.5"
+      risk_short: "0.5"
+    warnings:
+      - Research seed only; not Pine default; not production parameter.
+      - Smoke seeds prove schema/pipeline only; not final optimization conclusions.

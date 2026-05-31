@@ -1,0 +1,9 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,parameter_set,timeframe
+874,17,6732.5051,1.3557,66.3616,1.052,1.9516,1.052,6.0426,-8.7932,-91.8211,73.322,4.1396,4.1396,ADAUSDT,DOGEUSDT,False,LINDA_5SMA,"{""atr_stop"": 0, ""hold"": 10, ""sma"": 8, ""trend"": ""sma200""}",1D
+1155,17,5778.5183,1.3001,63.3766,0.8263,1.4842,0.8263,5.6488,-7.5192,-89.374,64.6555,3.1714,3.1714,ETHUSDT,DOGEUSDT,True,LINDA_5SMA,"{""atr_stop"": 0, ""hold"": 10, ""sma"": 5, ""trend"": ""sma200""}",1D
+1226,17,596.8408,1.2274,65.4976,0.7064,1.8486,0.7064,5.8218,-9.0043,-93.8112,6.3621,4.2455,4.2455,ETHUSDT,SOLUSDT,False,LINDA_5SMA,"{""atr_stop"": 0, ""hold"": 10, ""sma"": 8, ""trend"": ""sma50""}",1D
+874,17,506.6509,1.2196,65.9039,0.7166,1.9164,0.7166,6.0386,-9.5701,-97.9929,5.1703,3.2643,3.2643,ETHUSDT,DOTUSDT,False,LINDA_5SMA,"{""atr_stop"": 2, ""hold"": 10, ""sma"": 8, ""trend"": ""sma200""}",1D
+1617,17,491.293,1.1969,61.7811,0.5607,1.3856,0.5607,5.5173,-7.4515,-94.5077,5.1984,3.2727,3.2727,ETHUSDT,DOTUSDT,True,LINDA_5SMA,"{""atr_stop"": 0, ""hold"": 10, ""sma"": 5, ""trend"": ""sma50""}",1D
+1226,17,-4.9928,1.1412,65.0082,0.4691,1.8406,0.4691,5.8299,-9.4903,-98.2458,-0.0508,3.2716,3.2716,ETHUSDT,DOTUSDT,False,LINDA_5SMA,"{""atr_stop"": 2, ""hold"": 10, ""sma"": 8, ""trend"": ""sma50""}",1D
+1155,17,-73.6008,1.1136,62.7706,0.3605,1.4525,0.3605,5.6316,-8.5268,-99.5306,-0.7395,2.5576,2.5576,ETHUSDT,DOGEUSDT,True,LINDA_5SMA,"{""atr_stop"": 2, ""hold"": 10, ""sma"": 5, ""trend"": ""sma200""}",1D
+1617,17,-94.0612,1.0809,61.2863,0.2526,1.3495,0.2526,5.5086,-8.068,-99.7841,-0.9426,2.5788,2.5788,ETHUSDT,DOGEUSDT,True,LINDA_5SMA,"{""atr_stop"": 2, ""hold"": 10, ""sma"": 5, ""trend"": ""sma50""}",1D

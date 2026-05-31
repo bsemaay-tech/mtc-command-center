@@ -1,0 +1,17 @@
+{
+  "candidate_id": "QL_EPISODIC_PIVOT_CHRISTIAN_5M",
+  "source_url": "https://www.youtube.com/watch?v=Lot25-2fb-4",
+  "source_candidate": "QLR_Lot25-2fb-4",
+  "title": "Christian Flanders episodic pivot (5m opening range)",
+  "kind": "strategy",
+  "rules_high_confidence": [
+    "News/earnings catalyst (proxy: gap > 4% + 5m vol > 3x avg)",
+    "Buy at first 5m opening range high",
+    "Stop at low of day"
+  ],
+  "entry_pseudo": "catalyst_proxy AND close>or_high_5m",
+  "exit_pseudo": "close<low_of_day OR session_end",
+  "param_grid_size_planned": 50,
+  "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+  "promoted_at": "2026-05-31T00:09:34"
+}

@@ -1,0 +1,46 @@
+# Hardcoded Path Rewrite TODO
+
+No paths were rewritten in Phase 1. Barış must approve rewrite policy after copy verification.
+
+## add_htf_cols.py
+| Line | Matched path | Current text | Proposed clean mapping |
+|---|---|---|---|
+| 3 | `C:\LAB\tradingview-lab` | `csv_path = r'C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\05_PARITY\MTC_V2_PARITY_CASES.csv'` | `C:\LAB\Tradingview_LAB_CLEAN` |
+| 3 | `01_MASTER TEMPLATE_V2` | `csv_path = r'C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\05_PARITY\MTC_V2_PARITY_CASES.csv'` | `MTC_COMMAND_CENTER\01_MTC_PROJECT` |
+
+## add_l12_cases.py
+| Line | Matched path | Current text | Proposed clean mapping |
+|---|---|---|---|
+| 25 | `01_MASTER TEMPLATE_V2` | `TRACKER_CSV = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASES.csv"` | `MTC_COMMAND_CENTER\01_MTC_PROJECT` |
+| 26 | `01_MASTER TEMPLATE_V2` | `TRACKER_XLSX = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASE_TRACKER.xlsx"` | `MTC_COMMAND_CENTER\01_MTC_PROJECT` |
+
+## mtc_bridge.mjs
+| Line | Matched path | Current text | Proposed clean mapping |
+|---|---|---|---|
+| 90 | `mtc_backtest` | `TV_MERGED_DIR = resolve(__dirname, 'mtc_backtest/parity_suite_350/tv_manual_inputs/merged');` | `MTC_COMMAND_CENTER\02_MTC_BACKTEST` |
+| 124 | `01_MASTER TEMPLATE_V2` | `const PINE_PATH = resolve(__dirname, '01_MASTER TEMPLATE_V2/01_PINE/MTC_V2.pine');` | `MTC_COMMAND_CENTER\01_MTC_PROJECT` |
+
+## optimize.py
+| Line | Matched path | Current text | Proposed clean mapping |
+|---|---|---|---|
+| 26 | `mtc_backtest` | `# ─── Sys path: resolve mtc_backtest as package root ──────────────────────────` | `MTC_COMMAND_CENTER\02_MTC_BACKTEST` |
+| 28 | `mtc_backtest` | `MTC_ROOT  = REPO_ROOT / "mtc_backtest"` | `MTC_COMMAND_CENTER\02_MTC_BACKTEST` |
+| 45 | `110_MTC_BACKTEST_OPTİMİZASYON_DİZİNLERİ` | `REPO_ROOT / "110_MTC_BACKTEST_OPTİMİZASYON_DİZİNLERİ/data/processed_hist/binance_usdm/BTCUSDT.P/1h.parquet",` | `MTC_COMMAND_CENTER\02_MTC_BACKTEST\data\optimization` |
+
+## parity_compare.py
+| Line | Matched path | Current text | Proposed clean mapping |
+|---|---|---|---|
+| 24 | `01_MASTER TEMPLATE_V2` | `V2_PYTHON_ROOT = REPO_ROOT / "01_MASTER TEMPLATE_V2/00_PYTHON"` | `MTC_COMMAND_CENTER\01_MTC_PROJECT` |
+| 25 | `01_MASTER TEMPLATE_V2` | `PINE_SOURCE = REPO_ROOT / "01_MASTER TEMPLATE_V2/01_PINE/MTC_V2.pine"` | `MTC_COMMAND_CENTER\01_MTC_PROJECT` |
+| 26 | `01_MASTER TEMPLATE_V2` | `TRACKER_WORKBOOK_PATH = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASE_TRACKER.xlsx"` | `MTC_COMMAND_CENTER\01_MTC_PROJECT` |
+| 27 | `01_MASTER TEMPLATE_V2` | `TRACKER_WORKBOOK_FALLBACK_PATH = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASE_TRACKER_close_only_wave1_pending.xlsx"` | `MTC_COMMAND_CENTER\01_MTC_PROJECT` |
+| 28 | `01_MASTER TEMPLATE_V2` | `TRACKER_CSV_PATH = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASES.csv"` | `MTC_COMMAND_CENTER\01_MTC_PROJECT` |
+| 1592 | `mtc_backtest` | `help="Optional flat 00_PYTHON config overrides JSON. Legacy nested mtc_backtest cases are not supported.",` | `MTC_COMMAND_CENTER\02_MTC_BACKTEST` |
+
+## Phase 2 QuantLens Addendum
+
+Legacy QuantLens path mapping is separate from the `01_MASTER TEMPLATE_V2` MTC project mapping:
+
+| Legacy source path | Clean target path | Rule |
+|---|---|---|
+| `C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB` | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\03_QUANTLENS` | Rewrite QuantLens references directly to `MTC_COMMAND_CENTER\03_QUANTLENS`; do not inherit the `MTC_COMMAND_CENTER\01_MTC_PROJECT` mapping. |

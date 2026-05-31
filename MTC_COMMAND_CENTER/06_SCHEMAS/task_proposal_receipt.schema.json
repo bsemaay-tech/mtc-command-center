@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/task_proposal_receipt.schema.json",
+  "title": "MCC Task Proposal Receipt",
+  "type": "object",
+  "required": ["schema_version", "proposal_id", "status", "action", "created_at", "source_path", "errors"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "proposal_id": { "type": "string" },
+    "status": { "type": "string", "enum": ["accepted", "rejected"] },
+    "action": { "type": "string" },
+    "created_at": { "type": "string" },
+    "source_path": { "type": "string" },
+    "applied_task_id": { "type": ["string", "null"] },
+    "errors": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}

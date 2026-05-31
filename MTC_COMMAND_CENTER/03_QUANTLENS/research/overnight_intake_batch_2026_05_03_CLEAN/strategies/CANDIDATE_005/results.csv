@@ -1,0 +1,2 @@
+candidate_id,strategy,timeframe,trade_count,assets_tested,aggregate_pf,aggregate_net_return_pct,aggregate_max_dd_pct,return_dd_ratio,win_rate,average_trade_pct,median_trade_pct,average_win_pct,average_loss_pct,expectancy_pct,exposure_pct,fee_2x_pf,fee_3x_pf,fee_monotonic,classification
+CANDIDATE_005,BigBeluga RSI/CHoCH/ATR Proxy,1D,465,10,1.4516,3955.225,-79.8493,49.5336,46.6667,2.3674,-1.412,16.3052,-9.8282,2.3674,32.7527,1.4236,1.3962,True,WEAK_CANDIDATE

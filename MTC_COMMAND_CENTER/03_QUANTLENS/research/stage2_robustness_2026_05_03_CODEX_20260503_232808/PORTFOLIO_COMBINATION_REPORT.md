@@ -1,0 +1,5 @@
+# Portfolio Combination Report
+
+|portfolio|candidate_count|net_return|max_drawdown|
+|---|---|---|---|
+|equal_weight_weak_candidates|5|256288322439.0113|-84.5664|

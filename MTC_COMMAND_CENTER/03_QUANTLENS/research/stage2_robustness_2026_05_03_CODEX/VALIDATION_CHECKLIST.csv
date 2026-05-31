@@ -1,0 +1,8 @@
+item,status
+py_compile,passed
+tests,passed
+fee_monotonic,passed
+metric_recompute,passed
+assets_gte_5,passed
+MTC_V2_untouched,passed
+production_runner_untouched,passed

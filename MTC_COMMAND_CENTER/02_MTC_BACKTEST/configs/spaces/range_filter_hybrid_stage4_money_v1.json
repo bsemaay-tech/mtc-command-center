@@ -1,0 +1,13 @@
+{
+  "random": {
+    "risk.risk_long_percent": { "dist": "uniform_float", "low": 1.0, "high": 5.0, "step": 0.25 },
+    "risk.risk_short_percent": { "dist": "uniform_float", "low": 1.0, "high": 5.0, "step": 0.25 },
+    "risk.max_leverage_cap": { "dist": "choice", "values": [3.0, 5.0, 7.5, 10.0] },
+    "risk.fallback_qty_pct": { "dist": "choice", "values": [2.0, 5.0, 7.5, 10.0] },
+    "risk.risk_equity_mode": { "dist": "choice", "values": ["Initial", "Realized"] },
+    "risk.use_daily_loss_limit": { "dist": "choice", "values": [false, true] },
+    "risk.max_daily_loss_percent": { "dist": "choice", "values": [3.0, 5.0, 7.5, 10.0] },
+    "risk.use_max_trades_per_day": { "dist": "choice", "values": [false, true] },
+    "risk.max_trades_per_day": { "dist": "choice", "values": [3, 5, 8, 10, 15] }
+  }
+}

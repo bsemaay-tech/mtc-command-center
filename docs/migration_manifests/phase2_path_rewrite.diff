@@ -1,0 +1,148 @@
+--- a/MTC_COMMAND_CENTER/02_MTC_BACKTEST/add_htf_cols.py+++ b/MTC_COMMAND_CENTER/02_MTC_BACKTEST/add_htf_cols.py@@ -1,6 +1,8 @@ import csv, io
++from pathlib import Path
+ 
+-csv_path = r'C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\05_PARITY\MTC_V2_PARITY_CASES.csv'
++REPO_ROOT = Path(__file__).resolve().parents[2]
++csv_path = REPO_ROOT / 'MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/MTC_V2_PARITY_CASES.csv'
+ 
+ with open(csv_path, encoding='utf-8', newline='') as f:
+     content = f.read()
+--- a/MTC_COMMAND_CENTER/02_MTC_BACKTEST/add_l12_cases.py+++ b/MTC_COMMAND_CENTER/02_MTC_BACKTEST/add_l12_cases.py@@ -21,10 +21,11 @@ from openpyxl.styles import Alignment, Font, PatternFill
+ from openpyxl.utils import get_column_letter
+ 
+-REPO_ROOT = Path(__file__).resolve().parent
+-TRACKER_CSV = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASES.csv"
+-TRACKER_XLSX = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASE_TRACKER.xlsx"
+-REPORTS_DIR = REPO_ROOT / "reports/tracker_cases"
++REPO_ROOT = Path(__file__).resolve().parents[2]
++BACKTEST_ROOT = REPO_ROOT / "MTC_COMMAND_CENTER/02_MTC_BACKTEST"
++TRACKER_CSV = REPO_ROOT / "MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/MTC_V2_PARITY_CASES.csv"
++TRACKER_XLSX = REPO_ROOT / "MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/MTC_V2_PARITY_CASE_TRACKER.xlsx"
++REPORTS_DIR = BACKTEST_ROOT / "reports/tracker_cases"
+ 
+ # New columns to add (inserted after use_notional_assert)
+ NEW_COLS = [
+--- a/MTC_COMMAND_CENTER/02_MTC_BACKTEST/mtc_bridge.mjs+++ b/MTC_COMMAND_CENTER/02_MTC_BACKTEST/mtc_bridge.mjs@@ -87,7 +87,9 @@     await writeMockFromMergedCsv(symbol, tf, null, s, e);
+   }
+ }const __dirname = dirname(fileURLToPath(import.meta.url));
+-TV_MERGED_DIR = resolve(__dirname, 'mtc_backtest/parity_suite_350/tv_manual_inputs/merged');
++const REPO_ROOT = resolve(__dirname, '..', '..');
++const BACKTEST_ROOT = resolve(REPO_ROOT, 'MTC_COMMAND_CENTER/02_MTC_BACKTEST');
++TV_MERGED_DIR = resolve(BACKTEST_ROOT, 'parity_suite_350/tv_manual_inputs/merged');
+ 
+ // ─── CLI args ─────────────────────────────────────────────────────────────────
+ const argv = process.argv.slice(2);
+@@ -121,8 +123,8 @@ const HAS_DATE_WINDOW = START_MS !== undefined || END_MS !== undefined;
+ const REQUESTED_LIMIT = HAS_DATE_WINDOW ? null : BARS;
+ 
+-const PINE_PATH = resolve(__dirname, '01_MASTER TEMPLATE_V2/01_PINE/MTC_V2.pine');
+-const DATA_DIR  = resolve(__dirname, 'data');
++const PINE_PATH = resolve(REPO_ROOT, 'MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine');
++const DATA_DIR  = resolve(BACKTEST_ROOT, 'data');
+ const OUT_PATH  = join(DATA_DIR, 'mtc_signals.json');
+ const MOCK_BINANCE_DIR = join(DATA_DIR, 'pinets_mock_binance');
+ 
+--- a/MTC_COMMAND_CENTER/02_MTC_BACKTEST/optimize.py+++ b/MTC_COMMAND_CENTER/02_MTC_BACKTEST/optimize.py@@ -23,9 +23,9 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+-# ─── Sys path: resolve mtc_backtest as package root ──────────────────────────
+-REPO_ROOT = Path(__file__).resolve().parent
+-MTC_ROOT  = REPO_ROOT / "mtc_backtest"
++# ─── Sys path: resolve clean backtest package root ───────────────────────────
++REPO_ROOT = Path(__file__).resolve().parents[2]
++MTC_ROOT  = REPO_ROOT / "MTC_COMMAND_CENTER/02_MTC_BACKTEST"
+ sys.path.insert(0, str(MTC_ROOT))
+ 
+ import optuna
+@@ -42,14 +42,14 @@ # Actual parquet location (catalog paths point to 110_ which is under the
+ # İ-prefixed directory on this machine).
+ _DATASET_CANDIDATES = [
+-    REPO_ROOT / "110_MTC_BACKTEST_OPTİMİZASYON_DİZİNLERİ/data/processed_hist/binance_usdm/BTCUSDT.P/1h.parquet",
+-    REPO_ROOT / "110_/data/processed_hist/binance_usdm/BTCUSDT.P/1h.parquet",
++    MTC_ROOT / "data/processed_hist/binance_usdm/BTCUSDT.P/1h.parquet",
++    MTC_ROOT / "data/optimization/processed_hist/binance_usdm/BTCUSDT.P/1h.parquet",
+     MTC_ROOT   / "data/BTCUSDT_15m_20180701_20260308.parquet",   # fallback (15m)
+ ]
+ 
+ DEFAULT_CASE = MTC_ROOT / "configs/cases/supertrend_1h_full_20260312.json"
+ 
+-REPORTS_DIR = REPO_ROOT / "reports"
++REPORTS_DIR = MTC_ROOT / "reports"
+ REPORTS_DIR.mkdir(exist_ok=True)
+ 
+ 
+--- a/MTC_COMMAND_CENTER/02_MTC_BACKTEST/parity_compare.py+++ b/MTC_COMMAND_CENTER/02_MTC_BACKTEST/parity_compare.py@@ -20,13 +20,15 @@ if hasattr(sys.stdout, "reconfigure"):
+     sys.stdout.reconfigure(encoding="utf-8")
+ 
+-REPO_ROOT = Path(__file__).resolve().parent
+-V2_PYTHON_ROOT = REPO_ROOT / "01_MASTER TEMPLATE_V2/00_PYTHON"
+-PINE_SOURCE = REPO_ROOT / "01_MASTER TEMPLATE_V2/01_PINE/MTC_V2.pine"
+-TRACKER_WORKBOOK_PATH = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASE_TRACKER.xlsx"
+-TRACKER_WORKBOOK_FALLBACK_PATH = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASE_TRACKER_close_only_wave1_pending.xlsx"
+-TRACKER_CSV_PATH = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASES.csv"
+-REPORTS_DIR = REPO_ROOT / "reports"
++SCRIPT_DIR = Path(__file__).resolve().parent
++REPO_ROOT = SCRIPT_DIR.parents[1]
++BACKTEST_ROOT = REPO_ROOT / "MTC_COMMAND_CENTER/02_MTC_BACKTEST"
++V2_PYTHON_ROOT = REPO_ROOT / "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON"
++PINE_SOURCE = REPO_ROOT / "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine"
++TRACKER_WORKBOOK_PATH = REPO_ROOT / "MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/MTC_V2_PARITY_CASE_TRACKER.xlsx"
++TRACKER_WORKBOOK_FALLBACK_PATH = REPO_ROOT / "MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/MTC_V2_PARITY_CASE_TRACKER_close_only_wave1_pending.xlsx"
++TRACKER_CSV_PATH = REPO_ROOT / "MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/MTC_V2_PARITY_CASES.csv"
++REPORTS_DIR = BACKTEST_ROOT / "reports"
+ REPORTS_DIR.mkdir(exist_ok=True)
+ 
+ sys.path.insert(0, str(V2_PYTHON_ROOT))
+@@ -1589,7 +1591,7 @@     parser.add_argument(
+         "--case",
+         default="",
+-        help="Optional flat 00_PYTHON config overrides JSON. Legacy nested mtc_backtest cases are not supported.",
++        help="Optional flat 00_PYTHON config overrides JSON. Legacy nested backtest cases are not supported.",
+     )
+     parser.add_argument(
+         "--python-case",
+@@ -1694,7 +1696,7 @@         print(">>> Running mtc_bridge.mjs...")
+         bridge = subprocess.run(
+             bridge_args,
+-            cwd=REPO_ROOT,
++            cwd=BACKTEST_ROOT,
+             capture_output=False,
+         )
+         if bridge.returncode != 0:
+@@ -1704,7 +1706,7 @@         print("\n>>> Running pine_trades.py...")
+         extractor = subprocess.run(
+             [sys.executable, "pine_trades.py"],
+-            cwd=REPO_ROOT,
++            cwd=BACKTEST_ROOT,
+             capture_output=False,
+         )
+         if extractor.returncode != 0:
+@@ -1712,8 +1714,8 @@             return 1
+         print()
+ 
+-    pine_json = REPO_ROOT / args.pine_json
+-    signals_json = REPO_ROOT / args.signals_json
++    pine_json = BACKTEST_ROOT / args.pine_json
++    signals_json = BACKTEST_ROOT / args.signals_json
+     if not pine_json.exists():
+         print(f"ERROR: {pine_json} not found. Use --fetch-fresh.")
+         return 1
+@@ -1724,7 +1726,7 @@     pine_payload = load_pine_payload(pine_json)
+     signals_meta, signals_df = load_signals_json(signals_json)
+ 
+-    dataset_csv = REPO_ROOT / "data" / "parity_input_from_pinets.csv"
++    dataset_csv = BACKTEST_ROOT / "data" / "parity_input_from_pinets.csv"
+     write_exact_ohlcv_dataset(signals_df, dataset_csv)
+ 
+     pine_defaults = extract_supported_pine_defaults(PINE_SOURCE)
+--- a/MTC_COMMAND_CENTER/02_MTC_BACKTEST/hardcoded_path_rewrite_TODO.md+++ b/MTC_COMMAND_CENTER/02_MTC_BACKTEST/hardcoded_path_rewrite_TODO.md@@ -36,3 +36,11 @@ | 27 | `01_MASTER TEMPLATE_V2` | `TRACKER_WORKBOOK_FALLBACK_PATH = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASE_TRACKER_close_only_wave1_pending.xlsx"` | `MTC_COMMAND_CENTER\01_MTC_PROJECT` |
+ | 28 | `01_MASTER TEMPLATE_V2` | `TRACKER_CSV_PATH = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASES.csv"` | `MTC_COMMAND_CENTER\01_MTC_PROJECT` |
+ | 1592 | `mtc_backtest` | `help="Optional flat 00_PYTHON config overrides JSON. Legacy nested mtc_backtest cases are not supported.",` | `MTC_COMMAND_CENTER\02_MTC_BACKTEST` |
++
++## Phase 2 QuantLens Addendum
++
++Legacy QuantLens path mapping is separate from the `01_MASTER TEMPLATE_V2` MTC project mapping:
++
++| Legacy source path | Clean target path | Rule |
++|---|---|---|
++| `C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB` | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\03_QUANTLENS` | Rewrite QuantLens references directly to `MTC_COMMAND_CENTER\03_QUANTLENS`; do not inherit the `MTC_COMMAND_CENTER\01_MTC_PROJECT` mapping. |

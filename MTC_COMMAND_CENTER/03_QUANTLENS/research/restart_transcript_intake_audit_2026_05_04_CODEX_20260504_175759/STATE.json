@@ -1,0 +1,65 @@
+{
+  "status": "COMPLETED_WITH_AUDIT_LIMITS",
+  "run_at": "2026-05-04T17:58:00",
+  "output_root": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\06_QUANTLENS_LAB\\research\\restart_transcript_intake_audit_2026_05_04_CODEX_20260504_175759",
+  "transcript_count": 70,
+  "intake_count": 74,
+  "corrected_intake_count": 17,
+  "wisdom_item_count": 280,
+  "classification_summary": {
+    "SWING_TRADE_STRATEGY": 46,
+    "POSITION_TRADING_STRATEGY": 2,
+    "DATA_BLOCKED": 7,
+    "EXIT_MODULE": 3,
+    "FILTER_MODULE": 6,
+    "DAY_TRADE_STRATEGY": 3,
+    "SIZING_OR_RISK_MODULE": 3,
+    "PROCESS_OR_WORKFLOW_ONLY": 1,
+    "REJECT_LOW_QUALITY": 1,
+    "DUPLICATE_OR_MERGED": 2
+  },
+  "validation": [
+    {
+      "check": "py_compile_new_python",
+      "status": "PASS",
+      "detail": "06_QUANTLENS_LAB\\research\\restart_transcript_intake_audit_2026_05_04_CODEX_20260504_175759\\build_restart_audit.py"
+    },
+    {
+      "check": "excel_openpyxl_open",
+      "status": "PASS",
+      "detail": "16 sheets"
+    },
+    {
+      "check": "csv_readable",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "jsonl_valid",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "original_transcripts_intakes_unmodified",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "MTC_V2_pine_untouched",
+      "status": "PASS",
+      "detail": "before=e45bb6eb81c7773d6577ac976731a85ed7d5b90d57f24116b9d3ff73a67df900 after=e45bb6eb81c7773d6577ac976731a85ed7d5b90d57f24116b9d3ff73a67df900"
+    },
+    {
+      "check": "production_runner_untouched",
+      "status": "PASS",
+      "detail": "before=d378ef148229d0c6b07f239c71b185e37636ab8727b1b794fa21d49e5157df8f after=d378ef148229d0c6b07f239c71b185e37636ab8727b1b794fa21d49e5157df8f"
+    },
+    {
+      "check": "git_status_after_captured",
+      "status": "PASS",
+      "detail": "git_status_after.txt"
+    }
+  ],
+  "no_backtests_run": true,
+  "no_pine_promotion": true
+}

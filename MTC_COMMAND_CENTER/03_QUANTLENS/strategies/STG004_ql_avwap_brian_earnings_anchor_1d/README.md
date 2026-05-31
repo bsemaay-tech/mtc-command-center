@@ -1,0 +1,3 @@
+# STG004_ql_avwap_brian_earnings_anchor_1d
+
+Source folder: `C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\06_PROMOTED_TO_PARITY\QL_AVWAP_BRIAN_EARNINGS_ANCHOR_1D`

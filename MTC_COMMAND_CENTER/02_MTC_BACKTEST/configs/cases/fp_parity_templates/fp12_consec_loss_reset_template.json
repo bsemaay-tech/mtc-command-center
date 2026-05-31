@@ -1,0 +1,22 @@
+﻿{
+  "_comment": "FP-12 parity template. Fill tv_csv before regression.",
+  "tv_tz": "Europe/London",
+  "dataset": "BTCUSDT_15m_20240101_20260213.parquet",
+  "start_date": "2025-06-30T05:15:00",
+  "end_date": "2026-02-01",
+  "warmup_bars": 200,
+  "preroll_days": 365,
+  "tv_csv": "debug/parity_fp/fp12_tv_trades.csv",
+  "config": {
+    "guards": {"use_consec_loss_guard": true, "consec_loss_max": 3, "consec_loss_reset_daily": true},
+    "parity": {
+      "enabled": true,
+      "fill_contract": "touch",
+      "export_debug_csv": true,
+      "debug_dir": "debug/parity_fp/fp12",
+      "preroll_days": 365,
+      "preroll_mode": "warmup_only",
+      "close_open_at_eval_start": true
+    }
+  }
+}

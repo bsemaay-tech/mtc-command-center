@@ -1,0 +1,17 @@
+{
+  "candidate_id": "QL_HIGHEST_VOLUME_EDGE_PROSWING_1D",
+  "source_url": "https://www.youtube.com/watch?v=NwgJQyoUAaI",
+  "source_candidate": "QLR_NwgJQyoUAaI",
+  "title": "Highest-Volume edge (Pro Swing Ep 2)",
+  "kind": "strategy",
+  "rules_high_confidence": [
+    "Volume bar = MAX(volume, last 252 bars) \u2014 highest in past year",
+    "Optionally: highest since last earnings (proxy: top vol bar in last 60-90 days)",
+    "Confirmed: tag price-action setup (gap, breakout, etc.)"
+  ],
+  "entry_pseudo": "vol==max(vol, lookback) AND price_action_ok",
+  "exit_pseudo": "close<bar_low OR trail",
+  "param_grid_size_planned": 40,
+  "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+  "promoted_at": "2026-05-31T00:09:34"
+}

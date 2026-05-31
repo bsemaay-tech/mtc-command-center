@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/lineage.schema.json",
+  "title": "MCC Lineage Block",
+  "type": "object",
+  "required": ["execution_id"],
+  "properties": {
+    "execution_id": { "type": "string" },
+    "git_commit": { "type": ["string", "null"] },
+    "git_dirty": { "type": ["boolean", "null"] },
+    "config_hash_sha256": { "type": ["string", "null"] },
+    "data_hash_sha256": { "type": ["string", "null"] },
+    "code_hash_sha256": { "type": ["string", "null"] },
+    "engine_version": { "type": ["string", "null"] },
+    "python_version": { "type": ["string", "null"] },
+    "platform": { "type": ["string", "null"] },
+    "command": { "type": ["string", "null"] },
+    "started_at": { "type": ["string", "null"] },
+    "finished_at": { "type": ["string", "null"] }
+  },
+  "additionalProperties": true
+}

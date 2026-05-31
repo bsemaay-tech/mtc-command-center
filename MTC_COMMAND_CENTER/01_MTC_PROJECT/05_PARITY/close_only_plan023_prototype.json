@@ -1,0 +1,5 @@
+{
+  "execution_profile_id": "close_only_deterministic_v2",
+  "sl_mode": "Percent",
+  "sl_pct": 2.0
+}

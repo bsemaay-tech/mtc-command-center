@@ -1,0 +1,2 @@
+candidate_id,baseline,trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning
+ORB_8AM,random_same_hold,1700,17,-92.2611,0.6334,40.0588,-0.1441,-0.12,-0.1441,0.6218,-0.656,-92.8177,-0.994,12.0,12.0,NEARUSDT,POLUSDT,True

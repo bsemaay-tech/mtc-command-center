@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "product": "MTC Command Center",
+  "short_name": "MCC",
+  "root": "C:/LAB/tradingview-lab/MTC_COMMAND_CENTER",
+  "phase": "Strategy Pipeline",
+  "mode": "read_only",
+  "dry_run": true,
+  "live_trading_enabled": false,
+  "last_updated": "2026-05-30T00:00:00+03:00",
+  "summary": "Strategy Pipeline is the default dashboard view: candidates are shown across read-only research stages with detail pages, paper-trade context, parity proof, equity sparkline, and long/short research notes. Live trading and webhooks remain disabled.",
+  "critical_warnings": [
+    "No live trading allowed",
+    "MTC_v2 core files remain protected"
+  ],
+  "next_recommended_action": "Backfill missing source URLs when verified links are available; run separate short-side backtests before promoting any short variant.",
+  "active_writer": null
+}

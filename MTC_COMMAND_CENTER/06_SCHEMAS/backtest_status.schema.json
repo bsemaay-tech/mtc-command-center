@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/backtest_status.schema.json",
+  "title": "MCC Backtest Status",
+  "type": "object",
+  "required": ["schema_version", "summary", "runs"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "generated_at": { "type": ["string", "null"] },
+    "source": { "type": ["string", "null"] },
+    "summary": { "type": "object", "additionalProperties": true },
+    "runs": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+  },
+  "additionalProperties": false
+}

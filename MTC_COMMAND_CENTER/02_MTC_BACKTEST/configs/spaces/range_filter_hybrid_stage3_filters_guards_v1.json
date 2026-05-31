@@ -1,0 +1,43 @@
+{
+  "random": {
+    "filters.use_ma_filter": { "dist": "choice", "values": [false, true] },
+    "filters.ma_type": { "dist": "choice", "values": ["EMA", "SMA", "RMA", "WMA"] },
+    "filters.ma_length": { "dist": "uniform_int", "low": 50, "high": 250 },
+
+    "filters.use_ma_slope_filter": { "dist": "choice", "values": [false, true] },
+    "filters.ma_slope_len": { "dist": "uniform_int", "low": 50, "high": 250 },
+    "filters.ma_slope_min_pct": { "dist": "uniform_float", "low": 0.001, "high": 0.03, "step": 0.001 },
+
+    "filters.use_mcginley_filter": { "dist": "choice", "values": [false, true] },
+    "filters.mcginley_len": { "dist": "uniform_int", "low": 3, "high": 20 },
+    "filters.mcginley_k": { "dist": "uniform_float", "low": 0.3, "high": 1.2, "step": 0.05 },
+
+    "filters.use_volume_filter": { "dist": "choice", "values": [false, true] },
+    "filters.vol_filter_len": { "dist": "uniform_int", "low": 20, "high": 100 },
+    "filters.vol_filter_mult": { "dist": "uniform_float", "low": 0.2, "high": 1.5, "step": 0.05 },
+
+    "filters.use_atr_vol_filter": { "dist": "choice", "values": [false, true] },
+    "filters.atr_vol_len": { "dist": "uniform_int", "low": 7, "high": 28 },
+    "filters.atr_vol_smooth_len": { "dist": "uniform_int", "low": 30, "high": 150 },
+    "filters.atr_vol_floor_mult": { "dist": "uniform_float", "low": 0.6, "high": 1.8, "step": 0.05 },
+
+    "guards.use_eq_curve_guard": { "dist": "choice", "values": [false, true] },
+    "guards.eq_curve_ma_len": { "dist": "choice", "values": [5, 8, 10, 15, 20] },
+    "guards.use_cooldown_guard": { "dist": "choice", "values": [false, true] },
+    "guards.cooldown_bars": { "dist": "choice", "values": [3, 5, 8, 10, 15] },
+    "guards.use_dd_guard": { "dist": "choice", "values": [false, true] },
+    "guards.dd_guard_pct": { "dist": "choice", "values": [5.0, 7.5, 10.0, 12.5, 15.0] },
+
+    "confirmation.enabled": { "dist": "choice", "values": [false, true] },
+    "confirmation.p_left": { "dist": "choice", "values": [3, 5, 7] },
+    "confirmation.p_right": { "dist": "choice", "values": [3, 5, 7] },
+    "confirmation.require_close_beyond": { "dist": "choice", "values": [false, true] },
+    "confirmation.confirm_timeout_bars": { "dist": "choice", "values": [50, 100, 200] },
+    "confirmation.min_wait_bars": { "dist": "choice", "values": [0, 1, 2, 3] },
+    "confirmation.use_momentum": { "dist": "choice", "values": [false, true] },
+    "confirmation.momentum_mode": { "dist": "choice", "values": ["ATR_BODY", "ROC_1"] },
+    "confirmation.atr_len": { "dist": "choice", "values": [7, 10, 14, 21] },
+    "confirmation.mom_atr_mult": { "dist": "uniform_float", "low": 0.1, "high": 0.8, "step": 0.05 },
+    "confirmation.roc_min_pct": { "dist": "uniform_float", "low": 0.05, "high": 0.5, "step": 0.05 }
+  }
+}

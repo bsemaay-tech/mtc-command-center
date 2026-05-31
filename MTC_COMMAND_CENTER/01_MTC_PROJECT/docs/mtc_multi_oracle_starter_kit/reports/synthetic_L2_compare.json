@@ -1,0 +1,18 @@
+{
+  "level": "L2",
+  "baseline_dir": "/mnt/data/mtc_multi_oracle_starter_kit/examples/synthetic_outputs/baseline_python",
+  "candidate_dir": "/mnt/data/mtc_multi_oracle_starter_kit/examples/synthetic_outputs/candidate_pinets",
+  "compared_file": "normalized_signals.csv",
+  "generated_at_utc": "2026-04-26T14:18:54.665796+00:00",
+  "verdict": "PASS",
+  "result": {
+    "matched": 3,
+    "mismatched": 0,
+    "missing_in_candidate": 0,
+    "extra_in_candidate": 0,
+    "first_divergence": null,
+    "mismatches_sample": [],
+    "missing_in_candidate_sample": [],
+    "extra_in_candidate_sample": []
+  }
+}

@@ -1,0 +1,6 @@
+asset,trade_count,assets_tested,aggregate_pf,aggregate_net_return_pct,aggregate_max_dd_pct,return_dd_ratio,win_rate,average_trade_pct,median_trade_pct,average_win_pct,average_loss_pct,expectancy_pct,exposure_pct,fee_2x_pf,fee_3x_pf,fee_monotonic,classification
+BNBUSDT,851,1,0.5029,-61.1549,-62.4844,-0.9787,32.5499,-0.11,-0.1294,0.3419,-0.3281,-0.11,19.8786,0.2534,0.1346,True,DATA_BLOCKED
+BTCUSDT,853,1,0.4565,-62.2097,-62.1668,-1.0007,30.5979,-0.1131,-0.1291,0.3105,-0.2999,-0.1131,19.9101,0.2211,0.1192,True,DATA_BLOCKED
+ETHUSDT,852,1,0.4888,-69.8858,-69.9455,-0.9991,32.6291,-0.1389,-0.1407,0.4072,-0.4035,-0.1389,19.9022,0.2768,0.1661,True,DATA_BLOCKED
+SOLUSDT,850,1,0.605,-66.3888,-67.2443,-0.9873,39.7647,-0.1254,-0.1264,0.483,-0.527,-0.1254,19.9569,0.3785,0.242,True,DATA_BLOCKED
+XRPUSDT,853,1,0.5961,-65.038,-65.0241,-1.0002,35.17,-0.12,-0.1301,0.5035,-0.4583,-0.12,19.9023,0.3709,0.2429,True,DATA_BLOCKED

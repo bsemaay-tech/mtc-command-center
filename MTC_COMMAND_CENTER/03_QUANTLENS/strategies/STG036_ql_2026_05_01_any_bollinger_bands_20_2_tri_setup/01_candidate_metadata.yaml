@@ -1,0 +1,24 @@
+candidate_id: QL_2026-05-01_ANY_BOLLINGER_BANDS_20_2_TRI_SETUP
+status: READY_FOR_PYTHON_PROTOTYPE
+source_url: UNKNOWN_URL
+video_id: UNKNOWN_VIDEO_2026-05-01_BOLLINGER_BANDS_BREAKOUT_REVERSAL_PULLBACK
+title: Bollinger Bands 20/2 breakout reversal and pullback setups
+channel_name: UNKNOWN_CHANNEL
+channel_id: UNKNOWN_CHANNEL
+transcript_hash: 19fc0518715c9aa3f259a52428a394cb766b7282cdfc64d072a29bc1bbc3f24b
+intake_date: 2026-05-01
+market_type: ANY_CLAIMED_UNVALIDATED
+timeframe: ANY
+strategy_type: Bollinger Bands volatility regime tri-setup
+candidate_kind:
+  - entry_gate
+  - regime_filter
+  - confirmation
+  - guard
+  - sl_tp_method
+commercial_value_score: 6
+complexity_score: 6
+repaint_risk: LOW
+lookahead_risk: MEDIUM
+closed_source_risk: LOW
+notes: URL and channel metadata missing. Transcript repeatedly says Binger bands; interpreted as Bollinger Bands from context.

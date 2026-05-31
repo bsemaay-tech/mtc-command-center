@@ -1,0 +1,53 @@
+//@version=6
+// ============================================================================
+// REVIEW_ONLY — QL_ALPHA_LINK_8EMA_1H  (8EMA pullback entry + EMA8 trailing exit)
+// PARITY REVIEW WRAPPER. NOT production. DO NOT merge into MTC_V2.pine.
+// Source of truth = tools/reference_producer.py output (QL_ALPHA_LINK_8EMA_1H_trades.csv)
+// which reuses tools/mega_walk_forward.py build_signals/simulate.
+// Symbol/TF for parity: LINKUSDT, 1h. Long-only. Cost ~8 bps round-trip.
+// ============================================================================
+strategy("QL_ALPHA_LINK_8EMA_1H REVIEW_ONLY", overlay=true,
+     initial_capital=10000, default_qty_type=strategy.percent_of_equity, default_qty_value=100,
+     commission_type=strategy.commission.percent, commission_value=0.04,
+     process_orders_on_close=false, calc_on_every_tick=false, pyramiding=0)
+
+pullbackATR = input.float(0.5, "pullback_atr")
+impulseATR  = input.float(1.6, "impulse_atr")
+slopeWin    = input.int(3,    "slope_window")
+maxHold     = input.int(96,   "max_hold_bars")
+
+ema8  = ta.ema(close, 8)
+atr14 = ta.atr(14)
+slope   = ema8 - ema8[slopeWin]
+dist    = math.abs(close - ema8) / atr14
+impulse = math.abs(close - close[slopeWin]) / atr14
+
+// Producer (entry) signal — must match the Python reference long_entry column bar-for-bar
+longSig = close > ema8 and slope > 0 and dist <= pullbackATR and impulse[1] >= impulseATR
+
+stopCalc = ta.lowest(low, 3)              // stop = lowest low of last 3 bars at signal bar
+var float stopPrice = na
+var int   entryBar  = na
+
+canEnter = strategy.position_size == 0 and longSig and not na(atr14) and stopCalc < close
+if canEnter
+    stopPrice := stopCalc
+    entryBar  := bar_index
+    strategy.entry("L", strategy.long)     // fills next bar open (process_orders_on_close=false)
+
+if strategy.position_size > 0
+    strategy.exit("HardStop", "L", stop = stopPrice)             // intrabar hard stop
+    if close < ema8                                              // trailing: exit next bar open
+        strategy.close("L", comment = "trail")
+    if not na(entryBar) and (bar_index - entryBar) >= maxHold    // time stop
+        strategy.close("L", comment = "time")
+
+plotchar(longSig, "longSig", "▲", location.belowbar, color.new(color.lime, 0), size = size.tiny)
+plot(ema8, "ema8", color.orange)
+
+// PARITY NOTES (validate in TradingView before any promotion):
+// 1. Export Strategy Tester trade list; compare entry/exit bars to the Python
+//    reference QL_ALPHA_LINK_8EMA_1H_trades.csv (>=99% agreement, <=1 bar tolerance).
+// 2. ta.atr uses RMA — matches Python ewm(alpha=1/14). Confirm ema/atr within 1e-4.
+// 3. No request.security / HTF -> no repaint risk. calc_on_every_tick=false for parity.
+// 4. The exit-trail logic is an EXIT module for MTC_v2 (exit-first), separate from the producer entry.

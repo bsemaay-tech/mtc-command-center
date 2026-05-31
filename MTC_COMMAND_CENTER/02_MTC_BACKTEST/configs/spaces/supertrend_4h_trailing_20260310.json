@@ -1,0 +1,13 @@
+{
+  "grid": {
+    "trailing.use_trailing": {
+      "values": [true]
+    },
+    "trailing.start_r": {
+      "values": [1.0, 1.5, 2.0, 2.5, 3.0, 4.0]
+    },
+    "trailing.dist_r": {
+      "values": [0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "input_csv": "sample_ohlcv.csv",
+  "output_dir": "outputs",
+  "timestamp_column": "timestamp",
+  "warmup_bars": 50,
+  "vwap_guard_lookback": 8,
+  "vwap_guard_ratio": 0.75,
+  "slope_lookback": 12,
+  "range_lookback": 20,
+  "breakout_lookback": 10,
+  "atr_lookback": 14,
+  "volume_lookback": 20,
+  "capitulation_volume_mult": 2.0,
+  "capitulation_range_atr_mult": 1.5,
+  "capitulation_vwap_distance_pct": 1.5,
+  "compression_lookback": 20,
+  "compression_width_pct": 1.2,
+  "time_exit_bars": 20,
+  "enable_long": true,
+  "enable_short": true,
+  "fixed_qty": 1,
+  "cost_bps": 0
+}

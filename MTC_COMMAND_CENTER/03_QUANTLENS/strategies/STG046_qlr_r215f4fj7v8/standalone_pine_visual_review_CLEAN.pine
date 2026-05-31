@@ -1,0 +1,146 @@
+//@version=6
+indicator("QLR_R215f4fj7V8 CLEAN Visual Review", overlay=true, max_labels_count=50)
+
+// Clean manual visual review only.
+// No orders, no alerts, no profitability test, no MTC_V2 integration.
+
+show_raw_pulses = input.bool(false, "show_raw_pulses", group="Display")
+show_filtered_signals = input.bool(true, "show_filtered_signals", group="Display")
+show_vwap = input.bool(true, "show_vwap", group="Display")
+show_no_trade_zone = input.bool(false, "show_no_trade_zone", group="Display")
+show_stops = input.bool(false, "show_stops", group="Display")
+show_targets = input.bool(false, "show_targets", group="Display")
+show_debug_labels = input.bool(false, "show_debug_labels", group="Display")
+long_only = input.bool(false, "long_only", group="Direction")
+short_only = input.bool(false, "short_only", group="Direction")
+
+signal_cooldown_bars = input.int(20, "signal_cooldown_bars", minval=1, group="Clutter control")
+warmup_bars = input.int(50, "warmup_bars", minval=5, group="Signal")
+vwap_guard_lookback = input.int(10, "vwap_guard_lookback", minval=2, group="VWAP/trend guard")
+vwap_guard_ratio = input.float(0.80, "vwap_guard_ratio", minval=0.50, maxval=1.00, step=0.05, group="VWAP/trend guard")
+slope_lookback = input.int(14, "slope_lookback", minval=2, group="VWAP/trend guard")
+breakout_lookback = input.int(12, "breakout_lookback", minval=2, group="VWAP/trend guard")
+atr_lookback = input.int(14, "atr_lookback", minval=2, group="No-man's-land guard")
+volume_lookback = input.int(20, "volume_lookback", minval=2, group="Capitulation")
+capitulation_volume_mult = input.float(2.0, "capitulation_volume_mult", minval=1.0, step=0.25, group="Capitulation")
+capitulation_range_atr_mult = input.float(1.6, "capitulation_range_atr_mult", minval=0.5, step=0.1, group="Capitulation")
+capitulation_vwap_distance_pct = input.float(1.5, "capitulation_vwap_distance_pct", minval=0.1, step=0.1, group="Capitulation")
+compression_lookback = input.int(24, "compression_lookback", minval=5, group="No-man's-land guard")
+bb_width_threshold_pct = input.float(2.0, "bb_width_threshold_pct", minval=0.1, step=0.1, group="No-man's-land guard")
+recent_range_threshold_pct = input.float(1.4, "recent_range_threshold_pct", minval=0.1, step=0.1, group="No-man's-land guard")
+vwap_flat_threshold_pct = input.float(0.04, "vwap_flat_threshold_pct", minval=0.0, step=0.01, group="No-man's-land guard")
+chop_around_vwap_ratio = input.float(0.45, "chop_around_vwap_ratio", minval=0.1, maxval=0.9, step=0.05, group="No-man's-land guard")
+target_r = input.float(2.0, "target_R_visual_only", minval=0.25, step=0.25, group="Optional stop/target display")
+
+allow_long = not short_only
+allow_short = not long_only
+session_vwap = ta.vwap(hlc3)
+atr = ta.atr(atr_lookback)
+volume_ma = ta.sma(volume, volume_lookback)
+close_slope = (close - close[slope_lookback - 1]) / math.max(1, slope_lookback - 1)
+vwap_slope = (session_vwap - session_vwap[slope_lookback - 1]) / math.max(1, slope_lookback - 1)
+vwap_slope_pct = math.abs(vwap_slope) / close * 100.0
+
+above_ratio = ta.sma(close > session_vwap ? 1.0 : 0.0, vwap_guard_lookback)
+below_ratio = ta.sma(close < session_vwap ? 1.0 : 0.0, vwap_guard_lookback)
+steadily_above_vwap = above_ratio >= vwap_guard_ratio and vwap_slope >= 0
+steadily_below_vwap = below_ratio >= vwap_guard_ratio and vwap_slope <= 0
+
+bb_basis = ta.sma(close, compression_lookback)
+bb_dev = ta.stdev(close, compression_lookback)
+bb_width_pct = bb_basis != 0 ? (4.0 * bb_dev) / bb_basis * 100.0 : 999.0
+recent_range_pct = close != 0 ? (ta.highest(high, compression_lookback) - ta.lowest(low, compression_lookback)) / close * 100.0 : 999.0
+near_vwap_ratio = ta.sma(math.abs(close - session_vwap) <= atr * 0.35 ? 1.0 : 0.0, compression_lookback)
+vwap_flat = vwap_slope_pct <= vwap_flat_threshold_pct
+low_compression = bb_width_pct <= bb_width_threshold_pct or recent_range_pct <= recent_range_threshold_pct
+price_chopping_around_vwap = near_vwap_ratio >= chop_around_vwap_ratio
+no_mans_land = (price_chopping_around_vwap and vwap_flat) or (low_compression and vwap_flat)
+
+dist_pct = session_vwap != 0 ? math.abs(close - session_vwap) / session_vwap * 100.0 : 0.0
+wide_range = (high - low) >= atr * capitulation_range_atr_mult
+high_volume = volume >= volume_ma * capitulation_volume_mult
+downside_capitulation = close < session_vwap and wide_range and high_volume and dist_pct >= capitulation_vwap_distance_pct
+upside_capitulation = close > session_vwap and wide_range and high_volume and dist_pct >= capitulation_vwap_distance_pct
+
+var bool prior_downside_capitulation = false
+var bool prior_upside_capitulation = false
+if downside_capitulation
+    prior_downside_capitulation := true
+if upside_capitulation
+    prior_upside_capitulation := true
+
+range_high = ta.highest(high[1], breakout_lookback)
+range_low = ta.lowest(low[1], breakout_lookback)
+trend_continuation_long = close > session_vwap and vwap_slope >= 0 and close_slope > 0 and close > range_high
+trend_continuation_short = close < session_vwap and vwap_slope <= 0 and close_slope < 0 and close < range_low
+price_stopped_falling = close > close[1] and low >= low[1]
+price_stopped_rising = close < close[1] and high <= high[1]
+right_side_v_long_raw = prior_downside_capitulation and price_stopped_falling and (high > high[1] or close > high[1])
+right_side_v_short_raw = prior_upside_capitulation and price_stopped_rising and (low < low[1] or close < low[1])
+
+long_rejected_by_vwap = steadily_below_vwap and not prior_downside_capitulation
+short_rejected_by_vwap = steadily_above_vwap and not prior_upside_capitulation
+raw_long = bar_index >= warmup_bars and allow_long and not long_rejected_by_vwap and (trend_continuation_long or right_side_v_long_raw)
+raw_short = bar_index >= warmup_bars and allow_short and not short_rejected_by_vwap and (trend_continuation_short or right_side_v_short_raw)
+raw_conflict = raw_long and raw_short
+guarded_long = raw_long and not raw_conflict and not no_mans_land
+guarded_short = raw_short and not raw_conflict and not no_mans_land
+
+var int last_long_signal_bar = na
+var int last_short_signal_bar = na
+long_opposite_reset = not na(last_short_signal_bar) and (na(last_long_signal_bar) or last_short_signal_bar > last_long_signal_bar)
+short_opposite_reset = not na(last_long_signal_bar) and (na(last_short_signal_bar) or last_long_signal_bar > last_short_signal_bar)
+long_cooldown_ok = na(last_long_signal_bar) or bar_index - last_long_signal_bar >= signal_cooldown_bars or long_opposite_reset
+short_cooldown_ok = na(last_short_signal_bar) or bar_index - last_short_signal_bar >= signal_cooldown_bars or short_opposite_reset
+filtered_long = barstate.isconfirmed and guarded_long and long_cooldown_ok
+filtered_short = barstate.isconfirmed and guarded_short and short_cooldown_ok
+
+if filtered_long
+    last_long_signal_bar := bar_index
+    prior_downside_capitulation := false
+if filtered_short
+    last_short_signal_bar := bar_index
+    prior_upside_capitulation := false
+
+var int long_count = 0
+var int short_count = 0
+if filtered_long
+    long_count += 1
+if filtered_short
+    short_count += 1
+
+var float visual_stop = na
+var float visual_target = na
+if filtered_long
+    visual_stop := math.min(low, low[1])
+    visual_target := close + math.max(close - visual_stop, syminfo.mintick) * target_r
+if filtered_short
+    visual_stop := math.max(high, high[1])
+    visual_target := close - math.max(visual_stop - close, syminfo.mintick) * target_r
+
+plot(show_vwap ? session_vwap : na, "VWAP", color=color.new(color.blue, 0), linewidth=2)
+plot(show_stops ? visual_stop : na, "visual_stop", color=color.new(color.red, 0), linewidth=1, style=plot.style_linebr)
+plot(show_targets ? visual_target : na, "visual_target", color=color.new(color.green, 0), linewidth=1, style=plot.style_linebr)
+plotshape(show_raw_pulses and raw_long and not raw_conflict, "raw_long", shape.triangleup, location.belowbar, color=color.new(color.green, 70), size=size.tiny)
+plotshape(show_raw_pulses and raw_short and not raw_conflict, "raw_short", shape.triangledown, location.abovebar, color=color.new(color.red, 70), size=size.tiny)
+plotshape(show_filtered_signals and filtered_long and not right_side_v_long_raw, "filtered_long", shape.triangleup, location.belowbar, color=color.new(color.lime, 0), size=size.small)
+plotshape(show_filtered_signals and filtered_short and not right_side_v_short_raw, "filtered_short", shape.triangledown, location.abovebar, color=color.new(color.red, 0), size=size.small)
+plotshape(show_filtered_signals and filtered_long and right_side_v_long_raw, "right_side_v_long", shape.diamond, location.belowbar, color=color.new(color.aqua, 0), size=size.small)
+plotshape(show_filtered_signals and filtered_short and right_side_v_short_raw, "right_side_v_short_proxy", shape.diamond, location.abovebar, color=color.new(color.orange, 0), size=size.small)
+plotshape(show_no_trade_zone and no_mans_land, "no_mans_land", shape.xcross, location.top, color=color.new(color.gray, 35), size=size.tiny)
+plotshape(show_debug_labels and raw_conflict, "conflict_suppressed", shape.xcross, location.top, color=color.new(color.yellow, 0), size=size.small)
+
+var table info = table.new(position.top_right, 2, 6, border_width=1)
+if barstate.islast
+    table.cell(info, 0, 0, "candidate", text_color=color.white, bgcolor=color.new(color.blue, 0))
+    table.cell(info, 1, 0, "QLR_R215f4fj7V8", text_color=color.white, bgcolor=color.new(color.blue, 0))
+    table.cell(info, 0, 1, "timeframe")
+    table.cell(info, 1, 1, timeframe.period)
+    table.cell(info, 0, 2, "long signals")
+    table.cell(info, 1, 2, str.tostring(long_count))
+    table.cell(info, 0, 3, "short signals")
+    table.cell(info, 1, 3, str.tostring(short_count))
+    table.cell(info, 0, 4, "active filters")
+    table.cell(info, 1, 4, "VWAP, no-man, cooldown")
+    table.cell(info, 0, 5, "warning", text_color=color.white, bgcolor=color.new(color.red, 0))
+    table.cell(info, 1, 5, "Visual only; not profitability tested.", text_color=color.white, bgcolor=color.new(color.red, 0))

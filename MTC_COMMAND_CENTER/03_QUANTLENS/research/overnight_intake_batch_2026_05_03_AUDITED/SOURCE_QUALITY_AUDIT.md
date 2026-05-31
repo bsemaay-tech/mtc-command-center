@@ -1,0 +1,18 @@
+# Source Quality Audit
+
+|candidate_id|source_quality|source_penalty|handling|source_file|
+|---|---|---|---|---|
+|CANDIDATE_001|MEDIUM_QUALITY_EDUCATIONAL|0|requires stronger evidence if generic/low-quality|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_62OaP91Jz9k_quantlens_nick_schmidt_weekly_strategy_intake.md|
+|CANDIDATE_002|HIGH_QUALITY_TRADER_INTERVIEW|0|requires stronger evidence if generic/low-quality|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03_lS9zbnLi1Gg_martin_luke_283_gain_swing_trader.md|
+|CANDIDATE_003|MEDIUM_QUALITY_EDUCATIONAL|0|requires stronger evidence if generic/low-quality|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_c7ZSb2wNcOc_quantlens_detailed_intake.md|
+|CANDIDATE_004|HIGH_QUALITY_TRADER_INTERVIEW|0|requires stronger evidence if generic/low-quality|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_Ne3X-l6W4CQ_quantlens_process_strategy_intake.md|
+|CANDIDATE_005|MEDIUM_QUALITY_EDUCATIONAL|-1|requires stronger evidence if generic/low-quality|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_NGyE4YIgGpU_quantlens_tito_adhikary_options_momentum_intake_report.md|
+|CANDIDATE_006|HIGH_QUALITY_TRADER_INTERVIEW|0|requires stronger evidence if generic/low-quality|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_-JyH5PAJ4-Y_quantlens_nick_schmidt_weekly_character_change_intake.md|
+|CANDIDATE_007|HIGH_QUALITY_TRADER_INTERVIEW|0|requires stronger evidence if generic/low-quality|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_kTqKRi-j9kM_quantlens_linda_raschke_sell_rules_trade_management_intake.md|
+|CANDIDATE_008|MEDIUM_QUALITY_EDUCATIONAL|0|requires stronger evidence if generic/low-quality|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_-JyH5PAJ4-Y_quantlens_nick_schmidt_weekly_character_change_intake.md|
+|CANDIDATE_009|MEDIUM_QUALITY_EDUCATIONAL|0|requires stronger evidence if generic/low-quality|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_-JyH5PAJ4-Y_quantlens_nick_schmidt_weekly_character_change_intake.md|
+|CANDIDATE_010|HIGH_QUALITY_TRADER_INTERVIEW|0|requires stronger evidence if generic/low-quality|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03_6tnREqUJ1WY_trading_backtests_misleading.md|
+|CANDIDATE_011|MEDIUM_QUALITY_EDUCATIONAL|0|requires stronger evidence if generic/low-quality|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\QUANTLENS_DAILY_EXTENSION_ANTI_CHASE_CRITICAL_REPORT.md|
+|CANDIDATE_012|LOW_QUALITY_GENERIC_YOUTUBE|-1|requires stronger evidence if generic/low-quality|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_fYxSQvuwOQc_quantlens_oliver_kell_cycle_intake.md|
+|CANDIDATE_013|HIGH_QUALITY_TRADER_INTERVIEW|0|requires stronger evidence if generic/low-quality|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_kTqKRi-j9kM_quantlens_linda_raschke_sell_rules_trade_management_intake.md|
+|CANDIDATE_014|MEDIUM_QUALITY_EDUCATIONAL|0|requires stronger evidence if generic/low-quality|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03_ElocJ-b_NTs_oliver_kell_10_principles.md|

@@ -1,0 +1,16 @@
+{
+  "candidate_id": "QL_OPEN_RANGE_5PCT_STOP_CHRISTIAN_5M",
+  "source_url": "https://www.youtube.com/watch?v=Lot25-2fb-4",
+  "source_candidate": "QLR_Lot25-2fb-4",
+  "title": "Christian opening range + fixed 5% stop baseline",
+  "kind": "strategy",
+  "rules_high_confidence": [
+    "Buy at open OR 5m opening range high",
+    "Fixed 5-6% stop below entry"
+  ],
+  "entry_pseudo": "close>or_high_5m",
+  "exit_pseudo": "close<entry*0.95",
+  "param_grid_size_planned": 30,
+  "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+  "promoted_at": "2026-05-31T00:09:34"
+}

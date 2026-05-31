@@ -1,0 +1,57 @@
+{
+  "random": {
+    "range_filter.adx_trend_threshold": {
+      "dist": "uniform_int",
+      "low": 32,
+      "high": 40
+    },
+    "range_filter.adx_range_threshold": {
+      "dist": "uniform_int",
+      "low": 10,
+      "high": 20
+    },
+    "range_filter.chop_trend_threshold": {
+      "dist": "uniform_int",
+      "low": 35,
+      "high": 46
+    },
+    "range_filter.chop_range_threshold": {
+      "dist": "uniform_int",
+      "low": 55,
+      "high": 68
+    },
+    "range_filter.rsi_len": {
+      "dist": "uniform_int",
+      "low": 14,
+      "high": 30
+    },
+    "range_filter.rsi_oversold": {
+      "dist": "uniform_int",
+      "low": 15,
+      "high": 26
+    },
+    "range_filter.rsi_overbought": {
+      "dist": "uniform_int",
+      "low": 72,
+      "high": 86
+    },
+    "range_filter.bb_len": {
+      "dist": "uniform_int",
+      "low": 10,
+      "high": 20
+    },
+    "range_filter.bb_mult": {
+      "dist": "uniform_float",
+      "low": 2.0,
+      "high": 3.0,
+      "step": 0.1
+    },
+    "range_filter.use_bb_filter": {
+      "dist": "choice",
+      "values": [
+        true,
+        false
+      ]
+    }
+  }
+}

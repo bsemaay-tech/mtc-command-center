@@ -1,0 +1,16 @@
+{
+  "created": "2026-05-31T16:10:23",
+  "target": "C:\\LAB\\Tradingview_LAB_CLEAN",
+  "copied_files": 11093,
+  "dedupe_skipped_files": 1597,
+  "excluded_items": 98,
+  "mtc_command_center_files_verified": 406,
+  "root_scripts_copied": [
+    "add_htf_cols.py",
+    "add_l12_cases.py",
+    "mtc_bridge.mjs",
+    "optimize.py",
+    "parity_compare.py"
+  ],
+  "stg_count": 46
+}

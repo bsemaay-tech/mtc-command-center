@@ -1,0 +1,3 @@
+# STG002_ql_alpha_link_8ema_1h
+
+Source folder: `C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\06_PROMOTED_TO_PARITY\QL_ALPHA_LINK_8EMA_1H`

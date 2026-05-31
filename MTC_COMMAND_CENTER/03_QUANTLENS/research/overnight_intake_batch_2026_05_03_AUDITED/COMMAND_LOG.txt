@@ -1,0 +1,19 @@
+﻿
+$ C:\Python314\python.exe -m py_compile C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\overnight_intake_batch_2026_05_03_AUDITED\run_second_pass_audit.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\overnight_intake_batch_2026_05_03_AUDITED\audited_strategies\run_overnight_batch_audited_copy.py
+exit=0
+stdout=
+stderr=
+
+$ C:\Python314\python.exe -m py_compile C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\overnight_intake_batch_2026_05_03_AUDITED\run_second_pass_audit.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\overnight_intake_batch_2026_05_03_AUDITED\audited_strategies\run_overnight_batch_audited_copy.py
+exit=0
+stdout=
+stderr=
+
+
+$ Get-ChildItem audited folder -Include test_*.py,*_test.py
+test_file_count=74
+
+
+$ Get-ChildItem audited folder | Where-Object test filename patterns
+test_file_count=0
+

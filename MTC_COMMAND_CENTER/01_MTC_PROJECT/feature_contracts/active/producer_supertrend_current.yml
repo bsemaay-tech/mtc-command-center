@@ -1,0 +1,173 @@
+feature_id: producer_supertrend_current
+feature_name: Current Supertrend Producer
+feature_type: signal_producer
+version: 1.0.0
+status: parity_testing
+owner: codex
+created_at: 2026-04-26
+updated_at: 2026-04-26
+description: Describes the currently active Supertrend raw buy/sell signal producer in MTC V2.
+implementation_targets:
+  pine_files_touched:
+    - 01_PINE/MTC_V2.pine
+  python_files_touched:
+    - 00_PYTHON/mtc_v2/signals/supertrend.py
+    - 00_PYTHON/mtc_v2/core/config.py
+  pine_anchor_points:
+    - "02 Signal Producer inputs: Signal Mode, ATR Len, Factor"
+    - "Supertrend calculation block around st_atr/st_factor"
+    - "plot titles: supertrend_line and raw signal plots when available"
+  python_anchor_points:
+    - "mtc_v2.signals.supertrend.SupertrendSignal"
+    - "DEFAULT_CONFIG st_atr_len/st_factor/st_use_wicks/st_use_ha"
+  integration_mode: production_integrated
+input_parameters:
+  - name: signal_mode
+    type: string
+    default: Supertrend
+    min: null
+    max: null
+    options: [Supertrend]
+    pine_input_title: Signal Mode
+    python_config_field: signal_mode
+  - name: st_atr_len
+    type: int
+    default: 21
+    min: 1
+    max: null
+    options: []
+    pine_input_title: ATR Len
+    python_config_field: st_atr_len
+  - name: st_factor
+    type: float
+    default: 4.0
+    min: 0.1
+    max: null
+    options: []
+    pine_input_title: Factor
+    python_config_field: st_factor
+  - name: st_use_wicks
+    type: bool
+    default: false
+    min: null
+    max: null
+    options: []
+    pine_input_title: not visible in current Pine input surface
+    python_config_field: st_use_wicks
+  - name: st_use_ha
+    type: bool
+    default: false
+    min: null
+    max: null
+    options: []
+    pine_input_title: not visible in current Pine input surface
+    python_config_field: st_use_ha
+state:
+  state_variables:
+    - atr
+    - upper_band
+    - lower_band
+    - direction
+    - previous_close
+  persistent_state:
+    - previous ATR
+    - previous upper/lower bands
+    - previous direction
+  reset_conditions:
+    - case start
+    - st_use_ha unsupported branch in Python
+  warmup_policy:
+    bars: 21
+    exclude_from_comparison: true
+trace:
+  trace_source_mode: case_plan_overrides
+  candle_source: pinets_runner._build_case_bars(case_001 case_plan)
+  config_source: case_plan_overrides
+  timestamp_policy: ISO_UTC
+  bar_index_policy: zero_based_case_candle_index
+  warmup_bars: 21
+  trace_columns:
+    - {name: source_price, available: true}
+    - {name: atr, available: true}
+    - {name: upper_band, available: true}
+    - {name: lower_band, available: true}
+    - {name: supertrend_line, available: true}
+    - {name: direction, available: true}
+    - {name: long_raw, available: true}
+    - {name: short_raw, available: true}
+    - {name: conflict_reason, available: true}
+    - {name: internal_event_id, available: false, reason: "not exposed by current implementation"}
+  required_trace_columns:
+    - supertrend_line
+    - direction
+    - long_raw
+    - short_raw
+  optional_trace_columns:
+    - source_price
+    - atr
+    - upper_band
+    - lower_band
+    - conflict_reason
+    - warmup_ready
+    - valid_bar
+  expected_event_columns:
+    - conflict_reason
+  signal_columns:
+    - long_raw
+    - short_raw
+  decision_columns: []
+  execution_columns: []
+parity:
+  required_parity_levels:
+    - L0
+    - L1
+    - L2
+  tolerance_policy:
+    numeric_abs_tol: 1.0e-8
+    numeric_rel_tol: 1.0e-6
+    tick_tolerance: 0
+    booleans: exact
+    strings: exact
+  acceptance_profile: feature_contracts/acceptance_profiles/producer_acceptance.yml
+  supported_oracles:
+    python: true
+    pinets: true
+    pynecore: optional
+    vectorbt: optional
+    tradingview_export: final_release_audit
+  baseline_oracle: python
+  candidate_oracles:
+    - pinets
+safety:
+  rollback_files:
+    - 01_PINE/MTC_V2.pine
+    - 00_PYTHON/mtc_v2/signals/supertrend.py
+    - 00_PYTHON/mtc_v2/core/config.py
+  risk_notes:
+    - Full engine L1/L2 can diverge from isolated Supertrend because downstream config/export surface can differ.
+  known_limitations:
+    - st_use_ha is scaffold-only and not supported by Python producer.
+    - Current Pine UI exposes only Signal Mode, ATR Len, and Factor for this producer.
+  not_comparable_conditions:
+    - PineTS adapter output unavailable
+    - Python trace exporter unavailable
+    - required trace columns missing
+reporting:
+  required_report_sections:
+    - Command run
+    - Contract used
+    - Case used
+    - Python trace status
+    - PineTS trace status
+    - Acceptance profile used
+    - Pass/fail/not comparable
+    - First divergence if available
+    - Missing trace columns if any
+  acceptance_verdicts:
+    - FEATURE_TRACE_PASS
+    - FEATURE_TRACE_PASS_WITH_TOLERANCE
+    - FEATURE_TRACE_FAIL_INDICATOR
+    - FEATURE_TRACE_FAIL_SIGNAL
+    - FEATURE_TRACE_NOT_COMPARABLE
+    - ORACLE_UNAVAILABLE
+  final_verdict_rule: Do not replace or remove Supertrend until the candidate producer passes producer_acceptance.yml.

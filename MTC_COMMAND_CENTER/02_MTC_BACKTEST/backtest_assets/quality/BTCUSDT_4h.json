@@ -1,0 +1,51 @@
+{
+  "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_4h_20180701_20260308.parquet",
+  "sha256": "227577e83e2dfbd54caee6001abbb5508d0ddf2f30e56e14e8f1d0dc43d9eb0a",
+  "exchange_raw": "BINANCE",
+  "exchange_normalized": "BINANCE",
+  "symbol_raw": "BTCUSDT",
+  "symbol_normalized": "BTCUSDT",
+  "quality": {
+    "rows": 16840,
+    "duplicate_timestamps": 0,
+    "gap_count": 6,
+    "gaps": [
+      {
+        "index": 19,
+        "prev_ts": "2018-07-04 00:00:00+00:00",
+        "next_ts": "2018-07-04 08:00:00+00:00",
+        "gap_seconds": 28800
+      },
+      {
+        "index": 816,
+        "prev_ts": "2018-11-14 00:00:00+00:00",
+        "next_ts": "2018-11-14 08:00:00+00:00",
+        "gap_seconds": 28800
+      },
+      {
+        "index": 1523,
+        "prev_ts": "2019-03-12 00:00:00+00:00",
+        "next_ts": "2019-03-12 08:00:00+00:00",
+        "gap_seconds": 28800
+      },
+      {
+        "index": 1906,
+        "prev_ts": "2019-05-15 00:00:00+00:00",
+        "next_ts": "2019-05-15 12:00:00+00:00",
+        "gap_seconds": 43200
+      },
+      {
+        "index": 2456,
+        "prev_ts": "2019-08-15 00:00:00+00:00",
+        "next_ts": "2019-08-15 08:00:00+00:00",
+        "gap_seconds": 28800
+      },
+      {
+        "index": 3585,
+        "prev_ts": "2020-02-19 08:00:00+00:00",
+        "next_ts": "2020-02-19 16:00:00+00:00",
+        "gap_seconds": 28800
+      }
+    ]
+  }
+}

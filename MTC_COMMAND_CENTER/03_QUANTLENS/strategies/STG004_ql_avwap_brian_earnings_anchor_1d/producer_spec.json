@@ -1,0 +1,17 @@
+{
+  "candidate_id": "QL_AVWAP_BRIAN_EARNINGS_ANCHOR_1D",
+  "source_url": "https://www.youtube.com/watch?v=UmLa9FAlMgw",
+  "source_candidate": "QLR_UmLa9FAlMgw",
+  "title": "AVWAP earnings-anchor (Brian Shannon)",
+  "kind": "strategy",
+  "rules_high_confidence": [
+    "Anchor VWAP from earnings bar (proxy: largest daily volume bar in last 90 days)",
+    "Buy pullbacks to earnings AVWAP",
+    "Stop below AVWAP swing-low"
+  ],
+  "entry_pseudo": "anchor_bar=top_vol_90d; pullback_to_anchor_avwap_held",
+  "exit_pseudo": "close<anchor_avwap",
+  "param_grid_size_planned": 40,
+  "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+  "promoted_at": "2026-05-31T00:09:34"
+}

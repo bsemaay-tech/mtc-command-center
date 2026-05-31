@@ -1,0 +1,7 @@
+README.md
+STAGE2_RUN_LOG.md
+STAGE2_STATE.json
+ERROR_AND_RECOVERY_LOG.md
+COMMAND_LOG.txt
+FILES_CREATED.txt
+git_status_before.txt

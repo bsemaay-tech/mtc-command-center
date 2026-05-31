@@ -1,0 +1,2 @@
+candidate_id,strategy,timeframe,trade_count,assets_tested,aggregate_pf,aggregate_net_return_pct,aggregate_max_dd_pct,return_dd_ratio,win_rate,average_trade_pct,median_trade_pct,average_win_pct,average_loss_pct,expectancy_pct,exposure_pct,fee_2x_pf,fee_3x_pf,fee_monotonic,classification
+CANDIDATE_011,Daily Extension Anti-Chase Standalone Proxy,1D,111,10,0.5201,-96.8928,-98.614,-0.9825,43.2432,-2.4328,-1.7524,6.0962,-8.9311,-2.4328,10.0,0.5031,0.4865,True,REJECT

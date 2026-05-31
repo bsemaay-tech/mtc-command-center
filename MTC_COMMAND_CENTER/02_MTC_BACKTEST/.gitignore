@@ -1,0 +1,66 @@
+# ====================================
+# MTC Backtest - .gitignore
+# ====================================
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Distribution / Build
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Test / Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Logs
+logs/
+*.log
+
+# Debug outputs (generated at runtime)
+debug/
+
+# Data (large binary files, downloaded at runtime)
+data/*.parquet
+data/*.csv
+
+# Exports (generated at runtime)
+exports/
+results/
+
+# Optimizer scratch outputs
+bench_*.csv
+test_*.csv
+debug_*.py
+
+# Streamlit cache
+.streamlit/
+
+# Windows-specific
+*.bat.log
+
+# Sensitive / Environment
+.env
+.env.local

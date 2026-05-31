@@ -1,0 +1,91 @@
+# Audited Priority Matrix
+
+| Tier | Candidate ID | Score | Verdict | Asset Class | Timeframe |
+|---|---|---|---|---|---|
+| C | QL_NICK_WEEKLY_CHARACTER_CHANGE_001 | 5 | UNKNOWN | unknown | {'primary': '1W', 'optional_context': '1M'} |
+| C | QL_NICK_CONTROLLED_WEAKNESS_BASE_RETEST_001 | 5 | UNKNOWN | unknown | 1W |
+| C | QL_NICK_10W_30W_RESPECT_ENTRY_001 | 5 | UNKNOWN | unknown | 1W |
+| C | QL_NICK_UP_ON_VOLUME_RADAR_001 | 5 | UNKNOWN | unknown | 1W |
+| C | QL_NICK_WEEKLY_SELL_DECISION_FRAMEWORK_001 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_NICK_EARNINGS_CUSHION_RULE_001 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_NICK_TRADE_FREQUENCY_GUARD_001 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_GON_STRONG_DEMAND_LOW_VOLUME_EMA_TOUCH_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_GON_OG_BULL_FLAG_HIGH_TIGHT_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_GON_STRONG_DEMAND_SLOW_FADER_RECLAIM_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_GON_SHORT_SQUEEZE_REVERSAL_BALL_UNDER_WATER_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_GON_NEXT_DAY_LOW_FLOAT_CONTINUATION_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_NICK_WEEKLY_CHARACTER_CHANGE_TREND_STARTER_001 | 5 | UNKNOWN | unknown | 1W |
+| C | QL_NICK_WEEKLY_BASE_TIGHTNESS_ACCUMULATION_001 | 5 | UNKNOWN | unknown | 1W |
+| C | QL_NICK_UP_ON_VOLUME_UNIVERSE_SCAN_001 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_NICK_WEEKLY_SCALE_IN_ON_PROOF_001 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_NICK_WEEKLY_CLOSE_STOP_POLICY_001 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_NICK_ASYMMETRIC_RISK_REWARD_FILTER_001 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_CHARLES_UPSIDE_REVERSAL_PULLBACK_001 | 5 | UNKNOWN | unknown | {'primary': '1D', 'context': '1W'} |
+| C | QL_CHARLES_FIRST_PULLBACK_50DMA_001 | 5 | UNKNOWN | unknown | 1D |
+| C | QL_CHARLES_21EMA_PULLBACK_ADDON_001 | 5 | UNKNOWN | unknown | 1D |
+| C | QL_CHARLES_PRIOR_BASE_TOP_SUPPORT_PULLBACK_001 | 5 | UNKNOWN | unknown | 1D |
+| C | QL_CHARLES_REVERSE_PYRAMID_PULLBACK_SCALEIN_001 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_CHARLES_SWING_AROUND_CORE_001 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_CHARLES_WEEKLY_SHAKEOUT_CONFIRMATION_GUARD_001 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_RYAN_MARKET_AWARENESS_GATE_001 | 5 | UNKNOWN | {'primary': 'equities', 'secondary': 'crypto'} | {'market_context': ['daily', 'weekly'], 'execution': ['strategy_specific']} |
+| C | QL_RYAN_LATE_ENTRY_CHASE_FILTER_001 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_RYAN_PULLBACK_DANGER_ZONE_001 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_RYAN_SELL_INTO_STRENGTH_RUNNER_EXIT_001 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_LBR_COIL_BREAKOUT_RANGE_EXPANSION_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_LBR_THREE_BAR_BREAKOUT_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_LBR_BOX_MIDPOINT_RECLAIM_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_LBR_ATR_VOLATILITY_EXIT_OVERLAY_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_LBR_ADTR_POSITION_SIZING_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_LBR_EQUITY_CURVE_RISK_THROTTLE_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_TITO_RS_MOMENTUM_BREAKOUT_CROSSBACK_v0 | 5 | UNKNOWN | ['US_equities', 'liquid_crypto_proxy', 'high_beta_crypto_pairs'] | {'context': ['daily', 'weekly'], 'execution': ['1h', '30m', '15m']} |
+| C | QL_TITO_OPTIONS_AWARE_RISK_OVERLAY_v0 | 5 | UNKNOWN | ['all', 'especially_options', 'adaptable_to_futures'] | unknown |
+| C | QL_TITO_PROFIT_WITHDRAWAL_CAPITAL_AT_RISK_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_STAN_STAGE_1B_TO_2A_BREAKOUT_v0 | 5 | UNKNOWN | unknown | {'primary': '1D', 'confirmation': '1W'} |
+| C | QL_STAN_STAGE_2A_PULLBACK_SUPPORT_v0 | 5 | UNKNOWN | unknown | {'primary': '1D', 'confirmation': '1W'} |
+| C | QL_STAN_UNFILLED_GAP_CONTINUATION_v0 | 5 | UNKNOWN | unknown | 1D |
+| C | QL_STAN_FAILED_RALLY_200D_SHORT_AVOID_v0 | 5 | UNKNOWN | unknown | 1D |
+| C | QL_STAN_FOREST_GROUP_TREE_FILTER_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_STAN_SPLIT_TAPE_BREADTH_FILTER_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_STAN_GOOD_COMPANY_BAD_CHART_BLOCK_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_BRIAN_SHANNON_AVWAP_GAP_PULLBACK_STRENGTH_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_BRIAN_SHANNON_AVWAP_PINCH_BREAKOUT_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_BRIAN_SHANNON_AVWAP_HANDOFF_TREND_CONTINUATION_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_BRIAN_SHANNON_5DMA_AVWAP_MOMENTUM_ENTRY_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_BRIAN_SHANNON_BREAKAWAY_GAP_AVWAP_CONTINUATION_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_ANTHONY_OUTLIER_LEADER_BREAKOUT_v0 | 5 | UNKNOWN | unknown | daily |
+| C | QL_ANTHONY_BREAKOUT_PULLBACK_RS_v0 | 5 | UNKNOWN | unknown | ['daily', 'intraday_for_entry'] |
+| C | QL_ANTHONY_UNDERCUT_RECLAIM_LEADER_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_ANTHONY_EP_EARNINGS_THEME_BREAKOUT_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_ANTHONY_BACKWATCH_BREAKOUT_HEALTH_ENGINE_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_ANTHONY_THEME_LEADERSHIP_ENGINE_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_ANTHONY_CYCLE_AWARE_EXPOSURE_CONTROL_v0 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_MARTIN_PULLBACK_CONFLUENCE_LONG_001 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_MARTIN_PARABOLIC_LONG_001 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_TY_MICROCAP_LIQUIDITY_REVERSION_SHORT_001 | 5 | UNKNOWN | unknown | unknown |
+| C | QL_CANSLIM_O_NEIL_GROWTH_STOCK_SYSTEM | 2 | UNKNOWN | unknown | unknown |
+| C | QL_CANSLIM_SHAKEOUT_PLUS_3_001 | 2 | UNKNOWN | equities_primary | daily |
+| C | QL_SLINGSHOT_4EMA_HIGH_PULLBACK_001 | 2 | UNKNOWN | {'primary': 'equities', 'secondary_research': 'crypto_trend_assets'} | {'primary': 'daily', 'optional': ['1h', '4h', 'weekly']} |
+| C | QL_FISHHOOK_EP_DAY1_RETAKE_001 | 2 | UNKNOWN | {'primary': 'equities', 'not_primary': 'crypto'} | {'signal': 'daily', 'refinement': '10m_intraday'} |
+| C | QL_KELL_WEDGE_POP_001 | 2 | UNKNOWN | unknown | {'stock_original': 'daily + 65m', 'crypto_adaptation': 'daily + 4h or 1h'} |
+| C | QL_KELL_EMA_CROSSBACK_001 | 2 | UNKNOWN | unknown | unknown |
+| C | QL_KELL_BASIN_BREAK_001 | 2 | UNKNOWN | unknown | unknown |
+| C | QL_KELL_WEDGE_DROP_EXIT_001 | 2 | UNKNOWN | unknown | unknown |
+| C | QL_RYAN_TIGHT_BREAKOUT_001 | 2 | UNKNOWN | unknown | unknown |
+| C | QL_LBR_PREV_DAY_HIGH_LOW_TAYLOR_RHYTHM_v0 | 2 | UNKNOWN | unknown | unknown |
+| C | QL_LBR_ROC2_REVERSAL_v0 | 2 | UNKNOWN | unknown | unknown |
+| C | QL_ROPPEL_50D_RECLAIM_TIGHT_ACTION_v0 | 2 | UNKNOWN | ['US_growth_equities', 'high_beta_equities', 'crypto_proxy_optional'] | unknown |
+| C | QL_ROPPEL_357_SCALEOUT_RISK_MODULE_v0 | 2 | UNKNOWN | ['equities', 'crypto', 'futures'] | unknown |
+| C | QL_ROPPEL_LEADERSHIP_THEME_SCORE_v0 | 2 | UNKNOWN | ['US_equities', 'crypto_sector_proxy'] | unknown |
+| C | QL_ROPPEL_EXTENSION_OVER_50D_HEDGE_SIGNAL_v0 | 2 | UNKNOWN | ['equities', 'crypto', 'futures'] | unknown |
+| C | QL_ROPPEL_POSITION_TRADING_HOLD_ENGINE_v0 | 2 | UNKNOWN | unknown | unknown |
+| C | QL_VCP_BREAKOUT_DAILY_BASE_001 | 2 | UNKNOWN | unknown | unknown |
+| C | QL_BRIAN_SHANNON_FAILED_AVWAP_TRAP_v0 | 2 | UNKNOWN | unknown | unknown |
+| C | CAND_BRIAN_LEE_SMALLCAP_GAP_MR_SHORT_V1 | 2 | UNKNOWN | unknown | 1m_primary_5m_context |
+| C | QL_CAND_2026-05-03_eWtY7uoJL0_RYAN_PRICE_VOLUME_STAGE | 2 | UNKNOWN | unknown | unknown |
+| C | QL_CAND_003_KWxhLIOchvY | 2 | UNKNOWN | unknown | unknown |
+| C | QL_CAND_004_Nq-p7Bu1YT0 | 2 | UNKNOWN | unknown | unknown |
+| C | QL_MARTIN_PULLBACK_SHORT_001 | 2 | UNKNOWN | unknown | unknown |
+| C | YT_OLIVER_KELL_WEDGE_POP_PRICE_CYCLE_V1 | 2 | UNKNOWN | unknown | unknown |
+| C | QL_GON_HALT_MOMENTUM_CONTINUATION_v0 | 0 | UNKNOWN | unknown | unknown |
+| C | CAND_20260503_TED_ZHANG_MAGIC_ELIXIR_MOMENTUM_HAN1kymVbTc | 0 | UNKNOWN | unknown | unknown |
+| C | QL_BASELINE_EMA20_50_RETEST_001 | 0 | UNKNOWN | unknown | unknown |

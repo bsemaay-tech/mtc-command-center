@@ -1,0 +1,37 @@
+candidate,dimension,codex_round_a,claude_round_a,gemini_round_a,classification,round_b_resolution
+KELL_WEDGE,contract disagreement,Round A says prior proxy dropped Kell cycle preconditions and needs native data,Claude says Codex dropped flush/snapback/higher-low/contraction context and previous backtest was not fair,NOT_AVAILABLE,OTHER_AGENT_CORRECT,Keep NEEDS_NATIVE_DATA; previous proxy did not test Kell
+KELL_WEDGE,code disagreement,Stage-2 code/recompute usable only as degraded proxy,Claude says signal_kell reduced idea to EMA/Donchian-like proxy,NOT_AVAILABLE,OTHER_AGENT_CORRECT,Do not use prior code as Kell evidence
+KELL_WEDGE,source/context disagreement,Crypto proxy not source-faithful,Claude says US equity leader cycle context required,NOT_AVAILABLE,OTHER_AGENT_CORRECT,Native equity context required
+KELL_WEDGE,data/proxy disagreement,Current data insufficient,Claude says crypto-only bundle insufficient,NOT_AVAILABLE,OTHER_AGENT_CORRECT,Needs US equity daily plus RS/earnings context
+KELL_WEDGE,metric disagreement,High PF rejected due 17 trades/proxy,Claude says metrics measure degraded breakout proxy not Kell,NOT_AVAILABLE,OTHER_AGENT_CORRECT,Metrics are not valid rescue evidence
+KELL_WEDGE,verdict disagreement,NEEDS_NATIVE_DATA,CONTRACT_NEEDS_NATIVE_DATA,NOT_AVAILABLE,I_STAND_BY_MY_RESULT,Final remains NEEDS_NATIVE_DATA
+CRABEL_RANGE_EXPANSION,contract disagreement,Round A says canonical Crabel is intraday/session and prior crypto-daily test unfair,Claude says daily prior-range breakout with no NR filter is not Crabel,NOT_AVAILABLE,OTHER_AGENT_CORRECT,Keep Crabel as native/session-data retest only
+CRABEL_RANGE_EXPANSION,code disagreement,Crabel same-bar/gap fill and daily trigger are suspect,Claude says implementation is generic crypto-daily breakout not Crabel Stretch/NR,NOT_AVAILABLE,OTHER_AGENT_CORRECT,Prior code cannot rescue Crabel
+CRABEL_RANGE_EXPANSION,source/context disagreement,Crypto-daily range expansion is separate candidate,Claude says source is Crabel book/session-open Stretch breakout,NOT_AVAILABLE,OTHER_AGENT_CORRECT,Separate crypto-adapted variant if desired
+CRABEL_RANGE_EXPANSION,data/proxy disagreement,Needs intraday/session-native data,Claude says current daily crypto bundle invalid by construction,NOT_AVAILABLE,OTHER_AGENT_CORRECT,Needs ES/NQ/futures or US equity RTH intraday
+CRABEL_RANGE_EXPANSION,metric disagreement,Recomputed PF survives but DD/proxy block promotion,Claude says Stage-2 metrics measure wrong strategy,NOT_AVAILABLE,OTHER_AGENT_CORRECT,PF cannot count toward Crabel producer verdict
+CRABEL_RANGE_EXPANSION,verdict disagreement,NEEDS_NATIVE_DATA,CONTRACT_NEEDS_NATIVE_DATA,NOT_AVAILABLE,I_STAND_BY_MY_RESULT,Final remains NEEDS_NATIVE_DATA
+SLINGSHOT_EMA_PULLBACK,contract disagreement,Round A says code is materially simple but weak OOS/DD,Claude says contract is faithful and best of six,NOT_AVAILABLE,OTHER_AGENT_CORRECT,Upgrade narrative: best producer prospect but still not PASS
+SLINGSHOT_EMA_PULLBACK,code disagreement,Round A synthetic/code checks pass but OOS fails,Claude says previous code materially faithful with minor refinements,NOT_AVAILABLE,OTHER_AGENT_CORRECT,Code is acceptable for retest; not producer-ready
+SLINGSHOT_EMA_PULLBACK,source/context disagreement,Round A says crypto proxy only,Claude says equities primary and crypto exploratory,NOT_AVAILABLE,OTHER_AGENT_CORRECT,Needs equity basket for primary verdict
+SLINGSHOT_EMA_PULLBACK,data/proxy disagreement,Round A allows weak crypto result only,Claude says current crypto can be exploratory but primary verdict needs equities,NOT_AVAILABLE,OTHER_AGENT_CORRECT,Native/equity run needed before promotion
+SLINGSHOT_EMA_PULLBACK,metric disagreement,Round A emphasizes OOS PF below 1 and -99.97% DD,Claude does not override metric failure,NOT_AVAILABLE,I_STAND_BY_MY_RESULT,Metrics block PASS_STAGE3
+SLINGSHOT_EMA_PULLBACK,verdict disagreement,WEAK_STAGE3_CODE_VERIFIED,PREVIOUS_BACKTEST_FAIR_BUT_WEAK plus needs equity run,NOT_AVAILABLE,I_STAND_BY_MY_RESULT,Final remains WEAK_STAGE3_CODE_VERIFIED and strongest producer prospect
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,contract disagreement,Round A says true divergence missing and contract rewrite needed,Claude says actual Pine indicator source is well-defined and previous backtest not fair,NOT_AVAILABLE,OTHER_AGENT_CORRECT,Refine: not vague rewrite; rebuild faithfully from Pine source
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,code disagreement,Round A flagged RSI recovery plus CHoCH not strict divergence,Claude adds lookahead bias/wrong pivot/wrong exits/no latching/no ladder TPs,NOT_AVAILABLE,OTHER_AGENT_CORRECT,Prior code invalid for BigBeluga
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,source/context disagreement,Round A treated indicator conceptually,Claude says XNZ4f-b3ED8 indicator-audit intake is authoritative,NOT_AVAILABLE,OTHER_AGENT_CORRECT,Use indicator source as source of truth
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,data/proxy disagreement,Round A did not require native data,Claude says current crypto bundle is sufficient for faithful rerun,NOT_AVAILABLE,OTHER_AGENT_CORRECT,Immediate crypto retest is valid after rebuild
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,metric disagreement,Round A recomputed metrics from wrong previous code,Claude says Stage-2 numbers measure different strategy,NOT_AVAILABLE,OTHER_AGENT_CORRECT,Discard prior BigBeluga metrics for verdict
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,verdict disagreement,NEEDS_CONTRACT_REWRITE,CONTRACT_READY_FOR_CODEX_RETEST after rebuild,NOT_AVAILABLE,OTHER_AGENT_CORRECT,Updated final: NEEDS_RECODE_RETEST
+MARTIN_LUKE_PULLBACK,contract disagreement,Round A says AVWAP proxy/native data issue,NO_REPORT_CONTENT,NOT_AVAILABLE,NEEDS_HUMAN_REVIEW,No external agent evidence to change result
+MARTIN_LUKE_PULLBACK,code disagreement,Round A says rolling VWAP proxy is not event AVWAP,NO_REPORT_CONTENT,NOT_AVAILABLE,I_STAND_BY_MY_RESULT,Keep prior code as proxy only
+MARTIN_LUKE_PULLBACK,source/context disagreement,Round A says equity-native context,NO_REPORT_CONTENT,NOT_AVAILABLE,NEEDS_NATIVE_DATA,Needs native equity/AVWAP review
+MARTIN_LUKE_PULLBACK,data/proxy disagreement,Round A says crypto proxy OOS failed,NO_REPORT_CONTENT,NOT_AVAILABLE,NEEDS_NATIVE_DATA,Final remains NEEDS_NATIVE_DATA
+MARTIN_LUKE_PULLBACK,metric disagreement,Round A metrics not enough due OOS/proxy,NO_REPORT_CONTENT,NOT_AVAILABLE,I_STAND_BY_MY_RESULT,No metric upgrade
+MARTIN_LUKE_PULLBACK,verdict disagreement,NEEDS_NATIVE_DATA,NO_REPORT_CONTENT,NOT_AVAILABLE,I_STAND_BY_MY_RESULT,Final remains NEEDS_NATIVE_DATA
+LINDA_5SMA_PULLBACK,contract disagreement,Round A says RS proxy/native data issue,NO_REPORT_CONTENT,NOT_AVAILABLE,NEEDS_HUMAN_REVIEW,No external contract audit available
+LINDA_5SMA_PULLBACK,code disagreement,Round A says RS missing/proxied,NO_REPORT_CONTENT,NOT_AVAILABLE,I_STAND_BY_MY_RESULT,Keep code as proxy only
+LINDA_5SMA_PULLBACK,source/context disagreement,Round A says Linda RS context needs US equity/market benchmark,NO_REPORT_CONTENT,NOT_AVAILABLE,NEEDS_NATIVE_DATA,Needs native RS data
+LINDA_5SMA_PULLBACK,data/proxy disagreement,Round A says crypto proxy cannot verify original Linda edge,NO_REPORT_CONTENT,NOT_AVAILABLE,NEEDS_NATIVE_DATA,Final remains NEEDS_NATIVE_DATA
+LINDA_5SMA_PULLBACK,metric disagreement,Round A base edge weak and DD extreme,NO_REPORT_CONTENT,NOT_AVAILABLE,I_STAND_BY_MY_RESULT,No metric upgrade
+LINDA_5SMA_PULLBACK,verdict disagreement,NEEDS_NATIVE_DATA,NO_REPORT_CONTENT,NOT_AVAILABLE,I_STAND_BY_MY_RESULT,Final remains NEEDS_NATIVE_DATA

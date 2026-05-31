@@ -1,0 +1,321 @@
+//@version=6
+library("LIB_ConfirmationLayer", overlay=false)
+
+// Internal persistent state is declared inside the function (var)
+
+// Distance validation helpers (top-level to avoid nested function syntax)
+f_conf_isSwingOkForLong(_lvl, _c, _maxSwingDistPct) =>
+    _maxSwingDistPct <= 0.0 ? true : (
+        na(_lvl) or _c <= 0 ? false :
+        _lvl <= _c ? true : (100.0 * (_lvl - _c) / _c) <= _maxSwingDistPct
+    )
+
+f_conf_isSwingOkForShort(_lvl, _c, _maxSwingDistPct) =>
+    _maxSwingDistPct <= 0.0 ? true : (
+        na(_lvl) or _c <= 0 ? false :
+        _lvl >= _c ? true : (100.0 * (_c - _lvl) / _c) <= _maxSwingDistPct
+    )
+
+// Exported confirmation logic (visuals excluded)
+// Returns:
+// [longConfirmed, shortConfirmed, waitingLong, waitingShort, longLevel, shortLevel, longLevelBar, shortLevelBar, longLevelUpdatedThisBar, shortLevelUpdatedThisBar]
+export apply_confirmation(
+    bool longRaw,
+    bool shortRaw,
+    int signalDir,
+    float signalLine,
+    float posSize,
+    float o, float h, float l, float c,
+    int _bar_index,
+    int _time,
+    bool conf_useBreakout,
+    bool conf_useSwing,
+    bool conf_useMomentum,
+    string conf_momMode,
+    int conf_atrLen,
+    float conf_momAtrMult,
+    float conf_rocMinPct,
+    bool conf_useSessionFilter,
+    string conf_session,
+    bool conf_plotLevels,
+    bool conf_requireCloseBeyond,
+    int conf_confirmTimeoutBars,
+    int conf_minWaitBars,
+    bool conf_gateOnlyWhenFlat,
+    bool conf_dynamicLevelWhileWaiting,
+    string conf_dynUpdateMode,
+    bool conf_deferBreakOnLevelUpdate,
+    bool conf_refreshOnNewRawSignal,
+    string conf_rawEventMode,
+    string conf_tieRule,
+    bool conf_barCloseOnly,
+    bool conf_requireRawStillTrue,
+    int conf_breakBufferTicks,
+    float conf_maxSwingDistPct,
+    int conf_maxPivotAgeBars,
+    int conf_pLeft,
+    int conf_pRight
+) =>
+    // Persistent state (library-safe)
+    var float conf_lastSwingHigh = na
+    var float conf_lastSwingLow  = na
+    var int   conf_lastSwingHighBar = na
+    var int   conf_lastSwingLowBar  = na
+
+    var bool  conf_waitLong  = false
+    var bool  conf_waitShort = false
+    var float conf_longLevel = na
+    var float conf_shortLevel = na
+    var int   conf_waitLongStartBar  = na
+    var int   conf_waitShortStartBar = na
+
+    var bool conf_waitLongStarted  = false
+    var bool conf_waitShortStarted = false
+
+    var int conf_lastLongConfirmBar  = na
+    var int conf_lastShortConfirmBar = na
+
+    // Derived gates
+    bool conf_inCloseOnly = (not conf_barCloseOnly) or barstate.isconfirmed
+    bool conf_inSession   = (not conf_useSessionFilter) or (not na(time(timeframe.period, conf_session)))
+
+    // Consume signalDir to avoid unused-argument warnings (no behavioral effect)
+    if signalDir == 999999999
+        conf_waitLong := conf_waitLong
+
+    // Consume signalLine to avoid unused-argument warnings (no behavioral effect)
+    if signalLine == 999999999
+        conf_waitShort := conf_waitShort
+
+    // Consume time to avoid unused-argument warnings (no behavioral effect)
+    if _time == 999999999
+        conf_waitLong := conf_waitLong
+
+    // Consume conf_useBreakout to avoid unused-argument warnings (no behavioral effect)
+    if conf_useBreakout
+        conf_waitLong := conf_waitLong
+
+    // Consume conf_plotLevels to avoid unused-argument warnings (no behavioral effect)
+    if conf_plotLevels
+        conf_waitShort := conf_waitShort
+
+    // Apply confirmation only if enabled + session ok + (optional) flat
+    bool conf_shouldConfirm = conf_useSwing and conf_inSession and (not conf_gateOnlyWhenFlat or posSize == 0)
+
+    // Safe raw bools (na -> false)
+    bool conf_longRaw  = longRaw  ? true : false
+    bool conf_shortRaw = shortRaw ? true : false
+
+    // Last confirmed swings (anti-repaint; pivot confirms after conf_pRight bars)
+    float conf_ph = ta.pivothigh(h, conf_pLeft, conf_pRight)
+    float conf_pl = ta.pivotlow(l,  conf_pLeft, conf_pRight)
+
+    if conf_inCloseOnly
+        if not na(conf_ph)
+            conf_lastSwingHigh := conf_ph
+            conf_lastSwingHighBar := _bar_index
+        if not na(conf_pl)
+            conf_lastSwingLow := conf_pl
+            conf_lastSwingLowBar := _bar_index
+
+    // Pivot age filter (optional)
+    bool conf_pivotAgeOk_high = not na(conf_lastSwingHigh) and (conf_maxPivotAgeBars <= 0 or (not na(conf_lastSwingHighBar) and (_bar_index - conf_lastSwingHighBar <= conf_maxPivotAgeBars)))
+    bool conf_pivotAgeOk_low  = not na(conf_lastSwingLow)  and (conf_maxPivotAgeBars <= 0 or (not na(conf_lastSwingLowBar)  and (_bar_index - conf_lastSwingLowBar  <= conf_maxPivotAgeBars)))
+
+    // Waiting state machine
+    if not conf_useSwing
+        conf_waitLong := false
+        conf_waitShort := false
+        conf_longLevel := na
+        conf_shortLevel := na
+        conf_waitLongStartBar := na
+        conf_waitShortStartBar := na
+        conf_waitLongStarted := false
+        conf_waitShortStarted := false
+
+    // RAW event detection
+    bool conf_prevLongRaw  = _bar_index > 0 ? conf_longRaw[1]  : false
+    bool conf_prevShortRaw = _bar_index > 0 ? conf_shortRaw[1] : false
+
+    bool conf_useJustTurnedOn = conf_useSwing and not (_bar_index > 0 ? conf_useSwing[1] : conf_useSwing)
+
+    bool conf_longEvent_edge  = conf_shouldConfirm and conf_longRaw  and not conf_prevLongRaw
+    bool conf_shortEvent_edge = conf_shouldConfirm and conf_shortRaw and not conf_prevShortRaw
+
+    bool conf_longEvent_level  = conf_shouldConfirm and conf_longRaw
+    bool conf_shortEvent_level = conf_shouldConfirm and conf_shortRaw
+
+    bool conf_longRawEvent0  = conf_rawEventMode == "LEVEL" ? conf_longEvent_level  : conf_longEvent_edge
+    bool conf_shortRawEvent0 = conf_rawEventMode == "LEVEL" ? conf_shortEvent_level : conf_shortEvent_edge
+
+    bool conf_longRawEvent  = conf_longRawEvent0  or (conf_useJustTurnedOn and conf_shouldConfirm and conf_longRaw)
+    bool conf_shortRawEvent = conf_shortRawEvent0 or (conf_useJustTurnedOn and conf_shouldConfirm and conf_shortRaw)
+
+    bool conf_bothRawEvent = conf_longRawEvent and conf_shortRawEvent
+
+    bool conf_takeLongEvent  = conf_longRawEvent
+    bool conf_takeShortEvent = conf_shortRawEvent
+
+    if conf_bothRawEvent
+        if conf_tieRule == "LONG_WINS"
+            conf_takeShortEvent := false
+        else if conf_tieRule == "SHORT_WINS"
+            conf_takeLongEvent := false
+        else
+            conf_takeLongEvent := false
+            conf_takeShortEvent := false
+
+    // Distance validation
+
+    bool conf_canStartLong  = conf_pivotAgeOk_high
+    bool conf_canStartShort = conf_pivotAgeOk_low
+
+    if conf_inCloseOnly and conf_takeLongEvent and conf_canStartLong
+        bool conf_allowStart = (not conf_waitLong)
+        if conf_rawEventMode == "LEVEL"
+            conf_allowStart := (not conf_waitLong) or (conf_refreshOnNewRawSignal and not conf_waitLongStarted)
+        else
+            conf_allowStart := (not conf_waitLong) or conf_refreshOnNewRawSignal
+
+        if conf_allowStart and f_conf_isSwingOkForLong(conf_lastSwingHigh, c, conf_maxSwingDistPct)
+            conf_waitLong := true
+            conf_waitShort := false
+            conf_longLevel := conf_lastSwingHigh
+            conf_waitLongStartBar := _bar_index
+            conf_shortLevel := na
+            conf_waitShortStartBar := na
+            conf_waitLongStarted := true
+            conf_waitShortStarted := false
+
+    if conf_inCloseOnly and conf_takeShortEvent and conf_canStartShort
+        bool conf_allowStart = (not conf_waitShort)
+        if conf_rawEventMode == "LEVEL"
+            conf_allowStart := (not conf_waitShort) or (conf_refreshOnNewRawSignal and not conf_waitShortStarted)
+        else
+            conf_allowStart := (not conf_waitShort) or conf_refreshOnNewRawSignal
+
+        if conf_allowStart and f_conf_isSwingOkForShort(conf_lastSwingLow, c, conf_maxSwingDistPct)
+            conf_waitShort := true
+            conf_waitLong := false
+            conf_shortLevel := conf_lastSwingLow
+            conf_waitShortStartBar := _bar_index
+            conf_longLevel := na
+            conf_waitLongStartBar := na
+            conf_waitShortStarted := true
+            conf_waitLongStarted := false
+
+    if not conf_waitLong
+        conf_waitLongStarted := false
+    if not conf_waitShort
+        conf_waitShortStarted := false
+
+    bool conf_longLevelUpdatedThisBar  = false
+    bool conf_shortLevelUpdatedThisBar = false
+
+    if conf_shouldConfirm and conf_dynamicLevelWhileWaiting and conf_inCloseOnly
+        if conf_waitLong and not na(conf_lastSwingHigh) and conf_lastSwingHigh != conf_longLevel
+            if conf_dynUpdateMode == "ANY"
+                conf_longLevel := conf_lastSwingHigh
+            else
+                conf_longLevel := na(conf_longLevel) ? conf_lastSwingHigh : math.max(conf_longLevel, conf_lastSwingHigh)
+            conf_longLevelUpdatedThisBar := true
+
+        if conf_waitShort and not na(conf_lastSwingLow) and conf_lastSwingLow != conf_shortLevel
+            if conf_dynUpdateMode == "ANY"
+                conf_shortLevel := conf_lastSwingLow
+            else
+                conf_shortLevel := na(conf_shortLevel) ? conf_lastSwingLow : math.min(conf_shortLevel, conf_lastSwingLow)
+            conf_shortLevelUpdatedThisBar := true
+
+        if conf_waitLong and conf_longLevelUpdatedThisBar and not f_conf_isSwingOkForLong(conf_longLevel, c, conf_maxSwingDistPct)
+            conf_waitLong := false
+            conf_longLevel := na
+            conf_waitLongStartBar := na
+            conf_waitLongStarted := false
+
+        if conf_waitShort and conf_shortLevelUpdatedThisBar and not f_conf_isSwingOkForShort(conf_shortLevel, c, conf_maxSwingDistPct)
+            conf_waitShort := false
+            conf_shortLevel := na
+            conf_waitShortStartBar := na
+            conf_waitShortStarted := false
+
+    if conf_shouldConfirm
+        if conf_waitLong and not na(conf_waitLongStartBar) and (_bar_index - conf_waitLongStartBar >= conf_confirmTimeoutBars)
+            conf_waitLong := false
+            conf_longLevel := na
+            conf_waitLongStartBar := na
+            conf_waitLongStarted := false
+
+        if conf_waitShort and not na(conf_waitShortStartBar) and (_bar_index - conf_waitShortStartBar >= conf_confirmTimeoutBars)
+            conf_waitShort := false
+            conf_shortLevel := na
+            conf_waitShortStartBar := na
+            conf_waitShortStarted := false
+
+    float conf_tick = math.max(syminfo.mintick, 1e-10)
+
+    float conf_longBreakLevel  = conf_longLevel  + conf_tick * conf_breakBufferTicks
+    float conf_shortBreakLevel = conf_shortLevel - conf_tick * conf_breakBufferTicks
+
+    bool conf_longAgeOk  = conf_waitLong  and not na(conf_waitLongStartBar)  and (_bar_index > conf_waitLongStartBar)  and (_bar_index - conf_waitLongStartBar  >= conf_minWaitBars)
+    bool conf_shortAgeOk = conf_waitShort and not na(conf_waitShortStartBar) and (_bar_index > conf_waitShortStartBar) and (_bar_index - conf_waitShortStartBar >= conf_minWaitBars)
+
+    bool conf_allowBreakLong  = (not conf_deferBreakOnLevelUpdate) or (not conf_longLevelUpdatedThisBar)  or (conf_requireCloseBeyond ? c > conf_longBreakLevel  : h > conf_longBreakLevel)
+    bool conf_allowBreakShort = (not conf_deferBreakOnLevelUpdate) or (not conf_shortLevelUpdatedThisBar) or (conf_requireCloseBeyond ? c < conf_shortBreakLevel : l  < conf_shortBreakLevel)
+
+    bool conf_breakLong  = conf_shouldConfirm and conf_inCloseOnly and conf_longAgeOk  and not na(conf_longLevel)  and conf_allowBreakLong  and (conf_requireCloseBeyond ? c > conf_longBreakLevel  : h > conf_longBreakLevel)
+    bool conf_breakShort = conf_shouldConfirm and conf_inCloseOnly and conf_shortAgeOk and not na(conf_shortLevel) and conf_allowBreakShort and (conf_requireCloseBeyond ? c < conf_shortBreakLevel : l  < conf_shortBreakLevel)
+
+    float conf_atr  = ta.atr(conf_atrLen)
+    float conf_roc1 = ta.roc(c, 1)
+
+    bool conf_momLongOK_atr  = (not na(conf_atr)) and (math.abs(c - o) >= conf_atr * conf_momAtrMult) and (c > o)
+    bool conf_momShortOK_atr = (not na(conf_atr)) and (math.abs(c - o) >= conf_atr * conf_momAtrMult) and (c < o)
+
+    bool conf_momLongOK_roc  = conf_roc1 >= conf_rocMinPct
+    bool conf_momShortOK_roc = conf_roc1 <= -conf_rocMinPct
+
+    bool conf_momLongOK0  = conf_momMode == "ROC_1" ? conf_momLongOK_roc  : conf_momLongOK_atr
+    bool conf_momShortOK0 = conf_momMode == "ROC_1" ? conf_momShortOK_roc : conf_momShortOK_atr
+
+    bool conf_momLongOK  = conf_useMomentum ? conf_momLongOK0  : true
+    bool conf_momShortOK = conf_useMomentum ? conf_momShortOK0 : true
+
+    bool conf_longConfirmed0  = conf_shouldConfirm ? (conf_breakLong  and conf_momLongOK)  : conf_longRaw
+    bool conf_shortConfirmed0 = conf_shouldConfirm ? (conf_breakShort and conf_momShortOK) : conf_shortRaw
+
+    bool conf_longConfirmed1  = conf_requireRawStillTrue ? (conf_longConfirmed0  and conf_longRaw)  : conf_longConfirmed0
+    bool conf_shortConfirmed1 = conf_requireRawStillTrue ? (conf_shortConfirmed0 and conf_shortRaw) : conf_shortConfirmed0
+
+    bool conf_longSignal_pulse  = conf_longConfirmed1  and (nz(conf_lastLongConfirmBar,  -1) != _bar_index)
+    bool conf_shortSignal_pulse = conf_shortConfirmed1 and (nz(conf_lastShortConfirmBar, -1) != _bar_index)
+
+    if conf_longSignal_pulse
+        conf_lastLongConfirmBar := _bar_index
+    if conf_shortSignal_pulse
+        conf_lastShortConfirmBar := _bar_index
+
+    bool conf_longSignal_confirmed  = conf_longSignal_pulse
+    bool conf_shortSignal_confirmed = conf_shortSignal_pulse
+
+    if conf_shouldConfirm and conf_longSignal_confirmed
+        conf_waitLong := false
+        conf_waitShort := false
+        conf_longLevel := na
+        conf_shortLevel := na
+        conf_waitLongStartBar := na
+        conf_waitShortStartBar := na
+        conf_waitLongStarted := false
+        conf_waitShortStarted := false
+
+    if conf_shouldConfirm and conf_shortSignal_confirmed
+        conf_waitShort := false
+        conf_waitLong := false
+        conf_shortLevel := na
+        conf_longLevel := na
+        conf_waitShortStartBar := na
+        conf_waitLongStartBar := na
+        conf_waitShortStarted := false
+        conf_waitLongStarted := false
+
+    [conf_longSignal_confirmed, conf_shortSignal_confirmed, conf_waitLong, conf_waitShort, conf_longLevel, conf_shortLevel, conf_waitLongStartBar, conf_waitShortStartBar, conf_longLevelUpdatedThisBar, conf_shortLevelUpdatedThisBar]

@@ -1,0 +1,22 @@
+﻿{
+    "generated_at":  "2026-05-31T14:48:30.0215748Z",
+    "clean_repo_exists":  true,
+    "legacy_path_exists":  true,
+    "archive_path_exists":  false,
+    "clean_manifest_dir_exists":  true,
+    "C:\\LAB\\Tradingview_LAB_CLEAN":  {
+                                           "full_name":  "C:\\LAB\\Tradingview_LAB_CLEAN",
+                                           "attributes":  "Directory",
+                                           "last_write_time":  "2026-05-31T16:10:22.8430343+03:00"
+                                       },
+    "C:\\LAB\\tradingview-lab":  {
+                                     "full_name":  "C:\\LAB\\tradingview-lab",
+                                     "attributes":  "ReadOnly, Directory",
+                                     "last_write_time":  "2026-05-31T17:29:27.2207590+03:00"
+                                 },
+    "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests":  {
+                                                                      "full_name":  "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests",
+                                                                      "attributes":  "Directory",
+                                                                      "last_write_time":  "2026-05-31T17:47:02.5232459+03:00"
+                                                                  }
+}

@@ -1,0 +1,12 @@
+# Swing-Trade Candidates
+
+|candidate_id|title|classification|pf|net_return_pct|max_dd_pct|trade_count|assets_tested|
+|---|---|---|---|---|---|---|---|
+|CANDIDATE_001|Kell Wedge Pop / EMA Crossback|WEAK_CANDIDATE|1.7481|331.7517|-46.3269|111|10|
+|CANDIDATE_002|Martin Luke Pullback AVWAP|WEAK_CANDIDATE|1.4435|17034.8144|-91.7686|584|10|
+|CANDIDATE_003|Slingshot EMA(high,4) Pullback|WEAK_CANDIDATE|1.4581|292669.9798|-86.417|1388|10|
+|CANDIDATE_004|Crabel Range Expansion|WEAK_CANDIDATE|1.251|7179649232.748|-98.442|8105|10|
+|CANDIDATE_005|BigBeluga RSI Divergence + CHoCH + ATR|WEAK_CANDIDATE|1.4516|3955.225|-79.8493|465|10|
+|CANDIDATE_007|Linda 5SMA RS Pullback|WEAK_CANDIDATE|1.3096|1206.3069|-85.9357|687|10|
+|CANDIDATE_011|Daily Extension Anti-Chase Filter|REJECT|0.5201|-96.8928|-98.614|111|10|
+|CANDIDATE_012|EMA20/50 Two-Retest Baseline|BASELINE_ONLY|1.8741|738.7124|-82.1442|135|10|

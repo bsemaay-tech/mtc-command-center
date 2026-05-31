@@ -1,0 +1,54 @@
+candidate_id: SLINGSHOT_EMA_HIGH_4_PULLBACK_v1_CONTRACT
+direction: long_only
+asset_class:
+  primary: us_equities
+  secondary_exploratory: crypto_majors
+native_timeframe: 1D
+data_requirements:
+  - daily_ohlc
+  - daily_volume_optional
+  - benchmark_index_for_macro_gate_optional
+indicators:
+  ema_high:
+    formula: "EMA(high, n)"
+    n: 4
+  sma_50: "SMA(close, 50)"
+  sma_200: "SMA(close, 200)"
+  atr_14: "ATR(14)"
+prior_strength_any_of:
+  - "close > SMA50"
+  - "close > SMA200"
+  - "close / close[20] - 1 > 0.10"
+  - "close >= 0.95 * rolling_max(high, 20)"
+pullback_filter:
+  any_close_below_ema_high_within_bars:
+    grid: [3, 5, 8, 13]
+    default: 5
+  pullback_depth_pct_max:
+    grid: [10, 15, 25]
+    default: 15
+trigger:
+  rule: "close > EMA(high,4) AND close[1] <= EMA(high,4)[1]"
+entry: next_bar_open
+stop_initial:
+  variants:
+    - "min(pullback_low_N, trigger_bar_low)"
+    - "close - 2*ATR(14)"
+profit_target:
+  variants: [null, "2R", "3R"]
+exit:
+  default: "close < EMA(high, 4)"
+  variants:
+    - "ATR_2_trail"
+    - "R_multiple_2"
+    - "R_multiple_3"
+    - "time_stop_8_bars"
+filters_optional:
+  trend_gate: "close > EMA200"
+  market_regime: "benchmark > benchmark_EMA200"
+do_not_trade_when:
+  - "no prior-strength condition"
+  - "pullback depth > 15%"
+  - "broad market downtrend"
+non_repaint: required
+mtc_role: SIGNAL_PRODUCER_POSSIBLE

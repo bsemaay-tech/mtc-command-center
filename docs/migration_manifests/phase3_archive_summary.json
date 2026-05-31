@@ -1,0 +1,47 @@
+{
+  "old_path": "C:\\LAB\\tradingview-lab",
+  "intended_archive_path": "C:\\LAB\\tradingview-lab_ARCHIVE_2026-05-31",
+  "final_path": "C:\\LAB\\tradingview-lab",
+  "archive_date": "2026-05-31",
+  "timestamp_utc": "2026-05-31T14:31:47.381165+00:00",
+  "name_reverted_at_utc": "2026-05-31T14:40:00+00:00",
+  "name_revert_reason": "User reverted name back to 'tradingview-lab' because Claude Code session was holding cwd in legacy and could not respond. ReadOnly attribute and ARCHIVE_NOTICE.md remain applied — legacy is functionally frozen, only the rename was rolled back.",
+  "file_count": 47563,
+  "directory_count": 4973,
+  "spotcheck": "PASS",
+  "commit": "3b484f87",
+  "status": "SUCCESS_NAME_REVERTED_BY_USER",
+  "method": "rename-item-then-reverted",
+  "legacy_path_exists": true,
+  "archive_path_exists": false,
+  "archive_notice_written": true,
+  "archive_notice_path": "C:\\LAB\\tradingview-lab\\ARCHIVE_NOTICE.md",
+  "read_only_applied": true,
+  "read_only_status": "PARTIAL_WITH_ONE_ACCESS_DENIED_GENERATED_TMP_DIR",
+  "read_only_errors_count": 1,
+  "read_only_errors_csv": "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase3_readonly_errors.csv",
+  "read_only_errors": [
+    {
+      "path": "C:\\LAB\\tradingview-lab\\mtc_backtest\\.tmp\\pytest-of-Barış Semaay",
+      "error": "Exception setting \"Attributes\": \"Yola erişim engellendi.\""
+    }
+  ],
+  "git_directory_excluded_from_read_only": true,
+  "deleted_anything": false,
+  "pushed": false,
+  "killed_process_manifests": {
+    "cwd_lockers": "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase3_killed_cwd_lockers.csv",
+    "missing_cwd_lockers": "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase3_missing_cwd_lockers.csv"
+  },
+  "handle_outputs": {
+    "initial": "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase3_handle_locks.txt",
+    "retry": "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase3_handle_locks_retry.txt"
+  },
+  "restore_command_executed": "Rename-Item -LiteralPath 'C:\\LAB\\tradingview-lab_ARCHIVE_2026-05-31' -NewName 'tradingview-lab'",
+  "notes": [
+    "Legacy folder kept the original name 'tradingview-lab' by user request after archive rename.",
+    "ReadOnly attribute set recursively (except .git and one pytest tmp dir).",
+    "ARCHIVE_NOTICE.md present at C:\\LAB\\tradingview-lab\\ARCHIVE_NOTICE.md.",
+    "Migration is considered complete. Active work moves to C:\\LAB\\Tradingview_LAB_CLEAN."
+  ]
+}

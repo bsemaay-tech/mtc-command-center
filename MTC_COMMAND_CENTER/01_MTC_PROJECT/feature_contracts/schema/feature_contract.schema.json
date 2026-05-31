@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MTC V2 Generic Feature Contract",
+  "type": "object",
+  "required": [
+    "feature_id",
+    "feature_name",
+    "feature_type",
+    "version",
+    "status",
+    "owner",
+    "created_at",
+    "updated_at",
+    "description",
+    "implementation_targets",
+    "input_parameters",
+    "state",
+    "trace",
+    "parity",
+    "safety",
+    "reporting"
+  ],
+  "properties": {
+    "feature_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "feature_name": {
+      "type": "string"
+    },
+    "feature_type": {
+      "type": "string",
+      "enum": [
+        "signal_producer",
+        "signal_transform",
+        "entry_filter",
+        "exit_rule",
+        "stop_loss",
+        "take_profit",
+        "break_even",
+        "trailing_stop",
+        "position_sizing",
+        "portfolio_guard",
+        "visualization_only",
+        "alert_payload"
+      ]
+    },
+    "version": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "parity_testing",
+        "accepted",
+        "rejected",
+        "deprecated"
+      ]
+    },
+    "owner": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "updated_at": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "implementation_targets": {
+      "type": "object",
+      "properties": {
+        "pine_files_touched": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "python_files_touched": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "pine_anchor_points": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "python_anchor_points": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "integration_mode": {
+          "type": "string",
+          "enum": [
+            "isolated_adapter_only",
+            "draft_only",
+            "selectable_feature",
+            "production_integrated"
+          ]
+        }
+      }
+    },
+    "input_parameters": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "state": {
+      "type": "object"
+    },
+        "trace": {
+          "type": "object",
+          "properties": {
+            "trace_source_mode": {
+              "type": "string",
+              "enum": [
+                "case_plan_overrides",
+                "export_workbook",
+                "isolation_fixture"
+              ]
+            },
+            "candle_source": {
+              "type": "string"
+            },
+            "config_source": {
+              "type": "string"
+            },
+            "timestamp_policy": {
+              "type": "string"
+            },
+            "bar_index_policy": {
+              "type": "string"
+            },
+            "warmup_bars": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": true
+        },
+    "parity": {
+      "type": "object"
+    },
+    "safety": {
+      "type": "object"
+    },
+    "reporting": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

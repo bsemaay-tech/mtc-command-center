@@ -1,0 +1,3 @@
+run_order,case_id,bucket,notes
+402,parity_bnd_211_swing_right_bars_v03,EARLY_TRADE_END_CANDIDATE,current strict evidence: TV 123 / PY 236; source compare_runs/verify97_402.csv; clip=PASS raw=FAIL; TV_EARLY_TRADE_END_CANDIDATE gap_days=128.94
+416,parity_bnd_217_dynamic_update_mode_v02,EARLY_TRADE_END_CANDIDATE,current strict evidence: TV 129 / PY 189; source compare_runs/verify97_416.csv; clip=PASS raw=FAIL; TV_EARLY_TRADE_END_CANDIDATE gap_days=125.15

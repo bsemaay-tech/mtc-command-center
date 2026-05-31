@@ -1,0 +1,6 @@
+candidate_id,baseline,trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,net_noncompounded_return,notes
+KELL_WEDGE,random_same_hold,170,17,-93.5915,0.9371,47.0588,-0.3682,-0.918,-0.3682,11.6568,-11.0571,-96.8833,-0.966,11.0,11.0,ETHUSDT,BNBUSDT,True,,
+KELL_WEDGE,opposite_signal,,,,0.278116,,,,,,,,,,,,,,-61.233789,computed by sign-inverting repaired trace returns
+KELL_WEDGE,shuffled_signal,,,,3.595616,,,,,,,,,,,,,,61.233789,same returns reversed; checks metric stability not timing edge
+KELL_WEDGE,simple_trend_baseline,,,,SEE_STAGE2_BASELINE_RESULTS,,,,,,,,,,,,,,,global Stage-2 baseline file read; not candidate-native
+KELL_WEDGE,buy_and_hold,,,,SEE_STAGE2_BASELINE_RESULTS,,,,,,,,,,,,,,,global Stage-2 baseline file read; not candidate-native

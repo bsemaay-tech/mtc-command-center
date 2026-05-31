@@ -1,0 +1,11 @@
+# exit_refinement Template
+Research seeds only; not Pine defaults; not production parameters.
+
+purpose: exit_refinement
+input_seed_library: optimization/parameter_library/<producer>/<seed_file>
+accepted_for_next_stage: false
+parameter_ranges: {}
+center_params: {}
+minimum_evidence_required: TBD_BY_STAGE
+warnings:
+  - Research seeds only; not Pine defaults; not production parameters.

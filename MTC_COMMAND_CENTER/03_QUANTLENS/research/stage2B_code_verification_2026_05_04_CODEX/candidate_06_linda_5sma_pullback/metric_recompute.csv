@@ -1,0 +1,2 @@
+candidate_id,trade_count,gross_noncompounded_return,net_noncompounded_return,compounded_return,compounding_status,profit_factor,win_rate,average_trade,median_trade,average_winner,average_loser,expectancy,max_drawdown,max_losing_streak,max_winning_streak,asset_concentration,asset_count,year_split
+LINDA_5SMA_PULLBACK,874,1024.368959,919.488959,6732.505057,SAFE,1.355673,66.361556,1.052047,1.951627,6.042587,-8.793236,1.052047,-98.33831,11,29,0.113272,17,"{""2020"": 79, ""2021"": 208, ""2022"": 29, ""2023"": 205, ""2024"": 219, ""2025"": 129, ""2026"": 5}"

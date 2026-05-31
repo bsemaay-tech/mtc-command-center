@@ -1,0 +1,2 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,name,timeframe,best_parameter_set
+14202,17,-100.0,0.7414,41.1632,-0.1055,-0.1441,-0.1055,0.7348,-0.6935,-100.0,-1.0,12.0,12.0,POLUSDT,LTCUSDT,False,ORB_8AM,8AM Opening Range Breakout,5m,"{""hold"": 12, ""or_min"": 30}"

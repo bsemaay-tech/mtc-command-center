@@ -1,0 +1,13 @@
+{
+  "candidate_id": "CANDIDATE_009",
+  "timeframe": "5m",
+  "assets": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "BNBUSDT",
+    "XRPUSDT"
+  ],
+  "round_trip_cost_pct": 0.12,
+  "data_errors": []
+}

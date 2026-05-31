@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/task_proposal.schema.json",
+  "title": "MCC Task Proposal",
+  "type": "object",
+  "required": ["schema_version", "proposal_id", "action", "task"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "proposal_id": { "type": "string" },
+    "action": { "type": "string", "enum": ["create_task"] },
+    "task": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": false
+}

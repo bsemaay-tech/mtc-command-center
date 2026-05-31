@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/parity_status.schema.json",
+  "title": "MCC Parity Status",
+  "type": "object",
+  "required": ["schema_version", "summary", "cases"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "generated_at": { "type": ["string", "null"] },
+    "source": { "type": ["string", "null"] },
+    "summary": { "type": "object", "additionalProperties": { "type": ["integer", "number", "string", "null"] } },
+    "cases": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+  },
+  "additionalProperties": false
+}

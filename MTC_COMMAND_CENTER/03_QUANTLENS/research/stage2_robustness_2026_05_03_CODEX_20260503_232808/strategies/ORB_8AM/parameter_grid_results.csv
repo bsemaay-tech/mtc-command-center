@@ -1,0 +1,13 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,parameter_set,timeframe
+14202,17,-100.0,0.7414,41.1632,-0.1055,-0.1441,-0.1055,0.7348,-0.6935,-100.0,-1.0,12.0,12.0,POLUSDT,LTCUSDT,False,ORB_8AM,"{""hold"": 12, ""or_min"": 30}",5m
+14244,17,-100.0,0.6896,40.1011,-0.1208,-0.1399,-0.1208,0.6694,-0.6499,-100.0,-1.0,12.0,12.0,POLUSDT,LINKUSDT,False,ORB_8AM,"{""hold"": 12, ""or_min"": 15}",5m
+14202,17,-99.9999,0.6848,38.5087,-0.0943,-0.1219,-0.0943,0.532,-0.4865,-99.9999,-1.0,6.0,6.0,ARBUSDT,ETHUSDT,False,ORB_8AM,"{""hold"": 6, ""or_min"": 30}",5m
+14240,17,-100.0,0.6709,39.8315,-0.1328,-0.1462,-0.1328,0.6796,-0.6706,-100.0,-1.0,12.0,12.0,POLUSDT,LTCUSDT,False,ORB_8AM,"{""hold"": 12, ""or_min"": 20}",5m
+13945,17,-100.0,0.6677,41.0972,-0.1673,-0.1689,-0.1673,0.8177,-0.8545,-100.0,-1.0,12.0,12.0,TRXUSDT,APTUSDT,False,ORB_8AM,"{""hold"": 12, ""or_min"": 60}",5m
+14244,17,-100.0,0.6222,37.8896,-0.1149,-0.1265,-0.1149,0.4997,-0.4899,-100.0,-1.0,6.0,6.0,POLUSDT,OPUSDT,False,ORB_8AM,"{""hold"": 6, ""or_min"": 15}",5m
+14202,17,-99.9999,0.6132,35.488,-0.0966,-0.12,-0.0966,0.4313,-0.387,-99.9999,-1.0,3.0,3.0,POLUSDT,OPUSDT,False,ORB_8AM,"{""hold"": 3, ""or_min"": 30}",5m
+14240,17,-100.0,0.5889,37.4719,-0.128,-0.1314,-0.128,0.4894,-0.4981,-100.0,-1.0,6.0,6.0,POLUSDT,OPUSDT,False,ORB_8AM,"{""hold"": 6, ""or_min"": 20}",5m
+13945,17,-100.0,0.585,37.8845,-0.1573,-0.1594,-0.1573,0.5851,-0.61,-100.0,-1.0,6.0,6.0,TRXUSDT,APTUSDT,False,ORB_8AM,"{""hold"": 6, ""or_min"": 60}",5m
+14240,17,-100.0,0.5344,34.5576,-0.12,-0.12,-0.12,0.3987,-0.3939,-100.0,-1.0,3.0,3.0,POLUSDT,DOTUSDT,False,ORB_8AM,"{""hold"": 3, ""or_min"": 20}",5m
+14244,17,-100.0,0.5246,34.583,-0.1221,-0.1202,-0.1221,0.3895,-0.3925,-100.0,-1.0,3.0,3.0,POLUSDT,LINKUSDT,False,ORB_8AM,"{""hold"": 3, ""or_min"": 15}",5m
+13945,17,-100.0,0.5153,34.6863,-0.1424,-0.1525,-0.1424,0.4366,-0.4499,-100.0,-1.0,3.0,3.0,POLUSDT,APTUSDT,False,ORB_8AM,"{""hold"": 3, ""or_min"": 60}",5m

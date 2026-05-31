@@ -1,0 +1,4 @@
+strategy_id,best_parameter_set,best_mean_pf,near_parameter_count,near_parameter_median_pf,near_parameters_pf_gt_1_10,parameter_stability
+QL_CRABEL_RANGE_EXPANSION_STAGE2_v0,"{""atr_filter"": true, ""direction_mode"": ""long_only"", ""mult"": 0.7, ""trend_filter"": true}",2.0790005783097043,6,1.9268939085855563,6,STABLE
+QL_LINDA_5SMA_RS_PULLBACK_v0,"{""stop_mode"": ""none""}",1.666332443489172,0,0.0,0,OVERFIT_RISK
+QL_BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR_v0,"{""atr_mult"": 5.0, ""pivot"": 10}",2.0652987815430586,10,1.5308828663056537,10,STABLE

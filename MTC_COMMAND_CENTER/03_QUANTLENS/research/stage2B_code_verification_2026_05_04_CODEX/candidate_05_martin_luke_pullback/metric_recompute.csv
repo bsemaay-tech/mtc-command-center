@@ -1,0 +1,2 @@
+candidate_id,trade_count,gross_noncompounded_return,net_noncompounded_return,compounded_return,compounding_status,profit_factor,win_rate,average_trade,median_trade,average_winner,average_loser,expectancy,max_drawdown,max_losing_streak,max_winning_streak,asset_concentration,asset_count,year_split
+MARTIN_LUKE_PULLBACK,326,1110.732172,1071.612172,14344.654075,SAFE,1.528889,42.944785,3.287154,-4.663044,22.126915,-10.893311,3.287154,-99.350673,21,9,0.134969,17,"{""2020"": 45, ""2021"": 57, ""2022"": 15, ""2023"": 74, ""2024"": 74, ""2025"": 57, ""2026"": 4}"

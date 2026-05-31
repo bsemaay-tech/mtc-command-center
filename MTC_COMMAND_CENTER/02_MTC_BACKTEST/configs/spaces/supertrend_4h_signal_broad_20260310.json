@@ -1,0 +1,23 @@
+{
+  "random": {
+    "supertrend.atr_len": {
+      "dist": "uniform_int",
+      "low": 5,
+      "high": 80
+    },
+    "supertrend.factor": {
+      "dist": "uniform_float",
+      "low": 1.5,
+      "high": 8.0,
+      "step": 0.25
+    },
+    "supertrend.use_wicks": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "supertrend.use_ha": {
+      "dist": "choice",
+      "values": [false, true]
+    }
+  }
+}

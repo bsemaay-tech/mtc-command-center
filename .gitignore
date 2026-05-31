@@ -1,0 +1,124 @@
+# =============================================================================
+# Tradingview_LAB_CLEAN .gitignore
+# Migrated from C:\LAB\tradingview-lab on 2026-05-31.
+# Path-prefix rewrite applied: 01_MASTER TEMPLATE_V2/ → MTC_COMMAND_CENTER/01_MTC_PROJECT/
+#                              mtc_backtest/          → MTC_COMMAND_CENTER/02_MTC_BACKTEST/
+#                              06_QUANTLENS_LAB/      → MTC_COMMAND_CENTER/03_QUANTLENS/
+# =============================================================================
+
+# ---- Generic Python ----
+*.pyc
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
+
+# ---- Generic editor / IDE ----
+.vscode/
+.cursor/
+.claude/
+.agent/
+.workflow/
+.codex_old/
+
+# ---- OS / temp ----
+~$*.xlsx
+share_card.png
+_codex_status_porcelain.txt
+
+# ---- Node / external ----
+node_modules
+external/
+
+# ---- Screenshots (bloats git) ----
+**/60_SCREENSHOOTS/*.png
+
+# ---- TradingView alert logs ----
+TradingView_Alerts_Log*.csv
+
+# =============================================================================
+# MTC_COMMAND_CENTER/01_MTC_PROJECT  (was: 01_MASTER TEMPLATE_V2/)
+# =============================================================================
+
+# Caches
+MTC_COMMAND_CENTER/01_MTC_PROJECT/.pytest_cache/
+MTC_COMMAND_CENTER/01_MTC_PROJECT/**/__pycache__/
+
+# Backup files
+MTC_COMMAND_CENTER/01_MTC_PROJECT/**/*.bak*
+MTC_COMMAND_CENTER/01_MTC_PROJECT/**/*.backup_*
+
+# Heavy bundles / zips
+MTC_COMMAND_CENTER/01_MTC_PROJECT/docs/mtc_multi_oracle_starter_kit.zip
+MTC_COMMAND_CENTER/01_MTC_PROJECT/MTC_V2_PORTABLE_HANDOFF_*.zip
+MTC_COMMAND_CENTER/01_MTC_PROJECT/MTC_V2_PORTABLE_HANDOFF_*.zip.sha256
+
+# Optimizer runtime outputs
+MTC_COMMAND_CENTER/01_MTC_PROJECT/reports/optimization/**/workers/
+MTC_COMMAND_CENTER/01_MTC_PROJECT/reports/optimization/**/failures/
+MTC_COMMAND_CENTER/01_MTC_PROJECT/reports/optimization/**/heartbeat/
+MTC_COMMAND_CENTER/01_MTC_PROJECT/reports/optimization/**/detached/
+MTC_COMMAND_CENTER/01_MTC_PROJECT/reports/optimization/**/resume_registry.sqlite
+MTC_COMMAND_CENTER/01_MTC_PROJECT/reports/optimization/**/run_process.pid
+
+# Evidence / snapshots (kept on disk, not in git)
+MTC_COMMAND_CENTER/01_MTC_PROJECT/reports/
+MTC_COMMAND_CENTER/01_MTC_PROJECT/03_DOCS/Gemini_quantlens_knowledge_pack/
+MTC_COMMAND_CENTER/01_MTC_PROJECT/06_PINE_TESTING/
+
+# TradingView audit exports (evidence)
+MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/TW_EXPORT_CASES_V2/**/*.xlsx
+
+# =============================================================================
+# MTC_COMMAND_CENTER/02_MTC_BACKTEST  (was: mtc_backtest/)
+# =============================================================================
+
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/debug/
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/logs/
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/.pytest_cache/
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/.tmp/
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/venv/
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/reports/
+
+# Optimizer scratch outputs
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/bench_*.csv
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/test_*.csv
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/*.log
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/debug_*.py
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/parity_suite_340/
+
+# =============================================================================
+# MTC_COMMAND_CENTER/03_QUANTLENS  (was: 01_MASTER TEMPLATE_V2/06_QUANTLENS_LAB/)
+# QuantLens evidence-only — backtest results live on disk, not in git.
+# =============================================================================
+
+MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/
+MTC_COMMAND_CENTER/03_QUANTLENS/research/**/reports/
+MTC_COMMAND_CENTER/03_QUANTLENS/**/__pycache__/
+
+# =============================================================================
+# Root-level parity bridge outputs (generated during parity runs)
+# =============================================================================
+
+data/mtc_signals.json
+data/parity_input_from_pinets.csv
+data/pine_trades.csv
+data/pine_trades.json
+reports/manual_tw_futures_case_*.csv
+reports/manual_tw_futures_case_*.json
+reports/pine_input_overrides.json
+reports/*.csv
+reports/*.json
+reports/*.log
+reports/traderspost_integration_logs/
+
+# =============================================================================
+# Migration manifest CSVs are kept in git (audit trail)
+# but readonly-error CSV is environment-specific:
+# =============================================================================
+# docs/migration_manifests/ is KEPT (intentional)
+
+# Per-machine scratch
+Baristasks.md
+debug/
+results/

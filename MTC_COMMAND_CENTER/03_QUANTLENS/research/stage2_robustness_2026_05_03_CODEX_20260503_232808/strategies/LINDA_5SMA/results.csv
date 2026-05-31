@@ -1,0 +1,2 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,name,timeframe,best_parameter_set
+874,17,6732.5051,1.3557,66.3616,1.052,1.9516,1.052,6.0426,-8.7932,-98.3383,68.4627,4.1396,4.1396,ADAUSDT,DOGEUSDT,False,LINDA_5SMA,Linda 5SMA RS Pullback,1D,"{""atr_stop"": 0, ""hold"": 10, ""sma"": 8, ""trend"": ""sma200""}"

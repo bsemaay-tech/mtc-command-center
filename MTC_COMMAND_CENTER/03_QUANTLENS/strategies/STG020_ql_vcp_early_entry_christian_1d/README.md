@@ -1,0 +1,3 @@
+# STG020_ql_vcp_early_entry_christian_1d
+
+Source folder: `C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\06_PROMOTED_TO_PARITY\QL_VCP_EARLY_ENTRY_CHRISTIAN_1D`

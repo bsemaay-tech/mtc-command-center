@@ -1,0 +1,9 @@
+canonical_id,strategy_family,horizon,native_asset_class,native_timeframe,stage2_eligibility,reason
+QL_KELL_WEDGE_POP,Swing/Trend,SWING,Equities/Crypto,1D,YES,"Mechanical rules, data available"
+QL_SLINGSHOT_EMA_PULLBACK,Pullback,SWING,Equities,1D,YES,"Mechanical, needs robustness"
+QL_CRABEL_RANGE_EXPANSION,Breakout,SWING/DAY,Futures/Equities,1D,YES,Needs close_exit and multiplier tests
+QL_LBR_COIL_BREAKOUT_IDNR4,Volatility Contraction,DAY,Futures/Equities,5m,YES,Needs limit order variant and extensive test on 5m
+QL_MARTIN_PULLBACK_CONFLUENCE,Pullback/AVWAP,SWING,Equities,1D,YES,Needs mechanical anchor formalization
+QL_STAN_STAGE_2_BREAKOUT,Position/Swing,POSITION,Equities,1D/1W,YES,Needs mathematical definition for Stage 2 on Daily
+QL_CANSLIM_SHAKEOUT_PLUS_3,Growth,POSITION,Equities,1D/1W,NO,DATA_BLOCKED (Needs EPS/Sales)
+QL_MICROCAP_LIQUIDITY_SHORT,Microcap Reversion,DAY,Microcap Equities,1m,NO,DATA_BLOCKED (Needs Locate/Borrow costs)

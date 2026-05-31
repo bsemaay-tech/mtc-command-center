@@ -1,0 +1,4 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,split
+295,17,40.4781,1.4322,52.8814,0.1199,0.0453,0.1199,0.7513,-0.5888,-15.5915,2.5962,5.9695,5.9695,DOGEUSDT,ETHUSDT,False,HIGHBETA_PROXY,train
+98,17,2.2292,1.0945,45.9184,0.0262,-0.0716,0.0262,0.6606,-0.5125,-9.7424,0.2288,5.9694,5.9694,ARBUSDT,TRXUSDT,False,HIGHBETA_PROXY,validation
+99,17,26.4827,1.9843,53.5354,0.2436,0.0493,0.2436,0.9174,-0.5327,-8.016,3.3037,6.0,6.0,POLUSDT,ARBUSDT,False,HIGHBETA_PROXY,test

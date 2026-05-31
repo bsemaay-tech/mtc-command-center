@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/manual_input_request.schema.json",
+  "title": "MCC Manual Input Request",
+  "type": "object",
+  "required": ["input_type", "exact_request", "expected_file_type", "why_needed"],
+  "properties": {
+    "input_type": { "type": "string" },
+    "exact_request": { "type": "string" },
+    "expected_file_type": { "type": ["string", "null"] },
+    "save_location": { "type": ["string", "null"] },
+    "deadline": { "type": ["string", "null"] },
+    "why_needed": { "type": "string" }
+  },
+  "additionalProperties": true
+}

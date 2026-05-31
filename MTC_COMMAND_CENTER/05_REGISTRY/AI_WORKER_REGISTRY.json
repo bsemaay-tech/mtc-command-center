@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "workers": [
+    {
+      "name": "Codex",
+      "primary_role": "Repo automation, adapters, API, validation, and controlled file updates"
+    },
+    {
+      "name": "Claude",
+      "primary_role": "Pine Builder, Pine review, documentation, and prompt refinement"
+    },
+    {
+      "name": "Gemini Antigravity",
+      "primary_role": "Research, strategy discovery, intake review, and critique"
+    }
+  ]
+}

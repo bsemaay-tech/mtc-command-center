@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MTC Multi Oracle Parity Manifest",
+  "type": "object",
+  "required": ["manifest_id", "created_at", "cases", "engines", "baseline"],
+  "properties": {
+    "manifest_id": {"type": "string"},
+    "created_at": {"type": "string"},
+    "cases": {"type": "array", "items": {"type": "string"}},
+    "engines": {"type": "array", "items": {"type": "string"}},
+    "baseline": {"type": "string"},
+    "suite": {"type": "string", "enum": ["FAST_SUITE", "CORE_SUITE", "NIGHTLY_SUITE", "RELEASE_SUITE"]},
+    "notes": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": true
+}

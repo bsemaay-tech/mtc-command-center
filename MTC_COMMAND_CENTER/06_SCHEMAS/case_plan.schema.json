@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/case_plan.schema.json",
+  "title": "MCC Case Plan",
+  "type": "object",
+  "required": ["case_id"],
+  "properties": {
+    "case_id": { "type": "string" },
+    "symbol": { "type": ["string", "null"] },
+    "timeframe": { "type": ["string", "null"] },
+    "config_id": { "type": ["string", "null"] },
+    "settings": { "type": "object", "additionalProperties": true },
+    "lineage": { "$ref": "lineage.schema.json" }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,32 @@
+{
+  "_comment": "Standard parity profile for TV <-> Web/CLI reproducible runs",
+  "profile_name": "parity_profile_btcusdt_15m_jul2025_jan2026",
+  "base_case": "configs/cases/full_jul2025_jan2026_parity.json",
+  "dataset": "BTCUSDT_15m_20240101_20260213.parquet",
+  "symbol": "BTCUSDT.P",
+  "exchange": "BINANCE",
+  "market_type": "perpetual",
+  "timeframe": "15m",
+  "tv_timezone": "Europe/London",
+  "start_date": "2025-07-01",
+  "end_date": "2026-01-31",
+  "warmup_bars": 200,
+  "preroll_days": 365,
+  "strategy_properties": {
+    "initial_capital": 10000.0,
+    "commission_percent": 0.04,
+    "slippage_ticks": 5,
+    "pyramiding": 1
+  },
+  "trade_controls": {
+    "max_pyramid_positions": 1,
+    "signal_mode_max_entries": 1,
+    "signal_mode_cooldown_bars": 10
+  },
+  "tv_backtest_policy": {
+    "bar_magnifier": "OFF",
+    "deep_backtesting": "OFF",
+    "calc_on_every_tick": "OFF",
+    "calc_on_order_fills": "OFF"
+  }
+}

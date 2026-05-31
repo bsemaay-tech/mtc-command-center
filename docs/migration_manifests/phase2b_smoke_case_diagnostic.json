@@ -1,0 +1,116 @@
+﻿{
+    "phase":  "PHASE_2B_FIND_CORRECT_SMOKE_CASE",
+    "generated_at":  "2026-05-31T14:47:02.3747955Z",
+    "clean_repo":  "C:\\LAB\\Tradingview_LAB_CLEAN",
+    "archived_legacy_repo":  "C:\\LAB\\tradingview-lab_ARCHIVE_2026-05-31",
+    "legacy_modified":  false,
+    "pine_modified":  false,
+    "smoke_rerun_performed":  false,
+    "failed_command":  "python parity_compare.py --fetch-fresh --tracker-case case_110",
+    "failure_reason":  "case_110 is not present in MTC_V2_PARITY_CASES.csv case_id values; parity_compare.py --tracker-case only loads that tracker CSV.",
+    "tracker_csv":  {
+                        "path":  "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\05_PARITY\\MTC_V2_PARITY_CASES.csv",
+                        "exists":  true,
+                        "length":  106235,
+                        "last_write_time":  "2026-05-29T21:26:37.3517800+03:00",
+                        "sha256":  "FFC0038FD2EEE152D721048BEDB58D92648EDA5253446FB1FA1DD2917CAF6F9F"
+                    },
+    "suite_csv":  {
+                      "path":  "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\05_PARITY\\MTC_V2_TW_EXPORT_CASE_SUITE_V2.csv",
+                      "exists":  true,
+                      "length":  160460,
+                      "last_write_time":  "2026-05-29T20:54:49.0485502+03:00",
+                      "sha256":  "F4917500EEB5669BAC0305400ADC0B31D7C4E58813BCB17FA5920CBB36BA8D32"
+                  },
+    "tracker_row_count":  107,
+    "suite_row_count":  163,
+    "case_110_in_tracker_count":  0,
+    "case_110_in_suite_count":  1,
+    "case_110_files":  [
+                           {
+                               "path":  "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\05_PARITY\\TW_EXPORT_CASES_V2\\case_110\\case_plan.json",
+                               "exists":  true,
+                               "length":  4877,
+                               "last_write_time":  "2026-04-04T16:53:03.9425057+03:00",
+                               "sha256":  "250150537249D3A071507384446367E77F5B82CDF13581D873FF1829CD2E4026"
+                           },
+                           {
+                               "path":  "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\05_PARITY\\_nightly\\cases\\case_110\\case_result.json",
+                               "exists":  true,
+                               "length":  5684,
+                               "last_write_time":  "2026-04-09T21:04:49.7983237+03:00",
+                               "sha256":  "BE75081E6D6B2938158AE8F89893AC30757A7EED25C0CB27F6120E22E266276F"
+                           },
+                           {
+                               "path":  "C:\\LAB\\tradingview-lab_ARCHIVE_2026-05-31\\reports\\tracker_cases\\case_110\\parity_compare.json",
+                               "exists":  false,
+                               "length":  null,
+                               "last_write_time":  null,
+                               "sha256":  null
+                           }
+                       ],
+    "handoff_claim_file":  {
+                               "path":  "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\CLAUDE.md",
+                               "exists":  true,
+                               "length":  1226,
+                               "last_write_time":  "2026-05-29T21:37:14.9376184+03:00",
+                               "sha256":  "29E50B939F4C44649FE52925BD1D3D76A55A32559C63552B05031C826D36E2C0"
+                           },
+    "latest_tracker_pass":  {
+                                "case_id":  "AUTO_061",
+                                "status":  "DONE",
+                                "llm_auto_status":  "PASS",
+                                "parity_verdict":  "PASS",
+                                "last_run_utc":  "2026-05-29T18:26:37.3473240Z",
+                                "layer":  "L22",
+                                "case_package":  "CANDLE_PATTERN_LOOKBACK",
+                                "bars":  "1000",
+                                "primary_change":  "Candle Pattern Lookback=5 (L22 barssince behavior)",
+                                "artifacts":  "reports\\tracker_cases\\AUTO_061\\parity_compare.json; reports\\tracker_cases\\AUTO_061\\parity_trade_report.csv; reports\\tracker_cases\\AUTO_061\\python_trades_v2.csv; reports\\tracker_cases\\AUTO_061\\parity_effective_config.json"
+                            },
+    "auto_061_tracker_row":  {
+                                 "case_id":  "AUTO_061",
+                                 "status":  "DONE",
+                                 "llm_auto_status":  "PASS",
+                                 "llm_last_run_utc":  "2026-05-29T18:26:37.347324+00:00",
+                                 "parity_verdict":  "PASS",
+                                 "symbol":  "BTCUSDT",
+                                 "timeframe":  "1h",
+                                 "bars":  "1000",
+                                 "primary_change":  "Candle Pattern Lookback=5 (L22 barssince behavior)",
+                                 "artifacts":  "reports\\tracker_cases\\AUTO_061\\parity_compare.json; reports\\tracker_cases\\AUTO_061\\parity_trade_report.csv; reports\\tracker_cases\\AUTO_061\\python_trades_v2.csv; reports\\tracker_cases\\AUTO_061\\parity_effective_config.json"
+                             },
+    "auto_061_existing_report":  {
+                                     "path":  "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\02_MTC_BACKTEST\\reports\\tracker_cases\\AUTO_061\\parity_compare.json",
+                                     "file":  {
+                                                  "path":  "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\02_MTC_BACKTEST\\reports\\tracker_cases\\AUTO_061\\parity_compare.json",
+                                                  "exists":  true,
+                                                  "length":  2627,
+                                                  "last_write_time":  "2026-05-30T12:20:41.7559056+03:00",
+                                                  "sha256":  "724CCB3253877E0A4C0E1C010327DB35DAA61BEC3F802D442B53D14C6301794F"
+                                              },
+                                     "verdict":  "PASS",
+                                     "timestamp":  "2026-03-27T07:10:55.045934+00:00",
+                                     "override_source":  "AUTO_050",
+                                     "pine_meta_bars":  8760,
+                                     "note":  "Existing artifact is useful evidence only; fresh smoke should regenerate under the clean repo."
+                                 },
+    "case_110_archive_report":  {
+                                    "verdict":  null,
+                                    "timestamp":  null,
+                                    "strict_pass":  null,
+                                    "note":  "Machine report available in archived legacy shows MISMATCH from 2026-04-09; later 2026-05-29 PASS appears as a handoff/documentation claim, not a tracker-supported --tracker-case row."
+                                },
+    "recommendation":  {
+                           "recommended_smoke_case":  "AUTO_061",
+                           "fallback_smoke_case":  "AUTO_001",
+                           "reason":  "AUTO_061 is the newest dated PASS case in MTC_V2_PARITY_CASES.csv and is valid for parity_compare.py --tracker-case.",
+                           "exact_retry_command":  "cd C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\02_MTC_BACKTEST; python parity_compare.py --fetch-fresh --tracker-case AUTO_061",
+                           "log_path_if_approved":  "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase2b_smoke_AUTO_061.log"
+                       },
+    "generated_files":  [
+                            "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase2b_smoke_case_diagnostic.json",
+                            "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase2b_smoke_case_diagnostic.md",
+                            "C:\\LAB\\Tradingview_LAB_CLEAN\\docs\\migration_manifests\\phase2b_smoke_case_candidates.csv"
+                        ]
+}

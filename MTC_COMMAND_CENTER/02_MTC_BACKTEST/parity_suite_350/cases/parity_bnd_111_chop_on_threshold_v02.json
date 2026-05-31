@@ -1,0 +1,147 @@
+{
+  "_comment": "Full Jun 30 2025 - Feb 1 2026 BTCUSDT 15m parity case -- matches TV Strategy Report CSV date range",
+  "tv_tz": "Europe/London",
+  "dataset": "BTCUSDT_15m_20240101_20260213.parquet",
+  "start_date": "2025-06-30T07:30:00",
+  "end_date": "2026-02-01T00:00:00",
+  "warmup_bars": 200,
+  "preroll_days": 365,
+  "tv_csv": "debug/BTCUSDT/15m/MT_CORE2_BINANCE_BTCUSDT.P_2026-02-13_6e3fc.csv",
+  "config": {
+    "signal_mode": "Supertrend",
+    "supertrend": {
+      "atr_len": 21,
+      "factor": 4.0,
+      "use_wicks": true,
+      "use_ha": true
+    },
+    "trade": {
+      "enable_long": true,
+      "enable_short": true,
+      "allow_flip": true,
+      "exit_on_opposite_signal": false,
+      "exit_on_filter_block": false,
+      "use_regime_lock": false,
+      "entry_mode": "Signal",
+      "max_pyramid_positions": 1,
+      "signal_mode_max_entries": 1,
+      "signal_mode_cooldown_bars": 10,
+      "allow_same_bar_reentry": true,
+      "same_bar_reentry_requires_exit": true,
+      "same_bar_reentry_max_per_bar": 1,
+      "first_bar_requires_edge": false
+    },
+    "strategy": {
+      "initial_capital": 10000.0,
+      "commission_percent": 0.04,
+      "slippage_ticks": 5,
+      "pyramiding": 1,
+      "close_open_at_end": false
+    },
+    "risk": {
+      "risk_long_percent": 4.0,
+      "risk_short_percent": 3.0,
+      "max_leverage_cap": 5.0,
+      "fallback_qty_pct": 5.0,
+      "risk_equity_mode": "Initial",
+      "use_notional_hard_assert": false,
+      "use_daily_loss_limit": false,
+      "max_daily_loss_percent": 5.0,
+      "use_max_trades_per_day": false,
+      "max_trades_per_day": 5
+    },
+    "stop_loss": {
+      "use_sl": true,
+      "mode": "ATR",
+      "atr_len": 14,
+      "atr_mult": 4.0,
+      "percent": 1.0,
+      "swing_basis": "Wick",
+      "swing_lookback": 20,
+      "swing_atr_len": 14,
+      "swing_atr_mult": 0.5
+    },
+    "take_profit": {
+      "use_tp": true,
+      "mode": "ATR",
+      "atr_len": 14,
+      "atr_mult": 3.0,
+      "percent": 2.0,
+      "rr": 2.0
+    },
+    "break_even": {
+      "use_break_even": true,
+      "rr": 1.0,
+      "buffer_r": 0.1
+    },
+    "multi_tp": {
+      "use_multi_tp": true,
+      "tp1_rr": 3.0,
+      "tp1_pct": 50.0,
+      "tp2_rr": 5.5
+    },
+    "trailing": {
+      "use_trailing": true,
+      "atr_len": 14,
+      "start_r": 2.5,
+      "dist_r": 2.0
+    },
+    "filters": {
+      "use_ma_filter": false,
+      "use_ma_slope_filter": false,
+      "use_volume_filter": false,
+      "use_atr_vol_filter": false,
+      "use_htf_trend_filter": false,
+      "use_range_filters": true
+    },
+    "guards": {
+      "use_dd_guard": false,
+      "use_consec_loss_guard": false,
+      "use_cooldown_guard": false,
+      "use_eq_curve_guard": false,
+      "use_mae_guard": false
+    },
+    "time_stop": {
+      "enabled": false
+    },
+    "parity": {
+      "enabled": true,
+      "fill_contract": "touch",
+      "export_debug_csv": true,
+      "debug_dir": "debug/parity_suite_350/parity_bnd_111_chop_on_threshold_v02",
+      "preroll_days": 365,
+      "preroll_mode": "warmup_only",
+      "close_open_at_eval_start": true
+    }
+  },
+  "_generated": {
+    "suite": "parity_suite_350",
+    "generator": "generate_case_set_from_input_map.py",
+    "source_input_map": "C:\\LAB\\tradingview-lab\\mtc_backtest\\parity_suite_350\\manifests\\input_map_FILLED_v6.xlsx",
+    "source_seq": 111,
+    "source_input_name": "Chop On Threshold",
+    "source_value_index": 2,
+    "source_target_value": "45",
+    "mapped_paths": [
+      "filters.use_range_filters"
+    ],
+    "mapped_target_path": ""
+  },
+  "_tv_case": {
+    "seq": 111,
+    "input_name": "Chop On Threshold",
+    "target_value": "45",
+    "parents": [
+      {
+        "seq": 101,
+        "name": "Use Range Filters (Entry Pause)",
+        "value": "On"
+      },
+      {
+        "seq": 109,
+        "name": "Use Choppiness Filter",
+        "value": "On"
+      }
+    ]
+  }
+}

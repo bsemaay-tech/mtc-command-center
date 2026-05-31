@@ -1,0 +1,4 @@
+- Repo-local data source: `MTC_V2_OPTIMIZATION_DATA_BUNDLE_20260427`.
+- Available Binance futures symbols: 17 on 1D, 4h, 2h, 1h, 15m.
+- Missing: 5m datasets, US equities OHLCV, US microcap 1m/premarket/borrow/dilution/halt data.
+- Crypto tests use BTCUSDT, ETHUSDT, SOLUSDT, BNBUSDT, XRPUSDT unless strategy-specific data blocks apply.

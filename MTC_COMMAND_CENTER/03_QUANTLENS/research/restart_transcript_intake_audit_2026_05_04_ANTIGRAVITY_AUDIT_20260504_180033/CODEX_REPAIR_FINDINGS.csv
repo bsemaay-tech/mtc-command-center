@@ -1,0 +1,6 @@
+file_to_repair,issue,severity,exact_requested_change
+TRANSCRIPT_INTAKE_MATCH_MAP.csv,Missing intakes,HIGH,Run transcript fetcher or mark as permanently blocked
+TRANSCRIPT_INTAKE_MATCH_MAP.csv,Duplicate VKNEJA5r8zw,MEDIUM,Merge QUANTLENS_MARTIN_LUKE_PULLBACK_INTAKE_REPORT and YT_VKNEJA5r8zw
+Trader Wiki/LLM Wiki,Missing warnings/wisdom,HIGH,Append constraints from WIKI_REPAIR_REQUESTS_FOR_CODEX.csv
+MASTER_CANDIDATE_CLASSIFICATION.csv,Psychology misclassified as SWING,CRITICAL,Update classification based on CANDIDATE_RECLASSIFICATION_REQUESTS_FOR_CODEX.csv
+QUANTLENS_RESTART_CLASSIFICATION_WORKBOOK.xlsx,Stale data,HIGH,Regenerate after applying all above repairs

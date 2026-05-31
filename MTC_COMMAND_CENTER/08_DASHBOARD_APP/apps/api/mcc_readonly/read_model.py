@@ -1,0 +1,202 @@
+from __future__ import annotations
+
+import json
+import time
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+from .backtest_reader import build_backtest_status
+from .json_io import read_json_file
+from .liveops_reader import build_liveops_status
+from .mtc_v2_reader import build_mtc_v2_readiness
+from .optimization_reader import build_optimization_status
+from .paths import canonicalize, default_mcc_root
+from .parity_reader import build_parity_status
+from .pine_builder_reader import build_pine_builder_status
+from .audit_reader import build_candidate_audit
+from .pipeline_reader import build_candidate_pipeline
+from .registry_reader import build_strategy_registry
+from .schema import validate_json_schema
+from .task_lifecycle import build_task_lifecycle
+
+
+@dataclass(frozen=True)
+class ReadModelFile:
+    key: str
+    rel_path: str
+    schema_rel_path: str
+    required: bool = True
+
+
+READ_MODEL_FILES: tuple[ReadModelFile, ...] = (
+    ReadModelFile("current_status", "03_STATUS/CURRENT_STATUS.json", "06_SCHEMAS/current_status.schema.json"),
+    ReadModelFile("task_queue", "02_TASKS/TASK_QUEUE.json", "06_SCHEMAS/task_queue.schema.json"),
+    ReadModelFile("task_history", "02_TASKS/TASK_HISTORY.json", "06_SCHEMAS/task_history.schema.json"),
+    ReadModelFile("liveops_status", "03_STATUS/LIVEOPS_STATUS.json", "06_SCHEMAS/liveops_status.schema.json"),
+    ReadModelFile("parity_status", "03_STATUS/PARITY_STATUS.json", "06_SCHEMAS/parity_status.schema.json"),
+    ReadModelFile("backtest_status", "03_STATUS/BACKTEST_STATUS.json", "06_SCHEMAS/backtest_status.schema.json"),
+    ReadModelFile("optimization_status", "03_STATUS/OPTIMIZATION_STATUS.json", "06_SCHEMAS/optimization_status.schema.json"),
+    ReadModelFile("pine_builder_status", "03_STATUS/PINE_BUILDER_STATUS.json", "06_SCHEMAS/pine_builder_status.schema.json"),
+    ReadModelFile("report_manifest", "03_STATUS/REPORT_MANIFEST.json", "06_SCHEMAS/report_manifest.schema.json"),
+    ReadModelFile("strategy_registry", "05_REGISTRY/STRATEGY_REGISTRY.json", "06_SCHEMAS/strategy_registry.schema.json"),
+    ReadModelFile("paths_config", "00_CONFIG/paths.example.json", "06_SCHEMAS/paths.schema.json"),
+    ReadModelFile("paths_local", "00_CONFIG/paths.local.json", "06_SCHEMAS/paths.schema.json", required=False),
+    ReadModelFile(
+        "dashboard_config",
+        "00_CONFIG/dashboard_config.example.json",
+        "06_SCHEMAS/dashboard_config.schema.json",
+    ),
+)
+
+_SNAPSHOT_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
+_SNAPSHOT_CACHE_TTL_SECONDS = 30.0
+
+
+def build_read_model(mcc_root: str | Path | None = None) -> dict[str, Any]:
+    root = canonicalize(mcc_root or default_mcc_root())
+    files: dict[str, Any] = {}
+
+    for item in READ_MODEL_FILES:
+        result = read_json_file(root, item.rel_path, required=item.required)
+        schema_issues: list[str] = []
+        schema_ok: bool | None = None
+
+        if result.exists and result.ok:
+            schema_path = root / item.schema_rel_path
+            if schema_path.exists():
+                try:
+                    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+                    schema_issues = [
+                        f"{issue.path}: {issue.message}"
+                        for issue in validate_json_schema(result.data, schema)
+                    ]
+                    schema_ok = not schema_issues
+                except Exception as exc:
+                    schema_issues = [f"schema read/validation error: {exc}"]
+                    schema_ok = False
+            else:
+                schema_issues = [f"schema missing: {item.schema_rel_path}"]
+                schema_ok = False
+        elif not result.exists and not item.required:
+            schema_ok = None
+
+        record_ok = result.ok and (schema_ok is not False)
+        files[item.key] = {
+            "path": item.rel_path,
+            "schema_path": item.schema_rel_path,
+            "required": item.required,
+            "exists": result.exists,
+            "ok": record_ok,
+            "json_ok": result.ok,
+            "schema_ok": schema_ok,
+            "error": result.error,
+            "schema_issues": schema_issues,
+            "data": result.data if result.ok else None,
+        }
+
+    required_files_ok = all(record["ok"] for record in files.values() if record["required"])
+    present_optional_ok = all(record["ok"] for record in files.values() if not record["required"] and record["exists"])
+    schema_validation_ok = required_files_ok and present_optional_ok
+
+    return {
+        "schema_version": "1.0",
+        "mode": "read_only",
+        "mcc_root": str(root),
+        "summary": {
+            "file_count": len(files),
+            "required_file_count": sum(1 for record in files.values() if record["required"]),
+            "required_files_ok": required_files_ok,
+            "schema_validation_ok": schema_validation_ok,
+        },
+        "files": files,
+    }
+
+
+def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, Any]:
+    model = build_read_model(mcc_root)
+    files = model["files"]
+    task_lifecycle = build_task_lifecycle(files["task_queue"]["data"])
+    liveops_status = build_liveops_status(model["mcc_root"])
+    parity_status = build_parity_status(model["mcc_root"])
+    backtest_status = build_backtest_status(model["mcc_root"])
+    optimization_status = build_optimization_status(model["mcc_root"])
+    strategy_registry = build_strategy_registry(model["mcc_root"])
+    pine_builder_status = build_pine_builder_status(model["mcc_root"])
+    candidate_pipeline = build_candidate_pipeline(
+        model["mcc_root"], strategy_registry, pine_builder_status,
+        liveops_status, parity_status, backtest_status,
+    )
+    candidate_audit = build_candidate_audit(
+        model["mcc_root"],
+        candidate_pipeline=candidate_pipeline,
+        strategy_registry=strategy_registry,
+    )
+    mtc_v2_readiness = build_mtc_v2_readiness(
+        model["mcc_root"],
+        candidate_pipeline=candidate_pipeline,
+        candidate_audit=candidate_audit,
+    )
+    return {
+        "schema_version": "1.0",
+        "mode": "read_only",
+        "mcc_root": model["mcc_root"],
+        "diagnostics": model["summary"],
+        "current_status": files["current_status"]["data"],
+        "task_queue": files["task_queue"]["data"],
+        "task_history": files["task_history"]["data"],
+        "liveops_status": liveops_status,
+        "parity_status": parity_status,
+        "backtest_status": backtest_status,
+        "optimization_status": optimization_status,
+        "pine_builder_status": pine_builder_status,
+        "candidate_pipeline": candidate_pipeline,
+        "candidate_audit": candidate_audit,
+        "mtc_v2_readiness": mtc_v2_readiness,
+        "report_manifest": files["report_manifest"]["data"],
+        "strategy_registry": strategy_registry,
+        "dashboard_config": files["dashboard_config"]["data"],
+        "task_lifecycle": task_lifecycle,
+        "file_diagnostics": {
+            key: {
+                "path": value["path"],
+                "required": value["required"],
+                "exists": value["exists"],
+                "ok": value["ok"],
+                "json_ok": value["json_ok"],
+                "schema_ok": value["schema_ok"],
+                "error": value["error"],
+                "schema_issues": value["schema_issues"],
+            }
+            for key, value in files.items()
+        },
+    }
+
+
+def build_dashboard_snapshot_cached(
+    mcc_root: str | Path | None = None,
+    *,
+    force_refresh: bool = False,
+    ttl_seconds: float = _SNAPSHOT_CACHE_TTL_SECONDS,
+) -> dict[str, Any]:
+    root = str(canonicalize(mcc_root or default_mcc_root()))
+    now = time.monotonic()
+    cached = _SNAPSHOT_CACHE.get(root)
+    if not force_refresh and cached and now - cached[0] <= ttl_seconds:
+        payload = dict(cached[1])
+        payload["snapshot_cache"] = {
+            "status": "HIT",
+            "ttl_seconds": ttl_seconds,
+            "age_seconds": round(now - cached[0], 3),
+        }
+        return payload
+
+    snapshot = build_dashboard_snapshot(root)
+    _SNAPSHOT_CACHE[root] = (now, snapshot)
+    payload = dict(snapshot)
+    payload["snapshot_cache"] = {
+        "status": "MISS" if not force_refresh else "REFRESH",
+        "ttl_seconds": ttl_seconds,
+        "age_seconds": 0,
+    }
+    return payload

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MTC V2 Optimization Job",
+  "type": "object",
+  "required": [
+    "job_id",
+    "feature_id",
+    "profile",
+    "dataset_manifest_path",
+    "dataset_ids",
+    "regime_registry_path",
+    "required_symbols_min",
+    "required_timeframes",
+    "walkforward",
+    "scoring_profile",
+    "preconditions",
+    "output_root"
+  ],
+  "properties": {
+    "job_id": {"type": "string", "minLength": 1},
+    "feature_id": {"type": "string", "minLength": 1},
+    "profile": {"type": "string", "minLength": 1},
+    "dataset_manifest_path": {"type": "string", "minLength": 1},
+    "dataset_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "regime_registry_path": {"type": "string", "minLength": 1},
+    "required_symbols_min": {"type": "integer", "minimum": 1, "default": 2},
+    "required_timeframes": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "walkforward": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean", "default": true},
+        "train_pct": {"type": "number", "default": 0.6},
+        "validation_pct": {"type": "number", "default": 0.2},
+        "test_pct": {"type": "number", "default": 0.2}
+      }
+    },
+    "scoring_profile": {"type": "string"},
+    "preconditions": {
+      "type": "object",
+      "properties": {
+        "allow_unknown_source": {"type": "boolean", "default": false},
+        "require_hash_validation": {"type": "boolean", "default": true},
+        "require_walkforward": {"type": "boolean", "default": true},
+        "min_symbols_for_robust_claim": {"type": "integer", "minimum": 2, "default": 2},
+        "min_timeframes_for_robust_claim": {"type": "integer", "minimum": 2, "default": 2}
+      }
+    },
+    "output_root": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,290 @@
+{
+  "source_input_map": "C:\\LAB\\tradingview-lab\\mtc_backtest\\parity_suite_350\\manifests\\input_map_FILLED_v6.xlsx",
+  "target_total_from_workbook": 457,
+  "generated_total_cases": 457,
+  "generated_core_cases": 180,
+  "generated_boundary_cases": 277,
+  "generated_pairwise_cases": 0,
+  "mapped_case_count": 277,
+  "unmapped_case_count": 180,
+  "unmapped_unique_inputs": [
+    [
+      "[htf] ma type",
+      4
+    ],
+    [
+      "[ma] type",
+      4
+    ],
+    [
+      "[adx] htf timeframe",
+      3
+    ],
+    [
+      "[atr] baseline sma len",
+      3
+    ],
+    [
+      "[atr] min atr / baseline",
+      3
+    ],
+    [
+      "[atr] vol floor atr len",
+      3
+    ],
+    [
+      "[chop] htf timeframe",
+      3
+    ],
+    [
+      "[htf] buffer %",
+      3
+    ],
+    [
+      "[htf] ma length",
+      3
+    ],
+    [
+      "[ma] htf timeframe",
+      3
+    ],
+    [
+      "[ma] length",
+      3
+    ],
+    [
+      "[ma] slope len",
+      3
+    ],
+    [
+      "[ma] slope min %/bar",
+      3
+    ],
+    [
+      "[mcginley] length",
+      3
+    ],
+    [
+      "[rf] adx range threshold",
+      3
+    ],
+    [
+      "[rf] adx trend threshold",
+      3
+    ],
+    [
+      "[rf] bb length",
+      3
+    ],
+    [
+      "[rf] bb multiplier",
+      3
+    ],
+    [
+      "[rf] chop range threshold",
+      3
+    ],
+    [
+      "[rf] chop trend threshold",
+      3
+    ],
+    [
+      "[rf] rsi length",
+      3
+    ],
+    [
+      "[rf] rsi overbought",
+      3
+    ],
+    [
+      "[rf] rsi oversold",
+      3
+    ],
+    [
+      "[vol] min sma",
+      3
+    ],
+    [
+      "[vol] sma length",
+      3
+    ],
+    [
+      "adx length",
+      3
+    ],
+    [
+      "adx off threshold",
+      3
+    ],
+    [
+      "adx on threshold",
+      3
+    ],
+    [
+      "chop length",
+      3
+    ],
+    [
+      "chop off threshold",
+      3
+    ],
+    [
+      "chop on threshold",
+      3
+    ],
+    [
+      "cooldown bars after exit",
+      3
+    ],
+    [
+      "equity ma length",
+      3
+    ],
+    [
+      "fast",
+      3
+    ],
+    [
+      "global heikin ashi",
+      3
+    ],
+    [
+      "htf timeframe",
+      3
+    ],
+    [
+      "max mae %",
+      3
+    ],
+    [
+      "min distance (0=no effect)",
+      3
+    ],
+    [
+      "range hold bars",
+      3
+    ],
+    [
+      "recovery after (bars)",
+      3
+    ],
+    [
+      "recovery after (signals)",
+      3
+    ],
+    [
+      "signal",
+      3
+    ],
+    [
+      "slow",
+      3
+    ],
+    [
+      "virtual wins required",
+      3
+    ],
+    [
+      "[adx] use higher timeframe",
+      2
+    ],
+    [
+      "[chop] use higher timeframe",
+      2
+    ],
+    [
+      "[ma] use higher timeframe",
+      2
+    ],
+    [
+      "[rf] use strategy tf source",
+      2
+    ],
+    [
+      "apply htf regime sign",
+      2
+    ],
+    [
+      "close on opposite signal",
+      2
+    ],
+    [
+      "consec loss: reset daily (legacy)",
+      2
+    ],
+    [
+      "crossstate: line > signal long / < signal short",
+      2
+    ],
+    [
+      "hist mode",
+      2
+    ],
+    [
+      "histogram gate",
+      2
+    ],
+    [
+      "htf bias (regime)",
+      2
+    ],
+    [
+      "recovery: early-exit when equity curve turns ok",
+      2
+    ],
+    [
+      "recovery: quality-based virtual trade (consec loss)",
+      2
+    ],
+    [
+      "regime: line >0 long / <0 short",
+      2
+    ],
+    [
+      "source",
+      2
+    ],
+    [
+      "use adx range filter",
+      2
+    ],
+    [
+      "use be in virtual",
+      2
+    ],
+    [
+      "use choppiness filter",
+      2
+    ],
+    [
+      "use sl in virtual",
+      2
+    ],
+    [
+      "use tp in virtual",
+      2
+    ],
+    [
+      "use trailing in virtual",
+      2
+    ],
+    [
+      "zero-line distance gate",
+      2
+    ],
+    [
+      "commission",
+      1
+    ],
+    [
+      "slippage",
+      1
+    ]
+  ],
+  "manifests": {
+    "all": "C:\\LAB\\tradingview-lab\\mtc_backtest\\parity_suite_350\\manifests\\cases_manifest_all.csv",
+    "core": "C:\\LAB\\tradingview-lab\\mtc_backtest\\parity_suite_350\\manifests\\cases_manifest_core.csv",
+    "boundary": "C:\\LAB\\tradingview-lab\\mtc_backtest\\parity_suite_350\\manifests\\cases_manifest_boundary.csv",
+    "pairwise": "C:\\LAB\\tradingview-lab\\mtc_backtest\\parity_suite_350\\manifests\\cases_manifest_pairwise.csv"
+  }
+}

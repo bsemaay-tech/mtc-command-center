@@ -1,0 +1,3 @@
+# STG006_ql_avwap_brian_intraday_or_5m
+
+Source folder: `C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\06_PROMOTED_TO_PARITY\QL_AVWAP_BRIAN_INTRADAY_OR_5M`

@@ -1,0 +1,3 @@
+# STG043_ql_2026_05_01_us_equities_intraday_8ema_exit_trail
+
+Source folder: `C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\01_TRIAGED_CANDIDATES\QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL`

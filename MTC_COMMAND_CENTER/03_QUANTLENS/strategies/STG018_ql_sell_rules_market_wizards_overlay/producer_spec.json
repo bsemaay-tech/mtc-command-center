@@ -1,0 +1,19 @@
+{
+  "candidate_id": "QL_SELL_RULES_MARKET_WIZARDS_OVERLAY",
+  "source_url": "https://www.youtube.com/watch?v=UD7gipBWnuY",
+  "source_candidate": "QLR_UD7gipBWnuY",
+  "title": "Market Wizards sell-rule library",
+  "kind": "exit_overlay",
+  "rules_high_confidence": [
+    "Trim 50% on first close below 50-day MA",
+    "Full exit on extension > 8% from 50-day MA",
+    "Filter: don't trade below 20-week EMA",
+    "Trail 10/20-period MA with 3-touch confirmation",
+    "Monthly DD cap with cascade 5%/3%/2%/1%"
+  ],
+  "entry_pseudo": "N/A (overlay)",
+  "exit_pseudo": "trim_on=close<SMA50; full_exit_on=ext>8% OR close<EMA_weekly20",
+  "param_grid_size_planned": 40,
+  "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+  "promoted_at": "2026-05-31T00:09:34"
+}

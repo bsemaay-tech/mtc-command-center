@@ -1,0 +1,3 @@
+channel_key,channel_name,channel_id,total_processed,stop_count,reject_count,salvage_count,candidate_count,wiki_count,last_status,quality_state,blacklist_reason,first_seen_at,last_seen_at,notes
+UNKNOWN_CHANNEL,UNKNOWN_CHANNEL,UNKNOWN_CHANNEL,14,0,0,3,9,2,CANDIDATE,GOOD,,2026-05-01,2026-05-01,Channel metadata not provided; blacklist decision skipped; useful outputs reached 3
+EllyDTrades,EllyDTrades,UNKNOWN_CHANNEL_ID,2,0,0,0,2,0,CANDIDATE,UNKNOWN,,2026-05-01,2026-05-01,Channel ID not provided; useful candidate outputs; no blacklist action

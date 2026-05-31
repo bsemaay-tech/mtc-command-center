@@ -1,0 +1,146 @@
+//@version=6
+indicator("DEBUG ST Table", overlay=true, max_bars_back=5000)
+
+// --- Debug target date/time ---
+dbg_year  = input.int(2025, "Year")
+dbg_month = input.int(12, "Month")
+dbg_day   = input.int(1, "Day")
+dbg_hour  = input.int(5, "Hour (UTC)")
+dbg_min   = input.int(15, "Minute")
+
+// --- Inputs ---
+st_atr_len   = input.int(21, "ATR Length")
+st_factor    = input.float(4.0, "Factor")
+st_use_wicks = input.bool(true, "Use Wicks")
+
+// --- HA OHLC ---
+[haO, haH, haL, haC] = request.security(
+    ticker.heikinashi(syminfo.tickerid),
+    timeframe.period,
+    [open, high, low, close],
+    lookahead = barmerge.lookahead_off,
+    gaps = barmerge.gaps_off
+)
+
+// --- HA-based ATR ---
+float ha_pc = nz(haC[1], haC)
+float ha_tr_val = math.max(haH - haL, math.max(math.abs(haH - ha_pc), math.abs(haL - ha_pc)))
+float st_atr = ta.rma(ha_tr_val, st_atr_len)
+
+// --- Supertrend ---
+float _atr  = st_factor * st_atr
+float _src  = (haH + haL) / 2.0
+float _hEff = st_use_wicks ? haH : haC
+float _lEff = st_use_wicks ? haL : haC
+bool  _isDoji = haO == haC and haO == haL and haO == haH
+
+float _longStop     = _src - _atr
+float _longStopPrev = nz(_longStop[1], _longStop)
+if _longStop > 0
+    if _isDoji
+        _longStop := _longStopPrev
+    else
+        _longStop := _lEff[1] > _longStopPrev ? math.max(_longStop, _longStopPrev) : _longStop
+else
+    _longStop := _longStopPrev
+
+float _shortStop     = _src + _atr
+float _shortStopPrev = nz(_shortStop[1], _shortStop)
+if _shortStop > 0
+    if _isDoji
+        _shortStop := _shortStopPrev
+    else
+        _shortStop := _hEff[1] < _shortStopPrev ? math.min(_shortStop, _shortStopPrev) : _shortStop
+else
+    _shortStop := _shortStopPrev
+
+var int _dir = 1
+_dir := _dir == -1 and _hEff > _shortStopPrev ? 1 : _dir == 1 and _lEff < _longStopPrev ? -1 : _dir
+
+// --- Target timestamp ---
+int target_time = timestamp("UTC", dbg_year, dbg_month, dbg_day, dbg_hour, dbg_min, 0)
+bool isTarget = (time == target_time)
+
+// --- Store values for 5 bars ---
+var float[] arr_atr = array.new_float(5, na)
+var float[] arr_ls  = array.new_float(5, na)
+var float[] arr_ss  = array.new_float(5, na)
+var float[] arr_dir = array.new_float(5, na)
+var float[] arr_hE  = array.new_float(5, na)
+var float[] arr_lE  = array.new_float(5, na)
+var float[] arr_haO = array.new_float(5, na)
+var float[] arr_haH = array.new_float(5, na)
+var float[] arr_haL = array.new_float(5, na)
+var float[] arr_haC = array.new_float(5, na)
+var float[] arr_src = array.new_float(5, na)
+var float[] arr_ssp = array.new_float(5, na)
+
+if isTarget
+    for i = 0 to 4
+        array.set(arr_atr, i, st_atr[i])
+        array.set(arr_ls,  i, _longStop[i])
+        array.set(arr_ss,  i, _shortStop[i])
+        array.set(arr_dir, i, _dir[i])
+        array.set(arr_hE,  i, _hEff[i])
+        array.set(arr_lE,  i, _lEff[i])
+        array.set(arr_haO, i, haO[i])
+        array.set(arr_haH, i, haH[i])
+        array.set(arr_haL, i, haL[i])
+        array.set(arr_haC, i, haC[i])
+        array.set(arr_src, i, _src[i])
+        array.set(arr_ssp, i, _shortStopPrev[i])
+
+// --- Draw table ---
+if barstate.islast and not na(array.get(arr_dir, 0))
+    var table t = table.new(position.bottom_right, 6, 14, bgcolor=color.white, border_width=1, border_color=color.gray, frame_width=2, frame_color=color.blue)
+
+    // Column headers
+    table.cell(t, 0, 0, "Field", bgcolor=color.blue, text_color=color.white, text_size=size.normal)
+    string[] bar_names = array.from("04:15", "04:30", "04:45", "05:00", "05:15")
+    for c = 0 to 4
+        color hbg = c == 4 ? color.yellow : color.blue
+        color htc = c == 4 ? color.black : color.white
+        table.cell(t, c + 1, 0, array.get(bar_names, c), bgcolor=hbg, text_color=htc, text_size=size.normal)
+
+    // Row labels
+    string[] labels = array.from("ha_open", "ha_high", "ha_low", "ha_close", "st_atr", "src", "long_stop", "short_stop", "ss_prev", "DIR", "h_eff", "l_eff", "doji")
+
+    // Collect all arrays in order
+    for row = 0 to 12
+        string lbl = array.get(labels, row)
+        table.cell(t, 0, row + 1, lbl, bgcolor=color.new(color.gray, 80), text_color=color.black, text_size=size.small, text_halign=text.align_left)
+
+        for c = 0 to 4
+            int idx = 4 - c  // offset: c=0 is bar[4], c=4 is bar[0]
+            float val = na
+            if row == 0
+                val := array.get(arr_haO, idx)
+            else if row == 1
+                val := array.get(arr_haH, idx)
+            else if row == 2
+                val := array.get(arr_haL, idx)
+            else if row == 3
+                val := array.get(arr_haC, idx)
+            else if row == 4
+                val := array.get(arr_atr, idx)
+            else if row == 5
+                val := array.get(arr_src, idx)
+            else if row == 6
+                val := array.get(arr_ls, idx)
+            else if row == 7
+                val := array.get(arr_ss, idx)
+            else if row == 8
+                val := array.get(arr_ssp, idx)
+            else if row == 9
+                val := array.get(arr_dir, idx)
+            else if row == 10
+                val := array.get(arr_hE, idx)
+            else if row == 11
+                val := array.get(arr_lE, idx)
+            else if row == 12
+                val := 0  // placeholder for doji
+
+            string fmt = row == 4 ? "#.######" : row == 9 ? "#" : "#.##"
+            string txt = na(val) ? "N/A" : str.tostring(val, fmt)
+            color cellbg = c == 4 ? color.new(color.yellow, 85) : color.white
+            table.cell(t, c + 1, row + 1, txt, bgcolor=cellbg, text_color=color.black, text_size=size.small)

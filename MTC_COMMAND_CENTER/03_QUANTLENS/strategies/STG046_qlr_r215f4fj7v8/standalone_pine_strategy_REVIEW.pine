@@ -1,0 +1,198 @@
+//@version=6
+strategy("QLR_R215f4fj7V8 Strategy REVIEW", overlay=true, pyramiding=0, max_labels_count=20, process_orders_on_close=true)
+
+// Review-only strategy wrapper.
+// No alerts, no optimization, no profitability claim, no MTC_V2 integration.
+// Signal logic is copied from standalone_pine_visual_review_CLEAN.pine as closely as possible.
+
+enable_long = input.bool(true, "enable_long", group="Review strategy controls")
+enable_short = input.bool(true, "enable_short", group="Review strategy controls")
+risk_mode = input.string("fixed_qty", "risk_mode", options=["fixed_qty", "percent_equity"], group="Review strategy controls")
+fixed_qty = input.float(1.0, "fixed_qty", minval=0.0, step=1.0, group="Review strategy controls")
+percent_equity_qty = input.float(10.0, "percent_equity placeholder", minval=0.1, maxval=100.0, step=0.1, group="Review strategy controls")
+stop_mode = input.string("prior_bar", "stop_mode", options=["ATR", "prior_bar", "percent"], group="Exit review controls")
+tp_mode = input.string("R_multiple", "tp_mode", options=["R_multiple", "ATR", "none"], group="Exit review controls")
+atr_len = input.int(14, "atr_len", minval=2, group="Exit review controls")
+stop_atr_mult = input.float(1.5, "stop_atr_mult", minval=0.1, step=0.1, group="Exit review controls")
+stop_percent = input.float(1.0, "stop_percent", minval=0.1, step=0.1, group="Exit review controls")
+tp_r_multiple = input.float(2.0, "tp_r_multiple", minval=0.1, step=0.1, group="Exit review controls")
+tp_atr_mult = input.float(2.0, "tp_atr_mult", minval=0.1, step=0.1, group="Exit review controls")
+max_bars_in_trade = input.int(0, "max_bars_in_trade (0 = off)", minval=0, group="Exit review controls")
+one_position_at_a_time = input.bool(true, "one_position_at_a_time", group="Review strategy controls")
+use_session_filter = input.bool(false, "use_session_filter", group="Session filter")
+review_session = input.session("0930-1600", "review_session", group="Session filter")
+
+show_vwap = input.bool(true, "show_vwap", group="Display")
+show_signals = input.bool(true, "show_signals", group="Display")
+show_stops = input.bool(true, "show_stops", group="Display")
+show_targets = input.bool(true, "show_targets", group="Display")
+show_no_trade_zone = input.bool(false, "show_no_trade_zone", group="Display")
+show_debug_conflicts = input.bool(false, "show_debug_conflicts", group="Display")
+
+signal_cooldown_bars = input.int(20, "signal_cooldown_bars", minval=1, group="CLEAN signal logic")
+warmup_bars = input.int(50, "warmup_bars", minval=5, group="CLEAN signal logic")
+vwap_guard_lookback = input.int(10, "vwap_guard_lookback", minval=2, group="CLEAN signal logic")
+vwap_guard_ratio = input.float(0.80, "vwap_guard_ratio", minval=0.50, maxval=1.00, step=0.05, group="CLEAN signal logic")
+slope_lookback = input.int(14, "slope_lookback", minval=2, group="CLEAN signal logic")
+breakout_lookback = input.int(12, "breakout_lookback", minval=2, group="CLEAN signal logic")
+atr_lookback = input.int(14, "atr_lookback", minval=2, group="CLEAN signal logic")
+volume_lookback = input.int(20, "volume_lookback", minval=2, group="CLEAN signal logic")
+capitulation_volume_mult = input.float(2.0, "capitulation_volume_mult", minval=1.0, step=0.25, group="CLEAN signal logic")
+capitulation_range_atr_mult = input.float(1.6, "capitulation_range_atr_mult", minval=0.5, step=0.1, group="CLEAN signal logic")
+capitulation_vwap_distance_pct = input.float(1.5, "capitulation_vwap_distance_pct", minval=0.1, step=0.1, group="CLEAN signal logic")
+compression_lookback = input.int(24, "compression_lookback", minval=5, group="CLEAN signal logic")
+bb_width_threshold_pct = input.float(2.0, "bb_width_threshold_pct", minval=0.1, step=0.1, group="CLEAN signal logic")
+recent_range_threshold_pct = input.float(1.4, "recent_range_threshold_pct", minval=0.1, step=0.1, group="CLEAN signal logic")
+vwap_flat_threshold_pct = input.float(0.04, "vwap_flat_threshold_pct", minval=0.0, step=0.01, group="CLEAN signal logic")
+chop_around_vwap_ratio = input.float(0.45, "chop_around_vwap_ratio", minval=0.1, maxval=0.9, step=0.05, group="CLEAN signal logic")
+
+allow_long = enable_long
+allow_short = enable_short
+in_session = not use_session_filter or not na(time(timeframe.period, review_session))
+session_vwap = ta.vwap(hlc3)
+atr = ta.atr(atr_lookback)
+exit_atr = ta.atr(atr_len)
+volume_ma = ta.sma(volume, volume_lookback)
+close_slope = (close - close[slope_lookback - 1]) / math.max(1, slope_lookback - 1)
+vwap_slope = (session_vwap - session_vwap[slope_lookback - 1]) / math.max(1, slope_lookback - 1)
+vwap_slope_pct = math.abs(vwap_slope) / close * 100.0
+
+above_ratio = ta.sma(close > session_vwap ? 1.0 : 0.0, vwap_guard_lookback)
+below_ratio = ta.sma(close < session_vwap ? 1.0 : 0.0, vwap_guard_lookback)
+steadily_above_vwap = above_ratio >= vwap_guard_ratio and vwap_slope >= 0
+steadily_below_vwap = below_ratio >= vwap_guard_ratio and vwap_slope <= 0
+
+bb_basis = ta.sma(close, compression_lookback)
+bb_dev = ta.stdev(close, compression_lookback)
+bb_width_pct = bb_basis != 0 ? (4.0 * bb_dev) / bb_basis * 100.0 : 999.0
+recent_range_pct = close != 0 ? (ta.highest(high, compression_lookback) - ta.lowest(low, compression_lookback)) / close * 100.0 : 999.0
+near_vwap_ratio = ta.sma(math.abs(close - session_vwap) <= atr * 0.35 ? 1.0 : 0.0, compression_lookback)
+vwap_flat = vwap_slope_pct <= vwap_flat_threshold_pct
+low_compression = bb_width_pct <= bb_width_threshold_pct or recent_range_pct <= recent_range_threshold_pct
+price_chopping_around_vwap = near_vwap_ratio >= chop_around_vwap_ratio
+no_mans_land = (price_chopping_around_vwap and vwap_flat) or (low_compression and vwap_flat)
+
+dist_pct = session_vwap != 0 ? math.abs(close - session_vwap) / session_vwap * 100.0 : 0.0
+wide_range = (high - low) >= atr * capitulation_range_atr_mult
+high_volume = volume >= volume_ma * capitulation_volume_mult
+downside_capitulation = close < session_vwap and wide_range and high_volume and dist_pct >= capitulation_vwap_distance_pct
+upside_capitulation = close > session_vwap and wide_range and high_volume and dist_pct >= capitulation_vwap_distance_pct
+
+var bool prior_downside_capitulation = false
+var bool prior_upside_capitulation = false
+if downside_capitulation
+    prior_downside_capitulation := true
+if upside_capitulation
+    prior_upside_capitulation := true
+
+range_high = ta.highest(high[1], breakout_lookback)
+range_low = ta.lowest(low[1], breakout_lookback)
+trend_continuation_long = close > session_vwap and vwap_slope >= 0 and close_slope > 0 and close > range_high
+trend_continuation_short = close < session_vwap and vwap_slope <= 0 and close_slope < 0 and close < range_low
+price_stopped_falling = close > close[1] and low >= low[1]
+price_stopped_rising = close < close[1] and high <= high[1]
+right_side_v_long_raw = prior_downside_capitulation and price_stopped_falling and (high > high[1] or close > high[1])
+right_side_v_short_raw = prior_upside_capitulation and price_stopped_rising and (low < low[1] or close < low[1])
+
+long_rejected_by_vwap = steadily_below_vwap and not prior_downside_capitulation
+short_rejected_by_vwap = steadily_above_vwap and not prior_upside_capitulation
+raw_long = bar_index >= warmup_bars and allow_long and in_session and not long_rejected_by_vwap and (trend_continuation_long or right_side_v_long_raw)
+raw_short = bar_index >= warmup_bars and allow_short and in_session and not short_rejected_by_vwap and (trend_continuation_short or right_side_v_short_raw)
+raw_conflict = raw_long and raw_short
+guarded_long = raw_long and not raw_conflict and not no_mans_land
+guarded_short = raw_short and not raw_conflict and not no_mans_land
+
+var int last_long_signal_bar = na
+var int last_short_signal_bar = na
+long_opposite_reset = not na(last_short_signal_bar) and (na(last_long_signal_bar) or last_short_signal_bar > last_long_signal_bar)
+short_opposite_reset = not na(last_long_signal_bar) and (na(last_short_signal_bar) or last_long_signal_bar > last_short_signal_bar)
+long_cooldown_ok = na(last_long_signal_bar) or bar_index - last_long_signal_bar >= signal_cooldown_bars or long_opposite_reset
+short_cooldown_ok = na(last_short_signal_bar) or bar_index - last_short_signal_bar >= signal_cooldown_bars or short_opposite_reset
+filtered_long = barstate.isconfirmed and guarded_long and long_cooldown_ok
+filtered_short = barstate.isconfirmed and guarded_short and short_cooldown_ok
+
+if filtered_long
+    last_long_signal_bar := bar_index
+    prior_downside_capitulation := false
+if filtered_short
+    last_short_signal_bar := bar_index
+    prior_upside_capitulation := false
+
+can_enter = not one_position_at_a_time or strategy.position_size == 0
+entry_qty = risk_mode == "fixed_qty" ? fixed_qty : math.max((strategy.equity * percent_equity_qty / 100.0) / close, 0.0)
+long_entry = filtered_long and can_enter
+short_entry = filtered_short and can_enter
+
+long_stop_candidate = stop_mode == "ATR" ? close - exit_atr * stop_atr_mult : stop_mode == "percent" ? close * (1.0 - stop_percent / 100.0) : math.min(low, low[1])
+short_stop_candidate = stop_mode == "ATR" ? close + exit_atr * stop_atr_mult : stop_mode == "percent" ? close * (1.0 + stop_percent / 100.0) : math.max(high, high[1])
+long_risk = math.max(close - long_stop_candidate, syminfo.mintick)
+short_risk = math.max(short_stop_candidate - close, syminfo.mintick)
+long_tp_candidate = tp_mode == "R_multiple" ? close + long_risk * tp_r_multiple : tp_mode == "ATR" ? close + exit_atr * tp_atr_mult : na
+short_tp_candidate = tp_mode == "R_multiple" ? close - short_risk * tp_r_multiple : tp_mode == "ATR" ? close - exit_atr * tp_atr_mult : na
+
+var float active_stop = na
+var float active_target = na
+var int active_entry_bar = na
+var int long_entry_count = 0
+var int short_entry_count = 0
+
+if long_entry
+    active_stop := long_stop_candidate
+    active_target := long_tp_candidate
+    active_entry_bar := bar_index
+    long_entry_count += 1
+    strategy.entry("L", strategy.long, qty=entry_qty)
+if short_entry
+    active_stop := short_stop_candidate
+    active_target := short_tp_candidate
+    active_entry_bar := bar_index
+    short_entry_count += 1
+    strategy.entry("S", strategy.short, qty=entry_qty)
+
+if strategy.position_size > 0
+    strategy.exit("LX", from_entry="L", stop=active_stop, limit=active_target)
+if strategy.position_size < 0
+    strategy.exit("SX", from_entry="S", stop=active_stop, limit=active_target)
+
+bars_in_trade = not na(active_entry_bar) ? bar_index - active_entry_bar : na
+time_exit_long = max_bars_in_trade > 0 and strategy.position_size > 0 and not na(bars_in_trade) and bars_in_trade >= max_bars_in_trade
+time_exit_short = max_bars_in_trade > 0 and strategy.position_size < 0 and not na(bars_in_trade) and bars_in_trade >= max_bars_in_trade
+if time_exit_long
+    strategy.close("L", comment="time_exit")
+if time_exit_short
+    strategy.close("S", comment="time_exit")
+if strategy.position_size == 0 and strategy.position_size[1] != 0
+    active_stop := na
+    active_target := na
+    active_entry_bar := na
+
+plot(show_vwap ? session_vwap : na, "VWAP", color=color.new(color.blue, 0), linewidth=2)
+plot(show_stops and strategy.position_size != 0 ? active_stop : na, "active_stop", color=color.new(color.red, 0), linewidth=1, style=plot.style_linebr)
+plot(show_targets and strategy.position_size != 0 ? active_target : na, "active_target", color=color.new(color.green, 0), linewidth=1, style=plot.style_linebr)
+plotshape(show_signals and filtered_long and not right_side_v_long_raw, "filtered_long", shape.triangleup, location.belowbar, color=color.new(color.lime, 0), size=size.small)
+plotshape(show_signals and filtered_short and not right_side_v_short_raw, "filtered_short", shape.triangledown, location.abovebar, color=color.new(color.red, 0), size=size.small)
+plotshape(show_signals and filtered_long and right_side_v_long_raw, "right_side_v_long", shape.diamond, location.belowbar, color=color.new(color.aqua, 0), size=size.small)
+plotshape(show_signals and filtered_short and right_side_v_short_raw, "right_side_v_short_proxy", shape.diamond, location.abovebar, color=color.new(color.orange, 0), size=size.small)
+plotshape(show_no_trade_zone and no_mans_land, "no_mans_land", shape.xcross, location.top, color=color.new(color.gray, 35), size=size.tiny)
+plotshape(show_debug_conflicts and raw_conflict, "conflict_suppressed", shape.xcross, location.top, color=color.new(color.yellow, 0), size=size.small)
+
+closed_trades = strategy.closedtrades
+win_rate = closed_trades > 0 ? strategy.wintrades / closed_trades * 100.0 : na
+profit_factor = strategy.grossloss != 0 ? strategy.grossprofit / math.abs(strategy.grossloss) : na
+
+var table info = table.new(position.top_right, 2, 7, border_width=1)
+if barstate.islast
+    table.cell(info, 0, 0, "candidate", text_color=color.white, bgcolor=color.new(color.blue, 0))
+    table.cell(info, 1, 0, "QLR_R215f4fj7V8", text_color=color.white, bgcolor=color.new(color.blue, 0))
+    table.cell(info, 0, 1, "long entries")
+    table.cell(info, 1, 1, str.tostring(long_entry_count))
+    table.cell(info, 0, 2, "short entries")
+    table.cell(info, 1, 2, str.tostring(short_entry_count))
+    table.cell(info, 0, 3, "closed trades")
+    table.cell(info, 1, 3, str.tostring(closed_trades))
+    table.cell(info, 0, 4, "win rate")
+    table.cell(info, 1, 4, na(win_rate) ? "n/a" : str.tostring(win_rate, "#.##") + "%")
+    table.cell(info, 0, 5, "profit factor")
+    table.cell(info, 1, 5, na(profit_factor) ? "n/a" : str.tostring(profit_factor, "#.##"))
+    table.cell(info, 0, 6, "warning", text_color=color.white, bgcolor=color.new(color.red, 0))
+    table.cell(info, 1, 6, "Review only; not optimized.", text_color=color.white, bgcolor=color.new(color.red, 0))

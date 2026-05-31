@@ -1,0 +1,4 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,kill_test
+698,16,691566.2678,1.5747,45.5587,2.8035,-1.958,2.8035,16.8619,-8.9612,-99.9268,6920.7309,9.6691,9.6691,AVAXUSDT,DOTUSDT,False,BIGBELUGA,remove_best_asset
+637,17,6484.8631,1.3888,44.898,1.8637,-2.1309,1.8637,14.8272,-8.6991,-99.9616,64.8735,9.4725,9.4725,OPUSDT,DOTUSDT,False,BIGBELUGA,remove_best_year
+734,17,20001.0683,1.3858,45.0954,1.9302,-2.2848,1.9302,15.3738,-9.1116,-100.0,200.0107,9.6458,9.6458,BTCUSDT,DOTUSDT,False,BIGBELUGA,remove_top_5_trades

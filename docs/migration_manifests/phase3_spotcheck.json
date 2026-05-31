@@ -1,0 +1,556 @@
+{
+  "phase": "PHASE_3_SPOTCHECK",
+  "timestamp_utc": "2026-05-31T13:49:41.291019+00:00",
+  "legacy_repo": "C:\\LAB\\tradingview-lab",
+  "clean_repo": "C:\\LAB\\Tradingview_LAB_CLEAN",
+  "pine_legacy_root": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\01_PINE",
+  "python_legacy_root": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2",
+  "pine_count": 1,
+  "python_mtc_v2_count": 33,
+  "mismatch_count": 0,
+  "warning_count": 33,
+  "status": "PASS",
+  "warnings": [
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\__init__.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\__init__.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\config.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\confirmation.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\exits.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\gates.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\htf.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\indicators.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\instrument.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\ma.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\position_manager.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\position_sizer.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\results.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\rounding.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\runner.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\types.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\signals\\__init__.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\signals\\range_filter.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\signals\\supertrend.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\__init__.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_advanced_confirm.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_capital_block_fix.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_htf_infrastructure.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_l12_ma_filters.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_l12_new_filters.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_l18b_scaffold.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_level_retest.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_manual_tw_futures_audit.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_plan_b_gates.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_producer_selection_range_filter.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_range_filter.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_runner_metrics_api.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    },
+    {
+      "path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_supertrend_smoke.py",
+      "warning": "Target not present in mtc_command_center_sha256_manifest.csv; compared with copy_manifest.csv fallback because source is legacy 01_MASTER TEMPLATE_V2, not legacy MTC_COMMAND_CENTER."
+    }
+  ],
+  "mismatches": [],
+  "checks": [
+    {
+      "kind": "pine",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\01_PINE\\MTC_V2.pine",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\01_PINE\\MTC_V2.pine",
+      "legacy_sha256": "E45BB6EB81C7773D6577AC976731A85ED7D5B90D57F24116B9D3FF73A67DF900",
+      "clean_sha256": "E45BB6EB81C7773D6577AC976731A85ED7D5B90D57F24116B9D3FF73A67DF900",
+      "manifest": "pine_sha256_manifest.csv",
+      "manifest_sha256": "E45BB6EB81C7773D6577AC976731A85ED7D5B90D57F24116B9D3FF73A67DF900",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\__init__.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\__init__.py",
+      "legacy_sha256": "78AD0A12E3105559F469C4A4FE6C48C1C540C114E454B6D4C4579BADE4FA8720",
+      "clean_sha256": "78AD0A12E3105559F469C4A4FE6C48C1C540C114E454B6D4C4579BADE4FA8720",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "78AD0A12E3105559F469C4A4FE6C48C1C540C114E454B6D4C4579BADE4FA8720",
+      "copy_manifest_source_sha256": "78AD0A12E3105559F469C4A4FE6C48C1C540C114E454B6D4C4579BADE4FA8720",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\core\\__init__.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\__init__.py",
+      "legacy_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "clean_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "copy_manifest_source_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\core\\config.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\config.py",
+      "legacy_sha256": "DBF586ABEB095ED3FA8EC0B13EA771D7E10625A9BA7ED3C1CADD0E101A29C6F4",
+      "clean_sha256": "DBF586ABEB095ED3FA8EC0B13EA771D7E10625A9BA7ED3C1CADD0E101A29C6F4",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "DBF586ABEB095ED3FA8EC0B13EA771D7E10625A9BA7ED3C1CADD0E101A29C6F4",
+      "copy_manifest_source_sha256": "DBF586ABEB095ED3FA8EC0B13EA771D7E10625A9BA7ED3C1CADD0E101A29C6F4",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\core\\confirmation.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\confirmation.py",
+      "legacy_sha256": "585DB0CEDC4E045FEA7DEE1DDE5DAA2F90E4083968EDAC1B72611302B456A936",
+      "clean_sha256": "585DB0CEDC4E045FEA7DEE1DDE5DAA2F90E4083968EDAC1B72611302B456A936",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "585DB0CEDC4E045FEA7DEE1DDE5DAA2F90E4083968EDAC1B72611302B456A936",
+      "copy_manifest_source_sha256": "585DB0CEDC4E045FEA7DEE1DDE5DAA2F90E4083968EDAC1B72611302B456A936",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\core\\exits.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\exits.py",
+      "legacy_sha256": "74E02911B9527310BECEF31F5A98C7C41AAF50CC4738D59F0DD1BC0641941FD3",
+      "clean_sha256": "74E02911B9527310BECEF31F5A98C7C41AAF50CC4738D59F0DD1BC0641941FD3",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "74E02911B9527310BECEF31F5A98C7C41AAF50CC4738D59F0DD1BC0641941FD3",
+      "copy_manifest_source_sha256": "74E02911B9527310BECEF31F5A98C7C41AAF50CC4738D59F0DD1BC0641941FD3",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\core\\gates.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\gates.py",
+      "legacy_sha256": "10F95C8F7B09CFE844EEE94DCF5FBE8667FCEEFE9C09DE2806E79FB6595A7B66",
+      "clean_sha256": "10F95C8F7B09CFE844EEE94DCF5FBE8667FCEEFE9C09DE2806E79FB6595A7B66",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "10F95C8F7B09CFE844EEE94DCF5FBE8667FCEEFE9C09DE2806E79FB6595A7B66",
+      "copy_manifest_source_sha256": "10F95C8F7B09CFE844EEE94DCF5FBE8667FCEEFE9C09DE2806E79FB6595A7B66",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\core\\htf.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\htf.py",
+      "legacy_sha256": "4F82EDB2A84BA1AEF9E5EDD0A7EF33AE08BBC561062695E928E242F4C039ABBE",
+      "clean_sha256": "4F82EDB2A84BA1AEF9E5EDD0A7EF33AE08BBC561062695E928E242F4C039ABBE",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "4F82EDB2A84BA1AEF9E5EDD0A7EF33AE08BBC561062695E928E242F4C039ABBE",
+      "copy_manifest_source_sha256": "4F82EDB2A84BA1AEF9E5EDD0A7EF33AE08BBC561062695E928E242F4C039ABBE",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\core\\indicators.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\indicators.py",
+      "legacy_sha256": "5379422F45BE7C769E22EF41025267EBFAE77AE1757667CD603D4E52FEE1BB21",
+      "clean_sha256": "5379422F45BE7C769E22EF41025267EBFAE77AE1757667CD603D4E52FEE1BB21",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "5379422F45BE7C769E22EF41025267EBFAE77AE1757667CD603D4E52FEE1BB21",
+      "copy_manifest_source_sha256": "5379422F45BE7C769E22EF41025267EBFAE77AE1757667CD603D4E52FEE1BB21",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\core\\instrument.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\instrument.py",
+      "legacy_sha256": "E2C7161562E39B4A5E6A8349645EC1B04C676F033BF80A100B468F3E37976C6D",
+      "clean_sha256": "E2C7161562E39B4A5E6A8349645EC1B04C676F033BF80A100B468F3E37976C6D",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "E2C7161562E39B4A5E6A8349645EC1B04C676F033BF80A100B468F3E37976C6D",
+      "copy_manifest_source_sha256": "E2C7161562E39B4A5E6A8349645EC1B04C676F033BF80A100B468F3E37976C6D",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\core\\ma.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\ma.py",
+      "legacy_sha256": "491D1B5F4413981EAC7568BA01595EF3629B68D4032A00F96E503B16F78175E1",
+      "clean_sha256": "491D1B5F4413981EAC7568BA01595EF3629B68D4032A00F96E503B16F78175E1",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "491D1B5F4413981EAC7568BA01595EF3629B68D4032A00F96E503B16F78175E1",
+      "copy_manifest_source_sha256": "491D1B5F4413981EAC7568BA01595EF3629B68D4032A00F96E503B16F78175E1",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\core\\position_manager.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\position_manager.py",
+      "legacy_sha256": "8B77C38F107DDBBF197DA08076E2C5A9D8B2CB16B71D9B834A9B4ADBCB61E10B",
+      "clean_sha256": "8B77C38F107DDBBF197DA08076E2C5A9D8B2CB16B71D9B834A9B4ADBCB61E10B",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "8B77C38F107DDBBF197DA08076E2C5A9D8B2CB16B71D9B834A9B4ADBCB61E10B",
+      "copy_manifest_source_sha256": "8B77C38F107DDBBF197DA08076E2C5A9D8B2CB16B71D9B834A9B4ADBCB61E10B",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\core\\position_sizer.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\position_sizer.py",
+      "legacy_sha256": "1F07A858F415E0AA137C1539103C077C8B02B3F0B06C47534F9A3A78E3E1AFA7",
+      "clean_sha256": "1F07A858F415E0AA137C1539103C077C8B02B3F0B06C47534F9A3A78E3E1AFA7",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "1F07A858F415E0AA137C1539103C077C8B02B3F0B06C47534F9A3A78E3E1AFA7",
+      "copy_manifest_source_sha256": "1F07A858F415E0AA137C1539103C077C8B02B3F0B06C47534F9A3A78E3E1AFA7",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\core\\results.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\results.py",
+      "legacy_sha256": "EB325EA6C8E743D279A8D3DA27304DA44BC352721D894D816B1BDD0455B3F196",
+      "clean_sha256": "EB325EA6C8E743D279A8D3DA27304DA44BC352721D894D816B1BDD0455B3F196",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "EB325EA6C8E743D279A8D3DA27304DA44BC352721D894D816B1BDD0455B3F196",
+      "copy_manifest_source_sha256": "EB325EA6C8E743D279A8D3DA27304DA44BC352721D894D816B1BDD0455B3F196",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\core\\rounding.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\rounding.py",
+      "legacy_sha256": "2CDA87494D4E7FB2B98931C00562B2D693351180004A7E175C2085CDDD94D3DF",
+      "clean_sha256": "2CDA87494D4E7FB2B98931C00562B2D693351180004A7E175C2085CDDD94D3DF",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "2CDA87494D4E7FB2B98931C00562B2D693351180004A7E175C2085CDDD94D3DF",
+      "copy_manifest_source_sha256": "2CDA87494D4E7FB2B98931C00562B2D693351180004A7E175C2085CDDD94D3DF",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\core\\runner.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\runner.py",
+      "legacy_sha256": "9986A23282F7B834B77DB95A99D7DADEC9CDDCE64B615324EE03A4107BE29A7A",
+      "clean_sha256": "9986A23282F7B834B77DB95A99D7DADEC9CDDCE64B615324EE03A4107BE29A7A",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "9986A23282F7B834B77DB95A99D7DADEC9CDDCE64B615324EE03A4107BE29A7A",
+      "copy_manifest_source_sha256": "9986A23282F7B834B77DB95A99D7DADEC9CDDCE64B615324EE03A4107BE29A7A",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\core\\types.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\types.py",
+      "legacy_sha256": "5E5005C9CA120AB6FF359CA8082414CA9DACCEC6789C955938997A37CC1B8A16",
+      "clean_sha256": "5E5005C9CA120AB6FF359CA8082414CA9DACCEC6789C955938997A37CC1B8A16",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "5E5005C9CA120AB6FF359CA8082414CA9DACCEC6789C955938997A37CC1B8A16",
+      "copy_manifest_source_sha256": "5E5005C9CA120AB6FF359CA8082414CA9DACCEC6789C955938997A37CC1B8A16",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\signals\\__init__.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\signals\\__init__.py",
+      "legacy_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "clean_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "copy_manifest_source_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\signals\\range_filter.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\signals\\range_filter.py",
+      "legacy_sha256": "76C056E1DF9D24E7DEABE4A568DBB44F4F260ED8700A16F2938AA9D3692EDE33",
+      "clean_sha256": "76C056E1DF9D24E7DEABE4A568DBB44F4F260ED8700A16F2938AA9D3692EDE33",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "76C056E1DF9D24E7DEABE4A568DBB44F4F260ED8700A16F2938AA9D3692EDE33",
+      "copy_manifest_source_sha256": "76C056E1DF9D24E7DEABE4A568DBB44F4F260ED8700A16F2938AA9D3692EDE33",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\signals\\supertrend.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\signals\\supertrend.py",
+      "legacy_sha256": "84A4B8154A82DF07EA822DD5C94CF2D1E941D93BBAF2F5DFAC2EFFD871E2B1E8",
+      "clean_sha256": "84A4B8154A82DF07EA822DD5C94CF2D1E941D93BBAF2F5DFAC2EFFD871E2B1E8",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "84A4B8154A82DF07EA822DD5C94CF2D1E941D93BBAF2F5DFAC2EFFD871E2B1E8",
+      "copy_manifest_source_sha256": "84A4B8154A82DF07EA822DD5C94CF2D1E941D93BBAF2F5DFAC2EFFD871E2B1E8",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\tests\\__init__.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\__init__.py",
+      "legacy_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "clean_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "copy_manifest_source_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\tests\\test_advanced_confirm.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_advanced_confirm.py",
+      "legacy_sha256": "97A2CFD43BF3327D074FCD753F59CB9F31456D965FEF900DCF00D937DD0EE2B9",
+      "clean_sha256": "97A2CFD43BF3327D074FCD753F59CB9F31456D965FEF900DCF00D937DD0EE2B9",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "97A2CFD43BF3327D074FCD753F59CB9F31456D965FEF900DCF00D937DD0EE2B9",
+      "copy_manifest_source_sha256": "97A2CFD43BF3327D074FCD753F59CB9F31456D965FEF900DCF00D937DD0EE2B9",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\tests\\test_capital_block_fix.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_capital_block_fix.py",
+      "legacy_sha256": "D80E6081FF1FD5C5B094545A86690E877115A1BD13EAA062B4D37F007AB2A451",
+      "clean_sha256": "D80E6081FF1FD5C5B094545A86690E877115A1BD13EAA062B4D37F007AB2A451",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "D80E6081FF1FD5C5B094545A86690E877115A1BD13EAA062B4D37F007AB2A451",
+      "copy_manifest_source_sha256": "D80E6081FF1FD5C5B094545A86690E877115A1BD13EAA062B4D37F007AB2A451",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\tests\\test_htf_infrastructure.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_htf_infrastructure.py",
+      "legacy_sha256": "96FCC06204C4AAF0EA4733DA322A315ED9FDF45A8022E496703F57C7B6AA3FA3",
+      "clean_sha256": "96FCC06204C4AAF0EA4733DA322A315ED9FDF45A8022E496703F57C7B6AA3FA3",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "96FCC06204C4AAF0EA4733DA322A315ED9FDF45A8022E496703F57C7B6AA3FA3",
+      "copy_manifest_source_sha256": "96FCC06204C4AAF0EA4733DA322A315ED9FDF45A8022E496703F57C7B6AA3FA3",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\tests\\test_l12_ma_filters.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_l12_ma_filters.py",
+      "legacy_sha256": "5CF95717E06B5A06E90DAE598B86D1D8ECEFFC2141DEA0F077EC7BE36E3C0543",
+      "clean_sha256": "5CF95717E06B5A06E90DAE598B86D1D8ECEFFC2141DEA0F077EC7BE36E3C0543",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "5CF95717E06B5A06E90DAE598B86D1D8ECEFFC2141DEA0F077EC7BE36E3C0543",
+      "copy_manifest_source_sha256": "5CF95717E06B5A06E90DAE598B86D1D8ECEFFC2141DEA0F077EC7BE36E3C0543",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\tests\\test_l12_new_filters.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_l12_new_filters.py",
+      "legacy_sha256": "BAE3CB5FE1B1599685906A34D3351FD6A6F5DA814935B24FD0C08AD8B1F0EA93",
+      "clean_sha256": "BAE3CB5FE1B1599685906A34D3351FD6A6F5DA814935B24FD0C08AD8B1F0EA93",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "BAE3CB5FE1B1599685906A34D3351FD6A6F5DA814935B24FD0C08AD8B1F0EA93",
+      "copy_manifest_source_sha256": "BAE3CB5FE1B1599685906A34D3351FD6A6F5DA814935B24FD0C08AD8B1F0EA93",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\tests\\test_l18b_scaffold.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_l18b_scaffold.py",
+      "legacy_sha256": "2CABBC6E0EEE9BC1B2685F6C54DD00AB498B3E0EDEF1FCE6E7C9122BE6AA8E5C",
+      "clean_sha256": "2CABBC6E0EEE9BC1B2685F6C54DD00AB498B3E0EDEF1FCE6E7C9122BE6AA8E5C",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "2CABBC6E0EEE9BC1B2685F6C54DD00AB498B3E0EDEF1FCE6E7C9122BE6AA8E5C",
+      "copy_manifest_source_sha256": "2CABBC6E0EEE9BC1B2685F6C54DD00AB498B3E0EDEF1FCE6E7C9122BE6AA8E5C",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\tests\\test_level_retest.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_level_retest.py",
+      "legacy_sha256": "8C6B88D247C7FC062F7AA00A5D14DF11DE0E9E04E742604C501CA81C2BB39CB1",
+      "clean_sha256": "8C6B88D247C7FC062F7AA00A5D14DF11DE0E9E04E742604C501CA81C2BB39CB1",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "8C6B88D247C7FC062F7AA00A5D14DF11DE0E9E04E742604C501CA81C2BB39CB1",
+      "copy_manifest_source_sha256": "8C6B88D247C7FC062F7AA00A5D14DF11DE0E9E04E742604C501CA81C2BB39CB1",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\tests\\test_manual_tw_futures_audit.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_manual_tw_futures_audit.py",
+      "legacy_sha256": "6E5716B47CEFF99064181E7496F43424B3B4DA8ED573367AB65E9BEF52A30E0C",
+      "clean_sha256": "6E5716B47CEFF99064181E7496F43424B3B4DA8ED573367AB65E9BEF52A30E0C",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "6E5716B47CEFF99064181E7496F43424B3B4DA8ED573367AB65E9BEF52A30E0C",
+      "copy_manifest_source_sha256": "6E5716B47CEFF99064181E7496F43424B3B4DA8ED573367AB65E9BEF52A30E0C",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\tests\\test_plan_b_gates.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_plan_b_gates.py",
+      "legacy_sha256": "F7C919379E5D0D7A1D760AF4F015BEE45F240CEA8CAB38BBEFA63E1996A831D2",
+      "clean_sha256": "F7C919379E5D0D7A1D760AF4F015BEE45F240CEA8CAB38BBEFA63E1996A831D2",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "F7C919379E5D0D7A1D760AF4F015BEE45F240CEA8CAB38BBEFA63E1996A831D2",
+      "copy_manifest_source_sha256": "F7C919379E5D0D7A1D760AF4F015BEE45F240CEA8CAB38BBEFA63E1996A831D2",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\tests\\test_producer_selection_range_filter.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_producer_selection_range_filter.py",
+      "legacy_sha256": "929A043B0AB58733579DA3721444492EDD0FAD514460AD938CCD3708FBE0D27A",
+      "clean_sha256": "929A043B0AB58733579DA3721444492EDD0FAD514460AD938CCD3708FBE0D27A",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "929A043B0AB58733579DA3721444492EDD0FAD514460AD938CCD3708FBE0D27A",
+      "copy_manifest_source_sha256": "929A043B0AB58733579DA3721444492EDD0FAD514460AD938CCD3708FBE0D27A",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\tests\\test_range_filter.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_range_filter.py",
+      "legacy_sha256": "5AAF374A14F716D3F6FBF377015AE56D00B9D1D7A95ABA9844ED7E3258FDD6B7",
+      "clean_sha256": "5AAF374A14F716D3F6FBF377015AE56D00B9D1D7A95ABA9844ED7E3258FDD6B7",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "5AAF374A14F716D3F6FBF377015AE56D00B9D1D7A95ABA9844ED7E3258FDD6B7",
+      "copy_manifest_source_sha256": "5AAF374A14F716D3F6FBF377015AE56D00B9D1D7A95ABA9844ED7E3258FDD6B7",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\tests\\test_runner_metrics_api.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_runner_metrics_api.py",
+      "legacy_sha256": "1DE1E6C8E17317D9C3B9487BF83ABD272ED607B832CFAE85F9AA10AE497400A1",
+      "clean_sha256": "1DE1E6C8E17317D9C3B9487BF83ABD272ED607B832CFAE85F9AA10AE497400A1",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "1DE1E6C8E17317D9C3B9487BF83ABD272ED607B832CFAE85F9AA10AE497400A1",
+      "copy_manifest_source_sha256": "1DE1E6C8E17317D9C3B9487BF83ABD272ED607B832CFAE85F9AA10AE497400A1",
+      "status": "PASS"
+    },
+    {
+      "kind": "python_mtc_v2",
+      "legacy_path": "C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\00_PYTHON\\mtc_v2\\tests\\test_supertrend_smoke.py",
+      "clean_path": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_supertrend_smoke.py",
+      "legacy_sha256": "F99B05BB8D2090EC4E14780DEACC440AA3DA96E2802A09AC2D69011D7A7B5EF7",
+      "clean_sha256": "F99B05BB8D2090EC4E14780DEACC440AA3DA96E2802A09AC2D69011D7A7B5EF7",
+      "manifest": "mtc_command_center_sha256_manifest.csv plus copy_manifest.csv fallback for V2 legacy source",
+      "mtc_manifest_target_sha256": null,
+      "copy_manifest_target_sha256": "F99B05BB8D2090EC4E14780DEACC440AA3DA96E2802A09AC2D69011D7A7B5EF7",
+      "copy_manifest_source_sha256": "F99B05BB8D2090EC4E14780DEACC440AA3DA96E2802A09AC2D69011D7A7B5EF7",
+      "status": "PASS"
+    }
+  ]
+}

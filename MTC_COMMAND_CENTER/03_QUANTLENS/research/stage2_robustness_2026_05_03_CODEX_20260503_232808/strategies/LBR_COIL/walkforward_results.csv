@@ -1,0 +1,4 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,split
+274556,17,-100.0,0.9005,42.6933,-0.0297,-0.1485,-0.0297,0.6288,-0.5202,-100.0,-1.0,8.2585,8.2585,OPUSDT,BTCUSDT,True,LBR_COIL,train
+91519,17,-100.0,0.8441,41.8798,-0.0442,-0.1618,-0.0442,0.5712,-0.4876,-100.0,-1.0,8.1996,8.1996,OPUSDT,TRXUSDT,False,LBR_COIL,validation
+91519,17,-100.0,0.7842,40.7478,-0.0547,-0.1457,-0.0547,0.4876,-0.4277,-100.0,-1.0,8.1354,8.1354,POLUSDT,DOTUSDT,False,LBR_COIL,test

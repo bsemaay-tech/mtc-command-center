@@ -1,0 +1,6 @@
+candidate_id,baseline,trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,net_noncompounded_return,notes
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,random_same_hold,170,17,-88.7129,0.9811,43.5294,-0.1049,-0.6957,-0.1049,12.5385,-9.8509,-94.777,-0.936,10.0,10.0,ETHUSDT,BNBUSDT,True,,
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,opposite_signal,,,,0.57964,,,,,,,,,,,,,,-2662.945306,computed by sign-inverting repaired trace returns
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,shuffled_signal,,,,1.72521,,,,,,,,,,,,,,2662.945306,same returns reversed; checks metric stability not timing edge
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,simple_trend_baseline,,,,SEE_STAGE2_BASELINE_RESULTS,,,,,,,,,,,,,,,global Stage-2 baseline file read; not candidate-native
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,buy_and_hold,,,,SEE_STAGE2_BASELINE_RESULTS,,,,,,,,,,,,,,,global Stage-2 baseline file read; not candidate-native

@@ -1,0 +1,87 @@
+{
+  "phase": "phase11",
+  "status": "complete",
+  "updated_utc": "2026-05-03T19:48:43+00:00",
+  "checkpoints": [
+    {
+      "phase": "phase0",
+      "status": "started",
+      "time": "2026-05-03T19:45:12+00:00"
+    },
+    {
+      "phase": "phase1",
+      "status": "inventory_started",
+      "time": "2026-05-03T19:45:12+00:00"
+    },
+    {
+      "phase": "phase1",
+      "status": "inventory_complete",
+      "time": "2026-05-03T19:45:12+00:00",
+      "files": 74
+    },
+    {
+      "phase": "phase2",
+      "status": "candidates_extracted",
+      "time": "2026-05-03T19:45:12+00:00",
+      "candidates": 14
+    },
+    {
+      "phase": "phase4",
+      "status": "data_discovered",
+      "time": "2026-05-03T19:45:19+00:00",
+      "rows": 85
+    },
+    {
+      "phase": "phase6",
+      "status": "backtests_complete",
+      "time": "2026-05-03T19:46:35+00:00",
+      "summaries": 12,
+      "errors": 0
+    },
+    {
+      "phase": "phase11",
+      "status": "complete",
+      "time": "2026-05-03T19:46:35+00:00"
+    },
+    {
+      "phase": "phase0",
+      "status": "started",
+      "time": "2026-05-03T19:47:23+00:00"
+    },
+    {
+      "phase": "phase1",
+      "status": "inventory_started",
+      "time": "2026-05-03T19:47:23+00:00"
+    },
+    {
+      "phase": "phase1",
+      "status": "inventory_complete",
+      "time": "2026-05-03T19:47:23+00:00",
+      "files": 74
+    },
+    {
+      "phase": "phase2",
+      "status": "candidates_extracted",
+      "time": "2026-05-03T19:47:23+00:00",
+      "candidates": 14
+    },
+    {
+      "phase": "phase4",
+      "status": "data_discovered",
+      "time": "2026-05-03T19:47:30+00:00",
+      "rows": 85
+    },
+    {
+      "phase": "phase6",
+      "status": "backtests_complete",
+      "time": "2026-05-03T19:48:43+00:00",
+      "summaries": 12,
+      "errors": 0
+    },
+    {
+      "phase": "phase11",
+      "status": "complete",
+      "time": "2026-05-03T19:48:43+00:00"
+    }
+  ]
+}

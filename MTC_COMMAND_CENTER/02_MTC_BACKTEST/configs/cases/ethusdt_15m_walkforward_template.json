@@ -1,0 +1,28 @@
+{
+  "_comment": "Template multi-asset validation case (requires ETHUSDT dataset download)",
+  "dataset": "ETHUSDT_15m_20240101_20260213.parquet",
+  "start_date": "2025-07-01",
+  "end_date": "2026-01-31",
+  "warmup_bars": 200,
+  "preroll_days": 365,
+  "config": {
+    "signal_mode": "Supertrend",
+    "trade": {
+      "max_pyramid_positions": 1,
+      "signal_mode_max_entries": 1,
+      "signal_mode_cooldown_bars": 10
+    },
+    "strategy": {
+      "initial_capital": 10000.0,
+      "commission_percent": 0.04,
+      "slippage_ticks": 5,
+      "pyramiding": 1
+    },
+    "parity": {
+      "enabled": true,
+      "fill_contract": "touch",
+      "preroll_days": 365,
+      "preroll_mode": "warmup_only"
+    }
+  }
+}

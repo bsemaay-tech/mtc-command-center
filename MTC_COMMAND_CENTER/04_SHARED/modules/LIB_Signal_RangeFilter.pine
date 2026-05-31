@@ -1,0 +1,76 @@
+//@version=6
+library("LIB_Signal_RangeFilter", overlay=false)
+
+// Helper: confirmed-bar gate (non-repainting)
+f__confirmed(_cond) =>
+    barstate.isconfirmed ? _cond : false
+
+// Module: Range Filter Hybrid (ADX+Chop+BB Adaptive)
+// Returns: [line, dir, longRaw, shortRaw, bbUpper, bbLower, bbBasis]
+f_range_filter_hybrid_signal(_adx, _plusDI, _minusDI, _chop, _src, _adxTrendThresh, _adxRangeThresh, _chopTrendThresh, _chopRangeThresh, _rsiLen, _rsiOS, _rsiOB, _bbLen, _bbMult, _useBBFilter) =>
+    // 1. Market Regime Detection
+    bool isTrending = _adx > _adxTrendThresh and _chop < _chopTrendThresh
+    bool isRanging  = _adx < _adxRangeThresh and _chop > _chopRangeThresh
+
+    // 2. Trend Mode Signals (ADX + Directional Indicators)
+    bool trendLong  = isTrending and _plusDI > _minusDI and _adx > nz(_adx[1], _adx)
+    bool trendShort = isTrending and _minusDI > _plusDI and _adx > nz(_adx[1], _adx)
+
+    // 3. Range Mode Signals (RSI + Bollinger Bands Mean Reversion)
+    float rsi = ta.rsi(_src, _rsiLen)
+    float bbBasis = ta.sma(_src, _bbLen)
+    float bbDev   = ta.stdev(_src, _bbLen)
+    float bbUpper = bbBasis + (_bbMult * bbDev)
+    float bbLower = bbBasis - (_bbMult * bbDev)
+
+    // Mean reversion logic: buy near lower band, sell near upper band
+    bool nearLowerBand = _src <= bbLower * 1.02  // within 2% of lower band
+    bool nearUpperBand = _src >= bbUpper * 0.98  // within 2% of upper band
+
+    bool rangeLong  = isRanging and rsi < _rsiOS and (_useBBFilter ? nearLowerBand : true)
+    bool rangeShort = isRanging and rsi > _rsiOB and (_useBBFilter ? nearUpperBand : true)
+
+    // 4. Combined Signals
+    bool _longRaw  = trendLong or rangeLong
+    bool _shortRaw = trendShort or rangeShort
+
+    // 5. Wrap with confirmed to prevent repainting
+    bool _longRaw_confirmed  = f__confirmed(_longRaw)
+    bool _shortRaw_confirmed = f__confirmed(_shortRaw)
+
+    // 6. Outputs
+    float _line = bbBasis  // Use BB middle band as signal line
+    int _dir = _plusDI > _minusDI ? 1 : -1
+
+    [_line, _dir, _longRaw_confirmed, _shortRaw_confirmed, bbUpper, bbLower, bbBasis]
+
+// Exported Range Filter signal wrapper
+// Parameters:
+// - _adx/_plusDI/_minusDI/_chop: precomputed regime inputs
+// - _src: price source (close)
+// - _adxTrendThresh/_adxRangeThresh/_chopTrendThresh/_chopRangeThresh: regime thresholds
+// - _rsiLen/_rsiOS/_rsiOB: RSI settings
+// - _bbLen/_bbMult/_useBBFilter: Bollinger Band settings
+// Returns:
+// - line: signal line (BB basis)
+// - dir: +1/-1 direction
+// - longRaw/shortRaw: confirmed raw signals
+// - bbUpper/bbLower/bbBasis: BB series for visualization
+export sig_rangefilter(
+     float _adx,
+     float _plusDI,
+     float _minusDI,
+     float _chop,
+     float _src,
+     float _adxTrendThresh,
+     float _adxRangeThresh,
+     float _chopTrendThresh,
+     float _chopRangeThresh,
+     int _rsiLen,
+     float _rsiOS,
+     float _rsiOB,
+     int _bbLen,
+     float _bbMult,
+     bool _useBBFilter
+ ) =>
+    f_range_filter_hybrid_signal(_adx, _plusDI, _minusDI, _chop, _src, _adxTrendThresh, _adxRangeThresh, _chopTrendThresh, _chopRangeThresh, _rsiLen, _rsiOS, _rsiOB, _bbLen, _bbMult, _useBBFilter)

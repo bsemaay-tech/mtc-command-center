@@ -1,0 +1,4 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,split
+195,16,5591.6139,1.6357,42.5641,4.1468,-5.7101,4.1468,25.0678,-11.3572,-99.3507,56.2816,12.1385,12.1385,TRXUSDT,XRPUSDT,False,MARTIN_LUKE,train
+65,16,1342.6634,2.109,55.3846,5.8799,4.2672,5.8799,20.1896,-11.8838,-78.958,17.0048,12.5692,12.5692,DOGEUSDT,ARBUSDT,False,MARTIN_LUKE,validation
+66,17,-82.4083,0.7089,31.8182,-1.8062,-5.54,-1.8062,13.8243,-9.1005,-88.3936,-0.9323,12.4545,12.4545,BNBUSDT,LTCUSDT,False,MARTIN_LUKE,test

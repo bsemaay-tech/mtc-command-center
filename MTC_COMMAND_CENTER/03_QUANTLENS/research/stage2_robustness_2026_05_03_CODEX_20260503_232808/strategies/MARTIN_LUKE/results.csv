@@ -1,0 +1,2 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,name,timeframe,best_parameter_set
+326,17,14344.6541,1.5289,42.9448,3.2872,-4.663,3.2872,22.1269,-10.8933,-99.3507,144.3841,12.2883,12.2883,BNBUSDT,XRPUSDT,False,MARTIN_LUKE,Martin Luke Pullback / AVWAP,1D,"{""anchor_lb"": 20, ""hold"": 20, ""tol"": 0.015}"

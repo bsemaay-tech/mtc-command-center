@@ -1,0 +1,28 @@
+{
+  "random": {
+    "take_profit.use_tp": {
+      "dist": "choice",
+      "values": [true]
+    },
+    "multi_tp.use_multi_tp": {
+      "dist": "choice",
+      "values": [true]
+    },
+    "multi_tp.tp1_rr": {
+      "dist": "uniform_float",
+      "low": 0.5,
+      "high": 2.0,
+      "step": 0.25
+    },
+    "multi_tp.tp1_pct": {
+      "dist": "choice",
+      "values": [20.0, 25.0, 33.0, 40.0, 50.0, 60.0, 75.0]
+    },
+    "multi_tp.tp2_rr": {
+      "dist": "uniform_float",
+      "low": 2.0,
+      "high": 8.0,
+      "step": 0.25
+    }
+  }
+}

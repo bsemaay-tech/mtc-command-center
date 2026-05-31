@@ -1,0 +1,4 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,year
+184,17,36.3692,1.6945,55.4348,0.1736,0.0599,0.1736,0.7641,-0.5609,-14.8322,2.452,5.9511,5.9511,NEARUSDT,ETHUSDT,False,HIGHBETA_PROXY,2024
+235,17,33.6447,1.4493,50.6383,0.1283,0.0299,0.1283,0.8173,-0.5785,-15.5149,2.1685,5.9872,5.9872,DOTUSDT,TRXUSDT,False,HIGHBETA_PROXY,2025
+73,17,-0.3341,0.9978,45.2055,-0.0006,-0.0602,-0.0006,0.6168,-0.51,-8.016,-0.0417,6.0,6.0,POLUSDT,ARBUSDT,True,HIGHBETA_PROXY,2026

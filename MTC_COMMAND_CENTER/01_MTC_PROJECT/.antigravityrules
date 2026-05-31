@@ -1,0 +1,13 @@
+# Antigravity project rules
+
+Primary project rules live in `AGENTS.md`.
+Session state lives in `03_DOCS/HANDOFF.md`.
+Run/validation instructions live in `03_DOCS/RUNBOOK.md`.
+
+Core rules:
+- Work only on MTC V2 unless explicitly told otherwise
+- Treat V1 / legacy engine as reference-only
+- Keep Pine as single-file architecture
+- Follow parity-first layer order
+- Do not mix build phase with validate phase
+- Update HANDOFF.md at end of session

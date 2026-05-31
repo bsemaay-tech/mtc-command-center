@@ -1,0 +1,18 @@
+{
+  "grid": {
+    "take_profit.use_tp": {
+      "type": "choice",
+      "values": [true]
+    },
+    "take_profit.mode": {
+      "type": "choice",
+      "values": ["%"]
+    },
+    "take_profit.percent": {
+      "type": "float",
+      "low": 0.5,
+      "high": 4.0,
+      "step": 0.25
+    }
+  }
+}

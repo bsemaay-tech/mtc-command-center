@@ -1,0 +1,39 @@
+{
+  "candidate": {
+    "candidate_id": "LINDA_5SMA",
+    "name": "Linda 5SMA RS Pullback",
+    "aliases": "CANDIDATE_007",
+    "horizon": "SWING",
+    "family": "mean_reversion_pullback",
+    "native_asset_class": "crypto_proxy",
+    "native_timeframe": "1D",
+    "data_status": "available_crypto_daily_rs_proxy",
+    "eligible": true,
+    "reason": "mechanical proxy available; RS proxy caveat"
+  },
+  "best_parameter_set": {
+    "atr_stop": 0,
+    "hold": 10,
+    "sma": 8,
+    "trend": "sma200"
+  },
+  "assets": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "BNBUSDT",
+    "XRPUSDT",
+    "ADAUSDT",
+    "DOGEUSDT",
+    "AVAXUSDT",
+    "LINKUSDT",
+    "DOTUSDT",
+    "LTCUSDT",
+    "TRXUSDT",
+    "APTUSDT",
+    "ARBUSDT",
+    "NEARUSDT",
+    "OPUSDT",
+    "POLUSDT"
+  ]
+}

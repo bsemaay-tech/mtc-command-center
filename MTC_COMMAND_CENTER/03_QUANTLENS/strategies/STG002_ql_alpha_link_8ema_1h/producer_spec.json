@@ -1,0 +1,67 @@
+{
+  "candidate_id": "QL_ALPHA_LINK_8EMA_1H",
+  "strategy_family": "8EMA_PULLBACK_ENTRY_WITH_EMA8_TRAILING_EXIT",
+  "engine_strategy_id": "QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL",
+  "symbol": "LINKUSDT",
+  "timeframe": "1h",
+  "direction": "long_only",
+  "verified_parameters": {
+    "pullback_atr": 0.5,
+    "impulse_atr": 1.6,
+    "slope_window": 3,
+    "ema_len": 8,
+    "atr_len": 14,
+    "stop_lookback_bars": 3,
+    "cost_bps_round_trip": 8.0,
+    "max_hold_bars": 96
+  },
+  "signal_inputs": {
+    "ema8": "EMA(close, 8)",
+    "atr14": "ATR(14) Wilder/RMA (ewm alpha=1/14, min_periods=14)",
+    "slope": "ema8 - ema8[slope_window]",
+    "dist_atr": "abs(close - ema8) / atr14",
+    "impulse_atr": "abs(close - close[slope_window]) / atr14"
+  },
+  "long_signal_definition": "(close > ema8) AND (slope > 0) AND (dist_atr <= pullback_atr) AND (impulse_atr[1] >= impulse_atr_param)",
+  "short_signal_definition": null,
+  "entry_rule": "enter at NEXT bar open after the signal bar closes",
+  "stop_rule": "lowest low of last 3 bars at signal bar",
+  "exit_rule": "TRAILING: when bar close < ema8, exit at next bar open; hard stop if low <= stop_price; force-exit after max_hold_bars. NOTE: this exit-trail variant does NOT use a fixed 2R target.",
+  "bar_close_only": true,
+  "no_repaint": "true under engine assumptions: signal evaluated on CLOSED bar i, executed at open of bar i+1; no intrabar/tick dependency for signal; stop/exit checked intrabar on subsequent bars only",
+  "no_lookahead": "true: all inputs use values at or before the signal bar; impulse uses [1] shift",
+  "data_requirements": {
+    "ohlcv": ["open", "high", "low", "close"],
+    "warmup_bars": ">= 200 recommended for stable EMA/ATR",
+    "coverage_verified": "LINK 1h 2020-01-17..2026-04-27, 55016 bars"
+  },
+  "expected_outputs": {
+    "signal_column": "long_entry (bool, on signal bar)",
+    "stop_column": "stop_price",
+    "exit_marker": "trail_exit or stop_exit or time_exit"
+  },
+  "metrics_lockbox": {
+    "return_pct_compound": 75.37,
+    "buyhold_pct": -20.64,
+    "excess_alpha_pct": 96.01,
+    "profit_factor": 2.038,
+    "trades": 121,
+    "max_drawdown_pct": -16.31,
+    "win_rate": 0.3554,
+    "expectancy_R": 0.338,
+    "multi_window_positive": "5/5",
+    "param_stable": true,
+    "bootstrap_p_hires": 0.02736,
+    "deflated_sharpe_p": 0.0683,
+    "bh_fdr_survivor": false
+  },
+  "promotion_status": ["PROMOTE_TO_FORWARD_PAPER_TRADE", "PROMOTE_TO_PARITY_CANDIDATE"],
+  "fidelity_to_original_youtube_source": "NEEDS_SOURCE_CONFIRMATION",
+  "source_artifacts": [
+    "05_BACKTEST_RESULTS/MEGA_walk_forward_results.json",
+    "05_BACKTEST_RESULTS/alpha_summary.json",
+    "05_BACKTEST_RESULTS/multiwindow_summary.json",
+    "tools/mega_walk_forward.py"
+  ],
+  "not_an_approved_live_trading_system": true
+}

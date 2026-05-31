@@ -1,0 +1,4 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,kill_test
+466,16,58.2949,1.3705,50.6438,0.1032,0.0048,0.1032,0.7536,-0.5642,-15.5149,3.7573,5.9742,5.9742,DOGEUSDT,TRXUSDT,False,HIGHBETA_PROXY,remove_best_asset
+308,17,33.1982,1.3441,49.3506,0.0978,-0.0097,0.0978,0.7738,-0.5609,-15.5149,2.1398,5.9903,5.9903,POLUSDT,TRXUSDT,False,HIGHBETA_PROXY,remove_best_year
+487,17,47.4734,1.3053,51.1294,0.0837,0.0238,0.0837,0.6999,-0.5609,-73.8731,0.6426,5.9754,5.9754,DOGEUSDT,TRXUSDT,False,HIGHBETA_PROXY,remove_top_5_trades

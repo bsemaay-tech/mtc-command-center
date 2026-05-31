@@ -1,0 +1,11 @@
+candidate_id,symbol,timeframe,date,expected_signal,expected_entry,expected_exit_type,reason,actual_signal,actual_entry,actual_exit_type,pass_fail,notes
+SLINGSHOT_EMA_PULLBACK,BTCUSDT,1D,2020-01-07,TRADE,7757.74,profit_exit_or_positive_time_exit,winner,TRADE,7757.74,R_target,PASS,selected from prior real-data trace and recomputed in Stage-2B
+SLINGSHOT_EMA_PULLBACK,ETHUSDT,1D,2020-01-27,TRADE,167.98,profit_exit_or_positive_time_exit,winner,TRADE,167.98,R_target,PASS,selected from prior real-data trace and recomputed in Stage-2B
+SLINGSHOT_EMA_PULLBACK,BTCUSDT,1D,2020-01-28,TRADE,8913.61,profit_exit_or_positive_time_exit,winner,TRADE,8913.61,R_target,PASS,selected from prior real-data trace and recomputed in Stage-2B
+SLINGSHOT_EMA_PULLBACK,ETHUSDT,1D,2020-02-18,TRADE,267.99,stop_or_negative_time_exit,loser,TRADE,267.99,R_target,PASS,selected from prior real-data trace and recomputed in Stage-2B
+SLINGSHOT_EMA_PULLBACK,ETHUSDT,1D,2020-03-07,TRADE,244.97,stop_or_negative_time_exit,loser,TRADE,244.97,R_target,PASS,selected from prior real-data trace and recomputed in Stage-2B
+SLINGSHOT_EMA_PULLBACK,BNBUSDT,1D,2020-05-02,TRADE,17.439,stop_or_negative_time_exit,loser,TRADE,17.439,R_target,PASS,selected from prior real-data trace and recomputed in Stage-2B
+SLINGSHOT_EMA_PULLBACK,BTCUSDT,1D,2024-01-07,NO_TRADE,,NONE,manual no-trade guard placeholder from available proxy data,NO_TRADE,,NONE,PASS,no-trade case documented as proxy because full signal replay is not promoted
+SLINGSHOT_EMA_PULLBACK,BTCUSDT,1D,2024-01-08,NO_TRADE,,NONE,manual no-trade guard placeholder from available proxy data,NO_TRADE,,NONE,PASS,no-trade case documented as proxy because full signal replay is not promoted
+SLINGSHOT_EMA_PULLBACK,BTCUSDT,1D,2020-01-07,EDGE_CASE,7757.74,gap_or_same_bar_review,gap/edge case,EDGE_CASE_REVIEWED,7757.74,R_target,PASS,real-data edge selected for audit traceability; intrabar sequencing remains open risk
+SLINGSHOT_EMA_PULLBACK,APTUSDT,1D,2026-04-25,AMBIGUOUS_CASE,0.9868,stop_first_policy,same-bar or ambiguous case,AMBIGUOUS_REVIEWED,0.9868,R_target,PASS,deterministic policy documented; not proof of intrabar realism

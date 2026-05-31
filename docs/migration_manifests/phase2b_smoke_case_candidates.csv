@@ -1,0 +1,4 @@
+﻿"candidate","source","support_status","evidence","risk","recommended"
+"AUTO_061","MTC_V2_PARITY_CASES.csv","VALID_FOR_--tracker-case","Latest dated tracker-backed PASS row; status DONE; llm_last_run_utc 2026-05-29T18:26:37Z.","Existing copied artifact appears stale/inconsistent, so a fresh smoke should regenerate artifacts.","YES"
+"AUTO_001","MTC_V2_PARITY_CASES.csv","VALID_FOR_--tracker-case","Baseline tracker case; PASS in tracker; default when no --case and no --tracker-case are provided.","Less representative of the 2026-05-29 handoff claim than AUTO_061.","FALLBACK"
+"case_110","MTC_V2_TW_EXPORT_CASE_SUITE_V2.csv and TW_EXPORT_CASES_V2 folder","NOT_VALID_FOR_--tracker-case","Present in export suite and copied case_plan, but absent from MTC_V2_PARITY_CASES.csv case_id column.","--tracker-case case_110 fails before running because load_tracker_case_row cannot find it.","NO"

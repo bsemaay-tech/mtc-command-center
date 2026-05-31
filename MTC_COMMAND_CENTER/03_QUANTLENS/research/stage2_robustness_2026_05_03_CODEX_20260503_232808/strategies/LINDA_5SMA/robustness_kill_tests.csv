@@ -1,0 +1,4 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,kill_test
+821,16,974.3738,1.2856,66.1389,0.8577,1.8927,0.8577,5.8377,-8.8695,-97.9461,9.9481,4.151,4.151,ETHUSDT,DOGEUSDT,False,LINDA_5SMA,remove_best_asset
+666,17,79.9959,1.1873,65.1652,0.5347,1.7671,0.5347,5.2018,-8.1962,-97.865,0.8174,4.3078,4.3078,ETHUSDT,DOGEUSDT,False,LINDA_5SMA,remove_best_year
+869,17,1632.0778,1.2946,66.168,0.8763,1.907,0.8763,5.8204,-8.7932,-100.0,16.3208,4.153,4.153,ETHUSDT,DOGEUSDT,False,LINDA_5SMA,remove_top_5_trades

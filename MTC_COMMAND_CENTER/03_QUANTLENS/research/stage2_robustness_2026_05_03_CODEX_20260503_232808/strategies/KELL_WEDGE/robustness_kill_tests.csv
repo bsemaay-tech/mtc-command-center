@@ -1,0 +1,4 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,kill_test
+7,2,28.1359,3.3888,42.8571,3.9195,-2.3511,3.9195,12.9741,-2.8714,-6.1844,4.5495,11.7143,11.7143,BNBUSDT,BTCUSDT,True,KELL_WEDGE,remove_best_asset
+9,3,23.1029,2.7936,44.4444,2.5688,-2.285,2.5688,9.0021,-2.5779,-7.3131,3.1591,11.6667,11.6667,TRXUSDT,BNBUSDT,True,KELL_WEDGE,remove_best_year
+12,3,-8.8862,0.6397,25.0,-0.7083,-2.4025,-0.7083,5.0304,-2.6212,-21.271,-0.4178,7.6667,7.6667,BTCUSDT,BNBUSDT,True,KELL_WEDGE,remove_top_5_trades

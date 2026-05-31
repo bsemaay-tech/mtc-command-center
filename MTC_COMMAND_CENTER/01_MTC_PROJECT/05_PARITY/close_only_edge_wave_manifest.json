@@ -1,0 +1,66 @@
+{
+  "profile": "close_only_deterministic_v2",
+  "status": "frozen_tracker_case_pack",
+  "validated_on_utc": "2026-04-01T06:15:00Z",
+  "artifact_root": "reports/tracker_cases",
+  "tracker_workbook_fallback": "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASE_TRACKER_close_only_wave1_pending.xlsx",
+  "wave": "edge_and_exit_variants",
+  "cases": [
+    {
+      "id": "CO_024_MA_SLOPE",
+      "tracker_case_id": "CO_024_MA_SLOPE",
+      "source_case": "AUTO_024",
+      "owner_focus": "MA+slope zero-trade edge",
+      "expected_trades": 0,
+      "report_prefix": "tracker_cases/CO_024_MA_SLOPE"
+    },
+    {
+      "id": "CO_025_MCGINLEY",
+      "tracker_case_id": "CO_025_MCGINLEY",
+      "source_case": "AUTO_025",
+      "owner_focus": "McGinley edge",
+      "expected_trades": 75,
+      "report_prefix": "tracker_cases/CO_025_MCGINLEY"
+    },
+    {
+      "id": "CO_034_EXIT_ON_MA_BLOCK",
+      "tracker_case_id": "CO_034_EXIT_ON_MA_BLOCK",
+      "source_case": "AUTO_034",
+      "owner_focus": "MA block exit owner",
+      "expected_trades": 137,
+      "report_prefix": "tracker_cases/CO_034_EXIT_ON_MA_BLOCK"
+    },
+    {
+      "id": "CO_051_EXIT_ON_HTF_BLOCK",
+      "tracker_case_id": "CO_051_EXIT_ON_HTF_BLOCK",
+      "source_case": "AUTO_051",
+      "owner_focus": "HTF block exit owner",
+      "expected_trades": 114,
+      "report_prefix": "tracker_cases/CO_051_EXIT_ON_HTF_BLOCK"
+    },
+    {
+      "id": "CO_058_MCGINLEY_HTF",
+      "tracker_case_id": "CO_058_MCGINLEY_HTF",
+      "source_case": "AUTO_058",
+      "owner_focus": "McGinley HTF filter",
+      "expected_trades": 106,
+      "report_prefix": "tracker_cases/CO_058_MCGINLEY_HTF"
+    },
+    {
+      "id": "CO_059_ADX_HTF",
+      "tracker_case_id": "CO_059_ADX_HTF",
+      "source_case": "AUTO_059",
+      "owner_focus": "ADX HTF filter",
+      "expected_trades": 124,
+      "report_prefix": "tracker_cases/CO_059_ADX_HTF"
+    },
+    {
+      "id": "CO_060_CHOP_HTF",
+      "tracker_case_id": "CO_060_CHOP_HTF",
+      "source_case": "AUTO_060",
+      "owner_focus": "Chop HTF low-trade filter",
+      "expected_trades": 14,
+      "report_prefix": "tracker_cases/CO_060_CHOP_HTF"
+    }
+  ]
+}

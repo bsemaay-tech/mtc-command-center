@@ -1,0 +1,9 @@
+source_type,path_or_url,evidence,usage
+classification,06_QUANTLENS_LAB\research\restart_transcript_intake_audit_2026_05_04_FINAL_CODEX_REPAIRED\FINAL_MASTER_CANDIDATE_CLASSIFICATION.csv,QLR_R215f4fj7V8 classified DAY_TRADE_STRATEGY,Defines sandbox candidate and final action
+manual_queue,06_QUANTLENS_LAB\research\restart_transcript_intake_audit_2026_05_04_FINAL_CODEX_REPAIRED\FINAL_MANUAL_VISUAL_TEST_QUEUE.csv,Rank 1 day trade candidate,Defines first visual review priority
+antigravity_ranking,06_QUANTLENS_LAB\research\restart_final_priority_ranking_2026_05_04_ANTIGRAVITY_20260504_181609\FINAL_DAY_TRADE_PRIORITY_RANKING.csv,Plot intraday trend and entry/stop on 5m chart,Defines first visual chart goal
+transcript,06_QUANTLENS_LAB\00_INBOX_REPORTS\Transcrips\The Simple Trading Setup That Made Lance Breitstein Millions.md,"18:23 prior-bar-high reversal; 19:39 VWAP guard; 20:02 range-bound guard; 1:06:29 stop discipline",Primary source rules
+intake,06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03_R215f4fj7V8_lance_breitstein_trend_trading.md,VWAP guard / right-side-of-V / trend alignment extracted,Structured source summary
+corrected_intake,06_QUANTLENS_LAB\research\restart_transcript_intake_audit_2026_05_04_CODEX_20260504_175759\corrected_intakes\CORRECTED_R215f4fj7V8_INTAKE_2026-05-03_R215f4fj7V8_lance_breitstein_trend_trading.md,Missing trader wisdom preserved,Adds mental process/alert caveat
+trader_wiki,06_QUANTLENS_LAB\11_TRADER_WIKI\2026_05_04_final_repair_import\00_FINAL_REPAIR_INDEX.md,Preserve physical preparation and alerts below highs during flushes,Prevents over-mechanizing setup
+architecture,06_QUANTLENS_LAB\research\restart_transcript_intake_audit_2026_05_04_FINAL_CODEX_REPAIRED\FINAL_MTC_SANDBOX_ARCHITECTURE_DECISION.md,Standalone sandbox with raw pulses,Defines isolation boundary

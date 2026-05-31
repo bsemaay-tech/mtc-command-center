@@ -1,0 +1,1 @@
+Take QL_STAN_STAGE_2_BREAKOUT and create a mathematically rigorous Pine Script prototype module inside a scratchpad. Also, initiate Stage-3 Real Equity Data Acquisition for US growth stocks to properly backtest CANSLIM and Charles Harris Pullback systems.

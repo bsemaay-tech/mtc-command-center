@@ -1,0 +1,3 @@
+# STG045_ql_2026_05_01_us_equities_intraday_purple_profits
+
+Source folder: `C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\01_TRIAGED_CANDIDATES\QL_2026-05-01_US_EQUITIES_INTRADAY_PURPLE_PROFITS`

@@ -1,0 +1,16 @@
+{
+  "candidate_id": "QL_TRAIL_20MA_CHRISTIAN_1D",
+  "source_url": "https://www.youtube.com/watch?v=Lot25-2fb-4",
+  "source_candidate": "QLR_Lot25-2fb-4",
+  "title": "Christian Flanders 20-day MA trailing exit overlay",
+  "kind": "exit_overlay",
+  "rules_high_confidence": [
+    "Exit on close below 20-day SMA",
+    "Empirically: +145% vs 10-day baseline in author's backtest"
+  ],
+  "entry_pseudo": "N/A (overlay)",
+  "exit_pseudo": "exit_on=close<SMA20",
+  "param_grid_size_planned": 20,
+  "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+  "promoted_at": "2026-05-31T00:09:34"
+}

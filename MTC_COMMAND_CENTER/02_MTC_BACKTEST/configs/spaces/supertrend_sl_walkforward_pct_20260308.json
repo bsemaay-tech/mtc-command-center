@@ -1,0 +1,7 @@
+{
+  "random": {
+    "stop_loss.use_sl": { "dist": "choice", "values": [true] },
+    "stop_loss.mode": { "dist": "choice", "values": ["%"] },
+    "stop_loss.percent": { "dist": "uniform_float", "low": 0.2, "high": 8.0, "step": 0.1 }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/liveops_status.schema.json",
+  "title": "MCC LiveOps Status",
+  "type": "object",
+  "required": ["schema_version", "mode", "dry_run", "live_trading_enabled", "events"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "generated_at": { "type": ["string", "null"] },
+    "source": { "type": ["string", "null"] },
+    "mode": { "type": "string" },
+    "dry_run": { "type": "boolean" },
+    "live_trading_enabled": { "type": "boolean" },
+    "webhook_sending_enabled": { "type": "boolean" },
+    "broker_integration_enabled": { "type": "boolean" },
+    "summary": { "type": "object", "additionalProperties": true },
+    "safety_gates": { "type": "object", "additionalProperties": true },
+    "paper_trade_plans": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "events": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+  },
+  "additionalProperties": false
+}

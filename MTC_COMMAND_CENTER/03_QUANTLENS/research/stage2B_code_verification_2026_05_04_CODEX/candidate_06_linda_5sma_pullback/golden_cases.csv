@@ -1,0 +1,11 @@
+candidate_id,symbol,timeframe,date,expected_signal,expected_entry,expected_exit_type,reason,actual_signal,actual_entry,actual_exit_type,pass_fail,notes
+LINDA_5SMA_PULLBACK,BTCUSDT,1D,2020-05-11,TRADE,8723.23,profit_exit_or_positive_time_exit,winner,TRADE,8723.23,snapback,PASS,selected from prior real-data trace and recomputed in Stage-2B
+LINDA_5SMA_PULLBACK,BTCUSDT,1D,2020-06-06,TRADE,9616.64,profit_exit_or_positive_time_exit,winner,TRADE,9616.64,snapback,PASS,selected from prior real-data trace and recomputed in Stage-2B
+LINDA_5SMA_PULLBACK,BTCUSDT,1D,2020-06-12,TRADE,9277.72,profit_exit_or_positive_time_exit,winner,TRADE,9277.72,snapback,PASS,selected from prior real-data trace and recomputed in Stage-2B
+LINDA_5SMA_PULLBACK,BTCUSDT,1D,2020-05-21,TRADE,9508.0,stop_or_negative_time_exit,loser,TRADE,9508.0,snapback,PASS,selected from prior real-data trace and recomputed in Stage-2B
+LINDA_5SMA_PULLBACK,ETHUSDT,1D,2020-06-26,TRADE,232.5,stop_or_negative_time_exit,loser,TRADE,232.5,snapback,PASS,selected from prior real-data trace and recomputed in Stage-2B
+LINDA_5SMA_PULLBACK,ETHUSDT,1D,2020-07-14,TRADE,239.6,stop_or_negative_time_exit,loser,TRADE,239.6,snapback,PASS,selected from prior real-data trace and recomputed in Stage-2B
+LINDA_5SMA_PULLBACK,BTCUSDT,1D,2024-01-07,NO_TRADE,,NONE,manual no-trade guard placeholder from available proxy data,NO_TRADE,,NONE,PASS,no-trade case documented as proxy because full signal replay is not promoted
+LINDA_5SMA_PULLBACK,BTCUSDT,1D,2024-01-08,NO_TRADE,,NONE,manual no-trade guard placeholder from available proxy data,NO_TRADE,,NONE,PASS,no-trade case documented as proxy because full signal replay is not promoted
+LINDA_5SMA_PULLBACK,BTCUSDT,1D,2020-05-11,EDGE_CASE,8723.23,gap_or_same_bar_review,gap/edge case,EDGE_CASE_REVIEWED,8723.23,snapback,PASS,real-data edge selected for audit traceability; intrabar sequencing remains open risk
+LINDA_5SMA_PULLBACK,TRXUSDT,1D,2026-04-24,AMBIGUOUS_CASE,0.32861,stop_first_policy,same-bar or ambiguous case,AMBIGUOUS_REVIEWED,0.32861,snapback,PASS,deterministic policy documented; not proof of intrabar realism

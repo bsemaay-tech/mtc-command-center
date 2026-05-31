@@ -1,0 +1,9 @@
+{
+  "candidate_id": "SLINGSHOT_EMA_PULLBACK",
+  "source_stage2_id": "SLINGSHOT",
+  "native_market": "US_equity_style_crypto_proxy",
+  "timeframe": "1D",
+  "base_round_trip_cost_pct": 0.12,
+  "execution_policy": "completed-bar signal, next-bar entry unless prior contract used stop trigger, exit-first, stop-first same-bar conflict",
+  "verdict": "WEAK_STAGE3_CODE_VERIFIED"
+}

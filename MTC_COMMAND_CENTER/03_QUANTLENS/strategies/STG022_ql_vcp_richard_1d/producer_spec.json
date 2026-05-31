@@ -1,0 +1,19 @@
+{
+  "candidate_id": "QL_VCP_RICHARD_1D",
+  "source_url": "https://www.youtube.com/watch?v=Tm0dkf8_giA",
+  "source_candidate": "QLR_Tm0dkf8_giA",
+  "title": "VCP Breakout (Richard Moglen tutorial)",
+  "kind": "strategy",
+  "rules_high_confidence": [
+    "2+ successive lower-amplitude contractions within a base",
+    "volume declines on each contraction, surges on breakout",
+    "entry at pivot-point breakout (prior resistance)",
+    "stop at low of base OR low of breakout day",
+    "trail under 21 EMA"
+  ],
+  "entry_pseudo": "contractions>=2 AND close>pivot AND vol>1.5*avg20",
+  "exit_pseudo": "close<EMA21 OR close<stop",
+  "param_grid_size_planned": 50,
+  "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+  "promoted_at": "2026-05-31T00:09:34"
+}

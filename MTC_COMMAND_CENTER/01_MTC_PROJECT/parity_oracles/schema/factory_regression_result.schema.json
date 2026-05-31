@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Factory Regression Result",
+  "type": "object",
+  "required": [
+    "case_id",
+    "status",
+    "levels",
+    "reference_oracle_status",
+    "python_lifecycle_status",
+    "pinets_status",
+    "tradingview_export_status",
+    "first_divergence",
+    "not_comparable_reasons",
+    "commands_run",
+    "output_files"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/status"
+    },
+    "levels": {
+      "type": "object",
+      "required": ["L0", "L1", "L2", "L3", "L4", "L5", "L6"],
+      "properties": {
+        "L0": {"$ref": "#/$defs/status"},
+        "L1": {"$ref": "#/$defs/status"},
+        "L2": {"$ref": "#/$defs/status"},
+        "L3": {"$ref": "#/$defs/status"},
+        "L4": {"$ref": "#/$defs/status"},
+        "L5": {"$ref": "#/$defs/status"},
+        "L6": {"$ref": "#/$defs/status"}
+      },
+      "additionalProperties": false
+    },
+    "reference_oracle_status": {
+      "$ref": "#/$defs/status"
+    },
+    "python_lifecycle_status": {
+      "$ref": "#/$defs/status"
+    },
+    "pinets_status": {
+      "$ref": "#/$defs/status"
+    },
+    "tradingview_export_status": {
+      "$ref": "#/$defs/status"
+    },
+    "first_divergence": {},
+    "not_comparable_reasons": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "commands_run": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["command", "returncode", "stdout", "stderr"],
+        "properties": {
+          "command": {"type": "string"},
+          "returncode": {"type": "integer"},
+          "stdout": {"type": "string"},
+          "stderr": {"type": "string"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "output_files": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "status": {
+      "enum": [
+        "PASS",
+        "PASS_WITH_TOLERANCE",
+        "FAIL",
+        "NOT_COMPARABLE",
+        "MISSING_CASE_PLAN",
+        "MISSING_EXPORT",
+        "ORACLE_UNAVAILABLE",
+        "SKIPPED_BY_POLICY"
+      ]
+    }
+  }
+}

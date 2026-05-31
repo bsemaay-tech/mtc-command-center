@@ -1,0 +1,6 @@
+candidate_id,baseline,trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,net_noncompounded_return,notes
+MARTIN_LUKE_PULLBACK,random_same_hold,170,17,-96.1965,0.9187,41.7647,-0.4905,-2.0509,-0.4905,13.2626,-10.3538,-98.1576,-0.98,12.0,12.0,XRPUSDT,BNBUSDT,True,,
+MARTIN_LUKE_PULLBACK,opposite_signal,,,,0.65407,,,,,,,,,,,,,,-1071.612172,computed by sign-inverting repaired trace returns
+MARTIN_LUKE_PULLBACK,shuffled_signal,,,,1.528889,,,,,,,,,,,,,,1071.612172,same returns reversed; checks metric stability not timing edge
+MARTIN_LUKE_PULLBACK,simple_trend_baseline,,,,SEE_STAGE2_BASELINE_RESULTS,,,,,,,,,,,,,,,global Stage-2 baseline file read; not candidate-native
+MARTIN_LUKE_PULLBACK,buy_and_hold,,,,SEE_STAGE2_BASELINE_RESULTS,,,,,,,,,,,,,,,global Stage-2 baseline file read; not candidate-native

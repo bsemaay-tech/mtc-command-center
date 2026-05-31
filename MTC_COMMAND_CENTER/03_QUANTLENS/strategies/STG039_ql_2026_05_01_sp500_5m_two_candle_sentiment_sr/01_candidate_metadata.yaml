@@ -1,0 +1,24 @@
+candidate_id: QL_2026-05-01_SP500_5M_TWO_CANDLE_SENTIMENT_SR
+status: READY_FOR_PYTHON_PROTOTYPE
+source_url: UNKNOWN_URL
+video_id: UNKNOWN_VIDEO_2026-05-01_TWO_CANDLE_THEORY_SR
+title: Two candle theory sentiment with support and resistance
+channel_name: UNKNOWN_CHANNEL
+channel_id: UNKNOWN_CHANNEL
+transcript_hash: 742fbc7184cfe33487fe568b9c9ca695c5a33aaccd5d0028a1b299794f449203
+intake_date: 2026-05-01
+market_type: US_INDEX_EXAMPLE_GENERALIZABLE
+timeframe: 5m
+strategy_type: two candle sentiment state machine with support resistance
+candidate_kind:
+  - entry_gate
+  - confirmation
+  - guard
+  - exit_rule
+  - sl_tp_method
+commercial_value_score: 6
+complexity_score: 5
+repaint_risk: LOW
+lookahead_risk: MEDIUM
+closed_source_risk: LOW
+notes: URL and channel metadata missing. Transcript uses S&P 500 5m examples but claims general candle-reading process.

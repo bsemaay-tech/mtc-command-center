@@ -1,0 +1,116 @@
+//@version=6
+library("LIB_SLTP_HELPERS", overlay=false)
+
+const string LIB_SLTP_HELPERS_VER = "1.0.0"
+
+// ----------------------------------------
+// Config types
+// ----------------------------------------
+export type SwingConfig
+    string basis
+    int lookback
+    int atrLen
+    float atrMult
+
+export type SLConfig
+    string mode
+    int atrLen
+    float atrMult
+    float percent
+
+export type TPConfig
+    string mode
+    int atrLen
+    float atrMult
+    float percent
+    float rMultiplier
+
+export type RiskSizingContext
+    float equity
+    float maxLeverageCap
+    float mintick
+
+// ----------------------------------------
+// Swing-based stop helpers
+// ----------------------------------------
+export f_sl_swing_price(bool _isLong, SwingConfig _cfg, series float _open, series float _high, series float _low, series float _close, float _atrValue) =>
+    float hiBasis = _cfg.basis == "Body" ? math.max(_open, _close) : _high
+    float loBasis = _cfg.basis == "Body" ? math.min(_open, _close) : _low
+    float swingHigh = ta.highest(hiBasis[1], _cfg.lookback)
+    float swingLow = ta.lowest(loBasis[1], _cfg.lookback)
+    float atrBuff = _atrValue * _cfg.atrMult
+    _isLong ? (swingLow - atrBuff) : (swingHigh + atrBuff)
+
+export f_sl_swing_atr_price(bool _isLong, SwingConfig _cfg, series float _open, series float _high, series float _low, series float _close, int _barIndex, float _atrValue) =>
+    float hiBasis = _cfg.basis == "Body" ? math.max(_open, _close) : _high
+    float loBasis = _cfg.basis == "Body" ? math.min(_open, _close) : _low
+    int effLookback = math.max(1, math.min(_cfg.lookback, _barIndex))
+    float swingHigh = ta.highest(hiBasis[1], effLookback)
+    float swingLow = ta.lowest(loBasis[1], effLookback)
+    float atrBuff = _atrValue * _cfg.atrMult
+    _isLong ? (swingLow - atrBuff) : (swingHigh + atrBuff)
+
+// ----------------------------------------
+// SL / TP helpers
+// ----------------------------------------
+export f_sl_price(bool _isLong, float _entryPrice, SLConfig _cfg, float _atrValue) =>
+    if na(_entryPrice) or _entryPrice <= 0.0
+        na
+    else
+        float slDist = _cfg.mode == "ATR" ? _atrValue * _cfg.atrMult : _entryPrice * (_cfg.percent / 100.0)
+        _isLong ? _entryPrice - slDist : _entryPrice + slDist
+
+export f_tp_price(bool _isLong, float _entryPrice, TPConfig _cfg, float _atrValue, float _rDist) =>
+    if na(_entryPrice) or _entryPrice <= 0.0
+        na
+    else
+        float tpDist = na
+        if _cfg.mode == "ATR"
+            tpDist := _atrValue * _cfg.atrMult
+        else if _cfg.mode == "PCT"
+            tpDist := _entryPrice * (_cfg.percent / 100.0)
+        else if _cfg.mode == "R" and _rDist > 0.0
+            tpDist := _rDist * _cfg.rMultiplier
+        na(tpDist) ? na : (_isLong ? _entryPrice + tpDist : _entryPrice - tpDist)
+
+export f_tp_r_levels(bool _isLong, float _entryPrice, float _rDist, float _tp1Rr, float _tp2Rr) =>
+    float tp1 = na
+    float tp2 = na
+    if _rDist > 0.0
+        tp1 := _isLong ? _entryPrice + _rDist * _tp1Rr : _entryPrice - _rDist * _tp1Rr
+        tp2 := _isLong ? _entryPrice + _rDist * _tp2Rr : _entryPrice - _rDist * _tp2Rr
+    [tp1, tp2]
+
+// ----------------------------------------
+// Risk sizing
+// ----------------------------------------
+export f_calc_qty(float _entryPrice, float _slPrice, float _riskPerc, bool _useSL, float _fallbackPct, RiskSizingContext _ctx) =>
+    if _useSL
+        float slDist = math.abs(_entryPrice - _slPrice)
+        if slDist <= 0.0 or _entryPrice <= 0.0 or na(_entryPrice) or na(slDist)
+            0.0
+        else
+            // MINIMUM SL DISTANCE: At least 0.1% of entry price or 10x mintick, whichever is larger
+            float minSlDistPct = _entryPrice * 0.001  // 0.1% of entry
+            float minSlDistAbs = _ctx.mintick * 10.0   // 10x minimum tick
+            float minSlDist = math.max(minSlDistPct, minSlDistAbs)
+            float slDistSafe = math.max(slDist, minSlDist)
+            
+            float riskMoney = _ctx.equity * _riskPerc / 100.0
+            float idealQty = riskMoney / slDistSafe
+            float maxAllowedMoney = _ctx.equity * _ctx.maxLeverageCap
+            float entrySafe = math.max(_entryPrice, _ctx.mintick)
+            float maxLevQty = maxAllowedMoney / entrySafe
+            math.min(idealQty, maxLevQty)
+    else
+        if _entryPrice <= 0.0 or na(_entryPrice)
+            0.0
+        else
+            float effectiveRisk = math.min(_fallbackPct, _riskPerc)
+            
+            float positionMoney = _ctx.equity * effectiveRisk / 100.0
+            float entrySafe = math.max(_entryPrice, _ctx.mintick)
+            float fallbackQty = positionMoney / entrySafe
+            float maxAllowedMoney = _ctx.equity * _ctx.maxLeverageCap
+            float maxLevQty = maxAllowedMoney / entrySafe
+            math.min(fallbackQty, maxLevQty)

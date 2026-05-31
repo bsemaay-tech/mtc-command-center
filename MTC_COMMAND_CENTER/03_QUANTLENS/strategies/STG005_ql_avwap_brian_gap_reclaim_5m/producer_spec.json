@@ -1,0 +1,16 @@
+{
+  "candidate_id": "QL_AVWAP_BRIAN_GAP_RECLAIM_5M",
+  "source_url": "https://www.youtube.com/watch?v=UmLa9FAlMgw",
+  "source_candidate": "QLR_UmLa9FAlMgw",
+  "title": "AVWAP gap reclaim (Brian Shannon)",
+  "kind": "strategy",
+  "rules_high_confidence": [
+    "Gap up \u2192 settles \u2192 reclaims daily AVWAP from below",
+    "Stop below low of day"
+  ],
+  "entry_pseudo": "gap_up AND prior_below_avwap AND close>avwap_daily",
+  "exit_pseudo": "close<bar_low OR end_of_session",
+  "param_grid_size_planned": 40,
+  "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+  "promoted_at": "2026-05-31T00:09:34"
+}

@@ -1,0 +1,44 @@
+candidate_id: CRABEL_OPENING_RANGE_STRETCH_v1_CONTRACT
+direction: both
+asset_class: futures_or_us_equities_session_based
+native_timeframe: intraday_session
+data_requirements:
+  - intraday_or_session_OHLC
+  - todays_open
+  - prior_10d_OHLC_for_stretch
+  - prior_4_to_7d_for_NR_filter
+  - economic_calendar_optional
+indicators:
+  stretch:
+    formula: "mean_n(min(open-low, high-open))"
+    n: 10
+  multiplier_grid: [0.4, 0.6, 0.8, 1.0]
+  nr_pattern:
+    options: ["NR4", "NR7", "ID_NR4"]
+    default: "NR7"
+preconditions:
+  pattern_match:
+    rule: "prior_day in NR_pattern_set"
+trigger:
+  long_stop_price: "O_today + Stretch * mult"
+  short_stop_price: "O_today - Stretch * mult"
+  fill_rule: "first stop hit during session"
+entry_anchor: today_session_open
+filters:
+  trend_optional: "close_daily > EMA200_daily"
+  news_blackout: ["FOMC", "NFP", "CPI"]
+  half_day_skip: true
+stop_initial:
+  rule: "opposite_stop_level"
+profit_target:
+  variants: [null, "1x_stretch_from_entry", "prior_day_HL"]
+time_stop: session_close
+position_sizing:
+  risk_pct_per_trade: [0.5, 1.0]
+do_not_trade_when:
+  - "no NR pattern prior day"
+  - "scheduled major news during session"
+  - "shortened session"
+non_repaint: required
+mtc_role: SIGNAL_PRODUCER_POSSIBLE_BUT_AWKWARD
+note: "Strategy fundamentally session-anchored; consider as intraday module, not daily producer."

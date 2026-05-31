@@ -1,0 +1,15 @@
+# CANDIDATE_009 — HighBeta Opening Bar Crypto Proxy
+
+## Verdict
+WEAK_CANDIDATE_CRYPTO_PROXY
+
+## Metrics
+|candidate_id|timeframe|assets_tested|trade_count|aggregate_pf|aggregate_net_return_pct|aggregate_max_dd_pct|fee_2x_pf|fee_3x_pf|fee_monotonic|classification|
+|---|---|---|---|---|---|---|---|---|---|---|
+|CANDIDATE_009|5m|5|151|1.0861|3.0885|-7.1457|0.716|0.4825|True|WEAK_CANDIDATE_CRYPTO_PROXY|
+
+## Data Errors
+None
+
+## Caveat
+This is Python-only first-pass triage. It is not Pine-ready and not production integration.

@@ -1,0 +1,2 @@
+candidate_id,baseline,trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning
+LINDA_5SMA,random_same_hold,170,17,133.2483,1.3209,51.1765,0.9816,0.0546,0.9816,7.8944,-6.2644,-57.8207,2.3045,4.0,4.0,ARBUSDT,APTUSDT,False

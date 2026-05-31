@@ -1,0 +1,4 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,year
+5930,17,-99.5729,0.792,42.226,-0.0856,-0.1283,-0.0856,0.7721,-0.7125,-99.7751,-0.998,12.0,12.0,AVAXUSDT,NEARUSDT,False,ORB_8AM,2024
+6190,17,-99.9539,0.7068,40.42,-0.1192,-0.1629,-0.1192,0.7109,-0.6823,-99.9727,-0.9998,12.0,12.0,NEARUSDT,LINKUSDT,False,ORB_8AM,2025
+2082,17,-92.8415,0.6975,40.3458,-0.1216,-0.1286,-0.1216,0.6952,-0.674,-93.1176,-0.997,12.0,12.0,OPUSDT,APTUSDT,True,ORB_8AM,2026

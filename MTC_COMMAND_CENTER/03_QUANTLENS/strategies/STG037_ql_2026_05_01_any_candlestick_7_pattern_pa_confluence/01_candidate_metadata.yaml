@@ -1,0 +1,23 @@
+candidate_id: QL_2026-05-01_ANY_CANDLESTICK_7_PATTERN_PA_CONFLUENCE
+status: READY_FOR_PYTHON_PROTOTYPE
+source_url: UNKNOWN_URL
+video_id: UNKNOWN_VIDEO_2026-05-01_CANDLESTICK_7_PATTERNS_PA
+title: Seven candlestick patterns with price action confluence
+channel_name: UNKNOWN_CHANNEL
+channel_id: UNKNOWN_CHANNEL
+transcript_hash: f1b081079871e2770315c4848206bf2081e8067bfa2282f5ebed392646801a73
+intake_date: 2026-05-01
+market_type: ANY_CLAIMED_UNVALIDATED
+timeframe: ANY
+strategy_type: candlestick pattern price action confluence
+candidate_kind:
+  - entry_gate
+  - confirmation
+  - guard
+  - sl_tp_method
+commercial_value_score: 5
+complexity_score: 7
+repaint_risk: LOW
+lookahead_risk: HIGH
+closed_source_risk: LOW
+notes: URL and channel metadata missing. Pattern definitions are partially codable; support/resistance/trendline context can introduce lookahead if not made past-only.

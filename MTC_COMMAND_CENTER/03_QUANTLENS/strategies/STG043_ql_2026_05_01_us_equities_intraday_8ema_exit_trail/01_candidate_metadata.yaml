@@ -1,0 +1,29 @@
+candidate_id: QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL
+source_url: https://www.youtube.com/watch?v=rprQ4uo-mzE
+video_title: The Only Exit Strategy You'll Ever Need... (Even When You're Scared)
+quantlens_decision: CANDIDATE
+codex_status: READY_FOR_PYTHON_PROTOTYPE
+market_type: US_EQUITIES_OPTIONS_UNDERLYING_PRICE
+primary_timeframe: intraday
+strategy_type: 8 EMA trailing exit
+commercial_value_score: 6
+complexity_score: 2
+repaint_risk: LOW
+lookahead_risk: LOW
+overfit_risk: MEDIUM
+closed_source_risk: LOW
+risk_management_quality: PARTIAL
+candidate_kind:
+  producer: false
+  entry_gate: false
+  guard: false
+  confirmation: false
+  exit_rule: true
+  sl_tp_method: true
+  trailing_be_method: true
+  money_management: false
+existing_mtc_overlap: Strong overlap with EMA trailing exit and prior EllyDTrades 8 EMA candidates; evaluate as an exit module, not a separate producer.
+new_feature_required: UNKNOWN_UNTIL_MAPPING
+recommended_next_step: Define mechanical 8 EMA break rule and consolidate as exit layer for the EllyDTrades 8 EMA family.
+created_at: 2026-05-01
+updated_at: 2026-05-01

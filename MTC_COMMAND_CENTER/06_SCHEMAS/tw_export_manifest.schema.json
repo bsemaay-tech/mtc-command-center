@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/tw_export_manifest.schema.json",
+  "title": "MCC TradingView Export Manifest",
+  "type": "object",
+  "required": ["schema_version", "export_id", "case_id", "symbol", "timeframe", "exported_by_user"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "export_id": { "type": "string" },
+    "case_id": { "type": "string" },
+    "symbol": { "type": "string" },
+    "timeframe": { "type": "string" },
+    "date_range": { "type": "object", "additionalProperties": true },
+    "tradingview_chart_settings": { "type": "object", "additionalProperties": true },
+    "strategy_settings_hash_sha256": { "type": ["string", "null"] },
+    "export_file_path": { "type": ["string", "null"] },
+    "export_file_hash_sha256": { "type": ["string", "null"] },
+    "exported_by_user": { "type": "boolean" },
+    "notes": { "type": ["string", "null"] }
+  },
+  "additionalProperties": false
+}

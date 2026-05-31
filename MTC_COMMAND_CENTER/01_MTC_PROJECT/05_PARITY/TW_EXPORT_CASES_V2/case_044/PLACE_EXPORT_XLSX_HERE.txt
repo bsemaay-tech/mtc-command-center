@@ -1,0 +1,1 @@
+Place the TradingView xlsx export for this planned case into this folder.

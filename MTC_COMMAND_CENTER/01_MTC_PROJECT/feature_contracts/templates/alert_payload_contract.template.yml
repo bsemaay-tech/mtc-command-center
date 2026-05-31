@@ -1,0 +1,109 @@
+feature_id: example_alert_payload_v1
+feature_name: example_alert_payload
+feature_type: alert_payload
+version: 0.1.0
+status: draft
+owner: codex
+created_at: 2026-04-26
+updated_at: 2026-04-26
+description: Contract template for alert_payload features.
+intended_use: Replace this with the exact user-requested feature behavior.
+implementation_targets:
+  pine_files_touched: []
+  python_files_touched: []
+  pine_anchor_points:
+    - "L25 alert/webhook block or isolated PineTS adapter"
+  python_anchor_points:
+    - "00_PYTHON/mtc_v2/core/alerts_<name>.py or docs-only"
+  integration_mode: isolated_adapter_only
+input_parameters:
+  - name: example_parameter
+    type: float
+    default: 1.0
+    min: 0.0
+    max: null
+    options: []
+    pine_input_title: Example Parameter
+    python_config_field: example_parameter
+state:
+  state_variables: []
+  persistent_state: []
+  reset_conditions:
+    - case start
+    - invalid bar when feature requires reset
+  warmup_policy:
+    bars: contract_defined
+    exclude_from_comparison: true
+trace:
+  required_trace_columns:
+    - event_id
+    - event_type
+    - side
+    - qty
+    - price
+    - reason
+    - once_per_bar_key
+    - payload_json
+    - schema_valid
+    - idempotency_key
+  optional_trace_columns:
+    - webhook_profile
+    - reduce_only
+  expected_event_columns: []
+  signal_columns:
+    - raw_long
+    - raw_short
+  decision_columns: []
+  execution_columns: []
+parity:
+  required_parity_levels:
+    - L0
+    - L3
+    - L4
+  tolerance_policy:
+    numeric_abs_tol: 1.0e-8
+    numeric_rel_tol: 1.0e-6
+    tick_tolerance: 0
+    booleans: exact
+    strings: exact
+  acceptance_profile: feature_contracts/acceptance_profiles/alert_payload_acceptance.yml
+  supported_oracles:
+    python: true
+    pinets: true
+    pynecore: optional
+    vectorbt: optional
+    tradingview_export: final_release_audit
+  baseline_oracle: python
+  candidate_oracles:
+    - pinets
+safety:
+  rollback_files: []
+  rollback_notes:
+    - Do not integrate into canonical MTC_V2.pine until feature-level parity passes.
+  risk_notes: []
+  known_limitations: []
+  not_comparable_conditions:
+    - required trace column unavailable
+    - oracle unavailable
+reporting:
+  example_output_report_fields:
+    - command
+    - data_hash
+    - config_hash
+    - code_hash
+    - first_divergence
+    - missing_trace_columns
+  required_report_sections:
+    - Command run
+    - Contract used
+    - Case used
+    - Oracle status
+    - Acceptance profile
+    - Verdict
+  acceptance_verdicts:
+    - FEATURE_TRACE_PASS
+    - FEATURE_TRACE_FAIL
+    - FEATURE_TRACE_NOT_COMPARABLE
+    - ORACLE_UNAVAILABLE
+  final_verdict_rule: Do not return ready code until this profile passes or the user explicitly accepts a classified mismatch.
+integration_rule: Do not integrate into canonical MTC_V2.pine until feature-level parity passes.

@@ -1,0 +1,26 @@
+{
+  "random": {
+    "range_filter.adx_trend_threshold": {"dist": "uniform_int", "low": 19, "high": 21},
+    "range_filter.adx_range_threshold": {"dist": "uniform_int", "low": 14, "high": 16},
+    "range_filter.chop_trend_threshold": {"dist": "uniform_int", "low": 58, "high": 64},
+    "range_filter.chop_range_threshold": {"dist": "uniform_int", "low": 57, "high": 63},
+    "range_filter.rsi_len": {"dist": "uniform_int", "low": 22, "high": 26},
+    "range_filter.rsi_oversold": {"dist": "uniform_int", "low": 23, "high": 27},
+    "range_filter.rsi_overbought": {"dist": "uniform_int", "low": 68, "high": 74},
+    "range_filter.bb_len": {"dist": "choice", "values": [10, 12]},
+    "range_filter.bb_mult": {"dist": "uniform_float", "low": 1.8, "high": 2.4, "step": 0.2},
+    "range_filter.use_bb_filter": {"dist": "choice", "values": [false, true]},
+    "stop_loss.percent": {"dist": "uniform_float", "low": 1.5, "high": 2.1, "step": 0.2},
+    "take_profit.percent": {"dist": "uniform_float", "low": 2.5, "high": 3.5, "step": 0.5},
+    "filters.ma_type": {"dist": "choice", "values": ["EMA", "WMA"]},
+    "filters.ma_length": {"dist": "choice", "values": [55, 66, 77]},
+    "filters.ma_slope_len": {"dist": "choice", "values": [144, 191]},
+    "filters.vol_filter_len": {"dist": "choice", "values": [80, 94]},
+    "filters.vol_filter_mult": {"dist": "choice", "values": [1.3, 1.45, 1.6]},
+    "risk.risk_long_percent": {"dist": "choice", "values": [1.0, 1.25]},
+    "risk.risk_short_percent": {"dist": "choice", "values": [2.5, 2.75, 3.0]},
+    "risk.fallback_qty_pct": {"dist": "choice", "values": [5.0, 10.0]},
+    "risk.use_max_trades_per_day": {"dist": "choice", "values": [true, false]},
+    "risk.max_trades_per_day": {"dist": "choice", "values": [5, 8, 10, 12]}
+  }
+}

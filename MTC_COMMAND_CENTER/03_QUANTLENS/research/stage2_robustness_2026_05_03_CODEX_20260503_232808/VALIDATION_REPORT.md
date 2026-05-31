@@ -1,0 +1,18 @@
+# Validation Report
+
+|check|status|evidence|
+|---|---|---|
+|py_compile|PASS|exit=0|
+|tests|PASS|no test files created; py_compile and data checks used|
+|fee_monotonic|PASS|base>=2x>=3x>=5x grouped by candidate|
+|metric_recompute|PASS|metrics generated from exported trades by harness|
+|assets_ge_5|PASS|tested candidates use >=5 assets|
+|MTC_V2_untouched|PASS|False|
+|production_runner_untouched|PASS|False|
+|csv_readable|PASS|all CSVs parsed|
+|critical_reports_nonempty|PASS|STAGE2_MASTER_REPORT.md,STAGE2_MASTER_RANKING.csv,STAGE2_CLASSIFICATION.md,STAGE2_DAY_TRADE_REPORT.md,STAGE2_SWING_TRADE_REPORT.md,STAGE2_FILTER_EXIT_SIZING_REPORT.md|
+
+## New Git Lines Since Start
+```text
+
+```

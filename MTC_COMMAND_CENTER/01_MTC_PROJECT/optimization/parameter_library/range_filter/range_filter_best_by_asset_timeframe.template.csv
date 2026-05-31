@@ -1,0 +1,2 @@
+strategy_id,producer_id,asset,timeframe,rank,parameter_set_id,parameter_hash,source_run_id,params_json,metrics_json,warnings,status
+MTC_V2,RangeFilter,PLACEHOLDER_ASSET,PLACEHOLDER_TIMEFRAME,1,PLACEHOLDER,PLACEHOLDER,PLACEHOLDER,{},{},"Research seeds only; not Pine defaults; not production parameters.",TEMPLATE

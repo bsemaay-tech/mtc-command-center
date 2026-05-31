@@ -1,0 +1,149 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-05-30T00:00:00+03:00",
+  "reports": [
+    {
+      "report_id": "RPT-2026-0001",
+      "category": "ai_handoffs",
+      "title": "MCC MVP-0 Scaffold Completion Report",
+      "path": "04_REPORTS/ai_handoffs/MCC_BOOT_002_COMPLETION_REPORT.md",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "related_task_id": "MCC-BOOT-002",
+      "related_case_id": null,
+      "summary": "Foundation scaffold, schemas, docs, ADRs, hook stub, and validation completed."
+    },
+    {
+      "report_id": "RPT-2026-0002",
+      "category": "ai_handoffs",
+      "title": "MCC MVP-1 Read-only API Completion Report",
+      "path": "04_REPORTS/ai_handoffs/MCC_BOOT_006_COMPLETION_REPORT.md",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "related_task_id": "MCC-BOOT-006",
+      "related_case_id": null,
+      "summary": "Read-only API core, health report, read model, snapshot endpoint, tests, and docs completed."
+    },
+    {
+      "report_id": "RPT-2026-0003",
+      "category": "ai_handoffs",
+      "title": "MCC MVP-1 Dashboard Shell Completion Report",
+      "path": "04_REPORTS/ai_handoffs/MCC_BOOT_007_COMPLETION_REPORT.md",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "related_task_id": "MCC-BOOT-007",
+      "related_case_id": null,
+      "summary": "Read-only browser shell, static serving, tabs, diagnostics, tests, and browser verification completed."
+    },
+    {
+      "report_id": "RPT-2026-0004",
+      "category": "ai_handoffs",
+      "title": "MCC MVP-1 Report Viewer And Filters Completion Report",
+      "path": "04_REPORTS/ai_handoffs/MCC_BOOT_008_COMPLETION_REPORT.md",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "related_task_id": "MCC-BOOT-008",
+      "related_case_id": null,
+      "summary": "Read-only report endpoint, report viewer, task/report filters, empty states, tests, and browser verification completed."
+    },
+    {
+      "report_id": "RPT-2026-0005",
+      "category": "ai_handoffs",
+      "title": "MCC MVP-1 Acceptance Panels Completion Report",
+      "path": "04_REPORTS/ai_handoffs/MCC_BOOT_009_COMPLETION_REPORT.md",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "related_task_id": "MCC-BOOT-009",
+      "related_case_id": null,
+      "summary": "Backtest and strategy registry read-model entries, dashboard panels, empty states, tests, and browser verification completed."
+    },
+    {
+      "report_id": "RPT-2026-0006",
+      "category": "ai_handoffs",
+      "title": "MCC MVP-2 Task Proposal Writer Completion Report",
+      "path": "04_REPORTS/ai_handoffs/MCC_BOOT_010_COMPLETION_REPORT.md",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "related_task_id": "MCC-BOOT-010",
+      "related_case_id": null,
+      "summary": "Controlled task writer CLI, inbox/outbox receipts, lockfile, backup, schema validation, and tests completed."
+    },
+    {
+      "report_id": "RPT-2026-0007",
+      "category": "ai_handoffs",
+      "title": "MCC MVP-2 Task Diagnostics Completion Report",
+      "path": "04_REPORTS/ai_handoffs/MCC_BOOT_011_COMPLETION_REPORT.md",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "related_task_id": "MCC-BOOT-011",
+      "related_case_id": null,
+      "summary": "Read-only waiting task and stale candidate diagnostics, CLI output, dashboard flags, tests, and browser verification completed."
+    },
+    {
+      "report_id": "RPT-2026-0008",
+      "category": "ai_handoffs",
+      "title": "MCC MVP-3 Parity Status Reader Completion Report",
+      "path": "04_REPORTS/ai_handoffs/MCC_BOOT_012_COMPLETION_REPORT.md",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "related_task_id": "MCC-BOOT-012",
+      "related_case_id": null,
+      "summary": "Existing parity outputs normalized into read-only snapshot and CLI parity-status output with tests."
+    },
+    {
+      "report_id": "RPT-2026-0009",
+      "category": "ai_handoffs",
+      "title": "MCC MVP-4 Backtest Status Reader Completion Report",
+      "path": "04_REPORTS/ai_handoffs/MCC_BOOT_013_COMPLETION_REPORT.md",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "related_task_id": "MCC-BOOT-013",
+      "related_case_id": null,
+      "summary": "Existing QuantLens and optimization outputs normalized into read-only snapshot and CLI backtest-status output with tests."
+    },
+    {
+      "report_id": "RPT-2026-0010",
+      "category": "ai_handoffs",
+      "title": "MCC MVP-5 QuantLens Registry Completion Report",
+      "path": "04_REPORTS/ai_handoffs/MCC_BOOT_014_COMPLETION_REPORT.md",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "related_task_id": "MCC-BOOT-014",
+      "related_case_id": null,
+      "summary": "QuantLens candidate registry and promoted producer specs normalized into read-only snapshot and CLI registry-status output with tests."
+    },
+    {
+      "report_id": "RPT-2026-0011",
+      "category": "ai_handoffs",
+      "title": "MCC MVP-6 Pine Builder Workflow Completion Report",
+      "path": "04_REPORTS/ai_handoffs/MCC_BOOT_015_COMPLETION_REPORT.md",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "related_task_id": "MCC-BOOT-015",
+      "related_case_id": null,
+      "summary": "Pine review drafts and compile observations normalized into read-only snapshot and CLI pine-builder-status output with tests."
+    },
+    {
+      "report_id": "RPT-2026-0012",
+      "category": "ai_handoffs",
+      "title": "MCC MVP-7 Optimization Lab Completion Report",
+      "path": "04_REPORTS/ai_handoffs/MCC_BOOT_016_COMPLETION_REPORT.md",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "related_task_id": "MCC-BOOT-016",
+      "related_case_id": null,
+      "summary": "Optimization runs, ranked parameter candidates, worker benchmark guidance, and risk notes normalized into read-only snapshot and CLI optimization-status output with tests."
+    },
+    {
+      "report_id": "RPT-2026-0013",
+      "category": "ai_handoffs",
+      "title": "MCC MVP-8 LiveOps Dry-run Sandbox Completion Report",
+      "path": "04_REPORTS/ai_handoffs/MCC_BOOT_017_COMPLETION_REPORT.md",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "related_task_id": "MCC-BOOT-017",
+      "related_case_id": null,
+      "summary": "LiveOps dry-run state, safety gates, empty event log, and paper-trade plans normalized into read-only snapshot and CLI liveops-status output with tests."
+    }
+  ]
+}

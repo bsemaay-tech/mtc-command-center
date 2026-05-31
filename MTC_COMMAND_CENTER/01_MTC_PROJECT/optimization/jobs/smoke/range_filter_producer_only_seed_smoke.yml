@@ -1,0 +1,111 @@
+# range_filter_producer_only_seed_smoke.yml
+# Research seeds only; not Pine defaults; not production parameters.
+#
+# Purpose: POC smoke run to verify the Range Filter producer-only optimization
+# pipeline produces valid per-asset/timeframe seed output.
+#
+# Preconditions:
+#   - Range Filter local feature parity is PASS (verified 2026-05-29, 61327 rows, 0 mismatches)
+#   - reference_oracle: REFERENCE_PASS
+#   - No TradingView release parity claim; local parity only
+#
+# IMPORTANT: This smoke run does NOT bypass feature parity.
+# The optimizer must call the Python runner which uses the same RangeFilterSignal
+# that passed local feature parity. Do not use a separate code path.
+#
+# Output: ranked/per_asset_timeframe_seed_candidates.csv + seed summary report.
+# These outputs feed range_filter_seed_regions.yml evidence_count and accepted_for_next_stage.
+
+purpose: range_filter producer-only seed extraction POC smoke
+producer: RangeFilter
+producer_feature_parity_status: PASS
+producer_reference_oracle_status: PASS
+parity_bypass_allowed: false
+
+parameter_library_seed_file: optimization/parameter_library/range_filter/range_filter_seed_regions.yml
+output_root: reports/optimization/range_filter_seed_smoke
+
+scope:
+  assets:
+    - BTCUSDT
+    - ETHUSDT
+  timeframes:
+    - 15m
+    - 1h
+  max_variants_per_asset_timeframe: 5
+  max_split_evaluations: 200
+  max_workers: 4
+
+included_parameter_groups:
+  - range_filter_producer_parameters
+
+excluded_parameter_groups:
+  - filters
+  - gates
+  - guards
+  - integrations
+  - visualization
+  - complex_exits
+
+# Search bounds derived from range_filter_seed_regions.yml poc regions.
+# These are starting bounds only; optimizer may narrow within these.
+parameter_search_bounds:
+  BTCUSDT:
+    15m:
+      rf_range:
+        min: 200
+        max: 600
+        step: 100
+    1h:
+      rf_range:
+        min: 400
+        max: 1200
+        step: 200
+  ETHUSDT:
+    15m:
+      rf_range:
+        min: 10
+        max: 50
+        step: 10
+    1h:
+      rf_range:
+        min: 20
+        max: 100
+        step: 20
+
+fixed_smoke_exit_risk:
+  sl_atr_mult: 3.0
+  tp_mode: R
+  tp_r_multiple: 2.0
+  risk_long: 0.5
+  risk_short: 0.5
+
+scoring_profile: producer_seed_discovery
+
+minimum_coverage_requirements:
+  train_validation_test: true
+  min_positive_symbol_count: 1
+  min_positive_timeframe_count: 1
+  walkforward_consistency_min: 0.60
+
+required_outputs:
+  - ranked/all_evaluations.csv
+  - ranked/per_asset_timeframe_seed_candidates.csv
+  - ranked/per_asset_timeframe_summary.csv
+  - reports/RANGE_FILTER_SEED_SMOKE_REPORT.md
+
+fail_conditions:
+  - missing_dataset_manifest
+  - missing_regime_registry
+  - duplicate_conflicts_gt_zero
+  - failed_evaluations_gt_zero
+  - missing_dataset_id_source_type_or_evaluation_key
+  - parity_check_not_passed
+  - writes_to_big_overnight_output
+  - modifies_pine
+  - attempts_to_claim_tradingview_release_parity
+
+post_run_actions:
+  - update evidence_count in range_filter_seed_regions.yml with actual evaluation count
+  - set accepted_for_next_stage: true for regions with walkforward_consistency_min >= 0.60
+  - do NOT modify Pine defaults or claim TradingView release parity

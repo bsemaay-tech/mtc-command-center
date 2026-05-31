@@ -1,0 +1,2 @@
+1. `git status --short > git_status_before.txt`
+2. `mkdir "...\overnight_intake_batch_2026_05_03_AUDITED_20260503_232046"`

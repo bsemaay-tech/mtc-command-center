@@ -1,0 +1,2 @@
+tv_path,py_path,selected_mode,selected_strict_pass,raw_strict_pass,raw_tv_trades,raw_py_trades,raw_extra_tv,raw_extra_py,clip_strict_pass,clip_tv_trades,clip_py_trades,clip_extra_tv,clip_extra_py,out_report
+parity_suite_350\tv_manual_inputs\362_parity_core_194_mode_v01\MT_CORE2_BINANCE_BTCUSDT.P_2026-03-03_3b124_trades.csv,debug\parity_suite_350\parity_core_194_mode_v01\debug_python_trades_20260304_211754_e2ec09c3.csv,raw,PASS,PASS,177,177,0,0,PASS,177,177,0,0,parity_suite_350\compare_runs\dualcheck_362_report.csv

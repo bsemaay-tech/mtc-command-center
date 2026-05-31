@@ -1,0 +1,22 @@
+{
+  "case_id": "BTCUSDT_15m_CORE_001_SYNTHETIC",
+  "symbol": "BTCUSDT",
+  "timeframe": "15m",
+  "start_time": "2024-01-01T00:00:00Z",
+  "end_time": "2024-01-01T01:00:00Z",
+  "exchange": "synthetic",
+  "data_file": "examples/synthetic_outputs/baseline_python/normalized_data.csv",
+  "warmup_bars": 0,
+  "commission": 0.0,
+  "slippage": 0.0,
+  "initial_capital": 10000,
+  "sizing": {
+    "mode": "fixed_qty",
+    "qty": 1
+  },
+  "mtc_config": {
+    "producer": "synthetic_ma_cross",
+    "notes": "Synthetic example only."
+  },
+  "expected_reference_source": "synthetic"
+}

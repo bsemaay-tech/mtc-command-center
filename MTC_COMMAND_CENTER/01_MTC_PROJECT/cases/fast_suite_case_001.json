@@ -1,0 +1,20 @@
+{
+  "case_id": "case_001",
+  "symbol": "BTCUSDT.P",
+  "timeframe": "60",
+  "start_time": "from TradingView workbook Backtesting range",
+  "end_time": "from TradingView workbook Backtesting range",
+  "exchange": "BINANCE",
+  "data_file": "05_PARITY/01_TW_CHART_DATA/BINANCE_BTCUSDT.P, 60_consolidated_stable.csv",
+  "mtc_config": {
+    "source": "05_PARITY/TW_EXPORT_CASES_V2/case_001/case_plan.json"
+  },
+  "warmup_bars": 0,
+  "commission": 0,
+  "slippage": 0,
+  "initial_capital": 10000,
+  "sizing": {
+    "mode": "TradingView workbook properties"
+  },
+  "expected_reference_source": "05_PARITY/case_001/MTC_V2_BINANCE_BTCUSDT.P_2026-04-03_827c5.xlsx"
+}

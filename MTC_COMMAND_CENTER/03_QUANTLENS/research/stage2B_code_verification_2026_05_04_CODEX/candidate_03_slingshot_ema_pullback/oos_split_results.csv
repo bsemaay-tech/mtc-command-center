@@ -1,0 +1,4 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,split
+513,16,16341048221.5975,2.0823,50.6823,6.1449,0.6246,6.1449,23.3273,-11.5128,-99.9692,163460837.4502,11.3899,11.3899,SOLUSDT,XRPUSDT,False,SLINGSHOT,train
+171,17,7535.6311,1.7937,47.9532,4.2611,-0.3168,4.2611,20.0813,-10.3149,-98.9635,76.1456,11.7368,11.7368,DOGEUSDT,APTUSDT,False,SLINGSHOT,validation
+172,17,-98.0196,0.7786,42.4419,-1.3388,-4.4308,-1.3388,11.0947,-10.507,-98.9446,-0.9907,11.0988,11.0988,ARBUSDT,ADAUSDT,True,SLINGSHOT,test

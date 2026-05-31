@@ -1,0 +1,24 @@
+candidate_id: QL_2026-05-01_SWING_1H_DUAL_RSI_60_40_PULLBACK
+status: READY_FOR_PYTHON_PROTOTYPE
+source_url: UNKNOWN_URL
+video_id: UNKNOWN_VIDEO_2026-05-01_DUAL_RSI_60_40_SWING
+title: Dual RSI 60/40 swing pullback strategy
+channel_name: UNKNOWN_CHANNEL
+channel_id: UNKNOWN_CHANNEL
+transcript_hash: 0085bb9a34bfa64ce8e0d99b3532a28da703023088af74d8171f22417860337a
+intake_date: 2026-05-01
+market_type: SWING_MARKETS_GENERAL_CLAIM
+timeframe: 1h entries with 1d RSI trend filter
+strategy_type: dual RSI trend pullback
+candidate_kind:
+  - entry_gate
+  - regime_filter
+  - confirmation
+  - guard
+  - sl_tp_method
+commercial_value_score: 7
+complexity_score: 4
+repaint_risk: LOW
+lookahead_risk: MEDIUM
+closed_source_risk: LOW
+notes: URL and channel metadata missing. Price action confluence must be made deterministic before testing.

@@ -1,0 +1,28 @@
+version: 1
+generated_for: autopilot_case_builder
+
+modules:
+  - module_id: supertrend
+    signal_mode_value: "Supertrend"
+    staged_space_file: "configs/spaces/staged_supertrend_example.json"
+    case_overrides:
+      supertrend:
+        atr_len: 21
+        factor: 4.0
+        use_wicks: true
+        use_ha: true
+
+  - module_id: range_filter_hybrid
+    signal_mode_value: "Range Filter Hybrid (ADX+Chop+BB)"
+    staged_space_file: "configs/spaces/staged_rangefilter_example.json"
+    case_overrides:
+      range_filter:
+        adx_trend_threshold: 22
+        adx_range_threshold: 20
+        chop_trend_threshold: 40
+        chop_range_threshold: 60
+        rsi_length: 7
+        rsi_oversold: 30
+        rsi_overbought: 70
+        use_bb_filter: true
+

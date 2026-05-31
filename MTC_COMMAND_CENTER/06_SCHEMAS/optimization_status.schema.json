@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/optimization_status.schema.json",
+  "title": "MCC Optimization Status",
+  "type": "object",
+  "required": ["schema_version", "runs"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "generated_at": { "type": ["string", "null"] },
+    "source": { "type": ["string", "null"] },
+    "summary": { "type": "object", "additionalProperties": true },
+    "runs": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "top_candidates": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "risk_notes": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "worker_benchmark": { "type": "object", "additionalProperties": true },
+    "artifacts": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,8 @@
+[project]
+name = "mtc-v2"
+version = "0.1.0"
+description = "MTC V2 parity-first Python backtest skeleton"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["mtc_v2/tests"]

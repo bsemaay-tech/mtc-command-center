@@ -1,0 +1,2 @@
+candidate_id,strategy,timeframe,trade_count,assets_tested,aggregate_pf,aggregate_net_return_pct,aggregate_max_dd_pct,return_dd_ratio,win_rate,average_trade_pct,median_trade_pct,average_win_pct,average_loss_pct,expectancy_pct,exposure_pct,fee_2x_pf,fee_3x_pf,fee_monotonic,classification
+CANDIDATE_004,Crabel Range Expansion,1D,8105,10,1.251,7179649232.748,-98.442,72932791.7121,47.4522,0.5144,-0.2882,5.4034,-3.9004,0.5144,3.3333,1.1866,1.126,True,WEAK_CANDIDATE

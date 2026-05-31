@@ -1,0 +1,2 @@
+candidate_id,strategy,timeframe,trade_count,assets_tested,aggregate_pf,aggregate_net_return_pct,aggregate_max_dd_pct,return_dd_ratio,win_rate,average_trade_pct,median_trade_pct,average_win_pct,average_loss_pct,expectancy_pct,exposure_pct,fee_2x_pf,fee_3x_pf,fee_monotonic,classification
+CANDIDATE_007,Linda 5SMA Pullback,1D,687,10,1.3096,1206.3069,-85.9357,14.0373,63.0277,0.8382,1.7501,5.626,-7.3236,0.8382,13.9059,1.2609,1.2138,True,WEAK_CANDIDATE

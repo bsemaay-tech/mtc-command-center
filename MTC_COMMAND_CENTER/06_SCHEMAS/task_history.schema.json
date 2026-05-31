@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/task_history.schema.json",
+  "title": "MCC Task History",
+  "type": "object",
+  "required": ["schema_version", "events"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["event_id", "task_id", "event_type", "created_at", "summary"],
+        "properties": {
+          "event_id": { "type": "string" },
+          "task_id": { "type": "string" },
+          "event_type": { "type": "string" },
+          "created_at": { "type": ["string", "null"] },
+          "created_by": { "type": ["string", "null"] },
+          "summary": { "type": "string" },
+          "report_path": { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

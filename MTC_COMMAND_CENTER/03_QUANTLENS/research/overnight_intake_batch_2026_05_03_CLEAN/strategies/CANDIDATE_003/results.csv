@@ -1,0 +1,2 @@
+candidate_id,strategy,timeframe,trade_count,assets_tested,aggregate_pf,aggregate_net_return_pct,aggregate_max_dd_pct,return_dd_ratio,win_rate,average_trade_pct,median_trade_pct,average_win_pct,average_loss_pct,expectancy_pct,exposure_pct,fee_2x_pf,fee_3x_pf,fee_monotonic,classification
+CANDIDATE_003,"Slingshot EMA(high,4) Pullback",1D,1388,10,1.4581,292669.9798,-86.417,3386.7181,38.1124,0.9615,-0.9292,8.0297,-3.3913,0.9615,2.8578,1.3872,1.3207,True,WEAK_CANDIDATE

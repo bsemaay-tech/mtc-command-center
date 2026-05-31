@@ -1,0 +1,86 @@
+//@version=6
+library("LIB_Signal_Supertrend_Fix", overlay=false)
+
+// Supertrend helper (non-repainting, source-aware)
+// Restores classic band locking + separate wick/close handling for up/down checks.
+// Returns level signals (dir state), not edge-only pulses.
+f_supertrend_signal_src(_o, _h, _l, _c, _atrVal, _factor, _useWicks) =>
+    float _atr = _factor * _atrVal
+    float _src = (_h + _l) / 2.0
+    float _hEff = _useWicks ? _h : _c
+    float _lEff = _useWicks ? _l : _c
+    bool _isDoji = _o == _c and _o == _l and _o == _h
+
+    float _longStop     = _src - _atr
+    float _longStopPrev = nz(_longStop[1], _longStop)
+    if _longStop > 0
+        if _isDoji
+            _longStop := _longStopPrev
+        else
+            _longStop := _lEff[1] > _longStopPrev ? math.max(_longStop, _longStopPrev) : _longStop
+    else
+        _longStop := _longStopPrev
+
+    float _shortStop     = _src + _atr
+    float _shortStopPrev = nz(_shortStop[1], _shortStop)
+    if _shortStop > 0
+        if _isDoji
+            _shortStop := _shortStopPrev
+        else
+            _shortStop := _hEff[1] < _shortStopPrev ? math.min(_shortStop, _shortStopPrev) : _shortStop
+    else
+        _shortStop := _shortStopPrev
+
+    var int _dir = 1
+    _dir := _dir == -1 and _hEff > _shortStopPrev ? 1 : _dir == 1 and _lEff < _longStopPrev ? -1 : _dir
+
+    float _line = _dir == 1 ? _longStop : _shortStop
+    bool _longRaw  = _dir == 1
+    bool _shortRaw = _dir == -1
+    [_line, _dir, _longRaw, _shortRaw]
+
+// Exported Supertrend signal wrapper
+// Parameters:
+// - _signal_ha_mode: "On"/"Off"/"Auto" selection for HA usage
+// - _use_ha_for_supertrend: module toggle for HA usage
+// - _haOpen/_haHigh/_haLow/_haClose: precomputed Heikin Ashi series (chart TF)
+// - _open/_high/_low/_close: chart OHLC series
+// - _st_atr_len: ATR length for Supertrend
+// - _st_factor: Supertrend factor/multiplier
+// - _st_use_wicks: use wicks instead of close for band update
+// Returns:
+// - line: Supertrend line
+// - dir: +1/-1 trend direction
+// - longRaw/shortRaw: raw trend state (level signals)
+// - aux1/aux2/aux3: reserved for mode-specific series (na)
+export sig_supertrend(
+     string _signal_ha_mode,
+     bool _use_ha_for_supertrend,
+     float _haOpen,
+     float _haHigh,
+     float _haLow,
+     float _haClose,
+     float _open,
+     float _high,
+     float _low,
+     float _close,
+    float _st_atr,
+     float _st_factor,
+     bool _st_use_wicks
+ ) =>
+    bool useHA_eff = _signal_ha_mode == "On" ? true : _signal_ha_mode == "Off" ? false : _use_ha_for_supertrend
+    float srcOpen  = useHA_eff ? _haOpen : _open
+    float srcHigh  = useHA_eff ? _haHigh : _high
+    float srcLow   = useHA_eff ? _haLow  : _low
+    float srcClose = useHA_eff ? _haClose : _close
+    // Consume _haOpen to avoid unused-argument warnings (no behavioral effect)
+    if _haOpen == 999999999
+        srcClose := srcClose
+    // Consume _open to avoid unused-argument warnings (no behavioral effect)
+    if _open == 999999999
+        srcClose := srcClose
+    [line, dir, longRaw, shortRaw] = f_supertrend_signal_src(srcOpen, srcHigh, srcLow, srcClose, _st_atr, _st_factor, _st_use_wicks)
+    float aux1 = na
+    float aux2 = na
+    float aux3 = na
+    [line, dir, longRaw, shortRaw, aux1, aux2, aux3]

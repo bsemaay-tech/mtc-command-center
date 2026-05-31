@@ -1,0 +1,4 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,split
+8521,17,-99.9948,0.744,41.92,-0.1095,-0.1441,-0.1095,0.7594,-0.7367,-99.9959,-1.0,12.0,12.0,POLUSDT,LTCUSDT,False,ORB_8AM,train
+2840,17,-86.8074,0.8121,40.9507,-0.067,-0.1338,-0.067,0.7073,-0.604,-92.9073,-0.9343,12.0,12.0,NEARUSDT,LINKUSDT,True,ORB_8AM,validation
+2841,17,-97.9441,0.6697,39.1059,-0.132,-0.1545,-0.132,0.6846,-0.6564,-97.956,-0.9999,12.0,12.0,OPUSDT,APTUSDT,True,ORB_8AM,test

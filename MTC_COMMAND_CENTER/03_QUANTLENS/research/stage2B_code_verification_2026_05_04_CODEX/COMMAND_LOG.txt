@@ -1,0 +1,2441 @@
+$ git status --short
+exit=0
+stdout= M 00_PYTHON/mtc_v2/core/config.py
+ M 00_PYTHON/mtc_v2/core/runner.py
+ M 03_DOCS/HANDOFF.md
+ M 03_DOCS/MTC_V2_ARCHITECTURE.md
+ M 03_DOCS/RUNBOOK.md
+ M 05_PARITY/manual_tw_futures_audit.py
+ D 06_PINE_TESTING/CHATGBT.md
+ D 06_PINE_TESTING/CONSOLIDATED_REPORT.md
+ D 06_PINE_TESTING/Cloude.md
+ D "06_PINE_TESTING/Consolide rapo.md"
+ D 06_PINE_TESTING/Copilot.md
+ D 06_PINE_TESTING/EXECUTIVE_SUMMARY.md
+ D 06_PINE_TESTING/Gemini.md
+ D 06_PINE_TESTING/Mistral.md
+ D 06_PINE_TESTING/Preplexity.md
+ D 06_PINE_TESTING/ROADMAP.md
+ D 06_PINE_TESTING/deepseek.md
+ M ../data/mtc_signals.json
+ M ../data/parity_input_from_pinets.csv
+ M ../data/pine_trades.csv
+ M ../data/pine_trades.json
+ M ../data/pinets_mock_binance/fapi-exchangeInfo.json
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_02fe6.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_24adf.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_275c0.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_32e29.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_46494.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_55be3.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_61fe0.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_82c66.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_9c217.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_9d3d7.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_a5830.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_c2e77.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_c9e4e.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_e99fe.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_ec152.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_f3e40.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_faa75.xlsx"
+ M ../reports/manual_tw_futures_case_085.csv
+ M ../reports/manual_tw_futures_case_085.json
+ M ../reports/manual_tw_futures_case_085_python_trades.csv
+ M ../reports/manual_tw_futures_case_085_trade_report.csv
+ M ../reports/pine_input_overrides.json
+?? 00_PYTHON/mtc_v2/core/config.py.bak_range_filter_selectable_20260426
+?? 00_PYTHON/mtc_v2/core/results.py
+?? 00_PYTHON/mtc_v2/core/runner.py.bak_range_filter_selectable_20260426
+?? 00_PYTHON/mtc_v2/signals/range_filter.py
+?? 00_PYTHON/mtc_v2/tests/test_producer_selection_range_filter.py
+?? 00_PYTHON/mtc_v2/tests/test_range_filter.py
+?? 00_PYTHON/mtc_v2/tests/test_runner_metrics_api.py
+?? 01_PINE/MTC_V2.pine.bak_range_filter_selectable_20260426
+?? 03_DOCS/Gemini_quantlens_knowledge_pack/
+?? 03_DOCS/HANDOFF.md.bak_config_source_20260426
+?? 03_DOCS/HANDOFF.md.bak_fast_suite_case001_20260426
+?? 03_DOCS/HANDOFF.md.bak_feature_factory_v1_20260426
+?? 03_DOCS/HANDOFF.md.bak_multi_oracle_parity_20260426
+?? 03_DOCS/HANDOFF.md.bak_range_filter_poc_20260426
+?? 03_DOCS/HANDOFF.md.bak_range_filter_selectable_draft_20260426
+?? 03_DOCS/HANDOFF.md.bak_supertrend_isolation_20260426
+?? 03_DOCS/HANDOFF.md.bak_surface_gate_20260426
+?? 03_DOCS/HANDOFF.md.bak_trace_alignment_20260426
+?? 03_DOCS/MTC_V2_ARCHITECTURE.md.bak_portable_prepackage_20260426
+?? 03_DOCS/PLANS/MTC_V2_OPTIMIZATION_LOOP_SCORING_CROSS_MARKET_PLAN.md
+?? 04_AUDIT/MTC_V2_Parity_Deep_Audit.md
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_060/MTC_V2_1304_BINANCE_BTCUSDT.P_2026-04-13_00f2e.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_061/MTC_V2_1304_BINANCE_BTCUSDT.P_2026-04-13_30867.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_062/MTC_V2_1304_BINANCE_BTCUSDT.P_2026-04-13_b4a57.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_063/MTC_V2_1304_BINANCE_BTCUSDT.P_2026-04-13_6509e.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_064/MTC_V2_1304_BINANCE_BTCUSDT.P_2026-04-13_8be7b.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_065/MTC_V2_1304_BINANCE_BTCUSDT.P_2026-04-13_0e0fe.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_066/MTC_V2_1304_BINANCE_BTCUSDT.P_2026-04-13_00279.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_067/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-13_c1387.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_068/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_58c99.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_069/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_0c67e.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_070/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_ef0fc.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_071/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_09abe.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_072/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_6fddb.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_073/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_43034.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_074/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_c11c3.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_075/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_2a52e.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_076/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_4f90b.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_077/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_4f325.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_078/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_626f7.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_079/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_1a870.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_080/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_a2532.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_081/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_fa1d9.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_082/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_d84dd.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_083/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_69b91.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_084/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_03c98.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_093/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_f4be2.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_094/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_8dffc.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_095/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_4044c.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_096/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_fb49a.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_097/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_f0ee6.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_098/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_83501.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_099/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_6b9ea.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_100/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_030d3.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_101/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_4b889.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_102/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_5f284.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_103/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_f3b21.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_104/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_91034.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_105/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_1e1bf.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_106/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_63a39.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_107/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_fd4e7.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_108/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_d56fb.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_109/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_3c88c.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_110/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_655a9.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_111/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_7a015.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_112/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_d6ef9.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_113/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_6d114.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_114/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_ba5e0.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_115/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_02da3.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_116/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_67edf.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_117/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_df5b6.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_118/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_2de74.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_119/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_40ec6.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_120/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_67917.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_121/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_be8c0.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_122/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_e6c5d.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_123/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_74009.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_124/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_59b57.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_125/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_ba866.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_126/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_9712e.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_127/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_39fba.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_128/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_36130.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_129/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_32f41.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_130/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_26894.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_131/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_6e78f.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_132/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_cb188.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_133/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_717be.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_134/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_ba705.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_135/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_32bde.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_136/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_7cc2d.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_137/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_3d184.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_138/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_eed38.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_139/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_88100.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_140/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_4e3c7.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_141/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_abf59.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_142/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_5f380.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_143/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_55fc5.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_144/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_d0f96.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_145/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_4ccf1.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_146/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_a3c4a.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_147/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_2040c.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_148/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_6bb31.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_149/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_1e9bf.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_150/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_75bff.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_151/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_1edca.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_152/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_d3509.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_153/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_a6b6b.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_154/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_93a3c.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_155/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_a0465.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_156/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_b8147.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_157/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_17394.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_158/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_0e96c.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_159/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_8798d.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_160/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_6052f.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_161/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_43951.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_162/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_90822.xlsx
+?? 05_PARITY/remix_cases_compact.json
+?? 05_PARITY/remix_cases_needed.json
+?? 05_PARITY/tools/
+?? 06_QUANTLENS_LAB/
+?? MTC_V2_PORTABLE_HANDOFF/
+?? MTC_V2_PORTABLE_HANDOFF_20260426.zip
+?? MTC_V2_PORTABLE_HANDOFF_20260426.zip.sha256
+?? MTC_V2_PORTABLE_HANDOFF_20260428_OPTIMIZER_DETACHED_READY.zip
+?? MTC_V2_PORTABLE_HANDOFF_20260428_OPTIMIZER_DETACHED_READY.zip.sha256
+?? cases/
+?? docs/
+?? experiments/
+?? feature_contracts/
+?? optimization/
+?? parity_oracles/
+?? reports/
+?? scripts/
+?? tests/
+?? tools/
+?? ../06_PINE_TESTING/
+?? ../MTC_V2_OPTIMIZATION_DATA_BUNDLE_20260427.zip
+?? ../MTC_V2_OPTIMIZATION_DATA_BUNDLE_20260427.zip.sha256
+?? ../MTC_V2_OPTIMIZATION_DATA_BUNDLE_20260427/
+?? ../YOUTUBE_STRATEGY_INTAKE/
+?? ../data/pinets_mock_binance/BTCUSDT.P-1d-1567900800000-1776038400000.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1d-1733011200000-1767225599999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1d-1733097600000-1767225599999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1d-1735603200000-1767139200000.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1d-1769904000000-1776124799999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1d-1772240400000-1775840399999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1h-1600754400000-1777248000000.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1h-1712566800000-1776092400000.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1h-1735603200000-1767225599999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1h-1735689600000-1740787199999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1h-1735689600000-1767225599999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1h-1772488800000-1776088799999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1h-1775894400000-1776182399999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-2h-1713492000000-1776088800000.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-2h-1733011200000-1767146399999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-2h-1733011200000-1767225599999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-2h-1733097600000-1767225599999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-2h-1735603200000-1767139200000.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-2h-1769896800000-1776088799999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-2h-1772240400000-1775840399999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-4h-1567958400000-1776081600000.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-4h-1733011200000-1767153599999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-4h-1733011200000-1767225599999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-4h-1733097600000-1767225599999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-4h-1735603200000-1767139200000.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-4h-1769904000000-1776095999999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-4h-1772240400000-1775840399999.json
+?? ../mtc_backtest/parity_suite_350/tv_manual_inputs/consolidated_tv_exports/
+?? ../mtc_backtest/parity_suite_350/tv_manual_inputs/merge_tv_csvs.py
+?? ../mtc_backtest/parity_suite_350/tv_manual_inputs/merged/
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ADAUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ADAUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ADAUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ADAUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ADAUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_APTUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_APTUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_APTUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_APTUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_APTUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ARBUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ARBUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ARBUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ARBUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ARBUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_AVAXUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_AVAXUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_AVAXUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_AVAXUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_AVAXUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BNBUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BNBUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BNBUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BNBUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BNBUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BTCUSDT.P, 120_0b96a.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BTCUSDT.P, 120_f7d9b.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BTCUSDT.P, 15_consolidated_stable.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BTCUSDT.P, 1D_80f35.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BTCUSDT.P, 240_6f77f.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BTCUSDT.P, 60_1e6c0.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BTCUSDT.P, 60_45d08.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BTCUSDT.P, 60_6a2d3.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BTCUSDT.P, 60_d5bf6.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOGEUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOGEUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOGEUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOGEUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOGEUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOTUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOTUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOTUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOTUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOTUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ETHUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ETHUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ETHUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ETHUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ETHUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LINKUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LINKUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LINKUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LINKUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LINKUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LTCUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LTCUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LTCUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LTCUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LTCUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_NEARUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_NEARUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_NEARUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_NEARUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_NEARUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_OPUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_OPUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_OPUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_OPUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_OPUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_POLUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_POLUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_POLUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_POLUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_POLUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_SOLUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_SOLUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_SOLUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_SOLUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_SOLUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_TRXUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_TRXUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_TRXUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_TRXUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_TRXUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_XRPUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_XRPUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_XRPUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_XRPUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_XRPUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/BTCUSDT.P 15m/"
+?? ../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/MTCV2_1404_BINANCE_AVAXUSDT_2026-04-30_92c3e.xlsx
+?? ../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/MTCV2_1404_BINANCE_AVAXUSDT_2026-04-30_a0d4f.xlsx
+?? ../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/MTCV2_1404_BINANCE_AVAXUSDT_2026-04-30_a5aa3.xlsx
+?? ../reports/audit_case_039_20260419.csv
+?? ../reports/audit_case_039_20260419.json
+?? ../reports/audit_case_039_20260419_case_039_overrides.json
+?? ../reports/audit_case_040_20260419.csv
+?? ../reports/audit_case_040_20260419.json
+?? ../reports/audit_case_040_20260419_case_040_overrides.json
+?? ../reports/audit_case_044_20260419.csv
+?? ../reports/audit_case_044_20260419.json
+?? ../reports/audit_case_044_20260419_case_044_overrides.json
+?? ../reports/audit_case_045_20260419.csv
+?? ../reports/audit_case_045_20260419.json
+?? ../reports/audit_case_045_20260419_case_045_overrides.json
+?? ../reports/avax_seed.csv
+?? ../reports/avax_seed.json
+?? ../reports/avax_seed_avax.csv
+?? ../reports/avax_seed_avax.json
+?? ../reports/avax_seed_avax_avax_seed_a5aa3_overrides.json
+?? ../reports/avax_seed_avax_seed_a5aa3_overrides.json
+?? ../reports/case_060P_effective_config.json
+?? ../reports/case_060P_parity.json
+?? ../reports/case_060P_python_trades.csv
+?? ../reports/case_060P_trade_report.csv
+?? ../reports/case_061_effective_config.json
+?? ../reports/case_061_parity.json
+?? ../reports/case_061_python_trades.csv
+?? ../reports/case_061_trade_report.csv
+?? ../reports/case_103.csv
+?? ../reports/case_103.json
+?? ../reports/case_103_case_103_candle_pattern_gate_overrides.json
+?? ../reports/case_104.csv
+?? ../reports/case_104.json
+?? ../reports/case_104_case_104_overrides.json
+?? ../reports/case_105.csv
+?? ../reports/case_105.json
+?? ../reports/case_105_case_105_overrides.json
+?? ../reports/case_106.csv
+?? ../reports/case_106.json
+?? ../reports/case_106_case_106_overrides.json
+?? ../reports/case_107.csv
+?? ../reports/case_107.json
+?? ../reports/case_107_case_107_overrides.json
+?? ../reports/case_108.csv
+?? ../reports/case_108.json
+?? ../reports/case_108_case_108_overrides.json
+?? ../reports/case_109.csv
+?? ../reports/case_109.json
+?? ../reports/case_109_case_109_overrides.json
+?? ../reports/case_110.csv
+?? ../reports/case_110.json
+?? ../reports/case_110_case_110_overrides.json
+?? ../reports/case_111.csv
+?? ../reports/case_111.json
+?? ../reports/case_111_case_111_overrides.json
+?? ../reports/case_112.csv
+?? ../reports/case_112.json
+?? ../reports/case_112_case_112_overrides.json
+?? ../reports/case_113.csv
+?? ../reports/case_113.json
+?? ../reports/case_113_case_113_overrides.json
+?? ../reports/case_114.csv
+?? ../reports/case_114.json
+?? ../reports/case_114_case_114_overrides.json
+?? ../reports/case_115.csv
+?? ../reports/case_115.json
+?? ../reports/case_115_case_115_overrides.json
+?? ../reports/case_116.csv
+?? ../reports/case_116.json
+?? ../reports/case_116_case_116_overrides.json
+?? ../reports/case_117.csv
+?? ../reports/case_117.json
+?? ../reports/case_117_case_117_overrides.json
+?? ../reports/case_118.csv
+?? ../reports/case_118.json
+?? ../reports/case_118_case_118_overrides.json
+?? ../reports/case_119.csv
+?? ../reports/case_119.json
+?? ../reports/case_119_case_119_overrides.json
+?? ../reports/case_120.csv
+?? ../reports/case_120.json
+?? ../reports/case_120_case_120_overrides.json
+?? ../reports/case_121.csv
+?? ../reports/case_121.json
+?? ../reports/case_121_case_121_overrides.json
+?? ../reports/case_122.csv
+?? ../reports/case_122.json
+?? ../reports/case_122_case_122_overrides.json
+?? ../reports/case_123.csv
+?? ../reports/case_123.json
+?? ../reports/case_123_case_123_overrides.json
+?? ../reports/case_124.csv
+?? ../reports/case_124.json
+?? ../reports/case_124_case_124_overrides.json
+?? ../reports/case_125.csv
+?? ../reports/case_125.json
+?? ../reports/case_125_case_125_overrides.json
+?? ../reports/case_126.csv
+?? ../reports/case_126.json
+?? ../reports/case_126_case_126_overrides.json
+?? ../reports/case_127.csv
+?? ../reports/case_127.json
+?? ../reports/case_127_case_127_overrides.json
+?? ../reports/case_128.csv
+?? ../reports/case_128.json
+?? ../reports/case_128_case_128_overrides.json
+?? ../reports/case_129.csv
+?? ../reports/case_129.json
+?? ../reports/case_129_case_129_overrides.json
+?? ../reports/case_130.csv
+?? ../reports/case_130.json
+?? ../reports/case_130_case_130_overrides.json
+?? ../reports/case_131.csv
+?? ../reports/case_131.json
+?? ../reports/case_131_case_131_overrides.json
+?? ../reports/case_132.csv
+?? ../reports/case_132.json
+?? ../reports/case_132_case_132_overrides.json
+?? ../reports/case_133.csv
+?? ../reports/case_133.json
+?? ../reports/case_133_case_133_overrides.json
+?? ../reports/case_134.csv
+?? ../reports/case_134.json
+?? ../reports/case_134_case_134_overrides.json
+?? ../reports/case_135.csv
+?? ../reports/case_135.json
+?? ../reports/case_135_case_135_overrides.json
+?? ../reports/case_136.csv
+?? ../reports/case_136.json
+?? ../reports/case_136_case_136_overrides.json
+?? ../reports/case_137.csv
+?? ../reports/case_137.json
+?? ../reports/case_137_case_137_overrides.json
+?? ../reports/case_138.csv
+?? ../reports/case_138.json
+?? ../reports/case_138_case_138_overrides.json
+?? ../reports/case_139.csv
+?? ../reports/case_139.json
+?? ../reports/case_139_case_139_overrides.json
+?? ../reports/case_140.csv
+?? ../reports/case_140.json
+?? ../reports/case_140_case_140_overrides.json
+?? ../reports/case_141.csv
+?? ../reports/case_141.json
+?? ../reports/case_141_case_141_overrides.json
+?? ../reports/case_142.csv
+?? ../reports/case_142.json
+?? ../reports/case_142_case_142_overrides.json
+?? ../reports/case_143.csv
+?? ../reports/case_143.json
+?? ../reports/case_143_case_143_overrides.json
+?? ../reports/case_144.csv
+?? ../reports/case_144.json
+?? ../reports/case_144_case_144_overrides.json
+?? ../reports/case_145.csv
+?? ../reports/case_145.json
+?? ../reports/case_145_case_145_overrides.json
+?? ../reports/case_146.csv
+?? ../reports/case_146.json
+?? ../reports/case_146_case_146_overrides.json
+?? ../reports/case_147.csv
+?? ../reports/case_147.json
+?? ../reports/case_147_case_147_overrides.json
+?? ../reports/case_148.csv
+?? ../reports/case_148.json
+?? ../reports/case_148_case_148_overrides.json
+?? ../reports/case_149.csv
+?? ../reports/case_149.json
+?? ../reports/case_149_case_149_overrides.json
+?? ../reports/case_150.csv
+?? ../reports/case_150.json
+?? ../reports/case_150_case_150_overrides.json
+?? ../reports/case_151.csv
+?? ../reports/case_151.json
+?? ../reports/case_151_case_151_overrides.json
+?? ../reports/case_152.csv
+?? ../reports/case_152.json
+?? ../reports/case_152_case_152_overrides.json
+?? ../reports/case_153.csv
+?? ../reports/case_153.json
+?? ../reports/case_153_case_153_overrides.json
+?? ../reports/case_154.csv
+?? ../reports/case_154.json
+?? ../reports/case_154_case_154_overrides.json
+?? ../reports/case_155.csv
+?? ../reports/case_155.json
+?? ../reports/case_155_case_155_overrides.json
+?? ../reports/case_156.csv
+?? ../reports/case_156.json
+?? ../reports/case_156_case_156_overrides.json
+?? ../reports/case_157.csv
+?? ../reports/case_157.json
+?? ../reports/case_157_case_157_overrides.json
+?? ../reports/case_158.csv
+?? ../reports/case_158.json
+?? ../reports/case_158_case_158_overrides.json
+?? ../reports/case_159.csv
+?? ../reports/case_159.json
+?? ../reports/case_159_case_159_overrides.json
+?? ../reports/case_160.csv
+?? ../reports/case_160.json
+?? ../reports/case_160_case_160_overrides.json
+?? ../reports/case_161.csv
+?? ../reports/case_161.json
+?? ../reports/case_161_case_161_overrides.json
+?? ../reports/case_162.csv
+?? ../reports/case_162.json
+?? ../reports/case_162_case_162_overrides.json
+?? ../reports/manual_tw_futures_audit.csv
+?? ../reports/manual_tw_futures_audit.json
+?? ../reports/manual_tw_futures_audit_case_032_overrides.json
+?? ../reports/manual_tw_futures_audit_case_039_overrides.json
+?? ../reports/manual_tw_futures_audit_case_040_overrides.json
+?? ../reports/manual_tw_futures_audit_case_044_overrides.json
+?? ../reports/manual_tw_futures_audit_case_045_overrides.json
+?? ../reports/manual_tw_futures_audit_case_046_overrides.json
+?? ../reports/manual_tw_futures_audit_case_047_overrides.json
+?? ../reports/manual_tw_futures_audit_case_048_overrides.json
+?? ../reports/manual_tw_futures_audit_case_049_overrides.json
+?? ../reports/manual_tw_futures_audit_case_050_overrides.json
+?? ../reports/manual_tw_futures_audit_case_051_overrides.json
+?? ../reports/manual_tw_futures_audit_case_052_overrides.json
+?? ../reports/manual_tw_futures_audit_case_053_overrides.json
+?? ../reports/manual_tw_futures_audit_case_054_overrides.json
+?? ../reports/manual_tw_futures_audit_case_055_overrides.json
+?? ../reports/manual_tw_futures_audit_case_056_overrides.json
+?? ../reports/manual_tw_futures_audit_case_057_overrides.json
+?? ../reports/manual_tw_futures_audit_case_058_overrides.json
+?? ../reports/manual_tw_futures_audit_case_059_overrides.json
+?? ../reports/manual_tw_futures_audit_case_060_overrides.json
+?? ../reports/manual_tw_futures_audit_case_061_overrides.json
+?? ../reports/manual_tw_futures_audit_case_062_overrides.json
+?? ../reports/manual_tw_futures_audit_case_063_overrides.json
+?? ../reports/manual_tw_futures_audit_case_064_overrides.json
+?? ../reports/manual_tw_futures_audit_case_065_overrides.json
+?? ../reports/manual_tw_futures_audit_case_066_overrides.json
+?? ../reports/manual_tw_futures_audit_raw_6c6e0_overrides.json
+?? ../reports/manual_tw_futures_avax_seed_a5aa3.json
+?? ../reports/manual_tw_futures_avax_seed_a5aa3_effective_config.json
+?? ../reports/manual_tw_futures_avax_seed_a5aa3_python_trades.csv
+?? ../reports/manual_tw_futures_avax_seed_a5aa3_trade_report.csv
+?? ../reports/manual_tw_futures_case_032.json
+?? ../reports/manual_tw_futures_case_032_effective_config.json
+?? ../reports/manual_tw_futures_case_032_python_trades.csv
+?? ../reports/manual_tw_futures_case_032_trade_report.csv
+?? ../reports/manual_tw_futures_case_039.json
+?? ../reports/manual_tw_futures_case_039_effective_config.json
+?? ../reports/manual_tw_futures_case_039_python_trades.csv
+?? ../reports/manual_tw_futures_case_039_trade_report.csv
+?? ../reports/manual_tw_futures_case_040.json
+?? ../reports/manual_tw_futures_case_040_effective_config.json
+?? ../reports/manual_tw_futures_case_040_python_trades.csv
+?? ../reports/manual_tw_futures_case_040_trade_report.csv
+?? ../reports/manual_tw_futures_case_044.json
+?? ../reports/manual_tw_futures_case_044_effective_config.json
+?? ../reports/manual_tw_futures_case_044_python_trades.csv
+?? ../reports/manual_tw_futures_case_044_trade_report.csv
+?? ../reports/manual_tw_futures_case_045.json
+?? ../reports/manual_tw_futures_case_045_effective_config.json
+?? ../reports/manual_tw_futures_case_045_python_trades.csv
+?? ../reports/manual_tw_futures_case_045_trade_report.csv
+?? ../reports/manual_tw_futures_case_046.json
+?? ../reports/manual_tw_futures_case_046_effective_config.json
+?? ../reports/manual_tw_futures_case_046_python_trades.csv
+?? ../reports/manual_tw_futures_case_046_trade_report.csv
+?? ../reports/manual_tw_futures_case_047.json
+?? ../reports/manual_tw_futures_case_047_effective_config.json
+?? ../reports/manual_tw_futures_case_047_python_trades.csv
+?? ../reports/manual_tw_futures_case_047_trade_report.csv
+?? ../reports/manual_tw_futures_case_048.json
+?? ../reports/manual_tw_futures_case_048_effective_config.json
+?? ../reports/manual_tw_futures_case_048_python_trades.csv
+?? ../reports/manual_tw_futures_case_048_trade_report.csv
+?? ../reports/manual_tw_futures_case_049.json
+?? ../reports/manual_tw_futures_case_049_effective_config.json
+?? ../reports/manual_tw_futures_case_049_python_trades.csv
+?? ../reports/manual_tw_futures_case_049_trade_report.csv
+?? ../reports/manual_tw_futures_case_050.json
+?? ../reports/manual_tw_futures_case_050_effective_config.json
+?? ../reports/manual_tw_futures_case_050_python_trades.csv
+?? ../reports/manual_tw_futures_case_050_trade_report.csv
+?? ../reports/manual_tw_futures_case_051.json
+?? ../reports/manual_tw_futures_case_051_effective_config.json
+?? ../reports/manual_tw_futures_case_051_python_trades.csv
+?? ../reports/manual_tw_futures_case_051_trade_report.csv
+?? ../reports/manual_tw_futures_case_052.json
+?? ../reports/manual_tw_futures_case_052_effective_config.json
+?? ../reports/manual_tw_futures_case_052_python_trades.csv
+?? ../reports/manual_tw_futures_case_052_trade_report.csv
+?? ../reports/manual_tw_futures_case_053.json
+?? ../reports/manual_tw_futures_case_053_effective_config.json
+?? ../reports/manual_tw_futures_case_053_python_trades.csv
+?? ../reports/manual_tw_futures_case_053_trade_report.csv
+?? ../reports/manual_tw_futures_case_054.json
+?? ../reports/manual_tw_futures_case_054_effective_config.json
+?? ../reports/manual_tw_futures_case_054_python_trades.csv
+?? ../reports/manual_tw_futures_case_054_trade_report.csv
+?? ../reports/manual_tw_futures_case_055.json
+?? ../reports/manual_tw_futures_case_055_effective_config.json
+?? ../reports/manual_tw_futures_case_055_python_trades.csv
+?? ../reports/manual_tw_futures_case_055_trade_report.csv
+?? ../reports/manual_tw_futures_case_056.json
+?? ../reports/manual_tw_futures_case_056_effective_config.json
+?? ../reports/manual_tw_futures_case_056_python_trades.csv
+?? ../reports/manual_tw_futures_case_056_trade_report.csv
+?? ../reports/manual_tw_futures_case_057.json
+?? ../reports/manual_tw_futures_case_057_effective_config.json
+?? ../reports/manual_tw_futures_case_057_python_trades.csv
+?? ../reports/manual_tw_futures_case_057_trade_report.csv
+?? ../reports/manual_tw_futures_case_058.json
+?? ../reports/manual_tw_futures_case_058_effective_config.json
+?? ../reports/manual_tw_futures_case_058_python_trades.csv
+?? ../reports/manual_tw_futures_case_058_trade_report.csv
+?? ../reports/manual_tw_futures_case_059.json
+?? ../reports/manual_tw_futures_case_059_effective_config.json
+?? ../reports/manual_tw_futures_case_059_python_trades.csv
+?? ../reports/manual_tw_futures_case_059_trade_report.csv
+?? ../reports/manual_tw_futures_case_060.json
+?? ../reports/manual_tw_futures_case_060_effective_config.json
+?? ../reports/manual_tw_futures_case_060_python_trades.csv
+?? ../reports/manual_tw_futures_case_060_trade_report.csv
+?? ../reports/manual_tw_futures_case_061.json
+?? ../reports/manual_tw_futures_case_061_effective_config.json
+?? ../reports/manual_tw_futures_case_061_python_trades.csv
+?? ../reports/manual_tw_futures_case_061_trade_report.csv
+?? ../reports/manual_tw_futures_case_062.json
+?? ../reports/manual_tw_futures_case_062_effective_config.json
+?? ../reports/manual_tw_futures_case_062_python_trades.csv
+?? ../reports/manual_tw_futures_case_062_trade_report.csv
+?? ../reports/manual_tw_futures_case_063.json
+?? ../reports/manual_tw_futures_case_063_effective_config.json
+?? ../reports/manual_tw_futures_case_063_python_trades.csv
+?? ../reports/manual_tw_futures_case_063_trade_report.csv
+?? ../reports/manual_tw_futures_case_064.json
+?? ../reports/manual_tw_futures_case_064_effective_config.json
+?? ../reports/manual_tw_futures_case_064_python_trades.csv
+?? ../reports/manual_tw_futures_case_064_trade_report.csv
+?? ../reports/manual_tw_futures_case_065.json
+?? ../reports/manual_tw_futures_case_065_effective_config.json
+?? ../reports/manual_tw_futures_case_065_python_trades.csv
+?? ../reports/manual_tw_futures_case_065_trade_report.csv
+?? ../reports/manual_tw_futures_case_066.json
+?? ../reports/manual_tw_futures_case_066_effective_config.json
+?? ../reports/manual_tw_futures_case_066_python_trades.csv
+?? ../reports/manual_tw_futures_case_066_trade_report.csv
+?? ../reports/manual_tw_futures_case_067.csv
+?? ../reports/manual_tw_futures_case_067.json
+?? ../reports/manual_tw_futures_case_067_case_067_overrides.json
+?? ../reports/manual_tw_futures_case_067_effective_config.json
+?? ../reports/manual_tw_futures_case_067_python_trades.csv
+?? ../reports/manual_tw_futures_case_067_recheck.csv
+?? ../reports/manual_tw_futures_case_067_recheck.json
+?? ../reports/manual_tw_futures_case_067_recheck_case_067_overrides.json
+?? ../reports/manual_tw_futures_case_067_redo.csv
+?? ../reports/manual_tw_futures_case_067_redo.json
+?? ../reports/manual_tw_futures_case_067_redo_case_067_overrides.json
+?? ../reports/manual_tw_futures_case_067_trade_report.csv
+?? ../reports/manual_tw_futures_case_068.csv
+?? ../reports/manual_tw_futures_case_068.json
+?? ../reports/manual_tw_futures_case_068_case_068_overrides.json
+?? ../reports/manual_tw_futures_case_068_effective_config.json
+?? ../reports/manual_tw_futures_case_068_python_trades.csv
+?? ../reports/manual_tw_futures_case_068_trade_report.csv
+?? ../reports/manual_tw_futures_case_069.csv
+?? ../reports/manual_tw_futures_case_069.json
+?? ../reports/manual_tw_futures_case_069_case_069_overrides.json
+?? ../reports/manual_tw_futures_case_069_effective_config.json
+?? ../reports/manual_tw_futures_case_069_python_trades.csv
+?? ../reports/manual_tw_futures_case_069_trade_report.csv
+?? ../reports/manual_tw_futures_case_070.csv
+?? ../reports/manual_tw_futures_case_070.json
+?? ../reports/manual_tw_futures_case_070_case_070_overrides.json
+?? ../reports/manual_tw_futures_case_070_effective_config.json
+?? ../reports/manual_tw_futures_case_070_python_trades.csv
+?? ../reports/manual_tw_futures_case_070_trade_report.csv
+?? ../reports/manual_tw_futures_case_071.csv
+?? ../reports/manual_tw_futures_case_071.json
+?? ../reports/manual_tw_futures_case_071_case_071_overrides.json
+?? ../reports/manual_tw_futures_case_071_effective_config.json
+?? ../reports/manual_tw_futures_case_071_python_trades.csv
+?? ../reports/manual_tw_futures_case_071_trade_report.csv
+?? ../reports/manual_tw_futures_case_072.csv
+?? ../reports/manual_tw_futures_case_072.json
+?? ../reports/manual_tw_futures_case_072_case_072_overrides.json
+?? ../reports/manual_tw_futures_case_072_effective_config.json
+?? ../reports/manual_tw_futures_case_072_python_trades.csv
+?? ../reports/manual_tw_futures_case_072_trade_report.csv
+?? ../reports/manual_tw_futures_case_073.csv
+?? ../reports/manual_tw_futures_case_073.json
+?? ../reports/manual_tw_futures_case_073_case_073_overrides.json
+?? ../reports/manual_tw_futures_case_073_effective_config.json
+?? ../reports/manual_tw_futures_case_073_python_trades.csv
+?? ../reports/manual_tw_futures_case_073_trade_report.csv
+?? ../reports/manual_tw_futures_case_074.csv
+?? ../reports/manual_tw_futures_case_074.json
+?? ../reports/manual_tw_futures_case_074_case_074_overrides.json
+?? ../reports/manual_tw_futures_case_074_effective_config.json
+?? ../reports/manual_tw_futures_case_074_python_trades.csv
+?? ../reports/manual_tw_futures_case_074_trade_report.csv
+?? ../reports/manual_tw_futures_case_075.csv
+?? ../reports/manual_tw_futures_case_075.json
+?? ../reports/manual_tw_futures_case_075_case_075_overrides.json
+?? ../reports/manual_tw_futures_case_075_effective_config.json
+?? ../reports/manual_tw_futures_case_075_python_trades.csv
+?? ../reports/manual_tw_futures_case_075_trade_report.csv
+?? ../reports/manual_tw_futures_case_076.csv
+?? ../reports/manual_tw_futures_case_076.json
+?? ../reports/manual_tw_futures_case_076_case_076_overrides.json
+?? ../reports/manual_tw_futures_case_076_effective_config.json
+?? ../reports/manual_tw_futures_case_076_python_trades.csv
+?? ../reports/manual_tw_futures_case_076_trade_report.csv
+?? ../reports/manual_tw_futures_case_077.csv
+?? ../reports/manual_tw_futures_case_077.json
+?? ../reports/manual_tw_futures_case_077_case_077_overrides.json
+?? ../reports/manual_tw_futures_case_077_effective_config.json
+?? ../reports/manual_tw_futures_case_077_python_trades.csv
+?? ../reports/manual_tw_futures_case_077_trade_report.csv
+?? ../reports/manual_tw_futures_case_078.csv
+?? ../reports/manual_tw_futures_case_078.json
+?? ../reports/manual_tw_futures_case_078_case_078_overrides.json
+?? ../reports/manual_tw_futures_case_078_effective_config.json
+?? ../reports/manual_tw_futures_case_078_python_trades.csv
+?? ../reports/manual_tw_futures_case_078_trade_report.csv
+?? ../reports/manual_tw_futures_case_079.csv
+?? ../reports/manual_tw_futures_case_079.json
+?? ../reports/manual_tw_futures_case_079_case_079_overrides.json
+?? ../reports/manual_tw_futures_case_079_effective_config.json
+?? ../reports/manual_tw_futures_case_079_python_trades.csv
+?? ../reports/manual_tw_futures_case_079_trade_report.csv
+?? ../reports/manual_tw_futures_case_080.csv
+?? ../reports/manual_tw_futures_case_080.json
+?? ../reports/manual_tw_futures_case_080_case_080_overrides.json
+?? ../reports/manual_tw_futures_case_080_effective_config.json
+?? ../reports/manual_tw_futures_case_080_python_trades.csv
+?? ../reports/manual_tw_futures_case_080_trade_report.csv
+?? ../reports/manual_tw_futures_case_081.csv
+?? ../reports/manual_tw_futures_case_081.json
+?? ../reports/manual_tw_futures_case_081_case_081_overrides.json
+?? ../reports/manual_tw_futures_case_081_effective_config.json
+?? ../reports/manual_tw_futures_case_081_python_trades.csv
+?? ../reports/manual_tw_futures_case_081_trade_report.csv
+?? ../reports/manual_tw_futures_case_082.csv
+?? ../reports/manual_tw_futures_case_082.json
+?? ../reports/manual_tw_futures_case_082_case_082_overrides.json
+?? ../reports/manual_tw_futures_case_082_effective_config.json
+?? ../reports/manual_tw_futures_case_082_python_trades.csv
+?? ../reports/manual_tw_futures_case_082_trade_report.csv
+?? ../reports/manual_tw_futures_case_083.csv
+?? ../reports/manual_tw_futures_case_083.json
+?? ../reports/manual_tw_futures_case_083_case_083_overrides.json
+?? ../reports/manual_tw_futures_case_083_effective_config.json
+?? ../reports/manual_tw_futures_case_083_python_trades.csv
+?? ../reports/manual_tw_futures_case_083_trade_report.csv
+?? ../reports/manual_tw_futures_case_084.csv
+?? ../reports/manual_tw_futures_case_084.json
+?? ../reports/manual_tw_futures_case_084_case_084_overrides.json
+?? ../reports/manual_tw_futures_case_084_effective_config.json
+?? ../reports/manual_tw_futures_case_084_python_trades.csv
+?? ../reports/manual_tw_futures_case_084_trade_report.csv
+?? ../reports/manual_tw_futures_case_093.csv
+?? ../reports/manual_tw_futures_case_093.json
+?? ../reports/manual_tw_futures_case_093_case_093_overrides.json
+?? ../reports/manual_tw_futures_case_093_effective_config.json
+?? ../reports/manual_tw_futures_case_093_python_trades.csv
+?? ../reports/manual_tw_futures_case_093_trade_report.csv
+?? ../reports/manual_tw_futures_case_094.csv
+?? ../reports/manual_tw_futures_case_094.json
+?? ../reports/manual_tw_futures_case_094_case_094_overrides.json
+?? ../reports/manual_tw_futures_case_094_effective_config.json
+?? ../reports/manual_tw_futures_case_094_python_trades.csv
+?? ../reports/manual_tw_futures_case_094_trade_report.csv
+?? ../reports/manual_tw_futures_case_095.csv
+?? ../reports/manual_tw_futures_case_095.json
+?? ../reports/manual_tw_futures_case_095_case_095_overrides.json
+?? ../reports/manual_tw_futures_case_095_effective_config.json
+?? ../reports/manual_tw_futures_case_095_python_trades.csv
+?? ../reports/manual_tw_futures_case_095_trade_report.csv
+?? ../reports/manual_tw_futures_case_096.csv
+?? ../reports/manual_tw_futures_case_096.json
+?? ../reports/manual_tw_futures_case_096_case_096_overrides.json
+?? ../reports/manual_tw_futures_case_096_effective_config.json
+?? ../reports/manual_tw_futures_case_096_python_trades.csv
+?? ../reports/manual_tw_futures_case_096_trade_report.csv
+?? ../reports/manual_tw_futures_case_097.csv
+?? ../reports/manual_tw_futures_case_097.json
+?? ../reports/manual_tw_futures_case_097_case_097_overrides.json
+?? ../reports/manual_tw_futures_case_097_effective_config.json
+?? ../reports/manual_tw_futures_case_097_python_trades.csv
+?? ../reports/manual_tw_futures_case_097_trade_report.csv
+?? ../reports/manual_tw_futures_case_098.csv
+?? ../reports/manual_tw_futures_case_098.json
+?? ../reports/manual_tw_futures_case_098_case_098_overrides.json
+?? ../reports/manual_tw_futures_case_098_effective_config.json
+?? ../reports/manual_tw_futures_case_098_python_trades.csv
+?? ../reports/manual_tw_futures_case_098_trade_report.csv
+?? ../reports/manual_tw_futures_case_099.csv
+?? ../reports/manual_tw_futures_case_099.json
+?? ../reports/manual_tw_futures_case_099_case_099_overrides.json
+?? ../reports/manual_tw_futures_case_099_effective_config.json
+?? ../reports/manual_tw_futures_case_099_python_trades.csv
+?? ../reports/manual_tw_futures_case_099_trade_report.csv
+?? ../reports/manual_tw_futures_case_100.csv
+?? ../reports/manual_tw_futures_case_100.json
+?? ../reports/manual_tw_futures_case_100_case_100_overrides.json
+?? ../reports/manual_tw_futures_case_100_effective_config.json
+?? ../reports/manual_tw_futures_case_100_python_trades.csv
+?? ../reports/manual_tw_futures_case_100_trade_report.csv
+?? ../reports/manual_tw_futures_case_101.csv
+?? ../reports/manual_tw_futures_case_101.json
+?? ../reports/manual_tw_futures_case_101_case_101_overrides.json
+?? ../reports/manual_tw_futures_case_101_effective_config.json
+?? ../reports/manual_tw_futures_case_101_python_trades.csv
+?? ../reports/manual_tw_futures_case_101_trade_report.csv
+?? ../reports/manual_tw_futures_case_102.csv
+?? ../reports/manual_tw_futures_case_102.json
+?? ../reports/manual_tw_futures_case_102_case_102_overrides.json
+?? ../reports/manual_tw_futures_case_102_effective_config.json
+?? ../reports/manual_tw_futures_case_102_python_trades.csv
+?? ../reports/manual_tw_futures_case_102_trade_report.csv
+?? ../reports/manual_tw_futures_case_103.csv
+?? ../reports/manual_tw_futures_case_103.json
+?? ../reports/manual_tw_futures_case_103_candle_pattern_gate.json
+?? ../reports/manual_tw_futures_case_103_candle_pattern_gate_effective_config.json
+?? ../reports/manual_tw_futures_case_103_candle_pattern_gate_python_trades.csv
+?? ../reports/manual_tw_futures_case_103_candle_pattern_gate_trade_report.csv
+?? ../reports/manual_tw_futures_case_103_case_103_overrides.json
+?? ../reports/manual_tw_futures_case_103_effective_config.json
+?? ../reports/manual_tw_futures_case_103_python_trades.csv
+?? ../reports/manual_tw_futures_case_103_trade_report.csv
+?? ../reports/manual_tw_futures_case_104.csv
+?? ../reports/manual_tw_futures_case_104.json
+?? ../reports/manual_tw_futures_case_104_case_104_overrides.json
+?? ../reports/manual_tw_futures_case_104_effective_config.json
+?? ../reports/manual_tw_futures_case_104_python_trades.csv
+?? ../reports/manual_tw_futures_case_104_trade_report.csv
+?? ../reports/manual_tw_futures_case_105.csv
+?? ../reports/manual_tw_futures_case_105.json
+?? ../reports/manual_tw_futures_case_105_case_105_overrides.json
+?? ../reports/manual_tw_futures_case_105_effective_config.json
+?? ../reports/manual_tw_futures_case_105_python_trades.csv
+?? ../reports/manual_tw_futures_case_105_trade_report.csv
+?? ../reports/manual_tw_futures_case_106.csv
+?? ../reports/manual_tw_futures_case_106.json
+?? ../reports/manual_tw_futures_case_106_case_106_overrides.json
+?? ../reports/manual_tw_futures_case_106_effective_config.json
+?? ../reports/manual_tw_futures_case_106_python_trades.csv
+?? ../reports/manual_tw_futures_case_106_trade_report.csv
+?? ../reports/manual_tw_futures_case_107.csv
+?? ../reports/manual_tw_futures_case_107.json
+?? ../reports/manual_tw_futures_case_107_case_107_overrides.json
+?? ../reports/manual_tw_futures_case_107_effective_config.json
+?? ../reports/manual_tw_futures_case_107_python_trades.csv
+?? ../reports/manual_tw_futures_case_107_trade_report.csv
+?? ../reports/manual_tw_futures_case_108.csv
+?? ../reports/manual_tw_futures_case_108.json
+?? ../reports/manual_tw_futures_case_108_case_108_overrides.json
+?? ../reports/manual_tw_futures_case_108_effective_config.json
+?? ../reports/manual_tw_futures_case_108_python_trades.csv
+?? ../reports/manual_tw_futures_case_108_trade_report.csv
+?? ../reports/manual_tw_futures_case_109.csv
+?? ../reports/manual_tw_futures_case_109.json
+?? ../reports/manual_tw_futures_case_109_case_109_overrides.json
+?? ../reports/manual_tw_futures_case_109_effective_config.json
+?? ../reports/manual_tw_futures_case_109_python_trades.csv
+?? ../reports/manual_tw_futures_case_109_trade_report.csv
+?? ../reports/manual_tw_futures_case_110.csv
+?? ../reports/manual_tw_futures_case_110.json
+?? ../reports/manual_tw_futures_case_110_case_110_overrides.json
+?? ../reports/manual_tw_futures_case_110_effective_config.json
+?? ../reports/manual_tw_futures_case_110_python_trades.csv
+?? ../reports/manual_tw_futures_case_110_trade_report.csv
+?? ../reports/manual_tw_futures_case_111.csv
+?? ../reports/manual_tw_futures_case_111.json
+?? ../reports/manual_tw_futures_case_111_case_111_overrides.json
+?? ../reports/manual_tw_futures_case_111_effective_config.json
+?? ../reports/manual_tw_futures_case_111_python_trades.csv
+?? ../reports/manual_tw_futures_case_111_trade_report.csv
+?? ../reports/manual_tw_futures_case_112.csv
+?? ../reports/manual_tw_futures_case_112.json
+?? ../reports/manual_tw_futures_case_112_case_112_overrides.json
+?? ../reports/manual_tw_futures_case_112_effective_config.json
+?? ../reports/manual_tw_futures_case_112_python_trades.csv
+?? ../reports/manual_tw_futures_case_112_trade_report.csv
+?? ../reports/manual_tw_futures_case_113.csv
+?? ../reports/manual_tw_futures_case_113.json
+?? ../reports/manual_tw_futures_case_113_case_113_overrides.json
+?? ../reports/manual_tw_futures_case_113_effective_config.json
+?? ../reports/manual_tw_futures_case_113_python_trades.csv
+?? ../reports/manual_tw_futures_case_113_trade_report.csv
+?? ../reports/manual_tw_futures_case_114.csv
+?? ../reports/manual_tw_futures_case_114.json
+?? ../reports/manual_tw_futures_case_114_case_114_overrides.json
+?? ../reports/manual_tw_futures_case_114_effective_config.json
+?? ../reports/manual_tw_futures_case_114_python_trades.csv
+?? ../reports/manual_tw_futures_case_114_trade_report.csv
+?? ../reports/manual_tw_futures_case_115.csv
+?? ../reports/manual_tw_futures_case_115.json
+?? ../reports/manual_tw_futures_case_115_case_115_overrides.json
+?? ../reports/manual_tw_futures_case_115_effective_config.json
+?? ../reports/manual_tw_futures_case_115_python_trades.csv
+?? ../reports/manual_tw_futures_case_115_trade_report.csv
+?? ../reports/manual_tw_futures_case_116.csv
+?? ../reports/manual_tw_futures_case_116.json
+?? ../reports/manual_tw_futures_case_116_case_116_overrides.json
+?? ../reports/manual_tw_futures_case_116_effective_config.json
+?? ../reports/manual_tw_futures_case_116_python_trades.csv
+?? ../reports/manual_tw_futures_case_116_trade_report.csv
+?? ../reports/manual_tw_futures_case_117.csv
+?? ../reports/manual_tw_futures_case_117.json
+?? ../reports/manual_tw_futures_case_117_case_117_overrides.json
+?? ../reports/manual_tw_futures_case_117_effective_config.json
+?? ../reports/manual_tw_futures_case_117_python_trades.csv
+?? ../reports/manual_tw_futures_case_117_trade_report.csv
+?? ../reports/manual_tw_futures_case_118.csv
+?? ../reports/manual_tw_futures_case_118.json
+?? ../reports/manual_tw_futures_case_118_case_118_overrides.json
+?? ../reports/manual_tw_futures_case_118_effective_config.json
+?? ../reports/manual_tw_futures_case_118_python_trades.csv
+?? ../reports/manual_tw_futures_case_118_trade_report.csv
+?? ../reports/manual_tw_futures_case_119.csv
+?? ../reports/manual_tw_futures_case_119.json
+?? ../reports/manual_tw_futures_case_119_case_119_overrides.json
+?? ../reports/manual_tw_futures_case_119_effective_config.json
+?? ../reports/manual_tw_futures_case_119_python_trades.csv
+?? ../reports/manual_tw_futures_case_119_trade_report.csv
+?? ../reports/manual_tw_futures_case_120.csv
+?? ../reports/manual_tw_futures_case_120.json
+?? ../reports/manual_tw_futures_case_120_case_120_overrides.json
+?? ../reports/manual_tw_futures_case_120_effective_config.json
+?? ../reports/manual_tw_futures_case_120_python_trades.csv
+?? ../reports/manual_tw_futures_case_120_trade_report.csv
+?? ../reports/manual_tw_futures_case_121.csv
+?? ../reports/manual_tw_futures_case_121.json
+?? ../reports/manual_tw_futures_case_121_case_121_overrides.json
+?? ../reports/manual_tw_futures_case_121_effective_config.json
+?? ../reports/manual_tw_futures_case_121_python_trades.csv
+?? ../reports/manual_tw_futures_case_121_trade_report.csv
+?? ../reports/manual_tw_futures_case_122.csv
+?? ../reports/manual_tw_futures_case_122.json
+?? ../reports/manual_tw_futures_case_122_case_122_overrides.json
+?? ../reports/manual_tw_futures_case_122_effective_config.json
+?? ../reports/manual_tw_futures_case_122_python_trades.csv
+?? ../reports/manual_tw_futures_case_122_trade_report.csv
+?? ../reports/manual_tw_futures_case_123.csv
+?? ../reports/manual_tw_futures_case_123.json
+?? ../reports/manual_tw_futures_case_123_case_123_overrides.json
+?? ../reports/manual_tw_futures_case_123_effective_config.json
+?? ../reports/manual_tw_futures_case_123_python_trades.csv
+?? ../reports/manual_tw_futures_case_123_trade_report.csv
+?? ../reports/manual_tw_futures_case_124.csv
+?? ../reports/manual_tw_futures_case_124.json
+?? ../reports/manual_tw_futures_case_124_case_124_overrides.json
+?? ../reports/manual_tw_futures_case_124_effective_config.json
+?? ../reports/manual_tw_futures_case_124_python_trades.csv
+?? ../reports/manual_tw_futures_case_124_trade_report.csv
+?? ../reports/manual_tw_futures_case_125.csv
+?? ../reports/manual_tw_futures_case_125.json
+?? ../reports/manual_tw_futures_case_125_case_125_overrides.json
+?? ../reports/manual_tw_futures_case_125_effective_config.json
+?? ../reports/manual_tw_futures_case_125_python_trades.csv
+?? ../reports/manual_tw_futures_case_125_trade_report.csv
+?? ../reports/manual_tw_futures_case_126.csv
+?? ../reports/manual_tw_futures_case_126.json
+?? ../reports/manual_tw_futures_case_126_case_126_overrides.json
+?? ../reports/manual_tw_futures_case_126_effective_config.json
+?? ../reports/manual_tw_futures_case_126_python_trades.csv
+?? ../reports/manual_tw_futures_case_126_trade_report.csv
+?? ../reports/manual_tw_futures_case_127.csv
+?? ../reports/manual_tw_futures_case_127.json
+?? ../reports/manual_tw_futures_case_127_case_127_overrides.json
+?? ../reports/manual_tw_futures_case_127_effective_config.json
+?? ../reports/manual_tw_futures_case_127_python_trades.csv
+?? ../reports/manual_tw_futures_case_127_trade_report.csv
+?? ../reports/manual_tw_futures_case_128.csv
+?? ../reports/manual_tw_futures_case_128.json
+?? ../reports/manual_tw_futures_case_128_case_128_overrides.json
+?? ../reports/manual_tw_futures_case_128_effective_config.json
+?? ../reports/manual_tw_futures_case_128_python_trades.csv
+?? ../reports/manual_tw_futures_case_128_trade_report.csv
+?? ../reports/manual_tw_futures_case_129.csv
+?? ../reports/manual_tw_futures_case_129.json
+?? ../reports/manual_tw_futures_case_129_case_129_overrides.json
+?? ../reports/manual_tw_futures_case_129_effective_config.json
+?? ../reports/manual_tw_futures_case_129_python_trades.csv
+?? ../reports/manual_tw_futures_case_129_trade_report.csv
+?? ../reports/manual_tw_futures_case_130.csv
+?? ../reports/manual_tw_futures_case_130.json
+?? ../reports/manual_tw_futures_case_130_case_130_overrides.json
+?? ../reports/manual_tw_futures_case_130_effective_config.json
+?? ../reports/manual_tw_futures_case_130_python_trades.csv
+?? ../reports/manual_tw_futures_case_130_trade_report.csv
+?? ../reports/manual_tw_futures_case_131.csv
+?? ../reports/manual_tw_futures_case_131.json
+?? ../reports/manual_tw_futures_case_131_case_131_overrides.json
+?? ../reports/manual_tw_futures_case_131_effective_config.json
+?? ../reports/manual_tw_futures_case_131_python_trades.csv
+?? ../reports/manual_tw_futures_case_131_trade_report.csv
+?? ../reports/manual_tw_futures_case_132.csv
+?? ../reports/manual_tw_futures_case_132.json
+?? ../reports/manual_tw_futures_case_132_case_132_overrides.json
+?? ../reports/manual_tw_futures_case_132_effective_config.json
+?? ../reports/manual_tw_futures_case_132_python_trades.csv
+?? ../reports/manual_tw_futures_case_132_trade_report.csv
+?? ../reports/manual_tw_futures_case_133.csv
+?? ../reports/manual_tw_futures_case_133.json
+?? ../reports/manual_tw_futures_case_133_case_133_overrides.json
+?? ../reports/manual_tw_futures_case_133_effective_config.json
+?? ../reports/manual_tw_futures_case_133_python_trades.csv
+?? ../reports/manual_tw_futures_case_133_trade_report.csv
+?? ../reports/manual_tw_futures_case_134.csv
+?? ../reports/manual_tw_futures_case_134.json
+?? ../reports/manual_tw_futures_case_134_case_134_overrides.json
+?? ../reports/manual_tw_futures_case_134_effective_config.json
+?? ../reports/manual_tw_futures_case_134_python_trades.csv
+?? ../reports/manual_tw_futures_case_134_trade_report.csv
+?? ../reports/manual_tw_futures_case_135.csv
+?? ../reports/manual_tw_futures_case_135.json
+?? ../reports/manual_tw_futures_case_135_case_135_overrides.json
+?? ../reports/manual_tw_futures_case_135_effective_config.json
+?? ../reports/manual_tw_futures_case_135_python_trades.csv
+?? ../reports/manual_tw_futures_case_135_trade_report.csv
+?? ../reports/manual_tw_futures_case_136.csv
+?? ../reports/manual_tw_futures_case_136.json
+?? ../reports/manual_tw_futures_case_136_case_136_overrides.json
+?? ../reports/manual_tw_futures_case_136_effective_config.json
+?? ../reports/manual_tw_futures_case_136_python_trades.csv
+?? ../reports/manual_tw_futures_case_136_trade_report.csv
+?? ../reports/manual_tw_futures_case_137.csv
+?? ../reports/manual_tw_futures_case_137.json
+?? ../reports/manual_tw_futures_case_137_case_137_overrides.json
+?? ../reports/manual_tw_futures_case_137_effective_config.json
+?? ../reports/manual_tw_futures_case_137_python_trades.csv
+?? ../reports/manual_tw_futures_case_137_trade_report.csv
+?? ../reports/manual_tw_futures_case_138.csv
+?? ../reports/manual_tw_futures_case_138.json
+?? ../reports/manual_tw_futures_case_138_case_138_overrides.json
+?? ../reports/manual_tw_futures_case_138_effective_config.json
+?? ../reports/manual_tw_futures_case_138_python_trades.csv
+?? ../reports/manual_tw_futures_case_138_trade_report.csv
+?? ../reports/manual_tw_futures_case_139.csv
+?? ../reports/manual_tw_futures_case_139.json
+?? ../reports/manual_tw_futures_case_139_case_139_overrides.json
+?? ../reports/manual_tw_futures_case_139_effective_config.json
+?? ../reports/manual_tw_futures_case_139_python_trades.csv
+?? ../reports/manual_tw_futures_case_139_trade_report.csv
+?? ../reports/manual_tw_futures_case_140.csv
+?? ../reports/manual_tw_futures_case_140.json
+?? ../reports/manual_tw_futures_case_140_case_140_overrides.json
+?? ../reports/manual_tw_futures_case_140_effective_config.json
+?? ../reports/manual_tw_futures_case_140_python_trades.csv
+?? ../reports/manual_tw_futures_case_140_trade_report.csv
+?? ../reports/manual_tw_futures_case_141.csv
+?? ../reports/manual_tw_futures_case_141.json
+?? ../reports/manual_tw_futures_case_141_case_141_overrides.json
+?? ../reports/manual_tw_futures_case_141_effective_config.json
+?? ../reports/manual_tw_futures_case_141_python_trades.csv
+?? ../reports/manual_tw_futures_case_141_trade_report.csv
+?? ../reports/manual_tw_futures_case_142.csv
+?? ../reports/manual_tw_futures_case_142.json
+?? ../reports/manual_tw_futures_case_142_case_142_overrides.json
+?? ../reports/manual_tw_futures_case_142_effective_config.json
+?? ../reports/manual_tw_futures_case_142_python_trades.csv
+?? ../reports/manual_tw_futures_case_142_trade_report.csv
+?? ../reports/manual_tw_futures_case_143.csv
+?? ../reports/manual_tw_futures_case_143.json
+?? ../reports/manual_tw_futures_case_143_case_143_overrides.json
+?? ../reports/manual_tw_futures_case_143_effective_config.json
+?? ../reports/manual_tw_futures_case_143_python_trades.csv
+?? ../reports/manual_tw_futures_case_143_trade_report.csv
+?? ../reports/manual_tw_futures_case_144.csv
+?? ../reports/manual_tw_futures_case_144.json
+?? ../reports/manual_tw_futures_case_144_case_144_overrides.json
+?? ../reports/manual_tw_futures_case_144_effective_config.json
+?? ../reports/manual_tw_futures_case_144_python_trades.csv
+?? ../reports/manual_tw_futures_case_144_trade_report.csv
+?? ../reports/manual_tw_futures_case_145.csv
+?? ../reports/manual_tw_futures_case_145.json
+?? ../reports/manual_tw_futures_case_145_case_145_overrides.json
+?? ../reports/manual_tw_futures_case_145_effective_config.json
+?? ../reports/manual_tw_futures_case_145_python_trades.csv
+?? ../reports/manual_tw_futures_case_145_trade_report.csv
+?? ../reports/manual_tw_futures_case_146.csv
+?? ../reports/manual_tw_futures_case_146.json
+?? ../reports/manual_tw_futures_case_146_case_146_overrides.json
+?? ../reports/manual_tw_futures_case_146_effective_config.json
+?? ../reports/manual_tw_futures_case_146_python_trades.csv
+?? ../reports/manual_tw_futures_case_146_trade_report.csv
+?? ../reports/manual_tw_futures_case_147.csv
+?? ../reports/manual_tw_futures_case_147.json
+?? ../reports/manual_tw_futures_case_147_case_147_overrides.json
+?? ../reports/manual_tw_futures_case_147_effective_config.json
+?? ../reports/manual_tw_futures_case_147_python_trades.csv
+?? ../reports/manual_tw_futures_case_147_trade_report.csv
+?? ../reports/manual_tw_futures_case_148.csv
+?? ../reports/manual_tw_futures_case_148.json
+?? ../reports/manual_tw_futures_case_148_case_148_overrides.json
+?? ../reports/manual_tw_futures_case_148_effective_config.json
+?? ../reports/manual_tw_futures_case_148_python_trades.csv
+?? ../reports/manual_tw_futures_case_148_trade_report.csv
+?? ../reports/manual_tw_futures_case_149.csv
+?? ../reports/manual_tw_futures_case_149.json
+?? ../reports/manual_tw_futures_case_149_case_149_overrides.json
+?? ../reports/manual_tw_futures_case_149_effective_config.json
+?? ../reports/manual_tw_futures_case_149_python_trades.csv
+?? ../reports/manual_tw_futures_case_149_trade_report.csv
+?? ../reports/manual_tw_futures_case_150.csv
+?? ../reports/manual_tw_futures_case_150.json
+?? ../reports/manual_tw_futures_case_150_case_150_overrides.json
+?? ../reports/manual_tw_futures_case_150_effective_config.json
+?? ../reports/manual_tw_futures_case_150_python_trades.csv
+?? ../reports/manual_tw_futures_case_150_trade_report.csv
+?? ../reports/manual_tw_futures_case_151.csv
+?? ../reports/manual_tw_futures_case_151.json
+?? ../reports/manual_tw_futures_case_151_case_151_overrides.json
+?? ../reports/manual_tw_futures_case_151_effective_config.json
+?? ../reports/manual_tw_futures_case_151_python_trades.csv
+?? ../reports/manual_tw_futures_case_151_trade_report.csv
+?? ../reports/manual_tw_futures_case_152.csv
+?? ../reports/manual_tw_futures_case_152.json
+?? ../reports/manual_tw_futures_case_152_case_152_overrides.json
+?? ../reports/manual_tw_futures_case_152_effective_config.json
+?? ../reports/manual_tw_futures_case_152_python_trades.csv
+?? ../reports/manual_tw_futures_case_152_trade_report.csv
+?? ../reports/manual_tw_futures_case_153.csv
+?? ../reports/manual_tw_futures_case_153.json
+?? ../reports/manual_tw_futures_case_153_case_153_overrides.json
+?? ../reports/manual_tw_futures_case_153_effective_config.json
+?? ../reports/manual_tw_futures_case_153_python_trades.csv
+?? ../reports/manual_tw_futures_case_153_trade_report.csv
+?? ../reports/manual_tw_futures_case_154.csv
+?? ../reports/manual_tw_futures_case_154.json
+?? ../reports/manual_tw_futures_case_154_case_154_overrides.json
+?? ../reports/manual_tw_futures_case_154_effective_config.json
+?? ../reports/manual_tw_futures_case_154_python_trades.csv
+?? ../reports/manual_tw_futures_case_154_trade_report.csv
+?? ../reports/manual_tw_futures_case_155.csv
+?? ../reports/manual_tw_futures_case_155.json
+?? ../reports/manual_tw_futures_case_155_case_155_overrides.json
+?? ../reports/manual_tw_futures_case_155_effective_config.json
+?? ../reports/manual_tw_futures_case_155_python_trades.csv
+?? ../reports/manual_tw_futures_case_155_trade_report.csv
+?? ../reports/manual_tw_futures_case_156.csv
+?? ../reports/manual_tw_futures_case_156.json
+?? ../reports/manual_tw_futures_case_156_case_156_overrides.json
+?? ../reports/manual_tw_futures_case_156_effective_config.json
+?? ../reports/manual_tw_futures_case_156_python_trades.csv
+?? ../reports/manual_tw_futures_case_156_trade_report.csv
+?? ../reports/manual_tw_futures_case_157.csv
+?? ../reports/manual_tw_futures_case_157.json
+?? ../reports/manual_tw_futures_case_157_case_157_overrides.json
+?? ../reports/manual_tw_futures_case_157_effective_config.json
+?? ../reports/manual_tw_futures_case_157_python_trades.csv
+?? ../reports/manual_tw_futures_case_157_trade_report.csv
+?? ../reports/manual_tw_futures_case_158.csv
+?? ../reports/manual_tw_futures_case_158.json
+?? ../reports/manual_tw_futures_case_158_case_158_overrides.json
+?? ../reports/manual_tw_futures_case_158_effective_config.json
+?? ../reports/manual_tw_futures_case_158_python_trades.csv
+?? ../reports/manual_tw_futures_case_158_trade_report.csv
+?? ../reports/manual_tw_futures_case_159.csv
+?? ../reports/manual_tw_futures_case_159.json
+?? ../reports/manual_tw_futures_case_159_case_159_overrides.json
+?? ../reports/manual_tw_futures_case_159_effective_config.json
+?? ../reports/manual_tw_futures_case_159_python_trades.csv
+?? ../reports/manual_tw_futures_case_159_trade_report.csv
+?? ../reports/manual_tw_futures_case_160.json
+?? ../reports/manual_tw_futures_case_160_effective_config.json
+?? ../reports/manual_tw_futures_case_160_python_trades.csv
+?? ../reports/manual_tw_futures_case_160_trade_report.csv
+?? ../reports/manual_tw_futures_case_161.json
+?? ../reports/manual_tw_futures_case_161_effective_config.json
+?? ../reports/manual_tw_futures_case_161_python_trades.csv
+?? ../reports/manual_tw_futures_case_161_trade_report.csv
+?? ../reports/manual_tw_futures_case_162.csv
+?? ../reports/manual_tw_futures_case_162.json
+?? ../reports/manual_tw_futures_case_162_case_162_overrides.json
+?? ../reports/manual_tw_futures_case_162_effective_config.json
+?? ../reports/manual_tw_futures_case_162_python_trades.csv
+?? ../reports/manual_tw_futures_case_162_trade_report.csv
+?? ../reports/manual_tw_futures_raw_6c6e0.json
+?? ../reports/manual_tw_futures_raw_6c6e0_effective_config.json
+?? ../reports/manual_tw_futures_raw_6c6e0_python_trades.csv
+?? ../reports/manual_tw_futures_raw_6c6e0_trade_report.csv
+?? ../reports/tw_audit_batch_046_061.csv
+?? ../reports/tw_audit_batch_047_066.csv
+?? ../reports/tw_audit_batch_103_162.log
+?? ../reports/tw_effects_047_066.csv
+?? ../reports/tw_parity_summary_047_066.csv
+
+stderr=
+
+$ python -m py_compile C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\run_stage2b_codex_verification.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\candidate_01_kell_wedge\synthetic_tests.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\candidate_02_crabel_range_expansion\synthetic_tests.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\candidate_03_slingshot_ema_pullback\synthetic_tests.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\candidate_04_bigbeluga_rsi_divergence_choch_atr\synthetic_tests.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\candidate_05_martin_luke_pullback\synthetic_tests.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\candidate_06_linda_5sma_pullback\synthetic_tests.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_06_linda_5sma_pullback\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\07_linda_5sma_rs_pullback\src\backtest.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_06_linda_5sma_pullback\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\07_linda_5sma_rs_pullback\src\exits.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_06_linda_5sma_pullback\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\07_linda_5sma_rs_pullback\src\features.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_06_linda_5sma_pullback\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\07_linda_5sma_rs_pullback\src\reports.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_06_linda_5sma_pullback\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\07_linda_5sma_rs_pullback\tests\test_backtest_rules.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_06_linda_5sma_pullback\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\07_linda_5sma_rs_pullback\tests\test_features.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_05_martin_luke_pullback\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\02_martin_luke_pullback_avwap\src\backtest.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_05_martin_luke_pullback\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\02_martin_luke_pullback_avwap\src\exits.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_05_martin_luke_pullback\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\02_martin_luke_pullback_avwap\src\features.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_05_martin_luke_pullback\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\02_martin_luke_pullback_avwap\src\reports.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_05_martin_luke_pullback\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\02_martin_luke_pullback_avwap\tests\test_backtest_rules.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_05_martin_luke_pullback\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\02_martin_luke_pullback_avwap\tests\test_features.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_04_bigbeluga_rsi_divergence_choch_atr\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\05_bigbeluga_rsi_choch_atr\src\backtest.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_04_bigbeluga_rsi_divergence_choch_atr\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\05_bigbeluga_rsi_choch_atr\src\exits.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_04_bigbeluga_rsi_divergence_choch_atr\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\05_bigbeluga_rsi_choch_atr\src\features.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_04_bigbeluga_rsi_divergence_choch_atr\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\05_bigbeluga_rsi_choch_atr\src\reports.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_04_bigbeluga_rsi_divergence_choch_atr\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\05_bigbeluga_rsi_choch_atr\tests\test_backtest_rules.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_04_bigbeluga_rsi_divergence_choch_atr\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\05_bigbeluga_rsi_choch_atr\tests\test_features.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_03_slingshot_ema_pullback\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\03_slingshot_4ema_high_pullback\src\backtest.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_03_slingshot_ema_pullback\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\03_slingshot_4ema_high_pullback\src\exits.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_03_slingshot_ema_pullback\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\03_slingshot_4ema_high_pullback\src\features.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_03_slingshot_ema_pullback\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\03_slingshot_4ema_high_pullback\src\reports.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_03_slingshot_ema_pullback\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\03_slingshot_4ema_high_pullback\tests\test_backtest_rules.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_03_slingshot_ema_pullback\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\03_slingshot_4ema_high_pullback\tests\test_features.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_02_crabel_range_expansion\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\04_crabel_range_expansion_stage2\src\backtest.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_02_crabel_range_expansion\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\04_crabel_range_expansion_stage2\src\exits.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_02_crabel_range_expansion\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\04_crabel_range_expansion_stage2\src\features.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_02_crabel_range_expansion\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\04_crabel_range_expansion_stage2\src\reports.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_02_crabel_range_expansion\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\04_crabel_range_expansion_stage2\tests\test_backtest_rules.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_02_crabel_range_expansion\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\04_crabel_range_expansion_stage2\tests\test_features.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_01_kell_wedge\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\01_kell_wedge_pop_crossback\src\backtest.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_01_kell_wedge\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\01_kell_wedge_pop_crossback\src\exits.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_01_kell_wedge\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\01_kell_wedge_pop_crossback\src\features.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_01_kell_wedge\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\01_kell_wedge_pop_crossback\src\reports.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_01_kell_wedge\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\01_kell_wedge_pop_crossback\tests\test_backtest_rules.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\copied_previous_code\candidate_01_kell_wedge\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED\strategies\01_kell_wedge_pop_crossback\tests\test_features.py
+exit=0
+stdout=
+stderr=
+
+$ python C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\candidate_01_kell_wedge\synthetic_tests.py
+exit=0
+stdout=
+stderr=
+
+$ python C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\candidate_02_crabel_range_expansion\synthetic_tests.py
+exit=0
+stdout=
+stderr=
+
+$ python C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\candidate_03_slingshot_ema_pullback\synthetic_tests.py
+exit=0
+stdout=
+stderr=
+
+$ python C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\candidate_04_bigbeluga_rsi_divergence_choch_atr\synthetic_tests.py
+exit=0
+stdout=
+stderr=
+
+$ python C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\candidate_05_martin_luke_pullback\synthetic_tests.py
+exit=0
+stdout=
+stderr=
+
+$ python C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2B_code_verification_2026_05_04_CODEX\candidate_06_linda_5sma_pullback\synthetic_tests.py
+exit=0
+stdout=
+stderr=
+
+$ git status --short
+exit=0
+stdout= M 00_PYTHON/mtc_v2/core/config.py
+ M 00_PYTHON/mtc_v2/core/runner.py
+ M 03_DOCS/HANDOFF.md
+ M 03_DOCS/MTC_V2_ARCHITECTURE.md
+ M 03_DOCS/RUNBOOK.md
+ M 05_PARITY/manual_tw_futures_audit.py
+ D 06_PINE_TESTING/CHATGBT.md
+ D 06_PINE_TESTING/CONSOLIDATED_REPORT.md
+ D 06_PINE_TESTING/Cloude.md
+ D "06_PINE_TESTING/Consolide rapo.md"
+ D 06_PINE_TESTING/Copilot.md
+ D 06_PINE_TESTING/EXECUTIVE_SUMMARY.md
+ D 06_PINE_TESTING/Gemini.md
+ D 06_PINE_TESTING/Mistral.md
+ D 06_PINE_TESTING/Preplexity.md
+ D 06_PINE_TESTING/ROADMAP.md
+ D 06_PINE_TESTING/deepseek.md
+ M ../data/mtc_signals.json
+ M ../data/parity_input_from_pinets.csv
+ M ../data/pine_trades.csv
+ M ../data/pine_trades.json
+ M ../data/pinets_mock_binance/fapi-exchangeInfo.json
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_02fe6.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_24adf.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_275c0.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_32e29.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_46494.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_55be3.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_61fe0.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_82c66.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_9c217.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_9d3d7.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_a5830.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_c2e77.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_c9e4e.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_e99fe.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_ec152.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_f3e40.xlsx"
+ D "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/MTC_V2_BINANCE_BTCUSDT.P_2026-03-15_faa75.xlsx"
+ M ../reports/manual_tw_futures_case_085.csv
+ M ../reports/manual_tw_futures_case_085.json
+ M ../reports/manual_tw_futures_case_085_python_trades.csv
+ M ../reports/manual_tw_futures_case_085_trade_report.csv
+ M ../reports/pine_input_overrides.json
+?? 00_PYTHON/mtc_v2/core/config.py.bak_range_filter_selectable_20260426
+?? 00_PYTHON/mtc_v2/core/results.py
+?? 00_PYTHON/mtc_v2/core/runner.py.bak_range_filter_selectable_20260426
+?? 00_PYTHON/mtc_v2/signals/range_filter.py
+?? 00_PYTHON/mtc_v2/tests/test_producer_selection_range_filter.py
+?? 00_PYTHON/mtc_v2/tests/test_range_filter.py
+?? 00_PYTHON/mtc_v2/tests/test_runner_metrics_api.py
+?? 01_PINE/MTC_V2.pine.bak_range_filter_selectable_20260426
+?? 03_DOCS/Gemini_quantlens_knowledge_pack/
+?? 03_DOCS/HANDOFF.md.bak_config_source_20260426
+?? 03_DOCS/HANDOFF.md.bak_fast_suite_case001_20260426
+?? 03_DOCS/HANDOFF.md.bak_feature_factory_v1_20260426
+?? 03_DOCS/HANDOFF.md.bak_multi_oracle_parity_20260426
+?? 03_DOCS/HANDOFF.md.bak_range_filter_poc_20260426
+?? 03_DOCS/HANDOFF.md.bak_range_filter_selectable_draft_20260426
+?? 03_DOCS/HANDOFF.md.bak_supertrend_isolation_20260426
+?? 03_DOCS/HANDOFF.md.bak_surface_gate_20260426
+?? 03_DOCS/HANDOFF.md.bak_trace_alignment_20260426
+?? 03_DOCS/MTC_V2_ARCHITECTURE.md.bak_portable_prepackage_20260426
+?? 03_DOCS/PLANS/MTC_V2_OPTIMIZATION_LOOP_SCORING_CROSS_MARKET_PLAN.md
+?? 04_AUDIT/MTC_V2_Parity_Deep_Audit.md
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_060/MTC_V2_1304_BINANCE_BTCUSDT.P_2026-04-13_00f2e.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_061/MTC_V2_1304_BINANCE_BTCUSDT.P_2026-04-13_30867.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_062/MTC_V2_1304_BINANCE_BTCUSDT.P_2026-04-13_b4a57.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_063/MTC_V2_1304_BINANCE_BTCUSDT.P_2026-04-13_6509e.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_064/MTC_V2_1304_BINANCE_BTCUSDT.P_2026-04-13_8be7b.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_065/MTC_V2_1304_BINANCE_BTCUSDT.P_2026-04-13_0e0fe.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_066/MTC_V2_1304_BINANCE_BTCUSDT.P_2026-04-13_00279.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_067/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-13_c1387.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_068/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_58c99.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_069/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_0c67e.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_070/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_ef0fc.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_071/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_09abe.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_072/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_6fddb.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_073/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_43034.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_074/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_c11c3.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_075/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_2a52e.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_076/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_4f90b.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_077/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_4f325.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_078/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_626f7.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_079/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_1a870.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_080/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_a2532.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_081/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_fa1d9.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_082/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_d84dd.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_083/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_69b91.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_084/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_03c98.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_093/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_f4be2.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_094/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_8dffc.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_095/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_4044c.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_096/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_fb49a.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_097/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_f0ee6.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_098/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_83501.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_099/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_6b9ea.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_100/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_030d3.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_101/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_4b889.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_102/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_5f284.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_103/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_f3b21.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_104/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_91034.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_105/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_1e1bf.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_106/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_63a39.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_107/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_fd4e7.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_108/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_d56fb.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_109/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_3c88c.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_110/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_655a9.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_111/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_7a015.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_112/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_d6ef9.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_113/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_6d114.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_114/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_ba5e0.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_115/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_02da3.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_116/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_67edf.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_117/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_df5b6.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_118/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_2de74.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_119/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_40ec6.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_120/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_67917.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_121/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_be8c0.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_122/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_e6c5d.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_123/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_74009.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_124/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_59b57.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_125/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_ba866.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_126/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_9712e.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_127/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_39fba.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_128/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_36130.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_129/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_32f41.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_130/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_26894.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_131/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_6e78f.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_132/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_cb188.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_133/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_717be.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_134/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_ba705.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_135/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_32bde.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_136/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_7cc2d.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_137/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_3d184.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_138/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_eed38.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_139/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_88100.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_140/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_4e3c7.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_141/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_abf59.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_142/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_5f380.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_143/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_55fc5.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_144/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_d0f96.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_145/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_4ccf1.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_146/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_a3c4a.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_147/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_2040c.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_148/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_6bb31.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_149/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_1e9bf.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_150/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_75bff.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_151/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_1edca.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_152/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_d3509.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_153/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_a6b6b.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_154/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_93a3c.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_155/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_a0465.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_156/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_b8147.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_157/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_17394.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_158/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_0e96c.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_159/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_8798d.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_160/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_6052f.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_161/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_43951.xlsx
+?? 05_PARITY/TW_EXPORT_CASES_V2/case_162/MTCV2_1304_BINANCE_BTCUSDT.P_2026-04-14_90822.xlsx
+?? 05_PARITY/remix_cases_compact.json
+?? 05_PARITY/remix_cases_needed.json
+?? 05_PARITY/tools/
+?? 06_QUANTLENS_LAB/
+?? MTC_V2_PORTABLE_HANDOFF/
+?? MTC_V2_PORTABLE_HANDOFF_20260426.zip
+?? MTC_V2_PORTABLE_HANDOFF_20260426.zip.sha256
+?? MTC_V2_PORTABLE_HANDOFF_20260428_OPTIMIZER_DETACHED_READY.zip
+?? MTC_V2_PORTABLE_HANDOFF_20260428_OPTIMIZER_DETACHED_READY.zip.sha256
+?? cases/
+?? docs/
+?? experiments/
+?? feature_contracts/
+?? optimization/
+?? parity_oracles/
+?? reports/
+?? scripts/
+?? tests/
+?? tools/
+?? ../06_PINE_TESTING/
+?? ../MTC_V2_OPTIMIZATION_DATA_BUNDLE_20260427.zip
+?? ../MTC_V2_OPTIMIZATION_DATA_BUNDLE_20260427.zip.sha256
+?? ../MTC_V2_OPTIMIZATION_DATA_BUNDLE_20260427/
+?? ../YOUTUBE_STRATEGY_INTAKE/
+?? ../data/pinets_mock_binance/BTCUSDT.P-1d-1567900800000-1776038400000.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1d-1733011200000-1767225599999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1d-1733097600000-1767225599999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1d-1735603200000-1767139200000.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1d-1769904000000-1776124799999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1d-1772240400000-1775840399999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1h-1600754400000-1777248000000.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1h-1712566800000-1776092400000.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1h-1735603200000-1767225599999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1h-1735689600000-1740787199999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1h-1735689600000-1767225599999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1h-1772488800000-1776088799999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-1h-1775894400000-1776182399999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-2h-1713492000000-1776088800000.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-2h-1733011200000-1767146399999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-2h-1733011200000-1767225599999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-2h-1733097600000-1767225599999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-2h-1735603200000-1767139200000.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-2h-1769896800000-1776088799999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-2h-1772240400000-1775840399999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-4h-1567958400000-1776081600000.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-4h-1733011200000-1767153599999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-4h-1733011200000-1767225599999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-4h-1733097600000-1767225599999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-4h-1735603200000-1767139200000.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-4h-1769904000000-1776095999999.json
+?? ../data/pinets_mock_binance/BTCUSDT.P-4h-1772240400000-1775840399999.json
+?? ../mtc_backtest/parity_suite_350/tv_manual_inputs/consolidated_tv_exports/
+?? ../mtc_backtest/parity_suite_350/tv_manual_inputs/merge_tv_csvs.py
+?? ../mtc_backtest/parity_suite_350/tv_manual_inputs/merged/
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ADAUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ADAUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ADAUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ADAUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ADAUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_APTUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_APTUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_APTUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_APTUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_APTUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ARBUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ARBUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ARBUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ARBUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ARBUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_AVAXUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_AVAXUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_AVAXUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_AVAXUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_AVAXUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BNBUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BNBUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BNBUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BNBUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BNBUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BTCUSDT.P, 120_0b96a.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BTCUSDT.P, 120_f7d9b.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BTCUSDT.P, 15_consolidated_stable.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BTCUSDT.P, 1D_80f35.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BTCUSDT.P, 240_6f77f.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BTCUSDT.P, 60_1e6c0.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BTCUSDT.P, 60_45d08.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BTCUSDT.P, 60_6a2d3.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_BTCUSDT.P, 60_d5bf6.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOGEUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOGEUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOGEUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOGEUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOGEUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOTUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOTUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOTUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOTUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_DOTUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ETHUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ETHUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ETHUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ETHUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_ETHUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LINKUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LINKUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LINKUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LINKUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LINKUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LTCUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LTCUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LTCUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LTCUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_LTCUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_NEARUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_NEARUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_NEARUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_NEARUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_NEARUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_OPUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_OPUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_OPUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_OPUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_OPUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_POLUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_POLUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_POLUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_POLUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_POLUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_SOLUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_SOLUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_SOLUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_SOLUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_SOLUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_TRXUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_TRXUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_TRXUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_TRXUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_TRXUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_XRPUSDT.P, 120_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_XRPUSDT.P, 15_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_XRPUSDT.P, 1D_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_XRPUSDT.P, 240_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/AR\305\236\304\260V/BINANCE_XRPUSDT.P, 60_binance_public.csv"
+?? "../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/BTCUSDT.P 15m/"
+?? ../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/MTCV2_1404_BINANCE_AVAXUSDT_2026-04-30_92c3e.xlsx
+?? ../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/MTCV2_1404_BINANCE_AVAXUSDT_2026-04-30_a0d4f.xlsx
+?? ../mtc_backtest/parity_suite_350/tv_manual_inputs/raw_tv_exports/MTCV2_1404_BINANCE_AVAXUSDT_2026-04-30_a5aa3.xlsx
+?? ../reports/audit_case_039_20260419.csv
+?? ../reports/audit_case_039_20260419.json
+?? ../reports/audit_case_039_20260419_case_039_overrides.json
+?? ../reports/audit_case_040_20260419.csv
+?? ../reports/audit_case_040_20260419.json
+?? ../reports/audit_case_040_20260419_case_040_overrides.json
+?? ../reports/audit_case_044_20260419.csv
+?? ../reports/audit_case_044_20260419.json
+?? ../reports/audit_case_044_20260419_case_044_overrides.json
+?? ../reports/audit_case_045_20260419.csv
+?? ../reports/audit_case_045_20260419.json
+?? ../reports/audit_case_045_20260419_case_045_overrides.json
+?? ../reports/avax_seed.csv
+?? ../reports/avax_seed.json
+?? ../reports/avax_seed_avax.csv
+?? ../reports/avax_seed_avax.json
+?? ../reports/avax_seed_avax_avax_seed_a5aa3_overrides.json
+?? ../reports/avax_seed_avax_seed_a5aa3_overrides.json
+?? ../reports/case_060P_effective_config.json
+?? ../reports/case_060P_parity.json
+?? ../reports/case_060P_python_trades.csv
+?? ../reports/case_060P_trade_report.csv
+?? ../reports/case_061_effective_config.json
+?? ../reports/case_061_parity.json
+?? ../reports/case_061_python_trades.csv
+?? ../reports/case_061_trade_report.csv
+?? ../reports/case_103.csv
+?? ../reports/case_103.json
+?? ../reports/case_103_case_103_candle_pattern_gate_overrides.json
+?? ../reports/case_104.csv
+?? ../reports/case_104.json
+?? ../reports/case_104_case_104_overrides.json
+?? ../reports/case_105.csv
+?? ../reports/case_105.json
+?? ../reports/case_105_case_105_overrides.json
+?? ../reports/case_106.csv
+?? ../reports/case_106.json
+?? ../reports/case_106_case_106_overrides.json
+?? ../reports/case_107.csv
+?? ../reports/case_107.json
+?? ../reports/case_107_case_107_overrides.json
+?? ../reports/case_108.csv
+?? ../reports/case_108.json
+?? ../reports/case_108_case_108_overrides.json
+?? ../reports/case_109.csv
+?? ../reports/case_109.json
+?? ../reports/case_109_case_109_overrides.json
+?? ../reports/case_110.csv
+?? ../reports/case_110.json
+?? ../reports/case_110_case_110_overrides.json
+?? ../reports/case_111.csv
+?? ../reports/case_111.json
+?? ../reports/case_111_case_111_overrides.json
+?? ../reports/case_112.csv
+?? ../reports/case_112.json
+?? ../reports/case_112_case_112_overrides.json
+?? ../reports/case_113.csv
+?? ../reports/case_113.json
+?? ../reports/case_113_case_113_overrides.json
+?? ../reports/case_114.csv
+?? ../reports/case_114.json
+?? ../reports/case_114_case_114_overrides.json
+?? ../reports/case_115.csv
+?? ../reports/case_115.json
+?? ../reports/case_115_case_115_overrides.json
+?? ../reports/case_116.csv
+?? ../reports/case_116.json
+?? ../reports/case_116_case_116_overrides.json
+?? ../reports/case_117.csv
+?? ../reports/case_117.json
+?? ../reports/case_117_case_117_overrides.json
+?? ../reports/case_118.csv
+?? ../reports/case_118.json
+?? ../reports/case_118_case_118_overrides.json
+?? ../reports/case_119.csv
+?? ../reports/case_119.json
+?? ../reports/case_119_case_119_overrides.json
+?? ../reports/case_120.csv
+?? ../reports/case_120.json
+?? ../reports/case_120_case_120_overrides.json
+?? ../reports/case_121.csv
+?? ../reports/case_121.json
+?? ../reports/case_121_case_121_overrides.json
+?? ../reports/case_122.csv
+?? ../reports/case_122.json
+?? ../reports/case_122_case_122_overrides.json
+?? ../reports/case_123.csv
+?? ../reports/case_123.json
+?? ../reports/case_123_case_123_overrides.json
+?? ../reports/case_124.csv
+?? ../reports/case_124.json
+?? ../reports/case_124_case_124_overrides.json
+?? ../reports/case_125.csv
+?? ../reports/case_125.json
+?? ../reports/case_125_case_125_overrides.json
+?? ../reports/case_126.csv
+?? ../reports/case_126.json
+?? ../reports/case_126_case_126_overrides.json
+?? ../reports/case_127.csv
+?? ../reports/case_127.json
+?? ../reports/case_127_case_127_overrides.json
+?? ../reports/case_128.csv
+?? ../reports/case_128.json
+?? ../reports/case_128_case_128_overrides.json
+?? ../reports/case_129.csv
+?? ../reports/case_129.json
+?? ../reports/case_129_case_129_overrides.json
+?? ../reports/case_130.csv
+?? ../reports/case_130.json
+?? ../reports/case_130_case_130_overrides.json
+?? ../reports/case_131.csv
+?? ../reports/case_131.json
+?? ../reports/case_131_case_131_overrides.json
+?? ../reports/case_132.csv
+?? ../reports/case_132.json
+?? ../reports/case_132_case_132_overrides.json
+?? ../reports/case_133.csv
+?? ../reports/case_133.json
+?? ../reports/case_133_case_133_overrides.json
+?? ../reports/case_134.csv
+?? ../reports/case_134.json
+?? ../reports/case_134_case_134_overrides.json
+?? ../reports/case_135.csv
+?? ../reports/case_135.json
+?? ../reports/case_135_case_135_overrides.json
+?? ../reports/case_136.csv
+?? ../reports/case_136.json
+?? ../reports/case_136_case_136_overrides.json
+?? ../reports/case_137.csv
+?? ../reports/case_137.json
+?? ../reports/case_137_case_137_overrides.json
+?? ../reports/case_138.csv
+?? ../reports/case_138.json
+?? ../reports/case_138_case_138_overrides.json
+?? ../reports/case_139.csv
+?? ../reports/case_139.json
+?? ../reports/case_139_case_139_overrides.json
+?? ../reports/case_140.csv
+?? ../reports/case_140.json
+?? ../reports/case_140_case_140_overrides.json
+?? ../reports/case_141.csv
+?? ../reports/case_141.json
+?? ../reports/case_141_case_141_overrides.json
+?? ../reports/case_142.csv
+?? ../reports/case_142.json
+?? ../reports/case_142_case_142_overrides.json
+?? ../reports/case_143.csv
+?? ../reports/case_143.json
+?? ../reports/case_143_case_143_overrides.json
+?? ../reports/case_144.csv
+?? ../reports/case_144.json
+?? ../reports/case_144_case_144_overrides.json
+?? ../reports/case_145.csv
+?? ../reports/case_145.json
+?? ../reports/case_145_case_145_overrides.json
+?? ../reports/case_146.csv
+?? ../reports/case_146.json
+?? ../reports/case_146_case_146_overrides.json
+?? ../reports/case_147.csv
+?? ../reports/case_147.json
+?? ../reports/case_147_case_147_overrides.json
+?? ../reports/case_148.csv
+?? ../reports/case_148.json
+?? ../reports/case_148_case_148_overrides.json
+?? ../reports/case_149.csv
+?? ../reports/case_149.json
+?? ../reports/case_149_case_149_overrides.json
+?? ../reports/case_150.csv
+?? ../reports/case_150.json
+?? ../reports/case_150_case_150_overrides.json
+?? ../reports/case_151.csv
+?? ../reports/case_151.json
+?? ../reports/case_151_case_151_overrides.json
+?? ../reports/case_152.csv
+?? ../reports/case_152.json
+?? ../reports/case_152_case_152_overrides.json
+?? ../reports/case_153.csv
+?? ../reports/case_153.json
+?? ../reports/case_153_case_153_overrides.json
+?? ../reports/case_154.csv
+?? ../reports/case_154.json
+?? ../reports/case_154_case_154_overrides.json
+?? ../reports/case_155.csv
+?? ../reports/case_155.json
+?? ../reports/case_155_case_155_overrides.json
+?? ../reports/case_156.csv
+?? ../reports/case_156.json
+?? ../reports/case_156_case_156_overrides.json
+?? ../reports/case_157.csv
+?? ../reports/case_157.json
+?? ../reports/case_157_case_157_overrides.json
+?? ../reports/case_158.csv
+?? ../reports/case_158.json
+?? ../reports/case_158_case_158_overrides.json
+?? ../reports/case_159.csv
+?? ../reports/case_159.json
+?? ../reports/case_159_case_159_overrides.json
+?? ../reports/case_160.csv
+?? ../reports/case_160.json
+?? ../reports/case_160_case_160_overrides.json
+?? ../reports/case_161.csv
+?? ../reports/case_161.json
+?? ../reports/case_161_case_161_overrides.json
+?? ../reports/case_162.csv
+?? ../reports/case_162.json
+?? ../reports/case_162_case_162_overrides.json
+?? ../reports/manual_tw_futures_audit.csv
+?? ../reports/manual_tw_futures_audit.json
+?? ../reports/manual_tw_futures_audit_case_032_overrides.json
+?? ../reports/manual_tw_futures_audit_case_039_overrides.json
+?? ../reports/manual_tw_futures_audit_case_040_overrides.json
+?? ../reports/manual_tw_futures_audit_case_044_overrides.json
+?? ../reports/manual_tw_futures_audit_case_045_overrides.json
+?? ../reports/manual_tw_futures_audit_case_046_overrides.json
+?? ../reports/manual_tw_futures_audit_case_047_overrides.json
+?? ../reports/manual_tw_futures_audit_case_048_overrides.json
+?? ../reports/manual_tw_futures_audit_case_049_overrides.json
+?? ../reports/manual_tw_futures_audit_case_050_overrides.json
+?? ../reports/manual_tw_futures_audit_case_051_overrides.json
+?? ../reports/manual_tw_futures_audit_case_052_overrides.json
+?? ../reports/manual_tw_futures_audit_case_053_overrides.json
+?? ../reports/manual_tw_futures_audit_case_054_overrides.json
+?? ../reports/manual_tw_futures_audit_case_055_overrides.json
+?? ../reports/manual_tw_futures_audit_case_056_overrides.json
+?? ../reports/manual_tw_futures_audit_case_057_overrides.json
+?? ../reports/manual_tw_futures_audit_case_058_overrides.json
+?? ../reports/manual_tw_futures_audit_case_059_overrides.json
+?? ../reports/manual_tw_futures_audit_case_060_overrides.json
+?? ../reports/manual_tw_futures_audit_case_061_overrides.json
+?? ../reports/manual_tw_futures_audit_case_062_overrides.json
+?? ../reports/manual_tw_futures_audit_case_063_overrides.json
+?? ../reports/manual_tw_futures_audit_case_064_overrides.json
+?? ../reports/manual_tw_futures_audit_case_065_overrides.json
+?? ../reports/manual_tw_futures_audit_case_066_overrides.json
+?? ../reports/manual_tw_futures_audit_raw_6c6e0_overrides.json
+?? ../reports/manual_tw_futures_avax_seed_a5aa3.json
+?? ../reports/manual_tw_futures_avax_seed_a5aa3_effective_config.json
+?? ../reports/manual_tw_futures_avax_seed_a5aa3_python_trades.csv
+?? ../reports/manual_tw_futures_avax_seed_a5aa3_trade_report.csv
+?? ../reports/manual_tw_futures_case_032.json
+?? ../reports/manual_tw_futures_case_032_effective_config.json
+?? ../reports/manual_tw_futures_case_032_python_trades.csv
+?? ../reports/manual_tw_futures_case_032_trade_report.csv
+?? ../reports/manual_tw_futures_case_039.json
+?? ../reports/manual_tw_futures_case_039_effective_config.json
+?? ../reports/manual_tw_futures_case_039_python_trades.csv
+?? ../reports/manual_tw_futures_case_039_trade_report.csv
+?? ../reports/manual_tw_futures_case_040.json
+?? ../reports/manual_tw_futures_case_040_effective_config.json
+?? ../reports/manual_tw_futures_case_040_python_trades.csv
+?? ../reports/manual_tw_futures_case_040_trade_report.csv
+?? ../reports/manual_tw_futures_case_044.json
+?? ../reports/manual_tw_futures_case_044_effective_config.json
+?? ../reports/manual_tw_futures_case_044_python_trades.csv
+?? ../reports/manual_tw_futures_case_044_trade_report.csv
+?? ../reports/manual_tw_futures_case_045.json
+?? ../reports/manual_tw_futures_case_045_effective_config.json
+?? ../reports/manual_tw_futures_case_045_python_trades.csv
+?? ../reports/manual_tw_futures_case_045_trade_report.csv
+?? ../reports/manual_tw_futures_case_046.json
+?? ../reports/manual_tw_futures_case_046_effective_config.json
+?? ../reports/manual_tw_futures_case_046_python_trades.csv
+?? ../reports/manual_tw_futures_case_046_trade_report.csv
+?? ../reports/manual_tw_futures_case_047.json
+?? ../reports/manual_tw_futures_case_047_effective_config.json
+?? ../reports/manual_tw_futures_case_047_python_trades.csv
+?? ../reports/manual_tw_futures_case_047_trade_report.csv
+?? ../reports/manual_tw_futures_case_048.json
+?? ../reports/manual_tw_futures_case_048_effective_config.json
+?? ../reports/manual_tw_futures_case_048_python_trades.csv
+?? ../reports/manual_tw_futures_case_048_trade_report.csv
+?? ../reports/manual_tw_futures_case_049.json
+?? ../reports/manual_tw_futures_case_049_effective_config.json
+?? ../reports/manual_tw_futures_case_049_python_trades.csv
+?? ../reports/manual_tw_futures_case_049_trade_report.csv
+?? ../reports/manual_tw_futures_case_050.json
+?? ../reports/manual_tw_futures_case_050_effective_config.json
+?? ../reports/manual_tw_futures_case_050_python_trades.csv
+?? ../reports/manual_tw_futures_case_050_trade_report.csv
+?? ../reports/manual_tw_futures_case_051.json
+?? ../reports/manual_tw_futures_case_051_effective_config.json
+?? ../reports/manual_tw_futures_case_051_python_trades.csv
+?? ../reports/manual_tw_futures_case_051_trade_report.csv
+?? ../reports/manual_tw_futures_case_052.json
+?? ../reports/manual_tw_futures_case_052_effective_config.json
+?? ../reports/manual_tw_futures_case_052_python_trades.csv
+?? ../reports/manual_tw_futures_case_052_trade_report.csv
+?? ../reports/manual_tw_futures_case_053.json
+?? ../reports/manual_tw_futures_case_053_effective_config.json
+?? ../reports/manual_tw_futures_case_053_python_trades.csv
+?? ../reports/manual_tw_futures_case_053_trade_report.csv
+?? ../reports/manual_tw_futures_case_054.json
+?? ../reports/manual_tw_futures_case_054_effective_config.json
+?? ../reports/manual_tw_futures_case_054_python_trades.csv
+?? ../reports/manual_tw_futures_case_054_trade_report.csv
+?? ../reports/manual_tw_futures_case_055.json
+?? ../reports/manual_tw_futures_case_055_effective_config.json
+?? ../reports/manual_tw_futures_case_055_python_trades.csv
+?? ../reports/manual_tw_futures_case_055_trade_report.csv
+?? ../reports/manual_tw_futures_case_056.json
+?? ../reports/manual_tw_futures_case_056_effective_config.json
+?? ../reports/manual_tw_futures_case_056_python_trades.csv
+?? ../reports/manual_tw_futures_case_056_trade_report.csv
+?? ../reports/manual_tw_futures_case_057.json
+?? ../reports/manual_tw_futures_case_057_effective_config.json
+?? ../reports/manual_tw_futures_case_057_python_trades.csv
+?? ../reports/manual_tw_futures_case_057_trade_report.csv
+?? ../reports/manual_tw_futures_case_058.json
+?? ../reports/manual_tw_futures_case_058_effective_config.json
+?? ../reports/manual_tw_futures_case_058_python_trades.csv
+?? ../reports/manual_tw_futures_case_058_trade_report.csv
+?? ../reports/manual_tw_futures_case_059.json
+?? ../reports/manual_tw_futures_case_059_effective_config.json
+?? ../reports/manual_tw_futures_case_059_python_trades.csv
+?? ../reports/manual_tw_futures_case_059_trade_report.csv
+?? ../reports/manual_tw_futures_case_060.json
+?? ../reports/manual_tw_futures_case_060_effective_config.json
+?? ../reports/manual_tw_futures_case_060_python_trades.csv
+?? ../reports/manual_tw_futures_case_060_trade_report.csv
+?? ../reports/manual_tw_futures_case_061.json
+?? ../reports/manual_tw_futures_case_061_effective_config.json
+?? ../reports/manual_tw_futures_case_061_python_trades.csv
+?? ../reports/manual_tw_futures_case_061_trade_report.csv
+?? ../reports/manual_tw_futures_case_062.json
+?? ../reports/manual_tw_futures_case_062_effective_config.json
+?? ../reports/manual_tw_futures_case_062_python_trades.csv
+?? ../reports/manual_tw_futures_case_062_trade_report.csv
+?? ../reports/manual_tw_futures_case_063.json
+?? ../reports/manual_tw_futures_case_063_effective_config.json
+?? ../reports/manual_tw_futures_case_063_python_trades.csv
+?? ../reports/manual_tw_futures_case_063_trade_report.csv
+?? ../reports/manual_tw_futures_case_064.json
+?? ../reports/manual_tw_futures_case_064_effective_config.json
+?? ../reports/manual_tw_futures_case_064_python_trades.csv
+?? ../reports/manual_tw_futures_case_064_trade_report.csv
+?? ../reports/manual_tw_futures_case_065.json
+?? ../reports/manual_tw_futures_case_065_effective_config.json
+?? ../reports/manual_tw_futures_case_065_python_trades.csv
+?? ../reports/manual_tw_futures_case_065_trade_report.csv
+?? ../reports/manual_tw_futures_case_066.json
+?? ../reports/manual_tw_futures_case_066_effective_config.json
+?? ../reports/manual_tw_futures_case_066_python_trades.csv
+?? ../reports/manual_tw_futures_case_066_trade_report.csv
+?? ../reports/manual_tw_futures_case_067.csv
+?? ../reports/manual_tw_futures_case_067.json
+?? ../reports/manual_tw_futures_case_067_case_067_overrides.json
+?? ../reports/manual_tw_futures_case_067_effective_config.json
+?? ../reports/manual_tw_futures_case_067_python_trades.csv
+?? ../reports/manual_tw_futures_case_067_recheck.csv
+?? ../reports/manual_tw_futures_case_067_recheck.json
+?? ../reports/manual_tw_futures_case_067_recheck_case_067_overrides.json
+?? ../reports/manual_tw_futures_case_067_redo.csv
+?? ../reports/manual_tw_futures_case_067_redo.json
+?? ../reports/manual_tw_futures_case_067_redo_case_067_overrides.json
+?? ../reports/manual_tw_futures_case_067_trade_report.csv
+?? ../reports/manual_tw_futures_case_068.csv
+?? ../reports/manual_tw_futures_case_068.json
+?? ../reports/manual_tw_futures_case_068_case_068_overrides.json
+?? ../reports/manual_tw_futures_case_068_effective_config.json
+?? ../reports/manual_tw_futures_case_068_python_trades.csv
+?? ../reports/manual_tw_futures_case_068_trade_report.csv
+?? ../reports/manual_tw_futures_case_069.csv
+?? ../reports/manual_tw_futures_case_069.json
+?? ../reports/manual_tw_futures_case_069_case_069_overrides.json
+?? ../reports/manual_tw_futures_case_069_effective_config.json
+?? ../reports/manual_tw_futures_case_069_python_trades.csv
+?? ../reports/manual_tw_futures_case_069_trade_report.csv
+?? ../reports/manual_tw_futures_case_070.csv
+?? ../reports/manual_tw_futures_case_070.json
+?? ../reports/manual_tw_futures_case_070_case_070_overrides.json
+?? ../reports/manual_tw_futures_case_070_effective_config.json
+?? ../reports/manual_tw_futures_case_070_python_trades.csv
+?? ../reports/manual_tw_futures_case_070_trade_report.csv
+?? ../reports/manual_tw_futures_case_071.csv
+?? ../reports/manual_tw_futures_case_071.json
+?? ../reports/manual_tw_futures_case_071_case_071_overrides.json
+?? ../reports/manual_tw_futures_case_071_effective_config.json
+?? ../reports/manual_tw_futures_case_071_python_trades.csv
+?? ../reports/manual_tw_futures_case_071_trade_report.csv
+?? ../reports/manual_tw_futures_case_072.csv
+?? ../reports/manual_tw_futures_case_072.json
+?? ../reports/manual_tw_futures_case_072_case_072_overrides.json
+?? ../reports/manual_tw_futures_case_072_effective_config.json
+?? ../reports/manual_tw_futures_case_072_python_trades.csv
+?? ../reports/manual_tw_futures_case_072_trade_report.csv
+?? ../reports/manual_tw_futures_case_073.csv
+?? ../reports/manual_tw_futures_case_073.json
+?? ../reports/manual_tw_futures_case_073_case_073_overrides.json
+?? ../reports/manual_tw_futures_case_073_effective_config.json
+?? ../reports/manual_tw_futures_case_073_python_trades.csv
+?? ../reports/manual_tw_futures_case_073_trade_report.csv
+?? ../reports/manual_tw_futures_case_074.csv
+?? ../reports/manual_tw_futures_case_074.json
+?? ../reports/manual_tw_futures_case_074_case_074_overrides.json
+?? ../reports/manual_tw_futures_case_074_effective_config.json
+?? ../reports/manual_tw_futures_case_074_python_trades.csv
+?? ../reports/manual_tw_futures_case_074_trade_report.csv
+?? ../reports/manual_tw_futures_case_075.csv
+?? ../reports/manual_tw_futures_case_075.json
+?? ../reports/manual_tw_futures_case_075_case_075_overrides.json
+?? ../reports/manual_tw_futures_case_075_effective_config.json
+?? ../reports/manual_tw_futures_case_075_python_trades.csv
+?? ../reports/manual_tw_futures_case_075_trade_report.csv
+?? ../reports/manual_tw_futures_case_076.csv
+?? ../reports/manual_tw_futures_case_076.json
+?? ../reports/manual_tw_futures_case_076_case_076_overrides.json
+?? ../reports/manual_tw_futures_case_076_effective_config.json
+?? ../reports/manual_tw_futures_case_076_python_trades.csv
+?? ../reports/manual_tw_futures_case_076_trade_report.csv
+?? ../reports/manual_tw_futures_case_077.csv
+?? ../reports/manual_tw_futures_case_077.json
+?? ../reports/manual_tw_futures_case_077_case_077_overrides.json
+?? ../reports/manual_tw_futures_case_077_effective_config.json
+?? ../reports/manual_tw_futures_case_077_python_trades.csv
+?? ../reports/manual_tw_futures_case_077_trade_report.csv
+?? ../reports/manual_tw_futures_case_078.csv
+?? ../reports/manual_tw_futures_case_078.json
+?? ../reports/manual_tw_futures_case_078_case_078_overrides.json
+?? ../reports/manual_tw_futures_case_078_effective_config.json
+?? ../reports/manual_tw_futures_case_078_python_trades.csv
+?? ../reports/manual_tw_futures_case_078_trade_report.csv
+?? ../reports/manual_tw_futures_case_079.csv
+?? ../reports/manual_tw_futures_case_079.json
+?? ../reports/manual_tw_futures_case_079_case_079_overrides.json
+?? ../reports/manual_tw_futures_case_079_effective_config.json
+?? ../reports/manual_tw_futures_case_079_python_trades.csv
+?? ../reports/manual_tw_futures_case_079_trade_report.csv
+?? ../reports/manual_tw_futures_case_080.csv
+?? ../reports/manual_tw_futures_case_080.json
+?? ../reports/manual_tw_futures_case_080_case_080_overrides.json
+?? ../reports/manual_tw_futures_case_080_effective_config.json
+?? ../reports/manual_tw_futures_case_080_python_trades.csv
+?? ../reports/manual_tw_futures_case_080_trade_report.csv
+?? ../reports/manual_tw_futures_case_081.csv
+?? ../reports/manual_tw_futures_case_081.json
+?? ../reports/manual_tw_futures_case_081_case_081_overrides.json
+?? ../reports/manual_tw_futures_case_081_effective_config.json
+?? ../reports/manual_tw_futures_case_081_python_trades.csv
+?? ../reports/manual_tw_futures_case_081_trade_report.csv
+?? ../reports/manual_tw_futures_case_082.csv
+?? ../reports/manual_tw_futures_case_082.json
+?? ../reports/manual_tw_futures_case_082_case_082_overrides.json
+?? ../reports/manual_tw_futures_case_082_effective_config.json
+?? ../reports/manual_tw_futures_case_082_python_trades.csv
+?? ../reports/manual_tw_futures_case_082_trade_report.csv
+?? ../reports/manual_tw_futures_case_083.csv
+?? ../reports/manual_tw_futures_case_083.json
+?? ../reports/manual_tw_futures_case_083_case_083_overrides.json
+?? ../reports/manual_tw_futures_case_083_effective_config.json
+?? ../reports/manual_tw_futures_case_083_python_trades.csv
+?? ../reports/manual_tw_futures_case_083_trade_report.csv
+?? ../reports/manual_tw_futures_case_084.csv
+?? ../reports/manual_tw_futures_case_084.json
+?? ../reports/manual_tw_futures_case_084_case_084_overrides.json
+?? ../reports/manual_tw_futures_case_084_effective_config.json
+?? ../reports/manual_tw_futures_case_084_python_trades.csv
+?? ../reports/manual_tw_futures_case_084_trade_report.csv
+?? ../reports/manual_tw_futures_case_093.csv
+?? ../reports/manual_tw_futures_case_093.json
+?? ../reports/manual_tw_futures_case_093_case_093_overrides.json
+?? ../reports/manual_tw_futures_case_093_effective_config.json
+?? ../reports/manual_tw_futures_case_093_python_trades.csv
+?? ../reports/manual_tw_futures_case_093_trade_report.csv
+?? ../reports/manual_tw_futures_case_094.csv
+?? ../reports/manual_tw_futures_case_094.json
+?? ../reports/manual_tw_futures_case_094_case_094_overrides.json
+?? ../reports/manual_tw_futures_case_094_effective_config.json
+?? ../reports/manual_tw_futures_case_094_python_trades.csv
+?? ../reports/manual_tw_futures_case_094_trade_report.csv
+?? ../reports/manual_tw_futures_case_095.csv
+?? ../reports/manual_tw_futures_case_095.json
+?? ../reports/manual_tw_futures_case_095_case_095_overrides.json
+?? ../reports/manual_tw_futures_case_095_effective_config.json
+?? ../reports/manual_tw_futures_case_095_python_trades.csv
+?? ../reports/manual_tw_futures_case_095_trade_report.csv
+?? ../reports/manual_tw_futures_case_096.csv
+?? ../reports/manual_tw_futures_case_096.json
+?? ../reports/manual_tw_futures_case_096_case_096_overrides.json
+?? ../reports/manual_tw_futures_case_096_effective_config.json
+?? ../reports/manual_tw_futures_case_096_python_trades.csv
+?? ../reports/manual_tw_futures_case_096_trade_report.csv
+?? ../reports/manual_tw_futures_case_097.csv
+?? ../reports/manual_tw_futures_case_097.json
+?? ../reports/manual_tw_futures_case_097_case_097_overrides.json
+?? ../reports/manual_tw_futures_case_097_effective_config.json
+?? ../reports/manual_tw_futures_case_097_python_trades.csv
+?? ../reports/manual_tw_futures_case_097_trade_report.csv
+?? ../reports/manual_tw_futures_case_098.csv
+?? ../reports/manual_tw_futures_case_098.json
+?? ../reports/manual_tw_futures_case_098_case_098_overrides.json
+?? ../reports/manual_tw_futures_case_098_effective_config.json
+?? ../reports/manual_tw_futures_case_098_python_trades.csv
+?? ../reports/manual_tw_futures_case_098_trade_report.csv
+?? ../reports/manual_tw_futures_case_099.csv
+?? ../reports/manual_tw_futures_case_099.json
+?? ../reports/manual_tw_futures_case_099_case_099_overrides.json
+?? ../reports/manual_tw_futures_case_099_effective_config.json
+?? ../reports/manual_tw_futures_case_099_python_trades.csv
+?? ../reports/manual_tw_futures_case_099_trade_report.csv
+?? ../reports/manual_tw_futures_case_100.csv
+?? ../reports/manual_tw_futures_case_100.json
+?? ../reports/manual_tw_futures_case_100_case_100_overrides.json
+?? ../reports/manual_tw_futures_case_100_effective_config.json
+?? ../reports/manual_tw_futures_case_100_python_trades.csv
+?? ../reports/manual_tw_futures_case_100_trade_report.csv
+?? ../reports/manual_tw_futures_case_101.csv
+?? ../reports/manual_tw_futures_case_101.json
+?? ../reports/manual_tw_futures_case_101_case_101_overrides.json
+?? ../reports/manual_tw_futures_case_101_effective_config.json
+?? ../reports/manual_tw_futures_case_101_python_trades.csv
+?? ../reports/manual_tw_futures_case_101_trade_report.csv
+?? ../reports/manual_tw_futures_case_102.csv
+?? ../reports/manual_tw_futures_case_102.json
+?? ../reports/manual_tw_futures_case_102_case_102_overrides.json
+?? ../reports/manual_tw_futures_case_102_effective_config.json
+?? ../reports/manual_tw_futures_case_102_python_trades.csv
+?? ../reports/manual_tw_futures_case_102_trade_report.csv
+?? ../reports/manual_tw_futures_case_103.csv
+?? ../reports/manual_tw_futures_case_103.json
+?? ../reports/manual_tw_futures_case_103_candle_pattern_gate.json
+?? ../reports/manual_tw_futures_case_103_candle_pattern_gate_effective_config.json
+?? ../reports/manual_tw_futures_case_103_candle_pattern_gate_python_trades.csv
+?? ../reports/manual_tw_futures_case_103_candle_pattern_gate_trade_report.csv
+?? ../reports/manual_tw_futures_case_103_case_103_overrides.json
+?? ../reports/manual_tw_futures_case_103_effective_config.json
+?? ../reports/manual_tw_futures_case_103_python_trades.csv
+?? ../reports/manual_tw_futures_case_103_trade_report.csv
+?? ../reports/manual_tw_futures_case_104.csv
+?? ../reports/manual_tw_futures_case_104.json
+?? ../reports/manual_tw_futures_case_104_case_104_overrides.json
+?? ../reports/manual_tw_futures_case_104_effective_config.json
+?? ../reports/manual_tw_futures_case_104_python_trades.csv
+?? ../reports/manual_tw_futures_case_104_trade_report.csv
+?? ../reports/manual_tw_futures_case_105.csv
+?? ../reports/manual_tw_futures_case_105.json
+?? ../reports/manual_tw_futures_case_105_case_105_overrides.json
+?? ../reports/manual_tw_futures_case_105_effective_config.json
+?? ../reports/manual_tw_futures_case_105_python_trades.csv
+?? ../reports/manual_tw_futures_case_105_trade_report.csv
+?? ../reports/manual_tw_futures_case_106.csv
+?? ../reports/manual_tw_futures_case_106.json
+?? ../reports/manual_tw_futures_case_106_case_106_overrides.json
+?? ../reports/manual_tw_futures_case_106_effective_config.json
+?? ../reports/manual_tw_futures_case_106_python_trades.csv
+?? ../reports/manual_tw_futures_case_106_trade_report.csv
+?? ../reports/manual_tw_futures_case_107.csv
+?? ../reports/manual_tw_futures_case_107.json
+?? ../reports/manual_tw_futures_case_107_case_107_overrides.json
+?? ../reports/manual_tw_futures_case_107_effective_config.json
+?? ../reports/manual_tw_futures_case_107_python_trades.csv
+?? ../reports/manual_tw_futures_case_107_trade_report.csv
+?? ../reports/manual_tw_futures_case_108.csv
+?? ../reports/manual_tw_futures_case_108.json
+?? ../reports/manual_tw_futures_case_108_case_108_overrides.json
+?? ../reports/manual_tw_futures_case_108_effective_config.json
+?? ../reports/manual_tw_futures_case_108_python_trades.csv
+?? ../reports/manual_tw_futures_case_108_trade_report.csv
+?? ../reports/manual_tw_futures_case_109.csv
+?? ../reports/manual_tw_futures_case_109.json
+?? ../reports/manual_tw_futures_case_109_case_109_overrides.json
+?? ../reports/manual_tw_futures_case_109_effective_config.json
+?? ../reports/manual_tw_futures_case_109_python_trades.csv
+?? ../reports/manual_tw_futures_case_109_trade_report.csv
+?? ../reports/manual_tw_futures_case_110.csv
+?? ../reports/manual_tw_futures_case_110.json
+?? ../reports/manual_tw_futures_case_110_case_110_overrides.json
+?? ../reports/manual_tw_futures_case_110_effective_config.json
+?? ../reports/manual_tw_futures_case_110_python_trades.csv
+?? ../reports/manual_tw_futures_case_110_trade_report.csv
+?? ../reports/manual_tw_futures_case_111.csv
+?? ../reports/manual_tw_futures_case_111.json
+?? ../reports/manual_tw_futures_case_111_case_111_overrides.json
+?? ../reports/manual_tw_futures_case_111_effective_config.json
+?? ../reports/manual_tw_futures_case_111_python_trades.csv
+?? ../reports/manual_tw_futures_case_111_trade_report.csv
+?? ../reports/manual_tw_futures_case_112.csv
+?? ../reports/manual_tw_futures_case_112.json
+?? ../reports/manual_tw_futures_case_112_case_112_overrides.json
+?? ../reports/manual_tw_futures_case_112_effective_config.json
+?? ../reports/manual_tw_futures_case_112_python_trades.csv
+?? ../reports/manual_tw_futures_case_112_trade_report.csv
+?? ../reports/manual_tw_futures_case_113.csv
+?? ../reports/manual_tw_futures_case_113.json
+?? ../reports/manual_tw_futures_case_113_case_113_overrides.json
+?? ../reports/manual_tw_futures_case_113_effective_config.json
+?? ../reports/manual_tw_futures_case_113_python_trades.csv
+?? ../reports/manual_tw_futures_case_113_trade_report.csv
+?? ../reports/manual_tw_futures_case_114.csv
+?? ../reports/manual_tw_futures_case_114.json
+?? ../reports/manual_tw_futures_case_114_case_114_overrides.json
+?? ../reports/manual_tw_futures_case_114_effective_config.json
+?? ../reports/manual_tw_futures_case_114_python_trades.csv
+?? ../reports/manual_tw_futures_case_114_trade_report.csv
+?? ../reports/manual_tw_futures_case_115.csv
+?? ../reports/manual_tw_futures_case_115.json
+?? ../reports/manual_tw_futures_case_115_case_115_overrides.json
+?? ../reports/manual_tw_futures_case_115_effective_config.json
+?? ../reports/manual_tw_futures_case_115_python_trades.csv
+?? ../reports/manual_tw_futures_case_115_trade_report.csv
+?? ../reports/manual_tw_futures_case_116.csv
+?? ../reports/manual_tw_futures_case_116.json
+?? ../reports/manual_tw_futures_case_116_case_116_overrides.json
+?? ../reports/manual_tw_futures_case_116_effective_config.json
+?? ../reports/manual_tw_futures_case_116_python_trades.csv
+?? ../reports/manual_tw_futures_case_116_trade_report.csv
+?? ../reports/manual_tw_futures_case_117.csv
+?? ../reports/manual_tw_futures_case_117.json
+?? ../reports/manual_tw_futures_case_117_case_117_overrides.json
+?? ../reports/manual_tw_futures_case_117_effective_config.json
+?? ../reports/manual_tw_futures_case_117_python_trades.csv
+?? ../reports/manual_tw_futures_case_117_trade_report.csv
+?? ../reports/manual_tw_futures_case_118.csv
+?? ../reports/manual_tw_futures_case_118.json
+?? ../reports/manual_tw_futures_case_118_case_118_overrides.json
+?? ../reports/manual_tw_futures_case_118_effective_config.json
+?? ../reports/manual_tw_futures_case_118_python_trades.csv
+?? ../reports/manual_tw_futures_case_118_trade_report.csv
+?? ../reports/manual_tw_futures_case_119.csv
+?? ../reports/manual_tw_futures_case_119.json
+?? ../reports/manual_tw_futures_case_119_case_119_overrides.json
+?? ../reports/manual_tw_futures_case_119_effective_config.json
+?? ../reports/manual_tw_futures_case_119_python_trades.csv
+?? ../reports/manual_tw_futures_case_119_trade_report.csv
+?? ../reports/manual_tw_futures_case_120.csv
+?? ../reports/manual_tw_futures_case_120.json
+?? ../reports/manual_tw_futures_case_120_case_120_overrides.json
+?? ../reports/manual_tw_futures_case_120_effective_config.json
+?? ../reports/manual_tw_futures_case_120_python_trades.csv
+?? ../reports/manual_tw_futures_case_120_trade_report.csv
+?? ../reports/manual_tw_futures_case_121.csv
+?? ../reports/manual_tw_futures_case_121.json
+?? ../reports/manual_tw_futures_case_121_case_121_overrides.json
+?? ../reports/manual_tw_futures_case_121_effective_config.json
+?? ../reports/manual_tw_futures_case_121_python_trades.csv
+?? ../reports/manual_tw_futures_case_121_trade_report.csv
+?? ../reports/manual_tw_futures_case_122.csv
+?? ../reports/manual_tw_futures_case_122.json
+?? ../reports/manual_tw_futures_case_122_case_122_overrides.json
+?? ../reports/manual_tw_futures_case_122_effective_config.json
+?? ../reports/manual_tw_futures_case_122_python_trades.csv
+?? ../reports/manual_tw_futures_case_122_trade_report.csv
+?? ../reports/manual_tw_futures_case_123.csv
+?? ../reports/manual_tw_futures_case_123.json
+?? ../reports/manual_tw_futures_case_123_case_123_overrides.json
+?? ../reports/manual_tw_futures_case_123_effective_config.json
+?? ../reports/manual_tw_futures_case_123_python_trades.csv
+?? ../reports/manual_tw_futures_case_123_trade_report.csv
+?? ../reports/manual_tw_futures_case_124.csv
+?? ../reports/manual_tw_futures_case_124.json
+?? ../reports/manual_tw_futures_case_124_case_124_overrides.json
+?? ../reports/manual_tw_futures_case_124_effective_config.json
+?? ../reports/manual_tw_futures_case_124_python_trades.csv
+?? ../reports/manual_tw_futures_case_124_trade_report.csv
+?? ../reports/manual_tw_futures_case_125.csv
+?? ../reports/manual_tw_futures_case_125.json
+?? ../reports/manual_tw_futures_case_125_case_125_overrides.json
+?? ../reports/manual_tw_futures_case_125_effective_config.json
+?? ../reports/manual_tw_futures_case_125_python_trades.csv
+?? ../reports/manual_tw_futures_case_125_trade_report.csv
+?? ../reports/manual_tw_futures_case_126.csv
+?? ../reports/manual_tw_futures_case_126.json
+?? ../reports/manual_tw_futures_case_126_case_126_overrides.json
+?? ../reports/manual_tw_futures_case_126_effective_config.json
+?? ../reports/manual_tw_futures_case_126_python_trades.csv
+?? ../reports/manual_tw_futures_case_126_trade_report.csv
+?? ../reports/manual_tw_futures_case_127.csv
+?? ../reports/manual_tw_futures_case_127.json
+?? ../reports/manual_tw_futures_case_127_case_127_overrides.json
+?? ../reports/manual_tw_futures_case_127_effective_config.json
+?? ../reports/manual_tw_futures_case_127_python_trades.csv
+?? ../reports/manual_tw_futures_case_127_trade_report.csv
+?? ../reports/manual_tw_futures_case_128.csv
+?? ../reports/manual_tw_futures_case_128.json
+?? ../reports/manual_tw_futures_case_128_case_128_overrides.json
+?? ../reports/manual_tw_futures_case_128_effective_config.json
+?? ../reports/manual_tw_futures_case_128_python_trades.csv
+?? ../reports/manual_tw_futures_case_128_trade_report.csv
+?? ../reports/manual_tw_futures_case_129.csv
+?? ../reports/manual_tw_futures_case_129.json
+?? ../reports/manual_tw_futures_case_129_case_129_overrides.json
+?? ../reports/manual_tw_futures_case_129_effective_config.json
+?? ../reports/manual_tw_futures_case_129_python_trades.csv
+?? ../reports/manual_tw_futures_case_129_trade_report.csv
+?? ../reports/manual_tw_futures_case_130.csv
+?? ../reports/manual_tw_futures_case_130.json
+?? ../reports/manual_tw_futures_case_130_case_130_overrides.json
+?? ../reports/manual_tw_futures_case_130_effective_config.json
+?? ../reports/manual_tw_futures_case_130_python_trades.csv
+?? ../reports/manual_tw_futures_case_130_trade_report.csv
+?? ../reports/manual_tw_futures_case_131.csv
+?? ../reports/manual_tw_futures_case_131.json
+?? ../reports/manual_tw_futures_case_131_case_131_overrides.json
+?? ../reports/manual_tw_futures_case_131_effective_config.json
+?? ../reports/manual_tw_futures_case_131_python_trades.csv
+?? ../reports/manual_tw_futures_case_131_trade_report.csv
+?? ../reports/manual_tw_futures_case_132.csv
+?? ../reports/manual_tw_futures_case_132.json
+?? ../reports/manual_tw_futures_case_132_case_132_overrides.json
+?? ../reports/manual_tw_futures_case_132_effective_config.json
+?? ../reports/manual_tw_futures_case_132_python_trades.csv
+?? ../reports/manual_tw_futures_case_132_trade_report.csv
+?? ../reports/manual_tw_futures_case_133.csv
+?? ../reports/manual_tw_futures_case_133.json
+?? ../reports/manual_tw_futures_case_133_case_133_overrides.json
+?? ../reports/manual_tw_futures_case_133_effective_config.json
+?? ../reports/manual_tw_futures_case_133_python_trades.csv
+?? ../reports/manual_tw_futures_case_133_trade_report.csv
+?? ../reports/manual_tw_futures_case_134.csv
+?? ../reports/manual_tw_futures_case_134.json
+?? ../reports/manual_tw_futures_case_134_case_134_overrides.json
+?? ../reports/manual_tw_futures_case_134_effective_config.json
+?? ../reports/manual_tw_futures_case_134_python_trades.csv
+?? ../reports/manual_tw_futures_case_134_trade_report.csv
+?? ../reports/manual_tw_futures_case_135.csv
+?? ../reports/manual_tw_futures_case_135.json
+?? ../reports/manual_tw_futures_case_135_case_135_overrides.json
+?? ../reports/manual_tw_futures_case_135_effective_config.json
+?? ../reports/manual_tw_futures_case_135_python_trades.csv
+?? ../reports/manual_tw_futures_case_135_trade_report.csv
+?? ../reports/manual_tw_futures_case_136.csv
+?? ../reports/manual_tw_futures_case_136.json
+?? ../reports/manual_tw_futures_case_136_case_136_overrides.json
+?? ../reports/manual_tw_futures_case_136_effective_config.json
+?? ../reports/manual_tw_futures_case_136_python_trades.csv
+?? ../reports/manual_tw_futures_case_136_trade_report.csv
+?? ../reports/manual_tw_futures_case_137.csv
+?? ../reports/manual_tw_futures_case_137.json
+?? ../reports/manual_tw_futures_case_137_case_137_overrides.json
+?? ../reports/manual_tw_futures_case_137_effective_config.json
+?? ../reports/manual_tw_futures_case_137_python_trades.csv
+?? ../reports/manual_tw_futures_case_137_trade_report.csv
+?? ../reports/manual_tw_futures_case_138.csv
+?? ../reports/manual_tw_futures_case_138.json
+?? ../reports/manual_tw_futures_case_138_case_138_overrides.json
+?? ../reports/manual_tw_futures_case_138_effective_config.json
+?? ../reports/manual_tw_futures_case_138_python_trades.csv
+?? ../reports/manual_tw_futures_case_138_trade_report.csv
+?? ../reports/manual_tw_futures_case_139.csv
+?? ../reports/manual_tw_futures_case_139.json
+?? ../reports/manual_tw_futures_case_139_case_139_overrides.json
+?? ../reports/manual_tw_futures_case_139_effective_config.json
+?? ../reports/manual_tw_futures_case_139_python_trades.csv
+?? ../reports/manual_tw_futures_case_139_trade_report.csv
+?? ../reports/manual_tw_futures_case_140.csv
+?? ../reports/manual_tw_futures_case_140.json
+?? ../reports/manual_tw_futures_case_140_case_140_overrides.json
+?? ../reports/manual_tw_futures_case_140_effective_config.json
+?? ../reports/manual_tw_futures_case_140_python_trades.csv
+?? ../reports/manual_tw_futures_case_140_trade_report.csv
+?? ../reports/manual_tw_futures_case_141.csv
+?? ../reports/manual_tw_futures_case_141.json
+?? ../reports/manual_tw_futures_case_141_case_141_overrides.json
+?? ../reports/manual_tw_futures_case_141_effective_config.json
+?? ../reports/manual_tw_futures_case_141_python_trades.csv
+?? ../reports/manual_tw_futures_case_141_trade_report.csv
+?? ../reports/manual_tw_futures_case_142.csv
+?? ../reports/manual_tw_futures_case_142.json
+?? ../reports/manual_tw_futures_case_142_case_142_overrides.json
+?? ../reports/manual_tw_futures_case_142_effective_config.json
+?? ../reports/manual_tw_futures_case_142_python_trades.csv
+?? ../reports/manual_tw_futures_case_142_trade_report.csv
+?? ../reports/manual_tw_futures_case_143.csv
+?? ../reports/manual_tw_futures_case_143.json
+?? ../reports/manual_tw_futures_case_143_case_143_overrides.json
+?? ../reports/manual_tw_futures_case_143_effective_config.json
+?? ../reports/manual_tw_futures_case_143_python_trades.csv
+?? ../reports/manual_tw_futures_case_143_trade_report.csv
+?? ../reports/manual_tw_futures_case_144.csv
+?? ../reports/manual_tw_futures_case_144.json
+?? ../reports/manual_tw_futures_case_144_case_144_overrides.json
+?? ../reports/manual_tw_futures_case_144_effective_config.json
+?? ../reports/manual_tw_futures_case_144_python_trades.csv
+?? ../reports/manual_tw_futures_case_144_trade_report.csv
+?? ../reports/manual_tw_futures_case_145.csv
+?? ../reports/manual_tw_futures_case_145.json
+?? ../reports/manual_tw_futures_case_145_case_145_overrides.json
+?? ../reports/manual_tw_futures_case_145_effective_config.json
+?? ../reports/manual_tw_futures_case_145_python_trades.csv
+?? ../reports/manual_tw_futures_case_145_trade_report.csv
+?? ../reports/manual_tw_futures_case_146.csv
+?? ../reports/manual_tw_futures_case_146.json
+?? ../reports/manual_tw_futures_case_146_case_146_overrides.json
+?? ../reports/manual_tw_futures_case_146_effective_config.json
+?? ../reports/manual_tw_futures_case_146_python_trades.csv
+?? ../reports/manual_tw_futures_case_146_trade_report.csv
+?? ../reports/manual_tw_futures_case_147.csv
+?? ../reports/manual_tw_futures_case_147.json
+?? ../reports/manual_tw_futures_case_147_case_147_overrides.json
+?? ../reports/manual_tw_futures_case_147_effective_config.json
+?? ../reports/manual_tw_futures_case_147_python_trades.csv
+?? ../reports/manual_tw_futures_case_147_trade_report.csv
+?? ../reports/manual_tw_futures_case_148.csv
+?? ../reports/manual_tw_futures_case_148.json
+?? ../reports/manual_tw_futures_case_148_case_148_overrides.json
+?? ../reports/manual_tw_futures_case_148_effective_config.json
+?? ../reports/manual_tw_futures_case_148_python_trades.csv
+?? ../reports/manual_tw_futures_case_148_trade_report.csv
+?? ../reports/manual_tw_futures_case_149.csv
+?? ../reports/manual_tw_futures_case_149.json
+?? ../reports/manual_tw_futures_case_149_case_149_overrides.json
+?? ../reports/manual_tw_futures_case_149_effective_config.json
+?? ../reports/manual_tw_futures_case_149_python_trades.csv
+?? ../reports/manual_tw_futures_case_149_trade_report.csv
+?? ../reports/manual_tw_futures_case_150.csv
+?? ../reports/manual_tw_futures_case_150.json
+?? ../reports/manual_tw_futures_case_150_case_150_overrides.json
+?? ../reports/manual_tw_futures_case_150_effective_config.json
+?? ../reports/manual_tw_futures_case_150_python_trades.csv
+?? ../reports/manual_tw_futures_case_150_trade_report.csv
+?? ../reports/manual_tw_futures_case_151.csv
+?? ../reports/manual_tw_futures_case_151.json
+?? ../reports/manual_tw_futures_case_151_case_151_overrides.json
+?? ../reports/manual_tw_futures_case_151_effective_config.json
+?? ../reports/manual_tw_futures_case_151_python_trades.csv
+?? ../reports/manual_tw_futures_case_151_trade_report.csv
+?? ../reports/manual_tw_futures_case_152.csv
+?? ../reports/manual_tw_futures_case_152.json
+?? ../reports/manual_tw_futures_case_152_case_152_overrides.json
+?? ../reports/manual_tw_futures_case_152_effective_config.json
+?? ../reports/manual_tw_futures_case_152_python_trades.csv
+?? ../reports/manual_tw_futures_case_152_trade_report.csv
+?? ../reports/manual_tw_futures_case_153.csv
+?? ../reports/manual_tw_futures_case_153.json
+?? ../reports/manual_tw_futures_case_153_case_153_overrides.json
+?? ../reports/manual_tw_futures_case_153_effective_config.json
+?? ../reports/manual_tw_futures_case_153_python_trades.csv
+?? ../reports/manual_tw_futures_case_153_trade_report.csv
+?? ../reports/manual_tw_futures_case_154.csv
+?? ../reports/manual_tw_futures_case_154.json
+?? ../reports/manual_tw_futures_case_154_case_154_overrides.json
+?? ../reports/manual_tw_futures_case_154_effective_config.json
+?? ../reports/manual_tw_futures_case_154_python_trades.csv
+?? ../reports/manual_tw_futures_case_154_trade_report.csv
+?? ../reports/manual_tw_futures_case_155.csv
+?? ../reports/manual_tw_futures_case_155.json
+?? ../reports/manual_tw_futures_case_155_case_155_overrides.json
+?? ../reports/manual_tw_futures_case_155_effective_config.json
+?? ../reports/manual_tw_futures_case_155_python_trades.csv
+?? ../reports/manual_tw_futures_case_155_trade_report.csv
+?? ../reports/manual_tw_futures_case_156.csv
+?? ../reports/manual_tw_futures_case_156.json
+?? ../reports/manual_tw_futures_case_156_case_156_overrides.json
+?? ../reports/manual_tw_futures_case_156_effective_config.json
+?? ../reports/manual_tw_futures_case_156_python_trades.csv
+?? ../reports/manual_tw_futures_case_156_trade_report.csv
+?? ../reports/manual_tw_futures_case_157.csv
+?? ../reports/manual_tw_futures_case_157.json
+?? ../reports/manual_tw_futures_case_157_case_157_overrides.json
+?? ../reports/manual_tw_futures_case_157_effective_config.json
+?? ../reports/manual_tw_futures_case_157_python_trades.csv
+?? ../reports/manual_tw_futures_case_157_trade_report.csv
+?? ../reports/manual_tw_futures_case_158.csv
+?? ../reports/manual_tw_futures_case_158.json
+?? ../reports/manual_tw_futures_case_158_case_158_overrides.json
+?? ../reports/manual_tw_futures_case_158_effective_config.json
+?? ../reports/manual_tw_futures_case_158_python_trades.csv
+?? ../reports/manual_tw_futures_case_158_trade_report.csv
+?? ../reports/manual_tw_futures_case_159.csv
+?? ../reports/manual_tw_futures_case_159.json
+?? ../reports/manual_tw_futures_case_159_case_159_overrides.json
+?? ../reports/manual_tw_futures_case_159_effective_config.json
+?? ../reports/manual_tw_futures_case_159_python_trades.csv
+?? ../reports/manual_tw_futures_case_159_trade_report.csv
+?? ../reports/manual_tw_futures_case_160.json
+?? ../reports/manual_tw_futures_case_160_effective_config.json
+?? ../reports/manual_tw_futures_case_160_python_trades.csv
+?? ../reports/manual_tw_futures_case_160_trade_report.csv
+?? ../reports/manual_tw_futures_case_161.json
+?? ../reports/manual_tw_futures_case_161_effective_config.json
+?? ../reports/manual_tw_futures_case_161_python_trades.csv
+?? ../reports/manual_tw_futures_case_161_trade_report.csv
+?? ../reports/manual_tw_futures_case_162.csv
+?? ../reports/manual_tw_futures_case_162.json
+?? ../reports/manual_tw_futures_case_162_case_162_overrides.json
+?? ../reports/manual_tw_futures_case_162_effective_config.json
+?? ../reports/manual_tw_futures_case_162_python_trades.csv
+?? ../reports/manual_tw_futures_case_162_trade_report.csv
+?? ../reports/manual_tw_futures_raw_6c6e0.json
+?? ../reports/manual_tw_futures_raw_6c6e0_effective_config.json
+?? ../reports/manual_tw_futures_raw_6c6e0_python_trades.csv
+?? ../reports/manual_tw_futures_raw_6c6e0_trade_report.csv
+?? ../reports/tw_audit_batch_046_061.csv
+?? ../reports/tw_audit_batch_047_066.csv
+?? ../reports/tw_audit_batch_103_162.log
+?? ../reports/tw_effects_047_066.csv
+?? ../reports/tw_parity_summary_047_066.csv
+
+stderr=
+
+
+$ git status --short > git_status_after.txt
+exit=0
+
+$ refresh FILES_CREATED.txt
+exit=0
+
+$ python -m py_compile run_stage2b_codex_verification.py
+exit=0
+

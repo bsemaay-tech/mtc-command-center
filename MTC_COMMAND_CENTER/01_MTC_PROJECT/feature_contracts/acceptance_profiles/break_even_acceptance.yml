@@ -1,0 +1,44 @@
+profile_id: break_even_acceptance
+applicable_feature_types:
+  - break_even
+required_levels:
+  - contract.required_parity_levels
+required_oracles:
+  - python
+  - pinets
+optional_oracles:
+  - pynecore
+  - vectorbt
+  - tradingview_export
+numeric_tolerance:
+  numeric_abs_tol: 1.0e-8
+  numeric_rel_tol: 1.0e-6
+  tick_tolerance: configurable
+boolean_match_policy: exact
+event_match_policy:
+  timestamp: exact
+  bar_index: exact
+  reason_code: exact
+warmup_policy:
+  default_exclude_warmup: true
+  source: contract.warmup_policy
+pass_conditions:
+  - Trigger condition and activation bar must match.
+  - old_sl/new_sl must match.
+  - No backward stop movement is allowed.
+  - Stop owner transition must match.
+fail_conditions:
+  - Required oracle output is unavailable.
+  - Required trace columns are missing.
+  - Numeric values exceed configured tolerance.
+  - Boolean, event, reason, or payload values drift.
+  - First divergence is unclassified.
+report_requirements:
+  - exact command
+  - data hash
+  - config hash
+  - code hash
+  - output file paths
+  - first divergence table
+  - missing trace columns
+  - final acceptance verdict

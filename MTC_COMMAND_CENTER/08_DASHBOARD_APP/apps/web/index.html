@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MTC Command Center</title>
+    <link rel="stylesheet" href="/web/styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Dashboard navigation">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">M</div>
+          <div>
+            <h1>MTC Command Center</h1>
+            <p id="modeLabel">read_only</p>
+          </div>
+        </div>
+        <nav class="tabs" aria-label="Sections">
+          <button class="tab is-active" data-tab="pipeline" type="button" title="Where each strategy sits in the 6-stage flow and what to do next.">Pipeline</button>
+          <button class="tab" data-tab="audit" type="button" title="Read-only source, rule, and eligibility review for each candidate.">Audit</button>
+          <button class="tab" data-tab="mtc-v2" type="button" title="Read-only queue for MTC_V2 integration readiness.">MTC_V2</button>
+          <button class="tab" data-tab="home" type="button" title="System health, counts, and overall snapshot.">Home</button>
+          <button class="tab" data-tab="tasks" type="button" title="Task lifecycle and current build queue status.">MCC Tasks</button>
+          <button class="tab" data-tab="parity" type="button" title="Parity cases and pass/fail coverage.">Parity</button>
+          <button class="tab" data-tab="backtest" type="button" title="Backtest run summaries and reports.">Backtest</button>
+          <button class="tab" data-tab="registry" type="button" title="Canonical strategy registry and evidence state.">Registry</button>
+          <button class="tab" data-tab="pine-builder" type="button" title="Pine draft and chart-build status.">Pine Builder</button>
+          <button class="tab" data-tab="optimization" type="button" title="Optimization runs, top candidates, and risk notes.">Optimization</button>
+          <button class="tab" data-tab="liveops" type="button" title="Paper-trade and live operations status.">LiveOps</button>
+          <button class="tab" data-tab="reports" type="button" title="Rendered reports and markdown notes.">Reports</button>
+          <button class="tab" data-tab="diagnostics" type="button" title="File health, schema checks, and read-model diagnostics.">Diagnostics</button>
+        </nav>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">MVP-1</p>
+            <h2 id="phaseTitle">Loading</h2>
+          </div>
+          <div class="topbar-actions">
+            <span class="status-pill" id="healthPill">checking</span>
+            <button id="refreshButton" type="button" title="Refresh snapshot">Refresh</button>
+          </div>
+        </header>
+
+        <section class="notice" id="notice" hidden></section>
+
+        <section class="panel stacked-panel" id="strategyDetail" hidden></section>
+
+        <section class="tab-panel is-active" data-panel="pipeline">
+          <section class="panel">
+            <div class="panel-heading">
+              <h3>Strategy Pipeline</h3>
+              <span id="pipelineCount">--</span>
+            </div>
+            <p class="summary" id="pipelineIntro">Bir stratejiye tıkla → ne yaptığını ve detaylarını gör. Yeşil = tamam, amber = devam ediyor, gri = henüz değil, soluk = park edildi.</p>
+            <div class="parity-grid" id="pipelineSummary"></div>
+            <div class="filters compact-filters">
+              <label>
+                <span>Search</span>
+                <input id="pipelineSearch" type="search" autocomplete="off">
+              </label>
+              <label>
+                <span>Score</span>
+                <select id="pipelineScoreFilter">
+                  <option value="">All</option>
+                  <option value="high">85+</option>
+                  <option value="medium">65-84</option>
+                  <option value="low">Below 65</option>
+                </select>
+              </label>
+              <label>
+                <span>Next action</span>
+                <select id="pipelineActionFilter"></select>
+              </label>
+            </div>
+            <div class="table-wrap stacked-table" id="pipelineTableWrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th title="Strategy ID and its stable triage code from the worklist.">Strategy</th>
+                    <th title="Heuristic score out of 100 based on source coverage, rule quality, backtest evidence, and risk.">Score</th>
+                    <th title="Initial intake / spec is visible here.">Discovered</th>
+                    <th title="Sandbox backtest / OOS evidence.">Backtested</th>
+                    <th title="Promotion packet is ready for parity review.">Promoted</th>
+                    <th title="PineTS vs Python exact-match check.">Pre-Parity</th>
+                    <th title="Forward paper-trade phase with no capital at risk.">Paper-Trade</th>
+                    <th title="Integrated into the final MTC_v2 path.">Integrated</th>
+                    <th title="Single best next step the row should take.">Next action</th>
+                  </tr>
+                </thead>
+                <tbody id="pipelineRows"></tbody>
+              </table>
+            </div>
+            <div id="pipelineDetail" hidden></div>
+          </section>
+        </section>
+
+        <section class="tab-panel" data-panel="audit">
+          <section class="panel">
+            <div class="panel-heading">
+              <h3>Read-only Audit</h3>
+              <span id="auditCount">--</span>
+            </div>
+            <p class="summary" id="auditIntro">177 kayıt için kaynak kalitesi, deterministik kural izi, backtest uygunluğu ve canonical mapping burada toplanır. Bu katman yazmaz, sadece karar alanını görünür kılar.</p>
+            <div class="parity-grid" id="auditSummary"></div>
+            <div class="filters">
+              <label>
+                <span>Search</span>
+                <input id="auditSearch" type="search" autocomplete="off">
+              </label>
+            </div>
+            <div class="audit-filter-grid">
+              <label>
+                <span>Strategy</span>
+                <select id="auditStrategyFilter"></select>
+              </label>
+              <label>
+                <span>Quality</span>
+                <select id="auditQualityFilter"></select>
+              </label>
+              <label>
+                <span>Rules</span>
+                <select id="auditRulesFilter"></select>
+              </label>
+              <label>
+                <span>Source</span>
+                <select id="auditSourceFilter"></select>
+              </label>
+              <label>
+                <span>Eligible</span>
+                <select id="auditEligibleFilter"></select>
+              </label>
+              <label>
+                <span>Blocked reason</span>
+                <select id="auditBlockedFilter"></select>
+              </label>
+              <label>
+                <span>Canonical</span>
+                <select id="auditCanonicalFilter"></select>
+              </label>
+              <label>
+                <span>Next step</span>
+                <select id="auditStepFilter"></select>
+              </label>
+              <label>
+                <span>Score</span>
+                <select id="auditScoreFilter">
+                  <option value="">All</option>
+                  <option value="high">85+</option>
+                  <option value="medium">65-84</option>
+                  <option value="low">Below 65</option>
+                </select>
+              </label>
+            </div>
+            <div class="table-wrap stacked-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th title="Strategy ID and its stable triage code from the worklist.">Strategy</th>
+                    <th title="Heuristic score out of 100 based on source coverage, rule quality, backtest evidence, and risk.">Score</th>
+                    <th title="Source quality label (HIGH, MEDIUM, LOW, REJECTED).">Quality</th>
+                    <th title="Does the source contain deterministic, machine-testable rules?">Rules</th>
+                    <th title="Source URL and transcript coverage.">Source</th>
+                    <th title="Eligible for a backtest right now?">Eligible</th>
+                    <th title="Why the row is blocked or parked.">Blocked reason</th>
+                    <th title="Canonical row that represents the duplicate group.">Canonical</th>
+                    <th title="Single best next step the row should take.">Next step</th>
+                  </tr>
+                </thead>
+                <tbody id="auditRows"></tbody>
+              </table>
+            </div>
+            <div id="auditDetail" hidden></div>
+          </section>
+        </section>
+
+        <section class="tab-panel" data-panel="mtc-v2">
+          <section class="panel">
+            <div class="panel-heading">
+              <h3>MTC_V2 Readiness</h3>
+              <span id="mtcV2Count">--</span>
+            </div>
+            <p class="summary" id="mtcV2Intro">Read-only queue for deciding which strategy candidates are ready to approach MTC_V2. This does not edit MTC_V2.</p>
+            <div class="parity-grid" id="mtcV2Summary"></div>
+            <div class="filters compact-filters">
+              <label>
+                <span>Search</span>
+                <input id="mtcV2Search" type="search" autocomplete="off">
+              </label>
+              <label>
+                <span>Status</span>
+                <select id="mtcV2StatusFilter"></select>
+              </label>
+              <label>
+                <span>Score</span>
+                <select id="mtcV2ScoreFilter">
+                  <option value="">All</option>
+                  <option value="high">85+</option>
+                  <option value="medium">65-84</option>
+                  <option value="low">Below 65</option>
+                </select>
+              </label>
+            </div>
+            <div class="table-wrap stacked-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th title="Strategy ID and stable triage code.">Strategy</th>
+                    <th title="Triage score used as one input to readiness.">Score</th>
+                    <th title="Current MTC_V2 readiness bucket.">Readiness</th>
+                    <th title="Current Pipeline stage.">Pipeline stage</th>
+                    <th title="Forward paper-trade evidence progress.">Forward</th>
+                    <th title="What blocks MTC_V2 work right now.">Blocker</th>
+                    <th title="Single next action before MTC_V2 integration.">Next action</th>
+                  </tr>
+                </thead>
+                <tbody id="mtcV2Rows"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="tab-panel" data-panel="home">
+          <div class="metric-grid">
+            <article class="metric">
+              <span>Health</span>
+              <strong id="healthValue">--</strong>
+            </article>
+            <article class="metric">
+              <span>Build Tasks</span>
+              <strong id="taskValue">--</strong>
+            </article>
+            <article class="metric">
+              <span>Waiting</span>
+              <strong id="waitingValue">--</strong>
+            </article>
+            <article class="metric">
+              <span>Stale</span>
+              <strong id="staleValue">--</strong>
+            </article>
+            <article class="metric">
+              <span>Parity cases</span>
+              <strong id="parityValue">--</strong>
+            </article>
+            <article class="metric">
+              <span>Backtest runs</span>
+              <strong id="backtestValue">--</strong>
+            </article>
+            <article class="metric">
+              <span>Strategies</span>
+              <strong id="strategyValue">--</strong>
+            </article>
+            <article class="metric">
+              <span>Pine drafts</span>
+              <strong id="pineDraftValue">--</strong>
+            </article>
+            <article class="metric">
+              <span>Optimization runs</span>
+              <strong id="optimizationValue">--</strong>
+            </article>
+            <article class="metric">
+              <span>MTC_V2 ready</span>
+              <strong id="mtcV2Value">--</strong>
+            </article>
+            <article class="metric">
+              <span>LiveOps</span>
+              <strong id="liveopsValue">--</strong>
+            </article>
+            <article class="metric">
+              <span>Reports</span>
+              <strong id="reportValue">--</strong>
+            </article>
+          </div>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h3>Current Status</h3>
+              <span id="updatedAt">--</span>
+            </div>
+            <p class="summary" id="summaryText">Loading snapshot.</p>
+            <div class="status-rail" id="statusRail" aria-label="Health checks"></div>
+          </section>
+        </section>
+
+        <section class="tab-panel" data-panel="tasks">
+          <section class="panel">
+            <div class="panel-heading">
+              <h3>MCC Build Tasks</h3>
+              <span id="taskCount">0 tasks</span>
+            </div>
+            <p class="summary">Build-task control room: see what is active, stale, waiting, or linked to a report.</p>
+            <div class="parity-grid task-diagnostics-grid" id="taskLifecycleGrid"></div>
+            <div class="filters">
+              <label>
+                <span>Search</span>
+                <input id="taskSearch" type="search" autocomplete="off">
+              </label>
+              <label>
+                <span>Status</span>
+                <select id="taskStatusFilter"></select>
+              </label>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Phase</th>
+                    <th>Flags</th>
+                    <th>Report</th>
+                  </tr>
+                </thead>
+                <tbody id="taskRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="tab-panel" data-panel="parity">
+          <section class="panel">
+            <div class="panel-heading">
+              <h3>Parity Matrix</h3>
+              <span id="paritySource">--</span>
+            </div>
+            <p class="summary">Parity answers whether Pine, PineTS, and Python agree before any strategy moves forward.</p>
+            <div class="parity-grid" id="parityGrid"></div>
+          </section>
+        </section>
+
+        <section class="tab-panel" data-panel="backtest">
+          <section class="panel">
+            <div class="panel-heading">
+              <h3>Backtest Summary</h3>
+              <span id="backtestSource">--</span>
+            </div>
+            <p class="summary">Backtest shows completed evidence runs, symbols, timeframes, and linked result reports.</p>
+            <div class="parity-grid" id="backtestGrid"></div>
+            <div class="table-wrap stacked-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Run</th>
+                    <th>Status</th>
+                    <th>Symbol</th>
+                    <th>Timeframe</th>
+                    <th>Report</th>
+                  </tr>
+                </thead>
+                <tbody id="backtestRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="tab-panel" data-panel="registry">
+          <section class="panel">
+            <div class="panel-heading">
+              <h3>Strategy Registry</h3>
+              <span id="registryCount">0 entries</span>
+            </div>
+            <p class="summary">Registry is the canonical list of accepted candidates and promoted strategies.</p>
+            <div class="parity-grid" id="registryGrid"></div>
+            <div class="table-wrap stacked-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Evidence</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody id="registryRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="tab-panel" data-panel="pine-builder">
+          <section class="panel">
+            <div class="panel-heading">
+              <h3>Pine Builder</h3>
+              <span id="pineBuilderSource">--</span>
+            </div>
+            <p class="summary">Pine Builder tracks generated Pine drafts, compile gates, and protected core boundaries.</p>
+            <div class="parity-grid" id="pineBuilderGrid"></div>
+            <div class="table-wrap stacked-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Draft</th>
+                    <th>Status</th>
+                    <th>Compile</th>
+                    <th>Gate</th>
+                    <th>Path</th>
+                  </tr>
+                </thead>
+                <tbody id="pineBuilderRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="tab-panel" data-panel="optimization">
+          <section class="panel">
+            <div class="panel-heading">
+              <h3>Optimization Lab</h3>
+              <span id="optimizationSource">--</span>
+            </div>
+            <p class="summary">Optimization is research-only: it ranks parameter candidates without changing live defaults.</p>
+            <div class="parity-grid" id="optimizationGrid"></div>
+            <div class="table-wrap stacked-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Run</th>
+                    <th>Status</th>
+                    <th>Progress</th>
+                    <th>Workers</th>
+                    <th>Report</th>
+                  </tr>
+                </thead>
+                <tbody id="optimizationRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel stacked-panel">
+            <div class="panel-heading">
+              <h3>Top Parameter Candidates</h3>
+              <span id="optimizationCandidateCount">0 candidates</span>
+            </div>
+            <div class="table-wrap stacked-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Candidate</th>
+                    <th>Status</th>
+                    <th>Score</th>
+                    <th>Scope</th>
+                    <th>Params</th>
+                  </tr>
+                </thead>
+                <tbody id="optimizationCandidateRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel stacked-panel">
+            <div class="panel-heading">
+              <h3>Risk Notes</h3>
+              <span id="optimizationRiskCount">0 notes</span>
+            </div>
+            <div class="report-list" id="optimizationRiskList"></div>
+          </section>
+        </section>
+
+        <section class="tab-panel" data-panel="liveops">
+          <section class="panel">
+            <div class="panel-heading">
+              <h3>LiveOps Dry-run</h3>
+              <span id="liveopsSource">--</span>
+            </div>
+            <p class="summary">LiveOps confirms paper-trade plans and safety gates while live trading remains disabled.</p>
+            <div class="parity-grid" id="liveopsGrid"></div>
+            <div class="table-wrap stacked-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Gate</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="liveopsGateRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel stacked-panel">
+            <div class="panel-heading">
+              <h3>Paper Trade Plans</h3>
+              <span id="liveopsPlanCount">0 plans</span>
+            </div>
+            <div class="table-wrap stacked-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Candidate</th>
+                    <th>Status</th>
+                    <th>Webhook</th>
+                    <th>Path</th>
+                  </tr>
+                </thead>
+                <tbody id="liveopsPlanRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="tab-panel" data-panel="reports">
+          <section class="panel">
+            <div class="panel-heading">
+              <h3>Reports</h3>
+              <span id="reportCount">0 reports</span>
+            </div>
+            <div class="filters">
+              <label>
+                <span>Search</span>
+                <input id="reportSearch" type="search" autocomplete="off">
+              </label>
+              <label>
+                <span>Category</span>
+                <select id="reportCategoryFilter"></select>
+              </label>
+            </div>
+            <div class="report-layout">
+              <div class="report-list" id="reportList"></div>
+              <article class="report-viewer">
+                <div class="report-viewer-heading">
+                  <div>
+                    <span id="reportViewerMeta">No report selected</span>
+                    <h4 id="reportViewerTitle">Report Viewer</h4>
+                  </div>
+                </div>
+                <div class="report-viewer-body" id="reportViewerBody"></div>
+              </article>
+            </div>
+          </section>
+        </section>
+
+        <section class="tab-panel" data-panel="diagnostics">
+          <section class="panel">
+            <div class="panel-heading">
+              <h3>File Diagnostics</h3>
+              <span id="diagnosticsSummary">--</span>
+            </div>
+            <p class="summary">Diagnostics checks required JSON files, schemas, and read-model health.</p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>File</th>
+                    <th>Required</th>
+                    <th>JSON</th>
+                    <th>Schema</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="diagnosticRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+    <script src="/web/app.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,3 @@
+# STG008_ql_connell_event_driven_gap_1d
+
+Source folder: `C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\06_PROMOTED_TO_PARITY\QL_CONNELL_EVENT_DRIVEN_GAP_1D`

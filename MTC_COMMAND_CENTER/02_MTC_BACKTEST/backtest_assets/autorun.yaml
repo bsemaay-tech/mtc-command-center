@@ -1,0 +1,119 @@
+version: 1
+name: mtc_autopilot_default
+timezone: UTC
+seed: 42
+
+runtime:
+  commands_source: "100_PROJECT_MEMORY_FİLE/20_BACKTEST_WORKFLOW/01_CURRENT_STATE.md"
+  run_index_root: "mtc_backtest/backtest_assets/runs"
+
+paths:
+  assets_dir: "mtc_backtest/backtest_assets"
+  results_root: "mtc_backtest/results/autopilot"
+
+steps:
+  data_pipeline: { enabled: true }
+  parity_smoke: { enabled: true }
+  baseline_backtest: { enabled: true }
+  tiny_optimization: { enabled: true }
+  staged_optimization: { enabled: true }
+  walkforward: { enabled: true }
+  robustness: { enabled: true }
+
+# Step 0/1: Data pipeline defaults
+data:
+  processed_root: "110_/data/processed"
+  compat_data_dir: "mtc_backtest/data"
+  catalog: "mtc_backtest/backtest_assets/data_catalog.json"
+  validation_report: "mtc_backtest/backtest_assets/validation_report.md"
+  validation_no_fail: true
+
+  download_jobs:
+    - provider: binance
+      symbol: BTCUSDT
+      required: true
+      start: 2018-07-01
+      end: null
+      timeframes: ["5m", "15m", "1h", "2h", "4h", "1d"]
+      chunk_days: 30
+    - provider: binance
+      symbol: ETHUSDT
+      required: false
+      start: 2019-01-01
+      end: null
+      timeframes: ["1d"]
+      chunk_days: 365
+
+  csv_import_jobs:
+    - enabled: false
+      provider: csv
+      symbol: XAUUSD
+      required: false
+      csv_file: "data/imports/XAUUSD_1d.csv"
+      start: 2018-01-01
+      end: null
+      timeframes: ["1d"]
+
+# Step 2: Regime calendar defaults (4H)
+regime:
+  data_4h_ref: "BTCUSDT:4h"
+  out_json: "mtc_backtest/backtest_assets/regime_calendar_4h.json"
+  out_md: "mtc_backtest/backtest_assets/regime_calendar_4h.md"
+  override_yaml: "mtc_backtest/backtest_assets/regime_override.yaml"
+  labels: ["bull", "bear", "range", "chop", "all"]
+
+# Step 3: Parity smoke defaults
+parity:
+  mode: dual
+  case_for_py_generation: "mtc_backtest/configs/cases/full_jul2025_jan2026_parity.json"
+  tv_csv: "mtc_backtest/debug/BTCUSDT/15m/MT_CORE2_BINANCE_BTCUSDT.P_2026-02-13_6e3fc.csv"
+  py_csv: ""   # empty => auto resolve latest from parity case debug_dir
+  tv_tz: "Europe/London"
+  case_end: "2026-01-31T23:59:59+00:00"
+  out_raw_csv: "mtc_backtest/results/parity_smoke_raw.csv"
+  out_clip_csv: "mtc_backtest/results/parity_smoke_clip.csv"
+  summary_raw_csv: "mtc_backtest/results/parity_smoke_raw_summary.csv"
+  summary_clip_csv: "mtc_backtest/results/parity_smoke_clip_summary.csv"
+  classifiers:
+    tv_early_trade_end_candidate: true
+    gap_days_threshold: 30.0
+
+# Step 4: baseline backtest
+baseline_backtest:
+  case: "mtc_backtest/configs/cases/sep2025_parity.json"
+  regime: all
+
+# Step 5: tiny optimizer_v0 smoke
+tiny_optimization:
+  case: "mtc_backtest/configs/cases/sep2025_parity.json"
+  mode: random
+  iters: 30
+  workers: 1
+  db: "mtc_backtest/results/optimizer_smoke.db"
+  out_csv: "mtc_backtest/results/optimizer_smoke_trials.csv"
+  pareto_out: "mtc_backtest/results/optimizer_smoke_pareto.json"
+  objectives: "net_profit,max_dd_pct,profit_factor,win_rate,total_trades"
+
+# Step 6: staged optimization
+optimization:
+  case: "mtc_backtest/configs/cases/sep2025_parity.json"
+  mode: random
+  iters: 20
+  top_k: 8
+  workers: 1
+  outdir: "mtc_backtest/results/autopilot/staged_opt"
+  objectives: ["net_profit", "max_dd_pct", "total_trades"]
+
+# Step 7: Walk-forward + robustness defaults
+robustness:
+  train_case: "mtc_backtest/configs/cases/full_jul2025_jan2026_parity.json"
+  target_case_1: "mtc_backtest/configs/cases/target_sep2025_dec2025.json"
+  target_case_2: "mtc_backtest/configs/cases/target_jan2026.json"
+  iters: 10
+  workers: 1
+  min_trades: 10
+  max_dd: 40.0
+  walkforward_outdir: "mtc_backtest/results/autopilot/walkforward"
+  robustness_outdir: "mtc_backtest/results/autopilot/robustness"
+  candidate_json: ""   # empty => auto detect from staged_opt/walkforward outputs
+

@@ -1,0 +1,72 @@
+run_order,case_id,seq,primary_name,primary_value,tv_trade_count,reason
+048,parity_bnd_026_max_pyramid_positions_v02,026,Max Pyramid Positions,2,192,ALL 2 cases in seq 026 produce 192 TV trades
+049,parity_bnd_026_max_pyramid_positions_v03,026,Max Pyramid Positions,3,192,ALL 2 cases in seq 026 produce ? TV trades
+066,parity_core_033_rf_rsi_length_v01,033,[RF] RSI Length,14,144,Same TV trades as [067] [RF] RSI Length=21
+067,parity_bnd_033_rf_rsi_length_v02,033,[RF] RSI Length,21,144,Same TV trades as [066] [RF] RSI Length=14
+069,parity_core_034_rf_use_bb_filter_range_mode_v01,034,[RF] Use BB Filter (range mode),On,144,ALL 2 cases in seq 034 produce 144 TV trades
+070,parity_bnd_034_rf_use_bb_filter_range_mode_v02,034,[RF] Use BB Filter (range mode),Off,144,ALL 2 cases in seq 034 produce ? TV trades
+071,parity_core_036_rf_use_strategy_tf_source_v01,036,[RF] Use Strategy TF Source,Off,144,ALL 2 cases in seq 036 produce 144 TV trades
+072,parity_bnd_036_rf_use_strategy_tf_source_v02,036,[RF] Use Strategy TF Source,On,144,ALL 2 cases in seq 036 produce ? TV trades
+076,parity_core_038_rf_adx_range_threshold_v01,038,[RF] ADX Range Threshold,20,144,ALL 3 cases in seq 038 produce 144 TV trades
+077,parity_bnd_038_rf_adx_range_threshold_v02,038,[RF] ADX Range Threshold,25,144,ALL 3 cases in seq 038 produce ? TV trades
+078,parity_bnd_038_rf_adx_range_threshold_v03,038,[RF] ADX Range Threshold,15,144,ALL 3 cases in seq 038 produce ? TV trades
+082,parity_core_040_rf_chop_range_threshold_v01,040,[RF] Chop Range Threshold,62,144,ALL 3 cases in seq 040 produce 144 TV trades
+083,parity_bnd_040_rf_chop_range_threshold_v02,040,[RF] Chop Range Threshold,55,144,ALL 3 cases in seq 040 produce ? TV trades
+084,parity_bnd_040_rf_chop_range_threshold_v03,040,[RF] Chop Range Threshold,70,144,ALL 3 cases in seq 040 produce ? TV trades
+085,parity_core_041_rf_rsi_oversold_v01,041,[RF] RSI Oversold,30,144,ALL 3 cases in seq 041 produce 144 TV trades
+086,parity_bnd_041_rf_rsi_oversold_v02,041,[RF] RSI Oversold,35,144,ALL 3 cases in seq 041 produce ? TV trades
+087,parity_bnd_041_rf_rsi_oversold_v03,041,[RF] RSI Oversold,20,144,ALL 3 cases in seq 041 produce ? TV trades
+088,parity_core_042_rf_rsi_overbought_v01,042,[RF] RSI Overbought,70,144,ALL 3 cases in seq 042 produce 144 TV trades
+089,parity_bnd_042_rf_rsi_overbought_v02,042,[RF] RSI Overbought,80,144,ALL 3 cases in seq 042 produce ? TV trades
+090,parity_bnd_042_rf_rsi_overbought_v03,042,[RF] RSI Overbought,60,144,ALL 3 cases in seq 042 produce ? TV trades
+091,parity_core_043_rf_bb_length_v01,043,[RF] BB Length,20,144,ALL 3 cases in seq 043 produce 144 TV trades
+092,parity_bnd_043_rf_bb_length_v02,043,[RF] BB Length,25,144,ALL 3 cases in seq 043 produce ? TV trades
+093,parity_bnd_043_rf_bb_length_v03,043,[RF] BB Length,10,144,ALL 3 cases in seq 043 produce ? TV trades
+094,parity_core_044_rf_bb_multiplier_v01,044,[RF] BB Multiplier,2,144,ALL 3 cases in seq 044 produce 144 TV trades
+095,parity_bnd_044_rf_bb_multiplier_v02,044,[RF] BB Multiplier,3,144,ALL 3 cases in seq 044 produce ? TV trades
+096,parity_bnd_044_rf_bb_multiplier_v03,044,[RF] BB Multiplier,1,144,ALL 3 cases in seq 044 produce ? TV trades
+098,parity_bnd_045_risk_per_long_of_equity_v02,045,Risk per Long (% of equity),5,241,ALL 2 cases in seq 045 produce 241 TV trades
+099,parity_bnd_045_risk_per_long_of_equity_v03,045,Risk per Long (% of equity),2,241,ALL 2 cases in seq 045 produce ? TV trades
+101,parity_bnd_046_risk_per_short_of_equity_v02,046,Risk per Short (% of equity),5,241,ALL 2 cases in seq 046 produce 241 TV trades
+102,parity_bnd_046_risk_per_short_of_equity_v03,046,Risk per Short (% of equity),2,241,ALL 2 cases in seq 046 produce ? TV trades
+104,parity_bnd_047_fallback_position_size_when_sl_off_of_equi_v02,047,Fallback Position Size When SL OFF (% of equity),100,7,ALL 2 cases in seq 047 produce 7 TV trades
+105,parity_bnd_047_fallback_position_size_when_sl_off_of_equi_v03,047,Fallback Position Size When SL OFF (% of equity),20,7,ALL 2 cases in seq 047 produce ? TV trades
+117,parity_bnd_052_max_leverage_cap_limit_v02,052,Max Leverage Cap (Limit),100,241,ALL 2 cases in seq 052 produce 241 TV trades
+118,parity_bnd_052_max_leverage_cap_limit_v03,052,Max Leverage Cap (Limit),20,241,ALL 2 cases in seq 052 produce ? TV trades
+125,parity_bnd_055_sl_mode_v03,055,SL Mode,Swing+ATR,2,Same TV trades as [126] SL Mode=SWING_ATR
+126,parity_bnd_055_sl_mode_v04,055,SL Mode,SWING_ATR,2,Same TV trades as [125] SL Mode=Swing+ATR
+127,parity_core_056_swing_sl_basis_v01,056,Swing SL Basis,Wick,2,ALL 2 cases in seq 056 produce 2 TV trades
+128,parity_bnd_056_swing_sl_basis_v02,056,Swing SL Basis,Body,2,ALL 2 cases in seq 056 produce ? TV trades
+155,parity_core_067_swing_sl_atr_length_v01,067,Swing SL ATR Length,14,2,ALL 3 cases in seq 067 produce 2 TV trades
+156,parity_bnd_067_swing_sl_atr_length_v02,067,Swing SL ATR Length,7,2,ALL 3 cases in seq 067 produce ? TV trades
+157,parity_bnd_067_swing_sl_atr_length_v03,067,Swing SL ATR Length,21,2,ALL 3 cases in seq 067 produce ? TV trades
+158,parity_core_068_swing_sl_atr_multiplier_v01,068,Swing SL ATR Multiplier,0.5,2,Same TV trades as [159] Swing SL ATR Multiplier=0.25
+159,parity_bnd_068_swing_sl_atr_multiplier_v02,068,Swing SL ATR Multiplier,0.25,2,Same TV trades as [158] Swing SL ATR Multiplier=0.5
+167,parity_core_071_tp_atr_length_v01,071,TP ATR Length,14,23,Same TV trades as [169] TP ATR Length=21
+169,parity_bnd_071_tp_atr_length_v03,071,TP ATR Length,21,23,Same TV trades as [167] TP ATR Length=14
+183,parity_bnd_076_tp1_close_of_position_v02,076,TP1 Close % of position,25,241,ALL 2 cases in seq 076 produce 241 TV trades
+184,parity_bnd_076_tp1_close_of_position_v03,076,TP1 Close % of position,75,241,ALL 2 cases in seq 076 produce ? TV trades
+188,parity_bnd_078_trailing_atr_length_v02,078,Trailing ATR Length,7,241,ALL 2 cases in seq 078 produce 241 TV trades
+189,parity_bnd_078_trailing_atr_length_v03,078,Trailing ATR Length,21,241,ALL 2 cases in seq 078 produce ? TV trades
+230,parity_core_094_mcginley_length_v01,094,[McGinley] Length,5,224,Same TV trades as [232] [McGinley] Length=10
+232,parity_bnd_094_mcginley_length_v03,094,[McGinley] Length,10,224,Same TV trades as [230] [McGinley] Length=5
+236,parity_bnd_096_mcginley_htf_timeframe_v02,096,[McGinley] HTF Timeframe,240,224,Same TV trades as [237] [McGinley] HTF Timeframe=15
+237,parity_bnd_096_mcginley_htf_timeframe_v03,096,[McGinley] HTF Timeframe,15,224,Same TV trades as [236] [McGinley] HTF Timeframe=240
+253,parity_core_102_range_aggregation_v01,102,Range Aggregation,AND,198,ALL 2 cases in seq 102 produce 198 TV trades
+254,parity_bnd_102_range_aggregation_v02,102,Range Aggregation,COUNT,198,ALL 2 cases in seq 102 produce ? TV trades
+326,parity_core_131_max_mae_v01,131,Max MAE %,2,241,ALL 3 cases in seq 131 produce 241 TV trades
+327,parity_bnd_131_max_mae_v02,131,Max MAE %,1,241,ALL 3 cases in seq 131 produce ? TV trades
+328,parity_bnd_131_max_mae_v03,131,Max MAE %,4,241,ALL 3 cases in seq 131 produce ? TV trades
+362,parity_core_194_mode_v01,194,Mode,STANDARD,177,ALL 2 cases in seq 194 produce 177 TV trades
+363,parity_bnd_194_mode_v02,194,Mode,PPO_NORM,177,ALL 2 cases in seq 194 produce ? TV trades
+373,parity_bnd_198_signal_v02,198,Signal,5,177,ALL 2 cases in seq 198 produce 177 TV trades
+374,parity_bnd_198_signal_v03,198,Signal,15,177,ALL 2 cases in seq 198 produce ? TV trades
+385,parity_core_204_min_distance_0_no_effect_v01,204,Min distance (0=no effect),0.1,177,ALL 2 cases in seq 204 produce 177 TV trades
+386,parity_bnd_204_min_distance_0_no_effect_v02,204,Min distance (0=no effect),0.5,177,ALL 2 cases in seq 204 produce ? TV trades
+424,parity_bnd_221_if_long_short_raw_same_bar_v02,221,If LONG & SHORT raw same bar,SHORT_WINS,237,ALL 2 cases in seq 221 produce 237 TV trades
+425,parity_bnd_221_if_long_short_raw_same_bar_v03,221,If LONG & SHORT raw same bar,IGNORE,237,ALL 2 cases in seq 221 produce ? TV trades
+430,parity_core_224_break_buffer_ticks_v01,224,Break buffer (ticks),1,237,ALL 3 cases in seq 224 produce 237 TV trades
+431,parity_bnd_224_break_buffer_ticks_v02,224,Break buffer (ticks),5,237,ALL 3 cases in seq 224 produce ? TV trades
+432,parity_bnd_224_break_buffer_ticks_v03,224,Break buffer (ticks),0,237,ALL 3 cases in seq 224 produce ? TV trades
+433,parity_core_225_max_swing_distance_0_off_v01,225,Max swing distance % (0 = off),2,237,ALL 2 cases in seq 225 produce 237 TV trades
+434,parity_bnd_225_max_swing_distance_0_off_v02,225,Max swing distance % (0 = off),5,237,ALL 2 cases in seq 225 produce ? TV trades

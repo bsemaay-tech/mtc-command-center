@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/report_manifest.schema.json",
+  "title": "MCC Report Manifest",
+  "type": "object",
+  "required": ["schema_version", "reports"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "generated_at": { "type": ["string", "null"] },
+    "reports": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["report_id", "category", "title", "path"],
+        "properties": {
+          "report_id": { "type": "string" },
+          "category": { "type": "string" },
+          "title": { "type": "string" },
+          "path": { "type": "string" },
+          "created_at": { "type": ["string", "null"] },
+          "created_by": { "type": ["string", "null"] },
+          "related_task_id": { "type": ["string", "null"] },
+          "related_case_id": { "type": ["string", "null"] },
+          "summary": { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

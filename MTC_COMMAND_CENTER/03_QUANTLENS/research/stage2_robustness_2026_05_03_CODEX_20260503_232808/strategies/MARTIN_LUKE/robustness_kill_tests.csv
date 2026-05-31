@@ -1,0 +1,4 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,kill_test
+282,16,1968.7302,1.4358,40.0709,2.9247,-6.041,2.9247,24.0464,-11.1982,-99.4343,19.7993,12.1064,12.1064,BNBUSDT,XRPUSDT,True,MARTIN_LUKE,remove_best_asset
+281,17,426.2792,1.3525,40.2135,2.268,-5.5452,2.268,21.638,-10.7607,-99.3507,4.2907,12.2456,12.2456,BNBUSDT,XRPUSDT,False,MARTIN_LUKE,remove_best_year
+321,17,1091.2591,1.369,42.0561,2.3294,-5.3625,2.3294,20.5473,-10.8933,-100.0,10.9126,12.2835,12.2835,BNBUSDT,XRPUSDT,False,MARTIN_LUKE,remove_top_5_trades

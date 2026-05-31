@@ -1,0 +1,32 @@
+{
+  "job_id": "multi_asset_walkforward_supertrend_v1",
+  "feature_id": "MTC_V2_SUPERTREND",
+  "profile": "small_multi_asset_walkforward_smoke",
+  "dataset_manifest_path": "C:/LAB/tradingview-lab/MTC_V2_OPTIMIZATION_DATA_BUNDLE_20260427/manifests/dataset_manifest.yml",
+  "dataset_ids": [
+    "BINANCE_FUTURES_ETHUSDT_1h_20191127_20260427",
+    "BINANCE_FUTURES_ETHUSDT_4h_20191127_20260427",
+    "BINANCE_FUTURES_SOLUSDT_1h_20200914_20260427",
+    "BINANCE_FUTURES_SOLUSDT_4h_20200914_20260427",
+    "BINANCE_FUTURES_BNBUSDT_1h_20200210_20260427",
+    "BINANCE_FUTURES_BNBUSDT_4h_20200210_20260427"
+  ],
+  "regime_registry_path": "C:/LAB/tradingview-lab/MTC_V2_OPTIMIZATION_DATA_BUNDLE_20260427/regimes/regime_registry.yml",
+  "required_symbols_min": 2,
+  "required_timeframes": ["1h", "4h"],
+  "walkforward": {
+    "enabled": true,
+    "train_pct": 0.6,
+    "validation_pct": 0.2,
+    "test_pct": 0.2
+  },
+  "scoring_profile": "coverage_aware_walkforward_v1",
+  "preconditions": {
+    "allow_unknown_source": false,
+    "require_hash_validation": true,
+    "require_walkforward": true,
+    "min_symbols_for_robust_claim": 2,
+    "min_timeframes_for_robust_claim": 2
+  },
+  "output_root": "reports/optimization/multi_asset_walkforward_supertrend_v1"
+}

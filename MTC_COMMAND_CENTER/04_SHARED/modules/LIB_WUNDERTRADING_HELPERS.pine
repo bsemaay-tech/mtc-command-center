@@ -1,0 +1,49 @@
+//@version=6
+library("LIB_WUNDERTRADING_HELPERS", overlay=false)
+
+const string LIB_WUNDERTRADING_HELPERS_VER = "1.0.0"
+
+import bsemaay3/LIB_MATH_HELPERS/1 as MATH_HELPERS
+
+// ----------------------------------------
+// Configuration types
+// ----------------------------------------
+export type WTEntryConfig
+    string enterLongCode
+    string enterShortCode
+    string orderType
+    string amountType
+    float amount
+    float leverage
+    bool useTp
+    bool useSl
+    bool placeConditionalOrders
+    bool reduceOnly
+
+export type WTExitConfig
+    string exitLongCode
+    string exitShortCode
+    bool reduceOnly
+    bool placeConditionalOrders
+
+// ----------------------------------------
+// JSON helpers
+// ----------------------------------------
+export f_json_entry_message(string _side, string _symbol, string _tf, float _price, float _sl, float _tp, float _tp1, float _tp2, float _riskPct, float _qty, string _coreVer, string _tplVer, string _reasonCodes, WTEntryConfig _cfg) =>
+    string codeStr = _side == "LONG" ? _cfg.enterLongCode : _cfg.enterShortCode
+    string tpField = ""
+    if _cfg.useTp
+        if not na(_tp1) and not na(_tp2)
+            tpField := ',\"takeProfits\":[{\"price\":' + MATH_HELPERS.f_json_num(_tp1) + ',\"portfolio\":0.5},{\"price\":' + MATH_HELPERS.f_json_num(_tp2) + ',\"portfolio\":0.5}]'
+        else if not na(_tp)
+            tpField := ',\"takeProfits\":[{\"price\":' + MATH_HELPERS.f_json_num(_tp) + ',\"portfolio\":1}]'
+    string slField = ""
+    if _cfg.useSl and not na(_sl)
+        slField := ',\"stopLoss\":{\"price\":' + MATH_HELPERS.f_json_num(_sl) + '}'
+    string result = '{' + '\"code\":\"' + codeStr + '\"' + ',\"orderType\":\"' + _cfg.orderType + '\"' + ',\"amountPerTradeType\":\"' + _cfg.amountType + '\"' + ',\"amountPerTrade\":' + str.tostring(_qty) + ',\"leverage\":' + str.tostring(_cfg.leverage) + tpField + slField + ',\"reduceOnly\":' + (_cfg.reduceOnly ? 'true' : 'false') + ',\"placeConditionalOrdersOnExchange\":' + (_cfg.placeConditionalOrders ? 'true' : 'false') + ',\"_meta\":{\"side\":\"' + _side + '\",\"symbol\":\"' + _symbol + '\",\"tf\":\"' + _tf + '\",\"price\":' + MATH_HELPERS.f_json_num(_price) + ',\"qty\":' + str.tostring(_qty) + ',\"risk_pct\":' + str.tostring(_riskPct) + ',\"version\":\"' + _coreVer + '\",\"tpl_ver\":\"' + _tplVer + '\",\"reason_codes\":\"' + _reasonCodes + '\"}}'
+    result
+
+export f_json_exit_message(string _exitType, string _side, string _symbol, string _tf, float _price, float _limit, float _stop, string _coreVer, string _tplVer, WTExitConfig _cfg) =>
+    string codeStr = _side == "LONG" ? _cfg.exitLongCode : _cfg.exitShortCode
+    string result = '{' + '\"code\":\"' + codeStr + '\"' + ',\"reduceOnly\":' + (_cfg.reduceOnly ? 'true' : 'false') + ',\"placeConditionalOrdersOnExchange\":' + (_cfg.placeConditionalOrders ? 'true' : 'false') + ',\"_meta\":{\"exit_type\":\"' + _exitType + '\",\"side\":\"' + _side + '\",\"symbol\":\"' + _symbol + '\",\"tf\":\"' + _tf + '\",\"exit_price\":' + MATH_HELPERS.f_json_num(_price) + ',\"limit\":' + MATH_HELPERS.f_json_num(_limit) + ',\"stop\":' + MATH_HELPERS.f_json_num(_stop) + ',\"version\":\"' + _coreVer + '\",\"tpl_ver\":\"' + _tplVer + '\"}}'
+    result

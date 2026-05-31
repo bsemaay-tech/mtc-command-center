@@ -1,0 +1,125 @@
+//@version=6
+strategy("QLR_R215f4fj7V8 Lance Breitstein Trend Visual Sandbox", overlay=true, initial_capital=100000, pyramiding=0, calc_on_every_tick=false, process_orders_on_close=true)
+
+// Standalone visual review only.
+// Do not merge into MTC_V2.pine. Do not treat results as profitability evidence.
+
+enable_long = input.bool(true, "enable_long", group="MTC-compatible controls")
+enable_short = input.bool(true, "enable_short", group="MTC-compatible controls")
+risk_pct = input.float(0.25, "risk_pct_visual_only", minval=0.01, step=0.01, group="MTC-compatible controls")
+fixed_qty = input.float(1.0, "fixed_qty_visual_only", minval=0.0, step=1.0, group="MTC-compatible controls")
+use_fixed_qty = input.bool(true, "use_fixed_qty", group="MTC-compatible controls")
+stop_mode = input.string("prior_bar", "stop_mode", options=["prior_bar", "trigger_bar"], group="MTC-compatible controls")
+take_profit_mode = input.string("disabled", "take_profit_mode", options=["disabled", "fixed_R"], group="MTC-compatible controls")
+take_profit_r = input.float(2.0, "take_profit_R", minval=0.25, step=0.25, group="MTC-compatible controls")
+time_exit_bars = input.int(20, "time_exit_bars", minval=1, group="MTC-compatible controls")
+show_debug_labels = input.bool(true, "show_debug_labels", group="Display")
+show_signals = input.bool(true, "show_signals", group="Display")
+
+warmup_bars = input.int(50, "warmup_bars", minval=5, group="Signal")
+vwap_guard_lookback = input.int(8, "vwap_guard_lookback", minval=2, group="Signal")
+vwap_guard_ratio = input.float(0.75, "vwap_guard_ratio", minval=0.5, maxval=1.0, step=0.05, group="Signal")
+slope_lookback = input.int(12, "slope_lookback", minval=2, group="Signal")
+breakout_lookback = input.int(10, "breakout_lookback", minval=2, group="Signal")
+atr_lookback = input.int(14, "atr_lookback", minval=2, group="Signal")
+volume_lookback = input.int(20, "volume_lookback", minval=2, group="Signal")
+capitulation_volume_mult = input.float(2.0, "capitulation_volume_mult", minval=1.0, step=0.25, group="Signal")
+capitulation_range_atr_mult = input.float(1.5, "capitulation_range_atr_mult", minval=0.5, step=0.1, group="Signal")
+capitulation_vwap_distance_pct = input.float(1.5, "capitulation_vwap_distance_pct", minval=0.1, step=0.1, group="Signal")
+compression_lookback = input.int(20, "compression_lookback", minval=5, group="Signal")
+compression_width_pct = input.float(1.2, "compression_width_pct", minval=0.1, step=0.1, group="Signal")
+
+session_vwap = ta.vwap(hlc3)
+close_slope = (close - close[slope_lookback - 1]) / math.max(1, slope_lookback - 1)
+vwap_slope = (session_vwap - session_vwap[slope_lookback - 1]) / math.max(1, slope_lookback - 1)
+atr = ta.atr(atr_lookback)
+volume_ma = ta.sma(volume, volume_lookback)
+range_width_pct = (ta.highest(high, compression_lookback) - ta.lowest(low, compression_lookback)) / close * 100.0
+range_bound = range_width_pct <= compression_width_pct
+below_ratio = ta.sma(close < session_vwap ? 1.0 : 0.0, vwap_guard_lookback)
+above_ratio = ta.sma(close > session_vwap ? 1.0 : 0.0, vwap_guard_lookback)
+steadily_below_vwap = below_ratio >= vwap_guard_ratio and vwap_slope <= 0
+steadily_above_vwap = above_ratio >= vwap_guard_ratio and vwap_slope >= 0
+dist_pct = math.abs(close - session_vwap) / session_vwap * 100.0
+wide_range = (high - low) >= atr * capitulation_range_atr_mult
+high_volume = volume >= volume_ma * capitulation_volume_mult
+downside_capitulation = close < session_vwap and wide_range and high_volume and dist_pct >= capitulation_vwap_distance_pct
+upside_capitulation = close > session_vwap and wide_range and high_volume and dist_pct >= capitulation_vwap_distance_pct
+
+var bool recent_down_capitulation = false
+var bool recent_up_capitulation = false
+if downside_capitulation
+    recent_down_capitulation := true
+if upside_capitulation
+    recent_up_capitulation := true
+
+range_high = ta.highest(high[1], breakout_lookback)
+range_low = ta.lowest(low[1], breakout_lookback)
+trend_continuation_long = close > session_vwap and vwap_slope >= 0 and close_slope > 0 and close > range_high and not range_bound
+trend_continuation_short = close < session_vwap and vwap_slope <= 0 and close_slope < 0 and close < range_low and not range_bound
+right_side_v_long = recent_down_capitulation and high > high[1] and close > high[1]
+right_side_v_short = recent_up_capitulation and low < low[1] and close < low[1]
+long_rejected_by_vwap = steadily_below_vwap and not downside_capitulation and not recent_down_capitulation
+short_rejected_by_vwap = steadily_above_vwap and not upside_capitulation and not recent_up_capitulation
+
+confirmed_ready = barstate.isconfirmed and bar_index >= warmup_bars
+raw_long_pulse = confirmed_ready and enable_long and not long_rejected_by_vwap and (trend_continuation_long or right_side_v_long)
+raw_short_pulse = confirmed_ready and enable_short and not short_rejected_by_vwap and (trend_continuation_short or right_side_v_short)
+
+if raw_long_pulse
+    recent_down_capitulation := false
+if raw_short_pulse
+    recent_up_capitulation := false
+
+var float active_stop = na
+var float active_take_profit = na
+var int entry_bar = na
+qty = use_fixed_qty ? fixed_qty : math.max(1, strategy.equity * risk_pct / 100.0 / close)
+
+if raw_long_pulse and strategy.position_size == 0
+    initial_stop = stop_mode == "prior_bar" ? math.min(low, low[1]) : low
+    active_stop := initial_stop
+    risk_per_share = math.max(close - initial_stop, syminfo.mintick)
+    active_take_profit := take_profit_mode == "fixed_R" ? close + risk_per_share * take_profit_r : na
+    entry_bar := bar_index
+    strategy.entry("L", strategy.long, qty=qty, comment="raw_long_pulse")
+
+if raw_short_pulse and strategy.position_size == 0
+    initial_stop = stop_mode == "prior_bar" ? math.max(high, high[1]) : high
+    active_stop := initial_stop
+    risk_per_share = math.max(initial_stop - close, syminfo.mintick)
+    active_take_profit := take_profit_mode == "fixed_R" ? close - risk_per_share * take_profit_r : na
+    entry_bar := bar_index
+    strategy.entry("S", strategy.short, qty=qty, comment="raw_short_pulse")
+
+if strategy.position_size > 0
+    active_stop := math.max(nz(active_stop, low[1]), low[1])
+    if low <= active_stop
+        strategy.close("L", comment="prior_bar_low_stop")
+    else if take_profit_mode == "fixed_R" and not na(active_take_profit) and high >= active_take_profit
+        strategy.close("L", comment="fixed_R_visual_tp")
+    else if bar_index - nz(entry_bar, bar_index) >= time_exit_bars
+        strategy.close("L", comment="time_exit_visual")
+
+if strategy.position_size < 0
+    active_stop := math.min(nz(active_stop, high[1]), high[1])
+    if high >= active_stop
+        strategy.close("S", comment="prior_bar_high_stop")
+    else if take_profit_mode == "fixed_R" and not na(active_take_profit) and low <= active_take_profit
+        strategy.close("S", comment="fixed_R_visual_tp")
+    else if bar_index - nz(entry_bar, bar_index) >= time_exit_bars
+        strategy.close("S", comment="time_exit_visual")
+
+plot(session_vwap, "session_vwap", color=color.new(color.blue, 0), linewidth=2)
+plot(strategy.position_size != 0 ? active_stop : na, "active_stop", color=color.new(color.red, 0), linewidth=2, style=plot.style_linebr)
+plot(strategy.position_size != 0 ? active_take_profit : na, "active_take_profit", color=color.new(color.green, 0), linewidth=2, style=plot.style_linebr)
+plotshape(show_signals and raw_long_pulse, "raw_long_pulse", shape.triangleup, location.belowbar, color=color.new(color.lime, 0), size=size.small, text="L")
+plotshape(show_signals and raw_short_pulse, "raw_short_pulse", shape.triangledown, location.abovebar, color=color.new(color.red, 0), size=size.small, text="S")
+plotshape(show_signals and downside_capitulation, "downside_capitulation", shape.circle, location.belowbar, color=color.new(color.orange, 0), size=size.tiny, text="cap")
+plotshape(show_signals and upside_capitulation, "upside_capitulation", shape.circle, location.abovebar, color=color.new(color.orange, 0), size=size.tiny, text="cap")
+plotshape(show_signals and range_bound, "range_bound_no_mans_land", shape.xcross, location.top, color=color.new(color.gray, 40), size=size.tiny, text="range")
+
+if show_debug_labels and raw_long_pulse
+    label.new(bar_index, low, right_side_v_long ? "L right-side-V\nverify turn after panic" : "L trend\nverify above VWAP + range break", style=label.style_label_up, textcolor=color.white, color=color.new(color.green, 0))
+if show_debug_labels and raw_short_pulse
+    label.new(bar_index, high, right_side_v_short ? "S right-side-V\nverify turn after euphoric spike" : "S trend\nverify below VWAP + range break", style=label.style_label_down, textcolor=color.white, color=color.new(color.red, 0))

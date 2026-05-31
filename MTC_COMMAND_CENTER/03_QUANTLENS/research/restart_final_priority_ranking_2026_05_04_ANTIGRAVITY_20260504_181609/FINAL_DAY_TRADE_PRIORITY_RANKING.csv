@@ -1,0 +1,3 @@
+final_rank,candidate_id,candidate_name,source_url,source_quality,native_market_timeframe,classification,rationale,first_visual_check,required_data,required_sandbox,warning
+1,QLR_R215f4fj7V8,The Simple Trading Setup That Made Lance Breitstein Millions,https://www.youtube.com/watch?v=R215f4fj7V8,HIGH_QUALITY_TRADER_INTERVIEW,INTRADAY_OR_SESSION,DAY_TRADE_STRATEGY,High credibility and testability,Plot intraday trend and entry/stop,Intraday OHLCV,YES,DO NOT MERGE UNTIL TESTED
+2,QLR_6tnREqUJ1WY,Trading Backtests Are Misleading,https://www.youtube.com/watch?v=6tnREqUJ1WY,HIGH_QUALITY_TRADER_INTERVIEW,INTRADAY_OR_SESSION,DAY_TRADE_STRATEGY,High credibility but heavy sentiment focus,Map sentiment warnings,Intraday OHLCV,YES,DO NOT MERGE UNTIL TESTED

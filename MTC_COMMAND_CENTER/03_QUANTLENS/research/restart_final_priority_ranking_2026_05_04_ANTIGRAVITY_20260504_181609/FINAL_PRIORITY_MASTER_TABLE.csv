@@ -1,0 +1,11 @@
+final_rank,candidate_id,candidate_name,category
+1,QLR_R215f4fj7V8,Lance Breitstein Trend Trading,DAY_TRADE_STRATEGY
+2,QLR_JS4_6gv0PpI,Mark Minervini VCP,SWING_TRADE_STRATEGY
+3,QLR_GHZBv1W4-II,Larry Williams,SWING_TRADE_STRATEGY
+4,QLR_10pHBNVi4Jc,Gon Gajala Low Float,SWING_TRADE_STRATEGY
+5,QLR_DPA35Gug3Y4,Brian Lee Mean Reversion,SWING_TRADE_STRATEGY
+6,QLR_UmLa9FAlMgw,Brian Shannon AVWAP,FILTER_MODULE
+7,QLR_6tnREqUJ1WY,Trading Backtests Are Misleading,DAY_TRADE_STRATEGY
+8,QLR_zw96qkUn9_g,Clement Ang 150%+,SWING_TRADE_STRATEGY
+9,QLR_4-IjRmw7SZI,Trading TQQQ,SWING_TRADE_STRATEGY
+10,QLR_kTqKRi-j9kM,Linda Raschke Sell Rules,EXIT_MODULE

@@ -1,0 +1,11 @@
+candidate_id,symbol,timeframe,date,expected_signal,expected_entry,expected_exit_type,reason,actual_signal,actual_entry,actual_exit_type,pass_fail,notes
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,BTCUSDT,1D,2019-11-11,TRADE,9041.31,profit_exit_or_positive_time_exit,winner,TRADE,9041.31,combined,PASS,selected from prior real-data trace and recomputed in Stage-2B
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,BTCUSDT,1D,2019-12-25,TRADE,7251.57,profit_exit_or_positive_time_exit,winner,TRADE,7251.57,combined,PASS,selected from prior real-data trace and recomputed in Stage-2B
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,XRPUSDT,1D,2020-02-28,TRADE,0.2387,profit_exit_or_positive_time_exit,winner,TRADE,0.2387,combined,PASS,selected from prior real-data trace and recomputed in Stage-2B
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,BTCUSDT,1D,2019-12-17,TRADE,6887.48,stop_or_negative_time_exit,loser,TRADE,6887.48,combined,PASS,selected from prior real-data trace and recomputed in Stage-2B
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,LTCUSDT,1D,2020-04-18,TRADE,42.16,stop_or_negative_time_exit,loser,TRADE,42.16,combined,PASS,selected from prior real-data trace and recomputed in Stage-2B
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,LTCUSDT,1D,2020-05-13,TRADE,42.2,stop_or_negative_time_exit,loser,TRADE,42.2,combined,PASS,selected from prior real-data trace and recomputed in Stage-2B
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,BTCUSDT,1D,2024-01-07,NO_TRADE,,NONE,manual no-trade guard placeholder from available proxy data,NO_TRADE,,NONE,PASS,no-trade case documented as proxy because full signal replay is not promoted
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,BTCUSDT,1D,2024-01-08,NO_TRADE,,NONE,manual no-trade guard placeholder from available proxy data,NO_TRADE,,NONE,PASS,no-trade case documented as proxy because full signal replay is not promoted
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,BTCUSDT,1D,2019-11-11,EDGE_CASE,9041.31,gap_or_same_bar_review,gap/edge case,EDGE_CASE_REVIEWED,9041.31,combined,PASS,real-data edge selected for audit traceability; intrabar sequencing remains open risk
+BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR,POLUSDT,1D,2026-04-23,AMBIGUOUS_CASE,0.09314,stop_first_policy,same-bar or ambiguous case,AMBIGUOUS_REVIEWED,0.09314,combined,PASS,deterministic policy documented; not proof of intrabar realism

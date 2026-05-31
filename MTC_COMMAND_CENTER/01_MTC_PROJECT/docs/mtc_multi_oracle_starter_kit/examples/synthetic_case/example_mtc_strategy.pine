@@ -1,0 +1,18 @@
+//@version=6
+strategy("MTC Synthetic Example", overlay=true, initial_capital=10000)
+fast = ta.ema(close, 5)
+slow = ta.ema(close, 10)
+raw_long = ta.crossover(fast, slow)
+raw_short = ta.crossunder(fast, slow)
+final_long = raw_long and barstate.isconfirmed
+final_short = raw_short and barstate.isconfirmed
+if final_long
+    strategy.entry("L", strategy.long)
+if final_short
+    strategy.close("L")
+plot(raw_long ? 1 : 0, "RAW_LONG")
+plot(raw_short ? 1 : 0, "RAW_SHORT")
+plot(final_long ? 1 : 0, "FINAL_LONG")
+plot(final_short ? 1 : 0, "FINAL_SHORT")
+plot(fast, "EMA_FAST")
+plot(slow, "EMA_SLOW")

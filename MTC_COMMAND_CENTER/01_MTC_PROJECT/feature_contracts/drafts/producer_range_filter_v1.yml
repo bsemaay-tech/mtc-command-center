@@ -1,0 +1,122 @@
+feature_id: producer_range_filter_v1
+feature_name: range_filter
+feature_type: signal_producer
+version: 0.1.0
+status: parity_testing
+owner: codex
+created_at: 2026-04-26
+updated_at: 2026-04-26
+description: Isolated Range Filter signal producer POC for Generic Feature Parity Factory.
+implementation_targets:
+  pine_files_touched:
+    - parity_oracles/feature_adapters/pinets/producer_range_filter_v1.pine
+  python_files_touched:
+    - 00_PYTHON/mtc_v2/signals/range_filter.py
+    - parity_oracles/feature_traces/python/producer_range_filter_v1_trace.py
+  pine_anchor_points:
+    - isolated PineTS feature adapter only
+  python_anchor_points:
+    - mtc_v2.signals.range_filter.RangeFilterSignal
+  integration_mode: isolated_adapter_only
+input_parameters:
+  - name: rf_range
+    type: float
+    default: 1000.0
+    min: 0.0000001
+    max: null
+    options: []
+    pine_input_title: RF Range
+    python_config_field: rf_range
+state:
+  state_variables:
+    - filter_line
+    - direction
+  persistent_state:
+    - previous filter line
+    - previous direction
+  reset_conditions:
+    - case start
+  warmup_policy:
+    bars: 0
+    exclude_from_comparison: false
+trace:
+  trace_source_mode: case_plan_overrides
+  candle_source: pinets_runner._build_case_bars(case_001 case_plan)
+  config_source: case_plan_overrides
+  timestamp_policy: ISO_UTC
+  bar_index_policy: zero_based_case_candle_index
+  warmup_bars: 0
+  trace_columns:
+    - {name: source_price, available: true}
+    - {name: filter_line, available: true}
+    - {name: upper_band, available: true}
+    - {name: lower_band, available: true}
+    - {name: direction, available: true}
+    - {name: raw_long, available: true}
+    - {name: raw_short, available: true}
+  required_trace_columns:
+    - source_price
+    - filter_line
+    - upper_band
+    - lower_band
+    - direction
+    - raw_long
+    - raw_short
+  optional_trace_columns: []
+  expected_event_columns: []
+  signal_columns:
+    - raw_long
+    - raw_short
+  decision_columns: []
+  execution_columns: []
+parity:
+  required_parity_levels:
+    - L0
+    - L1
+    - L2
+  tolerance_policy:
+    numeric_abs_tol: 1.0e-8
+    numeric_rel_tol: 1.0e-6
+    tick_tolerance: 0
+    booleans: exact
+    strings: exact
+  acceptance_profile: feature_contracts/acceptance_profiles/producer_acceptance.yml
+  supported_oracles:
+    python: true
+    pinets: true
+    pynecore: optional
+    vectorbt: optional
+    tradingview_export: final_release_audit
+  baseline_oracle: python
+  candidate_oracles:
+    - pinets
+safety:
+  rollback_files:
+    - 00_PYTHON/mtc_v2/signals/range_filter.py
+    - parity_oracles/feature_adapters/pinets/producer_range_filter_v1.pine
+  risk_notes:
+    - POC only; not integrated into canonical Pine or production runner.
+  known_limitations:
+    - Uses fixed absolute range size for first factory POC.
+  not_comparable_conditions:
+    - feature exporter unavailable
+    - timestamp or candle source policy mismatch
+reporting:
+  required_report_sections:
+    - Command run
+    - Contract used
+    - Case used
+    - Python trace status
+    - PineTS trace status
+    - Acceptance profile used
+    - Pass/fail/not comparable
+    - First divergence if available
+    - Missing trace columns if any
+  acceptance_verdicts:
+    - FEATURE_TRACE_PASS
+    - FEATURE_TRACE_PASS_WITH_TOLERANCE
+    - FEATURE_TRACE_FAIL_INDICATOR
+    - FEATURE_TRACE_FAIL_SIGNAL
+    - FEATURE_TRACE_NOT_COMPARABLE
+  final_verdict_rule: Do not integrate into canonical MTC_V2.pine until producer_acceptance.yml passes.
+integration_rule: Do not integrate into canonical MTC_V2.pine until feature-level parity passes.

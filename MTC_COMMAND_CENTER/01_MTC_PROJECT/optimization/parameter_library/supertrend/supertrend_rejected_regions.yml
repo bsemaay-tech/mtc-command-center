@@ -1,0 +1,68 @@
+# Supertrend Rejected Regions
+Research seed only; not Pine default; not production parameter.
+
+rejected_or_caution_regions:
+  - region_id: smoke_schema_only_warning
+    type: caution
+    reason: Smoke-derived rows validate pipeline/schema only and are not final parameter conclusions.
+    action: Run real producer-only staged optimization before exit/filter refinement.
+  - region_id: rejected_BTCUSDT_15m_3a19b26935cb28d9
+    type: rejected_smoke_seed
+    reason: REJECTED
+    asset: BTCUSDT
+    timeframe: 15m
+  - region_id: rejected_BTCUSDT_1h_f6e1975a5626687a
+    type: rejected_smoke_seed
+    reason: REJECTED
+    asset: BTCUSDT
+    timeframe: 1h
+  - region_id: rejected_BTCUSDT_4h_87ea85ed5353caa0
+    type: rejected_smoke_seed
+    reason: REJECTED
+    asset: BTCUSDT
+    timeframe: 4h
+  - region_id: rejected_BTCUSDT_4h_2d39686e036fb109
+    type: rejected_smoke_seed
+    reason: REJECTED
+    asset: BTCUSDT
+    timeframe: 4h
+  - region_id: rejected_BTCUSDT_4h_38070c606e7d5265
+    type: rejected_smoke_seed
+    reason: REJECTED
+    asset: BTCUSDT
+    timeframe: 4h
+  - region_id: rejected_ETHUSDT_1h_3a19b26935cb28d9
+    type: rejected_smoke_seed
+    reason: REJECTED
+    asset: ETHUSDT
+    timeframe: 1h
+  - region_id: rejected_ETHUSDT_1h_a33357dd0d9bec20
+    type: rejected_smoke_seed
+    reason: REJECTED
+    asset: ETHUSDT
+    timeframe: 1h
+  - region_id: rejected_ETHUSDT_1h_87ea85ed5353caa0
+    type: rejected_smoke_seed
+    reason: REJECTED
+    asset: ETHUSDT
+    timeframe: 1h
+  - region_id: rejected_ETHUSDT_1h_617ae301b63c817e
+    type: rejected_smoke_seed
+    reason: REJECTED
+    asset: ETHUSDT
+    timeframe: 1h
+  - region_id: rejected_ETHUSDT_1h_3076c5bac3ebc6a7
+    type: rejected_smoke_seed
+    reason: REJECTED
+    asset: ETHUSDT
+    timeframe: 1h
+  - region_id: rejected_ETHUSDT_4h_617ae301b63c817e
+    type: rejected_smoke_seed
+    reason: REJECTED
+    asset: ETHUSDT
+    timeframe: 4h
+  - region_id: rejected_ETHUSDT_4h_2d39686e036fb109
+    type: rejected_smoke_seed
+    reason: REJECTED
+    asset: ETHUSDT
+    timeframe: 4h

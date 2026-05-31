@@ -1,0 +1,4 @@
+timestamp,bar_index,raw_long,raw_short,final_long,final_short,reason_code
+2024-01-01T00:00:00Z,0,0,0,0,0,
+2024-01-01T00:15:00Z,1,1,0,1,0,RAW_LONG
+2024-01-01T00:30:00Z,2,0,0,0,0,

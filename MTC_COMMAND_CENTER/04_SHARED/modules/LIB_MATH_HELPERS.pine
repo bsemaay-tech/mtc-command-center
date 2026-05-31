@@ -1,0 +1,89 @@
+//@version=6
+library("LIB_MATH_HELPERS", overlay=false)
+
+const string LIB_MATH_HELPERS_VER = "1.0.0"
+
+// ----------------------------------------
+// Basic utilities
+// ----------------------------------------
+export f_round2(float _value) =>
+    math.round(_value * 100.0) / 100.0
+
+export f_json_num(series float _value) =>
+    if na(_value)
+        "null"
+    else
+        string _s = str.tostring(_value)
+        bool _isInvalid = str.contains(_s, "NaN") or str.contains(_s, "inf") or str.contains(_s, "Infinity")
+        _isInvalid ? "null" : _s
+
+// ----------------------------------------
+// Adaptive indicators
+// ----------------------------------------
+export f_kama(series float _src, int _len, series float _prev) =>
+    float fastSC = 2.0 / (2.0 + 1.0)
+    float slowSC = 2.0 / (30.0 + 1.0)
+    float change = math.abs(_src - _src[_len])
+    float volatility = math.sum(math.abs(_src - _src[1]), _len)
+    float er = volatility != 0.0 ? change / volatility : 0.0
+    float sc = math.pow(er * (fastSC - slowSC) + slowSC, 2)
+    float base = na(_prev) ? _src : _prev
+    base + sc * (_src - base)
+
+export f_mcginley(series float _src, int _len, series float _prev) =>
+    float mgPrev = na(_prev) ? _src : _prev
+    float ratio = math.max(_src / math.max(mgPrev, syminfo.mintick), 0.001)
+    float denom = _len * math.pow(ratio, 4)
+    mgPrev + (_src - mgPrev) / math.max(denom, 1.0)
+
+export f_dema(series float _src, int _len) =>
+    float e1 = ta.ema(_src, _len)
+    float e2 = ta.ema(e1, _len)
+    2.0 * e1 - e2
+
+export f_tema(series float _src, int _len) =>
+    float e1 = ta.ema(_src, _len)
+    float e2 = ta.ema(e1, _len)
+    float e3 = ta.ema(e2, _len)
+    3.0 * (e1 - e2) + e3
+
+export f_ma(series float _src, int _len, string _type, series float _prevKama, series float _prevMcGinley) =>
+    float _sma = ta.sma(_src, _len)
+    float _ema = ta.ema(_src, _len)
+    float _dema = f_dema(_src, _len)
+    float _tema = f_tema(_src, _len)
+    float _rma = ta.rma(_src, _len)
+    float _wma = ta.wma(_src, _len)
+    float _vwma = ta.vwma(_src, _len)
+    float _kama = f_kama(_src, _len, _prevKama)
+    float _mcginley = f_mcginley(_src, _len, _prevMcGinley)
+    switch _type
+        "SMA"  => _sma
+        "EMA"  => _ema
+        "DEMA" => _dema
+        "TEMA" => _tema
+        "RMA"  => _rma
+        "WMA"  => _wma
+        "VWMA" => _vwma
+        "KAMA" => _kama
+        "MCGINLEY" => _mcginley
+        => _sma
+
+export f_composite_rsi(series float _src, int _rsiLen, int _changeLen) =>
+    float _rsi1 = ta.rsi(_src, _rsiLen)
+    float _rsi2 = ta.rsi(ta.change(_src), _changeLen)
+    float _rank = ta.percentrank(ta.change(_src), 100)
+    (_rsi1 + _rsi2 + _rank) / 3.0
+
+// ----------------------------------------
+// Range helpers
+// ----------------------------------------
+export f_fb_r_mult(float _entry, float _exit, bool _isLong, float _rDist) =>
+    _rDist > 0 ? (_isLong ? (_exit - _entry) / _rDist : (_entry - _exit) / _rDist) : 0.0
+
+export f_tr_local(series float _highSrc, series float _lowSrc, series float _closeSrc) =>
+    float prevClose = nz(_closeSrc[1], _closeSrc)
+    float a = _highSrc - _lowSrc
+    float b = math.abs(_highSrc - prevClose)
+    float c = math.abs(_lowSrc - prevClose)
+    math.max(math.max(a, b), c)

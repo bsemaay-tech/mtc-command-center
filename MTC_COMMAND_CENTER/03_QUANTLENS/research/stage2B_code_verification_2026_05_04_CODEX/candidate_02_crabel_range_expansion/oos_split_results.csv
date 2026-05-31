@@ -1,0 +1,4 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,split
+4693,16,1.118826681675278e+17,1.8869,52.6103,0.8859,0.1293,0.8859,3.5823,-2.1076,-63.8004,1753636967713143.8,0.0,0.0,DOGEUSDT,ARBUSDT,False,CRABEL,train
+1564,17,249650.5998,1.6246,50.9591,0.5858,0.0638,0.5858,2.99,-1.9125,-90.0656,2771.8744,0.0,0.0,TRXUSDT,APTUSDT,False,CRABEL,validation
+1565,17,44362.6827,1.5286,50.4153,0.4399,0.0188,0.4399,2.523,-1.6782,-66.8832,663.2856,0.0,0.0,DOGEUSDT,LTCUSDT,False,CRABEL,test

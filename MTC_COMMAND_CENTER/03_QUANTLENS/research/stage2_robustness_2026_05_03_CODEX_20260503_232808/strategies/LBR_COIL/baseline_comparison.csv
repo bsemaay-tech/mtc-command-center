@@ -1,0 +1,2 @@
+candidate_id,baseline,trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning
+LBR_COIL,random_same_hold,1700,17,-91.3147,0.5941,39.2353,-0.1385,-0.1159,-0.1385,0.5167,-0.5616,-91.7555,-0.9952,8.0,8.0,NEARUSDT,POLUSDT,True

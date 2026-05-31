@@ -1,0 +1,23 @@
+{
+  "_comment": "High-ATR Supertrend walk-forward space centered on the only cluster that degraded less on the 2025-01-01..2025-06-29 holdout.",
+  "grid": {
+    "supertrend.atr_len": {
+      "dtype": "int",
+      "values": [41, 42, 43, 44, 45, 46, 47, 48, 49]
+    },
+    "supertrend.factor": {
+      "dtype": "float",
+      "values": [4.8, 4.9, 5.0, 5.1, 5.2]
+    }
+  },
+  "random": {
+    "supertrend.atr_len": {
+      "dist": "choice",
+      "values": [41, 42, 43, 44, 45, 46, 47, 48, 49]
+    },
+    "supertrend.factor": {
+      "dist": "choice",
+      "values": [4.8, 4.9, 5.0, 5.1, 5.2]
+    }
+  }
+}

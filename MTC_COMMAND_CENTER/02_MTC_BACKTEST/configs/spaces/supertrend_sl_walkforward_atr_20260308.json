@@ -1,0 +1,8 @@
+{
+  "random": {
+    "stop_loss.use_sl": { "dist": "choice", "values": [true] },
+    "stop_loss.mode": { "dist": "choice", "values": ["ATR"] },
+    "stop_loss.atr_len": { "dist": "uniform_int", "low": 7, "high": 56 },
+    "stop_loss.atr_mult": { "dist": "uniform_float", "low": 0.5, "high": 8.0, "step": 0.1 }
+  }
+}

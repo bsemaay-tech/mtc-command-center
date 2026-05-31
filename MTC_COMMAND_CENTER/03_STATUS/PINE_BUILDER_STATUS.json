@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-05-30T00:00:00+03:00",
+  "source": "not_connected_yet",
+  "summary": {
+    "total_drafts": 0,
+    "compile_pass": 0,
+    "compile_fail": 0,
+    "waiting_for_tradingview_compile": 0
+  },
+  "drafts": []
+}

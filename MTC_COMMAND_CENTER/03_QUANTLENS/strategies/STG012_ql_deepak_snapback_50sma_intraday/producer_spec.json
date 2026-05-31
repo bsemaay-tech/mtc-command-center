@@ -1,0 +1,17 @@
+{
+  "candidate_id": "QL_DEEPAK_SNAPBACK_50SMA_INTRADAY",
+  "source_url": "https://www.youtube.com/watch?v=q43pkYBo1hU",
+  "source_candidate": "QLR_q43pkYBo1hU",
+  "title": "Deepak snapback at 50 SMA (intraday timing)",
+  "kind": "strategy",
+  "rules_high_confidence": [
+    "Index snapback: price below 50 SMA channel",
+    "Buy at bottom of channel, target 50 SMA area as resistance",
+    "Intraday entry timing: morning if good setup; EOD half-position if closing strong"
+  ],
+  "entry_pseudo": "price<channel_low AND turn_up_signal",
+  "exit_pseudo": "price>=SMA50 OR stop",
+  "param_grid_size_planned": 50,
+  "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+  "promoted_at": "2026-05-31T00:09:34"
+}

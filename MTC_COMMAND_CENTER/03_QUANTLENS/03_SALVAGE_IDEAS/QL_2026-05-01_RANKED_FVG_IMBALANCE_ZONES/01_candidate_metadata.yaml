@@ -1,0 +1,29 @@
+candidate_id: QL_2026-05-01_RANKED_FVG_IMBALANCE_ZONES
+source_url: UNKNOWN_URL
+video_title: Ranked FVG Imbalance Zones indicator
+quantlens_decision: SALVAGE
+codex_status: SALVAGE_ONLY
+market_type: UNKNOWN
+primary_timeframe: ANY
+strategy_type: external ranked FVG indicator
+commercial_value_score: 4
+complexity_score: 6
+repaint_risk: UNKNOWN
+lookahead_risk: MEDIUM
+overfit_risk: MEDIUM
+closed_source_risk: MEDIUM
+risk_management_quality: ABSENT
+candidate_kind:
+  producer: false
+  entry_gate: false
+  guard: true
+  confirmation: true
+  exit_rule: false
+  sl_tp_method: false
+  trailing_be_method: false
+  money_management: false
+existing_mtc_overlap: Possible overlap with FVG/imbalance support-resistance filters, but exact ranking formula is not pinned.
+new_feature_required: false
+recommended_next_step: Keep salvage-only until exact Zireman TradingView source/Pine code and ranking formula are available.
+created_at: 2026-05-01
+updated_at: 2026-05-01

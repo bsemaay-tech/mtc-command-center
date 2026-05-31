@@ -1,0 +1,96 @@
+{
+  "_comment": "Supertrend 1h perpetual full-period base case for multi-window optimization on BTCUSDT.P.",
+  "dataset": "C:/LAB/tradingview-lab/110_MTC_BACKTEST_OPTİMİZASYON_DİZİNLERİ/data/processed_hist/binance_usdm/BTCUSDT.P/1h.parquet",
+  "start_date": "2020-01-01T00:00:00",
+  "end_date": "2026-03-12T23:59:59",
+  "warmup_bars": 200,
+  "preroll_days": 365,
+  "config": {
+    "signal_mode": "Supertrend",
+    "supertrend": {
+      "atr_len": 21,
+      "factor": 4.0,
+      "use_wicks": false,
+      "use_ha": false
+    },
+    "trade": {
+      "enable_long": true,
+      "enable_short": true,
+      "allow_flip": true,
+      "exit_on_opposite_signal": true,
+      "exit_on_filter_block": false,
+      "use_regime_lock": false,
+      "entry_mode": "Edge",
+      "max_pyramid_positions": 1,
+      "signal_mode_max_entries": 1,
+      "signal_mode_cooldown_bars": 10,
+      "allow_same_bar_reentry": true,
+      "same_bar_reentry_requires_exit": true
+    },
+    "stop_loss": {
+      "use_sl": false
+    },
+    "take_profit": {
+      "use_tp": false
+    },
+    "break_even": {
+      "use_break_even": false
+    },
+    "multi_tp": {
+      "use_multi_tp": false
+    },
+    "trailing": {
+      "use_trailing": false
+    },
+    "time_stop": {
+      "enabled": false
+    },
+    "risk": {
+      "risk_long_percent": 100.0,
+      "risk_short_percent": 100.0,
+      "fallback_qty_pct": 100.0,
+      "max_leverage_cap": 5.0,
+      "risk_equity_mode": "Realized",
+      "use_daily_loss_limit": false,
+      "use_max_trades_per_day": false
+    },
+    "filters": {
+      "use_ma_filter": false,
+      "use_ma_slope_filter": false,
+      "use_volume_filter": false,
+      "use_atr_vol_filter": false,
+      "use_mcginley_filter": false,
+      "use_htf_trend_filter": false,
+      "use_macd_filter": false,
+      "use_range_filters": false,
+      "use_range_regime_filter": false
+    },
+    "guards": {
+      "use_dd_guard": false,
+      "use_consec_loss_guard": false,
+      "use_cooldown_guard": false,
+      "use_eq_curve_guard": false,
+      "use_mae_guard": false,
+      "use_guard_recovery": false
+    },
+    "confirmation": {
+      "enabled": false,
+      "use_session_filter": false
+    },
+    "strategy": {
+      "initial_capital": 10000.0,
+      "commission_percent": 0.04,
+      "slippage_ticks": 5,
+      "mintick": 0.1,
+      "pyramiding": 1,
+      "margin_long_percent": 1.0,
+      "margin_short_percent": 1.0
+    },
+    "parity": {
+      "enabled": true,
+      "export_debug_csv": false,
+      "preroll_days": 365,
+      "force_terminal_manual_close": true
+    }
+  }
+}

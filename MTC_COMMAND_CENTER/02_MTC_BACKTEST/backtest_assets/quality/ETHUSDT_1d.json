@@ -1,0 +1,14 @@
+{
+  "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\ETHUSDT_1d_20190101_20260308.parquet",
+  "sha256": "911c3dcd4309b5bdd4a53e93ab37653b5aaf48ef29e2189ad17c9a9f329ccd93",
+  "exchange_raw": "BINANCE",
+  "exchange_normalized": "BINANCE",
+  "symbol_raw": "ETHUSDT",
+  "symbol_normalized": "ETHUSDT",
+  "quality": {
+    "rows": 2624,
+    "duplicate_timestamps": 0,
+    "gap_count": 0,
+    "gaps": []
+  }
+}

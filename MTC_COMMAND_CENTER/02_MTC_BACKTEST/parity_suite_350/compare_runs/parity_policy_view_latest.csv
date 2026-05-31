@@ -1,0 +1,12 @@
+metric,value
+total_cases,457
+skip,18
+executable_cases,439
+raw_pass,437
+raw_mismatch,2
+clip_only_candidates,2
+clip_effective_pass,439
+clip_effective_mismatch,0
+other_status,0
+raw_pass_rate_executable_pct,99.54
+clip_effective_pass_rate_executable_pct,100.00

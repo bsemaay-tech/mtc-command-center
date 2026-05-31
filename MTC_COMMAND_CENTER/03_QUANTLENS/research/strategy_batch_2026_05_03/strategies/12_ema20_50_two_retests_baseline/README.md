@@ -1,0 +1,7 @@
+# QL_EMA20_50_TWO_RETEST_BASELINE_v0
+
+Research-only Python batch result.
+
+Source: `QUANTLENS_EMA20_50_RETEST_CRITICAL_INTAKE_REPORT.md`
+
+

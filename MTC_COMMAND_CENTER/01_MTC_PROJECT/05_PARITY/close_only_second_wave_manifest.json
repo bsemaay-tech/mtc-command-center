@@ -1,0 +1,74 @@
+{
+  "profile": "close_only_deterministic_v2",
+  "status": "frozen_tracker_case_pack",
+  "validated_on_utc": "2026-04-01T06:05:00Z",
+  "artifact_root": "reports/tracker_cases",
+  "tracker_workbook_fallback": "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASE_TRACKER_close_only_wave1_pending.xlsx",
+  "wave": "second_wave_representative_filters",
+  "cases": [
+    {
+      "id": "CO_017_MA_EMA200",
+      "tracker_case_id": "CO_017_MA_EMA200",
+      "source_case": "AUTO_017",
+      "owner_focus": "EMA 200 MA filter",
+      "expected_trades": 88,
+      "report_prefix": "tracker_cases/CO_017_MA_EMA200"
+    },
+    {
+      "id": "CO_026_VOLUME",
+      "tracker_case_id": "CO_026_VOLUME",
+      "source_case": "AUTO_026",
+      "owner_focus": "volume filter",
+      "expected_trades": 108,
+      "report_prefix": "tracker_cases/CO_026_VOLUME"
+    },
+    {
+      "id": "CO_027_ADX",
+      "tracker_case_id": "CO_027_ADX",
+      "source_case": "AUTO_027",
+      "owner_focus": "ADX filter",
+      "expected_trades": 54,
+      "report_prefix": "tracker_cases/CO_027_ADX"
+    },
+    {
+      "id": "CO_030_MACD_REGIME",
+      "tracker_case_id": "CO_030_MACD_REGIME",
+      "source_case": "AUTO_030",
+      "owner_focus": "MACD regime filter",
+      "expected_trades": 109,
+      "report_prefix": "tracker_cases/CO_030_MACD_REGIME"
+    },
+    {
+      "id": "CO_050_HTF_TREND",
+      "tracker_case_id": "CO_050_HTF_TREND",
+      "source_case": "AUTO_050",
+      "owner_focus": "HTF trend filter",
+      "expected_trades": 108,
+      "report_prefix": "tracker_cases/CO_050_HTF_TREND"
+    },
+    {
+      "id": "CO_055_MOMENTUM",
+      "tracker_case_id": "CO_055_MOMENTUM",
+      "source_case": "AUTO_055",
+      "owner_focus": "momentum filter",
+      "expected_trades": 129,
+      "report_prefix": "tracker_cases/CO_055_MOMENTUM"
+    },
+    {
+      "id": "CO_056_SESSION",
+      "tracker_case_id": "CO_056_SESSION",
+      "source_case": "AUTO_056",
+      "owner_focus": "session filter",
+      "expected_trades": 133,
+      "report_prefix": "tracker_cases/CO_056_SESSION"
+    },
+    {
+      "id": "CO_061_COOLDOWN",
+      "tracker_case_id": "CO_061_COOLDOWN",
+      "source_case": "AUTO_061",
+      "owner_focus": "trade cooldown guard",
+      "expected_trades": 84,
+      "report_prefix": "tracker_cases/CO_061_COOLDOWN"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "candidate_id": "LINDA_5SMA_PULLBACK",
+  "source_stage2_id": "LINDA_5SMA",
+  "native_market": "US_equity_RS_native_crypto_proxy",
+  "timeframe": "1D",
+  "base_round_trip_cost_pct": 0.12,
+  "execution_policy": "completed-bar signal, next-bar entry unless prior contract used stop trigger, exit-first, stop-first same-bar conflict",
+  "verdict": "NEEDS_NATIVE_DATA"
+}

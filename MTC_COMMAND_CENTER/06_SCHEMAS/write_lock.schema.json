@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/write_lock.schema.json",
+  "title": "MCC Write Lock",
+  "type": "object",
+  "required": ["resource", "owner_ai", "task_id", "acquired_at", "expires_at"],
+  "properties": {
+    "resource": { "type": "string" },
+    "owner_ai": { "type": "string" },
+    "task_id": { "type": "string" },
+    "acquired_at": { "type": "string" },
+    "expires_at": { "type": "string" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,68 @@
+{
+  "candidate_id": "QL_ALPHA_ADA_TWO_CANDLE_SR_1H",
+  "strategy_family": "SUPPORT_RESISTANCE_BREAKOUT_WITH_STRONG_CLOSE",
+  "engine_strategy_id": "QL_2026-05-01_SP500_5M_TWO_CANDLE_SENTIMENT_SR",
+  "symbol": "ADAUSDT",
+  "timeframe": "1h",
+  "direction": "long_only",
+  "verified_parameters": {
+    "level_lookback": 200,
+    "upper_third": 0.6,
+    "break_buf_atr": 0.0,
+    "atr_len": 14,
+    "stop_lookback_bars": 2,
+    "target_R": 2.0,
+    "cost_bps_round_trip": 8.0,
+    "max_hold_bars": 96
+  },
+  "signal_inputs": {
+    "high_break": "highest(high, 200)[1]  (min_periods=10)",
+    "candle_range": "high - low",
+    "close_position": "(close - low) / (high - low)",
+    "atr14": "ATR(14) Wilder/RMA"
+  },
+  "long_signal_definition": "(close_position >= upper_third) AND (close > high[1]) AND (close > high_break + break_buf_atr*atr14)",
+  "short_signal_definition": null,
+  "entry_rule": "enter at NEXT bar open after signal bar closes",
+  "stop_rule": "lowest low of last 2 bars at signal bar",
+  "exit_rule": "fixed 2R target (entry + 2*(entry-stop)) OR hard stop (low <= stop_price) OR force-exit after max_hold_bars",
+  "bar_close_only": true,
+  "no_repaint": "true under engine assumptions: signal on CLOSED bar i, executed at bar i+1 open; rolling high uses [1] shift so the breakout level excludes the current bar",
+  "no_lookahead": "true: high_break shifted by 1; close_position uses only current bar OHLC",
+  "data_requirements": {
+    "ohlcv": ["open", "high", "low", "close"],
+    "warmup_bars": ">= 210 (200-bar lookback + ATR warmup)",
+    "coverage_verified": "ADA 1h 2020-01-31..2026-04-27, 54680 bars"
+  },
+  "expected_outputs": {
+    "signal_column": "long_entry (bool)",
+    "stop_column": "stop_price",
+    "target_column": "target_price",
+    "exit_marker": "target_exit | stop_exit | time_exit"
+  },
+  "metrics_lockbox": {
+    "return_pct_compound": 79.23,
+    "buyhold_pct": -30.47,
+    "excess_alpha_pct": 109.70,
+    "profit_factor": 1.721,
+    "trades": 53,
+    "max_drawdown_pct": -14.16,
+    "win_rate": 0.4906,
+    "expectancy_R": 0.440,
+    "multi_window_positive": "4/5",
+    "param_stable": true,
+    "bootstrap_p_hires": 0.01434,
+    "deflated_sharpe_p": 0.0147,
+    "bh_fdr_survivor": false,
+    "caveat": "only 53 lockbox trades; Q1 window +599% is a small-sample distortion"
+  },
+  "promotion_status": ["PROMOTE_TO_FORWARD_PAPER_TRADE", "PROMOTE_TO_PARITY_CANDIDATE"],
+  "fidelity_to_original_youtube_source": "NEEDS_SOURCE_CONFIRMATION",
+  "source_artifacts": [
+    "05_BACKTEST_RESULTS/MEGA_walk_forward_results.json",
+    "05_BACKTEST_RESULTS/alpha_summary.json",
+    "05_BACKTEST_RESULTS/multiwindow_summary.json",
+    "tools/mega_walk_forward.py"
+  ],
+  "not_an_approved_live_trading_system": true
+}

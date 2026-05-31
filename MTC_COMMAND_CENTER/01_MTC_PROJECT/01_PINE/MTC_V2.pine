@@ -1,0 +1,2079 @@
+//@version=6
+// Parity scope ignores broker-capital constraints; keep initial capital high
+// enough so risk-sized entries are not silently rejected on the Pine side while
+// Python still accepts the same raw pulse.
+// L6a note: keep a generous broker-level pyramiding ceiling here and let the
+// script-level `max_entries` gate remain the sole owner of add permission.
+strategy("MTC_V2 Parity", shorttitle="MTCV2_1404", overlay=true, initial_capital=10000, calc_on_every_tick=false, process_orders_on_close=true, pyramiding=100)
+
+// ============================================================================
+// SECTION 1 - INPUT / UI SURFACE
+// ============================================================================
+// L0-L6a scope note:
+// - Current build wires direction gates, regime lock, allow_flip, basket-aware adds, ATR SL and ATR TP.
+// - Trailing, BE and advanced policy owners are fully implemented.
+enable_long  = input.bool(true,  "Enable Long",  group="01 Global")
+enable_short = input.bool(true,  "Enable Short", group="01 Global")
+allow_flip   = input.bool(true,  "Allow Flip",   group="01 Global", tooltip="Allows same-bar reversal on opposite signal. Off defers re-entry to a later eligible bar.")
+regime_lock  = input.bool(false, "Regime Lock",  group="01 Global", tooltip="Keeps trading on the current regime side until the regime resets. Helps reduce whipsaw.")
+max_entries  = input.int(1,      "Max Entries",  minval=1, group="01 Global", tooltip="Maximum same-side adds in one position lifecycle. More than 1 only matters when the signal model can re-arm.")
+cooldown_bars = input.int(0,     "Cooldown Bars", minval=0, group="01 Global", tooltip="Bars to wait before allowing a new entry after exit. Only matters when the model can re-enter quickly.")
+
+signal_mode = input.string("Supertrend", "Signal Mode", options=["Supertrend", "Range Filter"], group="02 Signal Producer", tooltip="Selects the raw signal producer. Entry gates and signal transforms act after this layer.")
+st_atr_len   = input.int(21, "ATR Len", minval=1, group="02 Signal Producer", inline="st_params")
+st_factor    = input.float(4.0, "Factor", minval=0.1, group="02 Signal Producer", inline="st_params")
+st_use_wicks = input.bool(false, "Use Wicks", group="02 Signal Producer", inline="st_toggles")
+st_use_ha    = input.bool(false, "Use HA [Not Supported]", group="02 Signal Producer", inline="st_toggles", tooltip="HA mode is not yet supported. Enabling this disables all signals and entries.")
+rf_range = input.float(1000.0, "RF Range", minval=0.0000001, group="02 Signal Producer", inline="rf_params")
+
+use_ma_filter = input.bool(false, "Use MA Filter", group="03 Entry Gates", inline="ma")
+ma_type = input.string("EMA", "Type", options=["EMA", "SMA", "WMA", "RMA"], group="03 Entry Gates", inline="ma")
+ma_length = input.int(200, "Length", minval=1, group="03 Entry Gates", inline="ma")
+use_ma_mtf = input.bool(false, "Use HTF", group="03 Entry Gates", inline="ma2")
+ma_htf_timeframe = input.string("60", "HTF TF", group="03 Entry Gates", inline="ma2")
+use_ma_slope_filter = input.bool(false, "Use MA Slope", group="03 Entry Gates", inline="mas", tooltip="Requires MA slope direction agreement. Use with Slope Len and Min Ratio.")
+ma_slope_len = input.int(200, "Slope Len", minval=1, group="03 Entry Gates", inline="mas", tooltip="Bars used for the slope reference MA. Higher is smoother and usually reduces trades.")
+ma_slope_min_pct = input.float(0.005, "Min Ratio", minval=0.0, step=0.0001, group="03 Entry Gates", inline="mas", tooltip="Minimum MA slope ratio required. Higher is stricter; too high can block all trades.")
+use_mcginley_filter = input.bool(false, "Use McGinley", group="03 Entry Gates", inline="mcg")
+mcginley_length = input.int(200, "McGinley Len", minval=1, group="03 Entry Gates", inline="mcg")
+mcginley_use_higher_timeframe = input.bool(false, "MCG Use HTF", group="03 Entry Gates", inline="mcg")
+mcginley_htf_timeframe = input.string("240", "MCG HTF TF", options=["60","120","240","D","W"], group="03 Entry Gates", inline="mcg")
+use_volume_filter = input.bool(false, "Use Volume", group="03 Entry Gates", inline="vol", tooltip="Blocks entries unless volume clears the volume threshold. Use with Vol SMA Len and Vol Mult.")
+vol_sma_length = input.int(20, "Vol SMA Len", minval=1, group="03 Entry Gates", inline="vol")
+vol_sma_mult = input.float(1.0, "Vol Mult", minval=0.0, step=0.1, group="03 Entry Gates", inline="vol", tooltip="Required volume multiple over Vol SMA. Higher is stricter and usually reduces trades.")
+use_adx_filter = input.bool(false, "Use ADX", group="03 Entry Gates", inline="adx")
+adx_length = input.int(14, "ADX Len", minval=1, group="03 Entry Gates", inline="adx")
+adx_threshold = input.float(25.0, "ADX Min", minval=0.0, group="03 Entry Gates", inline="adx")
+adx_use_higher_timeframe = input.bool(false, "ADX Use HTF", group="03 Entry Gates", inline="adx")
+adx_htf_timeframe = input.string("240", "ADX HTF TF", options=["60","120","240","D","W"], group="03 Entry Gates", inline="adx")
+use_chop_filter = input.bool(false, "Use Chop", group="03 Entry Gates", inline="chop")
+chop_length = input.int(14, "Chop Len", minval=2, group="03 Entry Gates", inline="chop")
+chop_threshold = input.float(61.8, "Chop Max", minval=0.0, group="03 Entry Gates", inline="chop")
+chop_use_higher_timeframe = input.bool(false, "Chop Use HTF", group="03 Entry Gates", inline="chop")
+chop_htf_timeframe = input.string("240", "Chop HTF TF", options=["60","120","240","D","W"], group="03 Entry Gates", inline="chop")
+use_atr_vol_floor = input.bool(false, "Use ATR Floor", group="03 Entry Gates", inline="avf")
+atr_vol_floor_fast_len = input.int(14, "ATR Fast", minval=1, group="03 Entry Gates", inline="avf")
+atr_vol_floor_baseline_len = input.int(100, "ATR Baseline", minval=1, group="03 Entry Gates", inline="avf")
+atr_vol_floor_mult = input.float(0.5, "ATR Floor Mult", minval=0.0, step=0.1, group="03 Entry Gates", inline="avf")
+use_macd_regime_filter = input.bool(false, "Use MACD Regime", group="03 Entry Gates", inline="macd_r", tooltip="Requires MACD line above zero for long and below zero for short. Independent MACD gate.")
+use_macd_cross_filter = input.bool(false, "Use MACD Cross", group="03 Entry Gates", inline="macd_c", tooltip="Requires MACD line above or below the signal line. Independent MACD gate.")
+use_macd_hist_filter = input.bool(false, "Use MACD Hist", group="03 Entry Gates", inline="macd_h", tooltip="Uses the MACD histogram as a gate. Exact behavior depends on Hist Mode.")
+macd_hist_mode = input.string("POSITIVE", "Hist Mode", options=["POSITIVE", "RISING", "RISING_POSITIVE"], group="03 Entry Gates", inline="macd_h")
+use_macd_zero_dist_filter = input.bool(false, "Use MACD Zero Dist", group="03 Entry Gates", inline="macd_z", tooltip="Requires MACD line to stay away from zero by Zero Dist Min. Use a binding threshold or it has no effect.")
+macd_zero_dist_min = input.float(0.0, "Zero Dist Min", minval=0.0, group="03 Entry Gates", inline="macd_z")
+macd_fast_len = input.int(12, "MACD Fast", minval=1, group="03 Entry Gates", inline="macd_l")
+macd_slow_len = input.int(26, "MACD Slow", minval=1, group="03 Entry Gates", inline="macd_l")
+macd_sig_len = input.int(9, "MACD Sig", minval=1, group="03 Entry Gates", inline="macd_l")
+macd_source = input.string("close", "MACD Src", options=["close", "open", "hl2", "hlc3", "ohlc4"], group="03 Entry Gates", inline="macd_l")
+use_macd_htf_bias = input.bool(false, "MACD HTF Bias", group="03 Entry Gates", inline="macd_htf", tooltip="Separate HTF MACD bias gate. Independent from other MACD gates: long needs HTF MACD > 0, short needs HTF MACD < 0.")
+macd_htf_timeframe = input.string("240", "MACD HTF TF", options=["60", "120", "240", "D", "W"], group="03 Entry Gates", inline="macd_htf")
+use_momentum_filter = input.bool(false, "Use Momentum", group="03 Entry Gates", inline="mom")
+momentum_mode = input.string("ATR_BODY", "Mode", options=["ATR_BODY", "ROC"], group="03 Entry Gates", inline="mom", tooltip="Selects momentum logic: ATR_BODY or ROC. Use with the matching ATR or ROC settings below.")
+momentum_atr_len = input.int(14, "ATR Len", minval=1, group="03 Entry Gates", inline="mom2")
+momentum_atr_mult = input.float(0.30, "ATR Mult", minval=0.0, step=0.01, group="03 Entry Gates", inline="mom2")
+momentum_roc_min_pct = input.float(0.15, "ROC Min %", minval=0.0, step=0.01, group="03 Entry Gates", inline="mom2")
+use_session_filter    = input.bool(false, "Use Session", group="03 Entry Gates", inline="sess")
+session_name          = input.string("New York", "Session", options=["New York", "London", "Asia", "Sydney", "Custom"], group="03 Entry Gates", inline="sess")
+session_custom_string = input.string("0930-1600", "Custom Session", group="03 Entry Gates")
+use_candle_pattern_gate = input.bool(false, "Candle Pattern Gate", group="03 Entry Gates", inline="cp", tooltip="Requires a bullish or bearish candle pattern before entry. Extra confirmation that usually reduces trades.")
+candle_pattern_lookback = input.int(5, "CP Lookback", minval=1, group="03 Entry Gates", inline="cp")
+level_proximity_lookback = input.int(50, "Level Lookback", minval=5, group="03 Entry Gates", inline="lp")
+use_level_proximity_gate = input.bool(false, "Level Proximity Gate", group="03 Entry Gates", inline="lp2", tooltip="Requires price to be near recent support or resistance before entry. Use with Level Lookback and Threshold %.")
+level_proximity_threshold_pct = input.float(0.5, "Threshold %", minval=0.0, group="03 Entry Gates", inline="lp2")
+// L12 - HTF Trend Filter
+use_htf_trend_filter     = input.bool(false,  "Use HTF Trend",    group="03 Entry Gates", inline="htf_trend", tooltip="Filters entries with a higher-timeframe MA trend. Use with HTF TF, MA Type, MA Len and Buffer %.")
+htf_trend_timeframe      = input.string("240","HTF TF",           group="03 Entry Gates", inline="htf_trend", options=["60","120","240","D","W"])
+htf_trend_ma_type        = input.string("EMA", "MA Type",         group="03 Entry Gates", inline="htf_trend2", options=["EMA","SMA","WMA","RMA"])
+htf_trend_ma_len         = input.int(100,      "MA Len", minval=1, group="03 Entry Gates", inline="htf_trend2")
+htf_trend_buffer_pct     = input.float(0.1,    "Buffer %", minval=0.0, step=0.05, group="03 Entry Gates", inline="htf_trend2")
+
+risk_per_long_pct = input.float(1.0, "Risk % Long", minval=0.0, group="04 Position Sizing", inline="risk")
+risk_per_short_pct = input.float(1.0, "Short", minval=0.0, group="04 Position Sizing", inline="risk")
+fallback_size_pct = input.float(10.0, "Fallback %", minval=0.0, group="04 Position Sizing", inline="fb", tooltip="Used only when no stop-based risk distance exists. Sizes notional as a percent of equity.")
+// Reminder: TradingView Margin % must match 100 / Max Lev for accurate broker rejection parity
+max_leverage_cap = input.float(1.0, "Max Lev", minval=0.0000001, group="04 Position Sizing", inline="fb", tooltip="Caps position notional at Equity x Max Lev. Match TV Margin %% to 100 / Max Lev.")
+string tw_audit_semantics_mode = "off"
+string tw_reversal_reentry_mode = "local"
+int tw_reversal_reentry_delay_bars = 0
+string tw_margin_call_mode = "off"
+bool tw_margin_call_split_entries = false
+string tw_be_semantics_mode = "local"
+string tw_trailing_semantics_mode = "local"
+sl_mode = input.string("ATR", "SL Mode", options=["None", "ATR", "Percent", "Swing+ATR"], group="05 Exit Skeleton", tooltip="Selects the stop engine. ATR and Swing+ATR make Risk %% sizing meaningful; None falls back to Fallback %%.")
+sl_atr_len = input.int(14, "ATR Length", minval=1, group="05 Exit Skeleton", inline="sl_atr")
+sl_atr_mult = input.float(2.0, "ATR Mult", minval=0.0000001, group="05 Exit Skeleton", inline="sl_atr")
+sl_pct = input.float(1.0, "SL %", minval=0.001, step=0.1, group="05 Exit Skeleton")
+sl_swing_basis = input.string("Wick", "Swing Basis", options=["Wick", "Close"], group="05 Exit Skeleton", inline="sl_swing_info", tooltip="Swing stop anchor: Wick uses extremes, Close uses closes. Only used with SL Mode = Swing+ATR.")
+sl_swing_lookback = input.int(20, "Lookback", minval=1, group="05 Exit Skeleton", inline="sl_swing_info")
+sl_swing_atr_len = input.int(14, "Swing ATR Len", minval=1, group="05 Exit Skeleton", inline="sl_swing")
+sl_swing_atr_mult = input.float(0.5, "Swing ATR Mult", minval=0.0000001, group="05 Exit Skeleton", inline="sl_swing")
+tp_mode = input.string("None", "TP Mode", options=["None", "ATR", "Percent", "R", "Multi-TP"], group="05 Exit Skeleton", tooltip="Selects the take-profit engine. R and Multi-TP depend on a valid stop or risk definition.")
+tp_atr_len = input.int(14, "TP ATR Length", minval=1, group="05 Exit Skeleton", inline="tp_atr")
+tp_atr_mult = input.float(3.0, "TP ATR Mult", minval=0.0000001, group="05 Exit Skeleton", inline="tp_atr")
+tp_percent = input.float(3.0, "TP %", minval=0.001, step=0.1, group="05 Exit Skeleton")
+tp_r_multiple = input.float(2.0, "TP R", minval=0.0000001, group="05 Exit Skeleton")
+tp1_r_multiple = input.float(3.0, "TP1 R", minval=0.0000001, group="05 Exit Skeleton", inline="tp_multi")
+tp1_close_pct = input.float(50.0, "TP1 Close %", minval=0.0001, maxval=99.9999, group="05 Exit Skeleton", inline="tp_multi")
+tp2_r_multiple = input.float(5.5, "TP2 R", minval=0.0000001, group="05 Exit Skeleton", inline="tp_multi")
+use_break_even = input.bool(false, "Use Break Even", group="05 Exit Skeleton", inline="be", tooltip="Moves stop toward entry after Trigger R. Best used when SL Mode is not None.")
+be_trigger_r = input.float(1.0, "Trigger R", minval=0.0000001, group="05 Exit Skeleton", inline="be")
+be_buffer_r = input.float(0.1, "Buffer R", minval=0.0, group="05 Exit Skeleton", inline="be")
+use_trailing = input.bool(false, "Use Trailing", group="05 Exit Skeleton", inline="trail", tooltip="Replaces the stop with trailing logic after Start R. Best used when SL Mode is not None.")
+trail_atr_len = input.int(14, "ATR Len", minval=1, group="05 Exit Skeleton", inline="trail")
+trail_start_r = input.float(2.0, "Start R", minval=0.0000001, group="05 Exit Skeleton", inline="trail")
+trail_distance_atr_mult = input.float(1.0, "Dist ATR", minval=0.0000001, group="05 Exit Skeleton", inline="trail")
+
+// L13 - Opposite Signal Exit
+exit_on_opposite_signal = input.bool(true, "Exit on Opposite Signal", group="06 Signal/Filter Exits", tooltip="Signal and filter exits close trades when the opposite signal or a blocking filter appears. Each exit toggle here is independent.")
+
+// L14 - Filter Block Exits (each toggle is independent - no master gate)
+exit_on_ma_block        = input.bool(false, "Exit on MA Block",       group="06 Signal/Filter Exits")
+exit_on_ma_slope_block  = input.bool(false, "Exit on MA Slope Block", group="06 Signal/Filter Exits")
+exit_on_mcginley_block  = input.bool(false, "Exit on McGinley Block", group="06 Signal/Filter Exits")
+exit_on_htf_trend_block = input.bool(false, "Exit on HTF Trend Block",group="06 Signal/Filter Exits")
+exit_on_vol_block       = input.bool(false, "Exit on Vol Block",      group="06 Signal/Filter Exits")
+exit_on_atr_vol_block   = input.bool(false, "Exit on ATR Vol Block",  group="06 Signal/Filter Exits")
+exit_on_range_block     = input.bool(false, "Exit on Range Block",    group="06 Signal/Filter Exits")
+exit_on_candle_pattern_block = input.bool(false, "Exit on Candle Ptn Block",    group="06 Signal/Filter Exits")
+exit_on_level_prox_block     = input.bool(false, "Exit on Level Prox Block",    group="06 Signal/Filter Exits")
+// L15 - Time-based Exits
+use_time_stop = input.bool(false, "Time Stop", group="07 Time Exits", inline="ts", tooltip="Closes trades after time conditions are met. Use with Bars, Condition and optional EOD/EOW exits.")
+time_stop_bars = input.int(50, "Bars", minval=1, group="07 Time Exits", inline="ts")
+time_stop_condition = input.string("Always", "Condition", options=["Always", "Profit Only", "Loss Only"], group="07 Time Exits", inline="ts")
+time_stop_eod = input.bool(false, "EOD Exit", group="07 Time Exits", inline="eod_eow")
+time_stop_eow = input.bool(false, "EOW Exit", group="07 Time Exits", inline="eod_eow")
+// L16 - Guards
+use_daily_loss_limit = input.bool(false, "Daily Loss Limit", group="08 Guards", inline="dll", tooltip="Guards block new entries after loss, trade-count or drawdown limits are hit. This group is risk protection, not signal logic.")
+max_daily_loss_pct = input.float(2.0, "Limit %", minval=0.0, group="08 Guards", inline="dll")
+use_max_trades_per_day = input.bool(false, "Max Trades/Day", group="08 Guards", inline="mtd")
+max_trades_per_day = input.int(3, "Max", minval=1, group="08 Guards", inline="mtd")
+use_max_drawdown_guard = input.bool(false, "Max DD Guard", group="08 Guards", inline="mdd")
+max_drawdown_pct = input.float(10.0, "Max DD %", minval=0.0, group="08 Guards", inline="mdd")
+use_consecutive_loss_halt = input.bool(false, "Consec Loss Guard", group="08 Guards", inline="cl")
+max_consecutive_losses = input.int(3, "Max Losses", minval=1, group="08 Guards", inline="cl")
+use_equity_curve_filter = input.bool(false, "Equity Curve Guard", group="08 Guards", inline="ec")
+equity_ma_length = input.int(20, "EC MA Len", minval=1, group="08 Guards", inline="ec")
+use_mae_guard           = input.bool(false, "MAE Guard",        group="08 Guards", inline="mae")
+max_mae_pct             = input.float(2.0,  "Max MAE %",        minval=0.0, group="08 Guards", inline="mae")
+use_guard_recovery      = input.bool(false, "Guard Recovery",   group="08 Guards", inline="gr")
+guard_recovery_mode     = input.string("Bars", "Mode",          options=["Bars","Signals"], group="08 Guards", inline="gr")
+guard_recovery_bars     = input.int(20,    "Recovery Bars",     minval=1, group="08 Guards", inline="grb")
+guard_recovery_signals  = input.int(2,     "Recovery Signals",  minval=1, group="08 Guards", inline="grs")
+use_trade_cooldown      = input.bool(false, "Trade Cooldown After Exit", group="08 Guards", inline="tcd")
+cooldown_bars_after_exit = input.int(5,   "Bars",               minval=1, group="08 Guards", inline="tcd")
+// L18 - Confirmation Transform
+use_confirm_transform = input.bool(false, "Confirm Transform", group="09 Signal Transform", inline="ct", tooltip="Transforms raw signals into confirmed signals after extra bars or cross rules. Reduces false starts but adds delay.")
+confirm_bars = input.int(1, "Confirm Bars", minval=1, group="09 Signal Transform", inline="ct")
+confirm_close_crosses = input.bool(true, "Close Must Cross", group="09 Signal Transform", inline="ct")
+require_raw_still_true = input.bool(false, "Req Raw Still True", group="09 Signal Transform", inline="ct_adv")
+refresh_on_new_raw     = input.bool(false, "Refresh New Raw",    group="09 Signal Transform", inline="ct_adv")
+// L21 - Level Retest Transform
+use_level_retest = input.bool(false, "Level Retest", group="09 Signal Transform", inline="lr")
+retest_timeout_bars = input.int(50, "Timeout", minval=1, group="09 Signal Transform", inline="lr")
+retest_buffer_pct = input.float(0.1, "Buffer %", minval=0.0, group="09 Signal Transform", inline="lr")
+
+// L25 - WunderTrading Integration
+wt_enter_long_code   = input.string("", "Enter Long Code",   group="10 Integrations")
+wt_exit_long_code    = input.string("", "Exit Long Code",    group="10 Integrations")
+wt_enter_short_code  = input.string("", "Enter Short Code",  group="10 Integrations")
+wt_exit_short_code   = input.string("", "Exit Short Code",   group="10 Integrations")
+wt_exit_all_code     = input.string("", "Exit All Code",     group="10 Integrations")
+wt_order_type        = input.string("market", "Order Type",  options=["market","limit"], group="10 Integrations", inline="wt_ord")
+wt_amount_type       = input.string("quote",  "Amount Type", options=["quote","base"],   group="10 Integrations", inline="wt_ord")
+wt_amount            = input.float(100.0, "Amount",   minval=0.0000001, group="10 Integrations", inline="wt_amt")
+wt_leverage          = input.int(1,       "Leverage", minval=1,         group="10 Integrations", inline="wt_amt")
+wt_use_tp            = input.bool(false, "WT TP",         group="10 Integrations", inline="wt_flags")
+wt_use_sl            = input.bool(false, "WT SL",         group="10 Integrations", inline="wt_flags")
+wt_reduce_only       = input.bool(true,  "Reduce Only",   group="10 Integrations", inline="wt_flags")
+wt_place_cond_orders = input.bool(false, "Cond Orders",   group="10 Integrations")
+
+// L23 - Visualization / Performance
+performance_mode = input.bool(false, "Performance Mode", group="11 Visualization/Performance")
+
+// use_ma_mtf is now fully implemented - no guard needed
+
+// ============================================================================
+// SECTION 2 - CORE TYPES / CONSTANTS
+// ============================================================================
+const string REASON_ST_WARMUP = "st_warmup"
+const string REASON_ST_DIRECTION_INIT = "st_direction_init"
+const string REASON_ST_HOLD_LONG = "st_hold_long"
+const string REASON_ST_HOLD_SHORT = "st_hold_short"
+const string REASON_ST_FLIP_LONG = "st_flip_long"
+const string REASON_ST_FLIP_SHORT = "st_flip_short"
+const string REASON_ST_INVALID_BAR = "st_invalid_bar"
+const string REASON_ST_HA_NOT_SUPPORTED = "st_ha_not_supported"
+const string REASON_RF_INIT = "rf_init"
+const string REASON_RF_HOLD = "rf_hold"
+const string REASON_RF_FLIP_LONG = "rf_flip_long"
+const string REASON_RF_FLIP_SHORT = "rf_flip_short"
+const string REASON_RF_INVALID_BAR = "rf_invalid_bar"
+const string REASON_EXIT_SL_ATR = "sl_atr_hit"
+const string REASON_EXIT_SL_PERCENT = "sl_percent_hit"
+const string REASON_EXIT_SL_SWING_ATR = "sl_swing_atr_hit"
+const string REASON_EXIT_TP_ATR = "tp_atr_hit"
+const string REASON_EXIT_TP_PERCENT = "tp_percent_hit"
+const string REASON_EXIT_TP_R = "tp_r_hit"
+const string REASON_EXIT_TP1 = "tp1_hit"
+const string REASON_EXIT_TP2 = "tp2_hit"
+const string REASON_EXIT_BE = "be_hit"
+const string REASON_EXIT_TRAIL = "trail_hit"
+const string REASON_EXIT_OPP_SIGNAL = "opp_signal"
+const string REASON_EXIT_FILTER_BLOCK = "filter_block"
+const string REASON_EXIT_TIME_STOP = "time_stop"
+const string REASON_EXIT_EOD = "eod"
+const string REASON_EXIT_EOW = "eow"
+const float PARITY_INITIAL_CAPITAL = 1000000.0
+const string REASON_EXIT_PRICE_AMBIGUOUS = "price_exit_ambiguous"
+const int STOP_OWNER_INITIAL_CODE = 1
+const int STOP_OWNER_BE_CODE = 2
+const int STOP_OWNER_TRAIL_CODE = 3
+
+// ============================================================================
+// SECTION 3 - SHARED HELPERS
+// ============================================================================
+// Keep helpers minimal in L0-L6a.
+// Future owners reserved here:
+// - instrument metadata / rounding
+// - execution fill policy
+// - exit-before-entry and same-bar reentry control
+round_floor_to_tick(value) =>
+    math.floor(value / syminfo.mintick) * syminfo.mintick
+
+round_ceil_to_tick(value) =>
+    math.ceil(value / syminfo.mintick) * syminfo.mintick
+
+// Architecture canonical: TP prices use round-half-up to nearest tick grid.
+// SL keeps adverse floor/ceil; TP must NOT use directional rounding.
+round_half_up_to_tick(value) =>
+    math.floor(value / syminfo.mintick + 0.5) * syminfo.mintick
+
+round_floor_qty_to_step(value) =>
+    float qty_step = syminfo.mincontract
+    qty_step > 0 ? math.floor(value / qty_step) * qty_step : 0.0
+
+calc_sma(src, length) =>
+    ta.sma(src, length)
+
+calc_wma(src, length) =>
+    ta.wma(src, length)
+
+calc_ma_line(ma_kind, length, prev_line) =>
+    float base_sma = calc_sma(close, length)
+    if ma_kind == "SMA"
+        base_sma
+    else if ma_kind == "WMA"
+        calc_wma(close, length)
+    else if ma_kind == "EMA"
+        if bar_index < length - 1
+            na
+        else if na(prev_line)
+            base_sma
+        else
+            float alpha = 2.0 / (length + 1.0)
+            (alpha * close) + ((1.0 - alpha) * prev_line)
+    else
+        if bar_index < length - 1
+            na
+        else if na(prev_line)
+            base_sma
+        else
+            ((prev_line * (length - 1.0)) + close) / length
+
+merge_pyramid_stop(existing_stop, candidate_stop, is_long) =>
+    if na(existing_stop)
+        candidate_stop
+    else if na(candidate_stop)
+        existing_stop
+    else
+        is_long ? math.max(existing_stop, candidate_stop) : math.min(existing_stop, candidate_stop)
+
+find_swing_reference(is_long, lookback, basis_close) =>
+    float ref = na
+    for i = 1 to lookback
+        float candidate = basis_close ? close[i] : is_long ? low[i] : high[i]
+        if not na(candidate)
+            ref := na(ref) ? candidate : is_long ? math.min(ref, candidate) : math.max(ref, candidate)
+    ref
+
+calc_stop_price(entry, is_long, atr_value, swing_ref, swing_atr_value) =>
+    if sl_mode == "None"
+        na
+    else if sl_mode == "ATR"
+        not na(atr_value) ? (is_long ? round_floor_to_tick(entry - (sl_atr_mult * atr_value)) : round_ceil_to_tick(entry + (sl_atr_mult * atr_value))) : na
+    else if sl_mode == "Percent"
+        is_long ? round_floor_to_tick(entry * (1.0 - sl_pct / 100.0)) : round_ceil_to_tick(entry * (1.0 + sl_pct / 100.0))
+    else if sl_mode == "Swing+ATR"
+        not na(swing_ref) and not na(swing_atr_value) ? (is_long ? round_floor_to_tick(swing_ref - (sl_swing_atr_mult * swing_atr_value)) : round_ceil_to_tick(swing_ref + (sl_swing_atr_mult * swing_atr_value))) : na
+    else
+        na
+
+calc_single_tp_price(entry, is_long, tp_atr_value, initial_risk) =>
+    if tp_mode == "ATR"
+        not na(tp_atr_value) ? round_half_up_to_tick(entry + ((is_long ? 1.0 : -1.0) * tp_atr_mult * tp_atr_value)) : na
+    else if tp_mode == "Percent"
+        round_half_up_to_tick(entry * (is_long ? (1.0 + tp_percent / 100.0) : (1.0 - tp_percent / 100.0)))
+    else if tp_mode == "R"
+        not na(initial_risk) ? round_half_up_to_tick(entry + ((is_long ? 1.0 : -1.0) * tp_r_multiple * initial_risk)) : na
+    else
+        na
+
+exit_reason_code(reason) =>
+    reason == REASON_EXIT_SL_ATR ? 1.0 :
+     reason == REASON_EXIT_SL_PERCENT ? 2.0 :
+     reason == REASON_EXIT_SL_SWING_ATR ? 3.0 :
+     reason == REASON_EXIT_OPP_SIGNAL ? 4.0 :
+     reason == REASON_EXIT_TP_ATR ? 5.0 :
+     reason == REASON_EXIT_TP_PERCENT ? 6.0 :
+     reason == REASON_EXIT_TP_R ? 7.0 :
+     reason == REASON_EXIT_TP1 ? 8.0 :
+     reason == REASON_EXIT_TP2 ? 9.0 :
+     reason == REASON_EXIT_BE ? 10.0 :
+     reason == REASON_EXIT_TRAIL ? 11.0 :
+     reason == REASON_EXIT_PRICE_AMBIGUOUS ? 12.0 :
+     reason == REASON_EXIT_FILTER_BLOCK ? 13.0 :
+     reason == REASON_EXIT_TIME_STOP ? 14.0 :
+     reason == REASON_EXIT_EOD ? 15.0 :
+     reason == REASON_EXIT_EOW ? 16.0 : 0.0
+
+calc_l6_qty(entry, sl_or_none, equity_snapshot, is_long) =>
+    float contract_multiplier = syminfo.pointvalue
+    float min_qty = syminfo.mincontract
+    float raw_qty = 0.0
+    if na(entry) or entry <= 0 or na(equity_snapshot) or equity_snapshot <= 0
+        0.0
+    else
+        float risk_pct = is_long ? risk_per_long_pct : risk_per_short_pct
+        if not na(sl_or_none)
+            float per_unit_risk = math.abs(entry - sl_or_none)
+            if per_unit_risk > 0
+                float risk_amount = equity_snapshot * (risk_pct / 100.0)
+                raw_qty := risk_amount / (per_unit_risk * contract_multiplier)
+        else
+            float fallback_notional = equity_snapshot * (fallback_size_pct / 100.0)
+            raw_qty := fallback_notional / entry
+
+        float leverage_cap_qty = (equity_snapshot * max_leverage_cap) / (entry * contract_multiplier)
+        raw_qty := math.min(raw_qty, leverage_cap_qty)
+
+        float rounded_qty = round_floor_qty_to_step(raw_qty)
+        bool below_min_qty = rounded_qty < min_qty
+        below_min_qty ? 0.0 : rounded_qty
+
+// ============================================================================
+// SECTION 4 - INDICATOR STATE / SNAPSHOT
+// ============================================================================
+// This section owns indicator state only.
+// Signal decision happens below from finalized indicator state.
+var float st_atr = na
+var float st_upper_band = na
+var float st_lower_band = na
+var float st_line = na
+var int st_direction = na
+var float st_tr_sum = 0.0
+var int st_tr_count = 0
+var float st_prev_close_state = na
+var float st_prev_atr_state = na
+var float st_prev_upper_band_state = na
+var float st_prev_lower_band_state = na
+var int st_prev_direction_state = na
+var float st_last_line = na
+var int st_last_direction = na
+var float rf_line_state = na
+var int rf_direction_state = 0
+var float rf_upper_band_state = na
+var float rf_lower_band_state = na
+var float sl_atr = na
+var float sl_tr_sum = 0.0
+var int sl_tr_count = 0
+var float sl_prev_close_state = na
+var float sl_prev_atr_state = na
+var bool sl_valid_bar_state = false
+var bool sl_warmup_ready_state = false
+var float tp_atr = na
+var float tp_tr_sum = 0.0
+var int tp_tr_count = 0
+var float tp_prev_close_state = na
+var float tp_prev_atr_state = na
+var bool tp_valid_bar_state = false
+var bool tp_warmup_ready_state = false
+var float sl_swing_atr = na
+var float sl_swing_tr_sum = 0.0
+var int sl_swing_tr_count = 0
+var float sl_swing_prev_close_state = na
+var float sl_swing_prev_atr_state = na
+var bool sl_swing_valid_bar_state = false
+var bool sl_swing_warmup_ready_state = false
+var float trail_atr = na
+var float trail_tr_sum = 0.0
+var int trail_tr_count = 0
+var float trail_prev_close_state = na
+var float trail_prev_atr_state = na
+var bool trail_valid_bar_state = false
+var bool trail_warmup_ready_state = false
+var float ma_filter_line_state = na
+var float htf_ma_filter_line_state = na
+var float ma_filter_prev_line_state = na
+var float ma_slope_line_state = na
+var float ma_slope_prev_line_state = na
+var float mcginley_line_state = na
+var float vol_sma_state = na
+var float adx_state = na
+var float chop_state = na
+var float atr_vol_floor_fast_state = na
+var float atr_vol_floor_baseline_state = na
+var float macd_line_state = na
+var float macd_signal_state = na
+var float macd_hist_state = na
+var float prev_macd_hist_state = na
+// L12 - HTF Trend Filter state
+var float htf_trend_line_state = na
+// L12 - MACD HTF Bias state
+var float macd_htf_line_state = na
+// L12 - Momentum Filter ATR state (RMA)
+var float momentum_atr_state = na
+
+// L15 - Time Exit state
+var int l15_bars_since_entry_state = 0
+var int l15_eod_last_day_state = 0
+var int l15_eow_last_week_state = 0
+
+// L16 - Guard state
+var float l16_day_open_equity_state = na
+var int l16_trades_today_state = 0
+var int l16_last_trade_day_int_state = 0
+var float l16_equity_peak_state = 0.0
+var int l16_consec_loss_count_state = 0
+var int l16_equity_sma_count_state = 0
+var float l16_equity_sma_state = na
+var array<float> l16_equity_history = array.new<float>()
+var float l16_current_mae_pct_state = 0.0
+var float l16_last_mae_pct_state = 0.0
+var bool  l16_guard_recovery_active_state = false
+var string l16_guard_recovery_owner_state = ""
+var int   l16_guard_recovery_bars_rem_state = 0
+var int   l16_guard_recovery_signals_rem_state = 0
+var int   l16_last_full_exit_bar_state = na
+
+// L18 - Confirmation Transform state
+var int l18_confirm_direction_state = 0
+var int l18_confirm_bars_count_state = 0
+var bool l18_long_armed_state = false
+var bool l18_short_armed_state = false
+
+// L21 - Level Retest Transform state
+var bool  l21_waiting_state = false
+var int   l21_pending_side_state = 0   // 1=long, -1=short
+var float l21_break_level_state = na
+var int   l21_bars_waiting_state = 0
+
+
+// ============================================================================
+// SECTION 5 - SIGNAL PRODUCER(S)
+// ============================================================================
+// Warmup contract:
+// - no pulse before a valid direction exists
+// - first ATR-valid bar initializes direction=1 with no pulse
+// - flips emit exactly one raw pulse on the transition bar
+bool long_raw = false
+bool short_raw = false
+string raw_reason = REASON_ST_WARMUP
+
+if signal_mode == "Supertrend" and st_use_ha
+    raw_reason := REASON_ST_HA_NOT_SUPPORTED
+    st_atr := na
+    st_upper_band := na
+    st_lower_band := na
+    st_line := na
+    st_direction := na
+    st_tr_sum := 0.0
+    st_tr_count := 0
+    st_prev_close_state := na
+    st_prev_atr_state := na
+    st_prev_upper_band_state := na
+    st_prev_lower_band_state := na
+    st_prev_direction_state := na
+    st_last_line := na
+    st_last_direction := na
+    sl_atr := na
+    sl_tr_sum := 0.0
+    sl_tr_count := 0
+    sl_prev_close_state := na
+    sl_prev_atr_state := na
+    sl_valid_bar_state := false
+    sl_warmup_ready_state := false
+    tp_atr := na
+    tp_tr_sum := 0.0
+    tp_tr_count := 0
+    tp_prev_close_state := na
+    tp_prev_atr_state := na
+    tp_valid_bar_state := false
+    tp_warmup_ready_state := false
+    sl_swing_atr := na
+    sl_swing_tr_sum := 0.0
+    sl_swing_tr_count := 0
+    sl_swing_prev_close_state := na
+    sl_swing_prev_atr_state := na
+    sl_swing_valid_bar_state := false
+    sl_swing_warmup_ready_state := false
+    trail_atr := na
+    trail_tr_sum := 0.0
+    trail_tr_count := 0
+    trail_prev_close_state := na
+    trail_prev_atr_state := na
+    trail_valid_bar_state := false
+    trail_warmup_ready_state := false
+    ma_filter_line_state := na
+    htf_ma_filter_line_state := na
+    ma_filter_prev_line_state := na
+    ma_slope_line_state := na
+    ma_slope_prev_line_state := na
+    mcginley_line_state := na
+    vol_sma_state := na
+    adx_state := na
+    chop_state := na
+    atr_vol_floor_fast_state := na
+    atr_vol_floor_baseline_state := na
+    macd_line_state := na
+    macd_signal_state := na
+    macd_hist_state := na
+    prev_macd_hist_state := na
+    momentum_atr_state := na
+    l16_last_full_exit_bar_state := na
+else
+    bool st_bar_has_na = na(open) or na(high) or na(low) or na(close)
+    bool st_bar_bounds_invalid = not st_bar_has_na and (high < low or open < low or open > high or close < low or close > high)
+    bool st_bar_valid = not st_bar_has_na and not st_bar_bounds_invalid
+
+    if not st_bar_valid
+        raw_reason := REASON_ST_INVALID_BAR
+        st_atr := st_prev_atr_state
+        st_upper_band := st_prev_upper_band_state
+        st_lower_band := st_prev_lower_band_state
+        st_line := st_last_line
+        st_direction := st_last_direction
+    else
+        float st_prev_close_for_tr = na(st_prev_close_state) ? close : st_prev_close_state
+        float st_tr = math.max(high - low, math.max(math.abs(high - st_prev_close_for_tr), math.abs(low - st_prev_close_for_tr)))
+
+        if st_tr_count < st_atr_len
+            st_tr_count += 1
+            st_tr_sum += st_tr
+            if st_tr_count == st_atr_len
+                st_atr := st_tr_sum / st_atr_len
+            else
+                st_atr := na
+        else
+            float st_prev_atr_for_calc = na(st_prev_atr_state) ? st_tr : st_prev_atr_state
+            st_atr := ((st_prev_atr_for_calc * (st_atr_len - 1)) + st_tr) / st_atr_len
+
+        if na(st_atr)
+            raw_reason := REASON_ST_WARMUP
+            st_line := na
+            st_direction := na
+            st_upper_band := na
+            st_lower_band := na
+            st_prev_close_state := close
+        else
+            float st_basis = (high + low) / 2.0
+            float st_basic_upper = st_basis + (st_factor * st_atr)
+            float st_basic_lower = st_basis - (st_factor * st_atr)
+            float st_prev_upper = st_prev_upper_band_state
+            float st_prev_lower = st_prev_lower_band_state
+            float st_prev_close_for_bands = na(st_prev_close_state) ? close : st_prev_close_state
+
+            float st_next_upper = st_basic_upper
+            if not na(st_prev_upper)
+                st_next_upper := st_basic_upper < st_prev_upper or st_prev_close_for_bands > st_prev_upper ? st_basic_upper : st_prev_upper
+
+            float st_next_lower = st_basic_lower
+            if not na(st_prev_lower)
+                st_next_lower := st_basic_lower > st_prev_lower or st_prev_close_for_bands < st_prev_lower ? st_basic_lower : st_prev_lower
+
+            float st_high_eff = st_use_wicks ? high : close
+            float st_low_eff = st_use_wicks ? low : close
+            int st_prev_direction = st_prev_direction_state
+
+            if na(st_prev_direction)
+                st_direction := 1
+                raw_reason := REASON_ST_DIRECTION_INIT
+            else if st_prev_direction < 0 and not na(st_prev_upper) and st_high_eff > st_prev_upper
+                st_direction := 1
+                long_raw := true
+                raw_reason := REASON_ST_FLIP_LONG
+            else if st_prev_direction > 0 and not na(st_prev_lower) and st_low_eff < st_prev_lower
+                st_direction := -1
+                short_raw := true
+                raw_reason := REASON_ST_FLIP_SHORT
+            else
+                st_direction := st_prev_direction
+                raw_reason := st_direction > 0 ? REASON_ST_HOLD_LONG : REASON_ST_HOLD_SHORT
+
+            st_upper_band := st_next_upper
+            st_lower_band := st_next_lower
+            st_line := st_direction > 0 ? st_next_lower : st_next_upper
+
+            st_prev_atr_state := st_atr
+            st_prev_upper_band_state := st_upper_band
+            st_prev_lower_band_state := st_lower_band
+            st_prev_direction_state := st_direction
+            st_prev_close_state := close
+            st_last_line := st_line
+            st_last_direction := st_direction
+
+        if signal_mode == "Range Filter"
+            long_raw := false
+            short_raw := false
+            bool rf_bar_valid = st_bar_valid
+            if not rf_bar_valid
+                raw_reason := REASON_RF_INVALID_BAR
+            else if na(rf_line_state)
+                rf_line_state := close
+                rf_direction_state := 0
+                raw_reason := REASON_RF_INIT
+            else
+                int rf_prev_direction = rf_direction_state
+                float rf_upper_before = rf_line_state + rf_range
+                float rf_lower_before = rf_line_state - rf_range
+                raw_reason := REASON_RF_HOLD
+                if rf_prev_direction < 0 and close > rf_line_state
+                    rf_line_state := close - rf_range
+                    rf_direction_state := 1
+                    long_raw := true
+                    raw_reason := REASON_RF_FLIP_LONG
+                else if rf_prev_direction <= 0 and close > rf_upper_before
+                    rf_line_state := close - rf_range
+                    rf_direction_state := 1
+                    long_raw := rf_prev_direction != 1
+                    raw_reason := long_raw ? REASON_RF_FLIP_LONG : REASON_RF_HOLD
+                else if rf_prev_direction >= 0 and close < rf_line_state
+                    rf_line_state := close + rf_range
+                    rf_direction_state := -1
+                    short_raw := rf_prev_direction != -1
+                    raw_reason := short_raw ? REASON_RF_FLIP_SHORT : REASON_RF_HOLD
+                else if rf_prev_direction > 0 and close > rf_upper_before
+                    rf_line_state := close - rf_range
+                else if rf_prev_direction < 0 and close < rf_lower_before
+                    rf_line_state := close + rf_range
+            rf_upper_band_state := na(rf_line_state) ? na : rf_line_state + rf_range
+            rf_lower_band_state := na(rf_line_state) ? na : rf_line_state - rf_range
+            st_line := rf_line_state
+            st_direction := rf_direction_state
+            st_upper_band := rf_upper_band_state
+            st_lower_band := rf_lower_band_state
+
+    bool sl_enabled = sl_mode != "None"
+    if not sl_enabled
+        sl_atr := na
+        sl_valid_bar_state := true
+        sl_warmup_ready_state := true
+    else if sl_mode != "ATR"
+        sl_atr := na
+        sl_valid_bar_state := true
+        sl_warmup_ready_state := true
+    else if not st_bar_valid
+        sl_atr := sl_prev_atr_state
+        sl_valid_bar_state := false
+        sl_warmup_ready_state := not na(sl_prev_atr_state)
+    else
+        float sl_prev_close_for_tr = na(sl_prev_close_state) ? close : sl_prev_close_state
+        float sl_tr = math.max(high - low, math.max(math.abs(high - sl_prev_close_for_tr), math.abs(low - sl_prev_close_for_tr)))
+
+        if sl_tr_count < sl_atr_len
+            sl_tr_count += 1
+            sl_tr_sum += sl_tr
+            if sl_tr_count == sl_atr_len
+                sl_atr := sl_tr_sum / sl_atr_len
+            else
+                sl_atr := na
+        else
+            float sl_prev_atr_for_calc = na(sl_prev_atr_state) ? sl_tr : sl_prev_atr_state
+            sl_atr := ((sl_prev_atr_for_calc * (sl_atr_len - 1)) + sl_tr) / sl_atr_len
+
+        sl_prev_close_state := close
+        sl_valid_bar_state := true
+        sl_warmup_ready_state := not na(sl_atr)
+        if not na(sl_atr)
+            sl_prev_atr_state := sl_atr
+
+    bool tp_enabled = tp_mode == "ATR"
+    if not tp_enabled
+        tp_atr := na
+        tp_valid_bar_state := true
+        tp_warmup_ready_state := true
+    else if not st_bar_valid
+        tp_atr := tp_prev_atr_state
+        tp_valid_bar_state := false
+        tp_warmup_ready_state := not na(tp_prev_atr_state)
+    else
+        float tp_prev_close_for_tr = na(tp_prev_close_state) ? close : tp_prev_close_state
+        float tp_tr = math.max(high - low, math.max(math.abs(high - tp_prev_close_for_tr), math.abs(low - tp_prev_close_for_tr)))
+
+        if tp_tr_count < tp_atr_len
+            tp_tr_count += 1
+            tp_tr_sum += tp_tr
+            if tp_tr_count == tp_atr_len
+                tp_atr := tp_tr_sum / tp_atr_len
+            else
+                tp_atr := na
+        else
+            float tp_prev_atr_for_calc = na(tp_prev_atr_state) ? tp_tr : tp_prev_atr_state
+            tp_atr := ((tp_prev_atr_for_calc * (tp_atr_len - 1)) + tp_tr) / tp_atr_len
+
+        tp_prev_close_state := close
+        tp_valid_bar_state := true
+        tp_warmup_ready_state := not na(tp_atr)
+        if not na(tp_atr)
+            tp_prev_atr_state := tp_atr
+
+    bool sl_swing_enabled = sl_mode == "Swing+ATR"
+    if not sl_swing_enabled
+        sl_swing_atr := na
+        sl_swing_valid_bar_state := true
+        sl_swing_warmup_ready_state := true
+    else if not st_bar_valid
+        sl_swing_atr := sl_swing_prev_atr_state
+        sl_swing_valid_bar_state := false
+        sl_swing_warmup_ready_state := not na(sl_swing_prev_atr_state)
+    else
+        float sl_swing_prev_close_for_tr = na(sl_swing_prev_close_state) ? close : sl_swing_prev_close_state
+        float sl_swing_tr = math.max(high - low, math.max(math.abs(high - sl_swing_prev_close_for_tr), math.abs(low - sl_swing_prev_close_for_tr)))
+        if sl_swing_tr_count < sl_swing_atr_len
+            sl_swing_tr_count += 1
+            sl_swing_tr_sum += sl_swing_tr
+            if sl_swing_tr_count == sl_swing_atr_len
+                sl_swing_atr := sl_swing_tr_sum / sl_swing_atr_len
+            else
+                sl_swing_atr := na
+        else
+            float sl_swing_prev_atr_for_calc = na(sl_swing_prev_atr_state) ? sl_swing_tr : sl_swing_prev_atr_state
+            sl_swing_atr := ((sl_swing_prev_atr_for_calc * (sl_swing_atr_len - 1)) + sl_swing_tr) / sl_swing_atr_len
+        sl_swing_prev_close_state := close
+        sl_swing_valid_bar_state := true
+        sl_swing_warmup_ready_state := not na(sl_swing_atr)
+        if not na(sl_swing_atr)
+            sl_swing_prev_atr_state := sl_swing_atr
+
+    bool trail_enabled = use_trailing
+    if not trail_enabled
+        trail_atr := na
+        trail_valid_bar_state := true
+        trail_warmup_ready_state := true
+    else if not st_bar_valid
+        trail_atr := trail_prev_atr_state
+        trail_valid_bar_state := false
+        trail_warmup_ready_state := not na(trail_prev_atr_state)
+    else
+        float trail_prev_close_for_tr = na(trail_prev_close_state) ? close : trail_prev_close_state
+        float trail_tr = math.max(high - low, math.max(math.abs(high - trail_prev_close_for_tr), math.abs(low - trail_prev_close_for_tr)))
+        if trail_tr_count < trail_atr_len
+            trail_tr_count += 1
+            trail_tr_sum += trail_tr
+            if trail_tr_count == trail_atr_len
+                trail_atr := trail_tr_sum / trail_atr_len
+            else
+                trail_atr := na
+        else
+            float trail_prev_atr_for_calc = na(trail_prev_atr_state) ? trail_tr : trail_prev_atr_state
+            trail_atr := ((trail_prev_atr_for_calc * (trail_atr_len - 1)) + trail_tr) / trail_atr_len
+        trail_prev_close_state := close
+        trail_valid_bar_state := true
+        trail_warmup_ready_state := not na(trail_atr)
+        if not na(trail_atr)
+            trail_prev_atr_state := trail_atr
+
+    float l12_next_ma_filter_line = calc_ma_line(ma_type, ma_length, ma_filter_line_state)
+    float l12_next_ma_slope_line = calc_ma_line(ma_type, ma_slope_len, ma_slope_line_state)
+    ma_filter_prev_line_state := ma_filter_line_state
+    ma_slope_prev_line_state := ma_slope_line_state
+    if st_bar_valid
+        ma_filter_line_state := l12_next_ma_filter_line
+        ma_slope_line_state := l12_next_ma_slope_line
+
+    // Safe evaluations outside of conditional blocks for stateful ta.* series
+    float free_mg_seed = calc_sma(close, mcginley_length)
+    float free_vol_sma = calc_sma(volume, vol_sma_length)
+
+    // ATR Vol Floor un-gated series (ta.sma via calc_sma wrapper)
+    float avf_prev_close = na(st_prev_close_state) ? close : st_prev_close_state
+    float avf_tr = math.max(high - low, math.max(math.abs(high - avf_prev_close), math.abs(low - avf_prev_close)))
+    float free_atr_vol_floor_fast = na(atr_vol_floor_fast_state) ? avf_tr : ((atr_vol_floor_fast_state * (atr_vol_floor_fast_len - 1)) + avf_tr) / atr_vol_floor_fast_len
+    float free_atr_vol_floor_baseline = calc_sma(free_atr_vol_floor_fast, atr_vol_floor_baseline_len)
+    float free_mcg_htf_src = request.security(syminfo.tickerid, mcginley_htf_timeframe, close[1], barmerge.gaps_off, barmerge.lookahead_off)
+    float free_mcg_htf_seed = calc_sma(free_mcg_htf_src, mcginley_length)
+    [free_adx_htf_h, free_adx_htf_l, free_adx_htf_c] = request.security(syminfo.tickerid, adx_htf_timeframe, [high[1], low[1], close[1]], barmerge.gaps_off, barmerge.lookahead_off)
+    float free_adx_htf_prev_h = nz(free_adx_htf_h[1], free_adx_htf_h)
+    float free_adx_htf_prev_l = nz(free_adx_htf_l[1], free_adx_htf_l)
+    float free_adx_htf_prev_c = nz(free_adx_htf_c[1], free_adx_htf_c)
+    float free_adx_htf_tr = math.max(free_adx_htf_h - free_adx_htf_l, math.max(math.abs(free_adx_htf_h - free_adx_htf_prev_c), math.abs(free_adx_htf_l - free_adx_htf_prev_c)))
+    float free_adx_htf_up = free_adx_htf_h - free_adx_htf_prev_h
+    float free_adx_htf_dn = free_adx_htf_prev_l - free_adx_htf_l
+    float free_adx_htf_pdm = free_adx_htf_up > free_adx_htf_dn and free_adx_htf_up > 0 ? free_adx_htf_up : 0.0
+    float free_adx_htf_ndm = free_adx_htf_dn > free_adx_htf_up and free_adx_htf_dn > 0 ? free_adx_htf_dn : 0.0
+    float free_adx_htf_str = ta.rma(free_adx_htf_tr, adx_length)
+    float free_adx_htf_spdm = ta.rma(free_adx_htf_pdm, adx_length)
+    float free_adx_htf_sndm = ta.rma(free_adx_htf_ndm, adx_length)
+    float free_adx_htf_pdi = free_adx_htf_str > 0 ? 100.0 * free_adx_htf_spdm / free_adx_htf_str : 0.0
+    float free_adx_htf_ndi = free_adx_htf_str > 0 ? 100.0 * free_adx_htf_sndm / free_adx_htf_str : 0.0
+    float free_adx_htf_dxd = free_adx_htf_pdi + free_adx_htf_ndi
+    float free_adx_htf_dx = free_adx_htf_dxd > 0 ? 100.0 * math.abs(free_adx_htf_pdi - free_adx_htf_ndi) / free_adx_htf_dxd : 0.0
+    float free_adx_htf_line = ta.rma(free_adx_htf_dx, adx_length)
+    [free_dx_p, free_dx_m, free_adx_ltf_line] = ta.dmi(adx_length, adx_length)
+    [free_chop_htf_h, free_chop_htf_l, free_chop_htf_c] = request.security(syminfo.tickerid, chop_htf_timeframe, [high[1], low[1], close[1]], barmerge.gaps_off, barmerge.lookahead_off)
+    float free_chop_htf_prev_c = nz(free_chop_htf_c[1], free_chop_htf_c)
+    float free_chop_htf_tr1 = math.max(free_chop_htf_h - free_chop_htf_l, math.max(math.abs(free_chop_htf_h - free_chop_htf_prev_c), math.abs(free_chop_htf_l - free_chop_htf_prev_c)))
+    float free_chop_htf_highest = ta.highest(free_chop_htf_h, chop_length)
+    float free_chop_htf_lowest = ta.lowest(free_chop_htf_l, chop_length)
+    float free_chop_htf_atr_sum = math.sum(free_chop_htf_tr1, chop_length)
+    float free_chop_htf_hl = free_chop_htf_highest - free_chop_htf_lowest
+    float free_chop_htf_value = free_chop_htf_hl > 0 ? 100 * math.log10(free_chop_htf_atr_sum / free_chop_htf_hl) / math.log10(chop_length) : na
+    float free_chop_ltf_high = ta.highest(high, chop_length)
+    float free_chop_ltf_low = ta.lowest(low, chop_length)
+    float free_chop_ltf_atr1 = ta.atr(1)
+    float free_chop_ltf_atr_sum = math.sum(free_chop_ltf_atr1, chop_length)
+    float free_chop_ltf_denom = free_chop_ltf_high - free_chop_ltf_low
+    float free_chop_ltf_value = free_chop_ltf_denom > 0 ? 100 * math.log10(free_chop_ltf_atr_sum / free_chop_ltf_denom) / math.log10(chop_length) : na
+    // McGinley Dynamic - seed with SMA, then iterative formula
+    // When mcginley_use_higher_timeframe=true, source is prior-closed HTF close (no dedup).
+    // Formula: mg = mg_prev + (src - mg_prev) / (length * (src / mg_prev)^4)
+    if use_mcginley_filter and st_bar_valid
+        float _mcg_src = mcginley_use_higher_timeframe ? free_mcg_htf_src : close
+        float _mcg_seed = mcginley_use_higher_timeframe ? free_mcg_htf_seed : free_mg_seed
+        if not na(_mcg_src)
+            if na(mcginley_line_state)
+                // Seed: SMA ready once enough bars have accumulated
+                if not na(_mcg_seed)
+                    mcginley_line_state := _mcg_seed
+            else
+                float mg_prev = mcginley_line_state
+                if mg_prev > 0
+                    float mg_ratio = _mcg_src / mg_prev
+                    float mg_denom = float(mcginley_length) * math.pow(mg_ratio, 4)
+                    mcginley_line_state := mg_denom != 0 ? mg_prev + (_mcg_src - mg_prev) / mg_denom : mg_prev
+
+    // Volume SMA filter
+    if use_volume_filter and st_bar_valid
+        vol_sma_state := free_vol_sma
+
+    // ADX filter - LTF: ta.dmi(); HTF: ta.rma()-based formula on prior-closed HTF h/l/c (no dedup)
+    // ta.rma() matches Python AdxTracker: DI+/DI- ratios are identical (n-factor cancels);
+    // ADX smoothing is EMA (1-1/n)*prev + (1/n)*dx which matches AdxTracker's _smooth_dx update.
+    if use_adx_filter and st_bar_valid
+        if adx_use_higher_timeframe
+            adx_state := free_adx_htf_line
+        else
+            adx_state := free_adx_ltf_line
+
+    // Choppiness filter - LTF: built-ins; HTF: ta.highest/lowest on HTF h/l and manual TR (no dedup)
+    if use_chop_filter and st_bar_valid
+        if chop_use_higher_timeframe
+            if not na(free_chop_htf_h)
+                chop_state := free_chop_htf_value
+        else
+            chop_state := free_chop_ltf_value
+
+    // ATR Vol Floor: fast ATR (RMA) vs slow baseline SMA of ATR
+    if use_atr_vol_floor and st_bar_valid
+        atr_vol_floor_fast_state := free_atr_vol_floor_fast
+        atr_vol_floor_baseline_state := free_atr_vol_floor_baseline
+
+    // Momentum Filter ATR (RMA, reuses avf_tr computed above)
+    if use_momentum_filter and st_bar_valid
+        momentum_atr_state := na(momentum_atr_state) ? avf_tr : ((momentum_atr_state * (momentum_atr_len - 1)) + avf_tr) / momentum_atr_len
+
+    // MACD filters - ta.macd computed only when a MACD feature is enabled (perf: avoids 3 EMA series on every bar)
+    // macd_source selects the price series used for MACD computation.
+    bool need_macd_ltf = use_macd_regime_filter or use_macd_cross_filter or use_macd_hist_filter or use_macd_zero_dist_filter
+    if need_macd_ltf and st_bar_valid
+        float _macd_src = macd_source == "close" ? close : macd_source == "open" ? open : macd_source == "hl2" ? (high + low) / 2.0 : macd_source == "hlc3" ? (high + low + close) / 3.0 : (open + high + low + close) / 4.0
+        [free_macd_l, free_macd_s, free_macd_h] = ta.macd(_macd_src, macd_fast_len, macd_slow_len, macd_sig_len)
+        prev_macd_hist_state := macd_hist_state
+        macd_line_state := free_macd_l
+        macd_signal_state := free_macd_s
+        macd_hist_state := free_macd_h
+
+    // MACD HTF Bias - compute MACD on prior-closed HTF close, advance every LTF bar (no dedup)
+    bool need_macd_htf = use_macd_htf_bias
+    if need_macd_htf and st_bar_valid
+        float free_htf_macd_close = request.security(syminfo.tickerid, macd_htf_timeframe, close[1], barmerge.gaps_off, barmerge.lookahead_off)
+        [free_htf_ml, free_htf_sl, free_htf_hl] = ta.macd(free_htf_macd_close, macd_fast_len, macd_slow_len, macd_sig_len)
+        if not na(free_htf_macd_close)
+            macd_htf_line_state := free_htf_ml
+
+    // HTF Trend Filter - request.security gives prior-closed HTF bar (lookahead_off + [1])
+    // MA is computed on every LTF bar (no dedup) so the built-in series functions
+    // accumulate history at the same rate in Pine and Python, ensuring identical warmup.
+    if use_htf_trend_filter
+        float free_htf_trend_close_raw = request.security(syminfo.tickerid, htf_trend_timeframe, close[1], barmerge.gaps_off, barmerge.lookahead_off)
+        float free_htf_trend_selected_ma = na
+        if htf_trend_ma_type == "SMA"
+            free_htf_trend_selected_ma := ta.sma(free_htf_trend_close_raw, htf_trend_ma_len)
+        else if htf_trend_ma_type == "WMA"
+            free_htf_trend_selected_ma := ta.wma(free_htf_trend_close_raw, htf_trend_ma_len)
+        else if htf_trend_ma_type == "EMA"
+            free_htf_trend_selected_ma := ta.ema(free_htf_trend_close_raw, htf_trend_ma_len)
+        else
+            free_htf_trend_selected_ma := ta.rma(free_htf_trend_close_raw, htf_trend_ma_len)
+        if st_bar_valid and not na(free_htf_trend_close_raw)
+            htf_trend_line_state := free_htf_trend_selected_ma
+
+    // MA Filter HTF path - when use_ma_mtf=true, compute MA on prior-closed HTF close
+    // No dedup: advance every LTF bar to match Pine's built-in series timing.
+    if use_ma_filter and use_ma_mtf
+        float free_htf_ma_close_raw = request.security(syminfo.tickerid, ma_htf_timeframe, close[1], barmerge.gaps_off, barmerge.lookahead_off)
+        float free_htf_ma_selected = na
+        if ma_type == "SMA"
+            free_htf_ma_selected := ta.sma(free_htf_ma_close_raw, ma_length)
+        else if ma_type == "WMA"
+            free_htf_ma_selected := ta.wma(free_htf_ma_close_raw, ma_length)
+        else if ma_type == "EMA"
+            free_htf_ma_selected := ta.ema(free_htf_ma_close_raw, ma_length)
+        else
+            free_htf_ma_selected := ta.rma(free_htf_ma_close_raw, ma_length)
+        if st_bar_valid and not na(free_htf_ma_close_raw)
+            htf_ma_filter_line_state := free_htf_ma_selected
+
+// ============================================================================
+// SECTION 7 - EXECUTION
+// ============================================================================
+// L6b-L11 parity-first execution surface:
+// - stop owner precedence: INITIAL -> BE -> TRAIL
+// - TP1 partial uses working_exit_reference_qty, TP2 closes remainder
+// - same-direction add rebuilds active targets and keeps completed TP1 disarmed
+var int l4_position_side_state = 0
+var float l4_entry_price_state = na
+var float l6_avg_entry_price_state = na
+var int l4_entry_bar_state = na
+var int l6_entry_count_state = 0
+var int l6_lifecycle_id_state = 0
+var int l6_next_lifecycle_id_state = 1
+var float l4_qty_state = 0.0
+var float l6_working_exit_reference_qty_state = na
+var int l6_working_exit_book_version_state = 0
+var float l6_initial_risk_per_unit_state = na
+var float l4_active_stop_price_state = na
+var int l6_active_stop_owner_code_state = 0
+var float l4_active_tp_price_state = na
+var float l6_tp1_price_state = na
+var float l6_tp2_price_state = na
+var bool l6_tp1_completed_state = false
+var bool l6_be_active_state = false
+var bool l6_trail_active_state = false
+var float l6_trail_price_state = na
+var float l4_last_exit_price_state = na
+var float l6_last_exit_qty_state = 0.0
+var float l4_realized_equity_state = 0.0
+var float l4_last_realized_pnl_state = 0.0
+var int l4_total_exits_state = 0
+var int l4_regime_lock_side_state = 0
+var float l6_last_sizing_equity_snapshot_state = na
+var int l6_deferred_flip_side_state = 0  // allow_flip=false: pending entry deferred from opp_signal bar
+
+string l4_closed_this_bar_reason_state = ""
+l6_last_exit_qty_state := 0.0
+bool l4_sl_enabled = sl_mode != "None"
+bool l4_tp_enabled = tp_mode != "None"
+bool l4_sl_ready = sl_mode == "None" or sl_mode == "Percent" or (sl_mode == "ATR" and sl_valid_bar_state and sl_warmup_ready_state) or (sl_mode == "Swing+ATR" and sl_swing_valid_bar_state and sl_swing_warmup_ready_state and bar_index >= sl_swing_lookback)
+bool l4_tp_ready = tp_mode == "None" or tp_mode == "Percent" or (tp_mode == "ATR" and tp_valid_bar_state and tp_warmup_ready_state) or ((tp_mode == "R" or tp_mode == "Multi-TP") and l4_sl_ready and l4_sl_enabled)
+bool l6_bar_has_na = na(open) or na(high) or na(low) or na(close)
+bool l6_bar_bounds_invalid = not l6_bar_has_na and (high < low or open < low or open > high or close < low or close > high)
+bool l6_bar_valid = not l6_bar_has_na and not l6_bar_bounds_invalid
+int l4_candidate_side = long_raw ? 1 : short_raw ? -1 : 0
+float _l12_ma_ref = use_ma_filter and use_ma_mtf ? htf_ma_filter_line_state : ma_filter_line_state
+bool l12_ma_filter_long_ok = not use_ma_filter or na(_l12_ma_ref) or close > _l12_ma_ref
+bool l12_ma_filter_short_ok = not use_ma_filter or na(_l12_ma_ref) or close < _l12_ma_ref
+float l12_ma_slope_ratio = not na(ma_slope_line_state) and not na(ma_slope_prev_line_state) and math.abs(ma_slope_prev_line_state) > 1e-12 ? (ma_slope_line_state - ma_slope_prev_line_state) / ma_slope_prev_line_state : na
+bool l12_ma_slope_long_ok = not use_ma_slope_filter or na(l12_ma_slope_ratio) or l12_ma_slope_ratio > ma_slope_min_pct
+bool l12_ma_slope_short_ok = not use_ma_slope_filter or na(l12_ma_slope_ratio) or l12_ma_slope_ratio < -ma_slope_min_pct
+bool l12_mcginley_long_ok = not use_mcginley_filter or na(mcginley_line_state) or close > mcginley_line_state
+bool l12_mcginley_short_ok = not use_mcginley_filter or na(mcginley_line_state) or close < mcginley_line_state
+bool l12_vol_ok = not use_volume_filter or na(vol_sma_state) or volume >= vol_sma_state * vol_sma_mult
+bool l12_adx_ok = not use_adx_filter or na(adx_state) or adx_state >= adx_threshold
+bool l12_chop_ok = not use_chop_filter or na(chop_state) or chop_state < chop_threshold
+bool l12_atr_floor_ok = not use_atr_vol_floor or na(atr_vol_floor_fast_state) or na(atr_vol_floor_baseline_state) or atr_vol_floor_fast_state >= atr_vol_floor_baseline_state * atr_vol_floor_mult
+bool l12_macd_regime_long_ok = not use_macd_regime_filter or na(macd_line_state) or macd_line_state > 0.0
+bool l12_macd_regime_short_ok = not use_macd_regime_filter or na(macd_line_state) or macd_line_state < 0.0
+bool l12_macd_cross_long_ok = not use_macd_cross_filter or na(macd_line_state) or na(macd_signal_state) or macd_line_state > macd_signal_state
+bool l12_macd_cross_short_ok = not use_macd_cross_filter or na(macd_line_state) or na(macd_signal_state) or macd_line_state < macd_signal_state
+bool l12_macd_zero_dist_ok = not use_macd_zero_dist_filter or na(macd_line_state) or math.abs(macd_line_state) >= macd_zero_dist_min
+float l12_h = macd_hist_state
+float l12_ph = na(prev_macd_hist_state) ? 0.0 : prev_macd_hist_state
+bool l12_macd_hist_long_ok = not use_macd_hist_filter or na(macd_hist_state) or (macd_hist_mode == "POSITIVE" ? l12_h > 0.0 : macd_hist_mode == "RISING" ? l12_h > l12_ph : (l12_h > 0.0 and l12_h > l12_ph))
+bool l12_macd_hist_short_ok = not use_macd_hist_filter or na(macd_hist_state) or (macd_hist_mode == "POSITIVE" ? l12_h < 0.0 : macd_hist_mode == "RISING" ? l12_h < l12_ph : (l12_h < 0.0 and l12_h < l12_ph))
+
+// --- L22: CANDLE PATTERN DETECTION ---
+bool need_candle_pattern_calc = use_candle_pattern_gate
+int l22_bars_since_bullish = na
+int l22_bars_since_bearish = na
+if need_candle_pattern_calc
+    float l22_body = math.abs(close - open)
+    float l22_prev_body = math.abs(close[1] - open[1])
+    float l22_upper_wick = high - math.max(open, close)
+    float l22_lower_wick = math.min(open, close) - low
+    bool l22_bullish_engulf = open < close[1] and close > open[1] and close[1] < open[1] and close > open
+    bool l22_hammer = l22_body > 0 and l22_lower_wick > 2 * l22_body and l22_upper_wick < 0.5 * l22_body and close > open
+    bool l22_bearish_engulf = open > close[1] and close < open[1] and close[1] > open[1] and close < open
+    bool l22_shooting_star = l22_body > 0 and l22_upper_wick > 2 * l22_body and l22_lower_wick < 0.5 * l22_body and close < open
+    bool l22_bullish_pattern = l22_bullish_engulf or l22_hammer
+    bool l22_bearish_pattern = l22_bearish_engulf or l22_shooting_star
+    l22_bars_since_bullish := ta.barssince(l22_bullish_pattern)
+    l22_bars_since_bearish := ta.barssince(l22_bearish_pattern)
+bool l12_candle_pattern_long_ok  = not use_candle_pattern_gate or (l22_bars_since_bullish < candle_pattern_lookback)
+bool l12_candle_pattern_short_ok = not use_candle_pattern_gate or (l22_bars_since_bearish < candle_pattern_lookback)
+
+// --- L20: LEVEL PROXIMITY GATE ---
+bool need_level_proximity_calc = use_level_proximity_gate
+float l20_swing_high = na
+float l20_swing_low = na
+bool l20_near_support = false
+bool l20_near_resistance = false
+if need_level_proximity_calc
+    l20_swing_high := ta.highest(high[1], level_proximity_lookback)
+    l20_swing_low := ta.lowest(low[1], level_proximity_lookback)
+    l20_near_support := l20_swing_low > 0 and ((math.abs(close - l20_swing_low) / l20_swing_low) * 100.0 <= level_proximity_threshold_pct)
+    l20_near_resistance := l20_swing_high > 0 and ((math.abs(close - l20_swing_high) / l20_swing_high) * 100.0 <= level_proximity_threshold_pct)
+
+bool l12_level_prox_long_ok  = not use_level_proximity_gate or l20_near_support
+bool l12_level_prox_short_ok = not use_level_proximity_gate or l20_near_resistance
+
+// --- L12: HTF TREND FILTER GATE ---
+float l12_htf_trend_buf = htf_trend_buffer_pct / 100.0
+bool  l12_htf_trend_long_ok  = not use_htf_trend_filter or na(htf_trend_line_state) or close > htf_trend_line_state * (1.0 - l12_htf_trend_buf)
+bool  l12_htf_trend_short_ok = not use_htf_trend_filter or na(htf_trend_line_state) or close < htf_trend_line_state * (1.0 + l12_htf_trend_buf)
+
+// --- L12: MACD HTF BIAS GATE ---
+bool l12_macd_htf_bias_long_ok  = not use_macd_htf_bias or na(macd_htf_line_state) or macd_htf_line_state > 0.0
+bool l12_macd_htf_bias_short_ok = not use_macd_htf_bias or na(macd_htf_line_state) or macd_htf_line_state < 0.0
+plot(macd_htf_line_state, title="macd_htf_line", display=display.none)
+
+// --- L12: Momentum Filter (direction-agnostic) ---
+bool l12_momentum_ok = not use_momentum_filter or (
+    momentum_mode == "ATR_BODY"
+        ? (na(momentum_atr_state) or math.abs(close - open) >= momentum_atr_state * momentum_atr_mult)
+        : (na(close[1]) or close[1] <= 0 or math.abs(close - close[1]) / close[1] * 100 >= momentum_roc_min_pct)
+)
+
+// --- L12: Session Filter (direction-agnostic) ---
+bool l12_session_ok = not use_session_filter
+if use_session_filter
+    string _sess_str = session_custom_string
+    if session_name == "New York"
+        _sess_str := "0930-1600"
+    else if session_name == "London"
+        _sess_str := "0800-1630"
+    else if session_name == "Asia"
+        _sess_str := "0900-1500"
+    else if session_name == "Sydney"
+        _sess_str := "1000-1600"
+    string _tz = ""
+    if session_name == "New York"
+        _tz := "America/New_York"
+    else if session_name == "London"
+        _tz := "Europe/London"
+    else if session_name == "Asia"
+        _tz := "Asia/Tokyo"
+    else if session_name == "Sydney"
+        _tz := "Australia/Sydney"
+    // Allow custom input to include timezone with colon syntax
+    if str.contains(_sess_str, ":")
+        // Split once: HHMM-HHMM:Area/City
+        string[] parts = str.split(_sess_str, ":")
+        _sess_str := array.get(parts, 0)
+        if array.size(parts) > 1
+            _tz := array.get(parts, 1)
+    l12_session_ok := not na(time(timeframe.period, _sess_str, _tz))
+
+bool long_gated = long_raw and l12_ma_filter_long_ok and l12_ma_slope_long_ok and l12_mcginley_long_ok and l12_vol_ok and l12_adx_ok and l12_chop_ok and l12_atr_floor_ok and l12_macd_regime_long_ok and l12_macd_cross_long_ok and l12_macd_hist_long_ok and l12_macd_zero_dist_ok and l12_candle_pattern_long_ok and l12_level_prox_long_ok and l12_htf_trend_long_ok and l12_macd_htf_bias_long_ok and l12_momentum_ok and l12_session_ok
+bool short_gated = short_raw and l12_ma_filter_short_ok and l12_ma_slope_short_ok and l12_mcginley_short_ok and l12_vol_ok and l12_adx_ok and l12_chop_ok and l12_atr_floor_ok and l12_macd_regime_short_ok and l12_macd_cross_short_ok and l12_macd_hist_short_ok and l12_macd_zero_dist_ok and l12_candle_pattern_short_ok and l12_level_prox_short_ok and l12_htf_trend_short_ok and l12_macd_htf_bias_short_ok and l12_momentum_ok and l12_session_ok
+int l12_gated_candidate_side = long_gated ? 1 : short_gated ? -1 : 0
+bool l12_filters_ready = (not use_ma_filter or (use_ma_mtf ? not na(htf_ma_filter_line_state) : not na(ma_filter_line_state))) and (not use_ma_slope_filter or (not na(ma_slope_line_state) and not na(ma_slope_prev_line_state))) and (not use_mcginley_filter or not na(mcginley_line_state)) and (not use_volume_filter or not na(vol_sma_state)) and (not use_adx_filter or not na(adx_state)) and (not use_chop_filter or not na(chop_state)) and (not use_atr_vol_floor or (not na(atr_vol_floor_fast_state) and not na(atr_vol_floor_baseline_state))) and (not (use_macd_regime_filter or use_macd_cross_filter or use_macd_hist_filter or use_macd_zero_dist_filter) or (not na(macd_line_state) and not na(macd_signal_state))) and (not use_level_proximity_gate or (not na(l20_swing_high) and not na(l20_swing_low))) and (not use_htf_trend_filter or not na(htf_trend_line_state)) and (not use_macd_htf_bias or not na(macd_htf_line_state)) and (not use_momentum_filter or (momentum_mode == "ATR_BODY" ? not na(momentum_atr_state) : not na(close[1])))
+bool l4_entry_ready = l4_sl_ready and l4_tp_ready and l12_filters_ready
+bool l4_stop_hit = false
+float l4_stop_fill_price = na
+bool l4_tp_hit = false
+float l4_tp_fill_price = na
+bool l6_tp1_hit = false
+float l6_tp1_fill_price = na
+float l6_tp1_exit_qty_plot = 0.0
+bool l6_tp2_hit = false
+float l6_tp2_fill_price = na
+bool l4_price_exit_hit = false
+float l4_price_exit_fill_price = na
+string l4_price_exit_reason = ""
+bool l4_pessimistic_sl_hit = false
+bool l4_opp_signal_exit = false
+int l4_prev_position_side_state = l4_position_side_state
+float l4_prev_active_stop_price_state = l4_active_stop_price_state
+float l4_prev_active_tp_price_state = l4_active_tp_price_state
+float l6_realized_equity_value = strategy.initial_capital + l4_realized_equity_state
+float l6_unrealized_pnl_snapshot = 0.0
+float l6_mark_basis_state = na(l6_avg_entry_price_state) ? l4_entry_price_state : l6_avg_entry_price_state
+if l4_position_side_state > 0 and not na(l6_mark_basis_state)
+    l6_unrealized_pnl_snapshot := (open - l6_mark_basis_state) * l4_qty_state * syminfo.pointvalue
+else if l4_position_side_state < 0 and not na(l6_mark_basis_state)
+    l6_unrealized_pnl_snapshot := (l6_mark_basis_state - open) * l4_qty_state * syminfo.pointvalue
+float l6_sizing_equity_snapshot = l6_realized_equity_value
+l6_last_sizing_equity_snapshot_state := l6_sizing_equity_snapshot
+bool l6_price_exit_blocked_entry = false
+bool l6_block_new_entries_this_bar = false
+bool l6_same_bar_reentry_allowed = false
+bool l6_close_only_profile = true
+
+if not l6_close_only_profile and l4_prev_position_side_state > 0
+    if not na(l4_prev_active_stop_price_state)
+        strategy.exit("L4-Long-SL", from_entry="L4-Long", stop=l4_prev_active_stop_price_state)
+    if tp_mode == "Multi-TP"
+        if not l6_tp1_completed_state and not na(l6_tp1_price_state)
+            strategy.exit("L9-Long-TP1", from_entry="L4-Long", limit=l6_tp1_price_state, qty_percent=tp1_close_pct)
+        if not na(l6_tp2_price_state)
+            strategy.exit("L9-Long-TP2", from_entry="L4-Long", limit=l6_tp2_price_state)
+    else if not na(l4_prev_active_tp_price_state)
+        strategy.exit("L5-Long-TP", from_entry="L4-Long", limit=l4_prev_active_tp_price_state)
+else if not l6_close_only_profile and l4_prev_position_side_state < 0
+    if not na(l4_prev_active_stop_price_state)
+        strategy.exit("L4-Short-SL", from_entry="L4-Short", stop=l4_prev_active_stop_price_state)
+    if tp_mode == "Multi-TP"
+        if not l6_tp1_completed_state and not na(l6_tp1_price_state)
+            strategy.exit("L9-Short-TP1", from_entry="L4-Short", limit=l6_tp1_price_state, qty_percent=tp1_close_pct)
+        if not na(l6_tp2_price_state)
+            strategy.exit("L9-Short-TP2", from_entry="L4-Short", limit=l6_tp2_price_state)
+    else if not na(l4_prev_active_tp_price_state)
+        strategy.exit("L5-Short-TP", from_entry="L4-Short", limit=l4_prev_active_tp_price_state)
+
+if l4_position_side_state != 0 and not na(l4_active_stop_price_state) and not na(l6_initial_risk_per_unit_state)
+    bool l6_is_long_position = l4_position_side_state > 0
+    float l6_position_sign = l6_is_long_position ? 1.0 : -1.0
+    bool l6_stop_owner_promoted = false
+
+    if use_trailing and not na(trail_atr) and trail_atr > 0
+        float l6_trail_trigger_price = l6_mark_basis_state + (l6_initial_risk_per_unit_state * trail_start_r * l6_position_sign)
+        float l6_trail_probe = l6_close_only_profile ? close : l6_is_long_position ? high : low
+        bool l6_trail_triggered = l6_is_long_position ? l6_trail_probe >= l6_trail_trigger_price : l6_trail_probe <= l6_trail_trigger_price
+        if l6_trail_active_state or l6_trail_triggered
+            l6_trail_active_state := true
+            l6_active_stop_owner_code_state := STOP_OWNER_TRAIL_CODE
+            float l6_trail_anchor = l6_close_only_profile ? close : l6_is_long_position ? high : low
+            l6_trail_price_state := na(l6_trail_price_state) ? l6_trail_anchor : l6_is_long_position ? math.max(l6_trail_price_state, l6_trail_anchor) : math.min(l6_trail_price_state, l6_trail_anchor)
+            float l6_trail_distance = trail_distance_atr_mult * trail_atr
+            float l6_trail_candidate = l6_is_long_position ? l6_trail_price_state - l6_trail_distance : l6_trail_price_state + l6_trail_distance
+            float l6_trail_stop = l6_is_long_position ? round_floor_to_tick(l6_trail_candidate) : round_ceil_to_tick(l6_trail_candidate)
+            l4_active_stop_price_state := l6_is_long_position ? math.max(l4_active_stop_price_state, l6_trail_stop) : math.min(l4_active_stop_price_state, l6_trail_stop)
+            l6_stop_owner_promoted := true
+
+    if use_break_even and not l6_stop_owner_promoted and l6_active_stop_owner_code_state != STOP_OWNER_TRAIL_CODE
+        float l6_be_trigger_price = l6_mark_basis_state + (l6_initial_risk_per_unit_state * be_trigger_r * l6_position_sign)
+        float l6_be_probe = l6_close_only_profile ? close : l6_is_long_position ? high : low
+        bool l6_be_triggered = l6_is_long_position ? l6_be_probe >= l6_be_trigger_price : l6_be_probe <= l6_be_trigger_price
+        if l6_be_active_state or l6_be_triggered
+            l6_be_active_state := true
+            l6_active_stop_owner_code_state := STOP_OWNER_BE_CODE
+            float l6_be_candidate = l4_entry_price_state + (l6_initial_risk_per_unit_state * be_buffer_r * l6_position_sign)
+            float l6_be_stop = l6_is_long_position ? round_floor_to_tick(l6_be_candidate) : round_ceil_to_tick(l6_be_candidate)
+            l4_active_stop_price_state := l6_is_long_position ? math.max(l4_active_stop_price_state, l6_be_stop) : math.min(l4_active_stop_price_state, l6_be_stop)
+
+if l4_position_side_state > 0 and not na(l4_active_stop_price_state) and l6_bar_valid
+    if l6_close_only_profile
+        if close <= l4_active_stop_price_state
+            l4_stop_hit := true
+            l4_stop_fill_price := close
+    else
+        if open <= l4_active_stop_price_state
+            l4_stop_hit := true
+            l4_stop_fill_price := open
+        else if low <= l4_active_stop_price_state
+            l4_stop_hit := true
+            l4_stop_fill_price := l4_active_stop_price_state
+else if l4_position_side_state < 0 and not na(l4_active_stop_price_state) and l6_bar_valid
+    if l6_close_only_profile
+        if close >= l4_active_stop_price_state
+            l4_stop_hit := true
+            l4_stop_fill_price := close
+    else
+        if open >= l4_active_stop_price_state
+            l4_stop_hit := true
+            l4_stop_fill_price := open
+        else if high >= l4_active_stop_price_state
+            l4_stop_hit := true
+            l4_stop_fill_price := l4_active_stop_price_state
+
+string l6_stop_reason = l6_active_stop_owner_code_state == STOP_OWNER_TRAIL_CODE ? REASON_EXIT_TRAIL : l6_active_stop_owner_code_state == STOP_OWNER_BE_CODE ? REASON_EXIT_BE : sl_mode == "Percent" ? REASON_EXIT_SL_PERCENT : sl_mode == "Swing+ATR" ? REASON_EXIT_SL_SWING_ATR : REASON_EXIT_SL_ATR
+string l6_target_reason = ""
+float l6_target_exit_pct = 1.0
+int l6_target_kind = 0
+
+if l4_position_side_state > 0 and l6_bar_valid
+    if tp_mode == "Multi-TP"
+        if not l6_tp1_completed_state and not na(l6_tp1_price_state)
+            if l6_close_only_profile and close >= l6_tp1_price_state
+                l4_tp_hit := true
+                l4_tp_fill_price := close
+                l6_target_reason := REASON_EXIT_TP1
+                l6_target_exit_pct := tp1_close_pct / 100.0
+                l6_target_kind := 1
+            else if not l6_close_only_profile and open >= l6_tp1_price_state
+                l4_tp_hit := true
+                l4_tp_fill_price := open
+                l6_target_reason := REASON_EXIT_TP1
+                l6_target_exit_pct := tp1_close_pct / 100.0
+                l6_target_kind := 1
+            else if not l6_close_only_profile and high >= l6_tp1_price_state
+                l4_tp_hit := true
+                l4_tp_fill_price := l6_tp1_price_state
+                l6_target_reason := REASON_EXIT_TP1
+                l6_target_exit_pct := tp1_close_pct / 100.0
+                l6_target_kind := 1
+        else if not na(l6_tp2_price_state)
+            if l6_close_only_profile and close >= l6_tp2_price_state
+                l4_tp_hit := true
+                l4_tp_fill_price := close
+                l6_target_reason := REASON_EXIT_TP2
+                l6_target_kind := 2
+            else if not l6_close_only_profile and open >= l6_tp2_price_state
+                l4_tp_hit := true
+                l4_tp_fill_price := open
+                l6_target_reason := REASON_EXIT_TP2
+                l6_target_kind := 2
+            else if not l6_close_only_profile and high >= l6_tp2_price_state
+                l4_tp_hit := true
+                l4_tp_fill_price := l6_tp2_price_state
+                l6_target_reason := REASON_EXIT_TP2
+                l6_target_kind := 2
+    else if not na(l4_active_tp_price_state)
+        if l6_close_only_profile and close >= l4_active_tp_price_state
+            l4_tp_hit := true
+            l4_tp_fill_price := close
+        else if not l6_close_only_profile and open >= l4_active_tp_price_state
+            l4_tp_hit := true
+            l4_tp_fill_price := open
+        else if not l6_close_only_profile and high >= l4_active_tp_price_state
+            l4_tp_hit := true
+            l4_tp_fill_price := l4_active_tp_price_state
+        if l4_tp_hit
+            l6_target_reason := tp_mode == "Percent" ? REASON_EXIT_TP_PERCENT : tp_mode == "R" ? REASON_EXIT_TP_R : REASON_EXIT_TP_ATR
+            l6_target_kind := 3
+else if l4_position_side_state < 0 and l6_bar_valid
+    if tp_mode == "Multi-TP"
+        if not l6_tp1_completed_state and not na(l6_tp1_price_state)
+            if l6_close_only_profile and close <= l6_tp1_price_state
+                l4_tp_hit := true
+                l4_tp_fill_price := close
+                l6_target_reason := REASON_EXIT_TP1
+                l6_target_exit_pct := tp1_close_pct / 100.0
+                l6_target_kind := 1
+            else if not l6_close_only_profile and open <= l6_tp1_price_state
+                l4_tp_hit := true
+                l4_tp_fill_price := open
+                l6_target_reason := REASON_EXIT_TP1
+                l6_target_exit_pct := tp1_close_pct / 100.0
+                l6_target_kind := 1
+            else if not l6_close_only_profile and low <= l6_tp1_price_state
+                l4_tp_hit := true
+                l4_tp_fill_price := l6_tp1_price_state
+                l6_target_reason := REASON_EXIT_TP1
+                l6_target_exit_pct := tp1_close_pct / 100.0
+                l6_target_kind := 1
+        else if not na(l6_tp2_price_state)
+            if l6_close_only_profile and close <= l6_tp2_price_state
+                l4_tp_hit := true
+                l4_tp_fill_price := close
+                l6_target_reason := REASON_EXIT_TP2
+                l6_target_kind := 2
+            else if not l6_close_only_profile and open <= l6_tp2_price_state
+                l4_tp_hit := true
+                l4_tp_fill_price := open
+                l6_target_reason := REASON_EXIT_TP2
+                l6_target_kind := 2
+            else if not l6_close_only_profile and low <= l6_tp2_price_state
+                l4_tp_hit := true
+                l4_tp_fill_price := l6_tp2_price_state
+                l6_target_reason := REASON_EXIT_TP2
+                l6_target_kind := 2
+    else if not na(l4_active_tp_price_state)
+        if l6_close_only_profile and close <= l4_active_tp_price_state
+            l4_tp_hit := true
+            l4_tp_fill_price := close
+        else if not l6_close_only_profile and open <= l4_active_tp_price_state
+            l4_tp_hit := true
+            l4_tp_fill_price := open
+        else if not l6_close_only_profile and low <= l4_active_tp_price_state
+            l4_tp_hit := true
+            l4_tp_fill_price := l4_active_tp_price_state
+        if l4_tp_hit
+            l6_target_reason := tp_mode == "Percent" ? REASON_EXIT_TP_PERCENT : tp_mode == "R" ? REASON_EXIT_TP_R : REASON_EXIT_TP_ATR
+            l6_target_kind := 3
+
+if l4_stop_hit and l4_tp_hit
+    l4_price_exit_hit := true
+    l4_price_exit_fill_price := l4_stop_fill_price
+    l4_price_exit_reason := l6_stop_reason
+    l4_pessimistic_sl_hit := true
+    l6_price_exit_blocked_entry := true
+else if l4_stop_hit
+    l4_price_exit_hit := true
+    l4_price_exit_fill_price := l4_stop_fill_price
+    l4_price_exit_reason := l6_stop_reason
+    l6_price_exit_blocked_entry := true
+else if l4_tp_hit and l6_target_kind != 1
+    l4_price_exit_hit := true
+    l4_price_exit_fill_price := l4_tp_fill_price
+    l4_price_exit_reason := l6_target_reason
+    l6_price_exit_blocked_entry := true
+else if l4_tp_hit and l6_target_kind == 1
+    float l6_partial_reference_qty = na(l6_working_exit_reference_qty_state) ? l4_qty_state : l6_working_exit_reference_qty_state
+    float l6_partial_exit_qty = math.min(l4_qty_state, l6_partial_reference_qty * l6_target_exit_pct)
+    if l6_partial_exit_qty > 0
+        bool l6_tp2_already_crossed_on_tp1_bar = l6_close_only_profile and not na(l6_tp2_price_state) and ((l4_position_side_state > 0 and close >= l6_tp2_price_state) or (l4_position_side_state < 0 and close <= l6_tp2_price_state))
+        float l6_partial_realized_pnl = l4_position_side_state > 0 ? (l4_tp_fill_price - l6_mark_basis_state) * l6_partial_exit_qty * syminfo.pointvalue : (l6_mark_basis_state - l4_tp_fill_price) * l6_partial_exit_qty * syminfo.pointvalue
+        l4_realized_equity_state += l6_partial_realized_pnl
+        l4_last_realized_pnl_state := l6_partial_realized_pnl
+        l4_last_exit_price_state := l4_tp_fill_price
+        l6_last_exit_qty_state := l6_partial_exit_qty
+        l4_total_exits_state += 1
+        l4_qty_state := math.max(0.0, l4_qty_state - l6_partial_exit_qty)
+        l6_tp1_completed_state := true
+        l6_tp1_price_state := na
+        l4_active_tp_price_state := l6_tp2_price_state
+        if l6_tp2_already_crossed_on_tp1_bar
+            l4_active_tp_price_state := na
+            l6_tp2_price_state := na
+        l4_closed_this_bar_reason_state := REASON_EXIT_TP1
+        l6_tp1_hit := true
+        l6_tp1_fill_price := l4_tp_fill_price
+        l6_tp1_exit_qty_plot := l6_partial_exit_qty
+        l6_price_exit_blocked_entry := true
+        if l6_close_only_profile
+            if l4_position_side_state > 0
+                strategy.close("L4-Long", qty_percent=tp1_close_pct, comment=REASON_EXIT_TP1)
+            else if l4_position_side_state < 0
+                strategy.close("L4-Short", qty_percent=tp1_close_pct, comment=REASON_EXIT_TP1)
+
+        if not l6_close_only_profile and l4_position_side_state != 0 and l4_qty_state > 0 and l6_bar_valid
+            bool l6_second_stop_hit = false
+            float l6_second_stop_fill = na
+            bool l6_second_tp2_hit = false
+            float l6_second_tp2_fill = na
+
+            if l4_position_side_state > 0 and not na(l4_active_stop_price_state)
+                if l6_close_only_profile and close <= l4_active_stop_price_state
+                    l6_second_stop_hit := true
+                    l6_second_stop_fill := close
+                else if not l6_close_only_profile and open <= l4_active_stop_price_state
+                    l6_second_stop_hit := true
+                    l6_second_stop_fill := open
+                else if not l6_close_only_profile and low <= l4_active_stop_price_state
+                    l6_second_stop_hit := true
+                    l6_second_stop_fill := l4_active_stop_price_state
+                if not na(l6_tp2_price_state)
+                    if l6_close_only_profile and close >= l6_tp2_price_state
+                        l6_second_tp2_hit := true
+                        l6_second_tp2_fill := close
+                    else if not l6_close_only_profile and open >= l6_tp2_price_state
+                        l6_second_tp2_hit := true
+                        l6_second_tp2_fill := open
+                    else if not l6_close_only_profile and high >= l6_tp2_price_state
+                        l6_second_tp2_hit := true
+                        l6_second_tp2_fill := l6_tp2_price_state
+            else if l4_position_side_state < 0 and not na(l4_active_stop_price_state)
+                if l6_close_only_profile and close >= l4_active_stop_price_state
+                    l6_second_stop_hit := true
+                    l6_second_stop_fill := close
+                else if not l6_close_only_profile and open >= l4_active_stop_price_state
+                    l6_second_stop_hit := true
+                    l6_second_stop_fill := open
+                else if not l6_close_only_profile and high >= l4_active_stop_price_state
+                    l6_second_stop_hit := true
+                    l6_second_stop_fill := l4_active_stop_price_state
+                if not na(l6_tp2_price_state)
+                    if l6_close_only_profile and close <= l6_tp2_price_state
+                        l6_second_tp2_hit := true
+                        l6_second_tp2_fill := close
+                    else if not l6_close_only_profile and open <= l6_tp2_price_state
+                        l6_second_tp2_hit := true
+                        l6_second_tp2_fill := open
+                    else if not l6_close_only_profile and low <= l6_tp2_price_state
+                        l6_second_tp2_hit := true
+                        l6_second_tp2_fill := l6_tp2_price_state
+
+            if l6_second_stop_hit or l6_second_tp2_hit
+                float l6_second_fill_price = l6_second_stop_hit ? l6_second_stop_fill : l6_second_tp2_fill
+                string l6_second_reason = l6_second_stop_hit ? l6_stop_reason : REASON_EXIT_TP2
+                float l6_second_exit_qty = l4_qty_state
+                float l6_second_realized_pnl = l4_position_side_state > 0 ? (l6_second_fill_price - l6_mark_basis_state) * l6_second_exit_qty * syminfo.pointvalue : (l6_mark_basis_state - l6_second_fill_price) * l6_second_exit_qty * syminfo.pointvalue
+                l4_realized_equity_state += l6_second_realized_pnl
+                l4_last_realized_pnl_state := l6_second_realized_pnl
+                l4_last_exit_price_state := l6_second_fill_price
+                l6_last_exit_qty_state := l6_second_exit_qty
+                l4_total_exits_state += 1
+                l4_position_side_state := 0
+                l4_entry_price_state := na
+                l6_avg_entry_price_state := na
+                l4_entry_bar_state := na
+                l4_qty_state := 0.0
+                l6_entry_count_state := 0
+                l6_lifecycle_id_state := 0
+                l6_working_exit_reference_qty_state := na
+                l6_working_exit_book_version_state := 0
+                l6_initial_risk_per_unit_state := na
+                l4_active_stop_price_state := na
+                l6_active_stop_owner_code_state := 0
+                l4_active_tp_price_state := na
+                l6_tp1_price_state := na
+                l6_tp2_price_state := na
+                l6_tp1_completed_state := false
+                l6_be_active_state := false
+                l6_trail_active_state := false
+                l6_trail_price_state := na
+                l4_closed_this_bar_reason_state := l6_second_reason
+                l4_stop_hit := l4_stop_hit or l6_second_stop_hit
+                l4_pessimistic_sl_hit := l4_pessimistic_sl_hit or (l6_second_stop_hit and l6_second_tp2_hit)
+                l6_tp2_hit := l6_second_tp2_hit
+                l6_tp2_fill_price := l6_second_tp2_fill
+
+if l4_price_exit_hit
+    float l4_realized_pnl = l4_position_side_state > 0 ? (l4_price_exit_fill_price - l6_mark_basis_state) * l4_qty_state * syminfo.pointvalue : (l6_mark_basis_state - l4_price_exit_fill_price) * l4_qty_state * syminfo.pointvalue
+    l4_realized_equity_state += l4_realized_pnl
+    l4_last_realized_pnl_state := l4_realized_pnl
+    l4_last_exit_price_state := l4_price_exit_fill_price
+    l6_last_exit_qty_state := l4_qty_state
+    l4_total_exits_state += 1
+    l4_position_side_state := 0
+    l4_entry_price_state := na
+    l6_avg_entry_price_state := na
+    l4_entry_bar_state := na
+    l4_qty_state := 0.0
+    l6_entry_count_state := 0
+    l6_lifecycle_id_state := 0
+    l6_working_exit_reference_qty_state := na
+    l6_working_exit_book_version_state := 0
+    l6_initial_risk_per_unit_state := na
+    l4_active_stop_price_state := na
+    l6_active_stop_owner_code_state := 0
+    l4_active_tp_price_state := na
+    l6_tp1_price_state := na
+    l6_tp2_price_state := na
+    l6_tp1_completed_state := false
+    l6_be_active_state := false
+    l6_trail_active_state := false
+    l6_trail_price_state := na
+    l4_closed_this_bar_reason_state := l4_price_exit_reason
+    if l6_close_only_profile
+        if l4_prev_position_side_state > 0
+            strategy.close("L4-Long", comment=l4_price_exit_reason)
+        else if l4_prev_position_side_state < 0
+            strategy.close("L4-Short", comment=l4_price_exit_reason)
+    if l4_price_exit_reason == REASON_EXIT_TP2
+        l6_tp2_hit := true
+        l6_tp2_fill_price := l4_price_exit_fill_price
+
+if exit_on_opposite_signal and l4_position_side_state != 0 and l4_candidate_side != 0 and l4_candidate_side != l4_position_side_state
+    float l4_opp_realized_pnl = l4_position_side_state > 0 ? (close - l6_mark_basis_state) * l4_qty_state * syminfo.pointvalue : (l6_mark_basis_state - close) * l4_qty_state * syminfo.pointvalue
+    l4_realized_equity_state += l4_opp_realized_pnl
+    l4_last_realized_pnl_state := l4_opp_realized_pnl
+    l4_last_exit_price_state := close
+    l6_last_exit_qty_state := l4_qty_state
+    l4_total_exits_state += 1
+    l4_position_side_state := 0
+    l4_entry_price_state := na
+    l6_avg_entry_price_state := na
+    l4_entry_bar_state := na
+    l4_qty_state := 0.0
+    l6_entry_count_state := 0
+    l6_lifecycle_id_state := 0
+    l6_working_exit_reference_qty_state := na
+    l6_working_exit_book_version_state := 0
+    l6_initial_risk_per_unit_state := na
+    l4_active_stop_price_state := na
+    l6_active_stop_owner_code_state := 0
+    l4_active_tp_price_state := na
+    l6_tp1_price_state := na
+    l6_tp2_price_state := na
+    l6_tp1_completed_state := false
+    l6_be_active_state := false
+    l6_trail_active_state := false
+    l6_trail_price_state := na
+    l4_closed_this_bar_reason_state := REASON_EXIT_OPP_SIGNAL
+    l4_opp_signal_exit := true
+    if l4_prev_position_side_state > 0
+        strategy.close("L4-Long", comment=REASON_EXIT_OPP_SIGNAL)
+    else if l4_prev_position_side_state < 0
+        strategy.close("L4-Short", comment=REASON_EXIT_OPP_SIGNAL)
+
+// ============================================================================
+// L14 - FILTER_BLOCK EXIT
+// Close open position if active filters now block it (gate flipped)
+// ============================================================================
+if l4_position_side_state != 0 and l4_closed_this_bar_reason_state == ""
+    bool l14_any_long_blocked = (exit_on_ma_block and not l12_ma_filter_long_ok) or (exit_on_ma_slope_block and not l12_ma_slope_long_ok) or (exit_on_mcginley_block and not l12_mcginley_long_ok) or (exit_on_vol_block and not l12_vol_ok) or (exit_on_atr_vol_block and not l12_atr_floor_ok) or (exit_on_range_block and (not l12_adx_ok or not l12_chop_ok)) or (exit_on_candle_pattern_block and not l12_candle_pattern_long_ok) or (exit_on_level_prox_block and not l12_level_prox_long_ok) or (exit_on_htf_trend_block and not l12_htf_trend_long_ok)
+    bool l14_any_short_blocked = (exit_on_ma_block and not l12_ma_filter_short_ok) or (exit_on_ma_slope_block and not l12_ma_slope_short_ok) or (exit_on_mcginley_block and not l12_mcginley_short_ok) or (exit_on_vol_block and not l12_vol_ok) or (exit_on_atr_vol_block and not l12_atr_floor_ok) or (exit_on_range_block and (not l12_adx_ok or not l12_chop_ok)) or (exit_on_candle_pattern_block and not l12_candle_pattern_short_ok) or (exit_on_level_prox_block and not l12_level_prox_short_ok) or (exit_on_htf_trend_block and not l12_htf_trend_short_ok)
+    bool l14_long_blocked = l4_position_side_state > 0 and l14_any_long_blocked
+    bool l14_short_blocked = l4_position_side_state < 0 and l14_any_short_blocked
+    if l14_long_blocked or l14_short_blocked
+        float l14_pnl = l4_position_side_state > 0 ? (close - l6_mark_basis_state) * l4_qty_state * syminfo.pointvalue : (l6_mark_basis_state - close) * l4_qty_state * syminfo.pointvalue
+        l4_realized_equity_state += l14_pnl
+        l4_last_realized_pnl_state := l14_pnl
+        l4_last_exit_price_state := close
+        l6_last_exit_qty_state := l4_qty_state
+        l4_total_exits_state += 1
+        int l14_closed_side = l4_position_side_state
+        l4_position_side_state := 0
+        l4_entry_price_state := na
+        l6_avg_entry_price_state := na
+        l4_entry_bar_state := na
+        l4_qty_state := 0.0
+        l6_entry_count_state := 0
+        l6_lifecycle_id_state := 0
+        l6_working_exit_reference_qty_state := na
+        l6_working_exit_book_version_state := 0
+        l6_initial_risk_per_unit_state := na
+        l4_active_stop_price_state := na
+        l6_active_stop_owner_code_state := 0
+        l4_active_tp_price_state := na
+        l6_tp1_price_state := na
+        l6_tp2_price_state := na
+        l6_tp1_completed_state := false
+        l6_be_active_state := false
+        l6_trail_active_state := false
+        l6_trail_price_state := na
+        l4_closed_this_bar_reason_state := REASON_EXIT_FILTER_BLOCK
+        l6_block_new_entries_this_bar := true
+        if l14_closed_side > 0
+            strategy.close("L4-Long", comment=REASON_EXIT_FILTER_BLOCK)
+        else
+            strategy.close("L4-Short", comment=REASON_EXIT_FILTER_BLOCK)
+
+// ============================================================================
+// L15 - TIME-BASED EXITS: TIME_STOP / EOD / EOW
+// ============================================================================
+if l4_position_side_state != 0 and l4_closed_this_bar_reason_state == ""
+    // Track bars since entry
+    l15_bars_since_entry_state := na(l4_entry_bar_state) ? 0 : bar_index - l4_entry_bar_state
+    bool l15_time_stop_trigger = false
+    bool l15_eod_trigger = false
+    bool l15_eow_trigger = false
+
+    if use_time_stop
+        float l15_open_trade_pnl = l4_position_side_state > 0 ? (close - l6_mark_basis_state) * l4_qty_state * syminfo.pointvalue : (l6_mark_basis_state - close) * l4_qty_state * syminfo.pointvalue
+        bool l15_ts_condition_ok = time_stop_condition == "Always" or (time_stop_condition == "Profit Only" and l15_open_trade_pnl >= 0.0) or (time_stop_condition == "Loss Only" and l15_open_trade_pnl < 0.0)
+        if l15_bars_since_entry_state >= time_stop_bars and l15_ts_condition_ok
+            l15_time_stop_trigger := true
+
+    if time_stop_eod
+        bool l15_is_new_day = dayofweek != dayofweek[1] or (hour == 0 and minute == 0)
+        if l15_is_new_day
+            l15_eod_trigger := true
+
+    if time_stop_eow
+        bool l15_is_friday_close = dayofweek == dayofweek.friday and (hour >= 21 or (hour == 20 and minute >= 50))
+        if l15_is_friday_close
+            l15_eow_trigger := true
+
+    string l15_reason = l15_eow_trigger ? REASON_EXIT_EOW : l15_eod_trigger ? REASON_EXIT_EOD : l15_time_stop_trigger ? REASON_EXIT_TIME_STOP : ""
+    if l15_reason != ""
+        float l15_pnl = l4_position_side_state > 0 ? (close - l6_mark_basis_state) * l4_qty_state * syminfo.pointvalue : (l6_mark_basis_state - close) * l4_qty_state * syminfo.pointvalue
+        l4_realized_equity_state += l15_pnl
+        l4_last_realized_pnl_state := l15_pnl
+        l4_last_exit_price_state := close
+        l6_last_exit_qty_state := l4_qty_state
+        l4_total_exits_state += 1
+        int l15_closed_side = l4_position_side_state
+        l4_position_side_state := 0
+        l4_entry_price_state := na
+        l6_avg_entry_price_state := na
+        l4_entry_bar_state := na
+        l4_qty_state := 0.0
+        l6_entry_count_state := 0
+        l6_lifecycle_id_state := 0
+        l6_working_exit_reference_qty_state := na
+        l6_working_exit_book_version_state := 0
+        l6_initial_risk_per_unit_state := na
+        l4_active_stop_price_state := na
+        l6_active_stop_owner_code_state := 0
+        l4_active_tp_price_state := na
+        l6_tp1_price_state := na
+        l6_tp2_price_state := na
+        l6_tp1_completed_state := false
+        l6_be_active_state := false
+        l6_trail_active_state := false
+        l6_trail_price_state := na
+        l4_closed_this_bar_reason_state := l15_reason
+        l6_block_new_entries_this_bar := true
+        if l15_closed_side > 0
+            strategy.close("L4-Long", comment=l15_reason)
+        else
+            strategy.close("L4-Short", comment=l15_reason)
+else if l4_position_side_state == 0
+    l15_bars_since_entry_state := 0
+
+// ============================================================================
+// L16 - GUARDS (Daily Loss, Max Trades/Day, Max DD, Consecutive Loss, Equity Curve)
+// Guards block new entries; they never force-close an open position
+// ============================================================================
+float l16_realized_equity = strategy.initial_capital + l4_realized_equity_state
+
+// Update equity peak
+if l16_realized_equity > l16_equity_peak_state
+    l16_equity_peak_state := l16_realized_equity
+
+// Track MAE for open position
+if l4_position_side_state != 0 and not na(l4_entry_price_state)
+    float l16_mae_adverse = l4_position_side_state > 0 ? math.max(l4_entry_price_state - low, 0) : math.max(high - l4_entry_price_state, 0)
+    float l16_mae_pct_now = l4_entry_price_state > 0 ? l16_mae_adverse / l4_entry_price_state * 100.0 : 0.0
+    l16_current_mae_pct_state := math.max(l16_current_mae_pct_state, l16_mae_pct_now)
+// When position closes, record MAE
+if l4_closed_this_bar_reason_state != "" and l4_position_side_state == 0
+    l16_last_mae_pct_state := l16_current_mae_pct_state
+    l16_current_mae_pct_state := 0.0
+
+// Track consecutive losses
+if l4_closed_this_bar_reason_state != "" and l4_position_side_state == 0
+    if l4_last_realized_pnl_state < 0.0
+        l16_consec_loss_count_state += 1
+    else if l4_last_realized_pnl_state >= 0.0
+        l16_consec_loss_count_state := 0
+
+// Track trades per day
+int l16_today_int = year * 10000 + month * 100 + dayofmonth
+if l16_last_trade_day_int_state != l16_today_int
+    l16_trades_today_state := 0
+    l16_last_trade_day_int_state := l16_today_int
+    l16_day_open_equity_state := l16_realized_equity
+
+// Equity Curve SMA (rolling over last equity_ma_length closed-trade equities)
+if l4_closed_this_bar_reason_state != "" and l4_position_side_state == 0
+    array.push(l16_equity_history, l16_realized_equity)
+    if array.size(l16_equity_history) > equity_ma_length
+        array.shift(l16_equity_history)
+    if array.size(l16_equity_history) >= equity_ma_length
+        float l16_ec_sum = 0.0
+        for ec_i = 0 to array.size(l16_equity_history) - 1
+            l16_ec_sum += array.get(l16_equity_history, ec_i)
+        l16_equity_sma_state := l16_ec_sum / equity_ma_length
+    l16_last_full_exit_bar_state := bar_index
+
+bool l16_daily_loss_breached = use_daily_loss_limit and not na(l16_day_open_equity_state) and l16_day_open_equity_state > 0 and ((l16_day_open_equity_state - l16_realized_equity) / l16_day_open_equity_state * 100.0) >= max_daily_loss_pct
+bool l16_max_trades_breached = use_max_trades_per_day and l16_trades_today_state >= max_trades_per_day
+bool l16_max_dd_breached = use_max_drawdown_guard and l16_equity_peak_state > 0 and ((l16_equity_peak_state - l16_realized_equity) / l16_equity_peak_state * 100.0) >= max_drawdown_pct
+bool l16_consec_loss_breached = use_consecutive_loss_halt and l16_consec_loss_count_state >= max_consecutive_losses
+bool l16_equity_curve_breached = use_equity_curve_filter and not na(l16_equity_sma_state) and l16_realized_equity < l16_equity_sma_state
+bool l16_mae_breached = use_mae_guard and l16_last_mae_pct_state > max_mae_pct
+bool l16_trade_cooldown_breached = use_trade_cooldown and not na(l16_last_full_exit_bar_state) and (bar_index - l16_last_full_exit_bar_state) < cooldown_bars_after_exit
+bool l16_guard_blocked_raw = l16_daily_loss_breached or l16_max_trades_breached or l16_max_dd_breached or l16_consec_loss_breached or l16_equity_curve_breached or l16_mae_breached or l16_trade_cooldown_breached
+
+// Guard Recovery
+bool l16_any_breach = l16_guard_blocked_raw
+if use_guard_recovery
+    if l16_any_breach and not l16_guard_recovery_active_state
+        l16_guard_recovery_active_state := true
+        l16_guard_recovery_bars_rem_state := guard_recovery_bars
+        l16_guard_recovery_signals_rem_state := guard_recovery_signals
+    if l16_guard_recovery_active_state
+        if guard_recovery_mode == "Bars"
+            if l16_guard_recovery_bars_rem_state > 0
+                l16_guard_recovery_bars_rem_state := l16_guard_recovery_bars_rem_state - 1
+            if l16_guard_recovery_bars_rem_state <= 0
+                // Force-reset guard-specific state so breach auto-clears on reactivation
+                l16_equity_peak_state       := l16_realized_equity
+                l16_consec_loss_count_state := 0
+                l16_last_mae_pct_state      := 0.0
+                if not na(l16_equity_sma_state)
+                    l16_equity_sma_state := l16_realized_equity * 0.999
+                l16_guard_recovery_active_state := false
+        // Signals mode: countdown deferred to after l21_final_candidate (see below)
+
+// ============================================================================
+// L18 - CONFIRMATION TRANSFORM (N-bar hold / confirm)
+// Raw signal must persist for confirm_bars consecutive bars before becoming gated
+// ============================================================================
+bool l18_long_confirmed = false
+bool l18_short_confirmed = false
+
+if use_confirm_transform
+    int l18_new_dir = long_raw ? 1 : short_raw ? -1 : 0
+    if l18_new_dir != 0 and l18_new_dir != l18_confirm_direction_state
+        // opposing or first pulse: reset
+        l18_confirm_direction_state := l18_new_dir
+        l18_confirm_bars_count_state := 1
+        l18_long_armed_state := false
+        l18_short_armed_state := false
+    else if l18_confirm_direction_state != 0
+        // no opposing pulse: keep counting (pulse-producer safe)
+        l18_confirm_bars_count_state += 1
+    // If confirm_close_crosses, require close to be on correct side of ST line
+    bool l18_cross_ok = not confirm_close_crosses or (l18_confirm_direction_state == 1 and close > st_line) or (l18_confirm_direction_state == -1 and close < st_line) or l18_confirm_direction_state == 0
+    if not l18_cross_ok
+        l18_confirm_bars_count_state := 0
+        l18_long_armed_state := false
+        l18_short_armed_state := false
+        
+    if refresh_on_new_raw and use_confirm_transform
+        bool l18b_prev_raw_long  = long_raw[1]
+        bool l18b_prev_raw_short = short_raw[1]
+        bool l18b_new_long_raw   = long_raw  and not l18b_prev_raw_long  and l18_confirm_direction_state == 1
+        bool l18b_new_short_raw  = short_raw and not l18b_prev_raw_short and l18_confirm_direction_state == -1
+        if l18b_new_long_raw or l18b_new_short_raw
+            l18_confirm_bars_count_state := 0
+
+    if l18_confirm_bars_count_state >= confirm_bars
+        bool l18b_raw_ok = not require_raw_still_true or (l18_confirm_direction_state == 1 ? long_raw : short_raw)
+        if l18b_raw_ok
+            if l18_confirm_direction_state == 1
+                l18_long_armed_state := true
+            else if l18_confirm_direction_state == -1
+                l18_short_armed_state := true
+    // one-shot fire: arm triggers on the confirmation bar regardless of pulse; reset state after firing
+    l18_long_confirmed  := l18_long_armed_state
+    l18_short_confirmed := l18_short_armed_state
+    if l18_long_confirmed
+        l18_long_armed_state         := false
+        l18_confirm_bars_count_state := 0
+        l18_confirm_direction_state  := 0
+    if l18_short_confirmed
+        l18_short_armed_state        := false
+        l18_confirm_bars_count_state := 0
+        l18_confirm_direction_state  := 0
+else
+    l18_long_confirmed := long_gated
+    l18_short_confirmed := short_gated
+
+bool l18_long_final = use_confirm_transform ? (l18_long_confirmed and l12_ma_filter_long_ok and l12_ma_slope_long_ok and l12_mcginley_long_ok and l12_vol_ok and l12_adx_ok and l12_chop_ok and l12_atr_floor_ok and l12_macd_regime_long_ok and l12_macd_cross_long_ok and l12_macd_hist_long_ok and l12_macd_zero_dist_ok and l12_candle_pattern_long_ok and l12_level_prox_long_ok and l12_htf_trend_long_ok and l12_macd_htf_bias_long_ok and l12_momentum_ok and l12_session_ok) : long_gated
+bool l18_short_final = use_confirm_transform ? (l18_short_confirmed and l12_ma_filter_short_ok and l12_ma_slope_short_ok and l12_mcginley_short_ok and l12_vol_ok and l12_adx_ok and l12_chop_ok and l12_atr_floor_ok and l12_macd_regime_short_ok and l12_macd_cross_short_ok and l12_macd_hist_short_ok and l12_macd_zero_dist_ok and l12_candle_pattern_short_ok and l12_level_prox_short_ok and l12_htf_trend_short_ok and l12_macd_htf_bias_short_ok and l12_momentum_ok and l12_session_ok) : short_gated
+
+// L21 Logic (runs after L18, modifies raw signal)
+bool l21_raw_long  = l18_long_final
+bool l21_raw_short = l18_short_final
+
+// Deferred flip entry (allow_flip=false): when opp_signal bar blocked the opposite-direction entry,
+// replay it on the next bar if position is flat, no opp_signal, and no fresh signal arrived.
+if l6_deferred_flip_side_state != 0
+    if l4_position_side_state != 0 or l4_opp_signal_exit
+        l6_deferred_flip_side_state := 0  // position open again or another exit - cancel
+    else if not l21_raw_long and not l21_raw_short
+        // re-validate replay-bar filters before injecting deferred entry
+        bool _rep_ok = false
+        if l6_deferred_flip_side_state == 1
+            _rep_ok := l12_ma_filter_long_ok and l12_ma_slope_long_ok and l12_mcginley_long_ok and l12_vol_ok and l12_adx_ok and l12_chop_ok and l12_atr_floor_ok and l12_macd_regime_long_ok and l12_macd_cross_long_ok and l12_macd_hist_long_ok and l12_macd_zero_dist_ok and l12_candle_pattern_long_ok and l12_level_prox_long_ok and l12_htf_trend_long_ok and l12_macd_htf_bias_long_ok and l12_momentum_ok and l12_session_ok
+        else if l6_deferred_flip_side_state == -1
+            _rep_ok := l12_ma_filter_short_ok and l12_ma_slope_short_ok and l12_mcginley_short_ok and l12_vol_ok and l12_adx_ok and l12_chop_ok and l12_atr_floor_ok and l12_macd_regime_short_ok and l12_macd_cross_short_ok and l12_macd_hist_short_ok and l12_macd_zero_dist_ok and l12_candle_pattern_short_ok and l12_level_prox_short_ok and l12_htf_trend_short_ok and l12_macd_htf_bias_short_ok and l12_momentum_ok and l12_session_ok
+        if _rep_ok
+            l21_raw_long  := l6_deferred_flip_side_state == 1
+            l21_raw_short := l6_deferred_flip_side_state == -1
+        l6_deferred_flip_side_state := 0
+    else
+        l6_deferred_flip_side_state := 0  // fresh signal arrived - it takes precedence
+
+if use_level_retest and l4_position_side_state == 0
+    if not l21_waiting_state and (l21_raw_long or l21_raw_short)
+        l21_waiting_state := true
+        l21_pending_side_state := l21_raw_long ? 1 : -1
+        l21_break_level_state := not na(st_line) ? st_line : close
+        l21_bars_waiting_state := 0
+        l21_raw_long  := false
+        l21_raw_short := false
+    else if l21_waiting_state
+        l21_bars_waiting_state := l21_bars_waiting_state + 1
+        bool l21_opp = (l21_pending_side_state == 1 and l21_raw_short) or (l21_pending_side_state == -1 and l21_raw_long)
+        if l21_opp or l21_bars_waiting_state >= retest_timeout_bars
+            l21_waiting_state := false
+            l21_pending_side_state := 0
+            l21_raw_long := false
+            l21_raw_short := false
+        else if not na(l21_break_level_state) and l21_break_level_state > 0
+            float l21_dist_pct = math.abs(close - l21_break_level_state) / l21_break_level_state * 100.0
+            if l21_dist_pct <= retest_buffer_pct
+                l21_raw_long  := l21_pending_side_state == 1
+                l21_raw_short := l21_pending_side_state == -1
+                l21_waiting_state := false
+                l21_pending_side_state := 0
+            else
+                l21_raw_long  := false
+                l21_raw_short := false
+    if l4_position_side_state[1] != 0 and l4_position_side_state == 0
+        l21_waiting_state := false
+        l21_pending_side_state := 0
+        l21_bars_waiting_state := 0
+
+int l21_final_candidate = l21_raw_long ? 1 : l21_raw_short ? -1 : 0
+bool l4_regime_lock_blocks_entry = regime_lock and l21_final_candidate != 0 and l4_regime_lock_side_state != 0 and l4_regime_lock_side_state != l21_final_candidate
+bool l6_same_bar_flip_reentry = l4_opp_signal_exit and not l6_price_exit_blocked_entry and allow_flip and l21_final_candidate != 0 and l21_final_candidate != l4_prev_position_side_state
+bool l6_cooldown_blocks_entry = cooldown_bars > 0 and not l6_same_bar_flip_reentry and not na(l16_last_full_exit_bar_state) and (bar_index - l16_last_full_exit_bar_state) < cooldown_bars
+bool l6_same_side_add = l4_position_side_state != 0 and l21_final_candidate != 0 and l21_final_candidate == l4_position_side_state
+bool l6_entry_limit_allows = l4_position_side_state == 0 ? max_entries >= 1 : l6_entry_count_state < max_entries
+bool l6_price_exit_blocks_entry = not l4_entry_ready
+l6_same_bar_reentry_allowed := l4_opp_signal_exit and not l6_price_exit_blocked_entry
+l6_block_new_entries_this_bar := l6_price_exit_blocks_entry or l6_price_exit_blocked_entry or (l4_opp_signal_exit and not allow_flip)
+// allow_flip=false: save the blocked candidate so it can be entered next bar.
+if l4_opp_signal_exit and not allow_flip and l21_final_candidate != 0
+    l6_deferred_flip_side_state := l21_final_candidate
+// Guard recovery: signals mode – count final post-transform tradable signal (unconditional, breach-agnostic)
+if use_guard_recovery and l16_guard_recovery_active_state and guard_recovery_mode == "Signals"
+    if l21_final_candidate != 0
+        l16_guard_recovery_signals_rem_state := math.max(0, l16_guard_recovery_signals_rem_state - 1)
+    if l16_guard_recovery_signals_rem_state <= 0
+        l16_equity_peak_state       := l16_realized_equity
+        l16_consec_loss_count_state := 0
+        l16_last_mae_pct_state      := 0.0
+        if not na(l16_equity_sma_state)
+            l16_equity_sma_state := l16_realized_equity * 0.999
+        l16_guard_recovery_active_state := false
+bool l16_guard_blocked = l16_guard_blocked_raw or (use_guard_recovery and l16_guard_recovery_active_state)
+bool l4_can_take_entry = l21_final_candidate != 0 and not l6_block_new_entries_this_bar and l4_entry_ready and not l4_regime_lock_blocks_entry and not l6_cooldown_blocks_entry and l6_entry_limit_allows and (l4_position_side_state == 0 or l6_same_side_add) and not l16_guard_blocked
+if l4_can_take_entry and enable_long and l21_raw_long
+    float l6_long_swing_ref = sl_mode == "Swing+ATR" ? find_swing_reference(true, sl_swing_lookback, sl_swing_basis == "Close") : na
+    float l4_new_long_stop = l4_sl_enabled ? calc_stop_price(close, true, sl_atr, l6_long_swing_ref, sl_swing_atr) : na
+    float l6_new_long_initial_risk = not na(l4_new_long_stop) ? math.abs(close - l4_new_long_stop) : na
+    float l4_new_long_tp = tp_mode == "Multi-TP" ? na : l4_tp_enabled ? calc_single_tp_price(close, true, tp_atr, l6_new_long_initial_risk) : na
+    float l6_new_long_tp1 = na
+    float l6_new_long_tp2 = na
+    if tp_mode == "Multi-TP" and not na(l6_new_long_initial_risk) and l6_new_long_initial_risk > 0
+        if not (l4_position_side_state == 1 and l6_tp1_completed_state)
+            l6_new_long_tp1 := round_half_up_to_tick(close + (tp1_r_multiple * l6_new_long_initial_risk))
+        l6_new_long_tp2 := round_half_up_to_tick(close + (tp2_r_multiple * l6_new_long_initial_risk))
+    float l6_new_long_qty = calc_l6_qty(close, l4_new_long_stop, l6_sizing_equity_snapshot, true)
+    if not na(l6_new_long_qty) and l6_new_long_qty > 0
+        bool l6_is_add = l4_position_side_state == 1
+        float l6_prev_qty = l4_qty_state
+        float l6_prev_avg = na(l6_avg_entry_price_state) ? l4_entry_price_state : l6_avg_entry_price_state
+        float l6_merged_qty = l6_prev_qty + l6_new_long_qty
+        float l6_merged_avg = l6_is_add and l6_merged_qty > 0 ? ((l6_prev_avg * l6_prev_qty) + (close * l6_new_long_qty)) / l6_merged_qty : close
+        float l6_merged_stop = l6_is_add ? merge_pyramid_stop(l4_active_stop_price_state, l4_new_long_stop, true) : l4_new_long_stop
+        int l6_next_stop_owner = l6_is_add ? l6_active_stop_owner_code_state : 0
+        if l6_next_stop_owner == 0 and not na(l6_merged_stop)
+            l6_next_stop_owner := STOP_OWNER_INITIAL_CODE
+        float l6_next_tp = tp_mode == "Multi-TP" ? (not na(l6_new_long_tp1) ? l6_new_long_tp1 : l6_new_long_tp2) : l4_new_long_tp
+        if not l6_is_add
+            l6_lifecycle_id_state := l6_next_lifecycle_id_state
+            l6_next_lifecycle_id_state += 1
+            l4_entry_price_state := close
+            l4_entry_bar_state := bar_index
+            l6_entry_count_state := 1
+            l6_working_exit_book_version_state := 1
+            l6_initial_risk_per_unit_state := l6_new_long_initial_risk
+            l6_tp1_completed_state := false
+            l6_be_active_state := false
+            l6_trail_active_state := false
+            l6_trail_price_state := na
+        else
+            l6_entry_count_state += 1
+            l6_working_exit_book_version_state += 1
+        l4_position_side_state := 1
+        l6_avg_entry_price_state := l6_merged_avg
+        l4_qty_state := l6_merged_qty
+        l6_working_exit_reference_qty_state := l6_merged_qty
+        l4_active_stop_price_state := l6_merged_stop
+        l6_active_stop_owner_code_state := l6_next_stop_owner
+        l4_active_tp_price_state := l6_next_tp
+        l6_tp1_price_state := l6_new_long_tp1
+        l6_tp2_price_state := l6_new_long_tp2
+        l4_regime_lock_side_state := 1
+        if not l6_is_add
+            l16_trades_today_state += 1
+        strategy.entry("L4-Long", strategy.long, qty=l6_new_long_qty)
+else if l4_can_take_entry and enable_short and l21_raw_short
+    float l6_short_swing_ref = sl_mode == "Swing+ATR" ? find_swing_reference(false, sl_swing_lookback, sl_swing_basis == "Close") : na
+    float l4_new_short_stop = l4_sl_enabled ? calc_stop_price(close, false, sl_atr, l6_short_swing_ref, sl_swing_atr) : na
+    float l6_new_short_initial_risk = not na(l4_new_short_stop) ? math.abs(close - l4_new_short_stop) : na
+    float l4_new_short_tp = tp_mode == "Multi-TP" ? na : l4_tp_enabled ? calc_single_tp_price(close, false, tp_atr, l6_new_short_initial_risk) : na
+    float l6_new_short_tp1 = na
+    float l6_new_short_tp2 = na
+    if tp_mode == "Multi-TP" and not na(l6_new_short_initial_risk) and l6_new_short_initial_risk > 0
+        if not (l4_position_side_state == -1 and l6_tp1_completed_state)
+            l6_new_short_tp1 := round_half_up_to_tick(close - (tp1_r_multiple * l6_new_short_initial_risk))
+        l6_new_short_tp2 := round_half_up_to_tick(close - (tp2_r_multiple * l6_new_short_initial_risk))
+    float l6_new_short_qty = calc_l6_qty(close, l4_new_short_stop, l6_sizing_equity_snapshot, false)
+    if not na(l6_new_short_qty) and l6_new_short_qty > 0
+        bool l6_is_add = l4_position_side_state == -1
+        float l6_prev_qty = l4_qty_state
+        float l6_prev_avg = na(l6_avg_entry_price_state) ? l4_entry_price_state : l6_avg_entry_price_state
+        float l6_merged_qty = l6_prev_qty + l6_new_short_qty
+        float l6_merged_avg = l6_is_add and l6_merged_qty > 0 ? ((l6_prev_avg * l6_prev_qty) + (close * l6_new_short_qty)) / l6_merged_qty : close
+        float l6_merged_stop = l6_is_add ? merge_pyramid_stop(l4_active_stop_price_state, l4_new_short_stop, false) : l4_new_short_stop
+        int l6_next_stop_owner = l6_is_add ? l6_active_stop_owner_code_state : 0
+        if l6_next_stop_owner == 0 and not na(l6_merged_stop)
+            l6_next_stop_owner := STOP_OWNER_INITIAL_CODE
+        float l6_next_tp = tp_mode == "Multi-TP" ? (not na(l6_new_short_tp1) ? l6_new_short_tp1 : l6_new_short_tp2) : l4_new_short_tp
+        if not l6_is_add
+            l6_lifecycle_id_state := l6_next_lifecycle_id_state
+            l6_next_lifecycle_id_state += 1
+            l4_entry_price_state := close
+            l4_entry_bar_state := bar_index
+            l6_entry_count_state := 1
+            l6_working_exit_book_version_state := 1
+            l6_initial_risk_per_unit_state := l6_new_short_initial_risk
+            l6_tp1_completed_state := false
+            l6_be_active_state := false
+            l6_trail_active_state := false
+            l6_trail_price_state := na
+        else
+            l6_entry_count_state += 1
+            l6_working_exit_book_version_state += 1
+        l4_position_side_state := -1
+        l6_avg_entry_price_state := l6_merged_avg
+        l4_qty_state := l6_merged_qty
+        l6_working_exit_reference_qty_state := l6_merged_qty
+        l4_active_stop_price_state := l6_merged_stop
+        l6_active_stop_owner_code_state := l6_next_stop_owner
+        l4_active_tp_price_state := l6_next_tp
+        l6_tp1_price_state := l6_new_short_tp1
+        l6_tp2_price_state := l6_new_short_tp2
+        l4_regime_lock_side_state := -1
+        if not l6_is_add
+            l16_trades_today_state += 1
+        strategy.entry("L4-Short", strategy.short, qty=l6_new_short_qty)
+
+// ============================================================================
+// SECTION 8 - PARITY EXPORT FIELDS
+// ============================================================================
+// TradingView export mapping:
+// - use built-in Date/Time as `timestamp`
+// - `position_side`: 1=long, -1=short, 0=flat
+// - `exit_reason`: see exit_reason_code()
+// - extra stop/tp debug fields below are for parity diagnosis only
+plot(st_line, title="supertrend_line", display=display.none)
+plot(float(st_direction), title="direction", display=display.none)
+plot(long_raw ? 1.0 : 0.0, title="long_raw", display=display.none)
+plot(short_raw ? 1.0 : 0.0, title="short_raw", display=display.none)
+plot(long_gated ? 1.0 : 0.0, title="long_gated", display=display.none)
+plot(short_gated ? 1.0 : 0.0, title="short_gated", display=display.none)
+// Intermediate filter logic states commented out to stay under 64 plot limit
+plot(use_ma_filter ? _l12_ma_ref : na, title="ma_filter_line", display=display.none)
+// plot(l12_ma_filter_long_ok ? 1.0 : 0.0, title="ma_filter_long_ok", display=display.none)
+// plot(l12_ma_filter_short_ok ? 1.0 : 0.0, title="ma_filter_short_ok", display=display.none)
+// plot(ma_slope_line_state, title="ma_slope_line", display=display.none)
+// plot(l12_ma_slope_ratio, title="ma_slope_ratio", display=display.none)
+// plot(l12_ma_slope_long_ok ? 1.0 : 0.0, title="ma_slope_long_ok", display=display.none)
+// plot(l12_ma_slope_short_ok ? 1.0 : 0.0, title="ma_slope_short_ok", display=display.none)
+plot(use_mcginley_filter ? mcginley_line_state : na, title="mcginley_line", display=display.none)
+// plot(l12_mcginley_long_ok ? 1.0 : 0.0, title="mcginley_long_ok", display=display.none)
+// plot(l12_mcginley_short_ok ? 1.0 : 0.0, title="mcginley_short_ok", display=display.none)
+// plot(vol_sma_state, title="vol_sma", display=display.none)
+// plot(l12_vol_ok ? 1.0 : 0.0, title="vol_ok", display=display.none)
+plot(adx_state, title="adx", display=display.none)
+// plot(l12_adx_ok ? 1.0 : 0.0, title="adx_ok", display=display.none)
+plot(chop_state, title="chop", display=display.none)
+// plot(l12_chop_ok ? 1.0 : 0.0, title="chop_ok", display=display.none)
+// plot(atr_vol_floor_fast_state, title="atr_vol_floor_fast", display=display.none)
+// plot(atr_vol_floor_baseline_state, title="atr_vol_floor_baseline", display=display.none)
+// plot(l12_atr_floor_ok ? 1.0 : 0.0, title="atr_floor_ok", display=display.none)
+// plot(macd_line_state, title="macd_line", display=display.none)
+// plot(macd_signal_state, title="macd_signal", display=display.none)
+// plot(macd_hist_state, title="macd_hist", display=display.none)
+// plot(prev_macd_hist_state, title="prev_macd_hist", display=display.none)
+// plot(l12_macd_regime_long_ok ? 1.0 : 0.0, title="macd_regime_long_ok", display=display.none)
+// plot(l12_macd_regime_short_ok ? 1.0 : 0.0, title="macd_regime_short_ok", display=display.none)
+// plot(l12_macd_cross_long_ok ? 1.0 : 0.0, title="macd_cross_long_ok", display=display.none)
+// plot(l12_macd_cross_short_ok ? 1.0 : 0.0, title="macd_cross_short_ok", display=display.none)
+// plot(l12_macd_hist_long_ok ? 1.0 : 0.0, title="macd_hist_long_ok", display=display.none)
+// plot(l12_macd_hist_short_ok ? 1.0 : 0.0, title="macd_hist_short_ok", display=display.none)
+// plot(l12_macd_zero_dist_ok ? 1.0 : 0.0, title="macd_zero_dist_ok", display=display.none)
+plot(sl_atr, title="sl_atr", display=display.none)
+plot(sl_swing_atr, title="sl_swing_atr", display=display.none)
+plot(tp_atr, title="tp_atr", display=display.none)
+plot(trail_atr, title="trail_atr", display=display.none)
+plot(l6_last_sizing_equity_snapshot_state, title="sizing_equity_snapshot", display=display.none)
+plot(float(l4_position_side_state), title="position_side", display=display.none)
+plot(l4_entry_price_state, title="entry_price", display=display.none)
+plot(l6_avg_entry_price_state, title="avg_entry_price", display=display.none)
+plot(l4_qty_state, title="qty", display=display.none)
+plot(float(l6_entry_count_state), title="entry_count", display=display.none)
+plot(float(l6_lifecycle_id_state), title="lifecycle_id", display=display.none)
+plot(l6_working_exit_reference_qty_state, title="working_exit_reference_qty", display=display.none)
+plot(l6_initial_risk_per_unit_state, title="initial_risk_per_unit", display=display.none)
+plot(l4_active_stop_price_state, title="active_stop_price", display=display.none)
+plot(float(l6_active_stop_owner_code_state), title="active_stop_owner_code", display=display.none)
+plot(l4_active_tp_price_state, title="active_tp_price", display=display.none)
+plot(l6_tp1_price_state, title="tp1_price", display=display.none)
+plot(l6_tp2_price_state, title="tp2_price", display=display.none)
+plot(l6_tp1_completed_state ? 1.0 : 0.0, title="tp1_completed", display=display.none)
+plot(l6_be_active_state ? 1.0 : 0.0, title="be_active", display=display.none)
+plot(l6_trail_active_state ? 1.0 : 0.0, title="trail_active", display=display.none)
+plot(l6_trail_price_state, title="trail_price", display=display.none)
+plot(l4_stop_hit ? 1.0 : 0.0, title="stop_hit", display=display.none)
+plot(l4_tp_hit ? 1.0 : 0.0, title="tp_hit", display=display.none)
+plot(l6_tp1_hit ? 1.0 : 0.0, title="tp1_hit", display=display.none)
+plot(l6_tp1_fill_price, title="tp1_fill_price", display=display.none)
+plot(l6_tp1_exit_qty_plot, title="tp1_exit_qty", display=display.none)
+plot(l6_tp2_hit ? 1.0 : 0.0, title="tp2_hit", display=display.none)
+plot(l4_pessimistic_sl_hit ? 1.0 : 0.0, title="pessimistic_sl_hit", display=display.none)
+plot(l6_last_exit_qty_state, title="last_exit_qty", display=display.none)
+plot(l6_same_bar_reentry_allowed ? 1.0 : 0.0, title="same_bar_reentry_allowed", display=display.none)
+plot(l6_block_new_entries_this_bar ? 1.0 : 0.0, title="block_new_entries_this_bar", display=display.none)
+plot(l4_closed_this_bar_reason_state != "" ? exit_reason_code(l4_closed_this_bar_reason_state) : 0.0, title="exit_reason", display=display.none)
+plot(l4_closed_this_bar_reason_state != "" ? float(bar_index) : na, title="exit_bar", display=display.none)
+plot(l4_closed_this_bar_reason_state != "" ? l4_last_exit_price_state : na, title="exit_price", display=display.none)
+plot(l16_guard_blocked ? 1.0 : 0.0, title="guard_blocked", display=display.none)
+plot(float(l18_confirm_bars_count_state), title="confirm_count", display=display.none)
+plot(use_htf_trend_filter ? htf_trend_line_state : na, title="htf_trend_line", display=display.none)
+
+// ============================================================================
+// SECTION 9 - WUNDERTRADING ALERT DISPATCH (L25)
+// ============================================================================
+bool l25_any_code_set = wt_enter_long_code != "" or wt_exit_long_code != "" or wt_enter_short_code != "" or wt_exit_short_code != "" or wt_exit_all_code != ""
+
+if l25_any_code_set
+    // Entry alert - fires when position opens
+    if l4_position_side_state != 0 and l4_position_side_state[1] == 0
+        string l25_entry_code = l4_position_side_state > 0 ? wt_enter_long_code : wt_enter_short_code
+        if l25_entry_code != ""
+            string l25_tp_str = wt_use_tp and not na(l4_active_tp_price_state) ? ',"tp":' + str.tostring(math.round(l4_active_tp_price_state, 2)) : ""
+            string l25_sl_str = wt_use_sl and not na(l4_active_stop_price_state) ? ',"sl":' + str.tostring(math.round(l4_active_stop_price_state, 2)) : ""
+            string l25_cond_str = wt_place_cond_orders ? ',"place_conditional_orders":true' : ""
+            alert('{"code":"' + l25_entry_code + '","order_type":"' + wt_order_type + '","amount":' + str.tostring(wt_amount) + ',"amount_type":"' + wt_amount_type + '","leverage":' + str.tostring(wt_leverage) + ',"reduce_only":' + (wt_reduce_only ? "true" : "false") + l25_tp_str + l25_sl_str + l25_cond_str + '}', alert.freq_once_per_bar_close)
+
+    // Exit alert - fires when position closes
+    if l4_position_side_state == 0 and l4_position_side_state[1] != 0
+        string l25_exit_code = l4_position_side_state[1] > 0 ? wt_exit_long_code : wt_exit_short_code
+        if l25_exit_code == "" and wt_exit_all_code != ""
+            l25_exit_code := wt_exit_all_code
+        if l25_exit_code != ""
+            alert('{"code":"' + l25_exit_code + '","reduce_only":true}', alert.freq_once_per_bar_close)
+
+// ============================================================================
+// SECTION 6 - VISUALIZATION (L23)
+// ============================================================================
+
+// Supertrend line (signal_mode=Supertrend only)
+plot(signal_mode == "Supertrend" and not performance_mode ? st_line : na, title="ST Line",
+     color=l4_position_side_state > 0 ? color.green : l4_position_side_state < 0 ? color.red : color.gray,
+     linewidth=2)
+
+// Active stop (SL / BE / Trail level)
+plot(l4_position_side_state != 0 and not na(l4_active_stop_price_state) and not performance_mode ? l4_active_stop_price_state : na,
+     title="Stop", color=color.red, style=plot.style_linebr, linewidth=1)
+
+// TP level (single TP mode)
+plot(l4_position_side_state != 0 and tp_mode != "None" and tp_mode != "Multi-TP" and not na(l4_active_tp_price_state) and not performance_mode ? l4_active_tp_price_state : na,
+     title="TP", color=color.green, style=plot.style_linebr, linewidth=1)
+
+// TP1 / TP2 (multi-TP mode)
+plot(l4_position_side_state != 0 and tp_mode == "Multi-TP" and not l6_tp1_completed_state and not na(l6_tp1_price_state) and not performance_mode ? l6_tp1_price_state : na,
+     title="TP1", color=color.lime, style=plot.style_linebr)
+plot(l4_position_side_state != 0 and tp_mode == "Multi-TP" and not na(l6_tp2_price_state) and not performance_mode ? l6_tp2_price_state : na,
+     title="TP2", color=color.teal, style=plot.style_linebr)
+
+// Trail anchor line (when trail is active)
+plot(l6_trail_active_state and not na(l6_trail_price_state) and not performance_mode ? l6_trail_price_state : na,
+     title="Trail Anchor", color=color.orange, style=plot.style_linebr, linewidth=1)
+
+// Entry markers
+plotshape(l4_position_side_state > 0 and l4_position_side_state[1] == 0 and not performance_mode,
+          title="Long Entry", style=shape.triangleup, location=location.belowbar,
+          color=color.new(color.green, 0), size=size.small)
+plotshape(l4_position_side_state < 0 and l4_position_side_state[1] == 0 and not performance_mode,
+          title="Short Entry", style=shape.triangledown, location=location.abovebar,
+          color=color.new(color.red, 0), size=size.small)
+
+// Exit marker
+plotshape(l4_position_side_state == 0 and l4_position_side_state[1] != 0 and not performance_mode,
+          title="Exit", style=shape.xcross, location=location.abovebar,
+          color=color.white, size=size.tiny)
+
+// Background: position direction
+bgcolor(not performance_mode and l4_position_side_state > 0 ? color.new(color.green, 93) :
+        not performance_mode and l4_position_side_state < 0 ? color.new(color.red,   93) : na,
+        title="Position BG")
+
+// Raw signal markers (light, visible in non-performance mode)
+plotchar(not performance_mode and long_raw,  title="Long Raw",  char="^", location=location.belowbar, color=color.new(color.green, 60), size=size.tiny)
+plotchar(not performance_mode and short_raw, title="Short Raw", char="v", location=location.abovebar, color=color.new(color.red,   60), size=size.tiny)
+
+

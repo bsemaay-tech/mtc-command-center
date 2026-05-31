@@ -1,0 +1,5 @@
+candidate_id,cost_mult,profit_factor,net_noncompounded_return,compounded_return,compounding_status,max_drawdown
+KELL_WEDGE,1,3.595616,61.233789,74.742499,SAFE,-7.313073
+KELL_WEDGE,2,3.399304,59.193789,71.316333,SAFE,-7.65488
+KELL_WEDGE,3,3.219458,57.153789,67.953445,SAFE,-7.995846
+KELL_WEDGE,5,2.90152,53.073789,61.413141,SAFE,-8.675258

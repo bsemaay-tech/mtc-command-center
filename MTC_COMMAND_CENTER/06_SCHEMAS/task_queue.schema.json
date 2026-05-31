@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/task_queue.schema.json",
+  "title": "MCC Task Queue",
+  "type": "object",
+  "required": ["schema_version", "tasks"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "generated_at": { "type": ["string", "null"] },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "status", "assigned_ai", "phase", "requires_user_input"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "status": { "type": "string", "enum": ["TODO", "READY", "IN_PROGRESS", "WAITING_FOR_USER", "WAITING_FOR_AI_REVIEW", "STALE", "FAILED", "DONE", "ARCHIVED"] },
+          "assigned_ai": { "type": "string" },
+          "phase": { "type": "string" },
+          "dependencies": { "type": "array", "items": { "type": "string" } },
+          "requires_user_input": { "type": "boolean" },
+          "timeout_seconds": { "type": "integer" },
+          "retry_count": { "type": "integer" },
+          "max_retries": { "type": "integer" },
+          "allowed_actions": { "type": "array", "items": { "type": "string" } },
+          "forbidden_actions": { "type": "array", "items": { "type": "string" } },
+          "expected_outputs": { "type": "array", "items": { "type": "string" } },
+          "report_path": { "type": ["string", "null"] },
+          "created_at": { "type": ["string", "null"] },
+          "updated_at": { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,100 @@
+﻿version: 1
+name: mtc_param_space_registry
+
+# Future-proof registry: add new modules here, then include module ids in stages.
+module_registry:
+  signals:
+    supertrend:
+      signal_mode_value: "Supertrend"
+      params:
+        - key: supertrend.atr_len
+          grid:   { type: int, low: 10, high: 40, step: 2 }
+          random: { dist: uniform_int, low: 10, high: 50 }
+        - key: supertrend.factor
+          grid:   { type: float, low: 2.0, high: 8.0, step: 0.5 }
+          random: { dist: uniform_float, low: 2.0, high: 8.0, step: 0.2 }
+
+    range_filter_hybrid:
+      signal_mode_value: "Range Filter Hybrid (ADX+Chop+BB)"
+      params:
+        - key: range_filter.adx_trend_threshold
+          grid:   { type: int, low: 20, high: 35, step: 1 }
+          random: { dist: uniform_int, low: 18, high: 40 }
+        - key: range_filter.chop_range_threshold
+          grid:   { type: int, low: 45, high: 65, step: 1 }
+          random: { dist: uniform_int, low: 40, high: 70 }
+
+  exits:
+    sl_tp_be_trail:
+      params:
+        - key: stop_loss.atr_mult
+          grid:   { type: float, low: 2.0, high: 6.0, step: 0.5 }
+          random: { dist: choice, values: [2.0, 2.5, 3.0, 3.5, 4.0, 5.0, 6.0] }
+        - key: take_profit.atr_mult
+          grid:   { type: float, low: 1.5, high: 5.0, step: 0.5 }
+          random: { dist: choice, values: [1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0] }
+        - key: break_even.rr
+          grid:   { type: float, low: 0.8, high: 2.0, step: 0.2 }
+          random: { dist: uniform_float, low: 0.8, high: 2.5, step: 0.1 }
+        - key: trailing.start_r
+          grid:   { type: float, low: 1.0, high: 4.0, step: 0.5 }
+          random: { dist: uniform_float, low: 1.0, high: 5.0, step: 0.25 }
+
+  filters:
+    ma_mcginley_volume:
+      params:
+        - key: filters.ma_len
+          grid:   { type: int, low: 50, high: 300, step: 25 }
+          random: { dist: uniform_int, low: 40, high: 320 }
+        - key: filters.mcginley_len
+          grid:   { type: int, low: 5, high: 30, step: 1 }
+          random: { dist: uniform_int, low: 5, high: 50 }
+        - key: filters.volume_sma_len
+          grid:   { type: int, low: 20, high: 120, step: 10 }
+          random: { dist: uniform_int, low: 10, high: 150 }
+
+  guards:
+    eq_curve_and_drawdown:
+      params:
+        - key: guards.max_dd_pct
+          grid:   { type: float, low: 8.0, high: 25.0, step: 1.0 }
+          random: { dist: uniform_float, low: 6.0, high: 30.0, step: 0.5 }
+        - key: guards.eq_curve_ma_len
+          grid:   { type: int, low: 3, high: 20, step: 1 }
+          random: { dist: uniform_int, low: 2, high: 30 }
+
+  money:
+    risk_sizing:
+      params:
+        - key: risk.risk_long_percent
+          grid:   { type: float, low: 0.5, high: 3.0, step: 0.25 }
+          random: { dist: uniform_float, low: 0.5, high: 4.0, step: 0.25 }
+        - key: risk.risk_short_percent
+          grid:   { type: float, low: 0.5, high: 3.0, step: 0.25 }
+          random: { dist: uniform_float, low: 0.5, high: 4.0, step: 0.25 }
+
+# Stage definitions: autopilot converts this into optimizer JSON spaces.
+stages:
+  - id: signal
+    module_ids: ["signals.supertrend"]
+    mode: random
+    iters: 20
+    top_k: 8
+
+  - id: exits
+    module_ids: ["exits.sl_tp_be_trail"]
+    mode: random
+    iters: 20
+    top_k: 8
+
+  - id: filters
+    module_ids: ["filters.ma_mcginley_volume", "guards.eq_curve_and_drawdown"]
+    mode: random
+    iters: 20
+    top_k: 8
+
+  - id: money
+    module_ids: ["money.risk_sizing"]
+    mode: random
+    iters: 20
+    top_k: 8

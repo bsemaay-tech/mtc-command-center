@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "mcc_root": "C:/LAB/tradingview-lab/MTC_COMMAND_CENTER",
+  "mtc_v2_root": "C:/LAB/tradingview-lab/01_MASTER TEMPLATE_V2",
+  "mtc_v2_python_exe": null,
+  "pinets_root": "C:/LAB/tradingview-lab/01_MASTER TEMPLATE_V2/05_PARITY",
+  "tradingview_exports_dir": "C:/LAB/tradingview-lab/01_MASTER TEMPLATE_V2/05_PARITY/TW_EXPORTS",
+  "reports_root": "C:/LAB/tradingview-lab/MTC_COMMAND_CENTER/04_REPORTS"
+}

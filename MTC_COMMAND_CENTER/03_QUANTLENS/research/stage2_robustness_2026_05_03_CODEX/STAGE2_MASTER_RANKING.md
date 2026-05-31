@@ -1,0 +1,5 @@
+# Stage 2 Master Ranking
+
+1. QL_LBR_COIL_BREAKOUT_IDNR4
+2. QL_STAN_STAGE_2_BREAKOUT
+3. QL_KELL_WEDGE_POP (Untested today)

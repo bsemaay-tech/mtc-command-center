@@ -1,0 +1,2 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,name,timeframe,best_parameter_set
+457594,17,-100.0,0.8687,42.1415,-0.0376,-0.1514,-0.0376,0.59,-0.4947,-100.0,-1.0,8.2221,8.2221,OPUSDT,TRXUSDT,False,LBR_COIL,LBR Coil Breakout / IDNR4,5m,"{""atr_stop"": 1.5, ""hold"": 12, ""inside"": false, ""nr"": 7, ""target_r"": 2.0}"

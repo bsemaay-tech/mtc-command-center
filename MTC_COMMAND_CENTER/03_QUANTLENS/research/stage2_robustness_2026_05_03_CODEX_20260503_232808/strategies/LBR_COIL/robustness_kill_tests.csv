@@ -1,0 +1,4 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,kill_test
+429749,16,-100.0,0.8605,42.0189,-0.0394,-0.1506,-0.0394,0.5782,-0.487,-100.0,-1.0,8.2188,8.2188,AVAXUSDT,TRXUSDT,False,LBR_COIL,remove_best_asset
+385253,17,-100.0,0.8827,42.422,-0.0342,-0.1518,-0.0342,0.6067,-0.5064,-100.0,-1.0,8.2382,8.2382,OPUSDT,BTCUSDT,False,LBR_COIL,remove_best_year
+457589,17,inf,0.8682,42.1409,-0.0377,-0.1514,-0.0377,0.5897,-0.4947,0.0,0.0,8.2221,8.2221,OPUSDT,TRXUSDT,False,LBR_COIL,remove_top_5_trades

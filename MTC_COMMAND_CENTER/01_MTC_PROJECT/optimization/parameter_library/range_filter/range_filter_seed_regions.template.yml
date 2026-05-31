@@ -1,0 +1,16 @@
+# Range Filter Seed Regions Template
+Research seeds only; not Pine defaults; not production parameters.
+
+regions:
+  - region_id: range_filter_placeholder_region
+    strategy_id: MTC_V2
+    producer_id: RangeFilter
+    asset: PLACEHOLDER
+    timeframe: PLACEHOLDER
+    parameter_ranges: {}
+    center_params: {}
+    evidence_count: 0
+    accepted_for_next_stage: false
+    rejected_reason: TEMPLATE_ONLY
+    warnings:
+      - Research seeds only; not Pine defaults; not production parameters.

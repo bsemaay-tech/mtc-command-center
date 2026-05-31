@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MTC V2 Parameter Region",
+  "type": "object",
+  "required": [
+    "strategy_id",
+    "producer_id",
+    "asset",
+    "timeframe",
+    "region_id",
+    "parameter_ranges",
+    "center_params",
+    "evidence_count",
+    "accepted_for_next_stage",
+    "warnings"
+  ],
+  "properties": {
+    "strategy_id": {
+      "type": "string"
+    },
+    "producer_id": {
+      "type": "string"
+    },
+    "asset": {
+      "type": "string"
+    },
+    "timeframe": {
+      "type": "string"
+    },
+    "region_id": {
+      "type": "string"
+    },
+    "parameter_ranges": {
+      "type": "object"
+    },
+    "center_params": {
+      "type": "object"
+    },
+    "evidence_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "accepted_for_next_stage": {
+      "type": "boolean"
+    },
+    "rejected_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}

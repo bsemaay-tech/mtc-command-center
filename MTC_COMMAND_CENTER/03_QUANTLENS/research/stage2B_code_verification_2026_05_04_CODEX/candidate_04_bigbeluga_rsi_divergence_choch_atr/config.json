@@ -1,0 +1,9 @@
+{
+  "candidate_id": "BIGBELUGA_RSI_DIVERGENCE_CHOCH_ATR",
+  "source_stage2_id": "BIGBELUGA",
+  "native_market": "crypto_proxy",
+  "timeframe": "1D",
+  "base_round_trip_cost_pct": 0.12,
+  "execution_policy": "completed-bar signal, next-bar entry unless prior contract used stop trigger, exit-first, stop-first same-bar conflict",
+  "verdict": "NEEDS_CONTRACT_REWRITE"
+}

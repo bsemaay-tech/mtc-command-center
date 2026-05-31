@@ -1,0 +1,172 @@
+{
+  "random": {
+    "confirmation.enabled": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "confirmation.p_left": {
+      "dist": "choice",
+      "values": [2, 3, 5, 7, 9]
+    },
+    "confirmation.p_right": {
+      "dist": "choice",
+      "values": [2, 3, 5, 7, 9]
+    },
+    "confirmation.require_close_beyond": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "confirmation.confirm_timeout_bars": {
+      "dist": "choice",
+      "values": [6, 12, 18, 24, 36, 48]
+    },
+    "confirmation.min_wait_bars": {
+      "dist": "choice",
+      "values": [0, 1, 2, 3]
+    },
+    "confirmation.gate_only_when_flat": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "confirmation.dynamic_level_while_waiting": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "confirmation.dyn_update_mode": {
+      "dist": "choice",
+      "values": ["ANY", "TIGHTEN_ONLY"]
+    },
+    "confirmation.defer_break_on_level_update": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "confirmation.refresh_on_new_raw_signal": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "confirmation.raw_event_mode": {
+      "dist": "choice",
+      "values": ["EDGE", "LEVEL"]
+    },
+    "confirmation.require_raw_still_true": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "confirmation.break_buffer_ticks": {
+      "dist": "choice",
+      "values": [0, 1, 2, 3]
+    },
+    "confirmation.max_swing_distance_pct": {
+      "dist": "choice",
+      "values": [0.0, 0.25, 0.5, 1.0, 2.0]
+    },
+    "confirmation.max_pivot_age_bars": {
+      "dist": "choice",
+      "values": [0, 3, 6, 12, 24]
+    },
+    "confirmation.same_bar_tie_rule": {
+      "dist": "choice",
+      "values": ["LONG_WINS", "SHORT_WINS", "IGNORE"]
+    },
+    "confirmation.use_momentum": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "confirmation.momentum_mode": {
+      "dist": "choice",
+      "values": ["ATR_BODY", "ROC_1"]
+    },
+    "confirmation.atr_len": {
+      "dist": "choice",
+      "values": [7, 10, 14, 21]
+    },
+    "confirmation.mom_atr_mult": {
+      "dist": "uniform_float",
+      "low": 0.1,
+      "high": 1.5,
+      "step": 0.05
+    },
+    "confirmation.roc_min_pct": {
+      "dist": "uniform_float",
+      "low": 0.05,
+      "high": 2.0,
+      "step": 0.05
+    },
+    "guards.use_dd_guard": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "guards.dd_guard_pct": {
+      "dist": "choice",
+      "values": [5.0, 7.5, 10.0, 12.5, 15.0, 20.0, 25.0]
+    },
+    "guards.use_consec_loss_guard": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "guards.consec_loss_max": {
+      "dist": "choice",
+      "values": [1, 2, 3, 4, 5]
+    },
+    "guards.consec_loss_reset_daily": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "guards.use_cooldown_guard": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "guards.cooldown_bars": {
+      "dist": "choice",
+      "values": [1, 2, 3, 5, 8, 13]
+    },
+    "guards.use_eq_curve_guard": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "guards.eq_curve_ma_len": {
+      "dist": "choice",
+      "values": [5, 8, 10, 15, 20, 30]
+    },
+    "guards.use_mae_guard": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "guards.mae_max_pct": {
+      "dist": "choice",
+      "values": [0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0]
+    },
+    "guards.use_guard_recovery": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "guards.guard_recovery_mode": {
+      "dist": "choice",
+      "values": ["Bars", "Signals", "Virtual Trade"]
+    },
+    "guards.guard_recovery_bars": {
+      "dist": "choice",
+      "values": [1, 2, 3, 5, 8, 13]
+    },
+    "guards.guard_recovery_signals": {
+      "dist": "choice",
+      "values": [1, 2, 3, 4]
+    },
+    "risk.use_daily_loss_limit": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "risk.max_daily_loss_percent": {
+      "dist": "choice",
+      "values": [1.0, 2.0, 3.0, 5.0, 7.5, 10.0]
+    },
+    "risk.use_max_trades_per_day": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "risk.max_trades_per_day": {
+      "dist": "choice",
+      "values": [1, 2, 3, 4, 5]
+    }
+  }
+}

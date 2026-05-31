@@ -1,0 +1,37 @@
+{
+  "case_id": "case_001_range_filter",
+  "case_no": 1,
+  "case_name": "case_001_range_filter",
+  "phase": "Feature Draft",
+  "title": "Range Filter selectable draft",
+  "description": "Local signal-level FAST_SUITE case using Range Filter producer selection.",
+  "status": "READY_LOCAL_ONLY",
+  "symbol": "BTCUSDT.P",
+  "timeframe": "60",
+  "exchange": "BINANCE",
+  "data_file": "05_PARITY/01_TW_CHART_DATA/BINANCE_BTCUSDT.P, 60_consolidated_stable.csv",
+  "baseline_reference_xlsx": "01_MASTER TEMPLATE_V2\\05_PARITY\\case_001\\MTC_V2_BINANCE_BTCUSDT.P_2026-04-03_827c5.xlsx",
+  "mtc_config": {
+    "source": "case_plan_overrides",
+    "signal_mode": "Range Filter",
+    "rf_range": 1000.0
+  },
+  "planned_overrides": {
+    "signal_mode": "Range Filter",
+    "rf_range": 1000.0,
+    "allow_flip": false,
+    "use_confirm_transform": false,
+    "use_l18b_confirmation": false,
+    "use_level_retest": false,
+    "sl_mode": "None",
+    "tp_mode": "None"
+  },
+  "warmup_bars": 0,
+  "commission": 0,
+  "slippage": 0,
+  "initial_capital": 10000,
+  "sizing": {
+    "mode": "case_plan_overrides"
+  },
+  "expected_reference_source": "local Range Filter selected signal-level comparison only"
+}

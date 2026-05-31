@@ -1,0 +1,2 @@
+candidate_id,strategy,timeframe,trade_count,assets_tested,aggregate_pf,aggregate_net_return_pct,aggregate_max_dd_pct,return_dd_ratio,win_rate,average_trade_pct,median_trade_pct,average_win_pct,average_loss_pct,expectancy_pct,exposure_pct,fee_2x_pf,fee_3x_pf,fee_monotonic,classification
+CANDIDATE_001,Kell Wedge Pop / EMA Crossback,1D,111,10,1.7481,331.7517,-46.3269,7.1611,31.5315,1.8977,-1.6369,14.0635,-3.705,1.8977,24.8348,1.6786,1.6132,True,WEAK_CANDIDATE

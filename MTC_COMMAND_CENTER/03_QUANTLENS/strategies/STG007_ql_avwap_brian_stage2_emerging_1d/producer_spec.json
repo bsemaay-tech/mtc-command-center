@@ -1,0 +1,17 @@
+{
+  "candidate_id": "QL_AVWAP_BRIAN_STAGE2_EMERGING_1D",
+  "source_url": "https://www.youtube.com/watch?v=UmLa9FAlMgw",
+  "source_candidate": "QLR_UmLa9FAlMgw",
+  "title": "AVWAP stage-2 emerging momentum (Brian Shannon)",
+  "kind": "strategy",
+  "rules_high_confidence": [
+    "20MA > 50MA > 200MA (Stage 2)",
+    "Anchor VWAP from key low",
+    "Buy on first higher-low pullback to AVWAP"
+  ],
+  "entry_pseudo": "stage2_ok AND higher_low_at_avwap AND turn_up",
+  "exit_pseudo": "close<avwap OR trail_under_swing_low",
+  "param_grid_size_planned": 60,
+  "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+  "promoted_at": "2026-05-31T00:09:34"
+}

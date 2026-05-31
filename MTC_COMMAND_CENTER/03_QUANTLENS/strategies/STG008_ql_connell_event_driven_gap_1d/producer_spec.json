@@ -1,0 +1,19 @@
+{
+  "candidate_id": "QL_CONNELL_EVENT_DRIVEN_GAP_1D",
+  "source_url": "https://www.youtube.com/watch?v=kao-hhaQnig",
+  "source_candidate": "QLR_kao-hhaQnig",
+  "title": "Andrew Connell event-driven catalyst",
+  "kind": "strategy",
+  "rules_high_confidence": [
+    "Catalyst proxy: gap > 5% AND volume in top decile of last 60 bars",
+    "Entry at open of catalyst bar",
+    "Stop at low of prior green candle (or session low)",
+    "Same-day invalidation: exit if loss > 1R by session close",
+    "3-part scale-out at value-area top (20-day high proxy)"
+  ],
+  "entry_pseudo": "gap_pct>=gap_thresh AND vol_rank>=0.9",
+  "exit_pseudo": "scale_out_at_VAH OR stop OR session_close_if_negative",
+  "param_grid_size_planned": 60,
+  "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+  "promoted_at": "2026-05-31T00:09:34"
+}

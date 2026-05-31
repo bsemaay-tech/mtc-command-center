@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/current_status.schema.json",
+  "title": "MCC Current Status",
+  "type": "object",
+  "required": ["schema_version", "product", "short_name", "root", "phase", "mode", "dry_run", "live_trading_enabled", "summary"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "product": { "type": "string" },
+    "short_name": { "type": "string" },
+    "root": { "type": "string" },
+    "phase": { "type": "string" },
+    "mode": { "type": "string" },
+    "dry_run": { "type": "boolean" },
+    "live_trading_enabled": { "type": "boolean" },
+    "last_updated": { "type": ["string", "null"] },
+    "summary": { "type": "string" },
+    "critical_warnings": { "type": "array", "items": { "type": "string" } },
+    "next_recommended_action": { "type": ["string", "null"] },
+    "active_writer": { "type": ["string", "null"] }
+  },
+  "additionalProperties": false
+}

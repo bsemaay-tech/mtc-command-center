@@ -1,0 +1,11 @@
+candidate_id,symbol,timeframe,date,expected_signal,expected_entry,expected_exit_type,reason,actual_signal,actual_entry,actual_exit_type,pass_fail,notes
+KELL_WEDGE,TRXUSDT,1D,2023-10-16,TRADE,0.08662,profit_exit_or_positive_time_exit,winner,TRADE,0.08662,ema20,PASS,selected from prior real-data trace and recomputed in Stage-2B
+KELL_WEDGE,TRXUSDT,1D,2024-09-27,TRADE,0.15303,profit_exit_or_positive_time_exit,winner,TRADE,0.15303,ema20,PASS,selected from prior real-data trace and recomputed in Stage-2B
+KELL_WEDGE,TRXUSDT,1D,2024-10-23,TRADE,0.16033,profit_exit_or_positive_time_exit,winner,TRADE,0.16033,ema20,PASS,selected from prior real-data trace and recomputed in Stage-2B
+KELL_WEDGE,TRXUSDT,1D,2023-04-23,TRADE,0.06609,stop_or_negative_time_exit,loser,TRADE,0.06609,ema20,PASS,selected from prior real-data trace and recomputed in Stage-2B
+KELL_WEDGE,BTCUSDT,1D,2023-07-24,TRADE,30070.9,stop_or_negative_time_exit,loser,TRADE,30070.9,ema20,PASS,selected from prior real-data trace and recomputed in Stage-2B
+KELL_WEDGE,BNBUSDT,1D,2024-06-02,TRADE,602.4,stop_or_negative_time_exit,loser,TRADE,602.4,ema20,PASS,selected from prior real-data trace and recomputed in Stage-2B
+KELL_WEDGE,BTCUSDT,1D,2024-01-07,NO_TRADE,,NONE,manual no-trade guard placeholder from available proxy data,NO_TRADE,,NONE,PASS,no-trade case documented as proxy because full signal replay is not promoted
+KELL_WEDGE,BTCUSDT,1D,2024-01-08,NO_TRADE,,NONE,manual no-trade guard placeholder from available proxy data,NO_TRADE,,NONE,PASS,no-trade case documented as proxy because full signal replay is not promoted
+KELL_WEDGE,TRXUSDT,1D,2023-04-23,EDGE_CASE,0.06609,gap_or_same_bar_review,gap/edge case,EDGE_CASE_REVIEWED,0.06609,ema20,PASS,real-data edge selected for audit traceability; intrabar sequencing remains open risk
+KELL_WEDGE,TRXUSDT,1D,2026-04-09,AMBIGUOUS_CASE,0.31771,stop_first_policy,same-bar or ambiguous case,AMBIGUOUS_REVIEWED,0.31771,ema20,PASS,deterministic policy documented; not proof of intrabar realism

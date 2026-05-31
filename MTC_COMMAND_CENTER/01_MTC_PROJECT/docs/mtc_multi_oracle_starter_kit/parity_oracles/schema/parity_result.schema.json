@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MTC Multi-Oracle Parity Result",
+  "type": "object",
+  "required": [
+    "engine_name",
+    "status",
+    "run_started_at",
+    "output_files"
+  ],
+  "properties": {
+    "engine_name": {
+      "type": "string"
+    },
+    "engine_version": {
+      "type": "string"
+    },
+    "command": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PASS",
+        "FAIL",
+        "ENGINE_UNAVAILABLE",
+        "NOT_COMPARABLE",
+        "STUB"
+      ]
+    },
+    "data_hash": {
+      "type": "string"
+    },
+    "config_hash": {
+      "type": "string"
+    },
+    "code_hash": {
+      "type": "string"
+    },
+    "run_started_at": {
+      "type": "string"
+    },
+    "run_finished_at": {
+      "type": "string"
+    },
+    "output_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}

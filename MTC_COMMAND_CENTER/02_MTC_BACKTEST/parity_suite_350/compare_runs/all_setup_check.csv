@@ -1,0 +1,458 @@
+run_order,case_id,status,primary_detail,notes
+1,parity_core_005_enable_long_trades_v01,PASS,PASS,
+2,parity_bnd_005_enable_long_trades_v02,PASS,PASS,
+3,parity_core_006_enable_short_trades_v01,NO_FILE,,No XLSX file found in 003_parity_core_006_enable_short_trades_v01/
+4,parity_bnd_006_enable_short_trades_v02,PASS,PASS,
+5,parity_core_007_allow_position_flips_longshort_same_bar_v01,NO_FILE,,No XLSX file found in 005_parity_core_007_allow_position_flips_longshort_same_bar_v01/
+6,parity_bnd_007_allow_position_flips_longshort_same_bar_v02,PASS,PASS,
+7,parity_core_008_exit_on_opposite_signal_v01,NO_FILE,,No XLSX file found in 007_parity_core_008_exit_on_opposite_signal_v01/
+8,parity_bnd_008_exit_on_opposite_signal_v02,PASS,PASS,
+9,parity_core_009_exit_if_selected_filters_block_while_in_po_v01,NO_FILE,,No XLSX file found in 009_parity_core_009_exit_if_selected_filters_block_while_in_po_v01/
+10,parity_bnd_009_exit_if_selected_filters_block_while_in_po_v02,PASS,PASS,
+11,parity_core_010_regime_lock_prevent_re_entry_same_directio_v01,NO_FILE,,No XLSX file found in 011_parity_core_010_regime_lock_prevent_re_entry_same_directio_v01/
+12,parity_bnd_010_regime_lock_prevent_re_entry_same_directio_v02,PASS,PASS,
+13,parity_core_011_entry_mode_v01,NO_FILE,,No XLSX file found in 013_parity_core_011_entry_mode_v01/
+14,parity_bnd_011_entry_mode_v02,PASS,PASS,
+15,parity_core_012_exit_on_ma_filter_block_v01,PASS,PASS,
+16,parity_bnd_012_exit_on_ma_filter_block_v02,PASS,PASS,
+17,parity_core_013_exit_on_ma_slope_filter_block_v01,PASS,PASS,
+18,parity_bnd_013_exit_on_ma_slope_filter_block_v02,PASS,PASS,
+19,parity_core_014_exit_on_mcginley_filter_block_v01,PASS,PASS,
+20,parity_bnd_014_exit_on_mcginley_filter_block_v02,PASS,PASS,
+21,parity_core_015_exit_on_htf_trend_filter_block_v01,PASS,PASS,
+22,parity_bnd_015_exit_on_htf_trend_filter_block_v02,PASS,PASS,
+23,parity_core_016_exit_on_volume_filter_block_v01,PASS,PASS,
+24,parity_bnd_016_exit_on_volume_filter_block_v02,PASS,PASS,
+25,parity_core_017_exit_on_atr_vol_filter_block_v01,PASS,PASS,
+26,parity_bnd_017_exit_on_atr_vol_filter_block_v02,PASS,PASS,
+27,parity_core_018_exit_on_range_filter_block_v01,PASS,PASS,
+28,parity_bnd_018_exit_on_range_filter_block_v02,PASS,PASS,
+29,parity_core_019_use_time_stop_position_duration_exit_v01,NO_FILE,,No XLSX file found in 029_parity_core_019_use_time_stop_position_duration_exit_v01/
+30,parity_bnd_019_use_time_stop_position_duration_exit_v02,PASS,PASS,
+31,parity_core_020_time_stop_bars_v01,PASS,PASS,
+32,parity_bnd_020_time_stop_bars_v02,PASS,PASS,
+33,parity_bnd_020_time_stop_bars_v03,PASS,PASS,
+34,parity_core_021_exit_at_end_of_day_v01,PASS,PASS,
+35,parity_bnd_021_exit_at_end_of_day_v02,PASS,PASS,
+36,parity_core_022_exit_at_end_of_week_v01,PASS,PASS,
+37,parity_bnd_022_exit_at_end_of_week_v02,PASS,PASS,
+38,parity_core_023_time_stop_condition_v01,PASS,PASS,
+39,parity_bnd_023_time_stop_condition_v02,PASS,PASS,
+40,parity_bnd_023_time_stop_condition_v03,PASS,PASS,
+41,parity_core_024_signal_mode_max_entries_v01,NO_FILE,,No XLSX file found in 041_parity_core_024_signal_mode_max_entries_v01/
+42,parity_bnd_024_signal_mode_max_entries_v02,PASS,PASS,
+43,parity_bnd_024_signal_mode_max_entries_v03,PASS,PASS,
+44,parity_core_025_signal_mode_cooldown_bars_v01,PASS,PASS,
+45,parity_bnd_025_signal_mode_cooldown_bars_v02,PASS,PASS,
+46,parity_bnd_025_signal_mode_cooldown_bars_v03,PASS,PASS,
+47,parity_core_026_max_pyramid_positions_v01,NO_FILE,,No XLSX file found in 047_parity_core_026_max_pyramid_positions_v01/
+48,parity_bnd_026_max_pyramid_positions_v02,PASS,PASS,
+49,parity_bnd_026_max_pyramid_positions_v03,PASS,PASS,
+50,parity_core_027_signal_mode_v01,PASS,PASS,
+51,parity_bnd_027_signal_mode_v02,NO_FILE,,No XLSX file found in 051_parity_bnd_027_signal_mode_v02/
+52,parity_bnd_027_signal_mode_v03,FAIL,PASS,Range: Trading range parse failed: '—'
+53,parity_core_028_global_heikin_ashi_v01,NO_FILE,,No XLSX file found in 053_parity_core_028_global_heikin_ashi_v01/
+54,parity_bnd_028_global_heikin_ashi_v02,PASS,PASS,
+55,parity_bnd_028_global_heikin_ashi_v03,PASS,PASS,
+56,parity_core_029_use_ha_for_supertrend_v01,NO_FILE,,No XLSX file found in 056_parity_core_029_use_ha_for_supertrend_v01/
+57,parity_bnd_029_use_ha_for_supertrend_v02,PASS,PASS,
+58,parity_core_030_st_use_wicks_v01,NO_FILE,,No XLSX file found in 058_parity_core_030_st_use_wicks_v01/
+59,parity_bnd_030_st_use_wicks_v02,PASS,PASS,
+60,parity_core_031_st_atr_len_v01,NO_FILE,,No XLSX file found in 060_parity_core_031_st_atr_len_v01/
+61,parity_bnd_031_st_atr_len_v02,PASS,PASS,
+62,parity_bnd_031_st_atr_len_v03,PASS,PASS,
+63,parity_core_032_st_factor_v01,NO_FILE,,No XLSX file found in 063_parity_core_032_st_factor_v01/
+64,parity_bnd_032_st_factor_v02,PASS,PASS,
+65,parity_bnd_032_st_factor_v03,PASS,PASS,
+66,parity_core_033_rf_rsi_length_v01,PASS,PASS,
+67,parity_bnd_033_rf_rsi_length_v02,PASS,PASS,
+68,parity_bnd_033_rf_rsi_length_v03,PASS,PASS,
+69,parity_core_034_rf_use_bb_filter_range_mode_v01,PASS,PASS,
+70,parity_bnd_034_rf_use_bb_filter_range_mode_v02,PASS,PASS,
+71,parity_core_036_rf_use_strategy_tf_source_v01,PASS,PASS,
+72,parity_bnd_036_rf_use_strategy_tf_source_v02,PASS,PASS,
+73,parity_core_037_rf_adx_trend_threshold_v01,PASS,PASS,
+74,parity_bnd_037_rf_adx_trend_threshold_v02,PASS,PASS,
+75,parity_bnd_037_rf_adx_trend_threshold_v03,PASS,PASS,
+76,parity_core_038_rf_adx_range_threshold_v01,PASS,PASS,
+77,parity_bnd_038_rf_adx_range_threshold_v02,PASS,PASS,
+78,parity_bnd_038_rf_adx_range_threshold_v03,PASS,PASS,
+79,parity_core_039_rf_chop_trend_threshold_v01,PASS,PASS,
+80,parity_bnd_039_rf_chop_trend_threshold_v02,PASS,PASS,
+81,parity_bnd_039_rf_chop_trend_threshold_v03,PASS,PASS,
+82,parity_core_040_rf_chop_range_threshold_v01,PASS,PASS,
+83,parity_bnd_040_rf_chop_range_threshold_v02,PASS,PASS,
+84,parity_bnd_040_rf_chop_range_threshold_v03,PASS,PASS,
+85,parity_core_041_rf_rsi_oversold_v01,PASS,PASS,
+86,parity_bnd_041_rf_rsi_oversold_v02,PASS,PASS,
+87,parity_bnd_041_rf_rsi_oversold_v03,PASS,PASS,
+88,parity_core_042_rf_rsi_overbought_v01,PASS,PASS,
+89,parity_bnd_042_rf_rsi_overbought_v02,PASS,PASS,
+90,parity_bnd_042_rf_rsi_overbought_v03,PASS,PASS,
+91,parity_core_043_rf_bb_length_v01,PASS,PASS,
+92,parity_bnd_043_rf_bb_length_v02,PASS,PASS,
+93,parity_bnd_043_rf_bb_length_v03,PASS,PASS,
+94,parity_core_044_rf_bb_multiplier_v01,PASS,PASS,
+95,parity_bnd_044_rf_bb_multiplier_v02,PASS,PASS,
+96,parity_bnd_044_rf_bb_multiplier_v03,PASS,PASS,
+97,parity_core_045_risk_per_long_of_equity_v01,NO_FILE,,No XLSX file found in 097_parity_core_045_risk_per_long_of_equity_v01/
+98,parity_bnd_045_risk_per_long_of_equity_v02,PASS,PASS,
+99,parity_bnd_045_risk_per_long_of_equity_v03,PASS,PASS,
+100,parity_core_046_risk_per_short_of_equity_v01,NO_FILE,,No XLSX file found in 100_parity_core_046_risk_per_short_of_equity_v01/
+101,parity_bnd_046_risk_per_short_of_equity_v02,PASS,PASS,
+102,parity_bnd_046_risk_per_short_of_equity_v03,PASS,PASS,
+103,parity_core_047_fallback_position_size_when_sl_off_of_equi_v01,NO_FILE,,No XLSX file found in 103_parity_core_047_fallback_position_size_when_sl_off_of_equi_v01/
+104,parity_bnd_047_fallback_position_size_when_sl_off_of_equi_v02,PASS,PASS,
+105,parity_bnd_047_fallback_position_size_when_sl_off_of_equi_v03,PASS,PASS,
+106,parity_core_048_use_daily_loss_limit_v01,NO_FILE,,No XLSX file found in 106_parity_core_048_use_daily_loss_limit_v01/
+107,parity_bnd_048_use_daily_loss_limit_v02,PASS,PASS,
+108,parity_core_049_max_daily_loss_of_equity_v01,PASS,PASS,
+109,parity_bnd_049_max_daily_loss_of_equity_v02,PASS,PASS,
+110,parity_bnd_049_max_daily_loss_of_equity_v03,PASS,PASS,
+111,parity_core_050_use_max_trades_per_day_v01,NO_FILE,,No XLSX file found in 111_parity_core_050_use_max_trades_per_day_v01/
+112,parity_bnd_050_use_max_trades_per_day_v02,PASS,PASS,
+113,parity_core_051_max_trades_per_day_v01,NO_FILE,,No XLSX file found in 113_parity_core_051_max_trades_per_day_v01/
+114,parity_bnd_051_max_trades_per_day_v02,PASS,PASS,
+115,parity_bnd_051_max_trades_per_day_v03,PASS,PASS,
+116,parity_core_052_max_leverage_cap_limit_v01,NO_FILE,,No XLSX file found in 116_parity_core_052_max_leverage_cap_limit_v01/
+117,parity_bnd_052_max_leverage_cap_limit_v02,PASS,PASS,
+118,parity_bnd_052_max_leverage_cap_limit_v03,PASS,PASS,
+119,parity_core_053_risk_equity_source_v01,NO_FILE,,No XLSX file found in 119_parity_core_053_risk_equity_source_v01/
+120,parity_bnd_053_risk_equity_source_v02,PASS,PASS,
+121,parity_core_054_use_notional_hard_assert_v01,NO_FILE,,No XLSX file found in 121_parity_core_054_use_notional_hard_assert_v01/
+122,parity_bnd_054_use_notional_hard_assert_v02,PASS,PASS,
+123,parity_core_055_sl_mode_v01,NO_FILE,,No XLSX file found in 123_parity_core_055_sl_mode_v01/
+124,parity_bnd_055_sl_mode_v02,PASS,PASS,
+125,parity_bnd_055_sl_mode_v03,PASS,PASS,
+126,parity_bnd_055_sl_mode_v04,PASS,PASS,
+127,parity_core_056_swing_sl_basis_v01,PASS,PASS,
+128,parity_bnd_056_swing_sl_basis_v02,PASS,PASS,
+129,parity_core_057_swing_sl_lookback_v01,NO_FILE,,No XLSX file found in 129_parity_core_057_swing_sl_lookback_v01/
+130,parity_bnd_057_swing_sl_lookback_v02,PASS,PASS,
+131,parity_bnd_057_swing_sl_lookback_v03,PASS,PASS,
+132,parity_core_058_sl_distance_v01,PASS,PASS,
+133,parity_bnd_058_sl_distance_v02,PASS,PASS,
+134,parity_bnd_058_sl_distance_v03,PASS,PASS,
+135,parity_core_059_tp_mode_single_tp_v01,PASS,PASS,
+136,parity_bnd_059_tp_mode_single_tp_v02,PASS,PASS,
+137,parity_bnd_059_tp_mode_single_tp_v03,PASS,PASS,
+138,parity_core_060_tp_distance_v01,PASS,PASS,
+139,parity_bnd_060_tp_distance_v02,PASS,PASS,
+140,parity_bnd_060_tp_distance_v03,PASS,PASS,
+141,parity_core_061_tp_r_multiple_single_tp_v01,PASS,PASS,
+142,parity_bnd_061_tp_r_multiple_single_tp_v02,PASS,PASS,
+143,parity_bnd_061_tp_r_multiple_single_tp_v03,PASS,PASS,
+144,parity_core_062_use_stop_loss_v01,NO_FILE,,No XLSX file found in 144_parity_core_062_use_stop_loss_v01/
+145,parity_bnd_062_use_stop_loss_v02,PASS,PASS,
+146,parity_core_063_use_take_profit_v01,NO_FILE,,No XLSX file found in 146_parity_core_063_use_take_profit_v01/
+147,parity_bnd_063_use_take_profit_v02,PASS,PASS,
+148,parity_core_064_use_break_even_v01,NO_FILE,,No XLSX file found in 148_parity_core_064_use_break_even_v01/
+149,parity_bnd_064_use_break_even_v02,PASS,PASS,
+150,parity_core_065_use_multi_tp_2_tps_requires_take_profit_on_v01,NO_FILE,,No XLSX file found in 150_parity_core_065_use_multi_tp_2_tps_requires_take_profit_on_v01/
+151,parity_bnd_065_use_multi_tp_2_tps_requires_take_profit_on_v02,PASS,PASS,
+152,parity_core_066_tp2_at_r_multiple_v01,NO_FILE,,No XLSX file found in 152_parity_core_066_tp2_at_r_multiple_v01/
+153,parity_bnd_066_tp2_at_r_multiple_v02,PASS,PASS,
+154,parity_bnd_066_tp2_at_r_multiple_v03,PASS,PASS,
+155,parity_core_067_swing_sl_atr_length_v01,PASS,PASS,
+156,parity_bnd_067_swing_sl_atr_length_v02,PASS,PASS,
+157,parity_bnd_067_swing_sl_atr_length_v03,PASS,PASS,
+158,parity_core_068_swing_sl_atr_multiplier_v01,PASS,PASS,
+159,parity_bnd_068_swing_sl_atr_multiplier_v02,PASS,PASS,
+160,parity_bnd_068_swing_sl_atr_multiplier_v03,PASS,PASS,
+161,parity_core_069_sl_atr_length_v01,NO_FILE,,No XLSX file found in 161_parity_core_069_sl_atr_length_v01/
+162,parity_bnd_069_sl_atr_length_v02,PASS,PASS,
+163,parity_bnd_069_sl_atr_length_v03,PASS,PASS,
+164,parity_core_070_sl_atr_multiplier_v01,NO_FILE,,No XLSX file found in 164_parity_core_070_sl_atr_multiplier_v01/
+165,parity_bnd_070_sl_atr_multiplier_v02,PASS,PASS,
+166,parity_bnd_070_sl_atr_multiplier_v03,PASS,PASS,
+167,parity_core_071_tp_atr_length_v01,PASS,PASS,
+168,parity_bnd_071_tp_atr_length_v02,PASS,PASS,
+169,parity_bnd_071_tp_atr_length_v03,PASS,PASS,
+170,parity_core_072_tp_atr_multiplier_v01,PASS,PASS,
+171,parity_bnd_072_tp_atr_multiplier_v02,PASS,PASS,
+172,parity_bnd_072_tp_atr_multiplier_v03,PASS,PASS,
+173,parity_core_073_be_trigger_r_multiple_v01,NO_FILE,,No XLSX file found in 173_parity_core_073_be_trigger_r_multiple_v01/
+174,parity_bnd_073_be_trigger_r_multiple_v02,PASS,PASS,
+175,parity_bnd_073_be_trigger_r_multiple_v03,PASS,PASS,
+176,parity_core_074_be_buffer_r_multiple_v01,NO_FILE,,No XLSX file found in 176_parity_core_074_be_buffer_r_multiple_v01/
+177,parity_bnd_074_be_buffer_r_multiple_v02,PASS,PASS,
+178,parity_bnd_074_be_buffer_r_multiple_v03,NO_FILE,,No XLSX file found in 178_parity_bnd_074_be_buffer_r_multiple_v03/
+179,parity_core_075_tp1_at_r_multiple_v01,NO_FILE,,No XLSX file found in 179_parity_core_075_tp1_at_r_multiple_v01/
+180,parity_bnd_075_tp1_at_r_multiple_v02,PASS,PASS,
+181,parity_bnd_075_tp1_at_r_multiple_v03,PASS,PASS,
+182,parity_core_076_tp1_close_of_position_v01,NO_FILE,,No XLSX file found in 182_parity_core_076_tp1_close_of_position_v01/
+183,parity_bnd_076_tp1_close_of_position_v02,PASS,PASS,
+184,parity_bnd_076_tp1_close_of_position_v03,PASS,PASS,
+185,parity_core_077_use_trailing_stop_v01,NO_FILE,,No XLSX file found in 185_parity_core_077_use_trailing_stop_v01/
+186,parity_bnd_077_use_trailing_stop_v02,PASS,PASS,
+187,parity_core_078_trailing_atr_length_v01,NO_FILE,,No XLSX file found in 187_parity_core_078_trailing_atr_length_v01/
+188,parity_bnd_078_trailing_atr_length_v02,PASS,PASS,
+189,parity_bnd_078_trailing_atr_length_v03,PASS,PASS,
+190,parity_core_079_start_after_r_multiple_v01,NO_FILE,,No XLSX file found in 190_parity_core_079_start_after_r_multiple_v01/
+191,parity_bnd_079_start_after_r_multiple_v02,PASS,PASS,
+192,parity_bnd_079_start_after_r_multiple_v03,PASS,PASS,
+193,parity_core_080_trail_distance_r_multiple_v01,NO_FILE,,No XLSX file found in 193_parity_core_080_trail_distance_r_multiple_v01/
+194,parity_bnd_080_trail_distance_r_multiple_v02,PASS,PASS,
+195,parity_bnd_080_trail_distance_r_multiple_v03,PASS,PASS,
+196,parity_core_081_use_ma_filter_v01,NO_FILE,,No XLSX file found in 196_parity_core_081_use_ma_filter_v01/
+197,parity_bnd_081_use_ma_filter_v02,PASS,PASS,
+198,parity_core_082_use_ma_slope_filter_v01,NO_FILE,,No XLSX file found in 198_parity_core_082_use_ma_slope_filter_v01/
+199,parity_bnd_082_use_ma_slope_filter_v02,PASS,PASS,
+200,parity_core_083_use_mcginley_filter_v01,NO_FILE,,No XLSX file found in 200_parity_core_083_use_mcginley_filter_v01/
+201,parity_bnd_083_use_mcginley_filter_v02,PASS,PASS,
+202,parity_core_084_use_htf_trend_filter_v01,NO_FILE,,No XLSX file found in 202_parity_core_084_use_htf_trend_filter_v01/
+203,parity_bnd_084_use_htf_trend_filter_v02,PASS,PASS,
+204,parity_core_085_htf_ma_length_v01,NO_FILE,,No XLSX file found in 204_parity_core_085_htf_ma_length_v01/
+205,parity_bnd_085_htf_ma_length_v02,PASS,PASS,
+206,parity_bnd_085_htf_ma_length_v03,PASS,PASS,
+207,parity_core_086_htf_buffer_v01,NO_FILE,,No XLSX file found in 207_parity_core_086_htf_buffer_v01/
+208,parity_bnd_086_htf_buffer_v02,PASS,PASS,
+209,parity_bnd_086_htf_buffer_v03,NO_FILE,,No XLSX file found in 209_parity_bnd_086_htf_buffer_v03/
+210,parity_core_087_use_volume_participation_filter_v01,PASS,PASS,
+211,parity_bnd_087_use_volume_participation_filter_v02,NO_FILE,,No XLSX file found in 211_parity_bnd_087_use_volume_participation_filter_v02/
+212,parity_core_088_ma_type_v01,NO_FILE,,No XLSX file found in 212_parity_core_088_ma_type_v01/
+213,parity_bnd_088_ma_type_v02,PASS,PASS,
+214,parity_bnd_088_ma_type_v03,PASS,PASS,
+215,parity_bnd_088_ma_type_v04,PASS,PASS,
+216,parity_core_089_ma_length_v01,NO_FILE,,No XLSX file found in 216_parity_core_089_ma_length_v01/
+217,parity_bnd_089_ma_length_v02,PASS,PASS,
+218,parity_bnd_089_ma_length_v03,PASS,PASS,
+219,parity_core_090_ma_slope_len_v01,NO_FILE,,No XLSX file found in 219_parity_core_090_ma_slope_len_v01/
+220,parity_bnd_090_ma_slope_len_v02,PASS,PASS,
+221,parity_bnd_090_ma_slope_len_v03,PASS,PASS,
+222,parity_core_091_ma_slope_min_bar_v01,NO_FILE,,No XLSX file found in 222_parity_core_091_ma_slope_min_bar_v01/
+223,parity_bnd_091_ma_slope_min_bar_v02,PASS,PASS,
+224,parity_bnd_091_ma_slope_min_bar_v03,PASS,PASS,
+225,parity_core_092_ma_use_higher_timeframe_v01,PASS,PASS,
+226,parity_bnd_092_ma_use_higher_timeframe_v02,PASS,PASS,
+227,parity_core_093_ma_htf_timeframe_v01,NO_FILE,,No XLSX file found in 227_parity_core_093_ma_htf_timeframe_v01/
+228,parity_bnd_093_ma_htf_timeframe_v02,PASS,PASS,
+229,parity_bnd_093_ma_htf_timeframe_v03,PASS,PASS,
+230,parity_core_094_mcginley_length_v01,PASS,PASS,
+231,parity_bnd_094_mcginley_length_v02,PASS,PASS,
+232,parity_bnd_094_mcginley_length_v03,PASS,PASS,
+233,parity_core_095_mcginley_use_higher_timeframe_v01,NO_FILE,,No XLSX file found in 233_parity_core_095_mcginley_use_higher_timeframe_v01/
+234,parity_bnd_095_mcginley_use_higher_timeframe_v02,PASS,PASS,
+235,parity_core_096_mcginley_htf_timeframe_v01,PASS,PASS,
+236,parity_bnd_096_mcginley_htf_timeframe_v02,PASS,PASS,
+237,parity_bnd_096_mcginley_htf_timeframe_v03,PASS,PASS,
+238,parity_core_097_htf_trend_timeframe_v01,PASS,PASS,
+239,parity_bnd_097_htf_trend_timeframe_v02,PASS,PASS,
+240,parity_bnd_097_htf_trend_timeframe_v03,PASS,PASS,
+241,parity_core_098_htf_ma_type_v01,NO_FILE,,No XLSX file found in 241_parity_core_098_htf_ma_type_v01/
+242,parity_bnd_098_htf_ma_type_v02,PASS,PASS,
+243,parity_bnd_098_htf_ma_type_v03,PASS,PASS,
+244,parity_bnd_098_htf_ma_type_v04,PASS,PASS,
+245,parity_core_099_vol_sma_length_v01,PASS,PASS,
+246,parity_bnd_099_vol_sma_length_v02,PASS,PASS,
+247,parity_bnd_099_vol_sma_length_v03,PASS,PASS,
+248,parity_core_100_vol_min_sma_v01,NO_FILE,,No XLSX file found in 248_parity_core_100_vol_min_sma_v01/
+249,parity_bnd_100_vol_min_sma_v02,PASS,PASS,
+250,parity_bnd_100_vol_min_sma_v03,PASS,PASS,
+251,parity_core_101_use_range_filters_entry_pause_v01,NO_FILE,,No XLSX file found in 251_parity_core_101_use_range_filters_entry_pause_v01/
+252,parity_bnd_101_use_range_filters_entry_pause_v02,PASS,PASS,
+253,parity_core_102_range_aggregation_v01,PASS,PASS,
+254,parity_bnd_102_range_aggregation_v02,PASS,PASS,
+255,parity_core_103_range_hold_bars_v01,NO_FILE,,No XLSX file found in 255_parity_core_103_range_hold_bars_v01/
+256,parity_bnd_103_range_hold_bars_v02,PASS,PASS,
+257,parity_bnd_103_range_hold_bars_v03,PASS,PASS,
+258,parity_core_105_use_adx_range_filter_v01,PASS,PASS,
+259,parity_bnd_105_use_adx_range_filter_v02,NO_FILE,,No XLSX file found in 259_parity_bnd_105_use_adx_range_filter_v02/
+260,parity_core_106_adx_length_v01,PASS,PASS,
+261,parity_bnd_106_adx_length_v02,PASS,PASS,
+262,parity_bnd_106_adx_length_v03,PASS,PASS,
+263,parity_core_107_adx_on_threshold_v01,PASS,PASS,
+264,parity_bnd_107_adx_on_threshold_v02,PASS,PASS,
+265,parity_bnd_107_adx_on_threshold_v03,PASS,PASS,
+266,parity_core_108_adx_off_threshold_v01,PASS,PASS,
+267,parity_bnd_108_adx_off_threshold_v02,PASS,PASS,
+268,parity_bnd_108_adx_off_threshold_v03,PASS,PASS,
+269,parity_core_109_use_choppiness_filter_v01,PASS,PASS,
+270,parity_bnd_109_use_choppiness_filter_v02,NO_FILE,,No XLSX file found in 270_parity_bnd_109_use_choppiness_filter_v02/
+271,parity_core_110_chop_length_v01,PASS,PASS,
+272,parity_bnd_110_chop_length_v02,PASS,PASS,
+273,parity_bnd_110_chop_length_v03,PASS,PASS,
+274,parity_core_111_chop_on_threshold_v01,PASS,PASS,
+275,parity_bnd_111_chop_on_threshold_v02,PASS,PASS,
+276,parity_bnd_111_chop_on_threshold_v03,PASS,PASS,
+277,parity_core_112_chop_off_threshold_v01,NO_FILE,,No XLSX file found in 277_parity_core_112_chop_off_threshold_v01/
+278,parity_bnd_112_chop_off_threshold_v02,PASS,PASS,
+279,parity_bnd_112_chop_off_threshold_v03,PASS,PASS,
+280,parity_core_113_count_mode_min_pass_v01,PASS,PASS,
+281,parity_bnd_113_count_mode_min_pass_v02,PASS,PASS,
+282,parity_bnd_113_count_mode_min_pass_v03,NO_FILE,,No XLSX file found in 282_parity_bnd_113_count_mode_min_pass_v03/
+283,parity_core_114_use_atr_volatility_floor_v01,PASS,PASS,
+284,parity_bnd_114_use_atr_volatility_floor_v02,NO_FILE,,No XLSX file found in 284_parity_bnd_114_use_atr_volatility_floor_v02/
+285,parity_core_115_atr_min_atr_baseline_v01,NO_FILE,,No XLSX file found in 285_parity_core_115_atr_min_atr_baseline_v01/
+286,parity_bnd_115_atr_min_atr_baseline_v02,PASS,PASS,
+287,parity_bnd_115_atr_min_atr_baseline_v03,PASS,PASS,
+288,parity_core_116_adx_use_higher_timeframe_v01,NO_FILE,,No XLSX file found in 288_parity_core_116_adx_use_higher_timeframe_v01/
+289,parity_bnd_116_adx_use_higher_timeframe_v02,PASS,PASS,
+290,parity_core_117_adx_htf_timeframe_v01,PASS,PASS,
+291,parity_bnd_117_adx_htf_timeframe_v02,PASS,PASS,
+292,parity_bnd_117_adx_htf_timeframe_v03,PASS,PASS,
+293,parity_core_118_chop_use_higher_timeframe_v01,NO_FILE,,No XLSX file found in 293_parity_core_118_chop_use_higher_timeframe_v01/
+294,parity_bnd_118_chop_use_higher_timeframe_v02,PASS,PASS,
+295,parity_core_119_chop_htf_timeframe_v01,PASS,PASS,
+296,parity_bnd_119_chop_htf_timeframe_v02,PASS,PASS,
+297,parity_bnd_119_chop_htf_timeframe_v03,PASS,PASS,
+298,parity_core_120_atr_vol_floor_atr_len_v01,PASS,PASS,
+299,parity_bnd_120_atr_vol_floor_atr_len_v02,PASS,PASS,
+300,parity_bnd_120_atr_vol_floor_atr_len_v03,PASS,PASS,
+301,parity_core_121_atr_baseline_sma_len_v01,NO_FILE,,No XLSX file found in 301_parity_core_121_atr_baseline_sma_len_v01/
+302,parity_bnd_121_atr_baseline_sma_len_v02,PASS,PASS,
+303,parity_bnd_121_atr_baseline_sma_len_v03,PASS,PASS,
+304,parity_core_122_use_max_drawdown_guard_v01,NO_FILE,,No XLSX file found in 304_parity_core_122_use_max_drawdown_guard_v01/
+305,parity_bnd_122_use_max_drawdown_guard_v02,PASS,PASS,
+306,parity_core_123_max_drawdown_v01,PASS,PASS,
+307,parity_bnd_123_max_drawdown_v02,PASS,PASS,
+308,parity_bnd_123_max_drawdown_v03,PASS,PASS,
+309,parity_core_124_use_consecutive_loss_halt_v01,NO_FILE,,No XLSX file found in 309_parity_core_124_use_consecutive_loss_halt_v01/
+310,parity_bnd_124_use_consecutive_loss_halt_v02,PASS,PASS,
+311,parity_core_125_max_consecutive_losses_v01,PASS,PASS,
+312,parity_bnd_125_max_consecutive_losses_v02,PASS,PASS,
+313,parity_bnd_125_max_consecutive_losses_v03,PASS,PASS,
+314,parity_core_126_use_trade_cooldown_v01,NO_FILE,,No XLSX file found in 314_parity_core_126_use_trade_cooldown_v01/
+315,parity_bnd_126_use_trade_cooldown_v02,PASS,PASS,
+316,parity_core_127_cooldown_bars_after_exit_v01,PASS,PASS,
+317,parity_bnd_127_cooldown_bars_after_exit_v02,PASS,PASS,
+318,parity_bnd_127_cooldown_bars_after_exit_v03,PASS,PASS,
+319,parity_core_128_use_equity_curve_filter_v01,PASS,PASS,
+320,parity_bnd_128_use_equity_curve_filter_v02,NO_FILE,,No XLSX file found in 320_parity_bnd_128_use_equity_curve_filter_v02/
+321,parity_core_129_equity_ma_length_v01,PASS,PASS,
+322,parity_bnd_129_equity_ma_length_v02,NO_FILE,,No XLSX file found in 322_parity_bnd_129_equity_ma_length_v02/
+323,parity_bnd_129_equity_ma_length_v03,PASS,PASS,
+324,parity_core_130_use_mae_guard_in_trade_v01,NO_FILE,,No XLSX file found in 324_parity_core_130_use_mae_guard_in_trade_v01/
+325,parity_bnd_130_use_mae_guard_in_trade_v02,PASS,PASS,
+326,parity_core_131_max_mae_v01,PASS,PASS,
+327,parity_bnd_131_max_mae_v02,PASS,PASS,
+328,parity_bnd_131_max_mae_v03,PASS,PASS,
+329,parity_core_132_consec_loss_reset_daily_legacy_v01,PASS,PASS,
+330,parity_bnd_132_consec_loss_reset_daily_legacy_v02,PASS,PASS,
+331,parity_core_133_use_guard_recovery_auto_resume_after_block_v01,NO_FILE,,No XLSX file found in 331_parity_core_133_use_guard_recovery_auto_resume_after_block_v01/
+332,parity_bnd_133_use_guard_recovery_auto_resume_after_block_v02,PASS,PASS,
+333,parity_core_134_recovery_mode_v01,PASS,PASS,
+334,parity_bnd_134_recovery_mode_v02,PASS,PASS,
+335,parity_bnd_134_recovery_mode_v03,PASS,PASS,
+336,parity_bnd_134_recovery_mode_v04,NO_FILE,,No XLSX file found in 336_parity_bnd_134_recovery_mode_v04/
+337,parity_core_135_recovery_after_bars_v01,PASS,PASS,
+338,parity_bnd_135_recovery_after_bars_v02,PASS,PASS,
+339,parity_bnd_135_recovery_after_bars_v03,PASS,PASS,
+340,parity_core_136_recovery_after_signals_v01,PASS,PASS,
+341,parity_bnd_136_recovery_after_signals_v02,PASS,PASS,
+342,parity_bnd_136_recovery_after_signals_v03,PASS,PASS,
+343,parity_core_137_recovery_early_exit_when_equity_curve_turn_v01,PASS,PASS,
+344,parity_bnd_137_recovery_early_exit_when_equity_curve_turn_v02,PASS,PASS,
+345,parity_core_138_recovery_quality_based_virtual_trade_conse_v01,NO_FILE,,No XLSX file found in 345_parity_core_138_recovery_quality_based_virtual_trade_conse_v01/
+346,parity_bnd_138_recovery_quality_based_virtual_trade_conse_v02,NO_FILE,,No XLSX file found in 346_parity_bnd_138_recovery_quality_based_virtual_trade_conse_v02/
+347,parity_core_139_virtual_wins_required_v01,NO_FILE,,No XLSX file found in 347_parity_core_139_virtual_wins_required_v01/
+348,parity_bnd_139_virtual_wins_required_v02,NO_FILE,,No XLSX file found in 348_parity_bnd_139_virtual_wins_required_v02/
+349,parity_bnd_139_virtual_wins_required_v03,NO_FILE,,No XLSX file found in 349_parity_bnd_139_virtual_wins_required_v03/
+350,parity_core_140_use_sl_in_virtual_v01,NO_FILE,,No XLSX file found in 350_parity_core_140_use_sl_in_virtual_v01/
+351,parity_bnd_140_use_sl_in_virtual_v02,NO_FILE,,No XLSX file found in 351_parity_bnd_140_use_sl_in_virtual_v02/
+352,parity_core_141_use_tp_in_virtual_v01,NO_FILE,,No XLSX file found in 352_parity_core_141_use_tp_in_virtual_v01/
+353,parity_bnd_141_use_tp_in_virtual_v02,NO_FILE,,No XLSX file found in 353_parity_bnd_141_use_tp_in_virtual_v02/
+354,parity_core_142_use_be_in_virtual_v01,PASS,PASS,
+355,parity_bnd_142_use_be_in_virtual_v02,NO_FILE,,No XLSX file found in 355_parity_bnd_142_use_be_in_virtual_v02/
+356,parity_core_143_use_trailing_in_virtual_v01,NO_FILE,,No XLSX file found in 356_parity_core_143_use_trailing_in_virtual_v01/
+357,parity_bnd_143_use_trailing_in_virtual_v02,NO_FILE,,No XLSX file found in 357_parity_bnd_143_use_trailing_in_virtual_v02/
+358,parity_core_144_close_on_opposite_signal_v01,NO_FILE,,No XLSX file found in 358_parity_core_144_close_on_opposite_signal_v01/
+359,parity_bnd_144_close_on_opposite_signal_v02,NO_FILE,,No XLSX file found in 359_parity_bnd_144_close_on_opposite_signal_v02/
+360,parity_core_193_enable_macd_filter_hub_v01,NO_FILE,,No XLSX file found in 360_parity_core_193_enable_macd_filter_hub_v01/
+361,parity_bnd_193_enable_macd_filter_hub_v02,PASS,PASS,
+362,parity_core_194_mode_v01,PASS,PASS,
+363,parity_bnd_194_mode_v02,PASS,PASS,
+364,parity_core_195_source_v01,NO_FILE,,No XLSX file found in 364_parity_core_195_source_v01/
+365,parity_bnd_195_source_v02,PASS,PASS,
+366,parity_core_196_fast_v01,NO_FILE,,No XLSX file found in 366_parity_core_196_fast_v01/
+367,parity_bnd_196_fast_v02,PASS,PASS,
+368,parity_bnd_196_fast_v03,PASS,PASS,
+369,parity_core_197_slow_v01,NO_FILE,,No XLSX file found in 369_parity_core_197_slow_v01/
+370,parity_bnd_197_slow_v02,PASS,PASS,
+371,parity_bnd_197_slow_v03,PASS,PASS,
+372,parity_core_198_signal_v01,NO_FILE,,No XLSX file found in 372_parity_core_198_signal_v01/
+373,parity_bnd_198_signal_v02,PASS,PASS,
+374,parity_bnd_198_signal_v03,PASS,PASS,
+375,parity_core_199_regime_line_0_long_0_short_v01,PASS,PASS,
+376,parity_bnd_199_regime_line_0_long_0_short_v02,PASS,PASS,
+377,parity_core_200_crossstate_line_signal_long_signal_short_v01,NO_FILE,,No XLSX file found in 377_parity_core_200_crossstate_line_signal_long_signal_short_v01/
+378,parity_bnd_200_crossstate_line_signal_long_signal_short_v02,PASS,PASS,
+379,parity_core_201_histogram_gate_v01,NO_FILE,,No XLSX file found in 379_parity_core_201_histogram_gate_v01/
+380,parity_bnd_201_histogram_gate_v02,PASS,PASS,
+381,parity_core_202_hist_mode_v01,NO_FILE,,No XLSX file found in 381_parity_core_202_hist_mode_v01/
+382,parity_bnd_202_hist_mode_v02,PASS,PASS,
+383,parity_core_203_zero_line_distance_gate_v01,NO_FILE,,No XLSX file found in 383_parity_core_203_zero_line_distance_gate_v01/
+384,parity_bnd_203_zero_line_distance_gate_v02,PASS,PASS,
+385,parity_core_204_min_distance_0_no_effect_v01,PASS,PASS,
+386,parity_bnd_204_min_distance_0_no_effect_v02,PASS,PASS,
+387,parity_bnd_204_min_distance_0_no_effect_v03,NO_FILE,,No XLSX file found in 387_parity_bnd_204_min_distance_0_no_effect_v03/
+388,parity_core_205_htf_bias_regime_v01,NO_FILE,,No XLSX file found in 388_parity_core_205_htf_bias_regime_v01/
+389,parity_bnd_205_htf_bias_regime_v02,PASS,PASS,
+390,parity_core_206_htf_timeframe_v01,NO_FILE,,No XLSX file found in 390_parity_core_206_htf_timeframe_v01/
+391,parity_bnd_206_htf_timeframe_v02,PASS,PASS,
+392,parity_bnd_206_htf_timeframe_v03,PASS,PASS,
+393,parity_core_207_apply_htf_regime_sign_v01,NO_FILE,,No XLSX file found in 393_parity_core_207_apply_htf_regime_sign_v01/
+394,parity_bnd_207_apply_htf_regime_sign_v02,PASS,PASS,
+395,parity_core_209_use_confirmation_swing_break_momentum_v01,PASS,PASS,
+396,parity_bnd_209_use_confirmation_swing_break_momentum_v02,NO_FILE,,No XLSX file found in 396_parity_bnd_209_use_confirmation_swing_break_momentum_v02/
+397,parity_core_210_swing_left_bars_v01,PASS,PASS,
+398,parity_bnd_210_swing_left_bars_v02,PASS,PASS,
+399,parity_bnd_210_swing_left_bars_v03,PASS,PASS,
+400,parity_core_211_swing_right_bars_v01,NO_FILE,,No XLSX file found in 400_parity_core_211_swing_right_bars_v01/
+401,parity_bnd_211_swing_right_bars_v02,PASS,PASS,
+402,parity_bnd_211_swing_right_bars_v03,PASS,PASS,
+403,parity_core_212_require_close_beyond_swing_else_wick_v01,NO_FILE,,No XLSX file found in 403_parity_core_212_require_close_beyond_swing_else_wick_v01/
+404,parity_bnd_212_require_close_beyond_swing_else_wick_v02,PASS,PASS,
+405,parity_core_213_max_bars_to_wait_timeout_v01,NO_FILE,,No XLSX file found in 405_parity_core_213_max_bars_to_wait_timeout_v01/
+406,parity_bnd_213_max_bars_to_wait_timeout_v02,FAIL,PASS,Range: Trading range parse failed: '—'
+407,parity_bnd_213_max_bars_to_wait_timeout_v03,PASS,PASS,
+408,parity_core_214_min_bars_to_wait_after_raw_v01,NO_FILE,,No XLSX file found in 408_parity_core_214_min_bars_to_wait_after_raw_v01/
+409,parity_bnd_214_min_bars_to_wait_after_raw_v02,PASS,PASS,
+410,parity_bnd_214_min_bars_to_wait_after_raw_v03,NO_FILE,,No XLSX file found in 410_parity_bnd_214_min_bars_to_wait_after_raw_v03/
+411,parity_core_215_apply_confirmation_only_when_flat_v01,NO_FILE,,No XLSX file found in 411_parity_core_215_apply_confirmation_only_when_flat_v01/
+412,parity_bnd_215_apply_confirmation_only_when_flat_v02,PASS,PASS,
+413,parity_core_216_update_swing_level_while_waiting_dynamic_v01,NO_FILE,,No XLSX file found in 413_parity_core_216_update_swing_level_while_waiting_dynamic_v01/
+414,parity_bnd_216_update_swing_level_while_waiting_dynamic_v02,PASS,PASS,
+415,parity_core_217_dynamic_update_mode_v01,PASS,PASS,
+416,parity_bnd_217_dynamic_update_mode_v02,PASS,PASS,
+417,parity_core_218_if_dynamic_updates_level_this_bar_defer_br_v01,NO_FILE,,No XLSX file found in 417_parity_core_218_if_dynamic_updates_level_this_bar_defer_br_v01/
+418,parity_bnd_218_if_dynamic_updates_level_this_bar_defer_br_v02,PASS,PASS,
+419,parity_core_219_if_new_raw_event_arrives_refresh_level_tim_v01,NO_FILE,,No XLSX file found in 419_parity_core_219_if_new_raw_event_arrives_refresh_level_tim_v01/
+420,parity_bnd_219_if_new_raw_event_arrives_refresh_level_tim_v02,PASS,PASS,
+421,parity_core_220_raw_event_mode_v01,NO_FILE,,No XLSX file found in 421_parity_core_220_raw_event_mode_v01/
+422,parity_bnd_220_raw_event_mode_v02,PASS,PASS,
+423,parity_core_221_if_long_short_raw_same_bar_v01,NO_FILE,,No XLSX file found in 423_parity_core_221_if_long_short_raw_same_bar_v01/
+424,parity_bnd_221_if_long_short_raw_same_bar_v02,PASS,PASS,
+425,parity_bnd_221_if_long_short_raw_same_bar_v03,PASS,PASS,
+426,parity_core_222_bar_close_only_barstate_isconfirmed_v01,NO_FILE,,No XLSX file found in 426_parity_core_222_bar_close_only_barstate_isconfirmed_v01/
+427,parity_bnd_222_bar_close_only_barstate_isconfirmed_v02,PASS,PASS,
+428,parity_core_223_require_raw_still_true_at_confirmation_v01,NO_FILE,,No XLSX file found in 428_parity_core_223_require_raw_still_true_at_confirmation_v01/
+429,parity_bnd_223_require_raw_still_true_at_confirmation_v02,PASS,PASS,
+430,parity_core_224_break_buffer_ticks_v01,PASS,PASS,
+431,parity_bnd_224_break_buffer_ticks_v02,PASS,PASS,
+432,parity_bnd_224_break_buffer_ticks_v03,PASS,PASS,
+433,parity_core_225_max_swing_distance_0_off_v01,PASS,PASS,
+434,parity_bnd_225_max_swing_distance_0_off_v02,PASS,PASS,
+435,parity_bnd_225_max_swing_distance_0_off_v03,NO_FILE,,No XLSX file found in 435_parity_bnd_225_max_swing_distance_0_off_v03/
+436,parity_core_226_max_pivot_age_bars_0_off_v01,PASS,PASS,
+437,parity_bnd_226_max_pivot_age_bars_0_off_v02,PASS,PASS,
+438,parity_bnd_226_max_pivot_age_bars_0_off_v03,NO_FILE,,No XLSX file found in 438_parity_bnd_226_max_pivot_age_bars_0_off_v03/
+439,parity_core_227_use_momentum_filter_v01,NO_FILE,,No XLSX file found in 439_parity_core_227_use_momentum_filter_v01/
+440,parity_bnd_227_use_momentum_filter_v02,NO_FILE,,No XLSX file found in 440_parity_bnd_227_use_momentum_filter_v02/
+441,parity_core_228_momentum_mode_v01,NO_FILE,,No XLSX file found in 441_parity_core_228_momentum_mode_v01/
+442,parity_bnd_228_momentum_mode_v02,NO_FILE,,No XLSX file found in 442_parity_bnd_228_momentum_mode_v02/
+443,parity_core_229_atr_len_v01,NO_FILE,,No XLSX file found in 443_parity_core_229_atr_len_v01/
+444,parity_bnd_229_atr_len_v02,NO_FILE,,No XLSX file found in 444_parity_bnd_229_atr_len_v02/
+445,parity_bnd_229_atr_len_v03,NO_FILE,,No XLSX file found in 445_parity_bnd_229_atr_len_v03/
+446,parity_core_230_atr_body_mult_v01,NO_FILE,,No XLSX file found in 446_parity_core_230_atr_body_mult_v01/
+447,parity_bnd_230_atr_body_mult_v02,NO_FILE,,No XLSX file found in 447_parity_bnd_230_atr_body_mult_v02/
+448,parity_bnd_230_atr_body_mult_v03,NO_FILE,,No XLSX file found in 448_parity_bnd_230_atr_body_mult_v03/
+449,parity_core_231_roc_1_min_0_15_0_15_v01,NO_FILE,,No XLSX file found in 449_parity_core_231_roc_1_min_0_15_0_15_v01/
+450,parity_bnd_231_roc_1_min_0_15_0_15_v02,NO_FILE,,No XLSX file found in 450_parity_bnd_231_roc_1_min_0_15_0_15_v02/
+451,parity_bnd_231_roc_1_min_0_15_0_15_v03,NO_FILE,,No XLSX file found in 451_parity_bnd_231_roc_1_min_0_15_0_15_v03/
+452,parity_core_232_use_session_filter_v01,NO_FILE,,No XLSX file found in 452_parity_core_232_use_session_filter_v01/
+453,parity_bnd_232_use_session_filter_v02,NO_FILE,,No XLSX file found in 453_parity_bnd_232_use_session_filter_v02/
+454,parity_core_233_session_v01,NO_FILE,,No XLSX file found in 454_parity_core_233_session_v01/
+455,parity_bnd_233_session_v02,NO_FILE,,No XLSX file found in 455_parity_bnd_233_session_v02/
+456,parity_core_248_commission_v01,NO_FILE,,No XLSX file found in 456_parity_core_248_commission_v01/
+457,parity_core_249_slippage_v01,NO_FILE,,No XLSX file found in 457_parity_core_249_slippage_v01/

@@ -1,0 +1,321 @@
+{
+  "schema_version": "1.0.0",
+  "suite_id": "parity_suite_350",
+  "description": "Dependency and routing contract for parity suite generation, TV XLSX routing, and comparison status logic.",
+  "routing": {
+    "property_case_id_keys": [
+      "TV preset name",
+      "Preset Name",
+      "Case ID",
+      "case_id"
+    ],
+    "property_strategy_name_keys": [
+      "Strategy title",
+      "Strategy Name",
+      "Name"
+    ],
+    "property_symbol_keys": [
+      "Symbol",
+      "Ticker"
+    ],
+    "property_timeframe_keys": [
+      "Timeframe",
+      "Resolution"
+    ],
+    "allow_filename_case_id_match": true,
+    "case_id_regex": "(parity_[a-z0-9_]+)"
+  },
+  "comparison_defaults": {
+    "time_tolerance_bars": 0,
+    "price_tolerance_mode": "mintick_multiplier",
+    "price_tolerance_multiplier": 0.01,
+    "aggregate_metric_tolerance": 0.0
+  },
+  "expected_trade_behaviors": [
+    "NORMAL",
+    "ZERO_TRADE_EXPECTED"
+  ],
+  "status_values": [
+    "PASS",
+    "SETUP_MISMATCH",
+    "MISMATCH",
+    "NO_TRADE_EXPECTED_PASS",
+    "ERROR"
+  ],
+  "bucket_values": [
+    "SETUP",
+    "DEPENDENCY_MODEL",
+    "MISSING_TRADES",
+    "EXTRA_TRADES",
+    "TIMING",
+    "PRICE_PNL",
+    "EXIT_REASON",
+    "UNKNOWN"
+  ],
+  "rules": [
+    {
+      "param_id": "signal_mode",
+      "ui_key": "Signal Mode",
+      "testable": true,
+      "active_when": null,
+      "children": [
+        "supertrend.*",
+        "range_filter.*"
+      ],
+      "exclude_when": [],
+      "notes": "If Signal Mode=None then ZERO_TRADE_EXPECTED."
+    },
+    {
+      "param_id": "trade.exit_on_filter_block",
+      "ui_key": "Exit if Selected Filters Block While In Position",
+      "testable": true,
+      "active_when": null,
+      "children": [
+        "filters.exit_filter_ma_block",
+        "filters.exit_filter_ma_slope_block",
+        "filters.exit_filter_mcginley_block",
+        "filters.exit_filter_htf_block",
+        "filters.exit_filter_volume_block",
+        "filters.exit_filter_atr_vol_block",
+        "filters.exit_filter_range_block"
+      ],
+      "exclude_when": [],
+      "notes": "Parent OFF => child cases are inert."
+    },
+    {
+      "param_id": "time_stop.enabled",
+      "ui_key": "Use Time Stop (Position Duration Exit)",
+      "testable": true,
+      "active_when": null,
+      "children": [
+        "time_stop.bars",
+        "time_stop.condition",
+        "time_stop.exit_end_of_day",
+        "time_stop.exit_end_of_week"
+      ],
+      "exclude_when": [
+        "timeframe_not_compatible"
+      ],
+      "notes": "Parent OFF => all time-stop children inert."
+    },
+    {
+      "param_id": "risk.use_daily_loss_limit",
+      "ui_key": "Use Daily Loss Limit",
+      "testable": true,
+      "active_when": null,
+      "children": [
+        "risk.max_daily_loss_percent"
+      ],
+      "exclude_when": [],
+      "notes": "Parent OFF => max_daily_loss_percent inert."
+    },
+    {
+      "param_id": "risk.use_max_trades_per_day",
+      "ui_key": "Use Max Trades Per Day",
+      "testable": true,
+      "active_when": null,
+      "children": [
+        "risk.max_trades_per_day"
+      ],
+      "exclude_when": [],
+      "notes": "Parent OFF => max_trades_per_day inert."
+    },
+    {
+      "param_id": "stop_loss.use_sl",
+      "ui_key": "Use Stop Loss",
+      "testable": true,
+      "active_when": null,
+      "children": [
+        "stop_loss.mode",
+        "stop_loss.atr_len",
+        "stop_loss.atr_mult",
+        "stop_loss.percent",
+        "stop_loss.swing_basis",
+        "stop_loss.swing_lookback",
+        "stop_loss.swing_atr_len",
+        "stop_loss.swing_atr_mult"
+      ],
+      "exclude_when": [],
+      "notes": "Parent OFF => all SL children inert."
+    },
+    {
+      "param_id": "stop_loss.mode",
+      "ui_key": "SL Mode",
+      "testable": true,
+      "active_when": "stop_loss.use_sl == true",
+      "children": [],
+      "exclude_when": [],
+      "notes": "Mode-specific parameters are only active in selected mode."
+    },
+    {
+      "param_id": "take_profit.use_tp",
+      "ui_key": "Use Take Profit",
+      "testable": true,
+      "active_when": null,
+      "children": [
+        "take_profit.mode",
+        "take_profit.atr_len",
+        "take_profit.atr_mult",
+        "take_profit.percent",
+        "take_profit.rr"
+      ],
+      "exclude_when": [],
+      "notes": "Parent OFF => all TP children inert."
+    },
+    {
+      "param_id": "multi_tp.use_multi_tp",
+      "ui_key": "Use Multi TP",
+      "testable": true,
+      "active_when": "take_profit.use_tp == true",
+      "children": [
+        "multi_tp.tp1_rr",
+        "multi_tp.tp1_pct",
+        "multi_tp.tp2_rr"
+      ],
+      "exclude_when": [],
+      "notes": "When true, single TP path is overridden for behavior checks."
+    },
+    {
+      "param_id": "break_even.use_break_even",
+      "ui_key": "Use Break Even",
+      "testable": true,
+      "active_when": null,
+      "children": [
+        "break_even.rr",
+        "break_even.buffer_r"
+      ],
+      "exclude_when": [],
+      "notes": "Parent OFF => child values inert."
+    },
+    {
+      "param_id": "trailing.use_trailing",
+      "ui_key": "Use Trailing Stop",
+      "testable": true,
+      "active_when": null,
+      "children": [
+        "trailing.atr_len",
+        "trailing.start_r",
+        "trailing.dist_r"
+      ],
+      "exclude_when": [],
+      "notes": "Parent OFF => child values inert."
+    },
+    {
+      "param_id": "filters.use_filter_hub",
+      "ui_key": "Enable Filter Hub",
+      "testable": true,
+      "active_when": null,
+      "children": [
+        "filters.use_ma_filter",
+        "filters.use_ma_slope_filter",
+        "filters.use_mcginley_filter",
+        "filters.use_htf_trend_filter",
+        "filters.use_volume_filter",
+        "filters.use_atr_vol_filter",
+        "filters.use_range_filter"
+      ],
+      "exclude_when": [],
+      "notes": "If this parent exists in code and is OFF, child filters are inert."
+    },
+    {
+      "param_id": "filters.use_macd_hub",
+      "ui_key": "Use MACD Filter Hub",
+      "testable": true,
+      "active_when": null,
+      "children": [
+        "filters.macd_mode",
+        "filters.macd_fast_len",
+        "filters.macd_slow_len",
+        "filters.macd_signal_len"
+      ],
+      "exclude_when": [],
+      "notes": "Parent OFF => MACD submodes inert."
+    },
+    {
+      "param_id": "confirmation.enabled",
+      "ui_key": "Use Confirmation Layer",
+      "testable": true,
+      "active_when": null,
+      "children": [
+        "confirmation.*"
+      ],
+      "exclude_when": [],
+      "notes": "Parent OFF => confirmation parameters inert."
+    },
+    {
+      "param_id": "filters.entry_pause.enabled",
+      "ui_key": "Range and Volatility Filter (Entry Pause)",
+      "testable": true,
+      "active_when": null,
+      "children": [
+        "filters.entry_pause.logic_mode",
+        "filters.entry_pause.minimum_pass_count",
+        "filters.entry_pause.use_adx",
+        "filters.entry_pause.use_choppiness"
+      ],
+      "exclude_when": [],
+      "notes": "Parent OFF => all entry-pause children inert."
+    },
+    {
+      "param_id": "filters.entry_pause.logic_mode",
+      "ui_key": "Entry Pause Logic Mode",
+      "testable": true,
+      "active_when": "filters.entry_pause.enabled == true",
+      "children": [
+        "filters.entry_pause.minimum_pass_count"
+      ],
+      "exclude_when": [],
+      "notes": "minimum_pass_count required only when mode=COUNT."
+    },
+    {
+      "param_id": "guards.any_guard_enabled",
+      "ui_key": "Any Guard Enabled",
+      "testable": true,
+      "active_when": null,
+      "children": [
+        "guards.use_guard_recovery"
+      ],
+      "exclude_when": [],
+      "notes": "If no guard is enabled, guard recovery has no effect."
+    },
+    {
+      "param_id": "guards.use_guard_recovery",
+      "ui_key": "Use Guard Recovery (Auto Resume)",
+      "testable": true,
+      "active_when": "guards.any_guard_enabled == true",
+      "children": [
+        "guards.recovery_mode",
+        "guards.recovery_wait_bars"
+      ],
+      "exclude_when": [],
+      "notes": "Parent OFF => recovery mode children inert."
+    },
+    {
+      "param_id": "trade.same_bar_reentry_requires_exit",
+      "ui_key": "Same-bar Reentry Requires Exit",
+      "testable": false,
+      "active_when": null,
+      "children": [],
+      "exclude_when": [],
+      "notes": "Known code-level field not available in current TV UI; do not generate standalone case."
+    },
+    {
+      "param_id": "trade.first_bar_requires_edge",
+      "ui_key": "First Bar Requires Edge",
+      "testable": false,
+      "active_when": null,
+      "children": [],
+      "exclude_when": [],
+      "notes": "Known code-level field not available in current TV UI; do not generate standalone case."
+    },
+    {
+      "param_id": "parity.*",
+      "ui_key": "Python parity internals",
+      "testable": false,
+      "active_when": null,
+      "children": [],
+      "exclude_when": [],
+      "notes": "Internal Python-only fields (fill mode, debug export, preroll) are excluded from TV parity cases."
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+trade_id,timestamp,bar_index,event_type,side,qty,price,reason,sl,tp,commission,equity_after
+1,2024-01-01T00:15:00Z,1,ENTRY,LONG,1,101,RAW_LONG,,,0,10000

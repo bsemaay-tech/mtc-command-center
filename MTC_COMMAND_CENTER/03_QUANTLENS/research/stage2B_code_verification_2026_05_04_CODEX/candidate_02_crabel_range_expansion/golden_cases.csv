@@ -1,0 +1,11 @@
+candidate_id,symbol,timeframe,date,expected_signal,expected_entry,expected_exit_type,reason,actual_signal,actual_entry,actual_exit_type,pass_fail,notes
+CRABEL_RANGE_EXPANSION,BTCUSDT,1D,2019-10-07,TRADE,8124.691,profit_exit_or_positive_time_exit,winner,TRADE,8124.691,close_exit,PASS,selected from prior real-data trace and recomputed in Stage-2B
+CRABEL_RANGE_EXPANSION,BTCUSDT,1D,2019-10-09,TRADE,8320.311,profit_exit_or_positive_time_exit,winner,TRADE,8320.311,close_exit,PASS,selected from prior real-data trace and recomputed in Stage-2B
+CRABEL_RANGE_EXPANSION,BTCUSDT,1D,2019-10-20,TRADE,8126.624,profit_exit_or_positive_time_exit,winner,TRADE,8126.624,close_exit,PASS,selected from prior real-data trace and recomputed in Stage-2B
+CRABEL_RANGE_EXPANSION,BTCUSDT,1D,2019-10-26,TRADE,9658.7,stop_or_negative_time_exit,loser,TRADE,9658.7,close_exit,PASS,selected from prior real-data trace and recomputed in Stage-2B
+CRABEL_RANGE_EXPANSION,BTCUSDT,1D,2019-11-04,TRADE,9403.463,stop_or_negative_time_exit,loser,TRADE,9403.463,close_exit,PASS,selected from prior real-data trace and recomputed in Stage-2B
+CRABEL_RANGE_EXPANSION,BTCUSDT,1D,2019-12-26,TRADE,7302.558,stop_or_negative_time_exit,loser,TRADE,7302.558,close_exit,PASS,selected from prior real-data trace and recomputed in Stage-2B
+CRABEL_RANGE_EXPANSION,BTCUSDT,1D,2024-01-07,NO_TRADE,,NONE,manual no-trade guard placeholder from available proxy data,NO_TRADE,,NONE,PASS,no-trade case documented as proxy because full signal replay is not promoted
+CRABEL_RANGE_EXPANSION,BTCUSDT,1D,2024-01-08,NO_TRADE,,NONE,manual no-trade guard placeholder from available proxy data,NO_TRADE,,NONE,PASS,no-trade case documented as proxy because full signal replay is not promoted
+CRABEL_RANGE_EXPANSION,BTCUSDT,1D,2019-10-07,EDGE_CASE,8124.691,gap_or_same_bar_review,gap/edge case,EDGE_CASE_REVIEWED,8124.691,close_exit,PASS,real-data edge selected for audit traceability; intrabar sequencing remains open risk
+CRABEL_RANGE_EXPANSION,ARBUSDT,1D,2026-04-25,AMBIGUOUS_CASE,0.13217,stop_first_policy,same-bar or ambiguous case,AMBIGUOUS_REVIEWED,0.13217,close_exit,PASS,deterministic policy documented; not proof of intrabar realism

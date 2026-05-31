@@ -1,0 +1,55 @@
+# Candidate Coverage Audit
+
+|coverage_status|linked_candidates|file_path|title|
+|---|---|---|---|
+|COVERED|AUD_CAND_006,AUD_CAND_008,AUD_CAND_009|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_-JyH5PAJ4-Y_quantlens_nick_schmidt_weekly_character_change_intake.md|QUANTLENS TRANSCRIPT INTAKE REPORT — Nick Schmidt Weekly Character Change / Trade Less Model|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_10pHBNVi4Jc_quantlens_gon_gajala_low_float_momentum_intake.md|QUANTLENS TRANSCRIPT INTAKE REPORT — Gon Gajala / Record Breaking Trading Champion Setups|
+|COVERED|AUD_CAND_001|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_62OaP91Jz9k_quantlens_nick_schmidt_weekly_strategy_intake.md|QUANTLENS TRANSCRIPT INTAKE REPORT — Nick Schmidt Weekly Strategy|
+|COVERED|AUD_CAND_003|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_c7ZSb2wNcOc_quantlens_detailed_intake.md|QUANTLENS TRANSCRIPT INTAKE REPORT — c7ZSb2wNcOc|
+|COVERED|AUD_CAND_012|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_fYxSQvuwOQc_quantlens_oliver_kell_cycle_intake.md|QUANTLENS TRANSCRIPT INTAKE REPORT — fYxSQvuwOQc|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_KQRuUWSZvLE_quantlens_ryan_pierpont_process_intake.md|QUANTLENS TRANSCRIPT INTAKE REPORT — KQRuUWSZvLE|
+|COVERED|AUD_CAND_007,AUD_CAND_013|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_kTqKRi-j9kM_quantlens_linda_raschke_sell_rules_trade_management_intake.md|QUANTLENS TRANSCRIPT INTAKE REPORT — Linda Bradford Raschke / 5 Essential Sell Rules & Trade Management|
+|COVERED|AUD_CAND_004|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_Ne3X-l6W4CQ_quantlens_process_strategy_intake.md|QUANTLENS TRANSCRIPT INTAKE REPORT — Ne3X-l6W4CQ|
+|COVERED|AUD_CAND_005|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_NGyE4YIgGpU_quantlens_tito_adhikary_options_momentum_intake_report.md|QuantLens Intake Report — Tito Adhikary / Options Momentum Breakout|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_O0GpSPtmCuM_quantlens_stan_weinstein_stage_analysis_intake.md|QUANTLENS TRANSCRIPT INTAKE REPORT — Stan Weinstein Stage Analysis / Current Market Warnings|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_UmLa9FAlMgw_quantlens_brian_shannon_avwap_intake.md|QUANTLENS TRANSCRIPT INTAKE REPORT — Brian Shannon / AVWAP Trading Indicator Secrets and Setups|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\2026-05-03_XNZ4f-b3ED8_quantlens_intake_indicator_audit.md|QUANTLENS TRANSCRIPT INTAKE REPORT — XNZ4f-b3ED8|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_001_Lot25-2fb-4_433_return_poker_player_full_time_trader.md|QuantLens Transcript Intake Report — 001 / 068|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_002_oZH6_XRxtDc_pro_swing_trading_entry_tactics_ep3.md|QuantLens Transcript Intake Report — 002 / 068|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_004_M_tD6X0CSOI_the_perfect_vcp_trading_setup_mark_minervini.md|QuantLens Transcript Intake Report — 004 / 068|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_005_jD4nynuWfEU_raschke_relative_strength_janus_factor.md|QuantLens Transcript Intake Report — 005 / 068|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_006_HAN1kymVbTc_ted_zhang_momentum_portfolio_manager.md|QuantLens Transcript Intake Report — 006 / 068|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03_2f5VfmlU90U_charles_harris_trading_psychology.md|QuantLens Transcript Intake Report — The Mind of a Trader / Charles Harris|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03_6aOnCK1gv2w_chris_flanders_edge.md|QuantLens Transcript Intake Report — 6aOnCK1gv2w|
+|COVERED|AUD_CAND_010|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03_6tnREqUJ1WY_trading_backtests_misleading.md|QuantLens Transcript Intake Report|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03__AAX1ylNbIE_market_wizards_lessons.md|QuantLens Transcript Intake Report|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03_C9Pvd9UD0jM_mark_minervini_progressive_exposure.md|QuantLens Transcript Intake Report|
+|COVERED|AUD_CAND_014|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03_ElocJ-b_NTs_oliver_kell_10_principles.md|QuantLens Transcript Intake Report — Oliver Kell / 10 Principles of Trading|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03_lpjTNygfnzM_deepak_swing_trading_triple_digit_returns.md|QuantLens Transcript Intake Report|
+|COVERED|AUD_CAND_002|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03_lS9zbnLi1Gg_martin_luke_283_gain_swing_trader.md|QuantLens Transcript Intake Report — 283% Gain in 1 Year: The Story of the 22-Year-Old Swing Trader|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03_QzzKqmPcB3A_ultimate_trading_guide_ep.md|QuantLens Transcript Intake Report — 7 Steps to Beat the Market - Ultimate Trading Guide Ep|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03_R1sNTB2Vh7w_peter_brandt_48_years_trading_lessons.md|QuantLens Transcript Intake Report — 48 Years of Trading Lessons with Market Wizard Peter Brandt|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03_R215f4fj7V8_lance_breitstein_trend_trading.md|QuantLens Transcript Intake Report — Lance Breitstein / Trend Trading, Right-Side-of-V & Catalyst Momentum|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03_RTHRh_GLwH8_mark_ritchie_low_risk_breakout_pyramid.md|QuantLens Transcript Intake Report|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03_tynE-pwE-1o_pradeep_bonde_process_beats_setups_NEEDS_TRANSCRIPT.md|QuantLens Transcript Intake Report — Why Process Beats Setups in Trading / Pradeep Bonde|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03_uh5bALsKkLg_mark_minervini_market_wizard.md|QuantLens Transcript Intake Report|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03_UMgJ0P8fe0s_swing_vs_position_matt_petrolia.md|QuantLens Transcript Intake Report|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\INTAKE_2026-05-03_zw96qkUn9_g_clement_ang_150pct_returns.md|QuantLens Transcript Intake Report — How Clement Ang Achieved 150%+ Returns in the US Investing Championship|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\QL_INTAKE_001_JS4_6gv0PpI_mark_minervini_vcp.md|QuantLens Transcript Intake Report — JS4_6gv0PpI|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\QL_INTAKE_004_Nq_p7Bu1YT0_ariel_rs_leadergroup_swing.md|QuantLens Transcript Intake Report — 004|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\QL_INTAKE_005_7UfHg8PpDZk_marios_three_setup_superperformance.md|QuantLens Transcript Intake Report — 005|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\QL_INTAKE_006_hVCcVRxaxJY_ajay_jani_sell_rules.md|QuantLens Transcript Intake Report — 006|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\QL_INTAKE_007_qz7avJJvnyI_lance_breitstein_deep_work_playbook.md|QuantLens Transcript Intake Report — 007|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\QL_INTAKE_008_UD7gipBWnuY_market_wizards_sell_rules.md|QuantLens Transcript Intake Report — 008|
+|COVERED|AUD_CAND_011|06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\QUANTLENS_DAILY_EXTENSION_ANTI_CHASE_CRITICAL_REPORT.md|QUANTLENS TRANSCRIPT INTAKE REPORT — Critical Review|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\QUANTLENS_EMA20_50_RETEST_CRITICAL_INTAKE_REPORT.md|QUANTLENS TRANSCRIPT INTAKE REPORT — Critical Review|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\QUANTLENS_MARTIN_LUKE_PULLBACK_INTAKE_REPORT.md|QUANTLENS TRANSCRIPT INTAKE REPORT — Martin Luke Pullback / Anchored VWAP System|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\QUANTLENS_TY_RAJNUS_MICROCAP_SHORT_INTAKE_REPORT.md|QUANTLENS TRANSCRIPT INTAKE REPORT — Ty Rajnus Short-Only System|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\YT_DLlNDuOTUfQ_Intake_Report_2026-05-03.md|YouTube Strategy Transcript Intake Report|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\YT_Eb9FkLNJLzs_Intake_Report_2026-05-03.md|YouTube Strategy Intake Report — Eb9FkLNJLzs|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\YT_Jew-Algmi0k_Intake_Report_2026-05-03.md|YouTube Strategy Transcript Intake Report|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\YT_m8F3KkBDtC0_Intake_Report_2026-05-03.md|QuantLens Transcript Intake Report|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\YT_oPeTkxTnooA_Intake_Report_2026-05-03.md|YouTube Strategy Intake Report — oPeTkxTnooA|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\YT_q43pkYBo1hU_Intake_Report_2026-05-03.md|YouTube Strategy Transcript Intake Report|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\YT_q4TuaY-ccqA_Intake_Report_2026-05-03.md|YouTube Strategy Intake Report — q4TuaY-ccqA|
+|CLASSIFIED_PROCESS_OR_POOL_NOT_TESTED||06_QUANTLENS_LAB\00_INBOX_REPORTS\3 Mayıs\YT_UtNrp_Uz9Oc_Intake_Report_2026-05-03.md|QuantLens Transcript Intake Report|

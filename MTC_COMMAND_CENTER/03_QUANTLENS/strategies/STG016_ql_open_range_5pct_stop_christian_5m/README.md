@@ -1,0 +1,3 @@
+# STG016_ql_open_range_5pct_stop_christian_5m
+
+Source folder: `C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\06_PROMOTED_TO_PARITY\QL_OPEN_RANGE_5PCT_STOP_CHRISTIAN_5M`

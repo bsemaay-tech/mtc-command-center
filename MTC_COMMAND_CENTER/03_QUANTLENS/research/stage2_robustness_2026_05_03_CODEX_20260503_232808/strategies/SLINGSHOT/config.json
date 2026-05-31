@@ -1,0 +1,40 @@
+{
+  "candidate": {
+    "candidate_id": "SLINGSHOT",
+    "name": "Slingshot EMA(high,4) Pullback",
+    "aliases": "CANDIDATE_003",
+    "horizon": "SWING",
+    "family": "trend_pullback",
+    "native_asset_class": "crypto_proxy",
+    "native_timeframe": "1D",
+    "data_status": "available_crypto_daily",
+    "eligible": true,
+    "reason": "mechanical and local OHLCV available"
+  },
+  "best_parameter_set": {
+    "ema_high": 8,
+    "exit": "R_target",
+    "hold": 15,
+    "pb_lb": 8,
+    "r_mult": 3
+  },
+  "assets": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "BNBUSDT",
+    "XRPUSDT",
+    "ADAUSDT",
+    "DOGEUSDT",
+    "AVAXUSDT",
+    "LINKUSDT",
+    "DOTUSDT",
+    "LTCUSDT",
+    "TRXUSDT",
+    "APTUSDT",
+    "ARBUSDT",
+    "NEARUSDT",
+    "OPUSDT",
+    "POLUSDT"
+  ]
+}

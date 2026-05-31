@@ -1,0 +1,3 @@
+# STG044_ql_2026_05_01_us_equities_intraday_le_model_bull_flag
+
+Source folder: `C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\01_TRIAGED_CANDIDATES\QL_2026-05-01_US_EQUITIES_INTRADAY_LE_MODEL_BULL_FLAG`

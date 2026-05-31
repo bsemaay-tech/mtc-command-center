@@ -1,0 +1,22 @@
+{
+  "generated_at_utc": "2026-02-26T06:32:43Z",
+  "baseline_case_id": "parity_core_001_baseline_touch",
+  "input_cases_enabled": 273,
+  "final_cases_selected": 36,
+  "selected_by_pack": {
+    "core": 22,
+    "boundary": 11,
+    "pairwise": 3
+  },
+  "coverage_universe_tokens": 77,
+  "coverage_tokens_covered": 77,
+  "coverage_rate": 1.0,
+  "selection_method": "greedy_set_cover_plus_redundant_prune",
+  "files": {
+    "cases_manifest_all": "manifests/cases_manifest_all.csv",
+    "cases_manifest_core": "manifests/cases_manifest_core.csv",
+    "cases_manifest_boundary": "manifests/cases_manifest_boundary.csv",
+    "cases_manifest_pairwise": "manifests/cases_manifest_pairwise.csv",
+    "coverage_tokens": "manifests/ui_coverage_tokens.csv"
+  }
+}

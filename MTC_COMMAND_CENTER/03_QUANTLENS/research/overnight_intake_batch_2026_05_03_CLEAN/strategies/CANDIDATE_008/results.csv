@@ -1,0 +1,2 @@
+candidate_id,strategy,timeframe,trade_count,assets_tested,aggregate_pf,aggregate_net_return_pct,aggregate_max_dd_pct,return_dd_ratio,win_rate,average_trade_pct,median_trade_pct,average_win_pct,average_loss_pct,expectancy_pct,exposure_pct,fee_2x_pf,fee_3x_pf,fee_monotonic,classification
+CANDIDATE_008,8AM ET ORB Crypto Proxy,5m,4259,5,0.5383,-99.4805,-99.4799,-1.0,34.1395,-0.1215,-0.1332,0.4149,-0.3995,-0.1215,19.91,0.3067,0.1848,True,REJECT_CRYPTO_PROXY

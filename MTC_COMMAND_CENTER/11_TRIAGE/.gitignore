@@ -1,0 +1,16 @@
+# Generated worklists are reproducible from generate_worklist.py
+*.xlsx
+
+# Daily drop-zone for verified URLs/transcripts (moved into QuantLens by ingestion)
+inbox/
+
+# Per-strategy .md notes. Pre-filled by generate_worklist.py, edited by user.
+# Ingestion will move verified URLs/transcripts into QuantLens canonical paths.
+strategies/
+
+# Dated heuristic reports — reproducible via analyze_transcripts.py
+reclassification_audit_*.md
+split_candidates_*.md
+review_human_samples_*.md
+
+# Manual review decisions (committed): reclassification_decisions_*.md

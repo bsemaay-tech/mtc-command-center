@@ -1,0 +1,57 @@
+name: Parity Regression
+
+on:
+  push:
+    paths:
+      - "mtc_backtest/src/engine/**"
+      - "mtc_backtest/src/config/**"
+      - "mtc_backtest/src/modules/**"
+      - "mtc_backtest/scripts/parity_regression.py"
+      - "mtc_backtest/configs/cases/full_jul2025_jan2026_parity.json"
+  pull_request:
+    paths:
+      - "mtc_backtest/src/engine/**"
+      - "mtc_backtest/src/config/**"
+      - "mtc_backtest/src/modules/**"
+  schedule:
+    - cron: "15 1 * * *"
+
+defaults:
+  run:
+    working-directory: mtc_backtest
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: mtc_backtest/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run parity regression
+        run: python scripts/parity_regression.py
+
+  dst_regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: mtc_backtest/requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run DST boundary regression tests
+        run: python -m pytest tests/test_tv_tz_parsing.py -v

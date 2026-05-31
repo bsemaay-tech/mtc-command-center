@@ -1,0 +1,2 @@
+candidate_id,trade_count,gross_noncompounded_return,net_noncompounded_return,compounded_return,compounding_status,profit_factor,win_rate,average_trade,median_trade,average_winner,average_loser,expectancy,max_drawdown,max_losing_streak,max_winning_streak,asset_concentration,asset_count,year_split
+KELL_WEDGE,17,63.273789,61.233789,74.742499,SAFE,3.595616,47.058824,3.601988,-1.854121,10.603128,-2.621249,3.601988,-7.313073,3,3,0.588235,3,"{""2023"": 3, ""2024"": 5, ""2025"": 8, ""2026"": 1}"

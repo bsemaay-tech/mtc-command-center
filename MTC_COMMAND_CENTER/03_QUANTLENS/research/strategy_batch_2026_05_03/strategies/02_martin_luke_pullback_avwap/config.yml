@@ -1,0 +1,4 @@
+commission_per_side: 0.0004
+slippage_per_side: 0.0002
+initial_equity: 10000
+research_only: true

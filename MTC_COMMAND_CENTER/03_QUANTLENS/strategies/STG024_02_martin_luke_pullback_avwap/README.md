@@ -1,0 +1,7 @@
+# QL_MARTIN_LUKE_PULLBACK_AVWAP_v0
+
+Research-only Python batch result.
+
+Source: `QUANTLENS_MARTIN_LUKE_PULLBACK_INTAKE_REPORT.md`
+
+

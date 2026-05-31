@@ -1,0 +1,3 @@
+# STG011_ql_deepak_259_risk_overlay
+
+Source folder: `C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\06_PROMOTED_TO_PARITY\QL_DEEPAK_259_RISK_OVERLAY`

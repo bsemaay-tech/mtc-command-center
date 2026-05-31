@@ -1,0 +1,80 @@
+{
+  "random": {
+    "trade.enable_long": {
+      "dist": "choice",
+      "values": [true, false]
+    },
+    "trade.enable_short": {
+      "dist": "choice",
+      "values": [true, false]
+    },
+    "trade.allow_flip": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "trade.exit_on_opposite_signal": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "trade.use_regime_lock": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "trade.entry_mode": {
+      "dist": "choice",
+      "values": ["Edge", "Signal"]
+    },
+    "trade.max_pyramid_positions": {
+      "dist": "choice",
+      "values": [1, 2, 3]
+    },
+    "trade.signal_mode_max_entries": {
+      "dist": "choice",
+      "values": [1, 2, 3]
+    },
+    "trade.signal_mode_cooldown_bars": {
+      "dist": "choice",
+      "values": [1, 2, 4, 8, 12, 24]
+    },
+    "trade.allow_same_bar_reentry": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "trade.same_bar_reentry_requires_exit": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "time_stop.enabled": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "time_stop.use_bars": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "time_stop.bars": {
+      "dist": "choice",
+      "values": [6, 12, 24, 48, 72, 96, 120, 168]
+    },
+    "time_stop.eod": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "time_stop.eow": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "time_stop.condition": {
+      "dist": "choice",
+      "values": ["Always", "Profit Only", "Loss Only"]
+    },
+    "confirmation.use_session_filter": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "confirmation.session": {
+      "dist": "choice",
+      "values": ["0000-2359", "0000-1200", "1200-2359", "0600-1800", "0700-1900", "0800-2000", "0900-1700", "1300-2100"]
+    }
+  }
+}

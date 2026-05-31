@@ -1,0 +1,13 @@
+candidate_id,trade_count_match,pf_match,fee_monotonic,assets_min5_or_blocked
+CANDIDATE_003,True,True,True,True
+CANDIDATE_007,True,True,True,True
+CANDIDATE_004,True,True,True,True
+CANDIDATE_011,True,True,True,True
+CANDIDATE_001,True,True,True,True
+CANDIDATE_005,True,True,True,True
+CANDIDATE_012,True,True,True,True
+CANDIDATE_008,True,True,True,True
+CANDIDATE_002,True,True,True,True
+CANDIDATE_009,True,True,True,True
+CANDIDATE_006,True,True,True,True
+CANDIDATE_010,True,True,True,True

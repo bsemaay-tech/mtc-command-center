@@ -1,0 +1,3 @@
+# STG019_ql_trail_20ma_christian_1d
+
+Source folder: `C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\06_PROMOTED_TO_PARITY\QL_TRAIL_20MA_CHRISTIAN_1D`

@@ -1,0 +1,6 @@
+case_id,case_type,label,synthetic,description,expected_long_pulse,expected_short_pulse,expected_exit_behavior
+GC_LONG_001,long_pulse,right_side_v_after_downside_capitulation,YES,Downside panic followed by prior bar high break,YES,NO,Initial stop below trigger/prior low
+GC_SHORT_001,short_pulse,upside_exhaustion_reversal,YES,Upside extension followed by prior bar low break,NO,YES,Initial stop above trigger/prior high
+GC_NONE_001,no_signal,range_bound_no_mans_land,YES,Compressed range around VWAP should not trigger,NO,NO,No trade
+GC_AMBIG_001,ambiguous,below_vwap_without_capitulation,YES,Price below VWAP with weak bounce should reject long,NO,NO,Needs source clarification if user expects long
+GC_EXIT_001,exit_behavior,prior_bar_low_trailing_stop,YES,Long after pulse then low breaches trailing stop,YES,NO,Exit when low breaches active stop

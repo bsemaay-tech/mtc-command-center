@@ -1,0 +1,267 @@
+Sheets: ['Performance', 'Trades analysis', 'Risk-adjusted performance', 'List of trades', 'Properties']
+
+Using Prop Sheet: Properties
+Trading range | Jul 01, 2025, 15:30 — Jan 01, 2026, 00:00
+Backtesting range | Jun 30, 2025, 01:00 — Jan 01, 2026, 00:00
+Symbol | BINANCE:BTCUSDT.P
+Timeframe | 15 minutes
+Point value | 1
+Chart type | Candles
+Currency | USDT
+Tick size | 0.1
+Precision | Default
+Enable Long Trades | On
+Enable Short Trades | On
+Exit on Opposite Signal | Off
+Allow Position Flips (Long↔Short same bar) | Off
+Exit if Selected Filters Block While In Position | Off
+Regime Lock (Prevent Re-entry Same Direction) | Off
+Entry Mode | Signal
+   Exit on MA Filter Block | Off
+   Exit on MA Slope Filter Block | Off
+   Exit on McGinley Filter Block | Off
+   Exit on HTF Trend Filter Block | Off
+   Exit on Volume Filter Block | Off
+   Exit on ATR Vol Filter Block | Off
+   Exit on Range Filter Block | Off
+Use Time Stop (Position Duration Exit) | Off
+Time Stop Bars | 50
+Exit at End of Day | Off
+Exit at End of Week | Off
+Time Stop Condition | Always
+Signal Mode Max Entries | 1
+Signal Mode Cooldown Bars | 10
+Edge Max Pyramid Positions | 1
+Signal Mode | Range Filter Hybrid (ADX+Chop+BB)
+Global Heikin Ashi | Off
+Use HA for Supertrend | On
+[ST] Use Wicks | On
+[ST] ATR Len | 21
+[ST] Factor | 4
+[RF] RSI Length | 27
+[RF] Use BB Filter (range mode) | Off
+[RF] Show Bollinger Bands | On
+[RF] Use Strategy TF Source | Off
+[RF] ADX Trend Threshold | 18
+[RF] ADX Range Threshold | 18
+[RF] Chop Trend Threshold | 55
+[RF] Chop Range Threshold | 57
+[RF] RSI Oversold | 28
+[RF] RSI Overbought | 70
+[RF] BB Length | 32
+[RF] BB Multiplier | 2.6
+Risk per Long (% of equity) | 1
+Risk per Short (% of equity) | 3
+ Fallback Position Size When SL OFF (% of equity) | 5
+Use Daily Loss Limit? | Off
+Max Daily Loss (% of equity) | 5
+Use Max Trades per Day? | Off
+Max Trades per Day | 5
+Max Leverage Cap (Limit) | 5
+Risk Equity Source | Realized
+Use Notional Hard Assert | Off
+SL Mode | ATR
+Use Stop Loss | On
+Swing SL Basis | Body
+Swing SL Lookback | 20
+SL % (distance) | 1
+TP Mode (single TP) | R
+Use Take Profit | On
+TP % (distance) | 2
+TP R multiple (single TP) | 5
+Use Break-Even? | On
+Use Multi TP (2 TPs, requires Take Profit = ON) | Off
+TP2 at R multiple | 5.5
+Swing SL ATR Length | 14
+Swing SL ATR Multiplier | 0.5
+SL ATR Length | 14
+SL ATR Multiplier | 4
+TP ATR Length | 14
+TP ATR Multiplier | 3
+BE trigger (R multiple) | 0.8
+BE buffer (R multiple) | 0.1
+TP1 at R multiple | 3
+TP1 Close % of position | 50
+Use Trailing Stop | On
+Trailing ATR Length | 14
+Start After (R multiple) | 2
+Trail Distance (R multiple) | 2
+Use MA Filter | On
+Use McGinley Filter | On
+Use HTF Trend Filter | Off
+[HTF] MA Length | 100
+[HTF] Buffer % | 0.1
+[MACD] Enable filter hub | Off
+[MACD] Mode | STANDARD
+[MACD] Source | close
+[MACD] Fast | 12
+[MACD] Slow | 26
+[MACD] Signal | 9
+[MACD] Regime: line >0 long / <0 short | On
+[MACD] CrossState: line > signal long / < signal short | Off
+[MACD] Histogram gate | Off
+[MACD] Hist mode | SIGN_ONLY
+[MACD] Zero-line distance gate | Off
+[MACD] Min distance (0=no effect) | 0
+[MACD] HTF bias (regime) | On
+[MACD] HTF timeframe | 240
+[MACD] Apply HTF regime sign | On
+[MACD] Expose crossover triggers (diagnostic) | Off
+[MA] Type | EMA
+[MA] Length | 97
+[MA] Use Higher Timeframe | Off
+[MA] HTF Timeframe | 60
+[McGinley] Length | 6
+[McGinley] Use Higher Timeframe | Off
+[McGinley] HTF Timeframe | 60
+[HTF] Trend Timeframe | 240
+[HTF] MA Type | EMA
+Use Volume Participation Filter | On
+[VOL] SMA Length | 80
+[VOL] Min SMA | 0.5
+Use Range Filters (Entry Pause) | Off
+Range Aggregation | AND
+Range Hold Bars | 8
+Range Debug Plots | Off
+Use MA Slope Filter | Off
+Use ADX Range Filter | Off
+ADX Length | 14
+ADX On Threshold | 25
+ADX Off Threshold | 20
+Use Choppiness Filter | Off
+Chop Length | 14
+Chop On Threshold | 50
+Chop Off Threshold | 62
+COUNT Mode Min Pass | 2
+Use ATR Volatility Floor | On
+[ATR] Min ATR / Baseline | 1.2
+[MA] Slope Len | 200
+[MA] Slope Min %/bar | 0.005
+[ADX] Use Higher Timeframe | Off
+[ADX] HTF Timeframe | 60
+[CHOP] Use Higher Timeframe | Off
+[CHOP] HTF Timeframe | 60
+[ATR] Vol Floor ATR Len | 14
+[ATR] Baseline SMA Len | 100
+Use Max Drawdown Guard | On
+Max Drawdown % | 12
+Use Consecutive Loss Halt | Off
+Max Consecutive Losses | 3
+Use Trade Cooldown | Off
+Cooldown Bars After Exit | 5
+Use Equity Curve Filter | On
+Equity MA Length | 6
+Use MAE Guard (in-trade) | Off
+Max MAE % | 2
+Consec Loss: Reset Daily (Legacy) | On
+Use Guard Recovery (auto-resume after block) | Off
+Recovery Mode | Bars
+Recovery After (bars) | 50
+Recovery After (signals) | 3
+Recovery: Early-exit when Equity Curve turns OK | On
+Recovery: Quality-Based Virtual Trade (Consec Loss) | Off
+  Virtual Wins Required | 1
+  Use SL in Virtual | On
+  Use TP in Virtual | On
+  Use BE in Virtual | On
+  Use Trailing in Virtual | On
+  Close on Opposite Signal | On
+Plot SL | On
+Plot SL Base (Locked) | Off
+Plot TP / TP1/2 | On
+Plot Trailing | On
+Plot Supertrend | Off
+   Show plots only when Supertrend mode active | Off
+Plot MA Filter | Off
+Plot McGinley Filter | Off
+Performance Mode (fewer plots/tables) | Off
+Show Signal Mode Tag | Off
+Show Signal Events (BUY/SELL) | On
+Show Filter Block Tags | Off
+Filter Tag Mode | Failed only
+Filter Tag Separator | Pipe
+Filter Tag Label Size | Small
+Max Filter Tag Labels (FIFO) | 100
+Filter Tag Cooldown Bars | 0
+ Orders are processed on bar close | On
+Debug bar colors | Off
+Show Exit Statistics Table | Off
+Exit Stats Mode | Events
+Exit Stats Table Text Size | Normal
+Exit Stats Table Position | Bottom Right
+Exit Stats: Show Flat column | Off
+Exit Stats: Show Win % column | Off
+Exit Stats Text Size | Normal
+Exit Stats Position | Bottom Right
+Debug Exit Reason (logs + optional labels) | Off
+Show Filter Block Stats Table | Off
+Filter Block Table Text Size | Normal
+Filter Block Table Position | Top Right
+Show Label Count Warning | Off
+Show Security Inventory Table | Off
+Show Why No Trade Dashboard | Off
+Force Alert UI Workaround | Off
+Enter Long Code | ENTER-LONG_Binance_BTCUSDT_MTC1_1H_cf58af3e65c750b64ad0161d
+Exit Long Code | EXIT-LONG_Binance_BTCUSDT_MTC1_1H_cf58af3e65c750b64ad0161d
+Enter Short Code | ENTER-SHORT_Binance_BTCUSDT_MTC1_1H_cf58af3e65c750b64ad0161d
+Exit Short Code | EXIT-SHORT_Binance_BTCUSDT_MTC1_1H_cf58af3e65c750b64ad0161d
+Exit All Code | EXIT-ALL_Binance_BTCUSDT_MTC1_1H_cf58af3e65c750b64ad0161d
+Order Type | market
+Amount Type | quote
+Amount Per Trade | 100
+Leverage | 1
+Send Take Profit | On
+Send Stop Loss | On
+Reduce Only (for exits) | On
+Place Conditional Orders on Exchange | Off
+Use Confirmation: Swing Break + Momentum | Off
+Swing Left Bars | 7
+Swing Right Bars | 7
+Require Close Beyond Swing (else wick) | On
+Max bars to wait (timeout) | 200
+Min bars to wait after raw | 1
+Apply confirmation only when flat | Off
+Update swing level while waiting (dynamic) | Off
+Dynamic update mode | TIGHTEN_ONLY
+If dynamic updates level this bar, defer break check 1 bar | On
+If new RAW event arrives, refresh level+timer | On
+RAW event mode | EDGE
+If LONG & SHORT raw same bar | LONG_WINS
+Bar close only (barstate.isconfirmed) | On
+Require RAW still true at confirmation | Off
+Break buffer (ticks) | 0
+Max swing distance % (0 = off) | 0
+Max pivot age bars (0 = off) | 0
+Use Momentum Filter | Off
+Momentum Mode | ATR_BODY
+ATR Len | 14
+ATR Body Mult | 0.3
+ROC(1) Min % (0.15 = 0.15%) | 0.15
+Use Session Filter | Off
+Session | 00:00 — 23:59
+Plot confirmation levels (only while waiting) | Off
+Enable confirmation visuals (debug) | Off
+RAWWAIT markers | On
+WAIT markers (per bar) | Off
+WAIT background tint | On
+Level lines | On
+BREAK markers | On
+CONF markers | On
+waitBars in Data Window | On
+Optional waitBars label (low spam) | Off
+Label update every N bars | 5
+Initial capital | 10000
+Order size | 1 contracts
+Pyramiding | 1 orders
+Commission | 0.04
+Slippage | 5 ticks
+Verify price for limit orders | 0 ticks
+Margin for long positions | 1%
+Margin for short positions | 1%
+Recalculate after order is filled | Off
+Recalculate on every tick | Off
+Recalculate on bar close | On
+Backtesting precision. Use bar magnifier | Off
+
+Using Trade Sheet: List of trades
+Total rows in trade sheet: 26

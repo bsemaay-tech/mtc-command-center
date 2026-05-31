@@ -1,0 +1,9 @@
+{
+  "generated_at_utc": "2026-03-05T21:01:42.391169+00:00",
+  "base_case": "C:\\LAB\\tradingview-lab\\mtc_backtest\\configs\\cases\\sep2025_parity.json",
+  "registry": "C:\\LAB\\tradingview-lab\\mtc_backtest\\backtest_assets\\module_registry.yaml",
+  "cases": [
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\configs\\cases\\autopilot\\supertrend.json",
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\configs\\cases\\autopilot\\range_filter_hybrid.json"
+  ]
+}

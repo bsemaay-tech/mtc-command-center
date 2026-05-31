@@ -1,0 +1,8 @@
+check,result,evidence
+py_compile,PASS,audit_finalize.py=OK; audit_inventory_and_master.py=OK; audit_recompute.py=OK
+fee_monotonic_all,PASS,10 / 10 monotonic
+metric_recompute_all_match,PASS,All 10 first-run aggregates reproduce within rounding (see METRIC_RECOMPUTE_AUDIT.csv)
+min_5_assets_or_blocked,PASS,All tested have ≥5 assets; DATA_BLOCKED set has 0 by definition
+mtc_pine_untouched,PASS,Audit only reads existing files; no Pine/runner edits in this folder
+final_reports_exist,PASS,AUDITED_MASTER_OVERNIGHT_QUANTLENS_REPORT.md + horizon reports + master comparison present
+csvs_readable,PASS,All produced CSVs use stdlib csv writer with explicit fieldnames

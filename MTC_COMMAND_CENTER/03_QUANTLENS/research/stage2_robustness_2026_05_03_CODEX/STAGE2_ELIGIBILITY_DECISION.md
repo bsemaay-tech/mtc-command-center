@@ -1,0 +1,11 @@
+# Stage 2 Eligibility Decision
+
+We will proceed with:
+1. QL_KELL_WEDGE_POP
+2. QL_SLINGSHOT_EMA_PULLBACK
+3. QL_CRABEL_RANGE_EXPANSION
+4. QL_LBR_COIL_BREAKOUT_IDNR4
+5. QL_MARTIN_PULLBACK_CONFLUENCE
+6. QL_STAN_STAGE_2_BREAKOUT
+
+CANSLIM and Microcap Short are excluded due to data blockages.

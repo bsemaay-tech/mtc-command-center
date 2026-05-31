@@ -1,0 +1,2 @@
+candidate_id,baseline,trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning
+CRABEL,random_same_hold,170,17,-54.2205,0.8715,45.2941,-0.2851,-0.3811,-0.2851,4.2699,-4.0564,-78.294,-0.6925,1.0,1.0,DOGEUSDT,NEARUSDT,False

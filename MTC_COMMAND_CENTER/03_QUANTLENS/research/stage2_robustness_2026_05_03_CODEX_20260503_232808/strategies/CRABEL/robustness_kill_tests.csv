@@ -1,0 +1,4 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,kill_test
+7317,16,4.9121375869162363e+20,1.7149,51.9885,0.6743,0.1007,0.6743,3.1113,-1.9646,-88.9905,5.519842127392406e+18,0.0,0.0,XRPUSDT,POLUSDT,False,CRABEL,remove_best_asset
+6619,17,1.5143378954081484e+16,1.6245,51.1104,0.5672,0.0585,0.5672,2.8866,-1.8577,-90.0656,168137168441734.25,0.0,0.0,ETHUSDT,POLUSDT,False,CRABEL,remove_best_year
+7817,17,3.3112042013898713e+21,1.6884,51.8102,0.6566,0.0913,0.6566,3.1085,-1.9794,-100.0,3.3112042013898715e+19,0.0,0.0,ETHUSDT,POLUSDT,False,CRABEL,remove_top_5_trades

@@ -1,0 +1,21 @@
+﻿{
+  "stages": [
+    {
+      "name": "stage1_signal",
+      "mode": "random",
+      "iters": 30,
+      "top_k": 10,
+      "space_file": "configs/space_example.json",
+      "objectives": "net_profit,max_dd_pct,profit_factor,win_rate,total_trades"
+    },
+    {
+      "name": "stage2_exits",
+      "mode": "random",
+      "iters": 20,
+      "top_k": 5,
+      "space_file": "configs/space_example.json",
+      "seed_offset": 100,
+      "objectives": "net_profit,max_dd_pct,profit_factor,win_rate,total_trades"
+    }
+  ]
+}

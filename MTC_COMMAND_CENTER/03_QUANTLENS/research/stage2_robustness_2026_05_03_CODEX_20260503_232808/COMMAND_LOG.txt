@@ -1,0 +1,23 @@
+﻿
+$ C:\Python314\python.exe -m py_compile C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\run_stage2_codex.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\costs.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\data_loader.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\exits.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\metrics.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\reporting.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\robustness.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\validation.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\walkforward.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\__init__.py
+exit=0
+stdout=
+stderr=
+
+$ C:\Python314\python.exe -m py_compile C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\run_stage2_codex.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\costs.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\data_loader.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\exits.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\metrics.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\reporting.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\robustness.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\validation.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\walkforward.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\__init__.py
+exit=0
+stdout=
+stderr=
+
+
+$ python -m py_compile <all new python files>
+exit=0
+
+$ python 06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\run_stage2_codex.py
+exit=0 after optimized/resumed rerun
+
+$ C:\Python314\python.exe -m py_compile C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\run_stage2_codex.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\costs.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\data_loader.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\exits.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\metrics.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\reporting.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\robustness.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\validation.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\walkforward.py C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03_CODEX_20260503_232808\stage2_lib\__init__.py
+exit=0
+stdout=
+stderr=
+

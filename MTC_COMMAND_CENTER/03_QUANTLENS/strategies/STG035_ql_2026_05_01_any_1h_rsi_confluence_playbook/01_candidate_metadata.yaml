@@ -1,0 +1,29 @@
+candidate_id: QL_2026-05-01_ANY_1H_RSI_CONFLUENCE_PLAYBOOK
+source_url: UNKNOWN_URL
+video_title: RSI indicator course with five setups and confluence filters
+quantlens_decision: CANDIDATE
+codex_status: READY_FOR_PYTHON_PROTOTYPE
+market_type: ANY_CLAIMED_UNVALIDATED
+primary_timeframe: 1h
+strategy_type: RSI confluence playbook
+commercial_value_score: 6
+complexity_score: 8
+repaint_risk: MEDIUM
+lookahead_risk: HIGH
+overfit_risk: HIGH
+closed_source_risk: LOW
+risk_management_quality: PARTIAL
+candidate_kind:
+  producer: false
+  entry_gate: true
+  guard: true
+  confirmation: true
+  exit_rule: true
+  sl_tp_method: true
+  trailing_be_method: false
+  money_management: false
+existing_mtc_overlap: Likely overlaps with RSI filters, divergence detection, Fibonacci/SR confluence, moving-average trend filters, and fixed R exits.
+new_feature_required: UNKNOWN_UNTIL_MAPPING
+recommended_next_step: Decompose into one deterministic RSI setup plus one confluence filter before Python prototype.
+created_at: 2026-05-01
+updated_at: 2026-05-01

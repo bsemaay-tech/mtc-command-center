@@ -1,0 +1,4 @@
+| run_order | case_id | tv_trades | py_trades | raw_tv_trades | raw_py_trades | compared | core_match_count | entry_price_match_count | exit_price_match_count | qty_match_count | all_price_qty_match_count | extra_tv_trades | extra_py_trades | trade_delta | count_match | prefix_core_match | strict_pass |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 362 | parity_core_194_mode_v01 | 177 | 177 | 177 | 177 | 177 | 177 | 177 | 154 | 148 | 125 | 0 | 0 | 0 | True | True | True |
+| 363 | parity_bnd_194_mode_v02 | 177 | 177 | 177 | 177 | 177 | 177 | 177 | 154 | 148 | 125 | 0 | 0 | 0 | True | True | True |

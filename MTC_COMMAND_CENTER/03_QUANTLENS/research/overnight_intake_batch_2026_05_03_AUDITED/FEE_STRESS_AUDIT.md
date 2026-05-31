@@ -1,0 +1,18 @@
+# Fee Stress Audit
+
+|candidate_id|PF_base|PF_fee_2x|PF_fee_3x|fee_monotonic|same_trade_set|downgrade_reason|
+|---|---|---|---|---|---|---|
+|CANDIDATE_001|1.7481|1.6786|1.6132|True|True||
+|CANDIDATE_002|1.4435|1.4078|1.3733|True|True||
+|CANDIDATE_003|1.4581|1.3872|1.3207|True|True||
+|CANDIDATE_004|1.251|1.1866|1.126|True|True||
+|CANDIDATE_005|1.4516|1.4236|1.3962|True|True||
+|CANDIDATE_006|0.0|0.0|0.0|True|True||
+|CANDIDATE_007|1.3096|1.2609|1.2138|True|True||
+|CANDIDATE_008|0.5383|0.3067|0.1848|True|True|2x/3x fee weak|
+|CANDIDATE_009|1.0861|0.716|0.4825|True|True|2x/3x fee weak|
+|CANDIDATE_010|0.0|0.0|0.0|True|True||
+|CANDIDATE_011|0.5201|0.5031|0.4865|True|True|2x/3x fee weak|
+|CANDIDATE_012|1.8741|1.8376|1.8023|True|True||
+|CANDIDATE_013|0.0|0.0|0.0|True|True||
+|CANDIDATE_014|0.0|0.0|0.0|True|True||

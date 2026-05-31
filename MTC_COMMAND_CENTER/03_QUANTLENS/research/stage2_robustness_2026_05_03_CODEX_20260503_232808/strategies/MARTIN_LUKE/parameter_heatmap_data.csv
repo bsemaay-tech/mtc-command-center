@@ -1,0 +1,13 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,parameter_set,timeframe
+326,17,14344.6541,1.5289,42.9448,3.2872,-4.663,3.2872,22.1269,-10.8933,-87.9501,163.0999,12.2883,12.2883,BNBUSDT,XRPUSDT,False,MARTIN_LUKE,"{""anchor_lb"": 20, ""hold"": 20, ""tol"": 0.015}",1D
+326,17,14344.6541,1.5289,42.9448,3.2872,-4.663,3.2872,22.1269,-10.8933,-87.9501,163.0999,12.2883,12.2883,BNBUSDT,XRPUSDT,False,MARTIN_LUKE,"{""anchor_lb"": 50, ""hold"": 20, ""tol"": 0.015}",1D
+325,17,11544.4237,1.516,42.4615,3.231,-5.1682,3.231,22.3564,-10.8828,-87.9501,131.261,12.2554,12.2554,TRXUSDT,XRPUSDT,False,MARTIN_LUKE,"{""anchor_lb"": 100, ""hold"": 20, ""tol"": 0.015}",1D
+433,17,750.2951,1.3401,40.1848,2.2688,-4.7166,2.2688,22.2464,-11.1524,-94.7444,7.9191,12.3233,12.3233,ADAUSDT,XRPUSDT,False,MARTIN_LUKE,"{""anchor_lb"": 20, ""hold"": 20, ""tol"": 0.025}",1D
+433,17,750.2951,1.3401,40.1848,2.2688,-4.7166,2.2688,22.2464,-11.1524,-94.7444,7.9191,12.3233,12.3233,ADAUSDT,XRPUSDT,False,MARTIN_LUKE,"{""anchor_lb"": 50, ""hold"": 20, ""tol"": 0.025}",1D
+431,17,546.0954,1.3286,39.9072,2.2067,-5.1682,2.2067,22.3595,-11.1766,-94.7444,5.7639,12.2459,12.2459,ADAUSDT,XRPUSDT,False,MARTIN_LUKE,"{""anchor_lb"": 100, ""hold"": 20, ""tol"": 0.025}",1D
+388,17,293.7763,1.2911,43.5567,1.5367,-2.5142,1.5367,15.6455,-9.351,-80.6757,3.6414,7.7448,7.7448,NEARUSDT,XRPUSDT,False,MARTIN_LUKE,"{""anchor_lb"": 20, ""hold"": 10, ""tol"": 0.015}",1D
+388,17,293.7763,1.2911,43.5567,1.5367,-2.5142,1.5367,15.6455,-9.351,-80.6757,3.6414,7.7448,7.7448,NEARUSDT,XRPUSDT,False,MARTIN_LUKE,"{""anchor_lb"": 50, ""hold"": 10, ""tol"": 0.015}",1D
+387,17,277.573,1.2891,43.4109,1.5296,-2.5257,1.5296,15.7131,-9.351,-81.4463,3.4081,7.739,7.739,NEARUSDT,XRPUSDT,False,MARTIN_LUKE,"{""anchor_lb"": 100, ""hold"": 10, ""tol"": 0.015}",1D
+534,17,-71.8581,1.1762,42.6966,0.9866,-2.9256,0.9866,15.4221,-9.7692,-95.9416,-0.749,7.7172,7.7172,ADAUSDT,XRPUSDT,False,MARTIN_LUKE,"{""anchor_lb"": 20, ""hold"": 10, ""tol"": 0.025}",1D
+534,17,-71.8581,1.1762,42.6966,0.9866,-2.9256,0.9866,15.4221,-9.7692,-95.9416,-0.749,7.7172,7.7172,ADAUSDT,XRPUSDT,False,MARTIN_LUKE,"{""anchor_lb"": 50, ""hold"": 10, ""tol"": 0.025}",1D
+530,17,-74.813,1.1725,42.4528,0.9722,-3.0293,0.9722,15.5678,-9.795,-96.118,-0.7783,7.7,7.7,ADAUSDT,XRPUSDT,False,MARTIN_LUKE,"{""anchor_lb"": 100, ""hold"": 10, ""tol"": 0.025}",1D

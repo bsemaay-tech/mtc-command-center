@@ -1,0 +1,37 @@
+{
+  "candidate": {
+    "candidate_id": "ORB_8AM",
+    "name": "8AM Opening Range Breakout",
+    "aliases": "CANDIDATE_008",
+    "horizon": "DAY",
+    "family": "opening_range_breakout",
+    "native_asset_class": "session_native_crypto_proxy",
+    "native_timeframe": "5m",
+    "data_status": "available_crypto_5m_proxy",
+    "eligible": true,
+    "reason": "prior reject but retest verifies timezone/session"
+  },
+  "best_parameter_set": {
+    "hold": 12,
+    "or_min": 30
+  },
+  "assets": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "BNBUSDT",
+    "XRPUSDT",
+    "ADAUSDT",
+    "DOGEUSDT",
+    "AVAXUSDT",
+    "LINKUSDT",
+    "DOTUSDT",
+    "LTCUSDT",
+    "TRXUSDT",
+    "APTUSDT",
+    "ARBUSDT",
+    "NEARUSDT",
+    "OPUSDT",
+    "POLUSDT"
+  ]
+}

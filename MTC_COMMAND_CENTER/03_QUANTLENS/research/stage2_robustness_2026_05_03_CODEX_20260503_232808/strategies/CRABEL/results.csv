@@ -1,0 +1,2 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,name,timeframe,best_parameter_set
+7822,17,1.2424102257232852e+23,1.7727,51.841,0.7366,0.093,0.7366,3.2598,-1.9794,-90.0656,1.3794499763202918e+21,0.0,0.0,DOGEUSDT,POLUSDT,False,CRABEL,Crabel Range Expansion,1D,"{""direction"": ""long"", ""exit"": ""close_exit"", ""range_mult"": 0.7}"

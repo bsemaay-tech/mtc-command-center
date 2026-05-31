@@ -1,0 +1,30 @@
+{
+  "case_no": "case_140",
+  "status": "PARTIAL",
+  "started_at": "2026-04-09T18:06:35.047705Z",
+  "tv_apply": {
+    "case_no": 140,
+    "status": "SKIPPED",
+    "note": "TradingView input application is intentionally thin; current run assumes chart/code are already loaded.",
+    "applied": {}
+  },
+  "tv_collect": {
+    "case_no": 140,
+    "symbol": "BINANCE:BTCUSDT.P",
+    "interval": "60",
+    "source": "manual-loaded TradingView chart",
+    "status": "OK"
+  },
+  "python": {
+    "case_no": 140,
+    "returncode": 0,
+    "stdout": "=== MTC Bridge: Signal Extraction ===\nSymbol : BTCUSDT.P  TF: 60  Bars: 1000\nSource : C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\01_PINE\\MTC_V2.pine\nOutput : C:\\LAB\\tradingview-lab\\data\\mtc_signals.json\n\nFetching Binance data and running PineTS...\nProvider: Mock(Binance futures)\nMock file: C:\\LAB\\tradingview-lab\\data\\pinets_mock_binance\\BTCUSDT.P-1h-1772161200000-1775761199999.json\nDone in 3.8s. Bars: 1000, Plots: 59\n\n--- Signal Summary ---\nLong  entries : 8\nShort entries : 8\nExit  events  : 15\n\nSaved â†’ C:\\LAB\\tradingview-lab\\data\\mtc_signals.json  (1110 KB)\n=== Pine Trade Extractor ===\n\nSignals: C:\\LAB\\tradingview-lab\\data\\mtc_signals.json\nBars   : 1000  (BTCUSDT.P 60)\nRange  : 2026-02-27 -> 2026-04-09\n\n--- Pine Metrics (PineTS state machine) ---\n  Total trades   : 15\n  Win rate       : 46.67%\n  Net PnL        : $18,642.57  (1.8643%)\n  Profit factor  : 1.1971\n  Max drawdown   : 4.72%\n  Long / Short   : 7 / 8\n  Exit reasons   : {'sl_atr_hit': 6, 'tp_atr_hit': 7, 'opp_signal': 2}\n\nSaved: C:\\LAB\\tradingview-lab\\data\\pine_trades.json\n       C:\\LAB\\tradingview-lab\\data\\pine_trades.csv\n>>> Running mtc_bridge.mjs...\n\n>>> Running pine_trades.py...\n\nPine metrics loaded: pine_trades.json\nExact OHLCV dataset: C:\\LAB\\tradingview-lab\\data\\parity_input_from_pinets.csv\nPython config mode : pine_defaults_plus_v2_overrides\nOverride source    : C:\\LAB\\tradingview-lab\\01_MASTER TEMPLATE_V2\\05_PARITY\\_nightly\\case_overrides\\case_140.json\n\nRunning canonical V2 Python runner on exact PineTS bars...\n\n==============================================================================\n  PARITY COMPARISON\n==============================================================================\n  Pine   : PineTS / BTCUSDT.P 60 (1000 bars)\n  Python : MTC_V2 00_PYTHON Runner\n------------------------------------------------------------------------------\n  Metric                       Pine       Python      AbsDiff     Status\n------------------------------------------------------------------------------\n  Trade Count                    15           15       0.0000         OK\n  Win Rate %                 46.67%       46.67%       0.0000         OK\n  Profit Factor              1.1971       1.1971       0.0000         OK\n  Net PnL %                 1.8643%      1.8643%       0.0000         OK\n  Max Drawdown %            4.7200%      4.7200%       0.0000         OK\n------------------------------------------------------------------------------\n  Trade Parity\n    Pine trades      : 15\n    Python trades    : 15\n    Compared         : 15\n    Core match count : 15\n    Entry px match   : 15\n    Exit px match    : 15\n    Qty match        : 15\n    Extra Pine       : 0\n    Extra Python     : 0\n    Strict trade PASS: YES\n\n  Exit Reasons\n    Pine   : {'sl_atr_hit': 6, 'tp_atr_hit': 7, 'opp_signal': 2}\n    Python : {'sl_atr_hit': 6, 'tp_atr_hit': 7, 'opp_signal': 2}\n==============================================================================\n  FINAL VERDICT: PASS\n==============================================================================\nSkipped tracker update for case_140: Pine case inputs were not explicitly aligned.\n\nSaved report: C:\\LAB\\tradingview-lab\\reports\\tracker_cases\\case_140\\parity_compare.json\nSaved trade report: C:\\LAB\\tradingview-lab\\reports\\tracker_cases\\case_140\\parity_trade_report.csv\nSaved python trades: C:\\LAB\\tradingview-lab\\reports\\tracker_cases\\case_140\\python_trades_v2.csv\n",
+    "stderr": "No mock data file found for BTCUSDT.P 4h. Searched in: C:\\LAB\\tradingview-lab\\data\\pinets_mock_binance\nNo mock data file found for BTCUSDT.P 4h. Searched in: C:\\LAB\\tradingview-lab\\data\\pinets_mock_binance\nNo mock data file found for BTCUSDT.P 4h. Searched in: C:\\LAB\\tradingview-lab\\data\\pinets_mock_binance\nNo mock data file found for BTCUSDT.P 4h. Searched in: C:\\LAB\\tradingview-lab\\data\\pinets_mock_binance\nNo mock data file found for BTCUSDT.P 4h. Searched in: C:\\LAB\\tradingview-lab\\data\\pinets_mock_binance\nNo mock data file found for BTCUSDT.P 4h. Searched in: C:\\LAB\\tradingview-lab\\data\\pinets_mock_binance\nNo mock data file found for BTCUSDT.P 4h. Searched in: C:\\LAB\\tradingview-lab\\data\\pinets_mock_binance\nNo mock data file found for BTCUSDT.P 4h. Searched in: C:\\LAB\\tradingview-lab\\data\\pinets_mock_binance\nNo mock data file found for BTCUSDT.P 4h. Searched in: C:\\LAB\\tradingview-lab\\data\\pinets_mock_binance\n",
+    "status": "OK"
+  },
+  "compare": {
+    "case_no": 140,
+    "status": "PARTIAL",
+    "note": "TradingView and Python outputs are not yet both populated by the thin workflow."
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "candidate_id": "QL_ALPHA_LTC_RSI_OVERSOLD_1H",
+  "strategy_family": "RSI_OVERSOLD_RECOVERY_MEAN_REVERSION",
+  "engine_strategy_id": "GEN_RSI_OVERSOLD_REVERSAL",
+  "symbol": "LTCUSDT",
+  "timeframe": "1h",
+  "direction": "long_only",
+  "trend_filter": "none (pure mean reversion)",
+  "verified_parameters": {
+    "rsi_len": 5,
+    "oversold": 35,
+    "recovery": 45,
+    "stop_lookback_bars": 5,
+    "target_R": 2.0,
+    "cost_bps_round_trip": 8.0,
+    "max_hold_bars": 96
+  },
+  "signal_inputs": {
+    "rsi5": "RSI(close, 5) Wilder (ewm alpha=1/5, min_periods=5)"
+  },
+  "long_signal_definition": "(rsi5[1] < oversold) AND (rsi5 >= recovery)",
+  "short_signal_definition": null,
+  "entry_rule": "enter at NEXT bar open after signal bar closes",
+  "stop_rule": "lowest low of last 5 bars at signal bar",
+  "exit_rule": "fixed 2R target (entry + 2*(entry-stop)) OR hard stop (low <= stop_price) OR force-exit after max_hold_bars",
+  "bar_close_only": true,
+  "no_repaint": "true under engine assumptions: RSI computed on CLOSED bars; signal on bar i, executed at bar i+1 open",
+  "no_lookahead": "true: uses rsi5 and rsi5[1] only (no forward reference)",
+  "data_requirements": {
+    "ohlcv": ["open", "high", "low", "close"],
+    "warmup_bars": ">= 50 (RSI(5) + stability)",
+    "coverage_verified": "LTC 1h 2020-01-09..2026-04-27, 55208 bars"
+  },
+  "expected_outputs": {
+    "signal_column": "long_entry (bool)",
+    "stop_column": "stop_price",
+    "target_column": "target_price",
+    "exit_marker": "target_exit | stop_exit | time_exit"
+  },
+  "metrics_lockbox": {
+    "return_pct_compound": 95.81,
+    "buyhold_pct": -20.84,
+    "excess_alpha_pct": 116.65,
+    "profit_factor": 1.230,
+    "trades": 329,
+    "max_drawdown_pct": -21.98,
+    "win_rate": 0.3799,
+    "expectancy_R": 0.107,
+    "multi_window_positive": "4/5",
+    "param_stable": true,
+    "walk_forward_folds_positive": "1/3",
+    "bootstrap_p_hires": 0.08488,
+    "deflated_sharpe_p": 0.0,
+    "bh_fdr_survivor": false,
+    "caveat": "thin PF 1.23, low expectancy 0.107R, fold consistency only 1/3, Q3 window -26.4%"
+  },
+  "promotion_status": ["PROMOTE_TO_FORWARD_PAPER_TRADE"],
+  "parity_status": "deferred (weak fold consistency; revisit after forward paper-trade)",
+  "fidelity_to_original_youtube_source": "NEEDS_SOURCE_CONFIRMATION",
+  "source_artifacts": [
+    "05_BACKTEST_RESULTS/MEGA_walk_forward_results.json",
+    "05_BACKTEST_RESULTS/alpha_summary.json",
+    "05_BACKTEST_RESULTS/multiwindow_summary.json",
+    "tools/mega_walk_forward.py"
+  ],
+  "not_an_approved_live_trading_system": true
+}

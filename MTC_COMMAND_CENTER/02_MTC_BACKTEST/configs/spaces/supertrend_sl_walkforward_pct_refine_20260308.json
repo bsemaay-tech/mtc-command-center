@@ -1,0 +1,7 @@
+{
+  "grid": {
+    "stop_loss.use_sl": { "values": [true] },
+    "stop_loss.mode": { "values": ["%"] },
+    "stop_loss.percent": { "low": 0.1, "high": 0.3, "step": 0.05, "dtype": "float" }
+  }
+}

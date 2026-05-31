@@ -1,0 +1,2 @@
+candidate_id,strategy,timeframe,trade_count,assets_tested,aggregate_pf,aggregate_net_return_pct,aggregate_max_dd_pct,return_dd_ratio,win_rate,average_trade_pct,median_trade_pct,average_win_pct,average_loss_pct,expectancy_pct,exposure_pct,fee_2x_pf,fee_3x_pf,fee_monotonic,classification
+CANDIDATE_009,HighBeta Opening Bar Crypto Proxy,5m,151,5,1.0861,3.0885,-7.1457,0.4322,49.0066,0.0235,-0.025,0.6058,-0.5361,0.0235,39.426,0.716,0.4825,True,WEAK_CANDIDATE_CRYPTO_PROXY

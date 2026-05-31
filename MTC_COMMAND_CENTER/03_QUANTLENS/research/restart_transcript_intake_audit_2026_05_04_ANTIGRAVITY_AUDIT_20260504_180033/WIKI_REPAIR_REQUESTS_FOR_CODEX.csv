@@ -1,0 +1,12 @@
+candidate_id,issue,repair_action
+Tm0dkf8_giA,Missing warnings regarding holding through bases,ADD_WARNING_TO_WIKI
+6aOnCK1gv2w,Missing rules on consecutive trades and chop,ADD_WARNING_TO_WIKI
+6tnREqUJ1WY,Missing sentiment peak warnings,ADD_WARNING_TO_WIKI
+lTiR1pc82EE,Missing HTF (weekly) check requirement,ADD_RULE_TO_WIKI
+R215f4fj7V8,Missing alert setting physical process,ADD_PROCESS_TO_WIKI
+RTHRh_GLwH8,Missing position sizing as risk management rule,ADD_RULE_TO_WIKI
+UMgJ0P8fe0s,Missing context on expecting trades to run,ADD_WARNING_TO_WIKI
+zw96qkUn9_g,Missing fat pitch patience warning,ADD_WARNING_TO_WIKI
+JS4_6gv0PpI,Missing style drift warning,ADD_WARNING_TO_WIKI
+_AAX1ylNbIE,Missing timeframe definitions,ADD_CONTEXT_TO_WIKI
+UtNrp_Uz9Oc,Missing FOMO/greed psychological definition,ADD_WISDOM_TO_WIKI

@@ -1,0 +1,40 @@
+{
+  "candidate": {
+    "candidate_id": "LBR_COIL",
+    "name": "LBR Coil Breakout / IDNR4",
+    "aliases": "QL_LBR_COIL_BREAKOUT_RANGE_EXPANSION_v0",
+    "horizon": "DAY",
+    "family": "coil_breakout",
+    "native_asset_class": "crypto_proxy",
+    "native_timeframe": "5m",
+    "data_status": "available_crypto_5m",
+    "eligible": true,
+    "reason": "Antigravity conflict candidate; mechanical 5m test required"
+  },
+  "best_parameter_set": {
+    "atr_stop": 1.5,
+    "hold": 12,
+    "inside": false,
+    "nr": 7,
+    "target_r": 2.0
+  },
+  "assets": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "BNBUSDT",
+    "XRPUSDT",
+    "ADAUSDT",
+    "DOGEUSDT",
+    "AVAXUSDT",
+    "LINKUSDT",
+    "DOTUSDT",
+    "LTCUSDT",
+    "TRXUSDT",
+    "APTUSDT",
+    "ARBUSDT",
+    "NEARUSDT",
+    "OPUSDT",
+    "POLUSDT"
+  ]
+}

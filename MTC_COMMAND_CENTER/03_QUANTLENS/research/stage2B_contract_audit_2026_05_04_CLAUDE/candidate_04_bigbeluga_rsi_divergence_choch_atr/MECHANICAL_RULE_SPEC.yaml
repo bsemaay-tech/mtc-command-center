@@ -1,0 +1,52 @@
+candidate_id: BIGBELUGA_RSI_DIV_CHOCH_ATR_v1_CONTRACT
+direction: long_short
+asset_class: agnostic
+native_timeframe: [4h, 1D]
+data_requirements:
+  - ohlc
+indicators:
+  ms_len: 10           # pivot left/right
+  atr_length: 14
+  atr_mult: 4.0        # trailing stop multiplier (NOT static)
+  target_step_mult: 2.0
+  rsi_length: 14
+pivots:
+  pivot_high: "ta.pivothigh(ms_len, ms_len)"
+  pivot_low:  "ta.pivotlow(ms_len, ms_len)"
+  confirmation_lag_bars: 10
+  no_centered_rolling: true
+  use_shift_to_avoid_lookahead: true
+divergence:
+  bull:
+    rule: "current confirmed price-pivot-low < previous confirmed price-pivot-low AND current confirmed RSI-pivot-low > previous confirmed RSI-pivot-low"
+  bear:
+    rule: "current confirmed price-pivot-high > previous confirmed price-pivot-high AND current confirmed RSI-pivot-high < previous confirmed RSI-pivot-high"
+  divergence_validity_bars: 30
+state:
+  direction: bool   # true = bull, false = bear
+  latched: true
+trigger:
+  bull_choch: "crossover(close, last_confirmed_pivot_high) AND direction == false"
+  bear_choch: "crossunder(close, last_confirmed_pivot_low) AND direction == true"
+entry:
+  rule: "next_bar_open after CHoCH event"
+  optional_filter: "require divergence flagged within last `divergence_validity_bars`"
+stop_initial:
+  rule: "divergence pattern extreme (swing low for bull, swing high for bear)"
+profit_target_ladder:
+  tp1_atr_mult: 2.0
+  tp2_atr_mult: 4.0
+  tp3_atr_mult: 6.0
+exit:
+  trailing_stop:
+    rule: "highest_high_since_entry - ATR(14)*4 for long, mirror for short"
+  opposite_choch: "force exit on opposite CHoCH"
+  time_stop_bars_optional: 50
+position_sizing:
+  risk_pct_per_trade: [0.5, 1.0]
+do_not_trade_when:
+  - "no confirmed pivot in lookback"
+  - "no recent divergence (if hard-required)"
+  - "consecutive flips < min_bars_between"
+non_repaint: required
+mtc_role: SIGNAL_PRODUCER_POSSIBLE_FSM

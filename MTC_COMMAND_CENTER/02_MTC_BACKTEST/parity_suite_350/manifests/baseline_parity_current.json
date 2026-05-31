@@ -1,0 +1,13 @@
+{
+  "tv_rows_parsed": 241,
+  "py_rows_parsed": 241,
+  "compared_rows": 241,
+  "core_match_relaxed": "241/241",
+  "entry_price_match_relaxed": "241/241",
+  "exit_price_match_relaxed": "241/241",
+  "qty_match_relaxed": "241/241",
+  "all_price_qty_match_relaxed": "241/241",
+  "strict_core_plus_price_qty": "241/241",
+  "tv_csv": "C:\\LAB\\tradingview-lab\\mtc_backtest\\parity_suite_350\\manifests\\baseline_sources\\baseline_tv_export_2026-02-27_2d41c_trades.csv",
+  "py_csv": "C:\\LAB\\tradingview-lab\\debug\\parity_suite_350\\parity_core_005_enable_long_trades_v01\\debug_python_trades_20260227_162210_e5405dfc.csv"
+}

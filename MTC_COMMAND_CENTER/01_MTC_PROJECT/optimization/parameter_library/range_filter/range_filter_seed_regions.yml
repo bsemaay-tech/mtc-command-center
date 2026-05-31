@@ -1,0 +1,134 @@
+# Range Filter Seed Regions - POC v1
+# Research seeds only; not Pine defaults; not production parameters.
+#
+# Status: SMOKE_POC - proves parameter_library pipeline for Range Filter producer.
+# These regions are initial search bounds derived from price-relative band heuristics.
+# No walkforward evidence yet; accepted_for_next_stage=false until evidence accumulates.
+#
+# Producer parameter: rf_range (band half-width in price units).
+# Rule: rf_range must be > 0. Typical practical range is 0.3%-2.0% of current asset price.
+
+regions:
+  - region_id: range_filter_BTCUSDT_15m_poc_v1
+    strategy_id: MTC_V2
+    producer_id: RangeFilter
+    asset: BTCUSDT
+    timeframe: 15m
+    confidence: LOW
+    evidence_count: 0
+    accepted_for_next_stage: false
+    seed_source_type: PRICE_RELATIVE_HEURISTIC_POC
+    warning: Research seed only; not Pine default; not production parameter.
+    rationale: >
+      BTCUSDT at ~70k price. 15m timeframe requires tighter bands to avoid excessive hold bars.
+      0.3%-0.7% of 70k = 210-490. Initial scan range 200-600.
+    parameter_ranges:
+      rf_range:
+        observed_values: [200, 300, 400, 500, 600]
+        min: 200
+        max: 600
+    center_params:
+      rf_range: "400"
+    fixed_exit_risk:
+      sl_atr_mult: 3.0
+      tp_mode: R
+      tp_r_multiple: 2.0
+      risk_long: 0.5
+      risk_short: 0.5
+    warnings:
+      - Research seed only; not Pine default; not production parameter.
+      - POC seeds prove schema/pipeline only; not final optimization conclusions.
+      - No walkforward evidence collected yet.
+
+  - region_id: range_filter_BTCUSDT_1h_poc_v1
+    strategy_id: MTC_V2
+    producer_id: RangeFilter
+    asset: BTCUSDT
+    timeframe: 1h
+    confidence: LOW
+    evidence_count: 0
+    accepted_for_next_stage: false
+    seed_source_type: PRICE_RELATIVE_HEURISTIC_POC
+    warning: Research seed only; not Pine default; not production parameter.
+    rationale: >
+      BTCUSDT 1h needs wider bands than 15m to filter noise.
+      0.5%-1.5% of 70k = 350-1050. Initial scan range 400-1200.
+    parameter_ranges:
+      rf_range:
+        observed_values: [400, 600, 800, 1000, 1200]
+        min: 400
+        max: 1200
+    center_params:
+      rf_range: "700"
+    fixed_exit_risk:
+      sl_atr_mult: 3.0
+      tp_mode: R
+      tp_r_multiple: 2.0
+      risk_long: 0.5
+      risk_short: 0.5
+    warnings:
+      - Research seed only; not Pine default; not production parameter.
+      - POC seeds prove schema/pipeline only; not final optimization conclusions.
+      - No walkforward evidence collected yet.
+
+  - region_id: range_filter_ETHUSDT_15m_poc_v1
+    strategy_id: MTC_V2
+    producer_id: RangeFilter
+    asset: ETHUSDT
+    timeframe: 15m
+    confidence: LOW
+    evidence_count: 0
+    accepted_for_next_stage: false
+    seed_source_type: PRICE_RELATIVE_HEURISTIC_POC
+    warning: Research seed only; not Pine default; not production parameter.
+    rationale: >
+      ETHUSDT at ~2500 price. 15m timeframe. 0.3%-0.7% of 2500 = 7.5-17.5.
+      Initial scan range 10-50 to stay conservative.
+    parameter_ranges:
+      rf_range:
+        observed_values: [10, 20, 30, 40, 50]
+        min: 10
+        max: 50
+    center_params:
+      rf_range: "25"
+    fixed_exit_risk:
+      sl_atr_mult: 3.0
+      tp_mode: R
+      tp_r_multiple: 2.0
+      risk_long: 0.5
+      risk_short: 0.5
+    warnings:
+      - Research seed only; not Pine default; not production parameter.
+      - POC seeds prove schema/pipeline only; not final optimization conclusions.
+      - No walkforward evidence collected yet.
+
+  - region_id: range_filter_ETHUSDT_1h_poc_v1
+    strategy_id: MTC_V2
+    producer_id: RangeFilter
+    asset: ETHUSDT
+    timeframe: 1h
+    confidence: LOW
+    evidence_count: 0
+    accepted_for_next_stage: false
+    seed_source_type: PRICE_RELATIVE_HEURISTIC_POC
+    warning: Research seed only; not Pine default; not production parameter.
+    rationale: >
+      ETHUSDT 1h needs wider bands. 0.5%-1.5% of 2500 = 12.5-37.5.
+      Initial scan range 20-100.
+    parameter_ranges:
+      rf_range:
+        observed_values: [20, 40, 60, 80, 100]
+        min: 20
+        max: 100
+    center_params:
+      rf_range: "50"
+    fixed_exit_risk:
+      sl_atr_mult: 3.0
+      tp_mode: R
+      tp_r_multiple: 2.0
+      risk_long: 0.5
+      risk_short: 0.5
+    warnings:
+      - Research seed only; not Pine default; not production parameter.
+      - POC seeds prove schema/pipeline only; not final optimization conclusions.
+      - No walkforward evidence collected yet.

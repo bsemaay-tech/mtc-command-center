@@ -1,0 +1,11 @@
+candidate_id,case_id,expected,actual,pass_fail
+CRABEL_RANGE_EXPANSION,clear_valid_setup_one_entry,1,1,PASS
+CRABEL_RANGE_EXPANSION,almost_valid_missing_condition,0,0,PASS
+CRABEL_RANGE_EXPANSION,warmup_incomplete_blocks_entry,0,0,PASS
+CRABEL_RANGE_EXPANSION,gap_beyond_trigger_uses_realistic_fill,1,1,PASS
+CRABEL_RANGE_EXPANSION,same_bar_sl_tp_stop_first,1,1,PASS
+CRABEL_RANGE_EXPANSION,duplicate_signal_while_in_position_blocked,1,1,PASS
+CRABEL_RANGE_EXPANSION,exit_before_new_entry,1,1,PASS
+CRABEL_RANGE_EXPANSION,nan_missing_candle_blocks_signal,0,0,PASS
+CRABEL_RANGE_EXPANSION,cost_model_reduces_return,1,1,PASS
+CRABEL_RANGE_EXPANSION,fee_stress_monotonic,1,1,PASS

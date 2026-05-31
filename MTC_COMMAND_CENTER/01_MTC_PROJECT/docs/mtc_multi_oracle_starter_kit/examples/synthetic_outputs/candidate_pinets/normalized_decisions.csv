@@ -1,0 +1,2 @@
+timestamp,bar_index,side,entry_allowed,blocked_reason,position_before,position_after
+2024-01-01T00:15:00Z,1,LONG,1,,FLAT,LONG

@@ -1,0 +1,18 @@
+{
+  "candidate_id": "QL_LAUNCHPAD_PROSWING_1D",
+  "source_url": "https://www.youtube.com/watch?v=NwgJQyoUAaI",
+  "source_candidate": "QLR_NwgJQyoUAaI",
+  "title": "Launchpad setup (Ross's variant, Pro Swing Ep 2)",
+  "kind": "strategy",
+  "rules_high_confidence": [
+    "Strong move up the right side, then tight contraction",
+    "Very low volatility in contraction zone (ATR/price low)",
+    "Breakout of contraction zone with volume",
+    "Stop below contraction"
+  ],
+  "entry_pseudo": "prior_up_move AND atr_compressed AND breakout_volume",
+  "exit_pseudo": "close<contraction_low OR trail_under_swing",
+  "param_grid_size_planned": 50,
+  "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+  "promoted_at": "2026-05-31T00:09:34"
+}

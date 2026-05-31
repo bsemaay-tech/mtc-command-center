@@ -1,0 +1,2 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,name,timeframe,best_parameter_set
+492,17,81.6414,1.4648,51.626,0.1261,0.0308,0.1261,0.7699,-0.5609,-15.5149,5.2621,5.9756,5.9756,POLUSDT,TRXUSDT,False,HIGHBETA_PROXY,HighBeta Opening Bar Gap-and-Go,5m,"{""confirm"": 4, ""hold"": 6, ""lookback"": 10}"

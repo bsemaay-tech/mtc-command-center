@@ -1,0 +1,55 @@
+//@version=6
+// ============================================================================
+// REVIEW_ONLY — QL_ALPHA_ADA_TWO_CANDLE_SR_1H  (S/R breakout + strong-close, 2R exit)
+// PARITY REVIEW WRAPPER. NOT production. DO NOT merge into MTC_V2.pine.
+// Source of truth = tools/reference_producer.py output (QL_ALPHA_ADA_TWO_CANDLE_SR_1H_trades.csv).
+// Symbol/TF for parity: ADAUSDT, 1h. Long-only. Cost ~8 bps round-trip.
+// ============================================================================
+strategy("QL_ALPHA_ADA_TWO_CANDLE_SR_1H REVIEW_ONLY", overlay=true,
+     initial_capital=10000, default_qty_type=strategy.percent_of_equity, default_qty_value=100,
+     commission_type=strategy.commission.percent, commission_value=0.04,
+     process_orders_on_close=false, calc_on_every_tick=false, pyramiding=0)
+
+levelLookback = input.int(200,   "level_lookback")
+upperThird    = input.float(0.6, "upper_third")
+breakBufATR   = input.float(0.0, "break_buf_atr")
+maxHold       = input.int(96,    "max_hold_bars")
+
+atr14    = ta.atr(14)
+highBreak = ta.highest(high, levelLookback)[1]      // resistance excludes current bar -> no repaint
+rng      = high - low
+pos      = rng > 0 ? (close - low) / rng : 0.0
+
+// Producer (entry) signal — must match Python reference long_entry bar-for-bar
+longSig = pos >= upperThird and close > high[1] and close > (highBreak + breakBufATR * atr14)
+
+stopCalc = ta.lowest(low, 2)                        // stop = lowest low of last 2 bars
+var float stopPrice  = na
+var float entryPrice = na
+var int   entryBar   = na
+
+canEnter = strategy.position_size == 0 and longSig and stopCalc < close
+if canEnter
+    stopPrice  := stopCalc
+    entryBar   := bar_index
+    strategy.entry("L", strategy.long)              // fills next bar open
+
+if strategy.position_size > 0
+    // capture realized entry price once filled, then set 2R target + stop
+    entryPrice := na(entryPrice) ? strategy.position_avg_price : entryPrice
+    risk = entryPrice - stopPrice
+    target = entryPrice + 2.0 * risk
+    strategy.exit("TP_SL", "L", stop = stopPrice, limit = target)   // 2R target OR hard stop, intrabar
+    if not na(entryBar) and (bar_index - entryBar) >= maxHold        // time stop
+        strategy.close("L", comment = "time")
+if strategy.position_size == 0
+    entryPrice := na
+
+plotchar(longSig, "longSig", "▲", location.belowbar, color.new(color.aqua, 0), size = size.tiny)
+plot(highBreak, "highBreak(200)[1]", color.new(color.red, 0))
+
+// PARITY NOTES (validate in TradingView before any promotion):
+// 1. Export Strategy Tester trades; compare to QL_ALPHA_ADA_TWO_CANDLE_SR_1H_trades.csv.
+// 2. highest(high,200)[1] is fixed at bar close -> no repaint. No HTF.
+// 3. Low sample (53 lockbox trades) -> parity is necessary but forward paper-trade is the priority.
+// 4. 2R target + stop is the EXIT module (exit-first), separate from the producer entry for MTC_v2.

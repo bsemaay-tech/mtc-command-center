@@ -1,0 +1,9 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,parameter_set,timeframe
+492,17,81.6414,1.4648,51.626,0.1261,0.0308,0.1261,0.7699,-0.5609,-5.3099,15.3752,5.9756,5.9756,POLUSDT,TRXUSDT,False,HIGHBETA_PROXY,"{""confirm"": 4, ""hold"": 6, ""lookback"": 10}",5m
+257,17,17.2707,1.2325,49.4163,0.0661,-0.0037,0.0661,0.7095,-0.5623,-7.9991,2.1591,5.9533,5.9533,DOGEUSDT,APTUSDT,False,HIGHBETA_PROXY,"{""confirm"": 4, ""hold"": 6, ""lookback"": 20}",5m
+492,17,38.5279,1.1936,48.5772,0.0733,-0.0572,0.0733,0.9303,-0.7363,-18.9505,2.0331,11.8598,11.8598,ARBUSDT,LINKUSDT,False,HIGHBETA_PROXY,"{""confirm"": 4, ""hold"": 12, ""lookback"": 10}",5m
+556,17,27.7155,1.1571,48.5612,0.0489,-0.026,0.0489,0.7421,-0.6055,-11.8514,2.3386,5.9532,5.9532,POLUSDT,ARBUSDT,False,HIGHBETA_PROXY,"{""confirm"": 3, ""hold"": 6, ""lookback"": 10}",5m
+257,17,5.258,1.0694,47.8599,0.0268,-0.0878,0.0268,0.8616,-0.7395,-16.6019,0.3167,11.7704,11.7704,ARBUSDT,LINKUSDT,False,HIGHBETA_PROXY,"{""confirm"": 4, ""hold"": 12, ""lookback"": 20}",5m
+556,17,7.8995,1.0504,46.0432,0.021,-0.1058,0.021,0.9496,-0.7714,-20.859,0.3787,11.7914,11.7914,POLUSDT,LINKUSDT,False,HIGHBETA_PROXY,"{""confirm"": 3, ""hold"": 12, ""lookback"": 10}",5m
+291,17,-0.1304,1.0134,47.079,0.0046,-0.0461,0.0046,0.7388,-0.6486,-11.6253,-0.0112,5.921,5.921,XRPUSDT,OPUSDT,False,HIGHBETA_PROXY,"{""confirm"": 3, ""hold"": 6, ""lookback"": 20}",5m
+291,17,-12.1719,0.9128,44.6735,-0.0374,-0.1306,-0.0374,0.8759,-0.7748,-16.7177,-0.7281,11.677,11.677,XRPUSDT,OPUSDT,False,HIGHBETA_PROXY,"{""confirm"": 3, ""hold"": 12, ""lookback"": 20}",5m

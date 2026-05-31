@@ -1,0 +1,4 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,split
+524,16,9654.7933,1.5393,69.084,1.529,2.411,1.529,6.3174,-9.1709,-98.3383,98.1794,3.8855,3.8855,ADAUSDT,XRPUSDT,False,LINDA_5SMA,train
+175,16,32.269,1.1884,61.7143,0.5466,1.2742,0.5466,5.5858,-7.5763,-90.6863,0.3558,4.4457,4.4457,APTUSDT,OPUSDT,False,LINDA_5SMA,validation
+175,17,-47.0454,1.0382,62.8571,0.1293,1.5981,0.1293,5.5867,-9.1062,-91.8515,-0.5122,4.5943,4.5943,LINKUSDT,APTUSDT,False,LINDA_5SMA,test

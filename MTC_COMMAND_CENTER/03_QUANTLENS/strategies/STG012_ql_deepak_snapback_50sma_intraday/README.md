@@ -1,0 +1,3 @@
+# STG012_ql_deepak_snapback_50sma_intraday
+
+Source folder: `C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\06_PROMOTED_TO_PARITY\QL_DEEPAK_SNAPBACK_50SMA_INTRADAY`

@@ -1,0 +1,8 @@
+check,status
+previous_code_copied,PASS
+trade_trace_exists,PASS
+metric_recompute_from_trace,PASS
+fee_monotonic,PASS
+golden_cases_10,PASS
+synthetic_tests_defined,PASS
+native_data_available,WARN

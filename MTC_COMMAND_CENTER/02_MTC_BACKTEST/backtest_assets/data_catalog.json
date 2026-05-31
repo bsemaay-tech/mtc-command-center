@@ -1,0 +1,140 @@
+{
+  "BTCUSDT": {
+    "1d": {
+      "path": "data/processed/binance/BTCUSDT/1d.parquet",
+      "abs_path": "C:/LAB/tradingview-lab/110_/data/processed/binance/BTCUSDT/1d.parquet",
+      "hash_sha256": "007f0d1cc62d42d7880a14353c9e004c2f4bba813a40855a69eec53aed010680",
+      "bar_count": 2808,
+      "start_utc": "2018-07-01T00:00:00+00:00",
+      "end_utc": "2026-03-08T00:00:00+00:00",
+      "provider": "binance",
+      "is_24_7": true,
+      "last_updated": "2026-03-08T17:03:33Z"
+    },
+    "4h": {
+      "path": "data/processed/binance/BTCUSDT/4h.parquet",
+      "abs_path": "C:/LAB/tradingview-lab/110_/data/processed/binance/BTCUSDT/4h.parquet",
+      "hash_sha256": "8e6a7e1fb4066aa53db29ca4e7695e02135b01d4d1096d050b50f73a07c75fba",
+      "bar_count": 16840,
+      "start_utc": "2018-07-01T00:00:00+00:00",
+      "end_utc": "2026-03-08T16:00:00+00:00",
+      "provider": "binance",
+      "is_24_7": true,
+      "last_updated": "2026-03-08T17:03:28Z"
+    },
+    "2h": {
+      "path": "data/processed/binance/BTCUSDT/2h.parquet",
+      "abs_path": "C:/LAB/tradingview-lab/110_/data/processed/binance/BTCUSDT/2h.parquet",
+      "hash_sha256": "583600446e0100e4f42b3edfc593af35263a0db7f34384e29272f43ba2f5f753",
+      "bar_count": 33663,
+      "start_utc": "2018-07-01T00:00:00+00:00",
+      "end_utc": "2026-03-08T16:00:00+00:00",
+      "provider": "binance",
+      "is_24_7": true,
+      "last_updated": "2026-03-08T17:03:22Z"
+    },
+    "1h": {
+      "path": "data/processed/binance/BTCUSDT/1h.parquet",
+      "abs_path": "C:/LAB/tradingview-lab/110_/data/processed/binance/BTCUSDT/1h.parquet",
+      "hash_sha256": "1c63da5a43ee2e6e60d40d2420d4b4db3190b13c2c0928f0c8a43df2f7dbda65",
+      "bar_count": 67406,
+      "start_utc": "2018-07-01T00:00:00+00:00",
+      "end_utc": "2026-03-12T18:00:00+00:00",
+      "provider": "binance",
+      "is_24_7": true,
+      "last_updated": "2026-03-12T18:27:43Z"
+    },
+    "15m": {
+      "path": "data/processed/binance/BTCUSDT/15m.parquet",
+      "abs_path": "C:/LAB/tradingview-lab/110_/data/processed/binance/BTCUSDT/15m.parquet",
+      "hash_sha256": "75899a321dc3685d2b113326d3f93fa433ff854b79ef21d8eec75e05c25385cf",
+      "bar_count": 269199,
+      "start_utc": "2018-07-01T00:00:00+00:00",
+      "end_utc": "2026-03-08T17:00:00+00:00",
+      "provider": "binance",
+      "is_24_7": true,
+      "last_updated": "2026-03-08T17:03:05Z"
+    },
+    "5m": {
+      "path": "data/processed/binance/BTCUSDT/5m.parquet",
+      "abs_path": "C:/LAB/tradingview-lab/110_/data/processed/binance/BTCUSDT/5m.parquet",
+      "hash_sha256": "c470c6669d99cb14db8a689508214f172c767a13a3587776dfb22734afd73de5",
+      "bar_count": 807586,
+      "start_utc": "2018-07-01T00:00:00+00:00",
+      "end_utc": "2026-03-08T17:00:00+00:00",
+      "provider": "binance",
+      "is_24_7": true,
+      "last_updated": "2026-03-08T17:02:59Z"
+    }
+  },
+  "ETHUSDT": {
+    "1d": {
+      "path": "data/processed/binance/ETHUSDT/1d.parquet",
+      "abs_path": "C:/LAB/tradingview-lab/110_/data/processed/binance/ETHUSDT/1d.parquet",
+      "hash_sha256": "ef0f1cf4e1b5592ab4d62b226b4a2e01d2dce835dc7477f84751eeb4c1b54ea8",
+      "bar_count": 2624,
+      "start_utc": "2019-01-01T00:00:00+00:00",
+      "end_utc": "2026-03-08T00:00:00+00:00",
+      "provider": "binance",
+      "is_24_7": true,
+      "last_updated": "2026-03-08T17:03:43Z"
+    },
+    "15m": {
+      "path": "data/processed/binance/ETHUSDT/15m.parquet",
+      "abs_path": "C:/LAB/tradingview-lab/110_/data/processed/binance/ETHUSDT/15m.parquet",
+      "hash_sha256": "622d92970a788967fe8b60a962e079f018aa8e9d1bd91b6e4e091b7816d0fbbe",
+      "bar_count": 251607,
+      "start_utc": "2019-01-01T00:00:00+00:00",
+      "end_utc": "2026-03-08T17:00:00+00:00",
+      "provider": "binance",
+      "is_24_7": true,
+      "last_updated": "2026-03-08T17:00:41Z"
+    },
+    "1h": {
+      "path": "data/processed/binance/ETHUSDT/1h.parquet",
+      "abs_path": "C:/LAB/tradingview-lab/110_/data/processed/binance/ETHUSDT/1h.parquet",
+      "hash_sha256": "63bcb9250429d2f92c4f9766335be58f0f1fced7daad1247af76d1b3e86b6ffe",
+      "bar_count": 62910,
+      "start_utc": "2019-01-01T00:00:00+00:00",
+      "end_utc": "2026-03-08T17:00:00+00:00",
+      "provider": "binance",
+      "is_24_7": true,
+      "last_updated": "2026-03-08T17:00:33Z"
+    },
+    "4h": {
+      "path": "data/processed/binance/ETHUSDT/4h.parquet",
+      "abs_path": "C:/LAB/tradingview-lab/110_/data/processed/binance/ETHUSDT/4h.parquet",
+      "hash_sha256": "7444a965f1f407115b6a3209836592d36712986175a3982caabe96dfd5039672",
+      "bar_count": 15738,
+      "start_utc": "2019-01-01T00:00:00+00:00",
+      "end_utc": "2026-03-08T16:00:00+00:00",
+      "provider": "binance",
+      "is_24_7": true,
+      "last_updated": "2026-03-08T17:00:13Z"
+    }
+  },
+  "BTCUSDT.P": {
+    "15m": {
+      "path": "data/processed/binance_usdm/BTCUSDT.P/15m.parquet",
+      "abs_path": "C:/LAB/tradingview-lab/110_/data/processed/binance_usdm/BTCUSDT.P/15m.parquet",
+      "hash_sha256": "a4edf3643214d9e3ed1a3add978f2a513bb7f27d5638d224f05f36c1319881c9",
+      "bar_count": 3072,
+      "start_utc": "2025-12-01T00:00:00+00:00",
+      "end_utc": "2026-01-01T23:45:00+00:00",
+      "provider": "binance_usdm",
+      "is_24_7": true,
+      "last_updated": "2026-03-07T16:39:13Z"
+    },
+    "4h": {
+      "path": "data/processed/binance_usdm/BTCUSDT.P/4h.parquet",
+      "abs_path": "C:/LAB/tradingview-lab/110_/data/processed/binance_usdm/BTCUSDT.P/4h.parquet",
+      "hash_sha256": "82b0236d99c5656575f487c63dfaaaf49b87a046e87a1934ddc92e84fe882526",
+      "bar_count": 4392,
+      "start_utc": "2024-01-01T00:00:00+00:00",
+      "end_utc": "2026-01-01T20:00:00+00:00",
+      "provider": "binance_usdm",
+      "is_24_7": true,
+      "last_updated": "2026-03-10T20:29:28Z"
+    }
+  }
+}

@@ -1,0 +1,4 @@
+Command: python -m venv experiments\pynecore_oracle_poc\.venv-pynecore
+Status: failed
+Error: ensurepip failed while creating the isolated virtual environment.
+Notes: pip install for pynesys-pynecore was not attempted because venv creation did not complete. Continue with other oracles.

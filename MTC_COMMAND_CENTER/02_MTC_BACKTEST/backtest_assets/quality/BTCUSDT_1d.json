@@ -1,0 +1,14 @@
+{
+  "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_1d_20180701_20260308.parquet",
+  "sha256": "71fb857e644efd3d03aacd832887cbcdc363cb617d8f4c9b510bbfc031c0f421",
+  "exchange_raw": "BINANCE",
+  "exchange_normalized": "BINANCE",
+  "symbol_raw": "BTCUSDT",
+  "symbol_normalized": "BTCUSDT",
+  "quality": {
+    "rows": 2808,
+    "duplicate_timestamps": 0,
+    "gap_count": 0,
+    "gaps": []
+  }
+}

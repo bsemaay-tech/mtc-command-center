@@ -1,0 +1,13 @@
+{
+  "bars_compared": 7485,
+  "signal_agreement_pct": 100.0,
+  "pine_long_signals": 60,
+  "python_long_signals": 60,
+  "long_both": 60,
+  "long_only_pine": 0,
+  "long_only_python": 0,
+  "ema8_max_rel_diff": 0.0,
+  "atr14_max_rel_diff": 0.00016394,
+  "warmup_excluded": 100,
+  "verdict": "PASS"
+}

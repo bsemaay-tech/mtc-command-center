@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/status_event.schema.json",
+  "title": "MCC Status Event",
+  "type": "object",
+  "required": ["schema_version", "event_id", "event_type", "created_at", "target_file", "action", "result"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "event_id": { "type": "string" },
+    "event_type": { "type": "string" },
+    "created_at": { "type": "string" },
+    "task_id": { "type": ["string", "null"] },
+    "agent_id": { "type": ["string", "null"] },
+    "model": { "type": ["string", "null"] },
+    "session_id": { "type": ["string", "null"] },
+    "target_file": { "type": "string" },
+    "action": { "type": "string" },
+    "hash_before_sha256": { "type": ["string", "null"] },
+    "hash_after_sha256": { "type": ["string", "null"] },
+    "result": { "type": "string" },
+    "error_code": { "type": ["string", "null"] },
+    "report_path": { "type": ["string", "null"] }
+  },
+  "additionalProperties": false
+}

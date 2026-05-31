@@ -1,0 +1,24 @@
+{
+  "phase": 16,
+  "status": "validation_complete",
+  "audited_strategies": 10,
+  "pass_stage2": [
+    "CANDIDATE_001"
+  ],
+  "weak": [
+    "CANDIDATE_003",
+    "CANDIDATE_005",
+    "CANDIDATE_002",
+    "CANDIDATE_007",
+    "CANDIDATE_004",
+    "CANDIDATE_009"
+  ],
+  "rejected": [
+    "CANDIDATE_008",
+    "CANDIDATE_011"
+  ],
+  "blocked": [
+    "CANDIDATE_006",
+    "CANDIDATE_010"
+  ]
+}

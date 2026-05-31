@@ -1,0 +1,2 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,name,timeframe,best_parameter_set
+856,17,24710806516.3562,1.7495,48.4813,4.2649,-0.7397,4.2649,20.5342,-11.0453,-99.9692,247184211.9586,11.4007,11.4007,SOLUSDT,XRPUSDT,False,SLINGSHOT,"Slingshot EMA(high,4) Pullback",1D,"{""ema_high"": 8, ""exit"": ""R_target"", ""hold"": 15, ""pb_lb"": 8, ""r_mult"": 3}"

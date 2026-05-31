@@ -1,0 +1,96 @@
+//@version=6
+indicator("DEBUG Supertrend Internals", overlay=false, max_bars_back=5000, precision=6)
+
+// ============================================================
+// PURPOSE: Export per-bar Supertrend internal values for Python parity comparison.
+// HOW TO USE:
+//   1. Add this indicator to BINANCE:BTCUSDT.P 15m chart
+//   2. Right-click chart -> "Export chart data..."
+//   3. Save the CSV -> place in debug/ folder
+//   4. Run compare_supertrend.py to find first divergence bar
+// ============================================================
+
+// --- Inputs (must match MASTER_TEMPLATE_CORE settings) ---
+st_atr_len = input.int(21, "ATR Length")
+st_factor  = input.float(4.0, "Factor")
+st_use_wicks = input.bool(true, "Use Wicks")
+
+// --- Heikin Ashi OHLC (same as MASTER_TEMPLATE_CORE line 347-357) ---
+[haOpen_raw, haHigh_raw, haLow_raw, haClose_raw] = request.security(
+    ticker.heikinashi(syminfo.tickerid),
+    timeframe.period,
+    [open, high, low, close],
+    lookahead = barmerge.lookahead_off,
+    gaps = barmerge.gaps_off
+)
+
+// --- HA-based ATR (same as MASTER_TEMPLATE_CORE line 2652-2656) ---
+float ha_prev_close = nz(haClose_raw[1], haClose_raw)
+float ha_tr = math.max(haHigh_raw - haLow_raw, math.max(math.abs(haHigh_raw - ha_prev_close), math.abs(haLow_raw - ha_prev_close)))
+float st_atr = ta.rma(ha_tr, st_atr_len)
+
+// --- Supertrend computation (same as LIB_Signal_Supertrend_Fix) ---
+float _atr = st_factor * st_atr
+float _src = (haHigh_raw + haLow_raw) / 2.0
+float _hEff = st_use_wicks ? haHigh_raw : haClose_raw
+float _lEff = st_use_wicks ? haLow_raw  : haClose_raw
+bool _isDoji = haOpen_raw == haClose_raw and haOpen_raw == haLow_raw and haOpen_raw == haHigh_raw
+
+float _longStop     = _src - _atr
+float _longStopPrev = nz(_longStop[1], _longStop)
+if _longStop > 0
+    if _isDoji
+        _longStop := _longStopPrev
+    else
+        _longStop := _lEff[1] > _longStopPrev ? math.max(_longStop, _longStopPrev) : _longStop
+else
+    _longStop := _longStopPrev
+
+float _shortStop     = _src + _atr
+float _shortStopPrev = nz(_shortStop[1], _shortStop)
+if _shortStop > 0
+    if _isDoji
+        _shortStop := _shortStopPrev
+    else
+        _shortStop := _hEff[1] < _shortStopPrev ? math.min(_shortStop, _shortStopPrev) : _shortStop
+else
+    _shortStop := _shortStopPrev
+
+var int _dir = 1
+_dir := _dir == -1 and _hEff > _shortStopPrev ? 1 : _dir == 1 and _lEff < _longStopPrev ? -1 : _dir
+
+// --- Plot everything for CSV export ---
+// Group 1: HA candles
+plot(haOpen_raw,  "ha_open",  display=display.data_window)
+plot(haHigh_raw,  "ha_high",  display=display.data_window)
+plot(haLow_raw,   "ha_low",   display=display.data_window)
+plot(haClose_raw, "ha_close", display=display.data_window)
+
+// Group 2: ATR internals
+plot(ha_tr,  "ha_tr",   display=display.data_window)
+plot(st_atr, "st_atr",  display=display.data_window)
+
+// Group 3: Supertrend bands
+plot(_src,       "st_src",        display=display.data_window)
+plot(_atr,       "st_atr_scaled", display=display.data_window)
+plot(_longStop,  "long_stop",     display=display.data_window)
+plot(_shortStop, "short_stop",    display=display.data_window)
+plot(_longStopPrev,  "long_stop_prev",  display=display.data_window)
+plot(_shortStopPrev, "short_stop_prev", display=display.data_window)
+
+// Group 4: Direction and effective prices
+plot(_dir,  "st_dir",  display=display.data_window)
+plot(_hEff, "h_eff",   display=display.data_window)
+plot(_lEff, "l_eff",   display=display.data_window)
+
+// Group 5: Doji flag
+plot(_isDoji ? 1 : 0, "is_doji", display=display.data_window)
+
+// Group 6: Raw OHLC for reference
+plot(open,  "raw_open",  display=display.data_window)
+plot(high,  "raw_high",  display=display.data_window)
+plot(low,   "raw_low",   display=display.data_window)
+plot(close, "raw_close", display=display.data_window)
+
+// Visual: show direction on chart
+bgcolor(_dir == 1 ? color.new(color.green, 90) : color.new(color.red, 90))

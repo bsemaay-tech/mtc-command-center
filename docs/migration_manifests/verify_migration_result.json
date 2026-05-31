@@ -1,0 +1,16 @@
+﻿{
+    "target_tree_created":  true,
+    "legacy_untouched_check":  true,
+    "excluded_folder_absent_check":  true,
+    "excluded_folder_hits":  [
+
+                             ],
+    "copy_manifest_sha256_check":  true,
+    "copy_manifest_mismatches":  [
+
+                                 ],
+    "pine_file_count":  24,
+    "deduplication_skipped_count":  1597,
+    "mtc_command_center_manifest_exists":  true,
+    "status":  "PASS"
+}

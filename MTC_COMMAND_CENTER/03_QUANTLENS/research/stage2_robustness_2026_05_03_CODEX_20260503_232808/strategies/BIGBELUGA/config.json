@@ -1,0 +1,42 @@
+{
+  "candidate": {
+    "candidate_id": "BIGBELUGA",
+    "name": "BigBeluga RSI Divergence + CHoCH + ATR",
+    "aliases": "CANDIDATE_005",
+    "horizon": "SWING",
+    "family": "structure_reversal",
+    "native_asset_class": "crypto_proxy",
+    "native_timeframe": "1D",
+    "data_status": "available_crypto_daily",
+    "eligible": true,
+    "reason": "mechanical proxy available; pivot delay required"
+  },
+  "best_parameter_set": {
+    "atr_len": 14,
+    "atr_mult": 2,
+    "hold": 12,
+    "mode": "combined",
+    "ms": 10,
+    "pivot_delay": 3,
+    "rsi": 14
+  },
+  "assets": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "BNBUSDT",
+    "XRPUSDT",
+    "ADAUSDT",
+    "DOGEUSDT",
+    "AVAXUSDT",
+    "LINKUSDT",
+    "DOTUSDT",
+    "LTCUSDT",
+    "TRXUSDT",
+    "APTUSDT",
+    "ARBUSDT",
+    "NEARUSDT",
+    "OPUSDT",
+    "POLUSDT"
+  ]
+}

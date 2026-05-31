@@ -1,0 +1,262 @@
+{
+  "random": {
+    "filters.use_ma_filter": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "filters.ma_type": {
+      "dist": "choice",
+      "values": ["EMA", "SMA", "RMA", "WMA", "KAMA", "DEMA", "TEMA", "VWMA"]
+    },
+    "filters.ma_length": {
+      "dist": "uniform_int",
+      "low": 20,
+      "high": 400
+    },
+    "filters.ma_use_higher_timeframe": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "filters.ma_htf_timeframe": {
+      "dist": "choice",
+      "values": ["240", "720", "1440", "2880"]
+    },
+    "filters.use_ma_slope_filter": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "filters.ma_slope_len": {
+      "dist": "uniform_int",
+      "low": 20,
+      "high": 300
+    },
+    "filters.ma_slope_min_pct": {
+      "dist": "uniform_float",
+      "low": 0.001,
+      "high": 0.04,
+      "step": 0.001
+    },
+    "filters.use_volume_filter": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "filters.vol_filter_len": {
+      "dist": "uniform_int",
+      "low": 10,
+      "high": 120
+    },
+    "filters.vol_filter_mult": {
+      "dist": "uniform_float",
+      "low": 0.25,
+      "high": 2.0,
+      "step": 0.05
+    },
+    "filters.use_atr_vol_filter": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "filters.atr_vol_len": {
+      "dist": "uniform_int",
+      "low": 7,
+      "high": 42
+    },
+    "filters.atr_vol_smooth_len": {
+      "dist": "uniform_int",
+      "low": 20,
+      "high": 160
+    },
+    "filters.atr_vol_floor_mult": {
+      "dist": "uniform_float",
+      "low": 0.4,
+      "high": 2.5,
+      "step": 0.05
+    },
+    "filters.use_mcginley_filter": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "filters.mcginley_len": {
+      "dist": "uniform_int",
+      "low": 3,
+      "high": 60
+    },
+    "filters.mcginley_k": {
+      "dist": "uniform_float",
+      "low": 0.3,
+      "high": 1.3,
+      "step": 0.05
+    },
+    "filters.use_mcginley_htf": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "filters.mcginley_htf_timeframe": {
+      "dist": "choice",
+      "values": ["240", "720", "1440", "2880"]
+    },
+    "filters.use_htf_trend_filter": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "filters.htf_trend_timeframe": {
+      "dist": "choice",
+      "values": ["240", "720", "1440", "2880"]
+    },
+    "filters.htf_trend_ma_type": {
+      "dist": "choice",
+      "values": ["EMA", "SMA", "RMA", "WMA", "KAMA", "DEMA", "TEMA", "VWMA"]
+    },
+    "filters.htf_trend_ma_len": {
+      "dist": "uniform_int",
+      "low": 20,
+      "high": 300
+    },
+    "filters.htf_trend_buffer_pct": {
+      "dist": "uniform_float",
+      "low": 0.0,
+      "high": 0.5,
+      "step": 0.05
+    },
+    "filters.use_macd_filter": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "filters.macd_gate_mode": {
+      "dist": "choice",
+      "values": ["Regime", "Cross-State", "Histogram", "Distance", "HTF Bias", "STANDARD", "PPO_NORM"]
+    },
+    "filters.macd_source": {
+      "dist": "choice",
+      "values": ["close", "hl2", "hlc3", "ohlc4"]
+    },
+    "filters.macd_fast_len": {
+      "dist": "uniform_int",
+      "low": 5,
+      "high": 24
+    },
+    "filters.macd_slow_len": {
+      "dist": "uniform_int",
+      "low": 18,
+      "high": 60
+    },
+    "filters.macd_signal_len": {
+      "dist": "uniform_int",
+      "low": 4,
+      "high": 20
+    },
+    "filters.macd_distance_pct": {
+      "dist": "uniform_float",
+      "low": 0.0,
+      "high": 2.0,
+      "step": 0.05
+    },
+    "filters.macd_htf_timeframe": {
+      "dist": "choice",
+      "values": ["240", "720", "1440", "2880"]
+    },
+    "filters.macd_use_htf_bias": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "filters.use_range_filters": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "filters.use_range_regime_filter": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "filters.range_regime_adx_on": {
+      "dist": "uniform_float",
+      "low": 15.0,
+      "high": 35.0,
+      "step": 1.0
+    },
+    "filters.range_regime_adx_off": {
+      "dist": "uniform_float",
+      "low": 10.0,
+      "high": 30.0,
+      "step": 1.0
+    },
+    "filters.range_regime_chop_on": {
+      "dist": "uniform_float",
+      "low": 35.0,
+      "high": 65.0,
+      "step": 1.0
+    },
+    "filters.range_regime_chop_off": {
+      "dist": "uniform_float",
+      "low": 45.0,
+      "high": 75.0,
+      "step": 1.0
+    },
+    "filters.range_regime_hold_bars": {
+      "dist": "choice",
+      "values": [0, 2, 4, 8, 12, 16, 24]
+    },
+    "filters.range_agg_mode": {
+      "dist": "choice",
+      "values": ["AND", "COUNT"]
+    },
+    "filters.range_min_pass": {
+      "dist": "choice",
+      "values": [1, 2, 3]
+    },
+    "filters.range_regime_adx_len": {
+      "dist": "choice",
+      "values": [7, 14, 21, 28]
+    },
+    "filters.range_regime_chop_len": {
+      "dist": "choice",
+      "values": [7, 14, 21, 28]
+    },
+    "filters.adx_use_higher_timeframe": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "filters.adx_htf_timeframe": {
+      "dist": "choice",
+      "values": ["240", "720", "1440", "2880"]
+    },
+    "filters.chop_use_higher_timeframe": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "filters.chop_htf_timeframe": {
+      "dist": "choice",
+      "values": ["240", "720", "1440", "2880"]
+    },
+    "trade.exit_on_filter_block": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "exit_filter_block.exit_on_ma_block": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "exit_filter_block.exit_on_ma_slope_block": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "exit_filter_block.exit_on_mcginley_block": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "exit_filter_block.exit_on_htf_trend_block": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "exit_filter_block.exit_on_vol_block": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "exit_filter_block.exit_on_atr_vol_block": {
+      "dist": "choice",
+      "values": [false, true]
+    },
+    "exit_filter_block.exit_on_range_block": {
+      "dist": "choice",
+      "values": [false, true]
+    }
+  }
+}

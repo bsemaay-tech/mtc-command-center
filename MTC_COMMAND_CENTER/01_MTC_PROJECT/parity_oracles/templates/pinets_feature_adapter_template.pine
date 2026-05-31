@@ -1,0 +1,45 @@
+//@version=6
+indicator("MTC V2 Feature Adapter Template", overlay=false, max_labels_count=500)
+
+// This adapter is for local PineTS feature trace only.
+// Do not use strategy.entry/strategy.exit here.
+// Plot names must be stable: FEATURE__<feature_id>__<stage>__<column_name>
+
+feature_id = input.string("producer_example_v1", "Feature ID")
+
+// Signal producer example
+producer_source = close
+producer_direction = close >= close[1] ? 1.0 : -1.0
+producer_raw_long = ta.crossover(close, ta.sma(close, 10))
+producer_raw_short = ta.crossunder(close, ta.sma(close, 10))
+plot(producer_source, title="FEATURE__producer_supertrend_current__indicator__source_price", display=display.none)
+plot(producer_direction, title="FEATURE__producer_supertrend_current__indicator__direction", display=display.none)
+plot(producer_raw_long ? 1 : 0, title="FEATURE__producer_supertrend_current__signal__raw_long", display=display.none)
+plot(producer_raw_short ? 1 : 0, title="FEATURE__producer_supertrend_current__signal__raw_short", display=display.none)
+
+// Entry filter example
+filter_allowed_long = close > ta.sma(close, 20)
+filter_allowed_short = close < ta.sma(close, 20)
+plot(filter_allowed_long ? 1 : 0, title="FEATURE__filter_adx_v2__gate__allowed_long", display=display.none)
+plot(filter_allowed_short ? 1 : 0, title="FEATURE__filter_adx_v2__gate__allowed_short", display=display.none)
+
+// Stop loss example
+active_sl = close - ta.atr(14) * 2.0
+plot(active_sl, title="FEATURE__sl_swing_atr_v1__execution__active_sl", display=display.none)
+plot(low <= active_sl ? 1 : 0, title="FEATURE__sl_swing_atr_v1__execution__sl_hit", display=display.none)
+
+// Take profit example
+tp1_price = close + ta.atr(14) * 3.0
+plot(tp1_price, title="FEATURE__tp_multi_r_v1__execution__tp1_price", display=display.none)
+plot(high >= tp1_price ? 1 : 0, title="FEATURE__tp_multi_r_v1__execution__tp1_hit", display=display.none)
+
+// Position sizing example
+risk_amount = 100.0
+qty = risk_amount / math.max(ta.atr(14) * 2.0, syminfo.mintick)
+plot(qty, title="FEATURE__sizing_risk_pct_v2__sizing__qty", display=display.none)
+plot(qty * close, title="FEATURE__sizing_risk_pct_v2__sizing__notional", display=display.none)
+
+// Alert payload trace example. Numeric code mirrors payload schema validity.
+event_id_code = producer_raw_long ? 1.0 : producer_raw_short ? -1.0 : 0.0
+plot(event_id_code, title="FEATURE__alert_wunder_v2__alert__event_id", display=display.none)
+plot(1, title="FEATURE__alert_wunder_v2__alert__schema_valid", display=display.none)

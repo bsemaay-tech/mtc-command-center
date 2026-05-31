@@ -1,0 +1,102 @@
+candidate_id: QLR_R215f4fj7V8
+source_title: "The Simple Trading Setup That Made Lance Breitstein Millions"
+source_url: "https://www.youtube.com/watch?v=R215f4fj7V8"
+sandbox_status: "MANUAL_VISUAL_REVIEW_ONLY"
+production_status: "NOT_PRODUCTION_NOT_PINE_READY_NOT_PROFIT_CLAIMED"
+
+market:
+  native: "US intraday equities; source is a discretionary/pro day-trading presentation"
+  proxy_allowed: "Any liquid intraday OHLCV chart for visual behavior only"
+  proxy_warning: "Crypto/futures proxies do not prove source edge"
+
+timeframe:
+  native: "2m or 5m intraday"
+  first_visual_review: "5m"
+  allowed_proxy_timeframes: ["2m", "5m", "15m"]
+  not_recommended: ["daily-only backtest"]
+
+direction:
+  long: true
+  short: true
+  default_review_focus: "long right-side-of-V and long trend continuation"
+
+setup_conditions:
+  trend_continuation_long:
+    - "close is above session VWAP"
+    - "VWAP slope is non-negative"
+    - "price is not range-bound/no-man's-land"
+    - "intraday trend slope is positive"
+    - "close breaks a recent range high"
+  right_side_v_long:
+    - "recent downside capitulation proxy occurred"
+    - "current confirmed bar breaks prior bar high"
+    - "price begins reclaiming toward VWAP or closes above prior high"
+  short_side:
+    - "symmetrical version for visual review only"
+
+entry_trigger:
+  long_pulse: "confirmed bar where trend_continuation_long OR right_side_v_long is true"
+  short_pulse: "confirmed bar where short continuation OR upside capitulation reversal is true"
+  no_lookahead: "uses only current and previous completed rows"
+
+exit_trigger:
+  primary: "prior-bar trailing stop breach"
+  secondary: "VWAP rejection or time exit in wrapper"
+  note: "exit logic is debug/visual only, not a profitability test"
+
+stop_logic:
+  initial_stop_long: "min(trigger bar low, previous bar low)"
+  trailing_stop_long: "max(existing stop, previous bar low)"
+  initial_stop_short: "max(trigger bar high, previous bar high)"
+  trailing_stop_short: "min(existing stop, previous bar high)"
+
+take_profit_logic:
+  default: "disabled"
+  optional_visual: "fixed R multiple in visual harness only"
+
+invalidation:
+  long: "close back below VWAP after entry, or trailing stop breach"
+  short: "close back above VWAP after entry, or trailing stop breach"
+
+filters:
+  vwap_guard:
+    - "reject long if steadily below VWAP unless downside capitulation"
+    - "reject short if steadily above VWAP unless upside capitulation"
+  range_guard:
+    - "reject entries when Bollinger width proxy indicates compression"
+  catalyst:
+    - "source mentions news/catalyst; this sandbox does not have a news feed"
+
+required_warmup:
+  bars: 50
+  reason: "VWAP, ATR, SMA, slope, Bollinger width, and rolling range context"
+
+repaint_risks:
+  - "No future pivot confirmation is used"
+  - "Pine script uses confirmed bars for entries"
+  - "No request.security HTF calls in v1"
+
+session_timezone_requirements:
+  session_vwap: "resets by calendar date in Python and TradingView session in Pine"
+  timezone: "chart/exchange timezone; user must visually verify on native market"
+
+data_requirements:
+  required_columns: ["timestamp", "open", "high", "low", "close", "volume"]
+  optional_columns: ["symbol", "session"]
+  missing_feed: "news/catalyst quality and halt/market microstructure not modeled"
+
+known:
+  - "Trend with VWAP guard is source-supported"
+  - "Range-bound/no-man's-land rejection is source-supported"
+  - "Right-side-of-V prior-bar-high trigger is source-supported"
+  - "Prior-bar-low stop behavior is source-supported"
+
+inferred:
+  - "ATR/volume/Bollinger proxies for capitulation and compression"
+  - "Exact thresholds are visual defaults, not optimized values"
+
+must_not_be_invented:
+  - "No claim that this is profitable"
+  - "No claim that this is complete Lance Breitstein discretionary method"
+  - "No automatic MTC_V2 integration"
+  - "No news/catalyst edge without a verified feed"

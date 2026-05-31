@@ -1,0 +1,221 @@
+{
+  "version": 1,
+  "items": {
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_1d_20180701_20260305.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_1d_20180701_20260305.parquet",
+      "sha256": "272dec1d06a6351547c34a9c736401f0b77ceaa96f644d735722da4d8b9e9fde",
+      "symbol": "BTCUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "1d",
+      "updated_at": "2026-03-05T21:43:52.535403+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_4h_20180701_20260305.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_4h_20180701_20260305.parquet",
+      "sha256": "a5ea4ebd3a1b968ab9a66c755801986318a91341c3b67ade60551a3c62e09537",
+      "symbol": "BTCUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "4h",
+      "updated_at": "2026-03-05T21:43:53.444448+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_2h_20180701_20260305.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_2h_20180701_20260305.parquet",
+      "sha256": "b40a8f89af37ddffd9ae1ea97eefa2cdaa48a2976bd04b74a97d58df8b2f979e",
+      "symbol": "BTCUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "2h",
+      "updated_at": "2026-03-05T21:43:54.331302+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_1h_20180701_20260305.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_1h_20180701_20260305.parquet",
+      "sha256": "02179202e91130a0de6aaa700ca6daf33e1067c18cbc606f5855002c970b3391",
+      "symbol": "BTCUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "1h",
+      "updated_at": "2026-03-05T21:43:55.278055+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_15m_20180701_20260305.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_15m_20180701_20260305.parquet",
+      "sha256": "513da9646302f734c8fdd7cc6a920606d3c678f23076b9553e5822f0e6607771",
+      "symbol": "BTCUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "15m",
+      "updated_at": "2026-03-05T21:43:56.197550+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_15m_20240101_20260213.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_15m_20240101_20260213.parquet",
+      "sha256": "7089a09cee35bb1907085a1de79848ca2b8bdae141b3a803bc8cd0ce0c9c3070",
+      "symbol": "BTCUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "15m",
+      "updated_at": "2026-03-08T17:03:58.660795+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_5m_20180701_20260305.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_5m_20180701_20260305.parquet",
+      "sha256": "cfd8795ccd0a0d0ab8b42564d7c6e1b5794fb14a981fb57f337f821e9a77bdec",
+      "symbol": "BTCUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "5m",
+      "updated_at": "2026-03-05T21:43:58.161754+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\ETHUSDT_1d_20190101_20260305.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\ETHUSDT_1d_20190101_20260305.parquet",
+      "sha256": "98182f99c13fab278c2c2fc1e7c7bddddbf2712ae57572bba743e3e9d83cd1ef",
+      "symbol": "ETHUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "1d",
+      "updated_at": "2026-03-05T21:43:59.065162+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\ETHUSDT_15m_20190101_20260305.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\ETHUSDT_15m_20190101_20260305.parquet",
+      "sha256": "2206bd024edf3d7d58d4344152056ea5933b50b66cf2980205a43834ab6e8de8",
+      "symbol": "ETHUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "15m",
+      "updated_at": "2026-03-05T21:44:00.071331+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\ETHUSDT_1h_20190101_20260305.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\ETHUSDT_1h_20190101_20260305.parquet",
+      "sha256": "18bb7c05ac484279cfa6fdeb6a99851a7ee8170ec7696b0bb25d7df445301b60",
+      "symbol": "ETHUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "1h",
+      "updated_at": "2026-03-05T21:44:00.966000+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\ETHUSDT_4h_20190101_20260305.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\ETHUSDT_4h_20190101_20260305.parquet",
+      "sha256": "d1c56ffc0a192039eda8926a53640958af7d5d3413d962241f04824100528a39",
+      "symbol": "ETHUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "4h",
+      "updated_at": "2026-03-05T21:44:01.856332+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_1d_20180701_20260307.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_1d_20180701_20260307.parquet",
+      "sha256": "bd6a90b030cbf19b99b6bc0b9b70f34849609140c53f744ca182cc29c6b05ac7",
+      "symbol": "BTCUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "1d",
+      "updated_at": "2026-03-07T21:00:59.062226+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_4h_20180701_20260307.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_4h_20180701_20260307.parquet",
+      "sha256": "b6cd7ae3adb224bd33782ddceb23e9fc17ba29e76bf06a068901fb48442fa1cc",
+      "symbol": "BTCUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "4h",
+      "updated_at": "2026-03-07T21:00:59.827405+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_2h_20180701_20260307.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_2h_20180701_20260307.parquet",
+      "sha256": "f3c4216a93df3589fb071984febb8e18bc3a350a8b81c56f37f9cd7ff2952e0d",
+      "symbol": "BTCUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "2h",
+      "updated_at": "2026-03-07T21:01:00.556630+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_1h_20180701_20260307.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_1h_20180701_20260307.parquet",
+      "sha256": "f0bb536ec9398d8e794a50a16f841272a5cf81b35864f78e6f13fc4d50263a38",
+      "symbol": "BTCUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "1h",
+      "updated_at": "2026-03-07T21:01:01.315216+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_15m_20180701_20260307.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_15m_20180701_20260307.parquet",
+      "sha256": "d2fae6a619f0a1da79b87ce16a12f7418d4974c7c0c6230ca44c08b0d3b8099d",
+      "symbol": "BTCUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "15m",
+      "updated_at": "2026-03-07T21:01:02.091846+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_5m_20180701_20260307.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_5m_20180701_20260307.parquet",
+      "sha256": "fdc34736600acdb078419a53a2d0f13ea7a997c4dea11d686c2c92d8308c50b4",
+      "symbol": "BTCUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "5m",
+      "updated_at": "2026-03-07T21:01:03.704815+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_1d_20180701_20260308.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_1d_20180701_20260308.parquet",
+      "sha256": "71fb857e644efd3d03aacd832887cbcdc363cb617d8f4c9b510bbfc031c0f421",
+      "symbol": "BTCUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "1d",
+      "updated_at": "2026-03-08T17:03:50.369780+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_4h_20180701_20260308.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_4h_20180701_20260308.parquet",
+      "sha256": "227577e83e2dfbd54caee6001abbb5508d0ddf2f30e56e14e8f1d0dc43d9eb0a",
+      "symbol": "BTCUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "4h",
+      "updated_at": "2026-03-08T17:03:51.909912+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_2h_20180701_20260308.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_2h_20180701_20260308.parquet",
+      "sha256": "a68eec100c4ebd9f502b2936897ed5fb2e0b1cc7a09611c1bfa3af447d974ce0",
+      "symbol": "BTCUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "2h",
+      "updated_at": "2026-03-08T17:03:53.581813+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_1h_20180701_20260308.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_1h_20180701_20260308.parquet",
+      "sha256": "c51c2334cd7222deb3e84c200a2bea54e695f7e8e08c2236aae9d234355723e8",
+      "symbol": "BTCUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "1h",
+      "updated_at": "2026-03-08T17:03:55.400542+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_15m_20180701_20260308.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_15m_20180701_20260308.parquet",
+      "sha256": "ec6a8358a5bc34d0e82d08024e050b8537ff582dd22feefcbabee141d8662c4d",
+      "symbol": "BTCUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "15m",
+      "updated_at": "2026-03-08T17:03:57.136054+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_5m_20180701_20260308.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\BTCUSDT_5m_20180701_20260308.parquet",
+      "sha256": "6c9fe446ee488287289d2fbfe17abf0d1cb52a861e1eb008f540cb7f8d98ade8",
+      "symbol": "BTCUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "5m",
+      "updated_at": "2026-03-08T17:04:00.354571+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\ETHUSDT_1d_20190101_20260308.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\ETHUSDT_1d_20190101_20260308.parquet",
+      "sha256": "911c3dcd4309b5bdd4a53e93ab37653b5aaf48ef29e2189ad17c9a9f329ccd93",
+      "symbol": "ETHUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "1d",
+      "updated_at": "2026-03-08T17:04:01.973588+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\ETHUSDT_15m_20190101_20260308.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\ETHUSDT_15m_20190101_20260308.parquet",
+      "sha256": "9db2e6e89b3fec8d34571066f3e33558508c2ed65d45a63d64e9f24bf3e944aa",
+      "symbol": "ETHUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "15m",
+      "updated_at": "2026-03-08T17:04:03.776600+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\ETHUSDT_1h_20190101_20260308.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\ETHUSDT_1h_20190101_20260308.parquet",
+      "sha256": "46de60fed4607ba00ef9c3cf97cc653e4e99ed43344a835cb70f44f82ce28941",
+      "symbol": "ETHUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "1h",
+      "updated_at": "2026-03-08T17:04:05.380740+00:00"
+    },
+    "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\ETHUSDT_4h_20190101_20260308.parquet": {
+      "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\ETHUSDT_4h_20190101_20260308.parquet",
+      "sha256": "8def8c44fd08581bf246d90a2b59cd2688f78ca1c48f0d3f0d404f79637d9832",
+      "symbol": "ETHUSDT",
+      "exchange": "BINANCE",
+      "timeframe": "4h",
+      "updated_at": "2026-03-08T17:04:06.894093+00:00"
+    }
+  }
+}

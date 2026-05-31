@@ -1,0 +1,4 @@
+python tools/audit_recompute.py
+python tools/audit_inventory_and_master.py
+python tools/audit_finalize.py
+python -m py_compile tools/*.py

@@ -1,0 +1,3 @@
+# STG037_ql_2026_05_01_any_candlestick_7_pattern_pa_confluence
+
+Source folder: `C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\01_TRIAGED_CANDIDATES\QL_2026-05-01_ANY_CANDLESTICK_7_PATTERN_PA_CONFLUENCE`

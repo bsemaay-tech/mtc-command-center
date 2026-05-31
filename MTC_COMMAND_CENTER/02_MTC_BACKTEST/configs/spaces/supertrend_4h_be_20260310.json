@@ -1,0 +1,13 @@
+{
+  "grid": {
+    "break_even.use_break_even": {
+      "values": [true]
+    },
+    "break_even.rr": {
+      "values": [0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0]
+    },
+    "break_even.buffer_r": {
+      "values": [0.0, 0.1, 0.2, 0.3]
+    }
+  }
+}

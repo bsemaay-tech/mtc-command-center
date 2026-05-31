@@ -1,0 +1,67 @@
+# Final Manual Visual Test Queue
+
+Grouped by final strategy/module class. No backtests were run.
+
+|strategy_group|rank|candidate_id|candidate_name|exact_first_visual_check|
+|---|---|---|---|---|
+|DAY_TRADE_STRATEGY|1|QLR_R215f4fj7V8|The Simple Trading Setup That Made Lance Breitstein Millions|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|DAY_TRADE_STRATEGY|2|QLR_6tnREqUJ1WY|Trading Backtests Are Misleading - Here's what to do instead|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|EXIT_MODULE|1|QLR_kTqKRi-j9kM|The 5 Essential Sell Rules from a Market Wizard - Linda Bradford Raschke|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|EXIT_MODULE|2|QLR_hVCcVRxaxJY|The Only Sell Rules You Need to Trade Ajay Jani|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|EXIT_MODULE|3|QLR_UD7gipBWnuY|When To Take Trading Profits - Market Wizards Share Their Sell Rules|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|FILTER_MODULE|1|QLR_UmLa9FAlMgw|The AVWAP Trading Indicator Secrets and Setups Brian Shannon, CMT|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|FILTER_MODULE|2|QLR_FtAshnE3MwM|The Simple Stage Analysis Trading System - Exclusive Interview with Stan Weinstein|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|FILTER_MODULE|3|QLR_O0GpSPtmCuM|Stage Analysis Warnings for Current Markets - Exclusive Interview with Stan Weinstein|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|FILTER_MODULE|4|QLR_a55f696216|The Reality of Relative Strength Based Trading with Linda Raschke|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|FILTER_MODULE|5|QLR_FiUGDA7eMyU|CANSLIM Trading Strategy Beat 99% of Investors Using This Simple Strategy|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|FILTER_MODULE|6|QLR_Jew-Algmi0k|The Dead Simple VWAP Swing Trading Setup With Brian Shannon|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SIZING_OR_RISK_MODULE|1|QLR_a4uJ3rHhbfA|The Art of Position Sizing with Anish Sikri  US Investing Championship Top Contender|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SIZING_OR_RISK_MODULE|2|QLR_C9Pvd9UD0jM|Mark Minervini's #1 Risk Management Secret to Grow Your Trading Profit|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SIZING_OR_RISK_MODULE|3|QLR_oPeTkxTnooA|259% Return in 1 Year The Risk Management Strategy YOU Need for Consistent Returns|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|1|QLR_GHZBv1W4-II|11,300% Return in One Year Interview with Larry Williams|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|2|QLR_JS4_6gv0PpI|33,500% RETURN - Mark Minervini's VCP Setup that made him Millions|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|3|QLR_10pHBNVi4Jc|The Trading Setups of the Record Breaking Trading Champion|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|4|QLR_DPA35Gug3Y4|Gamer Trades $5k into over $1 Million with just a 30% Win Rate - Brian Lee Trades|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|5|QLR_ElocJ-b_NTs|The 10 Principles of Trading with Investing Champion Oliver Kell|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|6|QLR_62OaP91Jz9k|120% Return A Simple Weekly Strategy Anyone Can Use|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|7|QLR__QewlGLBaeA|Trading Millions How I Finally Became a Profitable Swing Trader|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|8|QLR_ivL6E6Lc6gM|a Hedge Fund Manager Reveals his Perfect Pullback Trading Setup|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|9|QLR_KQRuUWSZvLE|10 Steps to Profitable Trading in 2024  Ryan Pierpont|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|10|QLR_MnXQOt7_ZP0|+85% Return in 30 Days The AI Bull Market Can Change your Life Hedge Fund Manager|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|11|QLR_NGyE4YIgGpU|2,115% Return in 1 Year How a Harvard Cancer Scientist Beat Wall Street|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|12|QLR_Tm0dkf8_giA|+50% in 20 Days - How to Trade Breakouts with The Volatility Contraction Pattern (VCP|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|13|QLR_Lot25-2fb-4|433% Return in 1 Year From Poker Player to Full Time Trader|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|14|QLR_oZH6_XRxtDc|Pro Swing Trading Entry Tactics Ultimate Trading Guide Ep3|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|15|QLR_NwgJQyoUAaI|Pro Swing Trading Setups For Consistent Gains Ultimate Trading Guide Ep 2|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|16|QLR_M_tD6X0CSOI|The Perfect VCP Trading Setup with Mark Minervini|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|17|QLR_HAN1kymVbTc|Trading $30 Million at Age 25 - The Story of Ted Zhang, Momentum Portfolio Manager|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|18|QLR_2f5VfmlU90U|The Mind of a Trader  Insights on Trading Psychology and Overcoming Setbacks  Charles Harris|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|19|QLR_4-IjRmw7SZI|The Reality of Trading TQQQ and Key Strategies|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|20|QLR_6aOnCK1gv2w|+1300% Return in 2 Years The Setups Rules Hard Won Lessons Behind Chris Flander's Edge|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|21|QLR__AAX1ylNbIE|10 Lessons from Market Wizards & Trading Legends|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|22|QLR_aDRYV4mjlHA|The Million Dollar TQQQ Swing Trading Strategy Vibha Jha|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|23|QLR_CtioOmc1Eig|Trade Like a Professional Simple and Effective Trading Strategy with Charles Harris|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|24|QLR_eWtY7uoJL_0|Trading The Battle With Yourself  Market Wizard David Ryan|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|25|QLR_jLioqyVlRkE|From Blowing Up 3 Times to Managing a $200 Million Hedge Fund — Exclusive Interview with Jim Roppel|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|26|QLR_kao-hhaQnig|103% Return in 1 Year The Simple Event Driven Trading Setup|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|27|QLR_lpjTNygfnzM|153% Return in 1 Year - Simple Swing Trading Strategies for Achieving Triple Digit Returns|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|28|QLR_lS9zbnLi1Gg|283% Gain in 1 Year - The Story of the 22-Year-Old Swing Trader|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|29|QLR_lTiR1pc82EE|5 Simple & Effective Trading Setups of Market Wizards|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|30|QLR_QzzKqmPcB3A|7 Steps to Beat the Market - Ultimate Trading Guide Ep|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|31|QLR_R1sNTB2Vh7w|48 Years of Trading Lessons with Market Wizard Peter Brandt|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|32|QLR_rdmjsbDVuoU|+222% Return in 27 Days  The High Tight Flag Trading Setup Leif Soreide|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|33|QLR_RTHRh_GLwH8|100% Trading Returns - How to become a Super Trade with Mark Ritchie|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|34|QLR_uh5bALsKkLg|How Mark Minervini Became a Market Wizard|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|35|QLR_UMgJ0P8fe0s|Swing Trading Vs|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|36|QLR_zw96qkUn9_g|How Clement Ang Achieved 150%+ Returns in the US Investing Championship|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|37|QLR_XOul-ECgHyA|100% Returns After Losing it all - Developing a Swing Trading System|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|38|QLR_KWxhLIOchvY|409% Return in 1 Year Aggressive Swing Trading Tactics and Setups|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|39|QLR_Nq-p7Bu1YT0|How A Day Trader Turned into a Super-Performance Swing Trader - Real Simple Ariel|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|40|QLR_7UfHg8PpDZk|The 3 Powerful Trading Setups of a Top Super-performance Trader|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|41|QLR_qz7avJJvnyI|The TRUE Path to Trading Success from Lance Breitstein, Market Wizard|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|42|QLR_VKNEJA5r8zw|+969% Return in 1 Year The Pullback Strategy of a Trading Champion|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|43|QLR_DLlNDuOTUfQ|Secrets to Profitable Trading from Market Legend Stan Weinstein|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|44|QLR_Eb9FkLNJLzs|40 Years of Trading Wisdom in 20 Minutes - Lessons from Jim Roppel, Hedge Fund Manager|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|45|QLR_m8F3KkBDtC0|The Wedge Pop Trading Setup of Trading Champion Oliver Kell|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|46|QLR_q43pkYBo1hU|+259% in 1 Year - Swing Trading Performance Strategy|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|
+|SWING_TRADE_STRATEGY|47|QLR_ZK5cnVQ2V3Q|The Market Wizard Trading System|Confirm raw setup/pulse/invalidation behavior on chart; do not test profitability.|

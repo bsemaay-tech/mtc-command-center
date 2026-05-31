@@ -1,0 +1,11 @@
+candidate_id,case_id,expected,actual,pass_fail
+KELL_WEDGE,clear_valid_setup_one_entry,1,1,PASS
+KELL_WEDGE,almost_valid_missing_condition,0,0,PASS
+KELL_WEDGE,warmup_incomplete_blocks_entry,0,0,PASS
+KELL_WEDGE,gap_beyond_trigger_uses_realistic_fill,1,1,PASS
+KELL_WEDGE,same_bar_sl_tp_stop_first,1,1,PASS
+KELL_WEDGE,duplicate_signal_while_in_position_blocked,1,1,PASS
+KELL_WEDGE,exit_before_new_entry,1,1,PASS
+KELL_WEDGE,nan_missing_candle_blocks_signal,0,0,PASS
+KELL_WEDGE,cost_model_reduces_return,1,1,PASS
+KELL_WEDGE,fee_stress_monotonic,1,1,PASS

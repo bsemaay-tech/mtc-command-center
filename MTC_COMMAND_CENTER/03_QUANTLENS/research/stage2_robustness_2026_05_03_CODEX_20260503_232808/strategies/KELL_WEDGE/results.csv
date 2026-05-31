@@ -1,0 +1,2 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,name,timeframe,best_parameter_set
+17,17,74.7425,3.5956,47.0588,3.602,-1.8541,3.602,10.6031,-2.6212,-7.3131,10.2204,11.2941,11.2941,TRXUSDT,BTCUSDT,True,KELL_WEDGE,Kell Wedge Pop / EMA Crossback,1D,"{""base_lb"": 8, ""exit"": ""ema20"", ""fast"": 10, ""hold"": 20, ""max_base"": 5, ""regime"": ""ema200"", ""slow"": 20}"

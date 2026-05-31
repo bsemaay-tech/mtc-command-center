@@ -1,0 +1,26 @@
+{
+  "case_id": "SYNTH_001",
+  "symbol": "BTCUSDT.P",
+  "timeframe": "15m",
+  "start_time": "2026-01-01T00:00:00Z",
+  "end_time": "2026-01-01T01:00:00Z",
+  "exchange": "BINANCE",
+  "data_file": "cases/synthetic_ohlcv.csv",
+  "mtc_config": {
+    "purpose": "synthetic comparator smoke test"
+  },
+  "warmup_bars": 1,
+  "commission": 0.0,
+  "slippage": 0.0,
+  "initial_capital": 10000,
+  "sizing": {
+    "mode": "fixed_qty",
+    "value": 1,
+    "currency": "contracts"
+  },
+  "expected_reference_source": null,
+  "tolerances": {
+    "absolute": 1e-8,
+    "relative": 1e-6
+  }
+}

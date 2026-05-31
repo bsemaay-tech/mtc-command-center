@@ -1,0 +1,6 @@
+candidate_id,baseline,trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,net_noncompounded_return,notes
+LINDA_5SMA_PULLBACK,random_same_hold,170,17,133.2483,1.3209,51.1765,0.9816,0.0546,0.9816,7.8944,-6.2644,-57.8207,2.3045,4.0,4.0,ARBUSDT,APTUSDT,False,,
+LINDA_5SMA_PULLBACK,opposite_signal,,,,0.737641,,,,,,,,,,,,,,-919.488959,computed by sign-inverting repaired trace returns
+LINDA_5SMA_PULLBACK,shuffled_signal,,,,1.355673,,,,,,,,,,,,,,919.488959,same returns reversed; checks metric stability not timing edge
+LINDA_5SMA_PULLBACK,simple_trend_baseline,,,,SEE_STAGE2_BASELINE_RESULTS,,,,,,,,,,,,,,,global Stage-2 baseline file read; not candidate-native
+LINDA_5SMA_PULLBACK,buy_and_hold,,,,SEE_STAGE2_BASELINE_RESULTS,,,,,,,,,,,,,,,global Stage-2 baseline file read; not candidate-native

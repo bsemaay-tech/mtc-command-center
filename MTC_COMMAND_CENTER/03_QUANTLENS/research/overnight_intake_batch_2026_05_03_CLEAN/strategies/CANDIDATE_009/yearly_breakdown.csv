@@ -1,0 +1,4 @@
+year,trade_count,assets_tested,aggregate_pf,aggregate_net_return_pct,aggregate_max_dd_pct,return_dd_ratio,win_rate,average_trade_pct,median_trade_pct,average_win_pct,average_loss_pct,expectancy_pct,exposure_pct,fee_2x_pf,fee_3x_pf,fee_monotonic,classification
+2024,60,5,0.6766,-6.6622,-7.7724,-0.8572,45.0,-0.1121,-0.1316,0.521,-0.6301,-0.1121,39.3889,0.4478,0.2971,True,REJECT
+2025,68,5,1.2043,3.0359,-5.1534,0.5891,47.0588,0.0479,-0.0913,0.6002,-0.443,0.0479,39.5588,0.7618,0.508,True,WEAK_CANDIDATE
+2026,23,5,2.5464,7.1925,-1.5366,4.6809,65.2174,0.3051,0.5733,0.7704,-0.5673,0.3051,39.1304,1.7745,1.2284,True,REJECT

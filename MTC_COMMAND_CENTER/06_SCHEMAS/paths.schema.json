@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/paths.schema.json",
+  "title": "MCC Paths Config",
+  "type": "object",
+  "required": ["schema_version", "mcc_root", "mtc_v2_root", "reports_root"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "mcc_root": { "type": "string" },
+    "mtc_v2_root": { "type": "string" },
+    "mtc_v2_python_exe": { "type": ["string", "null"] },
+    "pinets_root": { "type": ["string", "null"] },
+    "tradingview_exports_dir": { "type": ["string", "null"] },
+    "reports_root": { "type": "string" }
+  },
+  "additionalProperties": false
+}

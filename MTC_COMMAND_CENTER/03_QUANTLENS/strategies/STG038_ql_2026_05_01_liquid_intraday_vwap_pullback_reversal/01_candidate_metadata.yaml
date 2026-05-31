@@ -1,0 +1,29 @@
+candidate_id: QL_2026-05-01_LIQUID_INTRADAY_VWAP_PULLBACK_REVERSAL
+source_url: UNKNOWN_URL
+video_title: VWAP day trading pullback and reversal setups
+quantlens_decision: CANDIDATE
+codex_status: READY_FOR_PYTHON_PROTOTYPE
+market_type: LIQUID_INTRADAY_ASSETS
+primary_timeframe: 5m
+strategy_type: VWAP pullback continuation and band reversal
+commercial_value_score: 7
+complexity_score: 5
+repaint_risk: LOW
+lookahead_risk: MEDIUM
+overfit_risk: MEDIUM
+closed_source_risk: LOW
+risk_management_quality: PARTIAL
+candidate_kind:
+  producer: false
+  entry_gate: true
+  guard: true
+  confirmation: true
+  exit_rule: true
+  sl_tp_method: true
+  trailing_be_method: false
+  money_management: false
+existing_mtc_overlap: Likely overlaps with VWAP/session fair-value filters, support/resistance confluence, candle confirmation, fixed R exits, and mean-reversion-to-VWAP logic.
+new_feature_required: UNKNOWN_UNTIL_MAPPING
+recommended_next_step: Define deterministic VWAP pullback and band-reversal prototype spec before coding or backtesting.
+created_at: 2026-05-01
+updated_at: 2026-05-01

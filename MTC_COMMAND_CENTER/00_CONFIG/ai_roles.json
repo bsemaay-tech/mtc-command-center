@@ -1,0 +1,19 @@
+{
+  "workers": [
+    {
+      "name": "Codex",
+      "primary_role": "Repo automation, Python/backtest/parity tasks",
+      "default_scope": "Read repo files, run approved local tasks, update reports and status files."
+    },
+    {
+      "name": "Claude",
+      "primary_role": "Pine builder, Pine review, documentation and prompt refinement",
+      "default_scope": "Prepare Pine drafts, review Pine logic, improve AI task prompts and documentation."
+    },
+    {
+      "name": "Gemini Antigravity",
+      "primary_role": "Research, internet strategy review, intake review",
+      "default_scope": "Review strategy sources, summarize external research, prepare intake notes."
+    }
+  ]
+}

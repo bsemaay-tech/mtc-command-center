@@ -1,0 +1,54 @@
+# Supertrend Producer-Only Seed Granularity Smoke
+# Research seed only; not Pine default; not production parameter.
+
+purpose: verify per-asset/timeframe seed ranking output and parameter-library extraction
+producer: Supertrend
+dataset_manifest: C:\LAB\tradingview-lab\MTC_V2_OPTIMIZATION_DATA_BUNDLE_20260427\manifests\dataset_manifest.json
+regime_registry: C:\LAB\tradingview-lab\MTC_V2_OPTIMIZATION_DATA_BUNDLE_20260427\regimes\regime_registry.json
+output_root: reports/optimization/seed_granularity_smoke
+
+scope:
+  assets:
+    - BTCUSDT
+    - ETHUSDT
+  timeframes:
+    - 15m
+    - 1h
+    - 4h
+  max_variants: 20
+  max_split_evaluations: 360
+  max_workers: 4
+
+included_parameter_groups:
+  - supertrend_producer_parameters
+
+excluded_parameter_groups:
+  - broad_exit_grid
+  - filters
+  - gates
+  - guards
+  - integrations
+  - visualization
+  - debug
+
+fixed_smoke_exit_risk:
+  sl_atr_mult: 3.0
+  tp_mode: R
+  tp_r_multiple: 2.0
+  risk_long: 0.5
+  risk_short: 0.5
+
+required_outputs:
+  - ranked/all_evaluations.csv
+  - ranked/per_asset_timeframe_seed_candidates.csv
+  - ranked/per_asset_timeframe_summary.csv
+  - reports/SEED_GRANULARITY_SMOKE_REPORT.md
+
+fail_conditions:
+  - missing_dataset_manifest
+  - missing_regime_registry
+  - duplicate_conflicts_gt_zero
+  - failed_evaluations_gt_zero
+  - missing_dataset_id_source_type_or_evaluation_key
+  - writes_to_big_overnight_output
+  - modifies_pine

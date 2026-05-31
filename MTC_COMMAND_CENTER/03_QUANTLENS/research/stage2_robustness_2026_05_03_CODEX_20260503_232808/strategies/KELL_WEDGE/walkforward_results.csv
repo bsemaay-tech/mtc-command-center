@@ -1,0 +1,4 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,split
+10,3,27.8465,2.6696,40.0,2.7401,-2.318,2.7401,10.9533,-2.7353,-7.3131,3.8078,10.8,10.8,TRXUSDT,BNBUSDT,True,KELL_WEDGE,train
+3,2,24.5197,9.3212,66.6667,7.9136,8.9917,7.9136,13.297,-2.8531,-2.8531,8.5941,15.0,15.0,BNBUSDT,BTCUSDT,True,KELL_WEDGE,validation
+4,2,9.767,3.3326,50.0,2.5229,0.1177,2.5229,7.209,-2.1632,-4.2805,2.2817,9.75,9.75,BNBUSDT,TRXUSDT,True,KELL_WEDGE,test

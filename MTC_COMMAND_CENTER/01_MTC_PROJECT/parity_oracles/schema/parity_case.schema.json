@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MTC Multi Oracle Parity Case",
+  "type": "object",
+  "required": [
+    "case_id",
+    "symbol",
+    "timeframe",
+    "start_time",
+    "end_time",
+    "exchange",
+    "data_file",
+    "mtc_config",
+    "warmup_bars",
+    "commission",
+    "slippage",
+    "initial_capital",
+    "sizing"
+  ],
+  "properties": {
+    "case_id": {"type": "string", "minLength": 1},
+    "symbol": {"type": "string"},
+    "timeframe": {"type": "string"},
+    "start_time": {"type": "string"},
+    "end_time": {"type": "string"},
+    "exchange": {"type": "string"},
+    "data_file": {"type": "string"},
+    "mtc_config": {"type": "object"},
+    "warmup_bars": {"type": "integer", "minimum": 0},
+    "commission": {"type": "number", "minimum": 0},
+    "slippage": {"type": "number", "minimum": 0},
+    "initial_capital": {"type": "number", "exclusiveMinimum": 0},
+    "sizing": {
+      "type": "object",
+      "properties": {
+        "mode": {"type": "string"},
+        "value": {"type": "number"},
+        "currency": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "expected_reference_source": {"type": ["string", "null"]},
+    "engine_inputs": {"type": "object"},
+    "tolerances": {"type": "object"}
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,3 @@
+# Stage 2 Position Trading
+
+- QL_STAN_STAGE_2_BREAKOUT: WEAK_STAGE3_CANDIDATE

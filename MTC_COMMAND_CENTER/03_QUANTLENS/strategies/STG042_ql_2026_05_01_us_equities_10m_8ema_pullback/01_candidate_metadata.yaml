@@ -1,0 +1,29 @@
+candidate_id: QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK
+source_url: https://www.youtube.com/watch?v=Gr2VDAOPRoc
+video_title: UNKNOWN_TITLE - 8 EMA purple line Amazon trade
+quantlens_decision: CANDIDATE
+codex_status: READY_FOR_PYTHON_PROTOTYPE
+market_type: US_EQUITIES_OPTIONS_UNDERLYING_PRICE
+primary_timeframe: 10m
+strategy_type: EMA pullback trend continuation
+commercial_value_score: 6
+complexity_score: 3
+repaint_risk: LOW
+lookahead_risk: MEDIUM
+overfit_risk: MEDIUM
+closed_source_risk: LOW
+risk_management_quality: PARTIAL
+candidate_kind:
+  producer: false
+  entry_gate: true
+  guard: true
+  confirmation: false
+  exit_rule: true
+  sl_tp_method: true
+  trailing_be_method: false
+  money_management: true
+existing_mtc_overlap: EMA trend filter / pullback entry concepts likely overlap with existing trend and entry-gate modules; exact mapping requires MTC_V2 layer inspection.
+new_feature_required: UNKNOWN_UNTIL_MAPPING
+recommended_next_step: Define deterministic prototype rules for distance-to-EMA entry, HOD/LOD target, EMA break exit, and two-loss daily stop.
+created_at: 2026-05-01
+updated_at: 2026-05-01

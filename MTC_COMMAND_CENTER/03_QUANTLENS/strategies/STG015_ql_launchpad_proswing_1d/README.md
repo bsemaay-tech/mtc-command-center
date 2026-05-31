@@ -1,0 +1,3 @@
+# STG015_ql_launchpad_proswing_1d
+
+Source folder: `C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\06_PROMOTED_TO_PARITY\QL_LAUNCHPAD_PROSWING_1D`

@@ -1,0 +1,29 @@
+candidate_id: QL_2026-05-01_US_EQUITIES_INTRADAY_LE_MODEL_BULL_FLAG
+source_url: https://www.youtube.com/watch?v=mMwl4xAh_NI
+video_title: The ONLY Pattern I've Used for 7 Years - Nothing Else (Full Strategy)
+quantlens_decision: CANDIDATE
+codex_status: READY_FOR_PYTHON_PROTOTYPE
+market_type: US_EQUITIES_OPTIONS_UNDERLYING_PRICE
+primary_timeframe: intraday
+strategy_type: LE model bull flag breakout retest
+commercial_value_score: 7
+complexity_score: 4
+repaint_risk: LOW
+lookahead_risk: MEDIUM
+overfit_risk: MEDIUM
+closed_source_risk: LOW
+risk_management_quality: PARTIAL
+candidate_kind:
+  producer: false
+  entry_gate: true
+  guard: true
+  confirmation: true
+  exit_rule: true
+  sl_tp_method: true
+  trailing_be_method: false
+  money_management: true
+existing_mtc_overlap: Breakout level, EMA pullback, session guard, and trailing exit concepts may overlap with existing MTC_V2 modules; inspect before adding features.
+new_feature_required: UNKNOWN_UNTIL_MAPPING
+recommended_next_step: Write deterministic prototype spec for level breakout, EMA/level retest routing, flag quality, HOD target, and EMA runner exit.
+created_at: 2026-05-01
+updated_at: 2026-05-01

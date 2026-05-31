@@ -1,0 +1,4 @@
+explorer.exe       pid: 34892  type: File          605C: C:\LAB\tradingview-lab\MTC_COMMAND_CENTER\11_TRIAGE
+explorer.exe       pid: 34892  type: File          A8F4: C:\LAB\tradingview-lab\MTC_COMMAND_CENTER\11_TRIAGE
+explorer.exe       pid: 34892  type: File          AA5C: C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\00_INBOX_REPORTS\3 May?s
+explorer.exe       pid: 34892  type: File          AAF4: C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\00_INBOX_REPORTS\3 May?s

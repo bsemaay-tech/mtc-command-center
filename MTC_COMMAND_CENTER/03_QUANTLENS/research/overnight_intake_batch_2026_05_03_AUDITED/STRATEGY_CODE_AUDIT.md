@@ -1,0 +1,18 @@
+# Strategy Code Audit
+
+|candidate_id|lookahead_bias|cost_model|known_issue|audit_action|
+|---|---|---|---|---|
+|CANDIDATE_001|NOT_EVIDENCED_IN_AUDIT|ROUND_TRIP_NET_COLUMN|first-pass proxy code uses simplified fills; drawdown and proxy warnings required|documented; no original folder patched|
+|CANDIDATE_002|NOT_EVIDENCED_IN_AUDIT|ROUND_TRIP_NET_COLUMN|first-pass proxy code uses simplified fills; drawdown and proxy warnings required|documented; no original folder patched|
+|CANDIDATE_003|NOT_EVIDENCED_IN_AUDIT|ROUND_TRIP_NET_COLUMN|first-pass proxy code uses simplified fills; drawdown and proxy warnings required|documented; no original folder patched|
+|CANDIDATE_004|NOT_EVIDENCED_IN_AUDIT|ROUND_TRIP_NET_COLUMN|same-bar ambiguity simplified; keep weak despite PF due high drawdown|documented; no original folder patched|
+|CANDIDATE_005|NOT_EVIDENCED_IN_AUDIT|ROUND_TRIP_NET_COLUMN|first-pass proxy code uses simplified fills; drawdown and proxy warnings required|documented; no original folder patched|
+|CANDIDATE_006|NOT_EVIDENCED_IN_AUDIT|ROUND_TRIP_NET_COLUMN|first-pass proxy code uses simplified fills; drawdown and proxy warnings required|documented; no original folder patched|
+|CANDIDATE_007|NOT_EVIDENCED_IN_AUDIT|ROUND_TRIP_NET_COLUMN|first-pass proxy code uses simplified fills; drawdown and proxy warnings required|documented; no original folder patched|
+|CANDIDATE_008|NOT_EVIDENCED_IN_AUDIT|ROUND_TRIP_NET_COLUMN|session proxy on 24/7 crypto; not native equity/futures session proof|documented; no original folder patched|
+|CANDIDATE_009|NOT_EVIDENCED_IN_AUDIT|ROUND_TRIP_NET_COLUMN|session proxy on 24/7 crypto; not native equity/futures session proof|documented; no original folder patched|
+|CANDIDATE_010|NOT_EVIDENCED_IN_AUDIT|ROUND_TRIP_NET_COLUMN|first-pass proxy code uses simplified fills; drawdown and proxy warnings required|documented; no original folder patched|
+|CANDIDATE_011|NOT_EVIDENCED_IN_AUDIT|ROUND_TRIP_NET_COLUMN|first-pass proxy code uses simplified fills; drawdown and proxy warnings required|documented; no original folder patched|
+|CANDIDATE_012|NOT_EVIDENCED_IN_AUDIT|ROUND_TRIP_NET_COLUMN|first-pass proxy code uses simplified fills; drawdown and proxy warnings required|documented; no original folder patched|
+|CANDIDATE_013|NOT_EVIDENCED_IN_AUDIT|ROUND_TRIP_NET_COLUMN|first-pass proxy code uses simplified fills; drawdown and proxy warnings required|documented; no original folder patched|
+|CANDIDATE_014|NOT_EVIDENCED_IN_AUDIT|ROUND_TRIP_NET_COLUMN|first-pass proxy code uses simplified fills; drawdown and proxy warnings required|documented; no original folder patched|

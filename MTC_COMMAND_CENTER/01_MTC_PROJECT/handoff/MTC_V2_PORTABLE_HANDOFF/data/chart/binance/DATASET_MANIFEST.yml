@@ -1,0 +1,13 @@
+datasets:
+  - dataset_id: "tradingview_chart_csv_binance:BTCUSDT.P:1h:BINANCE_BTCUSDT.P, 60_consolidated_stable"
+    symbol: "BTCUSDT.P"
+    exchange: "BINANCE"
+    timeframe: "1h"
+    source_type: "tradingview_chart_csv_binance"
+    source_path_original: "05_PARITY/01_TW_CHART_DATA/BINANCE_BTCUSDT.P, 60_consolidated_stable.csv"
+    target_path: "data/chart/binance/BTCUSDTP/1h/BINANCE_BTCUSDT.P, 60_consolidated_stable.csv"
+    row_count: 24524
+    file_size_bytes: 1099743
+    sha256: "0e6c540065690ba1ce00f4d03ad65881569d974d50e02bdd305f1048604d9a99"
+    timezone: "UNKNOWN"
+    notes: "TradingView chart export for Binance symbol; preserve original filename and document source label."

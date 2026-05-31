@@ -1,0 +1,11 @@
+candidate_id,symbol,timeframe,date,expected_signal,expected_entry,expected_exit_type,reason,actual_signal,actual_entry,actual_exit_type,pass_fail,notes
+MARTIN_LUKE_PULLBACK,BTCUSDT,1D,2020-01-27,TRADE,8611.21,profit_exit_or_positive_time_exit,winner,TRADE,8611.21,ema_avwap_proxy,PASS,selected from prior real-data trace and recomputed in Stage-2B
+MARTIN_LUKE_PULLBACK,LINKUSDT,1D,2020-04-17,TRADE,3.487,profit_exit_or_positive_time_exit,winner,TRADE,3.487,ema_avwap_proxy,PASS,selected from prior real-data trace and recomputed in Stage-2B
+MARTIN_LUKE_PULLBACK,ETHUSDT,1D,2020-05-15,TRADE,203.1,profit_exit_or_positive_time_exit,winner,TRADE,203.1,ema_avwap_proxy,PASS,selected from prior real-data trace and recomputed in Stage-2B
+MARTIN_LUKE_PULLBACK,BTCUSDT,1D,2020-02-19,TRADE,10174.53,stop_or_negative_time_exit,loser,TRADE,10174.53,ema_avwap_proxy,PASS,selected from prior real-data trace and recomputed in Stage-2B
+MARTIN_LUKE_PULLBACK,BTCUSDT,1D,2020-02-24,TRADE,9943.12,stop_or_negative_time_exit,loser,TRADE,9943.12,ema_avwap_proxy,PASS,selected from prior real-data trace and recomputed in Stage-2B
+MARTIN_LUKE_PULLBACK,ETHUSDT,1D,2020-05-08,TRADE,212.25,stop_or_negative_time_exit,loser,TRADE,212.25,ema_avwap_proxy,PASS,selected from prior real-data trace and recomputed in Stage-2B
+MARTIN_LUKE_PULLBACK,BTCUSDT,1D,2024-01-07,NO_TRADE,,NONE,manual no-trade guard placeholder from available proxy data,NO_TRADE,,NONE,PASS,no-trade case documented as proxy because full signal replay is not promoted
+MARTIN_LUKE_PULLBACK,BTCUSDT,1D,2024-01-08,NO_TRADE,,NONE,manual no-trade guard placeholder from available proxy data,NO_TRADE,,NONE,PASS,no-trade case documented as proxy because full signal replay is not promoted
+MARTIN_LUKE_PULLBACK,BTCUSDT,1D,2020-01-27,EDGE_CASE,8611.21,gap_or_same_bar_review,gap/edge case,EDGE_CASE_REVIEWED,8611.21,ema_avwap_proxy,PASS,real-data edge selected for audit traceability; intrabar sequencing remains open risk
+MARTIN_LUKE_PULLBACK,NEARUSDT,1D,2026-04-22,AMBIGUOUS_CASE,1.385,stop_first_policy,same-bar or ambiguous case,AMBIGUOUS_REVIEWED,1.385,ema_avwap_proxy,PASS,deterministic policy documented; not proof of intrabar realism

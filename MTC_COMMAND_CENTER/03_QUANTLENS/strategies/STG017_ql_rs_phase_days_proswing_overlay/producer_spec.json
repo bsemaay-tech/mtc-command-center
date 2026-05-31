@@ -1,0 +1,16 @@
+{
+  "candidate_id": "QL_RS_PHASE_DAYS_PROSWING_OVERLAY",
+  "source_url": "https://www.youtube.com/watch?v=NwgJQyoUAaI",
+  "source_candidate": "QLR_NwgJQyoUAaI",
+  "title": "RS phase/days overlay (Pro Swing Ep 2)",
+  "kind": "filter_overlay",
+  "rules_high_confidence": [
+    "RS line (price/index) making new 21-day high",
+    "RS days: \u226561% of last 21 days outperforming index"
+  ],
+  "entry_pseudo": "long_ok = rs_new_high_21 AND rs_days_pct>=0.61",
+  "exit_pseudo": "N/A (overlay)",
+  "param_grid_size_planned": 30,
+  "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+  "promoted_at": "2026-05-31T00:09:34"
+}

@@ -1,0 +1,47 @@
+//@version=6
+indicator("producer_range_filter_v1 feature adapter", overlay=false)
+
+float rf_range = input.float(1000.0, "RF Range", minval=0.0000001)
+var float rf_line = na
+var int rf_direction = 0
+
+float source_price = close
+bool raw_long = false
+bool raw_short = false
+bool valid_bar = not na(open) and not na(high) and not na(low) and not na(close) and high >= low and open >= low and open <= high and close >= low and close <= high
+
+if valid_bar
+    if na(rf_line)
+        rf_line := close
+        rf_direction := 0
+    else
+        int previous_direction = rf_direction
+        float upper_before = rf_line + rf_range
+        float lower_before = rf_line - rf_range
+        if previous_direction < 0 and close > rf_line
+            rf_line := close - rf_range
+            rf_direction := 1
+            raw_long := true
+        else if previous_direction <= 0 and close > upper_before
+            rf_line := close - rf_range
+            rf_direction := 1
+            raw_long := previous_direction != 1
+        else if previous_direction >= 0 and close < rf_line
+            rf_line := close + rf_range
+            rf_direction := -1
+            raw_short := previous_direction != -1
+        else if previous_direction > 0 and close > upper_before
+            rf_line := close - rf_range
+        else if previous_direction < 0 and close < lower_before
+            rf_line := close + rf_range
+
+float upper_band = rf_line + rf_range
+float lower_band = rf_line - rf_range
+
+plot(source_price, title="FEATURE__producer_range_filter_v1__indicator__source_price", display=display.none)
+plot(rf_line, title="FEATURE__producer_range_filter_v1__indicator__filter_line", display=display.none)
+plot(upper_band, title="FEATURE__producer_range_filter_v1__indicator__upper_band", display=display.none)
+plot(lower_band, title="FEATURE__producer_range_filter_v1__indicator__lower_band", display=display.none)
+plot(float(rf_direction), title="FEATURE__producer_range_filter_v1__indicator__direction", display=display.none)
+plot(raw_long ? 1.0 : 0.0, title="FEATURE__producer_range_filter_v1__signal__raw_long", display=display.none)
+plot(raw_short ? 1.0 : 0.0, title="FEATURE__producer_range_filter_v1__signal__raw_short", display=display.none)

@@ -1,0 +1,26 @@
+{
+  "BTCUSDT.P": {
+    "4h": {
+      "path": "data/processed_hist/binance_usdm/BTCUSDT.P/4h.parquet",
+      "abs_path": "C:/LAB/tradingview-lab/110_/data/processed_hist/binance_usdm/BTCUSDT.P/4h.parquet",
+      "hash_sha256": "8245f41888180862b2245af2c8742822c0e7d1f82002c1b787bd8f484703203e",
+      "bar_count": 10962,
+      "start_utc": "2021-01-01T00:00:00+00:00",
+      "end_utc": "2026-01-01T20:00:00+00:00",
+      "provider": "binance_usdm",
+      "is_24_7": true,
+      "last_updated": "2026-03-11T20:01:35Z"
+    },
+    "1h": {
+      "path": "data/processed_hist/binance_usdm/BTCUSDT.P/1h.parquet",
+      "abs_path": "C:/LAB/tradingview-lab/110_/data/processed_hist/binance_usdm/BTCUSDT.P/1h.parquet",
+      "hash_sha256": "c584196634c779b320027ed9f88d1f4273ca0cb28422d45290e72a753f6a77a8",
+      "bar_count": 57042,
+      "start_utc": "2019-09-08T17:00:00+00:00",
+      "end_utc": "2026-03-12T10:00:00+00:00",
+      "provider": "binance_usdm",
+      "is_24_7": true,
+      "last_updated": "2026-03-12T10:21:58Z"
+    }
+  }
+}

@@ -1,0 +1,2 @@
+1. mkdir "stage2_robustness_2026_05_03_CODEX"
+2. git status --short > git_status_before.txt

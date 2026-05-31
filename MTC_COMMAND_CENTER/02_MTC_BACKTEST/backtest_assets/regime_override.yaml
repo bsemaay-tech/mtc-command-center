@@ -1,0 +1,7 @@
+enabled: false
+windows:
+  # Example:
+  # - start: "2020-03-01T00:00:00Z"
+  #   end: "2020-06-30T23:59:59Z"
+  #   label: "TREND_BEAR"
+

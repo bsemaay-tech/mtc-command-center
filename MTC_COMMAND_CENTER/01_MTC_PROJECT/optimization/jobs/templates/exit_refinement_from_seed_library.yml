@@ -1,0 +1,38 @@
+# exit_refinement_from_seed_library.yml
+# Research seeds only; not Pine defaults; not production parameters.
+
+purpose: exit/risk refinement from accepted producer seeds
+input_parameter_library_file: optimization/parameter_library/<producer>/<producer_seed_regions.yml>
+dataset_manifest_path: C:\LAB\tradingview-lab\MTC_V2_OPTIMIZATION_DATA_BUNDLE_20260427\manifests\dataset_manifest.json
+regime_registry_path: C:\LAB\tradingview-lab\MTC_V2_OPTIMIZATION_DATA_BUNDLE_20260427\regimes\regime_registry.json
+included_parameter_groups:
+  - exit_parameters
+  - risk_parameters
+excluded_parameter_groups:
+  - full_producer_grid
+  - filters
+  - gates
+  - guards
+  - integrations
+  - visualization
+scoring_profile: exit_risk_refinement
+minimum_coverage_requirements:
+  train_validation_test: true
+  min_positive_symbol_count: 3
+  min_positive_timeframe_count: 3
+  walkforward_consistency_min: 0.70
+output_requirements:
+  - candidate_csv
+  - seed_region_yaml
+  - rejected_region_list
+  - per_asset_timeframe_summary
+  - per_regime_summary
+  - evidence_path
+  - resume_dedup_report
+fail_conditions:
+  - missing_dataset_manifest
+  - missing_regime_registry
+  - duplicate_conflicts_gt_zero
+  - missing_evaluation_key
+  - attempts_to_modify_pine_defaults
+  - attempts_to_claim_tradingview_release_parity

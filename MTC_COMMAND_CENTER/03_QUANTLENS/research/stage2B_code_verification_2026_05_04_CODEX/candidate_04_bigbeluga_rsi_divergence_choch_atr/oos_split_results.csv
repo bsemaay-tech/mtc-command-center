@@ -1,0 +1,4 @@
+trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,candidate_id,split
+443,16,161227203.9194,2.3414,49.8871,6.0588,-0.12,6.0588,21.1992,-9.0134,-93.9039,1716938.5755,10.2573,10.2573,DOGEUSDT,ARBUSDT,False,BIGBELUGA,train
+148,17,-88.4754,0.9581,34.4595,-0.2631,-7.2088,-0.2631,17.4785,-9.5911,-97.501,-0.9074,8.223,8.223,XRPUSDT,APTUSDT,True,BIGBELUGA,validation
+148,17,-63.6793,1.0241,43.2432,0.1205,-2.2864,0.1205,11.8513,-8.8172,-99.3676,-0.6408,9.3176,9.3176,ARBUSDT,ADAUSDT,False,BIGBELUGA,test

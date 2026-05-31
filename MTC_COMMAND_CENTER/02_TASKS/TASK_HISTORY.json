@@ -1,0 +1,158 @@
+{
+  "schema_version": "1.0",
+  "events": [
+    {
+      "event_id": "HIST-2026-0001",
+      "task_id": "MCC-BOOT-001",
+      "event_type": "COMPLETED",
+      "created_at": "2026-05-29T00:00:00+03:00",
+      "created_by": "Codex",
+      "summary": "Initial foundation folder structure and documentation skeleton created.",
+      "report_path": null
+    },
+    {
+      "event_id": "HIST-2026-0002",
+      "task_id": "MCC-BOOT-002",
+      "event_type": "COMPLETED",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "summary": "Completed MVP-0 scaffold, schemas, policy docs, ADRs, hook stub, and validation report.",
+      "report_path": "04_REPORTS/ai_handoffs/MCC_BOOT_002_COMPLETION_REPORT.md"
+    },
+    {
+      "event_id": "HIST-2026-0003",
+      "task_id": "MCC-BOOT-003",
+      "event_type": "COMPLETED",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "summary": "Implemented dependency-free MVP-1 read-only core skeleton for path config, JSON reading, schema validation, and snapshots.",
+      "report_path": "04_REPORTS/ai_handoffs/MCC_BOOT_006_COMPLETION_REPORT.md"
+    },
+    {
+      "event_id": "HIST-2026-0004",
+      "task_id": "MCC-BOOT-004",
+      "event_type": "COMPLETED",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "summary": "Added MVP-1 health report and /healthz endpoint contract.",
+      "report_path": "04_REPORTS/ai_handoffs/MCC_BOOT_006_COMPLETION_REPORT.md"
+    },
+    {
+      "event_id": "HIST-2026-0005",
+      "task_id": "MCC-BOOT-005",
+      "event_type": "COMPLETED",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "summary": "Added read-model adapters for status, task, parity, report manifest, and dashboard config files.",
+      "report_path": "04_REPORTS/ai_handoffs/MCC_BOOT_006_COMPLETION_REPORT.md"
+    },
+    {
+      "event_id": "HIST-2026-0006",
+      "task_id": "MCC-BOOT-006",
+      "event_type": "COMPLETED",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "summary": "Verified CLI, health, read-model, snapshot, and HTTP read-only API behavior with unit tests.",
+      "report_path": "04_REPORTS/ai_handoffs/MCC_BOOT_006_COMPLETION_REPORT.md"
+    },
+    {
+      "event_id": "HIST-2026-0007",
+      "task_id": "MCC-BOOT-007",
+      "event_type": "COMPLETED",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "summary": "Built first browser dashboard shell consuming the read-only snapshot API and verified tab navigation in browser.",
+      "report_path": "04_REPORTS/ai_handoffs/MCC_BOOT_007_COMPLETION_REPORT.md"
+    },
+    {
+      "event_id": "HIST-2026-0008",
+      "task_id": "MCC-BOOT-008",
+      "event_type": "COMPLETED",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "summary": "Added read-only report endpoint, report viewer, task/report filters, and empty-state rendering.",
+      "report_path": "04_REPORTS/ai_handoffs/MCC_BOOT_008_COMPLETION_REPORT.md"
+    },
+    {
+      "event_id": "HIST-2026-0009",
+      "task_id": "MCC-BOOT-009",
+      "event_type": "COMPLETED",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "summary": "Added read-only backtest and strategy registry panels, expanded MVP-1 read model, and verified empty-state rendering.",
+      "report_path": "04_REPORTS/ai_handoffs/MCC_BOOT_009_COMPLETION_REPORT.md"
+    },
+    {
+      "event_id": "HIST-2026-0010",
+      "task_id": "MCC-BOOT-010",
+      "event_type": "COMPLETED",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "summary": "Implemented controlled task proposal writer with task lock, schema validation, backups, receipts, and status events.",
+      "report_path": "04_REPORTS/ai_handoffs/MCC_BOOT_010_COMPLETION_REPORT.md"
+    },
+    {
+      "event_id": "HIST-2026-0011",
+      "task_id": "MCC-BOOT-011",
+      "event_type": "COMPLETED",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "summary": "Added read-only stale task and WAITING_FOR_USER diagnostics to the snapshot, CLI, tests, and dashboard.",
+      "report_path": "04_REPORTS/ai_handoffs/MCC_BOOT_011_COMPLETION_REPORT.md"
+    },
+    {
+      "event_id": "HIST-2026-0012",
+      "task_id": "MCC-BOOT-012",
+      "event_type": "COMPLETED",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "summary": "Added read-only parity output normalization to the CLI, snapshot, tests, and dashboard data model.",
+      "report_path": "04_REPORTS/ai_handoffs/MCC_BOOT_012_COMPLETION_REPORT.md"
+    },
+    {
+      "event_id": "HIST-2026-0013",
+      "task_id": "MCC-BOOT-013",
+      "event_type": "COMPLETED",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "summary": "Added read-only backtest output normalization to the CLI, snapshot, tests, and dashboard data model.",
+      "report_path": "04_REPORTS/ai_handoffs/MCC_BOOT_013_COMPLETION_REPORT.md"
+    },
+    {
+      "event_id": "HIST-2026-0014",
+      "task_id": "MCC-BOOT-014",
+      "event_type": "COMPLETED",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "summary": "Added read-only QuantLens registry normalization to the CLI, snapshot, tests, and dashboard data model.",
+      "report_path": "04_REPORTS/ai_handoffs/MCC_BOOT_014_COMPLETION_REPORT.md"
+    },
+    {
+      "event_id": "HIST-2026-0015",
+      "task_id": "MCC-BOOT-015",
+      "event_type": "COMPLETED",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "summary": "Added read-only Pine Builder workflow normalization to the CLI, snapshot, tests, and dashboard data model.",
+      "report_path": "04_REPORTS/ai_handoffs/MCC_BOOT_015_COMPLETION_REPORT.md"
+    },
+    {
+      "event_id": "HIST-2026-0016",
+      "task_id": "MCC-BOOT-016",
+      "event_type": "COMPLETED",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "summary": "Added read-only Optimization Lab normalization to the CLI, snapshot, tests, and dashboard data model.",
+      "report_path": "04_REPORTS/ai_handoffs/MCC_BOOT_016_COMPLETION_REPORT.md"
+    },
+    {
+      "event_id": "HIST-2026-0017",
+      "task_id": "MCC-BOOT-017",
+      "event_type": "COMPLETED",
+      "created_at": "2026-05-30T00:00:00+03:00",
+      "created_by": "Codex",
+      "summary": "Added read-only LiveOps dry-run status normalization, safety gate checks, paper-trade plan indexing, CLI output, tests, and dashboard panel.",
+      "report_path": "04_REPORTS/ai_handoffs/MCC_BOOT_017_COMPLETION_REPORT.md"
+    }
+  ]
+}

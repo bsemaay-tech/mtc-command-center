@@ -1,0 +1,61 @@
+{
+  "random": {
+    "stop_loss.use_sl": {
+      "dist": "choice",
+      "values": [true]
+    },
+    "stop_loss.mode": {
+      "dist": "choice",
+      "values": ["ATR", "%", "Swing+ATR", "SWING_ATR"]
+    },
+    "stop_loss.atr_len": {
+      "dist": "uniform_int",
+      "low": 7,
+      "high": 35
+    },
+    "stop_loss.atr_mult": {
+      "dist": "uniform_float",
+      "low": 1.0,
+      "high": 6.0,
+      "step": 0.25
+    },
+    "stop_loss.percent": {
+      "dist": "uniform_float",
+      "low": 0.5,
+      "high": 5.0,
+      "step": 0.25
+    },
+    "stop_loss.swing_basis": {
+      "dist": "choice",
+      "values": ["Wick", "Body"]
+    },
+    "stop_loss.swing_lookback": {
+      "dist": "uniform_int",
+      "low": 5,
+      "high": 40
+    },
+    "stop_loss.swing_atr_len": {
+      "dist": "uniform_int",
+      "low": 7,
+      "high": 35
+    },
+    "stop_loss.swing_atr_mult": {
+      "dist": "uniform_float",
+      "low": 0.0,
+      "high": 3.0,
+      "step": 0.25
+    },
+    "risk.risk_long_percent": {
+      "dist": "choice",
+      "values": [0.1, 0.2, 0.3, 0.5, 0.75, 1.0, 1.5, 2.0]
+    },
+    "risk.risk_short_percent": {
+      "dist": "choice",
+      "values": [0.1, 0.2, 0.3, 0.5, 0.75, 1.0, 1.5, 2.0]
+    },
+    "risk.max_leverage_cap": {
+      "dist": "choice",
+      "values": [1.0, 2.0, 3.0, 4.0, 5.0]
+    }
+  }
+}

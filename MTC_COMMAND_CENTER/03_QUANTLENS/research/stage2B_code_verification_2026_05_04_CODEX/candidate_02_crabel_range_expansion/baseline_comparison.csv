@@ -1,0 +1,6 @@
+candidate_id,baseline,trade_count,assets_tested,net_return_after_costs,profit_factor,win_rate,average_trade,median_trade,expectancy,average_winner,average_loser,max_drawdown,return_over_dd,exposure,average_hold_bars,best_asset,worst_asset,concentration_warning,net_noncompounded_return,notes
+CRABEL_RANGE_EXPANSION,random_same_hold,170,17,-54.2205,0.8715,45.2941,-0.2851,-0.3811,-0.2851,4.2699,-4.0564,-78.294,-0.6925,1.0,1.0,DOGEUSDT,NEARUSDT,False,,
+CRABEL_RANGE_EXPANSION,opposite_signal,,,,0.564098,,,,,,,,,,,,,,-5761.97988,computed by sign-inverting repaired trace returns
+CRABEL_RANGE_EXPANSION,shuffled_signal,,,,1.772742,,,,,,,,,,,,,,5761.97988,same returns reversed; checks metric stability not timing edge
+CRABEL_RANGE_EXPANSION,simple_trend_baseline,,,,SEE_STAGE2_BASELINE_RESULTS,,,,,,,,,,,,,,,global Stage-2 baseline file read; not candidate-native
+CRABEL_RANGE_EXPANSION,buy_and_hold,,,,SEE_STAGE2_BASELINE_RESULTS,,,,,,,,,,,,,,,global Stage-2 baseline file read; not candidate-native

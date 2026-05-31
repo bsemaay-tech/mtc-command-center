@@ -1,0 +1,55 @@
+candidate_id: KELL_WEDGE_POP_v1_CONTRACT
+direction: long_only
+asset_class: us_equity_growth_leaders
+native_timeframe:
+  trade_idea: 1D
+  context: 1W
+  execution: 30m
+data_requirements:
+  - daily_ohlcv
+  - daily_volume
+  - weekly_ohlcv
+  - relative_strength_rank_vs_SPY
+  - earnings_calendar
+indicators:
+  ema_fast: 10
+  ema_slow: 20
+  ema_weekly: 10
+  atr_len: 20
+  rs_lookback_days: 60
+preconditions_in_order:
+  pre_flush:
+    rule: "min_close_in_last_30_bars < EMA20 - 1.5*ATR(20)"
+    must_be_true_within_bars: 30
+  snapback:
+    rule: "min(|close-EMA10|/close, |close-EMA20|/close) <= 0.01 within last 15 bars"
+  higher_low:
+    rule: "swing_low(left=2,right=2) confirmed > pre_flush_low"
+  contraction:
+    rule: "rolling_range(5)/close < rolling_range(30).median()*0.7 AND ATR_pctile_30d declining"
+  mini_base_duration_bars: 3
+trigger:
+  rule: "close > rolling_max(high, mini_base_window) AND close > EMA10 AND close > EMA20"
+entry: next_bar_open
+filters:
+  weekly_trend: "weekly_close > weekly_EMA10"
+  relative_strength: "rs_rank_60d_vs_SPY > 0"
+  earnings_blackout_days: 5
+  market_regime: "SPY > SPY_EMA200"
+stop_initial:
+  rule: "min(mini_base_low, higher_low_pivot - 0.25*ATR)"
+profit_target: null
+time_stop_bars: 5
+exit:
+  default: "close < EMA20"
+  switch_to_EMA10_after_holds: 3
+  blowoff_placeholder: "close > EMA10 * 1.20"
+position_sizing:
+  risk_pct_per_trade: [0.5, 0.75, 1.0]
+do_not_trade_when:
+  - "no pre-flush detected within 30 bars"
+  - "weekly EMA10 slope down"
+  - "SPY < SPY_EMA200"
+  - "earnings within 5 bars"
+non_repaint: required
+mtc_role: SIGNAL_PRODUCER_POSSIBLE

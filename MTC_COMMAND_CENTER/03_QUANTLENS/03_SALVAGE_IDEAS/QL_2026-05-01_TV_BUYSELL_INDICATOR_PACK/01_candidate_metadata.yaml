@@ -1,0 +1,29 @@
+candidate_id: QL_2026-05-01_TV_BUYSELL_INDICATOR_PACK
+source_url: UNKNOWN_URL
+video_title: Five TradingView buy/sell signal indicators
+quantlens_decision: SALVAGE
+codex_status: SALVAGE_ONLY
+market_type: UNKNOWN
+primary_timeframe: UNKNOWN
+strategy_type: external TradingView indicator list
+commercial_value_score: 3
+complexity_score: 6
+repaint_risk: UNKNOWN
+lookahead_risk: UNKNOWN
+overfit_risk: HIGH
+closed_source_risk: MEDIUM
+risk_management_quality: GENERIC_ONLY
+candidate_kind:
+  producer: false
+  entry_gate: false
+  guard: true
+  confirmation: true
+  exit_rule: false
+  sl_tp_method: false
+  trailing_be_method: false
+  money_management: false
+existing_mtc_overlap: Possible overlap with SuperTrend, ATR, RSI/QQE, and external confirmation filters; no direct MTC_V2 feature recommended.
+new_feature_required: false
+recommended_next_step: Keep as salvage-only indicator research note; do not prototype until a specific indicator is selected with reproducible open rules.
+created_at: 2026-05-01
+updated_at: 2026-05-01

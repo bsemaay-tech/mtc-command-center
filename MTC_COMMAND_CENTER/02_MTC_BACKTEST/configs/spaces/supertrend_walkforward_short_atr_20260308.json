@@ -1,0 +1,23 @@
+{
+  "_comment": "Short-ATR Supertrend walk-forward space from the local fine-grid basin around ATR 5..11 and factor 3.6..4.4.",
+  "grid": {
+    "supertrend.atr_len": {
+      "dtype": "int",
+      "values": [5, 6, 7, 8, 9, 10, 11]
+    },
+    "supertrend.factor": {
+      "dtype": "float",
+      "values": [3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4]
+    }
+  },
+  "random": {
+    "supertrend.atr_len": {
+      "dist": "choice",
+      "values": [5, 6, 7, 8, 9, 10, 11]
+    },
+    "supertrend.factor": {
+      "dist": "choice",
+      "values": [3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4]
+    }
+  }
+}

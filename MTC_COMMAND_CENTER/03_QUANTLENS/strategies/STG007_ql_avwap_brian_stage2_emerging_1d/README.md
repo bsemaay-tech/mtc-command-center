@@ -1,0 +1,3 @@
+# STG007_ql_avwap_brian_stage2_emerging_1d
+
+Source folder: `C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\06_PROMOTED_TO_PARITY\QL_AVWAP_BRIAN_STAGE2_EMERGING_1D`

@@ -1,0 +1,65 @@
+{
+  "profile": "close_only_deterministic_v2",
+  "status": "frozen_tracker_case_pack",
+  "validated_on_utc": "2026-04-01T05:53:00Z",
+  "artifact_root": "reports/tracker_cases",
+  "tracker_workbook_fallback": "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASE_TRACKER_close_only_wave1_pending.xlsx",
+  "cases": [
+    {
+      "id": "CO_001_BASELINE",
+      "override_file": "close_only_case001_prototype.json",
+      "tracker_case_id": "CO_001_BASELINE",
+      "owner_focus": "baseline close-only stop/opp lifecycle",
+      "expected_trades": 133,
+      "report_prefix": "tracker_cases/CO_001_BASELINE"
+    },
+    {
+      "id": "CO_020_BE",
+      "override_file": "close_only_plan020_prototype.json",
+      "tracker_case_id": "CO_020_BE",
+      "owner_focus": "break-even owner",
+      "expected_trades": 127,
+      "report_prefix": "tracker_cases/CO_020_BE"
+    },
+    {
+      "id": "CO_021_TRAIL",
+      "override_file": "close_only_plan021_prototype.json",
+      "tracker_case_id": "CO_021_TRAIL",
+      "owner_focus": "trailing owner",
+      "expected_trades": 135,
+      "report_prefix": "tracker_cases/CO_021_TRAIL"
+    },
+    {
+      "id": "CO_022_MULTI_TP",
+      "override_file": "close_only_plan022_prototype.json",
+      "tracker_case_id": "CO_022_MULTI_TP",
+      "owner_focus": "multi-tp / tp1 / tp2",
+      "expected_trades": 158,
+      "report_prefix": "tracker_cases/CO_022_MULTI_TP"
+    },
+    {
+      "id": "CO_023_PERCENT_SL",
+      "override_file": "close_only_plan023_prototype.json",
+      "tracker_case_id": "CO_023_PERCENT_SL",
+      "owner_focus": "percent stop",
+      "expected_trades": 133,
+      "report_prefix": "tracker_cases/CO_023_PERCENT_SL"
+    },
+    {
+      "id": "CO_024_PERCENT_TP",
+      "override_file": "close_only_plan024_prototype.json",
+      "tracker_case_id": "CO_024_PERCENT_TP",
+      "owner_focus": "percent target",
+      "expected_trades": 134,
+      "report_prefix": "tracker_cases/CO_024_PERCENT_TP"
+    },
+    {
+      "id": "CO_025_R_TP",
+      "override_file": "close_only_tp_r_prototype.json",
+      "tracker_case_id": "CO_025_R_TP",
+      "owner_focus": "R multiple target",
+      "expected_trades": 135,
+      "report_prefix": "tracker_cases/CO_025_R_TP"
+    }
+  ]
+}

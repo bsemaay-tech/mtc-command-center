@@ -1,0 +1,39 @@
+{
+  "dataset": "C:\\LAB\\tradingview-lab\\mtc_backtest\\data\\ETHUSDT_4h_20190101_20260308.parquet",
+  "sha256": "8def8c44fd08581bf246d90a2b59cd2688f78ca1c48f0d3f0d404f79637d9832",
+  "exchange_raw": "BINANCE",
+  "exchange_normalized": "BINANCE",
+  "symbol_raw": "ETHUSDT",
+  "symbol_normalized": "ETHUSDT",
+  "quality": {
+    "rows": 15738,
+    "duplicate_timestamps": 0,
+    "gap_count": 4,
+    "gaps": [
+      {
+        "index": 421,
+        "prev_ts": "2019-03-12 00:00:00+00:00",
+        "next_ts": "2019-03-12 08:00:00+00:00",
+        "gap_seconds": 28800
+      },
+      {
+        "index": 804,
+        "prev_ts": "2019-05-15 00:00:00+00:00",
+        "next_ts": "2019-05-15 12:00:00+00:00",
+        "gap_seconds": 43200
+      },
+      {
+        "index": 1354,
+        "prev_ts": "2019-08-15 00:00:00+00:00",
+        "next_ts": "2019-08-15 08:00:00+00:00",
+        "gap_seconds": 28800
+      },
+      {
+        "index": 2483,
+        "prev_ts": "2020-02-19 08:00:00+00:00",
+        "next_ts": "2020-02-19 16:00:00+00:00",
+        "gap_seconds": 28800
+      }
+    ]
+  }
+}

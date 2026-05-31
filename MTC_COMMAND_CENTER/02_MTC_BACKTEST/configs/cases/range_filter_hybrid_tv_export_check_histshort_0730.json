@@ -1,0 +1,147 @@
+{
+  "_comment": "TV export parity check case derived from Range filter Hypride optimzed.xlsx.",
+  "tv_tz": "Europe/London",
+  "dataset": "data/BTCUSDT_PERP_15m_20250730_20251201_histtest.parquet",
+  "start_date": "2025-07-31T07:00:00",
+  "end_date": "2025-12-01T00:00:00",
+  "warmup_bars": 20,
+  "preroll_days": 365,
+  "config": {
+    "signal_mode": "Range Filter Hybrid (ADX+Chop+BB)",
+    "supertrend": {
+      "atr_len": 21,
+      "factor": 4.0,
+      "use_wicks": true,
+      "use_ha": false
+    },
+    "range_filter": {
+      "adx_trend_threshold": 22,
+      "adx_range_threshold": 17,
+      "chop_trend_threshold": 61,
+      "chop_range_threshold": 54,
+      "rsi_len": 27,
+      "rsi_oversold": 28,
+      "rsi_overbought": 62,
+      "bb_len": 10,
+      "bb_mult": 1.7,
+      "use_bb_filter": false
+    },
+    "trade": {
+      "enable_long": true,
+      "enable_short": true,
+      "allow_flip": true,
+      "exit_on_opposite_signal": false,
+      "exit_on_filter_block": false,
+      "use_regime_lock": false,
+      "entry_mode": "Signal",
+      "max_pyramid_positions": 1,
+      "signal_mode_max_entries": 1,
+      "signal_mode_cooldown_bars": 10,
+      "allow_same_bar_reentry": true,
+      "same_bar_reentry_requires_exit": true,
+      "same_bar_reentry_max_per_bar": 1,
+      "first_bar_requires_edge": false
+    },
+    "strategy": {
+      "initial_capital": 10000.0,
+      "commission_percent": 0.04,
+      "slippage_ticks": 5,
+      "pyramiding": 1,
+      "close_open_at_end": false
+    },
+    "risk": {
+      "risk_long_percent": 3.0,
+      "risk_short_percent": 3.0,
+      "max_leverage_cap": 5.0,
+      "fallback_qty_pct": 100.0,
+      "risk_equity_mode": "Realized",
+      "use_notional_hard_assert": false,
+      "use_daily_loss_limit": false,
+      "max_daily_loss_percent": 10.0,
+      "use_max_trades_per_day": false,
+      "max_trades_per_day": 5
+    },
+    "stop_loss": {
+      "use_sl": true,
+      "mode": "ATR",
+      "atr_len": 14,
+      "atr_mult": 1.5,
+      "percent": 1.0,
+      "swing_basis": "Wick",
+      "swing_lookback": 20,
+      "swing_atr_len": 14,
+      "swing_atr_mult": 0.5
+    },
+    "take_profit": {
+      "use_tp": true,
+      "mode": "R",
+      "atr_len": 14,
+      "atr_mult": 3.0,
+      "percent": 2.0,
+      "rr": 2.0
+    },
+    "break_even": {
+      "use_break_even": false,
+      "rr": 1.0,
+      "buffer_r": 0.1
+    },
+    "multi_tp": {
+      "use_multi_tp": false,
+      "tp1_rr": 3.0,
+      "tp1_pct": 50.0,
+      "tp2_rr": 5.5
+    },
+    "trailing": {
+      "use_trailing": false,
+      "atr_len": 14,
+      "start_r": 2.5,
+      "dist_r": 2.0
+    },
+    "filters": {
+      "use_ma_filter": false,
+      "use_ma_slope_filter": false,
+      "use_mcginley_filter": false,
+      "use_htf_trend_filter": false,
+      "use_volume_filter": false,
+      "use_range_filters": false,
+      "use_range_regime_filter": false,
+      "use_atr_vol_filter": false,
+      "use_macd_filter": false
+    },
+    "guards": {
+      "use_dd_guard": false,
+      "use_consec_loss_guard": false,
+      "use_cooldown_guard": false,
+      "use_eq_curve_guard": false,
+      "use_mae_guard": false,
+      "use_guard_recovery": false
+    },
+    "confirmation": {
+      "enabled": false
+    },
+    "time_stop": {
+      "enabled": false,
+      "use_bars": false,
+      "bars": 50,
+      "eod": false,
+      "eow": false,
+      "condition": "Always",
+      "timezone": "UTC"
+    },
+    "parity": {
+      "enabled": true,
+      "fill_contract": "touch",
+      "export_debug_csv": true,
+      "debug_dir": "debug/optimization/range_filter_hybrid_tv_export_check_histshort_0730",
+      "preroll_days": 0,
+      "preroll_mode": "warmup_only",
+      "close_open_at_eval_start": true
+    }
+  },
+  "strategy_id": "range_filter_hybrid_tv_export_check_histshort_0730",
+  "module_id": "range_filter_hybrid",
+  "feature_flags": {
+    "signal_only_optimization_anchor": true,
+    "tv_xlsx_baseline": true
+  }
+}

@@ -1,0 +1,5 @@
+# Monte Carlo Report
+
+|mc_runs|p_negative|p5_return|median_return|p95_drawdown|
+|---|---|---|---|---|
+|200|0.0|2.0441496455028362e+20|8.92360310582555e+22|-62.5897|

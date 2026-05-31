@@ -1,0 +1,17 @@
+{
+  "candidate_id": "QL_CONNELL_EVENT_DRIVEN_GAP_5M",
+  "source_url": "https://www.youtube.com/watch?v=kao-hhaQnig",
+  "source_candidate": "QLR_kao-hhaQnig",
+  "title": "Andrew Connell intraday catalyst variant",
+  "kind": "strategy",
+  "rules_high_confidence": [
+    "5-minute timeframe entry on first 5m bar of gap day",
+    "Stop at low of first 5m bar",
+    "Same-day session exit"
+  ],
+  "entry_pseudo": "is_first_5m_of_gap_day AND gap_pct>=thresh",
+  "exit_pseudo": "close<bar_low OR session_end",
+  "param_grid_size_planned": 40,
+  "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+  "promoted_at": "2026-05-31T00:09:34"
+}

@@ -1,0 +1,10 @@
+path,name,score,last_write,evidence
+C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\overnight_intake_batch_2026_05_03_AUDITED_20260503_232057,overnight_intake_batch_2026_05_03_AUDITED_20260503_232057,0,2026-05-03T23:24:18.138064,
+C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\overnight_intake_batch_2026_05_03_AUDITED_20260503_232046,overnight_intake_batch_2026_05_03_AUDITED_20260503_232046,3,2026-05-03T23:24:08.296973,"README.md, VALIDATION_REPORT.md"
+C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\overnight_intake_batch_2026_05_03_CLEAN,overnight_intake_batch_2026_05_03_CLEAN,20,2026-05-03T22:46:35.884718,"MASTER_OVERNIGHT_QUANTLENS_REPORT.md, README.md, STATE.json, candidates, strategies, strategy_summary.csv, VALIDATION_REPORT.md, preferred CLEAN folder"
+C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\overnight_intake_batch_2026_05_03,overnight_intake_batch_2026_05_03,17,2026-05-03T22:44:39.024156,"MASTER_OVERNIGHT_QUANTLENS_REPORT.md, README.md, STATE.json, candidates, strategies, strategy_summary.csv, VALIDATION_REPORT.md, expected first-run root"
+C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\stage2_robustness_2026_05_03,stage2_robustness_2026_05_03,1,2026-05-03T21:26:54.413165,README.md
+C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_5M_RERUN,strategy_batch_2026_05_03_5M_RERUN,3,2026-05-03T21:19:14.943580,"README.md, strategies"
+C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\data_acquisition_5m_2026_05_03,data_acquisition_5m_2026_05_03,1,2026-05-03T21:19:14.939580,README.md
+C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03_AUDITED,strategy_batch_2026_05_03_AUDITED,3,2026-05-03T20:21:01.296135,"README.md, strategies"
+C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\research\strategy_batch_2026_05_03,strategy_batch_2026_05_03,3,2026-05-03T19:11:02.197410,"README.md, strategies"

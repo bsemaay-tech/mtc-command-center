@@ -1,0 +1,17 @@
+{
+  "candidate_id": "QL_VCP_EARLY_ENTRY_CHRISTIAN_1D",
+  "source_url": "https://www.youtube.com/watch?v=Lot25-2fb-4",
+  "source_candidate": "QLR_Lot25-2fb-4",
+  "title": "Christian VCP early-contraction entry",
+  "kind": "strategy",
+  "rules_high_confidence": [
+    "Same VCP detection as Minervini",
+    "Entry on day 2-3 of contraction (early, not breakout)",
+    "Tight stop below contraction"
+  ],
+  "entry_pseudo": "vcp_in_progress AND contraction_day_2_or_3",
+  "exit_pseudo": "close<contraction_low OR breakout_failed",
+  "param_grid_size_planned": 50,
+  "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+  "promoted_at": "2026-05-31T00:09:34"
+}
