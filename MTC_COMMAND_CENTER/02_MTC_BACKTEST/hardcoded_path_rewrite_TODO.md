@@ -45,6 +45,19 @@ absolute legacy paths but are not on the active runtime path:
   the clean-tree equivalent (`MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/MTC_V2_PARITY_CASE_TRACKER.xlsx`)
   AND first generate the xlsx target (currently CSV-only)
 
+### update_parity_files.py
+- Location: `MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/update_parity_files.py`
+- Line 3: `csv_file = r"C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\05_PARITY\MTC_V2_PARITY_CASES.csv"`
+- Purpose: one-shot column-adder for the tracker CSV. Appends 30+ guard /
+  filter columns to `MTC_V2_PARITY_CASES.csv`. Already executed — the
+  target columns are present in the current CSV header.
+- Reason for deferral: not invoked by any active runner; target CSV schema
+  already extended; re-running would duplicate columns
+- Action on next use: if this script is ever revived, rewrite `csv_file` to
+  `MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/MTC_V2_PARITY_CASES.csv`
+  AND add an idempotency check (skip columns that already exist) before
+  re-execution
+
 ---
 
 ## Phase 1 original five (rewritten in Phase 2 by Codex)
