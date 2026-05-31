@@ -1,0 +1,79 @@
+=== MTC Bridge: Signal Extraction ===
+Symbol : BTCUSDT  TF: 1h  Bars: 1000
+Source : C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\01_MTC_PROJECT\01_PINE\MTC_V2.pine
+Output : C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\02_MTC_BACKTEST\data\mtc_signals.json
+
+Fetching Binance data and running PineTS...
+Done in 5.3s. Bars: 1000, Plots: 61
+
+--- Signal Summary ---
+Long  entries : 7
+Short entries : 8
+Exit  events  : 7
+
+Saved → C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\02_MTC_BACKTEST\data\mtc_signals.json  (1162 KB)
+=== Pine Trade Extractor ===
+
+Signals: C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\02_MTC_BACKTEST\data\mtc_signals.json
+Bars   : 1000  (BTCUSDT 1h)
+Range  : 2026-04-20 -> 2026-05-31
+
+--- Pine Metrics (PineTS state machine) ---
+  Total trades   : 7
+  Win rate       : 14.29%
+  Net PnL        : $-391.17  (-0.0391%)
+  Profit factor  : 0.315
+  Max drawdown   : 0.05%
+  Long / Short   : 7 / 0
+  Exit reasons   : {'sl_atr_hit': 4, 'opp_signal': 3}
+
+Saved: C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\02_MTC_BACKTEST\data\pine_trades.json
+       C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\02_MTC_BACKTEST\data\pine_trades.csv
+>>> Running mtc_bridge.mjs...
+
+>>> Running pine_trades.py...
+
+Pine metrics loaded: pine_trades.json
+Exact OHLCV dataset: C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\02_MTC_BACKTEST\data\parity_input_from_pinets.csv
+Python config mode : tracker_case_aligned_pine_python
+Override source    : auto_002_override
+
+Running canonical V2 Python runner on exact PineTS bars...
+
+==============================================================================
+  PARITY COMPARISON
+==============================================================================
+  Pine   : PineTS / BTCUSDT 1h (1000 bars)
+  Python : MTC_V2 00_PYTHON Runner
+------------------------------------------------------------------------------
+  Metric                       Pine       Python      AbsDiff     Status
+------------------------------------------------------------------------------
+  Trade Count                     7            7       0.0000         OK
+  Win Rate %                 14.29%       14.29%       0.0000         OK
+  Profit Factor              0.3150       0.3150       0.0000         OK
+  Net PnL %                -3.9117%     -3.9117%       0.0000         OK
+  Max Drawdown %            4.5800%      4.5800%       0.0000         OK
+------------------------------------------------------------------------------
+  Trade Parity
+    Pine trades      : 7
+    Python trades    : 7
+    Compared         : 7
+    Core match count : 7
+    Entry px match   : 7
+    Exit px match    : 7
+    Qty match        : 7
+    Extra Pine       : 0
+    Extra Python     : 0
+    Strict trade PASS: YES
+
+  Exit Reasons
+    Pine   : {'sl_atr_hit': 4, 'opp_signal': 3}
+    Python : {'sl_atr_hit': 4, 'opp_signal': 3}
+==============================================================================
+  FINAL VERDICT: PASS
+==============================================================================
+Tracker workbook missing: C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\01_MTC_PROJECT\05_PARITY\MTC_V2_PARITY_CASE_TRACKER.xlsx
+
+Saved report: C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\02_MTC_BACKTEST\reports\tracker_cases\AUTO_002\parity_compare.json
+Saved trade report: C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\02_MTC_BACKTEST\reports\tracker_cases\AUTO_002\parity_trade_report.csv
+Saved python trades: C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\02_MTC_BACKTEST\reports\tracker_cases\AUTO_002\python_trades_v2.csv
