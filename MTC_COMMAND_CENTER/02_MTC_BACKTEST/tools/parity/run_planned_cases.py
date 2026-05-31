@@ -17,16 +17,18 @@ from tw_collect_result import collect_case
 from write_report import write_report
 
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-OUTPUT_DIR = REPO_ROOT / "01_MASTER TEMPLATE_V2" / "05_PARITY" / "_nightly"
+REPO_ROOT = Path(__file__).resolve().parents[4]
+BACKTEST_ROOT = Path(__file__).resolve().parents[2]
+V2_PARITY = REPO_ROOT / "MTC_COMMAND_CENTER" / "01_MTC_PROJECT" / "05_PARITY"
+OUTPUT_DIR = V2_PARITY / "_nightly"
 LOG_DIR = OUTPUT_DIR / "logs"
 CASE_DIR = OUTPUT_DIR / "cases"
-TRACKER_CSV = REPO_ROOT / "01_MASTER TEMPLATE_V2" / "05_PARITY" / "MTC_V2_PARITY_CASES.csv"
-TRACKER_SOURCE_CSV = REPO_ROOT / "01_MASTER TEMPLATE_V2" / "05_PARITY" / "MTC_V2_TW_EXPORT_CASE_SUITE_V2.csv"
+TRACKER_CSV = V2_PARITY / "MTC_V2_PARITY_CASES.csv"
+TRACKER_SOURCE_CSV = V2_PARITY / "MTC_V2_TW_EXPORT_CASE_SUITE_V2.csv"
 
 
 def _load_plan(case_no: str) -> dict:
-    folder = REPO_ROOT / "01_MASTER TEMPLATE_V2" / "05_PARITY" / "TW_EXPORT_CASES_V2" / case_no
+    folder = V2_PARITY / "TW_EXPORT_CASES_V2" / case_no
     return json.loads((folder / "case_plan.json").read_text(encoding="utf-8"))
 
 

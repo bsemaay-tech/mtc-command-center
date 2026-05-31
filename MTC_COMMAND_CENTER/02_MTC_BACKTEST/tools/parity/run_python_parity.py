@@ -6,8 +6,9 @@ import sys
 from pathlib import Path
 
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-OUTPUT_DIR = REPO_ROOT / "01_MASTER TEMPLATE_V2" / "05_PARITY" / "_nightly"
+REPO_ROOT = Path(__file__).resolve().parents[4]
+BACKTEST_ROOT = Path(__file__).resolve().parents[2]
+OUTPUT_DIR = REPO_ROOT / "MTC_COMMAND_CENTER" / "01_MTC_PROJECT" / "05_PARITY" / "_nightly"
 
 
 def run_case(case: dict) -> dict:
@@ -23,7 +24,7 @@ def run_case(case: dict) -> dict:
     overrides_path.write_text(json.dumps(case_overrides, ensure_ascii=False, indent=2), encoding="utf-8")
     cmd = [
         sys.executable,
-        str(REPO_ROOT / "parity_compare.py"),
+        str(BACKTEST_ROOT / "parity_compare.py"),
         "--fetch-fresh",
         "--case",
         str(overrides_path),
@@ -32,8 +33,8 @@ def run_case(case: dict) -> dict:
         "--tracker-agent",
         "Codex",
     ]
-    proc = subprocess.run(cmd, cwd=REPO_ROOT, capture_output=True, text=True)
-    compare_path = REPO_ROOT / "reports" / "tracker_cases" / tracker_case / "parity_compare.json"
+    proc = subprocess.run(cmd, cwd=BACKTEST_ROOT, capture_output=True, text=True)
+    compare_path = BACKTEST_ROOT / "reports" / "tracker_cases" / tracker_case / "parity_compare.json"
     structured = {}
     if compare_path.exists():
         try:

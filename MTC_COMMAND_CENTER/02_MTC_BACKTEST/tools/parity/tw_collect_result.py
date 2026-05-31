@@ -9,8 +9,8 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-OUTPUT_DIR = REPO_ROOT / "01_MASTER TEMPLATE_V2" / "05_PARITY" / "_nightly"
+REPO_ROOT = Path(__file__).resolve().parents[4]
+OUTPUT_DIR = REPO_ROOT / "MTC_COMMAND_CENTER" / "01_MTC_PROJECT" / "05_PARITY" / "_nightly"
 CDP_URL = "ws://[::1]:9222/devtools/page/D0968DC0DD3140AE9F6A7D85CEDAEB8E"
 
 

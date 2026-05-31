@@ -1,6 +1,36 @@
 # Hardcoded Path Rewrite TODO
 
-No paths were rewritten in Phase 1. Barış must approve rewrite policy after copy verification.
+Status: **Phase 5 active scripts rewritten and smoke verified (2026-05-31)**.
+Below sections are kept as audit trail of what was rewritten.
+
+## Phase 5 outcome (2026-05-31)
+Rewritten in clean tree, parity smoke AUTO_002 PASS after rewrite:
+- RUN_MTC_BACKTEST.ps1 (absolute path)
+- run_pinets.mjs, validate_syntax.mjs (`__dirname`-relative)
+- run_tracker_ready_cases.py, run_2025_audit.py (REPO_ROOT shift + path strings)
+- tools/parity/run_planned_cases.py, run_python_parity.py, build_case_queue.py,
+  read_tracker.py, tw_apply_case.py, tw_collect_result.py
+  (parents[2] → parents[4] + path strings)
+
+Smoke evidence: docs/migration_manifests/phase5_path_rewrite_smoke_AUTO_002.log
+
+## Deferred — QuantLens references (116 hits across 57 files)
+Bulk rewrite deferred because each anchor (MCC_ROOT.parent vs REPO_ROOT vs
+mcc_root.parent vs tpl_root vs root.parent) has different semantics and a
+naive string replace would create double-MTC_COMMAND_CENTER paths.
+
+Fix on demand when a specific QuantLens script is invoked. Most hits are in
+one-shot research batch scripts that already produced their evidence and will
+not be re-run. Active code that would need rewrite:
+- MTC_COMMAND_CENTER/11_TRIAGE/*.py (5 file)
+- MTC_COMMAND_CENTER/03_QUANTLENS/tools/*.py (~5 file)
+- MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/api/mcc_readonly/*.py (~6 file)
+
+Full list: docs/migration_manifests/phase2_quantlens_06_quantlens_lab_hits.csv
+
+---
+
+## Phase 1 original five (rewritten in Phase 2 by Codex)
 
 ## add_htf_cols.py
 | Line | Matched path | Current text | Proposed clean mapping |

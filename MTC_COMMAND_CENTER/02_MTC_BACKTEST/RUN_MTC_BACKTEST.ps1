@@ -1,4 +1,4 @@
-Set-Location "C:\LAB\tradingview-lab\mtc_backtest"
+Set-Location "C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\02_MTC_BACKTEST"
 
 # Activate venv
 . .\venv\Scripts\Activate.ps1

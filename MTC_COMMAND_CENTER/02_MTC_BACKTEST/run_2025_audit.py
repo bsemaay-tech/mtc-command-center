@@ -24,12 +24,13 @@ from openpyxl.utils import get_column_letter
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-REPO_ROOT = Path(__file__).resolve().parent
-V2_PYTHON_ROOT = REPO_ROOT / "01_MASTER TEMPLATE_V2/00_PYTHON"
-PINE_SOURCE = REPO_ROOT / "01_MASTER TEMPLATE_V2/01_PINE/MTC_V2.pine"
-TRACKER_WORKBOOK = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASE_TRACKER.xlsx"
-TRACKER_CSV = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASES.csv"
-DATA_FILE = REPO_ROOT / "mtc_backtest/data/BTCUSDT_1h_20180701_20260308.parquet"
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPT_DIR.parents[1]
+V2_PYTHON_ROOT = REPO_ROOT / "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON"
+PINE_SOURCE = REPO_ROOT / "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine"
+TRACKER_WORKBOOK = REPO_ROOT / "MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/MTC_V2_PARITY_CASE_TRACKER.xlsx"
+TRACKER_CSV = REPO_ROOT / "MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/MTC_V2_PARITY_CASES.csv"
+DATA_FILE = REPO_ROOT / "MTC_COMMAND_CENTER/02_MTC_BACKTEST/data/BTCUSDT_1h_20180701_20260308.parquet"
 
 START_DATE = datetime(2025, 1, 1, tzinfo=timezone.utc)
 END_DATE = datetime(2025, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
@@ -40,7 +41,7 @@ from mtc_v2.core.runner import Runner  # noqa: E402
 from mtc_v2.core.types import Bar  # noqa: E402
 
 # Reuse helpers from parity_compare
-sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(SCRIPT_DIR))
 from parity_compare import (  # noqa: E402
     extract_supported_pine_defaults,
     load_tracker_rows,

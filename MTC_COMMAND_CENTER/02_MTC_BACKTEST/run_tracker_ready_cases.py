@@ -6,8 +6,9 @@ import sys
 from pathlib import Path
 
 
-REPO_ROOT = Path(__file__).resolve().parent
-TRACKER_CSV = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASES.csv"
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPT_DIR.parents[1]
+TRACKER_CSV = REPO_ROOT / "MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/MTC_V2_PARITY_CASES.csv"
 
 
 def load_ready_cases() -> list[dict[str, str]]:
@@ -39,7 +40,7 @@ def main() -> int:
             "--tracker-agent",
             "Codex",
         ]
-        result = subprocess.run(cmd, cwd=REPO_ROOT)
+        result = subprocess.run(cmd, cwd=SCRIPT_DIR)
         if result.returncode != 0:
             failures.append(case_id)
 

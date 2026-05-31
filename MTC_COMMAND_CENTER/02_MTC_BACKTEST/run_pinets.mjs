@@ -22,7 +22,7 @@ const require = createRequire(import.meta.url);
 const { PineTS, Provider } = require('./node_modules/pinets/dist/pinets.min.cjs');
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const PINE_PATH = resolve(__dirname, '01_MASTER TEMPLATE_V2/01_PINE/MTC_V2.pine');
+const PINE_PATH = resolve(__dirname, '../01_MTC_PROJECT/01_PINE/MTC_V2.pine');
 const REPORTS_DIR = resolve(__dirname, 'reports');
 mkdirSync(REPORTS_DIR, { recursive: true });
 

@@ -8,8 +8,8 @@ from typing import Any
 from openpyxl import load_workbook
 
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-TRACKER_PATH = REPO_ROOT / "01_MASTER TEMPLATE_V2" / "05_PARITY" / "MTC_V2_TW_EXPORT_CASE_TRACKER.xlsx"
+REPO_ROOT = Path(__file__).resolve().parents[4]
+TRACKER_PATH = REPO_ROOT / "MTC_COMMAND_CENTER" / "01_MTC_PROJECT" / "05_PARITY" / "MTC_V2_TW_EXPORT_CASE_TRACKER.xlsx"
 
 
 @dataclass(slots=True)
