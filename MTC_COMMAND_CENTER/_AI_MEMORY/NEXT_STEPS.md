@@ -1,16 +1,23 @@
 # NEXT_STEPS
 
 ## Immediate
-- Review Phase 1 verification output (`docs/migration_manifests/phase1_apply_summary.json`, `phase1_residual_inventory.csv`) — sign-off pending.
-- Decide hardcoded path rewrite policy for the 18 active scripts (Barış approval).
-- Decide CHECK 1 legacy re-freeze approach: NTFS DACL deny-write on `C:\LAB\tradingview-lab` vs accept divergence + document.
+- (none — migration follow-ups closed 2026-05-31)
 
 ## Waiting On
-- Barış approval for post-copy path rewrites.
-- Barış decision on legacy re-freeze (NTFS DACL).
+- (none)
 
-## Recently Closed (2026-05-31)
-- Phase 6 audit artifacts committed (`2a38d19`).
-- CHECK 9 manifest hash format fixed — full SHA256 + Phase 5 divergence notes (`c3e78f4`).
-- CHECK 8 xlsx-missing warning suppressed (CSV-only mode) — smoke re-verified PASS (`d35e620`).
-- `update_tracker.py` documented as deferred one-shot in hardcoded path TODO (`1b7caff`).
+## Recently Closed (2026-05-31, Phase 6 follow-ups)
+- A: audit artifacts committed (`2a38d19`).
+- B: legacy freeze policy ratified — accept + document, no NTFS DACL (`dcdf913`).
+- C: xlsx-missing warning suppressed in CSV-only mode + AUTO_002 smoke PASS (`d35e620`).
+- D: Phase 4 manifest full SHA256 + Phase 5 divergence notes (`c3e78f4`).
+- E: `update_tracker.py` documented as deferred one-shot (`1b7caff`).
+- F: Phase 1 verification reviewed — PASS; path rewrite policy ratified
+  (active set complete, deferred set fix-on-demand). See
+  `docs/migration_manifests/PATH_REWRITE_POLICY.md`.
+
+## Reference Documents
+- Migration audit: `docs/migration_manifests/phase6_audit_report.md`
+- Legacy freeze policy: `docs/migration_manifests/LEGACY_FREEZE_POLICY.md`
+- Path rewrite policy: `docs/migration_manifests/PATH_REWRITE_POLICY.md`
+- Per-script TODO: `MTC_COMMAND_CENTER/02_MTC_BACKTEST/hardcoded_path_rewrite_TODO.md`
