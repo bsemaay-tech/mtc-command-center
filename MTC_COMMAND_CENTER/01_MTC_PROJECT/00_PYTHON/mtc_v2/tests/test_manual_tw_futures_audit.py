@@ -6,8 +6,8 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
-AUDIT_SCRIPT = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/manual_tw_futures_audit.py"
-CASE_001_XLSX = REPO_ROOT / "01_MASTER TEMPLATE_V2/05_PARITY/case_001/MTC_V2_BINANCE_BTCUSDT.P_2026-04-03_827c5.xlsx"
+AUDIT_SCRIPT = REPO_ROOT / "01_MTC_PROJECT/05_PARITY/manual_tw_futures_audit.py"
+CASE_001_XLSX = REPO_ROOT / "01_MTC_PROJECT/05_PARITY/case_001/MTC_V2_BINANCE_BTCUSDT.P_2026-04-03_827c5.xlsx"
 
 
 def _load_audit_module():
