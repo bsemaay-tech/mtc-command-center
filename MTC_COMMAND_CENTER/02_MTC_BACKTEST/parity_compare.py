@@ -1528,14 +1528,18 @@ def _update_tracker_workbooks(
     update_values: dict[str, str],
 ) -> bool:
     candidates = _candidate_tracker_workbooks(tracker_case)
+    existing = [p for p in candidates if p.exists()]
+    if not existing:
+        # CSV-only mode: xlsx tracker not present in this tree. CSV is source of truth.
+        return True
     updated_any = False
-    for i, workbook_path in enumerate(candidates):
+    for i, workbook_path in enumerate(existing):
         result = _update_tracker_workbook(
             tracker_case=tracker_case,
             update_values=update_values,
             workbook_path=workbook_path,
-            emit_missing=(i == len(candidates) - 1),
-            emit_locked=(i == len(candidates) - 1),
+            emit_missing=(i == len(existing) - 1),
+            emit_locked=(i == len(existing) - 1),
         )
         updated_any = updated_any or result
     return updated_any
