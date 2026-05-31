@@ -28,6 +28,23 @@ not be re-run. Active code that would need rewrite:
 
 Full list: docs/migration_manifests/phase2_quantlens_06_quantlens_lab_hits.csv
 
+## Deferred — one-shot legacy scripts (outside Phase 6 active-18 list)
+
+Identified during Phase 6 audit follow-up (2026-05-31). These scripts hold
+absolute legacy paths but are not on the active runtime path:
+
+### update_tracker.py
+- Location: `MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/update_tracker.py`
+- Line 3: `xlsx_path = r"C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\05_PARITY\MTC_V2_PARITY_CASE_TRACKER.xlsx"`
+- Purpose: one-shot xlsx append for AUTO_047/048/049 case rows (already
+  executed, evidence committed in tracker history)
+- Reason for deferral: not invoked by any active runner; xlsx target file
+  itself absent from clean tree (see CHECK 8 fix — CSV is source of truth);
+  rewriting now would only produce dead code targeting a missing file
+- Action on next use: if this script is ever revived, rewrite `xlsx_path` to
+  the clean-tree equivalent (`MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/MTC_V2_PARITY_CASE_TRACKER.xlsx`)
+  AND first generate the xlsx target (currently CSV-only)
+
 ---
 
 ## Phase 1 original five (rewritten in Phase 2 by Codex)
