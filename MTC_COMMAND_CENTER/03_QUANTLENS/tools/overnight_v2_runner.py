@@ -221,6 +221,55 @@ def grid_andrew_connell_5m_intraday():
     return out  # 3*2*2*2 = 24
 
 
+def grid_q_trend_v1():
+    out = []
+    for trend_p in (50, 100, 200):
+        for atr_period in (14, 21):
+            for mult in (0.5, 1.0, 1.5):
+                for stop_lb in (10, 20, 40):
+                    out.append({"trend_period": trend_p, "atr_period": atr_period,
+                                "multiplier": mult, "use_ema": False, "ema_period": 3,
+                                "mode": "Type A", "stop_lookback": stop_lb, "direction": "long"})
+    return out  # 3*2*3*3 = 54
+
+
+def grid_q_trend_v1_short():
+    out = []
+    for trend_p in (50, 100, 200):
+        for atr_period in (14, 21):
+            for mult in (0.5, 1.0, 1.5):
+                for stop_lb in (10, 20, 40):
+                    out.append({"trend_period": trend_p, "atr_period": atr_period,
+                                "multiplier": mult, "use_ema": False, "ema_period": 3,
+                                "mode": "Type A", "stop_lookback": stop_lb, "direction": "short"})
+    return out  # 3*2*3*3 = 54
+
+
+def _grid_qqe():
+    """QQE Signals grid — rsi_len, sf (smoothing), qqe_factor, stop_atr, stop_lookback."""
+    out = []
+    for rsi_len in (14, 21, 34, 55):
+        for sf in (3, 5, 8):
+            for qqe_factor in (2.618, 4.238, 8.0):
+                for stop_atr in (1.0, 1.5, 2.0):
+                    out.append({"rsi_len": rsi_len, "sf": sf,
+                                "qqe_factor": qqe_factor, "stop_atr": stop_atr,
+                                "stop_lookback": 10})
+    return out  # 4*3*3*3 = 108
+
+
+def grid_q_trend_strong():
+    out = []
+    for trend_p in (125, 200):
+        for stop_lb in (10, 20, 40):
+            for adx_thresh in (25, 30, 35):
+                out.append({"trend_period": trend_p, "atr_period": 14,
+                            "multiplier": 1.0, "use_ema": True, "ema_period": 9,
+                            "mode": "Type A", "stop_lookback": stop_lb,
+                            "adx_threshold": adx_thresh, "direction": "long"})
+    return out  # 2*3*3 = 18
+
+
 # ============================================================
 # 19 new build_signals branches as a dispatcher
 # ============================================================
@@ -229,13 +278,79 @@ def _vcp_contraction_signal(df, contractions: int, atr_decay: float):
     """Detect a chain of <contractions> successive lower-amplitude swings."""
     close = df["close"]; high = df["high"]; low = df["low"]
     atr_s = df["atr_14"]
-    # Use a rolling window of N bars; compare amplitudes
     win = 10
     amp = (high.rolling(win, min_periods=win).max() - low.rolling(win, min_periods=win).min()) / atr_s.replace(0, np.nan)
     ok = pd.Series(True, index=df.index)
     for i in range(1, contractions + 1):
-        ok &= (amp.shift(i * win) > amp.shift((i - 1) * win) * (atr_decay ** -1))  # earlier amp > later amp
+        ok &= (amp.shift(i * win) > amp.shift((i - 1) * win) * (atr_decay ** -1))
     return ok.fillna(False)
+
+
+def _compute_adx(df, period=14):
+    high = df["high"]; low = df["low"]; close = df["close"]
+    prev_close = close.shift(1)
+    prev_high = high.shift(1); prev_low = low.shift(1)
+    tr = pd.concat([
+        high - low,
+        (high - prev_close).abs(),
+        (low - prev_close).abs()
+    ], axis=1).max(axis=1)
+    plus_dm = pd.Series(0.0, index=df.index)
+    minus_dm = pd.Series(0.0, index=df.index)
+    up_move = high - prev_high
+    down_move = prev_low - low
+    plus_dm = up_move.where((up_move > 0) & (up_move > down_move), 0.0)
+    minus_dm = down_move.where((down_move > 0) & (down_move > up_move), 0.0)
+    atr_n = mw.ema(tr, period)
+    atr_n_safe = atr_n.replace(0, np.nan)
+    plus_di = 100.0 * mw.ema(plus_dm, period) / atr_n_safe
+    minus_di = 100.0 * mw.ema(minus_dm, period) / atr_n_safe
+    di_sum = plus_di + minus_di
+    dx = 100.0 * (plus_di - minus_di).abs() / di_sum.replace(0, np.nan)
+    return mw.ema(dx, period).fillna(50.0)
+
+
+def _qtrend_signal(df, p, atr_p, mult, mode, use_ema, ema_period):
+    close = df["close"]; high = df["high"]; low = df["low"]; open_ = df["open"]
+    src = mw.ema(close, ema_period) if use_ema else close
+    h = src.rolling(p, min_periods=p).max()
+    l = src.rolling(p, min_periods=p).min()
+    d = h - l
+    atr_val = mw.atr(df, atr_p).shift(1)
+    epsilon = mult * atr_val
+    sb = (open_ < l + d / 8.0) & (open_ >= l)
+    ss = (open_ > h - d / 8.0) & (open_ <= h)
+    strong_buy = sb | sb.shift(1) | sb.shift(2) | sb.shift(3) | sb.shift(4)
+    strong_sell = ss | ss.shift(1) | ss.shift(2) | ss.shift(3) | ss.shift(4)
+
+    n = len(df)
+    m = np.full(n, np.nan)
+    change_up = np.zeros(n, dtype=bool)
+    change_down = np.zeros(n, dtype=bool)
+    for i in range(p, n):
+        prev_m = m[i - 1] if i > 0 and not np.isnan(m[i - 1]) else (h.iloc[i] + l.iloc[i]) / 2.0
+        upper = prev_m + epsilon.iloc[i]
+        lower = prev_m - epsilon.iloc[i]
+        cur_src = src.iloc[i]
+        prev_src = src.iloc[i - 1] if i > 0 else cur_src
+        if mode == "Type B":
+            cu = float(cur_src) > float(upper) and float(prev_src) <= float(upper)
+            cd = float(cur_src) < float(lower) and float(prev_src) >= float(lower)
+        else:
+            cu = (float(cur_src) > float(upper) and float(prev_src) <= float(upper)) or float(cur_src) > float(upper)
+            cd = (float(cur_src) < float(lower) and float(prev_src) >= float(lower)) or float(cur_src) < float(lower)
+        if cu:
+            m[i] = prev_m + epsilon.iloc[i]
+            change_up[i] = True
+        elif cd:
+            m[i] = prev_m - epsilon.iloc[i]
+            change_down[i] = True
+        else:
+            m[i] = prev_m
+    change_up_s = pd.Series(change_up, index=df.index)
+    change_down_s = pd.Series(change_down, index=df.index)
+    trend_line = pd.Series(m, index=df.index)
+    return change_up_s, change_down_s, strong_buy, strong_sell, trend_line
 
 
 def signals_new(strategy, df, params, daily_rsi_map=None):
@@ -451,6 +566,72 @@ def signals_new(strategy, df, params, daily_rsi_map=None):
         stop = low.rolling(int(params["stop_lookback"]), min_periods=1).min()
         return sig.fillna(False), stop
 
+    if strategy == "QL_QTREND_V1_ALL_SIGNALS":
+        change_up, change_down, _, _, _ = _qtrend_signal(
+            df, int(params["trend_period"]), int(params["atr_period"]),
+            float(params["multiplier"]), str(params["mode"]),
+            bool(params["use_ema"]), int(params["ema_period"]))
+        sig = change_up
+        stop = low.rolling(int(params["stop_lookback"]), min_periods=1).min()
+        return sig.fillna(False), stop
+
+    if strategy == "QL_QTREND_V1_SHORT":
+        change_up, change_down, _, _, _ = _qtrend_signal(
+            df, int(params["trend_period"]), int(params["atr_period"]),
+            float(params["multiplier"]), str(params["mode"]),
+            bool(params["use_ema"]), int(params["ema_period"]))
+        sig = change_down
+        stop = high.rolling(int(params["stop_lookback"]), min_periods=1).max()
+        return sig.fillna(False), stop, "short"
+
+    if strategy == "QL_QTREND_V2_STRONG_ADX":
+        change_up, change_down, strong_buy, _, _ = _qtrend_signal(
+            df, int(params["trend_period"]), int(params["atr_period"]),
+            float(params["multiplier"]), str(params["mode"]),
+            bool(params["use_ema"]), int(params["ema_period"]))
+        if "adx_14" not in df:
+            df["adx_14"] = _compute_adx(df, 14)
+        sig = change_up & strong_buy & (df["adx_14"] < int(params["adx_threshold"]))
+        stop = low.rolling(int(params["stop_lookback"]), min_periods=1).min()
+        return sig.fillna(False), stop
+
+    # ------------------------------------------------------------------
+    # QQE Signals (Colin Mack style) — vectorised, no lookahead
+    # Signal: smoothed RSI crosses above 50 (confirmed on previous bar)
+    # Stop: price ATR-based
+    # ------------------------------------------------------------------
+    if strategy == "QL_QQE_SIGNALS":
+        rsi_len = int(params["rsi_len"])
+        sf = int(params["sf"])          # smoothing factor
+        qqe_factor = float(params["qqe_factor"])
+        stop_atr_mult = float(params["stop_atr"])
+
+        rsi_val = mw.rsi(close, rsi_len)
+        # Double-smooth: first EMA(rsi, sf), then EMA(..., 2*sf-1)
+        sm1 = rsi_val.ewm(span=sf, adjust=False, min_periods=sf).mean()
+        smooth_rsi = sm1.ewm(span=2 * sf - 1, adjust=False, min_periods=2*sf-1).mean()
+
+        # ATR of smoothed RSI (measures RSI volatility)
+        tr_rsi = smooth_rsi.diff().abs()
+        atr_rsi = tr_rsi.ewm(span=2 * sf - 1, adjust=False, min_periods=2*sf-1).mean()
+
+        # Dynamic band width
+        band = atr_rsi * qqe_factor
+
+        # Signal: smoothed_rsi crossed above 50 (confirmed — use .shift(1))
+        prev_smooth = smooth_rsi.shift(1)
+        cross_above_50 = (smooth_rsi > 50) & (prev_smooth <= 50)
+        # Quality filter: band width below threshold (momentum not overextended)
+        band_norm = band / (smooth_rsi.replace(0, np.nan) + 1e-9)
+        not_overextended = band_norm < band_norm.rolling(20, min_periods=10).quantile(0.75)
+        sig = cross_above_50 & not_overextended
+
+        # Stop: price ATR-based
+        stop = close - stop_atr_mult * atr_s
+        swl = low.rolling(int(params["stop_lookback"]), min_periods=1).min()
+        stop = pd.concat([stop, swl], axis=1).max(axis=1)
+        return sig.fillna(False), stop
+
     return None  # not our strategy
 
 
@@ -478,6 +659,10 @@ NEW_GRIDS = {
     "QL_RS_PHASE_DAYS_PROSWING_OVERLAY": grid_rs_phase_days_overlay(),
     "QL_DEEPAK_259_RISK_OVERLAY": grid_deepak_259_risk_overlay(),
     "QL_DEEPAK_SNAPBACK_50SMA_INTRADAY": grid_deepak_snapback_50sma(),
+    "QL_QTREND_V1_ALL_SIGNALS": grid_q_trend_v1(),
+    "QL_QTREND_V1_SHORT": grid_q_trend_v1_short(),
+    "QL_QTREND_V2_STRONG_ADX": grid_q_trend_strong(),
+    "QL_QQE_SIGNALS": _grid_qqe(),
 }
 
 # Add to GRIDS dict

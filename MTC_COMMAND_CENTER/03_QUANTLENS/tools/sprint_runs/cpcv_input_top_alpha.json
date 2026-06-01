@@ -1,0 +1,711 @@
+{
+  "results": [
+    {
+      "strategy": "QL_OPEN_RANGE_5PCT_STOP_CHRISTIAN_5M",
+      "symbol": "OPUSDT",
+      "timeframe": "1h",
+      "data_rows": 34226,
+      "data_start": "2022-06-01 14:00:00+00:00",
+      "data_end": "2026-04-27 15:00:00+00:00",
+      "trial_count": 27,
+      "trial_sr_std": 0.025,
+      "trial_sr_max": 0.0266,
+      "boot_p_value": 0.0515,
+      "summary": {
+        "best_params": {
+          "or_bars": 3,
+          "stop_pct": 0.05,
+          "target_pct": 0.1
+        },
+        "fold_test_returns_pct": [
+          -12.339,
+          10.789,
+          -61.896
+        ],
+        "fold_test_trade_counts": [
+          54,
+          61,
+          64
+        ],
+        "fold_test_sharpes": [
+          -0.0248,
+          0.4473,
+          -1.7339
+        ],
+        "avg_fold_test_return_pct": -21.149,
+        "folds_positive": 1,
+        "n_folds": 3,
+        "lockbox_oos": {
+          "num_trades": 74,
+          "win_rate": 0.473,
+          "net_return_pct": 94.625,
+          "max_drawdown_pct": -39.692,
+          "expectancy_R": 0.2401,
+          "profit_factor": 1.459,
+          "avg_R": 0.2401,
+          "sharpe": 1.4407,
+          "sharpe_pt": 0.167483
+        },
+        "best_train_sharpe_pt": 0.026566
+      },
+      "classification": "PASS",
+      "dsr_p_value": 0.3346,
+      "dsr_robust": false,
+      "bh_fdr_survivor": false,
+      "robust_final": false
+    },
+    {
+      "strategy": "QL_DEEPAK_SNAPBACK_50SMA_INTRADAY",
+      "symbol": "OPUSDT",
+      "timeframe": "2h",
+      "data_rows": 17113,
+      "data_start": "2022-06-01 14:00:00+00:00",
+      "data_end": "2026-04-27 14:00:00+00:00",
+      "trial_count": 27,
+      "trial_sr_std": 0.022,
+      "trial_sr_max": -0.0096,
+      "boot_p_value": 0.002,
+      "summary": {
+        "best_params": {
+          "sma_len": 50,
+          "dist_atr": 3.0,
+          "stop_lookback": 5,
+          "target_atr": 0.5
+        },
+        "fold_test_returns_pct": [
+          3.576,
+          39.355,
+          -19.274
+        ],
+        "fold_test_trade_counts": [
+          24,
+          21,
+          22
+        ],
+        "fold_test_sharpes": [
+          0.2662,
+          1.1761,
+          -0.7691
+        ],
+        "avg_fold_test_return_pct": 7.886,
+        "folds_positive": 2,
+        "n_folds": 3,
+        "lockbox_oos": {
+          "num_trades": 34,
+          "win_rate": 0.5588,
+          "net_return_pct": 72.181,
+          "max_drawdown_pct": -12.832,
+          "expectancy_R": 0.6405,
+          "profit_factor": 2.167,
+          "avg_R": 0.6405,
+          "sharpe": 1.8906,
+          "sharpe_pt": 0.324234
+        },
+        "best_train_sharpe_pt": -0.009558
+      },
+      "classification": "PASS",
+      "dsr_p_value": 0.0,
+      "dsr_robust": false,
+      "bh_fdr_survivor": false,
+      "robust_final": false
+    },
+    {
+      "strategy": "QL_OPEN_RANGE_5PCT_STOP_CHRISTIAN_5M",
+      "symbol": "NEARUSDT",
+      "timeframe": "4h",
+      "data_rows": 12122,
+      "data_start": "2020-10-15 08:00:00+00:00",
+      "data_end": "2026-04-27 12:00:00+00:00",
+      "trial_count": 27,
+      "trial_sr_std": 0.0891,
+      "trial_sr_max": 0.1777,
+      "boot_p_value": 0.101,
+      "summary": {
+        "best_params": {
+          "or_bars": 1,
+          "stop_pct": 0.05,
+          "target_pct": 0.1
+        },
+        "fold_test_returns_pct": [
+          1.064,
+          -14.06,
+          -13.878
+        ],
+        "fold_test_trade_counts": [
+          25,
+          31,
+          31
+        ],
+        "fold_test_sharpes": [
+          0.1952,
+          -0.1948,
+          -0.1894
+        ],
+        "avg_fold_test_return_pct": -8.958,
+        "folds_positive": 1,
+        "n_folds": 3,
+        "lockbox_oos": {
+          "num_trades": 51,
+          "win_rate": 0.4314,
+          "net_return_pct": 61.999,
+          "max_drawdown_pct": -34.091,
+          "expectancy_R": 0.2574,
+          "profit_factor": 1.419,
+          "avg_R": 0.2574,
+          "sharpe": 1.1679,
+          "sharpe_pt": 0.163538
+        },
+        "best_train_sharpe_pt": 0.177724
+      },
+      "classification": "PASS",
+      "dsr_p_value": 0.3514,
+      "dsr_robust": false,
+      "bh_fdr_survivor": false,
+      "robust_final": false
+    },
+    {
+      "strategy": "QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK",
+      "symbol": "NEARUSDT",
+      "timeframe": "1h",
+      "data_rows": 48488,
+      "data_start": "2020-10-15 08:00:00+00:00",
+      "data_end": "2026-04-27 15:00:00+00:00",
+      "trial_count": 75,
+      "trial_sr_std": 0.0363,
+      "trial_sr_max": 0.0059,
+      "boot_p_value": 0.2905,
+      "summary": {
+        "best_params": {
+          "pullback_atr": 0.4,
+          "impulse_atr": 1.6,
+          "slope_window": 3
+        },
+        "fold_test_returns_pct": [
+          -13.06,
+          4.922,
+          -15.827
+        ],
+        "fold_test_trade_counts": [
+          49,
+          60,
+          57
+        ],
+        "fold_test_sharpes": [
+          -0.9921,
+          0.3252,
+          -0.7274
+        ],
+        "avg_fold_test_return_pct": -7.988,
+        "folds_positive": 1,
+        "n_folds": 3,
+        "lockbox_oos": {
+          "num_trades": 71,
+          "win_rate": 0.3662,
+          "net_return_pct": 46.012,
+          "max_drawdown_pct": -8.157,
+          "expectancy_R": 0.091,
+          "profit_factor": 1.732,
+          "avg_R": 0.091,
+          "sharpe": 1.6037,
+          "sharpe_pt": 0.190329
+        },
+        "best_train_sharpe_pt": 0.005862
+      },
+      "classification": "PASS",
+      "dsr_p_value": 0.0965,
+      "dsr_robust": false,
+      "bh_fdr_survivor": false,
+      "robust_final": false
+    },
+    {
+      "strategy": "QL_2026-05-01_US_EQUITIES_INTRADAY_LE_MODEL_BULL_FLAG",
+      "symbol": "NEARUSDT",
+      "timeframe": "1h",
+      "data_rows": 48488,
+      "data_start": "2020-10-15 08:00:00+00:00",
+      "data_end": "2026-04-27 15:00:00+00:00",
+      "trial_count": 75,
+      "trial_sr_std": 0.0363,
+      "trial_sr_max": 0.0059,
+      "boot_p_value": 0.298,
+      "summary": {
+        "best_params": {
+          "pullback_atr": 0.4,
+          "impulse_atr": 1.6,
+          "slope_window": 3
+        },
+        "fold_test_returns_pct": [
+          -13.06,
+          4.922,
+          -15.827
+        ],
+        "fold_test_trade_counts": [
+          49,
+          60,
+          57
+        ],
+        "fold_test_sharpes": [
+          -0.9921,
+          0.3252,
+          -0.7274
+        ],
+        "avg_fold_test_return_pct": -7.988,
+        "folds_positive": 1,
+        "n_folds": 3,
+        "lockbox_oos": {
+          "num_trades": 71,
+          "win_rate": 0.3662,
+          "net_return_pct": 46.012,
+          "max_drawdown_pct": -8.157,
+          "expectancy_R": 0.091,
+          "profit_factor": 1.732,
+          "avg_R": 0.091,
+          "sharpe": 1.6037,
+          "sharpe_pt": 0.190329
+        },
+        "best_train_sharpe_pt": 0.005862
+      },
+      "classification": "PASS",
+      "dsr_p_value": 0.0965,
+      "dsr_robust": false,
+      "bh_fdr_survivor": false,
+      "robust_final": false
+    },
+    {
+      "strategy": "QL_DEEPAK_153_FILTER_1D",
+      "symbol": "SOLUSDT",
+      "timeframe": "2h",
+      "data_rows": 24617,
+      "data_start": "2020-09-14 06:00:00+00:00",
+      "data_end": "2026-04-27 14:00:00+00:00",
+      "trial_count": 12,
+      "trial_sr_std": 0.0407,
+      "trial_sr_max": 0.1762,
+      "boot_p_value": 0.014,
+      "summary": {
+        "best_params": {
+          "sma_fast": 50,
+          "sma_slow": 150,
+          "trigger_ema": 21,
+          "stop_lookback": 5
+        },
+        "fold_test_returns_pct": [
+          49.944,
+          53.885,
+          30.161
+        ],
+        "fold_test_trade_counts": [
+          47,
+          49,
+          43
+        ],
+        "fold_test_sharpes": [
+          1.2309,
+          1.1544,
+          0.864
+        ],
+        "avg_fold_test_return_pct": 44.663,
+        "folds_positive": 3,
+        "n_folds": 3,
+        "lockbox_oos": {
+          "num_trades": 56,
+          "win_rate": 0.4821,
+          "net_return_pct": 56.391,
+          "max_drawdown_pct": -15.551,
+          "expectancy_R": 0.4307,
+          "profit_factor": 1.701,
+          "avg_R": 0.4307,
+          "sharpe": 1.5751,
+          "sharpe_pt": 0.210484
+        },
+        "best_train_sharpe_pt": 0.176189
+      },
+      "classification": "STRONG_PASS",
+      "dsr_p_value": 0.4105,
+      "dsr_robust": false,
+      "bh_fdr_survivor": false,
+      "robust_final": false
+    },
+    {
+      "strategy": "GEN_MACD_BULL_CROSS",
+      "symbol": "SOLUSDT",
+      "timeframe": "15m",
+      "data_rows": 196929,
+      "data_start": "2020-09-14 07:00:00+00:00",
+      "data_end": "2026-04-27 15:00:00+00:00",
+      "trial_count": 27,
+      "trial_sr_std": 0.0105,
+      "trial_sr_max": -0.0084,
+      "boot_p_value": 0.1315,
+      "summary": {
+        "best_params": {
+          "fast": 17,
+          "slow": 34,
+          "signal": 13
+        },
+        "fold_test_returns_pct": [
+          -5.286,
+          57.145,
+          46.998
+        ],
+        "fold_test_trade_counts": [
+          309,
+          299,
+          282
+        ],
+        "fold_test_sharpes": [
+          0.1187,
+          1.1544,
+          1.1826
+        ],
+        "avg_fold_test_return_pct": 32.952,
+        "folds_positive": 2,
+        "n_folds": 3,
+        "lockbox_oos": {
+          "num_trades": 423,
+          "win_rate": 0.3783,
+          "net_return_pct": 53.114,
+          "max_drawdown_pct": -27.224,
+          "expectancy_R": 0.0727,
+          "profit_factor": 1.156,
+          "avg_R": 0.0727,
+          "sharpe": 1.1541,
+          "sharpe_pt": 0.056115
+        },
+        "best_train_sharpe_pt": -0.012418
+      },
+      "classification": "PASS",
+      "dsr_p_value": 0.0,
+      "dsr_robust": false,
+      "bh_fdr_survivor": false,
+      "robust_final": false
+    },
+    {
+      "strategy": "GEN_RSI_OVERSOLD_REVERSAL",
+      "symbol": "LTCUSDT",
+      "timeframe": "1h",
+      "data_rows": 55208,
+      "data_start": "2020-01-09 08:00:00+00:00",
+      "data_end": "2026-04-27 15:00:00+00:00",
+      "trial_count": 44,
+      "trial_sr_std": 0.2495,
+      "trial_sr_max": 1.4939,
+      "boot_p_value": 0.0775,
+      "summary": {
+        "best_params": {
+          "rsi_len": 5,
+          "oversold": 35,
+          "recovery": 45
+        },
+        "fold_test_returns_pct": [
+          -18.214,
+          -24.793,
+          9.026
+        ],
+        "fold_test_trade_counts": [
+          186,
+          173,
+          184
+        ],
+        "fold_test_sharpes": [
+          -0.4447,
+          -0.6464,
+          0.4075
+        ],
+        "avg_fold_test_return_pct": -11.327,
+        "folds_positive": 1,
+        "n_folds": 3,
+        "lockbox_oos": {
+          "num_trades": 329,
+          "win_rate": 0.3799,
+          "net_return_pct": 95.81,
+          "max_drawdown_pct": -21.983,
+          "expectancy_R": 0.107,
+          "profit_factor": 1.23,
+          "avg_R": 0.107,
+          "sharpe": 1.5057,
+          "sharpe_pt": 0.083013
+        },
+        "best_train_sharpe_pt": 0.061377
+      },
+      "classification": "PASS",
+      "dsr_p_value": 0.0,
+      "dsr_robust": false,
+      "bh_fdr_survivor": false,
+      "robust_final": false
+    },
+    {
+      "strategy": "QL_2026-05-01_ANY_CANDLESTICK_7_PATTERN_PA_CONFLUENCE",
+      "symbol": "APTUSDT",
+      "timeframe": "1h",
+      "data_rows": 30878,
+      "data_start": "2022-10-19 02:00:00+00:00",
+      "data_end": "2026-04-27 15:00:00+00:00",
+      "trial_count": 60,
+      "trial_sr_std": 0.074,
+      "trial_sr_max": 0.3516,
+      "boot_p_value": 0.0825,
+      "summary": {
+        "best_params": {
+          "level_lookback": 200,
+          "tolerance_atr": 0.75,
+          "atr_stop_mult": 0.25
+        },
+        "fold_test_returns_pct": [
+          24.47,
+          0.232,
+          -3.705
+        ],
+        "fold_test_trade_counts": [
+          22,
+          21,
+          25
+        ],
+        "fold_test_sharpes": [
+          1.0446,
+          0.0879,
+          -0.1561
+        ],
+        "avg_fold_test_return_pct": 6.999,
+        "folds_positive": 2,
+        "n_folds": 3,
+        "lockbox_oos": {
+          "num_trades": 44,
+          "win_rate": 0.4318,
+          "net_return_pct": 29.838,
+          "max_drawdown_pct": -11.169,
+          "expectancy_R": 0.2893,
+          "profit_factor": 1.611,
+          "avg_R": 0.2893,
+          "sharpe": 1.3301,
+          "sharpe_pt": 0.200523
+        },
+        "best_train_sharpe_pt": 0.235713
+      },
+      "classification": "PASS",
+      "dsr_p_value": 0.0,
+      "dsr_robust": false,
+      "bh_fdr_survivor": false,
+      "robust_final": false
+    },
+    {
+      "strategy": "QL_SELL_RULES_MARKET_WIZARDS_OVERLAY",
+      "symbol": "ARBUSDT",
+      "timeframe": "4h",
+      "data_rows": 6787,
+      "data_start": "2023-03-23 12:00:00+00:00",
+      "data_end": "2026-04-27 12:00:00+00:00",
+      "trial_count": 36,
+      "trial_sr_std": 0.0569,
+      "trial_sr_max": 0.0317,
+      "boot_p_value": 0.4445,
+      "summary": {
+        "best_params": {
+          "trail_ma": 50,
+          "entry_ema": 13,
+          "ext_pct": 0.12,
+          "stop_lookback": 5
+        },
+        "fold_test_returns_pct": [
+          12.823,
+          5.029,
+          -1.288
+        ],
+        "fold_test_trade_counts": [
+          23,
+          24,
+          21
+        ],
+        "fold_test_sharpes": [
+          0.5616,
+          0.3034,
+          0.0504
+        ],
+        "avg_fold_test_return_pct": 5.521,
+        "folds_positive": 2,
+        "n_folds": 3,
+        "lockbox_oos": {
+          "num_trades": 50,
+          "win_rate": 0.34,
+          "net_return_pct": 36.678,
+          "max_drawdown_pct": -19.869,
+          "expectancy_R": 0.0315,
+          "profit_factor": 1.571,
+          "avg_R": 0.0315,
+          "sharpe": 1.1741,
+          "sharpe_pt": 0.166047
+        },
+        "best_train_sharpe_pt": 0.031747
+      },
+      "classification": "PASS",
+      "dsr_p_value": 0.2305,
+      "dsr_robust": false,
+      "bh_fdr_survivor": false,
+      "robust_final": false
+    },
+    {
+      "strategy": "QL_2026-05-01_SP500_5M_TWO_CANDLE_SENTIMENT_SR",
+      "symbol": "ADAUSDT",
+      "timeframe": "1h",
+      "data_rows": 54680,
+      "data_start": "2020-01-31 08:00:00+00:00",
+      "data_end": "2026-04-27 15:00:00+00:00",
+      "trial_count": 75,
+      "trial_sr_std": 0.0587,
+      "trial_sr_max": 0.2301,
+      "boot_p_value": 0.007,
+      "summary": {
+        "best_params": {
+          "level_lookback": 200,
+          "upper_third": 0.6,
+          "break_buf_atr": 0.0
+        },
+        "fold_test_returns_pct": [
+          -21.728,
+          32.684,
+          9.204
+        ],
+        "fold_test_trade_counts": [
+          25,
+          36,
+          43
+        ],
+        "fold_test_sharpes": [
+          -1.0021,
+          1.0572,
+          0.4433
+        ],
+        "avg_fold_test_return_pct": 6.72,
+        "folds_positive": 2,
+        "n_folds": 3,
+        "lockbox_oos": {
+          "num_trades": 53,
+          "win_rate": 0.4906,
+          "net_return_pct": 79.233,
+          "max_drawdown_pct": -14.156,
+          "expectancy_R": 0.4401,
+          "profit_factor": 1.721,
+          "avg_R": 0.4401,
+          "sharpe": 1.7016,
+          "sharpe_pt": 0.233734
+        },
+        "best_train_sharpe_pt": 0.186385
+      },
+      "classification": "PASS",
+      "dsr_p_value": 0.0147,
+      "dsr_robust": false,
+      "bh_fdr_survivor": false,
+      "robust_final": false
+    },
+    {
+      "strategy": "QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL",
+      "symbol": "LINKUSDT",
+      "timeframe": "1h",
+      "data_rows": 55016,
+      "data_start": "2020-01-17 08:00:00+00:00",
+      "data_end": "2026-04-27 15:00:00+00:00",
+      "trial_count": 75,
+      "trial_sr_std": 0.043,
+      "trial_sr_max": 0.1533,
+      "boot_p_value": 0.024,
+      "summary": {
+        "best_params": {
+          "pullback_atr": 0.5,
+          "impulse_atr": 1.6,
+          "slope_window": 3
+        },
+        "fold_test_returns_pct": [
+          16.153,
+          -3.802,
+          0.246
+        ],
+        "fold_test_trade_counts": [
+          44,
+          62,
+          83
+        ],
+        "fold_test_sharpes": [
+          1.0067,
+          -0.1477,
+          0.0918
+        ],
+        "avg_fold_test_return_pct": 4.199,
+        "folds_positive": 2,
+        "n_folds": 3,
+        "lockbox_oos": {
+          "num_trades": 121,
+          "win_rate": 0.3554,
+          "net_return_pct": 75.374,
+          "max_drawdown_pct": -16.308,
+          "expectancy_R": 0.3376,
+          "profit_factor": 2.038,
+          "avg_R": 0.3376,
+          "sharpe": 1.6365,
+          "sharpe_pt": 0.148772
+        },
+        "best_train_sharpe_pt": 0.089432
+      },
+      "classification": "PASS",
+      "dsr_p_value": 0.0683,
+      "dsr_robust": false,
+      "bh_fdr_survivor": false,
+      "robust_final": false
+    },
+    {
+      "strategy": "QL_DEEPAK_153_FILTER_1D",
+      "symbol": "ETHUSDT",
+      "timeframe": "2h",
+      "data_rows": 28121,
+      "data_start": "2019-11-27 06:00:00+00:00",
+      "data_end": "2026-04-27 14:00:00+00:00",
+      "trial_count": 12,
+      "trial_sr_std": 0.0228,
+      "trial_sr_max": 0.0685,
+      "boot_p_value": 0.002,
+      "summary": {
+        "best_params": {
+          "sma_fast": 50,
+          "sma_slow": 200,
+          "trigger_ema": 21,
+          "stop_lookback": 5
+        },
+        "fold_test_returns_pct": [
+          -19.78,
+          1.1,
+          17.184
+        ],
+        "fold_test_trade_counts": [
+          41,
+          51,
+          51
+        ],
+        "fold_test_sharpes": [
+          -1.2158,
+          0.1503,
+          0.8347
+        ],
+        "avg_fold_test_return_pct": -0.499,
+        "folds_positive": 2,
+        "n_folds": 3,
+        "lockbox_oos": {
+          "num_trades": 80,
+          "win_rate": 0.4875,
+          "net_return_pct": 72.762,
+          "max_drawdown_pct": -14.346,
+          "expectancy_R": 0.4661,
+          "profit_factor": 1.658,
+          "avg_R": 0.4661,
+          "sharpe": 1.8886,
+          "sharpe_pt": 0.211155
+        },
+        "best_train_sharpe_pt": 0.068493
+      },
+      "classification": "PASS",
+      "dsr_p_value": 0.3955,
+      "dsr_robust": false,
+      "bh_fdr_survivor": false,
+      "robust_final": false
+    }
+  ],
+  "note": "Filtered: top alpha cells for CPCV"
+}
