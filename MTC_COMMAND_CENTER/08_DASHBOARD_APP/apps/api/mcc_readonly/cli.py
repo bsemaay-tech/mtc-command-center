@@ -24,7 +24,8 @@ def main(argv: list[str] | None = None) -> int:
     _configure_stdout()
     parser = argparse.ArgumentParser(prog="mcc-readonly", description="MCC MVP-1 read-only API tools")
     parser.add_argument("--mcc-root", default=None, help="Path to MTC_COMMAND_CENTER root")
-    subparsers = parser.add_subparsers(dest="command", required=True)
+    # command optional: bare `python -m mcc_readonly` defaults to `serve` + opens the dashboard.
+    subparsers = parser.add_subparsers(dest="command", required=False)
 
     subparsers.add_parser("health", help="Print the MVP-1 health report")
     subparsers.add_parser("read-model", help="Print the read-model diagnostics")
@@ -48,6 +49,18 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
     root = Path(args.mcc_root).resolve(strict=False) if args.mcc_root else None
+
+    if args.command is None:
+        # No subcommand: launch the dashboard and open it in the browser.
+        host, port = "127.0.0.1", 8765
+        url = f"http://{host}:{port}/dashboard"
+        import threading
+        import webbrowser
+
+        threading.Timer(1.0, lambda: webbrowser.open(url)).start()
+        print(f"MTC Command Center -> {url}  (Ctrl+C to stop)")
+        serve(host=host, port=port, mcc_root=root)
+        return 0
 
     if args.command == "health":
         _print_json(build_health_report(root))

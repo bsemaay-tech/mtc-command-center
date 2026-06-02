@@ -7,6 +7,14 @@ Current objective: Dashboard'u sprint_runs sonuçlarına bağla (Option B). — 
 Current phase: Uygulama bitti. Backtest sekmesi MEGA sonuçlarıyla doluyor (32 run, doğrulandı).
 Current blockers: (none)
 
+## Claude Opus 4.8 2026-06-02 — "Dashboard açılmıyor" fix
+
+Kök neden: bare `python -m mcc_readonly` (step 5'in söylediği komut) argparse `required=True` subcommand yüzünden exit 2 veriyordu ("the following arguments are required: command"). Doğru komut `serve` idi → kullanıcı "açılmıyor" gördü.
+Fix:
+- `cli.py` — subparsers `required=False`. Komut yoksa otomatik `serve` (127.0.0.1:8765) + `webbrowser.open(/dashboard)`.
+- Yeni `08_DASHBOARD_APP/START_DASHBOARD.bat` — çift tık launcher (apps\api'ye cd + bare modül + pause).
+Doğrulama: py_compile PASS; bare invocation serve OK; `GET /dashboard` HTTP 200.
+
 ## Claude Opus 4.8 2026-06-02 — Dashboard ↔ MEGA entegrasyonu (Option B UYGULANDI)
 
 Plan uygulandı + canlı doğrulandı. 5 adım:
