@@ -8,16 +8,37 @@ a single lucky run.
 from __future__ import annotations
 
 import json
+import argparse
+import math
+import shutil
 from collections import Counter, defaultdict
 from pathlib import Path
 from statistics import mean, median, stdev
 
-RUNS_DIR = Path(__file__).resolve().parent / "overnight_runs"
-OUT_PATH = RUNS_DIR.parent / "OVERNIGHT_AGGREGATED_REPORT.md"
+DEFAULT_RUNS_DIR = Path(__file__).resolve().parent / "overnight_runs"
+DEFAULT_OUT_PATH = DEFAULT_RUNS_DIR.parent / "OVERNIGHT_AGGREGATED_REPORT.md"
+# Dashboard backtest_reader scans this dir for *_results.json (matrix WF format).
+BACKTEST_RESULTS_DIR = Path(__file__).resolve().parent.parent / "05_BACKTEST_RESULTS"
 
 
-def load_results():
-    files = sorted(RUNS_DIR.glob("MEGA_results_iter_*.json"))
+def export_to_backtest_results(files, dest_dir=BACKTEST_RESULTS_DIR):
+    """Copy aggregated MEGA iteration JSONs into the dashboard's
+    05_BACKTEST_RESULTS dir so backtest_reader picks them up.
+
+    Each file is renamed to end with `_results.json` because the reader's
+    glob is `*_results.json`; MEGA filenames otherwise wouldn't match.
+    """
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    count = 0
+    for src in files:
+        target = dest_dir / f"{src.stem}_results.json"
+        shutil.copy2(src, target)
+        count += 1
+    return count
+
+
+def load_results(runs_dir: Path):
+    files = sorted(runs_dir.glob("MEGA_results_iter_*.json"))
     return files
 
 
@@ -48,7 +69,14 @@ def iter_classifications(results_json):
 
 
 def main():
-    files = load_results()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--runs-dir", type=Path, default=DEFAULT_RUNS_DIR)
+    parser.add_argument("--out", type=Path, default=DEFAULT_OUT_PATH)
+    args = parser.parse_args()
+
+    runs_dir = args.runs_dir.resolve()
+    out_path = args.out.resolve()
+    files = load_results(runs_dir)
     print(f"Aggregating {len(files)} iteration result files...")
     if not files:
         print("No results found.")
@@ -126,7 +154,7 @@ def main():
                "True robustness = high iters_passed AND tight ret_stdev. Single-iter PASSes that don't repeat "
                "are likely noise.\n")
     out.append("## ROBUST winners (iters_passed >= 50% of runs)\n")
-    threshold = iter_total // 2
+    threshold = math.ceil(iter_total * 0.5)
     winners = [r for r in rows_summary if r["iters_passed"] >= threshold]
     if winners:
         out.append("| Strategy | Sym | TF | Pass×/N | Strong× | Ret median % | Ret stdev | Sharpe med | Boot p med | DSR p med | PF med | DD med % | Trades med |")
@@ -136,8 +164,8 @@ def main():
                 f"| `{r['strategy']}` | {r['sym']} | {r['tf']} | "
                 f"**{r['iters_passed']}/{iter_total}** | {r['iters_strong']} | "
                 f"{r['ret_median']:.2f} | {r['ret_stdev'] or 0:.2f} | "
-                f"{r['sharpe_median'] or 0:.2f} | {r['boot_p_median'] or 1:.4f} | "
-                f"{r['dsr_p_median'] or 1:.4f} | {r['pf_median'] or 0:.3f} | "
+                f"{r['sharpe_median'] or 0:.2f} | {r['boot_p_median'] if r['boot_p_median'] is not None else 1:.4f} | "
+                f"{r['dsr_p_median'] if r['dsr_p_median'] is not None else 1:.4f} | {r['pf_median'] or 0:.3f} | "
                 f"{r['max_dd_median'] or 0:.1f} | {r['trades_median'] or 0:.0f} |"
             )
     else:
@@ -152,7 +180,7 @@ def main():
             f"| `{r['strategy']}` | {r['sym']} | {r['tf']} | "
             f"{r['iters_passed']}/{iter_total} | {r['iters_strong']} | "
             f"{r['ret_median']:.2f} | {r['ret_stdev'] or 0:.2f} | "
-            f"{r['sharpe_median'] or 0:.2f} | {r['boot_p_median'] or 1:.4f} | "
+            f"{r['sharpe_median'] or 0:.2f} | {r['boot_p_median'] if r['boot_p_median'] is not None else 1:.4f} | "
             f"{r['pf_median'] or 0:.3f} | {r['max_dd_median'] or 0:.1f} | "
             f"{r['trades_median'] or 0:.0f} |"
         )
@@ -176,11 +204,14 @@ def main():
     for strat, cells_any, cells_robust, best in strat_rows:
         out.append(f"| `{strat}` | {cells_any} | **{cells_robust}** | {best['sym']} {best['tf']} | {best['ret_median']:.2f} |")
 
-    OUT_PATH.write_text("\n".join(out), encoding="utf-8")
-    print(f"Wrote {OUT_PATH}")
+    out_path.write_text("\n".join(out), encoding="utf-8")
+    print(f"Wrote {out_path}")
     print(f"  iters: {iter_total}")
     print(f"  distinct PASS cells: {len(rows_summary)}")
     print(f"  robust winners (>= {threshold}/{iter_total} iters): {len([r for r in rows_summary if r['iters_passed'] >= threshold])}")
+
+    exported = export_to_backtest_results(files)
+    print(f"Exported {exported} files to 05_BACKTEST_RESULTS")
 
 
 if __name__ == "__main__":

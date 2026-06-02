@@ -1,11 +1,85 @@
 # GLOBAL_HANDOFF
 
-Last updated: 2026-06-02 (gece oturumu)
-Updated by: Claude Sonnet 4.6
+Last updated: 2026-06-02 (dashboard entegrasyon UYGULANDI + doğrulandı)
+Updated by: Claude Opus 4.8
 Active project: TradingView-LAB / MTC Command Center
-Current objective: Gece oturumu — B&H baseline, CPCV/PBO, promotion assessment, QQE salvage, SP-001 CLI, SP-002 vectorbt.
-Current phase: Tüm gece taskları DONE. MEGA loop çalışıyor (deadline 06:00, PID 34672).
-Current blockers: None.
+Current objective: Dashboard'u sprint_runs sonuçlarına bağla (Option B). — DONE
+Current phase: Uygulama bitti. Backtest sekmesi MEGA sonuçlarıyla doluyor (32 run, doğrulandı).
+Current blockers: (none)
+
+## Claude Opus 4.8 2026-06-02 — Dashboard ↔ MEGA entegrasyonu (Option B UYGULANDI)
+
+Plan uygulandı + canlı doğrulandı. 5 adım:
+1. `00_CONFIG/paths.local.json` oluşturuldu (mcc_root=.../MTC_COMMAND_CENTER, mtc_v2_root=C:/LAB/Tradingview_LAB_CLEAN, reports_root). Zaten `MTC_COMMAND_CENTER/.gitignore:3` ile ignore'lu → commit edilmez.
+2. `03_QUANTLENS/05_BACKTEST_RESULTS/` zaten vardı (oluşturmaya gerek yok).
+3. `aggregate_overnight_iters.py` — `export_to_backtest_results()` eklendi. sprint_runs MEGA JSON'larını `05_BACKTEST_RESULTS/`'a `{stem}_results.json` adıyla KOPYALAR (reader glob `*_results.json` ile eşleşsin diye rename şart). Mevcut mantığa dokunulmadı. Çıktı: "Exported 16 files to 05_BACKTEST_RESULTS".
+4. `single_strategy_backtest.py` — workflow sonuna non-fatal aggregate hook eklendi (`--runs-dir sprint_runs`). Başarılı → "Dashboard updated".
+
+**KÖK NEDEN DÜZELTMESİ (plan dışıydı, gerekti):** `backtest_reader.py` `mtc_v2_root/06_QUANTLENS_LAB/05_BACKTEST_RESULTS` HARDCODE ediyordu — bu dizin CLEAN repo'da YOK. Plan'ın "reader zaten okuyabiliyor" varsayımı yanlıştı (format uyumlu, ama dizin değil). `registry_reader.py:21` zaten doğru pattern'i kullanıyor: `default_quantlens_root(root)` (03_QUANTLENS tercih, 06 fallback). `backtest_reader.py` aynı pattern'e çevrildi (`_collect_quantlens_results` + `_collect_detached_statuses` artık quantlens_root alıyor). Tek outlier oydu — diğer reader'lar dokunulmadı.
+
+**Doğrulama (canlı):**
+- py_compile PASS (2 script)
+- `aggregate --runs-dir sprint_runs` → 16 iter, 149 robust winner, 16 export
+- `build_backtest_status()` → 32 run, 16 MEGA surfaced, matrix format parse OK (3655 evals)
+- `python -m mcc_readonly snapshot` → backtest_status.summary total_runs=32, source=C:/LAB/Tradingview_LAB_CLEAN
+- HTTP `serve --port 8770` + `GET /api/snapshot` → 32 run, last=MEGA_results_iter_13. Server kapatıldı.
+
+**Değişen dosyalar:** `00_CONFIG/paths.local.json` (yeni, ignored), `03_QUANTLENS/tools/aggregate_overnight_iters.py`, `03_QUANTLENS/tools/single_strategy_backtest.py`, `08_DASHBOARD_APP/apps/api/mcc_readonly/backtest_reader.py`. Export JSON'lar (`05_BACKTEST_RESULTS/MEGA_*_results.json`) gitignore'lu — repo bloat yok. Henüz commit EDİLMEDİ (kullanıcı onayı bekliyor).
+
+## Claude Sonnet 4.6 2026-06-02 — Sabah oturumu (Loop tamamlandı + Dashboard analizi)
+
+### MEGA Overnight Loop — TAMAMLANDI
+- 16 iter başarılı: 3 sprint + 13 gece (2026-06-01 23:36 → 2026-06-02 06:33)
+- **149 robust winner** (≥8/16 iter PASS) — dün sabah 117 idi (+32)
+- 16/16 STRONG çift: `QL_DEEPAK_SNAPBACK_50SMA_INTRADAY/TRXUSDT/2h` (ret%101, PF=1.82), `QL_DEEPAK_153_FILTER_1D/SOLUSDT/2h` (ret%56, PF=1.70)
+- Aggregate çalıştırıldı → `03_QUANTLENS/tools/OVERNIGHT_AGGREGATED_REPORT.md`
+- 17 JSON sprint_runs'ta: `MEGA_results_iter_1..13_*.json`
+
+### Dashboard Bağlantı Sorunu — TESPİT EDİLDİ, FIX PLANLI
+Dashboard (08_DASHBOARD_APP) Audit ve Pipeline sekmelerinde gece sonuçları GÖRÜNMÜYOR.
+Kök neden 3 katmanlı:
+1. `paths.local.json` YOK → dashboard `paths.example.json`'daki eski `C:/LAB/tradingview-lab/` path'ini kullanıyor (silinmiş dizin)
+2. `backtest_reader.py` → `mtc_v2_root/06_QUANTLENS_LAB/05_BACKTEST_RESULTS/` okuyor (eski path)
+3. MEGA sonuçları `sprint_runs/` altında — dashboard bilmiyor
+
+**Onaylanan Fix Planı (Option B):**
+Yeni oturumda yapılacaklar:
+1. `paths.local.json` oluştur → doğru `C:/LAB/Tradingview_LAB_CLEAN/` path'i ver
+2. `aggregate_overnight_iters.py` → sonunda MEGA JSON'larını `03_QUANTLENS/05_BACKTEST_RESULTS/` 'e kopyala
+3. `single_strategy_backtest.py` → bitince aggregate'i otomatik çağır
+4. Dashboard yeniden başlatınca Audit/Pipeline güncel veri gösterir
+
+**Gerekli dosyalar:**
+- `00_CONFIG/paths.local.json` (yeni, oluşturulacak)
+- `03_QUANTLENS/tools/aggregate_overnight_iters.py` (değiştirilecek — export adımı eklenecek)
+- `03_QUANTLENS/tools/single_strategy_backtest.py` (değiştirilecek — post-run aggregate hook)
+- `03_QUANTLENS/05_BACKTEST_RESULTS/` (yeni dizin, oluşturulacak)
+
+**Bağlamlar (yeni oturumda lazım):**
+- `backtest_reader.py` `_is_matrix_walk_forward()`: `results` listesindeki her dict'te `classification` + `summary` (dict) varsa MEGA formatı tanıyor → MEGA JSON'lar doğrudan okunabilir, format uyumlu
+- `paths.example.json` içeriği: `mtc_v2_root = C:/LAB/tradingview-lab/01_MASTER TEMPLATE_V2` → GEÇERSİZ
+- Doğru path: `C:/LAB/Tradingview_LAB_CLEAN`
+
+## Claude Sonnet 4.6 2026-06-02 — LLM Audit Fixes
+
+Multi-model audit (ChatGPT 5.5 / DeepSeek V4 Pro / Grok Build 01 / Antigravity) incelendi.
+**Fixed this session:**
+- `aggregate_overnight_iters.py:148,164` — `or 1` → explicit `is None` check (0.0 p-value inversion fix)
+- `mega_walk_forward.py:698` — `hash()` → `hashlib.md5()` deterministic bootstrap seed
+- `mega_walk_forward.py:708` — PASS threshold `n_folds // 2` → `math.ceil(n_folds / 2)`
+- `mega_walk_forward.py:653,690` — tuple direction detection: `result[2] in {"long","short"}` guard
+- `audit_hardcoded_paths.py:31` — SKIP_DIRS'e `single_strategy_runs`, `cpcv_runs`, `pbo_runs` eklendi
+- `.gitignore` — 5 run output dizini eklendi (`overnight_runs`, `sprint_runs`, `single_strategy_runs`, `cpcv_runs`, `pbo_runs`)
+- `mega_walk_forward.py:523` — short R-multiple işareti (önceki oturum)
+- `mega_walk_forward.py:778` — `_atomic_write_text` mkdir guard (önceki oturum)
+- `ingest.py:30` — `EMBEDDED_TRANSCRIPT_MIN_SIZE` 500→5000 regression fix (önceki oturum)
+
+Later same session — Mimo v2.5 Free audit (10 run) incelendi:
+- `audit_reader.py` duplicate `_lookup_source_record` (419+872 byte-identical) → ikinci silindi
+- AUDIT-008 (rolling fold OOS 113-bar overlap), AUDIT-009 (bars_per_day=78 crypto), AUDIT-010 (ingest transcript re-write race) eklendi
+- Mimo false positives doğrulandı: DSR `cdf` doğru (sf değil), MEGA_WORKERS env cap'i atlıyor — bunlar fix edilmedi (gerçek değil)
+
+**Open audit items → NEXT_STEPS.md AUDIT-001..AUDIT-010**
 
 ## Claude Sonnet 4.6 2026-06-02 — Overnight session (T-01..T-08)
 
@@ -86,7 +160,7 @@ Current blockers: None.
   - **Final classification: FILTER_OVERLAY** — standalone edge yok, confirmation/guard filter olarak kullanılabilir. Salvage dosyası güncellendi: `03_SALVAGE_IDEAS/QL_2026-05-01_TV_BUYSELL_INDICATOR_PACK/` (triage, metadata, next_action).
   - Diğer 4 indikatör (QQE, UT Bot, Pivot SuperTrend, Lorentzian) SALVAGE_ONLY — henüz split edilmedi.
   - **Artifact'lar:** `single_strategy_runs/qtrend_optimize/`, `qtrend_short_v2/`, `qtrend_strong/`
-- **Modified files:** `11_TRIAGE/analyze_transcripts.py`, `08_DASHBOARD_APP/apps/api/mcc_readonly/read_model.py`, `08_DASHBOARD_APP/apps/web/index.html`, `08_DASHBOARD_APP/apps/web/app.js`, `03_QUANTLENS/tools/overnight_v2_runner.py`, `03_QUANTLENS/tools/mega_walk_forward.py`, `03_QUANTLENS/03_SALVAGE_IDEAS/QL_2026-05-01_TV_BUYSELL_INDICATOR_PACK/*`, `_AI_MEMORY/GLOBAL_HANDOFF.md`, `_AI_MEMORY/NEXT_STEPS.md`, `deepseek V4 Pro.md` (root).
+- **Modified files:** `11_TRIAGE/analyze_transcripts.py`, `08_DASHBOARD_APP/apps/api/mcc_readonly/read_model.py`, `08_DASHBOARD_APP/apps/web/index.html`, `08_DASHBOARD_APP/apps/web/app.js`, `03_QUANTLENS/tools/overnight_v2_runner.py`, `03_QUANTLENS/tools/mega_walk_forward.py`, `03_QUANTLENS/03_SALVAGE_IDEAS/QL_2026-05-01_TV_BUYSELL_INDICATOR_PACK/*`, `_AI_MEMORY/GLOBAL_HANDOFF.md`, `_AI_MEMORY/NEXT_STEPS.md`.
 
 - **IM-002 complete:** added `03_QUANTLENS/tools/audit_hardcoded_paths.py` and wired `09_DOCS/hooks/protected_paths_hook.py` to run it on staged code-like files. Verification: `py_compile` PASS; staged audit PASS; full default audit reports 2,488 existing legacy references after generated-result dirs are skipped.
 - **Sprint aggregation complete:** `aggregate_overnight_iters.py` now accepts `--runs-dir` and `--out`; sprint JSONs aggregated to `03_QUANTLENS/tools/sprint_runs/SPRINT_AGGREGATED_REPORT.md`. Result: 3 iters, 189 PASS cells, robust threshold corrected to `ceil(50%)` = 2/3.

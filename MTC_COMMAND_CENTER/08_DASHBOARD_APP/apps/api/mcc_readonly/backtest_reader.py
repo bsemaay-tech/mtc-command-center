@@ -5,7 +5,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from .paths import canonicalize, default_mcc_root, load_path_config, resolve_configured_path
+from .paths import (
+    canonicalize,
+    default_mcc_root,
+    default_quantlens_root,
+    load_path_config,
+    resolve_configured_path,
+)
 
 
 MAX_PARSE_BYTES = 6_000_000
@@ -21,9 +27,15 @@ def build_backtest_status(mcc_root: str | Path | None = None) -> dict[str, Any]:
     if mtc_v2_root is None:
         return _empty_status("mtc_v2_root_not_configured")
 
+    # Resolve the QuantLens root the same way registry_reader does: prefer the
+    # in-repo 03_QUANTLENS, falling back to the legacy mtc_v2_root/06_QUANTLENS_LAB.
+    quantlens_root = default_quantlens_root(root)
+    if not quantlens_root.exists():
+        quantlens_root = mtc_v2_root / "06_QUANTLENS_LAB"
+
     runs: list[dict[str, Any]] = []
-    runs.extend(_collect_quantlens_results(mtc_v2_root))
-    runs.extend(_collect_detached_statuses(mtc_v2_root))
+    runs.extend(_collect_quantlens_results(quantlens_root))
+    runs.extend(_collect_detached_statuses(quantlens_root))
     runs.extend(_collect_optimization_metrics(mtc_v2_root))
     runs.sort(key=lambda item: item.get("_sort_mtime", 0.0), reverse=True)
     runs = runs[:MAX_RUNS]
@@ -40,8 +52,8 @@ def build_backtest_status(mcc_root: str | Path | None = None) -> dict[str, Any]:
     }
 
 
-def _collect_quantlens_results(mtc_v2_root: Path) -> list[dict[str, Any]]:
-    root = mtc_v2_root / "06_QUANTLENS_LAB" / "05_BACKTEST_RESULTS"
+def _collect_quantlens_results(quantlens_root: Path) -> list[dict[str, Any]]:
+    root = quantlens_root / "05_BACKTEST_RESULTS"
     if not root.exists():
         return []
 
@@ -51,8 +63,8 @@ def _collect_quantlens_results(mtc_v2_root: Path) -> list[dict[str, Any]]:
     return runs
 
 
-def _collect_detached_statuses(mtc_v2_root: Path) -> list[dict[str, Any]]:
-    root = mtc_v2_root / "06_QUANTLENS_LAB" / "05_BACKTEST_RESULTS"
+def _collect_detached_statuses(quantlens_root: Path) -> list[dict[str, Any]]:
+    root = quantlens_root / "05_BACKTEST_RESULTS"
     if not root.exists():
         return []
     return [_detached_status_run(path, root) for path in sorted(root.glob("**/detached/run_status.json"))]
