@@ -1,11 +1,131 @@
 # GLOBAL_HANDOFF
 
-Last updated: 2026-06-02 (dashboard entegrasyon UYGULANDI + doğrulandı)
+Last updated: 2026-06-03 (SP-005 strategy-detail redesign plan v3 + terminal prototypes; earlier: overnight sweep + sabah raporu + gece-sonu kapanış akışı)
 Updated by: Claude Opus 4.8
 Active project: TradingView-LAB / MTC Command Center
-Current objective: Dashboard'u sprint_runs sonuçlarına bağla (Option B). — DONE
-Current phase: Uygulama bitti. Backtest sekmesi MEGA sonuçlarıyla doluyor (32 run, doğrulandı).
+Current objective: Gece optimizasyon sweep'i + sabah raporu + kapanış akışı kalıcılaştırma. — DONE
+Current phase: 21 iter / 0 crash / ~3.6M param-eval. 149 robust PASS, 8 down-market alpha, hepsi DSR-unconfirmed. Gece-sonu kapanış (lessons + dashboard upgrade) artık RUNBOOK §6.4 zorunlu adım.
 Current blockers: (none)
+
+## Claude Opus 4.8 2026-06-04 — MTC-Engine Validation step design (spec)
+
+New workflow stage designed (brainstorming complete, awaiting spec review). Problem:
+QuantLens funnel tests producers **naked** (raw signal, no MTC risk) until final
+integration — never sees behavior under MTC SL/TP/trailing first. Fix: insert
+**MTC-Engine Validation** stage between naked screening and parity-candidate.
+
+Approved decisions: reuse existing `MTCRunner` with a **light config profile**
+(filters/guards OFF, risk ON) — no engine fork; **manual SignalPlugin adapter** per
+producer; runs **shortlist only**; **Python plugin + standalone Pine producer adapter
++ producer-level parity**, `MTC_V2.pine` untouched (parity via existing
+`parity_oracles` infra, Production Safety preserved); **Approach A** = new bridge
+CLI `mtc_engine_validate.py` orchestrating existing engine + WF/stats/parity tools.
+
+All-additive: MTCRunner / risk modules / QL overnight tools / MTC_V2.pine NOT modified.
+New: `config/profiles/light_risk.py`, `modules/signals/producers/<name>.py`,
+`cli/mtc_engine_validate.py`, standalone Pine producer adapter, `MTC_ENGINE_VALIDATED`
+promotion level + MTC-Engine Gate in 07 RULES.
+
+Spec: `docs/superpowers/specs/2026-06-04-mtc-engine-validation-step-design.md`.
+Next: user reviews spec -> writing-plans skill for phased implementation plan.
+
+## Claude Opus 4.8 2026-06-04 — Triage 172 integration + re-triage pilot
+
+Clarified "why only 46": 46 = matured QuantLens strategies; 172 = upstream raw
+triage worklist (`11_TRIAGE/2026-05-30_rejected_worklist.xlsx`). xlsx was stale —
+reconciled with on-disk transcripts: **159/172 now have transcripts**, 89 HIGH,
+**90 eligible_for_retriage**. Old repo `C:\LAB\tradingview-lab` is behind (81) and
+has nothing CLEAN lacks — ignore it; CLEAN is canonical.
+
+- New `05_REGISTRY/TRIAGE_CANDIDATE_REGISTRY.json` (+ schema) via
+  `03_QUANTLENS/tools/build_triage_registry.py` (reconciles xlsx + live transcripts).
+- Surfaced in dashboard: **Strategy Research Lab -> Triage Worklist** section
+  (filters: quality/transcript/re-triage) + 3 overview metrics; reader updated.
+- Re-triage worklist `11_TRIAGE/retriage_worklist_2026-06-04.md` (90 rows) via
+  `gen_retriage_worklist.py`.
+- **Pilot re-triage (3 HIGH, review-first)**: Stg083 -> CANDIDATE ->
+  `03_QUANTLENS/strategies/STG047_brian_lee_smallcap_gap_mr_short` (metadata +
+  deterministic spec + transcript). Stg082 -> WIKI_ONLY, Stg087 -> DUPLICATE.
+  Dispositions: `11_TRIAGE/retriage_dispositions_2026-06-04.md`.
+- Generator improved: explicit `candidate_metadata.yaml` taxonomy now overrides
+  heuristics (`classification_confidence: explicit_metadata`).
+- Verify: registries idempotent (`--check` 0), validator OK, 35 API tests pass
+  (raised test HTTP timeout 5s->30s; cold snapshot build ~6s, pre-existing, not a
+  code regression — research_reader is 0.003s).
+- Next: RESEARCH-004 continue ~87 remaining in batches (mostly WIKI/SALVAGE/DUP expected).
+
+## Claude Opus 4.8 2026-06-03 — Strategy Research Lab infrastructure + UI tab + USER_INTAKE
+
+Repo prepared for repeatable AI strategy research (no new strategy created, no
+optimization run, MTC_V2.pine untouched).
+
+- **Registries** (`05_REGISTRY/`, schemas in `06_SCHEMAS/`): generated
+  `STRATEGY_RESEARCH_REGISTRY.json` (46), `INDICATOR_REGISTRY.json` (23),
+  `COMPONENT_REGISTRY.json` (78), `TAG_DICTIONARY.json`; empty-but-valid
+  `RESEARCH_RUN_/VARIANT_LOG_/RESEARCH_BACKTEST_REGISTRY.json`.
+- **Generator** `03_QUANTLENS/tools/build_strategy_research_registry.py`
+  (idempotent, `--check`), **validator** `validate_research_registries.py`,
+  **router** `route_user_intake.py`.
+- **Source of truth** stays per-strategy (`01_candidate_metadata.yaml` /
+  `producer_spec.json`); registries are generated — do not hand-edit.
+- **Docs**: `_AI_MEMORY/STRATEGY_COMPONENT_LIBRARY.md`,
+  `STRATEGY_RESEARCH_WORKFLOW.md`, `STRATEGY_CODE_REVIEW_CHECKLIST.md`;
+  templates `03_QUANTLENS/_templates/VARIANT_LOG_TEMPLATE.md` +
+  `STRATEGY_RESEARCH_REPORT_TEMPLATE.md`.
+- **Dashboard**: new **Strategy Research Lab** tab (`web/index.html` +
+  `web/app.js renderResearchLab`), backed by read-only
+  `apps/api/mcc_readonly/research_reader.py` → snapshot key `strategy_research`.
+  35 API tests pass; tab renders 46/23/78 + Missing-Metadata (43 review_needed).
+- **Intake**: `00_INBOX/USER_INTAKE/` drop folder; every strategy now has an
+  (empty) `STGxxx/source_intake/{transcripts,screenshots}/`.
+- **Follow-ups** in NEXT_STEPS: RESEARCH-001 retro-consolidation,
+  RESEARCH-002 review_needed classification, RESEARCH-003 full MTC_V2 indicators.
+
+## Claude Opus 4.8 2026-06-03 — Strategy Detail Page redesign plan v3 + terminal prototypes
+
+SP-005 (Strategy Detail Page redesign) — **plan only, no live app code written.**
+
+Plan at `03_QUANTLENS/_user_guide/11_STRATEGY_DETAIL_PAGE_REDESIGN_PLAN.md` now at **v3**.
+Barış selected the **terminal** visual direction and gave 5 structural rules, all folded in:
+1. **One scoring system** = the Scorecard. QuantLens gives commentary only and references
+   the gate scores — no double scoring. Commercial value / complexity are labels, not bars.
+2. **Verdict & Decision merged** into one top block (QuantLens is the decision authority).
+3. **Scorecard directly under** the verdict, **click-to-expand** gates (`<details>`).
+4. **Backtest Evidence = TradingView-tester-style cases** — video-settings case + optimized
+   best cases, each with settings·symbol·timeframe on one **standard window**; TV metrics +
+   equity + B&H + source-claim-vs-reproduced.
+5. **One prototype per journey stage** built.
+
+Key earlier finding (carried): QuantLens is **already a real pipeline** —
+`03_QUANTLENS/03_SALVAGE_IDEAS/<candidate>/01_candidate_metadata.yaml` already has
+`quantlens_decision`, `commercial_value_score`, `complexity_score`, repaint/lookahead/
+closed_source risk, `candidate_kind` (salvage categories). Dashboard readers ignore these
+today → the QuantLens Verdict section surfaces existing data via a future read-only
+`quantlens_reader.py` (Wave B). No new scoring math; consumes `scorecard_v2` (SP-004).
+
+Prototypes (throwaway, `08_DASHBOARD_APP/apps/web/prototypes/`, English-only, single-scroll,
+CSS **inlined** so they render over `file://`): `proto_B2_terminal.html` (Source-checked/
+blocked), `proto_stage_rules_extracted.html`, `proto_stage_testability.html`,
+`proto_stage_backtested.html` (TV cases), `proto_stage_promotion.html` (TV cases).
+Earlier `proto_A/B/C` + `proto_B2_clinical/editorial` superseded.
+
+Delivery split into 3 waves (plan §11): A = single-scroll UI/wording/terminology on existing
+data (ships first); B = `quantlens_reader.py` + QuantLens Verdict + Salvageable Ideas +
+conditional render matrix; C = `scorecard_v2` gate bars + TV-style backtest-case reader.
+**Wave A coding NOT yet authorized — awaiting Barış go-ahead.**
+
+## Claude Opus 4.8 2026-06-03 — Overnight 21-iter QuantLens sweep
+
+Gece çalışması: `tools/overnight_loop_2026-06-02_night.sh` (20w, 11h deadline cap, thread-pinned, heartbeat + crash-restart). **21 iter tamam, 0 crash**, ~3.6M param-evaluation (1M hedef 3.6×). Reçete = dün geceyle aynı (`overnight_v2_runner.py`, 43 strateji × 2031 param × 17 sym × 5 TF ≈ 172k config/iter).
+
+Sonuç: cross-iter aggregation (≥11/21, ceil majority) → **149 robust PASS cell · 89 buy&hold yendi · 8 down-market alpha** (varlık düşerken kazanan). AMA **tüm adaylar DSR p < 0.50** (crypto research eşiği) → kanıtlı edge yok, max seviye `PROMOTE_TO_FORWARD_PAPER_TRADE`. MTC_v2 entegrasyonu/Pine default değişikliği YOK.
+
+Top down-market: ANY_CANDLESTICK_7 APT 1h (alpha +110.9%), SP500_TWO_CANDLE ADA 1h (+109.7%), US_EQ_INTRADAY LINK 1h (+96.0%, PF 2.04).
+Rapor: `03_QUANTLENS/05_BACKTEST_RESULTS/MORNING_REPORT.md`. Aggregate: `tools/night_runs/AGGREGATE_night_2026-06-02.json`. Alpha: `05_BACKTEST_RESULTS/alpha_summary.json`.
+
+Not: `generate_morning_report.py` hâlâ legacy hardcoded OUTPUT_DIR okuyor (A1) — rapor veriden elle üretildi; generator fix `hardcoded_path_rewrite_TODO`'da bekliyor.
+
+**İş akışı kalıcılaştırıldı (RUNBOOK §6.4 "Gece Sonu Kapanış"):** loop DEADLINE sonrası 7 zorunlu adım — aggregate → alpha → morning report → **MTC Command Center upgrade + doğrula** → **lessons arşivle (`lessons_archive/OVERNIGHT_LESSONS_<date>.md` + index + §8 anti-pattern + CHANGELOG)** → handoff → loop durdur. Dashboard güncellenmemiş VEYA ders arşivlenmemişse gece tamamlanmamış sayılır. Bu gecenin dersi: `lessons_archive/OVERNIGHT_LESSONS_2026-06-03.md` (G1-G5, A16/A17). Dashboard doğrulandı: 53 run, en yeni `MEGA_results_iter_21` COMPLETED.
 
 ## Claude Opus 4.8 2026-06-02 — "Dashboard açılmıyor" fix
 
