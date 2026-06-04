@@ -50,13 +50,16 @@ This document is a standard, not a strategy. It does not start backtests; it gov
 7. Apply **buy-and-hold comparison** and compute **excess alpha**.
 8. Apply **bootstrap, BH-FDR, Deflated Sharpe, and multi-window** stability checks where available.
 9. **Document skipped datasets, NO_DATA, and INSUFFICIENT_TRADES** explicitly.
-10. **Classify** each candidate (§6) and assign a **promotion level** (§9). Do not promote into MTC_v2
+10. For shortlisted producers only, run **MTC-Engine Validation** through the existing `MTCRunner`
+    with the light-risk profile: filters/guards OFF, risk ON, buy&hold reported, producer-level
+    Python-vs-standalone-Pine parity documented. Do not edit `MTC_V2.pine` at this stage.
+11. **Classify** each candidate (§6) and assign a **promotion level** (§9). Do not promote into MTC_v2
     before passing all required gates (§8).
 
 ### MTC_v2 development order (preserved, governs promotion path)
 parity-first → Python prototype → bounded multi-symbol validation → walk-forward →
-robustness/sensitivity check → feature contract → Pine/Python parity → PineTS check →
-TradingView export final verification.
+robustness/sensitivity check → MTC-Engine Validation → feature contract →
+producer-level Pine/Python parity → PineTS check → TradingView export final verification.
 
 ---
 
@@ -163,6 +166,20 @@ enough history per symbol/timeframe; NO_DATA & INSUFFICIENT_DATA reported.
 **Statistical Gate** — bootstrap p-value computed (if available); BH-FDR status reported; Deflated Sharpe evaluated;
 failed candidates are **never** called "proven edge".
 
+**CPCV Gate** — when enough history exists, Combinatorial Purged Cross-Validation must be run as an additional
+statistical robustness check. Report group count, test-group combinations, purge/embargo settings, pass rate,
+median/min return, and trade-count failures. CPCV failure blocks promotion above research/sandbox status.
+
+**PBO Gate** — when CPCV split returns are available, estimate Probabilistic Backtest Overfitting via
+Combinatorially Symmetric Cross-Validation. Report PBO, median logit(lambda), selected in-sample winners,
+and their out-of-sample rank. High PBO blocks promotion.
+
+**MTC-Engine Validation Gate** — shortlisted naked producers must run through the existing `MTCRunner`
+using the light-risk profile. The report must prove filters/guards OFF, risk management ON, strategy
+return, buy&hold return, excess alpha, max drawdown, profit factor, trade count, win rate, artifact
+paths, and producer-level parity status. Parity here is raw-signal Python adapter vs standalone Pine
+producer adapter only; it is not full MTC lifecycle parity and does not touch `MTC_V2.pine`.
+
 **Execution Efficiency Gate** — parallelized when tasks are independent; worker count logged; runtime logged;
 start/progress/done/crash markers written; outputs resumable or auditable from disk.
 
@@ -181,7 +198,11 @@ paths, and decision rationale all documented.
 ## 9. Promotion Levels
 
 `REJECTED` → `KEEP_AS_RESEARCH_NOTE` → `PROMOTE_TO_SANDBOX` → `PROMOTE_TO_FORWARD_PAPER_TRADE` →
-`PROMOTE_TO_PARITY_CANDIDATE` → `APPROVED_FOR_MTC_V2_INTEGRATION`.
+`MTC_ENGINE_VALIDATED` → `PROMOTE_TO_PARITY_CANDIDATE` → `APPROVED_FOR_MTC_V2_INTEGRATION`.
+
+`MTC_ENGINE_VALIDATED` means the naked producer already passed cheap QuantLens screening, has a manual
+Python `SignalPlugin` adapter, survived the existing MTC Python risk engine with the light-risk profile,
+and has documented raw-signal parity status against a standalone Pine producer adapter.
 
 `APPROVED_FOR_MTC_V2_INTEGRATION` is reserved for candidates that are **statistically strong,
 benchmark-beating, OOS-stable, no-repaint, no-lookahead, token-efficiently documented, and parity-compatible**.
@@ -234,6 +255,24 @@ Top of every report: a compact **"What changed / What matters / Next action"** b
 - Report **single-worker vs parallel** execution, **worker count**, **runtime**, **completed/total/skipped jobs**.
 - When workers finish quickly and exit, report **final status from disk** — do not infer failure from an empty process list.
 - Outputs must be **resumable or auditable from disk** (JSON results + Markdown summary).
+
+---
+
+## 13. Multi-Sprint Aggregation Robustness Threshold
+
+When running N independent sprint iterations and aggregating with `aggregate_overnight_iters.py`:
+
+- **Robust winner threshold:** `iters_passed >= ceil(N * 0.5)`
+- A cell must pass in **more than half** of runs (ceiling, not floor).
+
+| N | Threshold | Meaning |
+|---|-----------|---------|
+| 1 | 1 | trivial — don't promote from single sprint |
+| 3 | 2 | must pass 2/3 runs |
+| 5 | 3 | must pass 3/5 runs |
+| 10 | 5 | must pass 5/10 runs |
+
+**Why ceil, not floor:** `N=3, threshold=1` (floor) lets a 1/3-pass cell through — single-pass noise. `ceil` requires strict majority. Changed 2026-06-01 from `//2` to `math.ceil(*0.5)`. Old aggregated reports (1/3 threshold) are superseded; re-run with current tool before using old robot results.
 
 ---
 

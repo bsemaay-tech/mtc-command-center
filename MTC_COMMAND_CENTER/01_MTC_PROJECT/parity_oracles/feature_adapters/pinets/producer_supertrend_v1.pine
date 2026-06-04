@@ -1,0 +1,77 @@
+//@version=6
+// PARITY PRECONDITION: this adapter computes Supertrend on RAW candles (no Heikin
+// Ashi). The Python golden producer (SupertrendProducerAdapter) defaults to
+// use_ha=True, so producer-level parity MUST be run with the Python side forced to
+// use_ha=false, e.g. --producer-params '{"use_ha": false}'. Otherwise the raw-signal
+// streams will not match and parity will report a false FAIL.
+indicator("producer_supertrend_v1 feature adapter", overlay=false)
+
+int st_atr_len = input.int(21, "ATR Length", minval=1)
+float st_factor = input.float(4.0, "Factor", minval=0.1)
+bool st_use_wicks = input.bool(true, "Use Wicks")
+
+var float st_prev_close_state = na
+var float st_prev_atr_state = na
+var float st_prev_upper_band_state = na
+var float st_prev_lower_band_state = na
+var int st_prev_direction_state = na
+var int st_tr_count = 0
+var float st_tr_sum = 0.0
+
+bool st_bar_valid = not na(open) and not na(high) and not na(low) and not na(close) and high >= low and open >= low and open <= high and close >= low and close <= high
+float st_line = na
+int st_direction = na
+bool raw_long = false
+bool raw_short = false
+
+if not st_bar_valid
+    st_line := st_prev_direction_state > 0 ? st_prev_lower_band_state : st_prev_upper_band_state
+    st_direction := st_prev_direction_state
+else
+    float st_prev_close_for_tr = na(st_prev_close_state) ? close : st_prev_close_state
+    float st_tr = math.max(high - low, math.max(math.abs(high - st_prev_close_for_tr), math.abs(low - st_prev_close_for_tr)))
+    float st_atr = na
+    if st_tr_count < st_atr_len
+        st_tr_count += 1
+        st_tr_sum += st_tr
+        if st_tr_count == st_atr_len
+            st_atr := st_tr_sum / st_atr_len
+    else
+        float st_prev_atr_for_calc = na(st_prev_atr_state) ? st_tr : st_prev_atr_state
+        st_atr := ((st_prev_atr_for_calc * (st_atr_len - 1)) + st_tr) / st_atr_len
+
+    if na(st_atr)
+        st_prev_close_state := close
+    else
+        float st_basis = (high + low) / 2.0
+        float st_basic_upper = st_basis + (st_factor * st_atr)
+        float st_basic_lower = st_basis - (st_factor * st_atr)
+        float st_next_upper = st_basic_upper
+        if not na(st_prev_upper_band_state)
+            st_next_upper := st_basic_upper < st_prev_upper_band_state or st_prev_close_state > st_prev_upper_band_state ? st_basic_upper : st_prev_upper_band_state
+        float st_next_lower = st_basic_lower
+        if not na(st_prev_lower_band_state)
+            st_next_lower := st_basic_lower > st_prev_lower_band_state or st_prev_close_state < st_prev_lower_band_state ? st_basic_lower : st_prev_lower_band_state
+        float st_high_eff = st_use_wicks ? high : close
+        float st_low_eff = st_use_wicks ? low : close
+        if na(st_prev_direction_state)
+            st_direction := 1
+        else if st_prev_direction_state < 0 and not na(st_prev_upper_band_state) and st_high_eff > st_prev_upper_band_state
+            st_direction := 1
+            raw_long := true
+        else if st_prev_direction_state > 0 and not na(st_prev_lower_band_state) and st_low_eff < st_prev_lower_band_state
+            st_direction := -1
+            raw_short := true
+        else
+            st_direction := st_prev_direction_state
+        st_line := st_direction > 0 ? st_next_lower : st_next_upper
+        st_prev_atr_state := st_atr
+        st_prev_upper_band_state := st_next_upper
+        st_prev_lower_band_state := st_next_lower
+        st_prev_direction_state := st_direction
+        st_prev_close_state := close
+
+plot(st_line, title="FEATURE__producer_supertrend_v1__indicator__supertrend_line", display=display.none)
+plot(float(st_direction), title="FEATURE__producer_supertrend_v1__indicator__direction", display=display.none)
+plot(raw_long ? 1.0 : 0.0, title="FEATURE__producer_supertrend_v1__signal__raw_long", display=display.none)
+plot(raw_short ? 1.0 : 0.0, title="FEATURE__producer_supertrend_v1__signal__raw_short", display=display.none)

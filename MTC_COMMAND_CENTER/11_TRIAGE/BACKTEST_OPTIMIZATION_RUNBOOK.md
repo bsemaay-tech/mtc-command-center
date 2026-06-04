@@ -104,6 +104,33 @@ Bu runbook **QuantLens overnight research** akışını anlatır. MTC V2 parity 
 
 ---
 
+### 1.1 MTC-Engine Validation for shortlisted producers
+
+Use this after cheap naked QuantLens screening, not during mass discovery. The goal is to test whether
+raw producer signals still have an edge when routed through the existing MTC Python risk engine.
+
+```bash
+cd MTC_COMMAND_CENTER/02_MTC_BACKTEST
+python -m src.cli.mtc_engine_validate ^
+  --producer supertrend ^
+  --data data/BTCUSDT_15m_20240101_20241231.parquet ^
+  --symbol BTCUSDT ^
+  --timeframe 15m ^
+  --output results/mtc_engine_validation_runs/supertrend_smoke
+```
+
+Required artifacts: `report.md`, `results.json`, `manifest.json`, `trades.csv`.
+
+Rules:
+- `MTCRunner` remains the engine; do not fork or duplicate it.
+- `src/config/profiles/light_risk.py` must prove filters/guards OFF and risk ON.
+- Producer adapters live in `src/modules/signals/producers/` and emit raw long/short signals only.
+- Standalone Pine producer adapters live in `01_MTC_PROJECT/parity_oracles/feature_adapters/pinets/`.
+- If a producer-level parity command exists, pass it with `--parity-command`; otherwise the report must say `NOT_RUN`.
+- This stage never edits `MTC_V2.pine` and never claims full lifecycle parity.
+
+---
+
 ## 2. PRE-FLIGHT CHECKLIST (her gece, sırayla)
 
 ### 2.1 Path & writability
@@ -388,6 +415,7 @@ Bu dosya değiştirilir. Her gece sonu:
 5. CHANGELOG bölümü buraya, son 5 değişiklik
 
 ### CHANGELOG
+- 2026-06-04 — Added MTC-Engine Validation operational stage: light-risk profile, manual producer adapters, bridge CLI, report/artifact contract, and raw-signal parity limitation.
 - 2026-06-04 — Overnight 20-iter 2. sıfır-crash gece (3.44M eval, Codex çalıştırdı). A18 (morning report down-market yanlış sayım) eklendi. Gece-sonu konvansiyonu Codex tarafından atlanmıştı, ertesi sabah elle tamamlandı. LESSONS_2026-06-04.
 - 2026-06-03 — Overnight 21-iter sıfır-crash gece. A16 (morning generator legacy path) + A17 (DSR search-space inflation → confirmation grid) eklendi. LESSONS_2026-06-03.
 - 2026-06-01 — İlk konsolidasyon. 5 ayrı runbook + 3 lessons dosyası sentezi. B1-B5 + A1-A15 eklendi.
