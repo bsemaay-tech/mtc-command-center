@@ -1,11 +1,30 @@
 # GLOBAL_HANDOFF
 
-Last updated: 2026-06-05 (SP-004 worst-window fresh sweep)
+Last updated: 2026-06-05 (SP-004 annualized Sharpe/Sortino enrichment)
 Updated by: Codex GPT-5
 Active project: TradingView-LAB / MTC Command Center
-Current objective: propagate Gate 2 worst-window drawdown evidence across the fresh scorecard set - DONE.
-Current phase: fresh sweep + CPCV/PBO + artifact/scorecard rebuild completed; ready for next metric blocker.
-Current blockers: full scorecard promotion remains blocked by missing intake, feasibility, production-readiness, annualized sharpe/sortino, param-stability, slippage, EMA benchmark, and regime metrics.
+Current objective: enrich Gate 2 annualized Sharpe/Sortino evidence - DONE.
+Current phase: DeepSeek delegated implementation audited by Codex; ready for fresh sweep propagation.
+Current blockers: full scorecard promotion remains blocked by missing intake, feasibility, production-readiness, param-stability, slippage, EMA benchmark, and regime metrics.
+
+## Codex GPT-5 + DeepSeek 2026-06-05 - SP-004 annualized Sharpe/Sortino
+Scope: delegated read-only feasibility investigation, then bounded additive output work to DeepSeek for `03_QUANTLENS/tools/mega_walk_forward.py` and `build_evaluation_artifact.py`; Codex audited the diff and validation. No signal logic, classification thresholds, old MEGA `sharpe`/`sharpe_pt`, Pine, MTC behavior, parity, schemas, generated artifacts, or live-trading surface changed.
+
+Implemented:
+- `SliceStats` now has defaulted `annualized_sharpe` and `annualized_sortino` fields.
+- `simulate_slice` records closed trade events and derives a daily strategy equity curve from calendar-day last equity, with exit-bar costs applied exactly once via existing `net`.
+- Annualized Sharpe uses daily returns with `sqrt(365)`; Sortino uses downside daily returns with conservative finite fallback `0.0` when undefined.
+- `build_evaluation_artifact.py` maps `metrics.sharpe` and `metrics.sortino` only from the new annualized lockbox fields. Older MEGA `sharpe`/`sharpe_pt` and any old `sortino` remain unused.
+
+Validation:
+- DeepSeek reported py_compile and synthetic checks PASS.
+- Codex audit PASS: py_compile, `git diff --check`, real one-cell MEGA run, artifact build, Gate2 score, schema validation, and backward-compatibility check on pre-annualized MEGA JSON.
+- Real one-cell result: existing lockbox fields unchanged; new lockbox `annualized_sharpe=1.307`, `annualized_sortino=2.6959`; artifact Sharpe/Sortino OK from annualized source paths; Gate2 Sharpe 5/5 and Sortino 4/4; schema errors 0.
+- Backward compatibility: rebuilding 38 artifacts from `worst_window_2026-06-05_283d198` produced Sharpe N_A 38/38 and Sortino N_A 38/38, proving old t-stat fields are not remapped.
+
+Carry-forward:
+- Run a fresh full sweep before dashboard scorecards show annualized Sharpe/Sortino globally.
+- Remaining Gate2 blockers after propagation: parameter stability, slippage model, EMA benchmark, and regime split.
 
 ## Codex GPT-5 2026-06-05 - SP-004 worst-window fresh sweep
 Scope: regenerated run artifacts under the committed worst-window drawdown code (`283d198`). No Pine, MTC behavior, parity, schema, live-trading surface, or signal logic changed.

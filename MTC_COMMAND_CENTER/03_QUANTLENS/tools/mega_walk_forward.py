@@ -454,6 +454,8 @@ class SliceStats:
     max_consecutive_losses: int
     top_trade_concentration: float
     equity_curve_health: float
+    annualized_sharpe: float = 0.0
+    annualized_sortino: float = 0.0
 
 def bootstrap_p_positive(R, n_boot=2000, seed=0):
     """One-sided bootstrap p-value that mean(R) <= 0. Lower = stronger positive edge."""
@@ -485,6 +487,7 @@ def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False, d
 
     trades_pct = []
     trades_R = []
+    trade_events = []
 
     i = s_idx + 20
     end = e_idx - 1
@@ -536,6 +539,14 @@ def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False, d
         net = raw - cost
         trades_pct.append(net * 100.0)
         trades_R.append((entry_price - exit_price) / risk if is_short else (exit_price - entry_price) / risk if risk > 0 else 0.0)
+        trade_events.append({
+            "entry_idx": entry_idx,
+            "exit_idx": exit_idx,
+            "entry_price": float(entry_price),
+            "exit_price": float(exit_price),
+            "net": float(net),
+            "is_short": is_short,
+        })
         i = max(exit_idx + 1, i + 1)
 
     if not trades_pct:
@@ -570,6 +581,60 @@ def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False, d
     _peak = np.maximum.accumulate(eq)
     equity_health = round(float((eq >= _peak).mean()), 4)
     # --- end SP-004 ---
+
+    # --- Gate-2: daily-equity-based annualized Sharpe & Sortino ---
+    annualized_sharpe = 0.0
+    annualized_sortino = 0.0
+    if trade_events:
+        n_bars_slice = e_idx - s_idx
+        cl_slice = cl[s_idx:e_idx]
+        slice_dates = df["date"].iloc[s_idx:e_idx].to_numpy()
+        equity = np.ones(n_bars_slice)
+        # Map each bar to its trade event index (non-overlapping)
+        active_trade = [-1] * n_bars_slice
+        for ti, ev in enumerate(trade_events):
+            rel_entry = ev["entry_idx"] - s_idx
+            rel_exit = ev["exit_idx"] - s_idx
+            if rel_entry < 0:
+                rel_entry = 0
+            if rel_exit >= n_bars_slice:
+                rel_exit = n_bars_slice - 1
+            for cur in range(rel_entry, rel_exit + 1):
+                active_trade[cur] = ti
+        for i in range(1, n_bars_slice):
+            ti = active_trade[i]
+            if ti < 0:
+                equity[i] = equity[i - 1]
+                continue
+            ev = trade_events[ti]
+            rel_entry = ev["entry_idx"] - s_idx
+            rel_exit = ev["exit_idx"] - s_idx
+            if rel_entry < 0:
+                rel_entry = 0
+            eq_before = equity[rel_entry - 1] if rel_entry > 0 else 1.0
+            if i == rel_exit:
+                equity[i] = eq_before * (1.0 + ev["net"])
+            else:
+                if ev["is_short"]:
+                    equity[i] = eq_before * ev["entry_price"] / float(cl_slice[i])
+                else:
+                    equity[i] = eq_before * float(cl_slice[i]) / ev["entry_price"]
+        # Daily aggregation: last equity per calendar day
+        daily_eq_series = pd.Series(equity, index=slice_dates).groupby(level=0).last()
+        daily_equity = daily_eq_series.values
+        if len(daily_equity) > 1:
+            daily_ret = daily_equity[1:] / daily_equity[:-1] - 1.0
+            mu = float(np.mean(daily_ret))
+            std_daily = float(np.std(daily_ret, ddof=1))
+            if std_daily > 0:
+                annualized_sharpe = round(mu / std_daily * math.sqrt(365), 4)
+            down = daily_ret[daily_ret < 0]
+            if len(down) >= 2:
+                down_std = float(np.std(down, ddof=1))
+                if down_std > 0:
+                    annualized_sortino = round(mu / down_std * math.sqrt(365), 4)
+    # --- end Gate-2 ---
+
     stats = SliceStats(
         num_trades=len(trades_pct),
         win_rate=round(win_rate, 4),
@@ -583,6 +648,8 @@ def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False, d
         max_consecutive_losses=max_consec_losses,
         top_trade_concentration=top_trade_conc,
         equity_curve_health=equity_health,
+        annualized_sharpe=annualized_sharpe,
+        annualized_sortino=annualized_sortino,
     )
     return (stats, arr_R) if return_trades else stats
 

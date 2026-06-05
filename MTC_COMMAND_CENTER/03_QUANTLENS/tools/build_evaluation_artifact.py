@@ -292,20 +292,30 @@ def build_artifact(
         "mega:n/a",
     )
 
-    # 8. sharpe: N_A (MEGA lockbox sharpe is t-stat-like per-trade scaled, not annualized)
-    metrics["sharpe"] = _na(
-        "MEGA lockbox sharpe is a t-stat-like per-trade scaled value, NOT the annualized Sharpe the rubric scores; left N_A to avoid misrepresentation",
-        "mega:n/a",
-    )
+    # 8. sharpe: annualized from daily equity curve (Gate-2)
+    annualized_sharpe_val = lockbox.get("annualized_sharpe")
+    if annualized_sharpe_val is not None:
+        metrics["sharpe"] = _ok(
+            float(annualized_sharpe_val),
+            "mega:summary.lockbox_oos.annualized_sharpe",
+        )
+    else:
+        metrics["sharpe"] = _na(
+            "old MEGA sharpe is t-stat-like and not used; Gate-2 annualized_sharpe not yet computed",
+            "mega:summary.lockbox_oos.annualized_sharpe",
+        )
 
-    # 9. sortino: passthrough from lockbox
-    sortino_val = lockbox.get("sortino")
-    if sortino_val is not None:
-        metrics["sortino"] = _ok(sortino_val, "mega:summary.lockbox_oos.sortino")
+    # 9. sortino: annualized from daily equity curve (Gate-2)
+    annualized_sortino_val = lockbox.get("annualized_sortino")
+    if annualized_sortino_val is not None:
+        metrics["sortino"] = _ok(
+            float(annualized_sortino_val),
+            "mega:summary.lockbox_oos.annualized_sortino",
+        )
     else:
         metrics["sortino"] = _na(
-            "engine does not yet emit a sortino; left N_A",
-            "mega:summary.lockbox_oos.sortino",
+            "old lockbox sortino not used; Gate-2 annualized_sortino not yet computed",
+            "mega:summary.lockbox_oos.annualized_sortino",
         )
 
     # 10. equity_curve_health: passthrough from lockbox
