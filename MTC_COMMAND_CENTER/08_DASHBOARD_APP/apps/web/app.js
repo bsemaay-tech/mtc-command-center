@@ -411,6 +411,7 @@ function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
   const stgCode = row.stg_code || (auditRow && auditRow.stg_code) || '';
   const scorecard = row.scorecard || (auditRow && auditRow.scorecard) || null;
   const scorecardV2 = row.scorecard_v2 || (auditRow && auditRow.scorecard_v2) || null;
+  const scorecardV2Cases = row.scorecard_v2_cases || (auditRow && auditRow.scorecard_v2_cases) || [];
   const paperTrade = renderPaperTradeDetail(row.paper_trade_detail);
   const parityProof = renderParityProof(row.pinets_parity_proof);
   const directionalResearch = renderDirectionalResearch(row.directional_research);
@@ -424,7 +425,7 @@ function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
   ) || "No English strategy description is available yet.";
   const quantlens = findQuantlensCandidate(row, auditRow);
   const decision = buildWaveADecision(row, auditRow, mtcV2Row, scorecardV2, quantlens);
-  const scoreDetail = renderWaveAScorecard(scorecardV2, scorecard);
+  const scoreDetail = renderWaveAScorecard(scorecardV2, scorecard, scorecardV2Cases);
   const quantlensVerdict = renderQuantlensVerdict(quantlens);
   const taxonomy = renderStrategyTaxonomy(row, auditRow, producerSpecRaw, description);
   const journey = renderReviewJourney(row, auditRow, stages);
@@ -708,16 +709,30 @@ function renderVerdictDecision(decision) {
   `;
 }
 
-function renderWaveAScorecard(scorecardV2, legacyScorecard) {
+function renderWaveAScorecard(scorecardV2, legacyScorecard, scorecardV2Cases = []) {
   if (scorecardV2) {
-    const gates = Array.isArray(scorecardV2.gates) ? scorecardV2.gates : [];
+    const gateSummary = scorecardV2.gate_summary || {};
+    const gates = [
+      ["gate1", "Gate 1 Intake", scorecardV2.gate1],
+      ["gate1B", "Gate 1B MTC Feasibility", scorecardV2.gate1B],
+      ["gate2", "Gate 2 Backtest Evidence", scorecardV2.gate2],
+      ["gate3", "Gate 3 Production Readiness", scorecardV2.gate3],
+    ];
+    const promotable = gateSummary.promotable === true;
+    const blocking = Array.isArray(gateSummary.blocking) ? gateSummary.blocking : [];
     return `
       <section class="terminal-section scorecard-v2-section">
         <div class="terminal-section-head">
           <h4>Scorecard</h4>
-          <span class="terminal-badge ok">Gate based</span>
+          <span class="terminal-badge ${promotable ? "ok" : "amber"}">${promotable ? "Promotable" : "Not promotable"}</span>
         </div>
-        ${gates.length ? gates.map(renderGateRow).join("") : `<p class="muted-terminal">Gate scorecard data is present but no gate rows were provided.</p>`}
+        <p class="muted-terminal">Gate-based scorecard v2. Scores are shown only for gates whose source metrics are complete.</p>
+        ${renderScorecardCaseList(scorecardV2, scorecardV2Cases)}
+        <div class="chip-row">
+          <span class="terminal-chip">${escapeHtml(`Promotable: ${promotable ? "Yes" : "No"}`)}</span>
+          ${blocking.map((name) => `<span class="terminal-chip warn">${escapeHtml(`Blocking: ${statusText(name)}`)}</span>`).join("")}
+        </div>
+        ${gates.map(([key, label, gate]) => renderGateRow(key, label, gate)).join("")}
       </section>
     `;
   }
@@ -725,25 +740,81 @@ function renderWaveAScorecard(scorecardV2, legacyScorecard) {
     <section class="terminal-section scorecard-v2-section">
       <div class="terminal-section-head">
         <h4>Scorecard</h4>
-        <span class="terminal-badge muted">SP-004 pending</span>
+        <span class="terminal-badge muted">Missing artifact</span>
       </div>
-      <p><strong>Gate scorecard is not evaluated yet.</strong></p>
-      <p class="muted-terminal">The new gate-based scorecard will be available after SP-004 implementation. This page does not create scorecard_v2 math or invent gate scores.</p>
+      <p><strong>Scorecard not available.</strong></p>
+      <p class="muted-terminal">No enriched scorecard_v2 artifact is linked to this strategy yet. This page does not create scorecard math or invent gate scores.</p>
       ${legacyScorecard ? `<p class="muted-terminal">Legacy composite score is kept only in Technical Details for rollback and audit context.</p>` : ""}
     </section>
   `;
 }
 
-function renderGateRow(gate) {
-  const score = gate.score == null ? "N/A" : `${gate.score}/${gate.max || 100}`;
-  const label = gate.label || gate.name || gate.key || "Gate";
-  const status = gate.status || "NOT_EVALUATED";
+function renderScorecardCaseList(displayCard, cases) {
+  const allCases = Array.isArray(cases) && cases.length ? cases : [displayCard];
+  if (allCases.length <= 1) {
+    const label = [displayCard.symbol, displayCard.timeframe].filter(Boolean).join(" ");
+    return label ? `<p class="muted-terminal">Displayed case: ${escapeHtml(label)}.</p>` : "";
+  }
   return `
-    <details class="gate-row">
-      <summary><span>${escapeHtml(label)}</span><strong>${escapeHtml(score)}</strong><em>${escapeHtml(statusText(status))}</em></summary>
-      <p>${escapeHtml(gate.reason || gate.note || "No sub-criteria detail available yet.")}</p>
+    <div class="scorecard-case-list">
+      ${allCases.map((card) => {
+        const g2 = card.gate2 || {};
+        const status = g2.status || (card.gate_summary && card.gate_summary.statuses && card.gate_summary.statuses.gate2) || "UNKNOWN";
+        const score = scoreForGate(g2);
+        const active = card.strategy_id === displayCard.strategy_id ? " active" : "";
+        return `
+          <div class="scorecard-case${active}">
+            <span>${escapeHtml([card.symbol, card.timeframe].filter(Boolean).join(" ") || card.strategy_id || "Case")}</span>
+            <strong>${escapeHtml(score)}</strong>
+            <em>${escapeHtml(statusText(status))}</em>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderGateRow(key, label, gate) {
+  const safeGate = gate || {};
+  const status = safeGate.status || "NOT_EVALUATED";
+  const missing = gateMissingFields(safeGate);
+  const passLabel = safeGate.pass === true ? "Pass" : safeGate.pass === false ? "Fail" : "N/A";
+  const reason = Array.isArray(safeGate.incomplete_reasons) && safeGate.incomplete_reasons.length
+    ? safeGate.incomplete_reasons.slice(0, 6).join("; ")
+    : safeGate.reason || safeGate.note || "";
+  return `
+    <details class="gate-row gate-${escapeHtml(key)}" ${status === "INCOMPLETE" ? "open" : ""}>
+      <summary>
+        <span>${escapeHtml(label)}</span>
+        <strong>${escapeHtml(scoreForGate(safeGate))}</strong>
+        <em>${escapeHtml(statusText(status))} · ${escapeHtml(passLabel)}</em>
+      </summary>
+      ${reason ? `<p>${escapeHtml(reason)}</p>` : `<p class="muted-terminal">No blocking reason reported for this gate.</p>`}
+      ${missing.length ? `
+        <div class="missing-fields">
+          <span>Missing / not scored</span>
+          <ul>${missing.slice(0, 10).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+          ${missing.length > 10 ? `<p class="muted-terminal">${missing.length - 10} additional fields omitted in the compact view.</p>` : ""}
+        </div>
+      ` : `<p class="muted-terminal">No missing source fields reported.</p>`}
     </details>
   `;
+}
+
+function scoreForGate(gate) {
+  if (!gate || gate.status !== "OK" || gate.score == null) return "N/A";
+  return `${gate.score}/${gate.max || 100}`;
+}
+
+function gateMissingFields(gate) {
+  const rows = Array.isArray(gate.sub_scores) ? gate.sub_scores : [];
+  return rows
+    .filter((row) => row && (row.points_awarded == null || row.metric_status !== "OK"))
+    .map((row) => {
+      const source = row.source_metric || row.criterion || "unknown";
+      const status = row.metric_status || "NOT_SCORED";
+      return `${source} (${statusText(status)})`;
+    });
 }
 
 function renderStrategyTaxonomy(row, auditRow, producerSpec, description) {

@@ -19,6 +19,7 @@ from .pipeline_reader import build_candidate_pipeline
 from .registry_reader import build_strategy_registry
 from .research_reader import build_strategy_research
 from .quantlens_reader import build_quantlens
+from .scorecard_reader import attach_scorecards_to_rows, build_scorecards
 from .schema import validate_json_schema
 from .task_lifecycle import build_task_lifecycle
 
@@ -144,6 +145,13 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
         candidate_pipeline=candidate_pipeline,
         strategy_registry=strategy_registry,
     )
+    scorecards = build_scorecards(model["mcc_root"])
+    if isinstance(candidate_audit.get("rows"), list):
+        candidate_audit = dict(candidate_audit)
+        candidate_audit["rows"] = attach_scorecards_to_rows(candidate_audit["rows"], scorecards)
+    if isinstance(candidate_pipeline.get("candidates"), list):
+        candidate_pipeline = dict(candidate_pipeline)
+        candidate_pipeline["candidates"] = attach_scorecards_to_rows(candidate_pipeline["candidates"], scorecards)
     mtc_v2_readiness = build_mtc_v2_readiness(
         model["mcc_root"],
         candidate_pipeline=candidate_pipeline,
@@ -171,6 +179,7 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
         "strategy_registry": strategy_registry,
         "strategy_research": strategy_research,
         "quantlens": quantlens,
+        "scorecards": scorecards,
         "dashboard_config": files["dashboard_config"]["data"],
         "task_lifecycle": task_lifecycle,
         "transcript_reclassification": _load_transcript_reclassification(canonicalize(model["mcc_root"])),

@@ -1,11 +1,21 @@
 # GLOBAL_HANDOFF
 
-Last updated: 2026-06-05 (SP-004 Phase 3 + reader-side queue + SP-005 Wave B reader & UI card)
-Updated by: Claude
+Last updated: 2026-06-05 (SP-005 Wave C scorecard_v2 render)
+Updated by: Codex GPT-5
 Active project: TradingView-LAB / MTC Command Center
-Current objective: clear the no-approval reader-side queue (SP-004 Phase 3 scorers, morning-report path, SP-005 Wave B reader). — DONE
-Current phase: Confirmation done. Dar pre-registered grid DSR power'ı geri getirdi (0.0→0.34) ama hiçbir aday 0.50 geçmedi → STATISTICALLY_UNCONFIRMED. Promotion yok.
-Current blockers: (none)
+Current objective: render real scorecard_v2 gates in dashboard - DONE; keep non-promotable/incomplete state honest.
+Current phase: Wave C UI/API implemented and validated on local dashboard.
+Current blockers: full scorecard promotion remains blocked by missing intake, feasibility, production-readiness, annualized sharpe/sortino, regime, and benchmark metrics.
+
+## Codex GPT-5 2026-06-05 — SP-005 Wave C scorecard_v2 render
+Scope: implemented Wave C as a read-only dashboard consumer of real `scorecard_v2` artifacts. Added `08_DASHBOARD_APP/apps/api/mcc_readonly/scorecard_reader.py`, wired `read_model.py` to expose top-level `scorecards`, and attached `scorecard_v2` / `scorecard_v2_cases` to matching rows by base strategy id. Frontend `apps/web/app.js` now renders the actual composer shape (`gate1`, `gate1B`, `gate2`, `gate3`) with separate gate sections, promotable/blocking chips, symbol/timeframe cases, `N/A` for non-OK/null scores, and compact missing/not-scored fields. `styles.css` adds case/missing-field styling. No Pine, MTC behavior, parity, schema, or live-trading surface touched.
+
+Artifact state: generated real all-gate outputs with `score_all_gates.py --in-dir ../05_BACKTEST_RESULTS/enriched_metrics_2026-06-05/evaluation_artifacts --out-dir ../05_BACKTEST_RESULTS/enriched_metrics_2026-06-05/scorecard_v2`; 38 scorecard_v2 files, 0 promotable. Snapshot links 10 audit rows to scorecard_v2. All linked scorecards remain honestly INCOMPLETE/non-promotable because Gate 1/Gate 1B/Gate 3 envelopes are absent and Gate 2 still has N_A sharpe/sortino/regime/benchmark fields.
+
+Validation: gate tool py_compile PASS; corrected synthetic checks PASS (full OK -> 100/OK/pass, empty -> INCOMPLETE/null points, medium repaint -> Gate 1 score 98, REJECT_REPAINT blocks, no top-level blended `score`); real confirm-2026-06-04 all-gates 16/16 INCOMPLETE and 0 promotable; API `py_compile` PASS; dashboard API tests PASS (`35 passed, 1 subtest`); `node --check app.js` PASS; live browser check on `http://127.0.0.1:8765/dashboard` shows linked 8EMA scorecard gates/missing fields and unlinked VWAP missing-artifact fallback with no JS console errors. Browser screenshot capture timed out; functional browser checks passed.
+
+## Codex GPT-5 2026-06-05 — Hermes MTC memory import package
+Scope: created proposed Hermes memory import package only under `_HERMES_MEMORY_IMPORT/` (no copy/install into `$env:USERPROFILE\.hermes\memories`; no Pine/MTC/parity/backtest/dashboard changes). Files: `01_PROPOSED_HERMES_MEMORY/USER.md`, `MEMORY.md`, `02_PROJECT_CONTEXT/MTC_COMMAND_CENTER_CONTEXT.md`, `README.md`. Validation: exact marker-content PASS; counts USER 1270 / MEMORY 2070; no existing core USER/MEMORY found; awaiting Baris approval.
 
 ## Claude Opus 4.8 2026-06-05 — Confirmation (Option B) review + night-end closure
 

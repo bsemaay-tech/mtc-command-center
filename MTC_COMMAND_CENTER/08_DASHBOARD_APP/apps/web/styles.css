@@ -568,6 +568,64 @@ tr.row-click:hover { background: #f3f7fa; }
   font-style: normal;
 }
 
+.scorecard-case-list {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.scorecard-case {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid #1f4149;
+  border-radius: 8px;
+  background: #0b1c20;
+  padding: 8px 10px;
+  color: #d4e8eb;
+}
+
+.scorecard-case.active {
+  border-color: #2f7657;
+}
+
+.scorecard-case span,
+.scorecard-case strong,
+.scorecard-case em {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.scorecard-case em {
+  color: #8fa8ae;
+  font-style: normal;
+}
+
+.missing-fields {
+  margin-top: 10px;
+  border-top: 1px solid #1f4149;
+  padding-top: 8px;
+}
+
+.missing-fields span {
+  display: block;
+  color: #8fa8ae;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.missing-fields ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  color: #cbdde1;
+}
+
+.missing-fields li + li {
+  margin-top: 3px;
+}
+
 .journey-list {
   display: grid;
   gap: 8px;

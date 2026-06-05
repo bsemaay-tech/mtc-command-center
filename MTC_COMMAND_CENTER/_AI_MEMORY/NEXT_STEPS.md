@@ -90,6 +90,12 @@
 - Screenshot: `C:\tmp\hermes_desktop_final.png`.
 - Choose cost/routing policy before using Hermes for live agent sessions.
 
+### HERMES-004 | AWAITING APPROVAL | Install proposed MTC memory package into Hermes core memory [AI: Baris]
+- Package path: `_HERMES_MEMORY_IMPORT/`
+- Proposed target: `%USERPROFILE%\.hermes\memories\USER.md` + `MEMORY.md`
+- Current state: no existing USER.md/MEMORY.md found in Hermes core; directory exists.
+- Approval required before any copy/install.
+
 ## SP-005 Wave A status update (2026-06-04)
 
 ### SP-005 | DONE WAVE A | Strategy Detail Page Redesign [AI: Codex GPT-5]
@@ -105,9 +111,13 @@
 - UI DONE (2026-06-05, Claude): `apps/web/app.js` — `findQuantlensCandidate` (joins by candidate_id===row.id, confirmed all 3 match pipeline/audit rows), new `renderQuantlensVerdict` card (decision badge, stop-state banner, commercial/complexity/testability/instrument facts, risk chips, recommended next step), real `renderSalvageableIdeas` from `salvageable_ideas[]`, `buildWaveADecision` now surfaces the real QuantLens label. Section order Verdict→Scorecard→QuantLens Verdict→Taxonomy. `styles.css` adds `.quantlens-stop`. Verified live in the running dashboard (preview): QL strategy renders full card (Equilibrium: SALVAGE, 4/10, 4 components), non-QL strategy shows clean "Not in QuantLens" fallback, no JS error, `node --check` PASS. Not committed.
 - Carry-forward: stop-state banner code path (CLOSED_SOURCE_STOP/COMPLEXITY_OVERLOAD) is wired but unverified live (no on-disk candidate currently has a stop_state; all 3 are SALVAGE/no-stop).
 
-### SP-005 | OPEN WAVE C | scorecard_v2 and backtest evidence visuals [AI: Claude | depends on SP-004]
-- Wait for SP-004 to emit `scorecard_v2`; then render gate rows and TradingView-style backtest cases from real artifacts only.
-- Do not fake gate scores or invent unavailable metrics.
+### SP-005 | DONE WAVE C | scorecard_v2 gate render [AI: Codex GPT-5]
+- Implemented 2026-06-05 as read-only dashboard consumption of real `scorecard_v2` artifacts.
+- Added `mcc_readonly/scorecard_reader.py`; `read_model.py` now exposes top-level `scorecards` and attaches `scorecard_v2` / `scorecard_v2_cases` to matching audit/pipeline rows by base strategy id.
+- Generated 38 real all-gate scorecard_v2 files for `05_BACKTEST_RESULTS/enriched_metrics_2026-06-05/scorecard_v2`; snapshot currently links 10 audit rows.
+- `app.js` renders Gate 1 Intake, Gate 1B MTC Feasibility, Gate 2 Backtest Evidence, and Gate 3 Production Readiness separately; no blended score; null/non-OK scores display as `N/A`; missing/not-scored fields are visible; missing artifacts have a clean fallback.
+- Validation: API py_compile PASS, API tests PASS (`35 passed, 1 subtest`), `node --check app.js` PASS, browser check PASS for one linked scorecard row and one missing-artifact fallback row with no JS console errors.
+- Honest state: 38/38 scorecard_v2 are still non-promotable/INCOMPLETE because intake, feasibility, production-readiness, annualized sharpe/sortino, regime, and same-window benchmark fields are not available yet. This is expected and not a UI failure.
 
 ## MTC-Engine Validation step (2026-06-04)
 
