@@ -40,7 +40,14 @@
 - Claude audit (real 16 confirm-2026-06-04 eval artifacts + synthetic): py_compile PASS ×4; full-OK→100/OK/pass; empty→INCOMPLETE; gate1 MEDIUM-repaint→98; REJECT_REPAINT→FAIL; composer all-OK→promotable. **Real 16/16 = all gates INCOMPLETE, 0 pass, 0 promotable** — correct honest status (intake/feasibility/readiness artifacts not emitted yet). Inline fix: gate1b verdict PASS-under-REJECT_REPAINT → hard-fail override.
 - Carry-forward: these gates stay INCOMPLETE until writer artifacts exist (intake/feasibility for Gate1/1B; `production_readiness_artifact_v1` for Gate3; Gate2 metric-enrichment below). Scorers ready to score the moment those are emitted. Nothing committed.
 
-### SP-004-METRIC-ENRICHMENT | OPEN | MEGA lacks ~17 Gate-2 metrics [AI: Barış/Claude]
+### SP-004-METRIC-ENRICHMENT | PARTIAL DONE (uncommitted) | enrich builder + engine output [AI: Claude/DeepSeek | Barış approved 2026-06-05]
+- Barış approved 2026-06-05 (touches MTC strategy OUTPUT, not signal/Pine/parity logic). Done via DeepSeek dispatch + Claude audit.
+- **Builder (`build_evaluation_artifact.py`, Task A):** replaced the blanket-N_A block with honest per-metric derivation from data MEGA already emits — `return_pct_compound`, `recovery_factor`, `calendar_days` (from data_start/end), `multi_window_pass` (folds_positive==n_folds), `net_after_fees_pct` (cost already in net), `avg_trade_vs_cost` — plus forward-compatible passthrough for engine-emitted fields. **Integrity call (Claude): `sharpe`/`sortino` kept N_A** because MEGA's lockbox `sharpe` is a t-stat-like per-trade scaled value, NOT the annualized Sharpe the rubric scores — mapping it would inflate the gate. `param_stability_score`, `regime.*`, `long_short_ratio`, `net_after_slippage_pct` honestly N_A. Audit: rebuilt real 16 confirm artifacts, **0 schema errors** (Draft2020-12+$ref), values hand-verified; gate2 scores moved **22–43 → 42–60** (still INCOMPLETE, 0 pass, 0 fabricated — correct).
+- **Engine (`mega_walk_forward.py`, Task B):** additive OUTPUT only — added `max_consecutive_losses`, `top_trade_concentration`, `equity_curve_health` to `SliceStats`/`simulate_slice` (computed from the existing per-trade `arr`/`eq`; `asdict` auto-propagates into `lockbox_oos`). No existing field/value/trade-logic changed (verified: diff additive, formulas hand-checked mcl=1/conc=0.3333/health=0.6, import-failure is pre-existing/environmental on HEAD too). Builder passthrough will surface these on the **next** MEGA run.
+- **Still N_A until further work:** sharpe/sortino (need annualized definition or time-series equity), regime.* (no regime stage), benchmark.excess_alpha/beats_ema (needs B&H-on-same-window stage), worst_window_drawdown_pct, param_stability_score. Full Gate-2 PASS also needs a **fresh sweep** under the enriched engine (Barış OPS — not run here; existing artifacts built from old MEGA JSON so the 3 new engine metrics are still N_A in them).
+- **NOT COMMITTED (deliberate):** `mega_walk_forward.py` carries ~245/-50 of pre-existing uncommitted Batch A–J engine work; `build_evaluation_artifact.py` is untracked Batch G/H/J. Per the standing "leave Batch edits for Barış" rule, my enrichment rides on top uncommitted — Barış decides when to commit the combined engine/builder state.
+
+### SP-004-METRIC-ENRICHMENT-RUN | OPEN | fresh sweep under enriched engine [AI: Barış OPS]
 - **Finding:** all 149 cells score INCOMPLETE because MEGA/CPCV/PBO don't produce: sharpe, sortino, recovery_factor, worst_window_drawdown_pct, max_consecutive_losses, calendar_days, regime_coverage_count, top_trade_concentration, long_short_ratio, param_stability_score, multi_window_pass, net_after_fees_pct, net_after_slippage_pct, avg_trade_vs_cost, equity_curve_health, return_pct_compound, benchmark.excess_alpha_pct/beats_ema, regime.* (and CPCV only ran on a few cells → cpcv_pass_ratio mostly N_A).
 - To make Gate 2 fully scorable: enrich the backtest engine (mega_walk_forward) to emit these per-cell (OOS sharpe/sortino/recovery/regime split/benchmark), and run CPCV across all PASS cells. Backtest-side work — needs design + Barış. Until then INCOMPLETE is the correct honest status.
 
@@ -154,11 +161,17 @@
 
 ## Strategy Research Lab (infra eklendi 2026-06-03)
 
-### RESEARCH-001 | OPEN | Retro-consolidate scattered intake files [AI: Claude|Any]
-- Move existing intake/transcript files from `03_QUANTLENS/00_INBOX_REPORTS/`
-  and `03_QUANTLENS/03_SALVAGE_IDEAS/` into the matching strategy's
-  `STGxxx/source_intake/` (folders already created, currently empty).
-- Use `03_QUANTLENS/tools/route_user_intake.py` logic as a guide; document moves.
+### RESEARCH-001 | REVIEWED — BLOCKED (stale as written), do NOT mass-move [AI: Claude → Barış]
+- Reviewed 2026-06-05 (Claude). The literal task is unsafe/obsolete as written:
+  1. **`03_SALVAGE_IDEAS/` is now LIVE reader data** — `mcc_readonly/quantlens_reader.py` (SP-005 Wave B) parses those candidate dirs into the dashboard. Moving them WOULD BREAK the QuantLens Verdict card. Exclude from any move.
+  2. **`route_user_intake.py` targets a different inbox** (`00_INBOX/USER_INTAKE`, currently EMPTY — dry-run "nothing to route"), NOT `00_INBOX_REPORTS/`.
+  3. **`00_INBOX_REPORTS/` = 206 files in Turkish date-folders** (`1 Haziran`, `3 Mayıs`, `Transcrips`). Mapping each to one of 63 STG strategies needs per-file content judgment; auto-token-matching risks misfiling 206 files.
+- **Recommendation:** do NOT auto-move. If consolidation is wanted: (a) leave `03_SALVAGE_IDEAS` in place; (b) review `00_INBOX_REPORTS` in small human-confirmed batches, routing only files whose target STG is unambiguous; (c) extend `route_user_intake.py` to accept `00_INBOX_REPORTS` as a source only after a dry-run confirms matches. Left for Barış to greenlight a batch.
+
+### RESEARCH-003 | DONE | Full indicator inventory from MTC_V2.pine [AI: Claude]
+- Done 2026-06-05 (Claude), read-only. Extracted the MTC_V2 indicator set from `01_MTC_PROJECT/01_PINE/MTC_V2.pine` (2079 lines) via `ta.*` primitives + plot/variable titles — WITHOUT modifying the `.pine` and without ingesting the full 128K (token-efficient). Output: `05_REGISTRY/MTC_V2_INDICATOR_INVENTORY.md`.
+- Inventory: Supertrend (signal producer), MACD (+regime/cross/zero-dist/HTF variants), ADX/DMI, ATR (stops/targets/vol-floor), MA filter, MA slope, **McGinley Dynamic (new)**, **Choppiness (new)**, Donchian/Highest-Lowest, EMA/SMA/WMA/RMA, HTF trend/MACD, barssince. McGinley + Choppiness are the likely gaps vs the current 27-entry seed.
+- **Did NOT hand-edit `INDICATOR_REGISTRY.json`** (AGENTS.md: it is generator-produced). The inventory is a reference to feed the generator's curated seed when desired. Full per-gate semantic map (exact lengths/sources/conditions) deferred — needs a dedicated heavy `.pine` read.
 
 ### RESEARCH-002 | OPEN | Classification review for review_needed fields [AI: Claude|Barış]
 - 63 strategies have at least one `review_needed` placeholder after the 2026-06-04 re-triage refresh.
