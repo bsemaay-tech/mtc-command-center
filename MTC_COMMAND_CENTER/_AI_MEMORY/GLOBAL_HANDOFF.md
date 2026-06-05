@@ -1,11 +1,24 @@
 # GLOBAL_HANDOFF
 
-Last updated: 2026-06-05 (SP-004 Gate-2 buy-and-hold benchmark enrichment)
+Last updated: 2026-06-05 (SP-004 B&H benchmark fresh sweep)
 Updated by: Codex GPT-5
 Active project: TradingView-LAB / MTC Command Center
-Current objective: enrich Gate 2 benchmark evidence - same-window buy-and-hold benchmark DONE.
-Current phase: DeepSeek delegated implementation audited and corrected by Codex; ready for next metric blocker.
+Current objective: propagate Gate 2 B&H benchmark evidence across the fresh scorecard set - DONE.
+Current phase: fresh sweep + CPCV/PBO + artifact/scorecard rebuild completed; ready for next metric blocker.
 Current blockers: full scorecard promotion remains blocked by missing intake, feasibility, production-readiness, annualized sharpe/sortino, worst-window, param-stability, slippage, EMA benchmark, and regime metrics.
+
+## Codex GPT-5 2026-06-05 - SP-004 B&H benchmark fresh sweep
+Scope: regenerated run artifacts under the committed same-window B&H benchmark code (`7175ff6`). No Pine, MTC behavior, parity, schema, live-trading surface, or signal logic changed.
+
+Run: `03_QUANTLENS/05_BACKTEST_RESULTS/bh_benchmark_2026-06-05_7175ff6/`.
+- MEGA: 1700 cells, 8 workers, 807.5s; 31 PASS + 7 STRONG_PASS = 38 candidate cells; 1 BH-FDR survivor; 0 DSR-robust; 0 robust final.
+- Validation tail: CPCV `--v2`, PBO, 38 evaluation artifacts, 38 Gate-2 scorecards, 38 scorecard_v2 files.
+- Audit: 38/38 PASS+STRONG_PASS cells include `summary.buy_hold_lockbox`; 38/38 evaluation artifacts have B&H benchmark OK and `completeness.has_benchmark=true`; 38/38 artifacts schema-valid against `evaluation_artifact_v1`.
+- Result: Gate2 score range 38.59-69.0, mean 52.1; all 38 remain INCOMPLETE, 0 Gate2 pass, 0 all-gate promotable. Top cell: `QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL|LINKUSDT|1h` score 69.0.
+
+Carry-forward:
+- B&H is no longer a Gate2 blocker for the fresh scorecard set.
+- Remaining Gate2 blockers: annualized Sharpe/Sortino, worst-window drawdown, parameter stability, slippage model, EMA benchmark, and regime split.
 
 ## Codex GPT-5 + DeepSeek 2026-06-05 — SP-004 Gate-2 same-window buy-and-hold benchmark
 Scope: delegated bounded additive output work to DeepSeek for `03_QUANTLENS/tools/mega_walk_forward.py` and `build_evaluation_artifact.py`; Codex audited the diff and fixed two correctness details before accepting it. No signal logic, classification thresholds, Pine, MTC behavior, parity, schemas, generated artifacts, or live-trading surface changed.
