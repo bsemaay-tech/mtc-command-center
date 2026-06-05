@@ -649,6 +649,62 @@ def fold_feasibility(n_bars):
     return True, ""
 
 # ------------------------------------------------------------------
+# BUY-AND-HOLD BENCHMARK (same lockbox window)
+# ------------------------------------------------------------------
+def compute_buy_hold_lockbox(df, lockbox_start, lockbox_end):
+    """
+    Compute buy-and-hold stats for the same lockbox window used for lockbox_oos.
+    Convention: buy at open of the first tradable lockbox bar, hold until close
+    of the final lockbox bar (both prices from already-loaded df).  This mirrors
+    the lockbox window boundaries used by simulate_slice so the benchmark is
+    directly comparable.
+
+    Returns dict with:
+      buy_hold_return_pct      — compound percent return
+      buy_hold_max_drawdown_pct — positive percent drawdown (peak-to-trough)
+      buy_hold_ret_dd_ratio    — return / positive max drawdown (or return if dd=0 & ret>0)
+    """
+    if lockbox_end - lockbox_start < 2:
+        return {
+            "buy_hold_return_pct": 0.0,
+            "buy_hold_max_drawdown_pct": 0.0,
+            "buy_hold_ret_dd_ratio": 0.0,
+        }
+    entry_price = float(df["open"].iloc[lockbox_start])
+    exit_price = float(df["close"].iloc[lockbox_end - 1])
+    if entry_price <= 0:
+        return {
+            "buy_hold_return_pct": 0.0,
+            "buy_hold_max_drawdown_pct": 0.0,
+            "buy_hold_ret_dd_ratio": 0.0,
+        }
+
+    # Compound return percent
+    ret_pct = (exit_price / entry_price - 1.0) * 100.0
+
+    # Equity curve within lockbox window, including the entry baseline so an
+    # immediate close below the entry open counts as drawdown.
+    closes = df["close"].iloc[lockbox_start:lockbox_end].to_numpy(dtype=float)
+    eq = np.concatenate(([1.0], closes / entry_price))
+    peak = np.maximum.accumulate(eq)
+    dd = (eq / peak - 1.0).min()  # negative or zero
+    max_dd_pct = abs(dd) * 100.0  # positive percent
+
+    # ret_dd_ratio: return / positive max drawdown; avoid inf
+    if max_dd_pct > 0:
+        ratio = ret_pct / max_dd_pct
+    elif ret_pct > 0:
+        ratio = ret_pct  # conservative finite value when drawdown is zero
+    else:
+        ratio = 0.0
+
+    return {
+        "buy_hold_return_pct": float(round(ret_pct, 3)),
+        "buy_hold_max_drawdown_pct": float(round(max_dd_pct, 3)),
+        "buy_hold_ret_dd_ratio": float(round(ratio, 4)),
+    }
+
+# ------------------------------------------------------------------
 # WORKER
 # ------------------------------------------------------------------
 _MANIFEST = None
@@ -750,6 +806,10 @@ def _worker(job):
         seed = int(hashlib.md5(f"{strategy}|{symbol}|{tf}".encode()).hexdigest()[:8], 16) % (2**31)
         boot_p = bootstrap_p_positive(lb_R, n_boot=2000, seed=seed) if len(lb_R) >= MIN_TRADES_FOR_PASS else float("nan")
 
+        # Compute buy-and-hold benchmark for the same lockbox window
+        lockbox_start_idx = nb - int(nb * LOCKBOX_FRACTION)
+        bh_stats = compute_buy_hold_lockbox(df_b, lockbox_start_idx, nb)
+
         test_rets = [f["net_return_pct"] for f in best["fold_test"]]
         test_trades = [f["num_trades"] for f in best["fold_test"]]
         pos = sum(1 for r in test_rets if r > 0)
@@ -788,6 +848,7 @@ def _worker(job):
                 "folds_positive": pos,
                 "n_folds": n_folds,
                 "lockbox_oos": lb,
+                "buy_hold_lockbox": bh_stats,
                 "best_train_sharpe_pt": round(best["mean_train_sharpe_pt"], 6),
             },
             "classification": cls,

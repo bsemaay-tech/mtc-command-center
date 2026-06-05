@@ -403,19 +403,56 @@ def build_artifact(
 
     # ----- benchmark --------------------------------------------------------
     benchmark: Dict[str, Any] = {}
-    bh_fdr = mega_row.get("bh_fdr_survivor")
-    if bh_fdr is not None:
-        benchmark["beats_bh_risk_adjusted"] = _ok(
-            bool(bh_fdr), "mega:bh_fdr_survivor"
+
+    # Read buy_hold_lockbox if present (SP-004 Gate 2)
+    bh_lockbox = summary.get("buy_hold_lockbox") or {}
+    bh_return = bh_lockbox.get("buy_hold_return_pct")
+    bh_ratio = bh_lockbox.get("buy_hold_ret_dd_ratio")
+
+    # excess_alpha_pct: strategy lockbox net_return_pct - buy_hold_return_pct
+    strat_return = lockbox.get("net_return_pct")
+    excess_val = None
+    if strat_return is not None and bh_return is not None:
+        excess_val = round(strat_return - bh_return, 3)
+        benchmark["excess_alpha_pct"] = _ok(
+            excess_val,
+            "mega:derived(net_return_pct - buy_hold_return_pct)",
         )
     else:
-        benchmark["beats_bh_risk_adjusted"] = _na(
-            "bh_fdr_survivor missing from MEGA row", "mega:bh_fdr_survivor"
+        benchmark["excess_alpha_pct"] = _not_computed(
+            "strategy net_return_pct or buy_hold_return_pct missing",
+            "mega:derived",
         )
 
-    benchmark["excess_alpha_pct"] = _na(
-        "not produced by MEGA pipeline", "mega:n/a"
-    )
+    # beats_bh_risk_adjusted: strategy ret_dd_ratio > buy_hold_ret_dd_ratio
+    # AND excess_alpha_pct >= 0
+    strat_ret_dd_env = metrics.get("ret_dd_ratio")
+    if (
+        strat_ret_dd_env is not None
+        and strat_ret_dd_env.get("status") == "OK"
+        and bh_ratio is not None
+        and excess_val is not None
+    ):
+        beats = bool(
+            strat_ret_dd_env["value"] > bh_ratio and excess_val >= 0
+        )
+        benchmark["beats_bh_risk_adjusted"] = _ok(
+            beats,
+            "mega:derived(ret_dd_ratio > buy_hold_ret_dd_ratio AND excess_alpha_pct >= 0)",
+        )
+    else:
+        missing_parts = []
+        if strat_ret_dd_env is None or strat_ret_dd_env.get("status") != "OK":
+            missing_parts.append("strategy ret_dd_ratio")
+        if bh_ratio is None:
+            missing_parts.append("buy_hold_ret_dd_ratio")
+        if excess_val is None:
+            missing_parts.append("excess_alpha_pct")
+        benchmark["beats_bh_risk_adjusted"] = _not_computed(
+            f"missing inputs: {', '.join(missing_parts)}",
+            "mega:derived",
+        )
+
     benchmark["beats_ema_benchmark"] = _na(
         "not produced by MEGA pipeline", "mega:n/a"
     )
@@ -457,13 +494,19 @@ def build_artifact(
         missing.append("cpcv")
     if not pbo_ok:
         missing.append("pbo")
-    missing.append("benchmark")  # always
+    # benchmark is complete only when both excess_alpha_pct and beats_bh_risk_adjusted are OK
+    has_bench = (
+        benchmark["excess_alpha_pct"]["status"] == "OK"
+        and benchmark["beats_bh_risk_adjusted"]["status"] == "OK"
+    )
+    if not has_bench:
+        missing.append("benchmark")
     missing.append("regime")  # no regime stage in MEGA
 
     completeness: Dict[str, Any] = {
         "has_cpcv": cpcv_ok,
         "has_wfo": bool(n_folds_val > 0),
-        "has_benchmark": False,
+        "has_benchmark": has_bench,
         "missing": missing,
     }
 

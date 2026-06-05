@@ -1,11 +1,31 @@
 # GLOBAL_HANDOFF
 
-Last updated: 2026-06-05 (SP-005 Wave C scorecard_v2 render)
+Last updated: 2026-06-05 (SP-004 Gate-2 buy-and-hold benchmark enrichment)
 Updated by: Codex GPT-5
 Active project: TradingView-LAB / MTC Command Center
-Current objective: render real scorecard_v2 gates in dashboard - DONE; keep non-promotable/incomplete state honest.
-Current phase: Wave C UI/API implemented and validated on local dashboard.
-Current blockers: full scorecard promotion remains blocked by missing intake, feasibility, production-readiness, annualized sharpe/sortino, regime, and benchmark metrics.
+Current objective: enrich Gate 2 benchmark evidence - same-window buy-and-hold benchmark DONE.
+Current phase: DeepSeek delegated implementation audited and corrected by Codex; ready for next metric blocker.
+Current blockers: full scorecard promotion remains blocked by missing intake, feasibility, production-readiness, annualized sharpe/sortino, worst-window, param-stability, slippage, EMA benchmark, and regime metrics.
+
+## Codex GPT-5 + DeepSeek 2026-06-05 — SP-004 Gate-2 same-window buy-and-hold benchmark
+Scope: delegated bounded additive output work to DeepSeek for `03_QUANTLENS/tools/mega_walk_forward.py` and `build_evaluation_artifact.py`; Codex audited the diff and fixed two correctness details before accepting it. No signal logic, classification thresholds, Pine, MTC behavior, parity, schemas, generated artifacts, or live-trading surface changed.
+
+Implemented:
+- `mega_walk_forward.py` now computes `summary.buy_hold_lockbox` for the exact lockbox window: long-only buy at first lockbox open, hold to final lockbox close, with compound return, positive max drawdown, and finite return/DD ratio.
+- Codex audit fix: the B&H equity curve includes the entry baseline so an immediate close below entry counts as drawdown.
+- Codex audit fix: helper returns plain Python floats, not `numpy.float64`, to preserve JSON safety.
+- `build_evaluation_artifact.py` now emits `benchmark.excess_alpha_pct` as `strategy net_return_pct - buy_hold_return_pct` and `benchmark.beats_bh_risk_adjusted` as `strategy ret_dd_ratio > buy_hold_ret_dd_ratio AND excess_alpha_pct >= 0`, both `OK` only when real inputs exist. `benchmark.beats_ema_benchmark` remains `N_A`.
+- `completeness.has_benchmark` is now true only when the B&H benchmark fields are OK; otherwise `benchmark` remains in `missing`.
+
+Validation:
+- `python -m py_compile MTC_COMMAND_CENTER/03_QUANTLENS/tools/mega_walk_forward.py MTC_COMMAND_CENTER/03_QUANTLENS/tools/build_evaluation_artifact.py` PASS.
+- Synthetic helper smoke PASS: entry open 100, first close 80, final close 120 -> return 20.0%, max drawdown 20.0%, JSON-safe floats.
+- Synthetic builder smoke PASS: benchmark fields become OK and `has_benchmark=true` when B&H inputs exist.
+- Real one-cell audit run PASS: `QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL LINKUSDT 1h`, 1 worker, 4.3s, STRONG_PASS. New B&H fields: `buy_hold_return_pct=-22.615`, `buy_hold_max_drawdown_pct=73.96`, `buy_hold_ret_dd_ratio=-0.3058`. Built artifact benchmark OK: `excess_alpha_pct=97.989`, `beats_bh_risk_adjusted=true`; Gate2 score 56 but still INCOMPLETE because other fields remain unavailable.
+
+Carry-forward:
+- A fresh full sweep is required before the dashboard's 38 enriched scorecards show these benchmark fields globally.
+- Remaining Gate2 blockers are genuine: annualized Sharpe/Sortino definition/equity series, worst-window drawdown, parameter stability, slippage model, EMA benchmark, and regime split.
 
 ## Codex GPT-5 2026-06-05 — SP-005 Wave C scorecard_v2 render
 Scope: implemented Wave C as a read-only dashboard consumer of real `scorecard_v2` artifacts. Added `08_DASHBOARD_APP/apps/api/mcc_readonly/scorecard_reader.py`, wired `read_model.py` to expose top-level `scorecards`, and attached `scorecard_v2` / `scorecard_v2_cases` to matching rows by base strategy id. Frontend `apps/web/app.js` now renders the actual composer shape (`gate1`, `gate1B`, `gate2`, `gate3`) with separate gate sections, promotable/blocking chips, symbol/timeframe cases, `N/A` for non-OK/null scores, and compact missing/not-scored fields. `styles.css` adds case/missing-field styling. No Pine, MTC behavior, parity, schema, or live-trading surface touched.
