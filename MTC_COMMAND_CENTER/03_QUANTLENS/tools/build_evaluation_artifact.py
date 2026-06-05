@@ -286,11 +286,17 @@ def build_artifact(
             "mega:derived",
         )
 
-    # 7. param_stability_score: N_A (trial sharpe dispersion ≠ parameter stability)
-    metrics["param_stability_score"] = _na(
-        "trial sharpe dispersion is across trials, not the fold-level parameter stability the rubric scores; left N_A to avoid misrepresentation",
-        "mega:n/a",
-    )
+    # 7. param_stability_score: from MEGA summary enrichment when present; N_A otherwise
+    ps_val = summary.get("param_stability_score")
+    if ps_val is not None:
+        metrics["param_stability_score"] = _ok(
+            float(ps_val), "mega:summary.param_stability_score"
+        )
+    else:
+        metrics["param_stability_score"] = _na(
+            "param_stability_score not available (insufficient folds or no comparable params)",
+            "mega:summary.param_stability_score",
+        )
 
     # 8. sharpe: annualized from daily equity curve (Gate-2)
     annualized_sharpe_val = lockbox.get("annualized_sharpe")
@@ -476,18 +482,64 @@ def build_artifact(
             "mega:derived",
         )
 
-    benchmark["beats_ema_benchmark"] = _na(
-        "not produced by MEGA pipeline", "mega:n/a"
-    )
+    # beats_ema_benchmark: OK when EMA benchmark data exists; compare strategy vs EMA
+    ema_bench = summary.get("ema_benchmark_lockbox") or {}
+    ema_return = ema_bench.get("ema_return_pct")
+    ema_ret_dd = ema_bench.get("ema_ret_dd_ratio")
+    strat_ret = lockbox.get("net_return_pct")
+    strat_rdd_env = metrics.get("ret_dd_ratio")
+    if ema_return is not None and ema_ret_dd is not None and strat_ret is not None and strat_rdd_env is not None and strat_rdd_env.get("status") == "OK":
+        beats_ema = bool(strat_ret >= ema_return and strat_rdd_env["value"] > ema_ret_dd)
+        benchmark["beats_ema_benchmark"] = _ok(
+            beats_ema,
+            "mega:derived(net_return_pct >= ema_return_pct AND ret_dd_ratio > ema_ret_dd_ratio)",
+        )
+    else:
+        benchmark["beats_ema_benchmark"] = _na(
+            "not produced by MEGA pipeline", "mega:n/a"
+        )
 
     # ----- regime -----------------------------------------------------------
     regime: Dict[str, Any] = {}
-    for _rname in (
-        "regime_breakdown_present",
-        "weak_regime_identified",
-        "worst_regime_return_pct",
-    ):
-        regime[_rname] = _na("not produced by MEGA pipeline", "mega:n/a")
+    regime_data = summary.get("regime_analysis") or {}
+    if regime_data.get("regime_breakdown_present") is True:
+        regime["regime_breakdown_present"] = _ok(
+            True, "mega:summary.regime_analysis.regime_breakdown_present"
+        )
+        weak_regime = regime_data.get("weak_regime_identified")
+        if weak_regime is not None:
+            regime["weak_regime_identified"] = _ok(
+                weak_regime,
+                "mega:summary.regime_analysis.weak_regime_identified",
+            )
+        else:
+            regime["weak_regime_identified"] = _na(
+                "regime stage ran but no weak bucket had trades",
+                "mega:summary.regime_analysis.weak_regime_identified",
+            )
+        worst_regime = regime_data.get("worst_regime_return_pct")
+        if worst_regime is not None:
+            regime["worst_regime_return_pct"] = _ok(
+                worst_regime,
+                "mega:summary.regime_analysis.worst_regime_return_pct",
+            )
+        else:
+            regime["worst_regime_return_pct"] = _na(
+                "regime stage ran but no bucket had trades",
+                "mega:summary.regime_analysis.worst_regime_return_pct",
+            )
+        # Also update regime_coverage_count in metrics
+        metrics["regime_coverage_count"] = _ok(
+            regime_data.get("regime_coverage_count", 0),
+            "mega:summary.regime_analysis.regime_coverage_count",
+        )
+    else:
+        for _rname in (
+            "regime_breakdown_present",
+            "weak_regime_identified",
+            "worst_regime_return_pct",
+        ):
+            regime[_rname] = _na("not produced by MEGA pipeline", "mega:n/a")
 
     # ----- hard_flags -------------------------------------------------------
     # FIX 2: hard_flags values are BARE (string|null / boolean|null),
@@ -524,7 +576,8 @@ def build_artifact(
     )
     if not has_bench:
         missing.append("benchmark")
-    missing.append("regime")  # no regime stage in MEGA
+    if not regime_data.get("regime_breakdown_present"):
+        missing.append("regime")  # regime stage not run or no trade events
 
     completeness: Dict[str, Any] = {
         "has_cpcv": cpcv_ok,

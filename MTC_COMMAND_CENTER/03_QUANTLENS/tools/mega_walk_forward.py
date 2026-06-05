@@ -92,6 +92,22 @@ def atr(df, n):
     tr = pd.concat([df["high"]-df["low"], (df["high"]-pc).abs(), (df["low"]-pc).abs()], axis=1).max(axis=1)
     return tr.ewm(alpha=1/n, adjust=False, min_periods=n).mean()
 
+def adx(df, n=14):
+    """Compute ADX (Average Directional Index) — used for trend/range regime classification."""
+    pc = df["close"].shift(1)
+    tr = pd.concat([df["high"]-df["low"], (df["high"]-pc).abs(), (df["low"]-pc).abs()], axis=1).max(axis=1)
+    atr_n = tr.ewm(alpha=1/n, adjust=False, min_periods=n).mean()
+    up = df["high"] - df["high"].shift(1)
+    dn = df["low"].shift(1) - df["low"]
+    plus_dm = pd.Series(np.where((up > dn) & (up > 0), up, 0.0), index=df.index)
+    minus_dm = pd.Series(np.where((dn > up) & (dn > 0), dn, 0.0), index=df.index)
+    plus_di = 100 * (plus_dm.ewm(alpha=1/n, adjust=False, min_periods=n).mean() / atr_n.replace(0, np.nan))
+    minus_di = 100 * (minus_dm.ewm(alpha=1/n, adjust=False, min_periods=n).mean() / atr_n.replace(0, np.nan))
+    denom = (plus_di + minus_di).replace(0, np.nan)
+    dx = 100 * (plus_di - minus_di).abs() / denom
+    adx_n = dx.ewm(alpha=1/n, adjust=False, min_periods=n).mean()
+    return adx_n
+
 # ------------------------------------------------------------------
 # GRID BUILDERS — expanded
 # ------------------------------------------------------------------
@@ -470,9 +486,11 @@ def bootstrap_p_positive(R, n_boot=2000, seed=0):
     means = R[idx].mean(axis=1)
     return float((means <= 0).mean())
 
-def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False, direction="long"):
+def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False, direction="long", return_trade_events=False):
     if e_idx - s_idx < 100:
         empty = SliceStats(0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0)
+        if return_trades and return_trade_events:
+            return empty, np.array([]), []
         return (empty, np.array([])) if return_trades else empty
 
     cost = COST_BPS / 10000.0
@@ -553,6 +571,8 @@ def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False, d
 
     if not trades_pct:
         empty = SliceStats(0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0)
+        if return_trades and return_trade_events:
+            return empty, np.array([]), []
         return (empty, np.array([])) if return_trades else empty
 
     arr = np.array(trades_pct) / 100.0
@@ -659,6 +679,8 @@ def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False, d
         annualized_sortino=annualized_sortino,
         net_after_slippage_pct=net_after_slippage_pct,
     )
+    if return_trades and return_trade_events:
+        return stats, arr_R, trade_events
     return (stats, arr_R) if return_trades else stats
 
 # ------------------------------------------------------------------
@@ -780,6 +802,233 @@ def compute_buy_hold_lockbox(df, lockbox_start, lockbox_end):
     }
 
 # ------------------------------------------------------------------
+# EMA BENCHMARK  (EMA50/EMA200 long-flat on lockbox window)
+# ------------------------------------------------------------------
+def compute_ema_benchmark(df, lockbox_start, lockbox_end, cost_bps=None):
+    """
+    EMA50/EMA200 long-flat benchmark on the same lockbox window.
+
+    Start flat at lockbox_start; if EMA50 > EMA200 at lockbox_start, enter long
+    at first lockbox open. Enter at next bar open after EMA50 crosses above EMA200;
+    exit at next bar open after EMA50 crosses below/equal EMA200; close any open
+    position at final lockbox close.  Apply cost_bps once per completed round trip.
+
+    Returns dict with ema_return_pct, ema_max_drawdown_pct (positive),
+    ema_ret_dd_ratio, ema_num_trades, plus detail.
+    """
+    if cost_bps is None:
+        cost_bps = COST_BPS
+    cost = cost_bps / 10000.0
+
+    n = lockbox_end - lockbox_start
+    if n < 50:
+        return {
+            "ema_return_pct": 0.0,
+            "ema_max_drawdown_pct": 0.0,
+            "ema_ret_dd_ratio": 0.0,
+            "ema_num_trades": 0,
+        }
+
+    close = df["close"].to_numpy()
+    open_ = df["open"].to_numpy()
+
+    ema50 = ema(df["close"], 50).to_numpy()
+    ema200 = ema(df["close"], 200).to_numpy()
+
+    trades_pct = []
+    in_position = False
+    entry_price = 0.0
+
+    # Determine initial state at lockbox_start
+    i = lockbox_start
+    if not np.isnan(ema50[i]) and not np.isnan(ema200[i]) and open_[i] > 0:
+        if ema50[i] > ema200[i]:
+            in_position = True
+            entry_price = float(open_[i])
+    i += 1
+
+    while i < lockbox_end:
+        prev = i - 1
+        prev2 = i - 2
+        if prev2 < 0:
+            i += 1
+            continue
+        prev_finite = (
+            not np.isnan(ema50[prev])
+            and not np.isnan(ema200[prev])
+            and not np.isnan(ema50[prev2])
+            and not np.isnan(ema200[prev2])
+        )
+        if in_position:
+            # Exit at this bar's open after a cross-down observed on the previous close.
+            if prev_finite and open_[i] > 0:
+                if ema50[prev] <= ema200[prev] and ema50[prev2] > ema200[prev2]:
+                    exit_price = float(open_[i])
+                    raw = exit_price / entry_price - 1.0
+                    net = raw - cost
+                    trades_pct.append(net * 100.0)
+                    in_position = False
+                    entry_price = 0.0
+        else:
+            # Enter at this bar's open after a cross-up observed on the previous close.
+            if prev_finite and open_[i] > 0:
+                if ema50[prev] > ema200[prev] and ema50[prev2] <= ema200[prev2]:
+                    in_position = True
+                    entry_price = float(open_[i])
+        i += 1
+
+    # Close any open position at final lockbox close
+    if in_position and close[lockbox_end - 1] > 0:
+        exit_price = float(close[lockbox_end - 1])
+        raw = exit_price / entry_price - 1.0
+        net = raw - cost
+        trades_pct.append(net * 100.0)
+
+    if not trades_pct:
+        return {
+            "ema_return_pct": 0.0,
+            "ema_max_drawdown_pct": 0.0,
+            "ema_ret_dd_ratio": 0.0,
+            "ema_num_trades": 0,
+        }
+
+    arr = np.array(trades_pct) / 100.0
+    eq = np.concatenate(([1.0], np.cumprod(1.0 + arr)))
+    peak = np.maximum.accumulate(eq)
+    dd = float((eq / peak - 1.0).min())
+    net_compound = float((eq[-1] - 1.0) * 100.0)
+    max_dd_pct = float(abs(dd) * 100.0)
+
+    if max_dd_pct > 0:
+        ret_dd_ratio = round(net_compound / max_dd_pct, 4)
+    elif net_compound > 0:
+        ret_dd_ratio = round(net_compound, 4)
+    else:
+        ret_dd_ratio = 0.0
+
+    return {
+        "ema_return_pct": round(net_compound, 3),
+        "ema_max_drawdown_pct": round(max_dd_pct, 3),
+        "ema_ret_dd_ratio": ret_dd_ratio,
+        "ema_num_trades": len(trades_pct),
+    }
+
+
+# ------------------------------------------------------------------
+# REGIME ANALYSIS  (trend / range / high_vol / low_vol buckets)
+# ------------------------------------------------------------------
+def compute_regime_analysis(df, trade_events, lockbox_start, lockbox_end):
+    """
+    Classify each strategy lockbox trade by entry-bar regime into four
+    independent buckets: trend, range, high_vol, low_vol.
+
+    A trade can count in multiple buckets.  Each bucket compounds its
+    trades' net returns independently.
+
+    Returns dict with bucket_returns_pct, bucket_trade_counts,
+    regime_breakdown_present, weak_regime_identified, worst_regime_return_pct,
+    regime_coverage_count, plus detail.
+    """
+    if not trade_events:
+        return {
+            "bucket_returns_pct": {},
+            "bucket_trade_counts": {},
+            "regime_breakdown_present": False,
+            "weak_regime_identified": None,
+            "worst_regime_return_pct": None,
+            "regime_coverage_count": 0,
+        }
+
+    n = lockbox_end - lockbox_start
+    if n < 50:
+        return {
+            "bucket_returns_pct": {},
+            "bucket_trade_counts": {},
+            "regime_breakdown_present": False,
+            "weak_regime_identified": None,
+            "worst_regime_return_pct": None,
+            "regime_coverage_count": 0,
+        }
+
+    close = df["close"].to_numpy()
+    ema200_vals = ema(df["close"], 200).to_numpy()
+    adx14_vals = adx(df, 14).to_numpy()
+    atr14_vals = atr(df, 14).to_numpy()
+
+    # Lockbox ATR percentiles
+    atr_slice = atr14_vals[lockbox_start:lockbox_end]
+    atr_valid = atr_slice[~np.isnan(atr_slice)]
+    if len(atr_valid) < 10:
+        p25 = p75 = np.nan
+    else:
+        p25 = float(np.percentile(atr_valid, 25))
+        p75 = float(np.percentile(atr_valid, 75))
+
+    bucket_nets = {"trend": [], "range": [], "high_vol": [], "low_vol": []}
+
+    for ev in trade_events:
+        entry_idx = ev["entry_idx"]
+        if entry_idx < lockbox_start or entry_idx >= lockbox_end:
+            continue
+        net = ev["net"]
+
+        # Trend: price is above/below EMA200 and ADX14 >= 20.
+        if not np.isnan(ema200_vals[entry_idx]) and not np.isnan(adx14_vals[entry_idx]):
+            if close[entry_idx] != ema200_vals[entry_idx] and adx14_vals[entry_idx] >= 20:
+                bucket_nets["trend"].append(net)
+
+        # Range: ADX14 < 20
+        if not np.isnan(adx14_vals[entry_idx]):
+            if adx14_vals[entry_idx] < 20:
+                bucket_nets["range"].append(net)
+
+        # High vol: ATR14 >= lockbox ATR 75th percentile
+        if not np.isnan(atr14_vals[entry_idx]) and not np.isnan(p75):
+            if atr14_vals[entry_idx] >= p75:
+                bucket_nets["high_vol"].append(net)
+
+        # Low vol: ATR14 <= lockbox ATR 25th percentile
+        if not np.isnan(atr14_vals[entry_idx]) and not np.isnan(p25):
+            if atr14_vals[entry_idx] <= p25:
+                bucket_nets["low_vol"].append(net)
+
+    bucket_returns_pct = {}
+    bucket_trade_counts = {}
+    for bk in ["trend", "range", "high_vol", "low_vol"]:
+        nets = bucket_nets[bk]
+        bucket_trade_counts[bk] = len(nets)
+        if nets:
+            eq = np.cumprod(1.0 + np.array(nets))
+            ret = round(float((eq[-1] - 1.0) * 100.0), 3)
+            bucket_returns_pct[bk] = ret
+        else:
+            bucket_returns_pct[bk] = 0.0
+
+    regime_breakdown_present = True  # all four keys present
+
+    # Weak regime: bucket with lowest return among buckets with trades
+    buckets_with_trades = {k: v for k, v in bucket_returns_pct.items() if bucket_trade_counts[k] > 0}
+    regime_coverage_count = len(buckets_with_trades)
+
+    if buckets_with_trades:
+        weak_regime = min(buckets_with_trades, key=buckets_with_trades.get)
+        weak_regime_identified = weak_regime
+        worst_regime_return_pct = buckets_with_trades[weak_regime]
+    else:
+        weak_regime_identified = None
+        worst_regime_return_pct = None
+
+    return {
+        "bucket_returns_pct": bucket_returns_pct,
+        "bucket_trade_counts": bucket_trade_counts,
+        "regime_breakdown_present": regime_breakdown_present,
+        "weak_regime_identified": weak_regime_identified,
+        "worst_regime_return_pct": worst_regime_return_pct,
+        "regime_coverage_count": regime_coverage_count,
+    }
+
+
+# ------------------------------------------------------------------
 # WORKER
 # ------------------------------------------------------------------
 _MANIFEST = None
@@ -877,13 +1126,95 @@ def _worker(job):
             direction_b = "long"
         nb = len(df_b)
         lockbox_start_b = nb - int(nb * LOCKBOX_FRACTION)
-        _lb_stats, lb_R = simulate_slice(df_b, sig_b, stop_b, strategy, lockbox_start_b, nb, return_trades=True, direction=direction_b)
+        _lb_stats, lb_R, lb_trade_events = simulate_slice(df_b, sig_b, stop_b, strategy, lockbox_start_b, nb, return_trades=True, direction=direction_b, return_trade_events=True)
         seed = int(hashlib.md5(f"{strategy}|{symbol}|{tf}".encode()).hexdigest()[:8], 16) % (2**31)
         boot_p = bootstrap_p_positive(lb_R, n_boot=2000, seed=seed) if len(lb_R) >= MIN_TRADES_FOR_PASS else float("nan")
 
         # Compute buy-and-hold benchmark for the same lockbox window
         lockbox_start_idx = nb - int(nb * LOCKBOX_FRACTION)
         bh_stats = compute_buy_hold_lockbox(df_b, lockbox_start_idx, nb)
+
+        # ----- Gate-2 enrichment: param_stability_score -----
+        param_stability_score = None
+        param_stability_detail = None
+        folds_list = rolling_fold_indices(nb)
+        n_folds_available = len(folds_list)
+        if n_folds_available >= 2:
+            # Per-fold best config: select config with highest fold_train[fi].net_return_pct
+            fold_best_params = []
+            for fi in range(n_folds_available):
+                best_cfg = max(configs, key=lambda c: c["fold_train"][fi]["net_return_pct"])
+                fold_best_params.append(best_cfg["params"])
+            # Check if all identical
+            all_same = all(fp == fold_best_params[0] for fp in fold_best_params)
+            if all_same:
+                param_stability_score = 1.0
+                param_stability_detail = {"mode": "exact_match", "folds": n_folds_available}
+            else:
+                # Collect numeric param keys across all fold-selected params
+                numeric_keys = set()
+                for fp in fold_best_params:
+                    for k, v in fp.items():
+                        if isinstance(v, (int, float)):
+                            numeric_keys.add(k)
+                if numeric_keys:
+                    # Get min/max per key from the full grid
+                    key_ranges = {}
+                    for k in numeric_keys:
+                        vals = [c["params"][k] for c in configs if k in c["params"] and isinstance(c["params"][k], (int, float))]
+                        if len(vals) >= 2:
+                            key_ranges[k] = (min(vals), max(vals))
+                    closeness_scores = []
+                    for k in numeric_keys:
+                        if k not in key_ranges:
+                            continue
+                        kmin, kmax = key_ranges[k]
+                        if kmax == kmin:
+                            closeness_scores.append(1.0)
+                            continue
+                        selected_vals = [fp[k] for fp in fold_best_params if k in fp]
+                        if not selected_vals:
+                            continue
+                        median_val = float(np.median(selected_vals))
+                        # Normalize and compute 1 - mean abs dev from median
+                        norm_vals = [(v - kmin) / (kmax - kmin) for v in selected_vals]
+                        norm_median = (median_val - kmin) / (kmax - kmin)
+                        mad = float(np.mean([abs(v - norm_median) for v in norm_vals]))
+                        closeness = max(0.0, min(1.0, 1.0 - mad))
+                        closeness_scores.append(closeness)
+                    if closeness_scores:
+                        numeric_closeness = round(float(np.mean(closeness_scores)), 4)
+                    else:
+                        numeric_closeness = 0.0
+                    exact_share = 1.0 if n_folds_available > 0 else 0.0
+                    # exact_mode_share: fraction of folds sharing the most common param set
+                    param_tuples = [tuple(sorted(fp.items())) for fp in fold_best_params]
+                    from collections import Counter
+                    mode_count = Counter(param_tuples).most_common(1)[0][1]
+                    exact_mode_share = mode_count / n_folds_available
+                    param_stability_score = round(max(exact_mode_share, numeric_closeness), 4)
+                    param_stability_detail = {
+                        "mode": "partial",
+                        "folds": n_folds_available,
+                        "exact_mode_share": round(exact_mode_share, 4),
+                        "numeric_closeness": numeric_closeness,
+                        "numeric_keys_used": len(closeness_scores),
+                    }
+                else:
+                    param_stability_score = None
+                    param_stability_detail = {"mode": "no_numeric_keys", "folds": n_folds_available}
+        elif n_folds_available == 1:
+            param_stability_score = None
+            param_stability_detail = {"mode": "insufficient_folds", "folds": n_folds_available}
+        else:
+            param_stability_score = None
+            param_stability_detail = None
+
+        # ----- Gate-2 enrichment: EMA benchmark -----
+        ema_bench = compute_ema_benchmark(df_b, lockbox_start_idx, nb)
+
+        # ----- Gate-2 enrichment: regime analysis -----
+        regime = compute_regime_analysis(df_b, lb_trade_events, lockbox_start_idx, nb)
 
         test_rets = [f["net_return_pct"] for f in best["fold_test"]]
         test_trades = [f["num_trades"] for f in best["fold_test"]]
@@ -933,6 +1264,10 @@ def _worker(job):
                 "buy_hold_lockbox": bh_stats,
                 "best_train_sharpe_pt": round(best["mean_train_sharpe_pt"], 6),
                 "worst_window_drawdown_pct": worst_window_drawdown_pct,
+                "param_stability_score": param_stability_score,
+                "param_stability_detail": param_stability_detail,
+                "ema_benchmark_lockbox": ema_bench,
+                "regime_analysis": regime,
             },
             "classification": cls,
         }
