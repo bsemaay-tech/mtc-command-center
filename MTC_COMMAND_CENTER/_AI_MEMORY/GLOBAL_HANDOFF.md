@@ -1,11 +1,24 @@
 # GLOBAL_HANDOFF
 
-Last updated: 2026-06-05 (SP-004 slippage enrichment)
+Last updated: 2026-06-05 (SP-004 slippage fresh sweep)
 Updated by: Codex GPT-5
 Active project: TradingView-LAB / MTC Command Center
-Current objective: enrich Gate 2 slippage stress evidence - DONE.
-Current phase: DeepSeek delegated implementation audited by Codex; ready for fresh sweep propagation.
+Current objective: slippage evidence propagated/closed; fresh sweep + validation tail complete.
+Current phase: SP-004 Gate2 slippage blocker cleared; remaining blockers param-stability, EMA benchmark, and regime split.
 Current blockers: full scorecard promotion remains blocked by missing intake, feasibility, production-readiness, param-stability, EMA benchmark, and regime metrics.
+
+## Codex GPT-5 2026-06-05 - SP-004 slippage fresh sweep
+Scope: regenerated run artifacts under committed post-hoc slippage stress code (`5c68419`). No Pine, MTC behavior, parity, schema, live-trading surface, or signal logic changed.
+
+Run: `03_QUANTLENS/05_BACKTEST_RESULTS/slippage_2026-06-05_5c68419/`.
+- MEGA: 1700 cells, 8 workers, 1212.3s; 31 PASS + 7 STRONG_PASS = 38 candidate cells; 1 BH-FDR survivor; 0 DSR-robust; 0 robust final.
+- Validation tail: CPCV `--v2`, PBO, 38 evaluation artifacts, 38 Gate-2 scorecards, 38 scorecard_v2 files.
+- Codex audit: 38/38 PASS+STRONG_PASS cells/artifacts have annualized_sharpe, annualized_sortino, net_after_slippage_pct, B&H benchmark, and worst_window_drawdown_pct OK; 38/38 schema-valid (0 errors).
+- Result: Gate2 scorecards 38, score range 48.25–84.0, mean 63.69; all 38 INCOMPLETE, 0 Gate2 pass, 0 all-gate promotable. Top cell: `QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL|LINKUSDT|1h` score 84.0 INCOMPLETE.
+
+Carry-forward:
+- Slippage is no longer a Gate2 blocker for the fresh scorecard set.
+- Remaining Gate2 blockers after slippage closure: param-stability, EMA benchmark, and regime split.
 
 ## Codex GPT-5 + DeepSeek 2026-06-05 - SP-004 slippage stress metric
 Scope: delegated bounded additive output work to DeepSeek for `03_QUANTLENS/tools/mega_walk_forward.py` and `build_evaluation_artifact.py`; Codex audited the diff and validation. No signal logic, classification thresholds, existing fee model, Pine, MTC behavior, parity, schemas, generated artifacts, or live-trading surface changed.
