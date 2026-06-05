@@ -344,17 +344,24 @@ def build_artifact(
             "mega:summary.lockbox_oos.top_trade_concentration",
         )
 
-    # 13. worst_window_drawdown_pct: passthrough from lockbox (abs value)
-    wwd_val = lockbox.get("worst_window_drawdown_pct")
+    # 13. worst_window_drawdown_pct: primary source = mega summary (Gate-2 enriched);
+    # backward-compatible fallback to lockbox (pre-Gate-2) only when summary field missing.
+    wwd_val = summary.get("worst_window_drawdown_pct")
     if wwd_val is not None:
         metrics["worst_window_drawdown_pct"] = _ok(
-            abs(wwd_val), "mega:summary.lockbox_oos.worst_window_drawdown_pct"
+            float(wwd_val), "mega:summary.worst_window_drawdown_pct"
         )
     else:
-        metrics["worst_window_drawdown_pct"] = _na(
-            "engine does not yet emit worst_window_drawdown_pct",
-            "mega:summary.lockbox_oos.worst_window_drawdown_pct",
-        )
+        lb_wwd = lockbox.get("worst_window_drawdown_pct")
+        if lb_wwd is not None:
+            metrics["worst_window_drawdown_pct"] = _ok(
+                abs(lb_wwd), "mega:summary.lockbox_oos.worst_window_drawdown_pct"
+            )
+        else:
+            metrics["worst_window_drawdown_pct"] = _na(
+                "engine does not yet emit worst_window_drawdown_pct",
+                "mega:summary.worst_window_drawdown_pct",
+            )
 
     # 14. regime_coverage_count: N_A (no regime stage in MEGA)
     metrics["regime_coverage_count"] = _na(

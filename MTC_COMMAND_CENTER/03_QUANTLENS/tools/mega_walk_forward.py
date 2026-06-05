@@ -814,6 +814,13 @@ def _worker(job):
         test_trades = [f["num_trades"] for f in best["fold_test"]]
         pos = sum(1 for r in test_rets if r > 0)
         n_folds = len(test_rets)
+        # Gate-2 worst-window drawdown: max absolute drawdown across fold_test slices
+        ww_dd = (
+            max(abs(f["max_drawdown_pct"]) for f in best["fold_test"])
+            if best["fold_test"]
+            else 0.0
+        )
+        worst_window_drawdown_pct = round(float(ww_dd), 3)
         lb = best["lockbox"]
         if lb["num_trades"] < MIN_TRADES_FOR_PASS:
             cls = "INSUFFICIENT_TRADES"
@@ -850,6 +857,7 @@ def _worker(job):
                 "lockbox_oos": lb,
                 "buy_hold_lockbox": bh_stats,
                 "best_train_sharpe_pt": round(best["mean_train_sharpe_pt"], 6),
+                "worst_window_drawdown_pct": worst_window_drawdown_pct,
             },
             "classification": cls,
         }

@@ -1,11 +1,27 @@
 # GLOBAL_HANDOFF
 
-Last updated: 2026-06-05 (SP-004 B&H benchmark fresh sweep)
+Last updated: 2026-06-05 (SP-004 worst-window drawdown enrichment)
 Updated by: Codex GPT-5
 Active project: TradingView-LAB / MTC Command Center
-Current objective: propagate Gate 2 B&H benchmark evidence across the fresh scorecard set - DONE.
-Current phase: fresh sweep + CPCV/PBO + artifact/scorecard rebuild completed; ready for next metric blocker.
-Current blockers: full scorecard promotion remains blocked by missing intake, feasibility, production-readiness, annualized sharpe/sortino, worst-window, param-stability, slippage, EMA benchmark, and regime metrics.
+Current objective: enrich Gate 2 worst-window drawdown evidence - DONE.
+Current phase: DeepSeek delegated implementation audited by Codex; ready for fresh sweep propagation.
+Current blockers: full scorecard promotion remains blocked by missing intake, feasibility, production-readiness, annualized sharpe/sortino, param-stability, slippage, EMA benchmark, and regime metrics.
+
+## Codex GPT-5 + DeepSeek 2026-06-05 - SP-004 Gate2 worst-window drawdown
+Scope: delegated bounded additive output work to DeepSeek for `03_QUANTLENS/tools/mega_walk_forward.py` and `build_evaluation_artifact.py`; Codex audited the diff and validation. No signal logic, classification thresholds, Pine, MTC behavior, parity, schemas, generated artifacts, or live-trading surface changed.
+
+Implemented:
+- `mega_walk_forward.py` now emits `summary.worst_window_drawdown_pct` as the maximum absolute `max_drawdown_pct` across the selected config's `fold_test` slices, rounded to 3 decimals and JSON-safe.
+- `build_evaluation_artifact.py` now maps `metrics.worst_window_drawdown_pct` from `summary.worst_window_drawdown_pct` first, with backward-compatible lockbox fallback only if that exact field exists. It does not fabricate this metric from lockbox max drawdown.
+
+Validation:
+- DeepSeek harness reported py_compile and synthetic builder checks PASS.
+- Codex audit PASS: py_compile both files, `git diff --check`, synthetic builder primary/fallback/missing checks, real one-cell MEGA run `QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL LINKUSDT 1h`.
+- Real one-cell result: `summary.worst_window_drawdown_pct=19.452`; artifact metric OK from `mega:summary.worst_window_drawdown_pct`; Gate2 worst-window criterion scored 4/4; one-cell artifact schema errors 0.
+
+Carry-forward:
+- Run a fresh full sweep before dashboard scorecards show the new worst-window metric globally.
+- Remaining Gate2 blockers after worst-window propagation: annualized Sharpe/Sortino, parameter stability, slippage model, EMA benchmark, and regime split.
 
 ## Codex GPT-5 2026-06-05 - SP-004 B&H benchmark fresh sweep
 Scope: regenerated run artifacts under the committed same-window B&H benchmark code (`7175ff6`). No Pine, MTC behavior, parity, schema, live-trading surface, or signal logic changed.
