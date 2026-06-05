@@ -17,8 +17,20 @@ from .pine_builder_reader import build_pine_builder_status
 from .audit_reader import build_candidate_audit
 from .pipeline_reader import build_candidate_pipeline
 from .registry_reader import build_strategy_registry
+from .research_reader import build_strategy_research
+from .quantlens_reader import build_quantlens
 from .schema import validate_json_schema
 from .task_lifecycle import build_task_lifecycle
+
+
+def _load_transcript_reclassification(mcc_root: Path) -> dict[str, Any] | None:
+    path = mcc_root / "11_TRIAGE" / "transcript_reclassification.json"
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
 
 
 @dataclass(frozen=True)
@@ -137,6 +149,8 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
         candidate_pipeline=candidate_pipeline,
         candidate_audit=candidate_audit,
     )
+    strategy_research = build_strategy_research(model["mcc_root"])
+    quantlens = build_quantlens(model["mcc_root"])
     return {
         "schema_version": "1.0",
         "mode": "read_only",
@@ -155,8 +169,11 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
         "mtc_v2_readiness": mtc_v2_readiness,
         "report_manifest": files["report_manifest"]["data"],
         "strategy_registry": strategy_registry,
+        "strategy_research": strategy_research,
+        "quantlens": quantlens,
         "dashboard_config": files["dashboard_config"]["data"],
         "task_lifecycle": task_lifecycle,
+        "transcript_reclassification": _load_transcript_reclassification(canonicalize(model["mcc_root"])),
         "file_diagnostics": {
             key: {
                 "path": value["path"],

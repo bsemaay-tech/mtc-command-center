@@ -1,12 +1,122 @@
 # NEXT_STEPS
 
+## Confirmation Run Follow-up (2026-06-04)
+
+### NIGHT-CONFIRM-2026-06-04 | DONE | Quiet pre-registered confirmation run + validation tail [AI: Codex GPT-5]
+- Resumed Claude's interrupted Option B path and launched the quiet confirmation run with 4 workers.
+- Output: `03_QUANTLENS/05_BACKTEST_RESULTS/confirm_2026-06-04/MORNING_REPORT_confirm_2026-06-04.md`.
+- Result: 306 cells / ~3,672 configs / 16 PASS / 1 BH-FDR survivor / 0 DSR-robust / 0 final robust.
+- A18 fixed in output: down-market alpha count/table now matches canonical `alpha_summary.json` (`down_market_alpha=6`).
+- Validation tail done: CPCV, PBO, 16 evaluation artifacts, 16 Gate-2 scorecards. Scorecards: all INCOMPLETE, 0 pass.
+- Morning watchdog active until 2026-06-05 07:30 local: `03_QUANTLENS/tools/overnight_runs/_heartbeat_confirm_morning_watchdog.json`.
+- No Pine/MTC/parity/live-trading action is authorized by these results.
+
+### NIGHT-CONFIRM-2026-06-05-REVIEW | DONE 2026-06-05 (Claude) | Morning review of confirmation artifacts [AI: Claude|Baris]
+- Reviewed report + CPCV/PBO + 16 scorecards. A18 verified (down_market_alpha=6 == ALPHA_DONE).
+- DSR rose wide→narrow (0.0→0.34-0.38 best) but none ≥0.50; Gate-2 16/16 INCOMPLETE (metric gap, not FAIL).
+- **Decision:** no promotion. Forward-paper observation OPTIONAL for 2 least-weak cells: 8EMA LINK 1h, Donchian ETH 2h. No Pine/MTC/parity/live action.
+- Closure done: lessons C4-C6, runbook A19 + CHANGELOG, INDEX already had 06-05 line.
+
+### NIGHT-FOLLOWUP-HEAVY-TIER | OPEN | Compute-filling heavy-validation tier for confirmation nights [AI: Claude|Barış]
+- **Problem (A19):** deterministic narrow confirmation finishes in minutes; machine sat idle-awake on watchdog the rest of the night. Tekrar = sıfır bilgi (seed=md5, mega:731).
+- **Build:** a heavy-validation stage sized to wall-clock — 50k-resample bootstrap, multi-seed DSR/boot-p stability distribution (deliberately vary seed), CPCV across ALL pass cells, PBO with more combinations, ±2-step pre-registered grid + 4h/1D TFs. Wire into the confirmation runner post-pipeline with a deadline cap; if it finishes early, RELEASE the machine (no pointless keep-awake).
+
+## SP-004 rubric sign-off (2026-06-04)
+
+### SP-004-SIGNOFF | DONE | D1-D6 owner decisions resolved [AI: Claude | Barış]
+- Barış signed D1-D6 (DECISIONS D007). Rubric `12_STRATEGY_EVALUATION_RUBRIC.md` updated: D1 Gate 1B → /100 PASS≥75 (criteria rescaled ×2), D3 parity → advisory (PARITY_WARNING, non-blocking), D2/D4/D6 accepted, D5 deferred to Phase 1.5. **Unblocks Phase 2 scoring lock.**
+
+### SP-004-PHASE1-EVALARTIFACT | DONE | evaluation_artifact writer [AI: DeepSeek/Claude]
+- Done (2026-06-04 Batch G/H): `03_QUANTLENS/tools/build_evaluation_artifact.py`. CLI `--mega --cpcv --pbo --out-dir`; pure `build_artifact()`; status-enveloped metrics (OK only when computed, else NOT_COMPUTED/N_A, never auto-zero); hard_flags/flags bare per schema; version 'v1'. Claude-audited on real 5MB MEGA: 149 artifacts, 0 schema errors (Draft2020-12+$ref), 0 fabricated numbers.
+- Known limits (intentional): per-fold arrays dropped from metrics (scalars only); repaint_status=null (no repaint stage), parity_status='N_A', has_benchmark=false — fill when those stages exist.
+
+### SP-004-PHASE2-SCORINGREADER | DONE | gate2 scoring reader [AI: DeepSeek/Claude]
+- Done (2026-06-04 Batch I/J): `03_QUANTLENS/tools/score_gate2.py` (`score_gate2(artifact)->dict`, CLI `--in-dir --out-dir`). 25 criteria /100 per rubric §5.1-5.7; status-gated (non-OK metric → not scored → gate INCOMPLETE, never auto-zero); REJECT_REPAINT→FAIL; PBO≥0.5→OVERFIT_SUSPECT advisory; parity advisory; pass=(OK and ≥75). Batch J reconciled Phase-1 writer to emit schema metric vocabulary. Claude-audited real 5MB: 149 artifacts 0 schema-err, 149 scorecards all INCOMPLETE (22-43, 0 pass, 0 fabricated).
+
+### SP-004-PHASE3-GATESCORERS | DONE | Gate1/1B/3 + unified composer [AI: Grok/Claude]
+- Done (2026-06-05, dispatched to Grok grok-4 via `ds_agent.py`, Claude-audited on real data; DeepSeek was 402 Insufficient Balance).
+- New files under `03_QUANTLENS/tools/`: `score_gate1.py` (intake /100, 35 criteria, `intake.*` envelopes), `score_gate1b.py` (MTC feasibility /100 PASS≥75, `feasibility.*`, D1 verdict PASS/CONDITIONAL/FAIL), `score_gate3.py` (production-readiness /100, reads `production_readiness_artifact_v1` groups per D4, 37 criteria), `score_all_gates.py` (unified composer → one `scorecard_v2`, no top-level number; `gate_summary.promotable` honest = all four OK+pass).
+- All mirror `score_gate2.py`: pure `score_gateX(artifact)->dict` + CLI `--in-dir --out-dir`; status-envelope (only OK scores, non-OK → `points_awarded=None` → gate INCOMPLETE, never auto-zero); `REJECT_REPAINT`→FAIL; parity advisory; utf-8 stdout.
+- Claude audit (real 16 confirm-2026-06-04 eval artifacts + synthetic): py_compile PASS ×4; full-OK→100/OK/pass; empty→INCOMPLETE; gate1 MEDIUM-repaint→98; REJECT_REPAINT→FAIL; composer all-OK→promotable. **Real 16/16 = all gates INCOMPLETE, 0 pass, 0 promotable** — correct honest status (intake/feasibility/readiness artifacts not emitted yet). Inline fix: gate1b verdict PASS-under-REJECT_REPAINT → hard-fail override.
+- Carry-forward: these gates stay INCOMPLETE until writer artifacts exist (intake/feasibility for Gate1/1B; `production_readiness_artifact_v1` for Gate3; Gate2 metric-enrichment below). Scorers ready to score the moment those are emitted. Nothing committed.
+
+### SP-004-METRIC-ENRICHMENT | OPEN | MEGA lacks ~17 Gate-2 metrics [AI: Barış/Claude]
+- **Finding:** all 149 cells score INCOMPLETE because MEGA/CPCV/PBO don't produce: sharpe, sortino, recovery_factor, worst_window_drawdown_pct, max_consecutive_losses, calendar_days, regime_coverage_count, top_trade_concentration, long_short_ratio, param_stability_score, multi_window_pass, net_after_fees_pct, net_after_slippage_pct, avg_trade_vs_cost, equity_curve_health, return_pct_compound, benchmark.excess_alpha_pct/beats_ema, regime.* (and CPCV only ran on a few cells → cpcv_pass_ratio mostly N_A).
+- To make Gate 2 fully scorable: enrich the backtest engine (mega_walk_forward) to emit these per-cell (OOS sharpe/sortino/recovery/regime split/benchmark), and run CPCV across all PASS cells. Backtest-side work — needs design + Barış. Until then INCOMPLETE is the correct honest status.
+
+### SP-004-SCHEMA-PARITY | DONE | Move parity to advisory in schema [AI: DeepSeek/Claude]
+- Done (2026-06-04 Batch F): `06_SCHEMAS/evaluation_artifact_v1.schema.json` — `parity_gate` removed from `hard_flags`; new advisory `flags.parity_status` ∈ {PASS, WARN, N_A, null}. Claude-audited: json.load VALID, Draft2020-12 check_schema VALID, parity_gate gone everywhere, completeness intact.
+- **Reader carry-forward (Phase 2):** the future scoring reader must read `flags.parity_status` (NOT `hard_flags.parity_gate`) and treat WARN as non-blocking. Captured for the Phase-2 build.
+
+## Local YouTube Transcript Collector (2026-06-04)
+
+### YT-TRANSCRIPT-001 | DONE | Local transcript collector utility [AI: Codex GPT-5]
+- Added isolated Python tool under `YT_TRANSCRIPT_COLLECTOR/`.
+- Reads `urls.txt`, extracts YouTube video IDs, fetches transcripts with `youtube-transcript-api`, prefers `tr` then `en` then any available transcript, writes Markdown under `transcripts/`, and writes `reports/transcript_index.csv` plus `reports/failed_videos.csv`.
+- Safety boundary: no YouTube login, no password request, no video/audio download, no browser automation, and no account actions.
+- Validation: py_compile PASS, 2 offline URL extraction tests PASS from tool folder and repo root, CLI help PASS.
+- Run update 2026-06-04: fetched `2NuvYsXMehw` successfully; output `YT_TRANSCRIPT_COLLECTOR/transcripts/2NuvYsXMehw.md`; metadata `Turkish (auto-generated) (tr)`. Added UTF-8 BOM URL-file regression fix/test after PowerShell input exposed it.
+- Organization update 2026-06-04: moved Hermes-related transcript files into `YT_TRANSCRIPT_COLLECTOR/transcripts/hermes/`; moved contents of `Temp/HERMES/` there and deleted the old empty folder.
+- No open follow-up unless Baris explicitly requests Playwright/browser fallback after transcript-api failures.
+
+## Hermes Agent Layer (2026-06-04)
+
+### HERMES-001 | DONE | Install Hermes and create MTC profiles [AI: Codex GPT-5]
+- Installed Hermes Agent `0.15.2` in `%LOCALAPPDATA%/hermes/hermes-pypi-venv` after the official git installer clone timed out.
+- Created profiles: `mtc-steward`, `quantlens-research`, `dashboard-qa`, `backtest-monitor`, `repo-hygiene`.
+- Wrote profile-specific `SOUL.md` plus shared `memories/USER.md`, `memories/MEMORY.md`, and `MTC_WORKSPACE.md` guardrails.
+- PATH updated for new terminals; current shells may need restart.
+- Model/provider setup intentionally not selected to avoid unapproved paid/remote model routing.
+
+### HERMES-002 | OPEN | Configure model/provider per profile [AI: Baris]
+- Run one of: `<profile> setup`, `hermes -p <profile> model`, or `hermes -p <profile> config set model <provider/model>`.
+- Desktop path is now also available: open Hermes Desktop, click Settings, and choose a provider/model there. Do this only when remote/paid routing is approved.
+
+### HERMES-003 | DONE | Install Hermes Desktop app [AI: Codex GPT-5]
+- Installed official Hermes Desktop under `%LOCALAPPDATA%/hermes/hermes-agent/apps/desktop/release/win-unpacked/Hermes.exe`.
+- Created Desktop and Start Menu shortcuts.
+- Verified normal app launch after fixing the bootstrap marker.
+- Screenshot: `C:\tmp\hermes_desktop_final.png`.
+- Choose cost/routing policy before using Hermes for live agent sessions.
+
+## SP-005 Wave A status update (2026-06-04)
+
+### SP-005 | DONE WAVE A | Strategy Detail Page Redesign [AI: Codex GPT-5]
+- Status: **SP-005 Wave A implemented; Wave B/C pending.**
+- Files changed: `08_DASHBOARD_APP/apps/web/app.js`, `08_DASHBOARD_APP/apps/web/styles.css`, `08_DASHBOARD_APP/apps/api/mcc_readonly/pipeline_reader.py`.
+- Implemented live Strategy Detail Page Wave A: terminal single-scroll layout, human title fallback, merged Verdict & Decision block, Scorecard placeholder directly below verdict, Strategy Taxonomy shell, Review Journey, expanded Trading Rules with visible "Not defined yet", honest Backtest Evidence unavailable state/checklist, Salvageable Ideas placeholder, de-emphasized Source Material, and collapsed Technical Details carrying raw IDs/legacy composite/debug data.
+- Intentionally not implemented: SP-004 scoring math, `scorecard_v2`, QuantLens structured reader, backtest-case visualizations, source-claim-vs-reproduced visuals, filter migration to gate status, Pine/MTC/parity/backtest behavior changes, audit-data deletion.
+- Validation: `node --check app.js` PASS; `py_compile pipeline_reader.py` PASS; dashboard API tests PASS (`35 passed` with `PYTHONPATH` set); browser check on `http://127.0.0.1:8765/dashboard` confirms all Wave A sections render, first tested title is not raw ID, Technical Details collapsed, missing fields visible, no desktop horizontal overflow after CSS containment.
+- Data caveat: current snapshot has no row with real `metrics`, so metrics-present Backtest Evidence could not be visually verified. Missing-rules, legacy-score-only, and no-QuantLens states were verified from snapshot data.
+
+### SP-005 | DONE WAVE B | QuantLens structured reader + detail-page card [AI: Claude]
+- Reader DONE (2026-06-05, dispatched to Grok grok-4, Claude-audited): read-only `08_DASHBOARD_APP/apps/api/mcc_readonly/quantlens_reader.py` parses `03_SALVAGE_IDEAS/<candidate>/01_candidate_metadata.yaml` (PyYAML, guarded import). Emits per-candidate `quantlens_verdict` (decision label, commercial-value band §8.6, complexity, testability §8.7, risks — commentary/labels, NO computed score), structured `salvageable_ideas[]` from `candidate_kind` flags, derived `stop_state` (CLOSED_SOURCE_STOP from closed_source_risk HIGH / COMPLEXITY_OVERLOAD from complexity≥8 / GARBAGE), `reference_files` repo-relative links, JSON-safe `raw`. Wired `quantlens` key into `read_model.py`. Fixed 2 audit bugs (ref-files→dir; date→str coercion). Dashboard API tests 35 passed.
+- UI DONE (2026-06-05, Claude): `apps/web/app.js` — `findQuantlensCandidate` (joins by candidate_id===row.id, confirmed all 3 match pipeline/audit rows), new `renderQuantlensVerdict` card (decision badge, stop-state banner, commercial/complexity/testability/instrument facts, risk chips, recommended next step), real `renderSalvageableIdeas` from `salvageable_ideas[]`, `buildWaveADecision` now surfaces the real QuantLens label. Section order Verdict→Scorecard→QuantLens Verdict→Taxonomy. `styles.css` adds `.quantlens-stop`. Verified live in the running dashboard (preview): QL strategy renders full card (Equilibrium: SALVAGE, 4/10, 4 components), non-QL strategy shows clean "Not in QuantLens" fallback, no JS error, `node --check` PASS. Not committed.
+- Carry-forward: stop-state banner code path (CLOSED_SOURCE_STOP/COMPLEXITY_OVERLOAD) is wired but unverified live (no on-disk candidate currently has a stop_state; all 3 are SALVAGE/no-stop).
+
+### SP-005 | OPEN WAVE C | scorecard_v2 and backtest evidence visuals [AI: Claude | depends on SP-004]
+- Wait for SP-004 to emit `scorecard_v2`; then render gate rows and TradingView-style backtest cases from real artifacts only.
+- Do not fake gate scores or invent unavailable metrics.
+
 ## MTC-Engine Validation step (2026-06-04)
 
-### MEV-001 | OPEN | Spec review + implementation plan [AI: Claude | Barış onayı]
-- Spec hazır: `docs/superpowers/specs/2026-06-04-mtc-engine-validation-step-design.md`.
-- Barış spec'i okuyup onaylayınca → writing-plans skill ile fazlı uygulama planı.
-- Amaç: shortlist producer'ı MTC risk motoruyla (SL/TP/trailing, filtre OFF) test eden
-  yeni funnel halkası. All-additive, MTC_V2.pine'a dokunmaz.
+### MEV-001 | DONE | MTC-Engine Validation implementation [AI: Claude]
+- Implemented additive stage in `02_MTC_BACKTEST`: light-risk profile, manual producer adapter
+  scaffold, bridge CLI, Supertrend standalone Pine producer adapter, docs, and tests.
+- Entry command: `cd MTC_COMMAND_CENTER/02_MTC_BACKTEST && python -m src.cli.mtc_engine_validate --producer supertrend --data <ohlcv> --symbol <symbol> --timeframe <tf>`.
+- Verification 2026-06-04: 4 focused tests PASS, compileall PASS, BTCUSDT 1d real-data smoke PASS.
+- `MTC_V2.pine` untouched; `MTCRunner` untouched; parity is producer-level raw-signal only.
+
+### MEV-002 | OPEN | Wire first real shortlisted QuantLens producer adapter [AI: Claude | Barış approval]
+- Pick one shortlisted producer that already passed cheap naked screening.
+- Implement one manual `SignalPlugin` adapter under `02_MTC_BACKTEST/src/modules/signals/producers/`.
+- Add or map a standalone Pine producer adapter under `01_MTC_PROJECT/parity_oracles/feature_adapters/pinets/`.
+- Run `mtc_engine_validate` with producer-specific risk overrides and record artifacts before promotion.
+
+### MEV-003 | OPEN | Add callable producer-level parity command for bridge reports [AI: Claude]
+- Current bridge supports `--parity-command`, but generic auto-discovery is intentionally not implemented.
+- Next step: create a feature contract/trace command for each real producer so reports can show `PASS/FAIL`
+  instead of `NOT_RUN`.
 
 ## Immediate — Sabah Görevleri (2026-06-03)
 
@@ -21,8 +131,9 @@
 ### NIGHT-FOLLOWUP-002 | OPEN | DSR ~0 kök neden: search-space inflation [AI: Claude|DeepSeek]
 - Tüm adaylar DSR'da çakılıyor. Dar pre-registered hipotez grid'i ile confirmation-only run (küçük family → yüksek DSR gücü).
 
-### NIGHT-FOLLOWUP-003 | OPEN | generate_morning_report.py legacy hardcoded OUTPUT_DIR fix [AI: Claude]
-- Hâlâ `C:\LAB\tradingview-lab\...` okuyor (A1). Rapor elle üretildi. `hardcoded_path_rewrite_TODO`'ya bağlı.
+### NIGHT-FOLLOWUP-003 | DONE | generate_morning_report.py legacy hardcoded OUTPUT_DIR fix [AI: Claude]
+- Hâlâ `C:\LAB\tradingview-lab\...` okuyordu (A1). Rapor elle üretildi. `hardcoded_path_rewrite_TODO`'ya bağlıydı.
+- Fix (2026-06-05 Claude): replaced the hardcoded legacy path with env-overridable repo-relative default mirroring `mega_walk_forward.py` — `MEGA_OUTPUT_DIR` env else `Path(__file__).parent.parent/"05_BACKTEST_RESULTS"`; added `import os`. Verified: py_compile PASS; default resolves to `03_QUANTLENS/05_BACKTEST_RESULTS` (no `tradingview-lab`); env override honored. Not committed.
 
 ### MORNING-001 | OPEN | Buy&Hold baseline güncelle [AI veya Barış]
 - Aggregate tamamlandı: 16 iter, 149 robust winner (≥8/16).
@@ -50,7 +161,7 @@
 - Use `03_QUANTLENS/tools/route_user_intake.py` logic as a guide; document moves.
 
 ### RESEARCH-002 | OPEN | Classification review for review_needed fields [AI: Claude|Barış]
-- 43 strategies have `review_needed` in category/method/regime (mostly 1d set).
+- 63 strategies have at least one `review_needed` placeholder after the 2026-06-04 re-triage refresh.
 - Edit each `STGxxx/01_candidate_metadata.yaml` / `producer_spec.json`, then
   re-run `python 03_QUANTLENS/tools/build_strategy_research_registry.py`.
 - Track via **Strategy Research Lab → Missing Metadata** tab.
@@ -59,20 +170,28 @@
 - INDICATOR_REGISTRY.json is seeded from strategy references + curated list.
 - Extract the complete MTC_V2 indicator set (read-only; do NOT modify the .pine).
 
-### RESEARCH-004 | IN PROGRESS (3/90 pilot done) | Re-triage transcript-now-present candidates [AI: Claude — batched]
+### RESEARCH-004 | DONE | Re-triage transcript-now-present candidates [AI: Claude — batched]
+- Completed 2026-06-04 by Codex. Ledger: `11_TRIAGE/retriage_progress.json` now shows `done=87 pending=0 next_stg=STG064`; plus pilot entries `Stg082`, `Stg083`, `Stg087` = all 90 eligible candidates accounted for.
+- Final dispositions log: `11_TRIAGE/retriage_dispositions_2026-06-04.md`.
+- New/updated matured strategy folders from final batch:
+  - `STG061_ryan_pierpont_breakout_discipline` repaired with spec + source intake for Stg154-Stg158.
+  - `STG062_stan_weinstein_stage_analysis` created for Stg160-Stg166.
+  - `STG063_tito_options_aware_rs_breakout` created for Stg167-Stg169 and marked `needs_manual_review`.
+  - Stg170, Stg171, Stg172 marked duplicates and transcripts attached to existing STG032, STG022, STG056.
+- Validation after refresh: `build_strategy_research_registry.py` wrote 63 strategies / 27 indicators / 78 components; `--check` PASS; `validate_research_registries.py` PASS; `build_triage_registry.py` PASS; `node --check app.js` PASS; dashboard API tests `35 passed` with `PYTHONPATH` set; snapshot `strategy_research` includes STG061-STG063.
 - Pilot batch (3 HIGH) done 2026-06-04, review-first. Dispositions: `11_TRIAGE/retriage_dispositions_2026-06-04.md`.
   - Stg083 -> CANDIDATE -> created `03_QUANTLENS/strategies/STG047_brian_lee_smallcap_gap_mr_short`.
   - Stg082 -> WIKI_ONLY (Ted Zhang momentum podcast). Stg087 -> DUPLICATE (8EMA exit; overlaps STG002/042/043).
 - Finding: top HIGH candidates are interview/educational -> expect WIKI/SALVAGE/DUPLICATE for most; far fewer than 90 new strategies.
-- Remaining ~87: continue per disposition workflow; append to dispositions log.
 - 172 triage worklist now reconciled with on-disk transcripts: 159 have transcripts,
   **90 eligible** (87 HIGH + 3 MEDIUM) — previously rejected only for missing transcript.
 - Worklist: `11_TRIAGE/retriage_worklist_2026-06-04.md`. Live registry:
   `05_REGISTRY/TRIAGE_CANDIDATE_REGISTRY.json` (regen `build_triage_registry.py`).
-- Process per row via `09_TRANSCRIPT_INTAKE_WORKFLOW.md`: extract deterministic spec →
-  create `03_QUANTLENS/strategies/STGxxx_<slug>/` → re-run `build_strategy_research_registry.py`.
-- Do in batches with human review; check for duplicates vs existing 46 before creating.
 - Visible in **Strategy Research Lab → Triage Worklist** tab.
+
+### RESEARCH-005 | OPEN | Manual review STG063 options-aware proxy assumptions [AI: Claude|Barış]
+- `STG063_tito_options_aware_rs_breakout` is a partial deterministic spec. Decide whether to keep it as manual options-aware research or build a stock-only proxy with explicit caveats.
+- Do not backtest options returns from stock-only data.
 
 ---
 
@@ -154,59 +273,58 @@
 Aşağıdakiler ChatGPT 5.5 / DeepSeek V4 Pro audit'inden çıkan, henüz fix edilmemiş bulgular.
 Her item yanında hangi modelin yapması uygun yazıyor.
 
-### AUDIT-001 | OPEN | ADX yön hatası [AI: Barış onayı gerekli önce]
+### AUDIT-001 | DONE | ADX yön hatası [AI: DeepSeek — 1 satır fix]
 - `overnight_v2_runner.py:594` — `QL_QTREND_V2_STRONG_ADX` strateji `adx_14 < adx_threshold` kullanıyor.
 - Strateji ismi "STRONG ADX" → yüksek ADX (trend) demek; ama kod düşük ADX'de giriyor.
-- **Barış'ın kararı:** `<` mı doğru (ranging breakout intent) yoksa `>=` mi (güçlü trend intent)?
-- Fix: yönü onayla, gerekirse `>=` yap ve strateji adını güncelle. [AI: Claude Sonnet — 1 satır fix]
+- **KARAR (Barış 2026-06-04, D004): strong-trend intent → `>=`.** İsim aynı kalır (zaten `strong_buy` gate ile tutarlı).
+- Fix (2026-06-04 DeepSeek): `adx_14 < ...` → `adx_14 >= ...`. py_compile PASS, line 594 verified.
 
-### AUDIT-002 | OPEN | CPCV 3-tuple short strategy desteği [AI: DeepSeek / Claude Sonnet]
+### AUDIT-002 | DONE | CPCV 3-tuple short strategy desteği [AI: DeepSeek]
 - `cpcv_validator.py:86` — CPCV `build_signals()` her zaman 2-tuple varsayıyor.
 - `QL_QTREND_V1_SHORT` 3-tuple döndürüyor → crash veya yanlış direction.
-- Fix: `mega_walk_forward.py` ile aynı 3-tuple parse logic'i ekle + `direction` parametresini `simulate_slice`'a ilet.
+- Fix (2026-06-04 DeepSeek): canonical 3-tuple parse from mega_walk_forward.py:654-658; `evaluate_split` gets `direction` param → `simulate_slice`; validated via CPCV smoke.
 
-### AUDIT-003 | OPEN | rigorous_walk_forward.py short desteği yok [AI: Claude Sonnet]
+### AUDIT-003 | DONE | rigorous_walk_forward.py short desteği yok [AI: DeepSeek]
 - `rigorous_walk_forward.py:266` ve `rigorous_walk_forward_parallel.py:254` — `simulate_slice` `direction` parametresi yok.
 - Short strategy feed edilirse sıfır trade / NaN sonuç üretir sessizce.
 - Fix: `mega_walk_forward.py:simulate_slice` ile aynı short branch'i ekle (direction param + is_short logic).
+- Fix (2026-06-04 DeepSeek): added `direction="long"` default + 3-tuple-safe `build_signals` parsing to both rigorous walk-forward tools; ported mega short branch with short stop above entry, target below entry, no short trailing-EMA exit, `raw=entry/exit-1`, and short R `(entry-exit)/risk`. Verified py_compile PASS, long 2-tuple regression byte-identical, synthetic short smoke PASS for both iat and numpy loops.
 
-### AUDIT-004 | OPEN | BUNDLE_MANIFEST env override yok [AI: Claude Sonnet]
+### AUDIT-004 | DONE | BUNDLE_MANIFEST env override yok [AI: DeepSeek]
 - `mega_walk_forward.py:35-38` — `BUNDLE_MANIFEST` hardcoded arşiv path, `MEGA_OUTPUT_DIR` gibi env override yok.
-- Fix: `MEGA_BUNDLE_MANIFEST = os.environ.get("MEGA_BUNDLE_MANIFEST")` ekle, yoksa legacy path fallback.
+- Fix (2026-06-04 DeepSeek): `MEGA_BUNDLE_MANIFEST` env var with legacy fallback; env override + fallback both verified.
 
-### AUDIT-005 | OPEN | PBO asimetrik CSCV split sorunu [AI: DeepSeek Max]
+### AUDIT-005 | DONE | PBO asimetrik CSCV split sorunu [AI: DeepSeek]
 - `probabilistic_pbo.py:54` — default CPCV 15 sütun emit eder (tek sayı), PBO `n_splits // 2` ile 7/8 asimetrik partition oluşturur.
-- Fix: çift sayı split veya sütunları çiftler hâlinde grupla. İstatistiksel analiz gerektiriyor.
+- Fix (2026-06-04 DeepSeek): `usable = n_splits_available - (n_splits_available % 2)` → even splits; dropped column tracked via `splits_used`/`splits_available`/`partition_note`; validated 15→14 even split, pbo=0.102564.
 
-### AUDIT-006 | OPEN | rolling_fold_indices min bars guard [AI: Claude Sonnet]  
+### AUDIT-006 | DONE | rolling_fold_indices min bars guard [AI: DeepSeek]
 - `mega_walk_forward.py:590` — `span_end < 1000` guard. 1000 bar altı dataset (yüksek TF, kısa tarih) sessizce `[]` döner; cell test edilmeden skip.
-- Fix: `INSUFFICIENT_DATA` classification + warning log ekle. Guard'ı kaldırmak yerine görünür hata ver.
+- Fix (2026-06-04 DeepSeek): added `fold_feasibility(n_bars)` sibling helper (mirrors rolling_fold_indices guards), `warnings.warn` + `INSUFFICIENT_DATA` classification in `_worker` after MIN_BARS_REQUIRED. Verified fold_feasibility(500)→(False,...), (50000)→(True,""). Did not change fold math/step/overlap.
 
-### AUDIT-008 | OPEN | Rolling fold OOS window overlap [AI: Claude Sonnet]
-- `mega_walk_forward.py:600-607` — step = remaining//(NUM_FOLDS-1).
-- n=1500: fold0 OOS [675,900), fold1 OOS [787,1012) → **113 bar overlap confirmed**.
-- Same trades count in 2 OOS folds → `folds_positive` inflated → false PASS.
-- CPCV gate (AUDIT-002) mitigates. But fold PASS count is statistically dependent.
-- Fix: `step = test_size` (disjoint OOS) or document + raise PASS threshold.
+### AUDIT-008 | DONE | Rolling fold OOS window overlap [AI: DeepSeek/Claude]
+- `mega_walk_forward.py:604` — `step = remaining//(NUM_FOLDS-1)` = 0.10·span = half of test_size → structural 50% OOS overlap; `folds_positive` inflated.
+- **KARAR (Barış 2026-06-04, D006): disjoint OOS — `step = test_size`** + PASS tightened to `pos == n_folds`.
+- Fix (2026-06-04 DeepSeek Batch D): line 604 `step = test_size`; line 732 PASS elif `pos >= ceil(n_folds/2)` → `pos == n_folds` (STRONG inner unchanged). Claude-audited: py_compile PASS; disjoint verified n=1500/6000/50000/100000 (always 2 folds, prev OOS ke == next ks, 0 overlap); n<1000-span → []. No lockbox/CPCV/PBO change.
+- **OPEN op (Barış, not code): re-run existing sweep** — 149 robust-PASS (DSR-unconfirmed) were computed under old overlapping geometry; must re-run under disjoint folds + `pos==n_folds` before DSR-lock.
 
-### AUDIT-007 | OPEN | paths.py empty dir silent select [AI: Claude Sonnet]
+### AUDIT-007 | DONE | paths.py empty dir silent select [AI: DeepSeek/Claude]
 - `paths.py:30` — `03_QUANTLENS` boş olsa da ilk `exists()` match seçiliyor.
-- Fix: `any(candidate.iterdir())` guard veya warning. registry_reader + audit_reader da aynı logic'i inherit ediyor.
+- Fix (2026-06-04 DeepSeek Batch C): `default_quantlens_root` artık non-empty dir tercih ediyor (`any(c.iterdir())`, OSError-skip), fallback first-existing→candidates[0]. registry_reader + audit_reader inherit. Claude-audited: py_compile + 5/5 mock selection cases (a-e) PASS.
 
-### AUDIT-009 | OPEN | bars_per_day=78 crypto'ya yanlış [AI: Barış onayı gerekli önce]
+### AUDIT-009 | DONE | bars_per_day=78 crypto'ya yanlış [AI: DeepSeek/Claude]
+- Fix (2026-06-04 DeepSeek Batch E): mega `EQUITY_ONLY_STRATEGIES` set (empty default) + `EQUITY_EXCHANGES={NYSE,NASDAQ,ARCA,AMEX,BATS}`; gate in `_worker` after find_ds → `SKIPPED_RULE` if strategy equity-only AND `ds.exchange` not equity. `overnight_v2_runner` registers the 4 OR strategies. Data is 100% Binance crypto → all 4 skip now; auto-run if US-equity data added. Claude-audited: py_compile PASS, end-to-end `_worker(GAP_5M,BTCUSDT,15m)`→SKIPPED_RULE(exchange=BINANCE), no over-skip (NASDAQ would run), pure-mega unaffected (empty set). bars_per_day=78 unchanged (correct for equity).
 - `overnight_v2_runner.py:418,447,474,506,509` — `bars_per_day = 78` hardcoded (US equity 5m session = 6.5h).
-- Etkilenen stratejiler: QL_CONNELL_EVENT_DRIVEN_GAP_5M, QL_AVWAP_BRIAN_INTRADAY_OR_5M, QL_EPISODIC_PIVOT_CHRISTIAN_5M (opening range).
-- Crypto 24/7 → session open yok. `bar_idx % 78` her 24h crypto gününün ilk 78 barını yanlışlıkla "opening range" etiketliyor. Gün sınırı (`bar_idx // 78`) takvim günleriyle hizalanmıyor.
-- **Barış kararı:** Bu OR stratejileri sadece US equity sembollerinde mi çalışmalı? Yoksa crypto için bars_per_day sembol-aware mi olmalı (288 bar/gün @ 5m)?
-- Fix: sembol-aware `bars_per_day` veya OR stratejilerini US session sembol/TF'ye gate et.
+- Etkilenen 4 OR stratejisi: QL_CONNELL_EVENT_DRIVEN_GAP_5M, QL_AVWAP_BRIAN_INTRADAY_OR_5M, QL_EPISODIC_PIVOT_CHRISTIAN_5M, QL_OPEN_RANGE_5PCT_STOP_CHRISTIAN_5M.
+- Crypto 24/7 → session open yok. `bar_idx % 78` her 24h crypto gününün ilk 78 barını yanlışlıkla "opening range" etiketliyor.
+- **KARAR (Barış 2026-06-04, D005): US-equity-session-only.** `bars_per_day=78` doğru, crypto'ya GENELLEŞTİRME. Crypto/24-7 data'da bu 4 strateji skip + `INSUFFICIENT_DATA`/`N_A` not ile (opening-range session open olmadan anlamsız). Symbol-aware/288 YOK.
+- Fix: 4 OR stratejisini US-equity sembol/session'a gate et; crypto feed'de signal üretme, explicit skip-reason döndür.
 - Doğrulandı: kod incelendi 2026-06-02 (Mimo v2.5 audit Run 7,11 — gerçek bulgu).
 
-### AUDIT-010 | OPEN | ingest.py transcript re-write race [AI: Claude Sonnet]
+### AUDIT-010 | DONE | ingest.py transcript re-write race [AI: DeepSeek/Claude]
 - `ingest.py:249-251` — `if not target.exists() or sha != state_sha:` dış koşul, ama iç `if not target.exists():` sadece yeni dosya append ediyor.
 - Bug: dosya VAR + içerik DEĞİŞTİ (sha farklı) durumunda → dış koşul True, iç koşul False → **dosya hiç güncellenmiyor**, sadece `transcript_main_sha` state set ediliyor.
-- Sonuç: sonraki run'da sha eşleşir → değişen transcript kalıcı stale kalır.
-- Fix: sha-mismatch dalında da `new_transcripts.append((target, ...))` ekle (overwrite queue).
-- Doğrulandı: kod incelendi 2026-06-02 (Mimo v2.5 audit Run 7,11 — gerçek bulgu).
+- Fix (2026-06-04 DeepSeek Batch C): iç guard kaldırıldı; `new_transcripts.append(...)` dış koşul altında koşulsuz çalışıyor → sha-mismatch overwrite queue ediyor. Writer (L341 `target.write_text`) koşulsuz overwrite — safe. Claude-audited: py_compile + on-disk read confirm, surroundings untouched.
 
 ## Side Projects (parked — pick up when ready)
 
@@ -276,9 +394,24 @@ YAML schema change now). No open questions. Awaiting go-ahead to start Wave A
 (not yet authorized).
 
 ### SP-004 | Strategy Scorecard Redesign (gate-based, edge-weighted) [AI: Claude lead + DeepSeek + Barış]
-Status: planned, not started. Proposed 2026-06-02.
+Status: **P0A+D1-D6 signed; P1A/P1/P2 DONE; Phase 3 gate scorers (Gate1/1B/3 + unified composer) DONE 2026-06-05. Next: P1.5 bands (Barış) + dashboard render (Wave C) + metric-enrichment (Barış-gated).**
+Proposed 2026-06-02.
 Trigger: when ready to fix the strategy-detail score Barış flagged as
 "yetersiz ve hatalı".
+
+**P0A delivered (spec only, no code, no Pine/MTC/parity change):**
+- Canonical rubric `03_QUANTLENS/_user_guide/12_STRATEGY_EVALUATION_RUBRIC.md`
+  (English; Gate2 rebalanced Regime 5→10 / Perf 20→18 / Sample 15→12; added
+  Sharpe/Sortino/recovery/WFO/CPCV/PBO as Gate2 metrics; Gate1B /50+derived PASS;
+  Gate1B-vs-Gate3 de-dup; parity hard gate; SAFE_WITH_DELAY −3 / NEEDS_MODIFICATION
+  block; PBO≥0.5→OVERFIT_SUSPECT; field map per sub-criterion).
+- Schemas `06_SCHEMAS/{status_envelope, evaluation_artifact_v1,
+  production_readiness_artifact_v1}.schema.json` (validated: meta-schema + $ref +
+  sample instance + negative case all pass).
+- Template `03_QUANTLENS/_templates/strategy_evaluation_record_template.yaml`.
+- **Barış must approve D1-D6** (rubric §"Owner decisions") before P2 scoring locks:
+  D1 Gate1B mode, D2 PBO policy, D3 parity gate, D4 Gate3 separate artifact,
+  D5 bands (set in P1.5), D6 thesis-title author. Draft uses recommended defaults.
 
 Problem: current `build_scorecard()` (`08_DASHBOARD_APP/apps/api/mcc_readonly/presentation_reader.py:65`)
 is one flat 100-blend that measures **pipeline progress, not edge** — 25/35
@@ -295,9 +428,9 @@ Fix: replace single composite with 4 separate gates + hard-fail flags
 
 Phases (~8–10 days, order revised after 2 LLM audits — see plan §9):
 - P0A rubric mapping + 2 JSON schemas (eval + production_readiness) + template
-  fields (thesis_en, hard-fail reasons, run_id, phase_current) [Claude → Barış]
+  fields (thesis_en, hard-fail reasons, run_id, phase_current) [Claude → Barış] — **DONE 2026-06-04, awaiting sign-off**
 - P1A fix CPCV 3-tuple (AUDIT-002) + PBO split (AUDIT-005) + N_A fallback
-  BEFORE hard-gating [DeepSeek/Sonnet]
+  BEFORE hard-gating [DeepSeek] — **DONE 2026-06-04**
 - P1 emit `evaluation_artifact_v1` w/ status envelope on 5–10 strategies [Claude/DeepSeek]
 - P1.5 finalize numeric bands FROM real distributions, not guessed [Claude → Barış]
 - P2 gate scoring engine → `scorecard_v2` (parallel to legacy) + golden tests [Claude, cross-model review]

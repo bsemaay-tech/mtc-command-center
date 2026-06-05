@@ -1,11 +1,244 @@
 # GLOBAL_HANDOFF
 
-Last updated: 2026-06-03 (SP-005 strategy-detail redesign plan v3 + terminal prototypes; earlier: overnight sweep + sabah raporu + gece-sonu kapanış akışı)
-Updated by: Claude Opus 4.8
+Last updated: 2026-06-05 (SP-004 Phase 3 + reader-side queue + SP-005 Wave B reader & UI card)
+Updated by: Claude
 Active project: TradingView-LAB / MTC Command Center
-Current objective: Gece optimizasyon sweep'i + sabah raporu + kapanış akışı kalıcılaştırma. — DONE
-Current phase: 21 iter / 0 crash / ~3.6M param-eval. 149 robust PASS, 8 down-market alpha, hepsi DSR-unconfirmed. Gece-sonu kapanış (lessons + dashboard upgrade) artık RUNBOOK §6.4 zorunlu adım.
+Current objective: clear the no-approval reader-side queue (SP-004 Phase 3 scorers, morning-report path, SP-005 Wave B reader). — DONE
+Current phase: Confirmation done. Dar pre-registered grid DSR power'ı geri getirdi (0.0→0.34) ama hiçbir aday 0.50 geçmedi → STATISTICALLY_UNCONFIRMED. Promotion yok.
 Current blockers: (none)
+
+## Claude Opus 4.8 2026-06-05 — Confirmation (Option B) review + night-end closure
+
+Scope: reviewed the 2026-06-04 quiet confirmation run (Codex launched it) and completed the night-end closure. No Pine, MTC, parity, or live-trading action.
+
+Run: `confirm_2026-06-04` — pre-registered narrow grid, 6 candidate strategies × 17 symbols × {15m,1h,2h}, narrow grids (grid_n 6-18), 4 workers, ~70s, 0 crash. Codex then ran CPCV + PBO + 16 evaluation artifacts + 16 Gate-2 scorecards + a keep-awake watchdog to 07:30.
+
+Results:
+- multiwindow 16 cand → 9 regime+stable; alpha 16 PASS / 11 beat b&h / 6 premium / **6 down-market alpha**.
+- DSR rose wide→narrow (best 0.0→0.34-0.38, A17 fix works) but NONE ≥0.50 → `STATISTICALLY_UNCONFIRMED`.
+- Gate-2 16/16 INCOMPLETE (32-46), 0 pass — honest status (MEGA lacks ~17 Gate-2 metrics), not FAIL.
+- Cross-symbol alpha positive (LINK 1h+2h, ETH 2h, NEAR 1h while b&h<0 = real alpha not beta).
+
+Code changes:
+- **A18 FIXED** in `03_QUANTLENS/tools/write_overnight_morning_report.py`: counts + alpha tables now read canonical `alpha_summary.json` (`down_market_alpha`/`premium`) = ALPHA_DONE single source of truth, with a drift assert. Verified: report down_market=6 == log 6 (the 78≠8 bug gone).
+- New: `confirmation_runner_2026-06-04.py` (narrow-grid monkey-patch over mega, non-destructive) + `run_confirmation_2026-06-04.sh` (retry + isolated output + post-pipeline).
+
+Closure: lessons `OVERNIGHT_LESSONS_2026-06-05.md` C4-C6 added; runbook §8 A19 + CHANGELOG; NEXT_STEPS review DONE + `NIGHT-FOLLOWUP-HEAVY-TIER` opened.
+
+Key lesson (A19/C4-C5): the run is fully deterministic (bootstrap seed = md5(strat|sym|tf), mega:731) — repeating it overnight yields zero new info. Narrow grid was correct for DSR power; the waste was the idle keep-awake watchdog. Future confirmation nights need a compute-filling heavy-validation tier (50k bootstrap, multi-seed stability, CPCV-all-cells) or must release the machine.
+
+Decision: no promotion. Optional forward-paper observation only for 8EMA LINK 1h and Donchian ETH 2h.
+
+## Codex GPT-5 2026-06-04 — Hermes install and MTC agent profiles
+
+Scope: installed Hermes Agent and created five MTC-specific Hermes profiles. No Pine, MTC strategy behavior, parity files, live trading, backtest launch, account action, git commit, or secret value logging performed.
+
+Install result:
+- Official Windows installer was downloaded and inspected from `https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.ps1`.
+- Official git-based installer timed out during repository clone; the incomplete clone under `%LOCALAPPDATA%/hermes/hermes-agent` was removed after stopping only the stalled clone process tree.
+- Hermes was installed successfully via PyPI into `%LOCALAPPDATA%/hermes/hermes-pypi-venv`.
+- Verified: `Hermes Agent v0.15.2 (2026.5.29.2)`, Python `3.11.14`.
+- User PATH updated to include `%LOCALAPPDATA%/hermes/hermes-pypi-venv/Scripts`, `%LOCALAPPDATA%/hermes/bin`, and `%USERPROFILE%/.local/bin`. Existing Codex shell may need restart to pick it up.
+
+Profiles created:
+- `mtc-steward`
+- `quantlens-research`
+- `dashboard-qa`
+- `backtest-monitor`
+- `repo-hygiene`
+
+Profile guardrails:
+- Each profile has its own Hermes state directory under `%USERPROFILE%/.hermes/profiles/<profile>/`.
+- Each profile has custom `SOUL.md`, `memories/USER.md`, `memories/MEMORY.md`, and `MTC_WORKSPACE.md`.
+- Guardrails encode English responses, repo pre-read chain, read-first behavior, no autonomous deletion, and no Pine/MTC/parity/live-trading/backtest-launch changes without explicit approval.
+- Model/provider setup intentionally left unconfigured per profile to avoid choosing paid/remote model behavior without Baris approval; run `<profile> setup` or `hermes -p <profile> model` when ready.
+
+## Codex GPT-5 2026-06-04 — Fallow tool evaluation transcript
+
+Scope: fetched and evaluated transcript for `https://youtu.be/Iy8l_Wx1Bpg?si=v5Q2oV9vyHVtF2hD` to assess the video tool for MTC Command Center development. No browser automation, YouTube login, video/audio download, account action, Pine, MTC behavior, parity, backtest, optimization, or implementation changes touched.
+
+Result:
+- Transcript fetched successfully: `YT_TRANSCRIPT_COLLECTOR/transcripts/Iy8l_Wx1Bpg.md`.
+- Transcript metadata: Turkish auto-generated.
+- Tool identified as Fallow: Rust-native JS/TS codebase intelligence for dead code, unused dependencies/exports/types, duplication, complexity, cycles, and boundary checks.
+- Recommendation: useful only as an optional read-only audit for the small dashboard JS/frontend surface; not a primary MTC Command Center development tool because this repo is mostly Python/Pine and has no normal Node package graph for the dashboard.
+
+## Codex GPT-5 2026-06-04 — Hermes transcript folder organization
+
+Scope: organized Hermes-related transcript files only. No browser automation, YouTube login, video/audio download, account action, Pine, MTC behavior, parity, backtest, or optimization touched.
+
+Result:
+- Created `YT_TRANSCRIPT_COLLECTOR/transcripts/hermes/`.
+- Moved 7 collected YouTube transcript Markdown files into `YT_TRANSCRIPT_COLLECTOR/transcripts/hermes/`: `2NuvYsXMehw.md`, `QQEgIo4Juxg.md`, `nb5ALoAGAbE.md`, `gb5TlGw6Uks.md`, `xK1cgyCla-8.md`, `k5NhsF7t68M.md`, `LvWobwr0Neg.md`.
+- Moved 4 files from `Temp/HERMES/` into the same `hermes/` folder.
+- Deleted `Temp/HERMES/` after verifying it was empty.
+- Updated current `YT_TRANSCRIPT_COLLECTOR/reports/transcript_index.csv` output paths for the five rows it currently tracks.
+
+## Codex GPT-5 2026-06-04 — YouTube transcript fetch batch 5
+
+Scope: ran the isolated `YT_TRANSCRIPT_COLLECTOR` tool for five user-provided YouTube URLs. No browser automation, YouTube login, video/audio download, account action, Pine, MTC behavior, parity, backtest, or optimization touched.
+
+Result:
+- PASS: `Processed 5 URL(s): 5 success, 0 failed`.
+- Input: `YT_TRANSCRIPT_COLLECTOR/urls_run_batch_2026_06_04_5.txt`.
+- Reports refreshed: `YT_TRANSCRIPT_COLLECTOR/reports/transcript_index.csv`, `YT_TRANSCRIPT_COLLECTOR/reports/failed_videos.csv`.
+- Outputs:
+  - `YT_TRANSCRIPT_COLLECTOR/transcripts/nb5ALoAGAbE.md` — English auto-generated.
+  - `YT_TRANSCRIPT_COLLECTOR/transcripts/gb5TlGw6Uks.md` — English auto-generated.
+  - `YT_TRANSCRIPT_COLLECTOR/transcripts/xK1cgyCla-8.md` — Turkish auto-generated.
+  - `YT_TRANSCRIPT_COLLECTOR/transcripts/k5NhsF7t68M.md` — English auto-generated.
+  - `YT_TRANSCRIPT_COLLECTOR/transcripts/LvWobwr0Neg.md` — Turkish manual.
+
+## Codex GPT-5 2026-06-04 — YouTube transcript fetch run QQEgIo4Juxg
+
+Scope: ran the isolated `YT_TRANSCRIPT_COLLECTOR` tool for `https://youtu.be/QQEgIo4Juxg?si=H_WHHEOQOrbqK9e_`. No browser automation, YouTube login, video/audio download, account action, Pine, MTC behavior, parity, backtest, or optimization touched.
+
+Result:
+- PASS: `Processed 1 URL(s): 1 success, 0 failed`.
+- Transcript: `YT_TRANSCRIPT_COLLECTOR/transcripts/QQEgIo4Juxg.md`.
+- Index: `YT_TRANSCRIPT_COLLECTOR/reports/transcript_index.csv`.
+- Failures report: `YT_TRANSCRIPT_COLLECTOR/reports/failed_videos.csv` with 0 failed rows.
+- Transcript metadata: `English (en)`, type `manual`.
+- Added collector-local `.gitignore` for `.venv/`, `__pycache__/`, and `*.py[cod]`.
+
+## Codex GPT-5 2026-06-04 — YouTube transcript fetch run
+
+Scope: ran the isolated `YT_TRANSCRIPT_COLLECTOR` tool for `https://youtu.be/2NuvYsXMehw?si=Qvt1Y5yuBdvo2HNh`. No browser automation, YouTube login, video/audio download, account action, Pine, MTC behavior, parity, backtest, or optimization touched.
+
+Run details:
+- Created local venv under `YT_TRANSCRIPT_COLLECTOR/.venv/` and installed `youtube-transcript-api==1.2.4` via `requirements.txt`.
+- Created run input `YT_TRANSCRIPT_COLLECTOR/urls_run_2NuvYsXMehw.txt`.
+- Initial run exposed a UTF-8 BOM parsing issue from PowerShell-created URL files; fixed `read_urls()` to use `encoding="utf-8-sig"` and added a regression test.
+- Final command: `.\.venv\Scripts\python.exe .\collect_transcripts.py --urls .\urls_run_2NuvYsXMehw.txt`.
+
+Result:
+- PASS: `Processed 1 URL(s): 1 success, 0 failed`.
+- Transcript: `YT_TRANSCRIPT_COLLECTOR/transcripts/2NuvYsXMehw.md`.
+- Index: `YT_TRANSCRIPT_COLLECTOR/reports/transcript_index.csv`.
+- Failures report: `YT_TRANSCRIPT_COLLECTOR/reports/failed_videos.csv` with 0 failed rows.
+- Transcript metadata: `Turkish (auto-generated) (tr)`, type `auto-generated`.
+
+Validation:
+- `.\.venv\Scripts\python.exe -m py_compile .\collect_transcripts.py .\tests\test_collector.py` PASS.
+- `.\.venv\Scripts\python.exe -m unittest discover -s tests -p "test_*.py"` PASS: 3 tests.
+- Python UTF-8 readback confirmed Turkish characters are stored correctly; PowerShell preview may display mojibake depending on terminal encoding.
+
+## Claude 2026-06-04 — SP-004 rubric D1-D6 SIGNED OFF
+
+Barış signed all six owner decisions (DECISIONS D007); rubric `12_STRATEGY_EVALUATION_RUBRIC.md` updated to match. **Phase 2 scoring lock unblocked.**
+- **D1** Gate 1B → **/100, PASS ≥75** uniform with all gates (was /50+≥40; criteria rescaled ×2).
+- **D2** PBO ≥0.5 → `OVERFIT_SUSPECT`, blocks promotion, keeps idea (accepted).
+- **D3** parity → **ADVISORY, not a hard gate**: mismatch raises `PARITY_WARNING` + revisit note, does NOT block promotion; pure-Python strategies → `N_A`. Rationale: Pine layer may be retired for direct Python/Binance API execution.
+- **D4** Gate 3 → separate `production_readiness_artifact_v1`, N/A until exists (accepted).
+- **D5** numeric bands deferred to Phase 1.5 from real distributions (confirmed).
+- **D6** AI-drafts thesis title, Barış overrides (accepted).
+Spec-only — no code/Pine/parity-oracle change, no commit. **Follow-up (NEXT_STEPS SP-004-SCHEMA-PARITY):** move `parity_gate` out of `hard_flags` → advisory `flags.parity_status` in `evaluation_artifact_v1.schema.json` (Phase 1).
+
+## Claude 2026-06-04 — SP-004 Batch E (AUDIT-009) + AUDIT backlog cleared
+
+Equity gate for opening-range strategies (Barış D005; skip-by-exchange). The 4 OR strategies (`QL_CONNELL_EVENT_DRIVEN_GAP_5M`, `QL_AVWAP_BRIAN_INTRADAY_OR_5M`, `QL_EPISODIC_PIVOT_CHRISTIAN_5M`, `QL_OPEN_RANGE_5PCT_STOP_CHRISTIAN_5M`) hardcode `bars_per_day=78` (US-equity 6.5h session) — meaningless on the all-crypto bundle (93 datasets, all `exchange=BINANCE`). Fix: `mega_walk_forward.py` adds `EQUITY_ONLY_STRATEGIES` (empty default) + `EQUITY_EXCHANGES={NYSE,NASDAQ,ARCA,AMEX,BATS}` + a `_worker` gate (after find_ds, before load_df) returning `SKIPPED_RULE` when an equity-only strategy hits a non-equity exchange; `overnight_v2_runner.py` registers the 4. All skip today; auto-run if US-equity data is added later. Claude-audited ACCEPT: py_compile, end-to-end `_worker`→SKIPPED_RULE on BTCUSDT/BINANCE, no over-skip, pure-mega unaffected. `bars_per_day=78` left intact (correct for real equity). No commit.
+
+**AUDIT backlog now fully cleared:** 001-010 all DONE. Open items are Barış OPS, not code: (1) re-run the sweep — 149 robust-PASS were scored under old overlapping folds + looser threshold (D006); (2) add real US-equity data if the 4 OR strategies should ever produce results; (3) commit the Batch A-E edits + untracked tools (`cpcv_validator.py`, `probabilistic_pbo.py`, `_deepseek_driver/`).
+
+## Claude 2026-06-04 — SP-004 Batch D (AUDIT-008)
+
+Disjoint OOS rolling folds (Barış D006). `mega_walk_forward.py`: line 604 `step = test_size` (was `remaining//(NUM_FOLDS-1)` = structural 50% OOS overlap → inflated `folds_positive`); line 732 PASS elif tightened `pos >= ceil(n_folds/2)` → `pos == n_folds` (all OOS folds positive). Now exactly 2 independent folds for every dataset size (f=2 drops at `ke-ks<200`). Claude-audited ACCEPT: py_compile PASS, disjointness verified n=1500/6000/50000/100000, no lockbox/CPCV/PBO/DSR change, no commit.
+**OPEN op (Barış, not code):** existing 149 robust-PASS were computed under the OLD overlapping geometry — re-run the sweep under disjoint folds + `pos==n_folds` before DSR-lock.
+
+## Claude 2026-06-04 — SP-004 Batch C + DeepSeek harness
+
+**DeepSeek sandboxed harness** (`_deepseek_driver/ds_agent.py`): DeepSeek now runnable as an audited subagent over the OpenAI-compatible API (tools: read_file/edit_file/write_file/py_compile/run_python/finish). Write allowlist + denylist (`*.pine`/parity/`06_SCHEMAS`/`MTC_V2`/`.git`), no git/commit capability, `run_python` AST-guard blocks write/exec/network so all edits route through guarded `edit_file`. utf-8 stdout; report+transcript → `C:\tmp\ds_*_report.md`. Workflow: Claude writes the task prompt + audits; DeepSeek does read/edit. Key/model live (deepseek-chat & deepseek-v4-pro). Driver dir untracked.
+
+**Batch C (AUDIT-007 + AUDIT-010)** — first live harness job, Claude-audited ACCEPT:
+- AUDIT-007 `paths.py:default_quantlens_root` — prefers non-empty candidate dir (`any(c.iterdir())`, OSError-skip), fallback first-existing→candidates[0]. registry_reader + audit_reader inherit. Verified 5/5 mock selection cases.
+- AUDIT-010 `ingest.py:249-251` — inner `if not target.exists()` guard removed; sha-mismatch transcript now overwrite-queued (writer `target.write_text` overwrites). Surroundings untouched.
+Validation: py_compile both PASS, on-disk diff read, no unauthorized changes, no commit.
+
+AUDIT backlog status: 001/002/003/004/005/006/007/009/010 DONE. OPEN: AUDIT-008 (fold OOS overlap — needs Barış design call: `step=test_size` vs raise PASS threshold). AUDIT-009 DECIDED (D005) but impl needs market-metadata/session path in overnight_v2_runner — not yet wired.
+
+## DeepSeek 2026-06-04 — SP-004 Batch B short-direction support
+
+Completed AUDIT-003 in the two rigorous walk-forward tools only:
+- `03_QUANTLENS/tools/rigorous_walk_forward.py`
+- `03_QUANTLENS/tools/rigorous_walk_forward_parallel.py`
+
+Both `simulate_slice` implementations now accept `direction="long"` by default,
+parse optional 3-tuple `(sig, stop, direction)` from `build_signals`, and apply
+mega-style short math only when `direction == "short"`: short stop must be above
+entry, target is below entry, stop checks high >= stop, target checks low <= target,
+raw PnL is `entry_price / exit_price - 1.0`, and R is `(entry_price - exit_price) / risk`.
+No trailing-EMA exit is used for shorts. Existing 2-tuple strategies fall back to
+`direction="long"`.
+
+Validation: `py_compile` PASS; long-parity regression on
+`QL_2026-05-01_ANY_1H_RSI_CONFLUENCE_PLAYBOOK` was byte-identical before/after;
+synthetic short smoke PASS for both iat and numpy loops (`short_net=11.031`,
+`long_net=-5.08`, invalid short stop skipped with 0 trades). No changes to
+`mega_walk_forward.py`, overnight runner, CPCV/PBO, Pine, MTC, parity, schemas,
+fold logic, costs, thresholds, or SliceStats arity. No commit/push.
+
+## Claude Opus 4.8 2026-06-04 — SP-005 Wave A audit PASS + SP-004 Phase 0A drafted
+
+**1. SP-005 Wave A acceptance audit → PASS WITH MINOR ISSUES (accepted).**
+Reviewed Codex's terminal-style Strategy Detail Page. No blockers; no faked
+scorecard_v2 / QuantLens / metrics. Live snapshot confirms `scorecard_v2` absent
+on all 176 rows → honest "SP-004 pending" everywhere; legacy composite relocated
+to collapsed Technical Details; English title fallback works; CSS scoped (no other
+screen damage); list/filters intact. Validation: `node --check` PASS, `py_compile`
+PASS, 35 API tests PASS. **No files changed during audit.**
+- Note: Codex under-reported `pipeline_reader.py` — it also migrated 3 path helpers
+  (`_promoted_dir`/`_quantlens_root`/`_source_file_candidates`) from hardcoded
+  legacy `01_MASTER TEMPLATE_V2/06_QUANTLENS_LAB` → `default_quantlens_root()`.
+  Correct latent-bug fix (matches backtest_reader fix), read-only, beneficial.
+- Polish backlog (non-blocking): dead Turkish `DESCRIPTIONS` block + first
+  `_DEFAULT_DESC` (overwritten); orphaned `renderDecisionPanel`/`renderScorecard`
+  in app.js (no call sites after rewrite).
+
+**2. SP-004 Phase 0A — DRAFTED (spec only, no code, no Pine/MTC/parity touch).**
+Migrated the Turkish source rubric into canonical English + applied both audits'
+gap-fixes. Deliverables:
+- `03_QUANTLENS/_user_guide/12_STRATEGY_EVALUATION_RUBRIC.md` — 4 gates + hard-fail
+  gates, every sub-criterion mapped to an emittable field. Gate2 rebalanced
+  (Regime 5→10, Perf 20→18, Sample 15→12 = /100); added Sharpe/Sortino/recovery/
+  WFO/CPCV/PBO as Gate2 metrics; Gate1B = /50 + derived PASS≥40; Gate1B-vs-Gate3
+  §6.1 de-dup; parity hard pass/fail; SAFE_WITH_DELAY −3 / NEEDS_MODIFICATION
+  block-not-reject; PBO≥0.5 → OVERFIT_SUSPECT (blocks promotion, keeps idea).
+- `06_SCHEMAS/status_envelope.schema.json`, `evaluation_artifact_v1.schema.json`,
+  `production_readiness_artifact_v1.schema.json` (Gate3 separate, N/A until
+  integration evidence). Validated: meta-schema + $ref resolution + sample
+  instance + negative enum case all pass.
+- `03_QUANTLENS/_templates/strategy_evaluation_record_template.yaml` (thesis_en/tr,
+  gate hard_fail reasons, backtest_run_id, evaluation_artifact_version,
+  phase_current = N/A discriminator).
+- **Barış sign-off needed on D1-D6** (rubric §"Owner decisions") before P2 locks
+  scoring. Draft uses recommended defaults. Next: **P1A** (fix CPCV 3-tuple
+  AUDIT-002 + PBO split AUDIT-005 + N_A fallback) before any hard-gating.
+- `_eval_pipeline_source_TEMP/` retained (delete only Phase 5).
+
+## GPT-5 Codex 2026-06-04 — MTC-Engine Validation implementation
+
+Implemented the additive MTC-Engine Validation stage in `02_MTC_BACKTEST`.
+
+- New light-risk profile: `src/config/profiles/light_risk.py` returns a fresh `MTCConfig`
+  with filters/guards OFF, risk features ON, and nested or dotted per-producer overrides.
+- New manual producer-adapter package: `src/modules/signals/producers/`, including
+  `SupertrendProducerAdapter` as the golden adapter wrapping the existing Supertrend signal code.
+- New bridge CLI: `python -m src.cli.mtc_engine_validate` loads a producer adapter, applies
+  the light-risk profile, injects the adapter into an `MTCRunner` instance, emits `report.md`,
+  `results.json`, `manifest.json`, and `trades.csv`, and reports producer parity as `NOT_RUN`
+  unless an explicit `--parity-command` is supplied.
+- New standalone Pine producer adapter:
+  `01_MTC_PROJECT/parity_oracles/feature_adapters/pinets/producer_supertrend_v1.pine`
+  for raw-signal parity only. `01_MTC_PROJECT/01_PINE/MTC_V2.pine` was not modified.
+- Workflow docs updated: `03_QUANTLENS/_user_guide/07_BACKTEST_AND_OPTIMIZATION_RULES.md`
+  now includes `MTC_ENGINE_VALIDATED` and the MTC-Engine Validation Gate; runbook has the
+  operational command block.
+- Verification: `pytest tests/test_light_risk_profile.py tests/test_mtc_engine_validate_cli.py -q`
+  PASS (4 tests); `compileall` PASS; real-data smoke on `BTCUSDT_1d_20180701_20260308.parquet`
+  completed with strategy +20.2903%, buy&hold +111.8084%, excess -91.5181%, parity `NOT_RUN`.
+
+No engine fork, no MTCRunner edits, no risk-module edits, no QuantLens overnight-tool edits, no
+live trading functionality.
 
 ## Claude Opus 4.8 2026-06-04 — MTC-Engine Validation step design (spec)
 
@@ -310,6 +543,28 @@ Later same session — Mimo v2.5 Free audit (10 run) incelendi:
   - `sprint_runs/MEGA_results_iter_3_20260601_061755.json`
   - Iter 4 yarıda kesildi (kullanıcı kapatma talebi).
 
+## Codex GPT-5 2026-06-04 — Confirmation run resumed after Claude token stop
+
+Scope: resumed Claude's interrupted quiet confirmation run for `NIGHT-FOLLOWUP-002` after reading the pasted chat history and mandatory QuantLens backtest pre-reads. No Pine, MTC strategy behavior, parity files, live trading, or defaults changed.
+
+Actions:
+- Verified Claude had created `03_QUANTLENS/tools/confirmation_runner_2026-06-04.py`, `run_confirmation_2026-06-04.sh`, and the A18-fixed `write_overnight_morning_report.py`, but no live confirmation process or confirm output existed.
+- Added `start_confirmation_2026-06-04_keepawake.ps1` and launched it hidden. Core confirmation run completed: 306 cells, about 3,672 configs, 4 workers, 69.6s, 16 PASS/STRONG_PASS, 1 BH-FDR survivor, 0 DSR-robust, 0 final robust.
+- Post-pipeline completed: `multiwindow_oos.py`, `alpha_vs_buyhold.py`, and A18-fixed morning report.
+- Filled missing aggregate artifact and ran validation tail: CPCV over 16 PASS cells, PBO, 16 `evaluation_artifacts/*.eval.json`, and 16 `scorecards/*.scorecard.json`.
+- Started low-resource morning watchdog PID `44464`, heartbeat `03_QUANTLENS/tools/overnight_runs/_heartbeat_confirm_morning_watchdog.json`, deadline `2026-06-05T07:30:00` local. It keeps Windows awake and refreshes artifact status; it does not run more backtests.
+
+Key outcome:
+- Report: `03_QUANTLENS/05_BACKTEST_RESULTS/confirm_2026-06-04/MORNING_REPORT_confirm_2026-06-04.md`.
+- A18 fixed in this output: `ALPHA_DONE passes=16 beat_buyhold=11 premium=6 down_market_alpha=6`, and the Down-Market Alpha table has 6 rows.
+- Down-market alpha cells are still research-only. DSR research-threshold confirmations: 0. Gate-2 scorecards: 16 INCOMPLETE, 0 pass. `APPROVED_FOR_MTC_V2_INTEGRATION`: none.
+
+Validation:
+- `py_compile` PASS for confirmation runner, morning report writer, multiwindow, and alpha tools.
+- Git Bash path verified via `C:\Program Files\Git\bin\bash.exe`; launcher syntax PASS with that path.
+- Disk write probe PASS; C: used about 60%.
+- DeepSeek harness dispatch attempted for read-only audit, but provider returned 402 insufficient balance after task JSON BOM fix; no repo files were touched by the harness.
+
 ## Workflow konsolidasyonu (en önemli)
 
 Önceki sessions'da overnight workflow her seferinde sıfırdan icat ediliyordu. Bu seansta:
@@ -358,3 +613,275 @@ Warnings:
   - Hard safety rules (AI_RULES.md): no Pine/MTC/parity edits without
     explicit Barış approval; no live trading; no destructive git ops; no
     `--no-verify`.
+
+## Codex GPT-5 2026-06-04 — Transcript re-triage completion
+
+Scope: resumed Claude's Strategy Research / QuantLens re-triage session, preserved the existing uncommitted infrastructure, and completed the remaining transcript-now-present candidates without touching Pine, MTC behavior, parity logic, live trading, or optimization.
+
+Initial state:
+- Branch: `master`.
+- Worktree was already dirty with many modified/untracked files, including Strategy Research Lab infrastructure, `STG047`-`STG061`, registries, schemas, dashboard changes, and `11_TRIAGE/retriage_progress.json`.
+- Claude's reported infrastructure was present enough to continue: registry scripts, schemas, `00_INBOX/USER_INTAKE`, dashboard Strategy Research Lab tab, `research_reader.py`, and source-intake folders for the prior strategy set existed. I did not recreate parallel infrastructure.
+
+Re-triage result:
+- Ledger before final batch: `done=69 pending=18 next_stg=STG062`.
+- Ledger after final batch: `done=87 pending=0 next_stg=STG064`; helper `next` returns `ALL_DONE`. Together with pilot entries `Stg082`, `Stg083`, `Stg087`, all 90 eligible candidates are accounted for.
+- Final batch promoted/updated:
+  - `STG061_ryan_pierpont_breakout_discipline`: repaired with `07_deterministic_spec.md`, full `source_intake/`, and transcripts for `Stg154`-`Stg158`.
+  - `STG062_stan_weinstein_stage_analysis`: created with metadata, deterministic spec, full `source_intake/`, and transcripts for `Stg160`-`Stg166`.
+  - `STG063_tito_options_aware_rs_breakout`: created as `needs_manual_review` partial spec with full `source_intake/` and transcripts for `Stg167`-`Stg169`.
+  - Duplicates: `Stg170` -> `STG032_10_ty_microcap_short`; `Stg171` -> `STG022_ql_vcp_richard_1d`; `Stg172` -> `STG056_oliver_kell_price_cycle`. Transcripts copied into each target's `source_intake/transcripts/` and duplicate notes written under `source_intake/notes/`.
+
+Disposition counts for final batch:
+- `promoted_to_matured_strategy`: 12 candidate rows.
+- `needs_manual_review`: 3 candidate rows.
+- `duplicate_existing_strategy`: 3 candidate rows.
+- blocked: 0.
+
+Validation:
+- `python MTC_COMMAND_CENTER\03_QUANTLENS\tools\build_strategy_research_registry.py` PASS; wrote 63 strategies, 27 indicators, 78 components, 5 tag entries.
+- `python MTC_COMMAND_CENTER\03_QUANTLENS\tools\build_strategy_research_registry.py --check` PASS.
+- `python MTC_COMMAND_CENTER\03_QUANTLENS\tools\validate_research_registries.py` PASS.
+- `python MTC_COMMAND_CENTER\03_QUANTLENS\tools\build_triage_registry.py` PASS; 172 total, 159 with transcripts, 90 eligible.
+- `node --check MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\app.js` PASS.
+- `python -m pytest MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\tests` PASS only after setting `PYTHONPATH=C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api`; result 35 passed.
+- Dashboard snapshot check via `build_dashboard_snapshot()` PASS; `strategy_research` contains STG061, STG062, and STG063; diagnostics schema validation true.
+
+Remaining work:
+- `RESEARCH-004` is closed in `NEXT_STEPS.md`.
+- New residual item: `RESEARCH-005` review whether `STG063_tito_options_aware_rs_breakout` stays manual options-aware research or becomes a stock-only proxy with explicit caveats. Do not backtest options returns from stock-only data.
+- Continue `RESEARCH-002` review-needed cleanup across the refreshed 63-strategy registry.
+
+## Codex GPT-5 2026-06-04 — SP-005 Wave A Strategy Detail Page
+
+Scope: implemented SP-005 Wave A only for the live dashboard Strategy Detail Page. This is the presentation layer, not the SP-004 scorecard engine.
+
+Files changed:
+- `08_DASHBOARD_APP/apps/web/app.js`
+- `08_DASHBOARD_APP/apps/web/styles.css`
+- `08_DASHBOARD_APP/apps/api/mcc_readonly/pipeline_reader.py`
+- `_AI_MEMORY/NEXT_STEPS.md`
+- `_AI_MEMORY/GLOBAL_HANDOFF.md`
+- `_AI_MEMORY/SESSION_LOG.md`
+- `_AI_MEMORY/ACTIVE_FILES.md`
+
+Implemented:
+- Terminal-style single-scroll Strategy Detail Page with sticky mini-summary.
+- Human-readable title fallback so the main title is not a raw strategy ID.
+- Merged `Verdict & Decision` section using existing audit/readiness data.
+- Main `Scorecard` section shows honest SP-004 pending state when `scorecard_v2` is absent.
+- Legacy composite score moved into collapsed `Technical Details` only.
+- Strategy Taxonomy shell, Review Journey, Trading Rules with visible `Not defined yet`, Backtest Evidence unavailable state/checklist, Salvageable Ideas placeholder, Source Material, and collapsed Technical Details.
+- Existing hardcoded fallback strategy descriptions in `pipeline_reader.py` now have English override data for the detail page.
+
+Intentionally not implemented:
+- No SP-004 scoring math, no `scorecard_v2`, no fake gate scores.
+- No QuantLens structured reader yet; QuantLens/Salvage render honest placeholders.
+- No TradingView-style backtest case visualization yet.
+- No Pine, MTC behavior, parity, backtest, or trading logic changes.
+- No deletion of `11_TRIAGE/_eval_pipeline_source_TEMP/`.
+
+Validation:
+- `node --check MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\app.js` PASS.
+- `python -m py_compile MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\mcc_readonly\pipeline_reader.py` PASS.
+- `PYTHONPATH=C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api python -m pytest MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\tests` PASS: 35 passed.
+- Started dashboard at `http://127.0.0.1:8765/dashboard`; browser check confirmed all Wave A sections render, first tested title is not raw ID, Technical Details is collapsed by default, missing fields are visible, gate scorecard placeholder is shown, QuantLens placeholder is shown, and desktop horizontal overflow is fixed.
+- Snapshot verification: current data includes missing-rules and legacy-score-only cases, and no structured QuantLens data; no current row exposes real `metrics`, so metrics-present Backtest Evidence could not be visually verified.
+
+Remaining work:
+- SP-005 Wave B: add read-only QuantLens structured reader and wire real QuantLens Verdict/Salvageable Ideas fields.
+- SP-005 Wave C: after SP-004 emits `scorecard_v2`, render real gate rows and backtest evidence cases from real artifacts only.
+- SP-004 remains planned and incomplete; do not mark scorecard redesign complete.
+
+## DeepSeek v4-pro 2026-06-04 — SP-004 P1A CPCV/PBO fixes (AUDIT-002 + AUDIT-005)
+
+Completed SP-004 Phase 1A: robustness-tool hardening. Three narrow fixes applied to
+validator tools, no Pine/MTC/parity/mega_walk_forward edits.
+
+**FIX 1 — AUDIT-002 (cpcv_validator.py): 3-tuple short strategy support.**
+- `validate_candidate()` line 86: replaced `sig, stop = mw.build_signals(...)` with
+  canonical 3-tuple parse from mega_walk_forward.py:654-658 (`if isinstance(result, tuple)
+  and len(result) == 3 and result[2] in {"long", "short"}: sig, stop, direction = result`).
+- `evaluate_split()`: added `direction="long"` parameter, passed to every
+  `mw.simulate_slice(..., direction=direction)` call.
+- Call site at line ~91 passes `direction=direction` to `evaluate_split`.
+
+**FIX 2 — AUDIT-005 (probabilistic_pbo.py): symmetric CSCV partition.**
+- Replaced `half = n_splits // 2` with `usable = n_splits_available - (n_splits_available % 2)`
+  then `half = usable // 2`. Dropped column(s) recorded via `splits_used` / `splits_available`
+  / `partition_note` in result. Train and test halves equal length on every combination.
+
+**FIX 3 — N_A / TOOL_FAILED fallback (both files).**
+- cpcv_validator.py: NO_DATA→N_A, INSUFFICIENT_GROUPS→INSUFFICIENT_DATA, all with
+  `reason` string; per-candidate body wrapped in try/except → `{status: "TOOL_FAILED", reason}`.
+- probabilistic_pbo.py: SKIPPED→INSUFFICIENT_DATA; when pbo=None, status=`INSUFFICIENT_DATA`
+  (never bare zero), normal path status=`OK`.
+
+**Validation (all PASS):**
+1. `py_compile` both files — clean.
+2. CPCV smoke `--max-candidates 3` → `cpcv_results.json` + `CPCV_VALIDATION_REPORT.md` written, no crash.
+3. PBO smoke on CPCV output → `split_count=14` (even), `splits_available=15` (original odd),
+   `splits_used=14`, `pbo=0.102564`, `status=OK`.
+4. No short 3-tuple strategy in the input set, but the code path is structurally identical
+   to mega_walk_forward.py's verified pattern.
+
+**Next:** SP-004 P1 — emit `evaluation_artifact_v1` with status envelope on 5-10 strategies.
+
+## DeepSeek v4-pro 2026-06-04 — SP-004 Batch A engine hardening (AUDIT-001, AUDIT-004, AUDIT-006)
+
+Completed SP-004 Batch A: three engine-hardening fixes. No Pine/MTC/parity/strategy-rename changes.
+
+**FIX 1 — AUDIT-001 (overnight_v2_runner.py:594): ADX direction flip.**
+Barış D004 decision: STRONG ADX intent = high ADX. Changed `<` to `>=`:
+`sig = change_up & strong_buy & (df["adx_14"] >= int(params["adx_threshold"]))`.
+One-character logic fix. Consistent with existing `strong_buy` gate. No rename.
+
+**FIX 2 — AUDIT-004 (mega_walk_forward.py:36): BUNDLE_MANIFEST env override.**
+Added `_env_manifest = os.environ.get("MEGA_BUNDLE_MANIFEST")` with legacy fallback,
+matching `MEGA_OUTPUT_DIR` pattern at lines 40-45. Verified env override routes to
+correct path; unset falls back to archive path.
+
+**FIX 3 — AUDIT-006 (mega_walk_forward.py): silent fold skip → visible INSUFFICIENT_DATA.**
+Added `fold_feasibility(n_bars)` sibling helper mirroring `rolling_fold_indices` guards
+(span_end<1000, train_size<400, test_size<200) without changing any threshold. In
+`_worker`, immediately after MIN_BARS_REQUIRED check: if infeasible, `warnings.warn`
++ returns `classification: "INSUFFICIENT_DATA"` with `reason` string — distinct from
+generic NO_DATA. Added `import warnings` at module top. `if not folds: continue` kept
+as defensive guard. Fold math/step/overlap unchanged (AUDIT-008 separate).
+
+**Validation (all PASS):**
+1. `py_compile` overnight_v2_runner.py + mega_walk_forward.py — clean.
+2. FIX 1: line 594 shows `>=` — verified.
+3. FIX 2: env override forwards to custom path; unset falls back to legacy — verified.
+4. FIX 3: `fold_feasibility(500)` → `(False, "span_end=375 < 1000 (n_bars=500)")`;
+   `fold_feasibility(50000)` → `(True, "")` — verified.
+
+## Codex GPT-5 2026-06-04 — Local YouTube transcript collector
+
+Scope: created an isolated local Python utility under `YT_TRANSCRIPT_COLLECTOR/` for collecting transcripts from user-provided YouTube URLs. No Pine, MTC behavior, TradingView parity, backtest, optimization, browser automation, login, or account action touched.
+
+Files added:
+- `YT_TRANSCRIPT_COLLECTOR/collect_transcripts.py`
+- `YT_TRANSCRIPT_COLLECTOR/requirements.txt`
+- `YT_TRANSCRIPT_COLLECTOR/urls.txt`
+- `YT_TRANSCRIPT_COLLECTOR/README.md`
+- `YT_TRANSCRIPT_COLLECTOR/tests/test_collector.py`
+- `YT_TRANSCRIPT_COLLECTOR/transcripts/.gitkeep`
+- `YT_TRANSCRIPT_COLLECTOR/reports/.gitkeep`
+
+Implemented:
+- Reads URLs from `urls.txt`, ignores blank/comment lines, and extracts video IDs from standard watch URLs, `youtu.be`, shorts, embed, live, `/v/`, and raw 11-character IDs.
+- Uses `youtube-transcript-api` only; no video/audio download and no browser fallback.
+- Selects transcript language priority `tr`, then `en`, then first available transcript; supports manual and auto-generated transcript metadata when exposed by the library.
+- Writes per-video Markdown transcript files under `transcripts/`.
+- Writes `reports/transcript_index.csv` and `reports/failed_videos.csv`.
+- README includes Windows PowerShell install, usage, test commands, and safety notes.
+
+Validation:
+- `python -m py_compile .\YT_TRANSCRIPT_COLLECTOR\collect_transcripts.py .\YT_TRANSCRIPT_COLLECTOR\tests\test_collector.py` PASS.
+- `python -m unittest discover -s tests -p "test_*.py"` from `YT_TRANSCRIPT_COLLECTOR` PASS: 2 tests.
+- `python -m unittest discover -s .\YT_TRANSCRIPT_COLLECTOR\tests -p "test_*.py"` from repo root PASS: 2 tests.
+- `python .\YT_TRANSCRIPT_COLLECTOR\collect_transcripts.py --help` PASS.
+
+Notes:
+- Live transcript fetch was not run; the tool requires `youtube-transcript-api` installation and depends on public transcript availability / YouTube request behavior.
+
+## Codex GPT-5 2026-06-05 - Hermes Desktop install
+
+Scope: installed the official Hermes Desktop app described in `nb5ALoAGAbE` using the signed Windows desktop bootstrapper from Nous Research plus the official `install.ps1` stage flow. No YouTube login, no account actions, no Pine/MTC/parity/backtest changes.
+
+Completed:
+- Downloaded `Hermes-Setup.exe` from the official Hermes Desktop documentation link and verified the Authenticode signature: signer `Nous Research Inc.`.
+- Official GUI installer stalled at repository clone. Recovered by stopping only the Hermes installer process tree, seeding `%LOCALAPPDATA%\hermes\hermes-agent` from the official GitHub ZIP archive, then running official installer stages.
+- Built desktop app at `%LOCALAPPDATA%\hermes\hermes-agent\apps\desktop\release\win-unpacked\Hermes.exe`.
+- Created shortcuts:
+  - `%USERPROFILE%\Desktop\Hermes.lnk`
+  - `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Hermes.lnk`
+- Rewrote `.hermes-bootstrap-complete` with pinned commit `acce1a2452f8b85343db1b057c1d98717c421522` so Desktop skips first-launch bootstrap.
+
+Validation:
+- `venv`, Python dependencies, node deps, Playwright Chromium/FFmpeg, desktop build, PATH, config templates, platform SDKs, and bootstrap marker stages all completed.
+- Hermes Desktop launched and reached the normal app screen.
+- Verification screenshot: `C:\tmp\hermes_desktop_final.png`.
+
+Open:
+- Model/provider selection is intentionally left unconfigured unless Baris explicitly chooses a provider or approves remote/paid routing.
+
+## Claude Opus 4.8 2026-06-05 — SP-004 Phase 3 gate scorers
+
+Built the remaining gate scorers (reader-side, no approval needed) by dispatching the
+file labor to Grok `grok-4` via `_deepseek_driver/ds_agent.py` (DeepSeek returned 402
+Insufficient Balance), then Claude-auditing each on the real 16 confirm-2026-06-04
+evaluation artifacts.
+
+New files in `03_QUANTLENS/tools/`:
+- `score_gate1.py`  — Gate 1 intake /100 (35 criteria, `intake.*` envelopes).
+- `score_gate1b.py` — Gate 1B MTC feasibility /100, PASS≥75 (`feasibility.*`), D1 verdict
+  bands PASS/CONDITIONAL/FAIL; REJECT_REPAINT forces verdict FAIL.
+- `score_gate3.py`  — Gate 3 production-readiness /100, reads `production_readiness_artifact_v1`
+  groups per D4 (37 criteria).
+- `score_all_gates.py` — unified composer → one `scorecard_v2` (gate1+1B+2+3); NEVER a single
+  blended number; `gate_summary.promotable` = all four OK and pass.
+
+All mirror `score_gate2.py`: pure `score_gateX(artifact)->dict` + CLI `--in-dir --out-dir`;
+status-envelope rule (only OK scores; non-OK → `points_awarded=None` → gate INCOMPLETE; never
+auto-zero/fabricate); `REJECT_REPAINT`→FAIL; parity advisory (WARN never blocks); utf-8 stdout.
+
+Audit result: py_compile PASS ×4; synthetic full-OK→100/OK/pass; empty→INCOMPLETE; composer
+all-OK→promotable with no top-level score. Real 16/16 = every gate INCOMPLETE, 0 pass, 0
+promotable — the correct honest outcome, because intake/feasibility/readiness fields are not
+emitted yet (same gap as the ~17 missing Gate-2 metrics). Inline bug fix caught by audit:
+gate1b verdict reported PASS under a REJECT_REPAINT hard-fail → added override.
+
+Not committed (Barış commits). Downstream still gated: P1.5 numeric bands (Barış), SP-005
+Wave C dashboard render of `scorecard_v2`, and SP-004-METRIC-ENRICHMENT (backtest-side,
+approval-gated).
+
+## Claude Opus 4.8 2026-06-05 — Reader-side queue (morning-report path + SP-005 Wave B reader)
+
+Continued the dispatch workflow through the no-approval reader-side queue (DeepSeek still
+402 Insufficient Balance → all dispatch via Grok `grok-4`).
+
+1. **NIGHT-FOLLOWUP-003 DONE** — `03_QUANTLENS/tools/generate_morning_report.py` legacy
+   hardcoded `C:\LAB\tradingview-lab\...` OUTPUT_DIR replaced with env-overridable
+   repo-relative default (`MEGA_OUTPUT_DIR` else `03_QUANTLENS/05_BACKTEST_RESULTS`),
+   mirroring `mega_walk_forward.py`. Verified py_compile + default/override.
+
+2. **SP-005 Wave B reader DONE (data layer)** — new read-only
+   `08_DASHBOARD_APP/apps/api/mcc_readonly/quantlens_reader.py` parses
+   `03_SALVAGE_IDEAS/<candidate>/01_candidate_metadata.yaml` and emits `quantlens_verdict`
+   (decision label, commercial-value band, complexity, testability, risks — labels only, NO
+   computed score), structured `salvageable_ideas[]` from `candidate_kind`, derived
+   `stop_state` (CLOSED_SOURCE_STOP / COMPLEXITY_OVERLOAD / GARBAGE), `reference_files`,
+   JSON-safe `raw`. Wired `quantlens` key into `read_model.py`. Claude audit: 3 real
+   candidates parse correctly; fixed 2 inline bugs (reference_files → file not dir; YAML
+   date objects broke snapshot JSON → `_jsonable` coercion). Dashboard API tests 35 passed.
+   Remaining Wave B = the app.js QuantLens Verdict card (Claude-lead UI, not mechanical).
+
+Cleanly-dispatchable mechanical queue now exhausted. Everything else OPEN is Claude-lead UI
+(SP-005 Wave B card, Wave C — Wave C also blocked on real backtest metrics), judgment work
+(RESEARCH-001 intake consolidation, RESEARCH-003 MTC_V2 indicator inventory), or Barış-gated
+(SP-004 metric-enrichment, heavy-tier, MEV-002/003, promotion, US-equity data, all commits).
+Nothing committed.
+
+
+## Claude Opus 4.8 2026-06-05 — SP-005 Wave B UI (QuantLens Verdict card)
+
+Built the detail-page UI for the `quantlens` snapshot key (frontend; Claude-lead, not
+dispatched). `apps/web/app.js`: `findQuantlensCandidate` joins by candidate_id === pipeline/
+audit row.id (all 3 salvage candidates match); new `renderQuantlensVerdict` card (decision
+badge, stop-state banner, commercial-value band / complexity / testability / instrument-fit
+facts, risk chips, recommended next step — commentary/labels only, never a gate score);
+`renderSalvageableIdeas` now renders the real `salvageable_ideas[]`; `buildWaveADecision`
+surfaces the real QuantLens label. Section order: Verdict & Decision → Scorecard → QuantLens
+Verdict → Taxonomy. `styles.css` gains `.quantlens-stop`.
+
+Verified live on the running dashboard (preview server, port 8765): the Equilibrium QL
+strategy renders the full card (SALVAGE, commercial 4/10, complexity 6/10, testability
+Partially testable, 4 salvageable components: guard / confirmation / SL-TP / money mgmt); a
+non-QL strategy renders the clean "Not in QuantLens" fallback with no JS error; `node --check`
+PASS. SP-005 Wave B (reader + UI) complete. Only the stop-state banner path is unverified-live
+(no on-disk candidate currently carries CLOSED_SOURCE_STOP / COMPLEXITY_OVERLOAD). Not committed.
+
+Wave C (scorecard_v2 gate bars + backtest-evidence visuals) remains: blocked on real backtest
+metrics (no row has real Gate-2 metrics yet — SP-004-METRIC-ENRICHMENT is Barış-gated).

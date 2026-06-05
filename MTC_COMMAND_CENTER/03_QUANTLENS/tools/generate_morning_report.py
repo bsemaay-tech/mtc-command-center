@@ -5,12 +5,17 @@ user-friendly summary of the overnight rigor pass.
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 
-OUTPUT_DIR = Path(
-    r"C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2"
-    r"\06_QUANTLENS_LAB\05_BACKTEST_RESULTS"
+# Env-overridable, repo-relative default (mirrors mega_walk_forward.py).
+# Legacy hardcoded C:\LAB\tradingview-lab\... path removed (NIGHT-FOLLOWUP-003 / A1).
+_env_out = os.environ.get("MEGA_OUTPUT_DIR")
+OUTPUT_DIR = (
+    Path(_env_out)
+    if _env_out
+    else Path(__file__).resolve().parent.parent / "05_BACKTEST_RESULTS"
 )
 
 def main():
