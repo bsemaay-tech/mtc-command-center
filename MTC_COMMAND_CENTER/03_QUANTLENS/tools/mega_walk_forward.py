@@ -13,11 +13,15 @@ Mega Rolling Walk-Forward + Deflated Sharpe — Overnight Edition
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import argparse
 import math
 import os
+import pickle
 import sys
 import time
+import warnings
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from multiprocessing import Pool, cpu_count
@@ -30,13 +34,20 @@ from scipy import stats as sps
 # ------------------------------------------------------------------
 # CONFIG
 # ------------------------------------------------------------------
-BUNDLE_MANIFEST = Path(
-    r"C:\LAB\_MTC_V2_REPO_CLEANUP_ARCHIVE_20260529"
-    r"\MTC_V2_OPTIMIZATION_DATA_BUNDLE_20260427\manifests\dataset_manifest.json"
+_env_manifest = os.environ.get("MEGA_BUNDLE_MANIFEST")
+BUNDLE_MANIFEST = (
+    Path(_env_manifest)
+    if _env_manifest
+    else Path(
+        r"C:\LAB\_MTC_V2_REPO_CLEANUP_ARCHIVE_20260529"
+        r"\MTC_V2_OPTIMIZATION_DATA_BUNDLE_20260427\manifests\dataset_manifest.json"
+    )
 )
-OUTPUT_DIR = Path(
-    r"C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2"
-    r"\06_QUANTLENS_LAB\05_BACKTEST_RESULTS"
+_env_out = os.environ.get("MEGA_OUTPUT_DIR")
+OUTPUT_DIR = (
+    Path(_env_out)
+    if _env_out
+    else Path(__file__).resolve().parent.parent / "05_BACKTEST_RESULTS"
 )
 COST_BPS = 8.0
 
@@ -48,6 +59,11 @@ NUM_ROLLING_FOLDS = 3
 MIN_BARS_REQUIRED = 1500
 MIN_TRADES_FOR_PASS = 30
 HOLDING_BAR_LIMIT = 96
+
+# AUDIT-009/D005: opening-range strategies need a US-equity session open.
+# Populated by overnight_v2_runner; empty by default so pure-mega runs are unaffected.
+EQUITY_ONLY_STRATEGIES: set = set()
+EQUITY_EXCHANGES = {"NYSE", "NASDAQ", "ARCA", "AMEX", "BATS"}
 
 SYMBOLS = [
     "BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT",
@@ -435,6 +451,9 @@ class SliceStats:
     avg_R: float
     sharpe: float                # per-trade sharpe * sqrt(n_trades)  (scaled / t-stat-like)
     sharpe_pt: float             # per-trade sharpe (mean/std, UNSCALED) — correct DSR input
+    max_consecutive_losses: int
+    top_trade_concentration: float
+    equity_curve_health: float
 
 def bootstrap_p_positive(R, n_boot=2000, seed=0):
     """One-sided bootstrap p-value that mean(R) <= 0. Lower = stronger positive edge."""
@@ -447,13 +466,14 @@ def bootstrap_p_positive(R, n_boot=2000, seed=0):
     means = R[idx].mean(axis=1)
     return float((means <= 0).mean())
 
-def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False):
+def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False, direction="long"):
     if e_idx - s_idx < 100:
-        empty = SliceStats(0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        empty = SliceStats(0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0)
         return (empty, np.array([])) if return_trades else empty
 
     cost = COST_BPS / 10000.0
     is_trail = (strategy == "QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL")
+    is_short = (direction == "short")
 
     op = df["open"].to_numpy()
     hi = df["high"].to_numpy()
@@ -477,31 +497,49 @@ def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False):
             break
         entry_price = op[entry_idx]
         stop_price = st[i]
-        if np.isnan(entry_price) or np.isnan(stop_price) or stop_price >= entry_price or entry_price <= 0:
+        if np.isnan(entry_price) or np.isnan(stop_price) or entry_price <= 0:
             i += 1
             continue
-        risk = entry_price - stop_price
-        target = entry_price + 2.0 * risk
-        exit_idx = min(entry_idx + HOLDING_BAR_LIMIT, e_idx - 1)
-        exit_price = cl[exit_idx]
 
-        for cur in range(entry_idx, exit_idx + 1):
-            if lo[cur] <= stop_price:
-                exit_idx = cur; exit_price = stop_price; break
-            if not is_trail and hi[cur] >= target:
-                exit_idx = cur; exit_price = target; break
-            if is_trail and cl[cur] < em[cur]:
-                nxt = min(cur + 1, e_idx - 1)
-                exit_idx = cur; exit_price = op[nxt]; break
+        if is_short:
+            if stop_price <= entry_price:
+                i += 1
+                continue
+            risk = stop_price - entry_price
+            target = entry_price - 2.0 * risk
+            exit_idx = min(entry_idx + HOLDING_BAR_LIMIT, e_idx - 1)
+            exit_price = cl[exit_idx]
+            for cur in range(entry_idx, exit_idx + 1):
+                if hi[cur] >= stop_price:
+                    exit_idx = cur; exit_price = stop_price; break
+                if lo[cur] <= target:
+                    exit_idx = cur; exit_price = target; break
+            raw = entry_price / exit_price - 1.0
+        else:
+            if stop_price >= entry_price:
+                i += 1
+                continue
+            risk = entry_price - stop_price
+            target = entry_price + 2.0 * risk
+            exit_idx = min(entry_idx + HOLDING_BAR_LIMIT, e_idx - 1)
+            exit_price = cl[exit_idx]
+            for cur in range(entry_idx, exit_idx + 1):
+                if lo[cur] <= stop_price:
+                    exit_idx = cur; exit_price = stop_price; break
+                if not is_trail and hi[cur] >= target:
+                    exit_idx = cur; exit_price = target; break
+                if is_trail and cl[cur] < em[cur]:
+                    nxt = min(cur + 1, e_idx - 1)
+                    exit_idx = cur; exit_price = op[nxt]; break
+            raw = exit_price / entry_price - 1.0
 
-        raw = exit_price / entry_price - 1.0
         net = raw - cost
         trades_pct.append(net * 100.0)
-        trades_R.append((exit_price - entry_price) / risk if risk > 0 else 0.0)
+        trades_R.append((entry_price - exit_price) / risk if is_short else (exit_price - entry_price) / risk if risk > 0 else 0.0)
         i = max(exit_idx + 1, i + 1)
 
     if not trades_pct:
-        empty = SliceStats(0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        empty = SliceStats(0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0)
         return (empty, np.array([])) if return_trades else empty
 
     arr = np.array(trades_pct) / 100.0
@@ -519,6 +557,19 @@ def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False):
     std = float(arr.std(ddof=1)) if len(arr) > 1 else 0.0
     sharpe_pt = float(arr.mean() / std) if std > 0 else 0.0          # per-trade (unscaled)
     sharpe = float(sharpe_pt * math.sqrt(len(arr)))                  # scaled / t-stat-like
+    # --- SP-004: per-trade derived metrics ---
+    _losses = (arr < 0)
+    _mcl = 0; _run = 0
+    for _x in _losses:
+        if _x: _run += 1; _mcl = _run if _run > _mcl else _mcl
+        else: _run = 0
+    max_consec_losses = int(_mcl)
+    _wins = arr[arr > 0]
+    _gross = float(_wins.sum())
+    top_trade_conc = round(float(_wins.max()) / _gross, 4) if _gross > 0 else 0.0
+    _peak = np.maximum.accumulate(eq)
+    equity_health = round(float((eq >= _peak).mean()), 4)
+    # --- end SP-004 ---
     stats = SliceStats(
         num_trades=len(trades_pct),
         win_rate=round(win_rate, 4),
@@ -529,6 +580,9 @@ def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False):
         avg_R=round(avg_R, 4),
         sharpe=round(sharpe, 4),
         sharpe_pt=round(sharpe_pt, 6),
+        max_consecutive_losses=max_consec_losses,
+        top_trade_concentration=top_trade_conc,
+        equity_curve_health=equity_health,
     )
     return (stats, arr_R) if return_trades else stats
 
@@ -571,7 +625,7 @@ def rolling_fold_indices(n_bars):
     if train_size < 400 or test_size < 200:
         return []
     remaining = span_end - (train_size + test_size)
-    step = max(1, remaining // max(1, NUM_ROLLING_FOLDS - 1)) if NUM_ROLLING_FOLDS > 1 else 0
+    step = test_size  # AUDIT-008/D006: disjoint OOS (was remaining//(NUM_FOLDS-1) -> 50% overlap)
     folds = []
     for f in range(NUM_ROLLING_FOLDS):
         ts = f * step
@@ -582,6 +636,17 @@ def rolling_fold_indices(n_bars):
             break
         folds.append((ts, te, ks, ke))
     return folds
+
+def fold_feasibility(n_bars):
+    lockbox_size = int(n_bars * LOCKBOX_FRACTION)
+    span_end = n_bars - lockbox_size
+    if span_end < 1000:
+        return False, f"span_end={span_end} < 1000 (n_bars={n_bars})"
+    train_size = int(span_end * FOLD_TRAIN_FRACTION)
+    test_size = int(span_end * FOLD_TEST_FRACTION)
+    if train_size < 400 or test_size < 200:
+        return False, f"train_size={train_size}/test_size={test_size} below 400/200"
+    return True, ""
 
 # ------------------------------------------------------------------
 # WORKER
@@ -604,10 +669,21 @@ def _worker(job):
         if ds is None:
             return {"strategy": strategy, "symbol": symbol, "timeframe": tf,
                     "classification": "NO_DATA", "summary": {}}
+        if strategy in EQUITY_ONLY_STRATEGIES and str(ds.get("exchange", "")).upper() not in EQUITY_EXCHANGES:
+            return {"strategy": strategy, "symbol": symbol, "timeframe": tf,
+                    "classification": "SKIPPED_RULE", "summary": {},
+                    "reason": f"opening-range needs US-equity session; dataset exchange={ds.get('exchange')}"}
         df = load_df(ds["normalized_path"])
         if len(df) < MIN_BARS_REQUIRED:
             return {"strategy": strategy, "symbol": symbol, "timeframe": tf,
                     "classification": "NO_DATA", "summary": {}, "data_rows": int(len(df))}
+
+        ok, reason = fold_feasibility(len(df))
+        if not ok:
+            warnings.warn(f"INSUFFICIENT_DATA {strategy} {symbol} {tf}: {reason}")
+            return {"strategy": strategy, "symbol": symbol, "timeframe": tf,
+                    "classification": "INSUFFICIENT_DATA", "reason": reason,
+                    "summary": {}, "data_rows": int(len(df))}
 
         needs_daily = (strategy == "QL_2026-05-01_SWING_1H_DUAL_RSI_60_40_PULLBACK")
         daily_maps = _DAILY_CACHE.get(symbol)
@@ -626,17 +702,22 @@ def _worker(job):
                 if dmap is None:
                     continue
             df_w = df.copy()
-            sig, stop = build_signals(strategy, df_w, p, dmap)
+            result = build_signals(strategy, df_w, p, dmap)
+            if isinstance(result, tuple) and len(result) == 3 and result[2] in {"long", "short"}:
+                sig, stop, direction = result
+            else:
+                sig, stop = result[:2]
+                direction = "long"
             n = len(df_w)
             folds = rolling_fold_indices(n)
             if not folds:
                 continue
             ft, fk = [], []
             for (ts, te, ks, ke) in folds:
-                ft.append(asdict(simulate_slice(df_w, sig, stop, strategy, ts, te)))
-                fk.append(asdict(simulate_slice(df_w, sig, stop, strategy, ks, ke)))
+                ft.append(asdict(simulate_slice(df_w, sig, stop, strategy, ts, te, direction=direction)))
+                fk.append(asdict(simulate_slice(df_w, sig, stop, strategy, ks, ke, direction=direction)))
             lockbox_start = n - int(n * LOCKBOX_FRACTION)
-            lb = asdict(simulate_slice(df_w, sig, stop, strategy, lockbox_start, n))
+            lb = asdict(simulate_slice(df_w, sig, stop, strategy, lockbox_start, n, direction=direction))
             mean_train_ret = sum(f["net_return_pct"] for f in ft) / len(ft) if ft else 0.0
             mean_train_sharpe_pt = sum(f["sharpe_pt"] for f in ft) / len(ft) if ft else 0.0
             configs.append({"params": p, "fold_train": ft, "fold_test": fk,
@@ -657,12 +738,16 @@ def _worker(job):
         if needs_daily:
             dmap_b = daily_maps.get(int(bp["rsi_len"])) if daily_maps else None
         df_b = df.copy()
-        sig_b, stop_b = build_signals(strategy, df_b, bp, dmap_b)
+        result_b = build_signals(strategy, df_b, bp, dmap_b)
+        if isinstance(result_b, tuple) and len(result_b) == 3 and result_b[2] in {"long", "short"}:
+            sig_b, stop_b, direction_b = result_b
+        else:
+            sig_b, stop_b = result_b[:2]
+            direction_b = "long"
         nb = len(df_b)
         lockbox_start_b = nb - int(nb * LOCKBOX_FRACTION)
-        _lb_stats, lb_R = simulate_slice(df_b, sig_b, stop_b, strategy, lockbox_start_b, nb, return_trades=True)
-        # deterministic seed from job identity
-        seed = (abs(hash((strategy, symbol, tf))) % (2**31))
+        _lb_stats, lb_R = simulate_slice(df_b, sig_b, stop_b, strategy, lockbox_start_b, nb, return_trades=True, direction=direction_b)
+        seed = int(hashlib.md5(f"{strategy}|{symbol}|{tf}".encode()).hexdigest()[:8], 16) % (2**31)
         boot_p = bootstrap_p_positive(lb_R, n_boot=2000, seed=seed) if len(lb_R) >= MIN_TRADES_FOR_PASS else float("nan")
 
         test_rets = [f["net_return_pct"] for f in best["fold_test"]]
@@ -672,7 +757,7 @@ def _worker(job):
         lb = best["lockbox"]
         if lb["num_trades"] < MIN_TRADES_FOR_PASS:
             cls = "INSUFFICIENT_TRADES"
-        elif lb["net_return_pct"] > 0 and lb["max_drawdown_pct"] > -50 and lb["expectancy_R"] > 0 and pos >= max(1, n_folds // 2):
+        elif lb["net_return_pct"] > 0 and lb["max_drawdown_pct"] > -50 and lb["expectancy_R"] > 0 and pos == n_folds:
             if lb["expectancy_R"] >= 0.10 and lb["profit_factor"] >= 1.3 and pos == n_folds:
                 cls = "STRONG_PASS"
             else:
@@ -737,31 +822,138 @@ def deflated_sharpe_pvalue(observed_sr: float, n_trials: int, sr_std: float,
 # ------------------------------------------------------------------
 # MAIN
 # ------------------------------------------------------------------
-def main():
-    t0 = time.time()
-    workers = max(2, min(8, cpu_count() - 1))
-    total_param_sets = sum(len(g) for g in GRIDS.values())
-    print(f"[start] workers={workers} symbols={len(SYMBOLS)} tfs={TIMEFRAMES} strategies={len(GRIDS)} param_sets_total={total_param_sets}", flush=True)
+def _job_key(job):
+    return "|".join(job)
 
-    jobs = [(s, sym, tf) for s in GRIDS for sym in SYMBOLS for tf in TIMEFRAMES]
-    print(f"[start] total jobs (sym*tf*strat): {len(jobs)}; configs evaluated ~{len(jobs) * (total_param_sets // len(GRIDS))}", flush=True)
+
+def _atomic_write_text(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(text, encoding="utf-8")
+    tmp.replace(path)
+
+
+def _load_checkpoint(path: Path) -> dict:
+    if not path.exists():
+        return {"results": [], "completed_keys": set()}
+    with path.open("rb") as f:
+        state = pickle.load(f)
+    state["completed_keys"] = set(state.get("completed_keys", []))
+    state.setdefault("results", [])
+    return state
+
+
+def _save_checkpoint(path: Path, results: list, jobs: list, workers: int, started_utc: str) -> None:
+    completed_keys = [_job_key((r.get("strategy", ""), r.get("symbol", ""), r.get("timeframe", ""))) for r in results]
+    state = {
+        "version": 1,
+        "generated_utc": datetime.now(timezone.utc).isoformat(),
+        "started_utc": started_utc,
+        "workers": workers,
+        "completed": len(results),
+        "total_jobs": len(jobs),
+        "completed_keys": completed_keys,
+        "results": results,
+    }
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with tmp.open("wb") as f:
+        pickle.dump(state, f, protocol=pickle.HIGHEST_PROTOCOL)
+    tmp.replace(path)
+
+
+def _write_partial_json(path: Path, results: list, jobs: list, workers: int, started_utc: str) -> None:
+    _atomic_write_text(path, json.dumps({
+        "partial": True,
+        "generated_utc": datetime.now(timezone.utc).isoformat(),
+        "started_utc": started_utc,
+        "workers": workers,
+        "completed": len(results),
+        "total_jobs": len(jobs),
+        "results": results,
+    }, indent=2))
+
+
+def _write_progress_heartbeat(done: int, total: int, t0: float, results: list) -> None:
+    path = os.environ.get("MEGA_HEARTBEAT_PATH")
+    if not path:
+        return
+    cls_counts = {}
+    for rr in results:
+        c = rr.get("classification", "?")
+        cls_counts[c] = cls_counts.get(c, 0) + 1
+    payload = {
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "source": "mega_walk_forward",
+        "mode": os.environ.get("MEGA_HEARTBEAT_MODE", "mega"),
+        "iter": int(os.environ.get("MEGA_HEARTBEAT_ITER", "0") or 0),
+        "passes": int(os.environ.get("MEGA_HEARTBEAT_PASSES", "0") or 0),
+        "crashes": int(os.environ.get("MEGA_HEARTBEAT_CRASHES", "0") or 0),
+        "deadline_ts": int(os.environ.get("MEGA_HEARTBEAT_DEADLINE_TS", "0") or 0),
+        "last_exit_code": None,
+        "progress_done": done,
+        "progress_total": total,
+        "elapsed_seconds": int(time.time() - t0),
+        "counts": cls_counts,
+    }
+    _atomic_write_text(Path(path), json.dumps(payload, indent=2))
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--resume", type=Path, help="pickle checkpoint path to resume from or write to")
+    parser.add_argument("--checkpoint-every", type=int, default=25, help="save checkpoint every N completed jobs")
+    parser.add_argument("--partial-json", type=Path, help="partial JSON path; default OUTPUT_DIR/MEGA_walk_forward_partial.json")
+    parser.add_argument("--strategy", action="append", help="limit run to strategy id; repeatable")
+    parser.add_argument("--symbol", action="append", help="limit run to symbol; repeatable")
+    parser.add_argument("--tf", action="append", help="limit run to timeframe; repeatable")
+    args = parser.parse_args()
+
+    t0 = time.time()
+    started_utc = datetime.now(timezone.utc).isoformat()
+    _env_workers = os.environ.get("MEGA_WORKERS")
+    if _env_workers and _env_workers.isdigit() and int(_env_workers) >= 1:
+        workers = int(_env_workers)
+    else:
+        workers = max(2, min(8, cpu_count() - 1))
+    selected_strategies = args.strategy or list(GRIDS)
+    selected_symbols = args.symbol or SYMBOLS
+    selected_tfs = args.tf or TIMEFRAMES
+    missing = [s for s in selected_strategies if s not in GRIDS]
+    if missing:
+        raise SystemExit(f"Unknown strategy id(s): {missing}")
+    total_param_sets = sum(len(GRIDS[s]) for s in selected_strategies)
+    print(f"[start] workers={workers} symbols={len(selected_symbols)} tfs={selected_tfs} strategies={len(selected_strategies)} param_sets_total={total_param_sets}", flush=True)
+
+    jobs = [(s, sym, tf) for s in selected_strategies for sym in selected_symbols for tf in selected_tfs]
+    print(f"[start] total jobs (sym*tf*strat): {len(jobs)}; configs evaluated ~{len(jobs) * max(1, (total_param_sets // max(1, len(selected_strategies))))}", flush=True)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    results = []
-    done = 0
+    checkpoint_path = args.resume or (OUTPUT_DIR / "MEGA_walk_forward_checkpoint.pkl")
+    partial_json = args.partial_json or (OUTPUT_DIR / "MEGA_walk_forward_partial.json")
+    state = _load_checkpoint(checkpoint_path) if args.resume else {"results": [], "completed_keys": set()}
+    results = list(state.get("results", []))
+    completed_keys = set(state.get("completed_keys", set()))
+    pending_jobs = [job for job in jobs if _job_key(job) not in completed_keys]
+    done = len(results)
+    if results:
+        print(f"[resume] loaded {len(results)} completed jobs from {checkpoint_path}; pending={len(pending_jobs)}", flush=True)
     last_print = time.time()
 
     with Pool(processes=workers, initializer=_init_worker) as pool:
-        for r in pool.imap_unordered(_worker, jobs, chunksize=1):
+        for r in pool.imap_unordered(_worker, pending_jobs, chunksize=1):
             results.append(r)
             done += 1
             now = time.time()
+            if args.checkpoint_every > 0 and (done % args.checkpoint_every == 0 or done == len(jobs)):
+                _save_checkpoint(checkpoint_path, results, jobs, workers, started_utc)
+                _write_partial_json(partial_json, results, jobs, workers, started_utc)
             if now - last_print > 60:
                 cls_counts = {}
                 for rr in results:
                     c = rr.get("classification", "?")
                     cls_counts[c] = cls_counts.get(c, 0) + 1
                 print(f"  [{done}/{len(jobs)}] elapsed={int(now - t0)}s | counts={cls_counts}", flush=True)
+                _write_progress_heartbeat(done, len(jobs), t0, results)
                 last_print = now
 
     runtime = round(time.time() - t0, 1)
@@ -823,10 +1015,11 @@ def main():
 
     # Save full JSON
     out_json = OUTPUT_DIR / "MEGA_walk_forward_results.json"
-    out_json.write_text(json.dumps({
+    _atomic_write_text(out_json, json.dumps({
         "generated_utc": datetime.now(timezone.utc).isoformat(),
         "runtime_seconds": runtime,
         "workers": workers,
+        "resume_checkpoint": str(checkpoint_path),
         "config": {
             "cost_bps": COST_BPS,
             "lockbox_fraction": LOCKBOX_FRACTION,
@@ -838,11 +1031,13 @@ def main():
             "holding_bar_limit": HOLDING_BAR_LIMIT,
             "symbols": SYMBOLS,
             "timeframes": TIMEFRAMES,
-            "strategy_count": len(GRIDS),
+            "selected_symbols": selected_symbols,
+            "selected_timeframes": selected_tfs,
+            "strategy_count": len(selected_strategies),
             "param_set_total": total_param_sets,
         },
         "results": results,
-    }, indent=2), encoding="utf-8")
+    }, indent=2))
 
     # Build markdown report
     counts = {}
@@ -922,8 +1117,8 @@ def main():
         )
 
     md += ["", "## Per-Strategy Top 3 PASS configurations", ""]
-    for strat in sorted(GRIDS.keys()):
-        rows = sorted([r for r in by_strat[strat]
+    for strat in sorted(selected_strategies):
+        rows = sorted([r for r in by_strat.get(strat, [])
                        if r.get("classification") in {"PASS","STRONG_PASS"}],
                       key=lambda r: r["summary"]["lockbox_oos"]["net_return_pct"], reverse=True)[:3]
         if not rows:
