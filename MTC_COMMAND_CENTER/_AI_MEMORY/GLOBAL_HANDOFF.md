@@ -1,11 +1,24 @@
 # GLOBAL_HANDOFF
 
-Last updated: 2026-06-05 (SP-004 slippage fresh sweep)
-Updated by: Codex GPT-5
+Last updated: 2026-06-05 (SP-004 final Gate2 metrics fresh sweep)
+Updated by: Codex GPT-5 + DeepSeek
 Active project: TradingView-LAB / MTC Command Center
-Current objective: slippage evidence propagated/closed; fresh sweep + validation tail complete.
-Current phase: SP-004 Gate2 slippage blocker cleared; remaining blockers param-stability, EMA benchmark, and regime split.
-Current blockers: full scorecard promotion remains blocked by missing intake, feasibility, production-readiness, param-stability, EMA benchmark, and regime metrics.
+Current objective: Gate2 metric enrichment complete; param stability, EMA benchmark, regime split all committed and freshly swept.
+Current phase: Gate2 now fully scorable; remaining blockers are Gate1, Gate1B, Gate3 production.
+Current blockers: full scorecard promotion blocked by missing intake (Gate1), feasibility (Gate1B), and production-readiness (Gate3) artifacts, not Gate2 metric gaps.
+
+## Codex GPT-5 + DeepSeek 2026-06-05 - SP-004 final Gate2 metrics + fresh sweep
+Scope: Baris approved APPROVE GATE2 DEFINITIONS. Implemented output-only definitions: `param_stability_score` from per-fold selected best params with numeric-closeness fallback; EMA50/EMA200 same-window long-flat benchmark mapped to `benchmark.beats_ema_benchmark`; regime split trend/range/high_vol/low_vol using EMA200, ADX14, ATR percentile buckets mapped to regime fields and `regime_coverage_count`. Codex audit fixes: preserved `simulate_slice` `return_trades` two-value compatibility via `return_trade_events` flag; removed EMA lookahead by acting on previous-close cross at next open; schema-null regime safeguards. Validation before commit: py_compile, diff-check, real one-cell MEGA LINK 8EMA 1h, existing lockbox fields unchanged vs prior slippage audit, one-cell new fields OK: `param_stability_score` 0.899, EMA benchmark present, `regime_coverage_count` 4, schema errors 0; one-cell Gate2 score 95/INCOMPLETE only because single-candidate PBO is insufficient.
+
+Code commit: `39b51db` Add final Gate 2 benchmark and regime metrics.
+
+Fresh run path: `MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/final_gate2_2026-06-05_39b51db/`. MEGA full sweep: 1700 cells, 8 workers, 1517.4s, 31 PASS + 7 STRONG_PASS = 38 candidate cells, 1 BH-FDR survivor, 0 DSR-robust, 0 robust final. Validation tail: CPCV rerun with `--max-candidates 9999` (important; default 20 was corrected), CPCV 38/38 OK, PBO status OK candidate_count 38 split_count 14 pbo 0.014569, 38 evaluation artifacts, 38 Gate2 scorecards, 38 scorecard_v2.
+
+Audit: 38/38 artifacts schema-valid; 38/38 have OK for `param_stability_score`, `beats_ema_benchmark`, `regime_coverage_count`, `regime_breakdown_present`, `weak_regime_identified`, `worst_regime_return_pct`, PBO, CPCV, prior B&H/worst-window/annualized/slippage fields. Gate2 result: 25 OK/pass, 13 FAIL, 0 INCOMPLETE.
+
+Top scores: 100.0 `QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL|LINKUSDT|1h`; 100.0 `GEN_ATR_PULLBACK_TREND|DOGEUSDT|4h`; 99.18 `GEN_RSI_OVERSOLD_REVERSAL|LINKUSDT|2h`; 96.06 `GEN_KELTNER_BREAKOUT|LINKUSDT|15m`; 92.31 `GEN_ZSCORE_MEAN_REVERSION|DOTUSDT|15m`.
+
+scorecard_v2: 38 files, promotable 0 because Gate1/Gate1B/Gate3 remain INCOMPLETE/absent even when Gate2 is OK.
 
 ## Codex GPT-5 2026-06-05 - SP-004 slippage fresh sweep
 Scope: regenerated run artifacts under committed post-hoc slippage stress code (`5c68419`). No Pine, MTC behavior, parity, schema, live-trading surface, or signal logic changed.

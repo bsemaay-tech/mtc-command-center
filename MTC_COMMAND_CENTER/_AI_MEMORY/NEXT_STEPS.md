@@ -83,6 +83,16 @@
 - Fresh sweep DONE 2026-06-05: `05_BACKTEST_RESULTS/slippage_2026-06-05_5c68419/`. MEGA 1700 cells, 8 workers, 1212.3s, 31 PASS + 7 STRONG_PASS = 38 candidate cells; CPCV `--v2`, PBO, 38 evaluation artifacts, 38 Gate-2 scorecards, 38 scorecard_v2. Audit: 38/38 artifacts have annualized_sharpe, annualized_sortino, net_after_slippage_pct, B&H benchmark, and worst_window_drawdown_pct OK; 38/38 schema-valid (0 errors). Gate2 scores 48.25–84.0, mean 63.69; all 38 INCOMPLETE, 0 Gate2 pass, 0 promotable. Top cell 8EMA LINK 1h score 84.0 INCOMPLETE.
 - Carry-forward: slippage is no longer a Gate2 blocker. Remaining blockers: param stability, EMA benchmark, and regime split.
 
+### SP-004-GATE2-FINAL-METRICS | DONE + COMMITTED (39b51db) | param stability, EMA benchmark, regime split [AI: DeepSeek/Codex GPT-5]
+- Baris approved APPROVE GATE2 DEFINITIONS. Done 2026-06-05 via DeepSeek dispatch + Codex audit.
+- Implemented output-only definitions: `param_stability_score` from per-fold selected best params with numeric-closeness fallback; EMA50/EMA200 same-window long-flat benchmark mapped to `benchmark.beats_ema_benchmark`; regime split trend/range/high_vol/low_vol using EMA200, ADX14, ATR percentile buckets mapped to regime fields and `regime_coverage_count`.
+- Codex audit fixes: preserved `simulate_slice` `return_trades` two-value compatibility via `return_trade_events` flag; removed EMA lookahead by acting on previous-close cross at next open; schema-null regime safeguards.
+- Validation before commit: py_compile, diff-check, real one-cell MEGA LINK 8EMA 1h, existing lockbox fields unchanged vs prior slippage audit, one-cell new fields OK (`param_stability_score` 0.899, EMA benchmark present, `regime_coverage_count` 4, schema errors 0); one-cell Gate2 score 95/INCOMPLETE only because single-candidate PBO is insufficient.
+- **Fresh sweep DONE 2026-06-05:** `05_BACKTEST_RESULTS/final_gate2_2026-06-05_39b51db/`. MEGA full sweep: 1700 cells, 8 workers, 1517.4s, 31 PASS + 7 STRONG_PASS = 38 candidate cells; CPCV rerun with `--max-candidates 9999` (default 20 was corrected), CPCV 38/38 OK, PBO status OK pbo=0.014569; 38 evaluation artifacts, 38 Gate2 scorecards, 38 scorecard_v2.
+- **Gate2 result: 25 OK/pass, 13 FAIL, 0 INCOMPLETE.** Top scores: 100.0 8EMA LINK 1h; 100.0 GEN_ATR_PULLBACK_TREND DOGE 4h; 99.18 GEN_RSI_OVERSOLD_REVERSAL LINK 2h; 96.06 GEN_KELTNER_BREAKOUT LINK 15m; 92.31 GEN_ZSCORE_MEAN_REVERSION DOT 15m.
+- **All 38 scorecard_v2 still promotable=0** because Gate1/Gate1B/Gate3 remain INCOMPLETE/absent even when Gate2 is OK.
+- **Gate2 metric blockers are now fully cleared.** Next blockers are Gate1 intake artifacts, Gate1B feasibility artifacts, and Gate3 production-readiness artifacts — not Gate2 metrics.
+
 ### SP-004-SCHEMA-PARITY | DONE | Move parity to advisory in schema [AI: DeepSeek/Claude]
 - Done (2026-06-04 Batch F): `06_SCHEMAS/evaluation_artifact_v1.schema.json` — `parity_gate` removed from `hard_flags`; new advisory `flags.parity_status` ∈ {PASS, WARN, N_A, null}. Claude-audited: json.load VALID, Draft2020-12 check_schema VALID, parity_gate gone everywhere, completeness intact.
 - **Reader carry-forward (Phase 2):** the future scoring reader must read `flags.parity_status` (NOT `hard_flags.parity_gate`) and treat WARN as non-blocking. Captured for the Phase-2 build.
