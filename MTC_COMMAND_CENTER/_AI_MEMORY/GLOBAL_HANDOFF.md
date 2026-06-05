@@ -1,11 +1,30 @@
 # GLOBAL_HANDOFF
 
-Last updated: 2026-06-05 (SP-004 annualized-risk fresh sweep)
+Last updated: 2026-06-05 (SP-004 slippage enrichment)
 Updated by: Codex GPT-5
 Active project: TradingView-LAB / MTC Command Center
-Current objective: propagate Gate 2 annualized Sharpe/Sortino evidence across the fresh scorecard set - DONE.
-Current phase: fresh sweep + CPCV/PBO + artifact/scorecard rebuild completed; ready for next metric blocker.
-Current blockers: full scorecard promotion remains blocked by missing intake, feasibility, production-readiness, param-stability, slippage, EMA benchmark, and regime metrics.
+Current objective: enrich Gate 2 slippage stress evidence - DONE.
+Current phase: DeepSeek delegated implementation audited by Codex; ready for fresh sweep propagation.
+Current blockers: full scorecard promotion remains blocked by missing intake, feasibility, production-readiness, param-stability, EMA benchmark, and regime metrics.
+
+## Codex GPT-5 + DeepSeek 2026-06-05 - SP-004 slippage stress metric
+Scope: delegated bounded additive output work to DeepSeek for `03_QUANTLENS/tools/mega_walk_forward.py` and `build_evaluation_artifact.py`; Codex audited the diff and validation. No signal logic, classification thresholds, existing fee model, Pine, MTC behavior, parity, schemas, generated artifacts, or live-trading surface changed.
+
+Implemented:
+- Added `SLIPPAGE_BPS_PER_SIDE = 2.0` as an explicit post-hoc slippage stress, separate from existing `COST_BPS`.
+- `SliceStats` now has defaulted `net_after_slippage_pct`.
+- `simulate_slice` computes `net_after_slippage_pct` from existing per-trade net returns by subtracting an additional 4 bps round trip per trade before compounding.
+- `build_evaluation_artifact.py` maps `metrics.net_after_slippage_pct` only from `lockbox_oos.net_after_slippage_pct`; older runs remain N_A.
+
+Validation:
+- DeepSeek reported py_compile and synthetic checks PASS.
+- Codex audit PASS: py_compile, `git diff --check`, real one-cell MEGA run, artifact build, Gate2 score, schema validation, existing-lockbox-field comparison, and backward-compatibility check.
+- Real one-cell result: existing lockbox fields unchanged; `net_return_pct=75.374`, `net_after_slippage_pct=67.119`; artifact metric OK; Gate2 slippage criterion scored 2/2; schema errors 0.
+- Backward compatibility: rebuilding 38 artifacts from `annualized_risk_2026-06-05_15e8d47` kept slippage N_A 38/38.
+
+Carry-forward:
+- Run a fresh full sweep before dashboard scorecards show slippage globally.
+- Remaining Gate2 blockers after propagation: parameter stability, EMA benchmark, and regime split.
 
 ## Codex GPT-5 2026-06-05 - SP-004 annualized-risk fresh sweep
 Scope: regenerated run artifacts under the committed annualized Sharpe/Sortino code (`15e8d47`). No Pine, MTC behavior, parity, schema, live-trading surface, or signal logic changed.

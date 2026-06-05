@@ -384,11 +384,17 @@ def build_artifact(
         "mega:n/a",
     )
 
-    # 16. net_after_slippage_pct: N_A (MEGA cost model is fees only)
-    metrics["net_after_slippage_pct"] = _na(
-        "MEGA cost model is fees only (COST_BPS); no separate slippage model",
-        "mega:n/a",
-    )
+    # 16. net_after_slippage_pct: lockbox_oos.net_after_slippage_pct when present
+    nas_val = lockbox.get("net_after_slippage_pct")
+    if nas_val is not None:
+        metrics["net_after_slippage_pct"] = _ok(
+            nas_val, "mega:summary.lockbox_oos.net_after_slippage_pct"
+        )
+    else:
+        metrics["net_after_slippage_pct"] = _na(
+            "engine does not yet emit net_after_slippage_pct",
+            "mega:n/a",
+        )
 
     # -- CPCV (optional) -----------------------------------------------------
     if cpcv_ok:

@@ -50,6 +50,7 @@ OUTPUT_DIR = (
     else Path(__file__).resolve().parent.parent / "05_BACKTEST_RESULTS"
 )
 COST_BPS = 8.0
+SLIPPAGE_BPS_PER_SIDE = 2.0  # additional post-hoc slippage stress, separate from existing COST_BPS fee model
 
 LOCKBOX_FRACTION = 0.25
 FOLD_TRAIN_FRACTION = 0.60
@@ -456,6 +457,7 @@ class SliceStats:
     equity_curve_health: float
     annualized_sharpe: float = 0.0
     annualized_sortino: float = 0.0
+    net_after_slippage_pct: float = 0.0
 
 def bootstrap_p_positive(R, n_boot=2000, seed=0):
     """One-sided bootstrap p-value that mean(R) <= 0. Lower = stronger positive edge."""
@@ -554,6 +556,11 @@ def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False, d
         return (empty, np.array([])) if return_trades else empty
 
     arr = np.array(trades_pct) / 100.0
+    # --- Gate-2: net_after_slippage_pct (additional post-hoc slippage stress) ---
+    slippage_round_trip = (2.0 * SLIPPAGE_BPS_PER_SIDE) / 10000.0
+    arr_slip = arr - slippage_round_trip
+    net_after_slippage_pct = round(float((np.cumprod(1.0 + arr_slip)[-1] - 1.0) * 100.0), 3)
+    # --- end Gate-2 slippage ---
     eq = np.cumprod(1.0 + arr)
     peak = np.maximum.accumulate(eq)
     dd = float((eq / peak - 1.0).min())
@@ -650,6 +657,7 @@ def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False, d
         equity_curve_health=equity_health,
         annualized_sharpe=annualized_sharpe,
         annualized_sortino=annualized_sortino,
+        net_after_slippage_pct=net_after_slippage_pct,
     )
     return (stats, arr_R) if return_trades else stats
 
