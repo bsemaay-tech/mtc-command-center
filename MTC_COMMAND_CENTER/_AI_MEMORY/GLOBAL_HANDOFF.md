@@ -1,11 +1,40 @@
 # GLOBAL_HANDOFF
 
-Last updated: 2026-06-05 (SP-004 final Gate2 metrics fresh sweep)
-Updated by: Codex GPT-5 + DeepSeek
+Last updated: 2026-06-05 (SP-004 all-gate evidence + dashboard refresh)
+Updated by: Codex GPT-5 + DeepSeek dispatch
 Active project: TradingView-LAB / MTC Command Center
-Current objective: Gate2 metric enrichment complete; param stability, EMA benchmark, regime split all committed and freshly swept.
-Current phase: Gate2 now fully scorable; remaining blockers are Gate1, Gate1B, Gate3 production.
-Current blockers: full scorecard promotion blocked by missing intake (Gate1), feasibility (Gate1B), and production-readiness (Gate3) artifacts, not Gate2 metric gaps.
+Current objective: Gate2 metric enrichment complete; all possible Gate1/Gate1B evidence emitted from coded MEGA artifacts; dashboard-visible scorecard_v2 refreshed.
+Current phase: Gate1/Gate1B/Gate2 are now scorable for the final Gate2 run; Gate3 production readiness remains incomplete by honest evidence.
+Current blockers: full scorecard promotion blocked by missing production alert/state-sync/fail-safe/live-integration evidence (Gate3), plus 13 Gate2 failures among the 38 candidate cells.
+
+## Codex GPT-5 + DeepSeek dispatch 2026-06-05 - SP-004 all-gate evidence + dashboard refresh
+Scope: Baris asked to do all remaining possible work and delegate bounded work to DeepSeek. DeepSeek was dispatched for the mechanical helper; it timed out/left partial output, then Codex audited and fixed it. No Pine, MTC strategy behavior, parity, schema, live-trading, or signal logic changed.
+
+Implemented:
+- New helper `MTC_COMMAND_CENTER/03_QUANTLENS/tools/build_all_gate_evidence.py`.
+- It reads `evaluation_artifacts/` plus `MEGA_walk_forward_results.json` and writes combined all-gate artifacts with `intake`, `feasibility`, Gate3 production-readiness groups, and reproducibility envelopes.
+- Evidence policy: Gate1/Gate1B use coded MEGA/backtest evidence only; no production-readiness fabrication. Gate3 alert adapter, state sync, fail-safe, and unproven MTC risk compatibility stay N_A/NOT_COMPUTED, so Gate3 remains INCOMPLETE.
+- `cpcv_validator.py` default `--max-candidates` changed from 20 to 0, where 0 means no cap; slicing now happens only when an explicit positive cap is passed.
+
+Real run:
+- Input run: `MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/final_gate2_2026-06-05_39b51db/`.
+- Generated `all_gate_artifacts/`: 38 artifacts, 38/38 MEGA row matches.
+- Generated/updated `gate1_scorecards/`, `gate1b_scorecards/`, `gate3_scorecards/`, `scorecard_v2_all_gate/`, and refreshed dashboard-visible `scorecard_v2/`.
+
+Validation:
+- `py_compile` passed for `build_all_gate_evidence.py` and `cpcv_validator.py`.
+- Schema validation passed: 38/38 all-gate artifacts validate against both `evaluation_artifact_v1.schema.json` and `production_readiness_artifact_v1.schema.json` with local `$ref` resolution.
+- Gate1: 38 OK/pass, scores 93-96.
+- Gate1B: 38 OK/pass, score 80; risk-engine conflict intentionally scores false until MTC compatibility is proven.
+- Gate2: 25 OK/pass, 13 FAIL.
+- Gate3: 38 INCOMPLETE, score 30, 0 pass, because production alert/state-sync/fail-safe evidence is absent.
+- Unified scorecard_v2: 25 (`OK`, `OK`, `OK`, `INCOMPLETE`) and 13 (`OK`, `OK`, `FAIL`, `INCOMPLETE`); promotable 0/38.
+- Live read-only API `http://127.0.0.1:8765/api/snapshot?refresh=1` sees the refreshed final run: 38 cards, same status split.
+
+Next:
+- Do not promote or live-trade anything.
+- Remaining DeepSeek-safe work: bounded read-only inventory/spec extraction for Gate3 fields if a concrete alert/adapter/source artifact exists.
+- Remaining Claude/Codex/Baris work: define/approve real production-readiness evidence source for Gate3; only then emit OK production envelopes.
 
 ## Codex GPT-5 + DeepSeek 2026-06-05 - SP-004 final Gate2 metrics + fresh sweep
 Scope: Baris approved APPROVE GATE2 DEFINITIONS. Implemented output-only definitions: `param_stability_score` from per-fold selected best params with numeric-closeness fallback; EMA50/EMA200 same-window long-flat benchmark mapped to `benchmark.beats_ema_benchmark`; regime split trend/range/high_vol/low_vol using EMA200, ADX14, ATR percentile buckets mapped to regime fields and `regime_coverage_count`. Codex audit fixes: preserved `simulate_slice` `return_trades` two-value compatibility via `return_trade_events` flag; removed EMA lookahead by acting on previous-close cross at next open; schema-null regime safeguards. Validation before commit: py_compile, diff-check, real one-cell MEGA LINK 8EMA 1h, existing lockbox fields unchanged vs prior slippage audit, one-cell new fields OK: `param_stability_score` 0.899, EMA benchmark present, `regime_coverage_count` 4, schema errors 0; one-cell Gate2 score 95/INCOMPLETE only because single-candidate PBO is insufficient.

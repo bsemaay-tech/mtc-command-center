@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/status_envelope.schema.json",
+  "title": "Metric Status Envelope",
+  "description": "Every scored metric in an evaluation artifact carries this envelope. Only status==OK contributes points; any other status greys the sub-criterion and blocks the gate from reaching a pass until resolved. A failed tool maps to TOOL_FAILED/N_A and is NEVER auto-zeroed or auto-failed.",
+  "type": "object",
+  "required": ["status"],
+  "properties": {
+    "value": {
+      "description": "The measured value when status==OK; otherwise typically null.",
+      "type": ["number", "string", "boolean", "null"]
+    },
+    "status": {
+      "description": "OK scores. N_A=not applicable for this strategy type. NOT_COMPUTED=producer did not run it. INSUFFICIENT_DATA / INSUFFICIENT_TRADES=ran but sample too small to trust. TOOL_FAILED=tool errored (NaN/exception) — treat as N_A, never auto-fail.",
+      "enum": ["OK", "N_A", "NOT_COMPUTED", "INSUFFICIENT_DATA", "INSUFFICIENT_TRADES", "TOOL_FAILED"]
+    },
+    "reason": {
+      "description": "Human-readable explanation, required when status != OK.",
+      "type": "string"
+    },
+    "source_path": {
+      "description": "Repo-relative path to the artifact this value was read from.",
+      "type": ["string", "null"]
+    }
+  },
+  "additionalProperties": true
+}

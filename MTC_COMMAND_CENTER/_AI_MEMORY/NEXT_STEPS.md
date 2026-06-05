@@ -90,8 +90,18 @@
 - Validation before commit: py_compile, diff-check, real one-cell MEGA LINK 8EMA 1h, existing lockbox fields unchanged vs prior slippage audit, one-cell new fields OK (`param_stability_score` 0.899, EMA benchmark present, `regime_coverage_count` 4, schema errors 0); one-cell Gate2 score 95/INCOMPLETE only because single-candidate PBO is insufficient.
 - **Fresh sweep DONE 2026-06-05:** `05_BACKTEST_RESULTS/final_gate2_2026-06-05_39b51db/`. MEGA full sweep: 1700 cells, 8 workers, 1517.4s, 31 PASS + 7 STRONG_PASS = 38 candidate cells; CPCV rerun with `--max-candidates 9999` (default 20 was corrected), CPCV 38/38 OK, PBO status OK pbo=0.014569; 38 evaluation artifacts, 38 Gate2 scorecards, 38 scorecard_v2.
 - **Gate2 result: 25 OK/pass, 13 FAIL, 0 INCOMPLETE.** Top scores: 100.0 8EMA LINK 1h; 100.0 GEN_ATR_PULLBACK_TREND DOGE 4h; 99.18 GEN_RSI_OVERSOLD_REVERSAL LINK 2h; 96.06 GEN_KELTNER_BREAKOUT LINK 15m; 92.31 GEN_ZSCORE_MEAN_REVERSION DOT 15m.
-- **All 38 scorecard_v2 still promotable=0** because Gate1/Gate1B/Gate3 remain INCOMPLETE/absent even when Gate2 is OK.
-- **Gate2 metric blockers are now fully cleared.** Next blockers are Gate1 intake artifacts, Gate1B feasibility artifacts, and Gate3 production-readiness artifacts — not Gate2 metrics.
+- **Original scorecard_v2 still promotable=0** because Gate1/Gate1B/Gate3 envelopes were absent at sweep time.
+- **Gate2 metric blockers are now fully cleared.** Subsequent all-gate evidence work below fills Gate1/Gate1B from coded MEGA evidence; Gate3 remains the real blocker.
+
+### SP-004-ALL-GATE-EVIDENCE | DONE | Gate1/Gate1B evidence + dashboard scorecard refresh [AI: DeepSeek/Codex GPT-5]
+- Done 2026-06-05 after user requested all possible remaining work. DeepSeek was delegated the bounded helper; it timed out and left partial output, then Codex audited/fixed it.
+- New helper: `03_QUANTLENS/tools/build_all_gate_evidence.py`. It reads final Gate2 eval artifacts plus `MEGA_walk_forward_results.json` and emits combined all-gate artifacts with `intake`, `feasibility`, production-readiness groups, and reproducibility envelopes.
+- Evidence rule: Gate1/Gate1B are scored only from coded MEGA/backtest evidence. Gate3 production readiness is not fabricated; alert adapter/state sync/fail-safe and unproven MTC risk compatibility stay N_A/NOT_COMPUTED.
+- CPCV safety fix: `cpcv_validator.py --max-candidates` default is now `0` = no cap; rows are sliced only when an explicit positive cap is passed.
+- Real output: `05_BACKTEST_RESULTS/final_gate2_2026-06-05_39b51db/all_gate_artifacts/` (38/38 artifacts, all MEGA-matched), plus `gate1_scorecards/`, `gate1b_scorecards/`, `gate3_scorecards/`, `scorecard_v2_all_gate/`, and refreshed dashboard-visible `scorecard_v2/`.
+- Validation: py_compile PASS; 38/38 all-gate artifacts validate against both `evaluation_artifact_v1` and `production_readiness_artifact_v1`; Gate1 38 OK/pass (93-96), Gate1B 38 OK/pass (80), Gate2 25 OK/pass + 13 FAIL, Gate3 38 INCOMPLETE/0 pass, promotable 0/38.
+- Dashboard/API: `http://127.0.0.1:8765/api/snapshot?refresh=1` sees the final run with 38 cards: 25 `OK/OK/OK/INCOMPLETE`, 13 `OK/OK/FAIL/INCOMPLETE`.
+- Remaining blocker: Gate3 production-readiness evidence source. Needs real alert/adapter/state-sync/fail-safe/live-integration artifacts before any production OK envelopes or promotion claim. [AI: Claude|Baris]
 
 ### SP-004-SCHEMA-PARITY | DONE | Move parity to advisory in schema [AI: DeepSeek/Claude]
 - Done (2026-06-04 Batch F): `06_SCHEMAS/evaluation_artifact_v1.schema.json` — `parity_gate` removed from `hard_flags`; new advisory `flags.parity_status` ∈ {PASS, WARN, N_A, null}. Claude-audited: json.load VALID, Draft2020-12 check_schema VALID, parity_gate gone everywhere, completeness intact.
@@ -459,7 +469,7 @@ YAML schema change now). No open questions. Awaiting go-ahead to start Wave A
 (not yet authorized).
 
 ### SP-004 | Strategy Scorecard Redesign (gate-based, edge-weighted) [AI: Claude lead + DeepSeek + Barış]
-Status: **P0A+D1-D6 signed; P1A/P1/P2 DONE; Phase 3 gate scorers (Gate1/1B/3 + unified composer) DONE 2026-06-05. Next: P1.5 bands (Barış) + dashboard render (Wave C) + metric-enrichment (Barış-gated).**
+Status: **P0A+D1-D6 signed; P1A/P1/P2 DONE; Gate scorers DONE; Gate2 final metrics DONE; all possible Gate1/Gate1B evidence emitted for final run; dashboard-visible scorecard_v2 refreshed. Next: real Gate3 production-readiness evidence source + Baris promotion policy.**
 Proposed 2026-06-02.
 Trigger: when ready to fix the strategy-detail score Barış flagged as
 "yetersiz ve hatalı".

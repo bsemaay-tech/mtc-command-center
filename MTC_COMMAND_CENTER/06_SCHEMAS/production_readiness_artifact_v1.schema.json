@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/production_readiness_artifact_v1.schema.json",
+  "title": "Production Readiness Artifact v1 (Gate 3 MTC integration)",
+  "description": "Gate 3 evidence that a backtest artifact CANNOT supply: signal-contract precision, alert adapter, broker/state sync, MTC risk-engine compatibility, monitoring, fail-safe, reproducibility. Produced only at integration/parity/alert time. Until this artifact exists, Gate 3 stays N/A and the scorecard must say so — never invent a Gate 3 number from backtest data. See _user_guide/12_STRATEGY_EVALUATION_RUBRIC.md §Gate 3.",
+  "type": "object",
+  "required": ["strategy_id", "evaluation_artifact_version"],
+  "properties": {
+    "strategy_id": { "type": "string" },
+    "evaluation_artifact_version": { "type": "string", "const": "v1" },
+    "generated_at": { "type": ["string", "null"] },
+    "strategy_version": {
+      "type": ["string", "null"],
+      "description": "Pinned strategy version this readiness assessment applies to."
+    },
+    "signal_contract": {
+      "type": "object",
+      "description": "§6.1 /25. Production-grade signal contract (timing, collision, unique id, metadata). Distinct from Gate 1B which only asks 'representable at all?' — see rubric boundary note.",
+      "properties": {
+        "emits_long_short_close_flat": { "$ref": "status_envelope.schema.json" },
+        "signal_timing_defined": { "$ref": "status_envelope.schema.json" },
+        "same_bar_collision_defined": { "$ref": "status_envelope.schema.json" },
+        "signal_uniquely_identifiable": { "$ref": "status_envelope.schema.json" },
+        "entry_logical_exit_separable": { "$ref": "status_envelope.schema.json" },
+        "metadata_emittable": { "$ref": "status_envelope.schema.json" }
+      },
+      "additionalProperties": { "$ref": "status_envelope.schema.json" }
+    },
+    "alert_adapter": {
+      "type": "object",
+      "description": "§6.2 /20.",
+      "properties": {
+        "tv_alert_json_convertible": { "$ref": "status_envelope.schema.json" },
+        "entry_exit_reduceonly_distinguishable": { "$ref": "status_envelope.schema.json" },
+        "duplicate_alert_guarded": { "$ref": "status_envelope.schema.json" },
+        "order_type_derivable": { "$ref": "status_envelope.schema.json" },
+        "partial_fill_handled": { "$ref": "status_envelope.schema.json" },
+        "alert_deterministic_parseable": { "$ref": "status_envelope.schema.json" }
+      },
+      "additionalProperties": { "$ref": "status_envelope.schema.json" }
+    },
+    "state_sync": {
+      "type": "object",
+      "description": "§6.3 /15.",
+      "properties": {
+        "strategy_vs_broker_state_comparable": { "$ref": "status_envelope.schema.json" },
+        "flat_long_short_trackable": { "$ref": "status_envelope.schema.json" },
+        "resync_after_missed_alert": { "$ref": "status_envelope.schema.json" },
+        "multi_position_logic_explicit": { "$ref": "status_envelope.schema.json" },
+        "recomputable_after_restart": { "$ref": "status_envelope.schema.json" }
+      },
+      "additionalProperties": { "$ref": "status_envelope.schema.json" }
+    },
+    "risk_engine_compat": {
+      "type": "object",
+      "description": "§6.4 /15.",
+      "properties": {
+        "works_with_mtc_default_sl_tp_trail": { "$ref": "status_envelope.schema.json" },
+        "custom_stop_explicit_if_needed": { "$ref": "status_envelope.schema.json" },
+        "reverse_reentry_cooldown_mappable": { "$ref": "status_envelope.schema.json" },
+        "pyramiding_intent_explicit": { "$ref": "status_envelope.schema.json" },
+        "no_conflicting_order_logic": { "$ref": "status_envelope.schema.json" }
+      },
+      "additionalProperties": { "$ref": "status_envelope.schema.json" }
+    },
+    "monitoring": {
+      "type": "object",
+      "description": "§6.5 /10.",
+      "properties": {
+        "signal_reason_loggable": { "$ref": "status_envelope.schema.json" },
+        "params_loggable": { "$ref": "status_envelope.schema.json" },
+        "backtest_to_live_matchable": { "$ref": "status_envelope.schema.json" },
+        "debug_metadata_sufficient": { "$ref": "status_envelope.schema.json" },
+        "carries_version": { "$ref": "status_envelope.schema.json" }
+      },
+      "additionalProperties": { "$ref": "status_envelope.schema.json" }
+    },
+    "fail_safe": {
+      "type": "object",
+      "description": "§6.6 /10.",
+      "properties": {
+        "circuit_breaker_compatible": { "$ref": "status_envelope.schema.json" },
+        "max_daily_loss_compatible": { "$ref": "status_envelope.schema.json" },
+        "manual_override_behavior_defined": { "$ref": "status_envelope.schema.json" },
+        "safe_on_exchange_bot_error": { "$ref": "status_envelope.schema.json" },
+        "no_trade_on_unexpected_signal": { "$ref": "status_envelope.schema.json" }
+      },
+      "additionalProperties": { "$ref": "status_envelope.schema.json" }
+    },
+    "reproducibility": {
+      "type": "object",
+      "description": "§6.7 /5.",
+      "properties": {
+        "version_pinned": { "$ref": "status_envelope.schema.json" },
+        "param_set_saved": { "$ref": "status_envelope.schema.json" },
+        "dataset_window_saved": { "$ref": "status_envelope.schema.json" },
+        "cost_assumptions_saved": { "$ref": "status_envelope.schema.json" },
+        "rerun_reproducible": { "$ref": "status_envelope.schema.json" }
+      },
+      "additionalProperties": { "$ref": "status_envelope.schema.json" }
+    },
+    "evidence_sources": {
+      "type": "array",
+      "description": "Repo-relative paths to the alert/parity/integration evidence backing this artifact.",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": true
+}

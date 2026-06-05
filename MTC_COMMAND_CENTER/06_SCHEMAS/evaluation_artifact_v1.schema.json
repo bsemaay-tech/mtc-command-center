@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/evaluation_artifact_v1.schema.json",
+  "title": "Strategy Evaluation Artifact v1 (Gate 2 backtest evidence)",
+  "description": "One artifact per backtest run. Collects already-computed Gate 2 metrics (risk-adjusted performance, robustness, benchmark, regime) into one status-enveloped record so the scoring engine (SP-004 Phase 2) can compute gate2_backtest() without re-running anything. Output writer only — does NOT change trading/signal/parity logic. See _user_guide/12_STRATEGY_EVALUATION_RUBRIC.md.",
+  "type": "object",
+  "required": ["strategy_id", "backtest_run_id", "evaluation_artifact_version", "metrics"],
+  "properties": {
+    "strategy_id": { "type": "string" },
+    "backtest_run_id": {
+      "description": "Stable id of the backtest run that produced this artifact (e.g. MEGA_results_iter_21 / single_strategy_runs/<id>). Lets the scorecard cite which run it scored.",
+      "type": "string"
+    },
+    "evaluation_artifact_version": { "type": "string", "const": "v1" },
+    "generated_at": { "type": ["string", "null"], "description": "ISO 8601 UTC." },
+    "symbol": { "type": ["string", "null"] },
+    "timeframe": { "type": ["string", "null"] },
+    "strategy_type": {
+      "description": "Drives trade-count / duration minimums in §5.3 of the rubric.",
+      "type": ["string", "null"],
+      "enum": ["scalping", "intraday", "swing", "position", null]
+    },
+    "cost_assumptions": {
+      "type": "object",
+      "description": "Fee/slippage/spread assumptions the run used; required for reproducibility + §5.5.",
+      "properties": {
+        "fee_pct": { "type": ["number", "null"] },
+        "slippage_pct": { "type": ["number", "null"] },
+        "spread_pct": { "type": ["number", "null"] }
+      },
+      "additionalProperties": true
+    },
+    "primary_window": {
+      "type": "object",
+      "description": "The main OOS test window.",
+      "properties": {
+        "start": { "type": ["string", "null"] },
+        "end": { "type": ["string", "null"] },
+        "calendar_days": { "type": ["number", "null"] }
+      },
+      "additionalProperties": true
+    },
+    "multi_window": {
+      "description": "AGENTS.md promotability requires multi-window evidence. Each entry is an independent window result summary.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "start": { "type": ["string", "null"] },
+          "end": { "type": ["string", "null"] },
+          "return_pct": { "type": ["number", "null"] },
+          "max_drawdown_pct": { "type": ["number", "null"] },
+          "pass": { "type": ["boolean", "null"] }
+        },
+        "additionalProperties": true
+      }
+    },
+
+    "metrics": {
+      "type": "object",
+      "description": "Every field is a status envelope. Only status==OK scores. Grouped to match Gate 2 rubric categories §5.1-§5.7.",
+      "properties": {
+        "net_profit_pct": { "$ref": "status_envelope.schema.json" },
+        "return_pct_compound": { "$ref": "status_envelope.schema.json" },
+        "profit_factor": { "$ref": "status_envelope.schema.json" },
+        "expectancy_r": { "$ref": "status_envelope.schema.json" },
+        "sharpe": { "$ref": "status_envelope.schema.json" },
+        "sortino": { "$ref": "status_envelope.schema.json" },
+        "equity_curve_health": { "$ref": "status_envelope.schema.json" },
+
+        "max_drawdown_pct": { "$ref": "status_envelope.schema.json" },
+        "recovery_factor": { "$ref": "status_envelope.schema.json" },
+        "max_consecutive_losses": { "$ref": "status_envelope.schema.json" },
+        "ret_dd_ratio": { "$ref": "status_envelope.schema.json" },
+        "worst_window_drawdown_pct": { "$ref": "status_envelope.schema.json" },
+
+        "trades": { "$ref": "status_envelope.schema.json" },
+        "calendar_days": { "$ref": "status_envelope.schema.json" },
+        "regime_coverage_count": { "$ref": "status_envelope.schema.json" },
+        "top_trade_concentration": { "$ref": "status_envelope.schema.json" },
+        "long_short_ratio": { "$ref": "status_envelope.schema.json" },
+
+        "param_stability_score": { "$ref": "status_envelope.schema.json" },
+        "oos_return_pct": { "$ref": "status_envelope.schema.json" },
+        "wfo_pass": { "$ref": "status_envelope.schema.json" },
+        "cpcv_pass_ratio": { "$ref": "status_envelope.schema.json" },
+        "pbo": { "$ref": "status_envelope.schema.json" },
+        "multi_window_pass": { "$ref": "status_envelope.schema.json" },
+
+        "net_after_fees_pct": { "$ref": "status_envelope.schema.json" },
+        "net_after_slippage_pct": { "$ref": "status_envelope.schema.json" },
+        "avg_trade_vs_cost": { "$ref": "status_envelope.schema.json" }
+      },
+      "additionalProperties": { "$ref": "status_envelope.schema.json" }
+    },
+
+    "benchmark": {
+      "type": "object",
+      "description": "§5.6. Buy&Hold computed on the SAME symbol/timeframe/OOS window/fee as the strategy run. excess_alpha must be risk-adjusted, not raw return.",
+      "properties": {
+        "bh_return_pct": { "$ref": "status_envelope.schema.json" },
+        "bh_max_drawdown_pct": { "$ref": "status_envelope.schema.json" },
+        "bh_sharpe": { "$ref": "status_envelope.schema.json" },
+        "bh_ret_dd_ratio": { "$ref": "status_envelope.schema.json" },
+        "excess_alpha_pct": { "$ref": "status_envelope.schema.json" },
+        "beats_bh_risk_adjusted": { "$ref": "status_envelope.schema.json" },
+        "beats_ema_benchmark": { "$ref": "status_envelope.schema.json" }
+      },
+      "additionalProperties": { "$ref": "status_envelope.schema.json" }
+    },
+
+    "regime": {
+      "type": "object",
+      "description": "§5.7 (raised 5->10 pts). Per-regime breakdown + weak-regime identification.",
+      "properties": {
+        "regime_breakdown_present": { "$ref": "status_envelope.schema.json" },
+        "weak_regime_identified": { "$ref": "status_envelope.schema.json" },
+        "worst_regime_return_pct": { "$ref": "status_envelope.schema.json" }
+      },
+      "additionalProperties": { "$ref": "status_envelope.schema.json" }
+    },
+
+    "hard_flags": {
+      "type": "object",
+      "description": "Kill-switches and overfit gate. repaint_status from the repaint-verification stage; overfit_suspect derived from pbo>=0.5. (Parity moved to advisory flags.parity_status per rubric D3/D007 — it is NOT a kill-switch.)",
+      "properties": {
+        "repaint_status": {
+          "type": ["string", "null"],
+          "enum": ["VERIFIED_SAFE", "SAFE_WITH_DELAY", "NEEDS_MODIFICATION", "REJECT_REPAINT", "NOT_VERIFIED", null]
+        },
+        "overfit_suspect": { "type": ["boolean", "null"] }
+      },
+      "additionalProperties": true
+    },
+
+    "flags": {
+      "type": "object",
+      "description": "Advisory (non-blocking) flags. parity_status from PineTS parity (rubric D3/D007): WARN records a mismatch for later review but does NOT block promotion; N_A = no Pine counterpart or not yet run.",
+      "properties": {
+        "parity_status": {
+          "type": ["string", "null"],
+          "enum": ["PASS", "WARN", "N_A", null]
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "completeness": {
+      "type": "object",
+      "description": "Phase-1 completeness check. Lists missing required inputs so Phase-4 backfill does not silently score partial runs.",
+      "properties": {
+        "has_benchmark": { "type": ["boolean", "null"] },
+        "has_multi_window": { "type": ["boolean", "null"] },
+        "has_cpcv": { "type": ["boolean", "null"] },
+        "has_wfo": { "type": ["boolean", "null"] },
+        "missing": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
