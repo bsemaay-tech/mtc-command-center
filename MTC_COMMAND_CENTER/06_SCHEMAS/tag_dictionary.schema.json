@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/tag_dictionary.schema.json",
+  "title": "MCC Tag Dictionary",
+  "type": "object",
+  "required": ["schema_version", "tags"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "generated_at": { "type": ["string", "null"] },
+    "generator": { "type": "string" },
+    "tags": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": false
+}

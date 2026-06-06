@@ -1,8 +1,110 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-05-30T00:00:00+03:00",
-  "mode": "disabled",
+  "generated_at": "2026-06-06T10:53:31+00:00",
+  "mode": "dry_run",
   "dry_run": true,
   "live_trading_enabled": false,
-  "events": []
+  "events": [
+    {
+      "event_type": "SIMULATED_SIGNAL",
+      "timestamp": "2026-06-06T10:53:30+00:00",
+      "adapter": "liveops_dry_run_adapter",
+      "strategy": "QL_FAM_CONSOLIDATION_BREAKOUT",
+      "symbol": "SOLUSDT",
+      "timeframe": "15m",
+      "final_state": "final_state_recorded",
+      "webhook_sent": false,
+      "order_placed": false
+    },
+    {
+      "event_type": "SIMULATED_SIGNAL",
+      "timestamp": "2026-06-06T10:53:30+00:00",
+      "adapter": "liveops_dry_run_adapter",
+      "strategy": "QL_FAM_CONSOLIDATION_BREAKOUT",
+      "symbol": "TRXUSDT",
+      "timeframe": "2h",
+      "final_state": "final_state_recorded",
+      "webhook_sent": false,
+      "order_placed": false
+    },
+    {
+      "event_type": "SIMULATED_SIGNAL",
+      "timestamp": "2026-06-06T10:53:30+00:00",
+      "adapter": "liveops_dry_run_adapter",
+      "strategy": "QL_FAM_CONSOLIDATION_BREAKOUT",
+      "symbol": "TRXUSDT",
+      "timeframe": "4h",
+      "final_state": "final_state_recorded",
+      "webhook_sent": false,
+      "order_placed": false
+    },
+    {
+      "event_type": "SIMULATED_SIGNAL",
+      "timestamp": "2026-06-06T10:53:30+00:00",
+      "adapter": "liveops_dry_run_adapter",
+      "strategy": "QL_FAM_MOMENTUM_CONTINUATION",
+      "symbol": "BTCUSDT",
+      "timeframe": "4h",
+      "final_state": "final_state_recorded",
+      "webhook_sent": false,
+      "order_placed": false
+    },
+    {
+      "event_type": "SIMULATED_SIGNAL",
+      "timestamp": "2026-06-06T10:53:31+00:00",
+      "adapter": "liveops_dry_run_adapter",
+      "strategy": "QL_FAM_MOMENTUM_CONTINUATION",
+      "symbol": "LINKUSDT",
+      "timeframe": "4h",
+      "final_state": "final_state_recorded",
+      "webhook_sent": false,
+      "order_placed": false
+    },
+    {
+      "event_type": "SIMULATED_SIGNAL",
+      "timestamp": "2026-06-06T10:53:31+00:00",
+      "adapter": "liveops_dry_run_adapter",
+      "strategy": "QL_FAM_MOMENTUM_CONTINUATION",
+      "symbol": "TRXUSDT",
+      "timeframe": "15m",
+      "final_state": "final_state_recorded",
+      "webhook_sent": false,
+      "order_placed": false
+    },
+    {
+      "event_type": "SIMULATED_SIGNAL",
+      "timestamp": "2026-06-06T10:53:31+00:00",
+      "adapter": "liveops_dry_run_adapter",
+      "strategy": "QL_FAM_MOMENTUM_CONTINUATION",
+      "symbol": "TRXUSDT",
+      "timeframe": "1h",
+      "final_state": "final_state_recorded",
+      "webhook_sent": false,
+      "order_placed": false
+    },
+    {
+      "event_type": "SIMULATED_SIGNAL",
+      "timestamp": "2026-06-06T10:53:31+00:00",
+      "adapter": "liveops_dry_run_adapter",
+      "strategy": "QL_FAM_MOMENTUM_CONTINUATION",
+      "symbol": "TRXUSDT",
+      "timeframe": "4h",
+      "final_state": "final_state_recorded",
+      "webhook_sent": false,
+      "order_placed": false
+    },
+    {
+      "event_type": "SIMULATED_SIGNAL",
+      "timestamp": "2026-06-06T10:53:31+00:00",
+      "adapter": "liveops_dry_run_adapter",
+      "strategy": "QL_FAM_PULLBACK_TO_MA",
+      "symbol": "LTCUSDT",
+      "timeframe": "4h",
+      "final_state": "final_state_recorded",
+      "webhook_sent": false,
+      "order_placed": false
+    }
+  ],
+  "webhook_sending_enabled": false,
+  "broker_integration_enabled": false
 }

@@ -1,0 +1,144 @@
+<!doctype html>
+<!--
+  PROTOTYPE B — Single-scroll, progressive-disclosure variant (throwaway mockup).
+  Companion to 03_QUANTLENS/_user_guide/11_STRATEGY_DETAIL_PAGE_REDESIGN_PLAN.md.
+  Validates the small-screen / no-tabs fallback. Uses an UNDER-documented strategy
+  to prove the "Not defined yet" / N/A paths.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype B — single scroll</title>
+<style>
+:root{
+  --bg:#f5f7f8;--panel:#fff;--ink:#152029;--muted:#64717c;--line:#d8dee3;
+  --accent:#1d6f74;--amber:#9b6a18;--red:#a83d3d;--green:#28724f;
+  --shadow:0 12px 32px rgba(21,32,41,.08);font-family:Inter,"Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);padding:24px}
+.wrap{max-width:760px;margin:0 auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:18px 20px;margin-bottom:16px}
+h1{font-size:27px;margin:0 0 2px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 8px}
+.thesis{font-size:15px;margin:0}
+.pill{display:inline-block;padding:5px 13px;border-radius:999px;font-size:13px;font-weight:700}
+.pill.red{background:#f7e3e3;color:var(--red);border:1px solid #e0a3a3}
+.head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.decision{display:grid;grid-template-columns:14px 1fr;gap:13px}
+.dot{width:14px;height:14px;border-radius:50%;margin-top:5px;background:var(--red)}
+.verdict{font-size:18px;font-weight:800;margin:0 0 4px}
+.reason{margin:0 0 10px;color:#33414c}
+.next{background:#fbeeee;border:1px solid #e0a3a3;border-radius:10px;padding:10px 13px}
+.next b{color:var(--red)}
+.ladder{display:flex;gap:5px;flex-wrap:wrap}
+.step{flex:1;min-width:84px;border:1px solid var(--line);border-radius:9px;padding:8px;text-align:center;font-size:12px}
+.step.done{background:#e3f3ea;border-color:#9cd2b4}
+.step.blk{background:#f7e3e3;border-color:#e0a3a3;font-weight:700}
+.step.todo{color:var(--muted)}
+.cap{color:var(--muted);font-size:13px;margin:10px 0 0}
+section>summary{cursor:pointer;font-size:15px;font-weight:700;list-style:none;padding:4px 0;display:flex;justify-content:space-between}
+section>summary::-webkit-details-marker{display:none}
+section>summary::after{content:"▾";color:var(--muted)}
+section[open]>summary::after{content:"▴"}
+.rule{display:grid;grid-template-columns:180px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.rule:last-child{border-bottom:none}
+.rule .k{font-weight:700;color:#33414c}
+.rule .v.todo{color:var(--muted);font-style:italic}
+.gate{display:flex;align-items:center;gap:10px;padding:8px 0}
+.gname{min-width:170px;font-weight:600;font-size:14px}
+.bar{flex:1;height:12px;background:#eef1f3;border-radius:7px;overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%}
+.bar i.green{background:var(--green)}.bar i.amber{background:var(--amber)}
+.bar.na i{background:repeating-linear-gradient(45deg,#dfe4e8,#dfe4e8 6px,#eef1f3 6px,#eef1f3 12px);width:100%}
+.gscore{min-width:56px;text-align:right;font-weight:700;font-size:13px}
+.empty{background:#fbeeee;border:1px dashed #e0a3a3;border-radius:10px;padding:14px}
+.tech td{padding:6px 8px;border-bottom:1px solid var(--line);font-size:13px}
+.tech td:first-child{color:var(--muted);width:200px}
+.tech code{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+@media(max-width:640px){.rule{grid-template-columns:1fr}.gname{min-width:110px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card">
+    <div class="head-row">
+      <div>
+        <h1>VWAP Bounce Scalp</h1>
+        <p class="sub">Crypto · 5m · YouTube strategy</p>
+        <p class="thesis">VWAP'a dokunuşta sıçrama (mean-reversion) denemesi.</p>
+      </div>
+      <span class="pill red">Source check needed</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="decision">
+      <div class="dot"></div>
+      <div>
+        <p class="verdict">Test edilemez — önce kaynak doğrulaması</p>
+        <p class="reason">Kaynaktaki kurallar net değil; repaint/lookahead davranışı doğrulanmadan
+          backtest yapılamaz. Bu strateji henüz "fikir" aşamasında.</p>
+        <div class="next"><b>Sıradaki adım:</b> Kaynak/formül denetimini tamamla — kesin giriş/çıkış kurallarını ve repaint durumunu doğrula.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ladder">
+      <div class="step done">✓ Discovered</div>
+      <div class="step blk">✕ Classified</div>
+      <div class="step todo">○ Scored</div>
+      <div class="step todo">○ Backtested</div>
+      <div class="step todo">○ Promotion</div>
+      <div class="step todo">○ Paper</div>
+      <div class="step todo">○ Integrated</div>
+    </div>
+    <p class="cap">Blocked at: <b>Classification</b> — source/formula audit required.</p>
+  </div>
+
+  <details class="card" open><summary>Trading rules</summary>
+    <div class="rule"><div class="k">Market / bias</div><div class="v">Range / mean-reversion (belirsiz).</div></div>
+    <div class="rule"><div class="k">Entry</div><div class="v">Fiyat VWAP'a dokunup geri sıçradığında — eşik tanımsız.</div></div>
+    <div class="rule"><div class="k">Exit</div><div class="v todo">Not defined yet</div></div>
+    <div class="rule"><div class="k">Stop-loss</div><div class="v todo">Not defined yet</div></div>
+    <div class="rule"><div class="k">Take-profit</div><div class="v todo">Not defined yet</div></div>
+    <div class="rule"><div class="k">Risk management</div><div class="v todo">Not defined yet</div></div>
+    <div class="rule"><div class="k">Avoid trading when</div><div class="v todo">Not defined yet</div></div>
+  </details>
+
+  <details class="card"><summary>Scorecard</summary>
+    <div class="gate"><span class="gname">Gate 1 · Intake</span><span class="bar"><i class="amber" style="width:38%"></i></span><span class="gscore">38/100</span></div>
+    <div class="gate"><span class="gname">Gate 1B · Feasibility</span><span class="bar na"><i></i></span><span class="gscore">N/A</span></div>
+    <div class="gate"><span class="gname">Gate 2 · Backtest</span><span class="bar na"><i></i></span><span class="gscore">N/A</span></div>
+    <div class="gate"><span class="gname">Gate 3 · Production</span><span class="bar na"><i></i></span><span class="gscore">N/A</span></div>
+    <p class="cap">Gate 1 low — rules not deterministic enough to advance.</p>
+  </details>
+
+  <details class="card"><summary>Backtest evidence</summary>
+    <div class="empty"><b>Backtest evidence is not available yet.</b>
+      <p style="margin:8px 0 0">Blocked upstream: resolve the source/formula audit and write deterministic rules first.</p>
+    </div>
+  </details>
+
+  <details class="card"><summary>Source material</summary>
+    <div class="rule"><div class="k">Title</div><div class="v">VWAP bounce scalping (YouTube)</div></div>
+    <div class="rule"><div class="k">Video</div><div class="v"><a href="#">Open source ↗</a></div></div>
+    <div class="rule"><div class="k">Transcript</div><div class="v">Missing</div></div>
+    <div class="rule"><div class="k">Source quality</div><div class="v">Low</div></div>
+  </details>
+
+  <details class="card"><summary>Technical details</summary>
+    <table class="tech">
+      <tr><td>Canonical ID</td><td><code>QL_2026-05-03_CRYPTO_5M_VWAP_BOUNCE</code></td></tr>
+      <tr><td>Raw machine status</td><td><code>BLOCKED_SOURCE_AUDIT</code> → "Source check needed"</td></tr>
+      <tr><td>Duplicate handling</td><td>Primary version</td></tr>
+      <tr><td>Blocked reason (raw)</td><td><code>source audit</code></td></tr>
+    </table>
+  </details>
+
+</div>
+</body>
+</html>

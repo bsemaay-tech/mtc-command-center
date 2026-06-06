@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/triage_candidate_registry.schema.json",
+  "title": "MCC Triage Candidate Registry",
+  "type": "object",
+  "required": ["schema_version", "candidates"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "generated_at": { "type": ["string", "null"] },
+    "generator": { "type": "string" },
+    "source_worklist": { "type": "string" },
+    "summary": { "type": "object", "additionalProperties": true },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["stg_code"],
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

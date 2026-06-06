@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/research_run_registry.schema.json",
+  "title": "MCC Research Run Registry",
+  "type": "object",
+  "required": ["schema_version", "research_runs"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "generated_at": { "type": ["string", "null"] },
+    "research_runs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["research_run_id", "status"],
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

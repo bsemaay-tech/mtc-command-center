@@ -21,3 +21,9 @@ repaint_risk: LOW
 lookahead_risk: HIGH
 closed_source_risk: LOW
 notes: URL and channel metadata missing. Pattern definitions are partially codable; support/resistance/trendline context can introduce lookahead if not made past-only.
+
+# --- A1 Extracted (auto) ---
+trailing_logic: N_A
+filters_used: ATR
+known_strengths: "Entry: Bullish engulfing pattern near 96-bar support (distance <= 0.4 * ATR)."
+known_weaknesses: N_A

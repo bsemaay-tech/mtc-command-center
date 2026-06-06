@@ -18,10 +18,11 @@ Read-only. No side-effects on QuantLens or MCC core.
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 from collections import Counter
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 THIS = Path(__file__).resolve()
@@ -30,7 +31,7 @@ API_ROOT = THIS.parent.parent / "08_DASHBOARD_APP" / "apps" / "api"
 sys.path.insert(0, str(API_ROOT))
 
 from mcc_readonly.audit_reader import build_candidate_audit  # noqa: E402
-from mcc_readonly.paths import default_mcc_root  # noqa: E402
+from mcc_readonly.paths import default_mcc_root, default_quantlens_root  # noqa: E402
 
 STRATEGY_KEYWORDS = [
     r"\bentry\b", r"\bentries\b", r"\benter (?:long|short)\b", r"\bgo (?:long|short)\b",
@@ -180,9 +181,40 @@ def render_table(rows, headers) -> str:
     return line
 
 
+def resolve_transcript_path(tpath: str, mcc_root: Path) -> Path:
+    rel = Path(tpath.replace("\\", "/"))
+    if rel.is_absolute():
+        return rel
+
+    quantlens_root = default_quantlens_root(mcc_root)
+    workspace_root = mcc_root.parent
+    legacy_tpl_root = workspace_root / "01_MASTER TEMPLATE_V2"
+    candidates = [
+        quantlens_root / rel,
+        mcc_root / rel,
+        workspace_root / rel,
+        legacy_tpl_root / rel,
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+
+    basename = rel.name
+    basename_candidates = [
+        quantlens_root / "00_INBOX_REPORTS" / "Transcrips" / basename,
+        quantlens_root / "Transcrips" / basename,
+        mcc_root / "00_INBOX_REPORTS" / "Transcrips" / basename,
+        workspace_root / "MTC_COMMAND_CENTER" / "03_QUANTLENS" / "00_INBOX_REPORTS" / "Transcrips" / basename,
+    ]
+    for candidate in basename_candidates:
+        if candidate.exists():
+            return candidate
+
+    return candidates[0]
+
+
 def main() -> int:
     mcc_root = Path(default_mcc_root()).resolve()
-    tpl_root = mcc_root.parent / "01_MASTER TEMPLATE_V2"
     audit = build_candidate_audit()
     rows = audit.get("rows", []) or []
 
@@ -194,7 +226,7 @@ def main() -> int:
         tpath = row.get("transcript_path", "")
         if not tpath:
             continue
-        full = tpl_root / Path(tpath.replace("\\", "/"))
+        full = resolve_transcript_path(tpath, mcc_root)
         if not full.exists():
             continue
         try:
@@ -318,6 +350,36 @@ def main() -> int:
             slines.append("")
     split_path.write_text("\n".join(slines), encoding="utf-8")
     print(f"Wrote {split_path}")
+
+    json_path = THIS.parent / "transcript_reclassification.json"
+    json_rows = []
+    for a in analyses:
+        r = a["row"]
+        s = a["signals"]
+        json_rows.append({
+            "candidate_id": r.get("id", ""),
+            "title": (r.get("name") or "")[:120],
+            "source_quality": r.get("source_quality", ""),
+            "blocked_reason": r.get("blocked_reason", "") or "",
+            "verdict": a["verdict"],
+            "reason": a["reason"],
+            "word_count": s["word_count"],
+            "strategy_score": s["strategy_score"],
+            "educational_score": s["educational_score"],
+            "indicator_count": s["indicator_count"],
+            "indicators": s["indicators"],
+            "numeric_threshold_count": s["numeric_threshold_count"],
+        })
+    json_payload = {
+        "schema_version": "1.0",
+        "generated": datetime.now(timezone.utc).isoformat(),
+        "total_candidates": len(targets),
+        "analyzed": len(analyses),
+        "verdict_counts": dict(counts),
+        "rows": json_rows,
+    }
+    json_path.write_text(json.dumps(json_payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"Wrote {json_path}")
     return 0
 
 

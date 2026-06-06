@@ -27,7 +27,7 @@ API_ROOT = THIS.parent.parent / "08_DASHBOARD_APP" / "apps" / "api"
 sys.path.insert(0, str(API_ROOT))
 
 from mcc_readonly.audit_reader import build_candidate_audit  # noqa: E402
-from mcc_readonly.paths import default_mcc_root  # noqa: E402
+from mcc_readonly.paths import default_mcc_root, default_quantlens_root  # noqa: E402
 
 from openpyxl import Workbook  # noqa: E402
 from openpyxl.styles import Alignment, Font, PatternFill  # noqa: E402
@@ -113,9 +113,7 @@ def assign_codes(selected: list[tuple[str, dict]], code_map: dict[str, str]) -> 
 
 def write_md_files(selected: list[tuple[str, dict]], code_map: dict[str, str], mcc_root: Path) -> int:
     STRATEGIES_DIR.mkdir(parents=True, exist_ok=True)
-    # transcript_path values are relative to 01_MASTER TEMPLATE_V2/, e.g.
-    # "06_QUANTLENS_LAB\\00_INBOX_REPORTS\\Transcrips\\<title>.md".
-    tpl_root = mcc_root.parent / "01_MASTER TEMPLATE_V2"
+    qlab_root = default_quantlens_root(mcc_root)
     written = 0
     for _p, row in selected:
         cid = row.get("id") or ""
@@ -136,7 +134,7 @@ def write_md_files(selected: list[tuple[str, dict]], code_map: dict[str, str], m
             "",
         ]
         if transcript_rel:
-            transcript_full = tpl_root / Path(transcript_rel.replace("\\", "/"))
+            transcript_full = qlab_root / Path(transcript_rel.replace("\\", "/"))
             body.append("## Transcript")
             body.append("")
             try:

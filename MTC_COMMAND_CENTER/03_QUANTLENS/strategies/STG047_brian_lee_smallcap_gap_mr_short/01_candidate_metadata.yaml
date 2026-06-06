@@ -1,0 +1,55 @@
+candidate_id: CAND_BRIAN_LEE_SMALLCAP_GAP_MR_SHORT_V1
+source_url: https://youtu.be/DPA35Gug3Y4
+video_title: Gamer Trades $5k into over $1 Million with just a 30% Win Rate - Brian Lee
+quantlens_decision: CANDIDATE
+codex_status: READY_FOR_DETERMINISTIC_REVIEW
+market_type: US_SMALLCAP_EQUITIES
+primary_timeframe: intraday
+recommended_timeframes:
+  - 1m
+  - 5m
+  - 15m
+strategy_type: small-cap gap-up mean-reversion short
+strategy_category: day_trading
+method:
+  - mean_reversion
+  - reversal
+expected_market_regime:
+  - high_volatility
+  - reversal
+long_only_or_long_short: short_only
+commercial_value_score: 7
+complexity_score: 7
+repaint_risk: MEDIUM
+lookahead_risk: MEDIUM
+overfit_risk: HIGH
+closed_source_risk: LOW
+risk_management_quality: STRONG
+discretion_level: HIGH
+candidate_kind:
+  producer: false
+  entry_gate: true
+  guard: true
+  confirmation: true
+  exit_rule: true
+  sl_tp_method: true
+  trailing_be_method: false
+  money_management: true
+indicators_used:
+  - GAP
+  - SUPPORT_RESISTANCE
+  - RSI
+  - VOLUME
+existing_mtc_overlap: Overlaps with gap detection, resistance levels, RSI extension filters, and risk-per-trade sizing. Short-only small-cap niche is new vs the existing long-biased set.
+new_feature_required: Pre-market gap scanner + small-cap universe; short-side execution model.
+known_strengths: High reward-to-risk; statistical gap-fill / red-close tendency; tight risk control trailing account balance.
+known_weaknesses: ~30% win rate; squeeze risk on the front side; heavy discretion (news/filings/psychology ~50% of decision); hard to fully systematize.
+recommended_next_step: Extract one deterministic sub-setup (gap>=20% into prior resistance + HTF RSI extension -> short on momentum turn, cover at partial gap fill) before any Python prototype.
+created_at: 2026-06-04
+updated_at: 2026-06-04
+
+# --- A1 Extracted (auto) ---
+trailing_logic: N_A
+filters_used: N_A
+known_strengths: Deterministic Spec -- Brian Lee Small-cap Gap Mean-Reversion Short
+known_weaknesses: "Stop / risk. Tight, riskbased position sizing: fixed dollar/R risk per trade that"

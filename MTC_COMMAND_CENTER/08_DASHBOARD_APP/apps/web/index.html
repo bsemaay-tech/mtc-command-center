@@ -25,6 +25,7 @@
           <button class="tab" data-tab="parity" type="button" title="Parity cases and pass/fail coverage.">Parity</button>
           <button class="tab" data-tab="backtest" type="button" title="Backtest run summaries and reports.">Backtest</button>
           <button class="tab" data-tab="registry" type="button" title="Canonical strategy registry and evidence state.">Registry</button>
+          <button class="tab" data-tab="research" type="button" title="Reusable strategy/indicator/component inventory and AI research runs, variants, and reports.">Strategy Research Lab</button>
           <button class="tab" data-tab="pine-builder" type="button" title="Pine draft and chart-build status.">Pine Builder</button>
           <button class="tab" data-tab="optimization" type="button" title="Optimization runs, top candidates, and risk notes.">Optimization</button>
           <button class="tab" data-tab="liveops" type="button" title="Paper-trade and live operations status.">LiveOps</button>
@@ -46,6 +47,8 @@
         </header>
 
         <section class="notice" id="notice" hidden></section>
+
+        <section id="mccStatusPanel" class="mcc-status-panel" aria-label="MCC system status"></section>
 
         <section class="panel stacked-panel" id="strategyDetail" hidden></section>
 
@@ -74,6 +77,16 @@
               <label>
                 <span>Next action</span>
                 <select id="pipelineActionFilter"></select>
+              </label>
+              <label>
+                <span>Gate status</span>
+                <select id="pipelineGateFilter">
+                  <option value="">All</option>
+                  <option value="gate2_pass">Gate2: PASS only</option>
+                  <option value="gate3_incomplete">Gate3: Incomplete</option>
+                  <option value="promotable_only">Promotable: Only</option>
+                  <option value="blocked_gate3">Blocked by Gate3</option>
+                </select>
               </label>
             </div>
             <div class="table-wrap stacked-table" id="pipelineTableWrap">
@@ -130,6 +143,10 @@
                 <select id="auditSourceFilter"></select>
               </label>
               <label>
+                <span>Tx verdict</span>
+                <select id="auditTxVerdictFilter"></select>
+              </label>
+              <label>
                 <span>Eligible</span>
                 <select id="auditEligibleFilter"></select>
               </label>
@@ -164,6 +181,7 @@
                     <th title="Source quality label (HIGH, MEDIUM, LOW, REJECTED).">Quality</th>
                     <th title="Does the source contain deterministic, machine-testable rules?">Rules</th>
                     <th title="Source URL and transcript coverage.">Source</th>
+                    <th title="Transcript heuristic verdict (LIKELY_MISCLASSIFIED, REVIEW_HUMAN, KEEP_REJECTED, ALREADY_OK).">Transcript</th>
                     <th title="Eligible for a backtest right now?">Eligible</th>
                     <th title="Why the row is blocked or parked.">Blocked reason</th>
                     <th title="Canonical row that represents the duplicate group.">Canonical</th>
@@ -340,6 +358,7 @@
             </div>
             <p class="summary">Backtest shows completed evidence runs, symbols, timeframes, and linked result reports.</p>
             <div class="parity-grid" id="backtestGrid"></div>
+            <div id="overnightRunnerStatus"></div>
             <div class="table-wrap stacked-table">
               <table>
                 <thead>
@@ -354,6 +373,7 @@
                 <tbody id="backtestRows"></tbody>
               </table>
             </div>
+            <div id="backtestRunDetail"></div>
           </section>
         </section>
 
@@ -377,6 +397,242 @@
                   </tr>
                 </thead>
                 <tbody id="registryRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="tab-panel" data-panel="research">
+          <div class="metric-grid">
+            <article class="metric"><span>Strategies</span><strong id="researchStrategyValue">--</strong></article>
+            <article class="metric"><span>Indicators</span><strong id="researchIndicatorValue">--</strong></article>
+            <article class="metric"><span>Components</span><strong id="researchComponentValue">--</strong></article>
+            <article class="metric"><span>Tags</span><strong id="researchTagValue">--</strong></article>
+            <article class="metric"><span>Research runs</span><strong id="researchRunValue">--</strong></article>
+            <article class="metric"><span>Variants</span><strong id="researchVariantValue">--</strong></article>
+            <article class="metric"><span>Candidates</span><strong id="researchCandidateValue">--</strong></article>
+            <article class="metric"><span>Rejected</span><strong id="researchRejectedValue">--</strong></article>
+            <article class="metric"><span>Review needed</span><strong id="researchReviewValue">--</strong></article>
+            <article class="metric"><span>Triage worklist</span><strong id="researchTriageValue">--</strong></article>
+            <article class="metric"><span>Triage + transcript</span><strong id="researchTriageTranscriptValue">--</strong></article>
+            <article class="metric"><span>Re-triage eligible</span><strong id="researchRetriageValue">--</strong></article>
+          </div>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h3>Strategy Library</h3>
+              <span id="researchStrategyCount">--</span>
+            </div>
+            <p class="summary">Reusable inventory of matured strategies with research taxonomy. Read-only; generated from each strategy's source files. <code>review_needed</code> = heuristic value awaiting confirmation.</p>
+            <div class="audit-filter-grid">
+              <label><span>Search</span><input id="researchStrategySearch" type="search" autocomplete="off"></label>
+              <label><span>Category</span><select id="researchCategoryFilter"></select></label>
+              <label><span>Method</span><select id="researchMethodFilter"></select></label>
+              <label><span>Market regime</span><select id="researchRegimeFilter"></select></label>
+              <label><span>Timeframe</span><select id="researchTimeframeFilter"></select></label>
+              <label><span>Tag</span><select id="researchTagFilter"></select></label>
+              <label><span>Status</span><select id="researchStatusFilter"></select></label>
+            </div>
+            <div class="table-wrap stacked-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Strategy</th>
+                    <th>Category</th>
+                    <th>Method</th>
+                    <th>Market regime</th>
+                    <th>Timeframe</th>
+                    <th>Long/Short</th>
+                    <th>Maturity</th>
+                    <th>Indicators</th>
+                    <th>Tags</th>
+                    <th>Source</th>
+                  </tr>
+                </thead>
+                <tbody id="researchStrategyRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel stacked-panel">
+            <div class="panel-heading">
+              <h3>Indicator Library</h3>
+              <span id="researchIndicatorCount">--</span>
+            </div>
+            <div class="table-wrap stacked-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Indicator</th>
+                    <th>Primary use</th>
+                    <th>Category</th>
+                    <th>Entry</th>
+                    <th>Filter</th>
+                    <th>Regime</th>
+                    <th>Exit</th>
+                    <th>Stop/Trail</th>
+                    <th>Repaint</th>
+                    <th>Lookahead</th>
+                    <th>Tags</th>
+                  </tr>
+                </thead>
+                <tbody id="researchIndicatorRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel stacked-panel">
+            <div class="panel-heading">
+              <h3>Component Library</h3>
+              <span id="researchComponentCount">--</span>
+            </div>
+            <p class="summary">Reusable building blocks grouped by component type.</p>
+            <div class="parity-grid" id="researchComponentGroups"></div>
+          </section>
+
+          <section class="panel stacked-panel">
+            <div class="panel-heading">
+              <h3>Research Runs</h3>
+              <span id="researchRunCount">--</span>
+            </div>
+            <div class="table-wrap stacked-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Run ID</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Objective</th>
+                    <th>Architectures</th>
+                    <th>Variants</th>
+                    <th>Recommendation</th>
+                    <th>Report</th>
+                  </tr>
+                </thead>
+                <tbody id="researchRunRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel stacked-panel">
+            <div class="panel-heading">
+              <h3>Variant Log</h3>
+              <span id="researchVariantCount">--</span>
+            </div>
+            <div class="table-wrap stacked-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Variant</th>
+                    <th>Run</th>
+                    <th>Architecture</th>
+                    <th>Components</th>
+                    <th>Assets</th>
+                    <th>TF</th>
+                    <th>Net profit</th>
+                    <th>Max DD</th>
+                    <th>PF</th>
+                    <th>Win %</th>
+                    <th>Decision</th>
+                    <th>Report</th>
+                  </tr>
+                </thead>
+                <tbody id="researchVariantRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel stacked-panel">
+            <div class="panel-heading">
+              <h3>Backtest Results</h3>
+              <span id="researchBacktestCount">--</span>
+            </div>
+            <div class="table-wrap stacked-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Run</th>
+                    <th>Variant</th>
+                    <th>Asset</th>
+                    <th>Date range</th>
+                    <th>Trades</th>
+                    <th>Net profit</th>
+                    <th>Max DD</th>
+                    <th>PF</th>
+                    <th>Win %</th>
+                    <th>Exposure</th>
+                    <th>Final equity</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody id="researchBacktestRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel stacked-panel">
+            <div class="panel-heading">
+              <h3>Workflow &amp; Rules</h3>
+              <span>read first</span>
+            </div>
+            <p class="summary">Canonical files an AI agent must read before research. Paths are repo-relative.</p>
+            <div class="report-list" id="researchWorkflowList"></div>
+          </section>
+
+          <section class="panel stacked-panel">
+            <div class="panel-heading">
+              <h3>Triage Worklist (raw candidates)</h3>
+              <span id="researchTriageCount">--</span>
+            </div>
+            <p class="summary">Upstream raw candidates from <code>11_TRIAGE/2026-05-30_rejected_worklist.xlsx</code>, reconciled with transcripts now on disk. <code>Re-triage</code> = has transcript + HIGH/MEDIUM quality, ready to re-evaluate into the matured set.</p>
+            <div class="audit-filter-grid">
+              <label><span>Search</span><input id="researchTriageSearch" type="search" autocomplete="off"></label>
+              <label><span>Quality</span><select id="researchTriageQualityFilter"></select></label>
+              <label><span>Transcript</span><select id="researchTriageTranscriptFilter"><option value="">All</option><option value="yes">Has transcript</option><option value="no">No transcript</option></select></label>
+              <label><span>Re-triage</span><select id="researchTriageEligibleFilter"><option value="">All</option><option value="yes">Eligible</option><option value="no">Not eligible</option></select></label>
+            </div>
+            <div class="table-wrap stacked-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Stg</th>
+                    <th>Title</th>
+                    <th>Quality</th>
+                    <th>Coverage (live)</th>
+                    <th>Transcript</th>
+                    <th>Re-triage</th>
+                    <th>URL</th>
+                    <th>Next step</th>
+                  </tr>
+                </thead>
+                <tbody id="researchTriageRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel stacked-panel">
+            <div class="panel-heading">
+              <h3>Missing Metadata / Review Needed</h3>
+              <span id="researchMissingCount">--</span>
+            </div>
+            <p class="summary">Coverage of key metadata fields across research strategies. Fields with <code>review_needed</code> or empty values are flagged. Auto-updates when the metadata extractor (S1) finishes.</p>
+            <div id="metadataCoverageSummary" class="metadata-coverage-summary"></div>
+            <div id="metadataCoverageBars" class="metadata-coverage-bars"></div>
+            <div id="metadataAllFilled" hidden>
+              <p class="metadata-all-filled">✅ All strategies have complete metadata — no fields need review.</p>
+            </div>
+            <div class="table-wrap stacked-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Strategy ID</th>
+                    <th>trailing_logic</th>
+                    <th>filters_used</th>
+                    <th>known_strengths</th>
+                    <th>known_weaknesses</th>
+                  </tr>
+                </thead>
+                <tbody id="researchMissingRows"></tbody>
               </table>
             </div>
           </section>
@@ -559,6 +815,6 @@
         </section>
       </main>
     </div>
-    <script src="/web/app.js" defer></script>
+    <script src="/web/app.js?v=20260531-source-parent" defer></script>
   </body>
 </html>

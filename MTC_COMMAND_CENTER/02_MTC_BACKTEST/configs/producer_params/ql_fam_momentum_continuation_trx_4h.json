@@ -1,0 +1,5 @@
+{
+  "mom_lb": 10,
+  "trend_ema": 50,
+  "breakout_lb": 10
+}

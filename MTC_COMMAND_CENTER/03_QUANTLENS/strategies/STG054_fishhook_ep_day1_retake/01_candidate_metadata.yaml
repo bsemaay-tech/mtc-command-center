@@ -1,0 +1,56 @@
+candidate_id: QL_FISHHOOK_EP_DAY1_RETAKE_V1
+source_url: https://youtu.be/c7ZSb2wNcOc
+video_title: "The Slingshot Pullback Pattern - How To Trade Pullbacks"
+quantlens_decision: CANDIDATE
+codex_status: READY_FOR_DETERMINISTIC_REVIEW
+market_type: US_EQUITIES
+primary_timeframe: 1d
+recommended_timeframes:
+  - 1d
+  - 30m
+strategy_type: episodic-pivot "fishhook" day-after-gap retake (companion to slingshot)
+strategy_category: swing_trading
+method:
+  - breakout
+  - pullback_continuation
+  - momentum
+expected_market_regime:
+  - trending
+  - breakout
+  - high_volatility
+long_only_or_long_short: long_only
+commercial_value_score: 7
+complexity_score: 6
+repaint_risk: LOW
+lookahead_risk: MEDIUM
+overfit_risk: MEDIUM
+discretion_level: MEDIUM
+closed_source_risk: LOW
+risk_management_quality: MEDIUM
+candidate_kind:
+  producer: true
+  entry_gate: true
+  guard: true
+  confirmation: true
+  exit_rule: true
+  sl_tp_method: true
+  trailing_be_method: false
+  money_management: false
+indicators_used:
+  - EMA
+  - GAP
+  - CHART_PATTERN
+  - VOLUME
+existing_mtc_overlap: Companion "slingshot" setup (4-EMA-of-highs pullback) already exists as STG025. This folder = the distinct FISHHOOK (EP day-after-gap retake). Also relates to STG047 (gap) and EP setups in STG048.
+new_feature_required: Episodic-pivot detector (gap + run) + day-1/day-after retake trigger.
+known_strengths: Avoids breakout-chase slippage/fade by entering on the retake; objective 4-EMA-of-highs companion; auction/price-congestion logic (MAs "overrated", price levels matter).
+known_weaknesses: EP/gap names are volatile; risk can be large on gappers; discretionary congestion read.
+recommended_next_step: Define fishhook objectively (EP gap day -> next-day low -> reclaim of prior high/day-1 high) with a fixed risk cap; backtest vs simple gap-go.
+created_at: 2026-06-04
+updated_at: 2026-06-04
+
+# --- A1 Extracted (auto) ---
+trailing_logic: N_A
+filters_used: N_A
+known_strengths: Deterministic Spec -- Fishhook (EP Day-1 Retake) + Slingshot context
+known_weaknesses: "EP/gapper volatility + slippage must be modeled realistically. - 'Retake' and 'congestion' need objective definitions to avoid hindsight."

@@ -1,0 +1,59 @@
+candidate_id: QL_OLIVER_KELL_PRICE_CYCLE_V1
+source_url: https://youtu.be/fYxSQvuwOQc
+video_title: "The Wedge Pop Swing Trading Setup - How a Trading Champion Enters a Position (Oliver Kell)"
+quantlens_decision: CANDIDATE
+codex_status: READY_FOR_DETERMINISTIC_REVIEW
+market_type: US_EQUITIES
+primary_timeframe: 1d
+recommended_timeframes:
+  - 1d
+strategy_type: Oliver Kell price-cycle swing system (wedge pop / basin break / wedge drop)
+strategy_category: swing_trading
+method:
+  - trend_following
+  - breakout
+  - pullback_continuation
+  - reversal
+expected_market_regime:
+  - trending
+  - breakout
+long_only_or_long_short: long_short
+commercial_value_score: 8
+complexity_score: 7
+repaint_risk: LOW
+lookahead_risk: LOW
+overfit_risk: MEDIUM
+discretion_level: MEDIUM
+closed_source_risk: LOW
+risk_management_quality: STRONG
+candidate_kind:
+  producer: true
+  entry_gate: true
+  guard: true
+  confirmation: true
+  exit_rule: true
+  sl_tp_method: true
+  trailing_be_method: true
+  money_management: false
+indicators_used:
+  - EMA
+  - MOVING_AVERAGE
+  - CHART_PATTERN
+existing_mtc_overlap: STG023 (kell_wedge_pop_crossback) covers wedge pop + EMA crossback. This adds basin break + wedge drop exit and the full cycle/regime context.
+new_feature_required: Price-cycle state machine (reversal extension -> snapback -> wedge pop -> basin break -> wedge drop) on 10/20 EMA.
+sub_setups:
+  - WEDGE_POP_001 (Stg124) - push through 10/20 EMA zone building a higher low (entry) [see STG023]
+  - EMA_CROSSBACK_001 (Stg122) - reclaim/cross back above EMAs [see STG023]
+  - BASIN_BREAK_001 (Stg121) - break out of a rounded basin/base after snapback
+  - WEDGE_DROP_EXIT_001 (Stg123) - wedge drop = exit/short signal
+known_strengths: Objective regime via 10/20 EMA (green=above/long, red=below/short); named, repeatable cycle stages; clear exit (wedge drop).
+known_weaknesses: Stage labeling has some discretion; overlaps STG023.
+recommended_next_step: Encode the cycle as a state machine on 10/20 EMA; wedge pop entry + wedge drop exit; compare to STG023.
+created_at: 2026-06-04
+updated_at: 2026-06-04
+
+# --- A1 Extracted (auto) ---
+trailing_logic: N_A
+filters_used: "10/20EMA regime gate (green/red light), pricecycle state machine, wedgepop"
+known_strengths: Deterministic Spec -- Oliver Kell Price Cycle
+known_weaknesses: "Stage labeling needs objective triggers (e.g. 'wedge pop = close > 10EMA after a higher low within N bars of touching it')"

@@ -1,0 +1,18 @@
+[confirm] narrowed 6 strategies; param sets per strategy: CONFLUENCE=12, SR=12, TRAIL=12, STACK=6, BREAKOUT=18, REVERSAL=12
+[confirm] total narrow param sets: 72
+[confirm] universe: 6 strat x 17 sym x 3 tf; handing off to mega_walk_forward.main()
+[start] workers=4 symbols=17 tfs=['15m', '1h', '2h'] strategies=6 param_sets_total=72
+[start] total jobs (sym*tf*strat): 306; configs evaluated ~3672
+  [266/306] elapsed=60s | counts={'INSUFFICIENT_TRADES': 54, 'FAIL': 200, 'PASS': 11, 'STRONG_PASS': 1}
+[confirm] narrowed 6 strategies; param sets per strategy: CONFLUENCE=12, SR=12, TRAIL=12, STACK=6, BREAKOUT=18, REVERSAL=12
+[confirm] total narrow param sets: 72
+[confirm] narrowed 6 strategies; param sets per strategy: CONFLUENCE=12, SR=12, TRAIL=12, STACK=6, BREAKOUT=18, REVERSAL=12
+[confirm] total narrow param sets: 72
+[confirm] narrowed 6 strategies; param sets per strategy: CONFLUENCE=12, SR=12, TRAIL=12, STACK=6, BREAKOUT=18, REVERSAL=12
+[confirm] total narrow param sets: 72
+[confirm] narrowed 6 strategies; param sets per strategy: CONFLUENCE=12, SR=12, TRAIL=12, STACK=6, BREAKOUT=18, REVERSAL=12
+[confirm] total narrow param sets: 72
+[end] all jobs done in 69.6s
+DONE_MARKER  results=306 passes=16 bh_survivors=1 dsr_robust=0 robust_final=0 runtime=69.6s
+  JSON: C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\03_QUANTLENS\05_BACKTEST_RESULTS\confirm_2026-06-04\MEGA_walk_forward_results.json
+  MD  : C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\03_QUANTLENS\05_BACKTEST_RESULTS\confirm_2026-06-04\MEGA_walk_forward_report.md

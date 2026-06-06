@@ -1,0 +1,61 @@
+candidate_id: QL_ROPPEL_LEADERSHIP_POSITION_TRADING_V1
+source_url: https://youtu.be/MnXQOt7_ZP0
+video_title: "+85% Return in 30 Days... Hedge Fund Manager Jim Roppel"
+quantlens_decision: CANDIDATE
+codex_status: READY_FOR_DETERMINISTIC_REVIEW
+market_type: US_EQUITIES
+primary_timeframe: 1d
+recommended_timeframes:
+  - 1d
+  - 1wk
+strategy_type: theme-leadership position trading with 357 risk module
+strategy_category: position_trading
+method:
+  - trend_following
+  - breakout
+  - momentum
+expected_market_regime:
+  - trending
+  - bull_market
+long_only_or_long_short: long_only
+commercial_value_score: 8
+complexity_score: 6
+repaint_risk: LOW
+lookahead_risk: LOW
+overfit_risk: MEDIUM
+discretion_level: MEDIUM
+closed_source_risk: LOW
+risk_management_quality: STRONG
+candidate_kind:
+  producer: true
+  entry_gate: true
+  guard: true
+  confirmation: true
+  exit_rule: true
+  sl_tp_method: true
+  trailing_be_method: true
+  money_management: true
+indicators_used:
+  - MOVING_AVERAGE
+  - RELATIVE_STRENGTH
+  - CHART_PATTERN
+  - VOLUME
+existing_mtc_overlap: "Leadership/theme momentum (STG048/050/059). New: explicit 357 scale-out risk module + extension-over-50D hedge + position hold engine."
+new_feature_required: Theme leadership scoring; 50D reclaim/tight-action detector; 357 staged stop module.
+sub_setups:
+  - 357_SCALEOUT_RISK_MODULE (Stg149) - cut/scale a new position at 3/5/7% against (money management)
+  - 50D_RECLAIM_TIGHT_ACTION (Stg150) - reclaim of 50DMA with tight price action -> entry
+  - EXTENSION_OVER_50D_HEDGE_SIGNAL (Stg151) - too far above 50DMA -> trim/hedge
+  - LEADERSHIP_THEME_SCORE (Stg152) - score/rank by theme leadership (fundamentals+technicals)
+  - POSITION_TRADING_HOLD_ENGINE (Stg153) - hold leaders for the big move (let winners run)
+known_strengths: Strong staged risk (357); fundamentals corroborated by technicals; theme leadership focus; hold engine captures large moves.
+known_weaknesses: Theme scoring discretionary; needs fundamental data; bull-biased.
+recommended_next_step: Implement 50D_RECLAIM_TIGHT_ACTION entry + 357 staged stop as a clean module; add extension-over-50D trim.
+created_at: 2026-06-04
+updated_at: 2026-06-04
+
+# --- A1 Extracted (auto) ---
+trailing_logic: N_A
+filters_used: N_A
+known_strengths: Deterministic Spec -- Jim Roppel Leadership Position Trading
+known_weaknesses: Theme/leadership scoring is discretionary → encode RS + group rank objectively. - Needs fundamental data for full fidelity; technical-only is an approximation.

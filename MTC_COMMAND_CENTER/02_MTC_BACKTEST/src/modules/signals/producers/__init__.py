@@ -6,12 +6,16 @@ from typing import Any
 
 from src.modules.signals.base import SignalPlugin
 
+from .quantlens_momentum_continuation_producer import QuantLensMomentumContinuationProducerAdapter
 from .supertrend_producer import SupertrendProducerAdapter
 
 
 PRODUCER_REGISTRY = {
     "supertrend": SupertrendProducerAdapter,
     "producer_supertrend": SupertrendProducerAdapter,
+    "ql_fam_momentum_continuation": QuantLensMomentumContinuationProducerAdapter,
+    "producer_ql_fam_momentum_continuation": QuantLensMomentumContinuationProducerAdapter,
+    "momentum_continuation": QuantLensMomentumContinuationProducerAdapter,
 }
 
 
@@ -25,4 +29,9 @@ def create_producer(name: str, params: dict[str, Any] | None = None) -> SignalPl
     return cls(**(params or {}))
 
 
-__all__ = ["PRODUCER_REGISTRY", "SupertrendProducerAdapter", "create_producer"]
+__all__ = [
+    "PRODUCER_REGISTRY",
+    "QuantLensMomentumContinuationProducerAdapter",
+    "SupertrendProducerAdapter",
+    "create_producer",
+]

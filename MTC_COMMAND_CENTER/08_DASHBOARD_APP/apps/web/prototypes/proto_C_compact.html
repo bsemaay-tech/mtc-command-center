@@ -1,0 +1,105 @@
+<!doctype html>
+<!--
+  PROTOTYPE C — Verdict-first compact card (throwaway mockup).
+  Companion to 03_QUANTLENS/_user_guide/11_STRATEGY_DETAIL_PAGE_REDESIGN_PLAN.md.
+  Dense "peek" view: decision strip + ladder + gate bars only. Intended as a
+  list-row expansion or hover-peek, not the full page. Shows two strategies.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype C — compact peek</title>
+<style>
+:root{
+  --bg:#f5f7f8;--panel:#fff;--ink:#152029;--muted:#64717c;--line:#d8dee3;
+  --accent:#1d6f74;--amber:#9b6a18;--red:#a83d3d;--green:#28724f;
+  --shadow:0 8px 22px rgba(21,32,41,.08);font-family:Inter,"Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);padding:24px}
+.wrap{max-width:560px;margin:0 auto}
+.peek{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:14px 16px;margin-bottom:16px;border-left:5px solid var(--line)}
+.peek.amber{border-left-color:var(--amber)}.peek.green{border-left-color:var(--green)}.peek.red{border-left-color:var(--red)}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.name{font-size:18px;font-weight:800;margin:0}
+.sub{color:var(--muted);font-size:12px;margin:2px 0 0}
+.pill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.pill.amber{background:#fdf3df;color:var(--amber);border:1px solid #e7c98a}
+.pill.green{background:#e3f3ea;color:var(--green);border:1px solid #9cd2b4}
+.pill.red{background:#f7e3e3;color:var(--red);border:1px solid #e0a3a3}
+.verdict{font-size:14px;font-weight:700;margin:11px 0 2px}
+.next{font-size:13px;color:#33414c;margin:0}
+.next b{color:var(--accent)}
+.ladder{display:flex;gap:3px;margin:11px 0 0}
+.seg{flex:1;height:7px;border-radius:4px;background:#eef1f3}
+.seg.done{background:var(--green)}.seg.cur{background:var(--amber)}.seg.blk{background:var(--red)}
+.lcap{font-size:11px;color:var(--muted);margin:5px 0 0}
+.gates{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin:12px 0 0}
+.g{display:flex;align-items:center;gap:7px;font-size:12px}
+.g .gn{flex:1;color:#33414c}
+.gb{width:60px;height:8px;background:#eef1f3;border-radius:5px;overflow:hidden;border:1px solid var(--line)}
+.gb i{display:block;height:100%}
+.gb i.green{background:var(--green)}.gb i.amber{background:var(--amber)}
+.gb.na i{background:repeating-linear-gradient(45deg,#dfe4e8,#dfe4e8 5px,#eef1f3 5px,#eef1f3 10px);width:100%}
+.gv{width:42px;text-align:right;font-weight:700}
+.gv.na{color:var(--muted);font-weight:400}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="peek amber">
+    <div class="top">
+      <div><p class="name">8 EMA Pullback</p><p class="sub">US Equities · 10m · YouTube</p></div>
+      <span class="pill amber">Needs review</span>
+    </div>
+    <p class="verdict">Promosyona hazır değil — kanıt eşiğin (65) altında.</p>
+    <p class="next"><b>Next:</b> Eksik alanları tamamla → promosyon paketini yeniden oluştur.</p>
+    <div class="ladder"><span class="seg done"></span><span class="seg done"></span><span class="seg cur"></span><span class="seg"></span><span class="seg"></span><span class="seg"></span><span class="seg"></span></div>
+    <p class="lcap">Stuck at: Backtest evidence</p>
+    <div class="gates">
+      <div class="g"><span class="gn">G1 Intake</span><span class="gb"><i class="green" style="width:82%"></i></span><span class="gv">82</span></div>
+      <div class="g"><span class="gn">G1B Feasibility</span><span class="gb"><i class="green" style="width:90%"></i></span><span class="gv">45</span></div>
+      <div class="g"><span class="gn">G2 Backtest</span><span class="gb na"><i></i></span><span class="gv na">N/A</span></div>
+      <div class="g"><span class="gn">G3 Production</span><span class="gb na"><i></i></span><span class="gv na">N/A</span></div>
+    </div>
+  </div>
+
+  <div class="peek green">
+    <div class="top">
+      <div><p class="name">Snapback 50 SMA</p><p class="sub">Crypto · 2h · YouTube</p></div>
+      <span class="pill green">Ready for review</span>
+    </div>
+    <p class="verdict">Kanıt güçlü — salt-okunur MTC_V2 incelemesine hazır.</p>
+    <p class="next"><b>Next:</b> İleri (paper) işlem kanıtı toplamaya başla.</p>
+    <div class="ladder"><span class="seg done"></span><span class="seg done"></span><span class="seg done"></span><span class="seg done"></span><span class="seg done"></span><span class="seg cur"></span><span class="seg"></span></div>
+    <p class="lcap">Stuck at: Paper-trade (collecting evidence)</p>
+    <div class="gates">
+      <div class="g"><span class="gn">G1 Intake</span><span class="gb"><i class="green" style="width:91%"></i></span><span class="gv">91</span></div>
+      <div class="g"><span class="gn">G1B Feasibility</span><span class="gb"><i class="green" style="width:96%"></i></span><span class="gv">48</span></div>
+      <div class="g"><span class="gn">G2 Backtest</span><span class="gb"><i class="green" style="width:84%"></i></span><span class="gv">84</span></div>
+      <div class="g"><span class="gn">G3 Production</span><span class="gb"><i class="amber" style="width:55%"></i></span><span class="gv">55</span></div>
+    </div>
+  </div>
+
+  <div class="peek red">
+    <div class="top">
+      <div><p class="name">VWAP Bounce Scalp</p><p class="sub">Crypto · 5m · YouTube</p></div>
+      <span class="pill red">Source check needed</span>
+    </div>
+    <p class="verdict">Test edilemez — önce kaynak/formül doğrulaması.</p>
+    <p class="next"><b>Next:</b> Kesin kuralları ve repaint durumunu doğrula.</p>
+    <div class="ladder"><span class="seg done"></span><span class="seg blk"></span><span class="seg"></span><span class="seg"></span><span class="seg"></span><span class="seg"></span><span class="seg"></span></div>
+    <p class="lcap">Blocked at: Classification</p>
+    <div class="gates">
+      <div class="g"><span class="gn">G1 Intake</span><span class="gb"><i class="amber" style="width:38%"></i></span><span class="gv">38</span></div>
+      <div class="g"><span class="gn">G1B Feasibility</span><span class="gb na"><i></i></span><span class="gv na">N/A</span></div>
+      <div class="g"><span class="gn">G2 Backtest</span><span class="gb na"><i></i></span><span class="gv na">N/A</span></div>
+      <div class="g"><span class="gn">G3 Production</span><span class="gb na"><i></i></span><span class="gv na">N/A</span></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

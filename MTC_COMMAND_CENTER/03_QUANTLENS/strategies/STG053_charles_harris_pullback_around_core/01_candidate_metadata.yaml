@@ -1,0 +1,63 @@
+candidate_id: QL_CHARLES_HARRIS_PULLBACK_AROUND_CORE_V1
+source_url: https://youtu.be/NNGCxRmyNZYqNrJ
+video_title: "Hedge Fund Manager Reveals his Perfect Pullback Trading Setup (Charles Harris)"
+quantlens_decision: CANDIDATE
+codex_status: READY_FOR_DETERMINISTIC_REVIEW
+market_type: US_EQUITIES
+primary_timeframe: 1d
+recommended_timeframes:
+  - 1d
+  - 1wk
+strategy_type: pullback-to-support buying, swing-trade-around-a-core position
+strategy_category: position_trading
+method:
+  - pullback_continuation
+  - trend_following
+expected_market_regime:
+  - trending
+  - bull_market
+long_only_or_long_short: long_only
+commercial_value_score: 8
+complexity_score: 7
+repaint_risk: LOW
+lookahead_risk: LOW
+overfit_risk: MEDIUM
+discretion_level: MEDIUM
+closed_source_risk: LOW
+risk_management_quality: STRONG
+candidate_kind:
+  producer: true
+  entry_gate: true
+  guard: true
+  confirmation: true
+  exit_rule: true
+  sl_tp_method: true
+  trailing_be_method: true
+  money_management: true
+indicators_used:
+  - EMA
+  - SMA
+  - MOVING_AVERAGE
+  - CHART_PATTERN
+  - SUPPORT_RESISTANCE
+existing_mtc_overlap: "Pullback-to-MA family (STG024/025/029/041/042). Distinct: explicit swing-around-core (sell strength / add weakness), reverse-pyramid scale-in, weekly shakeout guard."
+new_feature_required: "Core-position manager (add on weakness / trim on strength); multi-support pullback detector (50DMA / 21EMA / prior base top / pivot)."
+sub_setups:
+  - 21EMA_PULLBACK_ADDON (Stg107) - add on pullback to 21EMA
+  - FIRST_PULLBACK_50DMA (Stg108) - first pullback to rising 50DMA after breakout
+  - PRIOR_BASE_TOP_SUPPORT_PULLBACK (Stg109) - pullback to prior base top (now support)
+  - REVERSE_PYRAMID_PULLBACK_SCALEIN (Stg110) - scale in larger as it confirms (reverse pyramid)
+  - SWING_AROUND_CORE (Stg111) - sell into strength, rebuy/add into weakness around a core
+  - UPSIDE_REVERSAL_PULLBACK (Stg112) - buy the upside reversal off support
+  - WEEKLY_SHAKEOUT_CONFIRMATION_GUARD (Stg113) - weekly-chart shakeout/confirmation guard
+known_strengths: Buys weakness in strong uptrends (good R:R at support); core+trade structure compounds big multi-year winners; strong overlay risk rules.
+known_weaknesses: Requires pre-existing position/conviction; discretionary "extended" read; long-only, bull-biased.
+recommended_next_step: "Systematize FIRST_PULLBACK_50DMA (objective: rising 50DMA + first touch + reversal bar) as a clean standalone entry before the core-management layer."
+created_at: 2026-06-04
+updated_at: 2026-06-04
+
+# --- A1 Extracted (auto) ---
+trailing_logic: "sell into strength** when extended, buy back / add into weakness at support"
+filters_used: "gate, coreposition manager (trim strength / add weakness), reversepyramid sizing,"
+known_strengths: Deterministic Spec -- Charles Harris Pullback / Swing-Around-Core
+known_weaknesses: "'Extended' / trim timing is discretionary; define objectively (e.g. % above 21EMA)"

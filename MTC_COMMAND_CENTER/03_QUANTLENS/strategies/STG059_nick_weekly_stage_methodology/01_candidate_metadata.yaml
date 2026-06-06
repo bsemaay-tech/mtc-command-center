@@ -1,0 +1,69 @@
+candidate_id: QL_NICK_WEEKLY_STAGE_METHODOLOGY_V1
+source_url: https://youtu.be/-JyH5PAJ4-Y
+source_url_2: https://youtu.be/62OaP91Jz9k
+video_title: "Nick - weekly-chart stage trading (I Stopped Trading So Much...)"
+quantlens_decision: CANDIDATE
+codex_status: READY_FOR_DETERMINISTIC_REVIEW
+market_type: US_EQUITIES
+primary_timeframe: 1wk
+recommended_timeframes:
+  - 1wk
+strategy_type: weekly-chart stage methodology (character change, up-on-volume, weekly stops)
+strategy_category: position_trading
+method:
+  - trend_following
+  - breakout
+  - pullback_continuation
+expected_market_regime:
+  - trending
+  - bull_market
+long_only_or_long_short: long_only
+commercial_value_score: 8
+complexity_score: 6
+repaint_risk: LOW
+lookahead_risk: LOW
+overfit_risk: LOW
+discretion_level: MEDIUM
+closed_source_risk: LOW
+risk_management_quality: STRONG
+candidate_kind:
+  producer: true
+  entry_gate: true
+  guard: true
+  confirmation: true
+  exit_rule: true
+  sl_tp_method: true
+  trailing_be_method: true
+  money_management: true
+indicators_used:
+  - MOVING_AVERAGE
+  - VOLUME
+  - CHART_PATTERN
+  - RELATIVE_STRENGTH
+existing_mtc_overlap: "Weinstein/O'Neil stage school (relates STG051 price-volume, STG052 CANSLIM, STG007 stage2). New: weekly-only decision frame, character-change setup, weekly close stop policy, trade-frequency guard."
+new_feature_required: Weekly resampling pipeline; 10W/30W MA; character-change detector; weekly-close stop engine.
+sub_setups:
+  - 10W_30W_RESPECT_ENTRY (Stg136) - buy when price respects rising 10W/30W MAs
+  - CONTROLLED_WEAKNESS_BASE_RETEST (Stg138) - shallow controlled pullback to base -> entry
+  - EARNINGS_CUSHION_RULE (Stg139) - require profit cushion before earnings (risk guard)
+  - TRADE_FREQUENCY_GUARD (Stg140) - trade less; weekly cadence reduces overtrading
+  - UP_ON_VOLUME_RADAR (Stg141) - up-on-volume weekly bars as a watch radar
+  - WEEKLY_CHARACTER_CHANGE (Stg144) - character change = the core trend-start setup
+  - WEEKLY_SELL_DECISION_FRAMEWORK (Stg148) - structured weekly sell rules
+  - ASYMMETRIC_RISK_REWARD_FILTER (Stg137) - only take trades with big R:R asymmetry
+  - UP_ON_VOLUME_UNIVERSE_SCAN (Stg142) - scan universe for up-on-volume leaders
+  - WEEKLY_BASE_TIGHTNESS_ACCUMULATION (Stg143) - tight weekly base = accumulation
+  - WEEKLY_CHARACTER_CHANGE_TREND_STARTER (Stg145) - character change as trend starter
+  - WEEKLY_CLOSE_STOP_POLICY (Stg146) - stops act on weekly closes only (no intraweek noise)
+  - WEEKLY_SCALE_IN_ON_PROOF (Stg147) - add only after the weekly bar proves the move
+known_strengths: Patience + fewer/better decisions; weekly-close stops cut noise; strong R:R asymmetry filter; clear sell framework; low overfit (coarse timeframe).
+known_weaknesses: Slow (weekly) — few signals; long-only bull-biased; character change needs objective definition.
+recommended_next_step: Define WEEKLY_CHARACTER_CHANGE + 10W/30W respect objectively on weekly bars; pair with WEEKLY_CLOSE_STOP_POLICY.
+created_at: 2026-06-04
+updated_at: 2026-06-04
+
+# --- A1 Extracted (auto) ---
+trailing_logic: N_A
+filters_used: "Weekly resampling, 10W/30W MA respect gate, characterchange detector, uponvolume"
+known_strengths: Deterministic Spec -- Nick Weekly Stage Methodology
+known_weaknesses: "Few signals (weekly) → small sample; test long histories. - 'Character change' needs an objective trigger to be testable."

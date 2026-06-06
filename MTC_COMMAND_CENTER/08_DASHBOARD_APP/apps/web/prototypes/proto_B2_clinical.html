@@ -1,0 +1,300 @@
+<!doctype html>
+<!--
+  PROTOTYPE B2-CLINICAL — v2 single-scroll, "clinical audit report" aesthetic.
+  Throwaway mockup for SP-005. English-only UI. Not loaded by the live app.
+  Companion: 03_QUANTLENS/_user_guide/11_STRATEGY_DETAIL_PAGE_REDESIGN_PLAN.md
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B2 Clinical — VWAP Bounce Scalp</title>
+<style>
+:root{
+  --bg:#fbfcfc;--panel:#fff;--ink:#1a242c;--muted:#6b7884;--line:#e3e8ec;
+  --accent:#1d6f74;--amber:#9b6a18;--red:#a83d3d;--green:#28724f;
+  --shadow:0 1px 0 rgba(21,32,41,.04);font-family:Inter,"Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.5}
+.wrap{max-width:720px;margin:0 auto;padding:0 20px 60px}
+/* sticky */
+.sticky{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:9px 20px;display:flex;gap:14px;align-items:center;font-size:13px;margin:0 -20px 0}
+.sticky b{font-size:14px}.sticky .s-dec{color:var(--amber);font-weight:700}
+.sticky .s-next{color:var(--muted)}.sticky .s-ql{margin-left:auto;color:var(--accent);font-weight:600}
+/* section */
+section{padding:26px 0;border-bottom:1px solid var(--line)}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 14px;font-weight:700}
+h1{font-size:32px;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:14px;margin:0 0 8px}
+.desc{font-size:16px;margin:0;max-width:60ch}
+.pillrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.pill{padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;border:1px solid var(--line)}
+.pill.amber{background:#fdf6e7;color:var(--amber);border-color:#e7c98a}
+.pill.red{background:#faeaea;color:var(--red);border-color:#e0a3a3}
+.pill.green{background:#e9f4ee;color:var(--green);border-color:#9cd2b4}
+.pill.grey{background:#f1f4f6;color:var(--muted)}
+/* decision */
+.dec h3{font-size:20px;margin:0 0 6px}
+.dec p{margin:0 0 12px;color:#33414c}
+.kvline{display:flex;gap:10px;font-size:14px;margin:0 0 6px}
+.kvline span:first-child{color:var(--muted);min-width:90px}
+.next{margin-top:14px;border-left:3px solid var(--accent);background:#f3f8f8;padding:12px 14px}
+.next b{color:var(--accent)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.chip{font-size:12px;padding:3px 10px;border:1px solid var(--line);border-radius:999px;background:#fff}
+.chip b{color:var(--ink)}
+/* quantlens stamp */
+.ql{border:1.5px solid var(--ink);border-radius:8px;padding:18px 20px;background:#fff}
+.ql .verdict{display:flex;align-items:baseline;gap:10px;margin-bottom:14px}
+.ql .verdict .lab{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.ql .verdict .val{font-size:20px;font-weight:800}
+.ql .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 22px;font-size:14px}
+.ql .grid .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.ql .reason{font-size:14px;color:#33414c;margin:0 0 16px;border-bottom:1px dashed var(--line);padding-bottom:14px}
+.warn{display:flex;flex-direction:column;gap:6px;margin-top:16px}
+.warn div{font-size:13px;padding:7px 11px;border-radius:5px}
+.warn .r{background:#faeaea;color:var(--red);border:1px solid #e0a3a3;font-weight:600}
+.warn .a{background:#fdf6e7;color:var(--amber);border:1px solid #e7c98a}
+.warn .u{background:#f1f4f6;color:#445;border:1px solid var(--line)}
+.warn .u s{color:var(--red)}
+/* taxonomy */
+.tax{display:grid;gap:13px}
+.tax .row{display:grid;grid-template-columns:170px 1fr;gap:12px;align-items:start}
+.tax .row .k{font-size:13px;color:var(--muted);padding-top:3px}
+.tax .tagset{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:12px;padding:3px 10px;border-radius:4px;background:#eef2f4;border:1px solid var(--line)}
+.tag.unk{color:var(--muted);font-style:italic}
+/* journey */
+.journey{display:flex;flex-wrap:wrap;gap:0}
+.jstep{flex:1;min-width:110px;text-align:center;font-size:12px;padding:10px 4px;border-top:3px solid var(--line);color:var(--muted)}
+.jstep.done{border-top-color:var(--green);color:var(--green);font-weight:600}
+.jstep.cur{border-top-color:var(--amber);color:var(--amber);font-weight:700}
+.jblock{margin-top:12px;font-size:13px;background:#fdf6e7;border:1px solid #e7c98a;border-radius:6px;padding:10px 12px;color:var(--amber)}
+/* rules */
+.rule{display:grid;grid-template-columns:200px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.rule:last-child{border:none}.rule .k{color:var(--muted)}.rule .v.todo{color:var(--muted);font-style:italic}
+/* scorecard */
+.gate{display:flex;align-items:center;gap:12px;padding:9px 0}
+.gname{min-width:190px;font-size:14px}
+.bar{flex:1;height:10px;background:#eef2f4;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:var(--amber)}
+.bar.na i{width:100%;background:repeating-linear-gradient(45deg,#e3e8ec,#e3e8ec 5px,#f1f4f6 5px,#f1f4f6 10px)}
+.gv{min-width:60px;text-align:right;font-weight:700;font-size:13px}.gv.na{color:var(--muted);font-weight:400}
+.gnote{font-size:12px;color:var(--muted);margin:2px 0 0 0;padding-left:0}
+/* evidence / salvage */
+.empty{background:#f7f9fa;border:1px solid var(--line);border-radius:6px;padding:16px}
+.empty b{color:var(--ink)}
+.check{list-style:none;padding:0;margin:10px 0 0;font-size:14px}
+.check li{padding:4px 0;color:#445}
+.idea{border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:12px}
+.idea .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.idea .nm{font-weight:700}
+.idea .meta{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0;font-size:12px}
+.idea .meta span{background:#eef2f4;border:1px solid var(--line);border-radius:4px;padding:2px 8px}
+.idea .why{font-size:13px;color:#445;margin:8px 0 0}
+.idea .why .neg{color:var(--red)}
+/* source / technical */
+.src{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;font-size:14px}
+.src .k{color:var(--muted);font-size:12px}
+details.tech{font-size:13px}details.tech summary{cursor:pointer;color:var(--muted);font-weight:600}
+.tech table{width:100%;border-collapse:collapse;margin-top:10px}
+.tech td{padding:6px 8px;border-bottom:1px solid var(--line)}.tech td:first-child{color:var(--muted);width:200px}
+.tech code{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+@media(max-width:640px){.ql .grid,.rule,.tax .row{grid-template-columns:1fr}.gname{min-width:120px}}
+</style>
+</head>
+<body>
+
+<div class="sticky">
+  <b>VWAP Bounce Scalp</b>
+  <span class="s-dec">Not testable yet</span>
+  <span class="s-next">Next: complete source audit</span>
+  <span class="s-ql">QuantLens: Needs clarification</span>
+</div>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <section>
+    <h1>VWAP Bounce Scalp</h1>
+    <p class="sub">Crypto · 5m · YouTube strategy</p>
+    <p class="desc">A mean-reversion scalp attempt based on price bouncing from VWAP.</p>
+    <div class="pillrow">
+      <span class="pill amber">Source check needed</span>
+      <span class="pill grey">QuantLens: Needs clarification</span>
+    </div>
+  </section>
+
+  <!-- DECISION SUMMARY -->
+  <section class="dec">
+    <h2>Decision summary</h2>
+    <h3>Not testable yet — source rules are incomplete</h3>
+    <p>The entry idea exists, but exit, stop-loss, take-profit, and repaint / lookahead behavior are not defined.</p>
+    <div class="kvline"><span>Can test?</span><b>No — rules incomplete</b></div>
+    <div class="kvline"><span>Blocking</span><b>Undefined exit / stop / take-profit</b></div>
+    <div class="next"><b>Next action:</b> Complete the source / formula audit before scoring or backtesting.</div>
+    <div class="chips">
+      <span class="chip">Evidence level: <b>Source only</b></span>
+      <span class="chip">Documented, <b>not proven</b></span>
+      <span class="chip">Testability: <b>Partially testable</b></span>
+    </div>
+  </section>
+
+  <!-- QUANTLENS VERDICT -->
+  <section>
+    <h2>QuantLens verdict</h2>
+    <div class="ql">
+      <div class="verdict"><span class="lab">Verdict</span><span class="val">Needs source clarification</span></div>
+      <p class="reason">Uses VWAP bounce logic, but the source does not define exact entry threshold,
+        stop-loss, or take-profit rules. Marketing claims discarded; no independent evidence of an edge.</p>
+      <div class="grid">
+        <div><div class="k">Commercial value</div>Plausible but unproven (3/10)</div>
+        <div><div class="k">Literature relevance</div>Common — VWAP mean-reversion is standard practice</div>
+        <div><div class="k">Testability</div>Partially testable</div>
+        <div><div class="k">Complexity</div>Moderate (5/10)</div>
+        <div><div class="k">Repaint / lookahead</div>Unknown / Unknown</div>
+        <div><div class="k">Salvageable ideas</div>3 found</div>
+      </div>
+      <div class="warn">
+        <div class="a">⚠ Repaint status unknown — not treated as safe</div>
+        <div class="u">Source backtest claim: 82% win rate — <s>unverified</s></div>
+        <div class="u">Rejected marketing claim: <s>"This strategy never loses."</s></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAXONOMY -->
+  <section>
+    <h2>Strategy taxonomy</h2>
+    <div class="tax">
+      <div class="row"><div class="k">Category / horizon</div><div class="tagset"><span class="tag">Scalping</span><span class="tag">Day trading</span></div></div>
+      <div class="row"><div class="k">Expected condition</div><div class="tagset"><span class="tag">Ranging</span><span class="tag">Mean-reversion regime</span></div></div>
+      <div class="row"><div class="k">Method</div><div class="tagset"><span class="tag">VWAP bounce</span><span class="tag">Mean reversion</span></div></div>
+      <div class="row"><div class="k">Instrument fit</div><div class="tagset"><span class="tag">Crypto</span></div></div>
+      <div class="row"><div class="k">Automation</div><div class="tagset"><span class="tag">Partially machine-testable</span></div></div>
+      <div class="row"><div class="k">Complexity</div><div class="tagset"><span class="tag">Moderate</span></div></div>
+    </div>
+  </section>
+
+  <!-- JOURNEY -->
+  <section>
+    <h2>Review journey</h2>
+    <div class="journey">
+      <div class="jstep done">Discovered</div>
+      <div class="jstep cur">Source checked</div>
+      <div class="jstep">Rules extracted</div>
+      <div class="jstep">Testability confirmed</div>
+      <div class="jstep">Backtested</div>
+      <div class="jstep">Promotion review</div>
+      <div class="jstep">Paper-trade</div>
+      <div class="jstep">Integrated</div>
+    </div>
+    <div class="jblock"><b>Blocked at: Source checked.</b> Why: rules are not deterministic.
+      To unblock: extract exact entry threshold, exit, stop-loss, take-profit + confirm repaint/lookahead.</div>
+  </section>
+
+  <!-- TRADING RULES -->
+  <section>
+    <h2>Trading rules</h2>
+    <div class="rule"><div class="k">Market / bias</div><div class="v">Range / mean-reversion (assumed)</div></div>
+    <div class="rule"><div class="k">Expected condition</div><div class="v">Ranging, low-trend sessions</div></div>
+    <div class="rule"><div class="k">Method</div><div class="v">VWAP bounce</div></div>
+    <div class="rule"><div class="k">Entry trigger</div><div class="v">Price touches VWAP and rejects — threshold undefined</div></div>
+    <div class="rule"><div class="k">Entry filters</div><div class="v todo">Not defined yet</div></div>
+    <div class="rule"><div class="k">Exit logic</div><div class="v todo">Not defined yet</div></div>
+    <div class="rule"><div class="k">Stop-loss</div><div class="v todo">Not defined yet</div></div>
+    <div class="rule"><div class="k">Take-profit</div><div class="v todo">Not defined yet</div></div>
+    <div class="rule"><div class="k">Trailing stop</div><div class="v todo">Not defined yet</div></div>
+    <div class="rule"><div class="k">Breakeven logic</div><div class="v todo">Not defined yet</div></div>
+    <div class="rule"><div class="k">Risk management</div><div class="v todo">Not defined yet</div></div>
+    <div class="rule"><div class="k">Avoid trading when</div><div class="v todo">Not defined yet</div></div>
+    <div class="rule"><div class="k">Repaint / lookahead</div><div class="v">Unknown — must be verified</div></div>
+    <div class="rule"><div class="k">Assumptions</div><div class="v">Intraday crypto; VWAP resets daily</div></div>
+  </section>
+
+  <!-- SCORECARD -->
+  <section>
+    <h2>Scorecard — 4 gates</h2>
+    <div class="gate"><span class="gname">Gate 1 · Intake</span><span class="bar"><i style="width:48%"></i></span><span class="gv">48/100</span></div>
+    <p class="gnote">Lost points: rules not deterministic. Improve: extract exact entry/exit formulas.</p>
+    <div class="gate"><span class="gname">Gate 1B · Feasibility</span><span class="bar na"><i></i></span><span class="gv na">N/A</span></div>
+    <div class="gate"><span class="gname">Gate 2 · Backtest</span><span class="bar na"><i></i></span><span class="gv na">N/A</span></div>
+    <div class="gate"><span class="gname">Gate 3 · Production</span><span class="bar na"><i></i></span><span class="gv na">N/A</span></div>
+    <p class="gnote">Gates stay N/A until their phase data exists — no single blended score.</p>
+  </section>
+
+  <!-- BACKTEST EVIDENCE -->
+  <section>
+    <h2>Backtest evidence</h2>
+    <div class="empty">
+      <b>Backtest evidence is not available yet.</b>
+      <p style="margin:8px 0 0;color:#445">Reason: blocked upstream — deterministic rules are not complete.</p>
+      <p style="margin:12px 0 0;color:var(--muted);font-size:13px">Required before backtest:</p>
+      <ul class="check">
+        <li>○ Exact entry condition</li>
+        <li>○ Exact exit condition</li>
+        <li>○ Stop-loss rule</li>
+        <li>○ Take-profit rule</li>
+        <li>○ Repaint / lookahead check</li>
+        <li>○ Test market / timeframe</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SALVAGEABLE IDEAS -->
+  <section>
+    <h2>Salvageable ideas (3)</h2>
+    <div class="idea">
+      <div class="top"><span class="nm">VWAP reaction confirmation</span><span class="pill grey">Confirmation</span></div>
+      <div class="meta"><span>MTC module: Confirmation filter</span><span>Dependency: VWAP</span><span>Confidence: Medium</span></div>
+      <p class="why">Useful: VWAP rejection is a recognised intraday confirmation signal.
+        <span class="neg">May fail: needs a quantified threshold; no edge alone.</span></p>
+    </div>
+    <div class="idea">
+      <div class="top"><span class="nm">Session filter (intraday only)</span><span class="pill grey">Session filter</span></div>
+      <div class="meta"><span>MTC module: Guard</span><span>Dependency: none</span><span>Confidence: High</span></div>
+      <p class="why">Useful: restricts trading to liquid hours.
+        <span class="neg">May fail: crypto is 24/7 — session boundaries are arbitrary.</span></p>
+    </div>
+    <div class="idea">
+      <div class="top"><span class="nm">Volatility guard</span><span class="pill grey">Risk guard</span></div>
+      <div class="meta"><span>MTC module: Guard</span><span>Dependency: ATR</span><span>Confidence: Medium</span></div>
+      <p class="why">Useful: skips trades in extreme volatility.
+        <span class="neg">May fail: cut-off must be tuned per symbol.</span></p>
+    </div>
+  </section>
+
+  <!-- SOURCE MATERIAL -->
+  <section>
+    <h2>Source material</h2>
+    <div class="src">
+      <div><div class="k">Title</div>VWAP bounce scalping</div>
+      <div><div class="k">Type</div>YouTube video</div>
+      <div><div class="k">Transcript</div>Missing</div>
+      <div><div class="k">Source quality</div>Low</div>
+      <div><div class="k">Extracted rule quality</div>Partial</div>
+      <div><div class="k">Marketing claims?</div>Yes</div>
+      <div><div class="k">Closed-source dependency?</div>No</div>
+    </div>
+    <div class="pillrow"><a class="chip" href="#">Open source ↗</a><span class="chip" style="color:var(--muted)">Transcript unavailable</span></div>
+  </section>
+
+  <!-- TECHNICAL -->
+  <section style="border:none">
+    <details class="tech">
+      <summary>Technical details</summary>
+      <table>
+        <tr><td>Canonical ID</td><td><code>QL_2026-05-03_CRYPTO_5M_VWAP_BOUNCE</code></td></tr>
+        <tr><td>Raw machine status</td><td><code>BLOCKED_SOURCE_AUDIT</code> → "Source check needed"</td></tr>
+        <tr><td>Duplicate handling</td><td>Primary version</td></tr>
+        <tr><td>Raw blocked reason</td><td><code>needs source/formula audit</code></td></tr>
+        <tr><td>QuantLens decision (raw)</td><td><code>NEEDS_CLARIFICATION</code></td></tr>
+        <tr><td>Legacy composite</td><td>deprecated</td></tr>
+      </table>
+    </details>
+  </section>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/research_backtest_registry.schema.json",
+  "title": "MCC Research Backtest Result Registry",
+  "type": "object",
+  "required": ["schema_version", "results"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "generated_at": { "type": ["string", "null"] },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["research_run_id", "variant_id"],
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

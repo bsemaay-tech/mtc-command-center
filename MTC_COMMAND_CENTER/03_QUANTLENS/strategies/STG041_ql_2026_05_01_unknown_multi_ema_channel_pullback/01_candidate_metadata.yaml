@@ -27,3 +27,9 @@ new_feature_required: UNKNOWN_UNTIL_MAPPING
 recommended_next_step: Define deterministic channel-touch and fast/medium EMA channel cross semantics before Python prototype.
 created_at: 2026-05-01
 updated_at: 2026-05-01
+
+# --- A1 Extracted (auto) ---
+trailing_logic: N_A
+filters_used: "ATR, EMA"
+known_strengths: "Entry: Price > EMA(200). Fast EMA(5) > Mid EMA(13). Price pulls back to touch or get near Mid EMA(13) (distance <= 0.4 * ATR)."
+known_weaknesses: N_A

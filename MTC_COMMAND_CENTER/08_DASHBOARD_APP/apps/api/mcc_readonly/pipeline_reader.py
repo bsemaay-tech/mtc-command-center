@@ -24,6 +24,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from .paths import default_quantlens_root
 from .presentation_reader import action_hint, build_scorecard, load_stg_code_map, resolve_stg_code
 
 STAGES = [
@@ -105,6 +106,90 @@ DESCRIPTIONS: list[tuple[str, dict]] = [
         "entry": "—", "exit": "—"}),
 ]
 _DEFAULT_DESC = {"family": "Bilinmeyen", "what": "Açıklama henüz eklenmedi.", "entry": "—", "exit": "—"}
+DESCRIPTIONS = [
+    ("FAM_PULLBACK_TO_MA", {"family": "Trend Pullback to Moving Average",
+        "what": "In an uptrend, buys the continuation when price pulls back to a fast moving average and closes back up off it.",
+        "entry": "close > slow MA (uptrend) + prior bar tagged the fast MA + close turns back up above the fast MA.",
+        "exit": "Swing-low stop; holding-bar limit."}),
+    ("FAM_CONSOLIDATION_BREAKOUT", {"family": "Tight-Consolidation Breakout",
+        "what": "Enters when price breaks out of a narrow consolidation channel within an uptrend.",
+        "entry": "Prior N-bar channel is tight (range/price < threshold) + uptrend + close breaks the prior channel high.",
+        "exit": "Swing-low stop; holding-bar limit."}),
+    ("FAM_MOMENTUM_CONTINUATION", {"family": "Momentum / RS Continuation",
+        "what": "Buys a fresh breakout high while momentum is positive and the trend is up (relative-strength continuation).",
+        "entry": "close > trend EMA + prior-bar ROC > 0 + close breaks the prior N-bar high.",
+        "exit": "Swing-low stop; holding-bar limit."}),
+    ("OLIVER_KELL", {"family": "Oliver Kell Price Cycle (10/20 EMA)",
+        "what": "In a 10/20 EMA 'green-light' regime, buys the continuation when price snaps back below the EMAs and then reclaims them (wedge pop).",
+        "entry": "Price was below the 20 EMA in recent bars (snapback) + crosses back above the 10 EMA + higher low + close above the 20 EMA.",
+        "exit": "Swing-low stop; loss of the EMA regime (engine exit)."}),
+    ("LBR_COIL", {"family": "Linda Raschke — Coil Breakout / Range Expansion",
+        "what": "Enters a range-expansion breakout after a volatility contraction (coil).",
+        "entry": "Prior bar ATR is squeezed (atr < squeeze x longer ATR average) + close breaks the last N-bar channel high.",
+        "exit": "Swing-low stop; holding-bar limit."}),
+    ("8EMA_EXIT_TRAIL", {"family": "8 EMA Pullback + Trailing Exit",
+        "what": "Buys continuation when price pulls back toward the 8 EMA during an uptrend and resumes higher.",
+        "entry": "Price stays above the 8 EMA, pulls back near the average, and follows a prior impulse move.",
+        "exit": "Exit when price closes below the 8 EMA as a trailing exit; fixed stop also applies."}),
+    ("8EMA", {"family": "8 EMA Pullback",
+        "what": "Buys continuation pullbacks to the 8 EMA during an uptrend.",
+        "entry": "Close is above the 8 EMA, price is near the average, and recent impulse is strong.",
+        "exit": "2R profit target or stop."}),
+    ("TWO_CANDLE", {"family": "Two-Candle Support/Resistance Breakout",
+        "what": "Buys when price breaks a resistance level with a strong candle.",
+        "entry": "The candle closes in the upper third of its range and breaks the highest high of the last 200 bars.",
+        "exit": "2R profit target or stop."}),
+    ("RSI_OVERSOLD", {"family": "RSI Oversold Reversal",
+        "what": "Buys when RSI starts recovering from oversold conditions; this is a dip-catch mean-reversion idea.",
+        "entry": "RSI(5) first drops below 35, then crosses back above 45.",
+        "exit": "2R profit target or stop. No trend filter is defined, so the edge is weak."}),
+    ("RSI_CONFLUENCE", {"family": "RSI + Trend Confirmation",
+        "what": "Buys when RSI crosses above 50 while price is above the moving average.",
+        "entry": "Close is above the SMA and RSI crosses 50 from below.",
+        "exit": "2R target or stop."}),
+    ("DUAL_RSI", {"family": "Dual RSI Daily + Hourly",
+        "what": "Buys hourly pullbacks while the daily RSI trend remains strong.",
+        "entry": "Daily RSI is high (>60) and hourly RSI crosses the entry threshold upward.",
+        "exit": "2R target or stop below the recent swing low."}),
+    ("BOLLINGER", {"family": "Bollinger Squeeze Breakout",
+        "what": "Buys a strong upper-band breakout after the bands contract.",
+        "entry": "Narrow bands plus a strong-bodied close above the upper band.",
+        "exit": "2R target or stop."}),
+    ("VWAP", {"family": "VWAP Pullback",
+        "what": "Buys pullbacks toward a rising VWAP.",
+        "entry": "VWAP slope is up and price is near or above VWAP.",
+        "exit": "2R target or band-based stop."}),
+    ("CANDLESTICK", {"family": "Support Engulfing Candle",
+        "what": "Buys when a bullish engulfing candle appears near support.",
+        "entry": "Bullish engulfing candle near a support zone.",
+        "exit": "2R target or stop."}),
+    ("MULTI_EMA_CHANNEL", {"family": "Multi-EMA Channel Pullback",
+        "what": "Buys a channel touch when the long-term trend is up and short EMAs are aligned.",
+        "entry": "Close is above EMA200, EMA5 is above EMA13, and price pulls back into the channel.",
+        "exit": "2R target or stop."}),
+    ("LE_MODEL_BULL_FLAG", {"family": "Bull Flag Breakout",
+        "what": "Buys the breakout of a short consolidation after a strong advance.",
+        "entry": "8 EMA impulse followed by a pullback breakout.",
+        "exit": "2R target or stop."}),
+    ("PURPLE_PROFITS", {"family": "8 EMA Trend (Purple Profits)",
+        "what": "Tracks the 8 EMA trend; a simplified version of the original purple-line concept.",
+        "entry": "Impulse and pullback while price remains above the 8 EMA.",
+        "exit": "2R target or stop."}),
+    ("10M_8EMA", {"family": "8 EMA Pullback from 10-Minute Source",
+        "what": "Buys continuation pullbacks to the 8 EMA, originally described in a 10-minute stock-video context.",
+        "entry": "Close is above the 8 EMA with a pullback and impulse.",
+        "exit": "2R target or stop."}),
+    ("TV_BUYSELL", {"family": "TradingView Buy/Sell Indicator Pack (Salvage)",
+        "what": "Five ready-made buy/sell indicators. This is not a complete strategy until one open formula is selected and audited.",
+        "entry": "--", "exit": "--"}),
+    ("EQUILIBRIUM", {"family": "Equilibrium Momentum Divergence (Salvage)",
+        "what": "BigBeluga oscillator divergence idea. It should not be used until source and repaint behavior are audited.",
+        "entry": "--", "exit": "--"}),
+    ("RANKED_FVG", {"family": "Ranked FVG Imbalance Zones (Salvage)",
+        "what": "Fair-value-gap zone indicator. It should not be used before the exact formula is clarified.",
+        "entry": "--", "exit": "--"}),
+]
+_DEFAULT_DESC = {"family": "Unknown", "what": "No strategy description has been added yet.", "entry": "--", "exit": "--"}
 
 
 def _describe(*texts: str) -> dict:
@@ -126,13 +211,11 @@ def _youtube(url: str | None) -> str:
 
 
 def _promoted_dir(mcc_root: str | Path) -> Path:
-    root = Path(mcc_root)
-    return root.parent / "01_MASTER TEMPLATE_V2" / "06_QUANTLENS_LAB" / "06_PROMOTED_TO_PARITY"
+    return default_quantlens_root(mcc_root) / "06_PROMOTED_TO_PARITY"
 
 
 def _quantlens_root(mcc_root: str | Path) -> Path:
-    root = Path(mcc_root)
-    return root.parent / "01_MASTER TEMPLATE_V2" / "06_QUANTLENS_LAB"
+    return default_quantlens_root(mcc_root)
 
 
 def _read_pinets_result(promoted_dir: Path, strategy_id: str) -> dict | None:
@@ -640,10 +723,11 @@ def _source_url_from_source_file(source_url: Any, source_file: str, root: Path) 
 def _source_file_candidates(source_file: str, root: Path) -> list[Path]:
     rel = Path(source_file)
     candidates: list[Path] = []
+    quantlens_root = default_quantlens_root(root)
     search_roots = [
-        root.parent / "01_MASTER TEMPLATE_V2" / "06_QUANTLENS_LAB",
-        root.parent / "01_MASTER TEMPLATE_V2" / "06_QUANTLENS_LAB" / "00_INBOX_REPORTS",
-        root.parent / "01_MASTER TEMPLATE_V2" / "06_QUANTLENS_LAB" / "research",
+        quantlens_root,
+        quantlens_root / "00_INBOX_REPORTS",
+        quantlens_root / "research",
         root,
     ]
     for base in search_roots:

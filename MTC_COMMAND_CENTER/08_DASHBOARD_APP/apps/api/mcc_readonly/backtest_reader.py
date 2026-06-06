@@ -42,6 +42,14 @@ def build_backtest_status(mcc_root: str | Path | None = None) -> dict[str, Any]:
 
     for run in runs:
         run.pop("_sort_mtime", None)
+        # D2: surface CPCV/PBO/alpha artifact paths
+        source_path = run.get("source_path")
+        if source_path:
+            run_dir = Path(source_path).parent
+            if run_dir.is_dir():
+                artifacts = _find_run_artifacts(run_dir, root)
+                if artifacts:
+                    run["artifacts"] = artifacts
 
     return {
         "schema_version": "1.0",
@@ -58,8 +66,25 @@ def _collect_quantlens_results(quantlens_root: Path) -> list[dict[str, Any]]:
         return []
 
     runs = []
+    seen: set[str] = set()
+    # Top-level exported results first (e.g. <run>_results.json).
     for path in sorted(root.glob("*_results.json")):
-        runs.append(_quantlens_result_run(path, root))
+        run = _quantlens_result_run(path, root)
+        rid = run.get("run_id")
+        if rid in seen:
+            continue
+        seen.add(rid)
+        runs.append(run)
+    # D1: also auto-surface every run subdir's canonical engine output so overnight
+    # runs appear without a manual top-level export. Dedupe against top-level exports.
+    for path in sorted(root.glob("*/MEGA_walk_forward_results.json")):
+        rid = path.parent.name
+        if rid in seen:
+            continue
+        seen.add(rid)
+        run = _quantlens_result_run(path, root)
+        run["run_id"] = rid  # override generic "MEGA_walk_forward" with the run dir name
+        runs.append(run)
     return runs
 
 
@@ -383,3 +408,24 @@ def _empty_status(source: str) -> dict[str, Any]:
         },
         "runs": [],
     }
+
+
+def _find_run_artifacts(run_dir: Path, mcc_root: Path) -> dict:
+    """Return relative paths (from mcc_root) for known artifact files in a run dir."""
+    artifacts = {}
+    candidates = {
+        "morning_report": list(run_dir.glob("*MORNING_REPORT*.md")),
+        "cpcv_report": [run_dir / "cpcv15" / "CPCV_VALIDATION_REPORT.md"],
+        "pbo_report": [run_dir / "pbo" / "PBO_REPORT.md"],
+        "alpha_summary": [run_dir / "alpha_summary.json"],
+        "aggregate_report": list(run_dir.glob("*AGGREGATE*.md")) + list(run_dir.glob("*AGGREGATED*.md")),
+    }
+    for key, paths in candidates.items():
+        for p in paths:
+            if p.exists():
+                try:
+                    artifacts[key] = p.relative_to(mcc_root).as_posix()
+                except ValueError:
+                    artifacts[key] = str(p)
+                break
+    return artifacts

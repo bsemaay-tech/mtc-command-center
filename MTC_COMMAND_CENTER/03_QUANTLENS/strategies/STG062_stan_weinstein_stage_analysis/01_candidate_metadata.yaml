@@ -1,0 +1,100 @@
+strategy_id: STG062
+strategy_name: Stan Weinstein Stage Analysis
+source_candidate_id:
+  - QL_STAN_FAILED_RALLY_200D_SHORT_AVOID_v0
+  - QL_STAN_FOREST_GROUP_TREE_FILTER_v0
+  - QL_STAN_GOOD_COMPANY_BAD_CHART_BLOCK_v0
+  - QL_STAN_SPLIT_TAPE_BREADTH_FILTER_v0
+  - QL_STAN_STAGE_1B_TO_2A_BREAKOUT_v0
+  - QL_STAN_STAGE_2A_PULLBACK_SUPPORT_v0
+  - QL_STAN_UNFILLED_GAP_CONTINUATION_v0
+source_transcript_path:
+  - 11_TRIAGE/strategies/stg160.md
+  - 11_TRIAGE/strategies/stg161.md
+  - 11_TRIAGE/strategies/stg162.md
+  - 11_TRIAGE/strategies/stg163.md
+  - 11_TRIAGE/strategies/stg164.md
+  - 11_TRIAGE/strategies/stg165.md
+  - 11_TRIAGE/strategies/stg166.md
+source_url: https://youtu.be/O0GpSPtmCuM?si=Ra7X5w149KdMksmj
+video_title: "Stage Analysis Warnings for Current Markets - Exclusive Interview with Stan Weinstein"
+quality: HIGH
+current_status: promoted_to_matured_strategy
+maturity_level: deterministic_spec_ready
+original_timeframe: 1d
+recommended_timeframes:
+  - 1d
+  - 1w
+original_asset_class: US_EQUITIES
+tested_assets_if_known: unknown
+long_only_or_long_short: long_short_filter
+strategy_category: position_trading
+expected_market_regime:
+  - bull_market
+  - bear_market
+  - trending
+method:
+  - trend_following
+  - breakout
+  - pullback_continuation
+entry_logic_summary: Prefer Stage 1B-to-2A breakouts and Stage 2A pullbacks in strong groups and supportive breadth; use unfilled gaps as continuation evidence when context is strong.
+exit_logic_summary: Avoid or exit failed rallies into the 200-day moving average, good-company/bad-chart names, split-tape weakness, and inferior merchandise in Stage 3/4.
+stop_loss_logic: Use failure back under the breakout/support zone or failed rally rejection as invalidation; exact stop distance unknown.
+take_profit_logic: unknown
+trailing_logic: unknown
+filters_used:
+  - group_strength_filter
+  - market_breadth_filter
+  - stage_filter
+  - good_company_bad_chart_block
+indicators_used:
+  - SMA
+  - RELATIVE_STRENGTH
+  - MARKET_BREADTH
+  - GAP
+htf_usage: Weekly context is useful for stage classification; exact HTF rule unknown.
+repaint_risk_notes: Stage labels can repaint if assigned after the move; use objective completed-bar moving-average and base rules.
+lookahead_risk_notes: Do not use later stage confirmation to justify earlier entries.
+data_leakage_risk_notes: Breadth and group-strength inputs must be measured at decision time.
+TradingView_compatibility_notes: Spec-only; compatible if stage, group, breadth, and 200-day rules are formalized.
+backtest_engine_compatibility_notes: Needs numeric stage classifier, group-relative-strength feed, breadth feed, and gap persistence rule.
+known_strengths:
+  - Strong regime and selection framework.
+  - Useful as a market/sector filter for many breakout systems.
+known_weaknesses:
+  - Interview format leaves exact formulas and thresholds partially discretionary.
+  - Requires market breadth and group data not always present in crypto proxy tests.
+reusable_components:
+  - stage_1b_to_2a_breakout_filter
+  - stage_2a_pullback_support_filter
+  - failed_rally_200d_avoid_filter
+  - group_tree_strength_filter
+  - split_tape_breadth_filter
+  - good_company_bad_chart_block
+  - unfilled_gap_continuation_filter
+suitable_for_combination_with:
+  - STG021_ql_vcp_minervini_1d
+  - STG048_anthony_layered_leadership_swing_system
+  - STG060_roppel_leadership_position_trading
+unsuitable_for_combination_with:
+  - low_liquidity_intraday_scalping
+  - pure_mean_reversion_without_trend_filter
+tags:
+  - stage_analysis
+  - trend_filter
+  - market_breadth
+  - relative_strength
+  - position_trading
+review_needed:
+  - exact_stage_classifier
+  - breadth_thresholds
+  - group_strength_thresholds
+  - gap_persistence_rule
+created_at: 2026-06-04
+updated_at: 2026-06-04
+
+# --- A1 Extracted (auto) ---
+trailing_logic: trail exits
+filters_used: "4. Treat unfilled upside gaps as continuation evidence only when the broader context is supportive., Requires broadmarket, sector/group, and individualstock context., Needs review. Requires a stage classifier and breadth/group data."
+known_strengths: Stan Weinstein Stage Analysis
+known_weaknesses: "Exact Stage 1B, 2A, 3, and 4 formulas. - Breadth thresholds for split tape"

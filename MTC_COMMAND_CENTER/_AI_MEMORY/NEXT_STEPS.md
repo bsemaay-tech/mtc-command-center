@@ -1,5 +1,58 @@
 # NEXT_STEPS
 
+## S6 worker monitor UI (2026-06-06)
+
+### S6-D3B-WORKER-MONITOR | DONE 2026-06-06 (Codex GPT-5) | Overnight runner heartbeat widget [AI: Codex]
+- Added embedded Worker Monitor card to Backtest Summary, using `snapshot.overnight_heartbeat`; no new top-level tab.
+- Current source snapshot renders offline state with reason `overnight_runs dir not found`.
+- Files changed: `08_DASHBOARD_APP/apps/web/app.js`, `08_DASHBOARD_APP/apps/web/index.html`, `08_DASHBOARD_APP/apps/web/styles.css`, `_AI_MEMORY/PARALLEL_AGENT_REPORTS/S6_D3B_WORKER_MONITOR_REPORT.md`.
+- Validation: D3a prerequisite PASS; `node --check app.js` PASS; clean dashboard server health PASS; browser verification PASS on `http://127.0.0.1:8766/dashboard`; API pytest blocked by missing `pytest`; DeepSeek review blocked by missing `openai`.
+
+## S5 dashboard acceptance panel (2026-06-06)
+
+### S5-CODEX-A8 | DONE 2026-06-06 (Codex GPT-5) | Global acceptance criterion panel [AI: Codex]
+- Added global `MCC System Status` panel at the top of the main dashboard content, visible on the default Pipeline screen without opening a strategy.
+- Panel derives from `snapshot.scorecards.cards`: best candidate, blocked count/reason, scorecard totals, Gate2 PASS, Gate3 OK, and next action.
+- Live values verified: 349 scorecards, 1 promotable, 125 Gate2 PASS, 1 Gate3 OK, 348 blocked; best `QL_FAM_MOMENTUM_CONTINUATION|TRXUSDT|4h`.
+- Validation: `node --check app.js` PASS; dashboard health PASS; browser verification PASS; API pytest blocked by missing `pytest`; DeepSeek review blocked by missing `openai`.
+
+## S2 dashboard UI components (2026-06-06)
+
+### S2-CODEX-UI | DONE 2026-06-06 (Codex GPT-5) | A5/A6/A7/D4 dashboard components [AI: Codex]
+- Implemented detail-page Gate2 Backtest Evidence renderer from `scorecard_v2.gate2.metrics`, Not Promotable blockers panel, Pipeline gate-status filters, and Backtest run detail panel.
+- Files changed: `08_DASHBOARD_APP/apps/web/app.js`, `08_DASHBOARD_APP/apps/web/index.html`, `08_DASHBOARD_APP/apps/web/styles.css`, `_AI_MEMORY/PARALLEL_AGENT_REPORTS/S2_CODEX_UI_REPORT.md`.
+- Validation: `node --check app.js` PASS; dashboard health PASS; browser verification PASS for A6, A7, D4, and A5 no-data state. API pytest blocked by missing `pytest`; DeepSeek adversarial review blocked by missing `openai`.
+- Caveat: current live snapshot scorecards have empty `gate2.metrics`, so positive metric-card rendering remains data-dependent. No metrics were fabricated.
+
+> **MASTER PLAN (2026-06-06):** MCC mimarisini tamamen bitirme + tüm stratejileri ilerletme iş planı → [[MCC_COMPLETION_MASTER_PLAN]] (`_AI_MEMORY/MCC_COMPLETION_MASTER_PLAN.md`). Workstream A (UI), B (pipeline), C (Gate3 — asıl blocker, builder yok), D (gece-veri→UI), E (promosyon hattı). Barış kararı bekleyen: C0 (production tanımı), B3 (confirmation grid), C2/C3 (entegrasyon onayı).
+
+## Codex continuation closure (2026-06-06)
+
+### C3-DRY-RUN-GATE3 | DONE 2026-06-06 (Codex GPT-5) | Dry-run adapter evidence, no live path [AI: Codex]
+- Added `07_ADAPTERS/liveops/dry_run_adapter.py`, tests, and README. Generated C3 evidence for the 9 `fam_templates_2026-06-06` all-gate artifacts under `03_STATUS/dry_run_evidence_2026-06-06/`.
+- `LIVEOPS_STATUS.json` now records dry-run mode only: live trading false, webhook sending false, broker integration false, 9 simulated-signal events, 0 live orders, 0 webhook sends.
+- Gate3 moved from 46.0 to 91.0 for the family-template readiness artifacts, but remains **INCOMPLETE** and `promotable=0` because MTC risk-engine compatibility and backtest-to-live matching are still unproven.
+- Validation: py_compile PASS, dry-run tests 4 PASS, 9/9 readiness artifacts schema-valid, clean score_gate3 pass=0, score_all_gates promotable=0.
+
+### B2-REMAINING-SHORT-MR | PARKED 2026-06-06 (Codex GPT-5) | STG047/STG054/STG055 not safe on crypto data [AI: Baris|Codex]
+- STG047 Brian Lee small-cap gap MR short requires US-equity gap-up scanner, low-float context, prior resistance, borrow/short frictions, and session/EOD behavior.
+- STG054 fishhook EP day-1 retake requires equity episodic-pivot gap+run/day-after retake and session semantics.
+- STG055 Gon low-float momentum requires low-float scanner, halt/resume events, premarket momentum, and float/volume filters.
+- Decision: do **not** code crypto proxy variants. They are parked until a US-equity data source with session/float/halt fields exists.
+
+### A3-GAP-MATRIX-DEEPSEEK-DISPATCH | DONE 2026-06-06 (Codex GPT-5) [AI: Codex|DeepSeek]
+- Added `_AI_MEMORY/A3_GAP_MATRIX.md`.
+- Added `_AI_MEMORY/DEEPSEEK_DISPATCH.md` with five read-only/skeptical review prompts: family mapping, no-lookahead safety, C3 adapter safety, documentation cleanup, and MOMENTUM_CONTINUATION 4h skeptical review.
+
+## New-strategy coding (2026-06-06)
+
+### NEWSTRAT-STG056 | DONE 2026-06-06 (Claude) | Oliver Kell price cycle coded + swept [AI: Claude]
+- Registry had 63 strategies but engine GRIDS only 43 → coded one genuinely-missing backtestable candidate. Picked **STG056 Oliver Kell** (clean objective spec, pure-EMA, crypto/daily fit). STG052 (CANSLIM — needs fundamentals, no data), STG047/STG054 (equity gap plays, weak crypto fit), STG057 (LBR — needs threshold/pattern judgment, pre-register first) deliberately NOT auto-coded.
+- New file `03_QUANTLENS/tools/strat_extra_runner.py` (monkey-patch layered on overnight_v2_runner, **no edit to mega_walk_forward.py or v2**). Faithful long-side mapping of `07_deterministic_spec.md`: 10/20-EMA green-light + snapback (was-below-slow within snap_lb) + wedge-pop crossback above fast EMA + higher-low; swing-low stop. All `.shift(1)` — no lookahead. Grid 36 configs.
+- Smoke PASS (non-degenerate: 40-50 trades/fold). Full sweep: 68 cells (17 sym × {1h,2h,4h,1D}), **2 PASS** (TRX 4h/2h), DSR 0.031/0.041. CPCV (extra-runner loaded): both TRX **15/15 splits pass** (120/158 trades). Gate2 80.4/83.5 **INCOMPLETE** (single/few-candidate PBO insufficient — not FAIL). Output: `05_BACKTEST_RESULTS/new_strategies_2026-06-06/` (+ top-level `_results.json`, dashboard COMPLETED).
+- **Verdict: works + CPCV-robust on TRX but DSR-floored + likely TRX bull-beta → NO promotion, no Pine/MTC/parity/live.** Same night-wide pattern (deeper validation can't beat DSR). Strategy reusable in engine via `strat_extra_runner.py`.
+- **Carry-forward:** STG057 LBR (ROC2-reversal / 3-bar-breakout / coil-expansion) + STG054 fishhook + STG047 smallcap-gap-short are codeable the same way once Barış pre-registers the threshold/pattern definitions (avoids me inventing params → keeps DSR valid). STG056 not registered in generated registries (AGENTS.md: generator-produced); logged here + handoff only.
+
 ## Confirmation Run Follow-up (2026-06-04)
 
 ### NIGHT-CONFIRM-2026-06-04 | DONE | Quiet pre-registered confirmation run + validation tail [AI: Codex GPT-5]
@@ -17,9 +70,12 @@
 - **Decision:** no promotion. Forward-paper observation OPTIONAL for 2 least-weak cells: 8EMA LINK 1h, Donchian ETH 2h. No Pine/MTC/parity/live action.
 - Closure done: lessons C4-C6, runbook A19 + CHANGELOG, INDEX already had 06-05 line.
 
-### NIGHT-FOLLOWUP-HEAVY-TIER | OPEN | Compute-filling heavy-validation tier for confirmation nights [AI: Claude|Barış]
+### NIGHT-FOLLOWUP-HEAVY-TIER | PARTIAL DONE 2026-06-05 (Claude) | Compute-filling heavy-validation tier [AI: Claude|Barış]
 - **Problem (A19):** deterministic narrow confirmation finishes in minutes; machine sat idle-awake on watchdog the rest of the night. Tekrar = sıfır bilgi (seed=md5, mega:731).
-- **Build:** a heavy-validation stage sized to wall-clock — 50k-resample bootstrap, multi-seed DSR/boot-p stability distribution (deliberately vary seed), CPCV across ALL pass cells, PBO with more combinations, ±2-step pre-registered grid + 4h/1D TFs. Wire into the confirmation runner post-pipeline with a deadline cap; if it finishes early, RELEASE the machine (no pointless keep-awake).
+- **DONE 2026-06-05 evening (Claude):** built `heavy_night_2026-06-05.sh` + `heavy_night_report.py`. Ran first **43-strategy** enriched sweep (3655 cells, 72 PASS+ vs 38 in the 20-strategy run) + **3×-deeper CPCV** (n_groups=10 → 45 splits, 24 cells ≥0.80) + PBO + 72 eval artifacts + Gate2 (53 PASS/19 FAIL) + scorecard_v2 (0 promotable, Gate3 INCOMPLETE). Output: `05_BACKTEST_RESULTS/heavy_tier_2026-06-05/` (+ top-level `heavy_tier_2026-06-05_results.json` for dashboard; verified visible, COMPLETED). Report: `heavy_tier_2026-06-05/HEAVY_TIER_MORNING_REPORT.md`. Closure: lessons C7/C8 + runbook A20/A21 + CHANGELOG.
+- **Key finding (C7/A21):** deeper CPCV does NOT rescue DSR — Gate2 PASS ∧ CPCV-deep≥0.80 ∧ DSR≥0.50 = **0/72**. DSR trial count = grid size, not split count (A17). Re-confirms: go narrow (NIGHT-FOLLOWUP-002), not deeper/broader.
+- **STILL OPEN (deliberately not autonomous):** multi-seed bootstrap stability is statistically trivial at n_boot=50k (MC SE ~0.002 → seed jitter negligible; "multi-seed DSR" moot under determinism). ±2-step pre-registered grid + 4h/1D neighborhood backtests = genuinely-new param-evals but need Barış design sign-off (A17: wider grids harm DSR). `probabilistic_pbo` lazy/random combo sampling fix (A20) for deep-CPCV PBO.
+- **No Pine/MTC/parity/live action taken. No promotion (Gate3 blocker stands).**
 
 ## SP-004 rubric sign-off (2026-06-04)
 
@@ -176,16 +232,31 @@
 - Verification 2026-06-04: 4 focused tests PASS, compileall PASS, BTCUSDT 1d real-data smoke PASS.
 - `MTC_V2.pine` untouched; `MTCRunner` untouched; parity is producer-level raw-signal only.
 
-### MEV-002 | OPEN | Wire first real shortlisted QuantLens producer adapter [AI: Claude | Barış approval]
-- Pick one shortlisted producer that already passed cheap naked screening.
-- Implement one manual `SignalPlugin` adapter under `02_MTC_BACKTEST/src/modules/signals/producers/`.
-- Add or map a standalone Pine producer adapter under `01_MTC_PROJECT/parity_oracles/feature_adapters/pinets/`.
-- Run `mtc_engine_validate` with producer-specific risk overrides and record artifacts before promotion.
+### MEV-002A | DONE 2026-06-06 | First real QuantLens Python producer adapter + MTC risk run [AI: Codex]
+- Selected `QL_FAM_MOMENTUM_CONTINUATION|TRXUSDT|4h` because it is the strongest current forward-paper cohort and maps cleanly to raw long entries without embedding stop/risk/lifecycle logic.
+- Added `QuantLensMomentumContinuationProducerAdapter` under `02_MTC_BACKTEST/src/modules/signals/producers/` and registered aliases `ql_fam_momentum_continuation`, `producer_ql_fam_momentum_continuation`, and `momentum_continuation`.
+- Params file: `02_MTC_BACKTEST/configs/producer_params/ql_fam_momentum_continuation_trx_4h.json` (`mom_lb=10`, `trend_ema=50`, `breakout_lb=10`).
+- Generated scoped dataset: `02_MTC_BACKTEST/data/mev_validation/TRXUSDT_4h_20240101_RESEARCH.csv` from existing Binance futures 5m research data.
+- Real MTC run: `02_MTC_BACKTEST/results/mtc_engine_validation_runs/ql_fam_momentum_continuation_trx_4h_2026-06-06/`; status `COMPLETED`, 51 trades, MTC light-risk stop_loss/take_profit/break_even/multi_tp/trailing enabled, parity `NOT_RUN`.
+- Gate3 delta for selected family artifact: 91.0 -> 95.0, still `INCOMPLETE`; all-gate promotable remains 0/9. The run proves adapter/risk-engine compatibility only, not edge quality or promotion.
+- Validation: py_compile PASS; producer tests 4 PASS; MEV CLI tests 2 PASS; real MEV run PASS; MEV readiness schema 9/9 valid; score_all_gates promotable=0.
 
-### MEV-003 | OPEN | Add callable producer-level parity command for bridge reports [AI: Claude]
-- Current bridge supports `--parity-command`, but generic auto-discovery is intentionally not implemented.
-- Next step: create a feature contract/trace command for each real producer so reports can show `PASS/FAIL`
-  instead of `NOT_RUN`.
+### MEV-002B | DONE 2026-06-06 | Standalone PineTS adapter for real QuantLens producer [AI: Codex]
+- Added standalone PineTS adapter `01_MTC_PROJECT/parity_oracles/feature_adapters/pinets/producer_ql_fam_momentum_continuation_v1.pine`.
+- Adapter emits raw long/short only and does not touch `MTC_V2.pine`, broker, webhook, or live trading paths.
+- Exact same-data parity against Python producer passed on TRXUSDT 4h: 5123/5123 long matches and 5123/5123 short matches.
+
+### MEV-003 | DONE 2026-06-06 | Callable producer-level parity command for bridge reports [AI: Codex]
+- Added `02_MTC_BACKTEST/tools/parity/run_quantlens_producer_parity.py`.
+- Command runs PineTS, exports `pine_signals.csv`, compares with the Python producer via `compare_signals`, writes `parity_compare.json` and `PARITY_REPORT.md`, and exits nonzero on mismatch.
+- `mtc_engine_validate` was rerun with native `--pine-signals-csv`; report now records `parity_status=PASS`.
+- Parity-backed readiness set: `03_STATUS/producer_parity_2026-06-06/`; selected TRXUSDT 4h Gate3 score is now 97.0 but still INCOMPLETE; promotable remains 0/9.
+
+### MEV-004 | BLOCKED | Reverse/re-entry/cooldown lifecycle mapping not clean [AI: Claude|Codex|Baris]
+- Attempted focused lifecycle proof with MTC engine tests after parity PASS.
+- Command result: 16 passed, 5 failed across pending-queue, time-stop EOD/EOW, consecutive-loss reset daily, and max-pyramid config guard tests.
+- Evidence note: `03_STATUS/producer_parity_2026-06-06/reverse_reentry_cooldown_mapping.md`.
+- Do not mark Gate3 complete until these lifecycle failures are fixed or a narrower approved mapping proof is defined. This may require MTC engine behavior changes and therefore is not safe to patch casually.
 
 ## Immediate — Sabah Görevleri (2026-06-03)
 
@@ -694,3 +765,18 @@ Must obey 7-gate workflow (AI_RULES.md). Start at Gate 1.
 - Legacy freeze policy: `docs/migration_manifests/LEGACY_FREEZE_POLICY.md`
 - Path rewrite policy: `docs/migration_manifests/PATH_REWRITE_POLICY.md`
 - Per-script TODO: `MTC_COMMAND_CENTER/02_MTC_BACKTEST/hardcoded_path_rewrite_TODO.md`
+
+## Codex lifecycle closure (2026-06-06)
+
+### MTC-LIFECYCLE-FIXES | DONE 2026-06-06 (Codex GPT-5) | Approved by Baris [AI: Codex]
+- Applied approved lifecycle fixes in `02_MTC_BACKTEST/src/engine/mtc_runner.py`: max-pyramid config guard, time-stop enabled/use_bars semantics, EOD/EOW previous-bar boundary closes, daily consecutive-loss reset timing, `_is_end_of_day/_is_end_of_week`, explicit once-per-bar unrealized equity update, and TRAIL close-price fills.
+- Fixed `data_tools/validate.py` gap severity to use timeframe-relative thresholds (`>=3x` WARN, `>=15x` ERROR).
+- Refreshed producer parity: `02_MTC_BACKTEST/results/producer_parity/ql_fam_momentum_continuation_trx_4h_2026-06-06_after_lifecycle_exit_fix/` PASS.
+- Refreshed MEV: `02_MTC_BACKTEST/results/mtc_engine_validation_runs/ql_fam_momentum_continuation_20260606_120640Z/`, `parity_status=PASS`, `strategy_return_pct=-103.9416`, B&H `214.6469`.
+- Refreshed lifecycle readiness: `03_STATUS/lifecycle_fixed_2026-06-06/`; Gate3 `OK=1 INCOMPLETE=8 FAIL=0`; all-gates `promotable=1 not_promotable=8`.
+- Warning: `promotable=True` is a scorecard result only. No live trading, no broker/webhook enablement, no MTC_V2/Pine production change.
+
+### MTC-FULL-SUITE-RESIDUALS | OPEN 2026-06-06 (Codex GPT-5) [AI: Codex|Baris]
+- `02_MTC_BACKTEST` full suite after fixes: `250 passed, 10 skipped, 5 failed`.
+- Residuals: `test_optimizer_migration_script.py` expects old `MTC_COMMAND_CENTER/mtc_backtest` cwd; `test_parity_smoke.py` expects missing TV debug CSV; `test_reports_ui_static.py` expects old `mtc_backtest/app.py`; `test_ui_phase31_static.py` expects old navigation labels.
+- Do not fake the TV CSV or add compatibility wrappers casually. Treat as a separate data/UI compatibility cleanup.

@@ -1,0 +1,90 @@
+strategy_id: STG061
+strategy_name: Ryan Pierpont Breakout Discipline
+source_candidate_id:
+  - QL_RYAN_LATE_ENTRY_CHASE_FILTER_001
+  - QL_RYAN_MARKET_AWARENESS_GATE_001
+  - QL_RYAN_PULLBACK_DANGER_ZONE_001
+  - QL_RYAN_SELL_INTO_STRENGTH_RUNNER_EXIT_001
+  - QL_RYAN_TIGHT_BREAKOUT_001
+source_transcript_path:
+  - 11_TRIAGE/strategies/stg154.md
+  - 11_TRIAGE/strategies/stg155.md
+  - 11_TRIAGE/strategies/stg156.md
+  - 11_TRIAGE/strategies/stg157.md
+  - 11_TRIAGE/strategies/stg158.md
+source_url: https://youtu.be/KQRuUWSZvLE?si=50fVh__JlzLkqeb0
+video_title: "10 Steps to Profitable Trading in 2024 | Ryan Pierpont"
+quality: HIGH
+current_status: promoted_to_matured_strategy
+maturity_level: deterministic_spec_ready
+original_timeframe: 1d
+recommended_timeframes:
+  - 1d
+original_asset_class: US_EQUITIES
+tested_assets_if_known: unknown
+long_only_or_long_short: long_only
+strategy_category: swing_trading
+expected_market_regime:
+  - bull_market
+  - trending
+  - breakout
+method:
+  - breakout
+  - trend_following
+  - momentum
+entry_logic_summary: Tight low-volatility breakout through a defined pivot; reject late entries that are extended beyond the pivot or leader move.
+exit_logic_summary: Trim into strength, protect gains after the first pullback danger zone, and leave a runner only while price action remains constructive.
+stop_loss_logic: Use the breakout pivot/base low or first danger-zone failure as the invalidation reference; exact percent threshold unknown.
+take_profit_logic: Sell partial position into strength; exact target threshold unknown.
+trailing_logic: Keep a runner while trend and market context remain constructive; exact trailing rule unknown.
+filters_used:
+  - late_entry_chase_filter
+  - market_awareness_gate
+  - pullback_danger_zone
+indicators_used:
+  - MOVING_AVERAGE
+  - VOLUME
+  - CHART_PATTERN
+htf_usage: unknown
+repaint_risk_notes: Low for close-confirmed price, moving-average, and volume checks; discretionary chart interpretation remains medium.
+lookahead_risk_notes: Low if pivot and extension filters are computed only from completed bars.
+data_leakage_risk_notes: Avoid using future leader performance or later market state to validate entry context.
+TradingView_compatibility_notes: Spec-only; compatible with Pine if pivot, extension, market filter, and partial-exit rules are formalized.
+backtest_engine_compatibility_notes: Requires explicit numeric pivot, extension, market-breadth, partial-exit, and trailing definitions before backtest.
+known_strengths:
+  - Guards are reusable across existing breakout producers.
+  - Risk discipline is central rather than added after the fact.
+known_weaknesses:
+  - Transcript is education/interview style and leaves several thresholds discretionary.
+  - Needs numeric formalization before promotion beyond spec stage.
+reusable_components:
+  - tight_breakout_entry
+  - late_entry_chase_filter
+  - market_awareness_gate
+  - pullback_danger_zone_guard
+  - sell_into_strength_runner_exit
+suitable_for_combination_with:
+  - STG048_anthony_layered_leadership_swing_system
+  - STG050_ariel_market_timed_momentum_swing
+  - STG021_ql_vcp_minervini_1d
+unsuitable_for_combination_with:
+  - mean_reversion_short_entries
+  - choppy_market_scalping
+tags:
+  - breakout
+  - swing_trading
+  - risk_filter
+  - market_gate
+review_needed:
+  - numeric_extension_threshold
+  - market_awareness_inputs
+  - danger_zone_failure_rule
+  - partial_exit_fraction
+created_at: 2026-06-04
+updated_at: 2026-06-04
+
+# --- A1 Extracted (auto) ---
+trailing_logic: N_A
+filters_used: "A longonly USequity swing breakout framework. The core idea is to enter tight, lowvolatility breakouts only when the mar, 2. Enter only when price breaks the pivot with constructive price/volume behavior., Keep a runner only if the trend and market context remain constructive., Source candidate IDs: QL_RYAN_LATE_ENTRY_CHASE_FILTER_001; QL_RYAN_MARKET_AWARENESS_GATE_001; QL_RYAN_PULLBACK_DANGER_ZO, Marketawareness gate., 1. Convert the lateentry filter and market gate into reusable guard modules."
+known_strengths: Ryan Pierpont Breakout Discipline
+known_weaknesses: Numeric overextension threshold. - Market-awareness inputs

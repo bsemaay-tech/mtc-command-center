@@ -257,6 +257,145 @@ class CandidateAuditTests(unittest.TestCase):
             self.assertGreaterEqual(row["split_candidate_count"], 2)
             self.assertEqual(row["recommended_next_pipeline_step"], "Split into indicator cases")
 
+    def test_audit_hides_source_parent_when_child_candidates_exist(self) -> None:
+        audit = build_candidate_audit(
+            Path("C:/TEMP/MTC_COMMAND_CENTER"),
+            candidate_pipeline={
+                "rows": [
+                    _row(
+                        "QLR_PARENT123",
+                        "Interview parent",
+                        "classified",
+                        "https://www.youtube.com/watch?v=parent123",
+                        "REJECT_NO_TEST because parent source was not Pine-ready",
+                        "Source parent",
+                    ),
+                    _row(
+                        "QL_CHILD_SETUP_001",
+                        "Extracted setup",
+                        "classified",
+                        "https://www.youtube.com/watch?v=parent123",
+                        "close > EMA(high, 4) AND close[1] <= EMA(high, 4)",
+                        "Extracted setup",
+                    ),
+                ]
+            },
+            strategy_registry={"candidates": [], "strategies": []},
+        )
+
+        rows = {row["id"]: row for row in audit["rows"]}
+        parent = rows["QLR_PARENT123"]
+        child = rows["QL_CHILD_SETUP_001"]
+
+        self.assertEqual(parent["audit_status"], "SOURCE_PARENT")
+        self.assertTrue(parent["is_source_parent"])
+        self.assertFalse(parent["visible_in_strategy_tables"])
+        self.assertFalse(parent["eligible_for_backtest"])
+        self.assertEqual(parent["blocked_reason"], "")
+        self.assertEqual(parent["source_quality"], "PARENT")
+        self.assertEqual(parent["recommended_next_pipeline_step"], "Hidden source parent")
+
+        self.assertNotEqual(child["audit_status"], "SOURCE_PARENT")
+        self.assertTrue(child["visible_in_strategy_tables"])
+        self.assertTrue(child["eligible_for_backtest"])
+        self.assertEqual(audit["summary"]["source_parent_rows"], 1)
+        self.assertEqual(audit["summary"]["visible_strategy_rows"], 1)
+
+    def test_audit_hides_qlr_multi_case_parent_without_registered_children(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "MTC_COMMAND_CENTER"
+            intake_rel = "00_INBOX_REPORTS/Multi Case QLR Intake.md"
+            intake_path = root / intake_rel
+            intake_path.parent.mkdir(parents=True)
+            intake_path.write_text(
+                "# Multi case QLR intake\n"
+                "Recommended decomposition: three cases.\n"
+                "5-SMA pullback model, opening-range breakout model, and range expansion model.\n",
+                encoding="utf-8",
+            )
+
+            map_dir = root / "12_LLM_WIKI" / "test_import"
+            map_dir.mkdir(parents=True)
+            (map_dir / "quantlens_source_map.csv").write_text(
+                "candidate_id,source_url,source_title,transcript_path,intake_path,corrected_intake_path,source_quality,rule_clarity_score,mechanical_testability_score,trader_credibility_context_score,data_availability_score,expected_edge_plausibility_score,MTC_compatibility_score,visual_review_priority,final_priority_score,classification,next_action,do_not_test_yet_reason\n"
+                f"QLR_MULTI_PARENT,https://www.youtube.com/watch?v=multiqlr,Multi case QLR,,{intake_rel},,,5,5,3,2,5,2,2,25.5,DATA_BLOCKED,DO_NOT_TEST_UNTIL_SOURCE_FIXED,\n",
+                encoding="utf-8",
+            )
+
+            audit = build_candidate_audit(
+                root,
+                candidate_pipeline={
+                    "rows": [
+                        _row(
+                            "QLR_MULTI_PARENT",
+                            "Multi case QLR",
+                            "classified",
+                            "https://www.youtube.com/watch?v=multiqlr",
+                            "DATA_BLOCKED with final action DO_NOT_TEST_UNTIL_SOURCE_RESOLVED",
+                            "Multi case QLR",
+                        ),
+                    ]
+                },
+                strategy_registry={"candidates": [], "strategies": []},
+            )
+
+            row = audit["rows"][0]
+            self.assertEqual(row["audit_status"], "SOURCE_PARENT")
+            self.assertTrue(row["is_source_parent"])
+            self.assertFalse(row["visible_in_strategy_tables"])
+            self.assertEqual(row["blocked_reason"], "")
+
+    def test_manual_backfill_does_not_inherit_stale_rejected_quality(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "MTC_COMMAND_CENTER"
+            stale_dir = root / "03_QUANTLENS" / "12_LLM_WIKI" / "old_import"
+            stale_dir.mkdir(parents=True)
+            (stale_dir / "FINAL_LLM_KNOWLEDGE_BASE.jsonl").write_text(
+                json.dumps(
+                    {
+                        "candidate_id": "QL_CHILD_BACKFILLED",
+                        "source_url": "https://www.youtube.com/watch?v=child123",
+                        "transcript_path": "",
+                        "summary": "DATA_BLOCKED with final action DO_NOT_TEST_UNTIL_SOURCE_RESOLVED.",
+                        "recommended_next_action": "DO_NOT_TEST_UNTIL_SOURCE_RESOLVED",
+                        "source_quality": "REJECTED",
+                        "exact_rules_if_available": "See source intake/corrected intake; no Pine-ready rules promoted.",
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            backfill_dir = root / "03_QUANTLENS" / "12_LLM_WIKI" / "manual_backfill"
+            backfill_dir.mkdir(parents=True)
+            (backfill_dir / "quantlens_source_map.csv").write_text(
+                "candidate_id,source_url,source_title,transcript_path,intake_path,corrected_intake_path,source_quality,rule_clarity_score,mechanical_testability_score,trader_credibility_context_score,data_availability_score,expected_edge_plausibility_score,MTC_compatibility_score,visual_review_priority,final_priority_score,classification,next_action,do_not_test_yet_reason\n"
+                "QL_CHILD_BACKFILLED,https://www.youtube.com/watch?v=child123,Backfilled child,00_INBOX_REPORTS/Transcrips/Backfilled.md,,,MANUAL_BACKFILL,,,,,,,,,MANUAL_BACKFILL_PENDING_REVIEW,RE_AUDIT_AFTER_INGEST,\n",
+                encoding="utf-8",
+            )
+
+            audit = build_candidate_audit(
+                root,
+                candidate_pipeline={
+                    "rows": [
+                        _row(
+                            "QL_CHILD_BACKFILLED",
+                            "Backfilled child",
+                            "classified",
+                            "https://www.youtube.com/watch?v=child123",
+                            "close > EMA(high, 4) AND close[1] <= EMA(high, 4)",
+                            "Backfilled child",
+                        ),
+                    ]
+                },
+                strategy_registry={"candidates": [], "strategies": []},
+            )
+
+            row = audit["rows"][0]
+            self.assertNotEqual(row["blocked_reason"], "rejected source classification")
+            self.assertNotEqual(row["source_quality"], "REJECTED")
+            self.assertTrue(row["eligible_for_backtest"])
+
 
 def _row(
     row_id: str,

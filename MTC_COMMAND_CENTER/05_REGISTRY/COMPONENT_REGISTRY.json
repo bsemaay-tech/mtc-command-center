@@ -1,0 +1,1484 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-06-06T20:08:30.768963+00:00",
+  "generator": "build_strategy_research_registry.py",
+  "components": [
+    {
+      "component_id": "ATR_regime_filter",
+      "component_type": "regime_filter",
+      "based_on_indicator": "ATR",
+      "description": "Atr used as regime filter",
+      "used_by_strategies": [
+        "STG027",
+        "STG057"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "atr",
+        "volatility",
+        "stop"
+      ]
+    },
+    {
+      "component_id": "ATR_exit_signal",
+      "component_type": "exit_signal",
+      "based_on_indicator": "ATR",
+      "description": "Atr used as exit signal",
+      "used_by_strategies": [
+        "STG027",
+        "STG057"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "atr",
+        "volatility",
+        "stop"
+      ]
+    },
+    {
+      "component_id": "ATR_trailing_module",
+      "component_type": "trailing_module",
+      "based_on_indicator": "ATR",
+      "description": "Atr used as trailing module",
+      "used_by_strategies": [
+        "STG027",
+        "STG057"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "atr",
+        "volatility",
+        "stop"
+      ]
+    },
+    {
+      "component_id": "AVWAP_entry_signal",
+      "component_type": "entry_signal",
+      "based_on_indicator": "AVWAP",
+      "description": "Avwap used as entry signal",
+      "used_by_strategies": [
+        "STG004",
+        "STG005",
+        "STG006",
+        "STG007",
+        "STG024",
+        "STG049"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "avwap",
+        "anchored",
+        "volume"
+      ]
+    },
+    {
+      "component_id": "AVWAP_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "AVWAP",
+      "description": "Avwap used as confirmation filter",
+      "used_by_strategies": [
+        "STG004",
+        "STG005",
+        "STG006",
+        "STG007",
+        "STG024",
+        "STG049"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "avwap",
+        "anchored",
+        "volume"
+      ]
+    },
+    {
+      "component_id": "AVWAP_exit_signal",
+      "component_type": "exit_signal",
+      "based_on_indicator": "AVWAP",
+      "description": "Avwap used as exit signal",
+      "used_by_strategies": [
+        "STG004",
+        "STG005",
+        "STG006",
+        "STG007",
+        "STG024",
+        "STG049"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "avwap",
+        "anchored",
+        "volume"
+      ]
+    },
+    {
+      "component_id": "BOLLINGER_BANDS_entry_signal",
+      "component_type": "entry_signal",
+      "based_on_indicator": "BOLLINGER_BANDS",
+      "description": "Bollinger Bands used as entry signal",
+      "used_by_strategies": [
+        "STG036"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "bollinger",
+        "volatility",
+        "mean_reversion"
+      ]
+    },
+    {
+      "component_id": "BOLLINGER_BANDS_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "BOLLINGER_BANDS",
+      "description": "Bollinger Bands used as confirmation filter",
+      "used_by_strategies": [
+        "STG036"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "bollinger",
+        "volatility",
+        "mean_reversion"
+      ]
+    },
+    {
+      "component_id": "BOLLINGER_BANDS_regime_filter",
+      "component_type": "regime_filter",
+      "based_on_indicator": "BOLLINGER_BANDS",
+      "description": "Bollinger Bands used as regime filter",
+      "used_by_strategies": [
+        "STG036"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "bollinger",
+        "volatility",
+        "mean_reversion"
+      ]
+    },
+    {
+      "component_id": "BOLLINGER_BANDS_exit_signal",
+      "component_type": "exit_signal",
+      "based_on_indicator": "BOLLINGER_BANDS",
+      "description": "Bollinger Bands used as exit signal",
+      "used_by_strategies": [
+        "STG036"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "bollinger",
+        "volatility",
+        "mean_reversion"
+      ]
+    },
+    {
+      "component_id": "CANDLESTICK_entry_signal",
+      "component_type": "entry_signal",
+      "based_on_indicator": "CANDLESTICK",
+      "description": "Candlestick used as entry signal",
+      "used_by_strategies": [
+        "STG001",
+        "STG037",
+        "STG039"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "candlestick",
+        "price_action"
+      ]
+    },
+    {
+      "component_id": "CANDLESTICK_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "CANDLESTICK",
+      "description": "Candlestick used as confirmation filter",
+      "used_by_strategies": [
+        "STG001",
+        "STG037",
+        "STG039"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "candlestick",
+        "price_action"
+      ]
+    },
+    {
+      "component_id": "CHART_PATTERN_entry_signal",
+      "component_type": "entry_signal",
+      "based_on_indicator": "CHART_PATTERN",
+      "description": "Chart Pattern used as entry signal",
+      "used_by_strategies": [
+        "STG023",
+        "STG044",
+        "STG048",
+        "STG050",
+        "STG051",
+        "STG052",
+        "STG053",
+        "STG054",
+        "STG055",
+        "STG056",
+        "STG057",
+        "STG058",
+        "STG059",
+        "STG060",
+        "STG061"
+      ],
+      "repaint_risk_notes": "high",
+      "lookahead_risk_notes": "medium",
+      "tags": [
+        "pattern",
+        "price_action"
+      ]
+    },
+    {
+      "component_id": "CHART_PATTERN_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "CHART_PATTERN",
+      "description": "Chart Pattern used as confirmation filter",
+      "used_by_strategies": [
+        "STG023",
+        "STG044",
+        "STG048",
+        "STG050",
+        "STG051",
+        "STG052",
+        "STG053",
+        "STG054",
+        "STG055",
+        "STG056",
+        "STG057",
+        "STG058",
+        "STG059",
+        "STG060",
+        "STG061"
+      ],
+      "repaint_risk_notes": "high",
+      "lookahead_risk_notes": "medium",
+      "tags": [
+        "pattern",
+        "price_action"
+      ]
+    },
+    {
+      "component_id": "CHART_PATTERN_trailing_module",
+      "component_type": "trailing_module",
+      "based_on_indicator": "CHART_PATTERN",
+      "description": "Chart Pattern used as trailing module",
+      "used_by_strategies": [
+        "STG023",
+        "STG044",
+        "STG048",
+        "STG050",
+        "STG051",
+        "STG052",
+        "STG053",
+        "STG054",
+        "STG055",
+        "STG056",
+        "STG057",
+        "STG058",
+        "STG059",
+        "STG060",
+        "STG061"
+      ],
+      "repaint_risk_notes": "high",
+      "lookahead_risk_notes": "medium",
+      "tags": [
+        "pattern",
+        "price_action"
+      ]
+    },
+    {
+      "component_id": "DIVERGENCE_entry_signal",
+      "component_type": "entry_signal",
+      "based_on_indicator": "DIVERGENCE",
+      "description": "Divergence used as entry signal",
+      "used_by_strategies": [],
+      "repaint_risk_notes": "high",
+      "lookahead_risk_notes": "medium",
+      "tags": [
+        "divergence",
+        "reversal"
+      ]
+    },
+    {
+      "component_id": "DIVERGENCE_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "DIVERGENCE",
+      "description": "Divergence used as confirmation filter",
+      "used_by_strategies": [],
+      "repaint_risk_notes": "high",
+      "lookahead_risk_notes": "medium",
+      "tags": [
+        "divergence",
+        "reversal"
+      ]
+    },
+    {
+      "component_id": "EMA_entry_signal",
+      "component_type": "entry_signal",
+      "based_on_indicator": "EMA",
+      "description": "Ema used as entry signal",
+      "used_by_strategies": [
+        "STG002",
+        "STG025",
+        "STG034",
+        "STG041",
+        "STG042",
+        "STG043",
+        "STG045",
+        "STG048",
+        "STG049",
+        "STG053",
+        "STG054",
+        "STG055",
+        "STG056",
+        "STG058"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "ema",
+        "trend",
+        "moving_average"
+      ]
+    },
+    {
+      "component_id": "EMA_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "EMA",
+      "description": "Ema used as confirmation filter",
+      "used_by_strategies": [
+        "STG002",
+        "STG025",
+        "STG034",
+        "STG041",
+        "STG042",
+        "STG043",
+        "STG045",
+        "STG048",
+        "STG049",
+        "STG053",
+        "STG054",
+        "STG055",
+        "STG056",
+        "STG058"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "ema",
+        "trend",
+        "moving_average"
+      ]
+    },
+    {
+      "component_id": "EMA_regime_filter",
+      "component_type": "regime_filter",
+      "based_on_indicator": "EMA",
+      "description": "Ema used as regime filter",
+      "used_by_strategies": [
+        "STG002",
+        "STG025",
+        "STG034",
+        "STG041",
+        "STG042",
+        "STG043",
+        "STG045",
+        "STG048",
+        "STG049",
+        "STG053",
+        "STG054",
+        "STG055",
+        "STG056",
+        "STG058"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "ema",
+        "trend",
+        "moving_average"
+      ]
+    },
+    {
+      "component_id": "EMA_exit_signal",
+      "component_type": "exit_signal",
+      "based_on_indicator": "EMA",
+      "description": "Ema used as exit signal",
+      "used_by_strategies": [
+        "STG002",
+        "STG025",
+        "STG034",
+        "STG041",
+        "STG042",
+        "STG043",
+        "STG045",
+        "STG048",
+        "STG049",
+        "STG053",
+        "STG054",
+        "STG055",
+        "STG056",
+        "STG058"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "ema",
+        "trend",
+        "moving_average"
+      ]
+    },
+    {
+      "component_id": "EMA_trailing_module",
+      "component_type": "trailing_module",
+      "based_on_indicator": "EMA",
+      "description": "Ema used as trailing module",
+      "used_by_strategies": [
+        "STG002",
+        "STG025",
+        "STG034",
+        "STG041",
+        "STG042",
+        "STG043",
+        "STG045",
+        "STG048",
+        "STG049",
+        "STG053",
+        "STG054",
+        "STG055",
+        "STG056",
+        "STG058"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "ema",
+        "trend",
+        "moving_average"
+      ]
+    },
+    {
+      "component_id": "FIBONACCI_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "FIBONACCI",
+      "description": "Fibonacci used as confirmation filter",
+      "used_by_strategies": [
+        "STG049"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "fibonacci",
+        "confluence",
+        "level"
+      ]
+    },
+    {
+      "component_id": "FIBONACCI_exit_signal",
+      "component_type": "exit_signal",
+      "based_on_indicator": "FIBONACCI",
+      "description": "Fibonacci used as exit signal",
+      "used_by_strategies": [
+        "STG049"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "fibonacci",
+        "confluence",
+        "level"
+      ]
+    },
+    {
+      "component_id": "FIBONACCI_trailing_module",
+      "component_type": "trailing_module",
+      "based_on_indicator": "FIBONACCI",
+      "description": "Fibonacci used as trailing module",
+      "used_by_strategies": [
+        "STG049"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "fibonacci",
+        "confluence",
+        "level"
+      ]
+    },
+    {
+      "component_id": "GAP_entry_signal",
+      "component_type": "entry_signal",
+      "based_on_indicator": "GAP",
+      "description": "Gap used as entry signal",
+      "used_by_strategies": [
+        "STG005",
+        "STG008",
+        "STG009",
+        "STG047",
+        "STG048",
+        "STG050",
+        "STG054",
+        "STG055",
+        "STG062"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "gap",
+        "event"
+      ]
+    },
+    {
+      "component_id": "GAP_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "GAP",
+      "description": "Gap used as confirmation filter",
+      "used_by_strategies": [
+        "STG005",
+        "STG008",
+        "STG009",
+        "STG047",
+        "STG048",
+        "STG050",
+        "STG054",
+        "STG055",
+        "STG062"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "gap",
+        "event"
+      ]
+    },
+    {
+      "component_id": "GAP_trailing_module",
+      "component_type": "trailing_module",
+      "based_on_indicator": "GAP",
+      "description": "Gap used as trailing module",
+      "used_by_strategies": [
+        "STG005",
+        "STG008",
+        "STG009",
+        "STG047",
+        "STG048",
+        "STG050",
+        "STG054",
+        "STG055",
+        "STG062"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "gap",
+        "event"
+      ]
+    },
+    {
+      "component_id": "MACD_entry_signal",
+      "component_type": "entry_signal",
+      "based_on_indicator": "MACD",
+      "description": "Macd used as entry signal",
+      "used_by_strategies": [],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "macd",
+        "momentum"
+      ]
+    },
+    {
+      "component_id": "MACD_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "MACD",
+      "description": "Macd used as confirmation filter",
+      "used_by_strategies": [],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "macd",
+        "momentum"
+      ]
+    },
+    {
+      "component_id": "MACD_exit_signal",
+      "component_type": "exit_signal",
+      "based_on_indicator": "MACD",
+      "description": "Macd used as exit signal",
+      "used_by_strategies": [],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "macd",
+        "momentum"
+      ]
+    },
+    {
+      "component_id": "MARKET_STRUCTURE_entry_signal",
+      "component_type": "entry_signal",
+      "based_on_indicator": "MARKET_STRUCTURE",
+      "description": "Market Structure used as entry signal",
+      "used_by_strategies": [
+        "STG027"
+      ],
+      "repaint_risk_notes": "high",
+      "lookahead_risk_notes": "medium",
+      "tags": [
+        "choch",
+        "structure",
+        "smc"
+      ]
+    },
+    {
+      "component_id": "MARKET_STRUCTURE_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "MARKET_STRUCTURE",
+      "description": "Market Structure used as confirmation filter",
+      "used_by_strategies": [
+        "STG027"
+      ],
+      "repaint_risk_notes": "high",
+      "lookahead_risk_notes": "medium",
+      "tags": [
+        "choch",
+        "structure",
+        "smc"
+      ]
+    },
+    {
+      "component_id": "MARKET_STRUCTURE_regime_filter",
+      "component_type": "regime_filter",
+      "based_on_indicator": "MARKET_STRUCTURE",
+      "description": "Market Structure used as regime filter",
+      "used_by_strategies": [
+        "STG027"
+      ],
+      "repaint_risk_notes": "high",
+      "lookahead_risk_notes": "medium",
+      "tags": [
+        "choch",
+        "structure",
+        "smc"
+      ]
+    },
+    {
+      "component_id": "MARKET_STRUCTURE_exit_signal",
+      "component_type": "exit_signal",
+      "based_on_indicator": "MARKET_STRUCTURE",
+      "description": "Market Structure used as exit signal",
+      "used_by_strategies": [
+        "STG027"
+      ],
+      "repaint_risk_notes": "high",
+      "lookahead_risk_notes": "medium",
+      "tags": [
+        "choch",
+        "structure",
+        "smc"
+      ]
+    },
+    {
+      "component_id": "MARKET_STRUCTURE_trailing_module",
+      "component_type": "trailing_module",
+      "based_on_indicator": "MARKET_STRUCTURE",
+      "description": "Market Structure used as trailing module",
+      "used_by_strategies": [
+        "STG027"
+      ],
+      "repaint_risk_notes": "high",
+      "lookahead_risk_notes": "medium",
+      "tags": [
+        "choch",
+        "structure",
+        "smc"
+      ]
+    },
+    {
+      "component_id": "OPENING_RANGE_entry_signal",
+      "component_type": "entry_signal",
+      "based_on_indicator": "OPENING_RANGE",
+      "description": "Opening Range used as entry signal",
+      "used_by_strategies": [
+        "STG006",
+        "STG030",
+        "STG031"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "opening_range",
+        "intraday",
+        "session"
+      ]
+    },
+    {
+      "component_id": "OPENING_RANGE_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "OPENING_RANGE",
+      "description": "Opening Range used as confirmation filter",
+      "used_by_strategies": [
+        "STG006",
+        "STG030",
+        "STG031"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "opening_range",
+        "intraday",
+        "session"
+      ]
+    },
+    {
+      "component_id": "OPENING_RANGE_exit_signal",
+      "component_type": "exit_signal",
+      "based_on_indicator": "OPENING_RANGE",
+      "description": "Opening Range used as exit signal",
+      "used_by_strategies": [
+        "STG006",
+        "STG030",
+        "STG031"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "opening_range",
+        "intraday",
+        "session"
+      ]
+    },
+    {
+      "component_id": "OPENING_RANGE_trailing_module",
+      "component_type": "trailing_module",
+      "based_on_indicator": "OPENING_RANGE",
+      "description": "Opening Range used as trailing module",
+      "used_by_strategies": [
+        "STG006",
+        "STG030",
+        "STG031"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "opening_range",
+        "intraday",
+        "session"
+      ]
+    },
+    {
+      "component_id": "PRICE_CHANNEL_entry_signal",
+      "component_type": "entry_signal",
+      "based_on_indicator": "PRICE_CHANNEL",
+      "description": "Price Channel used as entry signal",
+      "used_by_strategies": [
+        "STG041"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "channel",
+        "breakout"
+      ]
+    },
+    {
+      "component_id": "PRICE_CHANNEL_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "PRICE_CHANNEL",
+      "description": "Price Channel used as confirmation filter",
+      "used_by_strategies": [
+        "STG041"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "channel",
+        "breakout"
+      ]
+    },
+    {
+      "component_id": "PRICE_CHANNEL_regime_filter",
+      "component_type": "regime_filter",
+      "based_on_indicator": "PRICE_CHANNEL",
+      "description": "Price Channel used as regime filter",
+      "used_by_strategies": [
+        "STG041"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "channel",
+        "breakout"
+      ]
+    },
+    {
+      "component_id": "PRICE_CHANNEL_exit_signal",
+      "component_type": "exit_signal",
+      "based_on_indicator": "PRICE_CHANNEL",
+      "description": "Price Channel used as exit signal",
+      "used_by_strategies": [
+        "STG041"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "channel",
+        "breakout"
+      ]
+    },
+    {
+      "component_id": "PRICE_CHANNEL_trailing_module",
+      "component_type": "trailing_module",
+      "based_on_indicator": "PRICE_CHANNEL",
+      "description": "Price Channel used as trailing module",
+      "used_by_strategies": [
+        "STG041"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "channel",
+        "breakout"
+      ]
+    },
+    {
+      "component_id": "PRICE_EXTENSION_exit_signal",
+      "component_type": "exit_signal",
+      "based_on_indicator": "PRICE_EXTENSION",
+      "description": "Price Extension used as exit signal",
+      "used_by_strategies": [
+        "STG033"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "extension",
+        "filter"
+      ]
+    },
+    {
+      "component_id": "QQE_entry_signal",
+      "component_type": "entry_signal",
+      "based_on_indicator": "QQE",
+      "description": "Qqe used as entry signal",
+      "used_by_strategies": [],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "qqe",
+        "momentum",
+        "rsi"
+      ]
+    },
+    {
+      "component_id": "QQE_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "QQE",
+      "description": "Qqe used as confirmation filter",
+      "used_by_strategies": [],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "qqe",
+        "momentum",
+        "rsi"
+      ]
+    },
+    {
+      "component_id": "QQE_exit_signal",
+      "component_type": "exit_signal",
+      "based_on_indicator": "QQE",
+      "description": "Qqe used as exit signal",
+      "used_by_strategies": [],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "qqe",
+        "momentum",
+        "rsi"
+      ]
+    },
+    {
+      "component_id": "RELATIVE_STRENGTH_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "RELATIVE_STRENGTH",
+      "description": "Relative Strength used as confirmation filter",
+      "used_by_strategies": [
+        "STG017",
+        "STG029",
+        "STG048",
+        "STG050",
+        "STG059",
+        "STG060",
+        "STG062",
+        "STG063"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "rs",
+        "relative_strength",
+        "filter"
+      ]
+    },
+    {
+      "component_id": "RELATIVE_STRENGTH_regime_filter",
+      "component_type": "regime_filter",
+      "based_on_indicator": "RELATIVE_STRENGTH",
+      "description": "Relative Strength used as regime filter",
+      "used_by_strategies": [
+        "STG017",
+        "STG029",
+        "STG048",
+        "STG050",
+        "STG059",
+        "STG060",
+        "STG062",
+        "STG063"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "rs",
+        "relative_strength",
+        "filter"
+      ]
+    },
+    {
+      "component_id": "RSI_entry_signal",
+      "component_type": "entry_signal",
+      "based_on_indicator": "RSI",
+      "description": "Rsi used as entry signal",
+      "used_by_strategies": [
+        "STG003",
+        "STG027",
+        "STG035",
+        "STG040",
+        "STG047"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "rsi",
+        "momentum",
+        "oscillator"
+      ]
+    },
+    {
+      "component_id": "RSI_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "RSI",
+      "description": "Rsi used as confirmation filter",
+      "used_by_strategies": [
+        "STG003",
+        "STG027",
+        "STG035",
+        "STG040",
+        "STG047"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "rsi",
+        "momentum",
+        "oscillator"
+      ]
+    },
+    {
+      "component_id": "RSI_exit_signal",
+      "component_type": "exit_signal",
+      "based_on_indicator": "RSI",
+      "description": "Rsi used as exit signal",
+      "used_by_strategies": [
+        "STG003",
+        "STG027",
+        "STG035",
+        "STG040",
+        "STG047"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "rsi",
+        "momentum",
+        "oscillator"
+      ]
+    },
+    {
+      "component_id": "SMA_entry_signal",
+      "component_type": "entry_signal",
+      "based_on_indicator": "SMA",
+      "description": "Sma used as entry signal",
+      "used_by_strategies": [
+        "STG010",
+        "STG011",
+        "STG012",
+        "STG019",
+        "STG029",
+        "STG049",
+        "STG053",
+        "STG062"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "sma",
+        "trend",
+        "moving_average"
+      ]
+    },
+    {
+      "component_id": "SMA_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "SMA",
+      "description": "Sma used as confirmation filter",
+      "used_by_strategies": [
+        "STG010",
+        "STG011",
+        "STG012",
+        "STG019",
+        "STG029",
+        "STG049",
+        "STG053",
+        "STG062"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "sma",
+        "trend",
+        "moving_average"
+      ]
+    },
+    {
+      "component_id": "SMA_regime_filter",
+      "component_type": "regime_filter",
+      "based_on_indicator": "SMA",
+      "description": "Sma used as regime filter",
+      "used_by_strategies": [
+        "STG010",
+        "STG011",
+        "STG012",
+        "STG019",
+        "STG029",
+        "STG049",
+        "STG053",
+        "STG062"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "sma",
+        "trend",
+        "moving_average"
+      ]
+    },
+    {
+      "component_id": "SMA_exit_signal",
+      "component_type": "exit_signal",
+      "based_on_indicator": "SMA",
+      "description": "Sma used as exit signal",
+      "used_by_strategies": [
+        "STG010",
+        "STG011",
+        "STG012",
+        "STG019",
+        "STG029",
+        "STG049",
+        "STG053",
+        "STG062"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "sma",
+        "trend",
+        "moving_average"
+      ]
+    },
+    {
+      "component_id": "SMA_trailing_module",
+      "component_type": "trailing_module",
+      "based_on_indicator": "SMA",
+      "description": "Sma used as trailing module",
+      "used_by_strategies": [
+        "STG010",
+        "STG011",
+        "STG012",
+        "STG019",
+        "STG029",
+        "STG049",
+        "STG053",
+        "STG062"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "sma",
+        "trend",
+        "moving_average"
+      ]
+    },
+    {
+      "component_id": "SUPPORT_RESISTANCE_entry_signal",
+      "component_type": "entry_signal",
+      "based_on_indicator": "SUPPORT_RESISTANCE",
+      "description": "Support Resistance used as entry signal",
+      "used_by_strategies": [
+        "STG001",
+        "STG039",
+        "STG047",
+        "STG053",
+        "STG057",
+        "STG058"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "sr",
+        "level",
+        "breakout"
+      ]
+    },
+    {
+      "component_id": "SUPPORT_RESISTANCE_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "SUPPORT_RESISTANCE",
+      "description": "Support Resistance used as confirmation filter",
+      "used_by_strategies": [
+        "STG001",
+        "STG039",
+        "STG047",
+        "STG053",
+        "STG057",
+        "STG058"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "sr",
+        "level",
+        "breakout"
+      ]
+    },
+    {
+      "component_id": "SUPPORT_RESISTANCE_exit_signal",
+      "component_type": "exit_signal",
+      "based_on_indicator": "SUPPORT_RESISTANCE",
+      "description": "Support Resistance used as exit signal",
+      "used_by_strategies": [
+        "STG001",
+        "STG039",
+        "STG047",
+        "STG053",
+        "STG057",
+        "STG058"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "sr",
+        "level",
+        "breakout"
+      ]
+    },
+    {
+      "component_id": "SUPPORT_RESISTANCE_trailing_module",
+      "component_type": "trailing_module",
+      "based_on_indicator": "SUPPORT_RESISTANCE",
+      "description": "Support Resistance used as trailing module",
+      "used_by_strategies": [
+        "STG001",
+        "STG039",
+        "STG047",
+        "STG053",
+        "STG057",
+        "STG058"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "sr",
+        "level",
+        "breakout"
+      ]
+    },
+    {
+      "component_id": "VCP_entry_signal",
+      "component_type": "entry_signal",
+      "based_on_indicator": "VCP",
+      "description": "Vcp used as entry signal",
+      "used_by_strategies": [
+        "STG020",
+        "STG021",
+        "STG022"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "medium",
+      "tags": [
+        "vcp",
+        "contraction",
+        "breakout"
+      ]
+    },
+    {
+      "component_id": "VCP_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "VCP",
+      "description": "Vcp used as confirmation filter",
+      "used_by_strategies": [
+        "STG020",
+        "STG021",
+        "STG022"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "medium",
+      "tags": [
+        "vcp",
+        "contraction",
+        "breakout"
+      ]
+    },
+    {
+      "component_id": "VCP_regime_filter",
+      "component_type": "regime_filter",
+      "based_on_indicator": "VCP",
+      "description": "Vcp used as regime filter",
+      "used_by_strategies": [
+        "STG020",
+        "STG021",
+        "STG022"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "medium",
+      "tags": [
+        "vcp",
+        "contraction",
+        "breakout"
+      ]
+    },
+    {
+      "component_id": "VCP_trailing_module",
+      "component_type": "trailing_module",
+      "based_on_indicator": "VCP",
+      "description": "Vcp used as trailing module",
+      "used_by_strategies": [
+        "STG020",
+        "STG021",
+        "STG022"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "medium",
+      "tags": [
+        "vcp",
+        "contraction",
+        "breakout"
+      ]
+    },
+    {
+      "component_id": "VOLATILITY_RANGE_entry_signal",
+      "component_type": "entry_signal",
+      "based_on_indicator": "VOLATILITY_RANGE",
+      "description": "Volatility Range used as entry signal",
+      "used_by_strategies": [
+        "STG057"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "range_expansion",
+        "volatility"
+      ]
+    },
+    {
+      "component_id": "VOLATILITY_RANGE_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "VOLATILITY_RANGE",
+      "description": "Volatility Range used as confirmation filter",
+      "used_by_strategies": [
+        "STG057"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "range_expansion",
+        "volatility"
+      ]
+    },
+    {
+      "component_id": "VOLATILITY_RANGE_regime_filter",
+      "component_type": "regime_filter",
+      "based_on_indicator": "VOLATILITY_RANGE",
+      "description": "Volatility Range used as regime filter",
+      "used_by_strategies": [
+        "STG057"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "range_expansion",
+        "volatility"
+      ]
+    },
+    {
+      "component_id": "VOLATILITY_RANGE_trailing_module",
+      "component_type": "trailing_module",
+      "based_on_indicator": "VOLATILITY_RANGE",
+      "description": "Volatility Range used as trailing module",
+      "used_by_strategies": [
+        "STG057"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "range_expansion",
+        "volatility"
+      ]
+    },
+    {
+      "component_id": "VOLUME_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "VOLUME",
+      "description": "Volume used as confirmation filter",
+      "used_by_strategies": [
+        "STG014",
+        "STG047",
+        "STG048",
+        "STG050",
+        "STG051",
+        "STG052",
+        "STG054",
+        "STG055",
+        "STG059",
+        "STG060",
+        "STG061"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "volume",
+        "confirmation"
+      ]
+    },
+    {
+      "component_id": "VOLUME_regime_filter",
+      "component_type": "regime_filter",
+      "based_on_indicator": "VOLUME",
+      "description": "Volume used as regime filter",
+      "used_by_strategies": [
+        "STG014",
+        "STG047",
+        "STG048",
+        "STG050",
+        "STG051",
+        "STG052",
+        "STG054",
+        "STG055",
+        "STG059",
+        "STG060",
+        "STG061"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "volume",
+        "confirmation"
+      ]
+    },
+    {
+      "component_id": "VWAP_entry_signal",
+      "component_type": "entry_signal",
+      "based_on_indicator": "VWAP",
+      "description": "Vwap used as entry signal",
+      "used_by_strategies": [
+        "STG038",
+        "STG049"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "vwap",
+        "intraday",
+        "volume"
+      ]
+    },
+    {
+      "component_id": "VWAP_confirmation_filter",
+      "component_type": "confirmation_filter",
+      "based_on_indicator": "VWAP",
+      "description": "Vwap used as confirmation filter",
+      "used_by_strategies": [
+        "STG038",
+        "STG049"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "vwap",
+        "intraday",
+        "volume"
+      ]
+    },
+    {
+      "component_id": "VWAP_exit_signal",
+      "component_type": "exit_signal",
+      "based_on_indicator": "VWAP",
+      "description": "Vwap used as exit signal",
+      "used_by_strategies": [
+        "STG038",
+        "STG049"
+      ],
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "vwap",
+        "intraday",
+        "volume"
+      ]
+    },
+    {
+      "component_id": "ATR_stop_loss_module",
+      "component_type": "stop_loss_module",
+      "based_on_indicator": "ATR",
+      "description": "ATR-multiple stop placement",
+      "used_by_strategies": [
+        "STG027",
+        "STG057"
+      ],
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "atr",
+        "stop"
+      ]
+    },
+    {
+      "component_id": "fixed_R_take_profit_module",
+      "component_type": "take_profit_module",
+      "based_on_indicator": "review_needed",
+      "description": "Fixed R-multiple target (e.g. 2R)",
+      "used_by_strategies": "review_needed",
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "tags": [
+        "fixed_r",
+        "target"
+      ]
+    }
+  ]
+}

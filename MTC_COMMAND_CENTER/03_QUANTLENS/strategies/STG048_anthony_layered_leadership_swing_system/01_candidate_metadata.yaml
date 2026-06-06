@@ -1,0 +1,67 @@
+candidate_id: QL_ANTHONY_LAYERED_LEADERSHIP_SWING_SYSTEM_V1
+source_url: https://youtu.be/_QewlGLBaeA
+video_title: "Trading Millions: How I Finally Became a Profitable Swing Trader (Anthony)"
+quantlens_decision: CANDIDATE
+codex_status: READY_FOR_DETERMINISTIC_REVIEW
+market_type: US_EQUITIES
+primary_timeframe: 1d
+recommended_timeframes:
+  - 1d
+  - 1h
+strategy_type: layered relative-strength / theme leadership swing breakout system
+strategy_category: swing_trading
+method:
+  - trend_following
+  - breakout
+  - pullback_continuation
+  - momentum
+expected_market_regime:
+  - trending
+  - bull_market
+  - breakout
+long_only_or_long_short: long_only
+commercial_value_score: 8
+complexity_score: 9
+repaint_risk: LOW
+lookahead_risk: MEDIUM
+overfit_risk: MEDIUM
+closed_source_risk: LOW
+risk_management_quality: STRONG
+discretion_level: HIGH
+candidate_kind:
+  producer: true
+  entry_gate: true
+  guard: true
+  confirmation: true
+  exit_rule: true
+  sl_tp_method: true
+  trailing_be_method: true
+  money_management: true
+indicators_used:
+  - RELATIVE_STRENGTH
+  - MOVING_AVERAGE
+  - EMA
+  - VOLUME
+  - GAP
+  - CHART_PATTERN
+existing_mtc_overlap: "Overlaps RS filters, MA trend filters, breakout/base detection, gap/EP detection. New: layered theme-leadership selection + cycle-aware progressive exposure (money management)."
+new_feature_required: Theme/sector leadership ranking; episodic-pivot (EP) detector; cycle-stage exposure controller.
+sub_setups:
+  - BACKWATCH_BREAKOUT_HEALTH_ENGINE (Stg088) - daily scan/backwatch routine, market health
+  - BREAKOUT_PULLBACK_RS (Stg089) - breakout then pullback re-entry on RS leaders
+  - CYCLE_AWARE_EXPOSURE_CONTROL (Stg090) - progressive exposure money management
+  - EP_EARNINGS_THEME_BREAKOUT (Stg091) - episodic pivot earnings/news/theme breakout
+  - OUTLIER_LEADER_BREAKOUT (Stg092) - biggest-mover leader breakout
+  - THEME_LEADERSHIP_ENGINE (Stg093) - sector/theme leadership selection
+  - UNDERCUT_RECLAIM_LEADER (Stg094) - undercut & reclaim shakeout entry
+known_strengths: Asymmetric R:R from leaders in strong themes; layered margin-of-safety; disciplined risk-first (stop at low-of-day, trail); cycle-aware exposure.
+known_weaknesses: Highly discretionary (theme/cycle reading); needs market-environment context; multiple moving parts hard to fully systematize.
+recommended_next_step: Systematize ONE sub-setup first (EP_EARNINGS_THEME_BREAKOUT or BREAKOUT_PULLBACK_RS) with explicit RS + MA + base rules before prototyping.
+created_at: 2026-06-04
+updated_at: 2026-06-04
+
+# --- A1 Extracted (auto) ---
+trailing_logic: N_A
+filters_used: "3. Market environment / timing -- cycle stage gates exposure (press earlycycle,"
+known_strengths: Deterministic Spec -- Anthony Layered Leadership Swing System
+known_weaknesses: "Heavy discretion in theme/cycle reading; market-environment gating is subjective. - Lookahead risk in 'leader/theme' selection (must rank on closed data only)"

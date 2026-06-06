@@ -34,7 +34,7 @@ API_ROOT = THIS.parent.parent / "08_DASHBOARD_APP" / "apps" / "api"
 sys.path.insert(0, str(API_ROOT))
 
 from mcc_readonly.audit_reader import build_candidate_audit  # noqa: E402
-from mcc_readonly.paths import default_mcc_root  # noqa: E402
+from mcc_readonly.paths import default_mcc_root, default_quantlens_root  # noqa: E402
 
 CSV_HEADERS = [
     "candidate_id",
@@ -118,14 +118,14 @@ def embedded_transcript_body(path: Path, text: str) -> str:
     if not url_match:
         return ""
     body_start = url_match.end()
-    next_heading = re.search(r"^##\s+", text[body_start:], re.MULTILINE)
+    next_heading = re.search(r"^##\s+(?:Notes|Alternative Source)", text[body_start:], re.MULTILINE | re.IGNORECASE)
     body_end = body_start + next_heading.start() if next_heading else len(text)
     return text[body_start:body_end].strip()
 
 
 def parse_stg_md(path: Path) -> dict:
     text = path.read_text(encoding="utf-8")
-    header_match = re.search(r"^#\s+(\S+)\s+—\s+(.+?)\s*$", text, re.MULTILINE)
+    header_match = re.search(r"^#\s+(\S+)\s+(?:—|â€”|-)\s+(.+?)\s*$", text, re.MULTILINE)
     stg_code = header_match.group(1) if header_match else path.stem
     candidate_id = header_match.group(2).strip() if header_match else ""
     name_match = re.search(r"^Video name:\s*(.*?)\s*$", text, re.MULTILINE)
@@ -199,8 +199,7 @@ def main() -> int:
     args = parser.parse_args()
 
     mcc_root = Path(default_mcc_root()).resolve()
-    tpl_root = mcc_root.parent / "01_MASTER TEMPLATE_V2"
-    qlab_root = tpl_root / "06_QUANTLENS_LAB"
+    qlab_root = default_quantlens_root(mcc_root)
     transcripts_dir = qlab_root / "00_INBOX_REPORTS" / "Transcrips"
     backfill_dir = qlab_root / "12_LLM_WIKI" / "manual_backfill" / args.date
     backfill_csv = backfill_dir / "quantlens_source_map.csv"
@@ -247,9 +246,8 @@ def main() -> int:
             rel_target = target.relative_to(qlab_root)
             rel_transcript = str(rel_target).replace("/", "\\")
             link_key = (cid, rel_transcript)
-            if stg_state.get("transcript_main_sha") != content_sha:
-                if not target.exists():
-                    new_transcripts.append((target, parsed["transcript_main"], cid))
+            if not target.exists() or stg_state.get("transcript_main_sha") != content_sha:
+                new_transcripts.append((target, parsed["transcript_main"], cid))
                 stg_state["transcript_main_sha"] = content_sha
             # Annotate the CSV row's transcript_path if we queued or need a row for this candidate.
             for r in new_csv_rows:

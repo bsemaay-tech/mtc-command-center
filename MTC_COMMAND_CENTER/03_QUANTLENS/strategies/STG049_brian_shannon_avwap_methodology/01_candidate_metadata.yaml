@@ -1,0 +1,64 @@
+candidate_id: QL_BRIAN_SHANNON_AVWAP_METHODOLOGY_V1
+source_url: https://youtu.be/UmLa9FAlMgw
+video_title: "The AVWAP Trading Indicator | Secrets and Setups | Brian Shannon, CMT"
+quantlens_decision: CANDIDATE
+codex_status: READY_FOR_DETERMINISTIC_REVIEW
+market_type: US_EQUITIES
+primary_timeframe: 1d
+recommended_timeframes:
+  - 1d
+  - 30m
+  - 1h
+strategy_type: anchored VWAP confluence trend/continuation methodology
+strategy_category: swing_trading
+method:
+  - trend_following
+  - pullback_continuation
+  - breakout
+expected_market_regime:
+  - trending
+  - breakout
+long_only_or_long_short: long_only
+commercial_value_score: 8
+complexity_score: 7
+repaint_risk: LOW
+lookahead_risk: LOW
+overfit_risk: MEDIUM
+closed_source_risk: LOW
+risk_management_quality: STRONG
+discretion_level: MEDIUM
+candidate_kind:
+  producer: true
+  entry_gate: true
+  guard: true
+  confirmation: true
+  exit_rule: true
+  sl_tp_method: true
+  trailing_be_method: true
+  money_management: false
+indicators_used:
+  - AVWAP
+  - VWAP
+  - SMA
+  - EMA
+  - FIBONACCI
+existing_mtc_overlap: "Overlaps existing avwap_brian set (STG004-007) and VWAP/AVWAP components. New: explicit AVWAP handoff, AVWAP pinch breakout, failed-AVWAP trap, 5DMA trend gate."
+new_feature_required: Multi-anchor AVWAP (earnings/gap/YTD/swing) + AVWAP-pinch (convergence) detector.
+sub_setups:
+  - 5DMA_AVWAP_MOMENTUM_ENTRY (Stg096) - 5DMA rising + reclaim above AVWAP
+  - AVWAP_GAP_PULLBACK_STRENGTH (Stg097) - gap up, wait pullback, buy reclaim of daily VWAP
+  - AVWAP_HANDOFF_TREND_CONTINUATION (Stg098) - support rotates from one AVWAP anchor to a newer one
+  - AVWAP_PINCH_BREAKOUT (Stg099) - two AVWAPs converge then price breaks out
+  - BREAKAWAY_GAP_AVWAP_CONTINUATION (Stg100) - breakaway gap holds above its anchored VWAP
+  - FAILED_AVWAP_TRAP (Stg101) - failed reclaim of AVWAP -> avoid/short (trap)
+known_strengths: AVWAP is volume+time+price (superior reference); objective control read (above=buyers); strong confluence stacking; clear invalidation (stop below low of day / loss of AVWAP).
+known_weaknesses: Anchor selection is discretionary; many anchors possible; intraday AVWAP can repaint within the forming bar if misused.
+recommended_next_step: Systematize ONE setup first (AVWAP_GAP_PULLBACK_STRENGTH or 5DMA_AVWAP_MOMENTUM_ENTRY) with a fixed anchor rule (e.g. last earnings) before prototyping.
+created_at: 2026-06-04
+updated_at: 2026-06-04
+
+# --- A1 Extracted (auto) ---
+trailing_logic: N_A
+filters_used: "regime filter, lowofday stop., 5DMA = primary intermediate trend gate: do NOT buy if the 5day MA is declining., detector, AVWAPreclaim entry, failedreclaim guard, 5DMA trend gate, MAstack"
+known_strengths: Deterministic Spec -- Brian Shannon AVWAP Methodology
+known_weaknesses: "Anchor selection is discretionary → fix an objective anchor rule per backtest (e.g. 'AVWAP from the most recent earnings')"

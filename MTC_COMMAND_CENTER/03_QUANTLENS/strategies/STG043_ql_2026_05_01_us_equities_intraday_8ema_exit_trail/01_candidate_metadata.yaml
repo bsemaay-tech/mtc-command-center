@@ -27,3 +27,9 @@ new_feature_required: UNKNOWN_UNTIL_MAPPING
 recommended_next_step: Define mechanical 8 EMA break rule and consolidate as exit layer for the EllyDTrades 8 EMA family.
 created_at: 2026-05-01
 updated_at: 2026-05-01
+
+# --- A1 Extracted (auto) ---
+trailing_logic: Dynamic trailing exit when price closes crossing below the 8 EMA line.
+filters_used: "ATR, EMA"
+known_strengths: "Entry: Close > 8 EMA and 8 EMA slope > 0. Distance to 8 EMA <= 0.35 * ATR(14)."
+known_weaknesses: N_A

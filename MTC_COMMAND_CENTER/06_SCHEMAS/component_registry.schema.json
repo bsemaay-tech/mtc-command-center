@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/component_registry.schema.json",
+  "title": "MCC Component Registry",
+  "type": "object",
+  "required": ["schema_version", "components"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "generated_at": { "type": ["string", "null"] },
+    "generator": { "type": "string" },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["component_id", "component_type"],
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

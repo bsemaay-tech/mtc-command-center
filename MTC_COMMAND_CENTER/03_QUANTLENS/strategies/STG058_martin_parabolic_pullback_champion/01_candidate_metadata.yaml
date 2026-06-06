@@ -1,0 +1,60 @@
+candidate_id: QL_MARTIN_PARABOLIC_PULLBACK_CHAMPION_V1
+source_url: https://youtu.be/VKNEJA5r8zw
+video_title: "+969% Return in 1 Year: The Pullback Strategy of a Trading Champion (Martin)"
+quantlens_decision: CANDIDATE
+codex_status: READY_FOR_DETERMINISTIC_REVIEW
+market_type: US_EQUITIES
+primary_timeframe: 1h
+recommended_timeframes:
+  - 1h
+  - 15m
+  - 1d
+strategy_type: parabolic reversal + pullback (long & short) swing/trend
+strategy_category: swing_trading
+method:
+  - pullback_continuation
+  - reversal
+  - trend_following
+expected_market_regime:
+  - trending
+  - high_volatility
+  - reversal
+long_only_or_long_short: long_short
+commercial_value_score: 8
+complexity_score: 7
+repaint_risk: LOW
+lookahead_risk: MEDIUM
+overfit_risk: MEDIUM
+discretion_level: MEDIUM
+closed_source_risk: LOW
+risk_management_quality: STRONG
+candidate_kind:
+  producer: true
+  entry_gate: true
+  guard: true
+  confirmation: true
+  exit_rule: true
+  sl_tp_method: true
+  trailing_be_method: true
+  money_management: false
+indicators_used:
+  - EMA
+  - CHART_PATTERN
+  - SUPPORT_RESISTANCE
+existing_mtc_overlap: "Different trader from STG024 (martin_luke_pullback_avwap); same Kamagi pullback school. Distinct: parabolic-extension reversal (% from 1h EMA), short-side pullbacks."
+new_feature_required: Parabolic-extension detector (% distance from 1h EMA); long+short pullback engine.
+sub_setups:
+  - PARABOLIC_LONG (Stg133) - reversal long after parabolic extension (e.g. ~20% below 1h EMA -> snapback)
+  - PULLBACK_CONFLUENCE_LONG (Stg134) - pullback to confluence support in uptrend -> long
+  - PULLBACK_SHORT (Stg135) - pullback (counter-rally) into resistance in downtrend -> short
+known_strengths: Both sides (long & short pullbacks); objective extension metric (% from 1h EMA); trail winners, sell into strength when extended.
+known_weaknesses: Parabolic reversals are knife-catching (timing risk); high return year may be regime-specific; breakouts shook him out (why he moved to pullbacks).
+recommended_next_step: Define PARABOLIC_LONG objectively (% below 1h EMA + reversal bar) and PULLBACK_CONFLUENCE_LONG (EMA/level confluence) before prototyping.
+created_at: 2026-06-04
+updated_at: 2026-06-04
+
+# --- A1 Extracted (auto) ---
+trailing_logic: trail the whole position up; sell into strength when extended on the lower timeframe
+filters_used: N_A
+known_strengths: "Swing / trend-follower who moved from breakouts (got shaken out) to pullbacks, trades both long and short, learned pullbacks from the short side first."
+known_weaknesses: "Parabolic reversals are counter-trend (timing/knife-catch risk). - A single +969% year is likely regime-specific -- test across regimes; expect lower."

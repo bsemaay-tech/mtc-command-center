@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/variant_log_registry.schema.json",
+  "title": "MCC Variant Log Registry",
+  "type": "object",
+  "required": ["schema_version", "variants"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "generated_at": { "type": ["string", "null"] },
+    "variants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["variant_id", "research_run_id"],
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

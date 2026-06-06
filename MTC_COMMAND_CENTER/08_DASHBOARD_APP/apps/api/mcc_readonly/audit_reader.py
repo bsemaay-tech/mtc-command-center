@@ -9,7 +9,7 @@ from typing import Any
 from .backtest_reader import build_backtest_status
 from .liveops_reader import build_liveops_status
 from .parity_reader import build_parity_status
-from .paths import canonicalize, default_mcc_root
+from .paths import canonicalize, default_mcc_root, default_quantlens_root
 from .pine_builder_reader import build_pine_builder_status
 from .presentation_reader import action_hint, build_scorecard, load_stg_code_map, resolve_stg_code
 from .pipeline_reader import build_candidate_pipeline
@@ -27,7 +27,7 @@ _SOURCE_MAP_PATTERNS = (
     "12_LLM_WIKI/**/quantlens_source_map.csv",
 )
 
-_QUALITY_ORDER = {"REJECTED": 0, "LOW": 1, "MEDIUM": 2, "HIGH": 3}
+_QUALITY_ORDER = {"REJECTED": 0, "LOW": 1, "MEDIUM": 2, "PARENT": 2, "HIGH": 3}
 _STAGE_ORDER = {"discovered": 0, "backtested": 1, "promoted": 2, "pre_parity": 3, "paper_trade": 4, "integrated": 5}
 
 
@@ -84,7 +84,7 @@ def _load_source_index(root: Path) -> dict[str, Any]:
     by_candidate_id: dict[str, dict[str, Any]] = {}
     by_group_key: dict[str, dict[str, Any]] = {}
     source_record_count = 0
-    quantlens_root = root.parent / "01_MASTER TEMPLATE_V2" / "06_QUANTLENS_LAB"
+    quantlens_root = default_quantlens_root(root)
     scan_roots: list[Path] = []
     for candidate in (quantlens_root, root):
         if candidate.exists() and candidate not in scan_roots:
@@ -148,7 +148,9 @@ def _merged_source_record(previous: dict[str, Any] | None, record: dict[str, Any
     if not primary.get("rules_text") and secondary.get("rules_text"):
         primary["rules_text"] = secondary["rules_text"]
     if primary.get("source_quality") == "MANUAL_BACKFILL" and secondary.get("source_quality"):
-        primary["source_quality"] = secondary["source_quality"]
+        secondary_quality = str(secondary.get("source_quality") or "").upper()
+        if secondary_quality != "REJECTED":
+            primary["source_quality"] = secondary["source_quality"]
     for key in ("summary", "recommended_next_action", "verdict", "source_role"):
         if not primary.get(key) and secondary.get(key):
             primary[key] = secondary[key]
@@ -258,6 +260,7 @@ def _audit_row_base(row: dict[str, Any], source_index: dict[str, Any], stg_map: 
 
 
 def _finalize_audit_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    source_parent_ids = _source_parent_ids(rows)
     groups: dict[str, list[dict[str, Any]]] = {}
     for row in rows:
         group_key = row.get("duplicate_group_key") or row.get("id") or ""
@@ -280,6 +283,19 @@ def _finalize_audit_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         for row in group:
             duplicate_of = None if row.get("id") == canonical_id else canonical_id
             blocked_reason = row.get("blocked_reason") or ""
+            is_source_parent = row.get("id") in source_parent_ids
+            if is_source_parent:
+                blocked_reason = ""
+                duplicate_of = None
+                row["blocked_reason"] = ""
+                row["source_role"] = "SOURCE_PARENT"
+                row["source_quality"] = "PARENT"
+                row["source_quality_reason"] = "source parent with extracted child candidates"
+                row["source_quality_explanation"] = (
+                    "This is a source-parent row. Child candidates from the same video carry the "
+                    "testable strategy workflow; the parent is hidden from normal strategy queues."
+                )
+                row["source_parent_explanation"] = row["source_quality_explanation"]
             eligible_for_backtest = _eligible_for_backtest(
                 row=row,
                 blocked_reason=blocked_reason,
@@ -292,7 +308,9 @@ def _finalize_audit_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             row["canonical_id"] = canonical_id
             row["duplicate_group_size"] = len(group)
             row["audit_status"] = (
-                "SPLIT_REQUIRED"
+                "SOURCE_PARENT"
+                if is_source_parent
+                else "SPLIT_REQUIRED"
                 if blocked_reason == "needs indicator split"
                 else (
                     "SOURCE_AUDIT"
@@ -300,15 +318,22 @@ def _finalize_audit_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     else ("BLOCKED" if blocked_reason else ("DUPLICATE" if duplicate_of else "CANONICAL"))
                 )
             )
-            row["eligible_for_backtest"] = eligible_for_backtest
+            row["is_source_parent"] = is_source_parent
+            row["visible_in_strategy_tables"] = not is_source_parent
+            row["eligible_for_backtest"] = False if is_source_parent else eligible_for_backtest
             row["eligibility_explanation"] = _eligibility_explanation(
                 blocked_reason,
                 duplicate_of,
                 bool(row.get("has_source_url_transcript")),
                 bool(row.get("has_deterministic_rules")),
                 str(row.get("current_stage_key") or ""),
-                eligible_for_backtest,
+                False if is_source_parent else eligible_for_backtest,
             )
+            if is_source_parent:
+                row["eligibility_explanation"] = (
+                    "Not eligible because this is the source-parent record. Use the extracted child "
+                    "candidate rows from the same video for review and backtesting."
+                )
             row["duplicate_mapping_explanation"] = _duplicate_mapping_explanation(
                 row,
                 canonical_id,
@@ -319,16 +344,21 @@ def _finalize_audit_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 row=row,
                 blocked_reason=blocked_reason,
                 duplicate_of=duplicate_of,
-                eligible_for_backtest=eligible_for_backtest,
+                eligible_for_backtest=False if is_source_parent else eligible_for_backtest,
                 current_stage_key=str(row.get("current_stage_key") or ""),
             )
             row["recommended_next_pipeline_step_explanation"] = _recommended_next_pipeline_step_explanation(
                 row=row,
                 blocked_reason=blocked_reason,
                 duplicate_of=duplicate_of,
-                eligible_for_backtest=eligible_for_backtest,
+                eligible_for_backtest=False if is_source_parent else eligible_for_backtest,
                 current_stage_key=str(row.get("current_stage_key") or ""),
             )
+            if is_source_parent:
+                row["recommended_next_pipeline_step"] = "Hidden source parent"
+                row["recommended_next_pipeline_step_explanation"] = (
+                    "Keep this row only as source lineage. Work from the extracted child candidates."
+                )
             finalized.append(row)
     return finalized
 
@@ -346,6 +376,8 @@ def _audit_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "blocked_rows": sum(1 for row in rows if row.get("audit_status") == "BLOCKED"),
         "split_required_rows": sum(1 for row in rows if row.get("audit_status") == "SPLIT_REQUIRED"),
         "source_audit_rows": sum(1 for row in rows if row.get("audit_status") == "SOURCE_AUDIT"),
+        "source_parent_rows": sum(1 for row in rows if row.get("audit_status") == "SOURCE_PARENT"),
+        "visible_strategy_rows": sum(1 for row in rows if row.get("visible_in_strategy_tables", True)),
         "eligible_for_backtest_rows": sum(1 for row in rows if row.get("eligible_for_backtest")),
         "deterministic_rule_rows": sum(1 for row in rows if row.get("has_deterministic_rules")),
         "source_material_rows": sum(1 for row in rows if row.get("has_source_url_transcript")),
@@ -354,6 +386,30 @@ def _audit_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "next_step_counts": step_counts,
         "blocked_reason_counts": blocked_reason_counts,
     }
+
+
+def _source_parent_ids(rows: list[dict[str, Any]]) -> set[str]:
+    by_video: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        video_key = _source_video_key(row.get("source_url"))
+        if video_key:
+            by_video.setdefault(video_key, []).append(row)
+
+    parent_ids: set[str] = set()
+    for item in rows:
+        item_id = str(item.get("id") or "")
+        if item_id.startswith("QLR_") and int(item.get("split_candidate_count") or 0) >= 2:
+            parent_ids.add(item_id)
+
+    for group in by_video.values():
+        has_child_candidate = any(not str(item.get("id") or "").startswith("QLR_") for item in group)
+        if not has_child_candidate:
+            continue
+        for item in group:
+            item_id = str(item.get("id") or "")
+            if item_id.startswith("QLR_"):
+                parent_ids.add(item_id)
+    return parent_ids
 
 
 def _load_source_record_map(root: Path) -> dict[str, dict[str, Any]]:
@@ -785,9 +841,6 @@ def _source_material_text(source_record: dict[str, Any], source_index: dict[str,
         value = source_index.get(key)
         if value:
             roots.append(Path(str(value)))
-    if source_index.get("source_root"):
-        roots.append(Path(str(source_index["source_root"])).parent / "01_MASTER TEMPLATE_V2" / "06_QUANTLENS_LAB")
-
     rels = [
         _string_value(source_record.get("source_file")),
         _string_value(source_record.get("transcript_path")),
@@ -814,28 +867,6 @@ def _source_material_text(source_record: dict[str, Any], source_index: dict[str,
                 except Exception:
                     continue
     return "\n".join(texts)
-
-
-def _lookup_source_record(row: dict[str, Any], source_index: dict[str, Any]) -> dict[str, Any]:
-    by_candidate_id = source_index.get("by_candidate_id", {})
-    by_group_key = source_index.get("by_group_key", {})
-    ids = [
-        str(row.get("id") or "").strip(),
-        str(row.get("origin_candidate") or "").strip(),
-    ]
-    for cid in ids:
-        if cid and cid in by_candidate_id:
-            return by_candidate_id[cid]
-
-    group_key = _group_key(
-        row.get("source_url"),
-        row.get("name") or row.get("title") or row.get("id"),
-        row.get("timeframe"),
-        row.get("description"),
-    )
-    if group_key and group_key in by_group_key:
-        return by_group_key[group_key]
-    return {}
 
 
 def _compact_source_record(source_record: dict[str, Any]) -> dict[str, Any] | None:
@@ -1007,8 +1038,6 @@ def _transcript_source_url(transcript_path: str, source_index: dict[str, Any]) -
         value = source_index.get(key)
         if value:
             roots.append(Path(str(value)))
-    if source_index.get("source_root"):
-        roots.append(Path(str(source_index["source_root"])).parent / "01_MASTER TEMPLATE_V2" / "06_QUANTLENS_LAB")
     seen: set[str] = set()
     for root in roots:
         path = root / transcript_path
@@ -1036,11 +1065,12 @@ def _source_url_from_source_file(source_file: str, root: Path) -> str:
     if not source_file:
         return ""
     rel = Path(source_file)
+    quantlens_root = default_quantlens_root(root)
     search_roots = [
         root,
-        root.parent / "01_MASTER TEMPLATE_V2" / "06_QUANTLENS_LAB",
-        root.parent / "01_MASTER TEMPLATE_V2" / "06_QUANTLENS_LAB" / "00_INBOX_REPORTS",
-        root.parent / "01_MASTER TEMPLATE_V2" / "06_QUANTLENS_LAB" / "research",
+        quantlens_root,
+        quantlens_root / "00_INBOX_REPORTS",
+        quantlens_root / "research",
     ]
     candidates: list[Path] = []
     for base in search_roots:
@@ -1168,6 +1198,14 @@ def _normalize_url(value: Any) -> str:
     if "youtube.com/watch" in text or "youtu.be/" in text:
         return text
     return ""
+
+
+def _source_video_key(value: Any) -> str:
+    url = _normalize_url(value) or _string_value(value)
+    match = re.search(r"(?:[?&]v=|youtu\.be/)([A-Za-z0-9_-]+)", url)
+    if match:
+        return match.group(1)
+    return url.strip().lower()
 
 
 def _string_value(value: Any) -> str:

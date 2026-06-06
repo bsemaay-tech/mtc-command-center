@@ -27,3 +27,9 @@ new_feature_required: UNKNOWN_UNTIL_MAPPING
 recommended_next_step: Write deterministic prototype spec for level breakout, EMA/level retest routing, flag quality, HOD target, and EMA runner exit.
 created_at: 2026-05-01
 updated_at: 2026-05-01
+
+# --- A1 Extracted (auto) ---
+trailing_logic: N_A
+filters_used: "ATR, EMA"
+known_strengths: "Entry: Breakout EMA retest. Close > 8 EMA and 8 EMA slope > 0. Distance to 8 EMA <= 0.35 ATR(14). Preceding 3-bar impulse >= 1.0 ATR(14)."
+known_weaknesses: N_A

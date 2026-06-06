@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/indicator_registry.schema.json",
+  "title": "MCC Indicator Registry",
+  "type": "object",
+  "required": ["schema_version", "indicators"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "generated_at": { "type": ["string", "null"] },
+    "generator": { "type": "string" },
+    "indicators": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["indicator_id", "indicator_name"],
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

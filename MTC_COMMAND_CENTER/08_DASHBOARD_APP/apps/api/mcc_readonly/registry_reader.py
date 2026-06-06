@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from .paths import canonicalize, default_mcc_root, load_path_config, resolve_configured_path
+from .paths import canonicalize, default_mcc_root, default_quantlens_root, load_path_config, resolve_configured_path
 
 
 _YOUTUBE_URL_RE = re.compile(
@@ -18,14 +18,15 @@ _YOUTUBE_URL_RE = re.compile(
 
 def build_strategy_registry(mcc_root: str | Path | None = None) -> dict[str, Any]:
     root = canonicalize(mcc_root or default_mcc_root())
-    path_config = load_path_config(root)
-    mtc_v2_root = resolve_configured_path(path_config.config, "mtc_v2_root")
-    if mtc_v2_root is None:
-        return _empty_registry("mtc_v2_root_not_configured")
-
-    quantlens_root = mtc_v2_root / "06_QUANTLENS_LAB"
+    quantlens_root = default_quantlens_root(root)
     if not quantlens_root.exists():
-        return _empty_registry(str(quantlens_root))
+        path_config = load_path_config(root)
+        mtc_v2_root = resolve_configured_path(path_config.config, "mtc_v2_root")
+        if mtc_v2_root is None:
+            return _empty_registry("mtc_v2_root_not_configured")
+        quantlens_root = mtc_v2_root / "06_QUANTLENS_LAB"
+        if not quantlens_root.exists():
+            return _empty_registry(str(quantlens_root))
 
     candidates = _read_candidates(quantlens_root)
     strategies = _read_promoted_strategies(quantlens_root)

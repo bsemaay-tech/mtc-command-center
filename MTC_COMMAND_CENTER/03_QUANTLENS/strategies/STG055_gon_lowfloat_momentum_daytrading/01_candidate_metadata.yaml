@@ -1,0 +1,64 @@
+candidate_id: QL_GON_LOWFLOAT_MOMENTUM_DAYTRADING_V1
+source_url: https://youtu.be/hzwBJxkVCTKPpcX
+video_title: "Gon - low-float small-cap momentum day trading"
+quantlens_decision: CANDIDATE
+codex_status: READY_FOR_DETERMINISTIC_REVIEW
+market_type: US_SMALLCAP_EQUITIES
+primary_timeframe: 1m
+recommended_timeframes:
+  - 1m
+  - 5m
+strategy_type: low-float small-cap momentum continuation (halts, bull flags, squeezes)
+strategy_category: scalping
+method:
+  - momentum
+  - breakout
+  - pullback_continuation
+expected_market_regime:
+  - high_volatility
+  - breakout
+long_only_or_long_short: long_short
+commercial_value_score: 7
+complexity_score: 7
+repaint_risk: LOW
+lookahead_risk: MEDIUM
+overfit_risk: HIGH
+discretion_level: HIGH
+closed_source_risk: LOW
+risk_management_quality: STRONG
+candidate_kind:
+  producer: true
+  entry_gate: true
+  guard: true
+  confirmation: true
+  exit_rule: true
+  sl_tp_method: true
+  trailing_be_method: false
+  money_management: true
+indicators_used:
+  - EMA
+  - VOLUME
+  - GAP
+  - CHART_PATTERN
+existing_mtc_overlap: "Small-cap momentum niche; relates to STG047 (small-cap gap, short side) and STG031 (gap-and-go). New: halt continuation, low-float next-day continuation, high-tight-flag, squeeze reversal."
+new_feature_required: Halt detector; low-float/float filter; pre-market momentum scanner.
+universe_filter: price 0.50-100 USD, volume >= ~1M, top momentum / pre-market movers, low float
+chart_setup: 9 EMA + 21 EMA + price + volume only (100% technical)
+sub_setups:
+  - HALT_MOMENTUM_CONTINUATION (Stg115) - resume after halt-up, continue trend
+  - NEXT_DAY_LOW_FLOAT_CONTINUATION (Stg116) - day-after continuation on low float
+  - OG_BULL_FLAG_HIGH_TIGHT (Stg117) - high-tight bull flag breakout
+  - SHORT_SQUEEZE_REVERSAL_BALL_UNDER_WATER (Stg118) - squeeze reversal off lows
+  - STRONG_DEMAND_LOW_VOLUME_EMA_TOUCH (Stg119) - pullback to 9/21 EMA on dry volume then reclaim
+  - STRONG_DEMAND_SLOW_FADER_RECLAIM (Stg120) - slow fade then reclaim of demand level
+known_strengths: Tight risk (buy point = stop, out immediately if wrong); pure price+volume; repeatable momentum patterns; defined universe/volume filter.
+known_weaknesses: Low-float scalping = extreme slippage/halt/borrow risk; very discretionary; hard to backtest faithfully; overfit-prone.
+recommended_next_step: "Pick STRONG_DEMAND_LOW_VOLUME_EMA_TOUCH (objective: pullback to 9/21EMA + volume dry-up + reclaim) as the most mechanizable; model slippage heavily."
+created_at: 2026-06-04
+updated_at: 2026-06-04
+
+# --- A1 Extracted (auto) ---
+trailing_logic: N_A
+filters_used: N_A
+known_strengths: Deterministic Spec -- Gon Low-Float Momentum Day Trading
+known_weaknesses: "Low-float scalping has severe slippage, halts, and borrow constraints -- a naive backtest will be wildly optimistic. Model frictions aggressively; treat as research-only."

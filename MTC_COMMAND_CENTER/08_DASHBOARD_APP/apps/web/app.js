@@ -1,7 +1,8 @@
-﻿const state = {
+const state = {
   snapshot: null,
   health: null,
-  selectedReportPath: null
+  selectedReportPath: null,
+  selectedBacktestRunId: null
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -65,6 +66,8 @@ function bindFilters() {
     const el = $(sel);
     if (el) el.addEventListener(sel.endsWith("Search") ? "input" : "change", renderResearchLab);
   });
+  const gateFilter = $("#pipelineGateFilter");
+  if (gateFilter) gateFilter.addEventListener("change", renderPipeline);
   $("#reportList").addEventListener("click", (event) => {
     const button = event.target.closest("[data-report-path]");
     if (button) {
@@ -150,6 +153,7 @@ async function loadReport(path) {
 
 function render() {
   renderHeader();
+  renderAcceptancePanel();
   renderPipeline();
   renderAudit();
   renderMtcV2Readiness();
@@ -431,6 +435,8 @@ function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
   const journey = renderReviewJourney(row, auditRow, stages);
   const tradingRules = renderTradingRules(row, auditRow, producerSpecRaw, description, sourceRecord);
   const backtestEvidence = renderBacktestEvidence(row, auditRow, metrics);
+  const promotabilityPanel = renderPromotabilityPanel(scorecardV2);
+  const gate2Evidence = renderGate2EvidenceBlock(scorecardV2);
   const salvage = renderSalvageableIdeas(row, auditRow, quantlens);
   const sourceMaterial = renderSourceMaterial(auditRow, row, sourceRecord, sourceUrl, sourceUrlSource);
   const technicalDetails = renderTechnicalDetails({
@@ -466,6 +472,8 @@ function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
       </section>
       ${renderVerdictDecision(decision)}
       ${scoreDetail}
+      ${promotabilityPanel}
+      ${gate2Evidence}
       ${quantlensVerdict}
       ${taxonomy}
       ${journey}
@@ -1505,15 +1513,60 @@ function renderResearchLab() {
       <td>${researchValue(c.recommended_next_step)}</td>
     </tr>`).join("") : `<tr><td colspan="8" class="empty-cell">No triage candidates match</td></tr>`;
 
-  // Missing Metadata
-  $("#researchMissingCount").textContent = `${missing.length}`;
-  $("#researchMissingRows").innerHTML = missing.length ? missing.map((m) => `
-    <tr>
-      <td>${researchValue(m.type)}</td>
-      <td><code>${escapeHtml(m.id || "")}</code></td>
-      <td>${researchValue(m.name)}</td>
-      <td>${researchValue(m.missing_fields)}</td>
-    </tr>`).join("") : `<tr><td colspan="4" class="empty-cell">No missing metadata 🎉</td></tr>`;
+  // Missing Metadata — A4 enhanced coverage analysis
+  const metaFields = ['trailing_logic', 'filters_used', 'known_strengths', 'known_weaknesses'];
+  const REVIEW_SENTINEL = 'review_needed';
+  const metaTotal = strategies.length;
+  const metaCoverage = {};
+  metaFields.forEach(function(f) {
+    metaCoverage[f] = strategies.filter(function(e) { return e[f] && e[f] !== REVIEW_SENTINEL; }).length;
+  });
+  const metaMissing = strategies.filter(function(e) {
+    return metaFields.some(function(f) { return !e[f] || e[f] === REVIEW_SENTINEL; });
+  });
+  const metaFullyFilled = metaTotal - metaMissing.length;
+
+  $("#researchMissingCount").textContent = metaMissing.length
+    ? metaMissing.length + " strategies need review"
+    : "All filled";
+
+  const metaPct = metaTotal ? Math.round((metaFullyFilled / metaTotal) * 100) : 0;
+  const coverageSummaryEl = $("#metadataCoverageSummary");
+  if (coverageSummaryEl) {
+    coverageSummaryEl.innerHTML =
+      '<div class="metadata-headline"><strong>Metadata Coverage: ' +
+      metaFullyFilled + '/' + metaTotal + ' strategies fully filled (' + metaPct + '%)</strong></div>';
+  }
+
+  const coverageBarsEl = $("#metadataCoverageBars");
+  if (coverageBarsEl) {
+    coverageBarsEl.innerHTML = metaFields.map(function(f) {
+      const filled = metaCoverage[f];
+      const ratio = metaTotal ? Math.round((filled / metaTotal) * 100) : 0;
+      return '<div class="metadata-bar-row">' +
+        '<code>' + escapeHtml(f) + '</code>' +
+        '<div class="metadata-bar-track"><div class="metadata-bar-fill" style="width:' + ratio + '%"></div></div>' +
+        '<span>' + filled + '/' + metaTotal + '</span></div>';
+    }).join("");
+  }
+
+  const allFilledEl = $("#metadataAllFilled");
+  if (allFilledEl) { allFilledEl.hidden = metaMissing.length > 0; }
+
+  if (metaMissing.length) {
+    $("#researchMissingRows").innerHTML = metaMissing.map(function(s) {
+      const cells = metaFields.map(function(f) {
+        const val = s[f];
+        const isFilled = val && val !== REVIEW_SENTINEL;
+        return '<td class="' + (isFilled ? 'meta-ok' : 'meta-warn') + '">' + (isFilled ? '\u2713' : '\u26a0 missing') + '</td>';
+      }).join("");
+      return '<tr><td><code>' + escapeHtml(s.strategy_id || "") + '</code>' +
+        '<div class="muted-sub">' + escapeHtml(s.strategy_name || "") + '</div></td>' +
+        cells + '</tr>';
+    }).join("");
+  } else {
+    $("#researchMissingRows").innerHTML = '<tr><td colspan="5" class="empty-cell">No missing metadata \ud83c\udf89</td></tr>';
+  }
 }
 
 function renderTasks() {
@@ -1598,12 +1651,20 @@ function renderBacktest() {
       <strong>${escapeHtml(value ?? 0)}</strong>
     </div>
   `).join("");
+  const overnightEl = $("#overnightRunnerStatus");
+  if (overnightEl) {
+    overnightEl.innerHTML = renderOvernightRunnerStatus(
+      (state.snapshot.overnight_heartbeat) || null
+    );
+  }
   if (!runs.length) {
     $("#backtestRows").innerHTML = `<tr><td colspan="5" class="empty-cell">No backtest runs yet</td></tr>`;
+    $("#backtestRunDetail").innerHTML = "";
     return;
   }
   $("#backtestRows").innerHTML = runs.map((run) => `
-    <tr>
+    <tr class="row-click ${state.selectedBacktestRunId === (run.run_id || run.id) ? "is-selected" : ""}"
+        data-run-id="${escapeHtml(run.run_id || run.id || "")}" title="Open night-run detail">
       <td><code>${escapeHtml(run.run_id || run.id || "--")}</code></td>
       <td>${badge(run.status || "--")}</td>
       <td>${escapeHtml(run.symbol || run.ticker || "--")}</td>
@@ -1611,6 +1672,21 @@ function renderBacktest() {
       <td>${run.report_path ? reportButton(run.report_path) : "--"}</td>
     </tr>
   `).join("");
+  const tbody = $("#backtestRows");
+  if (tbody && !tbody.dataset.bound) {
+    tbody.dataset.bound = "1";
+    tbody.addEventListener("click", (event) => {
+      if (event.target.closest("[data-report-path]")) return;
+      const tr = event.target.closest("tr[data-run-id]");
+      if (tr) {
+        state.selectedBacktestRunId = tr.dataset.runId;
+        renderBacktest();
+      }
+    });
+  }
+  const selected = runs.find((run) => (run.run_id || run.id) === state.selectedBacktestRunId) || null;
+  const detailEl = $("#backtestRunDetail");
+  if (detailEl) detailEl.innerHTML = selected ? renderNightRunDetail(selected) : "";
 }
 
 function renderRegistry() {
@@ -1928,6 +2004,7 @@ function filterPipelineRows(rows) {
   const search = ($("#pipelineSearch").value || "").trim().toLowerCase();
   const score = $("#pipelineScoreFilter").value;
   const action = $("#pipelineActionFilter").value;
+  const gate = ($("#pipelineGateFilter") && $("#pipelineGateFilter").value) || "";
   return rows.filter((row) => {
     const haystack = [
       row.id,
@@ -1940,7 +2017,8 @@ function filterPipelineRows(rows) {
     ].join(" ").toLowerCase();
     return (!search || haystack.includes(search))
       && (!score || scoreBand(row.score) === score)
-      && (!action || row.next_action === action);
+      && (!action || row.next_action === action)
+      && (!gate || passesGateFilter(row, gate));
   });
 }
 
@@ -2197,4 +2275,289 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+// ── S2 A7 — Gate filter helpers ──────────────────────────────────────────────
+
+function scorecardV2ForRow(row) {
+  return (row && row.scorecard_v2) || null;
+}
+
+function passesGateFilter(row, filterVal) {
+  const sc2 = scorecardV2ForRow(row);
+  if (filterVal === "gate2_pass") {
+    if (!sc2) return false;
+    const g2 = sc2.gate2 || {};
+    return String(g2.status || "").toUpperCase() === "PASS" || g2.pass === true;
+  }
+  if (filterVal === "promotable_only") {
+    if (!sc2) return false;
+    const gs = sc2.gate_summary || {};
+    return gs.promotable === 1 || gs.promotable === true;
+  }
+  if (filterVal === "gate3_incomplete") {
+    if (!sc2) return true;
+    const g3 = sc2.gate3 || {};
+    return String(g3.status || "").toUpperCase() !== "PASS" && g3.pass !== true;
+  }
+  if (filterVal === "blocked_gate3") {
+    if (!sc2) return false;
+    const blocking = (sc2.gate_summary || {}).blocking || [];
+    return blocking.some((b) => String(b).toLowerCase().includes("gate3"));
+  }
+  return true;
+}
+
+// ── S5 A8 — Global acceptance panel ─────────────────────────────────────────
+
+function renderAcceptancePanel() {
+  const el = $("#mccStatusPanel");
+  if (!el) return;
+  if (!state.snapshot) {
+    el.innerHTML = `<div class="mcc-status-panel"><div class="mcc-status-head"><span>MCC Acceptance Status</span><strong>Loading…</strong></div></div>`;
+    return;
+  }
+  const summary = buildAcceptanceSummary();
+  const countLabel = `${summary.promotable} Promotable / ${summary.total} scored`;
+  el.innerHTML = `
+<div class="mcc-status-panel">
+  <div class="mcc-status-head">
+    <span>MCC Acceptance Status</span>
+    <strong>${escapeHtml(countLabel)}</strong>
+  </div>
+  <div class="mcc-status-grid">
+    ${summary.rows.length
+      ? summary.rows.map(renderAcceptanceRow).join("")
+      : `<div class="mcc-status-row"><span>Promotable</span><strong>None yet</strong><em>No strategy has passed all gates</em></div>`
+    }
+  </div>
+</div>`;
+}
+
+function buildAcceptanceSummary() {
+  const cards = (state.snapshot.scorecards && state.snapshot.scorecards.cards) || [];
+  const promotable = cards.filter((c) => {
+    const gs = c.gate_summary || {};
+    return gs.promotable === 1 || gs.promotable === true;
+  });
+  return { total: cards.length, promotable: promotable.length, rows: promotable };
+}
+
+function renderAcceptanceRow(card) {
+  const id = card.strategy_id || card.base_strategy_id || "--";
+  const symbol = card.symbol || "";
+  const tf = card.timeframe || "";
+  const label = acceptanceDateLabel(card);
+  return `
+<div class="mcc-status-row ok">
+  <span>Promotable</span>
+  <strong>${escapeHtml(id)}</strong>
+  <em>${escapeHtml([symbol, tf, label].filter(Boolean).join(" · "))}</em>
+</div>`;
+}
+
+function acceptanceDateLabel(card) {
+  const run = String(card.run_name || card.run_id || "");
+  if (!run) return "";
+  const m = run.match(/^(\d{4}-\d{2}-\d{2})/);
+  return m ? m[1] : run.slice(0, 20);
+}
+
+// ── S2 A6 — Promotability panel ──────────────────────────────────────────────
+
+function renderPromotabilityPanel(scorecardV2) {
+  if (!scorecardV2) return "";
+  const gs = scorecardV2.gate_summary || {};
+  const promotable = gs.promotable === 1 || gs.promotable === true;
+  const blocking = Array.isArray(gs.blocking) ? gs.blocking : [];
+  return `
+<section class="terminal-section promotability-panel${promotable ? " promotable-ok" : ""}">
+  <div class="terminal-section-head">
+    <h4>Promotability</h4>
+    <span class="terminal-badge ${promotable ? "ok" : "amber"}">${promotable ? "All gates pass" : "Not promotable yet"}</span>
+  </div>
+  ${promotable
+    ? `<p>Strategy has passed all scored gate criteria and is a candidate for the forward paper-trade queue.</p>`
+    : `<p class="muted-terminal">One or more gates are incomplete or failing. Address blockers before promotion.</p>`
+  }
+  ${blocking.length ? `
+    <div class="gate-blocker-list">
+      ${blocking.map((name) => `
+        <div class="gate-blocker fail">
+          <span>${escapeHtml(statusText(name))}</span>
+          <em>Blocking</em>
+        </div>`).join("")}
+    </div>` : ""}
+</section>`;
+}
+
+// ── S2 A5 — Gate 2 evidence block ────────────────────────────────────────────
+
+function renderGate2EvidenceBlock(scorecardV2) {
+  if (!scorecardV2) return "";
+  const g2 = scorecardV2.gate2 || {};
+  if (!g2.status && g2.score == null) return "";
+  const status = g2.status || "NOT_EVALUATED";
+  const score = g2.score != null ? `${g2.score}/${g2.max || 100}` : "N/A";
+  const subScores = Array.isArray(g2.sub_scores) ? g2.sub_scores : [];
+  const findMetric = (...names) => {
+    for (const name of names) {
+      const row = subScores.find((s) => String(s.source_metric || s.criterion || "").toLowerCase().includes(name));
+      if (row && row.value != null) return String(Number(row.value).toFixed(2));
+    }
+    return null;
+  };
+  const cards = [
+    ["Score", score],
+    ["Status", statusText(status)],
+    ["Profit factor", findMetric("profit_factor", "pf")],
+    ["Trades", findMetric("trades", "num_trades")],
+    ["CPCV", findMetric("cpcv")],
+    ["Max drawdown", findMetric("max_drawdown", "drawdown")],
+    ["Net return %", findMetric("net_return", "return_pct")],
+    ["Win rate %", findMetric("win_rate")],
+  ].filter(([, v]) => v != null);
+  if (!cards.length) return "";
+  return `
+<section class="terminal-section">
+  <div class="terminal-section-head">
+    <h4>Gate 2 Evidence</h4>
+    <span class="terminal-badge ${status === "PASS" ? "ok" : status === "FAIL" ? "bad" : "neutral"}">${escapeHtml(statusText(status))}</span>
+  </div>
+  <div class="evidence-card-grid">
+    ${cards.map(([label, value]) => `
+      <div class="evidence-card">
+        <span>${escapeHtml(label)}</span>
+        <strong>${escapeHtml(String(value))}</strong>
+      </div>`).join("")}
+  </div>
+</section>`;
+}
+
+// ── S2 D4 — Night run detail panel ───────────────────────────────────────────
+
+function nightRunArtifacts(run) {
+  const arts = run.artifacts || {};
+  const labels = {
+    morning_report: "Morning Report",
+    cpcv_report: "CPCV Validation",
+    pbo_report: "PBO Report",
+    alpha_summary: "Alpha Summary",
+    aggregate_report: "Aggregate Report",
+  };
+  return Object.entries(arts)
+    .filter(([, path]) => path)
+    .map(([key, path]) => [labels[key] || labelize(key), path]);
+}
+
+function renderArtifactPath(label, path) {
+  return `
+<div class="report-item" style="margin:4px 0">
+  <span>${escapeHtml(label)}</span>
+  ${reportButton(path)}
+</div>`;
+}
+
+function nightRunCandidates(run) {
+  return [
+    ["Evaluations", run.evaluations ?? run.completed_evaluations],
+    ["Pass", run.pass_count],
+    ["Fail", run.fail_count ?? run.failed_evaluations],
+    ["Workers", run.workers ?? run.worker_count],
+    ["Runtime (s)", run.runtime_seconds],
+  ].filter(([, v]) => v != null);
+}
+
+function renderNightRunDetail(run) {
+  if (!run) return "";
+  const artifacts = nightRunArtifacts(run);
+  const candidates = nightRunCandidates(run);
+  const fmt = (ts) => ts ? String(ts).slice(0, 19).replace("T", " ") : "--";
+  return `
+<div class="night-run-detail">
+  <div class="night-run-header">
+    <div>
+      <span>Run ID</span>
+      <strong>${escapeHtml(run.run_id || run.id || "--")}</strong>
+    </div>
+    <div>
+      <span>Symbol / TF</span>
+      <strong>${escapeHtml([run.symbol || run.ticker, run.timeframe].filter(Boolean).join(" ") || "--")}</strong>
+    </div>
+    <div>
+      <span>Status</span>
+      <strong>${badge(run.status || "--")}</strong>
+    </div>
+  </div>
+  <div class="gate2-split" style="margin-top:10px">
+    <div><span>Started</span><strong>${escapeHtml(fmt(run.started_at))}</strong></div>
+    <div><span>Ended</span><strong>${escapeHtml(fmt(run.ended_at))}</strong></div>
+    <div><span>Type</span><strong>${escapeHtml(run.source_type || "--")}</strong></div>
+  </div>
+  ${candidates.length ? `
+  <div class="gate2-split" style="margin-top:8px">
+    ${candidates.slice(0, 6).map(([label, value]) =>
+      `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value ?? "--"))}</strong></div>`
+    ).join("")}
+  </div>` : ""}
+  ${artifacts.length ? `
+  <div class="artifact-table">
+    ${artifacts.map(([label, path]) => renderArtifactPath(label, path)).join("")}
+  </div>` : `<p class="muted-terminal" style="margin-top:10px">No artifact files found for this run.</p>`}
+</div>`;
+}
+
+// ── S6 D3b — Worker monitor (overnight runner) ───────────────────────────────
+
+function formatHeartbeatTimestamp(value) {
+  if (!value) return "—";
+  try {
+    const d = new Date(String(value).replace(" ", "T"));
+    if (isNaN(d.getTime())) return String(value).slice(0, 19);
+    return d.toISOString().slice(0, 19).replace("T", " ") + " UTC";
+  } catch (_) {
+    return String(value).slice(0, 19);
+  }
+}
+
+function renderWorkerMonitorRow(label, value, detail) {
+  return `
+<div class="worker-monitor-row">
+  <span>${escapeHtml(label)}</span>
+  <strong>${escapeHtml(String(value ?? "—"))}</strong>
+  ${detail ? `<em>${escapeHtml(String(detail))}</em>` : ""}
+</div>`;
+}
+
+function renderOvernightRunnerStatus(heartbeat) {
+  if (!heartbeat || !heartbeat.available) {
+    const reason = (heartbeat && heartbeat.reason) || "overnight_runs dir not found";
+    return `
+<div class="worker-monitor-card offline">
+  <div class="worker-monitor-head">
+    <div><span>Worker Monitor</span><strong>Overnight Runner Status</strong></div>
+    <b>OFFLINE</b>
+  </div>
+  <div class="worker-monitor-grid">
+    ${renderWorkerMonitorRow("Availability", "Offline", reason)}
+    ${renderWorkerMonitorRow("Heartbeat", "Unavailable", "No active overnight runner heartbeat was reported.")}
+    ${renderWorkerMonitorRow("Run ID", "—", "")}
+  </div>
+</div>`;
+  }
+  const alive = heartbeat.is_alive;
+  const cardClass = alive ? "alive" : "stale";
+  const statusLabel = alive ? "ONLINE" : "STALE";
+  const age = heartbeat.age_minutes != null ? `${Number(heartbeat.age_minutes).toFixed(1)} min ago` : "—";
+  return `
+<div class="worker-monitor-card ${cardClass}">
+  <div class="worker-monitor-head">
+    <div><span>Worker Monitor</span><strong>Overnight Runner Status</strong></div>
+    <b>${escapeHtml(statusLabel)}</b>
+  </div>
+  <div class="worker-monitor-grid">
+    ${renderWorkerMonitorRow("Availability", alive ? "Online" : "Stale", age)}
+    ${renderWorkerMonitorRow("Heartbeat", formatHeartbeatTimestamp(heartbeat.timestamp), heartbeat.source_file || "")}
+    ${renderWorkerMonitorRow("Run ID", heartbeat.run_id || "—", heartbeat.stage || heartbeat.status || "")}
+  </div>
+</div>`;
+}
 

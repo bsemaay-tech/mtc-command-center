@@ -1,0 +1,73 @@
+# Strategy Evaluation Record — SP-004 canonical template (Phase 0A)
+# One record per strategy candidate. Drives the gate scorecard (scorecard_v2).
+# Rubric: 03_QUANTLENS/_user_guide/12_STRATEGY_EVALUATION_RUBRIC.md
+# Filename: strategy_record_<strategy_id>.yaml
+#
+# `phase_current` is the N/A discriminator: it decides which gate bars render with
+# a score vs grey "needs <phase> data". A gate never shows a number before its
+# phase is reached.
+
+strategy_id:
+strategy_name:
+strategy_thesis_en:        # one-line plain-English thesis, shown as the detail-page title
+strategy_thesis_tr:        # optional Turkish mirror
+source_type:
+source_url:
+market:
+timeframe:
+direction:
+  long:
+  short:
+strategy_type:             # scalping | intraday | swing | position
+  entry_only:
+  full_strategy:
+  mtc_exit_delegated:
+
+# Which phase this record has actually reached. Gates beyond it stay N/A.
+# idea | spec_draft | spec_ready | backtest_ready | prototype_coded |
+# repaint_verified | backtest_passed | parity_verified | mtc_ready | forward_test
+phase_current: idea
+
+backtest_run_id:                 # run that produced evaluation_artifact_v1 (null until backtested)
+evaluation_artifact_version: v1
+
+gate_1_candidate_intake:
+  score:                         # 0-100, null until evaluated
+  result:                        # PASS | FAIL | N_A
+  notes:
+
+gate_1b_mtc_feasibility:
+  score:                         # 0-50, null until evaluated
+  derived_verdict:               # PASS (>=40) | CONDITIONAL (30-39) | FAIL (<30) | N_A
+  notes:
+
+repaint_verification:
+  preliminary_status:            # LOW_RISK | MEDIUM_RISK | HIGH_RISK | UNKNOWN_NEEDS_CODE | REJECT_REPAINT
+  verified_status:               # VERIFIED_SAFE | SAFE_WITH_DELAY | NEEDS_MODIFICATION | REJECT_REPAINT | NOT_VERIFIED
+  notes:
+
+parity_gate:                     # PASS | FAIL | N_A  (Pine==Python signals)
+
+gate_2_backtest_evidence:
+  score:                         # 0-100, null until evaluated
+  result:                        # PASS | FAIL | OVERFIT_SUSPECT | N_A
+  test_period:
+  trade_count:
+  benchmark_result:              # excess_alpha vs same-window B&H
+  evaluation_artifact_path:      # -> evaluation_artifact_v1.json
+  notes:
+
+gate_3_mtc_production_readiness:
+  score:                         # 0-100, null until evaluated
+  result:                        # PASS | FAIL | N_A (N/A until integration evidence exists)
+  production_readiness_artifact_path:   # -> production_readiness_artifact_v1.json
+  notes:
+
+# Hard-fail kill switches. List the triggering reasons; non-empty => gate fails.
+gate_1_hard_fail: []             # e.g. ["uncodable", "requires human interpretation"]
+gate_2_hard_fail: []             # e.g. ["negative after fees", "PBO>=0.5"]
+gate_3_hard_fail: []             # e.g. ["no signal contract", "conflicts with risk engine"]
+
+final_status:                    # see rubric status labels
+decision:
+next_action:

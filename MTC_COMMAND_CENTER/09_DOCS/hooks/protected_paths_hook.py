@@ -11,6 +11,7 @@ MCC_ROOT = Path(__file__).resolve().parents[2]
 REPO_ROOT = MCC_ROOT.parent
 POLICY = MCC_ROOT / "09_DOCS" / "PROTECTED_PATHS_POLICY.md"
 TASK_HISTORY = MCC_ROOT / "02_TASKS" / "TASK_HISTORY.json"
+HARDCODED_PATH_AUDIT = MCC_ROOT / "03_QUANTLENS" / "tools" / "audit_hardcoded_paths.py"
 
 
 def staged_paths() -> list[str]:
@@ -60,6 +61,20 @@ def commit_message() -> str:
 
 
 def main() -> int:
+    if HARDCODED_PATH_AUDIT.exists():
+        audit = subprocess.run(
+            [sys.executable, str(HARDCODED_PATH_AUDIT), "--staged"],
+            cwd=REPO_ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if audit.returncode != 0:
+            print(audit.stdout.strip())
+            if audit.stderr.strip():
+                print(audit.stderr.strip())
+            return audit.returncode
+
     protected = [p for p in staged_paths() if touches_protected(p, protected_patterns())]
     if not protected:
         return 0

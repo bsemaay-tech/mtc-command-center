@@ -141,8 +141,8 @@ class MTCRunner:
         # These knobs are exposed in config/UI but not enforced in runner logic yet.
         if c.strategy.pyramiding != 1:
             unsupported.append("strategy.pyramiding != 1")
-        # max_pyramid_positions guard removed: strategy.pyramiding=1 already
-        # enforces single-position behavior in the engine.
+        if c.trade.max_pyramid_positions != 1:
+            unsupported.append("trade.max_pyramid_positions != 1")
         if c.trade.same_bar_reentry_max_per_bar != 1:
             unsupported.append("trade.same_bar_reentry_max_per_bar != 1")
 
@@ -261,9 +261,9 @@ class MTCRunner:
             self._daily_start_balance = float(self.state.balance)
             self._daily_entry_count = 0
             if self.config.guards.consec_loss_reset_daily:
-                # Pine parity: daily consec-loss reset is applied after
-                # current-bar guard evaluation (line-order effect).
-                self._pending_consec_daily_reset = True
+                self._guard_loss_streak = 0
+                self.state.consecutive_losses = 0
+                self._pending_consec_daily_reset = False
 
     def _refresh_guard_loss_streak_from_trades(self, bar_idx: Optional[int] = None) -> bool:
         """
@@ -454,13 +454,44 @@ class MTCRunner:
         prev = pd.Timestamp(ts_series.iloc[i - 1]).isocalendar()
         return (cur.year, cur.week) != (prev.year, prev.week)
 
+    @staticmethod
+    def _is_end_of_day(i: int, ts_series: Optional[pd.Series]) -> bool:
+        """Return True when the current bar is the last available bar of its UTC day."""
+        if ts_series is None or i < 0 or i >= len(ts_series):
+            return False
+        if i == len(ts_series) - 1:
+            return True
+        cur = pd.Timestamp(ts_series.iloc[i])
+        nxt = pd.Timestamp(ts_series.iloc[i + 1])
+        return cur.date() != nxt.date()
+
+    @staticmethod
+    def _is_end_of_week(i: int, ts_series: Optional[pd.Series]) -> bool:
+        """Return True when the current bar is the last available bar of its ISO week."""
+        if ts_series is None or i < 0 or i >= len(ts_series):
+            return False
+        if i == len(ts_series) - 1:
+            return True
+        cur = pd.Timestamp(ts_series.iloc[i]).isocalendar()
+        nxt = pd.Timestamp(ts_series.iloc[i + 1]).isocalendar()
+        return (cur.year, cur.week) != (nxt.year, nxt.week)
+
     def _time_stop_would_trigger(self, bar_idx: int, mark_price: float) -> bool:
         """Evaluate whether time-stop condition is true on this bar for current position."""
-        if not self.config.time_stop.enabled or not self.state.in_position or self.state.position is None:
+        time_stop_active = (
+            self.config.time_stop.enabled
+            or self.config.time_stop.use_bars
+            or self.config.time_stop.eod
+            or self.config.time_stop.eow
+        )
+        if not time_stop_active or not self.state.in_position or self.state.position is None:
             return False
         pos = self.state.position
         bars_in_pos = bar_idx - pos.entry_bar
-        bar_limit_met = bars_in_pos >= self.config.time_stop.bars
+        bar_limit_met = (
+            (self.config.time_stop.enabled or self.config.time_stop.use_bars)
+            and bars_in_pos >= self.config.time_stop.bars
+        )
         eod_condition = self.config.time_stop.eod and self._is_day_change(bar_idx, self._ts_series_calendar)
         eow_condition = self.config.time_stop.eow and self._is_week_change(bar_idx, self._ts_series_calendar)
         cond = self.config.time_stop.condition
@@ -1302,11 +1333,19 @@ class MTCRunner:
                     exit_reason = ExitReason.FILTER_BLOCK.value
 
             # Time Stop (Pine parity): one gate for bar-limit + EOD/EOW.
+            time_stop_active = (
+                self.config.time_stop.enabled
+                or self.config.time_stop.use_bars
+                or self.config.time_stop.eod
+                or self.config.time_stop.eow
+            )
             if (self.state.in_position and can_trade_window and exit_reason is None
-                    and self.config.time_stop.enabled):
+                    and time_stop_active):
                 bars_in_pos = i - self.state.position.entry_bar
-                bar_limit_met = (self.config.time_stop.use_bars
-                                 and bars_in_pos >= self.config.time_stop.bars)
+                bar_limit_met = (
+                    (self.config.time_stop.enabled or self.config.time_stop.use_bars)
+                    and bars_in_pos >= self.config.time_stop.bars
+                )
                 eod_condition = self.config.time_stop.eod and self._is_day_change(i, _ts_series_calendar)
                 eow_condition = self.config.time_stop.eow and self._is_week_change(i, _ts_series_calendar)
                 cond = self.config.time_stop.condition
@@ -1317,11 +1356,22 @@ class MTCRunner:
                     or (cond == "Loss Only" and unrealized < 0)
                 )
                 if condition_met and (bar_limit_met or eod_condition or eow_condition):
-                    self.state.close_position(
-                        exit_price=self._apply_slippage(bar["close"], not self.state.is_long),
-                        exit_reason=ExitReason.TIME_STOP,
-                        commission_pct=self.config.strategy.commission_percent,
-                    )
+                    boundary_exit = (eod_condition or eow_condition) and i > 0
+                    exit_price = float(df["close"].iloc[i - 1]) if boundary_exit else float(bar["close"])
+                    saved_bar_index = self.state.bar_index
+                    saved_current_time = self.state.current_time
+                    if boundary_exit:
+                        self.state.bar_index = i - 1
+                        self.state.current_time = _ts_series.iloc[i - 1] if _ts_series is not None else saved_current_time
+                    try:
+                        self.state.close_position(
+                            exit_price=self._apply_slippage(exit_price, not self.state.is_long),
+                            exit_reason=ExitReason.TIME_STOP,
+                            commission_pct=self.config.strategy.commission_percent,
+                        )
+                    finally:
+                        self.state.bar_index = saved_bar_index
+                        self.state.current_time = saved_current_time
                     exit_reason = ExitReason.TIME_STOP.value
 
             # Pine-like guard streak refresh after this bar's closes, so entries
@@ -1750,7 +1800,8 @@ class MTCRunner:
             # Update equity exactly once per bar.
             # In-position bars include unrealized PnL; flat bars use realized balance.
             if self.state.in_position:
-                self.state.update_equity(self._current_equity_mark_to_market(float(bar["close"])))
+                unrealized = self.state.position.unrealized_pnl(float(bar["close"]))
+                self.state.update_equity(self.state.balance + unrealized)
             else:
                 self.state.update_equity(self.state.balance)
             
@@ -2433,7 +2484,7 @@ class MTCRunner:
                     trail_stop_start is not None
                     and self._long_stop_hit(low, current_price, trail_stop_start)
                 )
-                trail_fill = self._apply_slippage(trail_stop_start if start_stop_hit else current_price, False)
+                trail_fill = self._apply_slippage(current_price, False)
                 self._same_bar_exit_tp1_fill_bar = pos.tp1_fill_bar
                 self._same_bar_exit_trail_active_start = trail_active_start
                 self._same_bar_exit_trailing_stop = float(pos.trailing_stop)
@@ -2473,7 +2524,7 @@ class MTCRunner:
                     trail_stop_start is not None
                     and self._short_stop_hit(high, current_price, trail_stop_start)
                 )
-                trail_fill = self._apply_slippage(trail_stop_start if start_stop_hit else current_price, True)
+                trail_fill = self._apply_slippage(current_price, True)
                 self._same_bar_exit_tp1_fill_bar = pos.tp1_fill_bar
                 self._same_bar_exit_trail_active_start = trail_active_start
                 self._same_bar_exit_trailing_stop = float(pos.trailing_stop)

@@ -1,0 +1,2834 @@
+{
+  "schema_version": "1.0",
+  "generated": "2026-06-01T18:06:37.989359+00:00",
+  "total_candidates": 165,
+  "analyzed": 165,
+  "verdict_counts": {
+    "ALREADY_OK": 115,
+    "KEEP_REJECTED": 19,
+    "REVIEW_HUMAN": 14,
+    "LIKELY_MISCLASSIFIED": 17
+  },
+  "rows": [
+    {
+      "candidate_id": "QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK",
+      "title": "UNKNOWN_TITLE - 8 EMA purple line Amazon trade",
+      "source_quality": "MEDIUM",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=33, ind=5, thresh=10",
+      "word_count": 5426,
+      "strategy_score": 33,
+      "educational_score": 1,
+      "indicator_count": 5,
+      "indicators": [
+        "ema",
+        "sma",
+        "rsi",
+        "macd",
+        "fibonacci"
+      ],
+      "numeric_threshold_count": 10
+    },
+    {
+      "candidate_id": "QL_2026-05-01_US_EQUITIES_INTRADAY_LE_MODEL_BULL_FLAG",
+      "title": "The ONLY Pattern I've Used for 7 Years - Nothing Else (Full Strategy)",
+      "source_quality": "MEDIUM",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=39, ind=2, thresh=2",
+      "word_count": 4609,
+      "strategy_score": 39,
+      "educational_score": 2,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 2
+    },
+    {
+      "candidate_id": "QL_2026-05-01_US_EQUITIES_INTRADAY_PURPLE_PROFITS",
+      "title": "Purple Profits strategy summary",
+      "source_quality": "MEDIUM",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=8, ind=1, thresh=1",
+      "word_count": 5033,
+      "strategy_score": 8,
+      "educational_score": 5,
+      "indicator_count": 1,
+      "indicators": [
+        "ema"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QLR_-JyH5PAJ4-Y",
+      "title": "I Stopped Trading So Much and My Profits Skyrocketed",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=27, ind=2, thresh=0",
+      "word_count": 15954,
+      "strategy_score": 27,
+      "educational_score": 4,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "sma"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_10pHBNVi4Jc",
+      "title": "The Trading Setups of the Record Breaking Trading Champion",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=97, ind=1, thresh=3",
+      "word_count": 27611,
+      "strategy_score": 97,
+      "educational_score": 31,
+      "indicator_count": 1,
+      "indicators": [
+        "ema"
+      ],
+      "numeric_threshold_count": 3
+    },
+    {
+      "candidate_id": "QLR_62OaP91Jz9k",
+      "title": "120% Return A Simple Weekly Strategy Anyone Can Use",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=27, ind=0, thresh=0",
+      "word_count": 16232,
+      "strategy_score": 27,
+      "educational_score": 21,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_9ZJK8175drM",
+      "title": "2026-05-03_9ZJK8175drM_quantlens_canslim_detailed_intake",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=61, ind=1, thresh=3",
+      "word_count": 18957,
+      "strategy_score": 61,
+      "educational_score": 10,
+      "indicator_count": 1,
+      "indicators": [
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 3
+    },
+    {
+      "candidate_id": "QLR__QewlGLBaeA",
+      "title": "Trading Millions How I Finally Became a Profitable Swing Trader",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=76, ind=4, thresh=0",
+      "word_count": 31994,
+      "strategy_score": 76,
+      "educational_score": 31,
+      "indicator_count": 4,
+      "indicators": [
+        "ema",
+        "sma",
+        "vwap",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_c7ZSb2wNcOc",
+      "title": "2026-05-03_c7ZSb2wNcOc_quantlens_detailed_intake",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=49, ind=2, thresh=5",
+      "word_count": 23610,
+      "strategy_score": 49,
+      "educational_score": 12,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "vwap"
+      ],
+      "numeric_threshold_count": 5
+    },
+    {
+      "candidate_id": "QLR_fYxSQvuwOQc",
+      "title": "2026-05-03_fYxSQvuwOQc_quantlens_oliver_kell_cycle_intake",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=10, ind=2, thresh=14",
+      "word_count": 13469,
+      "strategy_score": 10,
+      "educational_score": 13,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "sma"
+      ],
+      "numeric_threshold_count": 14
+    },
+    {
+      "candidate_id": "QLR_ivL6E6Lc6gM",
+      "title": "a Hedge Fund Manager Reveals his Perfect Pullback Trading Setup",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=38, ind=2, thresh=10",
+      "word_count": 21135,
+      "strategy_score": 38,
+      "educational_score": 7,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 10
+    },
+    {
+      "candidate_id": "QLR_KQRuUWSZvLE",
+      "title": "10 Steps to Profitable Trading in 2024  Ryan Pierpont",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=81, ind=3, thresh=0",
+      "word_count": 26374,
+      "strategy_score": 81,
+      "educational_score": 34,
+      "indicator_count": 3,
+      "indicators": [
+        "rsi",
+        "macd",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_kTqKRi-j9kM",
+      "title": "The 5 Essential Sell Rules from a Market Wizard - Linda Bradford Raschke",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=32, ind=3, thresh=1",
+      "word_count": 17499,
+      "strategy_score": 32,
+      "educational_score": 12,
+      "indicator_count": 3,
+      "indicators": [
+        "sma",
+        "atr",
+        "fibonacci"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QLR_MnXQOt7_ZP0",
+      "title": "+85% Return in 30 Days The AI Bull Market Can Change your Life Hedge Fund Manager",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=14, ind=1, thresh=4",
+      "word_count": 15721,
+      "strategy_score": 14,
+      "educational_score": 10,
+      "indicator_count": 1,
+      "indicators": [
+        "ema"
+      ],
+      "numeric_threshold_count": 4
+    },
+    {
+      "candidate_id": "QLR_Ne3X-l6W4CQ",
+      "title": "\"Process adherence, overtrading and behavior analytics playbook\"",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=16, ind=2, thresh=1",
+      "word_count": 17528,
+      "strategy_score": 16,
+      "educational_score": 24,
+      "indicator_count": 2,
+      "indicators": [
+        "sma",
+        "vwap"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QLR_NGyE4YIgGpU",
+      "title": "2,115% Return in 1 Year How a Harvard Cancer Scientist Beat Wall Street",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=78, ind=4, thresh=1",
+      "word_count": 30826,
+      "strategy_score": 78,
+      "educational_score": 30,
+      "indicator_count": 4,
+      "indicators": [
+        "ema",
+        "sma",
+        "rsi",
+        "vwap"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QLR_O0GpSPtmCuM",
+      "title": "Stage Analysis Warnings for Current Markets - Exclusive Interview with Stan Weinstein",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=15, ind=3, thresh=20",
+      "word_count": 15857,
+      "strategy_score": 15,
+      "educational_score": 12,
+      "indicator_count": 3,
+      "indicators": [
+        "ema",
+        "sma",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 20
+    },
+    {
+      "candidate_id": "QLR_Tm0dkf8_giA",
+      "title": "+50% in 20 Days - How to Trade Breakouts with The Volatility Contraction Pattern (VCP",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=31, ind=2, thresh=1",
+      "word_count": 2997,
+      "strategy_score": 31,
+      "educational_score": 0,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QLR_UmLa9FAlMgw",
+      "title": "The AVWAP Trading Indicator Secrets and Setups Brian Shannon, CMT",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=26, ind=5, thresh=1",
+      "word_count": 20217,
+      "strategy_score": 26,
+      "educational_score": 10,
+      "indicator_count": 5,
+      "indicators": [
+        "ema",
+        "sma",
+        "vwap",
+        "fibonacci",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QLR_XNZ4f-b3ED8",
+      "title": "2026-05-03_XNZ4f-b3ED8_quantlens_intake_indicator_audit",
+      "source_quality": "REJECTED",
+      "blocked_reason": "rejected source classification",
+      "verdict": "KEEP_REJECTED",
+      "reason": "no numeric thresholds = no isolated testable rule (strat=57, edu=0)",
+      "word_count": 2620,
+      "strategy_score": 57,
+      "educational_score": 0,
+      "indicator_count": 2,
+      "indicators": [
+        "rsi",
+        "atr"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_Lot25-2fb-4",
+      "title": "433% Return in 1 Year From Poker Player to Full Time Trader",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "REVIEW_HUMAN",
+      "reason": "some thresholds (1) but weak rule signals (strat=61, edu=15, ind=1)",
+      "word_count": 33797,
+      "strategy_score": 61,
+      "educational_score": 15,
+      "indicator_count": 1,
+      "indicators": [
+        "atr"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QLR_oZH6_XRxtDc",
+      "title": "Pro Swing Trading Entry Tactics Ultimate Trading Guide Ep3",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "LIKELY_MISCLASSIFIED",
+      "reason": "4 numeric thresholds and 314 rule signals — testable rule visible",
+      "word_count": 35523,
+      "strategy_score": 314,
+      "educational_score": 48,
+      "indicator_count": 5,
+      "indicators": [
+        "ema",
+        "rsi",
+        "macd",
+        "supply_demand",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 4
+    },
+    {
+      "candidate_id": "QLR_NwgJQyoUAaI",
+      "title": "Pro Swing Trading Setups For Consistent Gains Ultimate Trading Guide Ep 2",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "REVIEW_HUMAN",
+      "reason": "some thresholds (1) but weak rule signals (strat=63, edu=76, ind=4)",
+      "word_count": 31675,
+      "strategy_score": 63,
+      "educational_score": 76,
+      "indicator_count": 4,
+      "indicators": [
+        "ema",
+        "macd",
+        "bollinger",
+        "fibonacci"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QLR_M_tD6X0CSOI",
+      "title": "The Perfect VCP Trading Setup with Mark Minervini",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "REVIEW_HUMAN",
+      "reason": "some thresholds (3) but weak rule signals (strat=4, edu=7, ind=0)",
+      "word_count": 9615,
+      "strategy_score": 4,
+      "educational_score": 7,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 3
+    },
+    {
+      "candidate_id": "QLR_a55f696216",
+      "title": "The Reality of Relative Strength Based Trading with Linda Raschke",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "LIKELY_MISCLASSIFIED",
+      "reason": "3 numeric thresholds and 18 rule signals — testable rule visible",
+      "word_count": 15824,
+      "strategy_score": 18,
+      "educational_score": 9,
+      "indicator_count": 4,
+      "indicators": [
+        "ema",
+        "sma",
+        "stoch",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 3
+    },
+    {
+      "candidate_id": "QLR_HAN1kymVbTc",
+      "title": "Trading $30 Million at Age 25 - The Story of Ted Zhang, Momentum Portfolio Manager",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=36, ind=5, thresh=28",
+      "word_count": 33166,
+      "strategy_score": 36,
+      "educational_score": 59,
+      "indicator_count": 5,
+      "indicators": [
+        "ema",
+        "sma",
+        "atr",
+        "supply_demand",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 28
+    },
+    {
+      "candidate_id": "QLR_2f5VfmlU90U",
+      "title": "The Mind of a Trader  Insights on Trading Psychology and Overcoming Setbacks  Charles Harris",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "REVIEW_HUMAN",
+      "reason": "some thresholds (1) but weak rule signals (strat=4, edu=54, ind=0)",
+      "word_count": 20081,
+      "strategy_score": 4,
+      "educational_score": 54,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QLR_4-IjRmw7SZI",
+      "title": "The Reality of Trading TQQQ and Key Strategies",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "LIKELY_MISCLASSIFIED",
+      "reason": "7 numeric thresholds and 7 rule signals — testable rule visible",
+      "word_count": 15061,
+      "strategy_score": 7,
+      "educational_score": 20,
+      "indicator_count": 6,
+      "indicators": [
+        "ema",
+        "sma",
+        "rsi",
+        "macd",
+        "vwap",
+        "cci"
+      ],
+      "numeric_threshold_count": 7
+    },
+    {
+      "candidate_id": "QLR_6aOnCK1gv2w",
+      "title": "+1300% Return in 2 Years The Setups Rules Hard Won Lessons Behind Chris Flander's Edge",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "LIKELY_MISCLASSIFIED",
+      "reason": "20 numeric thresholds and 64 rule signals — testable rule visible",
+      "word_count": 33023,
+      "strategy_score": 64,
+      "educational_score": 20,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "atr"
+      ],
+      "numeric_threshold_count": 20
+    },
+    {
+      "candidate_id": "QLR_6tnREqUJ1WY",
+      "title": "Trading Backtests Are Misleading - Here's what to do instead",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "REVIEW_HUMAN",
+      "reason": "some thresholds (1) but weak rule signals (strat=33, edu=19, ind=0)",
+      "word_count": 20295,
+      "strategy_score": 33,
+      "educational_score": 19,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QLR__AAX1ylNbIE",
+      "title": "10 Lessons from Market Wizards & Trading Legends",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "LIKELY_MISCLASSIFIED",
+      "reason": "6 numeric thresholds and 62 rule signals — testable rule visible",
+      "word_count": 17146,
+      "strategy_score": 62,
+      "educational_score": 36,
+      "indicator_count": 3,
+      "indicators": [
+        "ema",
+        "sma",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 6
+    },
+    {
+      "candidate_id": "QLR_a4uJ3rHhbfA",
+      "title": "The Art of Position Sizing with Anish Sikri  US Investing Championship Top Contender",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "REVIEW_HUMAN",
+      "reason": "some thresholds (1) but weak rule signals (strat=53, edu=22, ind=1)",
+      "word_count": 24193,
+      "strategy_score": 53,
+      "educational_score": 22,
+      "indicator_count": 1,
+      "indicators": [
+        "atr"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QLR_aDRYV4mjlHA",
+      "title": "The Million Dollar TQQQ Swing Trading Strategy Vibha Jha",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "LIKELY_MISCLASSIFIED",
+      "reason": "4 numeric thresholds and 34 rule signals — testable rule visible",
+      "word_count": 26938,
+      "strategy_score": 34,
+      "educational_score": 15,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 4
+    },
+    {
+      "candidate_id": "QLR_C9Pvd9UD0jM",
+      "title": "Mark Minervini's #1 Risk Management Secret to Grow Your Trading Profit",
+      "source_quality": "MEDIUM",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=0, ind=0, thresh=0",
+      "word_count": 2622,
+      "strategy_score": 0,
+      "educational_score": 3,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_CtioOmc1Eig",
+      "title": "Trade Like a Professional Simple and Effective Trading Strategy with Charles Harris",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "LIKELY_MISCLASSIFIED",
+      "reason": "3 numeric thresholds and 12 rule signals — testable rule visible",
+      "word_count": 3452,
+      "strategy_score": 12,
+      "educational_score": 0,
+      "indicator_count": 1,
+      "indicators": [
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 3
+    },
+    {
+      "candidate_id": "QLR_DPA35Gug3Y4",
+      "title": "Gamer Trades $5k into over $1 Million with just a 30% Win Rate - Brian Lee Trades",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=49, ind=3, thresh=0",
+      "word_count": 20474,
+      "strategy_score": 49,
+      "educational_score": 36,
+      "indicator_count": 3,
+      "indicators": [
+        "rsi",
+        "supply_demand",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_ElocJ-b_NTs",
+      "title": "The 10 Principles of Trading with Investing Champion Oliver Kell",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "LIKELY_MISCLASSIFIED",
+      "reason": "8 numeric thresholds and 23 rule signals — testable rule visible",
+      "word_count": 16719,
+      "strategy_score": 23,
+      "educational_score": 11,
+      "indicator_count": 3,
+      "indicators": [
+        "ema",
+        "vwap",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 8
+    },
+    {
+      "candidate_id": "QLR_eWtY7uoJL_0",
+      "title": "Trading The Battle With Yourself  Market Wizard David Ryan",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=12, ind=1, thresh=0",
+      "word_count": 20071,
+      "strategy_score": 12,
+      "educational_score": 20,
+      "indicator_count": 1,
+      "indicators": [
+        "fibonacci"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_FiUGDA7eMyU",
+      "title": "CANSLIM Trading Strategy Beat 99% of Investors Using This Simple Strategy",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "KEEP_REJECTED",
+      "reason": "no numeric thresholds = no isolated testable rule (strat=3, edu=17)",
+      "word_count": 28347,
+      "strategy_score": 3,
+      "educational_score": 17,
+      "indicator_count": 1,
+      "indicators": [
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_FtAshnE3MwM",
+      "title": "The Simple Stage Analysis Trading System - Exclusive Interview with Stan Weinstein",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "LIKELY_MISCLASSIFIED",
+      "reason": "10 numeric thresholds and 6 rule signals — testable rule visible",
+      "word_count": 6970,
+      "strategy_score": 6,
+      "educational_score": 6,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 10
+    },
+    {
+      "candidate_id": "QLR_GHZBv1W4-II",
+      "title": "11,300% Return in One Year Interview with Larry Williams",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "KEEP_REJECTED",
+      "reason": "no numeric thresholds = no isolated testable rule (strat=26, edu=23)",
+      "word_count": 14436,
+      "strategy_score": 26,
+      "educational_score": 23,
+      "indicator_count": 2,
+      "indicators": [
+        "bollinger",
+        "fibonacci"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_jLioqyVlRkE",
+      "title": "From Blowing Up 3 Times to Managing a $200 Million Hedge Fund — Exclusive Interview with Jim Roppel",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "REVIEW_HUMAN",
+      "reason": "some thresholds (1) but weak rule signals (strat=28, edu=37, ind=2)",
+      "word_count": 34877,
+      "strategy_score": 28,
+      "educational_score": 37,
+      "indicator_count": 2,
+      "indicators": [
+        "sma",
+        "vwap"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QLR_kao-hhaQnig",
+      "title": "103% Return in 1 Year The Simple Event Driven Trading Setup",
+      "source_quality": "REJECTED",
+      "blocked_reason": "rejected source classification",
+      "verdict": "REVIEW_HUMAN",
+      "reason": "some thresholds (1) but weak rule signals (strat=48, edu=31, ind=1)",
+      "word_count": 19310,
+      "strategy_score": 48,
+      "educational_score": 31,
+      "indicator_count": 1,
+      "indicators": [
+        "sma"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QLR_lpjTNygfnzM",
+      "title": "153% Return in 1 Year - Simple Swing Trading Strategies for Achieving Triple Digit Returns",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "REVIEW_HUMAN",
+      "reason": "some thresholds (1) but weak rule signals (strat=11, edu=15, ind=1)",
+      "word_count": 22395,
+      "strategy_score": 11,
+      "educational_score": 15,
+      "indicator_count": 1,
+      "indicators": [
+        "atr"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QLR_lS9zbnLi1Gg",
+      "title": "283% Gain in 1 Year - The Story of the 22-Year-Old Swing Trader",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "LIKELY_MISCLASSIFIED",
+      "reason": "25 numeric thresholds and 171 rule signals — testable rule visible",
+      "word_count": 29138,
+      "strategy_score": 171,
+      "educational_score": 33,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "vwap"
+      ],
+      "numeric_threshold_count": 25
+    },
+    {
+      "candidate_id": "QLR_lTiR1pc82EE",
+      "title": "5 Simple & Effective Trading Setups of Market Wizards",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "LIKELY_MISCLASSIFIED",
+      "reason": "4 numeric thresholds and 15 rule signals — testable rule visible",
+      "word_count": 10413,
+      "strategy_score": 15,
+      "educational_score": 11,
+      "indicator_count": 3,
+      "indicators": [
+        "ema",
+        "rsi",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 4
+    },
+    {
+      "candidate_id": "QLR_QzzKqmPcB3A",
+      "title": "7 Steps to Beat the Market - Ultimate Trading Guide Ep",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "LIKELY_MISCLASSIFIED",
+      "reason": "5 numeric thresholds and 32 rule signals — testable rule visible",
+      "word_count": 27566,
+      "strategy_score": 32,
+      "educational_score": 60,
+      "indicator_count": 6,
+      "indicators": [
+        "ema",
+        "sma",
+        "rsi",
+        "macd",
+        "supply_demand",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 5
+    },
+    {
+      "candidate_id": "QLR_R1sNTB2Vh7w",
+      "title": "48 Years of Trading Lessons with Market Wizard Peter Brandt",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "KEEP_REJECTED",
+      "reason": "no numeric thresholds = no isolated testable rule (strat=13, edu=6)",
+      "word_count": 7311,
+      "strategy_score": 13,
+      "educational_score": 6,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_R215f4fj7V8",
+      "title": "The Simple Trading Setup That Made Lance Breitstein Millions",
+      "source_quality": "REJECTED",
+      "blocked_reason": "rejected source classification",
+      "verdict": "KEEP_REJECTED",
+      "reason": "no numeric thresholds = no isolated testable rule (strat=34, edu=10)",
+      "word_count": 20289,
+      "strategy_score": 34,
+      "educational_score": 10,
+      "indicator_count": 5,
+      "indicators": [
+        "sma",
+        "bollinger",
+        "vwap",
+        "supply_demand",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_rdmjsbDVuoU",
+      "title": "+222% Return in 27 Days  The High Tight Flag Trading Setup Leif Soreide",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "KEEP_REJECTED",
+      "reason": "transcript too short to extract a testable rule",
+      "word_count": 6,
+      "strategy_score": 0,
+      "educational_score": 0,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_RTHRh_GLwH8",
+      "title": "100% Trading Returns - How to become a Super Trade with Mark Ritchie",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "KEEP_REJECTED",
+      "reason": "no numeric thresholds = no isolated testable rule (strat=31, edu=31)",
+      "word_count": 19290,
+      "strategy_score": 31,
+      "educational_score": 31,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_tynE-pwE-1o",
+      "title": "Why Process Beats Setups in Trading Pradeep Bonde",
+      "source_quality": "REJECTED",
+      "blocked_reason": "wiki-only source",
+      "verdict": "KEEP_REJECTED",
+      "reason": "transcript too short to extract a testable rule",
+      "word_count": 9,
+      "strategy_score": 0,
+      "educational_score": 0,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_uh5bALsKkLg",
+      "title": "How Mark Minervini Became a Market Wizard",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "KEEP_REJECTED",
+      "reason": "no numeric thresholds = no isolated testable rule (strat=18, edu=13)",
+      "word_count": 13493,
+      "strategy_score": 18,
+      "educational_score": 13,
+      "indicator_count": 1,
+      "indicators": [
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_UMgJ0P8fe0s",
+      "title": "Swing Trading Vs",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "KEEP_REJECTED",
+      "reason": "no numeric thresholds = no isolated testable rule (strat=76, edu=24)",
+      "word_count": 24481,
+      "strategy_score": 76,
+      "educational_score": 24,
+      "indicator_count": 1,
+      "indicators": [
+        "sma"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_zw96qkUn9_g",
+      "title": "How Clement Ang Achieved 150%+ Returns in the US Investing Championship",
+      "source_quality": "REJECTED",
+      "blocked_reason": "rejected source classification",
+      "verdict": "LIKELY_MISCLASSIFIED",
+      "reason": "10 numeric thresholds and 114 rule signals — testable rule visible",
+      "word_count": 44616,
+      "strategy_score": 114,
+      "educational_score": 83,
+      "indicator_count": 6,
+      "indicators": [
+        "ema",
+        "sma",
+        "macd",
+        "vwap",
+        "atr",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 10
+    },
+    {
+      "candidate_id": "QLR_JS4_6gv0PpI",
+      "title": "33,500% RETURN - Mark Minervini's VCP Setup that made him Millions",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "KEEP_REJECTED",
+      "reason": "no numeric thresholds = no isolated testable rule (strat=9, edu=44)",
+      "word_count": 28688,
+      "strategy_score": 9,
+      "educational_score": 44,
+      "indicator_count": 1,
+      "indicators": [
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_XOul-ECgHyA",
+      "title": "100% Returns After Losing it all - Developing a Swing Trading System",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "KEEP_REJECTED",
+      "reason": "no numeric thresholds = no isolated testable rule (strat=32, edu=19)",
+      "word_count": 21259,
+      "strategy_score": 32,
+      "educational_score": 19,
+      "indicator_count": 1,
+      "indicators": [
+        "rsi"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_KWxhLIOchvY",
+      "title": "409% Return in 1 Year Aggressive Swing Trading Tactics and Setups",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=38, ind=0, thresh=4",
+      "word_count": 13668,
+      "strategy_score": 38,
+      "educational_score": 9,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 4
+    },
+    {
+      "candidate_id": "QLR_Nq-p7Bu1YT0",
+      "title": "How A Day Trader Turned into a Super-Performance Swing Trader - Real Simple Ariel",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=101, ind=5, thresh=5",
+      "word_count": 32786,
+      "strategy_score": 101,
+      "educational_score": 21,
+      "indicator_count": 5,
+      "indicators": [
+        "ema",
+        "sma",
+        "vwap",
+        "atr",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 5
+    },
+    {
+      "candidate_id": "QLR_7UfHg8PpDZk",
+      "title": "The 3 Powerful Trading Setups of a Top Super-performance Trader",
+      "source_quality": "REJECTED",
+      "blocked_reason": "rejected source classification",
+      "verdict": "KEEP_REJECTED",
+      "reason": "no numeric thresholds = no isolated testable rule (strat=79, edu=32)",
+      "word_count": 40701,
+      "strategy_score": 79,
+      "educational_score": 32,
+      "indicator_count": 4,
+      "indicators": [
+        "ema",
+        "vwap",
+        "atr",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_hVCcVRxaxJY",
+      "title": "The Only Sell Rules You Need to Trade Ajay Jani",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "KEEP_REJECTED",
+      "reason": "no numeric thresholds = no isolated testable rule (strat=21, edu=53)",
+      "word_count": 22108,
+      "strategy_score": 21,
+      "educational_score": 53,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_qz7avJJvnyI",
+      "title": "The TRUE Path to Trading Success from Lance Breitstein, Market Wizard",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "KEEP_REJECTED",
+      "reason": "no numeric thresholds = no isolated testable rule (strat=26, edu=23)",
+      "word_count": 17481,
+      "strategy_score": 26,
+      "educational_score": 23,
+      "indicator_count": 1,
+      "indicators": [
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_UD7gipBWnuY",
+      "title": "When To Take Trading Profits - Market Wizards Share Their Sell Rules",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "REVIEW_HUMAN",
+      "reason": "some thresholds (4) but weak rule signals (strat=3, edu=5, ind=2)",
+      "word_count": 11000,
+      "strategy_score": 3,
+      "educational_score": 5,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 4
+    },
+    {
+      "candidate_id": "QLR_Yb5lMegA5Hs",
+      "title": "QUANTLENS_DAILY_EXTENSION_ANTI_CHASE_CRITICAL_REPORT",
+      "source_quality": "REJECTED",
+      "blocked_reason": "rejected source classification",
+      "verdict": "KEEP_REJECTED",
+      "reason": "no numeric thresholds = no isolated testable rule (strat=15, edu=1)",
+      "word_count": 1774,
+      "strategy_score": 15,
+      "educational_score": 1,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_RHlsVNSM8Aw",
+      "title": "QUANTLENS_EMA20_50_RETEST_CRITICAL_INTAKE_REPORT",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=10, ind=1, thresh=3",
+      "word_count": 670,
+      "strategy_score": 10,
+      "educational_score": 0,
+      "indicator_count": 1,
+      "indicators": [
+        "ema"
+      ],
+      "numeric_threshold_count": 3
+    },
+    {
+      "candidate_id": "QLR_VKNEJA5r8zw",
+      "title": "+969% Return in 1 Year The Pullback Strategy of a Trading Champion",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=206, ind=3, thresh=99",
+      "word_count": 51904,
+      "strategy_score": 206,
+      "educational_score": 42,
+      "indicator_count": 3,
+      "indicators": [
+        "ema",
+        "vwap",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 99
+    },
+    {
+      "candidate_id": "QLR_bRXO6F_vGjM",
+      "title": "QUANTLENS_TY_RAJNUS_MICROCAP_SHORT_INTAKE_REPORT",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=40, ind=1, thresh=0",
+      "word_count": 25022,
+      "strategy_score": 40,
+      "educational_score": 14,
+      "indicator_count": 1,
+      "indicators": [
+        "atr"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_DLlNDuOTUfQ",
+      "title": "Secrets to Profitable Trading from Market Legend Stan Weinstein",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "LIKELY_MISCLASSIFIED",
+      "reason": "9 numeric thresholds and 9 rule signals — testable rule visible",
+      "word_count": 12591,
+      "strategy_score": 9,
+      "educational_score": 13,
+      "indicator_count": 1,
+      "indicators": [
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 9
+    },
+    {
+      "candidate_id": "QLR_Eb9FkLNJLzs",
+      "title": "40 Years of Trading Wisdom in 20 Minutes - Lessons from Jim Roppel, Hedge Fund Manager",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "KEEP_REJECTED",
+      "reason": "no numeric thresholds = no isolated testable rule (strat=8, edu=7)",
+      "word_count": 4901,
+      "strategy_score": 8,
+      "educational_score": 7,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_Jew-Algmi0k",
+      "title": "The Dead Simple VWAP Swing Trading Setup With Brian Shannon",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "LIKELY_MISCLASSIFIED",
+      "reason": "9 numeric thresholds and 31 rule signals — testable rule visible",
+      "word_count": 14281,
+      "strategy_score": 31,
+      "educational_score": 8,
+      "indicator_count": 3,
+      "indicators": [
+        "sma",
+        "vwap",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 9
+    },
+    {
+      "candidate_id": "QLR_m8F3KkBDtC0",
+      "title": "The Wedge Pop Trading Setup of Trading Champion Oliver Kell",
+      "source_quality": "PARENT",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=13, ind=3, thresh=10",
+      "word_count": 15316,
+      "strategy_score": 13,
+      "educational_score": 12,
+      "indicator_count": 3,
+      "indicators": [
+        "ema",
+        "sma",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 10
+    },
+    {
+      "candidate_id": "QLR_oPeTkxTnooA",
+      "title": "259% Return in 1 Year The Risk Management Strategy YOU Need for Consistent Returns",
+      "source_quality": "REJECTED",
+      "blocked_reason": "rejected source classification",
+      "verdict": "REVIEW_HUMAN",
+      "reason": "some thresholds (1) but weak rule signals (strat=35, edu=14, ind=1)",
+      "word_count": 19769,
+      "strategy_score": 35,
+      "educational_score": 14,
+      "indicator_count": 1,
+      "indicators": [
+        "ema"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QLR_q43pkYBo1hU",
+      "title": "+259% in 1 Year - Swing Trading Performance Strategy",
+      "source_quality": "REJECTED",
+      "blocked_reason": "",
+      "verdict": "REVIEW_HUMAN",
+      "reason": "some thresholds (1) but weak rule signals (strat=11, edu=36, ind=3)",
+      "word_count": 34258,
+      "strategy_score": 11,
+      "educational_score": 36,
+      "indicator_count": 3,
+      "indicators": [
+        "sma",
+        "atr",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QLR_q4TuaY-ccqA",
+      "title": "FOMO is Ruining Your Trades Here's How to Fix It Trading Psychology",
+      "source_quality": "REJECTED",
+      "blocked_reason": "wiki-only source",
+      "verdict": "KEEP_REJECTED",
+      "reason": "no numeric thresholds = no isolated testable rule (strat=7, edu=1)",
+      "word_count": 962,
+      "strategy_score": 7,
+      "educational_score": 1,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_UtNrp_Uz9Oc",
+      "title": "Trading The Mental Game Jared Tendler",
+      "source_quality": "REJECTED",
+      "blocked_reason": "wiki-only source",
+      "verdict": "KEEP_REJECTED",
+      "reason": "no numeric thresholds = no isolated testable rule (strat=7, edu=40)",
+      "word_count": 13377,
+      "strategy_score": 7,
+      "educational_score": 40,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QLR_ZK5cnVQ2V3Q",
+      "title": "The Market Wizard Trading System",
+      "source_quality": "REJECTED",
+      "blocked_reason": "rejected source classification",
+      "verdict": "REVIEW_HUMAN",
+      "reason": "some thresholds (1) but weak rule signals (strat=10, edu=25, ind=1)",
+      "word_count": 19566,
+      "strategy_score": 10,
+      "educational_score": 25,
+      "indicator_count": 1,
+      "indicators": [
+        "bollinger"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QLR_esDKpwi1b2M",
+      "title": "300% Return in the US Investing Championship Leos Mikulka's Winning Strategies.md",
+      "source_quality": "LOW",
+      "blocked_reason": "rejected source classification",
+      "verdict": "LIKELY_MISCLASSIFIED",
+      "reason": "6 numeric thresholds and 20 rule signals — testable rule visible",
+      "word_count": 12273,
+      "strategy_score": 20,
+      "educational_score": 19,
+      "indicator_count": 3,
+      "indicators": [
+        "ema",
+        "rsi",
+        "macd"
+      ],
+      "numeric_threshold_count": 6
+    },
+    {
+      "candidate_id": "QLR_SMWMraeRDXs",
+      "title": "The ULTIMATE Trading Risk Management Guide Market Wizard Tom Basso.md",
+      "source_quality": "LOW",
+      "blocked_reason": "rejected source classification",
+      "verdict": "REVIEW_HUMAN",
+      "reason": "some thresholds (2) but weak rule signals (strat=20, edu=10, ind=5)",
+      "word_count": 16602,
+      "strategy_score": 20,
+      "educational_score": 10,
+      "indicator_count": 5,
+      "indicators": [
+        "ema",
+        "rsi",
+        "bollinger",
+        "atr",
+        "stoch"
+      ],
+      "numeric_threshold_count": 2
+    },
+    {
+      "candidate_id": "QL_NICK_WEEKLY_CHARACTER_CHANGE_001",
+      "title": "QL_NICK_WEEKLY_CHARACTER_CHANGE_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=27, ind=2, thresh=0",
+      "word_count": 15949,
+      "strategy_score": 27,
+      "educational_score": 4,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "sma"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_NICK_CONTROLLED_WEAKNESS_BASE_RETEST_001",
+      "title": "QL_NICK_CONTROLLED_WEAKNESS_BASE_RETEST_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=27, ind=2, thresh=0",
+      "word_count": 15947,
+      "strategy_score": 27,
+      "educational_score": 4,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "sma"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_NICK_10W_30W_RESPECT_ENTRY_001",
+      "title": "QL_NICK_10W_30W_RESPECT_ENTRY_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=27, ind=2, thresh=0",
+      "word_count": 15947,
+      "strategy_score": 27,
+      "educational_score": 4,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "sma"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_NICK_UP_ON_VOLUME_RADAR_001",
+      "title": "QL_NICK_UP_ON_VOLUME_RADAR_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=27, ind=2, thresh=0",
+      "word_count": 15947,
+      "strategy_score": 27,
+      "educational_score": 4,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "sma"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_NICK_WEEKLY_SELL_DECISION_FRAMEWORK_001",
+      "title": "QL_NICK_WEEKLY_SELL_DECISION_FRAMEWORK_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=27, ind=2, thresh=0",
+      "word_count": 15947,
+      "strategy_score": 27,
+      "educational_score": 4,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "sma"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_NICK_EARNINGS_CUSHION_RULE_001",
+      "title": "QL_NICK_EARNINGS_CUSHION_RULE_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=27, ind=2, thresh=0",
+      "word_count": 15947,
+      "strategy_score": 27,
+      "educational_score": 4,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "sma"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_NICK_TRADE_FREQUENCY_GUARD_001",
+      "title": "QL_NICK_TRADE_FREQUENCY_GUARD_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=27, ind=2, thresh=0",
+      "word_count": 15947,
+      "strategy_score": 27,
+      "educational_score": 4,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "sma"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_GON_STRONG_DEMAND_LOW_VOLUME_EMA_TOUCH_v0",
+      "title": "QL_GON_STRONG_DEMAND_LOW_VOLUME_EMA_TOUCH_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=97, ind=1, thresh=3",
+      "word_count": 27597,
+      "strategy_score": 97,
+      "educational_score": 31,
+      "indicator_count": 1,
+      "indicators": [
+        "ema"
+      ],
+      "numeric_threshold_count": 3
+    },
+    {
+      "candidate_id": "QL_GON_OG_BULL_FLAG_HIGH_TIGHT_v0",
+      "title": "QL_GON_OG_BULL_FLAG_HIGH_TIGHT_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=97, ind=1, thresh=3",
+      "word_count": 27597,
+      "strategy_score": 97,
+      "educational_score": 31,
+      "indicator_count": 1,
+      "indicators": [
+        "ema"
+      ],
+      "numeric_threshold_count": 3
+    },
+    {
+      "candidate_id": "QL_GON_STRONG_DEMAND_SLOW_FADER_RECLAIM_v0",
+      "title": "QL_GON_STRONG_DEMAND_SLOW_FADER_RECLAIM_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=97, ind=1, thresh=3",
+      "word_count": 27597,
+      "strategy_score": 97,
+      "educational_score": 31,
+      "indicator_count": 1,
+      "indicators": [
+        "ema"
+      ],
+      "numeric_threshold_count": 3
+    },
+    {
+      "candidate_id": "QL_GON_SHORT_SQUEEZE_REVERSAL_BALL_UNDER_WATER_v0",
+      "title": "QL_GON_SHORT_SQUEEZE_REVERSAL_BALL_UNDER_WATER_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=97, ind=1, thresh=3",
+      "word_count": 27597,
+      "strategy_score": 97,
+      "educational_score": 31,
+      "indicator_count": 1,
+      "indicators": [
+        "ema"
+      ],
+      "numeric_threshold_count": 3
+    },
+    {
+      "candidate_id": "QL_GON_NEXT_DAY_LOW_FLOAT_CONTINUATION_v0",
+      "title": "QL_GON_NEXT_DAY_LOW_FLOAT_CONTINUATION_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=97, ind=1, thresh=3",
+      "word_count": 27597,
+      "strategy_score": 97,
+      "educational_score": 31,
+      "indicator_count": 1,
+      "indicators": [
+        "ema"
+      ],
+      "numeric_threshold_count": 3
+    },
+    {
+      "candidate_id": "QL_GON_HALT_MOMENTUM_CONTINUATION_v0",
+      "title": "QL_GON_HALT_MOMENTUM_CONTINUATION_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=97, ind=1, thresh=3",
+      "word_count": 27597,
+      "strategy_score": 97,
+      "educational_score": 31,
+      "indicator_count": 1,
+      "indicators": [
+        "ema"
+      ],
+      "numeric_threshold_count": 3
+    },
+    {
+      "candidate_id": "QL_NICK_WEEKLY_CHARACTER_CHANGE_TREND_STARTER_001",
+      "title": "QL_NICK_WEEKLY_CHARACTER_CHANGE_TREND_STARTER_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=27, ind=0, thresh=0",
+      "word_count": 16218,
+      "strategy_score": 27,
+      "educational_score": 21,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_NICK_WEEKLY_BASE_TIGHTNESS_ACCUMULATION_001",
+      "title": "QL_NICK_WEEKLY_BASE_TIGHTNESS_ACCUMULATION_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=27, ind=0, thresh=0",
+      "word_count": 16218,
+      "strategy_score": 27,
+      "educational_score": 21,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_NICK_UP_ON_VOLUME_UNIVERSE_SCAN_001",
+      "title": "QL_NICK_UP_ON_VOLUME_UNIVERSE_SCAN_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=27, ind=0, thresh=0",
+      "word_count": 16218,
+      "strategy_score": 27,
+      "educational_score": 21,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_NICK_WEEKLY_SCALE_IN_ON_PROOF_001",
+      "title": "QL_NICK_WEEKLY_SCALE_IN_ON_PROOF_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=27, ind=0, thresh=0",
+      "word_count": 16218,
+      "strategy_score": 27,
+      "educational_score": 21,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_NICK_WEEKLY_CLOSE_STOP_POLICY_001",
+      "title": "QL_NICK_WEEKLY_CLOSE_STOP_POLICY_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=27, ind=0, thresh=0",
+      "word_count": 16218,
+      "strategy_score": 27,
+      "educational_score": 21,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_NICK_ASYMMETRIC_RISK_REWARD_FILTER_001",
+      "title": "QL_NICK_ASYMMETRIC_RISK_REWARD_FILTER_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=27, ind=0, thresh=0",
+      "word_count": 16218,
+      "strategy_score": 27,
+      "educational_score": 21,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_CANSLIM_O_NEIL_GROWTH_STOCK_SYSTEM",
+      "title": "QL_CANSLIM_O_NEIL_GROWTH_STOCK_SYSTEM",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=61, ind=1, thresh=3",
+      "word_count": 18957,
+      "strategy_score": 61,
+      "educational_score": 10,
+      "indicator_count": 1,
+      "indicators": [
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 3
+    },
+    {
+      "candidate_id": "QL_CANSLIM_SHAKEOUT_PLUS_3_001",
+      "title": "QL_CANSLIM_SHAKEOUT_PLUS_3_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=61, ind=1, thresh=3",
+      "word_count": 18957,
+      "strategy_score": 61,
+      "educational_score": 10,
+      "indicator_count": 1,
+      "indicators": [
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 3
+    },
+    {
+      "candidate_id": "QL_SLINGSHOT_4EMA_HIGH_PULLBACK_001",
+      "title": "QL_SLINGSHOT_4EMA_HIGH_PULLBACK_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=49, ind=2, thresh=5",
+      "word_count": 23618,
+      "strategy_score": 49,
+      "educational_score": 12,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "vwap"
+      ],
+      "numeric_threshold_count": 5
+    },
+    {
+      "candidate_id": "QL_FISHHOOK_EP_DAY1_RETAKE_001",
+      "title": "QL_FISHHOOK_EP_DAY1_RETAKE_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=49, ind=2, thresh=5",
+      "word_count": 23618,
+      "strategy_score": 49,
+      "educational_score": 12,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "vwap"
+      ],
+      "numeric_threshold_count": 5
+    },
+    {
+      "candidate_id": "QL_KELL_WEDGE_POP_001",
+      "title": "QL_KELL_WEDGE_POP_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=10, ind=2, thresh=14",
+      "word_count": 13469,
+      "strategy_score": 10,
+      "educational_score": 13,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "sma"
+      ],
+      "numeric_threshold_count": 14
+    },
+    {
+      "candidate_id": "QL_KELL_EMA_CROSSBACK_001",
+      "title": "QL_KELL_EMA_CROSSBACK_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=10, ind=2, thresh=14",
+      "word_count": 13469,
+      "strategy_score": 10,
+      "educational_score": 13,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "sma"
+      ],
+      "numeric_threshold_count": 14
+    },
+    {
+      "candidate_id": "QL_KELL_BASIN_BREAK_001",
+      "title": "QL_KELL_BASIN_BREAK_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=10, ind=2, thresh=14",
+      "word_count": 13469,
+      "strategy_score": 10,
+      "educational_score": 13,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "sma"
+      ],
+      "numeric_threshold_count": 14
+    },
+    {
+      "candidate_id": "QL_KELL_WEDGE_DROP_EXIT_001",
+      "title": "QL_KELL_WEDGE_DROP_EXIT_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=10, ind=2, thresh=14",
+      "word_count": 13469,
+      "strategy_score": 10,
+      "educational_score": 13,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "sma"
+      ],
+      "numeric_threshold_count": 14
+    },
+    {
+      "candidate_id": "QL_CHARLES_UPSIDE_REVERSAL_PULLBACK_001",
+      "title": "QL_CHARLES_UPSIDE_REVERSAL_PULLBACK_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=38, ind=2, thresh=10",
+      "word_count": 21121,
+      "strategy_score": 38,
+      "educational_score": 7,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 10
+    },
+    {
+      "candidate_id": "QL_CHARLES_FIRST_PULLBACK_50DMA_001",
+      "title": "QL_CHARLES_FIRST_PULLBACK_50DMA_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=38, ind=2, thresh=10",
+      "word_count": 21121,
+      "strategy_score": 38,
+      "educational_score": 7,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 10
+    },
+    {
+      "candidate_id": "QL_CHARLES_21EMA_PULLBACK_ADDON_001",
+      "title": "QL_CHARLES_21EMA_PULLBACK_ADDON_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=38, ind=2, thresh=10",
+      "word_count": 21121,
+      "strategy_score": 38,
+      "educational_score": 7,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 10
+    },
+    {
+      "candidate_id": "QL_CHARLES_PRIOR_BASE_TOP_SUPPORT_PULLBACK_001",
+      "title": "QL_CHARLES_PRIOR_BASE_TOP_SUPPORT_PULLBACK_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=38, ind=2, thresh=10",
+      "word_count": 21121,
+      "strategy_score": 38,
+      "educational_score": 7,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 10
+    },
+    {
+      "candidate_id": "QL_CHARLES_REVERSE_PYRAMID_PULLBACK_SCALEIN_001",
+      "title": "QL_CHARLES_REVERSE_PYRAMID_PULLBACK_SCALEIN_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=38, ind=2, thresh=10",
+      "word_count": 21121,
+      "strategy_score": 38,
+      "educational_score": 7,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 10
+    },
+    {
+      "candidate_id": "QL_CHARLES_SWING_AROUND_CORE_001",
+      "title": "QL_CHARLES_SWING_AROUND_CORE_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=38, ind=2, thresh=10",
+      "word_count": 21121,
+      "strategy_score": 38,
+      "educational_score": 7,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 10
+    },
+    {
+      "candidate_id": "QL_CHARLES_WEEKLY_SHAKEOUT_CONFIRMATION_GUARD_001",
+      "title": "QL_CHARLES_WEEKLY_SHAKEOUT_CONFIRMATION_GUARD_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=38, ind=2, thresh=10",
+      "word_count": 21121,
+      "strategy_score": 38,
+      "educational_score": 7,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 10
+    },
+    {
+      "candidate_id": "QL_RYAN_MARKET_AWARENESS_GATE_001",
+      "title": "QL_RYAN_MARKET_AWARENESS_GATE_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=81, ind=3, thresh=0",
+      "word_count": 26355,
+      "strategy_score": 81,
+      "educational_score": 34,
+      "indicator_count": 3,
+      "indicators": [
+        "rsi",
+        "macd",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_RYAN_LATE_ENTRY_CHASE_FILTER_001",
+      "title": "QL_RYAN_LATE_ENTRY_CHASE_FILTER_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=81, ind=3, thresh=0",
+      "word_count": 26355,
+      "strategy_score": 81,
+      "educational_score": 34,
+      "indicator_count": 3,
+      "indicators": [
+        "rsi",
+        "macd",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_RYAN_TIGHT_BREAKOUT_001",
+      "title": "QL_RYAN_TIGHT_BREAKOUT_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=81, ind=3, thresh=0",
+      "word_count": 26355,
+      "strategy_score": 81,
+      "educational_score": 34,
+      "indicator_count": 3,
+      "indicators": [
+        "rsi",
+        "macd",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_RYAN_PULLBACK_DANGER_ZONE_001",
+      "title": "QL_RYAN_PULLBACK_DANGER_ZONE_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=81, ind=3, thresh=0",
+      "word_count": 26355,
+      "strategy_score": 81,
+      "educational_score": 34,
+      "indicator_count": 3,
+      "indicators": [
+        "rsi",
+        "macd",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_RYAN_SELL_INTO_STRENGTH_RUNNER_EXIT_001",
+      "title": "QL_RYAN_SELL_INTO_STRENGTH_RUNNER_EXIT_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=81, ind=3, thresh=0",
+      "word_count": 26355,
+      "strategy_score": 81,
+      "educational_score": 34,
+      "indicator_count": 3,
+      "indicators": [
+        "rsi",
+        "macd",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_LBR_COIL_BREAKOUT_RANGE_EXPANSION_v0",
+      "title": "QL_LBR_COIL_BREAKOUT_RANGE_EXPANSION_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=32, ind=3, thresh=1",
+      "word_count": 17491,
+      "strategy_score": 32,
+      "educational_score": 12,
+      "indicator_count": 3,
+      "indicators": [
+        "sma",
+        "atr",
+        "fibonacci"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QL_LBR_THREE_BAR_BREAKOUT_v0",
+      "title": "QL_LBR_THREE_BAR_BREAKOUT_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=32, ind=3, thresh=1",
+      "word_count": 17491,
+      "strategy_score": 32,
+      "educational_score": 12,
+      "indicator_count": 3,
+      "indicators": [
+        "sma",
+        "atr",
+        "fibonacci"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QL_LBR_PREV_DAY_HIGH_LOW_TAYLOR_RHYTHM_v0",
+      "title": "QL_LBR_PREV_DAY_HIGH_LOW_TAYLOR_RHYTHM_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=32, ind=3, thresh=1",
+      "word_count": 17491,
+      "strategy_score": 32,
+      "educational_score": 12,
+      "indicator_count": 3,
+      "indicators": [
+        "sma",
+        "atr",
+        "fibonacci"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QL_LBR_BOX_MIDPOINT_RECLAIM_v0",
+      "title": "QL_LBR_BOX_MIDPOINT_RECLAIM_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=32, ind=3, thresh=1",
+      "word_count": 17491,
+      "strategy_score": 32,
+      "educational_score": 12,
+      "indicator_count": 3,
+      "indicators": [
+        "sma",
+        "atr",
+        "fibonacci"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QL_LBR_ROC2_REVERSAL_v0",
+      "title": "QL_LBR_ROC2_REVERSAL_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=32, ind=3, thresh=1",
+      "word_count": 17491,
+      "strategy_score": 32,
+      "educational_score": 12,
+      "indicator_count": 3,
+      "indicators": [
+        "sma",
+        "atr",
+        "fibonacci"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QL_LBR_ATR_VOLATILITY_EXIT_OVERLAY_v0",
+      "title": "QL_LBR_ATR_VOLATILITY_EXIT_OVERLAY_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=32, ind=3, thresh=1",
+      "word_count": 17491,
+      "strategy_score": 32,
+      "educational_score": 12,
+      "indicator_count": 3,
+      "indicators": [
+        "sma",
+        "atr",
+        "fibonacci"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QL_LBR_ADTR_POSITION_SIZING_v0",
+      "title": "QL_LBR_ADTR_POSITION_SIZING_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=32, ind=3, thresh=1",
+      "word_count": 17491,
+      "strategy_score": 32,
+      "educational_score": 12,
+      "indicator_count": 3,
+      "indicators": [
+        "sma",
+        "atr",
+        "fibonacci"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QL_LBR_EQUITY_CURVE_RISK_THROTTLE_v0",
+      "title": "QL_LBR_EQUITY_CURVE_RISK_THROTTLE_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=32, ind=3, thresh=1",
+      "word_count": 17491,
+      "strategy_score": 32,
+      "educational_score": 12,
+      "indicator_count": 3,
+      "indicators": [
+        "sma",
+        "atr",
+        "fibonacci"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QL_ROPPEL_50D_RECLAIM_TIGHT_ACTION_v0",
+      "title": "QL_ROPPEL_50D_RECLAIM_TIGHT_ACTION_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=14, ind=1, thresh=4",
+      "word_count": 15714,
+      "strategy_score": 14,
+      "educational_score": 10,
+      "indicator_count": 1,
+      "indicators": [
+        "ema"
+      ],
+      "numeric_threshold_count": 4
+    },
+    {
+      "candidate_id": "QL_ROPPEL_357_SCALEOUT_RISK_MODULE_v0",
+      "title": "QL_ROPPEL_357_SCALEOUT_RISK_MODULE_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=14, ind=1, thresh=4",
+      "word_count": 15714,
+      "strategy_score": 14,
+      "educational_score": 10,
+      "indicator_count": 1,
+      "indicators": [
+        "ema"
+      ],
+      "numeric_threshold_count": 4
+    },
+    {
+      "candidate_id": "QL_ROPPEL_LEADERSHIP_THEME_SCORE_v0",
+      "title": "QL_ROPPEL_LEADERSHIP_THEME_SCORE_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=14, ind=1, thresh=4",
+      "word_count": 15714,
+      "strategy_score": 14,
+      "educational_score": 10,
+      "indicator_count": 1,
+      "indicators": [
+        "ema"
+      ],
+      "numeric_threshold_count": 4
+    },
+    {
+      "candidate_id": "QL_ROPPEL_EXTENSION_OVER_50D_HEDGE_SIGNAL_v0",
+      "title": "QL_ROPPEL_EXTENSION_OVER_50D_HEDGE_SIGNAL_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=14, ind=1, thresh=4",
+      "word_count": 15714,
+      "strategy_score": 14,
+      "educational_score": 10,
+      "indicator_count": 1,
+      "indicators": [
+        "ema"
+      ],
+      "numeric_threshold_count": 4
+    },
+    {
+      "candidate_id": "QL_ROPPEL_POSITION_TRADING_HOLD_ENGINE_v0",
+      "title": "QL_ROPPEL_POSITION_TRADING_HOLD_ENGINE_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=14, ind=1, thresh=4",
+      "word_count": 15714,
+      "strategy_score": 14,
+      "educational_score": 10,
+      "indicator_count": 1,
+      "indicators": [
+        "ema"
+      ],
+      "numeric_threshold_count": 4
+    },
+    {
+      "candidate_id": "QL_TITO_RS_MOMENTUM_BREAKOUT_CROSSBACK_v0",
+      "title": "QL_TITO_RS_MOMENTUM_BREAKOUT_CROSSBACK_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=78, ind=4, thresh=1",
+      "word_count": 30869,
+      "strategy_score": 78,
+      "educational_score": 30,
+      "indicator_count": 4,
+      "indicators": [
+        "ema",
+        "sma",
+        "rsi",
+        "vwap"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QL_TITO_OPTIONS_AWARE_RISK_OVERLAY_v0",
+      "title": "QL_TITO_OPTIONS_AWARE_RISK_OVERLAY_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=78, ind=4, thresh=1",
+      "word_count": 30869,
+      "strategy_score": 78,
+      "educational_score": 30,
+      "indicator_count": 4,
+      "indicators": [
+        "ema",
+        "sma",
+        "rsi",
+        "vwap"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QL_TITO_PROFIT_WITHDRAWAL_CAPITAL_AT_RISK_v0",
+      "title": "QL_TITO_PROFIT_WITHDRAWAL_CAPITAL_AT_RISK_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=78, ind=4, thresh=1",
+      "word_count": 30869,
+      "strategy_score": 78,
+      "educational_score": 30,
+      "indicator_count": 4,
+      "indicators": [
+        "ema",
+        "sma",
+        "rsi",
+        "vwap"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QL_STAN_STAGE_1B_TO_2A_BREAKOUT_v0",
+      "title": "QL_STAN_STAGE_1B_TO_2A_BREAKOUT_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=15, ind=3, thresh=20",
+      "word_count": 15851,
+      "strategy_score": 15,
+      "educational_score": 12,
+      "indicator_count": 3,
+      "indicators": [
+        "ema",
+        "sma",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 20
+    },
+    {
+      "candidate_id": "QL_STAN_STAGE_2A_PULLBACK_SUPPORT_v0",
+      "title": "QL_STAN_STAGE_2A_PULLBACK_SUPPORT_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=15, ind=3, thresh=20",
+      "word_count": 15851,
+      "strategy_score": 15,
+      "educational_score": 12,
+      "indicator_count": 3,
+      "indicators": [
+        "ema",
+        "sma",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 20
+    },
+    {
+      "candidate_id": "QL_STAN_UNFILLED_GAP_CONTINUATION_v0",
+      "title": "QL_STAN_UNFILLED_GAP_CONTINUATION_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=15, ind=3, thresh=20",
+      "word_count": 15851,
+      "strategy_score": 15,
+      "educational_score": 12,
+      "indicator_count": 3,
+      "indicators": [
+        "ema",
+        "sma",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 20
+    },
+    {
+      "candidate_id": "QL_STAN_FAILED_RALLY_200D_SHORT_AVOID_v0",
+      "title": "QL_STAN_FAILED_RALLY_200D_SHORT_AVOID_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=15, ind=3, thresh=20",
+      "word_count": 15851,
+      "strategy_score": 15,
+      "educational_score": 12,
+      "indicator_count": 3,
+      "indicators": [
+        "ema",
+        "sma",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 20
+    },
+    {
+      "candidate_id": "QL_STAN_FOREST_GROUP_TREE_FILTER_v0",
+      "title": "QL_STAN_FOREST_GROUP_TREE_FILTER_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=15, ind=3, thresh=20",
+      "word_count": 15851,
+      "strategy_score": 15,
+      "educational_score": 12,
+      "indicator_count": 3,
+      "indicators": [
+        "ema",
+        "sma",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 20
+    },
+    {
+      "candidate_id": "QL_STAN_SPLIT_TAPE_BREADTH_FILTER_v0",
+      "title": "QL_STAN_SPLIT_TAPE_BREADTH_FILTER_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=15, ind=3, thresh=20",
+      "word_count": 15851,
+      "strategy_score": 15,
+      "educational_score": 12,
+      "indicator_count": 3,
+      "indicators": [
+        "ema",
+        "sma",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 20
+    },
+    {
+      "candidate_id": "QL_STAN_GOOD_COMPANY_BAD_CHART_BLOCK_v0",
+      "title": "QL_STAN_GOOD_COMPANY_BAD_CHART_BLOCK_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=15, ind=3, thresh=20",
+      "word_count": 15851,
+      "strategy_score": 15,
+      "educational_score": 12,
+      "indicator_count": 3,
+      "indicators": [
+        "ema",
+        "sma",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 20
+    },
+    {
+      "candidate_id": "QL_VCP_BREAKOUT_DAILY_BASE_001",
+      "title": "QL_VCP_BREAKOUT_DAILY_BASE_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=31, ind=2, thresh=1",
+      "word_count": 2988,
+      "strategy_score": 31,
+      "educational_score": 0,
+      "indicator_count": 2,
+      "indicators": [
+        "ema",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QL_BRIAN_SHANNON_AVWAP_GAP_PULLBACK_STRENGTH_v0",
+      "title": "QL_BRIAN_SHANNON_AVWAP_GAP_PULLBACK_STRENGTH_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=26, ind=5, thresh=1",
+      "word_count": 20211,
+      "strategy_score": 26,
+      "educational_score": 10,
+      "indicator_count": 5,
+      "indicators": [
+        "ema",
+        "sma",
+        "vwap",
+        "fibonacci",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QL_BRIAN_SHANNON_AVWAP_PINCH_BREAKOUT_v0",
+      "title": "QL_BRIAN_SHANNON_AVWAP_PINCH_BREAKOUT_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=26, ind=5, thresh=1",
+      "word_count": 20211,
+      "strategy_score": 26,
+      "educational_score": 10,
+      "indicator_count": 5,
+      "indicators": [
+        "ema",
+        "sma",
+        "vwap",
+        "fibonacci",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QL_BRIAN_SHANNON_AVWAP_HANDOFF_TREND_CONTINUATION_v0",
+      "title": "QL_BRIAN_SHANNON_AVWAP_HANDOFF_TREND_CONTINUATION_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=26, ind=5, thresh=1",
+      "word_count": 20211,
+      "strategy_score": 26,
+      "educational_score": 10,
+      "indicator_count": 5,
+      "indicators": [
+        "ema",
+        "sma",
+        "vwap",
+        "fibonacci",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QL_BRIAN_SHANNON_5DMA_AVWAP_MOMENTUM_ENTRY_v0",
+      "title": "QL_BRIAN_SHANNON_5DMA_AVWAP_MOMENTUM_ENTRY_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=26, ind=5, thresh=1",
+      "word_count": 20211,
+      "strategy_score": 26,
+      "educational_score": 10,
+      "indicator_count": 5,
+      "indicators": [
+        "ema",
+        "sma",
+        "vwap",
+        "fibonacci",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QL_BRIAN_SHANNON_BREAKAWAY_GAP_AVWAP_CONTINUATION_v0",
+      "title": "QL_BRIAN_SHANNON_BREAKAWAY_GAP_AVWAP_CONTINUATION_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=26, ind=5, thresh=1",
+      "word_count": 20211,
+      "strategy_score": 26,
+      "educational_score": 10,
+      "indicator_count": 5,
+      "indicators": [
+        "ema",
+        "sma",
+        "vwap",
+        "fibonacci",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QL_BRIAN_SHANNON_FAILED_AVWAP_TRAP_v0",
+      "title": "QL_BRIAN_SHANNON_FAILED_AVWAP_TRAP_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=26, ind=5, thresh=1",
+      "word_count": 20211,
+      "strategy_score": 26,
+      "educational_score": 10,
+      "indicator_count": 5,
+      "indicators": [
+        "ema",
+        "sma",
+        "vwap",
+        "fibonacci",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 1
+    },
+    {
+      "candidate_id": "QL_ANTHONY_OUTLIER_LEADER_BREAKOUT_v0",
+      "title": "QL_ANTHONY_OUTLIER_LEADER_BREAKOUT_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=76, ind=4, thresh=0",
+      "word_count": 31988,
+      "strategy_score": 76,
+      "educational_score": 31,
+      "indicator_count": 4,
+      "indicators": [
+        "ema",
+        "sma",
+        "vwap",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_ANTHONY_BREAKOUT_PULLBACK_RS_v0",
+      "title": "QL_ANTHONY_BREAKOUT_PULLBACK_RS_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=76, ind=4, thresh=0",
+      "word_count": 31988,
+      "strategy_score": 76,
+      "educational_score": 31,
+      "indicator_count": 4,
+      "indicators": [
+        "ema",
+        "sma",
+        "vwap",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_ANTHONY_UNDERCUT_RECLAIM_LEADER_v0",
+      "title": "QL_ANTHONY_UNDERCUT_RECLAIM_LEADER_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=76, ind=4, thresh=0",
+      "word_count": 31988,
+      "strategy_score": 76,
+      "educational_score": 31,
+      "indicator_count": 4,
+      "indicators": [
+        "ema",
+        "sma",
+        "vwap",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_ANTHONY_EP_EARNINGS_THEME_BREAKOUT_v0",
+      "title": "QL_ANTHONY_EP_EARNINGS_THEME_BREAKOUT_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=76, ind=4, thresh=0",
+      "word_count": 31988,
+      "strategy_score": 76,
+      "educational_score": 31,
+      "indicator_count": 4,
+      "indicators": [
+        "ema",
+        "sma",
+        "vwap",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_ANTHONY_BACKWATCH_BREAKOUT_HEALTH_ENGINE_v0",
+      "title": "QL_ANTHONY_BACKWATCH_BREAKOUT_HEALTH_ENGINE_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=76, ind=4, thresh=0",
+      "word_count": 31988,
+      "strategy_score": 76,
+      "educational_score": 31,
+      "indicator_count": 4,
+      "indicators": [
+        "ema",
+        "sma",
+        "vwap",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_ANTHONY_THEME_LEADERSHIP_ENGINE_v0",
+      "title": "QL_ANTHONY_THEME_LEADERSHIP_ENGINE_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=76, ind=4, thresh=0",
+      "word_count": 31988,
+      "strategy_score": 76,
+      "educational_score": 31,
+      "indicator_count": 4,
+      "indicators": [
+        "ema",
+        "sma",
+        "vwap",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_ANTHONY_CYCLE_AWARE_EXPOSURE_CONTROL_v0",
+      "title": "QL_ANTHONY_CYCLE_AWARE_EXPOSURE_CONTROL_v0",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=76, ind=4, thresh=0",
+      "word_count": 31988,
+      "strategy_score": 76,
+      "educational_score": 31,
+      "indicator_count": 4,
+      "indicators": [
+        "ema",
+        "sma",
+        "vwap",
+        "supply_demand"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "CAND_20260503_TED_ZHANG_MAGIC_ELIXIR_MOMENTUM_HAN1kymVbTc",
+      "title": "CAND_20260503_TED_ZHANG_MAGIC_ELIXIR_MOMENTUM_HAN1kymVbTc",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=35, ind=5, thresh=28",
+      "word_count": 32970,
+      "strategy_score": 35,
+      "educational_score": 60,
+      "indicator_count": 5,
+      "indicators": [
+        "ema",
+        "sma",
+        "atr",
+        "supply_demand",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 28
+    },
+    {
+      "candidate_id": "CAND_BRIAN_LEE_SMALLCAP_GAP_MR_SHORT_V1",
+      "title": "CAND_BRIAN_LEE_SMALLCAP_GAP_MR_SHORT_V1",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=49, ind=3, thresh=0",
+      "word_count": 20468,
+      "strategy_score": 49,
+      "educational_score": 36,
+      "indicator_count": 3,
+      "indicators": [
+        "rsi",
+        "supply_demand",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_CAND_2026-05-03_eWtY7uoJL0_RYAN_PRICE_VOLUME_STAGE",
+      "title": "QL_CAND_2026-05-03_eWtY7uoJL0_RYAN_PRICE_VOLUME_STAGE",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=12, ind=1, thresh=0",
+      "word_count": 20061,
+      "strategy_score": 12,
+      "educational_score": 20,
+      "indicator_count": 1,
+      "indicators": [
+        "fibonacci"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "QL_CAND_003_KWxhLIOchvY",
+      "title": "QL_CAND_003_KWxhLIOchvY",
+      "source_quality": "LOW",
+      "blocked_reason": "no deterministic rules extracted",
+      "verdict": "LIKELY_MISCLASSIFIED",
+      "reason": "4 numeric thresholds and 38 rule signals — testable rule visible",
+      "word_count": 13662,
+      "strategy_score": 38,
+      "educational_score": 9,
+      "indicator_count": 0,
+      "indicators": [],
+      "numeric_threshold_count": 4
+    },
+    {
+      "candidate_id": "QL_CAND_004_Nq-p7Bu1YT0",
+      "title": "QL_CAND_004_Nq-p7Bu1YT0",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=101, ind=5, thresh=5",
+      "word_count": 32779,
+      "strategy_score": 101,
+      "educational_score": 21,
+      "indicator_count": 5,
+      "indicators": [
+        "ema",
+        "sma",
+        "vwap",
+        "atr",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 5
+    },
+    {
+      "candidate_id": "QL_BASELINE_EMA20_50_RETEST_001",
+      "title": "QL_BASELINE_EMA20_50_RETEST_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=10, ind=1, thresh=3",
+      "word_count": 670,
+      "strategy_score": 10,
+      "educational_score": 0,
+      "indicator_count": 1,
+      "indicators": [
+        "ema"
+      ],
+      "numeric_threshold_count": 3
+    },
+    {
+      "candidate_id": "QL_MARTIN_PULLBACK_CONFLUENCE_LONG_001",
+      "title": "QL_MARTIN_PULLBACK_CONFLUENCE_LONG_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=206, ind=3, thresh=99",
+      "word_count": 51858,
+      "strategy_score": 206,
+      "educational_score": 42,
+      "indicator_count": 3,
+      "indicators": [
+        "ema",
+        "vwap",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 99
+    },
+    {
+      "candidate_id": "QL_MARTIN_PULLBACK_SHORT_001",
+      "title": "QL_MARTIN_PULLBACK_SHORT_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=206, ind=3, thresh=99",
+      "word_count": 51858,
+      "strategy_score": 206,
+      "educational_score": 42,
+      "indicator_count": 3,
+      "indicators": [
+        "ema",
+        "vwap",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 99
+    },
+    {
+      "candidate_id": "QL_MARTIN_PARABOLIC_LONG_001",
+      "title": "QL_MARTIN_PARABOLIC_LONG_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=206, ind=3, thresh=99",
+      "word_count": 51858,
+      "strategy_score": 206,
+      "educational_score": 42,
+      "indicator_count": 3,
+      "indicators": [
+        "ema",
+        "vwap",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 99
+    },
+    {
+      "candidate_id": "QL_TY_MICROCAP_LIQUIDITY_REVERSION_SHORT_001",
+      "title": "QL_TY_MICROCAP_LIQUIDITY_REVERSION_SHORT_001",
+      "source_quality": "HIGH",
+      "blocked_reason": "needs indicator split",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=40, ind=1, thresh=0",
+      "word_count": 25022,
+      "strategy_score": 40,
+      "educational_score": 14,
+      "indicator_count": 1,
+      "indicators": [
+        "atr"
+      ],
+      "numeric_threshold_count": 0
+    },
+    {
+      "candidate_id": "YT_OLIVER_KELL_WEDGE_POP_PRICE_CYCLE_V1",
+      "title": "YT_OLIVER_KELL_WEDGE_POP_PRICE_CYCLE_V1",
+      "source_quality": "HIGH",
+      "blocked_reason": "",
+      "verdict": "ALREADY_OK",
+      "reason": "not rejected; strat=13, ind=3, thresh=10",
+      "word_count": 15306,
+      "strategy_score": 13,
+      "educational_score": 12,
+      "indicator_count": 3,
+      "indicators": [
+        "ema",
+        "sma",
+        "candle_pattern"
+      ],
+      "numeric_threshold_count": 10
+    }
+  ]
+}

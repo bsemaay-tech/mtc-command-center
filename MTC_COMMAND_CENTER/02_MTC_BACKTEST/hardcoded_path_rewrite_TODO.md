@@ -19,6 +19,19 @@ Bulk rewrite deferred because each anchor (MCC_ROOT.parent vs REPO_ROOT vs
 mcc_root.parent vs tpl_root vs root.parent) has different semantics and a
 naive string replace would create double-MTC_COMMAND_CENTER paths.
 
+### Reactivated 2026-05-31 for transcript backfill
+- `MTC_COMMAND_CENTER/11_TRIAGE/ingest.py`
+- `MTC_COMMAND_CENTER/11_TRIAGE/generate_worklist.py`
+- `MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/api/mcc_readonly/paths.py`
+- `MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/api/mcc_readonly/registry_reader.py`
+- `MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/api/mcc_readonly/pipeline_reader.py`
+- `MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/api/mcc_readonly/audit_reader.py`
+
+These now resolve QuantLens through the clean-tree `MTC_COMMAND_CENTER/03_QUANTLENS`
+layout first, with legacy `01_MASTER TEMPLATE_V2/06_QUANTLENS_LAB` kept as fallback.
+Verification: `python -m pytest tests` in `08_DASHBOARD_APP/apps/api` passed 32/32;
+`11_TRIAGE/ingest.py` dry-run is idempotent after backfill.
+
 Fix on demand when a specific QuantLens script is invoked. Most hits are in
 one-shot research batch scripts that already produced their evidence and will
 not be re-run. Active code that would need rewrite:

@@ -1,6 +1,6 @@
 # MTC-Engine Validation Step — Design Spec
 
-> **Status:** Design approved (brainstorming). Awaiting written-spec review before implementation planning.
+> **Status:** Implemented additively in `MTC_COMMAND_CENTER/02_MTC_BACKTEST` on 2026-06-04.
 > **Date:** 2026-06-04
 > **Owner discipline:** parity-first, deterministic, additive-only, do-not-break-existing.
 > **Author:** Claude Opus 4.8
@@ -129,7 +129,13 @@ Report explicitly states: filters/guards OFF, risk ON, producer-level parity sta
 - No modification of QuantLens overnight screening tools.
 - No auto-generation of producers from a shared spec (explicitly rejected — manual adapters chosen).
 
-## 13. Next Step
+## 13. Implementation Status
 
-After written-spec review and approval, proceed to the `writing-plans` skill to produce a detailed,
-phased implementation plan.
+Implemented additively:
+- `02_MTC_BACKTEST/src/config/profiles/light_risk.py`
+- `02_MTC_BACKTEST/src/modules/signals/producers/`
+- `02_MTC_BACKTEST/src/cli/mtc_engine_validate.py`
+- `02_MTC_BACKTEST/tests/test_light_risk_profile.py`
+- `02_MTC_BACKTEST/tests/test_mtc_engine_validate_cli.py`
+
+`MTC_V2.pine`, `MTCRunner`, risk modules, and QuantLens overnight tools were not modified.

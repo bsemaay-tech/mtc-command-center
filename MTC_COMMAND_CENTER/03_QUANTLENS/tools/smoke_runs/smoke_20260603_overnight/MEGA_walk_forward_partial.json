@@ -1,0 +1,61 @@
+{
+  "partial": true,
+  "generated_utc": "2026-06-03T16:29:57.399960+00:00",
+  "started_utc": "2026-06-03T16:29:55.314873+00:00",
+  "workers": 2,
+  "completed": 1,
+  "total_jobs": 1,
+  "results": [
+    {
+      "strategy": "QL_2026-05-01_SWING_1H_DUAL_RSI_60_40_PULLBACK",
+      "symbol": "BTCUSDT",
+      "timeframe": "4h",
+      "data_rows": 14454,
+      "data_start": "2019-09-08 16:00:00+00:00",
+      "data_end": "2026-04-13 12:00:00+00:00",
+      "trial_count": 64,
+      "trial_sr_std": 0.2874,
+      "trial_sr_max": 0.2626,
+      "boot_p_value": 0.268,
+      "summary": {
+        "best_params": {
+          "rsi_len": 7,
+          "daily_hi": 50,
+          "daily_lo": 50,
+          "stop_lookback": 14
+        },
+        "fold_test_returns_pct": [
+          -7.81,
+          -1.268,
+          7.648
+        ],
+        "fold_test_trade_counts": [
+          20,
+          27,
+          27
+        ],
+        "fold_test_sharpes": [
+          -0.3103,
+          0.0493,
+          0.4495
+        ],
+        "avg_fold_test_return_pct": -0.477,
+        "folds_positive": 1,
+        "n_folds": 3,
+        "lockbox_oos": {
+          "num_trades": 45,
+          "win_rate": 0.3778,
+          "net_return_pct": 12.732,
+          "max_drawdown_pct": -29.535,
+          "expectancy_R": 0.1445,
+          "profit_factor": 1.204,
+          "avg_R": 0.1445,
+          "sharpe": 0.53,
+          "sharpe_pt": 0.079003
+        },
+        "best_train_sharpe_pt": 0.165719
+      },
+      "classification": "FAIL"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+candidate_id: QL_CANSLIM_ONEIL_GROWTH_SYSTEM_V1
+source_url: https://youtu.be/9ZJK8175drM
+video_title: "The 6 Steps to Learning Trading - Full Crash Course (CANSLIM / O'Neil)"
+quantlens_decision: CANDIDATE
+codex_status: READY_FOR_DETERMINISTIC_REVIEW
+market_type: US_EQUITIES
+primary_timeframe: 1d
+recommended_timeframes:
+  - 1d
+  - 1wk
+strategy_type: CANSLIM growth-stock cup-base pivot breakout with fixed sell rules
+strategy_category: position_trading
+method:
+  - breakout
+  - trend_following
+expected_market_regime:
+  - trending
+  - bull_market
+long_only_or_long_short: long_only
+commercial_value_score: 8
+complexity_score: 6
+repaint_risk: LOW
+lookahead_risk: LOW
+overfit_risk: LOW
+closed_source_risk: LOW
+risk_management_quality: STRONG
+discretion_level: MEDIUM
+candidate_kind:
+  producer: true
+  entry_gate: true
+  guard: true
+  confirmation: true
+  exit_rule: true
+  sl_tp_method: true
+  trailing_be_method: false
+  money_management: true
+indicators_used:
+  - CHART_PATTERN
+  - VOLUME
+  - MOVING_AVERAGE
+existing_mtc_overlap: STG028 (canslim_shakeout_plus3) is a specific CANSLIM sub-pattern. This is the full O'Neil system with explicit sell rules; reusable money-management (-7/8% stop, +20-25% target).
+new_feature_required: Cup-with-handle / base + pivot-point detector; CANSLIM fundamental screen (earnings/leadership/sponsorship).
+known_strengths: Fully specified sell rules (-7 to -8% capital protection stop, +20-25% profit goal from pivot); buy exactly at pivot; precedent-based; institutional sponsorship edge.
+known_weaknesses: Fundamental criteria (C/A/N/S/L/I/M) need a data source; cup/handle detection nontrivial; long-only, bull-market biased.
+recommended_next_step: Implement base+pivot breakout entry with the -7/8% stop and +20-25% target as a clean, fully-deterministic baseline (fundamentals optional overlay).
+created_at: 2026-06-04
+updated_at: 2026-06-04
+
+# --- A1 Extracted (auto) ---
+trailing_logic: N_A
+filters_used: gate (M).
+known_strengths: "Deterministic Spec -- CANSLIM O'Neil Growth System"
+known_weaknesses: N_A

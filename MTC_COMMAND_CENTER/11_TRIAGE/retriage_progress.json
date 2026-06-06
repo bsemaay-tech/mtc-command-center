@@ -1,0 +1,880 @@
+{
+ "next_stg": 64,
+ "pilot_done": [
+  "Stg082->WIKI",
+  "Stg083->STG047",
+  "Stg087->DUPLICATE"
+ ],
+ "items": [
+  {
+   "stg": "Stg084",
+   "candidate_id": "QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK",
+   "md_file": "stg084.md",
+   "url": "https://www.youtube.com/watch?v=Gr2VDAOPRoc",
+   "quality": "MEDIUM",
+   "status": "done",
+   "disposition": "DUPLICATE",
+   "output": "STG042_ql_2026_05_01_us_equities_10m_8ema_pullback"
+  },
+  {
+   "stg": "Stg085",
+   "candidate_id": "QL_2026-05-01_US_EQUITIES_INTRADAY_LE_MODEL_BULL_FLAG",
+   "md_file": "stg085.md",
+   "url": "https://www.youtube.com/watch?v=mMwl4xAh_NI",
+   "quality": "MEDIUM",
+   "status": "done",
+   "disposition": "DUPLICATE",
+   "output": "STG044_ql_2026_05_01_us_equities_intraday_le_model_bull_flag"
+  },
+  {
+   "stg": "Stg086",
+   "candidate_id": "QL_2026-05-01_US_EQUITIES_INTRADAY_PURPLE_PROFITS",
+   "md_file": "stg086.md",
+   "url": "https://www.youtube.com/watch?v=wwbjYNV3vCY",
+   "quality": "MEDIUM",
+   "status": "done",
+   "disposition": "DUPLICATE",
+   "output": "STG045_ql_2026_05_01_us_equities_intraday_purple_profits"
+  },
+  {
+   "stg": "Stg088",
+   "candidate_id": "QL_ANTHONY_BACKWATCH_BREAKOUT_HEALTH_ENGINE_v0",
+   "md_file": "stg088.md",
+   "url": "https://youtu.be/_QewlGLBaeA?si=ZoVcYdRIch1Lx_Df",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG048_anthony_layered_leadership_swing_system"
+  },
+  {
+   "stg": "Stg089",
+   "candidate_id": "QL_ANTHONY_BREAKOUT_PULLBACK_RS_v0",
+   "md_file": "stg089.md",
+   "url": "https://youtu.be/_QewlGLBaeA?si=ZoVcYdRIch1Lx_Df",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG048_anthony_layered_leadership_swing_system"
+  },
+  {
+   "stg": "Stg090",
+   "candidate_id": "QL_ANTHONY_CYCLE_AWARE_EXPOSURE_CONTROL_v0",
+   "md_file": "stg090.md",
+   "url": "https://youtu.be/_QewlGLBaeA?si=ZoVcYdRIch1Lx_Df",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG048_anthony_layered_leadership_swing_system"
+  },
+  {
+   "stg": "Stg091",
+   "candidate_id": "QL_ANTHONY_EP_EARNINGS_THEME_BREAKOUT_v0",
+   "md_file": "stg091.md",
+   "url": "https://youtu.be/_QewlGLBaeA?si=ZoVcYdRIch1Lx_Df",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG048_anthony_layered_leadership_swing_system"
+  },
+  {
+   "stg": "Stg092",
+   "candidate_id": "QL_ANTHONY_OUTLIER_LEADER_BREAKOUT_v0",
+   "md_file": "stg092.md",
+   "url": "https://youtu.be/_QewlGLBaeA?si=ZoVcYdRIch1Lx_Df",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG048_anthony_layered_leadership_swing_system"
+  },
+  {
+   "stg": "Stg093",
+   "candidate_id": "QL_ANTHONY_THEME_LEADERSHIP_ENGINE_v0",
+   "md_file": "stg093.md",
+   "url": "https://youtu.be/_QewlGLBaeA?si=ZoVcYdRIch1Lx_Df",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG048_anthony_layered_leadership_swing_system"
+  },
+  {
+   "stg": "Stg094",
+   "candidate_id": "QL_ANTHONY_UNDERCUT_RECLAIM_LEADER_v0",
+   "md_file": "stg094.md",
+   "url": "https://youtu.be/_QewlGLBaeA?si=ZoVcYdRIch1Lx_Df",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG048_anthony_layered_leadership_swing_system"
+  },
+  {
+   "stg": "Stg095",
+   "candidate_id": "QL_BASELINE_EMA20_50_RETEST_001",
+   "md_file": "stg095.md",
+   "url": "https://youtu.be/RHlsVNSM8Aw?si=g54Kry_ryc8pYWPK",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "DUPLICATE",
+   "output": "STG034_12_ema20_50_two_retests_baseline"
+  },
+  {
+   "stg": "Stg096",
+   "candidate_id": "QL_BRIAN_SHANNON_5DMA_AVWAP_MOMENTUM_ENTRY_v0",
+   "md_file": "stg096.md",
+   "url": "https://youtu.be/UmLa9FAlMgw?si=bqyEc59JFMCVzcGH",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG049_brian_shannon_avwap_methodology"
+  },
+  {
+   "stg": "Stg097",
+   "candidate_id": "QL_BRIAN_SHANNON_AVWAP_GAP_PULLBACK_STRENGTH_v0",
+   "md_file": "stg097.md",
+   "url": "https://youtu.be/UmLa9FAlMgw?si=bqyEc59JFMCVzcGH",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG049_brian_shannon_avwap_methodology"
+  },
+  {
+   "stg": "Stg098",
+   "candidate_id": "QL_BRIAN_SHANNON_AVWAP_HANDOFF_TREND_CONTINUATION_v0",
+   "md_file": "stg098.md",
+   "url": "https://youtu.be/UmLa9FAlMgw?si=bqyEc59JFMCVzcGH",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG049_brian_shannon_avwap_methodology"
+  },
+  {
+   "stg": "Stg099",
+   "candidate_id": "QL_BRIAN_SHANNON_AVWAP_PINCH_BREAKOUT_v0",
+   "md_file": "stg099.md",
+   "url": "https://youtu.be/UmLa9FAlMgw?si=bqyEc59JFMCVzcGH",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG049_brian_shannon_avwap_methodology"
+  },
+  {
+   "stg": "Stg100",
+   "candidate_id": "QL_BRIAN_SHANNON_BREAKAWAY_GAP_AVWAP_CONTINUATION_v0",
+   "md_file": "stg100.md",
+   "url": "https://youtu.be/UmLa9FAlMgw?si=bqyEc59JFMCVzcGH",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG049_brian_shannon_avwap_methodology"
+  },
+  {
+   "stg": "Stg101",
+   "candidate_id": "QL_BRIAN_SHANNON_FAILED_AVWAP_TRAP_v0",
+   "md_file": "stg101.md",
+   "url": "https://youtu.be/UmLa9FAlMgw?si=bqyEc59JFMCVzcGH",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG049_brian_shannon_avwap_methodology"
+  },
+  {
+   "stg": "Stg103",
+   "candidate_id": "QL_CAND_004_Nq-p7Bu1YT0",
+   "md_file": "stg103.md",
+   "url": "https://youtu.be/Nq-p7Bu1YT0?si=jA26J6RGZtMXyY4v",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG050_ariel_market_timed_momentum_swing"
+  },
+  {
+   "stg": "Stg104",
+   "candidate_id": "QL_CAND_2026-05-03_eWtY7uoJL0_RYAN_PRICE_VOLUME_STAGE",
+   "md_file": "stg104.md",
+   "url": "https://youtu.be/eWtY7uoJL_0?si=9_3CvT5T5e5HyILo",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG051_david_ryan_price_volume_stage"
+  },
+  {
+   "stg": "Stg105",
+   "candidate_id": "QL_CANSLIM_O_NEIL_GROWTH_STOCK_SYSTEM",
+   "md_file": "stg105.md",
+   "url": "https://youtu.be/9ZJK8175drM?si=QcTE0mdW00UzcL_B",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG052_canslim_oneil_growth_system"
+  },
+  {
+   "stg": "Stg106",
+   "candidate_id": "QL_CANSLIM_SHAKEOUT_PLUS_3_001",
+   "md_file": "stg106.md",
+   "url": "https://youtu.be/9ZJK8175drM?si=QcTE0mdW00UzcL_B",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "DUPLICATE",
+   "output": "STG028_06_canslim_shakeout_plus3"
+  },
+  {
+   "stg": "Stg107",
+   "candidate_id": "QL_CHARLES_21EMA_PULLBACK_ADDON_001",
+   "md_file": "stg107.md",
+   "url": "https://youtu.be/ivL6E6Lc6gM?si=GNNGCxRmyNZYqNrJ",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG053_charles_harris_pullback_around_core"
+  },
+  {
+   "stg": "Stg108",
+   "candidate_id": "QL_CHARLES_FIRST_PULLBACK_50DMA_001",
+   "md_file": "stg108.md",
+   "url": "https://youtu.be/ivL6E6Lc6gM?si=GNNGCxRmyNZYqNrJ",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG053_charles_harris_pullback_around_core"
+  },
+  {
+   "stg": "Stg109",
+   "candidate_id": "QL_CHARLES_PRIOR_BASE_TOP_SUPPORT_PULLBACK_001",
+   "md_file": "stg109.md",
+   "url": "https://youtu.be/ivL6E6Lc6gM?si=GNNGCxRmyNZYqNrJ",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG053_charles_harris_pullback_around_core"
+  },
+  {
+   "stg": "Stg110",
+   "candidate_id": "QL_CHARLES_REVERSE_PYRAMID_PULLBACK_SCALEIN_001",
+   "md_file": "stg110.md",
+   "url": "https://youtu.be/ivL6E6Lc6gM?si=GNNGCxRmyNZYqNrJ",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG053_charles_harris_pullback_around_core"
+  },
+  {
+   "stg": "Stg111",
+   "candidate_id": "QL_CHARLES_SWING_AROUND_CORE_001",
+   "md_file": "stg111.md",
+   "url": "https://youtu.be/ivL6E6Lc6gM?si=GNNGCxRmyNZYqNrJ",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG053_charles_harris_pullback_around_core"
+  },
+  {
+   "stg": "Stg112",
+   "candidate_id": "QL_CHARLES_UPSIDE_REVERSAL_PULLBACK_001",
+   "md_file": "stg112.md",
+   "url": "https://youtu.be/ivL6E6Lc6gM?si=GNNGCxRmyNZYqNrJ",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG053_charles_harris_pullback_around_core"
+  },
+  {
+   "stg": "Stg113",
+   "candidate_id": "QL_CHARLES_WEEKLY_SHAKEOUT_CONFIRMATION_GUARD_001",
+   "md_file": "stg113.md",
+   "url": "https://youtu.be/ivL6E6Lc6gM?si=GNNGCxRmyNZYqNrJ",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG053_charles_harris_pullback_around_core"
+  },
+  {
+   "stg": "Stg114",
+   "candidate_id": "QL_FISHHOOK_EP_DAY1_RETAKE_001",
+   "md_file": "stg114.md",
+   "url": "https://youtu.be/c7ZSb2wNcOc?si=qdou6ffSbBNhJw63",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG054_fishhook_ep_day1_retake"
+  },
+  {
+   "stg": "Stg115",
+   "candidate_id": "QL_GON_HALT_MOMENTUM_CONTINUATION_v0",
+   "md_file": "stg115.md",
+   "url": "https://youtu.be/10pHBNVi4Jc?si=ohzwBJxkVCTKPpcX",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG055_gon_lowfloat_momentum_daytrading"
+  },
+  {
+   "stg": "Stg116",
+   "candidate_id": "QL_GON_NEXT_DAY_LOW_FLOAT_CONTINUATION_v0",
+   "md_file": "stg116.md",
+   "url": "https://youtu.be/10pHBNVi4Jc?si=ohzwBJxkVCTKPpcX",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG055_gon_lowfloat_momentum_daytrading"
+  },
+  {
+   "stg": "Stg117",
+   "candidate_id": "QL_GON_OG_BULL_FLAG_HIGH_TIGHT_v0",
+   "md_file": "stg117.md",
+   "url": "https://youtu.be/10pHBNVi4Jc?si=ohzwBJxkVCTKPpcX",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG055_gon_lowfloat_momentum_daytrading"
+  },
+  {
+   "stg": "Stg118",
+   "candidate_id": "QL_GON_SHORT_SQUEEZE_REVERSAL_BALL_UNDER_WATER_v0",
+   "md_file": "stg118.md",
+   "url": "https://youtu.be/10pHBNVi4Jc?si=ohzwBJxkVCTKPpcX",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG055_gon_lowfloat_momentum_daytrading"
+  },
+  {
+   "stg": "Stg119",
+   "candidate_id": "QL_GON_STRONG_DEMAND_LOW_VOLUME_EMA_TOUCH_v0",
+   "md_file": "stg119.md",
+   "url": "https://youtu.be/10pHBNVi4Jc?si=ohzwBJxkVCTKPpcX",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG055_gon_lowfloat_momentum_daytrading"
+  },
+  {
+   "stg": "Stg120",
+   "candidate_id": "QL_GON_STRONG_DEMAND_SLOW_FADER_RECLAIM_v0",
+   "md_file": "stg120.md",
+   "url": "https://youtu.be/10pHBNVi4Jc?si=ohzwBJxkVCTKPpcX",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG055_gon_lowfloat_momentum_daytrading"
+  },
+  {
+   "stg": "Stg121",
+   "candidate_id": "QL_KELL_BASIN_BREAK_001",
+   "md_file": "stg121.md",
+   "url": "https://youtu.be/fYxSQvuwOQc?si=mZyENAdFJu8x7LKZ",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG056_oliver_kell_price_cycle"
+  },
+  {
+   "stg": "Stg122",
+   "candidate_id": "QL_KELL_EMA_CROSSBACK_001",
+   "md_file": "stg122.md",
+   "url": "https://youtu.be/fYxSQvuwOQc?si=mZyENAdFJu8x7LKZ",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG056_oliver_kell_price_cycle"
+  },
+  {
+   "stg": "Stg123",
+   "candidate_id": "QL_KELL_WEDGE_DROP_EXIT_001",
+   "md_file": "stg123.md",
+   "url": "https://youtu.be/fYxSQvuwOQc?si=mZyENAdFJu8x7LKZ",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG056_oliver_kell_price_cycle"
+  },
+  {
+   "stg": "Stg124",
+   "candidate_id": "QL_KELL_WEDGE_POP_001",
+   "md_file": "stg124.md",
+   "url": "https://youtu.be/fYxSQvuwOQc?si=mZyENAdFJu8x7LKZ",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG056_oliver_kell_price_cycle"
+  },
+  {
+   "stg": "Stg125",
+   "candidate_id": "QL_LBR_ADTR_POSITION_SIZING_v0",
+   "md_file": "stg125.md",
+   "url": "https://youtu.be/kTqKRi-j9kM?si=99GgO3p0M-b25wBA",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG057_linda_raschke_lbr_toolkit"
+  },
+  {
+   "stg": "Stg126",
+   "candidate_id": "QL_LBR_ATR_VOLATILITY_EXIT_OVERLAY_v0",
+   "md_file": "stg126.md",
+   "url": "https://youtu.be/kTqKRi-j9kM?si=99GgO3p0M-b25wBA",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG057_linda_raschke_lbr_toolkit"
+  },
+  {
+   "stg": "Stg127",
+   "candidate_id": "QL_LBR_BOX_MIDPOINT_RECLAIM_v0",
+   "md_file": "stg127.md",
+   "url": "https://youtu.be/kTqKRi-j9kM?si=99GgO3p0M-b25wBA",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG057_linda_raschke_lbr_toolkit"
+  },
+  {
+   "stg": "Stg128",
+   "candidate_id": "QL_LBR_COIL_BREAKOUT_RANGE_EXPANSION_v0",
+   "md_file": "stg128.md",
+   "url": "https://youtu.be/kTqKRi-j9kM?si=99GgO3p0M-b25wBA",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG057_linda_raschke_lbr_toolkit"
+  },
+  {
+   "stg": "Stg129",
+   "candidate_id": "QL_LBR_EQUITY_CURVE_RISK_THROTTLE_v0",
+   "md_file": "stg129.md",
+   "url": "https://youtu.be/kTqKRi-j9kM?si=99GgO3p0M-b25wBA",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG057_linda_raschke_lbr_toolkit"
+  },
+  {
+   "stg": "Stg130",
+   "candidate_id": "QL_LBR_PREV_DAY_HIGH_LOW_TAYLOR_RHYTHM_v0",
+   "md_file": "stg130.md",
+   "url": "https://youtu.be/kTqKRi-j9kM?si=99GgO3p0M-b25wBA",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG057_linda_raschke_lbr_toolkit"
+  },
+  {
+   "stg": "Stg131",
+   "candidate_id": "QL_LBR_ROC2_REVERSAL_v0",
+   "md_file": "stg131.md",
+   "url": "https://youtu.be/kTqKRi-j9kM?si=99GgO3p0M-b25wBA",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG057_linda_raschke_lbr_toolkit"
+  },
+  {
+   "stg": "Stg132",
+   "candidate_id": "QL_LBR_THREE_BAR_BREAKOUT_v0",
+   "md_file": "stg132.md",
+   "url": "https://youtu.be/kTqKRi-j9kM?si=99GgO3p0M-b25wBA",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG057_linda_raschke_lbr_toolkit"
+  },
+  {
+   "stg": "Stg133",
+   "candidate_id": "QL_MARTIN_PARABOLIC_LONG_001",
+   "md_file": "stg133.md",
+   "url": "https://youtu.be/VKNEJA5r8zw?si=XIbuUbrJNtP5wjop",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG058_martin_parabolic_pullback_champion"
+  },
+  {
+   "stg": "Stg134",
+   "candidate_id": "QL_MARTIN_PULLBACK_CONFLUENCE_LONG_001",
+   "md_file": "stg134.md",
+   "url": "https://youtu.be/VKNEJA5r8zw?si=XIbuUbrJNtP5wjop",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG058_martin_parabolic_pullback_champion"
+  },
+  {
+   "stg": "Stg135",
+   "candidate_id": "QL_MARTIN_PULLBACK_SHORT_001",
+   "md_file": "stg135.md",
+   "url": "https://youtu.be/VKNEJA5r8zw?si=XIbuUbrJNtP5wjop",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG058_martin_parabolic_pullback_champion"
+  },
+  {
+   "stg": "Stg136",
+   "candidate_id": "QL_NICK_10W_30W_RESPECT_ENTRY_001",
+   "md_file": "stg136.md",
+   "url": "https://youtu.be/-JyH5PAJ4-Y?si=BqaSaOarsfJIutKk",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG059_nick_weekly_stage_methodology"
+  },
+  {
+   "stg": "Stg137",
+   "candidate_id": "QL_NICK_ASYMMETRIC_RISK_REWARD_FILTER_001",
+   "md_file": "stg137.md",
+   "url": "https://youtu.be/62OaP91Jz9k?si=PHn5ULWDuxyqjQ24",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG059_nick_weekly_stage_methodology"
+  },
+  {
+   "stg": "Stg138",
+   "candidate_id": "QL_NICK_CONTROLLED_WEAKNESS_BASE_RETEST_001",
+   "md_file": "stg138.md",
+   "url": "https://youtu.be/-JyH5PAJ4-Y?si=BqaSaOarsfJIutKk",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG059_nick_weekly_stage_methodology"
+  },
+  {
+   "stg": "Stg139",
+   "candidate_id": "QL_NICK_EARNINGS_CUSHION_RULE_001",
+   "md_file": "stg139.md",
+   "url": "https://youtu.be/-JyH5PAJ4-Y?si=BqaSaOarsfJIutKk",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG059_nick_weekly_stage_methodology"
+  },
+  {
+   "stg": "Stg140",
+   "candidate_id": "QL_NICK_TRADE_FREQUENCY_GUARD_001",
+   "md_file": "stg140.md",
+   "url": "https://youtu.be/-JyH5PAJ4-Y?si=BqaSaOarsfJIutKk",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG059_nick_weekly_stage_methodology"
+  },
+  {
+   "stg": "Stg141",
+   "candidate_id": "QL_NICK_UP_ON_VOLUME_RADAR_001",
+   "md_file": "stg141.md",
+   "url": "https://youtu.be/-JyH5PAJ4-Y?si=BqaSaOarsfJIutKk",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG059_nick_weekly_stage_methodology"
+  },
+  {
+   "stg": "Stg142",
+   "candidate_id": "QL_NICK_UP_ON_VOLUME_UNIVERSE_SCAN_001",
+   "md_file": "stg142.md",
+   "url": "https://youtu.be/62OaP91Jz9k?si=PHn5ULWDuxyqjQ24",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG059_nick_weekly_stage_methodology"
+  },
+  {
+   "stg": "Stg143",
+   "candidate_id": "QL_NICK_WEEKLY_BASE_TIGHTNESS_ACCUMULATION_001",
+   "md_file": "stg143.md",
+   "url": "https://youtu.be/62OaP91Jz9k?si=PHn5ULWDuxyqjQ24",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG059_nick_weekly_stage_methodology"
+  },
+  {
+   "stg": "Stg144",
+   "candidate_id": "QL_NICK_WEEKLY_CHARACTER_CHANGE_001",
+   "md_file": "stg144.md",
+   "url": "https://youtu.be/-JyH5PAJ4-Y?si=BqaSaOarsfJIutKk",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG059_nick_weekly_stage_methodology"
+  },
+  {
+   "stg": "Stg145",
+   "candidate_id": "QL_NICK_WEEKLY_CHARACTER_CHANGE_TREND_STARTER_001",
+   "md_file": "stg145.md",
+   "url": "https://youtu.be/62OaP91Jz9k?si=PHn5ULWDuxyqjQ24",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG059_nick_weekly_stage_methodology"
+  },
+  {
+   "stg": "Stg146",
+   "candidate_id": "QL_NICK_WEEKLY_CLOSE_STOP_POLICY_001",
+   "md_file": "stg146.md",
+   "url": "https://youtu.be/62OaP91Jz9k?si=PHn5ULWDuxyqjQ24",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG059_nick_weekly_stage_methodology"
+  },
+  {
+   "stg": "Stg147",
+   "candidate_id": "QL_NICK_WEEKLY_SCALE_IN_ON_PROOF_001",
+   "md_file": "stg147.md",
+   "url": "https://youtu.be/62OaP91Jz9k?si=PHn5ULWDuxyqjQ24",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG059_nick_weekly_stage_methodology"
+  },
+  {
+   "stg": "Stg148",
+   "candidate_id": "QL_NICK_WEEKLY_SELL_DECISION_FRAMEWORK_001",
+   "md_file": "stg148.md",
+   "url": "https://youtu.be/-JyH5PAJ4-Y?si=BqaSaOarsfJIutKk",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG059_nick_weekly_stage_methodology"
+  },
+  {
+   "stg": "Stg149",
+   "candidate_id": "QL_ROPPEL_357_SCALEOUT_RISK_MODULE_v0",
+   "md_file": "stg149.md",
+   "url": "https://youtu.be/MnXQOt7_ZP0?si=OdvX4hI-qnjYMKZp",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG060_roppel_leadership_position_trading"
+  },
+  {
+   "stg": "Stg150",
+   "candidate_id": "QL_ROPPEL_50D_RECLAIM_TIGHT_ACTION_v0",
+   "md_file": "stg150.md",
+   "url": "https://youtu.be/MnXQOt7_ZP0?si=OdvX4hI-qnjYMKZp",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG060_roppel_leadership_position_trading"
+  },
+  {
+   "stg": "Stg151",
+   "candidate_id": "QL_ROPPEL_EXTENSION_OVER_50D_HEDGE_SIGNAL_v0",
+   "md_file": "stg151.md",
+   "url": "https://youtu.be/MnXQOt7_ZP0?si=OdvX4hI-qnjYMKZp",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG060_roppel_leadership_position_trading"
+  },
+  {
+   "stg": "Stg152",
+   "candidate_id": "QL_ROPPEL_LEADERSHIP_THEME_SCORE_v0",
+   "md_file": "stg152.md",
+   "url": "https://youtu.be/MnXQOt7_ZP0?si=OdvX4hI-qnjYMKZp",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG060_roppel_leadership_position_trading"
+  },
+  {
+   "stg": "Stg153",
+   "candidate_id": "QL_ROPPEL_POSITION_TRADING_HOLD_ENGINE_v0",
+   "md_file": "stg153.md",
+   "url": "https://youtu.be/MnXQOt7_ZP0?si=OdvX4hI-qnjYMKZp",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "CANDIDATE",
+   "output": "STG060_roppel_leadership_position_trading"
+  },
+  {
+   "stg": "Stg154",
+   "candidate_id": "QL_RYAN_LATE_ENTRY_CHASE_FILTER_001",
+   "md_file": "stg154.md",
+   "url": "https://youtu.be/KQRuUWSZvLE?si=50fVh__JlzLkqeb0",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "promoted_to_matured_strategy",
+   "output": "STG061_ryan_pierpont_breakout_discipline"
+  },
+  {
+   "stg": "Stg155",
+   "candidate_id": "QL_RYAN_MARKET_AWARENESS_GATE_001",
+   "md_file": "stg155.md",
+   "url": "https://youtu.be/KQRuUWSZvLE?si=50fVh__JlzLkqeb0",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "promoted_to_matured_strategy",
+   "output": "STG061_ryan_pierpont_breakout_discipline"
+  },
+  {
+   "stg": "Stg156",
+   "candidate_id": "QL_RYAN_PULLBACK_DANGER_ZONE_001",
+   "md_file": "stg156.md",
+   "url": "https://youtu.be/KQRuUWSZvLE?si=50fVh__JlzLkqeb0",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "promoted_to_matured_strategy",
+   "output": "STG061_ryan_pierpont_breakout_discipline"
+  },
+  {
+   "stg": "Stg157",
+   "candidate_id": "QL_RYAN_SELL_INTO_STRENGTH_RUNNER_EXIT_001",
+   "md_file": "stg157.md",
+   "url": "https://youtu.be/KQRuUWSZvLE?si=50fVh__JlzLkqeb0",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "promoted_to_matured_strategy",
+   "output": "STG061_ryan_pierpont_breakout_discipline"
+  },
+  {
+   "stg": "Stg158",
+   "candidate_id": "QL_RYAN_TIGHT_BREAKOUT_001",
+   "md_file": "stg158.md",
+   "url": "https://youtu.be/KQRuUWSZvLE?si=50fVh__JlzLkqeb0",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "promoted_to_matured_strategy",
+   "output": "STG061_ryan_pierpont_breakout_discipline"
+  },
+  {
+   "stg": "Stg159",
+   "candidate_id": "QL_SLINGSHOT_4EMA_HIGH_PULLBACK_001",
+   "md_file": "stg159.md",
+   "url": "https://youtu.be/c7ZSb2wNcOc?si=qdou6ffSbBNhJw63",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "DUPLICATE",
+   "output": "STG025_03_slingshot_4ema_high_pullback"
+  },
+  {
+   "stg": "Stg160",
+   "candidate_id": "QL_STAN_FAILED_RALLY_200D_SHORT_AVOID_v0",
+   "md_file": "stg160.md",
+   "url": "https://youtu.be/O0GpSPtmCuM?si=Ra7X5w149KdMksmj",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "promoted_to_matured_strategy",
+   "output": "STG062_stan_weinstein_stage_analysis"
+  },
+  {
+   "stg": "Stg161",
+   "candidate_id": "QL_STAN_FOREST_GROUP_TREE_FILTER_v0",
+   "md_file": "stg161.md",
+   "url": "https://youtu.be/O0GpSPtmCuM?si=Ra7X5w149KdMksmj",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "promoted_to_matured_strategy",
+   "output": "STG062_stan_weinstein_stage_analysis"
+  },
+  {
+   "stg": "Stg162",
+   "candidate_id": "QL_STAN_GOOD_COMPANY_BAD_CHART_BLOCK_v0",
+   "md_file": "stg162.md",
+   "url": "https://youtu.be/O0GpSPtmCuM?si=Ra7X5w149KdMksmj",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "promoted_to_matured_strategy",
+   "output": "STG062_stan_weinstein_stage_analysis"
+  },
+  {
+   "stg": "Stg163",
+   "candidate_id": "QL_STAN_SPLIT_TAPE_BREADTH_FILTER_v0",
+   "md_file": "stg163.md",
+   "url": "https://youtu.be/O0GpSPtmCuM?si=Ra7X5w149KdMksmj",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "promoted_to_matured_strategy",
+   "output": "STG062_stan_weinstein_stage_analysis"
+  },
+  {
+   "stg": "Stg164",
+   "candidate_id": "QL_STAN_STAGE_1B_TO_2A_BREAKOUT_v0",
+   "md_file": "stg164.md",
+   "url": "https://youtu.be/O0GpSPtmCuM?si=Ra7X5w149KdMksmj",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "promoted_to_matured_strategy",
+   "output": "STG062_stan_weinstein_stage_analysis"
+  },
+  {
+   "stg": "Stg165",
+   "candidate_id": "QL_STAN_STAGE_2A_PULLBACK_SUPPORT_v0",
+   "md_file": "stg165.md",
+   "url": "https://youtu.be/O0GpSPtmCuM?si=Ra7X5w149KdMksmj",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "promoted_to_matured_strategy",
+   "output": "STG062_stan_weinstein_stage_analysis"
+  },
+  {
+   "stg": "Stg166",
+   "candidate_id": "QL_STAN_UNFILLED_GAP_CONTINUATION_v0",
+   "md_file": "stg166.md",
+   "url": "https://youtu.be/O0GpSPtmCuM?si=Ra7X5w149KdMksmj",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "promoted_to_matured_strategy",
+   "output": "STG062_stan_weinstein_stage_analysis"
+  },
+  {
+   "stg": "Stg167",
+   "candidate_id": "QL_TITO_OPTIONS_AWARE_RISK_OVERLAY_v0",
+   "md_file": "stg167.md",
+   "url": "https://youtu.be/NGyE4YIgGpU?si=gj_6ZcIyjUFAEGhk",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "needs_manual_review",
+   "output": "STG063_tito_options_aware_rs_breakout"
+  },
+  {
+   "stg": "Stg168",
+   "candidate_id": "QL_TITO_PROFIT_WITHDRAWAL_CAPITAL_AT_RISK_v0",
+   "md_file": "stg168.md",
+   "url": "https://youtu.be/NGyE4YIgGpU?si=gj_6ZcIyjUFAEGhk",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "needs_manual_review",
+   "output": "STG063_tito_options_aware_rs_breakout"
+  },
+  {
+   "stg": "Stg169",
+   "candidate_id": "QL_TITO_RS_MOMENTUM_BREAKOUT_CROSSBACK_v0",
+   "md_file": "stg169.md",
+   "url": "https://youtu.be/NGyE4YIgGpU?si=gj_6ZcIyjUFAEGhk",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "needs_manual_review",
+   "output": "STG063_tito_options_aware_rs_breakout"
+  },
+  {
+   "stg": "Stg170",
+   "candidate_id": "QL_TY_MICROCAP_LIQUIDITY_REVERSION_SHORT_001",
+   "md_file": "stg170.md",
+   "url": "https://youtu.be/bRXO6F_vGjM?si=N4P30T_3_i-IHPP4",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "duplicate_existing_strategy",
+   "output": "STG032_10_ty_microcap_short"
+  },
+  {
+   "stg": "Stg171",
+   "candidate_id": "QL_VCP_BREAKOUT_DAILY_BASE_001",
+   "md_file": "stg171.md",
+   "url": "https://youtu.be/Tm0dkf8_giA?si=KeJv1-D-_CbJU-FK",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "duplicate_existing_strategy",
+   "output": "STG022_ql_vcp_richard_1d"
+  },
+  {
+   "stg": "Stg172",
+   "candidate_id": "YT_OLIVER_KELL_WEDGE_POP_PRICE_CYCLE_V1",
+   "md_file": "stg172.md",
+   "url": "https://www.youtube.com/watch?v=m8F3KkBDtC0",
+   "quality": "HIGH",
+   "status": "done",
+   "disposition": "duplicate_existing_strategy",
+   "output": "STG056_oliver_kell_price_cycle"
+  }
+ ]
+}

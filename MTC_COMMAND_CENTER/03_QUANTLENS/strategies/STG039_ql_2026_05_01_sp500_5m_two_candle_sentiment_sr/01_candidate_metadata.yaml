@@ -22,3 +22,9 @@ repaint_risk: LOW
 lookahead_risk: MEDIUM
 closed_source_risk: LOW
 notes: URL and channel metadata missing. Transcript uses S&P 500 5m examples but claims general candle-reading process.
+
+# --- A1 Extracted (auto) ---
+trailing_logic: N_A
+filters_used: N_A
+known_strengths: "Entry: Breakout of 48-bar high level. Candle close must be in the upper third of its range."
+known_weaknesses: N_A

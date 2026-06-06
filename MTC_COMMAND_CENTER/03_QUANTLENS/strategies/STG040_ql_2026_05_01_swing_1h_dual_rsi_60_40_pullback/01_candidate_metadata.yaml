@@ -22,3 +22,9 @@ repaint_risk: LOW
 lookahead_risk: MEDIUM
 closed_source_risk: LOW
 notes: URL and channel metadata missing. Price action confluence must be made deterministic before testing.
+
+# --- A1 Extracted (auto) ---
+trailing_logic: N_A
+filters_used: "Multitimeframe trendfollowing pullback strategy using Daily RSI as trend filter and 1Hour RSI as local pullback executio, A. Higher Timeframe (HTF) Daily Trend Filter, 1. HTF Trend Filter must be in a Bull Regime., 1. HTF Trend Filter must be in a Bear Regime., Timeframes: 1Hour entries with Daily trend filter."
+known_strengths: QL_2026-05-01_SWING_1H_DUAL_RSI_60_40_PULLBACK
+known_weaknesses: "C. Stop Loss & Take Profit (Risk Management)"

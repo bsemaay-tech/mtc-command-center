@@ -5,7 +5,7 @@ def test_app_has_clean_navigation_labels_and_no_stale_not_implemented_block():
     app = Path(__file__).resolve().parents[1] / "app.py"
     text = app.read_text(encoding="utf-8")
 
-    assert '["Home", "Data Download", "Backtest", "Optimize", "Reports"]' in text
+    assert '["Operator", "Data Download", "Runs & Artifacts", "Classic Backtest", "Classic Optimize"]' in text
     assert "**Not Implemented in Python engine:**" not in text
 
 

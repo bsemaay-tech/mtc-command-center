@@ -1,0 +1,165 @@
+[v2-runner] mega_walk_forward source size: 49243 chars
+[v2-runner] GRIDS now has 43 strategies (23 new)
+[v2-runner] total param sets across all grids: 2031
+[v2-runner] handing off to mega_walk_forward.main()...
+[start] workers=20 symbols=17 tfs=['15m', '1h', '2h', '4h', '1D'] strategies=43 param_sets_total=2031
+[start] total jobs (sym*tf*strat): 3655; configs evaluated ~171785
+  [135/3655] elapsed=60s | counts={'SKIPPED_RULE': 17, 'INSUFFICIENT_TRADES': 39, 'FAIL': 70, 'PASS': 9}
+  [255/3655] elapsed=120s | counts={'SKIPPED_RULE': 17, 'INSUFFICIENT_TRADES': 68, 'FAIL': 148, 'PASS': 14, 'NO_DATA': 8}
+  [388/3655] elapsed=181s | counts={'SKIPPED_RULE': 17, 'INSUFFICIENT_TRADES': 99, 'FAIL': 240, 'PASS': 20, 'NO_DATA': 12}
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=40444, pipe_handle=1268)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\multiprocessing\spawn.py", line 113, in spawn_main
+    new_handle = reduction.duplicate(pipe_handle,
+                                     source_process=source_process)
+  File "C:\Python314\Lib\multiprocessing\reduction.py", line 79, in duplicate
+    return _winapi.DuplicateHandle(
+           ~~~~~~~~~~~~~~~~~~~~~~~^
+        source_process, handle, target_process,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0, inheritable, _winapi.DUPLICATE_SAME_ACCESS)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Eriþim engellendi
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=40444, pipe_handle=1340)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\multiprocessing\spawn.py", line 113, in spawn_main
+    new_handle = reduction.duplicate(pipe_handle,
+                                     source_process=source_process)
+  File "C:\Python314\Lib\multiprocessing\reduction.py", line 79, in duplicate
+    return _winapi.DuplicateHandle(
+           ~~~~~~~~~~~~~~~~~~~~~~~^
+        source_process, handle, target_process,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0, inheritable, _winapi.DUPLICATE_SAME_ACCESS)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Eriþim engellendi
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=40444, pipe_handle=840)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\multiprocessing\spawn.py", line 113, in spawn_main
+    new_handle = reduction.duplicate(pipe_handle,
+                                     source_process=source_process)
+  File "C:\Python314\Lib\multiprocessing\reduction.py", line 79, in duplicate
+    return _winapi.DuplicateHandle(
+           ~~~~~~~~~~~~~~~~~~~~~~~^
+        source_process, handle, target_process,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0, inheritable, _winapi.DUPLICATE_SAME_ACCESS)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Eriþim engellendi
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=40444, pipe_handle=1368)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\multiprocessing\spawn.py", line 113, in spawn_main
+    new_handle = reduction.duplicate(pipe_handle,
+                                     source_process=source_process)
+  File "C:\Python314\Lib\multiprocessing\reduction.py", line 79, in duplicate
+    return _winapi.DuplicateHandle(
+           ~~~~~~~~~~~~~~~~~~~~~~~^
+        source_process, handle, target_process,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0, inheritable, _winapi.DUPLICATE_SAME_ACCESS)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Eriþim engellendi
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=40444, pipe_handle=1216)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\multiprocessing\spawn.py", line 113, in spawn_main
+    new_handle = reduction.duplicate(pipe_handle,
+                                     source_process=source_process)
+  File "C:\Python314\Lib\multiprocessing\reduction.py", line 79, in duplicate
+    return _winapi.DuplicateHandle(
+           ~~~~~~~~~~~~~~~~~~~~~~~^
+        source_process, handle, target_process,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0, inheritable, _winapi.DUPLICATE_SAME_ACCESS)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Eriþim engellendi
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=40444, pipe_handle=1108)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\multiprocessing\spawn.py", line 113, in spawn_main
+    new_handle = reduction.duplicate(pipe_handle,
+                                     source_process=source_process)
+  File "C:\Python314\Lib\multiprocessing\reduction.py", line 79, in duplicate
+    return _winapi.DuplicateHandle(
+           ~~~~~~~~~~~~~~~~~~~~~~~^
+        source_process, handle, target_process,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0, inheritable, _winapi.DUPLICATE_SAME_ACCESS)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Eriþim engellendi
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=40444, pipe_handle=644)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\multiprocessing\spawn.py", line 113, in spawn_main
+    new_handle = reduction.duplicate(pipe_handle,
+                                     source_process=source_process)
+  File "C:\Python314\Lib\multiprocessing\reduction.py", line 79, in duplicate
+    return _winapi.DuplicateHandle(
+           ~~~~~~~~~~~~~~~~~~~~~~~^
+        source_process, handle, target_process,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0, inheritable, _winapi.DUPLICATE_SAME_ACCESS)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Eriþim engellendi
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=40444, pipe_handle=688)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\multiprocessing\spawn.py", line 113, in spawn_main
+    new_handle = reduction.duplicate(pipe_handle,
+                                     source_process=source_process)
+  File "C:\Python314\Lib\multiprocessing\reduction.py", line 79, in duplicate
+    return _winapi.DuplicateHandle(
+           ~~~~~~~~~~~~~~~~~~~~~~~^
+        source_process, handle, target_process,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0, inheritable, _winapi.DUPLICATE_SAME_ACCESS)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Eriþim engellendi
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=40444, pipe_handle=1156)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\multiprocessing\spawn.py", line 113, in spawn_main
+    new_handle = reduction.duplicate(pipe_handle,
+                                     source_process=source_process)
+  File "C:\Python314\Lib\multiprocessing\reduction.py", line 79, in duplicate
+    return _winapi.DuplicateHandle(
+           ~~~~~~~~~~~~~~~~~~~~~~~^
+        source_process, handle, target_process,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        0, inheritable, _winapi.DUPLICATE_SAME_ACCESS)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Eriþim engellendi
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=40444, pipe_handle=1192)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\multiprocessing\spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "C:\Python314\Lib\multiprocessing\spawn.py", line 132, in _main
+    self = reduction.pickle.load(from_parent)
+  File "C:\Python314\Lib\multiprocessing\connection.py", line 1196, in rebuild_pipe_connection
+    handle = dh.detach()
+  File "C:\Python314\Lib\multiprocessing\reduction.py", line 131, in detach
+    return _winapi.DuplicateHandle(
+           ~~~~~~~~~~~~~~~~~~~~~~~^
+        proc, self._handle, _winapi.GetCurrentProcess(),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self._access, False, _winapi.DUPLICATE_CLOSE_SOURCE)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Eriþim engellendi
+[v2-runner] mega_walk_forward source size: 49243 chars
+[v2-runner] GRIDS now has 43 strategies (23 new)
+[v2-runner] total param sets across all grids: 2031

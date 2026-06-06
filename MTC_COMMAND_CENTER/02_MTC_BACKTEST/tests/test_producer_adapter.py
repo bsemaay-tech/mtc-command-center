@@ -45,3 +45,50 @@ def test_producer_generate_is_deterministic():
 
     assert l1.equals(l2)
     assert s1.equals(s2)
+
+
+def test_quantlens_momentum_continuation_returns_long_only_aligned_signals():
+    producer = create_producer(
+        "ql_fam_momentum_continuation",
+        {"mom_lb": 3, "trend_ema": 5, "breakout_lb": 4},
+    )
+    df = _wave_df(120)
+
+    long_raw, short_raw = producer.generate(df)
+
+    assert producer.name == "producer_ql_fam_momentum_continuation"
+    assert long_raw.dtype == bool
+    assert short_raw.dtype == bool
+    assert len(long_raw) == len(df)
+    assert len(short_raw) == len(df)
+    assert not short_raw.any()
+    assert not long_raw.isna().any()
+    assert not short_raw.isna().any()
+
+
+def test_quantlens_momentum_continuation_uses_prior_breakout_channel():
+    producer = create_producer(
+        "ql_fam_momentum_continuation",
+        {"mom_lb": 2, "trend_ema": 3, "breakout_lb": 3},
+    )
+    idx = pd.date_range("2025-01-01", periods=8, freq="4h", tz="UTC")
+    close = pd.Series([10.0, 10.1, 10.2, 10.3, 10.4, 10.45, 11.0, 11.3])
+    df = pd.DataFrame(
+        {
+            "timestamp": idx,
+            "open": close - 0.05,
+            "high": [10.1, 10.2, 10.3, 10.4, 10.5, 11.2, 11.1, 11.35],
+            "low": close - 0.2,
+            "close": close,
+            "volume": 1000.0,
+        }
+    )
+
+    long_raw, short_raw = producer.generate(df)
+    debug = producer.get_debug_series(df)
+
+    assert not short_raw.any()
+    assert not bool(long_raw.iloc[5])
+    assert not bool(long_raw.iloc[6])
+    assert bool(long_raw.iloc[7])
+    assert debug["chan_hi"].iloc[6] == df["high"].iloc[3:6].max()

@@ -23,6 +23,7 @@ def build_mtc_v2_readiness(
     rows = [
         _readiness_row(row, audit_by_id.get(str(row.get("id") or "")))
         for row in pipeline_rows
+        if not (audit_by_id.get(str(row.get("id") or "")) or {}).get("is_source_parent")
     ]
     rows.sort(key=lambda row: (int(row.get("readiness_rank") or 99), -int(row.get("score") or 0), str(row.get("id") or "")))
 

@@ -1,0 +1,25 @@
+//@version=6
+indicator("producer_ql_fam_momentum_continuation_v1 feature adapter", overlay=false)
+
+int mom_lb = input.int(10, "Momentum Lookback", minval=1)
+int trend_ema_len = input.int(50, "Trend EMA", minval=1)
+int breakout_lb = input.int(10, "Breakout Lookback", minval=1)
+
+bool valid_bar = not na(open) and not na(high) and not na(low) and not na(close) and high >= low and open >= low and open <= high and close >= low and close <= high
+float trend_ema = ta.ema(close, trend_ema_len)
+float roc = not na(close[mom_lb]) and close[mom_lb] != 0.0 ? (close / close[mom_lb]) - 1.0 : na
+bool trend = close > trend_ema
+bool mom_ok = roc[1] > 0.0
+float chan_hi = bar_index >= 2 ? ta.highest(high[1], breakout_lb) : na
+bool breakout = close > chan_hi
+bool raw_long = valid_bar and trend and mom_ok and breakout
+bool raw_short = false
+
+plot(trend_ema, title="FEATURE__producer_ql_fam_momentum_continuation_v1__indicator__trend_ema", display=display.none)
+plot(roc, title="FEATURE__producer_ql_fam_momentum_continuation_v1__indicator__roc", display=display.none)
+plot(chan_hi, title="FEATURE__producer_ql_fam_momentum_continuation_v1__indicator__chan_hi", display=display.none)
+plot(trend ? 1.0 : 0.0, title="FEATURE__producer_ql_fam_momentum_continuation_v1__indicator__trend", display=display.none)
+plot(mom_ok ? 1.0 : 0.0, title="FEATURE__producer_ql_fam_momentum_continuation_v1__indicator__mom_ok", display=display.none)
+plot(breakout ? 1.0 : 0.0, title="FEATURE__producer_ql_fam_momentum_continuation_v1__indicator__breakout", display=display.none)
+plot(raw_long ? 1.0 : 0.0, title="FEATURE__producer_ql_fam_momentum_continuation_v1__signal__raw_long", display=display.none)
+plot(raw_short ? 1.0 : 0.0, title="FEATURE__producer_ql_fam_momentum_continuation_v1__signal__raw_short", display=display.none)

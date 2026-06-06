@@ -39,6 +39,15 @@ def build_scorecards(mcc_root: str | Path | None = None) -> dict[str, Any]:
             if sc_dir.is_dir():
                 run_dirs.append(item)
 
+    # Also scan 03_STATUS for readiness-validated scorecard sets
+    status_root = root / '03_STATUS'
+    if status_root.exists():
+        for item in sorted(status_root.iterdir()):
+            if item.is_dir():
+                sc_dir = item / 'scorecard_v2'
+                if sc_dir.is_dir() and item not in run_dirs:
+                    run_dirs.append(item)
+
     runs: list[dict[str, Any]] = []
     all_cards: list[dict[str, Any]] = []
     bad_json_count = 0

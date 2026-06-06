@@ -1,0 +1,250 @@
+<!doctype html>
+<!--
+  PROTOTYPE B2-EDITORIAL — v2 single-scroll, accented-card aesthetic.
+  Throwaway mockup for SP-005. English-only UI. Not loaded by the live app.
+  Companion: 03_QUANTLENS/_user_guide/11_STRATEGY_DETAIL_PAGE_REDESIGN_PLAN.md
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B2 Editorial — VWAP Bounce Scalp</title>
+<style>
+:root{
+  --bg:#f4f6f8;--panel:#fff;--ink:#172029;--muted:#697682;--line:#e4e9ed;
+  --accent:#1d6f74;--amber:#b07d1e;--red:#c14a48;--green:#2f8a5f;--blue:#3a6aa8;
+  --shadow:0 10px 30px rgba(21,32,41,.07);font-family:Inter,"Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.55}
+.wrap{max-width:740px;margin:0 auto;padding:0 18px 70px}
+.sticky{position:sticky;top:0;z-index:20;background:rgba(244,246,248,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 18px;display:flex;gap:14px;align-items:center;font-size:13px;margin:0 -18px}
+.sticky b{font-size:14px}.sticky .d{color:var(--amber);font-weight:700}.sticky .n{color:var(--muted)}.sticky .q{margin-left:auto;color:var(--accent);font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:22px 24px;margin:18px 0;border-left:5px solid var(--line)}
+.card.acc-amber{border-left-color:var(--amber)}.card.acc-red{border-left-color:var(--red)}
+.card.acc-green{border-left-color:var(--green)}.card.acc-accent{border-left-color:var(--accent)}.card.acc-blue{border-left-color:var(--blue)}
+h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 16px;font-weight:700}
+h1{font-size:33px;margin:0 0 4px;letter-spacing:-.015em}
+.sub{color:var(--muted);font-size:15px;margin:0 0 10px}
+.desc{font-size:17px;margin:0;max-width:58ch;color:#2c3a45}
+.pillrow{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+.pill{padding:6px 14px;border-radius:999px;font-size:13px;font-weight:600}
+.pill.amber{background:#faf0db;color:var(--amber)}.pill.red{background:#f8e6e6;color:var(--red)}
+.pill.green{background:#e4f3eb;color:var(--green)}.pill.grey{background:#eef1f4;color:var(--muted)}.pill.accent{background:#e2f0f0;color:var(--accent)}
+/* decision */
+.dec h3{font-size:22px;margin:0 0 8px}.dec p{margin:0 0 14px;color:#33414c;font-size:15px}
+.kv2{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:6px}
+.kv2 div{font-size:14px}.kv2 .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+.next{margin-top:16px;background:#eef7f6;border-radius:12px;padding:14px 16px;font-size:15px}.next b{color:var(--accent)}
+.chips{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+.chip{font-size:12px;padding:5px 12px;border:1px solid var(--line);border-radius:999px;background:#fafbfc}.chip b{color:var(--ink)}
+/* quantlens */
+.ql .verdict{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin:0 0 4px}
+.ql .val{font-size:24px;font-weight:800;margin:0 0 14px;color:var(--accent)}
+.ql .reason{font-size:15px;color:#33414c;margin:0 0 18px}
+.qgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.qcell{background:#f7f9fa;border-radius:12px;padding:12px 14px}
+.qcell .k{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px}
+.qcell .v{font-size:15px;font-weight:600}
+.warn{display:flex;flex-direction:column;gap:9px;margin-top:18px}
+.warn div{font-size:14px;padding:11px 14px;border-radius:10px}
+.warn .r{background:#f8e6e6;color:var(--red);font-weight:600}
+.warn .a{background:#faf0db;color:var(--amber);font-weight:600}
+.warn .u{background:#f1f4f6;color:#445}.warn .u s{color:var(--red)}
+/* taxonomy */
+.tax{display:grid;gap:16px}
+.tax .row .k{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px}
+.tag{font-size:13px;padding:5px 13px;border-radius:999px;background:#eef1f4;margin:0 7px 7px 0;display:inline-block}
+.tag.unk{color:var(--muted);font-style:italic}
+/* journey */
+.journey{display:flex;flex-wrap:wrap;gap:8px}
+.jstep{flex:1;min-width:100px;text-align:center;font-size:12px;padding:11px 6px;border-radius:10px;background:#f1f4f6;color:var(--muted)}
+.jstep.done{background:#e4f3eb;color:var(--green);font-weight:600}
+.jstep.cur{background:#faf0db;color:var(--amber);font-weight:700}
+.jblock{margin-top:14px;font-size:14px;background:#faf0db;border-radius:10px;padding:12px 14px;color:var(--amber)}
+/* rules */
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:0 28px}
+.rule{display:flex;flex-direction:column;padding:10px 0;border-bottom:1px solid var(--line)}
+.rule .k{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.rule .v{font-size:15px}.rule .v.todo{color:#9aa6b0;font-style:italic}
+/* scorecard */
+.gate{margin:10px 0}
+.gate .top{display:flex;justify-content:space-between;font-size:14px;margin-bottom:5px}.gate .gv{font-weight:700}.gate .gv.na{color:var(--muted);font-weight:400}
+.bar{height:12px;background:#eef1f4;border-radius:7px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--amber)}
+.bar.na i{width:100%;background:repeating-linear-gradient(45deg,#dfe4e8,#dfe4e8 6px,#eef1f4 6px,#eef1f4 12px)}
+.gnote{font-size:12px;color:var(--muted);margin:4px 0 0}
+/* evidence/salvage/source */
+.empty b{font-size:16px}.empty p{color:#445;margin:8px 0 0}
+.check{list-style:none;padding:0;margin:12px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:14px}.check li{color:#445}
+.idea{border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.idea .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}.idea .nm{font-weight:700;font-size:16px}
+.idea .meta{display:flex;gap:9px;flex-wrap:wrap;margin:10px 0 0;font-size:12px}
+.idea .meta span{background:#f1f4f6;border-radius:999px;padding:4px 11px}
+.idea .why{font-size:14px;color:#445;margin:10px 0 0}.idea .why .neg{color:var(--red)}
+.src{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;font-size:15px}.src .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+details.tech summary{cursor:pointer;color:var(--muted);font-weight:600}
+.tech table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+.tech td{padding:7px 8px;border-bottom:1px solid var(--line)}.tech td:first-child{color:var(--muted);width:200px}
+.tech code{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+@media(max-width:640px){.qgrid,.rules,.check,.kv2{grid-template-columns:1fr;display:grid}}
+</style>
+</head>
+<body>
+
+<div class="sticky">
+  <b>VWAP Bounce Scalp</b>
+  <span class="d">Not testable yet</span>
+  <span class="n">Next: complete source audit</span>
+  <span class="q">QuantLens: Needs clarification</span>
+</div>
+
+<div class="wrap">
+
+  <div class="card acc-amber">
+    <h1>VWAP Bounce Scalp</h1>
+    <p class="sub">Crypto · 5m · YouTube strategy</p>
+    <p class="desc">A mean-reversion scalp attempt based on price bouncing from VWAP.</p>
+    <div class="pillrow"><span class="pill amber">Source check needed</span><span class="pill accent">QuantLens: Needs clarification</span></div>
+  </div>
+
+  <div class="card acc-amber dec">
+    <h2>Decision summary</h2>
+    <h3>Not testable yet — source rules are incomplete</h3>
+    <p>The entry idea exists, but exit, stop-loss, take-profit, and repaint / lookahead behavior are not defined.</p>
+    <div class="kv2">
+      <div><div class="k">Can test?</div>No — rules incomplete</div>
+      <div><div class="k">Blocking</div>Undefined exit / stop / take-profit</div>
+    </div>
+    <div class="next"><b>Next action:</b> Complete the source / formula audit before scoring or backtesting.</div>
+    <div class="chips"><span class="chip">Evidence level: <b>Source only</b></span><span class="chip">Documented, <b>not proven</b></span><span class="chip">Testability: <b>Partial</b></span></div>
+  </div>
+
+  <div class="card acc-accent ql">
+    <h2>QuantLens verdict</h2>
+    <p class="verdict">Verdict</p>
+    <p class="val">Needs source clarification</p>
+    <p class="reason">Uses VWAP bounce logic, but the source does not define exact entry threshold, stop-loss, or
+      take-profit rules. Marketing claims discarded; no independent evidence of an edge.</p>
+    <div class="qgrid">
+      <div class="qcell"><div class="k">Commercial value</div><div class="v">Plausible but unproven (3/10)</div></div>
+      <div class="qcell"><div class="k">Literature relevance</div><div class="v">Common — VWAP mean-reversion</div></div>
+      <div class="qcell"><div class="k">Testability</div><div class="v">Partially testable</div></div>
+      <div class="qcell"><div class="k">Complexity</div><div class="v">Moderate (5/10)</div></div>
+      <div class="qcell"><div class="k">Repaint / lookahead</div><div class="v">Unknown / Unknown</div></div>
+      <div class="qcell"><div class="k">Salvageable ideas</div><div class="v">3 found</div></div>
+    </div>
+    <div class="warn">
+      <div class="a">⚠ Repaint status unknown — not treated as safe</div>
+      <div class="u">Source backtest claim: 82% win rate — <s>unverified</s></div>
+      <div class="u">Rejected marketing claim: <s>"This strategy never loses."</s></div>
+    </div>
+  </div>
+
+  <div class="card acc-blue">
+    <h2>Strategy taxonomy</h2>
+    <div class="tax">
+      <div class="row"><div class="k">Category / horizon</div><span class="tag">Scalping</span><span class="tag">Day trading</span></div>
+      <div class="row"><div class="k">Expected market condition</div><span class="tag">Ranging</span><span class="tag">Mean-reversion regime</span></div>
+      <div class="row"><div class="k">Method</div><span class="tag">VWAP bounce</span><span class="tag">Mean reversion</span></div>
+      <div class="row"><div class="k">Instrument fit</div><span class="tag">Crypto</span></div>
+      <div class="row"><div class="k">Automation suitability</div><span class="tag">Partially machine-testable</span></div>
+      <div class="row"><div class="k">Complexity</div><span class="tag">Moderate</span></div>
+    </div>
+  </div>
+
+  <div class="card acc-amber">
+    <h2>Review journey</h2>
+    <div class="journey">
+      <div class="jstep done">Discovered</div><div class="jstep cur">Source checked</div><div class="jstep">Rules extracted</div>
+      <div class="jstep">Testability</div><div class="jstep">Backtested</div><div class="jstep">Promotion</div>
+      <div class="jstep">Paper-trade</div><div class="jstep">Integrated</div>
+    </div>
+    <div class="jblock"><b>Blocked at: Source checked.</b> Why: rules are not deterministic. To unblock: extract exact entry threshold, exit, stop-loss, take-profit + confirm repaint/lookahead.</div>
+  </div>
+
+  <div class="card acc-accent">
+    <h2>Trading rules</h2>
+    <div class="rules">
+      <div class="rule"><span class="k">Market / bias</span><span class="v">Range / mean-reversion (assumed)</span></div>
+      <div class="rule"><span class="k">Expected condition</span><span class="v">Ranging, low-trend</span></div>
+      <div class="rule"><span class="k">Method</span><span class="v">VWAP bounce</span></div>
+      <div class="rule"><span class="k">Entry trigger</span><span class="v">VWAP touch + rejection (threshold undefined)</span></div>
+      <div class="rule"><span class="k">Entry filters</span><span class="v todo">Not defined yet</span></div>
+      <div class="rule"><span class="k">Exit logic</span><span class="v todo">Not defined yet</span></div>
+      <div class="rule"><span class="k">Stop-loss</span><span class="v todo">Not defined yet</span></div>
+      <div class="rule"><span class="k">Take-profit</span><span class="v todo">Not defined yet</span></div>
+      <div class="rule"><span class="k">Trailing stop</span><span class="v todo">Not defined yet</span></div>
+      <div class="rule"><span class="k">Breakeven logic</span><span class="v todo">Not defined yet</span></div>
+      <div class="rule"><span class="k">Risk management</span><span class="v todo">Not defined yet</span></div>
+      <div class="rule"><span class="k">Avoid trading when</span><span class="v todo">Not defined yet</span></div>
+      <div class="rule"><span class="k">Repaint / lookahead</span><span class="v">Unknown — must verify</span></div>
+      <div class="rule"><span class="k">Assumptions</span><span class="v">Intraday crypto; VWAP resets daily</span></div>
+    </div>
+  </div>
+
+  <div class="card acc-accent">
+    <h2>Scorecard — 4 gates</h2>
+    <div class="gate"><div class="top"><span>Gate 1 · Intake</span><span class="gv">48/100</span></div><div class="bar"><i style="width:48%"></i></div><p class="gnote">Lost points: rules not deterministic. Improve: extract exact entry/exit formulas.</p></div>
+    <div class="gate"><div class="top"><span>Gate 1B · Feasibility</span><span class="gv na">N/A</span></div><div class="bar na"><i></i></div></div>
+    <div class="gate"><div class="top"><span>Gate 2 · Backtest</span><span class="gv na">N/A</span></div><div class="bar na"><i></i></div></div>
+    <div class="gate"><div class="top"><span>Gate 3 · Production</span><span class="gv na">N/A</span></div><div class="bar na"><i></i></div></div>
+    <p class="gnote">Gates stay N/A until their phase data exists — no single blended score.</p>
+  </div>
+
+  <div class="card acc-red">
+    <h2>Backtest evidence</h2>
+    <div class="empty">
+      <b>Backtest evidence is not available yet.</b>
+      <p>Reason: blocked upstream — deterministic rules are not complete.</p>
+      <ul class="check">
+        <li>○ Exact entry condition</li><li>○ Exact exit condition</li>
+        <li>○ Stop-loss rule</li><li>○ Take-profit rule</li>
+        <li>○ Repaint / lookahead check</li><li>○ Test market / timeframe</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card acc-green">
+    <h2>Salvageable ideas (3)</h2>
+    <div class="idea"><div class="top"><span class="nm">VWAP reaction confirmation</span><span class="pill grey">Confirmation</span></div>
+      <div class="meta"><span>Module: Confirmation filter</span><span>Dependency: VWAP</span><span>Confidence: Medium</span></div>
+      <p class="why">Useful: recognised intraday confirmation signal. <span class="neg">May fail: needs a quantified threshold; no edge alone.</span></p></div>
+    <div class="idea"><div class="top"><span class="nm">Session filter (intraday only)</span><span class="pill grey">Session filter</span></div>
+      <div class="meta"><span>Module: Guard</span><span>Dependency: none</span><span>Confidence: High</span></div>
+      <p class="why">Useful: restricts trading to liquid hours. <span class="neg">May fail: crypto is 24/7 — session boundaries arbitrary.</span></p></div>
+    <div class="idea"><div class="top"><span class="nm">Volatility guard</span><span class="pill grey">Risk guard</span></div>
+      <div class="meta"><span>Module: Guard</span><span>Dependency: ATR</span><span>Confidence: Medium</span></div>
+      <p class="why">Useful: skips trades in extreme volatility. <span class="neg">May fail: cut-off must be tuned per symbol.</span></p></div>
+  </div>
+
+  <div class="card acc-blue">
+    <h2>Source material</h2>
+    <div class="src">
+      <div><div class="k">Title</div>VWAP bounce scalping</div>
+      <div><div class="k">Type</div>YouTube video</div>
+      <div><div class="k">Transcript</div>Missing</div>
+      <div><div class="k">Source quality</div>Low</div>
+      <div><div class="k">Extracted rule quality</div>Partial</div>
+      <div><div class="k">Marketing claims?</div>Yes</div>
+      <div><div class="k">Closed-source dependency?</div>No</div>
+    </div>
+    <div class="pillrow"><a class="pill accent" href="#">Open source ↗</a><span class="pill grey">Transcript unavailable</span></div>
+  </div>
+
+  <div class="card" style="border-left-color:var(--line)">
+    <details class="tech">
+      <summary>Technical details</summary>
+      <table>
+        <tr><td>Canonical ID</td><td><code>QL_2026-05-03_CRYPTO_5M_VWAP_BOUNCE</code></td></tr>
+        <tr><td>Raw machine status</td><td><code>BLOCKED_SOURCE_AUDIT</code> → "Source check needed"</td></tr>
+        <tr><td>Duplicate handling</td><td>Primary version</td></tr>
+        <tr><td>Raw blocked reason</td><td><code>needs source/formula audit</code></td></tr>
+        <tr><td>QuantLens decision (raw)</td><td><code>NEEDS_CLARIFICATION</code></td></tr>
+      </table>
+    </details>
+  </div>
+
+</div>
+</body>
+</html>

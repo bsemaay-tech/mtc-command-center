@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from .backtest_reader import build_backtest_status
+from .heartbeat_reader import build_overnight_heartbeat
 from .json_io import read_json_file
 from .liveops_reader import build_liveops_status
 from .mtc_v2_reader import build_mtc_v2_readiness
@@ -159,6 +160,7 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
     )
     strategy_research = build_strategy_research(model["mcc_root"])
     quantlens = build_quantlens(model["mcc_root"])
+    overnight_heartbeat = build_overnight_heartbeat()
     return {
         "schema_version": "1.0",
         "mode": "read_only",
@@ -179,6 +181,7 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
         "strategy_registry": strategy_registry,
         "strategy_research": strategy_research,
         "quantlens": quantlens,
+        "overnight_heartbeat": overnight_heartbeat,
         "scorecards": scorecards,
         "dashboard_config": files["dashboard_config"]["data"],
         "task_lifecycle": task_lifecycle,

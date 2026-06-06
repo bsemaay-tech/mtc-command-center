@@ -367,7 +367,10 @@ Loop `=== DEADLINE ===` marker yazınca sırayla, **atlama yasak**:
 | A15 | Hardcoded path migration sonrası rotate edilmedi | `tools/audit_hardcoded_paths.py` (NEXT_STEPS A4) | LESSONS_2026-06-01 |
 | A16 | `generate_morning_report.py` legacy hardcoded OUTPUT_DIR okuyor (A1 fix sıçramadı) | Raporu `alpha_summary.json` + `AGGREGATE_*.json` verisinden üret; generator'a env override ekle | LESSONS_2026-06-03 |
 | A17 | Geniş search-space DSR power'ı öldürür (tüm aday p<0.50) | İki aşama: geniş discovery → dar pre-registered confirmation grid | LESSONS_2026-06-03 |
-| A18 | Morning report down-market alpha yanlış sayım/etiket (rapor 78, log 8); down-market tablosu beat-b&h tablosunun kopyası | Sayıları alpha log `ALPHA_DONE` satırı ile assert; down-market tablosunu b&h<0 filtresinden üret | LESSONS_2026-06-04 |
+| A18 | Morning report down-market alpha yanlış sayım/etiket (rapor 78, log 8); down-market tablosu beat-b&h tablosunun kopyası | Sayıları alpha log `ALPHA_DONE` satırı ile assert; down-market tablosunu b&h<0 filtresinden üret. **FIXED 2026-06-05:** `write_overnight_morning_report.py` artık canonical `alpha_summary.json` (`down_market_alpha`/`premium`) okur + drift assert | LESSONS_2026-06-04 / 06-05 C2 |
+| A19 | Deterministic confirmation run dar grid'i dakikada bitirir → makine gece boyu idle-awake watchdog'da bekler (boşa) | Determinizm yüzünden tekrar değer üretmez (seed=md5, mega:731). Idle wall-clock'u NON-identical ağır validasyona harca: 50k bootstrap, multi-seed DSR stability, CPCV-all-cells, ±2-step pre-registered grid, 4h/1D TF. Yoksa makineyi bırak (keep-awake yok) | LESSONS_2026-06-05 C4/C5 |
+| A20 | `probabilistic_pbo` tam `C(n_splits, n_splits/2)` combo listesini `--max-combinations` slice'ından ÖNCE enumerate eder (pbo:63-68); derin CPCV (n_groups=10→44 split) → C(44,22)≈2T → MemoryError, cap işe yaramaz | PBO'yu standart 15-split CPCV'den besle (`cpcv15/`, C(14,7)=1716); derin 45-split CPCV'yi yalnız ek robustness tablosu olarak tut. Uzun vade: estimate_pbo capli iken lazy/random örnekleme | LESSONS_2026-06-05 A20 |
+| A21 | Derin CPCV (45 split) DSR'ı KURTARMAZ — daha çok OOS split CPCV güvenini artırır ama DSR trial count = grid size (A17), split sayısı değil. Geniş 43-strateji discovery DSR'ı yine sıfırlar (72 hücrede 0 final) | Discovery'yi derinleştirme/genişletme; dar pre-registered confirmation grid'e geç (NIGHT-FOLLOWUP-002) | LESSONS_2026-06-05 C7 |
 
 ---
 
@@ -415,6 +418,8 @@ Bu dosya değiştirilir. Her gece sonu:
 5. CHANGELOG bölümü buraya, son 5 değişiklik
 
 ### CHANGELOG
+- 2026-06-05 (akşam) — Heavy-tier gece (Claude). Determinizm tuzağı baştan tanındı, loop-pad reddedildi. İlk 43-strateji enriched sweep (3655 hücre, 72 PASS+), 3× derin CPCV (45 split, 24 hücre ≥0.80), PBO=0.0, Gate2 53 PASS/19 FAIL, scorecard_v2 promotable 0 (Gate3 INCOMPLETE). **C7/A21:** derin CPCV DSR'ı kurtarmıyor (Gate2∧CPCV≥0.80∧DSR≥0.50 = 0/72). A20 (PBO OOM derin CPCV'de) + C8 (alpha short-trap) eklendi. Çıktı: `05_BACKTEST_RESULTS/heavy_tier_2026-06-05/`. LESSONS_2026-06-05.
+- 2026-06-05 — Confirmation (Option B) gece: dar pre-registered grid DSR power'ı geri getirdi (en iyiler 0.0→0.34-0.38) ama hiçbir aday 0.50 eşiğini geçmedi → `STATISTICALLY_UNCONFIRMED`. A18 morning-report fix doğrulandı (down_market=6 == ALPHA_DONE). A19 eklendi (deterministic run idle-awake israfı). Determinizm mekanizması belgelendi (md5 seed, mega:731): tekrar = sıfır bilgi. LESSONS_2026-06-05.
 - 2026-06-04 — Added MTC-Engine Validation operational stage: light-risk profile, manual producer adapters, bridge CLI, report/artifact contract, and raw-signal parity limitation.
 - 2026-06-04 — Overnight 20-iter 2. sıfır-crash gece (3.44M eval, Codex çalıştırdı). A18 (morning report down-market yanlış sayım) eklendi. Gece-sonu konvansiyonu Codex tarafından atlanmıştı, ertesi sabah elle tamamlandı. LESSONS_2026-06-04.
 - 2026-06-03 — Overnight 21-iter sıfır-crash gece. A16 (morning generator legacy path) + A17 (DSR search-space inflation → confirmation grid) eklendi. LESSONS_2026-06-03.

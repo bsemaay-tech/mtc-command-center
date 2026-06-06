@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.mcc/schemas/strategy_research_registry.schema.json",
+  "title": "MCC Strategy Research Registry",
+  "type": "object",
+  "required": ["schema_version", "strategies"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "generated_at": { "type": ["string", "null"] },
+    "generator": { "type": "string" },
+    "strategies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["strategy_id", "strategy_name", "source_folder"],
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

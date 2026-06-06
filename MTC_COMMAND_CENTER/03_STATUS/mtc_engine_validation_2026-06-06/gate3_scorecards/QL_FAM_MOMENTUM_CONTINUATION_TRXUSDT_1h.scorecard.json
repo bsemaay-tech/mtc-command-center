@@ -1,0 +1,322 @@
+{
+  "strategy_id": "QL_FAM_MOMENTUM_CONTINUATION|TRXUSDT|1h",
+  "gate3": {
+    "score": 91.0,
+    "max": 100,
+    "sub_scores": [
+      {
+        "criterion": "emits_long_short_close_flat",
+        "points_max": 5,
+        "metric_status": "OK",
+        "source_metric": "signal_contract.emits_long_short_close_flat",
+        "note": "Emits long/short/close/flat signals.",
+        "points_awarded": 5
+      },
+      {
+        "criterion": "signal_timing_defined",
+        "points_max": 5,
+        "metric_status": "OK",
+        "source_metric": "signal_contract.signal_timing_defined",
+        "note": "Signal timing defined.",
+        "points_awarded": 5
+      },
+      {
+        "criterion": "same_bar_collision_defined",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "signal_contract.same_bar_collision_defined",
+        "note": "Same-bar collision handling defined.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "signal_uniquely_identifiable",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "signal_contract.signal_uniquely_identifiable",
+        "note": "Signals uniquely identifiable.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "entry_logical_exit_separable",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "signal_contract.entry_logical_exit_separable",
+        "note": "Entry and logical exit separable.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "metadata_emittable",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "signal_contract.metadata_emittable",
+        "note": "Metadata emittable with signals.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "tv_alert_json_convertible",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "alert_adapter.tv_alert_json_convertible",
+        "note": "TV alert JSON convertible.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "entry_exit_reduceonly_distinguishable",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "alert_adapter.entry_exit_reduceonly_distinguishable",
+        "note": "Entry/exit/reduce-only distinguishable.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "duplicate_alert_guarded",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "alert_adapter.duplicate_alert_guarded",
+        "note": "Duplicate alerts guarded.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "order_type_derivable",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "alert_adapter.order_type_derivable",
+        "note": "Order type derivable.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "partial_fill_handled",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "alert_adapter.partial_fill_handled",
+        "note": "Partial fills handled.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "alert_deterministic_parseable",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "alert_adapter.alert_deterministic_parseable",
+        "note": "Alerts deterministically parseable.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "strategy_vs_broker_state_comparable",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "state_sync.strategy_vs_broker_state_comparable",
+        "note": "Strategy vs broker state comparable.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "flat_long_short_trackable",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "state_sync.flat_long_short_trackable",
+        "note": "Flat/long/short state trackable.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "resync_after_missed_alert",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "state_sync.resync_after_missed_alert",
+        "note": "Resync after missed alert possible.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "multi_position_logic_explicit",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "state_sync.multi_position_logic_explicit",
+        "note": "Multi-position logic explicit.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "recomputable_after_restart",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "state_sync.recomputable_after_restart",
+        "note": "Recomputable after restart.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "works_with_mtc_default_sl_tp_trail",
+        "points_max": 4,
+        "metric_status": "N_A",
+        "source_metric": "risk_engine_compat.works_with_mtc_default_sl_tp_trail",
+        "note": "Works with MTC default SL/TP/trail. [NOT SCORED: metric status=N_A]",
+        "points_awarded": null
+      },
+      {
+        "criterion": "custom_stop_explicit_if_needed",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "risk_engine_compat.custom_stop_explicit_if_needed",
+        "note": "Custom stop explicit if needed.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "reverse_reentry_cooldown_mappable",
+        "points_max": 3,
+        "metric_status": "N_A",
+        "source_metric": "risk_engine_compat.reverse_reentry_cooldown_mappable",
+        "note": "Reverse/re-entry/cooldown mappable. [NOT SCORED: metric status=N_A]",
+        "points_awarded": null
+      },
+      {
+        "criterion": "pyramiding_intent_explicit",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "risk_engine_compat.pyramiding_intent_explicit",
+        "note": "Pyramiding intent explicit.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "no_conflicting_order_logic",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "risk_engine_compat.no_conflicting_order_logic",
+        "note": "No conflicting order logic.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "signal_reason_loggable",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "monitoring.signal_reason_loggable",
+        "note": "Signal reason loggable.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "params_loggable",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "monitoring.params_loggable",
+        "note": "Params loggable.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "backtest_to_live_matchable",
+        "points_max": 2,
+        "metric_status": "N_A",
+        "source_metric": "monitoring.backtest_to_live_matchable",
+        "note": "Backtest-to-live matchable. [NOT SCORED: metric status=N_A]",
+        "points_awarded": null
+      },
+      {
+        "criterion": "debug_metadata_sufficient",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "monitoring.debug_metadata_sufficient",
+        "note": "Debug metadata sufficient.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "carries_version",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "monitoring.carries_version",
+        "note": "Carries version metadata.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "circuit_breaker_compatible",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "fail_safe.circuit_breaker_compatible",
+        "note": "Circuit breaker compatible.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "max_daily_loss_compatible",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "fail_safe.max_daily_loss_compatible",
+        "note": "Max daily loss compatible.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "manual_override_behavior_defined",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "fail_safe.manual_override_behavior_defined",
+        "note": "Manual override behavior defined.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "safe_on_exchange_bot_error",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "fail_safe.safe_on_exchange_bot_error",
+        "note": "Safe on exchange/bot error.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "no_trade_on_unexpected_signal",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "fail_safe.no_trade_on_unexpected_signal",
+        "note": "No trade on unexpected signal.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "version_pinned",
+        "points_max": 1,
+        "metric_status": "OK",
+        "source_metric": "reproducibility.version_pinned",
+        "note": "Version pinned.",
+        "points_awarded": 1
+      },
+      {
+        "criterion": "param_set_saved",
+        "points_max": 1,
+        "metric_status": "OK",
+        "source_metric": "reproducibility.param_set_saved",
+        "note": "Param set saved.",
+        "points_awarded": 1
+      },
+      {
+        "criterion": "dataset_window_saved",
+        "points_max": 1,
+        "metric_status": "OK",
+        "source_metric": "reproducibility.dataset_window_saved",
+        "note": "Dataset window saved.",
+        "points_awarded": 1
+      },
+      {
+        "criterion": "cost_assumptions_saved",
+        "points_max": 1,
+        "metric_status": "OK",
+        "source_metric": "reproducibility.cost_assumptions_saved",
+        "note": "Cost assumptions saved.",
+        "points_awarded": 1
+      },
+      {
+        "criterion": "rerun_reproducible",
+        "points_max": 1,
+        "metric_status": "OK",
+        "source_metric": "reproducibility.rerun_reproducible",
+        "note": "Rerun reproducible.",
+        "points_awarded": 1
+      }
+    ],
+    "status": "INCOMPLETE",
+    "pass": false
+  },
+  "flags": {
+    "parity_status": "N_A"
+  },
+  "notes": [
+    "INCOMPLETE: 3 required metric(s) not OK: works_with_mtc_default_sl_tp_trail (risk_engine_compat.works_with_mtc_default_sl_tp_trail status=N_A); reverse_reentry_cooldown_mappable (risk_engine_compat.reverse_reentry_cooldown_mappable status=N_A); backtest_to_live_matchable (monitoring.backtest_to_live_matchable status=N_A)"
+  ],
+  "gate1": {
+    "status": "N_A"
+  },
+  "gate1B": {
+    "status": "N_A"
+  },
+  "gate2": {
+    "status": "N_A"
+  }
+}

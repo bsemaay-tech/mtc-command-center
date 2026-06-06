@@ -3,6 +3,7 @@ source_url: UNKNOWN_URL
 video_title: Five TradingView buy/sell signal indicators
 quantlens_decision: SALVAGE
 codex_status: SALVAGE_ONLY
+deepseek_status: Q_Trend → FILTER_OVERLAY (2026-06-01)
 market_type: UNKNOWN
 primary_timeframe: UNKNOWN
 strategy_type: external TradingView indicator list
@@ -22,8 +23,15 @@ candidate_kind:
   sl_tp_method: false
   trailing_be_method: false
   money_management: false
+q_trend_backtest:
+  long_best: "+110.7% ETH lockbox, PF 1.28, DD -50.8% → FAIL (cross-symbol inconsistent)"
+  short_best: "+70.8% SOL lockbox, PF 1.19, DD -63.6% → FAIL (folds negative)"
+  strong_adx: "INSUFFICIENT_TRADES (9-23 trades, < 30 threshold)"
+  verdict: "Standalone edge yok → FILTER_OVERLAY olarak sınıflandırıldı"
+  pine_source: "00_INBOX_REPORTS/1 Haziran/Stg Q Trend/Q Trend.pine"
+  python_impl: "overnight_v2_runner.py → _qtrend_signal(), _compute_adx()"
 existing_mtc_overlap: Possible overlap with SuperTrend, ATR, RSI/QQE, and external confirmation filters; no direct MTC_V2 feature recommended.
 new_feature_required: false
-recommended_next_step: Keep as salvage-only indicator research note; do not prototype until a specific indicator is selected with reproducible open rules.
+recommended_next_step: Q Trend → FILTER_OVERLAY. Diğer 4 indikatör SALVAGE_ONLY. Q Trend mevcut stratejilere confirmation/guard filter olarak entegre edilebilir.
 created_at: 2026-05-01
-updated_at: 2026-05-01
+updated_at: 2026-06-01

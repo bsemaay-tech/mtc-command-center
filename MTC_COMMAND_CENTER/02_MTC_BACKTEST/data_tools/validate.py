@@ -87,32 +87,30 @@ def check_gaps(df: pd.DataFrame, timeframe: str, is_24_7: bool) -> CheckResult:
 
     expected = pd.Timedelta(minutes=tf_min)
     diffs = df.index.to_series().diff().dropna()
-    large = diffs[diffs > expected]
+    # Use timeframe-relative thresholds so normal higher-timeframe bars are not gaps:
+    #   WARN  : gap >= 3x expected interval
+    #   ERROR : gap >= 15x expected interval
+    warn_threshold = expected * 3
+    error_threshold = expected * 15
 
-    # Use absolute time thresholds regardless of timeframe:
-    #   WARN  : gap > 1 hour (unexpected even for 5m data)
-    #   ERROR : gap > 24 hours (true data loss — exchange maintenance is typically < 12h)
-    warn_threshold = pd.Timedelta(hours=1)
-    error_threshold = pd.Timedelta(hours=24)
-
-    critical = diffs[diffs > error_threshold]
-    warn = diffs[(diffs > warn_threshold) & (diffs <= error_threshold)]
+    critical = diffs[diffs >= error_threshold]
+    warn = diffs[(diffs >= warn_threshold) & (diffs < error_threshold)]
 
     if len(critical) > 0:
         worst = critical.max()
         return CheckResult(
             "ERROR",
-            f"{len(critical)} critical gap(s) > 24h. "
+            f"{len(critical)} critical gap(s) >= 15x timeframe. "
             f"Largest: {worst} (expected {expected}). "
-            f"Total gaps > 1h: {len(large[large > warn_threshold])}.",
+            f"Total gaps >= 3x timeframe: {len(diffs[diffs >= warn_threshold])}.",
         )
     if len(warn) > 0:
         worst = warn.max()
         return CheckResult(
             "WARN",
-            f"{len(warn)} gap(s) between 1h-24h. "
+            f"{len(warn)} gap(s) between 3x-15x timeframe. "
             f"Largest: {worst} (expected {expected}). "
-            f"Likely exchange maintenance (Binance can have ~10-12h downtime).",
+            "Review for exchange maintenance or missing candles.",
         )
     return CheckResult("OK", f"No significant gaps (expected interval: {expected}).")
 

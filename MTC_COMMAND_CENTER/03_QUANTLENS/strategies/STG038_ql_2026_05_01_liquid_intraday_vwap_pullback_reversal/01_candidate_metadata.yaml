@@ -27,3 +27,9 @@ new_feature_required: UNKNOWN_UNTIL_MAPPING
 recommended_next_step: Define deterministic VWAP pullback and band-reversal prototype spec before coding or backtesting.
 created_at: 2026-05-01
 updated_at: 2026-05-01
+
+# --- A1 Extracted (auto) ---
+trailing_logic: N_A
+filters_used: "ATR, VWAP"
+known_strengths: "Entry: VWAP session proxy mean rolling window of 96 bars. Slope of proxy > 0 (long). Close above proxy and distance <= 0.4 * ATR."
+known_weaknesses: N_A

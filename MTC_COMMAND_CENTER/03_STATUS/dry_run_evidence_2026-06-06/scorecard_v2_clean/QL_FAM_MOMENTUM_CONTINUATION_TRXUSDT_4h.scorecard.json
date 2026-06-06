@@ -1,0 +1,881 @@
+{
+  "strategy_id": "QL_FAM_MOMENTUM_CONTINUATION|TRXUSDT|4h",
+  "scorecard_version": "v2",
+  "gate1": {
+    "score": 96.0,
+    "max": 100,
+    "sub_scores": [
+      {
+        "criterion": "entry_rule_explicit",
+        "points_max": 6,
+        "metric_status": "OK",
+        "source_metric": "intake.entry_pseudo_present",
+        "note": "Entry rule pseudo-code or explicit description present.",
+        "points_awarded": 6
+      },
+      {
+        "criterion": "exit_approach_explicit",
+        "points_max": 5,
+        "metric_status": "OK",
+        "source_metric": "intake.exit_pseudo_or_delegated",
+        "note": "Exit approach or delegation to backtest model stated.",
+        "points_awarded": 5
+      },
+      {
+        "criterion": "direction_defined",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "intake.direction_defined",
+        "note": "Long/short/neutral direction explicitly defined.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "same_bar_collision_rule",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "intake.opposite_signal_behavior_present",
+        "note": "Same-bar opposite-signal collision rule present.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "params_explicit",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "intake.params_enumerated",
+        "note": "All tunable parameters enumerated with defaults.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "no_human_interpretation",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "intake.has_deterministic_rules",
+        "note": "Rules are deterministic (no human interpretation required).",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "writable_pine_python",
+        "points_max": 5,
+        "metric_status": "OK",
+        "source_metric": "intake.codable",
+        "note": "Strategy is writable in Pine/Python.",
+        "points_awarded": 5
+      },
+      {
+        "criterion": "no_manual_eyeball",
+        "points_max": 5,
+        "metric_status": "OK",
+        "source_metric": "intake.not_manual_visual",
+        "note": "No manual eyeball/chart inspection required.",
+        "points_awarded": 5
+      },
+      {
+        "criterion": "inputs_numeric_boolean",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "intake.inputs_numeric_boolean",
+        "note": "Inputs are numeric or boolean (no free-text).",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "state_machine_modelable",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "intake.state_machine_definable",
+        "note": "State machine / position model definable.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "tv_python_reproducible",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "intake.not_closed_source",
+        "note": "Reproducible in TradingView/Python (not closed-source).",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "signal_closed_bar",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "intake.signal_from_closed_bar",
+        "note": "Signal generated on closed bar only.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "low_future_bar_risk",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "intake.repaint_class",
+        "note": "Preliminary repaint class LOW=full/MEDIUM=half/HIGH=0.",
+        "points_awarded": 2.0
+      },
+      {
+        "criterion": "htf_lookahead_safe",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "intake.htf_lookahead_safe",
+        "note": "Higher-timeframe lookahead safe.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "no_risky_structure",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "intake.no_risky_structure",
+        "note": "No risky structure (repaint/peek).",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "realtime_eq_backtest",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "intake.realtime_eq_backtest",
+        "note": "Realtime behavior equals backtest.",
+        "points_awarded": 0.0
+      },
+      {
+        "criterion": "entry_signal_clear",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "intake.entry_signal_clear",
+        "note": "Entry signal definition clear.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "exit_or_delegated_clear",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "intake.exit_or_delegated_clear",
+        "note": "Exit or delegated exit model clear.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "opposite_signal_clear",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "intake.opposite_signal_clear",
+        "note": "Opposite-signal handling clear.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "reentry_policy_clear",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "intake.reentry_policy_clear",
+        "note": "Re-entry policy clear.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "state_model_clear",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "intake.state_model_clear",
+        "note": "State/position model clear.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "backtest_exit_model_chosen",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "intake.backtest_exit_model_chosen",
+        "note": "Backtest exit model chosen.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "required_data_available",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "intake.required_data_available",
+        "note": "Required data available.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "granularity_available",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "intake.granularity_available",
+        "note": "Granularity available.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "indicators_computable",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "intake.indicators_computable",
+        "note": "Indicators computable.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "cost_model_addable",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "intake.cost_model_addable",
+        "note": "Cost model addable.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "enough_trade_potential",
+        "points_max": 1,
+        "metric_status": "OK",
+        "source_metric": "intake.enough_trade_potential",
+        "note": "Enough trade potential.",
+        "points_awarded": 1
+      },
+      {
+        "criterion": "order_type_clear",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "intake.order_type_clear",
+        "note": "Order type clear.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "entry_timing_clear",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "intake.entry_timing_clear",
+        "note": "Entry timing clear.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "spread_slippage_estimable",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "intake.spread_slippage_estimable",
+        "note": "Spread/slippage estimable.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "no_anti_liquidity",
+        "points_max": 1,
+        "metric_status": "OK",
+        "source_metric": "intake.no_anti_liquidity_assumption",
+        "note": "No anti-liquidity assumption.",
+        "points_awarded": 1
+      },
+      {
+        "criterion": "intrabar_uncertainty_ok",
+        "points_max": 1,
+        "metric_status": "OK",
+        "source_metric": "intake.intrabar_uncertainty_manageable",
+        "note": "Intrabar uncertainty manageable.",
+        "points_awarded": 1
+      },
+      {
+        "criterion": "no_extreme_latency",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "intake.no_extreme_latency_dependence",
+        "note": "No extreme latency dependence.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "sensible_market_hypothesis",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "intake.strategy_thesis_present",
+        "note": "Sensible market hypothesis present.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "expected_regime_stated",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "intake.expected_regime_present",
+        "note": "Expected regime stated.",
+        "points_awarded": 2
+      }
+    ],
+    "status": "OK",
+    "pass": true
+  },
+  "gate1B": {
+    "score": 80.0,
+    "max": 100,
+    "sub_scores": [
+      {
+        "criterion": "signal_reducible",
+        "points_max": 20,
+        "metric_status": "OK",
+        "source_metric": "feasibility.signal_reducible",
+        "note": "",
+        "points_awarded": 20
+      },
+      {
+        "criterion": "entry_vs_full_clear",
+        "points_max": 16,
+        "metric_status": "OK",
+        "source_metric": "feasibility.entry_vs_full_clear",
+        "note": "",
+        "points_awarded": 16
+      },
+      {
+        "criterion": "no_risk_engine_conflict",
+        "points_max": 20,
+        "metric_status": "OK",
+        "source_metric": "feasibility.no_risk_engine_conflict",
+        "note": "",
+        "points_awarded": 0.0
+      },
+      {
+        "criterion": "alert_convertible",
+        "points_max": 16,
+        "metric_status": "OK",
+        "source_metric": "feasibility.alert_convertible",
+        "note": "",
+        "points_awarded": 16
+      },
+      {
+        "criterion": "state_machine_definable",
+        "points_max": 16,
+        "metric_status": "OK",
+        "source_metric": "feasibility.state_machine_definable",
+        "note": "",
+        "points_awarded": 16
+      },
+      {
+        "criterion": "mtc_param_mappable",
+        "points_max": 12,
+        "metric_status": "OK",
+        "source_metric": "feasibility.mtc_param_mappable",
+        "note": "",
+        "points_awarded": 12
+      }
+    ],
+    "status": "OK",
+    "pass": true,
+    "verdict": "PASS"
+  },
+  "gate2": {
+    "score": 85.78,
+    "max": 100,
+    "sub_scores": [
+      {
+        "criterion": "sharpe_ratio",
+        "points_max": 5,
+        "metric_status": "OK",
+        "source_metric": "metrics.sharpe",
+        "note": "Sharpe ratio (risk-adjusted return).  Threshold \u2265 0.5 scores full.",
+        "points_awarded": 5
+      },
+      {
+        "criterion": "sortino_ratio",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "metrics.sortino",
+        "note": "Sortino ratio (downside-only risk).  Threshold \u2265 0.5 scores full.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "profit_factor",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "metrics.profit_factor",
+        "note": "Gross profit / gross loss.  Threshold \u2265 1.2 scores full.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "expectancy_r",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "metrics.expectancy_r",
+        "note": "Average R-multiple per trade.  Threshold \u2265 0.15 scores full.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "net_profit",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "metrics.net_profit_pct",
+        "note": "Net profit % over the OOS window.  Threshold \u2265 0 scores full.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "max_drawdown",
+        "points_max": 6,
+        "metric_status": "OK",
+        "source_metric": "metrics.max_drawdown_pct",
+        "note": "Max drawdown %.  Lower is better; \u2264 25 % scores full.",
+        "points_awarded": 4.74
+      },
+      {
+        "criterion": "ret_dd_ratio",
+        "points_max": 6,
+        "metric_status": "OK",
+        "source_metric": "metrics.ret_dd_ratio",
+        "note": "Return / drawdown ratio.  \u2265 1.0 scores full.",
+        "points_awarded": 6
+      },
+      {
+        "criterion": "recovery_factor",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "metrics.recovery_factor",
+        "note": "Recovery factor.  \u2265 1.0 scores full.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "worst_window_dd",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "metrics.worst_window_drawdown_pct",
+        "note": "Worst single-window drawdown %.  \u2264 30 % scores full.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "trade_count",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "metrics.trades",
+        "note": "Number of trades.  \u2265 30 scores full (scalping/intraday \u2265 50).",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "calendar_duration",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "metrics.calendar_days",
+        "note": "Calendar days in OOS window.  \u2265 180 scores full.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "trade_concentration",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "metrics.top_trade_concentration",
+        "note": "Top-trade concentration (lower is more diversified).  \u2264 30 % scores full.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "cpcv_pass_rate",
+        "points_max": 8,
+        "metric_status": "OK",
+        "source_metric": "metrics.cpcv_pass_ratio",
+        "note": "Combinatorial purged CV pass ratio.  \u2265 0.7 scores full.",
+        "points_awarded": 8
+      },
+      {
+        "criterion": "pbo_overfit_check",
+        "points_max": 5,
+        "metric_status": "OK",
+        "source_metric": "metrics.pbo",
+        "note": "Probability of backtest overfitting.  \u2264 0.3 scores full; \u2265 0.5 \u2192 OVERFIT_SUSPECT.",
+        "points_awarded": 5
+      },
+      {
+        "criterion": "wfo_pass",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "metrics.wfo_pass",
+        "note": "Walk-forward optimisation pass (boolean).  True scores full.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "multi_window_pass",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "metrics.multi_window_pass",
+        "note": "Multi-window OOS consistency.  True scores full.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "param_stability",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "metrics.param_stability_score",
+        "note": "Parameter stability across folds.  \u2265 0.6 scores full.",
+        "points_awarded": 2.67
+      },
+      {
+        "criterion": "net_after_fees",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "metrics.net_after_fees_pct",
+        "note": "Net return after fees.  \u2265 0 scores full.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "net_after_slippage",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "metrics.net_after_slippage_pct",
+        "note": "Net return after slippage.  \u2265 0 scores full.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "beats_bh_risk_adj",
+        "points_max": 5,
+        "metric_status": "OK",
+        "source_metric": "benchmark.beats_bh_risk_adjusted",
+        "note": "Beats buy & hold on a risk-adjusted basis.  True scores full.",
+        "points_awarded": 0.0
+      },
+      {
+        "criterion": "excess_alpha",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "benchmark.excess_alpha_pct",
+        "note": "Excess alpha over benchmark.  \u2265 0 scores full.",
+        "points_awarded": 0.0
+      },
+      {
+        "criterion": "beats_ema",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "benchmark.beats_ema_benchmark",
+        "note": "Beats EMA crossover benchmark.  True scores full.",
+        "points_awarded": 0.0
+      },
+      {
+        "criterion": "regime_breakdown",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "regime.regime_breakdown_present",
+        "note": "Regime breakdown present.  True scores full.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "weak_regime_awareness",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "regime.weak_regime_identified",
+        "note": "Weak regime identified.  True/string scores full.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "worst_regime_return",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "regime.worst_regime_return_pct",
+        "note": "Worst-regime return %.  \u2265 -10 % scores full.",
+        "points_awarded": 1.37
+      }
+    ],
+    "status": "OK",
+    "pass": true,
+    "overfit_suspect": false
+  },
+  "gate3": {
+    "score": 91.0,
+    "max": 100,
+    "sub_scores": [
+      {
+        "criterion": "emits_long_short_close_flat",
+        "points_max": 5,
+        "metric_status": "OK",
+        "source_metric": "signal_contract.emits_long_short_close_flat",
+        "note": "Emits long/short/close/flat signals.",
+        "points_awarded": 5
+      },
+      {
+        "criterion": "signal_timing_defined",
+        "points_max": 5,
+        "metric_status": "OK",
+        "source_metric": "signal_contract.signal_timing_defined",
+        "note": "Signal timing defined.",
+        "points_awarded": 5
+      },
+      {
+        "criterion": "same_bar_collision_defined",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "signal_contract.same_bar_collision_defined",
+        "note": "Same-bar collision handling defined.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "signal_uniquely_identifiable",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "signal_contract.signal_uniquely_identifiable",
+        "note": "Signals uniquely identifiable.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "entry_logical_exit_separable",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "signal_contract.entry_logical_exit_separable",
+        "note": "Entry and logical exit separable.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "metadata_emittable",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "signal_contract.metadata_emittable",
+        "note": "Metadata emittable with signals.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "tv_alert_json_convertible",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "alert_adapter.tv_alert_json_convertible",
+        "note": "TV alert JSON convertible.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "entry_exit_reduceonly_distinguishable",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "alert_adapter.entry_exit_reduceonly_distinguishable",
+        "note": "Entry/exit/reduce-only distinguishable.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "duplicate_alert_guarded",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "alert_adapter.duplicate_alert_guarded",
+        "note": "Duplicate alerts guarded.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "order_type_derivable",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "alert_adapter.order_type_derivable",
+        "note": "Order type derivable.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "partial_fill_handled",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "alert_adapter.partial_fill_handled",
+        "note": "Partial fills handled.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "alert_deterministic_parseable",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "alert_adapter.alert_deterministic_parseable",
+        "note": "Alerts deterministically parseable.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "strategy_vs_broker_state_comparable",
+        "points_max": 4,
+        "metric_status": "OK",
+        "source_metric": "state_sync.strategy_vs_broker_state_comparable",
+        "note": "Strategy vs broker state comparable.",
+        "points_awarded": 4
+      },
+      {
+        "criterion": "flat_long_short_trackable",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "state_sync.flat_long_short_trackable",
+        "note": "Flat/long/short state trackable.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "resync_after_missed_alert",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "state_sync.resync_after_missed_alert",
+        "note": "Resync after missed alert possible.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "multi_position_logic_explicit",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "state_sync.multi_position_logic_explicit",
+        "note": "Multi-position logic explicit.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "recomputable_after_restart",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "state_sync.recomputable_after_restart",
+        "note": "Recomputable after restart.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "works_with_mtc_default_sl_tp_trail",
+        "points_max": 4,
+        "metric_status": "N_A",
+        "source_metric": "risk_engine_compat.works_with_mtc_default_sl_tp_trail",
+        "note": "Works with MTC default SL/TP/trail. [NOT SCORED: metric status=N_A]",
+        "points_awarded": null
+      },
+      {
+        "criterion": "custom_stop_explicit_if_needed",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "risk_engine_compat.custom_stop_explicit_if_needed",
+        "note": "Custom stop explicit if needed.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "reverse_reentry_cooldown_mappable",
+        "points_max": 3,
+        "metric_status": "N_A",
+        "source_metric": "risk_engine_compat.reverse_reentry_cooldown_mappable",
+        "note": "Reverse/re-entry/cooldown mappable. [NOT SCORED: metric status=N_A]",
+        "points_awarded": null
+      },
+      {
+        "criterion": "pyramiding_intent_explicit",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "risk_engine_compat.pyramiding_intent_explicit",
+        "note": "Pyramiding intent explicit.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "no_conflicting_order_logic",
+        "points_max": 3,
+        "metric_status": "OK",
+        "source_metric": "risk_engine_compat.no_conflicting_order_logic",
+        "note": "No conflicting order logic.",
+        "points_awarded": 3
+      },
+      {
+        "criterion": "signal_reason_loggable",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "monitoring.signal_reason_loggable",
+        "note": "Signal reason loggable.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "params_loggable",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "monitoring.params_loggable",
+        "note": "Params loggable.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "backtest_to_live_matchable",
+        "points_max": 2,
+        "metric_status": "N_A",
+        "source_metric": "monitoring.backtest_to_live_matchable",
+        "note": "Backtest-to-live matchable. [NOT SCORED: metric status=N_A]",
+        "points_awarded": null
+      },
+      {
+        "criterion": "debug_metadata_sufficient",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "monitoring.debug_metadata_sufficient",
+        "note": "Debug metadata sufficient.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "carries_version",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "monitoring.carries_version",
+        "note": "Carries version metadata.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "circuit_breaker_compatible",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "fail_safe.circuit_breaker_compatible",
+        "note": "Circuit breaker compatible.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "max_daily_loss_compatible",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "fail_safe.max_daily_loss_compatible",
+        "note": "Max daily loss compatible.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "manual_override_behavior_defined",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "fail_safe.manual_override_behavior_defined",
+        "note": "Manual override behavior defined.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "safe_on_exchange_bot_error",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "fail_safe.safe_on_exchange_bot_error",
+        "note": "Safe on exchange/bot error.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "no_trade_on_unexpected_signal",
+        "points_max": 2,
+        "metric_status": "OK",
+        "source_metric": "fail_safe.no_trade_on_unexpected_signal",
+        "note": "No trade on unexpected signal.",
+        "points_awarded": 2
+      },
+      {
+        "criterion": "version_pinned",
+        "points_max": 1,
+        "metric_status": "OK",
+        "source_metric": "reproducibility.version_pinned",
+        "note": "Version pinned.",
+        "points_awarded": 1
+      },
+      {
+        "criterion": "param_set_saved",
+        "points_max": 1,
+        "metric_status": "OK",
+        "source_metric": "reproducibility.param_set_saved",
+        "note": "Param set saved.",
+        "points_awarded": 1
+      },
+      {
+        "criterion": "dataset_window_saved",
+        "points_max": 1,
+        "metric_status": "OK",
+        "source_metric": "reproducibility.dataset_window_saved",
+        "note": "Dataset window saved.",
+        "points_awarded": 1
+      },
+      {
+        "criterion": "cost_assumptions_saved",
+        "points_max": 1,
+        "metric_status": "OK",
+        "source_metric": "reproducibility.cost_assumptions_saved",
+        "note": "Cost assumptions saved.",
+        "points_awarded": 1
+      },
+      {
+        "criterion": "rerun_reproducible",
+        "points_max": 1,
+        "metric_status": "OK",
+        "source_metric": "reproducibility.rerun_reproducible",
+        "note": "Rerun reproducible.",
+        "points_awarded": 1
+      }
+    ],
+    "status": "INCOMPLETE",
+    "pass": false
+  },
+  "flags": {
+    "parity_status": "N_A"
+  },
+  "notes": [
+    "INCOMPLETE: 3 required metric(s) not OK: works_with_mtc_default_sl_tp_trail (risk_engine_compat.works_with_mtc_default_sl_tp_trail status=N_A); reverse_reentry_cooldown_mappable (risk_engine_compat.reverse_reentry_cooldown_mappable status=N_A); backtest_to_live_matchable (monitoring.backtest_to_live_matchable status=N_A)"
+  ],
+  "gate_summary": {
+    "statuses": {
+      "gate1": "OK",
+      "gate1B": "OK",
+      "gate2": "OK",
+      "gate3": "INCOMPLETE"
+    },
+    "all_pass": false,
+    "promotable": false,
+    "blocking": [
+      "gate3"
+    ]
+  }
+}

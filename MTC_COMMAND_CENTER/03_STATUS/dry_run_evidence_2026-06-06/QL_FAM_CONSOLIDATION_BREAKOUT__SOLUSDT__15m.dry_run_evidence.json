@@ -1,0 +1,244 @@
+{
+  "schema_version": "liveops_dry_run_evidence_v1",
+  "adapter": "liveops_dry_run_adapter",
+  "adapter_version": "1.0",
+  "generated_at": "2026-06-06T10:53:30+00:00",
+  "signal": {
+    "strategy": "QL_FAM_CONSOLIDATION_BREAKOUT",
+    "symbol": "SOLUSDT",
+    "timeframe": "15m",
+    "direction": "long",
+    "signal_id": "af2e18d9c9f188471890f426",
+    "timestamp": "2026-06-06T00:00:00Z",
+    "entry_price": 100.0,
+    "order_type": "market",
+    "reduce_only": false,
+    "position_mode": "single_position",
+    "reason": "representative_closed_bar_signal"
+  },
+  "alert_payload": {
+    "schema_version": "dry_run_alert_v1",
+    "signal_id": "af2e18d9c9f188471890f426",
+    "strategy": "QL_FAM_CONSOLIDATION_BREAKOUT",
+    "symbol": "SOLUSDT",
+    "timeframe": "15m",
+    "action": "long",
+    "order_type": "market",
+    "reduce_only": false,
+    "position_mode": "single_position",
+    "entry_price": 100.0,
+    "timestamp": "2026-06-06T00:00:00Z",
+    "dry_run": true,
+    "adapter": "liveops_dry_run_adapter",
+    "adapter_version": "1.0"
+  },
+  "state_transitions": [
+    {
+      "state": "signal_detected",
+      "timestamp": "2026-06-06T10:53:30+00:00"
+    },
+    {
+      "state": "alert_prepared",
+      "timestamp": "2026-06-06T10:53:30+00:00",
+      "parse_roundtrip_ok": true
+    },
+    {
+      "state": "dry_order_intent_created",
+      "timestamp": "2026-06-06T10:53:30+00:00",
+      "order_intent": {
+        "signal_id": "af2e18d9c9f188471890f426",
+        "symbol": "SOLUSDT",
+        "action": "long",
+        "order_type": "market",
+        "dry_run": true,
+        "partial_fill_policy": "record_only_no_execution"
+      }
+    },
+    {
+      "state": "risk_checked",
+      "timestamp": "2026-06-06T10:53:30+00:00",
+      "risk_ok": true
+    },
+    {
+      "state": "execution_skipped_because_dry_run",
+      "timestamp": "2026-06-06T10:53:30+00:00",
+      "reason": "Dry-run adapter records intent only; no webhook, broker, or order execution."
+    },
+    {
+      "state": "final_state_recorded",
+      "timestamp": "2026-06-06T10:53:30+00:00",
+      "recomputable_from_signal_id": "af2e18d9c9f188471890f426"
+    }
+  ],
+  "fail_safe_cases": {
+    "invalid_payload": {
+      "schema_version": "liveops_dry_run_evidence_v1",
+      "adapter": "liveops_dry_run_adapter",
+      "adapter_version": "1.0",
+      "generated_at": "2026-06-06T10:53:30+00:00",
+      "signal": {
+        "raw_type": "str"
+      },
+      "alert_payload": null,
+      "state_transitions": [
+        {
+          "state": "invalid_payload",
+          "timestamp": "2026-06-06T10:53:30+00:00",
+          "execution_skipped": true
+        }
+      ],
+      "fail_safe_cases": {},
+      "final_state": "invalid_payload",
+      "dry_run": true,
+      "live_trading_enabled": false,
+      "webhook_sent": false,
+      "order_placed": false,
+      "broker_client_created": false,
+      "fail_safe_triggered": "invalid_payload",
+      "probe": true
+    },
+    "missing_field": {
+      "schema_version": "liveops_dry_run_evidence_v1",
+      "adapter": "liveops_dry_run_adapter",
+      "adapter_version": "1.0",
+      "generated_at": "2026-06-06T10:53:30+00:00",
+      "signal": {
+        "strategy": "PROBE"
+      },
+      "alert_payload": null,
+      "state_transitions": [
+        {
+          "state": "missing_field",
+          "timestamp": "2026-06-06T10:53:30+00:00",
+          "execution_skipped": true
+        }
+      ],
+      "fail_safe_cases": {},
+      "final_state": "missing_field",
+      "dry_run": true,
+      "live_trading_enabled": false,
+      "webhook_sent": false,
+      "order_placed": false,
+      "broker_client_created": false,
+      "fail_safe_triggered": "missing_field",
+      "probe": true
+    },
+    "rejected_risk": {
+      "schema_version": "liveops_dry_run_evidence_v1",
+      "adapter": "liveops_dry_run_adapter",
+      "adapter_version": "1.0",
+      "generated_at": "2026-06-06T10:53:30+00:00",
+      "signal": {
+        "strategy": "PROBE",
+        "symbol": "BTCUSDT",
+        "timeframe": "1h",
+        "direction": "long",
+        "signal_id": "22daea16b60b70f7366742bc",
+        "timestamp": "2026-06-06T00:00:00Z",
+        "entry_price": 2000000.0,
+        "order_type": "market",
+        "reduce_only": false,
+        "position_mode": "single_position",
+        "reason": "representative_closed_bar_signal"
+      },
+      "alert_payload": {
+        "schema_version": "dry_run_alert_v1",
+        "signal_id": "22daea16b60b70f7366742bc",
+        "strategy": "PROBE",
+        "symbol": "BTCUSDT",
+        "timeframe": "1h",
+        "action": "long",
+        "order_type": "market",
+        "reduce_only": false,
+        "position_mode": "single_position",
+        "entry_price": 2000000.0,
+        "timestamp": "2026-06-06T00:00:00Z",
+        "dry_run": true,
+        "adapter": "liveops_dry_run_adapter",
+        "adapter_version": "1.0"
+      },
+      "state_transitions": [
+        {
+          "state": "signal_detected",
+          "timestamp": "2026-06-06T10:53:30+00:00"
+        },
+        {
+          "state": "alert_prepared",
+          "timestamp": "2026-06-06T10:53:30+00:00",
+          "parse_roundtrip_ok": true
+        },
+        {
+          "state": "dry_order_intent_created",
+          "timestamp": "2026-06-06T10:53:30+00:00",
+          "order_intent": {
+            "signal_id": "22daea16b60b70f7366742bc",
+            "symbol": "BTCUSDT",
+            "action": "long",
+            "order_type": "market",
+            "dry_run": true,
+            "partial_fill_policy": "record_only_no_execution"
+          }
+        },
+        {
+          "state": "rejected_risk",
+          "timestamp": "2026-06-06T10:53:30+00:00",
+          "execution_skipped": true,
+          "reason": "entry_price_exceeds_dry_run_limit"
+        }
+      ],
+      "fail_safe_cases": {},
+      "final_state": "rejected_risk",
+      "dry_run": true,
+      "live_trading_enabled": false,
+      "webhook_sent": false,
+      "order_placed": false,
+      "broker_client_created": false,
+      "fail_safe_triggered": "rejected_risk",
+      "probe": true
+    },
+    "disabled_trading": {
+      "schema_version": "liveops_dry_run_evidence_v1",
+      "adapter": "liveops_dry_run_adapter",
+      "adapter_version": "1.0",
+      "generated_at": "2026-06-06T10:53:30+00:00",
+      "signal": {
+        "strategy": "PROBE",
+        "symbol": "BTCUSDT",
+        "timeframe": "1h",
+        "direction": "long",
+        "signal_id": "22daea16b60b70f7366742bc",
+        "timestamp": "2026-06-06T00:00:00Z",
+        "entry_price": 100.0,
+        "order_type": "market",
+        "reduce_only": false,
+        "position_mode": "single_position",
+        "reason": "representative_closed_bar_signal"
+      },
+      "alert_payload": null,
+      "state_transitions": [
+        {
+          "state": "disabled_trading",
+          "timestamp": "2026-06-06T10:53:30+00:00",
+          "execution_skipped": true,
+          "reason": "Unsafe live/webhook/broker flag present; dry-run adapter refuses execution."
+        }
+      ],
+      "fail_safe_cases": {},
+      "final_state": "disabled_trading",
+      "dry_run": true,
+      "live_trading_enabled": false,
+      "webhook_sent": false,
+      "order_placed": false,
+      "broker_client_created": false,
+      "fail_safe_triggered": "disabled_trading",
+      "probe": true
+    }
+  },
+  "final_state": "final_state_recorded",
+  "dry_run": true,
+  "live_trading_enabled": false,
+  "webhook_sent": false,
+  "order_placed": false,
+  "broker_client_created": false,
+  "fail_safe_triggered": null
+}

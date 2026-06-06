@@ -1,0 +1,3493 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-06-06T20:08:30.768963+00:00",
+  "generator": "build_strategy_research_registry.py",
+  "strategies": [
+    {
+      "strategy_id": "STG001",
+      "strategy_name": "STG001_ql_alpha_ada_two_candle_sr_1h",
+      "source_file": "03_QUANTLENS/strategies/STG001_ql_alpha_ada_two_candle_sr_1h/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG001_ql_alpha_ada_two_candle_sr_1h",
+      "current_status": "PROMOTE_TO_FORWARD_PAPER_TRADE|PROMOTE_TO_PARITY_CANDIDATE",
+      "maturity_level": "promoted_candidate",
+      "original_timeframe": "1h",
+      "recommended_timeframes": [
+        "1h"
+      ],
+      "original_asset_class": "ADAUSDT",
+      "tested_assets_if_known": [
+        "ADAUSDT"
+      ],
+      "long_only_or_long_short": "long_only",
+      "strategy_category": "swing_trading",
+      "expected_market_regime": [
+        "ranging"
+      ],
+      "method": [
+        "support_resistance"
+      ],
+      "entry_logic_summary": "(close_position >= upper_third) AND (close > high[1]) AND (close > high_break + break_buf_atr*atr14)",
+      "exit_logic_summary": "fixed 2R target (entry + 2*(entry-stop)) OR hard stop (low <= stop_price) OR force-exit after max_hold_bars",
+      "stop_loss_logic": "lowest low of last 2 bars at signal bar",
+      "take_profit_logic": "target_R=2.0",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "SUPPORT_RESISTANCE",
+        "CANDLESTICK"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "true under engine assumptions: signal on CLOSED bar i, executed at bar i+1 open; rolling high uses [1] shift so the breakout level excludes the current bar",
+      "lookahead_risk_notes": "true: high_break shifted by 1; close_position uses only current bar OHLC",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "NEEDS_SOURCE_CONFIRMATION",
+      "backtest_engine_compatibility_notes": "bar_close_only",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "only 53 lockbox trades; Q1 window +599% is a small-sample distortion",
+      "reusable_components": [
+        "SUPPORT_RESISTANCE",
+        "CANDLESTICK"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1h",
+        "ada",
+        "alpha",
+        "candle",
+        "candlestick",
+        "ql",
+        "sr",
+        "support_resistance",
+        "two"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG002",
+      "strategy_name": "STG002_ql_alpha_link_8ema_1h",
+      "source_file": "03_QUANTLENS/strategies/STG002_ql_alpha_link_8ema_1h/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG002_ql_alpha_link_8ema_1h",
+      "current_status": "PROMOTE_TO_FORWARD_PAPER_TRADE|PROMOTE_TO_PARITY_CANDIDATE",
+      "maturity_level": "promoted_candidate",
+      "original_timeframe": "1h",
+      "recommended_timeframes": [
+        "1h"
+      ],
+      "original_asset_class": "LINKUSDT",
+      "tested_assets_if_known": [
+        "LINKUSDT"
+      ],
+      "long_only_or_long_short": "long_only",
+      "strategy_category": "swing_trading",
+      "expected_market_regime": [
+        "trending"
+      ],
+      "method": [
+        "trend_following"
+      ],
+      "entry_logic_summary": "(close > ema8) AND (slope > 0) AND (dist_atr <= pullback_atr) AND (impulse_atr[1] >= impulse_atr_param)",
+      "exit_logic_summary": "TRAILING: when bar close < ema8, exit at next bar open; hard stop if low <= stop_price; force-exit after max_hold_bars. NOTE: this exit-trail variant does NOT use a fixed 2R target.",
+      "stop_loss_logic": "lowest low of last 3 bars at signal bar",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "EMA"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "true under engine assumptions: signal evaluated on CLOSED bar i, executed at open of bar i+1; no intrabar/tick dependency for signal; stop/exit checked intrabar on subsequent bars only",
+      "lookahead_risk_notes": "true: all inputs use values at or before the signal bar; impulse uses [1] shift",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "NEEDS_SOURCE_CONFIRMATION",
+      "backtest_engine_compatibility_notes": "bar_close_only",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "EMA"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1h",
+        "8ema",
+        "alpha",
+        "ema",
+        "link",
+        "ql"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG003",
+      "strategy_name": "STG003_ql_alpha_ltc_rsi_oversold_1h",
+      "source_file": "03_QUANTLENS/strategies/STG003_ql_alpha_ltc_rsi_oversold_1h/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG003_ql_alpha_ltc_rsi_oversold_1h",
+      "current_status": "PROMOTE_TO_FORWARD_PAPER_TRADE",
+      "maturity_level": "promoted_candidate",
+      "original_timeframe": "1h",
+      "recommended_timeframes": [
+        "1h"
+      ],
+      "original_asset_class": "LTCUSDT",
+      "tested_assets_if_known": [
+        "LTCUSDT"
+      ],
+      "long_only_or_long_short": "long_only",
+      "strategy_category": "swing_trading",
+      "expected_market_regime": [
+        "ranging"
+      ],
+      "method": [
+        "mean_reversion"
+      ],
+      "entry_logic_summary": "(rsi5[1] < oversold) AND (rsi5 >= recovery)",
+      "exit_logic_summary": "fixed 2R target (entry + 2*(entry-stop)) OR hard stop (low <= stop_price) OR force-exit after max_hold_bars",
+      "stop_loss_logic": "lowest low of last 5 bars at signal bar",
+      "take_profit_logic": "target_R=2.0",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "RSI"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "true under engine assumptions: RSI computed on CLOSED bars; signal on bar i, executed at bar i+1 open",
+      "lookahead_risk_notes": "true: uses rsi5 and rsi5[1] only (no forward reference)",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "NEEDS_SOURCE_CONFIRMATION",
+      "backtest_engine_compatibility_notes": "bar_close_only",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "thin PF 1.23, low expectancy 0.107R, fold consistency only 1/3, Q3 window -26.4%",
+      "reusable_components": [
+        "RSI"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1h",
+        "alpha",
+        "ltc",
+        "oversold",
+        "ql",
+        "rsi"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG004",
+      "strategy_name": "STG004_ql_avwap_brian_earnings_anchor_1d",
+      "source_file": "03_QUANTLENS/strategies/STG004_ql_avwap_brian_earnings_anchor_1d/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG004_ql_avwap_brian_earnings_anchor_1d",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "day_trading",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "review_needed"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "AVWAP"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "AVWAP"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "anchor",
+        "avwap",
+        "brian",
+        "earnings",
+        "ql"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG005",
+      "strategy_name": "STG005_ql_avwap_brian_gap_reclaim_5m",
+      "source_file": "03_QUANTLENS/strategies/STG005_ql_avwap_brian_gap_reclaim_5m/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG005_ql_avwap_brian_gap_reclaim_5m",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "day_trading",
+      "expected_market_regime": [
+        "breakout"
+      ],
+      "method": [
+        "breakout"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "AVWAP",
+        "GAP"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "AVWAP",
+        "GAP"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "5m",
+        "avwap",
+        "brian",
+        "gap",
+        "ql",
+        "reclaim"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG006",
+      "strategy_name": "STG006_ql_avwap_brian_intraday_or_5m",
+      "source_file": "03_QUANTLENS/strategies/STG006_ql_avwap_brian_intraday_or_5m/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG006_ql_avwap_brian_intraday_or_5m",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "day_trading",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "review_needed"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "AVWAP",
+        "OPENING_RANGE"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "AVWAP",
+        "OPENING_RANGE"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "5m",
+        "avwap",
+        "brian",
+        "intraday",
+        "opening_range",
+        "or",
+        "ql"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG007",
+      "strategy_name": "STG007_ql_avwap_brian_stage2_emerging_1d",
+      "source_file": "03_QUANTLENS/strategies/STG007_ql_avwap_brian_stage2_emerging_1d/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG007_ql_avwap_brian_stage2_emerging_1d",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "review_needed"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "AVWAP"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "AVWAP"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "avwap",
+        "brian",
+        "emerging",
+        "ql",
+        "stage2"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG008",
+      "strategy_name": "STG008_ql_connell_event_driven_gap_1d",
+      "source_file": "03_QUANTLENS/strategies/STG008_ql_connell_event_driven_gap_1d/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG008_ql_connell_event_driven_gap_1d",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "breakout"
+      ],
+      "method": [
+        "breakout"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "GAP"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "GAP"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "connell",
+        "driven",
+        "event",
+        "gap",
+        "ql"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG009",
+      "strategy_name": "STG009_ql_connell_event_driven_gap_5m",
+      "source_file": "03_QUANTLENS/strategies/STG009_ql_connell_event_driven_gap_5m/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG009_ql_connell_event_driven_gap_5m",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "day_trading",
+      "expected_market_regime": [
+        "breakout"
+      ],
+      "method": [
+        "breakout"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "GAP"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "GAP"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "5m",
+        "connell",
+        "driven",
+        "event",
+        "gap",
+        "ql"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG010",
+      "strategy_name": "STG010_ql_deepak_153_filter_1d",
+      "source_file": "03_QUANTLENS/strategies/STG010_ql_deepak_153_filter_1d/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG010_ql_deepak_153_filter_1d",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "review_needed"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "SMA"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "SMA"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "deepak",
+        "filter",
+        "ql",
+        "sma"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG011",
+      "strategy_name": "STG011_ql_deepak_259_risk_overlay",
+      "source_file": "03_QUANTLENS/strategies/STG011_ql_deepak_259_risk_overlay/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG011_ql_deepak_259_risk_overlay",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "review_needed"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "SMA"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "SMA"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "deepak",
+        "overlay",
+        "ql",
+        "risk",
+        "sma"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG012",
+      "strategy_name": "STG012_ql_deepak_snapback_50sma_intraday",
+      "source_file": "03_QUANTLENS/strategies/STG012_ql_deepak_snapback_50sma_intraday/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG012_ql_deepak_snapback_50sma_intraday",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "day_trading",
+      "expected_market_regime": [
+        "reversal"
+      ],
+      "method": [
+        "reversal"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "SMA"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "SMA"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "50sma",
+        "deepak",
+        "intraday",
+        "ql",
+        "sma",
+        "snapback"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG013",
+      "strategy_name": "STG013_ql_episodic_pivot_christian_5m",
+      "source_file": "03_QUANTLENS/strategies/STG013_ql_episodic_pivot_christian_5m/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG013_ql_episodic_pivot_christian_5m",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "day_trading",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "review_needed"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": "review_needed",
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": "review_needed",
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "5m",
+        "christian",
+        "episodic",
+        "pivot",
+        "ql"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG014",
+      "strategy_name": "STG014_ql_highest_volume_edge_proswing_1d",
+      "source_file": "03_QUANTLENS/strategies/STG014_ql_highest_volume_edge_proswing_1d/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG014_ql_highest_volume_edge_proswing_1d",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "review_needed"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "VOLUME"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "VOLUME"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "edge",
+        "highest",
+        "proswing",
+        "ql",
+        "volume"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG015",
+      "strategy_name": "STG015_ql_launchpad_proswing_1d",
+      "source_file": "03_QUANTLENS/strategies/STG015_ql_launchpad_proswing_1d/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG015_ql_launchpad_proswing_1d",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "review_needed"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": "review_needed",
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": "review_needed",
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "launchpad",
+        "proswing",
+        "ql"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG016",
+      "strategy_name": "STG016_ql_open_range_5pct_stop_christian_5m",
+      "source_file": "03_QUANTLENS/strategies/STG016_ql_open_range_5pct_stop_christian_5m/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG016_ql_open_range_5pct_stop_christian_5m",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "day_trading",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "review_needed"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": "review_needed",
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": "review_needed",
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "5m",
+        "5pct",
+        "christian",
+        "open",
+        "ql",
+        "range",
+        "stop"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG017",
+      "strategy_name": "STG017_ql_rs_phase_days_proswing_overlay",
+      "source_file": "03_QUANTLENS/strategies/STG017_ql_rs_phase_days_proswing_overlay/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG017_ql_rs_phase_days_proswing_overlay",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "trending"
+      ],
+      "method": [
+        "momentum"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "RELATIVE_STRENGTH"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "RELATIVE_STRENGTH"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "days",
+        "overlay",
+        "phase",
+        "proswing",
+        "ql",
+        "relative_strength",
+        "rs"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG018",
+      "strategy_name": "STG018_ql_sell_rules_market_wizards_overlay",
+      "source_file": "03_QUANTLENS/strategies/STG018_ql_sell_rules_market_wizards_overlay/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG018_ql_sell_rules_market_wizards_overlay",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "review_needed"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": "review_needed",
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": "review_needed",
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "market",
+        "overlay",
+        "ql",
+        "rules",
+        "sell",
+        "wizards"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG019",
+      "strategy_name": "STG019_ql_trail_20ma_christian_1d",
+      "source_file": "03_QUANTLENS/strategies/STG019_ql_trail_20ma_christian_1d/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG019_ql_trail_20ma_christian_1d",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "trending"
+      ],
+      "method": [
+        "trend_following"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "SMA"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "SMA"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "20ma",
+        "christian",
+        "ql",
+        "sma",
+        "trail"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG020",
+      "strategy_name": "STG020_ql_vcp_early_entry_christian_1d",
+      "source_file": "03_QUANTLENS/strategies/STG020_ql_vcp_early_entry_christian_1d/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG020_ql_vcp_early_entry_christian_1d",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "high_volatility"
+      ],
+      "method": [
+        "volatility_expansion"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "VCP"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "VCP"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "christian",
+        "early",
+        "entry",
+        "ql",
+        "vcp"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG021",
+      "strategy_name": "STG021_ql_vcp_minervini_1d",
+      "source_file": "03_QUANTLENS/strategies/STG021_ql_vcp_minervini_1d/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG021_ql_vcp_minervini_1d",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "high_volatility"
+      ],
+      "method": [
+        "volatility_expansion"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "VCP"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "VCP"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "minervini",
+        "ql",
+        "vcp"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG022",
+      "strategy_name": "STG022_ql_vcp_richard_1d",
+      "source_file": "03_QUANTLENS/strategies/STG022_ql_vcp_richard_1d/producer_spec.json",
+      "source_folder": "03_QUANTLENS/strategies/STG022_ql_vcp_richard_1d",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "high_volatility"
+      ],
+      "method": [
+        "volatility_expansion"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "VCP"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "VCP"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "ql",
+        "richard",
+        "vcp"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG023",
+      "strategy_name": "STG023_01_kell_wedge_pop_crossback",
+      "source_file": "03_QUANTLENS/strategies/STG023_01_kell_wedge_pop_crossback/README.md",
+      "source_folder": "03_QUANTLENS/strategies/STG023_01_kell_wedge_pop_crossback",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "breakout",
+        "reversal"
+      ],
+      "method": [
+        "reversal",
+        "breakout"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "CHART_PATTERN"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "CHART_PATTERN"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "chart_pattern",
+        "crossback",
+        "kell",
+        "pop",
+        "wedge"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG024",
+      "strategy_name": "STG024_02_martin_luke_pullback_avwap",
+      "source_file": "03_QUANTLENS/strategies/STG024_02_martin_luke_pullback_avwap/README.md",
+      "source_folder": "03_QUANTLENS/strategies/STG024_02_martin_luke_pullback_avwap",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "trending"
+      ],
+      "method": [
+        "pullback_continuation"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "AVWAP"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "AVWAP"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "avwap",
+        "luke",
+        "martin",
+        "pullback"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG025",
+      "strategy_name": "STG025_03_slingshot_4ema_high_pullback",
+      "source_file": "03_QUANTLENS/strategies/STG025_03_slingshot_4ema_high_pullback/README.md",
+      "source_folder": "03_QUANTLENS/strategies/STG025_03_slingshot_4ema_high_pullback",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "trending"
+      ],
+      "method": [
+        "pullback_continuation"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "EMA"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "EMA"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "4ema",
+        "ema",
+        "high",
+        "pullback",
+        "slingshot"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG026",
+      "strategy_name": "STG026_04_crabel_range_expansion_stage2",
+      "source_file": "03_QUANTLENS/strategies/STG026_04_crabel_range_expansion_stage2/README.md",
+      "source_folder": "03_QUANTLENS/strategies/STG026_04_crabel_range_expansion_stage2",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "review_needed"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": "review_needed",
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": "review_needed",
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "crabel",
+        "expansion",
+        "range",
+        "stage2"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG027",
+      "strategy_name": "STG027_05_bigbeluga_rsi_choch_atr",
+      "source_file": "03_QUANTLENS/strategies/STG027_05_bigbeluga_rsi_choch_atr/README.md",
+      "source_folder": "03_QUANTLENS/strategies/STG027_05_bigbeluga_rsi_choch_atr",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "reversal"
+      ],
+      "method": [
+        "reversal"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "RSI",
+        "ATR",
+        "MARKET_STRUCTURE"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "RSI",
+        "ATR",
+        "MARKET_STRUCTURE"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "atr",
+        "bigbeluga",
+        "choch",
+        "market_structure",
+        "rsi"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG028",
+      "strategy_name": "STG028_06_canslim_shakeout_plus3",
+      "source_file": "03_QUANTLENS/strategies/STG028_06_canslim_shakeout_plus3/README.md",
+      "source_folder": "03_QUANTLENS/strategies/STG028_06_canslim_shakeout_plus3",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "review_needed"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": "review_needed",
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": "review_needed",
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "canslim",
+        "plus3",
+        "shakeout"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG029",
+      "strategy_name": "STG029_07_linda_5sma_rs_pullback",
+      "source_file": "03_QUANTLENS/strategies/STG029_07_linda_5sma_rs_pullback/README.md",
+      "source_folder": "03_QUANTLENS/strategies/STG029_07_linda_5sma_rs_pullback",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "trending"
+      ],
+      "method": [
+        "pullback_continuation",
+        "momentum"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "SMA",
+        "RELATIVE_STRENGTH"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "SMA",
+        "RELATIVE_STRENGTH"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "5sma",
+        "linda",
+        "pullback",
+        "relative_strength",
+        "rs",
+        "sma"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG030",
+      "strategy_name": "STG030_08_linda_8am_opening_range",
+      "source_file": "03_QUANTLENS/strategies/STG030_08_linda_8am_opening_range/README.md",
+      "source_folder": "03_QUANTLENS/strategies/STG030_08_linda_8am_opening_range",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "day_trading",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "review_needed"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "OPENING_RANGE"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "OPENING_RANGE"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "8am",
+        "linda",
+        "opening",
+        "opening_range",
+        "range"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG031",
+      "strategy_name": "STG031_09_highbeta_openingbar_gapandgo",
+      "source_file": "03_QUANTLENS/strategies/STG031_09_highbeta_openingbar_gapandgo/README.md",
+      "source_folder": "03_QUANTLENS/strategies/STG031_09_highbeta_openingbar_gapandgo",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "day_trading",
+      "expected_market_regime": [
+        "breakout"
+      ],
+      "method": [
+        "breakout"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "OPENING_RANGE"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "OPENING_RANGE"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "gapandgo",
+        "highbeta",
+        "opening_range",
+        "openingbar"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG032",
+      "strategy_name": "STG032_10_ty_microcap_short",
+      "source_file": "03_QUANTLENS/strategies/STG032_10_ty_microcap_short/README.md",
+      "source_folder": "03_QUANTLENS/strategies/STG032_10_ty_microcap_short",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "day_trading",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "review_needed"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": "review_needed",
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": "review_needed",
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "microcap",
+        "short",
+        "ty"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG033",
+      "strategy_name": "STG033_11_daily_extension_anti_chase_filter",
+      "source_file": "03_QUANTLENS/strategies/STG033_11_daily_extension_anti_chase_filter/README.md",
+      "source_folder": "03_QUANTLENS/strategies/STG033_11_daily_extension_anti_chase_filter",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "review_needed"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "PRICE_EXTENSION"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "PRICE_EXTENSION"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "anti",
+        "chase",
+        "daily",
+        "extension",
+        "filter",
+        "price_extension"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG034",
+      "strategy_name": "STG034_12_ema20_50_two_retests_baseline",
+      "source_file": "03_QUANTLENS/strategies/STG034_12_ema20_50_two_retests_baseline/README.md",
+      "source_folder": "03_QUANTLENS/strategies/STG034_12_ema20_50_two_retests_baseline",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "review_needed"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": [
+        "EMA"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": [
+        "EMA"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "baseline",
+        "ema",
+        "ema20",
+        "retests",
+        "two"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG035",
+      "strategy_name": "STG035_ql_2026_05_01_any_1h_rsi_confluence_playbook",
+      "source_file": "03_QUANTLENS/strategies/STG035_ql_2026_05_01_any_1h_rsi_confluence_playbook/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG035_ql_2026_05_01_any_1h_rsi_confluence_playbook",
+      "current_status": "READY_FOR_PYTHON_PROTOTYPE",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "1h",
+      "recommended_timeframes": [
+        "1h"
+      ],
+      "original_asset_class": "ANY_CLAIMED_UNVALIDATED",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "swing_trading",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "hybrid"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "RSI, SMA",
+      "indicators_used": [
+        "RSI"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "MEDIUM",
+      "lookahead_risk_notes": "HIGH",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Entry: Close > SMA(50). RSI(14) crosses above 50.",
+      "known_weaknesses": "N_A",
+      "reusable_components": [
+        "RSI"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1h",
+        "any",
+        "confluence",
+        "playbook",
+        "ql",
+        "rsi"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG036",
+      "strategy_name": "STG036_ql_2026_05_01_any_bollinger_bands_20_2_tri_setup",
+      "source_file": "03_QUANTLENS/strategies/STG036_ql_2026_05_01_any_bollinger_bands_20_2_tri_setup/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG036_ql_2026_05_01_any_bollinger_bands_20_2_tri_setup",
+      "current_status": "TRIAGED",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "ANY_CLAIMED_UNVALIDATED",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "review_needed"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "ATR, Bollinger Bands",
+      "indicators_used": [
+        "BOLLINGER_BANDS"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "MEDIUM",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Entry: BB width is inside the lowest 25% quantile of past 200 bars (Squeeze). Entry when close crosses outside upper Bollinger Band and signal candle body is >= 0.25 * ATR.",
+      "known_weaknesses": "N_A",
+      "reusable_components": [
+        "BOLLINGER_BANDS"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "any",
+        "bands",
+        "bollinger",
+        "bollinger_bands",
+        "ql",
+        "setup",
+        "tri"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG037",
+      "strategy_name": "STG037_ql_2026_05_01_any_candlestick_7_pattern_pa_confluence",
+      "source_file": "03_QUANTLENS/strategies/STG037_ql_2026_05_01_any_candlestick_7_pattern_pa_confluence/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG037_ql_2026_05_01_any_candlestick_7_pattern_pa_confluence",
+      "current_status": "TRIAGED",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "ANY_CLAIMED_UNVALIDATED",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "hybrid"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "ATR",
+      "indicators_used": [
+        "CANDLESTICK"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "HIGH",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Entry: Bullish engulfing pattern near 96-bar support (distance <= 0.4 * ATR).",
+      "known_weaknesses": "N_A",
+      "reusable_components": [
+        "CANDLESTICK"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "any",
+        "candlestick",
+        "confluence",
+        "pa",
+        "pattern",
+        "ql"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG038",
+      "strategy_name": "STG038_ql_2026_05_01_liquid_intraday_vwap_pullback_reversal",
+      "source_file": "03_QUANTLENS/strategies/STG038_ql_2026_05_01_liquid_intraday_vwap_pullback_reversal/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG038_ql_2026_05_01_liquid_intraday_vwap_pullback_reversal",
+      "current_status": "READY_FOR_PYTHON_PROTOTYPE",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "5m",
+      "recommended_timeframes": [
+        "5m"
+      ],
+      "original_asset_class": "LIQUID_INTRADAY_ASSETS",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "day_trading",
+      "expected_market_regime": [
+        "reversal",
+        "trending"
+      ],
+      "method": [
+        "pullback_continuation",
+        "reversal"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "ATR, VWAP",
+      "indicators_used": [
+        "VWAP"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "MEDIUM",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Entry: VWAP session proxy mean rolling window of 96 bars. Slope of proxy > 0 (long). Close above proxy and distance <= 0.4 * ATR.",
+      "known_weaknesses": "N_A",
+      "reusable_components": [
+        "VWAP"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "5m",
+        "intraday",
+        "liquid",
+        "pullback",
+        "ql",
+        "reversal",
+        "vwap"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG039",
+      "strategy_name": "STG039_ql_2026_05_01_sp500_5m_two_candle_sentiment_sr",
+      "source_file": "03_QUANTLENS/strategies/STG039_ql_2026_05_01_sp500_5m_two_candle_sentiment_sr/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG039_ql_2026_05_01_sp500_5m_two_candle_sentiment_sr",
+      "current_status": "TRIAGED",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "US_INDEX_EXAMPLE_GENERALIZABLE",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "day_trading",
+      "expected_market_regime": [
+        "ranging"
+      ],
+      "method": [
+        "support_resistance"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "N_A",
+      "indicators_used": [
+        "SUPPORT_RESISTANCE",
+        "CANDLESTICK"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "MEDIUM",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Entry: Breakout of 48-bar high level. Candle close must be in the upper third of its range.",
+      "known_weaknesses": "N_A",
+      "reusable_components": [
+        "SUPPORT_RESISTANCE",
+        "CANDLESTICK"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "5m",
+        "candle",
+        "candlestick",
+        "ql",
+        "sentiment",
+        "sp500",
+        "sr",
+        "support_resistance",
+        "two"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG040",
+      "strategy_name": "STG040_ql_2026_05_01_swing_1h_dual_rsi_60_40_pullback",
+      "source_file": "03_QUANTLENS/strategies/STG040_ql_2026_05_01_swing_1h_dual_rsi_60_40_pullback/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG040_ql_2026_05_01_swing_1h_dual_rsi_60_40_pullback",
+      "current_status": "TRIAGED",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "SWING_MARKETS_GENERAL_CLAIM",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "trending"
+      ],
+      "method": [
+        "pullback_continuation",
+        "trend_following"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "Multitimeframe trendfollowing pullback strategy using Daily RSI as trend filter and 1Hour RSI as local pullback executio, A. Higher Timeframe (HTF) Daily Trend Filter, 1. HTF Trend Filter must be in a Bull Regime., 1. HTF Trend Filter must be in a Bear Regime., Timeframes: 1Hour entries with Daily trend filter.",
+      "indicators_used": [
+        "RSI"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "MEDIUM",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "QL_2026-05-01_SWING_1H_DUAL_RSI_60_40_PULLBACK",
+      "known_weaknesses": "C. Stop Loss & Take Profit (Risk Management)",
+      "reusable_components": [
+        "RSI"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1h",
+        "dual",
+        "pullback",
+        "ql",
+        "rsi",
+        "swing"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG041",
+      "strategy_name": "STG041_ql_2026_05_01_unknown_multi_ema_channel_pullback",
+      "source_file": "03_QUANTLENS/strategies/STG041_ql_2026_05_01_unknown_multi_ema_channel_pullback/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG041_ql_2026_05_01_unknown_multi_ema_channel_pullback",
+      "current_status": "READY_FOR_PYTHON_PROTOTYPE",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "UNKNOWN",
+      "recommended_timeframes": [
+        "UNKNOWN"
+      ],
+      "original_asset_class": "UNKNOWN",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "trending"
+      ],
+      "method": [
+        "pullback_continuation",
+        "trend_following",
+        "hybrid"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "ATR, EMA",
+      "indicators_used": [
+        "EMA",
+        "PRICE_CHANNEL"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "LOW",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Entry: Price > EMA(200). Fast EMA(5) > Mid EMA(13). Price pulls back to touch or get near Mid EMA(13) (distance <= 0.4 * ATR).",
+      "known_weaknesses": "N_A",
+      "reusable_components": [
+        "EMA",
+        "PRICE_CHANNEL"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "channel",
+        "ema",
+        "multi",
+        "price_channel",
+        "pullback",
+        "ql",
+        "unknown"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG042",
+      "strategy_name": "STG042_ql_2026_05_01_us_equities_10m_8ema_pullback",
+      "source_file": "03_QUANTLENS/strategies/STG042_ql_2026_05_01_us_equities_10m_8ema_pullback/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG042_ql_2026_05_01_us_equities_10m_8ema_pullback",
+      "current_status": "READY_FOR_PYTHON_PROTOTYPE",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "10m",
+      "recommended_timeframes": [
+        "10m"
+      ],
+      "original_asset_class": "US_EQUITIES_OPTIONS_UNDERLYING_PRICE",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "day_trading",
+      "expected_market_regime": [
+        "trending"
+      ],
+      "method": [
+        "pullback_continuation",
+        "trend_following"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "ATR, EMA",
+      "indicators_used": [
+        "EMA"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "MEDIUM",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Entry: Close > 8 EMA and 8 EMA slope > 0. Distance to 8 EMA <= 0.35 ATR(14). Preceding 3-bar impulse >= 1.0 ATR(14).",
+      "known_weaknesses": "N_A",
+      "reusable_components": [
+        "EMA"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "10m",
+        "8ema",
+        "ema",
+        "equities",
+        "pullback",
+        "ql",
+        "us"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG043",
+      "strategy_name": "STG043_ql_2026_05_01_us_equities_intraday_8ema_exit_trail",
+      "source_file": "03_QUANTLENS/strategies/STG043_ql_2026_05_01_us_equities_intraday_8ema_exit_trail/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG043_ql_2026_05_01_us_equities_intraday_8ema_exit_trail",
+      "current_status": "READY_FOR_PYTHON_PROTOTYPE",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "intraday",
+      "recommended_timeframes": [
+        "intraday"
+      ],
+      "original_asset_class": "US_EQUITIES_OPTIONS_UNDERLYING_PRICE",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "day_trading",
+      "expected_market_regime": [
+        "trending"
+      ],
+      "method": [
+        "trend_following"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "Dynamic trailing exit when price closes crossing below the 8 EMA line.",
+      "filters_used": "ATR, EMA",
+      "indicators_used": [
+        "EMA"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "LOW",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Entry: Close > 8 EMA and 8 EMA slope > 0. Distance to 8 EMA <= 0.35 * ATR(14).",
+      "known_weaknesses": "N_A",
+      "reusable_components": [
+        "EMA"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "8ema",
+        "ema",
+        "equities",
+        "exit",
+        "intraday",
+        "ql",
+        "trail",
+        "us"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG044",
+      "strategy_name": "STG044_ql_2026_05_01_us_equities_intraday_le_model_bull_flag",
+      "source_file": "03_QUANTLENS/strategies/STG044_ql_2026_05_01_us_equities_intraday_le_model_bull_flag/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG044_ql_2026_05_01_us_equities_intraday_le_model_bull_flag",
+      "current_status": "READY_FOR_PYTHON_PROTOTYPE",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "intraday",
+      "recommended_timeframes": [
+        "intraday"
+      ],
+      "original_asset_class": "US_EQUITIES_OPTIONS_UNDERLYING_PRICE",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "day_trading",
+      "expected_market_regime": [
+        "breakout"
+      ],
+      "method": [
+        "breakout"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "ATR, EMA",
+      "indicators_used": [
+        "CHART_PATTERN"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "MEDIUM",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Entry: Breakout EMA retest. Close > 8 EMA and 8 EMA slope > 0. Distance to 8 EMA <= 0.35 ATR(14). Preceding 3-bar impulse >= 1.0 ATR(14).",
+      "known_weaknesses": "N_A",
+      "reusable_components": [
+        "CHART_PATTERN"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "bull",
+        "chart_pattern",
+        "equities",
+        "flag",
+        "intraday",
+        "le",
+        "model",
+        "ql",
+        "us"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG045",
+      "strategy_name": "STG045_ql_2026_05_01_us_equities_intraday_purple_profits",
+      "source_file": "03_QUANTLENS/strategies/STG045_ql_2026_05_01_us_equities_intraday_purple_profits/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG045_ql_2026_05_01_us_equities_intraday_purple_profits",
+      "current_status": "READY_FOR_PYTHON_PROTOTYPE",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "intraday",
+      "recommended_timeframes": [
+        "intraday"
+      ],
+      "original_asset_class": "US_EQUITIES_OPTIONS_UNDERLYING_PRICE",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "day_trading",
+      "expected_market_regime": [
+        "breakout",
+        "trending"
+      ],
+      "method": [
+        "breakout",
+        "trend_following"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "ATR, EMA",
+      "indicators_used": [
+        "EMA"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "MEDIUM",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Entry: Purple Profits 8 EMA strategy. Close > 8 EMA and 8 EMA slope > 0. Distance to 8 EMA <= 0.35 ATR(14). Preceding 3-bar impulse >= 1.0 ATR(14).",
+      "known_weaknesses": "N_A",
+      "reusable_components": [
+        "EMA"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "ema",
+        "equities",
+        "intraday",
+        "profits",
+        "purple",
+        "ql",
+        "us"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG046",
+      "strategy_name": "STG046_qlr_r215f4fj7v8",
+      "source_file": "03_QUANTLENS/strategies/STG046_qlr_r215f4fj7v8/README.md",
+      "source_folder": "03_QUANTLENS/strategies/STG046_qlr_r215f4fj7v8",
+      "current_status": "RESEARCH_BATCH",
+      "maturity_level": "research_batch_only",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": "review_needed",
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "review_needed",
+      "strategy_category": "review_needed",
+      "expected_market_regime": [
+        "review_needed"
+      ],
+      "method": [
+        "review_needed"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "review_needed",
+      "filters_used": "review_needed",
+      "indicators_used": "review_needed",
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "review_needed",
+      "known_weaknesses": "review_needed",
+      "reusable_components": "review_needed",
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "qlr",
+        "r215f4fj7v8"
+      ],
+      "classification_confidence": "heuristic_auto"
+    },
+    {
+      "strategy_id": "STG047",
+      "strategy_name": "STG047_brian_lee_smallcap_gap_mr_short",
+      "source_file": "03_QUANTLENS/strategies/STG047_brian_lee_smallcap_gap_mr_short/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG047_brian_lee_smallcap_gap_mr_short",
+      "current_status": "READY_FOR_DETERMINISTIC_REVIEW",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "intraday",
+      "recommended_timeframes": [
+        "1m",
+        "5m",
+        "15m"
+      ],
+      "original_asset_class": "US_SMALLCAP_EQUITIES",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "short_only",
+      "strategy_category": "day_trading",
+      "expected_market_regime": [
+        "high_volatility",
+        "reversal"
+      ],
+      "method": [
+        "mean_reversion",
+        "reversal"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "N_A",
+      "indicators_used": [
+        "GAP",
+        "SUPPORT_RESISTANCE",
+        "RSI",
+        "VOLUME"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "MEDIUM",
+      "lookahead_risk_notes": "MEDIUM",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Deterministic Spec -- Brian Lee Small-cap Gap Mean-Reversion Short",
+      "known_weaknesses": "Stop / risk. Tight, riskbased position sizing: fixed dollar/R risk per trade that",
+      "reusable_components": [
+        "GAP",
+        "SUPPORT_RESISTANCE",
+        "RSI",
+        "VOLUME"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "brian",
+        "gap",
+        "intraday",
+        "lee",
+        "mr",
+        "rsi",
+        "short",
+        "smallcap",
+        "support_resistance",
+        "volume"
+      ],
+      "classification_confidence": "explicit_metadata"
+    },
+    {
+      "strategy_id": "STG048",
+      "strategy_name": "STG048_anthony_layered_leadership_swing_system",
+      "source_file": "03_QUANTLENS/strategies/STG048_anthony_layered_leadership_swing_system/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG048_anthony_layered_leadership_swing_system",
+      "current_status": "READY_FOR_DETERMINISTIC_REVIEW",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "1d",
+      "recommended_timeframes": [
+        "1d",
+        "1h"
+      ],
+      "original_asset_class": "US_EQUITIES",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "long_only",
+      "strategy_category": "swing_trading",
+      "expected_market_regime": [
+        "trending",
+        "bull_market",
+        "breakout"
+      ],
+      "method": [
+        "trend_following",
+        "breakout",
+        "pullback_continuation",
+        "momentum"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "3. Market environment / timing -- cycle stage gates exposure (press earlycycle,",
+      "indicators_used": [
+        "RELATIVE_STRENGTH",
+        "MOVING_AVERAGE",
+        "EMA",
+        "VOLUME",
+        "GAP",
+        "CHART_PATTERN"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "MEDIUM",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Deterministic Spec -- Anthony Layered Leadership Swing System",
+      "known_weaknesses": "Heavy discretion in theme/cycle reading; market-environment gating is subjective. - Lookahead risk in 'leader/theme' selection (must rank on closed data only)",
+      "reusable_components": [
+        "RELATIVE_STRENGTH",
+        "MOVING_AVERAGE",
+        "EMA",
+        "VOLUME",
+        "GAP",
+        "CHART_PATTERN"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "anthony",
+        "chart_pattern",
+        "ema",
+        "gap",
+        "layered",
+        "leadership",
+        "moving_average",
+        "relative_strength",
+        "swing",
+        "system",
+        "volume"
+      ],
+      "classification_confidence": "explicit_metadata"
+    },
+    {
+      "strategy_id": "STG049",
+      "strategy_name": "STG049_brian_shannon_avwap_methodology",
+      "source_file": "03_QUANTLENS/strategies/STG049_brian_shannon_avwap_methodology/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG049_brian_shannon_avwap_methodology",
+      "current_status": "READY_FOR_DETERMINISTIC_REVIEW",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "1d",
+      "recommended_timeframes": [
+        "1d",
+        "30m",
+        "1h"
+      ],
+      "original_asset_class": "US_EQUITIES",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "long_only",
+      "strategy_category": "swing_trading",
+      "expected_market_regime": [
+        "trending",
+        "breakout"
+      ],
+      "method": [
+        "trend_following",
+        "pullback_continuation",
+        "breakout"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "regime filter, lowofday stop., 5DMA = primary intermediate trend gate: do NOT buy if the 5day MA is declining., detector, AVWAPreclaim entry, failedreclaim guard, 5DMA trend gate, MAstack",
+      "indicators_used": [
+        "AVWAP",
+        "VWAP",
+        "SMA",
+        "EMA",
+        "FIBONACCI"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "LOW",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Deterministic Spec -- Brian Shannon AVWAP Methodology",
+      "known_weaknesses": "Anchor selection is discretionary → fix an objective anchor rule per backtest (e.g. 'AVWAP from the most recent earnings')",
+      "reusable_components": [
+        "AVWAP",
+        "VWAP",
+        "SMA",
+        "EMA",
+        "FIBONACCI"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "avwap",
+        "brian",
+        "ema",
+        "fibonacci",
+        "methodology",
+        "shannon",
+        "sma",
+        "vwap"
+      ],
+      "classification_confidence": "explicit_metadata"
+    },
+    {
+      "strategy_id": "STG050",
+      "strategy_name": "STG050_ariel_market_timed_momentum_swing",
+      "source_file": "03_QUANTLENS/strategies/STG050_ariel_market_timed_momentum_swing/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG050_ariel_market_timed_momentum_swing",
+      "current_status": "READY_FOR_DETERMINISTIC_REVIEW",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "1d",
+      "recommended_timeframes": [
+        "1d",
+        "1h"
+      ],
+      "original_asset_class": "US_EQUITIES",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "long_short",
+      "strategy_category": "swing_trading",
+      "expected_market_regime": [
+        "trending",
+        "bull_market",
+        "breakout"
+      ],
+      "method": [
+        "trend_following",
+        "breakout",
+        "momentum"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "Trade relativestrength leaders in leading groups, but gate it by market state:, Reduce/avoid longs when market breadth deteriorates (marketstate gate)., Marketstate gate (tradeRS on/off), RS leader ranking, flatbedbase breakout",
+      "indicators_used": [
+        "RELATIVE_STRENGTH",
+        "MOVING_AVERAGE",
+        "GAP",
+        "CHART_PATTERN",
+        "VOLUME"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "MEDIUM",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Deterministic Spec -- Ariel Market-Timed Momentum Swing",
+      "known_weaknesses": "Market-state read is discretionary → encode an objective breadth/index filter. - Heavy overlap with other momentum systems → guard against redundant variants.",
+      "reusable_components": [
+        "RELATIVE_STRENGTH",
+        "MOVING_AVERAGE",
+        "GAP",
+        "CHART_PATTERN",
+        "VOLUME"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "ariel",
+        "chart_pattern",
+        "gap",
+        "market",
+        "momentum",
+        "moving_average",
+        "relative_strength",
+        "swing",
+        "timed",
+        "volume"
+      ],
+      "classification_confidence": "explicit_metadata"
+    },
+    {
+      "strategy_id": "STG051",
+      "strategy_name": "STG051_david_ryan_price_volume_stage",
+      "source_file": "03_QUANTLENS/strategies/STG051_david_ryan_price_volume_stage/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG051_david_ryan_price_volume_stage",
+      "current_status": "READY_FOR_DETERMINISTIC_REVIEW",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "1d",
+      "recommended_timeframes": [
+        "1d",
+        "1wk"
+      ],
+      "original_asset_class": "US_EQUITIES",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "long_only",
+      "strategy_category": "position_trading",
+      "expected_market_regime": [
+        "trending",
+        "bull_market"
+      ],
+      "method": [
+        "trend_following",
+        "breakout"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "N_A",
+      "indicators_used": [
+        "VOLUME",
+        "MOVING_AVERAGE",
+        "CHART_PATTERN"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "LOW",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Deterministic Spec -- David Ryan Price-Volume-Stage",
+      "known_weaknesses": "Define 'higher/lower volume' objectively (e.g. vs 50-day average) to avoid hindsight",
+      "reusable_components": [
+        "VOLUME",
+        "MOVING_AVERAGE",
+        "CHART_PATTERN"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "chart_pattern",
+        "david",
+        "moving_average",
+        "price",
+        "ryan",
+        "stage",
+        "volume"
+      ],
+      "classification_confidence": "explicit_metadata"
+    },
+    {
+      "strategy_id": "STG052",
+      "strategy_name": "STG052_canslim_oneil_growth_system",
+      "source_file": "03_QUANTLENS/strategies/STG052_canslim_oneil_growth_system/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG052_canslim_oneil_growth_system",
+      "current_status": "READY_FOR_DETERMINISTIC_REVIEW",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "1d",
+      "recommended_timeframes": [
+        "1d",
+        "1wk"
+      ],
+      "original_asset_class": "US_EQUITIES",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "long_only",
+      "strategy_category": "position_trading",
+      "expected_market_regime": [
+        "trending",
+        "bull_market"
+      ],
+      "method": [
+        "breakout",
+        "trend_following"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "gate (M).",
+      "indicators_used": [
+        "CHART_PATTERN",
+        "VOLUME",
+        "MOVING_AVERAGE"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "LOW",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Deterministic Spec -- CANSLIM O'Neil Growth System",
+      "known_weaknesses": "N_A",
+      "reusable_components": [
+        "CHART_PATTERN",
+        "VOLUME",
+        "MOVING_AVERAGE"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "canslim",
+        "chart_pattern",
+        "growth",
+        "moving_average",
+        "oneil",
+        "system",
+        "volume"
+      ],
+      "classification_confidence": "explicit_metadata"
+    },
+    {
+      "strategy_id": "STG053",
+      "strategy_name": "STG053_charles_harris_pullback_around_core",
+      "source_file": "03_QUANTLENS/strategies/STG053_charles_harris_pullback_around_core/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG053_charles_harris_pullback_around_core",
+      "current_status": "READY_FOR_DETERMINISTIC_REVIEW",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "1d",
+      "recommended_timeframes": [
+        "1d",
+        "1wk"
+      ],
+      "original_asset_class": "US_EQUITIES",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "long_only",
+      "strategy_category": "position_trading",
+      "expected_market_regime": [
+        "trending",
+        "bull_market"
+      ],
+      "method": [
+        "pullback_continuation",
+        "trend_following"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "sell into strength** when extended, buy back / add into weakness at support",
+      "filters_used": "gate, coreposition manager (trim strength / add weakness), reversepyramid sizing,",
+      "indicators_used": [
+        "EMA",
+        "SMA",
+        "MOVING_AVERAGE",
+        "CHART_PATTERN",
+        "SUPPORT_RESISTANCE"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "LOW",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Deterministic Spec -- Charles Harris Pullback / Swing-Around-Core",
+      "known_weaknesses": "'Extended' / trim timing is discretionary; define objectively (e.g. % above 21EMA)",
+      "reusable_components": [
+        "EMA",
+        "SMA",
+        "MOVING_AVERAGE",
+        "CHART_PATTERN",
+        "SUPPORT_RESISTANCE"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "around",
+        "charles",
+        "chart_pattern",
+        "core",
+        "ema",
+        "harris",
+        "moving_average",
+        "pullback",
+        "sma",
+        "support_resistance"
+      ],
+      "classification_confidence": "explicit_metadata"
+    },
+    {
+      "strategy_id": "STG054",
+      "strategy_name": "STG054_fishhook_ep_day1_retake",
+      "source_file": "03_QUANTLENS/strategies/STG054_fishhook_ep_day1_retake/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG054_fishhook_ep_day1_retake",
+      "current_status": "READY_FOR_DETERMINISTIC_REVIEW",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "1d",
+      "recommended_timeframes": [
+        "1d",
+        "30m"
+      ],
+      "original_asset_class": "US_EQUITIES",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "long_only",
+      "strategy_category": "swing_trading",
+      "expected_market_regime": [
+        "trending",
+        "breakout",
+        "high_volatility"
+      ],
+      "method": [
+        "breakout",
+        "pullback_continuation",
+        "momentum"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "N_A",
+      "indicators_used": [
+        "EMA",
+        "GAP",
+        "CHART_PATTERN",
+        "VOLUME"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "MEDIUM",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Deterministic Spec -- Fishhook (EP Day-1 Retake) + Slingshot context",
+      "known_weaknesses": "EP/gapper volatility + slippage must be modeled realistically. - 'Retake' and 'congestion' need objective definitions to avoid hindsight.",
+      "reusable_components": [
+        "EMA",
+        "GAP",
+        "CHART_PATTERN",
+        "VOLUME"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "chart_pattern",
+        "day1",
+        "ema",
+        "ep",
+        "fishhook",
+        "gap",
+        "retake",
+        "volume"
+      ],
+      "classification_confidence": "explicit_metadata"
+    },
+    {
+      "strategy_id": "STG055",
+      "strategy_name": "STG055_gon_lowfloat_momentum_daytrading",
+      "source_file": "03_QUANTLENS/strategies/STG055_gon_lowfloat_momentum_daytrading/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG055_gon_lowfloat_momentum_daytrading",
+      "current_status": "READY_FOR_DETERMINISTIC_REVIEW",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "1m",
+      "recommended_timeframes": [
+        "1m",
+        "5m"
+      ],
+      "original_asset_class": "US_SMALLCAP_EQUITIES",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "long_short",
+      "strategy_category": "scalping",
+      "expected_market_regime": [
+        "high_volatility",
+        "breakout"
+      ],
+      "method": [
+        "momentum",
+        "breakout",
+        "pullback_continuation"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "N_A",
+      "indicators_used": [
+        "EMA",
+        "VOLUME",
+        "GAP",
+        "CHART_PATTERN"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "MEDIUM",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Deterministic Spec -- Gon Low-Float Momentum Day Trading",
+      "known_weaknesses": "Low-float scalping has severe slippage, halts, and borrow constraints -- a naive backtest will be wildly optimistic. Model frictions aggressively; treat as research-only.",
+      "reusable_components": [
+        "EMA",
+        "VOLUME",
+        "GAP",
+        "CHART_PATTERN"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1m",
+        "chart_pattern",
+        "daytrading",
+        "ema",
+        "gap",
+        "gon",
+        "lowfloat",
+        "momentum",
+        "volume"
+      ],
+      "classification_confidence": "explicit_metadata"
+    },
+    {
+      "strategy_id": "STG056",
+      "strategy_name": "STG056_oliver_kell_price_cycle",
+      "source_file": "03_QUANTLENS/strategies/STG056_oliver_kell_price_cycle/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG056_oliver_kell_price_cycle",
+      "current_status": "READY_FOR_DETERMINISTIC_REVIEW",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "1d",
+      "recommended_timeframes": [
+        "1d"
+      ],
+      "original_asset_class": "US_EQUITIES",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "long_short",
+      "strategy_category": "swing_trading",
+      "expected_market_regime": [
+        "trending",
+        "breakout"
+      ],
+      "method": [
+        "trend_following",
+        "breakout",
+        "pullback_continuation",
+        "reversal"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "10/20EMA regime gate (green/red light), pricecycle state machine, wedgepop",
+      "indicators_used": [
+        "EMA",
+        "MOVING_AVERAGE",
+        "CHART_PATTERN"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "LOW",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Deterministic Spec -- Oliver Kell Price Cycle",
+      "known_weaknesses": "Stage labeling needs objective triggers (e.g. 'wedge pop = close > 10EMA after a higher low within N bars of touching it')",
+      "reusable_components": [
+        "EMA",
+        "MOVING_AVERAGE",
+        "CHART_PATTERN"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "chart_pattern",
+        "cycle",
+        "ema",
+        "kell",
+        "moving_average",
+        "oliver",
+        "price"
+      ],
+      "classification_confidence": "explicit_metadata"
+    },
+    {
+      "strategy_id": "STG057",
+      "strategy_name": "STG057_linda_raschke_lbr_toolkit",
+      "source_file": "03_QUANTLENS/strategies/STG057_linda_raschke_lbr_toolkit/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG057_linda_raschke_lbr_toolkit",
+      "current_status": "READY_FOR_DETERMINISTIC_REVIEW",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "1d",
+      "recommended_timeframes": [
+        "1d",
+        "30m",
+        "1h"
+      ],
+      "original_asset_class": "FUTURES_AND_EQUITIES",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "long_short",
+      "strategy_category": "swing_trading",
+      "expected_market_regime": [
+        "ranging",
+        "breakout",
+        "high_volatility"
+      ],
+      "method": [
+        "reversal",
+        "breakout",
+        "volatility_expansion",
+        "mean_reversion"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "N_A",
+      "indicators_used": [
+        "ATR",
+        "VOLATILITY_RANGE",
+        "MOMENTUM",
+        "SUPPORT_RESISTANCE",
+        "CHART_PATTERN"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "LOW",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Deterministic Spec -- Linda Raschke (LBR) Mechanical Toolkit",
+      "known_weaknesses": "Some setups need intraday / market-profile data; ensure objective definitions. - Originally futures-oriented; validate on the target universe.",
+      "reusable_components": [
+        "ATR",
+        "VOLATILITY_RANGE",
+        "MOMENTUM",
+        "SUPPORT_RESISTANCE",
+        "CHART_PATTERN"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "atr",
+        "chart_pattern",
+        "lbr",
+        "linda",
+        "momentum",
+        "raschke",
+        "support_resistance",
+        "toolkit",
+        "volatility_range"
+      ],
+      "classification_confidence": "explicit_metadata"
+    },
+    {
+      "strategy_id": "STG058",
+      "strategy_name": "STG058_martin_parabolic_pullback_champion",
+      "source_file": "03_QUANTLENS/strategies/STG058_martin_parabolic_pullback_champion/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG058_martin_parabolic_pullback_champion",
+      "current_status": "READY_FOR_DETERMINISTIC_REVIEW",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "1h",
+      "recommended_timeframes": [
+        "1h",
+        "15m",
+        "1d"
+      ],
+      "original_asset_class": "US_EQUITIES",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "long_short",
+      "strategy_category": "swing_trading",
+      "expected_market_regime": [
+        "trending",
+        "high_volatility",
+        "reversal"
+      ],
+      "method": [
+        "pullback_continuation",
+        "reversal",
+        "trend_following"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "trail the whole position up; sell into strength when extended on the lower timeframe",
+      "filters_used": "N_A",
+      "indicators_used": [
+        "EMA",
+        "CHART_PATTERN",
+        "SUPPORT_RESISTANCE"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "MEDIUM",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Swing / trend-follower who moved from breakouts (got shaken out) to pullbacks, trades both long and short, learned pullbacks from the short side first.",
+      "known_weaknesses": "Parabolic reversals are counter-trend (timing/knife-catch risk). - A single +969% year is likely regime-specific -- test across regimes; expect lower.",
+      "reusable_components": [
+        "EMA",
+        "CHART_PATTERN",
+        "SUPPORT_RESISTANCE"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1h",
+        "champion",
+        "chart_pattern",
+        "ema",
+        "martin",
+        "parabolic",
+        "pullback",
+        "support_resistance"
+      ],
+      "classification_confidence": "explicit_metadata"
+    },
+    {
+      "strategy_id": "STG059",
+      "strategy_name": "STG059_nick_weekly_stage_methodology",
+      "source_file": "03_QUANTLENS/strategies/STG059_nick_weekly_stage_methodology/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG059_nick_weekly_stage_methodology",
+      "current_status": "READY_FOR_DETERMINISTIC_REVIEW",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "1wk",
+      "recommended_timeframes": [
+        "1wk"
+      ],
+      "original_asset_class": "US_EQUITIES",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "long_only",
+      "strategy_category": "position_trading",
+      "expected_market_regime": [
+        "trending",
+        "bull_market"
+      ],
+      "method": [
+        "trend_following",
+        "breakout",
+        "pullback_continuation"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "Weekly resampling, 10W/30W MA respect gate, characterchange detector, uponvolume",
+      "indicators_used": [
+        "MOVING_AVERAGE",
+        "VOLUME",
+        "CHART_PATTERN",
+        "RELATIVE_STRENGTH"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "LOW",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Deterministic Spec -- Nick Weekly Stage Methodology",
+      "known_weaknesses": "Few signals (weekly) → small sample; test long histories. - 'Character change' needs an objective trigger to be testable.",
+      "reusable_components": [
+        "MOVING_AVERAGE",
+        "VOLUME",
+        "CHART_PATTERN",
+        "RELATIVE_STRENGTH"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1wk",
+        "chart_pattern",
+        "methodology",
+        "moving_average",
+        "nick",
+        "relative_strength",
+        "stage",
+        "volume",
+        "weekly"
+      ],
+      "classification_confidence": "explicit_metadata"
+    },
+    {
+      "strategy_id": "STG060",
+      "strategy_name": "STG060_roppel_leadership_position_trading",
+      "source_file": "03_QUANTLENS/strategies/STG060_roppel_leadership_position_trading/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG060_roppel_leadership_position_trading",
+      "current_status": "READY_FOR_DETERMINISTIC_REVIEW",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "1d",
+      "recommended_timeframes": [
+        "1d",
+        "1wk"
+      ],
+      "original_asset_class": "US_EQUITIES",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "long_only",
+      "strategy_category": "position_trading",
+      "expected_market_regime": [
+        "trending",
+        "bull_market"
+      ],
+      "method": [
+        "trend_following",
+        "breakout",
+        "momentum"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "N_A",
+      "indicators_used": [
+        "MOVING_AVERAGE",
+        "RELATIVE_STRENGTH",
+        "CHART_PATTERN",
+        "VOLUME"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "LOW",
+      "lookahead_risk_notes": "LOW",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Deterministic Spec -- Jim Roppel Leadership Position Trading",
+      "known_weaknesses": "Theme/leadership scoring is discretionary → encode RS + group rank objectively. - Needs fundamental data for full fidelity; technical-only is an approximation.",
+      "reusable_components": [
+        "MOVING_AVERAGE",
+        "RELATIVE_STRENGTH",
+        "CHART_PATTERN",
+        "VOLUME"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "1d",
+        "chart_pattern",
+        "leadership",
+        "moving_average",
+        "position",
+        "relative_strength",
+        "roppel",
+        "trading",
+        "volume"
+      ],
+      "classification_confidence": "explicit_metadata"
+    },
+    {
+      "strategy_id": "STG061",
+      "strategy_name": "STG061_ryan_pierpont_breakout_discipline",
+      "source_file": "03_QUANTLENS/strategies/STG061_ryan_pierpont_breakout_discipline/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG061_ryan_pierpont_breakout_discipline",
+      "current_status": "TRIAGED",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": [
+        "1d"
+      ],
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "long_only",
+      "strategy_category": "swing_trading",
+      "expected_market_regime": [
+        "bull_market",
+        "trending",
+        "breakout"
+      ],
+      "method": [
+        "breakout",
+        "trend_following",
+        "momentum"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "A longonly USequity swing breakout framework. The core idea is to enter tight, lowvolatility breakouts only when the mar, 2. Enter only when price breaks the pivot with constructive price/volume behavior., Keep a runner only if the trend and market context remain constructive., Source candidate IDs: QL_RYAN_LATE_ENTRY_CHASE_FILTER_001; QL_RYAN_MARKET_AWARENESS_GATE_001; QL_RYAN_PULLBACK_DANGER_ZO, Marketawareness gate., 1. Convert the lateentry filter and market gate into reusable guard modules.",
+      "indicators_used": [
+        "MOVING_AVERAGE",
+        "VOLUME",
+        "CHART_PATTERN"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Ryan Pierpont Breakout Discipline",
+      "known_weaknesses": "Numeric overextension threshold. - Market-awareness inputs",
+      "reusable_components": [
+        "MOVING_AVERAGE",
+        "VOLUME",
+        "CHART_PATTERN"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "breakout",
+        "chart_pattern",
+        "discipline",
+        "moving_average",
+        "pierpont",
+        "ryan",
+        "volume"
+      ],
+      "classification_confidence": "explicit_metadata"
+    },
+    {
+      "strategy_id": "STG062",
+      "strategy_name": "STG062_stan_weinstein_stage_analysis",
+      "source_file": "03_QUANTLENS/strategies/STG062_stan_weinstein_stage_analysis/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG062_stan_weinstein_stage_analysis",
+      "current_status": "TRIAGED",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": [
+        "1d",
+        "1w"
+      ],
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "long_short_filter",
+      "strategy_category": "position_trading",
+      "expected_market_regime": [
+        "bull_market",
+        "bear_market",
+        "trending"
+      ],
+      "method": [
+        "trend_following",
+        "breakout",
+        "pullback_continuation"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "trail exits",
+      "filters_used": "4. Treat unfilled upside gaps as continuation evidence only when the broader context is supportive., Requires broadmarket, sector/group, and individualstock context., Needs review. Requires a stage classifier and breadth/group data.",
+      "indicators_used": [
+        "SMA",
+        "RELATIVE_STRENGTH",
+        "MARKET_BREADTH",
+        "GAP"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Stan Weinstein Stage Analysis",
+      "known_weaknesses": "Exact Stage 1B, 2A, 3, and 4 formulas. - Breadth thresholds for split tape",
+      "reusable_components": [
+        "SMA",
+        "RELATIVE_STRENGTH",
+        "MARKET_BREADTH",
+        "GAP"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "analysis",
+        "gap",
+        "market_breadth",
+        "relative_strength",
+        "sma",
+        "stage",
+        "stan",
+        "weinstein"
+      ],
+      "classification_confidence": "explicit_metadata"
+    },
+    {
+      "strategy_id": "STG063",
+      "strategy_name": "STG063_tito_options_aware_rs_breakout",
+      "source_file": "03_QUANTLENS/strategies/STG063_tito_options_aware_rs_breakout/01_candidate_metadata.yaml",
+      "source_folder": "03_QUANTLENS/strategies/STG063_tito_options_aware_rs_breakout",
+      "current_status": "TRIAGED",
+      "maturity_level": "triaged_candidate",
+      "original_timeframe": "review_needed",
+      "recommended_timeframes": [
+        "1d"
+      ],
+      "original_asset_class": "review_needed",
+      "tested_assets_if_known": "review_needed",
+      "long_only_or_long_short": "long_only",
+      "strategy_category": "swing_trading",
+      "expected_market_regime": [
+        "bull_market",
+        "breakout",
+        "high_volatility"
+      ],
+      "method": [
+        "breakout",
+        "momentum",
+        "hybrid"
+      ],
+      "entry_logic_summary": "review_needed",
+      "exit_logic_summary": "review_needed",
+      "stop_loss_logic": "review_needed",
+      "take_profit_logic": "review_needed",
+      "trailing_logic": "N_A",
+      "filters_used": "Low to medium. Stockside breakout logic is reusable, but options implementation requires additional rules/data., Market environment gate.",
+      "indicators_used": [
+        "RELATIVE_STRENGTH",
+        "MOVING_AVERAGE",
+        "OPTIONS_IV"
+      ],
+      "htf_usage": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "data_leakage_risk_notes": "review_needed",
+      "tradingview_compatibility_notes": "review_needed",
+      "backtest_engine_compatibility_notes": "review_needed",
+      "known_strengths": "Tito Options-Aware RS Momentum Breakout",
+      "known_weaknesses": "Exact RS threshold. - Exact breakout/crossback trigger",
+      "reusable_components": [
+        "RELATIVE_STRENGTH",
+        "MOVING_AVERAGE",
+        "OPTIONS_IV"
+      ],
+      "suitable_for_combination_with": "review_needed",
+      "unsuitable_for_combination_with": "review_needed",
+      "tags": [
+        "aware",
+        "breakout",
+        "moving_average",
+        "options",
+        "options_iv",
+        "relative_strength",
+        "rs",
+        "tito"
+      ],
+      "classification_confidence": "explicit_metadata"
+    }
+  ]
+}

@@ -22,3 +22,9 @@ repaint_risk: LOW
 lookahead_risk: MEDIUM
 closed_source_risk: LOW
 notes: URL and channel metadata missing. Transcript repeatedly says Binger bands; interpreted as Bollinger Bands from context.
+
+# --- A1 Extracted (auto) ---
+trailing_logic: N_A
+filters_used: "ATR, Bollinger Bands"
+known_strengths: "Entry: BB width is inside the lowest 25% quantile of past 200 bars (Squeeze). Entry when close crosses outside upper Bollinger Band and signal candle body is >= 0.25 * ATR."
+known_weaknesses: N_A

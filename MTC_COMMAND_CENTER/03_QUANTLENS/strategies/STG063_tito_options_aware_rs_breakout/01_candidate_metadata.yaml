@@ -1,0 +1,84 @@
+strategy_id: STG063
+strategy_name: Tito Options-Aware RS Momentum Breakout
+source_candidate_id:
+  - QL_TITO_OPTIONS_AWARE_RISK_OVERLAY_v0
+  - QL_TITO_PROFIT_WITHDRAWAL_CAPITAL_AT_RISK_v0
+  - QL_TITO_RS_MOMENTUM_BREAKOUT_CROSSBACK_v0
+source_transcript_path:
+  - 11_TRIAGE/strategies/stg167.md
+  - 11_TRIAGE/strategies/stg168.md
+  - 11_TRIAGE/strategies/stg169.md
+source_url: https://youtu.be/NGyE4YIgGpU?si=gj_6ZcIyjUFAEGhk
+video_title: "2,115% Return in 1 Year: How a Harvard Cancer Scientist Beat Wall Street"
+quality: HIGH
+current_status: needs_manual_review
+maturity_level: deterministic_spec_partial
+original_timeframe: 1d
+recommended_timeframes:
+  - 1d
+original_asset_class: US_EQUITIES
+tested_assets_if_known: unknown
+long_only_or_long_short: long_only
+strategy_category: swing_trading
+expected_market_regime:
+  - bull_market
+  - breakout
+  - high_volatility
+method:
+  - breakout
+  - momentum
+  - hybrid
+entry_logic_summary: Relative-strength momentum breakout/crossback concept with options-aware sizing and market-environment gate; exact entry threshold unknown.
+exit_logic_summary: Take profits when option leverage/IV expansion creates outsized gains; exact exit trigger unknown.
+stop_loss_logic: Risk is constrained by sizing, options exposure, and mental-equity drawdown controls; exact stop unknown.
+take_profit_logic: Withdraw profits and reduce capital at risk after large gains; exact schedule unknown.
+trailing_logic: unknown
+filters_used:
+  - market_environment_gate
+  - options_iv_risk_overlay
+  - mental_equity_curve_size_down
+indicators_used:
+  - RELATIVE_STRENGTH
+  - MOVING_AVERAGE
+  - OPTIONS_IV
+htf_usage: unknown
+repaint_risk_notes: Low for price/moving-average conditions; options IV and discretionary thesis checks need timestamped inputs.
+lookahead_risk_notes: Do not use later IV expansion or gap outcome to justify entry.
+data_leakage_risk_notes: Options data, market context, and account-equity state must be measured at entry time.
+TradingView_compatibility_notes: Price side can be modeled in Pine; options IV/risk overlay likely needs external data or manual tagging.
+backtest_engine_compatibility_notes: Needs options-chain/IV inputs or a stock-only proxy; cannot claim options returns from stock-only data.
+known_strengths:
+  - Strong risk overlay emphasis.
+  - Clear warning against A-plus sizing in weak market context.
+known_weaknesses:
+  - Options leverage makes direct QuantLens proxy difficult.
+  - Several rules are behavioral/risk process rather than deterministic entry/exit thresholds.
+reusable_components:
+  - market_environment_gate
+  - options_aware_size_guard
+  - profit_withdrawal_capital_at_risk_rule
+  - rs_momentum_breakout_crossback
+suitable_for_combination_with:
+  - STG048_anthony_layered_leadership_swing_system
+  - STG061_ryan_pierpont_breakout_discipline
+unsuitable_for_combination_with:
+  - stock_only_backtest_without_options_proxy
+  - unmanaged_high_leverage_entries
+tags:
+  - options_overlay
+  - relative_strength
+  - breakout
+  - risk_management
+review_needed:
+  - exact_entry_trigger
+  - options_iv_threshold
+  - position_size_formula
+  - profit_withdrawal_schedule
+created_at: 2026-06-04
+updated_at: 2026-06-04
+
+# --- A1 Extracted (auto) ---
+trailing_logic: N_A
+filters_used: "Low to medium. Stockside breakout logic is reusable, but options implementation requires additional rules/data., Market environment gate."
+known_strengths: Tito Options-Aware RS Momentum Breakout
+known_weaknesses: Exact RS threshold. - Exact breakout/crossback trigger

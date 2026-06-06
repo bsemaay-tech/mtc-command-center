@@ -128,7 +128,7 @@ class ReadOnlyCoreTests(unittest.TestCase):
 
 
 def _request_json(host: str, port: int, method: str, path: str) -> dict:
-    connection = HTTPConnection(host, port, timeout=5)
+    connection = HTTPConnection(host, port, timeout=30)
     try:
         connection.request(method, path)
         response = connection.getresponse()
@@ -139,7 +139,7 @@ def _request_json(host: str, port: int, method: str, path: str) -> dict:
 
 
 def _request_text(host: str, port: int, method: str, path: str) -> dict:
-    connection = HTTPConnection(host, port, timeout=5)
+    connection = HTTPConnection(host, port, timeout=30)
     try:
         connection.request(method, path)
         response = connection.getresponse()

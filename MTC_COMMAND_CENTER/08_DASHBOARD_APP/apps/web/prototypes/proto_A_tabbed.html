@@ -1,0 +1,253 @@
+<!doctype html>
+<!--
+  PROTOTYPE A — Tabbed Strategy Review Dashboard (throwaway mockup).
+  Companion to 03_QUANTLENS/_user_guide/11_STRATEGY_DETAIL_PAGE_REDESIGN_PLAN.md.
+  Static, hand-filled with the "8 EMA Pullback" example. Not loaded by the app.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype A — 8 EMA Pullback</title>
+<style>
+:root{
+  --bg:#f5f7f8;--panel:#fff;--ink:#152029;--muted:#64717c;--line:#d8dee3;
+  --nav:#24313a;--accent:#1d6f74;--amber:#9b6a18;--red:#a83d3d;--green:#28724f;--blue:#355f91;
+  --shadow:0 12px 32px rgba(21,32,41,.08);
+  font-family:Inter,"Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);padding:28px}
+.wrap{max-width:1040px;margin:0 auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:20px 22px;margin-bottom:18px}
+h1{font-size:30px;margin:0 0 2px}
+h2{font-size:15px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 14px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 10px}
+.thesis{font-size:16px;margin:6px 0 0}
+.pill{display:inline-block;padding:5px 13px;border-radius:999px;font-size:13px;font-weight:700}
+.pill.amber{background:#fdf3df;color:var(--amber);border:1px solid #e7c98a}
+.pill.green{background:#e3f3ea;color:var(--green);border:1px solid #9cd2b4}
+.pill.red{background:#f7e3e3;color:var(--red);border:1px solid #e0a3a3}
+.pill.grey{background:#eef1f3;color:var(--muted);border:1px solid var(--line)}
+.head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+/* decision strip */
+.decision{display:grid;grid-template-columns:14px 1fr;gap:14px;align-items:start}
+.dot{width:14px;height:14px;border-radius:50%;margin-top:5px}
+.dot.amber{background:var(--amber)}.dot.green{background:var(--green)}.dot.red{background:var(--red)}
+.verdict{font-size:19px;font-weight:800;margin:0 0 4px}
+.reason{margin:0 0 10px;color:#33414c}
+.next{background:#f0f6f6;border:1px solid #bfdcdd;border-radius:10px;padding:10px 13px}
+.next b{color:var(--accent)}
+/* ladder */
+.ladder{display:flex;gap:6px;flex-wrap:wrap}
+.step{flex:1;min-width:96px;border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center;font-size:13px;position:relative}
+.step .ic{font-size:16px;display:block;margin-bottom:3px}
+.step.done{background:#e3f3ea;border-color:#9cd2b4}
+.step.cur{background:#fdf3df;border-color:#e7c98a;font-weight:700}
+.step.todo{color:var(--muted)}
+.cap{margin:10px 0 0;color:var(--muted);font-size:13px}
+/* tabs */
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:2px solid var(--line);margin-bottom:18px}
+.tab{padding:10px 16px;border:none;background:none;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.panel{display:none}.panel.active{display:block}
+/* rules */
+.rule{display:grid;grid-template-columns:200px 1fr;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.rule:last-child{border-bottom:none}
+.rule .k{font-weight:700;color:#33414c}
+.rule .v.todo{color:var(--muted);font-style:italic}
+.badge-sm{font-size:11px;padding:2px 8px;border-radius:999px;background:#eef1f3;color:var(--muted);border:1px solid var(--line);margin-left:8px}
+.badge-sm.warn{background:#fdf3df;color:var(--amber);border-color:#e7c98a}
+/* gates */
+.gate{margin-bottom:14px}
+.gate summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px}
+.gate summary::-webkit-details-marker{display:none}
+.gname{font-weight:700;min-width:210px}
+.bar{flex:1;height:14px;background:#eef1f3;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%}
+.bar i.green{background:var(--green)}.bar i.amber{background:var(--amber)}.bar i.red{background:var(--red)}
+.gscore{min-width:64px;text-align:right;font-weight:700}
+.gate.na summary{opacity:.6}
+.gate.na .bar i{background:repeating-linear-gradient(45deg,#dfe4e8,#dfe4e8 6px,#eef1f3 6px,#eef1f3 12px);width:100%!important}
+.subcrit{margin:12px 0 0;border-collapse:collapse;width:100%;font-size:13px}
+.subcrit td{padding:7px 8px;border-bottom:1px solid var(--line)}
+.subcrit td:nth-child(2){text-align:right;font-weight:700;white-space:nowrap}
+.src-path{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:var(--muted)}
+.hardfail{background:#f7e3e3;border:1px solid #e0a3a3;color:var(--red);border-radius:10px;padding:10px 13px;margin-bottom:14px;font-weight:600}
+/* evidence empty */
+.empty{background:#f0f6f6;border:1px dashed #bfdcdd;border-radius:10px;padding:16px}
+.checklist{list-style:none;padding:0;margin:10px 0 0}
+.checklist li{padding:5px 0}
+/* technical */
+.tech td{padding:6px 10px;border-bottom:1px solid var(--line);font-size:13px}
+.tech td:first-child{color:var(--muted);width:230px}
+.tech code{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.metric{border:1px solid var(--line);border-radius:10px;padding:12px}
+.metric .mv{font-size:22px;font-weight:800}
+.metric .ml{color:var(--muted);font-size:12px}
+@media(max-width:900px){.rule{grid-template-columns:1fr}.gname{min-width:120px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="card">
+    <div class="head-row">
+      <div>
+        <h1>8 EMA Pullback</h1>
+        <p class="sub">US Equities · 10m · YouTube strategy</p>
+        <p class="thesis">Yukarı trendde 8 EMA'ya geri çekilişte devam alımı.</p>
+      </div>
+      <span class="pill amber">Needs review</span>
+    </div>
+  </div>
+
+  <!-- DECISION STRIP -->
+  <div class="card">
+    <div class="decision">
+      <div class="dot amber"></div>
+      <div>
+        <p class="verdict">Promosyona hazır değil</p>
+        <p class="reason">Kanıt skoru gerekli eşiğin (65) altında. Strateji yazılı ve sınıflandırılmış,
+          ancak risk-ayarlı backtest kanıtı henüz yeterli değil — yani "belgelenmiş ama kanıtlanmamış".</p>
+        <div class="next"><b>Sıradaki adım:</b> Eksik scorecard alanlarını tamamla, sonra promosyon paketini yeniden oluştur.
+          <span class="cap" style="display:block">Neden: Gate 2 (Backtest Evidence) henüz veri beklediği için tıkanma burada.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- READINESS LADDER -->
+  <div class="card">
+    <h2>Readiness</h2>
+    <div class="ladder">
+      <div class="step done"><span class="ic">✓</span>Discovered</div>
+      <div class="step done"><span class="ic">✓</span>Classified</div>
+      <div class="step cur"><span class="ic">◐</span>Scored</div>
+      <div class="step todo"><span class="ic">○</span>Backtested</div>
+      <div class="step todo"><span class="ic">○</span>Promotion</div>
+      <div class="step todo"><span class="ic">○</span>Paper-trade</div>
+      <div class="step todo"><span class="ic">○</span>Integrated</div>
+    </div>
+    <p class="cap">Currently stuck at: <b>Backtest evidence</b> — risk-adjusted proof not yet collected.</p>
+  </div>
+
+  <!-- TABS -->
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" data-t="overview">Overview</button>
+      <button class="tab" data-t="rules">Trading Rules</button>
+      <button class="tab" data-t="score">Scorecard</button>
+      <button class="tab" data-t="evidence">Backtest Evidence</button>
+      <button class="tab" data-t="source">Source</button>
+      <button class="tab" data-t="tech">Technical</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="panel active" id="overview">
+      <h2>At a glance</h2>
+      <div class="metrics">
+        <div class="metric"><div class="mv">—</div><div class="ml">Return (no backtest)</div></div>
+        <div class="metric"><div class="mv">—</div><div class="ml">Max drawdown</div></div>
+        <div class="metric"><div class="mv">—</div><div class="ml">Profit factor</div></div>
+        <div class="metric"><div class="mv">—</div><div class="ml">Trades</div></div>
+      </div>
+      <p class="cap">No backtest run yet — metrics appear once Gate 2 evidence exists. See the Backtest Evidence tab.</p>
+      <h2 style="margin-top:20px">Rules summary</h2>
+      <div class="rule"><div class="k">Bias</div><div class="v">Yukarı trend (fiyat 8 EMA üzerinde, EMA yukarı eğimli).</div></div>
+      <div class="rule"><div class="k">Entry</div><div class="v">close &gt; 8 EMA + ortalamaya yakınlık + güçlü itki.</div></div>
+      <div class="rule"><div class="k">Exit</div><div class="v">2R kâr hedefi veya stop.</div></div>
+    </div>
+
+    <!-- TRADING RULES -->
+    <div class="panel" id="rules">
+      <h2>Trading rules <span class="badge-sm warn">Documented, not yet proven</span></h2>
+      <div class="rule"><div class="k">Market condition / bias</div><div class="v">Yukarı trend; fiyat 8 EMA üzerinde ve EMA yukarı eğimli.</div></div>
+      <div class="rule"><div class="k">Entry rules</div><div class="v">close &gt; 8 EMA, fiyat ortalamaya geri çekilmiş (yakınlık), ardından güçlü yukarı itki barı.</div></div>
+      <div class="rule"><div class="k">Exit rules</div><div class="v">2R kâr hedefine ulaşınca ya da stop tetiklenince çık.</div></div>
+      <div class="rule"><div class="k">Stop-loss logic</div><div class="v">Pullback dip / son swing low altına stop.</div></div>
+      <div class="rule"><div class="k">Take-profit logic</div><div class="v">Sabit 2R hedef.</div></div>
+      <div class="rule"><div class="k">Risk management</div><div class="v todo">Not defined yet</div></div>
+      <div class="rule"><div class="k">Avoid trading when</div><div class="v todo">Not defined yet</div></div>
+      <div class="rule"><div class="k">Notes / assumptions</div><div class="v">Kaynak: YouTube intraday eğitim videosu; itki tanımı niceliksel hâle getirilmeli.</div></div>
+    </div>
+
+    <!-- SCORECARD -->
+    <div class="panel" id="score">
+      <h2>Scorecard — 4 gates (no single score)</h2>
+      <details class="gate" open><summary><span class="gname">Gate 1 · Candidate Intake</span><span class="bar"><i class="green" style="width:82%"></i></span><span class="gscore">82/100</span></summary>
+        <table class="subcrit">
+          <tr><td>Codable rules present <span class="src-path">audit.has_deterministic_rules</span></td><td>PASS</td></tr>
+          <tr><td>Source quality <span class="src-path">audit.source_quality</span></td><td>MEDIUM</td></tr>
+          <tr><td>Worth testing <span class="src-path">audit.eligible_for_backtest</span></td><td>YES</td></tr>
+        </table>
+      </details>
+      <details class="gate"><summary><span class="gname">Gate 1B · MTC Feasibility</span><span class="bar"><i class="green" style="width:90%"></i></span><span class="gscore">45/50</span></summary>
+        <table class="subcrit"><tr><td>Representable in MTC_v2 <span class="src-path">feasibility</span></td><td>PASS</td></tr></table>
+      </details>
+      <details class="gate na"><summary><span class="gname">Gate 2 · Backtest Evidence</span><span class="bar"><i></i></span><span class="gscore">N/A</span></summary>
+        <table class="subcrit">
+          <tr><td>Max drawdown</td><td>NOT_COMPUTED</td></tr>
+          <tr><td>Sharpe / PF / Recovery</td><td>NOT_COMPUTED</td></tr>
+          <tr><td>Buy&amp;Hold excess alpha</td><td>NOT_COMPUTED</td></tr>
+          <tr><td>PBO (overfit prob)</td><td>NOT_COMPUTED</td></tr>
+        </table>
+        <p class="cap">Needs backtest data — run the strategy to populate Gate 2.</p>
+      </details>
+      <details class="gate na"><summary><span class="gname">Gate 3 · Production Readiness</span><span class="bar"><i></i></span><span class="gscore">N/A</span></summary>
+        <p class="cap" style="margin:10px 0 0">Needs integration / alert / parity evidence.</p>
+      </details>
+    </div>
+
+    <!-- EVIDENCE -->
+    <div class="panel" id="evidence">
+      <h2>Backtest evidence</h2>
+      <div class="empty">
+        <b>Backtest evidence is not available yet.</b>
+        <p style="margin:8px 0 0">To generate it, the following are required:</p>
+        <ul class="checklist">
+          <li>○ Deterministic entry/exit rules — <b>done</b></li>
+          <li>○ Validated data range (symbol/timeframe) — <b>missing</b></li>
+          <li>○ Buy&amp;Hold baseline (same window/fee) — <b>missing</b></li>
+          <li>○ Multi-window run — <b>missing</b></li>
+          <li>○ CPCV / walk-forward robustness — <b>missing</b></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- SOURCE -->
+    <div class="panel" id="source">
+      <h2>Source material</h2>
+      <div class="rule"><div class="k">Title</div><div class="v">8 EMA Pullback intraday setup (YouTube)</div></div>
+      <div class="rule"><div class="k">Video</div><div class="v"><a href="#">Open source ↗</a> &nbsp; <a href="#">Open transcript ↗</a></div></div>
+      <div class="rule"><div class="k">Transcript</div><div class="v">Available</div></div>
+      <div class="rule"><div class="k">Source quality</div><div class="v">Medium</div></div>
+      <div class="rule"><div class="k">Extracted rules</div><div class="v">5 high-confidence rules</div></div>
+    </div>
+
+    <!-- TECHNICAL -->
+    <div class="panel" id="tech">
+      <h2>Technical details</h2>
+      <table class="tech">
+        <tr><td>Canonical ID</td><td><code>QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK</code></td></tr>
+        <tr><td>Duplicate handling</td><td>Primary version (no duplicates)</td></tr>
+        <tr><td>Raw machine status</td><td><code>LOW_SCORE_REVIEW</code> → "Needs review"</td></tr>
+        <tr><td>Triage code</td><td><code>STG-0142</code></td></tr>
+        <tr><td>Pipeline row path</td><td><code class="src-path">11_TRIAGE/strategies/...</code></td></tr>
+        <tr><td>Legacy composite</td><td>57/100 (deprecated — superseded by gates above)</td></tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+<script>
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');document.getElementById(b.dataset.t).classList.add('active');
+});
+</script>
+</body>
+</html>

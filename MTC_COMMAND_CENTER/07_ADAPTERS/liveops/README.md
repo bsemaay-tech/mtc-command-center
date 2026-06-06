@@ -1,15 +1,29 @@
 # LiveOps Adapter
 
-This adapter is reserved for future LiveOps sandbox concepts.
+This adapter layer is dry-run only. It may simulate signal routing, alert
+payloads, state transitions, safety gates, and audit logs, but it must not send
+webhooks, create broker clients, or place orders.
 
-## MVP-0 State
+## Dry-Run Adapter
 
-Not implemented. Live trading and webhooks are disabled.
+`dry_run_adapter.py` accepts one all-gate artifact, generates a representative
+signal event, runs the no-execution lifecycle, and writes:
 
-## Future Contract
+- `<strategy>__<symbol>__<tf>.dry_run_evidence.json`
+- `<strategy>__<symbol>__<tf>.readiness.json`
 
-The adapter may simulate signal routing, dry-run alerts, safety gates, and audit logs. It should update `03_STATUS/LIVEOPS_STATUS.json`.
+Example:
+
+```powershell
+python MTC_COMMAND_CENTER\07_ADAPTERS\liveops\dry_run_adapter.py `
+  --artifact-in MTC_COMMAND_CENTER\03_QUANTLENS\05_BACKTEST_RESULTS\fam_templates_2026-06-06\all_gate_g3enriched\QL_FAM_MOMENTUM_CONTINUATION__TRXUSDT__4h.eval.json `
+  --out-dir MTC_COMMAND_CENTER\03_STATUS\dry_run_evidence_2026-06-06 `
+  --status-out MTC_COMMAND_CENTER\03_STATUS\LIVEOPS_STATUS.json
+```
 
 ## Safety
 
-No live trade, no live webhook, and no broker integration in foundation or read-only dashboard phases.
+The adapter forces `dry_run=true`, `live_trading_enabled=false`,
+`webhook_sending_enabled=false`, and `broker_integration_enabled=false` in the
+status output. Unsafe live/webhook/broker flags are recorded as a fail-safe
+case and skipped.

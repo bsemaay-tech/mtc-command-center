@@ -1,0 +1,803 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-06-06T20:08:30.768963+00:00",
+  "generator": "build_strategy_research_registry.py",
+  "indicators": [
+    {
+      "indicator_id": "ATR",
+      "indicator_name": "Atr",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "volatility",
+      "calculation_type": "review_needed",
+      "primary_use": "volatility sizing / stops / targets",
+      "usable_as_entry_signal": false,
+      "usable_as_confirmation_filter": false,
+      "usable_as_regime_filter": true,
+      "usable_as_exit_signal": true,
+      "usable_as_stop_or_trailing_component": true,
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG027",
+        "STG057"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "atr",
+        "volatility",
+        "stop"
+      ]
+    },
+    {
+      "indicator_id": "AVWAP",
+      "indicator_name": "Avwap",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "anchored_volume_weighted_price",
+      "calculation_type": "review_needed",
+      "primary_use": "anchored fair value from event",
+      "usable_as_entry_signal": true,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": false,
+      "usable_as_exit_signal": true,
+      "usable_as_stop_or_trailing_component": false,
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG004",
+        "STG005",
+        "STG006",
+        "STG007",
+        "STG024",
+        "STG049"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "avwap",
+        "anchored",
+        "volume"
+      ]
+    },
+    {
+      "indicator_id": "BOLLINGER_BANDS",
+      "indicator_name": "Bollinger Bands",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "volatility_band",
+      "calculation_type": "review_needed",
+      "primary_use": "volatility band / mean reversion",
+      "usable_as_entry_signal": true,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": true,
+      "usable_as_exit_signal": true,
+      "usable_as_stop_or_trailing_component": false,
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG036"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "bollinger",
+        "volatility",
+        "mean_reversion"
+      ]
+    },
+    {
+      "indicator_id": "CANDLESTICK",
+      "indicator_name": "Candlestick",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "price_action",
+      "calculation_type": "review_needed",
+      "primary_use": "reversal / continuation pattern",
+      "usable_as_entry_signal": true,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": false,
+      "usable_as_exit_signal": false,
+      "usable_as_stop_or_trailing_component": false,
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG001",
+        "STG037",
+        "STG039"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "candlestick",
+        "price_action"
+      ]
+    },
+    {
+      "indicator_id": "CHART_PATTERN",
+      "indicator_name": "Chart Pattern",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "chart_pattern",
+      "calculation_type": "review_needed",
+      "primary_use": "wedge / flag / structure pattern",
+      "usable_as_entry_signal": true,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": false,
+      "usable_as_exit_signal": false,
+      "usable_as_stop_or_trailing_component": true,
+      "repaint_risk_notes": "high",
+      "lookahead_risk_notes": "medium",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG023",
+        "STG044",
+        "STG048",
+        "STG050",
+        "STG051",
+        "STG052",
+        "STG053",
+        "STG054",
+        "STG055",
+        "STG056",
+        "STG057",
+        "STG058",
+        "STG059",
+        "STG060",
+        "STG061"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "pattern",
+        "price_action"
+      ]
+    },
+    {
+      "indicator_id": "DIVERGENCE",
+      "indicator_name": "Divergence",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "momentum_divergence",
+      "calculation_type": "review_needed",
+      "primary_use": "momentum/price divergence reversal",
+      "usable_as_entry_signal": true,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": false,
+      "usable_as_exit_signal": false,
+      "usable_as_stop_or_trailing_component": false,
+      "repaint_risk_notes": "high",
+      "lookahead_risk_notes": "medium",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [],
+      "reusable_components": "review_needed",
+      "tags": [
+        "divergence",
+        "reversal"
+      ]
+    },
+    {
+      "indicator_id": "EMA",
+      "indicator_name": "Ema",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "moving_average",
+      "calculation_type": "review_needed",
+      "primary_use": "trend direction / dynamic SR",
+      "usable_as_entry_signal": true,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": true,
+      "usable_as_exit_signal": true,
+      "usable_as_stop_or_trailing_component": true,
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG002",
+        "STG025",
+        "STG034",
+        "STG041",
+        "STG042",
+        "STG043",
+        "STG045",
+        "STG048",
+        "STG049",
+        "STG053",
+        "STG054",
+        "STG055",
+        "STG056",
+        "STG058"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "ema",
+        "trend",
+        "moving_average"
+      ]
+    },
+    {
+      "indicator_id": "FIBONACCI",
+      "indicator_name": "Fibonacci",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "price_level",
+      "calculation_type": "review_needed",
+      "primary_use": "retracement / confluence level",
+      "usable_as_entry_signal": false,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": false,
+      "usable_as_exit_signal": true,
+      "usable_as_stop_or_trailing_component": true,
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG049"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "fibonacci",
+        "confluence",
+        "level"
+      ]
+    },
+    {
+      "indicator_id": "GAP",
+      "indicator_name": "Gap",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "event_price",
+      "calculation_type": "review_needed",
+      "primary_use": "gap up/down event entry",
+      "usable_as_entry_signal": true,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": false,
+      "usable_as_exit_signal": false,
+      "usable_as_stop_or_trailing_component": true,
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG005",
+        "STG008",
+        "STG009",
+        "STG047",
+        "STG048",
+        "STG050",
+        "STG054",
+        "STG055",
+        "STG062"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "gap",
+        "event"
+      ]
+    },
+    {
+      "indicator_id": "MACD",
+      "indicator_name": "Macd",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "momentum_oscillator",
+      "calculation_type": "review_needed",
+      "primary_use": "momentum / trend confirmation",
+      "usable_as_entry_signal": true,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": false,
+      "usable_as_exit_signal": true,
+      "usable_as_stop_or_trailing_component": false,
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [],
+      "reusable_components": "review_needed",
+      "tags": [
+        "macd",
+        "momentum"
+      ]
+    },
+    {
+      "indicator_id": "MARKET_BREADTH",
+      "indicator_name": "Market Breadth",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "review_needed",
+      "calculation_type": "review_needed",
+      "primary_use": "review_needed",
+      "usable_as_entry_signal": "review_needed",
+      "usable_as_confirmation_filter": "review_needed",
+      "usable_as_regime_filter": "review_needed",
+      "usable_as_exit_signal": "review_needed",
+      "usable_as_stop_or_trailing_component": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG062"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "market_breadth"
+      ]
+    },
+    {
+      "indicator_id": "MARKET_STRUCTURE",
+      "indicator_name": "Market Structure",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "price_structure",
+      "calculation_type": "review_needed",
+      "primary_use": "change of character / structure shift",
+      "usable_as_entry_signal": true,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": true,
+      "usable_as_exit_signal": true,
+      "usable_as_stop_or_trailing_component": true,
+      "repaint_risk_notes": "high",
+      "lookahead_risk_notes": "medium",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG027"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "choch",
+        "structure",
+        "smc"
+      ]
+    },
+    {
+      "indicator_id": "MOMENTUM",
+      "indicator_name": "Momentum",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "review_needed",
+      "calculation_type": "review_needed",
+      "primary_use": "review_needed",
+      "usable_as_entry_signal": "review_needed",
+      "usable_as_confirmation_filter": "review_needed",
+      "usable_as_regime_filter": "review_needed",
+      "usable_as_exit_signal": "review_needed",
+      "usable_as_stop_or_trailing_component": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG057"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "momentum"
+      ]
+    },
+    {
+      "indicator_id": "MOVING_AVERAGE",
+      "indicator_name": "Moving Average",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "review_needed",
+      "calculation_type": "review_needed",
+      "primary_use": "review_needed",
+      "usable_as_entry_signal": "review_needed",
+      "usable_as_confirmation_filter": "review_needed",
+      "usable_as_regime_filter": "review_needed",
+      "usable_as_exit_signal": "review_needed",
+      "usable_as_stop_or_trailing_component": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG048",
+        "STG050",
+        "STG051",
+        "STG052",
+        "STG053",
+        "STG056",
+        "STG059",
+        "STG060",
+        "STG061",
+        "STG063"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "moving_average"
+      ]
+    },
+    {
+      "indicator_id": "OPENING_RANGE",
+      "indicator_name": "Opening Range",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "session_level",
+      "calculation_type": "review_needed",
+      "primary_use": "opening range breakout / fade",
+      "usable_as_entry_signal": true,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": false,
+      "usable_as_exit_signal": true,
+      "usable_as_stop_or_trailing_component": true,
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG006",
+        "STG030",
+        "STG031"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "opening_range",
+        "intraday",
+        "session"
+      ]
+    },
+    {
+      "indicator_id": "OPTIONS_IV",
+      "indicator_name": "Options Iv",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "review_needed",
+      "calculation_type": "review_needed",
+      "primary_use": "review_needed",
+      "usable_as_entry_signal": "review_needed",
+      "usable_as_confirmation_filter": "review_needed",
+      "usable_as_regime_filter": "review_needed",
+      "usable_as_exit_signal": "review_needed",
+      "usable_as_stop_or_trailing_component": "review_needed",
+      "repaint_risk_notes": "review_needed",
+      "lookahead_risk_notes": "review_needed",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG063"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "options_iv"
+      ]
+    },
+    {
+      "indicator_id": "PRICE_CHANNEL",
+      "indicator_name": "Price Channel",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "price_channel",
+      "calculation_type": "review_needed",
+      "primary_use": "channel breakout / pullback",
+      "usable_as_entry_signal": true,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": true,
+      "usable_as_exit_signal": true,
+      "usable_as_stop_or_trailing_component": true,
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG041"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "channel",
+        "breakout"
+      ]
+    },
+    {
+      "indicator_id": "PRICE_EXTENSION",
+      "indicator_name": "Price Extension",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "price_extension",
+      "calculation_type": "review_needed",
+      "primary_use": "overextension anti-chase filter",
+      "usable_as_entry_signal": false,
+      "usable_as_confirmation_filter": false,
+      "usable_as_regime_filter": false,
+      "usable_as_exit_signal": true,
+      "usable_as_stop_or_trailing_component": false,
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG033"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "extension",
+        "filter"
+      ]
+    },
+    {
+      "indicator_id": "QQE",
+      "indicator_name": "Qqe",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "momentum_oscillator",
+      "calculation_type": "review_needed",
+      "primary_use": "smoothed RSI momentum signal",
+      "usable_as_entry_signal": true,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": false,
+      "usable_as_exit_signal": true,
+      "usable_as_stop_or_trailing_component": false,
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [],
+      "reusable_components": "review_needed",
+      "tags": [
+        "qqe",
+        "momentum",
+        "rsi"
+      ]
+    },
+    {
+      "indicator_id": "RELATIVE_STRENGTH",
+      "indicator_name": "Relative Strength",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "relative_strength",
+      "calculation_type": "review_needed",
+      "primary_use": "leadership vs benchmark filter",
+      "usable_as_entry_signal": false,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": true,
+      "usable_as_exit_signal": false,
+      "usable_as_stop_or_trailing_component": false,
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG017",
+        "STG029",
+        "STG048",
+        "STG050",
+        "STG059",
+        "STG060",
+        "STG062",
+        "STG063"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "rs",
+        "relative_strength",
+        "filter"
+      ]
+    },
+    {
+      "indicator_id": "RSI",
+      "indicator_name": "Rsi",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "momentum_oscillator",
+      "calculation_type": "review_needed",
+      "primary_use": "momentum / overbought-oversold",
+      "usable_as_entry_signal": true,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": false,
+      "usable_as_exit_signal": true,
+      "usable_as_stop_or_trailing_component": false,
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG003",
+        "STG027",
+        "STG035",
+        "STG040",
+        "STG047"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "rsi",
+        "momentum",
+        "oscillator"
+      ]
+    },
+    {
+      "indicator_id": "SMA",
+      "indicator_name": "Sma",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "moving_average",
+      "calculation_type": "review_needed",
+      "primary_use": "trend direction / mean",
+      "usable_as_entry_signal": true,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": true,
+      "usable_as_exit_signal": true,
+      "usable_as_stop_or_trailing_component": true,
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG010",
+        "STG011",
+        "STG012",
+        "STG019",
+        "STG029",
+        "STG049",
+        "STG053",
+        "STG062"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "sma",
+        "trend",
+        "moving_average"
+      ]
+    },
+    {
+      "indicator_id": "SUPPORT_RESISTANCE",
+      "indicator_name": "Support Resistance",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "price_level",
+      "calculation_type": "review_needed",
+      "primary_use": "horizontal level / breakout anchor",
+      "usable_as_entry_signal": true,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": false,
+      "usable_as_exit_signal": true,
+      "usable_as_stop_or_trailing_component": true,
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG001",
+        "STG039",
+        "STG047",
+        "STG053",
+        "STG057",
+        "STG058"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "sr",
+        "level",
+        "breakout"
+      ]
+    },
+    {
+      "indicator_id": "VCP",
+      "indicator_name": "Vcp",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "chart_pattern",
+      "calculation_type": "review_needed",
+      "primary_use": "volatility contraction breakout setup",
+      "usable_as_entry_signal": true,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": true,
+      "usable_as_exit_signal": false,
+      "usable_as_stop_or_trailing_component": true,
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "medium",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG020",
+        "STG021",
+        "STG022"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "vcp",
+        "contraction",
+        "breakout"
+      ]
+    },
+    {
+      "indicator_id": "VOLATILITY_RANGE",
+      "indicator_name": "Volatility Range",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "volatility",
+      "calculation_type": "review_needed",
+      "primary_use": "range expansion (Crabel-style)",
+      "usable_as_entry_signal": true,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": true,
+      "usable_as_exit_signal": false,
+      "usable_as_stop_or_trailing_component": true,
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG057"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "range_expansion",
+        "volatility"
+      ]
+    },
+    {
+      "indicator_id": "VOLUME",
+      "indicator_name": "Volume",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "volume",
+      "calculation_type": "review_needed",
+      "primary_use": "participation / breakout confirmation",
+      "usable_as_entry_signal": false,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": true,
+      "usable_as_exit_signal": false,
+      "usable_as_stop_or_trailing_component": false,
+      "repaint_risk_notes": "low",
+      "lookahead_risk_notes": "low",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG014",
+        "STG047",
+        "STG048",
+        "STG050",
+        "STG051",
+        "STG052",
+        "STG054",
+        "STG055",
+        "STG059",
+        "STG060",
+        "STG061"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "volume",
+        "confirmation"
+      ]
+    },
+    {
+      "indicator_id": "VWAP",
+      "indicator_name": "Vwap",
+      "source_file": "review_needed",
+      "source_folder": "review_needed",
+      "indicator_category": "volume_weighted_price",
+      "calculation_type": "review_needed",
+      "primary_use": "intraday fair value / pullback anchor",
+      "usable_as_entry_signal": true,
+      "usable_as_confirmation_filter": true,
+      "usable_as_regime_filter": false,
+      "usable_as_exit_signal": true,
+      "usable_as_stop_or_trailing_component": false,
+      "repaint_risk_notes": "medium",
+      "lookahead_risk_notes": "low",
+      "htf_usage": "review_needed",
+      "parameters": "review_needed",
+      "strategy_dependencies": [
+        "STG038",
+        "STG049"
+      ],
+      "reusable_components": "review_needed",
+      "tags": [
+        "vwap",
+        "intraday",
+        "volume"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+candidate_id: QL_LINDA_RASCHKE_LBR_TOOLKIT_V1
+source_url: https://youtu.be/kTqKRi-j9kM
+video_title: "Linda Bradford Raschke (LBR) interview - setups, risk, position sizing"
+quantlens_decision: CANDIDATE
+codex_status: READY_FOR_DETERMINISTIC_REVIEW
+market_type: FUTURES_AND_EQUITIES
+primary_timeframe: 1d
+recommended_timeframes:
+  - 1d
+  - 30m
+  - 1h
+strategy_type: Linda Raschke mechanical short-term toolkit (reversal + range expansion + risk)
+strategy_category: swing_trading
+method:
+  - reversal
+  - breakout
+  - volatility_expansion
+  - mean_reversion
+expected_market_regime:
+  - ranging
+  - breakout
+  - high_volatility
+long_only_or_long_short: long_short
+commercial_value_score: 9
+complexity_score: 7
+repaint_risk: LOW
+lookahead_risk: LOW
+overfit_risk: MEDIUM
+discretion_level: LOW
+closed_source_risk: LOW
+risk_management_quality: STRONG
+candidate_kind:
+  producer: true
+  entry_gate: true
+  guard: true
+  confirmation: true
+  exit_rule: true
+  sl_tp_method: true
+  trailing_be_method: true
+  money_management: true
+indicators_used:
+  - ATR
+  - VOLATILITY_RANGE
+  - MOMENTUM
+  - SUPPORT_RESISTANCE
+  - CHART_PATTERN
+existing_mtc_overlap: STG026 (crabel_range_expansion) is adjacent (volatility expansion). LBR adds ROC reversal, 3-bar pattern, box midpoint, ADTR sizing, equity-curve throttle.
+new_feature_required: ROC (2-period) reversal, box/market-profile midpoint, ADTR sizing, equity-curve risk throttle, Taylor prev-day H/L rhythm.
+sub_setups:
+  - THREE_BAR_BREAKOUT (Stg132) - 3-bar price overlap at swing extreme -> breakout
+  - COIL_BREAKOUT_RANGE_EXPANSION (Stg128) - coil/contraction -> range-expansion day breakout
+  - ROC2_REVERSAL (Stg131) - 2-period rate-of-change reversal entry
+  - BOX_MIDPOINT_RECLAIM (Stg127) - market-profile box; reclaim of box midpoint
+  - PREV_DAY_HIGH_LOW_TAYLOR_RHYTHM (Stg130) - Taylor trading technique prev-day H/L rhythm
+  - ATR_VOLATILITY_EXIT_OVERLAY (Stg126) - ATR-based exit/trail overlay
+  - ADTR_POSITION_SIZING (Stg125) - size by average daily true range
+  - EQUITY_CURVE_RISK_THROTTLE (Stg129) - cut size when equity curve rolls over
+known_strengths: Highly mechanical, low-discretion, decades-proven; strong risk layer (ADTR sizing + equity-curve throttle + ATR exits); reversal + expansion edges.
+known_weaknesses: Some setups need intraday/market-profile data; futures-oriented originally.
+recommended_next_step: Implement THREE_BAR_BREAKOUT and COIL/RANGE_EXPANSION first (fully objective); wrap with ATR exit + ADTR sizing reusable modules.
+created_at: 2026-06-04
+updated_at: 2026-06-04
+
+# --- A1 Extracted (auto) ---
+trailing_logic: N_A
+filters_used: N_A
+known_strengths: Deterministic Spec -- Linda Raschke (LBR) Mechanical Toolkit
+known_weaknesses: Some setups need intraday / market-profile data; ensure objective definitions. - Originally futures-oriented; validate on the target universe.
