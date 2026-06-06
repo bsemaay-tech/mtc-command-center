@@ -31,7 +31,12 @@
   "no_repaint": "true under engine assumptions: signal evaluated on CLOSED bar i, executed at open of bar i+1; no intrabar/tick dependency for signal; stop/exit checked intrabar on subsequent bars only",
   "no_lookahead": "true: all inputs use values at or before the signal bar; impulse uses [1] shift",
   "data_requirements": {
-    "ohlcv": ["open", "high", "low", "close"],
+    "ohlcv": [
+      "open",
+      "high",
+      "low",
+      "close"
+    ],
     "warmup_bars": ">= 200 recommended for stable EMA/ATR",
     "coverage_verified": "LINK 1h 2020-01-17..2026-04-27, 55016 bars"
   },
@@ -55,7 +60,10 @@
     "deflated_sharpe_p": 0.0683,
     "bh_fdr_survivor": false
   },
-  "promotion_status": ["PROMOTE_TO_FORWARD_PAPER_TRADE", "PROMOTE_TO_PARITY_CANDIDATE"],
+  "promotion_status": [
+    "PROMOTE_TO_FORWARD_PAPER_TRADE",
+    "PROMOTE_TO_PARITY_CANDIDATE"
+  ],
   "fidelity_to_original_youtube_source": "NEEDS_SOURCE_CONFIRMATION",
   "source_artifacts": [
     "05_BACKTEST_RESULTS/MEGA_walk_forward_results.json",
@@ -63,5 +71,9 @@
     "05_BACKTEST_RESULTS/multiwindow_summary.json",
     "tools/mega_walk_forward.py"
   ],
-  "not_an_approved_live_trading_system": true
+  "not_an_approved_live_trading_system": true,
+  "trailing_logic": "Trailing Exit (QL_ALPHA_LINK_8EMA_1H) > Source: QL Alpha pipeline, promoted to parity",
+  "filters_used": "N_A",
+  "known_strengths": "Deterministic Spec — LINK 8EMA Pullback + Trailing Exit (QL_ALPHA_LINK_8EMA_1H)",
+  "known_weaknesses": "PROMOTED TO PARITY. Parity Pine: `LINK_8EMA_REVIEW.pine`. Not approved for live trading."
 }

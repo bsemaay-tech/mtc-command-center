@@ -15,5 +15,9 @@
   "exit_pseudo": "close<EMA21 OR stop OR target_3x_ATR",
   "param_grid_size_planned": 80,
   "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
-  "promoted_at": "2026-05-31T00:09:34"
+  "promoted_at": "2026-05-31T00:09:34",
+  "trailing_logic": "N_A",
+  "filters_used": "Trend template requires all 8 conditions — very restrictive; low trade frequency., real implementation requires fundamental + RS screening.",
+  "known_strengths": "Deterministic Spec — Minervini VCP Pivot Breakout 1D (QL_VCP_MINERVINI_1D)",
+  "known_weaknesses": "N_A"
 }

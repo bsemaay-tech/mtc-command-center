@@ -13,5 +13,9 @@
   "exit_pseudo": "close<anchor_avwap",
   "param_grid_size_planned": 40,
   "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
-  "promoted_at": "2026-05-31T00:09:34"
+  "promoted_at": "2026-05-31T00:09:34",
+  "trailing_logic": "N_A",
+  "filters_used": "trend_ok     = close > SMA(close, 200)            longterm trend filter, Requires earnings date annotation or quarterly date anchor., AVWAP requires an anchor date — backtesting must replay the earnings date in sequence., Parity candidate. Not approved for live trading. Requires earnings date feed for live implementation.",
+  "known_strengths": "Deterministic Spec — Brian Shannon AVWAP Earnings Anchor 1D (QL_AVWAP_BRIAN_EARNINGS_ANCHOR_1D)",
+  "known_weaknesses": "N_A"
 }

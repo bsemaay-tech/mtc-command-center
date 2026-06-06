@@ -14,5 +14,9 @@
   "exit_pseudo": "close<contraction_low OR trail_under_swing",
   "param_grid_size_planned": 50,
   "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
-  "promoted_at": "2026-05-31T00:09:34"
+  "promoted_at": "2026-05-31T00:09:34",
+  "trailing_logic": "N_A",
+  "filters_used": "N_A",
+  "known_strengths": "Deterministic Spec — Launchpad ProSwing 1D (QL_LAUNCHPAD_PROSWING_1D)",
+  "known_weaknesses": "full VCP or breakout criteria are met — for earlier exposure with tight risk."
 }

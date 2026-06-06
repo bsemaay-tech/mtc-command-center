@@ -7,11 +7,15 @@
   "rules_high_confidence": [
     "Anchor AVWAP at session open",
     "Break of opening range",
-    "Pullback to AVWAP holds as support \u2192 entry"
+    "Pullback to AVWAP holds as support → entry"
   ],
   "entry_pseudo": "or_break AND pullback_to_avwap_held",
   "exit_pseudo": "close<avwap_intraday OR end_of_session",
   "param_grid_size_planned": 40,
   "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
-  "promoted_at": "2026-05-31T00:09:34"
+  "promoted_at": "2026-05-31T00:09:34",
+  "trailing_logic": "N_A",
+  "filters_used": "Requires 5m OHLCV with session timestamps.",
+  "known_strengths": "Deterministic Spec — Brian Shannon AVWAP Intraday Opening Range 5m (QL_AVWAP_BRIAN_INTRADAY_OR_5M)",
+  "known_weaknesses": "N_A"
 }

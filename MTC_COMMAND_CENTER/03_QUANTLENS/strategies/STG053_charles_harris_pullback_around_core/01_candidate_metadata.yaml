@@ -60,4 +60,4 @@ updated_at: 2026-06-04
 trailing_logic: "sell into strength** when extended, buy back / add into weakness at support"
 filters_used: "gate, coreposition manager (trim strength / add weakness), reversepyramid sizing,"
 known_strengths: Deterministic Spec -- Charles Harris Pullback / Swing-Around-Core
-known_weaknesses: "'Extended' / trim timing is discretionary; define objectively (e.g. % above 21EMA)"
+known_weaknesses: "'Extended' / trim timing is discretionary → define objectively (e.g. % above 21EMA)"

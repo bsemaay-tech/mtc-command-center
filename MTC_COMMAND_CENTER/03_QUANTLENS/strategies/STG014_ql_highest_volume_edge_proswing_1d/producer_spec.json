@@ -5,7 +5,7 @@
   "title": "Highest-Volume edge (Pro Swing Ep 2)",
   "kind": "strategy",
   "rules_high_confidence": [
-    "Volume bar = MAX(volume, last 252 bars) \u2014 highest in past year",
+    "Volume bar = MAX(volume, last 252 bars) — highest in past year",
     "Optionally: highest since last earnings (proxy: top vol bar in last 60-90 days)",
     "Confirmed: tag price-action setup (gap, breakout, etc.)"
   ],
@@ -13,5 +13,9 @@
   "exit_pseudo": "close<bar_low OR trail",
   "param_grid_size_planned": 40,
   "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
-  "promoted_at": "2026-05-31T00:09:34"
+  "promoted_at": "2026-05-31T00:09:34",
+  "trailing_logic": "N_A",
+  "filters_used": "Trend filter: stock in uptrend",
+  "known_strengths": "Deterministic Spec — Highest Volume Edge ProSwing 1D (QL_HIGHEST_VOLUME_EDGE_PROSWING_1D)",
+  "known_weaknesses": "Parity candidate. Not approved for live trading. Strong conceptually; needs robust\nhighest-volume detection that filters outliers."
 }

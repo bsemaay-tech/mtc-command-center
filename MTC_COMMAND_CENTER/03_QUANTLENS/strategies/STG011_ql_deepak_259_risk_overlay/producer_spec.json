@@ -6,12 +6,16 @@
   "kind": "exit_overlay",
   "rules_high_confidence": [
     "Position sizing: 1% portfolio risk per trade",
-    "Calculated stop distance \u2192 share count = portfolio*0.01/stop_distance",
+    "Calculated stop distance → share count = portfolio*0.01/stop_distance",
     "Cap stops at technical levels OR 8% generic, whichever tighter"
   ],
   "entry_pseudo": "N/A (sizing overlay)",
   "exit_pseudo": "N/A (sizing overlay)",
   "param_grid_size_planned": 20,
   "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
-  "promoted_at": "2026-05-31T00:09:34"
+  "promoted_at": "2026-05-31T00:09:34",
+  "trailing_logic": "N_A",
+  "filters_used": "N_A",
+  "known_strengths": "Deterministic Spec — Deepak Singhania 259% Risk Overlay (QL_DEEPAK_259_RISK_OVERLAY)",
+  "known_weaknesses": "Deterministic Spec — Deepak Singhania 259% Risk Overlay (QL_DEEPAK_259_RISK_OVERLAY). Overlay risk management system — not a standalone entry strategy."
 }

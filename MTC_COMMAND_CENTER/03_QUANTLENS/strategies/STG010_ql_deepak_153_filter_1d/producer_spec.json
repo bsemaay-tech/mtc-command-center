@@ -14,5 +14,9 @@
   "exit_pseudo": "N/A (filter overlay)",
   "param_grid_size_planned": 20,
   "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
-  "promoted_at": "2026-05-31T00:09:34"
+  "promoted_at": "2026-05-31T00:09:34",
+  "trailing_logic": "N_A",
+  "filters_used": "Marketrelative RS requires benchmark feed., Use as entry gate, Parity candidate. Use as a universe filter / entry gate rather than standalone entry signal.",
+  "known_strengths": "Deterministic Spec — Deepak Singhania 1-5-3 Filter 1D (QL_DEEPAK_153_FILTER_1D)",
+  "known_weaknesses": "N_A"
 }

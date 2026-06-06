@@ -12,5 +12,9 @@
   "exit_pseudo": "close<entry*0.95",
   "param_grid_size_planned": 30,
   "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
-  "promoted_at": "2026-05-31T00:09:34"
+  "promoted_at": "2026-05-31T00:09:34",
+  "trailing_logic": "N_A",
+  "filters_used": "N_A",
+  "known_strengths": "Deterministic Spec — Christian Flanders Open Range 5% Stop 5m (QL_OPEN_RANGE_5PCT_STOP_CHRISTIAN_5M)",
+  "known_weaknesses": "Parity candidate (blocked by missing 5m data). Not approved for live trading.\nThe 5% fixed stop is a conservative setting that allows riding volatile stocks; tune for the asset."
 }

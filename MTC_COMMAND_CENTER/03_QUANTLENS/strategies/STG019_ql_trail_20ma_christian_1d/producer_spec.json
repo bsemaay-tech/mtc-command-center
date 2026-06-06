@@ -12,5 +12,9 @@
   "exit_pseudo": "exit_on=close<SMA20",
   "param_grid_size_planned": 20,
   "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
-  "promoted_at": "2026-05-31T00:09:34"
+  "promoted_at": "2026-05-31T00:09:34",
+  "trailing_logic": "trailing exit method",
+  "filters_used": "N_A",
+  "known_strengths": "Deterministic Spec — Christian Flanders Trail 20MA 1D (QL_TRAIL_20MA_CHRISTIAN_1D)",
+  "known_weaknesses": "N_A"
 }

@@ -13,5 +13,9 @@
   "exit_pseudo": "price>=SMA50 OR stop",
   "param_grid_size_planned": 50,
   "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
-  "promoted_at": "2026-05-31T00:09:34"
+  "promoted_at": "2026-05-31T00:09:34",
+  "trailing_logic": "N_A",
+  "filters_used": "Dailylevel trend filter (must confirm on daily first), Daily OHLCV for trend filter",
+  "known_strengths": "Deterministic Spec — Deepak Singhania Snapback to 50SMA Intraday (QL_DEEPAK_SNAPBACK_50SMA_INTRADAY)",
+  "known_weaknesses": "N_A"
 }

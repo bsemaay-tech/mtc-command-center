@@ -6,11 +6,15 @@
   "kind": "filter_overlay",
   "rules_high_confidence": [
     "RS line (price/index) making new 21-day high",
-    "RS days: \u226561% of last 21 days outperforming index"
+    "RS days: ≥61% of last 21 days outperforming index"
   ],
   "entry_pseudo": "long_ok = rs_new_high_21 AND rs_days_pct>=0.61",
   "exit_pseudo": "N/A (overlay)",
   "param_grid_size_planned": 30,
   "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
-  "promoted_at": "2026-05-31T00:09:34"
+  "promoted_at": "2026-05-31T00:09:34",
+  "trailing_logic": "N_A",
+  "filters_used": "This overlay gates entries to only fire when RS has been positive for N+ consecutive days., Use as gate on any producer entry:",
+  "known_strengths": "Deterministic Spec — RS Phase Days ProSwing Overlay (QL_RS_PHASE_DAYS_PROSWING_OVERLAY)",
+  "known_weaknesses": "N_A"
 }

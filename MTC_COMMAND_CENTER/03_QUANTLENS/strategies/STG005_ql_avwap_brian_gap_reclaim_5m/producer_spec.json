@@ -5,12 +5,16 @@
   "title": "AVWAP gap reclaim (Brian Shannon)",
   "kind": "strategy",
   "rules_high_confidence": [
-    "Gap up \u2192 settles \u2192 reclaims daily AVWAP from below",
+    "Gap up → settles → reclaims daily AVWAP from below",
     "Stop below low of day"
   ],
   "entry_pseudo": "gap_up AND prior_below_avwap AND close>avwap_daily",
   "exit_pseudo": "close<bar_low OR end_of_session",
   "param_grid_size_planned": 40,
   "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
-  "promoted_at": "2026-05-31T00:09:34"
+  "promoted_at": "2026-05-31T00:09:34",
+  "trailing_logic": "N_A",
+  "filters_used": "Requires 5m OHLCV with session timestamps and gap data., Requires sessionaware VWAP computation (resets each day).",
+  "known_strengths": "Deterministic Spec — Brian Shannon AVWAP Gap Reclaim 5m (QL_AVWAP_BRIAN_GAP_RECLAIM_5M)",
+  "known_weaknesses": "N_A"
 }

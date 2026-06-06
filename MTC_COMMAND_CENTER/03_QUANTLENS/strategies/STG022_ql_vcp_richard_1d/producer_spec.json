@@ -15,5 +15,9 @@
   "exit_pseudo": "close<EMA21 OR close<stop",
   "param_grid_size_planned": 50,
   "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
-  "promoted_at": "2026-05-31T00:09:34"
+  "promoted_at": "2026-05-31T00:09:34",
+  "trailing_logic": "N_A",
+  "filters_used": "Trend filter (simplified vs Minervini)",
+  "known_strengths": "Deterministic Spec — Richard Moglen VCP 1D (QL_VCP_RICHARD_1D)",
+  "known_weaknesses": "Parity candidate. Not approved for live trading. Looser criteria than STG021 — higher frequency,\nlower precision. Best combined with fundamental RS screening."
 }

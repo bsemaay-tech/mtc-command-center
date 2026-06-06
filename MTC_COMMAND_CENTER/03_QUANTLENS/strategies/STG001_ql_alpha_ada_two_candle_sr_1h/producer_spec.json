@@ -30,7 +30,12 @@
   "no_repaint": "true under engine assumptions: signal on CLOSED bar i, executed at bar i+1 open; rolling high uses [1] shift so the breakout level excludes the current bar",
   "no_lookahead": "true: high_break shifted by 1; close_position uses only current bar OHLC",
   "data_requirements": {
-    "ohlcv": ["open", "high", "low", "close"],
+    "ohlcv": [
+      "open",
+      "high",
+      "low",
+      "close"
+    ],
     "warmup_bars": ">= 210 (200-bar lookback + ATR warmup)",
     "coverage_verified": "ADA 1h 2020-01-31..2026-04-27, 54680 bars"
   },
@@ -43,12 +48,12 @@
   "metrics_lockbox": {
     "return_pct_compound": 79.23,
     "buyhold_pct": -30.47,
-    "excess_alpha_pct": 109.70,
+    "excess_alpha_pct": 109.7,
     "profit_factor": 1.721,
     "trades": 53,
     "max_drawdown_pct": -14.16,
     "win_rate": 0.4906,
-    "expectancy_R": 0.440,
+    "expectancy_R": 0.44,
     "multi_window_positive": "4/5",
     "param_stable": true,
     "bootstrap_p_hires": 0.01434,
@@ -56,7 +61,10 @@
     "bh_fdr_survivor": false,
     "caveat": "only 53 lockbox trades; Q1 window +599% is a small-sample distortion"
   },
-  "promotion_status": ["PROMOTE_TO_FORWARD_PAPER_TRADE", "PROMOTE_TO_PARITY_CANDIDATE"],
+  "promotion_status": [
+    "PROMOTE_TO_FORWARD_PAPER_TRADE",
+    "PROMOTE_TO_PARITY_CANDIDATE"
+  ],
   "fidelity_to_original_youtube_source": "NEEDS_SOURCE_CONFIRMATION",
   "source_artifacts": [
     "05_BACKTEST_RESULTS/MEGA_walk_forward_results.json",
@@ -64,5 +72,9 @@
     "05_BACKTEST_RESULTS/multiwindow_summary.json",
     "tools/mega_walk_forward.py"
   ],
-  "not_an_approved_live_trading_system": true
+  "not_an_approved_live_trading_system": true,
+  "trailing_logic": "N_A",
+  "filters_used": "N_A",
+  "known_strengths": "Deterministic Spec — ADA Two-Candle S/R Breakout (QL_ALPHA_ADA_TWO_CANDLE_SR_1H)",
+  "known_weaknesses": "Caveat: 53 trades is a thin sample; Q1 window +599% is a smallsample distortion."
 }

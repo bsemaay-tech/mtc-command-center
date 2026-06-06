@@ -15,5 +15,9 @@
   "exit_pseudo": "scale_out_at_VAH OR stop OR session_close_if_negative",
   "param_grid_size_planned": 60,
   "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
-  "promoted_at": "2026-05-31T00:09:34"
+  "promoted_at": "2026-05-31T00:09:34",
+  "trailing_logic": "N_A",
+  "filters_used": "N_A",
+  "known_strengths": "Deterministic Spec — Andrew Connell Event-Driven Gap 1D (QL_CONNELL_EVENT_DRIVEN_GAP_1D)",
+  "known_weaknesses": "N_A"
 }

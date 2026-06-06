@@ -13,5 +13,9 @@
   "exit_pseudo": "close<avwap OR trail_under_swing_low",
   "param_grid_size_planned": 60,
   "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
-  "promoted_at": "2026-05-31T00:09:34"
+  "promoted_at": "2026-05-31T00:09:34",
+  "trailing_logic": "N_A",
+  "filters_used": "Parity candidate. Not approved for live trading. Requires anchor date feed for live use.",
+  "known_strengths": "Deterministic Spec — Brian Shannon AVWAP Stage2 Emerging 1D (QL_AVWAP_BRIAN_STAGE2_EMERGING_1D)",
+  "known_weaknesses": "N_A"
 }

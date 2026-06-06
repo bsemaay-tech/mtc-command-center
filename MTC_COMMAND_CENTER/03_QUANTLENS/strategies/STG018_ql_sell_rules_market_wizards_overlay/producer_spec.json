@@ -15,5 +15,9 @@
   "exit_pseudo": "trim_on=close<SMA50; full_exit_on=ext>8% OR close<EMA_weekly20",
   "param_grid_size_planned": 40,
   "fidelity_to_original_youtube_source": "FIRST_PASS_PSEUDOCODE_FROM_TRIAGE",
-  "promoted_at": "2026-05-31T00:09:34"
+  "promoted_at": "2026-05-31T00:09:34",
+  "trailing_logic": "N_A",
+  "filters_used": "N_A",
+  "known_strengths": "Deterministic Spec — Market Wizards Sell Rules Overlay (QL_SELL_RULES_MARKET_WIZARDS_OVERLAY)",
+  "known_weaknesses": "Not an entry signal — purely an exit/risk discipline layer."
 }

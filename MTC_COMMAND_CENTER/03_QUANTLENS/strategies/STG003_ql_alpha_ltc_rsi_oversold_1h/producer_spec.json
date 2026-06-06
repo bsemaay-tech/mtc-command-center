@@ -27,7 +27,12 @@
   "no_repaint": "true under engine assumptions: RSI computed on CLOSED bars; signal on bar i, executed at bar i+1 open",
   "no_lookahead": "true: uses rsi5 and rsi5[1] only (no forward reference)",
   "data_requirements": {
-    "ohlcv": ["open", "high", "low", "close"],
+    "ohlcv": [
+      "open",
+      "high",
+      "low",
+      "close"
+    ],
     "warmup_bars": ">= 50 (RSI(5) + stability)",
     "coverage_verified": "LTC 1h 2020-01-09..2026-04-27, 55208 bars"
   },
@@ -41,7 +46,7 @@
     "return_pct_compound": 95.81,
     "buyhold_pct": -20.84,
     "excess_alpha_pct": 116.65,
-    "profit_factor": 1.230,
+    "profit_factor": 1.23,
     "trades": 329,
     "max_drawdown_pct": -21.98,
     "win_rate": 0.3799,
@@ -54,7 +59,9 @@
     "bh_fdr_survivor": false,
     "caveat": "thin PF 1.23, low expectancy 0.107R, fold consistency only 1/3, Q3 window -26.4%"
   },
-  "promotion_status": ["PROMOTE_TO_FORWARD_PAPER_TRADE"],
+  "promotion_status": [
+    "PROMOTE_TO_FORWARD_PAPER_TRADE"
+  ],
   "parity_status": "deferred (weak fold consistency; revisit after forward paper-trade)",
   "fidelity_to_original_youtube_source": "NEEDS_SOURCE_CONFIRMATION",
   "source_artifacts": [
@@ -63,5 +70,9 @@
     "05_BACKTEST_RESULTS/multiwindow_summary.json",
     "tools/mega_walk_forward.py"
   ],
-  "not_an_approved_live_trading_system": true
+  "not_an_approved_live_trading_system": true,
+  "trailing_logic": "N_A",
+  "filters_used": "Short: none (longonly). No trend filter (pure mean reversion).",
+  "known_strengths": "Deterministic Spec — LTC RSI(5) Oversold Recovery (QL_ALPHA_LTC_RSI_OVERSOLD_1H)",
+  "known_weaknesses": "N_A"
 }
