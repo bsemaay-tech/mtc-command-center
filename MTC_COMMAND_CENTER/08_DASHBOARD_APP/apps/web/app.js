@@ -737,7 +737,13 @@ function buildWaveADecision(row, auditRow, mtcV2Row, scorecardV2, quantlens, can
     evidenceLevel,
     gsPromotable,
     gsBlocking,
-    documentedVsProven: evidenceLevel.includes("Backtested") ? "Documented and internally tested" : "Documented, not proven",
+    // R2-08b wording + R2-29: don't claim "internally tested" when the backtest FAILED.
+    documentedVsProven: (function () {
+      const bt = String(can.backtest_status || can.gate2_status || "").toUpperCase();
+      if (bt === "FAIL") return "Rules written · backtest did not pass";
+      if (evidenceLevel.includes("Backtested") || bt === "PASS") return "Rules written · internally tested";
+      return "Rules written · not proven";
+    })(),
     quantlensLabel: quantlens
       ? `QuantLens: ${(quantlens.quantlens_verdict && quantlens.quantlens_verdict.decision_label) || quantlens.quantlens_decision || "Reviewed"}`
       : "QuantLens: Not in scope (separate AI pre-screen)",
@@ -873,14 +879,17 @@ function renderGateRow(key, label, gate) {
   const reason = Array.isArray(safeGate.incomplete_reasons) && safeGate.incomplete_reasons.length
     ? safeGate.incomplete_reasons.slice(0, 6).join("; ")
     : safeGate.reason || safeGate.note || "";
-  // UI-16: auto-open PASS gates too (user should see score detail); chevron in CSS via ::marker
-  const autoOpen = status === "INCOMPLETE" || status === "PASS" || safeGate.pass === true;
+  // UI-16 / R2-30: auto-open PASS, FAIL and INCOMPLETE gates so the user sees the detail
+  // (esp. WHY a gate failed) without an extra click.
+  const autoOpen = status === "INCOMPLETE" || status === "PASS" || status === "FAIL"
+    || safeGate.pass === true || safeGate.pass === false;
   const score = scoreForGate(safeGate);
-  // Sub-scores detail for PASS gates
+  // R2-15: show the sub-score breakdown for ANY gate that has sub_scores (FAIL/INCOMPLETE too,
+  // not only PASS) — a FAIL gate's breakdown is exactly what explains the failure.
   const subScores = Array.isArray(safeGate.sub_scores) ? safeGate.sub_scores : [];
-  const subScoreDetail = (status === "PASS" || safeGate.pass === true) && subScores.length
+  const subScoreDetail = subScores.length
     ? `<div class="gate-sub-scores"><table class="terminal-kv">${subScores.slice(0, 12).map((s) => {
-        const metric = s.source_metric || s.criterion || "—";
+        const metric = humanizeMetric(s.source_metric || s.criterion); // R2-11
         const val = s.value != null ? Number(s.value).toFixed(2) : "—";
         // R2-12: only show a denominator when max_points is real (not null/0/undefined); no fake "?".
         const pts = s.points_awarded == null ? "—"
@@ -900,7 +909,7 @@ function renderGateRow(key, label, gate) {
       ${subScoreDetail}
       ${missing.length ? `
         <div class="missing-fields">
-          <span>Missing / not scored</span>
+          <span title="These criteria were not produced or not scored by this backtest run — the metric was absent or could not be evaluated, so it did not contribute to the gate score. Not a dashboard bug.">Missing / not scored</span>
           <ul>${missing.slice(0, 10).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
           ${missing.length > 10 ? `<p class="muted-terminal">${missing.length - 10} additional fields omitted in the compact view.</p>` : ""}
         </div>
@@ -948,9 +957,9 @@ function gateMissingFields(gate) {
   return rows
     .filter((row) => row && (row.points_awarded == null || row.metric_status !== "OK"))
     .map((row) => {
-      const source = row.source_metric || row.criterion || "unknown";
+      const source = humanizeMetric(row.source_metric || row.criterion); // R2-19
       const status = row.metric_status || "NOT_SCORED";
-      return `${source} (${statusText(status)})`;
+      return `${source} — ${statusText(status)}`;
     });
 }
 
@@ -2162,6 +2171,31 @@ function qualityBadge(value) {
 
 function statusText(value) {
   return String(value).replaceAll("N_A", "N/A").replaceAll("_", " ");
+}
+
+// R2-11 / R2-19: turn raw gate metric keys (e.g. "intake.entry_pseudo_present",
+// "alert_adapter.tv_alert_json_convertible", "metrics.cpcv_pass_ratio") into
+// human-readable labels. One helper, reused by sub-scores AND missing-field lists.
+const GATE_FIELD_PREFIX = {
+  intake: "Intake", feasibility: "Feasibility", metrics: "Metric", benchmark: "Benchmark",
+  regime: "Regime", alert_adapter: "Alert", state_sync: "State sync", fail_safe: "Fail-safe",
+  monitoring: "Monitoring",
+};
+const GATE_FIELD_ACRONYMS = {
+  tv: "TradingView", json: "JSON", cpcv: "CPCV", pbo: "PBO", ema: "EMA", bh: "buy-hold",
+  dd: "drawdown", htf: "HTF", mtc: "MTC", wfo: "walk-forward", ret: "return", pct: "%",
+  reduceonly: "reduce-only", bot: "bot",
+};
+function humanizeMetric(key) {
+  const raw = String(key || "").trim();
+  if (!raw) return "—";
+  const dot = raw.indexOf(".");
+  const prefix = dot > 0 ? raw.slice(0, dot) : "";
+  const rest = (dot > 0 ? raw.slice(dot + 1) : raw).replace(/\./g, " ");
+  const words = rest.split("_").map((w) => GATE_FIELD_ACRONYMS[w] || w).join(" ").trim();
+  const label = words ? words.charAt(0).toUpperCase() + words.slice(1) : raw;
+  const group = GATE_FIELD_PREFIX[prefix];
+  return group ? `${label} (${group})` : label;
 }
 
 function renderFlags(flags) {
