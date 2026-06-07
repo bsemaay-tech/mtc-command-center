@@ -69,19 +69,6 @@ class _FakeNorm:
         return _norm_ppf(q)
 
 
-class _ShimFinder:
-    """sys.meta_path finder — intercepts scipy.stats before it loads."""
-
-    def __init__(self):
-        self._hit = False
-
-    def find_spec(self, fullname, path, target=None):
-        # Intercept: from scipy import stats  OR  import scipy.stats
-        if fullname == 'scipy.stats' or fullname == 'scipy':
-            return None  # let scipy base load (works fine)
-        return None
-
-
 _SCIPY_STATS_INTERCEPTED = False
 
 

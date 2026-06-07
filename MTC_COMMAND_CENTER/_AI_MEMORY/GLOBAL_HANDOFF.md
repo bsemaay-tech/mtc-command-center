@@ -1,5 +1,22 @@
 # GLOBAL_HANDOFF
 
+## Claude Sonnet 4.6 2026-06-07 — Audit + full sweep dispatch
+
+**Audit (dadb8c8 — DeepSeek recovery session):**
+- D009 fix confirmed correct: `_scipy_shim.py` intercepts `scipy.stats` via `sys.modules` pre-seed. Acklam `norm.ppf`/`norm.cdf` verified (error <1.15e-9). 425 jobs × 4 workers = 109.3s ✓
+- Dead code removed: `_ShimFinder` class (was defined but never installed into `sys.meta_path`)
+- DECISIONS.md D009 original entry marked SUPERSEDED by D009-revised
+- `remaining_test_scipy_fix/` empty dir deleted
+- Gate2 results: 4 PASS (QL_EMA_RETEST_v1 BNBUSDT 4h=90, QL_VWAP_TREND_CONT_v1 ARBUSDT 1h=91.87, QL_VWAP_TREND_CONT_v1 DOGEUSDT 2h=90.42, QL_HARRIS_50DMA_v1 TRXUSDT 4h=80.28). Gate3: all INCOMPLETE (expected). Promotable: 0/11.
+- QL_CANSLIM_SHAKEOUT_v1: 0 MEGA candidates. QL_ANTI_CHASE_CRABEL_v1: 5 cells FAIL only.
+
+**IN PROGRESS:** Full 59-strategy sweep script dispatched to DeepSeek V4 Pro (`full_sweep_2026-06-07.sh`). Will verify + launch after delivery.
+
+**Blocked on Barış:**
+- 9 PRE_REG threshold defs (STG007/021/027/037/054/058/061/062/063) → unblocks strategy coding
+- Gate3 MEV-004 scope decision
+- MORNING-003 transcript review
+
 ## DeepSeek v4 Pro 2026-06-07 — D009 root cause fix + recovery sweep complete
 
 **D009 root cause revised:** NOT MSYS2 DLL path conflict. OpenBLAS 0.3.30 bundled with
