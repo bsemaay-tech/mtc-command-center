@@ -749,11 +749,12 @@ function evidenceLevelLabel(row, auditRow, canonical) {
 function renderVerdictDecision(decision) {
   const verdictBadgeClass = decision.gsPromotable ? "ok" : (decision.canTest === "Yes" ? "amber" : "bad");
   const verdictBadgeLabel = decision.gsPromotable ? "Promotable" : (decision.canTest === "Yes" ? "Can test" : "Blocked");
+  const verdictBadgeTitle = decision.gsPromotable ? "Passed all gates incl. Gate3, ready for promotion packet." : (decision.canTest === "Yes" ? "Deterministic rules exist; ready for backtest review." : "At least one blocking gate is preventing advancement.");
   return `
     <section class="terminal-section verdict-section">
       <div class="terminal-section-head">
         <h4>Verdict &amp; Decision</h4>
-        <span class="terminal-badge ${verdictBadgeClass}">${escapeHtml(verdictBadgeLabel)}</span>
+        <span class="terminal-badge ${verdictBadgeClass}" title="${escapeHtml(verdictBadgeTitle)}">${escapeHtml(verdictBadgeLabel)}</span>
       </div>
       <p class="muted-sub">Primary verdict derived from gate_summary and canonical data. QuantLens = pre-screen commentary, not gate scoring. <span class="provenance-tag">source: gate_summary + canonical</span></p>
       <p class="verdict-line"><strong>${escapeHtml(decision.verdict)}</strong></p>
@@ -791,13 +792,13 @@ function renderWaveAScorecard(scorecardV2, legacyScorecard, scorecardV2Cases = [
       <section class="terminal-section scorecard-v2-section">
         <div class="terminal-section-head">
           <h4>Scorecard</h4>
-          <span class="terminal-badge ${promotable ? "ok" : "amber"}">${promotable ? "Promotable" : "Not promotable"}</span>
+          <span class="terminal-badge ${promotable ? "ok" : "amber"}" title="${promotable ? "Passed all gates incl. Gate3, ready for promotion packet." : "At least one gate is blocking — see Blocking chips below."}">${promotable ? "Promotable" : "Not promotable"}</span>
         </div>
         <p class="muted-terminal">Gate 2 quantitative backtest score /100. Threshold: ≥75 PASS · &lt;75 FAIL. <span class="provenance-tag">source: scorecard_v2</span></p>
         ${renderScorecardCaseList(scorecardV2, scorecardV2Cases, canonical)}
         <div class="chip-row">
-          <span class="terminal-chip">${escapeHtml(`Promotable: ${promotable ? "Yes" : "No"}`)}</span>
-          ${blocking.map((name) => `<span class="terminal-chip warn">${escapeHtml(`Blocking: ${statusText(name)}`)}</span>`).join("")}
+          <span class="terminal-chip" title="${promotable ? "All gates pass — strategy is cleared for promotion." : "At least one blocking gate is preventing advancement. See Blocking chips for which gate(s) failed."}">${escapeHtml(`Promotable: ${promotable ? "Yes" : "No"}`)}</span>
+          ${blocking.map((name) => `<span class="terminal-chip warn" title="${escapeHtml(blockingGateTooltip(name))}">${escapeHtml(`Blocking: ${statusText(name)}`)}</span>`).join("")}
           ${tfChip}
         </div>
         ${gates.map(([key, label, gate]) => renderGateRow(key, label, gate)).join("")}
@@ -901,6 +902,17 @@ function isPromotable(gs) {
   if (!gs) return false;
   const v = gs.promotable;
   return v === true || v === 1 || v === "1" || v === "true";
+}
+
+function blockingGateTooltip(name) {
+  const key = String(name || "").toLowerCase();
+  const map = {
+    gate1: "Gate 1 (Intake) did not pass — source material or transcript is missing or incomplete.",
+    gate1b: "Gate 1B (MTC Feasibility) did not pass — strategy cannot be mapped to MTC modules.",
+    gate2: "Gate 2 (Backtest Evidence) did not pass — score below 75, backtest metrics missing, or walk-forward incomplete.",
+    gate3: "Gate 3 (Production Readiness) did not pass — forward evidence, parity, or operational flags are incomplete.",
+  };
+  return map[key] || `Gate \"${statusText(name)}\" is blocking — review its score and reason in the scorecard below.`;
 }
 
 function producerSpecEntry(row) {
@@ -2511,11 +2523,12 @@ function renderAcceptancePanel() {
   }
   const summary = buildAcceptanceSummary();
   const countLabel = `${summary.promotable} Promotable / ${summary.total} scored`;
+  const countTitle = `Promotable = cleared all gates (Gate1, Gate1B, Gate2, Gate3). Scored = has a Gate2 scorecard. ${summary.total - summary.promotable} strategies not yet promotable.`;
   el.innerHTML = `
 <div class="mcc-status-panel">
   <div class="mcc-status-head">
     <span>MCC Acceptance Status <em class="provenance-tag">(Global summary — all strategies)</em></span>
-    <strong>${escapeHtml(countLabel)}</strong>
+    <strong title="${escapeHtml(countTitle)}">${escapeHtml(countLabel)}</strong>
   </div>
   <div class="mcc-status-grid">
     ${summary.rows.length
