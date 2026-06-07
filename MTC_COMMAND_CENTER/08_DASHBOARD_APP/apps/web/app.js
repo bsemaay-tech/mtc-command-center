@@ -876,9 +876,15 @@ function renderGateRow(key, label, gate) {
     : (status === "INCOMPLETE" || status === "NOT_EVALUATED") ? "Pending"
     : (safeGate.pass === false || status === "FAIL") ? "Failed"
     : statusText(status);
+  // R2-16: Gate 3 has no scorer system-wide — say "Not evaluated", not "Pending" (which implies it's coming).
+  const isGate3Unscored = key === "gate3" && (status === "INCOMPLETE" || status === "NOT_EVALUATED");
+  const displayLabel = isGate3Unscored ? "Not evaluated" : passLabel;
   const reason = Array.isArray(safeGate.incomplete_reasons) && safeGate.incomplete_reasons.length
     ? safeGate.incomplete_reasons.slice(0, 6).join("; ")
     : safeGate.reason || safeGate.note || "";
+  const emptyReason = isGate3Unscored
+    ? "Gate 3 (production-readiness) scorer is not built yet — every strategy is INCOMPLETE here. System-wide gap, not a per-strategy failure."
+    : "No blocking reason reported for this gate.";
   // UI-16 / R2-30: auto-open PASS, FAIL and INCOMPLETE gates so the user sees the detail
   // (esp. WHY a gate failed) without an extra click.
   const autoOpen = status === "INCOMPLETE" || status === "PASS" || status === "FAIL"
@@ -903,9 +909,9 @@ function renderGateRow(key, label, gate) {
         <span class="gate-chevron">▸</span>
         <span>${escapeHtml(label)}</span>
         <strong>${escapeHtml(score)}</strong>
-        <em>${escapeHtml(passLabel)}</em>
+        <em>${escapeHtml(displayLabel)}</em>
       </summary>
-      ${reason ? `<p>${escapeHtml(reason)}</p>` : `<p class="muted-terminal">No blocking reason reported for this gate.</p>`}
+      ${reason ? `<p>${escapeHtml(reason)}</p>` : `<p class="muted-terminal">${escapeHtml(emptyReason)}</p>`}
       ${subScoreDetail}
       ${missing.length ? `
         <div class="missing-fields">
@@ -966,16 +972,21 @@ function gateMissingFields(gate) {
 function renderStrategyTaxonomy(row, auditRow, producerSpec, description, canonical) {
   const can = canonical || row.canonical || (auditRow && auditRow.canonical) || {};
   const testedTf = can.tested_tf || row.timeframe || (auditRow && auditRow.timeframe);
-  const familyBlob = [row.id, description.family, producerSpec.title].join(" ");
+  // R2-35: feed the English description into the blob so "continuation" is matched before "pullback".
+  const familyBlob = [row.id, description.family, producerSpec.title, description.what, description.summary, description.entry]
+    .filter(Boolean).join(" ");
+  const symbol = row.symbol || (auditRow && auditRow.symbol) || can.symbol; // R2-34
+  // R2-22: time-horizon / market-condition / method are HEURISTIC guesses from the name+description
+  // (no producer_spec taxonomy yet). Flag them "estimated"; the real Defined/Tested TF sit alongside.
   const chips = [
-    ["Category / time horizon", inferTimeHorizon(testedTf, familyBlob)],
-    ["Expected market condition", inferMarketCondition(familyBlob)],
-    ["Method", inferMethod(familyBlob)],
-    ["Instrument / market fit", marketLabel(row.symbol || (auditRow && auditRow.symbol))],
-    ["Defined timeframe", can.defined_tf || row.timeframe || (auditRow && auditRow.timeframe) || "Not defined"],
-    ["Tested timeframe", can.tested_tf || "Not tested yet"],
-    ["Automation suitability", auditRow && auditRow.has_deterministic_rules ? "Machine-testable" : "Partially defined"],
-    ["Complexity", "Not defined yet"],
+    ["Category / time horizon", inferTimeHorizon(testedTf, familyBlob), true],
+    ["Expected market condition", inferMarketCondition(familyBlob), true],
+    ["Method", inferMethod(familyBlob), true],
+    ["Instrument / market fit", marketLabel(symbol), false],
+    ["Defined timeframe", can.defined_tf || row.timeframe || (auditRow && auditRow.timeframe) || "Not defined", false],
+    ["Tested timeframe", can.tested_tf || "Not tested yet", false],
+    ["Automation suitability", auditRow && auditRow.has_deterministic_rules ? "Machine-testable" : "Partially defined", false],
+    ["Complexity", "Not assessed yet", false],
   ];
   const mismatchChip = can.tf_mismatch
     ? `<div class="taxonomy-chip warn"><span>⚠ Timeframe mismatch</span><strong>Defined ${escapeHtml(can.defined_tf || "?")}, tested ${escapeHtml(can.tested_tf || "?")} — verify intent</strong></div>`
@@ -983,10 +994,11 @@ function renderStrategyTaxonomy(row, auditRow, producerSpec, description, canoni
   return `
     <section class="terminal-section">
       <div class="terminal-section-head"><h4>Strategy Taxonomy</h4></div>
+      <p class="muted-terminal">Category, market condition and method are <strong>estimated</strong> from the strategy name and description (no producer_spec taxonomy yet) — cross-check against the Defined/Tested timeframe below. <span class="provenance-tag">estimated + canonical</span></p>
       <div class="taxonomy-grid">
-        ${chips.map(([label, value]) => `
+        ${chips.map(([label, value, estimated]) => `
           <div class="taxonomy-chip">
-            <span>${escapeHtml(label)}</span>
+            <span>${escapeHtml(label)}${estimated ? ` <em class="provenance-tag">estimated</em>` : ""}</span>
             <strong>${escapeHtml(value || "Unknown")}</strong>
           </div>
         `).join("")}
@@ -2671,10 +2683,22 @@ function renderPromotabilityPanel(scorecardV2) {
     ${blocking.map((name) => `
       <div class="gate-blocker fail">
         <span>${escapeHtml(statusText(name))}</span>
-        <em>Blocking</em>
+        <em>${escapeHtml(blockingGateAction(name))}</em>
       </div>`).join("")}
   </div>
 </section>`;
+}
+
+// R2-18: gate-specific "what to do", not a generic "Action required".
+function blockingGateAction(name) {
+  const key = String(name || "").toLowerCase();
+  const map = {
+    gate1: "Complete source intake / transcript before scoring.",
+    gate1b: "Map the strategy to MTC_V2 modules (feasibility).",
+    gate2: "Re-run the backtest to reach ≥75, or park for manual review.",
+    gate3: "Blocked by the missing Gate 3 scorer (system-wide) — production readiness cannot be scored yet.",
+  };
+  return map[key] || "Review this gate's score and reason in the scorecard above.";
 }
 
 // ── S2 A5 — Gate 2 evidence block ────────────────────────────────────────────
