@@ -9,13 +9,18 @@ _2026-06-07, Claude Sonnet 4.6_
 | Sınıf | Sayı | Oran |
 |---|---|---|
 | ALREADY_IN_ENGINE | 34 | 54% |
-| CODEABLE | 18 | 29% |
-| PRE_REG_NEEDED | 7 | 11% |
+| CODEABLE | 16 | 25% |
+| PRE_REG_NEEDED | 9 | 14% |
 | DISCRETIONARY | 4 | 6% |
 | PARKED_NO_DATA | 6 | 9% |
 | **Toplam** | **63** | |
 
-**B2 gece batch hedefi:** 18 CODEABLE + 7 PRE_REG (Barış threshold tanımladıktan sonra) = **~25 strateji**.
+> **Revizyon 2026-06-07:** STG061 ve STG063 CODEABLE → PRE_REG_NEEDED olarak düzeltildi.
+> Her iki spec de "Backtest Readiness: Needs review — formalize thresholds first" diyor.
+
+**B2 gece batch hedefi:** 16 CODEABLE → 11'i zaten engine'de (batch023_034 + strat_extra),
+5 yeni (STG028/033/034/046/053) `strat_batch_remaining.py` olarak kodlandı (2026-06-07).
+9 PRE_REG: Barış threshold tanımladıktan sonra.
 
 ---
 
@@ -83,9 +88,9 @@ _2026-06-07, Claude Sonnet 4.6_
 | STG058 | Martin Parabolic Pullback | PRE_REG_NEEDED | Parabolic SAR threshold + champion filtresi |
 | STG059 | Nick Weekly Stage | DISCRETIONARY | Karakter değişimi + kazanç zamanlaması |
 | STG060 | Roppel Leadership Position | DISCRETIONARY | RS "hendek" + pozisyon büyüklüğü kararı |
-| STG061 | Ryan Pierpont Breakout | CODEABLE | Kırılım tanımı mekanik |
+| STG061 | Ryan Pierpont Breakout | PRE_REG_NEEDED | Spec: "thresholds unknown — formalize first" |
 | STG062 | Stan Weinstein Stage | PRE_REG_NEEDED | Stage threshold (destek/direnç) gerekli |
-| STG063 | Tito Options-Aware RS | CODEABLE | RS sıralama + kırılım + hacim mekanik |
+| STG063 | Tito Options-Aware RS | PRE_REG_NEEDED | Spec: "options rules unknown; Low readiness" |
 
 ---
 

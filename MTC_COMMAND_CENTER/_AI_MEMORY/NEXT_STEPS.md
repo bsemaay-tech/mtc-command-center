@@ -1,5 +1,37 @@
 # NEXT_STEPS
 
+## Strategy coding sprint (2026-06-07 — autonomous)
+
+### N5-AUDIT | DONE 2026-06-07 (Claude) | 63-strateji kodlanabilirlik audit
+- Kayıt: `_AI_MEMORY/N5_CODABILITY_AUDIT.md`
+- 34 ALREADY_IN_ENGINE · 16 CODEABLE · 9 PRE_REG_NEEDED · 4 DISCRETIONARY · 6 PARKED_NO_DATA
+- STG061+STG063: N5 agent CODEABLE dedi ama kendi spec'leri "thresholds unknown" → PRE_REG_NEEDED düzeltildi
+
+### A1-PRODUCER-SPEC | DONE 2026-06-07 (Claude) | 41 producer_spec.json üretildi
+- Script: `03_QUANTLENS/tools/generate_producer_specs.py`
+- 63/63 strateji artık producer_spec.json'a sahip (41 yeni, 22 mevcut)
+- 41 gerçek MEGA metrik; 22 dürüst placeholder (hiç uydurulmuş sayı yok)
+
+### STG028-034-046-053-CODING | IN PROGRESS 2026-06-07 (Claude)
+- Dosya: `03_QUANTLENS/tools/strat_batch_remaining.py`
+- QL_CANSLIM_SHAKEOUT_v1 (STG028) · QL_ANTI_CHASE_CRABEL_v1 (STG033)
+  QL_EMA_RETEST_v1 (STG034) · QL_VWAP_TREND_CONT_v1 (STG046) · QL_HARRIS_50DMA_v1 (STG053)
+- Sweep script: `overnight_remaining_2026-06-07.sh` — çalışıyor
+- STG061/063 ATLANMIŞ: spec "thresholds unknown, formalize first" diyor
+
+### PRE_REG_NEEDED — Barış threshold tanımlamalı (9 strateji):
+| STG | İhtiyaç |
+|---|---|
+| STG007 | Stage2 EMA/MA eşiği |
+| STG021 | VCP kontraksiyon % eşiği |
+| STG027 | RSI diverjans + CHoCH bölge genişliği |
+| STG037 | 7-mum pattern geometri |
+| STG054 | Fishhook derinlik/hız eşiği |
+| STG058 | Parabolic SAR çarpan + "champion" filtresi |
+| STG061 | Pierpont extension eşiği + danger-zone sınırı |
+| STG062 | Weinstein Stage2 MA eğim + hacim eşiği |
+| STG063 | Tito RS eşiği + crossback trigger |
+
 ## Overnight spec sprint (2026-06-06 — autonomous)
 
 ### SPEC-SPRINT-ALL-35 | DONE 2026-06-06 (Claude, autonomous) | 35 deterministic spec files [AI: Claude]
