@@ -685,10 +685,11 @@ function buildWaveADecision(row, auditRow, mtcV2Row, scorecardV2, quantlens, can
   const eligible = hasAudit ? Boolean(auditRow.eligible_for_backtest) : false;
   const deterministic = hasAudit ? Boolean(auditRow.has_deterministic_rules) : Boolean(row.producer_spec);
   const canBlocking = Array.isArray(can.blocking) ? can.blocking : [];
+  // R2-06: derive the blocker ONLY from canonical.blocking — never from the stale legacy
+  // auditRow.blocked_reason / mtcV2Row.blocker (source of the obsolete "score below 65" text).
   const blocker = canBlocking.length
     ? canBlocking.map((b) => statusText(b)).join("; ")
-    : cleanDisplayText((auditRow && auditRow.blocked_reason))
-      || (eligible ? "None" : "Deterministic rules are not complete.");
+    : (eligible ? "None" : "Deterministic rules are not complete.");
   const nextAction = cleanDisplayText((mtcV2Row && mtcV2Row.next_action) || row.next_action || (auditRow && auditRow.recommended_next_pipeline_step))
     || "Review the source evidence.";
   const evidenceLevel = can.evidence_level || evidenceLevelLabel(row, auditRow, can);
@@ -2561,8 +2562,9 @@ function renderAcceptancePanel() {
     return;
   }
   const summary = buildAcceptanceSummary();
-  const countLabel = `${summary.promotable} Promotable / ${summary.total} scored`;
-  const countTitle = `Promotable = cleared all gates (Gate1, Gate1B, Gate2, Gate3). Scored = has a Gate2 scorecard. ${summary.total - summary.promotable} strategies not yet promotable.`;
+  // R2-27: "scored" counted backtest runs (cards), not strategies — show both honestly.
+  const countLabel = `${summary.promotable} promotable · ${summary.strategies} strategies · ${summary.total} backtest runs`;
+  const countTitle = `Promotable = strategies that cleared all gates (Gate1, Gate1B, Gate2, Gate3). Strategies = distinct strategies with a Gate2 scorecard (${summary.strategies}). Backtest runs = total scored runs across all symbols/timeframes/sweeps (${summary.total}); one strategy has many runs.`;
   el.innerHTML = `
 <div class="mcc-status-panel">
   <div class="mcc-status-head">
@@ -2584,7 +2586,10 @@ function buildAcceptanceSummary() {
     const gs = c.gate_summary || {};
     return isPromotable(gs);
   });
-  return { total: cards.length, promotable: promotable.length, rows: promotable };
+  // R2-27: distinct strategies (base id before the first "|"), not the raw card/run count.
+  const baseId = (c) => String(c.base_strategy_id || c.strategy_id || "").split("|")[0];
+  const strategies = new Set(cards.map(baseId).filter(Boolean)).size;
+  return { total: cards.length, promotable: promotable.length, strategies, rows: promotable };
 }
 
 function renderAcceptanceRow(card) {
