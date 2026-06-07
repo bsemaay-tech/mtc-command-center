@@ -675,16 +675,24 @@ function buildWaveADecision(row, auditRow, mtcV2Row, scorecardV2, quantlens, can
   const nextAction = cleanDisplayText((mtcV2Row && mtcV2Row.next_action) || row.next_action || (auditRow && auditRow.recommended_next_pipeline_step))
     || "Review the source evidence.";
   const evidenceLevel = can.evidence_level || evidenceLevelLabel(row, auditRow, can);
+  // UI-31 (D6): entry+exit present → partially testable with MTC_V2 defaults
+  const hasEntry = Boolean(producerSpecEntry(row));
+  const hasExit = Boolean(producerSpecExit(row));
+  const partiallyTestable = deterministic || (hasEntry && hasExit);
   const verdict = eligible
     ? "Ready for backtest review"
-    : deterministic
+    : partiallyTestable
       ? "Partially testable"
-      : "Needs source clarification";
+      : (!hasEntry || !hasExit)
+        ? "Blocked — entry or exit rule missing"
+        : "Needs source clarification";
   const reason = eligible
     ? "Existing data says the candidate has enough deterministic rule evidence to enter a backtest workflow."
-    : deterministic
-      ? "Some rules are documented, but at least one upstream requirement is still blocking clean evidence."
-      : "The source does not define enough exact mechanical rules for honest scoring or backtesting.";
+    : partiallyTestable
+      ? "Entry and exit rules are documented. SL/TP/risk can be filled by MTC_V2 defaults — partially testable."
+      : (!hasEntry || !hasExit)
+        ? "Hard-blocked: entry or exit rule is missing. Cannot proceed until both are defined."
+        : "The source does not define enough exact mechanical rules for honest scoring or backtesting.";
   const riskFlags = [
     !deterministic ? "Undefined rules" : "",
     blocker && blocker !== "None" ? friendlyStatus(blocker) : "",
@@ -860,6 +868,18 @@ function isPromotable(gs) {
   return v === true || v === 1 || v === "1" || v === "true";
 }
 
+function producerSpecEntry(row) {
+  const ps = row.producer_spec || {};
+  const desc = row.description || {};
+  return cleanDisplayText(desc.entry || ps.entry_pseudo || ps.entry_trigger || "");
+}
+
+function producerSpecExit(row) {
+  const ps = row.producer_spec || {};
+  const desc = row.description || {};
+  return cleanDisplayText(desc.exit || ps.exit_pseudo || ps.exit_trigger || "");
+}
+
 function gateMissingFields(gate) {
   const rows = Array.isArray(gate.sub_scores) ? gate.sub_scores : [];
   return rows
@@ -871,16 +891,23 @@ function gateMissingFields(gate) {
     });
 }
 
-function renderStrategyTaxonomy(row, auditRow, producerSpec, description) {
+function renderStrategyTaxonomy(row, auditRow, producerSpec, description, canonical) {
+  const can = canonical || row.canonical || (auditRow && auditRow.canonical) || {};
+  const testedTf = can.tested_tf || row.timeframe || (auditRow && auditRow.timeframe);
   const familyBlob = [row.id, description.family, producerSpec.title].join(" ");
   const chips = [
-    ["Category / time horizon", inferTimeHorizon(row.timeframe || (auditRow && auditRow.timeframe), familyBlob)],
+    ["Category / time horizon", inferTimeHorizon(testedTf, familyBlob)],
     ["Expected market condition", inferMarketCondition(familyBlob)],
     ["Method", inferMethod(familyBlob)],
     ["Instrument / market fit", marketLabel(row.symbol || (auditRow && auditRow.symbol))],
+    ["Defined timeframe", can.defined_tf || row.timeframe || (auditRow && auditRow.timeframe) || "Not defined"],
+    ["Tested timeframe", can.tested_tf || "Not tested yet"],
     ["Automation suitability", auditRow && auditRow.has_deterministic_rules ? "Machine-testable" : "Partially defined"],
     ["Complexity", "Not defined yet"],
   ];
+  const mismatchChip = can.tf_mismatch
+    ? `<div class="taxonomy-chip warn"><span>⚠ Timeframe mismatch</span><strong>Defined ${escapeHtml(can.defined_tf || "?")}, tested ${escapeHtml(can.tested_tf || "?")} — verify intent</strong></div>`
+    : "";
   return `
     <section class="terminal-section">
       <div class="terminal-section-head"><h4>Strategy Taxonomy</h4></div>
@@ -891,6 +918,7 @@ function renderStrategyTaxonomy(row, auditRow, producerSpec, description) {
             <strong>${escapeHtml(value || "Unknown")}</strong>
           </div>
         `).join("")}
+        ${mismatchChip}
       </div>
     </section>
   `;
@@ -907,8 +935,10 @@ function inferTimeHorizon(timeframe, blob) {
 
 function inferMarketCondition(blob) {
   const text = String(blob || "").toLowerCase();
+  if (text.includes("continuation")) return "Trend continuation";
   if (text.includes("breakout") || text.includes("flag")) return "Breakout / trend continuation";
-  if (text.includes("vwap") || text.includes("rsi") || text.includes("pullback")) return "Pullback / mean reversion";
+  if (text.includes("pullback") && !text.includes("continuation")) return "Pullback / mean reversion";
+  if (text.includes("vwap") || text.includes("rsi")) return "Pullback / mean reversion";
   if (text.includes("bollinger")) return "Volatility expansion";
   return "Unknown";
 }
