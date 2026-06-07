@@ -122,10 +122,18 @@ def read_quantlens_candidate(candidate_dir: Path) -> dict:
     rmq = y.get('risk_management_quality')
 
     kinds = y.get('candidate_kind') or {}
-    salvageable = [
-        {'category': k, 'label': SALVAGE_KIND_LABELS.get(k, k)}
-        for k, v in kinds.items() if v
-    ]
+    if isinstance(kinds, list):
+        salvageable = [
+            {'category': str(k), 'label': SALVAGE_KIND_LABELS.get(str(k), str(k))}
+            for k in kinds if k
+        ]
+    elif isinstance(kinds, dict):
+        salvageable = [
+            {'category': k, 'label': SALVAGE_KIND_LABELS.get(k, k)}
+            for k, v in kinds.items() if v
+        ]
+    else:
+        salvageable = []
 
     ref_files = {}
     for bn in REFERENCE_BASENAMES:
@@ -165,18 +173,31 @@ def read_quantlens_candidate(candidate_dir: Path) -> dict:
 
 def build_quantlens(mcc_root: str | Path | None = None) -> dict:
     root = canonicalize(mcc_root or default_mcc_root())
-    salvage_root = default_quantlens_root(root) / '03_SALVAGE_IDEAS'
-    if not salvage_root.exists():
-        return {'candidates': [], 'count': 0, 'source': '03_QUANTLENS/03_SALVAGE_IDEAS'}
+    ql_root = default_quantlens_root(root)
+    seen: dict[str, dict] = {}
+    sources: list[str] = []
 
-    cands = []
-    for d in sorted(salvage_root.iterdir()):
-        if d.is_dir() and (d / '01_candidate_metadata.yaml').exists():
-            cands.append(read_quantlens_candidate(d))
+    salvage_root = ql_root / '03_SALVAGE_IDEAS'
+    if salvage_root.exists():
+        sources.append('03_QUANTLENS/03_SALVAGE_IDEAS')
+        for d in sorted(salvage_root.iterdir()):
+            if d.is_dir() and (d / '01_candidate_metadata.yaml').exists():
+                c = read_quantlens_candidate(d)
+                seen[c.get('candidate_id', '')] = c
 
-    cands.sort(key=lambda x: x.get('candidate_id', ''))
+    strategies_root = ql_root / 'strategies'
+    if strategies_root.exists():
+        sources.append('03_QUANTLENS/strategies')
+        for d in sorted(strategies_root.iterdir()):
+            if d.is_dir() and (d / '01_candidate_metadata.yaml').exists():
+                c = read_quantlens_candidate(d)
+                cid = c.get('candidate_id', '')
+                if cid not in seen:
+                    seen[cid] = c
+
+    cands = sorted(seen.values(), key=lambda x: x.get('candidate_id', ''))
     return {
         'candidates': cands,
         'count': len(cands),
-        'source': '03_QUANTLENS/03_SALVAGE_IDEAS',
+        'source': ', '.join(sources) if sources else '03_QUANTLENS',
     }
