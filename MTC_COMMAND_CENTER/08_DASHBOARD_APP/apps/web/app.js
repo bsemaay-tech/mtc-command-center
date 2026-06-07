@@ -851,14 +851,29 @@ function renderGateRow(key, label, gate) {
   const reason = Array.isArray(safeGate.incomplete_reasons) && safeGate.incomplete_reasons.length
     ? safeGate.incomplete_reasons.slice(0, 6).join("; ")
     : safeGate.reason || safeGate.note || "";
+  // UI-16: auto-open PASS gates too (user should see score detail); chevron in CSS via ::marker
+  const autoOpen = status === "INCOMPLETE" || status === "PASS" || safeGate.pass === true;
+  const score = scoreForGate(safeGate);
+  // Sub-scores detail for PASS gates
+  const subScores = Array.isArray(safeGate.sub_scores) ? safeGate.sub_scores : [];
+  const subScoreDetail = (status === "PASS" || safeGate.pass === true) && subScores.length
+    ? `<div class="gate-sub-scores"><table class="terminal-kv">${subScores.slice(0, 12).map((s) => {
+        const metric = s.source_metric || s.criterion || "—";
+        const val = s.value != null ? Number(s.value).toFixed(2) : "—";
+        const pts = s.points_awarded != null ? `${s.points_awarded}/${s.max_points || "?"}` : "—";
+        return `<tr><td>${escapeHtml(metric)}</td><td>${escapeHtml(val)}</td><td>${escapeHtml(pts)}</td></tr>`;
+      }).join("")}</table></div>`
+    : "";
   return `
-    <details class="gate-row gate-${escapeHtml(key)}" ${status === "INCOMPLETE" ? "open" : ""}>
+    <details class="gate-row gate-${escapeHtml(key)}" ${autoOpen ? "open" : ""}>
       <summary>
+        <span class="gate-chevron">▸</span>
         <span>${escapeHtml(label)}</span>
-        <strong>${escapeHtml(scoreForGate(safeGate))}</strong>
+        <strong>${escapeHtml(score)}</strong>
         <em>${escapeHtml(statusText(status))} · ${escapeHtml(passLabel)}</em>
       </summary>
       ${reason ? `<p>${escapeHtml(reason)}</p>` : `<p class="muted-terminal">No blocking reason reported for this gate.</p>`}
+      ${subScoreDetail}
       ${missing.length ? `
         <div class="missing-fields">
           <span>Missing / not scored</span>
@@ -973,6 +988,20 @@ function renderReviewJourney(row, auditRow, stages, canonical) {
   const backtestLabel = backtestDone
     ? (backtestStatus === "PASS" ? "Backtest passed" : "Backtest executed (not passed)")
     : "Backtest evidence not available yet.";
+  // UI-28: MTC_V2 Parity Test step — derive from parity proof data
+  const parityProof = row.pinets_parity_proof || {};
+  const parityHasResult = parityProof.overall_status || parityProof.match_pct != null;
+  const parityPassed = String(parityProof.overall_status || "").toUpperCase() === "PASS";
+  let parityStatus, parityNote;
+  if (parityHasResult) {
+    parityStatus = parityPassed ? "done" : "active";
+    parityNote = parityPassed
+      ? `Parity test passed${parityProof.match_pct != null ? " (" + parityProof.match_pct + "% match)" : ""}.`
+      : `Parity test run — ${statusText(parityProof.overall_status || "incomplete")}.`;
+  } else {
+    parityStatus = "pending";
+    parityNote = "Pending — not run. PineTS/Python parity test has not been executed for this strategy.";
+  }
   const base = [
     ["Discovered", "done", "Source row exists in the dashboard snapshot."],
     ["Source checked", auditRow && auditRow.has_source_url_transcript ? "done" : "active", auditRow && auditRow.has_source_url_transcript ? "Source or transcript linked." : "Source material is incomplete."],
@@ -982,6 +1011,7 @@ function renderReviewJourney(row, auditRow, stages, canonical) {
   const stageMap = row.stages || {};
   const late = [
     ["Backtested", backtestDone ? "done" : "pending", backtestLabel],
+    ["MTC_V2 Parity Test", parityStatus, parityNote],
     ["Promotion review", stageMap.promoted && stageMap.promoted.status === "done" ? "done" : "pending", stageMap.promoted && stageMap.promoted.metric || "Promotion packet not ready."],
     ["Paper-trade candidate", stageMap.paper_trade && stageMap.paper_trade.status === "done" ? "done" : "pending", stageMap.paper_trade && stageMap.paper_trade.metric || "Forward evidence not collected."],
     ["Integrated", stageMap.integrated && stageMap.integrated.status === "done" ? "done" : "pending", stageMap.integrated && stageMap.integrated.metric || "Not integrated."],
