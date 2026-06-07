@@ -247,8 +247,6 @@ def _gate2_band(score: float | int | None) -> str:
         return 'UNKNOWN'
     if score >= 75:
         return 'PASS'
-    if score >= 60:
-        return 'CONDITIONAL'
     return 'FAIL'
 
 
@@ -273,16 +271,12 @@ def _canonical_evidence_level(
     status = gate2_status.upper()
     if status == 'PASS':
         return 'gate2_pass'
-    if status == 'CONDITIONAL':
-        return 'gate2_conditional'
     if status == 'FAIL':
         return 'gate2_fail'
     if status in {'INCOMPLETE', 'PENDING'}:
         return 'gate2_incomplete'
     if gate2_band == 'PASS':
         return 'gate2_pass'
-    if gate2_band == 'CONDITIONAL':
-        return 'gate2_conditional'
     if gate2_band == 'FAIL':
         return 'gate2_fail'
     return 'scorecard_unscored'
