@@ -203,7 +203,7 @@ function renderPipeline() {
     const stgCode = row.stg_code ? `<div class="muted-sub"><code>${escapeHtml(row.stg_code)}</code></div>` : "";
     return `
       <tr class="row-click" data-id="${escapeHtml(row.id)}" title="Click for details">
-        <td><code>${escapeHtml(row.id)}</code>${stgCode}${fam ? `<div class="muted-sub">${escapeHtml(fam)}</div>` : ""}${sub ? `<div class="muted-sub">${escapeHtml(sub)}</div>` : ""}</td>
+        <td><code title="${escapeHtml(row.id)}">${escapeHtml(humanizeStrategyId(row.id))}</code>${stgCode}${fam ? `<div class="muted-sub">${escapeHtml(fam)}</div>` : ""}${sub ? `<div class="muted-sub">${escapeHtml(sub)}</div>` : ""}</td>
         <td>${renderScoreBadge(row.scorecard || row.score)}</td>
         ${cells}
         <td>${renderActionCell(row.next_action || "--", row.next_action_hint || "")}</td>
@@ -277,7 +277,7 @@ function renderAudit() {
     return `
     <tr class="row-click" data-audit-id="${escapeHtml(row.id)}" title="Detay için tıkla">
       <td>
-        <code>${escapeHtml(row.id || "--")}</code>
+        <code title="${escapeHtml(row.id || "--")}">${escapeHtml(humanizeStrategyId(row.id) || "--")}</code>
         ${row.stg_code ? `<div class="muted-sub"><code>${escapeHtml(row.stg_code)}</code></div>` : ""}
         ${row.description_family ? `<div class="muted-sub">${escapeHtml(row.description_family)}</div>` : ""}
         ${row.pipeline_stage_label ? `<div class="muted-sub">${escapeHtml(row.pipeline_stage_label)}</div>` : ""}
@@ -345,7 +345,7 @@ function renderMtcV2Readiness() {
   $("#mtcV2Rows").innerHTML = filtered.map((row) => `
     <tr class="row-click" data-mtc-v2-id="${escapeHtml(row.id)}" title="Open strategy detail">
       <td>
-        <code>${escapeHtml(row.id || "--")}</code>
+        <code title="${escapeHtml(row.id || "--")}">${escapeHtml(humanizeStrategyId(row.id) || "--")}</code>
         ${row.stg_code ? `<div class="muted-sub"><code>${escapeHtml(row.stg_code)}</code></div>` : ""}
       </td>
       <td>${renderScoreBadge({ total: row.score, label: row.score_label, band: row.score_band, note: "MTC_V2 readiness uses this as one triage input." })}</td>
@@ -2583,7 +2583,7 @@ function renderAcceptanceRow(card) {
   return `
 <div class="mcc-status-row ok">
   <span>Promotable</span>
-  <strong>${escapeHtml(formatStrategyId(id))}</strong>
+  <strong title="${escapeHtml(id)}">${escapeHtml(humanizeStrategyId(id))}</strong>
   <em>${escapeHtml([symbol, tf, label].filter(Boolean).join(" · "))} <span class="provenance-tag">accepted</span></em>
 </div>`;
 }
