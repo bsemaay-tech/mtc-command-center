@@ -153,6 +153,9 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
     if isinstance(candidate_pipeline.get("candidates"), list):
         candidate_pipeline = dict(candidate_pipeline)
         candidate_pipeline["candidates"] = attach_scorecards_to_rows(candidate_pipeline["candidates"], scorecards)
+    if isinstance(candidate_pipeline.get("rows"), list):
+        candidate_pipeline = dict(candidate_pipeline)
+        candidate_pipeline["rows"] = attach_scorecards_to_rows(candidate_pipeline["rows"], scorecards)
     mtc_v2_readiness = build_mtc_v2_readiness(
         model["mcc_root"],
         candidate_pipeline=candidate_pipeline,
