@@ -466,8 +466,8 @@ function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
           <p class="detail-description">${escapeHtml(displayDescription)}</p>
         </div>
         <div class="detail-status-stack">
-          <span class="terminal-badge">${escapeHtml(statusLabel)}</span>
-          <span class="terminal-badge muted" title="QuantLens pre-screen commentary. Not a gate score.">${escapeHtml(decision.quantlensLabel)}</span>
+          <span class="terminal-badge" title="${escapeHtml(statusBadgeTooltip(statusLabel))}">${escapeHtml(statusLabel)}</span>
+          <span class="terminal-badge muted" title="QuantLens is a separate AI pre-screen that reviews strategy quality, risk, and commercial viability. Commentary only — never a gate score. Independent of gate verdict above.">${escapeHtml(decision.quantlensLabel)}</span>
         </div>
       </section>
       ${renderVerdictDecision(decision)}
@@ -603,6 +603,16 @@ function friendlyStatus(value) {
     PARKED_OR_SPLIT: "Parked or split required",
   };
   return map[key] || statusText(key || "Review pending");
+}
+
+function statusBadgeTooltip(label) {
+  const text = String(label || "").toLowerCase();
+  if (text.includes("needs review")) return "Flagged for human review — Gate2 score is below promotion threshold (75). Not auto-rejected; parked for manual look. A reviewer must decide: promote, retest, or park.";
+  if (text.includes("primary")) return "This is the canonical version of the strategy — other duplicates point here.";
+  if (text.includes("source check")) return "The source or formula still needs audit — repaint, lookahead, or closed-source risk may exist.";
+  if (text.includes("ready for review")) return "High-evidence row that can enter a read-only MTC_V2 review queue.";
+  if (text.includes("closed-source")) return "Blocked because a paid/closed-source indicator was detected — analysis cannot continue.";
+  return "";
 }
 
 const QUANTLENS_STOP_LABELS = {
@@ -794,7 +804,7 @@ function renderWaveAScorecard(scorecardV2, legacyScorecard, scorecardV2Cases = [
           <h4>Scorecard</h4>
           <span class="terminal-badge ${promotable ? "ok" : "amber"}" title="${promotable ? "Passed all gates incl. Gate3, ready for promotion packet." : "At least one gate is blocking — see Blocking chips below."}">${promotable ? "Promotable" : "Not promotable"}</span>
         </div>
-        <p class="muted-terminal">Gate 2 quantitative backtest score /100. Threshold: ≥75 PASS · &lt;75 FAIL. <span class="provenance-tag">source: scorecard_v2</span></p>
+        <p class="muted-terminal">Gate 2 quantitative backtest score /100. Threshold: ≥75 PASS · &lt;75 FAIL. Promotion is an active reviewer action — the AI or a human reviewer must explicitly trigger it; it is not a nightly batch job. <span class="provenance-tag">source: scorecard_v2</span></p>
         ${renderScorecardCaseList(scorecardV2, scorecardV2Cases, canonical)}
         <div class="chip-row">
           <span class="terminal-chip" title="${promotable ? "All gates pass — strategy is cleared for promotion." : "At least one blocking gate is preventing advancement. See Blocking chips for which gate(s) failed."}">${escapeHtml(`Promotable: ${promotable ? "Yes" : "No"}`)}</span>
@@ -2152,15 +2162,32 @@ function renderActionCell(action, hint) {
   const label = String(action || "—");
   const text = statusText(label);
   const description = String(hint || "").trim();
-  if (!description) {
+  const tooltip = actionTooltip(text) || description;
+  if (!description && !tooltip) {
     return `<span class="action-copy"><strong>${escapeHtml(text)}</strong></span>`;
   }
   return `
-    <span class="action-copy" title="${escapeHtml(description)}">
+    <span class="action-copy" title="${escapeHtml(tooltip || description)}">
       <strong>${escapeHtml(text)}</strong>
-      <span>${escapeHtml(description)}</span>
+      <span>${escapeHtml(tooltip || description)}</span>
     </span>
   `;
+}
+
+function actionTooltip(text) {
+  const map = {
+    "Build promotion packet": "Assembles the strategy's evidence (scorecard, backtest, parity) into a package for production hand-off. Who: triggered by reviewer. When: after gates pass. This is an active review action — not an automatic night job.",
+    "Run backtest": "Runs a sandbox backtest on the candidate's deterministic rules. Requires explicit AI or human trigger.",
+    "Extract deterministic rules": "Turn the source into explicit entry/exit rules that can be tested mechanically.",
+    "Run PineTS parity": "Compare Python and Pine on the same data to confirm the signals match bar-for-bar.",
+    "Start forward paper-trade": "Begin a paper-trade run with live data but without risking capital.",
+    "Collect forward paper-trade results": "Keep recording forward trades until enough real-time evidence to judge the strategy.",
+    "Split into indicator cases": "Break a multi-signal pack into separate testable formulas before any backtest.",
+    "Resolve source/formula audit": "Verify the exact source, formula, repaint/lookahead behavior, and entry/exit rules.",
+    "Merge into canonical record": "This row duplicates another strategy; keep the canonical row and merge evidence there.",
+    "Source audit / park": "Hold the item until the source or formula is verified well enough to test safely.",
+  };
+  return map[text] || "";
 }
 
 function renderScorecard(scorecard) {
