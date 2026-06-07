@@ -740,7 +740,7 @@ function renderWaveAScorecard(scorecardV2, legacyScorecard, scorecardV2Cases = [
       ["gate2", "Gate 2 Backtest Evidence", scorecardV2.gate2],
       ["gate3", "Gate 3 Production Readiness", scorecardV2.gate3],
     ];
-    const promotable = gateSummary.promotable === true;
+    const promotable = isPromotable(gateSummary);
     const blocking = Array.isArray(gateSummary.blocking) ? gateSummary.blocking : [];
     return `
       <section class="terminal-section scorecard-v2-section">
@@ -784,9 +784,12 @@ function renderScorecardCaseList(displayCard, cases) {
         const status = g2.status || (card.gate_summary && card.gate_summary.statuses && card.gate_summary.statuses.gate2) || "UNKNOWN";
         const score = scoreForGate(g2);
         const active = card.strategy_id === displayCard.strategy_id ? " active" : "";
+        const runLabel = card.run_name || card.run_id || "";
+        const caseLabel = [card.symbol, card.timeframe].filter(Boolean).join(" ") || card.strategy_id || "Case";
+        const discriminator = runLabel ? ` · ${runLabel}` : "";
         return `
           <div class="scorecard-case${active}">
-            <span>${escapeHtml([card.symbol, card.timeframe].filter(Boolean).join(" ") || card.strategy_id || "Case")}</span>
+            <span>${escapeHtml(caseLabel + discriminator)}${active ? ' <em class="active-marker">▸ displayed</em>' : ''}</span>
             <strong>${escapeHtml(score)}</strong>
             <em>${escapeHtml(statusText(status))}</em>
           </div>
@@ -800,7 +803,9 @@ function renderGateRow(key, label, gate) {
   const safeGate = gate || {};
   const status = safeGate.status || "NOT_EVALUATED";
   const missing = gateMissingFields(safeGate);
-  const passLabel = safeGate.pass === true ? "Pass" : safeGate.pass === false ? "Fail" : "N/A";
+  const passLabel = safeGate.pass === true ? "Pass"
+    : (status === "INCOMPLETE" || status === "NOT_EVALUATED") ? "Pending"
+    : safeGate.pass === false ? "Fail" : "N/A";
   const reason = Array.isArray(safeGate.incomplete_reasons) && safeGate.incomplete_reasons.length
     ? safeGate.incomplete_reasons.slice(0, 6).join("; ")
     : safeGate.reason || safeGate.note || "";
@@ -824,8 +829,14 @@ function renderGateRow(key, label, gate) {
 }
 
 function scoreForGate(gate) {
-  if (!gate || gate.status !== "OK" || gate.score == null) return "N/A";
+  if (!gate || gate.score == null) return "N/A";
   return `${gate.score}/${gate.max || 100}`;
+}
+
+function isPromotable(gs) {
+  if (!gs) return false;
+  const v = gs.promotable;
+  return v === true || v === 1 || v === "1" || v === "true";
 }
 
 function gateMissingFields(gate) {
@@ -935,7 +946,15 @@ function renderTradingRules(row, auditRow, producerSpec, description, sourceReco
     ["Breakeven logic", firstEnglishText(producerSpec.breakeven, producerSpec.breakeven_rule) || "Not defined yet"],
     ["Risk management", firstEnglishText(producerSpec.risk_management) || "Not defined yet"],
     ["Avoid trading when", firstEnglishText(producerSpec.avoid_trading_when) || "Not defined yet"],
-    ["Repaint/lookahead notes", "Not evaluated yet"],
+    ["Repaint/lookahead notes", firstEnglishText(
+      row.repaint_risk_notes, row.lookahead_risk_notes,
+      auditRow && auditRow.repaint_risk_notes, auditRow && auditRow.lookahead_risk_notes,
+      producerSpec.repaint_risk_notes, producerSpec.lookahead_risk_notes,
+      row.repaint_risk && `Repaint: ${row.repaint_risk}`,
+      row.lookahead_risk && `Lookahead: ${row.lookahead_risk}`,
+      auditRow && auditRow.repaint_risk && `Repaint: ${auditRow.repaint_risk}`,
+      auditRow && auditRow.lookahead_risk && `Lookahead: ${auditRow.lookahead_risk}`
+    ) || "Not evaluated yet"],
     ["Assumptions", firstEnglishText(row.notes, producerSpec.assumptions) || "Not defined yet"],
   ];
   return `
@@ -1959,7 +1978,7 @@ function qualityBadge(value) {
 }
 
 function statusText(value) {
-  return String(value).replaceAll("_", " ");
+  return String(value).replaceAll("N_A", "N/A").replaceAll("_", " ");
 }
 
 function renderFlags(flags) {
@@ -2318,7 +2337,7 @@ function passesGateFilter(row, filterVal) {
   if (filterVal === "promotable_only") {
     if (!sc2) return false;
     const gs = sc2.gate_summary || {};
-    return gs.promotable === 1 || gs.promotable === true;
+    return isPromotable(gs);
   }
   if (filterVal === "gate3_incomplete") {
     if (!sc2) return true;
@@ -2363,7 +2382,7 @@ function buildAcceptanceSummary() {
   const cards = (state.snapshot.scorecards && state.snapshot.scorecards.cards) || [];
   const promotable = cards.filter((c) => {
     const gs = c.gate_summary || {};
-    return gs.promotable === 1 || gs.promotable === true;
+    return isPromotable(gs);
   });
   return { total: cards.length, promotable: promotable.length, rows: promotable };
 }
@@ -2398,7 +2417,7 @@ function acceptanceDateLabel(card) {
 function renderPromotabilityPanel(scorecardV2) {
   if (!scorecardV2) return "";
   const gs = scorecardV2.gate_summary || {};
-  const promotable = gs.promotable === 1 || gs.promotable === true;
+  const promotable = isPromotable(gs);
   const blocking = Array.isArray(gs.blocking) ? gs.blocking : [];
   return `
 <section class="terminal-section promotability-panel${promotable ? " promotable-ok" : ""}">
