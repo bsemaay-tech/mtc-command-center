@@ -514,8 +514,10 @@ function strategySubtitle(row, auditRow, sourceUrl) {
 }
 
 function cleanDisplayText(value) {
-  const text = String(value || "").trim();
+  let text = String(value || "").trim();
   if (!text || text === "--" || text === "—") return "";
+  text = text.replace(/^UNKNOWN_TITLE\s*[-–—]\s*/i, "");
+  if (!text || text.toUpperCase() === "UNKNOWN_TITLE" || text.toUpperCase() === "UNKNOWN") return "";
   return text;
 }
 
