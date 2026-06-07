@@ -460,7 +460,7 @@ function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
       </div>
       <section class="detail-hero">
         <div>
-          <p class="detail-kicker">${escapeHtml(stgCode || "Strategy Detail")}</p>
+          <p class="detail-kicker">${escapeHtml(stgCode || "Strategy Detail")}${snapshotFreshness()}</p>
           <h3 class="detail-title">${escapeHtml(title)}</h3>
           <p class="detail-subtitle">${escapeHtml(subtitle)}</p>
           <p class="detail-description">${escapeHtml(displayDescription)}</p>
@@ -519,6 +519,13 @@ function strategySubtitle(row, auditRow, sourceUrl, canonical) {
   const tfLabel = tfParts.join(" · ") || "";
   const sourceKind = sourceUrl ? (sourceUrl.includes("youtu") ? "YouTube source" : "External source") : "Source not linked";
   return [instrument, tfLabel, sourceKind].filter(Boolean).join(" / ") || "Review data not available yet";
+}
+
+function snapshotFreshness() {
+  const status = state.snapshot && state.snapshot.current_status ? state.snapshot.current_status : {};
+  const ts = status.last_updated || status.generated_at || (state.snapshot && state.snapshot.generated_at) || "";
+  if (!ts) return "";
+  return ` <span class="freshness-tag" title="Snapshot data last updated">Data: ${escapeHtml(ts)}</span>`;
 }
 
 function cleanDisplayText(value) {
@@ -1059,12 +1066,20 @@ function renderTradingRules(row, auditRow, producerSpec, description, sourceReco
     ) || "Not evaluated yet"],
     ["Assumptions", firstEnglishText(row.notes, producerSpec.assumptions) || "Not defined yet"],
   ];
+  // UI-30: count undefined fields — systemic gap banner when most fields missing
+  const missingCount = rows.filter(([, v]) => v === "Not defined yet" || v === "Not evaluated yet").length;
+  const totalFields = rows.length;
+  const majorGap = missingCount >= Math.ceil(totalFields * 0.5);
+  const gapBanner = majorGap
+    ? `<div class="systemic-gap-banner"><strong>⚠ Producer spec incomplete</strong> — ${missingCount}/${totalFields} rule fields are not defined yet. This is a data-fill gap, not a dashboard bug. Fill via the producer spec or intake form. <span class="provenance-tag">source: producer_spec</span></div>`
+    : "";
   return `
     <section class="terminal-section">
       <div class="terminal-section-head">
         <h4>Trading Rules</h4>
-        <span class="terminal-badge muted">Missing fields visible</span>
+        <span class="terminal-badge ${majorGap ? "amber" : "muted"}">${majorGap ? `${missingCount} fields missing` : "Fields visible"}</span>
       </div>
+      ${gapBanner}
       <table class="terminal-kv">${rows.map(([key, value]) => `
         <tr class="${value === "Not defined yet" || value === "Not evaluated yet" ? "missing-row" : ""}">
           <td>${escapeHtml(key)}</td>
@@ -1158,26 +1173,28 @@ function renderBacktestEvidence(row, auditRow, metrics, scorecardV2, canonical) 
 
 function renderSalvageableIdeas(row, auditRow, quantlens) {
   const ideas = quantlens && Array.isArray(quantlens.salvageable_ideas) ? quantlens.salvageable_ideas : [];
+  const sectionCaption = `Salvageable ideas are strategy components or sub-patterns that QuantLens flagged as potentially reusable in other contexts, even though the full strategy was not adopted or scored poorly. These are parked for later reuse — they are not active strategies.`;
   if (!quantlens) {
     return `
     <section class="terminal-section">
-      <div class="terminal-section-head"><h4>Salvageable Ideas</h4></div>
-      <p><strong>QuantLens analysis not available for this strategy.</strong></p>
-      <p class="muted-terminal">No structured salvageable idea exists because this strategy is not in the QuantLens salvage queue.</p>
+      <div class="terminal-section-head"><h4>Salvageable Ideas</h4>
+        <span class="terminal-badge muted">Not in QuantLens scope</span></div>
+      <p class="muted-terminal" title="${escapeHtml(sectionCaption)}">QuantLens is a separate AI pre-screen. This strategy is not in scope — it may have entered the pipeline before QuantLens was active, or it is still in early intake. No salvageable ideas are available. <span class="provenance-tag">source: quantlens</span></p>
     </section>`;
   }
   if (!ideas.length) {
     return `
     <section class="terminal-section">
-      <div class="terminal-section-head"><h4>Salvageable Ideas</h4></div>
-      <p class="muted-terminal">QuantLens reviewed this candidate but flagged no reusable component idea.</p>
+      <div class="terminal-section-head"><h4>Salvageable Ideas</h4>
+        <span class="terminal-badge muted">None flagged</span></div>
+      <p class="muted-terminal" title="${escapeHtml(sectionCaption)}">QuantLens reviewed this candidate but flagged no reusable component idea. This does not affect gate scoring.</p>
     </section>`;
   }
   return `
     <section class="terminal-section">
       <div class="terminal-section-head"><h4>Salvageable Ideas</h4>
         <span class="terminal-badge ok">${ideas.length} component${ideas.length === 1 ? "" : "s"}</span></div>
-      <p class="muted-terminal">Reusable independent components QuantLens identified from <code>candidate_kind</code> (the full strategy is not adopted).</p>
+      <p class="muted-terminal" title="${escapeHtml(sectionCaption)}">Reusable sub-patterns QuantLens identified. These are parked for later reuse — not active strategies. <span class="provenance-tag">source: quantlens</span></p>
       <div class="chip-row">
         ${ideas.map((i) => `<span class="terminal-chip">${escapeHtml(i.label || i.category)}</span>`).join("")}
       </div>
