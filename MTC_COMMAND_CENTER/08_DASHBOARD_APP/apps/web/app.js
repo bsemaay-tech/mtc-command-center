@@ -467,7 +467,7 @@ function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
         </div>
         <div class="detail-status-stack">
           <span class="terminal-badge" title="${escapeHtml(statusBadgeTooltip(statusLabel))}">${escapeHtml(statusLabel)}</span>
-          <span class="terminal-badge muted" title="QuantLens is a separate AI pre-screen that reviews strategy quality, risk, and commercial viability. Commentary only — never a gate score. Independent of gate verdict above.">${escapeHtml(decision.quantlensLabel)}</span>
+          <!-- R2-20: Gemini Pre-Screen shown once, in its own section below (was duplicated as a hero badge here). -->
         </div>
       </section>
       ${renderVerdictDecision(decision)}
@@ -636,9 +636,9 @@ function renderQuantlensVerdict(quantlens) {
   if (!quantlens) {
     return `
     <section class="terminal-section quantlens-section">
-      <div class="terminal-section-head"><h4>QuantLens Verdict</h4>
-        <span class="terminal-badge muted">Not in QuantLens scope</span></div>
-      <p class="muted-terminal">QuantLens is a separate AI pre-screen that reviews strategy quality, risk, and commercial viability. It is <strong>independent of the gate verdict</strong> above — it produces commentary and labels only, never a gate score. Not all strategies pass through QuantLens; strategies may be excluded because they entered the pipeline before QuantLens was active, or because they are still in early intake. <span class="provenance-tag">source: quantlens candidates</span></p>
+      <div class="terminal-section-head"><h4>Gemini Pre-Screen</h4>
+        <span class="terminal-badge muted">Not in Gemini Pre-Screen scope</span></div>
+      <p class="muted-terminal">The Gemini Pre-Screen is a separate AI pre-screen (from the Gemini intake) that reviews strategy quality, risk, and commercial viability. It is <strong>independent of the gate verdict</strong> above — it produces commentary and labels only, never a gate score. Not all strategies pass through it; some entered the pipeline before the pre-screen was active, or are still in early intake. <span class="provenance-tag">source: gemini pre-screen</span></p>
     </section>`;
   }
   const v = quantlens.quantlens_verdict || {};
@@ -667,10 +667,10 @@ function renderQuantlensVerdict(quantlens) {
   ];
   return `
     <section class="terminal-section quantlens-section">
-      <div class="terminal-section-head"><h4>QuantLens Verdict</h4>
+      <div class="terminal-section-head"><h4>Gemini Pre-Screen</h4>
         <span class="terminal-badge ${stop ? "warn" : "muted"}">${escapeHtml(v.decision_label || quantlens.quantlens_decision || "Reviewed")}</span></div>
       ${stopBanner}
-      <p class="muted-terminal">QuantLens is a separate AI pre-screen — commentary and labels only. It is independent of the gate verdict above and never adds its own gate score. <span class="provenance-tag">source: quantlens</span></p>
+      <p class="muted-terminal">Gemini Pre-Screen is a separate AI pre-screen (from the Gemini intake) — commentary and labels only. It is independent of the gate verdict above and never adds its own gate score. <span class="provenance-tag">source: gemini pre-screen</span></p>
       <div class="terminal-facts">
         ${facts.map(([k, val]) => `<div><span>${escapeHtml(k)}</span><strong>${escapeHtml(String(val))}</strong></div>`).join("")}
       </div>
@@ -745,8 +745,8 @@ function buildWaveADecision(row, auditRow, mtcV2Row, scorecardV2, quantlens, can
       return "Rules written · not proven";
     })(),
     quantlensLabel: quantlens
-      ? `QuantLens: ${(quantlens.quantlens_verdict && quantlens.quantlens_verdict.decision_label) || quantlens.quantlens_decision || "Reviewed"}`
-      : "QuantLens: Not in scope (separate AI pre-screen)",
+      ? `Gemini Pre-Screen: ${(quantlens.quantlens_verdict && quantlens.quantlens_verdict.decision_label) || quantlens.quantlens_decision || "Reviewed"}`
+      : "Gemini Pre-Screen: Not in scope (separate AI pre-screen)",
     scoreReference: scorecardV2
       ? "Gate scorecard is available below."
       : "Gate scorecard is not evaluated yet.",
@@ -774,7 +774,7 @@ function renderVerdictDecision(decision) {
         <h4>Verdict &amp; Decision</h4>
         <span class="terminal-badge ${verdictBadgeClass}" title="${escapeHtml(verdictBadgeTitle)}">${escapeHtml(verdictBadgeLabel)}</span>
       </div>
-      <p class="muted-sub">Primary verdict derived from gate_summary and canonical data. QuantLens = pre-screen commentary, not gate scoring. <span class="provenance-tag">source: gate_summary + canonical</span></p>
+      <p class="muted-sub">Primary verdict derived from gate_summary and canonical data. Gemini Pre-Screen = pre-screen commentary, not gate scoring. <span class="provenance-tag">source: gate_summary + canonical</span></p>
       <p class="verdict-line"><strong>${escapeHtml(decision.verdict)}</strong></p>
       <p>${escapeHtml(decision.reason)}</p>
       <div class="terminal-facts">
@@ -1225,13 +1225,13 @@ function renderBacktestEvidence(row, auditRow, metrics, scorecardV2, canonical) 
 
 function renderSalvageableIdeas(row, auditRow, quantlens) {
   const ideas = quantlens && Array.isArray(quantlens.salvageable_ideas) ? quantlens.salvageable_ideas : [];
-  const sectionCaption = `Salvageable ideas are strategy components or sub-patterns that QuantLens flagged as potentially reusable in other contexts, even though the full strategy was not adopted or scored poorly. These are parked for later reuse — they are not active strategies.`;
+  const sectionCaption = `Salvageable ideas are strategy components or sub-patterns that the Gemini Pre-Screen flagged as potentially reusable in other contexts, even though the full strategy was not adopted or scored poorly. These are parked for later reuse — they are not active strategies.`;
   if (!quantlens) {
     return `
     <section class="terminal-section">
       <div class="terminal-section-head"><h4>Salvageable Ideas</h4>
-        <span class="terminal-badge muted">Not in QuantLens scope</span></div>
-      <p class="muted-terminal" title="${escapeHtml(sectionCaption)}">QuantLens is a separate AI pre-screen. This strategy is not in scope — it may have entered the pipeline before QuantLens was active, or it is still in early intake. No salvageable ideas are available. <span class="provenance-tag">source: quantlens</span></p>
+        <span class="terminal-badge muted">Not in Gemini Pre-Screen scope</span></div>
+      <p class="muted-terminal" title="${escapeHtml(sectionCaption)}">The Gemini Pre-Screen is a separate AI pre-screen. This strategy is not in scope — it may have entered the pipeline before the pre-screen was active, or it is still in early intake. No salvageable ideas are available. <span class="provenance-tag">source: gemini pre-screen</span></p>
     </section>`;
   }
   if (!ideas.length) {
@@ -1239,14 +1239,14 @@ function renderSalvageableIdeas(row, auditRow, quantlens) {
     <section class="terminal-section">
       <div class="terminal-section-head"><h4>Salvageable Ideas</h4>
         <span class="terminal-badge muted">None flagged</span></div>
-      <p class="muted-terminal" title="${escapeHtml(sectionCaption)}">QuantLens reviewed this candidate but flagged no reusable component idea. This does not affect gate scoring.</p>
+      <p class="muted-terminal" title="${escapeHtml(sectionCaption)}">The Gemini Pre-Screen reviewed this candidate but flagged no reusable component idea. This does not affect gate scoring.</p>
     </section>`;
   }
   return `
     <section class="terminal-section">
       <div class="terminal-section-head"><h4>Salvageable Ideas</h4>
         <span class="terminal-badge ok">${ideas.length} component${ideas.length === 1 ? "" : "s"}</span></div>
-      <p class="muted-terminal" title="${escapeHtml(sectionCaption)}">Reusable sub-patterns QuantLens identified. These are parked for later reuse — not active strategies. <span class="provenance-tag">source: quantlens</span></p>
+      <p class="muted-terminal" title="${escapeHtml(sectionCaption)}">Reusable sub-patterns the Gemini Pre-Screen identified. These are parked for later reuse — not active strategies. <span class="provenance-tag">source: gemini pre-screen</span></p>
       <div class="chip-row">
         ${ideas.map((i) => `<span class="terminal-chip">${escapeHtml(i.label || i.category)}</span>`).join("")}
       </div>
