@@ -467,7 +467,7 @@ function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
         </div>
         <div class="detail-status-stack">
           <span class="terminal-badge">${escapeHtml(statusLabel)}</span>
-          <span class="terminal-badge muted">${escapeHtml(decision.quantlensLabel)}</span>
+          <span class="terminal-badge muted" title="QuantLens backtest pipeline status. 'Not evaluated yet' = strategy not yet in MEGA walk-forward sweep.">${escapeHtml(decision.quantlensLabel)}</span>
         </div>
       </section>
       ${renderVerdictDecision(decision)}
@@ -517,6 +517,17 @@ function cleanDisplayText(value) {
   const text = String(value || "").trim();
   if (!text || text === "--" || text === "—") return "";
   return text;
+}
+
+function formatStrategyId(id) {
+  if (!id || id === '--') return id || '--';
+  const parts = String(id).split('|');
+  if (parts.length >= 2) {
+    const name = statusText(parts[0]);
+    const rest = parts.slice(1).join(' · ');
+    return `${name} (${rest})`;
+  }
+  return statusText(id);
 }
 
 function looksLikeRawId(text) {
@@ -697,9 +708,10 @@ function renderVerdictDecision(decision) {
   return `
     <section class="terminal-section verdict-section">
       <div class="terminal-section-head">
-        <h4>Verdict & Decision</h4>
+        <h4>Verdict &amp; Decision</h4>
         <span class="terminal-badge amber">${escapeHtml(decision.canTest === "Yes" ? "Can test" : "Blocked")}</span>
       </div>
+      <p class="muted-sub">Consolidated view of all gate outcomes and the recommended next action for this strategy.</p>
       <p class="verdict-line"><strong>${escapeHtml(decision.verdict)}</strong></p>
       <p>${escapeHtml(decision.reason)}</p>
       <div class="terminal-facts">
@@ -734,7 +746,7 @@ function renderWaveAScorecard(scorecardV2, legacyScorecard, scorecardV2Cases = [
           <h4>Scorecard</h4>
           <span class="terminal-badge ${promotable ? "ok" : "amber"}">${promotable ? "Promotable" : "Not promotable"}</span>
         </div>
-        <p class="muted-terminal">Gate-based scorecard v2. Scores are shown only for gates whose source metrics are complete.</p>
+        <p class="muted-terminal">Gate 2 quantitative backtest score /100. Threshold: ≥75 PASS · 60–74 CONDITIONAL · &lt;60 FAIL. Scores shown only for gates with complete source metrics.</p>
         ${renderScorecardCaseList(scorecardV2, scorecardV2Cases)}
         <div class="chip-row">
           <span class="terminal-chip">${escapeHtml(`Promotable: ${promotable ? "Yes" : "No"}`)}</span>
@@ -933,7 +945,7 @@ function renderTradingRules(row, auditRow, producerSpec, description, sourceReco
       <table class="terminal-kv">${rows.map(([key, value]) => `
         <tr class="${value === "Not defined yet" || value === "Not evaluated yet" ? "missing-row" : ""}">
           <td>${escapeHtml(key)}</td>
-          <td>${escapeHtml(String(value))}</td>
+          <td title="${escapeHtml(tooltipFor(key))}">${escapeHtml(String(value))}</td>
         </tr>
       `).join("")}</table>
     </section>
@@ -943,6 +955,18 @@ function renderTradingRules(row, auditRow, producerSpec, description, sourceReco
 function listOrMissing(value) {
   if (Array.isArray(value) && value.length) return value.filter(Boolean).join(" | ");
   return "Not defined yet";
+}
+
+function tooltipFor(label) {
+  const tips = {
+    'Repaint/lookahead notes': 'Assessed during parity review phase — not yet evaluated for this strategy.',
+    'Market / bias': 'No symbol assigned yet. Set via producer spec or intake routing.',
+    'Entry trigger': 'Not yet extracted from the source intake. Fill in producer spec.',
+    'Exit logic': 'Not yet extracted from the source intake. Fill in producer spec.',
+    'Stop-loss rule': 'Not yet defined in producer spec.',
+    'Take-profit rule': 'Not yet defined in producer spec.',
+  };
+  return tips[label] || '';
 }
 
 function renderBacktestEvidence(row, auditRow, metrics) {
@@ -1075,9 +1099,9 @@ function renderLegacyScorecard(scorecard) {
 
 function renderDecisionPanel(row, auditRow, mtcV2Row, scorecard) {
   const scoreLabel = scorecard ? (scorecard.label || `${scorecard.total || 0}/100`) : "--";
-  const auditStatus = auditRow ? (auditRow.audit_status || "--") : "No audit row";
+  const auditStatus = auditRow ? friendlyStatus(auditRow.audit_status || "--") : "No audit row";
   const blocker = (mtcV2Row && mtcV2Row.blocker) || (auditRow && auditRow.blocked_reason) || "None";
-  const readiness = mtcV2Row ? (mtcV2Row.status_label || mtcV2Row.status) : "Not in MTC_V2 queue";
+  const readiness = mtcV2Row ? (mtcV2Row.status_label || friendlyStatus(mtcV2Row.status)) : "Not in MTC_V2 queue";
   const nextAction = (mtcV2Row && mtcV2Row.next_action) || row.next_action || (auditRow && auditRow.recommended_next_pipeline_step) || "Review";
   const decision = mtcV2Row && mtcV2Row.decision_sentence ? mtcV2Row.decision_sentence : (blocker === "None" ? nextAction : blocker);
   return `
@@ -1313,6 +1337,7 @@ function renderHome() {
 
 function researchValue(value) {
   if (value === "review_needed") return `<span class="muted-sub">review_needed</span>`;
+  if (value === 'UNKNOWN_TITLE' || value === 'UNKNOWN') return `<span class="muted-sub">(no title)</span>`;
   if (Array.isArray(value)) {
     if (!value.length || (value.length === 1 && value[0] === "review_needed")) {
       return `<span class="muted-sub">review_needed</span>`;
@@ -1383,7 +1408,7 @@ function renderResearchLab() {
   $("#researchStrategyCount").textContent = `${filtered.length}/${strategies.length}`;
   $("#researchStrategyRows").innerHTML = filtered.length ? filtered.map((s) => `
     <tr>
-      <td><code>${escapeHtml(s.strategy_id || "")}</code><div class="muted-sub">${escapeHtml(s.strategy_name || "")}</div></td>
+      <td><code>${escapeHtml(formatStrategyId(s.strategy_id || ""))}</code><div class="muted-sub">${escapeHtml(s.strategy_name || "")}</div></td>
       <td>${researchValue(s.strategy_category)}</td>
       <td>${researchValue(s.method)}</td>
       <td>${researchValue(s.expected_market_regime)}</td>
@@ -1717,7 +1742,7 @@ function renderRegistry() {
   }
   $("#registryRows").innerHTML = entries.map((entry) => `
     <tr>
-      <td><code>${escapeHtml(entry.id || entry.strategy_id || entry.candidate_id || "--")}</code></td>
+      <td><code>${escapeHtml(formatStrategyId(entry.id || entry.strategy_id || entry.candidate_id || "--"))}</code></td>
       <td>${escapeHtml(entry.name || entry.title || "--")}</td>
       <td>${badge(entry.status || "--")}</td>
       <td>${escapeHtml(entry.evidence_level || entry.evidence || "--")}</td>
@@ -2349,16 +2374,21 @@ function renderAcceptanceRow(card) {
   return `
 <div class="mcc-status-row ok">
   <span>Promotable</span>
-  <strong>${escapeHtml(id)}</strong>
+  <strong>${escapeHtml(formatStrategyId(id))}</strong>
   <em>${escapeHtml([symbol, tf, label].filter(Boolean).join(" · "))}</em>
 </div>`;
 }
 
 function acceptanceDateLabel(card) {
-  const run = String(card.run_name || card.run_id || "");
-  if (!run) return "";
-  const m = run.match(/^(\d{4}-\d{2}-\d{2})/);
-  return m ? m[1] : run.slice(0, 20);
+  const run = String(card.run_name || card.run_id || '');
+  if (!run) return '';
+  // Extract date prefix if present
+  const m = run.match(/(\d{4}-\d{2}-\d{2})/);
+  if (m) return m[1];
+  // Strip known prefixes and return clean label
+  return run
+    .replace(/^(lifecycle_fixed_|heavy_tier_|remaining_|full_sweep_|sprint_|night_|batch_)/, '')
+    .slice(0, 24);
 }
 
 // ── S2 A6 — Promotability panel ──────────────────────────────────────────────
