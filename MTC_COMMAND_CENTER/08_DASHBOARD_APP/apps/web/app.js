@@ -433,7 +433,7 @@ function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
   const scoreDetail = renderWaveAScorecard(scorecardV2, scorecard, scorecardV2Cases, canonical);
   const quantlensVerdict = renderQuantlensVerdict(quantlens);
   const taxonomy = renderStrategyTaxonomy(row, auditRow, producerSpecRaw, description, canonical);
-  const journey = renderReviewJourney(row, auditRow, stages, canonical);
+  const journey = renderReviewJourney(row, auditRow, stages, canonical, scorecardV2);
   const tradingRules = renderTradingRules(row, auditRow, producerSpecRaw, description, sourceRecord);
   const backtestEvidence = renderBacktestEvidence(row, auditRow, metrics, scorecardV2, canonical);
   const promotabilityPanel = renderPromotabilityPanel(scorecardV2);
@@ -463,7 +463,7 @@ function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
           <p class="detail-kicker">${escapeHtml(stgCode || "Strategy Detail")}${snapshotFreshness()}</p>
           <h3 class="detail-title">${escapeHtml(title)}</h3>
           <p class="detail-subtitle">${escapeHtml(subtitle)}</p>
-          <p class="detail-description">${escapeHtml(displayDescription)}</p>
+          ${displayDescription && displayDescription.trim().toLowerCase() !== String(title).trim().toLowerCase() ? `<p class="detail-description">${escapeHtml(displayDescription)}</p>` : ""}
         </div>
         <div class="detail-status-stack">
           <span class="terminal-badge" title="${escapeHtml(statusBadgeTooltip(statusLabel))}">${escapeHtml(statusLabel)}</span>
@@ -719,11 +719,12 @@ function buildWaveADecision(row, auditRow, mtcV2Row, scorecardV2, quantlens, can
     verdict = "Needs source clarification";
     reason = "The source does not define enough exact mechanical rules for honest scoring or backtesting.";
   }
+  // R2-07: blocker is already shown in the "Blocking item" fact — don't repeat it as a chip.
+  // R2-08a: dropped the hardcoded "Repaint status unknown" literal (no real data behind it;
+  //         actual repaint/lookahead status is surfaced in Trading Rules from metadata).
   const riskFlags = [
     !deterministic ? "Undefined rules" : "",
-    blocker && blocker !== "None" ? friendlyStatus(blocker) : "",
     hasAudit && !auditRow.has_source_url_transcript ? "Source material incomplete" : "",
-    "Repaint status unknown",
   ].filter(Boolean);
   return {
     verdict,
@@ -863,9 +864,11 @@ function renderGateRow(key, label, gate) {
   const safeGate = gate || {};
   const status = safeGate.status || "NOT_EVALUATED";
   const missing = gateMissingFields(safeGate);
-  const passLabel = safeGate.pass === true ? "Pass"
+  // R2-14: single authoritative label — kills the doubled "OK · Pass" / "FAIL · Fail" / "INCOMPLETE · Pending".
+  const passLabel = (safeGate.pass === true || status === "PASS" || status === "OK") ? "Passed"
     : (status === "INCOMPLETE" || status === "NOT_EVALUATED") ? "Pending"
-    : safeGate.pass === false ? "Fail" : "N/A";
+    : (safeGate.pass === false || status === "FAIL") ? "Failed"
+    : statusText(status);
   const reason = Array.isArray(safeGate.incomplete_reasons) && safeGate.incomplete_reasons.length
     ? safeGate.incomplete_reasons.slice(0, 6).join("; ")
     : safeGate.reason || safeGate.note || "";
@@ -878,7 +881,9 @@ function renderGateRow(key, label, gate) {
     ? `<div class="gate-sub-scores"><table class="terminal-kv">${subScores.slice(0, 12).map((s) => {
         const metric = s.source_metric || s.criterion || "—";
         const val = s.value != null ? Number(s.value).toFixed(2) : "—";
-        const pts = s.points_awarded != null ? `${s.points_awarded}/${s.max_points || "?"}` : "—";
+        // R2-12: only show a denominator when max_points is real (not null/0/undefined); no fake "?".
+        const pts = s.points_awarded == null ? "—"
+          : (s.max_points != null ? `${s.points_awarded}/${s.max_points}` : `${s.points_awarded} pts`);
         return `<tr><td>${escapeHtml(metric)}</td><td>${escapeHtml(val)}</td><td>${escapeHtml(pts)}</td></tr>`;
       }).join("")}</table></div>`
     : "";
@@ -888,7 +893,7 @@ function renderGateRow(key, label, gate) {
         <span class="gate-chevron">▸</span>
         <span>${escapeHtml(label)}</span>
         <strong>${escapeHtml(score)}</strong>
-        <em>${escapeHtml(statusText(status))} · ${escapeHtml(passLabel)}</em>
+        <em>${escapeHtml(passLabel)}</em>
       </summary>
       ${reason ? `<p>${escapeHtml(reason)}</p>` : `<p class="muted-terminal">No blocking reason reported for this gate.</p>`}
       ${subScoreDetail}
@@ -1010,9 +1015,12 @@ function inferMethod(blob) {
   return "Unknown";
 }
 
-function renderReviewJourney(row, auditRow, stages, canonical) {
+function renderReviewJourney(row, auditRow, stages, canonical, scorecardV2) {
   const can = canonical || row.canonical || (auditRow && auditRow.canonical) || {};
-  const backtestStatus = String(can.backtest_status || "").toUpperCase();
+  // R2-23: when canonical didn't reach this row, fall back to scorecard gate2 status
+  // (mirrors renderBacktestEvidence) so Journey doesn't show "pending" while Scorecard shows FAIL.
+  const g2Fallback = scorecardV2 && scorecardV2.gate2 && scorecardV2.gate2.status;
+  const backtestStatus = String(can.backtest_status || g2Fallback || "").toUpperCase();
   const backtestDone = backtestStatus === "PASS" || backtestStatus === "FAIL" || backtestStatus === "EXECUTED";
   const backtestLabel = backtestDone
     ? (backtestStatus === "PASS" ? "Backtest passed" : "Backtest executed (not passed)")
@@ -1455,6 +1463,10 @@ function closeUnifiedStrategyDetail() {
 function syncUnifiedDetailVisibility() {
   const detailOpen = Boolean(state.selectedStrategyId);
   $("#strategyDetail").hidden = !detailOpen;
+  // R2-25: the global acceptance banner is a system-wide summary — hide it on the detail page
+  // so it isn't misread as belonging to the open strategy.
+  const statusPanel = $("#mccStatusPanel");
+  if (statusPanel) statusPanel.hidden = detailOpen;
   $("#pipelineIntro").hidden = detailOpen;
   $("#pipelineSummary").hidden = detailOpen;
   $("#pipelineTableWrap").hidden = detailOpen;
