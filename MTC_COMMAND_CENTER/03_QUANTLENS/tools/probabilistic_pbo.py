@@ -59,13 +59,15 @@ def estimate_pbo(ids: list[str], matrix: list[list[float]], max_combinations: in
         if usable < n_splits_available else None
     )
 
+    # Early-exit build: C(44,22)≈7.3B — NEVER materialise full list then truncate.
+    # Break as soon as cap is reached to avoid MemoryError (D008).
     combos = []
     for combo in itertools.combinations(range(n_splits), half):
         if 0 not in combo:
             continue  # skip complement duplicates
         combos.append(combo)
-    if max_combinations > 0:
-        combos = combos[:max_combinations]
+        if max_combinations > 0 and len(combos) >= max_combinations:
+            break
 
     records = []
     lambdas = []

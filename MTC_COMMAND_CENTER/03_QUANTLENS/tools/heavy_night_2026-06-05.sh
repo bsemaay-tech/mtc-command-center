@@ -70,10 +70,10 @@ hb "cpcv" "done"
 # STAGE 3 - uncapped PBO
 # ----------------------------------------------------------------------
 guard "pbo"
-log "STAGE 3: PBO (uncapped)"
+log "STAGE 3: PBO (max-combinations=100000 — uncapped causes MemoryError on large sweeps)"
 hb "pbo" "running"
 python probabilistic_pbo.py --cpcv "${RUN_DIR}/cpcv/cpcv_results.json" \
-  --out-dir "${RUN_DIR}/pbo" --max-combinations 0 >> "$LOG" 2>&1
+  --out-dir "${RUN_DIR}/pbo" --max-combinations 100000 >> "$LOG" 2>&1
 log "STAGE 3 exit=$? pbo json: $([ -f ${RUN_DIR}/pbo/pbo_results.json ] && echo OK || echo MISSING)"
 hb "pbo" "done"
 

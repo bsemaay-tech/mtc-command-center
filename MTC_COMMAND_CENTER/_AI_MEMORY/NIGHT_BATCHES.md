@@ -42,6 +42,11 @@ bash night_runner.sh --runner strat_extra_runner.py --run-id ok_$(date +%F) --wo
 ## Otonom BAŞLATILAMAZ (Barış pre-reg/onay)
 - B3 confirmation grid · C2/C3 entegrasyon adapter · E Pine/parity.
 
+## Kritik kural — PBO cap (D008, 2026-06-07)
+
+`probabilistic_pbo.py --max-combinations 0` = YASAK. C(44,22) ≈ 7.3B → MemoryError.
+Her script'te `--max-combinations 100000` kullan. 100k örnek PBO dağılımını stabilize etmek için fazlasıyla yeterli.
+
 ## Launch mekaniği (uzun gece)
 ```bash
 # background + harness completion notify:

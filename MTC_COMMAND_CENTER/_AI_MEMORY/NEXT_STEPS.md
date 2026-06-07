@@ -1,5 +1,27 @@
 # NEXT_STEPS
 
+## Overnight spec sprint (2026-06-06 — autonomous)
+
+### SPEC-SPRINT-ALL-35 | DONE 2026-06-06 (Claude, autonomous) | 35 deterministic spec files [AI: Claude]
+- Barış approved: "Tüm 35 strateji için spec yaz / Gate3: başla / ben uyuyorum sen başla"
+- Written: 35 × `07_deterministic_spec.md` for STG001-022 (method reconstruction), STG023-034 (translated from run_batch.py Python functions), STG046 (parsed from Pine review script)
+- All existing specs (STG035-045, STG047-063) already present → **63/63 strategies now have spec files**
+- Committed as `915611f` (62 files, 2333 insertions)
+- Registry regenerated: review_needed 1447 → 1251 (−196 placeholders)
+- Known limit: STG001-034 and STG046 have no `01_candidate_metadata.yaml` → `known_strengths`/`known_weaknesses` registry fields remain review_needed until those files are created
+
+### GATE3-LIFECYCLE-INVEST | DONE 2026-06-06 (Claude, autonomous) | Gate3 lifecycle test investigation [AI: Claude]
+- Investigated "5 failing lifecycle tests" from prior context
+- Result: **286 tests pass, 0 failures** across all test suites (35 + 251)
+- The prior "lifecycle failures" were scorecard-level blockers, NOT pytest failures
+- MEV-004 still open: `pending_queue`, EOD/EOW time-stop, consecutive-loss reset, max-pyramid guard = real test failures in the MTC engine lifecycle test suite (not the pytest suite)
+- Gate3 score: 97.0/100 INCOMPLETE for `QL_FAM_MOMENTUM_CONTINUATION|TRXUSDT|4h`
+- No code changes made; no tests broken
+
+### PINE-BACKTEST-CHECK | DONE 2026-06-06 (Claude, autonomous) | Pine code availability check [AI: Claude]
+- Checked all Pine files in pinets/ — 3 found, none are strategies ready for overnight backtest without additional setup
+- No new backtests started (insufficient setup for autonomous execution)
+
 ## S6 worker monitor UI (2026-06-06)
 
 ### S6-D3B-WORKER-MONITOR | DONE 2026-06-06 (Codex GPT-5) | Overnight runner heartbeat widget [AI: Codex]
