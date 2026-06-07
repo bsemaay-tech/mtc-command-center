@@ -1,5 +1,33 @@
 # GLOBAL_HANDOFF
 
+## Claude Sonnet 4.6 2026-06-07 — Sweep running (PowerShell bypass), D009 fix
+
+**Commits:** `527bce9` (PBO fix + batch023_034) · `ae033ad` (N5+A1) · `b58aa27` (STG028-053 coding)
+
+**Completed this session:**
+- batch023_034 overnight: 4590 cells, Gate2 81/111 PASS, PBO=0.00026.
+- D008 PBO MemoryError fix: early-exit in `probabilistic_pbo.py` generator loop.
+- N5 codability audit (corrected): 35 ALREADY_IN_ENGINE, 16 CODEABLE, 8 PRE_REG_NEEDED, 4 DISCR, 6 PARKED. STG027 was misclassified as PRE_REG — fixed.
+- A1 producer_spec: 63/63 strategies have `producer_spec.json`.
+- STG028/033/034/046/053 coded in `strat_batch_remaining.py` (46 configs).
+- D009 scipy/bash hang: `import scipy.sparse` hangs when Python launched from MSYS2/Claude Code Bash tool (Electron handle inheritance). Fix: run sweep via PowerShell.
+- Sweep running via PowerShell Start-Job at 08:53. 18 workers, 5015 jobs (59 strategies). ETA ~10:08 AM.
+
+**IN PROGRESS:** MEGA sweep (PowerShell job). 225/5015 = 4.5% at last check. MEGA JSON expected ~10:08. Then run bash validation pipeline (CPCV+PBO+Gate2).
+
+**Next step after sweep:**
+```bash
+cd MTC_COMMAND_CENTER/03_QUANTLENS/tools
+bash overnight_remaining_2026-06-07.sh  # will skip Phase 1 (MEGA JSON exists), run Phase 2-3
+```
+
+**Blocked on Barış:**
+- 8 PRE_REG threshold definitions (STG007/021/037/054/058/061/062/063)
+- Gate3 MEV-004 scope decision
+- MORNING-003 transcript review
+
+---
+
 ## Claude Sonnet 4.6 2026-06-06 — S7 A4 complete + S2/S5/S6 JS recovery
 
 Scope: Restored all S2/S5/S6 JavaScript functions lost when S7 agent reverted app.js

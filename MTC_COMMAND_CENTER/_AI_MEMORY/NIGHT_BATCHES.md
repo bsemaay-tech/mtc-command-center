@@ -4,6 +4,24 @@
 > `mcc_night_tail.sh` (CPCV15+PBO+eval+Gate2+all-gate+**C1 Gate3 enrich**+scorecard_v2+
 > alpha+morning+**D1 dashboard verify**). Determinizm: her sweep BİR kez. Biter → makineyi bırak.
 
+## KRİTİK KURAL — Python sweep Claude Code Bash tool'dan çalıştırılmaz
+
+**D009:** `import scipy.sparse/stats`, MSYS2/Claude Code Bash tool'dan çalıştırıldığında Electron'dan kalıtılan Windows HANDLE'lar yüzünden <0 CPU ile 15+ dakika askıda kalır. Çözüm: sweep'leri PowerShell üzerinden çalıştır.
+
+```powershell
+# PowerShell'den sweep başlatma (önerilen yöntem)
+Set-Location "C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\03_QUANTLENS\tools"
+$env:MEGA_WORKERS = "18"; $env:MEGA_OUTPUT_DIR = "C:\LAB\...\05_BACKTEST_RESULTS\run_dir"
+python strat_batch_remaining.py > sweep.log 2>&1
+```
+
+Veya bash script içinde PowerShell wrapper:
+```bash
+powershell.exe -NoProfile -Command "Set-Location 'C:\...\tools'; \$env:MEGA_WORKERS='18'; python strat_batch_remaining.py" > sweep.log 2>&1
+```
+
+---
+
 ## Hazır batch'ler (onaysız, düşük risk)
 
 ### Tam 43-strateji enriched gece (genuinely-new değil — bugünküyle aynı; sadece yeniden-gating için)

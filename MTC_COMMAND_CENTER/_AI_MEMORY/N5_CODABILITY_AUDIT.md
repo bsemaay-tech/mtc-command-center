@@ -8,15 +8,16 @@ _2026-06-07, Claude Sonnet 4.6_
 
 | Sınıf | Sayı | Oran |
 |---|---|---|
-| ALREADY_IN_ENGINE | 34 | 54% |
+| ALREADY_IN_ENGINE | 35 | 56% |
 | CODEABLE | 16 | 25% |
-| PRE_REG_NEEDED | 9 | 14% |
+| PRE_REG_NEEDED | 8 | 13% |
 | DISCRETIONARY | 4 | 6% |
 | PARKED_NO_DATA | 6 | 9% |
 | **Toplam** | **63** | |
 
-> **Revizyon 2026-06-07:** STG061 ve STG063 CODEABLE → PRE_REG_NEEDED olarak düzeltildi.
-> Her iki spec de "Backtest Readiness: Needs review — formalize thresholds first" diyor.
+> **Revizyon 2026-06-07a:** STG061 ve STG063 CODEABLE → PRE_REG_NEEDED olarak düzeltildi.
+> **Revizyon 2026-06-07b:** STG027 PRE_REG_NEEDED → ALREADY_IN_ENGINE olarak düzeltildi.
+> STG027 (BigBeluga RSI CHoCH) `strat_extra_batch_023_034.py`'de `QL_BIGBELUGA_RSI_v1` olarak kodlanmış.
 
 **B2 gece batch hedefi:** 16 CODEABLE → 11'i zaten engine'de (batch023_034 + strat_extra),
 5 yeni (STG028/033/034/046/053) `strat_batch_remaining.py` olarak kodlandı (2026-06-07).
@@ -54,7 +55,7 @@ _2026-06-07, Claude Sonnet 4.6_
 | STG024 | Martin/Luke Pullback AVWAP | CODEABLE | AVWAP + EMA destek + dönüş mekanik |
 | STG025 | Slingshot 4EMA High Pullback | CODEABLE | EMA overlap + pullback + kırılım mekanik |
 | STG026 | Crabel Range Expansion Stage2 | CODEABLE | Coil + range-expansion + ATR mekanik |
-| STG027 | BigBeluga RSI CHoCH ATR | PRE_REG_NEEDED | RSI diverjans + CHoCH threshold gerekli |
+| STG027 | BigBeluga RSI CHoCH ATR | ALREADY_IN_ENGINE | strat_extra_batch_023_034 (QL_BIGBELUGA_RSI_v1) |
 | STG028 | CANSLIM Shakeout Plus3 | CODEABLE | Baz + shakeout + 3-bar giriş mekanik |
 | STG029 | Linda 5SMA RS Pullback | CODEABLE | 5SMA + RS rank + pullback + dönüş mekanik |
 | STG030 | Linda 8am ET Opening Range | PARKED_NO_DATA | US market session open marker gerekli |
@@ -94,26 +95,25 @@ _2026-06-07, Claude Sonnet 4.6_
 
 ---
 
-## CODEABLE — 18 strateji (autonomous batch için öncelik)
+## CODEABLE — 16 strateji (autonomous batch için öncelik)
 
-STG023 · STG024 · STG025 · STG026 · STG028 · STG029 · STG033 · STG034 · STG046 · STG053 · STG061 · STG063
+STG023 · STG024 · STG025 · STG026 · STG028 · STG029 · STG033 · STG034 · STG046 · STG053
 
-Not: STG023-029 ve STG033-034 **batch023_034'te zaten swept** (ilk tarama). Yeni sweep gerekmez; mevcut sonuçlar değerlendirildi.
+Not: STG023-029 ve STG033-034 **batch023_034'te swept** (ilk tarama).
+STG028/033/034/046/053 **strat_batch_remaining.py**'de kodlandı (2026-06-07).
+STG061/063 PRE_REG_NEEDED'a taşındı (spec "thresholds unknown" diyor).
 
-Geriye kalan NET-YENİ CODEABLE (hiç swept olmayan):
-- STG046 (VWAP Multi-Anchor — araştırma skripti)
-- STG053 (Charles Harris 50DMA/21EMA pullback)
-- STG061 (Ryan Pierpont breakout)
-- STG063 (Tito RS breakout)
+Tüm 16 CODEABLE strateji için kod mevcut. Sweep çalışıyor.
 
-## PRE_REG_NEEDED — 7 strateji (Barış threshold tanımlamalı)
+## PRE_REG_NEEDED — 8 strateji (Barış threshold tanımlamalı)
 
 | STG | Neye ihtiyaç var |
 |---|---|
 | STG007 | Stage2 EMA/MA gösterge eşiği |
 | STG021 | Kontraksiyon % eşiği (Minervini VCP dar baz) |
-| STG027 | RSI diverjans eşiği + CHoCH bölge genişliği |
 | STG037 | 7 mum pattern geometri tanımı |
 | STG054 | Fishhook pattern derinlik/hız eşiği |
 | STG058 | Parabolic SAR çarpan eşiği + "champion" filtresi |
+| STG061 | Pierpont extension eşiği + danger-zone sınırı |
 | STG062 | Weinstein Stage2 MA eğim eşiği + hacim eşiği |
+| STG063 | Tito RS eşiği + crossback trigger |
