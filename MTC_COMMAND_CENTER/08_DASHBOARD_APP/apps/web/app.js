@@ -403,6 +403,7 @@ function openUnifiedStrategyDetail(id) {
 
 function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
   const row = pipelineRow || auditRow || {};
+  const canonical = row.canonical || (auditRow && auditRow.canonical) || {};
   const description = row.description || {};
   const metrics = row.metrics || {};
   const sourceRecord = auditRow && auditRow.source_record ? auditRow.source_record : {};
@@ -410,7 +411,7 @@ function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
   const sourceUrlSource = auditRow ? auditRow.source_url_source : '';
   const producerSpecRaw = row.producer_spec || {};
   const title = strategyDisplayName(row, auditRow, producerSpecRaw, sourceRecord);
-  const subtitle = strategySubtitle(row, auditRow, sourceUrl);
+  const subtitle = strategySubtitle(row, auditRow, sourceUrl, canonical);
   const statusLabel = friendlyStatus((mtcV2Row && (mtcV2Row.status_label || mtcV2Row.status)) || (auditRow && auditRow.audit_status) || row.current_stage_label || row.current_stage_key || "Review pending");
   const stgCode = row.stg_code || (auditRow && auditRow.stg_code) || '';
   const scorecard = row.scorecard || (auditRow && auditRow.scorecard) || null;
@@ -428,15 +429,14 @@ function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
     sourceRecord.summary
   ) || "No English strategy description is available yet.";
   const quantlens = findQuantlensCandidate(row, auditRow);
-  const decision = buildWaveADecision(row, auditRow, mtcV2Row, scorecardV2, quantlens);
-  const scoreDetail = renderWaveAScorecard(scorecardV2, scorecard, scorecardV2Cases);
+  const decision = buildWaveADecision(row, auditRow, mtcV2Row, scorecardV2, quantlens, canonical);
+  const scoreDetail = renderWaveAScorecard(scorecardV2, scorecard, scorecardV2Cases, canonical);
   const quantlensVerdict = renderQuantlensVerdict(quantlens);
-  const taxonomy = renderStrategyTaxonomy(row, auditRow, producerSpecRaw, description);
-  const journey = renderReviewJourney(row, auditRow, stages);
+  const taxonomy = renderStrategyTaxonomy(row, auditRow, producerSpecRaw, description, canonical);
+  const journey = renderReviewJourney(row, auditRow, stages, canonical);
   const tradingRules = renderTradingRules(row, auditRow, producerSpecRaw, description, sourceRecord);
-  const backtestEvidence = renderBacktestEvidence(row, auditRow, metrics);
+  const backtestEvidence = renderBacktestEvidence(row, auditRow, metrics, scorecardV2, canonical);
   const promotabilityPanel = renderPromotabilityPanel(scorecardV2);
-  const gate2Evidence = renderGate2EvidenceBlock(scorecardV2);
   const salvage = renderSalvageableIdeas(row, auditRow, quantlens);
   const sourceMaterial = renderSourceMaterial(auditRow, row, sourceRecord, sourceUrl, sourceUrlSource);
   const technicalDetails = renderTechnicalDetails({
@@ -467,13 +467,12 @@ function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
         </div>
         <div class="detail-status-stack">
           <span class="terminal-badge">${escapeHtml(statusLabel)}</span>
-          <span class="terminal-badge muted" title="QuantLens backtest pipeline status. 'Not evaluated yet' = strategy not yet in MEGA walk-forward sweep.">${escapeHtml(decision.quantlensLabel)}</span>
+          <span class="terminal-badge muted" title="QuantLens pre-screen commentary. Not a gate score.">${escapeHtml(decision.quantlensLabel)}</span>
         </div>
       </section>
       ${renderVerdictDecision(decision)}
       ${scoreDetail}
       ${promotabilityPanel}
-      ${gate2Evidence}
       ${quantlensVerdict}
       ${taxonomy}
       ${journey}
@@ -506,11 +505,20 @@ function strategyDisplayName(row, auditRow, producerSpec, sourceRecord) {
   return humanizeStrategyId(row.id || (auditRow && auditRow.id) || "Unnamed strategy");
 }
 
-function strategySubtitle(row, auditRow, sourceUrl) {
-  const instrument = marketLabel(row.symbol || (auditRow && auditRow.symbol));
-  const timeframe = row.timeframe || (auditRow && auditRow.timeframe) || "";
+function strategySubtitle(row, auditRow, sourceUrl, canonical) {
+  const can = canonical || row.canonical || (auditRow && auditRow.canonical) || {};
+  const symbol = row.symbol || (auditRow && auditRow.symbol) || "";
+  const instrument = symbol ? symbol : "Symbol not defined";
+  const definedTf = can.defined_tf || row.timeframe || (auditRow && auditRow.timeframe) || "";
+  const testedTf = can.tested_tf || "";
+  const tfParts = [];
+  if (definedTf) tfParts.push(`Defined: ${definedTf}`);
+  if (testedTf && testedTf !== definedTf) tfParts.push(`Tested: ${testedTf}`);
+  else if (testedTf) tfParts.push(`Tested: ${testedTf}`);
+  else if (definedTf) tfParts.push(definedTf);
+  const tfLabel = tfParts.join(" · ") || "";
   const sourceKind = sourceUrl ? (sourceUrl.includes("youtu") ? "YouTube source" : "External source") : "Source not linked";
-  return [instrument, timeframe, sourceKind].filter(Boolean).join(" / ") || "Review data not available yet";
+  return [instrument, tfLabel, sourceKind].filter(Boolean).join(" / ") || "Review data not available yet";
 }
 
 function cleanDisplayText(value) {
@@ -654,15 +662,19 @@ function renderQuantlensVerdict(quantlens) {
     </section>`;
 }
 
-function buildWaveADecision(row, auditRow, mtcV2Row, scorecardV2, quantlens) {
+function buildWaveADecision(row, auditRow, mtcV2Row, scorecardV2, quantlens, canonical) {
+  const can = canonical || row.canonical || (auditRow && auditRow.canonical) || {};
   const hasAudit = Boolean(auditRow);
   const eligible = hasAudit ? Boolean(auditRow.eligible_for_backtest) : false;
   const deterministic = hasAudit ? Boolean(auditRow.has_deterministic_rules) : Boolean(row.producer_spec);
-  const blocker = cleanDisplayText((mtcV2Row && mtcV2Row.blocker) || (auditRow && auditRow.blocked_reason))
-    || (eligible ? "None" : "Deterministic rules are not complete.");
+  const canBlocking = Array.isArray(can.blocking) ? can.blocking : [];
+  const blocker = canBlocking.length
+    ? canBlocking.map((b) => statusText(b)).join("; ")
+    : cleanDisplayText((auditRow && auditRow.blocked_reason))
+      || (eligible ? "None" : "Deterministic rules are not complete.");
   const nextAction = cleanDisplayText((mtcV2Row && mtcV2Row.next_action) || row.next_action || (auditRow && auditRow.recommended_next_pipeline_step))
     || "Review the source evidence.";
-  const evidenceLevel = evidenceLevelLabel(row, auditRow);
+  const evidenceLevel = can.evidence_level || evidenceLevelLabel(row, auditRow, can);
   const verdict = eligible
     ? "Ready for backtest review"
     : deterministic
@@ -697,7 +709,9 @@ function buildWaveADecision(row, auditRow, mtcV2Row, scorecardV2, quantlens) {
   };
 }
 
-function evidenceLevelLabel(row, auditRow) {
+function evidenceLevelLabel(row, auditRow, canonical) {
+  const can = canonical || row.canonical || (auditRow && auditRow.canonical) || {};
+  if (can.evidence_level) return can.evidence_level;
   const stage = String(row.current_stage_key || (auditRow && auditRow.current_stage_key) || "").toLowerCase();
   if (stage === "integrated") return "Production candidate";
   if (stage === "paper_trade") return "Paper-trade observed";
@@ -731,7 +745,7 @@ function renderVerdictDecision(decision) {
   `;
 }
 
-function renderWaveAScorecard(scorecardV2, legacyScorecard, scorecardV2Cases = []) {
+function renderWaveAScorecard(scorecardV2, legacyScorecard, scorecardV2Cases = [], canonical = {}) {
   if (scorecardV2) {
     const gateSummary = scorecardV2.gate_summary || {};
     const gates = [
@@ -742,17 +756,21 @@ function renderWaveAScorecard(scorecardV2, legacyScorecard, scorecardV2Cases = [
     ];
     const promotable = isPromotable(gateSummary);
     const blocking = Array.isArray(gateSummary.blocking) ? gateSummary.blocking : [];
+    const tfChip = canonical.tf_mismatch
+      ? `<span class="terminal-chip warn">⚠ Defined ${escapeHtml(canonical.defined_tf || "?")}, tested ${escapeHtml(canonical.tested_tf || "?")} — verify intent</span>`
+      : "";
     return `
       <section class="terminal-section scorecard-v2-section">
         <div class="terminal-section-head">
           <h4>Scorecard</h4>
           <span class="terminal-badge ${promotable ? "ok" : "amber"}">${promotable ? "Promotable" : "Not promotable"}</span>
         </div>
-        <p class="muted-terminal">Gate 2 quantitative backtest score /100. Threshold: ≥75 PASS · 60–74 CONDITIONAL · &lt;60 FAIL. Scores shown only for gates with complete source metrics.</p>
-        ${renderScorecardCaseList(scorecardV2, scorecardV2Cases)}
+        <p class="muted-terminal">Gate 2 quantitative backtest score /100. Threshold: ≥75 PASS · &lt;75 FAIL. <span class="provenance-tag">source: scorecard_v2</span></p>
+        ${renderScorecardCaseList(scorecardV2, scorecardV2Cases, canonical)}
         <div class="chip-row">
           <span class="terminal-chip">${escapeHtml(`Promotable: ${promotable ? "Yes" : "No"}`)}</span>
           ${blocking.map((name) => `<span class="terminal-chip warn">${escapeHtml(`Blocking: ${statusText(name)}`)}</span>`).join("")}
+          ${tfChip}
         </div>
         ${gates.map(([key, label, gate]) => renderGateRow(key, label, gate)).join("")}
       </section>
@@ -771,11 +789,13 @@ function renderWaveAScorecard(scorecardV2, legacyScorecard, scorecardV2Cases = [
   `;
 }
 
-function renderScorecardCaseList(displayCard, cases) {
+function renderScorecardCaseList(displayCard, cases, canonical) {
+  const can = canonical || {};
   const allCases = Array.isArray(cases) && cases.length ? cases : [displayCard];
   if (allCases.length <= 1) {
     const label = [displayCard.symbol, displayCard.timeframe].filter(Boolean).join(" ");
-    return label ? `<p class="muted-terminal">Displayed case: ${escapeHtml(label)}.</p>` : "";
+    const testedLabel = can.tested_tf ? ` (Tested: ${can.tested_tf})` : "";
+    return label ? `<p class="muted-terminal">Displayed case: ${escapeHtml(label + testedLabel)}.</p>` : "";
   }
   return `
     <div class="scorecard-case-list">
@@ -785,7 +805,8 @@ function renderScorecardCaseList(displayCard, cases) {
         const score = scoreForGate(g2);
         const active = card.strategy_id === displayCard.strategy_id ? " active" : "";
         const runLabel = card.run_name || card.run_id || "";
-        const caseLabel = [card.symbol, card.timeframe].filter(Boolean).join(" ") || card.strategy_id || "Case";
+        const testedTf = can.tested_tf || card.timeframe || "";
+        const caseLabel = [card.symbol, testedTf ? `Tested: ${testedTf}` : ""].filter(Boolean).join(" ") || card.strategy_id || "Case";
         const discriminator = runLabel ? ` · ${runLabel}` : "";
         return `
           <div class="scorecard-case${active}">
@@ -902,7 +923,13 @@ function inferMethod(blob) {
   return "Unknown";
 }
 
-function renderReviewJourney(row, auditRow, stages) {
+function renderReviewJourney(row, auditRow, stages, canonical) {
+  const can = canonical || row.canonical || (auditRow && auditRow.canonical) || {};
+  const backtestStatus = String(can.backtest_status || "").toUpperCase();
+  const backtestDone = backtestStatus === "PASS" || backtestStatus === "FAIL" || backtestStatus === "EXECUTED";
+  const backtestLabel = backtestDone
+    ? (backtestStatus === "PASS" ? "Backtest passed" : "Backtest executed (not passed)")
+    : "Backtest evidence not available yet.";
   const base = [
     ["Discovered", "done", "Source row exists in the dashboard snapshot."],
     ["Source checked", auditRow && auditRow.has_source_url_transcript ? "done" : "active", auditRow && auditRow.has_source_url_transcript ? "Source or transcript linked." : "Source material is incomplete."],
@@ -911,14 +938,16 @@ function renderReviewJourney(row, auditRow, stages) {
   ];
   const stageMap = row.stages || {};
   const late = [
-    ["Backtested", stageMap.backtested && stageMap.backtested.status === "done" ? "done" : "pending", stageMap.backtested && stageMap.backtested.metric || "Backtest evidence not available yet."],
+    ["Backtested", backtestDone ? "done" : "pending", backtestLabel],
     ["Promotion review", stageMap.promoted && stageMap.promoted.status === "done" ? "done" : "pending", stageMap.promoted && stageMap.promoted.metric || "Promotion packet not ready."],
     ["Paper-trade candidate", stageMap.paper_trade && stageMap.paper_trade.status === "done" ? "done" : "pending", stageMap.paper_trade && stageMap.paper_trade.metric || "Forward evidence not collected."],
     ["Integrated", stageMap.integrated && stageMap.integrated.status === "done" ? "done" : "pending", stageMap.integrated && stageMap.integrated.metric || "Not integrated."],
   ];
   return `
     <section class="terminal-section">
-      <div class="terminal-section-head"><h4>Review Journey</h4></div>
+      <div class="terminal-section-head"><h4>Review Journey</h4>
+        <span class="provenance-tag">source: canonical + pipeline stages</span>
+      </div>
       <ol class="journey-list">
         ${base.concat(late).map(([label, status, note]) => `
           <li class="journey-${escapeHtml(status)}">
@@ -990,34 +1019,63 @@ function tooltipFor(label) {
   return tips[label] || '';
 }
 
-function renderBacktestEvidence(row, auditRow, metrics) {
+function renderBacktestEvidence(row, auditRow, metrics, scorecardV2, canonical) {
+  const can = canonical || row.canonical || (auditRow && auditRow.canonical) || {};
+  const g2 = scorecardV2 ? (scorecardV2.gate2 || {}) : {};
+  const hasGate2 = g2.status || g2.score != null;
+  // Gate 2 sub-score metric extraction
+  const subScores = Array.isArray(g2.sub_scores) ? g2.sub_scores : [];
+  const findMetric = (...names) => {
+    for (const name of names) {
+      const match = subScores.find((s) => String(s.source_metric || s.criterion || "").toLowerCase().includes(name));
+      if (match && match.value != null) return String(Number(match.value).toFixed(2));
+    }
+    return null;
+  };
+  // Prefer gate2 sub_scores, fall back to legacy metrics
+  const g2Score = can.gate2_score != null ? `${can.gate2_score}/${g2.max || 100}` : (g2.score != null ? `${g2.score}/${g2.max || 100}` : null);
+  const g2Status = can.gate2_status || g2.status || null;
   const metricRows = [
-    ["Net profit", metrics.return_pct_compound != null ? `${Number(metrics.return_pct_compound).toFixed(2)}%` : ""],
-    ["Profit factor", metrics.profit_factor],
-    ["Total trades", metrics.trades],
-    ["Max drawdown", metrics.max_drawdown_pct != null ? `${Number(metrics.max_drawdown_pct).toFixed(1)}%` : ""],
-    ["Win rate", metrics.win_rate != null ? `${(Number(metrics.win_rate) * 100).toFixed(1)}%` : ""],
-    ["Direction", metrics.direction],
-  ].filter(([, value]) => value !== null && value !== undefined && value !== "");
+    g2Score ? ["Gate 2 score", g2Score] : null,
+    g2Status ? ["Gate 2 status", statusText(g2Status)] : null,
+    ["Profit factor", findMetric("profit_factor", "pf") || (metrics.profit_factor != null ? String(metrics.profit_factor) : null)],
+    ["Total trades", findMetric("trades", "num_trades") || (metrics.trades != null ? String(metrics.trades) : null)],
+    ["CPCV", findMetric("cpcv")],
+    ["Max drawdown", findMetric("max_drawdown", "drawdown") || (metrics.max_drawdown_pct != null ? `${Number(metrics.max_drawdown_pct).toFixed(1)}%` : null)],
+    ["Net return %", findMetric("net_return", "return_pct") || (metrics.return_pct_compound != null ? `${Number(metrics.return_pct_compound).toFixed(2)}%` : null)],
+    ["Win rate %", findMetric("win_rate") || (metrics.win_rate != null ? `${(Number(metrics.win_rate) * 100).toFixed(1)}%` : null)],
+    ["Direction", metrics.direction || null],
+  ].filter((pair) => pair && pair[1] != null);
   const hasEvidence = metricRows.length > 0 || (row.equity_curve || []).length > 1;
   if (hasEvidence) {
+    const statusBadge = g2Status
+      ? `<span class="terminal-badge ${g2Status === "PASS" ? "ok" : g2Status === "FAIL" ? "bad" : "neutral"}">${escapeHtml(statusText(g2Status))}</span>`
+      : `<span class="terminal-badge amber">Evidence present</span>`;
     return `
       <section class="terminal-section">
         <div class="terminal-section-head">
           <h4>Backtest Evidence</h4>
-          <span class="terminal-badge amber">Existing evidence</span>
+          ${statusBadge}
         </div>
-        <p class="muted-terminal">These are existing raw metrics only. They are not a SP-004 Gate 2 score.</p>
-        ${metricRows.length ? `<table class="terminal-kv">${metricRows.map(([key, value]) => `<tr><td>${escapeHtml(key)}</td><td>${escapeHtml(String(value))}</td></tr>`).join("")}</table>` : ""}
+        <p class="muted-terminal">Unified backtest evidence from scorecard_v2 Gate 2 and legacy metrics. <span class="provenance-tag">source: scorecard_v2 + canonical</span></p>
+        ${metricRows.length ? `<div class="evidence-card-grid">${metricRows.map(([key, value]) => `
+          <div class="evidence-card">
+            <span>${escapeHtml(key)}</span>
+            <strong>${escapeHtml(String(value))}</strong>
+          </div>`).join("")}</div>` : ""}
         ${renderSparkline(row.equity_curve || [])}
       </section>
     `;
   }
-  const reason = auditRow && auditRow.blocked_reason ? `Blocked upstream: ${auditRow.blocked_reason}.` : "Blocked upstream: deterministic rules are not complete.";
+  const reason = can.backtest_status
+    ? `Canonical backtest status: ${statusText(can.backtest_status)}.`
+    : "Backtest has not been executed for this strategy yet.";
   const checklist = ["Exact entry rule", "Exact exit rule", "Stop-loss rule", "Take-profit rule", "Repaint/lookahead verification", "Test market, symbol, timeframe, date window"];
   return `
     <section class="terminal-section">
-      <div class="terminal-section-head"><h4>Backtest Evidence</h4></div>
+      <div class="terminal-section-head"><h4>Backtest Evidence</h4>
+        <span class="provenance-tag">source: canonical</span>
+      </div>
       <p><strong>Backtest evidence is not available yet.</strong></p>
       <p class="muted-terminal">${escapeHtml(reason)}</p>
       <ul class="checklist">${checklist.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
