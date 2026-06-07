@@ -679,20 +679,29 @@ function buildWaveADecision(row, auditRow, mtcV2Row, scorecardV2, quantlens, can
   const hasEntry = Boolean(producerSpecEntry(row));
   const hasExit = Boolean(producerSpecExit(row));
   const partiallyTestable = deterministic || (hasEntry && hasExit);
-  const verdict = eligible
-    ? "Ready for backtest review"
-    : partiallyTestable
-      ? "Partially testable"
-      : (!hasEntry || !hasExit)
-        ? "Blocked — entry or exit rule missing"
-        : "Needs source clarification";
-  const reason = eligible
-    ? "Existing data says the candidate has enough deterministic rule evidence to enter a backtest workflow."
-    : partiallyTestable
-      ? "Entry and exit rules are documented. SL/TP/risk can be filled by MTC_V2 defaults — partially testable."
-      : (!hasEntry || !hasExit)
-        ? "Hard-blocked: entry or exit rule is missing. Cannot proceed until both are defined."
-        : "The source does not define enough exact mechanical rules for honest scoring or backtesting.";
+  // UI-24 (D4): Primary verdict from gate_summary / canonical.promotable
+  const gsPromotable = isPromotable(can) || (scorecardV2 && isPromotable(scorecardV2.gate_summary || {}));
+  const gsBlocking = canBlocking.length > 0 || (scorecardV2 && Array.isArray((scorecardV2.gate_summary || {}).blocking) && (scorecardV2.gate_summary || {}).blocking.length > 0);
+  let verdict, reason;
+  if (gsPromotable) {
+    verdict = "Promotable — all gates pass";
+    reason = "Gate summary confirms all scored gates are passing. Strategy is a candidate for the forward paper-trade queue.";
+  } else if (can.gate2_status === "PASS" || can.backtest_status === "PASS") {
+    verdict = "Backtest passed — awaiting remaining gates";
+    reason = "Gate 2 backtest evidence passes but one or more other gates are incomplete or failing.";
+  } else if (eligible) {
+    verdict = "Ready for backtest review";
+    reason = "Existing data says the candidate has enough deterministic rule evidence to enter a backtest workflow.";
+  } else if (partiallyTestable) {
+    verdict = "Partially testable";
+    reason = "Entry and exit rules are documented. SL/TP/risk can be filled by MTC_V2 defaults — partially testable.";
+  } else if (!hasEntry || !hasExit) {
+    verdict = "Blocked — entry or exit rule missing";
+    reason = "Hard-blocked: entry or exit rule is missing. Cannot proceed until both are defined.";
+  } else {
+    verdict = "Needs source clarification";
+    reason = "The source does not define enough exact mechanical rules for honest scoring or backtesting.";
+  }
   const riskFlags = [
     !deterministic ? "Undefined rules" : "",
     blocker && blocker !== "None" ? friendlyStatus(blocker) : "",
@@ -707,13 +716,15 @@ function buildWaveADecision(row, auditRow, mtcV2Row, scorecardV2, quantlens, can
     nextAction: statusText(nextAction),
     riskFlags,
     evidenceLevel,
+    gsPromotable,
+    gsBlocking,
     documentedVsProven: evidenceLevel.includes("Backtested") ? "Documented and internally tested" : "Documented, not proven",
     quantlensLabel: quantlens
       ? `QuantLens: ${(quantlens.quantlens_verdict && quantlens.quantlens_verdict.decision_label) || quantlens.quantlens_decision || "Reviewed"}`
       : "QuantLens: Not evaluated yet",
     scoreReference: scorecardV2
       ? "Gate scorecard is available below."
-      : "Gate scorecard is not evaluated yet. The new gate-based scorecard will be available after SP-004 implementation.",
+      : "Gate scorecard is not evaluated yet.",
   };
 }
 
@@ -729,13 +740,15 @@ function evidenceLevelLabel(row, auditRow, canonical) {
 }
 
 function renderVerdictDecision(decision) {
+  const verdictBadgeClass = decision.gsPromotable ? "ok" : (decision.canTest === "Yes" ? "amber" : "bad");
+  const verdictBadgeLabel = decision.gsPromotable ? "Promotable" : (decision.canTest === "Yes" ? "Can test" : "Blocked");
   return `
     <section class="terminal-section verdict-section">
       <div class="terminal-section-head">
         <h4>Verdict &amp; Decision</h4>
-        <span class="terminal-badge amber">${escapeHtml(decision.canTest === "Yes" ? "Can test" : "Blocked")}</span>
+        <span class="terminal-badge ${verdictBadgeClass}">${escapeHtml(verdictBadgeLabel)}</span>
       </div>
-      <p class="muted-sub">Consolidated view of all gate outcomes and the recommended next action for this strategy.</p>
+      <p class="muted-sub">Primary verdict derived from gate_summary and canonical data. QuantLens = pre-screen commentary, not gate scoring. <span class="provenance-tag">source: gate_summary + canonical</span></p>
       <p class="verdict-line"><strong>${escapeHtml(decision.verdict)}</strong></p>
       <p>${escapeHtml(decision.reason)}</p>
       <div class="terminal-facts">
@@ -2454,7 +2467,7 @@ function renderAcceptancePanel() {
   el.innerHTML = `
 <div class="mcc-status-panel">
   <div class="mcc-status-head">
-    <span>MCC Acceptance Status</span>
+    <span>MCC Acceptance Status <em class="provenance-tag">(Global summary — all strategies)</em></span>
     <strong>${escapeHtml(countLabel)}</strong>
   </div>
   <div class="mcc-status-grid">
@@ -2484,7 +2497,7 @@ function renderAcceptanceRow(card) {
 <div class="mcc-status-row ok">
   <span>Promotable</span>
   <strong>${escapeHtml(formatStrategyId(id))}</strong>
-  <em>${escapeHtml([symbol, tf, label].filter(Boolean).join(" · "))}</em>
+  <em>${escapeHtml([symbol, tf, label].filter(Boolean).join(" · "))} <span class="provenance-tag">accepted</span></em>
 </div>`;
 }
 
@@ -2500,31 +2513,29 @@ function acceptanceDateLabel(card) {
     .slice(0, 24);
 }
 
-// ── S2 A6 — Promotability panel ──────────────────────────────────────────────
+// ── S2 A6 — Next Action panel (repurposed from Promotability, UI-20) ─────────
 
 function renderPromotabilityPanel(scorecardV2) {
   if (!scorecardV2) return "";
   const gs = scorecardV2.gate_summary || {};
   const promotable = isPromotable(gs);
   const blocking = Array.isArray(gs.blocking) ? gs.blocking : [];
+  if (promotable && !blocking.length) return "";
+  if (!blocking.length) return "";
   return `
-<section class="terminal-section promotability-panel${promotable ? " promotable-ok" : ""}">
+<section class="terminal-section promotability-panel">
   <div class="terminal-section-head">
-    <h4>Promotability</h4>
-    <span class="terminal-badge ${promotable ? "ok" : "amber"}">${promotable ? "All gates pass" : "Not promotable yet"}</span>
+    <h4>Gate Blockers</h4>
+    <span class="terminal-badge amber">Action required</span>
   </div>
-  ${promotable
-    ? `<p>Strategy has passed all scored gate criteria and is a candidate for the forward paper-trade queue.</p>`
-    : `<p class="muted-terminal">One or more gates are incomplete or failing. Address blockers before promotion.</p>`
-  }
-  ${blocking.length ? `
-    <div class="gate-blocker-list">
-      ${blocking.map((name) => `
-        <div class="gate-blocker fail">
-          <span>${escapeHtml(statusText(name))}</span>
-          <em>Blocking</em>
-        </div>`).join("")}
-    </div>` : ""}
+  <p class="muted-terminal">These gates are blocking promotion. Address them before the strategy can advance. <span class="provenance-tag">source: gate_summary</span></p>
+  <div class="gate-blocker-list">
+    ${blocking.map((name) => `
+      <div class="gate-blocker fail">
+        <span>${escapeHtml(statusText(name))}</span>
+        <em>Blocking</em>
+      </div>`).join("")}
+  </div>
 </section>`;
 }
 
