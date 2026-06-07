@@ -620,8 +620,8 @@ function renderQuantlensVerdict(quantlens) {
     return `
     <section class="terminal-section quantlens-section">
       <div class="terminal-section-head"><h4>QuantLens Verdict</h4>
-        <span class="terminal-badge muted">Not in QuantLens</span></div>
-      <p class="muted-terminal">This strategy is not part of the QuantLens salvage analysis. The QuantLens verdict is commentary only and never produces a gate score.</p>
+        <span class="terminal-badge muted">Not in QuantLens scope</span></div>
+      <p class="muted-terminal">QuantLens is a separate AI pre-screen that reviews strategy quality, risk, and commercial viability. It is <strong>independent of the gate verdict</strong> above — it produces commentary and labels only, never a gate score. Not all strategies pass through QuantLens; strategies may be excluded because they entered the pipeline before QuantLens was active, or because they are still in early intake. <span class="provenance-tag">source: quantlens candidates</span></p>
     </section>`;
   }
   const v = quantlens.quantlens_verdict || {};
@@ -653,7 +653,7 @@ function renderQuantlensVerdict(quantlens) {
       <div class="terminal-section-head"><h4>QuantLens Verdict</h4>
         <span class="terminal-badge ${stop ? "warn" : "muted"}">${escapeHtml(v.decision_label || quantlens.quantlens_decision || "Reviewed")}</span></div>
       ${stopBanner}
-      <p class="muted-terminal">QuantLens is a ruthless audit layer — commentary and labels only. It references the Scorecard above; it never adds its own gate score.</p>
+      <p class="muted-terminal">QuantLens is a separate AI pre-screen — commentary and labels only. It is independent of the gate verdict above and never adds its own gate score. <span class="provenance-tag">source: quantlens</span></p>
       <div class="terminal-facts">
         ${facts.map(([k, val]) => `<div><span>${escapeHtml(k)}</span><strong>${escapeHtml(String(val))}</strong></div>`).join("")}
       </div>
@@ -721,7 +721,7 @@ function buildWaveADecision(row, auditRow, mtcV2Row, scorecardV2, quantlens, can
     documentedVsProven: evidenceLevel.includes("Backtested") ? "Documented and internally tested" : "Documented, not proven",
     quantlensLabel: quantlens
       ? `QuantLens: ${(quantlens.quantlens_verdict && quantlens.quantlens_verdict.decision_label) || quantlens.quantlens_decision || "Reviewed"}`
-      : "QuantLens: Not evaluated yet",
+      : "QuantLens: Not in scope (separate AI pre-screen)",
     scoreReference: scorecardV2
       ? "Gate scorecard is available below."
       : "Gate scorecard is not evaluated yet.",
