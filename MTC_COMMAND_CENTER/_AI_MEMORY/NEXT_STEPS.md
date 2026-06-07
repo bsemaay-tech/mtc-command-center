@@ -12,12 +12,14 @@
 - 63/63 strateji artık producer_spec.json'a sahip (41 yeni, 22 mevcut)
 - 41 gerçek MEGA metrik; 22 dürüst placeholder (hiç uydurulmuş sayı yok)
 
-### STG028-034-046-053-CODING | IN PROGRESS 2026-06-07 (Claude)
-- Dosya: `03_QUANTLENS/tools/strat_batch_remaining.py`
+### STG028-034-046-053-CODING | DONE 2026-06-07 (DeepSeek v4 Pro recovery) | 5 strategies swept + validated
+- File: `03_QUANTLENS/tools/strat_batch_remaining.py`
 - QL_CANSLIM_SHAKEOUT_v1 (STG028) · QL_ANTI_CHASE_CRABEL_v1 (STG033)
   QL_EMA_RETEST_v1 (STG034) · QL_VWAP_TREND_CONT_v1 (STG046) · QL_HARRIS_50DMA_v1 (STG053)
-- Sweep script: `overnight_remaining_2026-06-07.sh` — çalışıyor
-- STG061/063 ATLANMIŞ: spec "thresholds unknown, formalize first" diyor
+- Recovery sweep: 425 jobs, 4 workers, 109.3s → 11 PASS candidates
+- Gate2: 4 OK/PASS, 7 FAIL. Promotable: 0/11 (Gate3 INCOMPLETE).
+- D009 fixed (scipy shim). STG061/063 remain PRE_REG_NEEDED.
+- Run: `remaining_2026-06-07-recovery/`
 
 ### PRE_REG_NEEDED — Barış threshold tanımlamalı (9 strateji):
 | STG | İhtiyaç |

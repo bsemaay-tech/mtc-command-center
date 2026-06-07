@@ -33,6 +33,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import _scipy_shim  # noqa: E402  D009 fix: pure-Python norm before any scipy import
+
 import strat_extra_batch_023_034 as _b023  # noqa: E402  stacks all prior patches
 import mega_walk_forward as mw              # noqa: E402
 import numpy as np                          # noqa: E402

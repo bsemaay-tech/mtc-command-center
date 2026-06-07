@@ -21,6 +21,10 @@ _2026-06-07, Claude Sonnet 4.6_
 
 **B2 gece batch hedefi:** 16 CODEABLE → 11'i zaten engine'de (batch023_034 + strat_extra),
 5 yeni (STG028/033/034/046/053) `strat_batch_remaining.py` olarak kodlandı (2026-06-07).
+**Recovery sweep 2026-06-07 (DeepSeek v4 Pro):** 425 jobs, 4 workers, 109.3s.
+11 PASS → Gate2: 4 OK, 7 FAIL. Gate3: 11 INCOMPLETE. Promotable: 0/11.
+Top: QL_VWAP_TREND_CONT_v1 ARBUSDT 1h (91.87), QL_EMA_RETEST_v1 BNBUSDT 4h (90.0).
+D009 fixed: `_scipy_shim.py` (pure-Python norm, no scipy C extension needed).
 9 PRE_REG: Barış threshold tanımladıktan sonra.
 
 ---

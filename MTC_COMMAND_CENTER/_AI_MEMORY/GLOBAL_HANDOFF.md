@@ -1,24 +1,46 @@
 # GLOBAL_HANDOFF
 
-## Claude Sonnet 4.6 2026-06-07 — Sweep running (PowerShell bypass), D009 fix
+## DeepSeek v4 Pro 2026-06-07 — D009 root cause fix + recovery sweep complete
 
-**Commits:** `527bce9` (PBO fix + batch023_034) · `ae033ad` (N5+A1) · `b58aa27` (STG028-053 coding)
+**D009 root cause revised:** NOT MSYS2 DLL path conflict. OpenBLAS 0.3.30 bundled with
+scipy 1.17.1 (Python 3.14) hangs during thread init on Haswell CPU (DYNAMIC_ARCH,
+NO_AFFINITY, MAX_THREADS=24). Hang occurs in C extension module load even with
+`OPENBLAS_NUM_THREADS=1`.
+
+**Fix:** `_scipy_shim.py` — pure-Python `norm.ppf()`/`norm.cdf()` (Acklam algorithm, error<1.15e-9).
+Auto-injected by `run_python_clean.py` for all target scripts. No scipy C extension is ever loaded.
+
+**Targeted sweep (recovery):** `remaining_2026-06-07-recovery/`
+- 5 strategies (STG028/033/034/046/053), 425 jobs, 4 workers, 109.3s
+- 11 PASS candidates → CPCV + PBO + eval artifacts + Gate2 + all-gate + alpha
+- Gate2: 4 PASS, 7 FAIL (of 11). All Gate3 INCOMPLETE (expected). Promotable 0/11.
+- Top cells: QL_VWAP_TREND_CONT_v1 ARBUSDT 1h (91.87), QL_EMA_RETEST_v1 BNBUSDT 4h (90.0)
+- STG061/STG063 remain PRE_REG_NEEDED (not coded)
+- Full report: `03_QUANTLENS/05_BACKTEST_RESULTS/remaining_2026-06-07-recovery/RECOVERY_RUN_REPORT.md`
+
+**Files changed this session:**
+- `tools/_scipy_shim.py` (NEW) — pure-Python scipy.stats.norm shim
+- `tools/strat_batch_remaining.py` — added `import _scipy_shim`
+- `tools/run_python_clean.py` — auto-injects shim, dual -c/file mode
+
+## Claude Sonnet 4.6 2026-06-07 — Targeted sweep (5 new strategies), D009 refinement
+
+**Commits:** `527bce9` (PBO fix + batch023_034) · `ae033ad` (N5+A1) · `b58aa27` (STG028-053 coding) · `1bde9fb` (D009 overnight fix)
 
 **Completed this session:**
 - batch023_034 overnight: 4590 cells, Gate2 81/111 PASS, PBO=0.00026.
 - D008 PBO MemoryError fix: early-exit in `probabilistic_pbo.py` generator loop.
-- N5 codability audit (corrected): 35 ALREADY_IN_ENGINE, 16 CODEABLE, 8 PRE_REG_NEEDED, 4 DISCR, 6 PARKED. STG027 was misclassified as PRE_REG — fixed.
-- A1 producer_spec: 63/63 strategies have `producer_spec.json`.
+- N5 codability audit (corrected): 35 ALREADY_IN_ENGINE, 16 CODEABLE, 8 PRE_REG_NEEDED, 4 DISCR, 6 PARKED. STG027 fixed.
 - STG028/033/034/046/053 coded in `strat_batch_remaining.py` (46 configs).
-- D009 scipy/bash hang: `import scipy.sparse` hangs when Python launched from MSYS2/Claude Code Bash tool (Electron handle inheritance). Fix: run sweep via PowerShell.
-- Sweep running via PowerShell Start-Job at 08:53. 18 workers, 5015 jobs (59 strategies). ETA ~10:08 AM.
+- D009 refined (2026-06-07): scipy hang affects BOTH Bash tool AND PowerShell tool (both inherit Electron handles). **Only reliable fix:** bash script → `powershell.exe -NoProfile -Command "python ..."` (bash spawns ps with clean handles). Documented in DECISIONS.md.
+- Full 5015-job sweep stalled at 225 jobs (workers not visible, main process at 0.2% CPU). Root cause unclear (possibly worker memory crash at scale). Switched to targeted 5-strategy sweep (425 jobs).
 
-**IN PROGRESS:** MEGA sweep (PowerShell job). 225/5015 = 4.5% at last check. MEGA JSON expected ~10:08. Then run bash validation pipeline (CPCV+PBO+Gate2).
+**IN PROGRESS:** `sweep_new_only_2026-06-07.sh` launched at 09:22. Runs only STG028/033/034/046/053 (425 jobs, 8 workers). ETA ~15 min. Writes to same RUN_DIR.
 
 **Next step after sweep:**
 ```bash
 cd MTC_COMMAND_CENTER/03_QUANTLENS/tools
-bash overnight_remaining_2026-06-07.sh  # will skip Phase 1 (MEGA JSON exists), run Phase 2-3
+bash overnight_remaining_2026-06-07.sh  # Phase 1 skipped (MEGA JSON exists), runs Phase 2-3
 ```
 
 **Blocked on Barış:**

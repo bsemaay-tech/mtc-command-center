@@ -60,14 +60,9 @@ if [ -f "$MEGA_JSON" ]; then
   log "=== PHASE 1: MEGA JSON already exists — skipping sweep ==="
   EC=0
 else
-  log "=== PHASE 1: MEGA sweep (via PowerShell to avoid scipy/bash hang) ==="
-  powershell.exe -NoProfile -Command "
-    Set-Location 'C:/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/03_QUANTLENS/tools'
-    \$env:MEGA_WORKERS = '18'
-    \$env:MEGA_OUTPUT_DIR = '${RUN_DIR}'
-    \$env:OMP_NUM_THREADS = '1'; \$env:MKL_NUM_THREADS = '1'; \$env:OPENBLAS_NUM_THREADS = '1'
-    python strat_batch_remaining.py
-  " > "${RUN_DIR}/sweep.log" 2>&1
+  log "=== PHASE 1: MEGA sweep (via run_python_clean.py — strips MSYS2 PATH/vars, D009 fix) ==="
+  MEGA_WORKERS=18 MEGA_OUTPUT_DIR="${RUN_DIR}" \
+    python run_python_clean.py strat_batch_remaining.py > "${RUN_DIR}/sweep.log" 2>&1
   EC=$?
   log "Phase 1 exit=${EC}"
 
@@ -93,10 +88,11 @@ log "MEGA result cells: ${SWEEP_CELLS}"
 log "=== PHASE 2: Validation ==="
 
 # 2a: CPCV n_groups=10
+# D009: cpcv_validator imports mega_walk_forward → scipy. Use run_python_clean.py wrapper.
 guard "cpcv"
 log "2a: CPCV n_groups=10"
-python cpcv_validator.py \
-  --input "$MEGA_JSON" \
+python run_python_clean.py cpcv_validator.py \
+  --input "${MEGA_JSON}" \
   --out-dir "${RUN_DIR}/cpcv" \
   --n-groups 10 --test-groups 2 --v2 >> "$LOG" 2>&1
 log "2a CPCV exit=$? json=$([ -f ${RUN_DIR}/cpcv/cpcv_results.json ] && echo OK || echo MISSING)"
@@ -140,9 +136,10 @@ python build_all_gate_evidence.py \
 log "2e all-gate exit=$?"
 
 # 2f: Alpha vs buy&hold
+# D009: alpha_vs_buyhold imports mega_walk_forward → scipy. Use run_python_clean.py wrapper.
 guard "alpha"
 log "2f: alpha vs buy&hold"
-MEGA_OUTPUT_DIR="$RUN_DIR" python alpha_vs_buyhold.py >> "$LOG" 2>&1
+MEGA_OUTPUT_DIR="${RUN_DIR}" python run_python_clean.py alpha_vs_buyhold.py >> "$LOG" 2>&1
 log "2f alpha exit=$?"
 
 # ============================================================
