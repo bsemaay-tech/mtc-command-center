@@ -589,6 +589,9 @@ function marketLabel(symbol) {
 
 function friendlyStatus(value) {
   const key = String(value || "").trim();
+  // R2-02: also match already-humanized inputs ("Low Score Review" → LOW_SCORE_REVIEW),
+  // so the mapped label + its tooltip fire even when the reader supplies a spaced status_label.
+  const norm = key.toUpperCase().replace(/[\s-]+/g, "_");
   const map = {
     CANONICAL: "Primary version",
     LOW_SCORE_REVIEW: "Needs review",
@@ -602,7 +605,7 @@ function friendlyStatus(value) {
     NEEDS_FORWARD_EVIDENCE: "Needs forward evidence",
     PARKED_OR_SPLIT: "Parked or split required",
   };
-  return map[key] || statusText(key || "Review pending");
+  return map[key] || map[norm] || statusText(key || "Review pending");
 }
 
 function statusBadgeTooltip(label) {
@@ -893,7 +896,9 @@ function renderGateRow(key, label, gate) {
   const score = scoreForGate(safeGate);
   // R2-15: show the sub-score breakdown for ANY gate that has sub_scores (FAIL/INCOMPLETE too,
   // not only PASS) — a FAIL gate's breakdown is exactly what explains the failure.
-  const subScores = Array.isArray(safeGate.sub_scores) ? safeGate.sub_scores : [];
+  // R2-32: when Gate 3 has no scorer, its sub_scores are dead N/A stubs — hide them; the
+  // "scorer not built" note above is the honest message, not a list of unscorable fields.
+  const subScores = (Array.isArray(safeGate.sub_scores) && !isGate3Unscored) ? safeGate.sub_scores : [];
   const subScoreDetail = subScores.length
     ? `<div class="gate-sub-scores"><table class="terminal-kv">${subScores.slice(0, 12).map((s) => {
         const metric = humanizeMetric(s.source_metric || s.criterion); // R2-11
@@ -914,13 +919,13 @@ function renderGateRow(key, label, gate) {
       </summary>
       ${reason ? `<p>${escapeHtml(reason)}</p>` : `<p class="muted-terminal">${escapeHtml(emptyReason)}</p>`}
       ${subScoreDetail}
-      ${missing.length ? `
+      ${isGate3Unscored ? "" : (missing.length ? `
         <div class="missing-fields">
           <span title="These criteria were not produced or not scored by this backtest run — the metric was absent or could not be evaluated, so it did not contribute to the gate score. Not a dashboard bug.">Missing / not scored</span>
           <ul>${missing.slice(0, 10).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
           ${missing.length > 10 ? `<p class="muted-terminal">${missing.length - 10} additional fields omitted in the compact view.</p>` : ""}
         </div>
-      ` : `<p class="muted-terminal">No missing source fields reported.</p>`}
+      ` : `<p class="muted-terminal">No missing source fields reported.</p>`)}
     </details>
   `;
 }
