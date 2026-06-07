@@ -1,0 +1,45 @@
+{
+  "candidate_id": "QL_2026_05_01_SWING_1H_DUAL_RSI_60_40_PULLBACK",
+  "strategy_family": "DUAL_RSI_TREND_PULLBACK",
+  "engine_strategy_id": "QL_2026-05-01_SWING_1H_DUAL_RSI_60_40_PULLBACK",
+  "symbol": "SWING_MARKETS_GENERAL_CLAIM",
+  "timeframe": "unknown",
+  "direction": "long_short",
+  "verified_parameters": {},
+  "long_signal_definition": null,
+  "short_signal_definition": null,
+  "stop_rule": "see_spec",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "classification": "PASS",
+    "source_file": "MEGA_walk_forward_results.json",
+    "symbol": "TRXUSDT",
+    "timeframe": "2h",
+    "bh_fdr_survivor": false,
+    "dsr_p_value": 0.0,
+    "dsr_robust": false,
+    "robust_final": false,
+    "num_trades": 109,
+    "win_rate": 0.422,
+    "net_return_pct": 26.178,
+    "max_drawdown_pct": -29.052,
+    "expectancy_R": 0.2789,
+    "profit_factor": 1.28,
+    "sharpe": 0.9434,
+    "best_params": {
+      "rsi_len": 14,
+      "daily_hi": 50,
+      "daily_lo": 50,
+      "stop_lookback": 5
+    }
+  },
+  "promotion_status": [
+    "FORWARD_PAPER_CANDIDATE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "QL_2026-05-01_SWING_1H_DUAL_RSI_60_40_PULLBACK",
+  "known_weaknesses": "\"C. Stop Loss & Take Profit (Risk Management)\""
+}

@@ -1,0 +1,44 @@
+{
+  "candidate_id": "QL_2026_05_01_SP500_5M_TWO_CANDLE_SENTIMENT_SR",
+  "strategy_family": "TWO_CANDLE_SENTIMENT_STATE_MACHINE_WITH_SUPPORT_RESISTANCE",
+  "engine_strategy_id": "QL_2026-05-01_SP500_5M_TWO_CANDLE_SENTIMENT_SR",
+  "symbol": "US_INDEX_EXAMPLE_GENERALIZABLE",
+  "timeframe": "15m",
+  "direction": "long_only",
+  "verified_parameters": {},
+  "long_signal_definition": "Breakout of 48-bar high level. Candle close must be in the upper third of its range.",
+  "short_signal_definition": null,
+  "stop_rule": "see_spec",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "classification": "PASS",
+    "source_file": "MEGA_walk_forward_results.json",
+    "symbol": "ADAUSDT",
+    "timeframe": "1h",
+    "bh_fdr_survivor": false,
+    "dsr_p_value": 0.0147,
+    "dsr_robust": false,
+    "robust_final": false,
+    "num_trades": 53,
+    "win_rate": 0.4906,
+    "net_return_pct": 79.233,
+    "max_drawdown_pct": -14.156,
+    "expectancy_R": 0.4401,
+    "profit_factor": 1.721,
+    "sharpe": 1.7016,
+    "best_params": {
+      "level_lookback": 200,
+      "upper_third": 0.6,
+      "break_buf_atr": 0.0
+    }
+  },
+  "promotion_status": [
+    "FORWARD_PAPER_CANDIDATE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "\"Entry: Breakout of 48-bar high level. Candle close must be in the upper third of its range.\"",
+  "known_weaknesses": "N_A"
+}

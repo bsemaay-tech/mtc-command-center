@@ -1,0 +1,46 @@
+{
+  "candidate_id": "BIGBELUGA_RSI_CHOCH_ATR",
+  "strategy_family": "RESEARCH_GRADE_SPEC",
+  "engine_strategy_id": "QL_BIGBELUGA_RSI_v1",
+  "symbol": "BTCUSDT",
+  "timeframe": "4h",
+  "direction": "long_short",
+  "verified_parameters": {},
+  "long_signal_definition": "any(bull_div in last 20 bars) AND (close > confirmed_high[1]) # break of prior swing high (CHoCH)",
+  "short_signal_definition": "any(bear_div in last 20 bars) AND (close < confirmed_low[1]) # break of prior swing low",
+  "stop_rule": "stop = close - atr_mult × ATR (long); close + atr_mult × ATR (short)",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "classification": "STRONG_PASS",
+    "source_file": "batch023_034_2026-06-07\\MEGA_walk_forward_results.json",
+    "symbol": "TRXUSDT",
+    "timeframe": "1h",
+    "bh_fdr_survivor": false,
+    "dsr_p_value": 0.0001,
+    "dsr_robust": false,
+    "robust_final": false,
+    "num_trades": 84,
+    "win_rate": 0.5238,
+    "net_return_pct": 35.732,
+    "net_after_slippage_pct": 31.26,
+    "max_drawdown_pct": -14.765,
+    "expectancy_R": 0.3023,
+    "profit_factor": 1.36,
+    "sharpe": 1.2149,
+    "annualized_sharpe": 0.9714,
+    "annualized_sortino": 0.9961,
+    "best_params": {
+      "pivot": 5,
+      "atr_mult": 4.0
+    }
+  },
+  "promotion_status": [
+    "FORWARD_PAPER_CANDIDATE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "N_A",
+  "known_weaknesses": "N_A"
+}

@@ -1,0 +1,26 @@
+{
+  "candidate_id": "ROPPEL_LEADERSHIP_POSITION_TRADING",
+  "strategy_family": "THEME_LEADERSHIP_POSITION_TRADING_WITH_357_RISK_MODULE",
+  "engine_strategy_id": null,
+  "symbol": "US_EQUITIES",
+  "timeframe": "1d",
+  "direction": "long_only",
+  "verified_parameters": {},
+  "long_signal_definition": "theme leader reclaims 50DMA with tight action.",
+  "short_signal_definition": null,
+  "stop_rule": "see_spec",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "status": "not_yet_evaluated",
+    "source": "no_mega_sweep_completed"
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "Deterministic Spec -- Jim Roppel Leadership Position Trading",
+  "known_weaknesses": "Theme/leadership scoring is discretionary → encode RS + group rank objectively. - Needs fundamental data for full fidelity; technical-only is an approximation."
+}

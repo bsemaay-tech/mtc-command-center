@@ -1,0 +1,39 @@
+{
+  "candidate_id": "QLR_R215F4FJ7V8",
+  "strategy_family": "RESEARCH_GRADE_SPEC",
+  "engine_strategy_id": null,
+  "symbol": "MULTI_ASSET",
+  "timeframe": "intraday",
+  "direction": "long_only",
+  "verified_parameters": {
+    "signal_cooldown_bars": 20,
+    "warmup_bars": 50,
+    "vwap_guard_lookback": 10,
+    "vwap_guard_ratio": 0.8,
+    "breakout_lookback": 12,
+    "compression_lookback": 24,
+    "bb_width_threshold_pct": "2.0%",
+    "capitulation_volume_mult": "2.0×",
+    "capitulation_range_atr_mult": "1.6×",
+    "capitulation_vwap_distance_pct": "1.5%",
+    "stop_mode": "prior_bar",
+    "tp_r_multiple": 2.0
+  },
+  "long_signal_definition": null,
+  "short_signal_definition": null,
+  "stop_rule": "`prior_bar`: `min(low, low[1])`",
+  "exit_rule": "`R_multiple`: `close + risk × tp_r_multiple` (default: 2R)",
+  "metrics_lockbox": {
+    "status": "not_yet_evaluated",
+    "source": "no_mega_sweep_completed"
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "N_A",
+  "known_weaknesses": "N_A"
+}

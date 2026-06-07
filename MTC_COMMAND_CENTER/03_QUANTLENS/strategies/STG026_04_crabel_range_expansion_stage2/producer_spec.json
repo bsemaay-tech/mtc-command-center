@@ -1,0 +1,48 @@
+{
+  "candidate_id": "CRABEL_RANGE_EXPANSION_STAGE2",
+  "strategy_family": "RESEARCH_GRADE_SPEC",
+  "engine_strategy_id": "QL_CRABEL_RANGE_EXP_v1",
+  "symbol": "BTCUSDT",
+  "timeframe": "1d",
+  "direction": "long_short",
+  "verified_parameters": {},
+  "long_signal_definition": "(high >= buy_stop) AND NOT (long AND short on same bar)",
+  "short_signal_definition": "(low <= sell_stop) AND NOT (long AND short on same bar)",
+  "stop_rule": "stop = sell_stop` (for long); `stop = buy_stop` (for short)",
+  "exit_rule": "No fixed target (mean-reversion logic; research only — exit not fully specified).",
+  "metrics_lockbox": {
+    "classification": "PASS",
+    "source_file": "batch023_034_2026-06-07\\MEGA_walk_forward_results.json",
+    "symbol": "TRXUSDT",
+    "timeframe": "1h",
+    "bh_fdr_survivor": false,
+    "dsr_p_value": 0.0,
+    "dsr_robust": false,
+    "robust_final": false,
+    "num_trades": 721,
+    "win_rate": 0.387,
+    "net_return_pct": 53.669,
+    "net_after_slippage_pct": 15.177,
+    "max_drawdown_pct": -33.838,
+    "expectancy_R": 0.1488,
+    "profit_factor": 1.135,
+    "sharpe": 1.0806,
+    "annualized_sharpe": 0.7949,
+    "annualized_sortino": 1.5975,
+    "best_params": {
+      "mult": 0.9,
+      "direction_mode": "both",
+      "trend_filter": false,
+      "atr_filter": false
+    }
+  },
+  "promotion_status": [
+    "FORWARD_PAPER_CANDIDATE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "N_A",
+  "known_weaknesses": "N_A"
+}

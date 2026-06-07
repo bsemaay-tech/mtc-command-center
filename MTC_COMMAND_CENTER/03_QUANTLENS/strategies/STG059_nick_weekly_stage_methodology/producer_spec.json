@@ -1,0 +1,26 @@
+{
+  "candidate_id": "NICK_WEEKLY_STAGE_METHODOLOGY",
+  "strategy_family": "WEEKLY_CHART_STAGE_METHODOLOGY_(CHARACTER_CHANGE,_UP_ON_VOLUME,_WEEKLY_STOPS)",
+  "engine_strategy_id": null,
+  "symbol": "US_EQUITIES",
+  "timeframe": "1wk",
+  "direction": "long_only",
+  "verified_parameters": {},
+  "long_signal_definition": null,
+  "short_signal_definition": null,
+  "stop_rule": "see_spec",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "status": "not_yet_evaluated",
+    "source": "no_mega_sweep_completed"
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "Deterministic Spec -- Nick Weekly Stage Methodology",
+  "known_weaknesses": "\"Few signals (weekly) → small sample; test long histories. - 'Character change' needs an objective trigger to be testable.\""
+}

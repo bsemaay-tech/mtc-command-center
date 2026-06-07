@@ -1,0 +1,26 @@
+{
+  "candidate_id": "RYAN_PIERPONT_BREAKOUT_DISCIPLINE",
+  "strategy_family": "RESEARCH_GRADE_SPEC",
+  "engine_strategy_id": null,
+  "symbol": "MULTI_ASSET",
+  "timeframe": "unknown",
+  "direction": "long_only",
+  "verified_parameters": {},
+  "long_signal_definition": "1. Define a clean pivot from a tight consolidation or constructive base.",
+  "short_signal_definition": null,
+  "stop_rule": "Use the pivot/base low or danger-zone failure as invalidation. The transcript does not provide a fully numeric stop rule.",
+  "exit_rule": "Sell some exposure into strength after a successful breakout.",
+  "metrics_lockbox": {
+    "status": "not_yet_evaluated",
+    "source": "no_mega_sweep_completed"
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "Ryan Pierpont Breakout Discipline",
+  "known_weaknesses": "Numeric overextension threshold. - Market-awareness inputs"
+}

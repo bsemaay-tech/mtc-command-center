@@ -1,0 +1,26 @@
+{
+  "candidate_id": "TITO_OPTIONS_AWARE_RS_BREAKOUT",
+  "strategy_family": "RESEARCH_GRADE_SPEC",
+  "engine_strategy_id": null,
+  "symbol": "MULTI_ASSET",
+  "timeframe": "unknown",
+  "direction": "long_only",
+  "verified_parameters": {},
+  "long_signal_definition": "1. Identify a relative-strength momentum setup or breakout/crossback condition.",
+  "short_signal_definition": null,
+  "stop_rule": "Risk is constrained through sizing and option exposure. A precise price stop is not defined in the available transcript evidence.",
+  "exit_rule": "Take profits after outsized option gains or favorable gap/IV expansion.",
+  "metrics_lockbox": {
+    "status": "not_yet_evaluated",
+    "source": "no_mega_sweep_completed"
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "Tito Options-Aware RS Momentum Breakout",
+  "known_weaknesses": "Exact RS threshold. - Exact breakout/crossback trigger"
+}

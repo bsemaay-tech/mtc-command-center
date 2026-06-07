@@ -1,0 +1,26 @@
+{
+  "candidate_id": "BRIAN_LEE_SMALLCAP_GAP_MR_SHORT",
+  "strategy_family": "SMALL_CAP_GAP_UP_MEAN_REVERSION_SHORT",
+  "engine_strategy_id": null,
+  "symbol": "US_SMALLCAP_EQUITIES",
+  "timeframe": "intraday",
+  "direction": "short_only",
+  "verified_parameters": {},
+  "long_signal_definition": null,
+  "short_signal_definition": "Stock is extended/parabolic into a daily/HTF prior resistance level.",
+  "stop_rule": "Tight, **risk-based position sizing**: fixed dollar/R risk per trade that",
+  "exit_rule": "Mean reversion = capture the **fade**, not top-to-bottom: cover into partial",
+  "metrics_lockbox": {
+    "status": "not_yet_evaluated",
+    "source": "no_mega_sweep_completed"
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "Deterministic Spec -- Brian Lee Small-cap Gap Mean-Reversion Short",
+  "known_weaknesses": "\"Stop / risk. Tight, riskbased position sizing: fixed dollar/R risk per trade that\""
+}

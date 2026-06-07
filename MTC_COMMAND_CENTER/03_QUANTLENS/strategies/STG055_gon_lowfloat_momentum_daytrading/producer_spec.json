@@ -1,0 +1,26 @@
+{
+  "candidate_id": "GON_LOWFLOAT_MOMENTUM_DAYTRADING",
+  "strategy_family": "LOW_FLOAT_SMALL_CAP_MOMENTUM_CONTINUATION_(HALTS,_BULL_FLAGS,_SQUEEZES)",
+  "engine_strategy_id": null,
+  "symbol": "US_SMALLCAP_EQUITIES",
+  "timeframe": "1m",
+  "direction": "long_short",
+  "verified_parameters": {},
+  "long_signal_definition": null,
+  "short_signal_definition": null,
+  "stop_rule": "see_spec",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "status": "not_yet_evaluated",
+    "source": "no_mega_sweep_completed"
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "Deterministic Spec -- Gon Low-Float Momentum Day Trading",
+  "known_weaknesses": "\"Low-float scalping has severe slippage, halts, and borrow constraints -- a naive backtest will be wildly optimistic. Model frictions aggressively; treat as research-only.\""
+}

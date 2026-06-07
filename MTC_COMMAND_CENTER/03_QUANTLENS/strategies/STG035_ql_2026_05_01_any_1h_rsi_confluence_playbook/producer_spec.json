@@ -1,0 +1,44 @@
+{
+  "candidate_id": "QL_2026_05_01_ANY_1H_RSI_CONFLUENCE_PLAYBOOK",
+  "strategy_family": "RSI_CONFLUENCE_PLAYBOOK",
+  "engine_strategy_id": "QL_2026-05-01_ANY_1H_RSI_CONFLUENCE_PLAYBOOK",
+  "symbol": "MULTI_ASSET",
+  "timeframe": "1h",
+  "direction": "long_only",
+  "verified_parameters": {},
+  "long_signal_definition": "Close > SMA(50). RSI(14) crosses above 50.",
+  "short_signal_definition": null,
+  "stop_rule": "see_spec",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "classification": "PASS",
+    "source_file": "MEGA_walk_forward_results.json",
+    "symbol": "ETHUSDT",
+    "timeframe": "2h",
+    "bh_fdr_survivor": false,
+    "dsr_p_value": 0.0001,
+    "dsr_robust": false,
+    "robust_final": false,
+    "num_trades": 94,
+    "win_rate": 0.4468,
+    "net_return_pct": 37.746,
+    "max_drawdown_pct": -36.049,
+    "expectancy_R": 0.2882,
+    "profit_factor": 1.254,
+    "sharpe": 0.9191,
+    "best_params": {
+      "rsi_len": 21,
+      "sma_len": 20,
+      "cross_lvl": 50
+    }
+  },
+  "promotion_status": [
+    "FORWARD_PAPER_CANDIDATE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "\"Entry: Close > SMA(50). RSI(14) crosses above 50.\"",
+  "known_weaknesses": "N_A"
+}

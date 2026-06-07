@@ -1,0 +1,52 @@
+{
+  "candidate_id": "KELL_WEDGE_POP_CROSSBACK",
+  "strategy_family": "RESEARCH_GRADE_SPEC",
+  "engine_strategy_id": "QL_KELL_BATCH_v1",
+  "symbol": "BTCUSDT",
+  "timeframe": "1d",
+  "direction": "long_only",
+  "verified_parameters": {
+    "contraction": 8,
+    "max_range": 5,
+    "stop_mode": "ATR_2",
+    "variant": "basin_break"
+  },
+  "long_signal_definition": "(close > e20) # trend filter AND (base_range[1] <= max_range) # prior bar had tight base (<=8%) AND (close > highest(high, N)[1]) # close breaks above N-bar high",
+  "short_signal_definition": null,
+  "stop_rule": "Default: `close − 2 × ATR`",
+  "exit_rule": "close + 3 × (close − stop)`",
+  "metrics_lockbox": {
+    "classification": "PASS",
+    "source_file": "batch023_034_2026-06-07\\MEGA_walk_forward_results.json",
+    "symbol": "TRXUSDT",
+    "timeframe": "2h",
+    "bh_fdr_survivor": false,
+    "dsr_p_value": 0.0048,
+    "dsr_robust": false,
+    "robust_final": false,
+    "num_trades": 220,
+    "win_rate": 0.4091,
+    "net_return_pct": 35.4,
+    "net_after_slippage_pct": 24.004,
+    "max_drawdown_pct": -18.982,
+    "expectancy_R": 0.2286,
+    "profit_factor": 1.174,
+    "sharpe": 1.0031,
+    "annualized_sharpe": 0.7807,
+    "annualized_sortino": 1.1984,
+    "best_params": {
+      "variant": "basin_break",
+      "contraction": 8,
+      "max_range": 8.0
+    }
+  },
+  "promotion_status": [
+    "FORWARD_PAPER_CANDIDATE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "N_A",
+  "known_weaknesses": "N_A"
+}

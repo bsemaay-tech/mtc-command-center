@@ -1,0 +1,45 @@
+{
+  "candidate_id": "LINDA_5SMA_RS_PULLBACK",
+  "strategy_family": "RESEARCH_GRADE_SPEC",
+  "engine_strategy_id": "QL_LINDA_5SMA_v1",
+  "symbol": "BTCUSDT",
+  "timeframe": "1d",
+  "direction": "long_only",
+  "verified_parameters": {},
+  "long_signal_definition": "trend AND (close[1] >= ma5[1]) # prior bar was at or above ma5 AND (close < ma5) # current bar dipped below ma5 (pullback into ma5)",
+  "short_signal_definition": null,
+  "stop_rule": "`\"none\"`: no hard stop (rely on exit signal only)",
+  "exit_rule": "exit_long = close > ma5 # price reclaims above ma5 → exit",
+  "metrics_lockbox": {
+    "classification": "PASS",
+    "source_file": "batch023_034_2026-06-07\\MEGA_walk_forward_results.json",
+    "symbol": "TRXUSDT",
+    "timeframe": "1h",
+    "bh_fdr_survivor": false,
+    "dsr_p_value": 0.7114,
+    "dsr_robust": false,
+    "robust_final": false,
+    "num_trades": 98,
+    "win_rate": 0.5816,
+    "net_return_pct": 69.879,
+    "net_after_slippage_pct": 63.376,
+    "max_drawdown_pct": -33.414,
+    "expectancy_R": 0.0887,
+    "profit_factor": 1.563,
+    "sharpe": 1.4605,
+    "annualized_sharpe": 1.1341,
+    "annualized_sortino": 1.6694,
+    "best_params": {
+      "stop_mode": "fixed_8pct"
+    }
+  },
+  "promotion_status": [
+    "FORWARD_PAPER_CANDIDATE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "N_A",
+  "known_weaknesses": "N_A"
+}

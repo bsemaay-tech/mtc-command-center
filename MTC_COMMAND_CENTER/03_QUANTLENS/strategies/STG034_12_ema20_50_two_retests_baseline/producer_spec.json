@@ -1,0 +1,26 @@
+{
+  "candidate_id": "EMA20_50_TWO_RETESTS_BASELINE",
+  "strategy_family": "RESEARCH_GRADE_SPEC",
+  "engine_strategy_id": null,
+  "symbol": "BTCUSDT",
+  "timeframe": "1d",
+  "direction": "long_only",
+  "verified_parameters": {},
+  "long_signal_definition": "(e20 > e50) # bullish regime AND (long_retest_count >= 2) AND (long_retest_count[1] < 2) # transition on this bar",
+  "short_signal_definition": "(e20 < e50) # bearish regime AND (short_retest_count >= 2) AND (short_retest_count[1] < 2)",
+  "stop_rule": "stop = close - 2 × atr (long); close + 2 × atr (short)",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "status": "not_yet_evaluated",
+    "source": "no_mega_sweep_completed"
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "N_A",
+  "known_weaknesses": "N_A"
+}

@@ -1,0 +1,45 @@
+{
+  "candidate_id": "MARTIN_LUKE_PULLBACK_AVWAP",
+  "strategy_family": "RESEARCH_GRADE_SPEC",
+  "engine_strategy_id": "QL_MARTIN_AVWAP_v1",
+  "symbol": "BTCUSDT",
+  "timeframe": "1d",
+  "direction": "long_only",
+  "verified_parameters": {},
+  "long_signal_definition": "trend AND support[1] AND prior_reclaim",
+  "short_signal_definition": null,
+  "stop_rule": "stop = max(lowest(low, 3)[1], close × 0.97) # low of 3 bars OR 3% hard floor",
+  "exit_rule": "close + 3 × (close − stop)`",
+  "metrics_lockbox": {
+    "classification": "INSUFFICIENT_TRADES",
+    "source_file": "batch023_034_2026-06-07\\MEGA_walk_forward_results.json",
+    "symbol": "LTCUSDT",
+    "timeframe": "1D",
+    "bh_fdr_survivor": false,
+    "dsr_p_value": 0.7895,
+    "dsr_robust": false,
+    "robust_final": false,
+    "num_trades": 20,
+    "win_rate": 0.5,
+    "net_return_pct": 29.893,
+    "net_after_slippage_pct": 28.87,
+    "max_drawdown_pct": -6.073,
+    "expectancy_R": 0.5,
+    "profit_factor": 1.919,
+    "sharpe": 1.3721,
+    "annualized_sharpe": 1.0045,
+    "annualized_sortino": 0.623,
+    "best_params": {
+      "variant": "ema_only"
+    }
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "N_A",
+  "known_weaknesses": "N_A"
+}

@@ -1,0 +1,26 @@
+{
+  "candidate_id": "FISHHOOK_EP_DAY1_RETAKE",
+  "strategy_family": "EPISODIC_PIVOT_\"FISHHOOK\"_DAY_AFTER_GAP_RETAKE_(COMPANION_TO_SLINGSHOT)",
+  "engine_strategy_id": null,
+  "symbol": "US_EQUITIES",
+  "timeframe": "1d",
+  "direction": "long_only",
+  "verified_parameters": {},
+  "long_signal_definition": "EP gap+run identified → wait for the pull-in → buy the reclaim of the",
+  "short_signal_definition": null,
+  "stop_rule": "see_spec",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "status": "not_yet_evaluated",
+    "source": "no_mega_sweep_completed"
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "Deterministic Spec -- Fishhook (EP Day-1 Retake) + Slingshot context",
+  "known_weaknesses": "\"EP/gapper volatility + slippage must be modeled realistically. - 'Retake' and 'congestion' need objective definitions to avoid hindsight.\""
+}

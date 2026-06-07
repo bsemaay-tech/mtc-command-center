@@ -1,0 +1,26 @@
+{
+  "candidate_id": "ANTHONY_LAYERED_LEADERSHIP_SWING_SYSTEM",
+  "strategy_family": "LAYERED_RELATIVE_STRENGTH_/_THEME_LEADERSHIP_SWING_BREAKOUT_SYSTEM",
+  "engine_strategy_id": null,
+  "symbol": "US_EQUITIES",
+  "timeframe": "1d",
+  "direction": "long_only",
+  "verified_parameters": {},
+  "long_signal_definition": "breakout from base / EP gap / undercut-reclaim, in an RS leader inside a",
+  "short_signal_definition": null,
+  "stop_rule": "see_spec",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "status": "not_yet_evaluated",
+    "source": "no_mega_sweep_completed"
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "Deterministic Spec -- Anthony Layered Leadership Swing System",
+  "known_weaknesses": "\"Heavy discretion in theme/cycle reading; market-environment gating is subjective. - Lookahead risk in 'leader/theme' selection (must rank on closed data only)\""
+}

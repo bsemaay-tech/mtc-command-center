@@ -1,0 +1,26 @@
+{
+  "candidate_id": "CANSLIM_SHAKEOUT_PLUS3",
+  "strategy_family": "RESEARCH_GRADE_SPEC",
+  "engine_strategy_id": null,
+  "symbol": "BTCUSDT",
+  "timeframe": "1d",
+  "direction": "long_only",
+  "verified_parameters": {},
+  "long_signal_definition": "uptrend AND shakeout[1] AND (high >= buy_point)",
+  "short_signal_definition": null,
+  "stop_rule": "stop = buy_point × 0.93 # 7% below the buy point",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "status": "not_yet_evaluated",
+    "source": "no_mega_sweep_completed"
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "N_A",
+  "known_weaknesses": "N_A"
+}

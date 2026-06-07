@@ -1,0 +1,26 @@
+{
+  "candidate_id": "STG004-007",
+  "strategy_family": "ANCHORED_VWAP_CONFLUENCE_TREND/CONTINUATION_METHODOLOGY",
+  "engine_strategy_id": null,
+  "symbol": "US_EQUITIES",
+  "timeframe": "1d",
+  "direction": "long_only",
+  "verified_parameters": {},
+  "long_signal_definition": "setup trigger above the chosen AVWAP with confluence + rising 5DMA.",
+  "short_signal_definition": null,
+  "stop_rule": "see_spec",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "status": "not_yet_evaluated",
+    "source": "no_mega_sweep_completed"
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "Deterministic Spec -- Brian Shannon AVWAP Methodology",
+  "known_weaknesses": "\"Anchor selection is discretionary → fix an objective anchor rule per backtest (e.g. 'AVWAP from the most recent earnings')\""
+}

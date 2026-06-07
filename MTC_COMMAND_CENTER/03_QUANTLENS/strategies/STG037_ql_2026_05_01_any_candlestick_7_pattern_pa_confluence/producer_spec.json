@@ -1,0 +1,44 @@
+{
+  "candidate_id": "QL_2026_05_01_ANY_CANDLESTICK_7_PATTERN_PA_CONFLUENCE",
+  "strategy_family": "CANDLESTICK_PATTERN_PRICE_ACTION_CONFLUENCE",
+  "engine_strategy_id": "QL_2026-05-01_ANY_CANDLESTICK_7_PATTERN_PA_CONFLUENCE",
+  "symbol": "MULTI_ASSET",
+  "timeframe": "1h",
+  "direction": "long_only",
+  "verified_parameters": {},
+  "long_signal_definition": "Bullish engulfing pattern near 96-bar support (distance <= 0.4 * ATR).",
+  "short_signal_definition": null,
+  "stop_rule": "see_spec",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "classification": "PASS",
+    "source_file": "MEGA_walk_forward_results.json",
+    "symbol": "APTUSDT",
+    "timeframe": "1h",
+    "bh_fdr_survivor": false,
+    "dsr_p_value": 0.0,
+    "dsr_robust": false,
+    "robust_final": false,
+    "num_trades": 44,
+    "win_rate": 0.4318,
+    "net_return_pct": 29.838,
+    "max_drawdown_pct": -11.169,
+    "expectancy_R": 0.2893,
+    "profit_factor": 1.611,
+    "sharpe": 1.3301,
+    "best_params": {
+      "level_lookback": 200,
+      "tolerance_atr": 0.75,
+      "atr_stop_mult": 0.25
+    }
+  },
+  "promotion_status": [
+    "FORWARD_PAPER_CANDIDATE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "\"Entry: Bullish engulfing pattern near 96-bar support (distance <= 0.4 * ATR).\"",
+  "known_weaknesses": "N_A"
+}

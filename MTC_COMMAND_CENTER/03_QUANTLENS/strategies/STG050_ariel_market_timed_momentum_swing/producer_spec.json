@@ -1,0 +1,26 @@
+{
+  "candidate_id": "ARIEL_MARKET_TIMED_MOMENTUM_SWING",
+  "strategy_family": "MARKET_TIMED_RELATIVE_STRENGTH_MOMENTUM_SWING_(BREAKOUT_/_EARNINGS_GAP_/_FLATBED)",
+  "engine_strategy_id": null,
+  "symbol": "US_EQUITIES",
+  "timeframe": "1d",
+  "direction": "long_short",
+  "verified_parameters": {},
+  "long_signal_definition": null,
+  "short_signal_definition": "**Breakout buy** — leader breaks out of a base.",
+  "stop_rule": "see_spec",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "status": "not_yet_evaluated",
+    "source": "no_mega_sweep_completed"
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "Deterministic Spec -- Ariel Market-Timed Momentum Swing",
+  "known_weaknesses": "Market-state read is discretionary → encode an objective breadth/index filter. - Heavy overlap with other momentum systems → guard against redundant variants."
+}

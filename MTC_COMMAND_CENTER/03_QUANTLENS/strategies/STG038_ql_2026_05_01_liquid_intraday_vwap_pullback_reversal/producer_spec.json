@@ -1,0 +1,44 @@
+{
+  "candidate_id": "QL_2026_05_01_LIQUID_INTRADAY_VWAP_PULLBACK_REVERSAL",
+  "strategy_family": "VWAP_PULLBACK_CONTINUATION_AND_BAND_REVERSAL",
+  "engine_strategy_id": "QL_2026-05-01_LIQUID_INTRADAY_VWAP_PULLBACK_REVERSAL",
+  "symbol": "LIQUID_INTRADAY_ASSETS",
+  "timeframe": "5m",
+  "direction": "long_only",
+  "verified_parameters": {},
+  "long_signal_definition": "VWAP session proxy mean rolling window of 96 bars. Slope of proxy > 0 (long). Close above proxy and distance <= 0.4 * ATR.",
+  "short_signal_definition": null,
+  "stop_rule": "see_spec",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "classification": "INSUFFICIENT_TRADES",
+    "source_file": "MEGA_walk_forward_results.json",
+    "symbol": "XRPUSDT",
+    "timeframe": "1D",
+    "bh_fdr_survivor": false,
+    "dsr_p_value": 0.5142,
+    "dsr_robust": false,
+    "robust_final": false,
+    "num_trades": 3,
+    "win_rate": 0.6667,
+    "net_return_pct": 39.132,
+    "max_drawdown_pct": -17.544,
+    "expectancy_R": 0.6106,
+    "profit_factor": 3.473,
+    "sharpe": 0.828,
+    "best_params": {
+      "session_window": 200,
+      "prox_atr": 0.75,
+      "slope_window": 8
+    }
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "\"Entry: VWAP session proxy mean rolling window of 96 bars. Slope of proxy > 0 (long). Close above proxy and distance <= 0.4 * ATR.\"",
+  "known_weaknesses": "N_A"
+}

@@ -1,0 +1,48 @@
+{
+  "candidate_id": "LINDA_RASCHKE_LBR_TOOLKIT",
+  "strategy_family": "LINDA_RASCHKE_MECHANICAL_SHORT_TERM_TOOLKIT_(REVERSAL_+_RANGE_EXPANSION_+_RISK)",
+  "engine_strategy_id": "QL_LBR_COIL_BREAKOUT_RANGE_EXPANSION",
+  "symbol": "FUTURES_AND_EQUITIES",
+  "timeframe": "1d",
+  "direction": "long_short",
+  "verified_parameters": {},
+  "long_signal_definition": "3-bar breakout / coil expansion / ROC reversal / box-midpoint reclaim.",
+  "short_signal_definition": null,
+  "stop_rule": "see_spec",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "classification": "PASS",
+    "source_file": "batch023_034_2026-06-07\\MEGA_walk_forward_results.json",
+    "symbol": "TRXUSDT",
+    "timeframe": "2h",
+    "bh_fdr_survivor": false,
+    "dsr_p_value": 0.0,
+    "dsr_robust": false,
+    "robust_final": false,
+    "num_trades": 41,
+    "win_rate": 0.4878,
+    "net_return_pct": 11.497,
+    "net_after_slippage_pct": 9.687,
+    "max_drawdown_pct": -9.808,
+    "expectancy_R": 0.4687,
+    "profit_factor": 1.277,
+    "sharpe": 0.6703,
+    "annualized_sharpe": 0.5369,
+    "annualized_sortino": 0.3552,
+    "best_params": {
+      "coil_lb": 7,
+      "breakout_lb": 10,
+      "atr_squeeze": 0.85,
+      "stop_lookback": 10
+    }
+  },
+  "promotion_status": [
+    "FORWARD_PAPER_CANDIDATE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "Deterministic Spec -- Linda Raschke (LBR) Mechanical Toolkit",
+  "known_weaknesses": "Some setups need intraday / market-profile data; ensure objective definitions. - Originally futures-oriented; validate on the target universe."
+}

@@ -1,0 +1,26 @@
+{
+  "candidate_id": "DAVID_RYAN_PRICE_VOLUME_STAGE",
+  "strategy_family": "PRICE_VOLUME_ACCUMULATION_+_STAGE_ANALYSIS_BASE_BREAKOUT_(CANSLIM_SCHOOL)",
+  "engine_strategy_id": null,
+  "symbol": "US_EQUITIES",
+  "timeframe": "1d",
+  "direction": "long_only",
+  "verified_parameters": {},
+  "long_signal_definition": "Buy base breakout confirmed by a volume spike, in a stage-2 uptrend (price above",
+  "short_signal_definition": null,
+  "stop_rule": "see_spec",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "status": "not_yet_evaluated",
+    "source": "no_mega_sweep_completed"
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "Deterministic Spec -- David Ryan Price-Volume-Stage",
+  "known_weaknesses": "\"Define 'higher/lower volume' objectively (e.g. vs 50-day average) to avoid hindsight\""
+}

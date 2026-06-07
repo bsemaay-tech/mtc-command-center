@@ -1,0 +1,26 @@
+{
+  "candidate_id": "TY_MICROCAP_SHORT",
+  "strategy_family": "RESEARCH_GRADE_SPEC",
+  "engine_strategy_id": null,
+  "symbol": "MULTI_ASSET",
+  "timeframe": "1m",
+  "direction": "short_only",
+  "verified_parameters": {},
+  "long_signal_definition": "False # this is a short-only strategy",
+  "short_signal_definition": "intraday_spike AND rsi_1m AND price_vs_avwap # plus fundamental flags stop_short = today_high + ATR × 0.5 target_cover = AVWAP OR gap_fill OR EOD",
+  "stop_rule": "see_spec",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "status": "not_yet_evaluated",
+    "source": "no_mega_sweep_completed"
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "N_A",
+  "known_weaknesses": "N_A"
+}

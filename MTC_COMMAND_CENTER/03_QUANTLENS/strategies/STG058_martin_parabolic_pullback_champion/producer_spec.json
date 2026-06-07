@@ -1,0 +1,26 @@
+{
+  "candidate_id": "MARTIN_PARABOLIC_PULLBACK_CHAMPION",
+  "strategy_family": "PARABOLIC_REVERSAL_+_PULLBACK_(LONG_&_SHORT)_SWING/TREND",
+  "engine_strategy_id": null,
+  "symbol": "US_EQUITIES",
+  "timeframe": "1h",
+  "direction": "long_short",
+  "verified_parameters": {},
+  "long_signal_definition": null,
+  "short_signal_definition": "extension % from 1h EMA (parabolic) or confluence pullback + reversal bar.",
+  "stop_rule": "see_spec",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "status": "not_yet_evaluated",
+    "source": "no_mega_sweep_completed"
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "\"Swing / trend-follower who moved from breakouts (got shaken out) to pullbacks, trades both long and short, learned pullbacks from the short side first.\"",
+  "known_weaknesses": "\"Parabolic reversals are counter-trend (timing/knife-catch risk). - A single +969% year is likely regime-specific -- test across regimes; expect lower.\""
+}

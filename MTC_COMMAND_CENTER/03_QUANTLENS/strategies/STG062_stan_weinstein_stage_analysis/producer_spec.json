@@ -1,0 +1,26 @@
+{
+  "candidate_id": "STAN_WEINSTEIN_STAGE_ANALYSIS",
+  "strategy_family": "RESEARCH_GRADE_SPEC",
+  "engine_strategy_id": null,
+  "symbol": "MULTI_ASSET",
+  "timeframe": "unknown",
+  "direction": "long_short",
+  "verified_parameters": {},
+  "long_signal_definition": "1. Prefer stocks transitioning from Stage 1B to Stage 2A or already in constructive Stage 2 behavior.",
+  "short_signal_definition": null,
+  "stop_rule": "Use failure below breakout/support zones or rejection at the long-term moving average as invalidation. Exact stop distance is unknown.",
+  "exit_rule": "Avoid or exit names that fail on rallies into the 200-day moving average.",
+  "metrics_lockbox": {
+    "status": "not_yet_evaluated",
+    "source": "no_mega_sweep_completed"
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "Stan Weinstein Stage Analysis",
+  "known_weaknesses": "\"Exact Stage 1B, 2A, 3, and 4 formulas. - Breadth thresholds for split tape\""
+}

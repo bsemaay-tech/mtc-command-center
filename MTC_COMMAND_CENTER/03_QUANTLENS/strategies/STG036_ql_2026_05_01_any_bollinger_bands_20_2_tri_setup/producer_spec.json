@@ -1,0 +1,44 @@
+{
+  "candidate_id": "QL_2026_05_01_ANY_BOLLINGER_BANDS_20_2_TRI_SETUP",
+  "strategy_family": "BOLLINGER_BANDS_VOLATILITY_REGIME_TRI_SETUP",
+  "engine_strategy_id": "QL_2026-05-01_ANY_BOLLINGER_BANDS_20_2_TRI_SETUP",
+  "symbol": "MULTI_ASSET",
+  "timeframe": "1h",
+  "direction": "long_only",
+  "verified_parameters": {},
+  "long_signal_definition": "BB width is inside the lowest 25% quantile of past 200 bars (Squeeze). Entry when close crosses outside upper Bollinger Band and signal candle body is >= 0.25 * ATR.",
+  "short_signal_definition": null,
+  "stop_rule": "see_spec",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "classification": "PASS",
+    "source_file": "MEGA_walk_forward_results.json",
+    "symbol": "TRXUSDT",
+    "timeframe": "1h",
+    "bh_fdr_survivor": false,
+    "dsr_p_value": 0.0045,
+    "dsr_robust": false,
+    "robust_final": false,
+    "num_trades": 58,
+    "win_rate": 0.4828,
+    "net_return_pct": 16.485,
+    "max_drawdown_pct": -15.456,
+    "expectancy_R": 0.4448,
+    "profit_factor": 1.393,
+    "sharpe": 1.0466,
+    "best_params": {
+      "width_quantile": 0.15,
+      "body_atr": 0.1,
+      "bb_len": 50
+    }
+  },
+  "promotion_status": [
+    "FORWARD_PAPER_CANDIDATE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "\"Entry: BB width is inside the lowest 25% quantile of past 200 bars (Squeeze). Entry when close crosses outside upper Bollinger Band and signal candle body is >= 0.25 * ATR.\"",
+  "known_weaknesses": "N_A"
+}

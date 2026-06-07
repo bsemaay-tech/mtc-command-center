@@ -1,0 +1,48 @@
+{
+  "candidate_id": "SLINGSHOT_4EMA_HIGH_PULLBACK",
+  "strategy_family": "RESEARCH_GRADE_SPEC",
+  "engine_strategy_id": "QL_SLINGSHOT_v1",
+  "symbol": "BTCUSDT",
+  "timeframe": "1d",
+  "direction": "long_only",
+  "verified_parameters": {},
+  "long_signal_definition": "strength AND pulled[1] AND depth_ok AND cross",
+  "short_signal_definition": null,
+  "stop_rule": "Default: `lowest(low, lookback)[1]`",
+  "exit_rule": "R2 variant: `close + 2 × (close − stop)`",
+  "metrics_lockbox": {
+    "classification": "PASS",
+    "source_file": "batch023_034_2026-06-07\\MEGA_walk_forward_results.json",
+    "symbol": "TRXUSDT",
+    "timeframe": "1h",
+    "bh_fdr_survivor": false,
+    "dsr_p_value": 0.0,
+    "dsr_robust": false,
+    "robust_final": false,
+    "num_trades": 222,
+    "win_rate": 0.4234,
+    "net_return_pct": 38.222,
+    "net_after_slippage_pct": 26.486,
+    "max_drawdown_pct": -29.775,
+    "expectancy_R": 0.1249,
+    "profit_factor": 1.183,
+    "sharpe": 0.9483,
+    "annualized_sharpe": 0.7893,
+    "annualized_sortino": 1.3965,
+    "best_params": {
+      "ema_len": 4,
+      "lookback": 13,
+      "depth": 15.0,
+      "exit_mode": "close_below"
+    }
+  },
+  "promotion_status": [
+    "FORWARD_PAPER_CANDIDATE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "N_A",
+  "known_weaknesses": "N_A"
+}

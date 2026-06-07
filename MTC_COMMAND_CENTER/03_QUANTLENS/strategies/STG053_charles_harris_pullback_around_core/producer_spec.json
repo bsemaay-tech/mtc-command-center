@@ -1,0 +1,26 @@
+{
+  "candidate_id": "CHARLES_HARRIS_PULLBACK_AROUND_CORE",
+  "strategy_family": "PULLBACK_TO_SUPPORT_BUYING,_SWING_TRADE_AROUND_A_CORE_POSITION",
+  "engine_strategy_id": null,
+  "symbol": "US_EQUITIES",
+  "timeframe": "1d",
+  "direction": "long_only",
+  "verified_parameters": {},
+  "long_signal_definition": "price pulls back to a defined support (50DMA / 21EMA / prior base top /",
+  "short_signal_definition": null,
+  "stop_rule": "see_spec",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "status": "not_yet_evaluated",
+    "source": "no_mega_sweep_completed"
+  },
+  "promotion_status": [
+    "RESEARCH_GRADE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "Deterministic Spec -- Charles Harris Pullback / Swing-Around-Core",
+  "known_weaknesses": "\"'Extended' / trim timing is discretionary → define objectively (e.g. % above 21EMA)\""
+}

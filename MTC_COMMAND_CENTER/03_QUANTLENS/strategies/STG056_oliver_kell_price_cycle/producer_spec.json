@@ -1,0 +1,48 @@
+{
+  "candidate_id": "OLIVER_KELL_PRICE_CYCLE",
+  "strategy_family": "OLIVER_KELL_PRICE_CYCLE_SWING_SYSTEM_(WEDGE_POP_/_BASIN_BREAK_/_WEDGE_DROP)",
+  "engine_strategy_id": "QL_OLIVER_KELL_PRICE_CYCLE",
+  "symbol": "US_EQUITIES",
+  "timeframe": "1d",
+  "direction": "long_short",
+  "verified_parameters": {},
+  "long_signal_definition": "wedge pop / basin break in a green-light (above-EMA) regime.",
+  "short_signal_definition": null,
+  "stop_rule": "see_spec",
+  "exit_rule": "see_spec",
+  "metrics_lockbox": {
+    "classification": "PASS",
+    "source_file": "batch023_034_2026-06-07\\MEGA_walk_forward_results.json",
+    "symbol": "TRXUSDT",
+    "timeframe": "4h",
+    "bh_fdr_survivor": false,
+    "dsr_p_value": 0.0388,
+    "dsr_robust": false,
+    "robust_final": false,
+    "num_trades": 99,
+    "win_rate": 0.4242,
+    "net_return_pct": 19.197,
+    "net_after_slippage_pct": 14.574,
+    "max_drawdown_pct": -21.265,
+    "expectancy_R": 0.2761,
+    "profit_factor": 1.184,
+    "sharpe": 0.6573,
+    "annualized_sharpe": 0.5367,
+    "annualized_sortino": 0.5405,
+    "best_params": {
+      "ema_fast": 13,
+      "ema_slow": 20,
+      "snap_lb": 20,
+      "stop_lookback": 5
+    }
+  },
+  "promotion_status": [
+    "FORWARD_PAPER_CANDIDATE"
+  ],
+  "not_an_approved_live_trading_system": true,
+  "source_artifacts": [
+    "07_deterministic_spec.md"
+  ],
+  "known_strengths": "Deterministic Spec -- Oliver Kell Price Cycle",
+  "known_weaknesses": "\"Stage labeling needs objective triggers (e.g. 'wedge pop = close > 10EMA after a higher low within N bars of touching it')\""
+}
