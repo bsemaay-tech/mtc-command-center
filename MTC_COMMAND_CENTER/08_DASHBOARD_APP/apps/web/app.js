@@ -813,13 +813,13 @@ function renderWaveAScorecard(scorecardV2, legacyScorecard, scorecardV2Cases = [
           <span class="terminal-badge ${promotable ? "ok" : "amber"}" title="${promotable ? "Passed all gates incl. Gate3, ready for promotion packet." : "At least one gate is blocking — see Blocking chips below."}">${promotable ? "Promotable" : "Not promotable"}</span>
         </div>
         <p class="muted-terminal">Gate 2 quantitative backtest score /100. Threshold: ≥75 PASS · &lt;75 FAIL. Promotion is an active reviewer action — the AI or a human reviewer must explicitly trigger it; it is not a nightly batch job. <span class="provenance-tag">source: scorecard_v2</span></p>
-        ${renderScorecardCaseList(scorecardV2, scorecardV2Cases, canonical)}
         <div class="chip-row">
           <span class="terminal-chip" title="${promotable ? "All gates pass — strategy is cleared for promotion." : "At least one blocking gate is preventing advancement. See Blocking chips for which gate(s) failed."}">${escapeHtml(`Promotable: ${promotable ? "Yes" : "No"}`)}</span>
           ${blocking.map((name) => `<span class="terminal-chip warn" title="${escapeHtml(blockingGateTooltip(name))}">${escapeHtml(`Blocking: ${statusText(name)}`)}</span>`).join("")}
           ${tfChip}
         </div>
         ${gates.map(([key, label, gate]) => renderGateRow(key, label, gate)).join("")}
+        ${renderScorecardCaseList(scorecardV2, scorecardV2Cases, canonical)}
       </section>
     `;
   }
@@ -845,6 +845,7 @@ function renderScorecardCaseList(displayCard, cases, canonical) {
     return label ? `<p class="muted-terminal">Displayed case: ${escapeHtml(label + testedLabel)}.</p>` : "";
   }
   return `
+    <p class="muted-terminal" style="margin-top:0.75rem"><strong>Backtest runs</strong> — same strategy across symbols / timeframes / sweeps; each row is one run's Gate 2 score. The ▸ displayed run drives the gates above; its metric detail is in <strong>Backtest Evidence</strong> below. <span class="provenance-tag">source: scorecard_v2 cases</span></p>
     <div class="scorecard-case-list">
       ${allCases.map((card) => {
         const g2 = card.gate2 || {};
@@ -2617,13 +2618,26 @@ function renderAcceptancePanel() {
     <span>MCC Acceptance Status <em class="provenance-tag">(Global summary — all strategies)</em></span>
     <strong title="${escapeHtml(countTitle)}">${escapeHtml(countLabel)}</strong>
   </div>
-  <div class="mcc-status-grid">
-    ${summary.rows.length
-      ? summary.rows.map(renderAcceptanceRow).join("")
-      : `<div class="mcc-status-row"><span>Promotable</span><strong>None yet</strong><em>No strategy has passed all gates</em></div>`
-    }
-  </div>
+  ${summary.rows.length
+    ? `<table class="acceptance-table">
+        <thead><tr>
+          ${["strategy:Strategy", "symbol:Symbol", "tf:Tested TF", "gate2:Gate 2", "date:Accepted", "run:Run"]
+            .map((c) => { const [k, lbl] = c.split(":"); const s = state.acceptanceSort || {};
+              const arrow = s.key === k ? (s.dir < 0 ? " ▼" : " ▲") : "";
+              return `<th onclick="sortAcceptance('${k}')" title="Sort by ${lbl}">${escapeHtml(lbl)}${arrow}</th>`; }).join("")}
+        </tr></thead>
+        <tbody>${summary.rows.map(renderAcceptanceRow).join("")}</tbody>
+      </table>`
+    : `<div class="mcc-status-grid"><div class="mcc-status-row"><span>Promotable</span><strong>None yet</strong><em>No strategy has passed all gates</em></div></div>`
+  }
 </div>`;
+}
+
+// R2-26: client-side sort only (read-only — no server param, no state persisted server-side).
+function sortAcceptance(key) {
+  const s = state.acceptanceSort || { key: "", dir: 1 };
+  state.acceptanceSort = { key, dir: s.key === key ? -s.dir : 1 };
+  renderAcceptancePanel();
 }
 
 function buildAcceptanceSummary() {
@@ -2635,20 +2649,43 @@ function buildAcceptanceSummary() {
   // R2-27: distinct strategies (base id before the first "|"), not the raw card/run count.
   const baseId = (c) => String(c.base_strategy_id || c.strategy_id || "").split("|")[0];
   const strategies = new Set(cards.map(baseId).filter(Boolean)).size;
+  // R2-26: apply the current client-side sort to the promotable rows.
+  const sort = state.acceptanceSort;
+  if (sort && sort.key) {
+    promotable.sort((a, b) => {
+      const va = acceptanceCardFields(a)[sort.key] ?? "";
+      const vb = acceptanceCardFields(b)[sort.key] ?? "";
+      return String(va).localeCompare(String(vb), undefined, { numeric: true }) * sort.dir;
+    });
+  }
   return { total: cards.length, promotable: promotable.length, strategies, rows: promotable };
 }
 
-function renderAcceptanceRow(card) {
+function acceptanceCardFields(card) {
   const id = card.strategy_id || card.base_strategy_id || "--";
-  const symbol = card.symbol || "";
-  const tf = card.timeframe || "";
-  const label = acceptanceDateLabel(card);
+  const g2 = card.gate2 || {};
+  return {
+    id,
+    strategy: humanizeStrategyId(id),
+    symbol: card.symbol || "",
+    tf: (card.canonical && card.canonical.tested_tf) || card.timeframe || "",
+    gate2: g2.score != null ? `${g2.score}/${g2.max || 100}` : "—",
+    date: acceptanceDateLabel(card),
+    run: card.run_name || card.run_id || "",
+  };
+}
+
+function renderAcceptanceRow(card) {
+  const f = acceptanceCardFields(card);
   return `
-<div class="mcc-status-row ok">
-  <span>Promotable</span>
-  <strong title="${escapeHtml(id)}">${escapeHtml(humanizeStrategyId(id))}</strong>
-  <em>${escapeHtml([symbol, tf, label].filter(Boolean).join(" · "))} <span class="provenance-tag">accepted</span></em>
-</div>`;
+<tr class="acceptance-row">
+  <td><strong title="${escapeHtml(f.id)}">${escapeHtml(f.strategy)}</strong></td>
+  <td>${escapeHtml(f.symbol || "—")}</td>
+  <td>${escapeHtml(f.tf || "—")}</td>
+  <td>${escapeHtml(f.gate2)}</td>
+  <td>${escapeHtml(f.date || "—")}</td>
+  <td>${escapeHtml(f.run || "—")}</td>
+</tr>`;
 }
 
 function acceptanceDateLabel(card) {
