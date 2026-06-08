@@ -6,7 +6,7 @@
 2. **UI Round-2 remainder** `[AI: Codex]` — R2-31 (scorecard vs snapshot freshness), R2-13-deep (per-sub-score reason, backlog), R2-04/05 (verdict/badge ladders, backlog). R2-36 closed 2026-06-08 by Codex GPT-5 as a no-code audit: Gate2 tooltip references real emitted `metrics.wfo_pass`, not a ghost requirement. Then Barış screenshot-re-check. Plan: `_AI_MEMORY/UI Reviev/ROUND2_PLAN.md`.
 3. **QuantLens = Claude/Codex verdict** `[AI: Codex|Barış]` — name freed (Gemini→"Gemini Pre-Screen", commit e2bf40b). Rubric `03_QUANTLENS/_user_guide/11_STRATEGY_DETAIL_PAGE_REDESIGN_PLAN.md §4.2-4.4`. Per-strategy AI verdict, opinion-only no-score, new data file → dashboard reads. Active AI work.
 4. **AI strategy naming** `[AI: Codex|Barış]` — assign clean human names per strategy (UI-5 was parked). Active AI work.
-5. **Backlog** — UI-30 producer_spec field-fill (needs approval), Gate3 builder (no scorer; binding decisions in memory mcc-gate3-promotion-decisions), W1 parity-in-night-flow, W2 auto-backtest-selector, delete dead `renderDecisionPanel()`, kill stray hung python (18480/57724/21200).
+5. **Backlog** — UI-30 producer_spec field-fill (needs approval), Gate3 builder (no scorer; binding decisions in memory mcc-gate3-promotion-decisions), W1 parity-in-night-flow, W2 auto-backtest-selector, kill stray hung python (18480/57724/21200). Dead `renderDecisionPanel()` cleanup closed 2026-06-08 by Codex GPT-5.
 
 ## Dashboard UI architecture (2026-06-07)
 

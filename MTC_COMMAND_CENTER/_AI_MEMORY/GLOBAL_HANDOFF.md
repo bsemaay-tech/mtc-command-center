@@ -1,5 +1,12 @@
 # GLOBAL_HANDOFF
 
+## Codex GPT-5 2026-06-08 - Dead renderDecisionPanel cleanup
+- Removed unused `renderDecisionPanel()` from `08_DASHBOARD_APP/apps/web/app.js` and removed the now-unused `.decision-panel` / `.decision-item` CSS from `styles.css`.
+- Verification: `node --check MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\app.js` PASS; `rg "renderDecisionPanel|decision-panel|decision-item"` across web app files returns no references.
+- Report: `_AI_MEMORY/UI Reviev/RESULT_DEAD_RENDER_DECISION_PANEL_codex.md`.
+- No API, Pine, MTC, parity, score math, or trading-logic files changed.
+- Next autonomous item: R2-31 scorecard-vs-snapshot freshness.
+
 ## Codex GPT-5 2026-06-08 - R2-36 Gate2 tooltip audit
 - Closed R2-36 as **no code change required**. The suspected Gate2 ghost tooltip is valid: all 360 current `scorecard_v2` files expose `metrics.wfo_pass`, and `score_gate2.py` / `build_evaluation_artifact.py` define and emit the walk-forward criterion.
 - Report: `_AI_MEMORY/UI Reviev/RESULT_R2_36_codex.md`.

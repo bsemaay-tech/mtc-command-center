@@ -1322,39 +1322,10 @@ tr.row-click:hover { background: #f3f7fa; }
   outline: none;
 }
 
-.decision-panel {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(140px, 1fr));
-  gap: 10px;
-  margin: 10px 0 18px;
-}
-
-.decision-item {
-  border: 1px solid #e3e8ec;
-  border-radius: 8px;
-  background: #fbfcfd;
-  padding: 10px;
-}
-
-.decision-item span {
-  display: block;
-  color: var(--muted);
-  font-size: 11px;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-
-.decision-item strong {
-  display: block;
-  line-height: 1.25;
-  overflow-wrap: anywhere;
-}
-
 @media (max-width: 900px) {
   .filters,
   .filters.compact-filters,
-  .audit-filter-grid,
-  .decision-panel {
+  .audit-filter-grid {
     grid-template-columns: 1fr;
   }
 }

@@ -1324,35 +1324,6 @@ function renderLegacyScorecard(scorecard) {
   `;
 }
 
-function renderDecisionPanel(row, auditRow, mtcV2Row, scorecard) {
-  const scoreLabel = scorecard ? (scorecard.label || `${scorecard.total || 0}/100`) : "--";
-  const auditStatus = auditRow ? friendlyStatus(auditRow.audit_status || "--") : "No audit row";
-  const blocker = (mtcV2Row && mtcV2Row.blocker) || (auditRow && auditRow.blocked_reason) || "None";
-  const readiness = mtcV2Row ? (mtcV2Row.status_label || friendlyStatus(mtcV2Row.status)) : "Not in MTC_V2 queue";
-  const nextAction = (mtcV2Row && mtcV2Row.next_action) || row.next_action || (auditRow && auditRow.recommended_next_pipeline_step) || "Review";
-  const decision = mtcV2Row && mtcV2Row.decision_sentence ? mtcV2Row.decision_sentence : (blocker === "None" ? nextAction : blocker);
-  return `
-    <div class="decision-panel" title="Decision snapshot for this strategy.">
-      <div class="decision-item">
-        <span>Status</span>
-        <strong>${escapeHtml(auditStatus)}</strong>
-      </div>
-      <div class="decision-item">
-        <span>Score</span>
-        <strong>${escapeHtml(scoreLabel)}</strong>
-      </div>
-      <div class="decision-item">
-        <span>MTC_V2</span>
-        <strong>${escapeHtml(readiness)}</strong>
-      </div>
-      <div class="decision-item">
-        <span>Blocker / next</span>
-        <strong>${escapeHtml(decision)}</strong>
-      </div>
-    </div>
-  `;
-}
-
 function renderForwardProgress(progress) {
   if (!progress) {
     return `<span class="muted-sub">No forward plan</span>`;
