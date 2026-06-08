@@ -1582,3 +1582,11 @@ Ran `03_QUANTLENS/tools/mcc_night_tail.sh` against `03_QUANTLENS/05_BACKTEST_RES
 Fixed dashboard read-only discovery in `08_DASHBOARD_APP/apps/api/mcc_readonly/scorecard_reader.py` so it scans nested directories that directly own `scorecard_v2`. Added `apps/api/tests/test_scorecard_reader.py` for nested scorecard runs. Validation: py_compile PASS; `python -m unittest tests.test_scorecard_reader` PASS; full dashboard API unittest discovery PASS (`36 tests`); real-data smoke reports 715 total scorecards, 18 runs, 46 distinct strategies, and 122 `night_1m_2026-06-07` v2 cards from `iter_05`.
 
 No Pine, MTC_V2, parity, live-trading, or strategy logic was changed. Detailed audit note: `_AI_MEMORY/RESULT_NIGHT_1M_MCC_TAIL_codex.md`.
+
+## Codex GPT-5 2026-06-08 - AI strategy display names
+
+Completed the AI strategy naming pass as display-only metadata. Added `05_REGISTRY/AI_STRATEGY_NAME_REGISTRY.json` with 212 entries and audit rationales, then added `08_DASHBOARD_APP/apps/api/mcc_readonly/ai_names_reader.py` to expose and attach those names read-only.
+
+`read_model.py` now includes top-level `ai_strategy_names` and attaches `strategy_display_name`, `strategy_display_name_source`, and `strategy_display_name_rationale` to candidate pipeline rows, candidate audit rows, and scorecard cards. The existing frontend `strategyDisplayName()` chain already prefers `row.strategy_display_name`, so no frontend rewrite was needed for detail headers.
+
+Validation: py_compile PASS for `ai_names_reader.py` and `read_model.py`; focused reader tests PASS; full dashboard API unittest discovery PASS (`37 tests`); real snapshot smoke reports 212 registry entries, 176/176 pipeline rows named, and 715/715 scorecards named. A name-quality audit found 0 names with underscores, raw intake tokens, unbalanced parentheses, or excessive length. No Pine, MTC_V2, parity, backtest engine, live-trading, or strategy logic files were changed. Detailed audit note: `_AI_MEMORY/RESULT_AI_STRATEGY_NAMES_codex.md`.

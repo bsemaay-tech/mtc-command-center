@@ -16,6 +16,11 @@ from .paths import canonicalize, default_mcc_root
 from .parity_reader import build_parity_status
 from .pine_builder_reader import build_pine_builder_status
 from .audit_reader import build_candidate_audit
+from .ai_names_reader import (
+    attach_ai_strategy_names_to_rows,
+    attach_ai_strategy_names_to_scorecards,
+    build_ai_strategy_names,
+)
 from .pipeline_reader import build_candidate_pipeline
 from .registry_reader import build_strategy_registry
 from .research_reader import build_strategy_research
@@ -147,14 +152,21 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
         strategy_registry=strategy_registry,
     )
     scorecards = build_scorecards(model["mcc_root"])
+    ai_strategy_names = build_ai_strategy_names(model["mcc_root"])
+    scorecards = attach_ai_strategy_names_to_scorecards(scorecards, ai_strategy_names)
     if isinstance(candidate_audit.get("rows"), list):
         candidate_audit = dict(candidate_audit)
+        candidate_audit["rows"] = attach_ai_strategy_names_to_rows(candidate_audit["rows"], ai_strategy_names)
         candidate_audit["rows"] = attach_scorecards_to_rows(candidate_audit["rows"], scorecards)
     if isinstance(candidate_pipeline.get("candidates"), list):
         candidate_pipeline = dict(candidate_pipeline)
+        candidate_pipeline["candidates"] = attach_ai_strategy_names_to_rows(
+            candidate_pipeline["candidates"], ai_strategy_names
+        )
         candidate_pipeline["candidates"] = attach_scorecards_to_rows(candidate_pipeline["candidates"], scorecards)
     if isinstance(candidate_pipeline.get("rows"), list):
         candidate_pipeline = dict(candidate_pipeline)
+        candidate_pipeline["rows"] = attach_ai_strategy_names_to_rows(candidate_pipeline["rows"], ai_strategy_names)
         candidate_pipeline["rows"] = attach_scorecards_to_rows(candidate_pipeline["rows"], scorecards)
     mtc_v2_readiness = build_mtc_v2_readiness(
         model["mcc_root"],
@@ -184,6 +196,7 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
         "strategy_registry": strategy_registry,
         "strategy_research": strategy_research,
         "quantlens": quantlens,
+        "ai_strategy_names": ai_strategy_names,
         "overnight_heartbeat": overnight_heartbeat,
         "scorecards": scorecards,
         "dashboard_config": files["dashboard_config"]["data"],

@@ -1,0 +1,1280 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-06-08T00:00:00+00:00",
+  "model": "Codex GPT-5",
+  "description": "AI-assigned human-readable display names for dashboard strategy rows and scorecard base strategies. Display metadata only; no scoring or trading behavior.",
+  "entries": [
+    {
+      "strategy_id": "CAND_20260503_TED_ZHANG_MAGIC_ELIXIR_MOMENTUM_HAN1kymVbTc",
+      "strategy_display_name": "Ted Zhang Momentum Elixir",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated by Codex after raw-name audit of source/intake title."
+    },
+    {
+      "strategy_id": "CAND_BRIAN_LEE_SMALLCAP_GAP_MR_SHORT_V1",
+      "strategy_display_name": "Brian Lee Small-Cap Gap Reversion Short",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated by Codex after raw-name audit of source/intake title."
+    },
+    {
+      "strategy_id": "GEN_ATR_PULLBACK_TREND",
+      "strategy_display_name": "ATR Pullback Trend",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated from generated strategy family id."
+    },
+    {
+      "strategy_id": "GEN_DONCHIAN_BREAKOUT",
+      "strategy_display_name": "Donchian Breakout",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated from generated strategy family id."
+    },
+    {
+      "strategy_id": "GEN_GOLDEN_CROSS_PULLBACK",
+      "strategy_display_name": "Golden Cross Pullback",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated from generated strategy family id."
+    },
+    {
+      "strategy_id": "GEN_KELTNER_BREAKOUT",
+      "strategy_display_name": "Keltner Breakout",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated from generated strategy family id."
+    },
+    {
+      "strategy_id": "GEN_MACD_BULL_CROSS",
+      "strategy_display_name": "MACD Bull Cross",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated from generated strategy family id."
+    },
+    {
+      "strategy_id": "GEN_RSI_OVERSOLD_REVERSAL",
+      "strategy_display_name": "RSI Oversold Reversal",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated from generated strategy family id."
+    },
+    {
+      "strategy_id": "GEN_STOCH_OVERSOLD_CROSS",
+      "strategy_display_name": "Stochastic Oversold Cross",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated from generated strategy family id."
+    },
+    {
+      "strategy_id": "GEN_ZSCORE_MEAN_REVERSION",
+      "strategy_display_name": "Z-Score Mean Reversion",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated from generated strategy family id."
+    },
+    {
+      "strategy_id": "QLR_-JyH5PAJ4-Y",
+      "strategy_display_name": "I Stopped Trading So Much Profits Skyrocketed",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_10pHBNVi4Jc",
+      "strategy_display_name": "The Trading Setups Record Breaking Trading Champion",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_2f5VfmlU90U",
+      "strategy_display_name": "The Mind Trader Insights Trading Psychology Overcoming",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_4-IjRmw7SZI",
+      "strategy_display_name": "The Reality Trading TQQQ Key Strategies",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_62OaP91Jz9k",
+      "strategy_display_name": "A Weekly Strategy Anyone Can Use",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_6aOnCK1gv2w",
+      "strategy_display_name": "The Setups Rules Hard Won Lessons Behind",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_6tnREqUJ1WY",
+      "strategy_display_name": "Trading Backtests Are Misleading - Here's What",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_7UfHg8PpDZk",
+      "strategy_display_name": "The 3 Trading Setups Top Super-Performance Trader",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_9ZJK8175drM",
+      "strategy_display_name": "CANSLIM Growth Stock Source Audit",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated by Codex after raw-name audit of source/intake title."
+    },
+    {
+      "strategy_id": "QLR_C9Pvd9UD0jM",
+      "strategy_display_name": "Mark Minervini's #1 Risk Management Grow Trading",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_CtioOmc1Eig",
+      "strategy_display_name": "Trade Like Professional Effective Trading Strategy Charles",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_DLlNDuOTUfQ",
+      "strategy_display_name": "To Profitable Trading Market Legend Stan Weinstein",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_DPA35Gug3Y4",
+      "strategy_display_name": "Gamer Trades $5k Into Over $1 Million",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_Eb9FkLNJLzs",
+      "strategy_display_name": "Of Trading Wisdom 20 Minutes - Lessons",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_ElocJ-b_NTs",
+      "strategy_display_name": "The 10 Principles Trading Investing Champion Oliver",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_FiUGDA7eMyU",
+      "strategy_display_name": "CANSLIM Trading Strategy Beat 99% Investors Using",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_FtAshnE3MwM",
+      "strategy_display_name": "The Stage Analysis Trading System - Exclusive",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_GHZBv1W4-II",
+      "strategy_display_name": "One Year Interview Larry Williams",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_HAN1kymVbTc",
+      "strategy_display_name": "Trading $30 Million At Age 25",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_JS4_6gv0PpI",
+      "strategy_display_name": "Mark Minervini's VCP Setup That Made Him",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_Jew-Algmi0k",
+      "strategy_display_name": "VWAP Pullback Source Review",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QLR_KQRuUWSZvLE",
+      "strategy_display_name": "Steps To Profitable Trading 2024 Ryan Pierpont",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_KWxhLIOchvY",
+      "strategy_display_name": "Aggressive Swing Trading Tactics Setups",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_Lot25-2fb-4",
+      "strategy_display_name": "From Poker Player Full Time Trader",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_M_tD6X0CSOI",
+      "strategy_display_name": "The VCP Trading Setup Mark Minervini",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_MnXQOt7_ZP0",
+      "strategy_display_name": "The Ai Bull Market Can Change Life",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_NGyE4YIgGpU",
+      "strategy_display_name": "How A Harvard Cancer Scientist Beat Wall",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_Ne3X-l6W4CQ",
+      "strategy_display_name": "Process Adherence, Overtrading Behavior Analytics Playbook",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_Nq-p7Bu1YT0",
+      "strategy_display_name": "How A Day Trader Turned Into Super-Performance",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_NwgJQyoUAaI",
+      "strategy_display_name": "Pro Swing Trading Setups Consistent Gains Trading",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_O0GpSPtmCuM",
+      "strategy_display_name": "Stage Analysis Warnings Current Markets - Exclusive",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_QzzKqmPcB3A",
+      "strategy_display_name": "Steps To Beat Market - Trading Guide",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_R1sNTB2Vh7w",
+      "strategy_display_name": "Of Trading Lessons Peter Brandt",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_R215f4fj7V8",
+      "strategy_display_name": "The Trading Setup That Made Lance Breitstein",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_RHlsVNSM8Aw",
+      "strategy_display_name": "EMA 20/50 Retest Source Audit",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated by Codex after raw-name audit of source/intake title."
+    },
+    {
+      "strategy_id": "QLR_RTHRh_GLwH8",
+      "strategy_display_name": "Trading Returns - Become Super Trade Mark",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_SMWMraeRDXs",
+      "strategy_display_name": "The Trading Risk Management Guide Tom Basso",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_Tm0dkf8_giA",
+      "strategy_display_name": "How To Trade Breakouts Volatility Contraction Pattern",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_UD7gipBWnuY",
+      "strategy_display_name": "When To Take Trading Profits - Share",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_UMgJ0P8fe0s",
+      "strategy_display_name": "Swing Trading Vs",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_UmLa9FAlMgw",
+      "strategy_display_name": "VWAP Pullback Source Review",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QLR_UtNrp_Uz9Oc",
+      "strategy_display_name": "Trading The Mental Game Jared Tendler",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_VKNEJA5r8zw",
+      "strategy_display_name": "The Pullback Strategy Trading Champion",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_XNZ4f-b3ED8",
+      "strategy_display_name": "Indicator Formula Source Audit",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated by Codex after raw-name audit of source/intake title."
+    },
+    {
+      "strategy_id": "QLR_XOul-ECgHyA",
+      "strategy_display_name": "S After Losing It All - Developing",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_Yb5lMegA5Hs",
+      "strategy_display_name": "Daily Extension Anti-Chase Review",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated by Codex after raw-name audit of source/intake title."
+    },
+    {
+      "strategy_id": "QLR_ZK5cnVQ2V3Q",
+      "strategy_display_name": "The Trading System",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR__AAX1ylNbIE",
+      "strategy_display_name": "Lessons From & Trading Legends",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR__QewlGLBaeA",
+      "strategy_display_name": "Trading Millions Finally Became Profitable Swing Trader",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_a4uJ3rHhbfA",
+      "strategy_display_name": "The Art Position Sizing Anish Sikri Us",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_a55f696216",
+      "strategy_display_name": "The Reality Relative Strength Based Trading Linda",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_aDRYV4mjlHA",
+      "strategy_display_name": "The Million Dollar TQQQ Swing Trading Strategy",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_bRXO6F_vGjM",
+      "strategy_display_name": "Ty Rajnus Microcap Short Review",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated by Codex after raw-name audit of source/intake title."
+    },
+    {
+      "strategy_id": "QLR_c7ZSb2wNcOc",
+      "strategy_display_name": "Detailed Source Intake Review",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated by Codex after raw-name audit of source/intake title."
+    },
+    {
+      "strategy_id": "QLR_eWtY7uoJL_0",
+      "strategy_display_name": "Trading The Battle Yourself David Ryan",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_esDKpwi1b2M",
+      "strategy_display_name": "The Us Investing Championship Leos Mikulka's Winning",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_fYxSQvuwOQc",
+      "strategy_display_name": "Oliver Kell Price Cycle (10/20 EMA Source Review)",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QLR_hVCcVRxaxJY",
+      "strategy_display_name": "The Sell Rules Need Trade Ajay Jani",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_ivL6E6Lc6gM",
+      "strategy_display_name": "A Hedge Fund Manager Reveals Pullback Trading",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_jLioqyVlRkE",
+      "strategy_display_name": "From Blowing Up 3 Times Managing $200",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_kTqKRi-j9kM",
+      "strategy_display_name": "The 5 Essential Sell Rules - Linda",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_kao-hhaQnig",
+      "strategy_display_name": "The Event Driven Trading Setup",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_lS9zbnLi1Gg",
+      "strategy_display_name": "Gain In 1 Year - Story 22-Year-Old",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_lTiR1pc82EE",
+      "strategy_display_name": "& Effective Trading Setups",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_lpjTNygfnzM",
+      "strategy_display_name": "Swing Trading Strategies Achieving Triple Digit Returns",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_m8F3KkBDtC0",
+      "strategy_display_name": "The Wedge Pop Trading Setup Trading Champion",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_oPeTkxTnooA",
+      "strategy_display_name": "The Risk Management Strategy Need Consistent Returns",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_oZH6_XRxtDc",
+      "strategy_display_name": "Pro Swing Trading Entry Tactics Trading Guide",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_q43pkYBo1hU",
+      "strategy_display_name": "Swing Trading Performance Strategy",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_q4TuaY-ccqA",
+      "strategy_display_name": "Fomo Is Ruining Trades Here's Fix It",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_qz7avJJvnyI",
+      "strategy_display_name": "The True Path Trading Success Lance Breitstein",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_rdmjsbDVuoU",
+      "strategy_display_name": "The High Tight Flag Trading Setup Leif",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_tynE-pwE-1o",
+      "strategy_display_name": "Why Process Beats Setups Trading Pradeep Bonde",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_uh5bALsKkLg",
+      "strategy_display_name": "How Mark Minervini Became",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QLR_zw96qkUn9_g",
+      "strategy_display_name": "How Clement Ang Achieved 150%+ Returns Us",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Condensed from source title without performance-marketing claims."
+    },
+    {
+      "strategy_id": "QL_2026-05-01_ANY_1H_RSI_CONFLUENCE_PLAYBOOK",
+      "strategy_display_name": "RSI + Trend Confirmation",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QL_2026-05-01_ANY_BOLLINGER_BANDS_20_2_TRI_SETUP",
+      "strategy_display_name": "Bollinger Squeeze Breakout",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QL_2026-05-01_ANY_CANDLESTICK_7_PATTERN_PA_CONFLUENCE",
+      "strategy_display_name": "Support Engulfing Candle",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QL_2026-05-01_EQUILIBRIUM_MOMENTUM_SHIFT_DIVERGENCE",
+      "strategy_display_name": "Equilibrium Momentum Divergence Review",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated by Codex after display-name casing and punctuation audit."
+    },
+    {
+      "strategy_id": "QL_2026-05-01_LIQUID_INTRADAY_VWAP_PULLBACK_REVERSAL",
+      "strategy_display_name": "VWAP Pullback",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QL_2026-05-01_RANKED_FVG_IMBALANCE_ZONES",
+      "strategy_display_name": "Ranked FVG Imbalance Zones Review",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated by Codex after display-name casing and punctuation audit."
+    },
+    {
+      "strategy_id": "QL_2026-05-01_SP500_5M_TWO_CANDLE_SENTIMENT_SR",
+      "strategy_display_name": "Two-Candle Support/Resistance Breakout",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QL_2026-05-01_SWING_1H_DUAL_RSI_60_40_PULLBACK",
+      "strategy_display_name": "Dual RSI Daily + Hourly",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QL_2026-05-01_TV_BUYSELL_INDICATOR_PACK",
+      "strategy_display_name": "TradingView Buy/Sell Indicator Pack Review",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated by Codex after display-name casing and punctuation audit."
+    },
+    {
+      "strategy_id": "QL_2026-05-01_UNKNOWN_MULTI_EMA_CHANNEL_PULLBACK",
+      "strategy_display_name": "Multi-EMA Channel Pullback",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK",
+      "strategy_display_name": "8 EMA Pullback",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL",
+      "strategy_display_name": "8 EMA Pullback + Trailing Exit",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QL_2026-05-01_US_EQUITIES_INTRADAY_LE_MODEL_BULL_FLAG",
+      "strategy_display_name": "Bull Flag Breakout",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QL_2026-05-01_US_EQUITIES_INTRADAY_PURPLE_PROFITS",
+      "strategy_display_name": "8 EMA Trend (Purple Profits)",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated by Codex after display-name casing and punctuation audit."
+    },
+    {
+      "strategy_id": "QL_ANTHONY_BACKWATCH_BREAKOUT_HEALTH_ENGINE_v0",
+      "strategy_display_name": "Anthony Backwatch Breakout Health Engine",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_ANTHONY_BREAKOUT_PULLBACK_RS_v0",
+      "strategy_display_name": "Anthony Breakout Pullback Rs",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_ANTHONY_CYCLE_AWARE_EXPOSURE_CONTROL_v0",
+      "strategy_display_name": "Anthony Cycle Aware Exposure Control",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_ANTHONY_EP_EARNINGS_THEME_BREAKOUT_v0",
+      "strategy_display_name": "Anthony Ep Earnings Theme Breakout",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_ANTHONY_OUTLIER_LEADER_BREAKOUT_v0",
+      "strategy_display_name": "Anthony Outlier Leader Breakout",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_ANTHONY_THEME_LEADERSHIP_ENGINE_v0",
+      "strategy_display_name": "Anthony Theme Leadership Engine",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_ANTHONY_UNDERCUT_RECLAIM_LEADER_v0",
+      "strategy_display_name": "Anthony Undercut Reclaim Leader",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_ANTI_CHASE_CRABEL_v1",
+      "strategy_display_name": "Anti Chase Crabel",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_AVWAP_BRIAN_INTRADAY_OR_5M",
+      "strategy_display_name": "AVWAP Brian Intraday Or 5M",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_AVWAP_BRIAN_STAGE2_EMERGING_1D",
+      "strategy_display_name": "AVWAP Brian Stage2 Emerging",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_BASELINE_EMA20_50_RETEST_001",
+      "strategy_display_name": "Baseline Ema20 Retest",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_BIGBELUGA_RSI_v1",
+      "strategy_display_name": "Bigbeluga RSI",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_BRIAN_SHANNON_5DMA_AVWAP_MOMENTUM_ENTRY_v0",
+      "strategy_display_name": "VWAP Pullback",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QL_BRIAN_SHANNON_AVWAP_GAP_PULLBACK_STRENGTH_v0",
+      "strategy_display_name": "VWAP Pullback",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QL_BRIAN_SHANNON_AVWAP_HANDOFF_TREND_CONTINUATION_v0",
+      "strategy_display_name": "VWAP Pullback",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QL_BRIAN_SHANNON_AVWAP_PINCH_BREAKOUT_v0",
+      "strategy_display_name": "VWAP Pullback",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QL_BRIAN_SHANNON_BREAKAWAY_GAP_AVWAP_CONTINUATION_v0",
+      "strategy_display_name": "VWAP Pullback",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QL_BRIAN_SHANNON_FAILED_AVWAP_TRAP_v0",
+      "strategy_display_name": "VWAP Pullback",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QL_CAND_003_KWxhLIOchvY",
+      "strategy_display_name": "Cand 003 Kwxhliochvy",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_CAND_004_Nq-p7Bu1YT0",
+      "strategy_display_name": "Cand 004 Nq-P7bu1yt0",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_CAND_2026-05-03_eWtY7uoJL0_RYAN_PRICE_VOLUME_STAGE",
+      "strategy_display_name": "Cand 2026-05-03 Ewty7uojl0 Ryan Price Volume Stage",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_CANSLIM_O_NEIL_GROWTH_STOCK_SYSTEM",
+      "strategy_display_name": "CANSLIM O Neil Growth Stock System",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_CANSLIM_SHAKEOUT_PLUS_3_001",
+      "strategy_display_name": "CANSLIM Shakeout Plus",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_CHARLES_21EMA_PULLBACK_ADDON_001",
+      "strategy_display_name": "Charles 21EMA Pullback Addon",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_CHARLES_FIRST_PULLBACK_50DMA_001",
+      "strategy_display_name": "Charles First Pullback 50DMA",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_CHARLES_PRIOR_BASE_TOP_SUPPORT_PULLBACK_001",
+      "strategy_display_name": "Charles Prior Base Top Support Pullback",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_CHARLES_REVERSE_PYRAMID_PULLBACK_SCALEIN_001",
+      "strategy_display_name": "Charles Reverse Pyramid Pullback Scalein",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_CHARLES_SWING_AROUND_CORE_001",
+      "strategy_display_name": "Charles Swing Around Core",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_CHARLES_UPSIDE_REVERSAL_PULLBACK_001",
+      "strategy_display_name": "Charles Upside Reversal Pullback",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_CHARLES_WEEKLY_SHAKEOUT_CONFIRMATION_GUARD_001",
+      "strategy_display_name": "Charles Weekly Shakeout Confirmation Guard",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_CRABEL_RANGE_EXP_v1",
+      "strategy_display_name": "Crabel Range Exp",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_DEEPAK_153_FILTER_1D",
+      "strategy_display_name": "Deepak 153 Filter",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_DEEPAK_259_RISK_OVERLAY",
+      "strategy_display_name": "Deepak 259 Risk Overlay",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_DEEPAK_SNAPBACK_50SMA_INTRADAY",
+      "strategy_display_name": "Deepak Snapback 50SMA Intraday",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_EMA_RETEST_v1",
+      "strategy_display_name": "EMA Retest",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_FAM_CONSOLIDATION_BREAKOUT",
+      "strategy_display_name": "Family Consolidation Breakout",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_FAM_MOMENTUM_CONTINUATION",
+      "strategy_display_name": "Family Momentum Continuation",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_FAM_PULLBACK_TO_MA",
+      "strategy_display_name": "Family Pullback To Ma",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_FISHHOOK_EP_DAY1_RETAKE_001",
+      "strategy_display_name": "Fishhook Ep Day1 Retake",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_GON_HALT_MOMENTUM_CONTINUATION_v0",
+      "strategy_display_name": "Gon Halt Momentum Continuation",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_GON_NEXT_DAY_LOW_FLOAT_CONTINUATION_v0",
+      "strategy_display_name": "Gon Next Day Low Float Continuation",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_GON_OG_BULL_FLAG_HIGH_TIGHT_v0",
+      "strategy_display_name": "Gon Og Bull Flag High Tight",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_GON_SHORT_SQUEEZE_REVERSAL_BALL_UNDER_WATER_v0",
+      "strategy_display_name": "Gon Short Squeeze Reversal Ball Under Water",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_GON_STRONG_DEMAND_LOW_VOLUME_EMA_TOUCH_v0",
+      "strategy_display_name": "Gon Strong Demand Low Volume EMA Touch",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_GON_STRONG_DEMAND_SLOW_FADER_RECLAIM_v0",
+      "strategy_display_name": "Gon Strong Demand Slow Fader Reclaim",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_HARRIS_50DMA_v1",
+      "strategy_display_name": "Harris 50DMA",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_HIGHEST_VOLUME_EDGE_PROSWING_1D",
+      "strategy_display_name": "Highest Volume Edge Proswing",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_KELL_BASIN_BREAK_001",
+      "strategy_display_name": "Kell Basin Break",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_KELL_BATCH_v1",
+      "strategy_display_name": "Kell Batch",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_KELL_EMA_CROSSBACK_001",
+      "strategy_display_name": "Kell EMA Crossback",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_KELL_WEDGE_DROP_EXIT_001",
+      "strategy_display_name": "Kell Wedge Drop Exit",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_KELL_WEDGE_POP_001",
+      "strategy_display_name": "Kell Wedge Pop",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_LBR_ADTR_POSITION_SIZING_v0",
+      "strategy_display_name": "LBR Adtr Position Sizing",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_LBR_ATR_VOLATILITY_EXIT_OVERLAY_v0",
+      "strategy_display_name": "LBR ATR Volatility Exit Overlay",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_LBR_BOX_MIDPOINT_RECLAIM_v0",
+      "strategy_display_name": "LBR Box Midpoint Reclaim",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_LBR_COIL_BREAKOUT_RANGE_EXPANSION",
+      "strategy_display_name": "LBR Coil Breakout Range Expansion",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_LBR_COIL_BREAKOUT_RANGE_EXPANSION_v0",
+      "strategy_display_name": "Linda Raschke \u2014 Coil Breakout / Range Expansion",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    },
+    {
+      "strategy_id": "QL_LBR_EQUITY_CURVE_RISK_THROTTLE_v0",
+      "strategy_display_name": "LBR Equity Curve Risk Throttle",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_LBR_PREV_DAY_HIGH_LOW_TAYLOR_RHYTHM_v0",
+      "strategy_display_name": "LBR Prev Day High Low Taylor Rhythm",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_LBR_ROC2_REVERSAL_v0",
+      "strategy_display_name": "LBR Roc2 Reversal",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_LBR_THREE_BAR_BREAKOUT_v0",
+      "strategy_display_name": "LBR Three Bar Breakout",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_LINDA_5SMA_v1",
+      "strategy_display_name": "Linda 5SMA",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_MARTIN_PARABOLIC_LONG_001",
+      "strategy_display_name": "Martin Parabolic Long",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_MARTIN_PULLBACK_CONFLUENCE_LONG_001",
+      "strategy_display_name": "Martin Pullback Confluence Long",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_MARTIN_PULLBACK_SHORT_001",
+      "strategy_display_name": "Martin Pullback Short",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_NICK_10W_30W_RESPECT_ENTRY_001",
+      "strategy_display_name": "Nick 10W 30W Respect Entry",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_NICK_ASYMMETRIC_RISK_REWARD_FILTER_001",
+      "strategy_display_name": "Nick Asymmetric Risk Reward Filter",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_NICK_CONTROLLED_WEAKNESS_BASE_RETEST_001",
+      "strategy_display_name": "Nick Controlled Weakness Base Retest",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_NICK_EARNINGS_CUSHION_RULE_001",
+      "strategy_display_name": "Nick Earnings Cushion Rule",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_NICK_TRADE_FREQUENCY_GUARD_001",
+      "strategy_display_name": "Nick Trade Frequency Guard",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_NICK_UP_ON_VOLUME_RADAR_001",
+      "strategy_display_name": "Nick Up On Volume Radar",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_NICK_UP_ON_VOLUME_UNIVERSE_SCAN_001",
+      "strategy_display_name": "Nick Up On Volume Universe Scan",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_NICK_WEEKLY_BASE_TIGHTNESS_ACCUMULATION_001",
+      "strategy_display_name": "Nick Weekly Base Tightness Accumulation",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_NICK_WEEKLY_CHARACTER_CHANGE_001",
+      "strategy_display_name": "Nick Weekly Character Change",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_NICK_WEEKLY_CHARACTER_CHANGE_TREND_STARTER_001",
+      "strategy_display_name": "Nick Weekly Character Change Trend Starter",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_NICK_WEEKLY_CLOSE_STOP_POLICY_001",
+      "strategy_display_name": "Nick Weekly Close Stop Policy",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_NICK_WEEKLY_SCALE_IN_ON_PROOF_001",
+      "strategy_display_name": "Nick Weekly Scale In On Proof",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_NICK_WEEKLY_SELL_DECISION_FRAMEWORK_001",
+      "strategy_display_name": "Nick Weekly Sell Decision Framework",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_OLIVER_KELL_PRICE_CYCLE",
+      "strategy_display_name": "Oliver Kell Price Cycle",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_OPEN_RANGE_5PCT_STOP_CHRISTIAN_5M",
+      "strategy_display_name": "Open Range 5PCT Stop Christian 5M",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_QTREND_V1_ALL_SIGNALS",
+      "strategy_display_name": "Qtrend V1 All Signals",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_QTREND_V1_SHORT",
+      "strategy_display_name": "Qtrend V1 Short",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_QTREND_V2_STRONG_ADX",
+      "strategy_display_name": "Qtrend V2 Strong ADX",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_ROPPEL_357_SCALEOUT_RISK_MODULE_v0",
+      "strategy_display_name": "Roppel 357 Scaleout Risk Module",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_ROPPEL_50D_RECLAIM_TIGHT_ACTION_v0",
+      "strategy_display_name": "Roppel Reclaim Tight Action",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_ROPPEL_EXTENSION_OVER_50D_HEDGE_SIGNAL_v0",
+      "strategy_display_name": "Roppel Extension Over Hedge Signal",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_ROPPEL_LEADERSHIP_THEME_SCORE_v0",
+      "strategy_display_name": "Roppel Leadership Theme Score",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_ROPPEL_POSITION_TRADING_HOLD_ENGINE_v0",
+      "strategy_display_name": "Roppel Position Trading Hold Engine",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_RS_PHASE_DAYS_PROSWING_OVERLAY",
+      "strategy_display_name": "Rs Phase Days Proswing Overlay",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_RYAN_LATE_ENTRY_CHASE_FILTER_001",
+      "strategy_display_name": "Ryan Late Entry Chase Filter",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_RYAN_MARKET_AWARENESS_GATE_001",
+      "strategy_display_name": "Ryan Market Awareness Gate",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_RYAN_PULLBACK_DANGER_ZONE_001",
+      "strategy_display_name": "Ryan Pullback Danger Zone",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_RYAN_SELL_INTO_STRENGTH_RUNNER_EXIT_001",
+      "strategy_display_name": "Ryan Sell Into Strength Runner Exit",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_RYAN_TIGHT_BREAKOUT_001",
+      "strategy_display_name": "Ryan Tight Breakout",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_SELL_RULES_MARKET_WIZARDS_OVERLAY",
+      "strategy_display_name": "Sell Rules Market Wizards Overlay",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_SLINGSHOT_4EMA_HIGH_PULLBACK_001",
+      "strategy_display_name": "Slingshot 4EMA High Pullback",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_SLINGSHOT_v1",
+      "strategy_display_name": "Slingshot",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_STAN_FAILED_RALLY_200D_SHORT_AVOID_v0",
+      "strategy_display_name": "Stan Failed Rally 200D Short Avoid",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_STAN_FOREST_GROUP_TREE_FILTER_v0",
+      "strategy_display_name": "Stan Forest Group Tree Filter",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_STAN_GOOD_COMPANY_BAD_CHART_BLOCK_v0",
+      "strategy_display_name": "Stan Good Company Bad Chart Block",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_STAN_SPLIT_TAPE_BREADTH_FILTER_v0",
+      "strategy_display_name": "Stan Split Tape Breadth Filter",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_STAN_STAGE_1B_TO_2A_BREAKOUT_v0",
+      "strategy_display_name": "Stan Stage 1B To 2A Breakout",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_STAN_STAGE_2A_PULLBACK_SUPPORT_v0",
+      "strategy_display_name": "Stan Stage 2A Pullback Support",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_STAN_UNFILLED_GAP_CONTINUATION_v0",
+      "strategy_display_name": "Stan Unfilled Gap Continuation",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_TITO_OPTIONS_AWARE_RISK_OVERLAY_v0",
+      "strategy_display_name": "Tito Options Aware Risk Overlay",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_TITO_PROFIT_WITHDRAWAL_CAPITAL_AT_RISK_v0",
+      "strategy_display_name": "Tito Profit Withdrawal Capital At Risk",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_TITO_RS_MOMENTUM_BREAKOUT_CROSSBACK_v0",
+      "strategy_display_name": "Tito Rs Momentum Breakout Crossback",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_TY_MICROCAP_LIQUIDITY_REVERSION_SHORT_001",
+      "strategy_display_name": "Ty Microcap Liquidity Reversion Short",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_VCP_BREAKOUT_DAILY_BASE_001",
+      "strategy_display_name": "VCP Breakout Daily Base",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_VCP_RICHARD_1D",
+      "strategy_display_name": "VCP Richard",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "QL_VWAP_TREND_CONT_v1",
+      "strategy_display_name": "VWAP Trend Cont",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from raw strategy id tokens."
+    },
+    {
+      "strategy_id": "UNKNOWN",
+      "strategy_display_name": "Unknown Strategy",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Curated from generated strategy family id."
+    },
+    {
+      "strategy_id": "YT_OLIVER_KELL_WEDGE_POP_PRICE_CYCLE_V1",
+      "strategy_display_name": "Oliver Kell Price Cycle (10/20 EMA)",
+      "source": "codex_ai_naming_2026_06_08",
+      "rationale": "Derived from existing strategy description family."
+    }
+  ]
+}
