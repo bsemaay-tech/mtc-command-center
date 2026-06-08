@@ -1,5 +1,14 @@
 # GLOBAL_HANDOFF
 
+## Codex GPT-5 2026-06-08 - batch023_034_2026-06-07 MCC tail complete
+- Ran `mcc_night_tail.sh` on `03_QUANTLENS/05_BACKTEST_RESULTS/batch023_034_2026-06-07` with `MCC_PYTHON` set to the Codex runtime Python.
+- Tail outputs: CPCV15 OK, PBO OK, 111 evaluation artifacts, 111 Gate2 scorecards, 111 all-gate artifacts, 111 Gate3 scorecards, 111 `scorecard_v2`, alpha OK, morning report OK.
+- MCC scorecard reader verification: total scorecards now 593, distinct strategies 46, `batch023_034_2026-06-07` contributes 111 v2 cards, 0 promotable.
+- The tail script's legacy `dashboard visible: NO` line checks `backtest_reader`; actual scorecard ingestion is PASS via `scorecard_reader`.
+- Report: `_AI_MEMORY/RESULT_BATCH023_034_MCC_TAIL_codex.md`.
+- Generated run artifacts are ignored by git and remain on disk under the run directory.
+- Next autonomous item: diagnose/export `night_1m_2026-06-07`, which lacks top-level `MEGA_walk_forward_results.json`.
+
 ## Codex GPT-5 2026-06-08 - full_sweep_2026-06-07 MCC tail complete
 - Ran `mcc_night_tail.sh` on `03_QUANTLENS/05_BACKTEST_RESULTS/full_sweep_2026-06-07` with `MCC_PYTHON` set to the Codex runtime Python.
 - Tail outputs: CPCV15 OK, PBO OK, 122 evaluation artifacts, 122 Gate2 scorecards, 122 all-gate artifacts, 122 Gate3 scorecards, 122 `scorecard_v2`, alpha OK, morning report OK.
