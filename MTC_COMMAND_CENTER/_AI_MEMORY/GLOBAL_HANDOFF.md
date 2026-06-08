@@ -1,5 +1,11 @@
 # GLOBAL_HANDOFF
 
+## Codex GPT-5 2026-06-08 - R2-36 Gate2 tooltip audit
+- Closed R2-36 as **no code change required**. The suspected Gate2 ghost tooltip is valid: all 360 current `scorecard_v2` files expose `metrics.wfo_pass`, and `score_gate2.py` / `build_evaluation_artifact.py` define and emit the walk-forward criterion.
+- Report: `_AI_MEMORY/UI Reviev/RESULT_R2_36_codex.md`.
+- No app, API, Pine, MTC, parity, or trading-logic files changed.
+- Next autonomous item: dead `renderDecisionPanel()` audit/removal.
+
 ## Claude Opus 4.8 2026-06-08 — Codex pickup handoff + UI Round-2 shipped
 - **Full pickup brief: `_AI_MEMORY/CODEX_PICKUP_2026-06-08.md`** (5 open work items, constraints, file map). Credit-out handoff Claude→Codex.
 - **UI Review Round 2 shipped: 8 commits** on master (`16c3c58 aaa089a 0f684b8 5a92065 e2bf40b cec2cf6 5f5f1a4` + this), ~26 findings (R2-*). app.js display-only + read-only readers; each `node --check` clean. Plan+4-way audit+progress: `_AI_MEMORY/UI Reviev/ROUND2_PLAN.md`. Highlights: gate label dedup (R2-14), stale "score below 65" source removed (R2-06), humanizeMetric label dictionary (R2-11/19), honest acceptance count "38 strategies · 360 runs" (R2-27), **QuantLens→"Gemini Pre-Screen" rename** (R2-D1, name reserved for the future Claude verdict), sortable acceptance table (R2-26), Gate3 "Not evaluated" honesty (R2-16).
