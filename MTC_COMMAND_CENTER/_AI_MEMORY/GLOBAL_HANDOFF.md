@@ -1,5 +1,80 @@
 # GLOBAL_HANDOFF
 
+## Claude Opus 4.8 2026-06-08 — Codex pickup handoff + UI Round-2 shipped
+- **Full pickup brief: `_AI_MEMORY/CODEX_PICKUP_2026-06-08.md`** (5 open work items, constraints, file map). Credit-out handoff Claude→Codex.
+- **UI Review Round 2 shipped: 8 commits** on master (`16c3c58 aaa089a 0f684b8 5a92065 e2bf40b cec2cf6 5f5f1a4` + this), ~26 findings (R2-*). app.js display-only + read-only readers; each `node --check` clean. Plan+4-way audit+progress: `_AI_MEMORY/UI Reviev/ROUND2_PLAN.md`. Highlights: gate label dedup (R2-14), stale "score below 65" source removed (R2-06), humanizeMetric label dictionary (R2-11/19), honest acceptance count "38 strategies · 360 runs" (R2-27), **QuantLens→"Gemini Pre-Screen" rename** (R2-D1, name reserved for the future Claude verdict), sortable acceptance table (R2-26), Gate3 "Not evaluated" honesty (R2-16).
+- **Night-run → MCC GAP (verified):** `night_1m_2026-06-07` (122) + `full_sweep_2026-06-07` (122) + `batch023_034_2026-06-07` (111) wrote to `gate2_scorecards/` not `scorecard_v2/` → invisible to MCC. Needs `mcc_night_tail.sh` enrich (D009 rule applies). Last night's `night_1m` finished clean (5 iters, 0 crash, ~1.08M evals).
+- Live snapshot: 38 strategies · 360 run-scorecards · 1 promotable. Round 1 (UI-1..39) = 38 shipped + UI-5 parked.
+
+## Codex GPT-5 2026-06-07 - Quiet 1M overnight QuantLens run STARTED
+
+Scope: Baris requested an autonomous overnight run of about 1,000,000 cases after the latest UI audit, max 10 workers and quiet machine. No Pine, MTC_V2, parity, trading logic, dashboard UI, or production/live path changed.
+
+Pre-read/gates: AGENTS.md, START_HERE.md, AI_RULES.md, backtest rules, runbook, backtest launch prompt, latest overnight lessons, GLOBAL_HANDOFF/NEXT_STEPS/DO_NOT_TOUCH, git status. DeepSeek planning dispatch was attempted per token discipline, but its suggested `quantlens.sweep` entrypoint was invalid; Codex audited and used the real entrypoint.
+
+Launched:
+- Launcher: `MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_1m_2026-06-07.sh`
+- Keep-awake wrapper: `MTC_COMMAND_CENTER/03_QUANTLENS/tools/start_night_1m_2026-06-07_keepawake.ps1`
+- Output root: `MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/night_1m_2026-06-07/`
+- Heartbeat: `MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/_heartbeat_night_1m_2026-06-07.json` plus dashboard-facing `_heartbeat.json`
+- Log: `MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/night_1m_2026-06-07.log`
+- Worker cap: 10, BLAS threads pinned to 1.
+- Target: 5 full MEGA passes x about 215,645 configs/pass = about 1,078,225 estimated config evaluations, then validation tail on the final successful pass.
+
+Verification before handoff: Bash syntax PASS; PowerShell parse PASS; real 2-worker smoke PASS wrote MEGA JSON for `QL_EMA_RETEST_v1/BNBUSDT/4h`; detached wrapper launched at 2026-06-07 23:36 local; heartbeat showed `status=running`, `stage=mega_sweep`, `iter=1`, `workers=10`, `crashes=0`.
+
+Important interpretation: repeated MEGA passes are deterministic soak/current-code evidence, not independent statistical proof. Do not promote anything from repetition count alone. The morning read should use the final validation artifacts and classify research-only unless all required gates prove otherwise.
+
+The earlier 18-worker `full_sweep_2026-06-07` is complete: 5015 cells, 122 evaluation artifacts, alpha summary `passes=122 beat_buyhold=55 premium=0 down_market_alpha=0`, report at `05_BACKTEST_RESULTS/full_sweep_2026-06-07/REPORT_full-2026-06-07.md`.
+
+## >>> NEXT SESSION PICKUP (Barış, 2026-06-07 — fresh window) <<<
+
+Barış reviewed the shipped UI fixes: "bazı şeyler düzeldi ama tam istediğim gibi değil" — partial
+satisfaction, wants ANOTHER refinement pass on the Strategy Detail page in a new session.
+
+State for the next agent:
+- 38/39 findings closed + committed (see entry below for commit list). UI-5 parked.
+- Code is sound (canonical keystone, binary band, provenance, honest gaps) but the VISUAL/UX result
+  does not fully match Barış's intent yet. The gap is taste/layout/wording, NOT correctness.
+- **First action:** reload dashboard, open Strategy Detail, walk it WITH Barış section by section to
+  capture exactly what still feels wrong. Do NOT assume — he will point at specifics.
+- All review artifacts: `MTC_COMMAND_CENTER/_AI_MEMORY/UI Reviev/` (5 screenshots, DISPATCH_PLAN.md
+  Waves 1-4, RESULT_*.md, AUDIT_REPORT_*.md per LLM).
+- Frontend: `08_DASHBOARD_APP/apps/web/app.js` (single file, ALL detail sections). canonical object
+  per row is available (`row.canonical`) — prefer it as the single source.
+- Token discipline: Barış's weekly Claude credit is low. Orchestrate (spec + audit), delegate code to
+  Antigravity/Codex/DeepSeek. Audit every sub-agent result on REAL data, never trust the report alone.
+- Constraints: display-only, read-only API. No Pine/MTC_V2/parity/trading-logic without explicit OK.
+- Open separate-project items: UI-30 producer_spec data-fill, Gate3 builder (both out of UI scope).
+
+## Claude Opus 4.8 2026-06-07 — MCC Strategy-Detail UI review COMPLETE (38/39 findings, multi-agent orchestrated)
+
+Scope: Barış section-by-section UI/UX review of the Strategy Detail page. 39 findings (UI-1..UI-39).
+Orchestrated across Antigravity / Codex / DeepSeek under token-budget; I (orchestrator) wrote NO code —
+specs + audits only. All work display-only + read-only API; no Pine/MTC_V2/parity/trading-logic changed.
+
+**Result: 38/39 closed. UI-5 PARKED (Barış). Final audit PASS.**
+
+Commits (chronological):
+- `aa18ab2` Phase 0 — UI-17/18/19/21/32/37 + UI-14 display (scoreForGate enum bug, promotable truthiness, N_A render)
+- `15a0e61` UI-36 KEYSTONE — API `build_canonical_display_row()`: single canonical object per row, precedence scorecard_v2>stage>legacy. Reconciles the 3 truth layers (pipeline-stage / scorecard / legacy-audit).
+- `473f5c3`+`f32c736` UI-8B — quantlens_reader scans `strategies/` (STG084 linkage); gate2_band binary (>=75 PASS, <75 FAIL), CONDITIONAL removed (D3b).
+- `d0594fa`+`c3f0e3d`+`9095b01` Phase A — 13 SST findings: merged backtest sections, verdict re-wired to canonical.promotable (6-level cascade), taxonomy/subtitle/blocker from canonical, acceptance panel relabeled "Global summary".
+- `1b3812e` UI-39 — STG042 collision dedupe: rejected triage entry -> `Stg042_REJECTED`; research STG042 + 8EMA Stg084 untouched.
+- `8d81355`+`f6000c5`+`40032cd` Phase B — journey MTC_V2 parity step, gate chevron+PASS detail, QuantLens scope copy, producer_spec gap banner (no fabrication), salvage caption, freshness timestamp.
+- `8821dd2`+`292c858`+`d26dbd5` Phase E — tooltips (Promotable/counter/Blocking chips/Needs-Review/QuantLens/promotion packet) + human-readable strategy IDs (raw on hover) + dedup header symbol/tf.
+
+Final audit (real data): `node --check app.js` clean; 35/35 API tests PASS; snapshot 176/176 rows carry `canonical`; gate2_band real dist PASS:5 FAIL:5 UNKNOWN:166 (0 CONDITIONAL).
+
+Architectural keystone: all panels now read ONE `canonical` object (UI-36). D3b binary enforced everywhere. Provenance tags on major sections. Gaps shown honestly (no fabricated SL/TP).
+
+Open (OUT OF UI-review scope — separate projects):
+- **UI-5** parked: `strategy_display_name` AI-generation field unimplemented (names come from raw `video_title`).
+- **UI-30 data-fill**: 58 producer_specs missing SL/TP, 3 fully empty (STG040/055/059). Display is now honest; actual rule-fill is a separate trading-logic task (needs approval + parity).
+- **Gate3 builder**: system-wide gap — Gate3 production-readiness scorer not implemented; all strategies INCOMPLETE. Pre-existing, not introduced here.
+
+Dispatch record: `MTC_COMMAND_CENTER/_AI_MEMORY/UI Reviev/DISPATCH_PLAN.md` (Waves 1-4) + RESULT_*.md per investigation.
+
 ## Claude Sonnet 4.6 2026-06-07 — Audit + full sweep dispatch
 
 **Audit (dadb8c8 — DeepSeek recovery session):**
@@ -10,7 +85,19 @@
 - Gate2 results: 4 PASS (QL_EMA_RETEST_v1 BNBUSDT 4h=90, QL_VWAP_TREND_CONT_v1 ARBUSDT 1h=91.87, QL_VWAP_TREND_CONT_v1 DOGEUSDT 2h=90.42, QL_HARRIS_50DMA_v1 TRXUSDT 4h=80.28). Gate3: all INCOMPLETE (expected). Promotable: 0/11.
 - QL_CANSLIM_SHAKEOUT_v1: 0 MEGA candidates. QL_ANTI_CHASE_CRABEL_v1: 5 cells FAIL only.
 
-**IN PROGRESS:** Full 59-strategy sweep script dispatched to DeepSeek V4 Pro (`full_sweep_2026-06-07.sh`). Will verify + launch after delivery.
+**Dashboard UI fixes committed (93c2cef):** 7 rendering issues fixed in `app.js`:
+- `formatStrategyId()`: pipe-separated IDs → human-readable
+- `acceptanceDateLabel()`: strips run prefixes, extracts date
+- `researchValue()`: handles UNKNOWN_TITLE/UNKNOWN literals
+- `friendlyStatus()`: used for audit/quality status (not raw statusText)
+- `tooltipFor()`: title attrs on trading rules kv table cells
+- quantlensLabel badge tooltip added
+- Verdict & Decision + Scorecard sections: descriptive subtitles with thresholds
+Node syntax check: SYNTAX_OK. Dashboard reload needed to serve updated app.js.
+
+**IN PROGRESS:** Full 59-strategy sweep `full_sweep_2026-06-07.sh` RUNNING.
+Status @ elapsed 2343s: 3444/5015 jobs (68.7%). PASS=52 STRONG_PASS=16 FAIL=1607 INSUFFICIENT=1592 NO_DATA=156.
+Throughput slowing (heavy strategies). Estimate Phase 1 done in ~1-2h more.
 
 **Blocked on Barış:**
 - 9 PRE_REG threshold defs (STG007/021/027/037/054/058/061/062/063) → unblocks strategy coding
@@ -1427,3 +1514,7 @@ All 3 files: legitimate Codex lifecycle work. Not committed (Barış commits).
 ## ChatGPT Codex 2026-06-06 — S6: D3b Worker Monitor UI
 
 Added `renderOvernightRunnerStatus()` (line 1845), `renderWorkerMonitorRow()` (line 1893), `formatHeartbeatTimestamp()` (line 1903) to `app.js`. Wired into `renderBacktest()` at line 1811-1814 via `#overnightRunnerStatus` div (index.html line 361, inside Backtest Lab section). Reads `state.snapshot.overnight_heartbeat` from D3a backend key. Three states: offline (available=false) / ALIVE (is_alive=true) / STALE. All values escaped, no fabricated data. Codex did not write report — Claude audited code directly. `node --check` PASS. Dashboard API: 35 passed (S6 touches no backend). Report: `_AI_MEMORY/PARALLEL_AGENT_REPORTS/S6_D3B_WORKER_MONITOR_REPORT.md`.
+
+## Codex GPT-5 2026-06-07 — UI-36 Canonical Display Row
+
+Implemented API-side `canonical` display rows in `08_DASHBOARD_APP/apps/api/mcc_readonly/scorecard_reader.py` and wired snapshot `candidate_pipeline.rows` through the same scorecard merge in `read_model.py`. Canonical fields now include defined/tested TF, TF mismatch, Gate2 status/score/band, normalized promotable bool, `gate_summary.blocking`, and scorecard-derived evidence level. Raw scorecard/stage/legacy fields remain intact. Validation: py_compile PASS; API unittest discovery 35/35 PASS; live snapshot smoke shows 176/176 audit rows and 176/176 pipeline rows carry `canonical`. Result note: `_AI_MEMORY/UI Reviev/RESULT_UI36_codex.md`.

@@ -2,6 +2,8 @@
 
 MTC Command Center (MCC) continuity handoff between AI sessions.
 
+> **▶ LATEST HANDOFF (2026-06-08, Claude → Codex): `_AI_MEMORY/CODEX_PICKUP_2026-06-08.md`.** 5 open work items + binding constraints + the night-run→MCC enrich gap. The 2026-05-31 state below is older background.
+
 ## Current State (2026-05-31)
 
 - Product: MTC Command Center · Short name: MCC

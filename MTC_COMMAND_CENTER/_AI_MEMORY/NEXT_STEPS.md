@@ -1,5 +1,22 @@
 # NEXT_STEPS
 
+## ▶ CODEX PICKUP 2026-06-08 — 5 open items (full detail: `_AI_MEMORY/CODEX_PICKUP_2026-06-08.md`)
+
+1. **Night-runs → MCC** `[AI: Codex]` — `night_1m_2026-06-07` (122), `full_sweep_2026-06-07` (122), `batch023_034_2026-06-07` (111) sit in `gate2_scorecards/`, NOT `scorecard_v2/` → MCC blind. Enrich via `mcc_night_tail.sh` (D009 scipy-hang rule! `run_python_clean.py`); verify `scorecard_version:"v2"` + refresh snapshot. ~355 scorecards.
+2. **UI Round-2 remainder** `[AI: Codex]` — R2-31 (scorecard vs snapshot freshness), R2-36 (Gate2 ghost tooltip), R2-13-deep (per-sub-score reason, backlog), R2-04/05 (verdict/badge ladders, backlog). Then Barış screenshot-re-check. Plan: `_AI_MEMORY/UI Reviev/ROUND2_PLAN.md`.
+3. **QuantLens = Claude/Codex verdict** `[AI: Codex|Barış]` — name freed (Gemini→"Gemini Pre-Screen", commit e2bf40b). Rubric `03_QUANTLENS/_user_guide/11_STRATEGY_DETAIL_PAGE_REDESIGN_PLAN.md §4.2-4.4`. Per-strategy AI verdict, opinion-only no-score, new data file → dashboard reads. Active AI work.
+4. **AI strategy naming** `[AI: Codex|Barış]` — assign clean human names per strategy (UI-5 was parked). Active AI work.
+5. **Backlog** — UI-30 producer_spec field-fill (needs approval), Gate3 builder (no scorer; binding decisions in memory mcc-gate3-promotion-decisions), W1 parity-in-night-flow, W2 auto-backtest-selector, delete dead `renderDecisionPanel()`, kill stray hung python (18480/57724/21200).
+
+## Dashboard UI architecture (2026-06-07)
+
+### UI-36-CANONICAL-ROW | DONE 2026-06-07 (Codex GPT-5) | API canonical display row [AI: Codex]
+- `scorecard_reader.py` now attaches `canonical` to every scorecard-merged row.
+- `read_model.py` now scorecard-merges `candidate_pipeline.rows` as well as audit rows.
+- Summary/schema written to `_AI_MEMORY/UI Reviev/RESULT_UI36_codex.md`.
+- Validation: py_compile PASS; API unittest discovery 35 passed; live snapshot smoke PASS.
+- Follow-up [AI: Claude|Codex]: migrate frontend panels to read `row.canonical` instead of raw stage/legacy fields.
+
 ## Strategy coding sprint (2026-06-07 — autonomous)
 
 ### N5-AUDIT | DONE 2026-06-07 (Claude) | 63-strateji kodlanabilirlik audit
@@ -12,11 +29,20 @@
 - 63/63 strateji artık producer_spec.json'a sahip (41 yeni, 22 mevcut)
 - 41 gerçek MEGA metrik; 22 dürüst placeholder (hiç uydurulmuş sayı yok)
 
-### FULL-59-SWEEP | IN PROGRESS 2026-06-07 (Claude + DeepSeek) | full_sweep_2026-06-07.sh dispatch [AI: Claude]
-- Script: `03_QUANTLENS/tools/full_sweep_2026-06-07.sh` (being written by DeepSeek V4 Pro)
-- 59 strategies via strat_batch_remaining.py chain, 18 workers
-- After: full validation pipeline (CPCV+PBO+eval+Gate2+all-gate+alpha+report)
-- D009 shim confirmed working — scipy.stats intercepted, no BLAS hang
+### FULL-59-SWEEP | DONE 2026-06-07 (Claude + DeepSeek) | full_sweep_2026-06-07.sh dispatch [AI: Claude]
+- Script: `03_QUANTLENS/tools/full_sweep_2026-06-07.sh`.
+- 59 strategies via strat_batch_remaining.py chain, 18 workers.
+- Result: 5015 cells, 122 evaluation artifacts, report written to `03_QUANTLENS/05_BACKTEST_RESULTS/full_sweep_2026-06-07/REPORT_full-2026-06-07.md`.
+- Alpha summary: passes=122, beat_buyhold=55, premium=0, down_market_alpha=0.
+- D009 shim confirmed working; scipy.stats intercepted, no BLAS hang.
+
+### NIGHT-1M-QUIET-2026-06-07 | RUNNING 2026-06-07 (Codex GPT-5) | 1M quiet overnight sweep [AI: Codex|Any]
+- User requested no questions, max 10 workers, quiet machine, about 1,000,000 cases after UI-audit work.
+- Launcher: `03_QUANTLENS/tools/night_1m_2026-06-07.sh`; keep-awake wrapper: `03_QUANTLENS/tools/start_night_1m_2026-06-07_keepawake.ps1`.
+- Output root: `03_QUANTLENS/05_BACKTEST_RESULTS/night_1m_2026-06-07/`.
+- Live heartbeat: `03_QUANTLENS/tools/overnight_runs/_heartbeat_night_1m_2026-06-07.json` and dashboard-facing `_heartbeat.json`.
+- Plan: 5 full MEGA passes at 10 workers, about 215,645 estimated configs/pass, target about 1,078,225, then validation tail on final successful pass.
+- Morning action [AI: Any]: verify heartbeat/logs, read `SUMMARY_night_1m_2026-06-07.md`, validate artifacts from the final successful iter, and keep the conclusion research-only unless gates prove otherwise. Repeated passes are deterministic soak/current-code evidence, not independent statistical proof.
 
 ### STG028-034-046-053-CODING | DONE 2026-06-07 (DeepSeek v4 Pro recovery) | 5 strategies swept + validated
 - File: `03_QUANTLENS/tools/strat_batch_remaining.py`

@@ -1,5 +1,7 @@
 ﻿# Current Status
 
+> **▶ 2026-06-08 — the live state + open work is in `_AI_MEMORY/CODEX_PICKUP_2026-06-08.md` (read it first).** Live snapshot now: **38 strategies · 360 backtest-run scorecards · 1 promotable**; UI Review Round 2 = 8 commits shipped (see `_AI_MEMORY/UI Reviev/ROUND2_PLAN.md`). The 2026-05-31 narrative below is older background and its counts are superseded.
+
 - Status: ACTIVE_DEVELOPMENT
 - Product: MTC Command Center (MCC)
 - Root: `C:\LAB\tradingview-lab\MTC_COMMAND_CENTER`

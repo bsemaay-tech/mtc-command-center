@@ -1,5 +1,7 @@
 # START_HERE
 
+> **▶ ACTIVE PICKUP (2026-06-08): read `_AI_MEMORY/CODEX_PICKUP_2026-06-08.md` FIRST.** It holds the 5 open work items (night-runs→MCC, UI Round-2 remainder, QuantLens Claude-verdict, AI naming, backlog) + binding constraints. Everything below is standing reference.
+
 Read order: `AGENTS.md`, this file, `AI_RULES.md`, `PROJECT_MEMORY.md`, `GLOBAL_HANDOFF.md` if needed, `NEXT_STEPS.md`, then project handoff files.
 
 Workflow gates and prompt templates: see `AI_RULES.md` and `..\04_SHARED\prompts\05_ai_workflow\00_index.md`.
