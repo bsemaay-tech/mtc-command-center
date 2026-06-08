@@ -1,5 +1,12 @@
 # GLOBAL_HANDOFF
 
+## Codex GPT-5 2026-06-08 - MCC night tail D009/D008 guard
+- Updated `03_QUANTLENS/tools/mcc_night_tail.sh` before running the hidden night-run enrichment: all Python steps now go through `run_python_clean.py`, satisfying D009 scipy/OpenBLAS shim requirements.
+- Changed PBO tail step from `--max-combinations 0` to `--max-combinations 100000`, satisfying D008 / NIGHT_BATCHES guidance.
+- Verification: `run_python_clean.py -c` shim smoke PASS; Git Bash `bash -n mcc_night_tail.sh` PASS; `rg` confirms no bare Python/PBO-zero launch remains.
+- Report: `_AI_MEMORY/RESULT_MCC_NIGHT_TAIL_D009_codex.md`.
+- Next autonomous item: run the tail on `full_sweep_2026-06-07` and `batch023_034_2026-06-07`, then verify MCC snapshot counts.
+
 ## Codex GPT-5 2026-06-08 - R2-31 scorecard freshness
 - Fixed Strategy Detail freshness display so it uses the selected `scorecard_v2.updated_at` timestamp when a scorecard is linked, with snapshot timestamp only as fallback/no-scorecard context.
 - Backend: `scorecard_reader.py` now normalizes `updated_at` from each scorecard JSON file mtime because current scorecard JSON has no internal timestamp fields.
