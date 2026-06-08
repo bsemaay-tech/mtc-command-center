@@ -976,7 +976,8 @@ function renderGateRow(key, label, gate) {
         // R2-12: only show a denominator when max_points is real (not null/0/undefined); no fake "?".
         const pts = s.points_awarded == null ? "—"
           : (s.max_points != null ? `${s.points_awarded}/${s.max_points}` : `${s.points_awarded} pts`);
-        return `<tr><td>${escapeHtml(metric)}</td><td>${escapeHtml(val)}</td><td>${escapeHtml(pts)}</td></tr>`;
+        const why = s.deduction_reason || s.reason || "";
+        return `<tr><td>${escapeHtml(metric)}</td><td>${escapeHtml(val)}</td><td>${escapeHtml(pts)}</td><td>${escapeHtml(why)}</td></tr>`;
       }).join("")}</table></div>`
     : "";
   return `

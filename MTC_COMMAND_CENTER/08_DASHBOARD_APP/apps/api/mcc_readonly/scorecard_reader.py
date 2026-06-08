@@ -161,13 +161,53 @@ def _normalize_scorecard(
         'updated_at': _timestamp(sc_file.stat().st_mtime),
         'scorecard_version': raw.get('scorecard_version'),
         'gate_summary': gate_summary,
-        'gate1': raw.get('gate1'),
-        'gate1B': raw.get('gate1B'),
-        'gate2': raw.get('gate2'),
-        'gate3': raw.get('gate3'),
+        'gate1': _normalize_gate(raw.get('gate1')),
+        'gate1B': _normalize_gate(raw.get('gate1B')),
+        'gate2': _normalize_gate(raw.get('gate2')),
+        'gate3': _normalize_gate(raw.get('gate3')),
         'flags': raw.get('flags') or [],
         'notes': raw.get('notes', ''),
     }
+
+
+def _normalize_gate(gate: Any) -> Any:
+    if not isinstance(gate, dict):
+        return gate
+    out = dict(gate)
+    sub_scores = gate.get('sub_scores')
+    if isinstance(sub_scores, list):
+        out['sub_scores'] = [_normalize_sub_score(row) for row in sub_scores]
+    return out
+
+
+def _normalize_sub_score(row: Any) -> Any:
+    if not isinstance(row, dict):
+        return row
+    out = dict(row)
+    max_points = out.get('max_points')
+    if max_points is None:
+        max_points = out.get('points_max')
+    if max_points is not None:
+        out['max_points'] = max_points
+    if not out.get('deduction_reason'):
+        out['deduction_reason'] = _sub_score_reason(out, max_points)
+    return out
+
+
+def _sub_score_reason(row: dict[str, Any], max_points: Any) -> str:
+    status = _string_value(row.get('metric_status')).upper()
+    awarded = _number_value(row.get('points_awarded'))
+    max_value = _number_value(max_points)
+    metric = _string_value(row.get('source_metric') or row.get('criterion')) or 'Metric'
+    if status and status != 'OK':
+        return f'{metric} was not scored because metric status is {status}.'
+    if awarded is None:
+        return f'{metric} did not receive usable scorer input.'
+    if max_value is not None and awarded >= max_value:
+        return 'Full credit: criterion met the full-credit threshold.'
+    if awarded <= 0:
+        return 'No credit: metric did not meet the scoring threshold.'
+    return 'Partial credit: metric was below the full-credit threshold.'
 
 
 def _pick_display_card(cards: list[dict[str, Any]]) -> dict[str, Any]:

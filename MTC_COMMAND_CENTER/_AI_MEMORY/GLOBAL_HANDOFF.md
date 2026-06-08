@@ -1608,3 +1608,9 @@ Checked backlog PIDs `18480`, `57724`, and `21200` with `Get-CimInstance Win32_P
 Closed W2/N5 with a read-only selector helper. Added `03_QUANTLENS/tools/build_needs_backtest_selector.py`, which reads the dashboard snapshot and selects rows where `eligible_for_backtest == true`, `scorecard_v2` is absent, and `expert_quantlens.decision` is not `SALVAGE`, `GARBAGE`, or `CLOSED_SOURCE_STOP`. It writes `03_QUANTLENS/05_BACKTEST_RESULTS/NEEDS_BACKTEST_SELECTOR.json` and `.md`.
 
 Current output has 89 candidates: 88 `MEDIUM`, 1 `LOW`; all selected rows have expert verdict `NEEDS_CLARIFICATION`. Added `apps/api/tests/test_needs_backtest_selector.py`. Validation: selector run PASS, py_compile PASS, focused test PASS, full dashboard API unittest discovery PASS (`39 tests`). This is only a selector/report; it does not launch backtests, MEGA, CPCV, PBO, parity, Pine, MTC_V2, or live trading. Detailed audit note: `_AI_MEMORY/RESULT_NEEDS_BACKTEST_SELECTOR_codex.md`.
+
+## Codex GPT-5 2026-06-08 - R2-13 sub-score deduction reasons
+
+Closed R2-13-deep without changing scoring math. `08_DASHBOARD_APP/apps/api/mcc_readonly/scorecard_reader.py` now normalizes gate `sub_scores` by adding `max_points` from existing `points_max` and deriving a short `deduction_reason` from existing metric status and awarded/max points. `08_DASHBOARD_APP/apps/web/app.js` now displays that reason in the gate sub-score table. Updated `tests/test_scorecard_reader.py`.
+
+Validation: py_compile PASS; focused scorecard reader test PASS; full dashboard API unittest discovery PASS (`39 tests`); `node --check app.js` PASS; real scorecard smoke reports 73,645/73,645 sub-scores with `deduction_reason` and 73,645/73,645 with `max_points`. No scoring thresholds, Pine, MTC_V2, parity, backtest engine, or trading behavior changed. Detailed audit note: `_AI_MEMORY/UI Reviev/RESULT_R2_13_DEEP_codex.md`.

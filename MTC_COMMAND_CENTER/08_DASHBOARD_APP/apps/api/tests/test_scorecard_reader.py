@@ -21,11 +21,14 @@ class ScorecardReaderTests(unittest.TestCase):
 
             run_paths = {run["run_path"] for run in payload["runs"]}
             strategy_ids = {card["strategy_id"] for card in payload["cards"]}
+            first_sub_score = payload["cards"][0]["gate2"]["sub_scores"][0]
             self.assertEqual(payload["count"], 2)
             self.assertIn("03_QUANTLENS/05_BACKTEST_RESULTS/top_run", run_paths)
             self.assertIn("03_QUANTLENS/05_BACKTEST_RESULTS/night_run/iter_05", run_paths)
             self.assertIn("GEN_TOP|BTCUSDT|1h", strategy_ids)
             self.assertIn("GEN_NESTED|ETHUSDT|4h", strategy_ids)
+            self.assertEqual(first_sub_score["max_points"], 4)
+            self.assertIn("Partial credit", first_sub_score["deduction_reason"])
 
 
 def _write_scorecard(run_dir: Path, strategy_id: str) -> None:
@@ -40,7 +43,18 @@ def _write_scorecard(run_dir: Path, strategy_id: str) -> None:
             "blocking": ["test"],
             "promotable": False,
         },
-        "gate2": {"status": "FAIL", "score": 10},
+        "gate2": {
+            "status": "FAIL",
+            "score": 10,
+            "sub_scores": [
+                {
+                    "criterion": "profit_factor",
+                    "points_max": 4,
+                    "metric_status": "OK",
+                    "points_awarded": 2,
+                }
+            ],
+        },
     }
     (scorecard_dir / f"{stem}.scorecard.json").write_text(json.dumps(payload), encoding="utf-8")
 
