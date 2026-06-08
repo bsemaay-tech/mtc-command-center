@@ -429,8 +429,10 @@ function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
     sourceRecord.summary
   ) || "No English strategy description is available yet.";
   const quantlens = findQuantlensCandidate(row, auditRow);
+  const expertQuantlens = findExpertQuantlensVerdict(row, auditRow, scorecardV2);
   const decision = buildWaveADecision(row, auditRow, mtcV2Row, scorecardV2, quantlens, canonical);
   const scoreDetail = renderWaveAScorecard(scorecardV2, scorecard, scorecardV2Cases, canonical);
+  const expertQuantlensVerdict = renderExpertQuantlensVerdict(expertQuantlens);
   const quantlensVerdict = renderQuantlensVerdict(quantlens);
   const taxonomy = renderStrategyTaxonomy(row, auditRow, producerSpecRaw, description, canonical);
   const journey = renderReviewJourney(row, auditRow, stages, canonical, scorecardV2);
@@ -473,6 +475,7 @@ function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
       ${renderVerdictDecision(decision)}
       ${scoreDetail}
       ${promotabilityPanel}
+      ${expertQuantlensVerdict}
       ${quantlensVerdict}
       ${taxonomy}
       ${journey}
@@ -640,6 +643,66 @@ function findQuantlensCandidate(row, auditRow) {
     .map(String);
   if (!keys.length) return null;
   return candidates.find((c) => keys.includes(String(c.candidate_id))) || null;
+}
+
+function findExpertQuantlensVerdict(row, auditRow, scorecardV2) {
+  const direct = (row && row.expert_quantlens_verdict)
+    || (auditRow && auditRow.expert_quantlens_verdict)
+    || (scorecardV2 && scorecardV2.expert_quantlens_verdict);
+  if (direct) return direct;
+  const ql = state.snapshot.expert_quantlens || {};
+  const byId = ql.by_strategy_id || {};
+  const keys = [
+    row && row.id,
+    row && row.strategy_id,
+    row && row.candidate_id,
+    auditRow && auditRow.id,
+    auditRow && auditRow.strategy_id,
+    auditRow && auditRow.candidate_id,
+    scorecardV2 && scorecardV2.base_strategy_id,
+  ].filter(Boolean).map(String);
+  for (const key of keys) {
+    if (byId[key]) return byId[key];
+  }
+  return null;
+}
+
+function renderExpertQuantlensVerdict(verdict) {
+  if (!verdict) {
+    return `
+    <section class="terminal-section quantlens-section">
+      <div class="terminal-section-head"><h4>QuantLens Expert Verdict</h4>
+        <span class="terminal-badge muted">Not reviewed</span></div>
+      <p class="muted-terminal">No Codex/Claude-authored QuantLens expert verdict is linked to this strategy yet. This layer is commentary only and never creates a gate score. <span class="provenance-tag">source: expert_quantlens</span></p>
+    </section>`;
+  }
+  const decision = String(verdict.decision || "").toUpperCase();
+  const badgeClass = decision === "PASS" ? "ok"
+    : (decision === "REJECT" || decision === "GARBAGE" || decision === "CLOSED_SOURCE_STOP") ? "bad"
+    : "amber";
+  const riskFlags = Array.isArray(verdict.risk_flags) ? verdict.risk_flags : [];
+  const facts = [
+    ["Can it be tested?", verdict.can_test || "Unknown"],
+    ["Blocking item", verdict.blocking || "Not specified"],
+    ["Commercial value", verdict.commercial_value || "Unknown"],
+    ["Literature relevance", verdict.literature_relevance || "Unknown"],
+    ["Testability", verdict.testability || "Unknown"],
+    ["Complexity", verdict.complexity || "Unknown"],
+  ];
+  return `
+    <section class="terminal-section quantlens-section">
+      <div class="terminal-section-head"><h4>QuantLens Expert Verdict</h4>
+        <span class="terminal-badge ${badgeClass}">${escapeHtml(verdict.decision_label || statusText(verdict.decision || "Reviewed"))}</span></div>
+      <p class="muted-terminal">Codex/Claude-authored expert commentary. It references the Scorecard but assigns no numeric score; the Scorecard remains the only scoring authority. <span class="provenance-tag">source: expert_quantlens</span></p>
+      <p class="verdict-line"><strong>${escapeHtml(verdict.decision_label || statusText(verdict.decision || "Reviewed"))}</strong></p>
+      ${verdict.reason ? `<p>${escapeHtml(verdict.reason)}</p>` : ""}
+      <div class="terminal-facts">
+        ${facts.map(([k, val]) => `<div><span>${escapeHtml(k)}</span><strong>${escapeHtml(String(val))}</strong></div>`).join("")}
+      </div>
+      ${riskFlags.length ? `<div class="chip-row">${riskFlags.map((flag) => `<span class="terminal-chip warn">${escapeHtml(statusText(flag))}</span>`).join("")}</div>` : ""}
+      ${verdict.score_reference ? `<p class="score-reference">${escapeHtml(verdict.score_reference)}</p>` : ""}
+      ${verdict.next_action ? `<p class="score-reference">Next action: ${escapeHtml(verdict.next_action)}</p>` : ""}
+    </section>`;
 }
 
 function renderQuantlensVerdict(quantlens) {
