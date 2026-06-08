@@ -1,5 +1,14 @@
 # GLOBAL_HANDOFF
 
+## Codex GPT-5 2026-06-08 - full_sweep_2026-06-07 MCC tail complete
+- Ran `mcc_night_tail.sh` on `03_QUANTLENS/05_BACKTEST_RESULTS/full_sweep_2026-06-07` with `MCC_PYTHON` set to the Codex runtime Python.
+- Tail outputs: CPCV15 OK, PBO OK, 122 evaluation artifacts, 122 Gate2 scorecards, 122 all-gate artifacts, 122 Gate3 scorecards, 122 `scorecard_v2`, alpha OK, morning report OK.
+- MCC scorecard reader verification: total scorecards now 482, distinct strategies 46, `full_sweep_2026-06-07` contributes 122 v2 cards, 0 promotable.
+- The tail script's legacy `dashboard visible: NO` line checks `backtest_reader`; actual scorecard ingestion is PASS via `scorecard_reader`.
+- Report: `_AI_MEMORY/RESULT_FULL_SWEEP_MCC_TAIL_codex.md`.
+- Generated run artifacts are ignored by git and remain on disk under the run directory.
+- Next autonomous item: run the same MCC tail on `batch023_034_2026-06-07`.
+
 ## Codex GPT-5 2026-06-08 - SciPy shim top-level import fix
 - Fixed `_scipy_shim.py` to support `from scipy import stats` by registering a fake top-level `scipy` module with `stats` attached.
 - This was required for `cpcv_validator.py` under the Codex bundled Python: numpy is available there, scipy is not installed, and the previous shim only covered `scipy.stats`.
