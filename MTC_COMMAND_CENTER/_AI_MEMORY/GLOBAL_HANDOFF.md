@@ -1572,3 +1572,13 @@ Added `renderOvernightRunnerStatus()` (line 1845), `renderWorkerMonitorRow()` (l
 ## Codex GPT-5 2026-06-07 — UI-36 Canonical Display Row
 
 Implemented API-side `canonical` display rows in `08_DASHBOARD_APP/apps/api/mcc_readonly/scorecard_reader.py` and wired snapshot `candidate_pipeline.rows` through the same scorecard merge in `read_model.py`. Canonical fields now include defined/tested TF, TF mismatch, Gate2 status/score/band, normalized promotable bool, `gate_summary.blocking`, and scorecard-derived evidence level. Raw scorecard/stage/legacy fields remain intact. Validation: py_compile PASS; API unittest discovery 35/35 PASS; live snapshot smoke shows 176/176 audit rows and 176/176 pipeline rows carry `canonical`. Result note: `_AI_MEMORY/UI Reviev/RESULT_UI36_codex.md`.
+
+## Codex GPT-5 2026-06-08 - night_1m_2026-06-07 MCC tail and nested scorecard discovery
+
+Completed the remaining night-run to MCC work. Diagnosis: `night_1m_2026-06-07` is an overnight container and its final validation source is `iter_05`; the top-level folder has no direct `MEGA_walk_forward_results.json`, while `iter_05` owns the actual MEGA output.
+
+Ran `03_QUANTLENS/tools/mcc_night_tail.sh` against `03_QUANTLENS/05_BACKTEST_RESULTS/night_1m_2026-06-07/iter_05` using bundled Python via `MCC_PYTHON`. Result: 122 evaluation artifacts, 122 Gate2 scorecards, 122 all-gate artifacts, 122 Gate3 scorecards, and 122 `scorecard_v2` files. `score_all_gates` reports `promotable=0 not_promotable=122`.
+
+Fixed dashboard read-only discovery in `08_DASHBOARD_APP/apps/api/mcc_readonly/scorecard_reader.py` so it scans nested directories that directly own `scorecard_v2`. Added `apps/api/tests/test_scorecard_reader.py` for nested scorecard runs. Validation: py_compile PASS; `python -m unittest tests.test_scorecard_reader` PASS; full dashboard API unittest discovery PASS (`36 tests`); real-data smoke reports 715 total scorecards, 18 runs, 46 distinct strategies, and 122 `night_1m_2026-06-07` v2 cards from `iter_05`.
+
+No Pine, MTC_V2, parity, live-trading, or strategy logic was changed. Detailed audit note: `_AI_MEMORY/RESULT_NIGHT_1M_MCC_TAIL_codex.md`.

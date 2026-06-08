@@ -31,14 +31,9 @@ def build_scorecards(mcc_root: str | Path | None = None) -> dict[str, Any]:
             'by_strategy': {},
         }
 
-    # ---- discover run directories (one level below backtest_root) ----
+    # ---- discover run directories ----
     # A "run" is any directory that contains a scorecard_v2 sub-directory.
-    run_dirs: list[Path] = []
-    for item in sorted(backtest_root.iterdir()):
-        if item.is_dir():
-            sc_dir = item / 'scorecard_v2'
-            if sc_dir.is_dir():
-                run_dirs.append(item)
+    run_dirs = _discover_scorecard_run_dirs(backtest_root)
 
     # Also scan 03_STATUS for readiness-validated scorecard sets
     status_root = root / '03_STATUS'
@@ -112,6 +107,22 @@ def build_scorecards(mcc_root: str | Path | None = None) -> dict[str, Any]:
             'bad_json_skipped': bad_json_count,
         },
     }
+
+
+def _discover_scorecard_run_dirs(backtest_root: Path) -> list[Path]:
+    """Return directories that directly own scorecard_v2 artifacts."""
+
+    run_dirs: list[Path] = []
+    seen: set[Path] = set()
+    for sc_dir in sorted(backtest_root.rglob('scorecard_v2')):
+        if not sc_dir.is_dir():
+            continue
+        run_dir = sc_dir.parent
+        if run_dir in seen:
+            continue
+        seen.add(run_dir)
+        run_dirs.append(run_dir)
+    return run_dirs
 
 
 def _normalize_scorecard(
