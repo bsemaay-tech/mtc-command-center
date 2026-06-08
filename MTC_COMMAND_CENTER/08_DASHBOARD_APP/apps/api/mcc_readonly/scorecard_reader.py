@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -146,6 +147,7 @@ def _normalize_scorecard(
         'run_id': run_dir.name,
         'run_name': run_dir.name,
         'source_path': sc_file.relative_to(mcc_root).as_posix(),
+        'updated_at': _timestamp(sc_file.stat().st_mtime),
         'scorecard_version': raw.get('scorecard_version'),
         'gate_summary': gate_summary,
         'gate1': raw.get('gate1'),
@@ -302,6 +304,10 @@ def _number_value(value: Any) -> float | int | None:
 
 def _string_value(value: Any) -> str:
     return str(value).strip() if value is not None else ''
+
+
+def _timestamp(epoch_seconds: float) -> str:
+    return datetime.fromtimestamp(epoch_seconds, timezone.utc).isoformat()
 
 
 def attach_scorecards_to_rows(

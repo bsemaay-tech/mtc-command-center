@@ -460,7 +460,7 @@ function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
       </div>
       <section class="detail-hero">
         <div>
-          <p class="detail-kicker">${escapeHtml(stgCode || "Strategy Detail")}${snapshotFreshness()}</p>
+          <p class="detail-kicker">${escapeHtml(stgCode || "Strategy Detail")}${snapshotFreshness(scorecardV2)}</p>
           <h3 class="detail-title">${escapeHtml(title)}</h3>
           <p class="detail-subtitle">${escapeHtml(subtitle)}</p>
           ${displayDescription && displayDescription.trim().toLowerCase() !== String(title).trim().toLowerCase() ? `<p class="detail-description">${escapeHtml(displayDescription)}</p>` : ""}
@@ -521,11 +521,18 @@ function strategySubtitle(row, auditRow, sourceUrl, canonical) {
   return [instrument, tfLabel, sourceKind].filter(Boolean).join(" / ") || "Review data not available yet";
 }
 
-function snapshotFreshness() {
+function snapshotFreshness(scorecardV2) {
   const status = state.snapshot && state.snapshot.current_status ? state.snapshot.current_status : {};
-  const ts = status.last_updated || status.generated_at || (state.snapshot && state.snapshot.generated_at) || "";
-  if (!ts) return "";
-  return ` <span class="freshness-tag" title="Snapshot data last updated">Data: ${escapeHtml(ts)}</span>`;
+  const snapshotTs = status.last_updated || status.generated_at || (state.snapshot && state.snapshot.generated_at) || "";
+  const scorecardTs = scorecardV2 && (scorecardV2.updated_at || scorecardV2.generated_at || "");
+  if (scorecardTs) {
+    const title = snapshotTs
+      ? `Displayed scorecard file last modified. Snapshot refreshed: ${snapshotTs}`
+      : "Displayed scorecard file last modified.";
+    return ` <span class="freshness-tag" title="${escapeHtml(title)}">Scorecard: ${escapeHtml(scorecardTs)}</span>`;
+  }
+  if (!snapshotTs) return "";
+  return ` <span class="freshness-tag" title="Snapshot data last updated; no scorecard_v2 artifact is linked to this row.">Snapshot: ${escapeHtml(snapshotTs)}</span>`;
 }
 
 function cleanDisplayText(value) {

@@ -1,5 +1,14 @@
 # GLOBAL_HANDOFF
 
+## Codex GPT-5 2026-06-08 - R2-31 scorecard freshness
+- Fixed Strategy Detail freshness display so it uses the selected `scorecard_v2.updated_at` timestamp when a scorecard is linked, with snapshot timestamp only as fallback/no-scorecard context.
+- Backend: `scorecard_reader.py` now normalizes `updated_at` from each scorecard JSON file mtime because current scorecard JSON has no internal timestamp fields.
+- Frontend: `app.js` now renders `Scorecard: <timestamp>` in the detail header and includes snapshot refresh time in the tooltip.
+- Verification: py_compile PASS, `node --check app.js` PASS, dashboard API unittest discovery 35 PASS, snapshot smoke confirms 360/360 scorecard cards have `updated_at`.
+- Report: `_AI_MEMORY/UI Reviev/RESULT_R2_31_codex.md`.
+- No Pine, MTC, parity, score math, or trading-logic files changed.
+- Browser screenshot was not run because the in-app Browser tool was not exposed by tool discovery in this turn.
+
 ## Codex GPT-5 2026-06-08 - Dead renderDecisionPanel cleanup
 - Removed unused `renderDecisionPanel()` from `08_DASHBOARD_APP/apps/web/app.js` and removed the now-unused `.decision-panel` / `.decision-item` CSS from `styles.css`.
 - Verification: `node --check MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\app.js` PASS; `rg "renderDecisionPanel|decision-panel|decision-item"` across web app files returns no references.
