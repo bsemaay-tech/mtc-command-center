@@ -1602,3 +1602,9 @@ Validation: py_compile PASS for `expert_quantlens_reader.py` and `read_model.py`
 ## Codex GPT-5 2026-06-08 - Stray process check
 
 Checked backlog PIDs `18480`, `57724`, and `21200` with `Get-CimInstance Win32_Process`. No matching processes were present, so nothing was killed. Detailed audit note: `_AI_MEMORY/RESULT_STRAY_PROCESS_CHECK_codex.md`.
+
+## Codex GPT-5 2026-06-08 - Needs-backtest selector
+
+Closed W2/N5 with a read-only selector helper. Added `03_QUANTLENS/tools/build_needs_backtest_selector.py`, which reads the dashboard snapshot and selects rows where `eligible_for_backtest == true`, `scorecard_v2` is absent, and `expert_quantlens.decision` is not `SALVAGE`, `GARBAGE`, or `CLOSED_SOURCE_STOP`. It writes `03_QUANTLENS/05_BACKTEST_RESULTS/NEEDS_BACKTEST_SELECTOR.json` and `.md`.
+
+Current output has 89 candidates: 88 `MEDIUM`, 1 `LOW`; all selected rows have expert verdict `NEEDS_CLARIFICATION`. Added `apps/api/tests/test_needs_backtest_selector.py`. Validation: selector run PASS, py_compile PASS, focused test PASS, full dashboard API unittest discovery PASS (`39 tests`). This is only a selector/report; it does not launch backtests, MEGA, CPCV, PBO, parity, Pine, MTC_V2, or live trading. Detailed audit note: `_AI_MEMORY/RESULT_NEEDS_BACKTEST_SELECTOR_codex.md`.
