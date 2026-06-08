@@ -1598,3 +1598,7 @@ Implemented the requested Codex/Claude-authored QuantLens expert verdict layer a
 Updated `08_DASHBOARD_APP/apps/web/app.js` to render a Strategy Detail `QuantLens Expert Verdict` section after the Scorecard/Promotability area and before the legacy Gemini Pre-Screen section. The section states that QuantLens is commentary only, references the Scorecard, and assigns no numeric score. Current distribution is deliberately strict: 141 `NEEDS_CLARIFICATION`, 46 `RESEARCH_ONLY`, 25 `SALVAGE`, 0 `PASS`.
 
 Validation: py_compile PASS for `expert_quantlens_reader.py` and `read_model.py`; focused reader tests PASS; full dashboard API unittest discovery PASS (`38 tests`); `node --check app.js` PASS; real snapshot smoke reports `expert_count=212`, 176/176 pipeline rows with expert verdicts, and 715/715 scorecards with expert verdicts. Browser visual verification could not be run because Browser was not exposed by tool discovery in this session. No Pine, MTC_V2, parity, backtest engine, live-trading, or strategy logic files were changed. Detailed audit note: `_AI_MEMORY/RESULT_EXPERT_QUANTLENS_VERDICTS_codex.md`.
+
+## Codex GPT-5 2026-06-08 - Stray process check
+
+Checked backlog PIDs `18480`, `57724`, and `21200` with `Get-CimInstance Win32_Process`. No matching processes were present, so nothing was killed. Detailed audit note: `_AI_MEMORY/RESULT_STRAY_PROCESS_CHECK_codex.md`.
