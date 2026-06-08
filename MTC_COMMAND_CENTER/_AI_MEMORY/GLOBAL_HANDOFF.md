@@ -1614,3 +1614,9 @@ Current output has 89 candidates: 88 `MEDIUM`, 1 `LOW`; all selected rows have e
 Closed R2-13-deep without changing scoring math. `08_DASHBOARD_APP/apps/api/mcc_readonly/scorecard_reader.py` now normalizes gate `sub_scores` by adding `max_points` from existing `points_max` and deriving a short `deduction_reason` from existing metric status and awarded/max points. `08_DASHBOARD_APP/apps/web/app.js` now displays that reason in the gate sub-score table. Updated `tests/test_scorecard_reader.py`.
 
 Validation: py_compile PASS; focused scorecard reader test PASS; full dashboard API unittest discovery PASS (`39 tests`); `node --check app.js` PASS; real scorecard smoke reports 73,645/73,645 sub-scores with `deduction_reason` and 73,645/73,645 with `max_points`. No scoring thresholds, Pine, MTC_V2, parity, backtest engine, or trading behavior changed. Detailed audit note: `_AI_MEMORY/UI Reviev/RESULT_R2_13_DEEP_codex.md`.
+
+## Codex GPT-5 2026-06-08 - R2-04/R2-05 verdict and badge ladder tooltip
+
+Closed R2-04/R2-05 as requested in the backlog style: no stacked widget, only a compact tooltip. `08_DASHBOARD_APP/apps/web/app.js` now adds `verdictLadderTooltip()` and `badgeLadderTooltip()`, and the Verdict & Decision badge title includes the current-state explanation plus the verdict and badge ladders.
+
+Validation: `node --check app.js` PASS; full dashboard API unittest discovery PASS (`39 tests`); `rg` confirms ladder text is limited to tooltip helpers. Display-only change; no scoring, Pine, MTC_V2, parity, backtest engine, or trading behavior changed. Detailed audit note: `_AI_MEMORY/UI Reviev/RESULT_R2_04_05_codex.md`.

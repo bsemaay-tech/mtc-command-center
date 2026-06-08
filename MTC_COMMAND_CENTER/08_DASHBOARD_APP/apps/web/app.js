@@ -841,11 +841,12 @@ function renderVerdictDecision(decision) {
   const verdictBadgeClass = decision.gsPromotable ? "ok" : (decision.canTest === "Yes" ? "amber" : "bad");
   const verdictBadgeLabel = decision.gsPromotable ? "Promotable" : (decision.canTest === "Yes" ? "Can test" : "Blocked");
   const verdictBadgeTitle = decision.gsPromotable ? "Passed all gates incl. Gate3, ready for promotion packet." : (decision.canTest === "Yes" ? "Deterministic rules exist; ready for backtest review." : "At least one blocking gate is preventing advancement.");
+  const ladderTitle = `${verdictBadgeTitle}\n\n${verdictLadderTooltip()}\n\n${badgeLadderTooltip()}`;
   return `
     <section class="terminal-section verdict-section">
       <div class="terminal-section-head">
         <h4>Verdict &amp; Decision</h4>
-        <span class="terminal-badge ${verdictBadgeClass}" title="${escapeHtml(verdictBadgeTitle)}">${escapeHtml(verdictBadgeLabel)}</span>
+        <span class="terminal-badge ${verdictBadgeClass}" title="${escapeHtml(ladderTitle)}">${escapeHtml(verdictBadgeLabel)}</span>
       </div>
       <p class="muted-sub">Primary verdict derived from gate_summary and canonical data. Gemini Pre-Screen = pre-screen commentary, not gate scoring. <span class="provenance-tag">source: gate_summary + canonical</span></p>
       <p class="verdict-line"><strong>${escapeHtml(decision.verdict)}</strong></p>
@@ -863,6 +864,14 @@ function renderVerdictDecision(decision) {
       <p class="score-reference">${escapeHtml(decision.scoreReference)}</p>
     </section>
   `;
+}
+
+function verdictLadderTooltip() {
+  return "Verdict ladder: Promotable -> Backtest passed / awaiting gates -> Ready for backtest review -> Partially testable -> Blocked by missing rules -> Needs source clarification.";
+}
+
+function badgeLadderTooltip() {
+  return "Badge ladder: Promotable = all gates pass; Can test = deterministic/testable but not promotable; Blocked = missing rules or blocking gate.";
 }
 
 function renderWaveAScorecard(scorecardV2, legacyScorecard, scorecardV2Cases = [], canonical = {}) {
