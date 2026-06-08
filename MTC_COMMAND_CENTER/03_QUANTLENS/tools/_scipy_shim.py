@@ -85,6 +85,14 @@ def install_shim():
     _fake_stats.__name__ = 'scipy.stats'
     sys.modules['scipy.stats'] = _fake_stats
 
+    # Support both import styles used in the tools:
+    #   import scipy.stats
+    #   from scipy import stats
+    _fake_scipy = types.ModuleType('scipy')
+    _fake_scipy.stats = _fake_stats
+    _fake_scipy.__file__ = __file__
+    sys.modules['scipy'] = _fake_scipy
+
     # Also patch scipy.stats._continuous_distns which norm normally lives in
     _fake_cont = types.ModuleType('scipy.stats._continuous_distns')
     _fake_cont.norm = _FakeNorm()

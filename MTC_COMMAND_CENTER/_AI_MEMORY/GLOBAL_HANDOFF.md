@@ -1,5 +1,12 @@
 # GLOBAL_HANDOFF
 
+## Codex GPT-5 2026-06-08 - SciPy shim top-level import fix
+- Fixed `_scipy_shim.py` to support `from scipy import stats` by registering a fake top-level `scipy` module with `stats` attached.
+- This was required for `cpcv_validator.py` under the Codex bundled Python: numpy is available there, scipy is not installed, and the previous shim only covered `scipy.stats`.
+- Verification: `run_python_clean.py -c "from scipy import stats; import numpy"` PASS; focused CPCV smoke wrote `cpcv_results.json`; Git Bash syntax check for `mcc_night_tail.sh` PASS.
+- Report: `_AI_MEMORY/RESULT_SCIPY_SHIM_TOPLEVEL_codex.md`.
+- Next autonomous item: rerun `mcc_night_tail.sh` on `full_sweep_2026-06-07` with `MCC_PYTHON` set to the Codex runtime, then run `batch023_034_2026-06-07`.
+
 ## Codex GPT-5 2026-06-08 - MCC night tail D009/D008 guard
 - Updated `03_QUANTLENS/tools/mcc_night_tail.sh` before running the hidden night-run enrichment: all Python steps now go through `run_python_clean.py`, satisfying D009 scipy/OpenBLAS shim requirements.
 - Changed PBO tail step from `--max-combinations 0` to `--max-combinations 100000`, satisfying D008 / NIGHT_BATCHES guidance.
