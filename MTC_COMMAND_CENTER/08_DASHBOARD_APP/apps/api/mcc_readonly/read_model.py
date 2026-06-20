@@ -76,6 +76,15 @@ READ_MODEL_FILES: tuple[ReadModelFile, ...] = (
 _SNAPSHOT_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
 _SNAPSHOT_CACHE_TTL_SECONDS = 30.0
 
+# Full (un-slimmed) scorecards retained for the lazy-load detail endpoint. The default
+# HTTP snapshot drops per-card gate ``sub_scores`` / verbose notes; the detail endpoint
+# serves the full cards for one requested strategy from this cache.
+_FULL_SCORECARDS_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
+_FULL_SCORECARDS_TTL_SECONDS = 120.0
+
+_GATE_KEYS = ("gate1", "gate1B", "gate2", "gate3")
+_NOTES_PREVIEW_CHARS = 160
+
 
 def build_read_model(mcc_root: str | Path | None = None) -> dict[str, Any]:
     root = canonicalize(mcc_root or default_mcc_root())
@@ -163,34 +172,152 @@ def _slim_rows_cases(rows: Any) -> Any:
     return slimmed
 
 
+def _slim_gate(gate: Any) -> Any:
+    """Drop the verbose ``sub_scores`` detail from a gate object; keep score/max/status.
+
+    The per-gate ``sub_scores`` arrays (full criterion / deduction text) are the bulk of the
+    snapshot. Scores, max, and statuses stay inline so list/summary pages keep working; the
+    full sub_scores are served on demand by the scorecard-detail endpoint.
+    """
+    if not isinstance(gate, dict) or "sub_scores" not in gate:
+        return gate
+    trimmed = dict(gate)
+    trimmed.pop("sub_scores", None)
+    return trimmed
+
+
+def _slim_card(card: Any) -> Any:
+    """Return a summary copy of a scorecard card with verbose gate detail removed.
+
+    Preserves: ids, names, symbol/timeframe/profile, gate scores+statuses, gate_summary,
+    promotion_status, provenance, profile_mapping, robustness, universe_mismatch, and all
+    other small fields. Removes per-gate ``sub_scores`` and collapses the verbose ``notes``
+    array to ``notes_count`` (+ a short ``notes_preview``).
+    """
+    if not isinstance(card, dict):
+        return card
+    out = dict(card)
+    for key in _GATE_KEYS:
+        if isinstance(out.get(key), dict):
+            out[key] = _slim_gate(out[key])
+    notes = out.get("notes")
+    if isinstance(notes, list):
+        out["notes_count"] = len(notes)
+        first = next((str(n) for n in notes if n), "")
+        out["notes_preview"] = first[:_NOTES_PREVIEW_CHARS]
+        out.pop("notes", None)
+    return out
+
+
+def _slim_scorecard_cases(rows: Any) -> Any:
+    """Drop ``scorecard_v2`` gate ``sub_scores`` from pipeline rows (kept score/status)."""
+    if not isinstance(rows, list):
+        return rows
+    out = []
+    for row in rows:
+        if isinstance(row, dict) and isinstance(row.get("scorecard_v2"), dict):
+            new_row = dict(row)
+            v2 = dict(row["scorecard_v2"])
+            for key in _GATE_KEYS:
+                if isinstance(v2.get(key), dict):
+                    v2[key] = _slim_gate(v2[key])
+            new_row["scorecard_v2"] = v2
+            out.append(new_row)
+        else:
+            out.append(row)
+    return out
+
+
 def _slim_http_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
     """Strip heavy, UI-unused fields from the HTTP snapshot (read-only serialization only).
 
-    Low-risk payload slimming per SNAPSHOT_PAYLOAD_PERFORMANCE_AUDIT_2026-06-16:
+    Payload slimming per SNAPSHOT_PAYLOAD_PERFORMANCE_AUDIT_2026-06-16:
       - drop ``scorecards.by_strategy`` (duplicate of ``cards``; never read by the frontend);
       - omit top-level ``candidate_audit`` (CLI/tests only; not read by the frontend);
       - collapse ``candidate_pipeline.rows[].scorecard_v2_cases`` arrays to integer counts.
-    Underlying readers, CLI, source artifacts, and scorecard ``cards`` are untouched.
+    M1 lazy-load slimming (full detail served via /api/scorecard-detail):
+      - drop per-card gate ``sub_scores`` and verbose ``notes`` from ``scorecards.cards``;
+      - drop ``scorecard_v2`` gate ``sub_scores`` from pipeline rows (scores/statuses kept).
+    Underlying readers, CLI, source artifacts, and the full scorecards cache are untouched.
     """
     slimmed = dict(snapshot)
     slimmed.pop("candidate_audit", None)
 
     scorecards = slimmed.get("scorecards")
-    if isinstance(scorecards, dict) and "by_strategy" in scorecards:
+    if isinstance(scorecards, dict):
         scorecards = dict(scorecards)
         scorecards.pop("by_strategy", None)
+        if isinstance(scorecards.get("cards"), list):
+            scorecards["cards"] = [_slim_card(c) for c in scorecards["cards"]]
         slimmed["scorecards"] = scorecards
 
     pipeline = slimmed.get("candidate_pipeline")
     if isinstance(pipeline, dict):
         pipeline = dict(pipeline)
         if isinstance(pipeline.get("rows"), list):
-            pipeline["rows"] = _slim_rows_cases(pipeline["rows"])
+            pipeline["rows"] = _slim_scorecard_cases(_slim_rows_cases(pipeline["rows"]))
         if isinstance(pipeline.get("candidates"), list):
-            pipeline["candidates"] = _slim_rows_cases(pipeline["candidates"])
+            pipeline["candidates"] = _slim_scorecard_cases(_slim_rows_cases(pipeline["candidates"]))
         slimmed["candidate_pipeline"] = pipeline
 
     return slimmed
+
+
+def build_scorecard_detail(
+    mcc_root: str | Path | None = None, strategy_id: str | None = None
+) -> dict[str, Any]:
+    """Read-only full-detail lookup for one strategy's scorecard cards (lazy-load endpoint).
+
+    Returns full cards (including gate ``sub_scores`` and notes) for the requested base/
+    strategy id. Never reads arbitrary files or accepts paths — only an id is matched against
+    the in-memory full scorecards. ``count`` is 0 with an empty ``cards`` list when not found.
+    """
+    root = str(canonicalize(mcc_root or default_mcc_root()))
+    sid = (strategy_id or "").strip()
+    result: dict[str, Any] = {
+        "schema_version": "1.0",
+        "mode": "read_only",
+        "strategy_id": sid,
+        "source": "scorecards",
+        "generated_at": _utc_now_iso(),
+        "count": 0,
+        "cards": [],
+    }
+    if not sid:
+        return result
+
+    scorecards = _full_scorecards_cached(root)
+    cards = scorecards.get("cards") if isinstance(scorecards, dict) else None
+    if not isinstance(cards, list):
+        return result
+
+    matched = [
+        card
+        for card in cards
+        if isinstance(card, dict)
+        and sid in {card.get("base_strategy_id"), card.get("strategy_id")}
+    ]
+    result["count"] = len(matched)
+    result["cards"] = matched
+    return result
+
+
+def _full_scorecards_cached(root: str) -> dict[str, Any]:
+    now = time.monotonic()
+    cached = _FULL_SCORECARDS_CACHE.get(root)
+    if cached and now - cached[0] <= _FULL_SCORECARDS_TTL_SECONDS:
+        return cached[1]
+    # Rebuild + repopulate the cache via a normal snapshot build (it stores full scorecards).
+    build_dashboard_snapshot(root)
+    cached = _FULL_SCORECARDS_CACHE.get(root)
+    return cached[1] if cached else {}
+
+
+def _utc_now_iso() -> str:
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc).isoformat()
+
 
 def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, Any]:
     model = build_read_model(mcc_root)
@@ -216,6 +343,9 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
     scorecards = attach_ai_strategy_names_to_scorecards(scorecards, ai_strategy_names)
     expert_quantlens = build_expert_quantlens(model["mcc_root"])
     scorecards = attach_expert_quantlens_to_scorecards(scorecards, expert_quantlens)
+    # Retain full (un-slimmed) scorecards for the lazy-load detail endpoint before the HTTP
+    # response is slimmed. Keyed by canonical root to match the snapshot cache.
+    _FULL_SCORECARDS_CACHE[str(canonicalize(model["mcc_root"]))] = (time.monotonic(), scorecards)
     if isinstance(candidate_audit.get("rows"), list):
         candidate_audit = dict(candidate_audit)
         candidate_audit["rows"] = attach_ai_strategy_names_to_rows(candidate_audit["rows"], ai_strategy_names)
@@ -283,8 +413,8 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
             for key, value in files.items()
         },
     }
-
     return _slim_http_snapshot(snapshot)
+
 
 def build_dashboard_snapshot_cached(
     mcc_root: str | Path | None = None,

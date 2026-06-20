@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from http.client import HTTPConnection
 from pathlib import Path
+from urllib.parse import quote
 
 from mcc_readonly.health import build_health_report
 from mcc_readonly.json_io import read_json_file
@@ -108,6 +109,30 @@ class ReadOnlyCoreTests(unittest.TestCase):
             self.assertIn("summary", snapshot["body"]["pine_builder_status"])
             self.assertIn("candidates", snapshot["body"]["strategy_registry"])
 
+            # M1 lazy-load slim: scorecard cards keep gate scores/statuses but drop the
+            # verbose gate sub_scores and notes (served on demand by /api/scorecard-detail).
+            sc_cards = snapshot["body"]["scorecards"]["cards"]
+            self.assertIsInstance(sc_cards, list)
+            for card in sc_cards:
+                for gk in ("gate1", "gate1B", "gate2", "gate3"):
+                    gate = card.get(gk)
+                    if isinstance(gate, dict):
+                        self.assertNotIn("sub_scores", gate)
+                self.assertNotIn("notes", card)
+            self.assertTrue(
+                any(
+                    isinstance(c.get("gate_summary"), dict) and "statuses" in c["gate_summary"]
+                    for c in sc_cards
+                )
+            )
+            # pipeline rows also drop scorecard_v2 gate sub_scores but keep scores/statuses.
+            for row in snapshot["body"]["candidate_pipeline"].get("rows", []):
+                v2 = row.get("scorecard_v2")
+                if isinstance(v2, dict):
+                    for gk in ("gate1", "gate1B", "gate2", "gate3"):
+                        if isinstance(v2.get(gk), dict):
+                            self.assertNotIn("sub_scores", v2[gk])
+
             refresh_snapshot = _request_json(host, port, "GET", "/api/snapshot?refresh=1")
             self.assertEqual(refresh_snapshot["status"], 200)
             self.assertEqual(refresh_snapshot["body"]["snapshot_cache"]["status"], "REFRESH")
@@ -136,6 +161,37 @@ class ReadOnlyCoreTests(unittest.TestCase):
             blocked = _request_json(host, port, "POST", "/api/snapshot")
             self.assertEqual(blocked["status"], 405)
             self.assertIn("read-only", blocked["body"]["error"])
+
+            # --- /api/scorecard-detail lazy-load endpoint ---
+            sid = "GEN_ATR_PULLBACK_TREND"
+            detail = _request_json(host, port, "GET", "/api/scorecard-detail?strategy_id=" + quote(sid))
+            self.assertEqual(detail["status"], 200)
+            self.assertEqual(detail["body"]["mode"], "read_only")
+            self.assertEqual(detail["body"]["strategy_id"], sid)
+            self.assertGreater(detail["body"]["count"], 0)
+            # full detail restores gate sub_scores for at least one gate.
+            self.assertTrue(
+                any(
+                    isinstance(card.get(gk), dict) and "sub_scores" in card[gk]
+                    for card in detail["body"]["cards"]
+                    for gk in ("gate1", "gate1B", "gate2", "gate3")
+                )
+            )
+
+            missing = _request_json(host, port, "GET", "/api/scorecard-detail?strategy_id=NO_SUCH_STRATEGY_XYZ")
+            self.assertEqual(missing["status"], 404)
+            self.assertEqual(missing["body"]["count"], 0)
+            self.assertEqual(missing["body"]["cards"], [])
+
+            # no arbitrary file read: path-like / traversal / missing params rejected.
+            traversal = _request_json(host, port, "GET", "/api/scorecard-detail?strategy_id=" + quote("../../etc/passwd"))
+            self.assertEqual(traversal["status"], 400)
+            no_param = _request_json(host, port, "GET", "/api/scorecard-detail")
+            self.assertEqual(no_param["status"], 400)
+
+            # write methods blocked on the new endpoint too.
+            blocked_detail = _request_json(host, port, "POST", "/api/scorecard-detail?strategy_id=" + quote(sid))
+            self.assertEqual(blocked_detail["status"], 405)
         finally:
             server.shutdown()
             server.server_close()

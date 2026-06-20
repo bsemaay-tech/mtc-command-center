@@ -9,7 +9,9 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from .health import build_health_report
-from .read_model import build_dashboard_snapshot_cached, build_read_model
+from .read_model import build_dashboard_snapshot_cached, build_read_model, build_scorecard_detail
+
+_STRATEGY_ID_MAX_LEN = 200
 
 
 class MCCReadOnlyHandler(BaseHTTPRequestHandler):
@@ -29,7 +31,7 @@ class MCCReadOnlyHandler(BaseHTTPRequestHandler):
                 {
                     "service": "mcc-readonly-api",
                     "mode": "read_only",
-                    "endpoints": ["/dashboard", "/healthz", "/api/read-model", "/api/snapshot", "/api/report"],
+                    "endpoints": ["/dashboard", "/healthz", "/api/read-model", "/api/snapshot", "/api/report", "/api/scorecard-detail"],
                 }
             )
             return
@@ -46,6 +48,9 @@ class MCCReadOnlyHandler(BaseHTTPRequestHandler):
             return
         if route == "/api/report":
             self._send_report(parse_qs(parsed.query).get("path", [""])[0])
+            return
+        if route == "/api/scorecard-detail":
+            self._send_scorecard_detail(parse_qs(parsed.query).get("strategy_id", [""])[0])
             return
         self._send_json({"error": "not found", "path": route}, status=HTTPStatus.NOT_FOUND)
 
@@ -144,6 +149,23 @@ class MCCReadOnlyHandler(BaseHTTPRequestHandler):
                 "content": content,
             }
         )
+
+    def _send_scorecard_detail(self, strategy_id: str) -> None:
+        sid = (strategy_id or "").strip()
+        if not sid:
+            self._send_json(
+                {"error": "missing strategy_id"}, status=HTTPStatus.BAD_REQUEST
+            )
+            return
+        # Reject anything that is not a plain identifier (no paths / traversal / control chars).
+        if len(sid) > _STRATEGY_ID_MAX_LEN or any(c in sid for c in "/\\") or any(ord(c) < 32 for c in sid):
+            self._send_json(
+                {"error": "invalid strategy_id", "strategy_id": sid}, status=HTTPStatus.BAD_REQUEST
+            )
+            return
+        detail = build_scorecard_detail(self.mcc_root, sid)
+        status = HTTPStatus.OK if detail.get("count", 0) > 0 else HTTPStatus.NOT_FOUND
+        self._send_json(detail, status=status)
 
     def _mcc_root(self) -> Path:
         if self.mcc_root:

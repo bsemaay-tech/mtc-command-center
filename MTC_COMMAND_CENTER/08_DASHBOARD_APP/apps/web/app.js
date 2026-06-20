@@ -2,7 +2,8 @@ const state = {
   snapshot: null,
   health: null,
   selectedReportPath: null,
-  selectedBacktestRunId: null
+  selectedBacktestRunId: null,
+  detailCards: {},
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -127,6 +128,40 @@ async function fetchJson(url) {
     throw new Error(payload.error || `${url} returned ${response.status}`);
   }
   return payload;
+}
+
+function loadStrategyDetail(id) {
+  if (!id) return;
+  const entry = state.detailCards[id];
+  if (entry && (entry.status === "loading" || entry.status === "ok" || entry.status === "empty")) return;
+  state.detailCards[id] = { status: "loading", cards: [] };
+  fetch("/api/scorecard-detail?strategy_id=" + encodeURIComponent(id), { cache: "no-store" })
+    .then((res) => res.json().then((body) => ({ res, body })))
+    .then(({ res, body }) => {
+      const cards = Array.isArray(body.cards) ? body.cards : [];
+      const emptyDetail = body && Number(body.count || 0) === 0 && cards.length === 0;
+      if ((res.status === 404 && emptyDetail) || (res.ok && emptyDetail)) {
+        state.detailCards[id] = { status: "empty", cards: [] };
+      } else if (res.ok) {
+        state.detailCards[id] = { status: "ok", cards };
+      } else {
+        state.detailCards[id] = { status: "error", cards: [] };
+      }
+    })
+    .catch(() => {
+      state.detailCards[id] = { status: "error", cards: [] };
+    })
+    .finally(() => {
+      if (state.selectedStrategyId === id) {
+        openUnifiedStrategyDetail(id);
+      }
+    });
+}
+
+function detailBestCard(id) {
+  const entry = state.detailCards[id];
+  if (!entry || entry.status !== "ok" || !entry.cards.length) return null;
+  return entry.cards.slice().sort((a, b) => Number((b.gate2 && b.gate2.score) || 0) - Number((a.gate2 && a.gate2.score) || 0))[0] || null;
 }
 
 async function loadReport(path) {
@@ -395,6 +430,7 @@ function openUnifiedStrategyDetail(id) {
   const mtcV2Row = (mtcV2.rows || []).find((row) => row.id === id) || null;
   if (!pipelineRow && !auditRow) return;
   state.selectedStrategyId = id;
+  loadStrategyDetail(id);
   renderUnifiedStrategyDetail(pipelineRow, auditRow, pipeline.stages || [], mtcV2Row);
   syncUnifiedDetailVisibility();
   const backButton = $('#strategyBack');
@@ -415,8 +451,13 @@ function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
   const statusLabel = friendlyStatus((mtcV2Row && (mtcV2Row.status_label || mtcV2Row.status)) || (auditRow && auditRow.audit_status) || row.current_stage_label || row.current_stage_key || "Review pending");
   const stgCode = row.stg_code || (auditRow && auditRow.stg_code) || '';
   const scorecard = row.scorecard || (auditRow && auditRow.scorecard) || null;
-  const scorecardV2 = row.scorecard_v2 || (auditRow && auditRow.scorecard_v2) || null;
-  const scorecardV2Cases = row.scorecard_v2_cases || (auditRow && auditRow.scorecard_v2_cases) || [];
+  const summaryScorecardV2 = row.scorecard_v2 || (auditRow && auditRow.scorecard_v2) || null;
+  const detailEntry = state.detailCards[state.selectedStrategyId] || null;
+  const detailCard = detailBestCard(state.selectedStrategyId);
+  const scorecardV2 = detailCard || summaryScorecardV2;
+  const scorecardV2Cases = detailEntry && detailEntry.status === "ok" ? detailEntry.cards : (row.scorecard_v2_cases || (auditRow && auditRow.scorecard_v2_cases) || []);
+  const detailStatus = detailEntry ? detailEntry.status : null;
+  const detailEmpty = !!(detailEntry && detailEntry.status === "empty");
   const paperTrade = renderPaperTradeDetail(row.paper_trade_detail);
   const parityProof = renderParityProof(row.pinets_parity_proof);
   const directionalResearch = renderDirectionalResearch(row.directional_research);
@@ -431,7 +472,7 @@ function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
   const quantlens = findQuantlensCandidate(row, auditRow);
   const expertQuantlens = findExpertQuantlensVerdict(row, auditRow, scorecardV2);
   const decision = buildWaveADecision(row, auditRow, mtcV2Row, scorecardV2, quantlens, canonical);
-  const scoreDetail = renderWaveAScorecard(scorecardV2, scorecard, scorecardV2Cases, canonical);
+  const scoreDetail = renderWaveAScorecard(scorecardV2, scorecard, scorecardV2Cases, canonical, detailStatus, detailEmpty);
   const expertQuantlensVerdict = renderExpertQuantlensVerdict(expertQuantlens);
   const quantlensVerdict = renderQuantlensVerdict(quantlens);
   const taxonomy = renderStrategyTaxonomy(row, auditRow, producerSpecRaw, description, canonical);
@@ -874,7 +915,7 @@ function badgeLadderTooltip() {
   return "Badge ladder: Promotable = all gates pass; Can test = deterministic/testable but not promotable; Blocked = missing rules or blocking gate.";
 }
 
-function renderWaveAScorecard(scorecardV2, legacyScorecard, scorecardV2Cases = [], canonical = {}) {
+function renderWaveAScorecard(scorecardV2, legacyScorecard, scorecardV2Cases = [], canonical = {}, detailStatus = null, detailEmpty = false) {
   if (scorecardV2) {
     const gateSummary = scorecardV2.gate_summary || {};
     const gates = [
@@ -900,7 +941,7 @@ function renderWaveAScorecard(scorecardV2, legacyScorecard, scorecardV2Cases = [
           ${blocking.map((name) => `<span class="terminal-chip warn" title="${escapeHtml(blockingGateTooltip(name))}">${escapeHtml(`Blocking: ${statusText(name)}`)}</span>`).join("")}
           ${tfChip}
         </div>
-        ${gates.map(([key, label, gate]) => renderGateRow(key, label, gate)).join("")}
+        ${gates.map(([key, label, gate]) => renderGateRow(key, label, gate, detailStatus, detailEmpty)).join("")}
         ${renderScorecardCaseList(scorecardV2, scorecardV2Cases, canonical)}
       </section>
     `;
@@ -950,7 +991,7 @@ function renderScorecardCaseList(displayCard, cases, canonical) {
   `;
 }
 
-function renderGateRow(key, label, gate) {
+function renderGateRow(key, label, gate, detailStatus = null, detailEmpty = false) {
   const safeGate = gate || {};
   const status = safeGate.status || "NOT_EVALUATED";
   const missing = gateMissingFields(safeGate);
@@ -981,14 +1022,20 @@ function renderGateRow(key, label, gate) {
   const subScoreDetail = subScores.length
     ? `<div class="gate-sub-scores"><table class="terminal-kv">${subScores.slice(0, 12).map((s) => {
         const metric = humanizeMetric(s.source_metric || s.criterion); // R2-11
-        const val = s.value != null ? Number(s.value).toFixed(2) : "—";
+        const val = s.value != null ? Number(s.value).toFixed(2) : "?";
         // R2-12: only show a denominator when max_points is real (not null/0/undefined); no fake "?".
-        const pts = s.points_awarded == null ? "—"
+        const pts = s.points_awarded == null ? "?"
           : (s.max_points != null ? `${s.points_awarded}/${s.max_points}` : `${s.points_awarded} pts`);
         const why = s.deduction_reason || s.reason || "";
         return `<tr><td>${escapeHtml(metric)}</td><td>${escapeHtml(val)}</td><td>${escapeHtml(pts)}</td><td>${escapeHtml(why)}</td></tr>`;
       }).join("")}</table></div>`
-    : "";
+    : detailStatus === "loading"
+      ? `<p class="muted-terminal">Loading full scorecard detail...</p>`
+      : detailStatus === "error"
+        ? `<p class="muted-terminal">Full gate detail unavailable; showing summary only.</p>`
+        : detailEmpty
+          ? `<p class="muted-terminal">No full scorecard detail found for this strategy.</p>`
+          : "";
   return `
     <details class="gate-row gate-${escapeHtml(key)}" ${autoOpen ? "open" : ""}>
       <summary>
