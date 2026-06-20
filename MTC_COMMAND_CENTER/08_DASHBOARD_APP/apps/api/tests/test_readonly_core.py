@@ -80,7 +80,22 @@ class ReadOnlyCoreTests(unittest.TestCase):
             self.assertEqual(snapshot["body"]["mode"], "read_only")
             self.assertIn(snapshot["body"]["snapshot_cache"]["status"], {"HIT", "MISS", "REFRESH"})
             self.assertIn("liveops_status", snapshot["body"])
-            self.assertIn("candidate_audit", snapshot["body"])
+            # Low-risk payload slimming (SNAPSHOT_PAYLOAD_PERFORMANCE_AUDIT_2026-06-16):
+            # candidate_audit is omitted from the HTTP snapshot (CLI/tests still build it).
+            self.assertNotIn("candidate_audit", snapshot["body"])
+            # scorecards.cards preserved; by_strategy duplicate dropped from HTTP snapshot.
+            scorecards = snapshot["body"]["scorecards"]
+            self.assertIn("cards", scorecards)
+            self.assertNotIn("by_strategy", scorecards)
+            # candidate_pipeline rows expose scorecard_v2_cases as a count (int) or None,
+            # never the heavy embedded array.
+            for row in snapshot["body"]["candidate_pipeline"].get("rows", []):
+                if "scorecard_v2_cases" in row:
+                    self.assertNotIsInstance(row["scorecard_v2_cases"], list)
+                    self.assertTrue(
+                        row["scorecard_v2_cases"] is None
+                        or isinstance(row["scorecard_v2_cases"], int)
+                    )
             self.assertIn("backtest_status", snapshot["body"])
             self.assertIn("optimization_status", snapshot["body"])
             self.assertIn("pine_builder_status", snapshot["body"])

@@ -137,6 +137,61 @@ def build_read_model(mcc_root: str | Path | None = None) -> dict[str, Any]:
     }
 
 
+def _count_or_passthrough(value: Any) -> Any:
+    """Collapse a heavy list to its length; preserve existing int/None as-is.
+
+    The frontend already reads ``scorecard_v2_cases`` as either an array length or a
+    plain number (see app.js), so emitting the count keeps UI behavior identical while
+    dropping the large embedded case arrays from the HTTP payload.
+    """
+    if isinstance(value, list):
+        return len(value)
+    return value
+
+
+def _slim_rows_cases(rows: Any) -> Any:
+    if not isinstance(rows, list):
+        return rows
+    slimmed = []
+    for row in rows:
+        if isinstance(row, dict) and "scorecard_v2_cases" in row:
+            new_row = dict(row)
+            new_row["scorecard_v2_cases"] = _count_or_passthrough(row["scorecard_v2_cases"])
+            slimmed.append(new_row)
+        else:
+            slimmed.append(row)
+    return slimmed
+
+
+def _slim_http_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
+    """Strip heavy, UI-unused fields from the HTTP snapshot (read-only serialization only).
+
+    Low-risk payload slimming per SNAPSHOT_PAYLOAD_PERFORMANCE_AUDIT_2026-06-16:
+      - drop ``scorecards.by_strategy`` (duplicate of ``cards``; never read by the frontend);
+      - omit top-level ``candidate_audit`` (CLI/tests only; not read by the frontend);
+      - collapse ``candidate_pipeline.rows[].scorecard_v2_cases`` arrays to integer counts.
+    Underlying readers, CLI, source artifacts, and scorecard ``cards`` are untouched.
+    """
+    slimmed = dict(snapshot)
+    slimmed.pop("candidate_audit", None)
+
+    scorecards = slimmed.get("scorecards")
+    if isinstance(scorecards, dict) and "by_strategy" in scorecards:
+        scorecards = dict(scorecards)
+        scorecards.pop("by_strategy", None)
+        slimmed["scorecards"] = scorecards
+
+    pipeline = slimmed.get("candidate_pipeline")
+    if isinstance(pipeline, dict):
+        pipeline = dict(pipeline)
+        if isinstance(pipeline.get("rows"), list):
+            pipeline["rows"] = _slim_rows_cases(pipeline["rows"])
+        if isinstance(pipeline.get("candidates"), list):
+            pipeline["candidates"] = _slim_rows_cases(pipeline["candidates"])
+        slimmed["candidate_pipeline"] = pipeline
+
+    return slimmed
+
 def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, Any]:
     model = build_read_model(mcc_root)
     files = model["files"]
@@ -188,7 +243,7 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
     strategy_research = build_strategy_research(model["mcc_root"])
     quantlens = build_quantlens(model["mcc_root"])
     overnight_heartbeat = build_overnight_heartbeat()
-    return {
+    snapshot = {
         "schema_version": "1.0",
         "mode": "read_only",
         "mcc_root": model["mcc_root"],
@@ -202,7 +257,6 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
         "optimization_status": optimization_status,
         "pine_builder_status": pine_builder_status,
         "candidate_pipeline": candidate_pipeline,
-        "candidate_audit": candidate_audit,
         "mtc_v2_readiness": mtc_v2_readiness,
         "report_manifest": files["report_manifest"]["data"],
         "strategy_registry": strategy_registry,
@@ -230,6 +284,7 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
         },
     }
 
+    return _slim_http_snapshot(snapshot)
 
 def build_dashboard_snapshot_cached(
     mcc_root: str | Path | None = None,
