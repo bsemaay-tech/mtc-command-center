@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "artifact_index.schema.json",
+  "title": "Run Artifact Index (read-only contract)",
+  "type": "object",
+  "required": ["run_id", "artifacts"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "run_id": {"type": "string"},
+    "root_dir": {"type": ["string", "null"]},
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "path"],
+        "properties": {
+          "type": {"type": "string"},
+          "path": {"type": "string"},
+          "exists": {"type": ["boolean", "null"]},
+          "consumed_by": {"type": ["string", "array", "null"]},
+          "required": {"type": ["boolean", "null"]}
+        }
+      }
+    }
+  }
+}

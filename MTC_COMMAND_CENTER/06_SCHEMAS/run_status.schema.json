@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "run_status.schema.json",
+  "title": "Backtest Run Status (read-only contract)",
+  "type": "object",
+  "required": ["run_id", "status"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "run_id": {"type": "string"},
+    "status": {"type": "string"},
+    "started_at": {"type": ["string", "null"]},
+    "updated_at": {"type": ["string", "null"]},
+    "finished_at": {"type": ["string", "null"]},
+    "workers": {"type": ["integer", "number", "null"]},
+    "progress": {
+      "type": ["object", "number", "null"],
+      "description": "Either a 0-100 number or an object with completed/total."
+    },
+    "heartbeat": {"type": ["object", "string", "null"]},
+    "current_stage": {"type": ["string", "null"]},
+    "errors": {"type": ["array", "null"], "items": {}},
+    "warnings": {"type": ["array", "null"], "items": {}},
+    "output_dir": {"type": ["string", "null"]}
+  }
+}

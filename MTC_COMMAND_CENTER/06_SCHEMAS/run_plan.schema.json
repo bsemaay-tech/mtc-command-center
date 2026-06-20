@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "run_plan.schema.json",
+  "title": "Backtest Run Plan (read-only contract)",
+  "type": "object",
+  "required": [
+    "run_id",
+    "read_only",
+    "no_execution",
+    "status",
+    "strategy_ids",
+    "profiles",
+    "approval",
+    "expected_artifacts"
+  ],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "run_id": {"type": "string"},
+    "created_at": {"type": ["string", "null"]},
+    "created_by": {"type": ["string", "null"]},
+    "read_only": {"type": "boolean", "enum": [true], "description": "Must be true. Draft plans are review-only."},
+    "no_execution": {"type": "boolean", "enum": [true], "description": "Must be true. Plan never triggers execution."},
+    "status": {"type": "string"},
+    "strategy_id": {"type": ["string", "null"]},
+    "strategy_ids": {"type": "array", "items": {"type": "string"}},
+    "strategy_display_name": {"type": ["string", "null"]},
+    "profiles": {
+      "type": "array",
+      "items": {"type": "string", "enum": ["SOURCE_NAKED", "RISK_NORMALIZED", "MTC_LIGHT", "FULL_MTC_CANDIDATE"]}
+    },
+    "symbols": {"type": "array", "items": {"type": "string"}},
+    "universe": {
+      "type": ["object", "null"],
+      "description": "Symbol universe state. Unresolved universe is allowed but must be explicit (needs_freeze).",
+      "properties": {
+        "status": {"type": "string", "enum": ["draft", "needs_freeze", "frozen"]},
+        "source": {"type": ["string", "null"]},
+        "reason": {"type": ["string", "null"]}
+      }
+    },
+    "timeframes": {"type": "array", "items": {"type": "string"}},
+    "parameter_space": {
+      "type": ["object", "array", "null"],
+      "description": "Parameter sweep definition. Free-form per strategy; summarized by reader."
+    },
+    "case_count": {"type": ["integer", "number", "null"]},
+    "cost_scenarios": {"type": ["array", "null"], "items": {}},
+    "walk_forward": {"type": ["object", "null"]},
+    "smoke_test": {"type": ["object", "boolean", "null"]},
+    "approval_required": {"type": ["boolean", "null"]},
+    "approval_state": {"type": ["string", "null"], "enum": ["PENDING", "APPROVED", "REJECTED", "NOT_REQUIRED", null]},
+    "approval": {
+      "type": "object",
+      "required": ["human_review_required", "approved", "execution_allowed"],
+      "properties": {
+        "human_review_required": {"type": "boolean", "enum": [true], "description": "Must be true for draft plans."},
+        "approved": {"type": "boolean", "enum": [false], "description": "Must be false for draft plans."},
+        "execution_allowed": {"type": "boolean", "enum": [false], "description": "Must be false for draft plans."}
+      }
+    },
+    "expected_artifacts": {"type": "array", "items": {"type": "string"}},
+    "output_dir": {"type": ["string", "null"]}
+  }
+}

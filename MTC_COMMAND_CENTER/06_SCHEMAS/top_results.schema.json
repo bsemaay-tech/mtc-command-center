@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "top_results.schema.json",
+  "title": "Top Results per Bucket (read-only contract)",
+  "description": "Top-N profile-separated results for a single bucket (profile + timeframe + symbol universe + score method).",
+  "type": "object",
+  "required": ["profile", "timeframe", "score_method", "top"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "run_id": {"type": ["string", "null"]},
+    "profile": {"type": "string", "enum": ["SOURCE_NAKED", "RISK_NORMALIZED", "MTC_LIGHT", "FULL_MTC_CANDIDATE"]},
+    "timeframe": {"type": "string"},
+    "symbol_universe": {"type": ["array", "string", "null"]},
+    "score_method": {"type": "string"},
+    "top": {"type": "array", "items": {"type": "object"}},
+    "benchmark": {"type": ["object", "null"]},
+    "challengers": {"type": ["array", "null"], "items": {"type": "object"}},
+    "same_bucket": {
+      "type": ["object", "null"],
+      "description": "Same-bucket validation metadata (profile/timeframe/universe/score_method used).",
+      "properties": {
+        "profile": {"type": ["string", "null"]},
+        "timeframe": {"type": ["string", "null"]},
+        "symbol_universe": {"type": ["array", "string", "null"]},
+        "score_method": {"type": ["string", "null"]}
+      }
+    }
+  }
+}

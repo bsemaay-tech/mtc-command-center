@@ -11,6 +11,7 @@ from .heartbeat_reader import build_overnight_heartbeat
 from .json_io import read_json_file
 from .liveops_reader import build_liveops_status
 from .mtc_v2_reader import build_mtc_v2_readiness
+from .night_artifacts_reader import build_night_artifacts
 from .optimization_reader import build_optimization_status
 from .paths import canonicalize, default_mcc_root
 from .parity_reader import build_parity_status
@@ -373,6 +374,7 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
     strategy_research = build_strategy_research(model["mcc_root"])
     quantlens = build_quantlens(model["mcc_root"])
     overnight_heartbeat = build_overnight_heartbeat()
+    night_artifacts = build_night_artifacts(model["mcc_root"])
     snapshot = {
         "schema_version": "1.0",
         "mode": "read_only",
@@ -395,6 +397,7 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
         "ai_strategy_names": ai_strategy_names,
         "expert_quantlens": expert_quantlens,
         "overnight_heartbeat": overnight_heartbeat,
+        "night_artifacts": night_artifacts,
         "scorecards": scorecards,
         "dashboard_config": files["dashboard_config"]["data"],
         "task_lifecycle": task_lifecycle,

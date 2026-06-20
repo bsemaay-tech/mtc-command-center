@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "backtest_profile_result.schema.json",
+  "title": "Profile-Separated Backtest Result (read-only contract)",
+  "description": "Single document may be one result object or an object with a 'results' array of result rows. Each row must carry profile + strategy + symbol + timeframe.",
+  "type": "object",
+  "required": ["run_id"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "run_id": {"type": "string"},
+    "results": {"type": "array", "items": {"$ref": "#/$defs/result_row"}}
+  },
+  "$defs": {
+    "result_row": {
+      "type": "object",
+      "required": ["strategy_id", "profile", "symbol", "timeframe"],
+      "properties": {
+        "run_id": {"type": ["string", "null"]},
+        "strategy_id": {"type": "string"},
+        "profile": {"type": "string", "enum": ["SOURCE_NAKED", "RISK_NORMALIZED", "MTC_LIGHT", "FULL_MTC_CANDIDATE"]},
+        "symbol": {"type": "string"},
+        "timeframe": {"type": "string"},
+        "parameter_set_id": {"type": ["string", "null"]},
+        "score_method": {"type": ["string", "null"]},
+        "score": {"type": ["number", "null"]},
+        "gate_summary": {"type": ["object", "null"]},
+        "metrics": {
+          "type": ["object", "null"],
+          "properties": {
+            "net_profit": {"type": ["number", "null"]},
+            "profit_factor": {"type": ["number", "null"]},
+            "max_drawdown": {"type": ["number", "null"]},
+            "win_rate": {"type": ["number", "null"]},
+            "trade_count": {"type": ["integer", "number", "null"]},
+            "buy_hold_return": {"type": ["number", "null"]},
+            "buy_hold_alpha": {"type": ["number", "null"]},
+            "sharpe": {"type": ["number", "null"]},
+            "sortino": {"type": ["number", "null"]},
+            "exposure": {"type": ["number", "null"]},
+            "avg_trade": {"type": ["number", "null"]},
+            "max_loss_streak": {"type": ["integer", "number", "null"]}
+          }
+        },
+        "benchmark": {"type": ["object", "null"]},
+        "robustness": {"type": ["object", "string", "null"]},
+        "artifacts": {"type": ["object", "array", "null"]},
+        "promotion_status": {"type": ["string", "null"]}
+      }
+    }
+  }
+}
