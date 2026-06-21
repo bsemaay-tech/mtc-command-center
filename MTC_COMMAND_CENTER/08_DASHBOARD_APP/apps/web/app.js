@@ -325,8 +325,9 @@ const M = {
 };
 
 function infoCard(label, value, opts = {}) {
-  const v = (value === null || value === undefined || value === "" ) ? missing(opts.empty || M.snapshot) : esc(value);
-  return `<div class="info-card ${opts.span2 ? "span-2" : ""}"><span>${esc(label)}</span><strong>${v}</strong></div>`;
+  const isEmpty = (value === null || value === undefined || value === "");
+  const v = isEmpty ? missing(opts.empty || M.snapshot) : esc(value);
+  return `<div class="info-card ${opts.span2 ? "span-2" : ""}${isEmpty ? " is-empty" : ""}"><span>${esc(label)}</span><strong>${v}</strong></div>`;
 }
 function defRow(k, v, empty) {
   const val = (v === null || v === undefined || v === "") ? missing(empty || M.snapshot) : esc(v);

@@ -478,6 +478,9 @@ button { font-family: var(--sans); }
 .info-card > span { font-size: 9.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--faint); }
 .info-card > strong { font-size: 13px; font-weight: 600; color: var(--text); word-break: break-word; }
 .info-card.span-2 { grid-column: span 2; }
+/* Empty fields keep their label but lose the filled frame, so populated cards carry
+   the visual weight and gaps recede instead of competing with real data. */
+.info-card.is-empty { background: transparent; border-color: rgba(148,163,184,0.07); }
 .value-muted { color: var(--faint) !important; font-style: italic; font-weight: 500 !important; }
 
 /* definition rows (label/value pairs) */
