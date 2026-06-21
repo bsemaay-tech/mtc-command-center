@@ -475,7 +475,7 @@ button { font-family: var(--sans); }
   gap: 6px;
   min-width: 0;
 }
-.info-card > span { font-size: 9.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--faint); }
+.info-card > span { font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--faint); }
 .info-card > strong { font-size: 13px; font-weight: 600; color: var(--text); word-break: break-word; }
 .info-card.span-2 { grid-column: span 2; }
 /* Empty fields keep their label but lose the filled frame, so populated cards carry
@@ -590,7 +590,7 @@ table.grid-table .empty-cell { text-align: center; color: var(--faint); padding:
 }
 .si-gate-cell { display: flex; flex-direction: column; gap: 5px; padding-right: 18px; border-right: 1px solid var(--border-soft); }
 .si-gate-cell:last-child { border-right: none; padding-right: 0; }
-.si-gate-cell .lbl { font-size: 8.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
+.si-gate-cell .lbl { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
 .si-gate-cell .val { font-family: var(--mono); font-weight: 800; font-size: 15px; }
 .si-gate-cell .val.ok { color: var(--emerald); }
 .si-gate-cell .val.bad { color: var(--red); }
@@ -607,7 +607,7 @@ table.grid-table .empty-cell { text-align: center; color: var(--faint); padding:
 }
 .workflow-card:hover { background: var(--panel-hover); }
 .workflow-card.dim { border-color: var(--border-soft); opacity: .55; }
-.workflow-card .stg { font-size: 8px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--teal); }
+.workflow-card .stg { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--teal); }
 .workflow-card.dim .stg { color: var(--faint); }
 .workflow-card .ttl { display: block; font-weight: 800; font-size: 12.5px; color: var(--text); margin-top: 4px; }
 .workflow-card .st { display: block; font-size: 9px; margin-top: 4px; font-family: var(--mono); color: var(--muted); }
@@ -674,14 +674,14 @@ table.grid-table .empty-cell { text-align: center; color: var(--faint); padding:
 .rail-row .v.bad { color: var(--red); }
 .rail-row .v.warn { color: var(--amber); }
 .rail-row .v.teal { color: var(--teal); }
-.rail-row .v.locked { color: var(--faint); border: 1px solid var(--border); background: rgba(15,20,28,0.6); padding: 2px 7px; border-radius: 4px; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+.rail-row .v.locked { color: var(--faint); border: 1px solid var(--border); background: rgba(15,20,28,0.6); padding: 2px 7px; border-radius: 4px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; }
 .rail-miss { display: flex; align-items: center; gap: 8px; padding: 7px 10px; margin-top: 6px; background: rgba(15,23,42,0.4); border: 1px solid var(--border-soft); border-radius: 5px; font-size: 11px; color: var(--muted); }
 .rail-miss .i { color: var(--amber); }
 
 /* sub-rule / overview blocks */
 .rule-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .rule-block { background: var(--panel-3); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 12px 14px; }
-.rule-block .rb-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--teal); }
+.rule-block .rb-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--teal); }
 .rule-block.warn .rb-label { color: var(--amber); }
 .rule-block .rb-val { margin-top: 6px; font-size: 12.5px; color: var(--text); line-height: 1.55; }
 
@@ -717,7 +717,7 @@ table.matrix .cell-empty { color: var(--faintest); font-style: italic; font-size
 table.matrix td.best { background: rgba(40,12,12,0.3); }
 .matrix-best { color: var(--red); font-family: var(--mono); font-weight: 700; font-size: 11px; }
 .matrix-best .sub { display: block; color: var(--muted); font-size: 9px; font-weight: 500; }
-.matrix-best a { color: var(--teal); font-size: 9.5px; }
+.matrix-best a { color: var(--teal); font-size: 9px; }
 
 /* result explorer bucket */
 .bucket {
