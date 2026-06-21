@@ -100,6 +100,12 @@ Each phase needs Barış approval to start. "Acceptance" = what proves a phase d
   vendor-neutral, no per-tool `graphify install` skill registration.
 - Acceptance MET: a fresh LLM session, reading only the read-first files, finds this plan, the
   backlog, the routing harness, AND the auto-use triggers without the user repeating anything.
+- DONE 2026-06-21 (optional L2, **local-only**): a Claude Code `SessionStart` hook surfaces
+  CodeBurn spend into context at each session start — `.claude/settings.json` +
+  `.claude/hooks/codeburn_sessionstart.sh`. NOTE: `.claude/` is git-ignored (repo convention),
+  so this hook is **per-machine, not committed/portable** — Claude Code only. The AGENTS.md
+  `AI TOOL AUTO-USE` convention remains the portable, all-agent backbone. To rebuild on another
+  machine, recreate those two files (script fails silent if `codeburn` is absent).
 
 ### Phase 2 — Knowledge consolidation (light)
 - Keep tool decisions in `09_DOCS/AI_TOOLING/` (this folder), research notes in `09_DOCS`,
