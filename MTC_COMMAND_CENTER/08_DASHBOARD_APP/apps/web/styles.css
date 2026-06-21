@@ -624,8 +624,7 @@ table.grid-table .empty-cell { text-align: center; color: var(--faint); padding:
   display: flex; align-items: center; justify-content: center;
   font-size: 15px;
 }
-.si-section-head .eyebrow { display: block; }
-.si-section-head h3 { margin: 2px 0 0; font-size: 16px; font-weight: 800; color: var(--text-strong); }
+.si-section-head h3 { margin: 0; font-size: 16px; font-weight: 800; color: var(--text-strong); }
 .si-section-head p { margin: 2px 0 0; font-size: 11.5px; color: var(--muted); }
 
 /* gate status summary cards */

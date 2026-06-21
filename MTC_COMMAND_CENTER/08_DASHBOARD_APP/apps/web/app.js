@@ -989,7 +989,9 @@ function workflowCard(stage, label, status, section, dim) {
 }
 
 function sectionHead(n, title, subtitle, iconName) {
-  return `<div class="si-section-head"><div class="si-section-icon">${icon(iconName)}</div><div><span class="eyebrow">Section ${n}</span><h3>${esc(title)}</h3><p>${esc(subtitle)}</p></div></div>`;
+  // Ordinal is carried by the sidebar's numbered section nav; an extra "Section N"
+  // eyebrow on every head here is redundant scaffolding, so the head is icon + title.
+  return `<div class="si-section-head"><div class="si-section-icon">${icon(iconName)}</div><div><h3>${esc(title)}</h3><p>${esc(subtitle)}</p></div></div>`;
 }
 
 function gateCard(title, desc, g, opts = {}) {
