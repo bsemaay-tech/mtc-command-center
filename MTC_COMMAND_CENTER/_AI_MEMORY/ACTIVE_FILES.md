@@ -1,10 +1,112 @@
 # ACTIVE_FILES
 
+## 2026-06-21 Claude Opus 4.8 Graphify piloted (KEEP on-demand)
+- `MTC_COMMAND_CENTER\09_DOCS\AI_TOOLING\pilots\graphify_pilot.md` (PASS; local/keyless code graph; impact analysis accurate)
+- installed: `graphifyy` v0.8.44 via `uv tool install` (global uv tool, no repo footprint); NOT `graphify install` (skill reg deferred)
+- `.gitignore` += `graphify-out/` + `**/graphify-out/` (graphs never committed)
+- usage pattern: scoped copy → `graphify update <path> --no-cluster` → `affected/explain/query`
+
+## 2026-06-21 Claude Opus 4.8 MarkItDown promoted to permanent (item 1)
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\markitdown_ingest.py` (COMMITTED wrapper: self-bootstrap venv + convert intake docs → .md; dry-run default, --apply/--out/--bootstrap)
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\.venvs\markitdown\` (git-IGNORED venv, Py3.13, markitdown 0.1.6) — rebuilt on fresh clone via --bootstrap
+- `.gitignore` += `MTC_COMMAND_CENTER/03_QUANTLENS/tools/.venvs/`
+- composes with (does NOT modify) `03_QUANTLENS\tools\route_user_intake.py`
+
+## 2026-06-21 Claude Opus 4.8 Phase 3 pilots: MarkItDown + CodeBurn (both KEEP)
+- `MTC_COMMAND_CENTER\09_DOCS\AI_TOOLING\pilots\codeburn_pilot.md` (PASS; read-only cost observability; DeepSeek underuse finding)
+- `MTC_COMMAND_CENTER\09_DOCS\AI_TOOLING\pilots\markitdown_pilot.md` (PASS for XLSX/Office; PDF deferred — no PDFs in repo)
+- installed: CodeBurn v0.9.12 global npm (no repo footprint); MarkItDown 0.1.6 now permanent (see block above; old `C:\tmp` venv removed)
+
+## 2026-06-20 Claude Opus 4.8 AI tool integration backlog filed + prepped
+- `MTC_COMMAND_CENTER\09_DOCS\AI_TOOLING\MTC_AI_TOOLS_MASTER_INTEGRATION_BACKLOG.md` (source backlog; moved from root `docs\`, banner added)
+- `MTC_COMMAND_CENTER\09_DOCS\AI_TOOLING\AI_TOOL_INTEGRATION_PLAN.md` (real-path map, phase gates, per-tool acceptance, §6 checklist, next command)
+- `MTC_COMMAND_CENTER\09_DOCS\AI_TOOLING\CLAUDE_REVIEW_OF_CODEX_BACKLOG.md` (Claude critique of Codex plan)
+- updated: `_AI_MEMORY\NEXT_STEPS.md`, `_AI_MEMORY\GLOBAL_HANDOFF.md`, `_AI_MEMORY\SESSION_LOG.md`, root `docs\ACTIVE_FILES.md`
+- key prep facts: model routing already exists (`_deepseek_driver\ds_agent.py`); review prompts already exist (`04_SHARED\prompts\05_ai_workflow\`); NOTHING installed — approval-gated per tool
+
+## 2026-06-16 Claude Opus 4.8 snapshot gate-detail lazy-load (M1) active set
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\mcc_readonly\read_model.py` (_slim_gate/_slim_card/_slim_scorecard_cases; _FULL_SCORECARDS_CACHE; build_scorecard_detail)
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\mcc_readonly\server.py` (GET /api/scorecard-detail, param-validated, POST→405)
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\app.js` (state.detailCards, loadStrategyDetail/detailBestCard, fetch-on-open, subscoreList loading states, advancedSection detail)
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\tests\test_readonly_core.py` (slim + detail endpoint asserts)
+- `MTC_COMMAND_CENTER\11_TRIAGE\SNAPSHOT_GATE_DETAIL_LAZY_LOAD_PATCH_REPORT_2026-06-16.md`
+- result: 44.64MB→4.45MB (orig 115.56→−96%); endpoint `GET /api/scorecard-detail?strategy_id=`
+
+## 2026-06-16 Claude Opus 4.8 snapshot payload slim (low-risk L1+L2+L3) active set
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\mcc_readonly\read_model.py` (_slim_http_snapshot: drop by_strategy, omit candidate_audit, scorecard_v2_cases→count)
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\tests\test_readonly_core.py` (slim contract asserts)
+- `MTC_COMMAND_CENTER\11_TRIAGE\SNAPSHOT_PAYLOAD_SLIM_LOW_RISK_PATCH_REPORT_2026-06-16.md`
+- `MTC_COMMAND_CENTER\11_TRIAGE\SNAPSHOT_PAYLOAD_PERFORMANCE_AUDIT_2026-06-16.md` (audit basis)
+- result: 115.56MB→44.64MB; OPEN M1 = gate sub_scores per-strategy lazy endpoint (~26MB)
+
+## 2026-06-16 Claude Opus 4.8 launcher single-instance follow-up active set
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\run_dashboard_server.ps1` (-StatusOnly non-mutating: moved before Limit-LogSize, Write-Output not Write-Launcher)
+- Startup VBS (verified, NOT modified): `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\MTC_Command_Center_Dashboard.vbs` → guarded launcher; sole auto-start, no duplicates
+- `MTC_COMMAND_CENTER\11_TRIAGE\DASHBOARD_LAUNCHER_SINGLE_INSTANCE_FOLLOWUP_REPORT_2026-06-15.md`
+- OPEN perf task (NEXT_STEPS 13): `/api/snapshot` ~121 MB / ~60 s
+
+## 2026-06-16 Claude Opus 4.8 dashboard launcher single-instance guard active set
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\run_dashboard_server.ps1` (single-instance guard + flags + bounded logs)
+- `MTC_COMMAND_CENTER\11_TRIAGE\DASHBOARD_LAUNCHER_SINGLE_INSTANCE_PATCH_REPORT_2026-06-15.md`
+
+## 2026-06-16 Claude Opus 4.8 profile-result research-only UI hardening active set
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\app.js` (profileRowFlags/Badges/researchOnlyBanner; Result Explorer/SI/Leaderboard/Advanced Artifacts)
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\index.html` (cache v9)
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\mcc_readonly\night_artifacts_reader.py` (provenance + profile_mapping passthrough)
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\tests\test_build_profile_result_artifact.py` (+badge-data passthrough test)
+- `MTC_COMMAND_CENTER\11_TRIAGE\PROFILE_RESULT_RESEARCH_ONLY_UI_HARDENING_REPORT_2026-06-15.md`
+
+## 2026-06-16 Claude Opus 4.8 first profile-separated result artifact pilot active set
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\build_profile_result_artifact.py` (read-only converter, real soak → backtest_profile_result.json)
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\tests\test_build_profile_result_artifact.py`
+- `MTC_COMMAND_CENTER\03_QUANTLENS\05_BACKTEST_RESULTS\pilot_profile_result_QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK_2026-06-16\backtest_profile_result.json`
+- source: `MTC_COMMAND_CENTER\03_QUANTLENS\05_BACKTEST_RESULTS\MEGA_results_iter_1_20260601_054633_results.json`
+- `MTC_COMMAND_CENTER\11_TRIAGE\FIRST_PROFILE_RESULT_ARTIFACT_PILOT_REPORT_2026-06-15.md`
+
+## 2026-06-15 Claude Opus 4.8 Home canonical universe + invariant hardening active set
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\app.js` (canonicalStrategyIds/orphanScorecardIds/strategyMetrics; Needs Review rename; metric() title)
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\index.html` (cache v8)
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\styles.css` (.metric-group/.metric-note)
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\tests\test_home_metric_invariants.py`
+- `MTC_COMMAND_CENTER\11_TRIAGE\HOME_CANONICAL_UNIVERSE_PATCH_REPORT_2026-06-15.md`
+- `MTC_COMMAND_CENTER\11_TRIAGE\HOME_METRIC_AGGREGATION_PATCH_REPORT_2026-06-15.md`
+- `MTC_COMMAND_CENTER\11_TRIAGE\NEXT_CODEX_AUDIT_PROMPT_HOME_CANONICAL_UNIVERSE_2026-06-15.md`
+
+## 2026-06-15 Claude Opus 4.8 first run_plan.json artifact flow active set
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\build_run_plan.py`
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\tests\test_build_run_plan.py`
+- `MTC_COMMAND_CENTER\03_QUANTLENS\05_BACKTEST_RESULTS\draft_run_plan_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK_2026-06-15\` (run_plan.json, artifact_index.json, run_plan.md)
+
+## 2026-06-15 Claude Opus 4.8 night-artifact contract + reader integration active set
+- `MTC_COMMAND_CENTER\06_SCHEMAS\run_plan.schema.json`
+- `MTC_COMMAND_CENTER\06_SCHEMAS\run_status.schema.json`
+- `MTC_COMMAND_CENTER\06_SCHEMAS\backtest_profile_result.schema.json`
+- `MTC_COMMAND_CENTER\06_SCHEMAS\artifact_index.schema.json`
+- `MTC_COMMAND_CENTER\06_SCHEMAS\top_results.schema.json`
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\mcc_readonly\night_artifacts_reader.py`
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\mcc_readonly\read_model.py`
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\tests\test_night_artifacts_reader.py`
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\app.js`
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\index.html`
+- `MTC_COMMAND_CENTER\11_TRIAGE\BACKTEST_ARTIFACT_READER_INTEGRATION_REPORT_2026-06-15.md`
+
 ## 2026-06-06 Codex GPT-5 S6 D3b worker monitor active set
 - `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\app.js`
 - `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\index.html`
 - `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\styles.css`
 - `MTC_COMMAND_CENTER\_AI_MEMORY\PARALLEL_AGENT_REPORTS\S6_D3B_WORKER_MONITOR_REPORT.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\GLOBAL_HANDOFF.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\NEXT_STEPS.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\SESSION_LOG.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\ACTIVE_FILES.md`
+
+## 2026-06-14 Codex GPT-5 Google Strategy Intelligence final cleanup active set
+
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\app.js`
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\index.html`
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\styles.css`
+- `MTC_COMMAND_CENTER\11_TRIAGE\ui_references\google_strategy_intelligence_v2_final\`
+- `C:\Users\BarışSemaay\.codex\attachments\c62ab0bb-e553-4b3f-9848-57528d4a2af4\pasted-text.txt`
 - `MTC_COMMAND_CENTER\_AI_MEMORY\GLOBAL_HANDOFF.md`
 - `MTC_COMMAND_CENTER\_AI_MEMORY\NEXT_STEPS.md`
 - `MTC_COMMAND_CENTER\_AI_MEMORY\SESSION_LOG.md`
@@ -231,6 +333,22 @@
 - `MTC_COMMAND_CENTER\_AI_MEMORY\ACTIVE_FILES.md`
 - `MTC_COMMAND_CENTER\_AI_MEMORY\PROJECT_MEMORY.md`
 
+## 2026-06-14 Codex GPT-5 Strategy Intelligence dark visual fidelity active set
+
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\index.html`
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\app.js`
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\styles.css`
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\tests\test_readonly_core.py`
+- `MTC_COMMAND_CENTER\11_TRIAGE\ui_references\google_strategy_intelligence_v2_final\`
+- `C:\Users\BarışSemaay\.codex\attachments\5689d283-53a2-4a6e-89d5-60b70969990b\pasted-text.txt`
+- `C:\tmp\mcc_dark_ui_visual_audit_task.json`
+- `C:\tmp\ds_mcc_dark_ui_visual_audit_report.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\GLOBAL_HANDOFF.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\NEXT_STEPS.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\SESSION_LOG.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\ACTIVE_FILES.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\PROJECT_MEMORY.md`
+
 ## 2026-06-04 SP-004 Batch C + DeepSeek harness active set
 
 - `_deepseek_driver\ds_agent.py`  (NEW — DeepSeek sandboxed subagent harness; untracked)
@@ -255,3 +373,62 @@
 - `MTC_COMMAND_CENTER\_AI_MEMORY\SESSION_LOG.md`
 - `MTC_COMMAND_CENTER\_AI_MEMORY\NEXT_STEPS.md`
 - `MTC_COMMAND_CENTER\_AI_MEMORY\ACTIVE_FILES.md`
+
+## 2026-06-07 Codex GPT-5 UI-36 canonical row active set
+
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\mcc_readonly\scorecard_reader.py`
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\mcc_readonly\read_model.py`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\UI Reviev\RESULT_UI36_codex.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\GLOBAL_HANDOFF.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\NEXT_STEPS.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\SESSION_LOG.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\ACTIVE_FILES.md`
+
+## 2026-06-07 Codex GPT-5 night 1M quiet run active set
+
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\night_1m_2026-06-07.sh`
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\start_night_1m_2026-06-07_keepawake.ps1`
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\overnight_runs\_heartbeat_night_1m_2026-06-07.json`
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\overnight_runs\_heartbeat.json`
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\overnight_runs\night_1m_2026-06-07.log`
+- `MTC_COMMAND_CENTER\03_QUANTLENS\05_BACKTEST_RESULTS\night_1m_2026-06-07\`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\GLOBAL_HANDOFF.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\NEXT_STEPS.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\SESSION_LOG.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\ACTIVE_FILES.md`
+
+## 2026-06-14 Codex GPT-5 Strategy Intelligence UI pilot active set
+
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\app.js`
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\index.html`
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\styles.css`
+- `MTC_COMMAND_CENTER\11_TRIAGE\ui_references\strategy_intelligence_lovable\CODEX_MTC_STRATEGY_INTELLIGENCE_UI_PILOT_PROMPT.md`
+- `MTC_COMMAND_CENTER\11_TRIAGE\ui_references\strategy_intelligence_lovable\`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\GLOBAL_HANDOFF.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\NEXT_STEPS.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\SESSION_LOG.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\ACTIVE_FILES.md`
+
+## 2026-06-14 Codex GPT-5 Strategy Intelligence UI rescue active set
+
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\app.js`
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\styles.css`
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\index.html`
+- `C:\Users\BarışSemaay\.codex\attachments\2ae7c77a-4fa4-4894-b31f-9e2e654eb12c\pasted-text.txt`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\GLOBAL_HANDOFF.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\NEXT_STEPS.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\SESSION_LOG.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\ACTIVE_FILES.md`
+## 2026-06-14 Codex GPT-5 dashboard shell replacement correction active set
+
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\index.html`
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\app.js`
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\web\styles.css`
+- `MTC_COMMAND_CENTER\08_DASHBOARD_APP\apps\api\tests\test_readonly_core.py`
+- `MTC_COMMAND_CENTER\11_TRIAGE\ui_references\strategy_intelligence_lovable\`
+- `C:\Users\BarışSemaay\.codex\attachments\c3cd19e8-60a2-4685-939a-ce36f028e068\pasted-text.txt`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\GLOBAL_HANDOFF.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\NEXT_STEPS.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\SESSION_LOG.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\ACTIVE_FILES.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\PROJECT_MEMORY.md`

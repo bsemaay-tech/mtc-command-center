@@ -139,7 +139,7 @@ class ReadOnlyCoreTests(unittest.TestCase):
 
             dashboard = _request_text(host, port, "GET", "/dashboard")
             self.assertEqual(dashboard["status"], 200)
-            self.assertIn("MTC Command Center", dashboard["body"])
+            self.assertIn("Strategy Intelligence Command Center", dashboard["body"])
 
             asset = _request_text(host, port, "GET", "/web/app.js")
             self.assertEqual(asset["status"], 200)
@@ -163,7 +163,13 @@ class ReadOnlyCoreTests(unittest.TestCase):
             self.assertIn("read-only", blocked["body"]["error"])
 
             # --- /api/scorecard-detail lazy-load endpoint ---
-            sid = "GEN_ATR_PULLBACK_TREND"
+            sid = None
+            for card in sc_cards:
+                sid = card.get("base_strategy_id") or card.get("strategy_id")
+                if sid:
+                    break
+            self.assertTrue(sid)
+
             detail = _request_json(host, port, "GET", "/api/scorecard-detail?strategy_id=" + quote(sid))
             self.assertEqual(detail["status"], 200)
             self.assertEqual(detail["body"]["mode"], "read_only")

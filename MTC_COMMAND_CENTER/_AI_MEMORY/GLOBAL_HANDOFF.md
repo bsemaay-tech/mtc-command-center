@@ -1,5 +1,81 @@
 # GLOBAL_HANDOFF
 
+## Claude Opus 4.8 2026-06-20 — AI tools master integration backlog filed + repo prep
+Filed the user's AI-tools survey into the repo and prepared the integration track (PREP ONLY — nothing installed, no tool integrated).
+- **Placed** the source doc at `09_DOCS\AI_TOOLING\MTC_AI_TOOLS_MASTER_INTEGRATION_BACKLOG.md` (moved from root `docs\`; added a placement banner). Picked `09_DOCS\AI_TOOLING\` because the doc's assumed folders (`00_DOCS`, `00_KNOWLEDGE_BASE`, `09_TOOLS`, `09_AUTOMATION`, `00_PLANS`) do **not** exist here — `09_DOCS` (with `ADR/`) is the canonical docs tree.
+- **Created** `09_DOCS\AI_TOOLING\AI_TOOL_INTEGRATION_PLAN.md` (real-repo path map, gated phases, per-tool acceptance, §6 pre-integration checklist, exact next command) and `CLAUDE_REVIEW_OF_CODEX_BACKLOG.md` (critique of the Codex backlog).
+- **Registered** in `_AI_MEMORY\NEXT_STEPS.md` (new "AI TOOL INTEGRATION ROADMAP" section), `_AI_MEMORY\ACTIVE_FILES.md`, `_AI_MEMORY\SESSION_LOG.md`, and root `docs\ACTIVE_FILES.md`.
+- **Key findings for future LLMs:** (1) cheaper-model routing the backlog asks to "create" already exists — `_deepseek_driver\ds_agent.py` + README + `_AI_MEMORY\DEEPSEEK_DISPATCH.md` + AGENTS.md TOKEN DISCIPLINE; do NOT make a duplicate `MODEL_ROUTING_POLICY.md`. (2) Adversarial plan/code review already exists in `04_SHARED\prompts\05_ai_workflow\`. (3) Claude rejects Headroom (MITM proxy, ~5% saving), NotebookLM-py (unofficial API), Webwright (redundant with existing browser MCPs); downgrades Graphify "immediate"→pilot. (4) Agrees with Codex's full "do not integrate" list.
+- **Constraint:** every install/integration is Barış-approval-gated, tool by tool. No Pine/MTC_V2/parity/schema/backtest/broker/execution touched. No code changed — docs + memory only.
+
+## Codex GPT-5 2026-06-14 — Google Strategy Intelligence final integration cleanup
+
+Applied the final safe read-only integration cleanup for `11_TRIAGE/ui_references/google_strategy_intelligence_v2_final` against the real vanilla dashboard architecture, preserving the existing frontend-only Strategy Intelligence work in `08_DASHBOARD_APP/apps/web/{app.js,index.html,styles.css}`.
+
+Changes:
+- Removed the active UI hardwire to the STG084 / 8 EMA pilot label in Backtest Result Explorer. The sidebar route now opens global scope; Strategy Intelligence links open strategy-scoped scope; the strategy selector is populated from existing snapshot scorecards, pipeline rows, and registry entries.
+- Registry remains separate from Pipeline and now renders catalog-style read-only columns: strategy id, human name, source, source type, horizon, method, market condition, timeframe, gate status, best result, reusable components, and an Open action. Rows resolve into the generic Strategy Intelligence view by exact or base strategy id.
+- Added the night backtest artifact contract as design/read-model display only in Result Explorer and Diagnostics. No file watcher, parser, ingestion, schema engine, DB write, backtest launch, or execution path was added.
+- Replaced remaining risky active wording: `Broker State Sync` -> `Broker connection readiness checklist`; `live trading remains disabled` -> `execution remains disabled`; removed hardcoded active `STG084 / 8 EMA Pullback` select text.
+
+Validation:
+- `node --check 08_DASHBOARD_APP/apps/web/app.js` PASS.
+- Dashboard API unittest discovery PASS: 39 tests.
+- Local `/healthz` on port 8777 PASS, `overall_ok=true`, `mode=read_only`.
+- Refreshed `/api/snapshot?refresh=1` smoke: `pipeline_rows=176`, `scorecard_cards=837`, `registry_candidates=14`, diagnostics present.
+- Active web search across `app.js`, `index.html`, `styles.css` found 0 matches for forbidden execution labels and hardcoded pilot/result terms (`Launch`, `Deploy`, `Execute`, `Run Now`, `Start Backtest`, `Retry Run`, `Broker Socket`, `Broker State Sync`, `Safe to trade`, `live trading`, `Connect broker`, `STG-084`, `STG084 / 8 EMA Pullback`, `8 EMA Pullback`, `MACD Base Divergence`, `68.76`, `89.2`, `BTCUSDT`, `ETHUSDT`, `run_plan.json missing`, `Gate 2 failed`). Broader profile search still finds `SOURCE_NAKED` and `MTC_LIGHT` only as the official required backtest profile labels.
+- `git diff --check` PASS with only expected line-ending warnings.
+- In-app Browser visual QA was attempted but blocked by the Browser security policy for `http://127.0.0.1:8777`; no browser-policy workaround was used.
+
+No Pine, MTC_V2, parity, backtest engine, live trading, broker, paper-trade execution, or write-back path was modified or launched. DeepSeek harness was attempted per token discipline; it wrote only part of `app.js` and hit max iterations, so Codex audited and completed the bounded cleanup directly.
+
+## DeepSeek v4 Pro 2026-06-09 — night_3M_2026-06-08 COMPLETE (user stopped early, validation complete)
+
+**Stopped at iter 9** (user request). Validation pipeline ran on iter_09. 9 iters / 0 crash / ~1.89M est param evals / 122 PASS+STRONG_PASS.
+
+Pipeline results:
+- CPCV (n_groups=10, 45 splits): OK, 122 candidates → `iter_09/cpcv/`
+- PBO: **SKIPPED** — A20 combinatorial hang (45 splits → C(44,22) too large). Needs 15-split CPCV rerun.
+- Eval artifacts: 122 → `iter_09/evaluation_artifacts/`
+- Gate2: 122 INCOMPLETE (no PBO data). Scores 52.6–95.0. Top: 8EMA LINK 1h (95.0), RSI Oversold LINK 2h (94.18), QTrend TRX 1h (93.0)
+- Scorecard_v2: 122, 0 promotable. Gate1 OK, Gate1B OK, Gate2 INCOMPLETE, Gate3 INCOMPLETE.
+- Alpha vs B&H: 55/122 beat buy&hold, 0 down-market alpha, 0 premium. TRXUSDT dominates (bull-beta pattern).
+- Morning report: `05_BACKTEST_RESULTS/night_3M_2026-06-08/MORNING_REPORT.md`
+- Dashboard JSON: `05_BACKTEST_RESULTS/night_3M_2026-06-08/night_3M_2026-06-08_results.json`
+
+Next: [AI: Any] Run `mcc_night_tail.sh` on iter_09 to get scorecards into MCC. [AI: Claude] Rerun CPCV with n_groups=5 → PBO → rebuild Gate2 to unblock scorecards.
+
+## DeepSeek v4 Pro 2026-06-08 — Overnight 3M+ QuantLens sweep LAUNCHED (superseded by above)
+
+Scope: Barış requested overnight backtest with "en az 3000000 case", 20 workers, no questions, run until done. Pre-read all Gate-0 files (rules + runbook + launch prompt + handoff). No Pine, MTC_V2, parity, trading logic, dashboard UI, or production/live path changed.
+
+Launched:
+- Loop script: `MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_loop_2026-06-08.sh`
+- Keep-awake wrapper: `MTC_COMMAND_CENTER/03_QUANTLENS/tools/start_night_3M_2026-06-08_keepawake.ps1`
+- Engine entry: `run_python_clean.py strat_batch_remaining.py` (59 strategies, ~2424 total configs)
+- Output root: `MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/night_3M_2026-06-08/`
+- Per-iter dirs: `iter_01/`, `iter_02/`, ...
+- Deadline: 8h from launch (~07:29 local)
+- Worker cap: 20, BLAS threads pinned to 1
+- Target: ~210K param evals/iter × ~15 iters = ~3.15M evaluations
+- Log: `tools/overnight_runs/night_3M_2026-06-08.log`
+- Heartbeat: `tools/overnight_runs/_heartbeat_night_3M_2026-06-08.json` + dashboard-facing `_heartbeat.json`
+- Child PID: 44152 (bash), Wrapper PID: 24296
+
+Verification before handoff: Bash syntax PASS; import chain verified (59 strategies loaded, GRIDS populated); 20 Python worker processes confirmed running (22 PIDs, ~100-180MB each); sweep.log shows `[123/5015]` in 60s at iter 1.
+
+Post-loop pipeline (auto-runs after deadline):
+- CPCV n_groups=10 → PBO max-combinations=100000 → eval artifacts → Gate2 scorecards → all-gate evidence → scorecard_v2 (MCC-visible) → alpha vs buy&hold → morning report
+
+Important: Each iteration is DETERMINISTIC (seed = md5(strategy|symbol|tf), mega:1130). Repeated iterations are system stability soak tests, not independent statistical evidence. Morning review should use the final validation artifacts from the best iteration and classify research-only unless gates prove otherwise. Per A19 (idle-awake trap): the post-loop validation pipeline is genuinely new work (CPCV, PBO, scorecards).
+
+Morning action [AI: Any|DeepSeek]:
+1. Read `05_BACKTEST_RESULTS/night_3M_2026-06-08/MORNING_REPORT.md`
+2. Check heartbeat/logs: `cat tools/overnight_runs/night_3M_2026-06-08.log`
+3. Verify MCC visibility: `cd 08_DASHBOARD_APP/apps/api && python -c "from mcc_readonly.scorecard_reader import build_scorecard_status; print(len(build_scorecard_status()['cards']))"`
+4. Run `mcc_night_tail.sh` if scorecards need enrichment for MCC
+5. Write `OVERNIGHT_LESSONS_2026-06-08.md` to `11_TRIAGE/lessons_archive/`
+
 ## Codex GPT-5 2026-06-08 - batch023_034_2026-06-07 MCC tail complete
 - Ran `mcc_night_tail.sh` on `03_QUANTLENS/05_BACKTEST_RESULTS/batch023_034_2026-06-07` with `MCC_PYTHON` set to the Codex runtime Python.
 - Tail outputs: CPCV15 OK, PBO OK, 111 evaluation artifacts, 111 Gate2 scorecards, 111 all-gate artifacts, 111 Gate3 scorecards, 111 `scorecard_v2`, alpha OK, morning report OK.
@@ -1620,3 +1696,60 @@ Validation: py_compile PASS; focused scorecard reader test PASS; full dashboard 
 Closed R2-04/R2-05 as requested in the backlog style: no stacked widget, only a compact tooltip. `08_DASHBOARD_APP/apps/web/app.js` now adds `verdictLadderTooltip()` and `badgeLadderTooltip()`, and the Verdict & Decision badge title includes the current-state explanation plus the verdict and badge ladders.
 
 Validation: `node --check app.js` PASS; full dashboard API unittest discovery PASS (`39 tests`); `rg` confirms ladder text is limited to tooltip helpers. Display-only change; no scoring, Pine, MTC_V2, parity, backtest engine, or trading behavior changed. Detailed audit note: `_AI_MEMORY/UI Reviev/RESULT_R2_04_05_codex.md`.
+
+## Codex GPT-5 2026-06-14 - Strategy Intelligence UI pilot
+
+Implemented the requested MTC Strategy Intelligence UI pilot from `11_TRIAGE/ui_references/strategy_intelligence_lovable/CODEX_MTC_STRATEGY_INTELLIGENCE_UI_PILOT_PROMPT.md`.
+
+Pilot target: `STG084` / `QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK`, displayed as `8 EMA Pullback`. Selected because the prompt preferred STG084 and the live snapshot has one pipeline row, source URL/transcript coverage, AI name metadata, expert QuantLens verdict `RESEARCH_ONLY`, and 11 linked legacy `scorecard_v2` rows.
+
+Frontend changes only:
+- `08_DASHBOARD_APP/apps/web/index.html`: added sidebar entries for `Strategy Detail`, `Backtest Result Explorer`, and `Strategy Leaderboard`; added read-only pilot panels for the two new pages.
+- `08_DASHBOARD_APP/apps/web/app.js`: reworked Strategy Detail into Strategy Intelligence Page v2 order: hero, workflow bar, Strategy Overview, LLM Evaluation, Backtest Plan & Evidence, Paper Trading Readiness, salvage, and collapsed Advanced Technical Details. Added Backtest Profiles, Position Sizing & Leverage Assumptions, Parameter Space Preview, Best Results, same-profile comparison warning, Result Explorer shell, and Leaderboard shell. Raw gate/scorecard details moved under Advanced Technical Details.
+- `08_DASHBOARD_APP/apps/web/styles.css`: added terminal-style grids/cards for the pilot layout.
+
+Data handling: existing snapshot data is used where present. Missing run-plan/profile/leaderboard fields render as `Not available`, `Not implemented`, `Legacy artifact missing field`, or `No profile-separated result available`; no fake performance data or benchmark winners were added. The dashboard remains read-only and contains no launch/approve execution controls.
+
+Validation: `node --check app.js` PASS; dashboard API health PASS on local port 8777; `/api/snapshot?refresh=1` smoke confirms pilot row=1, name=`8 EMA Pullback`, scorecard rows=11, expert verdict=`RESEARCH_ONLY`, source URL present; `python -m unittest discover tests` in dashboard API PASS (`39 tests`). Cheap-agent read-only review was attempted; first run read wrong files, second run was limited by the harness 60KB read cap and produced false missing-function findings, but confirmed required pilot pieces and no forbidden launch labels. Browser visual QA could not run because the in-app Browser policy blocked `http://127.0.0.1:8777`.
+
+No backtest, optimization, worker, Pine, MTC_V2, parity, strategy logic, live trading, or approval write-back was launched or modified.
+
+## Codex GPT-5 2026-06-14 - Strategy Intelligence UI rescue patch
+
+Applied the follow-up rescue prompt from the attached `pasted-text.txt`. Scope stayed frontend-only in `08_DASHBOARD_APP/apps/web/{app.js,index.html,styles.css}`.
+
+Rescue changes:
+- Main Strategy Detail now routes through clean renderers: `renderLlmEvaluationClean`, `renderBacktestPlanEvidenceClean`, and `renderPaperTradingReadinessClean`.
+- Removed the extra main-flow `Salvageable Ideas` block so the visible top-level page follows the requested 7-part structure: Hero Summary, Workflow Bar, Strategy Overview, LLM Evaluation, Backtest Plan & Evidence, Paper Trading Readiness, collapsed Advanced Technical Details.
+- Converted main-flow Source Material, LLM score breakdown, Reusable Components, Backtest Artifact Availability, Position Sizing/Leverage, and Paper Trading readiness from table-heavy layouts into compact cards.
+- Backtest evidence summary now shows only decision-level cards: backtest status, latest score, Gate 2 status, buy-and-hold comparison, robustness, and promotion recommendation. Raw Gate rows and linked legacy backtest rows remain only in Advanced Technical Details.
+- Advanced Technical Details now contains Raw Gate Summary, legacy scorecard, Review Journey, QuantLens Expert Verdict, Gemini Pre-Screen, Salvageable Ideas, producer spec/source JSON, artifact paths, technical IDs, and raw snapshots. It remains collapsed by default.
+
+Validation: `node --check app.js` PASS; dashboard API unittest discovery PASS (`39 tests`); local snapshot smoke on port 8777 confirms pilot row=1, name=`8 EMA Pullback`, scorecard rows=11, expert verdict=`RESEARCH_ONLY`, health OK. Static audit confirms no `Approve Backtest`, `Launch Backtest`, or `Start Overnight Run` labels. Cheap-agent read-only review failed because the harness ignored the explicit read-extra files and looked for unrelated `rescue_patch` files; it wrote nothing.
+
+No backtest, optimization, overnight job, worker, Pine, MTC_V2, parity, strategy logic, risk engine behavior, live trading, or dashboard write-back was launched or modified.
+
+## Codex GPT-5 2026-06-14 - Dashboard shell replacement correction
+
+Corrected the rejected `/dashboard` integration. The old vanilla tab shell is no longer the served dashboard shell; `/dashboard` now serves the Strategy Intelligence Command Center layout with a left sidebar, default Command Center Home, and route renderers for Pipeline, Registry, generic Strategy Intelligence, Backtest Planner, Backtest Runs, Backtest Result Explorer, Leaderboard, Paper Trading, AI Knowledge Base, Advanced Artifacts, Diagnostics, Reports, and Read Model / Data Model.
+
+Files changed: `08_DASHBOARD_APP/apps/web/index.html`, `08_DASHBOARD_APP/apps/web/app.js`, `08_DASHBOARD_APP/apps/web/styles.css`, and the stale dashboard contract assertion in `08_DASHBOARD_APP/apps/api/tests/test_readonly_core.py`.
+
+Validation: `node --check app.js` PASS; dashboard API unittest discovery PASS (`39 tests`); served `http://127.0.0.1:8765/dashboard` PASS for `Strategy Intelligence Command Center`, `data-route="home"`, `Home / Command Center`, `routeTitle`, and no `<nav class="tabs">`, `data-tab="pipeline"`, or `tab-panel`; served `/web/app.js?v=1` PASS for `renderCommandCenterHome`, `renderStrategyIntelligence`, `Backtest Result Explorer`, `Read Model / Data Model`, and `View Paper Trading Approval Package`; forbidden active UI phrase/hardcoded pilot data search PASS; live API smoke reports health OK, `read_only`, 176 pipeline rows, 14 registry candidates, 837 scorecards, and 13 reports.
+
+Browser visual QA was attempted with the in-app Browser but blocked by enterprise policy for `127.0.0.1:8765`; no workaround or alternate browser surface was used. No backtest, optimization, worker, Pine, MTC_V2, parity, strategy logic, live trading, broker path, or execution/write-back path was launched or modified.
+
+## Codex GPT-5 2026-06-14 - Dark visual fidelity correction for Strategy Intelligence Command Center
+
+Applied the corrective visual-fidelity prompt from `C:\Users\BarışSemaay\.codex\attachments\5689d283-53a2-4a6e-89d5-60b70969990b\pasted-text.txt`. This pass treats the previous light skeleton as unacceptable and uses `11_TRIAGE/ui_references/google_strategy_intelligence_v2_final` as the visual target. Inspected the final reference screenshots and the React/Tailwind source under `mtc-strategy-intelligence (8)`.
+
+Frontend-only changes:
+- `08_DASHBOARD_APP/apps/web/index.html`: changed the header/sidebar presentation toward the reference: MTC brand mark, compact dark command header, local engine/token mode indicators, and read-only health controls.
+- `08_DASHBOARD_APP/apps/web/styles.css`: replaced the light admin palette with a dark command-center visual system: fixed dark sidebar, sticky dark header, dense dark cards, dark tables, teal/blue/amber/red status accents, workflow cards, constraint notices, strategy cards, result rails, leaderboard cards, and responsive dark layouts.
+- `08_DASHBOARD_APP/apps/web/app.js`: preserved existing vanilla routing/read-only data helpers while upgrading Home metric labels, Pipeline strategy cards + filter chips, Registry catalog cards, Strategy Intelligence hero/workflow/constraint/gate/detail/decision-rail structure, Planner profile/read-only package view, Result Explorer bucket/result-rail/chart-placeholder view, and Leaderboard category cards.
+
+Validation: `node --check MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/web/app.js` PASS; dashboard API unittest discovery PASS (`39 tests`); `/healthz` reports `overall_ok=True`, `mode=read_only`; served `/dashboard` PASS for Command Center Home/sidebar and no old tab markers; served CSS PASS for dark tokens (`--bg: #07090e`, `--panel: #0e131c`) and reference structures (`strategy-card`, `workflow-bar`, `constraint-notice`, `leaderboard-card-grid`); served JS PASS for Strategy Intelligence detail structures and route renderers; forbidden execution wording and hardcoded pilot data search PASS with zero active UI matches.
+
+Visual QA notes: Browser screenshots could not be captured because the in-app Browser policy blocks `127.0.0.1:8765`, and no alternate browser workaround was used. Direct served-route inspection confirms the visual contract changed from the light skeleton to dark reference structures. Cheap-agent review was attempted through `_deepseek_driver`, but the agent drifted into unrelated files and hit `max_iters` without a usable report; no writes occurred.
+
+No backtest, optimization, worker, Pine, MTC_V2, parity, strategy logic, live trading, broker path, API write behavior, or execution/write-back path was launched or modified.

@@ -39,6 +39,18 @@ Volatile / per-session state belongs in `GLOBAL_HANDOFF.md`,
   See `docs/migration_manifests/PATH_REWRITE_POLICY.md`.
 - Legacy freeze policy: accept-and-document (no NTFS DACL).
   See `docs/migration_manifests/LEGACY_FREEZE_POLICY.md`.
+- Dashboard route contract: `/dashboard` serves
+  `MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/web/index.html` as the
+  Strategy Intelligence Command Center shell. The active shell is vanilla
+  HTML/JS/CSS with left-sidebar navigation, default Command Center Home, and
+  read-only API feeds from `/healthz`, `/api/snapshot`, and `/api/read-model`.
+  It is not a React runtime and it must not imply backtest, broker, paper, or
+  live execution capability.
+- Dashboard visual contract: the Strategy Intelligence Command Center shell
+  should follow the final `11_TRIAGE/ui_references/google_strategy_intelligence_v2_final`
+  dark command-center reference: dark canvas, compact left navigation, dense
+  dark cards/tables, teal/blue/amber/red status accents, workflow cards, and
+  read-only missing-artifact states. Avoid returning to a light admin skeleton.
 
 ## Existing Prompt Library
 
