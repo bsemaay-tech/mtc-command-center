@@ -1,5 +1,12 @@
 # PICKUP — Impeccable critique pass on Strategy Detail (2026-06-21)
 
+> **STATUS: DONE (Claude Opus 4.8, 2026-06-21).** Critique re-run (27/40 Acceptable) + full
+> backlog applied as 7 commits on `feature/ui-impeccable-pilot`. See GLOBAL_HANDOFF /
+> SESSION_LOG top entries for commit-by-commit detail. Co-located `apps/web/PRODUCT.md` +
+> `DESIGN.md` written. **Remaining (open a11y items, next pass):** empty-state text contrast
+> <AA; no `:focus-visible` + non-focusable workflow STAGE cards → suggest `/impeccable audit`.
+> Merge/PR is Barış's call (not done).
+
 **For the next Claude Code session (after restart).** The Impeccable agent skill was installed
 this session but its slash-commands only load on a fresh start. Restart done → execute this.
 

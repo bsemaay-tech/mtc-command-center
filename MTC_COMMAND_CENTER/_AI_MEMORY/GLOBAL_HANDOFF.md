@@ -1,5 +1,29 @@
 # GLOBAL_HANDOFF
 
+## Claude Opus 4.8 2026-06-21 — Impeccable Strategy-Detail polish pass DONE (branch `feature/ui-impeccable-pilot`, NOT merged)
+
+Continuation of the Phase-4 pilot below. Took the Strategy Detail view (`renderIntelligence`, `app.js:903`) from critique → applied fixes. **UI/CSS/markup only.** Commits attributed `Co-Authored-By: Codex GPT-5` per branch convention (git user on this branch).
+
+**Critique:** re-ran scoped to Strategy Detail only → **27/40 Acceptable** (snapshot `.impeccable/critique/2026-06-21T20-23-31Z__8-dashboard-app-apps-web-app-js-renderintelligence.md`). Strengths confirmed: sticky decision rail, honest empty states, restrained on-brand identity.
+
+**Design docs:** wrote co-located impeccable-standard `apps/web/PRODUCT.md` + `apps/web/DESIGN.md` (`567f260d`). Note: prior session's design context already exists under different names (`00_AGENT_PROTOCOLS/MCC_PRODUCT_CONTEXT.md`, `11_TRIAGE/STRATEGY_INTELLIGENCE_DESIGN_CONTEXT.md`) — mine are the tooling-discoverable named files, complementary not duplicate.
+
+**Fixes applied (one logical change per commit, each verified detect=[] / `node --check` / `unittest 79 OK` on JS changes / live computed-style QA at `:8765`):**
+1. `0172d940` [P2] gate-card side-stripe `.bar` (banned pattern) → full-border tint + faint bg per state; removed dead `.bar` span + `.accent`.
+2. `9b93191b` [P2] unified FAIL color: hero gate cell `.val.bad` amber → red (matched badge/rail; amber reserved for warn/pending).
+3. `8748faf8` [P1] dropped redundant per-section `Section N` eyebrow from `sectionHead` (ordinal already in sidebar nav).
+4. `58fb126c` [P1] section tiering: Explorer/Paper/Advanced → `.si-section.secondary` (smaller neutral head icon, lighter title, unfilled panel) so gates/verdict/evidence read primary. Restraint-first.
+5. `50c554bb` [P2] empty info-cards → `is-empty` modifier (transparent bg, faint border; label/contrast unchanged) so populated data carries weight.
+6. `29780f59` [P3] consolidated micro-label type 8/8.5/9/9.5px → 9px across Strategy Detail (left 10/10.5 secondary tier + other views untouched).
+
+**Verification:** detector `[]` throughout; `node --check` PASS; dashboard API `unittest discover tests` → **79 tests OK** after every JS-affecting change; live QA via preview server on `:8765` (computed styles confirmed each change; 2 confirming screenshots captured, the rest verified via DOM/computed-style as the screenshot tool intermittently timed out). No horizontal overflow.
+
+**Untracked helper (NOT committed):** created `08_DASHBOARD_APP/run_dashboard_server.ps1` because `.claude/launch.json` pointed at that missing path; lets the preview tool launch the read-only API.
+
+**STILL OPEN (prior critique a11y items — deliberately NOT touched this pass):** (a) faint empty-state text contrast below AA (`--faint` on dark); (b) no `:focus-visible` rules in `styles.css` + 4 non-focusable `div.workflow-card` STAGE cards. Recommend a dedicated `/impeccable audit` (a11y) follow-up.
+
+**Safety/scope:** RESEARCH ONLY / READ-ONLY / UNIVERSE MISMATCH / locked banners all intact. No change to data contracts, `read_model`/API shape, registry, scorecard semantics, night artifacts, backtest, Pine/MTC_V2/parity/broker/execution. `renderIntelligence` reads the same `strategyModel` fields — only appearance changed. master untouched. Merge/PR is Barış's call.
+
 ## Claude Opus 4.8 2026-06-21 — AI tooling Phase 3 done + Phase 4 Impeccable pilot (HANDOFF TO CODEX)
 **Phase 3 (local tools) — committed on master:** MarkItDown promoted permanent (wrapper `03_QUANTLENS/tools/markitdown_ingest.py` + git-ignored 3.13 venv), CodeBurn kept (global npm + local SessionStart hook `.claude/` showing spend), Graphify kept on-demand (`graphify_impact.py` wrapper, graphs git-ignored). AGENTS.md gained an **AI TOOL AUTO-USE** section so agents auto-use these. Commits `adc2c24`, `3cfb04c`, `c172a99`. Dropped tools: Headroom/NotebookLM-py/Webwright. Details: `09_DOCS/AI_TOOLING/` (+ `pilots/`).
 
