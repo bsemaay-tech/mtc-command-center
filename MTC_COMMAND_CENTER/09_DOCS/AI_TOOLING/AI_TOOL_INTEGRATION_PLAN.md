@@ -92,12 +92,14 @@ The backlog's Part 6 / C4 is **already implemented**. Action is *enforcement*, n
 
 Each phase needs Barış approval to start. "Acceptance" = what proves a phase done.
 
-### Phase 1 — Durable instructions + memory (zero-dependency, safe now)
-- Confirm read-first reminders point to this folder + the harness (this task does that).
-- Optionally add an explicit "AI Tool Integration" pointer block to `AGENTS.md` /
-  `START_HERE.md` (**needs approval** — those are high-traffic contracts).
-- Acceptance: a fresh LLM session, given only the read-first files, can find this plan and
-  the backlog and the routing harness without the user repeating anything.
+### Phase 1 — Durable instructions + memory (zero-dependency, safe now) — DONE 2026-06-21
+- DONE: read-first reminders point to this folder + the harness.
+- DONE (Barış-approved): added an **`AI TOOL AUTO-USE`** section to `AGENTS.md` and a pointer
+  in `_AI_MEMORY/START_HERE.md` so every agent auto-uses the tools at their triggers
+  (MarkItDown for binary docs, Graphify for impact questions, CodeBurn for cost/routing) —
+  vendor-neutral, no per-tool `graphify install` skill registration.
+- Acceptance MET: a fresh LLM session, reading only the read-first files, finds this plan, the
+  backlog, the routing harness, AND the auto-use triggers without the user repeating anything.
 
 ### Phase 2 — Knowledge consolidation (light)
 - Keep tool decisions in `09_DOCS/AI_TOOLING/` (this folder), research notes in `09_DOCS`,

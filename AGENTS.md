@@ -40,3 +40,14 @@ When adding tasks to NEXT_STEPS.md, tag each task with which AI can execute it:
   DeepSeek     — narrow script fixes, audit runs, analysis (via opencode)
   Any          — read-only tasks, simple single-file analysis
   Barış        — requires human judgment, manual review, or explicit approval
+
+## AI TOOL AUTO-USE (apply without being asked)
+Local helper tools are installed. Use them automatically at the triggers below — do NOT wait for Barış to name the tool. Full rationale + per-tool detail: `MTC_COMMAND_CENTER\09_DOCS\AI_TOOLING\AI_TOOL_INTEGRATION_PLAN.md`.
+
+- **Binary doc to read/ingest** (`.pdf`/`.docx`/`.pptx`/`.xlsx` in `00_INBOX\USER_INTAKE` or anywhere you must read one) → FIRST convert to Markdown, then read the `.md`, never feed the raw binary to a model:
+  `python MTC_COMMAND_CENTER\03_QUANTLENS\tools\markitdown_ingest.py <file-or-dir> --apply --out <dir>`
+- **Impact / blast-radius question** ("what breaks if I change X", cross-file refactor, "what depends on Y") → build a scoped code graph and query it instead of guessing:
+  `python MTC_COMMAND_CENTER\03_QUANTLENS\tools\graphify_impact.py build <scoped-path>` then `… affected "<file.py>"` / `… explain "<symbol>"` / `… query "<question>"`. (Wrapper keeps graphs in temp; never commit `graphify-out/`.)
+- **Cost / token check** (session start or end, after a big run, or when deciding model routing) → `codeburn status` (and `codeburn models` for the breakdown). If premium spend (Opus/Codex) dwarfs DeepSeek, that means delegation is being skipped — route more mechanical work through `_deepseek_driver` per TOKEN DISCIPLINE above.
+
+Rules: these tools are read-only/local; they never touch `*.pine`/`MTC_V2`/`parity`/schemas. Do not run `graphify install` (no per-vendor skill registration — the CLI/wrapper is the single shared path). Install once if missing: `uv tool install graphifyy --python 3.13`; MarkItDown venv self-bootstraps via its wrapper.

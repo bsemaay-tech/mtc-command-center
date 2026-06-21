@@ -6,6 +6,8 @@ Read order: `AGENTS.md`, this file, `AI_RULES.md`, `PROJECT_MEMORY.md`, `GLOBAL_
 
 Workflow gates and prompt templates: see `AI_RULES.md` and `..\04_SHARED\prompts\05_ai_workflow\00_index.md`.
 
+AI tool auto-use (MarkItDown for binary docs, Graphify for impact questions, CodeBurn for cost/routing): see the `AI TOOL AUTO-USE` section in `AGENTS.md` and `..\09_DOCS\AI_TOOLING\AI_TOOL_INTEGRATION_PLAN.md`. Use them automatically at their triggers; don't wait to be told.
+
 HER backtest / optimizasyon için (in-day tek strateji, sprint, overnight — fark etmez) **zorunlu pre-read iki dosya:**
 1. Canonical kurallar: `..\03_QUANTLENS\_user_guide\07_BACKTEST_AND_OPTIMIZATION_RULES.md` (4 gate, buy&hold + alpha, DSR, BH-FDR, classification, promotion levels, antigravity checklist)
 2. Operasyonel runbook: `..\11_TRIAGE\BACKTEST_OPTIMIZATION_RUNBOOK.md`
