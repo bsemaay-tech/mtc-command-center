@@ -638,10 +638,8 @@ table.grid-table .empty-cell { text-align: center; color: var(--faint); padding:
   padding: 14px 16px;
   overflow: hidden;
 }
-.gate-card .bar { position: absolute; left: 0; top: 0; width: 3px; height: 100%; }
-.gate-card.accent { padding-left: 18px; }
-.gate-card.ok .bar { background: var(--emerald); }
-.gate-card.bad .bar { background: var(--amber); }
+.gate-card.ok { border-color: rgba(16,90,60,0.55); background: rgba(6,40,28,0.18); }
+.gate-card.bad { border-color: rgba(120,40,40,0.55); background: rgba(40,12,12,0.18); }
 .gate-card.locked { opacity: .65; }
 .gate-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .gate-card h4 { margin: 0; font-size: 12.5px; font-weight: 700; color: var(--text); }

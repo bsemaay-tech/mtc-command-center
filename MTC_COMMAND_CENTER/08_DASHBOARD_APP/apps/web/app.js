@@ -994,12 +994,11 @@ function sectionHead(n, title, subtitle, iconName) {
 
 function gateCard(title, desc, g, opts = {}) {
   const tone = gateTone(g.status);
-  const cls = opts.locked ? "locked" : tone === "ok" ? "ok accent" : tone === "bad" ? "bad accent" : "";
+  const cls = opts.locked ? "locked" : tone === "ok" ? "ok" : tone === "bad" ? "bad" : "";
   const badgeCls = opts.locked ? "neutral" : tone;
   const label = g.score != null ? `${g.score}/${g.max} — ${spaced(g.status)}` : spaced(g.status);
   return `
     <div class="gate-card ${cls}">
-      ${(tone === "ok" || tone === "bad") && !opts.locked ? '<span class="bar"></span>' : ""}
       <div class="gate-card-head">
         <div><h4>${esc(title)}</h4><p>${esc(desc)}</p></div>
         ${badge(label, badgeCls)}
