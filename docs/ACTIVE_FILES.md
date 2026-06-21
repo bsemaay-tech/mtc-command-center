@@ -1,5 +1,11 @@
 # Active Files
 
+## AI Tooling Integration Backlog (2026-06-20, Claude Opus 4.8)
+- `MTC_COMMAND_CENTER\09_DOCS\AI_TOOLING\MTC_AI_TOOLS_MASTER_INTEGRATION_BACKLOG.md` — source backlog of AI tools reviewed (moved here from `docs\`; was `MTC_AI_Tools_Master_Integration_Backlog_and_Claude_Prompt.md`).
+- `MTC_COMMAND_CENTER\09_DOCS\AI_TOOLING\AI_TOOL_INTEGRATION_PLAN.md` — actionable phased plan, real-repo path map, per-tool acceptance gates.
+- `MTC_COMMAND_CENTER\09_DOCS\AI_TOOLING\CLAUDE_REVIEW_OF_CODEX_BACKLOG.md` — Claude's critique: disagreements + tools to drop (Headroom/NotebookLM-py/Webwright).
+- Roadmap is also registered in `MTC_COMMAND_CENTER\_AI_MEMORY\NEXT_STEPS.md`, `GLOBAL_HANDOFF.md`, `SESSION_LOG.md`, `ACTIVE_FILES.md`.
+
 ## Future AI Read-First Candidates
 | File | Reason | Action |
 | --- | --- | --- |

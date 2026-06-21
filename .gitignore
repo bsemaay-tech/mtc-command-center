@@ -143,3 +143,10 @@ MTC_COMMAND_CENTER/02_MTC_BACKTEST/reports/traderspost_integration_logs/
 Baristasks.md
 debug/
 results/
+
+# AI tooling local venvs (never commit — bootstrapped by markitdown_ingest.py)
+MTC_COMMAND_CENTER/03_QUANTLENS/tools/.venvs/
+
+# Graphify code-graph output (never commit — regenerate on demand)
+graphify-out/
+**/graphify-out/

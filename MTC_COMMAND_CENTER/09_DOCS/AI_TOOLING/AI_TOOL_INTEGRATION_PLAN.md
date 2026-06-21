@@ -1,0 +1,193 @@
+# AI Tool Integration Plan (MTC Command Center)
+
+**Owner:** Barış · **Drafted:** 2026-06-20 by Claude Opus 4.8 · **Status:** PREP ONLY — nothing installed.
+
+This is the actionable companion to
+[`MTC_AI_TOOLS_MASTER_INTEGRATION_BACKLOG.md`](MTC_AI_TOOLS_MASTER_INTEGRATION_BACKLOG.md)
+(the source backlog, written by a prior Codex session). It exists so that a future Claude /
+Codex / other LLM session can pick up tool integration **without re-reading the whole chat**
+and without breaking the existing repo structure.
+
+Read order for any AI tool work:
+1. `AGENTS.md` (root) → `_AI_MEMORY/START_HERE.md` → `_AI_MEMORY/AI_RULES.md`.
+2. This file.
+3. `CLAUDE_REVIEW_OF_CODEX_BACKLOG.md` (sibling) — Claude's disagreements with the backlog.
+4. The source backlog itself for per-tool detail.
+
+---
+
+## 0. Hard rules (inherited, non-negotiable)
+
+- **No installs / no integrations without explicit Barış approval.** This whole track is
+  documentation + memory until approved tool-by-tool.
+- Do not touch `*.pine`, `MTC_V2`, `parity`, registry schemas, or backtest/broker/execution
+  logic for any tool work. (Enforced by the DeepSeek harness denylist; applies to humans too.)
+- No secrets / `.env` / API keys printed or committed. Tools that need keys are pilot-gated.
+- Preserve existing structure. **Do not create the parallel folders the source backlog
+  assumes.** Use the path map in §1.
+
+---
+
+## 1. Path map — backlog's assumed paths → this repo's real paths
+
+The source backlog was written against a generic layout. This repo is different. Use the
+right column.
+
+| Backlog assumes | Use instead (real) | Notes |
+|---|---|---|
+| `00_DOCS/AI_WORKFLOW/` | `MTC_COMMAND_CENTER/09_DOCS/AI_TOOLING/` | This folder. `09_DOCS/AI_WORKFLOW.md` already exists as a file. |
+| `00_KNOWLEDGE_BASE/` | `MTC_COMMAND_CENTER/09_DOCS/` + `_AI_MEMORY/` | No separate KB. Research/decisions → `09_DOCS`; operational memory → `_AI_MEMORY`. Do **not** scaffold a new KB tree unless Barış asks. |
+| `00_PLANS/active/PLAN.md` + `PLAN-REVIEW-LOG.md` | `04_SHARED/prompts/05_ai_workflow/` + `09_DOCS/ADR/` | Plan/review prompts already exist (see §2). ADRs already have a home. |
+| `09_TOOLS/<tool>/` | `MTC_COMMAND_CENTER/03_QUANTLENS/tools/` (analysis tooling) or a new top-level `09_TOOLS/` **only if Barış approves** | Most existing helper scripts live in `03_QUANTLENS/tools/`. |
+| `09_AUTOMATION/n8n/` | new `09_AUTOMATION/` **only on approval** | Side-service, repo-external preferred. |
+| `.claude/skills/mtc-grill-plan/` | extend `04_SHARED/prompts/05_ai_workflow/` | Adversarial-review prompts already exist; extend them, don't fork a skill. |
+| `MODEL_ROUTING_POLICY.md` (new) | **already implemented** — see §3 | Do not duplicate. |
+| `CODEX.md` (root, new) | `AGENTS.md` (root) is the shared contract | Codex reads `AGENTS.md`. A separate `CODEX.md` is optional, not required. |
+
+---
+
+## 2. What already exists (do not rebuild)
+
+Before integrating any "workflow/pattern" tool, know these are already in the repo:
+
+- **Cheaper-model delegation harness** — `_deepseek_driver/ds_agent.py` (+ `README.md`),
+  `_AI_MEMORY/DEEPSEEK_DISPATCH.md`, and the mandated "TOKEN DISCIPLINE" section in
+  `AGENTS.md`. This **is** the model-routing implementation the backlog's Part 6 asks to
+  "create." It just gets forgotten — fix is a read-first reminder, not a new policy doc.
+- **Adversarial plan / code review (Grill-Me-style)** — `04_SHARED/prompts/05_ai_workflow/`:
+  `01_office_hours_scope_review.md`, `02_engineering_plan_review.md`,
+  `04_adversarial_code_review.md`, `06_security_review.md`, `07_handoff_update.md`.
+- **Backtest/optimization gate workflow** — `03_QUANTLENS/_user_guide/07_*` +
+  `11_TRIAGE/BACKTEST_OPTIMIZATION_RUNBOOK.md`.
+- **ADR home** — `09_DOCS/ADR/`. (Backlog's "draft ADR only until implemented" rule still applies.)
+- **Caveman output-compression** — already active as a Claude Code *client plugin* in this
+  environment (not a repo artifact). No repo integration needed.
+- **Document skills** — `pdf` / `docx` / `pptx` / `xlsx` Anthropic skills are available in the
+  Claude Code client; evaluate them before adding MarkItDown/LiteParse as repo dependencies.
+- **Browser automation** — `Claude-in-Chrome` and `Claude_Preview` MCPs are already available;
+  evaluate before adding Webwright/Playwright.
+
+---
+
+## 3. Model routing — already real, just enforce it
+
+The backlog's Part 6 / C4 is **already implemented**. Action is *enforcement*, not creation:
+
+- **Use the harness for bounded mechanical work** (single/few-file edits, schema/JSON edits,
+  audit runs, script writing): write task JSON → `python _deepseek_driver/ds_agent.py
+  --task <file>` → audit on real data yourself. See `_deepseek_driver/README.md`.
+- **When to route cheap:** large summarization, broad research, repeated audit passes, long
+  log summarization, draft critique, non-final classification.
+- **When NOT to route cheap:** final architecture decisions, registry/schema migration
+  approval, security-sensitive review, live-trading/broker logic, final user-facing verdicts.
+- **Providers:** `deepseek` (primary), `grok`/`xai`, `openrouter` (`:free` = fallback). Keys
+  via env only; never assume a key exists, never print one.
+
+> If Barış wants a single canonical "routing policy" page, it should *link to* the harness
+> README, not restate it — one source of truth.
+
+---
+
+## 4. Phased plan (gated)
+
+Each phase needs Barış approval to start. "Acceptance" = what proves a phase done.
+
+### Phase 1 — Durable instructions + memory (zero-dependency, safe now)
+- Confirm read-first reminders point to this folder + the harness (this task does that).
+- Optionally add an explicit "AI Tool Integration" pointer block to `AGENTS.md` /
+  `START_HERE.md` (**needs approval** — those are high-traffic contracts).
+- Acceptance: a fresh LLM session, given only the read-first files, can find this plan and
+  the backlog and the routing harness without the user repeating anything.
+
+### Phase 2 — Knowledge consolidation (light)
+- Keep tool decisions in `09_DOCS/AI_TOOLING/` (this folder), research notes in `09_DOCS`,
+  operational state in `_AI_MEMORY`. **Do not build a new KB tree.**
+- Acceptance: future query "what AI tools next, what's the approved roadmap?" answerable from
+  `_AI_MEMORY/NEXT_STEPS.md` + this folder.
+
+### Phase 3 — Local tools (each pilot-gated, run §6 checklist FIRST)
+Order, lowest-risk first: MarkItDown → LiteParse → CodeBurn → Graphify (pilot, not "immediate").
+- Acceptance per tool: §6 checklist green + a real-MTC-data A/B test recorded in
+  `09_DOCS/AI_TOOLING/pilots/<tool>_pilot.md`.
+
+### Phase 4 — Research / UI pilots (branch-isolated)
+Claude-Video, Impeccable, Design-Extract, Taste-Skill. UI tools on `feature/ui-*` branches
+only; **no data-contract / registry / backtest change**.
+- Acceptance: visible improvement on one screen, no API/contract diff, no console errors.
+
+### Phase 5 — Side-service automation (repo-external preferred)
+n8n watchdog for long backtests + Telegram/email notify. Requires the backtest runner to emit
+a stable progress/log file first.
+- Acceptance: a finished overnight run pushes a notification without an agent staying open.
+
+---
+
+## 5. Per-tool quick reference (decision · benefit · risk · next action · acceptance)
+
+Decisions below are **Claude's adjusted** view; where they differ from the source backlog,
+the reason is in `CLAUDE_REVIEW_OF_CODEX_BACKLOG.md`.
+
+| Tool | Decision (adjusted) | Next action | Acceptance / gate |
+|---|---|---|---|
+| CLAUDE.md/AGENTS.md/CODEX.md rules | Already present (AGENTS.md). Extend only. | Add tool-routing pointer (approval). | Read-first files link here + harness. |
+| MTC Grill Plan | Already present as prompt library. | Extend `05_ai_workflow/`. | No new parallel skill folder. |
+| Codex read-only review | Already present (`04_adversarial_code_review.md`). | Use as-is. | Used on high-risk diffs. |
+| Model routing / DeepSeek | **Already implemented** (`_deepseek_driver`). | Enforce, don't recreate. | Harness used for mechanical work. |
+| MarkItDown | Pilot (compare to built-in pdf/docx skills first). | A/B on real MTC PDF/XLSX. | Beats built-in skill on a real doc. |
+| LiteParse | Pilot (local, privacy). | A/B vs MarkItDown. | Better tables/layout on real PDF. |
+| CodeBurn | Pilot. | Verify provider/proxy pricing accuracy. | Cost numbers match reality. |
+| Graphify | **Pilot (downgraded from "immediate")**. | Run on repo, check Windows + output value. | Beats grep/registry for an impact question + graph.json git-noise decided. |
+| Understand-Anything | Pilot, A/B vs Graphify. | Only if Graphify wins. | One winner kept, not both. |
+| Caveman Light | Client plugin, already active. | No repo work. | n/a |
+| ~~Headroom~~ | **DROPPED 2026-06-20** — MITM proxy risk, ~5% real saving. | None. | n/a |
+| Claude-Video | Pilot (research). | A/B transcript-only vs frames on one strategy video. | Captures settings transcript missed. |
+| ~~NotebookLM-py~~ | **DROPPED 2026-06-20** — unofficial API, fragile. | None. | n/a |
+| Impeccable / Design-Extract / Taste-Skill | UI pilots, branch-isolated. | `feature/ui-*` only. | UI-only diff, no contract change. |
+| ~~Webwright / Playwright~~ | **DROPPED 2026-06-20** — redundant with existing browser MCPs. | Use Claude-in-Chrome / Preview. | n/a |
+| n8n watchdog | Side-service. | Needs stable log emitter first. | Overnight run notifies hands-free. |
+| Zapier | Watchlist. | None now. | n/a |
+| Supermemory / GBrain / Claude-Obsidian | Later / repo-external. | None. | n/a |
+| MoneyPrinter / VoxCPM / Career-Ops / Odysseus / ECC / Higgsfield | **Do not integrate** (agreed). | None. | n/a |
+
+### 5.1 DROPPED — do not integrate, do not pilot (decided 2026-06-20, Barış)
+
+Removed from all phases. Rationale in `CLAUDE_REVIEW_OF_CODEX_BACKLOG.md` §2.
+
+- **Headroom** — compression proxy sits between agent and LLM (sees all prompts/repo content); ~5% real saving. Not worth the security/accuracy risk.
+- **NotebookLM-py** — wraps an unofficial, undocumented API; breaks whenever Google changes it.
+- **Webwright** — duplicates the already-available `Claude-in-Chrome` / `Claude_Preview` MCPs.
+
+Plus Codex's original do-not list stands: MoneyPrinterTurbo, VoxCPM, Career-Ops, Odysseus, ECC, Higgsfield.
+
+---
+
+## 6. Per-tool pre-integration checklist (run before any install)
+
+```
+[ ] repo maintained / not abandoned?
+[ ] license compatible?
+[ ] Windows compatible (this is a Windows 11 repo)?
+[ ] Python/Node version requirement known?
+[ ] local-only or external API? (external API => key handling => pilot-gate)
+[ ] secrets/privacy risk? (anything that reads repo content or prompts => review)
+[ ] output file size / git noise? (large artifacts => .gitignore decision up front)
+[ ] does it modify files, or read-only?
+[ ] overlaps an existing repo capability (§2)? if yes, justify the addition
+[ ] conflicts with MTC denylist (pine/parity/MTC_V2/schemas)?
+```
+
+A tool that fails "Windows compatible", "secrets risk", or "overlaps existing" should not be
+promoted to integration without an explicit Barış override.
+
+---
+
+## 7. Exact next command for the user
+
+To start Phase 1 (safe, doc-only) in a fresh session, paste:
+
+```
+Read MTC_COMMAND_CENTER/09_DOCS/AI_TOOLING/AI_TOOL_INTEGRATION_PLAN.md and
+CLAUDE_REVIEW_OF_CODEX_BACKLOG.md. Then propose the exact pointer lines to add to AGENTS.md
+and _AI_MEMORY/START_HERE.md so future sessions auto-discover the AI-tool roadmap and the
+DeepSeek routing harness. Do not install any tool. Show diffs for my approval first.
+```
