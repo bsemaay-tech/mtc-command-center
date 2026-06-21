@@ -627,6 +627,18 @@ table.grid-table .empty-cell { text-align: center; color: var(--faint); padding:
 .si-section-head h3 { margin: 0; font-size: 16px; font-weight: 800; color: var(--text-strong); }
 .si-section-head p { margin: 2px 0 0; font-size: 11.5px; color: var(--muted); }
 
+/* Secondary (reference) sections recede below the decision sections: a smaller,
+   neutral head and an unfilled panel, so gates/verdict/evidence read as primary. */
+.si-section.secondary .si-section-icon {
+  width: 28px; height: 28px; flex: 0 0 28px;
+  font-size: 13px;
+  background: transparent;
+  border-color: var(--border-soft);
+  color: var(--muted);
+}
+.si-section.secondary .si-section-head h3 { font-size: 14px; color: var(--text); }
+.si-section.secondary > .panel { background: transparent; }
+
 /* gate status summary cards */
 .gate-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .gate-card {

@@ -1281,7 +1281,7 @@ function explorerPreviewSection(m) {
   const prows = profileRowsForStrategy(m.id).slice().sort((a, b) => Number(b.score || 0) - Number(a.score || 0));
   const pr = prows[0];
   return `
-    <section class="si-section" id="sec-explorer">
+    <section class="si-section secondary" id="sec-explorer">
       ${sectionHead(5, "Backtest Result Explorer", "Strategy-scoped result preview. Compare only within the same bucket.", "bar")}
       <div class="panel">
         <p class="same-profile-warning">Same-bucket rule: compare only within identical profile, timeframe, market universe, and score method.</p>
@@ -1322,7 +1322,7 @@ function paperReadinessSection(m) {
     ["Fail-Safe Readiness", "Not evaluated"],
   ];
   return `
-    <section class="si-section" id="sec-paper">
+    <section class="si-section secondary" id="sec-paper">
       ${sectionHead(6, "Paper Trading Readiness", "Read-only readiness review. Locked until evidence exists.", "activity")}
       <div class="panel">
         ${ready ? "" : `<div class="banner warn" style="margin-bottom:14px;"><div class="banner-icon">${icon("lock")}</div><div><h4>Paper Trading Locked</h4><p>Locked until Gate 2 evidence passes and Gate 3 readiness artifacts exist. Reason: ${esc(m.blocking.join(", ") || "Gate 2 evidence not demonstrated")}.</p></div></div>`}
@@ -1356,7 +1356,7 @@ function advancedSection(m) {
     ? `Scorecard rows (${cards.length} — full detail)`
     : `Scorecard rows (${cards.length} — summary)`;
   return `
-    <section class="si-section" id="sec-advanced">
+    <section class="si-section secondary" id="sec-advanced">
       ${sectionHead(7, "Advanced Technical Details", "Raw read-model rows and identifiers. Collapsed by default.", "settings")}
       <div class="panel">
         ${j("Raw gate summary (scorecard_v2.gate_summary)", m.v2.gate_summary)}
