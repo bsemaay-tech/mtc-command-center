@@ -157,5 +157,8 @@ MTC_COMMAND_CENTER/08_DASHBOARD_APP/logs/
 # Local temp workspace
 Temp/
 
+# Local Codex/session metadata
+.codex/
+
 # Accidental command-output typo
 tatus --short
