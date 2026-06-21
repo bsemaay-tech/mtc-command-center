@@ -1,5 +1,15 @@
 # NEXT_STEPS
 
+## ▶ IMPECCABLE UI PILOT (2026-06-21, Claude Opus 4.8) — branch `feature/ui-impeccable-pilot`, RESUME HERE
+Setup DONE: product context `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/MCC_PRODUCT_CONTEXT.md` + design context `MTC_COMMAND_CENTER/11_TRIAGE/STRATEGY_INTELLIGENCE_DESIGN_CONTEXT.md` (North Star "The Quiet Terminal"; preserves existing dark command-center identity) + `.claude/launch.json`. Critique DONE on Strategy-Detail = **30/40 Good** (`.impeccable/critique/2026-06-21T15-56-19Z__r-08-dashboard-app-apps-web-app-js-strategy-detail.md`).
+**NEXT = polish pass, per-issue with screenshot-verify (Barış's review style). Not started (credit out).** Frontend = single files `08_DASHBOARD_APP/apps/web/{app.js,styles.css}`. Backlog from critique, severity order:
+1. **[P1] a11y contrast** — empty-state values use `--faint #64748b` (~3.95:1 on `#0E131C`, fails AA). Bump those to `--muted #94a3b8` (~7.4:1) or a new `≥4.5:1` token; keep italic to mark "absent". Instances: "Not extracted from source", "Missing source metadata", "Method extraction reader not implemented", "Transcript not linked", "Not specified in source".
+2. **[P1] a11y focus** — add global `:focus-visible` ring (2px teal + offset) to `styles.css` (currently ZERO focus rules); make the 4 STAGE `div.workflow-card[onclick]` real `<button>`s or `tabindex=0 + role=button + Enter/Space`. Also add `@media (prefers-reduced-motion:reduce)` for the `@keyframes pulse` dot.
+3. **[P2] side-stripe bars** — remove `.gate-card .bar` (`styles.css:641-644`, 3px abs left bar); status already on the OK/FAIL badge. Use full 1px status-tinted border or nothing (obeys own Flat-Plane Rule).
+4. **[P2] boilerplate dedup** — Gate1/1B criteria lists: show note only on non-full-credit rows; let green `n/n` chip speak for full credit (kills ~15 identical "Full credit…" lines).
+5. **[P2] triple gate-state** — keep the persistent right rail as canonical verdict; collapse/trim the top KPI strip + Gate Status cards duplication (this is the R2-14 dedup keystone).
+Constraints: NO trading/Pine/MTC_V2/parity/schema/data-contract change; visual/a11y/wording only. Verify each fix live at `:8765/dashboard` (Claude-in-Chrome; `window.openStrategy('QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK')`) + `node --check app.js`. Re-run `/impeccable critique` after to track the score. See [[mcc-ui-review-state]] for R1/R2 history (this is effectively Round 3).
+
 ## ▶ AI TOOL INTEGRATION ROADMAP (filed 2026-06-20, Claude Opus 4.8) — PREP ONLY, nothing installed
 Source backlog + actionable plan + Claude critique live in `09_DOCS\AI_TOOLING\`:
 - `MTC_AI_TOOLS_MASTER_INTEGRATION_BACKLOG.md` (catalog), `AI_TOOL_INTEGRATION_PLAN.md` (do this), `CLAUDE_REVIEW_OF_CODEX_BACKLOG.md` (what to drop).
