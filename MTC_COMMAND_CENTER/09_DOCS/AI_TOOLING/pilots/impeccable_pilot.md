@@ -25,8 +25,23 @@ Both = "thick colored border on one side of a card — the most recognizable tel
 - `npx impeccable detect …` re-run → **0 anti-patterns** (was 2).
 - Diff = exactly 2 lines, CSS-only. No `app.js`/`index.html` change, no data-contract/registry/backtest/API change. Token `var(--border)` matches existing panels (consistency).
 
+## Agent skill — INSTALLED 2026-06-21 (Barış-approved)
+`npx impeccable install` (default: detected harnesses, project scope). Result:
+- Skills written to `.claude/skills/impeccable/` (**git-ignored**, Claude-Code-local).
+- Added a **PostToolUse hook** (matcher `Edit|Write|MultiEdit`, 5s) in
+  `.claude/settings.local.json` → runs `impeccable` UI-anti-pattern check after every edit.
+  Auto-enforcement of UI quality; local/git-ignored; does not touch the committed
+  `.claude/settings.json` (the CodeBurn SessionStart hook is intact).
+- **Removed the collateral `.agents/` (Codex) copy** — it is NOT git-ignored, would add
+  repo noise, and per-vendor skill scatter contradicts the CLI+convention principle used for
+  Graphify. Kept Claude-only.
+- **Slash-commands (`/impeccable init|critique|polish|craft|typeset|layout|…`) require a
+  Claude Code reload/restart** (skills load at session start) — not usable in the session that
+  installed them. Run `/impeccable init` first (writes design context), then `/impeccable
+  critique` on Strategy Detail.
+
 ## Caveats
-- Detector is deterministic and narrow (44 rules) — it found little because the CSS is already disciplined. The richer value (`craft`/`critique`/`polish`) lives in the **agent skill**, which needs `npx impeccable install` + a Claude Code reload to expose the slash-commands. Deferred (skill registration is a separate decision, like Graphify's).
+- Detector is deterministic and narrow (44 rules) — it found little because the CSS is already disciplined. The richer value (`craft`/`critique`/`polish`) lives in the **agent skill** (now installed; needs reload).
 - Pilot scope was the detector loop only; no broad restyle (would be a huge, risky diff on a 2366-line stylesheet).
 
 ## Next (optional, approval-gated)
