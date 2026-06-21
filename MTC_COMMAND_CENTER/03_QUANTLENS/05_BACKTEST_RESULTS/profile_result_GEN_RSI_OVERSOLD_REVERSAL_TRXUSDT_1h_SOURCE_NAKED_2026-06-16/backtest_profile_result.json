@@ -1,0 +1,135 @@
+{
+  "schema_version": "backtest_profile_result.v1",
+  "run_id": "profile_result_GEN_RSI_OVERSOLD_REVERSAL_TRXUSDT_1h_SOURCE_NAKED_2026-06-16",
+  "read_only": true,
+  "no_execution": true,
+  "generated_by": "Codex controlled artifact generation",
+  "generated_at": "2026-06-20T23:30:00+03:00",
+  "artifact_type": "backtest_profile_result",
+  "classification": "research-only / non-promotional",
+  "profile_mapping": {
+    "profile": "SOURCE_NAKED",
+    "profile_type": "SOURCE_NAKED",
+    "is_interpretation": true,
+    "source_bucket": {
+      "strategy_id": "GEN_RSI_OVERSOLD_REVERSAL",
+      "source_strategy_id": "GEN_RSI_OVERSOLD_REVERSAL|TRXUSDT|1h",
+      "symbol": "TRXUSDT",
+      "timeframe": "1h"
+    },
+    "notes": [
+      "Profile mapping is a research artifact classification from existing eval/scorecard evidence.",
+      "No MTC_LIGHT or RISK_NORMALIZED transformation was applied.",
+      "This is crypto/USDT evidence only, not native US equities evidence."
+    ]
+  },
+  "provenance": {
+    "primary_eval": "MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/night_1m_2026-06-07/iter_05/evaluation_artifacts/GEN_RSI_OVERSOLD_REVERSAL__TRXUSDT__1h.eval.json",
+    "primary_scorecard": "MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/night_1m_2026-06-07/iter_05/scorecard_v2/GEN_RSI_OVERSOLD_REVERSAL_TRXUSDT_1h.scorecard.json",
+    "all_gate_eval": "MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/night_1m_2026-06-07/iter_05/all_gate/GEN_RSI_OVERSOLD_REVERSAL__TRXUSDT__1h.eval.json",
+    "all_gate_g3enriched_eval": "MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/night_1m_2026-06-07/iter_05/all_gate_g3enriched/GEN_RSI_OVERSOLD_REVERSAL__TRXUSDT__1h.eval.json",
+    "gate2_scorecard": "MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/night_1m_2026-06-07/iter_05/gate2_scorecards/GEN_RSI_OVERSOLD_REVERSAL_TRXUSDT_1h.scorecard.json",
+    "gate3_scorecard": "MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/night_1m_2026-06-07/iter_05/gate3_scorecards/GEN_RSI_OVERSOLD_REVERSAL_TRXUSDT_1h.scorecard.json",
+    "planning_report": "MTC_COMMAND_CENTER/11_TRIAGE/GEN_RSI_TRXUSDT_1H_SOURCE_NAKED_ARTIFACT_PLAN_2026-06-16.md"
+  },
+  "safety": {
+    "promotion_status": "RESEARCH_ONLY",
+    "promotable": false,
+    "paper_ready": false,
+    "live_ready": false,
+    "native_us_equities": false,
+    "mtc_light": false,
+    "risk_normalized": false,
+    "top_results_ranking": false,
+    "strategy_promotion": false,
+    "gate3_complete": false
+  },
+  "results": [
+    {
+      "run_id": "MEGA_walk_forward_results",
+      "strategy_id": "GEN_RSI_OVERSOLD_REVERSAL",
+      "source_strategy_id": "GEN_RSI_OVERSOLD_REVERSAL|TRXUSDT|1h",
+      "profile": "SOURCE_NAKED",
+      "profile_type": "SOURCE_NAKED",
+      "symbol": "TRXUSDT",
+      "timeframe": "1h",
+      "parameter_set_id": null,
+      "score_method": "gate_scorecard_v2",
+      "score": 92.0,
+      "promotion_status": "RESEARCH_ONLY",
+      "promotable": false,
+      "paper_ready": false,
+      "live_ready": false,
+      "native_us_equities": false,
+      "mtc_light": false,
+      "risk_normalized": false,
+      "top_results_ranking": false,
+      "strategy_promotion": false,
+      "gate_summary": {
+        "statuses": {
+          "gate1": "OK",
+          "gate1B": "OK",
+          "gate2": "OK",
+          "gate3": "INCOMPLETE"
+        },
+        "scores": {
+          "gate1": 96.0,
+          "gate1B": 80.0,
+          "gate2": 92.0,
+          "gate3": 46.0
+        },
+        "all_pass": false,
+        "promotable": false,
+        "blocking": [
+          "gate3"
+        ]
+      },
+      "metrics": {
+        "net_profit": 70.498,
+        "profit_factor": 1.381,
+        "max_drawdown": 13.07,
+        "win_rate": null,
+        "trade_count": 280,
+        "buy_hold_return": null,
+        "buy_hold_alpha": -37.743,
+        "sharpe": 1.753,
+        "sortino": 2.4775,
+        "exposure": null,
+        "avg_trade": null,
+        "max_loss_streak": 10
+      },
+      "benchmark": {
+        "excess_alpha_pct": -37.743,
+        "beats_bh_risk_adjusted": false,
+        "beats_ema_benchmark": true
+      },
+      "robustness": {
+        "cpcv_pass_ratio": 0.9778,
+        "pbo": 0.00021,
+        "dsr_p_value": 0.0,
+        "boot_p_value": 0.004,
+        "wfo_pass": true,
+        "multi_window_pass": true,
+        "net_after_slippage_pct": 52.459,
+        "worst_window_drawdown_pct": 16.473,
+        "overfit_suspect": false,
+        "parity_status": "N_A"
+      },
+      "artifacts": {
+        "primary_eval": "MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/night_1m_2026-06-07/iter_05/evaluation_artifacts/GEN_RSI_OVERSOLD_REVERSAL__TRXUSDT__1h.eval.json",
+        "primary_scorecard": "MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/night_1m_2026-06-07/iter_05/scorecard_v2/GEN_RSI_OVERSOLD_REVERSAL_TRXUSDT_1h.scorecard.json",
+        "all_gate_eval": "MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/night_1m_2026-06-07/iter_05/all_gate/GEN_RSI_OVERSOLD_REVERSAL__TRXUSDT__1h.eval.json",
+        "all_gate_g3enriched_eval": "MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/night_1m_2026-06-07/iter_05/all_gate_g3enriched/GEN_RSI_OVERSOLD_REVERSAL__TRXUSDT__1h.eval.json",
+        "gate2_scorecard": "MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/night_1m_2026-06-07/iter_05/gate2_scorecards/GEN_RSI_OVERSOLD_REVERSAL_TRXUSDT_1h.scorecard.json",
+        "gate3_scorecard": "MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/night_1m_2026-06-07/iter_05/gate3_scorecards/GEN_RSI_OVERSOLD_REVERSAL_TRXUSDT_1h.scorecard.json"
+      },
+      "provenance": {
+        "primary_eval": "MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/night_1m_2026-06-07/iter_05/evaluation_artifacts/GEN_RSI_OVERSOLD_REVERSAL__TRXUSDT__1h.eval.json",
+        "primary_scorecard": "MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/night_1m_2026-06-07/iter_05/scorecard_v2/GEN_RSI_OVERSOLD_REVERSAL_TRXUSDT_1h.scorecard.json",
+        "same_bucket_only": true,
+        "source_universe": "crypto/USDT",
+        "not_native_us_equities": true
+      }
+    }
+  ]
+}
