@@ -590,7 +590,7 @@ table.grid-table .empty-cell { text-align: center; color: var(--faint); padding:
 .si-gate-cell .lbl { font-size: 8.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
 .si-gate-cell .val { font-family: var(--mono); font-weight: 800; font-size: 15px; }
 .si-gate-cell .val.ok { color: var(--emerald); }
-.si-gate-cell .val.bad { color: var(--amber); }
+.si-gate-cell .val.bad { color: var(--red); }
 .si-gate-cell .val.locked { color: var(--faint); font-size: 12px; }
 
 .workflow-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-soft); }
