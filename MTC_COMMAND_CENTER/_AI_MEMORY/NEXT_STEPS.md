@@ -1,5 +1,54 @@
 # NEXT_STEPS
 
+## ▶ AI TOOL INTEGRATION ROADMAP (filed 2026-06-20, Claude Opus 4.8) — PREP ONLY, nothing installed
+Source backlog + actionable plan + Claude critique live in `09_DOCS\AI_TOOLING\`:
+- `MTC_AI_TOOLS_MASTER_INTEGRATION_BACKLOG.md` (catalog), `AI_TOOL_INTEGRATION_PLAN.md` (do this), `CLAUDE_REVIEW_OF_CODEX_BACKLOG.md` (what to drop).
+Read `AI_TOOL_INTEGRATION_PLAN.md` before ANY AI-tool work. Phases (each Barış-approval-gated):
+1. **Phase 1 — docs/instructions/memory** `[AI: Claude|Barış]` — DONE in part (this filing). PENDING APPROVAL: add a tool-roadmap + DeepSeek-routing pointer block to `AGENTS.md` and `_AI_MEMORY/START_HERE.md` (high-traffic contracts → don't edit without approval). Diffs first.
+2. **Phase 2 — knowledge consolidation (light)** `[AI: Any]` — keep decisions in `09_DOCS\AI_TOOLING\`, research in `09_DOCS`, ops state in `_AI_MEMORY`. Do NOT build a new `00_KNOWLEDGE_BASE` tree.
+3. **Phase 3 — local tools (pilot-gated, run §6 checklist FIRST)** `[AI: Claude|Barış]` — order: MarkItDown → LiteParse → CodeBurn → Graphify (Graphify downgraded to pilot). Compare MarkItDown/LiteParse to built-in pdf/docx/xlsx skills before adding a dependency.
+   - DONE 2026-06-21: **MarkItDown** (0.1.6, `C:\tmp\mtc_markitdown_venv`, Py3.13) + **CodeBurn** (v0.9.12 global npm) piloted on real data → **both KEEP**. Reports `09_DOCS/AI_TOOLING/pilots/{markitdown,codeburn}_pilot.md`. CodeBurn finding: DeepSeek harness underused (Opus $563 + Codex $377 vs DeepSeek $2.44). NEXT in phase: LiteParse (A/B vs MarkItDown on a real PDF — none in repo yet) is the only Phase-3 item left.
+   - DONE 2026-06-21: **Graphify piloted → KEEP on-demand** (`graphifyy` 0.8.44 via uv tool; local/keyless code graph; accurate `affected`/`explain`/`query`; graphs git-ignored; not auto, not whole-repo; `graphify install` skill-reg deferred). Report `09_DOCS/AI_TOOLING/pilots/graphify_pilot.md`.
+   - DONE 2026-06-21 (Barış item 1): **MarkItDown promoted to permanent** — committed wrapper `03_QUANTLENS/tools/markitdown_ingest.py` (self-bootstraps git-ignored Py3.13 venv at `03_QUANTLENS/tools/.venvs/markitdown`, converts intake docs→.md; dry-run default). `.gitignore` updated; old `C:\tmp` venv removed; composes with (doesn't edit) `route_user_intake.py`. Still open: periodic `codeburn status` at session boundaries (CodeBurn stays global npm, no repo change).
+4. **Phase 4 — research/UI pilots (branch-isolated)** `[AI: Claude|Barış]` — Claude-Video, Impeccable, Design-Extract, Taste-Skill on `feature/ui-*` only; no data-contract/registry/backtest change.
+5. **Phase 5 — side-service automation** `[AI: Barış|Claude]` — n8n watchdog for long backtests; needs a stable progress/log emitter first.
+REJECTED beyond Codex's list (see critique): **Headroom** (MITM proxy, ~5% saving), **NotebookLM-py** (unofficial API), **Webwright** (redundant with existing browser MCPs). Already-exists (don't rebuild): model routing = `_deepseek_driver`; review prompts = `04_SHARED\prompts\05_ai_workflow`. Hard rule: no install/integration without explicit Barış approval, tool by tool; no pine/MTC_V2/parity/schema/broker touch.
+
+## ▶ DASHBOARD night-artifact contract LIVE 2026-06-15 (Claude Opus 4.8) — reader done, artifacts pending
+Read-only `night_artifacts` reader + 5 schemas shipped; dashboard wired to consume run_plan/run_status/backtest_profile_result/top_results/artifact_index/leaderboard_delta/benchmark_update_candidate. **No such artifacts exist yet** → official profile buckets correctly empty, legacy scorecard rows quarantined.
+Next when ready:
+1. DONE 2026-06-15 (run_plan part + audit patch): `build_run_plan.py` generates draft review-only `run_plan.json`+`artifact_index.json`+`run_plan.md`; reader discovers usable; Planner/Advanced Artifacts/SI §4/Result Explorer artifact panel populated. Audit follow-up applied: no silent BTCUSDT default (universe `needs_freeze` when unresolved), schema enforces read-only/no-execution safety fields, SI §4 wired to run plan. STILL NEEDED: real `backtest_profile_result.json` + `top_results.json` for a validated strategy/profile to populate official buckets + KPIs (writer outside read-only app). No fakes. Also: freeze the US_EQUITIES symbol universe (`--symbols`) before any approval.
+2. Implement interactive Result Explorer filters (currently placeholder; enable when profile rows real).
+3. Snapshot warm-up prefetch at server start to kill ~12s cold load.
+4. No promotion / no KPI fabrication; absent metrics stay `—`.
+5. DONE 2026-06-15: Home metric aggregation fix — strategy-level counts deduped by base id (no count > Total), Evidence/System row counts split out + labelled; SI Gate1 section shows best Gate 1 passing version + All Versions. Report: `11_TRIAGE/HOME_METRIC_AGGREGATION_PATCH_REPORT_2026-06-15.md`.
+6. DONE 2026-06-15 (RESOLVED open decision): Home canonical universe — `Total Strategies` = pipeline rows (registry fallback), Total back to **176**; scorecard-only ids shown as "Scorecard-only Strategy IDs" orphan metric (36). Gate metrics canonical-only. Report: `11_TRIAGE/HOME_CANONICAL_UNIVERSE_PATCH_REPORT_2026-06-15.md`.
+7. DONE 2026-06-15: Hardening — invariant test `tests/test_home_metric_invariants.py` (no strategy count > Total; orphan exclusion; registry fallback); "Needs Attention"→"Needs Review" rename + tooltip (broad heuristic, not strict blockers); audit prompt `11_TRIAGE/NEXT_CODEX_AUDIT_PROMPT_HOME_CANONICAL_UNIVERSE_2026-06-15.md`. PENDING USER: run that Codex audit. FUTURE: orphan-id drill-down + promotion path; real action-queue/blocker model to make Needs Review precise; jsdom JS test harness to retire Python mirror.
+8. DONE 2026-06-16: First profile-separated result artifact pilot (Option A). Read-only converter `03_QUANTLENS/tools/build_profile_result_artifact.py` turned real soak `MEGA_results_iter_1_*` into schema-valid `backtest_profile_result.json` (pilot dir, 4 SOURCE_NAKED rows, RESEARCH_ONLY, universe_mismatch recorded). Reader shows profile_result_rows=4. Report: `11_TRIAGE/FIRST_PROFILE_RESULT_ARTIFACT_PILOT_REPORT_2026-06-15.md`.
+9. DONE 2026-06-16: Research-only UI hardening — badges (RESEARCH ONLY/UNIVERSE MISMATCH/NON-ROBUST/PROFILE MAPPING INTERPRETED) across Result Explorer/SI §5/Leaderboard/Advanced Artifacts; reader forwards provenance+profile_mapping. Report: `11_TRIAGE/PROFILE_RESULT_RESEARCH_ONLY_UI_HARDENING_REPORT_2026-06-15.md`. Resolves item (a) above.
+10. DONE 2026-06-16: OPS BLOCKER resolved — `run_dashboard_server.ps1` now single-instance. Root cause (from server log): supervisor restarted `pythonw serve` every 5s; when port 8765 already bound each new process failed bind + exited same-second (endless churn), and multiple unguarded launcher copies raced → pile-up. Fix: launcher checks port 8765 + `/healthz mode=read_only` and logs `skip launch` (exit 0) if already running; supervised loop re-checks port each iteration and exits instead of churning; flags `-StatusOnly`/`-ForceRestart`/`-KillStaleMccOnly`; strict kill filter (python/pythonw + cmdline mcc_readonly + serve only — never unrelated python; default mode kills nothing); bounded `dashboard_launcher.log` + 256KB truncation on `dashboard_server.log`. Verified: 2 launches → both skip, proc count stays **1**; `POST`→405; `/healthz`+`/api/snapshot?refresh=1`=200; **69 API tests OK**; `node --check` PASS. NOTE: no auto-start trigger exists (launcher comment names a non-existent task; no Run key/Startup/VBS). If logon auto-start wanted, register ONE guarded scheduled task calling the launcher (self-skips) — left as manual user action. Report: `11_TRIAGE/DASHBOARD_LAUNCHER_SINGLE_INSTANCE_PATCH_REPORT_2026-06-15.md`.
+11. STILL OPEN: (b) regenerate pilot from native US-equities-10m soak when it exists (badges auto-clear); (c) top_results.json only once a real same-bucket multi-row set exists; (d) keep converter as only sanctioned path; (e) optional: make universe_mismatch a strict boolean in converter.
+12. DONE 2026-06-16: Launcher single-instance follow-up (audit nits). `-StatusOnly` now truly non-mutating (moved before `Limit-LogSize`, prints via `Write-Output` not the launcher log) — verified log size/mtime unchanged across 2 runs. Startup auto-start CORRECTED: one per-user Startup VBS `MTC_Command_Center_Dashboard.vbs` exists and points to the guarded `run_dashboard_server.ps1` (prior "no auto-start found" was stale); no duplicate VBS; nothing created/deleted. Re-verified: 2 launches skip, count=1, `POST`→405, `/healthz`+snapshot=200, 69 tests OK, PARSE_OK. Report: `11_TRIAGE/DASHBOARD_LAUNCHER_SINGLE_INSTANCE_FOLLOWUP_REPORT_2026-06-15.md`.
+13. AUDITED 2026-06-16 (impl pending): `/api/snapshot` perf. Measured **115.56 MB** (121,172,209 B), warm fetch 10.2s / cold ~60s. Root cause = scorecard data embedded 3-4×. Biggest: `scorecards.by_strategy` 31.6MB (**UI never reads it**), `scorecards.cards` 30MB (used; gates1/1B/2/3 sub_scores ~26MB), `candidate_audit` 8.4MB (**UI-unused**, CLI/tests only), `candidate_pipeline.rows[].scorecard_v2_cases` 7.1MB (**UI uses count only**, app.js:400 already accepts a number). Full analysis + UI dependency map: `11_TRIAGE/SNAPSHOT_PAYLOAD_PERFORMANCE_AUDIT_2026-06-16.md`.
+   - DONE 2026-06-16 (L1+L2+L3): snapshot slimmed **115.56MB → 44.64MB (−61%)**. `read_model._slim_http_snapshot()` drops `scorecards.by_strategy`, omits top-level `candidate_audit` (reader/CLI/tests intact), collapses `candidate_pipeline.rows[].scorecard_v2_cases` arrays → int count. Zero frontend change. 69 API tests OK; `node --check` OK; `/healthz`=200 read_only; `POST`→405. Report: `11_TRIAGE/SNAPSHOT_PAYLOAD_SLIM_LOW_RISK_PATCH_REPORT_2026-06-16.md`.
+   - DONE 2026-06-16 (M1): snapshot **44.64MB → 4.45MB** (−90%; vs original 115.56MB = −96%). `read_model._slim_http_snapshot` strips per-card gate `sub_scores` + collapses `notes`→count/preview (all 837 cards) and strips pipeline `scorecard_v2` gate sub_scores; scores+statuses+gate_summary kept inline. Full cards retained in `_FULL_SCORECARDS_CACHE`; new read-only `GET /api/scorecard-detail?strategy_id=` (server.py, param-validated, no path read, 400/404/200, POST→405) + `build_scorecard_detail`. app.js: `state.detailCards`, `loadStrategyDetail`/`detailBestCard`, fetch-on-open in renderIntelligence, subscoreList loading/summary-only states, advancedSection uses loaded detail. 69 API tests OK; `node --check` OK; `/healthz`=200; `POST` both endpoints 405; detail GEN_ATR_PULLBACK_TREND→11 cards/565KB/has_sub. Report: `11_TRIAGE/SNAPSHOT_GATE_DETAIL_LAZY_LOAD_PATCH_REPORT_2026-06-16.md`.
+   - ▶ OPTIONAL (polish, not bloat): gzip JSON responses (transport-only); cache detail-by-id across views. Snapshot size goal achieved.
+Report: `11_TRIAGE/BACKTEST_ARTIFACT_READER_INTEGRATION_REPORT_2026-06-15.md`.
+
+## ARCHIVED / HISTORICAL - night_3M_2026-06-08 run notes (launched 2026-06-08 23:29)
+
+Launched by DeepSeek v4 Pro. 59 strategies, 20 workers, ~210K evals/iter, target 15+ iters = 3M+ cases. Post-loop validation auto-runs after 8h deadline (~07:29).
+
+### Morning tasks [AI: Any|DeepSeek]:
+1. **Verify completion:** read heartbeat + log
+   - `cat tools/overnight_runs/night_3M_2026-06-08.log`
+   - `cat tools/overnight_runs/_heartbeat_night_3M_2026-06-08.json`
+   - Check for `=== ALL DONE ===` marker
+2. **Read morning report:** `05_BACKTEST_RESULTS/night_3M_2026-06-08/MORNING_REPORT.md`
+3. **MCC visibility:** Run `mcc_night_tail.sh` on the best iter if scorecards need enrichment (D009: use `run_python_clean.py`). Verify `/api/snapshot?refresh=1` shows new run.
+4. **Write lessons:** `11_TRIAGE/lessons_archive/OVERNIGHT_LESSONS_2026-06-08.md`
+5. **No promotion:** All results are research-only per deterministic soak nature (A19). Gates must prove edge independently.
+
 ## ▶ CODEX PICKUP 2026-06-08 — 5 open items (full detail: `_AI_MEMORY/CODEX_PICKUP_2026-06-08.md`)
 
 1. **Night-runs → MCC** `[AI: Codex]` — DONE 2026-06-08 by Codex GPT-5. `full_sweep_2026-06-07` (122), `batch023_034_2026-06-07` (111), and final validation iter `night_1m_2026-06-07/iter_05` (122) are enriched into `scorecard_v2`. MCC scorecard reader now scans nested scorecard runs and sees 715 total cards / 46 distinct strategies. No promotion: all three 2026-06-07 batches have 0 promotable cards.
@@ -36,7 +85,7 @@
 - Alpha summary: passes=122, beat_buyhold=55, premium=0, down_market_alpha=0.
 - D009 shim confirmed working; scipy.stats intercepted, no BLAS hang.
 
-### NIGHT-1M-QUIET-2026-06-07 | RUNNING 2026-06-07 (Codex GPT-5) | 1M quiet overnight sweep [AI: Codex|Any]
+### NIGHT-1M-QUIET-2026-06-07 | ARCHIVED / HISTORICAL 2026-06-07 (Codex GPT-5) | 1M quiet overnight sweep [AI: Codex|Any]
 - User requested no questions, max 10 workers, quiet machine, about 1,000,000 cases after UI-audit work.
 - Launcher: `03_QUANTLENS/tools/night_1m_2026-06-07.sh`; keep-awake wrapper: `03_QUANTLENS/tools/start_night_1m_2026-06-07_keepawake.ps1`.
 - Output root: `03_QUANTLENS/05_BACKTEST_RESULTS/night_1m_2026-06-07/`.
@@ -868,3 +917,41 @@ Must obey 7-gate workflow (AI_RULES.md). Start at Gate 1.
 - `02_MTC_BACKTEST` full suite after fixes: `250 passed, 10 skipped, 5 failed`.
 - Residuals: `test_optimizer_migration_script.py` expects old `MTC_COMMAND_CENTER/mtc_backtest` cwd; `test_parity_smoke.py` expects missing TV debug CSV; `test_reports_ui_static.py` expects old `mtc_backtest/app.py`; `test_ui_phase31_static.py` expects old navigation labels.
 - Do not fake the TV CSV or add compatibility wrappers casually. Treat as a separate data/UI compatibility cleanup.
+
+### STRATEGY-INTELLIGENCE-UI-PILOT | DONE 2026-06-14 (Codex GPT-5) | STG084 Strategy Intelligence Page v2 pilot [AI: Codex]
+- Implemented the pilot from `11_TRIAGE/ui_references/strategy_intelligence_lovable/CODEX_MTC_STRATEGY_INTELLIGENCE_UI_PILOT_PROMPT.md`.
+- Files: `08_DASHBOARD_APP/apps/web/app.js`, `index.html`, `styles.css`.
+- Adds sidebar entry for STG084 Strategy Detail plus `Backtest Result Explorer` and `Strategy Leaderboard` pilot pages.
+- Uses real snapshot data for STG084 where available; profile/run-plan/leaderboard data stays explicitly unavailable because those artifacts/readers do not exist yet.
+- Validation: `node --check` PASS; dashboard API `39 tests` PASS; local API health and snapshot smoke PASS. Browser visual QA blocked by in-app Browser policy for `127.0.0.1:8777`.
+- Future [AI: Codex|Claude]: implement real read-only readers for `run_plan.json`, `backtest_profile_result.json`, and `leaderboard_snapshot.json` only after those artifact contracts are approved.
+
+### STRATEGY-INTELLIGENCE-UI-RESCUE | DONE 2026-06-14 (Codex GPT-5) | simplify main Strategy Detail UX [AI: Codex]
+- Follow-up rescue patch applied after the pilot was judged too close to the old raw audit/scorecard screen.
+- Main page now keeps the exact high-level flow: Hero Summary, Workflow Bar, Strategy Overview, LLM Evaluation, Backtest Plan & Evidence, Paper Trading Readiness, collapsed Advanced Technical Details.
+- Demoted raw/secondary material into Advanced Technical Details: raw gates, scorecard rows, linked legacy backtest rows, Review Journey, QuantLens details, Gemini Pre-Screen, Salvageable Ideas, artifact paths, technical IDs, raw snapshots.
+- Main-flow tables were replaced with compact cards where practical; the Parameter Space Preview remains a compact table as requested by the prompt.
+- Validation: `node --check` PASS; dashboard API `39 tests` PASS; snapshot smoke PASS. Cheap-agent review failed due harness file-selection drift; no writes from the harness.
+
+### GOOGLE-STRATEGY-INTELLIGENCE-FINAL-CLEANUP | DONE 2026-06-14 (Codex GPT-5) | read-only final integration cleanup [AI: Codex]
+- Applied the final `google_strategy_intelligence_v2_final` prompt as a safe frontend-only cleanup on top of the existing Strategy Intelligence pilot/rescue work.
+- Backtest Result Explorer now supports global sidebar scope and strategy-scoped links from Strategy Intelligence; its selector is populated from snapshot scorecards, pipeline rows, and registry entries instead of hardcoded STG084 text.
+- Strategy Registry remains separate from Pipeline and now shows catalog columns plus row/button navigation into the generic Strategy Intelligence view by exact/base strategy id.
+- Night backtest artifact contract is displayed as design/read-model status in Result Explorer and Diagnostics only; no ingestion, watcher, parser, schema engine, DB write, backtest launch, or execution path was added.
+- Validation: `node --check` PASS; dashboard API `39 tests` PASS; `/healthz` PASS; `/api/snapshot?refresh=1` smoke PASS with 176 pipeline rows, 837 scorecards, 14 registry candidates; active UI forbidden-word/hardcoded-business-data search PASS. Browser visual QA blocked by in-app Browser policy for `127.0.0.1:8777`.
+
+### DASHBOARD-SHELL-REPLACEMENT-CORRECTION | DONE 2026-06-14 (Codex GPT-5) | rejected result corrected [AI: Codex]
+- Replaced the active served `/dashboard` shell instead of extending the old tab shell. The served page now defaults to Command Center Home and uses the Strategy Intelligence Command Center sidebar.
+- Implemented reachable vanilla JS renderers for Home, Pipeline, Registry, generic Strategy Intelligence, Backtest Planner, Backtest Runs, Backtest Result Explorer, Leaderboard, Paper Trading, AI Knowledge Base, Advanced Artifacts, Diagnostics, Reports, and Read Model / Data Model.
+- Updated the stale API dashboard contract test to expect `Strategy Intelligence Command Center`.
+- Validation: `node --check` PASS; API unittest discovery `39 tests` PASS; served `/dashboard` has no old tab markers and served `/web/app.js?v=1` contains the required route/render markers.
+- Browser visual QA remains blocked by in-app Browser enterprise policy for `127.0.0.1:8765`; direct HTTP served-route evidence is recorded in `GLOBAL_HANDOFF.md`.
+- Future [AI: Codex|Claude]: a visual pass can be repeated only if Browser localhost policy is available; do not use alternate browser workarounds for the blocked policy.
+
+### STRATEGY-INTELLIGENCE-DARK-VISUAL-FIDELITY | DONE 2026-06-14 (Codex GPT-5) | light skeleton corrected [AI: Codex]
+- Applied the corrective visual-fidelity prompt against the final `google_strategy_intelligence_v2_final` screenshots/source, keeping the vanilla served app.
+- Replaced the light admin visual system with a dark command-center theme: compact sidebar/header, dense dark cards, dark tables, workflow cards, strategy cards, status accents, right decision rails, result rail, chart placeholder, and leaderboard category cards.
+- Preserved the read-only routing contract: default Command Center Home, generic `renderStrategyIntelligence(strategy_id)`, Pipeline/Registry navigation, global/strategy Result Explorer, and missing-artifact states.
+- Validation: `node --check` PASS; API unittest discovery `39 tests` PASS; `/healthz` `overall_ok=True` and `mode=read_only`; served HTML/CSS/JS marker checks PASS; forbidden execution wording and hardcoded pilot data search PASS.
+- Visual QA limitation: Browser screenshots remain blocked by enterprise policy for `127.0.0.1:8765`; no alternate browser workaround used. Direct served CSS/JS checks are recorded in `GLOBAL_HANDOFF.md`.
+- Future [AI: Codex|Claude]: if Browser localhost policy becomes available, capture visual screenshots for Home, Pipeline, Registry, Strategy Intelligence, Planner, Explorer, Leaderboard, Diagnostics, and Read Model.
