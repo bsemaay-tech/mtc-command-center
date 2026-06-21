@@ -27,3 +27,7 @@ MCC may learn from command-dash for command-center dashboard structure, pine-mcp
 ## Dashboard Role
 
 The dashboard is the user's project memory and control surface. It should show current status, task queue, parity matrix, backtest summaries, data health, worker activity, reports, and future dry-run LiveOps state from files that AI workers maintain.
+
+## Agent Handoff Protocols
+
+Agent handoff protocols are in `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/`.
