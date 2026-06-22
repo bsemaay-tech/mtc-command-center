@@ -1,140 +1,161 @@
+/* ============================================================
+   MTC Strategy Intelligence Command Center — read-only frontend
+   Ports the Google / Lovable dark Strategy Intelligence reference
+   into a vanilla SPA over the read-only snapshot API.
+   Read-only: no run-trigger, write-back, or trading logic lives here.
+   ============================================================ */
+
 const state = {
   snapshot: null,
   health: null,
+  currentRoute: "home",
+  selectedStrategyId: null,
+  detailSection: "all",
+  explorerScope: "global",
+  explorerStrategyId: null,
   selectedReportPath: null,
-  selectedBacktestRunId: null,
   detailCards: {},
 };
 
-const $ = (selector) => document.querySelector(selector);
-const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+const NIGHT_CONTRACT = [
+  "run_plan.json", "run_status.json", "progress.json", "heartbeat.json",
+  "artifact_index.json", "summary.json", "backtest_profile_result.json",
+  "top_results.json", "leaderboard_delta.json", "benchmark_update_candidate.json",
+  "morning_report.md",
+];
+
+const PROFILES = ["SOURCE_NAKED", "RISK_NORMALIZED", "MTC_LIGHT", "FULL_MTC_CANDIDATE"];
+
+const NAV = [
+  { id: "home", label: "Home / Command Center", icon: "home", title: "Command Center Home", sub: "Monitor pipeline, benchmarks, backtest evidence, and next actions." },
+  { id: "pipeline", label: "Strategy Pipeline", icon: "layers", title: "Strategy Pipeline", sub: "Full strategy journey and gate status." },
+  { id: "registry", label: "Strategy Registry", icon: "file", title: "Strategy Registry", sub: "Searchable strategy and source catalog." },
+  { id: "intelligence", label: "Strategy Intelligence", icon: "cpu", title: "Strategy Intelligence", sub: "Per-strategy evaluation dossier." },
+  { id: "backtest-planner", label: "Backtest Planner", icon: "beaker", title: "Backtest Planner", sub: "Prepare run_plan.json (read-only review)." },
+  { id: "backtest-runs", label: "Backtest Runs", icon: "settings", title: "Backtest Runs", sub: "Run history and heartbeat." },
+  { id: "result-explorer", label: "Backtest Result Explorer", icon: "bar", title: "Backtest Result Explorer", sub: "Bucketed results and benchmark analysis." },
+  { id: "leaderboard", label: "Strategy Leaderboard", icon: "trend", title: "Strategy Leaderboard", sub: "Best strategies by category / profile / timeframe." },
+  { id: "paper-trading", label: "Paper Trading", icon: "activity", title: "Paper Trading", sub: "Readiness and locked candidates." },
+  { id: "ai-knowledge", label: "AI Knowledge Base", icon: "cpu", title: "AI Knowledge Base", sub: "Reusable components and insights." },
+  { id: "artifacts", label: "Advanced Artifacts", icon: "db", title: "Advanced Artifacts", sub: "Data and artifact health." },
+  { id: "diagnostics", label: "Diagnostics", icon: "shield", title: "Diagnostics", sub: "System health and coverage." },
+  { id: "reports", label: "Reports", icon: "info", title: "Reports", sub: "Morning summaries and audits." },
+  { id: "read-model", label: "Read Model / Data Model", icon: "db", title: "Read Model / Data Model", sub: "Data contracts and snapshot keys." },
+];
+const NAV_BY_ID = Object.fromEntries(NAV.map((n) => [n.id, n]));
+
+const DETAIL_SECTIONS = [
+  { id: "all", label: "All Document Sections", icon: "layers", anchor: null },
+  { id: "overview", label: "1. Strategy Overview", icon: "file", anchor: "sec-overview" },
+  { id: "gate1", label: "2. Gate 1 / Gate 1B Assessment", icon: "shield", anchor: "sec-gate1" },
+  { id: "verdict", label: "3. AI Verdict & Reuse Notes", icon: "cpu", anchor: "sec-verdict" },
+  { id: "evidence", label: "4. Backtest Plan & Evidence", icon: "beaker", anchor: "sec-evidence" },
+  { id: "explorer", label: "5. Backtest Result Explorer", icon: "bar", anchor: "sec-explorer" },
+  { id: "paper", label: "6. Paper Trading Readiness", icon: "activity", anchor: "sec-paper" },
+  { id: "advanced", label: "7. Advanced Technical Details", icon: "settings", anchor: "sec-advanced" },
+];
+
+const PAGE_FEEDS = [
+  ["Home / Command Center", "candidate_pipeline, scorecards, backtest_status, report_manifest, file_diagnostics"],
+  ["Strategy Pipeline", "candidate_pipeline.rows"],
+  ["Strategy Registry", "strategy_registry.candidates"],
+  ["Strategy Intelligence", "candidate_pipeline.rows[].scorecard_v2, expert_quantlens_verdict, canonical, strategy_registry"],
+  ["Backtest Planner", "night_artifacts.run_plans, candidate_pipeline"],
+  ["Backtest Runs", "night_artifacts.run_status, backtest_status.runs, overnight_heartbeat"],
+  ["Backtest Result Explorer", "night_artifacts.profile_results, scorecards.cards"],
+  ["Strategy Leaderboard", "night_artifacts.profile_results, night_artifacts.leaderboard_delta, scorecards.cards"],
+  ["Paper Trading", "candidate_pipeline.rows, scorecards.gate_summary"],
+  ["AI Knowledge Base", "strategy_registry.candidate_kind, strategy_research"],
+  ["Advanced Artifacts", "night_artifacts (run_plans, run_status, artifact_index, profile_results, top_results, leaderboard_delta, benchmark_update_candidates)"],
+  ["Diagnostics", "healthz, file_diagnostics, night_artifacts.summary"],
+  ["Reports", "report_manifest.reports"],
+  ["Read Model / Data Model", "all snapshot top-level keys"],
+];
+
+const ICON = {
+  home: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+  layers: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+  file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
+  cpu: '<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/>',
+  beaker: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.82 1.17V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 3.6 14H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8.6l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 10 3.6V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 20.4 10H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+  bar: '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>',
+  trend: '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',
+  activity: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+  db: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>',
+  shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+  back: '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+  target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+};
+function icon(name) {
+  return `<svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[name] || ICON.info}</svg>`;
+}
+
+/* ---------------- bootstrap ---------------- */
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => Array.from(document.querySelectorAll(s));
 
 document.addEventListener("DOMContentLoaded", () => {
-  bindTabs();
-  bindFilters();
-  $("#refreshButton").addEventListener("click", () => loadDashboard(true));
-  loadDashboard();
+  renderSidebar();
+  loadDashboard(false);
 });
 
-function bindTabs() {
-  $$(".tab").forEach((button) => {
-    button.addEventListener("click", () => {
-      const tab = button.dataset.tab;
-      $$(".tab").forEach((item) => item.classList.toggle("is-active", item === button));
-      $$(".tab-panel").forEach((panel) => {
-        panel.classList.toggle("is-active", panel.dataset.panel === tab);
-      });
-    });
-  });
-}
-
-function bindFilters() {
-  $("#taskSearch").addEventListener("input", renderTasks);
-  $("#taskStatusFilter").addEventListener("change", renderTasks);
-  $("#reportSearch").addEventListener("input", renderReports);
-  $("#reportCategoryFilter").addEventListener("change", renderReports);
-  $("#pipelineSearch").addEventListener("input", renderPipeline);
-  $("#pipelineScoreFilter").addEventListener("change", renderPipeline);
-  $("#pipelineActionFilter").addEventListener("change", renderPipeline);
-  $("#auditSearch").addEventListener("input", renderAudit);
-  [
-    "#auditStrategyFilter",
-    "#auditQualityFilter",
-    "#auditRulesFilter",
-    "#auditSourceFilter",
-    "#auditTxVerdictFilter",
-    "#auditEligibleFilter",
-    "#auditBlockedFilter",
-    "#auditCanonicalFilter",
-    "#auditStepFilter",
-    "#auditScoreFilter"
-  ].forEach((selector) => {
-    const control = $(selector);
-    if (control) {
-      control.addEventListener("change", renderAudit);
-    }
-  });
-  $("#mtcV2Search").addEventListener("input", renderMtcV2Readiness);
-  $("#mtcV2StatusFilter").addEventListener("change", renderMtcV2Readiness);
-  $("#mtcV2ScoreFilter").addEventListener("change", renderMtcV2Readiness);
-  [
-    "#researchStrategySearch", "#researchCategoryFilter", "#researchMethodFilter",
-    "#researchRegimeFilter", "#researchTimeframeFilter", "#researchTagFilter",
-    "#researchStatusFilter",
-    "#researchTriageSearch", "#researchTriageQualityFilter",
-    "#researchTriageTranscriptFilter", "#researchTriageEligibleFilter",
-  ].forEach((sel) => {
-    const el = $(sel);
-    if (el) el.addEventListener(sel.endsWith("Search") ? "input" : "change", renderResearchLab);
-  });
-  const gateFilter = $("#pipelineGateFilter");
-  if (gateFilter) gateFilter.addEventListener("change", renderPipeline);
-  $("#reportList").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-report-path]");
-    if (button) {
-      loadReport(button.dataset.reportPath);
-    }
-  });
-  $("#taskRows").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-report-path]");
-    if (button) {
-      activateTab("reports");
-      loadReport(button.dataset.reportPath);
-    }
-  });
-}
-
-function activateTab(tabName) {
-  $$(".tab").forEach((item) => item.classList.toggle("is-active", item.dataset.tab === tabName));
-  $$(".tab-panel").forEach((panel) => {
-    panel.classList.toggle("is-active", panel.dataset.panel === tabName);
-  });
-}
-
-async function loadDashboard(forceRefresh = false) {
+async function loadDashboard(forceRefresh) {
   setNotice("");
-  $("#healthPill").textContent = "checking";
-  $("#healthPill").className = "status-pill";
-  setTableLoading();
-
   try {
     const [health, snapshot] = await Promise.all([
       fetchJson("/healthz"),
-      fetchJson(forceRefresh ? "/api/snapshot?refresh=1" : "/api/snapshot")
+      fetchJson(forceRefresh ? "/api/snapshot?refresh=1" : "/api/snapshot"),
     ]);
     state.health = health;
     state.snapshot = snapshot;
-    render();
+    const modeEl = $("#modeLabel");
+    if (modeEl) modeEl.textContent = snapshot.mode || "read_only";
+    renderSidebar();
+    renderCurrentView();
   } catch (error) {
     setNotice(error.message || String(error));
-    $("#healthPill").textContent = "offline";
-    $("#healthPill").className = "status-pill bad";
+    renderHeader();
   }
-}
-
-function setTableLoading() {
-  $("#pipelineCount").textContent = "loading...";
-  $("#auditCount").textContent = "loading...";
-  $("#mtcV2Count").textContent = "loading...";
-  $("#pipelineRows").innerHTML = `<tr><td colspan="9" class="empty-cell">Loading strategy snapshot...</td></tr>`;
-  $("#auditRows").innerHTML = `<tr><td colspan="9" class="empty-cell">Loading audit snapshot...</td></tr>`;
-  $("#mtcV2Rows").innerHTML = `<tr><td colspan="7" class="empty-cell">Loading MTC_V2 readiness...</td></tr>`;
 }
 
 async function fetchJson(url) {
   const response = await fetch(url, { cache: "no-store" });
   const payload = await response.json();
-  if (!response.ok) {
-    throw new Error(payload.error || `${url} returned ${response.status}`);
-  }
+  if (!response.ok) throw new Error(payload.error || `${url} returned ${response.status}`);
   return payload;
 }
 
+/* ---------------- navigation ---------------- */
+function navigate(route, params = {}) {
+  state.currentRoute = route;
+  if (params.strategyId) state.selectedStrategyId = params.strategyId;
+  if (route === "intelligence") state.detailSection = "all";
+  if (route === "result-explorer" && !params.keepScope) {
+    state.explorerScope = "global";
+    state.explorerStrategyId = null;
+  }
+  renderSidebar();
+  renderCurrentView();
+  window.scrollTo({ top: 0 });
+}
+window.navigate = navigate;
+
+function openStrategy(id) { navigate("intelligence", { strategyId: id }); }
+window.openStrategy = openStrategy;
+
+/* Lazy-load full scorecard gate detail (sub_scores/notes) for one strategy on open.
+   The default snapshot ships summary cards only; full detail comes from the read-only
+   /api/scorecard-detail endpoint. Failures degrade gracefully to summary-only. */
 function loadStrategyDetail(id) {
   if (!id) return;
   const entry = state.detailCards[id];
   if (entry && (entry.status === "loading" || entry.status === "ok" || entry.status === "empty")) return;
   state.detailCards[id] = { status: "loading", cards: [] };
+  // Read the JSON body even on 404: the detail endpoint returns count=0/cards=[] for an
+  // unknown strategy, which is an *empty* detail (summary-only), not a hard server error.
   fetch("/api/scorecard-detail?strategy_id=" + encodeURIComponent(id), { cache: "no-store" })
     .then((res) => res.json().then((body) => ({ res, body })))
     .then(({ res, body }) => {
@@ -152,2864 +173,1981 @@ function loadStrategyDetail(id) {
       state.detailCards[id] = { status: "error", cards: [] };
     })
     .finally(() => {
-      if (state.selectedStrategyId === id) {
-        openUnifiedStrategyDetail(id);
+      if (state.currentRoute === "intelligence" && state.selectedStrategyId === id) {
+        renderCurrentView();
       }
     });
 }
 
+/* Best full detail card for a strategy (highest gate2 score), or null if not loaded. */
 function detailBestCard(id) {
   const entry = state.detailCards[id];
   if (!entry || entry.status !== "ok" || !entry.cards.length) return null;
   return entry.cards.slice().sort((a, b) => Number((b.gate2 && b.gate2.score) || 0) - Number((a.gate2 && a.gate2.score) || 0))[0] || null;
 }
 
-async function loadReport(path) {
-  if (!path) {
-    return;
-  }
-  state.selectedReportPath = path;
-  $("#reportViewerTitle").textContent = "Loading";
-  $("#reportViewerMeta").textContent = path;
-  $("#reportViewerBody").innerHTML = "";
-  try {
-    const payload = await fetchJson(`/api/report?path=${encodeURIComponent(path)}`);
-    const report = payload.report || {};
-    $("#reportViewerTitle").textContent = report.title || payload.path;
-    $("#reportViewerMeta").textContent = `${report.category || "report"} / ${report.report_id || "--"} / ${payload.size_bytes} bytes`;
-    $("#reportViewerBody").innerHTML = renderMarkdown(payload.content || "");
-    renderReports();
-  } catch (error) {
-    $("#reportViewerTitle").textContent = "Unable to load report";
-    $("#reportViewerMeta").textContent = path;
-    $("#reportViewerBody").innerHTML = `<p>${escapeHtml(error.message || String(error))}</p>`;
-  }
+function openExplorerForStrategy(id) {
+  state.explorerScope = "strategy";
+  state.explorerStrategyId = id;
+  state.currentRoute = "result-explorer";
+  renderSidebar();
+  renderCurrentView();
+  window.scrollTo({ top: 0 });
 }
+window.openExplorerForStrategy = openExplorerForStrategy;
 
-function render() {
-  renderHeader();
-  renderAcceptancePanel();
-  renderPipeline();
-  renderAudit();
-  renderMtcV2Readiness();
-  renderHome();
-  renderTasks();
-  renderParity();
-  renderBacktest();
-  renderRegistry();
-  renderResearchLab();
-  renderPineBuilder();
-  renderOptimization();
-  renderLiveOps();
-  renderReports();
-  renderDiagnostics();
-  if (state.selectedStrategyId) {
-    openUnifiedStrategyDetail(state.selectedStrategyId);
-  } else {
-    syncUnifiedDetailVisibility();
-  }
+function scrollToSection(sectionId) {
+  state.detailSection = sectionId;
+  renderSidebar();
+  const sec = DETAIL_SECTIONS.find((s) => s.id === sectionId);
+  if (!sec || !sec.anchor) { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+  const el = document.getElementById(sec.anchor);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
 }
-function renderPipeline() {
-  const pipe = state.snapshot.candidate_pipeline || {};
-  const allRows = pipe.rows || [];
-  const hiddenParents = hiddenSourceParentIds();
-  const rows = allRows.filter((row) => !hiddenParents.has(row.id));
-  const stages = pipe.stages || [];
-  const counts = (pipe.summary && pipe.summary.stage_done_counts) || {};
-  $("#pipelineIntro").textContent = "Each row is one strategy journey. The Stg tag is the stable triage code, the score is a heuristic fit score out of 100, and the next action tells you the single best next step.";
-  populateSelect("#pipelineActionFilter", uniqueValues(rows.map((row) => row.next_action)), "All");
-  const filtered = filterPipelineRows(rows);
-  $("#pipelineCount").textContent = `${filtered.length}/${rows.length} ${rows.length === 1 ? "strategy" : "strategies"}${allRows.length !== rows.length ? ` · ${allRows.length - rows.length} source parents hidden` : ""}`;
-  $("#pipelineSummary").innerHTML = stages.map((s) => `
-    <div class="parity-cell">
-      <span>${escapeHtml(s.label)}</span>
-      <strong>${Number(counts[s.key] || 0)}</strong>
-    </div>
-  `).join("");
-  const stageKeys = stages.map((s) => s.key);
-  if (!filtered.length) {
-    $("#pipelineRows").innerHTML = `<tr><td colspan="${stageKeys.length + 3}" class="empty-cell">No candidates yet</td></tr>`;
-    return;
-  }
-  $("#pipelineRows").innerHTML = filtered.map((row) => {
-    const cells = stageKeys.map((k) => stageCell(row.stages[k] || {})).join("");
-    const sub = row.symbol ? `${row.symbol} ${row.timeframe}` : (row.timeframe || "");
-    const fam = (row.description && row.description.family) ? row.description.family : "";
-    const stgCode = row.stg_code ? `<div class="muted-sub"><code>${escapeHtml(row.stg_code)}</code></div>` : "";
-    return `
-      <tr class="row-click" data-id="${escapeHtml(row.id)}" title="Click for details">
-        <td><code title="${escapeHtml(row.id)}">${escapeHtml(humanizeStrategyId(row.id))}</code>${stgCode}${fam ? `<div class="muted-sub">${escapeHtml(fam)}</div>` : ""}${sub ? `<div class="muted-sub">${escapeHtml(sub)}</div>` : ""}</td>
-        <td>${renderScoreBadge(row.scorecard || row.score)}</td>
-        ${cells}
-        <td>${renderActionCell(row.next_action || "--", row.next_action_hint || "")}</td>
-      </tr>
+window.scrollToSection = scrollToSection;
+
+/* ---------------- sidebar ---------------- */
+function renderSidebar() {
+  const nav = $("#sidebarNav");
+  if (!nav) return;
+  if (state.currentRoute === "intelligence") {
+    const sel = state.selectedStrategyId || defaultStrategyId();
+    nav.innerHTML = `
+      <button class="route back-btn" type="button" onclick="navigate('home')">${icon("back")}<span class="label">Back to Main Menu</span></button>
+      <div class="nav-caption teal">Strategy Intelligence</div>
+      <div class="nav-sub">Selected: ${esc(sel || "—")}</div>
+      ${DETAIL_SECTIONS.map((s) => `
+        <button class="route ${state.detailSection === s.id ? "is-active" : ""}" type="button" onclick="scrollToSection('${s.id}')">
+          ${icon(s.icon)}<span class="label">${esc(s.label)}</span>
+        </button>`).join("")}
     `;
-  }).join("");
-
-  const tbody = $("#pipelineRows");
-  if (!tbody.dataset.bound) {
-    tbody.dataset.bound = "1";
-    tbody.addEventListener("click", (event) => {
-      const tr = event.target.closest("tr[data-id]");
-      if (tr) openUnifiedStrategyDetail(tr.dataset.id);
-    });
-  }
-}
-
-function renderAudit() {
-  const audit = state.snapshot.candidate_audit || {};
-  const allRows = audit.rows || [];
-  const rows = allRows.filter((row) => row.visible_in_strategy_tables !== false);
-  const summary = audit.summary || {};
-  const txRec = state.snapshot.transcript_reclassification || null;
-  const txByCid = {};
-  if (txRec && txRec.rows) {
-    for (const tr of txRec.rows) { txByCid[tr.candidate_id] = tr; }
-  }
-  const txCounts = txRec ? txRec.verdict_counts || {} : {};
-  $("#auditIntro").textContent = "This table explains why a row is eligible, blocked, or parked. Sources is the raw scanned record count, Source audit means the source or formula still needs verification, and Next step is the immediate action recommended by the read-only gate.";
-  $("#auditCount").textContent = `${rows.length}/${allRows.length} ${rows.length === 1 ? "record" : "records"}${summary.source_parent_rows ? ` · ${summary.source_parent_rows} source parents hidden` : ""}`;
-  $("#auditSummary").innerHTML = [
-    ["Eligible", summary.eligible_for_backtest_rows, "Rows that can go straight to backtest from the current read-only gate."],
-    ["Blocked", summary.blocked_rows, "Rows parked because the source, formula, or classification still needs work."],
-    ["Split required", summary.split_required_rows, "Rows that must be split into separate indicator cases before testing."],
-    ["Source audit", summary.source_audit_rows, "Rows that need exact source/formula verification before any backtest."],
-    ["Source parents", summary.source_parent_rows || 0, "Original video/source rows hidden from normal strategy queues when extracted child candidates exist."],
-    ["Duplicates", summary.duplicate_rows, "Duplicate rows mapped to one canonical record."],
-    ["Deterministic", summary.deterministic_rule_rows, "Rows with mechanically testable rules visible to the audit layer."],
-    ["Source material", summary.source_material_rows, "Rows with at least a URL or transcript path attached."],
-    ["Sources", audit.source_record_count || 0, "Raw scanned source records across JSONL and CSV inputs, not unique strategies."]
-  ].concat(txRec ? [
-    ["Tx: Likely misclassified", txCounts.LIKELY_MISCLASSIFIED || 0, "Transcripts flagged as likely misclassified — testable rules visible."],
-    ["Tx: Review human", txCounts.REVIEW_HUMAN || 0, "Transcripts needing manual review — ambiguous signals."],
-    ["Tx: Keep rejected", txCounts.KEEP_REJECTED || 0, "Transcripts correctly rejected — no numeric thresholds."],
-  ] : []).map(([label, value, title]) => `
-    <div class="parity-cell" title="${escapeHtml(title)}">
-      <span>${escapeHtml(label)}</span>
-      <strong>${escapeHtml(formatNumber(value ?? 0))}</strong>
-    </div>
-  `).join("");
-
-  populateAuditFilters(rows);
-  const filtered = filterAuditRows(rows);
-  if (!filtered.length) {
-    $("#auditRows").innerHTML = `<tr><td colspan="10" class="empty-cell">No audit rows match</td></tr>`;
-    syncUnifiedDetailVisibility();
-    return;
-  }
-
-  $("#auditRows").innerHTML = filtered.map((row) => {
-    const tx = txByCid[row.id] || null;
-    const txVerdict = tx ? tx.verdict : (row.has_transcript && !tx ? "NO_SCAN" : "");
-    const txReason = tx ? tx.reason : "";
-    const txBadge = txVerdict
-      ? badge(txVerdict,
-          txVerdict === "LIKELY_MISCLASSIFIED" ? "warn" :
-          txVerdict === "REVIEW_HUMAN" ? "neutral" :
-          txVerdict === "ALREADY_OK" ? "ok" :
-          txVerdict === "KEEP_REJECTED" ? "bad" : "muted")
-      : `<span class="muted-sub">—</span>`;
-    return `
-    <tr class="row-click" data-audit-id="${escapeHtml(row.id)}" title="Detay için tıkla">
-      <td>
-        <code title="${escapeHtml(row.id || "--")}">${escapeHtml(humanizeStrategyId(row.id) || "--")}</code>
-        ${row.stg_code ? `<div class="muted-sub"><code>${escapeHtml(row.stg_code)}</code></div>` : ""}
-        ${row.description_family ? `<div class="muted-sub">${escapeHtml(row.description_family)}</div>` : ""}
-        ${row.pipeline_stage_label ? `<div class="muted-sub">${escapeHtml(row.pipeline_stage_label)}</div>` : ""}
-      </td>
-      <td>${renderScoreBadge(row.scorecard || row.score)}</td>
-      <td>${qualityBadge(row.source_quality)}</td>
-      <td>${badge(row.has_deterministic_rules ? "YES" : "NO", row.has_deterministic_rules ? "ok" : "bad")}</td>
-      <td>
-        ${badge(row.has_source_url_transcript ? "YES" : "NO", row.has_source_url_transcript ? "ok" : "bad")}
-        ${row.source_url ? `<div class="muted-sub">${escapeHtml(row.source_url)}</div>` : ""}
-        ${row.transcript_path ? `<div class="muted-sub">${escapeHtml(row.transcript_path)}</div>` : ""}
-      </td>
-      <td title="${escapeHtml(txReason)}">${txBadge}${txReason ? `<div class="muted-sub">${escapeHtml(txReason)}</div>` : ""}</td>
-      <td>${badge(row.eligible_for_backtest ? "YES" : "NO", row.eligible_for_backtest ? "ok" : "bad")}</td>
-      <td>${escapeHtml(row.blocked_reason || "—")}</td>
-      <td>
-        <div><code>${escapeHtml(row.canonical_id || row.id || "--")}</code></div>
-        ${row.duplicate_of ? `<div class="muted-sub">duplicate of ${escapeHtml(row.duplicate_of)}</div>` : `<div class="muted-sub">canonical</div>`}
-        ${row.duplicate_group_size ? `<div class="muted-sub">group ${escapeHtml(String(row.duplicate_group_size))}</div>` : ""}
-      </td>
-      <td>${renderActionCell(row.recommended_next_pipeline_step || "—", row.next_action_hint || "")}</td>
-    </tr>`;
-  }).join("");
-
-  const tbody = $("#auditRows");
-  if (!tbody.dataset.bound) {
-    tbody.dataset.bound = "1";
-    tbody.addEventListener("click", (event) => {
-      const tr = event.target.closest("tr[data-audit-id]");
-      if (tr) openUnifiedStrategyDetail(tr.dataset.auditId);
-    });
-  }
-
-  syncUnifiedDetailVisibility();
-}
-
-function renderMtcV2Readiness() {
-  const readiness = state.snapshot.mtc_v2_readiness || {};
-  const rows = (readiness.rows || []).filter((row) => !row.is_source_parent);
-  const summary = readiness.summary || {};
-  const tracker = readiness.parity_tracker || {};
-  $("#mtcV2Intro").textContent = summary.calibration_note || "This is a read-only planning queue for MTC_V2. It shows whether a candidate needs source audit, backtest, promotion pack, PineTS parity, forward evidence, or is ready for MTC_V2 review.";
-  populateSelect("#mtcV2StatusFilter", uniqueValues(rows.map((row) => row.status)), "All");
-  const filtered = filterMtcV2Rows(rows);
-  $("#mtcV2Count").textContent = `${filtered.length}/${rows.length} candidates`;
-  $("#mtcV2Summary").innerHTML = [
-    ["Ready review", summary.ready_for_review || 0, "High-evidence rows that can enter a read-only MTC_V2 review queue."],
-    ["Forward evidence", summary.needs_forward_evidence || 0, "Rows that need forward paper-trade evidence before integration decisions."],
-    ["PineTS parity", summary.needs_pinets_parity || 0, "Rows waiting for PineTS/Python parity."],
-    ["Promotion pack", summary.needs_promotion_pack || 0, "Rows waiting for a promotion packet."],
-    ["Blocked / parked", summary.blocked_or_parked || 0, "Rows blocked by source, split, or low-score review."],
-    ["MTC cases", tracker.total_cases || 0, "Rows in the existing MTC_V2 parity tracker."],
-    ["MTC passes", tracker.pass_cases || 0, "Existing MTC_V2 tracker cases with PASS verdict."],
-    ["Core Pine", readiness.pine_exists ? "OK" : "Missing", "Whether MTC_V2.pine is present; this page does not edit it."]
-  ].map(([label, value, title]) => `
-    <div class="parity-cell" title="${escapeHtml(title)}">
-      <span>${escapeHtml(label)}</span>
-      <strong>${escapeHtml(formatNumber(value))}</strong>
-    </div>
-  `).join("");
-  if (!filtered.length) {
-    $("#mtcV2Rows").innerHTML = `<tr><td colspan="7" class="empty-cell">No MTC_V2 readiness rows match</td></tr>`;
-    return;
-  }
-  $("#mtcV2Rows").innerHTML = filtered.map((row) => `
-    <tr class="row-click" data-mtc-v2-id="${escapeHtml(row.id)}" title="Open strategy detail">
-      <td>
-        <code title="${escapeHtml(row.id || "--")}">${escapeHtml(humanizeStrategyId(row.id) || "--")}</code>
-        ${row.stg_code ? `<div class="muted-sub"><code>${escapeHtml(row.stg_code)}</code></div>` : ""}
-      </td>
-      <td>${renderScoreBadge({ total: row.score, label: row.score_label, band: row.score_band, note: "MTC_V2 readiness uses this as one triage input." })}</td>
-      <td>${badge(row.status_label || row.status || "--", row.status === "READY_FOR_MTC_V2_REVIEW" ? "ok" : "neutral")}<div class="muted-sub">${escapeHtml(row.decision_sentence || row.reason || "")}</div></td>
-      <td>${escapeHtml(row.stage_label || row.stage || "--")}</td>
-      <td>${renderForwardProgress(row.forward_progress)}</td>
-      <td>${escapeHtml(row.blocker || "--")}</td>
-      <td>${renderActionCell(row.next_action || "--", row.next_action_hint || "")}</td>
-    </tr>
-  `).join("");
-  const tbody = $("#mtcV2Rows");
-  if (!tbody.dataset.bound) {
-    tbody.dataset.bound = "1";
-    tbody.addEventListener("click", (event) => {
-      const tr = event.target.closest("tr[data-mtc-v2-id]");
-      if (tr) openUnifiedStrategyDetail(tr.dataset.mtcV2Id);
-    });
-  }
-}
-
-function hiddenSourceParentIds() {
-  const audit = state.snapshot.candidate_audit || {};
-  return new Set((audit.rows || []).filter((row) => row.visible_in_strategy_tables === false).map((row) => row.id));
-}
-
-function stageCls(s) {
-  return { done: "ok", active: "stage-active", pending: "stage-pending", na: "stage-na", fail: "bad" }[s] || "stage-pending";
-}
-function stageIcon(s) {
-  return { done: "✓", active: "●", pending: "–", na: "·", fail: "✗" }[s] || "–";
-}
-function ytEmbed(url) {
-  const m1 = url.match(/[?&]v=([^&]+)/);
-  const m2 = url.match(/youtu\.be\/([^?&]+)/);
-  const id = (m1 && m1[1]) || (m2 && m2[1]) || "";
-  if (!id) return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)}</a>`;
-  return `<div class="yt-embed"><iframe src="https://www.youtube.com/embed/${encodeURIComponent(id)}" title="YouTube" frameborder="0" allow="encrypted-media" allowfullscreen></iframe></div>
-    <p class="muted-sub"><a href="${escapeHtml(url)}" target="_blank" rel="noopener">Open on YouTube</a></p>`;
-}
-
-function openUnifiedStrategyDetail(id) {
-  const pipeline = state.snapshot.candidate_pipeline || {};
-  const audit = state.snapshot.candidate_audit || {};
-  const mtcV2 = state.snapshot.mtc_v2_readiness || {};
-  const pipelineRow = (pipeline.rows || []).find((row) => row.id === id) || null;
-  const auditRow = (audit.rows || []).find((row) => row.id === id) || null;
-  const mtcV2Row = (mtcV2.rows || []).find((row) => row.id === id) || null;
-  if (!pipelineRow && !auditRow) return;
-  state.selectedStrategyId = id;
-  loadStrategyDetail(id);
-  renderUnifiedStrategyDetail(pipelineRow, auditRow, pipeline.stages || [], mtcV2Row);
-  syncUnifiedDetailVisibility();
-  const backButton = $('#strategyBack');
-  if (backButton) backButton.addEventListener('click', closeUnifiedStrategyDetail);
-}
-
-function renderUnifiedStrategyDetail(pipelineRow, auditRow, stages, mtcV2Row) {
-  const row = pipelineRow || auditRow || {};
-  const canonical = row.canonical || (auditRow && auditRow.canonical) || {};
-  const description = row.description || {};
-  const metrics = row.metrics || {};
-  const sourceRecord = auditRow && auditRow.source_record ? auditRow.source_record : {};
-  const sourceUrl = (auditRow && auditRow.source_url) || row.source_url || sourceRecord.source_url || '';
-  const sourceUrlSource = auditRow ? auditRow.source_url_source : '';
-  const producerSpecRaw = row.producer_spec || {};
-  const title = strategyDisplayName(row, auditRow, producerSpecRaw, sourceRecord);
-  const subtitle = strategySubtitle(row, auditRow, sourceUrl, canonical);
-  const statusLabel = friendlyStatus((mtcV2Row && (mtcV2Row.status_label || mtcV2Row.status)) || (auditRow && auditRow.audit_status) || row.current_stage_label || row.current_stage_key || "Review pending");
-  const stgCode = row.stg_code || (auditRow && auditRow.stg_code) || '';
-  const scorecard = row.scorecard || (auditRow && auditRow.scorecard) || null;
-  const summaryScorecardV2 = row.scorecard_v2 || (auditRow && auditRow.scorecard_v2) || null;
-  const detailEntry = state.detailCards[state.selectedStrategyId] || null;
-  const detailCard = detailBestCard(state.selectedStrategyId);
-  const scorecardV2 = detailCard || summaryScorecardV2;
-  const scorecardV2Cases = detailEntry && detailEntry.status === "ok" ? detailEntry.cards : (row.scorecard_v2_cases || (auditRow && auditRow.scorecard_v2_cases) || []);
-  const detailStatus = detailEntry ? detailEntry.status : null;
-  const detailEmpty = !!(detailEntry && detailEntry.status === "empty");
-  const paperTrade = renderPaperTradeDetail(row.paper_trade_detail);
-  const parityProof = renderParityProof(row.pinets_parity_proof);
-  const directionalResearch = renderDirectionalResearch(row.directional_research);
-  const producerSpec = renderProducerSpec(row.producer_spec);
-  const displayDescription = firstEnglishText(
-    row.strategy_description_en,
-    description.what,
-    description.summary,
-    producerSpecRaw.summary,
-    sourceRecord.summary
-  ) || "No English strategy description is available yet.";
-  const quantlens = findQuantlensCandidate(row, auditRow);
-  const expertQuantlens = findExpertQuantlensVerdict(row, auditRow, scorecardV2);
-  const decision = buildWaveADecision(row, auditRow, mtcV2Row, scorecardV2, quantlens, canonical);
-  const scoreDetail = renderWaveAScorecard(scorecardV2, scorecard, scorecardV2Cases, canonical, detailStatus, detailEmpty);
-  const expertQuantlensVerdict = renderExpertQuantlensVerdict(expertQuantlens);
-  const quantlensVerdict = renderQuantlensVerdict(quantlens);
-  const taxonomy = renderStrategyTaxonomy(row, auditRow, producerSpecRaw, description, canonical);
-  const journey = renderReviewJourney(row, auditRow, stages, canonical, scorecardV2);
-  const tradingRules = renderTradingRules(row, auditRow, producerSpecRaw, description, sourceRecord);
-  const backtestEvidence = renderBacktestEvidence(row, auditRow, metrics, scorecardV2, canonical);
-  const promotabilityPanel = renderPromotabilityPanel(scorecardV2);
-  const salvage = renderSalvageableIdeas(row, auditRow, quantlens);
-  const sourceMaterial = renderSourceMaterial(auditRow, row, sourceRecord, sourceUrl, sourceUrlSource);
-  const technicalDetails = renderTechnicalDetails({
-    row,
-    auditRow,
-    sourceRecord,
-    scorecard,
-    producerSpec,
-    directionalResearch,
-    paperTrade,
-    parityProof,
-  });
-  $('#strategyDetail').innerHTML = `
-    <button class="back-btn detail-back" id="strategyBack" type="button">Back to tables</button>
-    <div class="strategy-terminal">
-      <div class="detail-sticky">
-        <strong>${escapeHtml(title)}</strong>
-        <span>${escapeHtml(decision.verdict)}</span>
-        <span>${escapeHtml(decision.nextAction)}</span>
-        <span>${escapeHtml(decision.evidenceLevel)}</span>
-      </div>
-      <section class="detail-hero">
-        <div>
-          <p class="detail-kicker">${escapeHtml(stgCode || "Strategy Detail")}${snapshotFreshness(scorecardV2)}</p>
-          <h3 class="detail-title">${escapeHtml(title)}</h3>
-          <p class="detail-subtitle">${escapeHtml(subtitle)}</p>
-          ${displayDescription && displayDescription.trim().toLowerCase() !== String(title).trim().toLowerCase() ? `<p class="detail-description">${escapeHtml(displayDescription)}</p>` : ""}
-        </div>
-        <div class="detail-status-stack">
-          <span class="terminal-badge" title="${escapeHtml(statusBadgeTooltip(statusLabel))}">${escapeHtml(statusLabel)}</span>
-          <!-- R2-20: Gemini Pre-Screen shown once, in its own section below (was duplicated as a hero badge here). -->
-        </div>
-      </section>
-      ${renderVerdictDecision(decision)}
-      ${scoreDetail}
-      ${promotabilityPanel}
-      ${expertQuantlensVerdict}
-      ${quantlensVerdict}
-      ${taxonomy}
-      ${journey}
-      ${tradingRules}
-      ${backtestEvidence}
-      ${salvage}
-      ${sourceMaterial}
-      ${technicalDetails}
-    </div>
-  `;
-}
-
-function strategyDisplayName(row, auditRow, producerSpec, sourceRecord) {
-  const candidates = [
-    row.strategy_display_name,
-    row.display_name,
-    row.name,
-    row.title,
-    producerSpec && producerSpec.title,
-    row.description && row.description.family,
-    auditRow && auditRow.description_family,
-    sourceRecord && sourceRecord.title,
-  ];
-  for (const candidate of candidates) {
-    const text = cleanDisplayText(candidate);
-    if (text && !looksLikeRawId(text)) {
-      return text;
-    }
-  }
-  return humanizeStrategyId(row.id || (auditRow && auditRow.id) || "Unnamed strategy");
-}
-
-function strategySubtitle(row, auditRow, sourceUrl, canonical) {
-  const can = canonical || row.canonical || (auditRow && auditRow.canonical) || {};
-  const symbol = row.symbol || (auditRow && auditRow.symbol) || "";
-  const instrument = symbol ? symbol : "Symbol not defined";
-  const definedTf = can.defined_tf || row.timeframe || (auditRow && auditRow.timeframe) || "";
-  const testedTf = can.tested_tf || "";
-  const tfParts = [];
-  if (definedTf) tfParts.push(`Defined: ${definedTf}`);
-  if (testedTf && testedTf !== definedTf) tfParts.push(`Tested: ${testedTf}`);
-  else if (testedTf) tfParts.push(`Tested: ${testedTf}`);
-  else if (definedTf) tfParts.push(definedTf);
-  const tfLabel = tfParts.join(" · ") || "";
-  const sourceKind = sourceUrl ? (sourceUrl.includes("youtu") ? "YouTube source" : "External source") : "Source not linked";
-  return [instrument, tfLabel, sourceKind].filter(Boolean).join(" / ") || "Review data not available yet";
-}
-
-function snapshotFreshness(scorecardV2) {
-  const status = state.snapshot && state.snapshot.current_status ? state.snapshot.current_status : {};
-  const snapshotTs = status.last_updated || status.generated_at || (state.snapshot && state.snapshot.generated_at) || "";
-  const scorecardTs = scorecardV2 && (scorecardV2.updated_at || scorecardV2.generated_at || "");
-  if (scorecardTs) {
-    const title = snapshotTs
-      ? `Displayed scorecard file last modified. Snapshot refreshed: ${snapshotTs}`
-      : "Displayed scorecard file last modified.";
-    return ` <span class="freshness-tag" title="${escapeHtml(title)}">Scorecard: ${escapeHtml(scorecardTs)}</span>`;
-  }
-  if (!snapshotTs) return "";
-  return ` <span class="freshness-tag" title="Snapshot data last updated; no scorecard_v2 artifact is linked to this row.">Snapshot: ${escapeHtml(snapshotTs)}</span>`;
-}
-
-function cleanDisplayText(value) {
-  let text = String(value || "").trim();
-  if (!text || text === "--" || text === "—") return "";
-  text = text.replace(/^UNKNOWN_TITLE\s*[-–—]\s*/i, "");
-  if (!text || text.toUpperCase() === "UNKNOWN_TITLE" || text.toUpperCase() === "UNKNOWN") return "";
-  return text;
-}
-
-function formatStrategyId(id) {
-  if (!id || id === '--') return id || '--';
-  const parts = String(id).split('|');
-  if (parts.length >= 2) {
-    const name = statusText(parts[0]);
-    const rest = parts.slice(1).join(' · ');
-    return `${name} (${rest})`;
-  }
-  return statusText(id);
-}
-
-function looksLikeRawId(text) {
-  return /^[A-Z]{2,}_\d{4}/.test(text) || /^STG\d+/i.test(text) || (text.includes("_") && !text.includes(" "));
-}
-
-function humanizeStrategyId(value) {
-  const raw = String(value || "").trim();
-  if (!raw) return "Unnamed strategy";
-  const stripped = raw
-    .replace(/^QL_\d{4}-\d{2}-\d{2}_/i, "")
-    .replace(/^STG\d+_?/i, "")
-    .replace(/^\d+_/, "");
-  const words = stripped.split(/[_\-]+/).filter(Boolean);
-  const title = words.map((word) => {
-    if (/^(EMA|RSI|VWAP|ADX|ATR|FVG|ORB|SMA)$/i.test(word)) return word.toUpperCase();
-    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-  }).join(" ");
-  return title || "Unnamed strategy";
-}
-
-function firstEnglishText(...values) {
-  for (const value of values) {
-    const text = cleanDisplayText(value);
-    if (text && isLikelyEnglish(text)) {
-      return text;
-    }
-  }
-  return "";
-}
-
-function isLikelyEnglish(text) {
-  return !/[çğıöşüÇĞİÖŞÜ]/.test(text);
-}
-
-function marketLabel(symbol) {
-  const text = String(symbol || "").trim().toUpperCase();
-  if (!text) return "Market not defined";
-  if (text.endsWith("USDT") || text.endsWith("USD")) return `Crypto ${text}`;
-  return text;
-}
-
-function friendlyStatus(value) {
-  const key = String(value || "").trim();
-  // R2-02: also match already-humanized inputs ("Low Score Review" → LOW_SCORE_REVIEW),
-  // so the mapped label + its tooltip fire even when the reader supplies a spaced status_label.
-  const norm = key.toUpperCase().replace(/[\s-]+/g, "_");
-  const map = {
-    CANONICAL: "Primary version",
-    LOW_SCORE_REVIEW: "Needs review",
-    BLOCKED_SOURCE_AUDIT: "Source check needed",
-    READY_FOR_MTC_V2_REVIEW: "Ready for review",
-    CLOSED_SOURCE_STOP: "Closed-source / paid indicator detected - analysis stopped",
-    OVERFIT_SUSPECT: "Overfit risk",
-    NEEDS_BACKTEST: "Needs backtest evidence",
-    NEEDS_PROMOTION_PACK: "Needs promotion packet",
-    NEEDS_PINETS_PARITY: "Needs PineTS parity",
-    NEEDS_FORWARD_EVIDENCE: "Needs forward evidence",
-    PARKED_OR_SPLIT: "Parked or split required",
-  };
-  return map[key] || map[norm] || statusText(key || "Review pending");
-}
-
-function statusBadgeTooltip(label) {
-  const text = String(label || "").toLowerCase();
-  if (text.includes("needs review")) return "Flagged for human review — Gate2 score is below promotion threshold (75). Not auto-rejected; parked for manual look. A reviewer must decide: promote, retest, or park.";
-  if (text.includes("primary")) return "This is the canonical version of the strategy — other duplicates point here.";
-  if (text.includes("source check")) return "The source or formula still needs audit — repaint, lookahead, or closed-source risk may exist.";
-  if (text.includes("ready for review")) return "High-evidence row that can enter a read-only MTC_V2 review queue.";
-  if (text.includes("closed-source")) return "Blocked because a paid/closed-source indicator was detected — analysis cannot continue.";
-  return "";
-}
-
-const QUANTLENS_STOP_LABELS = {
-  CLOSED_SOURCE_STOP: "Closed-source / paid indicator — analysis stopped",
-  COMPLEXITY_OVERLOAD: "Too complex — simplification required",
-  GARBAGE: "Garbage — no viable strategy, salvage ideas only",
-};
-
-function findQuantlensCandidate(row, auditRow) {
-  const ql = state.snapshot.quantlens || {};
-  const candidates = Array.isArray(ql.candidates) ? ql.candidates : [];
-  if (!candidates.length) return null;
-  const keys = [row && row.id, row && row.candidate_id, auditRow && auditRow.id, auditRow && auditRow.candidate_id]
-    .filter(Boolean)
-    .map(String);
-  if (!keys.length) return null;
-  return candidates.find((c) => keys.includes(String(c.candidate_id))) || null;
-}
-
-function findExpertQuantlensVerdict(row, auditRow, scorecardV2) {
-  const direct = (row && row.expert_quantlens_verdict)
-    || (auditRow && auditRow.expert_quantlens_verdict)
-    || (scorecardV2 && scorecardV2.expert_quantlens_verdict);
-  if (direct) return direct;
-  const ql = state.snapshot.expert_quantlens || {};
-  const byId = ql.by_strategy_id || {};
-  const keys = [
-    row && row.id,
-    row && row.strategy_id,
-    row && row.candidate_id,
-    auditRow && auditRow.id,
-    auditRow && auditRow.strategy_id,
-    auditRow && auditRow.candidate_id,
-    scorecardV2 && scorecardV2.base_strategy_id,
-  ].filter(Boolean).map(String);
-  for (const key of keys) {
-    if (byId[key]) return byId[key];
-  }
-  return null;
-}
-
-function renderExpertQuantlensVerdict(verdict) {
-  if (!verdict) {
-    return `
-    <section class="terminal-section quantlens-section">
-      <div class="terminal-section-head"><h4>QuantLens Expert Verdict</h4>
-        <span class="terminal-badge muted">Not reviewed</span></div>
-      <p class="muted-terminal">No Codex/Claude-authored QuantLens expert verdict is linked to this strategy yet. This layer is commentary only and never creates a gate score. <span class="provenance-tag">source: expert_quantlens</span></p>
-    </section>`;
-  }
-  const decision = String(verdict.decision || "").toUpperCase();
-  const badgeClass = decision === "PASS" ? "ok"
-    : (decision === "REJECT" || decision === "GARBAGE" || decision === "CLOSED_SOURCE_STOP") ? "bad"
-    : "amber";
-  const riskFlags = Array.isArray(verdict.risk_flags) ? verdict.risk_flags : [];
-  const facts = [
-    ["Can it be tested?", verdict.can_test || "Unknown"],
-    ["Blocking item", verdict.blocking || "Not specified"],
-    ["Commercial value", verdict.commercial_value || "Unknown"],
-    ["Literature relevance", verdict.literature_relevance || "Unknown"],
-    ["Testability", verdict.testability || "Unknown"],
-    ["Complexity", verdict.complexity || "Unknown"],
-  ];
-  return `
-    <section class="terminal-section quantlens-section">
-      <div class="terminal-section-head"><h4>QuantLens Expert Verdict</h4>
-        <span class="terminal-badge ${badgeClass}">${escapeHtml(verdict.decision_label || statusText(verdict.decision || "Reviewed"))}</span></div>
-      <p class="muted-terminal">Codex/Claude-authored expert commentary. It references the Scorecard but assigns no numeric score; the Scorecard remains the only scoring authority. <span class="provenance-tag">source: expert_quantlens</span></p>
-      <p class="verdict-line"><strong>${escapeHtml(verdict.decision_label || statusText(verdict.decision || "Reviewed"))}</strong></p>
-      ${verdict.reason ? `<p>${escapeHtml(verdict.reason)}</p>` : ""}
-      <div class="terminal-facts">
-        ${facts.map(([k, val]) => `<div><span>${escapeHtml(k)}</span><strong>${escapeHtml(String(val))}</strong></div>`).join("")}
-      </div>
-      ${riskFlags.length ? `<div class="chip-row">${riskFlags.map((flag) => `<span class="terminal-chip warn">${escapeHtml(statusText(flag))}</span>`).join("")}</div>` : ""}
-      ${verdict.score_reference ? `<p class="score-reference">${escapeHtml(verdict.score_reference)}</p>` : ""}
-      ${verdict.next_action ? `<p class="score-reference">Next action: ${escapeHtml(verdict.next_action)}</p>` : ""}
-    </section>`;
-}
-
-function renderQuantlensVerdict(quantlens) {
-  if (!quantlens) {
-    return `
-    <section class="terminal-section quantlens-section">
-      <div class="terminal-section-head"><h4>Gemini Pre-Screen</h4>
-        <span class="terminal-badge muted">Not in Gemini Pre-Screen scope</span></div>
-      <p class="muted-terminal">The Gemini Pre-Screen is a separate AI pre-screen (from the Gemini intake) that reviews strategy quality, risk, and commercial viability. It is <strong>independent of the gate verdict</strong> above — it produces commentary and labels only, never a gate score. Not all strategies pass through it; some entered the pipeline before the pre-screen was active, or are still in early intake. <span class="provenance-tag">source: gemini pre-screen</span></p>
-    </section>`;
-  }
-  const v = quantlens.quantlens_verdict || {};
-  const cv = v.commercial_value || {};
-  const cx = v.complexity || {};
-  const risks = v.risks || {};
-  const stop = quantlens.stop_state;
-  const stopBanner = stop
-    ? `<p class="quantlens-stop"><strong>${escapeHtml(QUANTLENS_STOP_LABELS[stop] || statusText(stop))}</strong></p>`
-    : "";
-  const riskChips = [
-    ["Repaint", risks.repaint],
-    ["Lookahead", risks.lookahead],
-    ["Overfit", risks.overfit],
-    ["Closed-source", risks.closed_source],
-    ["Risk mgmt", risks.risk_management_quality],
-  ]
-    .filter(([, val]) => val)
-    .map(([k, val]) => `<span class="terminal-chip">${escapeHtml(k)}: ${escapeHtml(friendlyStatus(String(val)))}</span>`)
-    .join("");
-  const facts = [
-    ["Commercial value", cv.score == null ? cv.band || "Unknown" : `${cv.band} (${cv.score}/10)`],
-    ["Complexity", cx.score == null ? "Unknown" : `${cx.score}/10${cx.overload ? " — overload" : ""}`],
-    ["Testability", v.testability || "Unknown"],
-    ["Instrument fit", v.instrument_fit || "UNKNOWN"],
-  ];
-  return `
-    <section class="terminal-section quantlens-section">
-      <div class="terminal-section-head"><h4>Gemini Pre-Screen</h4>
-        <span class="terminal-badge ${stop ? "warn" : "muted"}">${escapeHtml(v.decision_label || quantlens.quantlens_decision || "Reviewed")}</span></div>
-      ${stopBanner}
-      <p class="muted-terminal">Gemini Pre-Screen is a separate AI pre-screen (from the Gemini intake) — commentary and labels only. It is independent of the gate verdict above and never adds its own gate score. <span class="provenance-tag">source: gemini pre-screen</span></p>
-      <div class="terminal-facts">
-        ${facts.map(([k, val]) => `<div><span>${escapeHtml(k)}</span><strong>${escapeHtml(String(val))}</strong></div>`).join("")}
-      </div>
-      ${riskChips ? `<div class="chip-row">${riskChips}</div>` : ""}
-      ${v.recommended_next_step ? `<p class="score-reference">Recommended next step: ${escapeHtml(v.recommended_next_step)}</p>` : ""}
-    </section>`;
-}
-
-function buildWaveADecision(row, auditRow, mtcV2Row, scorecardV2, quantlens, canonical) {
-  const can = canonical || row.canonical || (auditRow && auditRow.canonical) || {};
-  const hasAudit = Boolean(auditRow);
-  const eligible = hasAudit ? Boolean(auditRow.eligible_for_backtest) : false;
-  const deterministic = hasAudit ? Boolean(auditRow.has_deterministic_rules) : Boolean(row.producer_spec);
-  const canBlocking = Array.isArray(can.blocking) ? can.blocking : [];
-  // R2-06: derive the blocker ONLY from canonical.blocking — never from the stale legacy
-  // auditRow.blocked_reason / mtcV2Row.blocker (source of the obsolete "score below 65" text).
-  const blocker = canBlocking.length
-    ? canBlocking.map((b) => statusText(b)).join("; ")
-    : (eligible ? "None" : "Deterministic rules are not complete.");
-  const nextAction = cleanDisplayText((mtcV2Row && mtcV2Row.next_action) || row.next_action || (auditRow && auditRow.recommended_next_pipeline_step))
-    || "Review the source evidence.";
-  const evidenceLevel = can.evidence_level || evidenceLevelLabel(row, auditRow, can);
-  // UI-31 (D6): entry+exit present → partially testable with MTC_V2 defaults
-  const hasEntry = Boolean(producerSpecEntry(row));
-  const hasExit = Boolean(producerSpecExit(row));
-  const partiallyTestable = deterministic || (hasEntry && hasExit);
-  // UI-24 (D4): Primary verdict from gate_summary / canonical.promotable
-  const gsPromotable = isPromotable(can) || (scorecardV2 && isPromotable(scorecardV2.gate_summary || {}));
-  const gsBlocking = canBlocking.length > 0 || (scorecardV2 && Array.isArray((scorecardV2.gate_summary || {}).blocking) && (scorecardV2.gate_summary || {}).blocking.length > 0);
-  let verdict, reason;
-  if (gsPromotable) {
-    verdict = "Promotable — all gates pass";
-    reason = "Gate summary confirms all scored gates are passing. Strategy is a candidate for the forward paper-trade queue.";
-  } else if (can.gate2_status === "PASS" || can.backtest_status === "PASS") {
-    verdict = "Backtest passed — awaiting remaining gates";
-    reason = "Gate 2 backtest evidence passes but one or more other gates are incomplete or failing.";
-  } else if (eligible) {
-    verdict = "Ready for backtest review";
-    reason = "Existing data says the candidate has enough deterministic rule evidence to enter a backtest workflow.";
-  } else if (partiallyTestable) {
-    verdict = "Partially testable";
-    reason = "Entry and exit rules are documented. SL/TP/risk can be filled by MTC_V2 defaults — partially testable.";
-  } else if (!hasEntry || !hasExit) {
-    verdict = "Blocked — entry or exit rule missing";
-    reason = "Hard-blocked: entry or exit rule is missing. Cannot proceed until both are defined.";
   } else {
-    verdict = "Needs source clarification";
-    reason = "The source does not define enough exact mechanical rules for honest scoring or backtesting.";
-  }
-  // R2-07: blocker is already shown in the "Blocking item" fact — don't repeat it as a chip.
-  // R2-08a: dropped the hardcoded "Repaint status unknown" literal (no real data behind it;
-  //         actual repaint/lookahead status is surfaced in Trading Rules from metadata).
-  const riskFlags = [
-    !deterministic ? "Undefined rules" : "",
-    hasAudit && !auditRow.has_source_url_transcript ? "Source material incomplete" : "",
-  ].filter(Boolean);
-  return {
-    verdict,
-    reason,
-    canTest: eligible ? "Yes" : "No",
-    blocker,
-    nextAction: statusText(nextAction),
-    riskFlags,
-    evidenceLevel,
-    gsPromotable,
-    gsBlocking,
-    // R2-08b wording + R2-29: don't claim "internally tested" when the backtest FAILED.
-    documentedVsProven: (function () {
-      const bt = String(can.backtest_status || can.gate2_status || "").toUpperCase();
-      if (bt === "FAIL") return "Rules written · backtest did not pass";
-      if (evidenceLevel.includes("Backtested") || bt === "PASS") return "Rules written · internally tested";
-      return "Rules written · not proven";
-    })(),
-    quantlensLabel: quantlens
-      ? `Gemini Pre-Screen: ${(quantlens.quantlens_verdict && quantlens.quantlens_verdict.decision_label) || quantlens.quantlens_decision || "Reviewed"}`
-      : "Gemini Pre-Screen: Not in scope (separate AI pre-screen)",
-    scoreReference: scorecardV2
-      ? "Gate scorecard is available below."
-      : "Gate scorecard is not evaluated yet.",
-  };
-}
-
-function evidenceLevelLabel(row, auditRow, canonical) {
-  const can = canonical || row.canonical || (auditRow && auditRow.canonical) || {};
-  if (can.evidence_level) return can.evidence_level;
-  const stage = String(row.current_stage_key || (auditRow && auditRow.current_stage_key) || "").toLowerCase();
-  if (stage === "integrated") return "Production candidate";
-  if (stage === "paper_trade") return "Paper-trade observed";
-  if (["backtested", "promoted", "pre_parity"].includes(stage)) return "Backtested internally";
-  if (auditRow && auditRow.has_deterministic_rules) return "Rules extracted";
-  return "Source only";
-}
-
-function renderVerdictDecision(decision) {
-  const verdictBadgeClass = decision.gsPromotable ? "ok" : (decision.canTest === "Yes" ? "amber" : "bad");
-  const verdictBadgeLabel = decision.gsPromotable ? "Promotable" : (decision.canTest === "Yes" ? "Can test" : "Blocked");
-  const verdictBadgeTitle = decision.gsPromotable ? "Passed all gates incl. Gate3, ready for promotion packet." : (decision.canTest === "Yes" ? "Deterministic rules exist; ready for backtest review." : "At least one blocking gate is preventing advancement.");
-  const ladderTitle = `${verdictBadgeTitle}\n\n${verdictLadderTooltip()}\n\n${badgeLadderTooltip()}`;
-  return `
-    <section class="terminal-section verdict-section">
-      <div class="terminal-section-head">
-        <h4>Verdict &amp; Decision</h4>
-        <span class="terminal-badge ${verdictBadgeClass}" title="${escapeHtml(ladderTitle)}">${escapeHtml(verdictBadgeLabel)}</span>
-      </div>
-      <p class="muted-sub">Primary verdict derived from gate_summary and canonical data. Gemini Pre-Screen = pre-screen commentary, not gate scoring. <span class="provenance-tag">source: gate_summary + canonical</span></p>
-      <p class="verdict-line"><strong>${escapeHtml(decision.verdict)}</strong></p>
-      <p>${escapeHtml(decision.reason)}</p>
-      <div class="terminal-facts">
-        <div><span>Can it be tested?</span><strong>${escapeHtml(decision.canTest)}</strong></div>
-        <div><span>Blocking item</span><strong>${escapeHtml(decision.blocker)}</strong></div>
-        <div><span>Next required action</span><strong>${escapeHtml(decision.nextAction)}</strong></div>
-        <div><span>Evidence level</span><strong>${escapeHtml(decision.evidenceLevel)}</strong></div>
-      </div>
-      <div class="chip-row">
-        ${decision.riskFlags.map((flag) => `<span class="terminal-chip warn">${escapeHtml(flag)}</span>`).join("")}
-        <span class="terminal-chip">${escapeHtml(decision.documentedVsProven)}</span>
-      </div>
-      <p class="score-reference">${escapeHtml(decision.scoreReference)}</p>
-    </section>
-  `;
-}
-
-function verdictLadderTooltip() {
-  return "Verdict ladder: Promotable -> Backtest passed / awaiting gates -> Ready for backtest review -> Partially testable -> Blocked by missing rules -> Needs source clarification.";
-}
-
-function badgeLadderTooltip() {
-  return "Badge ladder: Promotable = all gates pass; Can test = deterministic/testable but not promotable; Blocked = missing rules or blocking gate.";
-}
-
-function renderWaveAScorecard(scorecardV2, legacyScorecard, scorecardV2Cases = [], canonical = {}, detailStatus = null, detailEmpty = false) {
-  if (scorecardV2) {
-    const gateSummary = scorecardV2.gate_summary || {};
-    const gates = [
-      ["gate1", "Gate 1 Intake", scorecardV2.gate1],
-      ["gate1B", "Gate 1B MTC Feasibility", scorecardV2.gate1B],
-      ["gate2", "Gate 2 Backtest Evidence", scorecardV2.gate2],
-      ["gate3", "Gate 3 Production Readiness", scorecardV2.gate3],
-    ];
-    const promotable = isPromotable(gateSummary);
-    const blocking = Array.isArray(gateSummary.blocking) ? gateSummary.blocking : [];
-    const tfChip = canonical.tf_mismatch
-      ? `<span class="terminal-chip warn">⚠ Defined ${escapeHtml(canonical.defined_tf || "?")}, tested ${escapeHtml(canonical.tested_tf || "?")} — verify intent</span>`
-      : "";
-    return `
-      <section class="terminal-section scorecard-v2-section">
-        <div class="terminal-section-head">
-          <h4>Scorecard</h4>
-          <span class="terminal-badge ${promotable ? "ok" : "amber"}" title="${promotable ? "Passed all gates incl. Gate3, ready for promotion packet." : "At least one gate is blocking — see Blocking chips below."}">${promotable ? "Promotable" : "Not promotable"}</span>
-        </div>
-        <p class="muted-terminal">Gate 2 quantitative backtest score /100. Threshold: ≥75 PASS · &lt;75 FAIL. Promotion is an active reviewer action — the AI or a human reviewer must explicitly trigger it; it is not a nightly batch job. <span class="provenance-tag">source: scorecard_v2</span></p>
-        <div class="chip-row">
-          <span class="terminal-chip" title="${promotable ? "All gates pass — strategy is cleared for promotion." : "At least one blocking gate is preventing advancement. See Blocking chips for which gate(s) failed."}">${escapeHtml(`Promotable: ${promotable ? "Yes" : "No"}`)}</span>
-          ${blocking.map((name) => `<span class="terminal-chip warn" title="${escapeHtml(blockingGateTooltip(name))}">${escapeHtml(`Blocking: ${statusText(name)}`)}</span>`).join("")}
-          ${tfChip}
-        </div>
-        ${gates.map(([key, label, gate]) => renderGateRow(key, label, gate, detailStatus, detailEmpty)).join("")}
-        ${renderScorecardCaseList(scorecardV2, scorecardV2Cases, canonical)}
-      </section>
+    nav.innerHTML = `
+      <div class="nav-caption">Main Menu</div>
+      ${NAV.map((n) => `
+        <button class="route ${state.currentRoute === n.id ? "is-active" : ""}" type="button" onclick="navigate('${n.id}')">
+          ${icon(n.icon)}<span class="label">${esc(n.label)}</span>
+        </button>`).join("")}
     `;
   }
-  return `
-    <section class="terminal-section scorecard-v2-section">
-      <div class="terminal-section-head">
-        <h4>Scorecard</h4>
-        <span class="terminal-badge muted">Missing artifact</span>
-      </div>
-      <p><strong>Scorecard not available.</strong></p>
-      <p class="muted-terminal">No enriched scorecard_v2 artifact is linked to this strategy yet. This page does not create scorecard math or invent gate scores.</p>
-      ${legacyScorecard ? `<p class="muted-terminal">Legacy composite score is kept only in Technical Details for rollback and audit context.</p>` : ""}
-    </section>
-  `;
 }
 
-function renderScorecardCaseList(displayCard, cases, canonical) {
-  const can = canonical || {};
-  const allCases = Array.isArray(cases) && cases.length ? cases : [displayCard];
-  if (allCases.length <= 1) {
-    const label = [displayCard.symbol, displayCard.timeframe].filter(Boolean).join(" ");
-    const testedLabel = can.tested_tf ? ` (Tested: ${can.tested_tf})` : "";
-    return label ? `<p class="muted-terminal">Displayed case: ${escapeHtml(label + testedLabel)}.</p>` : "";
-  }
-  return `
-    <p class="muted-terminal" style="margin-top:0.75rem"><strong>Backtest runs</strong> — same strategy across symbols / timeframes / sweeps; each row is one run's Gate 2 score. The ▸ displayed run drives the gates above; its metric detail is in <strong>Backtest Evidence</strong> below. <span class="provenance-tag">source: scorecard_v2 cases</span></p>
-    <div class="scorecard-case-list">
-      ${allCases.map((card) => {
-        const g2 = card.gate2 || {};
-        const status = g2.status || (card.gate_summary && card.gate_summary.statuses && card.gate_summary.statuses.gate2) || "UNKNOWN";
-        const score = scoreForGate(g2);
-        const active = card.strategy_id === displayCard.strategy_id ? " active" : "";
-        const runLabel = card.run_name || card.run_id || "";
-        const testedTf = can.tested_tf || card.timeframe || "";
-        const caseLabel = [card.symbol, testedTf ? `Tested: ${testedTf}` : ""].filter(Boolean).join(" ") || card.strategy_id || "Case";
-        const discriminator = runLabel ? ` · ${runLabel}` : "";
-        return `
-          <div class="scorecard-case${active}">
-            <span>${escapeHtml(caseLabel + discriminator)}${active ? ' <em class="active-marker">▸ displayed</em>' : ''}</span>
-            <strong>${escapeHtml(score)}</strong>
-            <em>${escapeHtml(statusText(status))}</em>
-          </div>
-        `;
-      }).join("")}
-    </div>
-  `;
-}
-
-function renderGateRow(key, label, gate, detailStatus = null, detailEmpty = false) {
-  const safeGate = gate || {};
-  const status = safeGate.status || "NOT_EVALUATED";
-  const missing = gateMissingFields(safeGate);
-  // R2-14: single authoritative label — kills the doubled "OK · Pass" / "FAIL · Fail" / "INCOMPLETE · Pending".
-  const passLabel = (safeGate.pass === true || status === "PASS" || status === "OK") ? "Passed"
-    : (status === "INCOMPLETE" || status === "NOT_EVALUATED") ? "Pending"
-    : (safeGate.pass === false || status === "FAIL") ? "Failed"
-    : statusText(status);
-  // R2-16: Gate 3 has no scorer system-wide — say "Not evaluated", not "Pending" (which implies it's coming).
-  const isGate3Unscored = key === "gate3" && (status === "INCOMPLETE" || status === "NOT_EVALUATED");
-  const displayLabel = isGate3Unscored ? "Not evaluated" : passLabel;
-  const reason = Array.isArray(safeGate.incomplete_reasons) && safeGate.incomplete_reasons.length
-    ? safeGate.incomplete_reasons.slice(0, 6).join("; ")
-    : safeGate.reason || safeGate.note || "";
-  const emptyReason = isGate3Unscored
-    ? "Gate 3 (production-readiness) scorer is not built yet — every strategy is INCOMPLETE here. System-wide gap, not a per-strategy failure."
-    : "No blocking reason reported for this gate.";
-  // UI-16 / R2-30: auto-open PASS, FAIL and INCOMPLETE gates so the user sees the detail
-  // (esp. WHY a gate failed) without an extra click.
-  const autoOpen = status === "INCOMPLETE" || status === "PASS" || status === "FAIL"
-    || safeGate.pass === true || safeGate.pass === false;
-  const score = scoreForGate(safeGate);
-  // R2-15: show the sub-score breakdown for ANY gate that has sub_scores (FAIL/INCOMPLETE too,
-  // not only PASS) — a FAIL gate's breakdown is exactly what explains the failure.
-  // R2-32: when Gate 3 has no scorer, its sub_scores are dead N/A stubs — hide them; the
-  // "scorer not built" note above is the honest message, not a list of unscorable fields.
-  const subScores = (Array.isArray(safeGate.sub_scores) && !isGate3Unscored) ? safeGate.sub_scores : [];
-  const subScoreDetail = subScores.length
-    ? `<div class="gate-sub-scores"><table class="terminal-kv">${subScores.slice(0, 12).map((s) => {
-        const metric = humanizeMetric(s.source_metric || s.criterion); // R2-11
-        const val = s.value != null ? Number(s.value).toFixed(2) : "?";
-        // R2-12: only show a denominator when max_points is real (not null/0/undefined); no fake "?".
-        const pts = s.points_awarded == null ? "?"
-          : (s.max_points != null ? `${s.points_awarded}/${s.max_points}` : `${s.points_awarded} pts`);
-        const why = s.deduction_reason || s.reason || "";
-        return `<tr><td>${escapeHtml(metric)}</td><td>${escapeHtml(val)}</td><td>${escapeHtml(pts)}</td><td>${escapeHtml(why)}</td></tr>`;
-      }).join("")}</table></div>`
-    : detailStatus === "loading"
-      ? `<p class="muted-terminal">Loading full scorecard detail...</p>`
-      : detailStatus === "error"
-        ? `<p class="muted-terminal">Full gate detail unavailable; showing summary only.</p>`
-        : detailEmpty
-          ? `<p class="muted-terminal">No full scorecard detail found for this strategy.</p>`
-          : "";
-  return `
-    <details class="gate-row gate-${escapeHtml(key)}" ${autoOpen ? "open" : ""}>
-      <summary>
-        <span class="gate-chevron">▸</span>
-        <span>${escapeHtml(label)}</span>
-        <strong>${escapeHtml(score)}</strong>
-        <em>${escapeHtml(displayLabel)}</em>
-      </summary>
-      ${reason ? `<p>${escapeHtml(reason)}</p>` : `<p class="muted-terminal">${escapeHtml(emptyReason)}</p>`}
-      ${subScoreDetail}
-      ${isGate3Unscored ? "" : (missing.length ? `
-        <div class="missing-fields">
-          <span title="These criteria were not produced or not scored by this backtest run — the metric was absent or could not be evaluated, so it did not contribute to the gate score. Not a dashboard bug.">Missing / not scored</span>
-          <ul>${missing.slice(0, 10).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
-          ${missing.length > 10 ? `<p class="muted-terminal">${missing.length - 10} additional fields omitted in the compact view.</p>` : ""}
-        </div>
-      ` : `<p class="muted-terminal">No missing source fields reported.</p>`)}
-    </details>
-  `;
-}
-
-function scoreForGate(gate) {
-  if (!gate || gate.score == null) return "N/A";
-  return `${gate.score}/${gate.max || 100}`;
-}
-
-function isPromotable(gs) {
-  if (!gs) return false;
-  const v = gs.promotable;
-  return v === true || v === 1 || v === "1" || v === "true";
-}
-
-function blockingGateTooltip(name) {
-  const key = String(name || "").toLowerCase();
-  const map = {
-    gate1: "Gate 1 (Intake) did not pass — source material or transcript is missing or incomplete.",
-    gate1b: "Gate 1B (MTC Feasibility) did not pass — strategy cannot be mapped to MTC modules.",
-    gate2: "Gate 2 (Backtest Evidence) did not pass — score below 75, backtest metrics missing, or walk-forward incomplete.",
-    gate3: "Gate 3 (Production Readiness) did not pass — forward evidence, parity, or operational flags are incomplete.",
-  };
-  return map[key] || `Gate \"${statusText(name)}\" is blocking — review its score and reason in the scorecard below.`;
-}
-
-function producerSpecEntry(row) {
-  const ps = row.producer_spec || {};
-  const desc = row.description || {};
-  return cleanDisplayText(desc.entry || ps.entry_pseudo || ps.entry_trigger || "");
-}
-
-function producerSpecExit(row) {
-  const ps = row.producer_spec || {};
-  const desc = row.description || {};
-  return cleanDisplayText(desc.exit || ps.exit_pseudo || ps.exit_trigger || "");
-}
-
-function gateMissingFields(gate) {
-  const rows = Array.isArray(gate.sub_scores) ? gate.sub_scores : [];
-  return rows
-    .filter((row) => row && (row.points_awarded == null || row.metric_status !== "OK"))
-    .map((row) => {
-      const source = humanizeMetric(row.source_metric || row.criterion); // R2-19
-      const status = row.metric_status || "NOT_SCORED";
-      return `${source} — ${statusText(status)}`;
-    });
-}
-
-function renderStrategyTaxonomy(row, auditRow, producerSpec, description, canonical) {
-  const can = canonical || row.canonical || (auditRow && auditRow.canonical) || {};
-  const testedTf = can.tested_tf || row.timeframe || (auditRow && auditRow.timeframe);
-  // R2-35: feed the English description into the blob so "continuation" is matched before "pullback".
-  const familyBlob = [row.id, description.family, producerSpec.title, description.what, description.summary, description.entry]
-    .filter(Boolean).join(" ");
-  const symbol = row.symbol || (auditRow && auditRow.symbol) || can.symbol; // R2-34
-  // R2-22: time-horizon / market-condition / method are HEURISTIC guesses from the name+description
-  // (no producer_spec taxonomy yet). Flag them "estimated"; the real Defined/Tested TF sit alongside.
-  const chips = [
-    ["Category / time horizon", inferTimeHorizon(testedTf, familyBlob), true],
-    ["Expected market condition", inferMarketCondition(familyBlob), true],
-    ["Method", inferMethod(familyBlob), true],
-    ["Instrument / market fit", marketLabel(symbol), false],
-    ["Defined timeframe", can.defined_tf || row.timeframe || (auditRow && auditRow.timeframe) || "Not defined", false],
-    ["Tested timeframe", can.tested_tf || "Not tested yet", false],
-    ["Automation suitability", auditRow && auditRow.has_deterministic_rules ? "Machine-testable" : "Partially defined", false],
-    ["Complexity", "Not assessed yet", false],
-  ];
-  const mismatchChip = can.tf_mismatch
-    ? `<div class="taxonomy-chip warn"><span>⚠ Timeframe mismatch</span><strong>Defined ${escapeHtml(can.defined_tf || "?")}, tested ${escapeHtml(can.tested_tf || "?")} — verify intent</strong></div>`
-    : "";
-  return `
-    <section class="terminal-section">
-      <div class="terminal-section-head"><h4>Strategy Taxonomy</h4></div>
-      <p class="muted-terminal">Category, market condition and method are <strong>estimated</strong> from the strategy name and description (no producer_spec taxonomy yet) — cross-check against the Defined/Tested timeframe below. <span class="provenance-tag">estimated + canonical</span></p>
-      <div class="taxonomy-grid">
-        ${chips.map(([label, value, estimated]) => `
-          <div class="taxonomy-chip">
-            <span>${escapeHtml(label)}${estimated ? ` <em class="provenance-tag">estimated</em>` : ""}</span>
-            <strong>${escapeHtml(value || "Unknown")}</strong>
-          </div>
-        `).join("")}
-        ${mismatchChip}
-      </div>
-    </section>
-  `;
-}
-
-function inferTimeHorizon(timeframe, blob) {
-  const tf = String(timeframe || "").toLowerCase();
-  const text = String(blob || "").toLowerCase();
-  if (tf.includes("5m") || tf.includes("10m") || tf.includes("15m") || text.includes("scalp")) return "Scalping / intraday";
-  if (tf.includes("1h") || tf.includes("2h") || tf.includes("4h")) return "Day trading / swing";
-  if (tf.includes("1d") || tf.includes("daily")) return "Swing / position";
-  return "Unknown";
-}
-
-function inferMarketCondition(blob) {
-  const text = String(blob || "").toLowerCase();
-  if (text.includes("continuation")) return "Trend continuation";
-  if (text.includes("breakout") || text.includes("flag")) return "Breakout / trend continuation";
-  if (text.includes("pullback") && !text.includes("continuation")) return "Pullback / mean reversion";
-  if (text.includes("vwap") || text.includes("rsi")) return "Pullback / mean reversion";
-  if (text.includes("bollinger")) return "Volatility expansion";
-  return "Unknown";
-}
-
-function inferMethod(blob) {
-  const text = String(blob || "").toLowerCase();
-  if (text.includes("vwap")) return "VWAP reaction";
-  if (text.includes("rsi")) return "Momentum oscillator";
-  if (text.includes("ema")) return "Moving-average trend filter";
-  if (text.includes("breakout")) return "Breakout";
-  if (text.includes("bollinger")) return "Volatility breakout";
-  return "Unknown";
-}
-
-function renderReviewJourney(row, auditRow, stages, canonical, scorecardV2) {
-  const can = canonical || row.canonical || (auditRow && auditRow.canonical) || {};
-  // R2-23: when canonical didn't reach this row, fall back to scorecard gate2 status
-  // (mirrors renderBacktestEvidence) so Journey doesn't show "pending" while Scorecard shows FAIL.
-  const g2Fallback = scorecardV2 && scorecardV2.gate2 && scorecardV2.gate2.status;
-  const backtestStatus = String(can.backtest_status || g2Fallback || "").toUpperCase();
-  const backtestDone = backtestStatus === "PASS" || backtestStatus === "FAIL" || backtestStatus === "EXECUTED";
-  const backtestLabel = backtestDone
-    ? (backtestStatus === "PASS" ? "Backtest passed" : "Backtest executed (not passed)")
-    : "Backtest evidence not available yet.";
-  // UI-28: MTC_V2 Parity Test step — derive from parity proof data
-  const parityProof = row.pinets_parity_proof || {};
-  const parityHasResult = parityProof.overall_status || parityProof.match_pct != null;
-  const parityPassed = String(parityProof.overall_status || "").toUpperCase() === "PASS";
-  let parityStatus, parityNote;
-  if (parityHasResult) {
-    parityStatus = parityPassed ? "done" : "active";
-    parityNote = parityPassed
-      ? `Parity test passed${parityProof.match_pct != null ? " (" + parityProof.match_pct + "% match)" : ""}.`
-      : `Parity test run — ${statusText(parityProof.overall_status || "incomplete")}.`;
-  } else {
-    parityStatus = "pending";
-    parityNote = "Pending — not run. PineTS/Python parity test has not been executed for this strategy.";
-  }
-  const base = [
-    ["Discovered", "done", "Source row exists in the dashboard snapshot."],
-    ["Source checked", auditRow && auditRow.has_source_url_transcript ? "done" : "active", auditRow && auditRow.has_source_url_transcript ? "Source or transcript linked." : "Source material is incomplete."],
-    ["Rules extracted", auditRow && auditRow.has_deterministic_rules ? "done" : "active", auditRow && auditRow.has_deterministic_rules ? "Deterministic rules detected." : "Exact rules are still missing."],
-    ["Testability confirmed", auditRow && auditRow.eligible_for_backtest ? "done" : "pending", auditRow && auditRow.eligible_for_backtest ? "Eligible for backtest." : "Blocked before backtest."],
-  ];
-  const stageMap = row.stages || {};
-  const late = [
-    ["Backtested", backtestDone ? "done" : "pending", backtestLabel],
-    ["MTC_V2 Parity Test", parityStatus, parityNote],
-    ["Promotion review", stageMap.promoted && stageMap.promoted.status === "done" ? "done" : "pending", stageMap.promoted && stageMap.promoted.metric || "Promotion packet not ready."],
-    ["Paper-trade candidate", stageMap.paper_trade && stageMap.paper_trade.status === "done" ? "done" : "pending", stageMap.paper_trade && stageMap.paper_trade.metric || "Forward evidence not collected."],
-    ["Integrated", stageMap.integrated && stageMap.integrated.status === "done" ? "done" : "pending", stageMap.integrated && stageMap.integrated.metric || "Not integrated."],
-  ];
-  return `
-    <section class="terminal-section">
-      <div class="terminal-section-head"><h4>Review Journey</h4>
-        <span class="provenance-tag">source: canonical + pipeline stages</span>
-      </div>
-      <ol class="journey-list">
-        ${base.concat(late).map(([label, status, note]) => `
-          <li class="journey-${escapeHtml(status)}">
-            <span>${escapeHtml(label)}</span>
-            <strong>${escapeHtml(statusText(status))}</strong>
-            <em>${escapeHtml(note)}</em>
-          </li>
-        `).join("")}
-      </ol>
-    </section>
-  `;
-}
-
-function renderTradingRules(row, auditRow, producerSpec, description, sourceRecord) {
-  const rows = [
-    ["Market / bias", row.symbol ? marketLabel(row.symbol) : "Not defined yet"],
-    ["Expected market condition", inferMarketCondition([row.id, description.family, producerSpec.title].join(" ")) || "Unknown"],
-    ["Strategy method", inferMethod([row.id, description.family, producerSpec.title].join(" ")) || "Unknown"],
-    ["Entry trigger", firstEnglishText(description.entry, producerSpec.entry_pseudo, sourceRecord.rules_text) || "Not defined yet"],
-    ["Entry filters", listOrMissing(producerSpec.rules_high_confidence)],
-    ["Exit logic", firstEnglishText(description.exit, producerSpec.exit_pseudo) || "Not defined yet"],
-    ["Stop-loss rule", firstEnglishText(producerSpec.stop_loss, producerSpec.stop_loss_rule) || "Not defined yet"],
-    ["Take-profit rule", firstEnglishText(producerSpec.take_profit, producerSpec.take_profit_rule) || "Not defined yet"],
-    ["Trailing stop", firstEnglishText(producerSpec.trailing_stop, producerSpec.trailing_stop_rule) || "Not defined yet"],
-    ["Breakeven logic", firstEnglishText(producerSpec.breakeven, producerSpec.breakeven_rule) || "Not defined yet"],
-    ["Risk management", firstEnglishText(producerSpec.risk_management) || "Not defined yet"],
-    ["Avoid trading when", firstEnglishText(producerSpec.avoid_trading_when) || "Not defined yet"],
-    ["Repaint/lookahead notes", firstEnglishText(
-      row.repaint_risk_notes, row.lookahead_risk_notes,
-      auditRow && auditRow.repaint_risk_notes, auditRow && auditRow.lookahead_risk_notes,
-      producerSpec.repaint_risk_notes, producerSpec.lookahead_risk_notes,
-      row.repaint_risk && `Repaint: ${row.repaint_risk}`,
-      row.lookahead_risk && `Lookahead: ${row.lookahead_risk}`,
-      auditRow && auditRow.repaint_risk && `Repaint: ${auditRow.repaint_risk}`,
-      auditRow && auditRow.lookahead_risk && `Lookahead: ${auditRow.lookahead_risk}`
-    ) || "Not evaluated yet"],
-    ["Assumptions", firstEnglishText(row.notes, producerSpec.assumptions) || "Not defined yet"],
-  ];
-  // UI-30: count undefined fields — systemic gap banner when most fields missing
-  const missingCount = rows.filter(([, v]) => v === "Not defined yet" || v === "Not evaluated yet").length;
-  const totalFields = rows.length;
-  const majorGap = missingCount >= Math.ceil(totalFields * 0.5);
-  const gapBanner = majorGap
-    ? `<div class="systemic-gap-banner"><strong>⚠ Producer spec incomplete</strong> — ${missingCount}/${totalFields} rule fields are not defined yet. This is a data-fill gap, not a dashboard bug. Fill via the producer spec or intake form. <span class="provenance-tag">source: producer_spec</span></div>`
-    : "";
-  return `
-    <section class="terminal-section">
-      <div class="terminal-section-head">
-        <h4>Trading Rules</h4>
-        <span class="terminal-badge ${majorGap ? "amber" : "muted"}">${majorGap ? `${missingCount} fields missing` : "Fields visible"}</span>
-      </div>
-      ${gapBanner}
-      <table class="terminal-kv">${rows.map(([key, value]) => `
-        <tr class="${value === "Not defined yet" || value === "Not evaluated yet" ? "missing-row" : ""}">
-          <td>${escapeHtml(key)}</td>
-          <td title="${escapeHtml(tooltipFor(key))}">${escapeHtml(String(value))}</td>
-        </tr>
-      `).join("")}</table>
-    </section>
-  `;
-}
-
-function listOrMissing(value) {
-  if (Array.isArray(value) && value.length) return value.filter(Boolean).join(" | ");
-  return "Not defined yet";
-}
-
-function tooltipFor(label) {
-  const tips = {
-    'Repaint/lookahead notes': 'Assessed during parity review phase — not yet evaluated for this strategy.',
-    'Market / bias': 'No symbol assigned yet. Set via producer spec or intake routing.',
-    'Entry trigger': 'Not yet extracted from the source intake. Fill in producer spec.',
-    'Exit logic': 'Not yet extracted from the source intake. Fill in producer spec.',
-    'Stop-loss rule': 'Not yet defined in producer spec.',
-    'Take-profit rule': 'Not yet defined in producer spec.',
-  };
-  return tips[label] || '';
-}
-
-function renderBacktestEvidence(row, auditRow, metrics, scorecardV2, canonical) {
-  const can = canonical || row.canonical || (auditRow && auditRow.canonical) || {};
-  const g2 = scorecardV2 ? (scorecardV2.gate2 || {}) : {};
-  const hasGate2 = g2.status || g2.score != null;
-  // Gate 2 sub-score metric extraction
-  const subScores = Array.isArray(g2.sub_scores) ? g2.sub_scores : [];
-  const findMetric = (...names) => {
-    for (const name of names) {
-      const match = subScores.find((s) => String(s.source_metric || s.criterion || "").toLowerCase().includes(name));
-      if (match && match.value != null) return String(Number(match.value).toFixed(2));
-    }
-    return null;
-  };
-  // Prefer gate2 sub_scores, fall back to legacy metrics
-  const g2Score = can.gate2_score != null ? `${can.gate2_score}/${g2.max || 100}` : (g2.score != null ? `${g2.score}/${g2.max || 100}` : null);
-  const g2Status = can.gate2_status || g2.status || null;
-  const metricRows = [
-    g2Score ? ["Gate 2 score", g2Score] : null,
-    g2Status ? ["Gate 2 status", statusText(g2Status)] : null,
-    ["Profit factor", findMetric("profit_factor", "pf") || (metrics.profit_factor != null ? String(metrics.profit_factor) : null)],
-    ["Total trades", findMetric("trades", "num_trades") || (metrics.trades != null ? String(metrics.trades) : null)],
-    ["CPCV", findMetric("cpcv")],
-    ["Max drawdown", findMetric("max_drawdown", "drawdown") || (metrics.max_drawdown_pct != null ? `${Number(metrics.max_drawdown_pct).toFixed(1)}%` : null)],
-    ["Net return %", findMetric("net_return", "return_pct") || (metrics.return_pct_compound != null ? `${Number(metrics.return_pct_compound).toFixed(2)}%` : null)],
-    ["Win rate %", findMetric("win_rate") || (metrics.win_rate != null ? `${(Number(metrics.win_rate) * 100).toFixed(1)}%` : null)],
-    ["Direction", metrics.direction || null],
-  ].filter((pair) => pair && pair[1] != null);
-  const hasEvidence = metricRows.length > 0 || (row.equity_curve || []).length > 1;
-  if (hasEvidence) {
-    const statusBadge = g2Status
-      ? `<span class="terminal-badge ${g2Status === "PASS" ? "ok" : g2Status === "FAIL" ? "bad" : "neutral"}">${escapeHtml(statusText(g2Status))}</span>`
-      : `<span class="terminal-badge amber">Evidence present</span>`;
-    return `
-      <section class="terminal-section">
-        <div class="terminal-section-head">
-          <h4>Backtest Evidence</h4>
-          ${statusBadge}
-        </div>
-        <p class="muted-terminal">Unified backtest evidence from scorecard_v2 Gate 2 and legacy metrics. <span class="provenance-tag">source: scorecard_v2 + canonical</span></p>
-        ${metricRows.length ? `<div class="evidence-card-grid">${metricRows.map(([key, value]) => `
-          <div class="evidence-card">
-            <span>${escapeHtml(key)}</span>
-            <strong>${escapeHtml(String(value))}</strong>
-          </div>`).join("")}</div>` : ""}
-        ${renderSparkline(row.equity_curve || [])}
-      </section>
-    `;
-  }
-  const reason = can.backtest_status
-    ? `Canonical backtest status: ${statusText(can.backtest_status)}.`
-    : "Backtest has not been executed for this strategy yet.";
-  const checklist = ["Exact entry rule", "Exact exit rule", "Stop-loss rule", "Take-profit rule", "Repaint/lookahead verification", "Test market, symbol, timeframe, date window"];
-  return `
-    <section class="terminal-section">
-      <div class="terminal-section-head"><h4>Backtest Evidence</h4>
-        <span class="provenance-tag">source: canonical</span>
-      </div>
-      <p><strong>Backtest evidence is not available yet.</strong></p>
-      <p class="muted-terminal">${escapeHtml(reason)}</p>
-      <ul class="checklist">${checklist.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
-    </section>
-  `;
-}
-
-function renderSalvageableIdeas(row, auditRow, quantlens) {
-  const ideas = quantlens && Array.isArray(quantlens.salvageable_ideas) ? quantlens.salvageable_ideas : [];
-  const sectionCaption = `Salvageable ideas are strategy components or sub-patterns that the Gemini Pre-Screen flagged as potentially reusable in other contexts, even though the full strategy was not adopted or scored poorly. These are parked for later reuse — they are not active strategies.`;
-  if (!quantlens) {
-    return `
-    <section class="terminal-section">
-      <div class="terminal-section-head"><h4>Salvageable Ideas</h4>
-        <span class="terminal-badge muted">Not in Gemini Pre-Screen scope</span></div>
-      <p class="muted-terminal" title="${escapeHtml(sectionCaption)}">The Gemini Pre-Screen is a separate AI pre-screen. This strategy is not in scope — it may have entered the pipeline before the pre-screen was active, or it is still in early intake. No salvageable ideas are available. <span class="provenance-tag">source: gemini pre-screen</span></p>
-    </section>`;
-  }
-  if (!ideas.length) {
-    return `
-    <section class="terminal-section">
-      <div class="terminal-section-head"><h4>Salvageable Ideas</h4>
-        <span class="terminal-badge muted">None flagged</span></div>
-      <p class="muted-terminal" title="${escapeHtml(sectionCaption)}">The Gemini Pre-Screen reviewed this candidate but flagged no reusable component idea. This does not affect gate scoring.</p>
-    </section>`;
-  }
-  return `
-    <section class="terminal-section">
-      <div class="terminal-section-head"><h4>Salvageable Ideas</h4>
-        <span class="terminal-badge ok">${ideas.length} component${ideas.length === 1 ? "" : "s"}</span></div>
-      <p class="muted-terminal" title="${escapeHtml(sectionCaption)}">Reusable sub-patterns the Gemini Pre-Screen identified. These are parked for later reuse — not active strategies. <span class="provenance-tag">source: gemini pre-screen</span></p>
-      <div class="chip-row">
-        ${ideas.map((i) => `<span class="terminal-chip">${escapeHtml(i.label || i.category)}</span>`).join("")}
-      </div>
-    </section>`;
-}
-
-function renderSourceMaterial(auditRow, row, sourceRecord, sourceUrl, sourceUrlSource) {
-  const rows = [
-    ["Source title", cleanDisplayText(sourceRecord.title) || cleanDisplayText(row.name) || "Not defined yet"],
-    ["Source type", sourceUrl && sourceUrl.includes("youtu") ? "YouTube" : sourceUrl ? "External link" : "Not defined yet"],
-    ["Source link", sourceUrl || "Not defined yet"],
-    ["Transcript status", auditRow && auditRow.has_transcript ? "Transcript linked" : "Transcript not available"],
-    ["Source quality", auditRow && auditRow.source_quality ? friendlyStatus(auditRow.source_quality) : "Unknown"],
-    ["Source URL source", sourceUrlSource || "Not defined yet"],
-  ];
-  return `
-    <section class="terminal-section source-section">
-      <div class="terminal-section-head"><h4>Source Material</h4></div>
-      <table class="terminal-kv">${rows.map(([key, value]) => `
-        <tr><td>${escapeHtml(key)}</td><td>${sourceUrl && key === "Source link" ? `<a href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(sourceUrl)}</a>` : escapeHtml(String(value))}</td></tr>
-      `).join("")}</table>
-    </section>
-  `;
-}
-
-function renderTechnicalDetails({ row, auditRow, sourceRecord, scorecard, producerSpec, directionalResearch, paperTrade, parityProof }) {
-  const rawRows = [
-    ["Internal strategy ID", row.id || (auditRow && auditRow.id) || "--"],
-    ["Raw stage", row.current_stage_key || (auditRow && auditRow.current_stage_key) || "--"],
-    ["Raw audit status", auditRow && auditRow.audit_status || "--"],
-    ["Canonical ID", auditRow && auditRow.canonical_id || "--"],
-    ["Duplicate of", auditRow && auditRow.duplicate_of || "canonical"],
-    ["Transcript path", auditRow && auditRow.transcript_path || "--"],
-    ["Source file", sourceRecord && (sourceRecord.source_file || sourceRecord.relative_source_path) || "--"],
-  ];
-  return `
-    <details class="terminal-section technical-details">
-      <summary>Technical Details</summary>
-      <table class="terminal-kv">${rawRows.map(([key, value]) => `<tr><td>${escapeHtml(key)}</td><td>${escapeHtml(String(value))}</td></tr>`).join("")}</table>
-      ${scorecard ? `<h5>Legacy Composite Score</h5>${renderLegacyScorecard(scorecard)}` : ""}
-      ${producerSpec ? `<h5>Producer Spec</h5>${producerSpec}` : ""}
-      <h5>Directional Research</h5>${directionalResearch}
-      <h5>Paper-trade</h5>${paperTrade}
-      <h5>PineTS Parity Proof</h5>${parityProof}
-      <h5>Raw Source Record</h5>
-      <pre><code>${escapeHtml(JSON.stringify(sourceRecord || {}, null, 2))}</code></pre>
-    </details>
-  `;
-}
-
-function renderLegacyScorecard(scorecard) {
-  if (!scorecard) return "";
-  const rows = (scorecard.components || []).map((component) => `
-    <tr>
-      <td>${escapeHtml(component.label)}</td>
-      <td><strong>${escapeHtml(String(component.score ?? 0))}/${escapeHtml(String(component.max ?? 0))}</strong></td>
-      <td>${escapeHtml(component.note || "--")}</td>
-    </tr>
-  `).join("");
-  return `
-    <div class="detail-card scorecard-card legacy-scorecard">
-      <div class="scorecard-head">
-        <p><strong>Legacy composite score: ${escapeHtml(scorecard.label || `${scorecard.total || 0}/100`)}</strong></p>
-        <span class="badge ${scoreBand(scorecard.total)}">${escapeHtml((scorecard.band || scoreBand(scorecard.total)).toUpperCase())}</span>
-      </div>
-      <p class="muted-sub">${escapeHtml(scorecard.note || "Deprecated heuristic composite score; not the new gate scorecard.")}</p>
-      <table class="kv scorecard-table">${rows}</table>
-    </div>
-  `;
-}
-
-function renderForwardProgress(progress) {
-  if (!progress) {
-    return `<span class="muted-sub">No forward plan</span>`;
-  }
-  const target = progress.target_trades;
-  const actual = progress.actual_trades || 0;
-  const label = progress.label || (target ? `${actual}/${target} trades` : `${actual} forward trades`);
-  const pct = Number(progress.progress_pct || 0);
-  const cls = target && actual >= target ? "ok" : target ? "neutral" : "stage-pending";
-  return `
-    ${badge(label, cls)}
-    <div class="muted-sub">${escapeHtml(progress.status || "WAITING")}${target ? ` · ${escapeHtml(String(pct))}%` : ""}</div>
-  `;
-}
-
-function renderDirectionalResearch(detail) {
-  if (!detail) {
-    return `<p class="muted-sub">Direction research not available.</p>`;
-  }
-  const rows = [
-    ["Current direction", detail.current_direction],
-    ["Status", detail.status],
-    ["Short action", detail.next_action]
-  ].filter(([, value]) => value);
-  return `
-    <div class="detail-card">
-      <table class="kv">${rows.map(([key, value]) => `<tr><td>${escapeHtml(key)}</td><td><strong>${escapeHtml(String(value))}</strong></td></tr>`).join("")}</table>
-      ${detail.long_signal_definition ? `<p class="muted-sub"><strong>Long rule:</strong> ${escapeHtml(detail.long_signal_definition)}</p>` : ""}
-      ${detail.short_signal_definition ? `<p class="muted-sub"><strong>Short rule:</strong> ${escapeHtml(detail.short_signal_definition)}</p>` : ""}
-      ${detail.suggested_short_research_rule ? `<p class="research-note">${escapeHtml(detail.suggested_short_research_rule)}</p>` : ""}
-      ${detail.warning ? `<p class="muted-sub">${escapeHtml(detail.warning)}</p>` : ""}
-    </div>
-  `;
-}
-
-function renderProducerSpec(detail) {
-  if (!detail) {
-    return null;
-  }
-  const rows = [
-    ["Title", detail.title],
-    ["Kind", detail.kind],
-    ["Source URL", detail.source_url],
-    ["Source candidate", detail.source_candidate],
-    ["Param grid", detail.param_grid_size_planned],
-    ["Promoted at", detail.promoted_at],
-    ["Next action", detail.next_action],
-  ].filter(([, value]) => value !== null && value !== undefined && value !== "");
-  return `
-    <div class="detail-card">
-      <table class="kv">${rows.map(([key, value]) => `<tr><td>${escapeHtml(key)}</td><td><strong>${escapeHtml(String(value))}</strong></td></tr>`).join("")}</table>
-      ${detail.summary ? `<p class="muted-sub">${escapeHtml(detail.summary)}</p>` : ""}
-      ${detail.rules_high_confidence && detail.rules_high_confidence.length ? `<p class="muted-sub"><strong>High-confidence rules:</strong> ${escapeHtml(detail.rules_high_confidence.join(" | "))}</p>` : ""}
-      ${detail.entry_pseudo ? `<p class="muted-sub"><strong>Entry pseudo:</strong> ${escapeHtml(detail.entry_pseudo)}</p>` : ""}
-      ${detail.exit_pseudo ? `<p class="muted-sub"><strong>Exit pseudo:</strong> ${escapeHtml(detail.exit_pseudo)}</p>` : ""}
-      ${detail.fidelity_to_original_youtube_source ? `<p class="muted-sub"><strong>Fidelity:</strong> ${escapeHtml(String(detail.fidelity_to_original_youtube_source))}</p>` : ""}
-      ${detail.path ? `<p class="muted-sub"><code>${escapeHtml(detail.relative_path || detail.path)}</code></p>` : ""}
-    </div>
-  `;
-}
-
-function renderSparkline(points) {
-  const values = (points || []).map(Number).filter((value) => Number.isFinite(value));
-  if (values.length < 2) {
-    return `<p class="muted-sub">No trade equity series yet.</p>`;
-  }
-  const width = 320;
-  const height = 86;
-  const pad = 8;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const span = max - min || 1;
-  const step = (width - pad * 2) / Math.max(values.length - 1, 1);
-  const d = values.map((value, index) => {
-    const x = pad + index * step;
-    const y = height - pad - ((value - min) / span) * (height - pad * 2);
-    return `${index === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
-  }).join(" ");
-  const start = values[0];
-  const end = values[values.length - 1];
-  const cls = end >= start ? "spark-up" : "spark-down";
-  return `
-    <div class="sparkline ${cls}">
-      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Equity curve">
-        <path d="${d}"></path>
-      </svg>
-      <div class="spark-meta">
-        <span>${escapeHtml(start.toFixed(2))}</span>
-        <strong>${escapeHtml(end.toFixed(2))}</strong>
-      </div>
-    </div>
-  `;
-}
-
-function renderPaperTradeDetail(detail) {
-  if (!detail) {
-    return `<p class="muted-sub">No paper-trade plan yet.</p>`;
-  }
-  const results = detail.forward_results || null;
-  const metricRows = results ? Object.entries(results.metrics || {}).filter(([, value]) => value !== null && value !== undefined && value !== "") : [];
-  const planLines = (detail.plan_summary || []).map((line) => `<li>${escapeHtml(line)}</li>`).join("");
-  return `
-    <div class="detail-card">
-      <p>${badge(detail.status || "--")}</p>
-      ${detail.plan_title ? `<p><strong>${escapeHtml(detail.plan_title)}</strong></p>` : ""}
-      ${detail.plan_path ? `<p class="muted-sub"><code>${escapeHtml(detail.plan_path)}</code></p>` : ""}
-      ${planLines ? `<ul class="compact-list">${planLines}</ul>` : ""}
-      ${results ? `
-        <p class="muted-sub">Forward results: <code>${escapeHtml(results.file || results.path || "")}</code></p>
-        ${metricRows.length ? `<table class="kv">${metricRows.map(([key, value]) => `<tr><td>${escapeHtml(statusText(key))}</td><td><strong>${escapeHtml(String(value))}</strong></td></tr>`).join("")}</table>` : `<p class="muted-sub">Results file found, no standard metrics detected.</p>`}
-      ` : `<p class="muted-sub">${escapeHtml(detail.forward_status || "WAITING_FOR_FORWARD_RESULTS")}</p>`}
-    </div>
-  `;
-}
-
-function renderParityProof(proof) {
-  if (!proof) {
-    return `<p class="muted-sub">No PineTS parity result yet.</p>`;
-  }
-  const rows = Object.entries(proof.summary || {}).filter(([, value]) => value !== null && value !== undefined && value !== "");
-  return `
-    <div class="detail-card parity-proof">
-      <p>${badge(proof.status || "--")}</p>
-      ${proof.relative_path ? `<p class="muted-sub"><code>${escapeHtml(proof.relative_path)}</code></p>` : ""}
-      ${rows.length ? `<table class="kv">${rows.map(([key, value]) => `<tr><td>${escapeHtml(statusText(key))}</td><td><strong>${escapeHtml(String(value))}</strong></td></tr>`).join("")}</table>` : ""}
-      <pre><code>${escapeHtml(JSON.stringify(proof.raw || {}, null, 2))}</code></pre>
-    </div>
-  `;
-}
-
-function closeUnifiedStrategyDetail() {
-  state.selectedStrategyId = null;
-  syncUnifiedDetailVisibility();
-}
-
-function syncUnifiedDetailVisibility() {
-  const detailOpen = Boolean(state.selectedStrategyId);
-  $("#strategyDetail").hidden = !detailOpen;
-  // R2-25: the global acceptance banner is a system-wide summary — hide it on the detail page
-  // so it isn't misread as belonging to the open strategy.
-  const statusPanel = $("#mccStatusPanel");
-  if (statusPanel) statusPanel.hidden = detailOpen;
-  $("#pipelineIntro").hidden = detailOpen;
-  $("#pipelineSummary").hidden = detailOpen;
-  $("#pipelineTableWrap").hidden = detailOpen;
-  $("#auditIntro").hidden = detailOpen;
-  $("#auditSummary").hidden = detailOpen;
-  $("#auditRows").closest(".table-wrap").hidden = detailOpen;
-  $("#pipelineDetail").hidden = true;
-  $("#auditDetail").hidden = true;
-}
-function stageCell(cell) {
-  const status = cell.status || "pending";
-  const metric = cell.metric || "";
-  const clsMap = { done: "ok", active: "stage-active", pending: "stage-pending", na: "stage-na", fail: "bad" };
-  const iconMap = { done: "✓", active: "●", pending: "–", na: "·", fail: "✗" };
-  const cls = clsMap[status] || "stage-pending";
-  const icon = iconMap[status] || "–";
-  return `<td><span class="badge ${cls}">${icon}</span>${metric ? `<div class="muted-sub">${escapeHtml(metric)}</div>` : ""}</td>`;
-}
-
+/* ---------------- header ---------------- */
 function renderHeader() {
-  const status = state.snapshot.current_status || {};
-  const healthOk = Boolean(state.health.overall_ok);
-  $("#phaseTitle").textContent = status.phase || "MVP-1 Read-only";
-  $("#modeLabel").textContent = state.snapshot.mode || "read_only";
-  $("#healthPill").textContent = healthOk ? "healthy" : "attention";
-  $("#healthPill").className = `status-pill ${healthOk ? "ok" : "bad"}`;
-}
-
-function renderHome() {
-  const status = state.snapshot.current_status || {};
-  const tasks = state.snapshot.task_queue?.tasks || [];
-  const reports = state.snapshot.report_manifest?.reports || [];
-  const paritySummary = state.snapshot.parity_status?.summary || {};
-  const backtestSummary = state.snapshot.backtest_status?.summary || {};
-  const pineSummary = state.snapshot.pine_builder_status?.summary || {};
-  const optimizationSummary = state.snapshot.optimization_status?.summary || {};
-  const liveopsSummary = state.snapshot.liveops_status?.summary || {};
-  const mtcV2Summary = state.snapshot.mtc_v2_readiness?.summary || {};
-  const registry = state.snapshot.strategy_registry || {};
-  const strategyEntries = registryEntries(registry);
-  const lifecycleSummary = state.snapshot.task_lifecycle?.summary || {};
-
-  $("#healthValue").textContent = state.health.overall_ok ? "OK" : "Check";
-  $("#taskValue").textContent = String(tasks.length);
-  $("#waitingValue").textContent = String(lifecycleSummary.waiting_for_user ?? 0);
-  $("#staleValue").textContent = String(lifecycleSummary.stale_candidates ?? 0);
-  $("#parityValue").textContent = String(paritySummary.total_cases ?? 0);
-  $("#backtestValue").textContent = String(backtestSummary.total_runs ?? 0);
-  $("#strategyValue").textContent = String(strategyEntries.length);
-  $("#pineDraftValue").textContent = String(pineSummary.total_drafts ?? 0);
-  $("#optimizationValue").textContent = String(optimizationSummary.total_runs ?? 0);
-  $("#mtcV2Value").textContent = String(mtcV2Summary.ready_for_review ?? 0);
-  $("#liveopsValue").textContent = liveopsSummary.all_safety_gates_ok ? "Safe" : "Check";
-  $("#reportValue").textContent = String(reports.length);
-  $("#updatedAt").textContent = status.last_updated || "--";
-  $("#summaryText").textContent = status.summary || "--";
-
-  const checks = state.health.checks || {};
-  $("#statusRail").innerHTML = Object.entries(checks)
-    .map(([key, value]) => {
-      const ok = Boolean(value);
-      return `
-        <div class="rail-cell ${ok ? "ok" : "bad"}">
-          <strong>${escapeHtml(labelize(key))}</strong>
-          <span>${ok ? "OK" : "Check"}</span>
-        </div>
-      `;
-    })
-    .join("");
-}
-
-function researchValue(value) {
-  if (value === "review_needed") return `<span class="muted-sub">review_needed</span>`;
-  if (value === 'UNKNOWN_TITLE' || value === 'UNKNOWN') return `<span class="muted-sub">(no title)</span>`;
-  if (Array.isArray(value)) {
-    if (!value.length || (value.length === 1 && value[0] === "review_needed")) {
-      return `<span class="muted-sub">review_needed</span>`;
-    }
-    return value.map((v) => escapeHtml(String(v))).join(", ");
+  const bar = $("#topbar");
+  if (!bar) return;
+  const meta = NAV_BY_ID[state.currentRoute] || NAV_BY_ID.home;
+  let title = meta.title;
+  let sub = meta.sub;
+  if (state.currentRoute === "intelligence") {
+    const id = state.selectedStrategyId || defaultStrategyId();
+    sub = `${id || "No strategy selected"} · evaluation dossier`;
   }
-  if (value === null || value === undefined || value === "") return "--";
-  return escapeHtml(String(value));
-}
-
-function researchBool(value) {
-  if (value === true) return "✓";
-  if (value === false) return "·";
-  return `<span class="muted-sub">?</span>`;
-}
-
-function renderResearchLab() {
-  const research = state.snapshot.strategy_research || {};
-  const overview = research.overview || {};
-  const strategies = research.strategies || [];
-  const indicators = research.indicators || [];
-  const components = research.components || [];
-  const runs = research.research_runs || [];
-  const variants = research.variants || [];
-  const backtests = research.backtest_results || [];
-  const missing = research.missing_metadata || [];
-  const docs = research.workflow_docs || {};
-
-  $("#researchStrategyValue").textContent = String(overview.total_strategies ?? 0);
-  $("#researchIndicatorValue").textContent = String(overview.total_indicators ?? 0);
-  $("#researchComponentValue").textContent = String(overview.total_components ?? 0);
-  $("#researchTagValue").textContent = String(overview.total_tags ?? 0);
-  $("#researchRunValue").textContent = String(overview.total_research_runs ?? 0);
-  $("#researchVariantValue").textContent = String(overview.total_variants ?? 0);
-  $("#researchCandidateValue").textContent = String(overview.final_candidate_strategies ?? 0);
-  $("#researchRejectedValue").textContent = String(overview.rejected_variants ?? 0);
-  $("#researchReviewValue").textContent = String(overview.strategies_needing_review ?? 0);
-
-  // Strategy Library filters
-  const flat = (arr) => (Array.isArray(arr) ? arr : [arr]).filter((v) => v && v !== "review_needed");
-  populateSelect("#researchCategoryFilter", uniqueValues(strategies.map((s) => s.strategy_category)), "All");
-  populateSelect("#researchMethodFilter", uniqueValues(strategies.flatMap((s) => flat(s.method))), "All");
-  populateSelect("#researchRegimeFilter", uniqueValues(strategies.flatMap((s) => flat(s.expected_market_regime))), "All");
-  populateSelect("#researchTimeframeFilter", uniqueValues(strategies.map((s) => s.original_timeframe)), "All");
-  populateSelect("#researchTagFilter", uniqueValues(strategies.flatMap((s) => flat(s.tags))), "All");
-  populateSelect("#researchStatusFilter", uniqueValues(strategies.map((s) => s.maturity_level)), "All");
-
-  const term = ($("#researchStrategySearch").value || "").toLowerCase();
-  const cat = $("#researchCategoryFilter").value;
-  const method = $("#researchMethodFilter").value;
-  const regime = $("#researchRegimeFilter").value;
-  const tf = $("#researchTimeframeFilter").value;
-  const tag = $("#researchTagFilter").value;
-  const status = $("#researchStatusFilter").value;
-  const has = (field, val) => !val || (Array.isArray(field) ? field.includes(val) : field === val);
-
-  const filtered = strategies.filter((s) => {
-    if (cat && s.strategy_category !== cat) return false;
-    if (!has(s.method, method)) return false;
-    if (!has(s.expected_market_regime, regime)) return false;
-    if (tf && s.original_timeframe !== tf) return false;
-    if (!has(s.tags, tag)) return false;
-    if (status && s.maturity_level !== status) return false;
-    if (term && !JSON.stringify(s).toLowerCase().includes(term)) return false;
-    return true;
-  });
-
-  $("#researchStrategyCount").textContent = `${filtered.length}/${strategies.length}`;
-  $("#researchStrategyRows").innerHTML = filtered.length ? filtered.map((s) => `
-    <tr>
-      <td><code>${escapeHtml(formatStrategyId(s.strategy_id || ""))}</code><div class="muted-sub">${escapeHtml(s.strategy_name || "")}</div></td>
-      <td>${researchValue(s.strategy_category)}</td>
-      <td>${researchValue(s.method)}</td>
-      <td>${researchValue(s.expected_market_regime)}</td>
-      <td>${researchValue(s.original_timeframe)}</td>
-      <td>${researchValue(s.long_only_or_long_short)}</td>
-      <td>${researchValue(s.maturity_level)}</td>
-      <td>${researchValue(s.indicators_used)}</td>
-      <td>${researchValue(s.tags)}</td>
-      <td><code class="muted-sub">${escapeHtml(s.source_folder || "")}</code></td>
-    </tr>`).join("") : `<tr><td colspan="10" class="empty-cell">No strategies match</td></tr>`;
-
-  // Indicator Library
-  $("#researchIndicatorCount").textContent = `${indicators.length}`;
-  $("#researchIndicatorRows").innerHTML = indicators.length ? indicators.map((i) => `
-    <tr>
-      <td><code>${escapeHtml(i.indicator_id || "")}</code></td>
-      <td>${researchValue(i.primary_use)}</td>
-      <td>${researchValue(i.indicator_category)}</td>
-      <td>${researchBool(i.usable_as_entry_signal)}</td>
-      <td>${researchBool(i.usable_as_confirmation_filter)}</td>
-      <td>${researchBool(i.usable_as_regime_filter)}</td>
-      <td>${researchBool(i.usable_as_exit_signal)}</td>
-      <td>${researchBool(i.usable_as_stop_or_trailing_component)}</td>
-      <td>${researchValue(i.repaint_risk_notes)}</td>
-      <td>${researchValue(i.lookahead_risk_notes)}</td>
-      <td>${researchValue(i.tags)}</td>
-    </tr>`).join("") : `<tr><td colspan="11" class="empty-cell">No indicators</td></tr>`;
-
-  // Component Library grouped by type
-  $("#researchComponentCount").textContent = `${components.length}`;
-  const groups = {};
-  components.forEach((c) => { (groups[c.component_type] = groups[c.component_type] || []).push(c); });
-  $("#researchComponentGroups").innerHTML = Object.keys(groups).sort().map((type) => `
-    <div class="parity-cell">
-      <span>${escapeHtml(labelize(type))}</span>
-      <strong>${groups[type].length}</strong>
-      <div class="muted-sub">${groups[type].map((c) => escapeHtml(c.based_on_indicator || c.component_id)).filter((v, idx, a) => a.indexOf(v) === idx).join(", ")}</div>
-    </div>`).join("") || `<div class="parity-cell"><span>No components</span></div>`;
-
-  // Research Runs
-  $("#researchRunCount").textContent = `${runs.length} runs`;
-  $("#researchRunRows").innerHTML = runs.length ? runs.map((r) => `
-    <tr>
-      <td><code>${escapeHtml(r.research_run_id || "")}</code></td>
-      <td>${researchValue(r.date)}</td>
-      <td>${researchValue(r.status)}</td>
-      <td>${researchValue(r.objective)}</td>
-      <td>${researchValue(r.architecture_families_tested)}</td>
-      <td>${researchValue(r.variants_tested ?? r.number_of_variants)}</td>
-      <td>${researchValue(r.final_recommendation)}</td>
-      <td><code class="muted-sub">${escapeHtml(r.report_path || "")}</code></td>
-    </tr>`).join("") : `<tr><td colspan="8" class="empty-cell">No research runs yet — created when AI strategy research begins.</td></tr>`;
-
-  // Variant Log
-  $("#researchVariantCount").textContent = `${variants.length} variants`;
-  $("#researchVariantRows").innerHTML = variants.length ? variants.map((v) => `
-    <tr>
-      <td><code>${escapeHtml(v.variant_id || "")}</code></td>
-      <td>${researchValue(v.research_run_id)}</td>
-      <td>${researchValue(v.architecture_family)}</td>
-      <td>${researchValue(v.components_used)}</td>
-      <td>${researchValue(v.assets_tested)}</td>
-      <td>${researchValue(v.timeframe)}</td>
-      <td>${researchValue(v.net_profit)}</td>
-      <td>${researchValue(v.max_drawdown)}</td>
-      <td>${researchValue(v.profit_factor)}</td>
-      <td>${researchValue(v.win_rate)}</td>
-      <td>${researchValue(v.decision)}</td>
-      <td><code class="muted-sub">${escapeHtml(v.report_link_or_path || "")}</code></td>
-    </tr>`).join("") : `<tr><td colspan="12" class="empty-cell">No variants logged yet.</td></tr>`;
-
-  // Backtest Results
-  $("#researchBacktestCount").textContent = `${backtests.length} results`;
-  $("#researchBacktestRows").innerHTML = backtests.length ? backtests.map((b) => `
-    <tr>
-      <td>${researchValue(b.research_run_id)}</td>
-      <td>${researchValue(b.variant_id)}</td>
-      <td>${researchValue(b.asset)}</td>
-      <td>${researchValue(b.date_range)}</td>
-      <td>${researchValue(b.number_of_trades)}</td>
-      <td>${researchValue(b.net_profit)}</td>
-      <td>${researchValue(b.max_drawdown)}</td>
-      <td>${researchValue(b.profit_factor)}</td>
-      <td>${researchValue(b.win_rate)}</td>
-      <td>${researchValue(b.exposure)}</td>
-      <td>${researchValue(b.final_equity)}</td>
-      <td>${researchValue(b.notes)}</td>
-    </tr>`).join("") : `<tr><td colspan="12" class="empty-cell">No backtest results yet.</td></tr>`;
-
-  // Workflow & Rules
-  $("#researchWorkflowList").innerHTML = Object.entries(docs).map(([key, path]) => `
-    <div class="report-item">
-      <strong>${escapeHtml(labelize(key))}</strong>
-      <span class="muted-sub"><code>${escapeHtml(path)}</code></span>
-    </div>`).join("");
-
-  // Triage Worklist
-  const triage = research.triage_candidates || [];
-  const tsum = research.triage_summary || {};
-  $("#researchTriageValue").textContent = String(tsum.total ?? triage.length);
-  $("#researchTriageTranscriptValue").textContent = String(tsum.with_transcript ?? 0);
-  $("#researchRetriageValue").textContent = String(tsum.eligible_for_retriage ?? 0);
-  populateSelect("#researchTriageQualityFilter", uniqueValues(triage.map((c) => c.source_quality)), "All");
-  const tTerm = ($("#researchTriageSearch").value || "").toLowerCase();
-  const tQual = $("#researchTriageQualityFilter").value;
-  const tTrans = $("#researchTriageTranscriptFilter").value;
-  const tElig = $("#researchTriageEligibleFilter").value;
-  const triageFiltered = triage.filter((c) => {
-    if (tQual && c.source_quality !== tQual) return false;
-    if (tTrans === "yes" && !c.transcript_present) return false;
-    if (tTrans === "no" && c.transcript_present) return false;
-    if (tElig === "yes" && !c.eligible_for_retriage) return false;
-    if (tElig === "no" && c.eligible_for_retriage) return false;
-    if (tTerm && !JSON.stringify(c).toLowerCase().includes(tTerm)) return false;
-    return true;
-  });
-  $("#researchTriageCount").textContent = `${triageFiltered.length}/${triage.length}`;
-  $("#researchTriageRows").innerHTML = triageFiltered.length ? triageFiltered.map((c) => `
-    <tr>
-      <td><code>${escapeHtml(c.stg_code || "")}</code></td>
-      <td>${researchValue(c.title)}<div class="muted-sub"><code>${escapeHtml(c.candidate_id || "")}</code></div></td>
-      <td>${researchValue(c.source_quality)}</td>
-      <td>${researchValue(c.coverage_status_live)}</td>
-      <td>${c.transcript_present ? "✓" : "·"}</td>
-      <td>${c.eligible_for_retriage ? "✓" : "·"}</td>
-      <td>${c.source_url ? `<a href="${escapeHtml(c.source_url)}" target="_blank" rel="noopener">link</a>` : "--"}</td>
-      <td>${researchValue(c.recommended_next_step)}</td>
-    </tr>`).join("") : `<tr><td colspan="8" class="empty-cell">No triage candidates match</td></tr>`;
-
-  // Missing Metadata — A4 enhanced coverage analysis
-  const metaFields = ['trailing_logic', 'filters_used', 'known_strengths', 'known_weaknesses'];
-  const REVIEW_SENTINEL = 'review_needed';
-  const metaTotal = strategies.length;
-  const metaCoverage = {};
-  metaFields.forEach(function(f) {
-    metaCoverage[f] = strategies.filter(function(e) { return e[f] && e[f] !== REVIEW_SENTINEL; }).length;
-  });
-  const metaMissing = strategies.filter(function(e) {
-    return metaFields.some(function(f) { return !e[f] || e[f] === REVIEW_SENTINEL; });
-  });
-  const metaFullyFilled = metaTotal - metaMissing.length;
-
-  $("#researchMissingCount").textContent = metaMissing.length
-    ? metaMissing.length + " strategies need review"
-    : "All filled";
-
-  const metaPct = metaTotal ? Math.round((metaFullyFilled / metaTotal) * 100) : 0;
-  const coverageSummaryEl = $("#metadataCoverageSummary");
-  if (coverageSummaryEl) {
-    coverageSummaryEl.innerHTML =
-      '<div class="metadata-headline"><strong>Metadata Coverage: ' +
-      metaFullyFilled + '/' + metaTotal + ' strategies fully filled (' + metaPct + '%)</strong></div>';
-  }
-
-  const coverageBarsEl = $("#metadataCoverageBars");
-  if (coverageBarsEl) {
-    coverageBarsEl.innerHTML = metaFields.map(function(f) {
-      const filled = metaCoverage[f];
-      const ratio = metaTotal ? Math.round((filled / metaTotal) * 100) : 0;
-      return '<div class="metadata-bar-row">' +
-        '<code>' + escapeHtml(f) + '</code>' +
-        '<div class="metadata-bar-track"><div class="metadata-bar-fill" style="width:' + ratio + '%"></div></div>' +
-        '<span>' + filled + '/' + metaTotal + '</span></div>';
-    }).join("");
-  }
-
-  const allFilledEl = $("#metadataAllFilled");
-  if (allFilledEl) { allFilledEl.hidden = metaMissing.length > 0; }
-
-  if (metaMissing.length) {
-    $("#researchMissingRows").innerHTML = metaMissing.map(function(s) {
-      const cells = metaFields.map(function(f) {
-        const val = s[f];
-        const isFilled = val && val !== REVIEW_SENTINEL;
-        return '<td class="' + (isFilled ? 'meta-ok' : 'meta-warn') + '">' + (isFilled ? '\u2713' : '\u26a0 missing') + '</td>';
-      }).join("");
-      return '<tr><td><code>' + escapeHtml(s.strategy_id || "") + '</code>' +
-        '<div class="muted-sub">' + escapeHtml(s.strategy_name || "") + '</div></td>' +
-        cells + '</tr>';
-    }).join("");
-  } else {
-    $("#researchMissingRows").innerHTML = '<tr><td colspan="5" class="empty-cell">No missing metadata \ud83c\udf89</td></tr>';
-  }
-}
-
-function renderTasks() {
-  const tasks = state.snapshot.task_queue?.tasks || [];
-  const lifecycle = state.snapshot.task_lifecycle || {};
-  const lifecycleSummary = lifecycle.summary || {};
-  renderTaskLifecycleGrid(lifecycleSummary);
-  populateSelect("#taskStatusFilter", uniqueValues(tasks.map((task) => task.status)), "All");
-  const filtered = filterTasks(tasks);
-  $("#taskCount").textContent = `${filtered.length}/${tasks.length} ${tasks.length === 1 ? "task" : "tasks"}`;
-  if (!filtered.length) {
-    $("#taskRows").innerHTML = `<tr><td colspan="6" class="empty-cell">No tasks match</td></tr>`;
-    return;
-  }
-  const taskFlags = lifecycle.task_flags || {};
-  $("#taskRows").innerHTML = filtered.map((task) => `
-    <tr>
-      <td><code>${escapeHtml(task.id || "--")}</code></td>
-      <td>${escapeHtml(task.title || "--")}</td>
-      <td>${badge(task.status || "--")}</td>
-      <td>${escapeHtml(task.phase || "--")}</td>
-      <td>${renderFlags(taskFlags[task.id] || [])}</td>
-      <td>${task.report_path ? reportButton(task.report_path) : "--"}</td>
-    </tr>
-  `).join("");
-}
-
-function renderTaskLifecycleGrid(summary) {
-  const byStatus = summary.by_status || {};
-  const entries = [
-    ["Total", summary.total],
-    ["Waiting", summary.waiting_for_user],
-    ["Stale candidates", summary.stale_candidates],
-    ["Ready", byStatus.READY || 0],
-    ["In progress", byStatus.IN_PROGRESS || 0],
-    ["Done", byStatus.DONE || 0]
-  ];
-  $("#taskLifecycleGrid").innerHTML = entries.map(([label, value]) => `
-    <div class="parity-cell">
-      <span>${escapeHtml(label)}</span>
-      <strong>${Number(value || 0)}</strong>
-    </div>
-  `).join("");
-}
-
-function renderParity() {
-  const parity = state.snapshot.parity_status || {};
-  const summary = parity.summary || {};
-  $("#paritySource").textContent = parity.source || "--";
-  const entries = [
-    ["Total", summary.total_cases],
-    ["Runnable", summary.runnable_cases],
-    ["Overall pass", summary.overall_pass],
-    ["Failed", summary.failed],
-    ["Needs export", summary.needs_user_export],
-    ["TradingView pass", summary.tradingview_pass],
-    ["Python pass", summary.python_pass],
-    ["PineTS pass", summary.pinets_pass]
-  ];
-  $("#parityGrid").innerHTML = entries.map(([label, value]) => `
-    <div class="parity-cell">
-      <span>${escapeHtml(label)}</span>
-      <strong>${Number(value || 0)}</strong>
-    </div>
-  `).join("");
-}
-
-function renderBacktest() {
-  const backtest = state.snapshot.backtest_status || {};
-  const summary = backtest.summary || {};
-  const runs = backtest.runs || [];
-  $("#backtestSource").textContent = backtest.source || "--";
-  const entries = [
-    ["Total runs", summary.total_runs],
-    ["Failed runs", summary.failed_runs],
-    ["Last run", summary.last_run_id || "--"],
-    ["Last successful", summary.last_successful_run || "--"]
-  ];
-  $("#backtestGrid").innerHTML = entries.map(([label, value]) => `
-    <div class="parity-cell">
-      <span>${escapeHtml(label)}</span>
-      <strong>${escapeHtml(value ?? 0)}</strong>
-    </div>
-  `).join("");
-  const overnightEl = $("#overnightRunnerStatus");
-  if (overnightEl) {
-    overnightEl.innerHTML = renderOvernightRunnerStatus(
-      (state.snapshot.overnight_heartbeat) || null
-    );
-  }
-  if (!runs.length) {
-    $("#backtestRows").innerHTML = `<tr><td colspan="5" class="empty-cell">No backtest runs yet</td></tr>`;
-    $("#backtestRunDetail").innerHTML = "";
-    return;
-  }
-  $("#backtestRows").innerHTML = runs.map((run) => `
-    <tr class="row-click ${state.selectedBacktestRunId === (run.run_id || run.id) ? "is-selected" : ""}"
-        data-run-id="${escapeHtml(run.run_id || run.id || "")}" title="Open night-run detail">
-      <td><code>${escapeHtml(run.run_id || run.id || "--")}</code></td>
-      <td>${badge(run.status || "--")}</td>
-      <td>${escapeHtml(run.symbol || run.ticker || "--")}</td>
-      <td>${escapeHtml(run.timeframe || "--")}</td>
-      <td>${run.report_path ? reportButton(run.report_path) : "--"}</td>
-    </tr>
-  `).join("");
-  const tbody = $("#backtestRows");
-  if (tbody && !tbody.dataset.bound) {
-    tbody.dataset.bound = "1";
-    tbody.addEventListener("click", (event) => {
-      if (event.target.closest("[data-report-path]")) return;
-      const tr = event.target.closest("tr[data-run-id]");
-      if (tr) {
-        state.selectedBacktestRunId = tr.dataset.runId;
-        renderBacktest();
-      }
-    });
-  }
-  const selected = runs.find((run) => (run.run_id || run.id) === state.selectedBacktestRunId) || null;
-  const detailEl = $("#backtestRunDetail");
-  if (detailEl) detailEl.innerHTML = selected ? renderNightRunDetail(selected) : "";
-}
-
-function renderRegistry() {
-  const registry = state.snapshot.strategy_registry || {};
-  const candidates = registry.candidates || [];
-  const strategies = registry.strategies || [];
-  const entries = registryEntries(registry);
-  $("#registryCount").textContent = `${entries.length} ${entries.length === 1 ? "entry" : "entries"}`;
-  const readyCount = entries.filter((entry) => String(entry.status || "").toUpperCase() === "READY").length;
-  const promotedCount = entries.filter((entry) => {
-    const status = String(entry.status || "").toUpperCase();
-    return status === "PROMOTED" || status.includes("PROMOTE") || entry.evidence_level === "promoted_to_parity";
-  }).length;
-  $("#registryGrid").innerHTML = [
-    ["Candidates", candidates.length],
-    ["Strategies", strategies.length],
-    ["Ready", readyCount],
-    ["Promoted", promotedCount]
-  ].map(([label, value]) => `
-    <div class="parity-cell">
-      <span>${escapeHtml(label)}</span>
-      <strong>${Number(value || 0)}</strong>
-    </div>
-  `).join("");
-  if (!entries.length) {
-    $("#registryRows").innerHTML = `<tr><td colspan="5" class="empty-cell">No strategy entries yet</td></tr>`;
-    return;
-  }
-  $("#registryRows").innerHTML = entries.map((entry) => `
-    <tr>
-      <td><code>${escapeHtml(formatStrategyId(entry.id || entry.strategy_id || entry.candidate_id || "--"))}</code></td>
-      <td>${escapeHtml(entry.name || entry.title || "--")}</td>
-      <td>${badge(entry.status || "--")}</td>
-      <td>${escapeHtml(entry.evidence_level || entry.evidence || "--")}</td>
-      <td>${escapeHtml(entry.notes || entry.summary || "--")}</td>
-    </tr>
-  `).join("");
-}
-
-function renderPineBuilder() {
-  const pine = state.snapshot.pine_builder_status || {};
-  const summary = pine.summary || {};
-  const drafts = pine.drafts || [];
-  $("#pineBuilderSource").textContent = pine.source || "--";
-  $("#pineBuilderGrid").innerHTML = [
-    ["Drafts", summary.total_drafts],
-    ["Compile pass", summary.compile_pass],
-    ["Waiting compile", summary.waiting_for_tradingview_compile],
-    ["Protected core", summary.protected_core_files],
-    ["Chart run pass", summary.chart_run_pass],
-    ["Supporting artifacts", summary.supporting_pine_artifacts]
-  ].map(([label, value]) => `
-    <div class="parity-cell">
-      <span>${escapeHtml(label)}</span>
-      <strong>${escapeHtml(value ?? 0)}</strong>
-    </div>
-  `).join("");
-  if (!drafts.length) {
-    $("#pineBuilderRows").innerHTML = `<tr><td colspan="5" class="empty-cell">No Pine review drafts yet</td></tr>`;
-    return;
-  }
-  $("#pineBuilderRows").innerHTML = drafts.map((draft) => `
-    <tr>
-      <td><code>${escapeHtml(draft.draft_id || draft.name || "--")}</code></td>
-      <td>${badge(draft.status || "--")}</td>
-      <td>${badge(draft.compile_status || "--")}</td>
-      <td>${escapeHtml(statusText(draft.promotion_gate || "--"))}</td>
-      <td><code>${escapeHtml(draft.relative_path || draft.source_path || "--")}</code></td>
-    </tr>
-  `).join("");
-}
-
-function renderOptimization() {
-  const optimization = state.snapshot.optimization_status || {};
-  const summary = optimization.summary || {};
-  const runs = optimization.runs || [];
-  const candidates = optimization.top_candidates || [];
-  const riskNotes = optimization.risk_notes || [];
-  $("#optimizationSource").textContent = optimization.source || "--";
-  $("#optimizationGrid").innerHTML = [
-    ["Runs", summary.total_runs],
-    ["Completed", summary.completed_runs],
-    ["Partial/check", summary.partial_or_check_runs],
-    ["Failed evals", summary.failed_evaluations],
-    ["Top candidates", summary.top_candidate_count],
-    ["Worker rec", summary.recommended_worker_count || "--"]
-  ].map(([label, value]) => `
-    <div class="parity-cell">
-      <span>${escapeHtml(label)}</span>
-      <strong>${escapeHtml(formatNumber(value ?? 0))}</strong>
-    </div>
-  `).join("");
-
-  if (!runs.length) {
-    $("#optimizationRows").innerHTML = `<tr><td colspan="5" class="empty-cell">No optimization runs yet</td></tr>`;
-  } else {
-    $("#optimizationRows").innerHTML = runs.map((run) => `
-      <tr>
-        <td><code>${escapeHtml(run.run_id || "--")}</code></td>
-        <td>${badge(run.status || "--")}</td>
-        <td>${escapeHtml(progressText(run))}</td>
-        <td>${escapeHtml(run.max_workers || run.worker_count || "--")}</td>
-        <td><code>${escapeHtml(run.report_path || run.relative_source_path || "--")}</code></td>
-      </tr>
-    `).join("");
-  }
-
-  $("#optimizationCandidateCount").textContent = `${candidates.length} ${candidates.length === 1 ? "candidate" : "candidates"}`;
-  if (!candidates.length) {
-    $("#optimizationCandidateRows").innerHTML = `<tr><td colspan="5" class="empty-cell">No ranked candidates yet</td></tr>`;
-  } else {
-    $("#optimizationCandidateRows").innerHTML = candidates.map((candidate) => `
-      <tr>
-        <td><code>${escapeHtml(candidate.candidate_id || candidate.parameter_hash || "--")}</code></td>
-        <td>${badge(candidate.status || "--")}</td>
-        <td>${escapeHtml(formatNumber(candidate.score ?? "--"))}</td>
-        <td>${escapeHtml(scopeText(candidate))}</td>
-        <td>${escapeHtml(candidate.param_preview || candidate.notes || "--")}</td>
-      </tr>
-    `).join("");
-  }
-
-  $("#optimizationRiskCount").textContent = `${riskNotes.length} ${riskNotes.length === 1 ? "note" : "notes"}`;
-  if (!riskNotes.length) {
-    $("#optimizationRiskList").innerHTML = `<div class="empty-state">No optimization risk notes yet</div>`;
-  } else {
-    $("#optimizationRiskList").innerHTML = riskNotes.map((note) => `
-      <article class="report-item">
-        <span>${escapeHtml(note.updated_at || "--")}</span>
-        <strong>${escapeHtml(note.title || "--")}</strong>
-        <code>${escapeHtml(note.relative_path || "--")}</code>
-      </article>
-    `).join("");
-  }
-}
-
-function renderLiveOps() {
-  const liveops = state.snapshot.liveops_status || {};
-  const summary = liveops.summary || {};
-  const gates = liveops.safety_gates || {};
-  const plans = liveops.paper_trade_plans || [];
-  $("#liveopsSource").textContent = liveops.source || "--";
-  $("#liveopsGrid").innerHTML = [
-    ["Mode", summary.mode || liveops.mode || "--"],
-    ["Dry-run", summary.dry_run ? "Yes" : "No"],
-    ["Live trading", summary.live_trading_enabled ? "Enabled" : "Disabled"],
-    ["Events", summary.event_count],
-    ["Paper plans", summary.paper_trade_plan_count],
-    ["Safety gates", summary.all_safety_gates_ok ? "OK" : "Check"]
-  ].map(([label, value]) => `
-    <div class="parity-cell">
-      <span>${escapeHtml(label)}</span>
-      <strong>${escapeHtml(value ?? 0)}</strong>
-    </div>
-  `).join("");
-
-  $("#liveopsGateRows").innerHTML = Object.entries(gates).map(([key, value]) => `
-    <tr>
-      <td>${escapeHtml(statusText(key))}</td>
-      <td>${value ? badge("OK", "ok") : badge("CHECK", "bad")}</td>
-    </tr>
-  `).join("");
-
-  $("#liveopsPlanCount").textContent = `${plans.length} ${plans.length === 1 ? "plan" : "plans"}`;
-  if (!plans.length) {
-    $("#liveopsPlanRows").innerHTML = `<tr><td colspan="4" class="empty-cell">No forward paper-trade plans yet</td></tr>`;
-    return;
-  }
-  $("#liveopsPlanRows").innerHTML = plans.map((plan) => `
-    <tr>
-      <td><code>${escapeHtml(plan.candidate_id || "--")}</code></td>
-      <td>${badge(plan.status || "--")}</td>
-      <td>${plan.webhook_enabled ? badge("ENABLED", "bad") : badge("DISABLED", "ok")}</td>
-      <td><code>${escapeHtml(plan.relative_path || plan.source_path || "--")}</code></td>
-    </tr>
-  `).join("");
-}
-
-function renderReports() {
-  const reports = state.snapshot.report_manifest?.reports || [];
-  populateSelect("#reportCategoryFilter", uniqueValues(reports.map((report) => report.category)), "All");
-  const filtered = filterReports(reports);
-  $("#reportCount").textContent = `${filtered.length}/${reports.length} ${reports.length === 1 ? "report" : "reports"}`;
-  if (!filtered.length) {
-    $("#reportList").innerHTML = `<div class="empty-state">No reports match</div>`;
-    return;
-  }
-  $("#reportList").innerHTML = filtered.map((report) => `
-    <article class="report-item ${state.selectedReportPath === report.path ? "is-selected" : ""}">
-      <span>${escapeHtml(report.category || "--")} / ${escapeHtml(report.report_id || "--")}</span>
-      <strong>${escapeHtml(report.title || "--")}</strong>
-      <code>${escapeHtml(report.path || "--")}</code>
-      <button type="button" data-report-path="${escapeHtml(report.path || "")}">View</button>
-    </article>
-  `).join("");
-  if (!state.selectedReportPath && reports[0]) {
-    loadReport(reports[0].path);
-  }
-}
-
-function renderDiagnostics() {
-  const diagnostics = state.snapshot.file_diagnostics || {};
-  const values = Object.entries(diagnostics);
-  const okCount = values.filter(([, item]) => item.ok).length;
-  $("#diagnosticsSummary").textContent = `${okCount}/${values.length} OK`;
-  $("#diagnosticRows").innerHTML = values.map(([key, item]) => `
-    <tr>
-      <td><code>${escapeHtml(item.path || key)}</code></td>
-      <td>${item.required ? "Yes" : "No"}</td>
-      <td>${booleanLabel(item.json_ok)}</td>
-      <td>${booleanLabel(item.schema_ok)}</td>
-      <td>${item.ok ? badge("OK", "ok") : badge("CHECK", "bad")}</td>
-    </tr>
-  `).join("");
-}
-
-function badge(text, forcedClass) {
-  const value = String(text);
-  const normalized = value.toUpperCase();
-  const isOk = ["DONE", "OK", "READY", "PASS", "CHART_RUN_PASS"].includes(normalized)
-    || normalized.endsWith("_PASS");
-  const isBad = normalized.includes("FAIL") || normalized.includes("ERROR") || normalized === "CHECK";
-  const cls = forcedClass || (isOk ? "ok" : isBad ? "bad" : "neutral");
-  return `<span class="badge ${cls}">${escapeHtml(statusText(value))}</span>`;
-}
-
-function renderScoreBadge(scorecard) {
-  if (scorecard === null || scorecard === undefined || scorecard === "") {
-    return badge("—", "neutral");
-  }
-  const card = typeof scorecard === "number"
-    ? { total: scorecard, label: `${scorecard}/100`, band: scoreBand(scorecard), note: "" }
-    : scorecard;
-  const total = Number(card.total ?? 0);
-  const cls = card.band === "high" ? "ok" : card.band === "medium" ? "neutral" : "bad";
-  return `<span class="badge ${cls}" title="${escapeHtml(card.note || 'Heuristic composite score')}" data-score="${escapeHtml(String(total))}">${escapeHtml(card.label || `${total}/100`)}</span>`;
-}
-
-function qualityBadge(value) {
-  const quality = String(value || "LOW").toUpperCase();
-  const classMap = { HIGH: "ok", MEDIUM: "neutral", PARENT: "neutral", LOW: "bad", REJECTED: "bad" };
-  return badge(quality, classMap[quality] || "neutral");
-}
-
-function statusText(value) {
-  return String(value).replaceAll("N_A", "N/A").replaceAll("_", " ");
-}
-
-// R2-11 / R2-19: turn raw gate metric keys (e.g. "intake.entry_pseudo_present",
-// "alert_adapter.tv_alert_json_convertible", "metrics.cpcv_pass_ratio") into
-// human-readable labels. One helper, reused by sub-scores AND missing-field lists.
-const GATE_FIELD_PREFIX = {
-  intake: "Intake", feasibility: "Feasibility", metrics: "Metric", benchmark: "Benchmark",
-  regime: "Regime", alert_adapter: "Alert", state_sync: "State sync", fail_safe: "Fail-safe",
-  monitoring: "Monitoring",
-};
-const GATE_FIELD_ACRONYMS = {
-  tv: "TradingView", json: "JSON", cpcv: "CPCV", pbo: "PBO", ema: "EMA", bh: "buy-hold",
-  dd: "drawdown", htf: "HTF", mtc: "MTC", wfo: "walk-forward", ret: "return", pct: "%",
-  reduceonly: "reduce-only", bot: "bot",
-};
-function humanizeMetric(key) {
-  const raw = String(key || "").trim();
-  if (!raw) return "—";
-  const dot = raw.indexOf(".");
-  const prefix = dot > 0 ? raw.slice(0, dot) : "";
-  const rest = (dot > 0 ? raw.slice(dot + 1) : raw).replace(/\./g, " ");
-  const words = rest.split("_").map((w) => GATE_FIELD_ACRONYMS[w] || w).join(" ").trim();
-  const label = words ? words.charAt(0).toUpperCase() + words.slice(1) : raw;
-  const group = GATE_FIELD_PREFIX[prefix];
-  return group ? `${label} (${group})` : label;
-}
-
-function renderFlags(flags) {
-  if (!flags.length) {
-    return `<span class="badge neutral">NONE</span>`;
-  }
-  return flags.map((flag) => badge(flag, flag === "STALE_CANDIDATE" ? "bad" : "neutral")).join(" ");
-}
-
-function renderActionCell(action, hint) {
-  const label = String(action || "—");
-  const text = statusText(label);
-  const description = String(hint || "").trim();
-  const tooltip = actionTooltip(text) || description;
-  if (!description && !tooltip) {
-    return `<span class="action-copy"><strong>${escapeHtml(text)}</strong></span>`;
-  }
-  return `
-    <span class="action-copy" title="${escapeHtml(tooltip || description)}">
-      <strong>${escapeHtml(text)}</strong>
-      <span>${escapeHtml(tooltip || description)}</span>
-    </span>
-  `;
-}
-
-function actionTooltip(text) {
-  const map = {
-    "Build promotion packet": "Assembles the strategy's evidence (scorecard, backtest, parity) into a package for production hand-off. Who: triggered by reviewer. When: after gates pass. This is an active review action — not an automatic night job.",
-    "Run backtest": "Runs a sandbox backtest on the candidate's deterministic rules. Requires explicit AI or human trigger.",
-    "Extract deterministic rules": "Turn the source into explicit entry/exit rules that can be tested mechanically.",
-    "Run PineTS parity": "Compare Python and Pine on the same data to confirm the signals match bar-for-bar.",
-    "Start forward paper-trade": "Begin a paper-trade run with live data but without risking capital.",
-    "Collect forward paper-trade results": "Keep recording forward trades until enough real-time evidence to judge the strategy.",
-    "Split into indicator cases": "Break a multi-signal pack into separate testable formulas before any backtest.",
-    "Resolve source/formula audit": "Verify the exact source, formula, repaint/lookahead behavior, and entry/exit rules.",
-    "Merge into canonical record": "This row duplicates another strategy; keep the canonical row and merge evidence there.",
-    "Source audit / park": "Hold the item until the source or formula is verified well enough to test safely.",
-  };
-  return map[text] || "";
-}
-
-function renderScorecard(scorecard) {
-  if (!scorecard) {
-    return null;
-  }
-  const rows = (scorecard.components || []).map((component) => `
-    <tr>
-      <td>${escapeHtml(component.label)}</td>
-      <td><strong>${escapeHtml(String(component.score ?? 0))}/${escapeHtml(String(component.max ?? 0))}</strong></td>
-      <td>${escapeHtml(component.note || "—")}</td>
-    </tr>
-  `).join("");
-  return `
-    <div class="detail-card scorecard-card">
-      <div class="scorecard-head">
-        <p><strong>${escapeHtml(scorecard.label || `${scorecard.total || 0}/100`)}</strong></p>
-        <span class="badge ${scoreBand(scorecard.total)}">${escapeHtml((scorecard.band || scoreBand(scorecard.total)).toUpperCase())}</span>
+  const healthy = state.health && state.health.overall_ok;
+  bar.innerHTML = `
+    <div>
+      <div class="topbar-title">
+        <h2>${esc(title)}</h2>
+        <span class="status-pill ${state.health ? (healthy ? "ok" : "bad") : "neutral"}">${state.health ? (healthy ? "System Healthy" : "Check Health") : "checking"}</span>
       </div>
-      <p class="muted-sub">${escapeHtml(scorecard.note || "Heuristic composite score for triage; not a profit forecast.")}</p>
-      <table class="kv scorecard-table">
-        ${rows}
-      </table>
+      <p class="topbar-sub">${esc(sub)}</p>
+    </div>
+    <div class="topbar-actions">
+      <span class="status-pill neutral">Local Engine: Idle</span>
+      <span class="status-pill neutral">Token Mode: Local / AI optional</span>
+      <button class="btn mini" type="button" onclick="loadDashboard(true)">Refresh Snapshot</button>
     </div>
   `;
 }
 
-function reportButton(path) {
-  return `
-    <div class="report-ref">
-      <code>${escapeHtml(path)}</code>
-      <button type="button" data-report-path="${escapeHtml(path)}">View</button>
-    </div>
-  `;
+/* ---------------- render dispatch ---------------- */
+function renderCurrentView() {
+  renderHeader();
+  const c = $("#viewContainer");
+  const renderers = {
+    home: renderHome,
+    pipeline: renderPipeline,
+    registry: renderRegistry,
+    intelligence: renderIntelligence,
+    "backtest-planner": renderPlanner,
+    "backtest-runs": renderRuns,
+    "result-explorer": renderResultExplorer,
+    leaderboard: renderLeaderboard,
+    "paper-trading": renderPaperTrading,
+    "ai-knowledge": renderKnowledge,
+    artifacts: renderArtifacts,
+    diagnostics: renderDiagnostics,
+    reports: renderReports,
+    "read-model": renderReadModel,
+  };
+  (renderers[state.currentRoute] || renderHome)(c);
 }
 
-function filterTasks(tasks) {
-  const search = ($("#taskSearch").value || "").trim().toLowerCase();
-  const status = $("#taskStatusFilter").value;
-  return tasks.filter((task) => {
-    const haystack = [task.id, task.title, task.phase, task.report_path].join(" ").toLowerCase();
-    return (!search || haystack.includes(search)) && (!status || task.status === status);
-  });
+function setNotice(msg) {
+  const n = $("#notice");
+  if (!n) return;
+  if (!msg) { n.hidden = true; n.textContent = ""; return; }
+  n.hidden = false; n.textContent = msg;
 }
 
-function filterPipelineRows(rows) {
-  const search = ($("#pipelineSearch").value || "").trim().toLowerCase();
-  const score = $("#pipelineScoreFilter").value;
-  const action = $("#pipelineActionFilter").value;
-  const gate = ($("#pipelineGateFilter") && $("#pipelineGateFilter").value) || "";
-  return rows.filter((row) => {
-    const haystack = [
-      row.id,
-      row.stg_code,
-      row.symbol,
-      row.timeframe,
-      row.next_action,
-      row.description && row.description.family,
-      row.description && row.description.what
-    ].join(" ").toLowerCase();
-    return (!search || haystack.includes(search))
-      && (!score || scoreBand(row.score) === score)
-      && (!action || row.next_action === action)
-      && (!gate || passesGateFilter(row, gate));
-  });
+function toast(msg) {
+  const t = $("#toast");
+  if (!t) return;
+  t.innerHTML = `<div class="tt">System Notification</div><div class="tm">${esc(msg)}</div>`;
+  t.hidden = false;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { t.hidden = true; }, 3800);
+}
+window.toast = toast;
+
+/* ---------------- generic helpers ---------------- */
+function esc(v) {
+  if (v === null || v === undefined) return "";
+  const d = document.createElement("div");
+  d.textContent = String(v);
+  return d.innerHTML;
+}
+function spaced(v) { return String(v || "").replace(/_/g, " "); }
+function titleCase(v) { return spaced(v).replace(/\b\w/g, (c) => c.toUpperCase()); }
+function num(v) { const n = Number(v); return Number.isFinite(n) ? n.toLocaleString() : String(v); }
+function baseId(v) { return String(v || "").split("|")[0]; }
+
+/* Explicit, contextual empty-state markup. */
+function missing(kind) { return `<span class="value-muted">${esc(kind)}</span>`; }
+const M = {
+  meta: "Missing source metadata",
+  artifact: "Artifact missing",
+  reader: "Reader not implemented",
+  snapshot: "Not present in current snapshot",
+  rulefreeze: "Pending rule freeze",
+  runplan: "Pending run_plan.json",
+  notextracted: "Not extracted from source",
+};
+
+function infoCard(label, value, opts = {}) {
+  const isEmpty = (value === null || value === undefined || value === "");
+  const v = isEmpty ? missing(opts.empty || M.snapshot) : esc(value);
+  return `<div class="info-card ${opts.span2 ? "span-2" : ""}${isEmpty ? " is-empty" : ""}"><span>${esc(label)}</span><strong>${v}</strong></div>`;
+}
+function defRow(k, v, empty) {
+  const val = (v === null || v === undefined || v === "") ? missing(empty || M.snapshot) : esc(v);
+  return `<div class="def-row"><span class="k">${esc(k)}</span><span class="v">${val}</span></div>`;
+}
+function emptyState(msg) { return `<div class="empty-state">${esc(msg)}</div>`; }
+
+function badge(text, cls = "neutral") { return `<span class="badge ${cls}">${esc(text)}</span>`; }
+
+function gateTone(status) {
+  const t = String(status || "").toLowerCase();
+  if (t.includes("ok") || t.includes("pass") || t.includes("certified") || t.includes("done")) return "ok";
+  if (t.includes("fail")) return "bad";
+  if (t.includes("incomplete") || t.includes("absent") || t.includes("locked") || t.includes("pending") || t.includes("review")) return "locked";
+  return "neutral";
+}
+function scoreClass(s) {
+  const n = Number(s);
+  if (!Number.isFinite(n)) return "na";
+  return n >= 85 ? "hi" : n >= 65 ? "mid" : "lo";
 }
 
-function filterAuditRows(rows) {
-  const search = ($("#auditSearch").value || "").trim().toLowerCase();
-  const strategy = $("#auditStrategyFilter").value;
-  const quality = $("#auditQualityFilter").value;
-  const rules = $("#auditRulesFilter").value;
-  const source = $("#auditSourceFilter").value;
-  const txVerdict = $("#auditTxVerdictFilter").value;
-  const eligible = $("#auditEligibleFilter").value;
-  const blocked = $("#auditBlockedFilter").value;
-  const canonical = $("#auditCanonicalFilter").value;
-  const step = $("#auditStepFilter").value;
-  const score = $("#auditScoreFilter").value;
-  const txRec = state.snapshot.transcript_reclassification || null;
-  const txByCid = {};
-  if (txRec && txRec.rows) {
-    for (const tr of txRec.rows) { txByCid[tr.candidate_id] = tr; }
-  }
-  return rows.filter((row) => {
-    const tx = txByCid[row.id] || null;
-    const rowTxVerdict = tx ? tx.verdict : (row.has_transcript && !tx ? "NO_SCAN" : "");
-    const haystack = [
-      row.id,
-      row.stg_code,
-      row.description_family,
-      row.description_hint,
-      row.source_url,
-      row.transcript_path,
-      row.blocked_reason,
-      row.canonical_id,
-      row.duplicate_of,
-      row.recommended_next_pipeline_step,
-      rowTxVerdict
-    ].join(" ").toLowerCase();
-    return (!search || haystack.includes(search))
-      && (!strategy || row.id === strategy)
-      && (!quality || row.source_quality === quality)
-      && (!rules || ((row.has_deterministic_rules ? "YES" : "NO") === rules))
-      && (!source || ((row.has_source_url_transcript ? "YES" : "NO") === source))
-      && (!txVerdict || rowTxVerdict === txVerdict)
-      && (!eligible || ((row.eligible_for_backtest ? "YES" : "NO") === eligible))
-      && (!blocked || row.blocked_reason === blocked)
-      && (!canonical || ((row.duplicate_of ? "DUPLICATE" : "CANONICAL") === canonical))
-      && (!step || row.recommended_next_pipeline_step === step)
-      && (!score || scoreBand(row.score) === score);
-  });
+/* ---------------- snapshot accessors ---------------- */
+function snap() { return state.snapshot || {}; }
+function pipelineRows() { const p = snap().candidate_pipeline || {}; return Array.isArray(p.rows) ? p.rows : []; }
+function registryEntries() {
+  const r = snap().strategy_registry || {};
+  return [].concat(Array.isArray(r.candidates) ? r.candidates : [], Array.isArray(r.strategies) ? r.strategies : []);
+}
+function scorecardCards() { const s = snap().scorecards || {}; return Array.isArray(s.cards) ? s.cards : []; }
+function backtestRuns() { const b = snap().backtest_status || {}; return Array.isArray(b.runs) ? b.runs : []; }
+function reportItems() { const m = snap().report_manifest || {}; return Array.isArray(m.reports) ? m.reports : []; }
+function diagnosticItems() {
+  const d = snap().file_diagnostics || {};
+  return Object.entries(d).map(([key, v]) => ({ key, ...(v || {}) }));
+}
+function nightArtifacts() { return snap().night_artifacts || {}; }
+function naList(key) { const v = nightArtifacts()[key]; return Array.isArray(v) ? v : []; }
+function profileRows() { return naList("profile_results"); }
+function profileRowsFor(profile) { return profileRows().filter((r) => r.profile === profile); }
+function profileRowsForStrategy(id) { const t = baseId(id); return profileRows().filter((r) => baseId(r.strategy_id) === t); }
+function usableRunPlans() { return naList("run_plans").filter((r) => r.state === "usable" || r.state === "incomplete"); }
+function runPlanForStrategy(id) {
+  const t = baseId(id);
+  return usableRunPlans().find((r) => {
+    const d = r.data || {};
+    const ids = Array.isArray(d.strategy_ids) ? d.strategy_ids : (d.strategy_id ? [d.strategy_id] : []);
+    return ids.some((x) => baseId(x) === t);
+  }) || null;
+}
+function usableRunStatus() { return naList("run_status").filter((r) => r.state === "usable" || r.state === "incomplete"); }
+function rowId(r) { return r.id || r.strategy_id || r.candidate_id || r.base_strategy_id || ""; }
+function findRow(id) {
+  const t = String(id || "");
+  const rows = pipelineRows();
+  return rows.find((r) => rowId(r) === t) || rows.find((r) => baseId(rowId(r)) === baseId(t)) || null;
+}
+function findRegistry(id) {
+  const t = baseId(id);
+  return registryEntries().find((r) => baseId(rowId(r)) === t) || null;
+}
+function cardsForStrategy(id) {
+  const t = baseId(id);
+  return scorecardCards().filter((c) => baseId(c.base_strategy_id || c.strategy_id) === t);
+}
+function defaultStrategyId() {
+  const r = pipelineRows()[0];
+  return r ? rowId(r) : (registryEntries()[0] ? rowId(registryEntries()[0]) : "");
 }
 
-function filterMtcV2Rows(rows) {
-  const search = ($("#mtcV2Search").value || "").trim().toLowerCase();
-  const status = $("#mtcV2StatusFilter").value;
-  const score = $("#mtcV2ScoreFilter").value;
-  return rows.filter((row) => {
-    const haystack = [
-      row.id,
-      row.stg_code,
-      row.status,
-      row.reason,
-      row.blocker,
-      row.stage,
-      row.next_action
-    ].join(" ").toLowerCase();
-    return (!search || haystack.includes(search))
-      && (!status || row.status === status)
-      && (!score || scoreBand(row.score) === score);
-  });
-}
-
-function filterReports(reports) {
-  const search = ($("#reportSearch").value || "").trim().toLowerCase();
-  const category = $("#reportCategoryFilter").value;
-  return reports.filter((report) => {
-    const haystack = [report.report_id, report.category, report.title, report.path, report.summary].join(" ").toLowerCase();
-    return (!search || haystack.includes(search)) && (!category || report.category === category);
-  });
-}
-
-function populateSelect(selector, values, allLabel) {
-  const select = $(selector);
-  const current = select.value;
-  const normalized = values.filter(Boolean).sort();
-  select.innerHTML = [`<option value="">${escapeHtml(allLabel)}</option>`]
-    .concat(normalized.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`))
-    .join("");
-  if (normalized.includes(current)) {
-    select.value = current;
-  }
-}
-
-function populateSelectPairs(selector, items, allLabel) {
-  const select = $(selector);
-  const current = select.value;
-  const seen = new Set();
-  const normalized = items.filter((item) => {
-    if (!item || !item.value || seen.has(item.value)) {
-      return false;
-    }
-    seen.add(item.value);
-    return true;
-  }).slice().sort((a, b) => a.label.localeCompare(b.label));
-  select.innerHTML = [`<option value="">${escapeHtml(allLabel)}</option>`]
-    .concat(normalized.map((item) => `<option value="${escapeHtml(item.value)}">${escapeHtml(item.label)}</option>`))
-    .join("");
-  if (normalized.some((item) => item.value === current)) {
-    select.value = current;
-  }
-}
-
-function populateAuditFilters(rows) {
-  populateSelectPairs(
-    "#auditStrategyFilter",
-    rows.map((row) => ({
-      value: row.id,
-      label: [row.stg_code || "", row.id].filter(Boolean).join(" · "),
-    })),
-    "All"
-  );
-  populateSelect("#auditQualityFilter", uniqueValues(rows.map((row) => row.source_quality)), "All");
-  populateSelect("#auditRulesFilter", uniqueValues(rows.map((row) => (row.has_deterministic_rules ? "YES" : "NO"))), "All");
-  populateSelect("#auditSourceFilter", uniqueValues(rows.map((row) => (row.has_source_url_transcript ? "YES" : "NO"))), "All");
-  const txRec = state.snapshot.transcript_reclassification || null;
-  const txByCid = {};
-  if (txRec && txRec.rows) {
-    for (const tr of txRec.rows) { txByCid[tr.candidate_id] = tr; }
-  }
-  const txOptions = rows.map((row) => {
-    const tx = txByCid[row.id];
-    return tx ? tx.verdict : (row.has_transcript && !tx ? "NO_SCAN" : "");
-  }).filter(Boolean);
-  populateSelect("#auditTxVerdictFilter", uniqueValues(txOptions), "All");
-  populateSelect("#auditEligibleFilter", uniqueValues(rows.map((row) => (row.eligible_for_backtest ? "YES" : "NO"))), "All");
-  populateSelect("#auditBlockedFilter", uniqueValues(rows.map((row) => row.blocked_reason)), "All");
-  populateSelect("#auditCanonicalFilter", uniqueValues(rows.map((row) => (row.duplicate_of ? "DUPLICATE" : "CANONICAL"))), "All");
-  populateSelect("#auditStepFilter", uniqueValues(rows.map((row) => row.recommended_next_pipeline_step)), "All");
-}
-
-function uniqueValues(values) {
-  return Array.from(new Set(values.filter(Boolean)));
-}
-
-function scoreBand(value) {
-  const score = Number(value || 0);
-  if (score >= 85) return "high";
-  if (score >= 65) return "medium";
-  return "low";
-}
-
-function registryEntries(registry) {
-  return []
-    .concat(registry.candidates || [])
-    .concat(registry.strategies || []);
-}
-
-function progressText(run) {
-  const completed = run.completed_evaluations ?? 0;
-  const planned = run.planned_evaluations ?? 0;
-  const failed = run.failed_evaluations ?? 0;
-  if (!planned && !completed && !failed) {
-    return "--";
-  }
-  return `${formatNumber(completed)}/${formatNumber(planned)} done, ${formatNumber(failed)} failed`;
-}
-
-function scopeText(candidate) {
-  return candidate.symbol || candidate.symbols_tested || candidate.timeframe || candidate.timeframes_tested || candidate.source_type || "--";
-}
-
-function formatNumber(value) {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return Number.isInteger(value) ? String(value) : value.toFixed(2);
-  }
-  return String(value);
-}
-
-function renderMarkdown(markdown) {
-  const lines = markdown.replace(/\r\n/g, "\n").split("\n");
-  const output = [];
-  let inCode = false;
-  let codeLines = [];
-
-  for (const line of lines) {
-    if (line.startsWith("```")) {
-      if (inCode) {
-        output.push(`<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`);
-        codeLines = [];
-        inCode = false;
-      } else {
-        inCode = true;
-      }
-      continue;
-    }
-
-    if (inCode) {
-      codeLines.push(line);
-      continue;
-    }
-
-    const heading = line.match(/^(#{1,4})\s+(.+)$/);
-    if (heading) {
-      const level = heading[1].length + 1;
-      output.push(`<h${level}>${formatInline(heading[2])}</h${level}>`);
-      continue;
-    }
-
-    if (line.startsWith("- ")) {
-      output.push(`<p class="md-list">${formatInline(line.slice(2))}</p>`);
-      continue;
-    }
-
-    if (!line.trim()) {
-      output.push(`<div class="md-gap"></div>`);
-      continue;
-    }
-
-    output.push(`<p>${formatInline(line)}</p>`);
-  }
-
-  if (inCode) {
-    output.push(`<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`);
-  }
-
-  return output.join("");
-}
-
-function formatInline(value) {
-  return escapeHtml(value).replaceAll(/`([^`]+)`/g, "<code>$1</code>");
-}
-
-function booleanLabel(value) {
-  if (value === null || value === undefined) {
-    return `<span class="badge neutral">N/A</span>`;
-  }
-  return value ? `<span class="badge ok">OK</span>` : `<span class="badge bad">CHECK</span>`;
-}
-
-function setNotice(message) {
-  const notice = $("#notice");
-  notice.hidden = !message;
-  notice.textContent = message || "";
-}
-
-function labelize(value) {
-  return value.replaceAll("_", " ");
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-// ── S2 A7 — Gate filter helpers ──────────────────────────────────────────────
-
-function scorecardV2ForRow(row) {
-  return (row && row.scorecard_v2) || null;
-}
-
-function passesGateFilter(row, filterVal) {
-  const sc2 = scorecardV2ForRow(row);
-  if (filterVal === "gate2_pass") {
-    if (!sc2) return false;
-    const g2 = sc2.gate2 || {};
-    return String(g2.status || "").toUpperCase() === "PASS" || g2.pass === true;
-  }
-  if (filterVal === "promotable_only") {
-    if (!sc2) return false;
-    const gs = sc2.gate_summary || {};
-    return isPromotable(gs);
-  }
-  if (filterVal === "gate3_incomplete") {
-    if (!sc2) return true;
-    const g3 = sc2.gate3 || {};
-    return String(g3.status || "").toUpperCase() !== "PASS" && g3.pass !== true;
-  }
-  if (filterVal === "blocked_gate3") {
-    if (!sc2) return false;
-    const blocking = (sc2.gate_summary || {}).blocking || [];
-    return blocking.some((b) => String(b).toLowerCase().includes("gate3"));
-  }
-  return true;
-}
-
-// ── S5 A8 — Global acceptance panel ─────────────────────────────────────────
-
-function renderAcceptancePanel() {
-  const el = $("#mccStatusPanel");
-  if (!el) return;
-  if (!state.snapshot) {
-    el.innerHTML = `<div class="mcc-status-panel"><div class="mcc-status-head"><span>MCC Acceptance Status</span><strong>Loading…</strong></div></div>`;
-    return;
-  }
-  const summary = buildAcceptanceSummary();
-  // R2-27: "scored" counted backtest runs (cards), not strategies — show both honestly.
-  const countLabel = `${summary.promotable} promotable · ${summary.strategies} strategies · ${summary.total} backtest runs`;
-  const countTitle = `Promotable = strategies that cleared all gates (Gate1, Gate1B, Gate2, Gate3). Strategies = distinct strategies with a Gate2 scorecard (${summary.strategies}). Backtest runs = total scored runs across all symbols/timeframes/sweeps (${summary.total}); one strategy has many runs.`;
-  el.innerHTML = `
-<div class="mcc-status-panel">
-  <div class="mcc-status-head">
-    <span>MCC Acceptance Status <em class="provenance-tag">(Global summary — all strategies)</em></span>
-    <strong title="${escapeHtml(countTitle)}">${escapeHtml(countLabel)}</strong>
-  </div>
-  ${summary.rows.length
-    ? `<table class="acceptance-table">
-        <thead><tr>
-          ${["strategy:Strategy", "symbol:Symbol", "tf:Tested TF", "gate2:Gate 2", "date:Accepted", "run:Run"]
-            .map((c) => { const [k, lbl] = c.split(":"); const s = state.acceptanceSort || {};
-              const arrow = s.key === k ? (s.dir < 0 ? " ▼" : " ▲") : "";
-              return `<th onclick="sortAcceptance('${k}')" title="Sort by ${lbl}">${escapeHtml(lbl)}${arrow}</th>`; }).join("")}
-        </tr></thead>
-        <tbody>${summary.rows.map(renderAcceptanceRow).join("")}</tbody>
-      </table>`
-    : `<div class="mcc-status-grid"><div class="mcc-status-row"><span>Promotable</span><strong>None yet</strong><em>No strategy has passed all gates</em></div></div>`
-  }
-</div>`;
-}
-
-// R2-26: client-side sort only (read-only — no server param, no state persisted server-side).
-function sortAcceptance(key) {
-  const s = state.acceptanceSort || { key: "", dir: 1 };
-  state.acceptanceSort = { key, dir: s.key === key ? -s.dir : 1 };
-  renderAcceptancePanel();
-}
-
-function buildAcceptanceSummary() {
-  const cards = (state.snapshot.scorecards && state.snapshot.scorecards.cards) || [];
-  const promotable = cards.filter((c) => {
-    const gs = c.gate_summary || {};
-    return isPromotable(gs);
-  });
-  // R2-27: distinct strategies (base id before the first "|"), not the raw card/run count.
-  const baseId = (c) => String(c.base_strategy_id || c.strategy_id || "").split("|")[0];
-  const strategies = new Set(cards.map(baseId).filter(Boolean)).size;
-  // R2-26: apply the current client-side sort to the promotable rows.
-  const sort = state.acceptanceSort;
-  if (sort && sort.key) {
-    promotable.sort((a, b) => {
-      const va = acceptanceCardFields(a)[sort.key] ?? "";
-      const vb = acceptanceCardFields(b)[sort.key] ?? "";
-      return String(va).localeCompare(String(vb), undefined, { numeric: true }) * sort.dir;
-    });
-  }
-  return { total: cards.length, promotable: promotable.length, strategies, rows: promotable };
-}
-
-function acceptanceCardFields(card) {
-  const id = card.strategy_id || card.base_strategy_id || "--";
-  const g2 = card.gate2 || {};
+/* Build a normalized strategy model from the pipeline row (richest source). */
+function strategyModel(id) {
+  const row = findRow(id) || {};
+  const reg = findRegistry(id) || {};
+  const v2 = row.scorecard_v2 || bestCardV2(id) || {};
+  const canonical = row.canonical || {};
+  const desc = row.description || {};
+  const statuses = (v2.gate_summary && v2.gate_summary.statuses) || {};
+  const detailCard = detailBestCard(id);
+  const detailEntry = state.detailCards[id];
+  const gate = (key, scoreObj) => {
+    const full = detailCard && detailCard[key];
+    return {
+      status: statuses[key] || "INCOMPLETE",
+      score: scoreObj && scoreObj.score != null ? scoreObj.score : null,
+      max: (scoreObj && scoreObj.max) || 100,
+      // Full sub_scores come from the lazy-loaded detail card; fall back to any inline
+      // sub_scores still present, else empty (UI shows loading/summary-only state).
+      sub: (full && full.sub_scores) || (scoreObj && scoreObj.sub_scores) || [],
+    };
+  };
   return {
-    id,
-    strategy: humanizeStrategyId(id),
-    symbol: card.symbol || "",
-    tf: (card.canonical && card.canonical.tested_tf) || card.timeframe || "",
-    gate2: g2.score != null ? `${g2.score}/${g2.max || 100}` : "—",
-    date: acceptanceDateLabel(card),
-    run: card.run_name || card.run_id || "",
+    id: rowId(row) || id,
+    baseId: baseId(rowId(row) || id),
+    row, reg, v2, canonical, desc,
+    displayName: row.strategy_display_name || v2.strategy_display_name || desc.family || reg.title || titleCase(baseId(id)),
+    thesis: desc.what || row.notes || M.notextracted,
+    family: desc.family || null,
+    sourceUrl: row.source_url || reg.source_url || null,
+    sourceTitle: reg.title || reg.name || row.name || null,
+    sourceType: reg.market_type || row.source_type || null,
+    transcript: reg.transcript_path || row.transcript_path || null,
+    marketCondition: row.market_condition || reg.market_condition || null,
+    definedTf: canonical.defined_tf || row.timeframe || reg.timeframe || null,
+    testedTf: canonical.tested_tf || null,
+    tfMismatch: !!canonical.tf_mismatch,
+    symbol: row.symbol || v2.symbol || canonical.symbol || null,
+    rules: { entry: desc.entry, exit: desc.exit, avoid: desc.avoid },
+    score: row.score != null ? row.score : (row.scorecard && row.scorecard.total),
+    scoreBand: (row.scorecard && row.scorecard.band) || row.score_band,
+    scorecard: row.scorecard || null,
+    classification: row.classification || {},
+    expert: row.expert_quantlens_verdict || null,
+    directional: row.directional_research || null,
+    candidateKind: Array.isArray(reg.candidate_kind) ? reg.candidate_kind : [],
+    nextAction: row.next_action || (row.classification && row.classification.next_action) || null,
+    blocking: Array.isArray(canonical.blocking) ? canonical.blocking : (v2.gate_summary && v2.gate_summary.blocking) || [],
+    promotable: !!(v2.gate_summary && v2.gate_summary.promotable),
+    casesCount: Array.isArray(row.scorecard_v2_cases) ? row.scorecard_v2_cases.length : (typeof row.scorecard_v2_cases === "number" ? row.scorecard_v2_cases : null),
+    gates: { g1: gate("gate1", v2.gate1), g1b: gate("gate1B", v2.gate1B), g2: gate("gate2", v2.gate2), g3: gate("gate3", v2.gate3) },
+    detailStatus: detailEntry ? detailEntry.status : null,
+    detailEmpty: !!(detailEntry && detailEntry.status === "empty"),
+    detailCard,
   };
 }
-
-function renderAcceptanceRow(card) {
-  const f = acceptanceCardFields(card);
-  return `
-<tr class="acceptance-row">
-  <td><strong title="${escapeHtml(f.id)}">${escapeHtml(f.strategy)}</strong></td>
-  <td>${escapeHtml(f.symbol || "—")}</td>
-  <td>${escapeHtml(f.tf || "—")}</td>
-  <td>${escapeHtml(f.gate2)}</td>
-  <td>${escapeHtml(f.date || "—")}</td>
-  <td>${escapeHtml(f.run || "—")}</td>
-</tr>`;
+function bestCardV2(id) {
+  const cs = cardsForStrategy(id);
+  return cs.slice().sort((a, b) => Number((b.gate2 && b.gate2.score) || 0) - Number((a.gate2 && a.gate2.score) || 0))[0] || null;
 }
 
-function acceptanceDateLabel(card) {
-  const run = String(card.run_name || card.run_id || '');
-  if (!run) return '';
-  // Extract date prefix if present
-  const m = run.match(/(\d{4}-\d{2}-\d{2})/);
-  if (m) return m[1];
-  // Strip known prefixes and return clean label
-  return run
-    .replace(/^(lifecycle_fixed_|heavy_tier_|remaining_|full_sweep_|sprint_|night_|batch_)/, '')
-    .slice(0, 24);
+/* ---------------- strategy-level aggregation (deduplicated by base id) ----------------
+   Strategy counts dedup by canonical base strategy id. Each metric is a per-id boolean
+   over the strategy universe, so no strategy-level count can exceed Total Strategies.
+   Raw scorecard/backtest row counts are computed separately and labelled "Rows". */
+function isPassStatus(s) {
+  const t = String(s || "").toLowerCase();
+  return t.includes("pass") || t === "ok" || t === "accepted" || t === "certified" || t === "done";
+}
+function isFailStatus(s) { return String(s || "").toLowerCase().includes("fail"); }
+
+/* Canonical strategy universe: pipeline rows (primary), registry candidates (fallback
+   only when pipeline rows are unavailable). Scorecard-only ids are NOT added here — they
+   are orphan evidence (see orphanScorecardIds). */
+function canonicalStrategyIds() {
+  const ids = new Set();
+  pipelineRows().forEach((r) => { const b = baseId(rowId(r)); if (b) ids.add(b); });
+  if (ids.size === 0) {
+    registryEntries().forEach((r) => { const b = baseId(rowId(r)); if (b) ids.add(b); });
+  }
+  return Array.from(ids);
+}
+/* Backwards-compatible alias; strategy-level metrics use the canonical universe. */
+function strategyUniverse() { return canonicalStrategyIds(); }
+/* Unique base ids present in scorecard cards but absent from the canonical universe. */
+function orphanScorecardIds() {
+  const canon = new Set(canonicalStrategyIds());
+  const orphans = new Set();
+  scorecardCards().forEach((c) => {
+    const b = baseId(c.base_strategy_id || c.strategy_id);
+    if (b && !canon.has(b)) orphans.add(b);
+  });
+  return Array.from(orphans);
+}
+/* Every known status for one gate across the pipeline-row scorecard_v2 + all scorecard cards. */
+function gateStatusesForStrategy(id, gateKey) {
+  const out = [];
+  const row = findRow(id);
+  const rowSt = row && row.scorecard_v2 && row.scorecard_v2.gate_summary && row.scorecard_v2.gate_summary.statuses;
+  if (rowSt && rowSt[gateKey] != null) out.push(rowSt[gateKey]);
+  cardsForStrategy(id).forEach((c) => {
+    const st = c.gate_summary && c.gate_summary.statuses && c.gate_summary.statuses[gateKey];
+    if (st != null) out.push(st);
+  });
+  return out;
+}
+function strategyGatePass(id, gateKey) { return gateStatusesForStrategy(id, gateKey).some(isPassStatus); }
+function strategyGate2Pass(id) {
+  if (strategyGatePass(id, "gate2")) return true;
+  return cardsForStrategy(id).some((c) => c.gate2 && Number(c.gate2.score) >= 80); // benchmark candidate
+}
+function strategyGate2Failed(id) {
+  const sts = gateStatusesForStrategy(id, "gate2");
+  if (!sts.length || strategyGate2Pass(id)) return false; // need evidence + no pass anywhere
+  return sts.some(isFailStatus);
+}
+function strategyPromotable(id) {
+  const row = findRow(id);
+  if (row && row.scorecard_v2 && row.scorecard_v2.gate_summary && row.scorecard_v2.gate_summary.promotable) return true;
+  return cardsForStrategy(id).some((c) => c.gate_summary && c.gate_summary.promotable);
+}
+function strategyNeedsAttention(id) {
+  const row = findRow(id);
+  if (!row) return false;
+  const t = [row.next_action, row.notes, JSON.stringify(row.canonical || {})].join(" ").toLowerCase();
+  return t.includes("pending") || t.includes("missing") || t.includes("fail") || t.includes("define") || t.includes("freeze");
+}
+function strategyMetrics() {
+  const ids = strategyUniverse();
+  const out = { total: ids.length, g1: 0, g1b: 0, g2: 0, g2f: 0, paper: 0, attn: 0 };
+  ids.forEach((id) => {
+    if (strategyGatePass(id, "gate1")) out.g1++;
+    if (strategyGatePass(id, "gate1B")) out.g1b++;
+    if (strategyGate2Pass(id)) out.g2++;
+    if (strategyGate2Failed(id)) out.g2f++;
+    if (strategyPromotable(id)) out.paper++;
+    if (strategyNeedsAttention(id)) out.attn++;
+  });
+  return out;
+}
+/* Best Gate 1 passing scorecard/version row for a strategy, else null. */
+function bestGate1PassingVersion(id) {
+  const cs = cardsForStrategy(id).filter((c) => c.gate_summary && c.gate_summary.statuses && isPassStatus(c.gate_summary.statuses.gate1));
+  if (!cs.length) return null;
+  return cs.slice().sort((a, b) => {
+    const ga = a.gate1 && a.gate1.score != null ? Number(a.gate1.score) : -1;
+    const gb = b.gate1 && b.gate1.score != null ? Number(b.gate1.score) : -1;
+    return gb - ga;
+  })[0];
 }
 
-// ── S2 A6 — Next Action panel (repurposed from Promotability, UI-20) ─────────
+/* ============================================================
+   PAGE: Command Center Home
+   ============================================================ */
+function renderHome(c) {
+  const rows = pipelineRows();
+  const cards = scorecardCards();
+  const runs = backtestRuns();
+  const diags = diagnosticItems();
+  const reports = reportItems();
+  const pipeline = snap().candidate_pipeline || {};
+  const stageCounts = (pipeline.summary && pipeline.summary.stage_done_counts) || {};
+  const stages = pipeline.stages || [];
 
-function renderPromotabilityPanel(scorecardV2) {
-  if (!scorecardV2) return "";
-  const gs = scorecardV2.gate_summary || {};
-  const promotable = isPromotable(gs);
-  const blocking = Array.isArray(gs.blocking) ? gs.blocking : [];
-  if (promotable && !blocking.length) return "";
-  if (!blocking.length) return "";
-  return `
-<section class="terminal-section promotability-panel">
-  <div class="terminal-section-head">
-    <h4>Gate Blockers</h4>
-    <span class="terminal-badge amber">Action required</span>
-  </div>
-  <p class="muted-terminal">These gates are blocking promotion. Address them before the strategy can advance. <span class="provenance-tag">source: gate_summary</span></p>
-  <div class="gate-blocker-list">
-    ${blocking.map((name) => `
-      <div class="gate-blocker fail">
-        <span>${escapeHtml(statusText(name))}</span>
-        <em>${escapeHtml(blockingGateAction(name))}</em>
-      </div>`).join("")}
-  </div>
-</section>`;
-}
+  // Strategy-level metrics (deduplicated by base id).
+  const sm = strategyMetrics();
+  // Evidence / system row metrics (raw rows/runs/artifacts — may exceed strategy count).
+  const scorecardRows = cards.length;
+  const gate1PassRows = cards.filter((c) => c.gate_summary && c.gate_summary.statuses && isPassStatus(c.gate_summary.statuses.gate1)).length;
+  const benchmarkRows = cards.filter((c) => c.gate2 && Number(c.gate2.score) >= 80).length;
+  const gate2FailRows = cards.filter((c) => c.gate_summary && c.gate_summary.statuses && isFailStatus(c.gate_summary.statuses.gate2)).length;
+  const orphanIds = orphanScorecardIds().length;
+  const artifactErrs = diags.filter((d) => !d.ok).length;
 
-// R2-18: gate-specific "what to do", not a generic "Action required".
-function blockingGateAction(name) {
-  const key = String(name || "").toLowerCase();
-  const map = {
-    gate1: "Complete source intake / transcript before scoring.",
-    gate1b: "Map the strategy to MTC_V2 modules (feasibility).",
-    gate2: "Re-run the backtest to reach ≥75, or park for manual review.",
-    gate3: "Blocked by the missing Gate 3 scorer (system-wide) — production readiness cannot be scored yet.",
-  };
-  return map[key] || "Review this gate's score and reason in the scorecard above.";
-}
+  const attention = rows.filter((r) => {
+    const t = [r.next_action, r.notes, JSON.stringify(r.canonical || {})].join(" ").toLowerCase();
+    return t.includes("pending") || t.includes("missing") || t.includes("fail") || t.includes("define") || t.includes("freeze");
+  }).slice(0, 5);
 
-// ── S2 A5 — Gate 2 evidence block ────────────────────────────────────────────
+  const topCards = cards.slice().sort((a, b) => Number((b.gate2 && b.gate2.score) || 0) - Number((a.gate2 && a.gate2.score) || 0)).slice(0, 5);
 
-function renderGate2EvidenceBlock(scorecardV2) {
-  if (!scorecardV2) return "";
-  const g2 = scorecardV2.gate2 || {};
-  if (!g2.status && g2.score == null) return "";
-  const status = g2.status || "NOT_EVALUATED";
-  const score = g2.score != null ? `${g2.score}/${g2.max || 100}` : "N/A";
-  const subScores = Array.isArray(g2.sub_scores) ? g2.sub_scores : [];
-  const findMetric = (...names) => {
-    for (const name of names) {
-      const row = subScores.find((s) => String(s.source_metric || s.criterion || "").toLowerCase().includes(name));
-      if (row && row.value != null) return String(Number(row.value).toFixed(2));
-    }
-    return null;
-  };
-  const cards = [
-    ["Score", score],
-    ["Status", statusText(status)],
-    ["Profit factor", findMetric("profit_factor", "pf")],
-    ["Trades", findMetric("trades", "num_trades")],
-    ["CPCV", findMetric("cpcv")],
-    ["Max drawdown", findMetric("max_drawdown", "drawdown")],
-    ["Net return %", findMetric("net_return", "return_pct")],
-    ["Win rate %", findMetric("win_rate")],
-  ].filter(([, v]) => v != null);
-  if (!cards.length) return "";
-  return `
-<section class="terminal-section">
-  <div class="terminal-section-head">
-    <h4>Gate 2 Evidence</h4>
-    <span class="terminal-badge ${status === "PASS" ? "ok" : status === "FAIL" ? "bad" : "neutral"}">${escapeHtml(statusText(status))}</span>
-  </div>
-  <div class="evidence-card-grid">
-    ${cards.map(([label, value]) => `
-      <div class="evidence-card">
-        <span>${escapeHtml(label)}</span>
-        <strong>${escapeHtml(String(value))}</strong>
-      </div>`).join("")}
-  </div>
-</section>`;
-}
+  const metric = (label, value, cls = "", title = "") => `<article class="metric ${cls}"${title ? ` title="${esc(title)}"` : ""}><span>${esc(label)}</span><strong>${num(value)}</strong></article>`;
 
-// ── S2 D4 — Night run detail panel ───────────────────────────────────────────
-
-function nightRunArtifacts(run) {
-  const arts = run.artifacts || {};
-  const labels = {
-    morning_report: "Morning Report",
-    cpcv_report: "CPCV Validation",
-    pbo_report: "PBO Report",
-    alpha_summary: "Alpha Summary",
-    aggregate_report: "Aggregate Report",
-  };
-  return Object.entries(arts)
-    .filter(([, path]) => path)
-    .map(([key, path]) => [labels[key] || labelize(key), path]);
-}
-
-function renderArtifactPath(label, path) {
-  return `
-<div class="report-item" style="margin:4px 0">
-  <span>${escapeHtml(label)}</span>
-  ${reportButton(path)}
-</div>`;
-}
-
-function nightRunCandidates(run) {
-  return [
-    ["Evaluations", run.evaluations ?? run.completed_evaluations],
-    ["Pass", run.pass_count],
-    ["Fail", run.fail_count ?? run.failed_evaluations],
-    ["Workers", run.workers ?? run.worker_count],
-    ["Runtime (s)", run.runtime_seconds],
-  ].filter(([, v]) => v != null);
-}
-
-function renderNightRunDetail(run) {
-  if (!run) return "";
-  const artifacts = nightRunArtifacts(run);
-  const candidates = nightRunCandidates(run);
-  const fmt = (ts) => ts ? String(ts).slice(0, 19).replace("T", " ") : "--";
-  return `
-<div class="night-run-detail">
-  <div class="night-run-header">
-    <div>
-      <span>Run ID</span>
-      <strong>${escapeHtml(run.run_id || run.id || "--")}</strong>
+  c.innerHTML = `
+    <div class="metric-group">
+      <div class="metric-group-head"><h3>Strategy Universe</h3><span>deduplicated by strategy_id</span></div>
+      <div class="metric-grid">
+        ${metric("Total Strategies", sm.total, "teal")}
+        ${metric("Gate 1 Passed Strategies", sm.g1, "blue")}
+        ${metric("Gate 1B Passed Strategies", sm.g1b, "blue")}
+        ${metric("Gate 2 Passed Strategies", sm.g2, "emerald")}
+        ${metric("Gate 2 Failed Strategies", sm.g2f, "red")}
+        ${metric("Paper Ready Strategies", sm.paper, "teal")}
+        ${metric("Needs Review Strategies", sm.attn, "amber", "Broad heuristic: canonical strategies whose pipeline next_action / notes / canonical block mentions pending, missing, fail, define, or freeze. Indicates review/rule-freeze needed, not necessarily broken.")}
+      </div>
     </div>
-    <div>
-      <span>Symbol / TF</span>
-      <strong>${escapeHtml([run.symbol || run.ticker, run.timeframe].filter(Boolean).join(" ") || "--")}</strong>
+
+    <div class="metric-group">
+      <div class="metric-group-head"><h3>Evidence / System Volume</h3><span>raw rows · runs · artifacts</span></div>
+      <div class="metric-grid">
+        ${metric("Scorecard Rows", scorecardRows)}
+        ${metric("Gate 1 Passed Rows", gate1PassRows)}
+        ${metric("Benchmark Candidate Rows", benchmarkRows)}
+        ${metric("Gate 2 Failed Rows", gate2FailRows)}
+        ${metric("Backtest Runs", runs.length)}
+        ${metric("Reports Indexed", reports.length)}
+        ${metric("Scorecard-only Strategy IDs", orphanIds, orphanIds ? "amber" : "")}
+        ${metric("Artifact Errors", artifactErrs, artifactErrs ? "red" : "")}
+      </div>
     </div>
-    <div>
-      <span>Status</span>
-      <strong>${badge(run.status || "--")}</strong>
+    <p class="metric-note">Strategy counts use the canonical pipeline/registry universe. Scorecard-only IDs are treated as orphan evidence until promoted into the strategy registry/pipeline. Row counts refer to scorecard/backtest evidence rows and may exceed strategy count. "Needs Review" is a broad heuristic (pending/missing/fail/define/freeze in pipeline metadata), not a strict blocker count.</p>
+
+    <div class="dashboard-grid">
+      <div class="stack">
+        <section class="panel">
+          <div class="panel-heading"><h3>Today's Action Queue</h3><span>${attention.length} items</span></div>
+          ${attention.length ? attention.map((r) => actionRow(r)).join("") : emptyState("No pending action items in current snapshot.")}
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading"><h3>Benchmark Board</h3><span>read-only</span></div>
+          <p class="same-profile-warning">Only compare results within the same profile, timeframe, market universe, and score method. Do not compare SOURCE_NAKED directly with MTC_LIGHT, or 15m results with 1D results.</p>
+          <div class="info-grid">
+            ${topCards.length ? topCards.map((c) => infoCard(`${esc(baseId(c.base_strategy_id || c.strategy_id))} / ${esc(c.timeframe || "tf")}`, `Gate 2: ${c.gate2 && c.gate2.score != null ? c.gate2.score : "—"}`)).join("") : infoCard("Benchmark data", null, { empty: M.artifact })}
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading"><h3>Strategy Pipeline Overview</h3><span>${stages.length} stages</span></div>
+          <div class="grid-4">
+            ${stages.length ? stages.map((s) => `<div class="lc-kpi"><span class="k">${esc(s.label || s.key)}</span><span class="v">${num(stageCounts[s.key] || 0)}</span></div>`).join("") : emptyState("Pipeline stage data missing.")}
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading"><h3>Strategy Watchlist / Needs Attention</h3><span>read-only</span></div>
+          ${attention.length ? attention.slice(0, 3).map((r) => watchRow(r)).join("") : emptyState("No watchlist items.")}
+        </section>
+      </div>
+
+      <div class="stack">
+        <section class="panel">
+          <div class="panel-heading"><h3>Official Gate System</h3><span>reference</span></div>
+          <div class="def-rows">
+            ${defRow("Gate 1", "Intake — deterministic, codable, testable")}
+            ${defRow("Gate 1B", "MTC feasibility — signal/module convertible")}
+            ${defRow("Gate 2", "Backtest evidence — performance & robustness")}
+            ${defRow("Gate 3", "Production readiness — alerts, monitoring, fail-safe")}
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading"><h3>Backtest Activity</h3><span>${runs.length} runs</span></div>
+          <div class="def-rows">
+            ${defRow("Total runs", (snap().backtest_status && snap().backtest_status.summary && snap().backtest_status.summary.total_runs) || runs.length)}
+            ${defRow("Latest run", (snap().backtest_status && snap().backtest_status.summary && snap().backtest_status.summary.last_run_id) || null, M.artifact)}
+            ${defRow("Failed runs", (snap().backtest_status && snap().backtest_status.summary && snap().backtest_status.summary.failed_runs) || 0)}
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading"><h3>Artifact Health</h3><span>${diags.length} checks</span></div>
+          <div class="def-rows">
+            ${defRow("Files OK", `${diags.filter((d) => d.ok).length} / ${diags.length}`)}
+            ${defRow("Read-only API", state.health && state.health.overall_ok ? "OK" : "Check")}
+            ${defRow("Reports", `${reports.length} indexed`)}
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading"><h3>Leaderboard Preview</h3><span>top ${topCards.length}</span></div>
+          <div class="table-wrap"><table class="grid-table">
+            <thead><tr><th>#</th><th>Strategy</th><th class="num">Score</th></tr></thead>
+            <tbody>${topCards.length ? topCards.map((c, i) => `<tr><td>${i + 1}</td><td>${esc(baseId(c.base_strategy_id || c.strategy_id))}</td><td class="num">${c.gate2 && c.gate2.score != null ? c.gate2.score : "—"}</td></tr>`).join("") : `<tr><td colspan="3" class="empty-cell">No leaderboard data.</td></tr>`}</tbody>
+          </table></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading"><h3>Result Explorer</h3><span>global</span></div>
+          <p class="summary">Open the global result explorer, or open a strategy dossier for strategy-scoped results.</p>
+          <button class="btn purple" type="button" onclick="navigate('result-explorer')">Open Backtest Result Explorer</button>
+        </section>
+      </div>
     </div>
-  </div>
-  <div class="gate2-split" style="margin-top:10px">
-    <div><span>Started</span><strong>${escapeHtml(fmt(run.started_at))}</strong></div>
-    <div><span>Ended</span><strong>${escapeHtml(fmt(run.ended_at))}</strong></div>
-    <div><span>Type</span><strong>${escapeHtml(run.source_type || "--")}</strong></div>
-  </div>
-  ${candidates.length ? `
-  <div class="gate2-split" style="margin-top:8px">
-    ${candidates.slice(0, 6).map(([label, value]) =>
-      `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value ?? "--"))}</strong></div>`
-    ).join("")}
-  </div>` : ""}
-  ${artifacts.length ? `
-  <div class="artifact-table">
-    ${artifacts.map(([label, path]) => renderArtifactPath(label, path)).join("")}
-  </div>` : `<p class="muted-terminal" style="margin-top:10px">No artifact files found for this run.</p>`}
-</div>`;
+  `;
 }
 
-// ── S6 D3b — Worker monitor (overnight runner) ───────────────────────────────
+function actionRow(r) {
+  const id = rowId(r);
+  const sev = String(r.next_action || "").toLowerCase().includes("fail") ? "HIGH" : "MED";
+  return `
+    <div class="readiness-row">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+          ${badge(sev, sev === "HIGH" ? "bad" : "warn")}
+          <span class="rk">${esc(r.strategy_display_name || (r.description && r.description.family) || titleCase(baseId(id)))}</span>
+        </div>
+        <span style="font-size:11.5px;color:var(--muted);">${esc(r.next_action || r.notes || "Pending review")}</span>
+      </div>
+      <button class="btn blue mini" type="button" onclick="openStrategy('${esc(id)}')">Open Strategy Intelligence</button>
+    </div>`;
+}
+function watchRow(r) {
+  const id = rowId(r);
+  const m = strategyModel(id);
+  return `
+    <div class="readiness-row">
+      <div>
+        <div class="rk" style="margin-bottom:5px;">${esc(m.displayName)}</div>
+        <div class="sc-gates">
+          ${badge("G1 " + spaced(m.gates.g1.status), gateTone(m.gates.g1.status))}
+          ${badge("G1B " + spaced(m.gates.g1b.status), gateTone(m.gates.g1b.status))}
+          ${badge("G2 " + spaced(m.gates.g2.status), gateTone(m.gates.g2.status))}
+        </div>
+      </div>
+      <button class="btn mini" type="button" onclick="openStrategy('${esc(id)}')">Open</button>
+    </div>`;
+}
 
-function formatHeartbeatTimestamp(value) {
-  if (!value) return "—";
-  try {
-    const d = new Date(String(value).replace(" ", "T"));
-    if (isNaN(d.getTime())) return String(value).slice(0, 19);
-    return d.toISOString().slice(0, 19).replace("T", " ") + " UTC";
-  } catch (_) {
-    return String(value).slice(0, 19);
+/* ============================================================
+   PAGE: Strategy Pipeline
+   ============================================================ */
+const PIPELINE_FILTERS = [
+  { id: "all", label: "All" },
+  { id: "g1", label: "Gate 1 Passed" },
+  { id: "g1b", label: "Gate 1B Passed" },
+  { id: "g2fail", label: "Gate 2 Failed" },
+  { id: "freeze", label: "Rule-Freeze Needed" },
+  { id: "backtested", label: "Backtested" },
+  { id: "paperlock", label: "Paper Locked" },
+];
+let pipelineFilter = "all";
+let pipelineSearch = "";
+
+function renderPipeline(c) {
+  const rows = pipelineRows();
+  const models = rows.map((r) => ({ m: strategyModel(rowId(r)), r }));
+  const kpi = {
+    total: rows.length,
+    g1: models.filter((x) => x.m.gates.g1.status === "OK").length,
+    g1b: models.filter((x) => x.m.gates.g1b.status === "OK").length,
+    g2fail: models.filter((x) => x.m.gates.g2.status === "FAIL").length,
+    freeze: models.filter((x) => (x.m.directional && x.m.directional.status === "DIRECTION_UNKNOWN") || !x.m.rules.exit || x.m.gates.g1.status !== "OK").length,
+    paperlock: models.filter((x) => !x.m.promotable).length,
+  };
+  c.innerHTML = `
+    <section class="panel">
+      <div class="panel-heading"><h3>Strategy Pipeline</h3><span>${rows.length} strategies</span></div>
+      <p class="summary">Workflow status from candidate_pipeline. Filter, search, then open any strategy to enter its Strategy Intelligence dossier.</p>
+      <div class="grid-4" style="margin-bottom:16px;grid-template-columns:repeat(6,1fr);">
+        <div class="lc-kpi"><span class="k">Total</span><span class="v">${kpi.total}</span></div>
+        <div class="lc-kpi"><span class="k">Gate 1 OK</span><span class="v">${kpi.g1}</span></div>
+        <div class="lc-kpi"><span class="k">Gate 1B OK</span><span class="v">${kpi.g1b}</span></div>
+        <div class="lc-kpi"><span class="k">Gate 2 Failed</span><span class="v">${kpi.g2fail}</span></div>
+        <div class="lc-kpi"><span class="k">Rule Freeze Needed</span><span class="v">${kpi.freeze}</span></div>
+        <div class="lc-kpi"><span class="k">Paper Locked</span><span class="v">${kpi.paperlock}</span></div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
+        <input id="pipeSearch" class="btn" style="flex:1;min-width:220px;cursor:text;" placeholder="Search strategy id, name, family…" value="${esc(pipelineSearch)}">
+      </div>
+      <div class="chip-row" id="pipeChips" style="margin-bottom:16px;">
+        ${PIPELINE_FILTERS.map((f) => `<span class="chip ${pipelineFilter === f.id ? "is-active" : ""}" data-filter="${f.id}">${esc(f.label)}</span>`).join("")}
+      </div>
+      <div class="strategy-card-grid" id="pipeGrid"></div>
+    </section>
+  `;
+  $("#pipeSearch").addEventListener("input", (e) => { pipelineSearch = e.target.value; paintPipeline(); });
+  $("#pipeChips").addEventListener("click", (e) => {
+    const chip = e.target.closest("[data-filter]");
+    if (!chip) return;
+    pipelineFilter = chip.dataset.filter;
+    $$("#pipeChips .chip").forEach((x) => x.classList.toggle("is-active", x.dataset.filter === pipelineFilter));
+    paintPipeline();
+  });
+  paintPipeline();
+}
+
+function pipelineMatches(m, r) {
+  const q = pipelineSearch.trim().toLowerCase();
+  if (q) {
+    const hay = [m.id, m.displayName, m.family, m.sourceTitle].join(" ").toLowerCase();
+    if (!hay.includes(q)) return false;
+  }
+  switch (pipelineFilter) {
+    case "g1": return m.gates.g1.status === "OK";
+    case "g1b": return m.gates.g1b.status === "OK";
+    case "g2fail": return m.gates.g2.status === "FAIL";
+    case "freeze": return (m.directional && m.directional.status === "DIRECTION_UNKNOWN") || !m.rules.exit || m.gates.g1.status !== "OK";
+    case "backtested": return (r.stages && r.stages.backtested && r.stages.backtested.status === "done");
+    case "paperlock": return !m.promotable;
+    default: return true;
   }
 }
 
-function renderWorkerMonitorRow(label, value, detail) {
-  return `
-<div class="worker-monitor-row">
-  <span>${escapeHtml(label)}</span>
-  <strong>${escapeHtml(String(value ?? "—"))}</strong>
-  ${detail ? `<em>${escapeHtml(String(detail))}</em>` : ""}
-</div>`;
+function paintPipeline() {
+  const grid = $("#pipeGrid");
+  if (!grid) return;
+  const rows = pipelineRows();
+  const filtered = rows.filter((r) => pipelineMatches(strategyModel(rowId(r)), r));
+  if (!filtered.length) { grid.innerHTML = emptyState("No strategies match this filter / search."); return; }
+  grid.innerHTML = filtered.map((r) => {
+    const m = strategyModel(rowId(r));
+    return strategyCard(m);
+  }).join("");
+  grid.onclick = (e) => {
+    const card = e.target.closest("[data-sid]");
+    if (card) openStrategy(card.dataset.sid);
+  };
 }
 
-function renderOvernightRunnerStatus(heartbeat) {
-  if (!heartbeat || !heartbeat.available) {
-    const reason = (heartbeat && heartbeat.reason) || "overnight_runs dir not found";
+function strategyCard(m) {
+  const sc = scoreClass(m.score);
+  return `
+    <article class="strategy-card clickable" data-sid="${esc(m.id)}">
+      <div class="sc-head">
+        <div><code>${esc(m.id)}</code><h4>${esc(m.displayName)}</h4></div>
+        <span class="score-chip ${sc}">${m.score != null ? esc(m.score) : "—"}</span>
+      </div>
+      <div class="sc-meta">
+        ${infoCard("Horizon / Category", [m.definedTf, m.classification.label].filter(Boolean).join(" · ") || null, { empty: M.notextracted })}
+        ${infoCard("Instrument", m.symbol, { empty: M.snapshot })}
+        ${infoCard("Source", m.sourceUrl ? hostOf(m.sourceUrl) : null, { empty: M.meta })}
+        ${infoCard("Family", m.family, { empty: M.notextracted })}
+      </div>
+      <div class="sc-gates">
+        ${badge("Gate 1 " + spaced(m.gates.g1.status), gateTone(m.gates.g1.status))}
+        ${badge("Gate 1B " + spaced(m.gates.g1b.status), gateTone(m.gates.g1b.status))}
+        ${badge("Gate 2 " + spaced(m.gates.g2.status), gateTone(m.gates.g2.status))}
+        ${badge("Gate 3 " + spaced(m.gates.g3.status), gateTone(m.gates.g3.status))}
+      </div>
+      <div class="sc-foot">
+        <span>${esc(m.nextAction || "Pending review")}</span>
+        <button class="btn mini" type="button" onclick="event.stopPropagation();openStrategy('${esc(m.id)}')">Open</button>
+      </div>
+    </article>`;
+}
+
+function hostOf(url) { try { return new URL(url).hostname.replace("www.", ""); } catch { return url; } }
+
+/* ============================================================
+   PAGE: Strategy Registry
+   ============================================================ */
+let registrySearch = "";
+function renderRegistry(c) {
+  const entries = registryEntries();
+  c.innerHTML = `
+    <section class="panel">
+      <div class="panel-heading"><h3>Strategy Registry</h3><span>${entries.length} entries</span></div>
+      <p class="summary">Source catalog distinct from the workflow pipeline. Search the catalog, then open a strategy for its generic Strategy Intelligence dossier.</p>
+      <input id="regSearch" class="btn" style="width:100%;cursor:text;margin-bottom:16px;" placeholder="Search by id, title, source type…" value="${esc(registrySearch)}">
+      <div class="stack" id="regList"></div>
+    </section>
+  `;
+  $("#regSearch").addEventListener("input", (e) => { registrySearch = e.target.value; paintRegistry(); });
+  paintRegistry();
+}
+function paintRegistry() {
+  const list = $("#regList");
+  if (!list) return;
+  const q = registrySearch.trim().toLowerCase();
+  const entries = registryEntries().filter((r) => {
+    if (!q) return true;
+    return [rowId(r), r.title, r.name, r.market_type, r.source_url].join(" ").toLowerCase().includes(q);
+  });
+  if (!entries.length) { list.innerHTML = emptyState("No registry entries match."); return; }
+  list.innerHTML = entries.map((r) => {
+    const id = rowId(r);
+    const m = strategyModel(id);
     return `
-<div class="worker-monitor-card offline">
-  <div class="worker-monitor-head">
-    <div><span>Worker Monitor</span><strong>Overnight Runner Status</strong></div>
-    <b>OFFLINE</b>
-  </div>
-  <div class="worker-monitor-grid">
-    ${renderWorkerMonitorRow("Availability", "Offline", reason)}
-    ${renderWorkerMonitorRow("Heartbeat", "Unavailable", "No active overnight runner heartbeat was reported.")}
-    ${renderWorkerMonitorRow("Run ID", "—", "")}
-  </div>
-</div>`;
-  }
-  const alive = heartbeat.is_alive;
-  const cardClass = alive ? "alive" : "stale";
-  const statusLabel = alive ? "ONLINE" : "STALE";
-  const age = heartbeat.age_minutes != null ? `${Number(heartbeat.age_minutes).toFixed(1)} min ago` : "—";
-  return `
-<div class="worker-monitor-card ${cardClass}">
-  <div class="worker-monitor-head">
-    <div><span>Worker Monitor</span><strong>Overnight Runner Status</strong></div>
-    <b>${escapeHtml(statusLabel)}</b>
-  </div>
-  <div class="worker-monitor-grid">
-    ${renderWorkerMonitorRow("Availability", alive ? "Online" : "Stale", age)}
-    ${renderWorkerMonitorRow("Heartbeat", formatHeartbeatTimestamp(heartbeat.timestamp), heartbeat.source_file || "")}
-    ${renderWorkerMonitorRow("Run ID", heartbeat.run_id || "—", heartbeat.stage || heartbeat.status || "")}
-  </div>
-</div>`;
+      <details class="acc">
+        <summary>
+          <span style="display:flex;flex-direction:column;gap:2px;">
+            <code style="color:var(--teal);font-size:11px;">${esc(id)}</code>
+            <strong style="font-size:13.5px;color:var(--text-strong);">${esc(r.title || r.name || m.displayName)}</strong>
+          </span>
+          <span style="display:flex;gap:6px;align-items:center;">
+            ${badge(r.status || "—", gateTone(r.status))}
+            <button class="btn mini" type="button" onclick="event.preventDefault();openStrategy('${esc(id)}')">Open Strategy</button>
+          </span>
+        </summary>
+        <div class="acc-body">
+          <div class="info-grid">
+            ${infoCard("Source Title", r.title || r.name, { empty: M.meta })}
+            ${infoCard("Source Type", r.market_type, { empty: M.meta })}
+            ${infoCard("Source URL", m.sourceUrl ? hostOf(m.sourceUrl) : null, { empty: M.meta })}
+            ${infoCard("Horizon / TF", r.timeframe, { empty: M.notextracted })}
+            ${infoCard("Method", null, { empty: "Method extraction reader not implemented" })}
+            ${infoCard("Market Condition", m.marketCondition, { empty: M.notextracted })}
+            ${infoCard("Defined Frame", m.definedTf, { empty: M.notextracted })}
+            ${infoCard("Tested Frame", m.testedTf, { empty: M.artifact })}
+            ${infoCard("Gate Status", `${spaced(m.gates.g1.status)} / ${spaced(m.gates.g2.status)}`)}
+            ${infoCard("Evidence Level", r.evidence_level, { empty: M.snapshot })}
+            ${infoCard("Reusable Components", m.candidateKind.length ? m.candidateKind.join(", ") : null, { empty: M.snapshot, span2: true })}
+            ${infoCard("Transcript", m.transcript ? "Linked" : null, { empty: "Transcript not linked" })}
+          </div>
+          ${m.sourceUrl ? `<div class="chip-row" style="margin-top:12px;"><a class="chip" href="${esc(m.sourceUrl)}" target="_blank" rel="noopener">View Source ↗</a></div>` : ""}
+        </div>
+      </details>`;
+  }).join("");
 }
 
+/* ============================================================
+   PAGE: Strategy Intelligence (detail dossier)
+   ============================================================ */
+function renderIntelligence(c) {
+  const id = state.selectedStrategyId || defaultStrategyId();
+  state.selectedStrategyId = id;
+  if (!id) { c.innerHTML = emptyState("No strategy selected and no pipeline rows in snapshot."); return; }
+  loadStrategyDetail(id);
+  const m = strategyModel(id);
+
+  c.innerHTML = `
+    ${heroBlock(m)}
+    ${constraintNotice(m)}
+    <div class="si-layout">
+      <div class="si-main">
+        ${gateSummaryBlock(m)}
+        ${overviewSection(m)}
+        ${gate1Section(m)}
+        ${verdictSection(m)}
+        ${evidenceSection(m)}
+        ${explorerPreviewSection(m)}
+        ${paperReadinessSection(m)}
+        ${advancedSection(m)}
+      </div>
+      <aside class="si-rail">
+        ${railBlock(m)}
+      </aside>
+    </div>
+  `;
+}
+
+function constraintNotice(m) {
+  const blockers = [];
+  if (!m.rules.entry) blockers.push("entry rule not extracted");
+  if (!m.rules.exit) blockers.push("exit logic not extracted");
+  if (!m.sourceUrl) blockers.push("source metadata missing");
+  if (m.gates.g2.status !== "OK") blockers.push("Gate 2 evidence not validated");
+  if (m.directional && m.directional.status === "DIRECTION_UNKNOWN") blockers.push("trade direction undefined");
+  if (Array.isArray(m.blocking) && m.blocking.length) blockers.push("blocking: " + m.blocking.map(spaced).join(", "));
+  if (!blockers.length) return "";
+  return `
+    <section class="constraint-notice">
+      <div class="banner-icon">${icon("shield")}</div>
+      <div>
+        <h4>Research Constraint Notice</h4>
+        <p>Undefined or missing rule, risk, source, or artifact fields remain blockers. This strategy stays read-only until source rules, risk model, and Gate 2 evidence are validated.</p>
+        <p class="cn-list">Detected blockers: ${esc(blockers.join(" · "))}.</p>
+      </div>
+    </section>`;
+}
+
+function heroVal(g, opts = {}) {
+  const tone = gateTone(g.status);
+  if (opts.score && g.score != null) return `<span class="val ${tone === "bad" ? "bad" : tone === "ok" ? "ok" : ""}">${g.score}<span style="font-size:10px;color:var(--faint);"> / ${g.max}</span></span>`;
+  if (tone === "ok") return `<span class="val ok">Certified</span>`;
+  if (tone === "bad") return `<span class="val bad">Failed</span>`;
+  return `<span class="val locked">${spaced(g.status) || "Pending"}</span>`;
+}
+
+function heroBlock(m) {
+  const paper = m.promotable ? "Ready (review)" : "Locked";
+  return `
+    <section class="si-hero" id="top">
+      <div class="si-hero-top">
+        <div>
+          <span class="eyebrow">Active Evaluation Candidate</span>
+          <h2 class="si-hero-id">${esc(m.displayName)}</h2>
+          <p class="si-hero-thesis">${esc(m.thesis)}</p>
+          <p class="si-hero-meta">${esc(m.id)}</p>
+        </div>
+        <div class="si-gate-panel">
+          <div class="si-gate-cell"><span class="lbl">Gate 1 / Intake</span>${heroVal(m.gates.g1)}</div>
+          <div class="si-gate-cell"><span class="lbl">Gate 1B / MTC</span>${heroVal(m.gates.g1b)}</div>
+          <div class="si-gate-cell"><span class="lbl">Gate 2 Evidence</span>${heroVal(m.gates.g2, { score: true })}</div>
+          <div class="si-gate-cell"><span class="lbl">Paper Trading</span><span class="val locked">${esc(paper)}</span></div>
+        </div>
+      </div>
+      <div class="workflow-bar">
+        ${workflowCard("Stage 1", "Strategy Overview", "Done", "overview", false)}
+        ${workflowCard("Stage 2", "Gate 1 / Gate 1B", m.gates.g1b.status === "OK" ? "Done" : "Review", "gate1", m.gates.g1b.status !== "OK")}
+        ${workflowCard("Stage 3", "Backtest Plan & Evidence", m.gates.g2.status === "FAIL" ? "Needs Review" : (m.gates.g2.status === "OK" ? "Done" : "Pending"), "evidence", m.gates.g2.status !== "OK")}
+        ${workflowCard("Stage 4", "Paper Trading", m.promotable ? "Pending approval" : "Locked", "paper", !m.promotable)}
+      </div>
+    </section>`;
+}
+function workflowCard(stage, label, status, section, dim) {
+  return `<div class="workflow-card ${dim ? "dim" : ""}" onclick="scrollToSection('${section}')">
+    <span class="stg">${esc(stage)}</span><span class="ttl">${esc(label)}</span><span class="st">${esc(status)}</span>
+  </div>`;
+}
+
+function sectionHead(n, title, subtitle, iconName) {
+  // Ordinal is carried by the sidebar's numbered section nav; an extra "Section N"
+  // eyebrow on every head here is redundant scaffolding, so the head is icon + title.
+  return `<div class="si-section-head"><div class="si-section-icon">${icon(iconName)}</div><div><h3>${esc(title)}</h3><p>${esc(subtitle)}</p></div></div>`;
+}
+
+function gateCard(title, desc, g, opts = {}) {
+  const tone = gateTone(g.status);
+  const cls = opts.locked ? "locked" : tone === "ok" ? "ok" : tone === "bad" ? "bad" : "";
+  const badgeCls = opts.locked ? "neutral" : tone;
+  const label = g.score != null ? `${g.score}/${g.max} — ${spaced(g.status)}` : spaced(g.status);
+  return `
+    <div class="gate-card ${cls}">
+      <div class="gate-card-head">
+        <div><h4>${esc(title)}</h4><p>${esc(desc)}</p></div>
+        ${badge(label, badgeCls)}
+      </div>
+    </div>`;
+}
+
+function gateSummaryBlock(m) {
+  return `
+    <section class="si-section">
+      <h3 class="section-title">Gate Status Summary</h3>
+      <div class="gate-summary-grid">
+        ${gateCard("Gate 1 Intake", "Checks whether source rules are deterministic, codable, and testable.", m.gates.g1)}
+        ${gateCard("Gate 1B MTC Feasibility", "Checks whether the strategy can be converted into an MTC-compatible signal or module.", m.gates.g1b)}
+        ${gateCard("Gate 2 Backtest Evidence", "Checks historical performance, robustness, trade sample quality, and benchmark comparison.", m.gates.g2)}
+        ${gateCard("Gate 3 Production Readiness", "Checks paper-trading readiness, alert contracts, fail-safe behavior, and controls.", m.gates.g3, { locked: m.gates.g3.status !== "OK" })}
+      </div>
+    </section>`;
+}
+
+function ruleBlock(label, value, warn) {
+  const v = value || null;
+  return `<div class="rule-block ${warn && !v ? "warn" : ""}"><div class="rb-label">${esc(label)}</div><div class="rb-val">${v ? esc(v) : missing(warn || M.notextracted)}</div></div>`;
+}
+
+function overviewSection(m) {
+  return `
+    <section class="si-section" id="sec-overview">
+      ${sectionHead(1, "Strategy Overview", "Plain-English thesis, mechanism, core rules, taxonomy, and source.", "file")}
+      <div class="panel">
+        <div class="rule-grid">
+          ${ruleBlock("Plain-English Thesis", m.thesis)}
+          ${ruleBlock("Best Market Condition", m.marketCondition, M.notextracted)}
+        </div>
+        <div class="rule-grid" style="margin-top:12px;">
+          ${ruleBlock("Visual Mechanism", null, "Not present in read model")}
+          ${ruleBlock("Family", m.family, M.notextracted)}
+        </div>
+
+        <h4 class="section-title" style="margin-top:18px;">Core Rules Breakdown</h4>
+        <div class="rule-grid">
+          ${ruleBlock("Entry Trigger", m.rules.entry, M.notextracted)}
+          ${ruleBlock("Exit Logic", m.rules.exit, M.notextracted)}
+          ${ruleBlock("Avoid Trading When", m.rules.avoid, "Not specified in source")}
+          ${ruleBlock("Assumptions to Freeze", m.directional && m.directional.next_action, M.rulefreeze)}
+        </div>
+
+        <h4 class="section-title" style="margin-top:18px;">Strategy Taxonomy</h4>
+        <div class="info-grid">
+          ${infoCard("Category / Horizon", [m.classification.label, m.definedTf].filter(Boolean).join(" · ") || null, { empty: M.notextracted })}
+          ${infoCard("Methodology", null, { empty: "Method extraction reader not implemented" })}
+          ${infoCard("Condition Fit", m.marketCondition, { empty: M.notextracted })}
+          ${infoCard("Defined Frame", m.definedTf, { empty: M.notextracted })}
+          ${infoCard("Tested Frame", m.testedTf ? (m.tfMismatch ? `${m.testedTf} (timeframe mismatch)` : m.testedTf) : null, { empty: M.artifact })}
+          ${infoCard("Instrument Fit", m.symbol || m.sourceType, { empty: M.notextracted })}
+          ${infoCard("Automation Suitability", m.gates.g1b.status === "OK" ? "Convertible to MTC signal" : null, { empty: M.rulefreeze })}
+          ${infoCard("Complexity", (m.expert && m.expert.complexity) || (m.reg && m.reg.complexity_score != null ? `score ${m.reg.complexity_score}` : null), { empty: M.notextracted })}
+        </div>
+
+        <h4 class="section-title" style="margin-top:18px;">Source Material</h4>
+        <div class="info-grid">
+          ${infoCard("Source Title", m.sourceTitle, { empty: M.meta })}
+          ${infoCard("Source Type", m.sourceType, { empty: M.meta })}
+          ${infoCard("Channel / Author", null, { empty: M.meta })}
+          ${infoCard("URL", m.sourceUrl ? hostOf(m.sourceUrl) : null, { empty: M.meta })}
+          ${infoCard("Transcript Status", m.transcript ? "Linked" : null, { empty: "Transcript not linked" })}
+        </div>
+        ${m.sourceUrl ? `<div class="chip-row" style="margin-top:12px;"><a class="chip" href="${esc(m.sourceUrl)}" target="_blank" rel="noopener">View Source ↗</a></div>` : ""}
+      </div>
+    </section>`;
+}
+
+function subscoreList(g, m) {
+  if (!g.sub || !g.sub.length) {
+    const status = m && m.detailStatus;
+    if (status === "loading") return emptyState("Loading full scorecard detail...");
+    if (status === "error") return emptyState("Full gate detail unavailable; showing summary only.");
+    if (m && m.detailEmpty) return emptyState("No full scorecard detail found for this strategy.");
+    return emptyState("Subscore breakdown not present in current snapshot.");
+  }
+  return `<div class="subscore-list">${g.sub.map((s) => {
+    const mx = s.max_points != null ? s.max_points : s.points_max;
+    const aw = s.points_awarded;
+    let cls = "absent", pts = `— / ${mx}`;
+    if (s.metric_status === "ABSENT") { cls = "absent"; pts = `n/a / ${mx}`; }
+    else if (aw != null) { const r = mx ? aw / mx : 0; cls = r >= 1 ? "full" : r > 0 ? "partial" : "none"; pts = `${aw} / ${mx}`; }
+    return `<div class="subscore"><div><div class="crit">${esc(titleCase(s.criterion))}</div><div class="note">${esc(s.deduction_reason || s.note || "")}</div></div><div class="pts ${cls}">${esc(pts)}</div></div>`;
+  }).join("")}</div>`;
+}
+
+function gate1Section(m) {
+  const best = bestGate1PassingVersion(m.id);
+  const all = cardsForStrategy(m.id);
+  const g1State = (c) => {
+    const st = c.gate_summary && c.gate_summary.statuses && c.gate_summary.statuses.gate1;
+    return isPassStatus(st) ? badge("PASS", "ok") : isFailStatus(st) ? badge("FAIL", "bad") : badge(st ? spaced(st) : "PENDING", "neutral");
+  };
+  const gx = (c, k) => {
+    const st = c.gate_summary && c.gate_summary.statuses && c.gate_summary.statuses[k];
+    return isPassStatus(st) ? badge("PASS", "ok") : isFailStatus(st) ? badge("FAIL", "bad") : badge(st ? spaced(st) : "—", "neutral");
+  };
+  return `
+    <section class="si-section" id="sec-gate1">
+      ${sectionHead(2, "Gate 1 / Gate 1B Pre-Backtest Assessment", "The official pre-backtest assessment. No separate pre-backtest index.", "shield")}
+      <div class="panel">
+        <div class="grid-2">
+          <div>
+            <div class="section-title" style="justify-content:space-between;display:flex;">Gate 1 Intake ${badge(m.gates.g1.score != null ? `${m.gates.g1.score}/${m.gates.g1.max}` : spaced(m.gates.g1.status), gateTone(m.gates.g1.status))}</div>
+            <p class="summary">Deterministic, codable, and testable source rules.</p>
+            ${subscoreList(m.gates.g1, m)}
+          </div>
+          <div>
+            <div class="section-title" style="justify-content:space-between;display:flex;">Gate 1B MTC Feasibility ${badge(m.gates.g1b.score != null ? `${m.gates.g1b.score}/${m.gates.g1b.max}` : spaced(m.gates.g1b.status), gateTone(m.gates.g1b.status))}</div>
+            <p class="summary">Convertible into an MTC-compatible signal or module.</p>
+            ${subscoreList(m.gates.g1b, m)}
+          </div>
+        </div>
+
+        <h4 class="section-title" style="margin-top:18px;display:flex;justify-content:space-between;align-items:center;">Primary Gate 1 Version ${best ? badge("Showing best Gate 1 passing version", "ok") : badge("No Gate 1 passing version found", "neutral")}</h4>
+        ${best ? `<div class="info-grid">
+          ${infoCard("Strategy ID", baseId(best.base_strategy_id || best.strategy_id || m.id), { empty: M.artifact })}
+          ${infoCard("Row / Run / Result ID", best.run_id || best.run_name || best.result_id || best.row_id, { empty: M.artifact })}
+          ${infoCard("Symbol / Universe", best.symbol, { empty: M.artifact })}
+          ${infoCard("Timeframe", best.timeframe, { empty: M.artifact })}
+          ${infoCard("Profile", best.profile, { empty: "Profile-separated artifact missing" })}
+          ${infoCard("Gate 1 Score / Status", best.gate1 && best.gate1.score != null ? `${best.gate1.score} — ${spaced((best.gate_summary && best.gate_summary.statuses && best.gate_summary.statuses.gate1) || "PASS")}` : spaced((best.gate_summary && best.gate_summary.statuses && best.gate_summary.statuses.gate1) || "PASS"))}
+          ${infoCard("Source Artifact Path", best.source_path, { empty: M.artifact, span2: true })}
+        </div>` : emptyState("No scorecard/version row with a passing Gate 1 status for this strategy in the current snapshot. Other versions (if any) are listed below.")}
+
+        <h4 class="section-title" style="margin-top:18px;">Advanced / All Versions <span style="color:var(--faint);font-weight:600;">${all.length} scorecard row${all.length === 1 ? "" : "s"}</span></h4>
+        ${all.length ? `<div class="table-wrap"><table class="grid-table">
+          <thead><tr><th>Asset / TF</th><th>Profile</th><th class="num">G1 Score</th><th>Gate 1</th><th>Gate 1B</th><th>Gate 2</th><th>Run</th></tr></thead>
+          <tbody>${all.slice().sort((a, b) => Number((b.gate1 && b.gate1.score) || 0) - Number((a.gate1 && a.gate1.score) || 0)).map((c) => `<tr>
+            <td>${esc(c.symbol || "—")} / ${esc(c.timeframe || "—")}</td>
+            <td>${c.profile ? esc(c.profile) : `<span class="value-muted">—</span>`}</td>
+            <td class="num">${c.gate1 && c.gate1.score != null ? c.gate1.score : "—"}</td>
+            <td>${g1State(c)}</td>
+            <td>${gx(c, "gate1B")}</td>
+            <td>${gx(c, "gate2")}</td>
+            <td><span class="cell-trunc">${esc(c.run_name || c.run_id || "—")}</span></td>
+          </tr>`).join("")}</tbody>
+        </table></div>` : emptyState("No scorecard/version rows for this strategy in the current snapshot.")}
+
+        <div class="banner info" style="margin-top:16px;margin-bottom:0;"><div class="banner-icon">${icon("info")}</div><div><h4>Official Note</h4><p>Gate 1 + Gate 1B together form the official pre-backtest assessment. Missing fields above reflect ABSENT source metrics in scorecard_v2, not a UI gap.</p></div></div>
+      </div>
+    </section>`;
+}
+
+function verdictSection(m) {
+  const e = m.expert;
+  return `
+    <section class="si-section" id="sec-verdict">
+      ${sectionHead(3, "AI Verdict & Reuse Notes", "Expert QuantLens narrative verdict, feasibility, and reuse value.", "cpu")}
+      <div class="panel">
+        ${e ? `
+        <div class="banner ${e.decision === "RESEARCH_ONLY" ? "warn" : "info"}" style="margin-bottom:16px;">
+          <div class="banner-icon">${icon("cpu")}</div>
+          <div><h4>${esc(e.decision_label || e.decision)}</h4><p>${esc(e.reason || "")}</p></div>
+        </div>
+        <div class="info-grid">
+          ${infoCard("Programmatic Feasibility", e.can_test ? `Testable: ${e.can_test}` : null, { empty: M.snapshot })}
+          ${infoCard("Backtest Feasibility", e.testability, { empty: M.snapshot })}
+          ${infoCard("Production Readiness", spaced(m.gates.g3.status))}
+          ${infoCard("AI Reuse Factor", m.candidateKind.length ? `${m.candidateKind.length} reusable components` : null, { empty: M.snapshot })}
+          ${infoCard("Commercial Value", e.commercial_value, { empty: M.snapshot })}
+          ${infoCard("Literature Relevance", e.literature_relevance, { empty: M.snapshot })}
+          ${infoCard("Complexity", e.complexity, { empty: M.snapshot })}
+          ${infoCard("Score Reference", e.score_reference, { empty: M.snapshot })}
+        </div>
+        <h4 class="section-title" style="margin-top:18px;">Strategic Weaknesses / Risk Flags</h4>
+        <div class="chip-row">${(e.risk_flags || []).length ? e.risk_flags.map((f) => badge(spaced(f), "warn")).join("") : missing(M.snapshot)}</div>
+        <h4 class="section-title" style="margin-top:18px;">AI-Reusable Components</h4>
+        <div class="chip-row">${m.candidateKind.length ? m.candidateKind.map((k) => `<span class="chip static">${esc(spaced(k))}</span>`).join("") : missing("Not catalogued in registry")}</div>
+        <h4 class="section-title" style="margin-top:18px;">Blocking / Missing Assumptions</h4>
+        <p class="summary" style="margin-bottom:0;">${esc(e.blocking || "No explicit blocking notes.")}${m.directional && m.directional.warning ? " · " + esc(m.directional.warning) : ""}</p>
+        ` : emptyState("Expert QuantLens verdict not present for this strategy in the current snapshot.")}
+      </div>
+    </section>`;
+}
+
+function evidenceSection(m) {
+  const g2 = m.gates.g2;
+  const tfs = explorerTimeframes();
+  const rp = runPlanForStrategy(m.id);
+  const pd = (rp && rp.data) || null;
+  const planProfiles = pd && Array.isArray(pd.profiles) ? pd.profiles : null;
+  const universe = pd && pd.universe ? pd.universe : null;
+  const symbolsTxt = pd && Array.isArray(pd.symbols) && pd.symbols.length
+    ? pd.symbols.join(", ")
+    : (universe ? `${spaced(universe.status)} — ${universe.reason || ""}` : null);
+  const paramState = pd && pd.parameter_space && pd.parameter_space.state ? pd.parameter_space.state : null;
+  const ap = pd && pd.approval ? pd.approval : null;
+  const missing = pd && Array.isArray(pd.missing_assumptions) ? pd.missing_assumptions : [];
+  const freeze = pd && Array.isArray(pd.rule_freeze_requirements) ? pd.rule_freeze_requirements : [];
+  return `
+    <section class="si-section" id="sec-evidence">
+      ${sectionHead(4, "Backtest Plan & Evidence", "Gate 2 evidence, profiles, parameter space, and target artifacts.", "beaker")}
+      <div class="panel">
+        ${pd ? `<div class="banner info"><div class="banner-icon">${icon("info")}</div><div><h4>run_plan.json present (draft / review-only)</h4><p>Loaded read-only from <code>${esc(rp.rel_path)}</code> (state: ${esc(rp.state)}). This is a draft plan — no execution is triggered.</p></div></div>` : ""}
+        <div class="info-grid">
+          ${infoCard("Gate 2 Status", g2.score != null ? `${g2.score}/${g2.max} — ${spaced(g2.status)}` : spaced(g2.status))}
+          ${infoCard("Run ID", pd ? pd.run_id : null, { empty: M.runplan })}
+          ${infoCard("Plan Status", pd ? spaced(pd.status) : null, { empty: M.runplan })}
+          ${infoCard("Approval State", pd ? (pd.approval_state || (ap ? "PENDING" : null)) : null, { empty: M.runplan })}
+          ${infoCard("Human Review Required", ap ? String(ap.human_review_required) : null, { empty: M.runplan })}
+          ${infoCard("Approved", ap ? String(ap.approved) : null, { empty: M.runplan })}
+          ${infoCard("Execution Allowed", ap ? String(ap.execution_allowed) : null, { empty: M.runplan })}
+          ${infoCard("Estimated Cells / Cases", pd && pd.case_count != null ? pd.case_count : (m.casesCount != null ? m.casesCount : null), { empty: M.runplan })}
+          ${infoCard("Universe / Symbols", symbolsTxt, { empty: M.runplan, span2: true })}
+          ${infoCard("Timeframes", pd && Array.isArray(pd.timeframes) && pd.timeframes.length ? pd.timeframes.join(", ") : null, { empty: M.runplan })}
+          ${infoCard("Parameter Space State", paramState ? spaced(paramState) : null, { empty: M.runplan })}
+          ${infoCard("Output Dir", pd ? pd.output_dir : null, { empty: M.runplan, span2: true })}
+          ${infoCard("Verification Method", "scorecard_v2 (heuristic gate scoring)")}
+        </div>
+
+        <h4 class="section-title" style="margin-top:18px;">Backtest Profiles</h4>
+        <div class="table-wrap"><table class="grid-table">
+          <thead><tr><th>Profile</th><th>Purpose</th><th>Status</th></tr></thead>
+          <tbody>
+            ${PROFILES.map((p) => `<tr><td class="mono">${esc(p)}</td><td>${esc(profilePurpose(p))}</td><td>${planProfiles ? (planProfiles.includes(p) ? badge("Selected in run_plan", "ok") : badge("Not selected", "neutral")) : badge("Not profile-separated", "neutral")}</td></tr>`).join("")}
+          </tbody>
+        </table></div>
+
+        ${pd ? `
+        <h4 class="section-title" style="margin-top:18px;">Expected Artifacts (per run_plan)</h4>
+        <div class="artifact-list">
+          ${(Array.isArray(pd.expected_artifacts) ? pd.expected_artifacts : []).map((a) => `<div class="artifact-item"><code>${esc(a)}</code><span class="a-state plan">Expected / not present</span></div>`).join("") || emptyState("No expected_artifacts listed in run_plan.")}
+        </div>
+
+        <h4 class="section-title" style="margin-top:18px;">Rule-Freeze / Missing Assumptions</h4>
+        ${(missing.length || freeze.length) ? `<ul class="plain-list">
+          ${missing.map((x) => `<li>${badge("missing", "warn")} ${esc(x)}</li>`).join("")}
+          ${freeze.map((x) => `<li>${badge("freeze", "neutral")} ${esc(x)}</li>`).join("")}
+        </ul>` : emptyState("No missing assumptions recorded in run_plan.")}
+        ` : `
+        <h4 class="section-title" style="margin-top:18px;">Case Count Calculator</h4>
+        ${emptyState("Parameter space and case-count calculation require run_plan.json — pending / artifact missing.")}
+
+        <h4 class="section-title" style="margin-top:18px;">Parameter Space Preview</h4>
+        ${emptyState("Parameter space not present in read model. " + M.runplan + ".")}`}
+
+        <h4 class="section-title" style="margin-top:18px;">Top Results Preview</h4>
+        ${profileMatrix(m, tfs)}
+        <p class="summary" style="margin-top:10px;margin-bottom:0;">The full Top 5 list lives in <a style="color:var(--teal);cursor:pointer;" onclick="openExplorerForStrategy('${esc(m.id)}')">Backtest Result Explorer</a>. This is a compact preview.</p>
+      </div>
+    </section>`;
+}
+function profilePurpose(p) {
+  return ({
+    SOURCE_NAKED: "Raw source rules, no risk normalization.",
+    RISK_NORMALIZED: "Risk-normalized position sizing applied.",
+    MTC_LIGHT: "Lightweight MTC signal conversion.",
+    FULL_MTC_CANDIDATE: "Full MTC candidate integration.",
+  })[p] || "—";
+}
+function explorerTimeframes() {
+  const tfs = new Set();
+  scorecardCards().forEach((c) => { if (c.timeframe) tfs.add(c.timeframe); });
+  const arr = Array.from(tfs);
+  return arr.length ? arr.slice(0, 6) : ["15m", "1h", "4h", "1D"];
+}
+function profileMatrix(m, tfs) {
+  const bestTf = m.testedTf;
+  const bestScore = m.canonical && m.canonical.gate2_score;
+  return `<div class="matrix-wrap"><table class="matrix">
+    <thead><tr><th>Profile</th>${tfs.map((t) => `<th class="num">${esc(t)}</th>`).join("")}</tr></thead>
+    <tbody>${PROFILES.map((p) => `<tr><td class="profile">${esc(p)}</td>${tfs.map((t) => {
+      const isBest = p === "SOURCE_NAKED" && t === bestTf && bestScore != null;
+      if (isBest) return `<td class="num best"><div class="matrix-best">Best: ${esc(bestScore)} / 100<span class="sub">Status: ${spaced(m.gates.g2.status)}</span><a onclick="openExplorerForStrategy('${esc(m.id)}')">Open Top 5</a></div></td>`;
+      return `<td class="num"><span class="cell-empty">No profile-separated result yet</span></td>`;
+    }).join("")}</tr>`).join("")}</tbody>
+  </table></div>`;
+}
+
+function explorerPreviewSection(m) {
+  const cards = cardsForStrategy(m.id).slice().sort((a, b) => Number((b.gate2 && b.gate2.score) || 0) - Number((a.gate2 && a.gate2.score) || 0));
+  const best = cards[0];
+  const prows = profileRowsForStrategy(m.id).slice().sort((a, b) => Number(b.score || 0) - Number(a.score || 0));
+  const pr = prows[0];
+  return `
+    <section class="si-section secondary" id="sec-explorer">
+      ${sectionHead(5, "Backtest Result Explorer", "Strategy-scoped result preview. Compare only within the same bucket.", "bar")}
+      <div class="panel">
+        <p class="same-profile-warning">Same-bucket rule: compare only within identical profile, timeframe, market universe, and score method.</p>
+        ${pr ? researchOnlyBanner(pr) : ""}
+        ${pr ? `
+        <div class="bucket" style="margin-bottom:12px;">
+          <div class="bucket-head"><div class="title"><span class="name">Best profile-separated result</span>${badge(pr.profile, "ok")} ${profileRowBadges(pr)}</div>${pr.promotion_status ? badge(spaced(pr.promotion_status), gateTone(pr.promotion_status)) : ""}</div>
+          <div class="info-grid">
+            ${infoCard("Profile", pr.profile)}
+            ${infoCard("Asset / Timeframe", `${pr.symbol || "—"} / ${pr.timeframe || "—"}`)}
+            ${infoCard("Score", pr.score != null ? pr.score : null, { empty: M.artifact })}
+            ${infoCard("Net Profit", pr.metrics && pr.metrics.net_profit != null ? pr.metrics.net_profit + "%" : null, { empty: M.artifact })}
+            ${infoCard("Max Drawdown", pr.metrics && pr.metrics.max_drawdown != null ? pr.metrics.max_drawdown + "%" : null, { empty: M.artifact })}
+            ${infoCard("Run", pr.run_id, { empty: M.artifact })}
+          </div>
+        </div>` : best ? `
+        <div class="bucket" style="margin-bottom:12px;">
+          <div class="bucket-head"><div class="title"><span class="name">Best available result</span>${badge("legacy row", "neutral")}</div>${badge(spaced(best.gate_summary && best.gate_summary.statuses && best.gate_summary.statuses.gate2), gateTone(best.gate_summary && best.gate_summary.statuses && best.gate_summary.statuses.gate2))}</div>
+          <div class="info-grid">
+            ${infoCard("Asset / Timeframe", `${best.symbol || "—"} / ${best.timeframe || "—"}`)}
+            ${infoCard("Gate 2 Score", best.gate2 && best.gate2.score != null ? best.gate2.score : null, { empty: M.artifact })}
+            ${infoCard("Run", best.run_name || best.run_id, { empty: M.artifact })}
+            ${infoCard("Profile", null, { empty: "Profile-separated artifact missing" })}
+          </div>
+        </div>` : emptyState("No scorecard result rows for this strategy in the current snapshot.")}
+        <button class="btn purple" type="button" onclick="openExplorerForStrategy('${esc(m.id)}')">Open Backtest Result Explorer (strategy scope)</button>
+      </div>
+    </section>`;
+}
+
+function paperReadinessSection(m) {
+  const ready = m.promotable;
+  const rows = [
+    ["Paper Trade Eligibility", ready ? "Eligible (pending approval)" : "Not eligible yet"],
+    ["Gate 3 Readiness", spaced(m.gates.g3.status)],
+    ["Alert Contract Readiness", "Not generated"],
+    ["Monitoring Readiness", "Not generated"],
+    ["Fail-Safe Readiness", "Not evaluated"],
+  ];
+  return `
+    <section class="si-section secondary" id="sec-paper">
+      ${sectionHead(6, "Paper Trading Readiness", "Read-only readiness review. Locked until evidence exists.", "activity")}
+      <div class="panel">
+        ${ready ? "" : `<div class="banner warn" style="margin-bottom:14px;"><div class="banner-icon">${icon("lock")}</div><div><h4>Paper Trading Locked</h4><p>Locked until Gate 2 evidence passes and Gate 3 readiness artifacts exist. Reason: ${esc(m.blocking.join(", ") || "Gate 2 evidence not demonstrated")}.</p></div></div>`}
+        <div class="def-rows">
+          ${rows.map(([k, v]) => `<div class="readiness-row"><span class="rk">${esc(k)}</span>${badge(v, gateTone(v))}</div>`).join("")}
+        </div>
+        <div class="chip-row" style="margin-top:14px;">
+          <span class="chip static">View Gate 3 Readiness Checklist (pending)</span>
+          <span class="chip static">View Paper Trading Approval Package (pending)</span>
+        </div>
+      </div>
+    </section>`;
+}
+
+function advancedSection(m) {
+  const j = (label, obj) => `<details class="acc"><summary>${esc(label)}</summary><div class="acc-body"><pre class="json">${esc(JSON.stringify(obj || {}, null, 2))}</pre></div></details>`;
+  // Prefer lazy-loaded full detail (with sub_scores) when available; else summary-only.
+  const dc = m.detailCard;
+  const detailEntry = state.detailCards[m.id];
+  const fullCards = detailEntry && detailEntry.status === "ok" ? detailEntry.cards : null;
+  const cards = fullCards || cardsForStrategy(m.id);
+  const gateObj = dc
+    ? { gate1: dc.gate1, gate1B: dc.gate1B, gate2: dc.gate2, gate3: dc.gate3 }
+    : { gate1: m.v2.gate1, gate1B: m.v2.gate1B, gate2: m.v2.gate2, gate3: m.v2.gate3 };
+  const gateLabel = dc
+    ? "Raw scorecard gates (gate1 / gate1B / gate2 / gate3 — full detail)"
+    : (m.detailStatus === "loading"
+        ? "Raw scorecard gates (loading full detail...)"
+        : "Raw scorecard gates (summary only — full sub_scores via scorecard-detail)");
+  const cardsLabel = fullCards
+    ? `Scorecard rows (${cards.length} — full detail)`
+    : `Scorecard rows (${cards.length} — summary)`;
+  return `
+    <section class="si-section secondary" id="sec-advanced">
+      ${sectionHead(7, "Advanced Technical Details", "Raw read-model rows and identifiers. Collapsed by default.", "settings")}
+      <div class="panel">
+        ${j("Raw gate summary (scorecard_v2.gate_summary)", m.v2.gate_summary)}
+        ${j(gateLabel, gateObj)}
+        ${j("Heuristic triage scorecard", m.scorecard)}
+        ${j(cardsLabel, cards)}
+        ${j("Canonical / classification", { canonical: m.canonical, classification: m.classification, directional_research: m.directional })}
+        ${j("Technical IDs & artifact paths", { id: m.id, base_strategy_id: m.baseId, run_id: m.v2.run_id, source_path: m.v2.source_path })}
+      </div>
+    </section>`;
+}
+
+function railRow(k, v, cls) {
+  const val = (v === null || v === undefined || v === "") ? `<span class="v locked">N/A</span>` : `<span class="v ${cls || ""}">${esc(v)}</span>`;
+  return `<div class="rail-row"><span class="k">${esc(k)}</span>${val}</div>`;
+}
+function railBlock(m) {
+  const e = m.expert;
+  const g = m.gates;
+  return `
+    <div class="rail-card next">
+      <div class="rail-next-head">
+        <div class="rail-next-icon">${icon("target")}</div>
+        <div><h4>Next Action</h4><p>${esc(m.nextAction || "Review evidence and freeze rules.")}</p></div>
+      </div>
+    </div>
+
+    <div class="rail-card">
+      <h4>Decision Summary</h4>
+      ${railRow("LLM / AI Verdict", e ? (e.decision_label || e.decision) : null, e && e.decision === "RESEARCH_ONLY" ? "warn" : "ok")}
+      ${railRow("Gate 1 Intake", spaced(g.g1.status), gateTone(g.g1.status))}
+      ${railRow("Gate 1B MTC", spaced(g.g1b.status), gateTone(g.g1b.status))}
+      ${railRow("Gate 2 Evidence", spaced(g.g2.status), gateTone(g.g2.status))}
+      ${railRow("Gate 3 Production", spaced(g.g3.status), "locked")}
+      ${railRow("Promotion", m.promotable ? "Eligible" : "Blocked", m.promotable ? "ok" : "warn")}
+      ${railRow("Paper Trading", m.promotable ? "Pending approval" : "Locked", "locked")}
+      ${railRow("AI Reuse Factor", m.candidateKind.length ? `${m.candidateKind.length} components` : null, "teal")}
+    </div>
+
+    <div class="rail-card">
+      <h4>Missing Fields / Risk</h4>
+      ${missingFieldsList(m)}
+    </div>
+
+    <div class="rail-card">
+      <h4>AI Knowledge Value</h4>
+      ${m.candidateKind.length ? m.candidateKind.map((k) => railRow(spaced(k), "Review needed", "warn")).join("") : `<div class="rail-miss">${missing("No reusable components catalogued")}</div>`}
+    </div>
+
+    <div class="rail-card">
+      <h4>Review State / Read-only</h4>
+      ${railRow("Mode", "READ-ONLY", "teal")}
+      ${railRow("AI Planning", "Review only", "")}
+      ${railRow("Backtest Evidence", "Manual review required", "")}
+      ${railRow("Monitoring", "Read-only", "")}
+      ${railRow("Morning Summary", "Artifact review only", "")}
+    </div>`;
+}
+function missingFieldsList(m) {
+  const items = [];
+  if (!m.sourceUrl) items.push("Source metadata");
+  (m.blocking || []).forEach((b) => items.push(`Blocking: ${spaced(b)}`));
+  if (m.directional && m.directional.status === "DIRECTION_UNKNOWN") items.push("Trade direction undefined");
+  if (!m.rules.exit) items.push("Exit logic not extracted");
+  if (m.tfMismatch) items.push("Defined vs tested timeframe mismatch");
+  if (!items.length) items.push("No critical missing fields detected");
+  return items.map((i) => `<div class="rail-miss"><span class="i">${icon("shield")}</span><span>${esc(i)}</span></div>`).join("");
+}
+
+/* ============================================================
+   PAGE: Backtest Planner (read-only)
+   ============================================================ */
+function renderPlanner(c) {
+  const id = state.selectedStrategyId || defaultStrategyId();
+  const m = id ? strategyModel(id) : null;
+  const plan = usableRunPlans()[0] || null;
+  const pd = (plan && plan.data) || null;
+  const planProfiles = pd && Array.isArray(pd.profiles) ? pd.profiles : null;
+  const expected = pd && Array.isArray(pd.expected_artifacts) ? pd.expected_artifacts
+    : ["run_plan.json", "scorecard_v2.json", "backtest_profile_result.json", "top_results.json", "artifact_index.json"];
+  c.innerHTML = `
+    <div class="banner warn"><div class="banner-icon">${icon("lock")}</div><div><h4>Read-only constraint</h4><p>This planner reviews draft run intent and expected artifact packages only. Artifact review only — no run-trigger or write-back affordances exist here.</p></div></div>
+
+    ${pd ? `<div class="banner info"><div class="banner-icon">${icon("info")}</div><div><h4>run_plan.json present</h4><p>Loaded read-only from <code>${esc(plan.rel_path)}</code> (state: ${esc(plan.state)}).</p></div></div>` : ""}
+
+    <section class="panel">
+      <div class="panel-heading"><h3>Run Intent</h3><span>${pd ? "from run_plan.json" : "read-only"}</span></div>
+      <div class="info-grid">
+        ${infoCard("Run ID", pd ? pd.run_id : null, { empty: M.runplan })}
+        ${infoCard("Selected Strategy", m ? m.displayName : (pd && pd.strategy_ids ? pd.strategy_ids.join(", ") : null), { empty: "No strategy selected" })}
+        ${infoCard("Run Intent", "Prepare Gate 2 evidence package")}
+        ${infoCard("Approval State", pd ? pd.approval_state : null, { empty: M.runplan })}
+        ${infoCard("Case Count", pd && pd.case_count != null ? pd.case_count : null, { empty: M.runplan })}
+        ${infoCard("Output Dir", pd ? pd.output_dir : null, { empty: M.runplan })}
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading"><h3>Backtest Profiles Setup</h3><span>4 profiles</span></div>
+      <div class="table-wrap"><table class="grid-table">
+        <thead><tr><th>Profile</th><th>Purpose</th><th>Setup Status</th></tr></thead>
+        <tbody>${PROFILES.map((p) => `<tr><td class="mono">${esc(p)}</td><td>${esc(profilePurpose(p))}</td><td>${planProfiles ? (planProfiles.includes(p) ? badge("Selected in run_plan", "ok") : badge("Not selected", "neutral")) : badge("Pending run_plan.json", "neutral")}</td></tr>`).join("")}</tbody>
+      </table></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading"><h3>Run Constraints & Assumptions</h3><span>${pd ? "from run_plan.json" : "draft"}</span></div>
+      <div class="info-grid">
+        ${infoCard("Timeframes", pd && Array.isArray(pd.timeframes) && pd.timeframes.length ? pd.timeframes.join(", ") : null, { empty: M.runplan })}
+        ${infoCard("Universe", pd && Array.isArray(pd.symbols) && pd.symbols.length ? pd.symbols.join(", ") : null, { empty: M.runplan })}
+        ${infoCard("Risk / Sizing", pd && pd.walk_forward ? "See run_plan.walk_forward" : null, { empty: M.rulefreeze })}
+        ${infoCard("Smoke Test", pd && pd.smoke_test != null ? (typeof pd.smoke_test === "object" ? "Configured" : String(pd.smoke_test)) : null, { empty: M.runplan })}
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading"><h3>Parameter Space & Case Count</h3><span>read-only</span></div>
+      ${pd && (pd.parameter_space != null || pd.case_count != null) ? `<div class="info-grid">
+        ${infoCard("Case Count", pd.case_count != null ? pd.case_count : null, { empty: M.runplan })}
+        ${infoCard("Parameter Space", pd.parameter_space != null ? (Array.isArray(pd.parameter_space) ? pd.parameter_space.length + " params" : Object.keys(pd.parameter_space).length + " keys") : null, { empty: M.runplan })}
+      </div>` : emptyState("Parameter space preview and case-count calculation require run_plan.json — pending / artifact missing.")}
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading"><h3>Approval & Expected Outputs</h3><span>artifact contract</span></div>
+      <div class="artifact-list">
+        ${expected.map((a) => `<div class="artifact-item"><code>${esc(a)}</code><span class="a-state ${pd ? "plan" : "plan"}">${pd ? "Expected per run_plan" : "Expected / not present"}</span></div>`).join("")}
+      </div>
+      <div class="chip-row" style="margin-top:14px;">
+        <span class="chip static">View Run Plan Draft (pending)</span>
+        <span class="chip static">View Approval Package (pending)</span>
+        <span class="chip static">View Expected Artifacts</span>
+      </div>
+    </section>
+  `;
+}
+
+/* ============================================================
+   PAGE: Backtest Runs
+   ============================================================ */
+function renderRuns(c) {
+  const runs = backtestRuns();
+  const summary = (snap().backtest_status && snap().backtest_status.summary) || {};
+  const hb = snap().overnight_heartbeat || {};
+  const completed = runs.filter((r) => String(r.status).toUpperCase() === "COMPLETED").length;
+  const failed = runs.filter((r) => /FAIL|CRASH|ERROR/i.test(String(r.status))).length;
+  const metric = (l, v, cls = "") => `<div class="lc-kpi"><span class="k">${esc(l)}</span><span class="v ${cls}">${esc(v)}</span></div>`;
+  const statusArtifacts = usableRunStatus();
+  const contractPanel = statusArtifacts.length ? `
+    <section class="panel">
+      <div class="panel-heading"><h3>Run Status (artifact contract)</h3><span>${statusArtifacts.length} run_status.json</span></div>
+      <div class="table-wrap"><table class="grid-table">
+        <thead><tr><th>Run ID</th><th>Status</th><th>Stage</th><th class="num">Progress</th><th class="num">Workers</th><th>Updated</th><th>Output Dir</th></tr></thead>
+        <tbody>${statusArtifacts.map((rec) => { const d = rec.data || {}; const prog = typeof d.progress === "object" && d.progress ? (d.progress.percent != null ? d.progress.percent + "%" : (d.progress.completed != null && d.progress.total != null ? `${d.progress.completed}/${d.progress.total}` : "—")) : (d.progress != null ? d.progress + "%" : "—"); return `<tr>
+          <td><code>${esc(d.run_id || rec.run_id)}</code></td>
+          <td>${badge(d.status || "—", gateTone(d.status))}</td>
+          <td>${esc(d.current_stage || "—")}</td>
+          <td class="num">${esc(prog)}</td>
+          <td class="num">${d.workers != null ? esc(d.workers) : "—"}</td>
+          <td>${esc(d.updated_at || d.finished_at || "—")}</td>
+          <td><span class="cell-path">${esc(d.output_dir || rec.rel_path)}</span></td>
+        </tr>`; }).join("")}</tbody>
+      </table></div>
+    </section>` : "";
+  c.innerHTML = `
+    ${contractPanel}
+    <section class="panel">
+      <div class="panel-heading"><h3>Backtest Runs</h3><span>${runs.length} runs</span></div>
+      <div class="grid-4" style="margin-bottom:8px;">
+        ${metric("Total Runs", summary.total_runs != null ? summary.total_runs : runs.length)}
+        ${metric("Completed", completed)}
+        ${metric("Failed / Crashed", failed, failed ? "na" : "")}
+        ${metric("Latest Run", summary.last_run_id || "—")}
+      </div>
+      <div class="grid-2" style="margin-bottom:16px;">
+        ${metric("Heartbeat", hb.available ? (hb.is_alive ? "Online" : "Stale") : "Not available")}
+        ${metric("Last Successful", summary.last_successful_run || "—")}
+      </div>
+      <div class="table-wrap"><table class="grid-table">
+        <thead><tr><th>Run ID</th><th>Status</th><th>Symbol(s)</th><th>Timeframe(s)</th><th class="num">Trades</th><th>Report Path</th></tr></thead>
+        <tbody>${runs.length ? runs.slice(0, 60).map((r) => `
+          <tr>
+            <td><code>${esc(r.run_id || r.id || "—")}</code></td>
+            <td>${badge(r.status || "—", gateTone(r.status))}</td>
+            <td>${esc((r.symbols_tested || [r.symbol]).filter(Boolean).join(", ") || "—")}</td>
+            <td>${esc((r.timeframes_tested || [r.timeframe]).filter(Boolean).join(", ") || "—")}</td>
+            <td class="num">${r.trade_count != null ? r.trade_count : "—"}</td>
+            <td><span class="cell-path">${esc(r.relative_source_path || r.report_path || M.artifact)}</span></td>
+          </tr>`).join("") : `<tr><td colspan="6" class="empty-cell">No backtest runs in snapshot.</td></tr>`}</tbody>
+      </table></div>
+    </section>
+  `;
+}
+
+/* ============================================================
+   PAGE: Backtest Result Explorer
+   ============================================================ */
+function renderResultExplorer(c) {
+  const scope = state.explorerScope;
+  const scopeId = state.explorerStrategyId;
+  let cards = scorecardCards().slice();
+  if (scope === "strategy" && scopeId) cards = cardsForStrategy(scopeId);
+  cards.sort((a, b) => Number((b.gate2 && b.gate2.score) || 0) - Number((a.gate2 && a.gate2.score) || 0));
+  const tfs = explorerTimeframes();
+  const selected = cards[0];
+
+  const sym = selected ? (selected.symbol || "—") : "—";
+  const prows = scope === "strategy" && scopeId ? profileRowsForStrategy(scopeId) : profileRows();
+  const hasProfile = prows.length > 0;
+  const pr0 = prows[0];
+  c.innerHTML = `
+    <section class="panel">
+      <div class="panel-heading"><h3>Backtest Result Explorer</h3><span>${scope === "strategy" ? "strategy scope: " + esc(baseId(scopeId)) : "global scope"}</span></div>
+      <p class="same-profile-warning">Only compare results within the same profile, timeframe, market universe, and score method. Do not compare SOURCE_NAKED with MTC_LIGHT, or 15m with 1D.</p>
+      ${hasProfile ? researchOnlyBanner(pr0) : ""}
+      <h4 class="section-title">Active Comparison State</h4>
+      <div class="info-grid">
+        ${infoCard("Score Method", hasProfile ? (pr0.score_method || "scorecard_v2") : "scorecard_v2")}
+        ${infoCard("Profile", hasProfile ? pr0.profile : null, { empty: "Profile artifact missing" })}
+        ${infoCard("Timeframe", hasProfile ? pr0.timeframe : (selected ? selected.timeframe : null), { empty: M.snapshot })}
+        ${infoCard("Symbol / Universe", hasProfile ? (pr0.symbol || "—") : (scope === "strategy" ? sym : "All symbols in snapshot"))}
+        ${infoCard("Run ID", hasProfile ? pr0.run_id : (selected ? selected.run_id : null), { empty: M.artifact })}
+        ${infoCard("Artifact Status", hasProfile ? (profileRowHasFlags(pr0) ? "Profile-separated artifact present — research-only" : "Profile-separated artifact present") : "Legacy scorecard only — profile artifact missing")}
+      </div>
+      ${hasProfile && profileRowHasFlags(pr0) ? `<div style="margin-top:8px;">${profileRowBadges(pr0)}</div>` : ""}
+      <h4 class="section-title" style="margin-top:16px;">Filters</h4>
+      <div class="chip-row">
+        ${["Strategy", "Profile", "Timeframe", "Symbol", "Score method", "Run ID", "Date range", "Min trade count", "Only benchmark beaters", "Only robust / OOS"].map((f) => `<span class="chip static" style="opacity:${hasProfile ? "1" : ".5"};">${esc(f)}</span>`).join("")}
+      </div>
+      <p class="summary" style="margin:10px 0 0;">${hasProfile ? "Read-only filters reflect available profile-separated artifact fields." : "Filter controls pending profile-separated artifact reader."}</p>
+    </section>
+
+    ${hasProfile ? "" : `<div class="banner warn"><div class="banner-icon">${icon("info")}</div><div><h4>Profile-separated artifacts not present</h4><p>No <code>backtest_profile_result.json</code> / profile-separated artifact exists yet. The four official profile buckets below stay empty; non-profile scorecard rows are quarantined in the Legacy Scorecard Reference section.</p></div></div>`}
+
+    <h4 class="section-title">Official Profile Buckets</h4>
+    ${PROFILES.map((p) => bucketBlock(p, (scope === "strategy" && scopeId ? profileRowsForStrategy(scopeId) : profileRowsFor(p)).filter((r) => r.profile === p))).join("")}
+
+    <section class="bucket" style="border-color: rgba(180,90,30,0.3);">
+      <div class="bucket-head">
+        <div class="title"><span class="name">Legacy Scorecard Reference — profile missing</span>${cards.length ? badge(`${cards.length} rows`, "warn") : badge("no rows", "neutral")}</div>
+      </div>
+      <p class="summary">These are non-profile-separated scorecard rows. They are not validated SOURCE_NAKED / profile results and must not be compared across buckets.</p>
+      ${cards.length ? `<div class="table-wrap"><table class="grid-table">
+        <thead><tr><th>Rank</th><th>Strategy</th><th>Asset / TF</th><th class="num">Gate 2</th><th>Gate Summary</th><th>Run</th></tr></thead>
+        <tbody>${cards.slice(0, 25).map((cc, i) => `<tr>
+          <td>#${i + 1}</td>
+          <td>${esc(baseId(cc.base_strategy_id || cc.strategy_id))}</td>
+          <td>${esc(cc.symbol || "—")} / ${esc(cc.timeframe || "—")}</td>
+          <td class="num">${cc.gate2 && cc.gate2.score != null ? cc.gate2.score : "—"}</td>
+          <td>${gateSummaryBadges(cc)}</td>
+          <td><span class="cell-trunc">${esc(cc.run_name || cc.run_id || "—")}</span></td>
+        </tr>`).join("")}</tbody>
+      </table></div>` : emptyState("No scorecard rows in scope.")}
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading"><h3>Selected Result Detail</h3><span>${selected ? esc(baseId(selected.base_strategy_id || selected.strategy_id)) : "none"}</span></div>
+      ${selected ? `<div class="info-grid">
+        ${infoCard("Strategy", baseId(selected.base_strategy_id || selected.strategy_id))}
+        ${infoCard("Asset / Timeframe", `${selected.symbol || "—"} / ${selected.timeframe || "—"}`)}
+        ${infoCard("Run ID", selected.run_id, { empty: M.artifact })}
+        ${infoCard("Gate 2 Score", selected.gate2 && selected.gate2.score != null ? selected.gate2.score : null, { empty: M.artifact })}
+        ${infoCard("Parameter Set", null, { empty: M.artifact })}
+        ${infoCard("Trade Count / Win Rate", null, { empty: "Raw metrics not in read model" })}
+        ${infoCard("Source Path", selected.source_path, { empty: M.artifact, span2: true })}
+      </div>` : emptyState("No result rows in scope.")}
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading"><h3>Chart Preview</h3><span>read-only</span></div>
+      ${emptyState("Equity, drawdown, trade list, and price+entries/exits charts require equity_curve / trade_list artifacts — not present in read model.")}
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading"><h3>Required Result Artifacts</h3><span>contract</span></div>
+      <div class="artifact-list">
+        ${[
+          ["run_plan.json", "run_plans"],
+          ["artifact_index.json", "artifact_index"],
+          ["backtest_profile_result.json", "profile_result_files"],
+          ["top_results.json", "top_results"],
+          ["result.json", null],
+          ["metrics.json", null],
+          ["equity_curve.csv/json", null],
+          ["drawdown_curve.csv/json", null],
+          ["trade_list.csv/json", null],
+        ].map(([label, key]) => `<div class="artifact-item"><code>${esc(label)}</code>${artifactStateBadge(key)}</div>`).join("")}
+      </div>
+    </section>
+  `;
+}
+
+/* Required-artifact state from night_artifacts (read-only). Untracked contract files
+   (no reader key) stay Missing; tracked files reflect actual usable/incomplete/invalid. */
+function artifactStateBadge(naKey) {
+  if (!naKey) return `<span class="a-state missing">Missing</span>`;
+  const recs = naList(naKey);
+  if (!recs.length) return `<span class="a-state missing">Missing</span>`;
+  const states = recs.map((r) => r.state);
+  if (states.includes("usable")) return `<span class="a-state ok">Present / usable</span>`;
+  if (states.includes("incomplete")) return `<span class="a-state warn">Present / incomplete</span>`;
+  if (states.includes("invalid")) return `<span class="a-state bad">Present / invalid</span>`;
+  return `<span class="a-state missing">Missing</span>`;
+}
+
+function kpi(v, suffix = "") { return (v === null || v === undefined) ? '<span class="value-muted">—</span>' : esc(v + suffix); }
+
+/* Research-only / non-native-universe flags for a profile-separated result row.
+   Reads only fields already present in the snapshot; never fabricates. */
+function profileRowFlags(r) {
+  const prov = r.provenance || {};
+  const rob = (r.robustness && typeof r.robustness === "object") ? r.robustness : {};
+  const pm = r.profile_mapping || {};
+  const promo = String(r.promotion_status || "").toUpperCase();
+  return {
+    researchOnly: promo.includes("RESEARCH_ONLY") || promo.startsWith("NOT_PROMOTED"),
+    universeMismatch: !!prov.universe_mismatch,
+    nonRobust: rob.robust_final === false,
+    interpreted: pm.is_interpretation === true,
+    mismatchText: typeof prov.universe_mismatch === "string" ? prov.universe_mismatch : null,
+    sourcePath: prov.source_path || r.source_rel_path || null,
+  };
+}
+function profileRowBadges(r) {
+  const f = profileRowFlags(r);
+  const out = [];
+  if (f.researchOnly) out.push(badge("RESEARCH ONLY", "warn"));
+  if (f.universeMismatch) out.push(badge("UNIVERSE MISMATCH", "bad"));
+  if (f.nonRobust) out.push(badge("NON-ROBUST", "warn"));
+  if (f.interpreted) out.push(badge("PROFILE MAPPING INTERPRETED", "neutral"));
+  return out.join(" ");
+}
+function profileRowHasFlags(r) {
+  const f = profileRowFlags(r);
+  return f.researchOnly || f.universeMismatch || f.nonRobust || f.interpreted;
+}
+/* Prominent warning banner for a flagged profile result (Result Explorer / SI preview). */
+function researchOnlyBanner(r) {
+  if (!profileRowHasFlags(r)) return "";
+  const f = profileRowFlags(r);
+  return `<div class="banner bad" style="margin-bottom:12px;">
+    <div class="banner-icon">${icon("info")}</div>
+    <div>
+      <h4>Research-only profile result ${profileRowBadges(r)}</h4>
+      <p>Real metrics are present, but this result is <strong>not native-universe validation</strong> and is not a production or paper-trading validation. The source universe/timeframe differs from the strategy identifier. Treat as research-only until a native universe run exists.</p>
+      <div class="def-rows" style="margin-top:8px;">
+        ${defRow("Strategy ID", baseId(r.strategy_id))}
+        ${defRow("Source universe / TF", `${r.symbol || "—"} / ${r.timeframe || "—"}`)}
+        ${f.mismatchText ? defRow("Universe mismatch", f.mismatchText) : ""}
+        ${defRow("Promotion status", spaced(r.promotion_status || "—"))}
+        ${defRow("robust_final", String((r.robustness && typeof r.robustness === "object") ? r.robustness.robust_final : "—"))}
+        ${defRow("Source path", f.sourcePath || M.artifact)}
+      </div>
+    </div>
+  </div>`;
+}
+
+function bucketBlock(profile, rows) {
+  // rows are profile-separated result rows (night_artifacts.profile_results), never legacy.
+  const top = rows.slice().sort((a, b) => Number(b.score || 0) - Number(a.score || 0)).slice(0, 5);
+  return `
+    <section class="bucket">
+      <div class="bucket-head">
+        <div class="title"><span class="name">${esc(profile)}</span>${top.length ? badge(`top ${top.length}`, "teal") : badge("no results", "neutral")}</div>
+        ${top.length ? badge("Profile-separated artifact", "ok") : ""}
+      </div>
+      ${top.some(profileRowHasFlags) ? `<p class="summary" style="margin:0 0 10px;color:var(--amber,#f5a623);">Some rows are real sourced evidence but <strong>not native-universe validation</strong>. Flagged rows are research-only until a native universe run exists.</p>` : ""}
+      ${top.length ? `<div class="table-wrap"><table class="grid-table">
+        <thead><tr><th>Rank</th><th>Strategy</th><th>Asset / TF</th><th class="num">Score</th><th class="num">Net Profit</th><th class="num">PF</th><th class="num">Max DD</th><th class="num">B&H Alpha</th><th class="num">Trades</th><th>Robustness</th><th>Promotion</th><th>Flags</th></tr></thead>
+        <tbody>${top.map((r, i) => { const m = r.metrics || {}; return `<tr>
+          <td>#${i + 1}</td>
+          <td>${esc(baseId(r.strategy_id) || "—")}</td>
+          <td>${esc(r.symbol || "—")} / ${esc(r.timeframe || "—")}</td>
+          <td class="num">${kpi(r.score)}</td>
+          <td class="num">${kpi(m.net_profit, "%")}</td>
+          <td class="num">${kpi(m.profit_factor)}</td>
+          <td class="num">${kpi(m.max_drawdown, "%")}</td>
+          <td class="num">${kpi(m.buy_hold_alpha, "%")}</td>
+          <td class="num">${kpi(m.trade_count)}</td>
+          <td>${r.robustness ? badge(typeof r.robustness === "string" ? r.robustness : ((r.robustness.robust_final === false) ? "non-robust" : "see artifact"), (typeof r.robustness === "object" && r.robustness.robust_final === false) ? "warn" : "neutral") : '<span class="value-muted">—</span>'}</td>
+          <td>${r.promotion_status ? badge(spaced(r.promotion_status), gateTone(r.promotion_status)) : '<span class="value-muted">—</span>'}</td>
+          <td>${profileRowBadges(r) || '<span class="value-muted">—</span>'}</td>
+        </tr>`; }).join("")}</tbody>
+      </table></div>` : emptyState("No profile-separated result artifact yet.")}
+    </section>`;
+}
+function gateSummaryBadges(c) {
+  const s = (c.gate_summary && c.gate_summary.statuses) || {};
+  return ["gate1", "gate1B", "gate2", "gate3"].map((g) => badge(g.replace("gate", "G") + " " + spaced(s[g] || "—"), gateTone(s[g]))).join(" ");
+}
+
+/* ============================================================
+   PAGE: Strategy Leaderboard
+   ============================================================ */
+function renderLeaderboard(c) {
+  const cards = scorecardCards().slice().sort((a, b) => Number((b.gate2 && b.gate2.score) || 0) - Number((a.gate2 && a.gate2.score) || 0));
+  const buckets = [
+    ["#1", "Top Gate 2 Reference #1"],
+    ["#2", "Top Gate 2 Reference #2"],
+    ["#3", "Top Gate 2 Reference #3"],
+    ["#4", "Top Gate 2 Reference #4"],
+  ];
+  const prows = profileRows();
+  const deltas = naList("leaderboard_delta");
+  const validatedPanel = prows.length ? leaderboardValidatedPanel(prows, deltas) : "";
+  c.innerHTML = `
+    ${validatedPanel}
+    <div class="banner warn"><div class="banner-icon">${icon("info")}</div><div><h4>${prows.length ? "Legacy Gate 2 references (below)" : "Not validated category winners"}</h4><p>${prows.length ? "Validated profile-separated winners are shown above. The references below remain legacy Gate 2 rows, not profile-separated." : "Category/profile-separated leaderboard artifacts are not present. These cards are legacy Gate 2 references, not validated category winners."}</p></div></div>
+
+    <section class="panel">
+      <div class="panel-heading"><h3>Top Gate 2 References</h3><span>${cards.length} rows</span></div>
+      <div class="leader-grid">
+        ${buckets.map(([rank, cat], i) => {
+          const card = cards[i];
+          return `<article class="leader-card">
+            <div class="lc-head"><span class="lc-rank">${esc(rank)}</span><span class="lc-cat">${esc(cat)}</span></div>
+            <h4>${card ? esc(baseId(card.base_strategy_id || card.strategy_id)) : "No validated candidate"}</h4>
+            <div class="lc-prof">${card ? `Profile: artifact missing · TF: ${esc(card.timeframe || "—")}` : "No data"}</div>
+            <div class="lc-kpis">
+              <div class="lc-kpi"><span class="k">Gate 2</span><span class="v ${card && card.gate2 && card.gate2.score != null ? "" : "na"}">${card && card.gate2 && card.gate2.score != null ? card.gate2.score : "—"}</span></div>
+              <div class="lc-kpi"><span class="k">Net Prof</span><span class="v na" style="font-size:10px;">Profile artifact missing</span></div>
+              <div class="lc-kpi"><span class="k">Drawdown</span><span class="v na" style="font-size:10px;">Profile artifact missing</span></div>
+            </div>
+            ${card ? `<button class="btn purple mini" type="button" onclick="openExplorerForStrategy('${esc(baseId(card.base_strategy_id || card.strategy_id))}')">Open Result Explorer</button>` : `<span class="empty-pill">No candidate</span>`}
+          </article>`;
+        }).join("")}
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading"><h3>Full Ranking</h3><span>top 25</span></div>
+      <div class="table-wrap"><table class="grid-table">
+        <thead><tr><th>Rank</th><th>Strategy</th><th>Profile</th><th>Asset / TF</th><th class="num">Score</th><th>Gate Summary</th><th>Benchmark</th></tr></thead>
+        <tbody>${cards.length ? cards.slice(0, 25).map((c, i) => `<tr>
+          <td>${i + 1}</td>
+          <td>${esc(baseId(c.base_strategy_id || c.strategy_id))}</td>
+          <td><span class="empty-pill">missing</span></td>
+          <td>${esc(c.symbol || "—")} / ${esc(c.timeframe || "—")}</td>
+          <td class="num">${c.gate2 && c.gate2.score != null ? c.gate2.score : "—"}</td>
+          <td>${gateSummaryBadges(c)}</td>
+          <td>${c.gate2 && Number(c.gate2.score) >= 80 ? badge("candidate", "ok") : badge("below", "neutral")}</td>
+        </tr>`).join("") : `<tr><td colspan="7" class="empty-cell">No leaderboard data.</td></tr>`}</tbody>
+      </table></div>
+    </section>
+  `;
+}
+
+function leaderboardValidatedPanel(prows, deltas) {
+  // Best profile-separated row per profile (validated winners from artifacts only).
+  const best = {};
+  prows.forEach((r) => {
+    const cur = best[r.profile];
+    if (!cur || Number(r.score || 0) > Number(cur.score || 0)) best[r.profile] = r;
+  });
+  const present = PROFILES.filter((p) => best[p]);
+  if (!present.length) return "";
+  const anyFlagged = present.some((p) => profileRowHasFlags(best[p]));
+  return `
+    <div class="banner ${anyFlagged ? "warn" : "info"}"><div class="banner-icon">${icon("trend")}</div><div><h4>Top profile-separated results ${anyFlagged ? "(research-only — not validated category winners)" : ""}</h4><p>From <code>backtest_profile_result.json</code>${deltas.length ? " / leaderboard_delta.json" : ""}. Each card is the top score within its official profile.${anyFlagged ? " Flagged cards are real sourced evidence but <strong>not native-universe validation</strong> and are not production/paper-ready." : ""}</p></div></div>
+    <section class="panel">
+      <div class="panel-heading"><h3>${anyFlagged ? "Top Profile Results (research-only)" : "Validated Profile Winners"}</h3><span>${present.length} profiles</span></div>
+      <div class="leader-grid">
+        ${present.map((p) => { const r = best[p]; const m = r.metrics || {}; const flagged = profileRowHasFlags(r); return `<article class="leader-card">
+          <div class="lc-head"><span class="lc-rank">${flagged ? "⚠" : "★"}</span><span class="lc-cat">${esc(p)}</span></div>
+          <h4>${esc(baseId(r.strategy_id) || "—")}</h4>
+          <div class="lc-prof">${esc(r.symbol || "—")} · TF: ${esc(r.timeframe || "—")} · ${esc(r.score_method || "scorecard_v2")}</div>
+          ${flagged ? `<div style="margin:4px 0 8px;">${profileRowBadges(r)}</div>` : ""}
+          <div class="lc-kpis">
+            <div class="lc-kpi"><span class="k">Score</span><span class="v">${kpi(r.score)}</span></div>
+            <div class="lc-kpi"><span class="k">Net Prof</span><span class="v" style="font-size:14px;">${kpi(m.net_profit, "%")}</span></div>
+            <div class="lc-kpi"><span class="k">Max DD</span><span class="v" style="font-size:14px;">${kpi(m.max_drawdown, "%")}</span></div>
+          </div>
+          <button class="btn purple mini" type="button" onclick="openExplorerForStrategy('${esc(baseId(r.strategy_id))}')">Open Result Explorer</button>
+        </article>`; }).join("")}
+      </div>
+    </section>`;
+}
+
+/* ============================================================
+   PAGE: Paper Trading
+   ============================================================ */
+function renderPaperTrading(c) {
+  const rows = pipelineRows().map((r) => strategyModel(rowId(r)));
+  const ready = rows.filter((m) => m.promotable);
+  const locked = rows.filter((m) => !m.promotable);
+  const candCard = (m) => `
+    <article class="strategy-card">
+      <div class="sc-head"><div><code>${esc(m.id)}</code><h4>${esc(m.displayName)}</h4></div>${badge(m.promotable ? "Ready" : "Locked", m.promotable ? "ok" : "neutral")}</div>
+      <div class="def-rows">
+        ${defRow("Gate 2 Evidence", spaced(m.gates.g2.status))}
+        ${defRow("Gate 3 Readiness", spaced(m.gates.g3.status))}
+        ${defRow(m.promotable ? "Requirement" : "Locked Reason", m.promotable ? "Human approval" : (m.blocking.join(", ") || "Gate 2 evidence"))}
+        ${defRow("Approval Package", null, "Pending / artifact missing")}
+      </div>
+      <div class="chip-row">
+        <span class="chip static">View Approval Package (pending)</span>
+        <span class="chip static">View Gate 3 Checklist (pending)</span>
+      </div>
+    </article>`;
+  c.innerHTML = `
+    <div class="banner warn"><div class="banner-icon">${icon("lock")}</div><div><h4>Read-only readiness view</h4><p>Candidates remain locked until validated Gate 2 evidence and Gate 3 readiness artifacts exist. This view only reviews readiness packages; no trading actions are available.</p></div></div>
+
+    <section class="panel">
+      <div class="panel-heading"><h3>Ready Candidates</h3><span>${ready.length}</span></div>
+      <div class="strategy-card-grid">${ready.length ? ready.map(candCard).join("") : emptyState("No promotable candidates in current snapshot.")}</div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading"><h3>Locked Candidates</h3><span>${locked.length}</span></div>
+      <div class="strategy-card-grid">${locked.length ? locked.slice(0, 12).map(candCard).join("") : emptyState("No locked candidates.")}</div>
+    </section>
+  `;
+}
+
+/* ============================================================
+   PAGE: AI Knowledge Base
+   ============================================================ */
+function renderKnowledge(c) {
+  const comps = [];
+  registryEntries().forEach((r) => {
+    const kinds = Array.isArray(r.candidate_kind) ? r.candidate_kind : [];
+    kinds.forEach((k) => comps.push({ type: k, from: rowId(r), fromName: r.title || r.name || titleCase(baseId(rowId(r))) }));
+  });
+  const types = {};
+  comps.forEach((x) => { (types[x.type] = types[x.type] || []).push(x); });
+  const typeKeys = Object.keys(types);
+  const reuse = (t) => (t.includes("exit") || t.includes("entry") ? "ready" : t.includes("money") || t.includes("guard") ? "review" : "review");
+  const reuseLabel = (cls) => cls === "ready" ? "USEFUL" : cls === "no" ? "DO NOT REUSE" : "REVIEW NEEDED";
+
+  c.innerHTML = `
+    <div class="banner info"><div class="banner-icon">${icon("cpu")}</div><div><h4>Reusable component library</h4><p>Components are derived from registry candidate_kind tags. Reuse ratings are heuristic until an extraction reader is implemented.</p></div></div>
+    <div class="kb-grid">
+      <section class="panel">
+        <div class="panel-heading"><h3>Reusable Component Library</h3><span>${comps.length} tagged</span></div>
+        ${comps.length ? typeKeys.map((t) => {
+          const cls = reuse(t);
+          return `<div class="kb-item">
+            <span class="kb-tag ${cls}">${esc(reuseLabel(cls))}</span>
+            <div>
+              <h5>${esc(titleCase(t))}</h5>
+              <p>Extracted from ${types[t].length} strateg${types[t].length === 1 ? "y" : "ies"}, e.g. ${esc(types[t][0].fromName)}. Related area: ${esc(t.includes("entry") ? "Gate 1 rules" : t.includes("sl_tp") || t.includes("money") ? "Risk / sizing" : "Signal module")}.</p>
+            </div>
+          </div>`;
+        }).join("") : emptyState("No reusable components tagged in registry.")}
+      </section>
+      <section class="panel">
+        <div class="panel-heading"><h3>Group by Type</h3><span>${typeKeys.length}</span></div>
+        <div class="def-rows">${typeKeys.length ? typeKeys.map((t) => defRow(titleCase(t), `${types[t].length} component(s)`)).join("") : emptyState("No component types.")}</div>
+        <div class="banner info" style="margin-top:14px;margin-bottom:0;"><div class="banner-icon">${icon("info")}</div><div><h4>Synthesis</h4><p>Component synthesis requires agent-level orchestration — not available in this read-only view.</p></div></div>
+      </section>
+    </div>
+  `;
+}
+
+/* ============================================================
+   PAGE: Advanced Artifacts
+   ============================================================ */
+function renderArtifacts(c) {
+  const groups = [
+    ["Run Planning", ["run_plan.json", "run_status.json", "progress.json"]],
+    ["Status / Heartbeat", ["heartbeat.json", "artifact_index.json", "summary.json"]],
+    ["Result Evidence", ["backtest_profile_result.json", "top_results.json"]],
+    ["Leaderboard / Benchmark", ["leaderboard_delta.json", "benchmark_update_candidate.json"]],
+    ["Reports", ["morning_report.md"]],
+  ];
+  const consumer = {
+    "run_plan.json": "Backtest Planner", "run_status.json": "Backtest Runs", "progress.json": "Backtest Runs",
+    "heartbeat.json": "Backtest Runs", "artifact_index.json": "Result Explorer", "summary.json": "Command Center Home",
+    "backtest_profile_result.json": "Result Explorer", "top_results.json": "Result Explorer / Leaderboard",
+    "leaderboard_delta.json": "Leaderboard", "benchmark_update_candidate.json": "Leaderboard", "morning_report.md": "Reports",
+  };
+  const na = nightArtifacts();
+  const byFile = {
+    "run_plan.json": naList("run_plans"),
+    "run_status.json": naList("run_status"),
+    "artifact_index.json": naList("artifact_index"),
+    "backtest_profile_result.json": naList("profile_result_files"),
+    "top_results.json": naList("top_results"),
+    "leaderboard_delta.json": naList("leaderboard_delta"),
+    "benchmark_update_candidate.json": naList("benchmark_update_candidates"),
+  };
+  const companions = Array.isArray(na.companions) ? na.companions : [];
+  const compPresent = new Set(companions.map((x) => x.type));
+  function stateCell(a) {
+    const recs = byFile[a];
+    if (recs && recs.length) {
+      const states = recs.map((r) => r.state);
+      const st = states.includes("invalid") ? "invalid" : states.includes("incomplete") ? "incomplete" : "usable";
+      return badge(`${recs.length} present · ${st}`, st === "usable" ? "ok" : st === "incomplete" ? "warn" : "bad");
+    }
+    if (compPresent.has(a)) return badge("present", "ok");
+    return badge("missing", "neutral");
+  }
+  function pathCell(a) {
+    const recs = byFile[a];
+    if (recs && recs.length) return `<span class="cell-path">${esc(recs[0].rel_path)}</span>`;
+    const comp = companions.find((x) => x.type === a);
+    if (comp) return `<span class="cell-path">${esc(comp.rel_path)}</span>`;
+    return `<span class="value-muted">expected under 05_BACKTEST_RESULTS/&lt;run&gt;/</span>`;
+  }
+  const summaryCard = (l, v, cls = "") => `<div class="lc-kpi"><span class="k">${esc(l)}</span><span class="v ${cls}">${esc(v)}</span></div>`;
+  const s = na.summary || {};
+  c.innerHTML = `
+    <div class="banner info"><div class="banner-icon">${icon("db")}</div><div><h4>Artifact contract</h4><p>Night artifact contract grouped by purpose, wired to the read-only <code>night_artifacts</code> reader. This frontend does not ingest or write artifacts.</p></div></div>
+    <section class="panel">
+      <div class="panel-heading"><h3>Contract Summary</h3><span>read-only</span></div>
+      <div class="grid-4">
+        ${summaryCard("Expected Types", s.expected_types != null ? s.expected_types : "—")}
+        ${summaryCard("Present Types", s.present_types != null ? s.present_types : 0)}
+        ${summaryCard("Usable", s.usable != null ? s.usable : 0, s.usable ? "" : "na")}
+        ${summaryCard("Invalid", s.invalid != null ? s.invalid : 0, s.invalid ? "na" : "")}
+      </div>
+    </section>
+    ${(() => {
+      const prs = profileRows();
+      if (!prs.length) return "";
+      const mismatch = prs.filter((r) => profileRowFlags(r).universeMismatch).length;
+      const research = prs.filter((r) => profileRowFlags(r).researchOnly).length;
+      const nonrobust = prs.filter((r) => profileRowFlags(r).nonRobust).length;
+      return `<section class="panel">
+        <div class="panel-heading"><h3>Profile Result Rows — Quality Flags</h3><span>${prs.length} rows</span></div>
+        <div class="grid-4">
+          ${summaryCard("Profile Rows", prs.length)}
+          ${summaryCard("Universe Mismatch Rows", mismatch, mismatch ? "na" : "")}
+          ${summaryCard("Research-only Rows", research, research ? "na" : "")}
+          ${summaryCard("Non-robust Rows", nonrobust, nonrobust ? "na" : "")}
+        </div>
+        ${(mismatch || research || nonrobust) ? `<p class="summary" style="margin:10px 0 0;color:var(--amber,#f5a623);">Flagged rows are real sourced evidence but not native-universe validation. See Result Explorer for per-row badges.</p>` : ""}
+      </section>`;
+    })()}
+    ${groups.map(([title, items]) => `
+      <section class="panel">
+        <div class="panel-heading"><h3>${esc(title)}</h3><span>${items.length}</span></div>
+        <div class="table-wrap"><table class="grid-table">
+          <thead><tr><th>Artifact</th><th>State</th><th>Consumed By</th><th>Path</th></tr></thead>
+          <tbody>${items.map((a) => `<tr><td><code>${esc(a)}</code></td><td>${stateCell(a)}</td><td>${esc(consumer[a] || "—")}</td><td>${pathCell(a)}</td></tr>`).join("")}</tbody>
+        </table></div>
+      </section>`).join("")}
+  `;
+}
+
+/* ============================================================
+   PAGE: Diagnostics
+   ============================================================ */
+function renderDiagnostics(c) {
+  const diags = diagnosticItems();
+  const okCount = diags.filter((d) => d.ok).length;
+  const routes = NAV.length;
+  c.innerHTML = `
+    <section class="panel">
+      <div class="panel-heading"><h3>System Diagnostics</h3><span>${diags.length} file checks</span></div>
+      <div class="grid-4" style="margin-bottom:8px;">
+        <div class="lc-kpi"><span class="k">Data Contract Coverage</span><span class="v">${okCount}/${diags.length}</span></div>
+        <div class="lc-kpi"><span class="k">UI Route Coverage</span><span class="v">${routes}/${routes}</span></div>
+        <div class="lc-kpi"><span class="k">Read-only API</span><span class="v ${state.health && state.health.overall_ok ? "" : "na"}">${state.health && state.health.overall_ok ? "OK" : "Check"}</span></div>
+        <div class="lc-kpi"><span class="k">Placeholder-only Pages</span><span class="v">0</span></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading"><h3>File Diagnostics</h3><span>${diags.length}</span></div>
+      <div class="table-wrap"><table class="grid-table">
+        <thead><tr><th>Feed</th><th>Path</th><th>Required</th><th>JSON</th><th>Schema</th><th>Status</th></tr></thead>
+        <tbody>${diags.length ? diags.map((d) => `<tr>
+          <td>${esc(d.key)}</td>
+          <td><span class="cell-path">${esc(d.path || "—")}</span></td>
+          <td>${d.required ? "Yes" : "No"}</td>
+          <td>${badge(d.json_ok === false ? "Check" : "OK", d.json_ok === false ? "bad" : "ok")}</td>
+          <td>${badge(d.schema_ok === false ? "Check" : "OK", d.schema_ok === false ? "bad" : "ok")}</td>
+          <td>${badge(d.ok ? "OK" : "Check", d.ok ? "ok" : "bad")}</td>
+        </tr>`).join("") : `<tr><td colspan="6" class="empty-cell">No diagnostics in snapshot.</td></tr>`}</tbody>
+      </table></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading"><h3>Artifact Contract Diagnostics</h3><span>night_artifacts</span></div>
+      <div class="grid-4" style="margin-bottom:8px;">
+        ${(() => { const s = nightArtifacts().summary || {}; return [
+          ["Expected Types", s.expected_types != null ? s.expected_types : "—", ""],
+          ["Present Types", s.present_types != null ? s.present_types : 0, ""],
+          ["Missing Types", s.missing_types != null ? s.missing_types : 0, ""],
+          ["Invalid", s.invalid != null ? s.invalid : 0, s.invalid ? "na" : ""],
+          ["Incomplete", s.incomplete != null ? s.incomplete : 0, ""],
+          ["Usable", s.usable != null ? s.usable : 0, ""],
+          ["Profile Rows", s.profile_result_rows != null ? s.profile_result_rows : 0, ""],
+          ["Snapshot Reader", nightArtifacts().schema_version ? "OK" : "Check", nightArtifacts().schema_version ? "" : "na"],
+        ].map(([l, v, cls]) => `<div class="lc-kpi"><span class="k">${esc(l)}</span><span class="v ${cls}">${esc(v)}</span></div>`).join(""); })()}
+      </div>
+      ${(nightArtifacts().warnings || []).length ? `<div class="def-rows">${nightArtifacts().warnings.map((w) => defRow("Warning", w)).join("")}</div>` : ""}
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading"><h3>UI Route Coverage</h3><span>${routes} routes</span></div>
+      <div class="info-grid">${NAV.map((n) => infoCard(n.label, "Implemented")).join("")}</div>
+    </section>
+  `;
+}
+
+/* ============================================================
+   PAGE: Reports
+   ============================================================ */
+function renderReports(c) {
+  const reports = reportItems();
+  c.innerHTML = `
+    <section class="panel">
+      <div class="panel-heading"><h3>Reports</h3><span>${reports.length} reports</span></div>
+      <p class="summary">Read-only report list from report_manifest. Select a report to load its content via the read-only report API.</p>
+      <div class="report-layout">
+        <div class="report-list" id="reportList">
+          ${reports.length ? reports.map((r) => `<div class="report-item" data-path="${esc(r.path || "")}">
+            <span class="cat">${esc(r.category || "report")}</span>
+            <h5>${esc(r.title || "Untitled")}</h5>
+            <code>${esc(r.path || "")}</code>
+          </div>`).join("") : emptyState("No reports indexed.")}
+        </div>
+        <div class="report-viewer">
+          <div class="report-viewer-head"><span class="meta" id="rvMeta">No report selected</span><h4 id="rvTitle">Report Viewer</h4></div>
+          <div class="report-viewer-body" id="rvBody"><p class="value-muted">Select a report from the list to load its content.</p></div>
+        </div>
+      </div>
+    </section>
+  `;
+  const list = $("#reportList");
+  if (list) list.addEventListener("click", async (e) => {
+    const item = e.target.closest("[data-path]");
+    if (!item) return;
+    $$("#reportList .report-item").forEach((x) => x.classList.remove("is-active"));
+    item.classList.add("is-active");
+    const path = item.dataset.path;
+    $("#rvMeta").textContent = path;
+    $("#rvTitle").textContent = "Loading…";
+    $("#rvBody").innerHTML = `<p class="value-muted">Loading…</p>`;
+    try {
+      const payload = await fetchJson(`/api/report?path=${encodeURIComponent(path)}`);
+      const report = payload.report || {};
+      $("#rvTitle").textContent = report.title || payload.path || path;
+      $("#rvMeta").textContent = `${report.category || "report"} · ${payload.size_bytes != null ? payload.size_bytes + " bytes" : ""}`;
+      if (payload.content) {
+        $("#rvBody").innerHTML = renderMarkdown(payload.content);
+      } else {
+        $("#rvBody").innerHTML = emptyState("Report manifest exists; content reader not implemented or content empty.");
+      }
+    } catch (err) {
+      $("#rvTitle").textContent = "Unable to load report";
+      $("#rvBody").innerHTML = `<p class="value-muted">${esc(err.message || String(err))}</p>`;
+    }
+  });
+}
+
+/* ============================================================
+   PAGE: Read Model / Data Model
+   ============================================================ */
+function renderReadModel(c) {
+  const s = snap();
+  const keys = Object.keys(s).sort();
+  c.innerHTML = `
+    <section class="panel">
+      <div class="panel-heading"><h3>Page → Read Model Mapping</h3><span>${PAGE_FEEDS.length} pages</span></div>
+      <div class="table-wrap"><table class="grid-table">
+        <thead><tr><th>Page</th><th>Read model feeds</th></tr></thead>
+        <tbody>${PAGE_FEEDS.map(([p, f]) => `<tr><td>${esc(p)}</td><td><span class="cell-path">${esc(f)}</span></td></tr>`).join("")}</tbody>
+      </table></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading"><h3>Snapshot Top-Level Keys</h3><span>${keys.length} keys</span></div>
+      <div class="table-wrap"><table class="grid-table">
+        <thead><tr><th>Key</th><th>Type</th><th>Size</th></tr></thead>
+        <tbody>${keys.map((k) => {
+          const v = s[k];
+          const type = Array.isArray(v) ? "array" : typeof v;
+          const size = Array.isArray(v) ? `${v.length} items` : (v && typeof v === "object" ? `${Object.keys(v).length} keys` : "—");
+          return `<tr><td><code>${esc(k)}</code></td><td>${esc(type)}</td><td>${esc(size)}</td></tr>`;
+        }).join("")}</tbody>
+      </table></div>
+    </section>
+  `;
+}
+
+/* ---------------- markdown (read-only render) ---------------- */
+function renderMarkdown(md) {
+  if (!md) return emptyState("Empty content.");
+  let html = esc(md);
+  html = html.replace(/^### (.+)$/gm, "<h5>$1</h5>");
+  html = html.replace(/^## (.+)$/gm, "<h4>$1</h4>");
+  html = html.replace(/^# (.+)$/gm, "<h3>$1</h3>");
+  html = html.replace(/^[-*] (.+)$/gm, '<div class="md-list">$1</div>');
+  html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+  html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/\n\n/g, '<div class="md-gap"></div>');
+  html = html.replace(/\n/g, "<br>");
+  return html;
+}

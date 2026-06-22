@@ -150,3 +150,23 @@ MTC_COMMAND_CENTER/03_QUANTLENS/tools/.venvs/
 # Graphify code-graph output (never commit — regenerate on demand)
 graphify-out/
 **/graphify-out/
+
+# Local dashboard/runtime logs
+MTC_COMMAND_CENTER/08_DASHBOARD_APP/logs/
+
+# Local temp workspace
+Temp/
+
+# Local Codex/session metadata
+.codex/
+
+# Accidental command-output typo
+tatus --short
+
+# Local UI critique/tool state
+.impeccable/
+
+# Local scratch files that may contain sensitive or duplicate context
+AUDIT_REPORT_CODEX.md
+CHATGPT_MEMORY_PROMPT.md
+MCC_COMMAND_CENTER/
