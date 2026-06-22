@@ -37,10 +37,11 @@ Claude Code client has `pdf`/`docx`/`xlsx` skills for one-off conversions. MarkI
 XLSX→md is clean and scriptable. Keep for batch Office ingestion. Re-test the PDF path when a real strategy PDF lands in `00_INBOX/USER_INTAKE/`.
 
 ## Caveats / footprint
-- Venv lives in `C:\tmp` (ephemeral). If promoted to a real workflow tool, relocate to a stable, **git-ignored** path and pin the command in the intake docs.
+- **(Historical — resolved on promotion.)** During the pilot the venv lived in `C:\tmp`. Now
+  permanent + git-ignored at `03_QUANTLENS/tools/.venvs/markitdown` (see PROMOTED block above).
 - Requires the 3.13 interpreter — do **not** rely on the system 3.14.
 - `NaN` empty-cell rows: add a post-filter if feeding to a token-sensitive model.
 
 ## Next (optional, approval-gated)
 - Wire a thin wrapper so `route_user_intake.py` can call MarkItDown for non-md/non-txt drops.
-- Decide permanent venv location + `.gitignore` entry before treating it as installed-for-real.
+- DONE: permanent venv location + `.gitignore` entry settled at promotion.

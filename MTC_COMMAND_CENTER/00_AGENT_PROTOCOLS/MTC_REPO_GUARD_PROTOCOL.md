@@ -17,6 +17,9 @@ promote). This file is the **single entry rule set**; those two carry the detail
 6. **No execution without explicit approval:** backtests, optimizations, servers, launchers,
    artifact generation, `top_results.json`, broker/live/paper actions.
 7. **No force-push. No unrelated user files. No silent file delete/move.**
+8. **Risky untracked files (launchers, `top_results.json`, `*_server.ps1`, `*.log`) are WARN,
+   not BLOCK** — by design. Rule 3 (exact staged files only) already stops them reaching a
+   commit; the warning just flags leaked local artifacts so you keep them out of the repo.
 
 ## Final report format (every task ends with this)
 
