@@ -127,7 +127,10 @@ only; **no data-contract / registry / backtest change**.
   (`pilots/design-extract_pilot.md`). Wrapper `03_QUANTLENS/tools/design_extract.ps1`.
 - DONE 2026-06-22: **Taste-Skill** → DEFER/do-not-install — self-excludes dashboards/data
   tables; Impeccable already owns MTC's domain (`pilots/taste-skill_pilot.md`).
-- Remaining: **Claude-Video** (needs a real strategy video input).
+- DONE 2026-06-22: **Claude-Video** → DEFER/do-not-install — piloted on a real strategy video;
+  frame value is content-gated (only an indicator-config screencast beats transcript), and the
+  pipeline is reproducible with installed tools (`pilots/claude-video_pilot.md`).
+- **→ Phase 4 COMPLETE.**
 
 ### Phase 5 — Side-service automation (repo-external preferred)
 n8n watchdog for long backtests + Telegram/email notify. Requires the backtest runner to emit
@@ -154,7 +157,7 @@ the reason is in `CLAUDE_REVIEW_OF_CODEX_BACKLOG.md`.
 | Understand-Anything | Pilot, A/B vs Graphify. | Only if Graphify wins. | One winner kept, not both. |
 | Caveman Light | Client plugin, already active. | No repo work. | n/a |
 | ~~Headroom~~ | **DROPPED 2026-06-20** — MITM proxy risk, ~5% real saving. | None. | n/a |
-| Claude-Video | Pilot (research). | A/B transcript-only vs frames on one strategy video. | Captures settings transcript missed. |
+| Claude-Video | **DEFER 2026-06-22** — piloted on a real video; frames add ~nothing on animated/price-action content (no on-screen settings); value only on indicator-config screencasts; tool unnecessary (pipeline reproducible). | On-demand manual pipeline (yt-dlp+ffmpeg+captions) only when a video shows real platform UI. | DEFER — see `pilots/claude-video_pilot.md`. |
 | ~~NotebookLM-py~~ | **DROPPED 2026-06-20** — unofficial API, fragile. | None. | n/a |
 | Impeccable | **DONE** — UI critique/polish skill, in use (Strategy Detail). | `feature/ui-impeccable-pilot` (merged). | UI-only diff. |
 | Design-Extract (`designlang`) | **DONE 2026-06-22** — KEEP on-demand for inspiration (not copy). | `pilots/design-extract_pilot.md`; wrapper `tools/design_extract.ps1`. | Tool PASS; dashboard apply deferred. |
