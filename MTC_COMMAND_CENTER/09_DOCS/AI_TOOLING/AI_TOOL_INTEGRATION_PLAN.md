@@ -113,8 +113,8 @@ Each phase needs Barış approval to start. "Acceptance" = what proves a phase d
 - Acceptance: future query "what AI tools next, what's the approved roadmap?" answerable from
   `_AI_MEMORY/NEXT_STEPS.md` + this folder.
 
-### Phase 3 — Local tools (each pilot-gated, run §6 checklist FIRST)
-Order, lowest-risk first: MarkItDown → LiteParse → CodeBurn → Graphify (pilot, not "immediate").
+### Phase 3 — Local tools (each pilot-gated, run §6 checklist FIRST) — COMPLETE 2026-06-21
+Order, lowest-risk first: MarkItDown ✅DONE (KEEP+promoted) → LiteParse ⏸️DEFER (overlaps MarkItDown, no PDFs) → CodeBurn ✅DONE (KEEP) → Graphify ✅DONE (KEEP on-demand). All 2026-06-21.
 - Acceptance per tool: §6 checklist green + a real-MTC-data A/B test recorded in
   `09_DOCS/AI_TOOLING/pilots/<tool>_pilot.md`.
 
@@ -141,10 +141,10 @@ the reason is in `CLAUDE_REVIEW_OF_CODEX_BACKLOG.md`.
 | MTC Grill Plan | Already present as prompt library. | Extend `05_ai_workflow/`. | No new parallel skill folder. |
 | Codex read-only review | Already present (`04_adversarial_code_review.md`). | Use as-is. | Used on high-risk diffs. |
 | Model routing / DeepSeek | **Already implemented** (`_deepseek_driver`). | Enforce, don't recreate. | Harness used for mechanical work. |
-| MarkItDown | Pilot (compare to built-in pdf/docx skills first). | A/B on real MTC PDF/XLSX. | Beats built-in skill on a real doc. |
-| LiteParse | Pilot (local, privacy). | A/B vs MarkItDown. | Better tables/layout on real PDF. |
-| CodeBurn | Pilot. | Verify provider/proxy pricing accuracy. | Cost numbers match reality. |
-| Graphify | **Pilot (downgraded from "immediate")**. | Run on repo, check Windows + output value. | Beats grep/registry for an impact question + graph.json git-noise decided. |
+| MarkItDown | **DONE 2026-06-21** — promoted, KEEP for XLSX/Office batch ingestion (PDF value deferred, no PDFs in repo). | Committed wrapper `03_QUANTLENS/tools/markitdown_ingest.py` (py3.13 git-ignored venv). | PASS — see `pilots/markitdown_pilot.md`. |
+| LiteParse | **DEFER 2026-06-21** — piloted; ties MarkItDown on text PDF, overlaps it; real edge (scanned-PDF OCR+spatial) untestable (0 PDFs in repo) + needs Tesseract/LibreOffice/ImageMagick. | Re-A/B when a real scanned strategy PDF lands. | NOT MET (blocked) — see `pilots/liteparse_pilot.md`. |
+| CodeBurn | **DONE 2026-06-21** — KEEP (v0.9.12 global npm). Finding: DeepSeek harness underused (Opus $563 + Codex $377 vs DeepSeek $2.44). | Periodic `codeburn status` at session boundaries. | PASS — see `pilots/codeburn_pilot.md`. |
+| Graphify | **DONE 2026-06-21** — KEEP on-demand (`graphifyy` 0.8.44 via uv tool; local/keyless; graphs git-ignored; not auto/whole-repo). | Use for impact (`affected`/`explain`/`query`); `graphify install` skill-reg deferred. | PASS — see `pilots/graphify_pilot.md`. |
 | Understand-Anything | Pilot, A/B vs Graphify. | Only if Graphify wins. | One winner kept, not both. |
 | Caveman Light | Client plugin, already active. | No repo work. | n/a |
 | ~~Headroom~~ | **DROPPED 2026-06-20** — MITM proxy risk, ~5% real saving. | None. | n/a |
