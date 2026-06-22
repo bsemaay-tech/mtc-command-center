@@ -9,7 +9,29 @@ import pytest
 # emitter lives one dir up
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from progress_emitter import Emitter, NullEmitter, emitter_from_env  # noqa: E402
+from datetime import datetime, timedelta, timezone  # noqa: E402
+
+from progress_emitter import Emitter, NullEmitter, emitter_from_env, derive_run_state  # noqa: E402
+
+
+def _ts_ago(minutes: float) -> str:
+    return (datetime.now(timezone.utc) - timedelta(minutes=minutes)).isoformat().replace("+00:00", "Z")
+
+
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def test_derive_state_done_and_failed_from_status():
+    hb = {"updated_at": _ts_ago(0.1), "last_progress_at": _ts_ago(0.1)}
+    assert derive_run_state(hb, {"result": "ok"}, _now()) == "done"
+    assert derive_run_state(hb, {"result": "fail"}, _now()) == "failed"
+
+
+def test_derive_state_running_stalled_dead_from_timestamps():
+    assert derive_run_state({"updated_at": _ts_ago(0.1), "last_progress_at": _ts_ago(0.1)}, None, _now()) == "running"
+    assert derive_run_state({"updated_at": _ts_ago(1), "last_progress_at": _ts_ago(30)}, None, _now()) == "stalled"
+    assert derive_run_state({"updated_at": _ts_ago(60), "last_progress_at": _ts_ago(60)}, None, _now()) == "dead"
 
 
 def _read_json(p: Path) -> dict:
