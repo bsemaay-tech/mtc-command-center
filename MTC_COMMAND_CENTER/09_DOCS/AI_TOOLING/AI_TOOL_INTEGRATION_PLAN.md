@@ -118,10 +118,16 @@ Order, lowest-risk first: MarkItDown ✅DONE (KEEP+promoted) → LiteParse ⏸�
 - Acceptance per tool: §6 checklist green + a real-MTC-data A/B test recorded in
   `09_DOCS/AI_TOOLING/pilots/<tool>_pilot.md`.
 
-### Phase 4 — Research / UI pilots (branch-isolated)
+### Phase 4 — Research / UI pilots (branch-isolated) — IN PROGRESS
 Claude-Video, Impeccable, Design-Extract, Taste-Skill. UI tools on `feature/ui-*` branches
 only; **no data-contract / registry / backtest change**.
 - Acceptance: visible improvement on one screen, no API/contract diff, no console errors.
+- DONE: **Impeccable** (Strategy Detail polish, merged to master).
+- DONE 2026-06-22: **Design-Extract** (`designlang`) → KEEP on-demand for inspiration only
+  (`pilots/design-extract_pilot.md`). Wrapper `03_QUANTLENS/tools/design_extract.ps1`.
+- DONE 2026-06-22: **Taste-Skill** → DEFER/do-not-install — self-excludes dashboards/data
+  tables; Impeccable already owns MTC's domain (`pilots/taste-skill_pilot.md`).
+- Remaining: **Claude-Video** (needs a real strategy video input).
 
 ### Phase 5 — Side-service automation (repo-external preferred)
 n8n watchdog for long backtests + Telegram/email notify. Requires the backtest runner to emit
@@ -150,7 +156,9 @@ the reason is in `CLAUDE_REVIEW_OF_CODEX_BACKLOG.md`.
 | ~~Headroom~~ | **DROPPED 2026-06-20** — MITM proxy risk, ~5% real saving. | None. | n/a |
 | Claude-Video | Pilot (research). | A/B transcript-only vs frames on one strategy video. | Captures settings transcript missed. |
 | ~~NotebookLM-py~~ | **DROPPED 2026-06-20** — unofficial API, fragile. | None. | n/a |
-| Impeccable / Design-Extract / Taste-Skill | UI pilots, branch-isolated. | `feature/ui-*` only. | UI-only diff, no contract change. |
+| Impeccable | **DONE** — UI critique/polish skill, in use (Strategy Detail). | `feature/ui-impeccable-pilot` (merged). | UI-only diff. |
+| Design-Extract (`designlang`) | **DONE 2026-06-22** — KEEP on-demand for inspiration (not copy). | `pilots/design-extract_pilot.md`; wrapper `tools/design_extract.ps1`. | Tool PASS; dashboard apply deferred. |
+| Taste-Skill | **DEFER 2026-06-22** — do-not-install; self-excludes dashboards, overlaps Impeccable. | `pilots/taste-skill_pilot.md`. | NOT MET (out of scope). |
 | ~~Webwright / Playwright~~ | **DROPPED 2026-06-20** — redundant with existing browser MCPs. | Use Claude-in-Chrome / Preview. | n/a |
 | n8n watchdog | Side-service. | Needs stable log emitter first. | Overnight run notifies hands-free. |
 | Zapier | Watchlist. | None now. | n/a |
