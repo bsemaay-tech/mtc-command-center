@@ -10,7 +10,7 @@ Setup DONE: product context `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/MCC_PRODUCT_C
 5. **[P2] triple gate-state** — keep the persistent right rail as canonical verdict; collapse/trim the top KPI strip + Gate Status cards duplication (this is the R2-14 dedup keystone).
 Constraints: NO trading/Pine/MTC_V2/parity/schema/data-contract change; visual/a11y/wording only. Verify each fix live at `:8765/dashboard` (Claude-in-Chrome; `window.openStrategy('QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK')`) + `node --check app.js`. Re-run `/impeccable critique` after to track the score. See [[mcc-ui-review-state]] for R1/R2 history (this is effectively Round 3).
 
-## ▶ AI TOOL INTEGRATION ROADMAP (filed 2026-06-20, Claude Opus 4.8) — PREP ONLY, nothing installed
+## ▶ AI TOOL INTEGRATION ROADMAP (filed 2026-06-20, Claude Opus 4.8) — STATUS 2026-06-22: Phases 1–3 DONE, Phase 4 IN PROGRESS
 Source backlog + actionable plan + Claude critique live in `09_DOCS\AI_TOOLING\`:
 - `MTC_AI_TOOLS_MASTER_INTEGRATION_BACKLOG.md` (catalog), `AI_TOOL_INTEGRATION_PLAN.md` (do this), `CLAUDE_REVIEW_OF_CODEX_BACKLOG.md` (what to drop).
 Read `AI_TOOL_INTEGRATION_PLAN.md` before ANY AI-tool work. Phases (each Barış-approval-gated):

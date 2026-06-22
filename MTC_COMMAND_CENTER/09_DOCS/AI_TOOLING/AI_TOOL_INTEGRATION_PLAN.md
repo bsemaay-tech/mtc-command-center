@@ -1,6 +1,6 @@
 # AI Tool Integration Plan (MTC Command Center)
 
-**Owner:** Barış · **Drafted:** 2026-06-20 by Claude Opus 4.8 · **Status:** PREP ONLY — nothing installed.
+**Owner:** Barış · **Drafted:** 2026-06-20 by Claude Opus 4.8 · **Status (2026-06-22):** Phases 1–3 DONE; Phase 4 IN PROGRESS (Impeccable + Design-Extract done). Per-tool status in §5.
 
 This is the actionable companion to
 [`MTC_AI_TOOLS_MASTER_INTEGRATION_BACKLOG.md`](MTC_AI_TOOLS_MASTER_INTEGRATION_BACKLOG.md)
