@@ -1,0 +1,62 @@
+{
+  "name": "MTC Backtest Watchdog",
+  "meta": {
+    "description": "Polls the MTC run progress contract via run_watchdog.py and notifies on done/failed/stalled/dead. Import into n8n, set the EXEC command path + a notify node. The watchdog itself de-dupes, so safe to poll frequently."
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [ { "field": "minutes", "minutesInterval": 5 } ] }
+      },
+      "id": "schedule",
+      "name": "Every 5 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [ 240, 300 ]
+    },
+    {
+      "parameters": {
+        "command": "python C:/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/03_QUANTLENS/tools/run_watchdog.py C:/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/progress"
+      },
+      "id": "exec",
+      "name": "Run Watchdog (one-shot)",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [ 480, 300 ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            { "value1": "={{ $json[\"stdout\"].trim() }}", "operation": "regex", "value2": "^(done|failed|stalled|dead)$" }
+          ]
+        }
+      },
+      "id": "is_alert",
+      "name": "Is alert state?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [ 720, 300 ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [ { "name": "message", "value": "=MTC backtest run is {{ $json[\"stdout\"].trim() }}" } ]
+        },
+        "options": {}
+      },
+      "id": "notify",
+      "name": "Notify (replace with Telegram/Email/Slack)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [ 960, 220 ]
+    }
+  ],
+  "connections": {
+    "Every 5 min": { "main": [ [ { "node": "Run Watchdog (one-shot)", "type": "main", "index": 0 } ] ] },
+    "Run Watchdog (one-shot)": { "main": [ [ { "node": "Is alert state?", "type": "main", "index": 0 } ] ] },
+    "Is alert state?": { "main": [ [ { "node": "Notify (replace with Telegram/Email/Slack)", "type": "main", "index": 0 } ], [] ] }
+  },
+  "settings": {},
+  "active": false
+}

@@ -40,6 +40,34 @@ def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def _age_minutes(ts_str, now: datetime) -> float | None:
+    if not ts_str:
+        return None
+    try:
+        ts = datetime.fromisoformat(str(ts_str).replace("Z", "+00:00"))
+        return (now - ts).total_seconds() / 60
+    except Exception:
+        return None
+
+
+def derive_run_state(heartbeat: dict[str, Any], status: dict[str, Any] | None, now: datetime,
+                     alive_minutes: float = 15.0, stall_minutes: float = 15.0) -> str:
+    """Pure state machine shared by the dashboard reader and the watchdog.
+
+    done/failed when a terminal status.json exists; otherwise dead (process gone) /
+    stalled (alive but no forward progress) / running, from the two heartbeat timestamps.
+    """
+    if status is not None:
+        return "done" if status.get("result") == "ok" else "failed"
+    proc_age = _age_minutes(heartbeat.get("updated_at"), now)
+    progress_age = _age_minutes(heartbeat.get("last_progress_at"), now)
+    if proc_age is None or proc_age >= alive_minutes:
+        return "dead"
+    if progress_age is not None and progress_age >= stall_minutes:
+        return "stalled"
+    return "running"
+
+
 def _atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
     """Write JSON via tmp file + os.replace so readers never see a torn file."""
     path.parent.mkdir(parents=True, exist_ok=True)

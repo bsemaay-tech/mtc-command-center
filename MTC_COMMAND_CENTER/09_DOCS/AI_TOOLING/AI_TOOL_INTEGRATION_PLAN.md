@@ -107,18 +107,19 @@ Each phase needs Barış approval to start. "Acceptance" = what proves a phase d
   `AI TOOL AUTO-USE` convention remains the portable, all-agent backbone. To rebuild on another
   machine, recreate those two files (script fails silent if `codeburn` is absent).
 
-### Phase 2 — Knowledge consolidation (light)
+### Phase 2 — Knowledge consolidation (light) — SATISFIED (standing policy) 2026-06-22
 - Keep tool decisions in `09_DOCS/AI_TOOLING/` (this folder), research notes in `09_DOCS`,
   operational state in `_AI_MEMORY`. **Do not build a new KB tree.**
-- Acceptance: future query "what AI tools next, what's the approved roadmap?" answerable from
-  `_AI_MEMORY/NEXT_STEPS.md` + this folder.
+- Acceptance MET: every pilot/decision since landed in `09_DOCS/AI_TOOLING/`, ops state in
+  `_AI_MEMORY/NEXT_STEPS.md`; no new KB tree built. This is a standing convention, not a build
+  task — nothing further to "complete."
 
 ### Phase 3 — Local tools (each pilot-gated, run §6 checklist FIRST) — COMPLETE 2026-06-21
 Order, lowest-risk first: MarkItDown ✅DONE (KEEP+promoted) → LiteParse ⏸️DEFER (overlaps MarkItDown, no PDFs) → CodeBurn ✅DONE (KEEP) → Graphify ✅DONE (KEEP on-demand). All 2026-06-21.
 - Acceptance per tool: §6 checklist green + a real-MTC-data A/B test recorded in
   `09_DOCS/AI_TOOLING/pilots/<tool>_pilot.md`.
 
-### Phase 4 — Research / UI pilots (branch-isolated) — IN PROGRESS
+### Phase 4 — Research / UI pilots (branch-isolated) — COMPLETE 2026-06-22
 Claude-Video, Impeccable, Design-Extract, Taste-Skill. UI tools on `feature/ui-*` branches
 only; **no data-contract / registry / backtest change**.
 - Acceptance: visible improvement on one screen, no API/contract diff, no console errors.
@@ -132,10 +133,19 @@ only; **no data-contract / registry / backtest change**.
   pipeline is reproducible with installed tools (`pilots/claude-video_pilot.md`).
 - **→ Phase 4 COMPLETE.**
 
-### Phase 5 — Side-service automation (repo-external preferred)
-n8n watchdog for long backtests + Telegram/email notify. Requires the backtest runner to emit
-a stable progress/log file first.
-- Acceptance: a finished overnight run pushes a notification without an agent staying open.
+### Phase 5 — Side-service automation (repo-external preferred) — COMPLETE 2026-06-22
+n8n watchdog for long backtests + Telegram/email notify. Required a stable progress/log file first.
+- DONE 2026-06-22 (TDD): **stable emitter contract** shipped — `progress_emitter.py` +
+  `run_emitter_supervisor.py` (engine-untouched; observes the runner's existing `run_status.json`)
+  + strict `heartbeat_reader.py`. Design `RUN_PROGRESS_EMITTER_DESIGN_2026-06-22.md`.
+- DONE 2026-06-22 (TDD): **watchdog** `run_watchdog.py` — one-shot poll, derives
+  running/stalled/dead/done/failed, fires one notification per alert transition (de-duped), local
+  log always + opt-in webhook. n8n workflow `03_QUANTLENS/tools/n8n/mtc_backtest_watchdog.workflow.json`;
+  ops `PHASE5_WATCHDOG_OPS.md` (n8n or Windows Task Scheduler).
+- Acceptance MET: a finished/failed/stalled run pushes a notification without an agent staying
+  open. Tools tests 22 passed; API suite 86 passed. **→ Phase 5 COMPLETE.**
+- Operator action (config, not code): wire the notify node to a real Telegram/Email/Slack channel
+  and activate the schedule (no outward send happens until a webhook URL is configured).
 
 ---
 
