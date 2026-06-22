@@ -52,6 +52,7 @@ class Worker:
     name: str
     prov: str = "deepseek"
     model: str | None = None
+    fallback: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -104,6 +105,22 @@ def _default_chat_fn(messages, prov, model):
     return provider.chat(messages, prov=prov, model=model)
 
 
+def _call_worker(chat_fn, messages, worker: "Worker") -> tuple[str, str, bool]:
+    """Call a worker with provider fallback. Returns (output, used_prov, ok).
+
+    Tries worker.prov first, then each fallback provider on any exception
+    (e.g. a 402 insufficient-balance). If all fail, returns a captured ERROR
+    string so the run continues instead of crashing.
+    """
+    last_err = None
+    for prov in [worker.prov, *worker.fallback]:
+        try:
+            return chat_fn(messages, prov, worker.model), prov, True
+        except Exception as e:  # noqa: BLE001 - intentionally resilient
+            last_err = f"ERROR: {type(e).__name__}: {e}"
+    return last_err or "ERROR: no provider", (worker.fallback[-1] if worker.fallback else worker.prov), False
+
+
 def run_board(
     bi: BoardInput,
     *,
@@ -144,16 +161,24 @@ def run_board(
     _write(run_dir / "input.md",
            f"# {bi.title}\n\n## Task\n{redact(bi.task)}{ctx}\n")
 
-    # 2. independent fan-out
+    # 2. independent fan-out (resilient: per-worker provider fallback, errors captured)
     worker_outputs: dict[str, str] = {}
+    worker_meta: list[dict] = []
     for w in bi.workers:
-        out = chat_fn(_worker_messages(bi), w.prov, w.model)
+        out, used_prov, ok = _call_worker(chat_fn, _worker_messages(bi), w)
         worker_outputs[w.name] = out
+        worker_meta.append({"name": w.name, "prov": w.prov, "model": w.model,
+                            "fallback": list(w.fallback), "used_prov": used_prov, "ok": ok})
         _write(run_dir / "worker_outputs" / f"{w.name}.md",
-               f"# Worker: {w.name} ({w.prov}/{w.model})\n\n{out}\n")
+               f"# Worker: {w.name} ({used_prov}/{w.model})\n\n{out}\n")
 
-    # 3. judge synthesis
-    judge_output = chat_fn(_judge_messages(bi, worker_outputs), bi.judge.prov, bi.judge.model)
+    # 3. judge synthesis (also resilient — a judge failure must not crash the run)
+    try:
+        judge_output = chat_fn(_judge_messages(bi, worker_outputs), bi.judge.prov, bi.judge.model)
+        judge_ok = True
+    except Exception as e:  # noqa: BLE001
+        judge_output = f"ERROR: {type(e).__name__}: {e}"
+        judge_ok = False
     _write(run_dir / "final_report.md",
            f"# Board verdict: {bi.title}\n\n{judge_output}\n")
 
@@ -161,8 +186,9 @@ def run_board(
     metadata = {
         "title": bi.title,
         "timestamp": ts,
-        "workers": [{"name": w.name, "prov": w.prov, "model": w.model} for w in bi.workers],
-        "judge": {"name": bi.judge.name, "prov": bi.judge.prov, "model": bi.judge.model},
+        "workers": worker_meta,
+        "judge": {"name": bi.judge.name, "prov": bi.judge.prov,
+                  "model": bi.judge.model, "ok": judge_ok},
         "provider_calls": len(bi.workers) + 1,
         "read_only": True,
     }
@@ -170,3 +196,58 @@ def run_board(
 
     return RunResult(run_dir=run_dir, worker_outputs=worker_outputs,
                      judge_output=judge_output, metadata=metadata, writes=writes)
+
+
+def board_input_from_config(cfg: dict) -> BoardInput:
+    """Build a BoardInput from a plain dict (parsed JSON board config)."""
+    def _worker(d: dict) -> Worker:
+        return Worker(name=d["name"], prov=d.get("prov", "deepseek"),
+                      model=d.get("model"), fallback=list(d.get("fallback", [])))
+
+    return BoardInput(
+        title=cfg["title"],
+        task=cfg["task"],
+        context=cfg.get("context", ""),
+        workers=[_worker(w) for w in cfg["workers"]],
+        judge=_worker(cfg["judge"]),
+    )
+
+
+# Default run location inside the triage tree (read-only artifacts only).
+DEFAULT_RUNS_DIR = (
+    Path(__file__).resolve().parent.parent
+    / "MTC_COMMAND_CENTER" / "11_TRIAGE" / "FUSION" / "runs"
+)
+
+
+def _dry_run_chat_fn(messages, prov, model):
+    """No-network chat: deterministic mock reply (for --dry-run)."""
+    from mock_provider import MockClient
+    mc = MockClient(default=f"[dry-run mock review by {prov}/{model}]")
+    return provider.chat(messages, prov=prov, model=model, client=mc)
+
+
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+
+    ap = argparse.ArgumentParser(description="Run the read-only MTC AI Boardroom.")
+    ap.add_argument("--config", required=True, help="path to board config JSON")
+    ap.add_argument("--runs-dir", default=str(DEFAULT_RUNS_DIR),
+                    help="parent folder for run artifacts")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="use a deterministic mock provider (no network/cost)")
+    a = ap.parse_args(argv)
+
+    cfg = json.loads(Path(a.config).read_text(encoding="utf-8"))
+    bi = board_input_from_config(cfg)
+    chat_fn = _dry_run_chat_fn if a.dry_run else None
+    res = run_board(bi, runs_dir=a.runs_dir, chat_fn=chat_fn)
+    print(f"[board] run saved -> {res.run_dir}")
+    print(f"[board] workers ok: "
+          f"{sum(1 for w in res.metadata['workers'] if w['ok'])}/{len(res.metadata['workers'])}, "
+          f"judge ok: {res.metadata['judge']['ok']}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

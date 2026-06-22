@@ -1,0 +1,10 @@
+{
+  "title": "Example architecture review",
+  "task": "State the decision to review here. Send only redacted task text, selected diff, and selected test output. Never paste secrets, .env, or whole-repo dumps.",
+  "context": "Optional: selected file excerpts / diff / test output (redacted).",
+  "workers": [
+    {"name": "deepseek", "prov": "deepseek", "model": "deepseek-chat", "fallback": ["xai"]},
+    {"name": "xai", "prov": "xai", "model": "grok-2-latest"}
+  ],
+  "judge": {"name": "judge", "prov": "deepseek", "model": "deepseek-chat"}
+}
