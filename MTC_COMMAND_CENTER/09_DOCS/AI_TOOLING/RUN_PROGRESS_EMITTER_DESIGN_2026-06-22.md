@@ -77,14 +77,20 @@ mtime-picks latest). That looseness is the symptom: there is **no contract**. n8
  "finished_at":"…Z","summary":{...},"report_path":"…|null"}
 ```
 
-## In-runner integration (`run_quantlens_overnight_research.py`, additive + env-gated)
-Emit only in `main()`'s existing bookkeeping seam (never in `signals_for`/`backtest_fixed_r`/
-`evaluate_one`):
-- after initial `write_json(status_path, status)` → `emit.run_started()` + `emit.phase("sweep")`;
-  `total` estimated as `len(selected) × candidates × max_params`.
-- in the 60s flush block → `emit.progress(completed, total)`.
-- final block → `emit.finished("ok", summary)`; `except` → `emit.finished("fail")`.
-All wrapped by `Emitter.from_env(...)` → no-op unless `MTC_RUN_EMITTER=1`.
+## Runner integration — status-file adapter (engine file NOT edited)
+**Refinement during implementation (stricter than the original "in-runner emit"):** the sweep
+runner `run_quantlens_overnight_research.py` already writes a native
+`out_root/detached/run_status.json` (`status`, `completed_evaluations`, `failed_evaluations`).
+So instead of editing that parity-sensitive file at all, the supervisor **observes** that native
+status file and republishes it into the canonical contract via `republish_native_status()`:
+- native `completed_evaluations` → `emitter.progress(current, total)`
+- native `failed_evaluations` → `emitter.counters(failed=...)`
+- native `status` (`completed`/`time_budget_reached` → ok, `failed` → fail) → terminal `status.json`
+Run with: `python run_emitter_supervisor.py <root> <run_id> --status-file <…/run_status.json>
+--status-total <N> -- python run_quantlens_overnight_research.py …`. The engine emitter hooks
+(`Emitter.from_env` / `MTC_RUN_EMITTER`) remain available for any *future* runner that wants to
+emit semantic phase/iter events directly, but **no existing engine code is modified** for this
+deliverable. `total` is supplied by the caller (or left 0 → pct unknown but counts/terminal work).
 
 ## Testing (no real backtest needed — the decoupling payoff)
 - **Emitter unit:** atomic write leaves no `.tmp`; `heartbeat.json` schema/fields; `events.jsonl`
@@ -95,14 +101,19 @@ All wrapped by `Emitter.from_env(...)` → no-op unless `MTC_RUN_EMITTER=1`.
 - **Reader:** strict parse of v1; stall vs dead vs running derivation from the two timestamps;
   old `_heartbeat*.json` fallback still works.
 
-## Files touched
+## Files touched (as implemented)
 - NEW `03_QUANTLENS/tools/progress_emitter.py`
 - NEW `03_QUANTLENS/tools/run_emitter_supervisor.py`
 - NEW `03_QUANTLENS/tools/tests/test_progress_emitter.py`, `test_run_emitter_supervisor.py`
-- EDIT `08_DASHBOARD_APP/apps/api/mcc_readonly/heartbeat_reader.py` (+ test in api tests dir)
-- EDIT `03_QUANTLENS/tools/run_quantlens_overnight_research.py` (additive, env-gated emit only)
-- EDIT `.gitignore` (ignore `overnight_runs/progress/`)
-- NO touch: `mega_walk_forward.py`, parity, MTC_V2, 06_SCHEMAS, broker/live.
+- EDIT `08_DASHBOARD_APP/apps/api/mcc_readonly/heartbeat_reader.py` (+ `tests/test_heartbeat_reader.py`)
+- NO `.gitignore` change needed — `overnight_runs/` already ignored (emitter outputs under it).
+- NO touch: `run_quantlens_overnight_research.py`, `mega_walk_forward.py`, parity, MTC_V2,
+  06_SCHEMAS, broker/live. (Engine observed via its existing native status file, not edited.)
+
+## Test result
+`03_QUANTLENS/tools/tests` 15 passed; full dashboard API suite 86 passed (no regression).
+End-to-end CLI smoke verified both terminal paths: success (pct 74.0, result ok) and
+crash (result fail, exit 1) — canonical heartbeat/events/status/`_latest` all written.
 
 ## Repo-guard
 Branch-isolated; exact-staged files; emitter outputs git-ignored (artifacts); no backtest executed;
