@@ -55,7 +55,7 @@ else { Line '[staged]    none' }
 $touched = @(git status --short | ForEach-Object { ($_ -replace '^.{3}','').Trim() -replace '"','' })
 $hitProtected = @()
 foreach ($p in $protected) {
-  foreach ($f in $touched) { if ($f -like "$p*") { $hitProtected += $f } }
+  foreach ($f in $touched) { if ($f -eq $p -or $f -like "$p/*") { $hitProtected += $f } }
 }
 if ($hitProtected.Count -gt 0) {
   Line "[protected] CHANGES in protected scope:"; $hitProtected | Sort-Object -Unique | ForEach-Object { Line "            $_" }
