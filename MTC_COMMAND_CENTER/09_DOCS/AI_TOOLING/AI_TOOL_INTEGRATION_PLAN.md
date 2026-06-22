@@ -1,6 +1,6 @@
 # AI Tool Integration Plan (MTC Command Center)
 
-**Owner:** Barış · **Drafted:** 2026-06-20 by Claude Opus 4.8 · **Status (2026-06-22):** Phases 1–3 DONE; Phase 4 IN PROGRESS (Impeccable + Design-Extract done). Per-tool status in §5.
+**Owner:** Barış · **Drafted:** 2026-06-20 by Claude Opus 4.8 · **Status (2026-06-22):** **ALL Phases 1–5 COMPLETE.** Remaining = operator config only (wire n8n notify channel) + standing DEFER re-open triggers (LiteParse/Claude-Video/Taste-Skill) + parked watchlist items (Zapier, Supermemory/GBrain/Obsidian — repo-external, none now). Per-tool status in §5.
 
 This is the actionable companion to
 [`MTC_AI_TOOLS_MASTER_INTEGRATION_BACKLOG.md`](MTC_AI_TOOLS_MASTER_INTEGRATION_BACKLOG.md)
@@ -156,7 +156,7 @@ the reason is in `CLAUDE_REVIEW_OF_CODEX_BACKLOG.md`.
 
 | Tool | Decision (adjusted) | Next action | Acceptance / gate |
 |---|---|---|---|
-| CLAUDE.md/AGENTS.md/CODEX.md rules | Already present (AGENTS.md). Extend only. | Add tool-routing pointer (approval). | Read-first files link here + harness. |
+| CLAUDE.md/AGENTS.md/CODEX.md rules | **DONE** — AGENTS.md has TOKEN DISCIPLINE (DeepSeek routing) + AI TOOL AUTO-USE (MarkItDown/Graphify/CodeBurn + long-backtest→watchdog); START_HERE points here. | None — extend only as new tools land. | MET — read-first files link here + harness. |
 | MTC Grill Plan | Already present as prompt library. | Extend `05_ai_workflow/`. | No new parallel skill folder. |
 | Codex read-only review | Already present (`04_adversarial_code_review.md`). | Use as-is. | Used on high-risk diffs. |
 | Model routing / DeepSeek | **Already implemented** (`_deepseek_driver`). | Enforce, don't recreate. | Harness used for mechanical work. |
@@ -164,7 +164,7 @@ the reason is in `CLAUDE_REVIEW_OF_CODEX_BACKLOG.md`.
 | LiteParse | **DEFER 2026-06-21** — piloted; ties MarkItDown on text PDF, overlaps it; real edge (scanned-PDF OCR+spatial) untestable (0 PDFs in repo) + needs Tesseract/LibreOffice/ImageMagick. | Re-A/B when a real scanned strategy PDF lands. | NOT MET (blocked) — see `pilots/liteparse_pilot.md`. |
 | CodeBurn | **DONE 2026-06-21** — KEEP (v0.9.12 global npm). Finding: DeepSeek harness underused (Opus $563 + Codex $377 vs DeepSeek $2.44). | Periodic `codeburn status` at session boundaries. | PASS — see `pilots/codeburn_pilot.md`. |
 | Graphify | **DONE 2026-06-21** — KEEP on-demand (`graphifyy` 0.8.44 via uv tool; local/keyless; graphs git-ignored; not auto/whole-repo). | Use for impact (`affected`/`explain`/`query`); `graphify install` skill-reg deferred. | PASS — see `pilots/graphify_pilot.md`. |
-| Understand-Anything | Pilot, A/B vs Graphify. | Only if Graphify wins. | One winner kept, not both. |
+| Understand-Anything | **SKIP 2026-06-22** — superseded. Graphify was piloted and KEPT (local/keyless, accurate); the "one winner, not both" rule resolves to Graphify. | None — re-open only if Graphify proves insufficient on a real impact query. | Closed (Graphify won). |
 | Caveman Light | Client plugin, already active. | No repo work. | n/a |
 | ~~Headroom~~ | **DROPPED 2026-06-20** — MITM proxy risk, ~5% real saving. | None. | n/a |
 | Claude-Video | **DEFER 2026-06-22** — piloted on a real video; frames add ~nothing on animated/price-action content (no on-screen settings); value only on indicator-config screencasts; tool unnecessary (pipeline reproducible). | On-demand manual pipeline (yt-dlp+ffmpeg+captions) only when a video shows real platform UI. | DEFER — see `pilots/claude-video_pilot.md`. |
@@ -173,7 +173,7 @@ the reason is in `CLAUDE_REVIEW_OF_CODEX_BACKLOG.md`.
 | Design-Extract (`designlang`) | **DONE 2026-06-22** — KEEP on-demand for inspiration (not copy). | `pilots/design-extract_pilot.md`; wrapper `tools/design_extract.ps1`. | Tool PASS; dashboard apply deferred. |
 | Taste-Skill | **DEFER 2026-06-22** — do-not-install; self-excludes dashboards, overlaps Impeccable. | `pilots/taste-skill_pilot.md`. | NOT MET (out of scope). |
 | ~~Webwright / Playwright~~ | **DROPPED 2026-06-20** — redundant with existing browser MCPs. | Use Claude-in-Chrome / Preview. | n/a |
-| n8n watchdog | Side-service. | Needs stable log emitter first. | Overnight run notifies hands-free. |
+| n8n watchdog | **DONE 2026-06-22** — emitter contract + supervisor + `run_watchdog.py` + n8n workflow shipped (TDD). | Operator: wire notify node to a channel + activate schedule. | MET — `PHASE5_WATCHDOG_OPS.md`. |
 | Zapier | Watchlist. | None now. | n/a |
 | Supermemory / GBrain / Claude-Obsidian | Later / repo-external. | None. | n/a |
 | MoneyPrinter / VoxCPM / Career-Ops / Odysseus / ECC / Higgsfield | **Do not integrate** (agreed). | None. | n/a |
