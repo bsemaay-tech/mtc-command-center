@@ -40,31 +40,15 @@ from pathlib import Path
 
 from openai import OpenAI
 
+# Provider routing is the shared layer (single source of truth, reused by board_runner).
+from provider import PROVIDERS, resolve_provider
+
 # HARD denylist: NEVER writable, no exception possible (trading/Pine/parity/vcs).
 HARD_DENYLIST = re.compile(r"(\.pine$|parity|MTC_V2|\.git[\\/])", re.IGNORECASE)
 # SOFT denylist: writable ONLY if the task lists the exact file in `schema_allow`.
 SOFT_DENYLIST = re.compile(r"(06_SCHEMAS)", re.IGNORECASE)
 
-# Multi-provider: pick with task["provider"] (default deepseek). Each = (base_url, key_env).
-# All are OpenAI-compatible REST endpoints, so the same tool-calling loop works.
-PROVIDERS = {
-    "deepseek":   ("https://api.deepseek.com",      "DEEPSEEK_API_KEY"),
-    "xai":        ("https://api.x.ai/v1",            "XAI_API_KEY"),
-    "grok":       ("https://api.x.ai/v1",            "XAI_API_KEY"),
-    "openrouter": ("https://openrouter.ai/api/v1",   "OPENROUTER_API_KEY"),
-    "openai":     ("https://api.openai.com/v1",       "OPENAI_API_KEY"),
-    "ollama":     ("http://localhost:11434/v1",       "OLLAMA_API_KEY"),
-}
-API_BASE = "https://api.deepseek.com"  # legacy default
-
-
-def resolve_provider(task: dict):
-    prov = (task.get("provider") or "deepseek").lower()
-    base, key_env = PROVIDERS.get(prov, PROVIDERS["deepseek"])
-    key = os.environ.get(key_env) or os.environ.get("OLLAMA_API_KEY", "ollama" if prov == "ollama" else "")
-    if not key:
-        raise SystemExit(f"missing env {key_env} for provider '{prov}'")
-    return prov, base, key
+API_BASE = PROVIDERS["deepseek"][0]  # legacy default for selftest
 
 # run_python is read-only: edits MUST go through edit_file (where the allowlist guard
 # lives). Reject any snippet that imports dangerous modules, opens files for write, or
