@@ -170,3 +170,6 @@ tatus --short
 AUDIT_REPORT_CODEX.md
 CHATGPT_MEMORY_PROMPT.md
 MCC_COMMAND_CENTER/
+
+# AI Boardroom run artifacts (ephemeral; may hold redacted task/context, not source)
+MTC_COMMAND_CENTER/11_TRIAGE/FUSION/runs/
