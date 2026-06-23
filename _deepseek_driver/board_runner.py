@@ -105,20 +105,36 @@ def _default_chat_fn(messages, prov, model):
     return provider.chat(messages, prov=prov, model=model)
 
 
-def _call_worker(chat_fn, messages, worker: "Worker") -> tuple[str, str, bool]:
-    """Call a worker with provider fallback. Returns (output, used_prov, ok).
+def _candidates(worker: "Worker") -> list[tuple[str, str | None]]:
+    """Build the (provider, model) attempt list for a worker.
 
-    Tries worker.prov first, then each fallback provider on any exception
-    (e.g. a 402 insufficient-balance). If all fail, returns a captured ERROR
-    string so the run continues instead of crashing.
+    Primary attempt uses worker.prov + worker.model. Each fallback entry is
+    either "prov" (reuse worker.model) or "prov:model" (override the model, so a
+    provider-specific model name is not carried to a provider that rejects it).
     """
+    attempts: list[tuple[str, str | None]] = [(worker.prov, worker.model)]
+    for fb in worker.fallback:
+        prov, sep, model = fb.partition(":")
+        attempts.append((prov, model if sep else worker.model))
+    return attempts
+
+
+def _call_worker(chat_fn, messages, worker: "Worker") -> tuple[str, str, str | None, bool]:
+    """Call a worker with provider/model fallback.
+
+    Returns (output, used_prov, used_model, ok). Tries each candidate in order
+    on any exception (e.g. a 402 insufficient-balance or a 400 unsupported
+    model). If all fail, returns a captured ERROR string so the run continues.
+    """
+    attempts = _candidates(worker)
     last_err = None
-    for prov in [worker.prov, *worker.fallback]:
+    for prov, model in attempts:
         try:
-            return chat_fn(messages, prov, worker.model), prov, True
+            return chat_fn(messages, prov, model), prov, model, True
         except Exception as e:  # noqa: BLE001 - intentionally resilient
             last_err = f"ERROR: {type(e).__name__}: {e}"
-    return last_err or "ERROR: no provider", (worker.fallback[-1] if worker.fallback else worker.prov), False
+    prov, model = attempts[-1]
+    return last_err or "ERROR: no provider", prov, model, False
 
 
 def run_board(
@@ -165,12 +181,13 @@ def run_board(
     worker_outputs: dict[str, str] = {}
     worker_meta: list[dict] = []
     for w in bi.workers:
-        out, used_prov, ok = _call_worker(chat_fn, _worker_messages(bi), w)
+        out, used_prov, used_model, ok = _call_worker(chat_fn, _worker_messages(bi), w)
         worker_outputs[w.name] = out
         worker_meta.append({"name": w.name, "prov": w.prov, "model": w.model,
-                            "fallback": list(w.fallback), "used_prov": used_prov, "ok": ok})
+                            "fallback": list(w.fallback), "used_prov": used_prov,
+                            "used_model": used_model, "ok": ok})
         _write(run_dir / "worker_outputs" / f"{w.name}.md",
-               f"# Worker: {w.name} ({used_prov}/{w.model})\n\n{out}\n")
+               f"# Worker: {w.name} ({used_prov}/{used_model})\n\n{out}\n")
 
     # 3. judge synthesis (also resilient — a judge failure must not crash the run)
     try:

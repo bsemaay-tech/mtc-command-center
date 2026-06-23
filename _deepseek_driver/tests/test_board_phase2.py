@@ -40,6 +40,36 @@ def test_worker_falls_back_to_next_provider_on_error(tmp_path):
     assert wmeta["w1"]["ok"] is True
 
 
+def test_fallback_entry_can_override_model(tmp_path):
+    # A provider-specific model name must not be carried to a different provider.
+    # `prov:model` fallback entries let the fallback use a model the target supports.
+    seen = []
+
+    def chat_fn(messages, prov, model):
+        if _judge_is(messages):
+            return "VERDICT"
+        seen.append((prov, model))
+        if "grok" in (model or ""):
+            raise RuntimeError("400: provider does not support this model")
+        return f"ok {prov}/{model}"
+
+    bi = BoardInput(
+        title="T", task="review",
+        workers=[Worker(name="w", prov="xai", model="grok-2-latest",
+                        fallback=["deepseek:deepseek-chat"])],
+        judge=Worker(name="judge", prov="deepseek", model="m"),
+    )
+    res = run_board(bi, runs_dir=tmp_path, chat_fn=chat_fn, now=_now())
+    assert res.worker_outputs["w"] == "ok deepseek/deepseek-chat"
+    wm = res.metadata["workers"][0]
+    assert wm["used_prov"] == "deepseek"
+    assert wm["used_model"] == "deepseek-chat"
+    assert wm["ok"] is True
+    # primary tried the original model; fallback used the overridden model
+    assert ("xai", "grok-2-latest") in seen
+    assert ("deepseek", "deepseek-chat") in seen
+
+
 def test_worker_error_is_captured_and_run_continues(tmp_path):
     def chat_fn(messages, prov, model):
         if _judge_is(messages):
