@@ -1,0 +1,73 @@
+{
+  "bundle_id": "native_us_equities_10m_us3_tradingview_2026-06-28",
+  "created_utc": "2026-06-28T17:31:17Z",
+  "provider": "tradingview_chart_data_export",
+  "classification": "SMOKE_ONLY_NOT_PROMOTABLE",
+  "universe": [
+    "SPY",
+    "QQQ",
+    "AAPL"
+  ],
+  "datasets": [
+    {
+      "symbol": "SPY",
+      "source_symbol": "BATS:SPY",
+      "exchange": "BATS",
+      "asset_class": "US_EQUITY",
+      "timeframe_normalized": "10m",
+      "normalized_path": "normalized/BATS_SPY_10m.csv",
+      "ohlcv_validation_status": "PASS",
+      "provider": "tradingview_chart_data_export",
+      "is_24_7": false,
+      "first_timestamp_utc": "2024-06-03 13:30:00+00:00",
+      "last_timestamp_utc": "2026-06-26 19:50:00+00:00",
+      "bar_count": 20094,
+      "volume_available": false,
+      "volume_source": "missing_from_tradingview_export_no_placeholder_added",
+      "adjustment_policy": "unknown_tradingview_export",
+      "session_policy_inferred": "RTH_ONLY_XNYS_09_30_to_16_00_ET_dst_aware",
+      "normalized_sha256": "821ea9fb874bc1a12ef532c9c5b9f62529f941d172fc7a7cb8ccbf35ab3578d3",
+      "source_file": "SPY_10m_tradingview__2024-06-03_to_2026-06-26.csv"
+    },
+    {
+      "symbol": "QQQ",
+      "source_symbol": "BATS:QQQ",
+      "exchange": "BATS",
+      "asset_class": "US_EQUITY",
+      "timeframe_normalized": "10m",
+      "normalized_path": "normalized/BATS_QQQ_10m.csv",
+      "ohlcv_validation_status": "PASS",
+      "provider": "tradingview_chart_data_export",
+      "is_24_7": false,
+      "first_timestamp_utc": "2024-06-03 13:30:00+00:00",
+      "last_timestamp_utc": "2026-06-26 19:50:00+00:00",
+      "bar_count": 20094,
+      "volume_available": false,
+      "volume_source": "missing_from_tradingview_export_no_placeholder_added",
+      "adjustment_policy": "unknown_tradingview_export",
+      "session_policy_inferred": "RTH_ONLY_XNYS_09_30_to_16_00_ET_dst_aware",
+      "normalized_sha256": "8220dd02472e92230f413d3fc74c58f2911647ead1cc84dc00f7b0d7f0be4e1b",
+      "source_file": "BATS_QQQ_10m_CONSOLIDATED_2024-06-03_to_2026-06-26.csv"
+    },
+    {
+      "symbol": "AAPL",
+      "source_symbol": "BATS:AAPL",
+      "exchange": "BATS",
+      "asset_class": "US_EQUITY",
+      "timeframe_normalized": "10m",
+      "normalized_path": "normalized/BATS_AAPL_10m.csv",
+      "ohlcv_validation_status": "PASS",
+      "provider": "tradingview_chart_data_export",
+      "is_24_7": false,
+      "first_timestamp_utc": "2024-06-03 13:30:00+00:00",
+      "last_timestamp_utc": "2026-06-26 19:50:00+00:00",
+      "bar_count": 20094,
+      "volume_available": false,
+      "volume_source": "missing_from_tradingview_export_no_placeholder_added",
+      "adjustment_policy": "unknown_tradingview_export",
+      "session_policy_inferred": "RTH_ONLY_XNYS_09_30_to_16_00_ET_dst_aware",
+      "normalized_sha256": "b02626de92ea77d15c7321cba5c0f7263c23ab885a927f1a9b29e33ff932116f",
+      "source_file": "BATS_AAPL_10m_CONSOLIDATED_2024-06-03_to_2026-06-26.csv"
+    }
+  ]
+}
