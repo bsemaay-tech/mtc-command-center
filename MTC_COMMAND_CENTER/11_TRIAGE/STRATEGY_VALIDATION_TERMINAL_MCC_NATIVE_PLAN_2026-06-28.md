@@ -144,10 +144,30 @@ both derived from real data only.
 
 ---
 
-## 5. Phase 2 — Deferred (only if requested)
+## 5. Phase 2 — Status (2026-06-29)
 
-Regime-split viz (use existing multiwindow data), parameter-sensitivity panel, cross-sectional
-momentum. Days→weeks. Not started without separate approval. **No HMM in production path.**
+| Item | Status | Notes |
+|---|---|---|
+| Parameter-sensitivity panel | **DONE** | `_parameter_sensitivity()` in validation_reader; OOS spread per strategy across parameter sets; fragile flag (spread ≥ 20%). Rendered in funnel view. Real data only. |
+| Regime performance split | **BLOCKED-ON-DATA** | Per-regime returns live in `multiwindow_summary.json`, not in the in-snapshot `backtest_profile_result` rows. Wiring that artifact in is a separate reader task — NOT faked. |
+| Cross-sectional / portfolio / correlation | **DEFERRED** | Needs a portfolio-level artifact that does not exist yet. Would require fabrication today → rejected. |
+| HMM regime gate | **OUT OF SCOPE** | Production rule: never an immediate production dependency. |
+
+Phase 2 honored the no-fake-data rule: only the data-backed piece (parameter sensitivity) shipped.
+The rest is documented as blocked-on-data rather than mocked.
+
+## 6a. Files delivered (2026-06-28 → 06-29)
+
+- `08_DASHBOARD_APP/apps/api/mcc_readonly/validation_reader.py` (new aggregator)
+- `08_DASHBOARD_APP/apps/api/mcc_readonly/read_model.py` (wiring)
+- `08_DASHBOARD_APP/apps/api/tests/test_validation_reader.py` (10 tests)
+- `08_DASHBOARD_APP/apps/web/app.js` (Validation Terminal tab + Funnel/Survivors/Graveyard
+  + IS/OOS scatter + Parameter Sensitivity + intelligence §8 evidence block)
+- `08_DASHBOARD_APP/apps/web/styles.css` (vt-* component styles)
+- `08_DASHBOARD_APP/run_dashboard_server.ps1` (preview/dev launcher referenced by launch.json)
+
+Verified: 99 api tests pass; live snapshot serves `validation_terminal`; browser renders all six
+panels with zero console errors; survivors honest-empty on current pilot data.
 
 ---
 

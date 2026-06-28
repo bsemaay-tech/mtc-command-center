@@ -24,6 +24,7 @@ def _row(**kw):
     }
     return {
         "strategy_id": kw.pop("strategy_id", "QL_2026_US_10M_8EMA_PULLBACK"),
+        "parameter_set_id": kw.pop("parameter_set_id", "pset_default"),
         "profile": kw.pop("profile", "SOURCE_NAKED"),
         "symbol": kw.pop("symbol", "SPY"),
         "timeframe": kw.pop("timeframe", "10m"),
@@ -113,6 +114,25 @@ class ValidationReaderTests(unittest.TestCase):
         self.assertEqual(fam["tested"], 2)
         self.assertEqual(fam["survivors"], 1)
         self.assertEqual(fam["survival_rate"], 0.5)
+
+    def test_parameter_sensitivity_spread(self) -> None:
+        rows = [
+            _row(strategy_id="S1", symbol="A", parameter_set_id="p1", oos=4.0),
+            _row(strategy_id="S1", symbol="A", parameter_set_id="p2", oos=20.0),
+            _row(strategy_id="S1", symbol="B", parameter_set_id="p3", oos=10.0),
+            # single param set -> excluded
+            _row(strategy_id="S2", symbol="A", parameter_set_id="only", oos=5.0),
+        ]
+        out = build_validation_terminal(_wrap(rows))
+        ps = out["parameter_sensitivity"]
+        self.assertEqual(len(ps), 1)
+        s1 = ps[0]
+        self.assertEqual(s1["strategy_id"], "S1")
+        self.assertEqual(s1["n_param_sets"], 3)
+        self.assertEqual(s1["oos_min"], 4.0)
+        self.assertEqual(s1["oos_max"], 20.0)
+        self.assertEqual(s1["oos_median"], 10.0)
+        self.assertEqual(s1["oos_spread"], 16.0)
 
     def test_scatter_requires_both_axes(self) -> None:
         out = build_validation_terminal(_wrap([

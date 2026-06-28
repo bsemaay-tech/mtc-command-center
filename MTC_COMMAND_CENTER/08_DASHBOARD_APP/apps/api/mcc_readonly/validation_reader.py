@@ -155,6 +155,63 @@ def _cross_asset_scores(rows: list[dict[str, Any]]) -> dict[str, int]:
     return scores
 
 
+def _median(values: list[float]) -> float | None:
+    if not values:
+        return None
+    s = sorted(values)
+    n = len(s)
+    mid = n // 2
+    if n % 2:
+        return s[mid]
+    return (s[mid - 1] + s[mid]) / 2.0
+
+
+def _parameter_sensitivity(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Per-strategy OOS spread across parameter sets — a real robustness signal.
+
+    A wide spread across neighboring parameter sets flags a fragile / overfit
+    pocket; a tight, positive spread is a stability signal. Derived only from the
+    ``avg_fold_test_return_pct`` already present per row. Strategies with a single
+    parameter set are omitted (no spread to report).
+    """
+    by_strategy: dict[str, dict[str, Any]] = defaultdict(
+        lambda: {"family": None, "param_sets": set(), "symbols": set(), "oos": []}
+    )
+    for row in rows:
+        sid = row.get("strategy_id") or "UNKNOWN"
+        agg = by_strategy[sid]
+        if agg["family"] is None:
+            agg["family"] = _family_of(row)
+        pid = row.get("parameter_set_id")
+        if pid is not None:
+            agg["param_sets"].add(str(pid))
+        if row.get("symbol"):
+            agg["symbols"].add(row.get("symbol"))
+        oos = _num(_robustness(row).get("avg_fold_test_return_pct"))
+        if oos is not None:
+            agg["oos"].append(oos)
+
+    out: list[dict[str, Any]] = []
+    for sid, agg in by_strategy.items():
+        if len(agg["param_sets"]) < 2 or not agg["oos"]:
+            continue
+        oos = agg["oos"]
+        out.append(
+            {
+                "strategy_id": sid,
+                "family": agg["family"],
+                "n_param_sets": len(agg["param_sets"]),
+                "n_symbols": len(agg["symbols"]),
+                "oos_min": round(min(oos), 4),
+                "oos_median": round(_median(oos), 4),
+                "oos_max": round(max(oos), 4),
+                "oos_spread": round(max(oos) - min(oos), 4),
+            }
+        )
+    out.sort(key=lambda x: x["oos_spread"], reverse=True)
+    return out
+
+
 def build_validation_terminal(
     night_artifacts: dict[str, Any] | None = None,
     scorecards: Any = None,
@@ -175,6 +232,7 @@ def build_validation_terminal(
             rows = [r for r in maybe if isinstance(r, dict)]
 
     cross_asset = _cross_asset_scores(rows)
+    parameter_sensitivity = _parameter_sensitivity(rows)
 
     funnel = {
         "total_variants": 0,
@@ -299,11 +357,13 @@ def build_validation_terminal(
         "family_survival": family_survival,
         "gauntlet": gauntlet_list,
         "is_oos_scatter": scatter,
+        "parameter_sensitivity": parameter_sensitivity,
         "source_counts": {
             "profile_result_rows": len(rows),
             "survivors": len(survivors),
             "graveyard": len(graveyard),
             "families": len(family_survival),
             "scatter_points": len(scatter),
+            "parameter_sensitivity": len(parameter_sensitivity),
         },
     }
