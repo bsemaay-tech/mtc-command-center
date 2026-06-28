@@ -1,0 +1,29 @@
+{
+  "bundle_id": "native_us_equities_10m_spy_tradingview_2026-06-28",
+  "created_utc": "2026-06-28T17:20:46Z",
+  "provider": "tradingview_chart_data_export",
+  "classification": "SMOKE_ONLY_NOT_PROMOTABLE",
+  "datasets": [
+    {
+      "symbol": "SPY",
+      "source_symbol": "BATS:SPY",
+      "exchange": "BATS",
+      "asset_class": "US_EQUITY",
+      "timeframe_normalized": "10m",
+      "normalized_path": "normalized/BATS_SPY_10m.csv",
+      "ohlcv_validation_status": "PASS",
+      "provider": "tradingview_chart_data_export",
+      "is_24_7": false,
+      "first_timestamp_utc": "2024-06-03 13:30:00+00:00",
+      "last_timestamp_utc": "2026-06-26 19:50:00+00:00",
+      "bar_count": 20094,
+      "volume_available": false,
+      "volume_source": "missing_from_tradingview_export_no_placeholder_added",
+      "adjustment_policy": "unknown_tradingview_export",
+      "session_policy_inferred": "RTH_ONLY_XNYS_09_30_to_16_00_ET_dst_aware",
+      "normalized_sha256": "821ea9fb874bc1a12ef532c9c5b9f62529f941d172fc7a7cb8ccbf35ab3578d3",
+      "source_consolidated_file": "SPY_10m_tradingview__2024-06-03_to_2026-06-26.csv",
+      "source_consolidated_sha256": "c9fc113b40c4639ac445cc8efa52571e855d9e53613ee9f054ccf0582647530d"
+    }
+  ]
+}
