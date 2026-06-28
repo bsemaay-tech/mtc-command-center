@@ -44,12 +44,12 @@ TradingView capped 10m history at ~20k bars (~2yr). On that thin data every stra
 | LIQUID_VWAP_PULLBACK | AMZN | **+5.9** | +5.3 |
 | LIQUID_VWAP_PULLBACK | MSFT | **+3.1** | −11.9 |
 
-Best DSR p-value across all 140 cells: **0.1375** (Keltner/AAPL) — still far above the ≤0.05 robustness threshold.
+Best DSR confidence across all 140 cells: **0.46** (DONCHIAN/NVDA) — still far below the ≥0.95 robustness threshold. (The engine's `deflated_sharpe_pvalue` is a confidence: higher = better, robust at ≥0.95.)
 
 ## Honest interpretation
 
 - **GEN_DONCHIAN_BREAKOUT is the genuine lead.** Positive OOS on 5 of 7 symbols, beats buy&hold on AAPL and TSLA. Cross-symbol consistency is arguably stronger evidence than any single-cell DSR p-value — a spurious edge rarely repeats across 5 independent symbols.
-- **But the formal gate is not met.** DSR deflates each cell's Sharpe for the number of configs tried; with 3 folds, no single cell reaches p ≤ 0.05. `robust_final = 0`. By the repo's own rules this is **NOT PROMOTABLE**.
+- **But the formal gate is not met.** DSR deflates each cell's Sharpe for the number of configs tried; no single cell reaches the ≥0.95 confidence bar (best 0.46). `robust_final = 0`. By the repo's own rules this is **NOT PROMOTABLE**.
 - The strategies that beat buy&hold do so mostly where buy&hold was negative (TSLA, MSFT over this slice) — i.e. they add value as **risk-managed / lower-exposure** participation, not by out-returning a rising market.
 
 ## Recommendation for Barış
