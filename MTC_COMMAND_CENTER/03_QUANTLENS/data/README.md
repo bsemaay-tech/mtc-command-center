@@ -21,8 +21,9 @@ filtered by `--symbol` / `--tf` CLI flags.
 
 | Bundle dir | Symbols | TF | Bars | Source | Validation | Notes |
 |---|---|---|---|---|---|---|
-| `native_us_equities_10m_us3_tradingview_2026-06-28/` | SPY, QQQ, AAPL | 10m | 20,094 each | TradingView Chart Data export (`BATS:`) | PASS | **Use this one for US-equities 10m.** RTH-only XNYS, no volume, adjustment unknown. 2024-06-03 → 2026-06-26. |
-| `native_us_equities_10m_spy_tradingview_2026-06-28/` | SPY | 10m | 20,094 | same | PASS | SPY-only superset-subset of the us3 bundle; kept for provenance. Prefer us3. |
+| `native_us_equities_10m_alpaca_2026-06-28/` | SPY, QQQ, AAPL, MSFT, NVDA, AMZN, TSLA | 10m | ~57,700 each | Alpaca IEX | PASS | **Primary US-equities 10m bundle.** ~6yr (2020-07-27 → 2026-06-26), split+dividend **adjusted**, **with volume**, RTH-only. Regenerate with `tools/alpaca_download_us_equities_10m.py` (needs `APCA_API_KEY_ID`/`APCA_API_SECRET_KEY`). **Normalized CSVs are git-ignored (24MB) — regenerate, don't expect them in a fresh clone.** Manifest is committed for provenance. |
+| `native_us_equities_10m_us3_tradingview_2026-06-28/` | SPY, QQQ, AAPL | 10m | 20,094 each | TradingView Chart Data export (`BATS:`) | PASS | Older/thinner (~2yr), no volume, adjustment unknown. 2024-06-03 → 2026-06-26. Superseded by the Alpaca bundle; kept for provenance. |
+| `native_us_equities_10m_spy_tradingview_2026-06-28/` | SPY | 10m | 20,094 | same | PASS | SPY-only first cut; kept for provenance. Prefer the Alpaca bundle. |
 
 Raw consolidated source CSVs (pre-normalization) live in
 `00_INBOX/USER_INTAKE/` (`SPY_10m_tradingview__*.csv`, `BATS_QQQ_10m_CONSOLIDATED_*.csv`,
@@ -31,10 +32,9 @@ Raw consolidated source CSVs (pre-normalization) live in
 ### Reuse for other strategies
 
 Any engine strategy can run on these bundles — just point `MEGA_BUNDLE_MANIFEST` at the manifest
-and pass `--strategy <id> --symbol SPY|QQQ|AAPL --tf 10m`. Already tested 2026-06-28: the 8EMA
-family + 15 other distinct strategies — **none robust on this window** (see
-`11_TRIAGE/US_EQUITIES_10M_MULTI_STRATEGY_SWEEP_2026-06-28.md`). Data is fine; strategies don't
-transfer. New/custom strategy logic is the open path.
+and pass `--strategy <id> --symbol <SYM> --tf 10m`. Tested 2026-06-28:
+- **TradingView 2yr/3sym** (`US_EQUITIES_10M_MULTI_STRATEGY_SWEEP_2026-06-28.md`): all 15 strategies, none robust.
+- **Alpaca 6yr/7sym** (`US_EQUITIES_10M_ALPACA_6YR_SWEEP_2026-06-28.md`): 15 PASS cells, still 0 DSR-robust, but **GEN_DONCHIAN_BREAKOUT is positive-OOS on 5/7 symbols** and the open research lead. More data helped a lot; the DSR gate is still not cleared.
 
 ## Crypto data (elsewhere in repo — for reference)
 

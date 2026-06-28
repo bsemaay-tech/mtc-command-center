@@ -173,3 +173,11 @@ MCC_COMMAND_CENTER/
 
 # AI Boardroom run artifacts (ephemeral; may hold redacted task/context, not source)
 MTC_COMMAND_CENTER/11_TRIAGE/FUSION/runs/
+
+# QuantLens native data — large regenerable OHLCV CSVs + engine run outputs.
+# Manifests + downloader scripts ARE committed; the bulk CSVs are regenerated
+# from the downloader (see 03_QUANTLENS/data/README.md). Keeps the repo lean.
+MTC_COMMAND_CENTER/03_QUANTLENS/data/native_us_equities_10m_alpaca_*/normalized/
+MTC_COMMAND_CENTER/03_QUANTLENS/data/**/full_sweep_*/
+MTC_COMMAND_CENTER/03_QUANTLENS/data/**/smoke_output_*/
+MTC_COMMAND_CENTER/03_QUANTLENS/data/**/candidate_sweep_*/
