@@ -24,6 +24,11 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any
 
+# Bound the payload as night-run history grows. Lists are ranked before capping;
+# honest totals stay in source_counts and a `truncated` flag marks any cut list.
+_MAX_LIST_ROWS = 500
+_MAX_SCATTER_POINTS = 2000
+
 # Ordered gate checks. The first failing gate is a row's ``primary_failure``.
 # (key, human label) — order matters and mirrors 07_BACKTEST_AND_OPTIMIZATION_RULES.
 _GATE_ORDER = (
@@ -97,14 +102,31 @@ def _gate_flags(row: dict[str, Any]) -> dict[str, bool]:
         "completed_run": completed,
         "positive_oos": positive_oos,
         "beats_buy_hold": beats_bh,
-        "robust_final": bool(r.get("robust_final")),
-        "dsr_robust": bool(r.get("dsr_robust")),
-        "bh_fdr_survivor": bool(r.get("bh_fdr_survivor")),
+        # Strict identity: a malformed truthy string (e.g. "false") must NOT pass.
+        "robust_final": r.get("robust_final") is True,
+        "dsr_robust": r.get("dsr_robust") is True,
+        "bh_fdr_survivor": r.get("bh_fdr_survivor") is True,
     }
 
 
+def _cumulative_pass(flags: dict[str, bool]) -> dict[str, bool]:
+    """Strictly narrowing pass-state per gate, in _GATE_ORDER.
+
+    Gate N is "passed" only if every prior gate also passed, so the funnel can
+    never widen and a survivor must have cleared completed-run, positive-OOS,
+    beats-buy&hold, robustness, DSR, and BH-FDR — even if a malformed row sets a
+    late flag without the earlier evidence.
+    """
+    out: dict[str, bool] = {}
+    ok = True
+    for key, _label in _GATE_ORDER:
+        ok = ok and bool(flags.get(key))
+        out[key] = ok
+    return out
+
+
 def _primary_failure(flags: dict[str, bool], row: dict[str, Any]) -> str | None:
-    """First failing gate. None when the row survived every gate."""
+    """First failing gate in _GATE_ORDER. None when every gate passed."""
     r = _robustness(row)
     for key, label in _GATE_ORDER:
         if not flags.get(key):
@@ -174,33 +196,42 @@ def _parameter_sensitivity(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     ``avg_fold_test_return_pct`` already present per row. Strategies with a single
     parameter set are omitted (no spread to report).
     """
+    # Aggregate OOS by (strategy, parameter_set_id) so spread is computed only
+    # across genuine parameter variants. Rows without a parameter id are not part
+    # of a parameter comparison and must not inflate the spread.
     by_strategy: dict[str, dict[str, Any]] = defaultdict(
-        lambda: {"family": None, "param_sets": set(), "symbols": set(), "oos": []}
+        lambda: {"family": None, "param_oos": defaultdict(list), "symbols": set()}
     )
     for row in rows:
+        pid = row.get("parameter_set_id")
+        if pid is None or str(pid) == "":
+            continue
+        oos = _num(_robustness(row).get("avg_fold_test_return_pct"))
+        if oos is None:
+            continue
         sid = row.get("strategy_id") or "UNKNOWN"
         agg = by_strategy[sid]
         if agg["family"] is None:
             agg["family"] = _family_of(row)
-        pid = row.get("parameter_set_id")
-        if pid is not None:
-            agg["param_sets"].add(str(pid))
+        agg["param_oos"][str(pid)].append(oos)
         if row.get("symbol"):
             agg["symbols"].add(row.get("symbol"))
-        oos = _num(_robustness(row).get("avg_fold_test_return_pct"))
-        if oos is not None:
-            agg["oos"].append(oos)
 
     out: list[dict[str, Any]] = []
     for sid, agg in by_strategy.items():
-        if len(agg["param_sets"]) < 2 or not agg["oos"]:
+        param_oos = agg["param_oos"]
+        if len(param_oos) < 2:
             continue
-        oos = agg["oos"]
+        # One representative OOS per parameter set (median across its rows).
+        oos = [_median(vals) for vals in param_oos.values() if vals]
+        oos = [v for v in oos if v is not None]
+        if len(oos) < 2:
+            continue
         out.append(
             {
                 "strategy_id": sid,
                 "family": agg["family"],
-                "n_param_sets": len(agg["param_sets"]),
+                "n_param_sets": len(param_oos),
                 "n_symbols": len(agg["symbols"]),
                 "oos_min": round(min(oos), 4),
                 "oos_median": round(_median(oos), 4),
@@ -252,19 +283,19 @@ def build_validation_terminal(
 
     for row in rows:
         flags = _gate_flags(row)
+        cum = _cumulative_pass(flags)
         family = _family_of(row)
         sid = row.get("strategy_id") or "UNKNOWN"
         m = _metrics(row)
         r = _robustness(row)
 
+        # Cumulative (strictly narrowing) funnel — each stage requires all prior gates.
         funnel["total_variants"] += 1
-        funnel["completed_runs"] += int(flags["completed_run"])
-        funnel["positive_oos"] += int(flags["completed_run"] and flags["positive_oos"])
-        funnel["beats_buy_hold"] += int(
-            flags["completed_run"] and flags["positive_oos"] and flags["beats_buy_hold"]
-        )
-        funnel["robust_passed"] += int(flags["robust_final"])
-        is_survivor = flags["bh_fdr_survivor"]
+        funnel["completed_runs"] += int(cum["completed_run"])
+        funnel["positive_oos"] += int(cum["positive_oos"])
+        funnel["beats_buy_hold"] += int(cum["beats_buy_hold"])
+        funnel["robust_passed"] += int(cum["robust_final"])
+        is_survivor = cum["bh_fdr_survivor"]  # True only if every ordered gate passed
         funnel["survivors"] += int(is_survivor)
 
         family_stats[family]["tested"] += 1
@@ -308,7 +339,7 @@ def build_validation_terminal(
             survivors.append(
                 {
                     **common,
-                    "dsr_robust": bool(r.get("dsr_robust")),
+                    "dsr_robust": r.get("dsr_robust") is True,
                     "cross_asset_consistency_score": cross_asset.get(sid, 0),
                 }
             )
@@ -347,23 +378,38 @@ def build_validation_terminal(
         reverse=True,
     )
 
+    # True totals captured before capping so the dashboard reports honest counts
+    # while the payload stays bounded as night-run history grows. Lists are
+    # already ranked (best-first / most-killed-first), so caps keep the top slice.
+    totals = {
+        "profile_result_rows": len(rows),
+        "survivors": len(survivors),
+        "graveyard": len(graveyard),
+        "families": len(family_survival),
+        "scatter_points": len(scatter),
+        "parameter_sensitivity": len(parameter_sensitivity),
+    }
+    survivors_out = survivors[:_MAX_LIST_ROWS]
+    graveyard_out = graveyard[:_MAX_LIST_ROWS]
+    scatter_out = scatter[:_MAX_SCATTER_POINTS]
+    param_out = parameter_sensitivity[:_MAX_LIST_ROWS]
+
     return {
         "schema_version": "1.0",
         "mode": "read_only",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "funnel": funnel,
-        "survivors": survivors,
-        "graveyard": graveyard,
+        "survivors": survivors_out,
+        "graveyard": graveyard_out,
         "family_survival": family_survival,
         "gauntlet": gauntlet_list,
-        "is_oos_scatter": scatter,
-        "parameter_sensitivity": parameter_sensitivity,
-        "source_counts": {
-            "profile_result_rows": len(rows),
-            "survivors": len(survivors),
-            "graveyard": len(graveyard),
-            "families": len(family_survival),
-            "scatter_points": len(scatter),
-            "parameter_sensitivity": len(parameter_sensitivity),
+        "is_oos_scatter": scatter_out,
+        "parameter_sensitivity": param_out,
+        "truncated": {
+            "survivors": len(survivors) > len(survivors_out),
+            "graveyard": len(graveyard) > len(graveyard_out),
+            "is_oos_scatter": len(scatter) > len(scatter_out),
+            "parameter_sensitivity": len(parameter_sensitivity) > len(param_out),
         },
+        "source_counts": totals,
     }

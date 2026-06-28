@@ -107,7 +107,7 @@ both derived from real data only.
 | funnel: passed filters | `robustness.robust_final == true` | |
 | funnel: survivors | `robustness.bh_fdr_survivor == true` | |
 | survivor verdict | `robustness.classification` + `promotion_status` | reuse MCC vocab, no new enum |
-| graveyard reason | first failing gate: data→benchmark→robust→dsr→fdr | derived from robustness flags |
+| graveyard reason | first failing gate: completed→OOS→benchmark→robustness→DSR→FDR | derived from robustness flags (matches `_GATE_ORDER`) |
 | family | `pipeline_reader` family map / strategy_id prefix | |
 | IS score (scatter X) | `score` if score_method is IS, else folds in-sample | confirm per artifact; fallback: train fold mean |
 | OOS score (scatter Y) | `robustness.avg_fold_test_return_pct` | |

@@ -72,9 +72,59 @@ class ValidationReaderTests(unittest.TestCase):
         out = build_validation_terminal(_wrap(rows))
         f = out["funnel"]
         self.assertEqual(f["total_variants"], 4)
-        self.assertGreaterEqual(f["completed_runs"], f["positive_oos"])
-        self.assertGreaterEqual(f["positive_oos"], f["beats_buy_hold"])
+        # Full chain must be strictly non-increasing.
+        chain = [f["total_variants"], f["completed_runs"], f["positive_oos"],
+                 f["beats_buy_hold"], f["robust_passed"], f["survivors"]]
+        self.assertEqual(chain, sorted(chain, reverse=True))
         self.assertEqual(f["survivors"], 1)
+
+    def test_malformed_truthy_string_does_not_survive(self) -> None:
+        # robustness flags as strings must NOT count as boolean True.
+        bad = _row(symbol="Z")
+        bad["robustness"]["bh_fdr_survivor"] = "false"
+        bad["robustness"]["robust_final"] = "true"
+        bad["robustness"]["dsr_robust"] = 1
+        out = build_validation_terminal(_wrap([bad]))
+        self.assertEqual(out["funnel"]["survivors"], 0)
+        self.assertEqual(len(out["survivors"]), 0)
+        self.assertEqual(len(out["graveyard"]), 1)
+
+    def test_late_flag_without_evidence_falls_to_graveyard(self) -> None:
+        # bh_fdr_survivor True but no metrics / negative OOS must not survive.
+        sneaky = _row(symbol="Q", metrics=None, oos=-5.0)
+        sneaky["metrics"] = None
+        sneaky["robustness"]["bh_fdr_survivor"] = True
+        out = build_validation_terminal(_wrap([sneaky]))
+        self.assertEqual(out["funnel"]["survivors"], 0)
+        self.assertEqual(len(out["graveyard"]), 1)
+
+    def test_missing_param_id_does_not_inflate_spread(self) -> None:
+        rows = [
+            _row(strategy_id="S1", parameter_set_id="p1", oos=10.0),
+            _row(strategy_id="S1", parameter_set_id="p2", oos=12.0),
+            _row(strategy_id="S1", parameter_set_id=None, oos=999.0),  # not a param variant
+        ]
+        out = build_validation_terminal(_wrap(rows))
+        ps = out["parameter_sensitivity"][0]
+        self.assertEqual(ps["n_param_sets"], 2)
+        self.assertEqual(ps["oos_max"], 12.0)  # 999 excluded
+        self.assertEqual(ps["oos_spread"], 2.0)
+
+    def test_duplicate_strategy_ids_across_runs(self) -> None:
+        rows = [_row(strategy_id="DUP", symbol="A"), _row(strategy_id="DUP", symbol="B")]
+        out = build_validation_terminal(_wrap(rows))
+        self.assertEqual(out["funnel"]["total_variants"], 2)
+        self.assertEqual(out["funnel"]["survivors"], 2)
+        # both feed the same family bucket
+        self.assertEqual(out["family_survival"][0]["tested"], 2)
+
+    def test_lists_capped_with_honest_totals(self) -> None:
+        rows = [_row(strategy_id=f"S{i}", symbol="A", bh_fdr_survivor=False,
+                     robust_final=False, oos=-1.0) for i in range(700)]
+        out = build_validation_terminal(_wrap(rows))
+        self.assertEqual(out["source_counts"]["graveyard"], 700)  # honest total
+        self.assertLessEqual(len(out["graveyard"]), 500)          # capped payload
+        self.assertTrue(out["truncated"]["graveyard"])
 
     def test_primary_failure_reasons(self) -> None:
         out = build_validation_terminal(_wrap([

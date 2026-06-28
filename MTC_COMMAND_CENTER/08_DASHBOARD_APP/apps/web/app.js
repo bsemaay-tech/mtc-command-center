@@ -311,6 +311,8 @@ function esc(v) {
   d.textContent = String(v);
   return d.innerHTML;
 }
+/* Escape for use inside a double-quoted HTML attribute (esc() leaves quotes intact). */
+function escAttr(v) { return esc(v).replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
 function spaced(v) { return String(v || "").replace(/_/g, " "); }
 function titleCase(v) { return spaced(v).replace(/\b\w/g, (c) => c.toUpperCase()); }
 function num(v) { const n = Number(v); return Number.isFinite(n) ? n.toLocaleString() : String(v); }
@@ -1565,7 +1567,9 @@ function vtRowsForStrategy(baseStrategyId) {
   const norm = (s) => String(s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
   const key = norm(baseStrategyId);
   if (key.length < 4) return { survivors: [], graveyard: [] };
-  const hit = (r) => { const sid = norm(r.strategy_id); return sid && (sid.includes(key) || key.includes(sid)); };
+  // Exact normalized id match only — substring matching cross-attached strategies
+  // that merely share a family token (e.g. RSI vs DUAL_RSI).
+  const hit = (r) => norm(r.strategy_id) === key;
   return {
     survivors: (vt.survivors || []).filter(hit),
     graveyard: (vt.graveyard || []).filter(hit),
@@ -1798,7 +1802,7 @@ function vtSurvivors(vt) {
       <td class="num">${vtPct(r.oos_return_pct)}</td>
       <td class="num">${vtPct(r.buy_hold_alpha)}</td>
       <td class="num">${vtNum(r.max_drawdown) !== null ? vtPct(r.max_drawdown) : "—"}</td>
-      <td class="num">${r.trade_count != null ? r.trade_count : "—"}</td>
+      <td class="num">${r.trade_count != null ? esc(r.trade_count) : "—"}</td>
       <td>${r.dsr_robust ? badge("DSR", "ok") : badge("DSR fail", "neutral")}</td>
       <td>${vtConsistencyBadge(r.cross_asset_consistency_score)}</td>
     </tr>`).join("");
@@ -1821,7 +1825,7 @@ function vtGraveyard(vt) {
   const filter = state.vtGraveFilter || "all";
   const rows = filter === "all" ? all : all.filter((r) => r.primary_failure === filter);
   const opts = ['<option value="all">All reasons (' + all.length + ")</option>"]
-    .concat(reasons.map((rs) => `<option value="${esc(rs)}" ${rs === filter ? "selected" : ""}>${esc(spaced(rs))}</option>`))
+    .concat(reasons.map((rs) => `<option value="${escAttr(rs)}" ${rs === filter ? "selected" : ""}>${esc(spaced(rs))}</option>`))
     .join("");
   const body = rows.length ? rows.map((r) => `
     <tr>
