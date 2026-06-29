@@ -1,5 +1,103 @@
 # GLOBAL_HANDOFF
 
+## Claude Opus 4.8 2026-06-29 — Onboarding/AI_MEMORY hardening via 2-round cold-start audit (PR #5–#8)
+
+Barış asked whether any AI does backtest / scoring / results→dashboard / AI-verdict / memory-update the SAME way, and whether AI_MEMORY is strong enough. Ran a **cold-onboarding audit** (read-only prompt; agents onboard via the chain and report what they understood + gaps). Two rounds, 6 independent models each (Claude/Opus, Codex, Kimi, Cursor/Sonnet, Antigravity, DeepSeek). Prompts: `11_TRIAGE/COLD_ONBOARDING_AUDIT_PROMPT_2026-06-29.md` (v1) + `..._v2_2026-06-29.md` (workflow-uniformity edition).
+
+**Round-1 finding:** rules/safety strong, but (a) onboarding never linked the data inventory → agents couldn't bind SPY 10m; (b) 2 of 6 agents onboarded the WRONG repo (`C:\LAB\tradingview-lab` frozen legacy); (c) DO_NOT_TOUCH too vague. **Fixed in PR #5:** AGENTS.md REPO IDENTITY anchor + DATA & LAUNCH section (data README + `MEGA_BUNDLE_MANIFEST` + canonical `mega_walk_forward.py` command); START_HERE/runbook data pointers; DO_NOT_TOUCH explicit protected-scope list.
+
+**Round-2 (v2 prompt) confirmed** round-1 fixes held: 6/6 right repo, 6/6 "data-binding CLOSED". Remaining consensus gaps → fixed:
+- **PR #6 (doc-sync):** `11_TRIAGE/RESULTS_TO_DASHBOARD_MAP_2026-06-29.md` (W3 — artifact→writer→reader→view map, single-run vs overnight, never-fabricate/top_results rules); runner-example reconciled to `mega_walk_forward.py`; DSR §4.1 corrected to a confidence (≥0.95 robust, not "p≤"); stale CODEX_PICKUP banner → current-state; bundle PRIMARY-vs-superseded rule; QuantLens naming glossary.
+- **PR #7 (W4):** `03_QUANTLENS/_user_guide/13_AI_VERDICT_AUTHORING_PROCEDURE.md` — deterministic 8-token decision tree so two authors reach the same verdict. Owner decisions: PASS strict (Gate2 ∧ robust_final, DSR≥0.95); complexity≥8/10→COMPLEXITY_OVERLOAD; SALVAGE if reusable component else RESEARCH_ONLY; only Claude/Codex author+commit (others propose→Claude/Codex approve); single-verdict free, batch-reverdict approval-gated. Linked from AI_RULES + START_HERE "per-job procedures".
+- **PR #8 (R5 code):** `mega_walk_forward.py` soft guard — loud stderr WARNING when `MEGA_BUNDLE_MANIFEST` unset (was silently binding legacy crypto). Backward-compatible.
+
+**Result: onboarding now uniform across all 7 job types (W1 backtest, W2 scoring, W3 dashboard, W4 verdict, W5 memory, W6 git, W7 tools)** — each has one authoritative procedure reachable from AGENTS→START_HERE→AI_RULES. Process: all mechanical doc edits authored as exact specs, applied via `_deepseek_driver` (token discipline; DeepSeek round-2 went 0→9.0 once v2 prompt hardened the framing — driver is fine), audited on real diffs. **Scoring of audit reports** (round-2): Opus/Cursor 9.5, DeepSeek/Kimi 9.0, Codex 8.5, Antigravity 6.5. **Open/optional:** re-run v2 audit as a regression to confirm W3/W4 now PASS; consider making v2 a permanent `ONBOARDING_SELFTEST`.
+
+## Claude Opus 4.8 2026-06-29 — Complete multi-asset, multi-TF Alpaca dataset built (357 datasets, ~11.86M bars)
+
+Barış asked for a complete tradeable dataset across timeframes. Built `03_QUANTLENS/tools/alpaca_download_dataset.py` (multi-asset, multi-TF; equities IEX + crypto endpoint; RTH filter equity-intraday only, crypto 24/7; resumable skip-existing; per-symbol manifest writes; reads `APCA_API_KEY_ID`/`APCA_API_SECRET_KEY`; no engine/protected-scope edits, no backtest). Ran overnight: bundle `03_QUANTLENS/data/native_multiasset_alpaca_2026-06-28` (dir stamped at launch 6/28, finished early 6/29). **51 symbols × 7 timeframes (10m/15m/30m/1h/2h/4h/1d) = 357 datasets, 357/357 PASS, ~11.86M bars, 711MB, zero EMPTY/ERROR.**
+
+Coverage (Alpaca-only, per Barış scope decision): indices (SPY/QQQ/DIA/IWM), mega-cap stocks (AAPL/MSFT/NVDA/AMZN/TSLA/GOOGL/META/NFLX/AMD), commodity ETF proxies (GLD gold, SLV silver, USO/BNO oil, UNG natgas, DBC broad, CPER copper), bonds (TLT/IEF/HYG/LQD), 11 sector ETFs (XLF/XLE/XLK…), VXX, intl (EEM/EFA/FXI), 12 crypto (BTC/ETH/SOL/LTC/BCH/LINK/UNI/AAVE/DOGE/AVAX/DOT/SHIB). Equity intraday from ~2020-07 (IEX limit), daily ~2018; crypto 24/7 from 2021 (BTC/ETH 10m ~288k bars each). Adjusted, with volume. **NOT included (Alpaca can't): spot forex, real CME futures** — deferred to a future provider decision (Polygon/Twelve Data for FX; Databento/IBKR for futures).
+
+711MB CSVs git-ignored (regenerable from the script); manifest (enriched with bar_count + date ranges) + script + README committed. `03_QUANTLENS/data/README.md` updated → this is now the PRIMARY bundle for any future strategy research. No sweep/backtest run (data-only task per Barış). **Next:** this dataset is the substrate for testing NEW strategy logic across asset classes/timeframes — the open path since no existing strategy is DSR-robust.
+
+## Claude Opus 4.8 2026-06-28 — Alpaca 6yr × 7-symbol US-equities 10m: DONCHIAN is the lead (still not DSR-robust)
+
+TradingView capped 10m at ~20k bars (~2yr) where every strategy died. Barış provisioned an Alpaca **paper** key (free IEX feed). Wrote `03_QUANTLENS/tools/alpaca_download_us_equities_10m.py` (native 10Min, split+dividend **adjusted**, **with volume**, RTH-only; reads `APCA_API_KEY_ID`/`APCA_API_SECRET_KEY`; no protected-scope/engine/Pine edits). Pulled **7 symbols (SPY/QQQ/AAPL/MSFT/NVDA/AMZN/TSLA), ~57,700 bars each, 2020-07-27→2026-06-26** (IEX free history starts 2020, not 2016). Bundle: `03_QUANTLENS/data/native_us_equities_10m_alpaca_2026-06-28/` (all 7 PASS validation).
+
+Ran the full engine (honest train-select walk-forward + DSR) on all strategies × 7 symbols = **140 cells**. Result vs the thin TW data: **15 PASS (was 1), but still 0 DSR-robust, 0 robust_final.** Best DSR confidence 0.46 (need ≥0.95 — DSR is a confidence, higher=better; earlier session notes wrote the threshold direction backwards as "≤0.05", now corrected). DONCHIAN positive OOS on 5/7 symbols looked like a lead. Report: `11_TRIAGE/US_EQUITIES_10M_ALPACA_6YR_SWEEP_2026-06-28.md`.
+
+**DONCHIAN cross-sectional DSR (the lead test) → LEAD CLOSED.** Forced ONE shared config (channel=150) onto all 7 symbols, selected on pooled train, pooled 488 OOS trades: mean R +0.03, PF 1.06, **bootstrap p=0.27 (need <0.05), DSR conf 0.22 (need ≥0.95) → NOT significant, NOT robust.** The "5/7 positive" was per-symbol parameter cherry-picking; under one shared config only QQQ/AAPL positive (PF 1.39/1.45), MSFT/AMZN negative — no shared edge. Report: `11_TRIAGE/DONCHIAN_CROSS_SECTIONAL_DSR_2026-06-28.md`. **Conclusion: no existing strategy has a robust edge on native US-equities 10m, even with 6yr × 7 symbols.**
+
+Data governance: `03_QUANTLENS/data/README.md` updated (Alpaca = primary bundle). 24MB normalized CSVs + engine run-output dirs are git-ignored (regenerable from the downloader); manifest + script + report committed. **Next:** infra is done + proven; productive path is NEW strategy logic (the crypto-era library does not transfer). No promotion / no artifacts until a cell is genuinely DSR-robust.
+
+## Claude Opus 4.8 2026-06-28 — SPY 10m native SMOKE shipped (TradingView CSV → bundle → 1-cell run)
+
+Closed the next safe step on the native US-equities-10m blocker. Barış supplied 8 TradingView `BATS:SPY` 10m Chart Data CSV exports; a prior consolidation (Codex) merged them to `00_INBOX/USER_INTAKE/SPY_10m_tradingview__2024-06-03_to_2026-06-26.csv` (sha256 `c9fc113b…`, verified).
+
+**Validation = PASS.** Independent re-check: 20,094 rows, 0 duplicate timestamps, 0 numeric failures, monotonic, **0 OHLC sanity violations**, **0 intra-session gaps**. RTH-only XNYS (bar starts 13:30→20:50 UTC = 09:30–16:00 ET, DST-aware), Mon–Fri only. **Volume absent — not fabricated.** Adjustment unknown. Report: `11_TRIAGE/TRADINGVIEW_SPY_10M_DATA_VALIDATION_2026-06-28.md`.
+
+**Bundle built** (new, unique path, nothing overwritten): `03_QUANTLENS/data/native_us_equities_10m_spy_tradingview_2026-06-28/` → `normalized/BATS_SPY_10m.csv` (`timestamp_utc,open,high,low,close`, sha256 `821ea9fb…`) + `manifests/dataset_manifest.json` (`symbol=SPY`, `exchange=BATS`, `timeframe_normalized=10m`, `ohlcv_validation_status=PASS`, `volume_available=false`, `adjustment_policy=unknown_tradingview_export`, `session_policy_inferred=RTH_ONLY_XNYS…`). Manifest format reverse-engineered from `mega_walk_forward.py` `find_ds`/`load_df` (needs `datasets[]` with symbol/timeframe_normalized/PASS/normalized_path; CSV needs `timestamp_utc`). Confirmed 8-EMA-pullback `build_signals` uses only OHLC/EMA/ATR → no volume needed.
+
+**Smoke ran** (Barış authorized the smallest cell in the handoff prompt): `mega_walk_forward.py --strategy QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK --symbol SPY --tf 10m`, 75 trials, 1 worker, `MEGA_OUTPUT_DIR` redirected into the bundle's `smoke_output_2026-06-28/` so **nothing landed in `05_BACKTEST_RESULTS`** and **no engine code was edited**. Exit 0, 3.7s. **Real** result row: classification `INSUFFICIENT_TRADES` — lockbox 17 trades (< 30 floor), win 29.4%, net −0.773% vs buy&hold +8.90%, PF 0.684, DSR p=0.263, `robust_final=false`. **SMOKE ONLY / NOT PROMOTABLE.** Report: `11_TRIAGE/SPY_10M_NATIVE_SMOKE_REPORT_2026-06-28.md`.
+
+**Did NOT generate** `backtest_profile_result.json` (one-row INSUFFICIENT_TRADES is not a usable promotable row) or `top_results.json` (needs multi-row same-bucket set). No Pine / MTC_V2 / parity / engine-logic / broker / scorecard edits. Original CSV exports preserved. No git checkout/reset/stash; no commit (new files left in working tree for Barış review).
+
+**UPDATE (Barış approved multi-symbol, same day):** QQQ + AAPL exports validated PASS (identical clean structure to SPY). Built 3-symbol bundle `03_QUANTLENS/data/native_us_equities_10m_us3_tradingview_2026-06-28/` (SPY/QQQ/AAPL, `universe=[SPY,QQQ,AAPL]`). 3-cell smoke (output redirected, engine untouched), exit 0: SPY INSUFFICIENT_TRADES (net −0.77%), QQQ INSUFFICIENT_TRADES (net −1.93%), AAPL FAIL (53 trades, PF 1.007, net −0.03%) — all below buy&hold, all `robust_final=false`. SMOKE ONLY / NOT PROMOTABLE; no profile/top_results artifact. Addendum in `11_TRIAGE/SPY_10M_NATIVE_SMOKE_REPORT_2026-06-28.md`.
+
+**Full param sweep (Barış approved, same day) → strategy shelved.** Evaluated all 75 8EMA grid configs × SPY/QQQ/AAPL over full period + lockbox OOS (engine reused unmodified, no `05_BACKTEST_RESULTS` writes). Result: **0/75 net-positive on SPY, 0/75 on QQQ, 1/75 on AAPL** (+0.15% breakeven, 16 OOS trades — noise). Zero configs beat buy&hold (SPY +42% / QQQ +57% / AAPL +47%). Report `11_TRIAGE/SPY_QQQ_AAPL_10M_8EMA_PARAM_SWEEP_2026-06-28.md`. **Verdict: the 8EMA-pullback strategy does not work on US-equities 10m this window — pipeline is proven, the strategy is the blocker.** No full soak run; protected-scope equity-session gating NOT configured. No artifacts generated.
+
+**Multi-strategy sweep DONE (Barış approved "do all options").** Swept all 15 distinct engine strategies × SPY/QQQ/AAPL on the native bundle (the 3 `US_EQUITIES_INTRADAY_*` are byte-identical 8EMA aliases → skipped; `SWING_1H_DUAL_RSI` needs 1D map → skipped). Two-stage: (A) exploratory best-of-grid sweep flagged DONCHIAN (88 survivors), VWAP (39), GOLDEN_CROSS (17) as promising; (B) **honest engine walk-forward + DSR** on the top 3 × 3 symbols = 9 cells → only 1 PASS (DONCHIAN/AAPL +2.18% OOS, PF 1.07) and it's **not DSR-robust (p=0.215)**; 0 DSR-robust, 0 robust_final. Stage-A "survivors" were multiple-testing noise (peeking at OOS); honest train-only selection collapses the edge. **Verdict: no promotable strategy on SPY/QQQ/AAPL 10m this window — the crypto-era strategy library does not transfer.** Report `11_TRIAGE/US_EQUITIES_10M_MULTI_STRATEGY_SWEEP_2026-06-28.md`. No artifacts generated; engine unmodified; outputs contained in bundle's `candidate_sweep_2026-06-28/`.
+
+**Data governance:** created `03_QUANTLENS/data/README.md` — discoverable inventory so any agent knows what OHLCV exists and where (native US-equities bundles + crypto data locations + the `MEGA_BUNDLE_MANIFEST` reuse contract). Native 10m bundles live in `03_QUANTLENS/data/native_us_equities_10m_*` (normalized); raw consolidated CSVs in `00_INBOX/USER_INTAKE/` (SPY/QQQ/AAPL). Crypto data is in different folders (`02_MTC_BACKTEST/data` parquet + `03_QUANTLENS/research` CSV + external archive bundle) — all now listed in the README. Other AIs CAN reuse the native bundle for any strategy via `MEGA_BUNDLE_MANIFEST` + `--symbol/--tf`.
+
+**Next human decision:** the infra blocker is fully closed (pipeline proven on native US-equities 10m). No existing strategy has an edge here → productive paths are NEW strategy logic and/or more symbols + longer history. Adjustment policy + equity-session gating remain moot until a real edge exists.
+
+## Codex GPT-5 2026-06-28 — Native US-equities 10m soak blocked
+
+Evaluated DeepSeek's feasibility report at `11_TRIAGE/_tmp_native_us_equities_10m_audit_2026-06-28/WORKER_REPORT.md` and verified the core conclusion against live repo files. The native US-equities-10m soak for `QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK` is blocked by infrastructure/data state, not by dashboard/artifact code: no US equities OHLCV provider is wired, no US equities 10m data was found on disk, the draft run plan still has `symbols: []` / `universe.status=needs_freeze`, and existing evidence is crypto proxy / `RESEARCH_ONLY`.
+
+Codex correction to the worker report: `EQUITY_ONLY_STRATEGIES` is currently an empty set, so the precise blocker is not "strategy missing from a populated equity-only list"; it is that equity-only/session gating has not been configured for this strategy yet. Also, `10m` can be requested explicitly by planner/runner; the real issue is no matching data/manifest entry.
+
+Wrote `11_TRIAGE/NATIVE_US_EQUITIES_10M_CODEX_ASSESSMENT_2026-06-28.md` and updated `NEXT_STEPS.md` item 11 to `BLOCKED - DATA PROVIDER / SYMBOL UNIVERSE REQUIRED`. No backtest, optimizer, artifact generation, provider implementation, Pine, MTC_V2, parity, broker/execution, scorecard, or trading logic was run or changed.
+
+## Codex GPT-5 2026-06-28 — Strategy Detail P1 a11y focus
+
+Closed the P1 a11y-focus follow-up from the Impeccable Strategy Detail critique. The four STAGE workflow cards in `app.js` are now native `<button type="button">` controls instead of clickable divs, preserving the existing `scrollToSection(...)` behavior while making the controls keyboard-focusable by default.
+
+`styles.css` now has a global `:focus-visible` ring (2px teal with offset), a focused workflow-card visual state, and `prefers-reduced-motion: reduce` handling that disables the pulsing amber dot animation. Added `tests/test_strategy_detail_a11y_static.py` to guard the native-button, focus-visible, and reduced-motion contract.
+
+Scope: UI/a11y only. No data contract, schema, backtest, Pine, MTC_V2, parity, broker/execution, scorecard, or trading logic changed. Claude audit prompt written to `11_TRIAGE/CLAUDE_AUDIT_PROMPT_STRATEGY_DETAIL_A11Y_FOCUS_2026-06-28.md`.
+
+Validation: focused static a11y test PASS (`2 tests`); full dashboard API suite PASS (`89 tests`); `node --check app.js` PASS; `git diff --check` PASS with only LF->CRLF warnings; live `:8765` health PASS and served `/web/app.js` contains workflow buttons with no old `div.workflow-card[onclick]` pattern.
+
+Claude audit: `11_TRIAGE/CLAUDE_AUDIT_REPORT_STRATEGY_DETAIL_A11Y_FOCUS_2026-06-28.md` returned PASS WITH NITS. No code fix required. Nits were commit hygiene for co-resident uncommitted UI tasks and optional broader reduced-motion coverage outside the P1 item.
+
+## Codex GPT-5 2026-06-28 — Night artifact universe-mismatch boolean normalization
+
+Closed the small optional artifact-contract follow-up in `NEXT_STEPS.md` item 11(e). Future `build_profile_result_artifact.py` output now writes `provenance.universe_mismatch` as a strict boolean and keeps the human-readable text in `provenance.universe_mismatch_reason`. The read-only `night_artifacts_reader.py` normalizes older pilot artifacts that stored `universe_mismatch` as a string, so existing artifact files are not rewritten and dashboard flags remain backward-compatible.
+
+Frontend `profileRowFlags()` now prefers `universe_mismatch_reason` for tooltip/detail text while treating the boolean flag as canonical. Added tests for converter output and legacy-reader normalization. No schema, existing result artifact, backtest, Pine, MTC_V2, parity, broker, execution, scorecard, or trading logic was changed.
+
+Validation: py_compile PASS for `build_profile_result_artifact.py` and `night_artifacts_reader.py`; focused API tests `tests.test_build_profile_result_artifact tests.test_night_artifacts_reader` PASS (`22 tests`); `node --check app.js` PASS. Full API test and Claude audit still pending for final close.
+
+## DeepSeek v4 Pro 2026-06-28 — Strategy Detail empty-state text contrast fix (current checkout: `master`, not pushed)
+
+Fixed the P1 a11y contrast issue from the 2026-06-21 critique: empty-state / missing-data text values in Strategy Detail were below WCAG AA (--faint #64748b ≈3.97–4.09:1 on dark panels).
+
+**Changes (CSS only, `styles.css`, 10 selectors):**
+Switched all empty-state text tokens from `--faint #64748b` (or `--faintest #475569`) → `--muted #94a3b8` (7.26–7.67:1 on all dark backgrounds, well above AA 4.5:1).
+
+Selectors changed: `.value-muted`, `.empty-state`, `table.grid-table .empty-cell`, `table.matrix .cell-empty`, `.score-chip.na`, `.si-gate-cell .val.locked`, `.rail-row .v.locked`, `.subscore .pts.absent`, `.artifact-item .a-state.plan`, `.empty-pill`.
+
+Italic/subdued styling preserved on all empty-state elements. No layout, wording, data, or behavior changes. No JS/app.py touched.
+
+**Validation:** `node --check app.js` PASS. API tests: 66 ran, 4 pre-existing errors (import `mcc_readonly` + temp-dir collisions — zero regression). No `impeccable detect` (tool not available in this env).
+
+**Final audit:** Claude Opus 4.8 returned `PASS WITH NITS`; no code fix required. Temporary worker/Codex/Claude report files were removed after the verdict; this handoff is the durable record.
+
+**STILL OPEN:** P2 boilerplate dedup; P2 triple gate-state.
+
 ## Claude Opus 4.8 2026-06-21 — Impeccable Strategy-Detail polish pass DONE (branch `feature/ui-impeccable-pilot`, NOT merged)
 
 Continuation of the Phase-4 pilot below. Took the Strategy Detail view (`renderIntelligence`, `app.js:903`) from critique → applied fixes. **UI/CSS/markup only.** Commits attributed `Co-Authored-By: Codex GPT-5` per branch convention (git user on this branch).
