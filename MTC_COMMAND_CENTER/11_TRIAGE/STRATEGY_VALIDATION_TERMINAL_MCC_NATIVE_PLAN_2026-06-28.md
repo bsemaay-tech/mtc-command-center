@@ -114,9 +114,11 @@ both derived from real data only.
 | layer / building stage | `profile` (SOURCE_NAKED…FULL_MTC_CANDIDATE) | |
 
 **Two derived scores (real fields only):**
-- `cross_asset_consistency_score` (0–4): bucket by count of distinct `symbol` where
-  (`bh_fdr_survivor` AND `buy_hold_alpha > 0`) for the same `strategy_id`/family.
-  `0`=1 symbol, `1`=2–3 related, `2`=several same-class, `3`=cross-class, `4`=cross-class+multi-TF+multi-window.
+- `cross_asset_consistency_score` (0–4) = **survivor breadth**, bucketed by count of distinct
+  `symbol` where (`bh_fdr_survivor` AND beats buy&hold) for the same `strategy_id`.
+  `0`=1 symbol, `1`=2–3, `2`=4–5, `3`=6+, `4`=6+ and multi-TF. **Measures symbol/timeframe breadth
+  only** — it does not prove asset-class diversity or multi-window robustness (no such field on the
+  row), so the label is "symbols", not "cross-class". Asset-class/window breadth is Phase 2 work.
 - survivor ranking: **no new composite.** Sort by (`bh_fdr_survivor` desc, `dsr_robust` desc,
   `buy_hold_alpha` desc). Display the real components, not a black-box number.
 

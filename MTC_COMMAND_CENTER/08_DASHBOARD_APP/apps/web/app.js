@@ -1782,9 +1782,9 @@ function vtScatter(points) {
 
 function vtConsistencyBadge(score) {
   const s = Number(score) || 0;
-  const labels = ["1 asset", "2–3 related", "several same-class", "cross-class", "cross-class + multi-TF"];
+  const labels = ["1 symbol", "2–3 symbols", "4–5 symbols", "6+ symbols", "6+ symbols · multi-TF"];
   const tone = s >= 3 ? "ok" : s >= 1 ? "warn" : "neutral";
-  return `<span class="badge ${tone}" title="Cross-asset consistency ${s}/4">${s}/4 · ${esc(labels[s] || "")}</span>`;
+  return `<span class="badge ${tone}" title="Survivor breadth: distinct symbols (+ timeframes) where the strategy beat buy&hold and passed BH-FDR">${s}/4 · ${esc(labels[s] || "")}</span>`;
 }
 
 function vtSurvivors(vt) {
@@ -1821,12 +1821,20 @@ function vtGraveyard(vt) {
     return `<section class="panel"><div class="panel-heading"><h3>Graveyard</h3><span>0</span></div>
       ${emptyState("No rejected strategies in the current snapshot.")}</section>`;
   }
+  const total = (vt.source_counts && vt.source_counts.graveyard != null) ? vt.source_counts.graveyard : all.length;
+  const truncated = !!(vt.truncated && vt.truncated.graveyard);
   const reasons = Array.from(new Set(all.map((r) => r.primary_failure).filter(Boolean))).sort();
   const filter = state.vtGraveFilter || "all";
   const rows = filter === "all" ? all : all.filter((r) => r.primary_failure === filter);
-  const opts = ['<option value="all">All reasons (' + all.length + ")</option>"]
+  const opts = ['<option value="all">All reasons (' + all.length + (truncated ? " shown" : "") + ")</option>"]
     .concat(reasons.map((rs) => `<option value="${escAttr(rs)}" ${rs === filter ? "selected" : ""}>${esc(spaced(rs))}</option>`))
     .join("");
+  const headSpan = truncated
+    ? `showing ${all.length} of ${total} rejected · filter applies to loaded slice`
+    : `${total} rejected · searchable`;
+  const truncNote = truncated
+    ? `<div class="banner warn" style="margin-bottom:10px;">Showing the first ${all.length} of ${total} rejected variants. Filtering and search apply to this loaded slice only; full set lives in the backtest artifacts.</div>`
+    : "";
   const body = rows.length ? rows.map((r) => `
     <tr>
       <td><code>${esc(r.strategy_id || "—")}</code></td>
@@ -1839,7 +1847,8 @@ function vtGraveyard(vt) {
       <td><span class="cell-path">${esc(r.source_rel_path || M.artifact)}</span></td>
     </tr>`).join("") : `<tr><td colspan="8" class="empty-cell">No rows for this reason.</td></tr>`;
   return `<section class="panel">
-    <div class="panel-heading"><h3>Graveyard</h3><span>${all.length} rejected · searchable, never deleted</span></div>
+    <div class="panel-heading"><h3>Graveyard</h3><span>${headSpan}</span></div>
+    ${truncNote}
     <div style="margin-bottom:10px;">
       <label style="font-size:12px;color:var(--faint);margin-right:6px;">Filter by failure</label>
       <select class="vt-select" onchange="setVtGraveFilter(this.value)">${opts}</select>

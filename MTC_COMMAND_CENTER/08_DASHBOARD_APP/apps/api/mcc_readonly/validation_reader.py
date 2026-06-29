@@ -140,10 +140,16 @@ def _primary_failure(flags: dict[str, bool], row: dict[str, Any]) -> str | None:
 
 
 def _cross_asset_scores(rows: list[dict[str, Any]]) -> dict[str, int]:
-    """0–4 consistency score per strategy_id from real survivor evidence.
+    """0–4 survivor-breadth score per strategy_id from real evidence.
 
-    Counts distinct symbols where a strategy both survived BH-FDR and beat
-    buy & hold, then buckets. Timeframe/window breadth nudges the top bucket.
+    Counts DISTINCT SYMBOLS where a strategy both survived BH-FDR and beat
+    buy & hold, then buckets by symbol count; the top bucket additionally
+    requires more than one timeframe. This measures symbol/timeframe breadth
+    only — it does NOT prove asset-class diversity or multi-window robustness,
+    because no asset-class/window field is available on the row. Labels in the
+    UI must reflect symbol/TF breadth, not "cross-class".
+
+    Buckets: 0 = 1 symbol · 1 = 2–3 · 2 = 4–5 · 3 = 6+ · 4 = 6+ and multi-TF.
     """
     by_strategy: dict[str, dict[str, set]] = defaultdict(
         lambda: {"symbols": set(), "timeframes": set()}
