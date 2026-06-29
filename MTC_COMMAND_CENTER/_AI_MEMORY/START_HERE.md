@@ -8,6 +8,8 @@ Read order: `AGENTS.md`, this file, `AI_RULES.md`, `PROJECT_MEMORY.md`, `GLOBAL_
 
 Workflow gates and prompt templates: see `AI_RULES.md` and `..\04_SHARED\prompts\05_ai_workflow\00_index.md`.
 
+Per-job procedures (so every agent does a job the same way): backtest data+launch → `AGENTS.md` "DATA & LAUNCH"; results → dashboard → `..\11_TRIAGE\RESULTS_TO_DASHBOARD_MAP_2026-06-29.md`; AI/QuantLens verdict authoring → `..\03_QUANTLENS\_user_guide\13_AI_VERDICT_AUTHORING_PROCEDURE.md`.
+
 AI tool auto-use (MarkItDown for binary docs, Graphify for impact questions, CodeBurn for cost/routing): see the `AI TOOL AUTO-USE` section in `AGENTS.md` and `..\09_DOCS\AI_TOOLING\AI_TOOL_INTEGRATION_PLAN.md`. Use them automatically at their triggers; don't wait to be told.
 
 HER backtest / optimizasyon için (in-day tek strateji, sprint, overnight — fark etmez) **zorunlu pre-read iki dosya:**
