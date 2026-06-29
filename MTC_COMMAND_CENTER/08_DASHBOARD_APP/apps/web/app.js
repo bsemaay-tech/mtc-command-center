@@ -15,6 +15,8 @@ const state = {
   explorerStrategyId: null,
   selectedReportPath: null,
   detailCards: {},
+  vtView: "funnel",
+  vtGraveFilter: "all",
 };
 
 const NIGHT_CONTRACT = [
@@ -34,6 +36,7 @@ const NAV = [
   { id: "backtest-planner", label: "Backtest Planner", icon: "beaker", title: "Backtest Planner", sub: "Prepare run_plan.json (read-only review)." },
   { id: "backtest-runs", label: "Backtest Runs", icon: "settings", title: "Backtest Runs", sub: "Run history and heartbeat." },
   { id: "result-explorer", label: "Backtest Result Explorer", icon: "bar", title: "Backtest Result Explorer", sub: "Bucketed results and benchmark analysis." },
+  { id: "validation-terminal", label: "Validation Terminal", icon: "shield", title: "Strategy Validation Terminal", sub: "Validation funnel, survivors, and graveyard from backtest evidence." },
   { id: "leaderboard", label: "Strategy Leaderboard", icon: "trend", title: "Strategy Leaderboard", sub: "Best strategies by category / profile / timeframe." },
   { id: "paper-trading", label: "Paper Trading", icon: "activity", title: "Paper Trading", sub: "Readiness and locked candidates." },
   { id: "ai-knowledge", label: "AI Knowledge Base", icon: "cpu", title: "AI Knowledge Base", sub: "Reusable components and insights." },
@@ -272,6 +275,7 @@ function renderCurrentView() {
     "backtest-planner": renderPlanner,
     "backtest-runs": renderRuns,
     "result-explorer": renderResultExplorer,
+    "validation-terminal": renderValidationTerminal,
     leaderboard: renderLeaderboard,
     "paper-trading": renderPaperTrading,
     "ai-knowledge": renderKnowledge,
@@ -307,6 +311,8 @@ function esc(v) {
   d.textContent = String(v);
   return d.innerHTML;
 }
+/* Escape for use inside a double-quoted HTML attribute (esc() leaves quotes intact). */
+function escAttr(v) { return esc(v).replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
 function spaced(v) { return String(v || "").replace(/_/g, " "); }
 function titleCase(v) { return spaced(v).replace(/\b\w/g, (c) => c.toUpperCase()); }
 function num(v) { const n = Number(v); return Number.isFinite(n) ? n.toLocaleString() : String(v); }
@@ -920,6 +926,7 @@ function renderIntelligence(c) {
         ${evidenceSection(m)}
         ${explorerPreviewSection(m)}
         ${paperReadinessSection(m)}
+        ${validationEvidenceSection(m)}
         ${advancedSection(m)}
       </div>
       <aside class="si-rail">
@@ -984,9 +991,9 @@ function heroBlock(m) {
     </section>`;
 }
 function workflowCard(stage, label, status, section, dim) {
-  return `<div class="workflow-card ${dim ? "dim" : ""}" onclick="scrollToSection('${section}')">
+  return `<button type="button" class="workflow-card ${dim ? "dim" : ""}" onclick="scrollToSection('${section}')">
     <span class="stg">${esc(stage)}</span><span class="ttl">${esc(label)}</span><span class="st">${esc(status)}</span>
-  </div>`;
+  </button>`;
 }
 
 function sectionHead(n, title, subtitle, iconName) {
@@ -1552,6 +1559,307 @@ function renderRuns(c) {
   `;
 }
 
+/* Intelligence dossier §8: validation-terminal evidence for the selected strategy.
+   Read-only cross-link; matches validation rows to the open strategy by id token. */
+function vtRowsForStrategy(baseStrategyId) {
+  const vt = snap().validation_terminal;
+  if (!vt || !baseStrategyId) return { survivors: [], graveyard: [] };
+  const norm = (s) => String(s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const key = norm(baseStrategyId);
+  if (key.length < 4) return { survivors: [], graveyard: [] };
+  // Exact normalized id match only — substring matching cross-attached strategies
+  // that merely share a family token (e.g. RSI vs DUAL_RSI).
+  const hit = (r) => norm(r.strategy_id) === key;
+  return {
+    survivors: (vt.survivors || []).filter(hit),
+    graveyard: (vt.graveyard || []).filter(hit),
+  };
+}
+
+function validationEvidenceSection(m) {
+  const baseId0 = baseId(m && (m.id || state.selectedStrategyId));
+  const { survivors, graveyard } = vtRowsForStrategy(baseId0);
+  const total = survivors.length + graveyard.length;
+  const head = `<div class="panel-heading"><h3>Validation Terminal Evidence</h3><span>${total ? total + " variant(s)" : "cross-link"}</span></div>`;
+  if (!total) {
+    return `<section class="panel" id="sec-validation">${head}
+      ${emptyState("No matching validation-terminal variants for this strategy in the current snapshot.")}
+      <div style="margin-top:10px;"><button class="btn" type="button" onclick="navigate('validation-terminal')">Open Validation Terminal</button></div>
+    </section>`;
+  }
+  const rows = survivors.map((r) => ({ r, survivor: true }))
+    .concat(graveyard.map((r) => ({ r, survivor: false })))
+    .map(({ r, survivor }) => `
+      <tr>
+        <td>${esc(r.symbol || "—")}</td>
+        <td>${esc(r.timeframe || "—")}</td>
+        <td>${esc(spaced(r.profile || "—"))}</td>
+        <td class="num">${vtNum(r.oos_return_pct) !== null ? vtPct(r.oos_return_pct) : "—"}</td>
+        <td class="num">${vtNum(r.buy_hold_alpha) !== null ? vtPct(r.buy_hold_alpha) : "—"}</td>
+        <td>${survivor ? badge("survivor", "ok") : badge(spaced(r.primary_failure || "rejected"), "na")}</td>
+      </tr>`).join("");
+  return `<section class="panel" id="sec-validation">${head}
+    <div class="grid-2" style="margin-bottom:12px;">
+      <div class="lc-kpi"><span class="k">Survivors</span><span class="v ${survivors.length ? "ok" : ""}">${survivors.length}</span></div>
+      <div class="lc-kpi"><span class="k">Graveyard</span><span class="v ${graveyard.length ? "na" : ""}">${graveyard.length}</span></div>
+    </div>
+    <div class="table-wrap"><table class="grid-table">
+      <thead><tr><th>Symbol</th><th>TF</th><th>Profile</th><th class="num">OOS</th><th class="num">Alpha</th><th>Status</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <div style="margin-top:10px;"><button class="btn" type="button" onclick="navigate('validation-terminal')">Open Validation Terminal</button></div>
+  </section>`;
+}
+
+/* ============================================================
+   PAGE: Strategy Validation Terminal
+   Read-only aggregate over snapshot.validation_terminal.
+   Sub-views: Funnel · Survivors · Graveyard.
+   ============================================================ */
+function setVtView(v) { state.vtView = v; renderCurrentView(); }
+window.setVtView = setVtView;
+function setVtGraveFilter(v) { state.vtGraveFilter = v; renderCurrentView(); }
+window.setVtGraveFilter = setVtGraveFilter;
+
+function vtPct(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return "—";
+  return (n > 0 ? "+" : "") + n.toFixed(2) + "%";
+}
+function vtNum(v) { const n = Number(v); return Number.isFinite(n) ? n : null; }
+
+function renderValidationTerminal(c) {
+  const vt = snap().validation_terminal;
+  if (!vt || typeof vt !== "object" || !vt.source_counts || vt.source_counts.profile_result_rows === 0) {
+    c.innerHTML = `<section class="panel">
+      <div class="panel-heading"><h3>Strategy Validation Terminal</h3><span>read-only</span></div>
+      ${emptyState("No profile-separated backtest results in the current snapshot. Run a backtest that emits backtest_profile_result.json, then refresh.")}
+    </section>`;
+    return;
+  }
+  const view = state.vtView || "funnel";
+  const tabBtn = (id, label) => `<button class="vt-tab ${view === id ? "is-active" : ""}" type="button" onclick="setVtView('${id}')">${esc(label)}</button>`;
+  const counts = vt.source_counts;
+  let body = "";
+  if (view === "survivors") body = vtSurvivors(vt);
+  else if (view === "graveyard") body = vtGraveyard(vt);
+  else body = vtFunnel(vt);
+
+  c.innerHTML = `
+    <section class="panel">
+      <div class="panel-heading"><h3>Strategy Validation Terminal</h3><span>${counts.profile_result_rows} variants · read-only</span></div>
+      <div class="grid-4" style="margin-bottom:8px;">
+        <div class="lc-kpi"><span class="k">Variants</span><span class="v">${counts.profile_result_rows}</span></div>
+        <div class="lc-kpi"><span class="k">Survivors</span><span class="v ${counts.survivors ? "ok" : ""}">${counts.survivors}</span></div>
+        <div class="lc-kpi"><span class="k">Graveyard</span><span class="v ${counts.graveyard ? "na" : ""}">${counts.graveyard}</span></div>
+        <div class="lc-kpi"><span class="k">Families</span><span class="v">${counts.families}</span></div>
+      </div>
+      <div class="vt-tabs">${tabBtn("funnel", "Funnel & Overview")}${tabBtn("survivors", "Survivors")}${tabBtn("graveyard", "Graveyard")}</div>
+    </section>
+    ${body}
+  `;
+}
+
+function vtFunnel(vt) {
+  const f = vt.funnel || {};
+  const stages = [
+    ["Total variants", f.total_variants],
+    ["Completed runs", f.completed_runs],
+    ["Positive OOS", f.positive_oos],
+    ["Beats Buy & Hold", f.beats_buy_hold],
+    ["Robust passed", f.robust_passed],
+    ["Survivors (BH-FDR)", f.survivors],
+  ];
+  const max = Math.max(1, ...stages.map((s) => Number(s[1]) || 0));
+  const funnelRows = stages.map(([label, val], i) => {
+    const n = Number(val) || 0;
+    const pct = Math.round((n / max) * 100);
+    const tone = i === stages.length - 1 ? "ok" : "";
+    return `<div class="vt-funnel-row">
+      <span class="vt-funnel-label">${esc(label)}</span>
+      <span class="vt-funnel-bar"><span class="vt-funnel-fill ${tone}" style="width:${pct}%;"></span></span>
+      <span class="vt-funnel-val">${n}</span>
+    </div>`;
+  }).join("");
+
+  const gauntlet = (vt.gauntlet || []);
+  const gMax = Math.max(1, ...gauntlet.map((g) => Number(g.killed) || 0));
+  const gauntletRows = gauntlet.length ? gauntlet.map((g) => `
+    <tr>
+      <td>${esc(spaced(g.filter))}</td>
+      <td class="num">${g.killed}</td>
+      <td><span class="vt-funnel-bar small"><span class="vt-funnel-fill na" style="width:${Math.round((Number(g.killed) || 0) / gMax * 100)}%;"></span></span></td>
+    </tr>`).join("") : `<tr><td colspan="3" class="empty-cell">No filter rejections recorded.</td></tr>`;
+
+  const fam = (vt.family_survival || []);
+  const famRows = fam.length ? fam.map((x) => `
+    <tr>
+      <td>${esc(x.family)}</td>
+      <td class="num">${x.tested}</td>
+      <td class="num">${x.survivors}</td>
+      <td class="num">${(Number(x.survival_rate) * 100).toFixed(1)}%</td>
+    </tr>`).join("") : `<tr><td colspan="4" class="empty-cell">No family data.</td></tr>`;
+
+  const ps = (vt.parameter_sensitivity || []);
+  const psRows = ps.length ? ps.slice(0, 30).map((x) => {
+    const fragile = Number(x.oos_spread) >= 20;
+    return `<tr>
+      <td><code>${esc(x.strategy_id)}</code></td>
+      <td class="num">${x.n_param_sets}</td>
+      <td class="num">${x.n_symbols}</td>
+      <td class="num">${vtPct(x.oos_min)}</td>
+      <td class="num">${vtPct(x.oos_median)}</td>
+      <td class="num">${vtPct(x.oos_max)}</td>
+      <td>${fragile ? badge(vtPct(x.oos_spread) + " spread", "na") : badge(vtPct(x.oos_spread) + " spread", "ok")}</td>
+    </tr>`;
+  }).join("") : `<tr><td colspan="7" class="empty-cell">No multi-parameter strategies to compare.</td></tr>`;
+  const psPanel = `
+    <section class="panel">
+      <div class="panel-heading"><h3>Parameter Sensitivity</h3><span>OOS spread across parameter sets · wide = fragile</span></div>
+      <div class="table-wrap"><table class="grid-table">
+        <thead><tr><th>Strategy</th><th class="num">Param sets</th><th class="num">Symbols</th><th class="num">OOS min</th><th class="num">OOS median</th><th class="num">OOS max</th><th>Spread</th></tr></thead>
+        <tbody>${psRows}</tbody>
+      </table></div>
+    </section>`;
+
+  return `
+    <section class="panel">
+      <div class="panel-heading"><h3>Validation Funnel</h3><span>each stage narrows the last</span></div>
+      <div class="vt-funnel">${funnelRows}</div>
+    </section>
+    <div class="grid-2">
+      <section class="panel">
+        <div class="panel-heading"><h3>In-Sample vs Out-of-Sample</h3><span>green = survivor</span></div>
+        ${vtScatter(vt.is_oos_scatter || [])}
+      </section>
+      <section class="panel">
+        <div class="panel-heading"><h3>Validation Gauntlet</h3><span>which filter kills most</span></div>
+        <div class="table-wrap"><table class="grid-table">
+          <thead><tr><th>Filter</th><th class="num">Killed</th><th></th></tr></thead>
+          <tbody>${gauntletRows}</tbody>
+        </table></div>
+      </section>
+    </div>
+    <section class="panel">
+      <div class="panel-heading"><h3>Survival Rate by Family</h3><span>${fam.length} families</span></div>
+      <div class="table-wrap"><table class="grid-table">
+        <thead><tr><th>Family</th><th class="num">Tested</th><th class="num">Survivors</th><th class="num">Survival %</th></tr></thead>
+        <tbody>${famRows}</tbody>
+      </table></div>
+    </section>
+    ${psPanel}`;
+}
+
+function vtScatter(points) {
+  if (!points.length) return emptyState("No IS/OOS points (both scores required).");
+  const xs = points.map((p) => vtNum(p.is_score)).filter((v) => v !== null);
+  const ys = points.map((p) => vtNum(p.oos_score)).filter((v) => v !== null);
+  if (!xs.length || !ys.length) return emptyState("No plottable IS/OOS points.");
+  const W = 360, H = 240, pad = 34;
+  let xMin = Math.min(...xs), xMax = Math.max(...xs);
+  let yMin = Math.min(...ys, 0), yMax = Math.max(...ys, 0);
+  if (xMin === xMax) { xMin -= 1; xMax += 1; }
+  if (yMin === yMax) { yMin -= 1; yMax += 1; }
+  const sx = (v) => pad + ((v - xMin) / (xMax - xMin)) * (W - pad * 1.4);
+  const sy = (v) => (H - pad) - ((v - yMin) / (yMax - yMin)) * (H - pad * 1.6);
+  const zeroY = sy(0);
+  const dots = points.map((p) => {
+    const x = vtNum(p.is_score), y = vtNum(p.oos_score);
+    if (x === null || y === null) return "";
+    const fill = p.survivor ? "var(--emerald, #34d399)" : "var(--faint, #64748b)";
+    const t = `${esc(p.strategy_id || "")} ${esc(p.symbol || "")} IS ${x.toFixed(2)} / OOS ${vtPct(y)}`;
+    return `<circle cx="${sx(x).toFixed(1)}" cy="${sy(y).toFixed(1)}" r="${p.survivor ? 5 : 3.5}" fill="${fill}" fill-opacity="0.85"><title>${t}</title></circle>`;
+  }).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" class="vt-scatter" role="img" aria-label="In-sample versus out-of-sample scatter">
+    <line x1="${pad}" y1="${H - pad}" x2="${W - 8}" y2="${H - pad}" stroke="var(--border,#1e2733)"/>
+    <line x1="${pad}" y1="8" x2="${pad}" y2="${H - pad}" stroke="var(--border,#1e2733)"/>
+    <line x1="${pad}" y1="${zeroY.toFixed(1)}" x2="${W - 8}" y2="${zeroY.toFixed(1)}" stroke="var(--amber,#f59e0b)" stroke-dasharray="4 3" stroke-opacity="0.7"><title>OOS = 0 survival line</title></line>
+    ${dots}
+    <text x="${(W / 2).toFixed(0)}" y="${H - 6}" fill="var(--faint,#8b949e)" font-size="10" text-anchor="middle">In-sample score</text>
+    <text x="10" y="${(H / 2).toFixed(0)}" fill="var(--faint,#8b949e)" font-size="10" text-anchor="middle" transform="rotate(-90 10 ${(H / 2).toFixed(0)})">OOS return %</text>
+  </svg>`;
+}
+
+function vtConsistencyBadge(score) {
+  const s = Number(score) || 0;
+  const labels = ["1 symbol", "2–3 symbols", "4–5 symbols", "6+ symbols", "6+ symbols · multi-TF"];
+  const tone = s >= 3 ? "ok" : s >= 1 ? "warn" : "neutral";
+  return `<span class="badge ${tone}" title="Survivor breadth: distinct symbols (+ timeframes) where the strategy beat buy&hold and passed BH-FDR">${s}/4 · ${esc(labels[s] || "")}</span>`;
+}
+
+function vtSurvivors(vt) {
+  const rows = vt.survivors || [];
+  if (!rows.length) {
+    return `<section class="panel"><div class="panel-heading"><h3>Survivors</h3><span>0</span></div>
+      ${emptyState("No strategies survived BH-FDR in the current snapshot. This is honest evidence, not a bug — research-only rows do not promote.")}</section>`;
+  }
+  const body = rows.map((r) => `
+    <tr>
+      <td><code>${esc(r.strategy_id || "—")}</code></td>
+      <td>${esc(r.symbol || "—")}</td>
+      <td>${esc(r.timeframe || "—")}</td>
+      <td>${esc(spaced(r.profile || "—"))}</td>
+      <td class="num">${vtPct(r.oos_return_pct)}</td>
+      <td class="num">${vtPct(r.buy_hold_alpha)}</td>
+      <td class="num">${vtNum(r.max_drawdown) !== null ? vtPct(r.max_drawdown) : "—"}</td>
+      <td class="num">${r.trade_count != null ? esc(r.trade_count) : "—"}</td>
+      <td>${r.dsr_robust ? badge("DSR", "ok") : badge("DSR fail", "neutral")}</td>
+      <td>${vtConsistencyBadge(r.cross_asset_consistency_score)}</td>
+    </tr>`).join("");
+  return `<section class="panel">
+    <div class="panel-heading"><h3>Survivors</h3><span>${rows.length} · ranked by DSR · cross-asset · alpha</span></div>
+    <div class="table-wrap"><table class="grid-table">
+      <thead><tr><th>Strategy</th><th>Symbol</th><th>TF</th><th>Profile</th><th class="num">OOS</th><th class="num">Alpha</th><th class="num">Max DD</th><th class="num">Trades</th><th>Stat</th><th>Cross-asset</th></tr></thead>
+      <tbody>${body}</tbody>
+    </table></div>
+  </section>`;
+}
+
+function vtGraveyard(vt) {
+  const all = vt.graveyard || [];
+  if (!all.length) {
+    return `<section class="panel"><div class="panel-heading"><h3>Graveyard</h3><span>0</span></div>
+      ${emptyState("No rejected strategies in the current snapshot.")}</section>`;
+  }
+  const total = (vt.source_counts && vt.source_counts.graveyard != null) ? vt.source_counts.graveyard : all.length;
+  const truncated = !!(vt.truncated && vt.truncated.graveyard);
+  const reasons = Array.from(new Set(all.map((r) => r.primary_failure).filter(Boolean))).sort();
+  const filter = state.vtGraveFilter || "all";
+  const rows = filter === "all" ? all : all.filter((r) => r.primary_failure === filter);
+  const opts = ['<option value="all">All reasons (' + all.length + (truncated ? " shown" : "") + ")</option>"]
+    .concat(reasons.map((rs) => `<option value="${escAttr(rs)}" ${rs === filter ? "selected" : ""}>${esc(spaced(rs))}</option>`))
+    .join("");
+  const headSpan = truncated
+    ? `showing ${all.length} of ${total} rejected · filter applies to loaded slice`
+    : `${total} rejected · searchable`;
+  const truncNote = truncated
+    ? `<div class="banner warn" style="margin-bottom:10px;">Showing the first ${all.length} of ${total} rejected variants. Filtering and search apply to this loaded slice only; full set lives in the backtest artifacts.</div>`
+    : "";
+  const body = rows.length ? rows.map((r) => `
+    <tr>
+      <td><code>${esc(r.strategy_id || "—")}</code></td>
+      <td>${esc(r.symbol || "—")}</td>
+      <td>${esc(r.timeframe || "—")}</td>
+      <td>${badge(spaced(r.primary_failure || "unconfirmed"), "na")}</td>
+      <td>${esc(r.classification ? spaced(r.classification) : "—")}</td>
+      <td class="num">${vtNum(r.buy_hold_alpha) !== null ? vtPct(r.buy_hold_alpha) : "—"}</td>
+      <td class="num">${vtNum(r.max_drawdown) !== null ? vtPct(r.max_drawdown) : "—"}</td>
+      <td><span class="cell-path">${esc(r.source_rel_path || M.artifact)}</span></td>
+    </tr>`).join("") : `<tr><td colspan="8" class="empty-cell">No rows for this reason.</td></tr>`;
+  return `<section class="panel">
+    <div class="panel-heading"><h3>Graveyard</h3><span>${headSpan}</span></div>
+    ${truncNote}
+    <div style="margin-bottom:10px;">
+      <label style="font-size:12px;color:var(--faint);margin-right:6px;">Filter by failure</label>
+      <select class="vt-select" onchange="setVtGraveFilter(this.value)">${opts}</select>
+    </div>
+    <div class="table-wrap"><table class="grid-table">
+      <thead><tr><th>Strategy</th><th>Symbol</th><th>TF</th><th>Primary failure</th><th>Classification</th><th class="num">Alpha</th><th class="num">Max DD</th><th>Source</th></tr></thead>
+      <tbody>${body}</tbody>
+    </table></div>
+  </section>`;
+}
+
 /* ============================================================
    PAGE: Backtest Result Explorer
    ============================================================ */
@@ -1672,12 +1980,13 @@ function profileRowFlags(r) {
   const rob = (r.robustness && typeof r.robustness === "object") ? r.robustness : {};
   const pm = r.profile_mapping || {};
   const promo = String(r.promotion_status || "").toUpperCase();
+  const mismatchReason = prov.universe_mismatch_reason || (typeof prov.universe_mismatch === "string" ? prov.universe_mismatch : null);
   return {
     researchOnly: promo.includes("RESEARCH_ONLY") || promo.startsWith("NOT_PROMOTED"),
-    universeMismatch: !!prov.universe_mismatch,
+    universeMismatch: prov.universe_mismatch === true || !!mismatchReason,
     nonRobust: rob.robust_final === false,
     interpreted: pm.is_interpretation === true,
-    mismatchText: typeof prov.universe_mismatch === "string" ? prov.universe_mismatch : null,
+    mismatchText: mismatchReason,
     sourcePath: prov.source_path || r.source_rel_path || null,
   };
 }
