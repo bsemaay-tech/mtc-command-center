@@ -63,8 +63,10 @@ Bu runbook üç senaryo için aynı kalite eşiğini garanti eder:
 # 2. Veri validation
 python -c "from pathlib import Path; p = Path('...'); print('first/last bar:', ...)"
 
-# 3. Sandbox backtest (küçük grid)
-python tools/walk_forward_processor.py --strategy <id> --symbol BTC --tf 1h --grid small
+# 3. KANONİK tek-koşu (data MEGA_BUNDLE_MANIFEST ile bağlanır — AGENTS.md "DATA & LAUNCH")
+$env:MEGA_BUNDLE_MANIFEST="...\03_QUANTLENS\data\<bundle>\manifests\dataset_manifest.json"
+python tools/mega_walk_forward.py --strategy <id> --symbol <SYM> --tf <tf>
+#    (walk_forward_processor.py = alt-seviye/custom; varsayılan tek-koşu DEĞİL)
 
 # 4. 4-gate validation
 #    a. Rolling WF + lockbox OOS — built-in
@@ -220,9 +222,10 @@ Cross-iter consistency check (≥3 iter aynı candidate)
 ```
 
 ### 4.1 DSR eşik kalibrasyonu (crypto için)
-- **DSR p≥0.95** klasik akademik eşik — kurumsal hisse momentum (Sharpe 1.5+) için tasarlanmış. Crypto'da hemen hiçbir candidate geçemez.
-- **DSR p≥0.50** crypto research için pragmatik (50% confidence).
-- **Production'a giderken DSR p≥0.85** talep et.
+- **DSR = güven skoru, YÜKSEK = İYİ** (Bailey-LdP deflated-Sharpe confidence; engine alanı `dsr_p_value`, `dsr_robust = dsr_p_value >= 0.95`). "p-value" DEĞİL — eşiği "≤" değil **"≥"** yönünde oku.
+- **DSR ≥ 0.95** klasik akademik eşik (kurumsal momentum). Crypto'da hemen hiçbir candidate geçemez.
+- **DSR ≥ 0.50** crypto research için pragmatik (research-robust).
+- **Production'a giderken DSR ≥ 0.85** talep et.
 
 ### 4.2 BH-FDR caveat
 BH-FDR sıkı CI'ı yüksek-trade hücreleri (örn. TRX 15m) lehine biased. Düşük-trade BTC 4h hücreleri aleyhine. Cross-symbol agg'a güven, single-cell BH-FDR survivor'ı aşırı yorumlama.
