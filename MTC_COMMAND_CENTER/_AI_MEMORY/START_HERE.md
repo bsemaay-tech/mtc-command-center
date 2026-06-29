@@ -14,6 +14,8 @@ HER backtest / optimizasyon için (in-day tek strateji, sprint, overnight — fa
 
 Akış: `..\04_SHARED\prompts\05_ai_workflow\08_backtest_launch.md`. Single-strategy 5dk run dahi 4-gate (rolling WF + bootstrap+BH-FDR + DSR + multi-window) + buy&hold karşılaştırması olmadan promotable değil.
 
+**Veri + çalıştırma (kanonik):** Hangi datayı kullanacağını bilmeden backtest çalıştırma. Otorite envanter: `..\03_QUANTLENS\data\README.md` (tüm native bundle'lar — sembol/timeframe/asset-class/bar sayısı + crypto data konumları). US equities / ETF / multi-asset / 10m **var**; engine'in hardcoded default manifest'i eski crypto arşivi, güncel data DEĞİL. Engine data seçimi: `MEGA_BUNDLE_MANIFEST` env → bir bundle'ın `manifests\dataset_manifest.json`'u + `--symbol`/`--tf`. Kanonik tek-koşu: `python ..\03_QUANTLENS\tools\mega_walk_forward.py --strategy <id> --symbol <SYM> --tf <tf>` (research engine; `walk_forward_processor.py` alt-seviye/custom). Birincil bundle: `native_multiasset_alpaca_2026-06-28`.
+
 Do not change trading logic, Pine logic, MTC behavior, or parity checks without explicit approval.
 
 ## Strategy research (combining existing strategies/indicators)

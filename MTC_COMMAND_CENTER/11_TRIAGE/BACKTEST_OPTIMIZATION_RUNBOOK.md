@@ -97,8 +97,8 @@ python tools/generate_morning_report.py --single-candidate <id>
 
 **Engine seçimi:**
 - **MTC V2 parity / Pine release:** `01_MTC_PROJECT/docs/optimization/BIG_OVERNIGHT_OPTIMIZATION_RUNBOOK.md` (resume registry, 16 worker, thread pinning)
-- **Yeni QuantLens stratejisi research:** `03_QUANTLENS/tools/mega_walk_forward.py` + `overnight_v2_runner.py` monkey-patch
-- **Custom 1-shot backtest:** `03_QUANTLENS/tools/walk_forward_processor.py`
+- **Yeni QuantLens stratejisi research (KANONİK tek-koşu dahil):** `03_QUANTLENS/tools/mega_walk_forward.py` — data `MEGA_BUNDLE_MANIFEST` env ile seçilir; `--strategy/--symbol/--tf` ile tek hücre koşulur. Overnight için `overnight_v2_runner.py` monkey-patch.
+- **Custom / alt-seviye 1-shot backtest:** `03_QUANTLENS/tools/walk_forward_processor.py` (kanonik DEĞİL; §0.5.1 örneği bunu kullanır ama varsayılan tek-koşu yolu `mega_walk_forward.py`'dir).
 
 Bu runbook **QuantLens overnight research** akışını anlatır. MTC V2 parity için yukarıdaki BIG_OVERNIGHT dosyasına git.
 
@@ -139,9 +139,10 @@ Rules:
 - [ ] Disk doluluk < %90 (`Get-PSDrive C`)
 
 ### 2.2 Veri bütünlüğü
-- [ ] OHLCV bundle erişilebilir
-- [ ] Symbol listesi gerçekçi (17 crypto USDT default)
-- [ ] Timeframe listesi gerçekçi (`["15m","1h","2h","4h","1D"]` default)
+- [ ] **Otorite data envanteri okundu:** `03_QUANTLENS/data/README.md` (tüm native bundle'lar: sembol/timeframe/asset-class/bar sayısı + crypto data konumları). Multi-asset / US-equities / 10m **var**.
+- [ ] **Engine'e data bağlandı:** `MEGA_BUNDLE_MANIFEST` env = hedef bundle'ın `manifests/dataset_manifest.json`'u. NOT: engine'in hardcoded default manifest'i eski crypto arşivi — bilerek seçmedikçe ona güvenme.
+- [ ] OHLCV bundle erişilebilir (manifest'teki `normalized_path`'ler diskte var, `ohlcv_validation_status=PASS`)
+- [ ] Symbol/timeframe seçilen bundle ile uyumlu (`--symbol`/`--tf`). Eski "17 crypto USDT / 15m-1D" artık tek evren DEĞİL; birincil bundle `native_multiasset_alpaca_2026-06-28` (51 sembol × 10m..1d).
 
 ### 2.3 Strateji + grid kontrolü
 - [ ] `GRIDS` dict'inde tüm stratejilerin grid sayısı > 0
