@@ -43,6 +43,18 @@ BUNDLE_MANIFEST = (
         r"\MTC_V2_OPTIMIZATION_DATA_BUNDLE_20260427\manifests\dataset_manifest.json"
     )
 )
+if not _env_manifest:
+    # Soft guard (R5, 2026-06-29): the hardcoded default is a LEGACY crypto archive, not the
+    # current data. Cold agents kept binding the wrong data silently. Warn loudly but stay
+    # backward-compatible (do not hard-exit). See AGENTS.md "DATA & LAUNCH" + 03_QUANTLENS/data/README.md.
+    print(
+        "[mega_walk_forward] WARNING: MEGA_BUNDLE_MANIFEST is not set -> using the LEGACY crypto "
+        "archive default manifest. This is almost certainly NOT the data you want "
+        "(US-equities / multi-asset / 10m live under 03_QUANTLENS/data/; primary bundle = "
+        "native_multiasset_alpaca_2026-06-28). Set $env:MEGA_BUNDLE_MANIFEST to a bundle's "
+        "manifests/dataset_manifest.json.",
+        file=sys.stderr,
+    )
 _env_out = os.environ.get("MEGA_OUTPUT_DIR")
 OUTPUT_DIR = (
     Path(_env_out)
