@@ -19,6 +19,8 @@ filtered by `--symbol` / `--tf` CLI flags.
 
 ## Native bundles in this folder (`03_QUANTLENS/data/`)
 
+> **Selection rule:** always use the bundle marked **PRIMARY** for a given asset/timeframe. "Superseded / provenance" bundles exist only to reproduce a specifically cited older report — never pick one for new work.
+
 | Bundle dir | Symbols | TF | Bars | Source | Validation | Notes |
 |---|---|---|---|---|---|---|
 | `native_multiasset_alpaca_2026-06-28/` | **51** (39 equity/ETF + 12 crypto) | **10m,15m,30m,1h,2h,4h,1d** | **357 datasets, ~11.86M bars** | Alpaca IEX + crypto | PASS (357/357) | **PRIMARY multi-asset, multi-timeframe bundle.** Covers indices (SPY/QQQ/DIA/IWM), mega-cap stocks, commodity proxies (GLD/SLV/USO/BNO/UNG/DBC/CPER), bonds (TLT/IEF/HYG/LQD), 11 sector ETFs (XLF/XLE/XLK…), VXX, intl (EEM/EFA/FXI), and crypto (BTC/ETH/SOL/LTC/BCH/LINK/UNI/AAVE/DOGE/AVAX/DOT/SHIB). Equity intraday from ~2020-07, daily from ~2018; crypto 24/7 from 2021. Adjusted, **with volume**. Equity intraday RTH-only; crypto 24/7. Regenerate: `tools/alpaca_download_dataset.py` (needs API key). **Normalized CSVs git-ignored (711MB) — regenerate; manifest committed for provenance.** NO forex / no real CME futures (Alpaca limitation). |

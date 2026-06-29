@@ -34,8 +34,9 @@ Aşağıdakileri ATLAMA bile in-day 5dk run'da:
 # Veri validation (rules §3)
 python -c "from tools.data_check import verify_actual_range; verify_actual_range('BTC','1h')"
 
-# Sandbox WF + lockbox (rules §2 madde 6)
-python tools/walk_forward_processor.py --strategy <id> --symbol BTC --tf 1h --grid small
+# KANONİK tek-koşu (data MEGA_BUNDLE_MANIFEST ile bağlanır — AGENTS.md "DATA & LAUNCH")
+python tools/mega_walk_forward.py --strategy <id> --symbol <SYM> --tf <tf>
+#    walk_forward_processor.py = alt-seviye/custom; varsayılan tek-koşu DEĞİL
 
 # 4-gate (rules §8)
 python tools/finalize_bootstrap_bh.py --result <result.json>   # bootstrap + BH-FDR + DSR
