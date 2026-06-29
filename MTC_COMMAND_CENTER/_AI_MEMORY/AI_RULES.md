@@ -104,4 +104,7 @@ Prompt: `04_SHARED/prompts/05_ai_workflow/07_handoff_update.md`
 4. Read `GLOBAL_HANDOFF.md`, `NEXT_STEPS.md`, `DO_NOT_TOUCH.md`.
 5. Pick the right prompt template under
    `04_SHARED/prompts/05_ai_workflow/` for the current gate.
+   - Backtest data + canonical run → `AGENTS.md` "DATA & LAUNCH".
+   - Results → dashboard → `11_TRIAGE/RESULTS_TO_DASHBOARD_MAP_2026-06-29.md`.
+   - Authoring an AI/QuantLens verdict → `03_QUANTLENS/_user_guide/13_AI_VERDICT_AUTHORING_PROCEDURE.md`.
 6. After finishing the task: execute Gate 7 (memory write-back).
