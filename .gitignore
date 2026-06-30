@@ -183,3 +183,5 @@ MTC_COMMAND_CENTER/03_QUANTLENS/data/_smoketest_*/
 MTC_COMMAND_CENTER/03_QUANTLENS/data/**/full_sweep_*/
 MTC_COMMAND_CENTER/03_QUANTLENS/data/**/smoke_output_*/
 MTC_COMMAND_CENTER/03_QUANTLENS/data/**/candidate_sweep_*/
+# Overnight sweep research output (large JSON + checkpoint; regenerable, dashboard reads locally)
+MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/overnight_multiasset_*/
