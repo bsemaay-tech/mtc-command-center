@@ -17,6 +17,7 @@
 | 2026-06-03 | [`OVERNIGHT_LESSONS_2026-06-03.md`](OVERNIGHT_LESSONS_2026-06-03.md) | 11h / 21 iter | İlk sıfır-crash gece; DSR search-space inflation (confirmation grid gerek); morning generator legacy path (A16) |
 | 2026-06-04 | [`OVERNIGHT_LESSONS_2026-06-04.md`](OVERNIGHT_LESSONS_2026-06-04.md) | 11.5h / 20 iter | 2. sıfır-crash gece (3.44M eval); morning report down-market sayım hatası (A18, 78≠8); gece-sonu konvansiyonu atlandı (G5); Codex çalıştırdı |
 | 2026-06-05 | [`OVERNIGHT_LESSONS_2026-06-05.md`](OVERNIGHT_LESSONS_2026-06-05.md) | confirmation + watchdog | Dar confirmation run hızlı bitti; A18 fix doğrulandı; DSR robust=0/Gate2 pass=0; watchdog sabaha kadar awake |
+| 2026-06-29 | [`OVERNIGHT_LESSONS_2026-06-29.md`](OVERNIGHT_LESSONS_2026-06-29.md) | ~27dk + ~13h idle | **A19 tekrarı** — multi-asset sweep (7140 hücre) hızlı bitti, makine boşa awake; kök neden launch'ta lessons pre-read atlandı; **A22** + audit compliance blind-spot |
 
 ## Convention
 
