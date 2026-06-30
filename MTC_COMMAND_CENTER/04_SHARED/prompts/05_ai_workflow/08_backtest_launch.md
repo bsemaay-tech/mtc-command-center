@@ -26,6 +26,7 @@ Atlama YASAK. Skip yaparsan A1-A15 anti-pattern'lerinden birini tekrarlarsın.
 - Kapsam ne? (1 strateji × 1 sembol / mevcut grid sweep / yeni transcript triage)
 - Worker sayısı (runbook §5 tablo: in-day 4-8, sprint 16-20, overnight 16, parity gece 16)
 - Süre bütçesi (`--time-budget-minutes` / loop `DEADLINE`)
+- **Runtime ↔ budget kontrolü (A22, ZORUNLU — "just start"ta bile):** Gate-0'da en yeni `lessons_archive/*` oku. Birkaç hücre smoke ile runtime'ı tahmin et. Sweep budget'tan KISA bitecekse: YA heavy-validation tier ekle (±2 grid, 50k bootstrap, multi-seed DSR, CPCV-all, PBO, +sembol/TF) YA DA makineyi bırak (idle box'ı keep-awake'te tutma). Deterministik sweep'i tekrar koşma = sıfır bilgi (A19).
 - OUTPUT_DIR (CLEAN repo default — env override gerek mi)
 
 ### Gate 1.5 — In-day single strategy minimum akış (kısa)
