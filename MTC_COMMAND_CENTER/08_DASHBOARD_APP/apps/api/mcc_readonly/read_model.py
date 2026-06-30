@@ -32,6 +32,7 @@ from .pipeline_reader import build_candidate_pipeline
 from .registry_reader import build_strategy_registry
 from .research_reader import build_strategy_research
 from .quantlens_reader import build_quantlens
+from .ai_tasks_reader import build_ai_tasks
 from .scorecard_reader import attach_scorecards_to_rows, build_scorecards
 from .schema import validate_json_schema
 from .task_lifecycle import build_task_lifecycle
@@ -374,6 +375,7 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
     )
     strategy_research = build_strategy_research(model["mcc_root"])
     quantlens = build_quantlens(model["mcc_root"])
+    ai_tasks = build_ai_tasks(model["mcc_root"])
     overnight_heartbeat = build_overnight_heartbeat()
     night_artifacts = build_night_artifacts(model["mcc_root"])
     validation_terminal = build_validation_terminal(
@@ -400,6 +402,7 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
         "strategy_registry": strategy_registry,
         "strategy_research": strategy_research,
         "quantlens": quantlens,
+        "ai_tasks": ai_tasks,
         "ai_strategy_names": ai_strategy_names,
         "expert_quantlens": expert_quantlens,
         "overnight_heartbeat": overnight_heartbeat,

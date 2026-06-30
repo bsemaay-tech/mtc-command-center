@@ -39,6 +39,7 @@ const NAV = [
   { id: "validation-terminal", label: "Validation Terminal", icon: "shield", title: "Strategy Validation Terminal", sub: "Validation funnel, survivors, and graveyard from backtest evidence." },
   { id: "leaderboard", label: "Strategy Leaderboard", icon: "trend", title: "Strategy Leaderboard", sub: "Best strategies by category / profile / timeframe." },
   { id: "paper-trading", label: "Paper Trading", icon: "activity", title: "Paper Trading", sub: "Readiness and locked candidates." },
+  { id: "ai-tasks", label: "AI Tasks", icon: "cpu", title: "AI Tasks", sub: "Copy-ready prompts to run AI jobs." },
   { id: "ai-knowledge", label: "AI Knowledge Base", icon: "cpu", title: "AI Knowledge Base", sub: "Reusable components and insights." },
   { id: "artifacts", label: "Advanced Artifacts", icon: "db", title: "Advanced Artifacts", sub: "Data and artifact health." },
   { id: "diagnostics", label: "Diagnostics", icon: "shield", title: "Diagnostics", sub: "System health and coverage." },
@@ -278,6 +279,7 @@ function renderCurrentView() {
     "validation-terminal": renderValidationTerminal,
     leaderboard: renderLeaderboard,
     "paper-trading": renderPaperTrading,
+    "ai-tasks": renderAiTasks,
     "ai-knowledge": renderKnowledge,
     artifacts: renderArtifacts,
     diagnostics: renderDiagnostics,
@@ -557,6 +559,47 @@ function bestGate1PassingVersion(id) {
 /* ============================================================
    PAGE: Command Center Home
    ============================================================ */
+function renderAiTasks(c) {
+  const data = snap().ai_tasks || {};
+  const tasks = Array.isArray(data.tasks) ? data.tasks : [];
+  if (!tasks.length) {
+    c.innerHTML = `<div class="panel"><div class="muted">No AI task prompts found. Add them in <code>05_REGISTRY/AI_TASKS.json</code>.</div></div>`;
+    return;
+  }
+  const intro = data.intro ? `<p class="ai-tasks-intro muted">${esc(data.intro)}</p>` : "";
+  const cards = tasks.map((t) => {
+    const reads = (t.read || []).map((r) => `<span class="chip">${esc(r)}</span>`).join("");
+    const knobs = (t.knobs || []).map((k) => `<span class="chip knob">${esc(k)}</span>`).join("");
+    return `
+      <div class="ai-task-card panel">
+        <div class="ai-task-head">
+          <div class="ai-task-title">${esc(t.title || t.id)}</div>
+          <button class="btn copy-btn" type="button" onclick="copyAiPrompt(this)">Copy</button>
+        </div>
+        ${t.summary ? `<div class="ai-task-summary muted">${esc(t.summary)}</div>` : ""}
+        ${reads ? `<div class="ai-task-meta"><span class="meta-label">Read first:</span> ${reads}</div>` : ""}
+        ${knobs ? `<div class="ai-task-meta"><span class="meta-label">Knobs:</span> ${knobs}</div>` : ""}
+        <textarea class="ai-prompt" spellcheck="false" rows="6">${esc(t.prompt || "")}</textarea>
+      </div>`;
+  }).join("");
+  c.innerHTML = `<div class="ai-tasks-view">${intro}${cards}</div>`;
+}
+
+function copyAiPrompt(btn) {
+  const card = btn.closest(".ai-task-card");
+  const ta = card && card.querySelector("textarea.ai-prompt");
+  if (!ta) return;
+  const done = () => { btn.textContent = "Copied ✓"; setTimeout(() => (btn.textContent = "Copy"), 1300); };
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(ta.value).then(done, () => { ta.select(); document.execCommand("copy"); done(); });
+      return;
+    }
+  } catch (e) { /* fall through */ }
+  ta.select(); document.execCommand("copy"); done();
+}
+window.copyAiPrompt = copyAiPrompt;
+
 function renderHome(c) {
   const rows = pipelineRows();
   const cards = scorecardCards();
