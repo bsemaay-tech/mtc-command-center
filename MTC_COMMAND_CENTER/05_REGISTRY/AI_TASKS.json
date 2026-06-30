@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "updated": "2026-06-30",
+  "intro": "Copy a prompt, tweak the {KNOBS}, paste it to the AI. Each prompt runs one defined job per the repo's rules, safety rails, and learned lessons. Edit the textarea inline before copying. Source of truth: 11_TRIAGE/AI_TASK_CATALOG_2026-06-30.md. To add/edit prompts, edit 05_REGISTRY/AI_TASKS.json (no app.js change).",
+  "tasks": [
+    {
+      "id": "overnight_backtest",
+      "title": "Overnight backtest + optimization",
+      "summary": "Run a timed/overnight sweep. Resumable, keep-awake, A22-disciplined (fill the budget with heavy validation or release the machine).",
+      "read": ["AGENTS.md §DATA & LAUNCH", "07_BACKTEST_AND_OPTIMIZATION_RULES.md", "11_TRIAGE/BACKTEST_OPTIMIZATION_RUNBOOK.md", "newest 11_TRIAGE/lessons_archive/*"],
+      "knobs": ["HOURS", "CASES", "STRATEGIES = ALL | LIST:<ids> | RECOMMEND_TOP"],
+      "prompt": "Run an overnight backtest + optimization. Do the Gate-0 pre-read first (AGENTS.md DATA & LAUNCH, 07_BACKTEST_AND_OPTIMIZATION_RULES.md, 11_TRIAGE/BACKTEST_OPTIMIZATION_RUNBOOK.md, and the NEWEST 11_TRIAGE/lessons_archive/ file). Budget: {HOURS=14}h, target ~{CASES=1,000,000} cases. Strategies: {STRATEGIES=RECOMMEND_TOP} (if RECOMMEND_TOP, pick the highest-potential and tell me which). Take keep-awake + checkpoint-resume + power-loss reboot-resume measures. Apply A22: estimate runtime vs budget; if the sweep finishes short, fill the rest with the heavy-validation tier (±2 grid, 50k bootstrap, multi-seed DSR, CPCV-all, PBO) — never re-run a deterministic sweep, never keep an idle machine awake. Don't ask me anything. In the morning do the full close (aggregate, alpha vs buy&hold, MORNING_REPORT, dashboard verify, lessons write-back). Promote nothing without robust_final."
+    },
+    {
+      "id": "transcript_intake",
+      "title": "Transcript → strategy intake + score + verdict",
+      "summary": "Turn a dropped transcript/screenshot into a scored candidate with a QuantLens verdict, visible in the dashboard.",
+      "read": ["03_QUANTLENS/_user_guide/09_TRANSCRIPT_INTAKE_WORKFLOW.md", "03_QUANTLENS/_user_guide/13_AI_VERDICT_AUTHORING_PROCEDURE.md"],
+      "knobs": ["FILE = auto-detect | <filename>"],
+      "prompt": "A strategy transcript/screenshot is in 00_INBOX/USER_INTAKE ({FILE=auto-detect}). Read 03_QUANTLENS/_user_guide/09_TRANSCRIPT_INTAKE_WORKFLOW.md. Extract the strategy, route it, create the STG candidate + deterministic spec, run the Scorecard, then author a QuantLens verdict per 03_QUANTLENS/_user_guide/13_AI_VERDICT_AUTHORING_PROCEDURE.md. Confirm it shows in the dashboard. Score numbers come only from the Scorecard; the verdict is labels only."
+    },
+    {
+      "id": "pipeline_triage",
+      "title": "Pipeline triage (which strategies advance)",
+      "summary": "Review strategies and decide advance / hold / reject with a ranked, reasoned list. Never promote without robust_final.",
+      "read": ["03_QUANTLENS/_user_guide/12_STRATEGY_EVALUATION_RUBRIC.md", "00_AGENT_PROTOCOLS/NO_PROMOTION_SAFETY_RULES.md"],
+      "knobs": ["SCOPE = ALL | only NEEDS_CLARIFICATION | only scored"],
+      "prompt": "Review the strategies in the Command Center ({SCOPE=ALL}). Using 12_STRATEGY_EVALUATION_RUBRIC.md + the gates, decide advance / hold / reject for each and give me a ranked list with reasons. Do not promote anything without robust_final. Output as a table."
+    },
+    {
+      "id": "backtest_space_design",
+      "title": "Design the per-strategy backtest space (pre-plan the night)",
+      "summary": "For each strategy, define its symbols/TFs/grid/gates and output a run-plan menu to pick from before the night run.",
+      "read": ["07_BACKTEST_AND_OPTIMIZATION_RULES.md §8", "03_QUANTLENS/data/README.md"],
+      "knobs": ["STRATEGIES = ALL | <ids>", "N = top cells to prioritize"],
+      "prompt": "For {STRATEGIES=ALL} strategies, design each one's backtest+optimization space (symbols, timeframes, param grid, gates) on the multi-asset bundle, and output a run-plan MENU I can pick from before tonight's run. Recommend the {N=5} highest-potential cells to prioritize. No execution yet."
+    },
+    {
+      "id": "data_acquisition",
+      "title": "Acquire a new dataset",
+      "summary": "Download, validate, normalize a dataset into a bundle + manifest and register it. No backtest.",
+      "read": ["03_QUANTLENS/data/README.md", "03_QUANTLENS/tools/alpaca_download_dataset.py"],
+      "knobs": ["SYMBOLS", "TIMEFRAMES", "PROVIDER = alpaca"],
+      "prompt": "Acquire {SYMBOLS} at {TIMEFRAMES} via {PROVIDER=alpaca}. Validate (timestamps / OHLC sanity / gaps / session), normalize, build the bundle + manifest, and register it in 03_QUANTLENS/data/README.md. Don't run a backtest."
+    }
+  ]
+}

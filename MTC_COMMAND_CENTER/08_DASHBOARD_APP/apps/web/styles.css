@@ -927,3 +927,22 @@ pre.json {
   background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
   border-radius: var(--radius-sm); padding: 6px 10px; font-size: 12px;
 }
+
+/* ---------------- AI Tasks tab ---------------- */
+.ai-tasks-view { display: flex; flex-direction: column; gap: 14px; }
+.ai-tasks-intro { margin: 0 0 4px; max-width: 80ch; }
+.ai-task-card { display: flex; flex-direction: column; gap: 8px; }
+.ai-task-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ai-task-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.ai-task-summary { font-size: 12px; }
+.ai-task-meta { font-size: 11px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ai-task-meta .meta-label { color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.ai-task-meta .chip.knob { border-style: dashed; }
+.ai-prompt {
+  width: 100%; box-sizing: border-box; resize: vertical; min-height: 120px;
+  background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 12px; font-size: 12.5px; line-height: 1.5;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+.ai-prompt:focus-visible { outline: 2px solid var(--accent, #2dd4bf); outline-offset: 1px; }
+.copy-btn { flex: 0 0 auto; cursor: pointer; }
