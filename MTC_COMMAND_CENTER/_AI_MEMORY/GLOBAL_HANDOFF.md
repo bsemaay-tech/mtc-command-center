@@ -1,5 +1,13 @@
 # GLOBAL_HANDOFF
 
+## Claude Opus 4.8 2026-06-30 — Overnight multi-asset sweep (7,140 cells) + morning close — NOTHING PROMOTABLE
+
+Barış requested a ~14h overnight backtest+optimization (~1M cases, max workers, crash/power-resilient). Launched detached: `mega_walk_forward.py`, **20 workers**, bundle `native_multiasset_alpaca_2026-06-28`, **all 51 symbols × 7 TFs × 20 strategies = 7,140 cells, ~399,840 configs**. Output: `05_BACKTEST_RESULTS/overnight_multiasset_2026-06-29/`.
+
+Resilience worked but wasn't needed: **finished in ONE clean pass, 1624s (~27 min), exit 0, `_DONE.marker`, zero crashes/relaunches, no power/net loss.** (20 workers + fast NO_DATA skips → far quicker than the 14h budget; deterministic, so the supervisor correctly stopped at DONE rather than re-running.) Checkpoint-resume (`--resume`/`--checkpoint-every 20`), supervisor auto-relaunch loop, per-user Startup reboot-resume hook (removed after completion), and keep-awake were all in place + verified.
+
+**Result (largest sweep to date): 7,140 cells → PASS 184, STRONG_PASS 172, BH-FDR survivors 19, dsr_robust 2, `robust_final` 0 → NOTHING PROMOTABLE.** The 2 "dsr_robust" cells are tiny-sample lottery (DONCHIAN/AMD/2h DSR 0.988 on 7 trades +174%; STOCH/LINKUSD/1d on 3 trades) — both INSUFFICIENT_TRADES, correctly not robust. BH survivors post huge raw % (SHIBUSD +385%, SLV +219%) but DSR≈0. Broadest cross-symbol: DONCHIAN (14 sym@30m, 13@10m) — again broadest in-sample but, per the prior pooled cross-sectional DSR test, noise-level. **Confirms at scale: the existing strategy library has no robust edge on any asset class/TF; path forward = NEW strategy logic, not more sweeps.** Morning close done: `MORNING_REPORT.md` written; dashboard verified (`backtest_reader` → `overnight_multiasset_2026-06-29` COMPLETED, 80 runs). No `backtest_profile_result.json`/`top_results.json` (no robust row; never fabricate).
+
 ## Claude Opus 4.8 2026-06-29 — Onboarding/AI_MEMORY hardening via 2-round cold-start audit (PR #5–#8)
 
 Barış asked whether any AI does backtest / scoring / results→dashboard / AI-verdict / memory-update the SAME way, and whether AI_MEMORY is strong enough. Ran a **cold-onboarding audit** (read-only prompt; agents onboard via the chain and report what they understood + gaps). Two rounds, 6 independent models each (Claude/Opus, Codex, Kimi, Cursor/Sonnet, Antigravity, DeepSeek). Prompts: `11_TRIAGE/COLD_ONBOARDING_AUDIT_PROMPT_2026-06-29.md` (v1) + `..._v2_2026-06-29.md` (workflow-uniformity edition).
