@@ -1,5 +1,18 @@
 # GLOBAL_HANDOFF
 
+## Claude Opus 4.8 2026-07-01 — Strategy param-spec registry (Faz 1, read-only) — branch not merged
+
+Barış asked how optimization params are chosen, where, and whether AI_MEMORY documents the case-count arithmetic uniformly. Findings surfaced a real gap: the search grid for each strategy is **hardcoded, arbitrary, undocumented, invisible** (buried in `mega_walk_forward.GRIDS` + `build_signals`), the `case = grids × symbols × TFs × folds` formula is written nowhere canonical, and "case" is used loosely (cells vs combos vs evals). Many knobs are **hardcoded, not swept** (DONCHIAN ATR=14, no opposite-channel exit, long-only; TRIPLE_EMA's 5/13/50 stack fully fixed) + a global execution model (2R target, 96-bar hold limit, 8bps cost, next-open entry) applies to all and is optimized by none.
+
+Approved architecture: declarative per-strategy param-spec — code stays source of truth for grids; curated overlay adds fixed-knob rationale + Faz-3 missing-knob candidates; dashboard surfaces it. Boundary: changing a grid **value** = optimization; adding a **rule** = new logic = new strategy (approval-gated, Faz 3). Taught DSR (trial-count deflation → wider grid worsens DSR, A17) + two-stage (broad discovery → narrow pre-registered confirmation).
+
+**Faz 1 DONE — branch `feature/strategy-param-specs`, 3 commits, NOT merged/pushed:**
+- `03_QUANTLENS/tools/build_strategy_param_specs.py` — introspects `GRIDS` + exec constants (code=truth), merges overlay, emits registry. Read-only, re-runnable.
+- `05_REGISTRY/STRATEGY_PARAM_SPEC_ANNOTATIONS.json` — hand-authored fixed-knob rationale + missing-knob candidates, all 20 strategies.
+- `05_REGISTRY/STRATEGY_PARAM_SPECS.json` — generated: 20 strat, sum_grid 1122, 357 cells × 3 folds = **1,201,662 cases** (the "~1M").
+- Dashboard: `param_specs_reader.build_param_specs()` → snapshot key `param_specs`; Strategy Detail §4 renders optimizable table + case count + fixed/missing knobs + exec model. +4 tests, **API 112 passed**, `node --check` OK, live render verified (8EMA: grid 75, 80,325 cases, ema_period=8 fixed), no console errors.
+- No engine/data/Pine/MTC_V2/parity touched. **Faz 2 (Pine parity map) + Faz 3 (missing-knob R&D) NOT started — approval-gated.**
+
 ## Claude Opus 4.8 2026-06-30 — Overnight multi-asset sweep (7,140 cells) + morning close — NOTHING PROMOTABLE
 
 Barış requested a ~14h overnight backtest+optimization (~1M cases, max workers, crash/power-resilient). Launched detached: `mega_walk_forward.py`, **20 workers**, bundle `native_multiasset_alpaca_2026-06-28`, **all 51 symbols × 7 TFs × 20 strategies = 7,140 cells, ~399,840 configs**. Output: `05_BACKTEST_RESULTS/overnight_multiasset_2026-06-29/`.
