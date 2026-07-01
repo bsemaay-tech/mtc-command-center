@@ -55,6 +55,8 @@ def build_param_specs(mcc_root: str | Path | None = None) -> dict[str, Any]:
                 continue
             entry = {
                 "strategy_id": sid,
+                "origin": s.get("origin", "core"),
+                "validation_status": s.get("validation_status"),
                 "grid_size": s.get("grid_size"),
                 "optimizable": s.get("optimizable", {}) if isinstance(s.get("optimizable"), dict) else {},
                 "cases_full_universe": s.get("cases_full_universe"),

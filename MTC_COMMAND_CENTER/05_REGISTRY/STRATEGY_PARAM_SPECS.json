@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_utc": "2026-07-01T14:56:57Z",
+  "generated_utc": "2026-07-01T15:02:47Z",
   "generator": "03_QUANTLENS/tools/build_strategy_param_specs.py",
   "source_of_truth": "mega_walk_forward.GRIDS (code) + STRATEGY_PARAM_SPEC_ANNOTATIONS.json (curated overlay)",
   "read_only": true,
@@ -53,15 +53,17 @@
     "note": "Per-strategy param -> Pine input() maps live in each strategy's mtc_v2_parity block."
   },
   "library_totals": {
-    "strategies": 20,
-    "sum_grid_size": 1122,
+    "strategies": 21,
+    "sum_grid_size": 1146,
     "cells": 357,
     "rolling_folds": 3,
-    "total_cases_full_universe": 1201662
+    "total_cases_full_universe": 1227366
   },
   "strategies": [
     {
       "strategy_id": "QL_2026-05-01_SWING_1H_DUAL_RSI_60_40_PULLBACK",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 64,
       "optimizable": {
         "rsi_len": {
@@ -139,6 +141,8 @@
     },
     {
       "strategy_id": "QL_2026-05-01_ANY_1H_RSI_CONFLUENCE_PLAYBOOK",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 75,
       "optimizable": {
         "rsi_len": {
@@ -205,6 +209,8 @@
     },
     {
       "strategy_id": "QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 75,
       "optimizable": {
         "pullback_atr": {
@@ -283,6 +289,8 @@
     },
     {
       "strategy_id": "QL_2026-05-01_US_EQUITIES_INTRADAY_LE_MODEL_BULL_FLAG",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 75,
       "optimizable": {
         "pullback_atr": {
@@ -355,6 +363,8 @@
     },
     {
       "strategy_id": "QL_2026-05-01_US_EQUITIES_INTRADAY_PURPLE_PROFITS",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 75,
       "optimizable": {
         "pullback_atr": {
@@ -427,6 +437,8 @@
     },
     {
       "strategy_id": "QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 75,
       "optimizable": {
         "pullback_atr": {
@@ -499,6 +511,8 @@
     },
     {
       "strategy_id": "QL_2026-05-01_UNKNOWN_MULTI_EMA_CHANNEL_PULLBACK",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 54,
       "optimizable": {
         "touch_atr": {
@@ -570,6 +584,8 @@
     },
     {
       "strategy_id": "QL_2026-05-01_LIQUID_INTRADAY_VWAP_PULLBACK_REVERSAL",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 75,
       "optimizable": {
         "session_window": {
@@ -647,6 +663,8 @@
     },
     {
       "strategy_id": "QL_2026-05-01_SP500_5M_TWO_CANDLE_SENTIMENT_SR",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 75,
       "optimizable": {
         "level_lookback": {
@@ -714,6 +732,8 @@
     },
     {
       "strategy_id": "QL_2026-05-01_ANY_BOLLINGER_BANDS_20_2_TRI_SETUP",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 60,
       "optimizable": {
         "width_quantile": {
@@ -791,6 +811,8 @@
     },
     {
       "strategy_id": "QL_2026-05-01_ANY_CANDLESTICK_7_PATTERN_PA_CONFLUENCE",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 60,
       "optimizable": {
         "level_lookback": {
@@ -867,6 +889,8 @@
     },
     {
       "strategy_id": "GEN_DONCHIAN_BREAKOUT",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 60,
       "optimizable": {
         "channel_len": {
@@ -959,6 +983,8 @@
     },
     {
       "strategy_id": "GEN_GOLDEN_CROSS_PULLBACK",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 72,
       "optimizable": {
         "fast_ema": {
@@ -1043,6 +1069,8 @@
     },
     {
       "strategy_id": "GEN_RSI_OVERSOLD_REVERSAL",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 44,
       "optimizable": {
         "rsi_len": {
@@ -1123,6 +1151,8 @@
     },
     {
       "strategy_id": "GEN_MACD_BULL_CROSS",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 27,
       "optimizable": {
         "fast": {
@@ -1196,6 +1226,8 @@
     },
     {
       "strategy_id": "GEN_ZSCORE_MEAN_REVERSION",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 48,
       "optimizable": {
         "win": {
@@ -1271,6 +1303,8 @@
     },
     {
       "strategy_id": "GEN_ATR_PULLBACK_TREND",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 72,
       "optimizable": {
         "ema_len": {
@@ -1355,6 +1389,8 @@
     },
     {
       "strategy_id": "GEN_KELTNER_BREAKOUT",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 16,
       "optimizable": {
         "ema_len": {
@@ -1427,6 +1463,8 @@
     },
     {
       "strategy_id": "GEN_TRIPLE_EMA_STACK",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 8,
       "optimizable": {
         "touch_atr": {
@@ -1489,6 +1527,8 @@
     },
     {
       "strategy_id": "GEN_STOCH_OVERSOLD_CROSS",
+      "origin": "core",
+      "validation_status": "engine_baseline",
       "grid_size": 12,
       "optimizable": {
         "stoch_n": {
@@ -1547,6 +1587,91 @@
         {
           "name": "overbought_exit",
           "note": "exit when %K crosses down from an overbought level",
+          "phase": "3-RnD"
+        }
+      ],
+      "mtc_v2_parity": {
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
+      }
+    },
+    {
+      "strategy_id": "GEN_DONCHIAN_TURTLE",
+      "origin": "variant",
+      "validation_status": "UNVALIDATED",
+      "grid_size": 24,
+      "optimizable": {
+        "entry_channel_len": {
+          "values": [
+            20,
+            40,
+            80
+          ],
+          "count": 3,
+          "type": "int",
+          "min": 20,
+          "max": 80
+        },
+        "exit_channel_len": {
+          "values": [
+            10,
+            20,
+            40
+          ],
+          "count": 3,
+          "type": "int",
+          "min": 10,
+          "max": 40
+        },
+        "atr_buf": {
+          "values": [
+            0.0,
+            0.1,
+            0.25
+          ],
+          "count": 3,
+          "type": "float",
+          "min": 0.0,
+          "max": 0.25
+        }
+      },
+      "cases_full_universe": 25704,
+      "cases_formula": "grid_size x cells x rolling_folds",
+      "annotation_status": "documented",
+      "grid_rationale": "Faz-3 variant that fills DONCHIAN's missing Turtle STRUCTURAL stop: entry is the same channel breakout, but the stop is placed at the opposite exit_channel_len-low channel (exit_channel_len <= entry_channel_len) instead of the base strategy's short stop_lookback rolling low.",
+      "fixed_knobs": [
+        {
+          "name": "atr_period",
+          "value": 14,
+          "reason": "buffer uses df.atr_14"
+        },
+        {
+          "name": "exit_style",
+          "value": "structural_channel_stop (static at entry)",
+          "reason": "TRUE trailing opposite-channel exit needs an engine-core change to simulate_slice (Faz 3b, approval-gated); this variant only relocates the STATIC stop to the opposite channel within the (signal, stop) contract"
+        },
+        {
+          "name": "profit_target",
+          "value": "2R (global)",
+          "reason": "still uses the global 2R target + 96-bar holding limit"
+        },
+        {
+          "name": "direction",
+          "value": "long_only"
+        }
+      ],
+      "missing_knobs": [
+        {
+          "name": "trailing_opposite_channel_exit",
+          "note": "re-evaluate the opposite-channel exit every bar (full Turtle signature) — requires simulate_slice support",
+          "phase": "3-RnD"
+        },
+        {
+          "name": "short_side",
+          "note": "symmetric short on N-low breakdown — simulate_slice supports is_short but the runner must pass direction",
           "phase": "3-RnD"
         }
       ],

@@ -1341,6 +1341,9 @@ function paramSpecBlock(m) {
     return `${head}
       ${emptyState("No engine search grid is mapped to this strategy id. Only strategies defined in mega_walk_forward.GRIDS have a parameter spec in STRATEGY_PARAM_SPECS.json.")}`;
   }
+  const originBadge = spec.origin === "variant"
+    ? ` ${badge("VARIANT · " + spaced(spec.validation_status || "UNVALIDATED"), "warn")}`
+    : "";
   const opt = spec.optimizable || {};
   const optRows = Object.keys(opt).map((k) => {
     const o = opt[k] || {};
@@ -1360,7 +1363,7 @@ function paramSpecBlock(m) {
   const parLine = par.status
     ? `<p class="summary" style="margin-top:8px;margin-bottom:0;">MTC_V2 / Pine parity: ${badge(spaced(par.pine_impl_status || "none"), parTone)} ${esc(spaced(par.status))}${par.pine_ref ? ` — <code>${esc(par.pine_ref)}</code>` : ""}${par.note ? `<br><span class="faint">${esc(par.note)}</span>` : ""}</p>`
     : "";
-  return `${head}
+  return `${head.replace("</h4>", originBadge + "</h4>")}
     <p class="summary" style="margin-top:0;">Source: <code>mega_walk_forward.GRIDS</code> (code = single source of truth). ${esc(spec.grid_rationale || "")}</p>
     <div class="info-grid">
       ${infoCard("Grid Size (combos)", spec.grid_size)}

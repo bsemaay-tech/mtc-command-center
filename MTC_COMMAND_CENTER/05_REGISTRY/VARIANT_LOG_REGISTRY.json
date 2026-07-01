@@ -1,5 +1,21 @@
 {
   "schema_version": "1.0",
-  "generated_at": null,
-  "variants": []
+  "generated_at": "2026-07-01",
+  "variants": [
+    {
+      "variant_id": "GEN_DONCHIAN_TURTLE",
+      "derived_from": "GEN_DONCHIAN_BREAKOUT",
+      "phase": "3-RnD",
+      "kind": "new_logic",
+      "origin": "variant",
+      "validation_status": "UNVALIDATED",
+      "author": "Claude Opus 4.8",
+      "created_utc": "2026-07-01",
+      "impl": "03_QUANTLENS/tools/variant_missing_knobs.py (monkey-patch; engine not modified)",
+      "change": "Fills DONCHIAN's missing Turtle STRUCTURAL stop: stop placed at the opposite exit_channel_len-low channel instead of the base short stop_lookback rolling low. New knob exit_channel_len; grid 24.",
+      "contract_limit": "TRUE trailing opposite-channel exit (re-evaluated every bar) needs an engine-core change to simulate_slice (Faz 3b, approval-gated) and would affect all strategies; not done.",
+      "promotable": false,
+      "next": "two-stage validation (broad discovery -> narrow pre-registered confirmation); promote nothing without robust_final"
+    }
+  ]
 }

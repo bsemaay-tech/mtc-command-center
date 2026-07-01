@@ -93,9 +93,14 @@ def load_universe() -> dict:
                 "cells": None, "manifest_found": False, "reason": f"{type(e).__name__}: {e}"}
 
 
-def build() -> dict:
+def build(with_variants: bool = False) -> dict:
     sys.path.insert(0, str(HERE))
     import mega_walk_forward as mw  # noqa: E402  (grids + constants live here)
+
+    variant_ids: set[str] = set()
+    if with_variants:
+        import variant_missing_knobs as vm  # noqa: E402  (Faz-3 monkey-patch extension)
+        variant_ids = set(vm.apply().keys())
 
     grids = mw.GRIDS
     folds = int(getattr(mw, "NUM_ROLLING_FOLDS", 3))
@@ -137,6 +142,8 @@ def build() -> dict:
         a = ann_doc.get(sid, {})
         strategies.append({
             "strategy_id": sid,
+            "origin": a.get("origin", "variant" if sid in variant_ids else "core"),
+            "validation_status": a.get("validation_status", "UNVALIDATED" if sid in variant_ids else "engine_baseline"),
             "grid_size": gsize,
             "optimizable": introspect_grid(grid),
             "cases_full_universe": cases,
@@ -196,9 +203,11 @@ def build() -> dict:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true", help="print summary, do not write")
+    ap.add_argument("--with-variants", action="store_true",
+                    help="include Faz-3 monkey-patch variants (variant_missing_knobs), tagged origin=variant/UNVALIDATED")
     args = ap.parse_args()
 
-    spec = build()
+    spec = build(with_variants=args.with_variants)
     lt = spec["library_totals"]
     print(f"[param-specs] strategies={lt['strategies']} sum_grid={lt['sum_grid_size']} "
           f"cells={lt['cells']} folds={lt['rolling_folds']} total_cases={lt['total_cases_full_universe']}")

@@ -23,6 +23,23 @@
         {"name": "atr_period", "note": "promote the fixed ATR=14 to a swept knob", "phase": "1-mechanical"}
       ]
     },
+    "GEN_DONCHIAN_TURTLE": {
+      "annotation_status": "documented",
+      "origin": "variant",
+      "validation_status": "UNVALIDATED",
+      "derived_from": "GEN_DONCHIAN_BREAKOUT",
+      "grid_rationale": "Faz-3 variant that fills DONCHIAN's missing Turtle STRUCTURAL stop: entry is the same channel breakout, but the stop is placed at the opposite exit_channel_len-low channel (exit_channel_len <= entry_channel_len) instead of the base strategy's short stop_lookback rolling low.",
+      "fixed_knobs": [
+        {"name": "atr_period", "value": 14, "reason": "buffer uses df.atr_14"},
+        {"name": "exit_style", "value": "structural_channel_stop (static at entry)", "reason": "TRUE trailing opposite-channel exit needs an engine-core change to simulate_slice (Faz 3b, approval-gated); this variant only relocates the STATIC stop to the opposite channel within the (signal, stop) contract"},
+        {"name": "profit_target", "value": "2R (global)", "reason": "still uses the global 2R target + 96-bar holding limit"},
+        {"name": "direction", "value": "long_only"}
+      ],
+      "missing_knobs": [
+        {"name": "trailing_opposite_channel_exit", "note": "re-evaluate the opposite-channel exit every bar (full Turtle signature) — requires simulate_slice support", "phase": "3-RnD"},
+        {"name": "short_side", "note": "symmetric short on N-low breakdown — simulate_slice supports is_short but the runner must pass direction", "phase": "3-RnD"}
+      ]
+    },
     "GEN_GOLDEN_CROSS_PULLBACK": {
       "annotation_status": "documented",
       "grid_rationale": "fast/slow EMA pair defines the trend regime (20/50 over 100/150/200); pull_atr sets how close to the fast EMA a pullback entry must be; stop_lookback is the swing-low stop window.",
