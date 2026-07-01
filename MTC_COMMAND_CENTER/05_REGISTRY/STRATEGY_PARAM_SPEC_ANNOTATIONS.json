@@ -1,0 +1,239 @@
+{
+  "schema_version": "1.0",
+  "authored_by": "Claude Opus 4.8",
+  "authored_utc": "2026-07-01",
+  "purpose": "Human-curated overlay merged by tools/build_strategy_param_specs.py. The OPTIMIZABLE grids are the single source of truth in CODE (mega_walk_forward.GRIDS) and are introspected mechanically; this file only ADDS documentation the code cannot express: why the grid ranges were chosen, which knobs are HARDCODED (fixed, not swept) and why, and candidate MISSING knobs that would be new strategy logic (Faz 3, approval-gated). Editing this file NEVER changes engine behavior — it is documentation only.",
+  "phase_legend": {
+    "1-mechanical": "promote an existing hardcoded value to a swept param — same logic, more dial settings (optimization; low risk)",
+    "3-RnD": "add a NEW decision rule — changes trading behavior = new strategy variant (approval-gated, VARIANT_LOG, fresh validation)"
+  },
+  "strategies": {
+    "GEN_DONCHIAN_BREAKOUT": {
+      "annotation_status": "documented",
+      "grid_rationale": "channel_len 10-150 brackets the Turtle-classic 20-55 breakout window plus faster/slower variants; atr_buf filters marginal breakouts by requiring price to clear the channel by a fraction of ATR; stop_lookback sets the swing-low stop window.",
+      "fixed_knobs": [
+        {"name": "atr_period", "value": 14, "reason": "buffer uses df.atr_14; the ATR window itself is never swept"},
+        {"name": "exit_style", "value": "swing_low_min(stop_lookback)", "reason": "the classic Donchian opposite-channel (N-low) exit is NOT implemented — known gap; exit is a rolling-low stop only"},
+        {"name": "entry_trigger", "value": "close > channel_high + buf", "reason": "close-based confirmation; an intrabar high>channel trigger is not offered"},
+        {"name": "direction", "value": "long_only", "reason": "no short leg"}
+      ],
+      "missing_knobs": [
+        {"name": "opposite_channel_exit", "note": "Turtle-signature exit on an N-low breakout instead of a fixed stop", "phase": "3-RnD"},
+        {"name": "short_side", "note": "symmetric short entry on an N-low breakdown", "phase": "3-RnD"},
+        {"name": "atr_period", "note": "promote the fixed ATR=14 to a swept knob", "phase": "1-mechanical"}
+      ]
+    },
+    "GEN_GOLDEN_CROSS_PULLBACK": {
+      "annotation_status": "documented",
+      "grid_rationale": "fast/slow EMA pair defines the trend regime (20/50 over 100/150/200); pull_atr sets how close to the fast EMA a pullback entry must be; stop_lookback is the swing-low stop window.",
+      "fixed_knobs": [
+        {"name": "atr_period", "value": 14, "reason": "pullback distance normalized by df.atr_14"},
+        {"name": "exit_style", "value": "swing_low_min(stop_lookback)", "reason": "no opposite-cross exit; rolling-low stop only"},
+        {"name": "direction", "value": "long_only"}
+      ],
+      "missing_knobs": [
+        {"name": "death_cross_exit", "note": "exit when fast crosses back below slow", "phase": "3-RnD"}
+      ]
+    },
+    "GEN_RSI_OVERSOLD_REVERSAL": {
+      "annotation_status": "documented",
+      "grid_rationale": "rsi_len sets sensitivity; oversold is the dip threshold; recovery is the level RSI must reclaim to trigger (recovery>oversold enforced).",
+      "fixed_knobs": [
+        {"name": "stop_window", "value": 5, "reason": "stop = low.rolling(5).min() is HARDCODED, not swept"},
+        {"name": "direction", "value": "long_only"},
+        {"name": "trend_filter", "value": "none", "reason": "no higher-timeframe or EMA trend gate — pure oscillator reversal"}
+      ],
+      "missing_knobs": [
+        {"name": "stop_window", "note": "promote fixed 5 to a swept knob", "phase": "1-mechanical"},
+        {"name": "trend_filter", "note": "add an ema_200 regime gate as an on/off knob", "phase": "3-RnD"}
+      ]
+    },
+    "GEN_MACD_BULL_CROSS": {
+      "annotation_status": "documented",
+      "grid_rationale": "fast/slow/signal are the three standard MACD periods (fast<slow enforced); the classic 12/26/9 is inside the grid.",
+      "fixed_knobs": [
+        {"name": "trend_filter", "value": "close > ema_200", "reason": "ema_200 regime gate is hardcoded on"},
+        {"name": "stop_window", "value": 5, "reason": "stop = low.rolling(5).min() HARDCODED"},
+        {"name": "direction", "value": "long_only"}
+      ],
+      "missing_knobs": [
+        {"name": "bear_cross_exit", "note": "exit on the opposite MACD cross", "phase": "3-RnD"}
+      ]
+    },
+    "GEN_ZSCORE_MEAN_REVERSION": {
+      "annotation_status": "documented",
+      "grid_rationale": "win is the mean/std lookback; z_lo is the dip entry z-score (buy the dip); trend_ema keeps entries in an uptrend (close>trend_ema).",
+      "fixed_knobs": [
+        {"name": "stop_window", "value": 10, "reason": "stop = low.rolling(10).min() HARDCODED"},
+        {"name": "exit_style", "value": "fixed 2R target / time / stop", "reason": "no mean-reversion exit-at-mean; uses the global 2R target"},
+        {"name": "direction", "value": "long_only"}
+      ],
+      "missing_knobs": [
+        {"name": "exit_at_mean", "note": "close when z reverts to 0 instead of a 2R target — the natural mean-reversion exit", "phase": "3-RnD"}
+      ]
+    },
+    "GEN_ATR_PULLBACK_TREND": {
+      "annotation_status": "documented",
+      "grid_rationale": "ema_len is the trend anchor; dist_atr caps how far above the EMA an entry may be; slope_atr requires a minimum ATR-normalized slope; stop_lookback is the swing-low stop.",
+      "fixed_knobs": [
+        {"name": "slope_window", "value": 5, "reason": "slope measured over shift(5) — HARDCODED, not swept"},
+        {"name": "atr_period", "value": 14, "reason": "distance/slope normalized by df.atr_14"},
+        {"name": "direction", "value": "long_only"}
+      ],
+      "missing_knobs": [
+        {"name": "slope_window", "note": "promote fixed 5-bar slope window to a swept knob", "phase": "1-mechanical"}
+      ]
+    },
+    "GEN_KELTNER_BREAKOUT": {
+      "annotation_status": "documented",
+      "grid_rationale": "ema_len is the channel mid; atr_len is the band ATR window; mult sets band width (1.5-3.0).",
+      "fixed_knobs": [
+        {"name": "trend_filter", "value": "close > ema_200", "reason": "ema_200 regime gate hardcoded on"},
+        {"name": "stop_window", "value": 5, "reason": "stop = low.rolling(5).min() HARDCODED"},
+        {"name": "direction", "value": "long_only"}
+      ],
+      "missing_knobs": [
+        {"name": "mid_channel_exit", "note": "exit on a close back below the channel mid", "phase": "3-RnD"}
+      ]
+    },
+    "GEN_TRIPLE_EMA_STACK": {
+      "annotation_status": "documented",
+      "grid_rationale": "smallest grid (8): only touch_atr (pullback proximity to ema_13) and stop_lookback are swept.",
+      "fixed_knobs": [
+        {"name": "ema_periods", "value": "5 / 13 / 50", "reason": "the three EMAs are HARDCODED — the defining stack is not swept at all"},
+        {"name": "entry_confirm", "value": "close > open", "reason": "bullish-bar confirmation hardcoded"},
+        {"name": "direction", "value": "long_only"}
+      ],
+      "missing_knobs": [
+        {"name": "ema_periods", "note": "promote the fixed 5/13/50 stack to swept knobs — currently the strategy's core is untuned", "phase": "1-mechanical"}
+      ]
+    },
+    "GEN_STOCH_OVERSOLD_CROSS": {
+      "annotation_status": "documented",
+      "grid_rationale": "stoch_n is the %K window; oversold is the dip threshold; smooth_d is the %D smoothing that %K must cross up through.",
+      "fixed_knobs": [
+        {"name": "trend_filter", "value": "close > ema_200", "reason": "ema_200 regime gate hardcoded on"},
+        {"name": "stop_window", "value": 5, "reason": "stop = low.rolling(5).min() HARDCODED"},
+        {"name": "direction", "value": "long_only"}
+      ],
+      "missing_knobs": [
+        {"name": "overbought_exit", "note": "exit when %K crosses down from an overbought level", "phase": "3-RnD"}
+      ]
+    },
+    "QL_2026-05-01_SWING_1H_DUAL_RSI_60_40_PULLBACK": {
+      "annotation_status": "documented",
+      "grid_rationale": "rsi_len sets the intraday RSI; daily_hi/daily_lo are the higher-timeframe RSI regime bands (60/40 classic); stop_lookback is the swing-low stop.",
+      "fixed_knobs": [
+        {"name": "daily_rsi_dependency", "value": "requires daily_rsi_map", "reason": "needs a daily-timeframe RSI feed; returns no signal if absent"},
+        {"name": "direction", "value": "long_only"}
+      ],
+      "missing_knobs": []
+    },
+    "QL_2026-05-01_ANY_1H_RSI_CONFLUENCE_PLAYBOOK": {
+      "annotation_status": "documented",
+      "grid_rationale": "rsi_len / sma_len / cross_lvl: entry when price is above the SMA and RSI crosses up through cross_lvl (45/50/55).",
+      "fixed_knobs": [
+        {"name": "stop_window", "value": 5, "reason": "stop = low.rolling(5).min() HARDCODED"},
+        {"name": "direction", "value": "long_only"}
+      ],
+      "missing_knobs": []
+    },
+    "QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK": {
+      "annotation_status": "documented",
+      "grid_rationale": "shared 8EMA family grid: pullback_atr (proximity to ema_8), impulse_atr (required prior impulse), slope_window.",
+      "fixed_knobs": [
+        {"name": "ema_period", "value": 8, "reason": "ema_8 anchor is HARDCODED — the family's namesake period is not swept"},
+        {"name": "stop_window", "value": 3, "reason": "stop = low.rolling(3).min() HARDCODED"},
+        {"name": "direction", "value": "long_only"}
+      ],
+      "missing_knobs": [
+        {"name": "ema_period", "note": "promote the fixed 8 to a swept knob", "phase": "1-mechanical"}
+      ]
+    },
+    "QL_2026-05-01_US_EQUITIES_INTRADAY_LE_MODEL_BULL_FLAG": {
+      "annotation_status": "documented",
+      "grid_rationale": "shares the 8EMA family grid and signal block (pullback_atr / impulse_atr / slope_window).",
+      "fixed_knobs": [
+        {"name": "ema_period", "value": 8, "reason": "ema_8 anchor HARDCODED (shared 8EMA block)"},
+        {"name": "stop_window", "value": 3, "reason": "stop = low.rolling(3).min() HARDCODED"},
+        {"name": "logic_identical_to", "value": "8EMA_PULLBACK", "reason": "same signal block; label differs but rules are identical — provenance/labeling concern"}
+      ],
+      "missing_knobs": []
+    },
+    "QL_2026-05-01_US_EQUITIES_INTRADAY_PURPLE_PROFITS": {
+      "annotation_status": "documented",
+      "grid_rationale": "shares the 8EMA family grid and signal block.",
+      "fixed_knobs": [
+        {"name": "ema_period", "value": 8, "reason": "ema_8 anchor HARDCODED"},
+        {"name": "stop_window", "value": 3, "reason": "HARDCODED"},
+        {"name": "logic_identical_to", "value": "8EMA_PULLBACK", "reason": "same signal block — distinct label, identical rules"}
+      ],
+      "missing_knobs": []
+    },
+    "QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL": {
+      "annotation_status": "documented",
+      "grid_rationale": "shares the 8EMA family grid; the ONLY strategy using a trailing exit (close below ema_8) instead of the global 2R target.",
+      "fixed_knobs": [
+        {"name": "ema_period", "value": 8, "reason": "ema_8 anchor HARDCODED"},
+        {"name": "exit_style", "value": "trail_below_ema8", "reason": "is_trail path in simulate_slice — exits on close<ema_8 next open; does NOT use the 2R target"},
+        {"name": "stop_window", "value": 3, "reason": "HARDCODED"}
+      ],
+      "missing_knobs": []
+    },
+    "QL_2026-05-01_UNKNOWN_MULTI_EMA_CHANNEL_PULLBACK": {
+      "annotation_status": "documented",
+      "grid_rationale": "touch_atr (pullback proximity to long EMA), short_ema/long_ema pair (short<long enforced).",
+      "fixed_knobs": [
+        {"name": "trend_filter", "value": "close > ema_200", "reason": "ema_200 regime gate hardcoded on"},
+        {"name": "entry_confirm", "value": "close > open", "reason": "bullish-bar confirmation hardcoded"},
+        {"name": "stop_window", "value": 5, "reason": "HARDCODED"}
+      ],
+      "missing_knobs": []
+    },
+    "QL_2026-05-01_LIQUID_INTRADAY_VWAP_PULLBACK_REVERSAL": {
+      "annotation_status": "documented",
+      "grid_rationale": "session_window (rolling-mean VWAP proxy window), prox_atr (proximity to the proxy), slope_window.",
+      "fixed_knobs": [
+        {"name": "vwap_proxy", "value": "rolling mean of close", "reason": "NOT a true volume-weighted VWAP — approximated by an SMA; known proxy limitation"},
+        {"name": "stop_style", "value": "proxy - 1.0 * band", "reason": "stop band multiplier 1.0 HARDCODED"},
+        {"name": "direction", "value": "long_only"}
+      ],
+      "missing_knobs": [
+        {"name": "true_vwap", "note": "use a real session-anchored volume-weighted VWAP", "phase": "3-RnD"}
+      ]
+    },
+    "QL_2026-05-01_SP500_5M_TWO_CANDLE_SENTIMENT_SR": {
+      "annotation_status": "documented",
+      "grid_rationale": "level_lookback (resistance window), upper_third (close position in the bar range), break_buf_atr (breakout buffer).",
+      "fixed_knobs": [
+        {"name": "stop_window", "value": 2, "reason": "stop = low.rolling(2).min() HARDCODED — very tight"},
+        {"name": "direction", "value": "long_only"}
+      ],
+      "missing_knobs": []
+    },
+    "QL_2026-05-01_ANY_BOLLINGER_BANDS_20_2_TRI_SETUP": {
+      "annotation_status": "documented",
+      "grid_rationale": "width_quantile (squeeze percentile over a 200-bar window), body_atr (breakout candle body size), bb_len (band period).",
+      "fixed_knobs": [
+        {"name": "bb_mult", "value": 2.0, "reason": "upper band = mid + 2*std HARDCODED (the '20_2' name); band width multiplier not swept"},
+        {"name": "squeeze_window", "value": 200, "reason": "width percentile lookback HARDCODED"},
+        {"name": "stop_window", "value": 5, "reason": "HARDCODED"}
+      ],
+      "missing_knobs": [
+        {"name": "bb_mult", "note": "promote the fixed 2.0 std multiplier to a swept knob", "phase": "1-mechanical"}
+      ]
+    },
+    "QL_2026-05-01_ANY_CANDLESTICK_7_PATTERN_PA_CONFLUENCE": {
+      "annotation_status": "documented",
+      "grid_rationale": "level_lookback (support window), tolerance_atr (proximity of the pattern to support), atr_stop_mult (ATR-based stop distance — the one swept stop in the library).",
+      "fixed_knobs": [
+        {"name": "pattern", "value": "bullish engulfing", "reason": "only one of the '7 patterns' (engulfing) is implemented; the named 7-pattern set is not"},
+        {"name": "atr_period", "value": 14, "reason": "tolerance and stop normalized by df.atr_14"},
+        {"name": "direction", "value": "long_only"}
+      ],
+      "missing_knobs": [
+        {"name": "additional_patterns", "note": "implement the remaining 6 candlestick patterns the name promises", "phase": "3-RnD"}
+      ]
+    }
+  }
+}
