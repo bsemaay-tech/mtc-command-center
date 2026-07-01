@@ -1267,6 +1267,8 @@ function evidenceSection(m) {
           ${infoCard("Verification Method", "scorecard_v2 (heuristic gate scoring)")}
         </div>
 
+        ${paramSpecBlock(m)}
+
         <h4 class="section-title" style="margin-top:18px;">Backtest Profiles</h4>
         <div class="table-wrap"><table class="grid-table">
           <thead><tr><th>Profile</th><th>Purpose</th><th>Status</th></tr></thead>
@@ -1290,8 +1292,8 @@ function evidenceSection(m) {
         <h4 class="section-title" style="margin-top:18px;">Case Count Calculator</h4>
         ${emptyState("Parameter space and case-count calculation require run_plan.json — pending / artifact missing.")}
 
-        <h4 class="section-title" style="margin-top:18px;">Parameter Space Preview</h4>
-        ${emptyState("Parameter space not present in read model. " + M.runplan + ".")}`}
+        <h4 class="section-title" style="margin-top:18px;">Planned Run Parameter Space</h4>
+        ${emptyState("A planned-run parameter space needs run_plan.json (" + M.runplan + "). The engine's optimization grid is shown above under 'Optimization Parameter Space'.")}`}
 
         <h4 class="section-title" style="margin-top:18px;">Top Results Preview</h4>
         ${profileMatrix(m, tfs)}
@@ -1326,6 +1328,50 @@ function profileMatrix(m, tfs) {
   </table></div>`;
 }
 
+function paramSpecFor(id) {
+  const byId = (snap().param_specs || {}).by_id || {};
+  return byId[id] || null;
+}
+function paramSpecBlock(m) {
+  const ps = snap().param_specs || {};
+  if (!ps.available) return "";
+  const spec = paramSpecFor(m.id);
+  const head = `<h4 class="section-title" style="margin-top:18px;">Optimization Parameter Space (engine grid)</h4>`;
+  if (!spec) {
+    return `${head}
+      ${emptyState("No engine search grid is mapped to this strategy id. Only strategies defined in mega_walk_forward.GRIDS have a parameter spec in STRATEGY_PARAM_SPECS.json.")}`;
+  }
+  const opt = spec.optimizable || {};
+  const optRows = Object.keys(opt).map((k) => {
+    const o = opt[k] || {};
+    const vals = Array.isArray(o.values) ? o.values.join(", ") : "—";
+    return `<tr><td class="mono">${esc(k)}</td><td class="mono">${esc(vals)}</td><td class="num">${esc(o.count)}</td><td>${esc(o.type || "")}</td></tr>`;
+  }).join("");
+  const fixed = (spec.fixed_knobs || []).map((f) =>
+    `<li><span class="chip static">FIXED</span> <span class="mono">${esc(f.name)}</span> = <span class="mono">${esc(String(f.value))}</span>${f.reason ? ` — <span class="summary">${esc(f.reason)}</span>` : ""}</li>`
+  ).join("");
+  const missing = (spec.missing_knobs || []).map((mk) =>
+    `<span class="chip knob" title="${esc(mk.note || "")}">${esc(mk.name)}${mk.phase ? " · " + esc(mk.phase) : ""}</span>`
+  ).join(" ");
+  const em = ps.execution_model || {};
+  const cases = spec.cases_full_universe != null ? Number(spec.cases_full_universe).toLocaleString() : null;
+  return `${head}
+    <p class="summary" style="margin-top:0;">Source: <code>mega_walk_forward.GRIDS</code> (code = single source of truth). ${esc(spec.grid_rationale || "")}</p>
+    <div class="info-grid">
+      ${infoCard("Grid Size (combos)", spec.grid_size)}
+      ${infoCard("Cases (full universe)", cases, { empty: "universe unknown" })}
+      ${infoCard("Case Formula", spec.cases_formula || "grid_size x cells x rolling_folds", { span2: true })}
+    </div>
+    <div class="table-wrap"><table class="grid-table">
+      <thead><tr><th>Optimized Param</th><th>Values</th><th>Count</th><th>Type</th></tr></thead>
+      <tbody>${optRows || `<tr><td colspan="4">—</td></tr>`}</tbody>
+    </table></div>
+    <h4 class="section-title" style="margin-top:14px;">Hardcoded (fixed — not swept)</h4>
+    ${fixed ? `<ul class="plain-list">${fixed}</ul>` : emptyState("No fixed knobs documented for this strategy.")}
+    <h4 class="section-title" style="margin-top:14px;">Candidate missing knobs (new-logic — approval-gated)</h4>
+    ${missing ? `<div class="chip-row">${missing}</div>` : emptyState("None flagged.")}
+    <p class="summary" style="margin-top:10px;margin-bottom:0;">Global execution model (all strategies, NOT optimized): entry = ${esc(em.entry || "next bar open")}; profit target = ${esc(em.profit_target_R)}R; holding limit = ${esc(em.holding_bar_limit)} bars; cost = ${esc(em.cost_bps)} bps.</p>`;
+}
 function explorerPreviewSection(m) {
   const cards = cardsForStrategy(m.id).slice().sort((a, b) => Number((b.gate2 && b.gate2.score) || 0) - Number((a.gate2 && a.gate2.score) || 0));
   const best = cards[0];
