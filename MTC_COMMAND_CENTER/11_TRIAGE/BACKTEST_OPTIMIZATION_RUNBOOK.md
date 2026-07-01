@@ -199,6 +199,29 @@ Loop sonrası `aggregate_overnight_iters.py` çalıştır:
 - Cross-cell coverage: candidate kaç (sym × TF) hücresinde geçti?
 - Best/worst split: highest avg return vs most defensive seed
 
+### 3.5 CASE-COUNT ARİTMETİĞİ (kanonik — "1M case" ne demek)
+
+"1,000,000 case" bir dial değil; şu çarpımdan **emergent** çıkar. Terimleri karıştırma:
+
+| Terim | Tanım | Örnek (mega, 20-strat sweep) |
+|---|---|---|
+| **cell (hücre)** | bir (strateji × sembol × TF) kombinasyonu | 20 × 51 × 7 = **7,140** |
+| **grid combo** | bir stratejinin gridindeki 1 parametre seti | DONCHIAN = 5×4×3 = **60** |
+| **case / param-evaluation** | bir grid combo'nun bir fold'da 1 backtest'i | aşağıdaki formül |
+| **iter** | tüm sweep'in tekrarı (deterministik → tekrar = sıfır bilgi, A19/A22) | — |
+
+**Kanonik formül:**
+```
+cases = Σ_strateji(grid_size) × semboller × timeframe'ler × rolling_folds
+```
+mega baseline: `1122 × 51 × 7 × 3 = 1,201,662 ≈ 1M`. Tek strateji katkısı: `grid_size × cells × folds` (DONCHIAN = 60 × 357 × 3 = 64,260).
+
+**İki runner, iki toplam** (aynı istekten farklı sayı çıkar — bunu netleştir):
+- `mega_walk_forward.py` doğrudan → 20 strateji, Σgrid 1122, 3 fold → ~1.2M case.
+- `overnight_v2_runner.py` (monkey-patch, +19 strateji) → ~43 strateji, Σgrid ~2031, 6 fold → ~4.4M (tarihsel "3.6M" bölgesi). DONCHIAN'ın kendi 60-gridi değişmez; sadece strateji seti + fold sayısı büyür.
+
+**Nerede önceden hesaplı:** her stratejinin `grid_size`, `cases_full_universe` ve optimize/sabit knob'ları `05_REGISTRY/STRATEGY_PARAM_SPECS.json`'da (generator `03_QUANTLENS/tools/build_strategy_param_specs.py`, kod = tek kaynak). Dashboard Strategy Detail §4'te görünür. Grid genişletmek DSR'ı kötüleştirir (A17) → case sayısını bilinçli seç.
+
 ---
 
 ## 4. OVERFIT-SKEPTIK VALİDASYON (zorunlu sıra)

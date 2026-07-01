@@ -11,7 +11,13 @@ Approved architecture: declarative per-strategy param-spec — code stays source
 - `05_REGISTRY/STRATEGY_PARAM_SPEC_ANNOTATIONS.json` — hand-authored fixed-knob rationale + missing-knob candidates, all 20 strategies.
 - `05_REGISTRY/STRATEGY_PARAM_SPECS.json` — generated: 20 strat, sum_grid 1122, 357 cells × 3 folds = **1,201,662 cases** (the "~1M").
 - Dashboard: `param_specs_reader.build_param_specs()` → snapshot key `param_specs`; Strategy Detail §4 renders optimizable table + case count + fixed/missing knobs + exec model. +4 tests, **API 112 passed**, `node --check` OK, live render verified (8EMA: grid 75, 80,325 cases, ema_period=8 fixed), no console errors.
-- No engine/data/Pine/MTC_V2/parity touched. **Faz 2 (Pine parity map) + Faz 3 (missing-knob R&D) NOT started — approval-gated.**
+- No engine/data/Pine/MTC_V2/parity touched.
+
+**Faz 2/3/4 also DONE (same branch, pushed → PR [#15](https://github.com/bsemaay-tech/mtc-command-center/pull/15)):**
+- **Faz 2** (parity, read-only): honest finding — the 20 generic engine strategies have NO 1:1 Pine impl, so no fabricated param→input map. Generator emits per-strategy `mtc_v2_parity` (default `deferred_until_promotion`) + a top-level `parity_contract` (any Pine port must ALSO replicate the global exec model, not just swept params). The 2 with a standalone review Pine (TWO_CANDLE→STG001, 8EMA→STG002) marked `review_pine_exists / needs_reconciliation` with the real .pine ref. §4 shows a Pine-parity line. Pine READ only, never edited.
+- **Faz 3** (new-logic, monkey-patch, UNVALIDATED): first variant `GEN_DONCHIAN_TURTLE` via `03_QUANTLENS/tools/variant_missing_knobs.py` (engine NOT modified) — DONCHIAN's missing Turtle STRUCTURAL stop (opposite `exit_channel_len` channel; new knob; grid 24). Honest contract limit: a TRUE trailing opposite-channel EXIT needs an engine-core `simulate_slice` change = **Faz 3b (approval-gated, NOT done)**. Registered in `VARIANT_LOG_REGISTRY.json` (promotable:false); registry `--with-variants` tags origin=variant/UNVALIDATED; §4 shows a VARIANT badge. Smoke OK; NO validation run (two-stage validation is the scoped next step).
+- **Faz 4** (doc): runbook §3.5 now defines the canonical case-count arithmetic (`cases = Σgrid × cells × folds`), the cell/combo/case/iter terms, and the two-runner difference — the previously-undocumented gap.
+- Verified throughout: API **112 passed**, `node --check` OK, live render verified (core clean, no variant leak). Nothing promotable; nothing merged (PR open for review).
 
 ## Claude Opus 4.8 2026-06-30 — Overnight multi-asset sweep (7,140 cells) + morning close — NOTHING PROMOTABLE
 
