@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_utc": "2026-07-01T11:55:27Z",
+  "generated_utc": "2026-07-01T14:56:57Z",
   "generator": "03_QUANTLENS/tools/build_strategy_param_specs.py",
   "source_of_truth": "mega_walk_forward.GRIDS (code) + STRATEGY_PARAM_SPEC_ANNOTATIONS.json (curated overlay)",
   "read_only": true,
@@ -38,6 +38,19 @@
     "min_bars_required": 1500,
     "min_trades_for_pass": 30,
     "note": "These apply to ALL strategies and are NOT optimized. Changing any of them is new logic (Faz 3), not tuning."
+  },
+  "parity_contract": {
+    "applies_to": "all strategies",
+    "requirement": "To reproduce any optimized QuantLens result in Pine/MTC_V2, a port must match BOTH the strategy's swept params AND the global execution model below. Mapping only the entry/exit params is insufficient.",
+    "must_match": {
+      "entry": "next bar open (fill at open[t+1] after signal at t)",
+      "profit_target_R": 2.0,
+      "holding_bar_limit": 96,
+      "cost_bps": 8.0,
+      "warmup_bars": 20
+    },
+    "phase": "2-parity",
+    "note": "Per-strategy param -> Pine input() maps live in each strategy's mtc_v2_parity block."
   },
   "library_totals": {
     "strategies": 20,
@@ -117,8 +130,11 @@
       ],
       "missing_knobs": [],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
       }
     },
     {
@@ -180,8 +196,11 @@
       ],
       "missing_knobs": [],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
       }
     },
     {
@@ -254,8 +273,12 @@
         }
       ],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "review_pine_exists",
+        "pine_ref": "03_QUANTLENS/strategies/STG002_ql_alpha_link_8ema_1h/LINK_8EMA_REVIEW.pine",
+        "parity_required": true,
+        "status": "needs_reconciliation",
+        "phase": "2-parity",
+        "note": "A standalone review Pine exists but is NOT confirmed input-for-input identical to the engine grid (pullback_atr/impulse_atr/slope_window) or to the global execution model (2R/96-bar/next-open/8bps). A real param->input map requires manual reconciliation against this file before any parity claim; the 3 sibling 8EMA-family strategies share this signal block."
       }
     },
     {
@@ -323,8 +346,11 @@
       ],
       "missing_knobs": [],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
       }
     },
     {
@@ -392,8 +418,11 @@
       ],
       "missing_knobs": [],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
       }
     },
     {
@@ -461,8 +490,11 @@
       ],
       "missing_knobs": [],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
       }
     },
     {
@@ -529,8 +561,11 @@
       ],
       "missing_knobs": [],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
       }
     },
     {
@@ -603,8 +638,11 @@
         }
       ],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
       }
     },
     {
@@ -666,8 +704,12 @@
       ],
       "missing_knobs": [],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "review_pine_exists",
+        "pine_ref": "03_QUANTLENS/strategies/STG001_ql_alpha_ada_two_candle_sr_1h/ADA_TWO_CANDLE_SR_REVIEW.pine",
+        "parity_required": true,
+        "status": "needs_reconciliation",
+        "phase": "2-parity",
+        "note": "A standalone review Pine exists (ADA/1h) but is NOT confirmed input-for-input identical to the engine grid (level_lookback/upper_third/break_buf_atr) or to the global execution model. A real param->input map requires manual reconciliation before any parity claim."
       }
     },
     {
@@ -740,8 +782,11 @@
         }
       ],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
       }
     },
     {
@@ -813,8 +858,11 @@
         }
       ],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
       }
     },
     {
@@ -902,8 +950,11 @@
         }
       ],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
       }
     },
     {
@@ -983,8 +1034,11 @@
         }
       ],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
       }
     },
     {
@@ -1060,8 +1114,11 @@
         }
       ],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
       }
     },
     {
@@ -1130,8 +1187,11 @@
         }
       ],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
       }
     },
     {
@@ -1202,8 +1262,11 @@
         }
       ],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
       }
     },
     {
@@ -1283,8 +1346,11 @@
         }
       ],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
       }
     },
     {
@@ -1352,8 +1418,11 @@
         }
       ],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
       }
     },
     {
@@ -1411,8 +1480,11 @@
         }
       ],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
       }
     },
     {
@@ -1479,8 +1551,11 @@
         }
       ],
       "mtc_v2_parity": {
-        "status": "not_mapped",
-        "phase": "2-parity"
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
       }
     }
   ]

@@ -1355,6 +1355,11 @@ function paramSpecBlock(m) {
   ).join(" ");
   const em = ps.execution_model || {};
   const cases = spec.cases_full_universe != null ? Number(spec.cases_full_universe).toLocaleString() : null;
+  const par = spec.mtc_v2_parity || {};
+  const parTone = par.pine_impl_status === "promoted" ? "ok" : (par.pine_impl_status === "review_pine_exists" ? "warn" : "neutral");
+  const parLine = par.status
+    ? `<p class="summary" style="margin-top:8px;margin-bottom:0;">MTC_V2 / Pine parity: ${badge(spaced(par.pine_impl_status || "none"), parTone)} ${esc(spaced(par.status))}${par.pine_ref ? ` — <code>${esc(par.pine_ref)}</code>` : ""}${par.note ? `<br><span class="faint">${esc(par.note)}</span>` : ""}</p>`
+    : "";
   return `${head}
     <p class="summary" style="margin-top:0;">Source: <code>mega_walk_forward.GRIDS</code> (code = single source of truth). ${esc(spec.grid_rationale || "")}</p>
     <div class="info-grid">
@@ -1370,7 +1375,8 @@ function paramSpecBlock(m) {
     ${fixed ? `<ul class="plain-list">${fixed}</ul>` : emptyState("No fixed knobs documented for this strategy.")}
     <h4 class="section-title" style="margin-top:14px;">Candidate missing knobs (new-logic — approval-gated)</h4>
     ${missing ? `<div class="chip-row">${missing}</div>` : emptyState("None flagged.")}
-    <p class="summary" style="margin-top:10px;margin-bottom:0;">Global execution model (all strategies, NOT optimized): entry = ${esc(em.entry || "next bar open")}; profit target = ${esc(em.profit_target_R)}R; holding limit = ${esc(em.holding_bar_limit)} bars; cost = ${esc(em.cost_bps)} bps.</p>`;
+    ${parLine}
+    <p class="summary" style="margin-top:10px;margin-bottom:0;">Global execution model (all strategies, NOT optimized): entry = ${esc(em.entry || "next bar open")}; profit target = ${esc(em.profit_target_R)}R; holding limit = ${esc(em.holding_bar_limit)} bars; cost = ${esc(em.cost_bps)} bps. <em>Any Pine port must replicate these to reproduce results.</em></p>`;
 }
 function explorerPreviewSection(m) {
   const cards = cardsForStrategy(m.id).slice().sort((a, b) => Number((b.gate2 && b.gate2.score) || 0) - Number((a.gate2 && a.gate2.score) || 0));

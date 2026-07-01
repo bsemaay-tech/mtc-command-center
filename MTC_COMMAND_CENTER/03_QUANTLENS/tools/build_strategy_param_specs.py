@@ -145,7 +145,15 @@ def build() -> dict:
             "grid_rationale": a.get("grid_rationale", ""),
             "fixed_knobs": a.get("fixed_knobs", []),
             "missing_knobs": a.get("missing_knobs", []),
-            "mtc_v2_parity": a.get("mtc_v2_parity", {"status": "not_mapped", "phase": "2-parity"}),
+            "mtc_v2_parity": a.get("mtc_v2_parity", {
+                "pine_impl_status": "none",
+                "parity_required": True,
+                "status": "deferred_until_promotion",
+                "phase": "2-parity",
+                "note": ("No Pine implementation yet; the param -> input() map is authored at "
+                         "promotion. Any Pine port must ALSO replicate the global execution model "
+                         "(entry, 2R target, holding limit, cost) or the optimized result will not reproduce."),
+            }),
         })
 
     return {
@@ -157,6 +165,23 @@ def build() -> dict:
         "phase_legend": ann_meta.get("phase_legend", {}),
         "universe": universe,
         "execution_model": execution_model,
+        "parity_contract": {
+            "applies_to": "all strategies",
+            "requirement": (
+                "To reproduce any optimized QuantLens result in Pine/MTC_V2, a port must match "
+                "BOTH the strategy's swept params AND the global execution model below. Mapping "
+                "only the entry/exit params is insufficient."
+            ),
+            "must_match": {
+                "entry": execution_model["entry"],
+                "profit_target_R": execution_model["profit_target_R"],
+                "holding_bar_limit": execution_model["holding_bar_limit"],
+                "cost_bps": execution_model["cost_bps"],
+                "warmup_bars": execution_model["warmup_bars"],
+            },
+            "phase": "2-parity",
+            "note": "Per-strategy param -> Pine input() maps live in each strategy's mtc_v2_parity block.",
+        },
         "library_totals": {
             "strategies": len(grids),
             "sum_grid_size": sum_grid,

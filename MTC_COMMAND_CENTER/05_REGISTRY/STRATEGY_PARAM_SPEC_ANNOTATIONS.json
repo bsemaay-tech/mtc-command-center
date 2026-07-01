@@ -148,7 +148,15 @@
       ],
       "missing_knobs": [
         {"name": "ema_period", "note": "promote the fixed 8 to a swept knob", "phase": "1-mechanical"}
-      ]
+      ],
+      "mtc_v2_parity": {
+        "pine_impl_status": "review_pine_exists",
+        "pine_ref": "03_QUANTLENS/strategies/STG002_ql_alpha_link_8ema_1h/LINK_8EMA_REVIEW.pine",
+        "parity_required": true,
+        "status": "needs_reconciliation",
+        "phase": "2-parity",
+        "note": "A standalone review Pine exists but is NOT confirmed input-for-input identical to the engine grid (pullback_atr/impulse_atr/slope_window) or to the global execution model (2R/96-bar/next-open/8bps). A real param->input map requires manual reconciliation against this file before any parity claim; the 3 sibling 8EMA-family strategies share this signal block."
+      }
     },
     "QL_2026-05-01_US_EQUITIES_INTRADAY_LE_MODEL_BULL_FLAG": {
       "annotation_status": "documented",
@@ -209,7 +217,15 @@
         {"name": "stop_window", "value": 2, "reason": "stop = low.rolling(2).min() HARDCODED — very tight"},
         {"name": "direction", "value": "long_only"}
       ],
-      "missing_knobs": []
+      "missing_knobs": [],
+      "mtc_v2_parity": {
+        "pine_impl_status": "review_pine_exists",
+        "pine_ref": "03_QUANTLENS/strategies/STG001_ql_alpha_ada_two_candle_sr_1h/ADA_TWO_CANDLE_SR_REVIEW.pine",
+        "parity_required": true,
+        "status": "needs_reconciliation",
+        "phase": "2-parity",
+        "note": "A standalone review Pine exists (ADA/1h) but is NOT confirmed input-for-input identical to the engine grid (level_lookback/upper_third/break_buf_atr) or to the global execution model. A real param->input map requires manual reconciliation before any parity claim."
+      }
     },
     "QL_2026-05-01_ANY_BOLLINGER_BANDS_20_2_TRI_SETUP": {
       "annotation_status": "documented",
