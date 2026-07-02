@@ -116,10 +116,25 @@ def grid_golden_atr_stop():
     return out  # golden-cross pullback with an ATR stop instead of the swing-low stop
 
 
+def grid_twocandle_confirm():
+    # STG001 (ADA two-candle SR) ±2 finer confirmation grid: NEW intermediate nodes not
+    # in the base two_candle coarse grid (level_lookback 24/48/96/144/200, upper 0.55..0.85,
+    # buf 0/0.10/0.25) -> genuinely-new confirmation, not a re-run.
+    out = []
+    for lb in (36, 60, 72, 120, 168):
+        for upper in (0.58, 0.63, 0.70, 0.80):
+            for buf in (0.05, 0.15, 0.20):
+                out.append({"level_lookback": lb, "upper_third": upper, "break_buf_atr": buf})
+    return out  # 5*4*3 = 60 new nodes
+
+
 NEW_GRIDS = {
+    # STG001/STG002 confirmation first (priority)
+    "GEN_TWOCANDLE_CONFIRM": grid_twocandle_confirm(),      # STG001 ADA two-candle ±2 grid
+    "GEN_EMA_PULLBACK_TUNED": grid_ema_pullback_tuned(),    # STG002 LINK 8ema (tunable period)
+    # rest of the family
     "GEN_DONCHIAN_TURTLE": grid_donchian_turtle(),
     "GEN_TRIPLE_EMA_TUNED": grid_triple_ema_tuned(),
-    "GEN_EMA_PULLBACK_TUNED": grid_ema_pullback_tuned(),
     "GEN_BB_MULT_TUNED": grid_bb_mult_tuned(),
     "GEN_MACD_NOFILTER": grid_macd_nofilter(),
     "GEN_RSI_TREND_GATED": grid_rsi_trend_gated(),
@@ -178,6 +193,16 @@ def signals_new(strategy, df, params, daily_rsi_map=None):
         r = mw.rsi(close, int(params["rsi_len"])); e200 = mw.ema(close, 200)
         sig = (r.shift(1) < params["oversold"]) & (r >= params["recovery"]) & (close > e200)  # ADDED trend gate
         stop = low.rolling(5, min_periods=1).min()
+        return sig.fillna(False), stop
+
+    if strategy == "GEN_TWOCANDLE_CONFIRM":
+        w = int(params["level_lookback"])
+        brk = high.rolling(w, min_periods=10).max().shift(1)
+        rng = (high - low).replace(0, np.nan)
+        pos = (close - low) / rng
+        buf = params.get("break_buf_atr", 0.0) * atr
+        sig = (pos >= params["upper_third"]) & (close > high.shift(1)) & (close > brk + buf)
+        stop = low.rolling(2, min_periods=1).min()
         return sig.fillna(False), stop
 
     if strategy == "GEN_GOLDEN_ATR_STOP":

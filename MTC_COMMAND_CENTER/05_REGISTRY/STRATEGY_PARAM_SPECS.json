@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_utc": "2026-07-02T09:56:44Z",
+  "generated_utc": "2026-07-02T18:05:01Z",
   "generator": "03_QUANTLENS/tools/build_strategy_param_specs.py",
   "source_of_truth": "mega_walk_forward.GRIDS (code) + STRATEGY_PARAM_SPEC_ANNOTATIONS.json (curated overlay)",
   "read_only": true,
@@ -53,11 +53,11 @@
     "note": "Per-strategy param -> Pine input() maps live in each strategy's mtc_v2_parity block."
   },
   "library_totals": {
-    "strategies": 27,
-    "sum_grid_size": 1350,
+    "strategies": 28,
+    "sum_grid_size": 1410,
     "cells": 357,
     "rolling_folds": 3,
-    "total_cases_full_universe": 1445850
+    "total_cases_full_universe": 1510110
   },
   "strategies": [
     {
@@ -1599,6 +1599,127 @@
       }
     },
     {
+      "strategy_id": "GEN_TWOCANDLE_CONFIRM",
+      "origin": "variant",
+      "validation_status": "UNVALIDATED",
+      "grid_size": 60,
+      "optimizable": {
+        "level_lookback": {
+          "values": [
+            36,
+            60,
+            72,
+            120,
+            168
+          ],
+          "count": 5,
+          "type": "int",
+          "min": 36,
+          "max": 168
+        },
+        "upper_third": {
+          "values": [
+            0.58,
+            0.63,
+            0.7,
+            0.8
+          ],
+          "count": 4,
+          "type": "float",
+          "min": 0.58,
+          "max": 0.8
+        },
+        "break_buf_atr": {
+          "values": [
+            0.05,
+            0.15,
+            0.2
+          ],
+          "count": 3,
+          "type": "float",
+          "min": 0.05,
+          "max": 0.2
+        }
+      },
+      "cases_full_universe": 64260,
+      "cases_formula": "grid_size x cells x rolling_folds",
+      "annotation_status": "todo",
+      "grid_rationale": "",
+      "fixed_knobs": [],
+      "missing_knobs": [],
+      "mtc_v2_parity": {
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
+      }
+    },
+    {
+      "strategy_id": "GEN_EMA_PULLBACK_TUNED",
+      "origin": "variant",
+      "validation_status": "UNVALIDATED",
+      "grid_size": 48,
+      "optimizable": {
+        "ema_len": {
+          "values": [
+            5,
+            8,
+            13,
+            21
+          ],
+          "count": 4,
+          "type": "int",
+          "min": 5,
+          "max": 21
+        },
+        "pullback_atr": {
+          "values": [
+            0.3,
+            0.5,
+            0.65
+          ],
+          "count": 3,
+          "type": "float",
+          "min": 0.3,
+          "max": 0.65
+        },
+        "impulse_atr": {
+          "values": [
+            0.5,
+            1.0
+          ],
+          "count": 2,
+          "type": "float",
+          "min": 0.5,
+          "max": 1.0
+        },
+        "slope_window": {
+          "values": [
+            3,
+            5
+          ],
+          "count": 2,
+          "type": "int",
+          "min": 3,
+          "max": 5
+        }
+      },
+      "cases_full_universe": 51408,
+      "cases_formula": "grid_size x cells x rolling_folds",
+      "annotation_status": "todo",
+      "grid_rationale": "",
+      "fixed_knobs": [],
+      "missing_knobs": [],
+      "mtc_v2_parity": {
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
+      }
+    },
+    {
       "strategy_id": "GEN_DONCHIAN_TURTLE",
       "origin": "variant",
       "validation_status": "UNVALIDATED",
@@ -1734,70 +1855,6 @@
         }
       },
       "cases_full_universe": 57834,
-      "cases_formula": "grid_size x cells x rolling_folds",
-      "annotation_status": "todo",
-      "grid_rationale": "",
-      "fixed_knobs": [],
-      "missing_knobs": [],
-      "mtc_v2_parity": {
-        "pine_impl_status": "none",
-        "parity_required": true,
-        "status": "deferred_until_promotion",
-        "phase": "2-parity",
-        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
-      }
-    },
-    {
-      "strategy_id": "GEN_EMA_PULLBACK_TUNED",
-      "origin": "variant",
-      "validation_status": "UNVALIDATED",
-      "grid_size": 48,
-      "optimizable": {
-        "ema_len": {
-          "values": [
-            5,
-            8,
-            13,
-            21
-          ],
-          "count": 4,
-          "type": "int",
-          "min": 5,
-          "max": 21
-        },
-        "pullback_atr": {
-          "values": [
-            0.3,
-            0.5,
-            0.65
-          ],
-          "count": 3,
-          "type": "float",
-          "min": 0.3,
-          "max": 0.65
-        },
-        "impulse_atr": {
-          "values": [
-            0.5,
-            1.0
-          ],
-          "count": 2,
-          "type": "float",
-          "min": 0.5,
-          "max": 1.0
-        },
-        "slope_window": {
-          "values": [
-            3,
-            5
-          ],
-          "count": 2,
-          "type": "int",
-          "min": 3,
-          "max": 5
-        }
-      },
-      "cases_full_universe": 51408,
       "cases_formula": "grid_size x cells x rolling_folds",
       "annotation_status": "todo",
       "grid_rationale": "",
