@@ -199,6 +199,29 @@ Loop sonrası `aggregate_overnight_iters.py` çalıştır:
 - Cross-cell coverage: candidate kaç (sym × TF) hücresinde geçti?
 - Best/worst split: highest avg return vs most defensive seed
 
+### 3.5 CASE-COUNT ARİTMETİĞİ (kanonik — "1M case" ne demek)
+
+"1,000,000 case" bir dial değil; şu çarpımdan **emergent** çıkar. Terimleri karıştırma:
+
+| Terim | Tanım | Örnek (mega, 20-strat sweep) |
+|---|---|---|
+| **cell (hücre)** | bir (strateji × sembol × TF) kombinasyonu | 20 × 51 × 7 = **7,140** |
+| **grid combo** | bir stratejinin gridindeki 1 parametre seti | DONCHIAN = 5×4×3 = **60** |
+| **case / param-evaluation** | bir grid combo'nun bir fold'da 1 backtest'i | aşağıdaki formül |
+| **iter** | tüm sweep'in tekrarı (deterministik → tekrar = sıfır bilgi, A19/A22) | — |
+
+**Kanonik formül:**
+```
+cases = Σ_strateji(grid_size) × semboller × timeframe'ler × rolling_folds
+```
+mega baseline: `1122 × 51 × 7 × 3 = 1,201,662 ≈ 1M`. Tek strateji katkısı: `grid_size × cells × folds` (DONCHIAN = 60 × 357 × 3 = 64,260).
+
+**İki runner, iki toplam** (aynı istekten farklı sayı çıkar — bunu netleştir):
+- `mega_walk_forward.py` doğrudan → 20 strateji, Σgrid 1122, 3 fold → ~1.2M case.
+- `overnight_v2_runner.py` (monkey-patch, +19 strateji) → ~43 strateji, Σgrid ~2031, 6 fold → ~4.4M (tarihsel "3.6M" bölgesi). DONCHIAN'ın kendi 60-gridi değişmez; sadece strateji seti + fold sayısı büyür.
+
+**Nerede önceden hesaplı:** her stratejinin `grid_size`, `cases_full_universe` ve optimize/sabit knob'ları `05_REGISTRY/STRATEGY_PARAM_SPECS.json`'da (generator `03_QUANTLENS/tools/build_strategy_param_specs.py`, kod = tek kaynak). Dashboard Strategy Detail §4'te görünür. Grid genişletmek DSR'ı kötüleştirir (A17) → case sayısını bilinçli seç.
+
 ---
 
 ## 4. OVERFIT-SKEPTIK VALİDASYON (zorunlu sıra)
@@ -375,7 +398,8 @@ Loop `=== DEADLINE ===` marker yazınca sırayla, **atlama yasak**:
 | A19 | Deterministic confirmation run dar grid'i dakikada bitirir → makine gece boyu idle-awake watchdog'da bekler (boşa) | Determinizm yüzünden tekrar değer üretmez (seed=md5, mega:731). Idle wall-clock'u NON-identical ağır validasyona harca: 50k bootstrap, multi-seed DSR stability, CPCV-all-cells, ±2-step pre-registered grid, 4h/1D TF. Yoksa makineyi bırak (keep-awake yok) | LESSONS_2026-06-05 C4/C5 |
 | A20 | `probabilistic_pbo` tam `C(n_splits, n_splits/2)` combo listesini `--max-combinations` slice'ından ÖNCE enumerate eder (pbo:63-68); derin CPCV (n_groups=10→44 split) → C(44,22)≈2T → MemoryError, cap işe yaramaz | PBO'yu standart 15-split CPCV'den besle (`cpcv15/`, C(14,7)=1716); derin 45-split CPCV'yi yalnız ek robustness tablosu olarak tut. Uzun vade: estimate_pbo capli iken lazy/random örnekleme | LESSONS_2026-06-05 A20 |
 | A21 | Derin CPCV (45 split) DSR'ı KURTARMAZ — daha çok OOS split CPCV güvenini artırır ama DSR trial count = grid size (A17), split sayısı değil. Geniş 43-strateji discovery DSR'ı yine sıfırlar (72 hücrede 0 final) | Discovery'yi derinleştirme/genişletme; dar pre-registered confirmation grid'e geç (NIGHT-FOLLOWUP-002) | LESSONS_2026-06-05 C7 |
-| A22 | **A19 tekrarı:** ~14h budget verildi, sweep deterministik+20 worker → ~27dk'da bitti, makine ~13h boşa **idle-awake** bekledi (tekrar = byte-identical, sıfır bilgi). Kök neden: launch'ta Gate-0 pre-read (en yeni lessons) ATLANDI; "sorma başla" pre-read'i bypass etti. Cold-onboarding audit prosedürün VAR olduğunu doğrular, UYULDUĞUNU değil (compliance blind spot). | **Launch ÖNCESİ (her zaman, "just start"ta bile): (1) en yeni `lessons_archive/*` oku; (2) runtime'ı budget'a karşı tahmin et (birkaç hücre smoke→extrapolate); (3) sweep budget'tan kısa bitecekse YA ağır-validasyon tier'ı ekle (±2 grid, 50k bootstrap, multi-seed DSR, CPCV-all, PBO, +sembol/TF) YA DA makineyi bırak (idle box'ı keep-awake'te tutma).** Uzun budget'ın default'u tek hızlı pass değil, heavy-validation tier. | LESSONS_2026-06-29 G1/G2 |
+| A22 | **A19 tekrarı:** ~14h budget verildi, sweep deterministik+20 worker → ~27dk'da bitti, makine ~13h boşa **idle-awake** bekledi (tekrar = byte-identical, sıfır bilgi). Kök neden: launch'ta Gate-0 pre-read (en yeni lessons) ATLANDI; "sorma başla" pre-read'i bypass etti. Cold-onboarding audit prosedürün VAR olduğunu doğrular, UYULDUĞUNU değil (compliance blind spot). | **Launch ÖNCESİ (her zaman, "just start"ta bile): (1) en yeni `lessons_archive/*` oku; (2) runtime'ı budget'a karşı tahmin et (birkaç hücre smoke→extrapolate); (3) sweep budget'tan kısa bitecekse YA ağır-validasyon tier'ı ekle (±2 grid, 50k bootstrap, multi-seed DSR, CPCV-all, PBO, +sembol/TF) YA DA makineyi bırak (idle box'ı keep-awake'te tutma).** Uzun budget'ın default'u tek hızlı pass değil, heavy-validation tier. **2026-07-01'de DOĞRU uygulandı** (LESSONS_2026-07-01 G1): genuinely-new varyant validasyonu + heavy tier, 31dk, makine bırakıldı. | LESSONS_2026-06-29 G1/G2 |
+| A23 | **mega sweep universe hardcoded LEGACY.** `SYMBOLS` (mega:81 = 17 crypto USDT) + `TIMEFRAMES` (mega:87 = 15m,1h,2h,4h,1D) sabit. `MEGA_BUNDLE_MANIFEST` yalnız DATA yükleme yolunu bağlar, sweep evrenini DEĞİL. Sadece manifest'i set eden bir launcher hâlâ legacy 17×5 evreni tarar (multi-asset crypto sembolleriyle kısmi eşleşme → yanıltıcı "85-cell" sonuç). | Runner evreni **manifest'ten türetip** `mw.SYMBOLS`/`mw.TIMEFRAMES`'i override etsin (`overnight_turtle_sweep_20260701.py` referans) YA DA tam evren için explicit `--symbol`/`--tf` geç. Ayrıca: runner `mw.main()`'i `if __name__=="__main__"` guard'ına al (variant patch module-level kalsın ki Windows-spawn worker'ları alsın; yoksa recursion). | LESSONS_2026-07-01 G2 |
 
 ---
 
@@ -423,6 +447,7 @@ Bu dosya değiştirilir. Her gece sonu:
 5. CHANGELOG bölümü buraya, son 5 değişiklik
 
 ### CHANGELOG
+- 2026-07-01 — turtle_heavy gece: **A22 DOĞRU uygulandı** (06-29'un aksine). Genuinely-new `GEN_DONCHIAN_TURTLE` (Faz-3 varyant) tam-evren validasyonu + 06-29 survivor'larına ilk derin CPCV/PBO; deterministik re-run reddedildi; 31dk'da bitti, makine bırakıldı (idle-awake yok). Sonuç: robust_final 0 (Turtle stop sistematik edge yok, %40 hücrede daha iyi). **A23 eklendi** (mega sweep universe hardcoded legacy — manifest yalnız veri; runner override etmeli + `__main__` guard). **A21 51×7'de yeniden doğrulandı** (derin CPCV pass≥0.80: 156 base/24 turtle + PBO≈0 ama robust_final 0 — CPCV/PBO ≠ DSR). LESSONS_2026-07-01.
 - 2026-06-29 — Multi-asset sweep (7,140 hücre, 20 worker) ~27dk'da bitti → ~13h boşa idle-awake (**A19 tekrarı**). Kök neden: launch'ta Gate-0 en-yeni-lessons pre-read ATLANDI ("just start" bypass). **A22 eklendi:** launch öncesi her zaman (1) en yeni lessons oku, (2) runtime'ı budget'a karşı tahmin et, (3) kısa bitecekse heavy-validation tier ekle YA DA makineyi bırak. Audit compliance blind-spot (prosedür var ≠ uyuluyor) belgelendi. LESSONS_2026-06-29 G1/G2.
 - 2026-06-05 (akşam) — Heavy-tier gece (Claude). Determinizm tuzağı baştan tanındı, loop-pad reddedildi. İlk 43-strateji enriched sweep (3655 hücre, 72 PASS+), 3× derin CPCV (45 split, 24 hücre ≥0.80), PBO=0.0, Gate2 53 PASS/19 FAIL, scorecard_v2 promotable 0 (Gate3 INCOMPLETE). **C7/A21:** derin CPCV DSR'ı kurtarmıyor (Gate2∧CPCV≥0.80∧DSR≥0.50 = 0/72). A20 (PBO OOM derin CPCV'de) + C8 (alpha short-trap) eklendi. Çıktı: `05_BACKTEST_RESULTS/heavy_tier_2026-06-05/`. LESSONS_2026-06-05.
 - 2026-06-05 — Confirmation (Option B) gece: dar pre-registered grid DSR power'ı geri getirdi (en iyiler 0.0→0.34-0.38) ama hiçbir aday 0.50 eşiğini geçmedi → `STATISTICALLY_UNCONFIRMED`. A18 morning-report fix doğrulandı (down_market=6 == ALPHA_DONE). A19 eklendi (deterministic run idle-awake israfı). Determinizm mekanizması belgelendi (md5 seed, mega:731): tekrar = sıfır bilgi. LESSONS_2026-06-05.
