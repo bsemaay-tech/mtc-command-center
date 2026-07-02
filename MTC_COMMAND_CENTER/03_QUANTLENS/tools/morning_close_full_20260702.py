@@ -86,6 +86,7 @@ def main():
              "validation); machine released when backlog exhausted, not idled.")
     L.append("")
     L.append("_Mechanical close. Lessons write-back + handoff by the operator/agent next session._")
+    OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text("\n".join(L), encoding="utf-8")
     print(f"[close] wrote {OUT}")
 
