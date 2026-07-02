@@ -97,6 +97,10 @@ else {
   "done" | Set-Content "$RUN\_D.done"; Log "Stage D done"; HB "D" "done"
 }
 
+# ---------- Mechanical morning close (inline, while awake) ----------
+Log "running mechanical close -> MORNING_REPORT.md"
+& $PY "$TOOLS\morning_close_full_20260702.py" *>> "$RUN\close.log"
+
 # ---------- Completion: RELEASE (backlog exhausted) ----------
 "ALL_DONE $(Get-Date -Format o)" | Set-Content "$RUN\_ALL_DONE.marker"
 Log "=== BACKLOG EXHAUSTED at $(Get-Date -Format HH:mm:ss). Releasing keep-awake (A22/A24). ==="
