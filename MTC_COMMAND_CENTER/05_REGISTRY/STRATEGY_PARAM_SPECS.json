@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_utc": "2026-07-01T15:02:47Z",
+  "generated_utc": "2026-07-02T09:56:44Z",
   "generator": "03_QUANTLENS/tools/build_strategy_param_specs.py",
   "source_of_truth": "mega_walk_forward.GRIDS (code) + STRATEGY_PARAM_SPEC_ANNOTATIONS.json (curated overlay)",
   "read_only": true,
@@ -53,11 +53,11 @@
     "note": "Per-strategy param -> Pine input() maps live in each strategy's mtc_v2_parity block."
   },
   "library_totals": {
-    "strategies": 21,
-    "sum_grid_size": 1146,
+    "strategies": 27,
+    "sum_grid_size": 1350,
     "cells": 357,
     "rolling_folds": 3,
-    "total_cases_full_universe": 1227366
+    "total_cases_full_universe": 1445850
   },
   "strategies": [
     {
@@ -1675,6 +1675,358 @@
           "phase": "3-RnD"
         }
       ],
+      "mtc_v2_parity": {
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
+      }
+    },
+    {
+      "strategy_id": "GEN_TRIPLE_EMA_TUNED",
+      "origin": "variant",
+      "validation_status": "UNVALIDATED",
+      "grid_size": 54,
+      "optimizable": {
+        "e_fast": {
+          "values": [
+            3,
+            5,
+            8
+          ],
+          "count": 3,
+          "type": "int",
+          "min": 3,
+          "max": 8
+        },
+        "e_mid": {
+          "values": [
+            13,
+            21
+          ],
+          "count": 2,
+          "type": "int",
+          "min": 13,
+          "max": 21
+        },
+        "e_slow": {
+          "values": [
+            34,
+            50,
+            100
+          ],
+          "count": 3,
+          "type": "int",
+          "min": 34,
+          "max": 100
+        },
+        "touch_atr": {
+          "values": [
+            0.25,
+            0.5,
+            0.75
+          ],
+          "count": 3,
+          "type": "float",
+          "min": 0.25,
+          "max": 0.75
+        }
+      },
+      "cases_full_universe": 57834,
+      "cases_formula": "grid_size x cells x rolling_folds",
+      "annotation_status": "todo",
+      "grid_rationale": "",
+      "fixed_knobs": [],
+      "missing_knobs": [],
+      "mtc_v2_parity": {
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
+      }
+    },
+    {
+      "strategy_id": "GEN_EMA_PULLBACK_TUNED",
+      "origin": "variant",
+      "validation_status": "UNVALIDATED",
+      "grid_size": 48,
+      "optimizable": {
+        "ema_len": {
+          "values": [
+            5,
+            8,
+            13,
+            21
+          ],
+          "count": 4,
+          "type": "int",
+          "min": 5,
+          "max": 21
+        },
+        "pullback_atr": {
+          "values": [
+            0.3,
+            0.5,
+            0.65
+          ],
+          "count": 3,
+          "type": "float",
+          "min": 0.3,
+          "max": 0.65
+        },
+        "impulse_atr": {
+          "values": [
+            0.5,
+            1.0
+          ],
+          "count": 2,
+          "type": "float",
+          "min": 0.5,
+          "max": 1.0
+        },
+        "slope_window": {
+          "values": [
+            3,
+            5
+          ],
+          "count": 2,
+          "type": "int",
+          "min": 3,
+          "max": 5
+        }
+      },
+      "cases_full_universe": 51408,
+      "cases_formula": "grid_size x cells x rolling_folds",
+      "annotation_status": "todo",
+      "grid_rationale": "",
+      "fixed_knobs": [],
+      "missing_knobs": [],
+      "mtc_v2_parity": {
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
+      }
+    },
+    {
+      "strategy_id": "GEN_BB_MULT_TUNED",
+      "origin": "variant",
+      "validation_status": "UNVALIDATED",
+      "grid_size": 24,
+      "optimizable": {
+        "bb_len": {
+          "values": [
+            20,
+            30,
+            50
+          ],
+          "count": 3,
+          "type": "int",
+          "min": 20,
+          "max": 50
+        },
+        "mult": {
+          "values": [
+            1.5,
+            2.0,
+            2.5,
+            3.0
+          ],
+          "count": 4,
+          "type": "float",
+          "min": 1.5,
+          "max": 3.0
+        },
+        "body_atr": {
+          "values": [
+            0.2,
+            0.45
+          ],
+          "count": 2,
+          "type": "float",
+          "min": 0.2,
+          "max": 0.45
+        }
+      },
+      "cases_full_universe": 25704,
+      "cases_formula": "grid_size x cells x rolling_folds",
+      "annotation_status": "todo",
+      "grid_rationale": "",
+      "fixed_knobs": [],
+      "missing_knobs": [],
+      "mtc_v2_parity": {
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
+      }
+    },
+    {
+      "strategy_id": "GEN_MACD_NOFILTER",
+      "origin": "variant",
+      "validation_status": "UNVALIDATED",
+      "grid_size": 27,
+      "optimizable": {
+        "fast": {
+          "values": [
+            8,
+            12,
+            17
+          ],
+          "count": 3,
+          "type": "int",
+          "min": 8,
+          "max": 17
+        },
+        "slow": {
+          "values": [
+            21,
+            26,
+            34
+          ],
+          "count": 3,
+          "type": "int",
+          "min": 21,
+          "max": 34
+        },
+        "signal": {
+          "values": [
+            5,
+            9,
+            13
+          ],
+          "count": 3,
+          "type": "int",
+          "min": 5,
+          "max": 13
+        }
+      },
+      "cases_full_universe": 28917,
+      "cases_formula": "grid_size x cells x rolling_folds",
+      "annotation_status": "todo",
+      "grid_rationale": "",
+      "fixed_knobs": [],
+      "missing_knobs": [],
+      "mtc_v2_parity": {
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
+      }
+    },
+    {
+      "strategy_id": "GEN_RSI_TREND_GATED",
+      "origin": "variant",
+      "validation_status": "UNVALIDATED",
+      "grid_size": 27,
+      "optimizable": {
+        "rsi_len": {
+          "values": [
+            7,
+            14,
+            21
+          ],
+          "count": 3,
+          "type": "int",
+          "min": 7,
+          "max": 21
+        },
+        "oversold": {
+          "values": [
+            25,
+            30,
+            35
+          ],
+          "count": 3,
+          "type": "int",
+          "min": 25,
+          "max": 35
+        },
+        "recovery": {
+          "values": [
+            40,
+            45,
+            50
+          ],
+          "count": 3,
+          "type": "int",
+          "min": 40,
+          "max": 50
+        }
+      },
+      "cases_full_universe": 28917,
+      "cases_formula": "grid_size x cells x rolling_folds",
+      "annotation_status": "todo",
+      "grid_rationale": "",
+      "fixed_knobs": [],
+      "missing_knobs": [],
+      "mtc_v2_parity": {
+        "pine_impl_status": "none",
+        "parity_required": true,
+        "status": "deferred_until_promotion",
+        "phase": "2-parity",
+        "note": "No Pine implementation yet; the param -> input() map is authored at promotion. Any Pine port must ALSO replicate the global execution model (entry, 2R target, holding limit, cost) or the optimized result will not reproduce."
+      }
+    },
+    {
+      "strategy_id": "GEN_GOLDEN_ATR_STOP",
+      "origin": "variant",
+      "validation_status": "UNVALIDATED",
+      "grid_size": 24,
+      "optimizable": {
+        "fast_ema": {
+          "values": [
+            20,
+            50
+          ],
+          "count": 2,
+          "type": "int",
+          "min": 20,
+          "max": 50
+        },
+        "slow_ema": {
+          "values": [
+            100,
+            200
+          ],
+          "count": 2,
+          "type": "int",
+          "min": 100,
+          "max": 200
+        },
+        "pull_atr": {
+          "values": [
+            0.25,
+            0.5
+          ],
+          "count": 2,
+          "type": "float",
+          "min": 0.25,
+          "max": 0.5
+        },
+        "atr_stop_mult": {
+          "values": [
+            1.5,
+            2.5,
+            3.5
+          ],
+          "count": 3,
+          "type": "float",
+          "min": 1.5,
+          "max": 3.5
+        }
+      },
+      "cases_full_universe": 25704,
+      "cases_formula": "grid_size x cells x rolling_folds",
+      "annotation_status": "todo",
+      "grid_rationale": "",
+      "fixed_knobs": [],
+      "missing_knobs": [],
       "mtc_v2_parity": {
         "pine_impl_status": "none",
         "parity_required": true,
