@@ -1,5 +1,30 @@
 # GLOBAL_HANDOFF
 
+## Claude Opus 4.8 2026-07-02 — Overnight turtle_heavy close: A22 done RIGHT, nothing promotable
+
+Same 14h "work till morning, don't waste it" prompt that caused the 06-29 idle-waste. This time A22
+was applied correctly: recognized re-running the base sweep = deterministic = zero-info and refused it;
+ran genuinely-NEW work — full-universe validation of the Faz-3 `GEN_DONCHIAN_TURTLE` variant + the first
+deep 45-split CPCV/PBO on the 06-29 survivors. Orchestrator (`overnight_turtle_heavy_2026-07-01.ps1`,
+16 workers, keep-awake, reboot-resume, deadline 08:30) ran **18:45→19:16 (~31 min), 5 stages, zero
+crashes, then RELEASED the machine** (not idled to 08:30). Auto close-watcher wrote MORNING_REPORT at
+completion (scheduling backend was 404).
+
+**Result: robust_final = 0 everywhere. Nothing promotable.** TURTLE 357 cells → 36 PASS/STRONG, 5 BH-FDR
+survivors, 0 robust. The Turtle STRUCTURAL stop beat the base GEN_DONCHIAN_BREAKOUT in only 40% of 315
+comparable cells (no systematic edge). Heavy tier: deep CPCV pass_rate≥0.80 on 156 base + 24 turtle
+cells, PBO≈0 — **yet 0 robust_final**, a fresh at-scale confirmation of **A21** (CPCV/PBO ≠ DSR; DSR is
+the binding gate, A17). Two pre-launch footguns caught + fixed → new anti-pattern **A23** (mega's sweep
+universe is hardcoded LEGACY 17-crypto×5-TF; MEGA_BUNDLE_MANIFEST only binds DATA — runner must override
+mw.SYMBOLS/TIMEFRAMES from the manifest + `__main__`-guard for Windows-spawn workers).
+
+Close done: MORNING_REPORT (`05_BACKTEST_RESULTS/turtle_heavy_2026-07-01/`), lessons
+`OVERNIGHT_LESSONS_2026-07-01.md` + INDEX, runbook §8 A23 + CHANGELOG. Dashboard: run left as research
+output, NOT promoted (0 robust; no profile_result/top_results fabricated). Runners committed on
+`feature/strategy-param-specs` (PR #15). **Path forward: NEW strategy logic with real edge — the
+breakout family (base + Turtle-stop variant) is confirmed non-robust; Faz 3b trailing-exit not
+motivated by this result.**
+
 ## Claude Opus 4.8 2026-07-01 — Strategy param-spec registry (Faz 1, read-only) — branch not merged
 
 Barış asked how optimization params are chosen, where, and whether AI_MEMORY documents the case-count arithmetic uniformly. Findings surfaced a real gap: the search grid for each strategy is **hardcoded, arbitrary, undocumented, invisible** (buried in `mega_walk_forward.GRIDS` + `build_signals`), the `case = grids × symbols × TFs × folds` formula is written nowhere canonical, and "case" is used loosely (cells vs combos vs evals). Many knobs are **hardcoded, not swept** (DONCHIAN ATR=14, no opposite-channel exit, long-only; TRIPLE_EMA's 5/13/50 stack fully fixed) + a global execution model (2R target, 96-bar hold limit, 8bps cost, next-open entry) applies to all and is optimized by none.

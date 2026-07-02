@@ -5,7 +5,7 @@ Branch `feature/strategy-param-specs`, pushed, **PR [#15](https://github.com/bse
 **Next:**
 - **[AI: Barış]** review + merge PR #15.
 - **[AI: Claude, approval-gated] Faz 3b:** TRUE trailing opposite-channel EXIT + short-side need an engine-core `simulate_slice` change (dynamic stop / direction) — affects ALL strategies → explicit approval before touching the shared simulator.
-- **[AI: Claude/Barış] validate `GEN_DONCHIAN_TURTLE`:** two-stage (broad discovery → narrow pre-registered confirmation), promote nothing without robust_final. Expect the same null per the library-wide finding — but it is genuinely NEW logic, so worth one honest pass.
+- ~~validate `GEN_DONCHIAN_TURTLE`~~ **DONE 2026-07-01** (turtle_heavy overnight): 357-cell full-universe + deep CPCV/PBO. **robust_final 0**; structural stop beat base in only 40% of cells (no systematic edge). Confirmed A21 (CPCV/PBO ≠ DSR) at 51×7 scale. Report: `05_BACKTEST_RESULTS/turtle_heavy_2026-07-01/MORNING_REPORT.md`; lessons `OVERNIGHT_LESSONS_2026-07-01.md`. **Do NOT pursue Faz 3b trailing-exit** — the structural-stop result does not motivate the engine-core change.
 - **[AI: Claude] extend variants:** the remaining Faz-3 missing_knobs across the 20 strategies (promote fixed knobs like TRIPLE_EMA 5/13/50, BB mult, 8EMA period; add filters) — each a NEW variant in VARIANT_LOG, not a mutation of the base strategy.
 
 ## ✅ OVERNIGHT MULTI-ASSET SWEEP DONE 2026-06-30 (Claude Opus 4.8) — nothing promotable

@@ -18,6 +18,7 @@
 | 2026-06-04 | [`OVERNIGHT_LESSONS_2026-06-04.md`](OVERNIGHT_LESSONS_2026-06-04.md) | 11.5h / 20 iter | 2. sıfır-crash gece (3.44M eval); morning report down-market sayım hatası (A18, 78≠8); gece-sonu konvansiyonu atlandı (G5); Codex çalıştırdı |
 | 2026-06-05 | [`OVERNIGHT_LESSONS_2026-06-05.md`](OVERNIGHT_LESSONS_2026-06-05.md) | confirmation + watchdog | Dar confirmation run hızlı bitti; A18 fix doğrulandı; DSR robust=0/Gate2 pass=0; watchdog sabaha kadar awake |
 | 2026-06-29 | [`OVERNIGHT_LESSONS_2026-06-29.md`](OVERNIGHT_LESSONS_2026-06-29.md) | ~27dk + ~13h idle | **A19 tekrarı** — multi-asset sweep (7140 hücre) hızlı bitti, makine boşa awake; kök neden launch'ta lessons pre-read atlandı; **A22** + audit compliance blind-spot |
+| 2026-07-01 | [`OVERNIGHT_LESSONS_2026-07-01.md`](OVERNIGHT_LESSONS_2026-07-01.md) | 31dk + released | **A22 DOĞRU uygulandı** (06-29 tekrarı DEĞİL): genuinely-new TURTLE varyant validasyonu + heavy tier, deterministik re-run reddedildi, bitince makine bırakıldı. **A23** (mega sweep universe hardcoded legacy — manifest sadece veri). **A21** 51×7'de yeniden doğrulandı (derin CPCV+PBO≈0 ama robust_final 0). Turtle stop sistematik edge yok. |
 
 ## Convention
 
