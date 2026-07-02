@@ -1,5 +1,60 @@
 # ACTIVE_FILES
 
+## 2026-07-02 Codex GPT-5 SYSTEM_TEST_ONLY vertical slice implementation
+- `.gitignore`
+- `MTC_COMMAND_CENTER\03_QUANTLENS\system_test\stg002_system_test_replay_20260702T171958Z\emitter_manifest.json` (git-ignored runtime output)
+- `MTC_COMMAND_CENTER\03_QUANTLENS\system_test\stg002_system_test_replay_20260702T171958Z\expected_signals.jsonl` (git-ignored runtime output)
+- `MTC_COMMAND_CENTER\03_QUANTLENS\system_test\stg002_system_test_replay_20260702T171958Z\received_signals.jsonl` (git-ignored runtime output)
+- `MTC_COMMAND_CENTER\03_QUANTLENS\system_test\stg002_system_test_replay_20260702T171958Z\simulated_fills.jsonl` (git-ignored runtime output)
+- `MTC_COMMAND_CENTER\03_QUANTLENS\system_test\stg002_system_test_replay_20260702T171958Z\reconciliation_summary.json` (git-ignored runtime output)
+- `MTC_COMMAND_CENTER\03_QUANTLENS\system_test\stg002_system_test_replay_20260702T171958Z\reconciliation_report.md` (git-ignored runtime output)
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\vertical_slice\__init__.py`
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\vertical_slice\constants.py`
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\vertical_slice\contracts.py`
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\vertical_slice\stg002_replay_emitter.py`
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\vertical_slice\local_receiver.py`
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\vertical_slice\reconciler.py`
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_vertical_slice_contracts.py`
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_vertical_slice_replay.py`
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_vertical_slice_receiver.py`
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_vertical_slice_reconciler.py`
+- Scope completed: local implementation, pre-run readiness, and exactly one
+  approved local STG002 SYSTEM_TEST_ONLY replay run.
+- Run result: `status=OK`, `EXPECTED=888`, `ENTRY=444`, `EXIT=444`,
+  `RECEIVED accepted=888`, `duplicates=0`, `rejected=0`,
+  `simulated_fills=888`, `round_trips=444`, `unexplained=0`.
+- Verification: focused pytest `37 passed`; unittest discovery `37 OK`;
+  py_compile PASS; `git check-ignore` confirms `03_QUANTLENS\system_test\`
+  is ignored; independent JSONL count check passed; run-id absent from
+  `03_QUANTLENS\research\` and `03_QUANTLENS\05_BACKTEST_RESULTS\`;
+  protected-path status clean.
+- Boundary still active: SYSTEM_TEST_ONLY / NOT STRATEGY_APPROVED /
+  NO REAL MONEY. No schema, broker/exchange/testnet, TradingView,
+  WunderTrading, Pine, parity, `MTC_V2`, `02_MTC_BACKTEST`, or `07_ADAPTERS`
+  work.
+- Next gate: review/audit the completed local replay result. Separate approval
+  is required before any V1.1 server, CLI, dashboard execution UI,
+  engine-forward generation, schema, broker, exchange, testnet, TradingView,
+  WunderTrading, Pine, parity, `MTC_V2`, paper, or live path.
+
+## 2026-07-02 Codex GPT-5 SYSTEM_TEST_ONLY vertical slice planning
+- `MTC_COMMAND_CENTER\00_AGENT_PROTOCOLS\EXECUTION_ARCHITECTURE_DECISION.md`
+- `MTC_COMMAND_CENTER\00_AGENT_PROTOCOLS\VERTICAL_SLICE_SCOPE.md`
+- `MTC_COMMAND_CENTER\00_AGENT_PROTOCOLS\PAPER_RECONCILIATION_PROTOCOL.md`
+- `MTC_COMMAND_CENTER\00_AGENT_PROTOCOLS\SYSTEM_TEST_VERTICAL_SLICE_IMPLEMENTATION_PLAN.md`
+- `MTC_COMMAND_CENTER\11_TRIAGE\FABLE_AUDIT_PROMPT_SYSTEM_TEST_VERTICAL_SLICE_PLAN_2026-07-02.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\LIVE_TRADING_GATE.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\DECISIONS.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\GLOBAL_HANDOFF.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\NEXT_STEPS.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\SESSION_LOG.md`
+- `MTC_COMMAND_CENTER\_AI_MEMORY\ACTIVE_FILES.md`
+- Approved benchmark: `STG002 / QL_ALPHA_LINK_8EMA_1H`.
+- Boundary: planning only; SYSTEM_TEST_ONLY / NOT STRATEGY_APPROVED / NO REAL MONEY.
+- No code, schema file, tests/backtests, server, broker/exchange/testnet,
+  TradingView, WunderTrading, Pine, parity, `MTC_V2`, `02_MTC_BACKTEST`, or
+  `07_ADAPTERS` work authorized.
+
 ## 2026-06-21 Claude Opus 4.8 Graphify piloted (KEEP on-demand)
 - `MTC_COMMAND_CENTER\09_DOCS\AI_TOOLING\pilots\graphify_pilot.md` (PASS; local/keyless code graph; impact analysis accurate)
 - installed: `graphifyy` v0.8.44 via `uv tool install` (global uv tool, no repo footprint); NOT `graphify install` (skill reg deferred)

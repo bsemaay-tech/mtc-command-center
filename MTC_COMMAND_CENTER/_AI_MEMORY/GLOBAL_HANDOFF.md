@@ -1,5 +1,189 @@
 # GLOBAL_HANDOFF
 
+## Codex GPT-5 2026-07-02 - STG002 SYSTEM_TEST_ONLY local replay run completed
+
+Baris approved the exact Step 9.1 sentence for one local replay run:
+
+`I approve one local SYSTEM_TEST_ONLY replay run for STG002. No broker, no TradingView, no WunderTrading, no testnet, no real money.`
+
+Codex ran exactly one local replay through the approved importable entry
+function `run_local_replay(...)`.
+
+Runtime output:
+
+- `MTC_COMMAND_CENTER/03_QUANTLENS/system_test/stg002_system_test_replay_20260702T171958Z/`
+
+Run artifacts present:
+
+- `emitter_manifest.json`
+- `expected_signals.jsonl`
+- `received_signals.jsonl`
+- `simulated_fills.jsonl`
+- `reconciliation_summary.json`
+- `reconciliation_report.md`
+
+Result:
+
+- Status: `OK`
+- EXPECTED payloads: `888`
+- EXPECTED ENTRY/EXIT: `444` / `444`
+- RECEIVED rows: `888`
+- RECEIVED dispositions: `accepted=888`, `duplicates=0`, `rejected=0`
+- Simulated fills: `888`
+- Simulated round trips: `444`
+- Unexplained count: `0`
+
+Verification:
+
+- Step 0 preflight passed: protected-path status clean, STG002 source artifacts
+  exist, pytest available, and `system_test/` ignored by `.gitignore`.
+- `python -m py_compile` on all vertical-slice implementation modules -> PASS.
+- `python -m pytest ...test_vertical_slice_*.py -q` -> `37 passed`.
+- `python -m unittest discover -s MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests -p "test_vertical_slice_*.py"` -> `Ran 37 tests ... OK`.
+- Independent JSONL count check confirmed `ENTRY=444`, `EXIT=444`,
+  `accepted=888`, `round_trips=444`, and `unexplained_count=0`.
+- `git check-ignore -v` confirms the runtime output is ignored.
+- Run-id search found no trace under `03_QUANTLENS/research/` or
+  `03_QUANTLENS/05_BACKTEST_RESULTS/`.
+- Protected-path status for `06_SCHEMAS`, `01_PINE`, `02_MTC_BACKTEST`, and
+  `07_ADAPTERS` -> no output.
+
+Boundary: this is SYSTEM_TEST_ONLY / NOT STRATEGY_APPROVED / NO REAL MONEY.
+No schema file, broker, exchange, testnet, TradingView, WunderTrading, Pine,
+parity, `MTC_V2`, strategy approval, paper-trading approval, or live-trading
+approval was touched. Stop here before extension legs.
+
+Recommended next action: review the completed run artifacts and, if desired,
+send a narrow read-only Fable audit prompt for this run result before any V1.1
+server, CLI, dashboard, TradingView, WunderTrading, testnet, schema, parity, or
+engine-forward extension is planned.
+
+## Codex GPT-5 2026-07-02 - SYSTEM_TEST_ONLY pre-run readiness patch
+
+Baris approved the narrow pre-run readiness patch. Changes:
+
+- `.gitignore` now ignores `MTC_COMMAND_CENTER/03_QUANTLENS/system_test/`.
+- `03_QUANTLENS/tools/vertical_slice/stg002_replay_emitter.py` now exposes
+  `run_local_replay(...)`, an importable local entry function that writes the
+  five local ledgers/reports into an explicit output directory.
+- `03_QUANTLENS/tools/tests/test_vertical_slice_replay.py` now covers the entry
+  function using synthetic temp CSVs only.
+
+No real STG002 replay run was performed. The tests exercised only temporary
+synthetic CSVs and temp output directories. No runtime output was written under
+`03_QUANTLENS/system_test/`. No schema file, broker, exchange, testnet,
+TradingView, WunderTrading, Pine, parity, `MTC_V2`, or real-money path was
+touched.
+
+Verification:
+
+- TDD RED: focused replay test failed because `run_local_replay` did not exist.
+- `python -m pytest ...test_vertical_slice_replay.py -q` -> `6 passed`.
+- `python -m pytest ...test_vertical_slice_*.py -q` -> `37 passed`.
+- `python -m unittest discover -s MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests -p "test_vertical_slice_*.py"` -> `Ran 37 tests ... OK`.
+- `python -m py_compile` on all vertical-slice implementation modules -> PASS.
+- `git check-ignore -v MTC_COMMAND_CENTER\03_QUANTLENS\system_test\_probe`
+  now resolves through `.gitignore`.
+- Protected-path status for `06_SCHEMAS`, `01_PINE`, `02_MTC_BACKTEST`,
+  `07_ADAPTERS`, and `03_QUANTLENS/system_test` -> no output.
+
+Next gate: Baris may now approve or reject the separate Step 9.1 local replay
+run. That run remains SYSTEM_TEST_ONLY / NOT STRATEGY_APPROVED / NO REAL MONEY.
+
+## Codex GPT-5 2026-07-02 - STG002 SYSTEM_TEST_ONLY vertical slice implemented, no replay run
+
+Baris approved the exact implementation sentence for the STG002
+SYSTEM_TEST_ONLY local vertical slice. Implemented V1 only: constants,
+in-code contract validation, trades-driven replay emitter, pure local receiver,
+three-ledger reconciler, and focused tests.
+
+Files added:
+
+- `03_QUANTLENS/tools/vertical_slice/__init__.py`
+- `03_QUANTLENS/tools/vertical_slice/constants.py`
+- `03_QUANTLENS/tools/vertical_slice/contracts.py`
+- `03_QUANTLENS/tools/vertical_slice/stg002_replay_emitter.py`
+- `03_QUANTLENS/tools/vertical_slice/local_receiver.py`
+- `03_QUANTLENS/tools/vertical_slice/reconciler.py`
+- `03_QUANTLENS/tools/tests/test_vertical_slice_contracts.py`
+- `03_QUANTLENS/tools/tests/test_vertical_slice_replay.py`
+- `03_QUANTLENS/tools/tests/test_vertical_slice_receiver.py`
+- `03_QUANTLENS/tools/tests/test_vertical_slice_reconciler.py`
+
+Implementation notes: Cline was attempted first with the repo-required
+`--auto-approve false` setting and returned `BLOCKED_BY_AUTO_APPROVE`; no Cline
+writes occurred. `_deepseek_driver` was attempted next with an allowlist but
+hit `max_iters` and wrote only invalid inline-copy tests. Codex replaced those
+with real import-based tests, verified the RED missing-module failure, then
+implemented the package manually.
+
+Verification:
+
+- RED check before implementation: focused pytest failed only because
+  `vertical_slice` modules did not exist.
+- `python -m pytest ...test_vertical_slice_*.py -q` -> `36 passed`.
+- `python -m unittest discover -s MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests -p "test_vertical_slice_*.py"` -> `Ran 36 tests ... OK`.
+- `python -m py_compile` on all five implementation modules -> PASS.
+- `git diff --check` on the new slice files/tests -> PASS.
+- Protected-path status for `06_SCHEMAS`, `01_PINE`, `02_MTC_BACKTEST`, and
+  `07_ADAPTERS` -> no output.
+- Safety grep found no network/broker/exchange API imports. The only
+  `system_test` hits are the intended `system_test_replay` risk label.
+
+No local replay run was performed. No files were written under
+`03_QUANTLENS/system_test/`, `03_QUANTLENS/research/`, or
+`03_QUANTLENS/05_BACKTEST_RESULTS/`. No schema file, broker, exchange, testnet,
+TradingView, WunderTrading, Pine, parity, `MTC_V2`, or live/paper-money path was
+touched.
+
+Important next gate: `git check-ignore` currently reports
+`MTC_COMMAND_CENTER/03_QUANTLENS/system_test/_probe` as `not ignored`. Before
+the separately approved first local replay run, Baris must approve adding or
+confirming the ignore rule, then separately approve the Step 9.1 run sentence.
+
+## Codex GPT-5 2026-07-02 - Vertical slice plan and Fable audit prompt drafted
+
+Drafted the next-stage docs for the approved STG002 SYSTEM_TEST_ONLY benchmark:
+`00_AGENT_PROTOCOLS/SYSTEM_TEST_VERTICAL_SLICE_IMPLEMENTATION_PLAN.md` and
+`11_TRIAGE/FABLE_AUDIT_PROMPT_SYSTEM_TEST_VERTICAL_SLICE_PLAN_2026-07-02.md`.
+
+Plan choice: replay-first using existing STG002 signal/trade CSV artifacts, then
+local receiver, fake fills, reconciliation, and D1-D5 drills. This avoids
+engine-forward generation, broker/testnet/network paths, Pine, parity, and
+schema writes in the first implementation. Implementation is still blocked
+until Baris gives a separate explicit approval. Next step: give the Fable audit
+prompt to Fable, then revise the plan if Fable finds blockers.
+
+Fable audit returned `SAFE ONLY AFTER PLAN FIXES`. Codex patched the plan text:
+trades-driven emission from `trades.csv` only, `signals.csv` only for the
+entry-while-open drill, output root moved from `03_QUANTLENS/research/` to
+`03_QUANTLENS/system_test/`, manifest labeling required before payload rows,
+timestamp canonicalization tests added, pytest preflight/unittest fallback
+added, D8-D10 local drills added, no default auth token allowed, and V1 scope
+cut to exclude CLI, standalone drill generator, and separate fill simulator.
+Implementation remains blocked until Baris gives the separate implementation
+approval sentence from the fixed plan.
+
+## Codex GPT-5 2026-07-02 - STG002 SYSTEM_TEST_ONLY benchmark approved
+
+Baris approved Gate V0 for SYSTEM_TEST_ONLY vertical-slice planning, then
+approved `STG002 / QL_ALPHA_LINK_8EMA_1H` as the benchmark. This is only a
+systems-plumbing benchmark decision. It is not strategy approval, paper
+approval, live approval, promotion evidence, or profitability evidence.
+
+Read-only benchmark audit basis: STG002 has 444 full-history trade rows versus
+235 for STG001, 121 lockbox trades versus 53, 5/5 positive windows versus 4/5,
+and an existing PineTS producer-parity result showing 100 percent signal
+agreement on the compared sample. STG001 remains a simpler fallback but has
+weaker parity evidence and fewer lifecycle events.
+
+Current route: Python remains the source of truth. The next safe step is a
+draft implementation plan only for a localhost/fake-money vertical slice:
+emitter, local receiver, reconciliation reporter, and induced-failure drills.
+Do not write code, schemas, run tests/backtests, launch servers, touch Pine,
+parity, `MTC_V2`, `02_MTC_BACKTEST`, `07_ADAPTERS`, broker/exchange/testnet,
+TradingView, or WunderTrading without a separate explicit approval.
+
 ## Claude Opus 4.8 2026-07-02 — Overnight turtle_heavy close: A22 done RIGHT, nothing promotable
 
 Same 14h "work till morning, don't waste it" prompt that caused the 06-29 idle-waste. This time A22

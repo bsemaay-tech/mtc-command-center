@@ -1,5 +1,52 @@
 # NEXT_STEPS
 
+## SYSTEM_TEST_ONLY VERTICAL SLICE - Gate V0 planning approved 2026-07-02
+
+Baris approved Gate V0 planning and selected `STG002 / QL_ALPHA_LINK_8EMA_1H`
+as the benchmark. This is a fake-money systems-plumbing benchmark only:
+SYSTEM_TEST_ONLY / NOT STRATEGY_APPROVED / NO REAL MONEY.
+
+**Next:**
+- ~~**[AI: Codex|Claude]** write a draft implementation plan only for the local
+  core slice: signal emitter, localhost receiver, reconciliation reporter, and
+  induced-failure drills. No code yet.~~ DONE 2026-07-02:
+  `00_AGENT_PROTOCOLS/SYSTEM_TEST_VERTICAL_SLICE_IMPLEMENTATION_PLAN.md`.
+- ~~**[AI: Codex|Claude]** prepare a narrow Fable audit prompt for that
+  implementation plan before any code is approved.~~ DONE 2026-07-02:
+  `11_TRIAGE/FABLE_AUDIT_PROMPT_SYSTEM_TEST_VERTICAL_SLICE_PLAN_2026-07-02.md`.
+- ~~**[AI: Baris]** send the Fable audit prompt to Fable and bring back the
+  report before implementation approval.~~ DONE 2026-07-02: Fable verdict was
+  `SAFE ONLY AFTER PLAN FIXES`; Codex applied the plan-text fixes.
+- ~~**[AI: Baris]** approve or reject the implementation plan.~~ DONE
+  2026-07-02: Baris approved implementation with the exact SYSTEM_TEST_ONLY
+  sentence. Codex implemented V1 local modules/tests only. No replay run,
+  schema files, backtests, servers, broker/exchange/testnet, TradingView,
+  WunderTrading, Pine, parity, `MTC_V2`, `02_MTC_BACKTEST`, or `07_ADAPTERS`
+  work was performed.
+- ~~**[AI: Baris|Codex]** before the first local replay run, resolve the output
+  root guard.~~ DONE 2026-07-02: Baris approved the pre-run readiness patch.
+  `.gitignore` now ignores `MTC_COMMAND_CENTER/03_QUANTLENS/system_test/`,
+  `git check-ignore` confirms `_probe` is ignored, and
+  `run_local_replay(...)` exists as a tested importable entry function. No real
+  STG002 replay run was performed.
+- ~~**[AI: Baris|Codex]** approve/run the separate Step 9.1 replay-run
+  sentence.~~ DONE 2026-07-02: Baris approved exactly one local
+  SYSTEM_TEST_ONLY replay. Codex ran it through `run_local_replay(...)` into
+  `03_QUANTLENS/system_test/stg002_system_test_replay_20260702T171958Z/`.
+  Result: `status=OK`, `EXPECTED=888`, `ENTRY=444`, `EXIT=444`,
+  `RECEIVED accepted=888`, `duplicates=0`, `rejected=0`,
+  `simulated_fills=888`, `round_trips=444`, `unexplained=0`.
+- **[AI: Baris|Codex]** review the completed local run artifacts and decide
+  whether to send a narrow read-only Fable audit prompt for the result. This is
+  the clean pause point before any V1.1 extension leg.
+- **[AI: Baris]** separate explicit approval is required before any server,
+  CLI, dashboard execution UI, engine-forward signal generation, schema file,
+  broker, exchange, testnet, TradingView, WunderTrading, Pine, parity,
+  `MTC_V2`, paper trading, or live trading path.
+- **[AI: Baris|Codex] Optional separate approval:** decide whether to add a
+  SUPERSEDED banner to stale STG002 `PROMOTE_TO_*` / forward-paper docs. This
+  is not part of the vertical slice implementation plan.
+
 ## 🔷 STRATEGY PARAM-SPEC REGISTRY — Faz 1-4 DONE 2026-07-01 (Claude Opus 4.8) → PR #15 open
 Branch `feature/strategy-param-specs`, pushed, **PR [#15](https://github.com/bsemaay-tech/mtc-command-center/pull/15) open (NOT merged)**. Faz 1: declarative per-strategy param spec (generator code=truth + overlay → `05_REGISTRY/STRATEGY_PARAM_SPECS.json`, 20 strat, 1122 combos, 1,201,662 cases) surfaced in Strategy Detail §4. Faz 2: honest MTC_V2/Pine parity readiness (no 1:1 Pine impl for the 20 generics → `deferred_until_promotion` + `parity_contract` that a Pine port must replicate the global exec model; 2 review-Pine refs marked needs_reconciliation). Faz 3: first missing-knob variant `GEN_DONCHIAN_TURTLE` (Turtle structural stop) via monkey-patch `03_QUANTLENS/tools/variant_missing_knobs.py` (engine untouched), origin=variant/UNVALIDATED, in VARIANT_LOG, smoke OK. Faz 4: runbook §3.5 canonical case-count definition. API 112 passed, renders verified.
 **Next:**
