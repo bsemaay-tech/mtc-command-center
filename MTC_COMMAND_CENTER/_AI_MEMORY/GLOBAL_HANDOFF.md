@@ -1,5 +1,30 @@
 # GLOBAL_HANDOFF
 
+## Claude Opus 4.8 2026-07-03 — Resilient overnight close: full executable universe = 0 robust
+
+Two runs on 2026-07-02. The **18:30 scheduled run DIED mid-Stage-A (~19:00) with no crash-restart** →
+machine idle ~2h (caught at 21:00). The **21:00 resilient run** (20 workers = cpu_count) fixed it:
+per-stage retry + a PID **lockfile** (single-instance) + an external **watchdog Task** (relaunch only
+if the lock PID is dead) + reboot hook. Ran 21:03→22:44 (~1h42m), zero crashes, watchdog logged
+"nothing to do" all night, machine released. During setup the watchdog's CommandLine matching flaked and
+false-launched a 2nd orchestrator → caught it, added the lockfile, cleaned the checkpoint, relaunched one
+clean instance. → new anti-patterns **A25** (unattended runs need crash-restart + external watchdog) and
+**A26** (PID-lockfile liveness, not CommandLine matching).
+
+**Result: robust_final = 0 across the ENTIRE executable universe.** Queue (all genuinely-new): STG001
+(ADA two-candle ±2 confirm) + STG002 (LINK 8ema tuned) = 714 cells, 0 robust; 8-variant family = 2856
+cells, 0 robust; the 23 v2 strategies swept on multiasset **for the first time** = 8211 cells, 0 robust;
++ deep CPCV/PBO. **11,781 new cells.** Combined with mega's 20, the **complete executable library (~51
+archetypes) is non-robust on this universe.** Every huge return is a **micro-price crypto compounding
+artifact** (SHIBUSD +12153%/+7875%, DOGEUSD, UNIUSD; dsr≈0) — C8 at scale; recommend excluding/capping
+micro-price assets so leaderboards are readable.
+
+Close done: MORNING_REPORT (`overnight_resilient_2026-07-02/`), lessons `OVERNIGHT_LESSONS_2026-07-02.md`
++ INDEX, runbook §8 A25/A26 + CHANGELOG. Nothing promoted; nothing fabricated. Runners + watchdog +
+variants on `feature/strategy-param-specs` (PR #15). **Path forward (honest): genuinely-new strategy
+LOGIC / new archetypes via STRATEGY_RESEARCH_WORKFLOW — the existing families (breakout/EMA/RSI/MACD/VCP/
+AVWAP/QTrend/open-range) are conclusively non-robust; more variants/grids on them will not help.**
+
 ## Codex GPT-5 2026-07-02 - STG002 SYSTEM_TEST_ONLY local replay run completed
 
 Baris approved the exact Step 9.1 sentence for one local replay run:
