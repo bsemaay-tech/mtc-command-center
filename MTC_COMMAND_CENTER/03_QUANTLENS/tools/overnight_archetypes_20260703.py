@@ -33,7 +33,12 @@ try:
         mw.SYMBOLS = _syms
     if _tfs:
         mw.TIMEFRAMES = _tfs
-    print(f"[archetypes-run] universe: {len(_syms)}x{len(_tfs)}; archetypes: {list(arch.NEW_GRIDS)}", flush=True)
+    # Deeper walk-forward for the confirmation-grade discovery (6 rolling folds vs default 3):
+    # more OOS rigor + more genuinely-new compute. Overridable via MEGA_FOLDS env.
+    import os as _os
+    mw.NUM_ROLLING_FOLDS = int(_os.environ.get("MEGA_FOLDS", "6"))
+    print(f"[archetypes-run] universe: {len(_syms)}x{len(_tfs)}; folds={mw.NUM_ROLLING_FOLDS}; "
+          f"archetypes: {list(arch.NEW_GRIDS)}", flush=True)
 except Exception as _e:  # pragma: no cover
     print(f"[archetypes-run] WARNING: universe override failed: {_e}", flush=True)
 

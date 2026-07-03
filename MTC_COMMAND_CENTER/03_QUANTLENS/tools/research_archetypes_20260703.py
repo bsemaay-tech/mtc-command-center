@@ -82,12 +82,82 @@ def grid_relvol_momentum():
     return out  # 54
 
 
+def grid_gap_fade():
+    out = []
+    for gap_atr in (0.5, 1.0, 2.0):
+        for stop_lb in (5, 10, 20):
+            for rev in (0.0, 0.3):
+                out.append({"gap_atr": gap_atr, "stop_lookback": stop_lb, "rev_body_atr": rev})
+    return out  # 18
+
+
+def grid_vol_contraction_breakout():
+    out = []
+    for ch in (20, 40):
+        for cfrac in (0.7, 0.9):
+            for vmult in (1.5, 2.0):
+                for stop_lb in (10, 20):
+                    out.append({"channel_len": ch, "contract_frac": cfrac, "vol_mult": vmult, "stop_lookback": stop_lb})
+    return out  # 16
+
+
+def grid_inside_bar_breakout():
+    out = []
+    for trend in (0, 50, 200):
+        for stop_lb in (5, 10, 20):
+            for vmult in (1.0, 1.5):
+                out.append({"trend_ema": trend, "stop_lookback": stop_lb, "vol_mult": vmult})
+    return out  # 18
+
+
+def grid_vwap_reversion():
+    out = []
+    for k in (1.0, 1.5, 2.0, 2.5):
+        for trend in (0, 100, 200):
+            out.append({"dev_atr": k, "trend_ema": trend})
+    return out  # 12
+
+
+def grid_volume_dryup_pullback():
+    out = []
+    for trend in (50, 100, 200):
+        for fast in (10, 20):
+            for dry in (0.7, 1.0):
+                out.append({"trend_ema": trend, "fast_ema": fast, "dry_mult": dry})
+    return out  # 12
+
+
+def grid_range_expansion_thrust():
+    out = []
+    for k in (1.5, 2.0, 2.5):
+        for top in (0.6, 0.7, 0.8):
+            for trend in (50, 200):
+                out.append({"range_atr": k, "close_top": top, "trend_ema": trend})
+    return out  # 18
+
+
+def grid_high_proximity_pullback():
+    out = []
+    for hi_len in (50, 100, 200):
+        for prox in (0.5, 1.0, 2.0):
+            for fast in (10, 20):
+                out.append({"high_len": hi_len, "prox_atr": prox, "fast_ema": fast})
+    return out  # 18
+
+
 NEW_GRIDS = {
     "NEW_VOL_BREAKOUT_CONFIRMED": grid_vol_breakout_confirmed(),
     "NEW_VOLUME_CLIMAX_REVERSAL": grid_volume_climax_reversal(),
     "NEW_GAP_GO": grid_gap_go(),
     "NEW_VOL_REGIME_SWITCH": grid_vol_regime_switch(),
     "NEW_RELVOL_MOMENTUM": grid_relvol_momentum(),
+    "NEW_GAP_FADE": grid_gap_fade(),
+    "NEW_VOL_CONTRACTION_BREAKOUT": grid_vol_contraction_breakout(),
+    "NEW_INSIDE_BAR_BREAKOUT": grid_inside_bar_breakout(),
+    "NEW_VWAP_REVERSION": grid_vwap_reversion(),
+    "NEW_VOLUME_DRYUP_PULLBACK": grid_volume_dryup_pullback(),
+    "NEW_RANGE_EXPANSION_THRUST": grid_range_expansion_thrust(),
+    "NEW_HIGH_PROXIMITY_PULLBACK": grid_high_proximity_pullback(),
 }
 
 
@@ -147,6 +217,76 @@ def signals_new(strategy, df, params, daily_rsi_map=None):
         rv = _relvol(df, params["vol_len"])
         trend = mw.ema(close, int(params["trend_ema"]))
         sig = up & (rv >= params["vol_mult"]) & (close > trend)
+        stop = low.rolling(10, min_periods=1).min()
+        return sig.fillna(False), stop
+
+    if strategy == "NEW_GAP_FADE":
+        new_day = pd.Series(df["date"].values != pd.Series(df["date"]).shift(1).values, index=df.index) if "date" in df.columns else pd.Series(False, index=df.index)
+        gap = (open_ - close.shift(1)) / atr
+        rev = (close - open_) >= params.get("rev_body_atr", 0.0) * atr   # intraday reversal up
+        sig = new_day & (gap <= -params["gap_atr"]) & rev
+        stop = low.rolling(int(params["stop_lookback"]), min_periods=1).min()
+        return sig.fillna(False), stop
+
+    if strategy == "NEW_VOL_CONTRACTION_BREAKOUT":
+        ch = int(params["channel_len"])
+        contracted = atr < (params["contract_frac"] * atr.rolling(ch, min_periods=ch).mean())
+        brk = close > high.rolling(ch, min_periods=ch).max().shift(1)
+        rv = _relvol(df, 20)
+        sig = contracted.shift(1).fillna(False) & brk & (rv >= params["vol_mult"])
+        stop = low.rolling(int(params["stop_lookback"]), min_periods=1).min()
+        return sig.fillna(False), stop
+
+    if strategy == "NEW_INSIDE_BAR_BREAKOUT":
+        prev_inside = (high.shift(1) < high.shift(2)) & (low.shift(1) > low.shift(2))
+        brk = close > high.shift(2)                                        # break the mother bar high
+        te = int(params.get("trend_ema", 0) or 0)
+        trend_ok = (close > mw.ema(close, te)) if te > 0 else pd.Series(True, index=df.index)
+        rv = _relvol(df, 20)
+        sig = prev_inside & brk & trend_ok & (rv >= params["vol_mult"])
+        stop = low.rolling(int(params["stop_lookback"]), min_periods=1).min()
+        return sig.fillna(False), stop
+
+    if strategy == "NEW_VWAP_REVERSION":
+        if "date" in df.columns and "volume" in df.columns:
+            tp = (high + low + close) / 3.0
+            pv = (tp * df["volume"]).groupby(df["date"]).cumsum()          # causal per-day cumulative
+            vv = df["volume"].groupby(df["date"]).cumsum().replace(0, np.nan)
+            vwap = pv / vv
+        else:
+            vwap = close.rolling(48, min_periods=10).mean()
+        dev = (close - vwap) / atr
+        te = int(params.get("trend_ema", 0) or 0)
+        trend_ok = (close > mw.ema(close, te)) if te > 0 else pd.Series(True, index=df.index)
+        sig = (dev <= -params["dev_atr"]) & (close > open_) & trend_ok     # stretched below VWAP, turning up
+        stop = low.rolling(5, min_periods=1).min()
+        return sig.fillna(False), stop
+
+    if strategy == "NEW_VOLUME_DRYUP_PULLBACK":
+        trend = mw.ema(close, int(params["trend_ema"]))
+        fast = mw.ema(close, int(params["fast_ema"]))
+        rv = _relvol(df, 20)
+        pulled = close.shift(1) < fast.shift(1)                            # prior bar pulled below fast EMA
+        dry = rv.shift(1) <= params["dry_mult"]                            # on low ("dried up") volume
+        sig = (close > trend) & pulled & dry & (close > open_)            # resume up in uptrend
+        stop = low.rolling(10, min_periods=1).min()
+        return sig.fillna(False), stop
+
+    if strategy == "NEW_RANGE_EXPANSION_THRUST":
+        rng = (high - low).replace(0, np.nan)
+        wide = rng > (params["range_atr"] * atr)
+        strong = (close - low) / rng >= params["close_top"]
+        up = close > mw.ema(close, int(params["trend_ema"]))
+        sig = wide & strong & up
+        stop = low.rolling(5, min_periods=1).min()
+        return sig.fillna(False), stop
+
+    if strategy == "NEW_HIGH_PROXIMITY_PULLBACK":
+        hl = int(params["high_len"])
+        rmax = high.rolling(hl, min_periods=hl).max()
+        near_high = (rmax - close) / atr <= params["prox_atr"]            # close near the trailing high
+        fast = mw.ema(close, int(params["fast_ema"]))
+        sig = near_high & (close > fast) & (close > open_)
         stop = low.rolling(10, min_periods=1).min()
         return sig.fillna(False), stop
 
