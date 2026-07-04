@@ -1138,7 +1138,8 @@ function subscoreList(g, m) {
     let cls = "absent", pts = `— / ${mx}`;
     if (s.metric_status === "ABSENT") { cls = "absent"; pts = `n/a / ${mx}`; }
     else if (aw != null) { const r = mx ? aw / mx : 0; cls = r >= 1 ? "full" : r > 0 ? "partial" : "none"; pts = `${aw} / ${mx}`; }
-    return `<div class="subscore"><div><div class="crit">${esc(titleCase(s.criterion))}</div><div class="note">${esc(s.deduction_reason || s.note || "")}</div></div><div class="pts ${cls}">${esc(pts)}</div></div>`;
+    const note = cls === "full" ? "" : (s.deduction_reason || s.note || "");
+    return `<div class="subscore"><div><div class="crit">${esc(titleCase(s.criterion))}</div>${note ? `<div class="note">${esc(note)}</div>` : ""}</div><div class="pts ${cls}">${esc(pts)}</div></div>`;
   }).join("")}</div>`;
 }
 
