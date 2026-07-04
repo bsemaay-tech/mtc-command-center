@@ -1,5 +1,20 @@
 # GLOBAL_HANDOFF
 
+## Codex GPT-5 2026-07-04 - Artifact universe-mismatch normalization committed
+
+Closed the test half of the 2026-06-28 artifact-contract follow-up. Commit
+`f9d6c8db` records the four-file normalization patch: new profile-result artifacts
+emit `provenance.universe_mismatch` as a strict boolean, reason text lives in
+`provenance.universe_mismatch_reason`, and legacy artifacts that stored the flag
+as a string are normalized at read time by the dashboard API reader without
+rewriting source artifacts on disk. Verification before commit: full dashboard API
+suite from `MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/api` passed (`112 tests`);
+`py_compile` passed for `build_profile_result_artifact.py` and
+`night_artifacts_reader.py`. No schema file, existing artifact, frontend,
+Pine/parity/MTC_V2, `02_MTC_BACKTEST`, or `07_ADAPTERS` path was changed; the
+read-only dashboard contract remains unchanged, with POST expected to stay 405.
+Fable audit remains the next closeout step after this commit.
+
 ## Claude Fable 5 2026-07-04 — V1.1 LOW-fix batch audited + committed (SYSTEM_TEST_ONLY slice)
 
 Closed the 4 LOW findings from the Fable V1 slice audit. Executor implemented per the exact Fable
