@@ -21,6 +21,7 @@ FORBIDDEN_LABELS = ("live", "testnet", "broker", "TradingView", "WunderTrading")
 
 TOOLS_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = Path(__file__).resolve().parents[4]
+SYSTEM_TEST_ROOT = REPO_ROOT / "MTC_COMMAND_CENTER" / "03_QUANTLENS" / "system_test"
 STG002_STRATEGY_DIR = (
     REPO_ROOT
     / "MTC_COMMAND_CENTER"

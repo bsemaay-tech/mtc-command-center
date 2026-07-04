@@ -4,6 +4,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 TOOLS_DIR = Path(__file__).resolve().parents[1]
@@ -137,6 +138,35 @@ class TestStg002ReplayEmitter(unittest.TestCase):
         self.assertEqual(manifest["strategy_approval_status"], "NOT_APPROVED")
         self.assertIn("robust_final = 0", manifest["robustness_note"])
 
+    def test_expected_ledger_redacts_auth_token_but_returned_payloads_do_not(self):
+        from vertical_slice.contracts import validate_signal_payload
+        from vertical_slice.stg002_replay_emitter import write_replay_artifacts
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            trades_path, signals_path = self.write_fixture_csvs(temp_dir)
+            output_dir = Path(temp_dir) / "out"
+            auth_token = "synthetic-token"
+
+            payloads = write_replay_artifacts(
+                trades_csv_path=trades_path,
+                signals_csv_path=signals_path,
+                output_dir=output_dir,
+                auth_token=auth_token,
+            )
+
+            ledger_rows = [
+                json.loads(line)
+                for line in (output_dir / "expected_signals.jsonl")
+                .read_text(encoding="utf-8")
+                .splitlines()
+            ]
+
+        self.assertTrue(ledger_rows)
+        self.assertTrue(all(row["auth_token"] == "<REDACTED>" for row in ledger_rows))
+        self.assertTrue(payloads)
+        self.assertTrue(all(payload["auth_token"] == auth_token for payload in payloads))
+        self.assertTrue(validate_signal_payload(payloads[0], auth_token).ok)
+
     def test_emitter_docstring_marks_signal_bar_as_nominal(self):
         from vertical_slice import stg002_replay_emitter
 
@@ -187,6 +217,32 @@ class TestStg002ReplayEmitter(unittest.TestCase):
         self.assertTrue(all(row["simulated"] for row in fills))
         self.assertEqual(persisted_summary, summary)
         self.assertIn(BANNER, report_text)
+
+    def test_run_local_replay_rejects_in_repo_output_outside_system_test_root(self):
+        from vertical_slice.constants import REPO_ROOT
+        from vertical_slice.stg002_replay_emitter import run_local_replay
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            trades_path, signals_path = self.write_fixture_csvs(temp_dir)
+            forbidden_output = (
+                REPO_ROOT
+                / "MTC_COMMAND_CENTER"
+                / "03_QUANTLENS"
+                / "05_BACKTEST_RESULTS"
+                / "vertical_slice_guard_test"
+            )
+
+            with patch(
+                "vertical_slice.stg002_replay_emitter.write_replay_artifacts",
+                side_effect=AssertionError("output guard did not run before writes"),
+            ):
+                with self.assertRaises(ValueError):
+                    run_local_replay(
+                        trades_csv_path=trades_path,
+                        signals_csv_path=signals_path,
+                        output_dir=forbidden_output,
+                        auth_token="synthetic-token",
+                    )
 
 
 if __name__ == "__main__":

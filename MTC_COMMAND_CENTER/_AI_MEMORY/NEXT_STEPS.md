@@ -36,9 +36,15 @@ SYSTEM_TEST_ONLY / NOT STRATEGY_APPROVED / NO REAL MONEY.
   Result: `status=OK`, `EXPECTED=888`, `ENTRY=444`, `EXIT=444`,
   `RECEIVED accepted=888`, `duplicates=0`, `rejected=0`,
   `simulated_fills=888`, `round_trips=444`, `unexplained=0`.
-- **[AI: Baris|Codex]** review the completed local run artifacts and decide
-  whether to send a narrow read-only Fable audit prompt for the result. This is
-  the clean pause point before any V1.1 extension leg.
+- ~~**[AI: Baris|Codex]** review the completed local run artifacts and decide
+  whether to send a narrow read-only Fable audit prompt for the result.~~ DONE
+  2026-07-02/04: Fable audited run + implementation (PASS), drafted the V1.1
+  LOW-fix dispatch; executor implemented (7-file allowlist); Fable audited the
+  diff and committed. Focused pytest **43 passed**. **Slice V1.1 CLOSED** —
+  clean pause point reached. Remaining slice work only via new gates:
+  V2 (TV alerts) / V3 (Wunder demo) / V4 (testnet), each Baris-approval-gated
+  and deliberately NOT opened (no robust strategy exists to justify them);
+  Gate V5 day-30 review due **2026-08-01**.
 - **[AI: Baris]** separate explicit approval is required before any server,
   CLI, dashboard execution UI, engine-forward signal generation, schema file,
   broker, exchange, testnet, TradingView, WunderTrading, Pine, parity,

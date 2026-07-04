@@ -18,13 +18,15 @@ from .constants import (
     ENGINE_STRATEGY_ID,
     EXCHANGE,
     QTY_MODEL,
+    REPO_ROOT,
     RISK_REF,
     SCHEMA_ID,
     STRATEGY_VERSION,
     SYMBOL,
+    SYSTEM_TEST_ROOT,
     TIMEFRAME,
 )
-from .contracts import canonicalize_timestamp, sign_payload
+from .contracts import canonicalize_timestamp, redact_sensitive_fields, sign_payload
 from .local_receiver import LocalReceiver, ReceiverState
 from .reconciler import reconcile_ledgers, write_reconciliation_report
 
@@ -145,7 +147,8 @@ def write_replay_artifacts(
     expected_path = output / "expected_signals.jsonl"
     with expected_path.open("w", encoding="utf-8", newline="\n") as handle:
         for payload in payloads:
-            handle.write(json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n")
+            redacted = redact_sensitive_fields(payload)
+            handle.write(json.dumps(redacted, sort_keys=True, separators=(",", ":")) + "\n")
 
     manifest = build_emitter_manifest(
         len(payloads),
@@ -178,6 +181,17 @@ def run_local_replay(
     network, and never talks to a broker, exchange, TradingView, or WunderTrading.
     """
     output = Path(output_dir)
+    resolved_output = output.resolve()
+    resolved_repo = REPO_ROOT.resolve()
+    resolved_system_test = SYSTEM_TEST_ROOT.resolve()
+    if resolved_output.is_relative_to(resolved_repo) and not resolved_output.is_relative_to(
+        resolved_system_test
+    ):
+        raise ValueError(
+            "run_local_replay output_dir must be outside the repo or under "
+            f"{resolved_system_test}"
+        )
+
     payloads = write_replay_artifacts(
         trades_csv_path=trades_csv_path,
         signals_csv_path=signals_csv_path,

@@ -65,17 +65,54 @@ class TestReconciler(unittest.TestCase):
         self.assertEqual(summary["status"], "HALT")
         self.assertEqual(summary["received_not_expected"], ["s2"])
 
+    def test_rejected_unknown_received_row_is_explained_not_unexplained(self):
+        from vertical_slice.reconciler import reconcile_ledgers
+
+        summary = reconcile_ledgers(
+            expected_signals=[{"signal_id": "s1"}],
+            received_rows=[
+                {"signal_id": "s1", "disposition": "accepted"},
+                {"signal_id": "suppressed-signal", "disposition": "rejected(entry_while_open)"},
+            ],
+            fills=[{"signal_id": "s1"}],
+        )
+
+        self.assertEqual(summary["status"], "OK")
+        self.assertEqual(summary["received_not_expected"], [])
+        self.assertEqual(summary["explained_rejections"], 1)
+        self.assertEqual(summary["unexplained_count"], 0)
+
+    def test_accepted_unknown_received_row_still_halts(self):
+        from vertical_slice.reconciler import reconcile_ledgers
+
+        summary = reconcile_ledgers(
+            expected_signals=[{"signal_id": "s1"}],
+            received_rows=[
+                {"signal_id": "s1", "disposition": "accepted"},
+                {"signal_id": "unexpected-accepted", "disposition": "accepted"},
+            ],
+            fills=[{"signal_id": "s1"}, {"signal_id": "unexpected-accepted"}],
+        )
+
+        self.assertEqual(summary["status"], "HALT")
+        self.assertEqual(summary["received_not_expected"], ["unexpected-accepted"])
+
     def test_report_writer_includes_banner(self):
         from vertical_slice.constants import BANNER
         from vertical_slice.reconciler import write_reconciliation_report
 
         with tempfile.TemporaryDirectory() as temp_dir:
             run_dir = Path(temp_dir)
-            summary = {"status": "OK", "unexplained_count": 0}
+            summary = {
+                "status": "OK",
+                "unexplained_count": 0,
+                "explained_rejections": 1,
+            }
             report_path = write_reconciliation_report(run_dir, summary)
             text = report_path.read_text(encoding="utf-8")
 
         self.assertIn(BANNER, text)
+        self.assertIn("Explained rejections: 1", text)
 
 
 class TestFailureDrills(unittest.TestCase):

@@ -122,6 +122,63 @@ class TestLocalReceiver(unittest.TestCase):
         self.assertEqual(row["disposition"], "rejected(entry_while_open)")
         self.assertEqual(len(receiver.state.fills), 1)
 
+    def test_entry_while_open_does_not_burn_idempotency_key(self):
+        from vertical_slice.local_receiver import LocalReceiver, ReceiverState
+
+        receiver = LocalReceiver(ReceiverState(expected_auth_token="synthetic-token"))
+        receiver.process(signed_payload())
+        rejected_entry = signed_payload(
+            timestamp_utc="2026-05-01T11:00:00Z",
+            bar_time_utc="2026-05-01T10:00:00Z",
+            entry_price=11.0,
+            stop_loss=10.0,
+        )
+
+        first_rejection = receiver.process(rejected_entry)
+        second_rejection = receiver.process(rejected_entry)
+
+        self.assertEqual(first_rejection["disposition"], "rejected(entry_while_open)")
+        self.assertEqual(second_rejection["disposition"], "rejected(entry_while_open)")
+        self.assertNotIn(
+            rejected_entry["idempotency_key"],
+            receiver.state.seen_idempotency_keys,
+        )
+
+    def test_entry_after_rejected_entry_and_later_exit_is_accepted(self):
+        from vertical_slice.local_receiver import LocalReceiver, ReceiverState
+
+        receiver = LocalReceiver(ReceiverState(expected_auth_token="synthetic-token"))
+        receiver.process(signed_payload())
+        rejected_entry = signed_payload(
+            timestamp_utc="2026-05-01T11:00:00Z",
+            bar_time_utc="2026-05-01T10:00:00Z",
+            entry_price=11.0,
+            stop_loss=10.0,
+        )
+        exit_payload = signed_payload(
+            action="EXIT",
+            current_position_intent="LONG_TO_FLAT",
+            entry_price=None,
+            stop_loss=None,
+            exit_price=11.2,
+            exit_reason="trail",
+            timestamp_utc="2026-05-01T14:00:00Z",
+            bar_time_utc="2026-05-01T14:00:00Z",
+        )
+        later_entry = signed_payload(
+            timestamp_utc="2026-05-01T15:00:00Z",
+            bar_time_utc="2026-05-01T14:00:00Z",
+            entry_price=12.0,
+            stop_loss=11.0,
+        )
+
+        receiver.process(rejected_entry)
+        receiver.process(exit_payload)
+        row = receiver.process(later_entry)
+
+        self.assertEqual(row["disposition"], "accepted")
+        self.assertEqual(len(receiver.state.fills), 3)
+
     def test_accepted_exit_closes_position_and_fills_once(self):
         from vertical_slice.local_receiver import LocalReceiver, ReceiverState
 

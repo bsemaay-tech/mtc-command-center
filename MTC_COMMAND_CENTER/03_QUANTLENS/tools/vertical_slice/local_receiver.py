@@ -34,12 +34,12 @@ class LocalReceiver:
         idempotency_key = str(payload["idempotency_key"])
         if idempotency_key in self.state.seen_idempotency_keys:
             return self._record(payload, "duplicate_dropped", "duplicate idempotency_key")
-        self.state.seen_idempotency_keys.add(idempotency_key)
 
         action = payload["action"]
         if action == "ENTRY":
             if self.state.position is not None:
                 return self._record(payload, "rejected(entry_while_open)", "entry_while_open")
+            self.state.seen_idempotency_keys.add(idempotency_key)
             row = self._record(payload, "accepted", None)
             self.state.position = {
                 "side": payload["side"],
@@ -66,6 +66,7 @@ class LocalReceiver:
                     "rejected(exit_with_no_position)",
                     "exit_with_no_position",
                 )
+            self.state.seen_idempotency_keys.add(idempotency_key)
             row = self._record(payload, "accepted", None)
             self.state.position = None
             self.state.fills.append(

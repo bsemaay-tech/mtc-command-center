@@ -1,5 +1,13 @@
 # ACTIVE_FILES
 
+## 2026-07-04 Claude Fable 5 — V1.1 LOW-fix batch (SYSTEM_TEST_ONLY slice, CLOSED)
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\vertical_slice\constants.py` (+SYSTEM_TEST_ROOT)
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\vertical_slice\stg002_replay_emitter.py` (ledger redaction + path guard)
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\vertical_slice\local_receiver.py` (idempotency on accept only)
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\vertical_slice\reconciler.py` (explained_rejections)
+- `MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_vertical_slice_{replay,receiver,reconciler}.py` (+6 tests → 43)
+- Status: audited by Fable on real diff, committed. Slice V1.1 CLOSED; legs V2-V4 gated; V5 review 2026-08-01.
+
 ## 2026-07-02 Codex GPT-5 SYSTEM_TEST_ONLY vertical slice implementation
 - `.gitignore`
 - `MTC_COMMAND_CENTER\03_QUANTLENS\system_test\stg002_system_test_replay_20260702T171958Z\emitter_manifest.json` (git-ignored runtime output)

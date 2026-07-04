@@ -24,9 +24,12 @@ def reconcile_ledgers(
         for row in received_rows
         if row.get("signal_id") and row.get("disposition") == "accepted"
     }
+    explained_rejections = sum(
+        1 for row in received_rows if str(row.get("disposition", "")).startswith("rejected(")
+    )
 
     expected_not_received = sorted(expected_ids - received_ids)
-    received_not_expected = sorted(received_ids - expected_ids)
+    received_not_expected = sorted(accepted_received_ids - expected_ids)
     received_not_filled = sorted(accepted_received_ids - filled_ids)
     unexplained = (
         len(expected_not_received)
@@ -47,6 +50,7 @@ def reconcile_ledgers(
         "rejected_count": sum(
             1 for row in received_rows if str(row.get("disposition", "")).startswith("rejected(")
         ),
+        "explained_rejections": explained_rejections,
         "expected_not_received": expected_not_received,
         "received_not_expected": received_not_expected,
         "received_not_filled": received_not_filled,
@@ -88,6 +92,7 @@ def write_reconciliation_report(run_dir: str | Path, summary: dict[str, Any]) ->
         "",
         f"- Status: {summary.get('status')}",
         f"- Unexplained count: {summary.get('unexplained_count')}",
+        f"- Explained rejections: {summary.get('explained_rejections', 0)}",
         f"- EXPECTED-not-RECEIVED: {summary.get('expected_not_received', [])}",
         f"- RECEIVED-not-EXPECTED: {summary.get('received_not_expected', [])}",
         f"- RECEIVED-not-FILLED: {summary.get('received_not_filled', [])}",

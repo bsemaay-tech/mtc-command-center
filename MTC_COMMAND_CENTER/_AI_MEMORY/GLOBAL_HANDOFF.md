@@ -1,5 +1,22 @@
 # GLOBAL_HANDOFF
 
+## Claude Fable 5 2026-07-04 — V1.1 LOW-fix batch audited + committed (SYSTEM_TEST_ONLY slice)
+
+Closed the 4 LOW findings from the Fable V1 slice audit. Executor implemented per the exact Fable
+dispatch (7-file allowlist); Fable audited the real diff (never trusted the report) and committed.
+Fixes: (1) `expected_signals.jsonl` now redacts `auth_token` (in-memory payloads keep the real token
+for receiver validation); (2) `run_local_replay()` rejects in-repo output dirs outside
+`03_QUANTLENS/system_test/` (temp dirs outside repo still allowed); (3) receiver registers
+idempotency keys only on `accepted` ENTRY/EXIT (rejected payloads no longer burn their key);
+(4) reconciler adds `explained_rejections` — `received_not_expected` computed from accepted rows
+only, accepted-unknown still HALTs. Verification: focused pytest **43 passed** (was 37; +6 tests,
+1:1 with dispatch cases), py_compile PASS, protected scopes clean, no new files.
+SYSTEM_TEST_ONLY / NOT STRATEGY_APPROVED / NO REAL MONEY — nothing here is strategy or live evidence.
+**Slice V1.1 CLOSED.** Extension legs (V2 TV alerts / V3 Wunder demo / V4 testnet) remain
+approval-gated and deliberately unopened; Gate V5 day-30 review due 2026-08-01. Delegation note:
+Cline was blocked (`--auto-approve false`) and DeepSeek failed this package twice before — Codex
+executed, Fable audited (documented exception to cheap-model-first).
+
 ## Claude Opus 4.8 2026-07-04 — 12 NEW archetypes → 0 robust → METHODOLOGICAL CEILING (pivot)
 
 Designed + implemented + validated **12 genuinely-new strategy archetypes** using signal sources the
