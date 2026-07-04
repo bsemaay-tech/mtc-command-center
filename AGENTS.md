@@ -6,8 +6,20 @@ Read this file first, then read `MTC_COMMAND_CENTER\_AI_MEMORY\START_HERE.md`.
 Use token-efficient search before broad scans.
 Do not change trading logic, Pine logic, MTC strategy behavior, or TradingView parity without explicit approval.
 
-## TOKEN DISCIPLINE — dispatch mechanical work to cheap models (MANDATORY)
-Expensive orchestrators (Claude, Codex) spend tokens on **decisions, specs, audits** — NOT on mechanical reading/editing. Delegate bounded mechanical work (single/few-file edits, known changes, schema/JSON edits, script writing, audit runs) to a cheap sub-agent via the dispatch harness:
+## TOKEN DISCIPLINE — dispatch mechanical work to Cline CLI first, then fallback cheap models (MANDATORY)
+Expensive orchestrators (Claude, Codex) spend tokens on **decisions, specs, audits** — NOT on mechanical reading/editing. Delegate bounded mechanical work (single/few-file edits, known changes, schema/JSON edits, script writing, audit runs) to a cheap sub-agent. **Cline CLI is the first-choice path** (uses monthly subscription credits before paid API spend); fall back to `_deepseek_driver` when Cline is unavailable, unauthenticated, out of credits, unsuitable, blocked, or when explicit provider routing / DeepSeek API is desired.
+
+### Cline CLI (first choice)
+```
+cline --cwd C:\LAB\Tradingview_LAB_CLEAN --auto-approve false "<bounded task prompt>"
+```
+For ClinePass subscription credits, prefer:
+```
+cline -P cline-pass -m cline-pass/deepseek-v4-flash --cwd C:\LAB\Tradingview_LAB_CLEAN --auto-approve false "<bounded task prompt>"
+```
+Use `cline-pass/deepseek-v4-pro` when the task needs stronger reasoning. Add `--json` when machine-readable logs are useful. Cline handles file reads/writes with its own safety rails; the orchestrator must still **audit results on real data** (never trust the sub-agent report). Do NOT route trading logic, Pine, parity, MTC strategy behavior, protected scopes, or schemas through Cline without explicit approval.
+
+### _deepseek_driver (fallback/secondary)
 - Harness: `_deepseek_driver\ds_agent.py`; how-to: `_deepseek_driver\README.md` (READ before dispatching).
 - Flow: write task JSON (prompt + `allow` files + rails) → `python _deepseek_driver\ds_agent.py --task <file>` → **audit the result yourself on real data** (never trust the sub-agent report).
 - Providers (env keys): `deepseek` (primary), `grok`/`xai` (`grok-4`), `openrouter` (`:free` = cheap/fallback). Route bulk/cheap work to the cheapest capable model.
@@ -61,7 +73,7 @@ Local helper tools are installed. Use them automatically at the triggers below �
   `python MTC_COMMAND_CENTER\03_QUANTLENS\tools\markitdown_ingest.py <file-or-dir> --apply --out <dir>`
 - **Impact / blast-radius question** ("what breaks if I change X", cross-file refactor, "what depends on Y") → build a scoped code graph and query it instead of guessing:
   `python MTC_COMMAND_CENTER\03_QUANTLENS\tools\graphify_impact.py build <scoped-path>` then `… affected "<file.py>"` / `… explain "<symbol>"` / `… query "<question>"`. (Wrapper keeps graphs in temp; never commit `graphify-out/`.)
-- **Cost / token check** (session start or end, after a big run, or when deciding model routing) → `codeburn status` (and `codeburn models` for the breakdown). If premium spend (Opus/Codex) dwarfs DeepSeek, that means delegation is being skipped — route more mechanical work through `_deepseek_driver` per TOKEN DISCIPLINE above.
+- **Cost / token check** (session start or end, after a big run, or when deciding model routing) → `codeburn status` (and `codeburn models` for the breakdown). If premium spend (Opus/Codex) dwarfs delegated work, route more mechanical work through **Cline CLI first**, then `_deepseek_driver` fallback, per TOKEN DISCIPLINE above.
 - **Long backtest / overnight run** (you want done/failed/stalled visibility without staying open) → launch it under the run-progress supervisor so the stable contract is written, then let the one-shot watchdog notify: `03_QUANTLENS/tools/run_emitter_supervisor.py` + `run_watchdog.py` (canonical `progress/<run_id>/` heartbeat·events·status; git-ignored). Engine is not edited (supervisor observes the runner's existing `run_status.json`). Ops + n8n/Task-Scheduler wiring: `09_DOCS/AI_TOOLING/PHASE5_WATCHDOG_OPS.md`.
 
 Rules: these tools are read-only/local; they never touch `*.pine`/`MTC_V2`/`parity`/schemas. Do not run `graphify install` (no per-vendor skill registration — the CLI/wrapper is the single shared path). Install once if missing: `uv tool install graphifyy --python 3.13`; MarkItDown venv self-bootstraps via its wrapper.
