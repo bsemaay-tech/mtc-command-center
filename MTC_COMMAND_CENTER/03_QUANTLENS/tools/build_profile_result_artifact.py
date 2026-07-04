@@ -66,7 +66,7 @@ def _num(v):
     return None
 
 
-def _universe_mismatch(strategy_id: str, symbol: str, timeframe: str) -> str | None:
+def _universe_mismatch_reason(strategy_id: str, symbol: str, timeframe: str) -> str | None:
     sid = strategy_id.upper()
     notes = []
     if "US_EQUITIES" in sid and symbol.upper().endswith(("USDT", "USD", "BTC", "ETH")):
@@ -116,6 +116,8 @@ def map_row(raw: dict, strategy_id: str, profile: str, run_id: str, source_rel: 
     best_params = summary.get("best_params")
     param_set_id = json.dumps(best_params, sort_keys=True, separators=(",", ":")) if isinstance(best_params, dict) else None
 
+    mismatch_reason = _universe_mismatch_reason(strategy_id, symbol, timeframe)
+
     return {
         "run_id": run_id,
         "strategy_id": strategy_id,
@@ -148,7 +150,8 @@ def map_row(raw: dict, strategy_id: str, profile: str, run_id: str, source_rel: 
             "cost_bps": cost_bps,
             "win_rate_unit": "fraction_0_1",
             "metric_units": "net_profit/max_drawdown = percent; sharpe = OOS lockbox sharpe",
-            "universe_mismatch": _universe_mismatch(strategy_id, symbol, timeframe),
+            "universe_mismatch": bool(mismatch_reason),
+            "universe_mismatch_reason": mismatch_reason,
             "not_robust_note": None if robust_final else "robust_final=false; research-only evidence, not a promotion claim",
         },
     }
@@ -210,7 +213,7 @@ def build_document(source_path: Path, strategy_id: str, profile: str, run_id: st
         "results": mapped,
     }
     notes.append(f"mapped {len(mapped)} real row(s); classification filter={classification or 'ALL'}")
-    mism = [m["provenance"]["universe_mismatch"] for m in mapped if m["provenance"]["universe_mismatch"]]
+    mism = [m["provenance"].get("universe_mismatch_reason") for m in mapped if m["provenance"].get("universe_mismatch")]
     if mism:
         notes.append("UNIVERSE MISMATCH recorded: " + mism[0])
     if all(not m["robustness"]["robust_final"] for m in mapped):

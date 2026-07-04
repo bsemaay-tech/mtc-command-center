@@ -186,8 +186,9 @@ class BuildProfileResultTests(unittest.TestCase):
             self.assertTrue(doc["conversion_timestamp"])
             row = doc["results"][0]
             self.assertEqual(row["provenance"]["source_type"], "deterministic_soak_mega_results")
-            # universe mismatch must be surfaced, not hidden
-            self.assertIsNotNone(row["provenance"]["universe_mismatch"])
+            # universe mismatch must be a strict flag, with the reason kept separately.
+            self.assertIs(row["provenance"]["universe_mismatch"], True)
+            self.assertIn("US equities", row["provenance"]["universe_mismatch_reason"])
 
     def test_no_fake_kpis_when_absent(self) -> None:
         with tempfile.TemporaryDirectory() as t:
@@ -241,8 +242,9 @@ class BuildProfileResultTests(unittest.TestCase):
             # non-robust signal
             self.assertIsInstance(row["robustness"], dict)
             self.assertIs(row["robustness"]["robust_final"], False)
-            # universe mismatch signal (truthy string)
-            self.assertTrue(row["provenance"]["universe_mismatch"])
+            # universe mismatch signal (strict boolean + reason text)
+            self.assertIs(row["provenance"]["universe_mismatch"], True)
+            self.assertIn("US equities", row["provenance"]["universe_mismatch_reason"])
             # profile mapping interpreted signal
             self.assertTrue(row["profile_mapping"]["is_interpretation"])
 

@@ -258,6 +258,7 @@ def _extract_profile_rows(record: dict[str, Any]) -> list[dict[str, Any]]:
         profile = raw.get("profile")
         if profile not in PROFILES:
             continue
+        provenance = _normalize_profile_provenance(raw.get("provenance"))
         rows.append(
             {
                 "run_id": raw.get("run_id") or record.get("run_id"),
@@ -274,12 +275,36 @@ def _extract_profile_rows(record: dict[str, Any]) -> list[dict[str, Any]]:
                 "robustness": raw.get("robustness"),
                 "promotion_status": raw.get("promotion_status"),
                 # Read-only passthrough so the UI can flag non-native / research-only evidence.
-                "provenance": raw.get("provenance"),
+                "provenance": provenance,
                 "profile_mapping": raw.get("profile_mapping") or doc_profile_mapping,
                 "source_rel_path": record.get("rel_path"),
             }
         )
     return rows
+
+
+def _normalize_profile_provenance(provenance: Any) -> Any:
+    """Normalize legacy profile-result provenance without mutating source data.
+
+    Older pilot artifacts stored provenance.universe_mismatch as a human-readable
+    string. The read model now exposes that flag as a strict boolean and carries
+    the text separately in universe_mismatch_reason. Unknown/missing values stay
+    absent instead of being invented.
+    """
+    if not isinstance(provenance, dict):
+        return provenance
+    normalized = dict(provenance)
+    mismatch = normalized.get("universe_mismatch")
+    if isinstance(mismatch, str):
+        normalized["universe_mismatch"] = bool(mismatch)
+        normalized.setdefault("universe_mismatch_reason", mismatch or None)
+    elif isinstance(mismatch, bool):
+        normalized["universe_mismatch"] = mismatch
+        normalized.setdefault("universe_mismatch_reason", None)
+    elif "universe_mismatch" in normalized:
+        normalized["universe_mismatch"] = bool(mismatch)
+        normalized.setdefault("universe_mismatch_reason", None)
+    return normalized
 
 
 def _load_schema(
