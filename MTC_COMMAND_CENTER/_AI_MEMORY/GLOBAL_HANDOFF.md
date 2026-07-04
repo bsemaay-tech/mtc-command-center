@@ -1,5 +1,32 @@
 # GLOBAL_HANDOFF
 
+## Claude Opus 4.8 2026-07-04 — 12 NEW archetypes → 0 robust → METHODOLOGICAL CEILING (pivot)
+
+Designed + implemented + validated **12 genuinely-new strategy archetypes** using signal sources the
+existing (non-robust) families never touched: volume (breakout-confirm, climax, dry-up, relvol,
+range-expansion), session gaps (go/fade), volatility-regime switching, true per-session volume-weighted
+VWAP, inside-bar, high-proximity. All lookahead-safe + contract-compatible, real-data smoke OK. Ran
+overnight (`overnight_archetypes_resilient_2026-07-03.ps1`, 20 workers, 6 folds, resilient) 18:27→18:48
+(~21 min) + deep CPCV/PBO. **4284 cells, robust_final 0.**
+
+**Key finding (pivot):** after 4 nights we have validated the complete existing library (51 archetypes)
+AND 12 brand-new ones — **63 archetypes, 0 robust on any asset/TF.** New logic + new signals still return
+0 ⇒ the ceiling is **methodological, not strategy selection.** The gates never align: a few archetypes hit
+DSR ≥0.95 but only on INSUFFICIENT_TRADES cells (small-sample lottery); where trades suffice, DSR
+collapses. Structural causes: (1) DSR trial-count deflation (A17) makes any grid ≥~15 nodes nearly
+impossible; (2) the fixed exit (2R/96-bar/next-open, optimized by nothing) is the likely binding
+constraint; (3) micro-price crypto compounding artifacts pollute pooling; (4) 51-symbol multi-asset
+pooling dilutes edge.
+
+**Recommendation (STOP adding strategies; fix methodology) [AI: Barış decision + Claude]:** (1)
+exclude/winsorize micro-price crypto; (2) hard MIN_TRADES floor + research-robust DSR bar (≥0.50 per rules,
+not 0.95); (3) **make the exit a swept knob (2R/3R/trailing/opposite-channel) — engine-core simulate_slice
+change = Faz 3b, approval-gated, highest leverage**; (4) single-asset-class subsets instead of pooling.
+
+Resilience (per-stage retry + PID lockfile + external watchdog) held a 2nd night — clean, no death.
+Close done: MORNING_REPORT + `OVERNIGHT_LESSONS_2026-07-03.md` + INDEX. 12 archetypes in VARIANT_LOG
+(UNVALIDATED). Runners on `feature/strategy-param-specs` (PR #15). Nothing promoted/fabricated.
+
 ## Claude Opus 4.8 2026-07-03 — Resilient overnight close: full executable universe = 0 robust
 
 Two runs on 2026-07-02. The **18:30 scheduled run DIED mid-Stage-A (~19:00) with no crash-restart** →
