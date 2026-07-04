@@ -1,5 +1,30 @@
 # GLOBAL_HANDOFF
 
+## Claude Fable 5 2026-07-04 — Faz 3b APPROVED (D013): scope + self-parity gate shipped; implementation handed off
+
+Methodology-pivot decision closed with Barış: **Faz 3b swept `exit_mode` in `simulate_slice` approved**
+(exact sentence in D013) + companion package (micro-price exclusion from pooled leaderboards;
+two-tier `research_robust` MIN_TRADES≥30 ∧ DSR≥0.50 vs unchanged promotable `robust_final`;
+single-asset-class Stage-1 subsets). Authorizes implementation + self-parity regression ONLY —
+**every sweep run remains separately approval-gated.**
+
+Shipped this session: scope contract `00_AGENT_PROTOCOLS/FAZ3B_EXIT_SWEEP_SCOPE.md` (`f8e13085`);
+regression gate `03_QUANTLENS/tools/faz3b_self_parity.py` + goldens
+`tools/tests/goldens/faz3b/golden_cells.json` captured from the PRE-EDIT engine (42 rows, 7 strategies
+× SPY/QQQ/BTCUSD × 1h/4h, 6 `is_trail` rows, sha `be8561ff…`) with determinism PROVEN (second
+independent run → identical sha, so post-edit FAILs are real, never noise). Implementation handoff for a
+fresh Claude session: `11_TRIAGE/FAZ3B_IMPLEMENTATION_PROMPT_2026-07-04.md` — key rules: `exit_mode`
+NOT in GRIDS (env `MEGA_EXIT_MODES`, default `fixed_2R` = byte-identical); `trail_ema8` absorbs the
+`is_trail` special case; harness may ONLY gain `ALLOWED_NEW_KEYS={"exit_mode","engine_version"}`
+stripping + a fixed_2R assertion; **goldens must never be recaptured**. After implementation: Codex
+adversarial review → Barış diff approval → separate written approval for the Stage-1 discovery run
+(pre-registered design: single-asset-class subset, trimmed grids, research tier).
+
+Also this session: combined audit of the Codex housekeeping batch (H1/T1/T2/T3) = PASS ×3 + PASS WITH
+NITS (T3: `gateSummaryBlock` likely dead code; hero paper-cell removal worth one Barış glance). 112 API
+tests re-run independently OK; POST 405 + read-only + badges verified live; orphaned memory notes
+committed (`529caa3d`). 06-28 debt fully cleared; working tree clean of modified tracked files.
+
 ## Codex GPT-5 2026-07-04 - Impeccable UI Pilot P2 cleanup completed
 
 Closed NEXT_STEPS "IMPECCABLE UI PILOT" P2 items 4 and 5 with UI-only edits to

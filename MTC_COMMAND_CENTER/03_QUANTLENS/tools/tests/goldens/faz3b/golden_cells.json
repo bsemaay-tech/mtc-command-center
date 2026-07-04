@@ -1,0 +1,3994 @@
+{
+ "banner": "FAZ3B SELF-PARITY GOLDEN (D013) - engine regression gate",
+ "pinned_strategies": [
+  "GEN_ATR_PULLBACK_TREND",
+  "GEN_DONCHIAN_BREAKOUT",
+  "GEN_GOLDEN_CROSS_PULLBACK",
+  "GEN_KELTNER_BREAKOUT",
+  "GEN_MACD_BULL_CROSS",
+  "GEN_RSI_OVERSOLD_REVERSAL",
+  "QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL"
+ ],
+ "pinned_symbols": [
+  "SPY",
+  "QQQ",
+  "BTCUSD"
+ ],
+ "pinned_tfs": [
+  "1h",
+  "4h"
+ ],
+ "row_count": 42,
+ "rows": [
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": 0.9215,
+   "classification": "FAIL",
+   "data_end": "2026-06-28 00:00:00+00:00",
+   "data_rows": 48077,
+   "data_start": "2021-01-01 06:00:00+00:00",
+   "dsr_p_value": 0.0,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_ATR_PULLBACK_TREND",
+   "summary": {
+    "avg_fold_test_return_pct": -4.239,
+    "best_params": {
+     "dist_atr": 0.5,
+     "ema_len": 20,
+     "slope_atr": 0.5,
+     "stop_lookback": 10
+    },
+    "best_train_sharpe_pt": 0.037802,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 53.852,
+     "buy_hold_ret_dd_ratio": -0.6872,
+     "buy_hold_return_pct": -37.005
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 29.296,
+     "ema_num_trades": 38,
+     "ema_ret_dd_ratio": -0.9208,
+     "ema_return_pct": -26.977
+    },
+    "fold_test_returns_pct": [
+     -5.723,
+     -2.754
+    ],
+    "fold_test_sharpes": [
+     -0.3484,
+     -0.1637
+    ],
+    "fold_test_trade_counts": [
+     50,
+     58
+    ],
+    "folds_positive": 0,
+    "lockbox_oos": {
+     "annualized_sharpe": -1.7917,
+     "annualized_sortino": -1.3788,
+     "avg_R": -0.1933,
+     "equity_curve_health": 0.043,
+     "expectancy_R": -0.1933,
+     "max_consecutive_losses": 10,
+     "max_drawdown_pct": -31.407,
+     "net_after_slippage_pct": -30.612,
+     "net_return_pct": -27.972,
+     "num_trades": 93,
+     "profit_factor": 0.541,
+     "sharpe": -2.2944,
+     "sharpe_pt": -0.237914,
+     "top_trade_concentration": 0.1037,
+     "win_rate": 0.2796
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "folds": 2,
+     "mode": "exact_match"
+    },
+    "param_stability_score": 1.0,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": -20.195,
+      "low_vol": -1.728,
+      "range": -3.922,
+      "trend": -25.032
+     },
+     "bucket_trade_counts": {
+      "high_vol": 19,
+      "low_vol": 17,
+      "range": 17,
+      "trend": 76
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "trend",
+     "worst_regime_return_pct": -25.032
+    },
+    "worst_window_drawdown_pct": 13.438
+   },
+   "symbol": "BTCUSD",
+   "timeframe": "1h",
+   "trial_count": 72,
+   "trial_sr_max": 0.1809,
+   "trial_sr_std": 0.3222
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": 0.647,
+   "classification": "FAIL",
+   "data_end": "2026-06-28 00:00:00+00:00",
+   "data_rows": 12023,
+   "data_start": "2021-01-01 04:00:00+00:00",
+   "dsr_p_value": 0.0071,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_ATR_PULLBACK_TREND",
+   "summary": {
+    "avg_fold_test_return_pct": 18.34,
+    "best_params": {
+     "dist_atr": 0.75,
+     "ema_len": 20,
+     "slope_atr": 0.5,
+     "stop_lookback": 10
+    },
+    "best_train_sharpe_pt": 0.110728,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 52.802,
+     "buy_hold_ret_dd_ratio": -0.7084,
+     "buy_hold_return_pct": -37.407
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 18.831,
+     "ema_num_trades": 7,
+     "ema_ret_dd_ratio": 0.4215,
+     "ema_return_pct": 7.937
+    },
+    "fold_test_returns_pct": [
+     13.08,
+     23.599
+    ],
+    "fold_test_sharpes": [
+     0.8215,
+     1.2058
+    ],
+    "fold_test_trade_counts": [
+     24,
+     25
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": -0.4688,
+     "annualized_sortino": -0.3411,
+     "avg_R": -0.081,
+     "equity_curve_health": 0.125,
+     "expectancy_R": -0.081,
+     "max_consecutive_losses": 6,
+     "max_drawdown_pct": -21.04,
+     "net_after_slippage_pct": -12.484,
+     "net_return_pct": -11.351,
+     "num_trades": 32,
+     "profit_factor": 0.795,
+     "sharpe": -0.5386,
+     "sharpe_pt": -0.095217,
+     "top_trade_concentration": 0.1569,
+     "win_rate": 0.3125
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "folds": 2,
+     "mode": "exact_match"
+    },
+    "param_stability_score": 1.0,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": -22.635,
+      "low_vol": 8.114,
+      "range": 0.089,
+      "trend": -11.43
+     },
+     "bucket_trade_counts": {
+      "high_vol": 6,
+      "low_vol": 8,
+      "range": 4,
+      "trend": 28
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "high_vol",
+     "worst_regime_return_pct": -22.635
+    },
+    "worst_window_drawdown_pct": 8.22
+   },
+   "symbol": "BTCUSD",
+   "timeframe": "4h",
+   "trial_count": 72,
+   "trial_sr_max": 0.5471,
+   "trial_sr_std": 0.3243
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 19:00:00+00:00",
+   "data_rows": 8884,
+   "data_start": "2020-07-27 14:00:00+00:00",
+   "dsr_p_value": 0.0002,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_ATR_PULLBACK_TREND",
+   "summary": {
+    "avg_fold_test_return_pct": -0.678,
+    "best_params": {
+     "dist_atr": 0.5,
+     "ema_len": 100,
+     "slope_atr": 0.1,
+     "stop_lookback": 10
+    },
+    "best_train_sharpe_pt": 0.239555,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 22.97,
+     "buy_hold_ret_dd_ratio": 1.6186,
+     "buy_hold_return_pct": 37.179
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 5.422,
+     "ema_num_trades": 6,
+     "ema_ret_dd_ratio": 5.6897,
+     "ema_return_pct": 30.85
+    },
+    "fold_test_returns_pct": [
+     -1.372,
+     0.017
+    ],
+    "fold_test_sharpes": [
+     -0.4366,
+     0.017
+    ],
+    "fold_test_trade_counts": [
+     7,
+     4
+    ],
+    "folds_positive": 1,
+    "lockbox_oos": {
+     "annualized_sharpe": -2.1211,
+     "annualized_sortino": -0.6668,
+     "avg_R": -0.5385,
+     "equity_curve_health": 0.0769,
+     "expectancy_R": -0.5385,
+     "max_consecutive_losses": 8,
+     "max_drawdown_pct": -9.694,
+     "net_after_slippage_pct": -10.283,
+     "net_return_pct": -9.812,
+     "num_trades": 13,
+     "profit_factor": 0.037,
+     "sharpe": -2.9764,
+     "sharpe_pt": -0.825512,
+     "top_trade_concentration": 1.0,
+     "win_rate": 0.0769
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "folds": 2,
+     "mode": "exact_match"
+    },
+    "param_stability_score": 1.0,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": -3.884,
+      "low_vol": 0.28,
+      "range": -4.192,
+      "trend": -5.866
+     },
+     "bucket_trade_counts": {
+      "high_vol": 2,
+      "low_vol": 3,
+      "range": 5,
+      "trend": 8
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "trend",
+     "worst_regime_return_pct": -5.866
+    },
+    "worst_window_drawdown_pct": 1.945
+   },
+   "symbol": "QQQ",
+   "timeframe": "1h",
+   "trial_count": 72,
+   "trial_sr_max": 0.2843,
+   "trial_sr_std": 0.2965
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 16:00:00+00:00",
+   "data_rows": 1990,
+   "data_start": "2020-07-27 16:00:00+00:00",
+   "dsr_p_value": 0.0184,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_ATR_PULLBACK_TREND",
+   "summary": {
+    "avg_fold_test_return_pct": 7.691,
+    "best_params": {
+     "dist_atr": 1.0,
+     "ema_len": 20,
+     "slope_atr": 0.1,
+     "stop_lookback": 5
+    },
+    "best_train_sharpe_pt": 0.175398,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 22.873,
+     "buy_hold_ret_dd_ratio": 1.6924,
+     "buy_hold_return_pct": 38.71
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 7.346,
+     "ema_num_trades": 3,
+     "ema_ret_dd_ratio": 1.4909,
+     "ema_return_pct": 10.952
+    },
+    "fold_test_returns_pct": [
+     11.614,
+     3.768
+    ],
+    "fold_test_sharpes": [
+     1.3127,
+     0.3651
+    ],
+    "fold_test_trade_counts": [
+     11,
+     10
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": -0.8326,
+     "annualized_sortino": -0.4787,
+     "avg_R": -0.2294,
+     "equity_curve_health": 0.1875,
+     "expectancy_R": -0.2294,
+     "max_consecutive_losses": 6,
+     "max_drawdown_pct": -10.043,
+     "net_after_slippage_pct": -7.857,
+     "net_return_pct": -7.262,
+     "num_trades": 16,
+     "profit_factor": 0.617,
+     "sharpe": -0.7936,
+     "sharpe_pt": -0.198397,
+     "top_trade_concentration": 0.3652,
+     "win_rate": 0.25
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.875,
+     "numeric_keys_used": 4
+    },
+    "param_stability_score": 0.875,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": -3.802,
+      "low_vol": -5.222,
+      "range": -6.533,
+      "trend": -0.78
+     },
+     "bucket_trade_counts": {
+      "high_vol": 1,
+      "low_vol": 6,
+      "range": 14,
+      "trend": 2
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "range",
+     "worst_regime_return_pct": -6.533
+    },
+    "worst_window_drawdown_pct": 4.892
+   },
+   "symbol": "QQQ",
+   "timeframe": "4h",
+   "trial_count": 72,
+   "trial_sr_max": 0.4756,
+   "trial_sr_std": 3.8146
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": 0.4525,
+   "classification": "FAIL",
+   "data_end": "2026-06-26 19:00:00+00:00",
+   "data_rows": 8887,
+   "data_start": "2020-07-27 14:00:00+00:00",
+   "dsr_p_value": 0.0138,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_ATR_PULLBACK_TREND",
+   "summary": {
+    "avg_fold_test_return_pct": 3.965,
+    "best_params": {
+     "dist_atr": 0.75,
+     "ema_len": 20,
+     "slope_atr": 0.25,
+     "stop_lookback": 10
+    },
+    "best_train_sharpe_pt": 0.109561,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 19.314,
+     "buy_hold_ret_dd_ratio": 1.3228,
+     "buy_hold_return_pct": 25.549
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 1.761,
+     "ema_num_trades": 7,
+     "ema_ret_dd_ratio": 12.8639,
+     "ema_return_pct": 22.651
+    },
+    "fold_test_returns_pct": [
+     8.563,
+     -0.634
+    ],
+    "fold_test_sharpes": [
+     1.2272,
+     -0.0521
+    ],
+    "fold_test_trade_counts": [
+     31,
+     31
+    ],
+    "folds_positive": 1,
+    "lockbox_oos": {
+     "annualized_sharpe": 0.0952,
+     "annualized_sortino": 0.0847,
+     "avg_R": 0.0581,
+     "equity_curve_health": 0.1333,
+     "expectancy_R": 0.0581,
+     "max_consecutive_losses": 9,
+     "max_drawdown_pct": -10.007,
+     "net_after_slippage_pct": -1.334,
+     "net_return_pct": 0.458,
+     "num_trades": 45,
+     "profit_factor": 1.048,
+     "sharpe": 0.0949,
+     "sharpe_pt": 0.014154,
+     "top_trade_concentration": 0.3616,
+     "win_rate": 0.3333
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "folds": 2,
+     "mode": "exact_match"
+    },
+    "param_stability_score": 1.0,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 6.565,
+      "low_vol": -1.503,
+      "range": -0.571,
+      "trend": 1.035
+     },
+     "bucket_trade_counts": {
+      "high_vol": 7,
+      "low_vol": 14,
+      "range": 24,
+      "trend": 21
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "low_vol",
+     "worst_regime_return_pct": -1.503
+    },
+    "worst_window_drawdown_pct": 6.353
+   },
+   "symbol": "SPY",
+   "timeframe": "1h",
+   "trial_count": 72,
+   "trial_sr_max": 0.5358,
+   "trial_sr_std": 0.2692
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 16:00:00+00:00",
+   "data_rows": 1990,
+   "data_start": "2020-07-27 16:00:00+00:00",
+   "dsr_p_value": 0.316,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_ATR_PULLBACK_TREND",
+   "summary": {
+    "avg_fold_test_return_pct": 3.716,
+    "best_params": {
+     "dist_atr": 1.0,
+     "ema_len": 50,
+     "slope_atr": 0.1,
+     "stop_lookback": 10
+    },
+    "best_train_sharpe_pt": 0.443724,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 18.76,
+     "buy_hold_ret_dd_ratio": 1.3979,
+     "buy_hold_return_pct": 26.224
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 5.644,
+     "ema_num_trades": 3,
+     "ema_ret_dd_ratio": 2.7849,
+     "ema_return_pct": 15.718
+    },
+    "fold_test_returns_pct": [
+     9.354,
+     -1.921
+    ],
+    "fold_test_sharpes": [
+     1.142,
+     -0.5905
+    ],
+    "fold_test_trade_counts": [
+     8,
+     5
+    ],
+    "folds_positive": 1,
+    "lockbox_oos": {
+     "annualized_sharpe": 0.9895,
+     "annualized_sortino": 0.7499,
+     "avg_R": 0.6154,
+     "equity_curve_health": 0.3077,
+     "expectancy_R": 0.6154,
+     "max_consecutive_losses": 2,
+     "max_drawdown_pct": -5.327,
+     "net_after_slippage_pct": 7.279,
+     "net_return_pct": 7.836,
+     "num_trades": 13,
+     "profit_factor": 1.955,
+     "sharpe": 0.744,
+     "sharpe_pt": 0.206347,
+     "top_trade_concentration": 0.5487,
+     "win_rate": 0.5385
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "folds": 2,
+     "mode": "exact_match"
+    },
+    "param_stability_score": 1.0,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 7.933,
+      "low_vol": 0.123,
+      "range": 8.734,
+      "trend": -0.826
+     },
+     "bucket_trade_counts": {
+      "high_vol": 3,
+      "low_vol": 5,
+      "range": 10,
+      "trend": 3
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "trend",
+     "worst_regime_return_pct": -0.826
+    },
+    "worst_window_drawdown_pct": 2.572
+   },
+   "symbol": "SPY",
+   "timeframe": "4h",
+   "trial_count": 72,
+   "trial_sr_max": 0.8799,
+   "trial_sr_std": 0.3189
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": 0.878,
+   "classification": "FAIL",
+   "data_end": "2026-06-28 00:00:00+00:00",
+   "data_rows": 48077,
+   "data_start": "2021-01-01 06:00:00+00:00",
+   "dsr_p_value": 0.0,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_DONCHIAN_BREAKOUT",
+   "summary": {
+    "avg_fold_test_return_pct": -9.553,
+    "best_params": {
+     "atr_buf": 0.5,
+     "channel_len": 150,
+     "stop_lookback": 10
+    },
+    "best_train_sharpe_pt": 0.122818,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 53.852,
+     "buy_hold_ret_dd_ratio": -0.6872,
+     "buy_hold_return_pct": -37.005
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 29.296,
+     "ema_num_trades": 38,
+     "ema_ret_dd_ratio": -0.9208,
+     "ema_return_pct": -26.977
+    },
+    "fold_test_returns_pct": [
+     -29.884,
+     10.778
+    ],
+    "fold_test_sharpes": [
+     -1.2586,
+     0.5827
+    ],
+    "fold_test_trade_counts": [
+     27,
+     29
+    ],
+    "folds_positive": 1,
+    "lockbox_oos": {
+     "annualized_sharpe": -0.8413,
+     "annualized_sortino": -0.6672,
+     "avg_R": -0.2307,
+     "equity_curve_health": 0.0833,
+     "expectancy_R": -0.2307,
+     "max_consecutive_losses": 7,
+     "max_drawdown_pct": -17.014,
+     "net_after_slippage_pct": -17.999,
+     "net_return_pct": -16.802,
+     "num_trades": 36,
+     "profit_factor": 0.699,
+     "sharpe": -0.9252,
+     "sharpe_pt": -0.154204,
+     "top_trade_concentration": 0.1729,
+     "win_rate": 0.2778
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.8611,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.8611,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": -8.825,
+      "low_vol": 1.304,
+      "range": 3.292,
+      "trend": -19.454
+     },
+     "bucket_trade_counts": {
+      "high_vol": 3,
+      "low_vol": 6,
+      "range": 5,
+      "trend": 31
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "trend",
+     "worst_regime_return_pct": -19.454
+    },
+    "worst_window_drawdown_pct": 28.612
+   },
+   "symbol": "BTCUSD",
+   "timeframe": "1h",
+   "trial_count": 60,
+   "trial_sr_max": 0.1228,
+   "trial_sr_std": 0.0441
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": 0.53,
+   "classification": "FAIL",
+   "data_end": "2026-06-28 00:00:00+00:00",
+   "data_rows": 12023,
+   "data_start": "2021-01-01 04:00:00+00:00",
+   "dsr_p_value": 0.0004,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_DONCHIAN_BREAKOUT",
+   "summary": {
+    "avg_fold_test_return_pct": 7.899,
+    "best_params": {
+     "atr_buf": 0.5,
+     "channel_len": 10,
+     "stop_lookback": 5
+    },
+    "best_train_sharpe_pt": 0.036852,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 52.802,
+     "buy_hold_ret_dd_ratio": -0.7084,
+     "buy_hold_return_pct": -37.407
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 18.831,
+     "ema_num_trades": 7,
+     "ema_ret_dd_ratio": 0.4215,
+     "ema_return_pct": 7.937
+    },
+    "fold_test_returns_pct": [
+     -19.044,
+     34.841
+    ],
+    "fold_test_sharpes": [
+     -0.5281,
+     1.1711
+    ],
+    "fold_test_trade_counts": [
+     24,
+     23
+    ],
+    "folds_positive": 1,
+    "lockbox_oos": {
+     "annualized_sharpe": -0.5354,
+     "annualized_sortino": -0.4395,
+     "avg_R": -0.0021,
+     "equity_curve_health": 0.1613,
+     "expectancy_R": -0.0021,
+     "max_consecutive_losses": 8,
+     "max_drawdown_pct": -29.909,
+     "net_after_slippage_pct": -18.857,
+     "net_return_pct": -17.837,
+     "num_trades": 31,
+     "profit_factor": 0.798,
+     "sharpe": -0.525,
+     "sharpe_pt": -0.094292,
+     "top_trade_concentration": 0.2458,
+     "win_rate": 0.3548
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.7381,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.7381,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": -13.615,
+      "low_vol": 6.163,
+      "range": -4.025,
+      "trend": -14.391
+     },
+     "bucket_trade_counts": {
+      "high_vol": 7,
+      "low_vol": 7,
+      "range": 9,
+      "trend": 22
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "trend",
+     "worst_regime_return_pct": -14.391
+    },
+    "worst_window_drawdown_pct": 25.334
+   },
+   "symbol": "BTCUSD",
+   "timeframe": "4h",
+   "trial_count": 60,
+   "trial_sr_max": 0.0765,
+   "trial_sr_std": 0.083
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 19:00:00+00:00",
+   "data_rows": 8884,
+   "data_start": "2020-07-27 14:00:00+00:00",
+   "dsr_p_value": 0.1995,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_DONCHIAN_BREAKOUT",
+   "summary": {
+    "avg_fold_test_return_pct": 5.589,
+    "best_params": {
+     "atr_buf": 0.5,
+     "channel_len": 80,
+     "stop_lookback": 10
+    },
+    "best_train_sharpe_pt": 0.38897,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 22.97,
+     "buy_hold_ret_dd_ratio": 1.6186,
+     "buy_hold_return_pct": 37.179
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 5.422,
+     "ema_num_trades": 6,
+     "ema_ret_dd_ratio": 5.6897,
+     "ema_return_pct": 30.85
+    },
+    "fold_test_returns_pct": [
+     8.955,
+     2.223
+    ],
+    "fold_test_sharpes": [
+     0.962,
+     0.3154
+    ],
+    "fold_test_trade_counts": [
+     12,
+     10
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": 1.4243,
+     "annualized_sortino": 1.3841,
+     "avg_R": 0.207,
+     "equity_curve_health": 0.4375,
+     "expectancy_R": 0.207,
+     "max_consecutive_losses": 5,
+     "max_drawdown_pct": -7.865,
+     "net_after_slippage_pct": 15.915,
+     "net_return_pct": 16.653,
+     "num_trades": 16,
+     "profit_factor": 2.086,
+     "sharpe": 1.1875,
+     "sharpe_pt": 0.296876,
+     "top_trade_concentration": 0.2664,
+     "win_rate": 0.4375
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.6389,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.6389,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 13.259,
+      "low_vol": 0.881,
+      "range": 5.702,
+      "trend": 10.36
+     },
+     "bucket_trade_counts": {
+      "high_vol": 2,
+      "low_vol": 5,
+      "range": 5,
+      "trend": 11
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "low_vol",
+     "worst_regime_return_pct": 0.881
+    },
+    "worst_window_drawdown_pct": 6.307
+   },
+   "symbol": "QQQ",
+   "timeframe": "1h",
+   "trial_count": 60,
+   "trial_sr_max": 0.389,
+   "trial_sr_std": 0.1098
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 16:00:00+00:00",
+   "data_rows": 1990,
+   "data_start": "2020-07-27 16:00:00+00:00",
+   "dsr_p_value": 0.6199,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_DONCHIAN_BREAKOUT",
+   "summary": {
+    "avg_fold_test_return_pct": 11.985,
+    "best_params": {
+     "atr_buf": 0.5,
+     "channel_len": 80,
+     "stop_lookback": 20
+    },
+    "best_train_sharpe_pt": 0.659414,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 22.873,
+     "buy_hold_ret_dd_ratio": 1.6924,
+     "buy_hold_return_pct": 38.71
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 7.346,
+     "ema_num_trades": 3,
+     "ema_ret_dd_ratio": 1.4909,
+     "ema_return_pct": 10.952
+    },
+    "fold_test_returns_pct": [
+     21.734,
+     2.235
+    ],
+    "fold_test_sharpes": [
+     0.9238,
+     0.2475
+    ],
+    "fold_test_trade_counts": [
+     3,
+     3
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": 1.2535,
+     "annualized_sortino": 1.0929,
+     "avg_R": 0.5364,
+     "equity_curve_health": 0.75,
+     "expectancy_R": 0.5364,
+     "max_consecutive_losses": 1,
+     "max_drawdown_pct": -3.945,
+     "net_after_slippage_pct": 19.906,
+     "net_return_pct": 20.089,
+     "num_trades": 4,
+     "profit_factor": 5.917,
+     "sharpe": 1.4338,
+     "sharpe_pt": 0.716916,
+     "top_trade_concentration": 0.4617,
+     "win_rate": 0.75
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.6722,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.6722,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 9.499,
+      "low_vol": -3.945,
+      "range": 6.408,
+      "trend": 12.857
+     },
+     "bucket_trade_counts": {
+      "high_vol": 1,
+      "low_vol": 1,
+      "range": 2,
+      "trend": 2
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "low_vol",
+     "worst_regime_return_pct": -3.945
+    },
+    "worst_window_drawdown_pct": 7.705
+   },
+   "symbol": "QQQ",
+   "timeframe": "4h",
+   "trial_count": 60,
+   "trial_sr_max": 0.6594,
+   "trial_sr_std": 0.2207
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 19:00:00+00:00",
+   "data_rows": 8887,
+   "data_start": "2020-07-27 14:00:00+00:00",
+   "dsr_p_value": 0.0236,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_DONCHIAN_BREAKOUT",
+   "summary": {
+    "avg_fold_test_return_pct": 12.421,
+    "best_params": {
+     "atr_buf": 0.1,
+     "channel_len": 80,
+     "stop_lookback": 5
+    },
+    "best_train_sharpe_pt": 0.257039,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 19.314,
+     "buy_hold_ret_dd_ratio": 1.3228,
+     "buy_hold_return_pct": 25.549
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 1.761,
+     "ema_num_trades": 7,
+     "ema_ret_dd_ratio": 12.8639,
+     "ema_return_pct": 22.651
+    },
+    "fold_test_returns_pct": [
+     11.43,
+     13.411
+    ],
+    "fold_test_sharpes": [
+     1.8707,
+     3.0012
+    ],
+    "fold_test_trade_counts": [
+     15,
+     14
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": 0.5785,
+     "annualized_sortino": 0.5467,
+     "avg_R": -0.0839,
+     "equity_curve_health": 0.2,
+     "expectancy_R": -0.0839,
+     "max_consecutive_losses": 6,
+     "max_drawdown_pct": -5.306,
+     "net_after_slippage_pct": 3.618,
+     "net_return_pct": 4.658,
+     "num_trades": 25,
+     "profit_factor": 1.352,
+     "sharpe": 0.5657,
+     "sharpe_pt": 0.113137,
+     "top_trade_concentration": 0.3025,
+     "win_rate": 0.32
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.95,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.95,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 7.23,
+      "low_vol": -2.972,
+      "range": 5.215,
+      "trend": -0.53
+     },
+     "bucket_trade_counts": {
+      "high_vol": 3,
+      "low_vol": 13,
+      "range": 8,
+      "trend": 17
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "low_vol",
+     "worst_regime_return_pct": -2.972
+    },
+    "worst_window_drawdown_pct": 3.655
+   },
+   "symbol": "SPY",
+   "timeframe": "1h",
+   "trial_count": 60,
+   "trial_sr_max": 0.2586,
+   "trial_sr_std": 0.0737
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 16:00:00+00:00",
+   "data_rows": 1990,
+   "data_start": "2020-07-27 16:00:00+00:00",
+   "dsr_p_value": 0.4871,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_DONCHIAN_BREAKOUT",
+   "summary": {
+    "avg_fold_test_return_pct": 14.471,
+    "best_params": {
+     "atr_buf": 0.25,
+     "channel_len": 20,
+     "stop_lookback": 20
+    },
+    "best_train_sharpe_pt": 0.376758,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 18.76,
+     "buy_hold_ret_dd_ratio": 1.3979,
+     "buy_hold_return_pct": 26.224
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 5.644,
+     "ema_num_trades": 3,
+     "ema_ret_dd_ratio": 2.7849,
+     "ema_return_pct": 15.718
+    },
+    "fold_test_returns_pct": [
+     19.481,
+     9.461
+    ],
+    "fold_test_sharpes": [
+     5.4385,
+     0.739
+    ],
+    "fold_test_trade_counts": [
+     2,
+     3
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": 1.7493,
+     "annualized_sortino": 1.9427,
+     "avg_R": 0.2583,
+     "equity_curve_health": 0.8,
+     "expectancy_R": 0.2583,
+     "max_consecutive_losses": 1,
+     "max_drawdown_pct": -1.988,
+     "net_after_slippage_pct": 23.027,
+     "net_return_pct": 23.264,
+     "num_trades": 5,
+     "profit_factor": 4.544,
+     "sharpe": 1.1231,
+     "sharpe_pt": 0.502257,
+     "top_trade_concentration": 0.6338,
+     "win_rate": 0.6
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.8119,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.8119,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 27.561,
+      "low_vol": 1.159,
+      "range": 14.619,
+      "trend": 7.543
+     },
+     "bucket_trade_counts": {
+      "high_vol": 2,
+      "low_vol": 2,
+      "range": 4,
+      "trend": 1
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "low_vol",
+     "worst_regime_return_pct": 1.159
+    },
+    "worst_window_drawdown_pct": 5.435
+   },
+   "symbol": "SPY",
+   "timeframe": "4h",
+   "trial_count": 60,
+   "trial_sr_max": 0.5996,
+   "trial_sr_std": 0.1731
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": 0.4355,
+   "classification": "FAIL",
+   "data_end": "2026-06-28 00:00:00+00:00",
+   "data_rows": 48077,
+   "data_start": "2021-01-01 06:00:00+00:00",
+   "dsr_p_value": 0.0,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_GOLDEN_CROSS_PULLBACK",
+   "summary": {
+    "avg_fold_test_return_pct": -0.141,
+    "best_params": {
+     "fast_ema": 50,
+     "pull_atr": 0.1,
+     "slow_ema": 100,
+     "stop_lookback": 10
+    },
+    "best_train_sharpe_pt": 0.009835,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 53.852,
+     "buy_hold_ret_dd_ratio": -0.6872,
+     "buy_hold_return_pct": -37.005
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 29.296,
+     "ema_num_trades": 38,
+     "ema_ret_dd_ratio": -0.9208,
+     "ema_return_pct": -26.977
+    },
+    "fold_test_returns_pct": [
+     -12.05,
+     11.768
+    ],
+    "fold_test_sharpes": [
+     -1.0002,
+     1.551
+    ],
+    "fold_test_trade_counts": [
+     50,
+     37
+    ],
+    "folds_positive": 1,
+    "lockbox_oos": {
+     "annualized_sharpe": -1.2597,
+     "annualized_sortino": -0.9358,
+     "avg_R": 0.0267,
+     "equity_curve_health": 0.0115,
+     "expectancy_R": 0.0267,
+     "max_consecutive_losses": 8,
+     "max_drawdown_pct": -19.561,
+     "net_after_slippage_pct": -18.532,
+     "net_return_pct": -15.64,
+     "num_trades": 87,
+     "profit_factor": 0.663,
+     "sharpe": -1.5726,
+     "sharpe_pt": -0.168598,
+     "top_trade_concentration": 0.084,
+     "win_rate": 0.3448
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.9583,
+     "numeric_keys_used": 4
+    },
+    "param_stability_score": 0.9583,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": -5.629,
+      "low_vol": 0.548,
+      "range": 2.378,
+      "trend": -17.6
+     },
+     "bucket_trade_counts": {
+      "high_vol": 13,
+      "low_vol": 23,
+      "range": 37,
+      "trend": 50
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "trend",
+     "worst_regime_return_pct": -17.6
+    },
+    "worst_window_drawdown_pct": 14.322
+   },
+   "symbol": "BTCUSD",
+   "timeframe": "1h",
+   "trial_count": 72,
+   "trial_sr_max": 0.0292,
+   "trial_sr_std": 0.04
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-28 00:00:00+00:00",
+   "data_rows": 12023,
+   "data_start": "2021-01-01 04:00:00+00:00",
+   "dsr_p_value": 0.0096,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_GOLDEN_CROSS_PULLBACK",
+   "summary": {
+    "avg_fold_test_return_pct": -5.133,
+    "best_params": {
+     "fast_ema": 20,
+     "pull_atr": 0.6,
+     "slow_ema": 150,
+     "stop_lookback": 20
+    },
+    "best_train_sharpe_pt": 0.066132,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 52.802,
+     "buy_hold_ret_dd_ratio": -0.7084,
+     "buy_hold_return_pct": -37.407
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 18.831,
+     "ema_num_trades": 7,
+     "ema_ret_dd_ratio": 0.4215,
+     "ema_return_pct": 7.937
+    },
+    "fold_test_returns_pct": [
+     -12.471,
+     2.205
+    ],
+    "fold_test_sharpes": [
+     -0.1355,
+     0.203
+    ],
+    "fold_test_trade_counts": [
+     21,
+     18
+    ],
+    "folds_positive": 1,
+    "lockbox_oos": {
+     "annualized_sharpe": 0.0232,
+     "annualized_sortino": 0.0252,
+     "avg_R": -0.0699,
+     "equity_curve_health": 0.1429,
+     "expectancy_R": -0.0699,
+     "max_consecutive_losses": 7,
+     "max_drawdown_pct": -24.912,
+     "net_after_slippage_pct": -2.99,
+     "net_return_pct": -1.895,
+     "num_trades": 28,
+     "profit_factor": 1.023,
+     "sharpe": 0.0507,
+     "sharpe_pt": 0.009589,
+     "top_trade_concentration": 0.2203,
+     "win_rate": 0.3214
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.625,
+     "numeric_keys_used": 4
+    },
+    "param_stability_score": 0.625,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": -6.221,
+      "low_vol": -2.086,
+      "range": -14.057,
+      "trend": 14.151
+     },
+     "bucket_trade_counts": {
+      "high_vol": 2,
+      "low_vol": 8,
+      "range": 6,
+      "trend": 22
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "range",
+     "worst_regime_return_pct": -14.057
+    },
+    "worst_window_drawdown_pct": 37.374
+   },
+   "symbol": "BTCUSD",
+   "timeframe": "4h",
+   "trial_count": 72,
+   "trial_sr_max": 0.0661,
+   "trial_sr_std": 0.0663
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 19:00:00+00:00",
+   "data_rows": 8884,
+   "data_start": "2020-07-27 14:00:00+00:00",
+   "dsr_p_value": 0.124,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_GOLDEN_CROSS_PULLBACK",
+   "summary": {
+    "avg_fold_test_return_pct": 7.164,
+    "best_params": {
+     "fast_ema": 50,
+     "pull_atr": 0.25,
+     "slow_ema": 100,
+     "stop_lookback": 20
+    },
+    "best_train_sharpe_pt": 0.162615,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 22.97,
+     "buy_hold_ret_dd_ratio": 1.6186,
+     "buy_hold_return_pct": 37.179
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 5.422,
+     "ema_num_trades": 6,
+     "ema_ret_dd_ratio": 5.6897,
+     "ema_return_pct": 30.85
+    },
+    "fold_test_returns_pct": [
+     9.017,
+     5.311
+    ],
+    "fold_test_sharpes": [
+     1.3273,
+     0.73
+    ],
+    "fold_test_trade_counts": [
+     14,
+     16
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": 0.2476,
+     "annualized_sortino": 0.1816,
+     "avg_R": -0.0091,
+     "equity_curve_health": 0.2,
+     "expectancy_R": -0.0091,
+     "max_consecutive_losses": 4,
+     "max_drawdown_pct": -6.769,
+     "net_after_slippage_pct": 1.127,
+     "net_return_pct": 1.532,
+     "num_trades": 10,
+     "profit_factor": 1.201,
+     "sharpe": 0.2369,
+     "sharpe_pt": 0.074915,
+     "top_trade_concentration": 0.4245,
+     "win_rate": 0.4
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.9167,
+     "numeric_keys_used": 4
+    },
+    "param_stability_score": 0.9167,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 3.467,
+      "low_vol": 0.0,
+      "range": -3.144,
+      "trend": 4.827
+     },
+     "bucket_trade_counts": {
+      "high_vol": 3,
+      "low_vol": 0,
+      "range": 3,
+      "trend": 7
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 3,
+     "weak_regime_identified": "range",
+     "worst_regime_return_pct": -3.144
+    },
+    "worst_window_drawdown_pct": 2.871
+   },
+   "symbol": "QQQ",
+   "timeframe": "1h",
+   "trial_count": 72,
+   "trial_sr_max": 0.2295,
+   "trial_sr_std": 0.0863
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 16:00:00+00:00",
+   "data_rows": 1990,
+   "data_start": "2020-07-27 16:00:00+00:00",
+   "dsr_p_value": 0.2562,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_GOLDEN_CROSS_PULLBACK",
+   "summary": {
+    "avg_fold_test_return_pct": 10.101,
+    "best_params": {
+     "fast_ema": 50,
+     "pull_atr": 0.6,
+     "slow_ema": 100,
+     "stop_lookback": 10
+    },
+    "best_train_sharpe_pt": 0.225029,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 22.873,
+     "buy_hold_ret_dd_ratio": 1.6924,
+     "buy_hold_return_pct": 38.71
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 7.346,
+     "ema_num_trades": 3,
+     "ema_ret_dd_ratio": 1.4909,
+     "ema_return_pct": 10.952
+    },
+    "fold_test_returns_pct": [
+     8.973,
+     11.229
+    ],
+    "fold_test_sharpes": [
+     0.656,
+     0.8028
+    ],
+    "fold_test_trade_counts": [
+     7,
+     9
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": 0.0222,
+     "annualized_sortino": 0.0115,
+     "avg_R": 0.1611,
+     "equity_curve_health": 0.3333,
+     "expectancy_R": 0.1611,
+     "max_consecutive_losses": 2,
+     "max_drawdown_pct": -3.749,
+     "net_after_slippage_pct": -0.251,
+     "net_return_pct": -0.132,
+     "num_trades": 3,
+     "profit_factor": 0.993,
+     "sharpe": -0.0046,
+     "sharpe_pt": -0.002652,
+     "top_trade_concentration": 1.0,
+     "win_rate": 0.3333
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.9083,
+     "numeric_keys_used": 4
+    },
+    "param_stability_score": 0.9083,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": -2.101,
+      "low_vol": 0.0,
+      "range": 2.012,
+      "trend": -2.101
+     },
+     "bucket_trade_counts": {
+      "high_vol": 1,
+      "low_vol": 0,
+      "range": 2,
+      "trend": 1
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 3,
+     "weak_regime_identified": "trend",
+     "worst_regime_return_pct": -2.101
+    },
+    "worst_window_drawdown_pct": 9.486
+   },
+   "symbol": "QQQ",
+   "timeframe": "4h",
+   "trial_count": 72,
+   "trial_sr_max": 0.225,
+   "trial_sr_std": 0.4533
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": 0.5745,
+   "classification": "FAIL",
+   "data_end": "2026-06-26 19:00:00+00:00",
+   "data_rows": 8887,
+   "data_start": "2020-07-27 14:00:00+00:00",
+   "dsr_p_value": 0.0019,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_GOLDEN_CROSS_PULLBACK",
+   "summary": {
+    "avg_fold_test_return_pct": 3.921,
+    "best_params": {
+     "fast_ema": 50,
+     "pull_atr": 0.6,
+     "slow_ema": 200,
+     "stop_lookback": 10
+    },
+    "best_train_sharpe_pt": 0.169647,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 19.314,
+     "buy_hold_ret_dd_ratio": 1.3228,
+     "buy_hold_return_pct": 25.549
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 1.761,
+     "ema_num_trades": 7,
+     "ema_ret_dd_ratio": 12.8639,
+     "ema_return_pct": 22.651
+    },
+    "fold_test_returns_pct": [
+     3.763,
+     4.08
+    ],
+    "fold_test_sharpes": [
+     0.9363,
+     0.5939
+    ],
+    "fold_test_trade_counts": [
+     16,
+     27
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": -0.1898,
+     "annualized_sortino": -0.1759,
+     "avg_R": -0.0237,
+     "equity_curve_health": 0.25,
+     "expectancy_R": -0.0237,
+     "max_consecutive_losses": 7,
+     "max_drawdown_pct": -8.597,
+     "net_after_slippage_pct": -3.095,
+     "net_return_pct": -1.688,
+     "num_trades": 36,
+     "profit_factor": 0.925,
+     "sharpe": -0.172,
+     "sharpe_pt": -0.028663,
+     "top_trade_concentration": 0.1761,
+     "win_rate": 0.3333
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.9083,
+     "numeric_keys_used": 4
+    },
+    "param_stability_score": 0.9083,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": -9.629,
+      "low_vol": 0.935,
+      "range": 8.072,
+      "trend": -9.031
+     },
+     "bucket_trade_counts": {
+      "high_vol": 6,
+      "low_vol": 9,
+      "range": 15,
+      "trend": 21
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "high_vol",
+     "worst_regime_return_pct": -9.629
+    },
+    "worst_window_drawdown_pct": 4.3
+   },
+   "symbol": "SPY",
+   "timeframe": "1h",
+   "trial_count": 72,
+   "trial_sr_max": 0.273,
+   "trial_sr_std": 0.1057
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 16:00:00+00:00",
+   "data_rows": 1990,
+   "data_start": "2020-07-27 16:00:00+00:00",
+   "dsr_p_value": 0.0974,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_GOLDEN_CROSS_PULLBACK",
+   "summary": {
+    "avg_fold_test_return_pct": 12.819,
+    "best_params": {
+     "fast_ema": 50,
+     "pull_atr": 0.6,
+     "slow_ema": 100,
+     "stop_lookback": 20
+    },
+    "best_train_sharpe_pt": 0.553795,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 18.76,
+     "buy_hold_ret_dd_ratio": 1.3979,
+     "buy_hold_return_pct": 26.224
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 5.644,
+     "ema_num_trades": 3,
+     "ema_ret_dd_ratio": 2.7849,
+     "ema_return_pct": 15.718
+    },
+    "fold_test_returns_pct": [
+     11.083,
+     14.556
+    ],
+    "fold_test_sharpes": [
+     0.8376,
+     1.3446
+    ],
+    "fold_test_trade_counts": [
+     6,
+     3
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": -0.2307,
+     "annualized_sortino": -0.1571,
+     "avg_R": 0.247,
+     "equity_curve_health": 0.3333,
+     "expectancy_R": 0.247,
+     "max_consecutive_losses": 1,
+     "max_drawdown_pct": -2.742,
+     "net_after_slippage_pct": -2.265,
+     "net_return_pct": -2.029,
+     "num_trades": 6,
+     "profit_factor": 0.751,
+     "sharpe": -0.2971,
+     "sharpe_pt": -0.121277,
+     "top_trade_concentration": 0.5466,
+     "win_rate": 0.5
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.95,
+     "numeric_keys_used": 4
+    },
+    "param_stability_score": 0.95,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 2.581,
+      "low_vol": -3.644,
+      "range": 1.405,
+      "trend": -3.386
+     },
+     "bucket_trade_counts": {
+      "high_vol": 2,
+      "low_vol": 1,
+      "range": 2,
+      "trend": 4
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "low_vol",
+     "worst_regime_return_pct": -3.644
+    },
+    "worst_window_drawdown_pct": 6.364
+   },
+   "symbol": "SPY",
+   "timeframe": "4h",
+   "trial_count": 72,
+   "trial_sr_max": 0.7415,
+   "trial_sr_std": 0.2364
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": 0.7505,
+   "classification": "FAIL",
+   "data_end": "2026-06-28 00:00:00+00:00",
+   "data_rows": 48077,
+   "data_start": "2021-01-01 06:00:00+00:00",
+   "dsr_p_value": 0.0008,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_KELTNER_BREAKOUT",
+   "summary": {
+    "avg_fold_test_return_pct": 1.417,
+    "best_params": {
+     "atr_len": 20,
+     "ema_len": 20,
+     "mult": 3.0
+    },
+    "best_train_sharpe_pt": 0.065792,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 53.852,
+     "buy_hold_ret_dd_ratio": -0.6872,
+     "buy_hold_return_pct": -37.005
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 29.296,
+     "ema_num_trades": 38,
+     "ema_ret_dd_ratio": -0.9208,
+     "ema_return_pct": -26.977
+    },
+    "fold_test_returns_pct": [
+     -19.202,
+     22.037
+    ],
+    "fold_test_sharpes": [
+     -0.8323,
+     1.0737
+    ],
+    "fold_test_trade_counts": [
+     36,
+     33
+    ],
+    "folds_positive": 1,
+    "lockbox_oos": {
+     "annualized_sharpe": -1.1073,
+     "annualized_sortino": -0.7369,
+     "avg_R": -0.1186,
+     "equity_curve_health": 0.1111,
+     "expectancy_R": -0.1186,
+     "max_consecutive_losses": 13,
+     "max_drawdown_pct": -32.418,
+     "net_after_slippage_pct": -28.236,
+     "net_return_pct": -26.923,
+     "num_trades": 45,
+     "profit_factor": 0.627,
+     "sharpe": -1.3871,
+     "sharpe_pt": -0.20677,
+     "top_trade_concentration": 0.1323,
+     "win_rate": 0.3333
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.8333,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.8333,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": -30.055,
+      "low_vol": 3.781,
+      "range": 2.887,
+      "trend": -28.974
+     },
+     "bucket_trade_counts": {
+      "high_vol": 13,
+      "low_vol": 9,
+      "range": 3,
+      "trend": 42
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "high_vol",
+     "worst_regime_return_pct": -30.055
+    },
+    "worst_window_drawdown_pct": 23.25
+   },
+   "symbol": "BTCUSD",
+   "timeframe": "1h",
+   "trial_count": 16,
+   "trial_sr_max": 0.0658,
+   "trial_sr_std": 0.0481
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": 0.589,
+   "classification": "FAIL",
+   "data_end": "2026-06-28 00:00:00+00:00",
+   "data_rows": 12023,
+   "data_start": "2021-01-01 04:00:00+00:00",
+   "dsr_p_value": 0.03,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_KELTNER_BREAKOUT",
+   "summary": {
+    "avg_fold_test_return_pct": 7.03,
+    "best_params": {
+     "atr_len": 10,
+     "ema_len": 20,
+     "mult": 1.5
+    },
+    "best_train_sharpe_pt": 0.141404,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 52.802,
+     "buy_hold_ret_dd_ratio": -0.7084,
+     "buy_hold_return_pct": -37.407
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 18.831,
+     "ema_num_trades": 7,
+     "ema_ret_dd_ratio": 0.4215,
+     "ema_return_pct": 7.937
+    },
+    "fold_test_returns_pct": [
+     14.091,
+     -0.031
+    ],
+    "fold_test_sharpes": [
+     0.5717,
+     0.1275
+    ],
+    "fold_test_trade_counts": [
+     21,
+     24
+    ],
+    "folds_positive": 1,
+    "lockbox_oos": {
+     "annualized_sharpe": -0.3577,
+     "annualized_sortino": -0.3495,
+     "avg_R": -0.0337,
+     "equity_curve_health": 0.0968,
+     "expectancy_R": -0.0337,
+     "max_consecutive_losses": 5,
+     "max_drawdown_pct": -25.73,
+     "net_after_slippage_pct": -11.995,
+     "net_return_pct": -10.891,
+     "num_trades": 31,
+     "profit_factor": 0.844,
+     "sharpe": -0.3913,
+     "sharpe_pt": -0.070276,
+     "top_trade_concentration": 0.2402,
+     "win_rate": 0.3226
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.7778,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.7778,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 1.466,
+      "low_vol": -4.11,
+      "range": -12.593,
+      "trend": 1.947
+     },
+     "bucket_trade_counts": {
+      "high_vol": 3,
+      "low_vol": 6,
+      "range": 9,
+      "trend": 22
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "range",
+     "worst_regime_return_pct": -12.593
+    },
+    "worst_window_drawdown_pct": 18.976
+   },
+   "symbol": "BTCUSD",
+   "timeframe": "4h",
+   "trial_count": 16,
+   "trial_sr_max": 0.1414,
+   "trial_sr_std": 0.0784
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": 0.422,
+   "classification": "PASS",
+   "data_end": "2026-06-26 19:00:00+00:00",
+   "data_rows": 8884,
+   "data_start": "2020-07-27 14:00:00+00:00",
+   "dsr_p_value": 0.1427,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_KELTNER_BREAKOUT",
+   "summary": {
+    "avg_fold_test_return_pct": 10.226,
+    "best_params": {
+     "atr_len": 10,
+     "ema_len": 20,
+     "mult": 2.0
+    },
+    "best_train_sharpe_pt": 0.23449,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 22.97,
+     "buy_hold_ret_dd_ratio": 1.6186,
+     "buy_hold_return_pct": 37.179
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 5.422,
+     "ema_num_trades": 6,
+     "ema_ret_dd_ratio": 5.6897,
+     "ema_return_pct": 30.85
+    },
+    "fold_test_returns_pct": [
+     17.046,
+     3.406
+    ],
+    "fold_test_sharpes": [
+     1.5708,
+     0.4134
+    ],
+    "fold_test_trade_counts": [
+     19,
+     15
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": 0.5087,
+     "annualized_sortino": 0.4481,
+     "avg_R": 0.0313,
+     "equity_curve_health": 0.25,
+     "expectancy_R": 0.0313,
+     "max_consecutive_losses": 6,
+     "max_drawdown_pct": -7.347,
+     "net_after_slippage_pct": 4.497,
+     "net_return_pct": 5.842,
+     "num_trades": 32,
+     "profit_factor": 1.237,
+     "sharpe": 0.4603,
+     "sharpe_pt": 0.081365,
+     "top_trade_concentration": 0.2098,
+     "win_rate": 0.3438
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "folds": 2,
+     "mode": "exact_match"
+    },
+    "param_stability_score": 1.0,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 10.229,
+      "low_vol": -1.549,
+      "range": 5.809,
+      "trend": 0.031
+     },
+     "bucket_trade_counts": {
+      "high_vol": 6,
+      "low_vol": 9,
+      "range": 13,
+      "trend": 19
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "low_vol",
+     "worst_regime_return_pct": -1.549
+    },
+    "worst_window_drawdown_pct": 7.246
+   },
+   "symbol": "QQQ",
+   "timeframe": "1h",
+   "trial_count": 16,
+   "trial_sr_max": 0.2345,
+   "trial_sr_std": 0.0625
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 16:00:00+00:00",
+   "data_rows": 1990,
+   "data_start": "2020-07-27 16:00:00+00:00",
+   "dsr_p_value": 0.4338,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_KELTNER_BREAKOUT",
+   "summary": {
+    "avg_fold_test_return_pct": 13.473,
+    "best_params": {
+     "atr_len": 10,
+     "ema_len": 50,
+     "mult": 3.0
+    },
+    "best_train_sharpe_pt": 0.496968,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 22.873,
+     "buy_hold_ret_dd_ratio": 1.6924,
+     "buy_hold_return_pct": 38.71
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 7.346,
+     "ema_num_trades": 3,
+     "ema_ret_dd_ratio": 1.4909,
+     "ema_return_pct": 10.952
+    },
+    "fold_test_returns_pct": [
+     20.888,
+     6.058
+    ],
+    "fold_test_sharpes": [
+     2.6502,
+     0.6627
+    ],
+    "fold_test_trade_counts": [
+     3,
+     6
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": 0.9587,
+     "annualized_sortino": 0.8675,
+     "avg_R": -0.1975,
+     "equity_curve_health": 0.375,
+     "expectancy_R": -0.1975,
+     "max_consecutive_losses": 3,
+     "max_drawdown_pct": -5.494,
+     "net_after_slippage_pct": 10.483,
+     "net_return_pct": 10.834,
+     "num_trades": 8,
+     "profit_factor": 1.899,
+     "sharpe": 0.5937,
+     "sharpe_pt": 0.209922,
+     "top_trade_concentration": 0.6223,
+     "win_rate": 0.25
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.8333,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.8333,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 22.074,
+      "low_vol": -6.603,
+      "range": 5.153,
+      "trend": 5.402
+     },
+     "bucket_trade_counts": {
+      "high_vol": 3,
+      "low_vol": 4,
+      "range": 6,
+      "trend": 2
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "low_vol",
+     "worst_regime_return_pct": -6.603
+    },
+    "worst_window_drawdown_pct": 2.209
+   },
+   "symbol": "QQQ",
+   "timeframe": "4h",
+   "trial_count": 16,
+   "trial_sr_max": 0.497,
+   "trial_sr_std": 0.1353
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 19:00:00+00:00",
+   "data_rows": 8887,
+   "data_start": "2020-07-27 14:00:00+00:00",
+   "dsr_p_value": 0.2714,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_KELTNER_BREAKOUT",
+   "summary": {
+    "avg_fold_test_return_pct": 8.841,
+    "best_params": {
+     "atr_len": 10,
+     "ema_len": 50,
+     "mult": 3.0
+    },
+    "best_train_sharpe_pt": 0.13987,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 19.314,
+     "buy_hold_ret_dd_ratio": 1.3228,
+     "buy_hold_return_pct": 25.549
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 1.761,
+     "ema_num_trades": 7,
+     "ema_ret_dd_ratio": 12.8639,
+     "ema_return_pct": 22.651
+    },
+    "fold_test_returns_pct": [
+     10.284,
+     7.397
+    ],
+    "fold_test_sharpes": [
+     1.2585,
+     1.4121
+    ],
+    "fold_test_trade_counts": [
+     17,
+     14
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": 0.7984,
+     "annualized_sortino": 0.761,
+     "avg_R": 0.2086,
+     "equity_curve_health": 0.3333,
+     "expectancy_R": 0.2086,
+     "max_consecutive_losses": 4,
+     "max_drawdown_pct": -5.211,
+     "net_after_slippage_pct": 5.851,
+     "net_return_pct": 6.998,
+     "num_trades": 27,
+     "profit_factor": 1.498,
+     "sharpe": 0.7978,
+     "sharpe_pt": 0.153532,
+     "top_trade_concentration": 0.2649,
+     "win_rate": 0.4074
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.7778,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.7778,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 5.577,
+      "low_vol": -1.198,
+      "range": 3.587,
+      "trend": 3.293
+     },
+     "bucket_trade_counts": {
+      "high_vol": 5,
+      "low_vol": 10,
+      "range": 9,
+      "trend": 18
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "low_vol",
+     "worst_regime_return_pct": -1.198
+    },
+    "worst_window_drawdown_pct": 4.407
+   },
+   "symbol": "SPY",
+   "timeframe": "1h",
+   "trial_count": 16,
+   "trial_sr_max": 0.1399,
+   "trial_sr_std": 0.048
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 16:00:00+00:00",
+   "data_rows": 1990,
+   "data_start": "2020-07-27 16:00:00+00:00",
+   "dsr_p_value": 0.6817,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_KELTNER_BREAKOUT",
+   "summary": {
+    "avg_fold_test_return_pct": 17.788,
+    "best_params": {
+     "atr_len": 10,
+     "ema_len": 20,
+     "mult": 1.5
+    },
+    "best_train_sharpe_pt": 0.163925,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 18.76,
+     "buy_hold_ret_dd_ratio": 1.3979,
+     "buy_hold_return_pct": 26.224
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 5.644,
+     "ema_num_trades": 3,
+     "ema_ret_dd_ratio": 2.7849,
+     "ema_return_pct": 15.718
+    },
+    "fold_test_returns_pct": [
+     15.431,
+     20.146
+    ],
+    "fold_test_sharpes": [
+     1.285,
+     1.9792
+    ],
+    "fold_test_trade_counts": [
+     6,
+     6
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": 1.833,
+     "annualized_sortino": 1.8071,
+     "avg_R": 0.5654,
+     "equity_curve_health": 0.5556,
+     "expectancy_R": 0.5654,
+     "max_consecutive_losses": 2,
+     "max_drawdown_pct": -4.391,
+     "net_after_slippage_pct": 18.771,
+     "net_return_pct": 19.192,
+     "num_trades": 9,
+     "profit_factor": 3.621,
+     "sharpe": 1.3465,
+     "sharpe_pt": 0.448839,
+     "top_trade_concentration": 0.4166,
+     "win_rate": 0.5556
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "folds": 2,
+     "mode": "exact_match"
+    },
+    "param_stability_score": 1.0,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 21.384,
+      "low_vol": 0.0,
+      "range": 6.346,
+      "trend": 12.079
+     },
+     "bucket_trade_counts": {
+      "high_vol": 3,
+      "low_vol": 0,
+      "range": 6,
+      "trend": 3
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 3,
+     "weak_regime_identified": "range",
+     "worst_regime_return_pct": 6.346
+    },
+    "worst_window_drawdown_pct": 4.616
+   },
+   "symbol": "SPY",
+   "timeframe": "4h",
+   "trial_count": 16,
+   "trial_sr_max": 0.1639,
+   "trial_sr_std": 0.1132
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": 0.2385,
+   "classification": "FAIL",
+   "data_end": "2026-06-28 00:00:00+00:00",
+   "data_rows": 48077,
+   "data_start": "2021-01-01 06:00:00+00:00",
+   "dsr_p_value": 0.0027,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_MACD_BULL_CROSS",
+   "summary": {
+    "avg_fold_test_return_pct": -2.446,
+    "best_params": {
+     "fast": 17,
+     "signal": 13,
+     "slow": 26
+    },
+    "best_train_sharpe_pt": -0.017662,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 53.852,
+     "buy_hold_ret_dd_ratio": -0.6872,
+     "buy_hold_return_pct": -37.005
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 29.296,
+     "ema_num_trades": 38,
+     "ema_ret_dd_ratio": -0.9208,
+     "ema_return_pct": -26.977
+    },
+    "fold_test_returns_pct": [
+     2.698,
+     -7.59
+    ],
+    "fold_test_sharpes": [
+     0.2294,
+     -0.2678
+    ],
+    "fold_test_trade_counts": [
+     81,
+     62
+    ],
+    "folds_positive": 1,
+    "lockbox_oos": {
+     "annualized_sharpe": -0.7042,
+     "annualized_sortino": -0.6227,
+     "avg_R": 0.09,
+     "equity_curve_health": 0.0093,
+     "expectancy_R": 0.09,
+     "max_consecutive_losses": 7,
+     "max_drawdown_pct": -21.718,
+     "net_after_slippage_pct": -23.511,
+     "net_return_pct": -20.126,
+     "num_trades": 108,
+     "profit_factor": 0.784,
+     "sharpe": -1.0594,
+     "sharpe_pt": -0.101945,
+     "top_trade_concentration": 0.0594,
+     "win_rate": 0.3704
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.7692,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.7692,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": -9.835,
+      "low_vol": -5.792,
+      "range": 0.114,
+      "trend": -20.217
+     },
+     "bucket_trade_counts": {
+      "high_vol": 13,
+      "low_vol": 32,
+      "range": 39,
+      "trend": 69
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "trend",
+     "worst_regime_return_pct": -20.217
+    },
+    "worst_window_drawdown_pct": 14.731
+   },
+   "symbol": "BTCUSD",
+   "timeframe": "1h",
+   "trial_count": 27,
+   "trial_sr_max": -0.0177,
+   "trial_sr_std": 0.0197
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": 0.596,
+   "classification": "FAIL",
+   "data_end": "2026-06-28 00:00:00+00:00",
+   "data_rows": 12023,
+   "data_start": "2021-01-01 04:00:00+00:00",
+   "dsr_p_value": 0.1904,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_MACD_BULL_CROSS",
+   "summary": {
+    "avg_fold_test_return_pct": 14.008,
+    "best_params": {
+     "fast": 8,
+     "signal": 5,
+     "slow": 21
+    },
+    "best_train_sharpe_pt": 0.149718,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 52.802,
+     "buy_hold_ret_dd_ratio": -0.7084,
+     "buy_hold_return_pct": -37.407
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 18.831,
+     "ema_num_trades": 7,
+     "ema_ret_dd_ratio": 0.4215,
+     "ema_return_pct": 7.937
+    },
+    "fold_test_returns_pct": [
+     15.272,
+     12.744
+    ],
+    "fold_test_sharpes": [
+     0.6397,
+     0.5849
+    ],
+    "fold_test_trade_counts": [
+     37,
+     27
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": 0.0316,
+     "annualized_sortino": 0.0351,
+     "avg_R": -0.0323,
+     "equity_curve_health": 0.1613,
+     "expectancy_R": -0.0323,
+     "max_consecutive_losses": 4,
+     "max_drawdown_pct": -14.831,
+     "net_after_slippage_pct": -2.329,
+     "net_return_pct": -1.109,
+     "num_trades": 31,
+     "profit_factor": 1.017,
+     "sharpe": 0.0395,
+     "sharpe_pt": 0.007098,
+     "top_trade_concentration": 0.2506,
+     "win_rate": 0.3226
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.6026,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.6026,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 4.669,
+      "low_vol": -4.822,
+      "range": -8.283,
+      "trend": 7.822
+     },
+     "bucket_trade_counts": {
+      "high_vol": 1,
+      "low_vol": 9,
+      "range": 9,
+      "trend": 22
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "range",
+     "worst_regime_return_pct": -8.283
+    },
+    "worst_window_drawdown_pct": 16.808
+   },
+   "symbol": "BTCUSD",
+   "timeframe": "4h",
+   "trial_count": 27,
+   "trial_sr_max": 0.1497,
+   "trial_sr_std": 0.0505
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": 0.2395,
+   "classification": "STRONG_PASS",
+   "data_end": "2026-06-26 19:00:00+00:00",
+   "data_rows": 8884,
+   "data_start": "2020-07-27 14:00:00+00:00",
+   "dsr_p_value": 0.7072,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_MACD_BULL_CROSS",
+   "summary": {
+    "avg_fold_test_return_pct": 9.5,
+    "best_params": {
+     "fast": 8,
+     "signal": 5,
+     "slow": 21
+    },
+    "best_train_sharpe_pt": 0.155963,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 22.97,
+     "buy_hold_ret_dd_ratio": 1.6186,
+     "buy_hold_return_pct": 37.179
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 5.422,
+     "ema_num_trades": 6,
+     "ema_ret_dd_ratio": 5.6897,
+     "ema_return_pct": 30.85
+    },
+    "fold_test_returns_pct": [
+     15.985,
+     3.016
+    ],
+    "fold_test_sharpes": [
+     1.3595,
+     0.3853
+    ],
+    "fold_test_trade_counts": [
+     34,
+     22
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": 1.8467,
+     "annualized_sortino": 2.0522,
+     "avg_R": 0.1673,
+     "equity_curve_health": 0.3784,
+     "expectancy_R": 0.1673,
+     "max_consecutive_losses": 9,
+     "max_drawdown_pct": -9.097,
+     "net_after_slippage_pct": 25.265,
+     "net_return_pct": 27.121,
+     "num_trades": 37,
+     "profit_factor": 1.958,
+     "sharpe": 1.5787,
+     "sharpe_pt": 0.259535,
+     "top_trade_concentration": 0.1413,
+     "win_rate": 0.4054
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.5926,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.5926,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 17.572,
+      "low_vol": 0.082,
+      "range": -0.926,
+      "trend": 28.309
+     },
+     "bucket_trade_counts": {
+      "high_vol": 7,
+      "low_vol": 9,
+      "range": 12,
+      "trend": 25
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "range",
+     "worst_regime_return_pct": -0.926
+    },
+    "worst_window_drawdown_pct": 6.988
+   },
+   "symbol": "QQQ",
+   "timeframe": "1h",
+   "trial_count": 27,
+   "trial_sr_max": 0.1929,
+   "trial_sr_std": 0.0316
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 16:00:00+00:00",
+   "data_rows": 1990,
+   "data_start": "2020-07-27 16:00:00+00:00",
+   "dsr_p_value": 0.2011,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_MACD_BULL_CROSS",
+   "summary": {
+    "avg_fold_test_return_pct": 11.209,
+    "best_params": {
+     "fast": 8,
+     "signal": 13,
+     "slow": 34
+    },
+    "best_train_sharpe_pt": 0.170342,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 22.873,
+     "buy_hold_ret_dd_ratio": 1.6924,
+     "buy_hold_return_pct": 38.71
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 7.346,
+     "ema_num_trades": 3,
+     "ema_ret_dd_ratio": 1.4909,
+     "ema_return_pct": 10.952
+    },
+    "fold_test_returns_pct": [
+     14.892,
+     7.526
+    ],
+    "fold_test_sharpes": [
+     0.8026,
+     0.5558
+    ],
+    "fold_test_trade_counts": [
+     6,
+     5
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": -0.4367,
+     "annualized_sortino": -0.3229,
+     "avg_R": -0.4919,
+     "equity_curve_health": 0.25,
+     "expectancy_R": -0.4919,
+     "max_consecutive_losses": 4,
+     "max_drawdown_pct": -12.127,
+     "net_after_slippage_pct": -5.996,
+     "net_return_pct": -5.693,
+     "num_trades": 8,
+     "profit_factor": 0.646,
+     "sharpe": -0.428,
+     "sharpe_pt": -0.151326,
+     "top_trade_concentration": 0.9789,
+     "win_rate": 0.25
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.7785,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.7785,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": -3.435,
+      "low_vol": -1.829,
+      "range": -0.441,
+      "trend": -5.274
+     },
+     "bucket_trade_counts": {
+      "high_vol": 2,
+      "low_vol": 1,
+      "range": 4,
+      "trend": 4
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "trend",
+     "worst_regime_return_pct": -5.274
+    },
+    "worst_window_drawdown_pct": 11.796
+   },
+   "symbol": "QQQ",
+   "timeframe": "4h",
+   "trial_count": 27,
+   "trial_sr_max": 0.1718,
+   "trial_sr_std": 0.0903
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": 0.5525,
+   "classification": "FAIL",
+   "data_end": "2026-06-26 19:00:00+00:00",
+   "data_rows": 8887,
+   "data_start": "2020-07-27 14:00:00+00:00",
+   "dsr_p_value": 0.5676,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_MACD_BULL_CROSS",
+   "summary": {
+    "avg_fold_test_return_pct": 3.454,
+    "best_params": {
+     "fast": 8,
+     "signal": 5,
+     "slow": 26
+    },
+    "best_train_sharpe_pt": 0.095116,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 19.314,
+     "buy_hold_ret_dd_ratio": 1.3228,
+     "buy_hold_return_pct": 25.549
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 1.761,
+     "ema_num_trades": 7,
+     "ema_ret_dd_ratio": 12.8639,
+     "ema_return_pct": 22.651
+    },
+    "fold_test_returns_pct": [
+     7.962,
+     -1.053
+    ],
+    "fold_test_sharpes": [
+     1.0624,
+     -0.1048
+    ],
+    "fold_test_trade_counts": [
+     30,
+     27
+    ],
+    "folds_positive": 1,
+    "lockbox_oos": {
+     "annualized_sharpe": 1.1377,
+     "annualized_sortino": 1.3869,
+     "avg_R": -0.0139,
+     "equity_curve_health": 0.3429,
+     "expectancy_R": -0.0139,
+     "max_consecutive_losses": 5,
+     "max_drawdown_pct": -5.538,
+     "net_after_slippage_pct": 10.844,
+     "net_return_pct": 12.402,
+     "num_trades": 35,
+     "profit_factor": 1.659,
+     "sharpe": 1.1632,
+     "sharpe_pt": 0.196622,
+     "top_trade_concentration": 0.1852,
+     "win_rate": 0.3714
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.5926,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.5926,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 6.336,
+      "low_vol": -0.552,
+      "range": 1.486,
+      "trend": 10.757
+     },
+     "bucket_trade_counts": {
+      "high_vol": 3,
+      "low_vol": 7,
+      "range": 11,
+      "trend": 24
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "low_vol",
+     "worst_regime_return_pct": -0.552
+    },
+    "worst_window_drawdown_pct": 7.095
+   },
+   "symbol": "SPY",
+   "timeframe": "1h",
+   "trial_count": 27,
+   "trial_sr_max": 0.1079,
+   "trial_sr_std": 0.0296
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 16:00:00+00:00",
+   "data_rows": 1990,
+   "data_start": "2020-07-27 16:00:00+00:00",
+   "dsr_p_value": 0.3066,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_MACD_BULL_CROSS",
+   "summary": {
+    "avg_fold_test_return_pct": 9.416,
+    "best_params": {
+     "fast": 8,
+     "signal": 13,
+     "slow": 34
+    },
+    "best_train_sharpe_pt": 0.220564,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 18.76,
+     "buy_hold_ret_dd_ratio": 1.3979,
+     "buy_hold_return_pct": 26.224
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 5.644,
+     "ema_num_trades": 3,
+     "ema_ret_dd_ratio": 2.7849,
+     "ema_return_pct": 15.718
+    },
+    "fold_test_returns_pct": [
+     8.092,
+     10.741
+    ],
+    "fold_test_sharpes": [
+     0.7442,
+     0.973
+    ],
+    "fold_test_trade_counts": [
+     5,
+     5
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": -0.1362,
+     "annualized_sortino": -0.1048,
+     "avg_R": -0.3152,
+     "equity_curve_health": 0.2857,
+     "expectancy_R": -0.3152,
+     "max_consecutive_losses": 2,
+     "max_drawdown_pct": -7.194,
+     "net_after_slippage_pct": -1.818,
+     "net_return_pct": -1.542,
+     "num_trades": 7,
+     "profit_factor": 0.904,
+     "sharpe": -0.1041,
+     "sharpe_pt": -0.039355,
+     "top_trade_concentration": 0.7465,
+     "win_rate": 0.2857
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.8333,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.8333,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 0.0,
+      "low_vol": -3.631,
+      "range": -2.461,
+      "trend": 0.943
+     },
+     "bucket_trade_counts": {
+      "high_vol": 0,
+      "low_vol": 2,
+      "range": 5,
+      "trend": 2
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 3,
+     "weak_regime_identified": "low_vol",
+     "worst_regime_return_pct": -3.631
+    },
+    "worst_window_drawdown_pct": 5.807
+   },
+   "symbol": "SPY",
+   "timeframe": "4h",
+   "trial_count": 27,
+   "trial_sr_max": 0.2206,
+   "trial_sr_std": 0.0552
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": 0.4025,
+   "classification": "FAIL",
+   "data_end": "2026-06-28 00:00:00+00:00",
+   "data_rows": 48077,
+   "data_start": "2021-01-01 06:00:00+00:00",
+   "dsr_p_value": 0.02,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_RSI_OVERSOLD_REVERSAL",
+   "summary": {
+    "avg_fold_test_return_pct": 2.987,
+    "best_params": {
+     "oversold": 35,
+     "recovery": 40,
+     "rsi_len": 14
+    },
+    "best_train_sharpe_pt": 0.074628,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 53.852,
+     "buy_hold_ret_dd_ratio": -0.6872,
+     "buy_hold_return_pct": -37.005
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 29.296,
+     "ema_num_trades": 38,
+     "ema_ret_dd_ratio": -0.9208,
+     "ema_return_pct": -26.977
+    },
+    "fold_test_returns_pct": [
+     -14.114,
+     20.088
+    ],
+    "fold_test_sharpes": [
+     -0.4745,
+     0.9715
+    ],
+    "fold_test_trade_counts": [
+     41,
+     51
+    ],
+    "folds_positive": 1,
+    "lockbox_oos": {
+     "annualized_sharpe": -0.3133,
+     "annualized_sortino": -0.2451,
+     "avg_R": 0.0331,
+     "equity_curve_health": 0.0759,
+     "expectancy_R": 0.0331,
+     "max_consecutive_losses": 6,
+     "max_drawdown_pct": -14.421,
+     "net_after_slippage_pct": -11.353,
+     "net_return_pct": -8.502,
+     "num_trades": 79,
+     "profit_factor": 0.906,
+     "sharpe": -0.3573,
+     "sharpe_pt": -0.040202,
+     "top_trade_concentration": 0.0941,
+     "win_rate": 0.3544
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "folds": 2,
+     "mode": "exact_match"
+    },
+    "param_stability_score": 1.0,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 1.488,
+      "low_vol": -1.179,
+      "range": 3.161,
+      "trend": -11.306
+     },
+     "bucket_trade_counts": {
+      "high_vol": 32,
+      "low_vol": 15,
+      "range": 8,
+      "trend": 71
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "trend",
+     "worst_regime_return_pct": -11.306
+    },
+    "worst_window_drawdown_pct": 24.861
+   },
+   "symbol": "BTCUSD",
+   "timeframe": "1h",
+   "trial_count": 44,
+   "trial_sr_max": 1.2993,
+   "trial_sr_std": 0.3862
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-28 00:00:00+00:00",
+   "data_rows": 12023,
+   "data_start": "2021-01-01 04:00:00+00:00",
+   "dsr_p_value": 0.2879,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_RSI_OVERSOLD_REVERSAL",
+   "summary": {
+    "avg_fold_test_return_pct": 2.7,
+    "best_params": {
+     "oversold": 25,
+     "recovery": 50,
+     "rsi_len": 5
+    },
+    "best_train_sharpe_pt": 0.220281,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 52.802,
+     "buy_hold_ret_dd_ratio": -0.7084,
+     "buy_hold_return_pct": -37.407
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 18.831,
+     "ema_num_trades": 7,
+     "ema_ret_dd_ratio": 0.4215,
+     "ema_return_pct": 7.937
+    },
+    "fold_test_returns_pct": [
+     14.306,
+     -8.906
+    ],
+    "fold_test_sharpes": [
+     1.531,
+     -0.9338
+    ],
+    "fold_test_trade_counts": [
+     5,
+     6
+    ],
+    "folds_positive": 1,
+    "lockbox_oos": {
+     "annualized_sharpe": 0.0013,
+     "annualized_sortino": 0.0006,
+     "avg_R": 0.0,
+     "equity_curve_health": 0.3333,
+     "expectancy_R": 0.0,
+     "max_consecutive_losses": 3,
+     "max_drawdown_pct": -7.801,
+     "net_after_slippage_pct": -1.123,
+     "net_return_pct": -0.766,
+     "num_trades": 9,
+     "profit_factor": 0.987,
+     "sharpe": -0.0165,
+     "sharpe_pt": -0.005498,
+     "top_trade_concentration": 0.5733,
+     "win_rate": 0.3333
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.7396,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.7396,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 1.537,
+      "low_vol": 0.116,
+      "range": 3.454,
+      "trend": -4.079
+     },
+     "bucket_trade_counts": {
+      "high_vol": 3,
+      "low_vol": 2,
+      "range": 3,
+      "trend": 6
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "trend",
+     "worst_regime_return_pct": -4.079
+    },
+    "worst_window_drawdown_pct": 12.378
+   },
+   "symbol": "BTCUSD",
+   "timeframe": "4h",
+   "trial_count": 44,
+   "trial_sr_max": 1.2931,
+   "trial_sr_std": 0.2635
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 19:00:00+00:00",
+   "data_rows": 8884,
+   "data_start": "2020-07-27 14:00:00+00:00",
+   "dsr_p_value": 0.4409,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_RSI_OVERSOLD_REVERSAL",
+   "summary": {
+    "avg_fold_test_return_pct": 0.979,
+    "best_params": {
+     "oversold": 35,
+     "recovery": 50,
+     "rsi_len": 7
+    },
+    "best_train_sharpe_pt": 0.274621,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 22.97,
+     "buy_hold_ret_dd_ratio": 1.6186,
+     "buy_hold_return_pct": 37.179
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 5.422,
+     "ema_num_trades": 6,
+     "ema_ret_dd_ratio": 5.6897,
+     "ema_return_pct": 30.85
+    },
+    "fold_test_returns_pct": [
+     3.813,
+     -1.855
+    ],
+    "fold_test_sharpes": [
+     0.6162,
+     -0.1991
+    ],
+    "fold_test_trade_counts": [
+     12,
+     10
+    ],
+    "folds_positive": 1,
+    "lockbox_oos": {
+     "annualized_sharpe": 0.5499,
+     "annualized_sortino": 0.37,
+     "avg_R": 0.4042,
+     "equity_curve_health": 0.3846,
+     "expectancy_R": 0.4042,
+     "max_consecutive_losses": 2,
+     "max_drawdown_pct": -4.078,
+     "net_after_slippage_pct": 3.598,
+     "net_return_pct": 4.136,
+     "num_trades": 13,
+     "profit_factor": 1.389,
+     "sharpe": 0.5378,
+     "sharpe_pt": 0.149158,
+     "top_trade_concentration": 0.2098,
+     "win_rate": 0.5385
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.7292,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.7292,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": -5.311,
+      "low_vol": -0.77,
+      "range": -5.174,
+      "trend": 9.818
+     },
+     "bucket_trade_counts": {
+      "high_vol": 5,
+      "low_vol": 2,
+      "range": 3,
+      "trend": 10
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "high_vol",
+     "worst_regime_return_pct": -5.311
+    },
+    "worst_window_drawdown_pct": 3.226
+   },
+   "symbol": "QQQ",
+   "timeframe": "1h",
+   "trial_count": 44,
+   "trial_sr_max": 0.2746,
+   "trial_sr_std": 0.3872
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 16:00:00+00:00",
+   "data_rows": 1990,
+   "data_start": "2020-07-27 16:00:00+00:00",
+   "dsr_p_value": 0.7808,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_RSI_OVERSOLD_REVERSAL",
+   "summary": {
+    "avg_fold_test_return_pct": 0.0,
+    "best_params": {
+     "oversold": 35,
+     "recovery": 40,
+     "rsi_len": 21
+    },
+    "best_train_sharpe_pt": 0.249854,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 22.873,
+     "buy_hold_ret_dd_ratio": 1.6924,
+     "buy_hold_return_pct": 38.71
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 7.346,
+     "ema_num_trades": 3,
+     "ema_ret_dd_ratio": 1.4909,
+     "ema_return_pct": 10.952
+    },
+    "fold_test_returns_pct": [
+     0.0,
+     0.0
+    ],
+    "fold_test_sharpes": [
+     0.0,
+     0.0
+    ],
+    "fold_test_trade_counts": [
+     0,
+     0
+    ],
+    "folds_positive": 0,
+    "lockbox_oos": {
+     "annualized_sharpe": 2.0461,
+     "annualized_sortino": 1.3422,
+     "avg_R": 1.0,
+     "equity_curve_health": 0.6667,
+     "expectancy_R": 1.0,
+     "max_consecutive_losses": 1,
+     "max_drawdown_pct": -2.699,
+     "net_after_slippage_pct": 22.72,
+     "net_return_pct": 22.858,
+     "num_trades": 3,
+     "profit_factor": 9.175,
+     "sharpe": 1.4328,
+     "sharpe_pt": 0.82725,
+     "top_trade_concentration": 0.5726,
+     "win_rate": 0.6667
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.7778,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.7778,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 26.267,
+      "low_vol": 0.0,
+      "range": 0.0,
+      "trend": 22.858
+     },
+     "bucket_trade_counts": {
+      "high_vol": 2,
+      "low_vol": 0,
+      "range": 0,
+      "trend": 3
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 2,
+     "weak_regime_identified": "trend",
+     "worst_regime_return_pct": 22.858
+    },
+    "worst_window_drawdown_pct": 0.0
+   },
+   "symbol": "QQQ",
+   "timeframe": "4h",
+   "trial_count": 44,
+   "trial_sr_max": 0.2499,
+   "trial_sr_std": 0.1404
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 19:00:00+00:00",
+   "data_rows": 8887,
+   "data_start": "2020-07-27 14:00:00+00:00",
+   "dsr_p_value": 0.2193,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_RSI_OVERSOLD_REVERSAL",
+   "summary": {
+    "avg_fold_test_return_pct": 1.28,
+    "best_params": {
+     "oversold": 35,
+     "recovery": 50,
+     "rsi_len": 7
+    },
+    "best_train_sharpe_pt": 0.317015,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 19.314,
+     "buy_hold_ret_dd_ratio": 1.3228,
+     "buy_hold_return_pct": 25.549
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 1.761,
+     "ema_num_trades": 7,
+     "ema_ret_dd_ratio": 12.8639,
+     "ema_return_pct": 22.651
+    },
+    "fold_test_returns_pct": [
+     4.609,
+     -2.049
+    ],
+    "fold_test_sharpes": [
+     1.0577,
+     -0.3817
+    ],
+    "fold_test_trade_counts": [
+     11,
+     10
+    ],
+    "folds_positive": 1,
+    "lockbox_oos": {
+     "annualized_sharpe": 0.0172,
+     "annualized_sortino": 0.0135,
+     "avg_R": -0.0832,
+     "equity_curve_health": 0.2778,
+     "expectancy_R": -0.0832,
+     "max_consecutive_losses": 5,
+     "max_drawdown_pct": -7.566,
+     "net_after_slippage_pct": -0.838,
+     "net_return_pct": -0.121,
+     "num_trades": 18,
+     "profit_factor": 1.01,
+     "sharpe": 0.0191,
+     "sharpe_pt": 0.004492,
+     "top_trade_concentration": 0.2058,
+     "win_rate": 0.3333
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.7847,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.7847,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": -0.42,
+      "low_vol": -0.394,
+      "range": 1.792,
+      "trend": -1.879
+     },
+     "bucket_trade_counts": {
+      "high_vol": 8,
+      "low_vol": 1,
+      "range": 1,
+      "trend": 17
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "trend",
+     "worst_regime_return_pct": -1.879
+    },
+    "worst_window_drawdown_pct": 4.47
+   },
+   "symbol": "SPY",
+   "timeframe": "1h",
+   "trial_count": 44,
+   "trial_sr_max": 4.9569,
+   "trial_sr_std": 0.8782
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 16:00:00+00:00",
+   "data_rows": 1990,
+   "data_start": "2020-07-27 16:00:00+00:00",
+   "dsr_p_value": 0.5946,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "GEN_RSI_OVERSOLD_REVERSAL",
+   "summary": {
+    "avg_fold_test_return_pct": 9.6,
+    "best_params": {
+     "oversold": 35,
+     "recovery": 45,
+     "rsi_len": 5
+    },
+    "best_train_sharpe_pt": 0.288754,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 18.76,
+     "buy_hold_ret_dd_ratio": 1.3979,
+     "buy_hold_return_pct": 26.224
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 5.644,
+     "ema_num_trades": 3,
+     "ema_ret_dd_ratio": 2.7849,
+     "ema_return_pct": 15.718
+    },
+    "fold_test_returns_pct": [
+     4.931,
+     14.269
+    ],
+    "fold_test_sharpes": [
+     0.7276,
+     1.8122
+    ],
+    "fold_test_trade_counts": [
+     8,
+     8
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": 1.4127,
+     "annualized_sortino": 1.0925,
+     "avg_R": 0.25,
+     "equity_curve_health": 0.4167,
+     "expectancy_R": 0.25,
+     "max_consecutive_losses": 5,
+     "max_drawdown_pct": -9.045,
+     "net_after_slippage_pct": 13.963,
+     "net_return_pct": 14.505,
+     "num_trades": 12,
+     "profit_factor": 2.071,
+     "sharpe": 0.9209,
+     "sharpe_pt": 0.265828,
+     "top_trade_concentration": 0.3922,
+     "win_rate": 0.4167
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "folds": 2,
+     "mode": "exact_match"
+    },
+    "param_stability_score": 1.0,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 21.371,
+      "low_vol": -2.807,
+      "range": -2.336,
+      "trend": 17.245
+     },
+     "bucket_trade_counts": {
+      "high_vol": 4,
+      "low_vol": 2,
+      "range": 4,
+      "trend": 8
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "low_vol",
+     "worst_regime_return_pct": -2.807
+    },
+    "worst_window_drawdown_pct": 2.725
+   },
+   "symbol": "SPY",
+   "timeframe": "4h",
+   "trial_count": 44,
+   "trial_sr_max": 0.4141,
+   "trial_sr_std": 0.8415
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-28 00:00:00+00:00",
+   "data_rows": 48077,
+   "data_start": "2021-01-01 06:00:00+00:00",
+   "dsr_p_value": 0.138,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL",
+   "summary": {
+    "avg_fold_test_return_pct": -1.511,
+    "best_params": {
+     "impulse_atr": 1.6,
+     "pullback_atr": 0.2,
+     "slope_window": 3
+    },
+    "best_train_sharpe_pt": -0.005498,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 53.852,
+     "buy_hold_ret_dd_ratio": -0.6872,
+     "buy_hold_return_pct": -37.005
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 29.296,
+     "ema_num_trades": 38,
+     "ema_ret_dd_ratio": -0.9208,
+     "ema_return_pct": -26.977
+    },
+    "fold_test_returns_pct": [
+     -1.217,
+     -1.805
+    ],
+    "fold_test_sharpes": [
+     -0.8763,
+     -0.6215
+    ],
+    "fold_test_trade_counts": [
+     11,
+     14
+    ],
+    "folds_positive": 0,
+    "lockbox_oos": {
+     "annualized_sharpe": 0.4407,
+     "annualized_sortino": 0.4587,
+     "avg_R": 0.4671,
+     "equity_curve_health": 0.2,
+     "expectancy_R": 0.4671,
+     "max_consecutive_losses": 6,
+     "max_drawdown_pct": -2.738,
+     "net_after_slippage_pct": 2.269,
+     "net_return_pct": 2.883,
+     "num_trades": 15,
+     "profit_factor": 1.802,
+     "sharpe": 0.5745,
+     "sharpe_pt": 0.148323,
+     "top_trade_concentration": 0.6442,
+     "win_rate": 0.2
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.9545,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.9545,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": -1.5,
+      "low_vol": -1.043,
+      "range": 3.702,
+      "trend": -0.789
+     },
+     "bucket_trade_counts": {
+      "high_vol": 2,
+      "low_vol": 6,
+      "range": 4,
+      "trend": 11
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "high_vol",
+     "worst_regime_return_pct": -1.5
+    },
+    "worst_window_drawdown_pct": 2.853
+   },
+   "symbol": "BTCUSD",
+   "timeframe": "1h",
+   "trial_count": 75,
+   "trial_sr_max": -0.0055,
+   "trial_sr_std": 0.0482
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-28 00:00:00+00:00",
+   "data_rows": 12023,
+   "data_start": "2021-01-01 04:00:00+00:00",
+   "dsr_p_value": 0.0006,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL",
+   "summary": {
+    "avg_fold_test_return_pct": 2.135,
+    "best_params": {
+     "impulse_atr": 1.6,
+     "pullback_atr": 0.65,
+     "slope_window": 3
+    },
+    "best_train_sharpe_pt": 0.17415,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 52.802,
+     "buy_hold_ret_dd_ratio": -0.7084,
+     "buy_hold_return_pct": -37.407
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 18.831,
+     "ema_num_trades": 7,
+     "ema_ret_dd_ratio": 0.4215,
+     "ema_return_pct": 7.937
+    },
+    "fold_test_returns_pct": [
+     8.723,
+     -4.453
+    ],
+    "fold_test_sharpes": [
+     0.6914,
+     -0.3175
+    ],
+    "fold_test_trade_counts": [
+     14,
+     23
+    ],
+    "folds_positive": 1,
+    "lockbox_oos": {
+     "annualized_sharpe": -0.6472,
+     "annualized_sortino": -0.3411,
+     "avg_R": -0.3878,
+     "equity_curve_health": 0.08,
+     "expectancy_R": -0.3878,
+     "max_consecutive_losses": 9,
+     "max_drawdown_pct": -17.223,
+     "net_after_slippage_pct": -11.388,
+     "net_return_pct": -10.493,
+     "num_trades": 25,
+     "profit_factor": 0.491,
+     "sharpe": -1.1216,
+     "sharpe_pt": -0.224324,
+     "top_trade_concentration": 0.6543,
+     "win_rate": 0.2
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "folds": 2,
+     "mode": "exact_match"
+    },
+    "param_stability_score": 1.0,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": -2.862,
+      "low_vol": -4.981,
+      "range": -1.298,
+      "trend": -9.316
+     },
+     "bucket_trade_counts": {
+      "high_vol": 7,
+      "low_vol": 7,
+      "range": 6,
+      "trend": 19
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "trend",
+     "worst_regime_return_pct": -9.316
+    },
+    "worst_window_drawdown_pct": 6.098
+   },
+   "symbol": "BTCUSD",
+   "timeframe": "4h",
+   "trial_count": 75,
+   "trial_sr_max": 0.1741,
+   "trial_sr_std": 0.1213
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": 0.1355,
+   "classification": "PASS",
+   "data_end": "2026-06-26 19:00:00+00:00",
+   "data_rows": 8884,
+   "data_start": "2020-07-27 14:00:00+00:00",
+   "dsr_p_value": 0.0,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL",
+   "summary": {
+    "avg_fold_test_return_pct": 13.44,
+    "best_params": {
+     "impulse_atr": 1.0,
+     "pullback_atr": 0.65,
+     "slope_window": 5
+    },
+    "best_train_sharpe_pt": 0.145891,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 22.97,
+     "buy_hold_ret_dd_ratio": 1.6186,
+     "buy_hold_return_pct": 37.179
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 5.422,
+     "ema_num_trades": 6,
+     "ema_ret_dd_ratio": 5.6897,
+     "ema_return_pct": 30.85
+    },
+    "fold_test_returns_pct": [
+     15.547,
+     11.333
+    ],
+    "fold_test_sharpes": [
+     1.4873,
+     1.1384
+    ],
+    "fold_test_trade_counts": [
+     54,
+     53
+    ],
+    "folds_positive": 2,
+    "lockbox_oos": {
+     "annualized_sharpe": 0.2054,
+     "annualized_sortino": 0.2448,
+     "avg_R": 1.5486,
+     "equity_curve_health": 0.0421,
+     "expectancy_R": 1.5486,
+     "max_consecutive_losses": 14,
+     "max_drawdown_pct": -9.794,
+     "net_after_slippage_pct": -2.206,
+     "net_return_pct": 1.582,
+     "num_trades": 95,
+     "profit_factor": 1.081,
+     "sharpe": 0.1974,
+     "sharpe_pt": 0.020256,
+     "top_trade_concentration": 0.2163,
+     "win_rate": 0.2211
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.9074,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.9074,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 6.035,
+      "low_vol": -3.333,
+      "range": 3.633,
+      "trend": -1.979
+     },
+     "bucket_trade_counts": {
+      "high_vol": 25,
+      "low_vol": 24,
+      "range": 39,
+      "trend": 56
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "low_vol",
+     "worst_regime_return_pct": -3.333
+    },
+    "worst_window_drawdown_pct": 3.465
+   },
+   "symbol": "QQQ",
+   "timeframe": "1h",
+   "trial_count": 75,
+   "trial_sr_max": 0.4406,
+   "trial_sr_std": 0.0734
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 16:00:00+00:00",
+   "data_rows": 1990,
+   "data_start": "2020-07-27 16:00:00+00:00",
+   "dsr_p_value": 0.0105,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL",
+   "summary": {
+    "avg_fold_test_return_pct": 0.808,
+    "best_params": {
+     "impulse_atr": 1.6,
+     "pullback_atr": 0.5,
+     "slope_window": 3
+    },
+    "best_train_sharpe_pt": -0.001509,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 22.873,
+     "buy_hold_ret_dd_ratio": 1.6924,
+     "buy_hold_return_pct": 38.71
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 7.346,
+     "ema_num_trades": 3,
+     "ema_ret_dd_ratio": 1.4909,
+     "ema_return_pct": 10.952
+    },
+    "fold_test_returns_pct": [
+     -0.834,
+     2.451
+    ],
+    "fold_test_sharpes": [
+     -1.008,
+     0.6673
+    ],
+    "fold_test_trade_counts": [
+     2,
+     3
+    ],
+    "folds_positive": 1,
+    "lockbox_oos": {
+     "annualized_sharpe": -1.027,
+     "annualized_sortino": -0.2691,
+     "avg_R": -0.4677,
+     "equity_curve_health": 0.1429,
+     "expectancy_R": -0.4677,
+     "max_consecutive_losses": 5,
+     "max_drawdown_pct": -3.809,
+     "net_after_slippage_pct": -6.382,
+     "net_return_pct": -6.117,
+     "num_trades": 7,
+     "profit_factor": 0.184,
+     "sharpe": -1.5236,
+     "sharpe_pt": -0.57585,
+     "top_trade_concentration": 0.6083,
+     "win_rate": 0.2857
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "folds": 2,
+     "mode": "exact_match"
+    },
+    "param_stability_score": 1.0,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": -3.225,
+      "low_vol": -0.879,
+      "range": -2.988,
+      "trend": -3.225
+     },
+     "bucket_trade_counts": {
+      "high_vol": 2,
+      "low_vol": 2,
+      "range": 5,
+      "trend": 2
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "trend",
+     "worst_regime_return_pct": -3.225
+    },
+    "worst_window_drawdown_pct": 0.307
+   },
+   "symbol": "QQQ",
+   "timeframe": "4h",
+   "trial_count": 75,
+   "trial_sr_max": -0.0015,
+   "trial_sr_std": 0.7927
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": 0.9995,
+   "classification": "FAIL",
+   "data_end": "2026-06-26 19:00:00+00:00",
+   "data_rows": 8887,
+   "data_start": "2020-07-27 14:00:00+00:00",
+   "dsr_p_value": 0.0,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL",
+   "summary": {
+    "avg_fold_test_return_pct": 5.324,
+    "best_params": {
+     "impulse_atr": 1.3,
+     "pullback_atr": 0.65,
+     "slope_window": 5
+    },
+    "best_train_sharpe_pt": 0.050403,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 19.314,
+     "buy_hold_ret_dd_ratio": 1.3228,
+     "buy_hold_return_pct": 25.549
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 1.761,
+     "ema_num_trades": 7,
+     "ema_ret_dd_ratio": 12.8639,
+     "ema_return_pct": 22.651
+    },
+    "fold_test_returns_pct": [
+     11.817,
+     -1.17
+    ],
+    "fold_test_sharpes": [
+     1.7098,
+     -0.2238
+    ],
+    "fold_test_trade_counts": [
+     40,
+     45
+    ],
+    "folds_positive": 1,
+    "lockbox_oos": {
+     "annualized_sharpe": -1.5525,
+     "annualized_sortino": -1.3853,
+     "avg_R": -0.4731,
+     "equity_curve_health": 0.026,
+     "expectancy_R": -0.4731,
+     "max_consecutive_losses": 20,
+     "max_drawdown_pct": -10.924,
+     "net_after_slippage_pct": -11.708,
+     "net_return_pct": -8.942,
+     "num_trades": 77,
+     "profit_factor": 0.503,
+     "sharpe": -1.9008,
+     "sharpe_pt": -0.216612,
+     "top_trade_concentration": 0.2876,
+     "win_rate": 0.1429
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.7045,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.7045,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": -4.279,
+      "low_vol": -1.876,
+      "range": -5.294,
+      "trend": -3.852
+     },
+     "bucket_trade_counts": {
+      "high_vol": 21,
+      "low_vol": 12,
+      "range": 35,
+      "trend": 42
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 4,
+     "weak_regime_identified": "range",
+     "worst_regime_return_pct": -5.294
+    },
+    "worst_window_drawdown_pct": 5.254
+   },
+   "symbol": "SPY",
+   "timeframe": "1h",
+   "trial_count": 75,
+   "trial_sr_max": 0.0892,
+   "trial_sr_std": 0.1231
+  },
+  {
+   "bh_fdr_survivor": false,
+   "boot_p_value": null,
+   "classification": "INSUFFICIENT_TRADES",
+   "data_end": "2026-06-26 16:00:00+00:00",
+   "data_rows": 1990,
+   "data_start": "2020-07-27 16:00:00+00:00",
+   "dsr_p_value": 0.1765,
+   "dsr_robust": false,
+   "robust_final": false,
+   "strategy": "QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL",
+   "summary": {
+    "avg_fold_test_return_pct": 1.593,
+    "best_params": {
+     "impulse_atr": 1.6,
+     "pullback_atr": 0.4,
+     "slope_window": 3
+    },
+    "best_train_sharpe_pt": 0.478603,
+    "buy_hold_lockbox": {
+     "buy_hold_max_drawdown_pct": 18.76,
+     "buy_hold_ret_dd_ratio": 1.3979,
+     "buy_hold_return_pct": 26.224
+    },
+    "ema_benchmark_lockbox": {
+     "ema_max_drawdown_pct": 5.644,
+     "ema_num_trades": 3,
+     "ema_ret_dd_ratio": 2.7849,
+     "ema_return_pct": 15.718
+    },
+    "fold_test_returns_pct": [
+     3.186,
+     0.0
+    ],
+    "fold_test_sharpes": [
+     0.0,
+     0.0
+    ],
+    "fold_test_trade_counts": [
+     1,
+     0
+    ],
+    "folds_positive": 1,
+    "lockbox_oos": {
+     "annualized_sharpe": -0.0521,
+     "annualized_sortino": -0.0171,
+     "avg_R": -0.0453,
+     "equity_curve_health": 0.75,
+     "expectancy_R": -0.0453,
+     "max_consecutive_losses": 1,
+     "max_drawdown_pct": -0.624,
+     "net_after_slippage_pct": -0.374,
+     "net_return_pct": -0.215,
+     "num_trades": 4,
+     "profit_factor": 0.763,
+     "sharpe": -0.1928,
+     "sharpe_pt": -0.096397,
+     "top_trade_concentration": 0.9849,
+     "win_rate": 0.5
+    },
+    "n_folds": 2,
+    "param_stability_detail": {
+     "exact_mode_share": 0.5,
+     "folds": 2,
+     "mode": "partial",
+     "numeric_closeness": 0.6389,
+     "numeric_keys_used": 3
+    },
+    "param_stability_score": 0.6389,
+    "regime_analysis": {
+     "bucket_returns_pct": {
+      "high_vol": 0.0,
+      "low_vol": 0.01,
+      "range": 0.05,
+      "trend": -0.264
+     },
+     "bucket_trade_counts": {
+      "high_vol": 0,
+      "low_vol": 1,
+      "range": 3,
+      "trend": 1
+     },
+     "regime_breakdown_present": true,
+     "regime_coverage_count": 3,
+     "weak_regime_identified": "trend",
+     "worst_regime_return_pct": -0.264
+    },
+    "worst_window_drawdown_pct": 0.0
+   },
+   "symbol": "SPY",
+   "timeframe": "4h",
+   "trial_count": 75,
+   "trial_sr_max": 0.4786,
+   "trial_sr_std": 0.2886
+  }
+ ],
+ "rows_sha256": "be8561ffeb4c4a9f6b80426f7487fe38adcc5dc792b7d49bc7611d4f97d6fd51"
+}

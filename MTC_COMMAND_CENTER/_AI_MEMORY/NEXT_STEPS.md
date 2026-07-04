@@ -1,5 +1,17 @@
 # NEXT_STEPS
 
+## 🔶 FAZ 3B — SWEPT EXIT_MODE (approved D013 2026-07-04; gate live; implementation NEXT)
+Scope: `00_AGENT_PROTOCOLS/FAZ3B_EXIT_SWEEP_SCOPE.md`. Self-parity goldens captured pre-edit +
+determinism proven (`faz3b_self_parity.py`, 42 rows, sha `be8561ff…`). Sweep runs separately gated.
+- **[AI: Claude]** implement per `11_TRIAGE/FAZ3B_IMPLEMENTATION_PROMPT_2026-07-04.md` — read that
+  prompt verbatim; `--verify` must PASS before AND after; goldens never recaptured.
+- **[AI: Codex]** adversarial review of the engine diff (Gate 5) after implementation.
+- **[AI: Barış]** approve the diff landing; then separately approve the Stage-1 discovery run design
+  (pre-registered: single-asset-class subset + trimmed grids + `research_robust` tier + micro-price
+  exclusion — the D013 items 2-4 ride in that run design).
+- **[AI: Barış]** 2026-08-01: Gate V5 day-30 review of the SYSTEM_TEST vertical-slice track (CLOSED at
+  V1.1; legs V2-V4 deliberately unopened).
+
 ## SYSTEM_TEST_ONLY VERTICAL SLICE - Gate V0 planning approved 2026-07-02
 
 Baris approved Gate V0 planning and selected `STG002 / QL_ALPHA_LINK_8EMA_1H`
