@@ -1,5 +1,20 @@
 # GLOBAL_HANDOFF
 
+## Codex GPT-5 2026-07-04 - Impeccable UI Pilot P2 cleanup completed
+
+Closed NEXT_STEPS "IMPECCABLE UI PILOT" P2 items 4 and 5 with UI-only edits to
+`08_DASHBOARD_APP/apps/web/app.js`. Commit `6da2735c` suppresses repeated
+full-credit Gate 1 / Gate 1B subscore note text while preserving notes on
+non-full-credit rows. Commit `e819ac02` removes duplicate gate verdict surfaces
+from the hero KPI strip and the main-column Gate Status Summary; the persistent
+right rail remains the canonical verdict/status surface. No API shape, data
+contract, registry, scorecard semantics, wording implying execution, Pine,
+parity, MTC_V2, `02_MTC_BACKTEST`, or `07_ADAPTERS` change. Verification after
+each item: `node --check app.js` PASS, full dashboard API unittest suite PASS
+(`112 tests`), and live `/dashboard` check for
+`QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK` confirmed RESEARCH ONLY,
+UNIVERSE MISMATCH, and locked states remain visible.
+
 ## Codex GPT-5 2026-07-04 - Artifact universe-mismatch normalization committed
 
 Closed the test half of the 2026-06-28 artifact-contract follow-up. Commit
