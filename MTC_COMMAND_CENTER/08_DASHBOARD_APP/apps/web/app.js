@@ -962,7 +962,6 @@ function renderIntelligence(c) {
     ${constraintNotice(m)}
     <div class="si-layout">
       <div class="si-main">
-        ${gateSummaryBlock(m)}
         ${overviewSection(m)}
         ${gate1Section(m)}
         ${verdictSection(m)}
@@ -1008,7 +1007,6 @@ function heroVal(g, opts = {}) {
 }
 
 function heroBlock(m) {
-  const paper = m.promotable ? "Ready (review)" : "Locked";
   return `
     <section class="si-hero" id="top">
       <div class="si-hero-top">
@@ -1017,12 +1015,6 @@ function heroBlock(m) {
           <h2 class="si-hero-id">${esc(m.displayName)}</h2>
           <p class="si-hero-thesis">${esc(m.thesis)}</p>
           <p class="si-hero-meta">${esc(m.id)}</p>
-        </div>
-        <div class="si-gate-panel">
-          <div class="si-gate-cell"><span class="lbl">Gate 1 / Intake</span>${heroVal(m.gates.g1)}</div>
-          <div class="si-gate-cell"><span class="lbl">Gate 1B / MTC</span>${heroVal(m.gates.g1b)}</div>
-          <div class="si-gate-cell"><span class="lbl">Gate 2 Evidence</span>${heroVal(m.gates.g2, { score: true })}</div>
-          <div class="si-gate-cell"><span class="lbl">Paper Trading</span><span class="val locked">${esc(paper)}</span></div>
         </div>
       </div>
       <div class="workflow-bar">
