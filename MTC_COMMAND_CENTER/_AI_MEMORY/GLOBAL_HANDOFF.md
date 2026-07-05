@@ -1,5 +1,23 @@
 # GLOBAL_HANDOFF
 
+## Claude Opus 4.8 2026-07-05 (5) — System Test / Fake Money Lab page shipped; branch merged to master
+
+Barış approved the audit's System Test Lab proposal ("onaylıyorum tasarım dokümanı + implementasyon.
+yap master merge de yap"). Design doc `11_TRIAGE/SYSTEM_TEST_LAB_PAGE_DESIGN_2026-07-05.md`, then
+built + merged the whole `feature/mcc-audit-fixes` branch to master.
+
+- **New read-only page** (`system_test_reader.py` + `renderSystemTest`): scans git-ignored
+  `03_QUANTLENS/system_test/*/` (emitter_manifest + reconciliation_summary), shows plumbing counts
+  ONLY (expected/received/simulated-fills/≈round-trips/rejected/dups/unexplained = 888/888/888/444/
+  0/0/0 for STG002) — never P&L, never a trading action. Sticky amber firewall banner
+  (`SYSTEM_TEST_ONLY / NOT STRATEGY_APPROVED / NO REAL MONEY`), V1.1-V5 gate ladder, honest empty
+  state. NO execution UI, NO schema/Pine/parity/MTC_V2/broker touch.
+- **Anti-confusion rename**: nav "Paper Trading" → "Promotion Readiness" + banner clarifying it is
+  not paper/testnet/live and not the fake-money lab — "paper" no longer means two things.
+- Verified: 120 API tests pass; node --check PASS; live `/dashboard` render confirmed via preview
+  (firewall banner amber, metrics correct, nav renamed, zero console errors); read_only + POST→405.
+- **Branch merged to master** (see below for the 5 fix commits it carried).
+
 ## Claude Fable 5 2026-07-05 (4) — MCC app audit + approved fixes executed
 
 Full read-only app audit (`11_TRIAGE/MCC_APP_AUDIT_2026-07-05.md`) found the dashboard blind to

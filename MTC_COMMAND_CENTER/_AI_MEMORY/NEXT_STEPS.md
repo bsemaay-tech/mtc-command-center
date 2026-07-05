@@ -9,7 +9,7 @@
 - **[AI: DeepSeek]** fix 39 pre-existing VARIANT_LOG_REGISTRY.json validator errors (archetype entries missing `research_run_id`; run `03_QUANTLENS/tools/validate_research_registries.py` until PASS).
 - **[AI: Claude]** build CURRENT_STATUS auto-derive tool (Barış decision: derive phase/summary/next_recommended_action from NEXT_STEPS top + GLOBAL_HANDOFF newest section; hand-refresh dies).
 - **[AI: Claude]** Home + Strategy Intelligence "as of" freshness chips (audit roadmap item 3/7; frontend-only).
-- **[AI: Barış]** System Test / Fake Money Lab page: approve or reject the read-only page proposal (audit §7 item 10 — display STG002 replay reconciliation evidence; no execution UI).
+- ~~System Test / Fake Money Lab page~~ **DONE 2026-07-05** (Barış approved design+impl): new read-only nav page `system_test_reader.py` + renderSystemTest; scans `03_QUANTLENS/system_test/*/`, shows plumbing counts only (888/888/888/≈444, 0 unexplained), sticky amber firewall banner, V1.1-V5 gate ladder. Renamed 'Paper Trading'->'Promotion Readiness' to kill the naming collision. Design: `11_TRIAGE/SYSTEM_TEST_LAB_PAGE_DESIGN_2026-07-05.md`. 120 API tests, live render verified.
 - **[AI: Barış]** run-manifest discovery contract (audit §6.1) — decide if wanted before next big orchestrated sweep.
 
 
