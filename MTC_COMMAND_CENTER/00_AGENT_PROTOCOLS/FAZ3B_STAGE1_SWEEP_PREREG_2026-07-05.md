@@ -32,10 +32,12 @@ stands at these gates.
 
 ## 3. Exit modes + trial budget (A17 discipline — D013)
 
-- **Swept modes: `fixed_3R`, `trail_ema8`, `opposite_channel` — three NEW modes only.**
-  `fixed_2R` is NOT re-run: byte-identical history already exists (self-parity proven), so
-  re-running it would only inflate trials. Baseline comparisons use the existing
-  fixed_2R results for the same cells.
+- **Swept modes: `fixed_3R`, `trail_ema8`, `opposite_channel` — three NEW modes only for 10m.**
+  `fixed_2R` is NOT re-run at 10m: byte-identical history already exists. Baseline
+  comparability was AUDITED 2026-07-05 (see §3b): data + engine chain verified.
+- **Exception — 1h cells run `fixed_2R` TOO** (4 modes at 1h): the 6yr sweep was 10m-only,
+  so 1h has NO fixed_2R baseline. Cost: +140 jobs at stride-3 grid (≈ ⅓ of a historical
+  full-grid pass) — accounted in the budget below.
 - **Grid trim: stride-3 subsample of each strategy's GRIDS list (indices 0, 3, 6, …).**
   Full grid = 1122 param sets → stride-3 ≈ 374. Trials/cell = 3 modes × (grid/3) ≈ 1.0× the
   current per-cell trial count. **Net: trials/cell do NOT exceed today's level.**
@@ -48,6 +50,23 @@ stands at these gates.
 - **DSR accounting:** DSR is computed by the engine per cell as today. The report must
   additionally state total historical trials per cell (existing fixed_2R full-grid runs +
   this run) so nobody mistakes Stage-1 DSR for a fresh-universe number.
+
+### 3b. Baseline comparability audit (done 2026-07-05, Claude Fable)
+
+The "reuse fixed_2R history as baseline" claim was verified, not assumed:
+
+- **Data identical:** all 7 symbols' 10m normalized CSVs are md5-IDENTICAL between the
+  sweep's bundle (`native_us_equities_10m_alpaca_2026-06-28`) and Stage-1's bundle
+  (`native_multiasset_alpaca_2026-06-28`); manifest row counts match (57,420–57,730/symbol).
+- **Engine chain result-equivalent at fixed_2R:** sweep ran at `39b51db2`. Since then:
+  `206bc9ff` (+12 lines, stderr warning only — no computation change), `cb8bf5a3` (Faz 3b —
+  fixed_2R byte-identity PROVEN by self-parity goldens captured pre-edit), `a6342810`
+  (defensive NA guard, unreachable at fixed_2R; parity re-verified PASS). GRIDS untouched
+  throughout.
+- **Gap found → §3 exception:** the 6yr sweep contains ZERO 1h rows; 1h fixed_2R baseline
+  must be produced inside Stage-1 itself.
+
+Jobs total: 20 strat × 7 sym × (10m × 3 modes + 1h × 4 modes) = **980** (was 840).
 
 ## 4. Evaluation tier (D013 item 3)
 
@@ -72,11 +91,15 @@ SHIBUSD, DOGEUSD, and any symbol whose median close < $0.01 in the run window.
 3. Full run under the run-progress supervisor (`run_emitter_supervisor.py` + `run_watchdog.py`):
    ```
    $env:MEGA_BUNDLE_MANIFEST = "<repo>\MTC_COMMAND_CENTER\03_QUANTLENS\data\native_multiasset_alpaca_2026-06-28\manifests\dataset_manifest.json"
+   # Pass 1 (10m, 3 new modes):
    $env:MEGA_EXIT_MODES     = "fixed_3R,trail_ema8,opposite_channel"
    $env:MEGA_GRID_STRIDE    = "3"
-   python MTC_COMMAND_CENTER\03_QUANTLENS\tools\mega_walk_forward.py --symbol SPY,QQQ,AAPL,MSFT,NVDA,AMZN,TSLA --tf 10m,1h
+   python MTC_COMMAND_CENTER\03_QUANTLENS\tools\mega_walk_forward.py --symbol SPY,QQQ,AAPL,MSFT,NVDA,AMZN,TSLA --tf 10m
+   # Pass 2 (1h, 4 modes incl. fixed_2R baseline — no 1h history exists, §3b):
+   $env:MEGA_EXIT_MODES     = "fixed_2R,fixed_3R,trail_ema8,opposite_channel"
+   python MTC_COMMAND_CENTER\03_QUANTLENS\tools\mega_walk_forward.py --symbol SPY,QQQ,AAPL,MSFT,NVDA,AMZN,TSLA --tf 1h
    ```
-   Jobs = 20 strat × 7 sym × 2 tf × 3 modes = **840**; checkpointed (4-tuple keys), resumable.
+   Jobs = 20×7×(3 + 4) = **980**; checkpointed (4-tuple keys), resumable.
 4. Outputs: `03_QUANTLENS/research/faz3b_stage1_<timestamp>/`; morning report per
    `07_BACKTEST_AND_OPTIMIZATION_RULES.md` standard, plus a per-exit-mode leaderboard vs the
    fixed_2R historical baseline for the same cells.
