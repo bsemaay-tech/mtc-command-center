@@ -538,6 +538,22 @@ def slice_is_na(s: "SliceStats") -> bool:
     return s.num_trades < 0
 
 
+def config_has_na(fold_train: list, fold_test: list, lockbox: dict) -> bool:
+    """True if any slice dict of a config is the NA sentinel (num_trades < 0).
+
+    Faz 3b audit nit-2: NA slices must never flow into fold means as zeros —
+    a config containing any NA slice is skipped entirely. Defensive: NA is
+    unreachable in the normal pipeline (build_signals always adds ema_8).
+    """
+    for f in fold_train:
+        if f.get("num_trades", 0) < 0:
+            return True
+    for f in fold_test:
+        if f.get("num_trades", 0) < 0:
+            return True
+    return lockbox.get("num_trades", 0) < 0
+
+
 def bootstrap_p_positive(R, n_boot=2000, seed=0):
     """One-sided bootstrap p-value that mean(R) <= 0. Lower = stronger positive edge."""
     R = np.asarray(R, dtype=float)
@@ -1187,6 +1203,7 @@ def _worker_impl(strategy, symbol, tf, exit_mode):
         grid = GRIDS[strategy]
         # We evaluate each config and store its train-fold mean + lockbox stats
         configs = []
+        na_configs = 0  # Faz 3b nit-2: configs skipped due to NA slices
         sharpe_train_pool = []  # for DSR
         for p in grid:
             dmap = None
@@ -1211,6 +1228,11 @@ def _worker_impl(strategy, symbol, tf, exit_mode):
                 fk.append(asdict(simulate_slice(df_w, sig, stop, strategy, ks, ke, direction=direction, exit_mode=exit_mode)))
             lockbox_start = n - int(n * LOCKBOX_FRACTION)
             lb = asdict(simulate_slice(df_w, sig, stop, strategy, lockbox_start, n, direction=direction, exit_mode=exit_mode))
+            # Faz 3b audit nit-2: a config with any NA slice is skipped, never
+            # averaged as zeros. Unreachable at fixed_2R (parity unaffected).
+            if config_has_na(ft, fk, lb):
+                na_configs += 1
+                continue
             mean_train_ret = sum(f["net_return_pct"] for f in ft) / len(ft) if ft else 0.0
             mean_train_sharpe_pt = sum(f["sharpe_pt"] for f in ft) / len(ft) if ft else 0.0
             configs.append({"params": p, "fold_train": ft, "fold_test": fk,
@@ -1219,6 +1241,13 @@ def _worker_impl(strategy, symbol, tf, exit_mode):
             sharpe_train_pool.append(mean_train_sharpe_pt)
 
         if not configs:
+            if na_configs:
+                # Faz 3b nit-2: every config was NA under this exit_mode —
+                # classify as an explicit skip, never an all-zero result row.
+                return {"strategy": strategy, "symbol": symbol, "timeframe": tf,
+                        "classification": "SKIPPED_NA_EXIT_MODE",
+                        "reason": f"exit_mode={exit_mode}: all {na_configs} configs NA (missing required column)",
+                        "summary": {}, "data_rows": int(len(df))}
             return {"strategy": strategy, "symbol": symbol, "timeframe": tf,
                     "classification": "NO_DATA", "summary": {}, "data_rows": int(len(df))}
 

@@ -160,3 +160,98 @@ def test_parse_exit_modes_default_and_variants():
 def test_parse_exit_modes_rejects_unknown():
     with pytest.raises(SystemExit):
         mw.parse_exit_modes("fixed_2R,made_up_mode")
+
+
+# --------------------------------------------------------------------------
+# Faz 3b audit nit-1: SHORT-path exits (trail / channel / 3R) were previously
+# unreachable (native trail strategy is long-only); exit_mode makes them live.
+# --------------------------------------------------------------------------
+def _one_short_trade_frame(n=130, stop_at=101.0):
+    """Single SHORT entry at bar 21 (sig[20]=True); stop above entry, open=100."""
+    op = _flat(n, 100.0)
+    hi = _flat(n, 100.5)
+    lo = _flat(n, 99.5)
+    cl = _flat(n, 100.0)
+    sig = np.zeros(n, dtype=bool)
+    sig[20] = True
+    stop = _flat(n, 0.0)
+    stop[20] = stop_at  # short: stop ABOVE entry
+    return op, hi, lo, cl, sig, stop
+
+
+def test_fixed_2R_vs_3R_short_target_math():
+    op, hi, lo, cl, sig, stop = _one_short_trade_frame()  # risk = 1.0
+    # Bar 22 spikes low to 96.9 (<= both 2R target 98 and 3R target 97);
+    # high stays below the 101 stop.
+    lo[22] = 96.9
+    df = _make_df(len(op), open_=op, high=hi, low=lo, close=cl)
+    sig_s, stop_s = pd.Series(sig), pd.Series(stop)
+
+    stats2, R2 = mw.simulate_slice(df, sig_s, stop_s, NON_TRAIL_STRAT, 0, len(op),
+                                   return_trades=True, direction="short",
+                                   exit_mode="fixed_2R")
+    stats3, R3 = mw.simulate_slice(df, sig_s, stop_s, NON_TRAIL_STRAT, 0, len(op),
+                                   return_trades=True, direction="short",
+                                   exit_mode="fixed_3R")
+
+    assert stats2.num_trades == 1 and stats3.num_trades == 1
+    assert R2[0] == pytest.approx(2.0, abs=1e-9)  # exits at entry - 2R (98)
+    assert R3[0] == pytest.approx(3.0, abs=1e-9)  # exits at entry - 3R (97)
+
+
+def test_trail_ema8_short_exits_next_open_on_close_above_ema():
+    op, hi, lo, cl, sig, stop = _one_short_trade_frame()
+    n = len(op)
+    ema = _flat(n, 101.0)         # close (100) stays below ema (101): no exit
+    ema[22] = 99.0               # bar 22 close 100 > ema 99 -> short trail exit
+    op[23] = 99.6                # exit fills at bar 23 open
+    df = _make_df(n, open_=op, high=hi, low=lo, close=cl, ema_8=ema)
+    sig_s, stop_s = pd.Series(sig), pd.Series(stop)
+
+    stats, R, events = mw.simulate_slice(
+        df, sig_s, stop_s, NON_TRAIL_STRAT, 0, n,
+        return_trades=True, return_trade_events=True,
+        direction="short", exit_mode="trail_ema8")
+
+    assert stats.num_trades == 1
+    assert events[0]["exit_idx"] == 22
+    assert events[0]["exit_price"] == pytest.approx(99.6)
+
+
+def test_opposite_channel_short_exit_level_and_shift1_no_lookahead():
+    op, hi, lo, cl, sig, stop = _one_short_trade_frame(stop_at=105.0)  # wide stop
+    n = len(op)
+    hi[:] = 100.5
+    hi[40] = 100.6                # max of highs[30:50] (excludes bar 50) = 100.6
+    hi[50] = 103.0                # bar 50's own high; MUST be excluded by shift(1)
+    cl[50] = 100.7                # close 100.7 > channel 100.6 -> exit; 100.7 !> 103 (bug case)
+    op[51] = 100.2                # exit fills at bar 51 open
+    df = _make_df(n, open_=op, high=hi, low=lo, close=cl)
+    sig_s, stop_s = pd.Series(sig), pd.Series(stop)
+
+    stats, R, events = mw.simulate_slice(
+        df, sig_s, stop_s, NON_TRAIL_STRAT, 0, n,
+        return_trades=True, return_trade_events=True,
+        direction="short", exit_mode="opposite_channel")
+
+    assert stats.num_trades == 1
+    assert events[0]["exit_idx"] == 50
+    assert events[0]["exit_price"] == pytest.approx(100.2)
+    chan = pd.Series(hi).rolling(mw.EXIT_CHANNEL_LEN).max().shift(1).to_numpy()
+    assert chan[50] == pytest.approx(100.6)
+
+
+# --------------------------------------------------------------------------
+# Faz 3b audit nit-2: NA slices must never flow into fold means as zeros.
+# (Defensive: build_signals always adds ema_8, so NA is unreachable in the
+# normal pipeline — but a config whose slices are NA must be skipped, and an
+# all-NA cell must classify as SKIPPED_NA_EXIT_MODE, never an all-zero row.)
+# --------------------------------------------------------------------------
+def test_config_has_na_detects_na_slices():
+    from dataclasses import asdict
+    na = asdict(mw._na_slice())
+    ok = asdict(mw.SliceStats(0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0))
+    assert mw.config_has_na([na], [ok], ok)      # NA in train folds
+    assert mw.config_has_na([ok], [na], ok)      # NA in test folds
+    assert mw.config_has_na([ok], [ok], na)      # NA lockbox
+    assert not mw.config_has_na([ok, ok], [ok], ok)
