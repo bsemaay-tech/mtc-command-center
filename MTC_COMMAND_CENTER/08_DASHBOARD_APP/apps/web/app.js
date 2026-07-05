@@ -600,6 +600,20 @@ function copyAiPrompt(btn) {
 }
 window.copyAiPrompt = copyAiPrompt;
 
+/* Per-source "data as of" line so stale sources are visible at a glance (audit 2026-07-05). */
+function freshnessLine() {
+  const s = snap();
+  const day = (v) => (v ? String(v).slice(0, 10) : "—");
+  const parts = [
+    ["Status", s.current_status && s.current_status.last_updated],
+    ["Backtest runs", s.backtest_status && s.backtest_status.generated_at],
+    ["AI verdicts", s.expert_quantlens && s.expert_quantlens.generated_at],
+    ["Night artifacts", s.night_artifacts && s.night_artifacts.generated_at],
+    ["Research registry", s.strategy_research && s.strategy_research.generated_at],
+  ];
+  return "Data as of — " + parts.map(([k, v]) => `${k}: ${day(v)}`).join(" · ");
+}
+
 function renderHome(c) {
   const rows = pipelineRows();
   const cards = scorecardCards();
@@ -657,6 +671,7 @@ function renderHome(c) {
       </div>
     </div>
     <p class="metric-note">Strategy counts use the canonical pipeline/registry universe. Scorecard-only IDs are treated as orphan evidence until promoted into the strategy registry/pipeline. Row counts refer to scorecard/backtest evidence rows and may exceed strategy count. "Needs Review" is a broad heuristic (pending/missing/fail/define/freeze in pipeline metadata), not a strict blocker count.</p>
+    <p class="metric-note">${esc(freshnessLine())}</p>
 
     <div class="dashboard-grid">
       <div class="stack">
