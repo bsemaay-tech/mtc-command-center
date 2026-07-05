@@ -63,6 +63,11 @@ VOLATILE_KEYS = {
     "partial_json",
 }
 
+# Faz 3b (D013): fields the new engine ALWAYS adds. Stripped during
+# canonicalization so fixed_2R output stays byte-identical to the pre-edit
+# golden. This is the ONLY sanctioned harness change; goldens are NOT recaptured.
+ALLOWED_NEW_KEYS = {"exit_mode", "engine_version"}
+
 
 def pinned_strategies() -> list[str]:
     sys.path.insert(0, str(TOOLS_DIR))
@@ -77,7 +82,7 @@ def strip_volatile(obj):
         return {
             k: strip_volatile(v)
             for k, v in sorted(obj.items())
-            if k not in VOLATILE_KEYS
+            if k not in VOLATILE_KEYS and k not in ALLOWED_NEW_KEYS
         }
     if isinstance(obj, list):
         return [strip_volatile(v) for v in obj]
@@ -95,6 +100,16 @@ def extract_rows(results_path: Path) -> list[dict]:
             rows = max(lists, key=len) if lists else []
     else:
         rows = []
+    # Faz 3b (D013): the gate must only ever run in default mode. Prove it before
+    # canonicalization strips the field — any non-fixed_2R row means the sweep
+    # axis leaked into the parity run and the byte-identity claim is void.
+    for r in rows:
+        if isinstance(r, dict) and "exit_mode" in r:
+            assert r["exit_mode"] == "fixed_2R", (
+                f"self-parity must run default exit_mode=fixed_2R; "
+                f"got {r['exit_mode']!r} for "
+                f"{r.get('strategy')}|{r.get('symbol')}|{r.get('tf', r.get('timeframe'))}"
+            )
     rows = [strip_volatile(r) for r in rows if isinstance(r, dict)]
     rows.sort(
         key=lambda r: (

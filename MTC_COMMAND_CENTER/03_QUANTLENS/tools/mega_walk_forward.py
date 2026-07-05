@@ -73,6 +73,43 @@ MIN_BARS_REQUIRED = 1500
 MIN_TRADES_FOR_PASS = 30
 HOLDING_BAR_LIMIT = 96
 
+# --- Faz 3b (D013): swept exit_mode ---------------------------------
+# Engine identity stamped on EVERY result row so fixed_2R history can never be
+# silently mixed with swept-exit outputs. Bump when exit semantics change.
+ENGINE_VERSION = "faz3b-exit-mode-v1"
+# Valid swept exit modes. fixed_2R is byte-identical to the pre-Faz3b engine.
+VALID_EXIT_MODES = ("fixed_2R", "fixed_3R", "trail_ema8", "opposite_channel")
+DEFAULT_EXIT_MODE = "fixed_2R"
+# Internal knob for opposite_channel: rolling low/high channel lookback.
+EXIT_CHANNEL_LEN = 20
+# The one native-trail strategy whose is_trail special case trail_ema8 absorbs.
+TRAIL_STRATEGY = "QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL"
+
+
+def parse_exit_modes(raw: str | None) -> list[str]:
+    """Parse env MEGA_EXIT_MODES (comma list) -> ordered, de-duped mode list.
+
+    None/empty -> [DEFAULT_EXIT_MODE] (fixed_2R only), preserving default trial
+    counts, DSR, and self-parity. Unknown modes are a hard error.
+    """
+    if not raw or not raw.strip():
+        return [DEFAULT_EXIT_MODE]
+    modes = [m.strip() for m in raw.split(",") if m.strip()]
+    if not modes:
+        return [DEFAULT_EXIT_MODE]
+    bad = [m for m in modes if m not in VALID_EXIT_MODES]
+    if bad:
+        raise SystemExit(
+            f"Unknown MEGA_EXIT_MODES entries {bad}; valid={list(VALID_EXIT_MODES)}"
+        )
+    seen: set = set()
+    out: list[str] = []
+    for m in modes:
+        if m not in seen:
+            seen.add(m)
+            out.append(m)
+    return out
+
 # AUDIT-009/D005: opening-range strategies need a US-equity session open.
 # Populated by overnight_v2_runner; empty by default so pure-mega runs are unaffected.
 EQUITY_ONLY_STRATEGIES: set = set()
@@ -487,6 +524,20 @@ class SliceStats:
     annualized_sortino: float = 0.0
     net_after_slippage_pct: float = 0.0
 
+
+def _na_slice() -> "SliceStats":
+    """NA/skip sentinel (num_trades = -1, never a zero-trade result).
+
+    Returned when trail_ema8 is requested for a slice with no ema_8 column, so a
+    skipped mode is never silently reported as an all-zero FAIL. asdict-safe.
+    """
+    return SliceStats(-1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0)
+
+
+def slice_is_na(s: "SliceStats") -> bool:
+    return s.num_trades < 0
+
+
 def bootstrap_p_positive(R, n_boot=2000, seed=0):
     """One-sided bootstrap p-value that mean(R) <= 0. Lower = stronger positive edge."""
     R = np.asarray(R, dtype=float)
@@ -498,7 +549,7 @@ def bootstrap_p_positive(R, n_boot=2000, seed=0):
     means = R[idx].mean(axis=1)
     return float((means <= 0).mean())
 
-def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False, direction="long", return_trade_events=False):
+def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False, direction="long", return_trade_events=False, exit_mode=DEFAULT_EXIT_MODE):
     if e_idx - s_idx < 100:
         empty = SliceStats(0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0)
         if return_trades and return_trade_events:
@@ -506,8 +557,24 @@ def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False, d
         return (empty, np.array([])) if return_trades else empty
 
     cost = COST_BPS / 10000.0
-    is_trail = (strategy == "QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL")
+    is_trail = (strategy == TRAIL_STRATEGY)
     is_short = (direction == "short")
+
+    # Faz 3b (D013): resolve exit behavior from the swept exit_mode. The native
+    # is_trail special case is ABSORBED into one trail path: the trail strategy
+    # still trails under every mode (so fixed_2R stays byte-identical to today),
+    # and trail_ema8 additionally lets any strategy trail.
+    use_trail = is_trail or (exit_mode == "trail_ema8")
+    use_channel = (exit_mode == "opposite_channel")
+    r_mult = 3.0 if exit_mode == "fixed_3R" else 2.0
+
+    # trail requires an ema_8 column; without it the slice is skipped as NA,
+    # never a fabricated all-zero result.
+    if use_trail and "ema_8" not in df.columns:
+        na = _na_slice()
+        if return_trades and return_trade_events:
+            return na, np.array([]), []
+        return (na, np.array([])) if return_trades else na
 
     op = df["open"].to_numpy()
     hi = df["high"].to_numpy()
@@ -516,6 +583,13 @@ def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False, d
     em = df["ema_8"].to_numpy() if "ema_8" in df.columns else np.zeros(len(df))
     sg = sig.to_numpy()
     st = stop.to_numpy()
+
+    # opposite_channel exit levels: rolling low/high over EXIT_CHANNEL_LEN,
+    # shift(1) so the current bar is excluded (no look-ahead).
+    chan_lo = chan_hi = None
+    if use_channel:
+        chan_lo = pd.Series(lo).rolling(EXIT_CHANNEL_LEN).min().shift(1).to_numpy()
+        chan_hi = pd.Series(hi).rolling(EXIT_CHANNEL_LEN).max().shift(1).to_numpy()
 
     trades_pct = []
     trades_R = []
@@ -541,31 +615,46 @@ def simulate_slice(df, sig, stop, strategy, s_idx, e_idx, return_trades=False, d
                 i += 1
                 continue
             risk = stop_price - entry_price
-            target = entry_price - 2.0 * risk
+            target = entry_price - r_mult * risk
             exit_idx = min(entry_idx + HOLDING_BAR_LIMIT, e_idx - 1)
             exit_price = cl[exit_idx]
             for cur in range(entry_idx, exit_idx + 1):
                 if hi[cur] >= stop_price:
                     exit_idx = cur; exit_price = stop_price; break
-                if lo[cur] <= target:
-                    exit_idx = cur; exit_price = target; break
+                if use_trail:
+                    if cl[cur] > em[cur]:
+                        nxt = min(cur + 1, e_idx - 1)
+                        exit_idx = cur; exit_price = op[nxt]; break
+                elif use_channel:
+                    if not np.isnan(chan_hi[cur]) and cl[cur] > chan_hi[cur]:
+                        nxt = min(cur + 1, e_idx - 1)
+                        exit_idx = cur; exit_price = op[nxt]; break
+                else:
+                    if lo[cur] <= target:
+                        exit_idx = cur; exit_price = target; break
             raw = entry_price / exit_price - 1.0
         else:
             if stop_price >= entry_price:
                 i += 1
                 continue
             risk = entry_price - stop_price
-            target = entry_price + 2.0 * risk
+            target = entry_price + r_mult * risk
             exit_idx = min(entry_idx + HOLDING_BAR_LIMIT, e_idx - 1)
             exit_price = cl[exit_idx]
             for cur in range(entry_idx, exit_idx + 1):
                 if lo[cur] <= stop_price:
                     exit_idx = cur; exit_price = stop_price; break
-                if not is_trail and hi[cur] >= target:
-                    exit_idx = cur; exit_price = target; break
-                if is_trail and cl[cur] < em[cur]:
-                    nxt = min(cur + 1, e_idx - 1)
-                    exit_idx = cur; exit_price = op[nxt]; break
+                if use_trail:
+                    if cl[cur] < em[cur]:
+                        nxt = min(cur + 1, e_idx - 1)
+                        exit_idx = cur; exit_price = op[nxt]; break
+                elif use_channel:
+                    if not np.isnan(chan_lo[cur]) and cl[cur] < chan_lo[cur]:
+                        nxt = min(cur + 1, e_idx - 1)
+                        exit_idx = cur; exit_price = op[nxt]; break
+                else:
+                    if hi[cur] >= target:
+                        exit_idx = cur; exit_price = target; break
             raw = exit_price / entry_price - 1.0
 
         net = raw - cost
@@ -1051,8 +1140,20 @@ def _init_worker():
     _MANIFEST = json.load(open(BUNDLE_MANIFEST, encoding="utf-8"))
 
 def _worker(job):
-    """job = (strategy_id, symbol, timeframe)."""
-    strategy, symbol, tf = job
+    """job = (strategy_id, symbol, timeframe, exit_mode).
+
+    Stamps exit_mode + engine_version onto EVERY returned row (Faz 3b / D013),
+    including early-exit classification rows, so fixed_2R history can never be
+    silently mixed with swept-exit outputs.
+    """
+    strategy, symbol, tf, exit_mode = job
+    row = _worker_impl(strategy, symbol, tf, exit_mode)
+    row["exit_mode"] = exit_mode
+    row["engine_version"] = ENGINE_VERSION
+    return row
+
+
+def _worker_impl(strategy, symbol, tf, exit_mode):
     try:
         if strategy == "QL_2026-05-01_SWING_1H_DUAL_RSI_60_40_PULLBACK" and tf == "1D":
             return {"strategy": strategy, "symbol": symbol, "timeframe": tf,
@@ -1106,10 +1207,10 @@ def _worker(job):
                 continue
             ft, fk = [], []
             for (ts, te, ks, ke) in folds:
-                ft.append(asdict(simulate_slice(df_w, sig, stop, strategy, ts, te, direction=direction)))
-                fk.append(asdict(simulate_slice(df_w, sig, stop, strategy, ks, ke, direction=direction)))
+                ft.append(asdict(simulate_slice(df_w, sig, stop, strategy, ts, te, direction=direction, exit_mode=exit_mode)))
+                fk.append(asdict(simulate_slice(df_w, sig, stop, strategy, ks, ke, direction=direction, exit_mode=exit_mode)))
             lockbox_start = n - int(n * LOCKBOX_FRACTION)
-            lb = asdict(simulate_slice(df_w, sig, stop, strategy, lockbox_start, n, direction=direction))
+            lb = asdict(simulate_slice(df_w, sig, stop, strategy, lockbox_start, n, direction=direction, exit_mode=exit_mode))
             mean_train_ret = sum(f["net_return_pct"] for f in ft) / len(ft) if ft else 0.0
             mean_train_sharpe_pt = sum(f["sharpe_pt"] for f in ft) / len(ft) if ft else 0.0
             configs.append({"params": p, "fold_train": ft, "fold_test": fk,
@@ -1138,7 +1239,7 @@ def _worker(job):
             direction_b = "long"
         nb = len(df_b)
         lockbox_start_b = nb - int(nb * LOCKBOX_FRACTION)
-        _lb_stats, lb_R, lb_trade_events = simulate_slice(df_b, sig_b, stop_b, strategy, lockbox_start_b, nb, return_trades=True, direction=direction_b, return_trade_events=True)
+        _lb_stats, lb_R, lb_trade_events = simulate_slice(df_b, sig_b, stop_b, strategy, lockbox_start_b, nb, return_trades=True, direction=direction_b, return_trade_events=True, exit_mode=exit_mode)
         seed = int(hashlib.md5(f"{strategy}|{symbol}|{tf}".encode()).hexdigest()[:8], 16) % (2**31)
         boot_p = bootstrap_p_positive(lb_R, n_boot=2000, seed=seed) if len(lb_R) >= MIN_TRADES_FOR_PASS else float("nan")
 
@@ -1335,7 +1436,7 @@ def _load_checkpoint(path: Path) -> dict:
 
 
 def _save_checkpoint(path: Path, results: list, jobs: list, workers: int, started_utc: str) -> None:
-    completed_keys = [_job_key((r.get("strategy", ""), r.get("symbol", ""), r.get("timeframe", ""))) for r in results]
+    completed_keys = [_job_key((r.get("strategy", ""), r.get("symbol", ""), r.get("timeframe", ""), r.get("exit_mode", DEFAULT_EXIT_MODE))) for r in results]
     state = {
         "version": 1,
         "generated_utc": datetime.now(timezone.utc).isoformat(),
@@ -1413,10 +1514,14 @@ def main():
     if missing:
         raise SystemExit(f"Unknown strategy id(s): {missing}")
     total_param_sets = sum(len(GRIDS[s]) for s in selected_strategies)
-    print(f"[start] workers={workers} symbols={len(selected_symbols)} tfs={selected_tfs} strategies={len(selected_strategies)} param_sets_total={total_param_sets}", flush=True)
+    # Faz 3b (D013): exit_mode is a separate sweep axis, NOT part of GRIDS.
+    # Default (MEGA_EXIT_MODES unset) -> [fixed_2R] only, so default trial
+    # counts, DSR, and self-parity are unchanged.
+    exit_modes = parse_exit_modes(os.environ.get("MEGA_EXIT_MODES"))
+    print(f"[start] workers={workers} symbols={len(selected_symbols)} tfs={selected_tfs} strategies={len(selected_strategies)} param_sets_total={total_param_sets} exit_modes={exit_modes}", flush=True)
 
-    jobs = [(s, sym, tf) for s in selected_strategies for sym in selected_symbols for tf in selected_tfs]
-    print(f"[start] total jobs (sym*tf*strat): {len(jobs)}; configs evaluated ~{len(jobs) * max(1, (total_param_sets // max(1, len(selected_strategies))))}", flush=True)
+    jobs = [(s, sym, tf, em) for s in selected_strategies for sym in selected_symbols for tf in selected_tfs for em in exit_modes]
+    print(f"[start] total jobs (sym*tf*strat*exit): {len(jobs)}; configs evaluated ~{len(jobs) * max(1, (total_param_sets // max(1, len(selected_strategies))))}", flush=True)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     checkpoint_path = args.resume or (OUTPUT_DIR / "MEGA_walk_forward_checkpoint.pkl")
