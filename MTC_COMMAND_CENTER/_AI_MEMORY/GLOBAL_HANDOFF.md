@@ -26,9 +26,13 @@ everything after 2026-06-29. Barış answered the audit's open questions and app
    `12_PARITY_PINETS/`; `paths.local.json` (git-ignored) pinets_root/tradingview_exports_dir now
    point in-repo. Verified `build_parity_status()` byte-identical minus source path. Originals
    untouched.
-8. **Scoring pass over July runs APPROVED by Barış** (`mcc_night_tail.sh` per stage dir) — see
-   NEXT_STEPS for launch state. Clarified: Strategy Intelligence does NOT auto-update after runs;
-   scorecards are a separate enrichment step by design.
+8. **Scoring pass over July runs DONE** (Barış approved; `mcc_night_tail.sh` per stage dir with
+   `MEGA_BUNDLE_MANIFEST` + `PYTHONUTF8=1` + Windows paths — all three required, see NEXT_STEPS
+   gotchas): 716 new scorecard_v2 cards, promotable=0 across all; dashboard scorecards 837→1553,
+   4 runs visible. Clarified for Barış: Strategy Intelligence does NOT auto-update after runs —
+   scorecards are a separate approval-gated enrichment step by design.
+9. **Home "Data as of" freshness line** shipped (`a1a6cf51`): per-source dates (Status/Backtest
+   runs/AI verdicts/Night artifacts/Research registry) under Home metrics.
 
 **NEXT:** Stage-2 pre-registration (unchanged, separately gated); System Test Lab page awaits
 Barış understanding/approval (audit Q5 re-explained in chat); CURRENT_STATUS auto-derive tool.
