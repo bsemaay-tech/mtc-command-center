@@ -26,7 +26,20 @@ no code yet**, on branch `feature/ibkr-paper-bridge`:
 
 LLM sentiment idea (Barış): regime from Grok/news deciding long-only/short-only/no-trade — designed
 in as Role A of llm_gate; YouTube source slot left in the SentimentSource protocol for later.
-Next: Barış approves pre-reg → build day per 02_BUILD_PLAN_1DAY.md → P0 smoke (approval-gated).
+
+Update (same day, later session): reviewed Barış's external report
+(`live_trading_dashboard_final_report.md`, Downloads). ADOPTED into docs: Gate Monitor
+(gate_results list + dashboard card), duplicate-order + stale-price guards, reduce-only close
+semantics, consecutive-loss stop + cooldown (also new PREREG abort line), strategy import format
+w/ permissions block (`live_allowed` hand-set only), Telegram notifier (fail-silent, task 11).
+DEFERRED to new §13 roadmap: execution ticket, event gate, market context page, crypto connectors,
+Postgres/Redis/Docker, React, login/2FA (required before any non-localhost exposure), tunnel→VPS
+phases (IBKR end-state = hybrid local bridge or IB Gateway on VPS). Also wrote
+`docs/04_AUDIT_PROMPT.md` — self-contained adversarial audit prompt for Codex/GPT/Gemini/DeepSeek:
+dimensions A-I, mandatory ≥5 improvements + ≥5 features + top-3 verdict, output to
+`docs/audits/AUDIT_<model>_<date>.md` on own branch, report file is the only allowed write.
+Next: Barış runs external audits → Claude triages audits + adopts → pre-reg approval → build day
+per 02_BUILD_PLAN_1DAY.md → P0 smoke (approval-gated).
 
 ## Claude Opus 4.8 2026-07-05 (6) — audit cleanup (4 remaining items) done + pushed to origin/master
 

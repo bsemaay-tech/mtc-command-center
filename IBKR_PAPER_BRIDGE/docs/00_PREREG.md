@@ -58,6 +58,8 @@ LLM gate calls (count, latency, veto count).
 - Daily loss limit hit (config `risk.max_daily_loss_pct`, default 2% of paper equity).
 - Order in unknown state > 120 s after submit.
 - 3 consecutive order rejects.
+- N consecutive losing trades (config `risk.max_consecutive_losses`, default 3) ⇒ auto-DISARM;
+  re-arm is manual after cooldown (`risk.cooldown_minutes_after_loss`).
 - Data staleness: no bar update for 2× bar period during market hours.
 - Position exists with no SL working order (naked position) — flatten immediately.
 

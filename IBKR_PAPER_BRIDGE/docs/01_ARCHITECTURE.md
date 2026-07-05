@@ -197,11 +197,22 @@ Parameters in `config/strategies/keltner_trail_ema8.yaml`:
 
 ```yaml
 id: keltner_trail_ema8
+version: 1.0.0
+source: MTC/FAZ3B_stage1       # provenance only — no runtime link
 symbol: AAPL
 timeframe: 1h
 params: { kc_length: 20, kc_mult: 2.0, atr_length: 20, trail_ema: 8 }
 direction_default: BOTH        # dashboard can restrict; LLM regime can restrict further
+permissions:                   # enforced by engine at load + ARM time
+  paper_allowed: true
+  live_allowed: false          # live ARM refuses strategies without this flag
+  requires_human_approval: true
+risk_overrides: {}             # optional per-strategy tightening of bridge.yaml risk (never loosening)
 ```
+
+This is the **strategy import format**: future MTC-researched strategies are exported into a file
+of this shape; the bridge validates permissions + risk_overrides at load and refuses live use
+unless `live_allowed: true` (which only Barış sets by hand).
 
 **Parity requirement:** the Python port must be replay-testable — `tests/test_strategy.py`
 feeds fixture bars and asserts signal timestamps against a golden list generated once from the
@@ -218,6 +229,8 @@ Checks in order (first failure returns `Rejection(stage="RISK", reason=...)`):
    empty intersection or NO_TRADE ⇒ reject.
 3. No open position (or flip allowed).
 4. Daily loss limit not hit: `realized_today + unrealized <= -max_daily_loss_pct * day_start_equity` ⇒ reject + auto-DISARM.
+4b. Consecutive-loss stop: last `max_consecutive_losses` trades all losers ⇒ reject + auto-DISARM.
+4c. Cooldown: within `cooldown_minutes_after_loss` of last SL exit ⇒ reject "cooldown_active".
 5. Sizing (fixed fractional): `risk_dollars = equity * risk_pct_per_trade` (default 0.5%);
    `stop_distance = |ref_price - stop_loss|` from strategy's initial SL
    (Keltner: opposite band; fallback `atr_mult_sl * ATR`); `qty = floor(risk_dollars / stop_distance)`.
@@ -227,6 +240,11 @@ Checks in order (first failure returns `Rejection(stage="RISK", reason=...)`):
    `tp_mode: none` ⇒ trail-only exit (matches trail_ema8 philosophy; DEFAULT for v1).
 
 Output `OrderPlan` with the full arithmetic trace in `reason` (auditable).
+
+**Gate-results exposure:** RiskEngine returns, alongside pass/reject, an ordered
+`gate_results: list[{gate, status: PASS|WARN|BLOCK|SKIP, detail}]` covering every check above +
+LLM gate + duplicate/stale checks. Stored in the decision payload and rendered as the dashboard
+**Gate Monitor** card — "signal ≠ order" made visible: what passed, what blocked, why.
 
 ### 6.4 LLM layer (`engine/llm_gate.py`) — two roles, both risk-reducing only
 
@@ -254,6 +272,13 @@ there is NO code path from LLM output to qty, price, or new-order fields.
 ### 6.5 OrderManager (`engine/orders.py`)
 
 - Owns mapping decision_id ↔ broker order ids; writes every `orderStatus`/fill event to Store.
+- **Duplicate-order protection:** submit is idempotent per decision_id; additionally a signal
+  fingerprint `(symbol, direction, bar_ts)` may submit at most once per run — re-delivery of the
+  same bar/signal (reconnect replays) can never double-order.
+- **Stale-price guard:** at submit, last bar/quote update must be < `max_price_age_s`
+  (default 90 s for 1h bars — generous, delayed feed) — else reject `STALE_PRICE`, log event.
+- **Close = reduce-only semantics:** exit paths (flip, flatten, trail) size orders to current
+  position qty read at submit time, never a cached value — a close can never open the opposite side.
 - Bracket submit; on partial fill > 60 s, cancel remainder, keep SL sized to filled qty (modify).
 - Watchdog: order not acked in 120 s ⇒ abort criterion (PREREG §7) ⇒ DISARM + alert row.
 - Reconciler coroutine (60 s): `broker.positions() ∪ open_orders()` vs DB expectations; any
@@ -261,6 +286,11 @@ there is NO code path from LLM output to qty, price, or new-order fields.
 
 ### 6.6 BarFeed staleness
 During RTH, if now − last_bar_update > 2 × timeframe ⇒ `DATA_STALE` event ⇒ DISARM (PREREG §7).
+
+### 6.7 Notifier (`engine/notify.py`) — optional, high value for unattended P2
+Telegram bot (env `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`; both unset ⇒ notifier disabled,
+no error). Sends: fills, trade closes (w/ P&L), every event severity ≥ WARN, DISARM/KILL,
+regime changes. Fire-and-forget with 5 s timeout — notification failure NEVER blocks trading path.
 
 ---
 
@@ -317,7 +347,9 @@ Layout: fixed left sidebar (nav + ARM/DISARM/KILL block), topbar (conn pill, mod
 Pages (hash-routed, one `app.js`):
 1. **Overview** — equity curve (lightweight-charts), day P&L card, open position card (entry, SL,
    TP, unrealized, trail level), last-10 decisions stream, regime card (regime, confidence,
-   countdown to TTL, rationale, refresh button).
+   countdown to TTL, rationale, refresh button), **Gate Monitor card** — last signal's full gate
+   breakdown (§6.3 gate_results): green PASS / amber WARN / red BLOCK / grey SKIP per gate, with
+   block reason text. Makes "signal ≠ order" visible at a glance.
 2. **Strategy & Risk config** — strategy select (v1: one), symbol, timeframe (read-only v1),
    direction (BOTH/LONG/SHORT), risk % per trade, tp_mode (none/rr) + rr, max daily loss %,
    max notional %, allow_flip, LLM toggles (regime on/off, veto on/off, fail policy, min confidence).
@@ -346,9 +378,13 @@ risk:
   risk_pct_per_trade: 0.005
   max_daily_loss_pct: 0.02
   max_position_notional_pct: 0.20
+  max_consecutive_losses: 3    # auto-DISARM after N losers in a row
+  cooldown_minutes_after_loss: 120
+  max_price_age_s: 90          # stale-price guard at submit
   tp_mode: none                # trail-only default
   rr_ratio: 2.0
   allow_flip: false
+notify: { telegram_enabled: true }   # tokens from env; unset = silently disabled
 llm:
   regime_enabled: true
   regime_refresh_minutes: 240
@@ -379,3 +415,21 @@ server: { host: 127.0.0.1, port: 8790 }
   broker-facing successor track, with its own PREREG gates (P0-P3).
 - Paper results feed BACK to MCC only as a written report (P3 slippage + parity report into
   `MTC_COMMAND_CENTER/11_TRIAGE/`), never as automatic promotion evidence.
+
+## 13. Roadmap beyond v1 (ideas adopted from `live_trading_dashboard_final_report.md`, 2026-07-05)
+
+Reviewed Barış's external design report; adopted into v1: gate monitor, duplicate-order +
+stale-price guards, consecutive-loss stop + cooldown, strategy import format w/ permissions,
+Telegram notifier. Deliberately DEFERRED (would break the 1-day build; revisit after P2):
+
+| Idea | When | Note |
+|---|---|---|
+| Manual Execution Ticket (risk-calculated manual orders w/ gate check) | v1.1 | v1 has only cancel/flatten manual actions. |
+| Event gate (CPI/FOMC/earnings block) | v1.1 | Partially covered by LLM regime NO_TRADE; a calendar-based hard gate is better — needs an events data source. |
+| Market Context page (movers, funding, OI, sentiment) | v2 | Context layer only, never an order trigger. |
+| Additional connectors (Binance/Bybit/Hyperliquid via direct HTTP/WS) | v2 | `Broker` protocol (§6.1) is already the abstraction seam; crypto connectors don't need a local terminal. |
+| Postgres + Redis + Docker Compose | v2 / multi-strategy | SQLite + 1 process is correct at v1 scale; migrate when >1 strategy or VPS. |
+| React/Next frontend | only if vanilla JS hits a wall | No build step is a feature for AI-driven iteration. |
+| Login + 2FA + roles | REQUIRED before any non-localhost exposure | v1 binds to 127.0.0.1 only. |
+| Deployment: local → Cloudflare Tunnel/Tailscale (monitor-only) → VPS | after P2 | IBKR needs local TWS/Gateway ⇒ end-state is hybrid: cloud dashboard + local execution bridge, OR IB Gateway on the VPS itself. Tunnel phase: dashboard read-only remotely, ARM/KILL still allowed, config edits blocked remotely. |
+| Multi-strategy portfolio + correlation/exposure gates | v2 | Requires portfolio-level risk engine (max correlated exposure, per-strategy caps — import format's `risk_overrides` is the hook). |
