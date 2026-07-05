@@ -1,5 +1,12 @@
 # NEXT_STEPS
 
+## 🚀 IBKR PAPER BRIDGE (new standalone track; design docs DONE 2026-07-05 on `feature/ibkr-paper-bridge`; read `IBKR_PAPER_BRIDGE/docs/` 00→01→02 before touching)
+- **[AI: Barış]** approve `IBKR_PAPER_BRIDGE/docs/00_PREREG.md` (gates P0-P3, abort criteria, first strategy = FAZ 3B KELTNER×trail_ema8×AAPL×1h as plumbing subject) + merge design branch.
+- **[AI: Claude|Codex]** BUILD DAY: execute `IBKR_PAPER_BRIDGE/docs/02_BUILD_PLAN_1DAY.md` tasks 1-11 in order, commit per task, mock-first (no TWS needed until task 8). Do not redesign — architecture decisions are final in `01_ARCHITECTURE.md`.
+- **[AI: Barış]** install/launch TWS paper (port 7497, API enabled, read-only OFF) + provide `XAI_API_KEY`/`ANTHROPIC_API_KEY` env for LLM gate.
+- **[AI: Claude, approval-gated]** P0 smoke against TWS paper (`tools/smoke_p0.py`) — ONLY with explicit Barış approval in-session (repo guard: broker actions gated).
+- Then PREREG gates P1 (mock dry-run demo) → P2 (paper ≥10d unattended) → P3 (≥30d, slippage + signal-parity report to `11_TRIAGE/`).
+
 ## 🔧 MCC APP AUDIT FOLLOW-UPS (audit 2026-07-05: `11_TRIAGE/MCC_APP_AUDIT_2026-07-05.md`; Barış answered all open questions; quick wins DONE same session on `feature/mcc-audit-fixes`)
 - ~~fix backtest_reader nested-run glob + heartbeat_reader parents index~~ DONE 2026-07-05 (115 tests pass; July runs + heartbeat visible).
 - ~~register faz3b_stage1 in RESEARCH_RUN_REGISTRY~~ DONE 2026-07-05.

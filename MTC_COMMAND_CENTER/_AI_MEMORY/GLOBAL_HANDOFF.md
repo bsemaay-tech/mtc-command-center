@@ -1,5 +1,33 @@
 # GLOBAL_HANDOFF
 
+## Claude Fable 5 2026-07-05 (7) — IBKR Paper Bridge: full design docs (NEW standalone track)
+
+Barış decision: IBKR paper integration is NOT deferred — plumbing gets built independent of a
+promotable strategy (motivation + tesisat validation). New top-level app `IBKR_PAPER_BRIDGE/`
+(independent from MCC dashboard, no runtime imports from MTC_COMMAND_CENTER). **Design docs only,
+no code yet**, on branch `feature/ibkr-paper-bridge`:
+
+1. `IBKR_PAPER_BRIDGE/docs/00_PREREG.md` — binding pre-reg: gates P0 (TWS smoke) → P1 (mock
+   dry-run) → P2 (paper AAPL 1h ≥10d unattended) → P3 (≥30d + slippage + signal-parity report);
+   abort criteria (daily loss, naked position, stale data, unknown order state); first strategy =
+   FAZ 3B STRONG_PASS `KELTNER_STOP_V1 × trail_ema8 × AAPL × 1h` as PLUMBING test subject
+   (explicitly not a promotion statement).
+2. `IBKR_PAPER_BRIDGE/docs/01_ARCHITECTURE.md` — decided stack (Python 3.11 + ib_async + FastAPI
+   + SQLite WAL + static vanilla dark dashboard, one process), Broker protocol w/ MockBroker,
+   state machine (DISARMED/ARMED/KILLED + per-trade decision chain), RiskEngine (fixed-fractional
+   sizing, daily-loss auto-DISARM, direction intersect), LLM layer **veto/regime-only**
+   (Grok-4 regime directive LONG_ONLY/SHORT_ONLY/BOTH/NO_TRADE w/ TTL+min-confidence, narrowing-only;
+   Claude pre-trade veto; fail-open default; hard code boundary — LLM can never create/enlarge orders),
+   SQLite schema, REST+WS API, 6-page dashboard spec (MTC_V2-style risk/SL/TP/direction config panel),
+   safety rails (live port 7496 refused w/o `IBKR_LIVE_ACK` env + double-confirm).
+3. `IBKR_PAPER_BRIDGE/docs/02_BUILD_PLAN_1DAY.md` — 11 ordered tasks w/ acceptance criteria so
+   Opus/Codex can build it in one day (mock-first; IBKR adapter task 8; dashboard task 10;
+   broker-touching runs remain Barış-approval-gated).
+
+LLM sentiment idea (Barış): regime from Grok/news deciding long-only/short-only/no-trade — designed
+in as Role A of llm_gate; YouTube source slot left in the SentimentSource protocol for later.
+Next: Barış approves pre-reg → build day per 02_BUILD_PLAN_1DAY.md → P0 smoke (approval-gated).
+
 ## Claude Opus 4.8 2026-07-05 (6) — audit cleanup (4 remaining items) done + pushed to origin/master
 
 Barış: "kalan küçük işleri yap push et". Closed the four leftover audit follow-ups on branch
