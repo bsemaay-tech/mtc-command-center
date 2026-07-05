@@ -1,0 +1,975 @@
+{
+  "baseline": {
+    "enable_long": true,
+    "enable_short": true,
+    "allow_flip": false,
+    "regime_lock": false,
+    "max_entries": 1,
+    "cooldown_bars": 0,
+    "signal_mode": "Supertrend",
+    "st_atr_len": 21,
+    "st_factor": 4.0,
+    "st_use_wicks": false,
+    "st_use_ha": false,
+    "session_custom_string": "0930-1600:America/New_York",
+    "use_ma_filter": false,
+    "ma_type": "EMA",
+    "ma_length": 200,
+    "use_ma_mtf": false,
+    "ma_htf_timeframe": "60",
+    "use_ma_slope_filter": false,
+    "ma_slope_len": 200,
+    "ma_slope_min_pct": 0.005,
+    "use_mcginley_filter": false,
+    "mcginley_length": 200,
+    "mcginley_use_higher_timeframe": false,
+    "mcginley_htf_timeframe": "240",
+    "use_volume_filter": false,
+    "vol_sma_length": 20,
+    "vol_sma_mult": 1.0,
+    "use_adx_filter": false,
+    "adx_length": 14,
+    "adx_threshold": 25.0,
+    "adx_use_higher_timeframe": false,
+    "adx_htf_timeframe": "240",
+    "use_chop_filter": false,
+    "chop_length": 14,
+    "chop_threshold": 61.8,
+    "chop_use_higher_timeframe": false,
+    "chop_htf_timeframe": "240",
+    "use_atr_vol_floor": false,
+    "atr_vol_floor_fast_len": 14,
+    "atr_vol_floor_baseline_len": 100,
+    "atr_vol_floor_mult": 0.5,
+    "use_macd_regime_filter": false,
+    "use_macd_cross_filter": false,
+    "use_macd_hist_filter": false,
+    "macd_hist_mode": "POSITIVE",
+    "use_macd_zero_dist_filter": false,
+    "macd_zero_dist_min": 0.0,
+    "macd_fast_len": 12,
+    "macd_slow_len": 26,
+    "macd_sig_len": 9,
+    "macd_source": "close",
+    "use_macd_htf_bias": false,
+    "macd_htf_timeframe": "240",
+    "use_momentum_filter": false,
+    "momentum_mode": "ATR_BODY",
+    "momentum_atr_len": 14,
+    "momentum_atr_mult": 0.3,
+    "momentum_roc_min_pct": 0.15,
+    "use_session_filter": false,
+    "session_name": "New York",
+    "use_candle_pattern_gate": false,
+    "level_proximity_lookback": 50,
+    "use_level_proximity_gate": false,
+    "level_proximity_threshold_pct": 0.5,
+    "use_htf_trend_filter": false,
+    "htf_trend_timeframe": "240",
+    "htf_trend_ma_type": "EMA",
+    "htf_trend_ma_len": 100,
+    "htf_trend_buffer_pct": 0.1,
+    "risk_per_long_pct": 1.0,
+    "risk_per_short_pct": 1.0,
+    "fallback_size_pct": 10.0,
+    "max_leverage_cap": 1.0,
+    "sl_mode": "None",
+    "sl_pct": 1.0,
+    "tp_mode": "None",
+    "tp_percent": 3.0,
+    "tp_r_multiple": 2.0,
+    "sl_atr_len": 14,
+    "sl_atr_mult": 2.0,
+    "sl_swing_basis": "Wick",
+    "sl_swing_lookback": 20,
+    "sl_swing_atr_len": 14,
+    "sl_swing_atr_mult": 0.5,
+    "tp_atr_len": 14,
+    "tp_atr_mult": 3.0,
+    "tp1_r_multiple": 3.0,
+    "tp1_close_pct": 50.0,
+    "tp2_r_multiple": 5.5,
+    "use_break_even": false,
+    "be_trigger_r": 1.0,
+    "be_buffer_r": 0.1,
+    "use_trailing": false,
+    "trail_atr_len": 14,
+    "trail_start_r": 2.0,
+    "trail_distance_atr_mult": 1.0,
+    "exit_on_opposite_signal": true,
+    "exit_on_ma_block": false,
+    "exit_on_ma_slope_block": false,
+    "exit_on_mcginley_block": false,
+    "exit_on_htf_trend_block": false,
+    "exit_on_vol_block": false,
+    "exit_on_atr_vol_block": false,
+    "exit_on_range_block": false,
+    "exit_on_candle_pattern_block": false,
+    "exit_on_level_prox_block": false,
+    "use_time_stop": false,
+    "time_stop_bars": 50,
+    "time_stop_condition": "Always",
+    "time_stop_eod": false,
+    "time_stop_eow": false,
+    "use_daily_loss_limit": false,
+    "max_daily_loss_pct": 2.0,
+    "use_max_trades_per_day": false,
+    "max_trades_per_day": 3,
+    "use_max_drawdown_guard": false,
+    "max_drawdown_pct": 10.0,
+    "use_consecutive_loss_halt": false,
+    "max_consecutive_losses": 3,
+    "use_equity_curve_filter": false,
+    "equity_ma_length": 20,
+    "use_mae_guard": false,
+    "max_mae_pct": 2.0,
+    "use_guard_recovery": false,
+    "guard_recovery_mode": "Bars",
+    "guard_recovery_bars": 20,
+    "guard_recovery_signals": 2,
+    "use_trade_cooldown": false,
+    "cooldown_bars_after_exit": 5,
+    "use_confirm_transform": false,
+    "confirm_bars": 1,
+    "confirm_close_crosses": false,
+    "require_raw_still_true": false,
+    "refresh_on_new_raw": false,
+    "use_level_retest": false,
+    "retest_timeout_bars": 50,
+    "retest_buffer_pct": 0.1
+  },
+  "cases": [
+    {
+      "case": "case_007",
+      "desc": "cooldown_bars: 0 -> 2 (paired with max_entries=2 for stateful entry-spacing check)",
+      "diff_from_baseline": {
+        "max_entries": 2,
+        "cooldown_bars": 2
+      }
+    },
+    {
+      "case": "case_060",
+      "desc": "use_macd_htf_bias: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_macd_htf_bias": true
+      }
+    },
+    {
+      "case": "case_061",
+      "desc": "macd_htf_timeframe: 240 -> 30",
+      "diff_from_baseline": {
+        "use_macd_htf_bias": true,
+        "macd_htf_timeframe": "30"
+      }
+    },
+    {
+      "case": "case_062",
+      "desc": "use_momentum_filter: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_momentum_filter": true
+      }
+    },
+    {
+      "case": "case_063",
+      "desc": "momentum_mode: ATR_BODY -> ROC",
+      "diff_from_baseline": {
+        "use_momentum_filter": true,
+        "momentum_mode": "ROC"
+      }
+    },
+    {
+      "case": "case_064",
+      "desc": "momentum_atr_len: 14 -> 10",
+      "diff_from_baseline": {
+        "use_momentum_filter": true,
+        "momentum_atr_len": 10
+      }
+    },
+    {
+      "case": "case_065",
+      "desc": "momentum_atr_mult: 0.3 -> 0.5",
+      "diff_from_baseline": {
+        "use_momentum_filter": true,
+        "momentum_atr_mult": 0.5
+      }
+    },
+    {
+      "case": "case_066",
+      "desc": "momentum_roc_min_pct: 0.15 -> 0.3",
+      "diff_from_baseline": {
+        "use_momentum_filter": true,
+        "momentum_mode": "ROC",
+        "momentum_roc_min_pct": 0.3
+      }
+    },
+    {
+      "case": "case_067",
+      "desc": "use_session_filter: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_session_filter": true
+      }
+    },
+    {
+      "case": "case_068",
+      "desc": "session_name: New York -> London",
+      "diff_from_baseline": {
+        "use_session_filter": true,
+        "session_name": "London"
+      }
+    },
+    {
+      "case": "case_069",
+      "desc": "session_custom_string: 0930-1600:America/New_York -> 0800-1700:UTC",
+      "diff_from_baseline": {
+        "session_custom_string": "0800-1700:UTC",
+        "use_session_filter": true,
+        "session_name": "Custom"
+      }
+    },
+    {
+      "case": "case_070",
+      "desc": "sl_mode: None -> ATR",
+      "diff_from_baseline": {
+        "sl_mode": "ATR"
+      }
+    },
+    {
+      "case": "case_071",
+      "desc": "sl_atr_len: 14 -> 10",
+      "diff_from_baseline": {
+        "sl_mode": "ATR",
+        "sl_atr_len": 10
+      }
+    },
+    {
+      "case": "case_072",
+      "desc": "sl_atr_mult: 2 -> 2.5",
+      "diff_from_baseline": {
+        "sl_mode": "ATR",
+        "sl_atr_mult": 2.5
+      }
+    },
+    {
+      "case": "case_073",
+      "desc": "sl_pct: 1 -> 1.5",
+      "diff_from_baseline": {
+        "sl_mode": "Percent",
+        "sl_pct": 1.5
+      }
+    },
+    {
+      "case": "case_074",
+      "desc": "sl_swing_basis: Wick -> Close",
+      "diff_from_baseline": {
+        "sl_mode": "Swing+ATR",
+        "sl_swing_basis": "Close"
+      }
+    },
+    {
+      "case": "case_075",
+      "desc": "sl_swing_lookback: 20 -> 10",
+      "diff_from_baseline": {
+        "sl_mode": "Swing+ATR",
+        "sl_swing_lookback": 10
+      }
+    },
+    {
+      "case": "case_076",
+      "desc": "sl_swing_atr_len: 14 -> 10",
+      "diff_from_baseline": {
+        "sl_mode": "Swing+ATR",
+        "sl_swing_atr_len": 10
+      }
+    },
+    {
+      "case": "case_077",
+      "desc": "sl_swing_atr_mult: 0.5 -> 0.8",
+      "diff_from_baseline": {
+        "sl_mode": "Swing+ATR",
+        "sl_swing_atr_mult": 0.8
+      }
+    },
+    {
+      "case": "case_078",
+      "desc": "tp_mode: None -> ATR",
+      "diff_from_baseline": {
+        "tp_mode": "ATR"
+      }
+    },
+    {
+      "case": "case_079",
+      "desc": "tp_atr_len: 14 -> 10",
+      "diff_from_baseline": {
+        "tp_mode": "ATR",
+        "tp_atr_len": 10
+      }
+    },
+    {
+      "case": "case_080",
+      "desc": "tp_atr_mult: 3 -> 2.5",
+      "diff_from_baseline": {
+        "tp_mode": "ATR",
+        "tp_atr_mult": 2.5
+      }
+    },
+    {
+      "case": "case_081",
+      "desc": "tp_percent: 3 -> 2.5",
+      "diff_from_baseline": {
+        "sl_mode": "ATR",
+        "tp_mode": "Percent",
+        "tp_percent": 2.5
+      }
+    },
+    {
+      "case": "case_082",
+      "desc": "tp_r_multiple: 2 -> 1.5",
+      "diff_from_baseline": {
+        "sl_mode": "ATR",
+        "tp_mode": "R",
+        "tp_r_multiple": 1.5
+      }
+    },
+    {
+      "case": "case_083",
+      "desc": "tp1_r_multiple: 3 -> 2",
+      "diff_from_baseline": {
+        "sl_mode": "ATR",
+        "tp_mode": "Multi-TP",
+        "tp1_r_multiple": 2.0
+      }
+    },
+    {
+      "case": "case_084",
+      "desc": "tp1_close_pct: 50 -> 40",
+      "diff_from_baseline": {
+        "sl_mode": "ATR",
+        "tp_mode": "Multi-TP",
+        "tp1_close_pct": 40.0
+      }
+    },
+    {
+      "case": "case_085",
+      "desc": "tp2_r_multiple: 5.5 -> 4",
+      "diff_from_baseline": {
+        "sl_mode": "ATR",
+        "tp_mode": "Multi-TP",
+        "tp2_r_multiple": 4.0
+      }
+    },
+    {
+      "case": "case_086",
+      "desc": "use_break_even: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "sl_mode": "ATR",
+        "use_break_even": true
+      }
+    },
+    {
+      "case": "case_087",
+      "desc": "be_trigger_r: 1 -> 1.5",
+      "diff_from_baseline": {
+        "sl_mode": "ATR",
+        "use_break_even": true,
+        "be_trigger_r": 1.5
+      }
+    },
+    {
+      "case": "case_088",
+      "desc": "be_buffer_r: 0.1 -> 0.2",
+      "diff_from_baseline": {
+        "sl_mode": "ATR",
+        "use_break_even": true,
+        "be_buffer_r": 0.2
+      }
+    },
+    {
+      "case": "case_089",
+      "desc": "use_trailing: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "sl_mode": "ATR",
+        "use_trailing": true
+      }
+    },
+    {
+      "case": "case_090",
+      "desc": "trail_atr_len: 14 -> 10",
+      "diff_from_baseline": {
+        "sl_mode": "ATR",
+        "use_trailing": true,
+        "trail_atr_len": 10
+      }
+    },
+    {
+      "case": "case_091",
+      "desc": "trail_start_r: 2 -> 1.5",
+      "diff_from_baseline": {
+        "sl_mode": "ATR",
+        "use_trailing": true,
+        "trail_start_r": 1.5
+      }
+    },
+    {
+      "case": "case_092",
+      "desc": "trail_distance_atr_mult: 1 -> 1.5",
+      "diff_from_baseline": {
+        "sl_mode": "ATR",
+        "use_trailing": true,
+        "trail_distance_atr_mult": 1.5
+      }
+    },
+    {
+      "case": "case_093",
+      "desc": "exit_on_opposite_signal: TRUE -> FALSE",
+      "diff_from_baseline": {
+        "exit_on_opposite_signal": false
+      }
+    },
+    {
+      "case": "case_094",
+      "desc": "exit_on_ma_block: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_ma_filter": true,
+        "exit_on_ma_block": true
+      }
+    },
+    {
+      "case": "case_095",
+      "desc": "exit_on_ma_slope_block: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_ma_slope_filter": true,
+        "exit_on_ma_slope_block": true
+      }
+    },
+    {
+      "case": "case_096",
+      "desc": "exit_on_mcginley_block: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_mcginley_filter": true,
+        "exit_on_mcginley_block": true
+      }
+    },
+    {
+      "case": "case_097",
+      "desc": "exit_on_htf_trend_block: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_htf_trend_filter": true,
+        "exit_on_htf_trend_block": true
+      }
+    },
+    {
+      "case": "case_098",
+      "desc": "exit_on_vol_block: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_volume_filter": true,
+        "exit_on_vol_block": true
+      }
+    },
+    {
+      "case": "case_099",
+      "desc": "exit_on_atr_vol_block: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_atr_vol_floor": true,
+        "exit_on_atr_vol_block": true
+      }
+    },
+    {
+      "case": "case_100",
+      "desc": "exit_on_range_block: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_adx_filter": true,
+        "exit_on_range_block": true
+      }
+    },
+    {
+      "case": "case_101",
+      "desc": "exit_on_candle_pattern_block: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_candle_pattern_gate": true,
+        "exit_on_candle_pattern_block": true
+      }
+    },
+    {
+      "case": "case_102",
+      "desc": "exit_on_level_prox_block: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_level_proximity_gate": true,
+        "exit_on_level_prox_block": true
+      }
+    },
+    {
+      "case": "case_103",
+      "desc": "use_candle_pattern_gate: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_candle_pattern_gate": true
+      }
+    },
+    {
+      "case": "case_104",
+      "desc": "use_level_proximity_gate: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_level_proximity_gate": true
+      }
+    },
+    {
+      "case": "case_105",
+      "desc": "level_proximity_threshold_pct: 0.5 -> 0.25",
+      "diff_from_baseline": {
+        "use_level_proximity_gate": true,
+        "level_proximity_threshold_pct": 0.25
+      }
+    },
+    {
+      "case": "case_106",
+      "desc": "level_proximity_lookback: 50 -> 30",
+      "diff_from_baseline": {
+        "level_proximity_lookback": 30,
+        "use_level_proximity_gate": true
+      }
+    },
+    {
+      "case": "case_107",
+      "desc": "use_time_stop: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_time_stop": true
+      }
+    },
+    {
+      "case": "case_108",
+      "desc": "time_stop_bars: 50 -> 20",
+      "diff_from_baseline": {
+        "use_time_stop": true,
+        "time_stop_bars": 20
+      }
+    },
+    {
+      "case": "case_109",
+      "desc": "time_stop_condition: Always -> Profit Only",
+      "diff_from_baseline": {
+        "use_time_stop": true,
+        "time_stop_condition": "Profit Only"
+      }
+    },
+    {
+      "case": "case_110",
+      "desc": "time_stop_eod: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_time_stop": true,
+        "time_stop_eod": true
+      }
+    },
+    {
+      "case": "case_111",
+      "desc": "time_stop_eow: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_time_stop": true,
+        "time_stop_eow": true
+      }
+    },
+    {
+      "case": "case_112",
+      "desc": "use_daily_loss_limit: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_daily_loss_limit": true
+      }
+    },
+    {
+      "case": "case_113",
+      "desc": "max_daily_loss_pct: 2 -> 1",
+      "diff_from_baseline": {
+        "use_daily_loss_limit": true,
+        "max_daily_loss_pct": 1.0
+      }
+    },
+    {
+      "case": "case_114",
+      "desc": "use_max_trades_per_day: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_max_trades_per_day": true
+      }
+    },
+    {
+      "case": "case_115",
+      "desc": "max_trades_per_day: 3 -> 2",
+      "diff_from_baseline": {
+        "use_max_trades_per_day": true,
+        "max_trades_per_day": 2
+      }
+    },
+    {
+      "case": "case_116",
+      "desc": "use_max_drawdown_guard: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_max_drawdown_guard": true
+      }
+    },
+    {
+      "case": "case_117",
+      "desc": "max_drawdown_pct: 10 -> 5",
+      "diff_from_baseline": {
+        "use_max_drawdown_guard": true,
+        "max_drawdown_pct": 5.0
+      }
+    },
+    {
+      "case": "case_118",
+      "desc": "use_consecutive_loss_halt: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_consecutive_loss_halt": true
+      }
+    },
+    {
+      "case": "case_119",
+      "desc": "max_consecutive_losses: 3 -> 2",
+      "diff_from_baseline": {
+        "use_consecutive_loss_halt": true,
+        "max_consecutive_losses": 2
+      }
+    },
+    {
+      "case": "case_120",
+      "desc": "use_equity_curve_filter: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_equity_curve_filter": true
+      }
+    },
+    {
+      "case": "case_121",
+      "desc": "equity_ma_length: 20 -> 10",
+      "diff_from_baseline": {
+        "use_equity_curve_filter": true,
+        "equity_ma_length": 10
+      }
+    },
+    {
+      "case": "case_122",
+      "desc": "use_mae_guard: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_mae_guard": true
+      }
+    },
+    {
+      "case": "case_123",
+      "desc": "max_mae_pct: 2 -> 1",
+      "diff_from_baseline": {
+        "use_mae_guard": true,
+        "max_mae_pct": 1.0
+      }
+    },
+    {
+      "case": "case_124",
+      "desc": "use_guard_recovery: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_guard_recovery": true
+      }
+    },
+    {
+      "case": "case_125",
+      "desc": "guard_recovery_mode: Bars -> Signals",
+      "diff_from_baseline": {
+        "use_guard_recovery": true,
+        "guard_recovery_mode": "Signals"
+      }
+    },
+    {
+      "case": "case_126",
+      "desc": "guard_recovery_bars: 20 -> 10",
+      "diff_from_baseline": {
+        "use_guard_recovery": true,
+        "guard_recovery_bars": 10
+      }
+    },
+    {
+      "case": "case_127",
+      "desc": "guard_recovery_signals: 2 -> 1",
+      "diff_from_baseline": {
+        "use_guard_recovery": true,
+        "guard_recovery_signals": 1
+      }
+    },
+    {
+      "case": "case_128",
+      "desc": "use_trade_cooldown: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_trade_cooldown": true
+      }
+    },
+    {
+      "case": "case_129",
+      "desc": "cooldown_bars_after_exit: 5 -> 3",
+      "diff_from_baseline": {
+        "use_trade_cooldown": true,
+        "cooldown_bars_after_exit": 3
+      }
+    },
+    {
+      "case": "case_130",
+      "desc": "use_confirm_transform: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_confirm_transform": true
+      }
+    },
+    {
+      "case": "case_131",
+      "desc": "confirm_bars: 1 -> 2",
+      "diff_from_baseline": {
+        "use_confirm_transform": true,
+        "confirm_bars": 2
+      }
+    },
+    {
+      "case": "case_132",
+      "desc": "confirm_close_crosses: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_confirm_transform": true,
+        "confirm_close_crosses": true
+      }
+    },
+    {
+      "case": "case_133",
+      "desc": "require_raw_still_true: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_confirm_transform": true,
+        "require_raw_still_true": true
+      }
+    },
+    {
+      "case": "case_134",
+      "desc": "refresh_on_new_raw: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_confirm_transform": true,
+        "refresh_on_new_raw": true
+      }
+    },
+    {
+      "case": "case_135",
+      "desc": "use_level_retest: FALSE -> TRUE",
+      "diff_from_baseline": {
+        "use_level_retest": true
+      }
+    },
+    {
+      "case": "case_136",
+      "desc": "retest_timeout_bars: 50 -> 20",
+      "diff_from_baseline": {
+        "use_level_retest": true,
+        "retest_timeout_bars": 20
+      }
+    },
+    {
+      "case": "case_137",
+      "desc": "retest_buffer_pct: 0.1 -> 0.2",
+      "diff_from_baseline": {
+        "use_level_retest": true,
+        "retest_buffer_pct": 0.2
+      }
+    },
+    {
+      "case": "case_138",
+      "desc": "SL=ATR + Break-even",
+      "diff_from_baseline": {
+        "sl_mode": "ATR",
+        "use_break_even": true
+      }
+    },
+    {
+      "case": "case_139",
+      "desc": "SL=ATR + Trailing",
+      "diff_from_baseline": {
+        "sl_mode": "ATR",
+        "use_trailing": true
+      }
+    },
+    {
+      "case": "case_140",
+      "desc": "SL=ATR + TP=ATR",
+      "diff_from_baseline": {
+        "sl_mode": "ATR",
+        "tp_mode": "ATR"
+      }
+    },
+    {
+      "case": "case_141",
+      "desc": "SL=ATR + TP=R",
+      "diff_from_baseline": {
+        "sl_mode": "ATR",
+        "tp_mode": "R"
+      }
+    },
+    {
+      "case": "case_142",
+      "desc": "SL=ATR + TP=Multi-TP",
+      "diff_from_baseline": {
+        "sl_mode": "ATR",
+        "tp_mode": "Multi-TP"
+      }
+    },
+    {
+      "case": "case_143",
+      "desc": "SL=Percent + TP=Percent",
+      "diff_from_baseline": {
+        "sl_mode": "Percent",
+        "tp_mode": "Percent"
+      }
+    },
+    {
+      "case": "case_144",
+      "desc": "MA filter + exit_on_ma_block",
+      "diff_from_baseline": {
+        "use_ma_filter": true,
+        "exit_on_ma_block": true
+      }
+    },
+    {
+      "case": "case_145",
+      "desc": "MA slope + exit_on_ma_slope_block",
+      "diff_from_baseline": {
+        "use_ma_slope_filter": true,
+        "exit_on_ma_slope_block": true
+      }
+    },
+    {
+      "case": "case_146",
+      "desc": "McGinley + exit_on_mcginley_block",
+      "diff_from_baseline": {
+        "use_mcginley_filter": true,
+        "exit_on_mcginley_block": true
+      }
+    },
+    {
+      "case": "case_147",
+      "desc": "HTF trend + exit_on_htf_trend_block",
+      "diff_from_baseline": {
+        "use_htf_trend_filter": true,
+        "exit_on_htf_trend_block": true
+      }
+    },
+    {
+      "case": "case_148",
+      "desc": "Volume filter + exit_on_vol_block",
+      "diff_from_baseline": {
+        "use_volume_filter": true,
+        "exit_on_vol_block": true
+      }
+    },
+    {
+      "case": "case_149",
+      "desc": "ATR vol floor + exit_on_atr_vol_block",
+      "diff_from_baseline": {
+        "use_atr_vol_floor": true,
+        "exit_on_atr_vol_block": true
+      }
+    },
+    {
+      "case": "case_150",
+      "desc": "Candle gate + exit_on_candle_pattern_block",
+      "diff_from_baseline": {
+        "use_candle_pattern_gate": true,
+        "exit_on_candle_pattern_block": true
+      }
+    },
+    {
+      "case": "case_151",
+      "desc": "Level proximity + exit_on_level_prox_block",
+      "diff_from_baseline": {
+        "use_level_proximity_gate": true,
+        "exit_on_level_prox_block": true
+      }
+    },
+    {
+      "case": "case_152",
+      "desc": "Confirm transform + require_raw_still_true",
+      "diff_from_baseline": {
+        "use_confirm_transform": true,
+        "require_raw_still_true": true
+      }
+    },
+    {
+      "case": "case_153",
+      "desc": "Confirm transform + refresh_on_new_raw",
+      "diff_from_baseline": {
+        "use_confirm_transform": true,
+        "refresh_on_new_raw": true
+      }
+    },
+    {
+      "case": "case_154",
+      "desc": "Level retest + confirm transform",
+      "diff_from_baseline": {
+        "use_confirm_transform": true,
+        "use_level_retest": true
+      }
+    },
+    {
+      "case": "case_155",
+      "desc": "MACD regime + HTF bias",
+      "diff_from_baseline": {
+        "use_macd_regime_filter": true,
+        "use_macd_htf_bias": true
+      }
+    },
+    {
+      "case": "case_156",
+      "desc": "MACD hist + zero distance",
+      "diff_from_baseline": {
+        "use_macd_hist_filter": true,
+        "use_macd_zero_dist_filter": true
+      }
+    },
+    {
+      "case": "case_157",
+      "desc": "Momentum ROC + session filter",
+      "diff_from_baseline": {
+        "use_momentum_filter": true,
+        "momentum_mode": "ROC",
+        "use_session_filter": true,
+        "session_name": "London"
+      }
+    },
+    {
+      "case": "case_158",
+      "desc": "Trade cooldown + max trades/day",
+      "diff_from_baseline": {
+        "use_max_trades_per_day": true,
+        "use_trade_cooldown": true
+      }
+    },
+    {
+      "case": "case_159",
+      "desc": "Daily loss limit + guard recovery",
+      "diff_from_baseline": {
+        "use_daily_loss_limit": true,
+        "use_guard_recovery": true
+      }
+    },
+    {
+      "case": "case_160",
+      "desc": "Max DD guard + recovery signals",
+      "diff_from_baseline": {
+        "use_max_drawdown_guard": true,
+        "use_guard_recovery": true,
+        "guard_recovery_mode": "Signals"
+      }
+    },
+    {
+      "case": "case_161",
+      "desc": "ADX HTF + Chop HTF + range block",
+      "diff_from_baseline": {
+        "use_adx_filter": true,
+        "adx_use_higher_timeframe": true,
+        "use_chop_filter": true,
+        "chop_use_higher_timeframe": true,
+        "exit_on_range_block": true
+      }
+    },
+    {
+      "case": "case_162",
+      "desc": "MA HTF + HTF trend",
+      "diff_from_baseline": {
+        "use_ma_filter": true,
+        "use_ma_mtf": true,
+        "use_htf_trend_filter": true
+      }
+    }
+  ]
+}

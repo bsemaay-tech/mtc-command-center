@@ -1,0 +1,938 @@
+[
+  {
+    "case_no": "case_007",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_007",
+    "export_file": "",
+    "title": "cooldown_bars: 0 -> 2 (paired with max_entries=2 for stateful entry-spacing check)",
+    "description": "cooldown_bars: 0 -> 2 (paired with max_entries=2 for stateful entry-spacing check)"
+  },
+  {
+    "case_no": "case_060",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_060",
+    "export_file": "",
+    "title": "use_macd_htf_bias: FALSE -> TRUE",
+    "description": "use_macd_htf_bias: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_061",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_061",
+    "export_file": "",
+    "title": "macd_htf_timeframe: 240 -> 30",
+    "description": "macd_htf_timeframe: 240 -> 30"
+  },
+  {
+    "case_no": "case_062",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_062",
+    "export_file": "",
+    "title": "use_momentum_filter: FALSE -> TRUE",
+    "description": "use_momentum_filter: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_063",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_063",
+    "export_file": "",
+    "title": "momentum_mode: ATR_BODY -> ROC",
+    "description": "momentum_mode: ATR_BODY -> ROC"
+  },
+  {
+    "case_no": "case_064",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_064",
+    "export_file": "",
+    "title": "momentum_atr_len: 14 -> 10",
+    "description": "momentum_atr_len: 14 -> 10"
+  },
+  {
+    "case_no": "case_065",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_065",
+    "export_file": "",
+    "title": "momentum_atr_mult: 0.3 -> 0.5",
+    "description": "momentum_atr_mult: 0.3 -> 0.5"
+  },
+  {
+    "case_no": "case_066",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_066",
+    "export_file": "",
+    "title": "momentum_roc_min_pct: 0.15 -> 0.3",
+    "description": "momentum_roc_min_pct: 0.15 -> 0.3"
+  },
+  {
+    "case_no": "case_067",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_067",
+    "export_file": "",
+    "title": "use_session_filter: FALSE -> TRUE",
+    "description": "use_session_filter: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_068",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_068",
+    "export_file": "",
+    "title": "session_name: New York -> London",
+    "description": "session_name: New York -> London"
+  },
+  {
+    "case_no": "case_069",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_069",
+    "export_file": "",
+    "title": "session_custom_string: 0930-1600:America/New_York -> 0800-1700:UTC",
+    "description": "session_custom_string: 0930-1600:America/New_York -> 0800-1700:UTC"
+  },
+  {
+    "case_no": "case_070",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_070",
+    "export_file": "",
+    "title": "sl_mode: None -> ATR",
+    "description": "sl_mode: None -> ATR"
+  },
+  {
+    "case_no": "case_071",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_071",
+    "export_file": "",
+    "title": "sl_atr_len: 14 -> 10",
+    "description": "sl_atr_len: 14 -> 10"
+  },
+  {
+    "case_no": "case_072",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_072",
+    "export_file": "",
+    "title": "sl_atr_mult: 2 -> 2.5",
+    "description": "sl_atr_mult: 2 -> 2.5"
+  },
+  {
+    "case_no": "case_073",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_073",
+    "export_file": "",
+    "title": "sl_pct: 1 -> 1.5",
+    "description": "sl_pct: 1 -> 1.5"
+  },
+  {
+    "case_no": "case_074",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_074",
+    "export_file": "",
+    "title": "sl_swing_basis: Wick -> Close",
+    "description": "sl_swing_basis: Wick -> Close"
+  },
+  {
+    "case_no": "case_075",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_075",
+    "export_file": "",
+    "title": "sl_swing_lookback: 20 -> 10",
+    "description": "sl_swing_lookback: 20 -> 10"
+  },
+  {
+    "case_no": "case_076",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_076",
+    "export_file": "",
+    "title": "sl_swing_atr_len: 14 -> 10",
+    "description": "sl_swing_atr_len: 14 -> 10"
+  },
+  {
+    "case_no": "case_077",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_077",
+    "export_file": "",
+    "title": "sl_swing_atr_mult: 0.5 -> 0.8",
+    "description": "sl_swing_atr_mult: 0.5 -> 0.8"
+  },
+  {
+    "case_no": "case_078",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_078",
+    "export_file": "",
+    "title": "tp_mode: None -> ATR",
+    "description": "tp_mode: None -> ATR"
+  },
+  {
+    "case_no": "case_079",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_079",
+    "export_file": "",
+    "title": "tp_atr_len: 14 -> 10",
+    "description": "tp_atr_len: 14 -> 10"
+  },
+  {
+    "case_no": "case_080",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_080",
+    "export_file": "",
+    "title": "tp_atr_mult: 3 -> 2.5",
+    "description": "tp_atr_mult: 3 -> 2.5"
+  },
+  {
+    "case_no": "case_081",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_081",
+    "export_file": "",
+    "title": "tp_percent: 3 -> 2.5",
+    "description": "tp_percent: 3 -> 2.5"
+  },
+  {
+    "case_no": "case_082",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_082",
+    "export_file": "",
+    "title": "tp_r_multiple: 2 -> 1.5",
+    "description": "tp_r_multiple: 2 -> 1.5"
+  },
+  {
+    "case_no": "case_083",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_083",
+    "export_file": "",
+    "title": "tp1_r_multiple: 3 -> 2",
+    "description": "tp1_r_multiple: 3 -> 2"
+  },
+  {
+    "case_no": "case_084",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_084",
+    "export_file": "",
+    "title": "tp1_close_pct: 50 -> 40",
+    "description": "tp1_close_pct: 50 -> 40"
+  },
+  {
+    "case_no": "case_085",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_085",
+    "export_file": "",
+    "title": "tp2_r_multiple: 5.5 -> 4",
+    "description": "tp2_r_multiple: 5.5 -> 4"
+  },
+  {
+    "case_no": "case_086",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_086",
+    "export_file": "",
+    "title": "use_break_even: FALSE -> TRUE",
+    "description": "use_break_even: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_087",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_087",
+    "export_file": "",
+    "title": "be_trigger_r: 1 -> 1.5",
+    "description": "be_trigger_r: 1 -> 1.5"
+  },
+  {
+    "case_no": "case_088",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_088",
+    "export_file": "",
+    "title": "be_buffer_r: 0.1 -> 0.2",
+    "description": "be_buffer_r: 0.1 -> 0.2"
+  },
+  {
+    "case_no": "case_089",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_089",
+    "export_file": "",
+    "title": "use_trailing: FALSE -> TRUE",
+    "description": "use_trailing: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_090",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_090",
+    "export_file": "",
+    "title": "trail_atr_len: 14 -> 10",
+    "description": "trail_atr_len: 14 -> 10"
+  },
+  {
+    "case_no": "case_091",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_091",
+    "export_file": "",
+    "title": "trail_start_r: 2 -> 1.5",
+    "description": "trail_start_r: 2 -> 1.5"
+  },
+  {
+    "case_no": "case_092",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_092",
+    "export_file": "",
+    "title": "trail_distance_atr_mult: 1 -> 1.5",
+    "description": "trail_distance_atr_mult: 1 -> 1.5"
+  },
+  {
+    "case_no": "case_093",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_093",
+    "export_file": "",
+    "title": "exit_on_opposite_signal: TRUE -> FALSE",
+    "description": "exit_on_opposite_signal: TRUE -> FALSE"
+  },
+  {
+    "case_no": "case_094",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_094",
+    "export_file": "",
+    "title": "exit_on_ma_block: FALSE -> TRUE",
+    "description": "exit_on_ma_block: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_095",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_095",
+    "export_file": "",
+    "title": "exit_on_ma_slope_block: FALSE -> TRUE",
+    "description": "exit_on_ma_slope_block: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_096",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_096",
+    "export_file": "",
+    "title": "exit_on_mcginley_block: FALSE -> TRUE",
+    "description": "exit_on_mcginley_block: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_097",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_097",
+    "export_file": "",
+    "title": "exit_on_htf_trend_block: FALSE -> TRUE",
+    "description": "exit_on_htf_trend_block: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_098",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_098",
+    "export_file": "",
+    "title": "exit_on_vol_block: FALSE -> TRUE",
+    "description": "exit_on_vol_block: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_099",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_099",
+    "export_file": "",
+    "title": "exit_on_atr_vol_block: FALSE -> TRUE",
+    "description": "exit_on_atr_vol_block: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_100",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_100",
+    "export_file": "",
+    "title": "exit_on_range_block: FALSE -> TRUE",
+    "description": "exit_on_range_block: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_101",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_101",
+    "export_file": "",
+    "title": "exit_on_candle_pattern_block: FALSE -> TRUE",
+    "description": "exit_on_candle_pattern_block: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_102",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_102",
+    "export_file": "",
+    "title": "exit_on_level_prox_block: FALSE -> TRUE",
+    "description": "exit_on_level_prox_block: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_103",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_103",
+    "export_file": "",
+    "title": "use_candle_pattern_gate: FALSE -> TRUE",
+    "description": "use_candle_pattern_gate: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_104",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_104",
+    "export_file": "",
+    "title": "use_level_proximity_gate: FALSE -> TRUE",
+    "description": "use_level_proximity_gate: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_105",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_105",
+    "export_file": "",
+    "title": "level_proximity_threshold_pct: 0.5 -> 0.25",
+    "description": "level_proximity_threshold_pct: 0.5 -> 0.25"
+  },
+  {
+    "case_no": "case_106",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_106",
+    "export_file": "",
+    "title": "level_proximity_lookback: 50 -> 30",
+    "description": "level_proximity_lookback: 50 -> 30"
+  },
+  {
+    "case_no": "case_107",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_107",
+    "export_file": "",
+    "title": "use_time_stop: FALSE -> TRUE",
+    "description": "use_time_stop: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_108",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_108",
+    "export_file": "",
+    "title": "time_stop_bars: 50 -> 20",
+    "description": "time_stop_bars: 50 -> 20"
+  },
+  {
+    "case_no": "case_109",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_109",
+    "export_file": "",
+    "title": "time_stop_condition: Always -> Profit Only",
+    "description": "time_stop_condition: Always -> Profit Only"
+  },
+  {
+    "case_no": "case_110",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_110",
+    "export_file": "",
+    "title": "time_stop_eod: FALSE -> TRUE",
+    "description": "time_stop_eod: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_111",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_111",
+    "export_file": "",
+    "title": "time_stop_eow: FALSE -> TRUE",
+    "description": "time_stop_eow: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_112",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_112",
+    "export_file": "",
+    "title": "use_daily_loss_limit: FALSE -> TRUE",
+    "description": "use_daily_loss_limit: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_113",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_113",
+    "export_file": "",
+    "title": "max_daily_loss_pct: 2 -> 1",
+    "description": "max_daily_loss_pct: 2 -> 1"
+  },
+  {
+    "case_no": "case_114",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_114",
+    "export_file": "",
+    "title": "use_max_trades_per_day: FALSE -> TRUE",
+    "description": "use_max_trades_per_day: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_115",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_115",
+    "export_file": "",
+    "title": "max_trades_per_day: 3 -> 2",
+    "description": "max_trades_per_day: 3 -> 2"
+  },
+  {
+    "case_no": "case_116",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_116",
+    "export_file": "",
+    "title": "use_max_drawdown_guard: FALSE -> TRUE",
+    "description": "use_max_drawdown_guard: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_117",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_117",
+    "export_file": "",
+    "title": "max_drawdown_pct: 10 -> 5",
+    "description": "max_drawdown_pct: 10 -> 5"
+  },
+  {
+    "case_no": "case_118",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_118",
+    "export_file": "",
+    "title": "use_consecutive_loss_halt: FALSE -> TRUE",
+    "description": "use_consecutive_loss_halt: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_119",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_119",
+    "export_file": "",
+    "title": "max_consecutive_losses: 3 -> 2",
+    "description": "max_consecutive_losses: 3 -> 2"
+  },
+  {
+    "case_no": "case_120",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_120",
+    "export_file": "",
+    "title": "use_equity_curve_filter: FALSE -> TRUE",
+    "description": "use_equity_curve_filter: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_121",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_121",
+    "export_file": "",
+    "title": "equity_ma_length: 20 -> 10",
+    "description": "equity_ma_length: 20 -> 10"
+  },
+  {
+    "case_no": "case_122",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_122",
+    "export_file": "",
+    "title": "use_mae_guard: FALSE -> TRUE",
+    "description": "use_mae_guard: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_123",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_123",
+    "export_file": "",
+    "title": "max_mae_pct: 2 -> 1",
+    "description": "max_mae_pct: 2 -> 1"
+  },
+  {
+    "case_no": "case_124",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_124",
+    "export_file": "",
+    "title": "use_guard_recovery: FALSE -> TRUE",
+    "description": "use_guard_recovery: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_125",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_125",
+    "export_file": "",
+    "title": "guard_recovery_mode: Bars -> Signals",
+    "description": "guard_recovery_mode: Bars -> Signals"
+  },
+  {
+    "case_no": "case_126",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_126",
+    "export_file": "",
+    "title": "guard_recovery_bars: 20 -> 10",
+    "description": "guard_recovery_bars: 20 -> 10"
+  },
+  {
+    "case_no": "case_127",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_127",
+    "export_file": "",
+    "title": "guard_recovery_signals: 2 -> 1",
+    "description": "guard_recovery_signals: 2 -> 1"
+  },
+  {
+    "case_no": "case_128",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_128",
+    "export_file": "",
+    "title": "use_trade_cooldown: FALSE -> TRUE",
+    "description": "use_trade_cooldown: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_129",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_129",
+    "export_file": "",
+    "title": "cooldown_bars_after_exit: 5 -> 3",
+    "description": "cooldown_bars_after_exit: 5 -> 3"
+  },
+  {
+    "case_no": "case_130",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_130",
+    "export_file": "",
+    "title": "use_confirm_transform: FALSE -> TRUE",
+    "description": "use_confirm_transform: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_131",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_131",
+    "export_file": "",
+    "title": "confirm_bars: 1 -> 2",
+    "description": "confirm_bars: 1 -> 2"
+  },
+  {
+    "case_no": "case_132",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_132",
+    "export_file": "",
+    "title": "confirm_close_crosses: FALSE -> TRUE",
+    "description": "confirm_close_crosses: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_133",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_133",
+    "export_file": "",
+    "title": "require_raw_still_true: FALSE -> TRUE",
+    "description": "require_raw_still_true: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_134",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_134",
+    "export_file": "",
+    "title": "refresh_on_new_raw: FALSE -> TRUE",
+    "description": "refresh_on_new_raw: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_135",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_135",
+    "export_file": "",
+    "title": "use_level_retest: FALSE -> TRUE",
+    "description": "use_level_retest: FALSE -> TRUE"
+  },
+  {
+    "case_no": "case_136",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_136",
+    "export_file": "",
+    "title": "retest_timeout_bars: 50 -> 20",
+    "description": "retest_timeout_bars: 50 -> 20"
+  },
+  {
+    "case_no": "case_137",
+    "phase": "Single-setting coverage",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_137",
+    "export_file": "",
+    "title": "retest_buffer_pct: 0.1 -> 0.2",
+    "description": "retest_buffer_pct: 0.1 -> 0.2"
+  },
+  {
+    "case_no": "case_138",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_138",
+    "export_file": "",
+    "title": "SL=ATR + Break-even",
+    "description": "SL=ATR + Break-even"
+  },
+  {
+    "case_no": "case_139",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_139",
+    "export_file": "",
+    "title": "SL=ATR + Trailing",
+    "description": "SL=ATR + Trailing"
+  },
+  {
+    "case_no": "case_140",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_140",
+    "export_file": "",
+    "title": "SL=ATR + TP=ATR",
+    "description": "SL=ATR + TP=ATR"
+  },
+  {
+    "case_no": "case_141",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_141",
+    "export_file": "",
+    "title": "SL=ATR + TP=R",
+    "description": "SL=ATR + TP=R"
+  },
+  {
+    "case_no": "case_142",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_142",
+    "export_file": "",
+    "title": "SL=ATR + TP=Multi-TP",
+    "description": "SL=ATR + TP=Multi-TP"
+  },
+  {
+    "case_no": "case_143",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_143",
+    "export_file": "",
+    "title": "SL=Percent + TP=Percent",
+    "description": "SL=Percent + TP=Percent"
+  },
+  {
+    "case_no": "case_144",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_144",
+    "export_file": "",
+    "title": "MA filter + exit_on_ma_block",
+    "description": "MA filter + exit_on_ma_block"
+  },
+  {
+    "case_no": "case_145",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_145",
+    "export_file": "",
+    "title": "MA slope + exit_on_ma_slope_block",
+    "description": "MA slope + exit_on_ma_slope_block"
+  },
+  {
+    "case_no": "case_146",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_146",
+    "export_file": "",
+    "title": "McGinley + exit_on_mcginley_block",
+    "description": "McGinley + exit_on_mcginley_block"
+  },
+  {
+    "case_no": "case_147",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_147",
+    "export_file": "",
+    "title": "HTF trend + exit_on_htf_trend_block",
+    "description": "HTF trend + exit_on_htf_trend_block"
+  },
+  {
+    "case_no": "case_148",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_148",
+    "export_file": "",
+    "title": "Volume filter + exit_on_vol_block",
+    "description": "Volume filter + exit_on_vol_block"
+  },
+  {
+    "case_no": "case_149",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_149",
+    "export_file": "",
+    "title": "ATR vol floor + exit_on_atr_vol_block",
+    "description": "ATR vol floor + exit_on_atr_vol_block"
+  },
+  {
+    "case_no": "case_150",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_150",
+    "export_file": "",
+    "title": "Candle gate + exit_on_candle_pattern_block",
+    "description": "Candle gate + exit_on_candle_pattern_block"
+  },
+  {
+    "case_no": "case_151",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_151",
+    "export_file": "",
+    "title": "Level proximity + exit_on_level_prox_block",
+    "description": "Level proximity + exit_on_level_prox_block"
+  },
+  {
+    "case_no": "case_152",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_152",
+    "export_file": "",
+    "title": "Confirm transform + require_raw_still_true",
+    "description": "Confirm transform + require_raw_still_true"
+  },
+  {
+    "case_no": "case_153",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_153",
+    "export_file": "",
+    "title": "Confirm transform + refresh_on_new_raw",
+    "description": "Confirm transform + refresh_on_new_raw"
+  },
+  {
+    "case_no": "case_154",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_154",
+    "export_file": "",
+    "title": "Level retest + confirm transform",
+    "description": "Level retest + confirm transform"
+  },
+  {
+    "case_no": "case_155",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_155",
+    "export_file": "",
+    "title": "MACD regime + HTF bias",
+    "description": "MACD regime + HTF bias"
+  },
+  {
+    "case_no": "case_156",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_156",
+    "export_file": "",
+    "title": "MACD hist + zero distance",
+    "description": "MACD hist + zero distance"
+  },
+  {
+    "case_no": "case_157",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_157",
+    "export_file": "",
+    "title": "Momentum ROC + session filter",
+    "description": "Momentum ROC + session filter"
+  },
+  {
+    "case_no": "case_158",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_158",
+    "export_file": "",
+    "title": "Trade cooldown + max trades/day",
+    "description": "Trade cooldown + max trades/day"
+  },
+  {
+    "case_no": "case_159",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_159",
+    "export_file": "",
+    "title": "Daily loss limit + guard recovery",
+    "description": "Daily loss limit + guard recovery"
+  },
+  {
+    "case_no": "case_160",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_160",
+    "export_file": "",
+    "title": "Max DD guard + recovery signals",
+    "description": "Max DD guard + recovery signals"
+  },
+  {
+    "case_no": "case_161",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_161",
+    "export_file": "",
+    "title": "ADX HTF + Chop HTF + range block",
+    "description": "ADX HTF + Chop HTF + range block"
+  },
+  {
+    "case_no": "case_162",
+    "phase": "Critical pairs",
+    "status": "PLANNED",
+    "folder": "01_MASTER TEMPLATE_V2\\05_PARITY\\TW_EXPORT_CASES_V2\\case_162",
+    "export_file": "",
+    "title": "MA HTF + HTF trend",
+    "description": "MA HTF + HTF trend"
+  }
+]

@@ -98,5 +98,22 @@ class HeartbeatReaderTests(unittest.TestCase):
             self.assertFalse(out["available"])
 
 
+class HeartbeatDefaultPathTests(unittest.TestCase):
+    """Integration guard: the production default path (no arg) must resolve inside
+    the real repo. A parents[] off-by-one here shipped a permanently-offline
+    Worker Monitor while every unit test passed by injecting overnight_dir."""
+
+    def test_default_module_paths_resolve_to_real_mcc_layout(self) -> None:
+        from mcc_readonly import heartbeat_reader
+
+        self.assertEqual(heartbeat_reader.MCC_ROOT.name, "MTC_COMMAND_CENTER")
+        self.assertTrue(heartbeat_reader.OVERNIGHT_DIR.exists(),
+                        f"missing: {heartbeat_reader.OVERNIGHT_DIR}")
+
+    def test_default_call_does_not_report_missing_dir(self) -> None:
+        out = build_overnight_heartbeat()
+        self.assertNotEqual(out.get("reason"), "overnight_runs dir not found")
+
+
 if __name__ == "__main__":
     unittest.main()

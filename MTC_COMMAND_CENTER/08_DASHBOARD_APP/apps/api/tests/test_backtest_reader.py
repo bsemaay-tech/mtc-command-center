@@ -108,6 +108,36 @@ class BacktestReaderTests(unittest.TestCase):
         self.assertGreaterEqual(status["summary"]["total_runs"], 0)
 
 
+    def test_discovers_nested_stage_results_as_rows(self) -> None:
+        # Orchestrated runs (sweep + CPCV + PBO stages) nest engine output one level
+        # deeper: <run>/<stage>/MEGA_walk_forward_results.json. Each stage must appear
+        # as its own row with run_id "<run>/<stage>".
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "MTC_COMMAND_CENTER"
+            mtc = Path(tmp) / "mtc"
+            backtests = mtc / "06_QUANTLENS_LAB" / "05_BACKTEST_RESULTS"
+            (root / "00_CONFIG").mkdir(parents=True)
+            stage = backtests / "overnight_x_2026-07-01" / "sweep_stage"
+            stage.mkdir(parents=True)
+            _write_paths(root, mtc)
+            _write_json(
+                stage / "MEGA_walk_forward_results.json",
+                {
+                    "generated_utc": "2026-07-01T01:00:00+00:00",
+                    "results": [
+                        {"strategy": "s1", "symbol": "AAPL", "timeframe": "1h", "classification": "PASS"},
+                    ],
+                },
+            )
+
+            status = build_backtest_status(root)
+
+            run_ids = [run["run_id"] for run in status["runs"]]
+            self.assertIn("overnight_x_2026-07-01/sweep_stage", run_ids)
+            self.assertEqual(status["summary"]["discovered_runs"], 1)
+            self.assertFalse(status["summary"]["runs_truncated"])
+
+
 def _write_paths(root: Path, mtc: Path) -> None:
     shutil.copytree(SOURCE_MCC_ROOT / "06_SCHEMAS", root / "06_SCHEMAS")
     (root / "00_CONFIG" / "paths.example.json").write_text(

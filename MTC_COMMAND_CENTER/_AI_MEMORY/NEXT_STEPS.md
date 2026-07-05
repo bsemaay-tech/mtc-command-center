@@ -1,5 +1,18 @@
 # NEXT_STEPS
 
+## 🔧 MCC APP AUDIT FOLLOW-UPS (audit 2026-07-05: `11_TRIAGE/MCC_APP_AUDIT_2026-07-05.md`; Barış answered all open questions; quick wins DONE same session on `feature/mcc-audit-fixes`)
+- ~~fix backtest_reader nested-run glob + heartbeat_reader parents index~~ DONE 2026-07-05 (115 tests pass; July runs + heartbeat visible).
+- ~~register faz3b_stage1 in RESEARCH_RUN_REGISTRY~~ DONE 2026-07-05.
+- ~~refresh REPORT_MANIFEST + CURRENT_STATUS; retire SESSION_LOG~~ DONE 2026-07-05.
+- ~~parity artifacts migrated to `12_PARITY_PINETS/`~~ DONE 2026-07-05 (byte-identical parity status; paths.local.json updated locally — git-ignored, other machines must update their own).
+- **[AI: Any]** scoring pass `mcc_night_tail.sh` over July stage dirs (Barış approved 2026-07-05): turtle_heavy_2026-07-01/turtle_sweep, overnight_full_2026-07-02/stageA_v2_multiasset, overnight_resilient_2026-07-02/variants, overnight_archetypes_2026-07-03/archetypes. Check launch state in GLOBAL_HANDOFF newest section; verify scorecards land + dashboard sees them (`/api/snapshot?refresh=1`).
+- **[AI: DeepSeek]** fix 39 pre-existing VARIANT_LOG_REGISTRY.json validator errors (archetype entries missing `research_run_id`; run `03_QUANTLENS/tools/validate_research_registries.py` until PASS).
+- **[AI: Claude]** build CURRENT_STATUS auto-derive tool (Barış decision: derive phase/summary/next_recommended_action from NEXT_STEPS top + GLOBAL_HANDOFF newest section; hand-refresh dies).
+- **[AI: Claude]** Home + Strategy Intelligence "as of" freshness chips (audit roadmap item 3/7; frontend-only).
+- **[AI: Barış]** System Test / Fake Money Lab page: approve or reject the read-only page proposal (audit §7 item 10 — display STG002 replay reconciliation evidence; no execution UI).
+- **[AI: Barış]** run-manifest discovery contract (audit §6.1) — decide if wanted before next big orchestrated sweep.
+
+
 ## 🔶 FAZ 3B — SWEPT EXIT_MODE (approved D013 2026-07-04; gate live; implementation NEXT)
 Scope: `00_AGENT_PROTOCOLS/FAZ3B_EXIT_SWEEP_SCOPE.md`. Self-parity goldens captured pre-edit +
 determinism proven (`faz3b_self_parity.py`, 42 rows, sha `be8561ff…`). Sweep runs separately gated.

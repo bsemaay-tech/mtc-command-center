@@ -1,0 +1,72 @@
+{
+  "profile": "close_only_deterministic_v2",
+  "status": "frozen_canonical_pack",
+  "validated_on_utc": "2026-04-01T06:35:00Z",
+  "artifact_root": "reports/tracker_cases",
+  "tracker_csv": "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASES.csv",
+  "tracker_workbook_primary": "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASE_TRACKER.xlsx",
+  "tracker_workbook_fallback": "01_MASTER TEMPLATE_V2/05_PARITY/MTC_V2_PARITY_CASE_TRACKER_close_only_wave1_pending.xlsx",
+  "waves": [
+    {
+      "name": "first_wave_exits",
+      "cases": [
+        "CO_001_BASELINE",
+        "CO_020_BE",
+        "CO_021_TRAIL",
+        "CO_022_MULTI_TP",
+        "CO_023_PERCENT_SL",
+        "CO_024_PERCENT_TP",
+        "CO_025_R_TP"
+      ]
+    },
+    {
+      "name": "second_wave_filters",
+      "cases": [
+        "CO_017_MA_EMA200",
+        "CO_026_VOLUME",
+        "CO_027_ADX",
+        "CO_030_MACD_REGIME",
+        "CO_050_HTF_TREND",
+        "CO_055_MOMENTUM",
+        "CO_056_SESSION",
+        "CO_061_COOLDOWN"
+      ]
+    },
+    {
+      "name": "edge_wave",
+      "cases": [
+        "CO_024_MA_SLOPE",
+        "CO_025_MCGINLEY",
+        "CO_034_EXIT_ON_MA_BLOCK",
+        "CO_051_EXIT_ON_HTF_BLOCK",
+        "CO_058_MCGINLEY_HTF",
+        "CO_059_ADX_HTF",
+        "CO_060_CHOP_HTF"
+      ]
+    }
+  ],
+  "cases": [
+    { "id": "CO_001_BASELINE", "wave": "first_wave_exits", "expected_trades": 133 },
+    { "id": "CO_020_BE", "wave": "first_wave_exits", "expected_trades": 127 },
+    { "id": "CO_021_TRAIL", "wave": "first_wave_exits", "expected_trades": 135 },
+    { "id": "CO_022_MULTI_TP", "wave": "first_wave_exits", "expected_trades": 158 },
+    { "id": "CO_023_PERCENT_SL", "wave": "first_wave_exits", "expected_trades": 133 },
+    { "id": "CO_024_PERCENT_TP", "wave": "first_wave_exits", "expected_trades": 134 },
+    { "id": "CO_025_R_TP", "wave": "first_wave_exits", "expected_trades": 135 },
+    { "id": "CO_017_MA_EMA200", "wave": "second_wave_filters", "expected_trades": 88 },
+    { "id": "CO_026_VOLUME", "wave": "second_wave_filters", "expected_trades": 108 },
+    { "id": "CO_027_ADX", "wave": "second_wave_filters", "expected_trades": 54 },
+    { "id": "CO_030_MACD_REGIME", "wave": "second_wave_filters", "expected_trades": 109 },
+    { "id": "CO_050_HTF_TREND", "wave": "second_wave_filters", "expected_trades": 108 },
+    { "id": "CO_055_MOMENTUM", "wave": "second_wave_filters", "expected_trades": 129 },
+    { "id": "CO_056_SESSION", "wave": "second_wave_filters", "expected_trades": 133 },
+    { "id": "CO_061_COOLDOWN", "wave": "second_wave_filters", "expected_trades": 84 },
+    { "id": "CO_024_MA_SLOPE", "wave": "edge_wave", "expected_trades": 0 },
+    { "id": "CO_025_MCGINLEY", "wave": "edge_wave", "expected_trades": 75 },
+    { "id": "CO_034_EXIT_ON_MA_BLOCK", "wave": "edge_wave", "expected_trades": 137 },
+    { "id": "CO_051_EXIT_ON_HTF_BLOCK", "wave": "edge_wave", "expected_trades": 114 },
+    { "id": "CO_058_MCGINLEY_HTF", "wave": "edge_wave", "expected_trades": 106 },
+    { "id": "CO_059_ADX_HTF", "wave": "edge_wave", "expected_trades": 124 },
+    { "id": "CO_060_CHOP_HTF", "wave": "edge_wave", "expected_trades": 14 }
+  ]
+}

@@ -1,5 +1,18 @@
 {
   "schema_version": "1.0",
-  "generated_at": null,
-  "research_runs": []
+  "generated_at": "2026-07-05T00:00:00+00:00",
+  "research_runs": [
+    {
+      "research_run_id": "faz3b_stage1_20260705",
+      "status": "COMPLETE",
+      "date": "2026-07-05",
+      "run_dir": "03_QUANTLENS/research/faz3b_stage1_20260705",
+      "report_path": "03_QUANTLENS/research/faz3b_stage1_20260705/STAGE1_REPORT.md",
+      "hypothesis": "FAZ 3B Stage-1 (D015, pre-registered): do swept exit modes (fixed_3R, trail_ema8, channel) reach research_robust where fixed_2R does not, on US equities 10m/1h?",
+      "outcome": "H1 CONFIRMED at 1h, H0 holds at 10m. 3 new-mode cells research_robust (union-adjusted DSR); cleanest GEN_KELTNER_BREAKOUT x AAPL x 1h x trail_ema8 (STRONG_PASS, union-DSR 0.581, 49 trades, +19.0% OOS). Confound: first-ever 1h fixed_2R baseline itself produced 3 robust cells. 10m: zero robust any mode. robust_final 0 - nothing promotable.",
+      "tier": "research_robust",
+      "approval": "Barış D015 2026-07-05 (pre-registration 00_AGENT_PROTOCOLS/FAZ3B_STAGE1_SWEEP_PREREG_2026-07-05.md)",
+      "next": "Stage-2 confirmation requires its own written pre-registration before any run (D013/D015)."
+    }
+  ]
 }

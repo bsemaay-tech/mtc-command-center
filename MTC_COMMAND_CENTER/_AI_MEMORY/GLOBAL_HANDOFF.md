@@ -1,5 +1,38 @@
 # GLOBAL_HANDOFF
 
+## Claude Fable 5 2026-07-05 (4) — MCC app audit + approved fixes executed
+
+Full read-only app audit (`11_TRIAGE/MCC_APP_AUDIT_2026-07-05.md`) found the dashboard blind to
+everything after 2026-06-29. Barış answered the audit's open questions and approved execution
+("do everything you can do now"). Done this session (branch `feature/mcc-audit-fixes`):
+
+1. **backtest_reader.py**: nested orchestrated runs (`<run>/<stage>/MEGA_walk_forward_results.json`)
+   now surface as their own rows (Barış: N rows) — turtle_heavy/overnight_full/resilient/archetypes
+   visible again; `summary.discovered_runs` + `runs_truncated` added (109 discovered > 80 cap).
+2. **heartbeat_reader.py**: `parents[5]`→`parents[4]` (OVERNIGHT_DIR pointed at repo root, Worker
+   Monitor was permanently "dir not found"); legacy heartbeat read switched to `utf-8-sig` (BOM).
+   Heartbeat live again. Tests: 115 passed (3 new, incl. default-path integration guards).
+3. **RESEARCH_RUN_REGISTRY.json**: faz3b_stage1_20260705 registered (Barış: research runs feed the
+   dashboard via registry, not directory scanning). Research Lab now shows 1 run. NOTE: validator
+   shows 39 PRE-EXISTING errors in VARIANT_LOG_REGISTRY (archetype batch missing research_run_id).
+4. **REPORT_MANIFEST.json**: +6 real reports (4 morning reports, STAGE1_REPORT, the app audit).
+5. **CURRENT_STATUS.json**: refreshed to Faz 3B Stage-1 state; `root` fixed (pointed at old repo).
+   Barış decision: this file should become AUTO-DERIVED from NEXT_STEPS/handoff — tool not built
+   yet, hand-refreshed for now.
+6. **SESSION_LOG.md RETIRED** (Barış decision) — banner added, Gate 7 in AI_RULES.md updated.
+   CORRECTION to audit: SESSION_LOG was newest-first and current through 07-04, not dead; retired
+   for duplication with GLOBAL_HANDOFF, not staleness.
+7. **Parity migration (Q6)**: `C:\LAB\tradingview-lab\...\05_PARITY` (731 files, 19 MB) copied to
+   `12_PARITY_PINETS/`; `paths.local.json` (git-ignored) pinets_root/tradingview_exports_dir now
+   point in-repo. Verified `build_parity_status()` byte-identical minus source path. Originals
+   untouched.
+8. **Scoring pass over July runs APPROVED by Barış** (`mcc_night_tail.sh` per stage dir) — see
+   NEXT_STEPS for launch state. Clarified: Strategy Intelligence does NOT auto-update after runs;
+   scorecards are a separate enrichment step by design.
+
+**NEXT:** Stage-2 pre-registration (unchanged, separately gated); System Test Lab page awaits
+Barış understanding/approval (audit Q5 re-explained in chat); CURRENT_STATUS auto-derive tool.
+
 ## Claude Fable 5 2026-07-05 (3) — D015 EXECUTED: Stage-1 sweep COMPLETE, H1 confirmed at 1h; PR #15 merged
 
 Barış approved everything ("hepsini onaylıyorum yap") → D015 recorded, then executed same

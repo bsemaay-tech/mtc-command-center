@@ -38,6 +38,7 @@ def build_backtest_status(mcc_root: str | Path | None = None) -> dict[str, Any]:
     runs.extend(_collect_detached_statuses(quantlens_root))
     runs.extend(_collect_optimization_metrics(mtc_v2_root))
     runs.sort(key=lambda item: item.get("_sort_mtime", 0.0), reverse=True)
+    discovered_runs = len(runs)
     runs = runs[:MAX_RUNS]
 
     for run in runs:
@@ -51,11 +52,14 @@ def build_backtest_status(mcc_root: str | Path | None = None) -> dict[str, Any]:
                 if artifacts:
                     run["artifacts"] = artifacts
 
+    summary = _summary(runs)
+    summary["discovered_runs"] = discovered_runs
+    summary["runs_truncated"] = discovered_runs > MAX_RUNS
     return {
         "schema_version": "1.0",
         "generated_at": _latest_timestamp(runs),
         "source": str(mtc_v2_root),
-        "summary": _summary(runs),
+        "summary": summary,
         "runs": runs,
     }
 
@@ -84,6 +88,17 @@ def _collect_quantlens_results(quantlens_root: Path) -> list[dict[str, Any]]:
         seen.add(rid)
         run = _quantlens_result_run(path, root)
         run["run_id"] = rid  # override generic "MEGA_walk_forward" with the run dir name
+        runs.append(run)
+    # Orchestrated runs nest engine output one level deeper (<run>/<stage>/MEGA_…, e.g.
+    # turtle_heavy_2026-07-01/turtle_sweep). Surface each stage as its own row,
+    # run_id "<run>/<stage>" (Barış 2026-07-05: N rows, not one grouped row).
+    for path in sorted(root.glob("*/*/MEGA_walk_forward_results.json")):
+        rid = f"{path.parent.parent.name}/{path.parent.name}"
+        if rid in seen:
+            continue
+        seen.add(rid)
+        run = _quantlens_result_run(path, root)
+        run["run_id"] = rid
         runs.append(run)
     return runs
 

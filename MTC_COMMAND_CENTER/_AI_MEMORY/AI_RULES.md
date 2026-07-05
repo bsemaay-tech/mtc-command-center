@@ -11,7 +11,7 @@ layer on top of them. Canonical state lives in:
 - `DECISIONS.md`        — sticky decisions
 - `DO_NOT_TOUCH.md`     — protected files / behaviour
 - `ACTIVE_FILES.md`     — current working set
-- `SESSION_LOG.md`      — one-line per session entries
+- `SESSION_LOG.md`      — RETIRED 2026-07-05 (Barış): do not write; GLOBAL_HANDOFF.md covers it
 - `SESSION_LOCK.md`     — write-session lock state
 - `PROJECT_MEMORY.md`   — stable repo facts (layout, modules, contracts)
 
@@ -78,7 +78,6 @@ Prompt: `04_SHARED/prompts/05_ai_workflow/06_security_review.md`
 Every completed task must update:
 - `GLOBAL_HANDOFF.md`   — always
 - `NEXT_STEPS.md`       — always
-- `SESSION_LOG.md`      — one line
 - `DECISIONS.md`        — if a sticky decision was made
 - `ACTIVE_FILES.md`     — if working set changed
 - `PROJECT_MEMORY.md`   — if a stable repo fact changed
