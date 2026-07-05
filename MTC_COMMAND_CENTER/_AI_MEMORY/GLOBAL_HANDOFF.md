@@ -1,5 +1,37 @@
 # GLOBAL_HANDOFF
 
+## Claude Fable 5 2026-07-05 — Faz 3b diff AUDITED + APPROVED by Barış (D014); engine landed, sweep still gated
+
+Adversarial Gate-5 audit of the Opus engine commit `cb8bf5a3` completed — never trusted the report,
+re-verified everything myself. Verdict: **PASS WITH NITS**; Barış approved ("onaylıyorum") → recorded
+as **D014**.
+
+Evidence chain:
+- Scope clean: commit touches only `mega_walk_forward.py` (simulate_slice + exit_mode plumbing),
+  `faz3b_self_parity.py` (ONLY the sanctioned `ALLOWED_NEW_KEYS` strip + fixed_2R assert), and new
+  `tests/test_faz3b_exit_modes.py`. No GRIDS content, no gate/threshold, no Pine/parity/MTC_V2/
+  `02_MTC_BACKTEST`/`07_ADAPTERS`/`06_SCHEMAS`. `exit_mode` swept via env `MEGA_EXIT_MODES` only;
+  default = `[fixed_2R]` so trial counts + DSR unchanged.
+- Goldens NOT recaptured: `golden_cells.json` git history = single capture commit `75da649c`.
+- Re-ran `faz3b_self_parity.py --verify` myself: **PASS — 42 rows byte-identical, sha256 be8561ff…**
+- `pytest tests/test_faz3b_exit_modes.py`: 6/6 green (tests are substantive: 2R/3R math, trail
+  next-open fill, NA-skip without ema_8, channel shift(1) no-lookahead bug-case, parser).
+- `py_compile` clean.
+
+**Three NITS — must be addressed in Stage-1 sweep pre-registration, do NOT block the diff:**
+1. Short-path trail/channel branches (`cl>em`, `cl>chan_hi`) newly reachable but untested — validate
+   before any trail/channel sweep touching shorts.
+2. NA sentinel (`num_trades=-1`) correct at slice level but NOT wired through `_worker_impl` fold
+   aggregation (`mean_train_ret` treats NA as 0.0) — trail_ema8 on ema_8-less strategies could emit a
+   misleading row instead of clean skip.
+3. Checkpoint key now 4-tuple — pre-Faz3b checkpoints will key-mismatch and re-run jobs (wasteful,
+   not wrong).
+
+**NEXT: Stage-1 sweep remains a SEPARATE written gate** (D013 items 2-4: single-asset-class subset,
+trimmed grids elsewhere, `research_robust` tier, micro-price exclusion). Whoever designs it must
+pre-register the grid in writing AND close nits 1-2 first. Also still pending: Gate V5 review
+(2026-08-01), PR #15 merge-or-split (Barış call).
+
 ## Claude Fable 5 2026-07-04 — Faz 3b APPROVED (D013): scope + self-parity gate shipped; implementation handed off
 
 Methodology-pivot decision closed with Barış: **Faz 3b swept `exit_mode` in `simulate_slice` approved**
