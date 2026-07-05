@@ -1,5 +1,32 @@
 # GLOBAL_HANDOFF
 
+## Claude Fable 5 2026-07-05 (3) — D015 EXECUTED: Stage-1 sweep COMPLETE, H1 confirmed at 1h; PR #15 merged
+
+Barış approved everything ("hepsini onaylıyorum yap") → D015 recorded, then executed same
+session:
+
+1. **PR #15 MERGED to master** (`508a4bfc`, merge commit, 35 commits). Lesson applied: new
+   work now on topic branches (`feature/faz3b-stage1-sweep`).
+2. **Triage batch** (`3892d5d5`): USER_INTAKE raw CSVs + 11 triage docs + 2 overnight ps1
+   committed; `_tmp_*` audit dir deleted.
+3. **MEGA_GRID_STRIDE implemented** (`b4b11daf`): capped floor-selector (372 configs /
+   1116 trials at stride 3 — pinned by test), `grid_stride` stamped on every row, parity
+   harness assert-then-strip. 14/14 tests, self-parity byte-identical PASS, goldens intact.
+4. **Smoke test PASS**, then **Stage-1 sweep RUN + COMPLETE**: 980/980 rows, all STOP
+   rules clear. Incident logged: first Pass-1 launch used comma-joined `--symbol` (flag is
+   repeatable) → 60 all-NO_DATA rows discarded, relaunch clean; pre-reg command fixed.
+5. **RESULT — H1 CONFIRMED at 1h, H0 holds at 10m.** Full report:
+   `03_QUANTLENS/research/faz3b_stage1_20260705/STAGE1_REPORT.md`. 3 new-mode cells reach
+   research_robust (union-adjusted DSR) where fixed_2R does not; cleanest =
+   **GEN_KELTNER_BREAKOUT × AAPL × 1h × trail_ema8 (STRONG_PASS, union-DSR 0.581, 49
+   trades, +19.0% OOS)**. Honest confound: first-ever 1h fixed_2R baseline itself produced
+   3 robust cells (KELTNER/SPY+QQQ, MACD/QQQ) — part of the signal is the 1h timeframe,
+   not the exit knob. 10m: zero robust in any mode. robust_final: 0 (nothing promotable).
+
+**NEXT:** Stage-2 confirmation for the KELTNER×trail_ema8×1h family requires its OWN
+written pre-registration (narrow grid winner ±1, exit frozen, held-out scope, DSR ≥ 0.95)
+BEFORE any run — separately gated per D013/D015. Also pending: Gate V5 (2026-08-01).
+
 ## Claude Fable 5 2026-07-05 (2) — Faz 3b nits closed + Stage-1 pre-reg drafted; Codex Gate-5 prompt ready
 
 Continuation of the D014 session, per Barış's "başla ve sırayla yap" instruction:

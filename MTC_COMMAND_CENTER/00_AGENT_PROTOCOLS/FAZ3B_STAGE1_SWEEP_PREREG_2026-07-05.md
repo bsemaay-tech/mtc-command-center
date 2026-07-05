@@ -102,13 +102,14 @@ SHIBUSD, DOGEUSD, and any symbol whose median close < $0.01 in the run window.
 3. Full run under the run-progress supervisor (`run_emitter_supervisor.py` + `run_watchdog.py`):
    ```
    $env:MEGA_BUNDLE_MANIFEST = "<repo>\MTC_COMMAND_CENTER\03_QUANTLENS\data\native_multiasset_alpaca_2026-06-28\manifests\dataset_manifest.json"
+   # NOTE: --symbol is a REPEATABLE flag (argparse action="append"), NOT a comma list.
    # Pass 1 (10m, 3 new modes):
    $env:MEGA_EXIT_MODES     = "fixed_3R,trail_ema8,opposite_channel"
    $env:MEGA_GRID_STRIDE    = "3"
-   python MTC_COMMAND_CENTER\03_QUANTLENS\tools\mega_walk_forward.py --symbol SPY,QQQ,AAPL,MSFT,NVDA,AMZN,TSLA --tf 10m
+   python MTC_COMMAND_CENTER\03_QUANTLENS\tools\mega_walk_forward.py --symbol SPY --symbol QQQ --symbol AAPL --symbol MSFT --symbol NVDA --symbol AMZN --symbol TSLA --tf 10m
    # Pass 2 (1h, 4 modes incl. fixed_2R baseline — no 1h history exists, §3b):
    $env:MEGA_EXIT_MODES     = "fixed_2R,fixed_3R,trail_ema8,opposite_channel"
-   python MTC_COMMAND_CENTER\03_QUANTLENS\tools\mega_walk_forward.py --symbol SPY,QQQ,AAPL,MSFT,NVDA,AMZN,TSLA --tf 1h
+   python MTC_COMMAND_CENTER\03_QUANTLENS\tools\mega_walk_forward.py --symbol SPY --symbol QQQ --symbol AAPL --symbol MSFT --symbol NVDA --symbol AMZN --symbol TSLA --tf 1h
    ```
    Jobs = 20×7×(3 + 4) = **980**; checkpointed (4-tuple keys), resumable.
 4. Outputs: `03_QUANTLENS/research/faz3b_stage1_<timestamp>/`; morning report per
