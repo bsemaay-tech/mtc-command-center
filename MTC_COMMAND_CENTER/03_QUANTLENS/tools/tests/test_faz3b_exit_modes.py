@@ -241,6 +241,29 @@ def test_opposite_channel_short_exit_level_and_shift1_no_lookahead():
     assert chan[50] == pytest.approx(100.6)
 
 
+def test_short_same_bar_stop_beats_target():
+    """Codex Gate-5 A-nit: pin same-bar SHORT stop-first ordering.
+
+    Bar 22 hits BOTH the stop (hi >= 101) and the 2R target (lo <= 98) —
+    stop must win (conservative same-bar ordering, unchanged from pre-Faz3b).
+    """
+    op, hi, lo, cl, sig, stop = _one_short_trade_frame()  # stop 101, risk 1
+    hi[22] = 101.2   # >= stop 101
+    lo[22] = 97.5    # <= 2R target 98
+    df = _make_df(len(op), open_=op, high=hi, low=lo, close=cl)
+    sig_s, stop_s = pd.Series(sig), pd.Series(stop)
+
+    stats, R, events = mw.simulate_slice(
+        df, sig_s, stop_s, NON_TRAIL_STRAT, 0, len(op),
+        return_trades=True, return_trade_events=True,
+        direction="short", exit_mode="fixed_2R")
+
+    assert stats.num_trades == 1
+    assert events[0]["exit_idx"] == 22
+    assert events[0]["exit_price"] == pytest.approx(101.0)  # stop, NOT target 98
+    assert R[0] == pytest.approx(-1.0, abs=1e-9)
+
+
 # --------------------------------------------------------------------------
 # Faz 3b audit nit-2: NA slices must never flow into fold means as zeros.
 # (Defensive: build_signals always adds ema_8, so NA is unreachable in the
