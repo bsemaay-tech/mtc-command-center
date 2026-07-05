@@ -35,6 +35,7 @@ from .quantlens_reader import build_quantlens
 from .ai_tasks_reader import build_ai_tasks
 from .param_specs_reader import build_param_specs
 from .scorecard_reader import attach_scorecards_to_rows, build_scorecards
+from .system_test_reader import build_system_test_status
 from .schema import validate_json_schema
 from .task_lifecycle import build_task_lifecycle
 
@@ -379,6 +380,7 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
     ai_tasks = build_ai_tasks(model["mcc_root"])
     param_specs = build_param_specs(model["mcc_root"])
     overnight_heartbeat = build_overnight_heartbeat()
+    system_test_status = build_system_test_status(model["mcc_root"])
     night_artifacts = build_night_artifacts(model["mcc_root"])
     validation_terminal = build_validation_terminal(
         night_artifacts=night_artifacts,
@@ -409,6 +411,7 @@ def build_dashboard_snapshot(mcc_root: str | Path | None = None) -> dict[str, An
         "ai_strategy_names": ai_strategy_names,
         "expert_quantlens": expert_quantlens,
         "overnight_heartbeat": overnight_heartbeat,
+        "system_test_status": system_test_status,
         "night_artifacts": night_artifacts,
         "validation_terminal": validation_terminal,
         "scorecards": scorecards,

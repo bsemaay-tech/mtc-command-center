@@ -38,7 +38,8 @@ const NAV = [
   { id: "result-explorer", label: "Backtest Result Explorer", icon: "bar", title: "Backtest Result Explorer", sub: "Bucketed results and benchmark analysis." },
   { id: "validation-terminal", label: "Validation Terminal", icon: "shield", title: "Strategy Validation Terminal", sub: "Validation funnel, survivors, and graveyard from backtest evidence." },
   { id: "leaderboard", label: "Strategy Leaderboard", icon: "trend", title: "Strategy Leaderboard", sub: "Best strategies by category / profile / timeframe." },
-  { id: "paper-trading", label: "Paper Trading", icon: "activity", title: "Paper Trading", sub: "Readiness and locked candidates." },
+  { id: "paper-trading", label: "Promotion Readiness", icon: "activity", title: "Promotion Readiness", sub: "Gate-2/Gate-3 readiness and locked candidates (not trading)." },
+  { id: "system-test", label: "System Test Lab", icon: "shield", title: "System Test / Fake Money Lab", sub: "Fake-money plumbing benchmark evidence — SYSTEM_TEST_ONLY, no real money." },
   { id: "ai-tasks", label: "AI Tasks", icon: "cpu", title: "AI Tasks", sub: "Copy-ready prompts to run AI jobs." },
   { id: "ai-knowledge", label: "AI Knowledge Base", icon: "cpu", title: "AI Knowledge Base", sub: "Reusable components and insights." },
   { id: "artifacts", label: "Advanced Artifacts", icon: "db", title: "Advanced Artifacts", sub: "Data and artifact health." },
@@ -68,7 +69,8 @@ const PAGE_FEEDS = [
   ["Backtest Runs", "night_artifacts.run_status, backtest_status.runs, overnight_heartbeat"],
   ["Backtest Result Explorer", "night_artifacts.profile_results, scorecards.cards"],
   ["Strategy Leaderboard", "night_artifacts.profile_results, night_artifacts.leaderboard_delta, scorecards.cards"],
-  ["Paper Trading", "candidate_pipeline.rows, scorecards.gate_summary"],
+  ["Promotion Readiness", "candidate_pipeline.rows, scorecards.gate_summary"],
+  ["System Test Lab", "system_test_status (read-only fake-money plumbing evidence)"],
   ["AI Knowledge Base", "strategy_registry.candidate_kind, strategy_research"],
   ["Advanced Artifacts", "night_artifacts (run_plans, run_status, artifact_index, profile_results, top_results, leaderboard_delta, benchmark_update_candidates)"],
   ["Diagnostics", "healthz, file_diagnostics, night_artifacts.summary"],
@@ -279,6 +281,7 @@ function renderCurrentView() {
     "validation-terminal": renderValidationTerminal,
     leaderboard: renderLeaderboard,
     "paper-trading": renderPaperTrading,
+    "system-test": renderSystemTest,
     "ai-tasks": renderAiTasks,
     "ai-knowledge": renderKnowledge,
     artifacts: renderArtifacts,
@@ -2273,7 +2276,7 @@ function renderPaperTrading(c) {
       </div>
     </article>`;
   c.innerHTML = `
-    <div class="banner warn"><div class="banner-icon">${icon("lock")}</div><div><h4>Read-only readiness view</h4><p>Candidates remain locked until validated Gate 2 evidence and Gate 3 readiness artifacts exist. This view only reviews readiness packages; no trading actions are available.</p></div></div>
+    <div class="banner warn"><div class="banner-icon">${icon("lock")}</div><div><h4>Read-only readiness view</h4><p>Gate-2/Gate-3 promotion readiness for candidate strategies. This is not paper trading, testnet, or live trading, and not the fake-money System Test Lab. Candidates stay locked until validated Gate 2 evidence and Gate 3 readiness artifacts exist; no trading actions are available.</p></div></div>
 
     <section class="panel">
       <div class="panel-heading"><h3>Ready Candidates</h3><span>${ready.length}</span></div>
@@ -2285,6 +2288,95 @@ function renderPaperTrading(c) {
       <div class="strategy-card-grid">${locked.length ? locked.slice(0, 12).map(candCard).join("") : emptyState("No locked candidates.")}</div>
     </section>
   `;
+}
+
+/* ============================================================
+   PAGE: System Test / Fake Money Lab  (read-only, display only)
+   ============================================================ */
+function renderSystemTest(c) {
+  const st = snap().system_test_status || {};
+  const runs = Array.isArray(st.runs) ? st.runs : [];
+  const banner = st.firewall_banner || "SYSTEM_TEST_ONLY / NOT STRATEGY_APPROVED / NO REAL MONEY";
+  const ladder = Array.isArray(st.gate_ladder) ? st.gate_ladder : [];
+
+  const firewall = `
+    <div class="banner systest-firewall"><div class="banner-icon">${icon("lock")}</div><div>
+      <h4>${esc(banner)}</h4>
+      <p>Fake-money systems-plumbing benchmark only. This lab displays reconciliation evidence (did every emitted signal arrive and reconcile) — never P&amp;L, never a trading action. No paper trading, no testnet, no live trading.</p>
+    </div></div>`;
+
+  const ladderCard = `
+    <section class="panel">
+      <div class="panel-heading"><h3>Vertical-Slice Gate Ladder</h3><span>reference</span></div>
+      <div class="def-rows">
+        ${ladder.map((g) => {
+          const state = String(g.state || "");
+          const cls = state === "CLOSED" ? "ok" : state.startsWith("DUE") ? "amber" : "neutral";
+          return `<div class="def-row"><span class="k">${esc(g.leg)} — ${esc(g.label)}</span><span class="v">${badge(spaced(state), cls)}</span></div>`;
+        }).join("")}
+      </div>
+      <p class="metric-note">${esc(st.next_approved_action || "")}</p>
+    </section>`;
+
+  if (!runs.length) {
+    c.innerHTML = firewall + ladderCard + `
+      <section class="panel">${emptyState("No system-test replay runs found. This lab displays fake-money plumbing benchmark evidence only; nothing here is paper, testnet, or live trading.")}</section>`;
+    return;
+  }
+
+  const runCard = (r) => {
+    const b = r.benchmark || {};
+    const rc = r.reconciliation || {};
+    const pb = r.promotion_blockers || {};
+    const statusCls = r.status === "OK" ? "ok" : r.status === "MISMATCH" ? "bad" : "neutral";
+    const metric = (label, value, cls = "") => `<article class="metric ${cls}"><span>${esc(label)}</span><strong>${value === null || value === undefined ? "—" : num(value)}</strong></article>`;
+    const arts = Array.isArray(r.artifacts) ? r.artifacts : [];
+    return `
+      <section class="panel">
+        <div class="panel-heading"><h3><code>${esc(r.run_id)}</code></h3>${badge(spaced(r.status || "—"), statusCls)}</div>
+
+        <div class="def-rows">
+          ${defRow("Benchmark candidate", b.candidate_id)}
+          ${defRow("Engine strategy", b.engine_strategy_id)}
+          ${defRow("Symbol / timeframe", [b.symbol, b.timeframe].filter(Boolean).join(" / "))}
+          ${defRow("Benchmark role", spaced(b.benchmark_role))}
+          ${defRow("Strategy approval", spaced(b.strategy_approval_status))}
+          ${defRow("Promotable", b.promotable ? "YES" : "NO")}
+        </div>
+
+        <div class="metric-group">
+          <div class="metric-group-head"><h3>Reconciliation (plumbing counts)</h3><span>simulated fills only — no P&amp;L</span></div>
+          <div class="metric-grid">
+            ${metric("Expected", rc.expected_count)}
+            ${metric("Received", rc.received_count)}
+            ${metric("Simulated fills", rc.filled_count)}
+            ${metric("≈ Round trips", rc.round_trips_approx)}
+            ${metric("Rejected", rc.rejected_count, (rc.rejected_count ? "red" : ""))}
+            ${metric("Duplicates dropped", rc.duplicates_dropped, (rc.duplicates_dropped ? "amber" : ""))}
+            ${metric("Unexplained", rc.unexplained_count, (rc.unexplained_count ? "red" : "emerald"))}
+          </div>
+        </div>
+
+        <div class="panel-heading"><h3>Promotion Blockers</h3><span>why nothing promotes</span></div>
+        <div class="def-rows">
+          ${defRow("Promotable", pb.promotable ? "YES" : "NO — SYSTEM_TEST_ONLY benchmark")}
+          ${defRow("Approval status", spaced(pb.strategy_approval_status))}
+          ${defRow("Robustness", pb.robustness_note)}
+        </div>
+
+        <div class="chip-row">
+          ${r.report_path ? `<span class="chip static">reconciliation_report.md</span>` : ""}
+          ${arts.map((a) => `<span class="chip static" title="${escAttr(a.relative_path || "")}">${esc(a.name)}${a.size_bytes != null ? ` (${num(a.size_bytes)} B)` : ""}</span>`).join("")}
+        </div>
+      </section>`;
+  };
+
+  c.innerHTML = firewall + `
+    <div class="metric-group">
+      <div class="metric-group-head"><h3>System Test Runs</h3><span>${runs.length} run${runs.length === 1 ? "" : "s"} · ${num((st.summary && st.summary.ok_runs) || 0)} reconciled clean</span></div>
+    </div>
+    ${ladderCard}
+    ${runs.map(runCard).join("")}`;
 }
 
 /* ============================================================
