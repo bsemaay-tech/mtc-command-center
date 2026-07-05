@@ -1,0 +1,172 @@
+{
+  "instrument": "BATS_QQQ",
+  "timeframe": "10m",
+  "input_file_count": 8,
+  "input_total_rows": 92928,
+  "input_total_unique_timestamps": 20094,
+  "duplicate_rows_removed": 72834,
+  "overlapping_timestamp_count": 18050,
+  "conflicting_ohlc_timestamp_count": 0,
+  "conflict_examples": [],
+  "output_rows": 20094,
+  "output_file": "/mnt/data/BATS_QQQ_10m_CONSOLIDATED_2024-06-03_to_2026-06-26.csv",
+  "start_utc": "2024-06-03 13:30:00+00:00",
+  "end_utc": "2026-06-26 19:50:00+00:00",
+  "expected_regular_session_bars": 20094,
+  "missing_regular_session_bars": 0,
+  "missing_intervals": [],
+  "bars_outside_expected_regular_session": 0,
+  "extra_examples": [],
+  "early_close_days_within_range": [
+    {
+      "date": "2024-07-03",
+      "expected_bars": 21,
+      "open_utc": "2024-07-03 13:30:00+00:00",
+      "close_utc": "2024-07-03 17:00:00+00:00"
+    },
+    {
+      "date": "2024-11-29",
+      "expected_bars": 21,
+      "open_utc": "2024-11-29 14:30:00+00:00",
+      "close_utc": "2024-11-29 18:00:00+00:00"
+    },
+    {
+      "date": "2024-12-24",
+      "expected_bars": 21,
+      "open_utc": "2024-12-24 14:30:00+00:00",
+      "close_utc": "2024-12-24 18:00:00+00:00"
+    },
+    {
+      "date": "2025-07-03",
+      "expected_bars": 21,
+      "open_utc": "2025-07-03 13:30:00+00:00",
+      "close_utc": "2025-07-03 17:00:00+00:00"
+    },
+    {
+      "date": "2025-11-28",
+      "expected_bars": 21,
+      "open_utc": "2025-11-28 14:30:00+00:00",
+      "close_utc": "2025-11-28 18:00:00+00:00"
+    },
+    {
+      "date": "2025-12-24",
+      "expected_bars": 21,
+      "open_utc": "2025-12-24 14:30:00+00:00",
+      "close_utc": "2025-12-24 18:00:00+00:00"
+    }
+  ],
+  "file_summaries": [
+    {
+      "file": "BATS_QQQ, 10_afc77.csv",
+      "rows": 12932,
+      "unique_times": 12932,
+      "start_utc": "2025-02-28 14:40:00+00:00",
+      "end_utc": "2026-06-26 19:50:00+00:00",
+      "columns": [
+        "time",
+        "open",
+        "high",
+        "low",
+        "close"
+      ]
+    },
+    {
+      "file": "BATS_QQQ, 10_91cd4.csv",
+      "rows": 15492,
+      "unique_times": 15492,
+      "start_utc": "2024-11-19 17:30:00+00:00",
+      "end_utc": "2026-06-26 19:50:00+00:00",
+      "columns": [
+        "time",
+        "open",
+        "high",
+        "low",
+        "close"
+      ]
+    },
+    {
+      "file": "BATS_QQQ, 10_bfb7e.csv",
+      "rows": 18050,
+      "unique_times": 18050,
+      "start_utc": "2024-08-16 19:10:00+00:00",
+      "end_utc": "2026-06-26 19:50:00+00:00",
+      "columns": [
+        "time",
+        "open",
+        "high",
+        "low",
+        "close"
+      ]
+    },
+    {
+      "file": "BATS_QQQ, 10_3c457.csv",
+      "rows": 20094,
+      "unique_times": 20094,
+      "start_utc": "2024-06-03 13:30:00+00:00",
+      "end_utc": "2026-06-26 19:50:00+00:00",
+      "columns": [
+        "time",
+        "open",
+        "high",
+        "low",
+        "close"
+      ]
+    },
+    {
+      "file": "BATS_QQQ, 10_03807.csv",
+      "rows": 2946,
+      "unique_times": 2946,
+      "start_utc": "2026-03-10 16:30:00+00:00",
+      "end_utc": "2026-06-26 19:50:00+00:00",
+      "columns": [
+        "time",
+        "open",
+        "high",
+        "low",
+        "close"
+      ]
+    },
+    {
+      "file": "BATS_QQQ, 10_0fef8.csv",
+      "rows": 5222,
+      "unique_times": 5222,
+      "start_utc": "2025-12-11 18:40:00+00:00",
+      "end_utc": "2026-06-26 19:50:00+00:00",
+      "columns": [
+        "time",
+        "open",
+        "high",
+        "low",
+        "close"
+      ]
+    },
+    {
+      "file": "BATS_QQQ, 10_5af59.csv",
+      "rows": 7820,
+      "unique_times": 7820,
+      "start_utc": "2025-09-08 17:10:00+00:00",
+      "end_utc": "2026-06-26 19:50:00+00:00",
+      "columns": [
+        "time",
+        "open",
+        "high",
+        "low",
+        "close"
+      ]
+    },
+    {
+      "file": "BATS_QQQ, 10_bb07b.csv",
+      "rows": 10372,
+      "unique_times": 10372,
+      "start_utc": "2025-06-03 17:50:00+00:00",
+      "end_utc": "2026-06-26 19:50:00+00:00",
+      "columns": [
+        "time",
+        "open",
+        "high",
+        "low",
+        "close"
+      ]
+    }
+  ]
+}
