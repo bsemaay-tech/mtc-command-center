@@ -1,5 +1,31 @@
 # GLOBAL_HANDOFF
 
+## Claude Fable 5 2026-07-05 (2) — Faz 3b nits closed + Stage-1 pre-reg drafted; Codex Gate-5 prompt ready
+
+Continuation of the D014 session, per Barış's "başla ve sırayla yap" instruction:
+
+1. **Nits 1-2 closed, commit `a6342810`** (tests-first): 3 new SHORT-path tests (fixed_3R
+   math, trail next-open on close>ema, channel chan_hi shift(1) bug-case) — engine was
+   already correct, tests are pinning-only. NA guard: `config_has_na()` + `_worker_impl`
+   skip + `SKIPPED_NA_EXIT_MODE` classification. Defensive only — NA unreachable in normal
+   pipeline (`build_signals` line ~339 always adds `ema_8`) and never fires at fixed_2R.
+   Verified: 10/10 tests, self-parity `--verify` PASS byte-identical (sha be8561ff…),
+   py_compile clean. Nit-3 (checkpoint 4-tuple) accepted as cosmetic, no action.
+2. **Stage-1 sweep pre-registration DRAFT:**
+   `00_AGENT_PROTOCOLS/FAZ3B_STAGE1_SWEEP_PREREG_2026-07-05.md`. Core design: US-equities
+   only, SAME 7 symbols as the 6yr Alpaca sweep (comparability), 10m+1h, all 20 strategies,
+   3 NEW modes only (fixed_2R = existing history, not re-run), grid stride-3 via new
+   default-off env `MEGA_GRID_STRIDE` → trials/cell ≈ 1.0× today. research_robust tier only,
+   nothing promotable. H0/H1 + STOP rules pre-registered. **NOT approved — draft.**
+3. **Codex Gate-5 prompt:** `11_TRIAGE/CODEX_GATE5_PROMPT_FAZ3B_STAGE1_2026-07-05.md` —
+   Codex adversarially reviews BOTH the nit-fix diff `a6342810` AND the Stage-1 design
+   (roles reversed: Claude wrote, Codex audits). Report goes to
+   `11_TRIAGE/CODEX_GATE5_REPORT_FAZ3B_STAGE1_2026-07-05.md`.
+
+**NEXT (order):** Barış runs Codex with that prompt → Codex report → Barış written approval
+sentence (→ D015) → only THEN: implement `MEGA_GRID_STRIDE` (self-parity must stay green),
+smoke test 1 cell, full 840-job run under supervisor/watchdog.
+
 ## Claude Fable 5 2026-07-05 — Faz 3b diff AUDITED + APPROVED by Barış (D014); engine landed, sweep still gated
 
 Adversarial Gate-5 audit of the Opus engine commit `cb8bf5a3` completed — never trusted the report,
