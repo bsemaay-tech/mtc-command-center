@@ -259,8 +259,7 @@ function renderHeader() {
       <p class="topbar-sub">${esc(sub)}</p>
     </div>
     <div class="topbar-actions">
-      <span class="status-pill neutral">Local Engine: Idle</span>
-      <span class="status-pill neutral">Token Mode: Local / AI optional</span>
+      <span class="status-pill neutral">Read-only</span>
       <button class="btn mini" type="button" onclick="loadDashboard(true)">Refresh Snapshot</button>
     </div>
   `;

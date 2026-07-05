@@ -13,6 +13,36 @@
       "tier": "research_robust",
       "approval": "Barış D015 2026-07-05 (pre-registration 00_AGENT_PROTOCOLS/FAZ3B_STAGE1_SWEEP_PREREG_2026-07-05.md)",
       "next": "Stage-2 confirmation requires its own written pre-registration before any run (D013/D015)."
+    },
+    {
+      "research_run_id": "turtle_heavy_2026-07-01",
+      "status": "COMPLETE",
+      "date": "2026-07-01",
+      "run_dir": "03_QUANTLENS/05_BACKTEST_RESULTS/turtle_heavy_2026-07-01",
+      "report_path": "03_QUANTLENS/05_BACKTEST_RESULTS/turtle_heavy_2026-07-01/MORNING_REPORT.md",
+      "outcome": "GEN_DONCHIAN_TURTLE structural-stop variant, 357-cell + deep CPCV/PBO. robust_final=0; no systematic edge. Variant origin=variant/UNVALIDATED.",
+      "tier": "research",
+      "approval": "Barış (turtle_heavy overnight)"
+    },
+    {
+      "research_run_id": "overnight_full_2026-07-02",
+      "status": "COMPLETE",
+      "date": "2026-07-02",
+      "run_dir": "03_QUANTLENS/05_BACKTEST_RESULTS/overnight_full_2026-07-02",
+      "report_path": "03_QUANTLENS/05_BACKTEST_RESULTS/overnight_full_2026-07-02/stageA_v2_multiasset/HEAVY_TIER_MORNING_REPORT.md",
+      "outcome": "Library-wide validation of 6 missing-knob tuned variants (variant_missing_knobs.py). All NEW logic, UNVALIDATED, robust_final=0. Faz 3 approval-gated; contract-compatible (signal,stop) only.",
+      "tier": "research",
+      "approval": "Barış (overnight_full)"
+    },
+    {
+      "research_run_id": "overnight_archetypes_2026-07-03",
+      "status": "COMPLETE",
+      "date": "2026-07-03",
+      "run_dir": "03_QUANTLENS/05_BACKTEST_RESULTS/overnight_archetypes_2026-07-03",
+      "report_path": "03_QUANTLENS/05_BACKTEST_RESULTS/overnight_archetypes_2026-07-03/MORNING_REPORT.md",
+      "outcome": "12 NEW strategy archetypes (research_archetypes_20260703.py) + CPCV/PBO. All UNVALIDATED until a two-stage run produces robust_final; robust_final=0.",
+      "tier": "research",
+      "approval": "Barış (archetypes overnight)"
     }
   ]
 }
