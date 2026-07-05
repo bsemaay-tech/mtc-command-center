@@ -1,5 +1,87 @@
 # GLOBAL_HANDOFF
 
+## Claude Opus 4.8 2026-07-05 (5) — System Test / Fake Money Lab page shipped; branch merged to master
+
+Barış approved the audit's System Test Lab proposal ("onaylıyorum tasarım dokümanı + implementasyon.
+yap master merge de yap"). Design doc `11_TRIAGE/SYSTEM_TEST_LAB_PAGE_DESIGN_2026-07-05.md`, then
+built + merged the whole `feature/mcc-audit-fixes` branch to master.
+
+- **New read-only page** (`system_test_reader.py` + `renderSystemTest`): scans git-ignored
+  `03_QUANTLENS/system_test/*/` (emitter_manifest + reconciliation_summary), shows plumbing counts
+  ONLY (expected/received/simulated-fills/≈round-trips/rejected/dups/unexplained = 888/888/888/444/
+  0/0/0 for STG002) — never P&L, never a trading action. Sticky amber firewall banner
+  (`SYSTEM_TEST_ONLY / NOT STRATEGY_APPROVED / NO REAL MONEY`), V1.1-V5 gate ladder, honest empty
+  state. NO execution UI, NO schema/Pine/parity/MTC_V2/broker touch.
+- **Anti-confusion rename**: nav "Paper Trading" → "Promotion Readiness" + banner clarifying it is
+  not paper/testnet/live and not the fake-money lab — "paper" no longer means two things.
+- Verified: 120 API tests pass; node --check PASS; live `/dashboard` render confirmed via preview
+  (firewall banner amber, metrics correct, nav renamed, zero console errors); read_only + POST→405.
+- **Branch merged to master** (see below for the 5 fix commits it carried).
+
+## Claude Fable 5 2026-07-05 (4) — MCC app audit + approved fixes executed
+
+Full read-only app audit (`11_TRIAGE/MCC_APP_AUDIT_2026-07-05.md`) found the dashboard blind to
+everything after 2026-06-29. Barış answered the audit's open questions and approved execution
+("do everything you can do now"). Done this session (branch `feature/mcc-audit-fixes`):
+
+1. **backtest_reader.py**: nested orchestrated runs (`<run>/<stage>/MEGA_walk_forward_results.json`)
+   now surface as their own rows (Barış: N rows) — turtle_heavy/overnight_full/resilient/archetypes
+   visible again; `summary.discovered_runs` + `runs_truncated` added (109 discovered > 80 cap).
+2. **heartbeat_reader.py**: `parents[5]`→`parents[4]` (OVERNIGHT_DIR pointed at repo root, Worker
+   Monitor was permanently "dir not found"); legacy heartbeat read switched to `utf-8-sig` (BOM).
+   Heartbeat live again. Tests: 115 passed (3 new, incl. default-path integration guards).
+3. **RESEARCH_RUN_REGISTRY.json**: faz3b_stage1_20260705 registered (Barış: research runs feed the
+   dashboard via registry, not directory scanning). Research Lab now shows 1 run. NOTE: validator
+   shows 39 PRE-EXISTING errors in VARIANT_LOG_REGISTRY (archetype batch missing research_run_id).
+4. **REPORT_MANIFEST.json**: +6 real reports (4 morning reports, STAGE1_REPORT, the app audit).
+5. **CURRENT_STATUS.json**: refreshed to Faz 3B Stage-1 state; `root` fixed (pointed at old repo).
+   Barış decision: this file should become AUTO-DERIVED from NEXT_STEPS/handoff — tool not built
+   yet, hand-refreshed for now.
+6. **SESSION_LOG.md RETIRED** (Barış decision) — banner added, Gate 7 in AI_RULES.md updated.
+   CORRECTION to audit: SESSION_LOG was newest-first and current through 07-04, not dead; retired
+   for duplication with GLOBAL_HANDOFF, not staleness.
+7. **Parity migration (Q6)**: `C:\LAB\tradingview-lab\...\05_PARITY` (731 files, 19 MB) copied to
+   `12_PARITY_PINETS/`; `paths.local.json` (git-ignored) pinets_root/tradingview_exports_dir now
+   point in-repo. Verified `build_parity_status()` byte-identical minus source path. Originals
+   untouched.
+8. **Scoring pass over July runs DONE** (Barış approved; `mcc_night_tail.sh` per stage dir with
+   `MEGA_BUNDLE_MANIFEST` + `PYTHONUTF8=1` + Windows paths — all three required, see NEXT_STEPS
+   gotchas): 716 new scorecard_v2 cards, promotable=0 across all; dashboard scorecards 837→1553,
+   4 runs visible. Clarified for Barış: Strategy Intelligence does NOT auto-update after runs —
+   scorecards are a separate approval-gated enrichment step by design.
+9. **Home "Data as of" freshness line** shipped (`a1a6cf51`): per-source dates (Status/Backtest
+   runs/AI verdicts/Night artifacts/Research registry) under Home metrics.
+
+**NEXT:** Stage-2 pre-registration (unchanged, separately gated); System Test Lab page awaits
+Barış understanding/approval (audit Q5 re-explained in chat); CURRENT_STATUS auto-derive tool.
+
+## Claude Fable 5 2026-07-05 (3) — D015 EXECUTED: Stage-1 sweep COMPLETE, H1 confirmed at 1h; PR #15 merged
+
+Barış approved everything ("hepsini onaylıyorum yap") → D015 recorded, then executed same
+session:
+
+1. **PR #15 MERGED to master** (`508a4bfc`, merge commit, 35 commits). Lesson applied: new
+   work now on topic branches (`feature/faz3b-stage1-sweep`).
+2. **Triage batch** (`3892d5d5`): USER_INTAKE raw CSVs + 11 triage docs + 2 overnight ps1
+   committed; `_tmp_*` audit dir deleted.
+3. **MEGA_GRID_STRIDE implemented** (`b4b11daf`): capped floor-selector (372 configs /
+   1116 trials at stride 3 — pinned by test), `grid_stride` stamped on every row, parity
+   harness assert-then-strip. 14/14 tests, self-parity byte-identical PASS, goldens intact.
+4. **Smoke test PASS**, then **Stage-1 sweep RUN + COMPLETE**: 980/980 rows, all STOP
+   rules clear. Incident logged: first Pass-1 launch used comma-joined `--symbol` (flag is
+   repeatable) → 60 all-NO_DATA rows discarded, relaunch clean; pre-reg command fixed.
+5. **RESULT — H1 CONFIRMED at 1h, H0 holds at 10m.** Full report:
+   `03_QUANTLENS/research/faz3b_stage1_20260705/STAGE1_REPORT.md`. 3 new-mode cells reach
+   research_robust (union-adjusted DSR) where fixed_2R does not; cleanest =
+   **GEN_KELTNER_BREAKOUT × AAPL × 1h × trail_ema8 (STRONG_PASS, union-DSR 0.581, 49
+   trades, +19.0% OOS)**. Honest confound: first-ever 1h fixed_2R baseline itself produced
+   3 robust cells (KELTNER/SPY+QQQ, MACD/QQQ) — part of the signal is the 1h timeframe,
+   not the exit knob. 10m: zero robust in any mode. robust_final: 0 (nothing promotable).
+
+**NEXT:** Stage-2 confirmation for the KELTNER×trail_ema8×1h family requires its OWN
+written pre-registration (narrow grid winner ±1, exit frozen, held-out scope, DSR ≥ 0.95)
+BEFORE any run — separately gated per D013/D015. Also pending: Gate V5 (2026-08-01).
+
 ## Claude Fable 5 2026-07-05 (2) — Faz 3b nits closed + Stage-1 pre-reg drafted; Codex Gate-5 prompt ready
 
 Continuation of the D014 session, per Barış's "başla ve sırayla yap" instruction:

@@ -1,5 +1,18 @@
 # NEXT_STEPS
 
+## 🔧 MCC APP AUDIT FOLLOW-UPS (audit 2026-07-05: `11_TRIAGE/MCC_APP_AUDIT_2026-07-05.md`; Barış answered all open questions; quick wins DONE same session on `feature/mcc-audit-fixes`)
+- ~~fix backtest_reader nested-run glob + heartbeat_reader parents index~~ DONE 2026-07-05 (115 tests pass; July runs + heartbeat visible).
+- ~~register faz3b_stage1 in RESEARCH_RUN_REGISTRY~~ DONE 2026-07-05.
+- ~~refresh REPORT_MANIFEST + CURRENT_STATUS; retire SESSION_LOG~~ DONE 2026-07-05.
+- ~~parity artifacts migrated to `12_PARITY_PINETS/`~~ DONE 2026-07-05 (byte-identical parity status; paths.local.json updated locally — git-ignored, other machines must update their own).
+- ~~scoring pass `mcc_night_tail.sh` over July stage dirs~~ **DONE 2026-07-05** (Barış approved): 716 new scorecard_v2 cards (turtle_sweep 36, stageA_v2_multiasset 302, variants 182, archetypes 196), **promotable=0 across all 716** (consistent with known nulls). Dashboard verified: scorecards 837→1553, all 4 runs listed. Gotchas: `mcc_night_tail.sh` needs `MEGA_BUNDLE_MANIFEST` set (else CPCV = all N_A "No dataset found") + Windows-style `C:/` RUN_DIR + `PYTHONUTF8=1` (run_python_clean exec wrapper decodes as cp1254 otherwise). Tail's own "dashboard visible" check greps stage-name run_id → false NO now that reader names runs `<run>/<stage>` — cosmetic [AI: DeepSeek].
+- **[AI: DeepSeek]** fix 39 pre-existing VARIANT_LOG_REGISTRY.json validator errors (archetype entries missing `research_run_id`; run `03_QUANTLENS/tools/validate_research_registries.py` until PASS).
+- **[AI: Claude]** build CURRENT_STATUS auto-derive tool (Barış decision: derive phase/summary/next_recommended_action from NEXT_STEPS top + GLOBAL_HANDOFF newest section; hand-refresh dies).
+- **[AI: Claude]** Home + Strategy Intelligence "as of" freshness chips (audit roadmap item 3/7; frontend-only).
+- ~~System Test / Fake Money Lab page~~ **DONE 2026-07-05** (Barış approved design+impl): new read-only nav page `system_test_reader.py` + renderSystemTest; scans `03_QUANTLENS/system_test/*/`, shows plumbing counts only (888/888/888/≈444, 0 unexplained), sticky amber firewall banner, V1.1-V5 gate ladder. Renamed 'Paper Trading'->'Promotion Readiness' to kill the naming collision. Design: `11_TRIAGE/SYSTEM_TEST_LAB_PAGE_DESIGN_2026-07-05.md`. 120 API tests, live render verified.
+- **[AI: Barış]** run-manifest discovery contract (audit §6.1) — decide if wanted before next big orchestrated sweep.
+
+
 ## 🔶 FAZ 3B — SWEPT EXIT_MODE (approved D013 2026-07-04; gate live; implementation NEXT)
 Scope: `00_AGENT_PROTOCOLS/FAZ3B_EXIT_SWEEP_SCOPE.md`. Self-parity goldens captured pre-edit +
 determinism proven (`faz3b_self_parity.py`, 42 rows, sha `be8561ff…`). Sweep runs separately gated.

@@ -1,0 +1,118 @@
+# Parity Summary
+
+- total planned cases: 104
+- total processed: 104
+- pass count: 0
+- fail count: 0
+- partial count: 104
+- error count: 0
+- skipped count: 0
+
+## Manual Review
+- case_007
+- case_060
+- case_061
+- case_062
+- case_063
+- case_064
+- case_065
+- case_066
+- case_067
+- case_068
+- case_069
+- case_070
+- case_071
+- case_072
+- case_073
+- case_074
+- case_075
+- case_076
+- case_077
+- case_078
+- case_079
+- case_080
+- case_081
+- case_082
+- case_083
+- case_084
+- case_085
+- case_086
+- case_087
+- case_088
+- case_089
+- case_090
+- case_091
+- case_092
+- case_093
+- case_094
+- case_095
+- case_096
+- case_097
+- case_098
+- case_099
+- case_100
+- case_101
+- case_102
+- case_103
+- case_104
+- case_105
+- case_106
+- case_107
+- case_108
+- case_109
+- case_110
+- case_111
+- case_112
+- case_113
+- case_114
+- case_115
+- case_116
+- case_117
+- case_118
+- case_119
+- case_120
+- case_121
+- case_122
+- case_123
+- case_124
+- case_125
+- case_126
+- case_127
+- case_128
+- case_129
+- case_130
+- case_131
+- case_132
+- case_133
+- case_134
+- case_135
+- case_136
+- case_137
+- case_138
+- case_139
+- case_140
+- case_141
+- case_142
+- case_143
+- case_144
+- case_145
+- case_146
+- case_147
+- case_148
+- case_149
+- case_150
+- case_151
+- case_152
+- case_153
+- case_154
+- case_155
+- case_156
+- case_157
+- case_158
+- case_159
+- case_160
+- case_161
+- case_162
+
+## Recurring Failure Patterns
+- 104x TradingView and Python outputs are not yet both populated by the thin workflow.

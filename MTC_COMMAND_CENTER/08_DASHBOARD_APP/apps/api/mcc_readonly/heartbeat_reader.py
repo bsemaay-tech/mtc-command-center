@@ -2,7 +2,8 @@ from pathlib import Path
 from datetime import datetime, timezone
 import json
 
-MCC_ROOT = Path(__file__).resolve().parents[5]
+# parents[4] = MTC_COMMAND_CENTER (mcc_readonly -> api -> apps -> 08_DASHBOARD_APP -> MCC root).
+MCC_ROOT = Path(__file__).resolve().parents[4]
 OVERNIGHT_DIR = MCC_ROOT / "03_QUANTLENS" / "tools" / "overnight_runs"
 ALIVE_THRESHOLD_MINUTES = 15
 STALL_THRESHOLD_MINUTES = 15
@@ -122,7 +123,8 @@ def _read_legacy_heartbeat(base: Path) -> dict:
 
     latest = max(heartbeat_files, key=lambda p: p.stat().st_mtime)
     try:
-        data = json.loads(latest.read_text(encoding="utf-8"))
+        # utf-8-sig: some heartbeat writers (PowerShell-launched) emit a UTF-8 BOM.
+        data = json.loads(latest.read_text(encoding="utf-8-sig"))
     except Exception as e:
         return {"available": False, "reason": f"parse error: {e}"}
 

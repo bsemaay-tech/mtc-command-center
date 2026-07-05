@@ -397,6 +397,11 @@ button { font-family: var(--sans); }
 .banner.danger h4 { color: var(--red); }
 .banner.info { background: rgba(10,18,28,0.7); border: 1px solid rgba(45,212,191,0.18); }
 .banner.info .banner-icon { background: rgba(45,212,191,0.08); border: 1px solid rgba(13,80,73,0.4); color: var(--teal); }
+/* System Test / Fake Money firewall — distinct amber-orange, sticky, so plumbing
+   evidence can never be mistaken for paper / testnet / live trading. */
+.banner.systest-firewall { position: sticky; top: 0; z-index: 5; background: rgba(38,24,8,0.92); border: 1px solid rgba(245,158,11,0.45); }
+.banner.systest-firewall .banner-icon { background: rgba(245,158,11,0.14); border: 1px solid rgba(245,158,11,0.45); color: var(--amber); }
+.banner.systest-firewall h4 { color: var(--amber); letter-spacing: 0.08em; }
 .banner.info h4 { color: var(--teal); }
 
 .constraint-notice {

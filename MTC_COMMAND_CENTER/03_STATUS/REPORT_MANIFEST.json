@@ -144,6 +144,72 @@
       "related_task_id": "MCC-BOOT-017",
       "related_case_id": null,
       "summary": "LiveOps dry-run state, safety gates, empty event log, and paper-trade plans normalized into read-only snapshot and CLI liveops-status output with tests."
+    },
+    {
+      "report_id": "RPT-2026-0014",
+      "category": "backtest_morning_reports",
+      "title": "Overnight Multi-Asset Sweep Morning Report (2026-06-30)",
+      "path": "03_QUANTLENS/05_BACKTEST_RESULTS/overnight_multiasset_2026-06-29/MORNING_REPORT.md",
+      "created_at": "2026-06-30T00:00:00+03:00",
+      "created_by": "Claude Opus 4.8",
+      "related_task_id": null,
+      "related_case_id": null,
+      "summary": "7,140 cells (51 sym x 7 TF x 20 strat): PASS 184 / STRONG_PASS 172 / BH-FDR 19 / robust_final 0. No existing strategy robust on any asset class/TF."
+    },
+    {
+      "report_id": "RPT-2026-0015",
+      "category": "backtest_morning_reports",
+      "title": "Turtle Heavy Overnight Morning Report (2026-07-01)",
+      "path": "03_QUANTLENS/05_BACKTEST_RESULTS/turtle_heavy_2026-07-01/MORNING_REPORT.md",
+      "created_at": "2026-07-01T00:00:00+03:00",
+      "created_by": "Claude Opus 4.8",
+      "related_task_id": null,
+      "related_case_id": null,
+      "summary": "GEN_DONCHIAN_TURTLE 357-cell full-universe + deep CPCV/PBO: robust_final 0; structural stop beat base in only 40% of cells - no systematic edge."
+    },
+    {
+      "report_id": "RPT-2026-0016",
+      "category": "backtest_morning_reports",
+      "title": "Overnight Resilient Variants Morning Report (2026-07-02)",
+      "path": "03_QUANTLENS/05_BACKTEST_RESULTS/overnight_resilient_2026-07-02/MORNING_REPORT.md",
+      "created_at": "2026-07-02T00:00:00+03:00",
+      "created_by": "Codex GPT-5",
+      "related_task_id": null,
+      "related_case_id": null,
+      "summary": "Resilient-variant overnight validation run morning report."
+    },
+    {
+      "report_id": "RPT-2026-0017",
+      "category": "backtest_morning_reports",
+      "title": "Overnight Archetypes Morning Report (2026-07-03)",
+      "path": "03_QUANTLENS/05_BACKTEST_RESULTS/overnight_archetypes_2026-07-03/MORNING_REPORT.md",
+      "created_at": "2026-07-03T00:00:00+03:00",
+      "created_by": "Codex GPT-5",
+      "related_task_id": null,
+      "related_case_id": null,
+      "summary": "12 new strategy archetypes overnight sweep + CPCV/PBO validation morning report."
+    },
+    {
+      "report_id": "RPT-2026-0018",
+      "category": "research_reports",
+      "title": "FAZ 3B Stage-1 Exit-Mode Sweep Report (2026-07-05)",
+      "path": "03_QUANTLENS/research/faz3b_stage1_20260705/STAGE1_REPORT.md",
+      "created_at": "2026-07-05T00:00:00+03:00",
+      "created_by": "Claude Fable 5",
+      "related_task_id": null,
+      "related_case_id": null,
+      "summary": "D015 pre-registered Stage-1: H1 confirmed at 1h (KELTNER x trail_ema8 x AAPL STRONG_PASS, union-DSR 0.581), H0 holds at 10m; robust_final 0. Stage-2 needs own pre-registration."
+    },
+    {
+      "report_id": "RPT-2026-0019",
+      "category": "audits",
+      "title": "MTC Command Center Full App Audit (2026-07-05)",
+      "path": "11_TRIAGE/MCC_APP_AUDIT_2026-07-05.md",
+      "created_at": "2026-07-05T00:00:00+03:00",
+      "created_by": "Claude Fable 5",
+      "related_task_id": null,
+      "related_case_id": null,
+      "summary": "Read-only audit: 2 SEV-1 reader bugs (nested-run glob, heartbeat path), stale Home/status/reports, faz3b invisible; propagation matrix + roadmap."
     }
   ]
 }

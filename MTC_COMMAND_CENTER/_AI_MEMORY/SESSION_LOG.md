@@ -1,5 +1,8 @@
 # SESSION_LOG
 
+> **RETIRED 2026-07-05 (Baris decision).** Do not add new entries. `GLOBAL_HANDOFF.md` is the
+> single per-session record (Gate 7 in `AI_RULES.md` updated accordingly). Kept for history.
+
 - 2026-07-04 | Claude Fable 5 | **Faz 3b approved (D013) + self-parity gate LIVE**: Barış signed the exact approval sentence → scope committed (`00_AGENT_PROTOCOLS/FAZ3B_EXIT_SWEEP_SCOPE.md`, `f8e13085`). Built `faz3b_self_parity.py`; captured goldens from the CURRENT engine BEFORE any edit (42 rows: 7 strats × SPY/QQQ/BTCUSD × 1h/4h incl. 6 is_trail rows; mixed FAIL/INSUFFICIENT/PASS/STRONG_PASS) and PROVED determinism (independent re-run = identical sha `be8561ff…`). Implementation handoff written: `11_TRIAGE/FAZ3B_IMPLEMENTATION_PROMPT_2026-07-04.md` (fresh Claude session implements; harness may only gain ALLOWED_NEW_KEYS strip + fixed_2R assert; goldens never recaptured). Companion items 2-4 (micro-price exclusion, research_robust two-tier, single-class subsets) approved in same D013 — implementation rides with the Stage-1 run design. No engine edit yet; no sweep (separately gated).
 
 - 2026-07-04 | Codex GPT-5 | **Impeccable UI Pilot P2 items 4-5 completed**: committed UI-only Strategy Detail cleanup in two commits: `6da2735c` dedups full-credit Gate 1/1B subscore notes while keeping non-full-credit note text; `e819ac02` removes duplicate hero gate KPI panel and main-column Gate Status Summary so the right rail remains the canonical verdict surface. Verified after each commit path: `node --check app.js` PASS, full dashboard API suite `112 tests OK`, live `/dashboard` check on `QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK` confirmed RESEARCH ONLY / UNIVERSE MISMATCH / locked remain visible.

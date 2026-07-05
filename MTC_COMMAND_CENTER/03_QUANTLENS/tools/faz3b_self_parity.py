@@ -65,8 +65,11 @@ VOLATILE_KEYS = {
 
 # Faz 3b (D013): fields the new engine ALWAYS adds. Stripped during
 # canonicalization so fixed_2R output stays byte-identical to the pre-edit
-# golden. This is the ONLY sanctioned harness change; goldens are NOT recaptured.
-ALLOWED_NEW_KEYS = {"exit_mode", "engine_version"}
+# golden. Goldens are NOT recaptured.
+# D015 (Codex Gate-5 edit #4): grid_stride is assert-then-strip — every default
+# row must prove grid_stride == 1 BEFORE the field may be stripped (see
+# extract_rows), so a default-mode trim bug fails the gate instead of hiding.
+ALLOWED_NEW_KEYS = {"exit_mode", "engine_version", "grid_stride"}
 
 
 def pinned_strategies() -> list[str]:
@@ -108,6 +111,14 @@ def extract_rows(results_path: Path) -> list[dict]:
             assert r["exit_mode"] == "fixed_2R", (
                 f"self-parity must run default exit_mode=fixed_2R; "
                 f"got {r['exit_mode']!r} for "
+                f"{r.get('strategy')}|{r.get('symbol')}|{r.get('tf', r.get('timeframe'))}"
+            )
+        # D015 (Codex edit #4): prove full grid BEFORE the field is stripped —
+        # a default-mode bug that silently trims the grid must FAIL the gate.
+        if isinstance(r, dict) and "grid_stride" in r:
+            assert r["grid_stride"] == 1, (
+                f"self-parity must run full grid (grid_stride=1); "
+                f"got {r['grid_stride']!r} for "
                 f"{r.get('strategy')}|{r.get('symbol')}|{r.get('tf', r.get('timeframe'))}"
             )
     rows = [strip_volatile(r) for r in rows if isinstance(r, dict)]
