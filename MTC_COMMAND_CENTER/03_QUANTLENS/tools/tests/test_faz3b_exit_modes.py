@@ -163,6 +163,45 @@ def test_parse_exit_modes_rejects_unknown():
 
 
 # --------------------------------------------------------------------------
+# D015 / Stage-1: MEGA_GRID_STRIDE parser + capped floor-selector
+# --------------------------------------------------------------------------
+def test_parse_grid_stride_default_and_variants():
+    assert mw.parse_grid_stride(None) == 1
+    assert mw.parse_grid_stride("") == 1
+    assert mw.parse_grid_stride("  ") == 1
+    assert mw.parse_grid_stride("1") == 1
+    assert mw.parse_grid_stride("3") == 3
+    with pytest.raises(SystemExit):
+        mw.parse_grid_stride("0")
+    with pytest.raises(SystemExit):
+        mw.parse_grid_stride("-2")
+    with pytest.raises(SystemExit):
+        mw.parse_grid_stride("abc")
+
+
+def test_select_grid_capped_floor_selector():
+    g16 = list(range(16))
+    # stride 1 -> same object (byte-identical default path)
+    assert mw.select_grid(g16, 1) is g16
+    # 16-entry grid at stride 3: naive [::3] gives 6; cap = floor(16/3) = 5
+    assert mw.select_grid(g16, 3) == [0, 3, 6, 9, 12]
+    g8 = list(range(8))
+    assert mw.select_grid(g8, 3) == [0, 3]        # floor(8/3) = 2
+    g75 = list(range(75))
+    assert len(mw.select_grid(g75, 3)) == 25       # divisible: exactly 1/3
+
+
+def test_select_grid_full_library_totals_372_at_stride3():
+    # Pre-reg §3 arithmetic (Codex Gate-5 edit #1): 372 configs, 1116 trials
+    total = sum(len(mw.select_grid(g, 3)) for g in mw.GRIDS.values())
+    assert total == 372
+    assert 3 * total == 1116  # < 1122 full-grid aggregate: strict non-exceedance
+    # per-strategy strict non-exceedance: 3 * floor(n/3) <= n for every grid
+    for name, g in mw.GRIDS.items():
+        assert 3 * len(mw.select_grid(g, 3)) <= len(g), name
+
+
+# --------------------------------------------------------------------------
 # Faz 3b audit nit-1: SHORT-path exits (trail / channel / 3R) were previously
 # unreachable (native trail strategy is long-only); exit_mode makes them live.
 # --------------------------------------------------------------------------

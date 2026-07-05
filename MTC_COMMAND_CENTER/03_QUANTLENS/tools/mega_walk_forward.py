@@ -110,6 +110,37 @@ def parse_exit_modes(raw: str | None) -> list[str]:
             out.append(m)
     return out
 
+
+def parse_grid_stride(raw: str | None) -> int:
+    """Parse env MEGA_GRID_STRIDE -> int stride (D015 / Stage-1 pre-reg).
+
+    None/empty -> 1 (full grid, byte-identical to today). Non-int or < 1 is
+    a hard error.
+    """
+    if raw is None or not str(raw).strip():
+        return 1
+    try:
+        stride = int(str(raw).strip())
+    except ValueError:
+        raise SystemExit(f"MEGA_GRID_STRIDE must be a positive int; got {raw!r}")
+    if stride < 1:
+        raise SystemExit(f"MEGA_GRID_STRIDE must be >= 1; got {stride}")
+    return stride
+
+
+def select_grid(grid: list, stride: int) -> list:
+    """Capped floor-selector (D015 / Codex Gate-5 edit #1).
+
+    stride == 1 -> grid object unchanged (byte-identical default). Otherwise
+    grid[::stride] capped to floor(len(grid)/stride) entries so per-strategy
+    trials never exceed len(grid)/stride (strict non-exceedance; e.g. a
+    16-entry grid at stride 3 yields 5 configs, not the naive 6).
+    """
+    if stride == 1:
+        return grid
+    return grid[::stride][: len(grid) // stride]
+
+
 # AUDIT-009/D005: opening-range strategies need a US-equity session open.
 # Populated by overnight_v2_runner; empty by default so pure-mega runs are unaffected.
 EQUITY_ONLY_STRATEGIES: set = set()
@@ -1166,6 +1197,9 @@ def _worker(job):
     row = _worker_impl(strategy, symbol, tf, exit_mode)
     row["exit_mode"] = exit_mode
     row["engine_version"] = ENGINE_VERSION
+    # D015: stamp the grid stride so strided (Stage-1) rows can never be
+    # silently mixed with full-grid history. Default 1 = full grid.
+    row["grid_stride"] = parse_grid_stride(os.environ.get("MEGA_GRID_STRIDE"))
     return row
 
 
@@ -1200,7 +1234,8 @@ def _worker_impl(strategy, symbol, tf, exit_mode):
             daily_maps = build_daily_rsi(_MANIFEST, symbol)
             _DAILY_CACHE[symbol] = daily_maps
 
-        grid = GRIDS[strategy]
+        # D015: capped floor-selector; stride 1 (default) = full grid unchanged.
+        grid = select_grid(GRIDS[strategy], parse_grid_stride(os.environ.get("MEGA_GRID_STRIDE")))
         # We evaluate each config and store its train-fold mean + lockbox stats
         configs = []
         na_configs = 0  # Faz 3b nit-2: configs skipped due to NA slices
