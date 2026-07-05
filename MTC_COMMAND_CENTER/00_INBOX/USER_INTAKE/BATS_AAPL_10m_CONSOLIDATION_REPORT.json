@@ -1,0 +1,191 @@
+{
+  "instrument": "BATS_AAPL",
+  "timeframe": "10m",
+  "input_file_count": 8,
+  "input_total_rows": 93002,
+  "input_total_unique_timestamps": 20094,
+  "duplicate_rows_removed": 72908,
+  "overlapping_timestamp_count": 18136,
+  "conflicting_ohlc_timestamp_count": 0,
+  "conflict_examples_first_25": [],
+  "conflict_file": null,
+  "consolidation_rule": "One row kept per timestamp. If OHLC conflicts exist, row from the source file with largest row coverage is preferred; ties use input order.",
+  "output_rows": 20094,
+  "output_file": "/mnt/data/BATS_AAPL_10m_CONSOLIDATED_2024-06-03_to_2026-06-26.csv",
+  "output_sha256": "f088f6065b9f3000d5ac3b8eb96c00fc6b6767f1698a2b0704d739dd4033f1e4",
+  "start_utc": "2024-06-03 13:30:00+00:00",
+  "end_utc": "2026-06-26 19:50:00+00:00",
+  "expected_regular_session_bars_xnys": 20094,
+  "missing_regular_session_bars": 0,
+  "missing_intervals_first_100": [],
+  "missing_file": null,
+  "bars_outside_expected_regular_session": 0,
+  "outside_expected_session_examples_first_25": [],
+  "outside_expected_session_file": null,
+  "early_close_days_within_range": [
+    {
+      "date": "2024-07-03",
+      "expected_bars": 21,
+      "open_utc": "2024-07-03 13:30:00+00:00",
+      "close_utc": "2024-07-03 17:00:00+00:00"
+    },
+    {
+      "date": "2024-11-29",
+      "expected_bars": 21,
+      "open_utc": "2024-11-29 14:30:00+00:00",
+      "close_utc": "2024-11-29 18:00:00+00:00"
+    },
+    {
+      "date": "2024-12-24",
+      "expected_bars": 21,
+      "open_utc": "2024-12-24 14:30:00+00:00",
+      "close_utc": "2024-12-24 18:00:00+00:00"
+    },
+    {
+      "date": "2025-07-03",
+      "expected_bars": 21,
+      "open_utc": "2025-07-03 13:30:00+00:00",
+      "close_utc": "2025-07-03 17:00:00+00:00"
+    },
+    {
+      "date": "2025-11-28",
+      "expected_bars": 21,
+      "open_utc": "2025-11-28 14:30:00+00:00",
+      "close_utc": "2025-11-28 18:00:00+00:00"
+    },
+    {
+      "date": "2025-12-24",
+      "expected_bars": 21,
+      "open_utc": "2025-12-24 14:30:00+00:00",
+      "close_utc": "2025-12-24 18:00:00+00:00"
+    }
+  ],
+  "source_contribution_kept_rows": [
+    {
+      "source_file": "BATS_AAPL, 10_d7718.csv",
+      "kept_rows": 20094
+    }
+  ],
+  "file_summaries": [
+    {
+      "file": "BATS_AAPL, 10_53f85.csv",
+      "rows": 2946,
+      "unique_times": 2946,
+      "start_utc": "2026-03-10 16:30:00+00:00",
+      "end_utc": "2026-06-26 19:50:00+00:00",
+      "columns": [
+        "time",
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "duplicate_times_inside_file": 0
+    },
+    {
+      "file": "BATS_AAPL, 10_3e678.csv",
+      "rows": 5204,
+      "unique_times": 5204,
+      "start_utc": "2025-12-12 15:10:00+00:00",
+      "end_utc": "2026-06-26 19:50:00+00:00",
+      "columns": [
+        "time",
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "duplicate_times_inside_file": 0
+    },
+    {
+      "file": "BATS_AAPL, 10_09558.csv",
+      "rows": 7756,
+      "unique_times": 7756,
+      "start_utc": "2025-09-10 14:50:00+00:00",
+      "end_utc": "2026-06-26 19:50:00+00:00",
+      "columns": [
+        "time",
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "duplicate_times_inside_file": 0
+    },
+    {
+      "file": "BATS_AAPL, 10_0046b.csv",
+      "rows": 10360,
+      "unique_times": 10360,
+      "start_utc": "2025-06-03 19:50:00+00:00",
+      "end_utc": "2026-06-26 19:50:00+00:00",
+      "columns": [
+        "time",
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "duplicate_times_inside_file": 0
+    },
+    {
+      "file": "BATS_AAPL, 10_08400.csv",
+      "rows": 12952,
+      "unique_times": 12952,
+      "start_utc": "2025-02-27 17:50:00+00:00",
+      "end_utc": "2026-06-26 19:50:00+00:00",
+      "columns": [
+        "time",
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "duplicate_times_inside_file": 0
+    },
+    {
+      "file": "BATS_AAPL, 10_44b9c.csv",
+      "rows": 15554,
+      "unique_times": 15554,
+      "start_utc": "2024-11-15 20:10:00+00:00",
+      "end_utc": "2026-06-26 19:50:00+00:00",
+      "columns": [
+        "time",
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "duplicate_times_inside_file": 0
+    },
+    {
+      "file": "BATS_AAPL, 10_6f0a2.csv",
+      "rows": 18136,
+      "unique_times": 18136,
+      "start_utc": "2024-08-14 17:50:00+00:00",
+      "end_utc": "2026-06-26 19:50:00+00:00",
+      "columns": [
+        "time",
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "duplicate_times_inside_file": 0
+    },
+    {
+      "file": "BATS_AAPL, 10_d7718.csv",
+      "rows": 20094,
+      "unique_times": 20094,
+      "start_utc": "2024-06-03 13:30:00+00:00",
+      "end_utc": "2026-06-26 19:50:00+00:00",
+      "columns": [
+        "time",
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "duplicate_times_inside_file": 0
+    }
+  ]
+}

@@ -112,6 +112,35 @@ class NightArtifactsReaderTests(unittest.TestCase):
             self.assertEqual(rows[0]["strategy_id"], "QL_DEMO")
             self.assertEqual(rows[0]["metrics"]["net_profit"], 41.2)
 
+    def test_legacy_universe_mismatch_string_is_normalized(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = _make_root(tmp)
+            run = _results_dir(root, "legacy_profile_run")
+            _write_json(
+                run / "backtest_profile_result.json",
+                {
+                    "schema_version": "1.0",
+                    "run_id": "legacy_profile_run",
+                    "results": [
+                        {
+                            "strategy_id": "QL_DEMO",
+                            "profile": "SOURCE_NAKED",
+                            "symbol": "BTCUSDT",
+                            "timeframe": "4h",
+                            "provenance": {
+                                "universe_mismatch": "strategy id implies US equities universe but soak symbol is BTCUSDT"
+                            },
+                        }
+                    ],
+                },
+            )
+            row = build_night_artifacts(root)["profile_results"][0]
+            self.assertIs(row["provenance"]["universe_mismatch"], True)
+            self.assertEqual(
+                row["provenance"]["universe_mismatch_reason"],
+                "strategy id implies US equities universe but soak symbol is BTCUSDT",
+            )
+
     def test_invalid_json_reported_not_crash(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = _make_root(tmp)

@@ -1,0 +1,82 @@
+{
+  "output": "BATS_SPY_10m_CONSOLIDATED_2024-06-03_to_2026-06-26.csv",
+  "output_size_bytes": 1271605,
+  "sha256": "c9fc113b40c4639ac445cc8efa52571e855d9e53613ee9f054ccf0582647530d",
+  "source_files": 8,
+  "input_rows_total": 92892,
+  "unique_rows_written": 20094,
+  "duplicate_rows_removed": 72798,
+  "timestamps_repeated_in_multiple_files": 18166,
+  "conflicting_timestamps": 0,
+  "range_utc_start": "2024-06-03 13:30:00 UTC",
+  "range_utc_end": "2026-06-26 19:50:00 UTC",
+  "expected_10m_bars_xnys": 20094,
+  "missing_expected_bars": 0,
+  "extra_bars_outside_xnys": 0,
+  "file_summaries": [
+    {
+      "file": "BATS_SPY, 10_474cc.csv",
+      "rows": 10398,
+      "min_time": 1748957400,
+      "max_time": 1782503400,
+      "min_utc": "2025-06-03T13:30:00+00:00",
+      "max_utc": "2026-06-26T19:50:00+00:00"
+    },
+    {
+      "file": "BATS_SPY, 10_594c5.csv",
+      "rows": 12972,
+      "min_time": 1740666600,
+      "max_time": 1782503400,
+      "min_utc": "2025-02-27T14:30:00+00:00",
+      "max_utc": "2026-06-26T19:50:00+00:00"
+    },
+    {
+      "file": "BATS_SPY, 10_6024d.csv",
+      "rows": 15566,
+      "min_time": 1731694200,
+      "max_time": 1782503400,
+      "min_utc": "2024-11-15T18:10:00+00:00",
+      "max_utc": "2026-06-26T19:50:00+00:00"
+    },
+    {
+      "file": "BATS_SPY, 10_624c3.csv",
+      "rows": 18166,
+      "min_time": 1723576800,
+      "max_time": 1782503400,
+      "min_utc": "2024-08-13T19:20:00+00:00",
+      "max_utc": "2026-06-26T19:50:00+00:00"
+    },
+    {
+      "file": "BATS_SPY, 10_70bb3.csv",
+      "rows": 7820,
+      "min_time": 1757351400,
+      "max_time": 1782503400,
+      "min_utc": "2025-09-08T17:10:00+00:00",
+      "max_utc": "2026-06-26T19:50:00+00:00"
+    },
+    {
+      "file": "BATS_SPY, 10_99744.csv",
+      "rows": 2638,
+      "min_time": 1774021800,
+      "max_time": 1782503400,
+      "min_utc": "2026-03-20T15:50:00+00:00",
+      "max_utc": "2026-06-26T19:50:00+00:00"
+    },
+    {
+      "file": "BATS_SPY, 10_d73fa.csv",
+      "rows": 5238,
+      "min_time": 1765468800,
+      "max_time": 1782503400,
+      "min_utc": "2025-12-11T16:00:00+00:00",
+      "max_utc": "2026-06-26T19:50:00+00:00"
+    },
+    {
+      "file": "BATS_SPY, 10_e98c7.csv",
+      "rows": 20094,
+      "min_time": 1717421400,
+      "max_time": 1782503400,
+      "min_utc": "2024-06-03T13:30:00+00:00",
+      "max_utc": "2026-06-26T19:50:00+00:00"
+    }
+  ]
+}

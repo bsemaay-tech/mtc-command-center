@@ -962,7 +962,6 @@ function renderIntelligence(c) {
     ${constraintNotice(m)}
     <div class="si-layout">
       <div class="si-main">
-        ${gateSummaryBlock(m)}
         ${overviewSection(m)}
         ${gate1Section(m)}
         ${verdictSection(m)}
@@ -1008,7 +1007,6 @@ function heroVal(g, opts = {}) {
 }
 
 function heroBlock(m) {
-  const paper = m.promotable ? "Ready (review)" : "Locked";
   return `
     <section class="si-hero" id="top">
       <div class="si-hero-top">
@@ -1017,12 +1015,6 @@ function heroBlock(m) {
           <h2 class="si-hero-id">${esc(m.displayName)}</h2>
           <p class="si-hero-thesis">${esc(m.thesis)}</p>
           <p class="si-hero-meta">${esc(m.id)}</p>
-        </div>
-        <div class="si-gate-panel">
-          <div class="si-gate-cell"><span class="lbl">Gate 1 / Intake</span>${heroVal(m.gates.g1)}</div>
-          <div class="si-gate-cell"><span class="lbl">Gate 1B / MTC</span>${heroVal(m.gates.g1b)}</div>
-          <div class="si-gate-cell"><span class="lbl">Gate 2 Evidence</span>${heroVal(m.gates.g2, { score: true })}</div>
-          <div class="si-gate-cell"><span class="lbl">Paper Trading</span><span class="val locked">${esc(paper)}</span></div>
         </div>
       </div>
       <div class="workflow-bar">
@@ -1138,7 +1130,8 @@ function subscoreList(g, m) {
     let cls = "absent", pts = `— / ${mx}`;
     if (s.metric_status === "ABSENT") { cls = "absent"; pts = `n/a / ${mx}`; }
     else if (aw != null) { const r = mx ? aw / mx : 0; cls = r >= 1 ? "full" : r > 0 ? "partial" : "none"; pts = `${aw} / ${mx}`; }
-    return `<div class="subscore"><div><div class="crit">${esc(titleCase(s.criterion))}</div><div class="note">${esc(s.deduction_reason || s.note || "")}</div></div><div class="pts ${cls}">${esc(pts)}</div></div>`;
+    const note = cls === "full" ? "" : (s.deduction_reason || s.note || "");
+    return `<div class="subscore"><div><div class="crit">${esc(titleCase(s.criterion))}</div>${note ? `<div class="note">${esc(note)}</div>` : ""}</div><div class="pts ${cls}">${esc(pts)}</div></div>`;
   }).join("")}</div>`;
 }
 
@@ -1267,6 +1260,8 @@ function evidenceSection(m) {
           ${infoCard("Verification Method", "scorecard_v2 (heuristic gate scoring)")}
         </div>
 
+        ${paramSpecBlock(m)}
+
         <h4 class="section-title" style="margin-top:18px;">Backtest Profiles</h4>
         <div class="table-wrap"><table class="grid-table">
           <thead><tr><th>Profile</th><th>Purpose</th><th>Status</th></tr></thead>
@@ -1290,8 +1285,8 @@ function evidenceSection(m) {
         <h4 class="section-title" style="margin-top:18px;">Case Count Calculator</h4>
         ${emptyState("Parameter space and case-count calculation require run_plan.json — pending / artifact missing.")}
 
-        <h4 class="section-title" style="margin-top:18px;">Parameter Space Preview</h4>
-        ${emptyState("Parameter space not present in read model. " + M.runplan + ".")}`}
+        <h4 class="section-title" style="margin-top:18px;">Planned Run Parameter Space</h4>
+        ${emptyState("A planned-run parameter space needs run_plan.json (" + M.runplan + "). The engine's optimization grid is shown above under 'Optimization Parameter Space'.")}`}
 
         <h4 class="section-title" style="margin-top:18px;">Top Results Preview</h4>
         ${profileMatrix(m, tfs)}
@@ -1326,6 +1321,59 @@ function profileMatrix(m, tfs) {
   </table></div>`;
 }
 
+function paramSpecFor(id) {
+  const byId = (snap().param_specs || {}).by_id || {};
+  return byId[id] || null;
+}
+function paramSpecBlock(m) {
+  const ps = snap().param_specs || {};
+  if (!ps.available) return "";
+  const spec = paramSpecFor(m.id);
+  const head = `<h4 class="section-title" style="margin-top:18px;">Optimization Parameter Space (engine grid)</h4>`;
+  if (!spec) {
+    return `${head}
+      ${emptyState("No engine search grid is mapped to this strategy id. Only strategies defined in mega_walk_forward.GRIDS have a parameter spec in STRATEGY_PARAM_SPECS.json.")}`;
+  }
+  const originBadge = spec.origin === "variant"
+    ? ` ${badge("VARIANT · " + spaced(spec.validation_status || "UNVALIDATED"), "warn")}`
+    : "";
+  const opt = spec.optimizable || {};
+  const optRows = Object.keys(opt).map((k) => {
+    const o = opt[k] || {};
+    const vals = Array.isArray(o.values) ? o.values.join(", ") : "—";
+    return `<tr><td class="mono">${esc(k)}</td><td class="mono">${esc(vals)}</td><td class="num">${esc(o.count)}</td><td>${esc(o.type || "")}</td></tr>`;
+  }).join("");
+  const fixed = (spec.fixed_knobs || []).map((f) =>
+    `<li><span class="chip static">FIXED</span> <span class="mono">${esc(f.name)}</span> = <span class="mono">${esc(String(f.value))}</span>${f.reason ? ` — <span class="summary">${esc(f.reason)}</span>` : ""}</li>`
+  ).join("");
+  const missing = (spec.missing_knobs || []).map((mk) =>
+    `<span class="chip knob" title="${esc(mk.note || "")}">${esc(mk.name)}${mk.phase ? " · " + esc(mk.phase) : ""}</span>`
+  ).join(" ");
+  const em = ps.execution_model || {};
+  const cases = spec.cases_full_universe != null ? Number(spec.cases_full_universe).toLocaleString() : null;
+  const par = spec.mtc_v2_parity || {};
+  const parTone = par.pine_impl_status === "promoted" ? "ok" : (par.pine_impl_status === "review_pine_exists" ? "warn" : "neutral");
+  const parLine = par.status
+    ? `<p class="summary" style="margin-top:8px;margin-bottom:0;">MTC_V2 / Pine parity: ${badge(spaced(par.pine_impl_status || "none"), parTone)} ${esc(spaced(par.status))}${par.pine_ref ? ` — <code>${esc(par.pine_ref)}</code>` : ""}${par.note ? `<br><span class="faint">${esc(par.note)}</span>` : ""}</p>`
+    : "";
+  return `${head.replace("</h4>", originBadge + "</h4>")}
+    <p class="summary" style="margin-top:0;">Source: <code>mega_walk_forward.GRIDS</code> (code = single source of truth). ${esc(spec.grid_rationale || "")}</p>
+    <div class="info-grid">
+      ${infoCard("Grid Size (combos)", spec.grid_size)}
+      ${infoCard("Cases (full universe)", cases, { empty: "universe unknown" })}
+      ${infoCard("Case Formula", spec.cases_formula || "grid_size x cells x rolling_folds", { span2: true })}
+    </div>
+    <div class="table-wrap"><table class="grid-table">
+      <thead><tr><th>Optimized Param</th><th>Values</th><th>Count</th><th>Type</th></tr></thead>
+      <tbody>${optRows || `<tr><td colspan="4">—</td></tr>`}</tbody>
+    </table></div>
+    <h4 class="section-title" style="margin-top:14px;">Hardcoded (fixed — not swept)</h4>
+    ${fixed ? `<ul class="plain-list">${fixed}</ul>` : emptyState("No fixed knobs documented for this strategy.")}
+    <h4 class="section-title" style="margin-top:14px;">Candidate missing knobs (new-logic — approval-gated)</h4>
+    ${missing ? `<div class="chip-row">${missing}</div>` : emptyState("None flagged.")}
+    ${parLine}
+    <p class="summary" style="margin-top:10px;margin-bottom:0;">Global execution model (all strategies, NOT optimized): entry = ${esc(em.entry || "next bar open")}; profit target = ${esc(em.profit_target_R)}R; holding limit = ${esc(em.holding_bar_limit)} bars; cost = ${esc(em.cost_bps)} bps. <em>Any Pine port must replicate these to reproduce results.</em></p>`;
+}
 function explorerPreviewSection(m) {
   const cards = cardsForStrategy(m.id).slice().sort((a, b) => Number((b.gate2 && b.gate2.score) || 0) - Number((a.gate2 && a.gate2.score) || 0));
   const best = cards[0];

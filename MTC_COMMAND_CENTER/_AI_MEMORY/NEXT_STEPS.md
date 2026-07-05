@@ -1,5 +1,78 @@
 # NEXT_STEPS
 
+## 🔶 FAZ 3B — SWEPT EXIT_MODE (approved D013 2026-07-04; gate live; implementation NEXT)
+Scope: `00_AGENT_PROTOCOLS/FAZ3B_EXIT_SWEEP_SCOPE.md`. Self-parity goldens captured pre-edit +
+determinism proven (`faz3b_self_parity.py`, 42 rows, sha `be8561ff…`). Sweep runs separately gated.
+- **[AI: Claude]** implement per `11_TRIAGE/FAZ3B_IMPLEMENTATION_PROMPT_2026-07-04.md` — read that
+  prompt verbatim; `--verify` must PASS before AND after; goldens never recaptured.
+- **[AI: Codex]** adversarial review of the engine diff (Gate 5) after implementation.
+- **[AI: Barış]** approve the diff landing; then separately approve the Stage-1 discovery run design
+  (pre-registered: single-asset-class subset + trimmed grids + `research_robust` tier + micro-price
+  exclusion — the D013 items 2-4 ride in that run design).
+- **[AI: Barış]** 2026-08-01: Gate V5 day-30 review of the SYSTEM_TEST vertical-slice track (CLOSED at
+  V1.1; legs V2-V4 deliberately unopened).
+
+## SYSTEM_TEST_ONLY VERTICAL SLICE - Gate V0 planning approved 2026-07-02
+
+Baris approved Gate V0 planning and selected `STG002 / QL_ALPHA_LINK_8EMA_1H`
+as the benchmark. This is a fake-money systems-plumbing benchmark only:
+SYSTEM_TEST_ONLY / NOT STRATEGY_APPROVED / NO REAL MONEY.
+
+**Next:**
+- ~~**[AI: Codex|Claude]** write a draft implementation plan only for the local
+  core slice: signal emitter, localhost receiver, reconciliation reporter, and
+  induced-failure drills. No code yet.~~ DONE 2026-07-02:
+  `00_AGENT_PROTOCOLS/SYSTEM_TEST_VERTICAL_SLICE_IMPLEMENTATION_PLAN.md`.
+- ~~**[AI: Codex|Claude]** prepare a narrow Fable audit prompt for that
+  implementation plan before any code is approved.~~ DONE 2026-07-02:
+  `11_TRIAGE/FABLE_AUDIT_PROMPT_SYSTEM_TEST_VERTICAL_SLICE_PLAN_2026-07-02.md`.
+- ~~**[AI: Baris]** send the Fable audit prompt to Fable and bring back the
+  report before implementation approval.~~ DONE 2026-07-02: Fable verdict was
+  `SAFE ONLY AFTER PLAN FIXES`; Codex applied the plan-text fixes.
+- ~~**[AI: Baris]** approve or reject the implementation plan.~~ DONE
+  2026-07-02: Baris approved implementation with the exact SYSTEM_TEST_ONLY
+  sentence. Codex implemented V1 local modules/tests only. No replay run,
+  schema files, backtests, servers, broker/exchange/testnet, TradingView,
+  WunderTrading, Pine, parity, `MTC_V2`, `02_MTC_BACKTEST`, or `07_ADAPTERS`
+  work was performed.
+- ~~**[AI: Baris|Codex]** before the first local replay run, resolve the output
+  root guard.~~ DONE 2026-07-02: Baris approved the pre-run readiness patch.
+  `.gitignore` now ignores `MTC_COMMAND_CENTER/03_QUANTLENS/system_test/`,
+  `git check-ignore` confirms `_probe` is ignored, and
+  `run_local_replay(...)` exists as a tested importable entry function. No real
+  STG002 replay run was performed.
+- ~~**[AI: Baris|Codex]** approve/run the separate Step 9.1 replay-run
+  sentence.~~ DONE 2026-07-02: Baris approved exactly one local
+  SYSTEM_TEST_ONLY replay. Codex ran it through `run_local_replay(...)` into
+  `03_QUANTLENS/system_test/stg002_system_test_replay_20260702T171958Z/`.
+  Result: `status=OK`, `EXPECTED=888`, `ENTRY=444`, `EXIT=444`,
+  `RECEIVED accepted=888`, `duplicates=0`, `rejected=0`,
+  `simulated_fills=888`, `round_trips=444`, `unexplained=0`.
+- ~~**[AI: Baris|Codex]** review the completed local run artifacts and decide
+  whether to send a narrow read-only Fable audit prompt for the result.~~ DONE
+  2026-07-02/04: Fable audited run + implementation (PASS), drafted the V1.1
+  LOW-fix dispatch; executor implemented (7-file allowlist); Fable audited the
+  diff and committed. Focused pytest **43 passed**. **Slice V1.1 CLOSED** —
+  clean pause point reached. Remaining slice work only via new gates:
+  V2 (TV alerts) / V3 (Wunder demo) / V4 (testnet), each Baris-approval-gated
+  and deliberately NOT opened (no robust strategy exists to justify them);
+  Gate V5 day-30 review due **2026-08-01**.
+- **[AI: Baris]** separate explicit approval is required before any server,
+  CLI, dashboard execution UI, engine-forward signal generation, schema file,
+  broker, exchange, testnet, TradingView, WunderTrading, Pine, parity,
+  `MTC_V2`, paper trading, or live trading path.
+- **[AI: Baris|Codex] Optional separate approval:** decide whether to add a
+  SUPERSEDED banner to stale STG002 `PROMOTE_TO_*` / forward-paper docs. This
+  is not part of the vertical slice implementation plan.
+
+## 🔷 STRATEGY PARAM-SPEC REGISTRY — Faz 1-4 DONE 2026-07-01 (Claude Opus 4.8) → PR #15 open
+Branch `feature/strategy-param-specs`, pushed, **PR [#15](https://github.com/bsemaay-tech/mtc-command-center/pull/15) open (NOT merged)**. Faz 1: declarative per-strategy param spec (generator code=truth + overlay → `05_REGISTRY/STRATEGY_PARAM_SPECS.json`, 20 strat, 1122 combos, 1,201,662 cases) surfaced in Strategy Detail §4. Faz 2: honest MTC_V2/Pine parity readiness (no 1:1 Pine impl for the 20 generics → `deferred_until_promotion` + `parity_contract` that a Pine port must replicate the global exec model; 2 review-Pine refs marked needs_reconciliation). Faz 3: first missing-knob variant `GEN_DONCHIAN_TURTLE` (Turtle structural stop) via monkey-patch `03_QUANTLENS/tools/variant_missing_knobs.py` (engine untouched), origin=variant/UNVALIDATED, in VARIANT_LOG, smoke OK. Faz 4: runbook §3.5 canonical case-count definition. API 112 passed, renders verified.
+**Next:**
+- **[AI: Barış]** review + merge PR #15.
+- **[AI: Claude, approval-gated] Faz 3b:** TRUE trailing opposite-channel EXIT + short-side need an engine-core `simulate_slice` change (dynamic stop / direction) — affects ALL strategies → explicit approval before touching the shared simulator.
+- ~~validate `GEN_DONCHIAN_TURTLE`~~ **DONE 2026-07-01** (turtle_heavy overnight): 357-cell full-universe + deep CPCV/PBO. **robust_final 0**; structural stop beat base in only 40% of cells (no systematic edge). Confirmed A21 (CPCV/PBO ≠ DSR) at 51×7 scale. Report: `05_BACKTEST_RESULTS/turtle_heavy_2026-07-01/MORNING_REPORT.md`; lessons `OVERNIGHT_LESSONS_2026-07-01.md`. **Do NOT pursue Faz 3b trailing-exit** — the structural-stop result does not motivate the engine-core change.
+- **[AI: Claude] extend variants:** the remaining Faz-3 missing_knobs across the 20 strategies (promote fixed knobs like TRIPLE_EMA 5/13/50, BB mult, 8EMA period; add filters) — each a NEW variant in VARIANT_LOG, not a mutation of the base strategy.
+
 ## ✅ OVERNIGHT MULTI-ASSET SWEEP DONE 2026-06-30 (Claude Opus 4.8) — nothing promotable
 Largest sweep to date: 7,140 cells (51 sym × 7 TF × 20 strat) on `native_multiasset_alpaca_2026-06-28`, 20 workers, one clean ~27-min pass. PASS 184 / STRONG_PASS 172 / BH-FDR 19 / **dsr_robust 2 (tiny-sample) / robust_final 0**. Report: `05_BACKTEST_RESULTS/overnight_multiasset_2026-06-29/MORNING_REPORT.md`. Dashboard shows run COMPLETED. **No existing strategy is robust on any asset class/TF — confirmed at scale.**
 **Next [AI: Barış|Claude]:** the open path is **NEW strategy logic** (the crypto-era library does not transfer; re-sweeping is deterministic and yields identical nulls). If a lead is pursued (e.g. metals/DONCHIAN-intraday showed largest raw returns), require portfolio/CPCV + a pre-registered confirmation grid — expect the same null per prior pooled-DSR test. Results dir `overnight_multiasset_2026-06-29/` (17MB JSON + checkpoint) is local research output — not committed (git-ignored bulk); regenerable.

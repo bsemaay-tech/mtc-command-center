@@ -1,5 +1,415 @@
 # GLOBAL_HANDOFF
 
+## Claude Fable 5 2026-07-05 (2) — Faz 3b nits closed + Stage-1 pre-reg drafted; Codex Gate-5 prompt ready
+
+Continuation of the D014 session, per Barış's "başla ve sırayla yap" instruction:
+
+1. **Nits 1-2 closed, commit `a6342810`** (tests-first): 3 new SHORT-path tests (fixed_3R
+   math, trail next-open on close>ema, channel chan_hi shift(1) bug-case) — engine was
+   already correct, tests are pinning-only. NA guard: `config_has_na()` + `_worker_impl`
+   skip + `SKIPPED_NA_EXIT_MODE` classification. Defensive only — NA unreachable in normal
+   pipeline (`build_signals` line ~339 always adds `ema_8`) and never fires at fixed_2R.
+   Verified: 10/10 tests, self-parity `--verify` PASS byte-identical (sha be8561ff…),
+   py_compile clean. Nit-3 (checkpoint 4-tuple) accepted as cosmetic, no action.
+2. **Stage-1 sweep pre-registration DRAFT:**
+   `00_AGENT_PROTOCOLS/FAZ3B_STAGE1_SWEEP_PREREG_2026-07-05.md`. Core design: US-equities
+   only, SAME 7 symbols as the 6yr Alpaca sweep (comparability), 10m+1h, all 20 strategies,
+   3 NEW modes only (fixed_2R = existing history, not re-run), grid stride-3 via new
+   default-off env `MEGA_GRID_STRIDE` → trials/cell ≈ 1.0× today. research_robust tier only,
+   nothing promotable. H0/H1 + STOP rules pre-registered. **NOT approved — draft.**
+3. **Codex Gate-5 prompt:** `11_TRIAGE/CODEX_GATE5_PROMPT_FAZ3B_STAGE1_2026-07-05.md` —
+   Codex adversarially reviews BOTH the nit-fix diff `a6342810` AND the Stage-1 design
+   (roles reversed: Claude wrote, Codex audits). Report goes to
+   `11_TRIAGE/CODEX_GATE5_REPORT_FAZ3B_STAGE1_2026-07-05.md`.
+
+**NEXT (order):** Barış runs Codex with that prompt → Codex report → Barış written approval
+sentence (→ D015) → only THEN: implement `MEGA_GRID_STRIDE` (self-parity must stay green),
+smoke test 1 cell, full 840-job run under supervisor/watchdog.
+
+## Claude Fable 5 2026-07-05 — Faz 3b diff AUDITED + APPROVED by Barış (D014); engine landed, sweep still gated
+
+Adversarial Gate-5 audit of the Opus engine commit `cb8bf5a3` completed — never trusted the report,
+re-verified everything myself. Verdict: **PASS WITH NITS**; Barış approved ("onaylıyorum") → recorded
+as **D014**.
+
+Evidence chain:
+- Scope clean: commit touches only `mega_walk_forward.py` (simulate_slice + exit_mode plumbing),
+  `faz3b_self_parity.py` (ONLY the sanctioned `ALLOWED_NEW_KEYS` strip + fixed_2R assert), and new
+  `tests/test_faz3b_exit_modes.py`. No GRIDS content, no gate/threshold, no Pine/parity/MTC_V2/
+  `02_MTC_BACKTEST`/`07_ADAPTERS`/`06_SCHEMAS`. `exit_mode` swept via env `MEGA_EXIT_MODES` only;
+  default = `[fixed_2R]` so trial counts + DSR unchanged.
+- Goldens NOT recaptured: `golden_cells.json` git history = single capture commit `75da649c`.
+- Re-ran `faz3b_self_parity.py --verify` myself: **PASS — 42 rows byte-identical, sha256 be8561ff…**
+- `pytest tests/test_faz3b_exit_modes.py`: 6/6 green (tests are substantive: 2R/3R math, trail
+  next-open fill, NA-skip without ema_8, channel shift(1) no-lookahead bug-case, parser).
+- `py_compile` clean.
+
+**Three NITS — must be addressed in Stage-1 sweep pre-registration, do NOT block the diff:**
+1. Short-path trail/channel branches (`cl>em`, `cl>chan_hi`) newly reachable but untested — validate
+   before any trail/channel sweep touching shorts.
+2. NA sentinel (`num_trades=-1`) correct at slice level but NOT wired through `_worker_impl` fold
+   aggregation (`mean_train_ret` treats NA as 0.0) — trail_ema8 on ema_8-less strategies could emit a
+   misleading row instead of clean skip.
+3. Checkpoint key now 4-tuple — pre-Faz3b checkpoints will key-mismatch and re-run jobs (wasteful,
+   not wrong).
+
+**NEXT: Stage-1 sweep remains a SEPARATE written gate** (D013 items 2-4: single-asset-class subset,
+trimmed grids elsewhere, `research_robust` tier, micro-price exclusion). Whoever designs it must
+pre-register the grid in writing AND close nits 1-2 first. Also still pending: Gate V5 review
+(2026-08-01), PR #15 merge-or-split (Barış call).
+
+## Claude Fable 5 2026-07-04 — Faz 3b APPROVED (D013): scope + self-parity gate shipped; implementation handed off
+
+Methodology-pivot decision closed with Barış: **Faz 3b swept `exit_mode` in `simulate_slice` approved**
+(exact sentence in D013) + companion package (micro-price exclusion from pooled leaderboards;
+two-tier `research_robust` MIN_TRADES≥30 ∧ DSR≥0.50 vs unchanged promotable `robust_final`;
+single-asset-class Stage-1 subsets). Authorizes implementation + self-parity regression ONLY —
+**every sweep run remains separately approval-gated.**
+
+Shipped this session: scope contract `00_AGENT_PROTOCOLS/FAZ3B_EXIT_SWEEP_SCOPE.md` (`f8e13085`);
+regression gate `03_QUANTLENS/tools/faz3b_self_parity.py` + goldens
+`tools/tests/goldens/faz3b/golden_cells.json` captured from the PRE-EDIT engine (42 rows, 7 strategies
+× SPY/QQQ/BTCUSD × 1h/4h, 6 `is_trail` rows, sha `be8561ff…`) with determinism PROVEN (second
+independent run → identical sha, so post-edit FAILs are real, never noise). Implementation handoff for a
+fresh Claude session: `11_TRIAGE/FAZ3B_IMPLEMENTATION_PROMPT_2026-07-04.md` — key rules: `exit_mode`
+NOT in GRIDS (env `MEGA_EXIT_MODES`, default `fixed_2R` = byte-identical); `trail_ema8` absorbs the
+`is_trail` special case; harness may ONLY gain `ALLOWED_NEW_KEYS={"exit_mode","engine_version"}`
+stripping + a fixed_2R assertion; **goldens must never be recaptured**. After implementation: Codex
+adversarial review → Barış diff approval → separate written approval for the Stage-1 discovery run
+(pre-registered design: single-asset-class subset, trimmed grids, research tier).
+
+Also this session: combined audit of the Codex housekeeping batch (H1/T1/T2/T3) = PASS ×3 + PASS WITH
+NITS (T3: `gateSummaryBlock` likely dead code; hero paper-cell removal worth one Barış glance). 112 API
+tests re-run independently OK; POST 405 + read-only + badges verified live; orphaned memory notes
+committed (`529caa3d`). 06-28 debt fully cleared; working tree clean of modified tracked files.
+
+## Codex GPT-5 2026-07-04 - Impeccable UI Pilot P2 cleanup completed
+
+Closed NEXT_STEPS "IMPECCABLE UI PILOT" P2 items 4 and 5 with UI-only edits to
+`08_DASHBOARD_APP/apps/web/app.js`. Commit `6da2735c` suppresses repeated
+full-credit Gate 1 / Gate 1B subscore note text while preserving notes on
+non-full-credit rows. Commit `e819ac02` removes duplicate gate verdict surfaces
+from the hero KPI strip and the main-column Gate Status Summary; the persistent
+right rail remains the canonical verdict/status surface. No API shape, data
+contract, registry, scorecard semantics, wording implying execution, Pine,
+parity, MTC_V2, `02_MTC_BACKTEST`, or `07_ADAPTERS` change. Verification after
+each item: `node --check app.js` PASS, full dashboard API unittest suite PASS
+(`112 tests`), and live `/dashboard` check for
+`QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK` confirmed RESEARCH ONLY,
+UNIVERSE MISMATCH, and locked states remain visible.
+
+## Codex GPT-5 2026-07-04 - Artifact universe-mismatch normalization committed
+
+Closed the test half of the 2026-06-28 artifact-contract follow-up. Commit
+`f9d6c8db` records the four-file normalization patch: new profile-result artifacts
+emit `provenance.universe_mismatch` as a strict boolean, reason text lives in
+`provenance.universe_mismatch_reason`, and legacy artifacts that stored the flag
+as a string are normalized at read time by the dashboard API reader without
+rewriting source artifacts on disk. Verification before commit: full dashboard API
+suite from `MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/api` passed (`112 tests`);
+`py_compile` passed for `build_profile_result_artifact.py` and
+`night_artifacts_reader.py`. No schema file, existing artifact, frontend,
+Pine/parity/MTC_V2, `02_MTC_BACKTEST`, or `07_ADAPTERS` path was changed; the
+read-only dashboard contract remains unchanged, with POST expected to stay 405.
+Fable audit remains the next closeout step after this commit.
+
+## Claude Fable 5 2026-07-04 — V1.1 LOW-fix batch audited + committed (SYSTEM_TEST_ONLY slice)
+
+Closed the 4 LOW findings from the Fable V1 slice audit. Executor implemented per the exact Fable
+dispatch (7-file allowlist); Fable audited the real diff (never trusted the report) and committed.
+Fixes: (1) `expected_signals.jsonl` now redacts `auth_token` (in-memory payloads keep the real token
+for receiver validation); (2) `run_local_replay()` rejects in-repo output dirs outside
+`03_QUANTLENS/system_test/` (temp dirs outside repo still allowed); (3) receiver registers
+idempotency keys only on `accepted` ENTRY/EXIT (rejected payloads no longer burn their key);
+(4) reconciler adds `explained_rejections` — `received_not_expected` computed from accepted rows
+only, accepted-unknown still HALTs. Verification: focused pytest **43 passed** (was 37; +6 tests,
+1:1 with dispatch cases), py_compile PASS, protected scopes clean, no new files.
+SYSTEM_TEST_ONLY / NOT STRATEGY_APPROVED / NO REAL MONEY — nothing here is strategy or live evidence.
+**Slice V1.1 CLOSED.** Extension legs (V2 TV alerts / V3 Wunder demo / V4 testnet) remain
+approval-gated and deliberately unopened; Gate V5 day-30 review due 2026-08-01. Delegation note:
+Cline was blocked (`--auto-approve false`) and DeepSeek failed this package twice before — Codex
+executed, Fable audited (documented exception to cheap-model-first).
+
+## Claude Opus 4.8 2026-07-04 — 12 NEW archetypes → 0 robust → METHODOLOGICAL CEILING (pivot)
+
+Designed + implemented + validated **12 genuinely-new strategy archetypes** using signal sources the
+existing (non-robust) families never touched: volume (breakout-confirm, climax, dry-up, relvol,
+range-expansion), session gaps (go/fade), volatility-regime switching, true per-session volume-weighted
+VWAP, inside-bar, high-proximity. All lookahead-safe + contract-compatible, real-data smoke OK. Ran
+overnight (`overnight_archetypes_resilient_2026-07-03.ps1`, 20 workers, 6 folds, resilient) 18:27→18:48
+(~21 min) + deep CPCV/PBO. **4284 cells, robust_final 0.**
+
+**Key finding (pivot):** after 4 nights we have validated the complete existing library (51 archetypes)
+AND 12 brand-new ones — **63 archetypes, 0 robust on any asset/TF.** New logic + new signals still return
+0 ⇒ the ceiling is **methodological, not strategy selection.** The gates never align: a few archetypes hit
+DSR ≥0.95 but only on INSUFFICIENT_TRADES cells (small-sample lottery); where trades suffice, DSR
+collapses. Structural causes: (1) DSR trial-count deflation (A17) makes any grid ≥~15 nodes nearly
+impossible; (2) the fixed exit (2R/96-bar/next-open, optimized by nothing) is the likely binding
+constraint; (3) micro-price crypto compounding artifacts pollute pooling; (4) 51-symbol multi-asset
+pooling dilutes edge.
+
+**Recommendation (STOP adding strategies; fix methodology) [AI: Barış decision + Claude]:** (1)
+exclude/winsorize micro-price crypto; (2) hard MIN_TRADES floor + research-robust DSR bar (≥0.50 per rules,
+not 0.95); (3) **make the exit a swept knob (2R/3R/trailing/opposite-channel) — engine-core simulate_slice
+change = Faz 3b, approval-gated, highest leverage**; (4) single-asset-class subsets instead of pooling.
+
+Resilience (per-stage retry + PID lockfile + external watchdog) held a 2nd night — clean, no death.
+Close done: MORNING_REPORT + `OVERNIGHT_LESSONS_2026-07-03.md` + INDEX. 12 archetypes in VARIANT_LOG
+(UNVALIDATED). Runners on `feature/strategy-param-specs` (PR #15). Nothing promoted/fabricated.
+
+## Claude Opus 4.8 2026-07-03 — Resilient overnight close: full executable universe = 0 robust
+
+Two runs on 2026-07-02. The **18:30 scheduled run DIED mid-Stage-A (~19:00) with no crash-restart** →
+machine idle ~2h (caught at 21:00). The **21:00 resilient run** (20 workers = cpu_count) fixed it:
+per-stage retry + a PID **lockfile** (single-instance) + an external **watchdog Task** (relaunch only
+if the lock PID is dead) + reboot hook. Ran 21:03→22:44 (~1h42m), zero crashes, watchdog logged
+"nothing to do" all night, machine released. During setup the watchdog's CommandLine matching flaked and
+false-launched a 2nd orchestrator → caught it, added the lockfile, cleaned the checkpoint, relaunched one
+clean instance. → new anti-patterns **A25** (unattended runs need crash-restart + external watchdog) and
+**A26** (PID-lockfile liveness, not CommandLine matching).
+
+**Result: robust_final = 0 across the ENTIRE executable universe.** Queue (all genuinely-new): STG001
+(ADA two-candle ±2 confirm) + STG002 (LINK 8ema tuned) = 714 cells, 0 robust; 8-variant family = 2856
+cells, 0 robust; the 23 v2 strategies swept on multiasset **for the first time** = 8211 cells, 0 robust;
++ deep CPCV/PBO. **11,781 new cells.** Combined with mega's 20, the **complete executable library (~51
+archetypes) is non-robust on this universe.** Every huge return is a **micro-price crypto compounding
+artifact** (SHIBUSD +12153%/+7875%, DOGEUSD, UNIUSD; dsr≈0) — C8 at scale; recommend excluding/capping
+micro-price assets so leaderboards are readable.
+
+Close done: MORNING_REPORT (`overnight_resilient_2026-07-02/`), lessons `OVERNIGHT_LESSONS_2026-07-02.md`
++ INDEX, runbook §8 A25/A26 + CHANGELOG. Nothing promoted; nothing fabricated. Runners + watchdog +
+variants on `feature/strategy-param-specs` (PR #15). **Path forward (honest): genuinely-new strategy
+LOGIC / new archetypes via STRATEGY_RESEARCH_WORKFLOW — the existing families (breakout/EMA/RSI/MACD/VCP/
+AVWAP/QTrend/open-range) are conclusively non-robust; more variants/grids on them will not help.**
+
+## Codex GPT-5 2026-07-02 - STG002 SYSTEM_TEST_ONLY local replay run completed
+
+Baris approved the exact Step 9.1 sentence for one local replay run:
+
+`I approve one local SYSTEM_TEST_ONLY replay run for STG002. No broker, no TradingView, no WunderTrading, no testnet, no real money.`
+
+Codex ran exactly one local replay through the approved importable entry
+function `run_local_replay(...)`.
+
+Runtime output:
+
+- `MTC_COMMAND_CENTER/03_QUANTLENS/system_test/stg002_system_test_replay_20260702T171958Z/`
+
+Run artifacts present:
+
+- `emitter_manifest.json`
+- `expected_signals.jsonl`
+- `received_signals.jsonl`
+- `simulated_fills.jsonl`
+- `reconciliation_summary.json`
+- `reconciliation_report.md`
+
+Result:
+
+- Status: `OK`
+- EXPECTED payloads: `888`
+- EXPECTED ENTRY/EXIT: `444` / `444`
+- RECEIVED rows: `888`
+- RECEIVED dispositions: `accepted=888`, `duplicates=0`, `rejected=0`
+- Simulated fills: `888`
+- Simulated round trips: `444`
+- Unexplained count: `0`
+
+Verification:
+
+- Step 0 preflight passed: protected-path status clean, STG002 source artifacts
+  exist, pytest available, and `system_test/` ignored by `.gitignore`.
+- `python -m py_compile` on all vertical-slice implementation modules -> PASS.
+- `python -m pytest ...test_vertical_slice_*.py -q` -> `37 passed`.
+- `python -m unittest discover -s MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests -p "test_vertical_slice_*.py"` -> `Ran 37 tests ... OK`.
+- Independent JSONL count check confirmed `ENTRY=444`, `EXIT=444`,
+  `accepted=888`, `round_trips=444`, and `unexplained_count=0`.
+- `git check-ignore -v` confirms the runtime output is ignored.
+- Run-id search found no trace under `03_QUANTLENS/research/` or
+  `03_QUANTLENS/05_BACKTEST_RESULTS/`.
+- Protected-path status for `06_SCHEMAS`, `01_PINE`, `02_MTC_BACKTEST`, and
+  `07_ADAPTERS` -> no output.
+
+Boundary: this is SYSTEM_TEST_ONLY / NOT STRATEGY_APPROVED / NO REAL MONEY.
+No schema file, broker, exchange, testnet, TradingView, WunderTrading, Pine,
+parity, `MTC_V2`, strategy approval, paper-trading approval, or live-trading
+approval was touched. Stop here before extension legs.
+
+Recommended next action: review the completed run artifacts and, if desired,
+send a narrow read-only Fable audit prompt for this run result before any V1.1
+server, CLI, dashboard, TradingView, WunderTrading, testnet, schema, parity, or
+engine-forward extension is planned.
+
+## Codex GPT-5 2026-07-02 - SYSTEM_TEST_ONLY pre-run readiness patch
+
+Baris approved the narrow pre-run readiness patch. Changes:
+
+- `.gitignore` now ignores `MTC_COMMAND_CENTER/03_QUANTLENS/system_test/`.
+- `03_QUANTLENS/tools/vertical_slice/stg002_replay_emitter.py` now exposes
+  `run_local_replay(...)`, an importable local entry function that writes the
+  five local ledgers/reports into an explicit output directory.
+- `03_QUANTLENS/tools/tests/test_vertical_slice_replay.py` now covers the entry
+  function using synthetic temp CSVs only.
+
+No real STG002 replay run was performed. The tests exercised only temporary
+synthetic CSVs and temp output directories. No runtime output was written under
+`03_QUANTLENS/system_test/`. No schema file, broker, exchange, testnet,
+TradingView, WunderTrading, Pine, parity, `MTC_V2`, or real-money path was
+touched.
+
+Verification:
+
+- TDD RED: focused replay test failed because `run_local_replay` did not exist.
+- `python -m pytest ...test_vertical_slice_replay.py -q` -> `6 passed`.
+- `python -m pytest ...test_vertical_slice_*.py -q` -> `37 passed`.
+- `python -m unittest discover -s MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests -p "test_vertical_slice_*.py"` -> `Ran 37 tests ... OK`.
+- `python -m py_compile` on all vertical-slice implementation modules -> PASS.
+- `git check-ignore -v MTC_COMMAND_CENTER\03_QUANTLENS\system_test\_probe`
+  now resolves through `.gitignore`.
+- Protected-path status for `06_SCHEMAS`, `01_PINE`, `02_MTC_BACKTEST`,
+  `07_ADAPTERS`, and `03_QUANTLENS/system_test` -> no output.
+
+Next gate: Baris may now approve or reject the separate Step 9.1 local replay
+run. That run remains SYSTEM_TEST_ONLY / NOT STRATEGY_APPROVED / NO REAL MONEY.
+
+## Codex GPT-5 2026-07-02 - STG002 SYSTEM_TEST_ONLY vertical slice implemented, no replay run
+
+Baris approved the exact implementation sentence for the STG002
+SYSTEM_TEST_ONLY local vertical slice. Implemented V1 only: constants,
+in-code contract validation, trades-driven replay emitter, pure local receiver,
+three-ledger reconciler, and focused tests.
+
+Files added:
+
+- `03_QUANTLENS/tools/vertical_slice/__init__.py`
+- `03_QUANTLENS/tools/vertical_slice/constants.py`
+- `03_QUANTLENS/tools/vertical_slice/contracts.py`
+- `03_QUANTLENS/tools/vertical_slice/stg002_replay_emitter.py`
+- `03_QUANTLENS/tools/vertical_slice/local_receiver.py`
+- `03_QUANTLENS/tools/vertical_slice/reconciler.py`
+- `03_QUANTLENS/tools/tests/test_vertical_slice_contracts.py`
+- `03_QUANTLENS/tools/tests/test_vertical_slice_replay.py`
+- `03_QUANTLENS/tools/tests/test_vertical_slice_receiver.py`
+- `03_QUANTLENS/tools/tests/test_vertical_slice_reconciler.py`
+
+Implementation notes: Cline was attempted first with the repo-required
+`--auto-approve false` setting and returned `BLOCKED_BY_AUTO_APPROVE`; no Cline
+writes occurred. `_deepseek_driver` was attempted next with an allowlist but
+hit `max_iters` and wrote only invalid inline-copy tests. Codex replaced those
+with real import-based tests, verified the RED missing-module failure, then
+implemented the package manually.
+
+Verification:
+
+- RED check before implementation: focused pytest failed only because
+  `vertical_slice` modules did not exist.
+- `python -m pytest ...test_vertical_slice_*.py -q` -> `36 passed`.
+- `python -m unittest discover -s MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests -p "test_vertical_slice_*.py"` -> `Ran 36 tests ... OK`.
+- `python -m py_compile` on all five implementation modules -> PASS.
+- `git diff --check` on the new slice files/tests -> PASS.
+- Protected-path status for `06_SCHEMAS`, `01_PINE`, `02_MTC_BACKTEST`, and
+  `07_ADAPTERS` -> no output.
+- Safety grep found no network/broker/exchange API imports. The only
+  `system_test` hits are the intended `system_test_replay` risk label.
+
+No local replay run was performed. No files were written under
+`03_QUANTLENS/system_test/`, `03_QUANTLENS/research/`, or
+`03_QUANTLENS/05_BACKTEST_RESULTS/`. No schema file, broker, exchange, testnet,
+TradingView, WunderTrading, Pine, parity, `MTC_V2`, or live/paper-money path was
+touched.
+
+Important next gate: `git check-ignore` currently reports
+`MTC_COMMAND_CENTER/03_QUANTLENS/system_test/_probe` as `not ignored`. Before
+the separately approved first local replay run, Baris must approve adding or
+confirming the ignore rule, then separately approve the Step 9.1 run sentence.
+
+## Codex GPT-5 2026-07-02 - Vertical slice plan and Fable audit prompt drafted
+
+Drafted the next-stage docs for the approved STG002 SYSTEM_TEST_ONLY benchmark:
+`00_AGENT_PROTOCOLS/SYSTEM_TEST_VERTICAL_SLICE_IMPLEMENTATION_PLAN.md` and
+`11_TRIAGE/FABLE_AUDIT_PROMPT_SYSTEM_TEST_VERTICAL_SLICE_PLAN_2026-07-02.md`.
+
+Plan choice: replay-first using existing STG002 signal/trade CSV artifacts, then
+local receiver, fake fills, reconciliation, and D1-D5 drills. This avoids
+engine-forward generation, broker/testnet/network paths, Pine, parity, and
+schema writes in the first implementation. Implementation is still blocked
+until Baris gives a separate explicit approval. Next step: give the Fable audit
+prompt to Fable, then revise the plan if Fable finds blockers.
+
+Fable audit returned `SAFE ONLY AFTER PLAN FIXES`. Codex patched the plan text:
+trades-driven emission from `trades.csv` only, `signals.csv` only for the
+entry-while-open drill, output root moved from `03_QUANTLENS/research/` to
+`03_QUANTLENS/system_test/`, manifest labeling required before payload rows,
+timestamp canonicalization tests added, pytest preflight/unittest fallback
+added, D8-D10 local drills added, no default auth token allowed, and V1 scope
+cut to exclude CLI, standalone drill generator, and separate fill simulator.
+Implementation remains blocked until Baris gives the separate implementation
+approval sentence from the fixed plan.
+
+## Codex GPT-5 2026-07-02 - STG002 SYSTEM_TEST_ONLY benchmark approved
+
+Baris approved Gate V0 for SYSTEM_TEST_ONLY vertical-slice planning, then
+approved `STG002 / QL_ALPHA_LINK_8EMA_1H` as the benchmark. This is only a
+systems-plumbing benchmark decision. It is not strategy approval, paper
+approval, live approval, promotion evidence, or profitability evidence.
+
+Read-only benchmark audit basis: STG002 has 444 full-history trade rows versus
+235 for STG001, 121 lockbox trades versus 53, 5/5 positive windows versus 4/5,
+and an existing PineTS producer-parity result showing 100 percent signal
+agreement on the compared sample. STG001 remains a simpler fallback but has
+weaker parity evidence and fewer lifecycle events.
+
+Current route: Python remains the source of truth. The next safe step is a
+draft implementation plan only for a localhost/fake-money vertical slice:
+emitter, local receiver, reconciliation reporter, and induced-failure drills.
+Do not write code, schemas, run tests/backtests, launch servers, touch Pine,
+parity, `MTC_V2`, `02_MTC_BACKTEST`, `07_ADAPTERS`, broker/exchange/testnet,
+TradingView, or WunderTrading without a separate explicit approval.
+
+## Claude Opus 4.8 2026-07-02 — Overnight turtle_heavy close: A22 done RIGHT, nothing promotable
+
+Same 14h "work till morning, don't waste it" prompt that caused the 06-29 idle-waste. This time A22
+was applied correctly: recognized re-running the base sweep = deterministic = zero-info and refused it;
+ran genuinely-NEW work — full-universe validation of the Faz-3 `GEN_DONCHIAN_TURTLE` variant + the first
+deep 45-split CPCV/PBO on the 06-29 survivors. Orchestrator (`overnight_turtle_heavy_2026-07-01.ps1`,
+16 workers, keep-awake, reboot-resume, deadline 08:30) ran **18:45→19:16 (~31 min), 5 stages, zero
+crashes, then RELEASED the machine** (not idled to 08:30). Auto close-watcher wrote MORNING_REPORT at
+completion (scheduling backend was 404).
+
+**Result: robust_final = 0 everywhere. Nothing promotable.** TURTLE 357 cells → 36 PASS/STRONG, 5 BH-FDR
+survivors, 0 robust. The Turtle STRUCTURAL stop beat the base GEN_DONCHIAN_BREAKOUT in only 40% of 315
+comparable cells (no systematic edge). Heavy tier: deep CPCV pass_rate≥0.80 on 156 base + 24 turtle
+cells, PBO≈0 — **yet 0 robust_final**, a fresh at-scale confirmation of **A21** (CPCV/PBO ≠ DSR; DSR is
+the binding gate, A17). Two pre-launch footguns caught + fixed → new anti-pattern **A23** (mega's sweep
+universe is hardcoded LEGACY 17-crypto×5-TF; MEGA_BUNDLE_MANIFEST only binds DATA — runner must override
+mw.SYMBOLS/TIMEFRAMES from the manifest + `__main__`-guard for Windows-spawn workers).
+
+Close done: MORNING_REPORT (`05_BACKTEST_RESULTS/turtle_heavy_2026-07-01/`), lessons
+`OVERNIGHT_LESSONS_2026-07-01.md` + INDEX, runbook §8 A23 + CHANGELOG. Dashboard: run left as research
+output, NOT promoted (0 robust; no profile_result/top_results fabricated). Runners committed on
+`feature/strategy-param-specs` (PR #15). **Path forward: NEW strategy logic with real edge — the
+breakout family (base + Turtle-stop variant) is confirmed non-robust; Faz 3b trailing-exit not
+motivated by this result.**
+
+## Claude Opus 4.8 2026-07-01 — Strategy param-spec registry (Faz 1, read-only) — branch not merged
+
+Barış asked how optimization params are chosen, where, and whether AI_MEMORY documents the case-count arithmetic uniformly. Findings surfaced a real gap: the search grid for each strategy is **hardcoded, arbitrary, undocumented, invisible** (buried in `mega_walk_forward.GRIDS` + `build_signals`), the `case = grids × symbols × TFs × folds` formula is written nowhere canonical, and "case" is used loosely (cells vs combos vs evals). Many knobs are **hardcoded, not swept** (DONCHIAN ATR=14, no opposite-channel exit, long-only; TRIPLE_EMA's 5/13/50 stack fully fixed) + a global execution model (2R target, 96-bar hold limit, 8bps cost, next-open entry) applies to all and is optimized by none.
+
+Approved architecture: declarative per-strategy param-spec — code stays source of truth for grids; curated overlay adds fixed-knob rationale + Faz-3 missing-knob candidates; dashboard surfaces it. Boundary: changing a grid **value** = optimization; adding a **rule** = new logic = new strategy (approval-gated, Faz 3). Taught DSR (trial-count deflation → wider grid worsens DSR, A17) + two-stage (broad discovery → narrow pre-registered confirmation).
+
+**Faz 1 DONE — branch `feature/strategy-param-specs`, 3 commits, NOT merged/pushed:**
+- `03_QUANTLENS/tools/build_strategy_param_specs.py` — introspects `GRIDS` + exec constants (code=truth), merges overlay, emits registry. Read-only, re-runnable.
+- `05_REGISTRY/STRATEGY_PARAM_SPEC_ANNOTATIONS.json` — hand-authored fixed-knob rationale + missing-knob candidates, all 20 strategies.
+- `05_REGISTRY/STRATEGY_PARAM_SPECS.json` — generated: 20 strat, sum_grid 1122, 357 cells × 3 folds = **1,201,662 cases** (the "~1M").
+- Dashboard: `param_specs_reader.build_param_specs()` → snapshot key `param_specs`; Strategy Detail §4 renders optimizable table + case count + fixed/missing knobs + exec model. +4 tests, **API 112 passed**, `node --check` OK, live render verified (8EMA: grid 75, 80,325 cases, ema_period=8 fixed), no console errors.
+- No engine/data/Pine/MTC_V2/parity touched.
+
+**Faz 2/3/4 also DONE (same branch, pushed → PR [#15](https://github.com/bsemaay-tech/mtc-command-center/pull/15)):**
+- **Faz 2** (parity, read-only): honest finding — the 20 generic engine strategies have NO 1:1 Pine impl, so no fabricated param→input map. Generator emits per-strategy `mtc_v2_parity` (default `deferred_until_promotion`) + a top-level `parity_contract` (any Pine port must ALSO replicate the global exec model, not just swept params). The 2 with a standalone review Pine (TWO_CANDLE→STG001, 8EMA→STG002) marked `review_pine_exists / needs_reconciliation` with the real .pine ref. §4 shows a Pine-parity line. Pine READ only, never edited.
+- **Faz 3** (new-logic, monkey-patch, UNVALIDATED): first variant `GEN_DONCHIAN_TURTLE` via `03_QUANTLENS/tools/variant_missing_knobs.py` (engine NOT modified) — DONCHIAN's missing Turtle STRUCTURAL stop (opposite `exit_channel_len` channel; new knob; grid 24). Honest contract limit: a TRUE trailing opposite-channel EXIT needs an engine-core `simulate_slice` change = **Faz 3b (approval-gated, NOT done)**. Registered in `VARIANT_LOG_REGISTRY.json` (promotable:false); registry `--with-variants` tags origin=variant/UNVALIDATED; §4 shows a VARIANT badge. Smoke OK; NO validation run (two-stage validation is the scoped next step).
+- **Faz 4** (doc): runbook §3.5 now defines the canonical case-count arithmetic (`cases = Σgrid × cells × folds`), the cell/combo/case/iter terms, and the two-runner difference — the previously-undocumented gap.
+- Verified throughout: API **112 passed**, `node --check` OK, live render verified (core clean, no variant leak). Nothing promotable; nothing merged (PR open for review).
+
 ## Claude Opus 4.8 2026-06-30 — Overnight multi-asset sweep (7,140 cells) + morning close — NOTHING PROMOTABLE
 
 Barış requested a ~14h overnight backtest+optimization (~1M cases, max workers, crash/power-resilient). Launched detached: `mega_walk_forward.py`, **20 workers**, bundle `native_multiasset_alpaca_2026-06-28`, **all 51 symbols × 7 TFs × 20 strategies = 7,140 cells, ~399,840 configs**. Output: `05_BACKTEST_RESULTS/overnight_multiasset_2026-06-29/`.
