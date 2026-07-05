@@ -1,5 +1,29 @@
 # GLOBAL_HANDOFF
 
+## Claude Opus 4.8 2026-07-05 (6) — audit cleanup (4 remaining items) done + pushed to origin/master
+
+Barış: "kalan küçük işleri yap push et". Closed the four leftover audit follow-ups on branch
+`feature/mcc-audit-cleanup`, merged to master, pushed origin.
+
+1. **CURRENT_STATUS auto-derive** — new `03_QUANTLENS/tools/derive_current_status.py` regenerates
+   `03_STATUS/CURRENT_STATUS.json` from GLOBAL_HANDOFF newest `## ` section (phase+summary) + first
+   open NEXT_STEPS bullet (next_action); safety fields (read_only, live_trading=false) hardcoded.
+   dry-run default / `--apply` / `--check` (exits 1 on drift). Applied — Home Status date now current.
+2. **VARIANT_LOG validator 39→0** — added `research_run_id` to all 19 variants (derived from real
+   `impl`+`created_utc`: 12 archetypes→overnight_archetypes_2026-07-03, turtle→turtle_heavy_2026-07-01,
+   6 missing-knobs→overnight_full_2026-07-02), registered those 3 runs in RESEARCH_RUN_REGISTRY
+   (now 4 total), dropped schema-invalid top-level `note`. `validate_research_registries.py` PASS.
+3. **mcc_night_tail.sh visibility check** — resolves MCC root by name-walk (old `parents[2]` was
+   wrong for nested stage dirs) and matches `<run>/<stage>` run_id (was false NO). Verified YES.
+4. **Header pills** — removed hardcoded "Local Engine: Idle" / "Token Mode" → single "Read-only".
+
+Verified: 120 API tests pass; validator PASS; CURRENT_STATUS schema-valid; live render (pills +
+freshness Status 2026-07-05, zero console errors). No protected scope touched. Two branches merged
+to master today: `feature/mcc-audit-fixes` (39d6d82a) then `feature/mcc-audit-cleanup`. Pushed.
+
+**Remaining open [AI]:** Stage-2 pre-registration (D013/D015, unchanged); optional SI per-section
+"as of" chips; run-manifest discovery contract (audit §6.1, Barış decision).
+
 ## Claude Opus 4.8 2026-07-05 (5) — System Test / Fake Money Lab page shipped; branch merged to master
 
 Barış approved the audit's System Test Lab proposal ("onaylıyorum tasarım dokümanı + implementasyon.

@@ -79,9 +79,13 @@ API_REL="../../08_DASHBOARD_APP/apps/api"
 PYTHONPATH="$TOOLS/$API_REL" "${RUNPY[@]}" -c "
 from mcc_readonly.backtest_reader import build_backtest_status
 from pathlib import Path
-root=Path(r'$RUN_DIR').parents[2]   # MTC_COMMAND_CENTER
+# Resolve MCC root by walking up (RUN_DIR may be RESULTS/<run> OR RESULTS/<run>/<stage>).
+p=Path(r'$RUN_DIR').resolve()
+root=next((a for a in p.parents if a.name=='MTC_COMMAND_CENTER'), p.parents[2])
 bs=build_backtest_status(root)
-hit=[r for r in bs['runs'] if r['run_id']==r'$RUN_ID']
+# Orchestrated stage dirs surface as run_id '<run>/<stage>', so match exact OR suffix.
+rid=r'$RUN_ID'
+hit=[r for r in bs['runs'] if r['run_id']==rid or str(r['run_id']).endswith('/'+rid)]
 print('[tail] dashboard visible:', 'YES' if hit else 'NO', '| status', hit[0]['status'] if hit else '-')
 " 2>&1 | tail -1
 

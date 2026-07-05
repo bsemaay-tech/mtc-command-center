@@ -3,17 +3,16 @@
   "product": "MTC Command Center",
   "short_name": "MCC",
   "root": "C:/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER",
-  "phase": "FAZ 3B Exit-Mode Research (Stage-1 complete, Stage-2 gated)",
   "mode": "read_only",
   "dry_run": true,
   "live_trading_enabled": false,
+  "active_writer": null,
+  "phase": "System Test / Fake Money Lab page shipped; branch merged to master",
   "last_updated": "2026-07-05T00:00:00+03:00",
-  "summary": "FAZ 3B Stage-1 sweep complete (D015): H1 confirmed at 1h - GEN_KELTNER_BREAKOUT x trail_ema8 x AAPL research_robust (STRONG_PASS, union-DSR 0.581); H0 holds at 10m; robust_final 0, nothing promotable. PR #15 merged. SYSTEM_TEST vertical slice V1.1 CLOSED (legs V2-V4 gated, Gate V5 review 2026-08-01). Live trading and webhooks remain disabled.",
+  "summary": "Barış approved the audit's System Test Lab proposal (\"onaylıyorum tasarım dokümanı + implementasyon. yap master merge de yap\"). Design doc `11_TRIAGE/SYSTEM_TEST_LAB_PAGE_DESIGN_2026-07-05.md`, then built + merged the whole `feature/mcc-audit-fixes` branch to master.",
   "critical_warnings": [
     "No live trading allowed",
-    "MTC_v2 core files remain protected",
-    "Stage-2 confirmation requires its own written pre-registration before any run (D013/D015)"
+    "MTC_v2 core files remain protected"
   ],
-  "next_recommended_action": "Write and get Barış approval on the Stage-2 pre-registration for the KELTNER x trail_ema8 x 1h family (narrow grid winner +/-1, exit frozen, held-out scope, DSR >= 0.95) before any run. NOTE: this file should become auto-derived from NEXT_STEPS/GLOBAL_HANDOFF (Barış decision 2026-07-05); until that tool exists it is hand-refreshed and can go stale.",
-  "active_writer": null
+  "next_recommended_action": "[AI: Claude, optional] Strategy Intelligence per-section \"as of\" chips (Home done; SI still could show evidence date per gate/verdict section)."
 }
