@@ -129,6 +129,21 @@ button:hover {
   color: var(--muted);
 }
 
+.drawer {
+  margin-top: 12px;
+  background: #0b1017;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+pre {
+  white-space: pre-wrap;
+  color: var(--muted);
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 13px;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

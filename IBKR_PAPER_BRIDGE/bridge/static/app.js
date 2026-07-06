@@ -32,6 +32,9 @@ async function refresh() {
   renderConfig();
   renderGates();
   renderTables();
+  renderJournal();
+  renderLlm();
+  renderSystem();
 }
 
 function renderStatus() {
@@ -74,6 +77,26 @@ function renderGates() {
 function renderTables() {
   renderRows("positionsBody", state.snapshot.positions);
   renderRows("ordersBody", state.snapshot.orders);
+}
+
+function renderJournal() {
+  renderRows("tradesBody", state.snapshot.trades);
+  setText("decisionChain", "Select a trade");
+}
+
+function renderLlm() {
+  const config = state.snapshot.config;
+  setText("llmRegime", state.status.regime || "BOTH");
+  setText("vetoMode", config.llm.veto_enabled ? "ON" : "OFF");
+  setText("llmCost", "$0.00");
+  renderRows("directivesBody", []);
+}
+
+function renderSystem() {
+  setText("systemNetwork", state.status.network || "testnet");
+  setText("stateVersion", String(state.status.state_version));
+  setText("dbStatus", "runtime");
+  renderRows("eventsBody", state.snapshot.events);
 }
 
 function renderRows(id, rows) {
