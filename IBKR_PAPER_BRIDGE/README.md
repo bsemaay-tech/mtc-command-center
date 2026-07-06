@@ -1,6 +1,6 @@
 # Crypto Paper Bridge (Hyperliquid) — standalone live/paper execution dashboard
 
-**Status: DESIGN ONLY. No code yet. Running anything against the exchange (even testnet) requires Barış approval per `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/MTC_REPO_GUARD_PROTOCOL.md`.**
+**Status: v1 mock-first build present on `feature/ibkr-bridge-final`. Running anything against the exchange (even testnet) requires Baris approval per `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/MTC_REPO_GUARD_PROTOCOL.md`.**
 
 > Directory is named `IBKR_PAPER_BRIDGE/` for git-history continuity only. The broker decision was
 > finalized on 2026-07-06 to **Hyperliquid** (testnet = paper). IBKR and Signum were evaluated and
@@ -34,3 +34,19 @@ monitoring. LLM layer is **veto/regime-only** — it never originates orders.
 7. **Kill switch always one click away** — cancels all open orders, optionally flattens, disarms.
 8. **Independent from MCC** — no runtime imports; strategy parameters are *copied* from research,
    never live-linked.
+
+## Quickstart (dry-run only)
+
+From a fresh shell:
+
+```powershell
+cd C:\LAB\Tradingview_LAB_CLEAN
+$env:PYTHONUTF8 = "1"
+python -m pip install -r IBKR_PAPER_BRIDGE\requirements.txt
+python -m pytest IBKR_PAPER_BRIDGE\tests -q
+cd IBKR_PAPER_BRIDGE
+python -m bridge.app --dry-run
+```
+
+Then open `http://127.0.0.1:8790`. The dry-run path uses `MockBroker` and the local fixture only.
+Do not run `tools/smoke_p0.py` without explicit in-session approval.

@@ -1,5 +1,15 @@
 # GLOBAL_HANDOFF
 
+## Codex GPT-5 2026-07-07 - Crypto Paper Bridge overnight build (tasks 1-11 done)
+
+Built the Hyperliquid Crypto Paper Bridge v1 mock-first slice on `feature/ibkr-bridge-final`.
+Commits cover tasks 1,2,3,3b,4,5,6,7,9,10a,10b,8,11 with exact-path commits after each accepted task.
+Core pieces now exist under `IBKR_PAPER_BRIDGE/`: FastAPI app, SQLite schema v2 Store, MockBroker, provisional golden generator, Keltner x EMA8 strategy, RiskEngine, dry-run Engine/OrderManager, LLM gate, Hyperliquid adapter, approval-gated `tools/smoke_p0.py`, notifier, and six-page dark dashboard shell.
+Verification: `PYTHONUTF8=1 python -m pytest IBKR_PAPER_BRIDGE\tests -q` passed (24 tests; one FastAPI/Starlette TestClient deprecation warning), `node --check` passed, dry-run server on `127.0.0.1:8790` returned snapshot trade data plus bars and was stopped.
+No exchange, LLM API, backtest, Pine, parity, MTC strategy, or protected MCC writes were performed.
+Known gap: `tests/fixtures/golden_signals.json` is provisional from a synthetic fixture/reference implementation, not a real QuantLens BTC 1h source run.
+Next human gate: review `IBKR_PAPER_BRIDGE/docs/03_STATUS.md`, prep Hyperliquid testnet wallet per `06_HYPERLIQUID_SETUP.md`, then explicitly approve or reject P0 smoke.
+
 ## Claude Opus 4.8 2026-07-06 (9) — Bridge broker PIVOT: IBKR/Signum out, Hyperliquid in; docs final
 
 Barış tried IBKR → KKTC address verification FAILED. Crypto-only OK (has Binance + Hyperliquid).

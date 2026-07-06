@@ -25,6 +25,13 @@ def init_runtime_state(app: FastAPI) -> None:
     }
     app.state.bridge_config = load_config()
     app.state.bridge_bars = {"bars": []}
+    app.state.bridge_data = {
+        "positions": [],
+        "orders": [],
+        "trades": [],
+        "events": [],
+        "latest_gates": {"gate_results": []},
+    }
 
 
 def install_routes(app: FastAPI) -> None:
@@ -115,11 +122,11 @@ def make_snapshot(app: FastAPI) -> dict[str, Any]:
     return {
         "status": dict(app.state.bridge_status),
         "config": dict(app.state.bridge_config),
-        "positions": [],
-        "orders": [],
-        "trades": [],
-        "events": [],
-        "latest_gates": {"gate_results": []},
+        "positions": list(app.state.bridge_data["positions"]),
+        "orders": list(app.state.bridge_data["orders"]),
+        "trades": list(app.state.bridge_data["trades"]),
+        "events": list(app.state.bridge_data["events"]),
+        "latest_gates": dict(app.state.bridge_data["latest_gates"]),
         "bars": {"bars": list(app.state.bridge_bars["bars"])},
     }
 
