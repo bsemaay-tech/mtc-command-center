@@ -30,6 +30,9 @@ _codex_status_porcelain.txt
 node_modules
 external/
 
+# ---- Crypto Paper Bridge runtime data ----
+IBKR_PAPER_BRIDGE/data/
+
 # ---- Screenshots (bloats git) ----
 **/60_SCREENSHOOTS/*.png
 
