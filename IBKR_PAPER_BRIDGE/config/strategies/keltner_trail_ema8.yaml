@@ -1,7 +1,7 @@
 id: keltner_trail_ema8
 version: 1.0.0
 source: MTC/crypto_plumbing_subject
-golden_run_id: ""
+golden_run_id: "PROVISIONAL_SYNTHETIC_REFERENCE_2026-07-06"
 symbol: BTC
 timeframe: 1h
 params:

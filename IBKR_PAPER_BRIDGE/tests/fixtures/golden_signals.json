@@ -1,0 +1,19 @@
+{
+  "provisional": true,
+  "source": "synthetic_fixture_reference_keltner",
+  "bar_alignment": "UTC_1h_24x7_close_confirmed_mkt_next",
+  "params": {
+    "kc_length": 20,
+    "kc_mult": 2.0,
+    "atr_length": 20,
+    "trail_ema": 8
+  },
+  "signals": [
+    {
+      "ts": "2024-01-01T20:00:00+00:00",
+      "direction": "LONG",
+      "ref_price": 30369.5,
+      "reason": "close above keltner"
+    }
+  ]
+}
