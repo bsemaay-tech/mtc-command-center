@@ -1,8 +1,8 @@
 # NEXT_STEPS
 
 ## 🚀 IBKR PAPER BRIDGE (new standalone track; design docs DONE 2026-07-05 on `feature/ibkr-paper-bridge`; read `IBKR_PAPER_BRIDGE/docs/` 00→01→02 before touching)
-- **[AI: Barış]** run external design audits: give `IBKR_PAPER_BRIDGE/docs/04_AUDIT_PROMPT.md` to Codex/GPT/Gemini/DeepSeek; reports land in `IBKR_PAPER_BRIDGE/docs/audits/`.
-- **[AI: Claude]** triage audit reports, adopt accepted findings into design docs (dated notes), reject with reasons.
+- ~~run external design audits~~ DONE 2026-07-06: 7 reports in `IBKR_PAPER_BRIDGE/docs/audits/`.
+- ~~triage audit reports, adopt accepted findings~~ **DONE 2026-07-06** (Claude Fable 5): 21 adopted clusters amended in place; record + rejections in `IBKR_PAPER_BRIDGE/docs/05_AUDIT_RESOLUTION.md`. Build plan now honestly **2 days** (Day 1 mock core, Day 2 IBKR hardening).
 - **[AI: Barış]** approve `IBKR_PAPER_BRIDGE/docs/00_PREREG.md` (gates P0-P3, abort criteria, first strategy = FAZ 3B KELTNER×trail_ema8×AAPL×1h as plumbing subject) + merge design branch.
 - **[AI: Claude|Codex]** BUILD DAY: execute `IBKR_PAPER_BRIDGE/docs/02_BUILD_PLAN_1DAY.md` tasks 1-11 in order, commit per task, mock-first (no TWS needed until task 8). Do not redesign — architecture decisions are final in `01_ARCHITECTURE.md`.
 - **[AI: Barış]** install/launch TWS paper (port 7497, API enabled, read-only OFF) + provide `XAI_API_KEY`/`ANTHROPIC_API_KEY` env for LLM gate.

@@ -130,13 +130,30 @@ FILLED → position managed by bracket (SL/TP working server-side at IBKR)
 EXIT fill → TRADE_CLOSED(pnl, exit_reason ∈ {SL, TP, TRAIL, SIGNAL_FLIP, MANUAL, KILL})
 ```
 
-Rules:
-- Only ONE open position per symbol. New opposite signal while in position ⇒ close-then-open
-  only if config `allow_flip: true`, else just close.
-- Trailing exit (trail_ema8) is engine-driven: each bar close, if trail condition hits, engine
-  replaces the SL order (modify, not cancel+new, to keep OCA intact).
-- On restart: Reconciler loads open orders/positions from broker, matches against `orders` table,
-  adopts unknown position into managed state IF it has matching working SL, else abort-flattens (PREREG §7).
+Rules (AMENDED 2026-07-06 per audit round):
+- **Step 0 of every `on_bar`:** read the freshest broker position snapshot (fill-callback-updated
+  cache), never a stale engine-local copy — an SL can fill between bar close and decision.
+- **Post-await state gate:** after ANY `await` in the decision chain (LLM veto, broker call),
+  re-read app-state + position immediately before `OrderManager.submit`; abort the decision if
+  ARMED was lost, KILL fired, or the position changed. KILL/DISARM set a flag that short-circuits
+  any in-flight decision — KILL is preemptive, never queued behind a pending order.
+- Only ONE open position per symbol. **Flip is DISABLED in v1** (`allow_flip` removed from config;
+  hardcoded false). Opposite signal while in position ⇒ close-only sequence: (1) cancel bracket
+  children, (2) submit reduce-only MKT close sized to live position qty at submit time, (3) done —
+  no new entry this bar. A flip sub-state machine is v1.1 (05_AUDIT_RESOLUTION).
+- Trailing exit (trail_ema8) is engine-driven: each bar close, engine modifies the SL order price
+  (see §6.1 modify path — same orderId, `auxPrice` only, never qty).
+- **DISARMED with open position:** no new entries; existing SL/TP stay working; **trail
+  modifications CONTINUE** — trail only tightens the stop (risk-reducing), freezing it would
+  increase exposure. (Decided against the freeze alternative; see 05_AUDIT_RESOLUTION.)
+- **DISARM side-effects:** cancel working entry orders, trigger an IMMEDIATE reconcile pass (not
+  wait 60 s), and resize any working SL/TP to current filled qty (partial-entry + DISARM race).
+- **KILLED persists:** `app_state` is stored in the `meta` table; a process restart comes up
+  KILLED (not DISARMED) until explicit operator ack via `/api/kill/ack`. Restart always creates a
+  NEW `run_id`; the old run's data is read-only journal history.
+- **On restart:** Reconciler runs BEFORE ARM is possible (ARM button disabled with "Resolving
+  broker state…" until reconcile completes). Adoption/flatten rules per §6.1 restart-recovery
+  (re-protect first; own-orderRef only; foreign positions untouched + WARN).
 
 ---
 
@@ -159,19 +176,56 @@ class Broker(Protocol):
     async def flatten(self, symbol) -> None
 ```
 
-`IBKRBroker` implementation notes (for the builder):
-- `ib_async.IB()`; `connectAsync(host, port, clientId)`; set `ib.reqMarketDataType(3)` (delayed)
-  **before** data requests — paper accounts without market-data subscription get delayed-15min;
-  this is FINE for 1h bars and must not be treated as an error. Log the data type actually returned.
-- Bars: `reqHistoricalData(..., keepUpToDate=True)` with `barSizeSetting='1 hour'`,
-  `useRTH=True`, `whatToShow='TRADES'`. The updateEvent fires on partial bars — only emit
-  `on_bar_closed` when a NEW bar object appears (previous bar is then final).
-- Bracket: `ib.bracketOrder(action, qty, limitPrice, takeProfitPrice, stopLossPrice)` then
-  place all three; if `entry_type == 'MKT'`, build manually: parent MarketOrder(transmit=False)
-  + StopOrder + LimitOrder(TP) sharing `ocaGroup`, last child `transmit=True`.
-- Reconnect: watch `ib.disconnectedEvent`; retry loop with backoff 5→60 s; TWS restarts nightly
-  (~23:45 exchange time) — reconnect + Reconciler must recover unattended (PREREG Gate P2 criterion).
-- clientId from env, default 17; collision with another API client is a startup error, not a retry.
+`IBKRBroker` implementation notes (for the builder) — **AMENDED per audit round 2026-07-06
+(see 05_AUDIT_RESOLUTION.md); this section is the binding contract:**
+
+- Connection: `ib_async.IB()`; `connectAsync(host, port, clientId)`; set `ib.reqMarketDataType(3)`
+  (delayed) **before** data requests — paper accounts without market-data subscription get
+  delayed-15min; this is FINE for 1h bars and must not be treated as an error. Log the data type
+  actually returned. clientId from env, default 17. clientId collision at **startup** = hard error;
+  a transient same-id busy during **reconnect** = retry with backoff (they are different cases).
+- **BarFinalizer contract (replaces naive "new bar object" detection):**
+  - Exchange calendar: NYSE, timezone `America/New_York` (`zoneinfo`); RTH 09:30–16:00; hardcoded
+    US holiday/half-day table in `config/nyse_calendar.yaml` for v1.
+  - Bar key: `(symbol, tf, bar_end_ts_utc)`. Algorithm: keep `last_bar_ts`; on `updateEvent` with
+    `hasNewBar` / `bars[-1].date > last_bar_ts` ⇒ emit `bars[-2]` as closed, advance `last_bar_ts`.
+  - **Session-end force-close:** the last RTH bar has no successor until next session — a timer at
+    session close (16:00 ET, or half-day close) force-finalizes it. Without this the last daily
+    signal fires ~17.5 h late.
+  - **RTH 1h alignment:** AAPL RTH = 6.5 h ⇒ the 15:30–16:00 tail bar is 30 min. v1 policy:
+    **discard the tail bar** (no signal on it); the parity golden run must use the same policy.
+    Bar-boundary convention (ts + OHLC) must be asserted identical to the golden fixture BEFORE
+    signal parity is evaluated (two-stage parity, PREREG §6).
+  - **Reconnect:** on every (re)connect, re-issue the historical stream + quote subscriptions
+    (they do NOT survive TWS restart), then verify the next bar arrives within 1× timeframe else
+    `DATA_STALE`. First bar after reconnect may duplicate the last pre-disconnect bar — dedupe by
+    checking a decision for that `bar_ts` already exists (idempotency guard).
+  - **P0 sub-check:** verify `keepUpToDate` actually streams under data type 3 on this TWS build;
+    if not, fall back to polled `reqHistoricalData` on a session-aligned timer. Document which
+    path P0 selected.
+- **Bracket:** `ib.bracketOrder(...)`; if `entry_type == 'MKT'`, parent MarketOrder(transmit=False)
+  + StopOrder + LimitOrder(TP) sharing `ocaGroup`, last child `transmit=True`. Placement sequence
+  is exactly parent→SL→TP and is P0-tested (orphan-children is a known TWS footgun).
+  **Modify path (trail):** fetch the LIVE order via `ib.trades()` by persisted id, change ONLY
+  `auxPrice`, re-`placeOrder` with the SAME orderId — never construct a new order object for a
+  modify (creates a duplicate stop + orphan). If the live order can't be found: cancel + re-place
+  SL and re-establish OCA — fallback path, log WARN. **Never modify child qty on partial fills** —
+  IBKR auto-scales OCA children when a parent is cancelled/partially filled; qty-modify races
+  IBKR's own scaling (audit: Gemini F-02).
+- **Durable order identity:** persist `perm_id`, `parent_perm_id`, `oca_group`, `client_id`,
+  `transmit_role`, `order_ref` (= our `decision_uid:role` tag set via `orderRef`) and contract
+  JSON on every order row. Local orderIds are NOT durable across TWS restarts; the Reconciler
+  matches by `perm_id` first, then by `order_ref`, then conservative attribute fallback
+  (symbol+action+type+auxPrice+qty). Ambiguous match ⇒ WARN event, do NOT flatten a
+  sensible-looking bracket.
+- **TWS nightly restart recovery (P2-critical):** TWS restarts ~23:45 ET and paper API orders may
+  be dropped. On reconnect, if a position tagged with our `orderRef` exists WITHOUT a working SL:
+  **first re-submit a protective bracket** for the existing position (config
+  `recover_orders_after_restart: true`, default true for paper); only if that submit fails ⇒
+  flatten per PREREG §7. Positions NOT tagged with our orderRef (manual/foreign) are never
+  adopted and never flattened — WARN banner only.
+- Reconnect loop: watch `ib.disconnectedEvent`; backoff 5→60 s; unattended recovery through the
+  nightly restart is a P2 exit criterion.
 
 `MockBroker`: in-memory; `historical_bars` reads CSV fixture `tests/fixtures/AAPL_1h.csv`;
 `subscribe_bars` replays remaining fixture rows on an accelerated clock (config); fills:
@@ -229,13 +283,27 @@ Checks in order (first failure returns `Rejection(stage="RISK", reason=...)`):
    empty intersection or NO_TRADE ⇒ reject.
 3. No open position (or flip allowed).
 4. Daily loss limit not hit: `realized_today + unrealized <= -max_daily_loss_pct * day_start_equity` ⇒ reject + auto-DISARM.
-4b. Consecutive-loss stop: last `max_consecutive_losses` trades all losers ⇒ reject + auto-DISARM.
-4c. Cooldown: within `cooldown_minutes_after_loss` of last SL exit ⇒ reject "cooldown_active".
+   **Trading day = America/New_York date.** `day_start_equity` snapshotted at the first RTH bar
+   (or engine start if later) into the `risk_days` table. Engine-computed daily P&L is logged
+   side-by-side with IBKR's `realizedPnL`; divergence > 1% ⇒ DISARM + alert (reconciliation bug).
+4b. Consecutive-loss stop: last `max_consecutive_losses` realized trades all losers
+   (**loss = pnl < 0 regardless of exit_reason** — trail scratches count) ⇒ reject + auto-pause.
+   **Counter resets to 0 on: any winning trade, new trading day, manual re-ARM.**
+   **Unattended policy (P2 fix):** config `on_consecutive_loss: disarm | pause_auto_rearm`
+   (default `pause_auto_rearm`: auto re-ARM after cooldown, max `max_auto_rearms_per_day: 2`,
+   then hard DISARM).
+4c. Cooldown: within `cooldown_minutes_after_loss` of the last LOSING trade close (any
+   exit_reason) ⇒ reject "cooldown_active". Evaluated independently of 4b.
 5. Sizing (fixed fractional): `risk_dollars = equity * risk_pct_per_trade` (default 0.5%);
    `stop_distance = |ref_price - stop_loss|` from strategy's initial SL
    (Keltner: opposite band; fallback `atr_mult_sl * ATR`); `qty = floor(risk_dollars / stop_distance)`.
+5a. **Stop-validity guards (BEFORE division):** reject if `stop_distance <= 0` (div-by-zero),
+   `stop_distance < min_stop_distance` (default `max(tick, 0.1% of ref_price)` — tiny stop ⇒
+   absurd qty), stop on the wrong side of price, or price already gapped through the stop.
 6. Constraint clamps: `qty * ref_price <= max_position_notional_pct * equity` (default 20%);
    qty ≥ 1 else reject "size_below_minimum".
+6b. **Buying-power check:** `qty * ref_price <= buying_power * 0.95` else reject
+   `INSUFFICIENT_BUYING_POWER` (prevents avoidable broker rejects).
 7. TP: `take_profit = ref_price ± rr_ratio * stop_distance` if `tp_mode: rr` (default rr 2.0);
    `tp_mode: none` ⇒ trail-only exit (matches trail_ema8 philosophy; DEFAULT for v1).
 
@@ -253,18 +321,37 @@ LLM gate + duplicate/stale checks. Stored in the decision payload and rendered a
   headlines/X sentiment it retrieves, output STRICT JSON `RegimeDirective`
   (regime ∈ LONG_ONLY|SHORT_ONLY|BOTH|NO_TRADE, confidence 0-1, ttl_minutes, rationale, sources[]).
 - Validation: non-JSON / invalid regime / confidence < `min_confidence` (default 0.6) ⇒ directive
-  IGNORED, fall back to `BOTH`, log `LLM_INVALID`. Expired TTL ⇒ `BOTH`.
+  IGNORED, fall back to config direction, log `LLM_INVALID`. `ttl_minutes` is **clamped to
+  [15, 1440]** — an LLM-chosen huge TTL cannot freeze a stale regime.
+- **TTL expiry (no silent widen):** expiry triggers an immediate refresh attempt; until a new
+  valid directive arrives, the LAST directive stays in force up to 2× its TTL; beyond that, fall
+  back to `config.direction` + WARN event. Expiry never silently converts NO_TRADE into BOTH
+  within the 2×TTL window (audit: Cursor F-13).
 - Regime can only **narrow** what config allows — never widen (config LONG_ONLY + regime BOTH = LONG_ONLY).
+- **Prompt-injection mitigation (audit: DeepSeek F-03):** every retrieved headline/post is
+  truncated (280 chars), control-chars + markdown fences stripped, URLs removed, and wrapped in
+  labeled `[SOURCE_START]…[SOURCE_END]` blocks; system prompt instructs the model to treat block
+  contents as DATA, never instructions. `directives` stores the source-text HASH, not raw text.
+  Worst-case injection = forced NO_TRADE (denial, not financial exploit) — narrowing-only holds.
+- Keys are the bridge's OWN env vars (`XAI_API_KEY`, `ANTHROPIC_API_KEY`) read by `settings.py` —
+  never shared with `_deepseek_driver`'s config lifecycle.
 - YouTube/market-video sentiment: v1 ships Grok-only; the `sources` abstraction
   (`llm_gate.SentimentSource` protocol) leaves a slot for a YouTube-transcript source later.
 
-**Role B — Pre-trade veto (per order, only if `llm.veto_enabled: true`):**
-- Claude (`claude-sonnet-5`, ANTHROPIC_API_KEY) receives the OrderPlan JSON + last N decisions +
-  current regime, answers STRICT JSON `{verdict: "PASS"|"VETO", reason: str}` with a checklist
-  prompt (SL present? size arithmetic consistent? conflicts with regime? symbol halted per feed staleness?).
-- Timeout 10 s. **Fail-open** (`llm.fail_policy: open`, default): timeout/error ⇒ `LLM_SKIPPED`,
-  trade proceeds per formal rule. `fail_policy: closed` available but not default (per Barış 2026-07-05).
-- Every call logged: prompt hash, latency, verdict, tokens.
+**Role B — Pre-trade veto (per order; `llm.veto_enabled: false` DEFAULT in v1 — audit consensus):**
+- v1 ships the veto path implemented behind `NullLLMGate` default; enabled at P1 after the hot
+  path is proven. Rationale: a synchronous 10 s external call on the bar→order path is both
+  latency-dangerous and non-protective when fail-open (Codex F-08, Copilot F-07, Cursor F-14).
+- When enabled: Claude (`claude-sonnet-5` — verified current Anthropic model ID, ANTHROPIC_API_KEY)
+  receives the OrderPlan JSON + last N decisions + current regime, answers STRICT JSON
+  `{verdict: "PASS"|"VETO", reason: str}` with a checklist prompt (SL present? size arithmetic
+  consistent? conflicts with regime? feed stale?).
+- Runs **async with a hard decision deadline** (`llm.veto_deadline_s: 5`): if no verdict by
+  deadline ⇒ `LLM_SKIPPED`, formal rule proceeds; the engine loop / fill handlers are NEVER
+  blocked by the call. `fail_policy: closed` available but not default (Barış 2026-07-05).
+- **Cost guards:** `llm.max_vetos_per_day: 20` and `llm.max_daily_llm_cost_usd: 5` — exceeded ⇒
+  auto-skip with `LLM_COST_LIMIT` event.
+- Every call logged to `llm_calls`: prompt hash, model, latency, verdict, token counts, cost est.
 
 **Hard boundary (enforced in code, not prompt):** LLM outputs are parsed into the two models above;
 there is NO code path from LLM output to qty, price, or new-order fields.
@@ -275,14 +362,31 @@ there is NO code path from LLM output to qty, price, or new-order fields.
 - **Duplicate-order protection:** submit is idempotent per decision_id; additionally a signal
   fingerprint `(symbol, direction, bar_ts)` may submit at most once per run — re-delivery of the
   same bar/signal (reconnect replays) can never double-order.
-- **Stale-price guard:** at submit, last bar/quote update must be < `max_price_age_s`
-  (default 90 s for 1h bars — generous, delayed feed) — else reject `STALE_PRICE`, log event.
-- **Close = reduce-only semantics:** exit paths (flip, flatten, trail) size orders to current
-  position qty read at submit time, never a cached value — a close can never open the opposite side.
-- Bracket submit; on partial fill > 60 s, cancel remainder, keep SL sized to filled qty (modify).
+- **Stale-DATA guard (reworked — audit: Cursor F-01):** under delayed data type 3 a tick-age
+  check is meaningless (feed is 15 min behind by design). Freshness for the 1h path = **bar age**:
+  at submit, the triggering bar's `end_ts` must be < 0.5× timeframe old AND the feed must not be
+  in `DATA_STALE` state. Staleness comparisons use **data timestamps** (`ticker.time` /
+  `bar.date`), never local receipt time. `max_price_age_s` applies only when real-time data
+  (type 1) is active.
+- **Close = reduce-only semantics:** exit paths (close-on-opposite-signal, flatten, trail) size
+  orders to current position qty read at submit time, never a cached value — a close can never
+  open the opposite side.
+- **Partial fills (reworked — audit: Gemini F-02, Codex F-04):** explicit states
+  `ENTRY_PARTIAL → CHILDREN_RESIZE_PENDING → PROTECTED | UNPROTECTED_ABORT`. On parent partial
+  fill > 60 s: cancel the remainder and **let IBKR's OCA auto-scaling resize the children — never
+  modify child qty manually**; verify children match filled qty within 10 s, else
+  `UNPROTECTED_ABORT` ⇒ flatten. Out-of-order `orderStatus` callbacks must be tolerated
+  (state transitions keyed by permId+status, idempotent).
+- **Stale entry order:** unfilled entry older than `max_open_order_age_s` (default 600 s) ⇒
+  cancel entry + children, log `ORDER_STALE_CANCELLED` (signal is no longer relevant).
 - Watchdog: order not acked in 120 s ⇒ abort criterion (PREREG §7) ⇒ DISARM + alert row.
-- Reconciler coroutine (60 s): `broker.positions() ∪ open_orders()` vs DB expectations; any
-  divergence ⇒ `events` row severity=WARN and dashboard banner; naked position ⇒ flatten (PREREG §7).
+- **Reconciler (reworked — audit: Opus F-11/F-17):** coroutine (60 s) compares broker truth vs DB.
+  Freshly submitted orders sit in a **PENDING grace state** excluded from reconciliation until
+  age > 2× interval — no action on in-flight races. Naked-position detection ALSO runs
+  event-driven on every fill/position callback (not only the 60 s tick). Flatten only positions
+  traceable to our `orderRef`; foreign positions ⇒ WARN banner, never touched. Reconciler also
+  snapshots equity every 60 s during RTH into `equity` (feeds max-intraday-DD, PREREG §5) and
+  runs the engine-vs-broker equity divergence check (>0.5% ⇒ WARN, >1% ⇒ DISARM).
 
 ### 6.6 BarFeed staleness
 During RTH, if now − last_bar_update > 2 × timeframe ⇒ `DATA_STALE` event ⇒ DISARM (PREREG §7).
@@ -296,20 +400,56 @@ regime changes. Fire-and-forget with 5 s timeout — notification failure NEVER 
 
 ## 7. SQLite schema (Store; all ts UTC ISO)
 
+Schema v2 (AMENDED 2026-07-06 — audit consensus: decision grouping, durable broker identity,
+PREREG §5 first-class columns, fills granularity, bars persistence, risk days, versioning):
+
 ```sql
-CREATE TABLE runs      (run_id TEXT PK, started_ts, mode TEXT CHECK(mode IN ('paper','dry_run','live')),
+CREATE TABLE meta      (key TEXT PK, value TEXT);            -- schema_version, app_state (KILLED persists), created_at
+CREATE TABLE runs      (run_id TEXT PK, started_ts, ended_ts, mode TEXT CHECK(mode IN ('paper','dry_run','live')),
                         config_json TEXT);
-CREATE TABLE decisions (id INTEGER PK, run_id, ts, symbol, stage TEXT,      -- SIGNAL/RISK_PASS/RISK_REJECT/LLM_PASS/LLM_VETO/LLM_SKIPPED/SUBMITTED/...
-                        payload_json TEXT);                                  -- full model dump of that stage
-CREATE TABLE orders    (order_id TEXT PK, decision_id INT, role TEXT,        -- ENTRY/SL/TP
+CREATE TABLE bars      (symbol, tf, bar_end_ts, open, high, low, close, volume,
+                        data_type INT,                       -- 1 realtime / 3 delayed
+                        PRIMARY KEY(symbol, tf, bar_end_ts)); -- every finalized bar; chart + parity forensics served from here
+CREATE TABLE decisions (id INTEGER PK, decision_uid TEXT NOT NULL, -- UUID shared by all stages of one decision
+                        run_id, ts, symbol, stage TEXT,      -- SIGNAL/RISK_PASS/RISK_REJECT/LLM_PASS/LLM_VETO/LLM_SKIPPED/SUBMITTED/...
+                        trade_id INT,                        -- filled at SUBMITTED stage onward
+                        payload_json TEXT, payload_version INT DEFAULT 1);
+CREATE TABLE orders    (order_id TEXT PK, perm_id INT, parent_perm_id INT, oca_group TEXT,
+                        client_id INT, transmit_role TEXT, order_ref TEXT, -- our decision_uid:role tag
+                        contract_json TEXT, decision_uid TEXT, trade_id INT,
+                        role TEXT,                           -- ENTRY/SL/TP
                         status, qty, filled_qty, avg_fill_px, ts_submit, ts_last);
-CREATE TABLE trades    (trade_id INTEGER PK, run_id, symbol, direction, qty, entry_px, entry_ts,
-                        exit_px, exit_ts, exit_reason, pnl, slippage_bps_entry, risk_dollars);
-CREATE TABLE equity    (ts PK, equity, cash, unrealized, realized_today);
-CREATE TABLE directives(id INTEGER PK, ts, regime, confidence, ttl_minutes, rationale, sources_json,
+CREATE TABLE fills     (fill_id TEXT PK, order_id, decision_uid, fill_ts, qty, px, commission);
+CREATE TABLE trades    (trade_id INTEGER PK, run_id, symbol, direction, qty,
+                        entry_decision_uid TEXT,             -- joins the full reasoning chain
+                        signal_ts, decision_ts, submit_ts, first_fill_ts, last_fill_ts,
+                        expected_px, entry_px, entry_ts, exit_px, exit_ts, exit_reason,
+                        pnl, slippage_bps_entry, risk_dollars, risk_pct,
+                        sl_initial, tp_initial, llm_directive_id INT);
+CREATE TABLE equity    (run_id, ts, equity, cash, unrealized, realized_today,
+                        PRIMARY KEY(run_id, ts));            -- sampled every 60s during RTH → max intraday DD computable
+CREATE TABLE risk_days (trading_date TEXT PK,                -- America/New_York date
+                        day_start_equity, realized_pnl_engine, realized_pnl_ibkr,
+                        max_intraday_dd, consecutive_losses_end, auto_rearms_used);
+CREATE TABLE directives(id INTEGER PK, ts, regime, confidence, ttl_minutes, rationale,
+                        sources_hash TEXT,                   -- hash, not raw text (injection/leak hygiene)
                         raw_response TEXT, valid INT);
-CREATE TABLE events    (id INTEGER PK, ts, severity TEXT, code TEXT, detail TEXT); -- DISCONNECT/RECONNECT/DATA_STALE/RECON_MISMATCH/KILL/...
+CREATE TABLE llm_calls (id INTEGER PK, ts, role TEXT,        -- regime/veto
+                        model, prompt_hash, latency_ms, verdict, tokens_in, tokens_out, cost_est);
+CREATE TABLE events    (id INTEGER PK, run_id, ts, severity TEXT, code TEXT, detail TEXT); -- DISCONNECT/RECONNECT/DATA_STALE/RECON_MISMATCH/CONFIG_CHANGED/KILL/...
+
+CREATE INDEX idx_decisions_uid  ON decisions(decision_uid);
+CREATE INDEX idx_decisions_run  ON decisions(run_id, ts);
+CREATE INDEX idx_orders_permid  ON orders(perm_id);
+CREATE INDEX idx_orders_trade   ON orders(trade_id);
+CREATE INDEX idx_fills_order    ON fills(order_id);
+CREATE INDEX idx_trades_run     ON trades(run_id);
+CREATE INDEX idx_events_run_sev ON events(run_id, severity, ts);
 ```
+
+Conventions: storage = UTC ISO; RTH/trading-day logic = America/New_York; display = ET.
+`meta.schema_version` gates inline migrations. On PUT /api/config while ARMED, an events row
+`CONFIG_CHANGED` records the field-level diff (old→new) so the journal shows context changes.
 
 `decisions.payload_json` is the audit trail Barış asked for (thesis-history idea from the video,
 adapted: every trade's full reasoning chain reconstructable by decision_id).
@@ -324,16 +464,29 @@ GET  /api/status            app state, broker conn, mode, data type, regime, acc
 GET  /api/config            merged config          PUT /api/config   validated runtime overrides
 POST /api/arm  /api/disarm  /api/kill?flatten=bool
 POST /api/regime/refresh    force LLM regime call
-GET  /api/positions  /api/orders  /api/trades?limit=  /api/decisions?trade_id=
+GET  /api/positions  /api/orders  /api/trades?limit=  /api/decisions?trade_id=  (joins via decision_uid)
 GET  /api/equity?from=      equity curve
 GET  /api/events?severity=
-GET  /api/bars?n=300        recent bars for chart
+GET  /api/bars?n=300        from the bars TABLE (not a live broker call); shape:
+                            {"bars":[{"time":unix_s,"open":..,"high":..,"low":..,"close":..,"volume":..}]}
+                            (lightweight-charts native format; empty [] + UI spinner before warmup)
+GET  /api/gates/latest      structured gate_results of the most recent decision (Gate Monitor source)
+GET  /api/snapshot          one-shot full state: status+positions+orders+last trades+latest gates
+GET  /api/runs/{run_id}     run record incl. config snapshot (System page)
+POST /api/kill/ack          operator ack to leave persisted KILLED state after restart
 ```
 WS `/ws`: server pushes `{topic, data}` for topics: `status`, `bar`, `decision`, `order`,
-`position`, `equity`, `directive`, `event`. Dashboard is fully WS-driven after initial REST load.
+`position`, `equity`, `directive`, `event`. **Reconnect contract (audit):** on every WS `open`,
+the server immediately pushes a full `snapshot` message (same payload as GET /api/snapshot);
+the client re-renders from it — no missed-DISARM/fill gaps after tab sleep or network blips.
+`status` also carries a monotonic `state_version`.
 
-Dangerous ops (`/api/arm`, `/api/kill`, PUT config while ARMED) require header
-`X-Confirm: <app_state_nonce>` returned by `/api/status` — prevents stale-tab accidents.
+Confirmation model (AMENDED — audit: Opus F-10, Codex F-10):
+- Mutating ops (ARM, PUT config while ARMED) require header `X-Confirm: <state_version>`;
+  server rejects if it doesn't match current version (stale tab). Version is pushed on every
+  WS status update, so an open dashboard always holds the current one.
+- **KILL and DISARM are NEVER nonce-blocked** — safety actions must not fail on stale UI state.
+  KILL uses its own two-step confirm (modal) client-side only.
 
 ---
 
@@ -371,42 +524,65 @@ positions" checkbox. DISARMED state = amber banner across every page. KILLED = r
 ## 10. Config (`config/bridge.yaml` defaults)
 
 ```yaml
-mode: paper                    # paper | dry_run | live(refused w/o IBKR_LIVE_ACK)
-broker: { host: 127.0.0.1, port: 7497, client_id: 17, market_data_type: 3 }
+mode: paper                    # paper | dry_run | live (live additionally needs --enable-live CLI flag + IBKR_LIVE_ACK env)
+broker:
+  host: 127.0.0.1
+  port: 7497                   # allow-list {7497 TWS-paper, 4002 Gateway-paper}; ANY other port refused w/o live triple-lock
+  client_id: 17
+  market_data_type: 3
+  recover_orders_after_restart: true   # re-protect naked position after TWS nightly restart before considering flatten
 strategy_file: strategies/keltner_trail_ema8.yaml
 risk:
   risk_pct_per_trade: 0.005
   max_daily_loss_pct: 0.02
   max_position_notional_pct: 0.20
-  max_consecutive_losses: 3    # auto-DISARM after N losers in a row
+  min_stop_distance_pct: 0.001 # 0.1% of ref_price floor (div-by-zero / absurd-qty guard)
+  max_consecutive_losses: 3    # losers = pnl<0, any exit_reason; resets on win / new day / manual re-ARM
+  on_consecutive_loss: pause_auto_rearm   # or: disarm (manual re-arm; breaks unattended P2)
+  max_auto_rearms_per_day: 2
   cooldown_minutes_after_loss: 120
-  max_price_age_s: 90          # stale-price guard at submit
+  max_open_order_age_s: 600    # cancel unfilled entries past relevance
+  max_price_age_s: 90          # applies only when data_type==1 (realtime); delayed mode uses bar-age staleness
   tp_mode: none                # trail-only default
   rr_ratio: 2.0
-  allow_flip: false
-notify: { telegram_enabled: true }   # tokens from env; unset = silently disabled
+notify: { telegram_enabled: true, heartbeat_hours: 6 }   # tokens from env; unset = silently disabled
 llm:
   regime_enabled: true
   regime_refresh_minutes: 240
   min_confidence: 0.6
-  veto_enabled: true
+  ttl_clamp_minutes: [15, 1440]
+  veto_enabled: false          # v1 default OFF (audit consensus); enable at P1
+  veto_deadline_s: 5
+  max_vetos_per_day: 20
+  max_daily_llm_cost_usd: 5
   fail_policy: open            # open = formal rule proceeds on LLM failure
   regime_model: grok-4
   veto_model: claude-sonnet-5
-server: { host: 127.0.0.1, port: 8790 }
+server: { host: 127.0.0.1, port: 8790 }   # CORS restricted to 127.0.0.1 origins
 ```
 
 ---
 
 ## 11. Safety rails summary (enforced in code)
 
-1. Port 7496 (live) ⇒ `BrokerRefusedLive` unless env `IBKR_LIVE_ACK=I_UNDERSTAND_THIS_IS_REAL_MONEY`.
+1. **Default-DENY port allow-list (AMENDED — audit: Opus F-01, the headline finding):** only paper
+   ports `{7497 (TWS paper), 4002 (IB Gateway paper)}` are connectable. ANY other port — 7496
+   (TWS live), **4001 (Gateway live — the standard unattended setup, missed by a 7496-only
+   block-list)**, or custom — raises `BrokerRefusedLive`. Live requires the triple-lock:
+   `--enable-live` CLI flag + `IBKR_LIVE_ACK=I_UNDERSTAND_THIS_IS_REAL_MONEY` env + strategy
+   `live_allowed: true`. `broker.port` is NOT runtime-editable via PUT /api/config (yaml-only,
+   restart required).
 2. `mode: live` additionally requires dashboard double-confirm at ARM. v1 acceptance never uses it.
 3. LLM outputs structurally cannot create/enlarge orders (§6.4 hard boundary).
 4. Every abort criterion (PREREG §7) wired to auto-DISARM + red event.
 5. Startup with unreconcilable broker state ⇒ start DISARMED with banner (never auto-trade into unknown state).
 6. Secrets only from env; never logged; `data/` git-ignored.
 7. This app never writes into `MTC_COMMAND_CENTER/` and never imports from it at runtime.
+8. Dashboard renders ALL payload/log fields via `textContent` / `<pre>` — never `innerHTML`
+   (XSS via strategy reason / event detail strings; audit: DeepSeek F-22).
+9. FastAPI `CORSMiddleware` restricted to `127.0.0.1` origins; server binds 127.0.0.1 only.
+10. Store redacts `(api.?key|token|secret|bearer)`-matching content from any persisted raw LLM
+    response (no-op in v1, future-proofing).
 
 ## 12. Relationship to MCC / existing tracks
 
@@ -431,5 +607,5 @@ Telegram notifier. Deliberately DEFERRED (would break the 1-day build; revisit a
 | Postgres + Redis + Docker Compose | v2 / multi-strategy | SQLite + 1 process is correct at v1 scale; migrate when >1 strategy or VPS. |
 | React/Next frontend | only if vanilla JS hits a wall | No build step is a feature for AI-driven iteration. |
 | Login + 2FA + roles | REQUIRED before any non-localhost exposure | v1 binds to 127.0.0.1 only. |
-| Deployment: local → Cloudflare Tunnel/Tailscale (monitor-only) → VPS | after P2 | IBKR needs local TWS/Gateway ⇒ end-state is hybrid: cloud dashboard + local execution bridge, OR IB Gateway on the VPS itself. Tunnel phase: dashboard read-only remotely, ARM/KILL still allowed, config edits blocked remotely. |
+| Deployment: local → Cloudflare Tunnel/Tailscale (monitor-only) → VPS | after P2 | IBKR needs local TWS/Gateway ⇒ end-state is hybrid: cloud dashboard + local execution bridge, OR IB Gateway on the VPS itself. **Tunnel phase is STRICTLY monitor-only: ARM/DISARM/KILL and config edits are ALL blocked remotely until login+2FA ships** (audit: Cursor F-19 — an unauthenticated tunnel URL holder must not be able to trade). |
 | Multi-strategy portfolio + correlation/exposure gates | v2 | Requires portfolio-level risk engine (max correlated exposure, per-strategy caps — import format's `risk_overrides` is the hook). |

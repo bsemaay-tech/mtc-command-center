@@ -1,5 +1,24 @@
 # GLOBAL_HANDOFF
 
+## Claude Fable 5 2026-07-06 (8) — IBKR Paper Bridge: 7-audit triage DONE, design docs FINAL
+
+All 7 external audits (Codex GPT-5, Opus 4.8, Gemini 3.1 Pro, DeepSeek V4 Pro, Cursor Composer,
+GitHub Copilot, Kimi K1.5; all "ship-with-fixes") triaged; accepted findings AMENDED in place in
+`IBKR_PAPER_BRIDGE/docs/00_PREREG.md`, `01_ARCHITECTURE.md`, `02_BUILD_PLAN_1DAY.md`. Full
+adopted/deferred/rejected record: **`docs/05_AUDIT_RESOLUTION.md`** (21 adopted clusters).
+Headline fixes: default-DENY broker-port allow-list {7497,4002} (Gateway 4001 live-port hole);
+BarFinalizer contract (session-end force-close, 30-min tail-bar discard, reconnect dedup);
+permId/orderRef durable order identity; TWS nightly-restart recovery (re-protect before flatten —
+was going to flatten every night); zero-stop-distance + buying-power guards; schema v2
+(decision_uid, fills/bars/risk_days/llm_calls/meta, PREREG columns on trades, indices);
+post-await state gate + preemptive KILL; reconciler PENDING grace; consecutive-loss
+pause_auto_rearm (P2-unattended fix); flip disabled v1; LLM veto default OFF v1 + injection
+mitigation + TTL clamp/no-silent-widen; PREREG metrics glossary + two-stage parity + operational
+veto-precision rule; build plan relabeled honest 2 days (Day1 mock core+10a / Day2 IBKR+10b),
+new task 3b golden-generation, 06_TWS_SETUP checklist requirement. Rejected (with reasons in
+§3): continuous rebalancing, Kelly sizing, dashboard cut to 1-2 pages, DISARMED-trail-freeze,
+"claude-sonnet-5 not a model" (it is). Next: Barış approves pre-reg → build days → P0 (gated).
+
 ## Claude Fable 5 2026-07-05 (7) — IBKR Paper Bridge: full design docs (NEW standalone track)
 
 Barış decision: IBKR paper integration is NOT deferred — plumbing gets built independent of a
