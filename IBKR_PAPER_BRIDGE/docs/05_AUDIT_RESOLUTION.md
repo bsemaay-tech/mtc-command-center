@@ -1,5 +1,17 @@
 # AUDIT RESOLUTION — 2026-07-06 (Claude Fable 5 triage)
 
+> **BROKER NOTE (added 2026-07-06, after this triage):** these audits were written against the
+> IBKR design. The broker was then changed to **Hyperliquid** (see `07_BROKER_DECISION.md`), which
+> DISSOLVES several IBKR-specific findings rather than fixing them: the port allow-list became a
+> testnet/mainnet network lock; the BarFinalizer lost all NYSE-calendar / session-end / tail-bar /
+> delayed-data complexity (crypto is 24/7, real-time); the TWS nightly-restart recovery is no longer
+> needed (no desktop terminal); `permId`/OCA identity became `cloid`/`positionTpsl` groups; and the
+> "synthetic vs native stop" risk is resolved by Hyperliquid's native resting trigger orders. The
+> non-broker findings (decision_uid schema, post-await state gate, reconciler grace, consecutive-loss
+> policy, LLM veto default-off + injection mitigation, PREREG metrics glossary, honest multi-day
+> build plan) all carried over unchanged. The IBKR-flavored wording below is kept as the historical
+> triage record; the binding spec is the amended, Hyperliquid-native `00/01/02` docs.
+
 Inputs: 7 external audits in `docs/audits/` (Codex GPT-5, Claude Opus 4.8, Gemini 3.1 Pro,
 DeepSeek V4 Pro, Cursor Composer, GitHub Copilot, Kimi K1.5), all on docs commit `c2c3bbb0`.
 All 7 verdicts: **ship-with-fixes**. This file records what was adopted into the design docs
