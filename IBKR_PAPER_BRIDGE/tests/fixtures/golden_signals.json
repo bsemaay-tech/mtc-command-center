@@ -10,7 +10,7 @@
   },
   "signals": [
     {
-      "ts": "2024-01-01T20:00:00+00:00",
+      "ts": "2024-01-01T20:00:00Z",
       "direction": "LONG",
       "ref_price": 30369.5,
       "reason": "close above keltner"

@@ -28,6 +28,10 @@ def _rows(path: Path) -> list[dict[str, float | str]]:
         ]
 
 
+def _runtime_ts(value: str) -> str:
+    return value.replace("+00:00", "Z")
+
+
 def generate_golden_from_csv(
     csv_path: str | Path,
     kc_length: int = 20,
@@ -68,7 +72,7 @@ def generate_golden_from_csv(
         if direction and direction != last_direction:
             signals.append(
                 {
-                    "ts": bars[idx]["ts"],
+                    "ts": _runtime_ts(str(bars[idx]["ts"])),
                     "direction": direction,
                     "ref_price": close,
                     "reason": f"close {'above' if direction == 'LONG' else 'below'} keltner",
