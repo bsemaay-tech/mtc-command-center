@@ -1,5 +1,23 @@
 # GLOBAL_HANDOFF
 
+## Claude Opus 4.8 2026-07-06 (9) — Bridge broker PIVOT: IBKR/Signum out, Hyperliquid in; docs final
+
+Barış tried IBKR → KKTC address verification FAILED. Crypto-only OK (has Binance + Hyperliquid).
+Evaluated Signum ($25/mo execution relay, site+FAQ+3 videos): signal-source-agnostic, supports own
+strategy, BUT market-only + NO native resting stop (synthetic 5-10s stop) → routing our engine
+through it neuters the risk engine → NOT chosen (kept as optional cheap "see-it-live" experiment).
+Decision = **direct Hyperliquid** (testnet = paper): API-first (no desktop terminal — deletes the
+whole TWS complexity class), native resting SL/TP trigger orders (real protection), 24/7 (simpler +
+faster P2), API-wallet-cannot-withdraw safety. Fits the `Broker` abstraction — connector swap, not
+redesign. All design docs REWRITTEN in place to Hyperliquid-native on `feature/ibkr-bridge-final`
+(commit 52b13f6f): README/00_PREREG/01_ARCHITECTURE/02_BUILD_PLAN + new `07_BROKER_DECISION.md`
+(full rationale) + `06_HYPERLIQUID_SETUP.md` (replaces deleted 06_TWS_SETUP); `05_AUDIT_RESOLUTION`
+got a broker-note mapping IBKR-specific fixes to Hyperliquid (port-lock→network-lock,
+BarFinalizer→24/7, permId→cloid, synthetic→native stop; non-broker fixes carry over). Dir name
+`IBKR_PAPER_BRIDGE/` kept for git continuity; product = "Crypto Paper Bridge". First subject =
+Keltner×trail_ema8 on **BTC 1h** (plumbing only). Next: Barış approves pre-reg + merges, preps
+testnet API wallet per 06, then 2 build days (mock-first); P0 smoke approval-gated.
+
 ## Claude Fable 5 2026-07-06 (8) — IBKR Paper Bridge: 7-audit triage DONE, design docs FINAL
 
 All 7 external audits (Codex GPT-5, Opus 4.8, Gemini 3.1 Pro, DeepSeek V4 Pro, Cursor Composer,

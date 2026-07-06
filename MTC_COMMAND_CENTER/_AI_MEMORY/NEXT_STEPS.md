@@ -1,9 +1,10 @@
 # NEXT_STEPS
 
-## 🚀 IBKR PAPER BRIDGE (new standalone track; design docs DONE 2026-07-05 on `feature/ibkr-paper-bridge`; read `IBKR_PAPER_BRIDGE/docs/` 00→01→02 before touching)
+## 🚀 CRYPTO PAPER BRIDGE — Hyperliquid (was "IBKR"; broker PIVOTED 2026-07-06, design FINAL on `feature/ibkr-bridge-final` 52b13f6f; read `IBKR_PAPER_BRIDGE/docs/` 00→01→05→02→07 before touching. IBKR closed (KKTC), Signum rejected (no native stop) — see 07_BROKER_DECISION)
 - ~~run external design audits~~ DONE 2026-07-06: 7 reports in `IBKR_PAPER_BRIDGE/docs/audits/`.
 - ~~triage audit reports, adopt accepted findings~~ **DONE 2026-07-06** (Claude Fable 5): 21 adopted clusters amended in place; record + rejections in `IBKR_PAPER_BRIDGE/docs/05_AUDIT_RESOLUTION.md`. Build plan now honestly **2 days** (Day 1 mock core, Day 2 IBKR hardening).
-- **[AI: Barış]** approve `IBKR_PAPER_BRIDGE/docs/00_PREREG.md` (gates P0-P3, abort criteria, first strategy = FAZ 3B KELTNER×trail_ema8×AAPL×1h as plumbing subject) + merge design branch.
+- **[AI: Barış]** approve `IBKR_PAPER_BRIDGE/docs/00_PREREG.md` (gates P0-P3, abort criteria, first strategy = Keltner×trail_ema8 on BTC 1h, plumbing subject) + merge `feature/ibkr-bridge-final`.
+- **[AI: Barış]** prep Hyperliquid **testnet** API wallet per `06_HYPERLIQUID_SETUP.md` (agent wallet = trade-only/no-withdraw; env HL_ACCOUNT_ADDRESS + HL_API_WALLET_KEY); optional XAI_API_KEY (Grok regime).
 - **[AI: Claude|Codex]** BUILD DAY: execute `IBKR_PAPER_BRIDGE/docs/02_BUILD_PLAN_1DAY.md` tasks 1-11 in order, commit per task, mock-first (no TWS needed until task 8). Do not redesign — architecture decisions are final in `01_ARCHITECTURE.md`.
 - **[AI: Barış]** install/launch TWS paper (port 7497, API enabled, read-only OFF) + provide `XAI_API_KEY`/`ANTHROPIC_API_KEY` env for LLM gate.
 - **[AI: Claude, approval-gated]** P0 smoke against TWS paper (`tools/smoke_p0.py`) — ONLY with explicit Barış approval in-session (repo guard: broker actions gated).
