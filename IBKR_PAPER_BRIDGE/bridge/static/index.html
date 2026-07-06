@@ -7,10 +7,62 @@
   <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
-  <main>
-    <h1>Crypto Paper Bridge</h1>
-    <p>Dashboard placeholder - build in progress.</p>
-    <div id="status">Status: loading...</div>
+  <aside class="sidebar">
+    <div class="brand">Crypto Paper Bridge</div>
+    <button class="nav active" data-page="overview">Overview</button>
+    <button class="nav" data-page="trading">Trading</button>
+    <button class="nav" data-page="config">Strategy & Risk</button>
+    <button class="danger" id="killButton">KILL</button>
+  </aside>
+  <main class="shell">
+    <header class="topbar">
+      <span class="pill" id="connPill">mock</span>
+      <span class="pill" id="modePill">TESTNET</span>
+      <span class="pill" id="regimePill">BOTH</span>
+      <strong id="stateText">DISARMED</strong>
+      <button id="armButton">ARM</button>
+      <button id="disarmButton">DISARM</button>
+    </header>
+
+    <section class="page active" id="page-overview">
+      <h1>Overview</h1>
+      <div class="grid">
+        <article class="card"><span>Equity</span><strong id="equityValue">--</strong></article>
+        <article class="card"><span>Day P&L</span><strong id="pnlValue">--</strong></article>
+        <article class="card"><span>Next Bar</span><strong id="nextBar">--:--:--</strong></article>
+      </div>
+      <section class="panel">
+        <h2>Gate Monitor</h2>
+        <ul id="gateList"><li>No signal yet - next bar pending</li></ul>
+      </section>
+      <section class="panel">
+        <h2>Decision Stream</h2>
+        <ol id="decisionStream"></ol>
+      </section>
+    </section>
+
+    <section class="page" id="page-trading">
+      <h1>Trading</h1>
+      <div class="chart" id="chartBox">Price chart loading</div>
+      <section class="panel">
+        <h2>Positions</h2>
+        <table><tbody id="positionsBody"></tbody></table>
+      </section>
+      <section class="panel">
+        <h2>Working Orders</h2>
+        <table><tbody id="ordersBody"></tbody></table>
+      </section>
+    </section>
+
+    <section class="page" id="page-config">
+      <h1>Strategy & Risk</h1>
+      <form class="config-grid">
+        <label>Coin <input id="coinInput" value="BTC" readonly></label>
+        <label>Direction <select id="directionInput"><option>BOTH</option><option>LONG</option><option>SHORT</option></select></label>
+        <label>Risk % <input id="riskInput" type="number" step="0.001"></label>
+        <label>Leverage <input id="leverageInput" type="number" min="1" max="1"></label>
+      </form>
+    </section>
   </main>
   <script src="/static/app.js"></script>
 </body>

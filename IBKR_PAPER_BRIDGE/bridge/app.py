@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import AsyncIterator
 
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -44,7 +45,7 @@ def create_app() -> FastAPI:
     static_dir = Path(__file__).resolve().parent / "static"
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-    @app.get("/")
+    @app.get("/", response_class=HTMLResponse)
     async def index() -> str:
         return (static_dir / "index.html").read_text(encoding="utf-8")
 

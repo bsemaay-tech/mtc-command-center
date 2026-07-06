@@ -1,10 +1,140 @@
-body {
-  margin: 0;
-  background: #0d1117;
-  color: #e6edf3;
-  font-family: Inter, system-ui, sans-serif;
+:root {
+  color-scheme: dark;
+  --bg: #0d1117;
+  --panel: #161b22;
+  --border: #30363d;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --green: #3fb950;
+  --red: #f85149;
+  --amber: #d29922;
+  --blue: #58a6ff;
 }
 
-main {
-  padding: 32px;
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, sans-serif;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  border-right: 1px solid var(--border);
+  padding: 16px;
+  background: #010409;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.brand {
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+button,
+input,
+select {
+  min-height: 36px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.nav {
+  text-align: left;
+}
+
+.nav.active,
+button:hover {
+  border-color: var(--blue);
+}
+
+.danger {
+  margin-top: auto;
+  border-color: var(--red);
+  color: var(--red);
+  font-weight: 700;
+}
+
+.shell {
+  padding: 20px;
+}
+
+.topbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
+}
+
+.pill {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.page {
+  display: none;
+}
+
+.page.active {
+  display: block;
+}
+
+.grid,
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.card,
+.panel,
+.chart {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.card span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 24px;
+}
+
+.chart {
+  min-height: 260px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+td {
+  border-top: 1px solid var(--border);
+  padding: 8px;
 }
