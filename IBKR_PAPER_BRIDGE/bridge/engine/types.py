@@ -23,6 +23,8 @@ class Signal(BaseModel):
     direction: Literal["LONG", "SHORT", "FLAT"]
     reason: str
     ref_price: float
+    stop_loss: float | None = None
+    take_profit: float | None = None
 
 
 class OrderPlan(BaseModel):

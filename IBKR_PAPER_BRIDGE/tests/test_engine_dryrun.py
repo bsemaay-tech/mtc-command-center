@@ -9,7 +9,7 @@ from bridge.engine.engine import BridgeEngine
 from bridge.engine.orders import OrderManager
 from bridge.engine.risk import RiskConfig, RiskEngine
 from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
-from bridge.engine.types import Bar
+from bridge.engine.types import Bar, Position, Signal
 from bridge.store.db import Store
 
 
@@ -19,6 +19,14 @@ def test_dryrun_replay_creates_trade_and_decision_chain(tmp_path):
 
 def test_engine_uses_broker_protocol_not_mockbroker_bars(tmp_path):
     asyncio.run(_run_protocol_broker_replay(tmp_path))
+
+
+def test_strategy_drives_stop(tmp_path):
+    asyncio.run(_run_strategy_stop(tmp_path))
+
+
+def test_position_blocks_entry(tmp_path):
+    asyncio.run(_run_position_blocks_entry(tmp_path))
 
 
 async def _run_dryrun_replay(tmp_path):
@@ -71,6 +79,55 @@ async def _run_protocol_broker_replay(tmp_path):
     snapshot = store.get_snapshot()
     assert len(snapshot["bars"]) == 1
     assert broker.connected is True
+
+
+async def _run_strategy_stop(tmp_path):
+    store = Store(tmp_path / "bridge.db")
+    store.initialize()
+    bar = Bar(ts=datetime(2026, 7, 6, 0, tzinfo=UTC), open=100, high=102, low=99, close=100, volume=1)
+    broker = RecordingBroker([bar])
+    engine = BridgeEngine(
+        run_id="strategy-stop",
+        broker=broker,
+        store=store,
+        strategy=FixedSignalStrategy(stop_loss=90.0, take_profit=115.0),
+        risk_engine=RiskEngine(RiskConfig(max_position_notional_pct=0.5)),
+    )
+
+    await engine.run_replay(max_bars=1)
+
+    trade = store.get_snapshot()["trades"][0]
+    assert trade["sl_initial"] == 90.0
+    assert trade["tp_initial"] == 115.0
+
+
+async def _run_position_blocks_entry(tmp_path):
+    store = Store(tmp_path / "bridge.db")
+    store.initialize()
+    bar = Bar(ts=datetime(2026, 7, 6, 0, tzinfo=UTC), open=100, high=102, low=99, close=100, volume=1)
+    broker = RecordingBroker(
+        [bar],
+        positions=[
+            Position(
+                symbol="BTC",
+                size=0.5,
+                entry_px=95.0,
+                unrealized=1.0,
+            )
+        ],
+    )
+    engine = BridgeEngine(
+        run_id="position-block",
+        broker=broker,
+        store=store,
+        strategy=FixedSignalStrategy(stop_loss=90.0, take_profit=115.0),
+        risk_engine=RiskEngine(RiskConfig(max_position_notional_pct=0.5)),
+    )
+
+    await engine.run_replay(max_bars=1)
+
+    assert store.get_snapshot()["trades"] == []
+    assert broker.submitted == []
 
 
 def test_order_manager_duplicate_and_disarmed_guards(tmp_path):
@@ -154,3 +211,51 @@ class ProtocolOnlyBroker:
 
     async def flatten(self, coin: str) -> None:
         return None
+
+
+class FixedSignalStrategy:
+    id = "fixed_signal"
+    warmup_bars = 0
+    symbol = "BTC"
+
+    def __init__(self, stop_loss: float, take_profit: float | None = None, direction: str = "LONG") -> None:
+        self.stop_loss = stop_loss
+        self.take_profit = take_profit
+        self.direction = direction
+
+    def on_bar(self, bars, position):
+        return Signal(
+            ts=bars[-1].ts,
+            symbol=self.symbol,
+            direction=self.direction,
+            reason="fixed",
+            ref_price=bars[-1].close,
+            stop_loss=self.stop_loss,
+            take_profit=self.take_profit,
+        )
+
+    def trail_level(self, bars, position):
+        return None
+
+
+class RecordingBroker(ProtocolOnlyBroker):
+    def __init__(self, bars: list[Bar], positions: list[Position] | None = None) -> None:
+        super().__init__(bars)
+        self._positions = positions or []
+        self.submitted: list = []
+
+    async def positions(self) -> list[Position]:
+        return list(self._positions)
+
+    async def place_bracket(self, plan) -> dict:
+        self.submitted.append(plan)
+        return {
+            "entry": {
+                "cloid": f"{plan.signal.ts.timestamp()}:entry",
+                "oid": 1,
+                "role": "ENTRY",
+                "status": "FILLED",
+                "qty": plan.qty,
+                "avg_fill_px": plan.signal.ref_price,
+            }
+        }

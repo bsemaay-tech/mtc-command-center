@@ -56,6 +56,8 @@ class KeltnerTrailEma8:
             direction=direction,
             reason=f"close {'above' if direction == 'LONG' else 'below'} keltner",
             ref_price=current.close,
+            stop_loss=lower if direction == "LONG" else upper,
+            take_profit=None,
         )
 
     def trail_level(

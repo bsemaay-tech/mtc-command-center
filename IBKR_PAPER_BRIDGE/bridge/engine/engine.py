@@ -10,7 +10,7 @@ from bridge.engine.llm_gate import NullLLMGate
 from bridge.engine.orders import OrderManager
 from bridge.engine.risk import RiskEngine
 from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
-from bridge.engine.types import Bar
+from bridge.engine.types import Bar, Position
 from bridge.store.db import Store
 
 
@@ -45,21 +45,31 @@ class BridgeEngine:
             bars = bars[:max_bars]
         for idx, bar in enumerate(bars):
             self.store.insert_bar(coin, "1h", bar.ts, bar.open, bar.high, bar.low, bar.close, bar.volume)
+            position = self._position_for(coin, await self.broker.positions())
             if self.state != "ARMED":
                 return
-            signal = self.strategy.on_bar(bars[: idx + 1], position=None)
+            signal = self.strategy.on_bar(bars[: idx + 1], position=position)
             if signal is None:
                 continue
 
             decision_uid = f"{self.run_id}:{signal.symbol}:{signal.ts.isoformat()}:{signal.direction}"
             self.store.insert_decision(self.run_id, decision_uid, signal.ts, signal.symbol, "SIGNAL", signal.model_dump(mode="json"))
-            stop_loss = signal.ref_price * (0.95 if signal.direction == "LONG" else 1.05)
-            take_profit = signal.ref_price * (1.05 if signal.direction == "LONG" else 0.95)
+            if signal.stop_loss is None:
+                self.store.insert_decision(
+                    self.run_id,
+                    decision_uid,
+                    signal.ts,
+                    signal.symbol,
+                    "RISK_REJECT",
+                    {"reason": "STRATEGY_STOP_MISSING", "gates": []},
+                )
+                continue
             risk = self.risk_engine.evaluate(
                 signal=signal,
                 account=await self.broker.account(),
-                stop_loss=stop_loss,
-                take_profit=take_profit,
+                stop_loss=signal.stop_loss,
+                take_profit=signal.take_profit,
+                open_position=position,
             )
             if not risk.accepted or risk.plan is None:
                 self.store.insert_decision(
@@ -100,3 +110,10 @@ class BridgeEngine:
             self.store.create_run(self.run_id, "dry_run", "testnet", {"broker": "mock"})
         except sqlite3.IntegrityError:
             return
+
+    @staticmethod
+    def _position_for(coin: str, positions: list[Position]) -> Position | None:
+        for position in positions:
+            if position.symbol == coin and position.size != 0:
+                return position
+        return None

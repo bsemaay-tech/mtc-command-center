@@ -35,6 +35,7 @@ def test_keltner_strategy_matches_golden_signal_timestamps():
         for idx in range(len(bars))
         if (signal := strategy.on_bar(bars[: idx + 1], position=None)) is not None
     ]
+    assert all(signal["stop_loss"] is not None for signal in signals)
 
     expected = [
         {
@@ -46,7 +47,11 @@ def test_keltner_strategy_matches_golden_signal_timestamps():
         }
         for item in golden["signals"]
     ]
-    assert signals == expected
+    comparable = [
+        {key: signal[key] for key in ("ts", "symbol", "direction", "reason", "ref_price")}
+        for signal in signals
+    ]
+    assert comparable == expected
 
 
 def test_keltner_strategy_trail_level_uses_ema8_for_long_position():
