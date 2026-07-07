@@ -1,5 +1,12 @@
 # GLOBAL_HANDOFF
 
+## Codex GPT-5 2026-07-07 - Crypto Paper Bridge corrective P1 pass
+
+Executed `IBKR_PAPER_BRIDGE/docs/09_CODEX_FIX_PROMPT.md` on `feature/ibkr-bridge-final` after the scaffold audit. Corrective commits: `d431dfab`, `3287f05c`, `f1a7b6d1`, `873c44dc`, `ad361301`, `0a26ad9e`, `0f6e241d`.
+Substance: engine/order paths now use the Broker protocol and callback bars; strategy stops/positions are real; MockBroker has resting lifecycle orders and persisted duplicate fingerprints; app state persists KILLED through restart and blocks mid-await submits; Hyperliquid fake-SDK tests cover native `positionTpsl` triggers and reduce-only flatten; dashboard renders real rows/status/bars and screenshots are saved under `IBKR_PAPER_BRIDGE/docs/screenshots/`.
+Verification: `python -m pytest IBKR_PAPER_BRIDGE/tests -q` passed with 37 tests and one FastAPI/Starlette TestClient warning. Dry-run dashboard served on `127.0.0.1:8791` during verification and showed numeric equity/day P&L/next-bar plus a visible candle plot.
+Honest caveat: FIX 6 is marked PARTIAL in `IBKR_PAPER_BRIDGE/docs/03_STATUS.md` because the screenshot-visible candle plot uses the local SVG fallback; the Lightweight Charts CDN path remained effectively blank in the browser screenshot runtime. No exchange/LLM API calls, backtests, Pine/parity, or protected MCC strategy behavior were touched. P0 Hyperliquid smoke remains explicit-approval gated.
+
 ## Codex GPT-5 2026-07-07 - Crypto Paper Bridge overnight build (tasks 1-11 done)
 
 Built the Hyperliquid Crypto Paper Bridge v1 mock-first slice on `feature/ibkr-bridge-final`.

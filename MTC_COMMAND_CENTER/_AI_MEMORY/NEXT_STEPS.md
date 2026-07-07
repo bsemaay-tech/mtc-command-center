@@ -3,9 +3,11 @@
 ## 🚀 CRYPTO PAPER BRIDGE — Hyperliquid (was "IBKR"; broker PIVOTED 2026-07-06, design FINAL on `feature/ibkr-bridge-final` 52b13f6f; read `IBKR_PAPER_BRIDGE/docs/` 00→01→05→02→07 before touching. IBKR closed (KKTC), Signum rejected (no native stop) — see 07_BROKER_DECISION)
 - ~~run external design audits~~ DONE 2026-07-06: 7 reports in `IBKR_PAPER_BRIDGE/docs/audits/`.
 - ~~triage audit reports, adopt accepted findings~~ **DONE 2026-07-06** (Claude Fable 5): 21 adopted clusters amended in place; record + rejections in `IBKR_PAPER_BRIDGE/docs/05_AUDIT_RESOLUTION.md`. Build plan now honestly **2 days** (Day 1 mock core, Day 2 IBKR hardening).
-- **[AI: Barış]** review `IBKR_PAPER_BRIDGE/docs/00_PREREG.md` + `IBKR_PAPER_BRIDGE/docs/03_STATUS.md` and decide whether to merge/continue `feature/ibkr-bridge-final`.
+- **[AI: Barış]** review corrected `IBKR_PAPER_BRIDGE/docs/03_STATUS.md` and commits `d431dfab..0f6e241d`; decide whether to merge/continue `feature/ibkr-bridge-final`.
 - **[AI: Barış]** prep Hyperliquid **testnet** API wallet per `06_HYPERLIQUID_SETUP.md` (agent wallet = trade-only/no-withdraw; env HL_ACCOUNT_ADDRESS + HL_API_WALLET_KEY); optional XAI_API_KEY (Grok regime).
 - ~~**[AI: Claude|Codex]** BUILD DAY: execute `IBKR_PAPER_BRIDGE/docs/02_BUILD_PLAN_1DAY.md` tasks 1-11 in order, commit per task, mock-first.~~ DONE 2026-07-07 (Codex GPT-5): 13 task commits through Task 11; tests pass; dry-run demo verified; P0 smoke written but not run.
+- ~~**[AI: Codex]** corrective scaffold-to-P1 pass from `docs/09_CODEX_FIX_PROMPT.md`.~~ DONE 2026-07-07: Broker protocol decoupling, strategy stops/live positions, resting order lifecycle, persisted duplicate guard, persisted KILL, Hyperliquid native trigger fake-SDK tests, dashboard real rows/status/bars/screenshots, and lifecycle tests. Full suite 37 passed. Caveat: chart screenshot uses local SVG fallback; actual Lightweight Charts visible rendering remains a focused follow-up.
+- **[AI: Codex|Claude]** focused dashboard chart follow-up: make the visible Trading chart use a reliable bundled/local Lightweight Charts path or formally accept the SVG fallback for P1 mock demo; verify with screenshots.
 - **[AI: Codex|Claude, approval-gated]** P0 smoke against Hyperliquid testnet (`IBKR_PAPER_BRIDGE/tools/smoke_p0.py`) — ONLY with explicit Barış approval in-session (repo guard: exchange actions gated).
 - Then PREREG gates P1 (mock dry-run demo) → P2 (paper ≥10d unattended) → P3 (≥30d, slippage + signal-parity report to `11_TRIAGE/`).
 
