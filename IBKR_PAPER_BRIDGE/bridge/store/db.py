@@ -20,7 +20,12 @@ def _to_iso(value: datetime | str | None) -> str | None:
 
 
 def _json(value: Any) -> str:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"))
+    def default(obj: Any) -> str:
+        if isinstance(obj, datetime):
+            return _to_iso(obj) or ""
+        raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
+
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), default=default)
 
 
 class Store:
@@ -196,6 +201,14 @@ class Store:
               detail TEXT
             );
 
+            CREATE TABLE IF NOT EXISTS signal_fingerprints (
+              run_id TEXT,
+              fingerprint TEXT,
+              decision_uid TEXT,
+              ts TEXT,
+              PRIMARY KEY(run_id, fingerprint)
+            );
+
             CREATE INDEX IF NOT EXISTS idx_decisions_uid ON decisions(decision_uid);
             CREATE INDEX IF NOT EXISTS idx_decisions_run ON decisions(run_id, ts);
             CREATE INDEX IF NOT EXISTS idx_orders_oid ON orders(oid);
@@ -214,6 +227,13 @@ class Store:
     def get_meta(self, key: str) -> str | None:
         row = self.conn.execute("SELECT value FROM meta WHERE key = ?", (key,)).fetchone()
         return None if row is None else str(row["value"])
+
+    def set_meta(self, key: str, value: str) -> None:
+        self.conn.execute(
+            "INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)",
+            (key, value),
+        )
+        self.conn.commit()
 
     def create_run(self, run_id: str, mode: str, network: str, config: dict[str, Any]) -> None:
         self.conn.execute(
@@ -493,6 +513,39 @@ class Store:
         )
         self.conn.commit()
         return int(cursor.lastrowid)
+
+    def claim_signal_fingerprint(self, run_id: str, fingerprint: str, decision_uid: str, ts: datetime | str) -> bool:
+        try:
+            self.conn.execute(
+                """
+                INSERT INTO signal_fingerprints(run_id, fingerprint, decision_uid, ts)
+                VALUES (?, ?, ?, ?)
+                """,
+                (run_id, fingerprint, decision_uid, _to_iso(ts)),
+            )
+            self.conn.commit()
+            return True
+        except sqlite3.IntegrityError:
+            return False
+
+    def get_order(self, cloid: str) -> dict[str, Any] | None:
+        row = self.conn.execute("SELECT * FROM orders WHERE cloid = ?", (cloid,)).fetchone()
+        return None if row is None else dict(row)
+
+    def get_trade(self, trade_id: int) -> dict[str, Any] | None:
+        row = self.conn.execute("SELECT * FROM trades WHERE trade_id = ?", (trade_id,)).fetchone()
+        return None if row is None else dict(row)
+
+    def update_trade_entry(self, trade_id: int, entry_px: float, entry_ts: datetime | str) -> None:
+        self.conn.execute(
+            """
+            UPDATE trades
+            SET entry_px = ?, entry_ts = ?, first_fill_ts = COALESCE(first_fill_ts, ?), last_fill_ts = ?
+            WHERE trade_id = ?
+            """,
+            (entry_px, _to_iso(entry_ts), _to_iso(entry_ts), _to_iso(entry_ts), trade_id),
+        )
+        self.conn.commit()
 
     def get_snapshot(self) -> dict[str, list[dict[str, Any]]]:
         return {

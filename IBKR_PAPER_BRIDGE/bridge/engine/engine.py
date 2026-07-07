@@ -45,6 +45,10 @@ class BridgeEngine:
             bars = bars[:max_bars]
         for idx, bar in enumerate(bars):
             self.store.insert_bar(coin, "1h", bar.ts, bar.open, bar.high, bar.low, bar.close, bar.volume)
+            process_bar = getattr(self.broker, "process_bar", None)
+            if process_bar is not None:
+                process_bar(bar)
+                await self.order_manager.sync_broker_state()
             position = self._position_for(coin, await self.broker.positions())
             if self.state != "ARMED":
                 return

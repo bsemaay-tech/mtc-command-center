@@ -65,31 +65,46 @@ class MockBroker:
         if len(self.bars) < 2:
             raise ValueError("MockBroker needs at least two bars for next-open fill")
 
-        fill_bar = self._next_bar_after(plan.signal.ts)
-        side = 1 if plan.signal.direction == "LONG" else -1
-        entry_px = fill_bar.open if plan.entry_type == "MKT" else plan.limit_price
-        if entry_px is None:
-            raise ValueError("limit_price is required for LMT orders")
-
-        entry = self._order("ENTRY", "FILLED", plan.qty, entry_px)
-        self.fills.append({"role": "ENTRY", "qty": plan.qty, "px": entry_px})
-        self.position = Position(
+        entry = self._order(
+            "ENTRY",
+            "OPEN",
+            plan.qty,
+            plan.signal.ref_price,
+            reduce_only=False,
+            signal_ts=plan.signal.ts,
+            direction=plan.signal.direction,
             symbol=plan.signal.symbol,
-            size=plan.qty * side,
-            entry_px=entry_px,
-            unrealized=0.0,
             leverage=plan.leverage,
-            liquidation_px=None,
-            margin_used=abs(plan.qty * entry_px) / max(plan.leverage, 1),
         )
-
-        exit_order = self._simulate_exit(plan, start_bar=fill_bar)
-        return {"entry": entry, "exit": exit_order}
+        sl = self._order(
+            "SL",
+            "OPEN",
+            plan.qty,
+            plan.stop_loss,
+            reduce_only=True,
+            trigger_px=plan.stop_loss,
+            direction=plan.signal.direction,
+            symbol=plan.signal.symbol,
+        )
+        result = {"entry": entry, "sl": sl}
+        if plan.take_profit is not None:
+            result["tp"] = self._order(
+                "TP",
+                "OPEN",
+                plan.qty,
+                plan.take_profit,
+                reduce_only=True,
+                trigger_px=plan.take_profit,
+                direction=plan.signal.direction,
+                symbol=plan.signal.symbol,
+            )
+        return result
 
     async def modify_stop(self, cloid: str, new_stop: float) -> None:
         for order in self.orders:
             if order["cloid"] == cloid:
                 order["trigger_px"] = new_stop
+                order["avg_fill_px"] = new_stop
                 return
         raise KeyError(cloid)
 
@@ -104,7 +119,54 @@ class MockBroker:
                 order["status"] = "CANCELLED_BY_ENGINE"
 
     async def flatten(self, coin: str) -> None:
+        if self.position is not None and self.position.symbol == coin:
+            qty = abs(self.position.size)
+            px = self._last_price()
+            close = self._order("CLOSE", "FILLED", qty, px, reduce_only=True, symbol=coin)
+            self._record_fill(close, qty, px, datetime.now())
         self.position = None
+
+    def process_bar(self, bar: Bar) -> None:
+        for order in self.orders:
+            if order["role"] != "ENTRY" or order["status"] != "OPEN":
+                continue
+            signal_ts = order.get("signal_ts")
+            if isinstance(signal_ts, datetime) and bar.ts <= signal_ts:
+                continue
+            entry_px = bar.open
+            order["status"] = "FILLED"
+            order["avg_fill_px"] = entry_px
+            direction = order.get("direction", "LONG")
+            side = 1 if direction == "LONG" else -1
+            self.position = Position(
+                symbol=order.get("symbol", self.coin),
+                size=float(order["qty"]) * side,
+                entry_px=entry_px,
+                unrealized=0.0,
+                leverage=int(order.get("leverage", 1)),
+                liquidation_px=None,
+                margin_used=abs(float(order["qty"]) * entry_px) / max(int(order.get("leverage", 1)), 1),
+            )
+            self._record_fill(order, float(order["qty"]), entry_px, bar.ts)
+
+        if self.position is None:
+            return
+
+        is_long = self.position.size > 0
+        trigger_orders = [order for order in self.orders if order["role"] in {"SL", "TP"} and order["status"] == "OPEN"]
+        sl = next((order for order in trigger_orders if order["role"] == "SL"), None)
+        tp = next((order for order in trigger_orders if order["role"] == "TP"), None)
+        if sl is not None:
+            sl_px = float(sl["trigger_px"])
+            sl_hit = bar.low <= sl_px if is_long else bar.high >= sl_px
+            if sl_hit:
+                self._fill_exit(sl, sl_px, bar.ts)
+                return
+        if tp is not None:
+            tp_px = float(tp["trigger_px"])
+            tp_hit = bar.high >= tp_px if is_long else bar.low <= tp_px
+            if tp_hit:
+                self._fill_exit(tp, tp_px, bar.ts)
 
     def _next_bar_after(self, ts: datetime) -> Bar:
         for bar in self.bars:
@@ -112,28 +174,22 @@ class MockBroker:
                 return bar
         return self.bars[-1]
 
-    def _simulate_exit(self, plan: OrderPlan, start_bar: Bar) -> dict:
-        is_long = plan.signal.direction == "LONG"
-        for bar in self.bars[self.bars.index(start_bar) :]:
-            sl_hit = bar.low <= plan.stop_loss if is_long else bar.high >= plan.stop_loss
-            tp_hit = False
-            if plan.take_profit is not None:
-                tp_hit = bar.high >= plan.take_profit if is_long else bar.low <= plan.take_profit
-
-            if sl_hit:
-                return self._close("SL", plan.qty, plan.stop_loss)
-            if tp_hit and plan.take_profit is not None:
-                return self._close("TP", plan.qty, plan.take_profit)
-
-        return self._order("SL", "OPEN", plan.qty, plan.stop_loss)
-
-    def _close(self, role: str, qty: float, px: float) -> dict:
-        order = self._order(role, "FILLED", qty, px)
-        self.fills.append({"role": role, "qty": qty, "px": px})
+    def _fill_exit(self, order: dict, px: float, ts: datetime) -> None:
+        order["status"] = "FILLED"
+        order["avg_fill_px"] = px
+        self._record_fill(order, float(order["qty"]), px, ts)
         self.position = None
-        return order
 
-    def _order(self, role: str, status: str, qty: float, avg_fill_px: float) -> dict:
+    def _order(
+        self,
+        role: str,
+        status: str,
+        qty: float,
+        avg_fill_px: float,
+        reduce_only: bool = False,
+        trigger_px: float | None = None,
+        **extra,
+    ) -> dict:
         oid = next(self._ids)
         order = {
             "cloid": f"mock-{oid}",
@@ -142,6 +198,29 @@ class MockBroker:
             "status": status,
             "qty": qty,
             "avg_fill_px": avg_fill_px,
+            "reduce_only": reduce_only,
         }
+        if trigger_px is not None:
+            order["trigger_px"] = trigger_px
+        order.update(extra)
         self.orders.append(order)
         return order
+
+    def _record_fill(self, order: dict, qty: float, px: float, ts: datetime) -> None:
+        self.fills.append(
+            {
+                "fill_id": f"{order['cloid']}:{len(self.fills) + 1}",
+                "cloid": order["cloid"],
+                "role": order["role"],
+                "qty": qty,
+                "px": px,
+                "ts": ts,
+            }
+        )
+
+    def _last_price(self) -> float:
+        if self.bars:
+            return self.bars[-1].close
+        if self.position is not None:
+            return self.position.entry_px
+        return 0.0

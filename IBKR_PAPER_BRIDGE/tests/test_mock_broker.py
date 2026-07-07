@@ -38,10 +38,14 @@ async def _run_market_fill_and_sl_priority():
     )
 
     ids = await broker.place_bracket(plan)
+    assert ids["entry"]["status"] == "OPEN"
+
+    broker.process_bar(bars[1])
+
     assert ids["entry"]["avg_fill_px"] == 101
-    assert ids["exit"]["status"] == "FILLED"
-    assert ids["exit"]["role"] == "SL"
-    assert ids["exit"]["avg_fill_px"] == 95
+    assert ids["sl"]["status"] == "FILLED"
+    assert ids["sl"]["role"] == "SL"
+    assert ids["sl"]["avg_fill_px"] == 95
     assert await broker.positions() == []
 
 
