@@ -5,18 +5,19 @@ from __future__ import annotations
 import sqlite3
 from dataclasses import dataclass
 
-from bridge.broker.mock import MockBroker
+from bridge.broker.base import Broker
 from bridge.engine.llm_gate import NullLLMGate
 from bridge.engine.orders import OrderManager
 from bridge.engine.risk import RiskEngine
 from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
+from bridge.engine.types import Bar
 from bridge.store.db import Store
 
 
 @dataclass
 class BridgeEngine:
     run_id: str
-    broker: MockBroker
+    broker: Broker
     store: Store
     strategy: KeltnerTrailEma8
     risk_engine: RiskEngine
@@ -37,9 +38,13 @@ class BridgeEngine:
         if self.state != "ARMED":
             return
 
-        bars = self.broker.bars[:max_bars] if max_bars else self.broker.bars
+        bars: list[Bar] = []
+        coin = getattr(self.strategy, "symbol", "BTC")
+        self.broker.subscribe_bars(coin, "1h", bars.append)
+        if max_bars is not None:
+            bars = bars[:max_bars]
         for idx, bar in enumerate(bars):
-            self.store.insert_bar(self.broker.coin, "1h", bar.ts, bar.open, bar.high, bar.low, bar.close, bar.volume)
+            self.store.insert_bar(coin, "1h", bar.ts, bar.open, bar.high, bar.low, bar.close, bar.volume)
             if self.state != "ARMED":
                 return
             signal = self.strategy.on_bar(bars[: idx + 1], position=None)

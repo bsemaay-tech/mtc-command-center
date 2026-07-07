@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Protocol
+from collections.abc import Callable
+from typing import Any, Protocol
+
+from bridge.engine.types import Bar, OrderPlan, Position
 
 
 class Broker(Protocol):
@@ -11,22 +14,22 @@ class Broker(Protocol):
     async def connect(self) -> None:
         ...
 
-    async def account(self) -> dict:
+    async def account(self) -> dict[str, float]:
         ...
 
-    async def positions(self) -> list:
+    async def positions(self) -> list[Position]:
         ...
 
-    async def open_orders(self) -> list:
+    async def open_orders(self) -> list[dict[str, Any]]:
         ...
 
-    async def historical_bars(self, coin: str, tf: str, lookback: int) -> list:
+    async def historical_bars(self, coin: str, tf: str, lookback: int) -> list[Bar]:
         ...
 
-    def subscribe_bars(self, coin: str, tf: str, on_bar_closed) -> None:
+    def subscribe_bars(self, coin: str, tf: str, on_bar_closed: Callable[[Bar], None]) -> None:
         ...
 
-    async def place_bracket(self, plan) -> dict:
+    async def place_bracket(self, plan: OrderPlan) -> dict[str, Any]:
         ...
 
     async def modify_stop(self, cloid: str, new_stop: float) -> None:

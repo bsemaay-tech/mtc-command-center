@@ -5,13 +5,13 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-from bridge.broker.mock import MockBroker
+from bridge.broker.base import Broker
 from bridge.engine.types import OrderPlan
 from bridge.store.db import Store
 
 
 class OrderManager:
-    def __init__(self, store: Store, broker: MockBroker, run_id: str) -> None:
+    def __init__(self, store: Store, broker: Broker, run_id: str) -> None:
         self.store = store
         self.broker = broker
         self.run_id = run_id
