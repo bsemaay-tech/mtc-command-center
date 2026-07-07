@@ -33,7 +33,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("Crypto Paper Bridge shutting down")
 
 
-def create_app(dry_run: bool = False) -> FastAPI:
+def create_app(dry_run: bool = False, store_path: str | Path | None = None) -> FastAPI:
     """Build an import-safe FastAPI app without exchange or LLM calls."""
     app = FastAPI(
         title="Crypto Paper Bridge",
@@ -46,7 +46,11 @@ def create_app(dry_run: bool = False) -> FastAPI:
         allow_methods=["GET", "POST", "PUT"],
         allow_headers=["X-Confirm", "Content-Type"],
     )
-    init_runtime_state(app)
+    store = None
+    if store_path is not None:
+        store = Store(store_path)
+        store.initialize()
+    init_runtime_state(app, store=store)
     if dry_run:
         _preload_dry_run(app)
     install_routes(app)

@@ -28,14 +28,19 @@ class BridgeEngine:
     def __post_init__(self) -> None:
         self.order_manager = self.order_manager or OrderManager(self.store, self.broker, self.run_id)
         self.llm_gate = self.llm_gate or NullLLMGate()
+        persisted = self.store.get_meta("app_state")
+        if persisted is None:
+            self.store.set_meta("app_state", self.state)
+        else:
+            self.state = persisted
 
     def disarm(self) -> None:
-        self.state = "DISARMED"
+        self._set_state("DISARMED")
 
     async def run_replay(self, max_bars: int | None = None) -> None:
         self._ensure_run()
         await self.broker.connect()
-        if self.state != "ARMED":
+        if self._app_state() != "ARMED":
             return
 
         bars: list[Bar] = []
@@ -50,7 +55,7 @@ class BridgeEngine:
                 process_bar(bar)
                 await self.order_manager.sync_broker_state()
             position = self._position_for(coin, await self.broker.positions())
-            if self.state != "ARMED":
+            if self._app_state() != "ARMED":
                 return
             signal = self.strategy.on_bar(bars[: idx + 1], position=position)
             if signal is None:
@@ -103,7 +108,10 @@ class BridgeEngine:
                 "LLM_SKIPPED",
                 {"reason": llm.reason},
             )
-            if self.state != "ARMED":
+            if self._app_state() != "ARMED":
+                return
+            latest_position = self._position_for(coin, await self.broker.positions())
+            if latest_position is not None:
                 return
             result = await self.order_manager.submit_plan(decision_uid, risk.plan)
             if result is not None:
@@ -114,6 +122,16 @@ class BridgeEngine:
             self.store.create_run(self.run_id, "dry_run", "testnet", {"broker": "mock"})
         except sqlite3.IntegrityError:
             return
+
+    def _app_state(self) -> str:
+        persisted = self.store.get_meta("app_state")
+        if persisted is not None:
+            self.state = persisted
+        return self.state
+
+    def _set_state(self, state: str) -> None:
+        self.state = state
+        self.store.set_meta("app_state", state)
 
     @staticmethod
     def _position_for(coin: str, positions: list[Position]) -> Position | None:

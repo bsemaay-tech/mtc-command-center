@@ -29,6 +29,10 @@ def test_position_blocks_entry(tmp_path):
     asyncio.run(_run_position_blocks_entry(tmp_path))
 
 
+def test_disarm_mid_await_no_submit(tmp_path):
+    asyncio.run(_run_disarm_mid_await_no_submit(tmp_path))
+
+
 async def _run_dryrun_replay(tmp_path):
     store = Store(tmp_path / "bridge.db")
     store.initialize()
@@ -128,6 +132,28 @@ async def _run_position_blocks_entry(tmp_path):
 
     assert store.get_snapshot()["trades"] == []
     assert broker.submitted == []
+
+
+async def _run_disarm_mid_await_no_submit(tmp_path):
+    store = Store(tmp_path / "bridge.db")
+    store.initialize()
+    store.set_meta("app_state", "ARMED")
+    bar = Bar(ts=datetime(2026, 7, 6, 0, tzinfo=UTC), open=100, high=102, low=99, close=100, volume=1)
+    broker = RecordingBroker([bar])
+    engine = BridgeEngine(
+        run_id="mid-await-disarm",
+        broker=broker,
+        store=store,
+        strategy=FixedSignalStrategy(stop_loss=90.0, take_profit=115.0),
+        risk_engine=RiskEngine(RiskConfig(max_position_notional_pct=0.5)),
+        llm_gate=DisarmingGate(store),
+    )
+
+    await engine.run_replay(max_bars=1)
+
+    assert store.get_meta("app_state") == "DISARMED"
+    assert broker.submitted == []
+    assert store.get_snapshot()["trades"] == []
 
 
 def test_order_manager_duplicate_and_disarmed_guards(tmp_path):
@@ -259,3 +285,16 @@ class RecordingBroker(ProtocolOnlyBroker):
                 "avg_fill_px": plan.signal.ref_price,
             }
         }
+
+
+class DisarmingGate:
+    def __init__(self, store: Store) -> None:
+        self.store = store
+
+    async def check(self, plan):
+        self.store.set_meta("app_state", "DISARMED")
+
+        class Result:
+            reason = "test disarm"
+
+        return Result()

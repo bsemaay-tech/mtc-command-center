@@ -8,21 +8,26 @@ from typing import Any
 import yaml
 from fastapi import FastAPI, Header, HTTPException, Request
 
+from bridge.store.db import Store
+
 
 def load_config() -> dict[str, Any]:
     path = Path(__file__).resolve().parents[2] / "config" / "bridge.yaml"
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
-def init_runtime_state(app: FastAPI) -> None:
+def init_runtime_state(app: FastAPI, store: Store | None = None) -> None:
+    if store is not None and store.get_meta("app_state") is None:
+        store.set_meta("app_state", "DISARMED")
     app.state.bridge_status = {
-        "state": "DISARMED",
+        "state": store.get_meta("app_state") if store is not None else "DISARMED",
         "mode": "paper",
         "network": "testnet",
         "exchange_conn": "mock",
         "regime": "BOTH",
         "state_version": 1,
     }
+    app.state.bridge_store = store
     app.state.bridge_config = load_config()
     app.state.bridge_bars = {"bars": []}
     app.state.bridge_data = {
@@ -54,26 +59,26 @@ def install_routes(app: FastAPI) -> None:
     @app.post("/api/arm")
     async def arm(request: Request, x_confirm: int | None = Header(default=None)) -> dict[str, Any]:
         _require_confirm(request, x_confirm)
-        request.app.state.bridge_status["state"] = "ARMED"
+        _set_state(request, "ARMED")
         _bump(request)
         return dict(request.app.state.bridge_status)
 
     @app.post("/api/disarm")
     async def disarm(request: Request) -> dict[str, Any]:
-        request.app.state.bridge_status["state"] = "DISARMED"
+        _set_state(request, "DISARMED")
         _bump(request)
         return dict(request.app.state.bridge_status)
 
     @app.post("/api/kill")
     async def kill(request: Request, flatten: bool = False) -> dict[str, Any]:
-        request.app.state.bridge_status["state"] = "KILLED"
+        _set_state(request, "KILLED")
         request.app.state.bridge_status["flatten_requested"] = flatten
         _bump(request)
         return dict(request.app.state.bridge_status)
 
     @app.post("/api/kill/ack")
     async def kill_ack(request: Request) -> dict[str, Any]:
-        request.app.state.bridge_status["state"] = "DISARMED"
+        _set_state(request, "DISARMED")
         _bump(request)
         return dict(request.app.state.bridge_status)
 
@@ -139,3 +144,10 @@ def _require_confirm(request: Request, x_confirm: int | None) -> None:
 
 def _bump(request: Request) -> None:
     request.app.state.bridge_status["state_version"] += 1
+
+
+def _set_state(request: Request, state: str) -> None:
+    request.app.state.bridge_status["state"] = state
+    store = getattr(request.app.state, "bridge_store", None)
+    if store is not None:
+        store.set_meta("app_state", state)

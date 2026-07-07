@@ -44,3 +44,22 @@ def test_ws_pushes_snapshot_on_connect():
 
     assert message["topic"] == "snapshot"
     assert message["data"]["status"]["mode"] == "paper"
+
+
+def test_kill_persists_across_restart(tmp_path):
+    db_path = tmp_path / "bridge.db"
+    first = TestClient(create_app(store_path=db_path))
+
+    killed = first.post("/api/kill?flatten=false")
+    assert killed.status_code == 200
+    assert killed.json()["state"] == "KILLED"
+
+    restarted = TestClient(create_app(store_path=db_path))
+    assert restarted.get("/api/status").json()["state"] == "KILLED"
+
+    acked = restarted.post("/api/kill/ack")
+    assert acked.status_code == 200
+    assert acked.json()["state"] == "DISARMED"
+
+    after_ack_restart = TestClient(create_app(store_path=db_path))
+    assert after_ack_restart.get("/api/status").json()["state"] == "DISARMED"
