@@ -7,6 +7,7 @@ must not be run without explicit approval because it places testnet orders.
 from __future__ import annotations
 
 import os
+import hashlib
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Callable
@@ -127,11 +128,58 @@ class HyperliquidBroker:
     async def place_bracket(self, plan: OrderPlan) -> dict:
         if self.exchange is None or not hasattr(self.exchange, "order"):
             raise HyperliquidNotConfigured("Exchange client not configured")
-        return {"entry": self.exchange.order(plan.signal.symbol, True, plan.qty, 0, {"limit": {"tif": "Ioc"}})}
+        is_entry_buy = plan.signal.direction == "LONG"
+        is_exit_buy = not is_entry_buy
+        entry_cloid = self._cloid(plan, "entry")
+        sl_cloid = self._cloid(plan, "sl")
+        entry_raw = self.exchange.order(
+            plan.signal.symbol,
+            is_entry_buy,
+            plan.qty,
+            0,
+            {"limit": {"tif": "Ioc"}},
+            reduce_only=False,
+            cloid=entry_cloid,
+        )
+        sl_raw = self.exchange.order(
+            plan.signal.symbol,
+            is_exit_buy,
+            plan.qty,
+            0,
+            {
+                "trigger": {"triggerPx": plan.stop_loss, "isMarket": True, "tpsl": "sl"},
+                "grouping": "positionTpsl",
+            },
+            reduce_only=True,
+            cloid=sl_cloid,
+        )
+        result = {
+            "entry": self._order_result("ENTRY", entry_cloid, entry_raw, plan.qty),
+            "sl": self._order_result("SL", sl_cloid, sl_raw, plan.qty, trigger_px=plan.stop_loss),
+        }
+        if plan.take_profit is not None:
+            tp_cloid = self._cloid(plan, "tp")
+            tp_raw = self.exchange.order(
+                plan.signal.symbol,
+                is_exit_buy,
+                plan.qty,
+                0,
+                {
+                    "trigger": {"triggerPx": plan.take_profit, "isMarket": True, "tpsl": "tp"},
+                    "grouping": "positionTpsl",
+                },
+                reduce_only=True,
+                cloid=tp_cloid,
+            )
+            result["tp"] = self._order_result("TP", tp_cloid, tp_raw, plan.qty, trigger_px=plan.take_profit)
+        return result
 
     async def modify_stop(self, cloid: str, new_stop: float) -> None:
         if self.exchange is not None and hasattr(self.exchange, "modify_order"):
-            self.exchange.modify_order(cloid, {"triggerPx": new_stop})
+            self.exchange.modify_order(
+                cloid,
+                {"trigger": {"triggerPx": new_stop, "isMarket": True, "tpsl": "sl"}, "grouping": "positionTpsl"},
+            )
 
     async def cancel(self, cloid: str) -> None:
         if self.exchange is not None and hasattr(self.exchange, "cancel_by_cloid"):
@@ -144,6 +192,26 @@ class HyperliquidBroker:
                 await self.cancel(cloid)
 
     async def flatten(self, coin: str) -> None:
+        if self.exchange is None or not hasattr(self.exchange, "order"):
+            raise HyperliquidNotConfigured("Exchange client not configured")
+        size = 0.0
+        for position in await self.positions():
+            parsed = self._parse_position(position)
+            if parsed is None or parsed["coin"] != coin:
+                continue
+            size = float(parsed["size"])
+            break
+        if size == 0:
+            return None
+        self.exchange.order(
+            coin,
+            size < 0,
+            abs(size),
+            0,
+            {"limit": {"tif": "Ioc"}},
+            reduce_only=True,
+            cloid=self._raw_cloid(f"{coin}:flatten:{datetime.now(UTC).isoformat()}"),
+        )
         return None
 
     def _check_network_lock(self) -> None:
@@ -164,3 +232,45 @@ class HyperliquidBroker:
         wallet = Account.from_key(self.api_wallet_key)
         self.info = Info(base_url, skip_ws=False)
         self.exchange = Exchange(wallet, base_url, account_address=self.account_address)
+
+    def _cloid(self, plan: OrderPlan, role: str) -> str:
+        raw = f"{plan.signal.symbol}:{plan.signal.ts.isoformat()}:{plan.signal.direction}:{role}"
+        return self._raw_cloid(raw)
+
+    @staticmethod
+    def _raw_cloid(raw: str) -> str:
+        return "0x" + hashlib.blake2s(raw.encode("utf-8"), digest_size=16).hexdigest()
+
+    @staticmethod
+    def _order_result(role: str, cloid: str, raw: object, qty: float, trigger_px: float | None = None) -> dict:
+        result = {"cloid": cloid, "oid": None, "role": role, "status": "OPEN", "qty": qty}
+        oid = HyperliquidBroker._extract_oid(raw)
+        if oid is not None:
+            result["oid"] = oid
+        if trigger_px is not None:
+            result["trigger_px"] = trigger_px
+        return result
+
+    @staticmethod
+    def _extract_oid(raw: object) -> int | None:
+        if not isinstance(raw, dict):
+            return None
+        statuses = raw.get("response", {}).get("data", {}).get("statuses", [])
+        if not statuses:
+            return None
+        status = statuses[0]
+        if "resting" in status:
+            return status["resting"].get("oid")
+        if "filled" in status:
+            return status["filled"].get("oid")
+        return None
+
+    @staticmethod
+    def _parse_position(position: object) -> dict[str, object] | None:
+        if not isinstance(position, dict):
+            return None
+        payload = position.get("position", position)
+        if not isinstance(payload, dict) or "coin" not in payload:
+            return None
+        raw_size = payload.get("szi", payload.get("size", 0))
+        return {"coin": payload["coin"], "size": float(raw_size)}
