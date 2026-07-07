@@ -6,7 +6,7 @@ import argparse
 import asyncio
 import logging
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import AsyncIterator
 
@@ -80,7 +80,12 @@ def _preload_dry_run(app: FastAPI) -> None:
     )
     asyncio.run(engine.run_replay(max_bars=80))
     snapshot = store.get_snapshot()
+    realized = sum(float(trade["pnl"] or 0.0) for trade in snapshot["trades"])
+    last_bar = snapshot["bars"][-1] if snapshot["bars"] else None
     app.state.bridge_status["mode"] = "dry_run"
+    app.state.bridge_status["equity"] = broker.starting_equity + realized
+    app.state.bridge_status["day_pnl"] = realized
+    app.state.bridge_status["next_bar"] = _next_bar_label(last_bar["bar_end_ts"]) if last_bar else "--:--:--"
     app.state.bridge_data["orders"] = snapshot["orders"][-25:]
     app.state.bridge_data["trades"] = snapshot["trades"][-25:]
     app.state.bridge_data["events"] = snapshot["events"][-25:]
@@ -95,6 +100,11 @@ def _preload_dry_run(app: FastAPI) -> None:
         }
         for row in snapshot["bars"][-300:]
     ]
+
+
+def _next_bar_label(bar_end_ts: str) -> str:
+    last = datetime.fromisoformat(bar_end_ts)
+    return (last.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)).strftime("%H:%M UTC")
 
 
 app = create_app()
