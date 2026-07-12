@@ -274,9 +274,15 @@ class HyperliquidBroker:
         except Exception:
             logger.warning("stop modify failed; cancelling and replacing cloid=%s", cloid)
             await asyncio.to_thread(self.exchange.cancel_by_cloid, spec["coin"], typed_cloid)
-            replacement = dict(spec)
-            replacement["limit_px"] = new_stop
-            replacement["order_type"] = order_type
+            replacement = self._request(
+                spec["coin"],
+                spec["is_buy"],
+                spec["sz"],
+                new_stop,
+                order_type,
+                True,
+                typed_cloid,
+            )
             await asyncio.to_thread(self.exchange.bulk_orders, [replacement], grouping="positionTpsl")
         spec["limit_px"] = new_stop
         spec["order_type"] = order_type

@@ -88,6 +88,31 @@ def test_hl_modify_and_cancel_use_real_sdk_signatures():
     assert isinstance(cancel.args[1], Cloid)
 
 
+def test_hl_modify_stop_fallback_replaces_with_clean_order_request():
+    exchange = _exchange_mock()
+    broker = HyperliquidBroker(info_client=object(), exchange_client=exchange)
+    ids = asyncio.run(broker.place_bracket(_plan()))
+    exchange.modify_order.side_effect = RuntimeError("forced modify failure")
+
+    asyncio.run(broker.modify_stop(ids["sl"]["cloid"], 96.0))
+
+    replacement = exchange.bulk_orders.call_args_list[-1].args[0][0]
+    assert set(replacement) == {
+        "coin",
+        "is_buy",
+        "sz",
+        "limit_px",
+        "order_type",
+        "reduce_only",
+        "cloid",
+    }
+    assert replacement["limit_px"] == 96.0
+    assert replacement["reduce_only"] is True
+    assert replacement["order_type"] == {
+        "trigger": {"triggerPx": 96.0, "isMarket": True, "tpsl": "sl"}
+    }
+
+
 @pytest.mark.parametrize("position_size", ["0.25", "-0.25"])
 def test_hl_flatten_uses_market_close_for_long_and_short(position_size):
     info = FakeInfo(size=position_size)
