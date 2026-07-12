@@ -1,5 +1,17 @@
 # ACTIVE_FILES
 
+## 2026-07-12 Codex GPT-5 — Crypto Paper Bridge P0 retry (BLOCKED)
+- `IBKR_PAPER_BRIDGE/bridge/broker/hyperliquid.py`
+- `IBKR_PAPER_BRIDGE/tools/smoke_p0.py`
+- `IBKR_PAPER_BRIDGE/tests/test_hyperliquid_broker.py`
+- `IBKR_PAPER_BRIDGE/tests/test_smoke_p0.py`
+- `IBKR_PAPER_BRIDGE/docs/p0_smoke_log.json`
+- `IBKR_PAPER_BRIDGE/docs/14_P0_SMOKE_REPORT.md`
+- `IBKR_PAPER_BRIDGE/docs/03_STATUS.md`
+- Result: F0/F1/F2 local PASS; both suites `67 passed`; P0 connected but placed no orders because
+  999 mock USDC was in Spot while Perps collateral was zero. Read-only cleanup proof: zero positions,
+  zero open orders. No retry; P2 unapproved.
+
 ## 2026-07-04 Claude Fable 5 — V1.1 LOW-fix batch (SYSTEM_TEST_ONLY slice, CLOSED)
 - `MTC_COMMAND_CENTER\03_QUANTLENS\tools\vertical_slice\constants.py` (+SYSTEM_TEST_ROOT)
 - `MTC_COMMAND_CENTER\03_QUANTLENS\tools\vertical_slice\stg002_replay_emitter.py` (ledger redaction + path guard)

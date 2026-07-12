@@ -1,5 +1,22 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5] 2026-07-12 — Bridge P0 retry blocked by Spot-only collateral
+
+Executed the approved `IBKR_PAPER_BRIDGE/docs/13_CODEX_P0_RETRY_PROMPT.md` scope on
+`feature/ibkr-bridge-final`. F0 credential precheck, F1 SDK `market_close` flatten safety, and F2
+clean modify-stop replacement requests are committed as `a50cb4a9`, `7f4f7888`, and `92bc4f19`.
+Full local suite passes from both required CWDs: `67 passed, 1 warning` each.
+
+The single authorized testnet P0 attempt connected and retrieved account state, three live BTC 1h
+candles, metadata, and an ~$11.51 resting plan. It failed before any oid/cloid because Perps account
+value was `0.0`; read-only diagnostics found `999.0` mock USDC in Spot, zero positions, and zero
+open orders. No retry or balance transfer was performed. The SDK returned an unhandled
+string-shaped response, and websocket worker state kept the finished script process alive until the
+outer timeout. Evidence: `IBKR_PAPER_BRIDGE/docs/14_P0_SMOKE_REPORT.md` and
+`docs/p0_smoke_log.json`. Next human action: move mock USDC Spot→Perps on testnet. A new P0 order
+attempt needs separate approval after safe response handling, disconnect lifecycle, and read-only
+Perps collateral confirmation. P2 remains unapproved.
+
 ## [Codex GPT-5] 2026-07-12 — Bridge P1 build
 
 Executed `IBKR_PAPER_BRIDGE/docs/10_CODEX_P1_BUILD_PROMPT.md` on
