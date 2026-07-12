@@ -359,6 +359,22 @@ class HyperliquidBroker:
                 # Filled status explains why the order is not in open_orders
                 result[role.lower()] = self._order_result(role, cloid, status, qty, trigger_px=trigger_px)
                 result[role.lower()]["symbol"] = symbol
+            elif "pending_child" in status:
+                # normalTpsl child trigger waiting for its parent to fill — not in
+                # open_orders yet by design; the exchange cancels it automatically
+                # if the parent is cancelled. Verified as a pending state.
+                row = {
+                    "cloid": cloid_str,
+                    "oid": None,
+                    "role": role,
+                    "status": "WAITING_CHILD",
+                    "qty": qty,
+                    "symbol": symbol,
+                    "pending_reason": status["pending_child"],
+                }
+                if trigger_px is not None:
+                    row["trigger_px"] = trigger_px
+                result[role.lower()] = row
             else:
                 # Every cloid must be verified — no special exemptions for triggers
                 raise HyperliquidOrderError(
@@ -614,13 +630,23 @@ class HyperliquidBroker:
                 f"Hyperliquid exchange response did not contain statuses; "
                 f"raw_response={HyperliquidBroker._raw_response_safe(raw)}"
             )
-        if any(not isinstance(status, dict) for status in statuses):
-            detail = "; ".join(str(status) for status in statuses if not isinstance(status, dict))
+        normalized: list[dict] = []
+        for status in statuses:
+            if isinstance(status, dict):
+                normalized.append(status)
+                continue
+            # Real testnet (attempt 6): normalTpsl child triggers return the plain
+            # string "waitingForFill" until the parent order fills. Treat known
+            # pending-child strings as a first-class pending state; anything else
+            # is still an error carrying the full redacted raw response.
+            if isinstance(status, str) and status in {"waitingForFill", "waitingForTrigger"}:
+                normalized.append({"pending_child": status})
+                continue
             raise HyperliquidOrderError(
-                f"{HyperliquidBroker._safe_exchange_message(detail)}; "
+                f"{HyperliquidBroker._safe_exchange_message(str(status))}; "
                 f"raw_response={HyperliquidBroker._raw_response_safe(raw)}"
             )
-        return statuses
+        return normalized
 
     @staticmethod
     def _safe_exchange_message(value: object, cap: int = 4000) -> str:

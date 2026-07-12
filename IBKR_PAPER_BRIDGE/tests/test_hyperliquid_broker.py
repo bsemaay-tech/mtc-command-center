@@ -1076,3 +1076,63 @@ def _verified_reprotect_info(decision_uid: str) -> object:
             return [{"coin": "BTC", "side": "A", "sz": "0.1", "oid": 7, "cloid": cloid, "orderType": "Stop Market", "triggerPx": "95", "reduceOnly": True}]
 
     return _ReprotectInfo()
+
+
+def test_hl_bracket_waiting_for_fill_child_is_verified_pending():
+    """W1: real attempt-6 shape — resting entry + string waitingForFill child.
+
+    Testnet returned: statuses = [{"resting": {oid, cloid}}, "waitingForFill"].
+    Pending children are not in open_orders by design; they must verify as
+    WAITING_CHILD instead of raising.
+    """
+    exchange = _exchange_mock()
+    expected = HyperliquidBroker.compute_cloids("BTC:2026-07-06T00:00:00+00:00:LONG")
+    exchange.bulk_orders.return_value = {
+        "status": "ok",
+        "response": {
+            "type": "order",
+            "data": {
+                "statuses": [
+                    {"resting": {"oid": 56380800181, "cloid": expected["entry"]}},
+                    "waitingForFill",
+                    "waitingForTrigger",
+                ]
+            },
+        },
+    }
+    broker = HyperliquidBroker(
+        info_client=_c1_open_orders_info({"entry": {"oid": 56380800181, "status": "OPEN"}}),
+        exchange_client=exchange,
+    )
+
+    ids = asyncio.run(broker.place_bracket(_plan()))
+
+    assert ids["entry"]["oid"] == 56380800181
+    assert ids["sl"]["status"] == "WAITING_CHILD"
+    assert ids["sl"]["pending_reason"] == "waitingForFill"
+    assert ids["sl"]["oid"] is None
+    assert ids["sl"]["trigger_px"] == 95.0
+    assert ids["tp"]["status"] == "WAITING_CHILD"
+    assert ids["tp"]["pending_reason"] == "waitingForTrigger"
+
+
+def test_hl_unknown_string_status_still_raises_with_raw_response():
+    """W1: only known pending-child strings are accepted; others stay errors."""
+    exchange = _exchange_mock()
+    exchange.bulk_orders.return_value = {
+        "status": "ok",
+        "response": {
+            "type": "order",
+            "data": {"statuses": [{"resting": {"oid": 1}}, "somethingUnexpected"]},
+        },
+    }
+    broker = HyperliquidBroker(
+        info_client=_c1_open_orders_info({"entry": {"oid": 1, "status": "OPEN"}}),
+        exchange_client=exchange,
+    )
+
+    with pytest.raises(HyperliquidOrderError) as err:
+        asyncio.run(broker.place_bracket(_plan()))
+
+    assert "somethingUnexpected" in str(err.value)
+    assert "raw_response" in str(err.value)
