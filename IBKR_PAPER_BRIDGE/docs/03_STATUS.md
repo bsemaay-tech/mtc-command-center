@@ -8,12 +8,11 @@ Builder: Codex GPT-5
 
 - **P1 local MockBroker gate: PASS.** Continuous background replay, real Store/API/WS wiring,
   live dashboard, and all eight failure drills are verified locally.
-- **P0 Hyperliquid testnet gate: FAIL before order acceptance; local retry fixes PASS.** Credential
-  format, connection, live candles, metadata, and bounded sizing passed. The old adapter
-  misclassified the account's `unifiedAccount` balance as zero and then masked a string-shaped
-  exchange rejection. No oid/cloid was returned; post-failure state had zero positions/open orders.
-  Unified balance handling, safe error preservation, and websocket shutdown are now locally green,
-  but the smoke has not been rerun. See `14_P0_SMOKE_REPORT.md`.
+- **P0 Hyperliquid testnet gate: FAIL; no further attempt approved.** The rounded-price attempt
+  passed credentials, `unifiedAccount` equity `999`, live candles, metadata, and compliant pricing,
+  then failed because real `positionTpsl` returned fewer statuses than the adapter expected. No oid
+  was captured; deterministic-cloid post-check found zero open orders and zero positions. Clean
+  disconnect passed. See `14_P0_SMOKE_REPORT.md`.
 - **Real QuantLens golden: BLOCKED.** The canonical engine does not register
   `keltner_trail_ema8`; the available `GEN_KELTNER_BREAKOUT` has materially different rules and was
   not substituted. The golden remains explicitly provisional.
@@ -31,16 +30,16 @@ Builder: Codex GPT-5
 | T6 continuous engine | DONE for P1 | Background runtime, safe startup, reconcile-before-ARM, trailing while disarmed, close-only opposite signal, risk disarm, preemptive KILL. |
 | T7 API/WS | DONE for P1 | Runtime controls, Store-backed endpoints, persistent WS, snapshot resync, live decision stream. |
 | T8 failure drills | DONE | Eight scripted drills pass. |
-| T9 CWD robustness | DONE | 70 tests pass from repo root and bridge directory. |
+| T9 CWD robustness | DONE | 72 tests pass from repo root and bridge directory. |
 | T10 chart | DONE | Local SVG candle renderer only; live screenshots verified. |
-| T11 P0 smoke | FAIL / AWAITING APPROVAL | Connected and fetched candles; Unified-account bug and masked exchange rejection fixed locally. Original run returned no oids/cloids and left zero open orders. |
+| T11 P0 smoke | FAIL / BLOCKED | Rounded-price attempt reached atomic submit, then real response cardinality violated the adapter assumption. Zero open orders/positions afterward; no retry approved. |
 | T12 real golden | BLOCKED | `docs/12_GOLDEN_REGEN_ATTEMPT.md`; exact strategy ID absent. |
 | T13 report/handoff | DONE | `docs/11_P1_BUILD_REPORT.md` plus canonical handoff entry. |
 
 ## Verification
 
-- Repo-root suite: `70 passed, 1 warning`.
-- Bridge-directory suite: `70 passed, 1 warning`.
+- Repo-root suite: `72 passed, 1 warning`.
+- Bridge-directory suite: `72 passed, 1 warning`.
 - `node --check IBKR_PAPER_BRIDGE/bridge/static/app.js`: pass.
 - Live mock UI: `DRY_RUN`, `ARMED`, `$100000.00`, 80 visible candle bodies, 10 decision rows,
   no CDN scripts.
@@ -50,8 +49,8 @@ Builder: Codex GPT-5
 ## Human next actions
 
 1. Do not transfer funds or change account mode; the testnet account is correctly Unified.
-2. Review `14_P0_SMOKE_REPORT.md`, then separately approve or reject one new bounded P0 attempt.
-   This correction approval did not authorize another order request.
+2. Fix and locally test real `positionTpsl` response cardinality plus owned-cloid cleanup when
+   placement parsing fails. Do not run another testnet attempt without new explicit approval.
 3. P2 remains a later go/no-go decision and is not approved.
 4. For a real golden, register the exact bridge Keltner signal semantics in QuantLens or approve a
    source-engine export adapter; do not relabel `GEN_KELTNER_BREAKOUT` as equivalent.

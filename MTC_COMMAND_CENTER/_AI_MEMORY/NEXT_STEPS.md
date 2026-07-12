@@ -10,7 +10,9 @@
 - **[AI: Codex|Claude]** focused dashboard chart follow-up: make the visible Trading chart use a reliable bundled/local Lightweight Charts path or formally accept the SVG fallback for P1 mock demo; verify with screenshots.
 - ~~**[AI: Codex]** support Hyperliquid Unified account balances, preserve string-shaped exchange errors, and cleanly disconnect the smoke websocket.~~ DONE 2026-07-12 in `944a5323`; both full suites `70 passed`.
 - **[AI: Barış]** do not transfer funds or change account mode; `unifiedAccount` correctly shares the 999 mock USDC balance across Spot/Perps.
-- **[AI: Barış, approval-gated]** review corrected `IBKR_PAPER_BRIDGE/docs/14_P0_SMOKE_REPORT.md`, then approve or reject exactly one new bounded P0 testnet attempt. P2 remains separately gated.
+- ~~**[AI: Codex]** add conservative Hyperliquid price rounding and run exactly one approved P0 attempt.~~ DONE 2026-07-12 in `42018032`; local suites `72 passed`, attempt failed cleanly on real `positionTpsl` response cardinality, zero open orders/positions.
+- **[AI: Codex|Claude]** locally harden `positionTpsl` response-shape handling and deterministic owned-cloid cleanup when placement parsing fails; no network action.
+- **[AI: Barış, approval-gated]** after reviewing those local fixes, separately approve or reject another bounded P0 attempt. P2 remains separately gated and unapproved.
 - Then PREREG gates P1 (mock dry-run demo) → P2 (paper ≥10d unattended) → P3 (≥30d, slippage + signal-parity report to `11_TRIAGE/`).
 
 ## 🔧 MCC APP AUDIT FOLLOW-UPS (audit 2026-07-05: `11_TRIAGE/MCC_APP_AUDIT_2026-07-05.md`; Barış answered all open questions; quick wins DONE same session on `feature/mcc-audit-fixes`)

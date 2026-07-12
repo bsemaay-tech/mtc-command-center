@@ -18,6 +18,159 @@ normalization, and explicit websocket shutdown. Both full suites now pass with
 unchanged as historical evidence. The exact exchange rejection remains unknown because the old
 parser masked it, so another order attempt still requires separate explicit approval.
 
+## Authorized rounded-price attempt - 2026-07-12
+
+Barış approved exactly one additional bounded P0 attempt after a Hyperliquid price-precision fix.
+Commit `42018032` added `round_hl_price()` and applied it at the smoke plan plus adapter entry,
+SL/TP, modify-stop, and reprotection submission boundaries. Required fixtures pass:
+`57542.4 -> 57540.0`, sub-unit precision respects `6 - szDecimals`, and valid prices remain
+unchanged. Both full suites passed before network access: `72 passed, 1 warning` from each CWD.
+
+The single attempt `p0-20260712T185408Z` **FAILED** after atomic submission because the real
+`positionTpsl` response contained fewer status objects than the adapter's one-status-per-request
+assumption. Earlier stages passed: `unifiedAccount`, equity/available/withdrawable `999.0`, three
+live BTC candles, and rounded prices `entry=57600`, `SL=56448`, `modified SL=56736` for
+`0.0002 BTC` (~`$11.52`). Clean websocket disconnect passed.
+
+No oid was returned to the script. Deterministic cloids for the run were:
+
+- entry: `0x8f2bdc2a2d4dd7e14f2a1df9d7b6c7ee`
+- SL: `0x5bf0e44907d2e1fd1f7843d05be2347d`
+- TP (not submitted by this plan): `0x23f6088a36b8838cd90b984c0a477e04`
+
+A separate read-only post-failure query found `open_orders=0`, no owned cloid, and zero positions;
+therefore no cancellation or flatten action was required. No second attempt was run.
+
+Complete overwritten `p0_smoke_log.json` for this attempt:
+
+```json
+{
+  "approved_scope": "one tiny resting entry plus native SL, modify, cancel, flatten only if needed",
+  "finished_ts": "2026-07-12T18:54:23.898448+00:00",
+  "network": "testnet",
+  "orders": [],
+  "result": "FAIL",
+  "run_id": "p0-20260712T185408Z",
+  "started_ts": "2026-07-12T18:54:08.310060+00:00",
+  "steps": [
+    {
+      "data": {
+        "account_format": "valid_20_bytes",
+        "key_format": "valid_32_bytes"
+      },
+      "name": "key_precheck",
+      "status": "PASS",
+      "ts": "2026-07-12T18:54:08.310084+00:00"
+    },
+    {
+      "data": {
+        "account_address": "0x1E265F5E39957E08ed02A120ceFA33A9bd46AC49",
+        "account_mode": "unifiedAccount",
+        "network": "testnet"
+      },
+      "name": "connect",
+      "status": "PASS",
+      "ts": "2026-07-12T18:54:19.447185+00:00"
+    },
+    {
+      "data": {
+        "available_margin": 999.0,
+        "equity": 999.0,
+        "withdrawable": 999.0
+      },
+      "name": "account",
+      "status": "PASS",
+      "ts": "2026-07-12T18:54:20.139904+00:00"
+    },
+    {
+      "data": {
+        "bars": [
+          {
+            "close": 64011.0,
+            "high": 64093.0,
+            "low": 63930.0,
+            "open": 64023.0,
+            "ts": "2026-07-12T16:00:00Z",
+            "volume": 2.09213
+          },
+          {
+            "close": 63919.0,
+            "high": 64120.0,
+            "low": 63863.0,
+            "open": 63994.0,
+            "ts": "2026-07-12T17:00:00Z",
+            "volume": 6.64689
+          },
+          {
+            "close": 64000.0,
+            "high": 64029.0,
+            "low": 63888.0,
+            "open": 63932.0,
+            "ts": "2026-07-12T18:00:00Z",
+            "volume": 3.5548
+          }
+        ],
+        "count": 3
+      },
+      "name": "candles",
+      "status": "PASS",
+      "ts": "2026-07-12T18:54:20.829684+00:00"
+    },
+    {
+      "data": {
+        "coin": "BTC",
+        "entry_limit": 57600.0,
+        "market_reference": 64000.0,
+        "modified_stop_trigger": 56736.0,
+        "notional_usd": 11.520000000000001,
+        "qty": 0.0002,
+        "size_decimals": 5,
+        "stop_trigger": 56448.0
+      },
+      "name": "meta_and_plan",
+      "status": "PASS",
+      "ts": "2026-07-12T18:54:21.628216+00:00"
+    },
+    {
+      "data": {
+        "error": "bulk order response did not contain every status",
+        "error_type": "HyperliquidOrderError"
+      },
+      "name": "failure",
+      "status": "FAIL",
+      "ts": "2026-07-12T18:54:22.632403+00:00"
+    },
+    {
+      "data": {
+        "flattened_symbols": []
+      },
+      "name": "partial_fill_guard",
+      "status": "PASS",
+      "ts": "2026-07-12T18:54:23.165621+00:00"
+    },
+    {
+      "data": {
+        "errors": []
+      },
+      "name": "best_effort_cleanup",
+      "status": "PASS",
+      "ts": "2026-07-12T18:54:23.165631+00:00"
+    },
+    {
+      "data": {},
+      "name": "disconnect",
+      "status": "PASS",
+      "ts": "2026-07-12T18:54:23.898439+00:00"
+    }
+  ]
+}
+```
+
+Current blocker: capture and normalize the real `positionTpsl` status cardinality/representation
+without assuming one status dict per submitted request, while retaining deterministic owned-cloid
+cleanup even when placement result parsing fails. This requires local fixtures/tests first and a
+new explicit approval before any further testnet order attempt. P2 remains unapproved.
+
 ## Original run verdict (collateral interpretation superseded)
 
 **F0/F1/F2: PASS locally. P0: FAIL before any order was accepted.**

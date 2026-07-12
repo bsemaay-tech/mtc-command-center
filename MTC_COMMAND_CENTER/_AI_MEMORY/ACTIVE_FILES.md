@@ -1,5 +1,16 @@
 # ACTIVE_FILES
 
+## 2026-07-12 Codex GPT-5 — Rounded-price P0 attempt (FAILED CLEANLY)
+- `IBKR_PAPER_BRIDGE/bridge/broker/hyperliquid.py`
+- `IBKR_PAPER_BRIDGE/tools/smoke_p0.py`
+- `IBKR_PAPER_BRIDGE/tests/test_hyperliquid_broker.py`
+- `IBKR_PAPER_BRIDGE/docs/p0_smoke_log.json`
+- `IBKR_PAPER_BRIDGE/docs/14_P0_SMOKE_REPORT.md`
+- `IBKR_PAPER_BRIDGE/docs/03_STATUS.md`
+- Result: price rounding committed (`42018032`), both suites `72 passed`; single approved testnet
+  attempt reached atomic submit but failed on real `positionTpsl` status cardinality. Deterministic
+  cloid post-check: zero open orders and zero positions. No second attempt; P2 unapproved.
+
 ## 2026-07-12 Codex GPT-5 — Crypto Paper Bridge Unified-account correction
 - `IBKR_PAPER_BRIDGE/bridge/broker/hyperliquid.py`
 - `IBKR_PAPER_BRIDGE/tools/smoke_p0.py`

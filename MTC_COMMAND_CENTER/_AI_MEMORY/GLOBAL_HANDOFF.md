@@ -1,5 +1,20 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5] 2026-07-12 — Rounded-price P0 attempt failed cleanly
+
+Barış approved exactly one bounded P0 attempt after price-precision hardening. Commit `42018032`
+adds conservative Hyperliquid rounding to smoke planning plus adapter entry, SL/TP, modify-stop,
+and reprotection paths; exact fixture `57542.4→57540` passes. Both full suites passed before the
+network attempt: `72 passed, 1 warning` from each CWD.
+
+Run `p0-20260712T185408Z` confirmed `unifiedAccount`, equity/available/withdrawable `999`, live BTC
+candles, compliant prices (`57600/56448/56736`), and clean websocket disconnect. It failed at
+atomic `positionTpsl` parsing because the real response returned fewer status objects than submitted
+requests. No oid was captured. A deterministic-cloid read-only post-check found zero open orders,
+zero owned orders, and zero positions, so no cleanup action was needed. No second attempt was run.
+Evidence: `IBKR_PAPER_BRIDGE/docs/14_P0_SMOKE_REPORT.md`. Next: local response-shape and
+failure-cleanup hardening, then a new explicit P0 approval. P2 remains unapproved.
+
 ## [Codex GPT-5] 2026-07-12 — Bridge Unified-account correction
 
 Corrected the post-P0 diagnosis after a read-only testnet query proved the account mode is
