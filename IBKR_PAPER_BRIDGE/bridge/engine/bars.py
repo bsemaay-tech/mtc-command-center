@@ -92,6 +92,7 @@ class BarFeed:
         on_stale: Callable[[], object] | None = None,
         poll_seconds: float = 1.0,
         staleness_enabled: bool = True,
+        reconnect_base_delay: float = 5.0,
     ) -> None:
         self.broker = broker
         self.coin = coin
@@ -101,11 +102,13 @@ class BarFeed:
         self.on_stale = on_stale
         self.poll_seconds = poll_seconds
         self.staleness_enabled = staleness_enabled
+        self.reconnect_base_delay = reconnect_base_delay
         self.last_bar_update: datetime | None = None
         self.warmup: list[Bar] = []
         self._stop = asyncio.Event()
         self._task: asyncio.Task | None = None
         self._stale_emitted = False
+        self._reconnecting = False
 
     async def start(self, lookback: int = 300) -> list[Bar]:
         self.warmup = await self.broker.historical_bars(self.coin, self.timeframe, lookback)
@@ -135,6 +138,21 @@ class BarFeed:
         finalize_due = getattr(self.broker, "finalize_due", None)
         if finalize_due is not None:
             finalize_due(now)
+        # B1: websocket health probe — a dead SDK ws thread means every
+        # subscription is gone; trigger the reconnect/resubscribe path
+        # automatically instead of waiting for bar staleness.
+        ws_alive = getattr(self.broker, "ws_alive", None)
+        if ws_alive is not None and not self._reconnecting and not ws_alive():
+            self._reconnecting = True
+            try:
+                recovered = await self.reconnect()
+            finally:
+                self._reconnecting = False
+            if not recovered and not self._stale_emitted:
+                self._stale_emitted = True
+                await self._call(self.on_event, "DATA_STALE", "ws_dead_reconnect_failed")
+                await self._call(self.on_stale)
+            return
         reference = getattr(self.broker, "last_bar_update", None) or self.last_bar_update
         if reference is None or not self.staleness_enabled:
             return
@@ -143,7 +161,8 @@ class BarFeed:
             await self._call(self.on_event, "DATA_STALE", f"last_update={reference.isoformat()}")
             await self._call(self.on_stale)
 
-    async def reconnect(self, attempts: int = 5, base_delay: float = 5.0) -> bool:
+    async def reconnect(self, attempts: int = 5, base_delay: float | None = None) -> bool:
+        base_delay = self.reconnect_base_delay if base_delay is None else base_delay
         await self._call(self.on_event, "DISCONNECT", "bar feed disconnected")
         for attempt in range(attempts):
             try:

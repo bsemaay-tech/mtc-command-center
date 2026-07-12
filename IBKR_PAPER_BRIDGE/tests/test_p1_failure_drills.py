@@ -231,3 +231,75 @@ class KillingGate:
             reason = "kill drill"
 
         return Result()
+
+
+class _WsDeadBroker:
+    """B1 stub: broker whose SDK websocket reports dead."""
+
+    def __init__(self, alive: bool = False, reconnect_ok: bool = True) -> None:
+        self.alive = alive
+        self.reconnect_ok = reconnect_ok
+        self.connect_calls = 0
+        self.resubscribe_calls = 0
+        self.last_bar_update = None
+
+    def ws_alive(self) -> bool:
+        return self.alive
+
+    async def connect(self) -> None:
+        self.connect_calls += 1
+        if not self.reconnect_ok:
+            raise RuntimeError("socket refused")
+        self.alive = True
+
+    async def resubscribe(self) -> None:
+        self.resubscribe_calls += 1
+
+
+def test_drill_ws_death_triggers_auto_reconnect():
+    async def run() -> None:
+        broker = _WsDeadBroker(alive=False, reconnect_ok=True)
+        events: list[tuple[str, str]] = []
+        feed = BarFeed(
+            broker,
+            "BTC",
+            "1h",
+            on_bar_closed=lambda bar: None,
+            on_event=lambda code, detail: events.append((code, detail)),
+        )
+
+        await feed.check_once(datetime(2026, 7, 12, tzinfo=UTC))
+
+        assert broker.connect_calls == 1
+        assert broker.resubscribe_calls == 1
+        codes = [code for code, _ in events]
+        assert "DISCONNECT" in codes and "RECONNECT" in codes
+        assert "DATA_STALE" not in codes
+
+    asyncio.run(run())
+
+
+def test_drill_ws_death_reconnect_failure_goes_stale_and_disarms():
+    async def run() -> None:
+        broker = _WsDeadBroker(alive=False, reconnect_ok=False)
+        events: list[tuple[str, str]] = []
+        stale_calls: list[bool] = []
+        feed = BarFeed(
+            broker,
+            "BTC",
+            "1h",
+            on_bar_closed=lambda bar: None,
+            on_event=lambda code, detail: events.append((code, detail)),
+            on_stale=lambda: stale_calls.append(True),
+            reconnect_base_delay=0.01,
+        )
+
+        await feed.check_once(datetime(2026, 7, 12, tzinfo=UTC))
+
+        assert broker.connect_calls == 5  # full backoff attempt budget
+        codes = [code for code, _ in events]
+        assert codes.count("RECONNECT_RETRY") == 5
+        assert ("DATA_STALE", "ws_dead_reconnect_failed") in events
+        assert stale_calls == [True]
+
+    asyncio.run(run())

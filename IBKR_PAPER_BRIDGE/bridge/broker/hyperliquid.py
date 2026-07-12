@@ -217,6 +217,26 @@ class HyperliquidBroker:
         for _, _, _, finalizer in self._bar_subscriptions:
             finalizer.finalize_due(now)
 
+    def ws_alive(self) -> bool:
+        """B1: report SDK websocket health for the BarFeed watchdog.
+
+        The SDK's WebsocketManager is a Thread subclass; a dead thread means
+        the socket dropped and every subscription with it. No manager (mock
+        clients / skip_ws) means there is nothing to monitor — report alive.
+        """
+        if self.info is None:
+            return False
+        manager = getattr(self.info, "ws_manager", None)
+        if manager is None:
+            return True
+        is_alive = getattr(manager, "is_alive", None)
+        if callable(is_alive):
+            try:
+                return bool(is_alive())
+            except Exception:  # noqa: BLE001 - health probe must never raise
+                return False
+        return True
+
     async def resubscribe(self) -> None:
         if self.info is None or not hasattr(self.info, "subscribe"):
             raise HyperliquidNotConfigured("Info client not configured")

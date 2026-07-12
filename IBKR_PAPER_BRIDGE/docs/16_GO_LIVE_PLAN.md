@@ -99,7 +99,7 @@ geçilmez.
 
 ### FAZ B — P2 öncesi zorunlu sağlamlaştırma (hepsi yerel; B6 hariç ağ yok)
 
-- [ ] **B1. Gerçek WS kopma tespiti → otomatik reconnect** (`bridge/broker/hyperliquid.py`,
+- [x] **B1. Gerçek WS kopma tespiti → otomatik reconnect** (`bridge/broker/hyperliquid.py`,
   `bridge/engine/bars.py`)
   - SDK `Info`'nun ws yöneticisinden kopma sinyali yakala (ws_manager thread'inin ölümü /
     on_close callback'i / son mesaj yaşı). En sağlam taşınabilir yöntem: BarFeed watchdog'una
