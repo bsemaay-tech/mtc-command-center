@@ -6,6 +6,7 @@ must not be run without explicit approval because it places testnet orders.
 
 from __future__ import annotations
 
+import asyncio
 import os
 import hashlib
 import logging
@@ -92,16 +93,16 @@ class HyperliquidBroker:
     async def connect(self) -> None:
         self._check_network_lock()
         if self.info is None or self.exchange is None:
-            self._build_sdk_clients()
+            await asyncio.to_thread(self._build_sdk_clients)
         if hasattr(self.exchange, "update_leverage"):
-            self.exchange.update_leverage(self.leverage, self.coin, is_cross=False)
+            await asyncio.to_thread(self.exchange.update_leverage, self.leverage, self.coin, is_cross=False)
         self.connected = True
 
     async def account(self) -> AccountSnapshot:
         if self.info is None:
             raise HyperliquidNotConfigured("Info client not configured")
         if hasattr(self.info, "user_state"):
-            state = self.info.user_state(self.account_address)
+            state = await asyncio.to_thread(self.info.user_state, self.account_address)
             if not isinstance(state, dict):
                 raise ValueError("Hyperliquid user_state was not an object")
             summary = state.get("marginSummary", {})
@@ -118,7 +119,7 @@ class HyperliquidBroker:
     async def positions(self) -> list[Position]:
         if self.info is None or not hasattr(self.info, "user_state"):
             raise HyperliquidNotConfigured("Info client not configured")
-        state = self.info.user_state(self.account_address)
+        state = await asyncio.to_thread(self.info.user_state, self.account_address)
         rows = state.get("assetPositions", []) if isinstance(state, dict) else []
         positions: list[Position] = []
         for row in rows:
@@ -130,13 +131,13 @@ class HyperliquidBroker:
     async def open_orders(self) -> list[BrokerOrder]:
         if self.info is None or not hasattr(self.info, "open_orders"):
             return []
-        rows = self.info.open_orders(self.account_address)
+        rows = await asyncio.to_thread(self.info.open_orders, self.account_address)
         return [self._parse_order(row) for row in rows if isinstance(row, dict)]
 
     async def historical_bars(self, coin: str, tf: str, lookback: int) -> list[Bar]:
         if self.info is None or not hasattr(self.info, "candles_snapshot"):
             return []
-        candles = self.info.candles_snapshot(coin, tf, 0, 0)[-lookback:]
+        candles = (await asyncio.to_thread(self.info.candles_snapshot, coin, tf, 0, 0))[-lookback:]
         return [
             Bar(
                 ts=datetime.fromtimestamp(int(c["t"]) / 1000, tz=UTC),
@@ -192,7 +193,7 @@ class HyperliquidBroker:
             )
             roles.append(("TP", tp_cloid, plan.take_profit))
 
-        raw = self.exchange.bulk_orders(requests, grouping="positionTpsl")
+        raw = await asyncio.to_thread(self.exchange.bulk_orders, requests, grouping="positionTpsl")
         statuses = self._extract_statuses(raw)
         result: dict[str, dict] = {}
         for idx, (role, cloid, trigger_px) in enumerate(roles):
@@ -219,7 +220,8 @@ class HyperliquidBroker:
         typed_cloid = Cloid.from_str(str(cloid))
         order_type = {"trigger": {"triggerPx": new_stop, "isMarket": True, "tpsl": "sl"}}
         try:
-            self.exchange.modify_order(
+            await asyncio.to_thread(
+                self.exchange.modify_order,
                 typed_cloid,
                 spec["coin"],
                 spec["is_buy"],
@@ -231,11 +233,11 @@ class HyperliquidBroker:
             )
         except Exception:
             logger.warning("stop modify failed; cancelling and replacing cloid=%s", cloid)
-            self.exchange.cancel_by_cloid(spec["coin"], typed_cloid)
+            await asyncio.to_thread(self.exchange.cancel_by_cloid, spec["coin"], typed_cloid)
             replacement = dict(spec)
             replacement["limit_px"] = new_stop
             replacement["order_type"] = order_type
-            self.exchange.bulk_orders([replacement], grouping="positionTpsl")
+            await asyncio.to_thread(self.exchange.bulk_orders, [replacement], grouping="positionTpsl")
         spec["limit_px"] = new_stop
         spec["order_type"] = order_type
 
@@ -243,7 +245,7 @@ class HyperliquidBroker:
         if self.exchange is not None and hasattr(self.exchange, "cancel_by_cloid"):
             spec = self._order_specs.get(str(cloid), {})
             coin = str(spec.get("coin", self.coin))
-            self.exchange.cancel_by_cloid(coin, Cloid.from_str(str(cloid)))
+            await asyncio.to_thread(self.exchange.cancel_by_cloid, coin, Cloid.from_str(str(cloid)))
 
     async def cancel_all(self) -> None:
         for order in await self.open_orders():
@@ -261,7 +263,8 @@ class HyperliquidBroker:
             break
         if size == 0:
             return None
-        self.exchange.order(
+        await asyncio.to_thread(
+            self.exchange.order,
             coin,
             size < 0,
             abs(size),

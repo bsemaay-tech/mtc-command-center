@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import threading
 from datetime import UTC, datetime, timedelta
 from unittest.mock import create_autospec
 
@@ -121,6 +122,29 @@ def test_broker_normalization_type_parity():
     assert isinstance(mock_account, AccountSnapshot)
 
 
+def test_async_sdk_calls_are_offloaded_from_event_loop_thread():
+    main_thread = threading.get_ident()
+    info = ThreadRecordingInfo()
+    exchange = _exchange_mock()
+    exchange_threads: list[int] = []
+    exchange.update_leverage.side_effect = lambda *args, **kwargs: exchange_threads.append(threading.get_ident())
+    broker = HyperliquidBroker(account_address="0xabc", info_client=info, exchange_client=exchange)
+
+    async def exercise() -> None:
+        await broker.connect()
+        await broker.account()
+        await broker.positions()
+        await broker.open_orders()
+        await broker.historical_bars("BTC", "1h", 1)
+        await broker.place_bracket(_plan())
+
+    asyncio.run(exercise())
+
+    assert info.threads
+    assert all(thread_id != main_thread for thread_id in info.threads)
+    assert exchange_threads and exchange_threads[0] != main_thread
+
+
 def _candle(ts: datetime, close: float) -> dict:
     return {
         "t": int(ts.timestamp() * 1000),
@@ -212,3 +236,24 @@ class FakeInfo:
                 "reduceOnly": True,
             }
         ]
+
+
+class ThreadRecordingInfo(FakeInfo):
+    def __init__(self) -> None:
+        super().__init__(size="0", with_summary=True)
+        self.threads: list[int] = []
+
+    def _record(self) -> None:
+        self.threads.append(threading.get_ident())
+
+    def user_state(self, address):
+        self._record()
+        return super().user_state(address)
+
+    def open_orders(self, address):
+        self._record()
+        return []
+
+    def candles_snapshot(self, coin, tf, start, end):
+        self._record()
+        return [_candle(datetime(2026, 7, 6, 0, tzinfo=UTC), 100)]
