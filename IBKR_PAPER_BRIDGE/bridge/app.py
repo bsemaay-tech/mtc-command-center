@@ -81,12 +81,27 @@ def create_app(
             if hub is not None:
                 await hub.broadcast(topic, data)
 
+        # C3/C4: engine risk limits come from config/bridge.yaml (frozen P2
+        # profile), not hardcoded literals. Dry-run keeps the wider notional
+        # so the fixture replay still trades.
+        import yaml as _yaml
+
+        risk_cfg_raw = _yaml.safe_load((root / "config" / "bridge.yaml").read_text(encoding="utf-8")).get("risk", {})
+        risk_config = RiskConfig(
+            risk_pct_per_trade=float(risk_cfg_raw.get("risk_pct_per_trade", 0.005)),
+            max_daily_loss_pct=float(risk_cfg_raw.get("max_daily_loss_pct", 0.02)),
+            max_position_notional_pct=0.5 if dry_run else float(risk_cfg_raw.get("max_position_notional_pct", 0.20)),
+            min_stop_distance_pct=float(risk_cfg_raw.get("min_stop_distance_pct", 0.001)),
+            min_order_usd=float(risk_cfg_raw.get("min_order_usd", 10)),
+            max_leverage=int(risk_cfg_raw.get("max_leverage", 1)),
+            max_consecutive_losses=int(risk_cfg_raw.get("max_consecutive_losses", 3)),
+        )
         engine = BridgeEngine(
             run_id=run_id,
             broker=runtime_broker,
             store=store,
             strategy=KeltnerTrailEma8(),
-            risk_engine=RiskEngine(RiskConfig(max_position_notional_pct=0.5)),
+            risk_engine=RiskEngine(risk_config),
             state="DISARMED",
             mode="dry_run" if dry_run else "paper",
             on_update=publish,
