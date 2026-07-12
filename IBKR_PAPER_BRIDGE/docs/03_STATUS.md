@@ -1,47 +1,54 @@
-# 03_STATUS - Crypto Paper Bridge corrective build status
+# 03_STATUS - Crypto Paper Bridge P1 build
 
-Date: 2026-07-07
+Date: 2026-07-12
 Branch: `feature/ibkr-bridge-final`
 Builder: Codex GPT-5
 
-## Fix status from `09_CODEX_FIX_PROMPT.md`
+## Current verdict
 
-- FIX 1 - DONE: `BridgeEngine` and `OrderManager` now depend on the `Broker` protocol, not `MockBroker`. Replay consumes bars through `subscribe_bars`; acceptance test uses a fake broker without `.bars`.
-- FIX 2 - DONE: Engine reads broker positions at bar start, passes the live position into the strategy, blocks new entries while positioned, and uses strategy-provided `stop_loss` / `take_profit`. Keltner now emits a channel-band initial stop.
-- FIX 3 - DONE: MockBroker now has resting entry/SL/TP orders, next-bar entry fills, later-bar SL/TP triggers, reduce-only flatten, same-cloid stop modification, OrderManager reconciliation, store fill sync, and persisted signal-fingerprint duplicate protection.
-- FIX 4 - DONE: `meta.app_state` persists DISARMED/ARMED/KILLED. API KILL survives restart until `/api/kill/ack`; engine re-reads persisted state and live position after awaited LLM gate before submit.
-- FIX 5 - DONE: Hyperliquid adapter uses deterministic cloids, native `positionTpsl` trigger orders for SL/TP, trigger-shaped stop modify, and reduce-only market flatten through fake SDK tests. No exchange call was run.
-- FIX 6 - PARTIAL: Dashboard now renders real rows, status metrics, `/api/bars` candles, WS snapshot rerender path, and verified screenshots at `docs/screenshots/overview.png` and `docs/screenshots/trading.png`. Remaining gap: the verified visible candle plot uses the local SVG fallback because the browser screenshot runtime rendered the Lightweight Charts CDN path as effectively blank; the CDN import remains but actual visible Lightweight rendering still needs a follow-up.
-- FIX 7 - DONE: Removed the old exact scaffold chain assertion. Tests now assert required lifecycle stages and include a forced-close replay that records `TRADE_CLOSED`. Persisted duplicate guard is covered across DB reopen.
+- **P1 local MockBroker gate: PASS.** Continuous background replay, real Store/API/WS wiring,
+  live dashboard, and all eight failure drills are verified locally.
+- **P0 Hyperliquid testnet gate: BLOCKED before connection.** `HL_API_WALLET_KEY` is present but
+  the SDK reports that it decodes to 20 bytes rather than the required 32 bytes. No testnet query,
+  order, modification, cancellation, fill, or flatten occurred.
+- **Real QuantLens golden: BLOCKED.** The canonical engine does not register
+  `keltner_trail_ema8`; the available `GEN_KELTNER_BREAKOUT` has materially different rules and was
+  not substituted. The golden remains explicitly provisional.
+- **P2: NOT STARTED / NOT APPROVED.** No autonomous testnet trading was run.
 
-## Corrective commits
+## Build task status
 
-- `d431dfab` - `fix(bridge): decouple engine from mock broker`
-- `3287f05c` - `fix(bridge): use strategy stops and live positions`
-- `f1a7b6d1` - `fix(bridge): implement order lifecycle and duplicate guard`
-- `873c44dc` - `fix(bridge): persist app state and guard submits`
-- `ad361301` - `fix(bridge): place hyperliquid native triggers`
-- `0a26ad9e` - `fix(bridge): render live dashboard data`
-- `0f6e241d` - `test(bridge): assert real decision lifecycle`
+| Task | Status | Evidence |
+|---|---|---|
+| T1 SDK contract | DONE locally | Typed cloids; atomic `bulk_orders(positionTpsl)`; real modify/cancel signatures; SDK-autospec tests. |
+| T2 typed normalization | DONE | `AccountSnapshot`, `Position`, and `BrokerOrder` parity tests across brokers. |
+| T3 async safety | DONE | Sync SDK calls use `asyncio.to_thread`; thread-identity test. |
+| T4 BarFeed | PARTIAL | Timer finalization, warmup, dedupe, staleness, and reconnect/resubscribe path implemented. Automatic SDK socket-drop notification remains unverified/unwired. |
+| T5 order events/reconcile | PARTIAL | No mock-internal reads; typed fill/order events; cloid matching; owned re-protect/flatten and foreign ignore; equity snapshots. `order_ref` and conservative attribute fallback matching remain. |
+| T6 continuous engine | DONE for P1 | Background runtime, safe startup, reconcile-before-ARM, trailing while disarmed, close-only opposite signal, risk disarm, preemptive KILL. |
+| T7 API/WS | DONE for P1 | Runtime controls, Store-backed endpoints, persistent WS, snapshot resync, live decision stream. |
+| T8 failure drills | DONE | Eight scripted drills pass. |
+| T9 CWD robustness | DONE | 54 tests pass from repo root and bridge directory. |
+| T10 chart | DONE | Local SVG candle renderer only; live screenshots verified. |
+| T11 P0 smoke | BLOCKED | `docs/p0_smoke_log.json`; invalid key length before connection; no oids/cloids. |
+| T12 real golden | BLOCKED | `docs/12_GOLDEN_REGEN_ATTEMPT.md`; exact strategy ID absent. |
+| T13 report/handoff | DONE | `docs/11_P1_BUILD_REPORT.md` plus canonical handoff entry. |
 
 ## Verification
 
-- `python -m pytest IBKR_PAPER_BRIDGE/tests -q`: 37 passed, 1 FastAPI/Starlette TestClient deprecation warning.
-- Dry-run dashboard verification: patched app served on `127.0.0.1:8791`; `/api/status` returned numeric equity, day P&L, and next-bar; screenshots captured from the live page.
-- Screenshots verified visually:
-  - `IBKR_PAPER_BRIDGE/docs/screenshots/overview.png`
-  - `IBKR_PAPER_BRIDGE/docs/screenshots/trading.png`
+- Repo-root suite: `54 passed, 1 warning`.
+- Bridge-directory suite: `54 passed, 1 warning`.
+- `node --check IBKR_PAPER_BRIDGE/bridge/static/app.js`: pass.
+- Live mock UI: `DRY_RUN`, `ARMED`, `$100000.00`, 80 visible candle bodies, 10 decision rows,
+  no CDN scripts.
+- Secret scan: no 64-hex private key or private-key material found in bridge artifacts.
+- Mainnet: never contacted; `HL_LIVE_ACK` was explicitly unset for the P0 attempt.
 
-## Remaining gaps
+## Human next actions
 
-- FIX 6 Lightweight Charts rendering should be repaired or replaced with a bundled/local chart asset so the visible chart does not depend on a CDN path that was blank in screenshot verification.
-- `golden_signals.json` remains provisional; it was generated from the local fixture/reference flow, not a real QuantLens BTC 1h source run.
-- P0 Hyperliquid testnet smoke remains approval-gated and was not run.
-- No exchange API, LLM API, backtest, Pine, parity, or protected MCC strategy behavior was touched in this corrective pass.
-
-## Human next steps
-
-1. Review this status and the corrective commits before merge/continue.
-2. Decide whether the SVG candle fallback is acceptable for P1 mock demo, or schedule a focused chart-library fix.
-3. Prepare Hyperliquid testnet API wallet per `docs/06_HYPERLIQUID_SETUP.md`.
-4. Approve or reject the separate P0 testnet smoke run.
+1. Replace `HL_API_WALLET_KEY` with the dedicated `MTC-bridge-test` agent-wallet **private key**
+   (32 bytes / 64 hex characters, normally `0x` plus 64 hex characters). Do not paste it into chat.
+2. Start a fresh Codex process so the corrected Windows user variable is inherited.
+3. Re-audit this build, then separately approve a P0 retry. P2 remains a later go/no-go decision.
+4. For a real golden, register the exact bridge Keltner signal semantics in QuantLens or approve a
+   source-engine export adapter; do not relabel `GEN_KELTNER_BREAKOUT` as equivalent.

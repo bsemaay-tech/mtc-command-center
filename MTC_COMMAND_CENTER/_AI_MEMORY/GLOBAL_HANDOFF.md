@@ -1,5 +1,21 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5] 2026-07-12 — Bridge P1 build
+
+Executed `IBKR_PAPER_BRIDGE/docs/10_CODEX_P1_BUILD_PROMPT.md` on
+`feature/ibkr-bridge-final`. P1 local gate PASS: continuous MockBroker runtime, typed broker
+snapshots/events, SDK-signature-constrained adapter tests, BarFeed timer/dedupe/staleness,
+reconcile-before-ARM, risk-reducing trail while disarmed, preemptive KILL, real Store-backed
+REST/persistent WS, local SVG candles, and all eight failure drills. Final suite: 54 passed from
+repo root and 54 passed from the bridge directory; live mock screenshots updated.
+
+P0 is BLOCKED before network connection: the Windows user `HL_API_WALLET_KEY` is present but the
+SDK reports a 20-byte value rather than a 32-byte private key. No testnet query/order/cancel/fill
+occurred; evidence is `IBKR_PAPER_BRIDGE/docs/p0_smoke_log.json`. Real QuantLens golden is also
+BLOCKED because `keltner_trail_ema8` is not registered and `GEN_KELTNER_BREAKOUT` is materially
+different; provisional golden retained. Audit report: `IBKR_PAPER_BRIDGE/docs/11_P1_BUILD_REPORT.md`.
+P2 remains unapproved and unstarted.
+
 ## Codex GPT-5 2026-07-07 - Crypto Paper Bridge corrective P1 pass
 
 Executed `IBKR_PAPER_BRIDGE/docs/09_CODEX_FIX_PROMPT.md` on `feature/ibkr-bridge-final` after the scaffold audit. Corrective commits: `d431dfab`, `3287f05c`, `f1a7b6d1`, `873c44dc`, `ad361301`, `0a26ad9e`, `0f6e241d`.
