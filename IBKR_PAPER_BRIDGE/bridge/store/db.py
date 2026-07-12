@@ -605,6 +605,13 @@ class Store:
     def get_bars(self, limit: int = 300) -> list[dict[str, Any]]:
         return self._rows("SELECT * FROM bars ORDER BY bar_end_ts DESC LIMIT ?", (limit,))[::-1]
 
+    def has_bar(self, coin: str, timeframe: str, bar_ts: datetime | str) -> bool:
+        row = self.conn.execute(
+            "SELECT 1 FROM bars WHERE coin = ? AND tf = ? AND bar_end_ts = ?",
+            (coin, timeframe, _to_iso(bar_ts)),
+        ).fetchone()
+        return row is not None
+
     def get_run(self, run_id: str) -> dict[str, Any] | None:
         row = self.conn.execute("SELECT * FROM runs WHERE run_id = ?", (run_id,)).fetchone()
         return None if row is None else dict(row)

@@ -36,6 +36,7 @@ class MockBroker:
     _ids: itertools.count = field(default_factory=lambda: itertools.count(1))
     _user_callbacks: list[Callable[[BrokerEvent], None]] = field(default_factory=list)
     _bar_callbacks: list[Callable[[Bar], None]] = field(default_factory=list)
+    resubscribe_count: int = 0
 
     @classmethod
     def from_csv(cls, path: str | Path, starting_equity: float = 10_000.0) -> "MockBroker":
@@ -104,10 +105,16 @@ class MockBroker:
 
     async def start_stream(self) -> None:
         for bar in self.bars:
-            self.process_bar(bar)
-            for callback in list(self._bar_callbacks):
-                callback(bar)
+            self.emit_bar(bar)
             await asyncio.sleep(self.stream_delay_s)
+
+    def emit_bar(self, bar: Bar) -> None:
+        self.process_bar(bar)
+        for callback in list(self._bar_callbacks):
+            callback(bar)
+
+    async def resubscribe(self) -> None:
+        self.resubscribe_count += 1
 
     def subscribe_user_events(self, on_event: Callable[[BrokerEvent], None]) -> None:
         self._user_callbacks.append(on_event)

@@ -39,6 +39,7 @@ class BridgeEngine:
     _feed: BarFeed | None = field(default=None, init=False)
     _tasks: list[asyncio.Task] = field(default_factory=list, init=False)
     _kill_requested: bool = field(default=False, init=False)
+    _consecutive_order_rejects: int = field(default=0, init=False)
 
     def __post_init__(self) -> None:
         self.order_manager = self.order_manager or OrderManager(self.store, self.broker, self.run_id)
@@ -129,6 +130,8 @@ class BridgeEngine:
             await self.on_bar(bar, process_broker_bar=True)
 
     async def on_bar(self, bar: Bar, process_broker_bar: bool = False) -> None:
+        if self.store.has_bar(self.coin, self.timeframe, bar.ts):
+            return
         if not self.bars or bar.ts > self.bars[-1].ts:
             self.bars.append(bar)
         self.store.insert_bar(self.coin, self.timeframe, bar.ts, bar.open, bar.high, bar.low, bar.close, bar.volume)
@@ -206,20 +209,53 @@ class BridgeEngine:
             {"order_plan": risk.plan.model_dump(mode="json"), "gates": risk.gate_results},
         )
         llm = await self.llm_gate.check(risk.plan)
+        verdict = getattr(llm, "verdict", "SKIPPED")
+        llm_stage = "LLM_VETO" if verdict == "VETO" else ("LLM_PASS" if verdict == "PASS" else "LLM_SKIPPED")
         self.store.insert_decision(
             self.run_id,
             decision_uid,
             signal.ts,
             signal.symbol,
-            "LLM_SKIPPED",
+            llm_stage,
             {"reason": llm.reason},
         )
+        if verdict == "VETO":
+            return
         if self._app_state() != "ARMED" or self._kill_requested:
             return
         if self._position_for(self.coin, await self.broker.positions()) is not None:
             return
-        result = await self.order_manager.submit_plan(decision_uid, risk.plan)
+        try:
+            result = await self.order_manager.submit_plan(decision_uid, risk.plan)
+        except Exception as exc:
+            self._consecutive_order_rejects += 1
+            self.store.insert_decision(
+                self.run_id,
+                decision_uid,
+                signal.ts,
+                signal.symbol,
+                "REJECTED",
+                {"reason": type(exc).__name__, "detail": str(exc)},
+            )
+            self.store.insert_event(
+                self.run_id,
+                datetime.now(UTC),
+                "WARN",
+                "ORDER_REJECTED",
+                f"count={self._consecutive_order_rejects}; error={type(exc).__name__}",
+            )
+            if self._consecutive_order_rejects >= 3:
+                self.disarm()
+                self.store.insert_event(
+                    self.run_id,
+                    datetime.now(UTC),
+                    "WARN",
+                    "ORDER_REJECT_LIMIT",
+                    "three consecutive order rejects",
+                )
+            return
         if result is not None:
+            self._consecutive_order_rejects = 0
             self.store.insert_decision(self.run_id, decision_uid, signal.ts, signal.symbol, "SUBMITTED", result)
         await self._publish("decision", {"decision_uid": decision_uid})
 

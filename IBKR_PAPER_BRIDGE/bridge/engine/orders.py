@@ -30,6 +30,8 @@ class OrderManager:
         if not self.store.claim_signal_fingerprint(self.run_id, fingerprint, decision_uid, plan.signal.ts):
             return None
 
+        plan.decision_uid = decision_uid
+        result = await self.broker.place_bracket(plan)
         trade_id = self.store.create_trade(
             run_id=self.run_id,
             coin=plan.signal.symbol,
@@ -46,8 +48,6 @@ class OrderManager:
             tp_initial=plan.take_profit,
             llm_directive_id=None,
         )
-        plan.decision_uid = decision_uid
-        result = await self.broker.place_bracket(plan)
         self._submitted.add(decision_uid)
 
         for role, order in result.items():
