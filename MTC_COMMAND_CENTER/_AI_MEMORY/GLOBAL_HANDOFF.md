@@ -1,5 +1,18 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5] 2026-07-12 — Bridge Unified-account correction
+
+Corrected the post-P0 diagnosis after a read-only testnet query proved the account mode is
+`unifiedAccount`. Hyperliquid intentionally reports shared USDC balance/holds through
+`spot_user_state`; Barış does not need a Spot→Perps transfer and should not change account mode.
+
+Commit `944a5323` adds mode detection, Unified USDC account snapshots, secret-redacted
+string-response errors, and explicit SDK websocket shutdown in the smoke lifecycle. Focused tests
+pass (`26`), and both full suites pass (`70 passed, 1 warning` each). The historical failed smoke
+was not rerun: it returned no oid/cloid and left zero positions/open orders. The exact exchange
+rejection was masked by the old parser, so the next bounded P0 order attempt requires fresh explicit
+approval. P2 remains unapproved.
+
 ## [Codex GPT-5] 2026-07-12 — Bridge P0 retry blocked by Spot-only collateral
 
 Executed the approved `IBKR_PAPER_BRIDGE/docs/13_CODEX_P0_RETRY_PROMPT.md` scope on

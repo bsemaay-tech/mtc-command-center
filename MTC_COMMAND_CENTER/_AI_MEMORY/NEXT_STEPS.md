@@ -8,9 +8,9 @@
 - ~~**[AI: Claude|Codex]** BUILD DAY: execute `IBKR_PAPER_BRIDGE/docs/02_BUILD_PLAN_1DAY.md` tasks 1-11 in order, commit per task, mock-first.~~ DONE 2026-07-07 (Codex GPT-5): 13 task commits through Task 11; tests pass; dry-run demo verified; P0 smoke written but not run.
 - ~~**[AI: Codex]** corrective scaffold-to-P1 pass from `docs/09_CODEX_FIX_PROMPT.md`.~~ DONE 2026-07-07: Broker protocol decoupling, strategy stops/live positions, resting order lifecycle, persisted duplicate guard, persisted KILL, Hyperliquid native trigger fake-SDK tests, dashboard real rows/status/bars/screenshots, and lifecycle tests. Full suite 37 passed. Caveat: chart screenshot uses local SVG fallback; actual Lightweight Charts visible rendering remains a focused follow-up.
 - **[AI: Codex|Claude]** focused dashboard chart follow-up: make the visible Trading chart use a reliable bundled/local Lightweight Charts path or formally accept the SVG fallback for P1 mock demo; verify with screenshots.
-- **[AI: Barış]** on Hyperliquid testnet, manually transfer mock USDC **Spot → Perps** using `Perps <-> Spot`; do not trade and do not touch mainnet. Current read-only state: Spot `999.0`, Perps `0.0`.
-- **[AI: Codex|Claude]** harden P0 string-shaped exchange-error handling and SDK websocket disconnect; confirm Perps collateral read-only. The 2026-07-12 approved attempt placed no orders and left zero open orders.
-- **[AI: Barış, approval-gated]** approve a new P0 testnet order attempt only after the preceding fixes/check. The failed attempt was non-transient, so its automatic-retry allowance does not apply.
+- ~~**[AI: Codex]** support Hyperliquid Unified account balances, preserve string-shaped exchange errors, and cleanly disconnect the smoke websocket.~~ DONE 2026-07-12 in `944a5323`; both full suites `70 passed`.
+- **[AI: Barış]** do not transfer funds or change account mode; `unifiedAccount` correctly shares the 999 mock USDC balance across Spot/Perps.
+- **[AI: Barış, approval-gated]** review corrected `IBKR_PAPER_BRIDGE/docs/14_P0_SMOKE_REPORT.md`, then approve or reject exactly one new bounded P0 testnet attempt. P2 remains separately gated.
 - Then PREREG gates P1 (mock dry-run demo) → P2 (paper ≥10d unattended) → P3 (≥30d, slippage + signal-parity report to `11_TRIAGE/`).
 
 ## 🔧 MCC APP AUDIT FOLLOW-UPS (audit 2026-07-05: `11_TRIAGE/MCC_APP_AUDIT_2026-07-05.md`; Barış answered all open questions; quick wins DONE same session on `feature/mcc-audit-fixes`)

@@ -4,25 +4,39 @@ Date: 2026-07-12
 Branch: `feature/ibkr-bridge-final`
 Builder: Codex GPT-5
 
-## Verdict
+## Correction - 2026-07-12
+
+The original post-run diagnosis below treated the `999.0` USDC returned by `spot_user_state` as
+unavailable to Perps. That diagnosis was incorrect: a read-only
+`query_user_abstraction_state` call returned `unifiedAccount`, where Hyperliquid intentionally
+stores shared Spot/Perps balances and holds in `spot_user_state`. **No Spot-to-Perps transfer is
+required, and Barış should not change account mode.**
+
+Commit `944a5323` adds Unified-account detection and balance handling, safe string-response error
+normalization, and explicit websocket shutdown. Both full suites now pass with
+`70 passed, 1 warning` from each required CWD. The failed smoke was not rerun; its raw log remains
+unchanged as historical evidence. The exact exchange rejection remains unknown because the old
+parser masked it, so another order attempt still requires separate explicit approval.
+
+## Original run verdict (collateral interpretation superseded)
 
 **F0/F1/F2: PASS locally. P0: FAIL before any order was accepted.**
 
 The testnet connection, account query, live candles, metadata, and bounded order plan completed.
-The perpetual account reported zero collateral, while a follow-up read-only query found all
-`999.0` mock USDC in the Spot balance. The atomic order call failed before returning any oid or
-cloid. A separate read-only cleanup check found zero positions and zero open orders. No retry was
-performed because insufficient Perps collateral is not a transient network failure.
+The old adapter reported zero collateral from the legacy Perps summary, while a follow-up read-only
+query found `999.0` mock USDC in the shared Unified balance. The atomic order call failed before
+returning any oid or cloid. A separate read-only cleanup check found zero positions and zero open
+orders. No retry was performed.
 
 ## F0/F1/F2 changes
 
-- F0: `tools/smoke_p0.py:38` validates the API key as 32-byte hex and the account as a
+- F0: `tools/smoke_p0.py:161` validates the API key as 32-byte hex and the account as a
   20-byte `0x` address before constructing SDK clients. It logs format labels only.
-- F1: `bridge/broker/hyperliquid.py:301` uses installed SDK
+- F1: `bridge/broker/hyperliquid.py:330` uses installed SDK
   `Exchange.market_close(coin, sz=..., slippage=0.05, cloid=...)`. SDK-contract tests prove long
   positions generate crossing SELL reduce-only IOC orders, shorts generate crossing BUY orders,
   and zero positions submit nothing.
-- F2: `bridge/broker/hyperliquid.py:277` rebuilds modify-stop fallback payloads through
+- F2: `bridge/broker/hyperliquid.py:306` rebuilds modify-stop fallback payloads through
   `_request(...)`; bookkeeping fields such as `role` cannot reach `bulk_orders`.
 - Stored-spec sweep: reprotection stores bookkeeping metadata but sends its separately constructed
   clean request list. No other stored spec is passed directly to `order` or `bulk_orders`.
@@ -183,8 +197,9 @@ Complete `p0_smoke_log.json`:
 
 ## Real-response surprises
 
-1. Faucet funds were visible as `999.0` Spot USDC, but `user_state` returned zero Perps account
-   value and withdrawable margin. The smoke requires Perps collateral.
+1. The account uses `unifiedAccount`. In this mode, `user_state.marginSummary` is not the balance
+   authority; shared USDC total/holds come from `spot_user_state`. The original Spot-only blocker
+   diagnosis is superseded by the correction above.
 2. The SDK/exchange failure response reached `_extract_statuses` with a string-shaped `response`,
    while the adapter assumes `response.data.statuses`. The adapter therefore surfaced
    `AttributeError` instead of the exchange rejection. The raw response was not persisted, so the
@@ -205,11 +220,10 @@ Result: zero matches.
 
 ## Remaining gaps and next gate
 
-- Barış must manually transfer mock USDC from **Spot to Perps** on Hyperliquid testnet using the
-  `Perps <-> Spot` control. No transfer was authorized or performed by Codex.
-- Harden `_extract_statuses` to preserve a safe, secret-free exchange error rather than throwing on
-  string responses.
-- Add an explicit SDK websocket disconnect/close path so the smoke exits after writing its log.
+- Unified-account balance handling is implemented and covered by tests; no user transfer or account
+  mode change is required.
+- `_extract_statuses` now preserves secret-redacted string exchange errors.
+- The smoke now explicitly disconnects the SDK websocket before exit.
 - Because this failure was not transient, a further P0 order attempt requires a new explicit
-  approval after Perps collateral is confirmed read-only.
+  approval. That attempt will reveal the previously masked exchange rejection if it recurs.
 - P0 remains failed; P2 unattended ARM remains not approved.

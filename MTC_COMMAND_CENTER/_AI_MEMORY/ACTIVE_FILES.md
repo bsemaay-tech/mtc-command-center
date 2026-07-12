@@ -1,5 +1,15 @@
 # ACTIVE_FILES
 
+## 2026-07-12 Codex GPT-5 — Crypto Paper Bridge Unified-account correction
+- `IBKR_PAPER_BRIDGE/bridge/broker/hyperliquid.py`
+- `IBKR_PAPER_BRIDGE/tools/smoke_p0.py`
+- `IBKR_PAPER_BRIDGE/tests/test_hyperliquid_broker.py`
+- `IBKR_PAPER_BRIDGE/docs/14_P0_SMOKE_REPORT.md`
+- `IBKR_PAPER_BRIDGE/docs/03_STATUS.md`
+- Result: live read-only mode query confirmed `unifiedAccount`; no Spot→Perps transfer is needed.
+  Unified USDC balance/hold handling, safe string errors, and websocket shutdown are locally green;
+  both suites `70 passed`. Historical P0 remains failed and was not rerun; P2 unapproved.
+
 ## 2026-07-12 Codex GPT-5 — Crypto Paper Bridge P0 retry (BLOCKED)
 - `IBKR_PAPER_BRIDGE/bridge/broker/hyperliquid.py`
 - `IBKR_PAPER_BRIDGE/tools/smoke_p0.py`
