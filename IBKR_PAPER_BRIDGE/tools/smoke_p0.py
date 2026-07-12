@@ -17,6 +17,7 @@ if str(ROOT) not in sys.path:
 
 from bridge.broker.hyperliquid import HyperliquidBroker, round_hl_price
 from bridge.engine.types import OrderPlan, Signal
+from bridge.settings import resolve_hyperliquid_credentials
 
 LOG_PATH = ROOT / "docs" / "p0_smoke_log.json"
 
@@ -36,14 +37,20 @@ async def main() -> None:
     initial_sizes: dict[str, float] = {}
     _cleanup_done = False
     try:
-        _validate_credentials()
+        hl_account, hl_key, credential_source = resolve_hyperliquid_credentials()
         _step(
             log,
-            "key_precheck",
+            "credential_source",
             "PASS",
-            {"key_format": "valid_32_bytes", "account_format": "valid_20_bytes"},
+            {"credential_source": credential_source},
         )
-        broker = HyperliquidBroker(network="testnet", coin="BTC", leverage=1)
+        broker = HyperliquidBroker(
+            network="testnet",
+            coin="BTC",
+            leverage=1,
+            account_address=hl_account,
+            api_wallet_key=hl_key,
+        )
         await broker.connect()
         _step(
             log,
@@ -177,6 +184,13 @@ async def main() -> None:
 
 
 def _validate_credentials() -> None:
+    """Validate process-environment Hyperliquid credentials.
+
+    Performs direct format checks on the env vars to preserve
+    backwards-compatible error messages used by existing tests, then
+    delegates to the canonical resolver for final confirmation.
+    """
+    # 1. Direct env-var format checks (backwards-compatible messages)
     key = os.environ.get("HL_API_WALLET_KEY", "").strip()
     key_hex = key[2:] if key.startswith("0x") else key
     if len(key_hex) != 64 or any(char not in string.hexdigits for char in key_hex):
@@ -186,6 +200,9 @@ def _validate_credentials() -> None:
     account_hex = account[2:] if account.startswith("0x") else ""
     if len(account_hex) != 40 or any(char not in string.hexdigits for char in account_hex):
         raise RuntimeError("HL_ACCOUNT_ADDRESS must be a 20-byte 0x-prefixed hexadecimal address")
+
+    # 2. Cross-check with canonical resolver (ensures at least one source works)
+    resolve_hyperliquid_credentials()
 
 
 async def _flatten_if_changed(broker: HyperliquidBroker, initial_sizes: dict[str, float], log: dict) -> None:

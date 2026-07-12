@@ -6,6 +6,7 @@ import pytest
 
 from bridge.broker.hyperliquid import HyperliquidOrderError
 from bridge.engine.types import BrokerOrder
+from bridge.settings import resolve_hyperliquid_credentials
 from tools.smoke_p0 import _deterministic_cleanup, _failure_data, _validate_credentials
 
 
@@ -42,6 +43,120 @@ def test_validate_credentials_rejects_invalid_account_without_exposing_it(monkey
         _validate_credentials()
 
     assert not account or account not in str(exc_info.value)
+
+
+# -----------------------------------------------------------------------
+# monkeypatched-winreg tests for resolve_hyperliquid_credentials
+# -----------------------------------------------------------------------
+
+# Build fixture strings via repetition – never literal 64-hex.
+_FIXTURE_KEY = "0x" + "ab" * 32
+_FIXTURE_ACCOUNT = "0x" + "cd" * 20
+_INVALID_KEY = "0x" + "zz" * 32
+_INVALID_ACCOUNT = "0x" + "zz" * 20
+
+
+class _FakeRegKey:
+    """Minimal fake for :func:`winreg.OpenKey` context manager."""
+
+    def __init__(self, values: dict[str, str]) -> None:
+        self._values = values
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
+
+
+def _fake_query_value_ex(key, name):
+    """Drop-in replacement for :func:`winreg.QueryValueEx` that works with
+    :class:`_FakeRegKey` instances."""
+    return key._values[name], 1
+
+
+def _patch_winreg_in_settings(monkeypatch, reg_values: dict[str, str]):
+    """Monkeypatch the ``winreg`` reference **inside** :mod:`bridge.settings`
+    so ``resolve_hyperliquid_credentials`` uses the fakes."""
+    import bridge.settings as _s
+
+    # Replace the entire winreg reference with a lightweight namespace whose
+    # OpenKey returns our fake and whose QueryValueEx delegates to the fake.
+    class _FakeWinreg:
+        HKEY_CURRENT_USER = 0
+
+        @staticmethod
+        def OpenKey(hkey, subkey):
+            assert subkey == "Environment"
+            return _FakeRegKey(reg_values)
+
+        @staticmethod
+        def QueryValueEx(key, name):
+            return _fake_query_value_ex(key, name)
+
+    monkeypatch.setattr(_s, "winreg", _FakeWinreg, raising=True)
+    monkeypatch.setattr(_s, "_HAS_WINREG", True, raising=True)
+
+
+# --- absent process env → uses registry ----------------------------------
+
+
+def test_resolver_absent_env_uses_registry(monkeypatch):
+    monkeypatch.delenv("HL_ACCOUNT_ADDRESS", raising=False)
+    monkeypatch.delenv("HL_API_WALLET_KEY", raising=False)
+
+    _patch_winreg_in_settings(
+        monkeypatch,
+        {"HL_ACCOUNT_ADDRESS": _FIXTURE_ACCOUNT, "HL_API_WALLET_KEY": _FIXTURE_KEY},
+    )
+
+    account, key, source = resolve_hyperliquid_credentials()
+    assert source == "user_registry"
+    assert account == _FIXTURE_ACCOUNT
+    assert key == _FIXTURE_KEY
+
+
+# --- invalid process env + valid registry → wins --------------------------
+
+
+def test_resolver_invalid_env_valid_registry_wins(monkeypatch):
+    monkeypatch.setenv("HL_ACCOUNT_ADDRESS", _INVALID_ACCOUNT)
+    monkeypatch.setenv("HL_API_WALLET_KEY", _INVALID_KEY)
+
+    _patch_winreg_in_settings(
+        monkeypatch,
+        {"HL_ACCOUNT_ADDRESS": _FIXTURE_ACCOUNT, "HL_API_WALLET_KEY": _FIXTURE_KEY},
+    )
+
+    account, key, source = resolve_hyperliquid_credentials()
+    assert source == "user_registry"
+    assert account == _FIXTURE_ACCOUNT
+    assert key == _FIXTURE_KEY
+
+
+# --- invalid both → raises; fixture values do NOT appear in exception -----
+
+
+def test_resolver_invalid_both_raises_without_exposing_values(monkeypatch):
+    monkeypatch.delenv("HL_ACCOUNT_ADDRESS", raising=False)
+    monkeypatch.delenv("HL_API_WALLET_KEY", raising=False)
+
+    _patch_winreg_in_settings(
+        monkeypatch,
+        {"HL_ACCOUNT_ADDRESS": _INVALID_ACCOUNT, "HL_API_WALLET_KEY": _INVALID_KEY},
+    )
+
+    with pytest.raises(RuntimeError) as exc_info:
+        resolve_hyperliquid_credentials()
+
+    msg = str(exc_info.value)
+    assert _FIXTURE_KEY not in msg
+    assert _FIXTURE_ACCOUNT not in msg
+    assert _INVALID_KEY not in msg
+    assert _INVALID_ACCOUNT not in msg
+
+
+# --- original tests below preserved exactly -------------------------------
 
 
 def test_failure_data_preserves_redacted_raw_exchange_response():
