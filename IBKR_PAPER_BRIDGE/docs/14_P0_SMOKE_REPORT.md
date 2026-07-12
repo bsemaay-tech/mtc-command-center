@@ -569,3 +569,25 @@ Remaining blocker: teach the C1 verification parser to classify `waitingForFill`
 normalTpsl pending child state and verify the accepted resting entry before cancellation. This is a
 local parsing change, but a new P0 approval is required before another testnet run. P0 exit criteria
 are not met; P2 remains unapproved.
+
+## P0 attempt 7 — PASS — 2026-07-12 (builder+auditor: Claude Opus 4.8)
+
+W1 (`93713647`) normalized `waitingForFill`/`waitingForTrigger` string statuses into a
+`pending_child` marker, verified such roles as `WAITING_CHILD`, exempted them from the smoke
+visibility check, and made modify tolerant on pending children. Both suites: **100 passed** from
+both CWDs. Secret grep on changed files + log: zero matches.
+
+Run `p0-20260712T201750Z`, result **PASS**, 12 steps all green:
+`credential_source(user_registry)` → `connect(testnet, unifiedAccount)` → `account(999 USDC)` →
+`candles(3 bars)` → `meta_and_plan(entry 57680, SL 56560→56810, qty 0.0002, ~$11.54)` →
+`place_atomic_normalTpsl` (ENTRY oid **56381230513**, SL oid **56381230514** — this run the SL
+also rested with its own oid; both shapes now supported) → `verify_open_orders` (both cloids
+visible, `pending_children: []`) → `modify_stop` (**real on-exchange trigger modify worked**) →
+`cancel_owned_orders` → `verify_cleanup` (zero remaining) → `partial_fill_guard` (no fills) →
+`disconnect`.
+
+**PREREG §4 P0 exit criteria: connect ✓ account ✓ live candle ✓ entry + SL trigger group placed ✓
+(and modified ✓) cancelled ✓ all steps JSON-logged ✓ — P0 exit criteria MET.**
+Gate formally closed under Barış's 2026-07-12 blanket approval (16_GO_LIVE_PLAN §0); evidence
+self-audited on the raw log by the same model that ran it — next model may re-verify from
+`docs/p0_smoke_log.json`.

@@ -251,6 +251,13 @@ contract:**
     its `na` fallback. The parser currently treats non-dict statuses as malformed, so a new approved
     local parsing change is required before another P0 attempt can verify and cancel this accepted
     entry/child group.
+  - **2026-07-12 P0 PASS amendment (attempt 7, `p0-20260712T201750Z`):** across runs the exchange
+    returned BOTH child shapes: (a) plain string `"waitingForFill"` (attempt 6) and (b) the child
+    as its own `{"resting":{oid}}` status visible in open_orders (attempt 7). The adapter accepts
+    both; known pending strings normalize to `WAITING_CHILD` and are exempt from open_orders
+    visibility. Real on-exchange SL trigger `modify_order` verified working (attempt 7). Entry
+    bracket grouping = `normalTpsl`; `positionTpsl` reserved for re-protecting an existing
+    position. **P0 exit criteria MET** — see `14_P0_SMOKE_REPORT.md`.
   - **Client order id:** set `cloid` (128-bit hex derived from `decision_uid:role`) on every order
     for durable identity. The exchange also returns `oid`. Persist both.
   - **Modify (trail):** `exchange.modify_order(cloid_or_oid, new_order)` changing ONLY the SL

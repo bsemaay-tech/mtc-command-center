@@ -70,7 +70,7 @@ geçilmez.
 
 ### FAZ W — P0 kapanışı
 
-- [ ] **W1. waitingForFill/waitingForTrigger desteği** (`bridge/broker/hyperliquid.py`,
+- [x] **W1. waitingForFill/waitingForTrigger desteği** (`bridge/broker/hyperliquid.py`,
   `tools/smoke_p0.py`)
   - `_extract_statuses`: liste içindeki string durumlardan `waitingForFill`/`waitingForTrigger`
     → `{"pending_child": "<string>"}` marker dict'ine normalize edilir; TANINMAYAN string hâlâ
@@ -86,7 +86,7 @@ geçilmez.
   - Testler: `[{resting},{...}"waitingForFill"]` fikstürü → entry oid'li + SL WAITING_CHILD;
     bilinmeyen string → hata; parent-cancel-kills-child davranışını simüle eden smoke birim testi.
   - Kabul: iki CWD'den tam suite yeşil (>98); secret grep temiz.
-- [ ] **W2. P0 deneme 7** — `PYTHONUTF8=1 python IBKR_PAPER_BRIDGE/tools/smoke_p0.py` (repo
+- [x] **W2. P0 deneme 7** — `PYTHONUTF8=1 python IBKR_PAPER_BRIDGE/tools/smoke_p0.py` (repo
   kökünden; PowerShell tercih ama E1 sayesinde şart değil). Beklenen: connect → account →
   candles → place (normalTpsl; entry resting + SL waiting) → verify → (modify dene, olmazsa
   WARN) → cancel → verify_cleanup → disconnect, `result: PASS`.
@@ -94,7 +94,7 @@ geçilmez.
     (onay §0-2 kapsamında) — döngü geçene kadar, her deneme raporlanır.
   - Kabul: `p0_smoke_log.json` PASS; `docs/14_P0_SMOKE_REPORT.md`'ye deneme bölümü eklendi;
     "P0 exit criteria MET" beyanı raporda.
-- [ ] **W3. P0 kapanış kaydı** — `03_STATUS.md`, `00_PREREG.md`'ye tarihli "P0 MET" notu,
+- [x] **W3. P0 kapanış kaydı** — `03_STATUS.md`, `00_PREREG.md`'ye tarihli "P0 MET" notu,
   GLOBAL_HANDOFF bölümü, mimari şerh güncellemesi (kanıtlanmış cevap şekilleri).
 
 ### FAZ B — P2 öncesi zorunlu sağlamlaştırma (hepsi yerel; B6 hariç ağ yok)

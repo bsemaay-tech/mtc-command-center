@@ -39,6 +39,11 @@ QuantLens crypto run; the bridge never reads MCC files at runtime.
 | P2 | Testnet single-coin | Strategy live on testnet BTC 1h for ≥10 days unattended (crypto 24/7 → ~10 calendar days). Reconnect survives WS drops. Zero unexplained order states. |
 | P3 | Testnet evaluation | ≥30 days. Fill-vs-expected slippage report. Backtest-parity comparison of signals (bridge signal timestamps vs QuantLens engine on same bars). |
 
+> **2026-07-12 — P0 MET.** Attempt 7 `p0-20260712T201750Z`: connect + account (unified,
+> 999 USDC) + live candles + entry & SL native trigger group placed atomically (normalTpsl,
+> oids 56381230513/56381230514) + on-exchange SL modify + cancel + verified cleanup, all in
+> `docs/p0_smoke_log.json`. Closed under the 2026-07-12 blanket approval (16_GO_LIVE_PLAN §0).
+
 ## 5. Pre-registered metrics (logged from P2 onward) — AMENDED 2026-07-06 (audit round)
 
 Per trade (first-class columns in `trades`, not JSON archaeology): signal_ts, decision_ts,

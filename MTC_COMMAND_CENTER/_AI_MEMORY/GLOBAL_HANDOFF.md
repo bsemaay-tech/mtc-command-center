@@ -1,5 +1,16 @@
 # GLOBAL_HANDOFF
 
+## [Claude Opus 4.8] 2026-07-12 — Bridge P0 GATE MET (attempt 7 PASS)
+
+W1 (`93713647`) accepted `waitingForFill`/`waitingForTrigger` pending-child statuses. Attempt 7
+`p0-20260712T201750Z`: ALL 12 steps PASS on testnet — connect (unified, 999 USDC), live candles,
+atomic normalTpsl entry+SL (oids 56381230513/56381230514, both resting), REAL on-exchange SL
+modify, cancel, verified cleanup, no fills, clean disconnect. 100 tests both CWDs; secret scans
+zero. **P0 exit criteria MET** (PREREG §4 note added; architecture amended with both observed
+child shapes). Next open task in `IBKR_PAPER_BRIDGE/docs/16_GO_LIVE_PLAN.md` §3: **B1
+(real WS-drop auto-reconnect)**, then B2-B6 → C → D (P2 ARM — pre-approved). Continue without
+asking per plan §0/§4.
+
 ## [Claude Opus 4.8] 2026-07-12 — Bridge GO-LIVE plan + blanket approvals
 
 Barış directive: take the bridge live (= P2 testnet loop; MAINNET STAYS FORBIDDEN). He

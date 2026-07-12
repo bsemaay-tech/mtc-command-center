@@ -1,68 +1,23 @@
-# 03_STATUS - Crypto Paper Bridge P1 build
+# 03_STATUS — Crypto Paper Bridge
 
-Date: 2026-07-12
-Branch: `feature/ibkr-bridge-final`
-Builder: Codex GPT-5
+Date: 2026-07-12 (late). Branch: `feature/ibkr-bridge-final`.
 
-## Current verdict
+## Gate status
+- **P0: MET** (attempt 7 `p0-20260712T201750Z`, all 12 steps PASS — entry+SL placed with real
+  oids, on-exchange modify worked, cancelled, cleanup verified; `docs/p0_smoke_log.json` +
+  `docs/14_P0_SMOKE_REPORT.md`).
+- **P1: PASS** (audited; continuous mock runtime, live REST/WS dashboard, failure drills).
+- **P2: NOT STARTED** — pre-approved by Barış (16_GO_LIVE_PLAN §0-4); blocked on Phase B+C tasks.
+- Tests: **100 passed, 1 warning** from both required CWDs.
 
-- **P1 local MockBroker gate: PASS.** Continuous background replay, real Store/API/WS wiring,
-  live dashboard, and all eight failure drills are verified locally.
-- **P0 Hyperliquid testnet gate: FAIL; no further attempt approved.** The rounded-price attempt
-  passed credentials, `unifiedAccount` equity `999`, live candles, metadata, and compliant pricing,
-  then failed because real `positionTpsl` returned fewer statuses than the adapter expected. No oid
-  was captured; deterministic-cloid post-check found zero open orders and zero positions. Clean
-  disconnect passed. See `14_P0_SMOKE_REPORT.md`.
-- **P0 attempt 4: FAIL at local precheck; approval consumed.** Commit `09a7a92f` passed C1-C3
-  local hardening and both full suites (`89 passed, 1 warning` each), then the single authorized
-  smoke stopped before SDK construction because the inherited key was not valid 32-byte hex. No
-  testnet call or order occurred; no retry is approved. See `14_P0_SMOKE_REPORT.md`.
-- **P0 attempt 5: FAIL at exchange trigger validation; approval consumed.** E1 (`25cee696`)
-  correctly used the valid Windows user-registry credentials; testnet connect/account/candles/plan
-  passed. Atomic placement returned one error status: `Trigger order has unexpected type.` C3
-  cleanup passed with no owned orders or changed position. No retry is approved.
-- **P0 attempt 6: FAIL at pending-child parsing; approval consumed.** G1/G2 (`a4de4a6e`) reached
-  testnet with `normalTpsl`; the exchange accepted a resting entry and returned `waitingForFill`
-  for the unfilled child. C3 cleanup removed the entry with no changed position. The `na` fallback
-  was not eligible and did not run. No retry is approved.
-- **Real QuantLens golden: BLOCKED.** The canonical engine does not register
-  `keltner_trail_ema8`; the available `GEN_KELTNER_BREAKOUT` has materially different rules and was
-  not substituted. The golden remains explicitly provisional.
-- **P2: NOT STARTED / NOT APPROVED.** No autonomous testnet trading was run.
+## Authoritative plan
+`docs/16_GO_LIVE_PLAN.md` — next open task: **B1 (real WS-drop auto-reconnect)**, then B2-B6,
+C1-C4, D1-D5. Any model continues per its §1/§4 without asking; human input only at §0-İ points
+(Telegram creds İ1, PC uptime İ2, mainnet forbidden İ3, QuantLens registration İ4).
 
-## Build task status
-
-| Task | Status | Evidence |
-|---|---|---|
-| T1 SDK contract | DONE locally | Typed cloids; atomic `bulk_orders(positionTpsl)`; real modify/cancel signatures; SDK-autospec tests. |
-| T2 typed normalization | DONE | `AccountSnapshot`, `Position`, and `BrokerOrder` parity tests across brokers. |
-| T3 async safety | DONE | Sync SDK calls use `asyncio.to_thread`; thread-identity test. |
-| T4 BarFeed | PARTIAL | Timer finalization, warmup, dedupe, staleness, and reconnect/resubscribe path implemented. Automatic SDK socket-drop notification remains unverified/unwired. |
-| T5 order events/reconcile | PARTIAL | No mock-internal reads; typed fill/order events; cloid matching; owned re-protect/flatten and foreign ignore; equity snapshots. `order_ref` and conservative attribute fallback matching remain. |
-| T6 continuous engine | DONE for P1 | Background runtime, safe startup, reconcile-before-ARM, trailing while disarmed, close-only opposite signal, risk disarm, preemptive KILL. |
-| T7 API/WS | DONE for P1 | Runtime controls, Store-backed endpoints, persistent WS, snapshot resync, live decision stream. |
-| T8 failure drills | DONE | Eight scripted drills pass. |
-| T9 CWD robustness | DONE | 98 tests pass from repo root and bridge directory. |
-| T10 chart | DONE | Local SVG candle renderer only; live screenshots verified. |
-| T11 P0 smoke | FAIL / BLOCKED | Attempt 6 proved `normalTpsl` wire acceptance (resting entry plus `waitingForFill` child), but C1 rejects that pending status. C3 cleanup passed; no retry is approved. |
-| T12 real golden | BLOCKED | `docs/12_GOLDEN_REGEN_ATTEMPT.md`; exact strategy ID absent. |
-| T13 report/handoff | DONE | `docs/11_P1_BUILD_REPORT.md` plus canonical handoff entry. |
-
-## Verification
-
-- Repo-root suite: `98 passed, 1 warning`.
-- Bridge-directory suite: `98 passed, 1 warning`.
-- `node --check IBKR_PAPER_BRIDGE/bridge/static/app.js`: pass.
-- Live mock UI: `DRY_RUN`, `ARMED`, `$100000.00`, 80 visible candle bodies, 10 decision rows,
-  no CDN scripts.
-- Secret scan: no 64-hex private key or private-key material found in bridge artifacts.
-- Mainnet: never contacted; `HL_LIVE_ACK` was explicitly unset for the P0 attempt.
-
-## Human next actions
-
-1. Do not transfer funds or change account mode; the testnet account is correctly Unified.
-2. Add and audit `waitingForFill` pending-child parsing/verification, then obtain new explicit
-   approval before any further P0 attempt. Do not run another testnet attempt without that approval.
-3. P2 remains a later go/no-go decision and is not approved.
-4. For a real golden, register the exact bridge Keltner signal semantics in QuantLens or approve a
-   source-engine export adapter; do not relabel `GEN_KELTNER_BREAKOUT` as equivalent.
+## Known open gaps (tracked in plan)
+- B1 ws-drop detection not wired to auto-reconnect; B2 reconciler fallback matching (order_ref/
+  attributes); B3 real user-event payloads never observed; B4 paper-mode end-to-end probe not run;
+  B5 Telegram notifier needs creds; B6 real fill lifecycle never exercised.
+- Golden/parity still provisional — needs QuantLens registration (İ4), required for P3 only.
+- Mainnet: triple-locked, out of scope, forbidden without new written approval.
