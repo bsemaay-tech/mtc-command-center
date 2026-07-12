@@ -112,7 +112,7 @@ geçilmez.
 - [x] **B2. Reconciler eşleştirme fallback'leri** (`bridge/engine/orders.py`)
   - Sıra: cloid → `order_ref` → muhafazakâr öznitelik (coin+side+type+triggerPx+sz). Belirsiz
     eşleşme = WARN, dokunma (spec §6.5). Testler: her kademe + belirsizlik.
-- [~] **B3. Gerçek user-event payload doğrulaması** — KISMEN 2026-07-12: `tools/probe_user_events.py` yazıldı, 90 sn testnet dinlemesi hatasız (0 mesaj — işlem aktivitesi yokken beklenen; abonelik kanıtlandı). Gerçek fill/orderUpdate şekilleri B6 fill smoke sırasında yakalanacak; parser testi o zaman tamamlanır. (küçük ağ işi, emir YOK — §0-2 kapsamında)
+- [x] **B3. Gerçek user-event payload doğrulaması** — TAMAM 2026-07-13: probe aracı + B6 sırasında 5 gerçek payload yakalandı (`docs/user_events_probe.json`); parser gerçek fill/orderUpdate fikstürleriyle testli (`test_real_captured_*`).
   - `tools/probe_user_events.py`: bağlan, `userEvents`+`orderUpdates` abone ol, 60-120 sn dinle,
     gelen HER mesajın redakte ham şeklini `docs/user_events_probe.json`'a yaz, kapan. (B6
     sırasında gerçek fill mesajı da buraya düşecek.) Parser'ı gerçek şekle göre düzelt.
@@ -133,7 +133,7 @@ geçilmez.
     DISARM/KILL/regime + 6 saat heartbeat; fire-and-forget 5 sn timeout; env yoksa sessiz).
   - Kabul: stub-HTTP birim testleri + gerçek tek "bridge alive" mesajı (Barış telefonda gördüm
     der — İ1'in parçası).
-- [ ] **B6. Yakın-market mini fill smoke (tek gerçek fill — onaylı §0-3)**
+- [x] **B6. Yakın-market mini fill smoke — PASS 2026-07-13** (`docs/fill_smoke_log.json`): market_open fill @64110 → positionTpsl SL gerçek defterde resting (**reprotect yolu borsada kanıtlı**, oid 56382516030) → reduce-only kapanış @64098 (pnl −0.00216 = spread) → temizlik doğrulandı. Notlar: (1) grouped-IOC giriş borsaca "could not immediately match" ile reddedildi (log tarihçesinde) — P2 engine akışı resting-LMT `place_bracket` kullandığından etkilenmez; (2) store-zincir kanıtı dürüst WARN ile P2 ilk trade'ine ertelendi. (tek gerçek fill — onaylı §0-3)
   - `tools/smoke_fill.py`: LONG BTC market-benzeri IOC girişi ~$11-12 (ya da market'in hemen
     altına LMT), doğal SL trigger'ı normalTpsl ile; fill geldiğinde: pozisyon görünür + SL
     resting doğrulanır; sonra `market_close` ile kapat; TRADE_CLOSED zinciri + fills tablosu
