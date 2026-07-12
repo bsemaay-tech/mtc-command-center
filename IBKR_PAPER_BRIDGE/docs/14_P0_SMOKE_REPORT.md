@@ -506,3 +506,66 @@ Remaining blocker: the native trigger request type is rejected by the real excha
 shape is captured and the architecture amendment records it. P0 exit criteria are not met; any
 payload correction and any subsequent testnet attempt require new explicit approval. P2 remains
 unapproved.
+
+## Re-approved P0 attempt 6 — G1/G2 normalTpsl grouping — 2026-07-12
+
+Commit `a4de4a6e` changed entry brackets to `grouping="normalTpsl"`, retained
+`positionTpsl` for re-protection, and added one bounded in-run `na` fallback for concrete
+type/grouping rejections. Adapter requests are tested through the installed SDK's
+`order_type_to_wire` and `order_request_to_order_wire` helpers. Both local suites passed before
+the run:
+
+```text
+Repo root: 98 passed, 1 warning in 4.81s
+IBKR_PAPER_BRIDGE/: 98 passed, 1 warning in 4.68s
+```
+
+The single testnet process ran once with `HL_LIVE_ACK` cleared. `normalTpsl` reached the exchange
+and returned a resting entry plus the pending child status `waitingForFill`; this demonstrates that
+the grouping/wire format was accepted for the unfilled entry. The C1 parser rejected the non-dict
+pending status before it could construct verified order results. This was not a type/grouping
+rejection, so the G2 `na` fallback was correctly **not** invoked. Total placement calls: **one**.
+
+The captured raw response was:
+
+```json
+{"status":"ok","response":{"type":"order","data":{"statuses":[{"resting":{"oid":56380800181,"cloid":"0x473f5818479690c75b757a38900ad51b"}},"waitingForFill"]}}}
+```
+
+No `orders` result was persisted because parsing stopped; the resting entry identified above was
+removed by C3. The log shows no changed position and two idempotent cleanup passes, both with
+`errors: []` (the inner failed-placement cleanup plus the outer failure guard). No second smoke
+process and no fallback placement occurred.
+
+Complete overwritten `p0_smoke_log.json` for attempt 6:
+
+```json
+{
+  "approved_scope":"one tiny resting entry plus native SL, modify, cancel, flatten only if needed",
+  "finished_ts":"2026-07-12T20:03:00.579701+00:00",
+  "network":"testnet",
+  "orders":[],
+  "result":"FAIL",
+  "run_id":"p0-20260712T200243Z",
+  "started_ts":"2026-07-12T20:02:43.147580+00:00",
+  "steps":[
+    {"data":{"credential_source":"user_registry"},"name":"credential_source","status":"PASS","ts":"2026-07-12T20:02:43.147640+00:00"},
+    {"data":{"account_address":"0x1E265F5E39957E08ed02A120ceFA33A9bd46AC49","account_mode":"unifiedAccount","network":"testnet"},"name":"connect","status":"PASS","ts":"2026-07-12T20:02:52.306032+00:00"},
+    {"data":{"available_margin":999.0,"equity":999.0,"withdrawable":999.0},"name":"account","status":"PASS","ts":"2026-07-12T20:02:52.601957+00:00"},
+    {"data":{"bars":[{"close":64012.0,"high":64029.0,"low":63888.0,"open":63932.0,"ts":"2026-07-12T18:00:00Z","volume":3.5634},{"close":64069.0,"high":64120.0,"low":64009.0,"open":64012.0,"ts":"2026-07-12T19:00:00Z","volume":0.37676},{"close":64139.0,"high":64161.0,"low":64081.0,"open":64081.0,"ts":"2026-07-12T20:00:00Z","volume":0.09881}],"count":3},"name":"candles","status":"PASS","ts":"2026-07-12T20:02:53.641938+00:00"},
+    {"data":{"coin":"BTC","entry_limit":57720.0,"market_reference":64139.0,"modified_stop_trigger":56850.0,"notional_usd":11.544,"qty":0.0002,"size_decimals":5,"stop_trigger":56560.0},"name":"meta_and_plan","status":"PASS","ts":"2026-07-12T20:02:54.579669+00:00"},
+    {"data":{"diagnostic":"waitingForFill; raw_response={\"status\": \"ok\", \"response\": {\"type\": \"order\", \"data\": {\"statuses\": [{\"resting\": {\"oid\": 56380800181, \"cloid\": \"0x473f5818479690c75b757a38900ad51b\"}}, \"waitingForFill\"]}}}","error_type":"HyperliquidOrderError","grouping":"normalTpsl"},"name":"placement_normalTpsl_failed","status":"WARN","ts":"2026-07-12T20:02:55.966715+00"},
+    {"data":{"flattened_symbols":[]},"name":"partial_fill_guard","status":"PASS","ts":"2026-07-12T20:02:59.138038+00"},
+    {"data":{"errors":[]},"name":"deterministic_cleanup","status":"PASS","ts":"2026-07-12T20:02:59.138047+00"},
+    {"data":{"error":"waitingForFill; raw_response={\"status\": \"ok\", \"response\": {\"type\": \"order\", \"data\": {\"statuses\": [{\"resting\": {\"oid\": 56380800181, \"cloid\": \"0x473f5818479690c75b757a38900ad51b\"}}, \"waitingForFill\"]}}}","error_type":"HyperliquidOrderError","raw_response":"{\"status\": \"ok\", \"response\": {\"type\": \"order\", \"data\": {\"statuses\": [{\"resting\": {\"oid\": 56380800181, \"cloid\": \"0x473f5818479690c75b757a38900ad51b\"}}, \"waitingForFill\"]}}}"},"name":"failure","status":"FAIL","ts":"2026-07-12T20:02:59.138076+00"},
+    {"data":{"flattened_symbols":[]},"name":"partial_fill_guard","status":"PASS","ts":"2026-07-12T20:03:00.277802+00"},
+    {"data":{"errors":[]},"name":"deterministic_cleanup","status":"PASS","ts":"2026-07-12T20:03:00.277812+00"},
+    {"data":{},"name":"disconnect","status":"PASS","ts":"2026-07-12T20:03:00.579690+00"}
+  ]
+}
+```
+
+Remaining blocker: teach the C1 verification parser to classify `waitingForFill` as an expected
+normalTpsl pending child state and verify the accepted resting entry before cancellation. This is a
+local parsing change, but a new P0 approval is required before another testnet run. P0 exit criteria
+are not met; P2 remains unapproved.

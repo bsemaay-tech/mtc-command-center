@@ -245,6 +245,12 @@ contract:**
   - **2026-07-12 testnet observation (historical):** the real bulk response with `positionTpsl` was
     `{"status":"ok","response":{"type":"order","data":{"statuses":[{"error":"Trigger order has unexpected type."}]}}}`.
     This motivated the shift to `normalTpsl` as the default and the `na` fallback path.
+  - **2026-07-12 testnet observation (attempt 6):** `normalTpsl` accepted the resting entry and
+    returned a second group status string, `"waitingForFill"`, while the far-below-market entry was
+    unfilled. This is a pending child state, not a grouping/type rejection; the smoke did not invoke
+    its `na` fallback. The parser currently treats non-dict statuses as malformed, so a new approved
+    local parsing change is required before another P0 attempt can verify and cancel this accepted
+    entry/child group.
   - **Client order id:** set `cloid` (128-bit hex derived from `decision_uid:role`) on every order
     for durable identity. The exchange also returns `oid`. Persist both.
   - **Modify (trail):** `exchange.modify_order(cloid_or_oid, new_order)` changing ONLY the SL

@@ -1,5 +1,14 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5] 2026-07-12 — Bridge P0 attempt 6
+
+G1/G2 in `a4de4a6e` moved entry brackets to `normalTpsl`, retained `positionTpsl` for re-protect,
+and added a bounded `na` fallback. Both suites passed (`98 passed, 1 warning` each). The one
+approved attempt `p0-20260712T200243Z` reached testnet and returned a resting entry plus
+`waitingForFill` child status. C1 rejected the non-dict pending child; C3 cleanup passed twice
+idempotently with no changed position. The `na` fallback was not eligible and did not run. No retry
+was run. P0 remains unmet; P2 remains unapproved. Evidence: `IBKR_PAPER_BRIDGE/docs/14_P0_SMOKE_REPORT.md`.
+
 ## [Codex GPT-5] 2026-07-12 — Bridge P0 attempt 5
 
 Implemented E1 in `25cee696`; the smoke resolved credentials from the Windows user registry

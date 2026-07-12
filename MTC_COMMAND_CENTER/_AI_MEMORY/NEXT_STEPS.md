@@ -12,8 +12,9 @@
 - **[AI: Barış]** do not transfer funds or change account mode; `unifiedAccount` correctly shares the 999 mock USDC balance across Spot/Perps.
 - ~~**[AI: Codex]** add conservative Hyperliquid price rounding and run exactly one approved P0 attempt.~~ DONE 2026-07-12 in `42018032`; local suites `72 passed`, attempt failed cleanly on real `positionTpsl` response cardinality, zero open orders/positions.
 - ~~**[AI: Codex]** locally harden `positionTpsl` response-shape handling, redacted diagnostics, and deterministic owned-cloid cleanup.~~ DONE 2026-07-12 in `09a7a92f`; both full suites `89 passed`.
-- ~~**[AI: Codex]** implement E1 user-registry credential fallback and run one re-approved P0 smoke.~~ DONE 2026-07-12 in `25cee696`; source=`user_registry`, both suites `92 passed`, attempt 5 reached testnet and exposed the native trigger-type rejection.
-- **[AI: Barış, approval-gated]** review/correct the native Hyperliquid trigger payload rejected as `Trigger order has unexpected type.`, then separately approve or reject a new bounded P0 attempt. P2 remains separately gated and unapproved.
+- ~~**[AI: Codex]** implement E1 user-registry fallback and run one re-approved P0 smoke.~~ DONE 2026-07-12 in `25cee696`; source=`user_registry`, both suites `92 passed`, attempt 5 reached testnet and exposed the native trigger-type rejection.
+- ~~**[AI: Codex]** implement G1 normalTpsl entry grouping and the bounded G2 fallback, then run attempt 6.~~ DONE 2026-07-12 in `a4de4a6e`; both suites `98 passed`, normalTpsl returned a resting entry plus `waitingForFill` child state, and C3 cleanup passed.
+- **[AI: Barış, approval-gated]** approve a local C1 parser update for `waitingForFill` pending-child verification, then separately approve or reject the next bounded P0 attempt. P2 remains separately gated and unapproved.
 - Then PREREG gates P1 (mock dry-run demo) → P2 (paper ≥10d unattended) → P3 (≥30d, slippage + signal-parity report to `11_TRIAGE/`).
 
 ## 🔧 MCC APP AUDIT FOLLOW-UPS (audit 2026-07-05: `11_TRIAGE/MCC_APP_AUDIT_2026-07-05.md`; Barış answered all open questions; quick wins DONE same session on `feature/mcc-audit-fixes`)

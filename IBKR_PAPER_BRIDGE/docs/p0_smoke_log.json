@@ -1,11 +1,11 @@
 {
   "approved_scope": "one tiny resting entry plus native SL, modify, cancel, flatten only if needed",
-  "finished_ts": "2026-07-12T19:46:42.075264+00:00",
+  "finished_ts": "2026-07-12T20:03:00.579701+00:00",
   "network": "testnet",
   "orders": [],
   "result": "FAIL",
-  "run_id": "p0-20260712T194622Z",
-  "started_ts": "2026-07-12T19:46:22.827525+00:00",
+  "run_id": "p0-20260712T200243Z",
+  "started_ts": "2026-07-12T20:02:43.147580+00:00",
   "steps": [
     {
       "data": {
@@ -13,7 +13,7 @@
       },
       "name": "credential_source",
       "status": "PASS",
-      "ts": "2026-07-12T19:46:22.827612+00:00"
+      "ts": "2026-07-12T20:02:43.147640+00:00"
     },
     {
       "data": {
@@ -23,7 +23,7 @@
       },
       "name": "connect",
       "status": "PASS",
-      "ts": "2026-07-12T19:46:35.256210+00:00"
+      "ts": "2026-07-12T20:02:52.306032+00:00"
     },
     {
       "data": {
@@ -33,19 +33,11 @@
       },
       "name": "account",
       "status": "PASS",
-      "ts": "2026-07-12T19:46:35.970227+00:00"
+      "ts": "2026-07-12T20:02:52.601957+00:00"
     },
     {
       "data": {
         "bars": [
-          {
-            "close": 63919.0,
-            "high": 64120.0,
-            "low": 63863.0,
-            "open": 63994.0,
-            "ts": "2026-07-12T17:00:00Z",
-            "volume": 6.64689
-          },
           {
             "close": 64012.0,
             "high": 64029.0,
@@ -55,34 +47,52 @@
             "volume": 3.5634
           },
           {
-            "close": 64016.0,
+            "close": 64069.0,
             "high": 64120.0,
             "low": 64009.0,
             "open": 64012.0,
             "ts": "2026-07-12T19:00:00Z",
-            "volume": 0.32303
+            "volume": 0.37676
+          },
+          {
+            "close": 64139.0,
+            "high": 64161.0,
+            "low": 64081.0,
+            "open": 64081.0,
+            "ts": "2026-07-12T20:00:00Z",
+            "volume": 0.09881
           }
         ],
         "count": 3
       },
       "name": "candles",
       "status": "PASS",
-      "ts": "2026-07-12T19:46:37.008545+00:00"
+      "ts": "2026-07-12T20:02:53.641938+00:00"
     },
     {
       "data": {
         "coin": "BTC",
-        "entry_limit": 57610.0,
-        "market_reference": 64016.0,
-        "modified_stop_trigger": 56740.0,
-        "notional_usd": 11.522,
+        "entry_limit": 57720.0,
+        "market_reference": 64139.0,
+        "modified_stop_trigger": 56850.0,
+        "notional_usd": 11.544,
         "qty": 0.0002,
         "size_decimals": 5,
-        "stop_trigger": 56450.0
+        "stop_trigger": 56560.0
       },
       "name": "meta_and_plan",
       "status": "PASS",
-      "ts": "2026-07-12T19:46:37.777163+00:00"
+      "ts": "2026-07-12T20:02:54.579669+00:00"
+    },
+    {
+      "data": {
+        "diagnostic": "waitingForFill; raw_response={\"status\": \"ok\", \"response\": {\"type\": \"order\", \"data\": {\"statuses\": [{\"resting\": {\"oid\": 56380800181, \"cloid\": \"0x473f5818479690c75b757a38900ad51b\"}}, \"waitingForFill\"]}}}",
+        "error_type": "HyperliquidOrderError",
+        "grouping": "normalTpsl"
+      },
+      "name": "placement_normalTpsl_failed",
+      "status": "WARN",
+      "ts": "2026-07-12T20:02:55.966715+00:00"
     },
     {
       "data": {
@@ -90,7 +100,7 @@
       },
       "name": "partial_fill_guard",
       "status": "PASS",
-      "ts": "2026-07-12T19:46:41.107691+00:00"
+      "ts": "2026-07-12T20:02:59.138038+00:00"
     },
     {
       "data": {
@@ -98,23 +108,39 @@
       },
       "name": "deterministic_cleanup",
       "status": "PASS",
-      "ts": "2026-07-12T19:46:41.107701+00:00"
+      "ts": "2026-07-12T20:02:59.138047+00:00"
     },
     {
       "data": {
-        "error": "cloid 0x95f589787908b598642cba45f8562333 (ENTRY) missing from open_orders and not explained; raw_response={\"status\": \"ok\", \"response\": {\"type\": \"order\", \"data\": {\"statuses\": [{\"error\": \"Trigger order has unexpected type.\"}]}}}",
+        "error": "waitingForFill; raw_response={\"status\": \"ok\", \"response\": {\"type\": \"order\", \"data\": {\"statuses\": [{\"resting\": {\"oid\": 56380800181, \"cloid\": \"0x473f5818479690c75b757a38900ad51b\"}}, \"waitingForFill\"]}}}",
         "error_type": "HyperliquidOrderError",
-        "raw_response": "{\"status\": \"ok\", \"response\": {\"type\": \"order\", \"data\": {\"statuses\": [{\"error\": \"Trigger order has unexpected type.\"}]}}}"
+        "raw_response": "{\"status\": \"ok\", \"response\": {\"type\": \"order\", \"data\": {\"statuses\": [{\"resting\": {\"oid\": 56380800181, \"cloid\": \"0x473f5818479690c75b757a38900ad51b\"}}, \"waitingForFill\"]}}}"
       },
       "name": "failure",
       "status": "FAIL",
-      "ts": "2026-07-12T19:46:41.107730+00:00"
+      "ts": "2026-07-12T20:02:59.138076+00:00"
+    },
+    {
+      "data": {
+        "flattened_symbols": []
+      },
+      "name": "partial_fill_guard",
+      "status": "PASS",
+      "ts": "2026-07-12T20:03:00.277802+00:00"
+    },
+    {
+      "data": {
+        "errors": []
+      },
+      "name": "deterministic_cleanup",
+      "status": "PASS",
+      "ts": "2026-07-12T20:03:00.277812+00:00"
     },
     {
       "data": {},
       "name": "disconnect",
       "status": "PASS",
-      "ts": "2026-07-12T19:46:42.075252+00:00"
+      "ts": "2026-07-12T20:03:00.579690+00:00"
     }
   ]
 }
