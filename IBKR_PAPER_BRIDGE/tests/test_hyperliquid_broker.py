@@ -3,7 +3,8 @@ from __future__ import annotations
 import asyncio
 import threading
 from datetime import UTC, datetime, timedelta
-from unittest.mock import create_autospec
+from types import SimpleNamespace
+from unittest.mock import Mock, create_autospec
 
 import pytest
 
@@ -87,17 +88,66 @@ def test_hl_modify_and_cancel_use_real_sdk_signatures():
     assert isinstance(cancel.args[1], Cloid)
 
 
-def test_hl_flatten_reduce_only():
-    info = FakeInfo(size="0.25")
+@pytest.mark.parametrize("position_size", ["0.25", "-0.25"])
+def test_hl_flatten_uses_market_close_for_long_and_short(position_size):
+    info = FakeInfo(size=position_size)
     exchange = _exchange_mock()
     broker = HyperliquidBroker(account_address="0xabc", info_client=info, exchange_client=exchange)
 
     asyncio.run(broker.flatten("BTC"))
 
-    close = exchange.order.call_args
-    assert close.args[:4] == ("BTC", False, 0.25, 0)
-    assert close.kwargs["reduce_only"] is True
+    close = exchange.market_close.call_args
+    assert close.args == ("BTC",)
+    assert close.kwargs["sz"] == 0.25
+    assert close.kwargs["slippage"] == 0.05
     assert isinstance(close.kwargs["cloid"], Cloid)
+
+
+def test_hl_flatten_zero_position_does_not_submit_close():
+    exchange = _exchange_mock()
+    broker = HyperliquidBroker(
+        account_address="0xabc",
+        info_client=FakeInfo(size="0"),
+        exchange_client=exchange,
+    )
+
+    asyncio.run(broker.flatten("BTC"))
+
+    exchange.market_close.assert_not_called()
+    exchange.order.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("position_size", "crossing_px", "expected_is_buy"),
+    [("0.25", 95.0, False), ("-0.25", 105.0, True)],
+)
+def test_installed_sdk_market_close_builds_crossing_reduce_only_ioc(
+    position_size,
+    crossing_px,
+    expected_is_buy,
+):
+    exchange = create_autospec(Exchange, instance=True)
+    exchange.wallet = SimpleNamespace(address="0xabc")
+    exchange.account_address = "0xabc"
+    exchange.vault_address = None
+    exchange.info = SimpleNamespace(
+        user_state=Mock(
+            return_value={
+                "assetPositions": [{"position": {"coin": "BTC", "szi": position_size}}]
+            }
+        )
+    )
+    exchange._slippage_price.return_value = crossing_px
+    cloid = Cloid.from_int(1)
+
+    Exchange.market_close(exchange, "BTC", sz=0.25, slippage=0.05, cloid=cloid)
+
+    order = exchange.order.call_args
+    assert order.args[:4] == ("BTC", expected_is_buy, 0.25, crossing_px)
+    assert crossing_px > 0
+    assert order.kwargs["order_type"] == {"limit": {"tif": "Ioc"}}
+    assert order.kwargs["reduce_only"] is True
+    assert order.kwargs["cloid"] is cloid
 
 
 def test_broker_normalization_type_parity():

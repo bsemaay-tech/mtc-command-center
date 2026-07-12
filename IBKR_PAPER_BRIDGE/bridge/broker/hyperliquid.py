@@ -293,7 +293,7 @@ class HyperliquidBroker:
                 await self.cancel(order.cloid)
 
     async def flatten(self, coin: str) -> None:
-        if self.exchange is None or not hasattr(self.exchange, "order"):
+        if self.exchange is None or not hasattr(self.exchange, "market_close"):
             raise HyperliquidNotConfigured("Exchange client not configured")
         size = 0.0
         for position in await self.positions():
@@ -304,13 +304,10 @@ class HyperliquidBroker:
         if size == 0:
             return None
         await asyncio.to_thread(
-            self.exchange.order,
+            self.exchange.market_close,
             coin,
-            size < 0,
-            abs(size),
-            0,
-            {"limit": {"tif": "Ioc"}},
-            reduce_only=True,
+            sz=abs(size),
+            slippage=0.05,
             cloid=self._raw_cloid(f"{coin}:flatten:{datetime.now(UTC).isoformat()}"),
         )
         return None
