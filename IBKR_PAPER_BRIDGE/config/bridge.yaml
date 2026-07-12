@@ -24,7 +24,7 @@ notify:
   telegram_enabled: true
   heartbeat_hours: 6
 llm:
-  regime_enabled: true
+  regime_enabled: false   # C3 P2 profile (2026-07-13): OFF for the whole P2 window - single-variable run; do NOT flip mid-P2
   regime_refresh_minutes: 240
   min_confidence: 0.6
   ttl_clamp_minutes: [15, 1440]
