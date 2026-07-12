@@ -46,6 +46,18 @@ def test_ws_pushes_snapshot_on_connect():
     assert message["data"]["status"]["mode"] == "paper"
 
 
+def test_ws_connection_stays_open_for_status_broadcasts():
+    client = TestClient(create_app())
+
+    with client.websocket_connect("/ws") as ws:
+        assert ws.receive_json()["topic"] == "snapshot"
+        client.post("/api/disarm")
+        message = ws.receive_json()
+
+    assert message["topic"] == "status"
+    assert message["data"]["state"] == "DISARMED"
+
+
 def test_kill_persists_across_restart(tmp_path):
     db_path = tmp_path / "bridge.db"
     first = TestClient(create_app(store_path=db_path))

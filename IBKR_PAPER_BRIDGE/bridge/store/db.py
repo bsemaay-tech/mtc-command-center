@@ -572,7 +572,55 @@ class Store:
             "fills": self._rows("SELECT * FROM fills ORDER BY fill_ts"),
             "events": self._rows("SELECT * FROM events ORDER BY id"),
             "bars": self._rows("SELECT * FROM bars ORDER BY bar_end_ts"),
+            "decisions": self._rows("SELECT * FROM decisions ORDER BY id"),
+            "equity": self._rows("SELECT * FROM equity ORDER BY ts"),
         }
+
+    def get_trades(self, limit: int = 50) -> list[dict[str, Any]]:
+        return self._rows("SELECT * FROM trades ORDER BY trade_id DESC LIMIT ?", (limit,))
+
+    def get_decisions(self, trade_id: int | None = None, limit: int = 200) -> list[dict[str, Any]]:
+        if trade_id is None:
+            rows = self._rows("SELECT * FROM decisions ORDER BY id DESC LIMIT ?", (limit,))
+        else:
+            rows = self._rows(
+                "SELECT * FROM decisions WHERE trade_id = ? ORDER BY id",
+                (trade_id,),
+            )
+        for row in rows:
+            row["payload"] = json.loads(row.pop("payload_json") or "{}")
+        return rows
+
+    def get_equity(self, limit: int = 1000) -> list[dict[str, Any]]:
+        return self._rows("SELECT * FROM equity ORDER BY ts DESC LIMIT ?", (limit,))
+
+    def get_events(self, severity: str | None = None, limit: int = 500) -> list[dict[str, Any]]:
+        if severity is None:
+            return self._rows("SELECT * FROM events ORDER BY id DESC LIMIT ?", (limit,))
+        return self._rows(
+            "SELECT * FROM events WHERE severity = ? ORDER BY id DESC LIMIT ?",
+            (severity, limit),
+        )
+
+    def get_bars(self, limit: int = 300) -> list[dict[str, Any]]:
+        return self._rows("SELECT * FROM bars ORDER BY bar_end_ts DESC LIMIT ?", (limit,))[::-1]
+
+    def get_run(self, run_id: str) -> dict[str, Any] | None:
+        row = self.conn.execute("SELECT * FROM runs WHERE run_id = ?", (run_id,)).fetchone()
+        return None if row is None else dict(row)
+
+    def get_latest_gates(self) -> dict[str, Any]:
+        row = self.conn.execute(
+            """
+            SELECT payload_json FROM decisions
+            WHERE stage IN ('RISK_PASS', 'RISK_REJECT')
+            ORDER BY id DESC LIMIT 1
+            """
+        ).fetchone()
+        if row is None:
+            return {"gate_results": []}
+        payload = json.loads(row["payload_json"] or "{}")
+        return {"gate_results": payload.get("gates", [])}
 
     def _rows(self, sql: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
         return [dict(row) for row in self.conn.execute(sql, params).fetchall()]

@@ -75,6 +75,11 @@ def create_app(
         async def publish(topic: str, data: object) -> None:
             if topic == "status" and isinstance(data, dict):
                 app.state.bridge_status.update(data)
+                app.state.bridge_status["state_version"] += 1
+                data = dict(app.state.bridge_status)
+            hub = getattr(app.state, "ws_hub", None)
+            if hub is not None:
+                await hub.broadcast(topic, data)
 
         engine = BridgeEngine(
             run_id=run_id,
