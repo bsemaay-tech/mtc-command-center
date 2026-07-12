@@ -109,7 +109,7 @@ geçilmez.
     pozisyon varsa SL doğrulaması → yoksa `reprotect_position` (mevcut) → o da olmazsa flatten.
   - Testler: sahte ws-ölümü → reconnect çağrıldı; reconnect başarısız × N → DATA_STALE/DISARM.
   - Kabul: suite yeşil; drill güncellemesi.
-- [ ] **B2. Reconciler eşleştirme fallback'leri** (`bridge/engine/orders.py`)
+- [x] **B2. Reconciler eşleştirme fallback'leri** (`bridge/engine/orders.py`)
   - Sıra: cloid → `order_ref` → muhafazakâr öznitelik (coin+side+type+triggerPx+sz). Belirsiz
     eşleşme = WARN, dokunma (spec §6.5). Testler: her kademe + belirsizlik.
 - [ ] **B3. Gerçek user-event payload doğrulaması** (küçük ağ işi, emir YOK — §0-2 kapsamında)

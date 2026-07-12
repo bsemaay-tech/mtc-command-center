@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from bridge.broker.base import Broker
-from bridge.engine.types import BrokerEvent, FillEvent, OrderPlan, OrderUpdateEvent, Position
+from bridge.engine.types import BrokerEvent, BrokerOrder, FillEvent, OrderPlan, OrderUpdateEvent, Position
 from bridge.store.db import Store
 
 
@@ -103,7 +103,7 @@ class OrderManager:
     async def reconcile(self) -> None:
         positions = await self.broker.positions()
         open_orders = await self.broker.open_orders()
-        protected = {order.coin for order in open_orders if order.role == "SL" and self.store.get_order(order.cloid)}
+        protected = {order.coin for order in open_orders if order.role == "SL" and self._match_order(order) is not None}
         for position in positions:
             if position.symbol in protected:
                 continue
@@ -168,7 +168,7 @@ class OrderManager:
                 for order in orders
                 if order.coin == position.symbol
                 and order.role == "SL"
-                and self.store.get_order(order.cloid) is not None
+                and self._match_order(order) is not None
             ),
             None,
         )
@@ -193,10 +193,47 @@ class OrderManager:
         for order in await self.broker.open_orders():
             if order.coin != position.symbol or order.role not in {"SL", "TP"}:
                 continue
-            if self.store.get_order(order.cloid) is not None:
+            if self._match_order(order) is not None:
                 await self.broker.cancel(order.cloid)
         await self.broker.flatten(position.symbol)
         await self.sync_broker_state()
+
+    def _match_order(self, order: BrokerOrder) -> dict[str, Any] | None:
+        """B2: match an exchange order to our DB (spec §6.5).
+
+        Cascade: cloid → order_ref → conservative attributes
+        (symbol+role+qty+trigger_px, live statuses only). An ambiguous
+        attribute match emits RECON_AMBIGUOUS and returns None — the caller
+        must not act on it.
+        """
+        if order.cloid:
+            row = self.store.get_order(order.cloid)
+            if row is not None:
+                return row
+        order_ref = getattr(order, "order_ref", None)
+        if order_ref:
+            row = self.store.get_order_by_ref(str(order_ref))
+            if row is not None:
+                return row
+        role = getattr(order, "role", None)
+        if role in {"SL", "TP", "ENTRY"}:
+            candidates = self.store.find_live_orders_by_attributes(
+                symbol=order.coin,
+                role=str(role),
+                qty=abs(order.size),
+                trigger_px=getattr(order, "trigger_px", None),
+            )
+            if len(candidates) == 1:
+                return candidates[0]
+            if len(candidates) > 1:
+                self.store.insert_event(
+                    self.run_id,
+                    datetime.now(UTC),
+                    "WARN",
+                    "RECON_AMBIGUOUS",
+                    f"{order.coin}:{role}:{len(candidates)} candidates",
+                )
+        return None
 
     def _queue_event(self, event: BrokerEvent) -> None:
         self._queued_events.append(event)

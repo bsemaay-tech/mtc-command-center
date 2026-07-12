@@ -532,6 +532,45 @@ class Store:
         row = self.conn.execute("SELECT * FROM orders WHERE cloid = ?", (cloid,)).fetchone()
         return None if row is None else dict(row)
 
+    def get_order_by_ref(self, order_ref: str) -> dict[str, Any] | None:
+        """B2 fallback 2: durable identity via our order_ref tag."""
+        row = self.conn.execute("SELECT * FROM orders WHERE order_ref = ?", (order_ref,)).fetchone()
+        return None if row is None else dict(row)
+
+    def find_live_orders_by_attributes(
+        self,
+        symbol: str,
+        role: str,
+        qty: float,
+        trigger_px: float | None,
+    ) -> list[dict[str, Any]]:
+        """B2 fallback 3: conservative attribute match (spec §6.5).
+
+        Matches only orders still in a live status; symbol and trigger price
+        come from the persisted order_json. Caller treats >1 result as
+        AMBIGUOUS and must not act on it.
+        """
+        rows = self._rows(
+            """
+            SELECT * FROM orders
+            WHERE role = ? AND qty = ?
+              AND status IN ('OPEN', 'SUBMITTED', 'PENDING')
+              AND json_extract(order_json, '$.symbol') = ?
+            """,
+            (role, qty, symbol),
+        )
+        if trigger_px is None:
+            return rows
+        matched: list[dict[str, Any]] = []
+        for row in rows:
+            try:
+                stored_trigger = json.loads(row["order_json"]).get("trigger_px")
+            except (TypeError, ValueError):
+                stored_trigger = None
+            if stored_trigger is not None and abs(float(stored_trigger) - trigger_px) < 1e-9:
+                matched.append(row)
+        return matched
+
     def get_trade(self, trade_id: int) -> dict[str, Any] | None:
         row = self.conn.execute("SELECT * FROM trades WHERE trade_id = ?", (trade_id,)).fetchone()
         return None if row is None else dict(row)

@@ -220,3 +220,56 @@ class ReprotectFailsBroker:
     async def reprotect_position(self, position: Position, stop_loss, take_profit, decision_uid):
         self.reprotect_attempts += 1
         return None
+
+
+def test_match_order_cascade_cloid_then_ref_then_attributes(tmp_path):
+    """B2: reconciler matching falls back cloid -> order_ref -> attributes."""
+    from bridge.engine.types import BrokerOrder
+
+    store = Store(tmp_path / "b2.db")
+    store.initialize()
+    store.create_run("b2", "dry_run", "testnet", {})
+    manager = OrderManager(store, MockBroker(bars=[], starting_equity=1000), "b2")
+    store.insert_order(
+        cloid="0xaa", oid=1, group_id="d1", order_ref="d1:SL",
+        order_json={"symbol": "BTC", "trigger_px": 95.0},
+        decision_uid="d1", trade_id=None, role="SL",
+        status="OPEN", qty=0.5, filled_qty=0.0, avg_fill_px=None,
+    )
+
+    base = dict(coin="BTC", side="SELL", size=0.5, status="OPEN", role="SL",
+                reduce_only=True, trigger_px=95.0, order_type="Stop Market")
+    # 1) cloid hit
+    assert manager._match_order(BrokerOrder(cloid="0xaa", oid=1, **base))["cloid"] == "0xaa"
+    # 2) unknown cloid, order_ref hit
+    assert manager._match_order(
+        BrokerOrder(cloid="0xdead", oid=2, order_ref="d1:SL", **base)
+    )["cloid"] == "0xaa"
+    # 3) unknown cloid+ref, single attribute match
+    assert manager._match_order(BrokerOrder(cloid="0xdead", oid=2, **base))["cloid"] == "0xaa"
+    # 3b) attribute mismatch (different trigger) -> no match
+    miss = dict(base, trigger_px=90.0)
+    assert manager._match_order(BrokerOrder(cloid="0xdead", oid=2, **miss)) is None
+
+
+def test_match_order_ambiguous_attributes_warns_and_returns_none(tmp_path):
+    from bridge.engine.types import BrokerOrder
+
+    store = Store(tmp_path / "b2b.db")
+    store.initialize()
+    store.create_run("b2b", "dry_run", "testnet", {})
+    manager = OrderManager(store, MockBroker(bars=[], starting_equity=1000), "b2b")
+    for idx in ("0x01", "0x02"):
+        store.insert_order(
+            cloid=idx, oid=None, group_id="d", order_ref=f"d:{idx}",
+            order_json={"symbol": "BTC", "trigger_px": 95.0},
+            decision_uid="d", trade_id=None, role="SL",
+            status="OPEN", qty=0.5, filled_qty=0.0, avg_fill_px=None,
+        )
+
+    order = BrokerOrder(cloid="0xdead", oid=9, coin="BTC", side="SELL", size=0.5,
+                        status="OPEN", role="SL", reduce_only=True,
+                        trigger_px=95.0, order_type="Stop Market")
+    assert manager._match_order(order) is None
+    events = store.get_events()
+    assert any(e["code"] == "RECON_AMBIGUOUS" for e in events)
