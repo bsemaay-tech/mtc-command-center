@@ -48,6 +48,7 @@ async def _run_dryrun_replay(tmp_path):
         store=store,
         strategy=KeltnerTrailEma8(),
         risk_engine=risk,
+        state="ARMED",
     )
 
     await engine.run_replay(max_bars=60)
@@ -82,6 +83,7 @@ async def _run_protocol_broker_replay(tmp_path):
         store=store,
         strategy=NoSignalStrategy(),
         risk_engine=RiskEngine(RiskConfig(max_position_notional_pct=0.5)),
+        state="ARMED",
     )
 
     await engine.run_replay(max_bars=1)
@@ -102,6 +104,7 @@ async def _run_strategy_stop(tmp_path):
         store=store,
         strategy=FixedSignalStrategy(stop_loss=90.0, take_profit=115.0),
         risk_engine=RiskEngine(RiskConfig(max_position_notional_pct=0.5)),
+        state="ARMED",
     )
 
     await engine.run_replay(max_bars=1)
@@ -132,6 +135,7 @@ async def _run_position_blocks_entry(tmp_path):
         store=store,
         strategy=FixedSignalStrategy(stop_loss=90.0, take_profit=115.0),
         risk_engine=RiskEngine(RiskConfig(max_position_notional_pct=0.5)),
+        state="ARMED",
     )
 
     await engine.run_replay(max_bars=1)
@@ -153,6 +157,7 @@ async def _run_disarm_mid_await_no_submit(tmp_path):
         strategy=FixedSignalStrategy(stop_loss=90.0, take_profit=115.0),
         risk_engine=RiskEngine(RiskConfig(max_position_notional_pct=0.5)),
         llm_gate=DisarmingGate(store),
+        state="ARMED",
     )
 
     await engine.run_replay(max_bars=1)
@@ -177,6 +182,7 @@ async def _run_decision_chain_records_trade_closed(tmp_path):
         store=store,
         strategy=FixedSignalStrategy(stop_loss=95.0, take_profit=None),
         risk_engine=RiskEngine(RiskConfig(max_position_notional_pct=0.5)),
+        state="ARMED",
     )
 
     await engine.run_replay(max_bars=3)
@@ -206,6 +212,7 @@ async def _run_order_manager_guards(tmp_path):
         strategy=KeltnerTrailEma8(),
         order_manager=manager,
         risk_engine=RiskEngine(RiskConfig(max_position_notional_pct=0.5)),
+        state="ARMED",
     )
     await engine.run_replay(max_bars=25)
     first_order_count = len(store.get_snapshot()["orders"])

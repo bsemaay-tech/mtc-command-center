@@ -135,6 +135,47 @@ class OrderManager:
             realized_today=0.0,
         )
 
+    async def trail_position(self, position: Position, new_stop: float) -> bool:
+        trade = self.store.get_open_trade_for_coin(self.run_id, position.symbol)
+        if trade is None:
+            return False
+        orders = await self.broker.open_orders()
+        stop = next(
+            (
+                order
+                for order in orders
+                if order.coin == position.symbol
+                and order.role == "SL"
+                and self.store.get_order(order.cloid) is not None
+            ),
+            None,
+        )
+        if stop is None:
+            return False
+        if stop.trigger_px is not None:
+            if position.size > 0 and new_stop <= stop.trigger_px:
+                return False
+            if position.size < 0 and new_stop >= stop.trigger_px:
+                return False
+        await self.broker.modify_stop(stop.cloid, new_stop)
+        self.store.insert_event(
+            self.run_id,
+            datetime.now(UTC),
+            "INFO",
+            "TRAIL_MODIFIED",
+            f"{position.symbol}:{new_stop}",
+        )
+        return True
+
+    async def close_position(self, position: Position) -> None:
+        for order in await self.broker.open_orders():
+            if order.coin != position.symbol or order.role not in {"SL", "TP"}:
+                continue
+            if self.store.get_order(order.cloid) is not None:
+                await self.broker.cancel(order.cloid)
+        await self.broker.flatten(position.symbol)
+        await self.sync_broker_state()
+
     def _queue_event(self, event: BrokerEvent) -> None:
         self._queued_events.append(event)
 

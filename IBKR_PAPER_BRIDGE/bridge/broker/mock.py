@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import asyncio
 import itertools
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -30,8 +31,11 @@ class MockBroker:
     orders: list[dict] = field(default_factory=list)
     fills: list[dict] = field(default_factory=list)
     position: Position | None = None
+    streaming: bool = False
+    stream_delay_s: float = 0.05
     _ids: itertools.count = field(default_factory=lambda: itertools.count(1))
     _user_callbacks: list[Callable[[BrokerEvent], None]] = field(default_factory=list)
+    _bar_callbacks: list[Callable[[Bar], None]] = field(default_factory=list)
 
     @classmethod
     def from_csv(cls, path: str | Path, starting_equity: float = 10_000.0) -> "MockBroker":
@@ -88,11 +92,22 @@ class MockBroker:
         return rows
 
     async def historical_bars(self, coin: str, tf: str, lookback: int) -> list[Bar]:
+        if self.streaming:
+            return []
         return self.bars[-lookback:]
 
     def subscribe_bars(self, coin: str, tf: str, on_bar_closed: Callable[[Bar], None]) -> None:
+        self._bar_callbacks.append(on_bar_closed)
+        if not self.streaming:
+            for bar in self.bars:
+                on_bar_closed(bar)
+
+    async def start_stream(self) -> None:
         for bar in self.bars:
-            on_bar_closed(bar)
+            self.process_bar(bar)
+            for callback in list(self._bar_callbacks):
+                callback(bar)
+            await asyncio.sleep(self.stream_delay_s)
 
     def subscribe_user_events(self, on_event: Callable[[BrokerEvent], None]) -> None:
         self._user_callbacks.append(on_event)

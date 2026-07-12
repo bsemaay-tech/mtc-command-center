@@ -1,22 +1,37 @@
 from __future__ import annotations
 
 import asyncio
+import time
+from pathlib import Path
 
 from fastapi.testclient import TestClient
 
 from bridge.app import create_app
+from bridge.broker.mock import MockBroker
 from bridge.engine.notify import TelegramNotifier
 
 
-def test_dry_run_app_snapshot_has_bars_and_trade_data():
-    client = TestClient(create_app(dry_run=True))
+def test_dry_run_app_snapshot_has_bars_and_trade_data(tmp_path):
+    fixture = Path(__file__).parent / "fixtures" / "BTC_1h.csv"
+    broker = MockBroker.from_csv(fixture, starting_equity=100000)
+    broker.streaming = True
+    broker.stream_delay_s = 0.001
+    app = create_app(
+        dry_run=True,
+        start_runtime=True,
+        store_path=tmp_path / "bridge.db",
+        broker=broker,
+    )
 
-    snapshot = client.get("/api/snapshot").json()
-    bars = client.get("/api/bars?n=5").json()
+    with TestClient(app) as client:
+        status = client.get("/api/status").json()
+        client.post("/api/arm", headers={"X-Confirm": str(status["state_version"])})
+        time.sleep(0.4)
+        snapshot = app.state.bridge_store.get_snapshot()
 
-    assert snapshot["status"]["mode"] == "dry_run"
+    assert app.state.bridge_status["mode"] == "dry_run"
     assert snapshot["trades"]
-    assert bars["bars"]
+    assert snapshot["bars"]
 
 
 def test_notifier_disabled_and_stubbed_send_never_raises():
