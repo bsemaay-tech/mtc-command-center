@@ -41,6 +41,7 @@ class OrderManager:
             tp_initial=plan.take_profit,
             llm_directive_id=None,
         )
+        plan.decision_uid = decision_uid
         result = await self.broker.place_bracket(plan)
         self._submitted.add(decision_uid)
 

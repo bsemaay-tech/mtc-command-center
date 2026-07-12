@@ -28,6 +28,7 @@ class Signal(BaseModel):
 
 
 class OrderPlan(BaseModel):
+    decision_uid: str | None = None
     signal: Signal
     qty: float
     entry_type: Literal["MKT", "LMT"]

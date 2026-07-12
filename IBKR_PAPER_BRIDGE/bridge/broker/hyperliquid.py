@@ -8,13 +8,16 @@ from __future__ import annotations
 
 import os
 import hashlib
+import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Callable
 
 from bridge.engine.types import Bar, OrderPlan
+from hyperliquid.utils.types import Cloid
 
 LIVE_ACK = "I_UNDERSTAND_THIS_IS_REAL_MONEY"
+logger = logging.getLogger(__name__)
 
 
 class BrokerRefusedLive(RuntimeError):
@@ -70,6 +73,8 @@ class HyperliquidBroker:
         api_wallet_key: str | None = None,
         info_client: object | None = None,
         exchange_client: object | None = None,
+        coin: str = "BTC",
+        leverage: int = 1,
     ) -> None:
         self.network = network
         self.enable_live = enable_live
@@ -79,12 +84,17 @@ class HyperliquidBroker:
         self.api_wallet_key = api_wallet_key or os.environ.get("HL_API_WALLET_KEY", "")
         self.info = info_client
         self.exchange = exchange_client
+        self.coin = coin
+        self.leverage = leverage
         self.connected = False
+        self._order_specs: dict[str, dict] = {}
 
     async def connect(self) -> None:
         self._check_network_lock()
         if self.info is None or self.exchange is None:
             self._build_sdk_clients()
+        if hasattr(self.exchange, "update_leverage"):
+            self.exchange.update_leverage(self.leverage, self.coin, is_cross=False)
         self.connected = True
 
     async def account(self) -> dict:
@@ -132,58 +142,88 @@ class HyperliquidBroker:
         is_exit_buy = not is_entry_buy
         entry_cloid = self._cloid(plan, "entry")
         sl_cloid = self._cloid(plan, "sl")
-        entry_raw = self.exchange.order(
-            plan.signal.symbol,
-            is_entry_buy,
-            plan.qty,
-            0,
-            {"limit": {"tif": "Ioc"}},
-            reduce_only=False,
-            cloid=entry_cloid,
-        )
-        sl_raw = self.exchange.order(
-            plan.signal.symbol,
-            is_exit_buy,
-            plan.qty,
-            0,
-            {
-                "trigger": {"triggerPx": plan.stop_loss, "isMarket": True, "tpsl": "sl"},
-                "grouping": "positionTpsl",
-            },
-            reduce_only=True,
-            cloid=sl_cloid,
-        )
-        result = {
-            "entry": self._order_result("ENTRY", entry_cloid, entry_raw, plan.qty),
-            "sl": self._order_result("SL", sl_cloid, sl_raw, plan.qty, trigger_px=plan.stop_loss),
-        }
-        if plan.take_profit is not None:
-            tp_cloid = self._cloid(plan, "tp")
-            tp_raw = self.exchange.order(
+        entry_px = plan.limit_price if plan.entry_type == "LMT" else plan.signal.ref_price
+        entry_type = {"limit": {"tif": "Gtc" if plan.entry_type == "LMT" else "Ioc"}}
+        requests = [
+            self._request(plan.signal.symbol, is_entry_buy, plan.qty, entry_px, entry_type, False, entry_cloid),
+            self._request(
                 plan.signal.symbol,
                 is_exit_buy,
                 plan.qty,
-                0,
-                {
-                    "trigger": {"triggerPx": plan.take_profit, "isMarket": True, "tpsl": "tp"},
-                    "grouping": "positionTpsl",
-                },
-                reduce_only=True,
-                cloid=tp_cloid,
+                plan.stop_loss,
+                {"trigger": {"triggerPx": plan.stop_loss, "isMarket": True, "tpsl": "sl"}},
+                True,
+                sl_cloid,
+            ),
+        ]
+        roles: list[tuple[str, Cloid, float | None]] = [("ENTRY", entry_cloid, None), ("SL", sl_cloid, plan.stop_loss)]
+        if plan.take_profit is not None:
+            tp_cloid = self._cloid(plan, "tp")
+            requests.append(
+                self._request(
+                    plan.signal.symbol,
+                    is_exit_buy,
+                    plan.qty,
+                    plan.take_profit,
+                    {"trigger": {"triggerPx": plan.take_profit, "isMarket": True, "tpsl": "tp"}},
+                    True,
+                    tp_cloid,
+                )
             )
-            result["tp"] = self._order_result("TP", tp_cloid, tp_raw, plan.qty, trigger_px=plan.take_profit)
+            roles.append(("TP", tp_cloid, plan.take_profit))
+
+        raw = self.exchange.bulk_orders(requests, grouping="positionTpsl")
+        statuses = self._extract_statuses(raw)
+        result: dict[str, dict] = {}
+        for idx, (role, cloid, trigger_px) in enumerate(roles):
+            status = statuses[idx] if idx < len(statuses) else {}
+            result[role.lower()] = self._order_result(role, cloid, status, plan.qty, trigger_px=trigger_px)
+            request = requests[idx]
+            self._order_specs[str(cloid)] = {
+                "coin": request["coin"],
+                "is_buy": request["is_buy"],
+                "sz": request["sz"],
+                "limit_px": request["limit_px"],
+                "order_type": request["order_type"],
+                "reduce_only": request["reduce_only"],
+                "cloid": cloid,
+            }
         return result
 
     async def modify_stop(self, cloid: str, new_stop: float) -> None:
-        if self.exchange is not None and hasattr(self.exchange, "modify_order"):
+        if self.exchange is None or not hasattr(self.exchange, "modify_order"):
+            raise HyperliquidNotConfigured("Exchange client not configured")
+        spec = self._order_specs.get(str(cloid))
+        if spec is None:
+            raise KeyError(f"unknown stop cloid: {cloid}")
+        typed_cloid = Cloid.from_str(str(cloid))
+        order_type = {"trigger": {"triggerPx": new_stop, "isMarket": True, "tpsl": "sl"}}
+        try:
             self.exchange.modify_order(
-                cloid,
-                {"trigger": {"triggerPx": new_stop, "isMarket": True, "tpsl": "sl"}, "grouping": "positionTpsl"},
+                typed_cloid,
+                spec["coin"],
+                spec["is_buy"],
+                spec["sz"],
+                new_stop,
+                order_type,
+                reduce_only=True,
+                cloid=typed_cloid,
             )
+        except Exception:
+            logger.warning("stop modify failed; cancelling and replacing cloid=%s", cloid)
+            self.exchange.cancel_by_cloid(spec["coin"], typed_cloid)
+            replacement = dict(spec)
+            replacement["limit_px"] = new_stop
+            replacement["order_type"] = order_type
+            self.exchange.bulk_orders([replacement], grouping="positionTpsl")
+        spec["limit_px"] = new_stop
+        spec["order_type"] = order_type
 
     async def cancel(self, cloid: str) -> None:
         if self.exchange is not None and hasattr(self.exchange, "cancel_by_cloid"):
-            self.exchange.cancel_by_cloid(cloid)
+            spec = self._order_specs.get(str(cloid), {})
+            coin = str(spec.get("coin", self.coin))
+            self.exchange.cancel_by_cloid(coin, Cloid.from_str(str(cloid)))
 
     async def cancel_all(self) -> None:
         for order in await self.open_orders():
@@ -233,17 +273,18 @@ class HyperliquidBroker:
         self.info = Info(base_url, skip_ws=False)
         self.exchange = Exchange(wallet, base_url, account_address=self.account_address)
 
-    def _cloid(self, plan: OrderPlan, role: str) -> str:
-        raw = f"{plan.signal.symbol}:{plan.signal.ts.isoformat()}:{plan.signal.direction}:{role}"
+    def _cloid(self, plan: OrderPlan, role: str) -> Cloid:
+        decision_uid = plan.decision_uid or f"{plan.signal.symbol}:{plan.signal.ts.isoformat()}:{plan.signal.direction}"
+        raw = f"{decision_uid}:{role}"
         return self._raw_cloid(raw)
 
     @staticmethod
-    def _raw_cloid(raw: str) -> str:
-        return "0x" + hashlib.blake2s(raw.encode("utf-8"), digest_size=16).hexdigest()
+    def _raw_cloid(raw: str) -> Cloid:
+        return Cloid.from_str("0x" + hashlib.blake2s(raw.encode("utf-8"), digest_size=16).hexdigest())
 
     @staticmethod
-    def _order_result(role: str, cloid: str, raw: object, qty: float, trigger_px: float | None = None) -> dict:
-        result = {"cloid": cloid, "oid": None, "role": role, "status": "OPEN", "qty": qty}
+    def _order_result(role: str, cloid: Cloid, raw: object, qty: float, trigger_px: float | None = None) -> dict:
+        result = {"cloid": str(cloid), "oid": None, "role": role, "status": "OPEN", "qty": qty}
         oid = HyperliquidBroker._extract_oid(raw)
         if oid is not None:
             result["oid"] = oid
@@ -255,15 +296,44 @@ class HyperliquidBroker:
     def _extract_oid(raw: object) -> int | None:
         if not isinstance(raw, dict):
             return None
-        statuses = raw.get("response", {}).get("data", {}).get("statuses", [])
-        if not statuses:
-            return None
-        status = statuses[0]
+        status = raw
+        if "response" in raw:
+            statuses = raw.get("response", {}).get("data", {}).get("statuses", [])
+            if not statuses:
+                return None
+            status = statuses[0]
         if "resting" in status:
             return status["resting"].get("oid")
         if "filled" in status:
             return status["filled"].get("oid")
         return None
+
+    @staticmethod
+    def _extract_statuses(raw: object) -> list[dict]:
+        if not isinstance(raw, dict):
+            return []
+        statuses = raw.get("response", {}).get("data", {}).get("statuses", [])
+        return [status for status in statuses if isinstance(status, dict)]
+
+    @staticmethod
+    def _request(
+        coin: str,
+        is_buy: bool,
+        size: float,
+        limit_px: float,
+        order_type: dict,
+        reduce_only: bool,
+        cloid: Cloid,
+    ) -> dict:
+        return {
+            "coin": coin,
+            "is_buy": is_buy,
+            "sz": size,
+            "limit_px": limit_px,
+            "order_type": order_type,
+            "reduce_only": reduce_only,
+            "cloid": cloid,
+        }
 
     @staticmethod
     def _parse_position(position: object) -> dict[str, object] | None:

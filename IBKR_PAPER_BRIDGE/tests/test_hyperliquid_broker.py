@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime, timedelta
+from unittest.mock import create_autospec
 
 import pytest
 
 from bridge.broker.hyperliquid import BarFinalizer, BrokerRefusedLive, HyperliquidBroker
 from bridge.engine.types import Bar, OrderPlan, Signal
+from hyperliquid.exchange import Exchange
+from hyperliquid.utils.types import Cloid
 
 
 def test_hyperliquid_mainnet_refuses_without_triple_lock():
@@ -17,17 +20,19 @@ def test_hyperliquid_mainnet_refuses_without_triple_lock():
 
 
 def test_hyperliquid_mainnet_allows_with_triple_lock_and_mock_clients():
+    exchange = _exchange_mock()
     broker = HyperliquidBroker(
         network="mainnet",
         enable_live=True,
         live_ack="I_UNDERSTAND_THIS_IS_REAL_MONEY",
         strategy_live_allowed=True,
         info_client=object(),
-        exchange_client=object(),
+        exchange_client=exchange,
     )
 
     asyncio.run(broker.connect())
     assert broker.connected is True
+    exchange.update_leverage.assert_called_once_with(1, "BTC", is_cross=False)
 
 
 def test_bar_finalizer_emits_once_and_dedupes_reconnect_duplicate():
@@ -44,33 +49,53 @@ def test_bar_finalizer_emits_once_and_dedupes_reconnect_duplicate():
 
 
 def test_hl_bracket_places_native_triggers():
-    exchange = FakeExchange()
+    exchange = _exchange_mock()
     broker = HyperliquidBroker(info_client=object(), exchange_client=exchange)
     plan = _plan()
 
     ids = asyncio.run(broker.place_bracket(plan))
 
     assert set(ids) == {"entry", "sl", "tp"}
-    assert exchange.orders[0]["order_type"] == {"limit": {"tif": "Ioc"}}
-    assert exchange.orders[1]["order_type"]["trigger"]["tpsl"] == "sl"
-    assert exchange.orders[1]["order_type"]["grouping"] == "positionTpsl"
-    assert exchange.orders[1]["reduce_only"] is True
-    assert exchange.orders[2]["order_type"]["trigger"]["tpsl"] == "tp"
+    requests = exchange.bulk_orders.call_args.args[0]
+    assert exchange.bulk_orders.call_args.kwargs == {"grouping": "positionTpsl"}
+    assert requests[0]["order_type"] == {"limit": {"tif": "Ioc"}}
+    assert requests[1]["order_type"]["trigger"]["tpsl"] == "sl"
+    assert "grouping" not in requests[1]["order_type"]
+    assert requests[1]["reduce_only"] is True
+    assert requests[2]["order_type"]["trigger"]["tpsl"] == "tp"
+    assert all(isinstance(request["cloid"], Cloid) for request in requests)
     assert ids["sl"]["cloid"].startswith("0x")
+
+
+def test_hl_modify_and_cancel_use_real_sdk_signatures():
+    exchange = _exchange_mock()
+    broker = HyperliquidBroker(info_client=object(), exchange_client=exchange)
+    ids = asyncio.run(broker.place_bracket(_plan()))
+
+    asyncio.run(broker.modify_stop(ids["sl"]["cloid"], 96.0))
+    asyncio.run(broker.cancel(ids["sl"]["cloid"]))
+
+    modify = exchange.modify_order.call_args
+    assert isinstance(modify.args[0], Cloid)
+    assert modify.args[1:6] == ("BTC", False, 0.1, 96.0, {"trigger": {"triggerPx": 96.0, "isMarket": True, "tpsl": "sl"}})
+    assert modify.kwargs["reduce_only"] is True
+    assert isinstance(modify.kwargs["cloid"], Cloid)
+    cancel = exchange.cancel_by_cloid.call_args
+    assert cancel.args[0] == "BTC"
+    assert isinstance(cancel.args[1], Cloid)
 
 
 def test_hl_flatten_reduce_only():
     info = FakeInfo(size="0.25")
-    exchange = FakeExchange()
+    exchange = _exchange_mock()
     broker = HyperliquidBroker(account_address="0xabc", info_client=info, exchange_client=exchange)
 
     asyncio.run(broker.flatten("BTC"))
 
-    close = exchange.orders[-1]
-    assert close["coin"] == "BTC"
-    assert close["is_buy"] is False
-    assert close["sz"] == 0.25
-    assert close["reduce_only"] is True
+    close = exchange.order.call_args
+    assert close.args[:4] == ("BTC", False, 0.25, 0)
+    assert close.kwargs["reduce_only"] is True
+    assert isinstance(close.kwargs["cloid"], Cloid)
 
 
 def _candle(ts: datetime, close: float) -> dict:
@@ -103,26 +128,22 @@ def _plan() -> OrderPlan:
     )
 
 
-class FakeExchange:
-    def __init__(self) -> None:
-        self.orders: list[dict] = []
-        self.modified: list[dict] = []
-
-    def order(self, coin, is_buy, sz, limit_px, order_type, reduce_only=False, cloid=None):
-        call = {
-            "coin": coin,
-            "is_buy": is_buy,
-            "sz": sz,
-            "limit_px": limit_px,
-            "order_type": order_type,
-            "reduce_only": reduce_only,
-            "cloid": cloid,
-        }
-        self.orders.append(call)
-        return {"status": "ok", "response": {"data": {"statuses": [{"resting": {"oid": len(self.orders)}}]}}}
-
-    def modify_order(self, cloid, order):
-        self.modified.append({"cloid": cloid, "order": order})
+def _exchange_mock():
+    exchange = create_autospec(Exchange, instance=True)
+    exchange.bulk_orders.return_value = {
+        "status": "ok",
+        "response": {
+            "data": {
+                "statuses": [
+                    {"resting": {"oid": 1}},
+                    {"resting": {"oid": 2}},
+                    {"resting": {"oid": 3}},
+                ]
+            }
+        },
+    }
+    exchange.order.return_value = {"status": "ok", "response": {"data": {"statuses": [{"resting": {"oid": 4}}]}}}
+    return exchange
 
 
 class FakeInfo:
