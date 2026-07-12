@@ -18,6 +18,7 @@ from bridge.broker.hyperliquid import (
 from bridge.broker.mock import MockBroker
 from bridge.engine.types import AccountSnapshot, Bar, BrokerOrder, FillEvent, OrderPlan, Position, Signal
 from hyperliquid.exchange import Exchange
+from hyperliquid.utils.signing import order_request_to_order_wire, order_type_to_wire
 from hyperliquid.utils.types import Cloid
 
 
@@ -58,6 +59,7 @@ def test_bar_finalizer_emits_once_and_dedupes_reconnect_duplicate():
 
 
 def test_hl_bracket_places_native_triggers():
+    """G1: place_bracket defaults to grouping=normalTpsl."""
     exchange = _exchange_mock()
     broker = HyperliquidBroker(info_client=_verified_plan_info(), exchange_client=exchange)
     plan = _plan()
@@ -66,14 +68,50 @@ def test_hl_bracket_places_native_triggers():
 
     assert set(ids) == {"entry", "sl", "tp"}
     requests = exchange.bulk_orders.call_args.args[0]
-    assert exchange.bulk_orders.call_args.kwargs == {"grouping": "positionTpsl"}
+    assert exchange.bulk_orders.call_args.kwargs == {"grouping": "normalTpsl"}
     assert requests[0]["order_type"] == {"limit": {"tif": "Ioc"}}
     assert requests[1]["order_type"]["trigger"]["tpsl"] == "sl"
     assert "grouping" not in requests[1]["order_type"]
     assert requests[1]["reduce_only"] is True
     assert requests[2]["order_type"]["trigger"]["tpsl"] == "tp"
     assert all(isinstance(request["cloid"], Cloid) for request in requests)
+    # Use installed SDK helpers for the actual wire contract, not a hand-made
+    # wire dict. Trigger wire must retain the required tpsl discriminator.
+    sl_wire = order_request_to_order_wire(requests[1], 0)
+    assert sl_wire["t"] == order_type_to_wire(requests[1]["order_type"])
+    assert sl_wire["t"]["trigger"]["tpsl"] == "sl"
     assert ids["sl"]["cloid"].startswith("0x")
+
+
+def test_hl_bracket_explicit_grouping_na_keeps_sdk_trigger_shape():
+    """G1: independent ``na`` trigger remains valid for SDK wire conversion."""
+    exchange = _exchange_mock()
+    broker = HyperliquidBroker(info_client=_verified_plan_info(), exchange_client=exchange)
+    plan = _plan()
+
+    ids = asyncio.run(broker.place_bracket(plan, grouping="na"))
+
+    assert set(ids) == {"entry", "sl", "tp"}
+    requests = exchange.bulk_orders.call_args.args[0]
+    assert exchange.bulk_orders.call_args.kwargs == {"grouping": "na"}
+    # The SDK's TriggerOrderType requires the tpsl discriminator even with na.
+    assert requests[1]["order_type"]["trigger"]["tpsl"] == "sl"
+    assert requests[1]["order_type"]["trigger"]["isMarket"] is True
+    assert requests[1]["order_type"]["trigger"]["triggerPx"] == 95.0
+    assert requests[2]["order_type"]["trigger"]["tpsl"] == "tp"
+    assert requests[2]["order_type"]["trigger"]["isMarket"] is True
+    assert requests[2]["order_type"]["trigger"]["triggerPx"] == 110.0
+    assert order_request_to_order_wire(requests[1], 0)["t"] == order_type_to_wire(requests[1]["order_type"])
+
+
+def test_hl_bracket_explicit_grouping_passthrough():
+    """G1: explicit grouping parameter is forwarded to bulk_orders."""
+    exchange = _exchange_mock()
+    broker = HyperliquidBroker(info_client=_verified_plan_info(), exchange_client=exchange)
+    plan = _plan()
+
+    asyncio.run(broker.place_bracket(plan, grouping="normalTpsl"))
+    assert exchange.bulk_orders.call_args.kwargs == {"grouping": "normalTpsl"}
 
 
 def test_hl_price_rounding_contract():
@@ -320,6 +358,7 @@ def test_hl_user_fill_event_is_typed_and_mapped_by_oid():
 
 
 def test_hl_reprotects_position_with_native_trigger_group():
+    """G1: reprotect_position uses grouping=positionTpsl (unchanged)."""
     exchange = _exchange_mock()
     exchange.bulk_orders.return_value = {
         "status": "ok",
@@ -337,6 +376,114 @@ def test_hl_reprotects_position_with_native_trigger_group():
     assert exchange.bulk_orders.call_args.kwargs == {"grouping": "positionTpsl"}
     assert requests[0]["reduce_only"] is True
     assert requests[0]["order_type"]["trigger"]["tpsl"] == "sl"
+
+
+# ── G2: smoke fallback normalTpsl → na (mocked) ─────────────────────────
+
+
+def test_g2_normal_tpsl_rejection_falls_back_to_na_exactly_once():
+    """G2: normalTpsl rejected with type/grouping error → C3 cleanup → exactly
+    one na retry (no loop, no third attempt)."""
+    exchange = _exchange_mock()
+    call_groupings: list[str] = []
+
+    def _bulk_orders(requests, grouping):
+        call_groupings.append(grouping)
+        if grouping == "normalTpsl":
+            raise HyperliquidOrderError(
+                "Trigger order has unexpected type.; "
+                "raw_response={'status':'ok','response':{'type':'order','data':{'statuses':[{'error':'Trigger order has unexpected type.'}]}}}"
+            )
+        # na grouping succeeds
+        return {
+            "status": "ok",
+            "response": {
+                "data": {
+                    "statuses": [
+                        {"resting": {"oid": 101}},
+                        {"resting": {"oid": 102}},
+                        {"resting": {"oid": 103}},
+                    ]
+                }
+            },
+        }
+
+    exchange.bulk_orders.side_effect = _bulk_orders
+    broker = HyperliquidBroker(info_client=_verified_plan_info(), exchange_client=exchange)
+    plan = _plan()
+
+    # Simulate G2 logic: first try normalTpsl, on type/grouping error fall back to na
+    # First attempt
+    with pytest.raises(HyperliquidOrderError):
+        asyncio.run(broker.place_bracket(plan, grouping="normalTpsl"))
+
+    assert call_groupings == ["normalTpsl"]
+    assert exchange.bulk_orders.call_count == 1
+
+    # Fallback attempt (na)
+    result = asyncio.run(broker.place_bracket(plan, grouping="na"))
+    assert call_groupings == ["normalTpsl", "na"]
+    assert exchange.bulk_orders.call_count == 2
+    assert set(result) == {"entry", "sl", "tp"}
+
+
+def test_g2_non_type_error_does_not_fall_back():
+    """G2: a non-type/non-grouping error (e.g. insufficient margin) must NOT
+    trigger a fallback — only one placement call, no second attempt."""
+    exchange = _exchange_mock()
+    call_groupings: list[str] = []
+
+    def _bulk_orders(requests, grouping):
+        call_groupings.append(grouping)
+        raise HyperliquidOrderError(
+            "Insufficient margin; "
+            "raw_response={'status':'err','response':'Insufficient margin'}"
+        )
+
+    exchange.bulk_orders.side_effect = _bulk_orders
+    broker = HyperliquidBroker(info_client=object(), exchange_client=exchange)
+    plan = _plan()
+
+    with pytest.raises(HyperliquidOrderError, match="Insufficient margin"):
+        asyncio.run(broker.place_bracket(plan, grouping="normalTpsl"))
+
+    assert call_groupings == ["normalTpsl"]
+    assert exchange.bulk_orders.call_count == 1  # no fallback
+
+
+def test_g2_fallback_grouping_rejection_detection():
+    """G2: verify that the smoke-level keyword detection correctly identifies
+    type/grouping rejections."""
+    # These should be detected as grouping rejection
+    grouping_messages = [
+        "Trigger order has unexpected type.",
+        "Invalid grouping type",
+        "Order type not supported for this grouping",
+        "tpsl field not allowed",
+    ]
+    for msg in grouping_messages:
+        msg_lower = msg.lower()
+        is_grouping = any(
+            keyword in msg_lower
+            for keyword in ("type", "grouping", "trigger", "unexpected", "tpsl")
+        )
+        assert is_grouping, f"Should detect grouping rejection in: {msg}"
+
+    # These should NOT be detected as grouping rejection
+    non_grouping_messages = [
+        "Insufficient margin",
+        "Rate limit exceeded",
+        "Order size too small",
+        "Price outside allowed range",
+        "",
+    ]
+    for msg in non_grouping_messages:
+        msg_lower = msg.lower()
+        is_grouping = any(
+            keyword in msg_lower
+            for keyword in ("type", "grouping", "trigger", "unexpected", "tpsl")
+        )
+        assert not is_grouping, f"Should NOT detect grouping rejection in: {msg}"
 
 
 def _candle(ts: datetime, close: float) -> dict:

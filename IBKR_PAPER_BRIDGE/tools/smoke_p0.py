@@ -125,42 +125,61 @@ async def main() -> None:
             leverage=1,
         )
 
-        # ---- C3: wrapped order phase — any exception triggers deterministic cleanup ----
-        try:
-            placed = await broker.place_bracket(plan)
-            log["orders"] = [
-                {"role": row["role"], "cloid": row["cloid"], "oid": row.get("oid"), "qty": row["qty"]}
-                for row in placed.values()
-            ]
-            _step(log, "place_atomic_position_tpsl", "PASS", {"orders": log["orders"]})
+        # ---- G2: normalTpsl first; fallback to na on type/grouping rejection ----
+        for attempt_idx, attempt_grouping in enumerate(("normalTpsl", "na")):
+            try:
+                placed = await broker.place_bracket(plan, grouping=attempt_grouping)
+                log["orders"] = [
+                    {"role": row["role"], "cloid": row["cloid"], "oid": row.get("oid"), "qty": row["qty"]}
+                    for row in placed.values()
+                ]
+                _step(log, f"place_atomic_{attempt_grouping}", "PASS", {"orders": log["orders"], "grouping": attempt_grouping})
 
-            visible = await broker.open_orders()
-            visible_cloids = {order.cloid for order in visible}
-            missing = sorted(set(owned_cloids) - visible_cloids)
-            if missing:
-                raise RuntimeError(f"placed cloids not visible: {missing}")
-            _step(log, "verify_open_orders", "PASS", {"owned_cloids_visible": sorted(owned_cloids)})
+                visible = await broker.open_orders()
+                visible_cloids = {order.cloid for order in visible}
+                missing = sorted(set(owned_cloids) - visible_cloids)
+                if missing:
+                    raise RuntimeError(f"placed cloids not visible: {missing}")
+                _step(log, "verify_open_orders", "PASS", {"owned_cloids_visible": sorted(owned_cloids)})
 
-            await broker.modify_stop(placed["sl"]["cloid"], modified_stop)
-            _step(log, "modify_stop", "PASS", {"cloid": placed["sl"]["cloid"], "new_trigger_px": modified_stop})
+                await broker.modify_stop(placed["sl"]["cloid"], modified_stop)
+                _step(log, "modify_stop", "PASS", {"cloid": placed["sl"]["cloid"], "new_trigger_px": modified_stop})
 
-            for cloid in owned_cloids:
-                await broker.cancel(cloid)
-            _step(log, "cancel_owned_orders", "PASS", {"cancelled_cloids": sorted(owned_cloids)})
+                for cloid in owned_cloids:
+                    await broker.cancel(cloid)
+                _step(log, "cancel_owned_orders", "PASS", {"cancelled_cloids": sorted(owned_cloids)})
 
-            remaining = {order.cloid for order in await broker.open_orders()}
-            uncleared = sorted(set(owned_cloids) & remaining)
-            if uncleared:
-                raise RuntimeError(f"owned cloids still open after cancel: {uncleared}")
-            _step(log, "verify_cleanup", "PASS", {"owned_open_orders_remaining": []})
+                remaining = {order.cloid for order in await broker.open_orders()}
+                uncleared = sorted(set(owned_cloids) & remaining)
+                if uncleared:
+                    raise RuntimeError(f"owned cloids still open after cancel: {uncleared}")
+                _step(log, "verify_cleanup", "PASS", {"owned_open_orders_remaining": []})
+                break  # success — exit the fallback loop
 
-        except Exception:
-            # C3: guaranteed cleanup exactly once for any post-bulk exception
-            if not _cleanup_done:
-                _cleanup_done = True
-                await _deterministic_cleanup(broker, owned_cloids, initial_sizes, log)
-            raise
-        # ---- end C3 wrapped phase ----
+            except Exception as exc:
+                _step(log, f"placement_{attempt_grouping}_failed", "WARN", {
+                    "grouping": attempt_grouping,
+                    "error_type": type(exc).__name__,
+                    "diagnostic": HyperliquidBroker._safe_exchange_message(str(exc), cap=4000),
+                })
+                # C3: deterministic cleanup after every failed placement attempt
+                if not _cleanup_done:
+                    _cleanup_done = True
+                    await _deterministic_cleanup(broker, owned_cloids, initial_sizes, log)
+                    _cleanup_done = False  # reset for a potential second attempt
+
+                if attempt_idx == 0:
+                    # Only fall back if the error indicates a type/grouping rejection
+                    if not _is_type_or_grouping_rejection(exc):
+                        raise  # non-grouping error — no fallback
+
+                    # Fall through to attempt_idx==1 (na)
+                    _step(log, "placement_fallback_na", "INFO", {"reason": "type/grouping rejection detected, retrying with na grouping"})
+                else:
+                    # Second attempt (na) also failed — stop
+                    _step(log, "placement_na_failed_no_fallback", "FAIL", {"reason": "na fallback also failed, stopping"})
+                    raise
+        # ---- end G2 wrapped phase ----
 
         await _flatten_if_changed(broker, initial_sizes, log)
         log["result"] = "PASS"
@@ -266,6 +285,28 @@ def _failure_data(exc: Exception) -> dict:
     if marker in error:
         data["raw_response"] = error.split(marker, 1)[1]
     return data
+
+
+def _is_type_or_grouping_rejection(exc: Exception) -> bool:
+    """True only for concrete exchange trigger/grouping rejections.
+
+    Do not use a bare ``type`` token: C2 raw responses include
+    ``response.type=order`` even when the exchange rejected something else.
+    """
+    message = str(exc).lower()
+    return any(
+        phrase in message
+        for phrase in (
+            "trigger order has unexpected type",
+            "unexpected trigger order type",
+            "order type not supported for this grouping",
+            "invalid grouping",
+            "unsupported grouping",
+            "grouping is not allowed",
+            "tpsl field not allowed",
+            "tpsl grouping",
+        )
+    )
 
 
 if __name__ == "__main__":

@@ -7,7 +7,12 @@ import pytest
 from bridge.broker.hyperliquid import HyperliquidOrderError
 from bridge.engine.types import BrokerOrder
 from bridge.settings import resolve_hyperliquid_credentials
-from tools.smoke_p0 import _deterministic_cleanup, _failure_data, _validate_credentials
+from tools.smoke_p0 import (
+    _deterministic_cleanup,
+    _failure_data,
+    _is_type_or_grouping_rejection,
+    _validate_credentials,
+)
 
 
 def test_validate_credentials_accepts_expected_formats(monkeypatch):
@@ -168,6 +173,21 @@ def test_failure_data_preserves_redacted_raw_exchange_response():
     assert secret_like not in str(payload)
     assert "[redacted]" in payload["raw_response"]
     assert "raw_response" in payload
+
+
+def test_g2_type_or_grouping_classifier_rejects_only_concrete_exchange_errors():
+    assert _is_type_or_grouping_rejection(
+        HyperliquidOrderError("Trigger order has unexpected type.")
+    )
+    assert _is_type_or_grouping_rejection(HyperliquidOrderError("Invalid grouping normalTpsl"))
+    assert _is_type_or_grouping_rejection(
+        HyperliquidOrderError("Order type not supported for this grouping")
+    )
+    # C2 payloads carry response.type=order; that alone must never unlock a
+    # second placement call for an unrelated rejection.
+    assert not _is_type_or_grouping_rejection(
+        HyperliquidOrderError('Insufficient margin; raw_response={"response":{"type":"order"}}')
+    )
 
 
 def test_deterministic_cleanup_cancels_owned_resting_order_after_mid_parse_failure():

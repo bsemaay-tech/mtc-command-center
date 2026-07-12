@@ -238,7 +238,18 @@ class HyperliquidBroker:
                 self._receive_user_message,
             )
 
-    async def place_bracket(self, plan: OrderPlan) -> dict:
+    async def place_bracket(self, plan: OrderPlan, grouping: str = "normalTpsl") -> dict:
+        """Place entry + SL + optional TP as a bulk group.
+
+        Default ``grouping="normalTpsl"`` sends entry and trigger orders in a
+        normal-TPSL group. Callers may pass ``grouping="na"`` to place each
+        order independently, while retaining the SDK-required trigger ``tpsl``
+        discriminator; this is the bounded smoke fallback when the exchange
+        rejects a TPSL grouping type.
+
+        ``reprotect_position`` continues to use ``positionTpsl`` because it
+        protects an already-open position.
+        """
         if self.exchange is None or not hasattr(self.exchange, "order"):
             raise HyperliquidNotConfigured("Exchange client not configured")
         is_entry_buy = plan.signal.direction == "LONG"
@@ -251,6 +262,12 @@ class HyperliquidBroker:
         )
         stop_px = self._round_price(plan.signal.symbol, plan.stop_loss)
         entry_type = {"limit": {"tif": "Gtc" if plan.entry_type == "LMT" else "Ioc"}}
+
+        # The installed SDK's TriggerOrderType requires ``tpsl`` regardless
+        # of grouping. With ``na`` it remains an independently submitted
+        # trigger, rather than a normal-TPSL-linked child.
+        sl_trigger = {"triggerPx": stop_px, "isMarket": True, "tpsl": "sl"}
+
         requests = [
             self._request(plan.signal.symbol, is_entry_buy, plan.qty, entry_px, entry_type, False, entry_cloid),
             self._request(
@@ -258,7 +275,7 @@ class HyperliquidBroker:
                 is_exit_buy,
                 plan.qty,
                 stop_px,
-                {"trigger": {"triggerPx": stop_px, "isMarket": True, "tpsl": "sl"}},
+                {"trigger": sl_trigger},
                 True,
                 sl_cloid,
             ),
@@ -267,20 +284,21 @@ class HyperliquidBroker:
         if plan.take_profit is not None:
             tp_cloid = self._cloid(plan, "tp")
             take_profit_px = self._round_price(plan.signal.symbol, plan.take_profit)
+            tp_trigger = {"triggerPx": take_profit_px, "isMarket": True, "tpsl": "tp"}
             requests.append(
                 self._request(
                     plan.signal.symbol,
                     is_exit_buy,
                     plan.qty,
                     take_profit_px,
-                    {"trigger": {"triggerPx": take_profit_px, "isMarket": True, "tpsl": "tp"}},
+                    {"trigger": tp_trigger},
                     True,
                     tp_cloid,
                 )
             )
             roles.append(("TP", tp_cloid, take_profit_px))
 
-        raw = await asyncio.to_thread(self.exchange.bulk_orders, requests, grouping="positionTpsl")
+        raw = await asyncio.to_thread(self.exchange.bulk_orders, requests, grouping=grouping)
         return await self._verify_positioned_orders(
             raw, roles, requests, plan.qty, plan.signal.symbol
         )

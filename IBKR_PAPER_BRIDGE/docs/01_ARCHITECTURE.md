@@ -190,7 +190,7 @@ class Broker(Protocol):
     async def open_orders(self) -> list[BrokerOrder]
     async def historical_bars(self, coin, tf, lookback) -> list[Bar]
     def subscribe_bars(self, coin, tf, on_bar_closed: Callback) -> None
-    async def place_bracket(self, plan: OrderPlan) -> BracketIds   # entry + SL trigger + optional TP trigger (positionTpsl group)
+    async def place_bracket(self, plan: OrderPlan) -> BracketIds   # entry + SL trigger + optional TP trigger (normalTpsl group)
     async def modify_stop(self, cloid, new_stop: float) -> None
     async def cancel(self, cloid) -> None
     async def cancel_all(self) -> None
@@ -223,18 +223,28 @@ contract:**
     interval boundary within a couple seconds.
 - **Bracket = entry + native trigger orders (the real advantage over Signum):**
   - Submit entry (MKT = aggressive IOC, or LMT GTC) together with two **trigger orders** using
-    `grouping="positionTpsl"`: an SL trigger `{"trigger":{"triggerPx":sl,"isMarket":true,"tpsl":"sl"}}`
-    and an optional TP trigger `{...,"tpsl":"tp"}`, both `reduce_only=True`. These are **real resting
-    orders on the Hyperliquid book** — they protect the position even if the bridge process dies.
-  - `positionTpsl` grouping means the TP/SL are **position-closing** triggers (they close whatever
-    size the position is), so a partial entry fill does NOT desync child quantities — the trigger
-    still closes the actual position. This removes the entire IBKR OCA child-resize problem.
-  - **2026-07-12 testnet amendment (attempt 5):** the real bulk response was
+    `grouping="normalTpsl"` (amended 2026-07-12): an SL trigger
+    `{"trigger":{"triggerPx":sl,"isMarket":true,"tpsl":"sl"}}` and an optional TP trigger
+    `{...,"tpsl":"tp"}`, both `reduce_only=True`. These are **real resting orders on the
+    Hyperliquid book** — they protect the position even if the bridge process dies.
+  - `normalTpsl` grouping links entry and triggers with individual sizing; each trigger order
+    carries its own quantity and reduces the position by that size.  The `reprotect_position`
+    path uses `grouping="positionTpsl"` because it protects an already-open position and the
+    position-linked semantics are appropriate for re-protection.
+  - **Partial-fill behaviour:** `normalTpsl` sends entry-matching trigger quantities. The P0
+    smoke uses a far-below-market resting entry, so it does not claim partial-fill coverage. At
+    runtime, reconciliation must compare live position and protective-trigger quantities; an
+    unmatched partial fill remains an `ENTRY_PARTIAL → PROTECTED | UNPROTECTED_ABORT` case and
+    must be re-protected or flattened under the existing 10 s guard.
+  - **G2 fallback (2026-07-12):** if `normalTpsl` is rejected by the exchange with a type/grouping
+    error (e.g. `"Trigger order has unexpected type."`), the smoke harness performs deterministic
+    C3 cleanup and makes exactly **one** second attempt via `place_bracket(…, grouping="na")` —
+    entry + independent trigger SL (the installed SDK still requires `tpsl:"sl"`, no TP). No
+    loop, no third attempt.
+    On any fallback failure, cleanup and stop.
+  - **2026-07-12 testnet observation (historical):** the real bulk response with `positionTpsl` was
     `{"status":"ok","response":{"type":"order","data":{"statuses":[{"error":"Trigger order has unexpected type."}]}}}`.
-    Thus the response can contain one error status for the group, and the current trigger payload is
-    not accepted by the exchange. No order was accepted. Correcting the native trigger request
-    requires a new explicitly approved local-fix and P0 scope; do not infer a successful trigger
-    placement from a short status list.
+    This motivated the shift to `normalTpsl` as the default and the `na` fallback path.
   - **Client order id:** set `cloid` (128-bit hex derived from `decision_uid:role`) on every order
     for durable identity. The exchange also returns `oid`. Persist both.
   - **Modify (trail):** `exchange.modify_order(cloid_or_oid, new_order)` changing ONLY the SL
@@ -398,11 +408,12 @@ there is NO code path from LLM output to qty, price, leverage, or new-order fiel
   not in `DATA_STALE`. (Hyperliquid is real-time; no delayed-feed caveat.)
 - **Close = reduce-only semantics:** exit paths (close-on-opposite-signal, flatten, trail) size
   orders to current position qty read at submit time — a close can never open the opposite side.
-- **Partial fills:** with `positionTpsl` grouping the SL/TP are position-closing triggers, so a
-  partial entry fill just yields a smaller position that the trigger still fully protects — no child
-  qty desync. Explicit states `ENTRY_PARTIAL → PROTECTED | UNPROTECTED_ABORT`: after entry, verify a
-  working SL trigger exists within 10 s, else `UNPROTECTED_ABORT` ⇒ flatten. Out-of-order status
-  callbacks tolerated (transitions keyed by cloid+status, idempotent).
+- **Partial fills:** with `normalTpsl` grouping the SL/TP carry explicit entry-matching quantities,
+  so reconciliation must compare trigger quantities with the live position after a partial fill.
+  Exact child-resize behavior is not P0-proven; an unmatched partial remains
+  `ENTRY_PARTIAL → PROTECTED | UNPROTECTED_ABORT` and must be re-protected or flattened under the
+  10 s guard. Out-of-order status callbacks are tolerated (transitions keyed by cloid+status,
+  idempotent).
 - **Stale entry order:** unfilled LMT entry older than `max_open_order_age_s` (default 600 s) ⇒
   cancel entry + its triggers, log `ORDER_STALE_CANCELLED`.
 - Watchdog: order not acked in 120 s ⇒ abort criterion (PREREG §7) ⇒ DISARM + alert.
