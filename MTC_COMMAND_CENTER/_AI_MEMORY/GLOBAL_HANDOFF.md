@@ -1,5 +1,14 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5] 2026-07-12 — Bridge P0 attempt 5
+
+Implemented E1 in `25cee696`; the smoke resolved credentials from the Windows user registry
+without disclosure and both full suites passed (`92 passed, 1 warning` each). The one re-approved
+testnet attempt `p0-20260712T194622Z` connected, read Unified balance and live BTC candles, then
+received the real atomic response `Trigger order has unexpected type.` C3 cleanup found no owned
+orders or changed position and disconnect passed. No retry was run. P0 remains unmet; P2 remains
+unapproved. Evidence: `IBKR_PAPER_BRIDGE/docs/14_P0_SMOKE_REPORT.md`.
+
 ## [Codex GPT-5] 2026-07-12 — Bridge P0 attempt 4
 
 Completed approved local cardinality/raw-response/owned-cleanup hardening in `09a7a92f`.

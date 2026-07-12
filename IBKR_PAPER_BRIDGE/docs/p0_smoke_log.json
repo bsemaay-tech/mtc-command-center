@@ -1,20 +1,120 @@
 {
   "approved_scope": "one tiny resting entry plus native SL, modify, cancel, flatten only if needed",
-  "finished_ts": "2026-07-12T19:28:48.427179+00:00",
+  "finished_ts": "2026-07-12T19:46:42.075264+00:00",
   "network": "testnet",
   "orders": [],
   "result": "FAIL",
-  "run_id": "p0-20260712T192848Z",
-  "started_ts": "2026-07-12T19:28:48.427061+00:00",
+  "run_id": "p0-20260712T194622Z",
+  "started_ts": "2026-07-12T19:46:22.827525+00:00",
   "steps": [
     {
       "data": {
-        "error": "HL_API_WALLET_KEY must be a 32-byte hexadecimal private key",
-        "error_type": "RuntimeError"
+        "credential_source": "user_registry"
+      },
+      "name": "credential_source",
+      "status": "PASS",
+      "ts": "2026-07-12T19:46:22.827612+00:00"
+    },
+    {
+      "data": {
+        "account_address": "0x1E265F5E39957E08ed02A120ceFA33A9bd46AC49",
+        "account_mode": "unifiedAccount",
+        "network": "testnet"
+      },
+      "name": "connect",
+      "status": "PASS",
+      "ts": "2026-07-12T19:46:35.256210+00:00"
+    },
+    {
+      "data": {
+        "available_margin": 999.0,
+        "equity": 999.0,
+        "withdrawable": 999.0
+      },
+      "name": "account",
+      "status": "PASS",
+      "ts": "2026-07-12T19:46:35.970227+00:00"
+    },
+    {
+      "data": {
+        "bars": [
+          {
+            "close": 63919.0,
+            "high": 64120.0,
+            "low": 63863.0,
+            "open": 63994.0,
+            "ts": "2026-07-12T17:00:00Z",
+            "volume": 6.64689
+          },
+          {
+            "close": 64012.0,
+            "high": 64029.0,
+            "low": 63888.0,
+            "open": 63932.0,
+            "ts": "2026-07-12T18:00:00Z",
+            "volume": 3.5634
+          },
+          {
+            "close": 64016.0,
+            "high": 64120.0,
+            "low": 64009.0,
+            "open": 64012.0,
+            "ts": "2026-07-12T19:00:00Z",
+            "volume": 0.32303
+          }
+        ],
+        "count": 3
+      },
+      "name": "candles",
+      "status": "PASS",
+      "ts": "2026-07-12T19:46:37.008545+00:00"
+    },
+    {
+      "data": {
+        "coin": "BTC",
+        "entry_limit": 57610.0,
+        "market_reference": 64016.0,
+        "modified_stop_trigger": 56740.0,
+        "notional_usd": 11.522,
+        "qty": 0.0002,
+        "size_decimals": 5,
+        "stop_trigger": 56450.0
+      },
+      "name": "meta_and_plan",
+      "status": "PASS",
+      "ts": "2026-07-12T19:46:37.777163+00:00"
+    },
+    {
+      "data": {
+        "flattened_symbols": []
+      },
+      "name": "partial_fill_guard",
+      "status": "PASS",
+      "ts": "2026-07-12T19:46:41.107691+00:00"
+    },
+    {
+      "data": {
+        "errors": []
+      },
+      "name": "deterministic_cleanup",
+      "status": "PASS",
+      "ts": "2026-07-12T19:46:41.107701+00:00"
+    },
+    {
+      "data": {
+        "error": "cloid 0x95f589787908b598642cba45f8562333 (ENTRY) missing from open_orders and not explained; raw_response={\"status\": \"ok\", \"response\": {\"type\": \"order\", \"data\": {\"statuses\": [{\"error\": \"Trigger order has unexpected type.\"}]}}}",
+        "error_type": "HyperliquidOrderError",
+        "raw_response": "{\"status\": \"ok\", \"response\": {\"type\": \"order\", \"data\": {\"statuses\": [{\"error\": \"Trigger order has unexpected type.\"}]}}}"
       },
       "name": "failure",
       "status": "FAIL",
-      "ts": "2026-07-12T19:28:48.427175+00:00"
+      "ts": "2026-07-12T19:46:41.107730+00:00"
+    },
+    {
+      "data": {},
+      "name": "disconnect",
+      "status": "PASS",
+      "ts": "2026-07-12T19:46:42.075252+00:00"
     }
   ]
 }

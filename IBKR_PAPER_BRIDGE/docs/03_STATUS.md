@@ -17,6 +17,10 @@ Builder: Codex GPT-5
   local hardening and both full suites (`89 passed, 1 warning` each), then the single authorized
   smoke stopped before SDK construction because the inherited key was not valid 32-byte hex. No
   testnet call or order occurred; no retry is approved. See `14_P0_SMOKE_REPORT.md`.
+- **P0 attempt 5: FAIL at exchange trigger validation; approval consumed.** E1 (`25cee696`)
+  correctly used the valid Windows user-registry credentials; testnet connect/account/candles/plan
+  passed. Atomic placement returned one error status: `Trigger order has unexpected type.` C3
+  cleanup passed with no owned orders or changed position. No retry is approved.
 - **Real QuantLens golden: BLOCKED.** The canonical engine does not register
   `keltner_trail_ema8`; the available `GEN_KELTNER_BREAKOUT` has materially different rules and was
   not substituted. The golden remains explicitly provisional.
@@ -34,16 +38,16 @@ Builder: Codex GPT-5
 | T6 continuous engine | DONE for P1 | Background runtime, safe startup, reconcile-before-ARM, trailing while disarmed, close-only opposite signal, risk disarm, preemptive KILL. |
 | T7 API/WS | DONE for P1 | Runtime controls, Store-backed endpoints, persistent WS, snapshot resync, live decision stream. |
 | T8 failure drills | DONE | Eight scripted drills pass. |
-| T9 CWD robustness | DONE | 89 tests pass from repo root and bridge directory. |
+| T9 CWD robustness | DONE | 92 tests pass from repo root and bridge directory. |
 | T10 chart | DONE | Local SVG candle renderer only; live screenshots verified. |
-| T11 P0 smoke | FAIL / BLOCKED | C1-C3 hardened cardinality, raw diagnostics, and owned cleanup; the final approved invocation failed at local key precheck, so no new testnet state exists and no retry is approved. |
+| T11 P0 smoke | FAIL / BLOCKED | E1 user-registry fallback worked; attempt 5 captured the real trigger-type rejection, then C3 cleanup passed with no accepted order or position. No retry is approved. |
 | T12 real golden | BLOCKED | `docs/12_GOLDEN_REGEN_ATTEMPT.md`; exact strategy ID absent. |
 | T13 report/handoff | DONE | `docs/11_P1_BUILD_REPORT.md` plus canonical handoff entry. |
 
 ## Verification
 
-- Repo-root suite: `72 passed, 1 warning`.
-- Bridge-directory suite: `72 passed, 1 warning`.
+- Repo-root suite: `92 passed, 1 warning`.
+- Bridge-directory suite: `92 passed, 1 warning`.
 - `node --check IBKR_PAPER_BRIDGE/bridge/static/app.js`: pass.
 - Live mock UI: `DRY_RUN`, `ARMED`, `$100000.00`, 80 visible candle bodies, 10 decision rows,
   no CDN scripts.
@@ -53,8 +57,8 @@ Builder: Codex GPT-5
 ## Human next actions
 
 1. Do not transfer funds or change account mode; the testnet account is correctly Unified.
-2. Restore the valid local 32-byte API-wallet key, then obtain new explicit approval before any
-   further P0 attempt. Do not run another testnet attempt without that approval.
+2. Audit and correct the native trigger payload that testnet rejects, then obtain new explicit
+   approval before any further P0 attempt. Do not run another testnet attempt without that approval.
 3. P2 remains a later go/no-go decision and is not approved.
 4. For a real golden, register the exact bridge Keltner signal semantics in QuantLens or approve a
    source-engine export adapter; do not relabel `GEN_KELTNER_BREAKOUT` as equivalent.

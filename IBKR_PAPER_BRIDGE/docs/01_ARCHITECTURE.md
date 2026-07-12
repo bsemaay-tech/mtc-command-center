@@ -229,6 +229,12 @@ contract:**
   - `positionTpsl` grouping means the TP/SL are **position-closing** triggers (they close whatever
     size the position is), so a partial entry fill does NOT desync child quantities — the trigger
     still closes the actual position. This removes the entire IBKR OCA child-resize problem.
+  - **2026-07-12 testnet amendment (attempt 5):** the real bulk response was
+    `{"status":"ok","response":{"type":"order","data":{"statuses":[{"error":"Trigger order has unexpected type."}]}}}`.
+    Thus the response can contain one error status for the group, and the current trigger payload is
+    not accepted by the exchange. No order was accepted. Correcting the native trigger request
+    requires a new explicitly approved local-fix and P0 scope; do not infer a successful trigger
+    placement from a short status list.
   - **Client order id:** set `cloid` (128-bit hex derived from `decision_uid:role`) on every order
     for durable identity. The exchange also returns `oid`. Persist both.
   - **Modify (trail):** `exchange.modify_order(cloid_or_oid, new_order)` changing ONLY the SL
