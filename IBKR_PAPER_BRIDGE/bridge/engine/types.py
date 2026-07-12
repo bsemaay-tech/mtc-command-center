@@ -50,6 +50,26 @@ class Position(BaseModel):
     margin_used: float = 0.0
 
 
+class AccountSnapshot(BaseModel):
+    equity: float
+    available_margin: float
+    withdrawable: float = 0.0
+
+
+class BrokerOrder(BaseModel):
+    cloid: str
+    oid: int | None = None
+    coin: str
+    side: Literal["BUY", "SELL"]
+    size: float
+    status: str = "OPEN"
+    role: Literal["ENTRY", "SL", "TP", "CLOSE", "UNKNOWN"] = "UNKNOWN"
+    reduce_only: bool = False
+    trigger_px: float | None = None
+    order_type: str | None = None
+    order_ref: str | None = None
+
+
 class Rejection(BaseModel):
     stage: Literal["RISK", "LLM", "STATE"]
     reason: str

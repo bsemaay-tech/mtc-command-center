@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
-from bridge.engine.types import Bar, OrderPlan, Position
+from bridge.engine.types import AccountSnapshot, Bar, BrokerOrder, OrderPlan, Position
 
 
 @dataclass
@@ -43,14 +43,39 @@ class MockBroker:
     async def connect(self) -> None:
         self.connected = True
 
-    async def account(self) -> dict:
-        return {"equity": self.starting_equity, "available_margin": self.starting_equity}
+    async def account(self) -> AccountSnapshot:
+        return AccountSnapshot(
+            equity=self.starting_equity,
+            available_margin=self.starting_equity,
+            withdrawable=self.starting_equity,
+        )
 
     async def positions(self) -> list[Position]:
         return [] if self.position is None else [self.position]
 
-    async def open_orders(self) -> list[dict]:
-        return [order for order in self.orders if order["status"] in {"SUBMITTED", "OPEN"}]
+    async def open_orders(self) -> list[BrokerOrder]:
+        rows: list[BrokerOrder] = []
+        for order in self.orders:
+            if order["status"] not in {"SUBMITTED", "OPEN"}:
+                continue
+            direction = order.get("direction", "LONG")
+            is_entry = order["role"] == "ENTRY"
+            is_buy = (direction == "LONG") if is_entry else (direction == "SHORT")
+            rows.append(
+                BrokerOrder(
+                    cloid=order["cloid"],
+                    oid=order["oid"],
+                    coin=order.get("symbol", self.coin),
+                    side="BUY" if is_buy else "SELL",
+                    size=float(order["qty"]),
+                    status=order["status"],
+                    role=order["role"],
+                    reduce_only=bool(order.get("reduce_only", False)),
+                    trigger_px=order.get("trigger_px"),
+                    order_type=order["role"],
+                )
+            )
+        return rows
 
     async def historical_bars(self, coin: str, tf: str, lookback: int) -> list[Bar]:
         return self.bars[-lookback:]

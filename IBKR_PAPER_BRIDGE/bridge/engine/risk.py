@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-from bridge.engine.types import OrderPlan, Signal
+from bridge.engine.types import AccountSnapshot, OrderPlan, Signal
 
 Direction = Literal["BOTH", "LONG_ONLY", "SHORT_ONLY", "NO_TRADE"]
 
@@ -42,7 +42,7 @@ class RiskEngine:
     def evaluate(
         self,
         signal: Signal,
-        account: dict[str, float],
+        account: AccountSnapshot | dict[str, float],
         stop_loss: float,
         take_profit: float | None = None,
         regime: Direction = "BOTH",
@@ -70,8 +70,12 @@ class RiskEngine:
             return self._reject("DIRECTION", "DIRECTION_BLOCKED", gates)
         gates.append(self._gate("DIRECTION", {"effective": sorted(effective)}))
 
-        equity = float(account.get("equity", 0.0))
-        available = float(account.get("available_margin", 0.0))
+        if isinstance(account, AccountSnapshot):
+            equity = account.equity
+            available = account.available_margin
+        else:
+            equity = float(account.get("equity", 0.0))
+            available = float(account.get("available_margin", 0.0))
         if equity <= 0 or available <= 0:
             return self._reject("ACCOUNT", "ACCOUNT_EQUITY_INVALID", gates)
         gates.append(self._gate("ACCOUNT"))

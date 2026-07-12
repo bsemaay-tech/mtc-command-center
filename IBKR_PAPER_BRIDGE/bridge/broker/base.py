@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any, Protocol
 
-from bridge.engine.types import Bar, OrderPlan, Position
+from bridge.engine.types import AccountSnapshot, Bar, BrokerOrder, OrderPlan, Position
 
 
 class Broker(Protocol):
@@ -14,13 +14,13 @@ class Broker(Protocol):
     async def connect(self) -> None:
         ...
 
-    async def account(self) -> dict[str, float]:
+    async def account(self) -> AccountSnapshot:
         ...
 
     async def positions(self) -> list[Position]:
         ...
 
-    async def open_orders(self) -> list[dict[str, Any]]:
+    async def open_orders(self) -> list[BrokerOrder]:
         ...
 
     async def historical_bars(self, coin: str, tf: str, lookback: int) -> list[Bar]:

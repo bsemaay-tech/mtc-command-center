@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Callable
 
-from bridge.engine.types import Bar, OrderPlan
+from bridge.engine.types import AccountSnapshot, Bar, BrokerOrder, OrderPlan, Position
 from hyperliquid.utils.types import Cloid
 
 LIVE_ACK = "I_UNDERSTAND_THIS_IS_REAL_MONEY"
@@ -97,21 +97,41 @@ class HyperliquidBroker:
             self.exchange.update_leverage(self.leverage, self.coin, is_cross=False)
         self.connected = True
 
-    async def account(self) -> dict:
+    async def account(self) -> AccountSnapshot:
         if self.info is None:
             raise HyperliquidNotConfigured("Info client not configured")
         if hasattr(self.info, "user_state"):
-            return self.info.user_state(self.account_address)  # type: ignore[no-any-return]
-        return {}
+            state = self.info.user_state(self.account_address)
+            if not isinstance(state, dict):
+                raise ValueError("Hyperliquid user_state was not an object")
+            summary = state.get("marginSummary", {})
+            equity = self._float(summary.get("accountValue"))
+            margin_used = self._float(summary.get("totalMarginUsed"))
+            withdrawable = self._float(state.get("withdrawable"))
+            return AccountSnapshot(
+                equity=equity,
+                available_margin=max(equity - margin_used, 0.0),
+                withdrawable=withdrawable,
+            )
+        raise HyperliquidNotConfigured("Info client has no user_state")
 
-    async def positions(self) -> list:
-        state = await self.account()
-        return state.get("assetPositions", []) if isinstance(state, dict) else []
+    async def positions(self) -> list[Position]:
+        if self.info is None or not hasattr(self.info, "user_state"):
+            raise HyperliquidNotConfigured("Info client not configured")
+        state = self.info.user_state(self.account_address)
+        rows = state.get("assetPositions", []) if isinstance(state, dict) else []
+        positions: list[Position] = []
+        for row in rows:
+            parsed = self._parse_position(row)
+            if parsed is not None and parsed.size != 0:
+                positions.append(parsed)
+        return positions
 
-    async def open_orders(self) -> list:
+    async def open_orders(self) -> list[BrokerOrder]:
         if self.info is None or not hasattr(self.info, "open_orders"):
             return []
-        return self.info.open_orders(self.account_address)  # type: ignore[no-any-return]
+        rows = self.info.open_orders(self.account_address)
+        return [self._parse_order(row) for row in rows if isinstance(row, dict)]
 
     async def historical_bars(self, coin: str, tf: str, lookback: int) -> list[Bar]:
         if self.info is None or not hasattr(self.info, "candles_snapshot"):
@@ -227,19 +247,17 @@ class HyperliquidBroker:
 
     async def cancel_all(self) -> None:
         for order in await self.open_orders():
-            cloid = order.get("cloid") if isinstance(order, dict) else None
-            if cloid:
-                await self.cancel(cloid)
+            if order.cloid:
+                await self.cancel(order.cloid)
 
     async def flatten(self, coin: str) -> None:
         if self.exchange is None or not hasattr(self.exchange, "order"):
             raise HyperliquidNotConfigured("Exchange client not configured")
         size = 0.0
         for position in await self.positions():
-            parsed = self._parse_position(position)
-            if parsed is None or parsed["coin"] != coin:
+            if position.symbol != coin:
                 continue
-            size = float(parsed["size"])
+            size = position.size
             break
         if size == 0:
             return None
@@ -336,11 +354,54 @@ class HyperliquidBroker:
         }
 
     @staticmethod
-    def _parse_position(position: object) -> dict[str, object] | None:
+    def _parse_position(position: object) -> Position | None:
         if not isinstance(position, dict):
             return None
         payload = position.get("position", position)
         if not isinstance(payload, dict) or "coin" not in payload:
             return None
         raw_size = payload.get("szi", payload.get("size", 0))
-        return {"coin": payload["coin"], "size": float(raw_size)}
+        leverage_raw = payload.get("leverage", 1)
+        leverage = leverage_raw.get("value", 1) if isinstance(leverage_raw, dict) else leverage_raw
+        liquidation = payload.get("liquidationPx")
+        return Position(
+            symbol=str(payload["coin"]),
+            size=HyperliquidBroker._float(raw_size),
+            entry_px=HyperliquidBroker._float(payload.get("entryPx")),
+            unrealized=HyperliquidBroker._float(payload.get("unrealizedPnl")),
+            leverage=int(HyperliquidBroker._float(leverage, 1.0)),
+            liquidation_px=None if liquidation in (None, "") else HyperliquidBroker._float(liquidation),
+            margin_used=HyperliquidBroker._float(payload.get("marginUsed")),
+        )
+
+    @staticmethod
+    def _parse_order(row: dict) -> BrokerOrder:
+        side_raw = str(row.get("side", "B")).upper()
+        order_type = str(row.get("orderType", row.get("order_type", ""))) or None
+        trigger_raw = row.get("triggerPx", row.get("trigger_px"))
+        trigger_px = None if trigger_raw in (None, "", "0", 0) else HyperliquidBroker._float(trigger_raw)
+        role = "UNKNOWN"
+        lowered = (order_type or "").lower()
+        if "stop" in lowered or "sl" in lowered:
+            role = "SL"
+        elif "take" in lowered or "tp" in lowered:
+            role = "TP"
+        return BrokerOrder(
+            cloid=str(row.get("cloid", "")),
+            oid=int(row["oid"]) if row.get("oid") is not None else None,
+            coin=str(row.get("coin", "")),
+            side="BUY" if side_raw in {"B", "BUY"} else "SELL",
+            size=HyperliquidBroker._float(row.get("sz", row.get("size"))),
+            status=str(row.get("status", "OPEN")),
+            role=role,
+            reduce_only=bool(row.get("reduceOnly", row.get("reduce_only", role in {"SL", "TP"}))),
+            trigger_px=trigger_px,
+            order_type=order_type,
+            order_ref=row.get("orderRef", row.get("order_ref")),
+        )
+
+    @staticmethod
+    def _float(value: object, default: float = 0.0) -> float:
+        if value in (None, ""):
+            return default
+        return float(value)

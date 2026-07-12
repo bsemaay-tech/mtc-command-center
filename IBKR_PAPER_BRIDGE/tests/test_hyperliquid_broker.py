@@ -7,7 +7,8 @@ from unittest.mock import create_autospec
 import pytest
 
 from bridge.broker.hyperliquid import BarFinalizer, BrokerRefusedLive, HyperliquidBroker
-from bridge.engine.types import Bar, OrderPlan, Signal
+from bridge.broker.mock import MockBroker
+from bridge.engine.types import AccountSnapshot, Bar, BrokerOrder, OrderPlan, Position, Signal
 from hyperliquid.exchange import Exchange
 from hyperliquid.utils.types import Cloid
 
@@ -98,6 +99,28 @@ def test_hl_flatten_reduce_only():
     assert isinstance(close.kwargs["cloid"], Cloid)
 
 
+def test_broker_normalization_type_parity():
+    info = FakeInfo(size="0.25", with_summary=True)
+    broker = HyperliquidBroker(account_address="0xabc", info_client=info, exchange_client=_exchange_mock())
+    mock = MockBroker(bars=[], starting_equity=1000)
+
+    account = asyncio.run(broker.account())
+    positions = asyncio.run(broker.positions())
+    orders = asyncio.run(broker.open_orders())
+    mock_account = asyncio.run(mock.account())
+
+    assert isinstance(account, AccountSnapshot)
+    assert account.equity == 999.0
+    assert account.available_margin == 989.0
+    assert account.withdrawable == 980.0
+    assert isinstance(positions[0], Position)
+    assert positions[0].symbol == "BTC"
+    assert positions[0].leverage == 1
+    assert isinstance(orders[0], BrokerOrder)
+    assert orders[0].role == "SL"
+    assert isinstance(mock_account, AccountSnapshot)
+
+
 def _candle(ts: datetime, close: float) -> dict:
     return {
         "t": int(ts.timestamp() * 1000),
@@ -147,8 +170,45 @@ def _exchange_mock():
 
 
 class FakeInfo:
-    def __init__(self, size: str) -> None:
+    def __init__(self, size: str, with_summary: bool = False) -> None:
         self.size = size
+        self.with_summary = with_summary
 
     def user_state(self, address):
-        return {"assetPositions": [{"position": {"coin": "BTC", "szi": self.size}}]}
+        state = {
+            "assetPositions": [
+                {
+                    "position": {
+                        "coin": "BTC",
+                        "szi": self.size,
+                        "entryPx": "100",
+                        "unrealizedPnl": "2.5",
+                        "leverage": {"type": "isolated", "value": 1},
+                        "liquidationPx": None,
+                        "marginUsed": "25",
+                    }
+                }
+            ]
+        }
+        if self.with_summary:
+            state.update(
+                {
+                    "marginSummary": {"accountValue": "999", "totalMarginUsed": "10"},
+                    "withdrawable": "980",
+                }
+            )
+        return state
+
+    def open_orders(self, address):
+        return [
+            {
+                "coin": "BTC",
+                "side": "A",
+                "sz": "0.25",
+                "oid": 12,
+                "cloid": "0x00000000000000000000000000000012",
+                "orderType": "Stop Market",
+                "triggerPx": "95",
+                "reduceOnly": True,
+            }
+        ]
