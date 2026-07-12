@@ -1136,3 +1136,26 @@ def test_hl_unknown_string_status_still_raises_with_raw_response():
 
     assert "somethingUnexpected" in str(err.value)
     assert "raw_response" in str(err.value)
+
+
+def test_user_event_subscription_survives_pre_connect_registration():
+    """B6 prereq: OrderManager subscribes BEFORE connect(); the callback must
+    be retained and channels flushed at connect — and only once."""
+    broker = HyperliquidBroker()  # no clients yet
+    received: list[object] = []
+    broker.subscribe_user_events(received.append)
+    broker.subscribe_user_events(received.append)  # second callback pre-connect
+
+    info = FakeInfo(size="0")
+    exchange = _exchange_mock()
+    broker.info = info
+    broker.exchange = exchange
+    asyncio.run(broker.connect())
+
+    channels = [sub[0]["type"] for sub in info.subscriptions]
+    assert channels.count("userEvents") == 1
+    assert channels.count("orderUpdates") == 1
+    # a later registration also must not duplicate channels
+    broker.subscribe_user_events(received.append)
+    channels = [sub[0]["type"] for sub in info.subscriptions]
+    assert channels.count("userEvents") == 1

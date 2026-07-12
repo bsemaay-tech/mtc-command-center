@@ -92,6 +92,7 @@ class HyperliquidBroker:
         self._order_specs: dict[str, dict] = {}
         self._bar_subscriptions: list[tuple[str, str, object, BarFinalizer]] = []
         self._user_callbacks: list[object] = []
+        self._user_channels_subscribed = False
         self._oid_to_cloid: dict[int, str] = {}
         self._size_decimals: dict[str, int] = {}
         self.last_bar_update: datetime | None = None
@@ -104,6 +105,8 @@ class HyperliquidBroker:
         await self._load_size_decimals()
         if hasattr(self.exchange, "update_leverage"):
             await asyncio.to_thread(self.exchange.update_leverage, self.leverage, self.coin, is_cross=False)
+        if self._user_callbacks:
+            self._subscribe_user_channels()
         self.connected = True
 
     async def disconnect(self) -> None:
@@ -201,9 +204,21 @@ class HyperliquidBroker:
         self.info.subscribe(subscription, receive)
 
     def subscribe_user_events(self, on_event) -> None:
-        if self.info is None or not hasattr(self.info, "subscribe"):
-            return
+        """Register a typed-event callback; safe to call BEFORE connect().
+
+        OrderManager subscribes at construction time, before the SDK clients
+        exist. The callback is always retained; the actual channel
+        subscription is flushed on connect()/resubscribe(). Channels are
+        subscribed at most once regardless of callback count.
+        """
         self._user_callbacks.append(on_event)
+        if self.info is None or not hasattr(self.info, "subscribe"):
+            return  # deferred — connect() flushes
+        self._subscribe_user_channels()
+
+    def _subscribe_user_channels(self) -> None:
+        if self._user_channels_subscribed or self.info is None or not hasattr(self.info, "subscribe"):
+            return
         self.info.subscribe(
             {"type": "userEvents", "user": self.account_address},
             self._receive_user_message,
@@ -212,6 +227,7 @@ class HyperliquidBroker:
             {"type": "orderUpdates", "user": self.account_address},
             self._receive_user_message,
         )
+        self._user_channels_subscribed = True
 
     def finalize_due(self, now: datetime | None = None) -> None:
         for _, _, _, finalizer in self._bar_subscriptions:
