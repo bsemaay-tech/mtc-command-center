@@ -93,6 +93,7 @@ class HyperliquidBroker:
         self._bar_subscriptions: list[tuple[str, str, object, BarFinalizer]] = []
         self._user_callbacks: list[object] = []
         self._user_channels_subscribed = False
+        self.raw_event_hook = None  # optional diagnostic tap (B3/B6 probes)
         self._oid_to_cloid: dict[int, str] = {}
         self._size_decimals: dict[str, int] = {}
         self.last_bar_update: datetime | None = None
@@ -767,6 +768,11 @@ class HyperliquidBroker:
         )
 
     def _receive_user_message(self, message: dict) -> None:
+        if self.raw_event_hook is not None:
+            try:
+                self.raw_event_hook(message)
+            except Exception:  # noqa: BLE001 - diagnostics never break the path
+                pass
         channel = str(message.get("channel", ""))
         data = message.get("data", message)
         if channel == "user" or "fills" in data:

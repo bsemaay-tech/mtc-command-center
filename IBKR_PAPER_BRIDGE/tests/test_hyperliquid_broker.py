@@ -1159,3 +1159,78 @@ def test_user_event_subscription_survives_pre_connect_registration():
     broker.subscribe_user_events(received.append)
     channels = [sub[0]["type"] for sub in info.subscriptions]
     assert channels.count("userEvents") == 1
+
+
+def test_real_captured_fill_payload_parses_to_typed_event():
+    """B3: fixture is the REAL testnet fill payload captured during the B6
+    fill smoke (docs/user_events_probe.json, 2026-07-13)."""
+    broker = HyperliquidBroker(info_client=FakeInfo(size="0"), exchange_client=_exchange_mock())
+    received: list[object] = []
+    broker.subscribe_user_events(received.append)
+    broker._oid_to_cloid[56382515366] = "0x700051b466fe62be49003f45c827bbd8"
+
+    real_fill_message = {
+        "channel": "user",
+        "data": {
+            "fills": [
+                {
+                    "coin": "BTC",
+                    "px": "64110.0",
+                    "sz": "0.00018",
+                    "side": "B",
+                    "time": 1783890260586,
+                    "startPosition": "0.0",
+                    "dir": "Open Long",
+                    "closedPnl": "0.0",
+                    "hash": "0xabc",
+                    "oid": 56382515366,
+                    "crossed": True,
+                    "fee": "0.002",
+                }
+            ]
+        },
+    }
+    broker._receive_user_message(real_fill_message)
+
+    fills = [e for e in received if isinstance(e, FillEvent)]
+    assert len(fills) == 1
+    assert fills[0].cloid == "0x700051b466fe62be49003f45c827bbd8"
+    assert fills[0].px == 64110.0
+    assert fills[0].qty == 0.00018
+    assert fills[0].fee == 0.002
+
+
+def test_real_captured_order_update_payload_parses_to_typed_event():
+    """B3: fixture is the REAL testnet orderUpdates payload from the B6 smoke."""
+    from bridge.engine.types import OrderUpdateEvent
+
+    broker = HyperliquidBroker(info_client=FakeInfo(size="0"), exchange_client=_exchange_mock())
+    received: list[object] = []
+    broker.subscribe_user_events(received.append)
+
+    real_update_message = {
+        "channel": "orderUpdates",
+        "data": [
+            {
+                "order": {
+                    "coin": "BTC",
+                    "side": "A",
+                    "limitPx": "62820.0",
+                    "sz": "0.00018",
+                    "oid": 56382516030,
+                    "timestamp": 1783890261973,
+                    "origSz": "0.00018",
+                    "reduceOnly": True,
+                    "cloid": "0x1b343338773b8dc13be656c31b0873e9",
+                },
+                "status": "open",
+                "statusTimestamp": 1783890261975,
+            }
+        ],
+    }
+    broker._receive_user_message(real_update_message)
+
+    updates = [e for e in received if isinstance(e, OrderUpdateEvent)]
+    assert len(updates) == 1
+    assert updates[0].cloid == "0x1b343338773b8dc13be656c31b0873e9"
+    assert updates[0].status == "OPEN"
