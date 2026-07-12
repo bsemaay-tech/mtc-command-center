@@ -1,24 +1,28 @@
-# 03_STATUS — Crypto Paper Bridge
+# 03_STATUS - Crypto Paper Bridge
 
-Date: 2026-07-12 (late). Branch: `feature/ibkr-bridge-final`.
+Date: 2026-07-13 (early). Branch: `feature/ibkr-bridge-final`.
 
 ## Gate status
-- **P0: MET** (attempt 7 `p0-20260712T201750Z`, all 12 steps PASS — entry+SL placed with real
-  oids, on-exchange modify worked, cancelled, cleanup verified; `docs/p0_smoke_log.json` +
-  `docs/14_P0_SMOKE_REPORT.md`).
-- **P1: PASS** (audited; continuous mock runtime, live REST/WS dashboard, failure drills).
-- **P2: NOT STARTED** — pre-approved by Barış (16_GO_LIVE_PLAN §0-4); blocked on Phase B+C tasks.
-- Tests: **100 passed, 1 warning** from both required CWDs.
+- **P0: MET** (attempt 7, all 12 steps; `docs/p0_smoke_log.json`).
+- **P1: PASS** (audited). **B6 fill smoke: PASS** (real fill 64110 -> positionTpsl SL rested ->
+  reduce-only close 64098; `docs/fill_smoke_log.json`).
+- **P2: READY TO ARM.** All B and C tasks complete (see 16_GO_LIVE_PLAN.md checkboxes). The
+  supervised paper instance is RUNNING via Task Scheduler `MTC-Bridge-P2` (crash-restart proven),
+  DISARMED, reconcile clean, real warmup bars, live equity 998.99 USDC.
+- Tests: **110 passed** both CWDs.
 
-## Authoritative plan
-`docs/16_GO_LIVE_PLAN.md` — next open task: **B6 (near-market fill smoke)**, then B3-finish,
-B4, C1-C4, D1-D5. Done this session: B1 (ws auto-reconnect, f1827103), B2 (reconciler fallback
-cascade, 1774c38f), B5 (live Telegram notifier wired + real heartbeat confirmed, 53db70b2),
-B3-partial (user-events probe tool, ad31d143). Tests: 107. Any model continues per its §1/§4 without asking; human input only at §0-İ points
-(Telegram creds İ1, PC uptime İ2, mainnet forbidden İ3, QuantLens registration İ4).
+## Last step before ARM (D2)
+Observe ONE live hourly bar close on the paper instance (expected 22:00 UTC 2026-07-12 or the
+next boundary) via `/api/bars` gaining a new 64k-range bar -> then POST /api/arm (pre-approved,
+plan §0-4). If this session ended, any model: verify the new bar exists, then ARM per plan D2.
 
-## Known open gaps (tracked in plan)
-- B3 real fill/orderUpdate payload shapes still unobserved (probe ready; captured during B6);
-  B4 paper-mode end-to-end probe not run; B6 real fill lifecycle never exercised.
-- Golden/parity still provisional — needs QuantLens registration (İ4), required for P3 only.
-- Mainnet: triple-locked, out of scope, forbidden without new written approval.
+## Operating notes for the P2 window
+- Do NOT change config (`bridge.yaml` frozen C3 profile; LLM regime OFF).
+- Supervisor: Task Scheduler `MTC-Bridge-P2` (logon trigger + crash loop). Logs:
+  `IBKR_PAPER_BRIDGE/data/logs/bridge_YYYYMMDD.log`.
+- Telegram notifier LIVE (state changes, WARN+ events, 6h heartbeat).
+- Human items: I2 PC must stay awake 24/7 (Baris); mainnet forbidden (I3).
+
+## Deferred (post-P2)
+- Store-chain proof of a full engine trade (P2 first real trade will provide it).
+- Golden/parity (P3): needs QuantLens registration (I4).

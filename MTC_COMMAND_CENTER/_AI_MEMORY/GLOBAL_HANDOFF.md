@@ -1,5 +1,19 @@
 # GLOBAL_HANDOFF
 
+## [Claude Opus 4.8] 2026-07-13 — Bridge P2-READY: B+C phases complete, ARM pending one bar close
+
+Since P0 MET: B1 ws auto-reconnect (f1827103), B2 reconciler fallback cascade (1774c38f), B5 live
+Telegram wired+confirmed (53db70b2), user-event subscription ordering bug fixed (6a9fd269),
+**B6 fill smoke PASS** (378564ce — real fill 64110, positionTpsl SL rested on live book =
+reprotect path proven, reduce-only close 64098, 5 real WS payloads captured), B3 parser tested
+against real fixtures, B4 paper probe (real warmup bars persisted, equity 998.99 live), E1 creds
+into app factory + yaml risk config wired into engine (86d16791, 2f31a9d6), C3 config frozen
+LLM-off (1b78bb66), C2 supervisor `tools/run_bridge_p2.ps1` + Task Scheduler `MTC-Bridge-P2` with
+crash-restart PROVEN (24768919). 110 tests both CWDs. Supervised paper instance RUNNING DISARMED.
+**Next model action (pre-approved, plan §0-4): verify one live hourly bar close appeared in
+/api/bars (64k-range, new ts), then POST /api/arm with X-Confirm — that starts P2 day 0.**
+Then follow plan D3 monitoring. Plan: `IBKR_PAPER_BRIDGE/docs/16_GO_LIVE_PLAN.md`.
+
 ## [Claude Opus 4.8] 2026-07-12 — Bridge P0 GATE MET (attempt 7 PASS)
 
 W1 (`93713647`) accepted `waitingForFill`/`waitingForTrigger` pending-child statuses. Attempt 7
