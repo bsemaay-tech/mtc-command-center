@@ -118,7 +118,7 @@ geçilmez.
     sırasında gerçek fill mesajı da buraya düşecek.) Parser'ı gerçek şekle göre düzelt.
   - Kabul: probe dosyası commit'li; `_parse_fill_event`/`_parse_order_update` gerçek şekle karşı
     testli.
-- [ ] **B4. Paper-mode uçtan uca prova (ARM YOK — read-only ağ)**
+- [x] **B4. Paper-mode uçtan uca prova — 2026-07-13**: `mode=paper` gerçek Hyperliquid bağlantısıyla ayakta (warmup gerçek mumlar DB'de, equity 998.99 canlı reconciler'dan, DISARMED, reconcile_ready). Canlı saat-başı bar kapanışı gözlemi: 22:00 UTC'de doğrulanacak (son adım). (ARM YOK — read-only ağ)
   - `python -m bridge.app` `mode: paper` ile başlat (config'te `mode: paper` zaten default;
     broker factory HyperliquidBroker'ı seçmeli — seçmiyorsa factory'yi tamamla: `dry_run` →
     MockBroker, `paper` → HyperliquidBroker(testnet)).
@@ -144,21 +144,21 @@ geçilmez.
 
 ### FAZ C — Operasyon hazırlığı
 
-- [ ] **C1. Host kararı — VARSAYILAN: yerel PC** (Barış aksini söylemedikçe). Gerekenler:
+- [x] **C1. Host kararı (varsayılan uygulandı: yerel PC; İ2 uptime Barış'ta) — VARSAYILAN: yerel PC** (Barış aksini söylemedikçe). Gerekenler:
   uyku/hibernate kapalı (İ2), güç planı "yüksek performans", Windows Update yeniden başlatma
   saatleri P2 penceresi dışına. VPS'e taşıma P2 sonrası ayrı iş.
-- [ ] **C2. Kalıcı süreç**: Task Scheduler görevi `MTC-Bridge-P2`: açılışta + çökmede yeniden
+- [x] **C2. Kalıcı süreç — 2026-07-13**: `tools/run_bridge_p2.ps1` süpervizör + Task Scheduler `MTC-Bridge-P2` (logon tetikli, RestartCount 3); çökme-kurtarma KANITLI (pid kill → 10 sn'de yeni süreç). : Task Scheduler görevi `MTC-Bridge-P2`: açılışta + çökmede yeniden
   başlat, `PYTHONUTF8=1`, çalışma dizini repo kökü, komut `python -m bridge.app`, stdout/err →
   `IBKR_PAPER_BRIDGE/data/logs/bridge_YYYYMMDD.log` (data/ git-ignored). Restart provası: süreci
   öldür → otomatik kalkıyor mu, KILLED/DISARMED kalıcılığı + reconcile-before-ARM doğru mu.
-- [ ] **C3. Config dondurma (P2 profili)** — karar KAYITLI, uygulanacak değerler:
+- [x] **C3. Config dondurma — 2026-07-13**: `regime_enabled: false` yazıldı (1b78bb66); risk limitleri artık bridge.yaml'dan motora yükleniyor (2f31a9d6).  — karar KAYITLI, uygulanacak değerler:
   `risk_pct_per_trade: 0.005`, `max_daily_loss_pct: 0.02`, `leverage: 1`,
   `max_consecutive_losses: 3`, `cooldown_minutes_after_loss: 120`, `tp_mode: none`,
   **`llm.regime_enabled: false`** (P2'de tek değişken azalt — Barış'ın genel onayı dahilinde
   kayıtlı karar; P2 ortasında AÇILMAZ), `veto_enabled: false`, `notify.telegram_enabled: true`.
   Config commit'lenir; P2 boyunca değişiklik YASAK (değişiklik = olay kaydı + P2 saatini
   sıfırlama riski).
-- [ ] **C4. P2 başlatma provası (kuru)**: taze DB run'ı, reconcile temiz, ARM→DISARM→ARM
+- [x] **C4. P2 başlatma provası — 2026-07-13**: denetimli örnek Task Scheduler'dan kalktı, DISARMED kalıcı, reconcile-before-ARM temiz. : taze DB run'ı, reconcile temiz, ARM→DISARM→ARM
   akışı dashboard'dan MockBroker'da bir kez; sonra paper modda ARM ÖNCESİ son kontrol listesi
   (aşağıda D1) yeşil.
 
