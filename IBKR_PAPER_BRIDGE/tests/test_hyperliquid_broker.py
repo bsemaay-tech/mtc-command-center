@@ -13,6 +13,7 @@ from bridge.broker.hyperliquid import (
     BrokerRefusedLive,
     HyperliquidBroker,
     HyperliquidOrderError,
+    round_hl_price,
 )
 from bridge.broker.mock import MockBroker
 from bridge.engine.types import AccountSnapshot, Bar, BrokerOrder, FillEvent, OrderPlan, Position, Signal
@@ -73,6 +74,28 @@ def test_hl_bracket_places_native_triggers():
     assert requests[2]["order_type"]["trigger"]["tpsl"] == "tp"
     assert all(isinstance(request["cloid"], Cloid) for request in requests)
     assert ids["sl"]["cloid"].startswith("0x")
+
+
+def test_hl_price_rounding_contract():
+    assert round_hl_price(57542.4, 5) == 57540.0
+    assert round_hl_price(0.123456, 2) == 0.1234
+    assert round_hl_price(95.0, 5) == 95.0
+
+
+def test_hl_reprotect_rounds_trigger_and_limit_prices():
+    exchange = _exchange_mock()
+    exchange.bulk_orders.return_value = {
+        "status": "ok",
+        "response": {"data": {"statuses": [{"resting": {"oid": 7}}]}},
+    }
+    broker = HyperliquidBroker(info_client=object(), exchange_client=exchange)
+    position = Position(symbol="BTC", size=0.1, entry_px=60_000)
+
+    asyncio.run(broker.reprotect_position(position, 57542.4, None, "rounded-reprotect"))
+
+    request = exchange.bulk_orders.call_args.args[0][0]
+    assert request["limit_px"] == 57540.0
+    assert request["order_type"]["trigger"]["triggerPx"] == 57540.0
 
 
 def test_hl_unified_account_uses_spot_usdc_balance_and_hold():

@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from bridge.broker.hyperliquid import HyperliquidBroker
+from bridge.broker.hyperliquid import HyperliquidBroker, round_hl_price
 from bridge.engine.types import OrderPlan, Signal
 
 LOG_PATH = ROOT / "docs" / "p0_smoke_log.json"
@@ -71,9 +71,9 @@ async def main() -> None:
             raise RuntimeError("BTC metadata not found")
         size_decimals = int(btc_meta["szDecimals"])
         market = bars[-1].close
-        entry_px = round(market * 0.90, 1)
-        stop_px = round(entry_px * 0.98, 1)
-        modified_stop = round(entry_px * 0.985, 1)
+        entry_px = round_hl_price(market * 0.90, size_decimals)
+        stop_px = round_hl_price(entry_px * 0.98, size_decimals)
+        modified_stop = round_hl_price(entry_px * 0.985, size_decimals)
         scale = 10**size_decimals
         qty = math.ceil((11.5 / entry_px) * scale) / scale
         notional = qty * entry_px

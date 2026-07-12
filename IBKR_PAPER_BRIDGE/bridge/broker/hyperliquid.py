@@ -12,6 +12,7 @@ import logging
 import os
 import re
 from datetime import UTC, datetime
+from decimal import Decimal, ROUND_DOWN
 
 from bridge.engine.types import (
     AccountSnapshot,
@@ -28,6 +29,26 @@ from hyperliquid.utils.types import Cloid
 
 LIVE_ACK = "I_UNDERSTAND_THIS_IS_REAL_MONEY"
 logger = logging.getLogger(__name__)
+
+
+def round_hl_price(price: float, size_decimals: int) -> float:
+    """Round positive prices down to Hyperliquid wire constraints."""
+    value = Decimal(str(price))
+    if value <= 0:
+        raise ValueError("Hyperliquid price must be positive")
+    if not 0 <= size_decimals <= 6:
+        raise ValueError("Hyperliquid size_decimals must be between 0 and 6")
+    if value == value.to_integral_value():
+        return float(value)
+
+    decimal_quantum = Decimal(1).scaleb(-(6 - size_decimals))
+    significant_quantum = Decimal(1).scaleb(value.adjusted() - 4)
+    # High-price decimals get one guard digit so 57542.4 becomes the requested
+    # conservative integer tick 57540 rather than relying on integer exemption.
+    if value >= 10_000:
+        significant_quantum = significant_quantum.scaleb(1)
+    quantum = max(decimal_quantum, significant_quantum)
+    return float(value.quantize(quantum, rounding=ROUND_DOWN))
 
 
 class BrokerRefusedLive(RuntimeError):
@@ -72,6 +93,7 @@ class HyperliquidBroker:
         self._bar_subscriptions: list[tuple[str, str, object, BarFinalizer]] = []
         self._user_callbacks: list[object] = []
         self._oid_to_cloid: dict[int, str] = {}
+        self._size_decimals: dict[str, int] = {}
         self.last_bar_update: datetime | None = None
 
     async def connect(self) -> None:
@@ -79,6 +101,7 @@ class HyperliquidBroker:
         if self.info is None or self.exchange is None:
             await asyncio.to_thread(self._build_sdk_clients)
         await self._detect_account_mode()
+        await self._load_size_decimals()
         if hasattr(self.exchange, "update_leverage"):
             await asyncio.to_thread(self.exchange.update_leverage, self.leverage, self.coin, is_cross=False)
         self.connected = True
@@ -222,7 +245,11 @@ class HyperliquidBroker:
         is_exit_buy = not is_entry_buy
         entry_cloid = self._cloid(plan, "entry")
         sl_cloid = self._cloid(plan, "sl")
-        entry_px = plan.limit_price if plan.entry_type == "LMT" else plan.signal.ref_price
+        entry_px = self._round_price(
+            plan.signal.symbol,
+            plan.limit_price if plan.entry_type == "LMT" else plan.signal.ref_price,
+        )
+        stop_px = self._round_price(plan.signal.symbol, plan.stop_loss)
         entry_type = {"limit": {"tif": "Gtc" if plan.entry_type == "LMT" else "Ioc"}}
         requests = [
             self._request(plan.signal.symbol, is_entry_buy, plan.qty, entry_px, entry_type, False, entry_cloid),
@@ -230,27 +257,28 @@ class HyperliquidBroker:
                 plan.signal.symbol,
                 is_exit_buy,
                 plan.qty,
-                plan.stop_loss,
-                {"trigger": {"triggerPx": plan.stop_loss, "isMarket": True, "tpsl": "sl"}},
+                stop_px,
+                {"trigger": {"triggerPx": stop_px, "isMarket": True, "tpsl": "sl"}},
                 True,
                 sl_cloid,
             ),
         ]
-        roles: list[tuple[str, Cloid, float | None]] = [("ENTRY", entry_cloid, None), ("SL", sl_cloid, plan.stop_loss)]
+        roles: list[tuple[str, Cloid, float | None]] = [("ENTRY", entry_cloid, None), ("SL", sl_cloid, stop_px)]
         if plan.take_profit is not None:
             tp_cloid = self._cloid(plan, "tp")
+            take_profit_px = self._round_price(plan.signal.symbol, plan.take_profit)
             requests.append(
                 self._request(
                     plan.signal.symbol,
                     is_exit_buy,
                     plan.qty,
-                    plan.take_profit,
-                    {"trigger": {"triggerPx": plan.take_profit, "isMarket": True, "tpsl": "tp"}},
+                    take_profit_px,
+                    {"trigger": {"triggerPx": take_profit_px, "isMarket": True, "tpsl": "tp"}},
                     True,
                     tp_cloid,
                 )
             )
-            roles.append(("TP", tp_cloid, plan.take_profit))
+            roles.append(("TP", tp_cloid, take_profit_px))
 
         raw = await asyncio.to_thread(self.exchange.bulk_orders, requests, grouping="positionTpsl")
         statuses = self._extract_statuses(raw)
@@ -287,7 +315,8 @@ class HyperliquidBroker:
         if spec is None:
             raise KeyError(f"unknown stop cloid: {cloid}")
         typed_cloid = Cloid.from_str(str(cloid))
-        order_type = {"trigger": {"triggerPx": new_stop, "isMarket": True, "tpsl": "sl"}}
+        rounded_stop = self._round_price(spec["coin"], new_stop)
+        order_type = {"trigger": {"triggerPx": rounded_stop, "isMarket": True, "tpsl": "sl"}}
         try:
             await asyncio.to_thread(
                 self.exchange.modify_order,
@@ -295,7 +324,7 @@ class HyperliquidBroker:
                 spec["coin"],
                 spec["is_buy"],
                 spec["sz"],
-                new_stop,
+                rounded_stop,
                 order_type,
                 reduce_only=True,
                 cloid=typed_cloid,
@@ -307,13 +336,13 @@ class HyperliquidBroker:
                 spec["coin"],
                 spec["is_buy"],
                 spec["sz"],
-                new_stop,
+                rounded_stop,
                 order_type,
                 True,
                 typed_cloid,
             )
             await asyncio.to_thread(self.exchange.bulk_orders, [replacement], grouping="positionTpsl")
-        spec["limit_px"] = new_stop
+        spec["limit_px"] = rounded_stop
         spec["order_type"] = order_type
 
     async def cancel(self, cloid: str) -> None:
@@ -361,13 +390,14 @@ class HyperliquidBroker:
         for role, px, tpsl in (("SL", stop_loss, "sl"), ("TP", take_profit, "tp")):
             if px is None:
                 continue
+            rounded_px = self._round_price(position.symbol, px)
             cloid = self._raw_cloid(f"{decision_uid}:reprotect:{role.lower()}")
             request = self._request(
                 position.symbol,
                 is_exit_buy,
                 abs(position.size),
-                px,
-                {"trigger": {"triggerPx": px, "isMarket": True, "tpsl": tpsl}},
+                rounded_px,
+                {"trigger": {"triggerPx": rounded_px, "isMarket": True, "tpsl": tpsl}},
                 True,
                 cloid,
             )
@@ -421,6 +451,18 @@ class HyperliquidBroker:
             self.account_mode = str(raw_mode.get("mode", raw_mode.get("abstraction", "standard")))
         else:
             self.account_mode = "standard"
+
+    async def _load_size_decimals(self) -> None:
+        if self.info is None or not hasattr(self.info, "meta"):
+            return
+        meta = await asyncio.to_thread(self.info.meta)
+        universe = meta.get("universe", []) if isinstance(meta, dict) else []
+        for row in universe:
+            if isinstance(row, dict) and "name" in row and "szDecimals" in row:
+                self._size_decimals[str(row["name"])] = int(row["szDecimals"])
+
+    def _round_price(self, coin: str, price: float) -> float:
+        return round_hl_price(price, self._size_decimals.get(coin, 5))
 
     def _cloid(self, plan: OrderPlan, role: str) -> Cloid:
         decision_uid = plan.decision_uid or f"{plan.signal.symbol}:{plan.signal.ts.isoformat()}:{plan.signal.direction}"
