@@ -20,6 +20,10 @@ def test_drill_duplicate_candle_creates_one_decision_and_order(tmp_path):
     asyncio.run(_duplicate_candle_creates_one_decision_and_order(tmp_path))
 
 
+def test_new_run_can_replay_bar_timestamp_from_prior_run(tmp_path):
+    asyncio.run(_new_run_can_replay_bar_timestamp_from_prior_run(tmp_path))
+
+
 def test_drill_three_order_rejects_auto_disarm(tmp_path):
     asyncio.run(_three_order_rejects_auto_disarm(tmp_path))
 
@@ -68,6 +72,31 @@ async def _duplicate_candle_creates_one_decision_and_order(tmp_path) -> None:
     decisions = engine.store.get_decisions()
     assert len([row for row in decisions if row["stage"] == "SIGNAL"]) == 1
     assert len([row for row in engine.store.get_snapshot()["orders"] if row["role"] == "ENTRY"]) == 1
+
+
+async def _new_run_can_replay_bar_timestamp_from_prior_run(tmp_path) -> None:
+    bars = _bars(2)
+    broker = MockBroker(bars=bars, starting_equity=100000)
+    first = _engine(tmp_path, broker, AlwaysSignalStrategy(), run_id="replay-one")
+    await broker.connect()
+    await first.on_bar(bars[0])
+
+    store = Store(tmp_path / "replay-one.db")
+    store.initialize()
+    store.create_run("replay-two", "dry_run", "testnet", {})
+    second = BridgeEngine(
+        run_id="replay-two",
+        broker=broker,
+        store=store,
+        strategy=AlwaysSignalStrategy(),
+        risk_engine=RiskEngine(RiskConfig(max_position_notional_pct=0.5)),
+        state="ARMED",
+    )
+    store.set_meta("app_state", "ARMED")
+    await second.on_bar(bars[0])
+
+    entries = [row for row in store.get_snapshot()["orders"] if row["role"] == "ENTRY"]
+    assert len(entries) == 2
 
 
 async def _three_order_rejects_auto_disarm(tmp_path) -> None:

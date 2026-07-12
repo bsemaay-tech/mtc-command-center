@@ -40,6 +40,7 @@ class BridgeEngine:
     _tasks: list[asyncio.Task] = field(default_factory=list, init=False)
     _kill_requested: bool = field(default=False, init=False)
     _consecutive_order_rejects: int = field(default=0, init=False)
+    _processed_bar_ts: set[datetime] = field(default_factory=set, init=False)
 
     def __post_init__(self) -> None:
         self.order_manager = self.order_manager or OrderManager(self.store, self.broker, self.run_id)
@@ -131,8 +132,9 @@ class BridgeEngine:
             await self.on_bar(bar, process_broker_bar=True)
 
     async def on_bar(self, bar: Bar, process_broker_bar: bool = False) -> None:
-        if self.store.has_bar(self.coin, self.timeframe, bar.ts):
+        if bar.ts in self._processed_bar_ts:
             return
+        self._processed_bar_ts.add(bar.ts)
         if not self.bars or bar.ts > self.bars[-1].ts:
             self.bars.append(bar)
         self.store.insert_bar(self.coin, self.timeframe, bar.ts, bar.open, bar.high, bar.low, bar.close, bar.volume)
