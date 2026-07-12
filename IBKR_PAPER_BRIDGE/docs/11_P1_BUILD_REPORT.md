@@ -190,6 +190,8 @@ c1af202b fix(bridge): use local live candle chart
 2cf44b65 docs(bridge): record golden run blocker
 ca5efda0 fix(bridge): scope bar dedupe to runtime
 4f6a3bad fix(bridge): render live decision stream
+95e732d6 docs(bridge): report p1 acceptance evidence
 ```
 
-The T13 status/report/handoff commit is the commit containing this file.
+Commit `95e732d6` is the T13 status/report/handoff commit. A later metadata-only commit may contain
+this self-reference line.
