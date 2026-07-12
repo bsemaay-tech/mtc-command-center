@@ -39,6 +39,7 @@ function renderAll() {
   renderConfig();
   renderGates();
   renderTables();
+  renderDecisionStream();
   renderJournal();
   renderLlm();
   renderSystem();
@@ -93,6 +94,24 @@ function renderTables() {
 function renderJournal() {
   renderRows("tradesBody", state.snapshot.trades);
   setText("decisionChain", "Select a trade");
+}
+
+function renderDecisionStream() {
+  const list = byId("decisionStream");
+  if (!list || !state.snapshot) return;
+  list.replaceChildren();
+  const decisions = state.snapshot.decisions || [];
+  if (!decisions.length) {
+    const item = document.createElement("li");
+    item.textContent = "No decisions yet";
+    list.appendChild(item);
+    return;
+  }
+  decisions.slice(0, 10).forEach((decision) => {
+    const item = document.createElement("li");
+    item.textContent = `${decision.stage} - ${decision.coin} - ${decision.ts}`;
+    list.appendChild(item);
+  });
 }
 
 function renderLlm() {

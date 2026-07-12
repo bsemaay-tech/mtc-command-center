@@ -182,6 +182,7 @@ async def make_snapshot(app: FastAPI) -> dict[str, Any]:
         "positions": positions,
         "orders": orders,
         "trades": store.get_trades(50) if store is not None else [],
+        "decisions": store.get_decisions(limit=50) if store is not None else [],
         "events": store.get_events(limit=100) if store is not None else [],
         "latest_gates": store.get_latest_gates() if store is not None else {"gate_results": []},
         "equity": store.get_equity() if store is not None else [],

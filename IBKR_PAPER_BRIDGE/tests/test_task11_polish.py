@@ -32,6 +32,7 @@ def test_dry_run_app_snapshot_has_bars_and_trade_data(tmp_path):
         bars = client.get("/api/bars?n=5").json()["bars"]
         trades = client.get("/api/trades").json()
         decisions = client.get("/api/decisions").json()
+        assert snapshot["decisions"]
 
     assert app.state.bridge_status["mode"] == "dry_run"
     assert snapshot["trades"]
