@@ -63,6 +63,7 @@ class BridgeEngine:
             on_bar_closed=self.on_bar,
             on_event=self._feed_event,
             on_stale=self._stale_disarm,
+            staleness_enabled=self.mode != "dry_run",
         )
         self.bars = await self._feed.start(lookback=lookback)
         stream = getattr(self.broker, "start_stream", None)

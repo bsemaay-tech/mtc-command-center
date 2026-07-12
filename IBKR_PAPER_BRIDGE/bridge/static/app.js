@@ -2,8 +2,6 @@ const state = {
   status: null,
   snapshot: null,
   bars: [],
-  chart: null,
-  candleSeries: null,
 };
 
 const byId = (id) => document.getElementById(id);
@@ -49,13 +47,16 @@ function renderAll() {
 
 function renderStatus() {
   if (!state.status) return;
+  const latestEquity = state.snapshot && state.snapshot.equity.length ? state.snapshot.equity[0] : null;
+  const equity = typeof state.status.equity === "number" ? state.status.equity : latestEquity && latestEquity.equity;
+  const dayPnl = typeof state.status.day_pnl === "number" ? state.status.day_pnl : latestEquity && latestEquity.realized_today;
   setText("connPill", state.status.exchange_conn || "mock");
-  setText("modePill", (state.status.network || "testnet").toUpperCase());
+  setText("modePill", (state.status.mode || state.status.network || "testnet").toUpperCase());
   setText("regimePill", state.status.regime || "BOTH");
   setText("stateText", state.status.state || "DISARMED");
-  setText("equityValue", formatMoney(state.status.equity));
-  setText("pnlValue", formatMoney(state.status.day_pnl));
-  setText("nextBar", state.status.next_bar || "--:--:--");
+  setText("equityValue", formatMoney(equity));
+  setText("pnlValue", formatMoney(dayPnl));
+  setText("nextBar", state.status.next_bar || nextBarLabel());
 }
 
 function renderConfig() {
@@ -159,31 +160,6 @@ function renderPriceChart() {
   const box = byId("chartBox");
   if (!box || !state.bars.length) return;
   renderFallbackCandles(box);
-  return;
-  if (!window.LightweightCharts) {
-    renderFallbackCandles(box);
-    return;
-  }
-  if (!state.chart) {
-    box.replaceChildren();
-    state.chart = LightweightCharts.createChart(box, {
-      width: box.clientWidth,
-      height: Math.max(260, box.clientHeight),
-      layout: { background: { color: "#161b22" }, textColor: "#e6edf3" },
-      grid: { vertLines: { color: "#30363d" }, horzLines: { color: "#30363d" } },
-      rightPriceScale: { borderColor: "#30363d" },
-      timeScale: { borderColor: "#30363d" },
-    });
-    state.candleSeries = state.chart.addCandlestickSeries({
-      upColor: "#3fb950",
-      downColor: "#f85149",
-      borderVisible: false,
-      wickUpColor: "#3fb950",
-      wickDownColor: "#f85149",
-    });
-  }
-  state.candleSeries.setData(state.bars);
-  state.chart.timeScale().fitContent();
 }
 
 function renderFallbackCandles(box) {
@@ -234,16 +210,32 @@ function maxPrice(min, span) {
   return min + span;
 }
 
+function nextBarLabel() {
+  if (!state.bars.length) return "--:--:--";
+  const next = new Date((state.bars[state.bars.length - 1].time + 3600) * 1000);
+  return `${String(next.getUTCHours()).padStart(2, "0")}:00 UTC`;
+}
+
 function connectWs() {
   const scheme = window.location.protocol === "https:" ? "wss" : "ws";
   const socket = new WebSocket(`${scheme}://${window.location.host}/ws`);
   socket.addEventListener("message", (event) => {
     const message = JSON.parse(event.data);
-    if (message.topic !== "snapshot") return;
-    state.snapshot = message.data;
-    state.status = state.snapshot.status;
-    state.bars = state.snapshot.bars ? state.snapshot.bars.bars : state.bars;
-    renderAll();
+    if (message.topic === "snapshot") {
+      state.snapshot = message.data;
+      state.status = state.snapshot.status;
+      state.bars = state.snapshot.bars ? state.snapshot.bars.bars : state.bars;
+      renderAll();
+      return;
+    }
+    if (message.topic === "status") {
+      state.status = message.data;
+      renderStatus();
+      renderSystem();
+      return;
+    }
+    window.clearTimeout(state.refreshTimer);
+    state.refreshTimer = window.setTimeout(() => refresh().catch(() => {}), 50);
   });
 }
 

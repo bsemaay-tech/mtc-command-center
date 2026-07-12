@@ -91,6 +91,7 @@ class BarFeed:
         on_event: EventCallback | None = None,
         on_stale: Callable[[], object] | None = None,
         poll_seconds: float = 1.0,
+        staleness_enabled: bool = True,
     ) -> None:
         self.broker = broker
         self.coin = coin
@@ -99,6 +100,7 @@ class BarFeed:
         self.on_event = on_event
         self.on_stale = on_stale
         self.poll_seconds = poll_seconds
+        self.staleness_enabled = staleness_enabled
         self.last_bar_update: datetime | None = None
         self.warmup: list[Bar] = []
         self._stop = asyncio.Event()
@@ -134,7 +136,7 @@ class BarFeed:
         if finalize_due is not None:
             finalize_due(now)
         reference = getattr(self.broker, "last_bar_update", None) or self.last_bar_update
-        if reference is None:
+        if reference is None or not self.staleness_enabled:
             return
         if now - reference > 2 * timeframe_delta(self.timeframe) and not self._stale_emitted:
             self._stale_emitted = True

@@ -23,6 +23,9 @@ def test_dashboard_core_static_contract():
     assert "innerHTML" not in js
     assert "textContent" in js
     assert "decisionDrawer" in html
+    assert "unpkg.com" not in html
+    assert "LightweightCharts" not in js
+    assert "createElementNS" in js
 
 
 def test_dashboard_root_serves_html():
