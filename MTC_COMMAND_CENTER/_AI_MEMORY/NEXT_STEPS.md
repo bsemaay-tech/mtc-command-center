@@ -14,8 +14,15 @@
 - ~~**[AI: Codex]** locally harden `positionTpsl` response-shape handling, redacted diagnostics, and deterministic owned-cloid cleanup.~~ DONE 2026-07-12 in `09a7a92f`; both full suites `89 passed`.
 - ~~**[AI: Codex]** implement E1 user-registry fallback and run one re-approved P0 smoke.~~ DONE 2026-07-12 in `25cee696`; source=`user_registry`, both suites `92 passed`, attempt 5 reached testnet and exposed the native trigger-type rejection.
 - ~~**[AI: Codex]** implement G1 normalTpsl entry grouping and the bounded G2 fallback, then run attempt 6.~~ DONE 2026-07-12 in `a4de4a6e`; both suites `98 passed`, normalTpsl returned a resting entry plus `waitingForFill` child state, and C3 cleanup passed.
-- **[AI: Barış, approval-gated]** approve a local C1 parser update for `waitingForFill` pending-child verification, then separately approve or reject the next bounded P0 attempt. P2 remains separately gated and unapproved.
-- Then PREREG gates P1 (mock dry-run demo) → P2 (paper ≥10d unattended) → P3 (≥30d, slippage + signal-parity report to `11_TRIAGE/`).
+- **[AI: Any] 🔴 ACTIVE — GO-LIVE PLAN: `IBKR_PAPER_BRIDGE/docs/16_GO_LIVE_PLAN.md` is the single
+  authoritative task ladder from here to P2 (testnet live loop).** Barış 2026-07-12 blanket-approved
+  ALL of it incl. bounded P0 smokes until pass, B6 fill smoke, and ALL of Phase D (P2 ARM). Any model
+  picks the first unchecked box in its §3 and executes per its §1 rules WITHOUT asking; human input
+  only at its §0-İ points (Telegram creds, PC uptime, mainnet=forbidden, QuantLens registration).
+  P1 audited PASS; P0 attempt 6 proved the wire format (resting entry + `waitingForFill` child); W1
+  (pending-child parser) is the current first task.
+- P3 later (≥30d, slippage + signal-parity report to `11_TRIAGE/`); parity blocked until
+  `keltner_trail_ema8` is registered in QuantLens ([AI: Barış] İ4 approval).
 
 ## 🔧 MCC APP AUDIT FOLLOW-UPS (audit 2026-07-05: `11_TRIAGE/MCC_APP_AUDIT_2026-07-05.md`; Barış answered all open questions; quick wins DONE same session on `feature/mcc-audit-fixes`)
 - ~~fix backtest_reader nested-run glob + heartbeat_reader parents index~~ DONE 2026-07-05 (115 tests pass; July runs + heartbeat visible).

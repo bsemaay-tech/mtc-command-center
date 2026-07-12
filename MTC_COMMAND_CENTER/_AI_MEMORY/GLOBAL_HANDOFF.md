@@ -1,5 +1,19 @@
 # GLOBAL_HANDOFF
 
+## [Claude Opus 4.8] 2026-07-12 — Bridge GO-LIVE plan + blanket approvals
+
+Barış directive: take the bridge live (= P2 testnet loop; MAINNET STAYS FORBIDDEN). He
+blanket-approved everything needed: all local work, bounded P0 smoke attempts until pass, the B6
+near-market fill smoke, and ALL of Phase D including P2 ARM. Models must proceed WITHOUT asking;
+human input only for Telegram creds, PC uptime, mainnet (never), QuantLens strategy registration.
+**Authoritative plan: `IBKR_PAPER_BRIDGE/docs/16_GO_LIVE_PLAN.md`** (commit e0a36b61) — task
+ladder W1→W3 (P0 closure), B1→B6 (hardening: auto-reconnect, reconciler fallbacks, user-event
+probe, paper-mode probe, Telegram, fill smoke), C1→C4 (ops: Task Scheduler service, frozen P2
+config with LLM OFF), D1→D5 (P2 ARM, ≥10-day run, exit audit). Handoff protocol in its §4: next
+model reads plan §3, takes first unchecked box, executes per §1, updates STATUS+HANDOFF, continues.
+Current first task: W1 (accept `waitingForFill`/`waitingForTrigger` pending-child statuses —
+attempt 6 proved entry rests and child waits; only the parser rejects it).
+
 ## [Codex GPT-5] 2026-07-12 — Bridge P0 attempt 6
 
 G1/G2 in `a4de4a6e` moved entry brackets to `normalTpsl`, retained `positionTpsl` for re-protect,
