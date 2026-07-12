@@ -112,10 +112,16 @@ def _build_broker(root: Path, dry_run: bool):
         broker = MockBroker.from_csv(root / "tests" / "fixtures" / "BTC_1h.csv", starting_equity=100000)
         broker.streaming = True
         return broker
+    # E1: resolve credentials process-env-first, then HKCU registry — the
+    # BaseSettings defaults are empty when the parent process predates the
+    # user-env variables.
+    from bridge.settings import resolve_hyperliquid_credentials
+
+    account_address, api_wallet_key, _source = resolve_hyperliquid_credentials()
     return HyperliquidBroker(
         network="testnet",
-        account_address=settings.hl_account_address,
-        api_wallet_key=settings.hl_api_wallet_key,
+        account_address=account_address,
+        api_wallet_key=api_wallet_key,
         coin="BTC",
         leverage=1,
     )

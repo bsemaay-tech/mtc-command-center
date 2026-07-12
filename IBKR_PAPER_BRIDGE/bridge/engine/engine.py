@@ -72,6 +72,12 @@ class BridgeEngine:
             staleness_enabled=self.mode != "dry_run",
         )
         self.bars = await self._feed.start(lookback=lookback)
+        # Persist warmup so the dashboard chart shows real exchange bars
+        # immediately (INSERT OR REPLACE — reruns are idempotent).
+        for bar in self.bars:
+            self.store.insert_bar(
+                self.coin, self.timeframe, bar.ts, bar.open, bar.high, bar.low, bar.close, bar.volume
+            )
         stream = getattr(self.broker, "start_stream", None)
         if stream is not None:
             self._tasks.append(asyncio.create_task(stream(), name="mock-broker-stream"))
