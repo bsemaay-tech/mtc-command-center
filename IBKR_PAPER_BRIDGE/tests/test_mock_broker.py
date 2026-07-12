@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime
+from pathlib import Path
 
 from bridge.broker.mock import MockBroker
 from bridge.engine.types import Bar, OrderPlan, Signal
@@ -50,7 +51,7 @@ async def _run_market_fill_and_sl_priority():
 
 
 def test_mock_broker_loads_fixture():
-    broker = MockBroker.from_csv("IBKR_PAPER_BRIDGE/tests/fixtures/BTC_1h.csv")
+    broker = MockBroker.from_csv(Path(__file__).parent / "fixtures" / "BTC_1h.csv")
 
     assert len(broker.bars) >= 2000
     assert broker.coin == "BTC"

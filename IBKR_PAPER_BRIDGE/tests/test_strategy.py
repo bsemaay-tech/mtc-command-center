@@ -8,6 +8,8 @@ from pathlib import Path
 from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
 from bridge.engine.types import Bar
 
+FIXTURES = Path(__file__).parent / "fixtures"
+
 
 def _load_bars(path: Path) -> list[Bar]:
     with path.open("r", newline="", encoding="utf-8") as handle:
@@ -25,8 +27,8 @@ def _load_bars(path: Path) -> list[Bar]:
 
 
 def test_keltner_strategy_matches_golden_signal_timestamps():
-    fixture = Path("IBKR_PAPER_BRIDGE/tests/fixtures/BTC_1h.csv")
-    golden = json.loads(Path("IBKR_PAPER_BRIDGE/tests/fixtures/golden_signals.json").read_text())
+    fixture = FIXTURES / "BTC_1h.csv"
+    golden = json.loads((FIXTURES / "golden_signals.json").read_text())
     strategy = KeltnerTrailEma8()
     bars = _load_bars(fixture)
 
@@ -56,7 +58,7 @@ def test_keltner_strategy_matches_golden_signal_timestamps():
 
 def test_keltner_strategy_trail_level_uses_ema8_for_long_position():
     strategy = KeltnerTrailEma8()
-    bars = _load_bars(Path("IBKR_PAPER_BRIDGE/tests/fixtures/BTC_1h.csv"))[:30]
+    bars = _load_bars(FIXTURES / "BTC_1h.csv")[:30]
 
     class Position:
         size = 1.0

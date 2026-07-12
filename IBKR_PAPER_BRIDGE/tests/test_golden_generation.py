@@ -8,8 +8,8 @@ from tools.generate_golden import generate_golden_from_csv
 
 
 def test_golden_file_is_provisional_and_matches_reference():
-    fixture = Path("IBKR_PAPER_BRIDGE/tests/fixtures/BTC_1h.csv")
-    golden_path = Path("IBKR_PAPER_BRIDGE/tests/fixtures/golden_signals.json")
+    fixture = Path(__file__).parent / "fixtures" / "BTC_1h.csv"
+    golden_path = Path(__file__).parent / "fixtures" / "golden_signals.json"
 
     generated = generate_golden_from_csv(fixture)
     saved = json.loads(golden_path.read_text(encoding="utf-8"))

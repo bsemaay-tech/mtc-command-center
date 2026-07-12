@@ -8,7 +8,7 @@ from bridge.app import create_app
 
 
 def test_dashboard_core_static_contract():
-    root = Path("IBKR_PAPER_BRIDGE/bridge/static")
+    root = Path(__file__).resolve().parents[1] / "bridge" / "static"
     html = (root / "index.html").read_text(encoding="utf-8")
     css = (root / "app.css").read_text(encoding="utf-8")
     js = (root / "app.js").read_text(encoding="utf-8")

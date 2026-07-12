@@ -12,6 +12,8 @@ from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
 from bridge.engine.types import Bar, Position, Signal
 from bridge.store.db import Store
 
+FIXTURES = Path(__file__).parent / "fixtures"
+
 
 def test_dryrun_replay_creates_trade_and_decision_chain(tmp_path):
     asyncio.run(_run_dryrun_replay(tmp_path))
@@ -40,7 +42,7 @@ def test_decision_chain_records_trade_closed(tmp_path):
 async def _run_dryrun_replay(tmp_path):
     store = Store(tmp_path / "bridge.db")
     store.initialize()
-    broker = MockBroker.from_csv("IBKR_PAPER_BRIDGE/tests/fixtures/BTC_1h.csv", starting_equity=100000)
+    broker = MockBroker.from_csv(FIXTURES / "BTC_1h.csv", starting_equity=100000)
     risk = RiskEngine(RiskConfig(max_position_notional_pct=0.5))
     engine = BridgeEngine(
         run_id="dryrun-test",
@@ -201,7 +203,7 @@ async def _run_order_manager_guards(tmp_path):
     store = Store(tmp_path / "bridge.db")
     store.initialize()
     store.create_run("run", "dry_run", "testnet", {})
-    broker = MockBroker.from_csv("IBKR_PAPER_BRIDGE/tests/fixtures/BTC_1h.csv", starting_equity=100000)
+    broker = MockBroker.from_csv(FIXTURES / "BTC_1h.csv", starting_equity=100000)
     await broker.connect()
     manager = OrderManager(store=store, broker=broker, run_id="run")
 
