@@ -48,7 +48,10 @@ class BridgeEngine:
     def __post_init__(self) -> None:
         self.order_manager = self.order_manager or OrderManager(self.store, self.broker, self.run_id)
         if self.notifier is None:
-            self.notifier = build_notifier()
+            # Default DISABLED: tests construct engines directly and must
+            # never leak real Telegram messages. The app factory injects the
+            # real notifier explicitly (build_notifier()).
+            self.notifier = TelegramNotifier(enabled=False)
         self.llm_gate = self.llm_gate or NullLLMGate()
         persisted = self.store.get_meta("app_state")
         if persisted is None:

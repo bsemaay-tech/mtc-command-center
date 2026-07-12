@@ -1234,3 +1234,61 @@ def test_real_captured_order_update_payload_parses_to_typed_event():
     assert len(updates) == 1
     assert updates[0].cloid == "0x1b343338773b8dc13be656c31b0873e9"
     assert updates[0].status == "OPEN"
+
+
+def test_connect_rebuilds_clients_when_owned_ws_is_dead():
+    """B1 completion: live 'Expired' socket close (2026-07-13) proved a dead
+    Info cannot be re-subscribed; connect() must rebuild owned clients."""
+    broker = HyperliquidBroker()  # owns clients (none injected)
+    dead_info = FakeInfo(size="0")
+    dead_info.ws_manager = SimpleNamespace(is_alive=lambda: False)
+    dead_info.disconnect_websocket = lambda: None
+    broker.info = dead_info
+    broker.exchange = _exchange_mock()
+    broker._user_callbacks.append(lambda e: None)
+    broker._user_channels_subscribed = True
+
+    fresh_info = FakeInfo(size="0")
+    rebuilds: list[bool] = []
+
+    def fake_build():
+        rebuilds.append(True)
+        broker.info = fresh_info
+        broker.exchange = _exchange_mock()
+
+    broker._build_sdk_clients = fake_build
+    asyncio.run(broker.connect())
+
+    assert rebuilds == [True]
+    assert broker.info is fresh_info
+    channels = [sub[0]["type"] for sub in fresh_info.subscriptions]
+    assert "userEvents" in channels and "orderUpdates" in channels
+
+
+def test_injected_clients_are_never_rebuilt():
+    info = FakeInfo(size="0")
+    info.ws_manager = SimpleNamespace(is_alive=lambda: False)  # dead, but injected
+    broker = HyperliquidBroker(info_client=info, exchange_client=_exchange_mock())
+    asyncio.run(broker.connect())
+    assert broker.info is info  # test doubles stay untouched
+
+
+def test_engine_default_notifier_is_disabled(tmp_path):
+    """Telegram leak regression: engines built without an explicit notifier
+    (i.e. every test) must never send real messages."""
+    from bridge.broker.mock import MockBroker
+    from bridge.engine.engine import BridgeEngine
+    from bridge.engine.risk import RiskConfig, RiskEngine
+    from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
+    from bridge.store.db import Store
+
+    store = Store(tmp_path / "notif.db")
+    store.initialize()
+    engine = BridgeEngine(
+        run_id="notif",
+        broker=MockBroker(bars=[], starting_equity=1000),
+        store=store,
+        strategy=KeltnerTrailEma8(),
+        risk_engine=RiskEngine(RiskConfig()),
+    )
+    assert engine.notifier is not None and engine.notifier.enabled is False

@@ -88,6 +88,7 @@ class HyperliquidBroker:
         self.coin = coin
         self.leverage = leverage
         self.connected = False
+        self._owns_clients = info_client is None and exchange_client is None
         self.account_mode = "standard"
         self._order_specs: dict[str, dict] = {}
         self._bar_subscriptions: list[tuple[str, str, object, BarFinalizer]] = []
@@ -100,8 +101,24 @@ class HyperliquidBroker:
 
     async def connect(self) -> None:
         self._check_network_lock()
+        # B1 completion: a dead SDK websocket cannot be revived by
+        # re-subscribing on the same Info object (observed live 2026-07-13:
+        # exchange closed the socket with "Expired"; every resubscribe then
+        # raised WebSocketConnectionClosedException). Rebuild the clients.
+        if self._owns_clients and self.info is not None:
+            manager = getattr(self.info, "ws_manager", None)
+            is_alive = getattr(manager, "is_alive", None)
+            if manager is not None and callable(is_alive) and not is_alive():
+                try:
+                    await asyncio.to_thread(getattr(self.info, "disconnect_websocket", lambda: None))
+                except Exception:  # noqa: BLE001 - old socket is already dead
+                    pass
+                self.info = None
+                self.exchange = None
+                self._user_channels_subscribed = False
         if self.info is None or self.exchange is None:
             await asyncio.to_thread(self._build_sdk_clients)
+            self._user_channels_subscribed = False
         await self._detect_account_mode()
         await self._load_size_decimals()
         if hasattr(self.exchange, "update_leverage"):

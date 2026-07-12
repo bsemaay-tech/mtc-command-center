@@ -96,12 +96,15 @@ def create_app(
             max_leverage=int(risk_cfg_raw.get("max_leverage", 1)),
             max_consecutive_losses=int(risk_cfg_raw.get("max_consecutive_losses", 3)),
         )
+        from bridge.engine.notify import build_notifier
+
         engine = BridgeEngine(
             run_id=run_id,
             broker=runtime_broker,
             store=store,
             strategy=KeltnerTrailEma8(),
             risk_engine=RiskEngine(risk_config),
+            notifier=build_notifier(),
             state="DISARMED",
             mode="dry_run" if dry_run else "paper",
             on_update=publish,
