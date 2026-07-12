@@ -44,7 +44,16 @@ async def main() -> None:
         )
         broker = HyperliquidBroker(network="testnet", coin="BTC", leverage=1)
         await broker.connect()
-        _step(log, "connect", "PASS", {"network": broker.network, "account_address": broker.account_address})
+        _step(
+            log,
+            "connect",
+            "PASS",
+            {
+                "network": broker.network,
+                "account_address": broker.account_address,
+                "account_mode": broker.account_mode,
+            },
+        )
 
         account = await broker.account()
         _step(log, "account", "PASS", account.model_dump(mode="json"))
@@ -138,6 +147,12 @@ async def main() -> None:
             await _best_effort_cleanup(broker, owned_cloids, initial_sizes, log)
         raise
     finally:
+        if broker is not None:
+            try:
+                await broker.disconnect()
+                _step(log, "disconnect", "PASS", {})
+            except Exception as exc:
+                _step(log, "disconnect", "WARN", {"error_type": type(exc).__name__})
         log["finished_ts"] = datetime.now(UTC).isoformat()
         LOG_PATH.write_text(json.dumps(log, indent=2, sort_keys=True), encoding="utf-8")
         print(json.dumps({"result": log["result"], "log": str(LOG_PATH), "steps": len(log["steps"])}))

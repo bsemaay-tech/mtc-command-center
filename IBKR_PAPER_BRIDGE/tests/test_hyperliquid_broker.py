@@ -8,7 +8,12 @@ from unittest.mock import Mock, create_autospec
 
 import pytest
 
-from bridge.broker.hyperliquid import BarFinalizer, BrokerRefusedLive, HyperliquidBroker
+from bridge.broker.hyperliquid import (
+    BarFinalizer,
+    BrokerRefusedLive,
+    HyperliquidBroker,
+    HyperliquidOrderError,
+)
 from bridge.broker.mock import MockBroker
 from bridge.engine.types import AccountSnapshot, Bar, BrokerOrder, FillEvent, OrderPlan, Position, Signal
 from hyperliquid.exchange import Exchange
@@ -68,6 +73,47 @@ def test_hl_bracket_places_native_triggers():
     assert requests[2]["order_type"]["trigger"]["tpsl"] == "tp"
     assert all(isinstance(request["cloid"], Cloid) for request in requests)
     assert ids["sl"]["cloid"].startswith("0x")
+
+
+def test_hl_unified_account_uses_spot_usdc_balance_and_hold():
+    info = UnifiedInfo()
+    exchange = _exchange_mock()
+    broker = HyperliquidBroker(account_address="0xabc", info_client=info, exchange_client=exchange)
+
+    asyncio.run(broker.connect())
+    account = asyncio.run(broker.account())
+
+    assert broker.account_mode == "unifiedAccount"
+    assert account.equity == 999.0
+    assert account.available_margin == 989.0
+    assert account.withdrawable == 989.0
+
+
+def test_hl_string_exchange_rejection_is_preserved_and_secret_redacted():
+    exchange = _exchange_mock()
+    secret_like = "ab" * 32
+    exchange.bulk_orders.return_value = {
+        "status": "err",
+        "response": f"Insufficient margin request={secret_like}",
+    }
+    broker = HyperliquidBroker(info_client=object(), exchange_client=exchange)
+
+    with pytest.raises(HyperliquidOrderError, match="Insufficient margin") as exc_info:
+        asyncio.run(broker.place_bracket(_plan()))
+
+    assert secret_like not in str(exc_info.value)
+    assert "[redacted]" in str(exc_info.value)
+
+
+def test_hl_disconnect_stops_sdk_websocket():
+    info = DisconnectInfo()
+    broker = HyperliquidBroker(info_client=info, exchange_client=_exchange_mock())
+
+    asyncio.run(broker.connect())
+    asyncio.run(broker.disconnect())
+
+    assert info.disconnected is True
+    assert broker.connected is False
 
 
 def test_hl_modify_and_cancel_use_real_sdk_signatures():
@@ -380,3 +426,22 @@ class ThreadRecordingInfo(FakeInfo):
     def candles_snapshot(self, coin, tf, start, end):
         self._record()
         return [_candle(datetime(2026, 7, 6, 0, tzinfo=UTC), 100)]
+
+
+class UnifiedInfo(FakeInfo):
+    def __init__(self) -> None:
+        super().__init__(size="0", with_summary=True)
+
+    def query_user_abstraction_state(self, address):
+        return "unifiedAccount"
+
+    def spot_user_state(self, address):
+        return {"balances": [{"coin": "USDC", "total": "999", "hold": "10"}]}
+
+
+class DisconnectInfo:
+    def __init__(self) -> None:
+        self.disconnected = False
+
+    def disconnect_websocket(self):
+        self.disconnected = True

@@ -7,9 +7,10 @@ must not be run without explicit approval because it places testnet orders.
 from __future__ import annotations
 
 import asyncio
-import os
 import hashlib
 import logging
+import os
+import re
 from datetime import UTC, datetime
 
 from bridge.engine.types import (
@@ -66,6 +67,7 @@ class HyperliquidBroker:
         self.coin = coin
         self.leverage = leverage
         self.connected = False
+        self.account_mode = "standard"
         self._order_specs: dict[str, dict] = {}
         self._bar_subscriptions: list[tuple[str, str, object, BarFinalizer]] = []
         self._user_callbacks: list[object] = []
@@ -76,13 +78,40 @@ class HyperliquidBroker:
         self._check_network_lock()
         if self.info is None or self.exchange is None:
             await asyncio.to_thread(self._build_sdk_clients)
+        await self._detect_account_mode()
         if hasattr(self.exchange, "update_leverage"):
             await asyncio.to_thread(self.exchange.update_leverage, self.leverage, self.coin, is_cross=False)
         self.connected = True
 
+    async def disconnect(self) -> None:
+        try:
+            if self.info is not None and hasattr(self.info, "disconnect_websocket"):
+                await asyncio.to_thread(self.info.disconnect_websocket)
+        except RuntimeError as exc:
+            logger.debug("Hyperliquid websocket disconnect skipped: %s", exc)
+        finally:
+            self.connected = False
+
     async def account(self) -> AccountSnapshot:
         if self.info is None:
             raise HyperliquidNotConfigured("Info client not configured")
+        if self.account_mode == "unifiedAccount" and hasattr(self.info, "spot_user_state"):
+            state = await asyncio.to_thread(self.info.spot_user_state, self.account_address)
+            if not isinstance(state, dict):
+                raise ValueError("Hyperliquid spot_user_state was not an object")
+            balances = state.get("balances", [])
+            usdc = next(
+                (row for row in balances if isinstance(row, dict) and row.get("coin") == "USDC"),
+                {},
+            )
+            equity = self._float(usdc.get("total"))
+            held = self._float(usdc.get("hold"))
+            available = max(equity - held, 0.0)
+            return AccountSnapshot(
+                equity=equity,
+                available_margin=available,
+                withdrawable=available,
+            )
         if hasattr(self.info, "user_state"):
             state = await asyncio.to_thread(self.info.user_state, self.account_address)
             if not isinstance(state, dict):
@@ -381,6 +410,18 @@ class HyperliquidBroker:
         self.info = Info(base_url, skip_ws=False)
         self.exchange = Exchange(wallet, base_url, account_address=self.account_address)
 
+    async def _detect_account_mode(self) -> None:
+        if self.info is None or not hasattr(self.info, "query_user_abstraction_state"):
+            self.account_mode = "standard"
+            return
+        raw_mode = await asyncio.to_thread(self.info.query_user_abstraction_state, self.account_address)
+        if isinstance(raw_mode, str):
+            self.account_mode = raw_mode
+        elif isinstance(raw_mode, dict):
+            self.account_mode = str(raw_mode.get("mode", raw_mode.get("abstraction", "standard")))
+        else:
+            self.account_mode = "standard"
+
     def _cloid(self, plan: OrderPlan, role: str) -> Cloid:
         decision_uid = plan.decision_uid or f"{plan.signal.symbol}:{plan.signal.ts.isoformat()}:{plan.signal.direction}"
         raw = f"{decision_uid}:{role}"
@@ -419,9 +460,29 @@ class HyperliquidBroker:
     @staticmethod
     def _extract_statuses(raw: object) -> list[dict]:
         if not isinstance(raw, dict):
-            return []
-        statuses = raw.get("response", {}).get("data", {}).get("statuses", [])
-        return [status for status in statuses if isinstance(status, dict)]
+            raise HyperliquidOrderError("Hyperliquid exchange response was not an object")
+        response = raw.get("response")
+        if isinstance(response, str):
+            raise HyperliquidOrderError(HyperliquidBroker._safe_exchange_message(response))
+        if not isinstance(response, dict):
+            raise HyperliquidOrderError("Hyperliquid exchange response payload was not an object")
+        data = response.get("data")
+        if isinstance(data, str):
+            raise HyperliquidOrderError(HyperliquidBroker._safe_exchange_message(data))
+        if not isinstance(data, dict):
+            raise HyperliquidOrderError("Hyperliquid exchange response data was not an object")
+        statuses = data.get("statuses")
+        if not isinstance(statuses, list):
+            raise HyperliquidOrderError("Hyperliquid exchange response did not contain statuses")
+        if any(not isinstance(status, dict) for status in statuses):
+            detail = "; ".join(str(status) for status in statuses if not isinstance(status, dict))
+            raise HyperliquidOrderError(HyperliquidBroker._safe_exchange_message(detail))
+        return statuses
+
+    @staticmethod
+    def _safe_exchange_message(value: object) -> str:
+        message = str(value).strip() or "Hyperliquid exchange rejected the request"
+        return re.sub(r"(?i)(?:0x)?[0-9a-f]{64,}", "[redacted]", message)[:500]
 
     @staticmethod
     def _request(
