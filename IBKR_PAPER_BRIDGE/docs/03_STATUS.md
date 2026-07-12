@@ -13,6 +13,10 @@ Builder: Codex GPT-5
   then failed because real `positionTpsl` returned fewer statuses than the adapter expected. No oid
   was captured; deterministic-cloid post-check found zero open orders and zero positions. Clean
   disconnect passed. See `14_P0_SMOKE_REPORT.md`.
+- **P0 attempt 4: FAIL at local precheck; approval consumed.** Commit `09a7a92f` passed C1-C3
+  local hardening and both full suites (`89 passed, 1 warning` each), then the single authorized
+  smoke stopped before SDK construction because the inherited key was not valid 32-byte hex. No
+  testnet call or order occurred; no retry is approved. See `14_P0_SMOKE_REPORT.md`.
 - **Real QuantLens golden: BLOCKED.** The canonical engine does not register
   `keltner_trail_ema8`; the available `GEN_KELTNER_BREAKOUT` has materially different rules and was
   not substituted. The golden remains explicitly provisional.
@@ -30,9 +34,9 @@ Builder: Codex GPT-5
 | T6 continuous engine | DONE for P1 | Background runtime, safe startup, reconcile-before-ARM, trailing while disarmed, close-only opposite signal, risk disarm, preemptive KILL. |
 | T7 API/WS | DONE for P1 | Runtime controls, Store-backed endpoints, persistent WS, snapshot resync, live decision stream. |
 | T8 failure drills | DONE | Eight scripted drills pass. |
-| T9 CWD robustness | DONE | 72 tests pass from repo root and bridge directory. |
+| T9 CWD robustness | DONE | 89 tests pass from repo root and bridge directory. |
 | T10 chart | DONE | Local SVG candle renderer only; live screenshots verified. |
-| T11 P0 smoke | FAIL / BLOCKED | Rounded-price attempt reached atomic submit, then real response cardinality violated the adapter assumption. Zero open orders/positions afterward; no retry approved. |
+| T11 P0 smoke | FAIL / BLOCKED | C1-C3 hardened cardinality, raw diagnostics, and owned cleanup; the final approved invocation failed at local key precheck, so no new testnet state exists and no retry is approved. |
 | T12 real golden | BLOCKED | `docs/12_GOLDEN_REGEN_ATTEMPT.md`; exact strategy ID absent. |
 | T13 report/handoff | DONE | `docs/11_P1_BUILD_REPORT.md` plus canonical handoff entry. |
 
@@ -49,8 +53,8 @@ Builder: Codex GPT-5
 ## Human next actions
 
 1. Do not transfer funds or change account mode; the testnet account is correctly Unified.
-2. Fix and locally test real `positionTpsl` response cardinality plus owned-cloid cleanup when
-   placement parsing fails. Do not run another testnet attempt without new explicit approval.
+2. Restore the valid local 32-byte API-wallet key, then obtain new explicit approval before any
+   further P0 attempt. Do not run another testnet attempt without that approval.
 3. P2 remains a later go/no-go decision and is not approved.
 4. For a real golden, register the exact bridge Keltner signal semantics in QuantLens or approve a
    source-engine export adapter; do not relabel `GEN_KELTNER_BREAKOUT` as equivalent.

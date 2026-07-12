@@ -1,120 +1,20 @@
 {
   "approved_scope": "one tiny resting entry plus native SL, modify, cancel, flatten only if needed",
-  "finished_ts": "2026-07-12T18:54:23.898448+00:00",
+  "finished_ts": "2026-07-12T19:28:48.427179+00:00",
   "network": "testnet",
   "orders": [],
   "result": "FAIL",
-  "run_id": "p0-20260712T185408Z",
-  "started_ts": "2026-07-12T18:54:08.310060+00:00",
+  "run_id": "p0-20260712T192848Z",
+  "started_ts": "2026-07-12T19:28:48.427061+00:00",
   "steps": [
     {
       "data": {
-        "account_format": "valid_20_bytes",
-        "key_format": "valid_32_bytes"
-      },
-      "name": "key_precheck",
-      "status": "PASS",
-      "ts": "2026-07-12T18:54:08.310084+00:00"
-    },
-    {
-      "data": {
-        "account_address": "0x1E265F5E39957E08ed02A120ceFA33A9bd46AC49",
-        "account_mode": "unifiedAccount",
-        "network": "testnet"
-      },
-      "name": "connect",
-      "status": "PASS",
-      "ts": "2026-07-12T18:54:19.447185+00:00"
-    },
-    {
-      "data": {
-        "available_margin": 999.0,
-        "equity": 999.0,
-        "withdrawable": 999.0
-      },
-      "name": "account",
-      "status": "PASS",
-      "ts": "2026-07-12T18:54:20.139904+00:00"
-    },
-    {
-      "data": {
-        "bars": [
-          {
-            "close": 64011.0,
-            "high": 64093.0,
-            "low": 63930.0,
-            "open": 64023.0,
-            "ts": "2026-07-12T16:00:00Z",
-            "volume": 2.09213
-          },
-          {
-            "close": 63919.0,
-            "high": 64120.0,
-            "low": 63863.0,
-            "open": 63994.0,
-            "ts": "2026-07-12T17:00:00Z",
-            "volume": 6.64689
-          },
-          {
-            "close": 64000.0,
-            "high": 64029.0,
-            "low": 63888.0,
-            "open": 63932.0,
-            "ts": "2026-07-12T18:00:00Z",
-            "volume": 3.5548
-          }
-        ],
-        "count": 3
-      },
-      "name": "candles",
-      "status": "PASS",
-      "ts": "2026-07-12T18:54:20.829684+00:00"
-    },
-    {
-      "data": {
-        "coin": "BTC",
-        "entry_limit": 57600.0,
-        "market_reference": 64000.0,
-        "modified_stop_trigger": 56736.0,
-        "notional_usd": 11.520000000000001,
-        "qty": 0.0002,
-        "size_decimals": 5,
-        "stop_trigger": 56448.0
-      },
-      "name": "meta_and_plan",
-      "status": "PASS",
-      "ts": "2026-07-12T18:54:21.628216+00:00"
-    },
-    {
-      "data": {
-        "error": "bulk order response did not contain every status",
-        "error_type": "HyperliquidOrderError"
+        "error": "HL_API_WALLET_KEY must be a 32-byte hexadecimal private key",
+        "error_type": "RuntimeError"
       },
       "name": "failure",
       "status": "FAIL",
-      "ts": "2026-07-12T18:54:22.632403+00:00"
-    },
-    {
-      "data": {
-        "flattened_symbols": []
-      },
-      "name": "partial_fill_guard",
-      "status": "PASS",
-      "ts": "2026-07-12T18:54:23.165621+00:00"
-    },
-    {
-      "data": {
-        "errors": []
-      },
-      "name": "best_effort_cleanup",
-      "status": "PASS",
-      "ts": "2026-07-12T18:54:23.165631+00:00"
-    },
-    {
-      "data": {},
-      "name": "disconnect",
-      "status": "PASS",
-      "ts": "2026-07-12T18:54:23.898439+00:00"
+      "ts": "2026-07-12T19:28:48.427175+00:00"
     }
   ]
 }

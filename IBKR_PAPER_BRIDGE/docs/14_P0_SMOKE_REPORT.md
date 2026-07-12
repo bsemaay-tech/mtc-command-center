@@ -380,3 +380,72 @@ Result: zero matches.
 - Because this failure was not transient, a further P0 order attempt requires a new explicit
   approval. That attempt will reveal the previously masked exchange rejection if it recurs.
 - P0 remains failed; P2 unattended ARM remains not approved.
+
+## Approved P0 attempt 4 — 2026-07-12
+
+Commit `09a7a92f` completed the approved local C1-C3 hardening before the one authorized smoke invocation.
+
+- **C1 — cardinality:** `bridge/broker/hyperliquid.py:288` no longer requires one status per submitted request. It maps the returned statuses as hints, then uses `open_orders()` as the authority; each submitted cloid must be visible or be specifically explained as filled. `reprotect_position()` uses the same verifier. Tests cover 1, 2, and 3 statuses for a three-order group, error statuses, filled explanation, and missing trigger failure (`tests/test_hyperliquid_broker.py:487`).
+- **C2 — diagnostics:** `bridge/broker/hyperliquid.py:565` attaches the complete JSON-safe, 64+-hex-redacted raw response to parse/verification errors, capped at 4000 characters; `tools/smoke_p0.py:244` carries that diagnostic into the smoke log; `bridge/engine/orders.py:43` persists submission failure context to an events row. Tests cover redaction, parser shapes, and smoke-log failure data.
+- **C3 — cleanup:** `tools/smoke_p0.py:204` deterministically derives only the submitted entry/SL cloids, queries open orders, cancels owned resting orders, verifies they are absent, and flattens only an unexpected changed position. The cleanup test is `tests/test_smoke_p0.py:58`.
+
+Full local pytest summaries, run before the network attempt:
+
+Repository root:
+
+```text
+........................................................................ [ 80%]
+.................                                                        [100%]
+89 passed, 1 warning in 3.69s
+```
+
+`IBKR_PAPER_BRIDGE/`:
+
+```text
+........................................................................ [ 80%]
+.................                                                        [100%]
+89 passed, 1 warning in 3.55s
+```
+
+The one authorized command was run once from the repository root with `HL_LIVE_ACK` cleared for that process:
+
+```powershell
+$env:PYTHONUTF8='1'; Remove-Item Env:HL_LIVE_ACK -ErrorAction SilentlyContinue; python IBKR_PAPER_BRIDGE\tools\smoke_p0.py
+```
+
+It failed at the local key-format precheck before SDK construction. Therefore **no testnet connection, account query, candle query, exchange response, order, cancellation, or flatten action occurred**. No retry was run. There is no real `positionTpsl` response shape to amend in `01_ARCHITECTURE.md`; the C1 correction remains the local response-shape hardening pending a newly approved future attempt.
+
+Complete overwritten `p0_smoke_log.json` for this attempt:
+
+```json
+{
+  "approved_scope": "one tiny resting entry plus native SL, modify, cancel, flatten only if needed",
+  "finished_ts": "2026-07-12T19:28:48.427179+00:00",
+  "network": "testnet",
+  "orders": [],
+  "result": "FAIL",
+  "run_id": "p0-20260712T192848Z",
+  "started_ts": "2026-07-12T19:28:48.427061+00:00",
+  "steps": [
+    {
+      "data": {
+        "error": "HL_API_WALLET_KEY must be a 32-byte hexadecimal private key",
+        "error_type": "RuntimeError"
+      },
+      "name": "failure",
+      "status": "FAIL",
+      "ts": "2026-07-12T19:28:48.427175+00:00"
+    }
+  ]
+}
+```
+
+Placed/cancelled oids and cloids: none. Secret scan command and result:
+
+```powershell
+$targets = @('IBKR_PAPER_BRIDGE/bridge/broker/hyperliquid.py','IBKR_PAPER_BRIDGE/bridge/engine/orders.py','IBKR_PAPER_BRIDGE/tools/smoke_p0.py','IBKR_PAPER_BRIDGE/tests/test_hyperliquid_broker.py','IBKR_PAPER_BRIDGE/tests/test_smoke_p0.py','IBKR_PAPER_BRIDGE/docs/p0_smoke_log.json','IBKR_PAPER_BRIDGE/docs/14_P0_SMOKE_REPORT.md','IBKR_PAPER_BRIDGE/docs/03_STATUS.md'); @(rg -l -i '[0-9a-f]{64,}' @targets 2>$null).Count
+```
+
+Result: `0`.
+
+Remaining gap: the Windows environment inherited by this run did not contain a valid 32-byte API-wallet key. Correct the local credential, then obtain a **new explicit P0 approval** before any future smoke invocation. P0 exit criteria are not met; P2 remains unapproved.

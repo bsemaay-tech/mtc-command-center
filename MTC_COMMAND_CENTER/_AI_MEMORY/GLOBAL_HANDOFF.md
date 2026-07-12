@@ -1,5 +1,14 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5] 2026-07-12 — Bridge P0 attempt 4
+
+Completed approved local cardinality/raw-response/owned-cleanup hardening in `09a7a92f`.
+Both full bridge suites passed (`89 passed, 1 warning` each). The single authorized smoke
+`p0-20260712T192848Z` then failed at the local 32-byte API-wallet-key precheck, before any SDK
+construction or testnet request. No order, cancellation, position, or real `positionTpsl` response
+exists for this attempt, and no retry was run. P0 exit criteria remain unmet; P2 remains unapproved.
+Evidence: `IBKR_PAPER_BRIDGE/docs/14_P0_SMOKE_REPORT.md`.
+
 ## [Codex GPT-5] 2026-07-12 — Rounded-price P0 attempt failed cleanly
 
 Barış approved exactly one bounded P0 attempt after price-precision hardening. Commit `42018032`
