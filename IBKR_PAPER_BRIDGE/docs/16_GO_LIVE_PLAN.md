@@ -112,7 +112,7 @@ geçilmez.
 - [x] **B2. Reconciler eşleştirme fallback'leri** (`bridge/engine/orders.py`)
   - Sıra: cloid → `order_ref` → muhafazakâr öznitelik (coin+side+type+triggerPx+sz). Belirsiz
     eşleşme = WARN, dokunma (spec §6.5). Testler: her kademe + belirsizlik.
-- [ ] **B3. Gerçek user-event payload doğrulaması** (küçük ağ işi, emir YOK — §0-2 kapsamında)
+- [~] **B3. Gerçek user-event payload doğrulaması** — KISMEN 2026-07-12: `tools/probe_user_events.py` yazıldı, 90 sn testnet dinlemesi hatasız (0 mesaj — işlem aktivitesi yokken beklenen; abonelik kanıtlandı). Gerçek fill/orderUpdate şekilleri B6 fill smoke sırasında yakalanacak; parser testi o zaman tamamlanır. (küçük ağ işi, emir YOK — §0-2 kapsamında)
   - `tools/probe_user_events.py`: bağlan, `userEvents`+`orderUpdates` abone ol, 60-120 sn dinle,
     gelen HER mesajın redakte ham şeklini `docs/user_events_probe.json`'a yaz, kapan. (B6
     sırasında gerçek fill mesajı da buraya düşecek.) Parser'ı gerçek şekle göre düzelt.

@@ -1,0 +1,9 @@
+{
+  "probe": "user_events",
+  "network": "testnet",
+  "credential_source": "user_registry",
+  "listened_seconds": 90,
+  "message_count": 0,
+  "finished_ts": "2026-07-12T20:44:06.024841+00:00",
+  "messages": []
+}
