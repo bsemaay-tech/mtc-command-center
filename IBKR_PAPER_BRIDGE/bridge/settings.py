@@ -115,3 +115,31 @@ def resolve_hyperliquid_credentials() -> Tuple[str, str, str]:
         "and HL_API_WALLET_KEY in the process environment or in "
         "HKEY_CURRENT_USER\\Environment"
     )
+
+
+def resolve_user_env(name: str) -> str:
+    """Generic process-env-then-user-registry lookup (B5; same E1 pattern).
+
+    Returns the trimmed value or an empty string. Never raises; never logs
+    the value.
+    """
+    value = os.environ.get(name, "").strip()
+    if value:
+        return value
+    if _HAS_WINREG:
+        try:
+            with winreg.OpenKey(  # type: ignore[attr-defined]
+                winreg.HKEY_CURRENT_USER, "Environment"
+            ) as reg_key:
+                raw, _ = winreg.QueryValueEx(reg_key, name)  # type: ignore[attr-defined]
+            if isinstance(raw, str):
+                return raw.strip()
+        except Exception:
+            return ""
+    return ""
+
+
+def resolve_telegram_credentials() -> Tuple[str, str]:
+    """Return ``(bot_token, chat_id)``; empty strings when unset (notifier
+    then stays silently disabled per architecture §6.7)."""
+    return resolve_user_env("TELEGRAM_BOT_TOKEN"), resolve_user_env("TELEGRAM_CHAT_ID")

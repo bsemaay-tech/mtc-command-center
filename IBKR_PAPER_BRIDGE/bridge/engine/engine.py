@@ -12,6 +12,7 @@ from typing import Callable
 from bridge.broker.base import Broker
 from bridge.engine.bars import BarFeed
 from bridge.engine.llm_gate import NullLLMGate
+from bridge.engine.notify import TelegramNotifier, build_notifier
 from bridge.engine.orders import OrderManager
 from bridge.engine.risk import RiskEngine
 from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
@@ -33,6 +34,8 @@ class BridgeEngine:
     timeframe: str = "1h"
     mode: str = "dry_run"
     on_update: Callable[[str, object], object] | None = None
+    notifier: TelegramNotifier | None = None
+    heartbeat_hours: float = 6.0
     reconcile_interval_s: float = 60.0
     bars: list[Bar] = field(default_factory=list)
     reconcile_ready: bool = False
@@ -44,6 +47,8 @@ class BridgeEngine:
 
     def __post_init__(self) -> None:
         self.order_manager = self.order_manager or OrderManager(self.store, self.broker, self.run_id)
+        if self.notifier is None:
+            self.notifier = build_notifier()
         self.llm_gate = self.llm_gate or NullLLMGate()
         persisted = self.store.get_meta("app_state")
         if persisted is None:
@@ -71,6 +76,8 @@ class BridgeEngine:
         if stream is not None:
             self._tasks.append(asyncio.create_task(stream(), name="mock-broker-stream"))
         self._tasks.append(asyncio.create_task(self._reconcile_loop(), name="bridge-reconciler"))
+        if self.notifier is not None and self.notifier.enabled:
+            self._tasks.append(asyncio.create_task(self._heartbeat_loop(), name="bridge-heartbeat"))
 
     async def stop(self) -> None:
         if self._feed is not None:
@@ -271,6 +278,18 @@ class BridgeEngine:
             "timeframe": self.timeframe,
         }
 
+    async def _heartbeat_loop(self) -> None:
+        while True:
+            await asyncio.sleep(self.heartbeat_hours * 3600)
+            positions = await self.broker.positions()
+            account = await self.broker.account()
+            position = self._position_for(self.coin, positions)
+            await self.notifier.heartbeat(
+                position=f"{position.size} {position.symbol}" if position else "none",
+                equity=f"{account.equity}",
+                last_bar=self.bars[-1].ts.isoformat() if self.bars else "none",
+            )
+
     async def _reconcile_loop(self) -> None:
         while True:
             await asyncio.sleep(self.reconcile_interval_s)
@@ -280,6 +299,8 @@ class BridgeEngine:
     async def _feed_event(self, code: str, detail: str) -> None:
         severity = "WARN" if code in {"DATA_STALE", "DISCONNECT", "RECONNECT_RETRY"} else "INFO"
         self.store.insert_event(self.run_id, datetime.now(UTC), severity, code, detail)
+        if severity != "INFO":
+            self._notify_bg(severity, f"{code}: {detail}")
         await self._publish("event", {"code": code, "detail": detail})
 
     async def _stale_disarm(self) -> None:
@@ -306,8 +327,20 @@ class BridgeEngine:
         return self.state
 
     def _set_state(self, state: str) -> None:
+        previous = self.state
         self.state = state
         self.store.set_meta("app_state", state)
+        if state != previous and state in {"DISARMED", "KILLED", "ARMED"}:
+            self._notify_bg("WARN" if state != "ARMED" else "INFO", f"state -> {state}")
+
+    def _notify_bg(self, severity: str, message: str) -> None:
+        """Fire-and-forget notification; never blocks the trading path."""
+        if self.notifier is None or not self.notifier.enabled:
+            return
+        try:
+            asyncio.get_running_loop().create_task(self.notifier.send(severity, message))
+        except RuntimeError:
+            pass  # no running loop (sync replay/tests) — skip silently
 
     @staticmethod
     def _position_for(coin: str, positions: list[Position]) -> Position | None:

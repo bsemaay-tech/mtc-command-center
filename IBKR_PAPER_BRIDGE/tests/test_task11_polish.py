@@ -50,3 +50,41 @@ def test_notifier_disabled_and_stubbed_send_never_raises():
     notifier = TelegramNotifier(enabled=True, sender=lambda payload: sent.append(payload))
     asyncio.run(notifier.send("WARN", "hello"))
     assert sent[0]["text"] == "[WARN] hello"
+
+
+def test_build_notifier_disabled_without_creds(monkeypatch):
+    """B5: missing creds => silently disabled, never raises."""
+    import bridge.engine.notify as notify_mod
+
+    monkeypatch.setattr(notify_mod, "resolve_telegram_credentials", lambda: ("", ""))
+    notifier = notify_mod.build_notifier()
+    assert notifier.enabled is False
+    asyncio.run(notifier.send("WARN", "should be a no-op"))
+
+
+def test_build_notifier_enabled_sends_via_http_sender(monkeypatch):
+    import bridge.engine.notify as notify_mod
+
+    sent: list[dict] = []
+
+    def fake_sender(token, chat_id):
+        async def send(payload):
+            sent.append({"chat_id": chat_id, **payload})
+        return send
+
+    monkeypatch.setattr(notify_mod, "resolve_telegram_credentials", lambda: ("tok", "42"))
+    monkeypatch.setattr(notify_mod, "_http_sender", fake_sender)
+    notifier = notify_mod.build_notifier()
+    assert notifier.enabled is True
+    asyncio.run(notifier.send("INFO", "hello"))
+    assert sent == [{"chat_id": "42", "text": "[INFO] hello"}]
+
+
+def test_notifier_send_failure_never_raises():
+    from bridge.engine.notify import TelegramNotifier
+
+    async def exploding_sender(payload):
+        raise RuntimeError("boom")
+
+    notifier = TelegramNotifier(enabled=True, sender=exploding_sender)
+    asyncio.run(notifier.send("ERROR", "x"))  # must not raise

@@ -126,7 +126,7 @@ geçilmez.
     akışta tetikleniyor (1-2 bar bekle); dashboard Overview/Trading gerçek testnet verisi
     gösteriyor; reconcile-before-ARM temiz; DISARMED kalıyor (ARM edilmez!).
   - Kanıt: `docs/screenshots/paper_probe_*.png` + `docs/03_STATUS.md` notu + events log kesiti.
-- [ ] **B5. Telegram notifier devreye alma** — **İNSAN GİRDİSİ İ1**
+- [x] **B5. Telegram notifier devreye alma** — **İNSAN GİRDİSİ İ1**
   - Barış'tan iste: BotFather'dan bot token + chat id; Windows USER env:
     `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`. (Değerler chat'e yazılmaz.)
   - Kod hazır değilse tamamla (`bridge/engine/notify.py` spec §6.7: fill/TRADE_CLOSED/WARN+/
