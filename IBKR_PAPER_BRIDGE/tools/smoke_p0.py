@@ -5,6 +5,8 @@ from __future__ import annotations
 import asyncio
 import json
 import math
+import os
+import string
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -29,10 +31,18 @@ async def main() -> None:
         "orders": [],
         "result": "RUNNING",
     }
-    broker = HyperliquidBroker(network="testnet", coin="BTC", leverage=1)
+    broker: HyperliquidBroker | None = None
     owned_cloids: list[str] = []
     initial_sizes: dict[str, float] = {}
     try:
+        _validate_credentials()
+        _step(
+            log,
+            "key_precheck",
+            "PASS",
+            {"key_format": "valid_32_bytes", "account_format": "valid_20_bytes"},
+        )
+        broker = HyperliquidBroker(network="testnet", coin="BTC", leverage=1)
         await broker.connect()
         _step(log, "connect", "PASS", {"network": broker.network, "account_address": broker.account_address})
 
@@ -124,12 +134,25 @@ async def main() -> None:
     except Exception as exc:
         log["result"] = "FAIL"
         _step(log, "failure", "FAIL", {"error_type": type(exc).__name__, "error": str(exc)})
-        await _best_effort_cleanup(broker, owned_cloids, initial_sizes, log)
+        if broker is not None:
+            await _best_effort_cleanup(broker, owned_cloids, initial_sizes, log)
         raise
     finally:
         log["finished_ts"] = datetime.now(UTC).isoformat()
         LOG_PATH.write_text(json.dumps(log, indent=2, sort_keys=True), encoding="utf-8")
         print(json.dumps({"result": log["result"], "log": str(LOG_PATH), "steps": len(log["steps"])}))
+
+
+def _validate_credentials() -> None:
+    key = os.environ.get("HL_API_WALLET_KEY", "").strip()
+    key_hex = key[2:] if key.startswith("0x") else key
+    if len(key_hex) != 64 or any(char not in string.hexdigits for char in key_hex):
+        raise RuntimeError("HL_API_WALLET_KEY must be a 32-byte hexadecimal private key")
+
+    account = os.environ.get("HL_ACCOUNT_ADDRESS", "").strip()
+    account_hex = account[2:] if account.startswith("0x") else ""
+    if len(account_hex) != 40 or any(char not in string.hexdigits for char in account_hex):
+        raise RuntimeError("HL_ACCOUNT_ADDRESS must be a 20-byte 0x-prefixed hexadecimal address")
 
 
 async def _flatten_if_changed(broker: HyperliquidBroker, initial_sizes: dict[str, float], log: dict) -> None:
