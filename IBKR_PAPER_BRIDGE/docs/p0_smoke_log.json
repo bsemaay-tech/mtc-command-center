@@ -1,0 +1,30 @@
+{
+  "approved_scope": "one tiny resting entry plus native SL, modify, cancel, flatten only if needed",
+  "finished_ts": "2026-07-12T17:47:41.471821+00:00",
+  "network": "testnet",
+  "orders": [],
+  "result": "FAIL",
+  "run_id": "p0-20260712T174741Z",
+  "started_ts": "2026-07-12T17:47:41.190117+00:00",
+  "steps": [
+    {
+      "data": {
+        "error": "The private key must be exactly 32 bytes long, instead of 20 bytes.",
+        "error_type": "ValueError"
+      },
+      "name": "failure",
+      "status": "FAIL",
+      "ts": "2026-07-12T17:47:41.471803+00:00"
+    },
+    {
+      "data": {
+        "errors": [
+          "flatten:HyperliquidNotConfigured"
+        ]
+      },
+      "name": "best_effort_cleanup",
+      "status": "WARN",
+      "ts": "2026-07-12T17:47:41.471819+00:00"
+    }
+  ]
+}

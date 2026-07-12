@@ -22,7 +22,7 @@ from bridge.engine.types import (
     OrderUpdateEvent,
     Position,
 )
-from bridge.engine.bars import BarFinalizer
+from bridge.engine.bars import BarFinalizer, timeframe_delta
 from hyperliquid.utils.types import Cloid
 
 LIVE_ACK = "I_UNDERSTAND_THIS_IS_REAL_MONEY"
@@ -34,6 +34,10 @@ class BrokerRefusedLive(RuntimeError):
 
 
 class HyperliquidNotConfigured(RuntimeError):
+    pass
+
+
+class HyperliquidOrderError(RuntimeError):
     pass
 
 
@@ -115,7 +119,10 @@ class HyperliquidBroker:
     async def historical_bars(self, coin: str, tf: str, lookback: int) -> list[Bar]:
         if self.info is None or not hasattr(self.info, "candles_snapshot"):
             return []
-        candles = (await asyncio.to_thread(self.info.candles_snapshot, coin, tf, 0, 0))[-lookback:]
+        end_ms = int(datetime.now(UTC).timestamp() * 1000)
+        window_ms = int(timeframe_delta(tf).total_seconds() * 1000)
+        start_ms = end_ms - window_ms * max(lookback * 2, 2)
+        candles = (await asyncio.to_thread(self.info.candles_snapshot, coin, tf, start_ms, end_ms))[-lookback:]
         return [
             Bar(
                 ts=datetime.fromtimestamp(int(c["t"]) / 1000, tz=UTC),
@@ -218,6 +225,11 @@ class HyperliquidBroker:
 
         raw = await asyncio.to_thread(self.exchange.bulk_orders, requests, grouping="positionTpsl")
         statuses = self._extract_statuses(raw)
+        if len(statuses) != len(requests):
+            raise HyperliquidOrderError("bulk order response did not contain every status")
+        errors = [str(status.get("error")) for status in statuses if "error" in status]
+        if errors:
+            raise HyperliquidOrderError("; ".join(errors))
         result: dict[str, dict] = {}
         for idx, (role, cloid, trigger_px) in enumerate(roles):
             status = statuses[idx] if idx < len(statuses) else {}
