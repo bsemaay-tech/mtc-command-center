@@ -1,7 +1,7 @@
 # 14_P0_SMOKE_REPORT - F0/F1/F2 fixes and P0 retry
 
-Date: 2026-07-12  
-Branch: `feature/ibkr-bridge-final`  
+Date: 2026-07-12
+Branch: `feature/ibkr-bridge-final`
 Builder: Codex GPT-5
 
 ## Verdict
@@ -58,8 +58,8 @@ The warning in both runs is the existing Starlette `httpx` deprecation warning.
 Command: `PYTHONUTF8=1 python IBKR_PAPER_BRIDGE/tools/smoke_p0.py`, with Windows user credentials
 loaded into the child process without printing them and `HL_LIVE_ACK` explicitly unset.
 
-Placed oids/cloids: **none**.  
-Cancelled oids/cloids: **none required**.  
+Placed oids/cloids: **none**.
+Cancelled oids/cloids: **none required**.
 Post-failure read-only state: `positions=0`, `open_orders=0`, Perps account value `0.0`, Spot USDC
 `999.0`.
 
