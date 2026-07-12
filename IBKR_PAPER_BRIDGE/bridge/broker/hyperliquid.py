@@ -281,17 +281,75 @@ class HyperliquidBroker:
             roles.append(("TP", tp_cloid, take_profit_px))
 
         raw = await asyncio.to_thread(self.exchange.bulk_orders, requests, grouping="positionTpsl")
+        return await self._verify_positioned_orders(
+            raw, roles, requests, plan.qty, plan.signal.symbol
+        )
+
+    async def _verify_positioned_orders(
+        self,
+        raw: object,
+        roles: list[tuple[str, Cloid, float | None]],
+        requests: list[dict],
+        qty: float,
+        symbol: str,
+    ) -> dict[str, dict]:
+        """Verify bulk-placed orders via open_orders; authoritative verification.
+
+        Every submitted cloid (including SL/TP triggers) MUST be visible in
+        open_orders OR specifically confirmed filled by exchange status/position
+        evidence.  Status cardinality is a hint only — never sufficient to claim
+        resting.  Any unverified cloid raises HyperliquidOrderError with the full
+        redacted raw response.
+        """
         statuses = self._extract_statuses(raw)
-        if len(statuses) != len(requests):
-            raise HyperliquidOrderError("bulk order response did not contain every status")
-        errors = [str(status.get("error")) for status in statuses if "error" in status]
-        if errors:
-            raise HyperliquidOrderError("; ".join(errors))
+        # Map statuses to roles by positional index; statuses may be fewer than
+        # the number of requests in positionTpsl groups.
+        role_to_status: dict[str, dict] = {}
+        for idx, (role, _cloid, _tp) in enumerate(roles):
+            if idx < len(statuses):
+                role_to_status[role] = statuses[idx]
+            else:
+                # No individual status for this role — must be verified below
+                role_to_status[role] = {}
+
+        errors = [str(s.get("error")) for s in statuses if "error" in s]
+
+        # Ground-truth query: every order we own that is live on the exchange
+        open_orders = await self.open_orders()
+        open_by_cloid: dict[str, BrokerOrder] = {o.cloid: o for o in open_orders if o.cloid}
+
         result: dict[str, dict] = {}
-        for idx, (role, cloid, trigger_px) in enumerate(roles):
-            status = statuses[idx] if idx < len(statuses) else {}
-            result[role.lower()] = self._order_result(role, cloid, status, plan.qty, trigger_px=trigger_px)
-            result[role.lower()]["symbol"] = plan.signal.symbol
+        for role, cloid, trigger_px in roles:
+            cloid_str = str(cloid)
+            status = role_to_status.get(role, {})
+
+            if cloid_str in open_by_cloid:
+                # Visible in open_orders — authoritative ground truth
+                order = open_by_cloid[cloid_str]
+                row = {
+                    "cloid": cloid_str,
+                    "oid": order.oid,
+                    "role": role,
+                    "status": order.status,
+                    "qty": qty,
+                    "symbol": symbol,
+                }
+                if trigger_px is not None:
+                    row["trigger_px"] = trigger_px
+                result[role.lower()] = row
+            elif "filled" in status:
+                # Filled status explains why the order is not in open_orders
+                result[role.lower()] = self._order_result(role, cloid, status, qty, trigger_px=trigger_px)
+                result[role.lower()]["symbol"] = symbol
+            else:
+                # Every cloid must be verified — no special exemptions for triggers
+                raise HyperliquidOrderError(
+                    f"cloid {cloid_str} ({role}) missing from open_orders and not explained; "
+                    f"raw_response={self._raw_response_safe(raw)}"
+                )
+
+        # Update order_specs and oid_to_cloid from every row
+        for idx, (role, cloid, _tp) in enumerate(roles):
             request = requests[idx]
             self._order_specs[str(cloid)] = {
                 "coin": request["coin"],
@@ -303,9 +361,13 @@ class HyperliquidBroker:
                 "cloid": cloid,
                 "role": role,
             }
-            oid = result[role.lower()].get("oid")
-            if oid is not None:
-                self._oid_to_cloid[int(oid)] = str(cloid)
+            row = result.get(role.lower())
+            if row and row.get("oid") is not None:
+                self._oid_to_cloid[int(row["oid"])] = str(cloid)
+
+        if errors:
+            raise HyperliquidOrderError("; ".join(errors))
+
         return result
 
     async def modify_stop(self, cloid: str, new_stop: float) -> None:
@@ -387,6 +449,7 @@ class HyperliquidBroker:
             return None
         is_exit_buy = position.size < 0
         requests: list[dict] = []
+        roles: list[tuple[str, Cloid, float | None]] = []
         for role, px, tpsl in (("SL", stop_loss, "sl"), ("TP", take_profit, "tp")):
             if px is None:
                 continue
@@ -402,24 +465,14 @@ class HyperliquidBroker:
                 cloid,
             )
             requests.append(request)
+            roles.append((role, cloid, rounded_px))
             self._order_specs[str(cloid)] = {**request, "role": role}
         if not requests:
             return None
         raw = await asyncio.to_thread(self.exchange.bulk_orders, requests, grouping="positionTpsl")
-        statuses = self._extract_statuses(raw)
-        if len(statuses) != len(requests) or any("error" in status for status in statuses):
-            return None
-        result: dict[str, dict] = {}
-        for request, status in zip(requests, statuses):
-            cloid = request["cloid"]
-            spec = self._order_specs[str(cloid)]
-            role = spec["role"]
-            row = self._order_result(role, cloid, status, request["sz"], request["limit_px"])
-            row["symbol"] = position.symbol
-            result[role.lower()] = row
-            if row.get("oid") is not None:
-                self._oid_to_cloid[int(row["oid"])] = str(cloid)
-        return result
+        return await self._verify_positioned_orders(
+            raw, roles, requests, abs(position.size), position.symbol
+        )
 
     def _check_network_lock(self) -> None:
         if self.network != "mainnet":
@@ -474,6 +527,15 @@ class HyperliquidBroker:
         return Cloid.from_str("0x" + hashlib.blake2s(raw.encode("utf-8"), digest_size=16).hexdigest())
 
     @staticmethod
+    def compute_cloids(decision_uid: str, roles: tuple[str, ...] = ("entry", "sl", "tp")) -> dict[str, str]:
+        """Precompute deterministic cloids for a decision_uid (used by smoke cleanup)."""
+        result: dict[str, str] = {}
+        for role in roles:
+            raw = f"{decision_uid}:{role}"
+            result[role] = str(HyperliquidBroker._raw_cloid(raw))
+        return result
+
+    @staticmethod
     def _order_result(role: str, cloid: Cloid, raw: object, qty: float, trigger_px: float | None = None) -> dict:
         result = {"cloid": str(cloid), "oid": None, "role": role, "status": "OPEN", "qty": qty}
         oid = HyperliquidBroker._extract_oid(raw)
@@ -502,29 +564,60 @@ class HyperliquidBroker:
     @staticmethod
     def _extract_statuses(raw: object) -> list[dict]:
         if not isinstance(raw, dict):
-            raise HyperliquidOrderError("Hyperliquid exchange response was not an object")
+            raise HyperliquidOrderError(
+                f"Hyperliquid exchange response was not an object; "
+                f"raw_response={HyperliquidBroker._raw_response_safe(raw)}"
+            )
         response = raw.get("response")
         if isinstance(response, str):
-            raise HyperliquidOrderError(HyperliquidBroker._safe_exchange_message(response))
+            raise HyperliquidOrderError(
+                f"{HyperliquidBroker._safe_exchange_message(response)}; "
+                f"raw_response={HyperliquidBroker._raw_response_safe(raw)}"
+            )
         if not isinstance(response, dict):
-            raise HyperliquidOrderError("Hyperliquid exchange response payload was not an object")
+            raise HyperliquidOrderError(
+                f"Hyperliquid exchange response payload was not an object; "
+                f"raw_response={HyperliquidBroker._raw_response_safe(raw)}"
+            )
         data = response.get("data")
         if isinstance(data, str):
-            raise HyperliquidOrderError(HyperliquidBroker._safe_exchange_message(data))
+            raise HyperliquidOrderError(
+                f"{HyperliquidBroker._safe_exchange_message(data)}; "
+                f"raw_response={HyperliquidBroker._raw_response_safe(raw)}"
+            )
         if not isinstance(data, dict):
-            raise HyperliquidOrderError("Hyperliquid exchange response data was not an object")
+            raise HyperliquidOrderError(
+                f"Hyperliquid exchange response data was not an object; "
+                f"raw_response={HyperliquidBroker._raw_response_safe(raw)}"
+            )
         statuses = data.get("statuses")
         if not isinstance(statuses, list):
-            raise HyperliquidOrderError("Hyperliquid exchange response did not contain statuses")
+            raise HyperliquidOrderError(
+                f"Hyperliquid exchange response did not contain statuses; "
+                f"raw_response={HyperliquidBroker._raw_response_safe(raw)}"
+            )
         if any(not isinstance(status, dict) for status in statuses):
             detail = "; ".join(str(status) for status in statuses if not isinstance(status, dict))
-            raise HyperliquidOrderError(HyperliquidBroker._safe_exchange_message(detail))
+            raise HyperliquidOrderError(
+                f"{HyperliquidBroker._safe_exchange_message(detail)}; "
+                f"raw_response={HyperliquidBroker._raw_response_safe(raw)}"
+            )
         return statuses
 
     @staticmethod
-    def _safe_exchange_message(value: object) -> str:
+    def _safe_exchange_message(value: object, cap: int = 4000) -> str:
         message = str(value).strip() or "Hyperliquid exchange rejected the request"
-        return re.sub(r"(?i)(?:0x)?[0-9a-f]{64,}", "[redacted]", message)[:500]
+        return re.sub(r"(?i)(?:0x)?[0-9a-f]{64,}", "[redacted]", message)[:cap]
+
+    @staticmethod
+    def _raw_response_safe(raw: object, cap: int = 4000) -> str:
+        """Redact and cap a full exchange response for diagnostic logging."""
+        import json as _json_mod
+        try:
+            serialized = _json_mod.dumps(raw, default=str)
+        except Exception:
+            serialized = str(raw)
+        return HyperliquidBroker._safe_exchange_message(serialized, cap=cap)
 
     @staticmethod
     def _request(

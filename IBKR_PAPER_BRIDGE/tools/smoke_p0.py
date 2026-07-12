@@ -34,6 +34,7 @@ async def main() -> None:
     broker: HyperliquidBroker | None = None
     owned_cloids: list[str] = []
     initial_sizes: dict[str, float] = {}
+    _cleanup_done = False
     try:
         _validate_credentials()
         _step(
@@ -93,6 +94,12 @@ async def main() -> None:
             },
         )
 
+        # Precompute deterministic cloids ONLY for roles actually submitted by
+        # this P0 plan (entry + SL; no TP).  Cleanup must not touch orders it
+        # did not create.
+        expected_cloids = HyperliquidBroker.compute_cloids(log["run_id"], ("entry", "sl"))
+        owned_cloids = list(expected_cloids.values())
+
         signal = Signal(
             ts=datetime.now(UTC),
             symbol="BTC",
@@ -110,41 +117,52 @@ async def main() -> None:
             stop_loss=stop_px,
             leverage=1,
         )
-        placed = await broker.place_bracket(plan)
-        owned_cloids = [row["cloid"] for row in placed.values()]
-        log["orders"] = [
-            {"role": row["role"], "cloid": row["cloid"], "oid": row.get("oid"), "qty": row["qty"]}
-            for row in placed.values()
-        ]
-        _step(log, "place_atomic_position_tpsl", "PASS", {"orders": log["orders"]})
 
-        visible = await broker.open_orders()
-        visible_cloids = {order.cloid for order in visible}
-        missing = sorted(set(owned_cloids) - visible_cloids)
-        if missing:
-            raise RuntimeError(f"placed cloids not visible: {missing}")
-        _step(log, "verify_open_orders", "PASS", {"owned_cloids_visible": sorted(owned_cloids)})
+        # ---- C3: wrapped order phase — any exception triggers deterministic cleanup ----
+        try:
+            placed = await broker.place_bracket(plan)
+            log["orders"] = [
+                {"role": row["role"], "cloid": row["cloid"], "oid": row.get("oid"), "qty": row["qty"]}
+                for row in placed.values()
+            ]
+            _step(log, "place_atomic_position_tpsl", "PASS", {"orders": log["orders"]})
 
-        await broker.modify_stop(placed["sl"]["cloid"], modified_stop)
-        _step(log, "modify_stop", "PASS", {"cloid": placed["sl"]["cloid"], "new_trigger_px": modified_stop})
+            visible = await broker.open_orders()
+            visible_cloids = {order.cloid for order in visible}
+            missing = sorted(set(owned_cloids) - visible_cloids)
+            if missing:
+                raise RuntimeError(f"placed cloids not visible: {missing}")
+            _step(log, "verify_open_orders", "PASS", {"owned_cloids_visible": sorted(owned_cloids)})
 
-        for cloid in owned_cloids:
-            await broker.cancel(cloid)
-        _step(log, "cancel_owned_orders", "PASS", {"cancelled_cloids": sorted(owned_cloids)})
+            await broker.modify_stop(placed["sl"]["cloid"], modified_stop)
+            _step(log, "modify_stop", "PASS", {"cloid": placed["sl"]["cloid"], "new_trigger_px": modified_stop})
 
-        remaining = {order.cloid for order in await broker.open_orders()}
-        uncleared = sorted(set(owned_cloids) & remaining)
-        if uncleared:
-            raise RuntimeError(f"owned cloids still open after cancel: {uncleared}")
-        _step(log, "verify_cleanup", "PASS", {"owned_open_orders_remaining": []})
+            for cloid in owned_cloids:
+                await broker.cancel(cloid)
+            _step(log, "cancel_owned_orders", "PASS", {"cancelled_cloids": sorted(owned_cloids)})
+
+            remaining = {order.cloid for order in await broker.open_orders()}
+            uncleared = sorted(set(owned_cloids) & remaining)
+            if uncleared:
+                raise RuntimeError(f"owned cloids still open after cancel: {uncleared}")
+            _step(log, "verify_cleanup", "PASS", {"owned_open_orders_remaining": []})
+
+        except Exception:
+            # C3: guaranteed cleanup exactly once for any post-bulk exception
+            if not _cleanup_done:
+                _cleanup_done = True
+                await _deterministic_cleanup(broker, owned_cloids, initial_sizes, log)
+            raise
+        # ---- end C3 wrapped phase ----
 
         await _flatten_if_changed(broker, initial_sizes, log)
         log["result"] = "PASS"
     except Exception as exc:
         log["result"] = "FAIL"
-        _step(log, "failure", "FAIL", {"error_type": type(exc).__name__, "error": str(exc)})
-        if broker is not None:
-            await _best_effort_cleanup(broker, owned_cloids, initial_sizes, log)
+        _step(log, "failure", "FAIL", _failure_data(exc))
+        if broker is not None and broker.connected and not _cleanup_done:
+            _cleanup_done = True
+            await _deterministic_cleanup(broker, owned_cloids, initial_sizes, log)
         raise
     finally:
         if broker is not None:
@@ -183,29 +201,54 @@ async def _flatten_if_changed(broker: HyperliquidBroker, initial_sizes: dict[str
     )
 
 
-async def _best_effort_cleanup(
+async def _deterministic_cleanup(
     broker: HyperliquidBroker,
     owned_cloids: list[str],
     initial_sizes: dict[str, float],
     log: dict,
 ) -> None:
+    """C3: guaranteed cleanup — query open_orders, cancel owned, verify, flatten."""
     cleanup_errors: list[str] = []
-    for cloid in owned_cloids:
-        try:
-            await broker.cancel(cloid)
-        except Exception as exc:
-            cleanup_errors.append(f"cancel:{type(exc).__name__}")
+    try:
+        open_orders = await broker.open_orders()
+    except Exception as exc:
+        cleanup_errors.append(f"open_orders:{type(exc).__name__}")
+        open_orders = []
+    owned_set = set(owned_cloids)
+    for order in open_orders:
+        if order.cloid in owned_set:
+            try:
+                await broker.cancel(order.cloid)
+            except Exception as exc:
+                cleanup_errors.append(f"cancel:{type(exc).__name__}")
+    try:
+        remaining = await broker.open_orders()
+        still_open = {o.cloid for o in remaining} & owned_set
+        if still_open:
+            cleanup_errors.append(f"uncleared:{sorted(still_open)}")
+    except Exception as exc:
+        cleanup_errors.append(f"verify:{type(exc).__name__}")
     try:
         await _flatten_if_changed(broker, initial_sizes, log)
     except Exception as exc:
         cleanup_errors.append(f"flatten:{type(exc).__name__}")
-    _step(log, "best_effort_cleanup", "PASS" if not cleanup_errors else "WARN", {"errors": cleanup_errors})
+    _step(log, "deterministic_cleanup", "PASS" if not cleanup_errors else "WARN", {"errors": cleanup_errors})
 
 
 def _step(log: dict, name: str, status: str, data: dict) -> None:
     log["steps"].append(
         {"name": name, "status": status, "ts": datetime.now(UTC).isoformat(), "data": data}
     )
+
+
+def _failure_data(exc: Exception) -> dict:
+    """Return a log-safe failure payload, preserving a captured raw response."""
+    error = HyperliquidBroker._safe_exchange_message(str(exc), cap=4000)
+    data = {"error_type": type(exc).__name__, "error": error}
+    marker = "raw_response="
+    if marker in error:
+        data["raw_response"] = error.split(marker, 1)[1]
+    return data
 
 
 if __name__ == "__main__":

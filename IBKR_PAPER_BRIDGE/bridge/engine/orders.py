@@ -31,7 +31,19 @@ class OrderManager:
             return None
 
         plan.decision_uid = decision_uid
-        result = await self.broker.place_bracket(plan)
+        try:
+            result = await self.broker.place_bracket(plan)
+        except Exception as exc:
+            # Write a secret-redacted diagnostic events row before re-raising
+            if hasattr(self.store, "insert_event"):
+                self.store.insert_event(
+                    self.run_id,
+                    datetime.now(UTC),
+                    "ERROR",
+                    "PLACE_BRACKET_FAILED",
+                    f"decision_uid={decision_uid} error={type(exc).__name__}: {exc}",
+                )
+            raise
         trade_id = self.store.create_trade(
             run_id=self.run_id,
             coin=plan.signal.symbol,
@@ -107,12 +119,22 @@ class OrderManager:
                 continue
             if self._within_pending_grace(int(trade["trade_id"])):
                 continue
-            recovered = await self.broker.reprotect_position(
-                position,
-                float(trade["sl_initial"]),
-                float(trade["tp_initial"]) if trade["tp_initial"] is not None else None,
-                str(trade["entry_decision_uid"]),
-            )
+            try:
+                recovered = await self.broker.reprotect_position(
+                    position,
+                    float(trade["sl_initial"]),
+                    float(trade["tp_initial"]) if trade["tp_initial"] is not None else None,
+                    str(trade["entry_decision_uid"]),
+                )
+            except Exception as exc:
+                self.store.insert_event(
+                    self.run_id,
+                    datetime.now(UTC),
+                    "ERROR",
+                    "REPROTECT_FAILED",
+                    f"{position.symbol}: {type(exc).__name__}: {exc}",
+                )
+                recovered = None
             if recovered:
                 self._persist_reprotected(recovered, trade)
                 self.store.insert_event(

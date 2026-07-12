@@ -59,7 +59,7 @@ def test_bar_finalizer_emits_once_and_dedupes_reconnect_duplicate():
 
 def test_hl_bracket_places_native_triggers():
     exchange = _exchange_mock()
-    broker = HyperliquidBroker(info_client=object(), exchange_client=exchange)
+    broker = HyperliquidBroker(info_client=_verified_plan_info(), exchange_client=exchange)
     plan = _plan()
 
     ids = asyncio.run(broker.place_bracket(plan))
@@ -88,7 +88,9 @@ def test_hl_reprotect_rounds_trigger_and_limit_prices():
         "status": "ok",
         "response": {"data": {"statuses": [{"resting": {"oid": 7}}]}},
     }
-    broker = HyperliquidBroker(info_client=object(), exchange_client=exchange)
+    broker = HyperliquidBroker(
+        info_client=_verified_reprotect_info("rounded-reprotect"), exchange_client=exchange
+    )
     position = Position(symbol="BTC", size=0.1, entry_px=60_000)
 
     asyncio.run(broker.reprotect_position(position, 57542.4, None, "rounded-reprotect"))
@@ -141,7 +143,7 @@ def test_hl_disconnect_stops_sdk_websocket():
 
 def test_hl_modify_and_cancel_use_real_sdk_signatures():
     exchange = _exchange_mock()
-    broker = HyperliquidBroker(info_client=object(), exchange_client=exchange)
+    broker = HyperliquidBroker(info_client=_verified_plan_info(), exchange_client=exchange)
     ids = asyncio.run(broker.place_bracket(_plan()))
 
     asyncio.run(broker.modify_stop(ids["sl"]["cloid"], 96.0))
@@ -159,7 +161,7 @@ def test_hl_modify_and_cancel_use_real_sdk_signatures():
 
 def test_hl_modify_stop_fallback_replaces_with_clean_order_request():
     exchange = _exchange_mock()
-    broker = HyperliquidBroker(info_client=object(), exchange_client=exchange)
+    broker = HyperliquidBroker(info_client=_verified_plan_info(), exchange_client=exchange)
     ids = asyncio.run(broker.place_bracket(_plan()))
     exchange.modify_order.side_effect = RuntimeError("forced modify failure")
 
@@ -291,6 +293,9 @@ def test_async_sdk_calls_are_offloaded_from_event_loop_thread():
 
 def test_hl_user_fill_event_is_typed_and_mapped_by_oid():
     info = FakeInfo(size="0", with_summary=True)
+    info._open_orders = _c1_open_order_rows(
+        {"entry": {"oid": 1, "status": "OPEN"}, "sl": {"oid": 2, "status": "OPEN"}, "tp": {"oid": 3, "status": "OPEN"}}
+    )
     exchange = _exchange_mock()
     broker = HyperliquidBroker(account_address="0xabc", info_client=info, exchange_client=exchange)
     asyncio.run(broker.place_bracket(_plan()))
@@ -320,7 +325,9 @@ def test_hl_reprotects_position_with_native_trigger_group():
         "status": "ok",
         "response": {"data": {"statuses": [{"resting": {"oid": 7}}]}},
     }
-    broker = HyperliquidBroker(info_client=object(), exchange_client=exchange)
+    broker = HyperliquidBroker(
+        info_client=_verified_reprotect_info("decision-owned"), exchange_client=exchange
+    )
     position = Position(symbol="BTC", size=0.1, entry_px=100)
 
     result = asyncio.run(broker.reprotect_position(position, 95.0, None, "decision-owned"))
@@ -412,6 +419,8 @@ class FakeInfo:
         return state
 
     def open_orders(self, address):
+        if hasattr(self, "_open_orders"):
+            return self._open_orders
         return [
             {
                 "coin": "BTC",
@@ -444,7 +453,9 @@ class ThreadRecordingInfo(FakeInfo):
 
     def open_orders(self, address):
         self._record()
-        return []
+        return _c1_open_order_rows(
+            {"entry": {"oid": 1, "status": "OPEN"}, "sl": {"oid": 2, "status": "OPEN"}, "tp": {"oid": 3, "status": "OPEN"}}
+        )
 
     def candles_snapshot(self, coin, tf, start, end):
         self._record()
@@ -468,3 +479,453 @@ class DisconnectInfo:
 
     def disconnect_websocket(self):
         self.disconnected = True
+
+
+# ── C1: positionTpsl cardinality tolerance ──────────────────────────────
+
+
+def test_c1_three_order_group_with_one_status():
+    """3-order group (entry+SL+TP) returns only 1 status — all verified
+    authoritatively via open_orders (no blind trigger acceptance)."""
+    exchange = _exchange_mock()
+    exchange.bulk_orders.return_value = {
+        "status": "ok",
+        "response": {
+            "data": {
+                "statuses": [
+                    {"resting": {"oid": 10}},
+                ]
+            }
+        },
+    }
+    info = _c1_open_orders_info(
+        open_cloids={
+            "entry": {"oid": 10, "status": "OPEN"},
+            "sl": {"oid": 11, "status": "OPEN"},
+            "tp": {"oid": 12, "status": "OPEN"},
+        }
+    )
+    broker = HyperliquidBroker(account_address="0xabc", info_client=info, exchange_client=exchange)
+
+    result = asyncio.run(broker.place_bracket(_plan()))
+
+    assert set(result) == {"entry", "sl", "tp"}
+    assert result["entry"]["oid"] == 10
+    assert result["sl"]["oid"] == 11
+    assert result["sl"]["status"] == "OPEN"
+    assert result["tp"]["oid"] == 12
+
+
+def test_c1_three_order_group_with_two_statuses():
+    """3-order group returns 2 statuses — all verified authoritatively via open_orders."""
+    exchange = _exchange_mock()
+    exchange.bulk_orders.return_value = {
+        "status": "ok",
+        "response": {
+            "data": {
+                "statuses": [
+                    {"resting": {"oid": 20}},
+                    {"resting": {"oid": 21}},
+                ]
+            }
+        },
+    }
+    info = _c1_open_orders_info(
+        open_cloids={
+            "entry": {"oid": 20, "status": "OPEN"},
+            "sl": {"oid": 21, "status": "OPEN"},
+            "tp": {"oid": 22, "status": "OPEN"},
+        }
+    )
+    broker = HyperliquidBroker(account_address="0xabc", info_client=info, exchange_client=exchange)
+
+    result = asyncio.run(broker.place_bracket(_plan()))
+
+    assert set(result) == {"entry", "sl", "tp"}
+    assert result["entry"]["oid"] == 20
+    assert result["sl"]["oid"] == 21
+    assert result["tp"]["oid"] == 22
+
+
+def test_c1_three_order_group_with_three_statuses():
+    """3-order group returns all 3 statuses — classic case still works."""
+    exchange = _exchange_mock()
+    exchange.bulk_orders.return_value = {
+        "status": "ok",
+        "response": {
+            "data": {
+                "statuses": [
+                    {"resting": {"oid": 30}},
+                    {"resting": {"oid": 31}},
+                    {"resting": {"oid": 32}},
+                ]
+            }
+        },
+    }
+    info = _c1_open_orders_info(
+        open_cloids={
+            "entry": {"oid": 30, "status": "OPEN"},
+            "sl": {"oid": 31, "status": "OPEN"},
+            "tp": {"oid": 32, "status": "OPEN"},
+        }
+    )
+    broker = HyperliquidBroker(account_address="0xabc", info_client=info, exchange_client=exchange)
+
+    result = asyncio.run(broker.place_bracket(_plan()))
+
+    assert set(result) == {"entry", "sl", "tp"}
+    assert all(row["oid"] is not None for row in result.values())
+
+
+def test_c1_error_status_still_raises():
+    """An error in any status must still raise HyperliquidOrderError."""
+    exchange = _exchange_mock()
+    exchange.bulk_orders.return_value = {
+        "status": "ok",
+        "response": {
+            "data": {
+                "statuses": [
+                    {"error": "Insufficient margin", "resting": {"oid": 40}},
+                ]
+            }
+        },
+    }
+    info = _c1_open_orders_info(
+        open_cloids={
+            "entry": {"oid": 40, "status": "OPEN"},
+            "sl": {"oid": 41, "status": "OPEN"},
+            "tp": {"oid": 42, "status": "OPEN"},
+        }
+    )
+    broker = HyperliquidBroker(account_address="0xabc", info_client=info, exchange_client=exchange)
+
+    with pytest.raises(HyperliquidOrderError, match="Insufficient margin"):
+        asyncio.run(broker.place_bracket(_plan()))
+
+
+def test_c1_verification_driven_result_missing_cloid_raises():
+    """If a non-trigger cloid is neither in open_orders nor confirmed by status, raise."""
+    exchange = _exchange_mock()
+    # Return zero statuses — entry gets no status, triggers get ACCEPTED
+    exchange.bulk_orders.return_value = {
+        "status": "ok",
+        "response": {
+            "data": {
+                "statuses": [],
+            }
+        },
+    }
+    # Open orders has only SL and TP; ENTRY is completely missing
+    info = _c1_open_orders_info(
+        open_cloids={
+            "sl": {"oid": 51, "status": "OPEN"},
+            "tp": {"oid": 52, "status": "OPEN"},
+        }
+    )
+    broker = HyperliquidBroker(account_address="0xabc", info_client=info, exchange_client=exchange)
+
+    with pytest.raises(HyperliquidOrderError, match="missing from open_orders"):
+        asyncio.run(broker.place_bracket(_plan()))
+
+
+def test_c1_filled_status_explains_missing_order():
+    """A filled status explains why an order is not in open_orders."""
+    exchange = _exchange_mock()
+    exchange.bulk_orders.return_value = {
+        "status": "ok",
+        "response": {
+            "data": {
+                "statuses": [
+                    {"filled": {"oid": 60, "totalSz": "0.1"}},
+                ]
+            }
+        },
+    }
+    # Only SL and TP visible in open_orders; entry was filled
+    info = _c1_open_orders_info(
+        open_cloids={
+            "sl": {"oid": 61, "status": "OPEN"},
+            "tp": {"oid": 62, "status": "OPEN"},
+        }
+    )
+    broker = HyperliquidBroker(account_address="0xabc", info_client=info, exchange_client=exchange)
+
+    result = asyncio.run(broker.place_bracket(_plan()))
+
+    assert set(result) == {"entry", "sl", "tp"}
+    assert result["entry"]["oid"] == 60
+    assert result["sl"]["oid"] == 61
+    assert result["tp"]["oid"] == 62
+
+
+# ── C2: raw response capture on mismatch ────────────────────────────────
+
+
+def test_c2_raw_response_safe_redacts_and_caps():
+    """_raw_response_safe redacts 64+ hex and caps at requested length."""
+    long_secret = "ab" * 64  # 128 hex chars
+    raw = {
+        "status": "err",
+        "response": f"something went wrong with key={long_secret}",
+        "extra": "x" * 5000,
+    }
+    safe = HyperliquidBroker._raw_response_safe(raw, cap=4000)
+
+    assert long_secret not in safe
+    assert "[redacted]" in safe
+    assert len(safe) <= 4000
+    assert "something went wrong" in safe
+
+
+def test_c2_surprising_response_preserved_in_error():
+    """When cardinality surprises us, the raw response is embedded in the error."""
+    exchange = _exchange_mock()
+    surprising = {
+        "status": "ok",
+        "response": {
+            "data": {
+                "statuses": [],  # empty statuses — entry is unexplained
+            }
+        },
+    }
+    exchange.bulk_orders.return_value = surprising
+    # Use FakeInfo so open_orders returns a cloid not matching ours
+    broker = HyperliquidBroker(account_address="0xabc", info_client=FakeInfo(size="0"), exchange_client=exchange)
+
+    with pytest.raises(HyperliquidOrderError, match="raw_response=") as exc_info:
+        asyncio.run(broker.place_bracket(_plan()))
+
+    error_str = str(exc_info.value)
+    # The error should contain the redacted raw response
+    assert "raw_response=" in error_str
+    assert '"statuses": []' in error_str
+
+
+# ── C3: guaranteed owned-cloid cleanup ──────────────────────────────────
+
+
+def test_c3_verify_positioned_orders_still_populates_order_specs():
+    """Order specs must be populated even when triggers are accepted-with-position."""
+    exchange = _exchange_mock()
+    exchange.bulk_orders.return_value = {
+        "status": "ok",
+        "response": {
+            "data": {
+                "statuses": [
+                    {"resting": {"oid": 70}},
+                ]
+            }
+        },
+    }
+    info = _c1_open_orders_info(
+        open_cloids={
+            "entry": {"oid": 70, "status": "OPEN"},
+            "sl": {"oid": 71, "status": "OPEN"},
+            "tp": {"oid": 72, "status": "OPEN"},
+        }
+    )
+    broker = HyperliquidBroker(account_address="0xabc", info_client=info, exchange_client=exchange)
+
+    result = asyncio.run(broker.place_bracket(_plan()))
+
+    # All three specs should be populated
+    for role in ("entry", "sl", "tp"):
+        cloid = result[role]["cloid"]
+        assert cloid in broker._order_specs
+        assert broker._order_specs[cloid]["role"].upper() == role.upper()
+
+    # Modify should work on the sl
+    asyncio.run(broker.modify_stop(result["sl"]["cloid"], 96.0))
+    assert exchange.modify_order.called
+
+
+def test_c1_missing_trigger_cloid_raises():
+    """A trigger (SL/TP) not in open_orders and not confirmed filled MUST raise.
+
+    This is the key audit fix: no submitted cloid may succeed merely because
+    it has no individual status.  The old code treated missing-trigger-status
+    as 'accepted-with-position' which was non-authoritative.
+    """
+    exchange = _exchange_mock()
+    exchange.bulk_orders.return_value = {
+        "status": "ok",
+        "response": {
+            "data": {
+                "statuses": [
+                    {"resting": {"oid": 80}},
+                ]
+            }
+        },
+    }
+    # Only entry is in open_orders; SL and TP are completely missing
+    info = _c1_open_orders_info(
+        open_cloids={
+            "entry": {"oid": 80, "status": "OPEN"},
+        }
+    )
+    broker = HyperliquidBroker(account_address="0xabc", info_client=info, exchange_client=exchange)
+
+    with pytest.raises(HyperliquidOrderError, match="missing from open_orders"):
+        asyncio.run(broker.place_bracket(_plan()))
+
+
+def test_c1_reprotect_no_longer_swallows_verification_failure():
+    """reprotect_position must propagate HyperliquidOrderError, not return None."""
+    exchange = _exchange_mock()
+    # Return zero statuses with no open_orders backing — verification MUST fail
+    exchange.bulk_orders.return_value = {
+        "status": "ok",
+        "response": {"data": {"statuses": []}},
+    }
+    info = _c1_open_orders_info(open_cloids={})  # nothing in open_orders
+    broker = HyperliquidBroker(account_address="0xabc", info_client=info, exchange_client=exchange)
+    position = Position(symbol="BTC", size=0.1, entry_px=100)
+
+    with pytest.raises(HyperliquidOrderError, match="missing from open_orders"):
+        asyncio.run(broker.reprotect_position(position, 95.0, None, "decision-reprotect"))
+
+
+# ── C2: full raw response in every parser error ─────────────────────────
+
+
+def test_c2_extract_statuses_includes_raw_response_on_type_error():
+    """When statuses is not a list, the error MUST embed the redacted raw response."""
+    raw = {
+        "status": "ok",
+        "response": {"data": {"statuses": "not_a_list_surprise"}},
+    }
+    with pytest.raises(HyperliquidOrderError, match="raw_response=") as exc_info:
+        HyperliquidBroker._extract_statuses(raw)
+    error_str = str(exc_info.value)
+    assert "raw_response=" in error_str
+    assert '"statuses"' in error_str
+
+
+def test_c2_extract_statuses_includes_raw_response_on_non_dict_item():
+    """When a status item is not a dict, error must carry redacted raw response."""
+    raw = {
+        "status": "ok",
+        "response": {"data": {"statuses": ["just_a_string"]}},
+    }
+    with pytest.raises(HyperliquidOrderError, match="raw_response=") as exc_info:
+        HyperliquidBroker._extract_statuses(raw)
+    error_str = str(exc_info.value)
+    assert "raw_response=" in error_str
+
+
+def test_c2_non_dict_raw_yields_raw_response_in_error():
+    """When the top-level raw is not a dict, error includes redacted raw."""
+    with pytest.raises(HyperliquidOrderError, match="raw_response=") as exc_info:
+        HyperliquidBroker._extract_statuses("not_even_json")
+    error_str = str(exc_info.value)
+    assert "raw_response=" in error_str
+
+
+# ── C3: mid-parse exception triggers cleanup ────────────────────────────
+
+
+def test_c3_mid_parse_placement_exception_cancels_resting_owned_order(
+    monkeypatch,
+):
+    """If verification raises mid-way, any successfully placed order must be
+    cancellable.  This test simulates an exchange that accepts the entry but
+    whose open_orders view is missing the SL — causing a HyperliquidOrderError.
+    The smoke-level cleanup path cancels cloids that do appear in open_orders.
+    """
+    exchange = _exchange_mock()
+    exchange.bulk_orders.return_value = {
+        "status": "ok",
+        "response": {
+            "data": {
+                "statuses": [
+                    {"resting": {"oid": 90}},
+                ]
+            }
+        },
+    }
+    # Only entry is visible — SL and TP are missing, so verification MUST raise
+    info = _c1_open_orders_info(
+        open_cloids={
+            "entry": {"oid": 90, "status": "OPEN"},
+        }
+    )
+    broker = HyperliquidBroker(account_address="0xabc", info_client=info, exchange_client=exchange)
+
+    # place_bracket must raise because SL/TP not in open_orders
+    with pytest.raises(HyperliquidOrderError, match="missing from open_orders"):
+        asyncio.run(broker.place_bracket(_plan()))
+
+    # The entry order WAS placed (it's in open_orders), so it should be
+    # cancellable.  Simulate what _deterministic_cleanup does.
+    open_orders = asyncio.run(broker.open_orders())
+    entry_cloid = HyperliquidBroker.compute_cloids("BTC:2026-07-06T00:00:00+00:00:LONG")["entry"]
+    entry_in_open = [o for o in open_orders if o.cloid == entry_cloid]
+    assert len(entry_in_open) == 1
+    # Cancel it
+    asyncio.run(broker.cancel(entry_in_open[0].cloid))
+    exchange.cancel_by_cloid.assert_called()
+    assert exchange.cancel_by_cloid.call_args.args[0] == "BTC"
+
+
+# ── C1-C3 helpers ───────────────────────────────────────────────────────
+
+
+def _c1_open_orders_info(open_cloids: dict) -> object:
+    """Return an info stub whose open_orders() returns orders keyed by cloid suffix role.
+
+    The cloid is computed from the plan in _plan() which uses a fixed ts + symbol.
+    We precompute the expected cloids for the same decision_uid pattern used by _plan.
+    """
+    orders = _c1_open_order_rows(open_cloids)
+
+    class _C1Info:
+        def user_state(self, address):
+            return {"assetPositions": []}
+
+        def open_orders(self, address):
+            return orders
+
+        def subscribe(self, *args, **kwargs):
+            pass
+
+    return _C1Info()
+
+
+def _c1_open_order_rows(open_cloids: dict) -> list[dict]:
+    expected = HyperliquidBroker.compute_cloids("BTC:2026-07-06T00:00:00+00:00:LONG")
+    orders: list[dict] = []
+    for role, cloid_str in expected.items():
+        if role in open_cloids:
+            cfg = open_cloids[role]
+            orders.append({
+                "coin": "BTC",
+                "side": "B" if role == "entry" else "A",
+                "sz": "0.1",
+                "oid": cfg["oid"],
+                "cloid": cloid_str,
+                "status": cfg.get("status", "OPEN"),
+                "orderType": "Limit" if role == "entry" else "Stop Market",
+                "triggerPx": "95" if role == "sl" else ("110" if role == "tp" else None),
+                "reduceOnly": role != "entry",
+            })
+
+    return orders
+
+
+def _verified_plan_info() -> object:
+    return _c1_open_orders_info(
+        {"entry": {"oid": 1, "status": "OPEN"}, "sl": {"oid": 2, "status": "OPEN"}, "tp": {"oid": 3, "status": "OPEN"}}
+    )
+
+
+def _verified_reprotect_info(decision_uid: str) -> object:
+    cloid = str(HyperliquidBroker._raw_cloid(f"{decision_uid}:reprotect:sl"))
+
+    class _ReprotectInfo:
+        def user_state(self, address):
+            return {"assetPositions": []}
+
+        def open_orders(self, address):
+            return [{"coin": "BTC", "side": "A", "sz": "0.1", "oid": 7, "cloid": cloid, "orderType": "Stop Market", "triggerPx": "95", "reduceOnly": True}]
+
+    return _ReprotectInfo()
