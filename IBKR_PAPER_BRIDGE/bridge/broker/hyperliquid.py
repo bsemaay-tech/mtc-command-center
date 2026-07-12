@@ -10,11 +10,10 @@ import asyncio
 import os
 import hashlib
 import logging
-from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Callable
 
 from bridge.engine.types import AccountSnapshot, Bar, BrokerOrder, OrderPlan, Position
+from bridge.engine.bars import BarFinalizer
 from hyperliquid.utils.types import Cloid
 
 LIVE_ACK = "I_UNDERSTAND_THIS_IS_REAL_MONEY"
@@ -27,40 +26,6 @@ class BrokerRefusedLive(RuntimeError):
 
 class HyperliquidNotConfigured(RuntimeError):
     pass
-
-
-@dataclass
-class BarFinalizer:
-    on_bar_closed: Callable[[Bar], None]
-    last_open_ts: datetime | None = None
-    current: Bar | None = None
-    emitted: set[datetime] | None = None
-
-    def __post_init__(self) -> None:
-        if self.emitted is None:
-            self.emitted = set()
-
-    def on_candle(self, candle: dict) -> None:
-        opened = datetime.fromtimestamp(int(candle["t"]) / 1000, tz=UTC)
-        bar = Bar(
-            ts=opened,
-            open=float(candle["o"]),
-            high=float(candle["h"]),
-            low=float(candle["l"]),
-            close=float(candle["c"]),
-            volume=float(candle["v"]),
-        )
-        if self.current is not None and opened > self.current.ts:
-            self._emit(self.current)
-        self.current = bar
-        self.last_open_ts = opened
-
-    def _emit(self, bar: Bar) -> None:
-        assert self.emitted is not None
-        if bar.ts in self.emitted:
-            return
-        self.emitted.add(bar.ts)
-        self.on_bar_closed(bar)
 
 
 class HyperliquidBroker:
@@ -89,6 +54,8 @@ class HyperliquidBroker:
         self.leverage = leverage
         self.connected = False
         self._order_specs: dict[str, dict] = {}
+        self._bar_subscriptions: list[tuple[str, str, object, BarFinalizer]] = []
+        self.last_bar_update: datetime | None = None
 
     async def connect(self) -> None:
         self._check_network_lock()
@@ -153,8 +120,29 @@ class HyperliquidBroker:
     def subscribe_bars(self, coin: str, tf: str, on_bar_closed) -> None:
         if self.info is None or not hasattr(self.info, "subscribe"):
             return
-        finalizer = BarFinalizer(on_bar_closed=on_bar_closed)
-        self.info.subscribe({"type": "candle", "coin": coin, "interval": tf}, finalizer.on_candle)
+        subscription = {"type": "candle", "coin": coin, "interval": tf}
+
+        def receive(message: dict) -> None:
+            self.last_bar_update = datetime.now(UTC)
+            finalizer.on_candle(message)
+
+        finalizer = BarFinalizer(on_bar_closed=on_bar_closed, timeframe=tf)
+        self._bar_subscriptions.append((coin, tf, receive, finalizer))
+        self.info.subscribe(subscription, receive)
+
+    def finalize_due(self, now: datetime | None = None) -> None:
+        for _, _, _, finalizer in self._bar_subscriptions:
+            finalizer.finalize_due(now)
+
+    async def resubscribe(self) -> None:
+        if self.info is None or not hasattr(self.info, "subscribe"):
+            raise HyperliquidNotConfigured("Info client not configured")
+        for coin, tf, receive, _ in self._bar_subscriptions:
+            await asyncio.to_thread(
+                self.info.subscribe,
+                {"type": "candle", "coin": coin, "interval": tf},
+                receive,
+            )
 
     async def place_bracket(self, plan: OrderPlan) -> dict:
         if self.exchange is None or not hasattr(self.exchange, "order"):
