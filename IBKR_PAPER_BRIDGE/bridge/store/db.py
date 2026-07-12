@@ -536,6 +536,23 @@ class Store:
         row = self.conn.execute("SELECT * FROM trades WHERE trade_id = ?", (trade_id,)).fetchone()
         return None if row is None else dict(row)
 
+    def get_open_trade_for_coin(self, run_id: str, coin: str) -> dict[str, Any] | None:
+        row = self.conn.execute(
+            """
+            SELECT * FROM trades
+            WHERE run_id = ? AND coin = ? AND exit_ts IS NULL
+            ORDER BY trade_id DESC LIMIT 1
+            """,
+            (run_id, coin),
+        ).fetchone()
+        return None if row is None else dict(row)
+
+    def get_orders_for_trade(self, trade_id: int) -> list[dict[str, Any]]:
+        return self._rows(
+            "SELECT * FROM orders WHERE trade_id = ? ORDER BY ts_submit",
+            (trade_id,),
+        )
+
     def update_trade_entry(self, trade_id: int, entry_px: float, entry_ts: datetime | str) -> None:
         self.conn.execute(
             """

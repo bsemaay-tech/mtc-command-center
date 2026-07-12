@@ -9,7 +9,16 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
-from bridge.engine.types import AccountSnapshot, Bar, BrokerOrder, OrderPlan, Position
+from bridge.engine.types import (
+    AccountSnapshot,
+    Bar,
+    BrokerEvent,
+    BrokerOrder,
+    FillEvent,
+    OrderPlan,
+    OrderUpdateEvent,
+    Position,
+)
 
 
 @dataclass
@@ -22,6 +31,7 @@ class MockBroker:
     fills: list[dict] = field(default_factory=list)
     position: Position | None = None
     _ids: itertools.count = field(default_factory=lambda: itertools.count(1))
+    _user_callbacks: list[Callable[[BrokerEvent], None]] = field(default_factory=list)
 
     @classmethod
     def from_csv(cls, path: str | Path, starting_equity: float = 10_000.0) -> "MockBroker":
@@ -84,6 +94,9 @@ class MockBroker:
         for bar in self.bars:
             on_bar_closed(bar)
 
+    def subscribe_user_events(self, on_event: Callable[[BrokerEvent], None]) -> None:
+        self._user_callbacks.append(on_event)
+
     async def place_bracket(self, plan: OrderPlan) -> dict:
         if not self.connected:
             raise RuntimeError("MockBroker is not connected")
@@ -137,11 +150,13 @@ class MockBroker:
         for order in self.orders:
             if order["cloid"] == cloid and order["status"] in {"SUBMITTED", "OPEN"}:
                 order["status"] = "CANCELLED_BY_ENGINE"
+                self._emit_order_update(order)
 
     async def cancel_all(self) -> None:
         for order in self.orders:
             if order["status"] in {"SUBMITTED", "OPEN"}:
                 order["status"] = "CANCELLED_BY_ENGINE"
+                self._emit_order_update(order)
 
     async def flatten(self, coin: str) -> None:
         if self.position is not None and self.position.symbol == coin:
@@ -150,6 +165,27 @@ class MockBroker:
             close = self._order("CLOSE", "FILLED", qty, px, reduce_only=True, symbol=coin)
             self._record_fill(close, qty, px, datetime.now())
         self.position = None
+
+    async def reprotect_position(
+        self,
+        position: Position,
+        stop_loss: float,
+        take_profit: float | None,
+        decision_uid: str,
+    ) -> dict[str, dict] | None:
+        direction = "LONG" if position.size > 0 else "SHORT"
+        sl = self._order(
+            "SL",
+            "OPEN",
+            abs(position.size),
+            stop_loss,
+            reduce_only=True,
+            trigger_px=stop_loss,
+            direction=direction,
+            symbol=position.symbol,
+            cloid=f"mock-reprotect-{decision_uid}-sl",
+        )
+        return {"sl": sl}
 
     def process_bar(self, bar: Bar) -> None:
         for order in self.orders:
@@ -173,6 +209,7 @@ class MockBroker:
                 margin_used=abs(float(order["qty"]) * entry_px) / max(int(order.get("leverage", 1)), 1),
             )
             self._record_fill(order, float(order["qty"]), entry_px, bar.ts)
+            self._emit_order_update(order)
 
         if self.position is None:
             return
@@ -203,6 +240,7 @@ class MockBroker:
         order["status"] = "FILLED"
         order["avg_fill_px"] = px
         self._record_fill(order, float(order["qty"]), px, ts)
+        self._emit_order_update(order)
         self.position = None
 
     def _order(
@@ -216,8 +254,9 @@ class MockBroker:
         **extra,
     ) -> dict:
         oid = next(self._ids)
+        requested_cloid = extra.pop("cloid", None)
         order = {
-            "cloid": f"mock-{oid}",
+            "cloid": requested_cloid or f"mock-{oid}",
             "oid": oid,
             "role": role,
             "status": status,
@@ -232,16 +271,37 @@ class MockBroker:
         return order
 
     def _record_fill(self, order: dict, qty: float, px: float, ts: datetime) -> None:
-        self.fills.append(
-            {
-                "fill_id": f"{order['cloid']}:{len(self.fills) + 1}",
-                "cloid": order["cloid"],
-                "role": order["role"],
-                "qty": qty,
-                "px": px,
-                "ts": ts,
-            }
+        fill = {
+            "fill_id": f"{order['cloid']}:{len(self.fills) + 1}",
+            "cloid": order["cloid"],
+            "role": order["role"],
+            "qty": qty,
+            "px": px,
+            "ts": ts,
+        }
+        self.fills.append(fill)
+        event = FillEvent(
+            fill_id=fill["fill_id"],
+            cloid=fill["cloid"],
+            coin=order.get("symbol", self.coin),
+            qty=qty,
+            px=px,
+            ts=ts,
+            role=order["role"],
         )
+        for callback in list(self._user_callbacks):
+            callback(event)
+
+    def _emit_order_update(self, order: dict) -> None:
+        event = OrderUpdateEvent(
+            cloid=order["cloid"],
+            status=order["status"],
+            ts=datetime.now().astimezone(),
+            filled_qty=float(order["qty"]) if order["status"] == "FILLED" else None,
+            avg_fill_px=order.get("avg_fill_px"),
+        )
+        for callback in list(self._user_callbacks):
+            callback(event)
 
     def _last_price(self) -> float:
         if self.bars:

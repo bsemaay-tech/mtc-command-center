@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 
 from bridge.broker.mock import MockBroker
 from bridge.engine.orders import OrderManager
-from bridge.engine.types import Bar, OrderPlan, Position, Signal
+from bridge.engine.types import AccountSnapshot, Bar, OrderPlan, Position, Signal
 from bridge.store.db import Store
 
 
@@ -27,6 +27,10 @@ def test_naked_position_reprotects_then_flattens(tmp_path):
 
 def test_duplicate_signal_persisted(tmp_path):
     asyncio.run(_run_duplicate_signal_persisted(tmp_path))
+
+
+def test_foreign_position_is_warned_and_never_flattened(tmp_path):
+    asyncio.run(_run_foreign_position_is_warned_and_never_flattened(tmp_path))
 
 
 async def _run_sl_fills_on_later_bar() -> None:
@@ -90,13 +94,44 @@ async def _run_naked_position_reprotects_then_flattens(tmp_path) -> None:
     store = Store(tmp_path / "bridge.db")
     store.initialize()
     store.create_run("run", "dry_run", "testnet", {})
+    now = datetime(2026, 7, 6, 0, tzinfo=UTC)
+    store.create_trade(
+        run_id="run",
+        coin="BTC",
+        direction="LONG",
+        qty=0.1,
+        entry_decision_uid="owned-decision",
+        signal_ts=now,
+        decision_ts=now,
+        expected_px=100.0,
+        risk_dollars=1.0,
+        risk_pct=0.001,
+        leverage=1,
+        sl_initial=95.0,
+        tp_initial=None,
+        llm_directive_id=None,
+    )
     broker = ReprotectFailsBroker()
-    manager = OrderManager(store=store, broker=broker, run_id="run")
+    manager = OrderManager(store=store, broker=broker, run_id="run", pending_grace_s=0)
 
     await manager.reconcile()
 
     assert broker.reprotect_attempts == 1
     assert broker.flattened == ["BTC"]
+
+
+async def _run_foreign_position_is_warned_and_never_flattened(tmp_path) -> None:
+    store = Store(tmp_path / "bridge.db")
+    store.initialize()
+    store.create_run("run", "dry_run", "testnet", {})
+    broker = ReprotectFailsBroker()
+    manager = OrderManager(store=store, broker=broker, run_id="run", pending_grace_s=0)
+
+    await manager.reconcile()
+
+    assert broker.reprotect_attempts == 0
+    assert broker.flattened == []
+    assert store.get_snapshot()["events"][-1]["code"] == "FOREIGN_POSITION_IGNORED"
 
 
 async def _run_duplicate_signal_persisted(tmp_path) -> None:
@@ -152,8 +187,8 @@ class ReprotectFailsBroker:
     async def connect(self) -> None:
         return None
 
-    async def account(self) -> dict[str, float]:
-        return {"equity": 1000.0, "available_margin": 1000.0}
+    async def account(self) -> AccountSnapshot:
+        return AccountSnapshot(equity=1000.0, available_margin=1000.0)
 
     async def positions(self) -> list[Position]:
         return [Position(symbol="BTC", size=0.1, entry_px=100.0)]
@@ -182,6 +217,6 @@ class ReprotectFailsBroker:
     async def flatten(self, coin: str) -> None:
         self.flattened.append(coin)
 
-    async def reprotect_position(self, position: Position) -> bool:
+    async def reprotect_position(self, position: Position, stop_loss, take_profit, decision_uid):
         self.reprotect_attempts += 1
-        return False
+        return None

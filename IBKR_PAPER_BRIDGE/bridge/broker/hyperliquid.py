@@ -12,7 +12,16 @@ import hashlib
 import logging
 from datetime import UTC, datetime
 
-from bridge.engine.types import AccountSnapshot, Bar, BrokerOrder, OrderPlan, Position
+from bridge.engine.types import (
+    AccountSnapshot,
+    Bar,
+    BrokerEvent,
+    BrokerOrder,
+    FillEvent,
+    OrderPlan,
+    OrderUpdateEvent,
+    Position,
+)
 from bridge.engine.bars import BarFinalizer
 from hyperliquid.utils.types import Cloid
 
@@ -55,6 +64,8 @@ class HyperliquidBroker:
         self.connected = False
         self._order_specs: dict[str, dict] = {}
         self._bar_subscriptions: list[tuple[str, str, object, BarFinalizer]] = []
+        self._user_callbacks: list[object] = []
+        self._oid_to_cloid: dict[int, str] = {}
         self.last_bar_update: datetime | None = None
 
     async def connect(self) -> None:
@@ -130,6 +141,19 @@ class HyperliquidBroker:
         self._bar_subscriptions.append((coin, tf, receive, finalizer))
         self.info.subscribe(subscription, receive)
 
+    def subscribe_user_events(self, on_event) -> None:
+        if self.info is None or not hasattr(self.info, "subscribe"):
+            return
+        self._user_callbacks.append(on_event)
+        self.info.subscribe(
+            {"type": "userEvents", "user": self.account_address},
+            self._receive_user_message,
+        )
+        self.info.subscribe(
+            {"type": "orderUpdates", "user": self.account_address},
+            self._receive_user_message,
+        )
+
     def finalize_due(self, now: datetime | None = None) -> None:
         for _, _, _, finalizer in self._bar_subscriptions:
             finalizer.finalize_due(now)
@@ -142,6 +166,17 @@ class HyperliquidBroker:
                 self.info.subscribe,
                 {"type": "candle", "coin": coin, "interval": tf},
                 receive,
+            )
+        if self._user_callbacks:
+            await asyncio.to_thread(
+                self.info.subscribe,
+                {"type": "userEvents", "user": self.account_address},
+                self._receive_user_message,
+            )
+            await asyncio.to_thread(
+                self.info.subscribe,
+                {"type": "orderUpdates", "user": self.account_address},
+                self._receive_user_message,
             )
 
     async def place_bracket(self, plan: OrderPlan) -> dict:
@@ -187,6 +222,7 @@ class HyperliquidBroker:
         for idx, (role, cloid, trigger_px) in enumerate(roles):
             status = statuses[idx] if idx < len(statuses) else {}
             result[role.lower()] = self._order_result(role, cloid, status, plan.qty, trigger_px=trigger_px)
+            result[role.lower()]["symbol"] = plan.signal.symbol
             request = requests[idx]
             self._order_specs[str(cloid)] = {
                 "coin": request["coin"],
@@ -196,7 +232,11 @@ class HyperliquidBroker:
                 "order_type": request["order_type"],
                 "reduce_only": request["reduce_only"],
                 "cloid": cloid,
+                "role": role,
             }
+            oid = result[role.lower()].get("oid")
+            if oid is not None:
+                self._oid_to_cloid[int(oid)] = str(cloid)
         return result
 
     async def modify_stop(self, cloid: str, new_stop: float) -> None:
@@ -262,6 +302,50 @@ class HyperliquidBroker:
             cloid=self._raw_cloid(f"{coin}:flatten:{datetime.now(UTC).isoformat()}"),
         )
         return None
+
+    async def reprotect_position(
+        self,
+        position: Position,
+        stop_loss: float,
+        take_profit: float | None,
+        decision_uid: str,
+    ) -> dict[str, dict] | None:
+        if self.exchange is None or not hasattr(self.exchange, "bulk_orders"):
+            return None
+        is_exit_buy = position.size < 0
+        requests: list[dict] = []
+        for role, px, tpsl in (("SL", stop_loss, "sl"), ("TP", take_profit, "tp")):
+            if px is None:
+                continue
+            cloid = self._raw_cloid(f"{decision_uid}:reprotect:{role.lower()}")
+            request = self._request(
+                position.symbol,
+                is_exit_buy,
+                abs(position.size),
+                px,
+                {"trigger": {"triggerPx": px, "isMarket": True, "tpsl": tpsl}},
+                True,
+                cloid,
+            )
+            requests.append(request)
+            self._order_specs[str(cloid)] = {**request, "role": role}
+        if not requests:
+            return None
+        raw = await asyncio.to_thread(self.exchange.bulk_orders, requests, grouping="positionTpsl")
+        statuses = self._extract_statuses(raw)
+        if len(statuses) != len(requests) or any("error" in status for status in statuses):
+            return None
+        result: dict[str, dict] = {}
+        for request, status in zip(requests, statuses):
+            cloid = request["cloid"]
+            spec = self._order_specs[str(cloid)]
+            role = spec["role"]
+            row = self._order_result(role, cloid, status, request["sz"], request["limit_px"])
+            row["symbol"] = position.symbol
+            result[role.lower()] = row
+            if row.get("oid") is not None:
+                self._oid_to_cloid[int(row["oid"])] = str(cloid)
+        return result
 
     def _check_network_lock(self) -> None:
         if self.network != "mainnet":
@@ -365,24 +449,24 @@ class HyperliquidBroker:
             margin_used=HyperliquidBroker._float(payload.get("marginUsed")),
         )
 
-    @staticmethod
-    def _parse_order(row: dict) -> BrokerOrder:
+    def _parse_order(self, row: dict) -> BrokerOrder:
         side_raw = str(row.get("side", "B")).upper()
         order_type = str(row.get("orderType", row.get("order_type", ""))) or None
         trigger_raw = row.get("triggerPx", row.get("trigger_px"))
         trigger_px = None if trigger_raw in (None, "", "0", 0) else HyperliquidBroker._float(trigger_raw)
-        role = "UNKNOWN"
+        spec = self._order_specs.get(str(row.get("cloid", "")), {})
+        role = str(spec.get("role", "UNKNOWN"))
         lowered = (order_type or "").lower()
-        if "stop" in lowered or "sl" in lowered:
+        if role == "UNKNOWN" and ("stop" in lowered or "sl" in lowered):
             role = "SL"
-        elif "take" in lowered or "tp" in lowered:
+        elif role == "UNKNOWN" and ("take" in lowered or "tp" in lowered):
             role = "TP"
         return BrokerOrder(
             cloid=str(row.get("cloid", "")),
             oid=int(row["oid"]) if row.get("oid") is not None else None,
             coin=str(row.get("coin", "")),
             side="BUY" if side_raw in {"B", "BUY"} else "SELL",
-            size=HyperliquidBroker._float(row.get("sz", row.get("size"))),
+            size=self._float(row.get("sz", row.get("size"))),
             status=str(row.get("status", "OPEN")),
             role=role,
             reduce_only=bool(row.get("reduceOnly", row.get("reduce_only", role in {"SL", "TP"}))),
@@ -390,6 +474,73 @@ class HyperliquidBroker:
             order_type=order_type,
             order_ref=row.get("orderRef", row.get("order_ref")),
         )
+
+    def _receive_user_message(self, message: dict) -> None:
+        channel = str(message.get("channel", ""))
+        data = message.get("data", message)
+        if channel == "user" or "fills" in data:
+            fills = data.get("fills", []) if isinstance(data, dict) else []
+            for fill in fills:
+                event = self._parse_fill_event(fill)
+                if event is not None:
+                    self._dispatch_user_event(event)
+        if channel == "orderUpdates" or isinstance(data, list):
+            updates = data if isinstance(data, list) else data.get("orderUpdates", [])
+            for update in updates:
+                event = self._parse_order_update(update)
+                if event is not None:
+                    self._dispatch_user_event(event)
+
+    def _parse_fill_event(self, fill: object) -> FillEvent | None:
+        if not isinstance(fill, dict):
+            return None
+        oid = fill.get("oid")
+        cloid_value = fill.get("cloid")
+        if not cloid_value and oid is not None:
+            cloid_value = self._oid_to_cloid.get(int(oid))
+        cloid = str(cloid_value or "")
+        if not cloid:
+            return None
+        spec = self._order_specs.get(cloid, {})
+        raw_time = fill.get("time", fill.get("timestamp"))
+        ts = datetime.fromtimestamp(float(raw_time) / 1000, tz=UTC) if raw_time is not None else datetime.now(UTC)
+        return FillEvent(
+            fill_id=str(fill.get("tid", fill.get("hash", f"{cloid}:{raw_time}"))),
+            cloid=cloid,
+            coin=str(fill.get("coin", spec.get("coin", self.coin))),
+            qty=self._float(fill.get("sz", fill.get("qty"))),
+            px=self._float(fill.get("px")),
+            ts=ts,
+            fee=self._float(fill.get("fee")),
+            role=spec.get("role", "UNKNOWN"),
+        )
+
+    def _parse_order_update(self, update: object) -> OrderUpdateEvent | None:
+        if not isinstance(update, dict):
+            return None
+        order = update.get("order", update)
+        if not isinstance(order, dict):
+            return None
+        oid = order.get("oid")
+        cloid_value = order.get("cloid")
+        if not cloid_value and oid is not None:
+            cloid_value = self._oid_to_cloid.get(int(oid))
+        cloid = str(cloid_value or "")
+        if not cloid:
+            return None
+        raw_time = update.get("statusTimestamp", update.get("time"))
+        ts = datetime.fromtimestamp(float(raw_time) / 1000, tz=UTC) if raw_time is not None else datetime.now(UTC)
+        return OrderUpdateEvent(
+            cloid=cloid,
+            status=str(update.get("status", order.get("status", "OPEN"))).upper(),
+            ts=ts,
+            filled_qty=self._float(order.get("filledSz")) if order.get("filledSz") is not None else None,
+            avg_fill_px=self._float(order.get("avgPx")) if order.get("avgPx") is not None else None,
+        )
+
+    def _dispatch_user_event(self, event: BrokerEvent) -> None:
+        for callback in list(self._user_callbacks):
+            callback(event)
 
     @staticmethod
     def _float(value: object, default: float = 0.0) -> float:

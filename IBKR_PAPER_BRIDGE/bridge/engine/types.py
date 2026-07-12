@@ -70,6 +70,31 @@ class BrokerOrder(BaseModel):
     order_ref: str | None = None
 
 
+class FillEvent(BaseModel):
+    event_type: Literal["FILL"] = "FILL"
+    fill_id: str
+    cloid: str
+    coin: str
+    qty: float
+    px: float
+    ts: datetime
+    fee: float = 0.0
+    funding: float = 0.0
+    role: Literal["ENTRY", "SL", "TP", "CLOSE", "UNKNOWN"] = "UNKNOWN"
+
+
+class OrderUpdateEvent(BaseModel):
+    event_type: Literal["ORDER"] = "ORDER"
+    cloid: str
+    status: str
+    ts: datetime
+    filled_qty: float | None = None
+    avg_fill_px: float | None = None
+
+
+BrokerEvent = FillEvent | OrderUpdateEvent
+
+
 class Rejection(BaseModel):
     stage: Literal["RISK", "LLM", "STATE"]
     reason: str

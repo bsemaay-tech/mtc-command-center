@@ -9,7 +9,7 @@ import pytest
 
 from bridge.broker.hyperliquid import BarFinalizer, BrokerRefusedLive, HyperliquidBroker
 from bridge.broker.mock import MockBroker
-from bridge.engine.types import AccountSnapshot, Bar, BrokerOrder, OrderPlan, Position, Signal
+from bridge.engine.types import AccountSnapshot, Bar, BrokerOrder, FillEvent, OrderPlan, Position, Signal
 from hyperliquid.exchange import Exchange
 from hyperliquid.utils.types import Cloid
 
@@ -145,6 +145,49 @@ def test_async_sdk_calls_are_offloaded_from_event_loop_thread():
     assert exchange_threads and exchange_threads[0] != main_thread
 
 
+def test_hl_user_fill_event_is_typed_and_mapped_by_oid():
+    info = FakeInfo(size="0", with_summary=True)
+    exchange = _exchange_mock()
+    broker = HyperliquidBroker(account_address="0xabc", info_client=info, exchange_client=exchange)
+    asyncio.run(broker.place_bracket(_plan()))
+    events = []
+    broker.subscribe_user_events(events.append)
+
+    broker._receive_user_message(
+        {
+            "channel": "user",
+            "data": {
+                "fills": [
+                    {"oid": 1, "coin": "BTC", "sz": "0.1", "px": "100", "time": 1783814400000, "tid": 99}
+                ]
+            },
+        }
+    )
+
+    assert isinstance(events[0], FillEvent)
+    assert events[0].role == "ENTRY"
+    assert events[0].cloid.startswith("0x")
+    assert {sub["type"] for sub, _ in info.subscriptions} == {"userEvents", "orderUpdates"}
+
+
+def test_hl_reprotects_position_with_native_trigger_group():
+    exchange = _exchange_mock()
+    exchange.bulk_orders.return_value = {
+        "status": "ok",
+        "response": {"data": {"statuses": [{"resting": {"oid": 7}}]}},
+    }
+    broker = HyperliquidBroker(info_client=object(), exchange_client=exchange)
+    position = Position(symbol="BTC", size=0.1, entry_px=100)
+
+    result = asyncio.run(broker.reprotect_position(position, 95.0, None, "decision-owned"))
+
+    assert result is not None and set(result) == {"sl"}
+    requests = exchange.bulk_orders.call_args.args[0]
+    assert exchange.bulk_orders.call_args.kwargs == {"grouping": "positionTpsl"}
+    assert requests[0]["reduce_only"] is True
+    assert requests[0]["order_type"]["trigger"]["tpsl"] == "sl"
+
+
 def _candle(ts: datetime, close: float) -> dict:
     return {
         "t": int(ts.timestamp() * 1000),
@@ -197,6 +240,7 @@ class FakeInfo:
     def __init__(self, size: str, with_summary: bool = False) -> None:
         self.size = size
         self.with_summary = with_summary
+        self.subscriptions: list[tuple[dict, object]] = []
 
     def user_state(self, address):
         state = {
@@ -236,6 +280,10 @@ class FakeInfo:
                 "reduceOnly": True,
             }
         ]
+
+    def subscribe(self, subscription, callback):
+        self.subscriptions.append((subscription, callback))
+        return len(self.subscriptions)
 
 
 class ThreadRecordingInfo(FakeInfo):
