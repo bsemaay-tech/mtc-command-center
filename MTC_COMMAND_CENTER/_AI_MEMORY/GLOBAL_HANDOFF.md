@@ -1,5 +1,15 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5] 2026-07-13 — Real QuantLens Keltner golden completed
+
+Commits `bcecdce0`, `04048a0b`, and `5d7e9208` registered the additive QuantLens plumbing strategy
+and produced **858 real signals over 48,077 BTCUSD 1h bars**. Golden run id:
+`QL_MEGA_KELTNER_TRAIL_EMA8_BTCUSD_1h_2026-06-28_01a3f1255e29`. Codex verification found
+deterministic regeneration exactly equal to the saved golden; both bridge test CWDs passed
+(`114 passed, 1 warning`). No bridge runtime, protected scope, exchange, or LLM changes. Entry
+signals are 858/858 identical; exits are not parity-claimed because bridge `trail_level` is SMA-8
+while QuantLens `trail_ema8` is EMA-8. See `IBKR_PAPER_BRIDGE/docs/18_GOLDEN_REPORT.md`.
+
 ## [Claude Opus 4.8] 2026-07-13 — Bridge P2-READY: B+C phases complete, ARM pending one bar close
 
 Since P0 MET: B1 ws auto-reconnect (f1827103), B2 reconciler fallback cascade (1774c38f), B5 live
