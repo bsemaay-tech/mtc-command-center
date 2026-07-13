@@ -15,8 +15,9 @@ Full audit record: GLOBAL_HANDOFF `[Claude Fable 5] 2026-07-13 — CONSOLIDATION
   union-resolution for `GLOBAL_HANDOFF.md`/`NEXT_STEPS.md` conflicts noted in PR bodies.
 - **[AI: Barış]** merge PRs #16→#17→#18→#19 in order on GitHub (union-resolve shared handoff
   files in #17..#19). P2RT sync to the consolidated tip stays a planned restart-window decision.
-- **[AI: Codex]** queue 3 CLEARED: FAZ3B Stage-2 Gate-5 adversarial review (written findings
-  only, NO runs) per the task-queue spec; then Fable synthesizes for D016.
+- ~~queue 3: Gate-5 adversarial review~~ **DONE 2026-07-13**: Codex verdict FATAL (`1859910c`),
+  Fable re-verified decisive claims on raw artifacts/code — CONFIRMED. Prereg marked BLOCKED
+  (`f32a354c`); PR #18 updated. See FAZ 3B section below for the D016 decision now owed by Barış.
 
 ## CRYPTO PAPER BRIDGE P2 ARMED — D3 ACTIVE 2026-07-13 [AI: Any]
 
@@ -91,24 +92,32 @@ The US-equities-10m Donchian lead does NOT transfer to crypto 1h/4h. Verdict rep
 - **[AI: Barış]** run-manifest discovery contract (audit §6.1) — decide if wanted before next big orchestrated sweep.
 
 
-## 🔶 FAZ 3B — SWEPT EXIT_MODE (Stage-1 COMPLETE D015; Stage-2 pre-reg DRAFTED 2026-07-13, awaiting review+approval)
+## 🔶 FAZ 3B — SWEPT EXIT_MODE (Stage-2 prereg BLOCKED by Gate-5 FATAL 2026-07-13 — D016 decision now = path choice)
 Scope: `00_AGENT_PROTOCOLS/FAZ3B_EXIT_SWEEP_SCOPE.md`. Chain D013→D014→D015 done: engine landed,
 self-parity byte-identical (goldens never recaptured), Stage-1 discovery run COMPLETE 2026-07-05
 (`03_QUANTLENS/research/faz3b_stage1_20260705/STAGE1_REPORT.md`): H1 confirmed at 1h — clean cell
 GEN_KELTNER_BREAKOUT × AAPL × 1h × trail_ema8 STRONG_PASS union-DSR 0.581; H0 holds at 10m;
 honest confound: first-ever 1h fixed_2R baseline itself robust on KELTNER SPY/QQQ. PR #15 merged.
-- ~~**[AI: Claude]** draft Stage-2 confirmation pre-registration~~ **DONE 2026-07-13**:
-  `00_AGENT_PROTOCOLS/FAZ3B_STAGE2_CONFIRM_PREREG_2026-07-13.md` (DRAFT — AWAITING BARIŞ APPROVAL).
-  Design: KELTNER only, 1h only, exit frozen trail_ema8 + fixed_2R confound twin, 12-set narrow grid
-  (winner {50,10,2.0} ±1 neighbor, literal list), held-out GOOGL/META/AMD/NFLX/DIA/IWM (AAPL
-  reference-only), union-DSR family N=219, robust_final judged there only, full decision table.
-- **[AI: Claude|Codex]** write Codex Gate-5 adversarial-review prompt for the Stage-2 pre-reg
-  (`11_TRIAGE/CODEX_GATE5_PROMPT_FAZ3B_STAGE2_<date>.md` per `11_TRIAGE/FAZ3B_STAGE2_PREREG_PROMPT_2026-07-05.md`
-  Step 2); Barış runs Codex; apply every required edit to the pre-reg.
-- **[AI: Barış]** approve reviewed Stage-2 pre-reg with explicit sentence → record as **D016** in
-  `_AI_MEMORY/DECISIONS.md`. NO runner code, NO smoke, NO run before D016.
-- **[AI: Claude]** after D016 only: runner script (zero engine edit, §5 of pre-reg) → 1-cell smoke →
-  14-row run → morning report + registry entry, per pre-reg §9.
+- ~~draft Stage-2 pre-reg~~ DONE 2026-07-13, then ~~Gate-5 adversarial review~~ **DONE 2026-07-13
+  — VERDICT FATAL, Fable-verified on raw artifacts/code (findings `1859910c`, banner `f32a354c`,
+  PR #18):** (1) all 6 "held-out" symbols already swept — June-29 overnight covered ALL 51 bundle
+  symbols at Keltner 1h → NO untouched 1h symbol exists in the canonical bundle; registry proved
+  NOT to be an evidence inventory; (2) CPCV/multiwindow tools are exit-blind (simulate_slice
+  defaults fixed_2R) and PBO lacks a per-config matrix → §6 gauntlet unexecutable as written;
+  (3) 12-set grid = 75% of discovery grid = re-optimization. Current draft can NEVER get D016.
+- **[AI: Barış] 🔴 D016 DECISION = choose path:** **(a) RECOMMENDED — deferred forward
+  confirmation:** freeze a pre-registered forward window now (bars after 2026-06-26, evaluate
+  e.g. after 2026-12-31, pre-named symbols + ≥2 diversity groups); zero compute today, truly
+  virgin data. **(b) close Faz3b as INCONCLUSIVE** (Stage-1 AAPL stays research-only, family
+  gets no confirmation attempt). Either way requires NEW prereg + fresh Gate-5 before any run.
+- **[AI: Codex, needs Barış approval — prerequisite for path (a) and any future exit-mode
+  confirmation]** exit-aware gauntlet tooling task: `cpcv_validator.py` + `multiwindow_oos.py`
+  must pass `row.exit_mode` into `simulate_slice` and stamp it in outputs; PBO needs a
+  per-config×period return-matrix contract (Gate-5 findings §F/§G/§J + REQUIRED EDITS 9-11 are
+  the spec). Own code review + self-parity discipline; separate approval.
+- **[AI: Any]** register `overnight_multiasset_2026-06-29` in RESEARCH_RUN_REGISTRY; add the
+  "virginity check = scan 05_BACKTEST_RESULTS + research JSONs, never registry-only" rule to
+  prereg templates.
 - **[AI: Barış]** 2026-08-01: Gate V5 day-30 review of the SYSTEM_TEST vertical-slice track (CLOSED at
   V1.1; legs V2-V4 deliberately unopened).
 

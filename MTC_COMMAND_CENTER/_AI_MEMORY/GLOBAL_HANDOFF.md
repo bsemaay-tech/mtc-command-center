@@ -1,5 +1,43 @@
 # GLOBAL_HANDOFF
 
+## [Claude Fable 5] 2026-07-13 — Gate-5 synthesis: FATAL CONFIRMED on real artifacts; D016 impossible for current draft; decision to Barış
+
+Audited Codex's Gate-5 findings (`1859910c`) the only way that counts — re-derived the decisive
+claims from raw data and code, not from the report:
+
+1. **Held-out contamination CONFIRMED:** parsed
+   `05_BACKTEST_RESULTS/overnight_multiasset_2026-06-29/MEGA_walk_forward_results.json` myself —
+   all 6 proposed symbols (GOOGL/META/AMD/NFLX/DIA/IWM) have GEN_KELTNER_BREAKOUT 1h rows,
+   16 trials each. Worse: that sweep covered **all 51 bundle symbols** at Keltner 1h →
+   **no untouched 1h symbol exists in `native_multiasset_alpaca_2026-06-28` for this family.**
+   Root cause is mine (drafting): the prereg's virginity check used RESEARCH_RUN_REGISTRY.json,
+   which lists only 5 runs — the registry is NOT an evidence inventory. Standing lesson for every
+   future prereg: virginity checks must scan `05_BACKTEST_RESULTS/` + `research/` result JSONs,
+   not the registry.
+2. **Gauntlet exit-blindness CONFIRMED in code:** zero `exit_mode` occurrences in
+   `cpcv_validator.py` and `multiwindow_oos.py`; `simulate_slice` default is
+   `DEFAULT_EXIT_MODE="fixed_2R"` (`mega_walk_forward.py:82,648`); CPCV calls it without the
+   argument (`cpcv_validator.py:46`). Any trail_ema8 gauntlet today silently scores fixed_2R.
+   `probabilistic_pbo.py` consumes CPCV rows as candidates — no per-config matrix exists.
+3. Stride finding real: `select_grid` 16@3 → 5 configs (`mega_walk_forward.py:131-141`); the
+   12-set cartesian is 75% of the discovery grid with 8/12 configs never evaluated in Stage-1 —
+   re-optimization, not confirmation.
+
+**Actions taken:** prereg marked BLOCKED with full-reason banner (`f32a354c`, in the C:\FZ3G5
+worktree — branch checked out there, so no ref-move hazard); branch pushed, PR #18 now carries
+prereg + findings + banner as one honest record.
+
+**Recommendation to Barış (D016 = DO NOT ISSUE; choose a path):**
+- **(a) RECOMMENDED — deferred forward confirmation:** freeze NOW a pre-registered forward
+  window (bars after 2026-06-26, e.g. evaluate after 2026-12-31) on pre-named symbols +
+  diversity rule; genuinely virgin data at zero compute cost today. Prerequisite: exit-aware
+  CPCV/multiwindow/PBO tooling built as a separately-approved, separately-reviewed code task
+  (needed for ANY future exit-mode confirmation anyway).
+- **(b) close Faz3b now** as INCONCLUSIVE (Stage-1 AAPL result stays research-only, no
+  confirmation attempted); cheapest, honest.
+- Either way: register the June-29 artifact in RESEARCH_RUN_REGISTRY and add the
+  evidence-inventory rule to prereg templates.
+
 ## [Claude Fable 5] 2026-07-13 — Barış blanket-approved recommendations: P2RT detached at 54278b66; 4 PRs pushed+opened
 
 Barış approved all pending recommended options ("bende onay bekleyen tüm işlerde önerilen
