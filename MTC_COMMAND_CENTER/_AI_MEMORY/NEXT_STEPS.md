@@ -1,5 +1,15 @@
 # NEXT_STEPS
 
+## BRANCH CONSOLIDATION BUILDER COMPLETE — FABLE AUDIT NEXT 2026-07-13 [AI: Claude]
+
+Codex completed queue 2a–2c and wrote
+`11_TRIAGE/BRANCH_CONSOLIDATION_REPORT_2026-07-13.md`. Bridge tip is `908e1b34`; both suites
+passed `122 passed, 1 warning`. No push, PR creation, P2RT sync, or restart occurred.
+- **[AI: Claude]** audit the report against real refs, merge parents, conflict probes, and both
+  test commands; either require fixes or clear queue 3.
+- **[AI: Barış]** after Fable clearance, decide whether to push/open the four proposed PRs in the
+  recommended order. P2RT sync remains a separate planned restart-window decision.
+
 ## CRYPTO PAPER BRIDGE P2 ARMED — D3 ACTIVE 2026-07-13 [AI: Any]
 
 **Day 0 RESET to `2026-07-13T15:17:05.383618Z`** after the approved EMA-8 trail fix `f209acd2`
@@ -13,6 +23,16 @@ Task Scheduler must never be redirected to the parallel-agent research checkout.
   process/commit, all positions/orders, and native stops for any owned position.
 - **[AI: Claude|Codex]** any safety anomaly: preserve evidence, DISARM safely if needed, diagnose;
   do not repeat ARM without a fresh complete gate.
+- **[AI: Codex]** 🔴 test-suite Telegram leak fix (Barış-approved 2026-07-13): suite sends REAL
+  `state -> ARMED` messages (create_app → build_notifier → E1 registry creds; test_api arms).
+  Fix = autouse conftest fixture patching `resolve_telegram_credentials` at BOTH import sites —
+  full spec in `11_TRIAGE/CODEX_BRANCH_CONSOLIDATION_PROMPT_2026-07-13.md` TASK 4. Test-only,
+  commit to `feature/ibkr-bridge-final`, NEVER touch `C:\P2RT` (old conftest there still leaks
+  until the next planned sync window).
+- Known-benign noise: Hyperliquid testnet WS expires connections ~every 10-11 min
+  (`opcode=8 'Expired'` in runtime log); `DISCONNECT -> RECONNECT attempt=1 -> DATA_RESTORED`
+  chains in Telegram are normal. Optional notify-threshold change (only attempt>1 / STALE)
+  deferred to the VPS restart window — P2 config frozen.
 - Evidence committed on `feature/ibkr-bridge-final` at `59352bb3`:
   `IBKR_PAPER_BRIDGE/docs/19_P2_RECONNECT_INCIDENT_2026-07-13.md`.
 
