@@ -1,5 +1,86 @@
 # GLOBAL_HANDOFF
 
+## [Claude Fable 5] 2026-07-13 — AUDIT PASS: EMA-8 fix + re-ARM verified; queue 2 (branch consolidation) cleared for Codex
+
+Audited the Codex EMA-8 report against real code and runs — every claim verified. `C:\P2RT` is at
+`54278b66` (tip includes `f209acd2`), clean tree, branch `feature/ibkr-bridge-final`.
+`trail_level()` in `bridge/engine/strategies/keltner_trail_ema8.py` implements alpha `2/9`,
+first-close recursive seed, `None` until 8 closes — the exact convention of QuantLens
+`mega_walk_forward.py:160` (`ewm(span=n, adjust=False, min_periods=n)`); independently recomputed
+`68.64558996000855` with pandas on the test fixture (SMA-8 would be `65.0`). The `f209acd2` diff
+touches ONLY the strategy file + `tests/test_strategy.py` — entry-band math and entry goldens
+untouched; secret grep on the diff = 0. Re-ran suites myself in `C:\P2RT` from both CWDs:
+`121 passed, 1 warning` twice. Live checks 15:26Z: ARMED, run `paper-20260713150651`,
+`reconcile_ready=true`, reconcile fresh (≤1 min), `reconcile_error=null`, positions `[]`, orders
+`[]`, equity flat `998.987457` with per-minute ticks, zero ERROR events. Events show exactly one
+`ARM_REQUEST` + one `DISARMED->ARMED` at `15:17:05.383618Z` (= new Day 0). Supervisor PID 95724
+runs `C:\P2RT\IBKR_PAPER_BRIDGE\tools\run_bridge_p2.ps1`; child PID 54192 started `15:06:50Z`
+matching the run id. Recurring ~10-min `DISCONNECT -> RECONNECT attempt=1 -> DATA_RESTORED`
+cycles (15/15/14) are the known feed pattern; the single non-restored case was the `DATA_STALE`
+fail-closed auto-DISARM at `13:29:59Z` — correct behavior. Telegram visibility not re-verified
+(accepted; B5 previously proven).
+
+**Queue 2 cleared for Codex with one hard warning for 2a:** the shared checkout's uncommitted
+`IBKR_PAPER_BRIDGE/docs/03_STATUS.md` and untracked `docs/19_P2_RECONNECT_INCIDENT_2026-07-13.md`
+are intermediate doc-polish rewrites from the earlier Opus audit session — they still say Day 0
+`13:00:28Z` / `59c334c0` / 119 tests and match NO committed version. Committing them as-is onto
+`feature/ibkr-bridge-final` would REGRESS tip `54278b66`. Codex must reconcile manually: keep tip
+`03_STATUS.md` as base (drop the stale working copy after diffing for any wording worth porting),
+and update the incident doc's SUPERSEDED banner to reference the second Day-0 reset
+(`15:17:05Z`, `f209acd2`) before committing it. Note `git diff` warns LF→CRLF on these files —
+keep line endings consistent with tip. Shared-checkout local ref `feature/ibkr-bridge-final`
+already equals P2RT tip `54278b66`, so no divergence; queue 2d (P2RT sync) is moot until the next
+planned restart window.
+
+## [Codex GPT-5] 2026-07-13 — EMA-8 trail corrected; P2 Day 0 reset
+
+Approved bridge-only fix `f209acd2` changed `KeltnerTrailEma8.trail_level()` from SMA-8 to the
+exact QuantLens EMA convention (`span=8`, `adjust=False`, `min_periods=8`, alpha `2/9`,
+first-close recursive seed over full available history). Entry-band math and entry goldens were
+untouched. Both bridge-suite invocations passed `121 passed, 1 warning`; deterministic proof is
+EMA `68.64558996000855` versus last-eight SMA `65.0`; changed-file secret grep found zero.
+
+The earlier P2 run had auto-disarmed at `13:29:59Z` on `DATA_STALE`. Pre-deploy Hyperliquid
+testnet positions/orders were `[]`/`[]`. Exactly one deploy cycle followed: DISARM, stop PID
+81788, supervisor restart to run `paper-20260713150651` at `f209acd2`, then ten clean minutes
+DISARMED with fresh reconciles. Exactly one ARM call (`X-Confirm: 2`) produced
+`15:17:05.377321Z ARM_REQUEST state=DISARMED` and `15:17:05.383618Z DISARMED->ARMED`.
+Telegram visibly showed `[INFO] state -> ARMED`. Post-ARM cycle passed:
+`15:18:06Z DISCONNECT -> 15:18:13Z RECONNECT attempt=1 -> 15:18:14Z DATA_RESTORED`.
+Final API evidence: ARMED, reconcile-ready, no reconcile error, positions/orders `[]`/`[]`.
+**New P2 Day 0 is 2026-07-13T15:17:05.383618Z.** Status record:
+`IBKR_PAPER_BRIDGE/docs/03_STATUS.md`, committed as `54278b66` on
+`feature/ibkr-bridge-final`.
+
+## [Codex GPT-5] 2026-07-13 — Bridge P2 ARMED; Day 0 started after incident repair
+
+**P2 ARMED at 2026-07-13T13:00:28.6218649Z, exactly one ARM call.** Incident was first contained
+DISARMED with exchange positions/orders empty. Runtime moved to isolated `C:\P2RT` at
+`59c334c0` (includes `29d9879f`), supervisor task repointed there, and full suites passed
+`119 passed, 1 warning` from both roots. Real gate passed:
+`12:57:21Z DISCONNECT -> 12:57:29Z RECONNECT attempt=1 -> 12:57:39Z DATA_RESTORED`, then
+reconciles at `12:58:29Z` and `12:59:30Z`; no retry/stale/reconcile failure. ARM audit contains one
+`ARM_REQUEST` and one `DISARMED->ARMED`. Post-ARM reconciles at `13:01:32Z` and `13:02:34Z`
+remained ARMED with no positions/orders. D3 >=10-day monitoring is active. Evidence committed on
+`feature/ibkr-bridge-final` at `59352bb3`:
+`IBKR_PAPER_BRIDGE/docs/19_P2_RECONNECT_INCIDENT_2026-07-13.md`.
+
+## [Codex GPT-5] 2026-07-13 — Bridge reconnect incident contained; ARM blocked
+
+**Final: INCIDENT CONTAINED — DISARMED.** No ARM/restart/kill was performed. Live Hyperliquid
+testnet endpoints returned state DISARMED, positions `[]`, orders `[]`; one supervisor PID 89596
+and one child PID 65384 were running. PID 65384 loaded fix `29d9879f` before a parallel checkout
+replaced `hyperliquid.py` at 11:25:23 local, so the next supervisor restart would load pre-fix code.
+The old run's exact failure was duplicate `userEvents` subscription -> SDK
+`NotImplementedError`; corrected run recorded 18 first-attempt reconnects, no retry/stale event,
+and fresh 1h bars. However, equity/reconciler evidence stopped at 10:47:34Z while status still said
+`reconcile_ready=true`. The two ARMED notices represent distinct state transitions separated by a
+process restart; retained logs do not preserve the POST callers, so their provenance is not safely
+auditable. No duplicates or exchange exposure found. Prior ARM approval is revoked; fresh Baris
+approval is required only after pinned-code restart in DISARMED, real reconnect/data restoration,
+and continuing reconciler proof. Report:
+`IBKR_PAPER_BRIDGE/docs/19_P2_RECONNECT_INCIDENT_2026-07-13.md`.
+
 ## [Claude Fable 5] 2026-07-13 — GEN_DONCHIAN_BREAKOUT crypto ladder (BTC/ETH × 1h/4h) → NULL
 
 Pre-approved 4-cell evidence-ladder run (Gate 0 read; A22 smoke 2.8 s/cell → 5 s run, no

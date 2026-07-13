@@ -1,5 +1,21 @@
 # NEXT_STEPS
 
+## CRYPTO PAPER BRIDGE P2 ARMED — D3 ACTIVE 2026-07-13 [AI: Any]
+
+**Day 0 RESET to `2026-07-13T15:17:05.383618Z`** after the approved EMA-8 trail fix `f209acd2`
+(SMA-8 → exact QuantLens EMA convention) landed in `C:\P2RT` and one clean deploy+re-ARM cycle
+(run `paper-20260713150651`, tests `121 passed` from both roots, one ARM_REQUEST, post-ARM
+reconnect gate passed). Fable audited 2026-07-13 against real code/runs: PASS. Earlier Day 0
+(`13:00:28Z`, `59c334c0`, 119 tests) is superseded — that run auto-disarmed at `13:29:59Z` on
+`DATA_STALE` (fail-closed worked). Runtime is pinned at `C:\P2RT` at `54278b66`;
+Task Scheduler must never be redirected to the parallel-agent research checkout.
+- **[AI: Any]** daily read-only D3 check: state/reconcile freshness, WARN/ERROR events, equity,
+  process/commit, all positions/orders, and native stops for any owned position.
+- **[AI: Claude|Codex]** any safety anomaly: preserve evidence, DISARM safely if needed, diagnose;
+  do not repeat ARM without a fresh complete gate.
+- Evidence committed on `feature/ibkr-bridge-final` at `59352bb3`:
+  `IBKR_PAPER_BRIDGE/docs/19_P2_RECONNECT_INCIDENT_2026-07-13.md`.
+
 ## ✅ DONCHIAN CRYPTO LADDER DONE 2026-07-13 (Claude Fable 5) — NULL
 GEN_DONCHIAN_BREAKOUT × {BTCUSD, ETHUSD} × {1h, 4h} through the full canonical ladder
 (pre-approved 2026-07-13): **0/4 PASS, 0 robust_final — 3 REJECTED + 1 INSUFFICIENT_TRADES
@@ -49,15 +65,24 @@ The US-equities-10m Donchian lead does NOT transfer to crypto 1h/4h. Verdict rep
 - **[AI: Barış]** run-manifest discovery contract (audit §6.1) — decide if wanted before next big orchestrated sweep.
 
 
-## 🔶 FAZ 3B — SWEPT EXIT_MODE (approved D013 2026-07-04; gate live; implementation NEXT)
-Scope: `00_AGENT_PROTOCOLS/FAZ3B_EXIT_SWEEP_SCOPE.md`. Self-parity goldens captured pre-edit +
-determinism proven (`faz3b_self_parity.py`, 42 rows, sha `be8561ff…`). Sweep runs separately gated.
-- **[AI: Claude]** implement per `11_TRIAGE/FAZ3B_IMPLEMENTATION_PROMPT_2026-07-04.md` — read that
-  prompt verbatim; `--verify` must PASS before AND after; goldens never recaptured.
-- **[AI: Codex]** adversarial review of the engine diff (Gate 5) after implementation.
-- **[AI: Barış]** approve the diff landing; then separately approve the Stage-1 discovery run design
-  (pre-registered: single-asset-class subset + trimmed grids + `research_robust` tier + micro-price
-  exclusion — the D013 items 2-4 ride in that run design).
+## 🔶 FAZ 3B — SWEPT EXIT_MODE (Stage-1 COMPLETE D015; Stage-2 pre-reg DRAFTED 2026-07-13, awaiting review+approval)
+Scope: `00_AGENT_PROTOCOLS/FAZ3B_EXIT_SWEEP_SCOPE.md`. Chain D013→D014→D015 done: engine landed,
+self-parity byte-identical (goldens never recaptured), Stage-1 discovery run COMPLETE 2026-07-05
+(`03_QUANTLENS/research/faz3b_stage1_20260705/STAGE1_REPORT.md`): H1 confirmed at 1h — clean cell
+GEN_KELTNER_BREAKOUT × AAPL × 1h × trail_ema8 STRONG_PASS union-DSR 0.581; H0 holds at 10m;
+honest confound: first-ever 1h fixed_2R baseline itself robust on KELTNER SPY/QQQ. PR #15 merged.
+- ~~**[AI: Claude]** draft Stage-2 confirmation pre-registration~~ **DONE 2026-07-13**:
+  `00_AGENT_PROTOCOLS/FAZ3B_STAGE2_CONFIRM_PREREG_2026-07-13.md` (DRAFT — AWAITING BARIŞ APPROVAL).
+  Design: KELTNER only, 1h only, exit frozen trail_ema8 + fixed_2R confound twin, 12-set narrow grid
+  (winner {50,10,2.0} ±1 neighbor, literal list), held-out GOOGL/META/AMD/NFLX/DIA/IWM (AAPL
+  reference-only), union-DSR family N=219, robust_final judged there only, full decision table.
+- **[AI: Claude|Codex]** write Codex Gate-5 adversarial-review prompt for the Stage-2 pre-reg
+  (`11_TRIAGE/CODEX_GATE5_PROMPT_FAZ3B_STAGE2_<date>.md` per `11_TRIAGE/FAZ3B_STAGE2_PREREG_PROMPT_2026-07-05.md`
+  Step 2); Barış runs Codex; apply every required edit to the pre-reg.
+- **[AI: Barış]** approve reviewed Stage-2 pre-reg with explicit sentence → record as **D016** in
+  `_AI_MEMORY/DECISIONS.md`. NO runner code, NO smoke, NO run before D016.
+- **[AI: Claude]** after D016 only: runner script (zero engine edit, §5 of pre-reg) → 1-cell smoke →
+  14-row run → morning report + registry entry, per pre-reg §9.
 - **[AI: Barış]** 2026-08-01: Gate V5 day-30 review of the SYSTEM_TEST vertical-slice track (CLOSED at
   V1.1; legs V2-V4 deliberately unopened).
 
