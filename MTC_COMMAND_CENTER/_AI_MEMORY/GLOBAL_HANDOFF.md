@@ -1,5 +1,63 @@
 # GLOBAL_HANDOFF
 
+## [Claude Fable 5] 2026-07-13 — Barış blanket-approved recommendations: P2RT detached at 54278b66; 4 PRs pushed+opened
+
+Barış approved all pending recommended options ("bende onay bekleyen tüm işlerde önerilen
+seçenekleri onaylıyorum"). Executed:
+
+1. **P2RT git-identity repair DONE:** pre-verified worktree+index diff vs `54278b66` both empty,
+   then `git -C C:/P2RT checkout --detach 54278b66`. Post: detached HEAD at `54278b66`, porcelain
+   clean, diff still empty, bridge unaffected (ARMED, run `paper-20260713150651`, reconcile
+   `16:12:07Z`). Branch `feature/ibkr-bridge-final` is now free — the linked-worktree ref-move
+   hazard is closed. `git log` inside P2RT is truthful again.
+2. **4 branches pushed to origin** (all `[new branch]`), secret scan (64+hex) on each full diff
+   vs master = zero matches. PRs opened with recommended merge order in bodies:
+   - PR #16 bridge (`feature/ibkr-bridge-final`, merge 1st)
+   - PR #17 UI (`feature/mcc-ui-impeccable-fixes`, 2nd)
+   - PR #18 faz3b prereg (`feature/faz3b-stage2-prereg`, 3rd; D016 still unapproved)
+   - PR #19 donchian (`feature/donchian-crypto-ladder`, last; carries shared handoff)
+   `GLOBAL_HANDOFF.md` will conflict across PRs — union-resolve when merging 2nd..4th.
+3. VPS window items unchanged (P2RT sync + notify-threshold tweak fold into one restart).
+   D016 NOT granted by this approval — Gate-5 review (queue 3, Codex) still precedes it.
+
+## [Claude Fable 5] 2026-07-13 — CONSOLIDATION AUDIT: content PASS; one MAJOR finding — P2RT branch ref moved (files intact); queue 3 cleared
+
+Audited `11_TRIAGE/BRANCH_CONSOLIDATION_REPORT_2026-07-13.md` against real code and runs.
+**Content work: VERIFIED PASS.** Golden tip `4ee8a098` confirmed ancestor of bridge tip
+`960369b9` (`merge-base --is-ancestor`). Suites independently re-run by auditor in a detached
+temp worktree at `960369b9`: `122 passed, 1 warning` from both CWDs. Incident-doc banner at tip
+correctly records both resets and Day 0 `15:17:05.383618Z`; `03_STATUS.md` at tip preserves the
+EMA/Day-0 record. `conftest.py` fix patches BOTH resolver import sites. Secret grep 0 on
+`6db8bf62`, `8a08928e`, `6442b000`, `960369b9`. No push: none of the four branches exist on
+origin (`ls-remote` empty). Bridge-vs-master `merge-tree` re-run: exit 0, 0 conflicts. Prereg
+working copy blob-identical to branch copy (`a5e40659`). `mega_walk_forward.py` merge delta is
+the explicit-select-only parity registration (İ4) — default runs untouched. The disclosed
+single-parent merge anomaly is real and correctly repaired: `git diff 6442b000 908e1b34` empty.
+
+**MAJOR FINDING (report headline claim false in one dimension):** the report says C:\P2RT was
+"not accessed or changed". Files: TRUE — auditor verified P2RT working tree AND index are
+byte-identical to `54278b66` (`git -C C:/P2RT diff 54278b66` and `diff --cached` both empty;
+old conftest on disk; no `18_GOLDEN_REPORT.md` on disk; running child PID 54192 unaffected; P2
+clock intact). Git identity: FALSE — **C:\P2RT is a linked worktree of the shared repo**
+(`.git/worktrees/P2RT`), it has `feature/ibkr-bridge-final` checked out, and Codex's
+`--ignore-other-worktrees` commits moved that ref `54278b66 → 960369b9` under the runtime.
+Consequences until repaired: (a) `git log -1` inside P2RT reports code that is NOT deployed;
+(b) `git status` there shows phantom staged diffs; (c) any git file op inside P2RT
+(`checkout .`, `reset --hard`, `pull`) would silently deploy unapproved code into the LIVE
+runtime. The "isolated checkout" premise was never true — same `.git`.
+
+**Required remediation (needs Barış yes/no):** run `git -C C:/P2RT checkout --detach 54278b66`.
+Zero tracked-file writes (content already identical), makes P2RT HEAD truthfully pinned,
+clears phantom staged state, frees the branch for shared-checkout work, prevents recurrence.
+Until then: daily monitoring must verify pinned identity via
+`git -C C:/P2RT diff 54278b66 --stat` (must be empty), NOT via `git log`; and NO git operations
+of any kind inside C:\P2RT.
+
+**Queue 3 (FAZ3B Stage-2 Gate-5 adversarial review, written-only, no runs) is CLEARED for
+Codex** — independent of the bridge finding. Queue 2d (P2RT sync) remains gated on a planned
+restart window and should fold in the detach repair + conftest/EMA-consolidated tip in one
+window.
+
 ## [Codex GPT-5] 2026-07-13 — Branch consolidation
 
 Queue 2a–2c plus the later approved pytest Telegram-isolation task are complete and stopped for

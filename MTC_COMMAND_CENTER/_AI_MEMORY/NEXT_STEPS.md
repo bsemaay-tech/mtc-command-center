@@ -1,15 +1,22 @@
 # NEXT_STEPS
 
-## BRANCH CONSOLIDATION BUILDER COMPLETE — FABLE AUDIT NEXT 2026-07-13 [AI: Claude]
+## BRANCH CONSOLIDATION — FABLE AUDIT DONE 2026-07-13: content PASS + 1 MAJOR finding
 
-Codex completed queue 2a–2c and wrote
-`11_TRIAGE/BRANCH_CONSOLIDATION_REPORT_2026-07-13.md`. The later approved Telegram test-isolation
-fix is also complete. Bridge tip is `960369b9`; both suites passed `122 passed, 1 warning` after
-that change. No push, PR creation, P2RT sync, or restart occurred.
-- **[AI: Claude]** audit the report against real refs, merge parents, conflict probes, and both
-  test commands; either require fixes or clear queue 3.
-- **[AI: Barış]** after Fable clearance, decide whether to push/open the four proposed PRs in the
-  recommended order. P2RT sync remains a separate planned restart-window decision.
+Codex's queue 2a–2c + Telegram test-isolation work **VERIFIED PASS** on real code/runs (Fable,
+2026-07-13): golden ancestor confirmed, 122/122 both CWDs independently re-run at `960369b9`,
+secret greps 0, no push (branches absent on origin), bridge-vs-master conflict probe clean.
+Full audit record: GLOBAL_HANDOFF `[Claude Fable 5] 2026-07-13 — CONSOLIDATION AUDIT`.
+- ~~P2RT git identity repair~~ **DONE 2026-07-13 (Barış approved, Fable executed):**
+  `git -C C:/P2RT checkout --detach 54278b66` — pre/post diffs empty, zero file writes, bridge
+  stayed ARMED. P2RT `git log` truthful again; branch freed. Daily pinned-identity check can use
+  `git -C C:/P2RT log --oneline -1` (= `54278b66` detached) + `diff 54278b66 --stat` empty.
+- ~~push/open four PRs~~ **DONE 2026-07-13 (Barış approved):** PR #16 bridge → #17 UI →
+  #18 faz3b-prereg → #19 donchian, merge in that order; secret scans zero; recommended
+  union-resolution for `GLOBAL_HANDOFF.md`/`NEXT_STEPS.md` conflicts noted in PR bodies.
+- **[AI: Barış]** merge PRs #16→#17→#18→#19 in order on GitHub (union-resolve shared handoff
+  files in #17..#19). P2RT sync to the consolidated tip stays a planned restart-window decision.
+- **[AI: Codex]** queue 3 CLEARED: FAZ3B Stage-2 Gate-5 adversarial review (written findings
+  only, NO runs) per the task-queue spec; then Fable synthesizes for D016.
 
 ## CRYPTO PAPER BRIDGE P2 ARMED — D3 ACTIVE 2026-07-13 [AI: Any]
 
