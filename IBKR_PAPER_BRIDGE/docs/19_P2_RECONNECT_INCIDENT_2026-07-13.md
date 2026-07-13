@@ -1,120 +1,172 @@
-# P2 Reconnect Incident Resolution and ARM Report
+# P2 Reconnect Safety Incident — 2026-07-13
 
-Date: 2026-07-13 UTC. Environment: Hyperliquid TESTNET only.
+> **RESOLVED / SUPERSEDED:** After this containment record was written, Barış approved the repair
+> and first ARM. The pinned `C:\P2RT` runtime at `59c334c0` passed both full suites (`119 passed`)
+> and was ARMED at `2026-07-13T13:00:28.6218649Z`, but that run auto-disarmed at `13:29:59Z` on
+> `DATA_STALE`. Barış then approved the EMA-8 correction `f209acd2` and one deploy/re-ARM cycle.
+> Both suites passed with `121 passed`; the current P2 Day 0 is
+> **`2026-07-13T15:17:05.383618Z`**, recorded at the pre-consolidation branch tip `54278b66`.
+> The historical containment narrative below is preserved unchanged.
 
 ## Final verdict
 
-**ALREADY ARMED — SAFE AND VERIFIED**
+**INCIDENT CONTAINED — DISARMED**
 
-Official P2 Day 0 start: **2026-07-13T13:00:28.6218649Z**.
+No ARM request was issued during this investigation. At the final live check the bridge was
+`DISARMED` on Hyperliquid testnet, and the exchange-backed position and open-order endpoints both
+returned `[]`. No process was restarted or terminated.
 
-Exactly one ARM request was issued after fresh Baris approval and after every repaired reconnect
-gate passed. Immediate and post-reconcile checks found zero exchange positions and zero open
-orders. Mainnet was never enabled or contacted.
+ARM remains blocked. The currently loaded child contains the reconnect fix, but the shared
+working tree no longer does; the next supervisor restart would load the pre-fix implementation.
+The reconciler also stopped writing equity evidence while `reconcile_ready` remained true.
 
-## Incident and containment
+## Evidence capture
 
-The earlier process repeatedly lost its WebSocket with `Expired`. The pre-fix reconnect path
-rebuilt the SDK clients, subscribed user channels in `connect()`, then subscribed `userEvents`
-again in `resubscribe()`. Installed Hyperliquid SDK code rejects that duplicate at
-`websocket_manager.py:148` with `NotImplementedError`.
+Captured before any mutation:
 
-Telegram later showed two ARMED transitions separated by a process restart, but the old runtime
-did not persist HTTP mutation records. The bridge was therefore treated as an active incident.
-Evidence was captured first; the live API then proved `DISARMED`, positions `[]`, and orders `[]`.
-The Task Scheduler supervisor was stopped. Windows left PID 65384 orphaned; it was terminated only
-after the zero-exposure proof. Port 8790 then closed.
+- Task Scheduler: one task, `MTC-Bridge-P2`, state `Running`.
+- Supervisor: PID `89596`, started `2026-07-13 08:52:42 +03:00`, Windows PowerShell,
+  `tools/run_bridge_p2.ps1`.
+- Bridge child: PID `65384`, parent `89596`, started
+  `2026-07-13 11:24:54 +03:00`, `C:\Python314\python.exe -m bridge.app`.
+- Listener: PID `65384`, `127.0.0.1:8790`, created
+  `2026-07-13 11:25:06 +03:00`.
+- Working directory: the supervisor script executes `Set-Location` to
+  `C:\LAB\Tradingview_LAB_CLEAN\IBKR_PAPER_BRIDGE` before starting the child.
+- Runtime config: `config/bridge.yaml`; strategy config:
+  `config/strategies/keltner_trail_ema8.yaml`.
+- Runtime identity: `paper`, `testnet`, Hyperliquid, BTC, 1h; run
+  `paper-20260713082455`, started `2026-07-13T08:24:56.304652Z`.
+- No second bridge task, supervisor, child, or `:8790` listener was found. The other Python
+  process was the unrelated read-only MCC dashboard.
 
-## Corrective implementation
+Final live API response:
 
-Deployment is isolated from the parallel-agent research worktree:
+```json
+{"state":"DISARMED","mode":"paper","network":"testnet","exchange_conn":"hyperliquid","regime":"BOTH","state_version":2,"reconcile_ready":true,"run_id":"paper-20260713082455","coin":"BTC","timeframe":"1h"}
+```
 
-- runtime worktree: `C:\P2RT`;
-- branch: `feature/ibkr-bridge-final`;
-- reconnect base fix: `29d9879f`;
-- incident hardening commit: `59c334c065b0b88e66d2cdcedf8337fa1fc76e86`;
-- Task Scheduler action now points to
-  `C:\P2RT\IBKR_PAPER_BRIDGE\tools\run_bridge_p2.ps1`;
-- the supervisor script resolves its root from `$PSScriptRoot`, not a shared absolute checkout.
+`GET /api/positions` returned `[]`; `GET /api/orders` returned `[]`. These routes call the live
+broker's `positions()` and `open_orders()` methods, so they cover bridge-owned and foreign
+exchange state. Native protective-order validation is not applicable because there is no open
+position.
 
-Commit `59c334c0` adds:
+## Loaded-code proof and restart hazard
 
-- a persistent reconciler exception boundary and retry loop;
-- fail-closed DISARM on reconciler failure;
-- `last_reconcile_ts` and `reconcile_error` status evidence;
-- ARM rejection when reconcile evidence is stale;
-- sanitized traceback callsites in `RECONCILE_FAILED` events;
-- auditable `ARM_REQUEST`, `DISARM_REQUEST`, and `STATE_TRANSITION` events;
-- explicit Telegram-visible `RECONNECT` and `DATA_RESTORED` success events;
-- a 60-second fresh-data deadline after reconnect, otherwise `DATA_STALE` and DISARM;
-- thread-safe scheduling of async bar callbacks from the SDK WebSocket thread.
+Commit `29d9879ff8100a7ae104a1de55961da6f961046b` was committed at
+`2026-07-13 11:24:31 +03:00`. The supervisor launched PID `65384` at `11:24:54`; the server was
+listening by `11:25:06`. A parallel repo checkout then replaced
+`bridge/broker/hyperliquid.py` at `11:25:23`.
 
-The original reconciler stopped after one unhandled broker exception while the old boolean stayed
-true. Its exact exception traceback was not retained by the old code. The new code preserves a
-sanitized call stack and keeps retrying while disarmed.
+Therefore PID `65384` imported the `29d9879f` implementation before the replacement. Runtime
+behavior corroborates this: the prior child recorded `RECONNECT_RETRY ... NotImplementedError`,
+whereas PID `65384` has recorded 18 first-attempt `RECONNECT` events and zero
+`RECONNECT_RETRY`/`NotImplementedError` events.
 
-## Verification
+The current file is not the fixed file:
 
-Targeted safety suite: **73 passed**.
+- working-tree/current-HEAD blob: `47cca178c59a704c62eb27a92afddd667f571cb2`;
+- `29d9879f` blob: `7f9da14c5493a3a62edcb9024c4f0b03e031d393`.
 
-Full suite:
+The active branch at capture was `feature/donchian-crypto-ladder`, HEAD
+`51445a08fe3994226413eb269febc5681fe45e44`; that branch does not contain `29d9879f`. A future
+supervisor restart is consequently unsafe for ARM until deployment is pinned to reviewed code.
 
-- repo root: **119 passed, 1 warning**;
-- `IBKR_PAPER_BRIDGE/`: **119 passed, 1 warning**.
+## Exact NotImplementedError path
 
-The only warning is the existing Starlette/httpx test-client deprecation.
+The application did not persist a Python traceback: `BarFeed.reconnect()` catches `Exception` and
+stores only `type(exc).__name__`. The exact call chain is nevertheless proven from the pre-fix
+source and installed SDK:
 
-Pinned process:
+1. `BarFeed.reconnect()` calls `await broker.connect()` and then `await broker.resubscribe()`.
+2. `connect()` rebuilt the client and subscribed the user channels.
+3. The pre-fix `resubscribe()` called `Info.subscribe({"type":"userEvents", ...})` again.
+4. Installed `hyperliquid/websocket_manager.py:148` raises
+   `NotImplementedError("Cannot subscribe to userEvents multiple times")` when that identifier
+   already has an active subscription.
 
-- supervisor PID 95724;
-- bridge child PID 81788;
-- run `paper-20260713124604`;
-- mode `paper`, network `testnet`, broker `hyperliquid`, BTC 1h;
-- startup state `DISARMED`;
-- startup exchange positions/orders: `[]` / `[]`.
+`29d9879f` makes user-channel resubscription flag-guarded and moves candle restoration to the
+fresh-client build path.
 
-Real natural reconnect gate:
+## Disconnect/reconnect reconstruction
 
-| Evidence | UTC |
-|---|---|
-| DISCONNECT | 2026-07-13T12:57:21.934878Z |
-| RECONNECT attempt=1 | 2026-07-13T12:57:29.844827Z |
-| DATA_RESTORED | 2026-07-13T12:57:39.924260Z |
-| Fresh market-data timestamp | 2026-07-13T12:57:39.488108Z |
-| Post-restore reconcile 1 | 2026-07-13T12:58:29.107810Z |
-| Post-restore reconcile 2 | 2026-07-13T12:59:30.309495Z |
+The failed pre-fix run `paper-20260713055252` had two failed cycles:
 
-There were no `RECONNECT_RETRY`, `NotImplementedError`, `DATA_STALE`, or `RECONCILE_FAILED`
-events. Positions and orders remained empty.
+- `08:04:33Z` disconnect; attempts 1–5 failed with `NotImplementedError`; `DATA_STALE` at
+  `08:06:05Z`.
+- `08:15:31Z` disconnect; attempts 1–5 failed with `NotImplementedError` through `08:17:02Z`.
 
-## ARM record
+Corrected run `paper-20260713082455`:
 
-Pre-ARM check at `2026-07-13T13:00:28.6021648Z`:
+| Disconnect (UTC) | RECONNECT (UTC) | Delay s | Result |
+|---|---|---:|---|
+| 08:35:28.280944 | 08:35:40.211655 | 11.931 | attempt=1 |
+| 08:47:08.673310 | 08:47:16.447796 | 7.774 | attempt=1 |
+| 08:58:16.043579 | 08:58:23.182683 | 7.139 | attempt=1 |
+| 09:09:21.746025 | 09:09:29.485340 | 7.739 | attempt=1 |
+| 09:21:00.820760 | 09:21:12.643005 | 11.822 | attempt=1 |
+| 09:32:29.553178 | 09:32:40.304358 | 10.751 | attempt=1 |
+| 09:43:59.013479 | 09:44:07.021299 | 8.008 | attempt=1 |
+| 09:55:05.378214 | 09:55:13.171799 | 7.794 | attempt=1 |
+| 10:05:41.279551 | 10:05:50.272792 | 8.993 | attempt=1 |
+| 10:16:35.613082 | 10:16:43.805335 | 8.192 | attempt=1 |
+| 10:28:12.535479 | 10:28:20.008637 | 7.473 | attempt=1 |
+| 10:38:31.984216 | 10:38:41.714758 | 9.731 | attempt=1 |
+| 10:48:34.662633 | 10:48:46.409131 | 11.746 | attempt=1 |
+| 10:59:01.453042 | 10:59:09.977275 | 8.524 | attempt=1 |
+| 11:10:27.241502 | 11:10:35.521605 | 8.280 | attempt=1 |
+| 11:22:05.423591 | 11:22:12.624403 | 7.201 | attempt=1 |
+| 11:32:42.850546 | 11:32:51.614400 | 8.764 | attempt=1 |
+| 11:43:51.958784 | 11:43:58.358528 | 6.400 | attempt=1 |
 
-- state `DISARMED`;
-- state version 2;
-- reconcile ready, age 58.2 seconds;
-- one pinned child and one running supervisor;
-- clean runtime worktree at `59c334c0`;
-- positions `[]`, orders `[]`;
-- no failure event.
+The corrected run has no `DATA_STALE`, retry, or NotImplemented event. Closed 1h bars exist at
+`08:00Z`, `09:00Z`, and `10:00Z`, proving post-start market-data progress. The absence of a
+Telegram success message is an observability defect: `RECONNECT` is classified INFO and
+`_feed_event()` sends Telegram only for non-INFO events, while every `DISCONNECT` is WARN.
 
-One `POST /api/arm` was sent at `2026-07-13T13:00:28.6218649Z`. The response was `ARMED`,
-state version 4. The event database contains exactly one `ARM_REQUEST` followed by exactly one
-`STATE_TRANSITION` with `DISARMED->ARMED`.
+## ARM notification reconstruction
 
-Post-ARM:
+The two Telegram messages cannot be one notifier delivery retried twice: the notifier has no
+retry loop, and `state -> ARMED` is emitted only when `_set_state()` sees an actual state change.
+Startup also resets non-KILLED state to `DISARMED` and does not emit ARMED. The supervisor log
+proves an old child exited at `11:24:44 +03:00` and PID `65384` started at `11:24:54`, between the
+11:24 and 11:27 Telegram messages.
 
-- reconcile `2026-07-13T13:01:32.783888Z`: ARMED, ready, positions/orders empty;
-- reconcile `2026-07-13T13:02:34.431911Z`: ARMED, ready, positions/orders empty;
-- supervisor and child remained running;
-- no order was created merely by ARM.
+The most consistent reconstruction is two separate DISARMED-to-ARMED transitions—one on each
+side of the restart, normally caused by two ARM API calls. However, Uvicorn access logs contain no
+retained POST record and state transitions are not stored in the events table, so the caller and
+request IDs cannot be proven. This observability gap prevents treating the ARM history as clean.
+There is no evidence of two simultaneously running bridge children in the retained process and
+supervisor records.
 
-## Next operation
+## Duplicate and scheduler checks
 
-D3 monitoring is active for at least 10 calendar days. Daily read-only checks must verify status,
-WARN/ERROR events, reconcile freshness, equity continuity, positions, orders, and native stop
-protection for any bridge-owned position. Any DISARM, critical code/config change, stale reconcile,
-missing data restoration, or unexplained order state invalidates the uninterrupted Day 0 claim and
-must be investigated before a newly approved restart/ARM.
+For corrected run `paper-20260713082455`:
 
+- decisions: 0;
+- signal fingerprints: 0;
+- trades: 0;
+- current-run orders: 0;
+- duplicate stored bar keys: 0;
+- duplicate decision UIDs/fingerprints: 0;
+- duplicate equity timestamps: 0;
+- active bridge schedulers/children: one each.
+
+There is therefore no evidence of duplicate bars, signals, order requests, or repeated reconciler
+actions. There is instead a reconciler liveness failure: equity rows stop at
+`2026-07-13T10:47:34.360627Z`, over one hour before the incident check, while the status endpoint
+still reports `reconcile_ready=true`. The readiness flag is not proof that the recurring task is
+alive.
+
+## Required next gate
+
+Do not ARM. Before any new approval is requested:
+
+1. Pin the supervisor to an isolated, reviewed deployment containing `29d9879f` or a reviewed
+   descendant; eliminate shared-worktree branch flips from runtime deployment.
+2. Diagnose and test the stopped reconciler task and make readiness reflect task liveness.
+3. Persist state-transition request/audit records and emit explicit reconnect/data-restored
+   notifications.
+4. Restart only into `DISARMED`, confirm zero exchange exposure, and observe a complete natural
+   expiry/reconnect cycle with fresh closed-bar data and continuing reconciler evidence.
+5. Obtain fresh Baris approval before any ARM operation.
