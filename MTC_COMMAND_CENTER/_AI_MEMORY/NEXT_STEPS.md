@@ -14,24 +14,27 @@
 - **[AI: Barış]** run-manifest discovery contract (audit §6.1) — decide if wanted before next big orchestrated sweep.
 
 
-## 🔶 FAZ 3B — SWEPT EXIT_MODE (Stage-1 COMPLETE D015; Stage-2 pre-reg DRAFTED 2026-07-13, awaiting review+approval)
+## FAZ 3B — SWEPT EXIT_MODE (D016 Path A scope freeze approved; passive accrual only)
 Scope: `00_AGENT_PROTOCOLS/FAZ3B_EXIT_SWEEP_SCOPE.md`. Chain D013→D014→D015 done: engine landed,
 self-parity byte-identical (goldens never recaptured), Stage-1 discovery run COMPLETE 2026-07-05
 (`03_QUANTLENS/research/faz3b_stage1_20260705/STAGE1_REPORT.md`): H1 confirmed at 1h — clean cell
 GEN_KELTNER_BREAKOUT × AAPL × 1h × trail_ema8 STRONG_PASS union-DSR 0.581; H0 holds at 10m;
 honest confound: first-ever 1h fixed_2R baseline itself robust on KELTNER SPY/QQQ. PR #15 merged.
-- ~~**[AI: Claude]** draft Stage-2 confirmation pre-registration~~ **DONE 2026-07-13**:
-  `00_AGENT_PROTOCOLS/FAZ3B_STAGE2_CONFIRM_PREREG_2026-07-13.md` (DRAFT — AWAITING BARIŞ APPROVAL).
-  Design: KELTNER only, 1h only, exit frozen trail_ema8 + fixed_2R confound twin, 12-set narrow grid
-  (winner {50,10,2.0} ±1 neighbor, literal list), held-out GOOGL/META/AMD/NFLX/DIA/IWM (AAPL
-  reference-only), union-DSR family N=219, full BH-FDR/CPCV/PBO/multi-window decision table.
-- **[AI: Claude|Codex]** write the Stage-2 Gate-5 adversarial-review prompt
-  (`11_TRIAGE/CODEX_GATE5_PROMPT_FAZ3B_STAGE2_<date>.md` per `11_TRIAGE/FAZ3B_STAGE2_PREREG_PROMPT_2026-07-05.md`
-  Step 2); Barış runs Codex; apply every required edit to the pre-reg.
-- **[AI: Barış]** approve the reviewed Stage-2 pre-reg with an explicit sentence → record as
-  **D016** in `_AI_MEMORY/DECISIONS.md`. NO runner code, smoke, or run before D016.
-- **[AI: Claude]** after D016 only: runner script (zero engine edit, §5 of pre-reg) → 1-cell smoke →
-  14-row run → morning report + registry entry, per pre-reg §9.
+- ~~Original Stage-2 draft + Gate-5~~ **CLOSED/BLOCKED 2026-07-13**: Codex FATAL findings
+  `11_TRIAGE/CODEX_GATE5_FINDINGS_FAZ3B_STAGE2_2026-07-13.md` were independently confirmed by
+  Fable; all six proposed held-out symbols were historically contaminated, the 12-grid was
+  re-optimization, and existing gauntlet tools were exit-blind. The old draft can never run.
+- ~~**[AI: Barış] choose Path A/B**~~ **DONE — D016 PATH A APPROVED 2026-07-13**. New temporal
+  holdout frozen in `00_AGENT_PROTOCOLS/FAZ3B_STAGE2_FORWARD_CONFIRM_PREREG_2026-07-13.md`:
+  scored 1h sessions 2026-07-14 through 2028-07-13; SPY/IWM, XLF/XLE, XLV/XLP across three
+  diversity groups; primary `{50,10,2.0}` only plus four diagnostic star points. Earliest possible
+  evaluation 2028-07-14. Today: zero compute and no data ingestion.
+- **[AI: Codex, needs separate Barış approval]** build exit-aware CPCV/multi-window/PBO tooling
+  exactly to the new prereg section 8 contract; default fixed-2R self-parity must stay byte-identical.
+- **[AI: Any]** before any future-data unblinding, complete the artifact-level historical Keltner
+  trial ledger. Registry-only checks are forbidden; scan result JSONs in both backtest-result roots.
+- **[AI: Barış]** after the fixed window closes: separately approve non-performance data inventory,
+  then Gate-5, then exactly one smoke/full evaluation. D016 itself authorizes none of these.
 - **[AI: Barış]** 2026-08-01: Gate V5 day-30 review of the SYSTEM_TEST vertical-slice track (CLOSED at
   V1.1; legs V2-V4 deliberately unopened).
 

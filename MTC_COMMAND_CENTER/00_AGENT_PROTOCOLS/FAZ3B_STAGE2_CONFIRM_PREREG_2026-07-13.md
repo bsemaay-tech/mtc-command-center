@@ -17,6 +17,9 @@
 > pre-registration on genuinely untouched data (pre-frozen forward window or new dataset)
 > plus exit-aware gauntlet tooling under its own review. This document is retained
 > unedited below as the honest record of what was proposed and why it failed review.
+> D016 later selected Path A only in
+> `FAZ3B_STAGE2_FORWARD_CONFIRM_PREREG_2026-07-13.md`; D016 does not authorize this
+> blocked draft or any run/tool work.
 > No run, no smoke test, no runner-script code, no engine edit is or ever was authorized.
 > Written 2026-07-13 by Claude Fable 5; Gate-5 review by Codex GPT-5; review audited and
 > this banner added by Claude Fable 5.

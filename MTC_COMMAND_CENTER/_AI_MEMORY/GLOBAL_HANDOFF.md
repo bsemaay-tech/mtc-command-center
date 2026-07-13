@@ -1,5 +1,11 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5] 2026-07-13 — D016 Path A frozen; deferred forward confirmation only
+
+Barış approved Claude's recommended Path A: “yol a onaylıyorum sen işlemi yap.” Recorded D016 and created `00_AGENT_PROTOCOLS/FAZ3B_STAGE2_FORWARD_CONFIRM_PREREG_2026-07-13.md`. The genuinely future temporal holdout is fixed now: 1h sessions 2026-07-14 through 2028-07-13, earliest evaluation 2028-07-14; symbols/groups SPY+IWM (broad market), XLF+XLE (cyclical sectors), XLV+XLP (defensive sectors); primary Keltner `{50,10,2.0}` only, with four diagnostic-only star neighbors. Confirmation requires EXIT-INCREMENTAL evidence in at least two groups. No AAPL reference and no substitutions.
+
+D016 is deliberately narrow: scope freeze and passive calendar accrual only. It does not approve exit-aware CPCV/multi-window/PBO code, data ingestion, runner/smoke/backtest/gauntlet execution, paper/live trading, or promotion. The original Stage-2 draft remains permanently blocked. Next approval-gated item is the exit-aware tooling contract; future evaluation additionally requires a complete artifact-level historical trial ledger, post-window data inventory, fresh Gate-5, and one-shot execution approval.
+
 ## [Codex GPT-5] 2026-07-13 — FAZ 3B Stage-2 pre-registration drafted; D016 required
 
 Completed and audited the document-only Stage-2 confirmation pre-registration at
