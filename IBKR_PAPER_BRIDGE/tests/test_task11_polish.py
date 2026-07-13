@@ -27,8 +27,13 @@ def test_dry_run_app_snapshot_has_bars_and_trade_data(tmp_path):
         status = client.get("/api/status").json()
         assert status["reconcile_ready"] is True
         client.post("/api/arm", headers={"X-Confirm": str(status["state_version"])})
-        time.sleep(0.4)
+        # Poll instead of a fixed sleep — the streamed replay races a fixed
+        # 0.4 s under machine load (flake seen while the paper instance ran).
+        deadline = time.time() + 10
         snapshot = client.get("/api/snapshot").json()
+        while time.time() < deadline and not (snapshot.get("decisions") and snapshot.get("trades")):
+            time.sleep(0.2)
+            snapshot = client.get("/api/snapshot").json()
         bars = client.get("/api/bars?n=5").json()["bars"]
         trades = client.get("/api/trades").json()
         decisions = client.get("/api/decisions").json()

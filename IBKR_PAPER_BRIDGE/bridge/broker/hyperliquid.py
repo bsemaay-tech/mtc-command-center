@@ -119,6 +119,14 @@ class HyperliquidBroker:
         if self.info is None or self.exchange is None:
             await asyncio.to_thread(self._build_sdk_clients)
             self._user_channels_subscribed = False
+            # Fresh Info = zero subscriptions: re-register every candle feed
+            # (user channels are flushed below via _subscribe_user_channels).
+            for coin, tf, receive, _finalizer in self._bar_subscriptions:
+                await asyncio.to_thread(
+                    self.info.subscribe,
+                    {"type": "candle", "coin": coin, "interval": tf},
+                    receive,
+                )
         await self._detect_account_mode()
         await self._load_size_decimals()
         if hasattr(self.exchange, "update_leverage"):
@@ -272,25 +280,17 @@ class HyperliquidBroker:
         return True
 
     async def resubscribe(self) -> None:
+        """Idempotent: connect() already re-registers everything when it
+        rebuilds dead clients; the SDK raises NotImplementedError on
+        duplicate userEvents/orderUpdates subscriptions (live incident
+        2026-07-13 08:04-08:17Z: every reconnect retry died on this).
+        Candle re-subscription is also skipped when the ws is alive —
+        subscriptions only vanish when the socket (and thus Info) is
+        replaced, which connect() now handles."""
         if self.info is None or not hasattr(self.info, "subscribe"):
             raise HyperliquidNotConfigured("Info client not configured")
-        for coin, tf, receive, _ in self._bar_subscriptions:
-            await asyncio.to_thread(
-                self.info.subscribe,
-                {"type": "candle", "coin": coin, "interval": tf},
-                receive,
-            )
-        if self._user_callbacks:
-            await asyncio.to_thread(
-                self.info.subscribe,
-                {"type": "userEvents", "user": self.account_address},
-                self._receive_user_message,
-            )
-            await asyncio.to_thread(
-                self.info.subscribe,
-                {"type": "orderUpdates", "user": self.account_address},
-                self._receive_user_message,
-            )
+        if self._user_callbacks and not self._user_channels_subscribed:
+            await asyncio.to_thread(self._subscribe_user_channels)
 
     async def place_bracket(self, plan: OrderPlan, grouping: str = "normalTpsl") -> dict:
         """Place entry + SL + optional TP as a bulk group.
