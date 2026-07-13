@@ -2423,3 +2423,9 @@ Validation: `node --check MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/web/app.js` P
 Visual QA notes: Browser screenshots could not be captured because the in-app Browser policy blocks `127.0.0.1:8765`, and no alternate browser workaround was used. Direct served-route inspection confirms the visual contract changed from the light skeleton to dark reference structures. Cheap-agent review was attempted through `_deepseek_driver`, but the agent drifted into unrelated files and hit `max_iters` without a usable report; no writes occurred.
 
 No backtest, optimization, worker, Pine, MTC_V2, parity, strategy logic, live trading, broker path, API write behavior, or execution/write-back path was launched or modified.
+
+## [Codex GPT-5] 2026-07-13 — Gate-5 adversarial review
+
+Completed the written-only Gate-5 review of `00_AGENT_PROTOCOLS/FAZ3B_STAGE2_CONFIRM_PREREG_2026-07-13.md`. Overall verdict: **FATAL; D016 blocked on the current draft.** All six proposed held-out decision symbols already have prior `GEN_KELTNER_BREAKOUT` 1h results on the identical 2020-07-27 through 2026-06-26 observation window. The existing CPCV and multi-window tools also omit `exit_mode` and therefore silently score `fixed_2R`, while the PBO tool lacks the required per-configuration common-period matrix.
+
+Deliverable: `11_TRIAGE/CODEX_GATE5_FINDINGS_FAZ3B_STAGE2_2026-07-13.md`, with A–J verdicts, evidence, apply-ready required edits, non-blocking improvements, and explicit unverifiable items. No backtest, smoke, runner, CPCV, PBO, multi-window, pytest, paper-trading, or live action was executed. Stop point: Fable synthesis and pre-reg repair; a second adversarial re-review is required before Baris considers D016.
