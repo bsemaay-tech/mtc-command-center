@@ -37,4 +37,3 @@ Three independent gates must ALL pass for `robust_final`:
 |---|---|---|---|---|---|---|---|---|---|---|---|
 
 ## Per-Strategy Top 3 PASS configurations
-

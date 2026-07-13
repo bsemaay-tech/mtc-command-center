@@ -60,7 +60,9 @@ Smoke: 1 cell / 2 workers / 2.8 s (scratchpad, JSON write proven — Gate 3.2). 
 
 ## Walk-Forward / OOS Method & Statistical Corrections
 
-3 rolling folds (60/20) + 25% terminal lockbox never used in selection; MIN_TRADES_FOR_PASS 30.
+The engine was configured for 3 rolling folds (60/20), but the disjoint-OOS geometry yields
+**2 feasible non-overlapping folds** per dataset (`summary.n_folds=2`); the third configured fold
+cannot fit before the 25% terminal lockbox and is not emitted. MIN_TRADES_FOR_PASS 30.
 Bootstrap 2000 resamples (+ 50k hi-res pass — 0 PASS candidates to refine) → BH-FDR q=0.10 over
 m=3 testable lockboxes → Bailey-LdP DSR (trials = 60). CPCV (6 groups, 2 test, 1% embargo) ran
 for the record: **0 eligible candidates** (nothing PASS/STRONG_PASS). PBO: N/A (no CPCV splits).
@@ -68,12 +70,15 @@ Multi-window Q1–Q4 + parameter neighborhood: **0 candidates** (tool consumes P
 
 ## Strategy vs Buy-and-Hold (identical lockbox slice, ALL cells — `buyhold_all_cells.json`)
 
+Benchmark convention is the engine's canonical first lockbox-bar open to final lockbox-bar close,
+copied from each result's `summary.buy_hold_lockbox`.
+
 | Cell | Class | Strategy % | B&H % | Excess α % | Trades | PF | MaxDD % | Folds+ | Boot p | DSR |
 |---|---|---|---|---|---|---|---|---|---|---|
-| BTCUSD 1h | FAIL | −16.80 | −37.11 | +20.30 | 36 | 0.70 | −17.0 | 1/3 | 0.878 | 0.00 |
-| BTCUSD 4h | FAIL | −17.84 | −37.44 | +19.60 | 31 | 0.80 | −29.9 | 1/3 | 0.530 | 0.0001 |
-| ETHUSD 1h | FAIL | −22.44 | −39.74 | +17.30 | 126 | 0.95 | −35.7 | 1/3 | 0.509 | 0.00 |
-| ETHUSD 4h | INSUFFICIENT_TRADES | +30.79 | −40.14 | +70.93 | **9** | 2.13 | −19.7 | 2/3 | n/a | 0.24 |
+| BTCUSD 1h | FAIL | −16.80 | −37.01 | +20.20 | 36 | 0.70 | −17.0 | 1/2 | 0.878 | 0.00 |
+| BTCUSD 4h | FAIL | −17.84 | −37.41 | +19.57 | 31 | 0.80 | −29.9 | 1/2 | 0.530 | 0.0001 |
+| ETHUSD 1h | FAIL | −22.44 | −39.25 | +16.81 | 126 | 0.95 | −35.7 | 1/2 | 0.509 | 0.00 |
+| ETHUSD 4h | INSUFFICIENT_TRADES | +30.79 | −39.97 | +70.76 | **9** | 2.13 | −19.7 | 2/2 | n/a | 0.24 |
 
 Returns are compound (engine). "Excess α > 0" here means *lost less than holding* — absolute
 returns are negative in 3/4 cells. Long-only strategy; no short leg exists to break down.

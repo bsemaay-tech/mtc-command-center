@@ -13,4 +13,3 @@
 ## REGIME-ROBUST + PARAM-STABLE (cross-window survivors)
 
 _(No candidate is both regime-robust across windows AND parameter-stable.)_
-
