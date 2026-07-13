@@ -1,5 +1,19 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5] 2026-07-13 — FAZ 3B Stage-2 pre-registration drafted; D016 required
+
+Completed and audited the document-only Stage-2 confirmation pre-registration at
+`00_AGENT_PROTOCOLS/FAZ3B_STAGE2_CONFIRM_PREREG_2026-07-13.md`. It carries forward the clean
+Stage-1 lead (GEN_KELTNER_BREAKOUT × AAPL × 1h × trail_ema8, STRONG_PASS, union-DSR 0.581) while
+controlling the KELTNER-1h confound with held-out GOOGL/META/AMD/NFLX/DIA/IWM decision cells,
+fixed_2R twins, and AAPL reference-only rows. Exact scope: one strategy, one timeframe, two exits,
+12 literal winner-neighborhood configs, 14 result rows / 168 new trials, union family N=219.
+Promotion gates and outcome actions are frozen in writing: union-DSR ≥0.95, BH-FDR, positive
+buy-and-hold alpha, CPCV ≥0.70, PBO<0.5, canonical 3/5 multi-window plus ≥70% neighbor stability.
+Status remains **DRAFT — AWAITING BARIŞ APPROVAL**. Next: Gate-5 review, apply required edits, then
+Barış approval recorded as D016. No runner code, smoke, run, engine/Pine/parity/registry/schema edit,
+or trading action occurred.
+
 ## Claude Opus 4.8 2026-07-05 (6) — audit cleanup (4 remaining items) done + pushed to origin/master
 
 Barış: "kalan küçük işleri yap push et". Closed the four leftover audit follow-ups on branch
