@@ -30,11 +30,16 @@ Task Scheduler must never be redirected to the parallel-agent research checkout.
   authoritative task ladder from here to P2 (testnet live loop).** Barış 2026-07-12 blanket-approved
   ALL of it incl. bounded P0 smokes until pass, B6 fill smoke, and ALL of Phase D (P2 ARM). Any model
   picks the first unchecked box in its §3 and executes per its §1 rules WITHOUT asking; human input
-  only at its §0-İ points (Telegram creds, PC uptime, mainnet=forbidden, QuantLens registration).
+  only at its §0-İ points (Telegram creds, PC uptime, mainnet=forbidden; QuantLens registration İ4
+  is now complete).
   P1 audited PASS; P0 attempt 6 proved the wire format (resting entry + `waitingForFill` child); W1
   (pending-child parser) is the current first task.
-- P3 later (≥30d, slippage + signal-parity report to `11_TRIAGE/`); parity blocked until
-  `keltner_trail_ema8` is registered in QuantLens ([AI: Barış] İ4 approval).
+- ~~**[AI: Barış]** approve QuantLens İ4 registration and unblock the real golden.~~ **DONE
+  2026-07-13**: `keltner_trail_ema8` is registered and the real golden is ready; 858/858 entry
+  signals match. Evidence: `IBKR_PAPER_BRIDGE/docs/18_GOLDEN_REPORT.md`. Honest caveat: the
+  bridge exit trail is SMA-8 while QuantLens `trail_ema8` is EMA-8, so exit parity is not claimed.
+- **[AI: Claude|Codex]** P3 later (≥30d): produce the slippage + operational signal-parity report
+  to `11_TRIAGE/`; the QuantLens/golden prerequisite is complete.
 
 ## 🔧 MCC APP AUDIT FOLLOW-UPS (audit 2026-07-05: `11_TRIAGE/MCC_APP_AUDIT_2026-07-05.md`; Barış answered all open questions; quick wins DONE same session on `feature/mcc-audit-fixes`)
 - ~~fix backtest_reader nested-run glob + heartbeat_reader parents index~~ DONE 2026-07-05 (115 tests pass; July runs + heartbeat visible).

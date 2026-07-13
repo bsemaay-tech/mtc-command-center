@@ -61,3 +61,13 @@ Phase D3: monitor continuously for at least 10 calendar days. Daily read-only ch
 Do not change code or frozen P2 config during the new window except for a critical safety incident.
 Any DISARM or critical runtime change requires investigation and resets the uninterrupted window.
 Mainnet remains forbidden.
+
+## Deferred (post-P2)
+- Store-chain proof of a full engine trade (P2 first real trade will provide it).
+- QuantLens I4 registration and the real golden fixture are **COMPLETE**: 858/858 entry signals
+  match over 48,077 BTCUSD 1h bars; run id
+  `QL_MEGA_KELTNER_TRAIL_EMA8_BTCUSD_1h_2026-06-28_01a3f1255e29`. Evidence:
+  [`18_GOLDEN_REPORT.md`](18_GOLDEN_REPORT.md).
+- The later bridge correction `f209acd2` aligns the trail calculation with QuantLens EMA-8.
+  The golden still proves entry-signal parity only; broader exit-execution parity is not claimed.
+- P3's slippage and operational parity report remains post-P2 and requires at least 30 days.

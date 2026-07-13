@@ -321,6 +321,14 @@ def grid_keltner_breakout():
                 out.append({"ema_len": ema_len, "atr_len": atr_len, "mult": mult})
     return out  # 2*2*4 = 16
 
+def grid_keltner_trail_ema8():
+    # IBKR bridge parity subject (Barış I4 approval 2026-07-13). Single pinned
+    # combo mirroring IBKR_PAPER_BRIDGE/config/strategies/keltner_trail_ema8.yaml
+    # verbatim — never sweep. Excluded from default full runs via
+    # BRIDGE_PARITY_STRATEGIES so existing trial counts / BH-FDR families are
+    # untouched; runs only when explicitly selected with --strategy.
+    return [{"kc_length": 20, "kc_mult": 2.0, "atr_length": 20, "trail_ema": 8}]
+
 def grid_triple_ema_stack():
     out = []
     for touch_atr in (0.15, 0.30, 0.50, 0.75):
@@ -359,7 +367,14 @@ GRIDS: dict[str, list[dict]] = {
     "GEN_KELTNER_BREAKOUT": grid_keltner_breakout(),
     "GEN_TRIPLE_EMA_STACK": grid_triple_ema_stack(),
     "GEN_STOCH_OVERSOLD_CROSS": grid_stoch_oversold(),
+    # Bridge parity subject — explicit-select only (see BRIDGE_PARITY_STRATEGIES).
+    "keltner_trail_ema8": grid_keltner_trail_ema8(),
 }
+
+# Strategies registered ONLY for explicit --strategy selection (bridge parity
+# fixtures). Never part of default full runs, so default job lists, trial
+# counts, DSR pools, and the BH-FDR family stay byte-identical.
+BRIDGE_PARITY_STRATEGIES: set = {"keltner_trail_ema8"}
 
 # ------------------------------------------------------------------
 # SIGNALS
@@ -514,6 +529,40 @@ def build_signals(strategy, df, params, daily_rsi_map=None):
         sig = (close > upper) & (close.shift(1) <= upper.shift(1)) & (close > df["ema_200"])
         stop = low.rolling(5, min_periods=1).min()
         return sig.fillna(False), stop
+
+    if strategy == "keltner_trail_ema8":
+        # IBKR bridge parity subject (I4 approval 2026-07-13). Rules mirror
+        # IBKR_PAPER_BRIDGE/bridge/engine/strategies/keltner_trail_ema8.py
+        # verbatim: prior-window bands (current bar EXCLUDED — SMA of closes and
+        # arithmetic mean of true range over the previous kc_length/atr_length
+        # bars), two-sided close-confirmed breakout, consecutive same-direction
+        # breakouts collapsed (bridge last-signal-direction state machine).
+        # First bar's TR = high-low (no prev close); NaN-skipping max gives that
+        # for free. The full two-sided event stream is stamped on df as
+        # kte8_event (+1 LONG / -1 SHORT) for the golden exporter
+        # (IBKR_PAPER_BRIDGE/tools/generate_golden.py); the engine sim itself is
+        # single-direction, so sig = the LONG leg with the bridge's initial stop
+        # (lower band). Metrics from this sim are plumbing evidence only, NOT a
+        # promotion claim.
+        kl = int(params["kc_length"]); al = int(params["atr_length"]); mult = params["kc_mult"]
+        pc = close.shift(1)
+        tr = pd.concat([high - low, (high - pc).abs(), (low - pc).abs()], axis=1).max(axis=1)
+        mid = close.rolling(kl, min_periods=kl).mean().shift(1)
+        band = tr.rolling(al, min_periods=al).mean().shift(1)
+        upper = mid + mult * band
+        lower = mid - mult * band
+        raw = pd.Series(0, index=df.index)
+        raw[close > upper] = 1
+        raw[close < lower] = -1
+        nz = raw[raw != 0]
+        events = nz[nz != nz.shift(1)]
+        evt = pd.Series(0, index=df.index)
+        evt.loc[events.index] = events
+        df["kte8_event"] = evt
+        df["kte8_upper"] = upper
+        df["kte8_lower"] = lower
+        sig = evt == 1
+        return sig.fillna(False), lower
 
     if strategy == "GEN_TRIPLE_EMA_STACK":
         e5 = ema(close, 5); e13 = ema(close, 13); e50 = ema(close, 50)
@@ -1571,7 +1620,9 @@ def main():
         workers = int(_env_workers)
     else:
         workers = max(2, min(8, cpu_count() - 1))
-    selected_strategies = args.strategy or list(GRIDS)
+    # Bridge parity subjects never join default full runs (see
+    # BRIDGE_PARITY_STRATEGIES) — default job lists stay byte-identical.
+    selected_strategies = args.strategy or [s for s in GRIDS if s not in BRIDGE_PARITY_STRATEGIES]
     selected_symbols = args.symbol or SYMBOLS
     selected_tfs = args.tf or TIMEFRAMES
     missing = [s for s in selected_strategies if s not in GRIDS]
