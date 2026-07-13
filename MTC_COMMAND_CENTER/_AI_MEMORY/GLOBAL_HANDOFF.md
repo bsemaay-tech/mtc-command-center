@@ -2,15 +2,19 @@
 
 ## [Codex GPT-5] 2026-07-13 — Branch consolidation
 
-Queue 2a–2c builder work is complete and stopped for Fable audit. Stray golden/UI/Faz files were
+Queue 2a–2c plus the later approved pytest Telegram-isolation task are complete and stopped for
+Fable audit. Stray golden/UI/Faz files were
 already byte-identical on their designated branches; the stale bridge status was archived and
 restored, and the incident containment document gained the audited two-reset banner in `6db8bf62`.
-`feature/ibkr-bridge-final` now contains the reviewed golden integration `6442b000` plus
-content-neutral ancestry merge `908e1b34`; the golden tip is an ancestor and both bridge suites
-passed `122 passed, 1 warning`. Four master PRs were proposed as text only; none was pushed.
+`feature/ibkr-bridge-final` now contains the reviewed golden integration `6442b000`,
+content-neutral ancestry merge `908e1b34`, and test-only Telegram credential isolation
+`960369b9`; the golden tip is an ancestor and both bridge suites passed `122 passed, 1 warning`
+after the final change. Four master PRs were proposed as text only; none was pushed.
 Recommended order: bridge → UI → Faz prereg → Donchian, with shared `GLOBAL_HANDOFF.md`/
 `NEXT_STEPS.md` conflicts resolved as unions. `C:\P2RT` was not accessed or changed; queue 2d was
-not performed. Full evidence: `11_TRIAGE/BRANCH_CONSOLIDATION_REPORT_2026-07-13.md`.
+not performed. The pinned runtime therefore still has its old conftest until the next planned sync
+window; do not run its suite if fake Telegram messages are unacceptable. Full evidence:
+`11_TRIAGE/BRANCH_CONSOLIDATION_REPORT_2026-07-13.md`.
 
 ## [Claude Fable 5] 2026-07-13 — AUDIT PASS: EMA-8 fix + re-ARM verified; queue 2 (branch consolidation) cleared for Codex
 

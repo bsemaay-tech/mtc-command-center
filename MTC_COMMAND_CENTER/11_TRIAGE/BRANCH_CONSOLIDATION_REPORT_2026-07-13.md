@@ -4,13 +4,15 @@ Executor: Codex GPT-5. Audit gate: stop after this deliverable for Claude Fable 
 
 ## Verdict
 
-**BUILDER COMPLETE — READY FOR FABLE AUDIT.** Queue 2a–2c were executed in the shared checkout.
+**BUILDER COMPLETE — READY FOR FABLE AUDIT.** Queue 2a–2c and the later approved Task 4 were
+executed in the shared checkout.
 No remote was pushed. No mainnet action occurred. `HL_LIVE_ACK` was not changed. No file under
 `C:\P2RT` was read or written. Queue 2d (runtime sync/restart) was not performed.
 
-The consolidated bridge branch is `feature/ibkr-bridge-final` at `908e1b34`. It contains the
+The consolidated bridge branch is `feature/ibkr-bridge-final` at `960369b9`. It contains the
 reviewed golden tree integration (`6442b000`) and a content-neutral two-parent ancestry merge
-(`908e1b34`). The golden tip is now an ancestor. Both bridge suites passed `122 passed, 1 warning`.
+(`908e1b34`), followed by the test-only Telegram isolation fix (`960369b9`). The golden tip is an
+ancestor. Both bridge suites passed `122 passed, 1 warning` after the final change.
 
 ## 1. Initial state and guard
 
@@ -288,7 +290,7 @@ Current individual master probes are all clean:
 
 | Branch | Commits vs master | Files | Diff tail | Master conflict probe |
 |---|---:|---:|---|---|
-| `feature/ibkr-bridge-final` | 101 | 93 | 69,399 insertions / 1 deletion | exit 0, none |
+| `feature/ibkr-bridge-final` | 102 | 93 | 69,413 insertions / 1 deletion | exit 0, none |
 | `feature/mcc-ui-impeccable-fixes` | 3 | 9 | 81 insertions / 77 deletions | exit 0, none |
 | `feature/donchian-crypto-ladder` | 95 | 102 | 69,725 insertions / 14 deletions | exit 0, none |
 | `feature/faz3b-stage2-prereg` | 1 | 3 | 313 insertions / 9 deletions | exit 0, none |
@@ -302,8 +304,9 @@ All four currently share merge base `af26d6a74979ec3e7176890557fde8b1a3431b99` w
 **Body:** Merge the complete Hyperliquid testnet paper-bridge build and audited P0/P2 safety
 hardening, including reconnect/reconcile fail-closed behavior, supervisor and deployment docs,
 the approved EMA-8 correction, the current Day-0 evidence record, and the real QuantLens
-858-signal entry golden. Both supported bridge test invocations pass 122 tests. This does not sync
-or restart the pinned P2 runtime and does not authorize mainnet.
+858-signal entry golden. It also prevents pytest from resolving real Telegram credentials through
+the Windows registry. Both supported bridge test invocations pass 122 tests. This does not sync or
+restart the pinned P2 runtime and does not authorize mainnet.
 
 **Conflicts:** none against current master. Pairwise probes show `GLOBAL_HANDOFF.md` conflicts with
 each other proposed branch; `NEXT_STEPS.md` auto-merges against UI/Faz but conflicts with Donchian.
@@ -368,7 +371,80 @@ UI + Faz          -> GLOBAL_HANDOFF conflict
 Donchian + Faz    -> GLOBAL_HANDOFF, NEXT_STEPS conflicts
 ```
 
-## 5. Operational anomalies and left undone
+## 5. Task 4 — pytest Telegram isolation
+
+The prompt gained this Barış-approved task during execution. The verified leak chain was:
+
+```text
+create_app() -> build_notifier() -> resolve_telegram_credentials()
+             -> HKCU fallback -> real sender during /api/arm tests
+```
+
+The bounded one-file edit was offered to Cline first; Cline failed before work with
+`session not found`. The DeepSeek harness fallback edited only `IBKR_PAPER_BRIDGE/tests/conftest.py`
+under an exact write allowlist. Codex then audited the real diff.
+
+Implementation evidence at
+`feature/ibkr-bridge-final:IBKR_PAPER_BRIDGE/tests/conftest.py:13-22`:
+
+```python
+@pytest.fixture(autouse=True)
+def _no_real_telegram(monkeypatch):
+    monkeypatch.setattr(
+        "bridge.settings.resolve_telegram_credentials", lambda: ("", "")
+    )
+    monkeypatch.setattr(
+        "bridge.engine.notify.resolve_telegram_credentials", lambda: ("", "")
+    )
+```
+
+Both names are required because `bridge.engine.notify` imports a copied resolver reference.
+Runtime code was untouched.
+
+Focused acceptance:
+
+```powershell
+$env:PYTHONUTF8='1'
+python -m pytest `
+  IBKR_PAPER_BRIDGE/tests/test_task11_polish.py::test_build_notifier_disabled_without_creds `
+  IBKR_PAPER_BRIDGE/tests/test_task11_polish.py::test_build_notifier_enabled_sends_via_http_sender -q
+```
+
+```text
+2 passed, 1 warning in 0.45s
+```
+
+Grep proof:
+
+```text
+tests/conftest.py patches both resolver names to empty credentials for every test.
+tests/test_task11_polish.py:80 explicitly supplies fake credentials.
+tests/test_task11_polish.py:81 explicitly replaces _http_sender with fake_sender.
+No other test path references _http_sender.
+```
+
+Full-suite outputs after the fixture change:
+
+```text
+repo root:          122 passed, 1 warning in 17.97s
+IBKR_PAPER_BRIDGE:  122 passed, 1 warning in 17.76s
+```
+
+Commit:
+
+```text
+STAGED_FILES
+IBKR_PAPER_BRIDGE/tests/conftest.py
+DIFF_CHECK=PASS
+SECRET_GREP_COUNT=0
+[feature/ibkr-bridge-final 960369b9] test(bridge): block real Telegram credentials in pytest
+```
+
+Important runtime caveat: `C:\P2RT` was deliberately not synced or touched. Until the next
+planned restart/sync window, a suite run from inside `C:\P2RT` still uses its old conftest and can
+emit test Telegram messages. Do not run its suite during P2 unless that consequence is accepted.
+
+## 6. Operational anomalies and left undone
 
 - `pwsh` was unavailable; installed Windows PowerShell ran the same guard successfully.
 - Two early Bash `-lc` commit wrappers failed before mutation because Windows argument parsing
@@ -381,6 +457,8 @@ Donchian + Faz    -> GLOBAL_HANDOFF, NEXT_STEPS conflicts
   `MERGE_HEAD`; `908e1b34` repairs ancestry without changing the tested tree.
 - No push or PR creation was performed.
 - P2RT sync/restart (queue 2d) was not performed.
+- The pytest Telegram isolation fix exists only on the shared branch tip `960369b9`; the pinned
+  runtime retains its old test fixture until the separately planned sync window.
 - The stale-status archive, generated Sites residue, interrupted research artifacts, byte-identical
   UI/prereg working copies, and `Youtube transcrip/` remain untracked/on disk as documented.
 
