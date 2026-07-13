@@ -5,8 +5,9 @@ from __future__ import annotations
 import asyncio
 import inspect
 import sqlite3
+import traceback
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Callable
 
 from bridge.broker.base import Broker
@@ -39,6 +40,8 @@ class BridgeEngine:
     reconcile_interval_s: float = 60.0
     bars: list[Bar] = field(default_factory=list)
     reconcile_ready: bool = False
+    last_reconcile_ts: datetime | None = None
+    reconcile_error: str | None = None
     _feed: BarFeed | None = field(default=None, init=False)
     _tasks: list[asyncio.Task] = field(default_factory=list, init=False)
     _kill_requested: bool = field(default=False, init=False)
@@ -64,6 +67,8 @@ class BridgeEngine:
         await self.broker.connect()
         await self.order_manager.reconcile()
         self.reconcile_ready = True
+        self.last_reconcile_ts = datetime.now(UTC)
+        self.reconcile_error = None
         await self._publish("status", self.status())
         self._feed = BarFeed(
             broker=self.broker,
@@ -98,10 +103,18 @@ class BridgeEngine:
         self._tasks.clear()
 
     async def arm(self) -> None:
-        if self._app_state() == "KILLED":
+        now = datetime.now(UTC)
+        previous = self._app_state()
+        self.store.insert_event(self.run_id, now, "INFO", "ARM_REQUEST", f"state={previous}")
+        if previous == "KILLED":
             raise RuntimeError("KILLED requires operator acknowledgement")
         if not self.reconcile_ready:
             raise RuntimeError("startup reconcile incomplete")
+        max_age = timedelta(seconds=max(self.reconcile_interval_s * 3, 30.0))
+        if self.last_reconcile_ts is None or now - self.last_reconcile_ts > max_age:
+            self.reconcile_ready = False
+            self.reconcile_error = "STALE"
+            raise RuntimeError("reconcile evidence stale")
         self._kill_requested = False
         self._set_state("ARMED")
         await self._publish("status", self.status())
@@ -110,6 +123,13 @@ class BridgeEngine:
         self._set_state("DISARMED")
 
     async def disarm_runtime(self) -> None:
+        self.store.insert_event(
+            self.run_id,
+            datetime.now(UTC),
+            "INFO",
+            "DISARM_REQUEST",
+            f"state={self._app_state()}",
+        )
         self.disarm()
         for order in await self.broker.open_orders():
             if order.role == "ENTRY":
@@ -282,6 +302,8 @@ class BridgeEngine:
         return {
             "state": self._app_state(),
             "reconcile_ready": self.reconcile_ready,
+            "last_reconcile_ts": self.last_reconcile_ts.isoformat() if self.last_reconcile_ts else None,
+            "reconcile_error": self.reconcile_error,
             "run_id": self.run_id,
             "coin": self.coin,
             "timeframe": self.timeframe,
@@ -302,13 +324,55 @@ class BridgeEngine:
     async def _reconcile_loop(self) -> None:
         while True:
             await asyncio.sleep(self.reconcile_interval_s)
+            if await self._run_reconcile_cycle():
+                await self._publish("equity", {"run_id": self.run_id})
+
+    async def _run_reconcile_cycle(self) -> bool:
+        try:
             await self.order_manager.reconcile()
-            await self._publish("equity", {"run_id": self.run_id})
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:  # noqa: BLE001 - fail closed and keep the health loop alive
+            error = type(exc).__name__
+            stack = " > ".join(
+                f"{frame.name}:{frame.lineno}"
+                for frame in traceback.extract_tb(exc.__traceback__)[-8:]
+            )
+            self.reconcile_ready = False
+            self.reconcile_error = error
+            self.store.insert_event(
+                self.run_id,
+                datetime.now(UTC),
+                "ERROR",
+                "RECONCILE_FAILED",
+                f"error={error}; stack={stack or 'unavailable'}",
+            )
+            self._notify_bg("ERROR", f"RECONCILE_FAILED: error={error}")
+            if self._app_state() == "ARMED":
+                self.disarm()
+            await self._publish("status", self.status())
+            return False
+
+        recovered = not self.reconcile_ready
+        self.reconcile_ready = True
+        self.last_reconcile_ts = datetime.now(UTC)
+        self.reconcile_error = None
+        if recovered:
+            self.store.insert_event(
+                self.run_id,
+                self.last_reconcile_ts,
+                "INFO",
+                "RECONCILE_RECOVERED",
+                "periodic reconcile succeeded",
+            )
+            self._notify_bg("INFO", "RECONCILE_RECOVERED: periodic reconcile succeeded")
+            await self._publish("status", self.status())
+        return True
 
     async def _feed_event(self, code: str, detail: str) -> None:
         severity = "WARN" if code in {"DATA_STALE", "DISCONNECT", "RECONNECT_RETRY"} else "INFO"
         self.store.insert_event(self.run_id, datetime.now(UTC), severity, code, detail)
-        if severity != "INFO":
+        if severity != "INFO" or code in {"RECONNECT", "DATA_RESTORED"}:
             self._notify_bg(severity, f"{code}: {detail}")
         await self._publish("event", {"code": code, "detail": detail})
 
@@ -340,6 +404,13 @@ class BridgeEngine:
         self.state = state
         self.store.set_meta("app_state", state)
         if state != previous and state in {"DISARMED", "KILLED", "ARMED"}:
+            self.store.insert_event(
+                self.run_id,
+                datetime.now(UTC),
+                "INFO" if state == "ARMED" else "WARN",
+                "STATE_TRANSITION",
+                f"{previous}->{state}",
+            )
             self._notify_bg("WARN" if state != "ARMED" else "INFO", f"state -> {state}")
 
     def _notify_bg(self, severity: str, message: str) -> None:

@@ -93,6 +93,7 @@ class BarFeed:
         poll_seconds: float = 1.0,
         staleness_enabled: bool = True,
         reconnect_base_delay: float = 5.0,
+        data_restore_timeout_s: float = 60.0,
     ) -> None:
         self.broker = broker
         self.coin = coin
@@ -103,14 +104,18 @@ class BarFeed:
         self.poll_seconds = poll_seconds
         self.staleness_enabled = staleness_enabled
         self.reconnect_base_delay = reconnect_base_delay
+        self.data_restore_timeout_s = data_restore_timeout_s
         self.last_bar_update: datetime | None = None
         self.warmup: list[Bar] = []
         self._stop = asyncio.Event()
         self._task: asyncio.Task | None = None
         self._stale_emitted = False
         self._reconnecting = False
+        self._awaiting_data_since: datetime | None = None
+        self._loop: asyncio.AbstractEventLoop | None = None
 
     async def start(self, lookback: int = 300) -> list[Bar]:
+        self._loop = asyncio.get_running_loop()
         self.warmup = await self.broker.historical_bars(self.coin, self.timeframe, lookback)
         if self.warmup:
             self.last_bar_update = self.warmup[-1].ts
@@ -131,7 +136,7 @@ class BarFeed:
         self._stale_emitted = False
         result = self.on_bar_closed(bar)
         if inspect.isawaitable(result):
-            asyncio.get_running_loop().create_task(result)
+            self._schedule_awaitable(result)
 
     async def check_once(self, now: datetime | None = None) -> None:
         now = now or datetime.now(UTC)
@@ -154,6 +159,18 @@ class BarFeed:
                 await self._call(self.on_stale)
             return
         reference = getattr(self.broker, "last_bar_update", None) or self.last_bar_update
+        if self._awaiting_data_since is not None:
+            if reference is not None and reference > self._awaiting_data_since:
+                await self._call(self.on_event, "DATA_RESTORED", f"last_update={reference.isoformat()}")
+                self._awaiting_data_since = None
+                self._stale_emitted = False
+            elif now - self._awaiting_data_since > timedelta(seconds=self.data_restore_timeout_s):
+                self._awaiting_data_since = None
+                if not self._stale_emitted:
+                    self._stale_emitted = True
+                    await self._call(self.on_event, "DATA_STALE", "reconnect_no_fresh_data")
+                    await self._call(self.on_stale)
+                return
         if reference is None or not self.staleness_enabled:
             return
         if now - reference > 2 * timeframe_delta(self.timeframe) and not self._stale_emitted:
@@ -165,11 +182,13 @@ class BarFeed:
         base_delay = self.reconnect_base_delay if base_delay is None else base_delay
         await self._call(self.on_event, "DISCONNECT", "bar feed disconnected")
         for attempt in range(attempts):
+            attempt_started = datetime.now(UTC)
             try:
                 await self.broker.connect()
                 resubscribe = getattr(self.broker, "resubscribe", None)
                 if resubscribe is not None:
                     await resubscribe()
+                self._awaiting_data_since = attempt_started
                 await self._call(self.on_event, "RECONNECT", f"attempt={attempt + 1}")
                 return True
             except Exception as exc:
@@ -182,6 +201,21 @@ class BarFeed:
         while not self._stop.is_set():
             await self.check_once()
             await asyncio.sleep(self.poll_seconds)
+
+    def _schedule_awaitable(self, result: Awaitable) -> None:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+        if loop is not None:
+            loop.create_task(result)
+            return
+        if self._loop is not None and self._loop.is_running():
+            self._loop.call_soon_threadsafe(self._loop.create_task, result)
+            return
+        close = getattr(result, "close", None)
+        if callable(close):
+            close()
 
     @staticmethod
     async def _call(callback: Callable | None, *args) -> None:

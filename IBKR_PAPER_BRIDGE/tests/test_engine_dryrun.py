@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+
+import pytest
 
 from bridge.broker.mock import MockBroker
 from bridge.engine.engine import BridgeEngine
@@ -37,6 +39,14 @@ def test_disarm_mid_await_no_submit(tmp_path):
 
 def test_decision_chain_records_trade_closed(tmp_path):
     asyncio.run(_run_decision_chain_records_trade_closed(tmp_path))
+
+
+def test_reconciler_failure_disarms_and_recovers(tmp_path):
+    asyncio.run(_reconciler_failure_disarms_and_recovers(tmp_path))
+
+
+def test_arm_requires_fresh_reconcile_evidence(tmp_path):
+    asyncio.run(_arm_requires_fresh_reconcile_evidence(tmp_path))
 
 
 async def _run_dryrun_replay(tmp_path):
@@ -195,6 +205,67 @@ async def _run_decision_chain_records_trade_closed(tmp_path):
     assert trade["exit_reason"] == "SL"
 
 
+async def _reconciler_failure_disarms_and_recovers(tmp_path):
+    store = Store(tmp_path / "reconciler.db")
+    store.initialize()
+    store.create_run("reconciler", "paper", "testnet", {})
+    store.set_meta("app_state", "ARMED")
+    broker = MockBroker([], starting_equity=1000)
+    manager = FailsOnceOrderManager()
+    engine = BridgeEngine(
+        run_id="reconciler",
+        broker=broker,
+        store=store,
+        strategy=NoSignalStrategy(),
+        risk_engine=RiskEngine(RiskConfig()),
+        order_manager=manager,
+        state="ARMED",
+    )
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime.now(UTC)
+
+    assert await engine._run_reconcile_cycle() is False
+    assert engine.state == "DISARMED"
+    assert engine.reconcile_ready is False
+    assert engine.reconcile_error == "RuntimeError"
+    assert await engine._run_reconcile_cycle() is True
+    assert engine.reconcile_ready is True
+    assert engine.reconcile_error is None
+    codes = [row["code"] for row in store.get_events()]
+    assert "RECONCILE_FAILED" in codes
+    assert "RECONCILE_RECOVERED" in codes
+    assert "STATE_TRANSITION" in codes
+
+
+async def _arm_requires_fresh_reconcile_evidence(tmp_path):
+    store = Store(tmp_path / "arm-freshness.db")
+    store.initialize()
+    store.create_run("arm-freshness", "paper", "testnet", {})
+    broker = MockBroker([], starting_equity=1000)
+    engine = BridgeEngine(
+        run_id="arm-freshness",
+        broker=broker,
+        store=store,
+        strategy=NoSignalStrategy(),
+        risk_engine=RiskEngine(RiskConfig()),
+        state="DISARMED",
+    )
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime.now(UTC) - timedelta(minutes=10)
+
+    with pytest.raises(RuntimeError, match="reconcile evidence stale"):
+        await engine.arm()
+    assert store.get_meta("app_state") == "DISARMED"
+
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime.now(UTC)
+    await engine.arm()
+    assert store.get_meta("app_state") == "ARMED"
+    codes = [row["code"] for row in store.get_events()]
+    assert codes.count("ARM_REQUEST") == 2
+    assert "STATE_TRANSITION" in codes
+
+
 def test_order_manager_duplicate_and_disarmed_guards(tmp_path):
     asyncio.run(_run_order_manager_guards(tmp_path))
 
@@ -235,6 +306,16 @@ class NoSignalStrategy:
 
     def trail_level(self, bars, position):
         return None
+
+
+class FailsOnceOrderManager:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def reconcile(self) -> None:
+        self.calls += 1
+        if self.calls == 1:
+            raise RuntimeError("transient broker failure")
 
 
 class ProtocolOnlyBroker:

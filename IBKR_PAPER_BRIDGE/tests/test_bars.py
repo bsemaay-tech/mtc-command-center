@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import threading
 from datetime import UTC, datetime, timedelta
 
 from bridge.engine.bars import BarFeed, BarFinalizer
@@ -27,6 +28,18 @@ def test_data_stale_emits_and_disarms_once():
     asyncio.run(_data_stale_emits_and_disarms_once())
 
 
+def test_reconnect_requires_fresh_data_confirmation():
+    asyncio.run(_reconnect_requires_fresh_data_confirmation())
+
+
+def test_async_bar_callback_is_dispatched_from_sdk_thread():
+    asyncio.run(_async_bar_callback_is_dispatched_from_sdk_thread())
+
+
+def test_reconnect_without_fresh_data_goes_stale():
+    asyncio.run(_reconnect_without_fresh_data_goes_stale())
+
+
 async def _reconnect_duplicate_is_deduped() -> None:
     base = datetime(2026, 7, 12, 10, tzinfo=UTC)
     broker = FeedBroker([_bar(base)])
@@ -44,6 +57,71 @@ async def _reconnect_duplicate_is_deduped() -> None:
     assert [bar.ts for bar in emitted] == [base + timedelta(hours=1), base + timedelta(hours=2)]
     assert broker.resubscribe_count == 1
     assert [code for code, _ in events] == ["DISCONNECT", "RECONNECT"]
+
+
+async def _reconnect_requires_fresh_data_confirmation() -> None:
+    base = datetime.now(UTC)
+    broker = FeedBroker([_bar(base - timedelta(hours=1))])
+    events: list[tuple[str, str]] = []
+    disarms: list[bool] = []
+    feed = BarFeed(
+        broker,
+        "BTC",
+        "1h",
+        lambda bar: None,
+        lambda code, detail: events.append((code, detail)),
+        lambda: disarms.append(True),
+        data_restore_timeout_s=1,
+    )
+    await feed.start(lookback=1)
+    assert await feed.reconnect(attempts=1, base_delay=0) is True
+    broker.last_bar_update = datetime.now(UTC) + timedelta(milliseconds=1)
+    await feed.check_once(datetime.now(UTC) + timedelta(milliseconds=2))
+    await feed.stop()
+
+    assert [code for code, _ in events] == ["DISCONNECT", "RECONNECT", "DATA_RESTORED"]
+    assert disarms == []
+
+
+async def _async_bar_callback_is_dispatched_from_sdk_thread() -> None:
+    base = datetime.now(UTC) - timedelta(hours=1)
+    broker = FeedBroker([_bar(base)])
+    received = asyncio.Event()
+
+    async def on_bar(_bar_value: Bar) -> None:
+        received.set()
+
+    feed = BarFeed(broker, "BTC", "1h", on_bar)
+    await feed.start(lookback=1)
+    worker = threading.Thread(target=broker.emit, args=(_bar(base + timedelta(hours=1)),))
+    worker.start()
+    worker.join()
+    await asyncio.wait_for(received.wait(), timeout=1)
+    await feed.stop()
+
+
+async def _reconnect_without_fresh_data_goes_stale() -> None:
+    broker = FeedBroker([])
+    events: list[tuple[str, str]] = []
+    disarms: list[bool] = []
+    feed = BarFeed(
+        broker,
+        "BTC",
+        "1h",
+        lambda bar: None,
+        lambda code, detail: events.append((code, detail)),
+        lambda: disarms.append(True),
+        data_restore_timeout_s=1,
+    )
+    await feed.start(lookback=1)
+    assert await feed.reconnect(attempts=1, base_delay=0) is True
+    assert feed._awaiting_data_since is not None
+    await feed.check_once(feed._awaiting_data_since + timedelta(seconds=2))
+    await feed.stop()
+
+    assert [code for code, _ in events] == ["DISCONNECT", "RECONNECT", "DATA_STALE"]
+    assert events[-1][1] == "reconnect_no_fresh_data"
+    assert disarms == [True]
 
 
 async def _data_stale_emits_and_disarms_once() -> None:
