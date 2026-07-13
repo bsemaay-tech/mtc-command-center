@@ -147,6 +147,52 @@ For each of `feature/ibkr-bridge-final` (post-merge), `feature/mcc-ui-impeccable
   (honest — include cross-branch conflicts, e.g. all four may touch GLOBAL_HANDOFF/NEXT_STEPS),
   and your recommended merge ORDER for Barış.
 
+## TASK 4 — Test-suite Telegram leak fix (ADDED 2026-07-13, Barış-approved)
+
+**Bug (Fable-verified on real code + live Telegram):** the test suite sends REAL Telegram
+messages to Barış's chat. Chain: `create_app()` always calls `build_notifier()`
+(`bridge/app.py:107`) → `resolve_telegram_credentials()` falls back to HKCU registry (E1) and
+finds the real creds → `test_api.py` POSTs `/api/arm` → real `[INFO] state -> ARMED` lands in
+Telegram. Confirmed deliveries: 15:03/15:04Z (your pre-deploy suite runs) and 15:27/15:28Z
+(Fable's audit suite runs). Your Task 2 suite runs will have produced two more.
+
+**Fix (test-only; runtime code untouched):** in `IBKR_PAPER_BRIDGE/tests/conftest.py` add an
+autouse fixture that neutralizes Telegram credential resolution for every test:
+
+```python
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def _no_real_telegram(monkeypatch):
+    # Empty PROCESS env is NOT enough: resolve_user_env falls through to the
+    # HKCU registry (settings.py E1 pattern). Patch the resolver at BOTH import
+    # sites so build_notifier() stays silently disabled in tests.
+    monkeypatch.setattr(
+        "bridge.settings.resolve_telegram_credentials", lambda: ("", "")
+    )
+    monkeypatch.setattr(
+        "bridge.engine.notify.resolve_telegram_credentials", lambda: ("", "")
+    )
+```
+
+CRITICAL detail: `bridge/engine/notify.py` does `from bridge.settings import
+resolve_telegram_credentials` — patching only `bridge.settings` misses the copied reference;
+patch both names as above.
+
+**Acceptance:**
+1. `test_task11_polish.py::test_build_notifier_disabled_without_creds` and
+   `..._enabled_sends_via_http_sender` still pass (their own test-level monkeypatches override
+   the autouse fixture; verify, don't assume).
+2. Full suite green from BOTH CWDs.
+3. Grep proof in the report that no test path reaches `_http_sender` with registry creds
+   anymore (only explicit test monkeypatches construct senders).
+
+Commit to `feature/ibkr-bridge-final` (inline pattern, secret grep first).
+**Do NOT touch `C:\P2RT`** — the pinned runtime keeps the old conftest until the next planned
+sync window; until then any suite run inside `C:\P2RT` will still emit fake Telegram messages.
+State this caveat in the report.
+
 ## DELIVERABLE
 
 `MTC_COMMAND_CENTER/11_TRIAGE/BRANCH_CONSOLIDATION_REPORT_2026-07-13.md` containing: every
