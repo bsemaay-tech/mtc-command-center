@@ -1,5 +1,20 @@
 # GLOBAL_HANDOFF
 
+## [Claude Fable 5] 2026-07-13 — GEN_DONCHIAN_BREAKOUT crypto ladder (BTC/ETH × 1h/4h) → NULL
+
+Pre-approved 4-cell evidence-ladder run (Gate 0 read; A22 smoke 2.8 s/cell → 5 s run, no
+supervisor/idle-awake; A23 explicit `--symbol/--tf`). Bundle `native_multiasset_alpaca_2026-06-28`
+verified on disk (2021-01-01 → 2026-06-28). **Result: 0/4 PASS — BTCUSD 1h/4h + ETHUSD 1h
+REJECTED (lockbox −16.8…−22.4%, PF 0.70–0.95), ETHUSD 4h INSUFFICIENT_TRADES (+30.8% on 9
+trades); 0 BH-FDR, DSR ≤ 0.24, CPCV 0 eligible, robust_final 0. Verdict NULL; FORWARD_PAPER
+mapping not triggered; bridge export NOT READY, bridge untouched.** Note: strategy "beat" B&H in
+all 4 cells only because lockbox = down market (BTC −37%, ETH −40%) — absolute returns negative
+in 3/4. Consistent with the 63-archetype methodological-ceiling finding (2026-07-03).
+Report: `11_TRIAGE/DONCHIAN_CRYPTO_LADDER_VERDICT_2026-07-13.md`. Artifacts:
+`03_QUANTLENS/research/donchian_crypto_ladder_2026-07-13/`. Registered in RESEARCH_RUN_REGISTRY +
+VARIANT_LOG_REGISTRY (`GEN_DONCHIAN_BREAKOUT_CRYPTO_1H4H`), validator PASS. No engine edits.
+No new anti-pattern.
+
 ## [Claude Opus 4.8] 2026-07-13 — Bridge P2-READY: B+C phases complete, ARM pending one bar close
 
 Since P0 MET: B1 ws auto-reconnect (f1827103), B2 reconciler fallback cascade (1774c38f), B5 live

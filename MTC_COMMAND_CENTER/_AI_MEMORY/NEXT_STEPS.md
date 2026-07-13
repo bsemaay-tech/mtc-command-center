@@ -1,5 +1,16 @@
 # NEXT_STEPS
 
+## ✅ DONCHIAN CRYPTO LADDER DONE 2026-07-13 (Claude Fable 5) — NULL
+GEN_DONCHIAN_BREAKOUT × {BTCUSD, ETHUSD} × {1h, 4h} through the full canonical ladder
+(pre-approved 2026-07-13): **0/4 PASS, 0 robust_final — 3 REJECTED + 1 INSUFFICIENT_TRADES
+(ETHUSD 4h, 9 trades). Nothing promotable, nothing forward-paper; bridge export NOT READY.**
+The US-equities-10m Donchian lead does NOT transfer to crypto 1h/4h. Verdict report:
+`11_TRIAGE/DONCHIAN_CRYPTO_LADDER_VERDICT_2026-07-13.md`; artifacts
+`03_QUANTLENS/research/donchian_crypto_ladder_2026-07-13/`; registries updated (validator PASS).
+- **[AI: Barış]** optional: if crypto Donchian is ever revisited, it needs a NEW pre-registered
+  design (longer-history crypto source + multi-symbol family + Faz-3b swept exits) — re-running
+  this grid is deterministic and yields identical nulls (A19).
+
 ## 🚀 CRYPTO PAPER BRIDGE — Hyperliquid (was "IBKR"; broker PIVOTED 2026-07-06, design FINAL on `feature/ibkr-bridge-final` 52b13f6f; read `IBKR_PAPER_BRIDGE/docs/` 00→01→05→02→07 before touching. IBKR closed (KKTC), Signum rejected (no native stop) — see 07_BROKER_DECISION)
 - ~~run external design audits~~ DONE 2026-07-06: 7 reports in `IBKR_PAPER_BRIDGE/docs/audits/`.
 - ~~triage audit reports, adopt accepted findings~~ **DONE 2026-07-06** (Claude Fable 5): 21 adopted clusters amended in place; record + rejections in `IBKR_PAPER_BRIDGE/docs/05_AUDIT_RESOLUTION.md`. Build plan now honestly **2 days** (Day 1 mock core, Day 2 IBKR hardening).
