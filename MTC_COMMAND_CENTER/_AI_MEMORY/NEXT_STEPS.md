@@ -1,5 +1,17 @@
 # NEXT_STEPS
 
+## CRYPTO PAPER BRIDGE P2 ARMED — D3 ACTIVE 2026-07-13 [AI: Any]
+
+Day 0 started `2026-07-13T13:00:28.6218649Z` after incident containment, commit `59c334c0`, full
+tests `119 passed` from both roots, and a real
+`DISCONNECT -> RECONNECT -> DATA_RESTORED -> two reconciles` gate. Runtime is pinned at `C:\P2RT`;
+Task Scheduler must never be redirected to the parallel-agent research checkout.
+- **[AI: Any]** daily read-only D3 check: state/reconcile freshness, WARN/ERROR events, equity,
+  process/commit, all positions/orders, and native stops for any owned position.
+- **[AI: Claude|Codex]** any safety anomaly: preserve evidence, DISARM safely if needed, diagnose;
+  do not repeat ARM without a fresh complete gate.
+- Evidence: `IBKR_PAPER_BRIDGE/docs/19_P2_RECONNECT_INCIDENT_2026-07-13.md`.
+
 ## 🚀 CRYPTO PAPER BRIDGE — Hyperliquid (was "IBKR"; broker PIVOTED 2026-07-06, design FINAL on `feature/ibkr-bridge-final` 52b13f6f; read `IBKR_PAPER_BRIDGE/docs/` 00→01→05→02→07 before touching. IBKR closed (KKTC), Signum rejected (no native stop) — see 07_BROKER_DECISION)
 - ~~run external design audits~~ DONE 2026-07-06: 7 reports in `IBKR_PAPER_BRIDGE/docs/audits/`.
 - ~~triage audit reports, adopt accepted findings~~ **DONE 2026-07-06** (Claude Fable 5): 21 adopted clusters amended in place; record + rejections in `IBKR_PAPER_BRIDGE/docs/05_AUDIT_RESOLUTION.md`. Build plan now honestly **2 days** (Day 1 mock core, Day 2 IBKR hardening).

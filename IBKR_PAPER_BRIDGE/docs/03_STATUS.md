@@ -1,28 +1,39 @@
 # 03_STATUS - Crypto Paper Bridge
 
-Date: 2026-07-13 (early). Branch: `feature/ibkr-bridge-final`.
+Date: 2026-07-13. Branch: `feature/ibkr-bridge-final`.
 
 ## Gate status
-- **P0: MET** (attempt 7, all 12 steps; `docs/p0_smoke_log.json`).
-- **P1: PASS** (audited). **B6 fill smoke: PASS** (real fill 64110 -> positionTpsl SL rested ->
-  reduce-only close 64098; `docs/fill_smoke_log.json`).
-- **P2: READY TO ARM.** All B and C tasks complete (see 16_GO_LIVE_PLAN.md checkboxes). The
-  supervised paper instance is RUNNING via Task Scheduler `MTC-Bridge-P2` (crash-restart proven),
-  DISARMED, reconcile clean, real warmup bars, live equity 998.99 USDC.
-- Tests: **110 passed** both CWDs.
 
-## Last step before ARM (D2)
-Observe ONE live hourly bar close on the paper instance (expected 22:00 UTC 2026-07-12 or the
-next boundary) via `/api/bars` gaining a new 64k-range bar -> then POST /api/arm (pre-approved,
-plan §0-4). If this session ended, any model: verify the new bar exists, then ARM per plan D2.
+- **P0: MET** (attempt 7; `docs/p0_smoke_log.json`).
+- **P1: PASS**; B6 real fill/native-stop lifecycle PASS.
+- **P2: ARMED — DAY 0 STARTED 2026-07-13T13:00:28.6218649Z.**
+- Runtime: Hyperliquid TESTNET, paper, BTC 1h, LLM regime/veto OFF.
+- Pinned deployment: `C:\P2RT`, commit `59c334c0`, Task Scheduler `MTC-Bridge-P2`.
+- Tests: **119 passed, 1 warning** from both supported working directories.
 
-## Operating notes for the P2 window
-- Do NOT change config (`bridge.yaml` frozen C3 profile; LLM regime OFF).
-- Supervisor: Task Scheduler `MTC-Bridge-P2` (logon trigger + crash loop). Logs:
-  `IBKR_PAPER_BRIDGE/data/logs/bridge_YYYYMMDD.log`.
-- Telegram notifier LIVE (state changes, WARN+ events, 6h heartbeat).
-- Human items: I2 PC must stay awake 24/7 (Baris); mainnet forbidden (I3).
+## Reconnect incident resolution
 
-## Deferred (post-P2)
-- Store-chain proof of a full engine trade (P2 first real trade will provide it).
-- Golden/parity (P3): needs QuantLens registration (I4).
+The earlier duplicate-user-subscription `NotImplementedError`, ambiguous ARM history, and dead
+reconciler incident was contained while DISARMED with zero exchange exposure. The fixed pinned
+runtime passed a real natural cycle:
+
+`12:57:21Z DISCONNECT -> 12:57:29Z RECONNECT -> 12:57:39Z DATA_RESTORED`, followed by two
+successful reconciles. ARM was then called exactly once. Two post-ARM reconciles remained ARMED
+with positions/orders empty.
+
+Full evidence: `docs/19_P2_RECONNECT_INCIDENT_2026-07-13.md`.
+
+## Active phase
+
+Phase D3: monitor continuously for at least 10 calendar days. Daily read-only checks:
+
+- `/api/status`: ARMED, `reconcile_ready=true`, recent `last_reconcile_ts`, no error;
+- WARN/ERROR events and every disconnect/reconnect/data-restored chain;
+- exchange positions and orders; every owned position must have a valid native stop;
+- equity continuity and unexplained order-state checks;
+- process/supervisor stability and pinned commit identity.
+
+Do not change code or frozen P2 config during the window except for a critical safety incident.
+Any DISARM or critical runtime change requires investigation and resets the uninterrupted window.
+Mainnet remains forbidden.
+

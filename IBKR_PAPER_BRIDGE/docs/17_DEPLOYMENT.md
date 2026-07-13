@@ -5,6 +5,14 @@ paralelde VPS kiralanınca kalıcı taşınma. Bu doküman herhangi bir modelin 
 başına uygulayabileceği kadar ayrıntılıdır. **TESTNET-ONLY; mainnet üçlü kilidi her makinede
 geçerli.**
 
+## 2026-07-13 P2 runtime isolation requirement
+
+The active P2 process must not run from the shared research worktree because parallel agents can
+switch its branch between supervisor restarts. Use a short isolated Git worktree such as
+`C:\P2RT`, pin and review its commit, and point Task Scheduler directly to that worktree's
+`IBKR_PAPER_BRIDGE\tools\run_bridge_p2.ps1`. The wrapper resolves its runtime root from
+`$PSScriptRoot`; do not reintroduce a hardcoded shared-checkout root.
+
 ## 0. Güvenlik kuralı — her makineye AYRI API cüzdanı
 
 Ana cüzdan private key'i HİÇBİR makineye konmaz. Her host için Hyperliquid testnet arayüzünden

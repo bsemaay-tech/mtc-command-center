@@ -1,5 +1,17 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5] 2026-07-13 — Bridge P2 ARMED; Day 0 started after incident repair
+
+**P2 ARMED at 2026-07-13T13:00:28.6218649Z, exactly one ARM call.** Incident was first contained
+DISARMED with exchange positions/orders empty. Runtime moved to isolated `C:\P2RT` at
+`59c334c0` (includes `29d9879f`), supervisor task repointed there, and full suites passed
+`119 passed, 1 warning` from both roots. Real gate passed:
+`12:57:21Z DISCONNECT -> 12:57:29Z RECONNECT attempt=1 -> 12:57:39Z DATA_RESTORED`, then
+reconciles at `12:58:29Z` and `12:59:30Z`; no retry/stale/reconcile failure. ARM audit contains one
+`ARM_REQUEST` and one `DISARMED->ARMED`. Post-ARM reconciles at `13:01:32Z` and `13:02:34Z`
+remained ARMED with no positions/orders. D3 ≥10-day monitoring is active. Evidence:
+`IBKR_PAPER_BRIDGE/docs/19_P2_RECONNECT_INCIDENT_2026-07-13.md`.
+
 ## [Claude Opus 4.8] 2026-07-13 — Bridge P2-READY: B+C phases complete, ARM pending one bar close
 
 Since P0 MET: B1 ws auto-reconnect (f1827103), B2 reconciler fallback cascade (1774c38f), B5 live
