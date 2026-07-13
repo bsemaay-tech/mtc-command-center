@@ -27,8 +27,13 @@ def _load_bars(path: Path) -> list[Bar]:
 
 
 def test_keltner_strategy_matches_golden_signal_timestamps():
-    fixture = FIXTURES / "BTC_1h.csv"
+    # REAL golden parity: replay the bridge port over the exact BTCUSD 1h bars
+    # QuantLens processed (48,077 bars) and require signal-for-signal equality
+    # with the QuantLens-derived golden. See docs/18_GOLDEN_REPORT.md.
+    fixture = FIXTURES / "BTC_1h_real.csv"
     golden = json.loads((FIXTURES / "golden_signals.json").read_text())
+    assert golden["provisional"] is False
+    assert golden["signal_count"] == len(golden["signals"]) > 0
     strategy = KeltnerTrailEma8()
     bars = _load_bars(fixture)
 
@@ -58,7 +63,7 @@ def test_keltner_strategy_matches_golden_signal_timestamps():
 
 def test_keltner_strategy_trail_level_uses_ema8_for_long_position():
     strategy = KeltnerTrailEma8()
-    bars = _load_bars(FIXTURES / "BTC_1h.csv")[:30]
+    bars = _load_bars(FIXTURES / "BTC_1h_real.csv")[:30]
 
     class Position:
         size = 1.0
