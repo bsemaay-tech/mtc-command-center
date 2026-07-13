@@ -6,10 +6,35 @@ Date: 2026-07-13. Branch: `feature/ibkr-bridge-final`.
 
 - **P0: MET** (attempt 7; `docs/p0_smoke_log.json`).
 - **P1: PASS**; B6 real fill/native-stop lifecycle PASS.
-- **P2: ARMED — DAY 0 STARTED 2026-07-13T13:00:28.6218649Z.**
+- **P2: ARMED — NEW DAY 0 STARTED 2026-07-13T15:17:05.383618Z.**
 - Runtime: Hyperliquid TESTNET, paper, BTC 1h, LLM regime/veto OFF.
-- Pinned deployment: `C:\P2RT`, commit `59c334c0`, Task Scheduler `MTC-Bridge-P2`.
-- Tests: **119 passed, 1 warning** from both supported working directories.
+- Pinned deployment: `C:\P2RT`, commit `f209acd2`, Task Scheduler `MTC-Bridge-P2`.
+- Tests: **121 passed, 1 warning** from both supported working directories.
+
+## EMA-8 correction and Day-0 reset
+
+Approved bridge-only correction `f209acd2` replaced the mislabeled SMA-8 trail with the exact
+QuantLens EMA convention from `mega_walk_forward.py`: `span=8`, `adjust=False`,
+`min_periods=8`, alpha `2/(8+1)`, first-close recursive seed, and the full available close
+history. Entry-band logic and the entry golden were unchanged. A fixed synthetic case proves
+EMA `68.64558996000855` versus last-eight SMA `65.0`; long, short, and insufficient-history
+guards are covered. The changed-file 64+-hex secret scan returned zero matches.
+
+The prior Day-0 run had already auto-disarmed at `13:29:59Z` after
+`DATA_STALE reconnect_no_fresh_data`; positions and orders were `[]` before deployment. One
+approved deploy cycle was performed: `DISARM_REQUEST` at `15:06:33Z`, supervised child PID
+`81788` stopped, new run `paper-20260713150651` started DISARMED, and reconcile was ready at
+`15:06:59Z`. The new run then remained DISARMED, flat, and reconcile-clean for ten minutes.
+
+Exactly one ARM call used `X-Confirm: 2`:
+
+`15:17:05.377321Z ARM_REQUEST state=DISARMED -> 15:17:05.383618Z DISARMED->ARMED`.
+
+Telegram visibly recorded `[INFO] state -> ARMED`. The first post-ARM natural cycle passed:
+`15:18:06Z DISCONNECT -> 15:18:13Z RECONNECT attempt=1 -> 15:18:14Z DATA_RESTORED`.
+Afterward the API remained ARMED and reconcile-ready with fresh reconcile `15:18:13Z`, no
+reconcile error, positions `[]`, and orders `[]`. This ARM timestamp resets the P2 monitoring
+clock to Day 0.
 
 ## Reconnect incident resolution
 
@@ -33,7 +58,6 @@ Phase D3: monitor continuously for at least 10 calendar days. Daily read-only ch
 - equity continuity and unexplained order-state checks;
 - process/supervisor stability and pinned commit identity.
 
-Do not change code or frozen P2 config during the window except for a critical safety incident.
+Do not change code or frozen P2 config during the new window except for a critical safety incident.
 Any DISARM or critical runtime change requires investigation and resets the uninterrupted window.
 Mainnet remains forbidden.
-
