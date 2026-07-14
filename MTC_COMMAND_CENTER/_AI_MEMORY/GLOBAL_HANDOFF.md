@@ -1,5 +1,20 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5] 2026-07-14 — P2 race fix built at da44d1ff; Fable audit and deploy approval pending
+
+Executed Tasks 1–3 of `11_TRIAGE/CODEX_P2_RACE_FIX_PROMPT_2026-07-14.md` in the dedicated
+`C:\BFIX` worktree. Commit `da44d1ff` replaces the reconnect-time null-client window with a
+local-build/candle-resubscribe/atomic-swap path, adds the narrow `RECONCILE_DEFERRED` defense for
+`HyperliquidNotConfigured` only while `broker.rebuilding`, and preserves single-strike fail-closed
+behavior for all other cases. Five new deterministic tests cover the real blocked-build race,
+defer contract, fail-closed regressions, and swap integrity. Independent suites passed from both
+required CWDs: `127 passed, 1 warning` each. Staged secret grep was zero; `HL_LIVE_ACK` was unset.
+Builder report: `11_TRIAGE/P2_RACE_FIX_REPORT_2026-07-14.md`.
+
+**STOP boundary:** no deployment, runtime restart, API/broker call, ARM, Day-0 reset, push, or
+`C:\P2RT` mutation occurred. Fable must audit first; Task 4 stays locked until Fable PASS plus
+Barış's explicit go.
+
 ## [Codex GPT-5] 2026-07-13 — Bridge P2 ARMED; Day 0 started after incident repair
 
 **P2 ARMED at 2026-07-13T13:00:28.6218649Z, exactly one ARM call.** Incident was first contained

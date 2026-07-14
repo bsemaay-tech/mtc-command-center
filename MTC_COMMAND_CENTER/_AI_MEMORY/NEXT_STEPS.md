@@ -1,5 +1,17 @@
 # NEXT_STEPS
 
+## CRYPTO PAPER BRIDGE P2 — RACE FIX BUILT; AUDIT/DEPLOY LOCKED 2026-07-14
+
+Commit `da44d1ff` on `feature/ibkr-bridge-final` implements the atomic reconnect client swap,
+narrow rebuild-only reconcile deferral, and deterministic regressions. Both full suites passed
+`127 passed, 1 warning`; report: `11_TRIAGE/P2_RACE_FIX_REPORT_2026-07-14.md`.
+
+- **[AI: Claude]** Fable adversarial audit on the real commit and independent suite rerun.
+- **[AI: Barış]** only after Fable PASS, explicitly approve or reject Task 4's single deploy/re-arm
+  window. No approval is inferred from the build request.
+- **[AI: Claude|Codex]** after both gates, execute Task 4 exactly once with its stop conditions;
+  otherwise leave `C:\P2RT` and the DISARMED runtime untouched.
+
 ## CRYPTO PAPER BRIDGE P2 ARMED — D3 ACTIVE 2026-07-13 [AI: Any]
 
 Day 0 started `2026-07-13T13:00:28.6218649Z` after incident containment, commit `59c334c0`, full
