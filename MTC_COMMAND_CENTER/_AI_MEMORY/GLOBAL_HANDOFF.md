@@ -1,5 +1,37 @@
 # GLOBAL_HANDOFF
 
+## [Claude Fable 5] 2026-07-14 — RACE-FIX AUDIT: PASS. Deploy (Task 4) awaits Barış go
+
+Audited `da44d1ff` in `C:\BFIX` on real code and runs. **Every claim verified; fix is
+correct and minimal.**
+
+- Diff scope exactly broker + engine + tests (75/13/297 lines). Single caller of the
+  refactored `_build_sdk_clients`. Secret greps 0 on both commits. P2RT untouched at
+  `54278b66`. Branch local-only, not pushed.
+- Atomic swap verified line-by-line: replacement clients built into locals, candle
+  subscriptions registered on the NEW Info before exposure, `self.info, self.exchange`
+  swapped in one tuple assignment (no awaits between), `_user_channels_subscribed` reset and
+  user channels re-subscribed after swap, old dead socket disconnected only AFTER the swap in
+  `finally`, `rebuilding` flag always cleared in `finally`. Bonus robustness: a FAILED rebuild
+  no longer nulls the clients — the old Info keeps serving REST (`user_state`) so the
+  reconciler survives even repeated rebuild failures.
+- Fail-closed doctrine preserved: only `HyperliquidNotConfigured` WHILE `broker.rebuilding`
+  defers (WARN `RECONCILE_DEFERRED`, no state flip); same exception without rebuild and any
+  other exception still disarm single-strike — both proven by dedicated tests.
+- Suites re-run by auditor from both CWDs: **127 passed, 1 warning** twice.
+- **Decisive adversarial check:** the new tests were run against PRE-fix code (`960369b9` in
+  a temp worktree): `test_rebuild_swap_integrity` FAILED, `test_reconcile_during_rebuild_
+  defers_not_disarms` FAILED, the preserved-behavior regression test PASSED, and the
+  blocking-rebuild race test deadlocked (old code cannot survive it). Tests genuinely
+  encode the defect.
+- Codex report anomalies are honest (Cline session failure → DeepSeek fallback with three
+  audit defects Codex itself caught and fixed; delegated pass-count claim ignored until
+  independently reproduced — correct discipline).
+
+**Task 4 (deploy + re-ARM, single restart window incl. P2RT sync to the consolidated tip)
+is ready and remains LOCKED on one input: Barış's explicit go.** Runbook is in
+`11_TRIAGE/CODEX_P2_RACE_FIX_PROMPT_2026-07-14.md` §Task 4; new Day 0 resets the P2 clock.
+
 ## [Claude Fable 5] 2026-07-14 — P2 INCIDENT: Day 0 died 2026-07-13T16:46:42Z on reconnect/reconciler race; root cause in code; fix decision owed by Barış
 
 Daily D3 check found the bridge **DISARMED** with positions/orders `[]` and equity intact
