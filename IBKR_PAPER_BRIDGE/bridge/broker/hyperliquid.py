@@ -94,6 +94,7 @@ class HyperliquidBroker:
         self._bar_subscriptions: list[tuple[str, str, object, BarFinalizer]] = []
         self._user_callbacks: list[object] = []
         self._user_channels_subscribed = False
+        self.rebuilding = False
         self.raw_event_hook = None  # optional diagnostic tap (B3/B6 probes)
         self._oid_to_cloid: dict[int, str] = {}
         self._size_decimals: dict[str, int] = {}
@@ -101,39 +102,54 @@ class HyperliquidBroker:
 
     async def connect(self) -> None:
         self._check_network_lock()
+        # Invariant: Info REST methods including user_state remain usable on
+        # the old client while only websocket subscriptions are dead;
+        # BarFeed owns bar staleness detection.
         # B1 completion: a dead SDK websocket cannot be revived by
         # re-subscribing on the same Info object (observed live 2026-07-13:
         # exchange closed the socket with "Expired"; every resubscribe then
         # raised WebSocketConnectionClosedException). Rebuild the clients.
-        if self._owns_clients and self.info is not None:
-            manager = getattr(self.info, "ws_manager", None)
-            is_alive = getattr(manager, "is_alive", None)
-            if manager is not None and callable(is_alive) and not is_alive():
+        old_info = None
+        swapped = False
+        try:
+            needs_rebuild = self.info is None or self.exchange is None
+            if self._owns_clients and self.info is not None:
+                manager = getattr(self.info, "ws_manager", None)
+                is_alive = getattr(manager, "is_alive", None)
+                if manager is not None and callable(is_alive) and not is_alive():
+                    old_info = self.info
+                    self.rebuilding = True
+                    needs_rebuild = True
+            if needs_rebuild:
+                new_info, new_exchange = await asyncio.to_thread(self._build_sdk_clients)
+                # Subscribe every stored candle subscription on the new Info
+                # BEFORE it is exposed via self.info.
+                for coin, tf, receive, _finalizer in self._bar_subscriptions:
+                    await asyncio.to_thread(
+                        new_info.subscribe,
+                        {"type": "candle", "coin": coin, "interval": tf},
+                        receive,
+                    )
+                # One tuple assignment exposes the replacement pair together.
+                self.info, self.exchange = new_info, new_exchange
+                swapped = True
+                self._user_channels_subscribed = False
+            await self._detect_account_mode()
+            await self._load_size_decimals()
+            if hasattr(self.exchange, "update_leverage"):
+                await asyncio.to_thread(self.exchange.update_leverage, self.leverage, self.coin, is_cross=False)
+            if self._user_callbacks:
+                self._subscribe_user_channels()
+            self.connected = True
+        finally:
+            self.rebuilding = False
+            # Best-effort disconnect of the old dead websocket only AFTER
+            # the swap so there is never a window with no live Info.
+            if swapped and old_info is not None:
                 try:
-                    await asyncio.to_thread(getattr(self.info, "disconnect_websocket", lambda: None))
+                    await asyncio.to_thread(getattr(old_info, "disconnect_websocket", lambda: None))
                 except Exception:  # noqa: BLE001 - old socket is already dead
                     pass
-                self.info = None
-                self.exchange = None
-                self._user_channels_subscribed = False
-        if self.info is None or self.exchange is None:
-            await asyncio.to_thread(self._build_sdk_clients)
-            self._user_channels_subscribed = False
-            # Fresh Info = zero subscriptions: re-register every candle feed
-            # (user channels are flushed below via _subscribe_user_channels).
-            for coin, tf, receive, _finalizer in self._bar_subscriptions:
-                await asyncio.to_thread(
-                    self.info.subscribe,
-                    {"type": "candle", "coin": coin, "interval": tf},
-                    receive,
-                )
-        await self._detect_account_mode()
-        await self._load_size_decimals()
-        if hasattr(self.exchange, "update_leverage"):
-            await asyncio.to_thread(self.exchange.update_leverage, self.leverage, self.coin, is_cross=False)
-        if self._user_callbacks:
-            self._subscribe_user_channels()
-        self.connected = True
 
     async def disconnect(self) -> None:
         try:
@@ -568,7 +584,7 @@ class HyperliquidBroker:
         if not (self.enable_live and self.live_ack == LIVE_ACK and self.strategy_live_allowed):
             raise BrokerRefusedLive("mainnet requires CLI flag, HL_LIVE_ACK, and strategy live_allowed")
 
-    def _build_sdk_clients(self) -> None:
+    def _build_sdk_clients(self) -> tuple[object, object]:
         if not self.account_address or not self.api_wallet_key:
             raise HyperliquidNotConfigured("HL_ACCOUNT_ADDRESS and HL_API_WALLET_KEY are required")
         from eth_account import Account
@@ -578,8 +594,9 @@ class HyperliquidBroker:
 
         base_url = constants.TESTNET_API_URL if self.network == "testnet" else constants.MAINNET_API_URL
         wallet = Account.from_key(self.api_wallet_key)
-        self.info = Info(base_url, skip_ws=False)
-        self.exchange = Exchange(wallet, base_url, account_address=self.account_address)
+        new_info = Info(base_url, skip_ws=False)
+        new_exchange = Exchange(wallet, base_url, account_address=self.account_address)
+        return new_info, new_exchange
 
     async def _detect_account_mode(self) -> None:
         if self.info is None or not hasattr(self.info, "query_user_abstraction_state"):

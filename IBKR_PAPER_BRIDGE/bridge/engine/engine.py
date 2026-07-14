@@ -333,6 +333,19 @@ class BridgeEngine:
         except asyncio.CancelledError:
             raise
         except Exception as exc:  # noqa: BLE001 - fail closed and keep the health loop alive
+            # Defer reconciliation when the broker is mid-rebuild — the old
+            # Info client still serves REST calls but its websocket is dead.
+            # Class-name string check avoids concrete-broker coupling /
+            # circular-import risk.
+            if type(exc).__name__ == "HyperliquidNotConfigured" and getattr(self.broker, "rebuilding", False):
+                self.store.insert_event(
+                    self.run_id,
+                    datetime.now(UTC),
+                    "WARN",
+                    "RECONCILE_DEFERRED",
+                    "broker rebuilding",
+                )
+                return False
             error = type(exc).__name__
             stack = " > ".join(
                 f"{frame.name}:{frame.lineno}"

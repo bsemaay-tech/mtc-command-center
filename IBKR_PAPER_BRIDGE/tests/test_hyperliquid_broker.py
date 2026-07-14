@@ -1238,7 +1238,11 @@ def test_real_captured_order_update_payload_parses_to_typed_event():
 
 def test_connect_rebuilds_clients_when_owned_ws_is_dead():
     """B1 completion: live 'Expired' socket close (2026-07-13) proved a dead
-    Info cannot be re-subscribed; connect() must rebuild owned clients."""
+    Info cannot be re-subscribed; connect() must rebuild owned clients.
+
+    Updated for P2: _build_sdk_clients now returns a (new_info, new_exchange)
+    tuple instead of mutating self.info / self.exchange directly.
+    """
     broker = HyperliquidBroker()  # owns clients (none injected)
     dead_info = FakeInfo(size="0")
     dead_info.ws_manager = SimpleNamespace(is_alive=lambda: False)
@@ -1249,18 +1253,19 @@ def test_connect_rebuilds_clients_when_owned_ws_is_dead():
     broker._user_channels_subscribed = True
 
     fresh_info = FakeInfo(size="0")
+    fresh_exchange = _exchange_mock()
     rebuilds: list[bool] = []
 
     def fake_build():
         rebuilds.append(True)
-        broker.info = fresh_info
-        broker.exchange = _exchange_mock()
+        return fresh_info, fresh_exchange
 
     broker._build_sdk_clients = fake_build
     asyncio.run(broker.connect())
 
     assert rebuilds == [True]
     assert broker.info is fresh_info
+    assert broker.exchange is fresh_exchange
     channels = [sub[0]["type"] for sub in fresh_info.subscriptions]
     assert "userEvents" in channels and "orderUpdates" in channels
 
@@ -1292,3 +1297,289 @@ def test_engine_default_notifier_is_disabled(tmp_path):
         risk_engine=RiskEngine(RiskConfig()),
     )
     assert engine.notifier is not None and engine.notifier.enabled is False
+
+
+# ── P2: race-fix rebuild / reconcile tests ─────────────────────────────
+
+
+def test_positions_and_reconcile_use_old_client_during_blocking_rebuild(tmp_path):
+    """P2: REST methods including positions() remain usable on the old Info
+    client while _build_sdk_clients is blocking mid-rebuild, so the engine
+    neither records RECONCILE_FAILED nor disarms."""
+    from bridge.engine.engine import BridgeEngine
+    from bridge.engine.risk import RiskConfig, RiskEngine
+    from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
+    from bridge.store.db import Store
+
+    old_info = FakeInfo(size="0.5", with_summary=True)
+    old_info.ws_manager = SimpleNamespace(is_alive=lambda: False)
+    old_info.disconnect_websocket = lambda: None
+
+    broker = HyperliquidBroker(account_address="0xabc")
+    broker.info = old_info
+    broker.exchange = _exchange_mock()
+    broker._owns_clients = True
+
+    build_started = threading.Event()
+    build_may_finish = threading.Event()
+    new_info = FakeInfo(size="0")
+    new_exchange = _exchange_mock()
+
+    def blocking_build():
+        build_started.set()
+        build_may_finish.wait()
+        return new_info, new_exchange
+
+    broker._build_sdk_clients = blocking_build
+
+    store = Store(tmp_path / "blocked-rebuild.db")
+    store.initialize()
+    engine = BridgeEngine(
+        run_id="blocked-rebuild",
+        broker=broker,
+        store=store,
+        strategy=KeltnerTrailEma8(),
+        risk_engine=RiskEngine(RiskConfig()),
+    )
+    engine._set_state("ARMED")
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime(2026, 7, 13, 8, 0, tzinfo=UTC)
+
+    async def run_test():
+        connect_task = asyncio.create_task(broker.connect())
+        await asyncio.to_thread(build_started.wait)
+        # Mid-rebuild: old client still assigned, rebuilding flag is set
+        assert broker.rebuilding is True
+        assert broker.info is old_info
+        positions = await broker.positions()
+        assert len(positions) == 1
+        assert positions[0].symbol == "BTC"
+        assert await engine._run_reconcile_cycle() is True
+        assert engine._app_state() == "ARMED"
+        event_codes = [event["code"] for event in store.get_events()]
+        assert "RECONCILE_FAILED" not in event_codes
+        assert "RECONCILE_DEFERRED" not in event_codes
+        # Release the builder
+        build_may_finish.set()
+        await connect_task
+        assert broker.info is new_info
+        assert broker.exchange is new_exchange
+        assert broker.rebuilding is False
+
+    asyncio.run(run_test())
+
+
+def test_reconcile_during_rebuild_defers_not_disarms(tmp_path):
+    """P2: when HyperliquidNotConfigured is raised during reconcile AND the
+    broker is rebuilding, the cycle is deferred — no RECONCILE_FAILED event,
+    no disarm, reconcile health fields preserved."""
+    from bridge.engine.engine import BridgeEngine
+    from bridge.engine.risk import RiskConfig, RiskEngine
+    from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
+    from bridge.store.db import Store
+
+    store = Store(tmp_path / "defer.db")
+    store.initialize()
+
+    # Broker with no info → positions() raises HyperliquidNotConfigured
+    broker = HyperliquidBroker(account_address="0xabc")
+    broker.info = None
+    broker.exchange = _exchange_mock()
+    broker.rebuilding = True  # mid-rebuild
+
+    engine = BridgeEngine(
+        run_id="defer",
+        broker=broker,
+        store=store,
+        strategy=KeltnerTrailEma8(),
+        risk_engine=RiskEngine(RiskConfig()),
+    )
+    # Manually set ARMED with fresh reconcile health
+    engine._set_state("ARMED")
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime(2026, 7, 13, 8, 0, tzinfo=UTC)
+    engine.reconcile_error = None
+
+    result = asyncio.run(engine._run_reconcile_cycle())
+
+    # Must return False (deferred, not failed)
+    assert result is False
+    # State preserved — NOT disarmed
+    assert engine._app_state() == "ARMED"
+    assert engine.reconcile_ready is True
+    assert engine.last_reconcile_ts == datetime(2026, 7, 13, 8, 0, tzinfo=UTC)
+    assert engine.reconcile_error is None
+
+    # Verify RECONCILE_DEFERRED event was stored
+    events = store.get_events()
+    deferred = [e for e in events if e["code"] == "RECONCILE_DEFERRED"]
+    assert len(deferred) == 1
+    assert deferred[0]["severity"] == "WARN"
+    assert deferred[0]["detail"] == "broker rebuilding"
+
+    # Verify NO RECONCILE_FAILED event
+    failed = [e for e in events if e["code"] == "RECONCILE_FAILED"]
+    assert len(failed) == 0
+
+
+def test_hyperliquid_not_configured_without_rebuild_disarms(tmp_path):
+    """P2: HyperliquidNotConfigured when NOT rebuilding must still follow
+    the existing fail-closed path (disarm + RECONCILE_FAILED)."""
+    from bridge.engine.engine import BridgeEngine
+    from bridge.engine.risk import RiskConfig, RiskEngine
+    from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
+    from bridge.store.db import Store
+
+    store = Store(tmp_path / "failclosed.db")
+    store.initialize()
+
+    broker = HyperliquidBroker(account_address="0xabc")
+    broker.info = None  # will cause HyperliquidNotConfigured
+    broker.exchange = _exchange_mock()
+    broker.rebuilding = False  # NOT rebuilding
+
+    engine = BridgeEngine(
+        run_id="failclosed",
+        broker=broker,
+        store=store,
+        strategy=KeltnerTrailEma8(),
+        risk_engine=RiskEngine(RiskConfig()),
+    )
+    engine._set_state("ARMED")
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime(2026, 7, 13, 8, 0, tzinfo=UTC)
+
+    result = asyncio.run(engine._run_reconcile_cycle())
+
+    assert result is False
+    # Must disarm
+    assert engine._app_state() == "DISARMED"
+    assert engine.reconcile_ready is False
+    assert engine.reconcile_error == "HyperliquidNotConfigured"
+
+    events = store.get_events()
+    failed = [e for e in events if e["code"] == "RECONCILE_FAILED"]
+    assert len(failed) == 1
+    deferred = [e for e in events if e["code"] == "RECONCILE_DEFERRED"]
+    assert len(deferred) == 0
+
+
+def test_different_exception_during_rebuild_disarms(tmp_path):
+    """P2: any exception other than HyperliquidNotConfigured, even while
+    rebuilding, must follow the existing fail-closed path."""
+    from bridge.engine.engine import BridgeEngine
+    from bridge.engine.risk import RiskConfig, RiskEngine
+    from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
+    from bridge.store.db import Store
+
+    store = Store(tmp_path / "other_exc.db")
+    store.initialize()
+
+    # Use a broker whose positions() raises ValueError (not HyperliquidNotConfigured)
+    class _ValueErrorInfo:
+        def user_state(self, address):
+            raise ValueError("something else broke")
+
+        def open_orders(self, address):
+            return []
+
+        def subscribe(self, *args, **kwargs):
+            pass
+
+    broker = HyperliquidBroker(account_address="0xabc")
+    broker.info = _ValueErrorInfo()
+    broker.exchange = _exchange_mock()
+    broker.rebuilding = True  # rebuilding, but different exception
+
+    engine = BridgeEngine(
+        run_id="other_exc",
+        broker=broker,
+        store=store,
+        strategy=KeltnerTrailEma8(),
+        risk_engine=RiskEngine(RiskConfig()),
+    )
+    engine._set_state("ARMED")
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime(2026, 7, 13, 8, 0, tzinfo=UTC)
+
+    result = asyncio.run(engine._run_reconcile_cycle())
+
+    assert result is False
+    # Must disarm — different exception is not deferred
+    assert engine._app_state() == "DISARMED"
+    assert engine.reconcile_ready is False
+
+    events = store.get_events()
+    failed = [e for e in events if e["code"] == "RECONCILE_FAILED"]
+    assert len(failed) == 1
+    deferred = [e for e in events if e["code"] == "RECONCILE_DEFERRED"]
+    assert len(deferred) == 0
+
+
+def test_rebuild_swap_integrity():
+    """P2: during dead-owned-websocket rebuild, every stored candle
+    subscription is registered on the new Info BEFORE it is exposed;
+    userEvents/orderUpdates are each subscribed exactly once; and the
+    old dead websocket is disconnected only AFTER the atomic swap."""
+    old_info = FakeInfo(size="0")
+    old_info.ws_manager = SimpleNamespace(is_alive=lambda: False)
+    old_disconnect_after_swap: list[bool] = []
+
+    def old_disconnect():
+        old_disconnect_after_swap.append(broker.info is new_info)
+
+    old_info.disconnect_websocket = old_disconnect
+
+    new_info = FakeInfo(size="0")
+    new_exchange = _exchange_mock()
+
+    broker = HyperliquidBroker(account_address="0xabc")
+    broker.info = old_info
+    broker.exchange = _exchange_mock()
+    broker._owns_clients = True
+    broker._user_callbacks.append(lambda e: None)
+
+    # Register a candle subscription before connect
+    candle_received: list[object] = []
+
+    def on_bar(bar):
+        candle_received.append(bar)
+
+    from bridge.engine.bars import BarFinalizer
+    broker.subscribe_bars("ETH", "4h", on_bar)
+
+    def tracking_build():
+        return new_info, new_exchange
+
+    broker._build_sdk_clients = tracking_build
+
+    # Patch new_info.subscribe to capture when subscriptions happen
+    original_new_subscribe = new_info.subscribe
+    new_subscribe_calls: list[dict] = []
+
+    def tracking_subscribe(subscription, callback):
+        new_subscribe_calls.append({"sub": subscription, "exposed": broker.info is new_info})
+        return original_new_subscribe(subscription, callback)
+
+    new_info.subscribe = tracking_subscribe
+
+    asyncio.run(broker.connect())
+
+    # After connect, new_info is exposed
+    assert broker.info is new_info
+    assert broker.exchange is new_exchange
+
+    # Every candle subscription must have been registered BEFORE exposure
+    candle_subs = [c for c in new_subscribe_calls if c["sub"]["type"] == "candle"]
+    assert len(candle_subs) >= 1  # our ETH candle sub
+    assert all(not c["exposed"] for c in candle_subs), (
+        "candle subscriptions must be registered BEFORE new_info is exposed"
+    )
+
+    # userEvents and orderUpdates each exactly once
+    user_subs = [c for c in new_subscribe_calls if c["sub"]["type"] == "userEvents"]
+    order_subs = [c for c in new_subscribe_calls if c["sub"]["type"] == "orderUpdates"]
+    assert len(user_subs) == 1
+    assert len(order_subs) == 1
+
+    assert old_disconnect_after_swap == [True]
