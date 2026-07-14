@@ -19,9 +19,21 @@ Full audit record: GLOBAL_HANDOFF `[Claude Fable 5] 2026-07-13 — CONSOLIDATION
   Fable re-verified decisive claims on raw artifacts/code — CONFIRMED. Prereg marked BLOCKED
   (`f32a354c`); PR #18 updated. See FAZ 3B section below for the D016 decision now owed by Barış.
 
-## CRYPTO PAPER BRIDGE P2 ARMED — D3 ACTIVE 2026-07-13 [AI: Any]
+## CRYPTO PAPER BRIDGE P2 — 🔴 DISARMED 2026-07-13T16:46:42Z (reconnect/reconciler race); fix decision pending Barış
 
-**Day 0 RESET to `2026-07-13T15:17:05.383618Z`** after the approved EMA-8 trail fix `f209acd2`
+**Day 0 v2 died after 1h29m.** Root cause verified in code: `connect()` nulls SDK clients
+during every ~10-min reconnect rebuild; the 60s reconciler firing inside that window raises
+`HyperliquidNotConfigured` → single-strike fail-closed disarm (`engine.py
+_run_reconcile_cycle`). Zero exposure throughout; equity intact; separate real HL testnet
+outage 07:52-07:54Z (Jul 14) occurred while already DISARMED and self-recovered.
+**P2 ≥10 days is unreachable until the race is fixed — do NOT re-ARM before the fix.**
+- **[AI: Barış] 🔴 approve race fix + single restart window:** atomic client swap in
+  `connect()` (+ optional defer-if-reconnecting guard in reconciler); same window syncs
+  `C:\P2RT` (detached) to consolidated bridge tip (conftest fix + golden included), full
+  suites, supervisor restart, full gate, ONE ARM = new Day 0. Codex builds, Fable audits.
+- Full incident record: GLOBAL_HANDOFF `[Claude Fable 5] 2026-07-14 — P2 INCIDENT`.
+
+Previous window record (superseded): Day 0 RESET to `2026-07-13T15:17:05.383618Z` after the approved EMA-8 trail fix `f209acd2`
 (SMA-8 → exact QuantLens EMA convention) landed in `C:\P2RT` and one clean deploy+re-ARM cycle
 (run `paper-20260713150651`, tests `121 passed` from both roots, one ARM_REQUEST, post-ARM
 reconnect gate passed). Fable audited 2026-07-13 against real code/runs: PASS. Earlier Day 0

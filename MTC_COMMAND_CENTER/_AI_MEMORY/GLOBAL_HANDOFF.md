@@ -1,5 +1,39 @@
 # GLOBAL_HANDOFF
 
+## [Claude Fable 5] 2026-07-14 — P2 INCIDENT: Day 0 died 2026-07-13T16:46:42Z on reconnect/reconciler race; root cause in code; fix decision owed by Barış
+
+Daily D3 check found the bridge **DISARMED** with positions/orders `[]` and equity intact
+(998.987457). Timeline from the event store (evidence preserved, runtime untouched):
+
+- **16:46:40Z (Jul 13)** routine 10-min feed DISCONNECT → `connect()` client rebuild begins.
+- **16:46:42Z** the 60s reconciler fired inside the rebuild window: `positions()` hit
+  `self.info is None` → `HyperliquidNotConfigured` → `RECONCILE_FAILED` → single-strike
+  fail-closed → **ARMED->DISARMED. Day 0 (15:17:05Z) survived 1h29m.**
+- 16:46:48Z DATA_RESTORED; 16:47:43Z RECONCILE_RECOVERED — the runtime was healthy again 61s
+  after it killed its own window.
+- Separately, **07:52–07:54Z (Jul 14)** a REAL Hyperliquid testnet outage (RECONNECT_RETRY ×5
+  `ServerError`, DATA_STALE `ws_dead_reconnect_failed`) occurred while already DISARMED; feed
+  recovered on its own. Intermittent `RECONCILE_FAILED HyperliquidNotConfigured` entries
+  (07:37, 07:52-07:54, 09:00Z) are the same race, harmless while DISARMED.
+
+**Root cause (code, verified in `C:\P2RT`):** `hyperliquid.py connect()` sets
+`self.info = None; self.exchange = None` then rebuilds in a thread — seconds-long window every
+~10-min reconnect cycle. `engine.py _run_reconcile_cycle()` disarms on ANY exception
+single-strike. Collision odds ≈ rebuild_seconds/60 per cycle × ~6 cycles/hour → expected
+window death in hours. **P2's ≥10-day uninterrupted requirement is mathematically unreachable
+until this race is fixed.** The fail-closed principle (59c334c0) is right; its trigger is
+over-broad for this known-transient state.
+
+**Recommended fix (needs Barış approval — bridge code change, resets P2 clock which is already
+dead):** (1) PRIMARY: atomic client swap in `connect()` — build new SDK clients into locals,
+swap references only when ready; `self.info` is never `None` mid-rebuild. (2) Optional
+belt-and-braces: reconciler treats `HyperliquidNotConfigured` DURING an in-progress reconnect
+as a deferred cycle (WARN, retry next tick), single-strike stays for everything else.
+Deploy doctrine: this approval = the planned restart window — sync `C:\P2RT` (detached) to the
+consolidated `feature/ibkr-bridge-final` tip incl. this fix + conftest Telegram isolation +
+golden merge, full suites both CWDs, supervisor restart, full reconnect gate, ONE ARM →
+**new Day 0, single clock reset.** Codex builds, Fable audits before deploy.
+
 ## [Claude Fable 5] 2026-07-14 — AUDIT PASS: D016 Path A execution verified; one power-risk note for Barış
 
 Audited Codex's Path A delivery (`5b7e244c`) on real files/refs. All claims verified: local =
