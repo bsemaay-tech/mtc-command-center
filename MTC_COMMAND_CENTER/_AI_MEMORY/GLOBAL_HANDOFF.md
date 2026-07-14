@@ -1,5 +1,33 @@
 # GLOBAL_HANDOFF
 
+## [Claude Fable 5] 2026-07-14 — AUDIT PASS: D016 Path A execution verified; one power-risk note for Barış
+
+Audited Codex's Path A delivery (`5b7e244c`) on real files/refs. All claims verified: local =
+remote tip, worktree clean, secret grep 0; **D016 recorded** in DECISIONS.md with correctly
+narrow scope (docs-only — explicitly excludes tooling, ingestion, runs, paper/live); forward
+prereg `FAZ3B_STAGE2_FORWARD_CONFIRM_PREREG_2026-07-13.md` implements every Gate-5 required-edit
+principle: genuinely future holdout (scored 1h sessions 2026-07-14→2028-07-13, all post-approval;
+eval ≥2028-07-14, no extension), single frozen decision config `{50,10,2.0}` + 4 diagnostic-only
+star points (no best-of selection), 3 diversity groups (SPY/IWM, XLF/XLE, XLV/XLP) with ≥2-group
+confirmation, margin rule deleted (clean truth table), 6-cell Bonferroni (`du_cell ≥ 0.9916667`),
+literal DSR equations copied from the engine, artifact-ledger prerequisite (registry never
+sufficient), exit-aware tooling gate (§8, unapproved), immutable STOP rules, 7-item authorization
+ledger. June-29 sweep registered in RESEARCH_RUN_REGISTRY (honest outcome note); launch workflow
+gained mandatory Gate 1.1 result-JSON virginity scan; blocked draft cross-linked. All 6 symbols
+confirmed present in the canonical bundle (from the 51-symbol June-29 list).
+
+**Power-risk note (non-blocking, for Barış's awareness):** the CPCV bar (≥30 trades per passing
+combination, 11/15 combinations) implies ~90+ trades over the 2-year window per row; ETF
+Keltner-1h signal density may make outcome D (NOT CONFIRMED) likely by construction. This is
+pre-registered and honest — insufficient trades = valid negative — but the confirmation bar is
+deliberately HIGH; do not expect an easy A. Minor cosmetic: §9's PF ≥ 1.30 / expectancy_R ≥ 0.10
+thresholds should cite their rules-doc provenance in the future execution document.
+
+**State: Faz 3b is now passive-accrual only until 2028-07-14.** Open approval-gated items, in
+order: (1) exit-aware CPCV/multiwindow/PBO tooling task (§8 contract; Barış approval + own
+Gate-5); (2) historical Keltner trial ledger; (3) post-window inventory → Gate-5 → one-shot
+evaluation. Nothing runs today.
+
 ## [Claude Fable 5] 2026-07-13 — Gate-5 synthesis: FATAL CONFIRMED on real artifacts; D016 impossible for current draft; decision to Barış
 
 Audited Codex's Gate-5 findings (`1859910c`) the only way that counts — re-derived the decisive
