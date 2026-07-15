@@ -55,8 +55,11 @@ def windows(n):
         "H2_50-100": (2*q, n),
     }
 
-def score_window(df, sig, stop, strategy, s, e, seed):
-    stats, R = M.simulate_slice(df, sig, stop, strategy, s, e, return_trades=True)
+def score_window(df, sig, stop, strategy, s, e, seed, exit_mode=None):
+    # Exit-aware (2026-07-15): None -> M.DEFAULT_EXIT_MODE (fixed_2R), byte-identical
+    # to the pre-change default call — legacy parity preserved.
+    em = exit_mode or M.DEFAULT_EXIT_MODE
+    stats, R = M.simulate_slice(df, sig, stop, strategy, s, e, return_trades=True, exit_mode=em)
     bp = M.bootstrap_p_positive(R, 1500, seed) if len(R) >= MIN_TR else float("nan")
     return {
         "ret": stats.net_return_pct, "trades": stats.num_trades,
@@ -91,6 +94,41 @@ def build_for(strategy, df, params, symbol):
         dmap = maps.get(int(params["rsi_len"])) if maps else None
     return M.build_signals(strategy, df, params, dmap)
 
+
+def neighbor_stability(strat, df, params, sym, lb_s, n, exit_mode=None,
+                       min_tr=MIN_TR, literal_neighbors=None, strict=False):
+    """Terminal-lockbox parameter-neighbourhood stability.
+
+    Legacy (default, strict=False, generated ×0.8/×1.25 neighbours,
+    low-trade neighbours EXCLUDED from the denominator) reproduces the
+    pre-2026-07-15 behaviour byte-identically once exit_mode is fixed_2R.
+
+    Confirmation (strict=True, caller supplies the literal pre-registered
+    neighbour list): a low-trade neighbour counts as a FAILURE in the
+    denominator (Gate-5 edit 9 — never silently inflate the pass rate).
+    Returns (stable_pos, stable_tot).
+    """
+    em = exit_mode or M.DEFAULT_EXIT_MODE
+    if literal_neighbors is not None:
+        neigh = [("literal", None, p2) for p2 in literal_neighbors]
+    else:
+        neigh = perturb_params(strat, params)
+    stable_pos = 0
+    stable_tot = 0
+    for _k, _fac, p2 in neigh:
+        sig2, stop2 = build_for(strat, df, p2, sym)
+        st2 = M.simulate_slice(df, sig2, stop2, strat, lb_s, n, exit_mode=em)
+        if strict:
+            stable_tot += 1  # insufficient-trade neighbour = failure, kept in denominator
+            if st2.num_trades >= min_tr and st2.net_return_pct > 0:
+                stable_pos += 1
+        else:
+            if st2.num_trades >= min_tr:  # legacy: low-trade neighbour excluded
+                stable_tot += 1
+                if st2.net_return_pct > 0:
+                    stable_pos += 1
+    return stable_pos, stable_tot
+
 def main():
     M._MANIFEST = json.load(open(M.BUNDLE_MANIFEST, encoding="utf-8"))
     results, _ = load_results()
@@ -111,6 +149,7 @@ def main():
     for r in cands:
         strat = r["strategy"]; sym = r["symbol"]; tf = r["timeframe"]
         params = r["summary"]["best_params"]
+        exit_mode = r.get("exit_mode") or M.DEFAULT_EXIT_MODE
         ds = M.find_ds(M._MANIFEST, sym, tf)
         if ds is None:
             continue
@@ -122,23 +161,16 @@ def main():
         n = len(df)
         wins = windows(n)
         seed = abs(hash((strat, sym, tf))) % (2**31)
-        wres = {name: score_window(df, sig, stop, strat, s, e, seed + i)
+        wres = {name: score_window(df, sig, stop, strat, s, e, seed + i, exit_mode=exit_mode)
                 for i, (name, (s, e)) in enumerate(wins.items())}
         pos = sum(1 for w in ["Q1_0-25","Q2_25-50","Q3_50-75","Q4_75-100","H2_50-100"]
                   if wres[w]["trades"] >= MIN_TR and wres[w]["ret"] > 0)
         regime = pos >= 3
 
-        # neighborhood stability on terminal lockbox
+        # neighborhood stability on terminal lockbox (legacy generated neighbours,
+        # low-trade excluded — byte-identical to pre-change once exit_mode=fixed_2R)
         lb_s = n - (n // 4)
-        neigh = perturb_params(strat, params)
-        stable_pos = 0; stable_tot = 0
-        for k, fac, p2 in neigh:
-            sig2, stop2 = build_for(strat, df, p2, sym)
-            st2 = M.simulate_slice(df, sig2, stop2, strat, lb_s, n)
-            if st2.num_trades >= MIN_TR:
-                stable_tot += 1
-                if st2.net_return_pct > 0:
-                    stable_pos += 1
+        stable_pos, stable_tot = neighbor_stability(strat, df, params, sym, lb_s, n, exit_mode=exit_mode)
         param_stable = (stable_tot > 0 and stable_pos / stable_tot >= 0.70)
 
         if regime:

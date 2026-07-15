@@ -18,6 +18,7 @@ sys.path.insert(0, str(TOOLS))
 
 import mega_walk_forward as mw  # noqa: E402
 import cpcv_validator as cpcv  # noqa: E402
+import multiwindow_oos as mwin  # noqa: E402
 
 
 class FakeStats:
@@ -117,3 +118,50 @@ def test_cpcv_evaluate_split_passes_exit_mode(monkeypatch):
     seen.clear()
     cpcv.evaluate_split([0], [0], [0], "S", [(0, 100)])
     assert seen == ["fixed_2R"]
+
+
+# ---- multiwindow_oos ----
+
+def _install_queue_spy(monkeypatch, stats_queue):
+    """simulate_slice spy that pops a FakeStats per call; records exit_mode."""
+    seen = []
+    q = list(stats_queue)
+
+    def spy(df, sig, stop, strategy, s_idx, e_idx, return_trades=False,
+            direction="long", return_trade_events=False, exit_mode=mw.DEFAULT_EXIT_MODE):
+        seen.append(exit_mode)
+        stats = q.pop(0) if q else FakeStats()
+        if return_trades:
+            return stats, [1.0] * max(int(stats.num_trades), 0)
+        return stats
+
+    monkeypatch.setattr(mw, "simulate_slice", spy)
+    monkeypatch.setattr(mw, "bootstrap_p_positive", lambda R, n, seed: 0.5)
+    monkeypatch.setattr(mw, "build_signals", lambda strat, df, params, dmap: ([0], [0]))
+    return seen
+
+
+def test_multiwindow_score_window_threads_exit_mode(monkeypatch):
+    seen = _install_queue_spy(monkeypatch, [FakeStats()])
+    mwin.score_window([0], [0], [0], "S", 0, 100, seed=1, exit_mode="trail_ema8")
+    assert seen == ["trail_ema8"]
+
+
+def test_neighbor_stability_strict_counts_low_trade_as_fail(monkeypatch):
+    # two literal neighbours: first healthy+positive, second low-trade
+    lits = [{"ema_len": 20}, {"ema_len": 60}]
+    # strict=True: low-trade neighbour stays in denominator as a failure
+    _install_queue_spy(monkeypatch, [FakeStats(num_trades=40, net_return_pct=2.0),
+                                     FakeStats(num_trades=5, net_return_pct=2.0)])
+    pos, tot = mwin.neighbor_stability("S", [0], {"ema_len": 50}, "SPY", 0, 100,
+                                       exit_mode="trail_ema8", literal_neighbors=lits, strict=True)
+    assert (pos, tot) == (1, 2)  # 1 of 2 pass; low-trade counted as fail
+
+
+def test_neighbor_stability_legacy_excludes_low_trade(monkeypatch):
+    lits = [{"ema_len": 20}, {"ema_len": 60}]
+    _install_queue_spy(monkeypatch, [FakeStats(num_trades=40, net_return_pct=2.0),
+                                     FakeStats(num_trades=5, net_return_pct=2.0)])
+    pos, tot = mwin.neighbor_stability("S", [0], {"ema_len": 50}, "SPY", 0, 100,
+                                       literal_neighbors=lits, strict=False)
+    assert (pos, tot) == (1, 1)  # low-trade excluded from denominator (legacy)
