@@ -28,12 +28,18 @@ DATA_STALE after ~80s) fire on any ~2-min exchange outage → **P2 ≥10 days un
 without an outage-tolerance policy change.** Zero exposure; equity intact; reconcile
 recovered 08:42:07Z. ⚠️ No `DATA_RESTORED` seen after recovery yet — verify fresh bars
 before any ARM.
-- **[AI: Barış] 🔴 policy decision:** (a) RECOMMENDED tolerance: N=3 consecutive
-  RECONCILE_FAILED before disarm + ~5-min reconnect budget before DATA_STALE (bounded risk:
-  native SL rests on-exchange); fold notify-threshold change into same window; Codex builds,
-  Fable audits, one deploy = Day 0 v4. (b) keep strict policy → accept testnet-dependent
-  completion. Full analysis: GLOBAL_HANDOFF `[Claude Fable 5] 2026-07-15 — P2 INCIDENT #2`.
-- **[AI: Any]** do NOT re-ARM before decision + full gate incl. verified fresh bars.
+- ~~policy decision~~ **DONE 2026-07-15: Barış approved option (a).** Codex prompt written:
+  `11_TRIAGE/CODEX_P2_OUTAGE_TOLERANCE_PROMPT_2026-07-15.md` — reconcile N=3 consecutive-strike
+  tolerance + ~5-min reconnect budget before DATA_STALE + notify-threshold (suppress routine
+  DISCONNECT/RECONNECT-attempt1/DATA_RESTORED) + tests. Fail-closed principle preserved.
+- **[AI: Codex]** build the policy fix (prompt Tasks 1-4) on `feature/ibkr-bridge-final` in a
+  dedicated worktree → STOP for Fable audit. Then Task 5 deploy is LOCKED on Fable PASS + Barış
+  go; Task 6 (merge PRs #16→#19, union-resolve handoff files) runs after Task-4 audit.
+- **[AI: Any]** do NOT re-ARM before Fable audit PASS + full gate incl. verified fresh bars.
+- **PC uptime (Barış 2026-07-15):** ON now → Jul 18 Sat (~2h off) → ON → Jul 20 (~2h off am)
+  → 6 days uninterrupted → pattern continues. **VPS end of month.** No pre-VPS window reaches
+  ≥10 uninterrupted days — any PC ARM is policy VALIDATION; the definitive D3 clock starts on
+  the VPS. Planned PC-offs are window boundaries, NOT safety incidents.
 
 Superseded record (Day 0 v3, dead): DAY 0 v3 = 2026-07-15T06:48:16.619336Z [AI: Any]
 
