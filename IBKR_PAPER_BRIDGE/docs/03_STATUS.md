@@ -6,10 +6,40 @@ Date: 2026-07-15. Branch: `feature/ibkr-bridge-final`.
 
 - **P0: MET** (attempt 7; `docs/p0_smoke_log.json`).
 - **P1: PASS**; B6 real fill/native-stop lifecycle PASS.
-- **P2: ARMED — NEW DAY 0 STARTED 2026-07-15T06:48:16.619336Z.**
+- **P2: ARMED — DAY 0 v4 STARTED 2026-07-15T12:02:42.856537Z.**
 - Runtime: Hyperliquid TESTNET, paper, BTC 1h, LLM regime/veto OFF.
-- Pinned deployment: `C:\P2RT`, detached commit `cc4ce67d`, Task Scheduler `MTC-Bridge-P2`.
-- Tests: **127 passed, 1 warning** from both supported working directories.
+- Pinned deployment: `C:\P2RT`, detached commit `1465f8f0`, Task Scheduler `MTC-Bridge-P2`.
+- Tests: **130 passed, 1 warning** from both supported working directories.
+
+## Outage-tolerance deployment and Day 0 v4
+
+Fable audited the outage-tolerance build PASS, and Barış authorized one deploy/re-ARM. Runtime
+commit `1465f8f0` contains three-consecutive-failure reconcile tolerance, a config-driven
+nine-attempt reconnect budget (315 seconds), and routine feed-event Telegram suppression.
+The process was already down and port 8790 closed; `C:\P2RT` was checked out detached at the
+audited tip. Both deployed-runtime suites passed `130 passed, 1 warning` before startup.
+
+Run `paper-20260715105547` started DISARMED and reconcile-ready. The observation baseline was
+`2026-07-15T10:56:23.8748664Z`; positions and orders were `[]`. The required natural cycle was:
+
+`11:07:13.425338Z DISCONNECT -> 11:07:20.454025Z RECONNECT attempt=1 -> 11:07:21.465900Z DATA_RESTORED`.
+
+The current run recorded no ERROR, `RECONCILE_FAILED`, or `DATA_STALE` event during the gate.
+Fresh-bar proof was explicit: `/api/bars` advanced from the `10:00Z` bar (epoch `1784109600`)
+to the newly persisted `11:00Z` bar (epoch `1784113200`) at `12:00:37.9423549Z`.
+
+Exactly one ARM call used `X-Confirm: 2`:
+
+`12:02:42.853744Z ARM_REQUEST state=DISARMED -> 12:02:42.856537Z DISARMED->ARMED`.
+
+Clean post-ARM reconciles completed at `12:03:27.534022Z` and `12:04:28.442119Z`. The API
+remained ARMED and reconcile-ready with positions/orders `[]`, exactly one ARM request, and
+exactly one ARMED transition. The state transition invoked the existing `state -> ARMED`
+Telegram path; the runtime does not expose a delivery receipt, so delivery is not claimed.
+
+This Day 0 v4 window is policy validation, not definitive D3. The planned July 18 PC-off is an
+expected window boundary, not a safety incident. The definitive uninterrupted D3 clock starts
+after the end-of-month VPS migration.
 
 ## Reconnect/reconciler race fix and Day-0 reset
 
@@ -90,7 +120,7 @@ Full evidence: `docs/19_P2_RECONNECT_INCIDENT_2026-07-13.md`.
 
 ## Active phase
 
-Phase D3: monitor continuously for at least 10 calendar days. Daily read-only checks:
+Day 0 v4 validation window: monitor until the planned July 18 PC-off. Daily read-only checks:
 
 - `/api/status`: ARMED, `reconcile_ready=true`, recent `last_reconcile_ts`, no error;
 - WARN/ERROR events and every disconnect/reconnect/data-restored chain;
@@ -99,8 +129,9 @@ Phase D3: monitor continuously for at least 10 calendar days. Daily read-only ch
 - process/supervisor stability and pinned commit identity.
 
 Do not change code or frozen P2 config during the new window except for a critical safety incident.
-Any DISARM or critical runtime change requires investigation and resets the uninterrupted window.
-Mainnet remains forbidden.
+Any safety DISARM or critical runtime change requires investigation and resets the validation
+window. Planned PC-off boundaries must be recorded separately. Definitive D3 begins on the VPS;
+mainnet remains forbidden.
 
 ## Deferred (post-P2)
 - Store-chain proof of a full engine trade (P2 first real trade will provide it).

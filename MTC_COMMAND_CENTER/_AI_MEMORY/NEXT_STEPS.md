@@ -1139,7 +1139,10 @@ Must obey 7-gate workflow (AI_RULES.md). Start at Gate 1.
 - Visual QA limitation: Browser screenshots remain blocked by enterprise policy for `127.0.0.1:8765`; no alternate browser workaround used. Direct served CSS/JS checks are recorded in `GLOBAL_HANDOFF.md`.
 - Future [AI: Codex|Claude]: if Browser localhost policy becomes available, capture visual screenshots for Home, Pipeline, Registry, Strategy Intelligence, Planner, Explorer, Leaderboard, Diagnostics, and Read Model.
 
-### P2-OUTAGE-TOLERANCE-AUDIT | OPEN 2026-07-15 | code `0e644b52` [AI: Claude]
-- Fable must independently audit `MTC_COMMAND_CENTER/11_TRIAGE/P2_OUTAGE_TOLERANCE_REPORT_2026-07-15.md`, code/config scope, deterministic tests, both 130-pass suites, and zero-match secret scan.
-- Task 5 deploy/re-ARM remains locked until audit PASS plus explicit Barış go. [AI: Barış|Codex]
-- Task 6 PR merges (#16 through #19, union-resolving only the documented handoff conflicts) remains locked until audit PASS; it is independent of deploy approval. [AI: Codex|Claude]
+### P2-OUTAGE-TOLERANCE-AUDIT | DONE 2026-07-15 | code `0e644b52` [AI: Claude]
+- Fable independently audited the outage-tolerance build PASS; Barış then authorized the single deploy/re-ARM window.
+
+### P2-DAY0-V4-POST-ARM-AUDIT | OPEN 2026-07-15 | runtime `1465f8f0` [AI: Claude]
+- Audit run `paper-20260715105547`, the single `12:02:42.856537Z` ARMED transition, fresh-bar proof, two post-ARM reconciles, empty positions/orders, and final master merge evidence.
+- Monitor Day 0 v4 as validation-tier until the planned July 18 PC-off; record that shutdown as a planned boundary, not a safety incident. [AI: Any]
+- Start definitive D3 only after VPS migration at end of month. [AI: Barış|Claude]

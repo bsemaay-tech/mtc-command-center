@@ -2701,3 +2701,25 @@ Built the approved paper-testnet outage-tolerance change on `feature/ibkr-bridge
 Deterministic coverage includes third-strike disarm, 2-fail/success/2-fail reset, rebuild defer versus genuine nonconfiguration, 195-second simulated recovery without stale, 315-second exhaustion with real stale-disarm callback, and notifier/store separation. Full suites passed from both required CWDs: `130 passed` from `C:\BTOL` and `130 passed` from `C:\BTOL\IBKR_PAPER_BRIDGE`. Staged 64+-hex secret scan: zero matches.
 
 Detailed evidence and honest delegation anomalies: `MTC_COMMAND_CENTER/11_TRIAGE/P2_OUTAGE_TOLERANCE_REPORT_2026-07-15.md`. `C:\P2RT` remains untouched at detached `cc4ce67d`; no deploy, restart, ARM, push, or PR merge was performed. Task 5 requires Fable PASS plus Barış go. Task 6 remains post-audit.
+
+## Codex GPT-5 2026-07-15 — P2 Day 0 v4 deployed; post-ARM audit pending
+
+After Fable PASS and Barış's one-ARM go, deployed audited tip `1465f8f0` to the detached
+`C:\P2RT` worktree through the existing `MTC-Bridge-P2` scheduled task. Both P2RT suites passed
+`130 passed, 1 warning`. Run `paper-20260715105547` started DISARMED, testnet, reconcile-ready,
+and flat.
+
+The DISARMED gate began at `10:56:23.8748664Z`, stayed flat and error-free, and observed the
+required `11:07:13.425338Z DISCONNECT -> 11:07:20.454025Z RECONNECT attempt=1 ->
+11:07:21.465900Z DATA_RESTORED` cycle. `/api/bars` then advanced from the `10:00Z` bar
+(`1784109600`) to the newly persisted `11:00Z` bar (`1784113200`) at `12:00:37.9423549Z`.
+
+Exactly one ARM used `X-Confirm: 2`: event id 839 `ARM_REQUEST` at `12:02:42.853744Z`, followed
+by event id 840 `DISARMED->ARMED` at `12:02:42.856537Z`. Clean post-ARM reconciles landed at
+`12:03:27.534022Z` and `12:04:28.442119Z`; state remained ARMED with positions/orders `[]`, one
+ARM request, one ARMED transition, and zero post-ARM bad events. The state-notification code path
+ran, but Telegram delivery is not externally observable from the bridge logs and is not claimed.
+
+Day 0 v4 is validation-tier. The planned July 18 PC-off is a window boundary; definitive D3
+starts on the VPS. Task 5 runtime work is complete. Task 6 PR merges and Fable post-ARM audit
+remain to be closed in this session.
