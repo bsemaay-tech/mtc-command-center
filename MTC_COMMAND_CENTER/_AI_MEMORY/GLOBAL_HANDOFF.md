@@ -295,6 +295,26 @@ The canonical dashboard API suite also passed: `Ran 120 tests`, `OK`.
 Honest re-score: **32/40 Good** (from 30/40), with loading skeleton, shortcuts, and taxonomy density
 still open quality gaps. Report: `11_TRIAGE/UI_AUDITS/IMPECCABLE_PILOT_R3/CRITIQUE_RESCORE_2026-07-13.md`.
 Frontend/docs only; no backend, data-contract, engine, Pine, parity, schema, or execution change.
+## [Codex GPT-5] 2026-07-13 — D016 Path A frozen; deferred forward confirmation only
+
+Barış approved Claude's recommended Path A: “yol a onaylıyorum sen işlemi yap.” Recorded D016 and created `00_AGENT_PROTOCOLS/FAZ3B_STAGE2_FORWARD_CONFIRM_PREREG_2026-07-13.md`. The genuinely future temporal holdout is fixed now: 1h sessions 2026-07-14 through 2028-07-13, earliest evaluation 2028-07-14; symbols/groups SPY+IWM (broad market), XLF+XLE (cyclical sectors), XLV+XLP (defensive sectors); primary Keltner `{50,10,2.0}` only, with four diagnostic-only star neighbors. Confirmation requires EXIT-INCREMENTAL evidence in at least two groups. No AAPL reference and no substitutions.
+
+D016 is deliberately narrow: scope freeze and passive calendar accrual only. It does not approve exit-aware CPCV/multi-window/PBO code, data ingestion, runner/smoke/backtest/gauntlet execution, paper/live trading, or promotion. The original Stage-2 draft remains permanently blocked. Next approval-gated item is the exit-aware tooling contract; future evaluation additionally requires a complete artifact-level historical trial ledger, post-window data inventory, fresh Gate-5, and one-shot execution approval.
+
+## [Codex GPT-5] 2026-07-13 — FAZ 3B Stage-2 pre-registration drafted; D016 required
+
+Completed and audited the document-only Stage-2 confirmation pre-registration at
+`00_AGENT_PROTOCOLS/FAZ3B_STAGE2_CONFIRM_PREREG_2026-07-13.md`. It carries forward the clean
+Stage-1 lead (GEN_KELTNER_BREAKOUT × AAPL × 1h × trail_ema8, STRONG_PASS, union-DSR 0.581) while
+controlling the KELTNER-1h confound with held-out GOOGL/META/AMD/NFLX/DIA/IWM decision cells,
+fixed_2R twins, and AAPL reference-only rows. Exact scope: one strategy, one timeframe, two exits,
+12 literal winner-neighborhood configs, 14 result rows / 168 new trials, union family N=219.
+Promotion gates and outcome actions are frozen in writing: union-DSR ≥0.95, BH-FDR, positive
+buy-and-hold alpha, CPCV ≥0.70, PBO<0.5, canonical 3/5 multi-window plus ≥70% neighbor stability.
+Status remains **DRAFT — AWAITING BARIŞ APPROVAL**. Next: Gate-5 review, apply required edits, then
+Barış approval recorded as D016. No runner code, smoke, run, engine/Pine/parity/registry/schema edit,
+or trading action occurred.
+
 ## Claude Opus 4.8 2026-07-05 (6) — audit cleanup (4 remaining items) done + pushed to origin/master
 
 Barış: "kalan küçük işleri yap push et". Closed the four leftover audit follow-ups on branch
@@ -2734,3 +2754,8 @@ ran, but Telegram delivery is not externally observable from the bridge logs and
 Day 0 v4 is validation-tier. The planned July 18 PC-off is a window boundary; definitive D3
 starts on the VPS. Task 5 runtime work is complete. Task 6 PR merges and Fable post-ARM audit
 remain to be closed in this session.
+## [Codex GPT-5] 2026-07-13 — Gate-5 adversarial review
+
+Completed the written-only Gate-5 review of `00_AGENT_PROTOCOLS/FAZ3B_STAGE2_CONFIRM_PREREG_2026-07-13.md`. Overall verdict: **FATAL; D016 blocked on the current draft.** All six proposed held-out decision symbols already have prior `GEN_KELTNER_BREAKOUT` 1h results on the identical 2020-07-27 through 2026-06-26 observation window. The existing CPCV and multi-window tools also omit `exit_mode` and therefore silently score `fixed_2R`, while the PBO tool lacks the required per-configuration common-period matrix.
+
+Deliverable: `11_TRIAGE/CODEX_GATE5_FINDINGS_FAZ3B_STAGE2_2026-07-13.md`, with A–J verdicts, evidence, apply-ready required edits, non-blocking improvements, and explicit unverifiable items. No backtest, smoke, runner, CPCV, PBO, multi-window, pytest, paper-trading, or live action was executed. Stop point: Fable synthesis and pre-reg repair; a second adversarial re-review is required before Baris considers D016.

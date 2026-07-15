@@ -29,6 +29,15 @@ Atlama YASAK. Skip yaparsan A1-A15 anti-pattern'lerinden birini tekrarlarsın.
 - **Runtime ↔ budget kontrolü (A22, ZORUNLU — "just start"ta bile):** Gate-0'da en yeni `lessons_archive/*` oku. Birkaç hücre smoke ile runtime'ı tahmin et. Sweep budget'tan KISA bitecekse: YA heavy-validation tier ekle (±2 grid, 50k bootstrap, multi-seed DSR, CPCV-all, PBO, +sembol/TF) YA DA makineyi bırak (idle box'ı keep-awake'te tutma). Deterministik sweep'i tekrar koşma = sıfır bilgi (A19).
 - OUTPUT_DIR (CLEAN repo default — env override gerek mi)
 
+### Gate 1.1 — Held-out-data virginity (MANDATORY)
+
+`RESEARCH_RUN_REGISTRY.json` is a dashboard index, not a complete evidence inventory. Before
+freezing any held-out strategy/symbol/timeframe/window scope, recursively scan prior result JSONs
+under both `03_QUANTLENS/05_BACKTEST_RESULTS/` and `03_QUANTLENS/research/` for the same strategy,
+symbol, timeframe, and observation window. Disclose every hit in the pre-registration. A hit
+requires an amended scope and fresh written approval before execution; never silently replace or
+drop a cell. Registry lookup alone never proves virginity.
+
 ### Gate 1.5 — In-day single strategy minimum akış (kısa)
 Aşağıdakileri ATLAMA bile in-day 5dk run'da:
 ```bash
