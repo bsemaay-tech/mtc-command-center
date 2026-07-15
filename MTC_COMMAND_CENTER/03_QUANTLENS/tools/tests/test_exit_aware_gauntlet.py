@@ -16,9 +16,12 @@ import pytest
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
 
+import json  # noqa: E402
+
 import mega_walk_forward as mw  # noqa: E402
 import cpcv_validator as cpcv  # noqa: E402
 import multiwindow_oos as mwin  # noqa: E402
+import probabilistic_pbo as pbo  # noqa: E402
 
 
 class FakeStats:
@@ -165,3 +168,46 @@ def test_neighbor_stability_legacy_excludes_low_trade(monkeypatch):
     pos, tot = mwin.neighbor_stability("S", [0], {"ema_len": 50}, "SPY", 0, 100,
                                        literal_neighbors=lits, strict=False)
     assert (pos, tot) == (1, 1)  # low-trade excluded from denominator (legacy)
+
+
+# ---- probabilistic_pbo ----
+
+def test_pbo_candidate_id_exit_and_params_aware():
+    legacy = pbo.candidate_id({"strategy": "S", "symbol": "SPY", "timeframe": "1h"})
+    assert legacy == "S|SPY|1h"  # legacy rows unchanged
+    full = pbo.candidate_id({"strategy": "S", "symbol": "SPY", "timeframe": "1h",
+                             "exit_mode": "trail_ema8", "params": {"ema_len": 50, "atr_len": 10}})
+    assert full == "S|SPY|1h|trail_ema8|atr_len=10,ema_len=50"
+
+
+def _write_matrix(tmp_path, configs, cell=None):
+    cell = cell or {"strategy": "S", "symbol": "SPY_NEW", "timeframe": "1h", "exit_mode": "trail_ema8"}
+    p = tmp_path / "config_matrix.json"
+    p.write_text(json.dumps({"cell": cell, "period_labels": ["G0", "G1", "G2"], "configs": configs}), encoding="utf-8")
+    return p
+
+
+def test_pbo_config_matrix_rows_are_configs(tmp_path):
+    configs = [
+        {"params": {"ema_len": 50}, "role": "primary", "returns_pct": [1.0, 2.0, -1.0]},
+        {"params": {"ema_len": 20}, "role": "star", "returns_pct": [0.5, 1.0, 0.0]},
+    ]
+    ids, matrix = pbo.load_config_matrix(_write_matrix(tmp_path, configs))
+    assert len(ids) == 2 and len(matrix) == 2 and len(matrix[0]) == 3
+    assert all("SPY_NEW|1h|trail_ema8" in i for i in ids)
+    assert ids[0] != ids[1]  # distinct params -> distinct configs
+
+
+def test_pbo_config_matrix_refuses_single_config(tmp_path):
+    configs = [{"params": {"ema_len": 50}, "role": "primary", "returns_pct": [1.0, 2.0]}]
+    with pytest.raises(ValueError):
+        pbo.load_config_matrix(_write_matrix(tmp_path, configs))
+
+
+def test_pbo_config_matrix_refuses_ragged_periods(tmp_path):
+    configs = [
+        {"params": {"ema_len": 50}, "role": "primary", "returns_pct": [1.0, 2.0, 3.0]},
+        {"params": {"ema_len": 20}, "role": "star", "returns_pct": [1.0, 2.0]},
+    ]
+    with pytest.raises(ValueError):
+        pbo.load_config_matrix(_write_matrix(tmp_path, configs))
