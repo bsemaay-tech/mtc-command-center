@@ -1,5 +1,289 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5] 2026-07-15 — P2 race fix deployed; new Day 0 ARMED at 06:48:16Z
+
+Fable audit PASS plus Barış's explicit Task 4/push go satisfied both gates. One restart window
+deployed detached `C:\P2RT` from `54278b66` to audited tip `cc4ce67d` (race fix `da44d1ff` plus
+Telegram test isolation and golden). Preflight was DISARMED/testnet/paper with positions/orders
+`[]`; both P2RT suites passed `127 passed, 1 warning`. `Stop-ScheduledTask` left child PID `54192`
+alive, so that orphan was terminated once before checkout; port 8790 was closed before sync.
+
+New run `paper-20260715063657` started DISARMED and passed a 10m29s flat observation. Natural
+cycle: `06:47:06.153686Z DISCONNECT -> 06:47:14.370206Z RECONNECT attempt=1 ->
+06:47:39.560468Z DATA_RESTORED`; reconcile `06:47:26.646538Z` succeeded inside the rebuild
+window. Exactly one ARM used `X-Confirm: 2`: `06:48:16.616853Z ARM_REQUEST` then
+`06:48:16.619336Z DISARMED->ARMED`. Post-ARM reconciles at `06:48:28.376718Z` and
+`06:49:29.975312Z` were clean. Final API: ARMED, reconcile-ready, positions/orders `[]`; event
+counts: one ARM request, one ARMED transition, zero ERROR/`RECONCILE_FAILED`/
+`RECONCILE_DEFERRED`. Telegram notifier was enabled and the transition invoked the existing
+`state -> ARMED` notification path; no delivery receipt is persisted. The
+`2026-07-15T06:48:16.619336Z` ARMED transition timestamp is the new P2 Day 0. Full record:
+`IBKR_PAPER_BRIDGE/docs/03_STATUS.md`.
+
+Next: resume D3 daily read-only monitoring for at least 10 uninterrupted calendar days. Any
+DISARM or critical runtime change requires investigation and a fresh complete gate; mainnet
+remains forbidden.
+
+## [Codex GPT-5] 2026-07-14 — P2 race fix built at da44d1ff; Fable audit and deploy approval pending
+
+Executed Tasks 1–3 of `11_TRIAGE/CODEX_P2_RACE_FIX_PROMPT_2026-07-14.md` in the dedicated
+`C:\BFIX` worktree. Commit `da44d1ff` replaces the reconnect-time null-client window with a
+local-build/candle-resubscribe/atomic-swap path, adds the narrow `RECONCILE_DEFERRED` defense for
+`HyperliquidNotConfigured` only while `broker.rebuilding`, and preserves single-strike fail-closed
+behavior for all other cases. Five new deterministic tests cover the real blocked-build race,
+defer contract, fail-closed regressions, and swap integrity. Independent suites passed from both
+required CWDs: `127 passed, 1 warning` each. Staged secret grep was zero; `HL_LIVE_ACK` was unset.
+Builder report: `11_TRIAGE/P2_RACE_FIX_REPORT_2026-07-14.md`.
+
+**STOP boundary:** no deployment, runtime restart, API/broker call, ARM, Day-0 reset, push, or
+`C:\P2RT` mutation occurred. Fable must audit first; Task 4 stays locked until Fable PASS plus
+Barış's explicit go.
+
+## [Codex GPT-5] 2026-07-13 — Bridge P2 ARMED; Day 0 started after incident repair
+
+**P2 ARMED at 2026-07-13T13:00:28.6218649Z, exactly one ARM call.** Incident was first contained
+DISARMED with exchange positions/orders empty. Runtime moved to isolated `C:\P2RT` at
+`59c334c0` (includes `29d9879f`), supervisor task repointed there, and full suites passed
+`119 passed, 1 warning` from both roots. Real gate passed:
+`12:57:21Z DISCONNECT -> 12:57:29Z RECONNECT attempt=1 -> 12:57:39Z DATA_RESTORED`, then
+reconciles at `12:58:29Z` and `12:59:30Z`; no retry/stale/reconcile failure. ARM audit contains one
+`ARM_REQUEST` and one `DISARMED->ARMED`. Post-ARM reconciles at `13:01:32Z` and `13:02:34Z`
+remained ARMED with no positions/orders. D3 ≥10-day monitoring is active. Evidence:
+`IBKR_PAPER_BRIDGE/docs/19_P2_RECONNECT_INCIDENT_2026-07-13.md`.
+
+## [Codex GPT-5] 2026-07-13 — Real QuantLens Keltner golden completed
+
+Commits `bcecdce0`, `04048a0b`, and `5d7e9208` registered the additive QuantLens plumbing strategy
+and produced **858 real signals over 48,077 BTCUSD 1h bars**. Golden run id:
+`QL_MEGA_KELTNER_TRAIL_EMA8_BTCUSD_1h_2026-06-28_01a3f1255e29`. Codex verification found
+deterministic regeneration exactly equal to the saved golden; both bridge test CWDs passed
+(`114 passed, 1 warning`). No bridge runtime, protected scope, exchange, or LLM changes. Entry
+signals are 858/858 identical. At report time, exits were not parity-claimed because bridge
+`trail_level` was SMA-8 while QuantLens used EMA-8; `f209acd2` later corrected that calculation,
+but the golden remains entry-signal evidence only. See `IBKR_PAPER_BRIDGE/docs/18_GOLDEN_REPORT.md`.
+
+## [Claude Opus 4.8] 2026-07-13 — Bridge P2-READY: B+C phases complete, ARM pending one bar close
+
+Since P0 MET: B1 ws auto-reconnect (f1827103), B2 reconciler fallback cascade (1774c38f), B5 live
+Telegram wired+confirmed (53db70b2), user-event subscription ordering bug fixed (6a9fd269),
+**B6 fill smoke PASS** (378564ce — real fill 64110, positionTpsl SL rested on live book =
+reprotect path proven, reduce-only close 64098, 5 real WS payloads captured), B3 parser tested
+against real fixtures, B4 paper probe (real warmup bars persisted, equity 998.99 live), E1 creds
+into app factory + yaml risk config wired into engine (86d16791, 2f31a9d6), C3 config frozen
+LLM-off (1b78bb66), C2 supervisor `tools/run_bridge_p2.ps1` + Task Scheduler `MTC-Bridge-P2` with
+crash-restart PROVEN (24768919). 110 tests both CWDs. Supervised paper instance RUNNING DISARMED.
+**Next model action (pre-approved, plan §0-4): verify one live hourly bar close appeared in
+/api/bars (64k-range, new ts), then POST /api/arm with X-Confirm — that starts P2 day 0.**
+Then follow plan D3 monitoring. Plan: `IBKR_PAPER_BRIDGE/docs/16_GO_LIVE_PLAN.md`.
+
+## [Claude Opus 4.8] 2026-07-12 — Bridge P0 GATE MET (attempt 7 PASS)
+
+W1 (`93713647`) accepted `waitingForFill`/`waitingForTrigger` pending-child statuses. Attempt 7
+`p0-20260712T201750Z`: ALL 12 steps PASS on testnet — connect (unified, 999 USDC), live candles,
+atomic normalTpsl entry+SL (oids 56381230513/56381230514, both resting), REAL on-exchange SL
+modify, cancel, verified cleanup, no fills, clean disconnect. 100 tests both CWDs; secret scans
+zero. **P0 exit criteria MET** (PREREG §4 note added; architecture amended with both observed
+child shapes). Next open task in `IBKR_PAPER_BRIDGE/docs/16_GO_LIVE_PLAN.md` §3: **B1
+(real WS-drop auto-reconnect)**, then B2-B6 → C → D (P2 ARM — pre-approved). Continue without
+asking per plan §0/§4.
+
+## [Claude Opus 4.8] 2026-07-12 — Bridge GO-LIVE plan + blanket approvals
+
+Barış directive: take the bridge live (= P2 testnet loop; MAINNET STAYS FORBIDDEN). He
+blanket-approved everything needed: all local work, bounded P0 smoke attempts until pass, the B6
+near-market fill smoke, and ALL of Phase D including P2 ARM. Models must proceed WITHOUT asking;
+human input only for Telegram creds, PC uptime, mainnet (never), QuantLens strategy registration.
+**Authoritative plan: `IBKR_PAPER_BRIDGE/docs/16_GO_LIVE_PLAN.md`** (commit e0a36b61) — task
+ladder W1→W3 (P0 closure), B1→B6 (hardening: auto-reconnect, reconciler fallbacks, user-event
+probe, paper-mode probe, Telegram, fill smoke), C1→C4 (ops: Task Scheduler service, frozen P2
+config with LLM OFF), D1→D5 (P2 ARM, ≥10-day run, exit audit). Handoff protocol in its §4: next
+model reads plan §3, takes first unchecked box, executes per §1, updates STATUS+HANDOFF, continues.
+Current first task: W1 (accept `waitingForFill`/`waitingForTrigger` pending-child statuses —
+attempt 6 proved entry rests and child waits; only the parser rejects it).
+
+## [Codex GPT-5] 2026-07-12 — Bridge P0 attempt 6
+
+G1/G2 in `a4de4a6e` moved entry brackets to `normalTpsl`, retained `positionTpsl` for re-protect,
+and added a bounded `na` fallback. Both suites passed (`98 passed, 1 warning` each). The one
+approved attempt `p0-20260712T200243Z` reached testnet and returned a resting entry plus
+`waitingForFill` child status. C1 rejected the non-dict pending child; C3 cleanup passed twice
+idempotently with no changed position. The `na` fallback was not eligible and did not run. No retry
+was run. P0 remains unmet; P2 remains unapproved. Evidence: `IBKR_PAPER_BRIDGE/docs/14_P0_SMOKE_REPORT.md`.
+
+## [Codex GPT-5] 2026-07-12 — Bridge P0 attempt 5
+
+Implemented E1 in `25cee696`; the smoke resolved credentials from the Windows user registry
+without disclosure and both full suites passed (`92 passed, 1 warning` each). The one re-approved
+testnet attempt `p0-20260712T194622Z` connected, read Unified balance and live BTC candles, then
+received the real atomic response `Trigger order has unexpected type.` C3 cleanup found no owned
+orders or changed position and disconnect passed. No retry was run. P0 remains unmet; P2 remains
+unapproved. Evidence: `IBKR_PAPER_BRIDGE/docs/14_P0_SMOKE_REPORT.md`.
+
+## [Codex GPT-5] 2026-07-12 — Bridge P0 attempt 4
+
+Completed approved local cardinality/raw-response/owned-cleanup hardening in `09a7a92f`.
+Both full bridge suites passed (`89 passed, 1 warning` each). The single authorized smoke
+`p0-20260712T192848Z` then failed at the local 32-byte API-wallet-key precheck, before any SDK
+construction or testnet request. No order, cancellation, position, or real `positionTpsl` response
+exists for this attempt, and no retry was run. P0 exit criteria remain unmet; P2 remains unapproved.
+Evidence: `IBKR_PAPER_BRIDGE/docs/14_P0_SMOKE_REPORT.md`.
+
+## [Codex GPT-5] 2026-07-12 — Rounded-price P0 attempt failed cleanly
+
+Barış approved exactly one bounded P0 attempt after price-precision hardening. Commit `42018032`
+adds conservative Hyperliquid rounding to smoke planning plus adapter entry, SL/TP, modify-stop,
+and reprotection paths; exact fixture `57542.4→57540` passes. Both full suites passed before the
+network attempt: `72 passed, 1 warning` from each CWD.
+
+Run `p0-20260712T185408Z` confirmed `unifiedAccount`, equity/available/withdrawable `999`, live BTC
+candles, compliant prices (`57600/56448/56736`), and clean websocket disconnect. It failed at
+atomic `positionTpsl` parsing because the real response returned fewer status objects than submitted
+requests. No oid was captured. A deterministic-cloid read-only post-check found zero open orders,
+zero owned orders, and zero positions, so no cleanup action was needed. No second attempt was run.
+Evidence: `IBKR_PAPER_BRIDGE/docs/14_P0_SMOKE_REPORT.md`. Next: local response-shape and
+failure-cleanup hardening, then a new explicit P0 approval. P2 remains unapproved.
+
+## [Codex GPT-5] 2026-07-12 — Bridge Unified-account correction
+
+Corrected the post-P0 diagnosis after a read-only testnet query proved the account mode is
+`unifiedAccount`. Hyperliquid intentionally reports shared USDC balance/holds through
+`spot_user_state`; Barış does not need a Spot→Perps transfer and should not change account mode.
+
+Commit `944a5323` adds mode detection, Unified USDC account snapshots, secret-redacted
+string-response errors, and explicit SDK websocket shutdown in the smoke lifecycle. Focused tests
+pass (`26`), and both full suites pass (`70 passed, 1 warning` each). The historical failed smoke
+was not rerun: it returned no oid/cloid and left zero positions/open orders. The exact exchange
+rejection was masked by the old parser, so the next bounded P0 order attempt requires fresh explicit
+approval. P2 remains unapproved.
+
+## [Codex GPT-5] 2026-07-12 — Bridge P0 retry blocked by Spot-only collateral
+
+Executed the approved `IBKR_PAPER_BRIDGE/docs/13_CODEX_P0_RETRY_PROMPT.md` scope on
+`feature/ibkr-bridge-final`. F0 credential precheck, F1 SDK `market_close` flatten safety, and F2
+clean modify-stop replacement requests are committed as `a50cb4a9`, `7f4f7888`, and `92bc4f19`.
+Full local suite passes from both required CWDs: `67 passed, 1 warning` each.
+
+The single authorized testnet P0 attempt connected and retrieved account state, three live BTC 1h
+candles, metadata, and an ~$11.51 resting plan. It failed before any oid/cloid because Perps account
+value was `0.0`; read-only diagnostics found `999.0` mock USDC in Spot, zero positions, and zero
+open orders. No retry or balance transfer was performed. The SDK returned an unhandled
+string-shaped response, and websocket worker state kept the finished script process alive until the
+outer timeout. Evidence: `IBKR_PAPER_BRIDGE/docs/14_P0_SMOKE_REPORT.md` and
+`docs/p0_smoke_log.json`. Next human action: move mock USDC Spot→Perps on testnet. A new P0 order
+attempt needs separate approval after safe response handling, disconnect lifecycle, and read-only
+Perps collateral confirmation. P2 remains unapproved.
+
+## [Codex GPT-5] 2026-07-12 — Bridge P1 build
+
+Executed `IBKR_PAPER_BRIDGE/docs/10_CODEX_P1_BUILD_PROMPT.md` on
+`feature/ibkr-bridge-final`. P1 local gate PASS: continuous MockBroker runtime, typed broker
+snapshots/events, SDK-signature-constrained adapter tests, BarFeed timer/dedupe/staleness,
+reconcile-before-ARM, risk-reducing trail while disarmed, preemptive KILL, real Store-backed
+REST/persistent WS, local SVG candles, and all eight failure drills. Final suite: 54 passed from
+repo root and 54 passed from the bridge directory; live mock screenshots updated.
+
+P0 is BLOCKED before network connection: the Windows user `HL_API_WALLET_KEY` is present but the
+SDK reports a 20-byte value rather than a 32-byte private key. No testnet query/order/cancel/fill
+occurred; evidence is `IBKR_PAPER_BRIDGE/docs/p0_smoke_log.json`. Real QuantLens golden is also
+BLOCKED because `keltner_trail_ema8` is not registered and `GEN_KELTNER_BREAKOUT` is materially
+different; provisional golden retained. Audit report: `IBKR_PAPER_BRIDGE/docs/11_P1_BUILD_REPORT.md`.
+P2 remains unapproved and unstarted.
+
+## Codex GPT-5 2026-07-07 - Crypto Paper Bridge corrective P1 pass
+
+Executed `IBKR_PAPER_BRIDGE/docs/09_CODEX_FIX_PROMPT.md` on `feature/ibkr-bridge-final` after the scaffold audit. Corrective commits: `d431dfab`, `3287f05c`, `f1a7b6d1`, `873c44dc`, `ad361301`, `0a26ad9e`, `0f6e241d`.
+Substance: engine/order paths now use the Broker protocol and callback bars; strategy stops/positions are real; MockBroker has resting lifecycle orders and persisted duplicate fingerprints; app state persists KILLED through restart and blocks mid-await submits; Hyperliquid fake-SDK tests cover native `positionTpsl` triggers and reduce-only flatten; dashboard renders real rows/status/bars and screenshots are saved under `IBKR_PAPER_BRIDGE/docs/screenshots/`.
+Verification: `python -m pytest IBKR_PAPER_BRIDGE/tests -q` passed with 37 tests and one FastAPI/Starlette TestClient warning. Dry-run dashboard served on `127.0.0.1:8791` during verification and showed numeric equity/day P&L/next-bar plus a visible candle plot.
+Honest caveat: FIX 6 is marked PARTIAL in `IBKR_PAPER_BRIDGE/docs/03_STATUS.md` because the screenshot-visible candle plot uses the local SVG fallback; the Lightweight Charts CDN path remained effectively blank in the browser screenshot runtime. No exchange/LLM API calls, backtests, Pine/parity, or protected MCC strategy behavior were touched. P0 Hyperliquid smoke remains explicit-approval gated.
+
+## Codex GPT-5 2026-07-07 - Crypto Paper Bridge overnight build (tasks 1-11 done)
+
+Built the Hyperliquid Crypto Paper Bridge v1 mock-first slice on `feature/ibkr-bridge-final`.
+Commits cover tasks 1,2,3,3b,4,5,6,7,9,10a,10b,8,11 with exact-path commits after each accepted task.
+Core pieces now exist under `IBKR_PAPER_BRIDGE/`: FastAPI app, SQLite schema v2 Store, MockBroker, provisional golden generator, Keltner x EMA8 strategy, RiskEngine, dry-run Engine/OrderManager, LLM gate, Hyperliquid adapter, approval-gated `tools/smoke_p0.py`, notifier, and six-page dark dashboard shell.
+Verification: `PYTHONUTF8=1 python -m pytest IBKR_PAPER_BRIDGE\tests -q` passed (24 tests; one FastAPI/Starlette TestClient deprecation warning), `node --check` passed, dry-run server on `127.0.0.1:8790` returned snapshot trade data plus bars and was stopped.
+No exchange, LLM API, backtest, Pine, parity, MTC strategy, or protected MCC writes were performed.
+Known gap: `tests/fixtures/golden_signals.json` is provisional from a synthetic fixture/reference implementation, not a real QuantLens BTC 1h source run.
+Next human gate: review `IBKR_PAPER_BRIDGE/docs/03_STATUS.md`, prep Hyperliquid testnet wallet per `06_HYPERLIQUID_SETUP.md`, then explicitly approve or reject P0 smoke.
+
+## Claude Opus 4.8 2026-07-06 (9) — Bridge broker PIVOT: IBKR/Signum out, Hyperliquid in; docs final
+
+Barış tried IBKR → KKTC address verification FAILED. Crypto-only OK (has Binance + Hyperliquid).
+Evaluated Signum ($25/mo execution relay, site+FAQ+3 videos): signal-source-agnostic, supports own
+strategy, BUT market-only + NO native resting stop (synthetic 5-10s stop) → routing our engine
+through it neuters the risk engine → NOT chosen (kept as optional cheap "see-it-live" experiment).
+Decision = **direct Hyperliquid** (testnet = paper): API-first (no desktop terminal — deletes the
+whole TWS complexity class), native resting SL/TP trigger orders (real protection), 24/7 (simpler +
+faster P2), API-wallet-cannot-withdraw safety. Fits the `Broker` abstraction — connector swap, not
+redesign. All design docs REWRITTEN in place to Hyperliquid-native on `feature/ibkr-bridge-final`
+(commit 52b13f6f): README/00_PREREG/01_ARCHITECTURE/02_BUILD_PLAN + new `07_BROKER_DECISION.md`
+(full rationale) + `06_HYPERLIQUID_SETUP.md` (replaces deleted 06_TWS_SETUP); `05_AUDIT_RESOLUTION`
+got a broker-note mapping IBKR-specific fixes to Hyperliquid (port-lock→network-lock,
+BarFinalizer→24/7, permId→cloid, synthetic→native stop; non-broker fixes carry over). Dir name
+`IBKR_PAPER_BRIDGE/` kept for git continuity; product = "Crypto Paper Bridge". First subject =
+Keltner×trail_ema8 on **BTC 1h** (plumbing only). Next: Barış approves pre-reg + merges, preps
+testnet API wallet per 06, then 2 build days (mock-first); P0 smoke approval-gated.
+
+## Claude Fable 5 2026-07-06 (8) — IBKR Paper Bridge: 7-audit triage DONE, design docs FINAL
+
+All 7 external audits (Codex GPT-5, Opus 4.8, Gemini 3.1 Pro, DeepSeek V4 Pro, Cursor Composer,
+GitHub Copilot, Kimi K1.5; all "ship-with-fixes") triaged; accepted findings AMENDED in place in
+`IBKR_PAPER_BRIDGE/docs/00_PREREG.md`, `01_ARCHITECTURE.md`, `02_BUILD_PLAN_1DAY.md`. Full
+adopted/deferred/rejected record: **`docs/05_AUDIT_RESOLUTION.md`** (21 adopted clusters).
+Headline fixes: default-DENY broker-port allow-list {7497,4002} (Gateway 4001 live-port hole);
+BarFinalizer contract (session-end force-close, 30-min tail-bar discard, reconnect dedup);
+permId/orderRef durable order identity; TWS nightly-restart recovery (re-protect before flatten —
+was going to flatten every night); zero-stop-distance + buying-power guards; schema v2
+(decision_uid, fills/bars/risk_days/llm_calls/meta, PREREG columns on trades, indices);
+post-await state gate + preemptive KILL; reconciler PENDING grace; consecutive-loss
+pause_auto_rearm (P2-unattended fix); flip disabled v1; LLM veto default OFF v1 + injection
+mitigation + TTL clamp/no-silent-widen; PREREG metrics glossary + two-stage parity + operational
+veto-precision rule; build plan relabeled honest 2 days (Day1 mock core+10a / Day2 IBKR+10b),
+new task 3b golden-generation, 06_TWS_SETUP checklist requirement. Rejected (with reasons in
+§3): continuous rebalancing, Kelly sizing, dashboard cut to 1-2 pages, DISARMED-trail-freeze,
+"claude-sonnet-5 not a model" (it is). Next: Barış approves pre-reg → build days → P0 (gated).
+
+## Claude Fable 5 2026-07-05 (7) — IBKR Paper Bridge: full design docs (NEW standalone track)
+
+Barış decision: IBKR paper integration is NOT deferred — plumbing gets built independent of a
+promotable strategy (motivation + tesisat validation). New top-level app `IBKR_PAPER_BRIDGE/`
+(independent from MCC dashboard, no runtime imports from MTC_COMMAND_CENTER). **Design docs only,
+no code yet**, on branch `feature/ibkr-paper-bridge`:
+
+1. `IBKR_PAPER_BRIDGE/docs/00_PREREG.md` — binding pre-reg: gates P0 (TWS smoke) → P1 (mock
+   dry-run) → P2 (paper AAPL 1h ≥10d unattended) → P3 (≥30d + slippage + signal-parity report);
+   abort criteria (daily loss, naked position, stale data, unknown order state); first strategy =
+   FAZ 3B STRONG_PASS `KELTNER_STOP_V1 × trail_ema8 × AAPL × 1h` as PLUMBING test subject
+   (explicitly not a promotion statement).
+2. `IBKR_PAPER_BRIDGE/docs/01_ARCHITECTURE.md` — decided stack (Python 3.11 + ib_async + FastAPI
+   + SQLite WAL + static vanilla dark dashboard, one process), Broker protocol w/ MockBroker,
+   state machine (DISARMED/ARMED/KILLED + per-trade decision chain), RiskEngine (fixed-fractional
+   sizing, daily-loss auto-DISARM, direction intersect), LLM layer **veto/regime-only**
+   (Grok-4 regime directive LONG_ONLY/SHORT_ONLY/BOTH/NO_TRADE w/ TTL+min-confidence, narrowing-only;
+   Claude pre-trade veto; fail-open default; hard code boundary — LLM can never create/enlarge orders),
+   SQLite schema, REST+WS API, 6-page dashboard spec (MTC_V2-style risk/SL/TP/direction config panel),
+   safety rails (live port 7496 refused w/o `IBKR_LIVE_ACK` env + double-confirm).
+3. `IBKR_PAPER_BRIDGE/docs/02_BUILD_PLAN_1DAY.md` — 11 ordered tasks w/ acceptance criteria so
+   Opus/Codex can build it in one day (mock-first; IBKR adapter task 8; dashboard task 10;
+   broker-touching runs remain Barış-approval-gated).
+
+LLM sentiment idea (Barış): regime from Grok/news deciding long-only/short-only/no-trade — designed
+in as Role A of llm_gate; YouTube source slot left in the SentimentSource protocol for later.
+
+Update (same day, later session): reviewed Barış's external report
+(`live_trading_dashboard_final_report.md`, Downloads). ADOPTED into docs: Gate Monitor
+(gate_results list + dashboard card), duplicate-order + stale-price guards, reduce-only close
+semantics, consecutive-loss stop + cooldown (also new PREREG abort line), strategy import format
+w/ permissions block (`live_allowed` hand-set only), Telegram notifier (fail-silent, task 11).
+DEFERRED to new §13 roadmap: execution ticket, event gate, market context page, crypto connectors,
+Postgres/Redis/Docker, React, login/2FA (required before any non-localhost exposure), tunnel→VPS
+phases (IBKR end-state = hybrid local bridge or IB Gateway on VPS). Also wrote
+`docs/04_AUDIT_PROMPT.md` — self-contained adversarial audit prompt for Codex/GPT/Gemini/DeepSeek:
+dimensions A-I, mandatory ≥5 improvements + ≥5 features + top-3 verdict, output to
+`docs/audits/AUDIT_<model>_<date>.md` on own branch, report file is the only allowed write.
+Next: Barış runs external audits → Claude triages audits + adopts → pre-reg approval → build day
+per 02_BUILD_PLAN_1DAY.md → P0 smoke (approval-gated).
+
 ## Claude Opus 4.8 2026-07-05 (6) — audit cleanup (4 remaining items) done + pushed to origin/master
 
 Barış: "kalan küçük işleri yap push et". Closed the four leftover audit follow-ups on branch
@@ -2409,3 +2693,33 @@ Validation: `node --check MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/web/app.js` P
 Visual QA notes: Browser screenshots could not be captured because the in-app Browser policy blocks `127.0.0.1:8765`, and no alternate browser workaround was used. Direct served-route inspection confirms the visual contract changed from the light skeleton to dark reference structures. Cheap-agent review was attempted through `_deepseek_driver`, but the agent drifted into unrelated files and hit `max_iters` without a usable report; no writes occurred.
 
 No backtest, optimization, worker, Pine, MTC_V2, parity, strategy logic, live trading, broker path, API write behavior, or execution/write-back path was launched or modified.
+
+## Codex GPT-5 2026-07-15 — P2 outage-tolerance Tasks 1-4 built; audit pending
+
+Built the approved paper-testnet outage-tolerance change on `feature/ibkr-bridge-final` in dedicated worktree `C:\BTOL`. Code commit `0e644b52` adds three-consecutive-failure reconcile tolerance with success reset, a config-driven nine-attempt/315-second websocket reconnect budget, and explicit Telegram suppression for routine disconnect/first-reconnect/data-restored chatter while retaining all DB events and escalated alerts.
+
+Deterministic coverage includes third-strike disarm, 2-fail/success/2-fail reset, rebuild defer versus genuine nonconfiguration, 195-second simulated recovery without stale, 315-second exhaustion with real stale-disarm callback, and notifier/store separation. Full suites passed from both required CWDs: `130 passed` from `C:\BTOL` and `130 passed` from `C:\BTOL\IBKR_PAPER_BRIDGE`. Staged 64+-hex secret scan: zero matches.
+
+Detailed evidence and honest delegation anomalies: `MTC_COMMAND_CENTER/11_TRIAGE/P2_OUTAGE_TOLERANCE_REPORT_2026-07-15.md`. `C:\P2RT` remains untouched at detached `cc4ce67d`; no deploy, restart, ARM, push, or PR merge was performed. Task 5 requires Fable PASS plus Barış go. Task 6 remains post-audit.
+
+## Codex GPT-5 2026-07-15 — P2 Day 0 v4 deployed; post-ARM audit pending
+
+After Fable PASS and Barış's one-ARM go, deployed audited tip `1465f8f0` to the detached
+`C:\P2RT` worktree through the existing `MTC-Bridge-P2` scheduled task. Both P2RT suites passed
+`130 passed, 1 warning`. Run `paper-20260715105547` started DISARMED, testnet, reconcile-ready,
+and flat.
+
+The DISARMED gate began at `10:56:23.8748664Z`, stayed flat and error-free, and observed the
+required `11:07:13.425338Z DISCONNECT -> 11:07:20.454025Z RECONNECT attempt=1 ->
+11:07:21.465900Z DATA_RESTORED` cycle. `/api/bars` then advanced from the `10:00Z` bar
+(`1784109600`) to the newly persisted `11:00Z` bar (`1784113200`) at `12:00:37.9423549Z`.
+
+Exactly one ARM used `X-Confirm: 2`: event id 839 `ARM_REQUEST` at `12:02:42.853744Z`, followed
+by event id 840 `DISARMED->ARMED` at `12:02:42.856537Z`. Clean post-ARM reconciles landed at
+`12:03:27.534022Z` and `12:04:28.442119Z`; state remained ARMED with positions/orders `[]`, one
+ARM request, one ARMED transition, and zero post-ARM bad events. The state-notification code path
+ran, but Telegram delivery is not externally observable from the bridge logs and is not claimed.
+
+Day 0 v4 is validation-tier. The planned July 18 PC-off is a window boundary; definitive D3
+starts on the VPS. Task 5 runtime work is complete. Task 6 PR merges and Fable post-ARM audit
+remain to be closed in this session.

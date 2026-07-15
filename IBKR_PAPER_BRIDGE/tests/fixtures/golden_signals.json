@@ -1,0 +1,5173 @@
+{
+  "provisional": false,
+  "source": "quantlens_mega_walk_forward_registry",
+  "golden_run_id": "QL_MEGA_KELTNER_TRAIL_EMA8_BTCUSD_1h_2026-06-28_01a3f1255e29",
+  "engine_version": "faz3b-exit-mode-v1",
+  "strategy_id": "keltner_trail_ema8",
+  "bar_alignment": "UTC_1h_24x7_close_confirmed_mkt_next",
+  "dataset": {
+    "manifest": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\03_QUANTLENS\\data\\native_multiasset_alpaca_2026-06-28\\manifests\\dataset_manifest.json",
+    "symbol": "BTCUSD",
+    "timeframe": "1h",
+    "rows": 48077,
+    "start": "2021-01-01T06:00:00+00:00",
+    "end": "2026-06-28T00:00:00+00:00"
+  },
+  "params": {
+    "kc_length": 20,
+    "kc_mult": 2.0,
+    "atr_length": 20,
+    "trail_ema": 8
+  },
+  "signal_count": 858,
+  "signals": [
+    {
+      "ts": "2021-01-02T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 30649.71,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-01-04T09:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 31013.27,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-01-05T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 33459.02,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-01-10T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 39218.17,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-01-13T19:00:00Z",
+      "direction": "LONG",
+      "ref_price": 35992.36,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-01-15T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 36880.89,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-01-22T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 33301.0,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-01-24T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 31323.82,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-01-25T03:00:00Z",
+      "direction": "LONG",
+      "ref_price": 33573.58,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-01-25T23:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 32283.38,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-01-28T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 32687.51,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-01-31T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 32920.16,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-02-01T08:00:00Z",
+      "direction": "LONG",
+      "ref_price": 34497.94,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-02-07T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 38681.28,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-02-08T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 43185.67,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-02-10T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 45005.0,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-02-11T10:00:00Z",
+      "direction": "LONG",
+      "ref_price": 46343.16,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-02-15T02:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 46941.01,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-02-16T03:00:00Z",
+      "direction": "LONG",
+      "ref_price": 49560.8,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-02-22T08:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 55482.51,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-02-25T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 51500.0,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-02-25T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 48047.97,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-03-01T02:00:00Z",
+      "direction": "LONG",
+      "ref_price": 46513.72,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-03-02T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 47550.0,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-03-03T07:00:00Z",
+      "direction": "LONG",
+      "ref_price": 49772.14,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-03-04T04:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 49055.74,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-03-05T19:00:00Z",
+      "direction": "LONG",
+      "ref_price": 49341.47,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-03-06T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 47337.34,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-03-07T02:00:00Z",
+      "direction": "LONG",
+      "ref_price": 49564.46,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-03-11T09:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 54450.0,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-03-11T22:00:00Z",
+      "direction": "LONG",
+      "ref_price": 57925.24,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-03-14T23:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 59000.0,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-03-17T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 57605.68,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-03-18T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 57246.74,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-03-24T08:00:00Z",
+      "direction": "LONG",
+      "ref_price": 56286.8,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-03-24T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 53716.99,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-03-26T21:00:00Z",
+      "direction": "LONG",
+      "ref_price": 54627.11,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-03-28T20:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 54834.36,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-03-29T08:00:00Z",
+      "direction": "LONG",
+      "ref_price": 57116.74,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-04-03T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 58253.63,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-04-05T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 59164.12,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-04-06T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 57935.59,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-04-08T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 57669.18,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-04-10T20:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 58554.72,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-04-12T06:00:00Z",
+      "direction": "LONG",
+      "ref_price": 60800.0,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-04-14T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 62233.87,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-04-26T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 51958.18,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-04-29T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 52995.46,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-04-30T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 54711.37,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-05-02T03:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 56517.83,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-05-03T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 58069.76,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-05-03T20:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 56798.8,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-05-05T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 56298.29,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-05-06T18:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 55805.59,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-05-07T16:00:00Z",
+      "direction": "LONG",
+      "ref_price": 58345.0,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-05-09T12:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 56420.02,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-05-10T02:00:00Z",
+      "direction": "LONG",
+      "ref_price": 59058.38,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-05-10T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 56891.71,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-05-12T00:00:00Z",
+      "direction": "LONG",
+      "ref_price": 57399.0,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-05-12T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 55524.03,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-05-24T11:00:00Z",
+      "direction": "LONG",
+      "ref_price": 37648.1,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-05-27T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 37670.76,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-05-30T11:00:00Z",
+      "direction": "LONG",
+      "ref_price": 36384.01,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-05-31T03:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 34525.4,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-05-31T10:00:00Z",
+      "direction": "LONG",
+      "ref_price": 36913.76,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-06-04T02:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 37795.45,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-06-09T06:00:00Z",
+      "direction": "LONG",
+      "ref_price": 34249.33,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-06-12T02:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 35516.04,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-06-13T16:00:00Z",
+      "direction": "LONG",
+      "ref_price": 37042.44,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-06-16T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 39101.47,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-06-24T16:00:00Z",
+      "direction": "LONG",
+      "ref_price": 34532.78,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-06-25T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 33277.86,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-06-27T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 32877.5,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-06-30T04:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 34751.43,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-07-03T07:00:00Z",
+      "direction": "LONG",
+      "ref_price": 34507.04,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-07-05T00:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 34845.58,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-07-06T04:00:00Z",
+      "direction": "LONG",
+      "ref_price": 34667.26,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-07-07T23:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 33864.47,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-07-09T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 33533.78,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-07-12T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 33538.96,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-07-18T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 32226.34,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-07-18T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 31332.24,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-07-21T04:00:00Z",
+      "direction": "LONG",
+      "ref_price": 30697.42,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-07-27T02:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 36577.95,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-07-27T22:00:00Z",
+      "direction": "LONG",
+      "ref_price": 39210.64,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-07-30T08:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 38755.03,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-07-30T20:00:00Z",
+      "direction": "LONG",
+      "ref_price": 40700.0,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-08-01T22:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 40282.97,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-08-04T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 38850.9,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-08-05T08:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 38480.85,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-08-05T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 40724.94,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-08-12T05:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 45183.13,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-08-13T06:00:00Z",
+      "direction": "LONG",
+      "ref_price": 45864.59,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-08-14T10:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 46333.28,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-08-15T22:00:00Z",
+      "direction": "LONG",
+      "ref_price": 47262.58,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-08-16T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 46104.23,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-08-19T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 45789.4,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-08-22T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 48283.74,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-08-23T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 49863.07,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-08-24T00:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 49231.58,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-08-26T00:00:00Z",
+      "direction": "LONG",
+      "ref_price": 49298.0,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-08-26T05:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 47068.24,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-08-27T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 48151.7,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-08-30T12:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 47600.04,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-09-01T16:00:00Z",
+      "direction": "LONG",
+      "ref_price": 48466.84,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-09-03T00:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 48597.9,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-09-03T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 50668.27,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-09-07T08:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 51206.41,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-09-12T08:00:00Z",
+      "direction": "LONG",
+      "ref_price": 46115.35,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-09-13T03:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 44618.7,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-09-13T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 46165.39,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-09-19T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 47334.92,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-09-23T03:00:00Z",
+      "direction": "LONG",
+      "ref_price": 44097.57,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-09-24T09:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 42383.46,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-09-27T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 44303.19,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-09-27T20:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 42709.71,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-09-30T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 42960.32,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-10-12T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 55904.62,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-10-13T19:00:00Z",
+      "direction": "LONG",
+      "ref_price": 57273.1,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-10-17T20:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 59395.89,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-10-18T00:00:00Z",
+      "direction": "LONG",
+      "ref_price": 62460.0,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-10-22T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 61560.34,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-10-25T00:00:00Z",
+      "direction": "LONG",
+      "ref_price": 61798.91,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-10-26T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 60849.3,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-10-28T08:00:00Z",
+      "direction": "LONG",
+      "ref_price": 60596.15,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-10-31T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 60470.7,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-11-01T07:00:00Z",
+      "direction": "LONG",
+      "ref_price": 62195.57,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-11-03T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 61864.78,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-11-07T00:00:00Z",
+      "direction": "LONG",
+      "ref_price": 61968.07,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-11-10T20:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 65831.4,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-11-13T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 64719.59,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-11-15T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 64327.81,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-11-20T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 58854.63,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-11-20T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 57647.08,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-11-20T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 59459.05,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-11-22T00:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 58189.79,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-11-25T00:00:00Z",
+      "direction": "LONG",
+      "ref_price": 58030.14,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-11-26T06:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 57605.85,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-11-28T21:00:00Z",
+      "direction": "LONG",
+      "ref_price": 56334.43,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-11-30T05:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 56321.17,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-12-01T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 58603.99,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-12-03T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 55011.2,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-12-06T21:00:00Z",
+      "direction": "LONG",
+      "ref_price": 50131.18,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-12-08T10:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 49276.82,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-12-10T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 49640.78,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-12-13T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 48625.68,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-12-14T21:00:00Z",
+      "direction": "LONG",
+      "ref_price": 48311.41,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-12-15T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 46604.97,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-12-15T20:00:00Z",
+      "direction": "LONG",
+      "ref_price": 49227.69,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-12-16T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 47869.32,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-12-19T03:00:00Z",
+      "direction": "LONG",
+      "ref_price": 47738.26,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-12-26T02:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 50057.26,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-12-26T21:00:00Z",
+      "direction": "LONG",
+      "ref_price": 50824.24,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-12-28T00:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 50372.78,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2021-12-30T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 47884.22,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2021-12-31T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 45705.26,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-01-01T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 47764.58,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-01-03T20:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 45926.44,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-01-04T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 47350.0,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-01-04T18:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 45733.37,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-01-09T19:00:00Z",
+      "direction": "LONG",
+      "ref_price": 42716.98,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-01-10T12:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 40940.33,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-01-11T16:00:00Z",
+      "direction": "LONG",
+      "ref_price": 42715.51,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-01-13T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 42840.67,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-01-20T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 42999.67,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-01-20T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 41330.89,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-01-24T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 36205.44,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-01-26T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 36342.11,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-01-29T20:00:00Z",
+      "direction": "LONG",
+      "ref_price": 38370.12,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-01-31T00:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 36856.91,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-01-31T16:00:00Z",
+      "direction": "LONG",
+      "ref_price": 38347.16,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-02-02T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 37715.56,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-02-04T06:00:00Z",
+      "direction": "LONG",
+      "ref_price": 38018.67,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-02-11T00:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 43078.93,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-02-15T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 43487.52,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-02-17T10:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 43080.13,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-02-21T04:00:00Z",
+      "direction": "LONG",
+      "ref_price": 39303.86,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-02-21T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 37606.19,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-02-23T09:00:00Z",
+      "direction": "LONG",
+      "ref_price": 38902.33,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-02-23T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 37539.01,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-02-24T19:00:00Z",
+      "direction": "LONG",
+      "ref_price": 37364.43,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-02-27T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 38215.9,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-02-27T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 39760.38,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-02-27T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 37575.33,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-02-28T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 39849.46,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-03-03T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 42559.33,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-03-09T03:00:00Z",
+      "direction": "LONG",
+      "ref_price": 41235.11,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-03-10T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 40933.54,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-03-11T11:00:00Z",
+      "direction": "LONG",
+      "ref_price": 39917.64,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-03-13T12:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 38523.96,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-03-14T23:00:00Z",
+      "direction": "LONG",
+      "ref_price": 39686.63,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-03-20T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 41046.73,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-03-22T02:00:00Z",
+      "direction": "LONG",
+      "ref_price": 41856.58,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-03-23T04:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 41938.05,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-03-24T00:00:00Z",
+      "direction": "LONG",
+      "ref_price": 43050.19,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-03-30T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 46889.93,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-04-01T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 46175.38,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-04-02T18:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 45860.53,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-04-03T21:00:00Z",
+      "direction": "LONG",
+      "ref_price": 46978.0,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-04-04T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 45387.24,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-04-04T22:00:00Z",
+      "direction": "LONG",
+      "ref_price": 46699.26,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-04-05T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 45829.36,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-04-10T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 43120.59,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-04-10T22:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 42149.77,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-04-13T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 40656.39,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-04-14T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 40607.44,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-04-18T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 40219.66,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-04-20T18:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 40966.78,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-04-21T10:00:00Z",
+      "direction": "LONG",
+      "ref_price": 42265.86,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-04-21T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 41225.29,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-04-25T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 39883.24,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-04-26T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 39275.87,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-04-27T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 39336.88,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-04-29T10:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 38805.9,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-05-01T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 38491.01,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-05-03T18:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 37763.02,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-05-04T07:00:00Z",
+      "direction": "LONG",
+      "ref_price": 38678.84,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-05-05T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 38976.27,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-05-13T03:00:00Z",
+      "direction": "LONG",
+      "ref_price": 30508.68,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-05-13T23:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 29232.45,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-05-14T22:00:00Z",
+      "direction": "LONG",
+      "ref_price": 30188.48,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-05-16T06:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 29550.89,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-05-19T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 29832.15,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-05-20T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 29444.85,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-05-22T09:00:00Z",
+      "direction": "LONG",
+      "ref_price": 30110.86,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-05-23T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 29071.0,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-05-25T02:00:00Z",
+      "direction": "LONG",
+      "ref_price": 30077.83,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-05-26T08:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 28975.06,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-05-29T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 29349.79,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-06-01T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 31147.91,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-06-06T00:00:00Z",
+      "direction": "LONG",
+      "ref_price": 30271.61,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-06-07T00:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 30170.79,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-06-07T19:00:00Z",
+      "direction": "LONG",
+      "ref_price": 31030.56,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-06-10T00:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 29726.52,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-06-19T10:00:00Z",
+      "direction": "LONG",
+      "ref_price": 19881.22,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-06-22T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 20384.91,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-06-23T23:00:00Z",
+      "direction": "LONG",
+      "ref_price": 21091.3,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-06-27T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 20717.06,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-06-30T23:00:00Z",
+      "direction": "LONG",
+      "ref_price": 19937.23,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-07-05T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 19494.55,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-07-05T20:00:00Z",
+      "direction": "LONG",
+      "ref_price": 20436.38,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-07-10T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 21065.15,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-07-13T23:00:00Z",
+      "direction": "LONG",
+      "ref_price": 20219.7,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-07-17T23:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 20798.5,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-07-18T05:00:00Z",
+      "direction": "LONG",
+      "ref_price": 21855.31,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-07-21T02:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 22697.81,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-07-22T11:00:00Z",
+      "direction": "LONG",
+      "ref_price": 23618.14,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-07-22T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 22587.05,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-07-27T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 21540.53,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-07-31T23:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 23304.65,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-08-02T16:00:00Z",
+      "direction": "LONG",
+      "ref_price": 23386.08,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-08-03T23:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 22824.55,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-08-05T03:00:00Z",
+      "direction": "LONG",
+      "ref_price": 23181.47,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-08-06T23:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 22959.28,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-08-07T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 23239.11,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-08-09T09:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 23472.5,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-08-10T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 23992.96,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-08-11T22:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 23910.65,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-08-12T23:00:00Z",
+      "direction": "LONG",
+      "ref_price": 24412.39,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-08-14T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 24233.99,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-08-15T02:00:00Z",
+      "direction": "LONG",
+      "ref_price": 24924.02,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-08-15T07:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 24032.91,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-08-17T06:00:00Z",
+      "direction": "LONG",
+      "ref_price": 24410.0,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-08-17T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 23428.34,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-08-24T16:00:00Z",
+      "direction": "LONG",
+      "ref_price": 21720.15,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-08-26T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 21191.07,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-08-29T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 20169.58,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-08-30T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 19837.38,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-09-02T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 20366.69,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-09-02T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 19807.05,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-09-06T00:00:00Z",
+      "direction": "LONG",
+      "ref_price": 20094.49,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-09-06T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 19099.77,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-09-07T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 19079.75,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-09-13T12:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 21403.3,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-09-17T16:00:00Z",
+      "direction": "LONG",
+      "ref_price": 20129.41,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-09-18T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 19631.1,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-09-19T19:00:00Z",
+      "direction": "LONG",
+      "ref_price": 19515.11,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-09-20T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 18929.46,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-09-21T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 19825.0,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-09-21T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 18470.56,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-09-26T08:00:00Z",
+      "direction": "LONG",
+      "ref_price": 19271.63,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-09-27T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 19118.4,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-09-28T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 19380.0,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-09-29T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 18997.83,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-09-30T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 20015.0,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-10-02T10:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 19104.56,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-10-03T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 19545.53,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-10-05T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 19885.83,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-10-13T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 19424.03,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-10-14T18:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 19216.59,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-10-16T19:00:00Z",
+      "direction": "LONG",
+      "ref_price": 19381.11,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-10-18T18:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 19222.52,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-10-23T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 19474.48,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-10-27T22:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 20272.42,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-10-28T16:00:00Z",
+      "direction": "LONG",
+      "ref_price": 20712.11,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-10-31T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 20307.35,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-11-04T05:00:00Z",
+      "direction": "LONG",
+      "ref_price": 20441.42,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-11-06T23:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 20908.79,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-11-10T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 17619.99,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-11-13T06:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 16652.85,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-11-14T07:00:00Z",
+      "direction": "LONG",
+      "ref_price": 16793.99,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-11-16T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 16503.7,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-11-18T00:00:00Z",
+      "direction": "LONG",
+      "ref_price": 16934.59,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-11-20T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 16510.89,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-11-22T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 16154.21,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-11-25T04:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 16377.89,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-11-29T04:00:00Z",
+      "direction": "LONG",
+      "ref_price": 16421.07,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-12-05T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 17043.57,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-12-08T16:00:00Z",
+      "direction": "LONG",
+      "ref_price": 16950.96,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-12-12T00:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 16951.08,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-12-12T20:00:00Z",
+      "direction": "LONG",
+      "ref_price": 17123.91,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-12-15T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 17449.92,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2022-12-26T02:00:00Z",
+      "direction": "LONG",
+      "ref_price": 16889.99,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2022-12-27T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 16767.34,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-01-01T19:00:00Z",
+      "direction": "LONG",
+      "ref_price": 16596.74,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-01-06T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 16734.26,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-01-06T19:00:00Z",
+      "direction": "LONG",
+      "ref_price": 16933.27,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-01-11T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 17326.52,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-01-11T19:00:00Z",
+      "direction": "LONG",
+      "ref_price": 17540.07,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-01-18T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 20851.03,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-01-19T19:00:00Z",
+      "direction": "LONG",
+      "ref_price": 21097.84,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-01-22T20:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 22453.25,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-01-25T20:00:00Z",
+      "direction": "LONG",
+      "ref_price": 22932.73,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-01-27T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 22650.58,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-01-29T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 23240.53,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-01-30T09:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 23190.32,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-01-31T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 23160.29,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-02-02T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 23485.59,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-02-06T06:00:00Z",
+      "direction": "LONG",
+      "ref_price": 23766.0,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-02-09T03:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 22523.2,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-02-11T21:00:00Z",
+      "direction": "LONG",
+      "ref_price": 21832.32,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-02-13T09:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 21605.77,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-02-14T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 22244.72,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-02-16T22:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 23990.36,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-02-17T19:00:00Z",
+      "direction": "LONG",
+      "ref_price": 24533.5,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-02-19T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 24367.43,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-02-20T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 24968.32,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-02-21T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 24400.0,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-02-23T02:00:00Z",
+      "direction": "LONG",
+      "ref_price": 24532.72,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-02-24T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 23350.72,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-02-26T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 23496.72,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-03-03T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 22169.4,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-03-05T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 22589.71,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-03-07T18:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 22198.25,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-03-12T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 21010.0446605,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-03-22T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 26743.62922955,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-03-23T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 28610.4134425,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-03-24T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 27642.429275,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-03-26T11:00:00Z",
+      "direction": "LONG",
+      "ref_price": 27893.587537645,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-03-27T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 26962.20021885,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-03-29T06:00:00Z",
+      "direction": "LONG",
+      "ref_price": 28049.919,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-03-30T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 27877.951110325,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-04-05T00:00:00Z",
+      "direction": "LONG",
+      "ref_price": 28664.3363666,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-04-05T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 27978.3135,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-04-08T05:00:00Z",
+      "direction": "LONG",
+      "ref_price": 28160.4145663,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-04-14T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 30276.976285,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-04-18T09:00:00Z",
+      "direction": "LONG",
+      "ref_price": 29905.061502,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-04-19T08:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 29202.29104059,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-04-22T16:00:00Z",
+      "direction": "LONG",
+      "ref_price": 27677.6765838,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-04-24T08:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 27207.979364,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-04-25T20:00:00Z",
+      "direction": "LONG",
+      "ref_price": 28006.24955,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-04-26T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 27911.380145,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-04-27T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 29779.13607544,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-05-01T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 28547.874264,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-05-02T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 28598.552564295,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-05-03T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 28259.11146703,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-05-03T22:00:00Z",
+      "direction": "LONG",
+      "ref_price": 29145.846908,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-05-06T12:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 29224.496631675,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-05-10T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 28195.09145,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-05-11T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 26958.4255,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-05-15T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 27215.4039625,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-05-16T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 27032.51429,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-05-17T19:00:00Z",
+      "direction": "LONG",
+      "ref_price": 27374.2025,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-05-18T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 26524.88409021,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-05-20T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 27143.05,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-05-21T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 26785.63,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-05-23T03:00:00Z",
+      "direction": "LONG",
+      "ref_price": 27362.12166,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-05-24T03:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 26836.0048136,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-05-28T22:00:00Z",
+      "direction": "LONG",
+      "ref_price": 28113.7628574,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-05-31T04:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 27278.28,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-06-06T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 26100.31952,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-06-10T04:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 25773.4272,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-06-15T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 25365.12097785,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-06-26T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 30181.37794335,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-06-27T11:00:00Z",
+      "direction": "LONG",
+      "ref_price": 30735.94,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-06-28T07:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 30190.395841805,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-06-29T10:00:00Z",
+      "direction": "LONG",
+      "ref_price": 30695.99315,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-07-04T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 30702.91481,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-07-06T07:00:00Z",
+      "direction": "LONG",
+      "ref_price": 30809.555,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-07-06T23:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 29911.2,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-07-10T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 30548.6518188,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-07-12T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 30282.40737895,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-07-13T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 30667.45,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-07-14T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 30719.7345,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-07-20T09:00:00Z",
+      "direction": "LONG",
+      "ref_price": 30328.390636528,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-07-20T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 29780.81101,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-07-23T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 30123.134,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-07-24T09:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 29176.8032695,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-07-26T20:00:00Z",
+      "direction": "LONG",
+      "ref_price": 29590.182416,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-07-27T18:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 29139.10154,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-07-28T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 29483.7138013,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-08-01T02:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 28932.7702313,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-08-01T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 29253.26995835,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-08-02T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 29005.88390498,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-08-08T11:00:00Z",
+      "direction": "LONG",
+      "ref_price": 29389.582202202,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-08-09T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 29392.115,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-08-14T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 29572.37,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-08-15T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 29147.169733835,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-08-19T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 26213.588612,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-08-22T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 25819.99,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-08-23T16:00:00Z",
+      "direction": "LONG",
+      "ref_price": 26386.795,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-08-24T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 26105.537,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-08-27T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 26135.2685,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-08-28T06:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 25927.643,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-08-29T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 27505.305,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-08-30T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 27116.2515,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-09-07T21:00:00Z",
+      "direction": "LONG",
+      "ref_price": 26153.17,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-09-08T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 25785.95,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-09-12T03:00:00Z",
+      "direction": "LONG",
+      "ref_price": 25784.7,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-09-15T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 26232.35,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-09-15T22:00:00Z",
+      "direction": "LONG",
+      "ref_price": 26775.6,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-09-21T09:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 26740.805,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-09-24T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 26678.514775,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-09-24T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 26457.01,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-09-27T09:00:00Z",
+      "direction": "LONG",
+      "ref_price": 26378.487710444,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-10-02T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 27491.34,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-10-04T23:00:00Z",
+      "direction": "LONG",
+      "ref_price": 27790.7,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-10-06T12:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 27249.467,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-10-06T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 27952.643,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-10-09T09:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 27547.975,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-10-13T21:00:00Z",
+      "direction": "LONG",
+      "ref_price": 27018.3695,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-10-26T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 34105.16,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-10-29T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 34424.95,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-11-02T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 34652.8105,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-11-04T22:00:00Z",
+      "direction": "LONG",
+      "ref_price": 35171.218,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-11-05T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 34683.241,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-11-07T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 35393.535,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-11-13T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 36495.33,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-11-15T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 36421.505,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-11-16T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 36781.505,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-11-18T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 36732.155,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-11-21T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 36639.7455,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-11-22T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 37202.29,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-11-23T09:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 36391.6876574305,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-11-24T09:00:00Z",
+      "direction": "LONG",
+      "ref_price": 37627.9395,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-11-26T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 37370.605,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-11-28T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 37427.6775,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-12-07T09:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 43366.091,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-12-08T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 43981.309,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-12-11T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 43223.5495,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-12-13T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 41909.981,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-12-15T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 42183.3305,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-12-16T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 42568.48,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-12-17T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 41963.72,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-12-18T20:00:00Z",
+      "direction": "LONG",
+      "ref_price": 41957.85,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-12-24T22:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 43016.9,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-12-27T10:00:00Z",
+      "direction": "LONG",
+      "ref_price": 43216.3095,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2023-12-28T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 42658.01,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2023-12-31T09:00:00Z",
+      "direction": "LONG",
+      "ref_price": 42719.2865,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-01-03T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 43731.245,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-01-04T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 44082.03,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-01-08T02:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 43397.2825,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-01-08T11:00:00Z",
+      "direction": "LONG",
+      "ref_price": 44650.816,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-01-09T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 45438.634,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-01-11T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 48647.375,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-01-12T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 44418.9735,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-01-24T00:00:00Z",
+      "direction": "LONG",
+      "ref_price": 40157.595,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-01-28T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 41803.025,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-01-29T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 42624.57,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-01-31T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 42781.238,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-01-31T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 43727.0715,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-02-01T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 41927.17,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-02-01T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 42908.9245,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-02-04T06:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 42739.945,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-02-05T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 43220.7375,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-02-05T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 42344.915,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-02-06T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 43204.7245,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-02-13T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 48703.887,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-02-14T08:00:00Z",
+      "direction": "LONG",
+      "ref_price": 50789.8035,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-02-17T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 51208.91,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-02-18T22:00:00Z",
+      "direction": "LONG",
+      "ref_price": 52259.46,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-02-21T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 50970.24,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-02-24T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 51529.099,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-02-26T09:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 50942.8415,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-02-26T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 52880.541220403,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-03-05T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 61481.39,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-03-08T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 68568.67,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-03-10T22:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 68546.15,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-03-11T07:00:00Z",
+      "direction": "LONG",
+      "ref_price": 71028.8,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-03-12T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 70531.236,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-03-13T08:00:00Z",
+      "direction": "LONG",
+      "ref_price": 73452.41,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-03-14T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 71921.069,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-03-17T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 68517.7855,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-03-19T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 65884.6825,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-03-20T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 65386.259,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-03-21T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 65684.72,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-03-23T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 65262.706,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-03-27T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 68869.485,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-03-28T10:00:00Z",
+      "direction": "LONG",
+      "ref_price": 70787.455,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-03-29T07:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 69813.6715,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-03-31T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 70532.6615,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-04-01T05:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 69209.835,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-04-04T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 67272.43,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-04-09T06:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 70777.188,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-04-10T22:00:00Z",
+      "direction": "LONG",
+      "ref_price": 70539.512,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-04-12T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 69259.7945,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-04-15T06:00:00Z",
+      "direction": "LONG",
+      "ref_price": 66558.0395,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-04-15T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 63931.305,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-04-18T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 62858.4935,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-04-19T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 61036.37,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-04-19T06:00:00Z",
+      "direction": "LONG",
+      "ref_price": 64626.9445,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-04-24T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 65219.1,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-04-28T02:00:00Z",
+      "direction": "LONG",
+      "ref_price": 63909.912,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-04-28T22:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 63099.34,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-04-29T22:00:00Z",
+      "direction": "LONG",
+      "ref_price": 63862.9925,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-04-30T08:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 61938.8,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-05-02T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 59255.575,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-05-07T23:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 62317.916,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-05-09T19:00:00Z",
+      "direction": "LONG",
+      "ref_price": 62475.45,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-05-10T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 61047.8545,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-05-12T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 61402.9875,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-05-14T06:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 61980.636,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-05-15T09:00:00Z",
+      "direction": "LONG",
+      "ref_price": 62656.68,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-05-16T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 65121.587,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-05-17T10:00:00Z",
+      "direction": "LONG",
+      "ref_price": 66488.970277078,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-05-19T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 66033.31,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-05-20T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 67442.95,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-05-21T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 69256.1925,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-05-24T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 68898.015,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-05-26T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 68483.725,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-05-27T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 69409.965,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-05-28T03:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 68027.9555,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-05-30T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 68604.3,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-05-31T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 67433.955,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-06-02T11:00:00Z",
+      "direction": "LONG",
+      "ref_price": 68232.295,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-06-06T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 70461.76,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-06-07T11:00:00Z",
+      "direction": "LONG",
+      "ref_price": 71673.5,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-06-07T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 69706.23,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-06-09T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 69716.55,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-06-11T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 68693.478,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-06-12T10:00:00Z",
+      "direction": "LONG",
+      "ref_price": 67972.4,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-06-13T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 66452.8,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-06-16T10:00:00Z",
+      "direction": "LONG",
+      "ref_price": 66660.13,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-06-17T09:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 65697.472,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-06-17T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 67047.675,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-06-18T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 64820.4685,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-06-20T07:00:00Z",
+      "direction": "LONG",
+      "ref_price": 65812.633,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-06-21T03:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 64482.245,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-06-25T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 61718.555,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-06-26T18:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 60895.4815,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-06-27T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 61941.265,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-06-28T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 60845.87,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-06-30T07:00:00Z",
+      "direction": "LONG",
+      "ref_price": 61410.3395,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-07-02T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 61954.1865,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-07-06T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 57337.05,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-07-07T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 56878.0705,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-07-08T08:00:00Z",
+      "direction": "LONG",
+      "ref_price": 57800.8,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-07-12T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 56948.38,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-07-12T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 58220.3,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-07-18T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 63538.3975,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-07-19T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 65169.7195,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-07-23T05:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 66429.75,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-07-24T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 66786.0,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-07-25T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 64443.965,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-07-25T21:00:00Z",
+      "direction": "LONG",
+      "ref_price": 65861.502,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-07-29T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 66916.651,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-08-01T22:00:00Z",
+      "direction": "LONG",
+      "ref_price": 65151.3275,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-08-02T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 63116.907,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-08-08T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 57955.5,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-08-11T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 60363.0995,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-08-12T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 60284.9,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-08-14T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 59648.3685,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-08-15T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 59710.9125,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-08-15T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 57054.445,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-08-16T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 59254.9,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-08-18T23:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 58436.376,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-08-19T23:00:00Z",
+      "direction": "LONG",
+      "ref_price": 59457.5,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-08-20T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 59506.85,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-08-21T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 60807.905,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-08-27T00:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 62739.136,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-08-29T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 60353.492,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-08-30T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 58085.5,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-09-02T20:00:00Z",
+      "direction": "LONG",
+      "ref_price": 59011.15,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-09-03T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 58369.6715,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-09-04T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 58140.335,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-09-05T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 56671.7025,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-09-07T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 54793.725,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-09-08T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 53692.4185,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-09-09T00:00:00Z",
+      "direction": "LONG",
+      "ref_price": 55061.28,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-09-11T05:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 56252.705,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-09-12T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 58144.343,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-09-15T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 59642.9,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-09-17T09:00:00Z",
+      "direction": "LONG",
+      "ref_price": 59000.6335,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-09-25T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 63154.002,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-09-26T10:00:00Z",
+      "direction": "LONG",
+      "ref_price": 64374.142,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-09-30T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 64764.732,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-10-04T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 61901.0175,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-10-05T20:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 61719.4585,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-10-06T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 62720.82,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-10-07T22:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 62478.75,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-10-11T10:00:00Z",
+      "direction": "LONG",
+      "ref_price": 61113.017,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-10-13T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 62543.3086848635,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-10-14T03:00:00Z",
+      "direction": "LONG",
+      "ref_price": 64261.635,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-10-17T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 66863.957,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-10-18T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 68049.7,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-10-21T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 67294.6845,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-10-24T00:00:00Z",
+      "direction": "LONG",
+      "ref_price": 67370.3475,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-10-25T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 66808.7365,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-10-27T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 67562.245,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-10-31T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 71257.0315,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-11-01T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 71159.6,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-11-03T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 69002.985,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-11-05T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 69969.4025,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-11-14T20:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 87610.0125,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-11-15T20:00:00Z",
+      "direction": "LONG",
+      "ref_price": 91478.25,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-11-17T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 89128.255,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-11-18T06:00:00Z",
+      "direction": "LONG",
+      "ref_price": 91999.75,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-11-23T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 97880.145,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-11-27T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 94219.13,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-11-30T10:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 96175.73,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-12-01T21:00:00Z",
+      "direction": "LONG",
+      "ref_price": 97818.6,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-12-02T07:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 96038.714,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-12-04T19:00:00Z",
+      "direction": "LONG",
+      "ref_price": 97335.865,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-12-05T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 99129.4375,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-12-06T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 101030.3475,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-12-08T09:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 98966.3505,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-12-08T23:00:00Z",
+      "direction": "LONG",
+      "ref_price": 101252.025,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-12-09T09:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 98414.55,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-12-11T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 98802.97,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-12-12T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 99554.2,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-12-13T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 101719.88,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-12-14T20:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 100737.588,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-12-15T04:00:00Z",
+      "direction": "LONG",
+      "ref_price": 102333.55,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-12-18T03:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 104766.155,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-12-21T05:00:00Z",
+      "direction": "LONG",
+      "ref_price": 98653.435,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-12-22T04:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 96055.445,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-12-24T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 95953.875,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2024-12-26T08:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 95799.28,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2024-12-31T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 95480.78,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-01-07T12:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 100731.5435,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-01-10T10:00:00Z",
+      "direction": "LONG",
+      "ref_price": 95269.738,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-01-13T08:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 93023.52,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-01-14T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 94775.67,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-01-16T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 97590.755,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-01-17T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 101673.25,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-01-19T23:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 101228.28,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-01-20T06:00:00Z",
+      "direction": "LONG",
+      "ref_price": 107325.035,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-01-22T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 104081.2125,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-01-23T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 105186.695,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-01-26T22:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 104327.143,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-01-28T04:00:00Z",
+      "direction": "LONG",
+      "ref_price": 102934.5,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-01-28T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 100288.875,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-01-29T19:00:00Z",
+      "direction": "LONG",
+      "ref_price": 103556.0925,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-01-31T18:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 102596.962,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-02-03T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 100029.4255,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-02-04T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 96563.379,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-02-06T10:00:00Z",
+      "direction": "LONG",
+      "ref_price": 99039.1945,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-02-06T18:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 96391.941,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-02-07T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 98899.99,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-02-07T20:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 95759.975,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-02-09T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 96997.239,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-02-09T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 95958.1505980145,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-02-10T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 98207.0,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-02-11T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 96816.137,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-02-12T21:00:00Z",
+      "direction": "LONG",
+      "ref_price": 97688.165,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-02-13T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 95394.6,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-02-14T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 98570.12,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-02-16T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 96878.85,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-02-19T11:00:00Z",
+      "direction": "LONG",
+      "ref_price": 96366.445,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-02-21T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 96976.32,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-02-28T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 84471.9325,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-03-03T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 89197.85,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-03-04T19:00:00Z",
+      "direction": "LONG",
+      "ref_price": 88246.874,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-03-06T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 88602.3445,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-03-11T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 83276.865,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-03-13T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 81767.7,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-03-14T09:00:00Z",
+      "direction": "LONG",
+      "ref_price": 82813.7605,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-03-16T10:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 83672.1,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-03-19T08:00:00Z",
+      "direction": "LONG",
+      "ref_price": 83432.489,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-03-20T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 83768.658,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-03-23T11:00:00Z",
+      "direction": "LONG",
+      "ref_price": 84690.797,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-03-25T03:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 86522.575,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-03-30T09:00:00Z",
+      "direction": "LONG",
+      "ref_price": 83486.7,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-03-31T00:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 81643.8125,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-03-31T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 83467.241,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-04-02T22:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 82816.554,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-04-04T07:00:00Z",
+      "direction": "LONG",
+      "ref_price": 83925.453,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-04-05T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 82730.8555,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-04-08T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 80615.0285,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-04-08T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 77375.201,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-04-09T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 82186.685,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-04-10T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 78691.485,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-04-11T09:00:00Z",
+      "direction": "LONG",
+      "ref_price": 82355.058401015,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-04-13T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 83545.103,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-04-16T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 84839.55,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-04-20T08:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 84656.385,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-04-21T00:00:00Z",
+      "direction": "LONG",
+      "ref_price": 86613.365,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-04-28T00:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 93471.014,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-04-28T10:00:00Z",
+      "direction": "LONG",
+      "ref_price": 95097.285,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-04-30T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 93056.1,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-05-01T09:00:00Z",
+      "direction": "LONG",
+      "ref_price": 95569.719,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-05-03T10:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 95941.415,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-05-06T22:00:00Z",
+      "direction": "LONG",
+      "ref_price": 96261.066,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-05-12T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 102800.89,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-05-13T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 104285.556,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-05-15T05:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 102462.286,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-05-15T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 103976.99,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-05-19T04:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 103002.165,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-05-19T21:00:00Z",
+      "direction": "LONG",
+      "ref_price": 105534.68,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-05-23T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 109078.6115,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-05-25T22:00:00Z",
+      "direction": "LONG",
+      "ref_price": 109208.3485,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-05-27T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 108415.92,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-05-31T20:00:00Z",
+      "direction": "LONG",
+      "ref_price": 104848.434,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-06-02T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 104067.54,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-06-02T23:00:00Z",
+      "direction": "LONG",
+      "ref_price": 105929.76,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-06-05T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 103315.765,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-06-06T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 104181.9035,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-06-11T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 108569.925,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-06-16T07:00:00Z",
+      "direction": "LONG",
+      "ref_price": 107034.991,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-06-17T09:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 106195.3385,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-06-20T07:00:00Z",
+      "direction": "LONG",
+      "ref_price": 105840.455,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-06-20T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 103914.455,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-06-23T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 102409.255,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-06-30T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 106823.821,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-07-02T07:00:00Z",
+      "direction": "LONG",
+      "ref_price": 107118.664,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-07-04T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 108061.831,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-07-06T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 108778.3695,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-07-07T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 107941.46,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-07-08T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 108951.35,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-07-15T00:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 119523.7435,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-07-16T20:00:00Z",
+      "direction": "LONG",
+      "ref_price": 119937.625,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-07-18T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 117581.035,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-07-20T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 118740.5965,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-07-21T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 116750.22,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-07-22T11:00:00Z",
+      "direction": "LONG",
+      "ref_price": 119225.1535,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-07-23T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 117459.271,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-07-26T10:00:00Z",
+      "direction": "LONG",
+      "ref_price": 118026.8235,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-07-28T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 118030.010085,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-08-03T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 114374.339,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-08-05T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 113039.885,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-08-06T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 115216.932,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-08-11T20:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 118882.352,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-08-12T20:00:00Z",
+      "direction": "LONG",
+      "ref_price": 120189.097,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-08-14T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 121024.47,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-08-17T08:00:00Z",
+      "direction": "LONG",
+      "ref_price": 118478.15,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-08-18T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 116422.0,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-08-22T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 115806.77,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-08-23T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 114865.5545,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-08-26T22:00:00Z",
+      "direction": "LONG",
+      "ref_price": 111938.7825,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-08-29T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 111510.41,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-08-31T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 109457.4835,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-09-01T02:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 107628.75,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-09-01T07:00:00Z",
+      "direction": "LONG",
+      "ref_price": 109432.92,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-09-04T06:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 110443.68,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-09-05T06:00:00Z",
+      "direction": "LONG",
+      "ref_price": 111950.25,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-09-06T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 110071.7385,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-09-07T10:00:00Z",
+      "direction": "LONG",
+      "ref_price": 111258.4,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-09-09T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 110941.15,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-09-10T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 113383.6915,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-09-14T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 115381.519,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-09-15T05:00:00Z",
+      "direction": "LONG",
+      "ref_price": 116569.69,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-09-17T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 115649.471,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-09-18T03:00:00Z",
+      "direction": "LONG",
+      "ref_price": 117633.326,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-09-19T12:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 116224.977,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-09-24T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 113768.74,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-09-25T04:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 111734.254,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-09-28T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 110052.145,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-09-30T09:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 112861.864,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-10-01T08:00:00Z",
+      "direction": "LONG",
+      "ref_price": 116162.8235,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-10-07T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 122847.7575,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-10-08T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 124090.4885,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-10-09T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 119891.205,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-10-12T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 113286.21,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-10-14T04:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 113123.85,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-10-19T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 108466.11,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-10-21T04:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 107831.225,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-10-21T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 112227.105,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-10-28T20:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 112787.935,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-11-07T20:00:00Z",
+      "direction": "LONG",
+      "ref_price": 103760.7135,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-11-11T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 103425.6645,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-11-12T10:00:00Z",
+      "direction": "LONG",
+      "ref_price": 104901.95,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-11-12T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 102142.815,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-11-26T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 89827.356,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-12-01T00:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 87024.715,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-12-02T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 89280.05,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-12-05T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 90506.0485,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-12-07T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 90977.363,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-12-11T02:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 90088.507,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-12-11T21:00:00Z",
+      "direction": "LONG",
+      "ref_price": 92909.3125,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-12-12T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 89936.761,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-12-13T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 91458.8964532015,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-12-14T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 89396.63,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-12-17T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 89644.4025,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-12-18T19:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 84437.1335,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-12-21T09:00:00Z",
+      "direction": "LONG",
+      "ref_price": 88882.607,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-12-21T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 87654.32,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-12-22T09:00:00Z",
+      "direction": "LONG",
+      "ref_price": 89783.982,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-12-23T06:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 87329.297,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-12-25T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 88303.7815,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-12-26T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 86757.8365,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2025-12-29T02:00:00Z",
+      "direction": "LONG",
+      "ref_price": 89062.59,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2025-12-31T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 87540.4015,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-01-01T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 88189.271,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-01-06T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 92651.487,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-01-11T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 91014.479,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-01-16T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 94532.99,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-01-23T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 90502.45,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-01-25T03:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 88827.115,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-01-27T20:00:00Z",
+      "direction": "LONG",
+      "ref_price": 89297.5595,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-01-29T02:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 87755.784,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-02-06T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 70724.9,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-02-09T10:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 68651.9175,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-02-13T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 68643.165,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-02-17T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 66827.441,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-02-25T01:00:00Z",
+      "direction": "LONG",
+      "ref_price": 65895.5955,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-02-27T12:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 65937.793,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-03-02T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 69149.3635,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-03-05T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 70714.45,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-03-10T09:00:00Z",
+      "direction": "LONG",
+      "ref_price": 71065.76,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-03-18T11:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 72967.26,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-03-23T11:00:00Z",
+      "direction": "LONG",
+      "ref_price": 70105.616,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-03-24T16:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 69453.5195,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-03-25T10:00:00Z",
+      "direction": "LONG",
+      "ref_price": 71475.3465,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-03-26T05:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 69976.84,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-03-28T13:00:00Z",
+      "direction": "LONG",
+      "ref_price": 66807.245,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-03-29T22:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 65789.22,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-03-30T04:00:00Z",
+      "direction": "LONG",
+      "ref_price": 67555.65,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-04-02T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 67358.7705,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-04-04T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 67375.5835,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-04-05T06:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 66791.165,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-04-05T20:00:00Z",
+      "direction": "LONG",
+      "ref_price": 67632.46,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-04-07T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 68402.6855,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-04-07T21:00:00Z",
+      "direction": "LONG",
+      "ref_price": 69925.1635,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-04-12T01:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 71676.404,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-04-13T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 72449.615,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-04-16T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 73779.706,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-04-17T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 76264.9385,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-04-18T10:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 76208.995,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-04-20T17:00:00Z",
+      "direction": "LONG",
+      "ref_price": 75928.401,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-04-27T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 76768.5705,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-04-29T04:00:00Z",
+      "direction": "LONG",
+      "ref_price": 77263.912,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-04-29T15:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 75867.969,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-05-01T03:00:00Z",
+      "direction": "LONG",
+      "ref_price": 77090.65,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-05-07T14:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 80153.745,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-05-09T18:00:00Z",
+      "direction": "LONG",
+      "ref_price": 80890.282,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-05-12T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 80444.259,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-05-14T14:00:00Z",
+      "direction": "LONG",
+      "ref_price": 80953.597456895,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-05-15T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 78709.7765,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-05-23T19:00:00Z",
+      "direction": "LONG",
+      "ref_price": 75887.735,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-05-24T21:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 76041.45,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-06-07T04:00:00Z",
+      "direction": "LONG",
+      "ref_price": 61871.9155,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-06-09T13:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 62217.075,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-06-10T15:00:00Z",
+      "direction": "LONG",
+      "ref_price": 62582.16,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-06-14T17:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 63707.165,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-06-14T21:00:00Z",
+      "direction": "LONG",
+      "ref_price": 65278.148,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-06-17T08:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 64874.9795,
+      "reason": "close below keltner"
+    },
+    {
+      "ts": "2026-06-22T12:00:00Z",
+      "direction": "LONG",
+      "ref_price": 65080.975,
+      "reason": "close above keltner"
+    },
+    {
+      "ts": "2026-06-23T04:00:00Z",
+      "direction": "SHORT",
+      "ref_price": 63544.5195,
+      "reason": "close below keltner"
+    }
+  ]
+}

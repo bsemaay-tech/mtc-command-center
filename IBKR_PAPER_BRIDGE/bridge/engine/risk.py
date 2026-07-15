@@ -1,0 +1,157 @@
+"""RiskEngine for pure sizing and gate checks."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any, Literal
+
+from bridge.engine.types import AccountSnapshot, OrderPlan, Signal
+
+Direction = Literal["BOTH", "LONG_ONLY", "SHORT_ONLY", "NO_TRADE"]
+
+
+@dataclass(frozen=True)
+class RiskConfig:
+    risk_pct_per_trade: float = 0.005
+    max_daily_loss_pct: float = 0.02
+    max_position_notional_pct: float = 0.20
+    min_stop_distance_pct: float = 0.001
+    min_order_usd: float = 10.0
+    max_leverage: int = 1
+    max_consecutive_losses: int = 3
+    coin_enabled: bool = True
+    feed_stale: bool = False
+    app_armed: bool = True
+    direction: Direction = "BOTH"
+    size_decimals: int = 6
+
+
+@dataclass
+class RiskResult:
+    accepted: bool
+    plan: OrderPlan | None = None
+    rejection: str | None = None
+    gate_results: list[dict[str, Any]] = field(default_factory=list)
+    disarm: bool = False
+
+
+class RiskEngine:
+    def __init__(self, config: RiskConfig | None = None) -> None:
+        self.config = config or RiskConfig()
+
+    def evaluate(
+        self,
+        signal: Signal,
+        account: AccountSnapshot | dict[str, float],
+        stop_loss: float,
+        take_profit: float | None = None,
+        regime: Direction = "BOTH",
+        open_position: object | None = None,
+        realized_today: float = 0.0,
+        consecutive_losses: int = 0,
+        leverage: int = 1,
+    ) -> RiskResult:
+        gates: list[dict[str, Any]] = []
+
+        if not self.config.app_armed:
+            return self._reject("STATE_ARMED", "STATE_NOT_ARMED", gates)
+        gates.append(self._gate("STATE_ARMED"))
+
+        if not self.config.coin_enabled or self.config.feed_stale:
+            return self._reject("FEED_READY", "FEED_BLOCKED", gates)
+        gates.append(self._gate("FEED_READY"))
+
+        if open_position is not None:
+            return self._reject("NO_OPEN_POSITION", "POSITION_EXISTS", gates)
+        gates.append(self._gate("NO_OPEN_POSITION"))
+
+        effective = self._intersect_direction(self.config.direction, regime)
+        if signal.direction not in effective:
+            return self._reject("DIRECTION", "DIRECTION_BLOCKED", gates)
+        gates.append(self._gate("DIRECTION", {"effective": sorted(effective)}))
+
+        if isinstance(account, AccountSnapshot):
+            equity = account.equity
+            available = account.available_margin
+        else:
+            equity = float(account.get("equity", 0.0))
+            available = float(account.get("available_margin", 0.0))
+        if equity <= 0 or available <= 0:
+            return self._reject("ACCOUNT", "ACCOUNT_EQUITY_INVALID", gates)
+        gates.append(self._gate("ACCOUNT"))
+
+        if realized_today <= -(equity * self.config.max_daily_loss_pct):
+            return self._reject("DAILY_LOSS", "DAILY_LOSS_LIMIT", gates, disarm=True)
+        gates.append(self._gate("DAILY_LOSS"))
+
+        if consecutive_losses >= self.config.max_consecutive_losses:
+            return self._reject("CONSECUTIVE_LOSS", "CONSECUTIVE_LOSS_LIMIT", gates, disarm=True)
+        gates.append(self._gate("CONSECUTIVE_LOSS"))
+
+        if leverage > self.config.max_leverage:
+            return self._reject("LEVERAGE", "LEVERAGE_CAP", gates)
+        gates.append(self._gate("LEVERAGE"))
+
+        stop_distance = abs(signal.ref_price - stop_loss)
+        min_distance = signal.ref_price * self.config.min_stop_distance_pct
+        if stop_distance < min_distance:
+            return self._reject("STOP_DISTANCE", "STOP_TOO_CLOSE", gates)
+        if signal.direction == "LONG" and stop_loss >= signal.ref_price:
+            return self._reject("STOP_SIDE", "STOP_WRONG_SIDE", gates)
+        if signal.direction == "SHORT" and stop_loss <= signal.ref_price:
+            return self._reject("STOP_SIDE", "STOP_WRONG_SIDE", gates)
+        gates.append(self._gate("STOP"))
+
+        risk_dollars = equity * self.config.risk_pct_per_trade
+        raw_qty = risk_dollars / stop_distance
+        qty = round(raw_qty, self.config.size_decimals)
+        notional = qty * signal.ref_price
+
+        if notional < self.config.min_order_usd:
+            return self._reject("MIN_ORDER", "MIN_ORDER_USD", gates)
+        gates.append(self._gate("MIN_ORDER", {"notional": notional}))
+
+        max_notional = equity * self.config.max_position_notional_pct * leverage
+        if notional > max_notional:
+            return self._reject("NOTIONAL", "NOTIONAL_CAP", gates)
+        gates.append(self._gate("NOTIONAL", {"notional": notional, "max_notional": max_notional}))
+
+        if notional / max(leverage, 1) > available * 0.95:
+            return self._reject("MARGIN", "MARGIN_CAP", gates)
+        gates.append(self._gate("MARGIN"))
+
+        plan = OrderPlan(
+            signal=signal,
+            qty=qty,
+            entry_type="MKT",
+            limit_price=None,
+            stop_loss=stop_loss,
+            take_profit=take_profit,
+            leverage=leverage,
+            risk_dollars=round(risk_dollars, 8),
+            risk_pct=self.config.risk_pct_per_trade,
+        )
+        return RiskResult(accepted=True, plan=plan, gate_results=gates)
+
+    def _intersect_direction(self, config_direction: Direction, regime: Direction) -> set[str]:
+        allowed = {
+            "BOTH": {"LONG", "SHORT"},
+            "LONG_ONLY": {"LONG"},
+            "SHORT_ONLY": {"SHORT"},
+            "NO_TRADE": set(),
+        }
+        return allowed[config_direction] & allowed[regime]
+
+    @staticmethod
+    def _gate(name: str, detail: dict[str, Any] | None = None) -> dict[str, Any]:
+        return {"name": name, "status": "PASS", "detail": detail or {}}
+
+    @staticmethod
+    def _reject(
+        gate: str,
+        reason: str,
+        gates: list[dict[str, Any]],
+        disarm: bool = False,
+    ) -> RiskResult:
+        gates.append({"name": gate, "status": "BLOCK", "reason": reason})
+        return RiskResult(False, rejection=reason, gate_results=gates, disarm=disarm)

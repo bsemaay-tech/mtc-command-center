@@ -1,0 +1,17 @@
+id: keltner_trail_ema8
+version: 1.0.0
+source: MTC/crypto_plumbing_subject
+golden_run_id: "QL_MEGA_KELTNER_TRAIL_EMA8_BTCUSD_1h_2026-06-28_01a3f1255e29"
+symbol: BTC
+timeframe: 1h
+params:
+  kc_length: 20
+  kc_mult: 2.0
+  atr_length: 20
+  trail_ema: 8
+direction_default: BOTH
+permissions:
+  paper_allowed: true
+  live_allowed: false
+  requires_human_approval: true
+risk_overrides: {}

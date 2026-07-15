@@ -1,0 +1,35 @@
+{
+  "probe": "user_events",
+  "network": "testnet",
+  "credential_source": "user_registry",
+  "listened_seconds": 90,
+  "message_count": 0,
+  "finished_ts": "2026-07-12T20:44:06.024841+00:00",
+  "messages": [
+    {
+      "received_ts": "2026-07-12T21:01:58.597550+00:00",
+      "raw_redacted": "{\"channel\": \"orderUpdates\", \"data\": [{\"order\": {\"coin\": \"BTC\", \"side\": \"B\", \"limitPx\": \"64097.0\", \"sz\": \"0.00018\", \"oid\": 56382440212, \"timestamp\": 1783890118478, \"origSz\": \"0.00018\", \"cloid\": \"0x2d173fe7da680181f1139bee6cc3aed5\"}, \"status\": \"iocCancelRejected\", \"statusTimestamp\": 1783890118478}]}"
+    },
+    {
+      "received_ts": "2026-07-12T21:04:20.559065+00:00",
+      "raw_redacted": "{\"channel\": \"user\", \"data\": {\"fills\": [{\"coin\": \"BTC\", \"px\": \"64110.0\", \"sz\": \"0.00018\", \"side\": \"B\", \"time\": 1783890260586, \"startPosition\": \"0.0\", \"dir\": \"Open Long\", \"closedPnl\": \"0.0\", \"hash\": \"[redacted]\", \"oid\": 56382515366, \"crossed\": true, \"fee\": \"0.005192\", \"tid\": 671615807141153, \"cloid\": \"0x700051b466fe62be49003f45c827bbd8\", \"feeToken\": \"USDC\", \"twapId\": null}]}}"
+    },
+    {
+      "received_ts": "2026-07-12T21:04:20.559342+00:00",
+      "raw_redacted": "{\"channel\": \"orderUpdates\", \"data\": [{\"order\": {\"coin\": \"BTC\", \"side\": \"B\", \"limitPx\": \"67309.0\", \"sz\": \"0.00018\", \"oid\": 56382515366, \"timestamp\": 1783890260586, \"origSz\": \"0.00018\", \"cloid\": \"0x700051b466fe62be49003f45c827bbd8\"}, \"status\": \"open\", \"statusTimestamp\": 1783890260586}, {\"order\": {\"coin\": \"BTC\", \"side\": \"B\", \"limitPx\": \"67309.0\", \"sz\": \"0.0\", \"oid\": 56382515366, \"timestamp\": 1783890260586, \"origSz\": \"0.00018\", \"cloid\": \"0x700051b466fe62be49003f45c827bbd8\"}, \"status\": \"filled\", \"statusTimestamp\": 1783890260586}]}"
+    },
+    {
+      "received_ts": "2026-07-12T21:04:21.990140+00:00",
+      "raw_redacted": "{\"channel\": \"orderUpdates\", \"data\": [{\"order\": {\"coin\": \"BTC\", \"side\": \"A\", \"limitPx\": \"62820.0\", \"sz\": \"0.00018\", \"oid\": 56382516030, \"timestamp\": 1783890261973, \"origSz\": \"0.00018\", \"reduceOnly\": true, \"cloid\": \"0x1b343338773b8dc13be656c31b0873e9\"}, \"status\": \"open\", \"statusTimestamp\": 1783890261973}]}"
+    },
+    {
+      "received_ts": "2026-07-12T21:04:30.791912+00:00",
+      "raw_redacted": "{\"channel\": \"user\", \"data\": {\"fills\": [{\"coin\": \"BTC\", \"px\": \"64098.0\", \"sz\": \"0.00018\", \"side\": \"A\", \"time\": 1783890270770, \"startPosition\": \"0.00018\", \"dir\": \"Close Long\", \"closedPnl\": \"-0.00216\", \"hash\": \"[redacted]\", \"oid\": 56382520375, \"crossed\": true, \"fee\": \"0.005191\", \"tid\": 132941239437156, \"cloid\": \"0xeb3ad5cd3908b2076b7078c3e873fcc2\", \"feeToken\": \"USDC\", \"twapId\": null}]}}"
+    },
+    {
+      "received_ts": "2026-07-12T21:04:30.792112+00:00",
+      "raw_redacted": "{\"channel\": \"orderUpdates\", \"data\": [{\"order\": {\"coin\": \"BTC\", \"side\": \"A\", \"limitPx\": \"60899.0\", \"sz\": \"0.00018\", \"oid\": 56382520375, \"timestamp\": 1783890270770, \"origSz\": \"0.00018\", \"reduceOnly\": true, \"cloid\": \"0xeb3ad5cd3908b2076b7078c3e873fcc2\"}, \"status\": \"open\", \"statusTimestamp\": 1783890270770}, {\"order\": {\"coin\": \"BTC\", \"side\": \"A\", \"limitPx\": \"60899.0\", \"sz\": \"0.0\", \"oid\": 56382520375, \"timestamp\": 1783890270770, \"origSz\": \"0.00018\", \"reduceOnly\": true, \"cloid\": \"0xeb3ad5cd3908b2076b7078c3e873fcc2\"}, \"status\": \"filled\", \"statusTimestamp\": 1783890270770}, {\"order\": {\"coin\": \"BTC\", \"side\": \"A\", \"limitPx\": \"62820.0\", \"sz\": \"0.00018\", \"oid\": 56382516030, \"timestamp\": 1783890261973, \"origSz\": \"0.00018\", \"reduceOnly\": true, \"cloid\": \"0x1b343338773b8dc13be656c31b0873e9\"}, \"status\": \"reduceOnlyCanceled\", \"statusTimestamp\": 1783890270770}]}"
+    }
+  ],
+  "b6_appended_ts": "2026-07-12T21:04:33.632721+00:00"
+}

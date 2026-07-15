@@ -1,0 +1,177 @@
+{
+  "approved_scope": "one tiny resting entry plus native SL, modify, cancel, flatten only if needed",
+  "finished_ts": "2026-07-12T20:18:13.418508+00:00",
+  "network": "testnet",
+  "orders": [
+    {
+      "cloid": "0x8e326ec7068eed1a38961ac77a4a1149",
+      "oid": 56381230513,
+      "qty": 0.0002,
+      "role": "ENTRY"
+    },
+    {
+      "cloid": "0x1ab77510182c80cd6588201abc96144c",
+      "oid": 56381230514,
+      "qty": 0.0002,
+      "role": "SL"
+    }
+  ],
+  "result": "PASS",
+  "run_id": "p0-20260712T201750Z",
+  "started_ts": "2026-07-12T20:17:50.052630+00:00",
+  "steps": [
+    {
+      "data": {
+        "credential_source": "user_registry"
+      },
+      "name": "credential_source",
+      "status": "PASS",
+      "ts": "2026-07-12T20:17:50.052724+00:00"
+    },
+    {
+      "data": {
+        "account_address": "0x1E265F5E39957E08ed02A120ceFA33A9bd46AC49",
+        "account_mode": "unifiedAccount",
+        "network": "testnet"
+      },
+      "name": "connect",
+      "status": "PASS",
+      "ts": "2026-07-12T20:18:03.792549+00:00"
+    },
+    {
+      "data": {
+        "available_margin": 999.0,
+        "equity": 999.0,
+        "withdrawable": 999.0
+      },
+      "name": "account",
+      "status": "PASS",
+      "ts": "2026-07-12T20:18:04.082358+00:00"
+    },
+    {
+      "data": {
+        "bars": [
+          {
+            "close": 64012.0,
+            "high": 64029.0,
+            "low": 63888.0,
+            "open": 63932.0,
+            "ts": "2026-07-12T18:00:00Z",
+            "volume": 3.5634
+          },
+          {
+            "close": 64069.0,
+            "high": 64120.0,
+            "low": 64009.0,
+            "open": 64012.0,
+            "ts": "2026-07-12T19:00:00Z",
+            "volume": 0.37676
+          },
+          {
+            "close": 64094.0,
+            "high": 64161.0,
+            "low": 64046.0,
+            "open": 64081.0,
+            "ts": "2026-07-12T20:00:00Z",
+            "volume": 0.4779
+          }
+        ],
+        "count": 3
+      },
+      "name": "candles",
+      "status": "PASS",
+      "ts": "2026-07-12T20:18:05.549763+00:00"
+    },
+    {
+      "data": {
+        "coin": "BTC",
+        "entry_limit": 57680.0,
+        "market_reference": 64094.0,
+        "modified_stop_trigger": 56810.0,
+        "notional_usd": 11.536000000000001,
+        "qty": 0.0002,
+        "size_decimals": 5,
+        "stop_trigger": 56520.0
+      },
+      "name": "meta_and_plan",
+      "status": "PASS",
+      "ts": "2026-07-12T20:18:06.355110+00:00"
+    },
+    {
+      "data": {
+        "grouping": "normalTpsl",
+        "orders": [
+          {
+            "cloid": "0x8e326ec7068eed1a38961ac77a4a1149",
+            "oid": 56381230513,
+            "qty": 0.0002,
+            "role": "ENTRY"
+          },
+          {
+            "cloid": "0x1ab77510182c80cd6588201abc96144c",
+            "oid": 56381230514,
+            "qty": 0.0002,
+            "role": "SL"
+          }
+        ]
+      },
+      "name": "place_atomic_normalTpsl",
+      "status": "PASS",
+      "ts": "2026-07-12T20:18:07.799800+00:00"
+    },
+    {
+      "data": {
+        "owned_cloids_visible": [
+          "0x1ab77510182c80cd6588201abc96144c",
+          "0x8e326ec7068eed1a38961ac77a4a1149"
+        ],
+        "pending_children": []
+      },
+      "name": "verify_open_orders",
+      "status": "PASS",
+      "ts": "2026-07-12T20:18:08.282347+00:00"
+    },
+    {
+      "data": {
+        "cloid": "0x1ab77510182c80cd6588201abc96144c",
+        "new_trigger_px": 56810.0
+      },
+      "name": "modify_stop",
+      "status": "PASS",
+      "ts": "2026-07-12T20:18:09.320367+00:00"
+    },
+    {
+      "data": {
+        "cancelled_cloids": [
+          "0x1ab77510182c80cd6588201abc96144c",
+          "0x8e326ec7068eed1a38961ac77a4a1149"
+        ]
+      },
+      "name": "cancel_owned_orders",
+      "status": "PASS",
+      "ts": "2026-07-12T20:18:11.558179+00:00"
+    },
+    {
+      "data": {
+        "owned_open_orders_remaining": []
+      },
+      "name": "verify_cleanup",
+      "status": "PASS",
+      "ts": "2026-07-12T20:18:12.031656+00:00"
+    },
+    {
+      "data": {
+        "flattened_symbols": []
+      },
+      "name": "partial_fill_guard",
+      "status": "PASS",
+      "ts": "2026-07-12T20:18:12.966869+00:00"
+    },
+    {
+      "data": {},
+      "name": "disconnect",
+      "status": "PASS",
+      "ts": "2026-07-12T20:18:13.418479+00:00"
+    }
+  ]
+}

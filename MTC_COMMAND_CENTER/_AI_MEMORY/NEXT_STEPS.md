@@ -1,5 +1,74 @@
 # NEXT_STEPS
 
+## CRYPTO PAPER BRIDGE P2 — ARMED, NEW DAY 0 2026-07-15T06:48:16.619336Z [AI: Any]
+
+Fable-audited race fix `da44d1ff` is deployed in detached `C:\P2RT` at `cc4ce67d`. Run
+`paper-20260715063657` passed the required 10-minute reconnect gate and two post-ARM reconciles.
+Exactly one ARM request/transition occurred; final state was ARMED and reconcile-ready with
+positions/orders `[]` and zero ERROR/reconcile-failure/defer events.
+
+- **[AI: Any]** daily read-only D3 check: state/reconcile freshness, WARN/ERROR events, equity,
+  process/commit identity, all positions/orders, and native stops for any owned position.
+- **[AI: Claude|Codex]** on any safety anomaly: preserve evidence, DISARM safely if necessary,
+  diagnose, and do not repeat ARM without a fresh complete gate.
+- **[AI: Barış]** keep the host/supervisor available for at least 10 uninterrupted calendar days;
+  any shutdown or critical runtime change resets the P2 clock.
+- Evidence: `IBKR_PAPER_BRIDGE/docs/03_STATUS.md` and
+  `MTC_COMMAND_CENTER/11_TRIAGE/P2_RACE_FIX_REPORT_2026-07-14.md`.
+
+## SUPERSEDED — P2 RACE FIX BUILT; AUDIT/DEPLOY LOCKED 2026-07-14
+
+Commit `da44d1ff` on `feature/ibkr-bridge-final` implements the atomic reconnect client swap,
+narrow rebuild-only reconcile deferral, and deterministic regressions. Both full suites passed
+`127 passed, 1 warning`; report: `11_TRIAGE/P2_RACE_FIX_REPORT_2026-07-14.md`.
+
+- **[AI: Claude]** Fable adversarial audit on the real commit and independent suite rerun.
+- **[AI: Barış]** only after Fable PASS, explicitly approve or reject Task 4's single deploy/re-arm
+  window. No approval is inferred from the build request.
+- **[AI: Claude|Codex]** after both gates, execute Task 4 exactly once with its stop conditions;
+  otherwise leave `C:\P2RT` and the DISARMED runtime untouched.
+
+## SUPERSEDED — P2 ARMED, D3 STARTED 2026-07-13
+
+Day 0 started `2026-07-13T13:00:28.6218649Z` after incident containment, commit `59c334c0`, full
+tests `119 passed` from both roots, and a real
+`DISCONNECT -> RECONNECT -> DATA_RESTORED -> two reconciles` gate. Runtime is pinned at `C:\P2RT`;
+Task Scheduler must never be redirected to the parallel-agent research checkout.
+- **[AI: Any]** daily read-only D3 check: state/reconcile freshness, WARN/ERROR events, equity,
+  process/commit, all positions/orders, and native stops for any owned position.
+- **[AI: Claude|Codex]** any safety anomaly: preserve evidence, DISARM safely if needed, diagnose;
+  do not repeat ARM without a fresh complete gate.
+- Evidence: `IBKR_PAPER_BRIDGE/docs/19_P2_RECONNECT_INCIDENT_2026-07-13.md`.
+
+## 🚀 CRYPTO PAPER BRIDGE — Hyperliquid (was "IBKR"; broker PIVOTED 2026-07-06, design FINAL on `feature/ibkr-bridge-final` 52b13f6f; read `IBKR_PAPER_BRIDGE/docs/` 00→01→05→02→07 before touching. IBKR closed (KKTC), Signum rejected (no native stop) — see 07_BROKER_DECISION)
+- ~~run external design audits~~ DONE 2026-07-06: 7 reports in `IBKR_PAPER_BRIDGE/docs/audits/`.
+- ~~triage audit reports, adopt accepted findings~~ **DONE 2026-07-06** (Claude Fable 5): 21 adopted clusters amended in place; record + rejections in `IBKR_PAPER_BRIDGE/docs/05_AUDIT_RESOLUTION.md`. Build plan now honestly **2 days** (Day 1 mock core, Day 2 IBKR hardening).
+- **[AI: Barış]** review corrected `IBKR_PAPER_BRIDGE/docs/03_STATUS.md` and commits `d431dfab..0f6e241d`; decide whether to merge/continue `feature/ibkr-bridge-final`.
+- ~~**[AI: Barış]** prep Hyperliquid **testnet** API wallet per `06_HYPERLIQUID_SETUP.md`.~~ DONE 2026-07-12: dedicated `MTC-bridge-test` agent authorized; Windows user credential formats validated without disclosure.
+- ~~**[AI: Claude|Codex]** BUILD DAY: execute `IBKR_PAPER_BRIDGE/docs/02_BUILD_PLAN_1DAY.md` tasks 1-11 in order, commit per task, mock-first.~~ DONE 2026-07-07 (Codex GPT-5): 13 task commits through Task 11; tests pass; dry-run demo verified; P0 smoke written but not run.
+- ~~**[AI: Codex]** corrective scaffold-to-P1 pass from `docs/09_CODEX_FIX_PROMPT.md`.~~ DONE 2026-07-07: Broker protocol decoupling, strategy stops/live positions, resting order lifecycle, persisted duplicate guard, persisted KILL, Hyperliquid native trigger fake-SDK tests, dashboard real rows/status/bars/screenshots, and lifecycle tests. Full suite 37 passed. Caveat: chart screenshot uses local SVG fallback; actual Lightweight Charts visible rendering remains a focused follow-up.
+- **[AI: Codex|Claude]** focused dashboard chart follow-up: make the visible Trading chart use a reliable bundled/local Lightweight Charts path or formally accept the SVG fallback for P1 mock demo; verify with screenshots.
+- ~~**[AI: Codex]** support Hyperliquid Unified account balances, preserve string-shaped exchange errors, and cleanly disconnect the smoke websocket.~~ DONE 2026-07-12 in `944a5323`; both full suites `70 passed`.
+- **[AI: Barış]** do not transfer funds or change account mode; `unifiedAccount` correctly shares the 999 mock USDC balance across Spot/Perps.
+- ~~**[AI: Codex]** add conservative Hyperliquid price rounding and run exactly one approved P0 attempt.~~ DONE 2026-07-12 in `42018032`; local suites `72 passed`, attempt failed cleanly on real `positionTpsl` response cardinality, zero open orders/positions.
+- ~~**[AI: Codex]** locally harden `positionTpsl` response-shape handling, redacted diagnostics, and deterministic owned-cloid cleanup.~~ DONE 2026-07-12 in `09a7a92f`; both full suites `89 passed`.
+- ~~**[AI: Codex]** implement E1 user-registry fallback and run one re-approved P0 smoke.~~ DONE 2026-07-12 in `25cee696`; source=`user_registry`, both suites `92 passed`, attempt 5 reached testnet and exposed the native trigger-type rejection.
+- ~~**[AI: Codex]** implement G1 normalTpsl entry grouping and the bounded G2 fallback, then run attempt 6.~~ DONE 2026-07-12 in `a4de4a6e`; both suites `98 passed`, normalTpsl returned a resting entry plus `waitingForFill` child state, and C3 cleanup passed.
+- **[AI: Any] 🔴 ACTIVE — GO-LIVE PLAN: `IBKR_PAPER_BRIDGE/docs/16_GO_LIVE_PLAN.md` is the single
+  authoritative task ladder from here to P2 (testnet live loop).** Barış 2026-07-12 blanket-approved
+  ALL of it incl. bounded P0 smokes until pass, B6 fill smoke, and ALL of Phase D (P2 ARM). Any model
+  picks the first unchecked box in its §3 and executes per its §1 rules WITHOUT asking; human input
+  only at its §0-İ points (Telegram creds, PC uptime, mainnet=forbidden; QuantLens registration İ4
+  is now complete).
+  P1 audited PASS; P0 attempt 6 proved the wire format (resting entry + `waitingForFill` child); W1
+  (pending-child parser) is the current first task.
+- ~~**[AI: Barış]** approve QuantLens İ4 registration and unblock the real golden.~~ **DONE
+  2026-07-13**: `keltner_trail_ema8` is registered and the real golden is ready; 858/858 entry
+  signals match. Evidence: `IBKR_PAPER_BRIDGE/docs/18_GOLDEN_REPORT.md`. Honest caveat: the
+  bridge exit trail is SMA-8 while QuantLens `trail_ema8` is EMA-8, so exit parity is not claimed.
+- **[AI: Claude|Codex]** P3 later (≥30d): produce the slippage + operational signal-parity report
+  to `11_TRIAGE/`; the QuantLens/golden prerequisite is complete.
+
 ## 🔧 MCC APP AUDIT FOLLOW-UPS (audit 2026-07-05: `11_TRIAGE/MCC_APP_AUDIT_2026-07-05.md`; Barış answered all open questions; quick wins DONE same session on `feature/mcc-audit-fixes`)
 - ~~fix backtest_reader nested-run glob + heartbeat_reader parents index~~ DONE 2026-07-05 (115 tests pass; July runs + heartbeat visible).
 - ~~register faz3b_stage1 in RESEARCH_RUN_REGISTRY~~ DONE 2026-07-05.
@@ -1069,3 +1138,11 @@ Must obey 7-gate workflow (AI_RULES.md). Start at Gate 1.
 - Validation: `node --check` PASS; API unittest discovery `39 tests` PASS; `/healthz` `overall_ok=True` and `mode=read_only`; served HTML/CSS/JS marker checks PASS; forbidden execution wording and hardcoded pilot data search PASS.
 - Visual QA limitation: Browser screenshots remain blocked by enterprise policy for `127.0.0.1:8765`; no alternate browser workaround used. Direct served CSS/JS checks are recorded in `GLOBAL_HANDOFF.md`.
 - Future [AI: Codex|Claude]: if Browser localhost policy becomes available, capture visual screenshots for Home, Pipeline, Registry, Strategy Intelligence, Planner, Explorer, Leaderboard, Diagnostics, and Read Model.
+
+### P2-OUTAGE-TOLERANCE-AUDIT | DONE 2026-07-15 | code `0e644b52` [AI: Claude]
+- Fable independently audited the outage-tolerance build PASS; Barış then authorized the single deploy/re-ARM window.
+
+### P2-DAY0-V4-POST-ARM-AUDIT | OPEN 2026-07-15 | runtime `1465f8f0` [AI: Claude]
+- Audit run `paper-20260715105547`, the single `12:02:42.856537Z` ARMED transition, fresh-bar proof, two post-ARM reconciles, empty positions/orders, and final master merge evidence.
+- Monitor Day 0 v4 as validation-tier until the planned July 18 PC-off; record that shutdown as a planned boundary, not a safety incident. [AI: Any]
+- Start definitive D3 only after VPS migration at end of month. [AI: Barış|Claude]

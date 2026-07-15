@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crypto Paper Bridge</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">Crypto Paper Bridge</div>
+    <button class="nav active" data-page="overview">Overview</button>
+    <button class="nav" data-page="trading">Trading</button>
+    <button class="nav" data-page="config">Strategy & Risk</button>
+    <button class="nav" data-page="journal">Journal</button>
+    <button class="nav" data-page="llm">LLM</button>
+    <button class="nav" data-page="system">System</button>
+    <button class="danger" id="killButton">KILL</button>
+  </aside>
+  <main class="shell">
+    <header class="topbar">
+      <span class="pill" id="connPill">mock</span>
+      <span class="pill" id="modePill">TESTNET</span>
+      <span class="pill" id="regimePill">BOTH</span>
+      <strong id="stateText">DISARMED</strong>
+      <button id="armButton">ARM</button>
+      <button id="disarmButton">DISARM</button>
+    </header>
+
+    <section class="page active" id="page-overview">
+      <h1>Overview</h1>
+      <div class="grid">
+        <article class="card"><span>Equity</span><strong id="equityValue">--</strong></article>
+        <article class="card"><span>Day P&L</span><strong id="pnlValue">--</strong></article>
+        <article class="card"><span>Next Bar</span><strong id="nextBar">--:--:--</strong></article>
+      </div>
+      <section class="panel">
+        <h2>Gate Monitor</h2>
+        <ul id="gateList"><li>No signal yet - next bar pending</li></ul>
+      </section>
+      <section class="panel">
+        <h2>Decision Stream</h2>
+        <ol id="decisionStream"></ol>
+      </section>
+    </section>
+
+    <section class="page" id="page-trading">
+      <h1>Trading</h1>
+      <div class="chart" id="chartBox">Price chart loading</div>
+      <section class="panel">
+        <h2>Positions</h2>
+        <table><tbody id="positionsBody"></tbody></table>
+      </section>
+      <section class="panel">
+        <h2>Working Orders</h2>
+        <table><tbody id="ordersBody"></tbody></table>
+      </section>
+    </section>
+
+    <section class="page" id="page-config">
+      <h1>Strategy & Risk</h1>
+      <form class="config-grid">
+        <label>Coin <input id="coinInput" value="BTC" readonly></label>
+        <label>Direction <select id="directionInput"><option>BOTH</option><option>LONG</option><option>SHORT</option></select></label>
+        <label>Risk % <input id="riskInput" type="number" step="0.001"></label>
+        <label>Leverage <input id="leverageInput" type="number" min="1" max="1"></label>
+      </form>
+    </section>
+
+    <section class="page" id="page-journal">
+      <h1>Journal</h1>
+      <section class="panel">
+        <h2>Trades</h2>
+        <table><tbody id="tradesBody"></tbody></table>
+      </section>
+      <aside class="drawer" id="decisionDrawer">
+        <h2>Decision Chain</h2>
+        <pre id="decisionChain">Select a trade</pre>
+      </aside>
+    </section>
+
+    <section class="page" id="page-llm">
+      <h1>LLM</h1>
+      <div class="grid">
+        <article class="card"><span>Regime</span><strong id="llmRegime">BOTH</strong></article>
+        <article class="card"><span>Veto Mode</span><strong id="vetoMode">OFF</strong></article>
+        <article class="card"><span>Cost Today</span><strong id="llmCost">$0.00</strong></article>
+      </div>
+      <section class="panel">
+        <h2>Directive History</h2>
+        <table><tbody id="directivesBody"></tbody></table>
+      </section>
+    </section>
+
+    <section class="page" id="page-system">
+      <h1>System</h1>
+      <div class="grid">
+        <article class="card"><span>Network</span><strong id="systemNetwork">testnet</strong></article>
+        <article class="card"><span>DB</span><strong id="dbStatus">runtime</strong></article>
+        <article class="card"><span>State Version</span><strong id="stateVersion">1</strong></article>
+      </div>
+      <section class="panel">
+        <h2>Events</h2>
+        <table><tbody id="eventsBody"></tbody></table>
+      </section>
+    </section>
+  </main>
+  <script src="/static/app.js?v=4"></script>
+</body>
+</html>

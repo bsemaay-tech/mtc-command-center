@@ -1,0 +1,122 @@
+{
+  "approved_scope": "one tiny real fill + native SL + reduce-only close (16_GO_LIVE_PLAN B6)",
+  "run_id": "fillsmoke-20260712T210404Z",
+  "network": "testnet",
+  "started_ts": "2026-07-12T21:04:04.568873+00:00",
+  "result": "PASS",
+  "steps": [
+    {
+      "name": "credential_source",
+      "status": "PASS",
+      "ts": "2026-07-12T21:04:04.568945+00:00",
+      "data": {
+        "credential_source": "user_registry"
+      }
+    },
+    {
+      "name": "connect",
+      "status": "PASS",
+      "ts": "2026-07-12T21:04:16.963583+00:00",
+      "data": {
+        "account_mode": "unifiedAccount"
+      }
+    },
+    {
+      "name": "account",
+      "status": "PASS",
+      "ts": "2026-07-12T21:04:17.587143+00:00",
+      "data": {
+        "equity": 999.0,
+        "available_margin": 999.0,
+        "withdrawable": 999.0
+      }
+    },
+    {
+      "name": "plan",
+      "status": "PASS",
+      "ts": "2026-07-12T21:04:18.838748+00:00",
+      "data": {
+        "market": 64110.0,
+        "entry_ioc_limit": 65390.0,
+        "stop_trigger": 62820.0,
+        "qty": 0.00018,
+        "notional_usd": 11.539800000000001
+      }
+    },
+    {
+      "name": "market_open_raw",
+      "status": "PASS",
+      "ts": "2026-07-12T21:04:20.559579+00:00",
+      "data": {
+        "raw_redacted": "{\"status\": \"ok\", \"response\": {\"type\": \"order\", \"data\": {\"statuses\": [{\"filled\": {\"totalSz\": \"0.00018\", \"avgPx\": \"64110.0\", \"oid\": 56382515366, \"cloid\": \"0x700051b466fe62be49003f45c827bbd8\"}}]}}}"
+      }
+    },
+    {
+      "name": "position_open",
+      "status": "PASS",
+      "ts": "2026-07-12T21:04:20.876306+00:00",
+      "data": {
+        "symbol": "BTC",
+        "size": 0.00018,
+        "entry_px": 64110.0,
+        "unrealized": 0.0,
+        "leverage": 1,
+        "liquidation_px": 29.2095639944,
+        "margin_used": 11.534608
+      }
+    },
+    {
+      "name": "sl_placed_positionTpsl",
+      "status": "PASS",
+      "ts": "2026-07-12T21:04:22.317051+00:00",
+      "data": {
+        "cloid": "0x1b343338773b8dc13be656c31b0873e9",
+        "oid": 56382516030,
+        "role": "SL",
+        "status": "OPEN",
+        "qty": 0.00018,
+        "symbol": "BTC",
+        "trigger_px": 62820.0
+      }
+    },
+    {
+      "name": "sl_protection",
+      "status": "PASS",
+      "ts": "2026-07-12T21:04:22.613196+00:00",
+      "data": {
+        "sl_resting": true,
+        "note": null
+      }
+    },
+    {
+      "name": "raw_fill_events",
+      "status": "PASS",
+      "ts": "2026-07-12T21:04:27.624172+00:00",
+      "data": {
+        "raw_event_count": 3
+      }
+    },
+    {
+      "name": "position_closed",
+      "status": "PASS",
+      "ts": "2026-07-12T21:04:31.162132+00:00",
+      "data": {}
+    },
+    {
+      "name": "cleanup_verified",
+      "status": "PASS",
+      "ts": "2026-07-12T21:04:33.625270+00:00",
+      "data": {}
+    },
+    {
+      "name": "db_chain",
+      "status": "WARN",
+      "ts": "2026-07-12T21:04:33.625281+00:00",
+      "data": {
+        "note": "entry via direct market_open (not OrderManager.submit_plan); store-chain proof deferred to P2 first trade \u2014 raw WS fill payloads captured for B3 parser validation"
+      }
+    }
+  ],
+  "finished_ts": "2026-07-12T21:04:33.625283+00:00",
+  "raw_event_count": 5
+}
