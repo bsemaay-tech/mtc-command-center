@@ -1138,3 +1138,8 @@ Must obey 7-gate workflow (AI_RULES.md). Start at Gate 1.
 - Validation: `node --check` PASS; API unittest discovery `39 tests` PASS; `/healthz` `overall_ok=True` and `mode=read_only`; served HTML/CSS/JS marker checks PASS; forbidden execution wording and hardcoded pilot data search PASS.
 - Visual QA limitation: Browser screenshots remain blocked by enterprise policy for `127.0.0.1:8765`; no alternate browser workaround used. Direct served CSS/JS checks are recorded in `GLOBAL_HANDOFF.md`.
 - Future [AI: Codex|Claude]: if Browser localhost policy becomes available, capture visual screenshots for Home, Pipeline, Registry, Strategy Intelligence, Planner, Explorer, Leaderboard, Diagnostics, and Read Model.
+
+### P2-OUTAGE-TOLERANCE-AUDIT | OPEN 2026-07-15 | code `0e644b52` [AI: Claude]
+- Fable must independently audit `MTC_COMMAND_CENTER/11_TRIAGE/P2_OUTAGE_TOLERANCE_REPORT_2026-07-15.md`, code/config scope, deterministic tests, both 130-pass suites, and zero-match secret scan.
+- Task 5 deploy/re-ARM remains locked until audit PASS plus explicit Barış go. [AI: Barış|Codex]
+- Task 6 PR merges (#16 through #19, union-resolving only the documented handoff conflicts) remains locked until audit PASS; it is independent of deploy approval. [AI: Codex|Claude]

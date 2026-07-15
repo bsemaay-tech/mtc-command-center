@@ -2693,3 +2693,11 @@ Validation: `node --check MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/web/app.js` P
 Visual QA notes: Browser screenshots could not be captured because the in-app Browser policy blocks `127.0.0.1:8765`, and no alternate browser workaround was used. Direct served-route inspection confirms the visual contract changed from the light skeleton to dark reference structures. Cheap-agent review was attempted through `_deepseek_driver`, but the agent drifted into unrelated files and hit `max_iters` without a usable report; no writes occurred.
 
 No backtest, optimization, worker, Pine, MTC_V2, parity, strategy logic, live trading, broker path, API write behavior, or execution/write-back path was launched or modified.
+
+## Codex GPT-5 2026-07-15 — P2 outage-tolerance Tasks 1-4 built; audit pending
+
+Built the approved paper-testnet outage-tolerance change on `feature/ibkr-bridge-final` in dedicated worktree `C:\BTOL`. Code commit `0e644b52` adds three-consecutive-failure reconcile tolerance with success reset, a config-driven nine-attempt/315-second websocket reconnect budget, and explicit Telegram suppression for routine disconnect/first-reconnect/data-restored chatter while retaining all DB events and escalated alerts.
+
+Deterministic coverage includes third-strike disarm, 2-fail/success/2-fail reset, rebuild defer versus genuine nonconfiguration, 195-second simulated recovery without stale, 315-second exhaustion with real stale-disarm callback, and notifier/store separation. Full suites passed from both required CWDs: `130 passed` from `C:\BTOL` and `130 passed` from `C:\BTOL\IBKR_PAPER_BRIDGE`. Staged 64+-hex secret scan: zero matches.
+
+Detailed evidence and honest delegation anomalies: `MTC_COMMAND_CENTER/11_TRIAGE/P2_OUTAGE_TOLERANCE_REPORT_2026-07-15.md`. `C:\P2RT` remains untouched at detached `cc4ce67d`; no deploy, restart, ARM, push, or PR merge was performed. Task 5 requires Fable PASS plus Barış go. Task 6 remains post-audit.
