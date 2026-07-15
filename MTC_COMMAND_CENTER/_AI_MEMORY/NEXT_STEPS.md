@@ -1,5 +1,19 @@
 # NEXT_STEPS
 
+## ✅ P2 DAY 0 v4 ARMED 2026-07-15T12:02:42.856537Z + ALL PRs MERGED (Fable audit PASS)
+
+Outage-tolerance fix deployed (P2RT detached `1465f8f0`, 130 tests); one ARM; zero
+FAILED/TOLERATED/STALE since; flat. **Master consolidated `8721bce0`: PR #16/#17/#18/#19 all
+MERGED** (Fable finished #19 registry + handoff union after Codex correctly stopped; e0651f94
+Day-0-v4 report folded in; bridge suite 130 on master). Full record: GLOBAL_HANDOFF
+`[Claude Fable 5] 2026-07-15 — DEPLOY (Day 0 v4) + PR MERGE AUDIT`.
+- **[AI: Any]** daily D3 check unchanged; **Day 0 v4 resets at the Jul 18 planned PC-off — that
+  is a window boundary, NOT a safety incident.** Definitive ≥10-day D3 runs on the VPS (end of
+  month). Benign feed noise now suppressed from Telegram; `RECONCILE_FAILED_TOLERATED` (WARN, no
+  disarm) during a real outage = correct new behavior, not a failure.
+- **[AI: Any, low priority]** tidy master `NEXT_STEPS.md` union artifacts (superseded FAZ3B/bridge
+  sections) next session; remove merged worktrees C:/BTOL, C:/FZ3G5.
+
 ## BRANCH CONSOLIDATION — FABLE AUDIT DONE 2026-07-13: content PASS + 1 MAJOR finding
 
 Codex's queue 2a–2c + Telegram test-isolation work **VERIFIED PASS** on real code/runs (Fable,

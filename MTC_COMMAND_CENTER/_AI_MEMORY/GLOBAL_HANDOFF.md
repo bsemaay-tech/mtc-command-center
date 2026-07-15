@@ -1,5 +1,31 @@
 # GLOBAL_HANDOFF
 
+## [Claude Fable 5] 2026-07-15 — DEPLOY (Day 0 v4) + PR MERGE AUDIT: PASS. Master consolidated (#16-#19), all four PRs MERGED
+
+**Task 5 deploy — verified on live runtime, PASS.** P2 ARMED, run `paper-20260715105547`,
+**Day 0 v4 = 2026-07-15T12:02:42.856537Z**, exactly one `ARM_REQUEST` + one `DISARMED->ARMED`,
+zero `RECONCILE_FAILED` / `RECONCILE_FAILED_TOLERATED` / `DATA_STALE` since ARM, positions/orders
+`[]`/`[]`, reconcile fresh. P2RT pinned detached `1465f8f0`, diff empty; 130 tests both CWDs.
+The outage-tolerance fix is now live.
+
+**Task 6 PR merges — completed by Fable.** Codex merged #16 (master `20237733`) then correctly
+STOPPED at #19 because `RESEARCH_RUN_REGISTRY.json` conflicted (outside its handoff-only
+whitelist). Fable finished the consolidation on real refs:
+- #19 registry conflict was ONLY the `generated_at` timestamp (array entries auto-unioned) →
+  kept the newer HEAD timestamp; both `overnight_multiasset_2026-06-29` and the donchian entries
+  present; JSON validated.
+- Handoff files (`GLOBAL_HANDOFF`, `NEXT_STEPS`) union-resolved (both sides' dated sections kept,
+  no duplicates, no markers).
+- Caught that PR #16's merge (`20237733`) did NOT include the trailing `e0651f94` (Day-0-v4
+  deploy report) — Codex pushed it after the merge. Merged `feature/ibkr-bridge-final` (e0651f94)
+  in too, so master now has the full Day-0-v4 records + deploy report.
+- Bridge suite re-run on the consolidated master: **130 passed** both CWDs. Secret greps 0.
+- Pushed **master `8721bce0`**; GitHub shows **PR #16/#17/#18/#19 all MERGED**.
+- Known cosmetic: master `NEXT_STEPS.md` now carries a couple of semantically-superseded sections
+  (e.g. an older FAZ3B "BLOCKED" alongside the current "Path A") from the union — lossless,
+  harmless; a future session can tidy. Stale worktrees C:/BTOL + C:/FZ3G5 (both merged) can be
+  removed later; C:/BFIX pruned.
+
 ## [Claude Fable 5] 2026-07-15 — OUTAGE-TOLERANCE FIX AUDIT: PASS + operational finding: P2 bridge process is DOWN (DISARMED/flat/safe)
 
 **Code audit (Task 1-4, `0e644b52`): PASS on real code + runs.**
