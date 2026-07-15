@@ -1,5 +1,28 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5] 2026-07-15 — P2 race fix deployed; new Day 0 ARMED at 06:48:16Z
+
+Fable audit PASS plus Barış's explicit Task 4/push go satisfied both gates. One restart window
+deployed detached `C:\P2RT` from `54278b66` to audited tip `cc4ce67d` (race fix `da44d1ff` plus
+Telegram test isolation and golden). Preflight was DISARMED/testnet/paper with positions/orders
+`[]`; both P2RT suites passed `127 passed, 1 warning`. `Stop-ScheduledTask` left child PID `54192`
+alive, so that orphan was terminated once before checkout; port 8790 was closed before sync.
+
+New run `paper-20260715063657` started DISARMED and passed a 10m29s flat observation. Natural
+cycle: `06:47:06.153686Z DISCONNECT -> 06:47:14.370206Z RECONNECT attempt=1 ->
+06:47:39.560468Z DATA_RESTORED`; reconcile `06:47:26.646538Z` succeeded inside the rebuild
+window. Exactly one ARM used `X-Confirm: 2`: `06:48:16.616853Z ARM_REQUEST` then
+`06:48:16.619336Z DISARMED->ARMED`. Post-ARM reconciles at `06:48:28.376718Z` and
+`06:49:29.975312Z` were clean. Final API: ARMED, reconcile-ready, positions/orders `[]`; event
+counts: one ARM request, one ARMED transition, zero ERROR/`RECONCILE_FAILED`/
+`RECONCILE_DEFERRED`. Telegram notifier was enabled and the transition invoked the existing
+`state -> ARMED` notification path; no delivery receipt is persisted. This ARM_REQUEST timestamp
+is the new P2 Day 0. Full record: `IBKR_PAPER_BRIDGE/docs/03_STATUS.md`.
+
+Next: resume D3 daily read-only monitoring for at least 10 uninterrupted calendar days. Any
+DISARM or critical runtime change requires investigation and a fresh complete gate; mainnet
+remains forbidden.
+
 ## [Codex GPT-5] 2026-07-14 — P2 race fix built at da44d1ff; Fable audit and deploy approval pending
 
 Executed Tasks 1–3 of `11_TRIAGE/CODEX_P2_RACE_FIX_PROMPT_2026-07-14.md` in the dedicated

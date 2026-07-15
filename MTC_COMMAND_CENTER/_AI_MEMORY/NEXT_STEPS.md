@@ -1,6 +1,22 @@
 # NEXT_STEPS
 
-## CRYPTO PAPER BRIDGE P2 — RACE FIX BUILT; AUDIT/DEPLOY LOCKED 2026-07-14
+## CRYPTO PAPER BRIDGE P2 — ARMED, NEW DAY 0 2026-07-15T06:48:16.616853Z [AI: Any]
+
+Fable-audited race fix `da44d1ff` is deployed in detached `C:\P2RT` at `cc4ce67d`. Run
+`paper-20260715063657` passed the required 10-minute reconnect gate and two post-ARM reconciles.
+Exactly one ARM request/transition occurred; final state was ARMED and reconcile-ready with
+positions/orders `[]` and zero ERROR/reconcile-failure/defer events.
+
+- **[AI: Any]** daily read-only D3 check: state/reconcile freshness, WARN/ERROR events, equity,
+  process/commit identity, all positions/orders, and native stops for any owned position.
+- **[AI: Claude|Codex]** on any safety anomaly: preserve evidence, DISARM safely if necessary,
+  diagnose, and do not repeat ARM without a fresh complete gate.
+- **[AI: Barış]** keep the host/supervisor available for at least 10 uninterrupted calendar days;
+  any shutdown or critical runtime change resets the P2 clock.
+- Evidence: `IBKR_PAPER_BRIDGE/docs/03_STATUS.md` and
+  `MTC_COMMAND_CENTER/11_TRIAGE/P2_RACE_FIX_REPORT_2026-07-14.md`.
+
+## SUPERSEDED — P2 RACE FIX BUILT; AUDIT/DEPLOY LOCKED 2026-07-14
 
 Commit `da44d1ff` on `feature/ibkr-bridge-final` implements the atomic reconnect client swap,
 narrow rebuild-only reconcile deferral, and deterministic regressions. Both full suites passed
@@ -12,7 +28,7 @@ narrow rebuild-only reconcile deferral, and deterministic regressions. Both full
 - **[AI: Claude|Codex]** after both gates, execute Task 4 exactly once with its stop conditions;
   otherwise leave `C:\P2RT` and the DISARMED runtime untouched.
 
-## CRYPTO PAPER BRIDGE P2 ARMED — D3 ACTIVE 2026-07-13 [AI: Any]
+## SUPERSEDED — P2 ARMED, D3 STARTED 2026-07-13
 
 Day 0 started `2026-07-13T13:00:28.6218649Z` after incident containment, commit `59c334c0`, full
 tests `119 passed` from both roots, and a real
