@@ -236,9 +236,15 @@ class KillingGate:
 class _WsDeadBroker:
     """B1 stub: broker whose SDK websocket reports dead."""
 
-    def __init__(self, alive: bool = False, reconnect_ok: bool = True) -> None:
+    def __init__(
+        self,
+        alive: bool = False,
+        reconnect_ok: bool = True,
+        failures_before_success: int = 0,
+    ) -> None:
         self.alive = alive
         self.reconnect_ok = reconnect_ok
+        self.failures_before_success = failures_before_success
         self.connect_calls = 0
         self.resubscribe_calls = 0
         self.last_bar_update = None
@@ -248,7 +254,7 @@ class _WsDeadBroker:
 
     async def connect(self) -> None:
         self.connect_calls += 1
-        if not self.reconnect_ok:
+        if not self.reconnect_ok or self.connect_calls <= self.failures_before_success:
             raise RuntimeError("socket refused")
         self.alive = True
 
@@ -279,11 +285,17 @@ def test_drill_ws_death_triggers_auto_reconnect():
     asyncio.run(run())
 
 
-def test_drill_ws_death_reconnect_failure_goes_stale_and_disarms():
+def test_drill_ws_death_survives_three_minute_outage_within_retry_budget(monkeypatch):
     async def run() -> None:
-        broker = _WsDeadBroker(alive=False, reconnect_ok=False)
+        broker = _WsDeadBroker(alive=False, failures_before_success=6)
         events: list[tuple[str, str]] = []
         stale_calls: list[bool] = []
+        scheduled_delays: list[float] = []
+
+        async def record_sleep(delay: float) -> None:
+            scheduled_delays.append(delay)
+
+        monkeypatch.setattr("bridge.engine.bars.asyncio.sleep", record_sleep)
         feed = BarFeed(
             broker,
             "BTC",
@@ -291,15 +303,59 @@ def test_drill_ws_death_reconnect_failure_goes_stale_and_disarms():
             on_bar_closed=lambda bar: None,
             on_event=lambda code, detail: events.append((code, detail)),
             on_stale=lambda: stale_calls.append(True),
-            reconnect_base_delay=0.01,
         )
 
         await feed.check_once(datetime(2026, 7, 12, tzinfo=UTC))
 
-        assert broker.connect_calls == 5  # full backoff attempt budget
+        assert broker.connect_calls == 7
+        assert scheduled_delays == [5.0, 10.0, 20.0, 40.0, 60.0, 60.0]
+        assert sum(scheduled_delays) == 195.0
+        assert ("RECONNECT", "attempt=7") in events
+        assert not any(code == "DATA_STALE" for code, _ in events)
+        assert stale_calls == []
+
+    asyncio.run(run())
+
+
+def test_drill_ws_death_reconnect_failure_goes_stale_after_full_budget(monkeypatch, tmp_path):
+    async def run() -> None:
+        broker = _WsDeadBroker(alive=False, reconnect_ok=False)
+        events: list[tuple[str, str]] = []
+        scheduled_delays: list[float] = []
+        store = Store(tmp_path / "reconnect-budget.db")
+        store.initialize()
+        store.create_run("reconnect-budget", "paper", "testnet", {})
+        store.set_meta("app_state", "ARMED")
+        engine = BridgeEngine(
+            run_id="reconnect-budget",
+            broker=broker,
+            store=store,
+            strategy=AlwaysSignalStrategy(),
+            risk_engine=RiskEngine(RiskConfig()),
+            state="ARMED",
+        )
+
+        async def record_sleep(delay: float) -> None:
+            scheduled_delays.append(delay)
+
+        monkeypatch.setattr("bridge.engine.bars.asyncio.sleep", record_sleep)
+        feed = BarFeed(
+            broker,
+            "BTC",
+            "1h",
+            on_bar_closed=lambda bar: None,
+            on_event=lambda code, detail: events.append((code, detail)),
+            on_stale=engine._stale_disarm,
+        )
+
+        await feed.check_once(datetime(2026, 7, 12, tzinfo=UTC))
+
+        assert broker.connect_calls == 9
+        assert scheduled_delays == [5.0, 10.0, 20.0, 40.0, 60.0, 60.0, 60.0, 60.0]
+        assert sum(scheduled_delays) == 315.0
         codes = [code for code, _ in events]
-        assert codes.count("RECONNECT_RETRY") == 5
+        assert codes.count("RECONNECT_RETRY") == 9
         assert ("DATA_STALE", "ws_dead_reconnect_failed") in events
-        assert stale_calls == [True]
+        assert engine._app_state() == "DISARMED"
 
     asyncio.run(run())

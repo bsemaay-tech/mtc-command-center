@@ -1409,6 +1409,7 @@ def test_reconcile_during_rebuild_defers_not_disarms(tmp_path):
     assert engine.reconcile_ready is True
     assert engine.last_reconcile_ts == datetime(2026, 7, 13, 8, 0, tzinfo=UTC)
     assert engine.reconcile_error is None
+    assert engine._consecutive_reconcile_failures == 0
 
     # Verify RECONCILE_DEFERRED event was stored
     events = store.get_events()
@@ -1422,9 +1423,9 @@ def test_reconcile_during_rebuild_defers_not_disarms(tmp_path):
     assert len(failed) == 0
 
 
-def test_hyperliquid_not_configured_without_rebuild_disarms(tmp_path):
-    """P2: HyperliquidNotConfigured when NOT rebuilding must still follow
-    the existing fail-closed path (disarm + RECONCILE_FAILED)."""
+def test_hyperliquid_not_configured_without_rebuild_counts_toward_threshold(tmp_path):
+    """Only the rebuild case defers; genuine nonconfiguration consumes
+    the same three-strike failure budget and then disarms."""
     from bridge.engine.engine import BridgeEngine
     from bridge.engine.risk import RiskConfig, RiskEngine
     from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
@@ -1449,10 +1450,11 @@ def test_hyperliquid_not_configured_without_rebuild_disarms(tmp_path):
     engine.reconcile_ready = True
     engine.last_reconcile_ts = datetime(2026, 7, 13, 8, 0, tzinfo=UTC)
 
-    result = asyncio.run(engine._run_reconcile_cycle())
-
-    assert result is False
-    # Must disarm
+    assert asyncio.run(engine._run_reconcile_cycle()) is False
+    assert engine._app_state() == "ARMED"
+    assert asyncio.run(engine._run_reconcile_cycle()) is False
+    assert engine._app_state() == "ARMED"
+    assert asyncio.run(engine._run_reconcile_cycle()) is False
     assert engine._app_state() == "DISARMED"
     assert engine.reconcile_ready is False
     assert engine.reconcile_error == "HyperliquidNotConfigured"
@@ -1460,11 +1462,16 @@ def test_hyperliquid_not_configured_without_rebuild_disarms(tmp_path):
     events = store.get_events()
     failed = [e for e in events if e["code"] == "RECONCILE_FAILED"]
     assert len(failed) == 1
+    tolerated = [e for e in events if e["code"] == "RECONCILE_FAILED_TOLERATED"]
+    assert [e["detail"] for e in reversed(tolerated)] == [
+        "consecutive=1/3; error=HyperliquidNotConfigured",
+        "consecutive=2/3; error=HyperliquidNotConfigured",
+    ]
     deferred = [e for e in events if e["code"] == "RECONCILE_DEFERRED"]
     assert len(deferred) == 0
 
 
-def test_different_exception_during_rebuild_disarms(tmp_path):
+def test_different_exception_during_rebuild_uses_failure_threshold(tmp_path):
     """P2: any exception other than HyperliquidNotConfigured, even while
     rebuilding, must follow the existing fail-closed path."""
     from bridge.engine.engine import BridgeEngine
@@ -1502,6 +1509,9 @@ def test_different_exception_during_rebuild_disarms(tmp_path):
     engine.reconcile_ready = True
     engine.last_reconcile_ts = datetime(2026, 7, 13, 8, 0, tzinfo=UTC)
 
+    for _ in range(2):
+        assert asyncio.run(engine._run_reconcile_cycle()) is False
+        assert engine._app_state() == "ARMED"
     result = asyncio.run(engine._run_reconcile_cycle())
 
     assert result is False

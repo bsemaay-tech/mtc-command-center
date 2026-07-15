@@ -92,6 +92,7 @@ class BarFeed:
         on_stale: Callable[[], object] | None = None,
         poll_seconds: float = 1.0,
         staleness_enabled: bool = True,
+        reconnect_attempts: int = 9,
         reconnect_base_delay: float = 5.0,
         data_restore_timeout_s: float = 60.0,
     ) -> None:
@@ -103,6 +104,7 @@ class BarFeed:
         self.on_stale = on_stale
         self.poll_seconds = poll_seconds
         self.staleness_enabled = staleness_enabled
+        self.reconnect_attempts = max(1, int(reconnect_attempts))
         self.reconnect_base_delay = reconnect_base_delay
         self.data_restore_timeout_s = data_restore_timeout_s
         self.last_bar_update: datetime | None = None
@@ -178,7 +180,8 @@ class BarFeed:
             await self._call(self.on_event, "DATA_STALE", f"last_update={reference.isoformat()}")
             await self._call(self.on_stale)
 
-    async def reconnect(self, attempts: int = 5, base_delay: float | None = None) -> bool:
+    async def reconnect(self, attempts: int | None = None, base_delay: float | None = None) -> bool:
+        attempts = self.reconnect_attempts if attempts is None else max(1, int(attempts))
         base_delay = self.reconnect_base_delay if base_delay is None else base_delay
         await self._call(self.on_event, "DISCONNECT", "bar feed disconnected")
         for attempt in range(attempts):

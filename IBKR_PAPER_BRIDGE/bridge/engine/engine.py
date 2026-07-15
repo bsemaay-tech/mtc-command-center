@@ -21,6 +21,9 @@ from bridge.engine.types import Bar, Position
 from bridge.store.db import Store
 
 
+_ROUTINE_FEED_NOTIFICATION_CODES = frozenset({"DISCONNECT", "DATA_RESTORED"})
+
+
 @dataclass
 class BridgeEngine:
     run_id: str
@@ -38,6 +41,9 @@ class BridgeEngine:
     notifier: TelegramNotifier | None = None
     heartbeat_hours: float = 6.0
     reconcile_interval_s: float = 60.0
+    reconcile_max_consecutive_failures: int = 3
+    bar_reconnect_attempts: int = 9
+    bar_reconnect_base_delay_s: float = 5.0
     bars: list[Bar] = field(default_factory=list)
     reconcile_ready: bool = False
     last_reconcile_ts: datetime | None = None
@@ -46,9 +52,12 @@ class BridgeEngine:
     _tasks: list[asyncio.Task] = field(default_factory=list, init=False)
     _kill_requested: bool = field(default=False, init=False)
     _consecutive_order_rejects: int = field(default=0, init=False)
+    _consecutive_reconcile_failures: int = field(default=0, init=False)
     _processed_bar_ts: set[datetime] = field(default_factory=set, init=False)
 
     def __post_init__(self) -> None:
+        self.reconcile_max_consecutive_failures = max(1, int(self.reconcile_max_consecutive_failures))
+        self.bar_reconnect_attempts = max(1, int(self.bar_reconnect_attempts))
         self.order_manager = self.order_manager or OrderManager(self.store, self.broker, self.run_id)
         if self.notifier is None:
             # Default DISABLED: tests construct engines directly and must
@@ -78,6 +87,8 @@ class BridgeEngine:
             on_event=self._feed_event,
             on_stale=self._stale_disarm,
             staleness_enabled=self.mode != "dry_run",
+            reconnect_attempts=self.bar_reconnect_attempts,
+            reconnect_base_delay=self.bar_reconnect_base_delay_s,
         )
         self.bars = await self._feed.start(lookback=lookback)
         # Persist warmup so the dashboard chart shows real exchange bars
@@ -345,27 +356,47 @@ class BridgeEngine:
                     "RECONCILE_DEFERRED",
                     "broker rebuilding",
                 )
+                self._notify_bg("WARN", "RECONCILE_DEFERRED: broker rebuilding")
                 return False
             error = type(exc).__name__
+            self._consecutive_reconcile_failures += 1
+            consecutive = self._consecutive_reconcile_failures
+            limit = self.reconcile_max_consecutive_failures
             stack = " > ".join(
                 f"{frame.name}:{frame.lineno}"
                 for frame in traceback.extract_tb(exc.__traceback__)[-8:]
             )
             self.reconcile_ready = False
             self.reconcile_error = error
-            self.store.insert_event(
-                self.run_id,
-                datetime.now(UTC),
-                "ERROR",
-                "RECONCILE_FAILED",
-                f"error={error}; stack={stack or 'unavailable'}",
-            )
-            self._notify_bg("ERROR", f"RECONCILE_FAILED: error={error}")
-            if self._app_state() == "ARMED":
-                self.disarm()
+            if consecutive < limit:
+                detail = f"consecutive={consecutive}/{limit}; error={error}"
+                self.store.insert_event(
+                    self.run_id,
+                    datetime.now(UTC),
+                    "WARN",
+                    "RECONCILE_FAILED_TOLERATED",
+                    detail,
+                )
+                self._notify_bg("WARN", f"RECONCILE_FAILED_TOLERATED: {detail}")
+            else:
+                detail = (
+                    f"consecutive={consecutive}/{limit}; error={error}; "
+                    f"stack={stack or 'unavailable'}"
+                )
+                self.store.insert_event(
+                    self.run_id,
+                    datetime.now(UTC),
+                    "ERROR",
+                    "RECONCILE_FAILED",
+                    detail,
+                )
+                self._notify_bg("ERROR", f"RECONCILE_FAILED: {detail}")
+                if self._app_state() == "ARMED":
+                    self.disarm()
             await self._publish("status", self.status())
             return False
 
+        self._consecutive_reconcile_failures = 0
         recovered = not self.reconcile_ready
         self.reconcile_ready = True
         self.last_reconcile_ts = datetime.now(UTC)
@@ -385,7 +416,11 @@ class BridgeEngine:
     async def _feed_event(self, code: str, detail: str) -> None:
         severity = "WARN" if code in {"DATA_STALE", "DISCONNECT", "RECONNECT_RETRY"} else "INFO"
         self.store.insert_event(self.run_id, datetime.now(UTC), severity, code, detail)
-        if severity != "INFO" or code in {"RECONNECT", "DATA_RESTORED"}:
+        should_notify = severity != "INFO" or code in {"RECONNECT", "DATA_RESTORED"}
+        routine = code in _ROUTINE_FEED_NOTIFICATION_CODES or (
+            code == "RECONNECT" and detail.strip() == "attempt=1"
+        )
+        if should_notify and not routine:
             self._notify_bg(severity, f"{code}: {detail}")
         await self._publish("event", {"code": code, "detail": detail})
 

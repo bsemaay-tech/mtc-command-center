@@ -5,6 +5,8 @@ broker:
   leverage: 1
   margin_mode: isolated
   recover_orders_after_reconnect: true
+  reconnect_attempts: 9
+  reconnect_base_delay_s: 5.0
 strategy_file: strategies/keltner_trail_ema8.yaml
 risk:
   risk_pct_per_trade: 0.005
@@ -14,6 +16,7 @@ risk:
   min_order_usd: 10
   max_leverage: 1
   max_consecutive_losses: 3
+  reconcile_max_consecutive_failures: 3
   on_consecutive_loss: pause_auto_rearm
   max_auto_rearms_per_day: 2
   cooldown_minutes_after_loss: 120

@@ -86,7 +86,9 @@ def create_app(
         # so the fixture replay still trades.
         import yaml as _yaml
 
-        risk_cfg_raw = _yaml.safe_load((root / "config" / "bridge.yaml").read_text(encoding="utf-8")).get("risk", {})
+        bridge_cfg_raw = _yaml.safe_load((root / "config" / "bridge.yaml").read_text(encoding="utf-8"))
+        risk_cfg_raw = bridge_cfg_raw.get("risk", {})
+        broker_cfg_raw = bridge_cfg_raw.get("broker", {})
         risk_config = RiskConfig(
             risk_pct_per_trade=float(risk_cfg_raw.get("risk_pct_per_trade", 0.005)),
             max_daily_loss_pct=float(risk_cfg_raw.get("max_daily_loss_pct", 0.02)),
@@ -108,6 +110,11 @@ def create_app(
             state="DISARMED",
             mode="dry_run" if dry_run else "paper",
             on_update=publish,
+            reconcile_max_consecutive_failures=int(
+                risk_cfg_raw.get("reconcile_max_consecutive_failures", 3)
+            ),
+            bar_reconnect_attempts=int(broker_cfg_raw.get("reconnect_attempts", 9)),
+            bar_reconnect_base_delay_s=float(broker_cfg_raw.get("reconnect_base_delay_s", 5.0)),
         )
         app.state.bridge_engine = engine
         app.state.bridge_status["mode"] = "dry_run" if dry_run else "paper"

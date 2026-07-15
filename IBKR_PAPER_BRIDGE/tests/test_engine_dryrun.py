@@ -41,8 +41,12 @@ def test_decision_chain_records_trade_closed(tmp_path):
     asyncio.run(_run_decision_chain_records_trade_closed(tmp_path))
 
 
-def test_reconciler_failure_disarms_and_recovers(tmp_path):
-    asyncio.run(_reconciler_failure_disarms_and_recovers(tmp_path))
+def test_reconciler_tolerates_two_failures_then_disarms_on_third(tmp_path):
+    asyncio.run(_reconciler_tolerates_two_failures_then_disarms_on_third(tmp_path))
+
+
+def test_reconciler_success_resets_consecutive_failure_budget(tmp_path):
+    asyncio.run(_reconciler_success_resets_consecutive_failure_budget(tmp_path))
 
 
 def test_arm_requires_fresh_reconcile_evidence(tmp_path):
@@ -205,13 +209,13 @@ async def _run_decision_chain_records_trade_closed(tmp_path):
     assert trade["exit_reason"] == "SL"
 
 
-async def _reconciler_failure_disarms_and_recovers(tmp_path):
+async def _reconciler_tolerates_two_failures_then_disarms_on_third(tmp_path):
     store = Store(tmp_path / "reconciler.db")
     store.initialize()
     store.create_run("reconciler", "paper", "testnet", {})
     store.set_meta("app_state", "ARMED")
     broker = MockBroker([], starting_equity=1000)
-    manager = FailsOnceOrderManager()
+    manager = ScriptedOrderManager([RuntimeError("one"), RuntimeError("two"), RuntimeError("three")])
     engine = BridgeEngine(
         run_id="reconciler",
         broker=broker,
@@ -224,17 +228,59 @@ async def _reconciler_failure_disarms_and_recovers(tmp_path):
     engine.reconcile_ready = True
     engine.last_reconcile_ts = datetime.now(UTC)
 
+    for expected_count in (1, 2):
+        assert await engine._run_reconcile_cycle() is False
+        assert engine._app_state() == "ARMED"
+        assert engine.reconcile_ready is False
+        assert engine.reconcile_error == "RuntimeError"
+        tolerated = [
+            row for row in store.get_events() if row["code"] == "RECONCILE_FAILED_TOLERATED"
+        ]
+        assert tolerated[0]["severity"] == "WARN"
+        assert tolerated[0]["detail"] == f"consecutive={expected_count}/3; error=RuntimeError"
+
     assert await engine._run_reconcile_cycle() is False
-    assert engine.state == "DISARMED"
-    assert engine.reconcile_ready is False
-    assert engine.reconcile_error == "RuntimeError"
+    assert engine._app_state() == "DISARMED"
+    failed = [row for row in store.get_events() if row["code"] == "RECONCILE_FAILED"]
+    assert len(failed) == 1
+    assert failed[0]["severity"] == "ERROR"
+    assert failed[0]["detail"].startswith("consecutive=3/3; error=RuntimeError; stack=")
+
+
+async def _reconciler_success_resets_consecutive_failure_budget(tmp_path):
+    store = Store(tmp_path / "reconciler-reset.db")
+    store.initialize()
+    store.create_run("reconciler-reset", "paper", "testnet", {})
+    store.set_meta("app_state", "ARMED")
+    broker = MockBroker([], starting_equity=1000)
+    manager = ScriptedOrderManager(
+        [RuntimeError("one"), RuntimeError("two"), None, RuntimeError("three"), RuntimeError("four")]
+    )
+    engine = BridgeEngine(
+        run_id="reconciler-reset",
+        broker=broker,
+        store=store,
+        strategy=NoSignalStrategy(),
+        risk_engine=RiskEngine(RiskConfig()),
+        order_manager=manager,
+        state="ARMED",
+    )
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime.now(UTC)
+
+    assert await engine._run_reconcile_cycle() is False
+    assert await engine._run_reconcile_cycle() is False
     assert await engine._run_reconcile_cycle() is True
-    assert engine.reconcile_ready is True
-    assert engine.reconcile_error is None
-    codes = [row["code"] for row in store.get_events()]
-    assert "RECONCILE_FAILED" in codes
-    assert "RECONCILE_RECOVERED" in codes
-    assert "STATE_TRANSITION" in codes
+    assert engine._consecutive_reconcile_failures == 0
+    assert await engine._run_reconcile_cycle() is False
+    assert await engine._run_reconcile_cycle() is False
+
+    assert engine._app_state() == "ARMED"
+    assert engine._consecutive_reconcile_failures == 2
+    events = store.get_events()
+    assert sum(row["code"] == "RECONCILE_FAILED_TOLERATED" for row in events) == 4
+    assert not any(row["code"] == "RECONCILE_FAILED" for row in events)
+    assert any(row["code"] == "RECONCILE_RECOVERED" for row in events)
 
 
 async def _arm_requires_fresh_reconcile_evidence(tmp_path):
@@ -308,14 +354,14 @@ class NoSignalStrategy:
         return None
 
 
-class FailsOnceOrderManager:
-    def __init__(self) -> None:
-        self.calls = 0
+class ScriptedOrderManager:
+    def __init__(self, outcomes: list[Exception | None]) -> None:
+        self.outcomes = list(outcomes)
 
     async def reconcile(self) -> None:
-        self.calls += 1
-        if self.calls == 1:
-            raise RuntimeError("transient broker failure")
+        outcome = self.outcomes.pop(0)
+        if outcome is not None:
+            raise outcome
 
 
 class ProtocolOnlyBroker:
