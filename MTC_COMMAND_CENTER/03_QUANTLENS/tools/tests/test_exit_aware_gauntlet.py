@@ -22,6 +22,7 @@ import mega_walk_forward as mw  # noqa: E402
 import cpcv_validator as cpcv  # noqa: E402
 import multiwindow_oos as mwin  # noqa: E402
 import probabilistic_pbo as pbo  # noqa: E402
+import exit_aware_gauntlet as gaunt  # noqa: E402
 
 
 class FakeStats:
@@ -211,3 +212,48 @@ def test_pbo_config_matrix_refuses_ragged_periods(tmp_path):
     ]
     with pytest.raises(ValueError):
         pbo.load_config_matrix(_write_matrix(tmp_path, configs))
+
+
+# ---- exit_aware_gauntlet orchestrator ----
+
+def test_build_config_matrix_shape_and_exit_stamp(monkeypatch):
+    seen = _install_queue_spy(monkeypatch, [FakeStats(net_return_pct=float(i)) for i in range(6)])
+    cell = {"strategy": "S", "symbol": "SPY_NEW", "timeframe": "1h", "exit_mode": "trail_ema8"}
+    configs = [{"params": {"ema_len": 50}, "role": "primary"},
+               {"params": {"ema_len": 20}, "role": "star"}]
+    art = gaunt.build_config_matrix(cell, list(range(300)), configs, n_groups=3)
+    assert art["cell"]["exit_mode"] == "trail_ema8"
+    assert len(art["configs"]) == 2
+    assert all(len(c["returns_pct"]) == 3 for c in art["configs"])
+    assert all(em == "trail_ema8" for em in seen)  # exit threaded into every group sim
+
+
+def test_build_config_matrix_feeds_pbo(tmp_path, monkeypatch):
+    _install_queue_spy(monkeypatch, [FakeStats(net_return_pct=1.0) for _ in range(6)])
+    cell = {"strategy": "S", "symbol": "SPY_NEW", "timeframe": "1h", "exit_mode": "trail_ema8"}
+    configs = [{"params": {"ema_len": 50}, "role": "primary"},
+               {"params": {"ema_len": 20}, "role": "star"}]
+    art = gaunt.build_config_matrix(cell, list(range(300)), configs, n_groups=3)
+    p = tmp_path / "m.json"
+    p.write_text(json.dumps(art), encoding="utf-8")
+    ids, matrix = pbo.load_config_matrix(p)  # must be consumable end-to-end
+    assert len(ids) == 2 and len(matrix[0]) == 3
+
+
+def test_verdict_all_gates_pass():
+    v = gaunt.verdict({"status": "OK", "pass_rate": 0.8}, {"status": "OK", "pbo": 0.2},
+                      mw_pos=4, mw_stable_pos=4, mw_stable_tot=4)
+    assert v["gauntlet_pass"] and v["status"] == "PASS" and not v["reasons"]
+
+
+def test_verdict_any_missing_gate_fails():
+    # PBO N_A (as in the Donchian 0-eligible case) => GAUNTLET_FAIL, never waived
+    v = gaunt.verdict({"status": "OK", "pass_rate": 0.9}, {"status": "INSUFFICIENT_DATA", "pbo": None},
+                      mw_pos=5, mw_stable_pos=4, mw_stable_tot=4)
+    assert not v["gauntlet_pass"] and v["status"] == "GAUNTLET_FAIL"
+    assert any("pbo" in r for r in v["reasons"])
+
+
+def test_faz3b_self_parity_module_present():
+    # sanity: the engine self-parity gate exists and is unaffected (we never touch the engine)
+    assert (TOOLS / "faz3b_self_parity.py").exists()
