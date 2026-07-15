@@ -1,0 +1,45 @@
+{
+  "note": "buy&hold over identical lockbox slice (last 25%, first-bar open -> final-bar close), using each result's canonical summary.buy_hold_lockbox; alpha_vs_buyhold.py only covers PASS cells (0 here)",
+  "rows": [
+    {
+      "symbol": "BTCUSD",
+      "tf": "4h",
+      "classification": "FAIL",
+      "lockbox_bars": 3005,
+      "lockbox_start_utc": "2025-02-12 08:00:00+00:00",
+      "strategy_ret_pct": -17.837,
+      "buyhold_ret_pct": -37.407,
+      "excess_alpha_pct": 19.57
+    },
+    {
+      "symbol": "ETHUSD",
+      "tf": "4h",
+      "classification": "INSUFFICIENT_TRADES",
+      "lockbox_bars": 3005,
+      "lockbox_start_utc": "2025-02-12 08:00:00+00:00",
+      "strategy_ret_pct": 30.79,
+      "buyhold_ret_pct": -39.967,
+      "excess_alpha_pct": 70.757
+    },
+    {
+      "symbol": "BTCUSD",
+      "tf": "1h",
+      "classification": "FAIL",
+      "lockbox_bars": 12019,
+      "lockbox_start_utc": "2025-02-12 04:00:00+00:00",
+      "strategy_ret_pct": -16.802,
+      "buyhold_ret_pct": -37.005,
+      "excess_alpha_pct": 20.203
+    },
+    {
+      "symbol": "ETHUSD",
+      "tf": "1h",
+      "classification": "FAIL",
+      "lockbox_bars": 12018,
+      "lockbox_start_utc": "2025-02-12 05:00:00+00:00",
+      "strategy_ret_pct": -22.441,
+      "buyhold_ret_pct": -39.246,
+      "excess_alpha_pct": 16.805
+    }
+  ]
+}

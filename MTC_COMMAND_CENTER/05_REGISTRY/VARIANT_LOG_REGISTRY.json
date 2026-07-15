@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-07-02",
+  "generated_at": "2026-07-13T08:25:46.193943+00:00",
   "variants": [
     {
       "variant_id": "NEW_VOL_BREAKOUT_CONFIRMED",
@@ -261,6 +261,21 @@
       "change": "Golden-cross pullback with an ATR stop (close - mult*ATR) instead of the swing-low stop.",
       "promotable": false,
       "research_run_id": "overnight_full_2026-07-02"
+    },
+    {
+      "variant_id": "GEN_DONCHIAN_BREAKOUT_CRYPTO_1H4H",
+      "derived_from": "GEN_DONCHIAN_BREAKOUT",
+      "phase": "3-RnD",
+      "kind": "asset_transfer",
+      "origin": "variant",
+      "validation_status": "VALIDATED_NULL",
+      "author": "Claude Fable 5",
+      "created_utc": "2026-07-13",
+      "impl": "mega_walk_forward.py (base strategy unchanged; universe = BTCUSD/ETHUSD x 1h/4h via explicit --symbol/--tf)",
+      "change": "No logic change - asset-transfer evaluation of the US-equities-10m Donchian lead onto crypto BTC/ETH 1h+4h. Result: 3 REJECTED (negative lockbox, PF<1) + 1 INSUFFICIENT_TRADES (ETHUSD 4h, 9 trades); 0 robust_final.",
+      "promotable": false,
+      "research_run_id": "donchian_crypto_ladder_2026-07-13",
+      "report_link_or_path": "11_TRIAGE/DONCHIAN_CRYPTO_LADDER_VERDICT_2026-07-13.md"
     }
   ]
 }

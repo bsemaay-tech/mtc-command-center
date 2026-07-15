@@ -33,12 +33,103 @@ narrow rebuild-only reconcile deferral, and deterministic regressions. Both full
 Day 0 started `2026-07-13T13:00:28.6218649Z` after incident containment, commit `59c334c0`, full
 tests `119 passed` from both roots, and a real
 `DISCONNECT -> RECONNECT -> DATA_RESTORED -> two reconciles` gate. Runtime is pinned at `C:\P2RT`;
+## BRANCH CONSOLIDATION — FABLE AUDIT DONE 2026-07-13: content PASS + 1 MAJOR finding
+
+Codex's queue 2a–2c + Telegram test-isolation work **VERIFIED PASS** on real code/runs (Fable,
+2026-07-13): golden ancestor confirmed, 122/122 both CWDs independently re-run at `960369b9`,
+secret greps 0, no push (branches absent on origin), bridge-vs-master conflict probe clean.
+Full audit record: GLOBAL_HANDOFF `[Claude Fable 5] 2026-07-13 — CONSOLIDATION AUDIT`.
+- ~~P2RT git identity repair~~ **DONE 2026-07-13 (Barış approved, Fable executed):**
+  `git -C C:/P2RT checkout --detach 54278b66` — pre/post diffs empty, zero file writes, bridge
+  stayed ARMED. P2RT `git log` truthful again; branch freed. Daily pinned-identity check can use
+  `git -C C:/P2RT log --oneline -1` (= `54278b66` detached) + `diff 54278b66 --stat` empty.
+- ~~push/open four PRs~~ **DONE 2026-07-13 (Barış approved):** PR #16 bridge → #17 UI →
+  #18 faz3b-prereg → #19 donchian, merge in that order; secret scans zero; recommended
+  union-resolution for `GLOBAL_HANDOFF.md`/`NEXT_STEPS.md` conflicts noted in PR bodies.
+- **[AI: Barış]** merge PRs #16→#17→#18→#19 in order on GitHub (union-resolve shared handoff
+  files in #17..#19). P2RT sync to the consolidated tip stays a planned restart-window decision.
+- ~~queue 3: Gate-5 adversarial review~~ **DONE 2026-07-13**: Codex verdict FATAL (`1859910c`),
+  Fable re-verified decisive claims on raw artifacts/code — CONFIRMED. Prereg marked BLOCKED
+  (`f32a354c`); PR #18 updated. See FAZ 3B section below for the D016 decision now owed by Barış.
+
+## CRYPTO PAPER BRIDGE P2 — 🔴 DISARMED 2026-07-15T08:40:06Z (real HL outage; Day 0 v3 dead after 1h52m); POLICY DECISION PENDING
+
+Second real Hyperliquid testnet outage in ~26h (`ServerError` on reconnect ×5 AND on the
+reconcile REST call) → fail-closed disarm. **Race fix HELD (zero DEFERRED, zero
+NotConfigured) — not a code defect.** Both safety triggers (reconcile single-strike +
+DATA_STALE after ~80s) fire on any ~2-min exchange outage → **P2 ≥10 days unreachable
+without an outage-tolerance policy change.** Zero exposure; equity intact; reconcile
+recovered 08:42:07Z. ⚠️ No `DATA_RESTORED` seen after recovery yet — verify fresh bars
+before any ARM.
+- ~~policy decision~~ **DONE 2026-07-15: Barış approved option (a).** Codex prompt written:
+  `11_TRIAGE/CODEX_P2_OUTAGE_TOLERANCE_PROMPT_2026-07-15.md` — reconcile N=3 consecutive-strike
+  tolerance + ~5-min reconnect budget before DATA_STALE + notify-threshold (suppress routine
+  DISCONNECT/RECONNECT-attempt1/DATA_RESTORED) + tests. Fail-closed principle preserved.
+- ~~build policy fix (Tasks 1-4)~~ **DONE + Fable audit PASS 2026-07-15** (`0e644b52`, 130 tests
+  both CWDs, 4 new tests proven failing on pre-fix code, trade-path safety verified). Task 5
+  deploy CLEARED on Barış go; Task 6 PR merges CLEARED.
+- **[AI: Barış] 🔴 P2 bridge PROCESS is DOWN** (supervisor exited ~09:57Z; DISARMED/flat/safe —
+  monitoring gap only, no trading risk). Your go on the Task-5 deploy is now the clean restart
+  (brings the audited fix live, Day 0 v4 validation-tier). Or say the word to relaunch the
+  supervisor on old code just to restore monitoring. Runbook:
+  `11_TRIAGE/CODEX_P2_OUTAGE_TOLERANCE_PROMPT_2026-07-15.md` §Task 5.
+- **[AI: Codex]** on Barış go: Task 5 deploy (child already stopped → detach P2RT to audited tip
+  → suites → supervisor → gate → ONE ARM → Day 0 v4) + Task 6 PR merges #16→#19.
+- **[AI: Any]** do NOT re-ARM before Fable audit PASS + full gate incl. verified fresh bars.
+- **PC uptime (Barış 2026-07-15):** ON now → Jul 18 Sat (~2h off) → ON → Jul 20 (~2h off am)
+  → 6 days uninterrupted → pattern continues. **VPS end of month.** No pre-VPS window reaches
+  ≥10 uninterrupted days — any PC ARM is policy VALIDATION; the definitive D3 clock starts on
+  the VPS. Planned PC-offs are window boundaries, NOT safety incidents.
+
+Superseded record (Day 0 v3, dead): DAY 0 v3 = 2026-07-15T06:48:16.619336Z [AI: Any]
+
+Race incident (Day 0 v2 died 16:46:42Z Jul 13) → fix `da44d1ff` (atomic client swap +
+RECONCILE_DEFERRED guard; 127 tests; new tests proven failing on pre-fix code) → Fable audit
+PASS → Task-4 single restart window executed 2026-07-15: `C:\P2RT` detached at `cc4ce67d`
+(race fix + conftest Telegram isolation + golden all live), run `paper-20260715063657`,
+pre-ARM gate passed, ONE ARM at 06:48:16Z, zero ERROR/FAILED/DEFERRED, live proof: reconcile
+succeeded INSIDE a reconnect window (06:47:26). Deploy audit: GLOBAL_HANDOFF
+`[Claude Fable 5] 2026-07-15 — DEPLOY AUDIT: PASS`. PR #16 tip `8e53439e`.
+- **[AI: Any]** daily read-only D3 check: state/reconcile freshness, WARN+ events (benign =
+  ~10-min DISCONNECT→RECONNECT attempt=1→DATA_RESTORED; occasional single RECONCILE_DEFERRED
+  during a rebuild is expected and harmless), equity, positions/orders + native stops,
+  process identity, pinned check = P2RT detached `cc4ce67d` + clean status.
+- **[AI: Claude|Codex]** any safety anomaly: preserve evidence, DISARM if needed, diagnose;
+  no re-ARM without fresh complete gate. **D3 target: ≥10 uninterrupted days → 2026-07-25+.**
+
+Previous window record (superseded): Day 0 RESET to `2026-07-13T15:17:05.383618Z` after the approved EMA-8 trail fix `f209acd2`
+(SMA-8 → exact QuantLens EMA convention) landed in `C:\P2RT` and one clean deploy+re-ARM cycle
+(run `paper-20260713150651`, tests `121 passed` from both roots, one ARM_REQUEST, post-ARM
+reconnect gate passed). Fable audited 2026-07-13 against real code/runs: PASS. Earlier Day 0
+(`13:00:28Z`, `59c334c0`, 119 tests) is superseded — that run auto-disarmed at `13:29:59Z` on
+`DATA_STALE` (fail-closed worked). Runtime is pinned at `C:\P2RT` at `54278b66`;
 Task Scheduler must never be redirected to the parallel-agent research checkout.
 - **[AI: Any]** daily read-only D3 check: state/reconcile freshness, WARN/ERROR events, equity,
   process/commit, all positions/orders, and native stops for any owned position.
 - **[AI: Claude|Codex]** any safety anomaly: preserve evidence, DISARM safely if needed, diagnose;
   do not repeat ARM without a fresh complete gate.
 - Evidence: `IBKR_PAPER_BRIDGE/docs/19_P2_RECONNECT_INCIDENT_2026-07-13.md`.
+- ~~**[AI: Codex]** test-suite Telegram leak fix~~ **DONE 2026-07-13** in `960369b9`: autouse
+  conftest fixture patches `resolve_telegram_credentials` at both import sites; focused tests
+  `2 passed`, both full suites `122 passed`. Runtime code untouched. `C:\P2RT` was not synced, so
+  its old conftest can still emit test messages until the next planned sync window.
+- Known-benign noise: Hyperliquid testnet WS expires connections ~every 10-11 min
+  (`opcode=8 'Expired'` in runtime log); `DISCONNECT -> RECONNECT attempt=1 -> DATA_RESTORED`
+  chains in Telegram are normal. Optional notify-threshold change (only attempt>1 / STALE)
+  deferred to the VPS restart window — P2 config frozen.
+- Evidence committed on `feature/ibkr-bridge-final` at `59352bb3`:
+  `IBKR_PAPER_BRIDGE/docs/19_P2_RECONNECT_INCIDENT_2026-07-13.md`.
+
+## ✅ DONCHIAN CRYPTO LADDER DONE 2026-07-13 (Claude Fable 5) — NULL
+GEN_DONCHIAN_BREAKOUT × {BTCUSD, ETHUSD} × {1h, 4h} through the full canonical ladder
+(pre-approved 2026-07-13): **0/4 PASS, 0 robust_final — 3 REJECTED + 1 INSUFFICIENT_TRADES
+(ETHUSD 4h, 9 trades). Nothing promotable, nothing forward-paper; bridge export NOT READY.**
+The US-equities-10m Donchian lead does NOT transfer to crypto 1h/4h. Verdict report:
+`11_TRIAGE/DONCHIAN_CRYPTO_LADDER_VERDICT_2026-07-13.md`; artifacts
+`03_QUANTLENS/research/donchian_crypto_ladder_2026-07-13/`; registries updated (validator PASS).
+- **[AI: Barış]** optional: if crypto Donchian is ever revisited, it needs a NEW pre-registered
+  design (longer-history crypto source + multi-symbol family + Faz-3b swept exits) — re-running
+  this grid is deterministic and yields identical nulls (A19).
 
 ## 🚀 CRYPTO PAPER BRIDGE — Hyperliquid (was "IBKR"; broker PIVOTED 2026-07-06, design FINAL on `feature/ibkr-bridge-final` 52b13f6f; read `IBKR_PAPER_BRIDGE/docs/` 00→01→05→02→07 before touching. IBKR closed (KKTC), Signum rejected (no native stop) — see 07_BROKER_DECISION)
 - ~~run external design audits~~ DONE 2026-07-06: 7 reports in `IBKR_PAPER_BRIDGE/docs/audits/`.
@@ -84,6 +175,7 @@ Task Scheduler must never be redirected to the parallel-agent research checkout.
 
 
 ## FAZ 3B — SWEPT EXIT_MODE (D016 Path A scope freeze approved; passive accrual only)
+## 🔶 FAZ 3B — SWEPT EXIT_MODE (Stage-2 prereg BLOCKED by Gate-5 FATAL 2026-07-13 — D016 decision now = path choice)
 Scope: `00_AGENT_PROTOCOLS/FAZ3B_EXIT_SWEEP_SCOPE.md`. Chain D013→D014→D015 done: engine landed,
 self-parity byte-identical (goldens never recaptured), Stage-1 discovery run COMPLETE 2026-07-05
 (`03_QUANTLENS/research/faz3b_stage1_20260705/STAGE1_REPORT.md`): H1 confirmed at 1h — clean cell
@@ -104,6 +196,26 @@ honest confound: first-ever 1h fixed_2R baseline itself robust on KELTNER SPY/QQ
   trial ledger. Registry-only checks are forbidden; scan result JSONs in both backtest-result roots.
 - **[AI: Barış]** after the fixed window closes: separately approve non-performance data inventory,
   then Gate-5, then exactly one smoke/full evaluation. D016 itself authorizes none of these.
+- ~~draft Stage-2 pre-reg~~ DONE 2026-07-13, then ~~Gate-5 adversarial review~~ **DONE 2026-07-13
+  — VERDICT FATAL, Fable-verified on raw artifacts/code (findings `1859910c`, banner `f32a354c`,
+  PR #18):** (1) all 6 "held-out" symbols already swept — June-29 overnight covered ALL 51 bundle
+  symbols at Keltner 1h → NO untouched 1h symbol exists in the canonical bundle; registry proved
+  NOT to be an evidence inventory; (2) CPCV/multiwindow tools are exit-blind (simulate_slice
+  defaults fixed_2R) and PBO lacks a per-config matrix → §6 gauntlet unexecutable as written;
+  (3) 12-set grid = 75% of discovery grid = re-optimization. Current draft can NEVER get D016.
+- **[AI: Barış] 🔴 D016 DECISION = choose path:** **(a) RECOMMENDED — deferred forward
+  confirmation:** freeze a pre-registered forward window now (bars after 2026-06-26, evaluate
+  e.g. after 2026-12-31, pre-named symbols + ≥2 diversity groups); zero compute today, truly
+  virgin data. **(b) close Faz3b as INCONCLUSIVE** (Stage-1 AAPL stays research-only, family
+  gets no confirmation attempt). Either way requires NEW prereg + fresh Gate-5 before any run.
+- **[AI: Codex, needs Barış approval — prerequisite for path (a) and any future exit-mode
+  confirmation]** exit-aware gauntlet tooling task: `cpcv_validator.py` + `multiwindow_oos.py`
+  must pass `row.exit_mode` into `simulate_slice` and stamp it in outputs; PBO needs a
+  per-config×period return-matrix contract (Gate-5 findings §F/§G/§J + REQUIRED EDITS 9-11 are
+  the spec). Own code review + self-parity discipline; separate approval.
+- **[AI: Any]** register `overnight_multiasset_2026-06-29` in RESEARCH_RUN_REGISTRY; add the
+  "virginity check = scan 05_BACKTEST_RESULTS + research JSONs, never registry-only" rule to
+  prereg templates.
 - **[AI: Barış]** 2026-08-01: Gate V5 day-30 review of the SYSTEM_TEST vertical-slice track (CLOSED at
   V1.1; legs V2-V4 deliberately unopened).
 

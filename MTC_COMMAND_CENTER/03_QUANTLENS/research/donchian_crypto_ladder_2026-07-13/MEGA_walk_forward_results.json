@@ -1,0 +1,463 @@
+{
+  "generated_utc": "2026-07-12T21:43:40.921328+00:00",
+  "runtime_seconds": 5.0,
+  "workers": 4,
+  "resume_checkpoint": "C:\\LAB\\Tradingview_LAB_CLEAN\\MTC_COMMAND_CENTER\\03_QUANTLENS\\research\\donchian_crypto_ladder_2026-07-13\\MEGA_walk_forward_checkpoint.pkl",
+  "config": {
+    "cost_bps": 8.0,
+    "lockbox_fraction": 0.25,
+    "fold_train_fraction": 0.6,
+    "fold_test_fraction": 0.2,
+    "num_rolling_folds": 3,
+    "min_bars": 1500,
+    "min_trades_for_pass": 30,
+    "holding_bar_limit": 96,
+    "symbols": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "SOLUSDT",
+      "BNBUSDT",
+      "XRPUSDT",
+      "ADAUSDT",
+      "AVAXUSDT",
+      "DOGEUSDT",
+      "LINKUSDT",
+      "DOTUSDT",
+      "LTCUSDT",
+      "TRXUSDT",
+      "NEARUSDT",
+      "APTUSDT",
+      "ARBUSDT",
+      "OPUSDT",
+      "POLUSDT"
+    ],
+    "timeframes": [
+      "15m",
+      "1h",
+      "2h",
+      "4h",
+      "1D"
+    ],
+    "selected_symbols": [
+      "BTCUSD",
+      "ETHUSD"
+    ],
+    "selected_timeframes": [
+      "1h",
+      "4h"
+    ],
+    "strategy_count": 1,
+    "param_set_total": 60
+  },
+  "results": [
+    {
+      "strategy": "GEN_DONCHIAN_BREAKOUT",
+      "symbol": "BTCUSD",
+      "timeframe": "4h",
+      "data_rows": 12023,
+      "data_start": "2021-01-01 04:00:00+00:00",
+      "data_end": "2026-06-28 00:00:00+00:00",
+      "trial_count": 60,
+      "trial_sr_std": 0.083,
+      "trial_sr_max": 0.0765,
+      "boot_p_value": 0.53,
+      "summary": {
+        "best_params": {
+          "channel_len": 10,
+          "atr_buf": 0.5,
+          "stop_lookback": 5
+        },
+        "fold_test_returns_pct": [
+          -19.044,
+          34.841
+        ],
+        "fold_test_trade_counts": [
+          24,
+          23
+        ],
+        "fold_test_sharpes": [
+          -0.5281,
+          1.1711
+        ],
+        "avg_fold_test_return_pct": 7.899,
+        "folds_positive": 1,
+        "n_folds": 2,
+        "lockbox_oos": {
+          "num_trades": 31,
+          "win_rate": 0.3548,
+          "net_return_pct": -17.837,
+          "max_drawdown_pct": -29.909,
+          "expectancy_R": -0.0021,
+          "profit_factor": 0.798,
+          "avg_R": -0.0021,
+          "sharpe": -0.525,
+          "sharpe_pt": -0.094292,
+          "max_consecutive_losses": 8,
+          "top_trade_concentration": 0.2458,
+          "equity_curve_health": 0.1613,
+          "annualized_sharpe": -0.5354,
+          "annualized_sortino": -0.4395,
+          "net_after_slippage_pct": -18.857
+        },
+        "buy_hold_lockbox": {
+          "buy_hold_return_pct": -37.407,
+          "buy_hold_max_drawdown_pct": 52.802,
+          "buy_hold_ret_dd_ratio": -0.7084
+        },
+        "best_train_sharpe_pt": 0.036852,
+        "worst_window_drawdown_pct": 25.334,
+        "param_stability_score": 0.7381,
+        "param_stability_detail": {
+          "mode": "partial",
+          "folds": 2,
+          "exact_mode_share": 0.5,
+          "numeric_closeness": 0.7381,
+          "numeric_keys_used": 3
+        },
+        "ema_benchmark_lockbox": {
+          "ema_return_pct": 7.937,
+          "ema_max_drawdown_pct": 18.831,
+          "ema_ret_dd_ratio": 0.4215,
+          "ema_num_trades": 7
+        },
+        "regime_analysis": {
+          "bucket_returns_pct": {
+            "trend": -14.391,
+            "range": -4.025,
+            "high_vol": -13.615,
+            "low_vol": 6.163
+          },
+          "bucket_trade_counts": {
+            "trend": 22,
+            "range": 9,
+            "high_vol": 7,
+            "low_vol": 7
+          },
+          "regime_breakdown_present": true,
+          "weak_regime_identified": "trend",
+          "worst_regime_return_pct": -14.391,
+          "regime_coverage_count": 4
+        }
+      },
+      "classification": "FAIL",
+      "exit_mode": "fixed_2R",
+      "engine_version": "faz3b-exit-mode-v1",
+      "grid_stride": 1,
+      "dsr_p_value": 0.0001,
+      "dsr_robust": false,
+      "bh_fdr_survivor": false,
+      "robust_final": false,
+      "bh_survivor_mfull": false,
+      "bh_survivor_mpass": false
+    },
+    {
+      "strategy": "GEN_DONCHIAN_BREAKOUT",
+      "symbol": "ETHUSD",
+      "timeframe": "4h",
+      "data_rows": 12023,
+      "data_start": "2021-01-01 04:00:00+00:00",
+      "data_end": "2026-06-28 00:00:00+00:00",
+      "trial_count": 60,
+      "trial_sr_std": 0.1278,
+      "trial_sr_max": 0.5699,
+      "boot_p_value": null,
+      "summary": {
+        "best_params": {
+          "channel_len": 150,
+          "atr_buf": 0.5,
+          "stop_lookback": 10
+        },
+        "fold_test_returns_pct": [
+          28.585,
+          8.442
+        ],
+        "fold_test_trade_counts": [
+          8,
+          5
+        ],
+        "fold_test_sharpes": [
+          0.9883,
+          0.4137
+        ],
+        "avg_fold_test_return_pct": 18.514,
+        "folds_positive": 2,
+        "n_folds": 2,
+        "lockbox_oos": {
+          "num_trades": 9,
+          "win_rate": 0.5556,
+          "net_return_pct": 30.79,
+          "max_drawdown_pct": -19.654,
+          "expectancy_R": 0.3163,
+          "profit_factor": 2.134,
+          "avg_R": 0.3163,
+          "sharpe": 0.9384,
+          "sharpe_pt": 0.312792,
+          "max_consecutive_losses": 3,
+          "top_trade_concentration": 0.3266,
+          "equity_curve_health": 0.5556,
+          "annualized_sharpe": 0.7757,
+          "annualized_sortino": 0.7903,
+          "net_after_slippage_pct": 30.332
+        },
+        "buy_hold_lockbox": {
+          "buy_hold_return_pct": -39.967,
+          "buy_hold_max_drawdown_pct": 68.077,
+          "buy_hold_ret_dd_ratio": -0.5871
+        },
+        "best_train_sharpe_pt": 0.569886,
+        "worst_window_drawdown_pct": 13.677,
+        "param_stability_score": 0.869,
+        "param_stability_detail": {
+          "mode": "partial",
+          "folds": 2,
+          "exact_mode_share": 0.5,
+          "numeric_closeness": 0.869,
+          "numeric_keys_used": 3
+        },
+        "ema_benchmark_lockbox": {
+          "ema_return_pct": 35.413,
+          "ema_max_drawdown_pct": 32.675,
+          "ema_ret_dd_ratio": 1.0838,
+          "ema_num_trades": 6
+        },
+        "regime_analysis": {
+          "bucket_returns_pct": {
+            "trend": 23.437,
+            "range": 5.957,
+            "high_vol": 26.553,
+            "low_vol": 0.0
+          },
+          "bucket_trade_counts": {
+            "trend": 7,
+            "range": 2,
+            "high_vol": 2,
+            "low_vol": 0
+          },
+          "regime_breakdown_present": true,
+          "weak_regime_identified": "range",
+          "worst_regime_return_pct": 5.957,
+          "regime_coverage_count": 3
+        }
+      },
+      "classification": "INSUFFICIENT_TRADES",
+      "exit_mode": "fixed_2R",
+      "engine_version": "faz3b-exit-mode-v1",
+      "grid_stride": 1,
+      "dsr_p_value": 0.2397,
+      "dsr_robust": false,
+      "bh_fdr_survivor": false,
+      "robust_final": false,
+      "bh_survivor_mfull": false,
+      "bh_survivor_mpass": false
+    },
+    {
+      "strategy": "GEN_DONCHIAN_BREAKOUT",
+      "symbol": "BTCUSD",
+      "timeframe": "1h",
+      "data_rows": 48077,
+      "data_start": "2021-01-01 06:00:00+00:00",
+      "data_end": "2026-06-28 00:00:00+00:00",
+      "trial_count": 60,
+      "trial_sr_std": 0.0441,
+      "trial_sr_max": 0.1228,
+      "boot_p_value": 0.878,
+      "summary": {
+        "best_params": {
+          "channel_len": 150,
+          "atr_buf": 0.5,
+          "stop_lookback": 10
+        },
+        "fold_test_returns_pct": [
+          -29.884,
+          10.778
+        ],
+        "fold_test_trade_counts": [
+          27,
+          29
+        ],
+        "fold_test_sharpes": [
+          -1.2586,
+          0.5827
+        ],
+        "avg_fold_test_return_pct": -9.553,
+        "folds_positive": 1,
+        "n_folds": 2,
+        "lockbox_oos": {
+          "num_trades": 36,
+          "win_rate": 0.2778,
+          "net_return_pct": -16.802,
+          "max_drawdown_pct": -17.014,
+          "expectancy_R": -0.2307,
+          "profit_factor": 0.699,
+          "avg_R": -0.2307,
+          "sharpe": -0.9252,
+          "sharpe_pt": -0.154204,
+          "max_consecutive_losses": 7,
+          "top_trade_concentration": 0.1729,
+          "equity_curve_health": 0.0833,
+          "annualized_sharpe": -0.8413,
+          "annualized_sortino": -0.6672,
+          "net_after_slippage_pct": -17.999
+        },
+        "buy_hold_lockbox": {
+          "buy_hold_return_pct": -37.005,
+          "buy_hold_max_drawdown_pct": 53.852,
+          "buy_hold_ret_dd_ratio": -0.6872
+        },
+        "best_train_sharpe_pt": 0.122818,
+        "worst_window_drawdown_pct": 28.612,
+        "param_stability_score": 0.8611,
+        "param_stability_detail": {
+          "mode": "partial",
+          "folds": 2,
+          "exact_mode_share": 0.5,
+          "numeric_closeness": 0.8611,
+          "numeric_keys_used": 3
+        },
+        "ema_benchmark_lockbox": {
+          "ema_return_pct": -26.977,
+          "ema_max_drawdown_pct": 29.296,
+          "ema_ret_dd_ratio": -0.9208,
+          "ema_num_trades": 38
+        },
+        "regime_analysis": {
+          "bucket_returns_pct": {
+            "trend": -19.454,
+            "range": 3.292,
+            "high_vol": -8.825,
+            "low_vol": 1.304
+          },
+          "bucket_trade_counts": {
+            "trend": 31,
+            "range": 5,
+            "high_vol": 3,
+            "low_vol": 6
+          },
+          "regime_breakdown_present": true,
+          "weak_regime_identified": "trend",
+          "worst_regime_return_pct": -19.454,
+          "regime_coverage_count": 4
+        }
+      },
+      "classification": "FAIL",
+      "exit_mode": "fixed_2R",
+      "engine_version": "faz3b-exit-mode-v1",
+      "grid_stride": 1,
+      "dsr_p_value": 0.0,
+      "dsr_robust": false,
+      "bh_fdr_survivor": false,
+      "robust_final": false,
+      "bh_survivor_mfull": false,
+      "bh_survivor_mpass": false
+    },
+    {
+      "strategy": "GEN_DONCHIAN_BREAKOUT",
+      "symbol": "ETHUSD",
+      "timeframe": "1h",
+      "data_rows": 48075,
+      "data_start": "2021-01-01 06:00:00+00:00",
+      "data_end": "2026-06-28 00:00:00+00:00",
+      "trial_count": 60,
+      "trial_sr_std": 0.045,
+      "trial_sr_max": 0.1445,
+      "boot_p_value": 0.509,
+      "summary": {
+        "best_params": {
+          "channel_len": 20,
+          "atr_buf": 0.25,
+          "stop_lookback": 10
+        },
+        "fold_test_returns_pct": [
+          2.367,
+          -17.932
+        ],
+        "fold_test_trade_counts": [
+          75,
+          75
+        ],
+        "fold_test_sharpes": [
+          0.2296,
+          -0.3429
+        ],
+        "avg_fold_test_return_pct": -7.782,
+        "folds_positive": 1,
+        "n_folds": 2,
+        "lockbox_oos": {
+          "num_trades": 126,
+          "win_rate": 0.373,
+          "net_return_pct": -22.441,
+          "max_drawdown_pct": -35.661,
+          "expectancy_R": 0.0004,
+          "profit_factor": 0.953,
+          "avg_R": 0.0004,
+          "sharpe": -0.2192,
+          "sharpe_pt": -0.019531,
+          "max_consecutive_losses": 8,
+          "top_trade_concentration": 0.0914,
+          "equity_curve_health": 0.0238,
+          "annualized_sharpe": -0.1594,
+          "annualized_sortino": -0.2158,
+          "net_after_slippage_pct": -26.265
+        },
+        "buy_hold_lockbox": {
+          "buy_hold_return_pct": -39.246,
+          "buy_hold_max_drawdown_pct": 69.157,
+          "buy_hold_ret_dd_ratio": -0.5675
+        },
+        "best_train_sharpe_pt": 0.113147,
+        "worst_window_drawdown_pct": 32.718,
+        "param_stability_score": 0.9048,
+        "param_stability_detail": {
+          "mode": "partial",
+          "folds": 2,
+          "exact_mode_share": 0.5,
+          "numeric_closeness": 0.9048,
+          "numeric_keys_used": 3
+        },
+        "ema_benchmark_lockbox": {
+          "ema_return_pct": 0.356,
+          "ema_max_drawdown_pct": 38.737,
+          "ema_ret_dd_ratio": 0.0092,
+          "ema_num_trades": 39
+        },
+        "regime_analysis": {
+          "bucket_returns_pct": {
+            "trend": 34.938,
+            "range": -42.522,
+            "high_vol": -21.93,
+            "low_vol": -17.8
+          },
+          "bucket_trade_counts": {
+            "trend": 88,
+            "range": 38,
+            "high_vol": 33,
+            "low_vol": 26
+          },
+          "regime_breakdown_present": true,
+          "weak_regime_identified": "range",
+          "worst_regime_return_pct": -42.522,
+          "regime_coverage_count": 4
+        }
+      },
+      "classification": "FAIL",
+      "exit_mode": "fixed_2R",
+      "engine_version": "faz3b-exit-mode-v1",
+      "grid_stride": 1,
+      "dsr_p_value": 0.0,
+      "dsr_robust": false,
+      "bh_fdr_survivor": false,
+      "robust_final": false,
+      "bh_survivor_mfull": false,
+      "bh_survivor_mpass": false
+    }
+  ],
+  "bh_meta": {
+    "m_full": 3,
+    "bh_threshold_full": 0.0,
+    "survivors_full": 0,
+    "m_pass": 0,
+    "bh_threshold_pass": 0.0,
+    "survivors_pass": 0,
+    "hires_resamples": 50000
+  }
+}

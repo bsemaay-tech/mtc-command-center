@@ -58,6 +58,28 @@
       "outcome": "12 NEW strategy archetypes (research_archetypes_20260703.py) + CPCV/PBO. All UNVALIDATED until a two-stage run produces robust_final; robust_final=0.",
       "tier": "research",
       "approval": "Barış (archetypes overnight)"
+    },
+    {
+      "research_run_id": "donchian_crypto_ladder_2026-07-13",
+      "status": "COMPLETED",
+      "verdict": "NULL - 0/4 cells PASS walk-forward; 0 BH-FDR survivors; 0 dsr_robust; 0 robust_final; nothing promotable, nothing forward-paper",
+      "strategy_ids": [
+        "GEN_DONCHIAN_BREAKOUT"
+      ],
+      "symbols": [
+        "BTCUSD",
+        "ETHUSD"
+      ],
+      "timeframes": [
+        "1h",
+        "4h"
+      ],
+      "engine": "mega_walk_forward.py (faz3b-exit-mode-v1, exit_mode=fixed_2R, read-only)",
+      "data_bundle": "native_multiasset_alpaca_2026-06-28",
+      "run_dir": "03_QUANTLENS/research/donchian_crypto_ladder_2026-07-13",
+      "report_path": "11_TRIAGE/DONCHIAN_CRYPTO_LADDER_VERDICT_2026-07-13.md",
+      "created_utc": "2026-07-13",
+      "author": "Claude Fable 5"
     }
   ]
 }
