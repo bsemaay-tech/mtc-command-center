@@ -1,5 +1,41 @@
 # GLOBAL_HANDOFF
 
+## [Claude Fable 5] 2026-07-15 — OUTAGE-TOLERANCE FIX AUDIT: PASS + operational finding: P2 bridge process is DOWN (DISARMED/flat/safe)
+
+**Code audit (Task 1-4, `0e644b52`): PASS on real code + runs.**
+- Diff scope = engine + bars + app config + bridge.yaml + tests only; secret greps 0; P2RT
+  untouched (`cc4ce67d`, diff empty).
+- Reconcile N=3: `_consecutive_reconcile_failures` increments on non-deferred exception, emits
+  WARN `RECONCILE_FAILED_TOLERATED` for strikes 1-2 (no disarm), ERROR `RECONCILE_FAILED` +
+  disarm on strike 3; counter resets to 0 on any success. `max(1, …)` clamp prevents disabling
+  the guard. Race-fix `RECONCILE_DEFERRED` branch preserved and does NOT count toward the 3.
+- Reconnect budget: `attempts=9` default, backoff 5+10+20+40+60+60+60+60 = 315s ≈ 5.25 min
+  before `DATA_STALE ws_dead_reconnect_failed`. Config-driven via bridge.yaml
+  broker.reconnect_attempts / reconcile_max_consecutive_failures.
+- Notify-threshold: routine `DISCONNECT` / `RECONNECT attempt=1` / `DATA_RESTORED` suppressed
+  from Telegram only (store/dashboard unchanged); RECONNECT_RETRY / DATA_STALE / RECONCILE_* /
+  STATE_TRANSITION / non-first RECONNECT still notify.
+- **Safety check (Fable):** during a tolerated-failure window (reconcile_ready=False, still
+  ARMED) the trade path in `on_bar` independently calls live `broker.positions()`/`account()`;
+  those fail during the same outage → no order is placed on unknown state. Native SL rests
+  on-exchange. Tolerance is bounded-risk-safe for paper.
+- Suites re-run by auditor both CWDs: **130 passed, 1 warning** ×2. The 4 key new tests were
+  run against pre-fix code (`8e53439e`): all 4 FAILED — they genuinely encode the new behavior.
+- **VERDICT: PASS. Task 5 deploy is cleared on Barış's go; Task 6 PR merges cleared.**
+
+**OPERATIONAL FINDING (separate from the code): the P2 bridge PROCESS is DOWN.** No
+`bridge.app` process, nothing bound on :8790, Task-Scheduler `MTC-Bridge-P2` = Ready (not
+running) — the supervisor itself exited. Store DB `app_state = DISARMED`; last event
+`09:57:30Z DATA_RESTORED`; the process stopped writing after ~09:57Z (~4h dark). **No safety
+impact:** DISARMED bridge places no orders; every check today showed positions/orders `[]`;
+no position could have opened since the 08:40Z DISARM. This is a monitoring gap, not a trading
+event. **Deliberately NOT restarted unilaterally** — the Task 5 deploy window is the sanctioned
+clean restart and now starts from an already-stopped child (simpler). If Barış wants live
+monitoring restored BEFORE the deploy decision, relaunch the supervisor
+(`tools/run_bridge_p2.ps1` / the MTC-Bridge-P2 task) — DISARMED, old code cc4ce67d, no ARM.
+Given the PC-schedule finding (PC ARM is validation-only; definitive D3 is on VPS), leaving it
+down until the deploy is acceptable.
+
 ## [Claude Fable 5] 2026-07-15 — P2 INCIDENT #2 (same day): Day 0 v3 died at 08:40:06Z on a REAL Hyperliquid outage; race fix HELD; policy decision now owed by Barış
 
 Fable-verified on the live event store (read-only; runtime untouched):

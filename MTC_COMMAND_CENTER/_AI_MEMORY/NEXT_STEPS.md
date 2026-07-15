@@ -32,9 +32,16 @@ before any ARM.
   `11_TRIAGE/CODEX_P2_OUTAGE_TOLERANCE_PROMPT_2026-07-15.md` — reconcile N=3 consecutive-strike
   tolerance + ~5-min reconnect budget before DATA_STALE + notify-threshold (suppress routine
   DISCONNECT/RECONNECT-attempt1/DATA_RESTORED) + tests. Fail-closed principle preserved.
-- **[AI: Codex]** build the policy fix (prompt Tasks 1-4) on `feature/ibkr-bridge-final` in a
-  dedicated worktree → STOP for Fable audit. Then Task 5 deploy is LOCKED on Fable PASS + Barış
-  go; Task 6 (merge PRs #16→#19, union-resolve handoff files) runs after Task-4 audit.
+- ~~build policy fix (Tasks 1-4)~~ **DONE + Fable audit PASS 2026-07-15** (`0e644b52`, 130 tests
+  both CWDs, 4 new tests proven failing on pre-fix code, trade-path safety verified). Task 5
+  deploy CLEARED on Barış go; Task 6 PR merges CLEARED.
+- **[AI: Barış] 🔴 P2 bridge PROCESS is DOWN** (supervisor exited ~09:57Z; DISARMED/flat/safe —
+  monitoring gap only, no trading risk). Your go on the Task-5 deploy is now the clean restart
+  (brings the audited fix live, Day 0 v4 validation-tier). Or say the word to relaunch the
+  supervisor on old code just to restore monitoring. Runbook:
+  `11_TRIAGE/CODEX_P2_OUTAGE_TOLERANCE_PROMPT_2026-07-15.md` §Task 5.
+- **[AI: Codex]** on Barış go: Task 5 deploy (child already stopped → detach P2RT to audited tip
+  → suites → supervisor → gate → ONE ARM → Day 0 v4) + Task 6 PR merges #16→#19.
 - **[AI: Any]** do NOT re-ARM before Fable audit PASS + full gate incl. verified fresh bars.
 - **PC uptime (Barış 2026-07-15):** ON now → Jul 18 Sat (~2h off) → ON → Jul 20 (~2h off am)
   → 6 days uninterrupted → pattern continues. **VPS end of month.** No pre-VPS window reaches
