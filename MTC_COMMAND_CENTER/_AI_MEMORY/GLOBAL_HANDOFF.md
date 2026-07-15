@@ -16,8 +16,9 @@ window. Exactly one ARM used `X-Confirm: 2`: `06:48:16.616853Z ARM_REQUEST` then
 `06:49:29.975312Z` were clean. Final API: ARMED, reconcile-ready, positions/orders `[]`; event
 counts: one ARM request, one ARMED transition, zero ERROR/`RECONCILE_FAILED`/
 `RECONCILE_DEFERRED`. Telegram notifier was enabled and the transition invoked the existing
-`state -> ARMED` notification path; no delivery receipt is persisted. This ARM_REQUEST timestamp
-is the new P2 Day 0. Full record: `IBKR_PAPER_BRIDGE/docs/03_STATUS.md`.
+`state -> ARMED` notification path; no delivery receipt is persisted. The
+`2026-07-15T06:48:16.619336Z` ARMED transition timestamp is the new P2 Day 0. Full record:
+`IBKR_PAPER_BRIDGE/docs/03_STATUS.md`.
 
 Next: resume D3 daily read-only monitoring for at least 10 uninterrupted calendar days. Any
 DISARM or critical runtime change requires investigation and a fresh complete gate; mainnet

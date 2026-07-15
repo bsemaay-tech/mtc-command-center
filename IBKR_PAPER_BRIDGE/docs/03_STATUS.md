@@ -6,7 +6,7 @@ Date: 2026-07-15. Branch: `feature/ibkr-bridge-final`.
 
 - **P0: MET** (attempt 7; `docs/p0_smoke_log.json`).
 - **P1: PASS**; B6 real fill/native-stop lifecycle PASS.
-- **P2: ARMED — NEW DAY 0 STARTED 2026-07-15T06:48:16.616853Z.**
+- **P2: ARMED — NEW DAY 0 STARTED 2026-07-15T06:48:16.619336Z.**
 - Runtime: Hyperliquid TESTNET, paper, BTC 1h, LLM regime/veto OFF.
 - Pinned deployment: `C:\P2RT`, detached commit `cc4ce67d`, Task Scheduler `MTC-Bridge-P2`.
 - Tests: **127 passed, 1 warning** from both supported working directories.
@@ -49,7 +49,7 @@ The Telegram notifier was enabled and the state transition invoked the existing
 post-ARM reconciles completed at `06:48:28.376718Z` and `06:49:29.975312Z`. At the final
 deployment check the API remained ARMED and reconcile-ready with positions/orders `[]`, one
 ARM request, one ARMED transition, and zero ERROR/reconcile-failure/defer events. The
-`ARM_REQUEST` timestamp above resets the P2 monitoring clock to Day 0.
+`DISARMED->ARMED` transition timestamp above resets the P2 monitoring clock to Day 0.
 
 ## EMA-8 correction and Day-0 reset
 
