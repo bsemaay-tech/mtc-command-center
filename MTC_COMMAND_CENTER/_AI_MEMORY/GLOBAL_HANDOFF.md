@@ -3145,3 +3145,19 @@ remain to be closed in this session.
 Completed the written-only Gate-5 review of `00_AGENT_PROTOCOLS/FAZ3B_STAGE2_CONFIRM_PREREG_2026-07-13.md`. Overall verdict: **FATAL; D016 blocked on the current draft.** All six proposed held-out decision symbols already have prior `GEN_KELTNER_BREAKOUT` 1h results on the identical 2020-07-27 through 2026-06-26 observation window. The existing CPCV and multi-window tools also omit `exit_mode` and therefore silently score `fixed_2R`, while the PBO tool lacks the required per-configuration common-period matrix.
 
 Deliverable: `11_TRIAGE/CODEX_GATE5_FINDINGS_FAZ3B_STAGE2_2026-07-13.md`, with A–J verdicts, evidence, apply-ready required edits, non-blocking improvements, and explicit unverifiable items. No backtest, smoke, runner, CPCV, PBO, multi-window, pytest, paper-trading, or live action was executed. Stop point: Fable synthesis and pre-reg repair; a second adversarial re-review is required before Baris considers D016.
+
+## Codex GPT-5 2026-07-15 — Task 6 stopped at PR #19 registry conflict
+
+PR #16 merged remotely as `20237733`. In isolated `C:\P2MERGE`, PR #17 merged locally as
+`60415b08` and PR #18 as `89725dfe`; each conflicted only in `GLOBAL_HANDOFF.md` and received a
+full union resolution with zero secret matches. Neither local merge was pushed.
+
+PR #19 then conflicted in `05_REGISTRY/RESEARCH_RUN_REGISTRY.json` as well as the two approved
+memory files. This triggered the prompt's explicit stop condition. The #19 merge was aborted,
+local master is clean at `89725dfe`, remote master remains `20237733`, and PRs #17–#19 remain
+OPEN. No final master suite was claimed because all four PRs did not land.
+
+Full Task-5 live evidence and Task-6 stopped-state evidence:
+`MTC_COMMAND_CENTER/11_TRIAGE/P2_DAY0_V4_DEPLOY_REPORT_2026-07-15.md`. The live bridge remained
+ARMED/reconcile-ready/flat at the final check. Fable must audit before any registry-conflict
+resolution or further merge action.
