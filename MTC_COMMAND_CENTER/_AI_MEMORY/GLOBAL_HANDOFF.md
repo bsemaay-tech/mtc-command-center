@@ -283,7 +283,18 @@ dimensions A-I, mandatory ≥5 improvements + ≥5 features + top-3 verdict, out
 `docs/audits/AUDIT_<model>_<date>.md` on own branch, report file is the only allowed write.
 Next: Barış runs external audits → Claude triages audits + adopts → pre-reg approval → build day
 per 02_BUILD_PLAN_1DAY.md → P0 smoke (approval-gated).
+## [Codex GPT-5] 2026-07-13 — Impeccable Strategy Detail pilot complete
 
+Finished the two queued R3 polish items on `feature/mcc-ui-impeccable-fixes`: fix 4 full-credit
+note dedup is screenshot-verified in `adeb889b`; fix 5 makes the sticky right rail the canonical
+gate verdict and removes dead duplicate helpers/CSS in `93114a61`, with committed before/after
+screenshots. Live `:8765/dashboard` verification on
+`QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK` confirmed no hero gate KPI panel, no Gate Status
+Summary grid, and one Decision Summary rail. `node --check` PASS; focused a11y tests `2 passed`.
+The canonical dashboard API suite also passed: `Ran 120 tests`, `OK`.
+Honest re-score: **32/40 Good** (from 30/40), with loading skeleton, shortcuts, and taxonomy density
+still open quality gaps. Report: `11_TRIAGE/UI_AUDITS/IMPECCABLE_PILOT_R3/CRITIQUE_RESCORE_2026-07-13.md`.
+Frontend/docs only; no backend, data-contract, engine, Pine, parity, schema, or execution change.
 ## Claude Opus 4.8 2026-07-05 (6) — audit cleanup (4 remaining items) done + pushed to origin/master
 
 Barış: "kalan küçük işleri yap push et". Closed the four leftover audit follow-ups on branch

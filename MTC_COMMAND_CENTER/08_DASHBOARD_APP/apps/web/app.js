@@ -1015,14 +1015,6 @@ function constraintNotice(m) {
     </section>`;
 }
 
-function heroVal(g, opts = {}) {
-  const tone = gateTone(g.status);
-  if (opts.score && g.score != null) return `<span class="val ${tone === "bad" ? "bad" : tone === "ok" ? "ok" : ""}">${g.score}<span style="font-size:10px;color:var(--faint);"> / ${g.max}</span></span>`;
-  if (tone === "ok") return `<span class="val ok">Certified</span>`;
-  if (tone === "bad") return `<span class="val bad">Failed</span>`;
-  return `<span class="val locked">${spaced(g.status) || "Pending"}</span>`;
-}
-
 function heroBlock(m) {
   return `
     <section class="si-hero" id="top">
@@ -1052,33 +1044,6 @@ function sectionHead(n, title, subtitle, iconName) {
   // Ordinal is carried by the sidebar's numbered section nav; an extra "Section N"
   // eyebrow on every head here is redundant scaffolding, so the head is icon + title.
   return `<div class="si-section-head"><div class="si-section-icon">${icon(iconName)}</div><div><h3>${esc(title)}</h3><p>${esc(subtitle)}</p></div></div>`;
-}
-
-function gateCard(title, desc, g, opts = {}) {
-  const tone = gateTone(g.status);
-  const cls = opts.locked ? "locked" : tone === "ok" ? "ok" : tone === "bad" ? "bad" : "";
-  const badgeCls = opts.locked ? "neutral" : tone;
-  const label = g.score != null ? `${g.score}/${g.max} — ${spaced(g.status)}` : spaced(g.status);
-  return `
-    <div class="gate-card ${cls}">
-      <div class="gate-card-head">
-        <div><h4>${esc(title)}</h4><p>${esc(desc)}</p></div>
-        ${badge(label, badgeCls)}
-      </div>
-    </div>`;
-}
-
-function gateSummaryBlock(m) {
-  return `
-    <section class="si-section">
-      <h3 class="section-title">Gate Status Summary</h3>
-      <div class="gate-summary-grid">
-        ${gateCard("Gate 1 Intake", "Checks whether source rules are deterministic, codable, and testable.", m.gates.g1)}
-        ${gateCard("Gate 1B MTC Feasibility", "Checks whether the strategy can be converted into an MTC-compatible signal or module.", m.gates.g1b)}
-        ${gateCard("Gate 2 Backtest Evidence", "Checks historical performance, robustness, trade sample quality, and benchmark comparison.", m.gates.g2)}
-        ${gateCard("Gate 3 Production Readiness", "Checks paper-trading readiness, alert contracts, fail-safe behavior, and controls.", m.gates.g3, { locked: m.gates.g3.status !== "OK" })}
-      </div>
-    </section>`;
 }
 
 function ruleBlock(label, value, warn) {
