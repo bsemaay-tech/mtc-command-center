@@ -19,19 +19,21 @@ Full audit record: GLOBAL_HANDOFF `[Claude Fable 5] 2026-07-13 — CONSOLIDATION
   Fable re-verified decisive claims on raw artifacts/code — CONFIRMED. Prereg marked BLOCKED
   (`f32a354c`); PR #18 updated. See FAZ 3B section below for the D016 decision now owed by Barış.
 
-## CRYPTO PAPER BRIDGE P2 — 🔴 DISARMED 2026-07-13T16:46:42Z (reconnect/reconciler race); fix decision pending Barış
+## CRYPTO PAPER BRIDGE P2 ARMED — DAY 0 v3 = 2026-07-15T06:48:16.619336Z; D3 ACTIVE [AI: Any]
 
-**Day 0 v2 died after 1h29m.** Root cause verified in code: `connect()` nulls SDK clients
-during every ~10-min reconnect rebuild; the 60s reconciler firing inside that window raises
-`HyperliquidNotConfigured` → single-strike fail-closed disarm (`engine.py
-_run_reconcile_cycle`). Zero exposure throughout; equity intact; separate real HL testnet
-outage 07:52-07:54Z (Jul 14) occurred while already DISARMED and self-recovered.
-**P2 ≥10 days is unreachable until the race is fixed — do NOT re-ARM before the fix.**
-- **[AI: Barış] 🔴 approve race fix + single restart window:** atomic client swap in
-  `connect()` (+ optional defer-if-reconnecting guard in reconciler); same window syncs
-  `C:\P2RT` (detached) to consolidated bridge tip (conftest fix + golden included), full
-  suites, supervisor restart, full gate, ONE ARM = new Day 0. Codex builds, Fable audits.
-- Full incident record: GLOBAL_HANDOFF `[Claude Fable 5] 2026-07-14 — P2 INCIDENT`.
+Race incident (Day 0 v2 died 16:46:42Z Jul 13) → fix `da44d1ff` (atomic client swap +
+RECONCILE_DEFERRED guard; 127 tests; new tests proven failing on pre-fix code) → Fable audit
+PASS → Task-4 single restart window executed 2026-07-15: `C:\P2RT` detached at `cc4ce67d`
+(race fix + conftest Telegram isolation + golden all live), run `paper-20260715063657`,
+pre-ARM gate passed, ONE ARM at 06:48:16Z, zero ERROR/FAILED/DEFERRED, live proof: reconcile
+succeeded INSIDE a reconnect window (06:47:26). Deploy audit: GLOBAL_HANDOFF
+`[Claude Fable 5] 2026-07-15 — DEPLOY AUDIT: PASS`. PR #16 tip `8e53439e`.
+- **[AI: Any]** daily read-only D3 check: state/reconcile freshness, WARN+ events (benign =
+  ~10-min DISCONNECT→RECONNECT attempt=1→DATA_RESTORED; occasional single RECONCILE_DEFERRED
+  during a rebuild is expected and harmless), equity, positions/orders + native stops,
+  process identity, pinned check = P2RT detached `cc4ce67d` + clean status.
+- **[AI: Claude|Codex]** any safety anomaly: preserve evidence, DISARM if needed, diagnose;
+  no re-ARM without fresh complete gate. **D3 target: ≥10 uninterrupted days → 2026-07-25+.**
 
 Previous window record (superseded): Day 0 RESET to `2026-07-13T15:17:05.383618Z` after the approved EMA-8 trail fix `f209acd2`
 (SMA-8 → exact QuantLens EMA convention) landed in `C:\P2RT` and one clean deploy+re-ARM cycle

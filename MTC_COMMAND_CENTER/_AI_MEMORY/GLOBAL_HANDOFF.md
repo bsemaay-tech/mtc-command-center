@@ -1,5 +1,31 @@
 # GLOBAL_HANDOFF
 
+## [Claude Fable 5] 2026-07-15 — DEPLOY AUDIT: PASS. P2 Day 0 v3 = 2026-07-15T06:48:16.619336Z; D3 monitoring active
+
+Audited Codex's Task-4 deploy against the live runtime. All verified:
+
+- `C:\P2RT` detached at audited tip `cc4ce67d`, clean, `diff cc4ce67d` empty — deployed code
+  is exactly what passed audit (race fix + conftest Telegram isolation + golden live together).
+- Live API: ARMED, run `paper-20260715063657`, reconcile fresh, no error, positions/orders
+  `[]`/`[]`, equity flat 998.987457. Child PID 71728 started 06:36:56Z (matches run id);
+  supervisor PID 39916 from the P2RT script.
+- Events for the new run: exactly one `ARM_REQUEST` + one `DISARMED->ARMED` at
+  **06:48:16.619336Z = Day 0 v3**; pre-ARM gate `06:47:06 DISCONNECT -> 06:47:14 RECONNECT
+  attempt=1 -> 06:47:39 DATA_RESTORED`; zero ERROR / RECONCILE_FAILED / RECONCILE_DEFERRED;
+  ~10 benign reconnect cycles since, all recovered, state stayed ARMED.
+- **Live race-fix proof:** equity rows show a reconcile succeeding at `06:47:26` — INSIDE the
+  reconnect window that used to kill the run. The old Info client served REST through the
+  rebuild, as designed.
+- Suites re-run by auditor inside `C:\P2RT` from both CWDs: **127 passed, 1 warning** twice
+  (no Telegram leakage — conftest fix live).
+- Post-deploy docs commits `afae6ac6` + `8e53439e` are docs-only, secret greps 0; branch
+  pushed, PR #16 tip = `8e53439e` (remote verified).
+
+**P2 clock: Day 0 v3 running. D3 = ≥10 uninterrupted calendar days from 2026-07-15T06:48:16Z
+(target 2026-07-25+). Daily read-only checks continue; pinned-identity check =
+`git -C C:/P2RT log -1` (detached `cc4ce67d`) + clean status. No code/config changes in P2RT
+except approved critical safety fixes. Mainnet forbidden.**
+
 ## [Claude Fable 5] 2026-07-14 — RACE-FIX AUDIT: PASS. Deploy (Task 4) awaits Barış go
 
 Audited `da44d1ff` in `C:\BFIX` on real code and runs. **Every claim verified; fix is
