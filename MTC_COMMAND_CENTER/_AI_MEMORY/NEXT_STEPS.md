@@ -1146,3 +1146,8 @@ Must obey 7-gate workflow (AI_RULES.md). Start at Gate 1.
 - Audit run `paper-20260715105547`, the single `12:02:42.856537Z` ARMED transition, fresh-bar proof, two post-ARM reconciles, empty positions/orders, and final master merge evidence.
 - Monitor Day 0 v4 as validation-tier until the planned July 18 PC-off; record that shutdown as a planned boundary, not a safety incident. [AI: Any]
 - Start definitive D3 only after VPS migration at end of month. [AI: Barış|Claude]
+
+### P2-PR-MERGE-REGISTRY-CONFLICT | BLOCKED 2026-07-15 | PR #19 [AI: Claude|Barış]
+- PR #16 is merged remotely at `20237733`; PRs #17–#19 remain open.
+- Local isolated master contains unpushed #17/#18 merge commits `60415b08` and `89725dfe`.
+- PR #19 adds an out-of-scope conflict in `05_REGISTRY/RESEARCH_RUN_REGISTRY.json`; do not resolve or push without Fable review and explicit direction. The attempted #19 merge was aborted cleanly.

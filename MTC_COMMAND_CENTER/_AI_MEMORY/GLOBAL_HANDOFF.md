@@ -2723,3 +2723,19 @@ ran, but Telegram delivery is not externally observable from the bridge logs and
 Day 0 v4 is validation-tier. The planned July 18 PC-off is a window boundary; definitive D3
 starts on the VPS. Task 5 runtime work is complete. Task 6 PR merges and Fable post-ARM audit
 remain to be closed in this session.
+
+## Codex GPT-5 2026-07-15 — Task 6 stopped at PR #19 registry conflict
+
+PR #16 merged remotely as `20237733`. In isolated `C:\P2MERGE`, PR #17 merged locally as
+`60415b08` and PR #18 as `89725dfe`; each conflicted only in `GLOBAL_HANDOFF.md` and received a
+full union resolution with zero secret matches. Neither local merge was pushed.
+
+PR #19 then conflicted in `05_REGISTRY/RESEARCH_RUN_REGISTRY.json` as well as the two approved
+memory files. This triggered the prompt's explicit stop condition. The #19 merge was aborted,
+local master is clean at `89725dfe`, remote master remains `20237733`, and PRs #17–#19 remain
+OPEN. No final master suite was claimed because all four PRs did not land.
+
+Full Task-5 live evidence and Task-6 stopped-state evidence:
+`MTC_COMMAND_CENTER/11_TRIAGE/P2_DAY0_V4_DEPLOY_REPORT_2026-07-15.md`. The live bridge remained
+ARMED/reconcile-ready/flat at the final check. Fable must audit before any registry-conflict
+resolution or further merge action.
