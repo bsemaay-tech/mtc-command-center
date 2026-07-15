@@ -19,7 +19,23 @@ Full audit record: GLOBAL_HANDOFF `[Claude Fable 5] 2026-07-13 — CONSOLIDATION
   Fable re-verified decisive claims on raw artifacts/code — CONFIRMED. Prereg marked BLOCKED
   (`f32a354c`); PR #18 updated. See FAZ 3B section below for the D016 decision now owed by Barış.
 
-## CRYPTO PAPER BRIDGE P2 ARMED — DAY 0 v3 = 2026-07-15T06:48:16.619336Z; D3 ACTIVE [AI: Any]
+## CRYPTO PAPER BRIDGE P2 — 🔴 DISARMED 2026-07-15T08:40:06Z (real HL outage; Day 0 v3 dead after 1h52m); POLICY DECISION PENDING
+
+Second real Hyperliquid testnet outage in ~26h (`ServerError` on reconnect ×5 AND on the
+reconcile REST call) → fail-closed disarm. **Race fix HELD (zero DEFERRED, zero
+NotConfigured) — not a code defect.** Both safety triggers (reconcile single-strike +
+DATA_STALE after ~80s) fire on any ~2-min exchange outage → **P2 ≥10 days unreachable
+without an outage-tolerance policy change.** Zero exposure; equity intact; reconcile
+recovered 08:42:07Z. ⚠️ No `DATA_RESTORED` seen after recovery yet — verify fresh bars
+before any ARM.
+- **[AI: Barış] 🔴 policy decision:** (a) RECOMMENDED tolerance: N=3 consecutive
+  RECONCILE_FAILED before disarm + ~5-min reconnect budget before DATA_STALE (bounded risk:
+  native SL rests on-exchange); fold notify-threshold change into same window; Codex builds,
+  Fable audits, one deploy = Day 0 v4. (b) keep strict policy → accept testnet-dependent
+  completion. Full analysis: GLOBAL_HANDOFF `[Claude Fable 5] 2026-07-15 — P2 INCIDENT #2`.
+- **[AI: Any]** do NOT re-ARM before decision + full gate incl. verified fresh bars.
+
+Superseded record (Day 0 v3, dead): DAY 0 v3 = 2026-07-15T06:48:16.619336Z [AI: Any]
 
 Race incident (Day 0 v2 died 16:46:42Z Jul 13) → fix `da44d1ff` (atomic client swap +
 RECONCILE_DEFERRED guard; 127 tests; new tests proven failing on pre-fix code) → Fable audit

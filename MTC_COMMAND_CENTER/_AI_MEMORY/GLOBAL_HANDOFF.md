@@ -1,5 +1,38 @@
 # GLOBAL_HANDOFF
 
+## [Claude Fable 5] 2026-07-15 — P2 INCIDENT #2 (same day): Day 0 v3 died at 08:40:06Z on a REAL Hyperliquid outage; race fix HELD; policy decision now owed by Barış
+
+Fable-verified on the live event store (read-only; runtime untouched):
+
+- `08:39:58Z` DISCONNECT → reconnect attempts 1-5 all `ServerError` (real HL testnet outage,
+  second in ~26h after Jul-14 07:52Z).
+- `08:40:06Z` reconciler REST call also got `ServerError` → `RECONCILE_FAILED` →
+  **ARMED->DISARMED (Day 0 v3 lived 1h52m).** Single-strike fail-closed worked as designed.
+- `08:41:19Z` `DATA_STALE ws_dead_reconnect_failed` (5 retries exhausted) — would have
+  disarmed anyway: **two independent triggers fired on the same ~2-min outage.**
+- `08:42:05Z` reconnect succeeded (attempt 4), `08:42:07Z` RECONCILE_RECOVERED. Now:
+  DISARMED, reconcile healthy, positions/orders `[]`/`[]`, equity 998.987457 intact.
+- **The race fix held:** error was `ServerError` (exchange-side), zero `RECONCILE_DEFERRED`,
+  zero `HyperliquidNotConfigured`. This is NOT a code defect — it is a policy/environment
+  mismatch.
+- ⚠️ Open observation: no `DATA_RESTORED` event after the 08:42:05Z reconnect (nor after
+  08:52:44Z). Fresh-bar flow must be explicitly verified before any future ARM.
+
+**Structural conclusion:** HL testnet shows ~2-min outages roughly daily. Under current
+policy (reconcile single-strike + DATA_STALE after ~80s of failed retries) every such outage
+kills an ARMED window → **P2 ≥10 uninterrupted days is unreachable without a policy change.**
+
+**Decision owed by Barış (any change = approved safety fix + Fable audit + clock reset):**
+- (a) Outage tolerance: disarm on N consecutive `RECONCILE_FAILED` (e.g. N=3 ≈ 3 min) AND
+  extend the reconnect retry budget before `DATA_STALE` (e.g. ~5 min with backoff). Rationale:
+  native SL rests ON the exchange (positionTpsl), so a blind window ≤5 min with server-side
+  stops is bounded risk for a PAPER test. Recommended; can fold the deferred notify-threshold
+  change into the same window.
+- (b) Keep strict policy and accept that P2 completion depends on testnet stability (or move
+  to VPS/mainnet-grade infra later — but testnet outages are exchange-side, a VPS won't fix
+  them).
+- Do NOT re-ARM before the decision + a full gate including verified fresh bars.
+
 ## [Claude Fable 5] 2026-07-15 — DEPLOY AUDIT: PASS. P2 Day 0 v3 = 2026-07-15T06:48:16.619336Z; D3 monitoring active
 
 Audited Codex's Task-4 deploy against the live runtime. All verified:
