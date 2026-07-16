@@ -7,6 +7,7 @@ broker:
   recover_orders_after_reconnect: true
   reconnect_attempts: 9
   reconnect_base_delay_s: 5.0
+  data_restore_timeout_s: 300
 strategy_file: strategies/keltner_trail_ema8.yaml
 risk:
   risk_pct_per_trade: 0.005

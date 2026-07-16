@@ -29,8 +29,11 @@ def test_dry_run_app_snapshot_has_bars_and_trade_data(tmp_path):
     assert app.state.bridge_engine.reconcile_max_consecutive_failures == 3
     assert app.state.bridge_engine.bar_reconnect_attempts == 9
     assert app.state.bridge_engine.bar_reconnect_base_delay_s == 5.0
+    assert app.state.bridge_engine.bar_data_restore_timeout_s == 300.0
 
     with TestClient(app) as client:
+        assert app.state.bridge_engine._feed is not None
+        assert app.state.bridge_engine._feed.data_restore_timeout_s == 300.0
         status = client.get("/api/status").json()
         assert status["reconcile_ready"] is True
         client.post("/api/arm", headers={"X-Confirm": str(status["state_version"])})
