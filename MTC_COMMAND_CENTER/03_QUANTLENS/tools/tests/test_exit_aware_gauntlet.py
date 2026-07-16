@@ -317,6 +317,54 @@ def test_runner_accepts_correct_scope(monkeypatch, tmp_path):
     runner.assert_scope(["--tf", "1h"], str(m), tmp_path / "fresh_out")  # must not raise
 
 
+# ---- exit_aware_gauntlet.run_cell (end-to-end wiring, all data mocked) ----
+
+def _full_cell():
+    return {"strategy": "GEN_KELTNER_BREAKOUT", "symbol": "JPM", "timeframe": "1h",
+            "exit_mode": "trail_ema8",
+            "primary_params": {"ema_len": 50, "atr_len": 10, "mult": 2.0},
+            "star_params": [{"ema_len": 20, "atr_len": 10, "mult": 2.0},
+                            {"ema_len": 50, "atr_len": 20, "mult": 2.0}]}
+
+
+def test_run_cell_end_to_end_stamped(tmp_path, monkeypatch):
+    seen = _install_queue_spy(monkeypatch, [])  # every sim returns healthy FakeStats
+    _install_data_stubs(monkeypatch)
+    res = gaunt.run_cell(_full_cell(), {}, tmp_path / "out", n_groups=3)
+    # exit_mode threaded into EVERY simulate_slice call (cpcv + matrix + windows + neighbours)
+    assert seen and all(em == "trail_ema8" for em in seen)
+    # stamps everywhere + artifacts persisted
+    assert res["exit_mode"] == "trail_ema8"
+    assert res["cpcv"]["exit_mode"] == "trail_ema8"
+    assert (tmp_path / "out" / "config_matrix.json").exists()
+    assert (tmp_path / "out" / "gauntlet_result.json").exists()
+    assert res["verdict"]["status"] in {"PASS", "GAUNTLET_FAIL"}
+    # healthy stats + strict literal neighbours -> full pass expected here
+    assert res["verdict"]["gauntlet_pass"] is True
+
+
+def test_run_cell_refuses_missing_exit_mode(tmp_path):
+    cell = _full_cell(); cell.pop("exit_mode")
+    with pytest.raises(ValueError):
+        gaunt.run_cell(cell, {}, tmp_path / "out")
+
+
+def test_run_cell_refuses_no_stars(tmp_path):
+    cell = _full_cell(); cell["star_params"] = []
+    with pytest.raises(ValueError):
+        gaunt.run_cell(cell, {}, tmp_path / "out")
+
+
+def test_run_cell_pbo_insufficient_makes_gauntlet_fail(tmp_path, monkeypatch):
+    _install_queue_spy(monkeypatch, [])
+    _install_data_stubs(monkeypatch)
+    # force PBO to refuse (e.g. matrix loader raising) -> verdict must be GAUNTLET_FAIL
+    monkeypatch.setattr(pbo, "load_config_matrix", lambda p: (_ for _ in ()).throw(ValueError("boom")))
+    res = gaunt.run_cell(_full_cell(), {}, tmp_path / "out", n_groups=3)
+    assert res["verdict"]["gauntlet_pass"] is False
+    assert res["verdict"]["status"] == "GAUNTLET_FAIL"
+
+
 # ---- alpaca_download_dataset --symbols override (data acquisition prerequisite) ----
 
 import alpaca_download_dataset as dl  # noqa: E402
