@@ -86,10 +86,17 @@ regime-independence for a result in days instead of two years — an explicit, a
 ```powershell
 # NOT AUTHORISED until Barış approves this pre-registration.
 python MTC_COMMAND_CENTER\03_QUANTLENS\tools\alpaca_download_dataset.py `
-  --bundle-id native_newsymbol_confirm_2026-07 `
+  --bundle-name native_newsymbol_confirm_2026-07 `
   --symbols JPM XOM JNJ PG EWJ EWG INDA EWZ RSP QUAL MTUM USMV SMH XBI KRE XOP `
-  --timeframes 1h --start 2020-07-27 --end 2026-06-26
+  --asset-class confirm_newsymbol `
+  --timeframes 1h --start 2020-07-27 --end 2026-06-26 --feed iex --adjustment all
 ```
+> The `--symbols` / `--asset-class` override did NOT exist when this pre-reg was first drafted —
+> the self-review caught that the original command was fabricated. The flags were added
+> 2026-07-15 as an **additive** change (omitting `--symbols` reproduces the historical universe
+> byte-for-byte; `EQUITY_UNIVERSE` is never mutated, so existing bundles keep their exact
+> composition). Unit-tested in `tools/tests/test_exit_aware_gauntlet.py`. Requires Alpaca API
+> credentials in the environment.
 Acceptance before any scoring: all 16 symbols present at 1h with
 `ohlcv_validation_status: PASS`, bar counts within ±10% of the bundle's 1h norm (~8,850), and
 first/last timestamps matching the window. **Any symbol failing acceptance is DROPPED and
@@ -196,12 +203,19 @@ Order: **0. acquire + verify → 1. virginity re-scan → 2. 1-cell smoke → 3.
 3. Full run → `03_QUANTLENS/research/faz3b_newsymbol_<ts>/`; register in
    `RESEARCH_RUN_REGISTRY.json`; morning report per rules-doc §10.
 
+**Power floor (added by self-review 2026-07-16, §E):** the bar needs ≥30 lockbox trades/cell and
+CPCV needs enough trades per 2-group window. Low-volatility cells (e.g. USMV, QUAL) may fall
+short, which would make the run underpowered rather than informative. **Pre-registered VOID
+rule: if fewer than 8 decision cells reach ≥30 lockbox trades at `trail_ema8`, or if the
+surviving cells span fewer than 2 diversity groups, the run is VOID** — not "H0 confirmed".
+An underpowered run must never be read as evidence against H1.
+
 **STOP rules (any hit = VOID, partial results are NEVER evidence in any direction):** row count
 ≠ 32 (after documented acceptance drops); missing/incorrect stamping; any `exit_mode` stamp
 absent from a gauntlet output; `SKIPPED_NA_EXIT_MODE` > 0; any engine edit needed; a virginity
-hit on any acquired symbol; first crash; wall-clock > cap; disk < 10 GB; any unexplained ERROR
-row. **No substitution, no cell drop after acceptance, no automatic retry** — amendment + fresh
-approval only (Gate-5 edit 12).
+hit on any acquired symbol; the power floor above; first crash; wall-clock > cap; disk < 10 GB;
+any unexplained ERROR row. **No substitution, no cell drop after acceptance, no automatic retry**
+— amendment + fresh approval only (Gate-5 edit 12).
 
 ## 10. Decision table — every outcome pre-mapped
 
@@ -244,9 +258,15 @@ class; that a confirmed cell is promotable without the separate FORWARD_PAPER hu
 absence of confirmation proves the exit is worthless (only that it does not generalise on THIS
 evidence).
 
-- [ ] Adversarial **Gate-5 review** of this document (own prompt; attack the symbol virginity,
-      the N=5,795 ledger, the multiplicity formula, gauntlet feasibility with the new tooling,
-      and the honest-limitation framing of §4).
+- [x] **Self-adversarial review** 2026-07-16: `11_TRIAGE/FAZ3B_NEWSYMBOL_SELF_GATE5_2026-07-16.md`
+      — found 2 blocking gaps (fabricated acquisition command → FIXED; gauntlet orchestrator
+      `main()` is a stub → OPEN) + corrected the deflation framing (§8) + added the §9 power
+      floor. A self-review is NOT independent review.
+- [ ] **Wire `exit_aware_gauntlet.main()` end-to-end** (self-review §C) — the gauntlet cannot run
+      today; the approved artifact must be the thing that actually runs.
+- [ ] Independent adversarial **Gate-5 review** (Codex; own prompt) of this document AND the
+      tooling diff — attack symbol virginity, the primary-vs-secondary deflation choice, the
+      multiplicity formula, gauntlet feasibility/trade counts, and the §4 correlation limitation.
 - [ ] Required edits applied.
 - [ ] **Barış approval sentence** → recorded in `_AI_MEMORY/DECISIONS.md`.
 - [ ] Only then: §5 acquisition → §9 execution.

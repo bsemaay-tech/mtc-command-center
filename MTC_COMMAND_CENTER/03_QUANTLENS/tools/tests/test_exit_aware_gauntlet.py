@@ -315,3 +315,26 @@ def test_runner_accepts_correct_scope(monkeypatch, tmp_path):
     monkeypatch.setenv("MEGA_EXIT_MODES", "fixed_2R,trail_ema8")
     m = tmp_path / "manifest.json"; m.write_text("{}", encoding="utf-8")
     runner.assert_scope(["--tf", "1h"], str(m), tmp_path / "fresh_out")  # must not raise
+
+
+# ---- alpaca_download_dataset --symbols override (data acquisition prerequisite) ----
+
+import alpaca_download_dataset as dl  # noqa: E402
+
+
+def test_downloader_default_universe_unchanged():
+    # parity: no --symbols -> exactly the historical universe (equities + crypto)
+    uni = dl.build_universe()
+    syms = [s for s, _c, _a in uni]
+    assert len(uni) == len(dl.EQUITY_UNIVERSE) + len(dl.CRYPTO_UNIVERSE)
+    assert "SPY" in syms and "BTC/USD" in syms
+    assert any(is_crypto for _s, is_crypto, _a in uni)
+
+
+def test_downloader_explicit_symbols_override():
+    uni = dl.build_universe(["JPM", "EWJ", "RSP"], asset_class="confirm_newsymbol")
+    assert [s for s, _c, _a in uni] == ["JPM", "EWJ", "RSP"]
+    assert all(not is_crypto for _s, is_crypto, _a in uni)  # no crypto smuggled in
+    assert all(ac == "confirm_newsymbol" for _s, _c, ac in uni)
+    # the hardcoded universe is never mutated
+    assert "JPM" not in dl.EQUITY_UNIVERSE
