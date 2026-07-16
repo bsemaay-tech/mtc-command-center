@@ -1,5 +1,20 @@
 # NEXT_STEPS
 
+## 🔴 P2 DISARMED — Day 0 v4 died 2026-07-15T20:22:44Z (`DATA_STALE reconnect_no_fresh_data`); timeout fix APPROVED, Codex queued
+
+Day 0 v4 lived 8h20m. The reconcile N=3 tolerance WORKED (two ReadTimeouts tolerated, no
+disarm); the killer was the third trigger the fix left alone: `data_restore_timeout_s = 60s`
+(fresh-bar deadline after a reconnect). Barış approved 60s→300s 2026-07-16. Process restarted
+2026-07-16 06:34 and waits DISARMED by design (re-ARM = human decision after a fresh gate).
+- **[AI: Codex]** execute `11_TRIAGE/CODEX_GATE5_PR22_AND_BRIDGE_TIMEOUT_PROMPT_2026-07-16.md`:
+  Task A = independent Gate-5 of PR #22 (written findings, unit tests only, NO real-data runs);
+  Task B = the approved timeout fix (build+tests → STOP for Fable audit; deploy on audit PASS =
+  Day 0 v5, validation-tier; Jul-18 PC-off stays a window boundary).
+- **[AI: Claude]** audit Codex Task B on real code; synthesize Task A findings; apply prereg
+  edits; then Barış's formal run-approval decision on the new-symbol confirmation.
+- **[AI: Barış]** decided 2026-07-16: (a) timeout fix ✓, (b) independent Gate-5 ✓ queued,
+  (c) new-symbol design direction ACCEPTED (run approval after Gate-5 + edits).
+
 ## ✅ P2 DAY 0 v4 ARMED 2026-07-15T12:02:42.856537Z + ALL PRs MERGED (Fable audit PASS)
 
 Outage-tolerance fix deployed (P2RT detached `1465f8f0`, 130 tests); one ARM; zero

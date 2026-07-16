@@ -1,5 +1,28 @@
 # GLOBAL_HANDOFF
 
+## [Claude Fable 5] 2026-07-16 — Barış triple decision: bridge timeout fix approved; independent Gate-5 on PR #22 requested; new-symbol design ACCEPTED. Gauntlet wiring closed.
+
+Barış 2026-07-16: **(a)** bridge `data_restore_timeout_s` 60s→300s fix APPROVED (Day 0 v4 died
+2026-07-15T20:22:44Z on `DATA_STALE reconnect_no_fresh_data` — the one trigger the
+outage-tolerance fix left at its old value; reconcile N=3 tolerance was PROVEN working the same
+day: two ReadTimeouts tolerated without disarm). **(b)** independent Codex Gate-5 on PR #22
+requested. **(c)** new-symbol FAZ3B design direction ACCEPTED — replaces the 2028 forward wait
+as primary; forward prereg stays as fallback; run approval still gated on Gate-5 + edits.
+
+Fable actions (same day):
+- **Self-review blocking gap C CLOSED:** `exit_aware_gauntlet.main()` is no longer a stub —
+  `run_cell` wires CPCV → config-matrix → PBO → strict multiwindow → combined fail-closed
+  verdict; approval-gated `--i-have-approval`; substitution guard raises if any output loses its
+  exit stamp. **108/108 tools tests green**; live refusal check passed; pushed to PR #22
+  (`563116f0`, `f72b377a`).
+- **Codex prompt written:** `11_TRIAGE/CODEX_GATE5_PR22_AND_BRIDGE_TIMEOUT_PROMPT_2026-07-16.md`
+  — Task A independent Gate-5 (9 attack surfaces incl. re-derived virginity scan, parity
+  proof-on-pre-change-code, exit-threading completeness sweep, §8 statistics, wiring fail-closed
+  paths, runner guard bypasses, power feasibility); Task B the approved timeout fix (exact scope
+  mirroring `0e644b52`, tests must fail on pre-fix code, deploy locked on Fable audit; Barış's
+  (a) approval covers deploy after audit PASS → Day 0 v5, validation-tier; Jul-18 PC-off stays a
+  window boundary).
+
 ## [Claude Fable 5] 2026-07-15 — DEPLOY (Day 0 v4) + PR MERGE AUDIT: PASS. Master consolidated (#16-#19), all four PRs MERGED
 
 **Task 5 deploy — verified on live runtime, PASS.** P2 ARMED, run `paper-20260715105547`,
