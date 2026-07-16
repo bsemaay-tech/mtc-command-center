@@ -1,5 +1,22 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5] 2026-07-16 — PR #22 independent Gate-5: BLOCK; Task B not started
+
+Task A completed read-only at PR #22 head `f72b377a` in `C:\G5R`; no real-data run or download.
+Report: `11_TRIAGE/CODEX_GATE5_FINDINGS_PR22_2026-07-16.md`. Mocked tests: 29/29 targeted and
+108/108 full tools suite. Virginity re-scan: 145 MEGA JSONs, 10,417 Keltner rows, 68 symbols,
+zero frozen-symbol Keltner rows; five local dataset manifests also contain none of the 16.
+
+Gate-5 is **BLOCKED**. Main blockers: runner argv/manifest scope bypasses; gauntlet geometry and
+cell spec are mutable; one-config runner makes engine DSR undefined (`grid_n=1` -> NaN) with no
+replacement DSR tool; N=5,795 lacks the required artifact ledger; A/A-prime precedence defeats
+the promised secondary downgrade and leaves mixed gauntlet outcomes unmapped. Several of the
+prior 15 required edits are only partial or not applied. D016 remains unspent; Barış retains the
+D-decision after edits plus a fresh independent re-review.
+
+Per the combined prompt, execution **STOPPED after Task A**. The approved bridge timeout Task B
+has not been started and no `C:\BTL2` worktree was created.
+
 ## [Codex GPT-5] 2026-07-15 — P2 race fix deployed; new Day 0 ARMED at 06:48:16Z
 
 Fable audit PASS plus Barış's explicit Task 4/push go satisfied both gates. One restart window
