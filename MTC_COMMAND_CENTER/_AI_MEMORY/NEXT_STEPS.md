@@ -1,6 +1,22 @@
 # NEXT_STEPS
 
-## CRYPTO PAPER BRIDGE P2 — ARMED, NEW DAY 0 2026-07-15T06:48:16.619336Z [AI: Any]
+## CRYPTO PAPER BRIDGE P2 — TIMEOUT FIX BUILT; FABLE AUDIT/DEPLOY LOCKED 2026-07-16 [AI: Claude]
+
+Approved 60-to-300-second data-restore timeout wiring is built in commit `79976577` on
+`feature/ibkr-bridge-final`. Final focused tests failed on pre-fix code (`1 failed, 2 passed`), then
+passed after the fix (`3 passed`); both full suites pass `132 passed, 1 warning` from both
+supported CWDs. `bars.py` is unchanged. Report:
+`11_TRIAGE/P2_DATA_RESTORE_TIMEOUT_REPORT_2026-07-16.md`.
+
+- **[AI: Claude]** independently audit real code at `79976577`, rerun both full suites, and
+  reproduce the focused failure against pre-fix code. Do not trust the Codex report.
+- **[AI: Claude|Codex]** only after Fable records PASS, execute the existing single testnet
+  deploy window: detach `C:\P2RT` to the audited tip, rerun both suites, supervisor start,
+  at least 10-minute gate including verified fresh bars, then exactly one authorized ARM.
+- **[AI: Any]** until audit PASS, keep the runtime DISARMED and leave clean detached
+  `C:\P2RT` at `1465f8f0`. Mainnet remains forbidden.
+
+## SUPERSEDED — CRYPTO PAPER BRIDGE P2 ARMED, NEW DAY 0 2026-07-15T06:48:16.619336Z
 
 Fable-audited race fix `da44d1ff` is deployed in detached `C:\P2RT` at `cc4ce67d`. Run
 `paper-20260715063657` passed the required 10-minute reconnect gate and two post-ARM reconciles.

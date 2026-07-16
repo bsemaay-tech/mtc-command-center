@@ -1,15 +1,35 @@
 # 03_STATUS - Crypto Paper Bridge
 
-Date: 2026-07-15. Branch: `feature/ibkr-bridge-final`.
+Date: 2026-07-16. Branch: `feature/ibkr-bridge-final`.
 
 ## Gate status
 
 - **P0: MET** (attempt 7; `docs/p0_smoke_log.json`).
 - **P1: PASS**; B6 real fill/native-stop lifecycle PASS.
-- **P2: ARMED — DAY 0 v4 STARTED 2026-07-15T12:02:42.856537Z.**
+- **P2: DISARMED — Day 0 v4 ended 2026-07-15T20:22:44Z; timeout fix built, audit locked.**
 - Runtime: Hyperliquid TESTNET, paper, BTC 1h, LLM regime/veto OFF.
 - Pinned deployment: `C:\P2RT`, detached commit `1465f8f0`, Task Scheduler `MTC-Bridge-P2`.
-- Tests: **130 passed, 1 warning** from both supported working directories.
+- Runtime remains pinned at `1465f8f0`; build commit `79976577` is not deployed.
+- Build tests: **132 passed, 1 warning** from both supported working directories.
+
+## Data-restore timeout build; deployment locked
+
+Day 0 v4 failed closed on `DATA_STALE reconnect_no_fresh_data` after a successful reconnect
+did not produce a fresh bar within the unchanged 60-second restore deadline. Barış approved
+raising only the application/configured deadline to 300 seconds. Commit `79976577` adds the
+broker config value, wires it through `create_app` and `BridgeEngine`, clamps it to at least
+30 seconds, and passes it to `BarFeed`; `bars.py`, notifications, reconcile behavior, and
+trading logic are unchanged.
+
+New deterministic tests prove a first fresh bar at 240 seconds restores without stale under
+the 300-second setting, the explicit legacy 60-second setting still stales/disarms, a never-
+fresh feed stales/disarms exactly once after 300 seconds, and YAML reaches the live `BarFeed`
+instance. The final focused tests fail on pre-fix code (`1 failed, 2 passed`) and pass after the
+fix (`3 passed`). Both full suites pass `132 passed, 1 warning` from both supported CWDs.
+
+`C:\P2RT` is still clean and detached at `1465f8f0`. No deploy, restart, API call, or ARM was
+performed. Fable audit PASS is required before the already-approved deploy window can begin.
+Evidence: `MTC_COMMAND_CENTER/11_TRIAGE/P2_DATA_RESTORE_TIMEOUT_REPORT_2026-07-16.md`.
 
 ## Outage-tolerance deployment and Day 0 v4
 
@@ -120,18 +140,10 @@ Full evidence: `docs/19_P2_RECONNECT_INCIDENT_2026-07-13.md`.
 
 ## Active phase
 
-Day 0 v4 validation window: monitor until the planned July 18 PC-off. Daily read-only checks:
-
-- `/api/status`: ARMED, `reconcile_ready=true`, recent `last_reconcile_ts`, no error;
-- WARN/ERROR events and every disconnect/reconnect/data-restored chain;
-- exchange positions and orders; every owned position must have a valid native stop;
-- equity continuity and unexplained order-state checks;
-- process/supervisor stability and pinned commit identity.
-
-Do not change code or frozen P2 config during the new window except for a critical safety incident.
-Any safety DISARM or critical runtime change requires investigation and resets the validation
-window. Planned PC-off boundaries must be recorded separately. Definitive D3 begins on the VPS;
-mainnet remains forbidden.
+Fable audit of build commit `79976577`. Keep the runtime DISARMED and `C:\P2RT` pinned at
+`1465f8f0`. Do not deploy, restart, or ARM before an independent PASS. After PASS, use the
+existing single-window testnet deploy runbook with both-CWD tests, a full fresh-bar gate, and
+exactly one authorized ARM. Definitive D3 begins on the VPS; mainnet remains forbidden.
 
 ## Deferred (post-P2)
 - Store-chain proof of a full engine trade (P2 first real trade will provide it).
