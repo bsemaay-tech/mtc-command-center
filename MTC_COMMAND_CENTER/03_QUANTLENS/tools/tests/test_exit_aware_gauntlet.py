@@ -257,3 +257,61 @@ def test_verdict_any_missing_gate_fails():
 def test_faz3b_self_parity_module_present():
     # sanity: the engine self-parity gate exists and is unaffected (we never touch the engine)
     assert (TOOLS / "faz3b_self_parity.py").exists()
+
+
+# ---- faz3b_newsymbol_runner (pre-registration scope guards) ----
+
+import faz3b_newsymbol_runner as runner  # noqa: E402
+
+
+def test_runner_grid_is_exactly_the_frozen_winner():
+    # the whole design: ONE config decides, no selection on the new data
+    assert runner.frozen_grid() == [{"ema_len": 50, "atr_len": 10, "mult": 2.0}]
+    assert len(runner.frozen_grid()) == 1
+
+
+def test_runner_symbol_universe_frozen_and_grouped():
+    assert len(runner.SYMBOLS) == 16
+    assert len(set(runner.SYMBOLS)) == 16  # no duplicates
+    assert len(runner.SYMBOL_GROUPS) == 4  # >=2 groups required to confirm
+    assert runner.EXPECTED_ROWS == 32  # 16 symbols x 2 exit modes
+
+
+def test_runner_rejects_stride_set(monkeypatch, tmp_path):
+    monkeypatch.setenv("MEGA_GRID_STRIDE", "3")
+    monkeypatch.setenv("MEGA_EXIT_MODES", "fixed_2R,trail_ema8")
+    m = tmp_path / "manifest.json"; m.write_text("{}", encoding="utf-8")
+    with pytest.raises(SystemExit):
+        runner.assert_scope([], str(m), tmp_path / "out")
+
+
+def test_runner_rejects_wrong_exit_modes(monkeypatch, tmp_path):
+    monkeypatch.delenv("MEGA_GRID_STRIDE", raising=False)
+    monkeypatch.setenv("MEGA_EXIT_MODES", "fixed_2R")  # missing the candidate
+    m = tmp_path / "manifest.json"; m.write_text("{}", encoding="utf-8")
+    with pytest.raises(SystemExit):
+        runner.assert_scope([], str(m), tmp_path / "out")
+
+
+def test_runner_rejects_wrong_timeframe(monkeypatch, tmp_path):
+    monkeypatch.delenv("MEGA_GRID_STRIDE", raising=False)
+    monkeypatch.setenv("MEGA_EXIT_MODES", "fixed_2R,trail_ema8")
+    m = tmp_path / "manifest.json"; m.write_text("{}", encoding="utf-8")
+    with pytest.raises(SystemExit):
+        runner.assert_scope(["--tf", "4h"], str(m), tmp_path / "out")
+
+
+def test_runner_rejects_nonempty_out_dir(monkeypatch, tmp_path):
+    monkeypatch.delenv("MEGA_GRID_STRIDE", raising=False)
+    monkeypatch.setenv("MEGA_EXIT_MODES", "fixed_2R,trail_ema8")
+    m = tmp_path / "manifest.json"; m.write_text("{}", encoding="utf-8")
+    out = tmp_path / "out"; out.mkdir(); (out / "stale.json").write_text("{}", encoding="utf-8")
+    with pytest.raises(SystemExit):
+        runner.assert_scope([], str(m), out)
+
+
+def test_runner_accepts_correct_scope(monkeypatch, tmp_path):
+    monkeypatch.delenv("MEGA_GRID_STRIDE", raising=False)
+    monkeypatch.setenv("MEGA_EXIT_MODES", "fixed_2R,trail_ema8")
+    m = tmp_path / "manifest.json"; m.write_text("{}", encoding="utf-8")
+    runner.assert_scope(["--tf", "1h"], str(m), tmp_path / "fresh_out")  # must not raise
