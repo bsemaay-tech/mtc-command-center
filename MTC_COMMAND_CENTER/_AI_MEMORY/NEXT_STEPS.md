@@ -1,25 +1,29 @@
 # NEXT_STEPS
 
-## 🔴 P2 DISARMED — Day 0 v4 died 2026-07-15T20:22:44Z (`DATA_STALE reconnect_no_fresh_data`); timeout fix APPROVED, Codex queued
+## ✅ P2 DAY 0 v5 ARMED 2026-07-16T13:41:26.908952Z — 300s timeout fix DEPLOYED + field-proven during the gate
 
-Day 0 v4 lived 8h20m. The reconcile N=3 tolerance WORKED (two ReadTimeouts tolerated, no
-disarm); the killer was the third trigger the fix left alone: `data_restore_timeout_s = 60s`
-(fresh-bar deadline after a reconnect). Barış approved 60s→300s 2026-07-16. Process restarted
-2026-07-16 06:34 DISARMED, then **stopped again 07:19:55Z — bridge process DOWN, API 8790
-unreachable** (DB confirms flat/safe: orders 0, equity 998.99, no ARM since v4's; P2RT pinned
-`1465f8f0` clean). Safe but unmonitorable until Task B's deploy restarts it under the supervisor.
-- **[AI: Codex]** ~~Task A~~ **DONE 2026-07-16** (`CODEX_GATE5_FINDINGS_PR22_2026-07-16.md`,
-  `cc59c931`, BLOCK — Fable-verified). **NEXT: Task B** of
-  `11_TRIAGE/CODEX_GATE5_PR22_AND_BRIDGE_TIMEOUT_PROMPT_2026-07-16.md` (approved timeout fix,
-  build+tests → STOP for Fable audit; deploy on audit PASS = Day 0 v5, validation-tier; Jul-18
-  PC-off stays a window boundary). AFTER Task B: the PR #22 edit round,
-  `11_TRIAGE/CODEX_PR22_REQUIRED_EDITS_PROMPT_2026-07-16.md`.
-- **[AI: Claude]** audit Codex Task B on real code (re-run suites, tests-fail-pre-fix proof);
-  deploy window per proven runbook; then re-review the PR #22 edit round; only after that the
-  single formal run-approval question to Barış.
-- **[AI: Barış]** decided 2026-07-16: (a) timeout fix ✓, (b) independent Gate-5 ✓ DELIVERED
-  (BLOCK, verified), (c) new-symbol design direction ACCEPTED (run approval only after the edit
-  round + Fable re-review). PRs #20/#21 (docs-only) still mergeable any time.
+Task B (`79976577`+`74e0990b`, PR #23 draft) Fable-audited **PASS** and deployed same day:
+P2RT detached `74e0990b`, 132×2 both CWDs (incl. inside P2RT), supervisor `MTC-Bridge-P2`, run
+`paper-20260716132819`, >13-min gate, ONE ARM, flat. **Live proof: a real HL outage during the
+gate ended with the first fresh bar 118s after reconnect — the old 60s trigger (v4 killer)
+would have disarmed; the 300s window absorbed it** (zero DATA_STALE/ERROR). Full record:
+`11_TRIAGE/FABLE_AUDIT_P2_TIMEOUT_FIX_2026-07-16.md` + GLOBAL_HANDOFF same date.
+- **[AI: Any]** daily D3 check: `/api/status` ARMED + fresh reconcile + `[]`/`[]` + P2RT pinned
+  `74e0990b` clean. Benign ~10-min feed cycles + `RECONCILE_FAILED_TOLERATED` WARNs = expected.
+  **Jul-18 planned PC-off = window boundary (v5 resets), NOT an incident.** Definitive ≥10-day
+  D3 on the VPS (end of month).
+- **[AI: Codex]** NEXT: PR #22 edit round —
+  `11_TRIAGE/CODEX_PR22_REQUIRED_EDITS_PROMPT_2026-07-16.md` (10 required edits + A2
+  claim-narrowing + adversarial tests proven failing on `f72b377a`); STOP for Fable re-review.
+- **[AI: Claude]** re-review the edit round on real code; then the single formal run-approval
+  question to Barış.
+- **[AI: Barış]** merge decisions: PR #23 (deployed fix), PRs #20/#21 (docs-only) — any time.
+
+## ~~🔴 P2 DISARMED — Day 0 v4 died 2026-07-15T20:22:44Z~~ RESOLVED by Day 0 v5 above
+
+Day 0 v4 lived 8h20m; reconcile N=3 tolerance WORKED; killer was `data_restore_timeout_s=60s`.
+Barış approved 60→300s 2026-07-16 → Codex Task A (Gate-5, BLOCK, Fable-verified) + Task B
+(timeout fix) both delivered 2026-07-16; deploy = Day 0 v5 (section above).
 
 ## 🔴 FAZ3B PR #22 — independent Gate-5 = BLOCK (Fable-verified 2026-07-16); 10 REQUIRED EDITS queued
 

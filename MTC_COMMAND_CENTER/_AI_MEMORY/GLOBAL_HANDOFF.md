@@ -1,5 +1,32 @@
 # GLOBAL_HANDOFF
 
+## [Claude Fable 5] 2026-07-16 — TASK B AUDIT: PASS + DEPLOYED. **Day 0 v5 = 2026-07-16T13:41:26.908952Z** — with LIVE field proof of the 300s fix during the gate
+
+**Audit PASS** (`11_TRIAGE/FABLE_AUDIT_P2_TIMEOUT_FIX_2026-07-16.md`) of Codex Task B
+(`79976577` fix + `74e0990b` docs, PR #23 draft): diff scope = approved spec exactly
+(bridge.yaml `data_restore_timeout_s: 300` + app.py wiring + engine field/clamp/pass-through;
+`bars.py` zero diff); **132/132 both CWDs independently re-run**; pre-fix failure proof
+reproduced in a fresh `8721bce0` worktree (wiring test fails with exact
+`AttributeError: 'BridgeEngine' object has no attribute 'bar_data_restore_timeout_s'`; the two
+direct-BarFeed behavior tests pass both versions — Codex's report says so honestly);
+fail-closed preserved (no-fresh-bar still DATA_STALE+disarm once at >300s); secret grep 0.
+
+**Deploy executed under Barış's 2026-07-16 (a) approval (Task-5-style runbook):** P2RT detached
+`1465f8f0`→`74e0990b` (clean, diff empty; process was already down), 132×2 inside P2RT,
+supervisor `MTC-Bridge-P2` started, run `paper-20260716132819` (testnet/paper/DISARMED),
+>13-min gate with verified fresh bars, ONE ARM → **Day 0 v5 = 2026-07-16T13:41:26.908952Z**,
+positions/orders `[]`/`[]`, validation-tier.
+
+**Live proof during the gate:** a REAL HL testnet outage (13:36:56Z DISCONNECT, ServerError ×4
+retries, `RECONCILE_FAILED_TOLERATED 1/3`, reconnect success attempt=5 13:38:20Z) ended with
+DATA_RESTORED at 13:40:18Z — **first fresh bar 118s after reconnect. The old 60s timeout fires
+`DATA_STALE reconnect_no_fresh_data` and disarms on this exact sequence (the v4 killer); the
+deployed 300s window absorbed it.** Zero DATA_STALE, zero ERROR, no disarm.
+
+Open: PR #23 merge (Barış); Codex next = PR #22 edit round
+(`11_TRIAGE/CODEX_PR22_REQUIRED_EDITS_PROMPT_2026-07-16.md`); Jul-18 PC-off = window boundary
+(v5 resets there); definitive D3 on VPS end of month.
+
 ## [Claude Fable 5] 2026-07-16 — Codex Gate-5 on PR #22 AUDITED: BLOCK VERIFIED (4 FATALs confirmed on real code); edit round queued. P2 process down again (DISARMED/flat/safe)
 
 **Codex delivered Task A** (`11_TRIAGE/CODEX_GATE5_FINDINGS_PR22_2026-07-16.md`, `cc59c931` on
