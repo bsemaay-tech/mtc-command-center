@@ -5,15 +5,34 @@
 Day 0 v4 lived 8h20m. The reconcile N=3 tolerance WORKED (two ReadTimeouts tolerated, no
 disarm); the killer was the third trigger the fix left alone: `data_restore_timeout_s = 60s`
 (fresh-bar deadline after a reconnect). Barış approved 60s→300s 2026-07-16. Process restarted
-2026-07-16 06:34 and waits DISARMED by design (re-ARM = human decision after a fresh gate).
-- **[AI: Codex]** execute `11_TRIAGE/CODEX_GATE5_PR22_AND_BRIDGE_TIMEOUT_PROMPT_2026-07-16.md`:
-  Task A = independent Gate-5 of PR #22 (written findings, unit tests only, NO real-data runs);
-  Task B = the approved timeout fix (build+tests → STOP for Fable audit; deploy on audit PASS =
-  Day 0 v5, validation-tier; Jul-18 PC-off stays a window boundary).
-- **[AI: Claude]** audit Codex Task B on real code; synthesize Task A findings; apply prereg
-  edits; then Barış's formal run-approval decision on the new-symbol confirmation.
-- **[AI: Barış]** decided 2026-07-16: (a) timeout fix ✓, (b) independent Gate-5 ✓ queued,
-  (c) new-symbol design direction ACCEPTED (run approval after Gate-5 + edits).
+2026-07-16 06:34 DISARMED, then **stopped again 07:19:55Z — bridge process DOWN, API 8790
+unreachable** (DB confirms flat/safe: orders 0, equity 998.99, no ARM since v4's; P2RT pinned
+`1465f8f0` clean). Safe but unmonitorable until Task B's deploy restarts it under the supervisor.
+- **[AI: Codex]** ~~Task A~~ **DONE 2026-07-16** (`CODEX_GATE5_FINDINGS_PR22_2026-07-16.md`,
+  `cc59c931`, BLOCK — Fable-verified). **NEXT: Task B** of
+  `11_TRIAGE/CODEX_GATE5_PR22_AND_BRIDGE_TIMEOUT_PROMPT_2026-07-16.md` (approved timeout fix,
+  build+tests → STOP for Fable audit; deploy on audit PASS = Day 0 v5, validation-tier; Jul-18
+  PC-off stays a window boundary). AFTER Task B: the PR #22 edit round,
+  `11_TRIAGE/CODEX_PR22_REQUIRED_EDITS_PROMPT_2026-07-16.md`.
+- **[AI: Claude]** audit Codex Task B on real code (re-run suites, tests-fail-pre-fix proof);
+  deploy window per proven runbook; then re-review the PR #22 edit round; only after that the
+  single formal run-approval question to Barış.
+- **[AI: Barış]** decided 2026-07-16: (a) timeout fix ✓, (b) independent Gate-5 ✓ DELIVERED
+  (BLOCK, verified), (c) new-symbol design direction ACCEPTED (run approval only after the edit
+  round + Fable re-review). PRs #20/#21 (docs-only) still mergeable any time.
+
+## 🔴 FAZ3B PR #22 — independent Gate-5 = BLOCK (Fable-verified 2026-07-16); 10 REQUIRED EDITS queued
+
+Codex Gate-5 (`11_TRIAGE/CODEX_GATE5_FINDINGS_PR22_2026-07-16.md`) found 4 FATAL areas; Fable
+confirmed ALL on real code (`11_TRIAGE/FABLE_AUDIT_CODEX_GATE5_PR22_2026-07-16.md`): A4 primary
+DSR non-executable (engine NaN at grid_n=1, no du_cell tool exists), A5 gauntlet geometry
+mutable/unasserted, A6 runner argv+manifest+commit+post-run guard bypasses, A9 pre-reg §8↔§10
+decision-table contradictions. 108/108 tests reproduce; engine byte-identity holds; virginity
+scan clean (local corpus). **No run, no approval question, D016 unspent** until:
+- **[AI: Codex]** execute `11_TRIAGE/CODEX_PR22_REQUIRED_EDITS_PROMPT_2026-07-16.md` (after
+  Task B): 10 edits + A2 claim-narrowing + adversarial tests proven failing on `f72b377a`.
+- **[AI: Claude]** independent re-review of the edit round on real code; then present the
+  run-approval question to Barış.
 
 ## ✅ P2 DAY 0 v4 ARMED 2026-07-15T12:02:42.856537Z + ALL PRs MERGED (Fable audit PASS)
 

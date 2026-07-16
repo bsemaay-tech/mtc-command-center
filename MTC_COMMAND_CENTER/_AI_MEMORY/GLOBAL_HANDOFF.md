@@ -1,5 +1,38 @@
 # GLOBAL_HANDOFF
 
+## [Claude Fable 5] 2026-07-16 — Codex Gate-5 on PR #22 AUDITED: BLOCK VERIFIED (4 FATALs confirmed on real code); edit round queued. P2 process down again (DISARMED/flat/safe)
+
+**Codex delivered Task A** (`11_TRIAGE/CODEX_GATE5_FINDINGS_PR22_2026-07-16.md`, `cc59c931` on
+`feature/exit-aware-gauntlet`, new worktree `C:\G5R` — C:/EAG is gone): verdict **BLOCK**, 10
+REQUIRED EDITS. **Fable audit: VERIFIED — the BLOCK stands**
+(`11_TRIAGE/FABLE_AUDIT_CODEX_GATE5_PR22_2026-07-16.md`). Every FATAL re-checked on real code:
+- **A4** engine DSR returns NaN at `n_trials<=1`, `grid_n=len(GRIDS[strat])`, runner injects ONE
+  config → every confirmation row `dsr_p_value=None`; grep `du_cell|du_family` over tools = 0
+  hits — the pre-reg's primary statistic has no executable implementation.
+- **A5** `run_cell` geometry mutable (n_groups/stars/combinations), `verdict()` never asserts
+  15 splits / 5 candidates / 10 combinations, approval gate CLI-only, the e2e test PASSES with
+  n_groups=3 + 2 stars, PBO truncation stays OK.
+- **A6** runner guard: equals-form argv (`--symbol=BAD`, `--tf=4h`) bypasses checks; exact-token
+  `--symbol BAD` SUPPRESSES the frozen universe; manifest=existence-only; commit unchecked; no
+  post-run verification.
+- **A9** pre-reg §8 "secondary failure caps at A′" contradicts §10 (row A doesn't require
+  secondary PASS; precedence A>A′ picks A); partial-group gauntlet outcome unmapped; E missing
+  from precedence; §5 drops conflict with fixed 32/`m=16`; §11 overstated old edits 5/7/10/11/14
+  as applied.
+- 108/108 tools tests independently re-run by Fable in C:/G5R. A1/A7/A8 accepted as reported.
+Codex's 10 edits adopted as binding; build order written:
+`11_TRIAGE/CODEX_PR22_REQUIRED_EDITS_PROMPT_2026-07-16.md` — **Task B (bridge timeout) comes
+FIRST**, then the edit round, then Fable re-review, THEN the single run-approval question to
+Barış. D016 unspent. No real-data execution anywhere in review or audit.
+
+**P2 monitoring (read-only):** bridge process was restarted 06:34:39Z (run
+`paper-20260716063439`, DISARMED, benign ~10-min DISCONNECT→RECONNECT attempt=1→DATA_RESTORED
+cycles, NO ARM_REQUEST since v4's) and **stopped again 2026-07-16T07:19:55Z** — API 8790 down,
+no bridge process. DB confirms flat/safe: orders 0, equity 998.987457, unrealized 0. P2RT pinned
+detached `1465f8f0`, status clean. No reboot since 01:32 local. DISARMED+down = safe but
+unmonitorable; Task B deploy (Day 0 v5) restarts it under the supervisor anyway. Task B NOT
+started (C:/BTL2 clean at `e0651f94`).
+
 ## [Claude Fable 5] 2026-07-16 — Barış triple decision: bridge timeout fix approved; independent Gate-5 on PR #22 requested; new-symbol design ACCEPTED. Gauntlet wiring closed.
 
 Barış 2026-07-16: **(a)** bridge `data_restore_timeout_s` 60s→300s fix APPROVED (Day 0 v4 died
