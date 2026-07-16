@@ -262,8 +262,13 @@ evidence).
       — found 2 blocking gaps (fabricated acquisition command → FIXED; gauntlet orchestrator
       `main()` is a stub → OPEN) + corrected the deflation framing (§8) + added the §9 power
       floor. A self-review is NOT independent review.
-- [ ] **Wire `exit_aware_gauntlet.main()` end-to-end** (self-review §C) — the gauntlet cannot run
-      today; the approved artifact must be the thing that actually runs.
+- [x] **Wire `exit_aware_gauntlet.main()` end-to-end** — DONE 2026-07-16 (`run_cell`: CPCV →
+      config-matrix → PBO → strict multiwindow → combined verdict; approval-gated
+      `--i-have-approval`; substitution guard raises if any output loses its exit stamp;
+      108/108 tests). Self-review blocking gap C closed.
+- [x] **Design direction ACCEPTED by Barış 2026-07-16** ("yeni-sembol tasarımını kabul") — the
+      new-symbol path replaces the 2028 forward window as primary; the forward prereg stays as
+      fallback. This acceptance is NOT the run approval — the checkboxes below still gate it.
 - [ ] Independent adversarial **Gate-5 review** (Codex; own prompt) of this document AND the
       tooling diff — attack symbol virginity, the primary-vs-secondary deflation choice, the
       multiplicity formula, gauntlet feasibility/trade counts, and the §4 correlation limitation.
