@@ -99,6 +99,36 @@ pass-cases pass either way, as expected). No exchange, scheduler, credential, co
   the semantic result was 14 failed / 4 passed. This round's red proof restores production
   files to `066b49cc` with the test file unchanged, so failures are semantic by construction.
 
+## Third repair round after round-3 BLOCK (2026-07-18,
+`CODEX_INTERIM_TSP1007_REAUDIT2_2026-07-18.md`)
+
+- **Immutable fill identity:** `fill_id` is now insert-once. An exact payload redelivery is
+  idempotent; a changed payload or cross-order reuse preserves the first row, emits
+  `FILL_ID_CONFLICT`, and DISARMS. Exact fills may replay idempotent accounting after a
+  prior transaction failure, but cannot duplicate partial- or full-close decisions.
+- **Canonical closes cannot be rewritten:** a distinct SL/TP/CLOSE fill received after
+  `trades.exit_ts` is set is retained as raw evidence, emits `POST_CLOSE_FILL`, and DISARMS;
+  it cannot change exit price, net PnL, daily PnL, loss streak, or the single
+  `TRADE_CLOSED` decision. Per-order and cross-order exit overfills similarly quarantine
+  with `ORDER_OVERFILL` or `TRADE_OVERFILL` and leave the trade unclosed for reconciliation.
+- **Live entry remainder ownership:** an exit that flattens only the currently filled entry
+  cannot close the trade while an owned entry order still has fillable quantity. The trade
+  remains open, `ENTRY_REMAINDER_LIVE` DISARMS the bridge, and a later entry fill remains
+  attached to that trade across manager restart. Reconcile therefore reprotects or flattens
+  broker exposure instead of classifying it as `FOREIGN_POSITION_IGNORED`.
+- **Atomic terminal state:** the guarded trade-row close and its `TRADE_CLOSED` decision are
+  one SQLite transaction. A forced decision-insert abort rolls back the trade close; exact
+  fill redelivery after restart completes it once without duplicating the immutable fill.
+- **Semantic gate proof:** the half-exit engine test now uses quantity 100, so the old phantom
+  close would breach the default 2% daily-loss boundary while the corrected partial exit
+  contributes nothing.
+
+Focused evidence is **32 passed from both required CWDs**. The complete suite is **164 passed,
+1 pre-existing Starlette deprecation warning from both CWDs**. The independently reproducible
+old-code semantic red result and exact restore commands are recorded in the round-4 Fable audit
+handoff. Funding treatment and all other interim limitations remain unchanged, including owner
+decision D017.
+
 ## Interim semantics disclosed (audit F-05)
 
 - The daily-loss percentage compares realized PnL against **current account equity at signal

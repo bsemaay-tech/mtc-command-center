@@ -6,7 +6,7 @@ import json
 import sqlite3
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
 
 def _to_iso(value: datetime | str | None) -> str | None:
@@ -379,15 +379,49 @@ class Store:
         px: float,
         fee: float,
         funding: float,
-    ) -> None:
-        self.conn.execute(
+    ) -> Literal["INSERTED", "EXACT_DUPLICATE", "CONFLICT"]:
+        """Insert an immutable fill record and classify a primary-key hit."""
+        normalized = (
+            fill_id,
+            cloid,
+            decision_uid,
+            _to_iso(fill_ts),
+            float(qty),
+            float(px),
+            float(fee),
+            float(funding),
+        )
+        cursor = self.conn.execute(
             """
-            INSERT OR REPLACE INTO fills(fill_id, cloid, decision_uid, fill_ts, qty, px, fee, funding)
+            INSERT OR IGNORE INTO fills(fill_id, cloid, decision_uid, fill_ts, qty, px, fee, funding)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (fill_id, cloid, decision_uid, _to_iso(fill_ts), qty, px, fee, funding),
+            normalized,
         )
         self.conn.commit()
+        if cursor.rowcount == 1:
+            return "INSERTED"
+
+        row = self.conn.execute(
+            """
+            SELECT fill_id, cloid, decision_uid, fill_ts, qty, px, fee, funding
+            FROM fills WHERE fill_id = ?
+            """,
+            (fill_id,),
+        ).fetchone()
+        if row is None:
+            return "CONFLICT"
+        existing = (
+            str(row["fill_id"]),
+            str(row["cloid"]),
+            str(row["decision_uid"]),
+            str(row["fill_ts"]),
+            float(row["qty"]),
+            float(row["px"]),
+            float(row["fee"] or 0.0),
+            float(row["funding"] or 0.0),
+        )
+        return "EXACT_DUPLICATE" if existing == normalized else "CONFLICT"
 
     def create_trade(
         self,
@@ -451,6 +485,41 @@ class Store:
             (exit_px, _to_iso(exit_ts), exit_reason, pnl, trade_id),
         )
         self.conn.commit()
+
+    def close_trade_once_with_decision(
+        self,
+        trade_id: int,
+        run_id: str,
+        decision_uid: str,
+        coin: str,
+        exit_px: float,
+        exit_ts: datetime | str,
+        exit_reason: str,
+        pnl: float,
+        payload: dict[str, Any],
+    ) -> bool:
+        """Atomically close one open trade and append its close decision."""
+        ts_iso = _to_iso(exit_ts)
+        with self.conn:
+            cursor = self.conn.execute(
+                """
+                UPDATE trades
+                SET exit_px = ?, exit_ts = ?, exit_reason = ?, pnl = ?
+                WHERE trade_id = ? AND exit_ts IS NULL
+                """,
+                (exit_px, ts_iso, exit_reason, pnl, trade_id),
+            )
+            if cursor.rowcount != 1:
+                return False
+            self.conn.execute(
+                """
+                INSERT INTO decisions(
+                  decision_uid, run_id, ts, coin, stage, trade_id, payload_json, payload_version
+                ) VALUES (?, ?, ?, ?, 'TRADE_CLOSED', ?, ?, 1)
+                """,
+                (decision_uid, run_id, ts_iso, coin, trade_id, _json(payload)),
+            )
+        return True
 
     def _run_environment(self, run_id: str) -> tuple[str, str]:
         row = self.conn.execute(
@@ -554,6 +623,16 @@ class Store:
                 totals["exit_vwap"] = vwap
                 totals["exit_last_ts"] = row["last_ts"]
         return totals
+
+    def has_live_entry_remainder(self, trade_id: int) -> bool:
+        """Whether an owned ENTRY order can still fill more quantity."""
+        for order in self.get_orders_for_trade(trade_id):
+            if order["role"] != "ENTRY" or order["status"] not in {"OPEN", "SUBMITTED", "PENDING"}:
+                continue
+            filled_qty, _ = self.order_fill_totals(str(order["cloid"]))
+            if filled_qty < float(order["qty"]) - 1e-9:
+                return True
+        return False
 
     def trade_costs(self, decision_uid: str) -> float:
         """Total captured fill costs for one trade (entry + exit + funding).

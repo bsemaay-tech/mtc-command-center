@@ -267,8 +267,19 @@ class OrderManager:
         order = self.store.get_order(fill.cloid)
         if order is None:
             return False
-        role = fill.role if fill.role != "UNKNOWN" else order["role"]
-        self.store.insert_fill(
+        role = str(order["role"])
+        if fill.role != "UNKNOWN" and fill.role != role:
+            self._quarantine_fill(
+                "FILL_ROLE_CONFLICT",
+                fill,
+                f"event_role={fill.role} stored_role={role} cloid={fill.cloid}",
+            )
+            self._synced_fills.add(fill.fill_id)
+            return True
+
+        trade_id = order["trade_id"]
+        trade = self.store.get_trade(int(trade_id)) if trade_id is not None else None
+        outcome = self.store.insert_fill(
             fill_id=fill.fill_id,
             cloid=fill.cloid,
             decision_uid=order["decision_uid"],
@@ -278,10 +289,38 @@ class OrderManager:
             fee=fill.fee,
             funding=fill.funding,
         )
+        if outcome == "CONFLICT":
+            self._quarantine_fill(
+                "FILL_ID_CONFLICT",
+                fill,
+                f"immutable fill_id reused with different payload: {fill.fill_id}",
+            )
+            self._synced_fills.add(fill.fill_id)
+            return True
+        if trade is not None and trade["exit_ts"] is not None:
+            if outcome == "EXACT_DUPLICATE":
+                self._synced_fills.add(fill.fill_id)
+                return True
+            self._quarantine_fill(
+                "POST_CLOSE_FILL",
+                fill,
+                f"trade_id={trade_id} role={role} canonical_exit_ts={trade['exit_ts']}",
+            )
+            self._synced_fills.add(fill.fill_id)
+            return True
+
         # Cumulative order accounting: an order becomes FILLED only when its
         # persisted fills reach the ordered quantity; a partial fill keeps the
         # current status so pending/grace logic still sees a live order.
         order_filled_qty, order_vwap = self.store.order_fill_totals(fill.cloid)
+        if order_filled_qty > float(order["qty"]) + 1e-9:
+            self._quarantine_fill(
+                "ORDER_OVERFILL",
+                fill,
+                f"cloid={fill.cloid} filled_qty={order_filled_qty} order_qty={order['qty']}",
+            )
+            self._synced_fills.add(fill.fill_id)
+            return True
         order_complete = order_filled_qty >= float(order["qty"]) - 1e-9
         self.store.update_order_status(
             fill.cloid,
@@ -290,7 +329,6 @@ class OrderManager:
             avg_fill_px=order_vwap,
             ts_last=fill.ts,
         )
-        trade_id = order["trade_id"]
         if trade_id is not None and role == "ENTRY":
             totals = self.store.trade_fill_totals(int(trade_id))
             if totals["entry_qty"] > 0 and totals["entry_vwap"] is not None:
@@ -311,8 +349,38 @@ class OrderManager:
                 else:
                     entry_qty = float(trade["qty"])
                     entry_px = float(trade["entry_px"] or trade["expected_px"])
-                was_closed = trade["exit_ts"] is not None
+                if exit_qty > entry_qty + 1e-9:
+                    self._quarantine_fill(
+                        "TRADE_OVERFILL",
+                        fill,
+                        f"trade_id={trade_id} exit_qty={exit_qty} entry_qty={entry_qty}",
+                    )
+                    self._synced_fills.add(fill.fill_id)
+                    return True
                 if exit_qty >= entry_qty - 1e-9:
+                    if self.store.has_live_entry_remainder(int(trade_id)):
+                        if outcome == "INSERTED":
+                            self.store.insert_decision(
+                                self.run_id,
+                                order["decision_uid"],
+                                fill.ts,
+                                trade["coin"],
+                                "TRADE_PARTIAL_EXIT",
+                                {
+                                    "exit_reason": role,
+                                    "exit_qty": exit_qty,
+                                    "entry_qty": entry_qty,
+                                    "entry_remainder_live": True,
+                                },
+                                trade_id=int(trade_id),
+                            )
+                            self._quarantine_fill(
+                                "ENTRY_REMAINDER_LIVE",
+                                fill,
+                                f"trade_id={trade_id} flat_qty={exit_qty} owned entry remainder can still fill",
+                            )
+                        self._synced_fills.add(fill.fill_id)
+                        return True
                     exit_vwap = float(totals["exit_vwap"])
                     sign = 1 if trade["direction"] == "LONG" else -1
                     gross = (exit_vwap - entry_px) * entry_qty * sign
@@ -320,26 +388,32 @@ class OrderManager:
                     # fill above is already in `fills`.
                     costs = self.store.trade_costs(str(order["decision_uid"]))
                     pnl = gross - costs
-                    self.store.update_trade_exit(int(trade_id), exit_vwap, fill.ts, role, pnl)
-                    if not was_closed:
-                        self.store.insert_decision(
-                            self.run_id,
-                            order["decision_uid"],
-                            fill.ts,
-                            trade["coin"],
-                            "TRADE_CLOSED",
-                            {
-                                "exit_reason": role,
-                                "pnl": pnl,
-                                "pnl_gross": gross,
-                                "costs": costs,
-                                "entry_basis_px": entry_px,
-                                "exit_vwap": exit_vwap,
-                                "qty": entry_qty,
-                            },
-                            trade_id=int(trade_id),
+                    closed = self.store.close_trade_once_with_decision(
+                        trade_id=int(trade_id),
+                        run_id=self.run_id,
+                        decision_uid=str(order["decision_uid"]),
+                        coin=str(trade["coin"]),
+                        exit_px=exit_vwap,
+                        exit_ts=fill.ts,
+                        exit_reason=role,
+                        pnl=pnl,
+                        payload={
+                            "exit_reason": role,
+                            "pnl": pnl,
+                            "pnl_gross": gross,
+                            "costs": costs,
+                            "entry_basis_px": entry_px,
+                            "exit_vwap": exit_vwap,
+                            "qty": entry_qty,
+                        },
+                    )
+                    if not closed:
+                        self._quarantine_fill(
+                            "TRADE_CLOSE_RACE",
+                            fill,
+                            f"trade_id={trade_id} was closed before atomic close",
                         )
-                elif not was_closed:
+                elif outcome == "INSERTED":
                     # Partial exit: the trade stays open — no exit_ts, no PnL,
                     # no gate contribution until the position is fully flat.
                     self.store.insert_decision(
@@ -353,6 +427,17 @@ class OrderManager:
                     )
         self._synced_fills.add(fill.fill_id)
         return True
+
+    def _quarantine_fill(self, code: str, fill: FillEvent, detail: str) -> None:
+        """Persist an integrity fault and stop new entries without rewriting PnL."""
+        self.store.set_meta("app_state", "DISARMED")
+        self.store.insert_event(
+            self.run_id,
+            fill.ts,
+            "ERROR",
+            code,
+            f"fill_id={fill.fill_id} {detail}",
+        )
 
     def _within_pending_grace(self, trade_id: int) -> bool:
         now = datetime.now(UTC)

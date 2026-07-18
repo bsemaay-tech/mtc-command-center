@@ -20,7 +20,7 @@ from bridge.broker.mock import MockBroker
 from bridge.engine.engine import BridgeEngine
 from bridge.engine.orders import OrderManager
 from bridge.engine.risk import RiskConfig, RiskEngine
-from bridge.engine.types import Bar, FillEvent, Signal
+from bridge.engine.types import AccountSnapshot, Bar, FillEvent, Position, Signal
 from bridge.store.db import Store
 
 EQUITY = 100000.0
@@ -40,8 +40,8 @@ class ProtocolBroker:
     async def connect(self) -> None:
         self.connected = True
 
-    async def account(self) -> dict:
-        return {"equity": EQUITY, "available_margin": EQUITY}
+    async def account(self) -> AccountSnapshot:
+        return AccountSnapshot(equity=EQUITY, available_margin=EQUITY)
 
     async def positions(self) -> list:
         return []
@@ -700,6 +700,196 @@ def test_partial_entry_state_survives_restart(tmp_path):
     assert trade["pnl"] == pytest.approx(0.0)
 
 
+def test_late_mixed_role_fill_quarantines_without_rewriting_close(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, duid = _open_trade(store, "late", qty=200.0, expected_px=100.0)
+    store.insert_order(
+        cloid="late-t", oid=None, group_id=None, order_ref="late-t", order_json={},
+        decision_uid=duid, trade_id=trade_id, role="TP", status="OPEN", qty=200.0,
+    )
+    manager._ingest_fill(_fill("late-e1", "late-e", px=100.0, qty=200.0, offset_s=0))
+    manager._ingest_fill(_fill("late-sl", "late-s", px=90.0, qty=200.0, offset_s=1))
+    assert store.get_trade(trade_id)["pnl"] == pytest.approx(-2000.0)
+
+    manager._ingest_fill(_fill("late-tp", "late-t", px=110.0, qty=200.0, offset_s=2))
+
+    trade = store.get_trade(trade_id)
+    assert trade["pnl"] == pytest.approx(-2000.0)
+    assert trade["exit_px"] == pytest.approx(90.0)
+    assert store.realized_pnl_today(SEED_RUN) == pytest.approx(-2000.0)
+    assert store.consecutive_closed_losses(SEED_RUN) == 1
+    assert len(_closed_decisions(store, "TRADE_CLOSED")) == 1
+    assert store.get_meta("app_state") == "DISARMED"
+    assert "POST_CLOSE_FILL" in {row["code"] for row in store.get_events()}
+
+
+@pytest.mark.parametrize(
+    ("first_role", "late_role", "first_px", "late_px", "expected_pnl"),
+    [
+        ("TP", "SL", 110.0, 90.0, 10.0),
+        ("SL", "CLOSE", 90.0, 105.0, -10.0),
+    ],
+)
+def test_other_late_exit_roles_preserve_canonical_close(
+    tmp_path, first_role, late_role, first_px, late_px, expected_pnl
+):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, duid = _open_trade(store, "roles", qty=1.0, expected_px=100.0)
+    for role in {first_role, late_role} - {"SL"}:
+        suffix = role.lower()
+        store.insert_order(
+            cloid=f"roles-{suffix}", oid=None, group_id=None, order_ref=f"roles-{suffix}", order_json={},
+            decision_uid=duid, trade_id=trade_id, role=role, status="OPEN", qty=1.0,
+        )
+    cloid = {"SL": "roles-s", "TP": "roles-tp", "CLOSE": "roles-close"}
+    manager._ingest_fill(_fill("roles-e1", "roles-e", px=100.0, qty=1.0, offset_s=0))
+    manager._ingest_fill(_fill("roles-first", cloid[first_role], px=first_px, qty=1.0, offset_s=1))
+    manager._ingest_fill(_fill("roles-late", cloid[late_role], px=late_px, qty=1.0, offset_s=2))
+
+    trade = store.get_trade(trade_id)
+    assert trade["pnl"] == pytest.approx(expected_pnl)
+    assert trade["exit_px"] == pytest.approx(first_px)
+    assert trade["exit_reason"] == first_role
+    assert len(_closed_decisions(store, "TRADE_CLOSED")) == 1
+    assert "POST_CLOSE_FILL" in {row["code"] for row in store.get_events()}
+
+
+def test_conflicting_duplicate_fill_id_is_immutable_and_quarantines(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, duid = _open_trade(store, "conflict", qty=1.0, expected_px=100.0)
+    store.insert_order(
+        cloid="conflict-t", oid=None, group_id=None, order_ref="conflict-t", order_json={},
+        decision_uid=duid, trade_id=trade_id, role="TP", status="OPEN", qty=1.0,
+    )
+    manager._ingest_fill(_fill("conflict-e", "conflict-e", px=100.0, qty=1.0, offset_s=0))
+    manager._ingest_fill(_fill("conflict-x", "conflict-s", px=90.0, qty=1.0, offset_s=1, fee=1.0))
+    assert store.get_trade(trade_id)["pnl"] == pytest.approx(-11.0)
+
+    manager2 = _manager(store)
+    manager2._ingest_fill(_fill("conflict-x", "conflict-t", px=110.0, qty=1.0, offset_s=2))
+
+    trade = store.get_trade(trade_id)
+    fill_row = next(row for row in store.get_snapshot()["fills"] if row["fill_id"] == "conflict-x")
+    assert trade["pnl"] == pytest.approx(-11.0)
+    assert fill_row["px"] == pytest.approx(90.0)
+    assert fill_row["fee"] == pytest.approx(1.0)
+    assert store.get_meta("app_state") == "DISARMED"
+    assert "FILL_ID_CONFLICT" in {row["code"] for row in store.get_events()}
+
+
+def test_exact_partial_fill_redelivery_does_not_duplicate_decision(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    _open_trade(store, "pdup", qty=2.0, expected_px=100.0)
+    manager._ingest_fill(_fill("pdup-e", "pdup-e", px=100.0, qty=2.0, offset_s=0))
+    partial = _fill("pdup-x", "pdup-s", px=90.0, qty=1.0, offset_s=1)
+    manager._ingest_fill(partial)
+    assert len(_closed_decisions(store, "TRADE_PARTIAL_EXIT")) == 1
+
+    _manager(store)._ingest_fill(partial)
+
+    assert len(_closed_decisions(store, "TRADE_PARTIAL_EXIT")) == 1
+
+
+def test_partial_entry_remainder_quarantines_and_late_fill_stays_owned(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, _ = _open_trade(store, "remain", qty=2.0, expected_px=100.0)
+    manager._ingest_fill(_fill("remain-e1", "remain-e", px=100.0, qty=1.0, offset_s=0))
+    manager._ingest_fill(_fill("remain-x1", "remain-s", px=90.0, qty=1.0, offset_s=1))
+
+    trade = store.get_trade(trade_id)
+    assert trade["exit_ts"] is None
+    assert trade["pnl"] is None
+    assert store.get_meta("app_state") == "DISARMED"
+    assert "ENTRY_REMAINDER_LIVE" in {row["code"] for row in store.get_events()}
+
+    _manager(store)._ingest_fill(_fill("remain-e2", "remain-e", px=110.0, qty=1.0, offset_s=2))
+    assert store.get_open_trade_for_coin(SEED_RUN, "BTC") is not None
+    assert store.get_trade(trade_id)["entry_px"] == pytest.approx(105.0)
+
+    class PositionBroker(ProtocolBroker):
+        def __init__(self):
+            super().__init__([])
+            self.reprotect_attempts = 0
+            self.flattened: list[str] = []
+
+        async def positions(self):
+            return [Position(symbol="BTC", size=1.0, entry_px=110.0)]
+
+        async def reprotect_position(self, position, stop_loss, take_profit, decision_uid):
+            self.reprotect_attempts += 1
+            return None
+
+        async def flatten(self, coin: str):
+            self.flattened.append(coin)
+
+    broker = PositionBroker()
+    asyncio.run(OrderManager(store, broker, SEED_RUN, pending_grace_s=0).reconcile())
+    assert broker.reprotect_attempts == 1
+    assert broker.flattened == ["BTC"]
+    assert "FOREIGN_POSITION_IGNORED" not in {row["code"] for row in store.get_events()}
+
+
+def test_cross_order_trade_overfill_quarantines_without_closing(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, duid = _open_trade(store, "over", qty=2.0, expected_px=100.0)
+    store.insert_order(
+        cloid="over-t", oid=None, group_id=None, order_ref="over-t", order_json={},
+        decision_uid=duid, trade_id=trade_id, role="TP", status="OPEN", qty=2.0,
+    )
+    manager._ingest_fill(_fill("over-e", "over-e", px=100.0, qty=2.0, offset_s=0))
+    manager._ingest_fill(_fill("over-s1", "over-s", px=90.0, qty=1.5, offset_s=1))
+    manager._ingest_fill(_fill("over-t1", "over-t", px=110.0, qty=1.0, offset_s=2))
+
+    trade = store.get_trade(trade_id)
+    assert trade["exit_ts"] is None
+    assert trade["pnl"] is None
+    assert store.get_meta("app_state") == "DISARMED"
+    assert "TRADE_OVERFILL" in {row["code"] for row in store.get_events()}
+
+
+def test_close_and_decision_rollback_then_exact_fill_restart_recovers(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, _ = _open_trade(store, "atomic", qty=1.0, expected_px=100.0)
+    manager._ingest_fill(_fill("atomic-e", "atomic-e", px=100.0, qty=1.0, offset_s=0))
+    exit_fill = _fill("atomic-x", "atomic-s", px=90.0, qty=1.0, offset_s=1)
+    store.conn.execute(
+        """
+        CREATE TRIGGER fail_trade_closed
+        BEFORE INSERT ON decisions
+        WHEN NEW.stage = 'TRADE_CLOSED'
+        BEGIN
+          SELECT RAISE(ABORT, 'forced close decision failure');
+        END
+        """
+    )
+    store.conn.commit()
+
+    with pytest.raises(sqlite3.IntegrityError, match="forced close decision failure"):
+        manager._ingest_fill(exit_fill)
+
+    failed_trade = store.get_trade(trade_id)
+    assert failed_trade["exit_ts"] is None
+    assert failed_trade["pnl"] is None
+    assert len(_closed_decisions(store, "TRADE_CLOSED")) == 0
+    assert [row["fill_id"] for row in store.get_snapshot()["fills"]].count("atomic-x") == 1
+
+    store.conn.execute("DROP TRIGGER fail_trade_closed")
+    store.conn.commit()
+    _manager(store)._ingest_fill(exit_fill)
+
+    recovered_trade = store.get_trade(trade_id)
+    assert recovered_trade["pnl"] == pytest.approx(-10.0)
+    assert len(_closed_decisions(store, "TRADE_CLOSED")) == 1
+    assert [row["fill_id"] for row in store.get_snapshot()["fills"]].count("atomic-x") == 1
+
+
 def test_half_exited_trade_does_not_trip_gates_through_engine_path(tmp_path):
     asyncio.run(_half_exit_engine_path(tmp_path))
 
@@ -707,8 +897,8 @@ def test_half_exited_trade_does_not_trip_gates_through_engine_path(tmp_path):
 async def _half_exit_engine_path(tmp_path):
     store = _store(tmp_path)
     manager = _manager(store)
-    _open_trade(store, "hx", qty=2.0, expected_px=100.0)
-    manager._ingest_fill(_fill("hx-1", "hx-e", px=100.0, qty=2.0, offset_s=0))
+    _open_trade(store, "hx", qty=100.0, expected_px=100.0)
+    manager._ingest_fill(_fill("hx-1", "hx-e", px=100.0, qty=100.0, offset_s=0))
     # First exit leg at 50: the OLD accounting persisted a full-qty loss here
     # (would exceed the daily limit); correct accounting keeps the trade open.
     manager._ingest_fill(_fill("hx-2", "hx-s", px=50.0, qty=1.0, offset_s=1))
