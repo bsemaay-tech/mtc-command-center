@@ -90,8 +90,10 @@ pass-cases pass either way, as expected). No exchange, scheduler, credential, co
   `fee` only, and no funding-ledger subscription exists. In production, gate PnL is therefore
   **gross − fees**; funding events on the exchange are NOT captured. Wiring a real funding
   ledger (subscription, signed attribution, day boundaries) is deliberately deferred to the
-  full TS-P1-007/TS-P1-005 work. **This exclusion requires explicit owner acceptance and is
-  pending Barış's decision.** The synthetic funding tests prove the code path only.
+  full TS-P1-007/TS-P1-005 work. **This exclusion was explicitly ACCEPTED by Barış on
+  2026-07-18 — recorded as `_AI_MEMORY/DECISIONS.md` entry D017** (revisit before any paper
+  evidence cites the daily-loss gate, or if funding costs become material). The synthetic
+  funding tests prove the code path only.
 - **R-03 red-proof honesty:** the first repair round's "18/18 FAIL pre-repair" was
   constructor-signature-level (old `Store` lacked `clock=`); Codex's compatibility shim showed
   the semantic result was 14 failed / 4 passed. This round's red proof restores production
