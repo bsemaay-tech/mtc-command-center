@@ -509,6 +509,52 @@ class Store:
                 break
         return count
 
+    def order_fill_totals(self, cloid: str) -> tuple[float, float | None]:
+        """Cumulative filled quantity and VWAP for one order, derived from the
+        persisted fills (fill_id is the primary key, so duplicate deliveries
+        coalesce and the totals are restart-safe)."""
+        row = self.conn.execute(
+            "SELECT COALESCE(SUM(qty), 0.0), SUM(qty * px) FROM fills WHERE cloid = ?",
+            (cloid,),
+        ).fetchone()
+        qty = float(row[0]) if row and row[0] is not None else 0.0
+        vwap = (float(row[1]) / qty) if qty > 0 and row[1] is not None else None
+        return qty, vwap
+
+    def trade_fill_totals(self, trade_id: int) -> dict[str, Any]:
+        """Cumulative entry/exit fill quantities, VWAPs and timestamps for a
+        trade, joining fills to their orders' roles. Restart- and
+        duplicate-safe for the same reason as order_fill_totals."""
+        rows = self.conn.execute(
+            """
+            SELECT CASE WHEN o.role = 'ENTRY' THEN 'ENTRY' ELSE 'EXIT' END AS side,
+                   COALESCE(SUM(f.qty), 0.0) AS qty,
+                   SUM(f.qty * f.px) AS notional,
+                   MIN(f.fill_ts) AS first_ts,
+                   MAX(f.fill_ts) AS last_ts
+            FROM fills f JOIN orders o ON o.cloid = f.cloid
+            WHERE o.trade_id = ?
+            GROUP BY side
+            """,
+            (trade_id,),
+        ).fetchall()
+        totals: dict[str, Any] = {
+            "entry_qty": 0.0, "entry_vwap": None, "entry_first_ts": None,
+            "exit_qty": 0.0, "exit_vwap": None, "exit_last_ts": None,
+        }
+        for row in rows:
+            qty = float(row["qty"])
+            vwap = (float(row["notional"]) / qty) if qty > 0 and row["notional"] is not None else None
+            if row["side"] == "ENTRY":
+                totals["entry_qty"] = qty
+                totals["entry_vwap"] = vwap
+                totals["entry_first_ts"] = row["first_ts"]
+            else:
+                totals["exit_qty"] = qty
+                totals["exit_vwap"] = vwap
+                totals["exit_last_ts"] = row["last_ts"]
+        return totals
+
     def trade_costs(self, decision_uid: str) -> float:
         """Total captured fill costs for one trade (entry + exit + funding).
         Positive values are debits per the Hyperliquid fee convention; rebates

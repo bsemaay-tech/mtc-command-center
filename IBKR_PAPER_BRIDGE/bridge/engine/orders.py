@@ -278,37 +278,79 @@ class OrderManager:
             fee=fill.fee,
             funding=fill.funding,
         )
+        # Cumulative order accounting: an order becomes FILLED only when its
+        # persisted fills reach the ordered quantity; a partial fill keeps the
+        # current status so pending/grace logic still sees a live order.
+        order_filled_qty, order_vwap = self.store.order_fill_totals(fill.cloid)
+        order_complete = order_filled_qty >= float(order["qty"]) - 1e-9
         self.store.update_order_status(
             fill.cloid,
-            "FILLED",
-            filled_qty=fill.qty,
-            avg_fill_px=fill.px,
+            "FILLED" if order_complete else str(order["status"]),
+            filled_qty=order_filled_qty,
+            avg_fill_px=order_vwap,
             ts_last=fill.ts,
         )
         trade_id = order["trade_id"]
         if trade_id is not None and role == "ENTRY":
-            self.store.update_trade_entry(int(trade_id), fill.px, fill.ts)
+            totals = self.store.trade_fill_totals(int(trade_id))
+            if totals["entry_qty"] > 0 and totals["entry_vwap"] is not None:
+                self.store.update_trade_entry(
+                    int(trade_id), float(totals["entry_vwap"]), str(totals["entry_first_ts"])
+                )
         elif trade_id is not None and role in {"SL", "TP", "TRAIL", "CLOSE"}:
             trade = self.store.get_trade(int(trade_id))
             if trade is not None:
-                entry_px = float(trade["entry_px"] or trade["expected_px"])
-                sign = 1 if trade["direction"] == "LONG" else -1
-                gross = (fill.px - entry_px) * float(trade["qty"]) * sign
-                # Persisted PnL is NET of captured fees/funding (the exit fill
-                # above is already in `fills`), so the risk gates see economic
-                # losses, not just price-delta losses.
-                costs = self.store.trade_costs(str(order["decision_uid"]))
-                pnl = gross - costs
-                self.store.update_trade_exit(int(trade_id), fill.px, fill.ts, role, pnl)
-                self.store.insert_decision(
-                    self.run_id,
-                    order["decision_uid"],
-                    fill.ts,
-                    trade["coin"],
-                    "TRADE_CLOSED",
-                    {"exit_reason": role, "pnl": pnl, "pnl_gross": gross, "costs": costs},
-                    trade_id=int(trade_id),
-                )
+                totals = self.store.trade_fill_totals(int(trade_id))
+                exit_qty = float(totals["exit_qty"])
+                # Entry basis: prefer persisted entry fills (split-entry VWAP);
+                # brokers that report the entry only on the order row fall back
+                # to the trade's planned quantity and recorded entry price.
+                if totals["entry_qty"] > 0 and totals["entry_vwap"] is not None:
+                    entry_qty = float(totals["entry_qty"])
+                    entry_px = float(totals["entry_vwap"])
+                else:
+                    entry_qty = float(trade["qty"])
+                    entry_px = float(trade["entry_px"] or trade["expected_px"])
+                was_closed = trade["exit_ts"] is not None
+                if exit_qty >= entry_qty - 1e-9:
+                    exit_vwap = float(totals["exit_vwap"])
+                    sign = 1 if trade["direction"] == "LONG" else -1
+                    gross = (exit_vwap - entry_px) * entry_qty * sign
+                    # Persisted PnL is NET of captured fill costs; the exit
+                    # fill above is already in `fills`.
+                    costs = self.store.trade_costs(str(order["decision_uid"]))
+                    pnl = gross - costs
+                    self.store.update_trade_exit(int(trade_id), exit_vwap, fill.ts, role, pnl)
+                    if not was_closed:
+                        self.store.insert_decision(
+                            self.run_id,
+                            order["decision_uid"],
+                            fill.ts,
+                            trade["coin"],
+                            "TRADE_CLOSED",
+                            {
+                                "exit_reason": role,
+                                "pnl": pnl,
+                                "pnl_gross": gross,
+                                "costs": costs,
+                                "entry_basis_px": entry_px,
+                                "exit_vwap": exit_vwap,
+                                "qty": entry_qty,
+                            },
+                            trade_id=int(trade_id),
+                        )
+                elif not was_closed:
+                    # Partial exit: the trade stays open — no exit_ts, no PnL,
+                    # no gate contribution until the position is fully flat.
+                    self.store.insert_decision(
+                        self.run_id,
+                        order["decision_uid"],
+                        fill.ts,
+                        trade["coin"],
+                        "TRADE_PARTIAL_EXIT",
+                        {"exit_reason": role, "exit_qty": exit_qty, "entry_qty": entry_qty},
+                        trade_id=int(trade_id),
+                    )
         self._synced_fills.add(fill.fill_id)
         return True
 

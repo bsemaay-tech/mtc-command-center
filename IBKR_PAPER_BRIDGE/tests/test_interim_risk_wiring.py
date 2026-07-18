@@ -567,6 +567,161 @@ def test_store_helpers_empty_open_and_zero_pnl(tmp_path):
     assert store.consecutive_closed_losses(SEED_RUN) == 0
 
 
+# --- Partial-fill accounting (re-audit R-01) -------------------------------
+
+
+def _open_trade(store: Store, tag: str, qty: float, expected_px: float, run_id: str = SEED_RUN) -> tuple[int, str]:
+    duid = f"{run_id}:BTC:{tag}"
+    trade_id = store.create_trade(
+        run_id=run_id,
+        coin="BTC",
+        direction="LONG",
+        qty=qty,
+        entry_decision_uid=duid,
+        signal_ts=FROZEN - timedelta(hours=1),
+        decision_ts=FROZEN - timedelta(hours=1),
+        expected_px=expected_px,
+        risk_dollars=1.0,
+        risk_pct=0.005,
+        leverage=1,
+        sl_initial=expected_px * 0.9,
+        tp_initial=None,
+        llm_directive_id=None,
+    )
+    store.insert_order(
+        cloid=f"{tag}-e", oid=None, group_id=None, order_ref=f"{tag}-e", order_json={},
+        decision_uid=duid, trade_id=trade_id, role="ENTRY", status="SUBMITTED", qty=qty,
+    )
+    store.insert_order(
+        cloid=f"{tag}-s", oid=None, group_id=None, order_ref=f"{tag}-s", order_json={},
+        decision_uid=duid, trade_id=trade_id, role="SL", status="OPEN", qty=qty,
+    )
+    return trade_id, duid
+
+
+def _fill(fill_id: str, cloid: str, px: float, qty: float, offset_s: int, fee: float = 0.0, role: str = "UNKNOWN") -> FillEvent:
+    return FillEvent(
+        fill_id=fill_id, cloid=cloid, coin="BTC", qty=qty, px=px,
+        ts=FROZEN - timedelta(minutes=10) + timedelta(seconds=offset_s), fee=fee, role=role,
+    )
+
+
+def _closed_decisions(store: Store, stage: str) -> list[dict]:
+    return [row for row in store.get_snapshot()["decisions"] if row["stage"] == stage]
+
+
+def test_split_entry_uses_vwap_and_true_zero_pnl(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, _ = _open_trade(store, "se", qty=2.0, expected_px=100.0)
+    manager._ingest_fill(_fill("se-1", "se-e", px=100.0, qty=1.0, offset_s=0))
+    manager._ingest_fill(_fill("se-2", "se-e", px=110.0, qty=1.0, offset_s=1))
+    manager._ingest_fill(_fill("se-3", "se-s", px=105.0, qty=2.0, offset_s=2))
+
+    trade = store.get_trade(trade_id)
+    assert trade["entry_px"] == pytest.approx(105.0)
+    assert trade["pnl"] == pytest.approx(0.0)
+    assert len(_closed_decisions(store, "TRADE_CLOSED")) == 1
+    assert store.consecutive_closed_losses(SEED_RUN) == 0
+
+
+def test_split_exit_no_premature_close_then_correct_final_pnl(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, _ = _open_trade(store, "sx", qty=2.0, expected_px=100.0)
+    manager._ingest_fill(_fill("sx-1", "sx-e", px=100.0, qty=2.0, offset_s=0))
+    manager._ingest_fill(_fill("sx-2", "sx-s", px=90.0, qty=1.0, offset_s=1))
+
+    # Half-exited: trade must remain OPEN with no phantom -20 loss.
+    trade = store.get_trade(trade_id)
+    assert trade["exit_ts"] is None
+    assert trade["pnl"] is None
+    assert store.realized_pnl_today(SEED_RUN) == 0.0
+    assert store.consecutive_closed_losses(SEED_RUN) == 0
+    assert len(_closed_decisions(store, "TRADE_PARTIAL_EXIT")) == 1
+    assert not _closed_decisions(store, "TRADE_CLOSED")
+
+    manager._ingest_fill(_fill("sx-3", "sx-s", px=110.0, qty=1.0, offset_s=2))
+    trade = store.get_trade(trade_id)
+    assert trade["pnl"] == pytest.approx(0.0)
+    assert trade["exit_px"] == pytest.approx(100.0)
+    assert len(_closed_decisions(store, "TRADE_CLOSED")) == 1
+
+
+def test_split_exit_with_fees_is_net_loss(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, _ = _open_trade(store, "sf", qty=2.0, expected_px=100.0)
+    manager._ingest_fill(_fill("sf-1", "sf-e", px=100.0, qty=2.0, offset_s=0, fee=3.0))
+    manager._ingest_fill(_fill("sf-2", "sf-s", px=90.0, qty=1.0, offset_s=1, fee=2.0))
+    manager._ingest_fill(_fill("sf-3", "sf-s", px=110.0, qty=1.0, offset_s=2, fee=5.0))
+
+    assert store.get_trade(trade_id)["pnl"] == pytest.approx(-10.0)
+    assert store.realized_pnl_today(SEED_RUN) == pytest.approx(-10.0)
+    assert store.consecutive_closed_losses(SEED_RUN) == 1
+
+
+def test_duplicate_final_fill_is_idempotent_across_restart(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, _ = _open_trade(store, "dup", qty=2.0, expected_px=100.0)
+    manager._ingest_fill(_fill("dup-1", "dup-e", px=100.0, qty=1.0, offset_s=0))
+    manager._ingest_fill(_fill("dup-2", "dup-e", px=110.0, qty=1.0, offset_s=1))
+    final = _fill("dup-3", "dup-s", px=105.0, qty=2.0, offset_s=2)
+    manager._ingest_fill(final)
+
+    # Redelivery after restart: a FRESH manager (empty _synced_fills) re-ingests
+    # the same fill_id. INSERT OR REPLACE coalesces the row; totals, PnL and
+    # the TRADE_CLOSED decision must not change or duplicate.
+    manager2 = _manager(store)
+    manager2._ingest_fill(final)
+
+    trade = store.get_trade(trade_id)
+    assert trade["pnl"] == pytest.approx(0.0)
+    assert trade["entry_px"] == pytest.approx(105.0)
+    assert len(_closed_decisions(store, "TRADE_CLOSED")) == 1
+
+
+def test_partial_entry_state_survives_restart(tmp_path):
+    first = _store(tmp_path)
+    manager_a = _manager(first)
+    trade_id, _ = _open_trade(first, "rs", qty=2.0, expected_px=100.0)
+    manager_a._ingest_fill(_fill("rs-1", "rs-e", px=100.0, qty=1.0, offset_s=0))
+    manager_a._ingest_fill(_fill("rs-2", "rs-e", px=110.0, qty=1.0, offset_s=1))
+    first.close()
+
+    store = Store(tmp_path / "bridge.db", clock=lambda: FROZEN)
+    store.initialize()
+    manager_b = OrderManager(store=store, broker=MockBroker([], starting_equity=1000), run_id=SEED_RUN)
+    manager_b._ingest_fill(_fill("rs-3", "rs-s", px=105.0, qty=2.0, offset_s=2))
+
+    trade = store.get_trade(trade_id)
+    assert trade["entry_px"] == pytest.approx(105.0)
+    assert trade["pnl"] == pytest.approx(0.0)
+
+
+def test_half_exited_trade_does_not_trip_gates_through_engine_path(tmp_path):
+    asyncio.run(_half_exit_engine_path(tmp_path))
+
+
+async def _half_exit_engine_path(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    _open_trade(store, "hx", qty=2.0, expected_px=100.0)
+    manager._ingest_fill(_fill("hx-1", "hx-e", px=100.0, qty=2.0, offset_s=0))
+    # First exit leg at 50: the OLD accounting persisted a full-qty loss here
+    # (would exceed the daily limit); correct accounting keeps the trade open.
+    manager._ingest_fill(_fill("hx-2", "hx-s", px=50.0, qty=1.0, offset_s=1))
+
+    broker = ProtocolBroker([_bar()])
+    engine = _engine(store, broker, "half-exit")
+
+    await engine.run_replay(max_bars=1)
+
+    assert len(broker.submitted) == 1
+    assert store.get_meta("app_state") == "ARMED"
+
+
 def test_reconcile_equity_row_carries_realized_today(tmp_path):
     asyncio.run(_equity_row_realized(tmp_path))
 

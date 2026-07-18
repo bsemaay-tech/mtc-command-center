@@ -72,6 +72,31 @@ pass-cases pass either way, as expected). No exchange, scheduler, credential, co
    query uses the bounded half-open interval `[UTC midnight, next midnight)`.
 5. **Deterministic clock (F-06):** `Store(db_path, clock=...)` seam; engine-path tests freeze it.
 
+## Second repair round after re-audit BLOCK (2026-07-18, `CODEX_INTERIM_TSP1007_REAUDIT_2026-07-18.md`)
+
+- **R-01 partial fills:** fill accounting is now cumulative and derived from persisted fills.
+  Order `filled_qty`/`avg_fill_px` are cumulative; an order flips to `FILLED` only when its
+  fills reach the ordered quantity (partial fills keep the resting status so pending/grace
+  logic still sees a live order). Trade entry price is the entry-fill VWAP (first-fill
+  timestamp preserved); each exit fill contributes its actual quantity; the trade closes only
+  when cumulative exit quantity reaches the entry basis, and only then are exit VWAP, net PnL,
+  and one `TRADE_CLOSED` decision persisted. Earlier partial exits persist a
+  `TRADE_PARTIAL_EXIT` decision and contribute NOTHING to either gate. Close is idempotent
+  (duplicate redelivered fills coalesce on `fill_id`; `TRADE_CLOSED` is not duplicated).
+  Brokers that report the entry only on the order row (mock paths) fall back to the trade's
+  planned quantity and recorded entry price, preserving prior behavior.
+- **R-02 funding — honest production semantics:** the cost sum includes the `fills.funding`
+  column, but **no production path populates funding today**: the Hyperliquid adapter maps
+  `fee` only, and no funding-ledger subscription exists. In production, gate PnL is therefore
+  **gross − fees**; funding events on the exchange are NOT captured. Wiring a real funding
+  ledger (subscription, signed attribution, day boundaries) is deliberately deferred to the
+  full TS-P1-007/TS-P1-005 work. **This exclusion requires explicit owner acceptance and is
+  pending Barış's decision.** The synthetic funding tests prove the code path only.
+- **R-03 red-proof honesty:** the first repair round's "18/18 FAIL pre-repair" was
+  constructor-signature-level (old `Store` lacked `clock=`); Codex's compatibility shim showed
+  the semantic result was 14 failed / 4 passed. This round's red proof restores production
+  files to `066b49cc` with the test file unchanged, so failures are semantic by construction.
+
 ## Interim semantics disclosed (audit F-05)
 
 - The daily-loss percentage compares realized PnL against **current account equity at signal
