@@ -239,6 +239,8 @@ class BridgeEngine:
             stop_loss=signal.stop_loss,
             take_profit=signal.take_profit,
             open_position=None,
+            realized_today=self.store.realized_pnl_today(),
+            consecutive_losses=self.store.consecutive_closed_losses(),
         )
         if not risk.accepted or risk.plan is None:
             self.store.insert_decision(

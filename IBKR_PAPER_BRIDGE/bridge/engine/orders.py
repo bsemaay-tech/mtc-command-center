@@ -154,7 +154,7 @@ class OrderManager:
             equity=account.equity,
             cash=account.available_margin,
             unrealized=sum(position.unrealized for position in positions),
-            realized_today=0.0,
+            realized_today=self.store.realized_pnl_today(),
         )
 
     async def trail_position(self, position: Position, new_stop: float) -> bool:

@@ -448,6 +448,38 @@ class Store:
         )
         self.conn.commit()
 
+    def realized_pnl_today(self, now: datetime | None = None) -> float:
+        """Sum of closed-trade PnL since UTC midnight, across all run_ids so a
+        restart inside the same trading day cannot reset the daily-loss gate."""
+        current = now if now is not None else datetime.now(UTC)
+        day_start = current.astimezone(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+        row = self.conn.execute(
+            """
+            SELECT COALESCE(SUM(pnl), 0.0) FROM trades
+            WHERE exit_ts IS NOT NULL AND pnl IS NOT NULL AND exit_ts >= ?
+            """,
+            (_to_iso(day_start),),
+        ).fetchone()
+        return float(row[0]) if row and row[0] is not None else 0.0
+
+    def consecutive_closed_losses(self) -> int:
+        """Most-recent consecutive closed trades with negative PnL, across all
+        run_ids so the loss streak survives restarts; not day-scoped."""
+        rows = self.conn.execute(
+            """
+            SELECT pnl FROM trades
+            WHERE exit_ts IS NOT NULL AND pnl IS NOT NULL
+            ORDER BY exit_ts DESC, trade_id DESC
+            """
+        ).fetchall()
+        count = 0
+        for (pnl,) in rows:
+            if float(pnl) < 0:
+                count += 1
+            else:
+                break
+        return count
+
     def insert_equity(
         self,
         run_id: str,
