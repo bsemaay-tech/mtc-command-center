@@ -40,6 +40,14 @@ def test_reconnect_without_fresh_data_goes_stale():
     asyncio.run(_reconnect_without_fresh_data_goes_stale())
 
 
+def test_reconnect_late_fresh_bar_respects_restore_timeout():
+    asyncio.run(_reconnect_late_fresh_bar_respects_restore_timeout())
+
+
+def test_reconnect_default_restore_timeout_disarms_after_300_seconds():
+    asyncio.run(_reconnect_default_restore_timeout_disarms_after_300_seconds())
+
+
 async def _reconnect_duplicate_is_deduped() -> None:
     base = datetime(2026, 7, 12, 10, tzinfo=UTC)
     broker = FeedBroker([_bar(base)])
@@ -121,6 +129,77 @@ async def _reconnect_without_fresh_data_goes_stale() -> None:
 
     assert [code for code, _ in events] == ["DISCONNECT", "RECONNECT", "DATA_STALE"]
     assert events[-1][1] == "reconnect_no_fresh_data"
+    assert disarms == [True]
+
+
+async def _reconnect_late_fresh_bar_respects_restore_timeout() -> None:
+    default_broker = FeedBroker([])
+    default_events: list[tuple[str, str]] = []
+    default_disarms: list[bool] = []
+    default_feed = BarFeed(
+        default_broker,
+        "BTC",
+        "1h",
+        lambda bar: None,
+        lambda code, detail: default_events.append((code, detail)),
+        lambda: default_disarms.append(True),
+        data_restore_timeout_s=300,
+    )
+    assert await default_feed.reconnect(attempts=1, base_delay=0) is True
+    assert default_feed._awaiting_data_since is not None
+    default_started = default_feed._awaiting_data_since
+
+    await default_feed.check_once(default_started + timedelta(seconds=239))
+    assert "DATA_STALE" not in [code for code, _ in default_events]
+    assert default_disarms == []
+
+    default_feed._receive_bar(_bar(default_started + timedelta(seconds=240)))
+    await default_feed.check_once(default_started + timedelta(seconds=240))
+    assert [code for code, _ in default_events] == ["DISCONNECT", "RECONNECT", "DATA_RESTORED"]
+    assert default_disarms == []
+
+    legacy_broker = FeedBroker([])
+    legacy_events: list[tuple[str, str]] = []
+    legacy_disarms: list[bool] = []
+    legacy_feed = BarFeed(
+        legacy_broker,
+        "BTC",
+        "1h",
+        lambda bar: None,
+        lambda code, detail: legacy_events.append((code, detail)),
+        lambda: legacy_disarms.append(True),
+        data_restore_timeout_s=60,
+    )
+    assert await legacy_feed.reconnect(attempts=1, base_delay=0) is True
+    assert legacy_feed._awaiting_data_since is not None
+    await legacy_feed.check_once(legacy_feed._awaiting_data_since + timedelta(seconds=239))
+
+    assert legacy_events[-1] == ("DATA_STALE", "reconnect_no_fresh_data")
+    assert legacy_disarms == [True]
+
+
+async def _reconnect_default_restore_timeout_disarms_after_300_seconds() -> None:
+    broker = FeedBroker([])
+    events: list[tuple[str, str]] = []
+    disarms: list[bool] = []
+    feed = BarFeed(
+        broker,
+        "BTC",
+        "1h",
+        lambda bar: None,
+        lambda code, detail: events.append((code, detail)),
+        lambda: disarms.append(True),
+        data_restore_timeout_s=300,
+    )
+    assert await feed.reconnect(attempts=1, base_delay=0) is True
+    assert feed._awaiting_data_since is not None
+    started = feed._awaiting_data_since
+
+    await feed.check_once(started + timedelta(seconds=301))
+    await feed.check_once(started + timedelta(seconds=302))
+
+    assert events[-1] == ("DATA_STALE", "reconnect_no_fresh_data")
+    assert [code for code, _ in events].count("DATA_STALE") == 1
     assert disarms == [True]
 
 

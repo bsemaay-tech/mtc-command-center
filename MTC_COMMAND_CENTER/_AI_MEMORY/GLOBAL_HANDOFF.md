@@ -3161,3 +3161,22 @@ Full Task-5 live evidence and Task-6 stopped-state evidence:
 `MTC_COMMAND_CENTER/11_TRIAGE/P2_DAY0_V4_DEPLOY_REPORT_2026-07-15.md`. The live bridge remained
 ARMED/reconcile-ready/flat at the final check. Fable must audit before any registry-conflict
 resolution or further merge action.
+
+## [Codex GPT-5] 2026-07-16 — P2 data-restore timeout fix built; Fable audit locked
+
+Built the approved 60-to-300-second post-reconnect data-restore timeout on
+`feature/ibkr-bridge-final` in isolated `C:\BTL2`. Implementation commit `79976577` adds only
+the broker YAML value and `app.py`/`BridgeEngine` wiring; `bars.py`, notification behavior,
+reconcile behavior, trading logic, and protected scopes are unchanged.
+
+Test-first evidence: the final focused set failed on exact pre-fix production files with
+`1 failed, 2 passed` (missing engine/config wiring). After the fix, the focused set passed
+`3 passed`; both complete suites passed `132 passed, 1 warning` from the repo root and bridge
+CWD. The tests cover fresh data at 240 seconds, explicit legacy 60-second stale/disarm, never-
+fresh stale/disarm after 300 seconds, and YAML-to-`BarFeed` wiring. Staged 64+-hex secret scan
+was zero.
+
+No real-data run, broker/API action, deploy, restart, DISARM, or ARM occurred. `C:\P2RT` remains
+clean and detached at `1465f8f0`. Detailed evidence:
+`MTC_COMMAND_CENTER/11_TRIAGE/P2_DATA_RESTORE_TIMEOUT_REPORT_2026-07-16.md`. STOP for Fable to
+audit real code, independently rerun suites and the pre-fix failure, and record PASS before deploy.

@@ -44,6 +44,7 @@ class BridgeEngine:
     reconcile_max_consecutive_failures: int = 3
     bar_reconnect_attempts: int = 9
     bar_reconnect_base_delay_s: float = 5.0
+    bar_data_restore_timeout_s: float = 300.0
     bars: list[Bar] = field(default_factory=list)
     reconcile_ready: bool = False
     last_reconcile_ts: datetime | None = None
@@ -58,6 +59,7 @@ class BridgeEngine:
     def __post_init__(self) -> None:
         self.reconcile_max_consecutive_failures = max(1, int(self.reconcile_max_consecutive_failures))
         self.bar_reconnect_attempts = max(1, int(self.bar_reconnect_attempts))
+        self.bar_data_restore_timeout_s = max(30.0, float(self.bar_data_restore_timeout_s))
         self.order_manager = self.order_manager or OrderManager(self.store, self.broker, self.run_id)
         if self.notifier is None:
             # Default DISABLED: tests construct engines directly and must
@@ -89,6 +91,7 @@ class BridgeEngine:
             staleness_enabled=self.mode != "dry_run",
             reconnect_attempts=self.bar_reconnect_attempts,
             reconnect_base_delay=self.bar_reconnect_base_delay_s,
+            data_restore_timeout_s=self.bar_data_restore_timeout_s,
         )
         self.bars = await self._feed.start(lookback=lookback)
         # Persist warmup so the dashboard chart shows real exchange bars

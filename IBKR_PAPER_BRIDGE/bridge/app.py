@@ -115,6 +115,7 @@ def create_app(
             ),
             bar_reconnect_attempts=int(broker_cfg_raw.get("reconnect_attempts", 9)),
             bar_reconnect_base_delay_s=float(broker_cfg_raw.get("reconnect_base_delay_s", 5.0)),
+            bar_data_restore_timeout_s=float(broker_cfg_raw.get("data_restore_timeout_s", 300.0)),
         )
         app.state.bridge_engine = engine
         app.state.bridge_status["mode"] = "dry_run" if dry_run else "paper"
