@@ -148,13 +148,20 @@ class OrderManager:
                 await self.broker.flatten(position.symbol)
                 self.store.insert_event(self.run_id, datetime.now(UTC), "WARN", "NAKED_POSITION_FLATTENED", position.symbol)
         account = await self.broker.account()
+        try:
+            realized_today = self.store.realized_pnl_today(self.run_id)
+        except LookupError:
+            # Telemetry only: a reconcile before the run row exists has no
+            # same-environment trades to sum. Real DB errors still propagate
+            # so the reconcile failure budget sees them.
+            realized_today = 0.0
         self.store.insert_equity(
             self.run_id,
             datetime.now(UTC),
             equity=account.equity,
             cash=account.available_margin,
             unrealized=sum(position.unrealized for position in positions),
-            realized_today=self.store.realized_pnl_today(),
+            realized_today=realized_today,
         )
 
     async def trail_position(self, position: Position, new_stop: float) -> bool:
@@ -286,7 +293,12 @@ class OrderManager:
             if trade is not None:
                 entry_px = float(trade["entry_px"] or trade["expected_px"])
                 sign = 1 if trade["direction"] == "LONG" else -1
-                pnl = (fill.px - entry_px) * float(trade["qty"]) * sign
+                gross = (fill.px - entry_px) * float(trade["qty"]) * sign
+                # Persisted PnL is NET of captured fees/funding (the exit fill
+                # above is already in `fills`), so the risk gates see economic
+                # losses, not just price-delta losses.
+                costs = self.store.trade_costs(str(order["decision_uid"]))
+                pnl = gross - costs
                 self.store.update_trade_exit(int(trade_id), fill.px, fill.ts, role, pnl)
                 self.store.insert_decision(
                     self.run_id,
@@ -294,7 +306,7 @@ class OrderManager:
                     fill.ts,
                     trade["coin"],
                     "TRADE_CLOSED",
-                    {"exit_reason": role, "pnl": pnl},
+                    {"exit_reason": role, "pnl": pnl, "pnl_gross": gross, "costs": costs},
                     trade_id=int(trade_id),
                 )
         self._synced_fills.add(fill.fill_id)

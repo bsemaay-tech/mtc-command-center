@@ -4,16 +4,19 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 
 def _to_iso(value: datetime | str | None) -> str | None:
     if value is None:
         return None
     if isinstance(value, str):
-        return value
+        # Canonicalize instead of passing through: lexicographic range queries
+        # on TEXT timestamps are only correct if every stored value has the
+        # same aware-UTC ISO shape. Invalid strings raise (fail closed).
+        value = datetime.fromisoformat(value)
     if value.tzinfo is None:
         value = value.replace(tzinfo=UTC)
     return value.astimezone(UTC).isoformat()
@@ -31,9 +34,10 @@ def _json(value: Any) -> str:
 class Store:
     """Small SQLite access layer for the bridge runtime database."""
 
-    def __init__(self, db_path: str | Path):
+    def __init__(self, db_path: str | Path, clock: Callable[[], datetime] | None = None):
         self.db_path = Path(db_path)
         self._conn: sqlite3.Connection | None = None
+        self._clock: Callable[[], datetime] = clock or (lambda: datetime.now(UTC))
 
     @property
     def conn(self) -> sqlite3.Connection:
@@ -448,29 +452,54 @@ class Store:
         )
         self.conn.commit()
 
-    def realized_pnl_today(self, now: datetime | None = None) -> float:
-        """Sum of closed-trade PnL since UTC midnight, across all run_ids so a
-        restart inside the same trading day cannot reset the daily-loss gate."""
-        current = now if now is not None else datetime.now(UTC)
+    def _run_environment(self, run_id: str) -> tuple[str, str]:
+        row = self.conn.execute(
+            "SELECT mode, network FROM runs WHERE run_id = ?", (run_id,)
+        ).fetchone()
+        if row is None:
+            # Fail closed: risk queries must not silently fall back to an
+            # unscoped view when the environment is unknown.
+            raise LookupError(f"run not found for risk scoping: {run_id}")
+        return str(row["mode"]), str(row["network"])
+
+    def realized_pnl_today(self, run_id: str, now: datetime | None = None) -> float:
+        """Closed-trade net PnL inside [UTC midnight, next midnight) for the
+        given run's mode+network. Cross-run within that environment so a
+        restart inside the trading day cannot reset the daily-loss gate, but
+        other environments (e.g. dry_run replays sharing the DB file) never
+        leak in."""
+        mode, network = self._run_environment(run_id)
+        current = now if now is not None else self._clock()
+        if current.tzinfo is None:
+            current = current.replace(tzinfo=UTC)
         day_start = current.astimezone(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = day_start + timedelta(days=1)
         row = self.conn.execute(
             """
-            SELECT COALESCE(SUM(pnl), 0.0) FROM trades
-            WHERE exit_ts IS NOT NULL AND pnl IS NOT NULL AND exit_ts >= ?
+            SELECT COALESCE(SUM(t.pnl), 0.0)
+            FROM trades t JOIN runs r ON r.run_id = t.run_id
+            WHERE r.mode = ? AND r.network = ?
+              AND t.exit_ts IS NOT NULL AND t.pnl IS NOT NULL
+              AND t.exit_ts >= ? AND t.exit_ts < ?
             """,
-            (_to_iso(day_start),),
+            (mode, network, _to_iso(day_start), _to_iso(day_end)),
         ).fetchone()
         return float(row[0]) if row and row[0] is not None else 0.0
 
-    def consecutive_closed_losses(self) -> int:
-        """Most-recent consecutive closed trades with negative PnL, across all
-        run_ids so the loss streak survives restarts; not day-scoped."""
+    def consecutive_closed_losses(self, run_id: str) -> int:
+        """Most-recent consecutive closed trades with negative net PnL within
+        the given run's mode+network. Cross-run inside that environment so the
+        streak survives restarts; not day-scoped."""
+        mode, network = self._run_environment(run_id)
         rows = self.conn.execute(
             """
-            SELECT pnl FROM trades
-            WHERE exit_ts IS NOT NULL AND pnl IS NOT NULL
-            ORDER BY exit_ts DESC, trade_id DESC
-            """
+            SELECT t.pnl
+            FROM trades t JOIN runs r ON r.run_id = t.run_id
+            WHERE r.mode = ? AND r.network = ?
+              AND t.exit_ts IS NOT NULL AND t.pnl IS NOT NULL
+            ORDER BY t.exit_ts DESC, t.trade_id DESC
+            """,
+            (mode, network),
         ).fetchall()
         count = 0
         for (pnl,) in rows:
@@ -479,6 +508,19 @@ class Store:
             else:
                 break
         return count
+
+    def trade_costs(self, decision_uid: str) -> float:
+        """Total captured fill costs for one trade (entry + exit + funding).
+        Positive values are debits per the Hyperliquid fee convention; rebates
+        arrive negative and reduce the cost."""
+        row = self.conn.execute(
+            """
+            SELECT COALESCE(SUM(fee), 0.0) + COALESCE(SUM(funding), 0.0)
+            FROM fills WHERE decision_uid = ?
+            """,
+            (decision_uid,),
+        ).fetchone()
+        return float(row[0]) if row and row[0] is not None else 0.0
 
     def insert_equity(
         self,
