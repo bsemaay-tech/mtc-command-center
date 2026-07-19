@@ -18,6 +18,13 @@ from bridge.engine.orders import OrderManager
 from bridge.engine.risk import RiskEngine
 from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
 from bridge.engine.types import Bar, Position
+from bridge.engine.window import (
+    DEFAULT_STALE_AFTER_S,
+    detect_interruption,
+    record_liveness,
+    record_window_start,
+    window_status,
+)
 from bridge.store.db import Store
 
 
@@ -45,6 +52,7 @@ class BridgeEngine:
     bar_reconnect_attempts: int = 9
     bar_reconnect_base_delay_s: float = 5.0
     bar_data_restore_timeout_s: float = 300.0
+    window_stale_after_s: float = DEFAULT_STALE_AFTER_S
     bars: list[Bar] = field(default_factory=list)
     reconcile_ready: bool = False
     last_reconcile_ts: datetime | None = None
@@ -76,11 +84,22 @@ class BridgeEngine:
 
     async def start(self, lookback: int = 300) -> None:
         self._ensure_run(mode=self.mode)
+        # TS-P0-003: stamp a sticky interruption BEFORE fresh liveness is
+        # recorded, so a crash/downtime gap can never be silently bridged.
+        if detect_interruption(self.store, datetime.now(UTC), self.window_stale_after_s):
+            self.store.insert_event(
+                self.run_id,
+                datetime.now(UTC),
+                "WARN",
+                "WINDOW_INTERRUPTED",
+                f"liveness gap exceeded {self.window_stale_after_s}s at startup",
+            )
         await self.broker.connect()
         await self.order_manager.reconcile()
         self.reconcile_ready = True
         self.last_reconcile_ts = datetime.now(UTC)
         self.reconcile_error = None
+        record_liveness(self.store, self.last_reconcile_ts)
         await self._publish("status", self.status())
         self._feed = BarFeed(
             broker=self.broker,
@@ -134,6 +153,7 @@ class BridgeEngine:
         # Explicit human re-arm clears the sticky risk-input fail-closed latch.
         self.risk_input_error = None
         self._set_state("ARMED")
+        record_window_start(self.store, now)
         await self._publish("status", self.status())
 
     def disarm(self) -> None:
@@ -355,6 +375,11 @@ class BridgeEngine:
             state = self.state
         return {
             "state": state,
+            "window": window_status(
+                self.store,
+                app_state=state,
+                stale_after_s=self.window_stale_after_s,
+            ),
             "risk_input_error": self.risk_input_error,
             "reconcile_ready": self.reconcile_ready,
             "last_reconcile_ts": self.last_reconcile_ts.isoformat() if self.last_reconcile_ts else None,
@@ -445,6 +470,7 @@ class BridgeEngine:
         self.reconcile_ready = True
         self.last_reconcile_ts = datetime.now(UTC)
         self.reconcile_error = None
+        record_liveness(self.store, self.last_reconcile_ts)
         if recovered:
             self.store.insert_event(
                 self.run_id,
