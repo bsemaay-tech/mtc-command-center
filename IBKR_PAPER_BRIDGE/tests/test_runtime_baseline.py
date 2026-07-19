@@ -59,6 +59,7 @@ def make_source_repo(tmp_path: Path) -> Path:
     _init_repo(root)
     _write(root, "IBKR_PAPER_BRIDGE/bridge/app.py", "APP = 1\n")
     _write(root, "IBKR_PAPER_BRIDGE/bridge/engine/engine.py", "ENGINE = 1\n")
+    _write(root, "IBKR_PAPER_BRIDGE/bridge/store/db.py", "SCHEMA = 1\n")
     _write(root, "IBKR_PAPER_BRIDGE/config/bridge.yaml", "mode: paper\n")
     _write(
         root,
