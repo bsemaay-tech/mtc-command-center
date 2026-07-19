@@ -1,0 +1,928 @@
+"""Interim TS-P1-007: engine-path proof that DAILY_LOSS and CONSECUTIVE_LOSS
+gates receive real persisted values.
+
+Risk assertions drive ``BridgeEngine.on_bar`` through ``run_replay`` — no test
+passes ``realized_today``/``consecutive_losses`` directly into
+``RiskEngine.evaluate``. Net-PnL assertions drive the real
+``OrderManager._ingest_fill`` path. A frozen Store clock makes every UTC-day
+boundary deterministic (audit F-06).
+"""
+
+from __future__ import annotations
+
+import asyncio
+import sqlite3
+from datetime import UTC, datetime, timedelta
+
+import pytest
+
+from bridge.broker.mock import MockBroker
+from bridge.engine.engine import BridgeEngine
+from bridge.engine.orders import OrderManager
+from bridge.engine.risk import RiskConfig, RiskEngine
+from bridge.engine.types import AccountSnapshot, Bar, FillEvent, Position, Signal
+from bridge.store.db import Store
+
+EQUITY = 100000.0
+DAILY_LIMIT = EQUITY * RiskConfig().max_daily_loss_pct
+FROZEN = datetime(2026, 7, 6, 12, 0, tzinfo=UTC)
+SEED_RUN = "seed-run"
+
+
+class ProtocolBroker:
+    coin = "BTC"
+
+    def __init__(self, bars: list[Bar]) -> None:
+        self._replay = bars
+        self.connected = False
+        self.submitted: list = []
+
+    async def connect(self) -> None:
+        self.connected = True
+
+    async def account(self) -> AccountSnapshot:
+        return AccountSnapshot(equity=EQUITY, available_margin=EQUITY)
+
+    async def positions(self) -> list:
+        return []
+
+    async def open_orders(self) -> list:
+        return []
+
+    async def historical_bars(self, coin: str, tf: str, lookback: int) -> list[Bar]:
+        return self._replay[-lookback:]
+
+    def subscribe_bars(self, coin: str, tf: str, on_bar_closed) -> None:
+        for bar in self._replay:
+            on_bar_closed(bar)
+
+    async def place_bracket(self, plan) -> dict:
+        self.submitted.append(plan)
+        return {
+            "entry": {
+                "cloid": f"{plan.signal.ts.timestamp()}:entry",
+                "oid": 1,
+                "role": "ENTRY",
+                "status": "FILLED",
+                "qty": plan.qty,
+                "avg_fill_px": plan.signal.ref_price,
+            }
+        }
+
+    async def modify_stop(self, cloid: str, new_stop: float) -> None:
+        return None
+
+    async def cancel(self, cloid: str) -> None:
+        return None
+
+    async def cancel_all(self) -> None:
+        return None
+
+    async def flatten(self, coin: str) -> None:
+        return None
+
+
+class FixedSignalStrategy:
+    id = "fixed_signal"
+    warmup_bars = 0
+    symbol = "BTC"
+
+    def __init__(self, stop_loss: float = 90.0) -> None:
+        self.stop_loss = stop_loss
+
+    def on_bar(self, bars, position):
+        return Signal(
+            ts=bars[-1].ts,
+            symbol=self.symbol,
+            direction="LONG",
+            reason="fixed",
+            ref_price=bars[-1].close,
+            stop_loss=self.stop_loss,
+            take_profit=None,
+        )
+
+    def trail_level(self, bars, position):
+        return None
+
+
+class BrokenRiskReadStore(Store):
+    """Risk-input reads fail; everything else works (transient read fault)."""
+
+    def realized_pnl_today(self, run_id: str, now=None) -> float:
+        raise sqlite3.DatabaseError("disk I/O error")
+
+
+class DeadWriteStore(Store):
+    """Risk-input reads fail AND the matching state/event writes fail, while
+    meta reads still return the stale persisted value (worst observable case:
+    the DISARMED verdict cannot be persisted)."""
+
+    dead: bool = False
+
+    def realized_pnl_today(self, run_id: str, now=None) -> float:
+        if self.dead:
+            raise sqlite3.DatabaseError("disk I/O error")
+        return super().realized_pnl_today(run_id, now)
+
+    def set_meta(self, key: str, value: str) -> None:
+        if self.dead and key == "app_state":
+            raise sqlite3.DatabaseError("disk I/O error")
+        super().set_meta(key, value)
+
+    def insert_event(self, *args, **kwargs):
+        if self.dead:
+            raise sqlite3.DatabaseError("disk I/O error")
+        return super().insert_event(*args, **kwargs)
+
+
+def _bar() -> Bar:
+    return Bar(ts=datetime(2026, 7, 6, 0, tzinfo=UTC), open=100, high=102, low=99, close=100, volume=1)
+
+
+def _store(tmp_path, cls=Store, name: str = "bridge.db"):
+    store = cls(tmp_path / name, clock=lambda: FROZEN)
+    store.initialize()
+    store.create_run(SEED_RUN, "dry_run", "testnet", {})
+    return store
+
+
+def _seed_closed_trade(store: Store, pnl: float, exit_ts, tag: str, run_id: str = SEED_RUN) -> int:
+    entry_ts = FROZEN - timedelta(hours=2)
+    trade_id = store.create_trade(
+        run_id=run_id,
+        coin="BTC",
+        direction="LONG",
+        qty=1.0,
+        entry_decision_uid=f"{run_id}:BTC:{tag}",
+        signal_ts=entry_ts,
+        decision_ts=entry_ts,
+        expected_px=100.0,
+        risk_dollars=1.0,
+        risk_pct=0.005,
+        leverage=1,
+        sl_initial=90.0,
+        tp_initial=None,
+        llm_directive_id=None,
+    )
+    store.update_trade_exit(trade_id, exit_px=100.0 + pnl, exit_ts=exit_ts, exit_reason="SL", pnl=pnl)
+    return trade_id
+
+
+def _ingest_closed_trade(
+    store: Store,
+    manager: OrderManager,
+    tag: str,
+    entry_px: float,
+    exit_px: float,
+    entry_fee: float,
+    exit_fee: float,
+    funding: float = 0.0,
+    exit_ts: datetime | None = None,
+    run_id: str = SEED_RUN,
+) -> int:
+    exit_ts = exit_ts or FROZEN
+    duid = f"{run_id}:BTC:{tag}"
+    trade_id = store.create_trade(
+        run_id=run_id,
+        coin="BTC",
+        direction="LONG",
+        qty=1.0,
+        entry_decision_uid=duid,
+        signal_ts=exit_ts - timedelta(hours=1),
+        decision_ts=exit_ts - timedelta(hours=1),
+        expected_px=entry_px,
+        risk_dollars=1.0,
+        risk_pct=0.005,
+        leverage=1,
+        sl_initial=entry_px * 0.9,
+        tp_initial=None,
+        llm_directive_id=None,
+    )
+    store.insert_order(
+        cloid=f"{tag}-e", oid=None, group_id=None, order_ref=f"{tag}-e", order_json={},
+        decision_uid=duid, trade_id=trade_id, role="ENTRY", status="SUBMITTED", qty=1.0,
+    )
+    store.insert_order(
+        cloid=f"{tag}-s", oid=None, group_id=None, order_ref=f"{tag}-s", order_json={},
+        decision_uid=duid, trade_id=trade_id, role="SL", status="OPEN", qty=1.0,
+    )
+    manager._ingest_fill(FillEvent(
+        fill_id=f"{tag}-f1", cloid=f"{tag}-e", coin="BTC", qty=1.0, px=entry_px,
+        ts=exit_ts - timedelta(minutes=30), fee=entry_fee, role="ENTRY",
+    ))
+    manager._ingest_fill(FillEvent(
+        fill_id=f"{tag}-f2", cloid=f"{tag}-s", coin="BTC", qty=1.0, px=exit_px,
+        ts=exit_ts, fee=exit_fee, funding=funding, role="SL",
+    ))
+    return trade_id
+
+
+def _engine(store: Store, broker: ProtocolBroker, run_id: str) -> BridgeEngine:
+    return BridgeEngine(
+        run_id=run_id,
+        broker=broker,
+        store=store,
+        strategy=FixedSignalStrategy(),
+        risk_engine=RiskEngine(RiskConfig(max_position_notional_pct=0.5)),
+        state="ARMED",
+    )
+
+
+def _manager(store: Store) -> OrderManager:
+    return OrderManager(store=store, broker=MockBroker([], starting_equity=1000), run_id=SEED_RUN)
+
+
+def _rejections(store: Store, reason: str) -> list[dict]:
+    return [
+        row
+        for row in store.get_snapshot()["decisions"]
+        if row["stage"] == "RISK_REJECT" and reason in str(row["payload_json"])
+    ]
+
+
+# --- Gate triggers through the engine path -------------------------------
+
+
+def test_daily_loss_gate_triggers_through_engine_path(tmp_path):
+    asyncio.run(_daily_loss_trigger(tmp_path))
+
+
+async def _daily_loss_trigger(tmp_path):
+    store = _store(tmp_path)
+    _seed_closed_trade(store, -DAILY_LIMIT, FROZEN - timedelta(minutes=5), "boundary")
+    broker = ProtocolBroker([_bar()])
+    engine = _engine(store, broker, "daily-loss-trigger")
+
+    await engine.run_replay(max_bars=1)
+
+    assert broker.submitted == []
+    assert store.get_meta("app_state") == "DISARMED"
+    assert _rejections(store, "DAILY_LOSS_LIMIT")
+    assert any(row["code"] == "RISK_AUTO_DISARM" for row in store.get_events())
+
+
+def test_daily_loss_one_dollar_inside_boundary_passes(tmp_path):
+    asyncio.run(_daily_loss_inside(tmp_path))
+
+
+async def _daily_loss_inside(tmp_path):
+    store = _store(tmp_path)
+    _seed_closed_trade(store, -(DAILY_LIMIT - 1.0), FROZEN - timedelta(minutes=5), "inside")
+    broker = ProtocolBroker([_bar()])
+    engine = _engine(store, broker, "daily-loss-inside")
+
+    await engine.run_replay(max_bars=1)
+
+    assert len(broker.submitted) == 1
+    assert store.get_meta("app_state") == "ARMED"
+    assert not _rejections(store, "DAILY_LOSS_LIMIT")
+
+
+def test_yesterday_loss_does_not_count_toward_daily_gate(tmp_path):
+    asyncio.run(_yesterday_loss(tmp_path))
+
+
+async def _yesterday_loss(tmp_path):
+    store = _store(tmp_path)
+    _seed_closed_trade(store, -(DAILY_LIMIT * 2), FROZEN - timedelta(days=1), "yesterday")
+    broker = ProtocolBroker([_bar()])
+    engine = _engine(store, broker, "daily-loss-yesterday")
+
+    await engine.run_replay(max_bars=1)
+
+    assert len(broker.submitted) == 1
+    assert store.get_meta("app_state") == "ARMED"
+
+
+def test_consecutive_loss_gate_triggers_through_engine_path(tmp_path):
+    asyncio.run(_consecutive_trigger(tmp_path))
+
+
+async def _consecutive_trigger(tmp_path):
+    store = _store(tmp_path)
+    for i in range(RiskConfig().max_consecutive_losses):
+        _seed_closed_trade(store, -1.0, FROZEN - timedelta(minutes=5) + timedelta(seconds=i), f"streak{i}")
+    broker = ProtocolBroker([_bar()])
+    engine = _engine(store, broker, "consecutive-trigger")
+
+    await engine.run_replay(max_bars=1)
+
+    assert broker.submitted == []
+    assert store.get_meta("app_state") == "DISARMED"
+    assert _rejections(store, "CONSECUTIVE_LOSS_LIMIT")
+
+
+def test_win_resets_consecutive_loss_streak(tmp_path):
+    asyncio.run(_win_resets_streak(tmp_path))
+
+
+async def _win_resets_streak(tmp_path):
+    store = _store(tmp_path)
+    for i, pnl in enumerate((-1.0, -1.0, 1.0, -1.0)):
+        _seed_closed_trade(store, pnl, FROZEN - timedelta(minutes=5) + timedelta(seconds=i), f"mix{i}")
+    broker = ProtocolBroker([_bar()])
+    engine = _engine(store, broker, "streak-reset")
+
+    await engine.run_replay(max_bars=1)
+
+    assert len(broker.submitted) == 1
+    assert store.get_meta("app_state") == "ARMED"
+    assert not _rejections(store, "CONSECUTIVE_LOSS_LIMIT")
+
+
+def test_gates_persist_across_restart(tmp_path):
+    asyncio.run(_restart_persistence(tmp_path))
+
+
+async def _restart_persistence(tmp_path):
+    first = _store(tmp_path)
+    _seed_closed_trade(first, -DAILY_LIMIT, FROZEN - timedelta(minutes=5), "restart")
+    first.close()
+
+    # Fresh Store + fresh engine on the same file simulates a process restart:
+    # the gate must trigger from SQLite state alone.
+    store = Store(tmp_path / "bridge.db", clock=lambda: FROZEN)
+    store.initialize()
+    broker = ProtocolBroker([_bar()])
+    engine = _engine(store, broker, "restart-run")
+
+    await engine.run_replay(max_bars=1)
+
+    assert broker.submitted == []
+    assert store.get_meta("app_state") == "DISARMED"
+    assert _rejections(store, "DAILY_LOSS_LIMIT")
+
+
+# --- Environment isolation (audit F-01) ----------------------------------
+
+
+def test_other_mode_trades_never_reach_the_gates(tmp_path):
+    asyncio.run(_mode_isolation_engine_path(tmp_path))
+
+
+async def _mode_isolation_engine_path(tmp_path):
+    store = _store(tmp_path)
+    store.create_run("paper-run", "paper", "testnet", {})
+    # Catastrophic paper losses in the shared DB file must not trip a dry-run
+    # engine's gates (and vice versa).
+    for i in range(5):
+        _seed_closed_trade(store, -DAILY_LIMIT, FROZEN - timedelta(minutes=5) + timedelta(seconds=i),
+                           f"paper{i}", run_id="paper-run")
+    broker = ProtocolBroker([_bar()])
+    engine = _engine(store, broker, "mode-isolation")
+
+    await engine.run_replay(max_bars=1)
+
+    assert len(broker.submitted) == 1
+    assert store.get_meta("app_state") == "ARMED"
+
+
+def test_store_helpers_scope_by_mode_and_win_cannot_reset_foreign_streak(tmp_path):
+    store = _store(tmp_path)
+    store.create_run("paper-run", "paper", "testnet", {})
+    base = FROZEN - timedelta(minutes=5)
+    _seed_closed_trade(store, -100.0, base, "dr-loss1")
+    _seed_closed_trade(store, -100.0, base + timedelta(seconds=1), "dr-loss2")
+    # A later dry-run win must not reset the paper streak, and paper losses
+    # must not appear in dry-run sums.
+    _seed_closed_trade(store, -500.0, base + timedelta(seconds=2), "p-loss", run_id="paper-run")
+    _seed_closed_trade(store, 50.0, base + timedelta(seconds=3), "dr-win")
+
+    assert store.realized_pnl_today(SEED_RUN) == pytest.approx(-150.0)
+    assert store.consecutive_closed_losses(SEED_RUN) == 0  # dry-run win is latest dry-run close
+    assert store.realized_pnl_today("paper-run") == pytest.approx(-500.0)
+    assert store.consecutive_closed_losses("paper-run") == 1  # dry-run win did not reset it
+
+
+def test_unknown_run_id_fails_closed(tmp_path):
+    store = _store(tmp_path)
+    with pytest.raises(LookupError):
+        store.realized_pnl_today("never-created")
+    with pytest.raises(LookupError):
+        store.consecutive_closed_losses("never-created")
+
+
+# --- Net PnL through the real fill path (audit F-02) ----------------------
+
+
+def test_fee_only_loss_is_a_net_loss(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id = _ingest_closed_trade(store, manager, "feeonly", 100.0, 100.0, entry_fee=10.0, exit_fee=15.0)
+
+    trade = store.get_trade(trade_id)
+    assert trade["pnl"] == pytest.approx(-25.0)
+    assert store.realized_pnl_today(SEED_RUN) == pytest.approx(-25.0)
+    assert store.consecutive_closed_losses(SEED_RUN) == 1
+
+
+def test_gross_win_net_loss_and_funding_debit(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id = _ingest_closed_trade(
+        store, manager, "grosswin", 100.0, 100.02, entry_fee=5.0, exit_fee=2.0, funding=3.0
+    )
+
+    trade = store.get_trade(trade_id)
+    assert trade["pnl"] == pytest.approx(100.02 - 100.0 - 10.0)
+    assert trade["pnl"] < 0
+    # Funding credit (negative = rebate) reduces the cost.
+    credit_id = _ingest_closed_trade(
+        store, manager, "credit", 100.0, 100.0, entry_fee=1.0, exit_fee=1.0, funding=-5.0,
+        exit_ts=FROZEN + timedelta(minutes=1),
+    )
+    assert store.get_trade(credit_id)["pnl"] == pytest.approx(3.0)
+
+
+def test_net_fee_losses_trip_consecutive_gate_through_engine_path(tmp_path):
+    asyncio.run(_net_loss_streak_engine_path(tmp_path))
+
+
+async def _net_loss_streak_engine_path(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    # Three gross-flat trades that are net losers only because of fees.
+    for i in range(RiskConfig().max_consecutive_losses):
+        _ingest_closed_trade(
+            store, manager, f"netloss{i}", 100.0, 100.0, entry_fee=2.0, exit_fee=2.0,
+            exit_ts=FROZEN - timedelta(minutes=5) + timedelta(seconds=i),
+        )
+    broker = ProtocolBroker([_bar()])
+    engine = _engine(store, broker, "net-loss-streak")
+
+    await engine.run_replay(max_bars=1)
+
+    assert broker.submitted == []
+    assert store.get_meta("app_state") == "DISARMED"
+    assert _rejections(store, "CONSECUTIVE_LOSS_LIMIT")
+
+
+# --- Fail-closed on risk-input read failure (audit F-03) ------------------
+
+
+def test_risk_input_read_failure_fails_closed_and_is_observable(tmp_path):
+    asyncio.run(_risk_input_failure(tmp_path))
+
+
+async def _risk_input_failure(tmp_path):
+    store = _store(tmp_path, cls=BrokenRiskReadStore)
+    broker = ProtocolBroker([_bar()])
+    engine = _engine(store, broker, "risk-input-fail")
+
+    await engine.run_replay(max_bars=1)
+
+    assert broker.submitted == []
+    assert engine.state == "DISARMED"
+    assert store.get_meta("app_state") == "DISARMED"
+    assert any(row["code"] == "RISK_INPUT_FAILED" for row in store.get_events())
+    status = engine.status()
+    assert status["state"] == "DISARMED"
+    assert "DatabaseError" in str(status["risk_input_error"])
+
+
+def test_risk_input_failure_stays_disarmed_even_when_writes_also_fail(tmp_path):
+    asyncio.run(_risk_input_failure_dead_writes(tmp_path))
+
+
+async def _risk_input_failure_dead_writes(tmp_path):
+    store = _store(tmp_path, cls=DeadWriteStore)
+    broker = ProtocolBroker([_bar()])
+    engine = _engine(store, broker, "risk-input-dead")
+    store.dead = True
+
+    await engine.run_replay(max_bars=1)
+
+    assert broker.submitted == []
+    # Persisted meta still says ARMED (the disarm write failed), but the
+    # sticky in-memory latch must dominate every observable surface.
+    assert engine.state == "DISARMED"
+    status = engine.status()
+    assert status["state"] == "DISARMED"
+    assert "DatabaseError" in str(status["risk_input_error"])
+    assert engine._app_state() == "DISARMED"
+
+
+# --- Timestamp canonicalization and day bounds (audit F-04) ---------------
+
+
+def test_timestamp_forms_are_canonicalized_and_day_is_bounded(tmp_path):
+    store = _store(tmp_path)
+    base = FROZEN - timedelta(minutes=5)
+    # Offset form: 2026-07-05T23:30-02:00 == 2026-07-06T01:30 UTC -> counted.
+    _seed_closed_trade(store, -10.0, "2026-07-05T23:30:00-02:00", "offset")
+    # Space-separated naive string -> UTC -> counted.
+    _seed_closed_trade(store, -10.0, "2026-07-06 01:00:00", "space")
+    # Zulu suffix -> counted.
+    _seed_closed_trade(store, -10.0, "2026-07-06T22:00:00Z", "zulu")
+    # Naive datetime object -> UTC -> counted.
+    _seed_closed_trade(store, -10.0, datetime(2026, 7, 6, 2, 0), "naive")
+    # Yesterday UTC (23:30-02:00 == 07-06 01:30, so use a real prior day) -> excluded.
+    _seed_closed_trade(store, -100.0, "2026-07-05T10:00:00+00:00", "prior")
+    # Future day -> excluded from today's bounded interval.
+    _seed_closed_trade(store, -100.0, "2026-07-07T01:00:00+00:00", "future")
+    _ = base
+
+    assert store.realized_pnl_today(SEED_RUN) == pytest.approx(-40.0)
+
+    # Naive `now` injection is treated as UTC, matching storage semantics.
+    assert store.realized_pnl_today(SEED_RUN, now=datetime(2026, 7, 6, 3, 0)) == pytest.approx(-40.0)
+
+
+def test_invalid_timestamp_string_is_rejected(tmp_path):
+    store = _store(tmp_path)
+    trade_id = _seed_closed_trade(store, -1.0, FROZEN, "valid")
+    with pytest.raises(ValueError):
+        store.update_trade_exit(trade_id, exit_px=99.0, exit_ts="not-a-timestamp", exit_reason="SL", pnl=-1.0)
+
+
+# --- Store helper edges ----------------------------------------------------
+
+
+def test_store_helpers_empty_open_and_zero_pnl(tmp_path):
+    store = _store(tmp_path)
+    assert store.realized_pnl_today(SEED_RUN) == 0.0
+    assert store.consecutive_closed_losses(SEED_RUN) == 0
+
+    # An open trade (no exit, NULL pnl) must not affect either helper.
+    store.create_trade(
+        run_id=SEED_RUN,
+        coin="BTC",
+        direction="LONG",
+        qty=1.0,
+        entry_decision_uid=f"{SEED_RUN}:BTC:open",
+        signal_ts=FROZEN,
+        decision_ts=FROZEN,
+        expected_px=100.0,
+        risk_dollars=1.0,
+        risk_pct=0.005,
+        leverage=1,
+        sl_initial=90.0,
+        tp_initial=None,
+        llm_directive_id=None,
+    )
+    _seed_closed_trade(store, -2.0, FROZEN - timedelta(seconds=2), "loss")
+    # Zero-PnL close counts in the daily sum and breaks the loss streak.
+    _seed_closed_trade(store, 0.0, FROZEN - timedelta(seconds=1), "flat")
+    assert store.realized_pnl_today(SEED_RUN) == pytest.approx(-2.0)
+    assert store.consecutive_closed_losses(SEED_RUN) == 0
+
+
+# --- Partial-fill accounting (re-audit R-01) -------------------------------
+
+
+def _open_trade(store: Store, tag: str, qty: float, expected_px: float, run_id: str = SEED_RUN) -> tuple[int, str]:
+    duid = f"{run_id}:BTC:{tag}"
+    trade_id = store.create_trade(
+        run_id=run_id,
+        coin="BTC",
+        direction="LONG",
+        qty=qty,
+        entry_decision_uid=duid,
+        signal_ts=FROZEN - timedelta(hours=1),
+        decision_ts=FROZEN - timedelta(hours=1),
+        expected_px=expected_px,
+        risk_dollars=1.0,
+        risk_pct=0.005,
+        leverage=1,
+        sl_initial=expected_px * 0.9,
+        tp_initial=None,
+        llm_directive_id=None,
+    )
+    store.insert_order(
+        cloid=f"{tag}-e", oid=None, group_id=None, order_ref=f"{tag}-e", order_json={},
+        decision_uid=duid, trade_id=trade_id, role="ENTRY", status="SUBMITTED", qty=qty,
+    )
+    store.insert_order(
+        cloid=f"{tag}-s", oid=None, group_id=None, order_ref=f"{tag}-s", order_json={},
+        decision_uid=duid, trade_id=trade_id, role="SL", status="OPEN", qty=qty,
+    )
+    return trade_id, duid
+
+
+def _fill(fill_id: str, cloid: str, px: float, qty: float, offset_s: int, fee: float = 0.0, role: str = "UNKNOWN") -> FillEvent:
+    return FillEvent(
+        fill_id=fill_id, cloid=cloid, coin="BTC", qty=qty, px=px,
+        ts=FROZEN - timedelta(minutes=10) + timedelta(seconds=offset_s), fee=fee, role=role,
+    )
+
+
+def _closed_decisions(store: Store, stage: str) -> list[dict]:
+    return [row for row in store.get_snapshot()["decisions"] if row["stage"] == stage]
+
+
+def test_split_entry_uses_vwap_and_true_zero_pnl(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, _ = _open_trade(store, "se", qty=2.0, expected_px=100.0)
+    manager._ingest_fill(_fill("se-1", "se-e", px=100.0, qty=1.0, offset_s=0))
+    manager._ingest_fill(_fill("se-2", "se-e", px=110.0, qty=1.0, offset_s=1))
+    manager._ingest_fill(_fill("se-3", "se-s", px=105.0, qty=2.0, offset_s=2))
+
+    trade = store.get_trade(trade_id)
+    assert trade["entry_px"] == pytest.approx(105.0)
+    assert trade["pnl"] == pytest.approx(0.0)
+    assert len(_closed_decisions(store, "TRADE_CLOSED")) == 1
+    assert store.consecutive_closed_losses(SEED_RUN) == 0
+
+
+def test_split_exit_no_premature_close_then_correct_final_pnl(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, _ = _open_trade(store, "sx", qty=2.0, expected_px=100.0)
+    manager._ingest_fill(_fill("sx-1", "sx-e", px=100.0, qty=2.0, offset_s=0))
+    manager._ingest_fill(_fill("sx-2", "sx-s", px=90.0, qty=1.0, offset_s=1))
+
+    # Half-exited: trade must remain OPEN with no phantom -20 loss.
+    trade = store.get_trade(trade_id)
+    assert trade["exit_ts"] is None
+    assert trade["pnl"] is None
+    assert store.realized_pnl_today(SEED_RUN) == 0.0
+    assert store.consecutive_closed_losses(SEED_RUN) == 0
+    assert len(_closed_decisions(store, "TRADE_PARTIAL_EXIT")) == 1
+    assert not _closed_decisions(store, "TRADE_CLOSED")
+
+    manager._ingest_fill(_fill("sx-3", "sx-s", px=110.0, qty=1.0, offset_s=2))
+    trade = store.get_trade(trade_id)
+    assert trade["pnl"] == pytest.approx(0.0)
+    assert trade["exit_px"] == pytest.approx(100.0)
+    assert len(_closed_decisions(store, "TRADE_CLOSED")) == 1
+
+
+def test_split_exit_with_fees_is_net_loss(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, _ = _open_trade(store, "sf", qty=2.0, expected_px=100.0)
+    manager._ingest_fill(_fill("sf-1", "sf-e", px=100.0, qty=2.0, offset_s=0, fee=3.0))
+    manager._ingest_fill(_fill("sf-2", "sf-s", px=90.0, qty=1.0, offset_s=1, fee=2.0))
+    manager._ingest_fill(_fill("sf-3", "sf-s", px=110.0, qty=1.0, offset_s=2, fee=5.0))
+
+    assert store.get_trade(trade_id)["pnl"] == pytest.approx(-10.0)
+    assert store.realized_pnl_today(SEED_RUN) == pytest.approx(-10.0)
+    assert store.consecutive_closed_losses(SEED_RUN) == 1
+
+
+def test_duplicate_final_fill_is_idempotent_across_restart(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, _ = _open_trade(store, "dup", qty=2.0, expected_px=100.0)
+    manager._ingest_fill(_fill("dup-1", "dup-e", px=100.0, qty=1.0, offset_s=0))
+    manager._ingest_fill(_fill("dup-2", "dup-e", px=110.0, qty=1.0, offset_s=1))
+    final = _fill("dup-3", "dup-s", px=105.0, qty=2.0, offset_s=2)
+    manager._ingest_fill(final)
+
+    # Redelivery after restart: a FRESH manager (empty _synced_fills) re-ingests
+    # the same fill_id. INSERT OR REPLACE coalesces the row; totals, PnL and
+    # the TRADE_CLOSED decision must not change or duplicate.
+    manager2 = _manager(store)
+    manager2._ingest_fill(final)
+
+    trade = store.get_trade(trade_id)
+    assert trade["pnl"] == pytest.approx(0.0)
+    assert trade["entry_px"] == pytest.approx(105.0)
+    assert len(_closed_decisions(store, "TRADE_CLOSED")) == 1
+
+
+def test_partial_entry_state_survives_restart(tmp_path):
+    first = _store(tmp_path)
+    manager_a = _manager(first)
+    trade_id, _ = _open_trade(first, "rs", qty=2.0, expected_px=100.0)
+    manager_a._ingest_fill(_fill("rs-1", "rs-e", px=100.0, qty=1.0, offset_s=0))
+    manager_a._ingest_fill(_fill("rs-2", "rs-e", px=110.0, qty=1.0, offset_s=1))
+    first.close()
+
+    store = Store(tmp_path / "bridge.db", clock=lambda: FROZEN)
+    store.initialize()
+    manager_b = OrderManager(store=store, broker=MockBroker([], starting_equity=1000), run_id=SEED_RUN)
+    manager_b._ingest_fill(_fill("rs-3", "rs-s", px=105.0, qty=2.0, offset_s=2))
+
+    trade = store.get_trade(trade_id)
+    assert trade["entry_px"] == pytest.approx(105.0)
+    assert trade["pnl"] == pytest.approx(0.0)
+
+
+def test_late_mixed_role_fill_quarantines_without_rewriting_close(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, duid = _open_trade(store, "late", qty=200.0, expected_px=100.0)
+    store.insert_order(
+        cloid="late-t", oid=None, group_id=None, order_ref="late-t", order_json={},
+        decision_uid=duid, trade_id=trade_id, role="TP", status="OPEN", qty=200.0,
+    )
+    manager._ingest_fill(_fill("late-e1", "late-e", px=100.0, qty=200.0, offset_s=0))
+    manager._ingest_fill(_fill("late-sl", "late-s", px=90.0, qty=200.0, offset_s=1))
+    assert store.get_trade(trade_id)["pnl"] == pytest.approx(-2000.0)
+
+    manager._ingest_fill(_fill("late-tp", "late-t", px=110.0, qty=200.0, offset_s=2))
+
+    trade = store.get_trade(trade_id)
+    assert trade["pnl"] == pytest.approx(-2000.0)
+    assert trade["exit_px"] == pytest.approx(90.0)
+    assert store.realized_pnl_today(SEED_RUN) == pytest.approx(-2000.0)
+    assert store.consecutive_closed_losses(SEED_RUN) == 1
+    assert len(_closed_decisions(store, "TRADE_CLOSED")) == 1
+    assert store.get_meta("app_state") == "DISARMED"
+    assert "POST_CLOSE_FILL" in {row["code"] for row in store.get_events()}
+
+
+@pytest.mark.parametrize(
+    ("first_role", "late_role", "first_px", "late_px", "expected_pnl"),
+    [
+        ("TP", "SL", 110.0, 90.0, 10.0),
+        ("SL", "CLOSE", 90.0, 105.0, -10.0),
+    ],
+)
+def test_other_late_exit_roles_preserve_canonical_close(
+    tmp_path, first_role, late_role, first_px, late_px, expected_pnl
+):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, duid = _open_trade(store, "roles", qty=1.0, expected_px=100.0)
+    for role in {first_role, late_role} - {"SL"}:
+        suffix = role.lower()
+        store.insert_order(
+            cloid=f"roles-{suffix}", oid=None, group_id=None, order_ref=f"roles-{suffix}", order_json={},
+            decision_uid=duid, trade_id=trade_id, role=role, status="OPEN", qty=1.0,
+        )
+    cloid = {"SL": "roles-s", "TP": "roles-tp", "CLOSE": "roles-close"}
+    manager._ingest_fill(_fill("roles-e1", "roles-e", px=100.0, qty=1.0, offset_s=0))
+    manager._ingest_fill(_fill("roles-first", cloid[first_role], px=first_px, qty=1.0, offset_s=1))
+    manager._ingest_fill(_fill("roles-late", cloid[late_role], px=late_px, qty=1.0, offset_s=2))
+
+    trade = store.get_trade(trade_id)
+    assert trade["pnl"] == pytest.approx(expected_pnl)
+    assert trade["exit_px"] == pytest.approx(first_px)
+    assert trade["exit_reason"] == first_role
+    assert len(_closed_decisions(store, "TRADE_CLOSED")) == 1
+    assert "POST_CLOSE_FILL" in {row["code"] for row in store.get_events()}
+
+
+def test_conflicting_duplicate_fill_id_is_immutable_and_quarantines(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, duid = _open_trade(store, "conflict", qty=1.0, expected_px=100.0)
+    store.insert_order(
+        cloid="conflict-t", oid=None, group_id=None, order_ref="conflict-t", order_json={},
+        decision_uid=duid, trade_id=trade_id, role="TP", status="OPEN", qty=1.0,
+    )
+    manager._ingest_fill(_fill("conflict-e", "conflict-e", px=100.0, qty=1.0, offset_s=0))
+    manager._ingest_fill(_fill("conflict-x", "conflict-s", px=90.0, qty=1.0, offset_s=1, fee=1.0))
+    assert store.get_trade(trade_id)["pnl"] == pytest.approx(-11.0)
+
+    manager2 = _manager(store)
+    manager2._ingest_fill(_fill("conflict-x", "conflict-t", px=110.0, qty=1.0, offset_s=2))
+
+    trade = store.get_trade(trade_id)
+    fill_row = next(row for row in store.get_snapshot()["fills"] if row["fill_id"] == "conflict-x")
+    assert trade["pnl"] == pytest.approx(-11.0)
+    assert fill_row["px"] == pytest.approx(90.0)
+    assert fill_row["fee"] == pytest.approx(1.0)
+    assert store.get_meta("app_state") == "DISARMED"
+    assert "FILL_ID_CONFLICT" in {row["code"] for row in store.get_events()}
+
+
+def test_exact_partial_fill_redelivery_does_not_duplicate_decision(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    _open_trade(store, "pdup", qty=2.0, expected_px=100.0)
+    manager._ingest_fill(_fill("pdup-e", "pdup-e", px=100.0, qty=2.0, offset_s=0))
+    partial = _fill("pdup-x", "pdup-s", px=90.0, qty=1.0, offset_s=1)
+    manager._ingest_fill(partial)
+    assert len(_closed_decisions(store, "TRADE_PARTIAL_EXIT")) == 1
+
+    _manager(store)._ingest_fill(partial)
+
+    assert len(_closed_decisions(store, "TRADE_PARTIAL_EXIT")) == 1
+
+
+def test_partial_entry_remainder_quarantines_and_late_fill_stays_owned(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, _ = _open_trade(store, "remain", qty=2.0, expected_px=100.0)
+    manager._ingest_fill(_fill("remain-e1", "remain-e", px=100.0, qty=1.0, offset_s=0))
+    manager._ingest_fill(_fill("remain-x1", "remain-s", px=90.0, qty=1.0, offset_s=1))
+
+    trade = store.get_trade(trade_id)
+    assert trade["exit_ts"] is None
+    assert trade["pnl"] is None
+    assert store.get_meta("app_state") == "DISARMED"
+    assert "ENTRY_REMAINDER_LIVE" in {row["code"] for row in store.get_events()}
+
+    _manager(store)._ingest_fill(_fill("remain-e2", "remain-e", px=110.0, qty=1.0, offset_s=2))
+    assert store.get_open_trade_for_coin(SEED_RUN, "BTC") is not None
+    assert store.get_trade(trade_id)["entry_px"] == pytest.approx(105.0)
+
+    class PositionBroker(ProtocolBroker):
+        def __init__(self):
+            super().__init__([])
+            self.reprotect_attempts = 0
+            self.flattened: list[str] = []
+
+        async def positions(self):
+            return [Position(symbol="BTC", size=1.0, entry_px=110.0)]
+
+        async def reprotect_position(self, position, stop_loss, take_profit, decision_uid):
+            self.reprotect_attempts += 1
+            return None
+
+        async def flatten(self, coin: str):
+            self.flattened.append(coin)
+
+    broker = PositionBroker()
+    asyncio.run(OrderManager(store, broker, SEED_RUN, pending_grace_s=0).reconcile())
+    assert broker.reprotect_attempts == 1
+    assert broker.flattened == ["BTC"]
+    assert "FOREIGN_POSITION_IGNORED" not in {row["code"] for row in store.get_events()}
+
+
+def test_cross_order_trade_overfill_quarantines_without_closing(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, duid = _open_trade(store, "over", qty=2.0, expected_px=100.0)
+    store.insert_order(
+        cloid="over-t", oid=None, group_id=None, order_ref="over-t", order_json={},
+        decision_uid=duid, trade_id=trade_id, role="TP", status="OPEN", qty=2.0,
+    )
+    manager._ingest_fill(_fill("over-e", "over-e", px=100.0, qty=2.0, offset_s=0))
+    manager._ingest_fill(_fill("over-s1", "over-s", px=90.0, qty=1.5, offset_s=1))
+    manager._ingest_fill(_fill("over-t1", "over-t", px=110.0, qty=1.0, offset_s=2))
+
+    trade = store.get_trade(trade_id)
+    assert trade["exit_ts"] is None
+    assert trade["pnl"] is None
+    assert store.get_meta("app_state") == "DISARMED"
+    assert "TRADE_OVERFILL" in {row["code"] for row in store.get_events()}
+
+
+def test_close_and_decision_rollback_then_exact_fill_restart_recovers(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    trade_id, _ = _open_trade(store, "atomic", qty=1.0, expected_px=100.0)
+    manager._ingest_fill(_fill("atomic-e", "atomic-e", px=100.0, qty=1.0, offset_s=0))
+    exit_fill = _fill("atomic-x", "atomic-s", px=90.0, qty=1.0, offset_s=1)
+    store.conn.execute(
+        """
+        CREATE TRIGGER fail_trade_closed
+        BEFORE INSERT ON decisions
+        WHEN NEW.stage = 'TRADE_CLOSED'
+        BEGIN
+          SELECT RAISE(ABORT, 'forced close decision failure');
+        END
+        """
+    )
+    store.conn.commit()
+
+    with pytest.raises(sqlite3.IntegrityError, match="forced close decision failure"):
+        manager._ingest_fill(exit_fill)
+
+    failed_trade = store.get_trade(trade_id)
+    assert failed_trade["exit_ts"] is None
+    assert failed_trade["pnl"] is None
+    assert len(_closed_decisions(store, "TRADE_CLOSED")) == 0
+    assert [row["fill_id"] for row in store.get_snapshot()["fills"]].count("atomic-x") == 1
+
+    store.conn.execute("DROP TRIGGER fail_trade_closed")
+    store.conn.commit()
+    _manager(store)._ingest_fill(exit_fill)
+
+    recovered_trade = store.get_trade(trade_id)
+    assert recovered_trade["pnl"] == pytest.approx(-10.0)
+    assert len(_closed_decisions(store, "TRADE_CLOSED")) == 1
+    assert [row["fill_id"] for row in store.get_snapshot()["fills"]].count("atomic-x") == 1
+
+
+def test_half_exited_trade_does_not_trip_gates_through_engine_path(tmp_path):
+    asyncio.run(_half_exit_engine_path(tmp_path))
+
+
+async def _half_exit_engine_path(tmp_path):
+    store = _store(tmp_path)
+    manager = _manager(store)
+    _open_trade(store, "hx", qty=100.0, expected_px=100.0)
+    manager._ingest_fill(_fill("hx-1", "hx-e", px=100.0, qty=100.0, offset_s=0))
+    # First exit leg at 50: the OLD accounting persisted a full-qty loss here
+    # (would exceed the daily limit); correct accounting keeps the trade open.
+    manager._ingest_fill(_fill("hx-2", "hx-s", px=50.0, qty=1.0, offset_s=1))
+
+    broker = ProtocolBroker([_bar()])
+    engine = _engine(store, broker, "half-exit")
+
+    await engine.run_replay(max_bars=1)
+
+    assert len(broker.submitted) == 1
+    assert store.get_meta("app_state") == "ARMED"
+
+
+def test_reconcile_equity_row_carries_realized_today(tmp_path):
+    asyncio.run(_equity_row_realized(tmp_path))
+
+
+async def _equity_row_realized(tmp_path):
+    store = _store(tmp_path)
+    _seed_closed_trade(store, -123.45, FROZEN - timedelta(minutes=5), "equity")
+    manager = _manager(store)
+
+    await manager.reconcile()
+
+    rows = store.get_equity()
+    assert rows
+    assert rows[0]["realized_today"] == pytest.approx(-123.45)

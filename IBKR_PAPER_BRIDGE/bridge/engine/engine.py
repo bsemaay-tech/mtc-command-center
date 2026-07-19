@@ -55,6 +55,7 @@ class BridgeEngine:
     _consecutive_order_rejects: int = field(default=0, init=False)
     _consecutive_reconcile_failures: int = field(default=0, init=False)
     _processed_bar_ts: set[datetime] = field(default_factory=set, init=False)
+    risk_input_error: str | None = field(default=None, init=False)
 
     def __post_init__(self) -> None:
         self.reconcile_max_consecutive_failures = max(1, int(self.reconcile_max_consecutive_failures))
@@ -130,6 +131,8 @@ class BridgeEngine:
             self.reconcile_error = "STALE"
             raise RuntimeError("reconcile evidence stale")
         self._kill_requested = False
+        # Explicit human re-arm clears the sticky risk-input fail-closed latch.
+        self.risk_input_error = None
         self._set_state("ARMED")
         await self._publish("status", self.status())
 
@@ -233,12 +236,20 @@ class BridgeEngine:
                 {"reason": "STRATEGY_STOP_MISSING", "gates": []},
             )
             return
+        try:
+            realized_today = self.store.realized_pnl_today(self.run_id)
+            consecutive_losses = self.store.consecutive_closed_losses(self.run_id)
+        except Exception as exc:  # unknown risk state -> fail closed, never trade blind
+            await self._risk_inputs_failed(exc)
+            return
         risk = self.risk_engine.evaluate(
             signal=signal,
             account=await self.broker.account(),
             stop_loss=signal.stop_loss,
             take_profit=signal.take_profit,
             open_position=None,
+            realized_today=realized_today,
+            consecutive_losses=consecutive_losses,
         )
         if not risk.accepted or risk.plan is None:
             self.store.insert_decision(
@@ -312,9 +323,39 @@ class BridgeEngine:
             self.store.insert_decision(self.run_id, decision_uid, signal.ts, signal.symbol, "SUBMITTED", result)
         await self._publish("decision", {"decision_uid": decision_uid})
 
+    async def _risk_inputs_failed(self, exc: Exception) -> None:
+        # Fail closed on unreadable risk inputs. In-memory state changes first:
+        # the DISARMED verdict must stay observable even when the store that
+        # just failed cannot accept the matching writes.
+        self.state = "DISARMED"
+        self.risk_input_error = f"{type(exc).__name__}: {exc}"
+        try:
+            self.store.set_meta("app_state", "DISARMED")
+            self.store.insert_event(
+                self.run_id,
+                datetime.now(UTC),
+                "ERROR",
+                "RISK_INPUT_FAILED",
+                self.risk_input_error,
+            )
+        except Exception:
+            pass
+        await self.notifier.send("ERROR", f"RISK_INPUT_FAILED — DISARMED: {self.risk_input_error}")
+        try:
+            await self._publish("status", self.status())
+        except Exception:
+            pass
+
     def status(self) -> dict[str, object]:
+        try:
+            state = self._app_state()
+        except Exception:
+            # Store unreadable: report the in-memory state rather than crash
+            # the status surface (see _risk_inputs_failed).
+            state = self.state
         return {
-            "state": self._app_state(),
+            "state": state,
+            "risk_input_error": self.risk_input_error,
             "reconcile_ready": self.reconcile_ready,
             "last_reconcile_ts": self.last_reconcile_ts.isoformat() if self.last_reconcile_ts else None,
             "reconcile_error": self.reconcile_error,
@@ -445,6 +486,12 @@ class BridgeEngine:
             return
 
     def _app_state(self) -> str:
+        if self.risk_input_error is not None:
+            # Sticky fail-closed: after a risk-input failure the engine stays
+            # DISARMED until a human re-arms, even if the DISARMED meta write
+            # itself failed and the persisted value still says ARMED.
+            self.state = "DISARMED"
+            return self.state
         persisted = self.store.get_meta("app_state")
         if persisted is not None:
             self.state = persisted

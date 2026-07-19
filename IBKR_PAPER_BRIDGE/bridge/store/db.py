@@ -4,16 +4,19 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Literal
 
 
 def _to_iso(value: datetime | str | None) -> str | None:
     if value is None:
         return None
     if isinstance(value, str):
-        return value
+        # Canonicalize instead of passing through: lexicographic range queries
+        # on TEXT timestamps are only correct if every stored value has the
+        # same aware-UTC ISO shape. Invalid strings raise (fail closed).
+        value = datetime.fromisoformat(value)
     if value.tzinfo is None:
         value = value.replace(tzinfo=UTC)
     return value.astimezone(UTC).isoformat()
@@ -31,9 +34,10 @@ def _json(value: Any) -> str:
 class Store:
     """Small SQLite access layer for the bridge runtime database."""
 
-    def __init__(self, db_path: str | Path):
+    def __init__(self, db_path: str | Path, clock: Callable[[], datetime] | None = None):
         self.db_path = Path(db_path)
         self._conn: sqlite3.Connection | None = None
+        self._clock: Callable[[], datetime] = clock or (lambda: datetime.now(UTC))
 
     @property
     def conn(self) -> sqlite3.Connection:
@@ -375,15 +379,49 @@ class Store:
         px: float,
         fee: float,
         funding: float,
-    ) -> None:
-        self.conn.execute(
+    ) -> Literal["INSERTED", "EXACT_DUPLICATE", "CONFLICT"]:
+        """Insert an immutable fill record and classify a primary-key hit."""
+        normalized = (
+            fill_id,
+            cloid,
+            decision_uid,
+            _to_iso(fill_ts),
+            float(qty),
+            float(px),
+            float(fee),
+            float(funding),
+        )
+        cursor = self.conn.execute(
             """
-            INSERT OR REPLACE INTO fills(fill_id, cloid, decision_uid, fill_ts, qty, px, fee, funding)
+            INSERT OR IGNORE INTO fills(fill_id, cloid, decision_uid, fill_ts, qty, px, fee, funding)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (fill_id, cloid, decision_uid, _to_iso(fill_ts), qty, px, fee, funding),
+            normalized,
         )
         self.conn.commit()
+        if cursor.rowcount == 1:
+            return "INSERTED"
+
+        row = self.conn.execute(
+            """
+            SELECT fill_id, cloid, decision_uid, fill_ts, qty, px, fee, funding
+            FROM fills WHERE fill_id = ?
+            """,
+            (fill_id,),
+        ).fetchone()
+        if row is None:
+            return "CONFLICT"
+        existing = (
+            str(row["fill_id"]),
+            str(row["cloid"]),
+            str(row["decision_uid"]),
+            str(row["fill_ts"]),
+            float(row["qty"]),
+            float(row["px"]),
+            float(row["fee"] or 0.0),
+            float(row["funding"] or 0.0),
+        )
+        return "EXACT_DUPLICATE" if existing == normalized else "CONFLICT"
 
     def create_trade(
         self,
@@ -447,6 +485,167 @@ class Store:
             (exit_px, _to_iso(exit_ts), exit_reason, pnl, trade_id),
         )
         self.conn.commit()
+
+    def close_trade_once_with_decision(
+        self,
+        trade_id: int,
+        run_id: str,
+        decision_uid: str,
+        coin: str,
+        exit_px: float,
+        exit_ts: datetime | str,
+        exit_reason: str,
+        pnl: float,
+        payload: dict[str, Any],
+    ) -> bool:
+        """Atomically close one open trade and append its close decision."""
+        ts_iso = _to_iso(exit_ts)
+        with self.conn:
+            cursor = self.conn.execute(
+                """
+                UPDATE trades
+                SET exit_px = ?, exit_ts = ?, exit_reason = ?, pnl = ?
+                WHERE trade_id = ? AND exit_ts IS NULL
+                """,
+                (exit_px, ts_iso, exit_reason, pnl, trade_id),
+            )
+            if cursor.rowcount != 1:
+                return False
+            self.conn.execute(
+                """
+                INSERT INTO decisions(
+                  decision_uid, run_id, ts, coin, stage, trade_id, payload_json, payload_version
+                ) VALUES (?, ?, ?, ?, 'TRADE_CLOSED', ?, ?, 1)
+                """,
+                (decision_uid, run_id, ts_iso, coin, trade_id, _json(payload)),
+            )
+        return True
+
+    def _run_environment(self, run_id: str) -> tuple[str, str]:
+        row = self.conn.execute(
+            "SELECT mode, network FROM runs WHERE run_id = ?", (run_id,)
+        ).fetchone()
+        if row is None:
+            # Fail closed: risk queries must not silently fall back to an
+            # unscoped view when the environment is unknown.
+            raise LookupError(f"run not found for risk scoping: {run_id}")
+        return str(row["mode"]), str(row["network"])
+
+    def realized_pnl_today(self, run_id: str, now: datetime | None = None) -> float:
+        """Closed-trade net PnL inside [UTC midnight, next midnight) for the
+        given run's mode+network. Cross-run within that environment so a
+        restart inside the trading day cannot reset the daily-loss gate, but
+        other environments (e.g. dry_run replays sharing the DB file) never
+        leak in."""
+        mode, network = self._run_environment(run_id)
+        current = now if now is not None else self._clock()
+        if current.tzinfo is None:
+            current = current.replace(tzinfo=UTC)
+        day_start = current.astimezone(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = day_start + timedelta(days=1)
+        row = self.conn.execute(
+            """
+            SELECT COALESCE(SUM(t.pnl), 0.0)
+            FROM trades t JOIN runs r ON r.run_id = t.run_id
+            WHERE r.mode = ? AND r.network = ?
+              AND t.exit_ts IS NOT NULL AND t.pnl IS NOT NULL
+              AND t.exit_ts >= ? AND t.exit_ts < ?
+            """,
+            (mode, network, _to_iso(day_start), _to_iso(day_end)),
+        ).fetchone()
+        return float(row[0]) if row and row[0] is not None else 0.0
+
+    def consecutive_closed_losses(self, run_id: str) -> int:
+        """Most-recent consecutive closed trades with negative net PnL within
+        the given run's mode+network. Cross-run inside that environment so the
+        streak survives restarts; not day-scoped."""
+        mode, network = self._run_environment(run_id)
+        rows = self.conn.execute(
+            """
+            SELECT t.pnl
+            FROM trades t JOIN runs r ON r.run_id = t.run_id
+            WHERE r.mode = ? AND r.network = ?
+              AND t.exit_ts IS NOT NULL AND t.pnl IS NOT NULL
+            ORDER BY t.exit_ts DESC, t.trade_id DESC
+            """,
+            (mode, network),
+        ).fetchall()
+        count = 0
+        for (pnl,) in rows:
+            if float(pnl) < 0:
+                count += 1
+            else:
+                break
+        return count
+
+    def order_fill_totals(self, cloid: str) -> tuple[float, float | None]:
+        """Cumulative filled quantity and VWAP for one order, derived from the
+        persisted fills (fill_id is the primary key, so duplicate deliveries
+        coalesce and the totals are restart-safe)."""
+        row = self.conn.execute(
+            "SELECT COALESCE(SUM(qty), 0.0), SUM(qty * px) FROM fills WHERE cloid = ?",
+            (cloid,),
+        ).fetchone()
+        qty = float(row[0]) if row and row[0] is not None else 0.0
+        vwap = (float(row[1]) / qty) if qty > 0 and row[1] is not None else None
+        return qty, vwap
+
+    def trade_fill_totals(self, trade_id: int) -> dict[str, Any]:
+        """Cumulative entry/exit fill quantities, VWAPs and timestamps for a
+        trade, joining fills to their orders' roles. Restart- and
+        duplicate-safe for the same reason as order_fill_totals."""
+        rows = self.conn.execute(
+            """
+            SELECT CASE WHEN o.role = 'ENTRY' THEN 'ENTRY' ELSE 'EXIT' END AS side,
+                   COALESCE(SUM(f.qty), 0.0) AS qty,
+                   SUM(f.qty * f.px) AS notional,
+                   MIN(f.fill_ts) AS first_ts,
+                   MAX(f.fill_ts) AS last_ts
+            FROM fills f JOIN orders o ON o.cloid = f.cloid
+            WHERE o.trade_id = ?
+            GROUP BY side
+            """,
+            (trade_id,),
+        ).fetchall()
+        totals: dict[str, Any] = {
+            "entry_qty": 0.0, "entry_vwap": None, "entry_first_ts": None,
+            "exit_qty": 0.0, "exit_vwap": None, "exit_last_ts": None,
+        }
+        for row in rows:
+            qty = float(row["qty"])
+            vwap = (float(row["notional"]) / qty) if qty > 0 and row["notional"] is not None else None
+            if row["side"] == "ENTRY":
+                totals["entry_qty"] = qty
+                totals["entry_vwap"] = vwap
+                totals["entry_first_ts"] = row["first_ts"]
+            else:
+                totals["exit_qty"] = qty
+                totals["exit_vwap"] = vwap
+                totals["exit_last_ts"] = row["last_ts"]
+        return totals
+
+    def has_live_entry_remainder(self, trade_id: int) -> bool:
+        """Whether an owned ENTRY order can still fill more quantity."""
+        for order in self.get_orders_for_trade(trade_id):
+            if order["role"] != "ENTRY" or order["status"] not in {"OPEN", "SUBMITTED", "PENDING"}:
+                continue
+            filled_qty, _ = self.order_fill_totals(str(order["cloid"]))
+            if filled_qty < float(order["qty"]) - 1e-9:
+                return True
+        return False
+
+    def trade_costs(self, decision_uid: str) -> float:
+        """Total captured fill costs for one trade (entry + exit + funding).
+        Positive values are debits per the Hyperliquid fee convention; rebates
+        arrive negative and reduce the cost."""
+        row = self.conn.execute(
+            """
+            SELECT COALESCE(SUM(fee), 0.0) + COALESCE(SUM(funding), 0.0)
+            FROM fills WHERE decision_uid = ?
+            """,
+            (decision_uid,),
+        ).fetchone()
+        return float(row[0]) if row and row[0] is not None else 0.0
 
     def insert_equity(
         self,
