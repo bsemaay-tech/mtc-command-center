@@ -10,6 +10,13 @@ Module: `bridge/engine/types.py` (`OrderState`, `ORDER_STATE_TRANSITIONS`,
 acceptance. Not yet wired into persistence, broker adapters, or the engine
 (see Scope boundary below).
 
+**Repair history:** commit `5140e062` was BLOCKed by independent Codex audit
+(`11_TRIAGE/CODEX_TSP1001_AUDIT_2026-07-20.md`) for a mutable policy-map
+backing surface (F1) and an unsafe exception contract (F2); both are fixed
+in the repair commit described in
+`11_TRIAGE/CLAUDE_TSP1001_REPAIR_REPORT_2026-07-20.md`. The immutability and
+exception sections below describe the repaired behavior.
+
 ## Problem
 
 ADR-0023 requires "Accepted, resting, partially filled, filled,
@@ -73,13 +80,23 @@ to observe real semantics. Mapped to the more conservative of the two live
 buckets (`SUBMITTED`, not `OPEN`), since `OPEN` specifically asserts
 confirmed-resting, which an unqualified `PENDING` does not evidence.
 
-Anything else — non-string input (`bool`, `None`, `bytes`, list, dict),
+Anything else — non-string input (`bool`, `None`, `bytes`, list, dict,
+including hostile objects with a leaking or raising `__repr__`),
 empty/whitespace-only strings, and unrecognized strings (`"OPENN"`,
 `"waitingForFill"`, `"WAITING_CHILD"`) — raises
 `UnknownRawOrderStatusError(raw, reason_code)` with `reason_code` one of
 `NON_STRING_RAW_STATUS`, `EMPTY_RAW_STATUS`, `UNRECOGNIZED_RAW_STATUS`.
 **Never** defaults to `OPEN`/`SUBMITTED`/`FILLED` or any other live/terminal
-state.
+state. The error message never interpolates `repr(raw)`/`str(raw)` — only
+`type(raw).__name__` — so a hostile `raw.__repr__` can neither leak
+arbitrary text into the message nor raise its own exception in place of
+`UnknownRawOrderStatusError`. The original `raw` object is still available
+unmodified on the `.raw` attribute for a caller who chooses to inspect it.
+
+`IllegalOrderTransitionError` (raised by `validate_order_transition`) always
+carries `reason_code == "ILLEGAL_ORDER_TRANSITION"` alongside the structured
+`from_state`/`to_state` fields — every instance, not conditional on which
+pair was illegal.
 
 ## Transition table
 
@@ -118,7 +135,7 @@ Design notes:
   after real reconciliation creates a **new** order/decision_uid; it is
   never modeled as this same order mutating backward.
 
-## Invariants (tested exhaustively in `test_order_state.py`, 74 cases)
+## Invariants (tested exhaustively in `test_order_state.py`, 80 cases)
 
 1. Every one of the 121 ordered `(from, to)` pairs has one deterministic
    legal/illegal answer — `can_transition` is a total pure function over
@@ -140,8 +157,22 @@ Design notes:
    `MappingProxyType`-wrapped, with transition values further wrapped in
    `frozenset` — read-only at both the outer-mapping and inner-collection
    level. `can_transition`/`validate_order_transition`/
-   `normalize_raw_order_status` perform no mutation and no I/O.
-7. All pre-existing `bridge/engine/types.py` models/imports are unchanged;
+   `normalize_raw_order_status` perform no mutation and no I/O. Critically,
+   the dict literal each proxy wraps is **not bound to any module-level
+   name** — only `MappingProxyType(...)` is exported — so there is no
+   caller-reachable mutable object backing either policy map (a named
+   `_..._SEED` dict, even one only assigned through the proxy publicly, is
+   itself a mutable backing surface and is not used here). A caller can
+   still take `dict(ORDER_STATE_TRANSITIONS)`/`dict(RAW_ORDER_STATUS_ALIASES)`
+   to get their own mutable copy, but mutating that copy cannot affect
+   `can_transition`/`normalize_raw_order_status`.
+7. `IllegalOrderTransitionError` and `UnknownRawOrderStatusError` are safe to
+   construct from untrusted input: neither ever calls `repr()`/`str()` on a
+   caller-supplied object when building its message (`IllegalOrderTransitionError`
+   only ever receives `OrderState` members it formats via `.value`;
+   `UnknownRawOrderStatusError` reports only `type(raw).__name__`), and both
+   carry a stable `reason_code` attribute.
+8. All pre-existing `bridge/engine/types.py` models/imports are unchanged;
    `OrderState` and its supporting symbols are additive only.
 
 ## Quantity limitation (explicit)

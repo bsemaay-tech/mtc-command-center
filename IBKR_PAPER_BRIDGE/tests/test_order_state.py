@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import BaseModel
 
+import bridge.engine.types as bridge_types_module
 from bridge.engine.types import (
     AccountSnapshot,
     Bar,
@@ -218,6 +219,7 @@ def test_illegal_transition_error_is_structured():
     err = exc_info.value
     assert err.from_state is OrderState.FILLED
     assert err.to_state is OrderState.OPEN
+    assert err.reason_code == "ILLEGAL_ORDER_TRANSITION"
 
 
 @pytest.mark.parametrize(
@@ -268,6 +270,30 @@ def test_unknown_raw_status_error_is_structured_with_reason_code():
     assert isinstance(err.reason_code, str) and err.reason_code
 
 
+class _LeakyRepr:
+    def __repr__(self) -> str:
+        return "LEAK_TOKEN_9f8e7d"
+
+
+class _ExplodingRepr:
+    def __repr__(self) -> str:
+        raise RuntimeError("repr exploded")
+
+
+def test_leaking_repr_object_fails_closed_without_leaking_into_message():
+    with pytest.raises(UnknownRawOrderStatusError) as exc_info:
+        normalize_raw_order_status(_LeakyRepr())
+    err = exc_info.value
+    assert err.reason_code == "NON_STRING_RAW_STATUS"
+    assert "LEAK_TOKEN_9f8e7d" not in str(err)
+
+
+def test_exploding_repr_object_still_raises_dedicated_error_not_a_repr_crash():
+    with pytest.raises(UnknownRawOrderStatusError) as exc_info:
+        normalize_raw_order_status(_ExplodingRepr())
+    assert exc_info.value.reason_code == "NON_STRING_RAW_STATUS"
+
+
 def test_transition_map_values_are_frozensets_immutable_to_callers():
     edges = ORDER_STATE_TRANSITIONS[OrderState.OPEN]
     assert isinstance(edges, frozenset)
@@ -283,6 +309,36 @@ def test_transition_map_itself_is_read_only():
 def test_raw_alias_table_is_read_only():
     with pytest.raises(TypeError):
         RAW_ORDER_STATUS_ALIASES["OPEN"] = OrderState.FILLED
+
+
+def test_no_module_level_mutable_dict_backs_the_transition_policy():
+    for name, value in vars(bridge_types_module).items():
+        if isinstance(value, dict) and OrderState.FILLED in value:
+            pytest.fail(
+                f"module-level mutable dict {name!r} is reachable and backs the "
+                "transition policy; MappingProxyType alone does not freeze it"
+            )
+
+
+def test_no_module_level_mutable_dict_backs_the_raw_alias_policy():
+    for name, value in vars(bridge_types_module).items():
+        if isinstance(value, dict) and value.get("OPEN") is OrderState.OPEN:
+            pytest.fail(
+                f"module-level mutable dict {name!r} is reachable and backs the "
+                "raw-alias policy; MappingProxyType alone does not freeze it"
+            )
+
+
+def test_mutating_a_copy_of_transitions_does_not_affect_can_transition():
+    poisoned = dict(ORDER_STATE_TRANSITIONS)
+    poisoned[OrderState.FILLED] = frozenset({OrderState.OPEN})
+    assert can_transition(OrderState.FILLED, OrderState.OPEN) is False
+
+
+def test_mutating_a_copy_of_raw_aliases_does_not_affect_normalization():
+    poisoned = dict(RAW_ORDER_STATUS_ALIASES)
+    poisoned["OPEN"] = OrderState.FILLED
+    assert normalize_raw_order_status("OPEN") is OrderState.OPEN
 
 
 def test_can_transition_and_validate_are_pure_no_mutation():

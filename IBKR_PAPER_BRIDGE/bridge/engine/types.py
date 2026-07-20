@@ -137,7 +137,10 @@ TERMINAL_ORDER_STATES: frozenset[OrderState] = frozenset(
 )
 
 
-_ORDER_STATE_TRANSITIONS_SEED: dict[OrderState, frozenset[OrderState]] = {
+# No module-level name binds this dict: once MappingProxyType wraps it below,
+# the literal is unreachable to callers (fixes audit F1 — a named seed is a
+# mutable backing surface even when the proxy itself blocks writes).
+ORDER_STATE_TRANSITIONS: Mapping[OrderState, frozenset[OrderState]] = MappingProxyType({
     OrderState.PENDING_NEW: frozenset({OrderState.PENDING_NEW, OrderState.SUBMITTING}),
     OrderState.SUBMITTING: frozenset(
         {
@@ -205,11 +208,7 @@ _ORDER_STATE_TRANSITIONS_SEED: dict[OrderState, frozenset[OrderState]] = {
     OrderState.CANCELED: frozenset({OrderState.CANCELED}),
     OrderState.REJECTED: frozenset({OrderState.REJECTED}),
     OrderState.EXPIRED: frozenset({OrderState.EXPIRED}),
-}
-
-ORDER_STATE_TRANSITIONS: Mapping[OrderState, frozenset[OrderState]] = MappingProxyType(
-    _ORDER_STATE_TRANSITIONS_SEED
-)
+})
 
 
 class IllegalOrderTransitionError(Exception):
@@ -218,7 +217,11 @@ class IllegalOrderTransitionError(Exception):
     def __init__(self, from_state: OrderState, to_state: OrderState) -> None:
         self.from_state = from_state
         self.to_state = to_state
-        super().__init__(f"illegal order-state transition: {from_state.value} -> {to_state.value}")
+        self.reason_code = "ILLEGAL_ORDER_TRANSITION"
+        super().__init__(
+            f"{self.reason_code}: illegal order-state transition: "
+            f"{from_state.value} -> {to_state.value}"
+        )
 
 
 def can_transition(from_state: OrderState, to_state: OrderState) -> bool:
@@ -237,25 +240,28 @@ class UnknownRawOrderStatusError(Exception):
     """Raised when a raw broker/DB status string cannot be normalized.
 
     Fail-closed by design: never defaults to a live/filled/retryable state.
+    The message never interpolates `repr(raw)`/`str(raw)` — only the type
+    name — so a hostile `raw.__repr__` can neither leak arbitrary text into
+    the message nor escape this exception with one of its own.
     """
 
     def __init__(self, raw: object, reason_code: str) -> None:
         self.raw = raw
         self.reason_code = reason_code
-        super().__init__(f"{reason_code}: unrecognized raw order status {raw!r}")
+        super().__init__(
+            f"{reason_code}: unrecognized raw order status of type {type(raw).__name__}"
+        )
 
 
-_RAW_ORDER_STATUS_ALIASES_SEED: dict[str, OrderState] = {
+# No module-level name binds this dict either, for the same reason as
+# ORDER_STATE_TRANSITIONS above (audit F1).
+RAW_ORDER_STATUS_ALIASES: Mapping[str, OrderState] = MappingProxyType({
     "OPEN": OrderState.OPEN,
     "SUBMITTED": OrderState.SUBMITTED,
     "PENDING": OrderState.SUBMITTED,
     "FILLED": OrderState.FILLED,
     "CANCELLED_BY_ENGINE": OrderState.CANCELED,
-}
-
-RAW_ORDER_STATUS_ALIASES: Mapping[str, OrderState] = MappingProxyType(
-    _RAW_ORDER_STATUS_ALIASES_SEED
-)
+})
 
 
 def normalize_raw_order_status(raw: object) -> OrderState:
