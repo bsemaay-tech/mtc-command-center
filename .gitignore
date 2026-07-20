@@ -189,3 +189,12 @@ MTC_COMMAND_CENTER/03_QUANTLENS/data/**/smoke_output_*/
 MTC_COMMAND_CENTER/03_QUANTLENS/data/**/candidate_sweep_*/
 # Overnight sweep research output (large JSON + checkpoint; regenerable, dashboard reads locally)
 MTC_COMMAND_CENTER/03_QUANTLENS/05_BACKTEST_RESULTS/overnight_multiasset_*/
+
+# Interrupted mega_walk_forward run artifacts (regenerable checkpoints/partials; not verdict evidence)
+MTC_COMMAND_CENTER/03_QUANTLENS/research/**/MEGA_walk_forward_checkpoint.pkl
+MTC_COMMAND_CENTER/03_QUANTLENS/research/**/MEGA_walk_forward_partial.json
+# Dashboard site build residue (source tracked separately on its own branch)
+MTC_COMMAND_CENTER/08_DASHBOARD_APP/sites/**/.vinext/
+MTC_COMMAND_CENTER/08_DASHBOARD_APP/sites/**/.wrangler/
+MTC_COMMAND_CENTER/08_DASHBOARD_APP/sites/**/dist/
+MTC_COMMAND_CENTER/08_DASHBOARD_APP/sites/**/node_modules/
