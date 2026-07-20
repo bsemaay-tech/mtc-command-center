@@ -101,8 +101,9 @@ flags already cover whole-repo identity; the hash scope exists to pinpoint
 Files whose basename matches the denylist are **never opened and never
 hashed** — they appear in `excluded` by path + reason only:
 
-- `.env`, `.env.*` (any case)
-- `secret*` / `secrets*`
+- `.env`, `.env.*`, `*.env`, `*.env.*` (any case)
+- `secret` / `secrets` with optional suffixes, plus `*.secret` / `*.secrets`
+- `key` with any optional extension (including `key.txt`)
 - `*.key`, `*.pem`, `*.p12`, `*.pfx`
 - `*.db`, `*.sqlite`, `*.sqlite3`, `*.log`
 

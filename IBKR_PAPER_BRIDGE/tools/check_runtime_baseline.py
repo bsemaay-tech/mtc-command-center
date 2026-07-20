@@ -45,9 +45,16 @@ CONFIG_SCOPE = ("IBKR_PAPER_BRIDGE/config",)
 EXCLUDED_DIR_NAMES = {".git", "__pycache__", ".pytest_cache"}
 
 # Never read, never hashed — recorded by path only.
+# Policy: basename rules only; never opens or hashes:
+#   - .env prefix/suffix variants  (e.g. .env, .env.prod, prod.env)
+#   - secret/secrets standalone or dot-suffix  (e.g. secret, secrets.key, my.secrets)
+#   - key with optional extension  (e.g. key, key.txt)
+#   - *.key / *.pem / *.p12 / *.pfx  (key material extensions)
+#   - *.db / *.sqlite / *.sqlite3 / *.log  (database and log files)
 SECRET_FILE_PATTERNS = (
-    re.compile(r"^\.env(\..*)?$", re.IGNORECASE),
-    re.compile(r"^secrets?(\..*)?$", re.IGNORECASE),
+    re.compile(r"^(?:\.env(?:\..*)?|.+\.env(?:\..*)?)$", re.IGNORECASE),
+    re.compile(r"^(?:secrets?(?:\..*)?|.+\.secrets?(?:\..*)?)$", re.IGNORECASE),
+    re.compile(r"^key(\..*)?$", re.IGNORECASE),
     re.compile(r".*\.(key|pem|p12|pfx)$", re.IGNORECASE),
     re.compile(r".*\.(db|sqlite|sqlite3|log)$", re.IGNORECASE),
 )

@@ -76,6 +76,17 @@ REQUIRED_HASH_KEYS = (
     "runtime_config_hash",
 )
 
+REQUIRED_STRING_FIELDS = (
+    "schema_version",
+    "tool",
+    "generated_at_utc",
+    "repo_root",
+    "runtime_root",
+    "release_commit",
+    "rollback_commit",
+    "integrity_sha256",
+)
+
 _HEX40 = __import__("re").compile(r"^[0-9a-f]{40}$")
 _TS_RE = __import__("re").compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 
@@ -162,16 +173,26 @@ def _validate_manifest(manifest: dict, repo_root: Path, runtime_root: Path) -> d
     for field in REQUIRED_FIELDS:
         if field not in manifest:
             failures.append(f"missing_field:{field}")
-    if "hashes" in manifest and isinstance(manifest["hashes"], dict):
-        for key in REQUIRED_HASH_KEYS:
-            if key not in manifest["hashes"]:
-                failures.append(f"missing_field:hashes.{key}")
 
+    for field in REQUIRED_STRING_FIELDS:
+        if field in manifest and not isinstance(manifest[field], str):
+            failures.append(f"invalid_type:{field}")
+
+    # Validate hashes container type and per-field types before any dereference.
+    if "hashes" in manifest:
+        if not isinstance(manifest["hashes"], dict):
+            failures.append("invalid_type:hashes")
+        else:
+            for key in REQUIRED_HASH_KEYS:
+                if key not in manifest["hashes"]:
+                    failures.append(f"missing_field:hashes.{key}")
+                elif not isinstance(manifest["hashes"][key], str):
+                    failures.append(f"invalid_type:hashes.{key}")
     version = manifest.get("schema_version")
-    if version is not None and version != SCHEMA_VERSION:
+    if isinstance(version, str) and version != SCHEMA_VERSION:
         failures.append(f"unsupported_schema_version:{version}")
 
-    if "integrity_sha256" in manifest:
+    if isinstance(manifest.get("integrity_sha256"), str):
         if _integrity_hash(manifest) != manifest["integrity_sha256"]:
             failures.append("integrity_hash_mismatch")
 

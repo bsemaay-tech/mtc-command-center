@@ -287,10 +287,18 @@ def test_byte_stable_json_and_md_outputs(pair, tmp_path, capsys):
 
 
 def test_secret_safe_output(pair, capsys, monkeypatch):
+    """All five denylist names must be excluded and never passed to _hash_file."""
     repo, runtime, head = pair
     secret = "0xDEADBEEFCAFE_SECRET_VALUE"
-    _write(repo, "IBKR_PAPER_BRIDGE/config/.env", f"HL_API_WALLET_KEY={secret}\n")
-    _write(repo, "IBKR_PAPER_BRIDGE/config/secrets.key", secret + "\n")
+    secret_files = [
+        ("IBKR_PAPER_BRIDGE/config/.env", f"HL_API_WALLET_KEY={secret}\n"),
+        ("IBKR_PAPER_BRIDGE/config/secrets.key", secret + "\n"),
+        ("IBKR_PAPER_BRIDGE/config/prod.env", f"DB_PASS={secret}\n"),
+        ("IBKR_PAPER_BRIDGE/config/my.secrets", secret + "\n"),
+        ("IBKR_PAPER_BRIDGE/config/key.txt", secret + "\n"),
+    ]
+    for path, content in secret_files:
+        _write(repo, path, content)
 
     hashed_paths = []
     real_hash = crb._hash_file
@@ -304,12 +312,18 @@ def test_secret_safe_output(pair, capsys, monkeypatch):
     m = manifest_of(out)
     text = out + err
     assert secret not in text
-    assert ".env" not in hashed_paths
-    assert "secrets.key" not in hashed_paths
+    # All five basenames must be excluded — never passed to _hash_file
+    denied_names = {".env", "secrets.key", "prod.env", "my.secrets", "key.txt"}
+    for name in denied_names:
+        assert name not in hashed_paths, f"{name} was hashed"
     assert not any(k.endswith(".env") for k in m["hashes"]["repo"]["files"])
-    excluded = m["hashes"]["repo"]["excluded"]
-    assert any(e["path"].endswith(".env") for e in excluded)
-    assert any(e["path"].endswith("secrets.key") for e in excluded)
+    assert not any(k.endswith("secrets.key") for k in m["hashes"]["repo"]["files"])
+    assert not any(k.endswith("prod.env") for k in m["hashes"]["repo"]["files"])
+    assert not any(k.endswith("my.secrets") for k in m["hashes"]["repo"]["files"])
+    assert not any(k.endswith("key.txt") for k in m["hashes"]["repo"]["files"])
+    excluded_paths = [e["path"] for e in m["hashes"]["repo"]["excluded"]]
+    for name in denied_names:
+        assert any(p.endswith(name) for p in excluded_paths), f"{name} not in excluded"
     # planted secrets make the repo dirty (untracked) -> must exit 2, never 0
     assert rc == 2
 

@@ -28,7 +28,7 @@ contract):
 
 1. reset marker and no window started since → **RESET**
 2. no window started → **DOWN**
-3. liveness missing or age > `stale_after_s` (default 300s) → **DOWN**
+3. liveness missing, future-dated, or age > `stale_after_s` (default 300s) → **DOWN**
 4. interruption recorded → **INTERRUPTED**
 5. `app_state == ARMED` → **RUNNING**
 6. otherwise (alive but DISARMED/KILLED mid-window) → **INTERRUPTED**
@@ -36,7 +36,10 @@ contract):
 **Invariant (tested exhaustively):** RUNNING requires fresh liveness AND
 ARMED AND no recorded interruption — a down bridge can never present as an
 active soak window. Unreadable store evidence reports DOWN with
-`error: store_unreadable`, never a fabricated active state.
+`error: store_unreadable`, never a fabricated active state. Any non-empty
+persisted window timestamp that cannot be parsed reports DOWN with
+`error: invalid_meta:<meta-key>`. Future-dated liveness reports DOWN with
+`error: future_liveness`; exact-threshold liveness remains fresh.
 
 ## Reset policy — PROPOSED, pending Barış confirmation
 

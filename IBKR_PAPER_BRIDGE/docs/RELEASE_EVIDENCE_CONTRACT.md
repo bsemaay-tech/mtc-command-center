@@ -46,7 +46,9 @@ python IBKR_PAPER_BRIDGE/tools/release_evidence.py validate \
 
 `validate` checks, in order:
 
-1. Required fields all present (`missing_field:<name>` failures).
+1. Required fields all present and structurally typed before any live-state
+   dereference (`missing_field:<name>` / `invalid_type:<name>` failures).
+   `hashes` must be an object and every required hash value must be a string.
 2. `schema_version` equals the supported version
    (`unsupported_schema_version:<v>` — old manifests are rejected, not
    silently reinterpreted).
@@ -65,7 +67,7 @@ python IBKR_PAPER_BRIDGE/tools/release_evidence.py validate \
 | Code | Meaning |
 | --- | --- |
 | 0 | `create`: manifest written. `validate`: VALID — every check passed. |
-| 2 | `validate`: INVALID — one or more failures (tamper, missing field, old version, unknown rollback, drift). |
+| 2 | `validate`: INVALID — one or more failures (tamper, missing/wrong-type field, old version, unknown rollback, drift). |
 | 3 | Invalid evidence input: bad roots, malformed git output, non-hex commits, corrupt/absent manifest file, bad CLI arguments. Single stderr line, no traceback. |
 
 ## Manifest fields

@@ -224,6 +224,33 @@ def test_window_status_survives_store_failure(store):
     assert block["error"] == "store_unreadable"
 
 
+@pytest.mark.parametrize(
+    "meta_key",
+    [
+        w.META_STARTED,
+        w.META_LAST_ALIVE,
+        w.META_INTERRUPTED,
+        w.META_RESET,
+    ],
+)
+def test_malformed_persisted_timestamp_fails_down(store, meta_key):
+    w.record_window_start(store, T0 - timedelta(hours=1))
+    w.record_liveness(store, T0 - timedelta(seconds=1))
+    store.set_meta(meta_key, "garbage")
+    block = status_at(store, T0)
+    assert block["state"] == w.WINDOW_DOWN
+    assert block["error"] == f"invalid_meta:{meta_key}"
+
+
+def test_future_liveness_fails_down(store):
+    w.record_window_start(store, T0 - timedelta(hours=1))
+    w.record_liveness(store, T0 + timedelta(seconds=1))
+    block = status_at(store, T0)
+    assert block["state"] == w.WINDOW_DOWN
+    assert block["error"] == "future_liveness"
+    assert compute(last_alive_ts=T0 + timedelta(seconds=1)) == w.WINDOW_DOWN
+
+
 # ---------------------------------------------------------------------------
 # engine integration: status() exposes the window; arm starts it;
 # reconcile success records liveness

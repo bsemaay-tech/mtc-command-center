@@ -7,6 +7,8 @@ and runtime are never touched.
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -209,6 +211,68 @@ def test_validate_detects_current_state_drift(pair, tmp_path, capsys):
     report = json.loads(vout)
     assert vrc == 2
     assert "repo_head_not_release_commit" in report["failures"]
+
+
+def test_validate_resigned_non_dict_hashes_exit_2_no_traceback(
+    pair, tmp_path, capsys
+):
+    """A structurally invalid but correctly re-signed manifest fails safely."""
+    rc, out = create_manifest(pair, tmp_path, capsys)
+    assert rc == 0
+    manifest = json.loads(out.read_text(encoding="utf-8"))
+    manifest["hashes"] = []
+    manifest["integrity_sha256"] = rev._integrity_hash(manifest)
+    out.write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    repo, runtime, _, _ = pair
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(Path(rev.__file__).resolve()),
+            "validate",
+            "--manifest",
+            str(out),
+            "--repo-root",
+            str(repo),
+            "--runtime-root",
+            str(runtime),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    report = json.loads(proc.stdout)
+    assert proc.returncode == report["exit_code"] == 2
+    assert report["failures"] == ["invalid_type:hashes"]
+    assert "Traceback" not in proc.stderr
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "failure"),
+    [
+        ("release_commit", [], "invalid_type:release_commit"),
+        ("hashes.config_hash", [], "invalid_type:hashes.config_hash"),
+    ],
+)
+def test_validate_resigned_wrong_scalar_types(
+    pair, tmp_path, capsys, field, value, failure
+):
+    rc, out = create_manifest(pair, tmp_path, capsys)
+    assert rc == 0
+    manifest = json.loads(out.read_text(encoding="utf-8"))
+    if field.startswith("hashes."):
+        manifest["hashes"][field.split(".", 1)[1]] = value
+    else:
+        manifest[field] = value
+    manifest["integrity_sha256"] = rev._integrity_hash(manifest)
+    out.write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    vrc, vout, err = validate(pair, out, capsys)
+    report = json.loads(vout)
+    assert vrc == report["exit_code"] == 2
+    assert report["failures"] == [failure]
+    assert "Traceback" not in err
 
 
 def test_validate_corrupt_json_exit_3(pair, tmp_path, capsys):

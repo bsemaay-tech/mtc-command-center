@@ -45,6 +45,8 @@ DEFAULT_STALE_AFTER_S = 300.0
 def _parse_ts(value: str | None) -> datetime | None:
     if not value:
         return None
+    if not isinstance(value, str):
+        return None
     try:
         parsed = datetime.fromisoformat(value)
     except ValueError:
@@ -79,7 +81,8 @@ def compute_window_state(
         return WINDOW_DOWN
     if last_alive_ts is None:
         return WINDOW_DOWN
-    if (now - last_alive_ts).total_seconds() > stale_after_s:
+    age_s = (now - last_alive_ts).total_seconds()
+    if age_s < 0 or age_s > stale_after_s:
         return WINDOW_DOWN
     if interrupted_ts is not None:
         return WINDOW_INTERRUPTED
@@ -98,11 +101,15 @@ def window_status(
     """Read-model block for /api/status. Fails safe: unreadable evidence is
     reported as DOWN with an explicit error, never as an active window."""
     now = now if now is not None else datetime.now(UTC)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=UTC)
     try:
-        started = _parse_ts(store.get_meta(META_STARTED))
-        last_alive = _parse_ts(store.get_meta(META_LAST_ALIVE))
-        interrupted = _parse_ts(store.get_meta(META_INTERRUPTED))
-        reset = _parse_ts(store.get_meta(META_RESET))
+        raw = {
+            META_STARTED: store.get_meta(META_STARTED),
+            META_LAST_ALIVE: store.get_meta(META_LAST_ALIVE),
+            META_INTERRUPTED: store.get_meta(META_INTERRUPTED),
+            META_RESET: store.get_meta(META_RESET),
+        }
     except Exception:
         return {
             "state": WINDOW_DOWN,
@@ -112,6 +119,32 @@ def window_status(
             "reset_ts": None,
             "stale_after_s": stale_after_s,
             "error": "store_unreadable",
+        }
+    parsed = {key: _parse_ts(value) for key, value in raw.items()}
+    for key, value in raw.items():
+        if value not in (None, "") and parsed[key] is None:
+            return {
+                "state": WINDOW_DOWN,
+                "started_ts": None,
+                "last_alive_ts": None,
+                "interrupted_ts": None,
+                "reset_ts": None,
+                "stale_after_s": stale_after_s,
+                "error": f"invalid_meta:{key}",
+            }
+    started = parsed[META_STARTED]
+    last_alive = parsed[META_LAST_ALIVE]
+    interrupted = parsed[META_INTERRUPTED]
+    reset = parsed[META_RESET]
+    if last_alive is not None and (now - last_alive).total_seconds() < 0:
+        return {
+            "state": WINDOW_DOWN,
+            "started_ts": started.isoformat() if started else None,
+            "last_alive_ts": last_alive.isoformat(),
+            "interrupted_ts": interrupted.isoformat() if interrupted else None,
+            "reset_ts": reset.isoformat() if reset else None,
+            "stale_after_s": stale_after_s,
+            "error": "future_liveness",
         }
     state = compute_window_state(
         app_state=app_state,
