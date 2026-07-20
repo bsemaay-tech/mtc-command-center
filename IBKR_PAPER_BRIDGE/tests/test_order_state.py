@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gc
 import itertools
 from datetime import UTC, datetime
 
@@ -294,6 +295,25 @@ def test_exploding_repr_object_still_raises_dedicated_error_not_a_repr_crash():
     assert exc_info.value.reason_code == "NON_STRING_RAW_STATUS"
 
 
+class _HostileMeta(type):
+    def __getattribute__(cls, name):
+        if name == "__name__":
+            raise RuntimeError("metaclass name exploded")
+        return super().__getattribute__(name)
+
+
+class _Hostile(metaclass=_HostileMeta):
+    pass
+
+
+def test_hostile_metaclass_name_lookup_still_raises_dedicated_error():
+    with pytest.raises(UnknownRawOrderStatusError) as exc_info:
+        normalize_raw_order_status(_Hostile())
+    err = exc_info.value
+    assert err.reason_code == "NON_STRING_RAW_STATUS"
+    assert "metaclass name exploded" not in str(err)
+
+
 def test_transition_map_values_are_frozensets_immutable_to_callers():
     edges = ORDER_STATE_TRANSITIONS[OrderState.OPEN]
     assert isinstance(edges, frozenset)
@@ -339,6 +359,64 @@ def test_mutating_a_copy_of_raw_aliases_does_not_affect_normalization():
     poisoned = dict(RAW_ORDER_STATUS_ALIASES)
     poisoned["OPEN"] = OrderState.FILLED
     assert normalize_raw_order_status("OPEN") is OrderState.OPEN
+
+
+def _transitive_gc_referents(obj, limit=200):
+    """BFS over gc.get_referents, skipping type objects (classes) so the
+    walk stays scoped to *data* reachable from `obj`, not the surrounding
+    class/module machinery. Bounded by `limit` as a runaway-graph guard.
+    """
+    seen_ids = {id(obj)}
+    frontier = [obj]
+    collected = []
+    while frontier and len(collected) < limit:
+        current = frontier.pop()
+        for referent in gc.get_referents(current):
+            if isinstance(referent, type):
+                continue
+            marker = id(referent)
+            if marker in seen_ids:
+                continue
+            seen_ids.add(marker)
+            collected.append(referent)
+            frontier.append(referent)
+    return collected
+
+
+def test_gc_referents_of_transitions_contain_no_mutable_container():
+    referents = _transitive_gc_referents(ORDER_STATE_TRANSITIONS)
+    mutable = [r for r in referents if isinstance(r, (dict, list, set, bytearray))]
+    assert mutable == []
+
+
+def test_gc_referents_of_transitions_cannot_alter_can_transition():
+    before = can_transition(OrderState.FILLED, OrderState.OPEN)
+    assert before is False
+    for referent in _transitive_gc_referents(ORDER_STATE_TRANSITIONS):
+        if isinstance(referent, dict):
+            referent[OrderState.FILLED] = frozenset({OrderState.OPEN})
+        if isinstance(referent, list):
+            referent.append((OrderState.FILLED, frozenset({OrderState.OPEN})))
+    after = can_transition(OrderState.FILLED, OrderState.OPEN)
+    assert after is False
+
+
+def test_gc_referents_of_raw_aliases_contain_no_mutable_container():
+    referents = _transitive_gc_referents(RAW_ORDER_STATUS_ALIASES)
+    mutable = [r for r in referents if isinstance(r, (dict, list, set, bytearray))]
+    assert mutable == []
+
+
+def test_gc_referents_of_raw_aliases_cannot_alter_normalization():
+    before = normalize_raw_order_status("OPEN")
+    assert before is OrderState.OPEN
+    for referent in _transitive_gc_referents(RAW_ORDER_STATUS_ALIASES):
+        if isinstance(referent, dict):
+            referent["OPEN"] = OrderState.FILLED
+        if isinstance(referent, list):
+            referent.append(("OPEN", OrderState.FILLED))
+    after = normalize_raw_order_status("OPEN")
+    assert after is OrderState.OPEN
 
 
 def test_can_transition_and_validate_are_pure_no_mutation():

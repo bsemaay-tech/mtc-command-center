@@ -12,10 +12,16 @@ acceptance. Not yet wired into persistence, broker adapters, or the engine
 
 **Repair history:** commit `5140e062` was BLOCKed by independent Codex audit
 (`11_TRIAGE/CODEX_TSP1001_AUDIT_2026-07-20.md`) for a mutable policy-map
-backing surface (F1) and an unsafe exception contract (F2); both are fixed
-in the repair commit described in
-`11_TRIAGE/CLAUDE_TSP1001_REPAIR_REPORT_2026-07-20.md`. The immutability and
-exception sections below describe the repaired behavior.
+backing surface (F1) and an unsafe exception contract (F2); repair commit
+`851d88a0` fixed the named-seed and hostile-`repr` examples
+(`11_TRIAGE/CLAUDE_TSP1001_REPAIR_REPORT_2026-07-20.md`) but was itself
+BLOCKed on re-audit (`11_TRIAGE/CODEX_TSP1001_REAUDIT_2026-07-20.md`) for two
+residual findings: F1-R — `MappingProxyType`'s backing `dict` is still a
+mutable object reachable via `gc.get_referents()` regardless of naming; F2-R
+— `type(raw).__name__` is not safe against a hostile metaclass overriding
+class attribute lookup. Both are fixed in the second repair described in
+`11_TRIAGE/CLAUDE_TSP1001_REPAIR2_REPORT_2026-07-20.md`. The immutability and
+exception sections below describe the twice-repaired behavior.
 
 ## Problem
 
@@ -87,11 +93,14 @@ empty/whitespace-only strings, and unrecognized strings (`"OPENN"`,
 `UnknownRawOrderStatusError(raw, reason_code)` with `reason_code` one of
 `NON_STRING_RAW_STATUS`, `EMPTY_RAW_STATUS`, `UNRECOGNIZED_RAW_STATUS`.
 **Never** defaults to `OPEN`/`SUBMITTED`/`FILLED` or any other live/terminal
-state. The error message never interpolates `repr(raw)`/`str(raw)` — only
-`type(raw).__name__` — so a hostile `raw.__repr__` can neither leak
-arbitrary text into the message nor raise its own exception in place of
-`UnknownRawOrderStatusError`. The original `raw` object is still available
-unmodified on the `.raw` attribute for a caller who chooses to inspect it.
+state. The error message is a constant string per `reason_code` — it never
+accesses any attribute of `raw` or `type(raw)` at all, not `repr()`/`str()`
+and not even `type(raw).__name__` (a class's `__name__` lookup is dispatched
+through its metaclass, so a caller-controlled metaclass can intercept and
+raise on that specific access — audit F2-R). So neither a hostile
+`__repr__` nor a hostile metaclass can leak text into the message or escape
+this exception. The original `raw` object is still available unmodified on
+the `.raw` attribute for a caller who chooses to inspect it themselves.
 
 `IllegalOrderTransitionError` (raised by `validate_order_transition`) always
 carries `reason_code == "ILLEGAL_ORDER_TRANSITION"` alongside the structured
@@ -135,7 +144,7 @@ Design notes:
   after real reconciliation creates a **new** order/decision_uid; it is
   never modeled as this same order mutating backward.
 
-## Invariants (tested exhaustively in `test_order_state.py`, 80 cases)
+## Invariants (tested exhaustively in `test_order_state.py`, 85 cases)
 
 1. Every one of the 121 ordered `(from, to)` pairs has one deterministic
    legal/illegal answer — `can_transition` is a total pure function over
@@ -153,25 +162,35 @@ Design notes:
    pending cancel request).
 5. Unrecognized raw statuses fail closed via `UnknownRawOrderStatusError`,
    reason-coded; never default to a live/filled state.
-6. `ORDER_STATE_TRANSITIONS` and `RAW_ORDER_STATUS_ALIASES` are
-   `MappingProxyType`-wrapped, with transition values further wrapped in
-   `frozenset` — read-only at both the outer-mapping and inner-collection
-   level. `can_transition`/`validate_order_transition`/
-   `normalize_raw_order_status` perform no mutation and no I/O. Critically,
-   the dict literal each proxy wraps is **not bound to any module-level
-   name** — only `MappingProxyType(...)` is exported — so there is no
-   caller-reachable mutable object backing either policy map (a named
-   `_..._SEED` dict, even one only assigned through the proxy publicly, is
-   itself a mutable backing surface and is not used here). A caller can
-   still take `dict(ORDER_STATE_TRANSITIONS)`/`dict(RAW_ORDER_STATUS_ALIASES)`
-   to get their own mutable copy, but mutating that copy cannot affect
-   `can_transition`/`normalize_raw_order_status`.
+6. `ORDER_STATE_TRANSITIONS` and `RAW_ORDER_STATUS_ALIASES` are instances of
+   a private `_ImmutableMapping` class (implements `collections.abc.Mapping`
+   over a `tuple` of `(key, value)` pairs), not `MappingProxyType` over a
+   `dict`. This distinction is load-bearing: `MappingProxyType(d)` blocks
+   writes *through the proxy*, but `d` remains a plain mutable `dict` and is
+   returned directly by Python's standard `gc.get_referents(proxy)` — so
+   mutating it changes later `can_transition`/`normalize_raw_order_status`
+   decisions regardless of whether `d` is bound to any module-level name
+   (audit F1-R). A `tuple` cannot be mutated in place at all, so the entire
+   object graph reachable from either export — checked transitively via
+   `gc.get_referents`, not just one hop — contains only tuples, `frozenset`s,
+   and `OrderState`/`str` values; no `dict`, `list`, or other mutable
+   container exists anywhere in it. `can_transition`/
+   `validate_order_transition`/`normalize_raw_order_status` perform no
+   mutation and no I/O. A caller can still take
+   `dict(ORDER_STATE_TRANSITIONS)`/`dict(RAW_ORDER_STATUS_ALIASES)` to get
+   their own independent mutable copy, but mutating that copy cannot affect
+   the original.
 7. `IllegalOrderTransitionError` and `UnknownRawOrderStatusError` are safe to
-   construct from untrusted input: neither ever calls `repr()`/`str()` on a
-   caller-supplied object when building its message (`IllegalOrderTransitionError`
-   only ever receives `OrderState` members it formats via `.value`;
-   `UnknownRawOrderStatusError` reports only `type(raw).__name__`), and both
-   carry a stable `reason_code` attribute.
+   construct from untrusted input: neither ever accesses any attribute of a
+   caller-supplied object when building its message.
+   `IllegalOrderTransitionError` only ever receives `OrderState` members
+   (our own closed enum, never externally supplied raw data) and formats
+   them via `.value`. `UnknownRawOrderStatusError`'s message is a constant
+   string per `reason_code` and does not reference `raw` at all — not
+   `repr()`/`str()`, and not even `type(raw).__name__` (accessing a class's
+   `__name__` is dispatched through its metaclass, so a caller-controlled
+   metaclass can intercept that specific lookup and raise — audit F2-R).
+   Both exceptions carry a stable `reason_code` attribute.
 8. All pre-existing `bridge/engine/types.py` models/imports are unchanged;
    `OrderState` and its supporting symbols are additive only.
 

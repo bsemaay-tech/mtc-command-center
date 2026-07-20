@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
 from enum import Enum
-from types import MappingProxyType
-from typing import Literal, Mapping
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -137,78 +137,129 @@ TERMINAL_ORDER_STATES: frozenset[OrderState] = frozenset(
 )
 
 
-# No module-level name binds this dict: once MappingProxyType wraps it below,
-# the literal is unreachable to callers (fixes audit F1 — a named seed is a
-# mutable backing surface even when the proxy itself blocks writes).
-ORDER_STATE_TRANSITIONS: Mapping[OrderState, frozenset[OrderState]] = MappingProxyType({
-    OrderState.PENDING_NEW: frozenset({OrderState.PENDING_NEW, OrderState.SUBMITTING}),
-    OrderState.SUBMITTING: frozenset(
-        {
-            OrderState.SUBMITTING,
-            OrderState.SUBMITTED,
-            OrderState.REJECTED,
-            OrderState.UNKNOWN_SUBMISSION,
-        }
+class _ImmutableMapping(Mapping):
+    """Read-only Mapping with no mutable object anywhere in its referent graph.
+
+    `MappingProxyType(d)` blocks writes *through the proxy*, but `d` itself
+    remains a plain `dict` and is returned directly by
+    `gc.get_referents(proxy)` — mutating that `dict` still changes what the
+    proxy reports, whether or not `d` is bound to a module-level name (audit
+    F1-R). This class instead stores its data as a `tuple` of `(key, value)`
+    pairs. Tuples cannot be mutated in place (no `__setitem__`/`append`/etc.),
+    so even a caller that walks `gc.get_referents` transitively from an
+    instance of this class only ever reaches tuples, `frozenset`s, and
+    `OrderState`/`str` values — never a `dict` or `list` it could mutate to
+    change a later lookup.
+    """
+
+    __slots__ = ("_pairs",)
+
+    def __init__(self, pairs) -> None:
+        self._pairs = tuple(pairs)
+
+    def __getitem__(self, key):
+        for stored_key, value in self._pairs:
+            if stored_key == key:
+                return value
+        raise KeyError(key)
+
+    def __iter__(self):
+        return (stored_key for stored_key, _ in self._pairs)
+
+    def __len__(self) -> int:
+        return len(self._pairs)
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({dict(self._pairs)!r})"
+
+
+ORDER_STATE_TRANSITIONS: Mapping[OrderState, frozenset[OrderState]] = _ImmutableMapping((
+    (OrderState.PENDING_NEW, frozenset({OrderState.PENDING_NEW, OrderState.SUBMITTING})),
+    (
+        OrderState.SUBMITTING,
+        frozenset(
+            {
+                OrderState.SUBMITTING,
+                OrderState.SUBMITTED,
+                OrderState.REJECTED,
+                OrderState.UNKNOWN_SUBMISSION,
+            }
+        ),
     ),
-    OrderState.SUBMITTED: frozenset(
-        {
-            OrderState.SUBMITTED,
-            OrderState.OPEN,
-            OrderState.REJECTED,
-            OrderState.FILLED,
-            OrderState.PARTIALLY_FILLED,
-            OrderState.EXPIRED,
-            OrderState.PENDING_CANCEL,
-            OrderState.CANCELED,
-        }
+    (
+        OrderState.SUBMITTED,
+        frozenset(
+            {
+                OrderState.SUBMITTED,
+                OrderState.OPEN,
+                OrderState.REJECTED,
+                OrderState.FILLED,
+                OrderState.PARTIALLY_FILLED,
+                OrderState.EXPIRED,
+                OrderState.PENDING_CANCEL,
+                OrderState.CANCELED,
+            }
+        ),
     ),
-    OrderState.OPEN: frozenset(
-        {
-            OrderState.OPEN,
-            OrderState.PARTIALLY_FILLED,
-            OrderState.FILLED,
-            OrderState.PENDING_CANCEL,
-            OrderState.CANCELED,
-            OrderState.EXPIRED,
-        }
+    (
+        OrderState.OPEN,
+        frozenset(
+            {
+                OrderState.OPEN,
+                OrderState.PARTIALLY_FILLED,
+                OrderState.FILLED,
+                OrderState.PENDING_CANCEL,
+                OrderState.CANCELED,
+                OrderState.EXPIRED,
+            }
+        ),
     ),
-    OrderState.PARTIALLY_FILLED: frozenset(
-        {
-            OrderState.PARTIALLY_FILLED,
-            OrderState.FILLED,
-            OrderState.PENDING_CANCEL,
-            OrderState.CANCELED,
-            OrderState.EXPIRED,
-        }
+    (
+        OrderState.PARTIALLY_FILLED,
+        frozenset(
+            {
+                OrderState.PARTIALLY_FILLED,
+                OrderState.FILLED,
+                OrderState.PENDING_CANCEL,
+                OrderState.CANCELED,
+                OrderState.EXPIRED,
+            }
+        ),
     ),
-    OrderState.PENDING_CANCEL: frozenset(
-        {
-            OrderState.PENDING_CANCEL,
-            OrderState.CANCELED,
-            OrderState.FILLED,
-            OrderState.PARTIALLY_FILLED,
-            OrderState.OPEN,
-            OrderState.EXPIRED,
-        }
+    (
+        OrderState.PENDING_CANCEL,
+        frozenset(
+            {
+                OrderState.PENDING_CANCEL,
+                OrderState.CANCELED,
+                OrderState.FILLED,
+                OrderState.PARTIALLY_FILLED,
+                OrderState.OPEN,
+                OrderState.EXPIRED,
+            }
+        ),
     ),
-    OrderState.UNKNOWN_SUBMISSION: frozenset(
-        {
-            OrderState.UNKNOWN_SUBMISSION,
-            OrderState.SUBMITTED,
-            OrderState.OPEN,
-            OrderState.PARTIALLY_FILLED,
-            OrderState.PENDING_CANCEL,
-            OrderState.FILLED,
-            OrderState.CANCELED,
-            OrderState.REJECTED,
-            OrderState.EXPIRED,
-        }
+    (
+        OrderState.UNKNOWN_SUBMISSION,
+        frozenset(
+            {
+                OrderState.UNKNOWN_SUBMISSION,
+                OrderState.SUBMITTED,
+                OrderState.OPEN,
+                OrderState.PARTIALLY_FILLED,
+                OrderState.PENDING_CANCEL,
+                OrderState.FILLED,
+                OrderState.CANCELED,
+                OrderState.REJECTED,
+                OrderState.EXPIRED,
+            }
+        ),
     ),
-    OrderState.FILLED: frozenset({OrderState.FILLED}),
-    OrderState.CANCELED: frozenset({OrderState.CANCELED}),
-    OrderState.REJECTED: frozenset({OrderState.REJECTED}),
-    OrderState.EXPIRED: frozenset({OrderState.EXPIRED}),
-})
+    (OrderState.FILLED, frozenset({OrderState.FILLED})),
+    (OrderState.CANCELED, frozenset({OrderState.CANCELED})),
+    (OrderState.REJECTED, frozenset({OrderState.REJECTED})),
+    (OrderState.EXPIRED, frozenset({OrderState.EXPIRED})),
+))
 
 
 class IllegalOrderTransitionError(Exception):
@@ -240,28 +291,27 @@ class UnknownRawOrderStatusError(Exception):
     """Raised when a raw broker/DB status string cannot be normalized.
 
     Fail-closed by design: never defaults to a live/filled/retryable state.
-    The message never interpolates `repr(raw)`/`str(raw)` — only the type
-    name — so a hostile `raw.__repr__` can neither leak arbitrary text into
-    the message nor escape this exception with one of its own.
+    The message is a constant string per `reason_code` and never accesses
+    any attribute of `raw` or `type(raw)` — not `repr()`/`str()`, and not
+    even `type(raw).__name__` (accessing a class's `__name__` is dispatched
+    through its metaclass, so a caller-controlled metaclass can intercept
+    that lookup and raise; audit F2-R). `.raw` still holds the original
+    object unmodified for a caller who wants to inspect it directly.
     """
 
     def __init__(self, raw: object, reason_code: str) -> None:
         self.raw = raw
         self.reason_code = reason_code
-        super().__init__(
-            f"{reason_code}: unrecognized raw order status of type {type(raw).__name__}"
-        )
+        super().__init__(f"{reason_code}: raw order status could not be normalized")
 
 
-# No module-level name binds this dict either, for the same reason as
-# ORDER_STATE_TRANSITIONS above (audit F1).
-RAW_ORDER_STATUS_ALIASES: Mapping[str, OrderState] = MappingProxyType({
-    "OPEN": OrderState.OPEN,
-    "SUBMITTED": OrderState.SUBMITTED,
-    "PENDING": OrderState.SUBMITTED,
-    "FILLED": OrderState.FILLED,
-    "CANCELLED_BY_ENGINE": OrderState.CANCELED,
-})
+RAW_ORDER_STATUS_ALIASES: Mapping[str, OrderState] = _ImmutableMapping((
+    ("OPEN", OrderState.OPEN),
+    ("SUBMITTED", OrderState.SUBMITTED),
+    ("PENDING", OrderState.SUBMITTED),
+    ("FILLED", OrderState.FILLED),
+    ("CANCELLED_BY_ENGINE", OrderState.CANCELED),
+))
 
 
 def normalize_raw_order_status(raw: object) -> OrderState:
