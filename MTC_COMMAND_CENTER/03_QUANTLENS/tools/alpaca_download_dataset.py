@@ -62,6 +62,19 @@ CRYPTO_UNIVERSE = ["BTC/USD", "ETH/USD", "SOL/USD", "LTC/USD", "BCH/USD", "LINK/
                    "UNI/USD", "AAVE/USD", "DOGE/USD", "AVAX/USD", "DOT/USD", "SHIB/USD"]
 
 
+def build_universe(symbols=None, asset_class="stock"):
+    """(symbol, is_crypto, asset_class) triples to fetch.
+
+    symbols=None -> the historical default (full EQUITY_UNIVERSE + CRYPTO_UNIVERSE),
+    byte-identical to the pre-2026-07-15 behaviour. An explicit list fetches exactly
+    those equities (no crypto) and never mutates EQUITY_UNIVERSE.
+    """
+    if symbols:
+        return [(s, False, asset_class) for s in symbols]
+    return [(s, False, ac) for s, ac in EQUITY_UNIVERSE.items()] + \
+           [(s, True, "crypto") for s in CRYPTO_UNIVERSE]
+
+
 def _headers():
     kid = os.environ.get("APCA_API_KEY_ID"); sec = os.environ.get("APCA_API_SECRET_KEY")
     if not kid or not sec:
@@ -145,6 +158,14 @@ def main():
     ap.add_argument("--adjustment", default="all", choices=["raw", "split", "dividend", "all"])
     ap.add_argument("--out-root", default=str(Path(__file__).resolve().parents[1] / "data"))
     ap.add_argument("--bundle-name", default=f"native_multiasset_alpaca_{dt.date.today().isoformat()}")
+    # Additive override (2026-07-15): fetch an explicit equity symbol list instead of the
+    # hardcoded EQUITY_UNIVERSE, WITHOUT editing that universe (existing bundles keep their
+    # exact composition). Omitting --symbols reproduces the previous behaviour byte-for-byte.
+    # Needed by the FAZ 3B new-symbol confirmation, whose universe is frozen by its pre-reg.
+    ap.add_argument("--symbols", nargs="+", default=None,
+                    help="explicit equity symbols to fetch (overrides EQUITY_UNIVERSE; skips crypto)")
+    ap.add_argument("--asset-class", default="stock",
+                    help="asset_class tag applied to --symbols entries")
     args = ap.parse_args()
 
     headers = _headers()
@@ -153,8 +174,7 @@ def main():
     norm.mkdir(parents=True, exist_ok=True); mans.mkdir(parents=True, exist_ok=True)
     man_path = mans / "dataset_manifest.json"
 
-    universe = [(s, False, ac) for s, ac in EQUITY_UNIVERSE.items()] + \
-               [(s, True, "crypto") for s in CRYPTO_UNIVERSE]
+    universe = build_universe(args.symbols, args.asset_class)
     datasets = []
     t0 = time.time()
     total = len(universe) * len(args.timeframes)

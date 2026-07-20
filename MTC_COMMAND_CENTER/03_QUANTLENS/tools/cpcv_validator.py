@@ -42,8 +42,12 @@ def compound_returns(returns_pct: list[float]) -> float:
     return (eq - 1.0) * 100.0
 
 
-def evaluate_split(df, sig, stop, strategy: str, ranges: list[tuple[int, int]], direction: str = "long") -> dict:
-    stats = [mw.simulate_slice(df, sig, stop, strategy, start, end, direction=direction) for start, end in ranges]
+def evaluate_split(df, sig, stop, strategy: str, ranges: list[tuple[int, int]], direction: str = "long", exit_mode: str | None = None) -> dict:
+    # Exit-aware (2026-07-15): thread the row's exit_mode into simulate_slice.
+    # None -> mw.DEFAULT_EXIT_MODE (fixed_2R), which is byte-identical to the
+    # pre-change default call, preserving parity for legacy fixed_2R inputs.
+    em = exit_mode or mw.DEFAULT_EXIT_MODE
+    stats = [mw.simulate_slice(df, sig, stop, strategy, start, end, direction=direction, exit_mode=em) for start, end in ranges]
     returns = [float(s.net_return_pct) for s in stats]
     trades = sum(int(s.num_trades) for s in stats)
     drawdown = min((float(s.max_drawdown_pct) for s in stats), default=0.0)
@@ -67,16 +71,20 @@ def validate_candidate(row: dict, manifest: dict, args) -> dict:
     symbol = row["symbol"]
     tf = row["timeframe"]
     params = row["summary"]["best_params"]
+    # Exit-aware (2026-07-15): a row's exit_mode decides the exit; a missing
+    # field defaults to fixed_2R (legacy parity). The stamp on every returned
+    # dict lets an auditor detect a silent exit substitution.
+    exit_mode = row.get("exit_mode") or mw.DEFAULT_EXIT_MODE
 
     ds = mw.find_ds(manifest, symbol, tf)
     if ds is None:
-        return {"strategy": strategy, "symbol": symbol, "timeframe": tf, "status": "N_A",
+        return {"strategy": strategy, "symbol": symbol, "timeframe": tf, "exit_mode": exit_mode, "status": "N_A",
                 "reason": "No dataset found in manifest for this symbol/timeframe"}
 
     df = mw.load_df(ds["normalized_path"])
     groups = contiguous_groups(len(df), args.n_groups)
     if len(groups) < args.n_groups:
-        return {"strategy": strategy, "symbol": symbol, "timeframe": tf, "status": "INSUFFICIENT_DATA",
+        return {"strategy": strategy, "symbol": symbol, "timeframe": tf, "exit_mode": exit_mode, "status": "INSUFFICIENT_DATA",
                 "reason": f"Only {len(groups)} groups available, need {args.n_groups}"}
 
     try:
@@ -97,7 +105,7 @@ def validate_candidate(row: dict, manifest: dict, args) -> dict:
         split_rows = []
         for test_ids in itertools.combinations(range(args.n_groups), args.test_groups):
             test_ranges = [groups[i] for i in test_ids]
-            split = evaluate_split(df_w, sig, stop, strategy, test_ranges, direction=direction)
+            split = evaluate_split(df_w, sig, stop, strategy, test_ranges, direction=direction, exit_mode=exit_mode)
             split["test_groups"] = list(test_ids)
             split["train_bars_after_purge"] = purged_train_bars(groups, test_ids, embargo_bars)
             split["pass"] = bool(
@@ -115,6 +123,7 @@ def validate_candidate(row: dict, manifest: dict, args) -> dict:
             "strategy": strategy,
             "symbol": symbol,
             "timeframe": tf,
+            "exit_mode": exit_mode,
             "status": "OK",
             "params": params,
             "n_groups": args.n_groups,
@@ -133,6 +142,7 @@ def validate_candidate(row: dict, manifest: dict, args) -> dict:
             "strategy": strategy,
             "symbol": symbol,
             "timeframe": tf,
+            "exit_mode": exit_mode,
             "status": "TOOL_FAILED",
             "reason": f"{type(exc).__name__}: {exc}",
         }

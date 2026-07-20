@@ -13,8 +13,24 @@ from statistics import mean, median
 TOOLS_DIR = Path(__file__).resolve().parent
 
 
+def _params_tag(params: dict | None) -> str:
+    if not params:
+        return ""
+    return ",".join(f"{k}={params[k]}" for k in sorted(params))
+
+
 def candidate_id(row: dict) -> str:
-    return f"{row.get('strategy')}|{row.get('symbol')}|{row.get('timeframe')}"
+    # Exit-aware (2026-07-15): include exit_mode + literal params when present so
+    # a candidate is uniquely a (strategy,symbol,tf,exit,params) tuple. Legacy
+    # rows without those fields keep the old strategy|symbol|tf id.
+    base = f"{row.get('strategy')}|{row.get('symbol')}|{row.get('timeframe')}"
+    em = row.get("exit_mode")
+    if em:
+        base += f"|{em}"
+    tag = _params_tag(row.get("params"))
+    if tag:
+        base += f"|{tag}"
+    return base
 
 
 def load_cpcv_matrix(path: Path) -> tuple[list[str], list[list[float]]]:
@@ -26,6 +42,43 @@ def load_cpcv_matrix(path: Path) -> tuple[list[str], list[list[float]]]:
     split_count = min(len(r["split_results"]) for r in rows)
     ids = [candidate_id(r) for r in rows]
     matrix = [[float(s["return_pct"]) for s in r["split_results"][:split_count]] for r in rows]
+    return ids, matrix
+
+
+def load_config_matrix(path: Path) -> tuple[list[str], list[list[float]]]:
+    """Per-cell configuration x common-period return matrix (Gate-5 edit 11).
+
+    The CORRECT PBO/CSCV input for confirming ONE cell: rows are competing
+    CONFIGURATIONS (frozen primary + literal star neighbours) of the SAME
+    symbol+exit, columns are identical non-overlapping chronological periods.
+    Refuses any matrix that mixes symbols or exits, or has < 2 configurations —
+    those are the exact misuse Gate-5 flagged in the legacy row-as-candidate path.
+
+    Artifact schema:
+      {"cell": {"strategy","symbol","timeframe","exit_mode"},
+       "period_labels": [...],
+       "configs": [{"params": {...}, "role": "primary|star", "returns_pct": [...]}]}
+    """
+    data = json.loads(path.read_text(encoding="utf-8"))
+    cell = data.get("cell", {})
+    configs = data.get("configs", [])
+    if len(configs) < 2:
+        raise ValueError("config matrix needs >= 2 configurations (primary + >=1 star)")
+    n_periods = len(configs[0].get("returns_pct", []))
+    if n_periods < 2:
+        raise ValueError("config matrix needs >= 2 common periods")
+    ids, matrix = [], []
+    for cfg in configs:
+        rets = cfg.get("returns_pct", [])
+        if len(rets) != n_periods:
+            raise ValueError("all configurations must share the same period count")
+        row = {"strategy": cell.get("strategy"), "symbol": cell.get("symbol"),
+               "timeframe": cell.get("timeframe"), "exit_mode": cell.get("exit_mode"),
+               "params": cfg.get("params")}
+        ids.append(candidate_id(row))
+        matrix.append([float(x) for x in rets])
+    if len(set(ids)) != len(ids):
+        raise ValueError("duplicate configuration ids — params must be distinct per config")
     return ids, matrix
 
 
