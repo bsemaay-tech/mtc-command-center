@@ -41,7 +41,7 @@ persisted window timestamp that cannot be parsed reports DOWN with
 `error: invalid_meta:<meta-key>`. Future-dated liveness reports DOWN with
 `error: future_liveness`; exact-threshold liveness remains fresh.
 
-## Reset policy — PROPOSED, pending Barış confirmation
+## Reset policy — CONFIRMED by Barış, 2026-07-20 (D018)
 
 - An interruption is **sticky**: re-arming alone never clears it. Only an
   explicit `reset_window` call starts a clean evidence run. Rationale: a

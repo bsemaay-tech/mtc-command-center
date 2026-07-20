@@ -1,8 +1,8 @@
 # Release Evidence Contract (TS-P0-002)
 
-> **DRAFT — pending Barış approval.** The card requires owner approval of this
-> contract before it is binding. Tooling and tests exist; the contract is a
-> proposal until Barış signs off.
+> **APPROVED — Barış, 2026-07-20 (D018).** The owner reviewed and accepted this
+> contract after the independent TS-P0 audit. This approval does not itself
+> authorize merge, deployment, or live/mainnet operation.
 
 Contract for `tools/release_evidence.py` — the release/rollback evidence
 manifest tool. Builds on the TS-P0-001 hashing primitives

@@ -7,8 +7,8 @@ baseline manifest and drift checker.
   addition/removal/semantic change).
 - **Governing ADRs:** ADR-0019 (research/validation/paper/live separation),
   ADR-0027 (supply-chain & secret security). Supports ADR-0018/0025 evidence.
-- **Hash-scope owner:** Barış — the scope below is proposed and pending his
-  confirmation (TS-P0-001 human-review requirement).
+- **Hash-scope owner:** Barış — the scope below was approved on 2026-07-20
+  (decision D018; TS-P0-001 human-review requirement satisfied).
 
 ## Purpose
 
@@ -110,6 +110,11 @@ hashed** — they appear in `excluded` by path + reason only:
 The tool reads no environment secrets and emits no file contents anywhere in
 JSON, Markdown, stdout, or stderr. `tests/test_runtime_baseline.py::test_secret_safe_output`
 proves a planted fake secret is neither read, hashed, nor leaked.
+
+**Symlink limitation:** a file symlink encountered inside the declared hash
+scope is followed and the target bytes are hashed. This is a digest oracle only;
+the tool still emits no file content. Creating symlinks on Windows normally
+requires administrator privilege or Developer Mode.
 
 ## Determinism
 
