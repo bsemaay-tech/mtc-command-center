@@ -1,4 +1,4 @@
-# 07 — Handoff Update  (Gate 7)
+# 07 - Handoff Update  (Gate 7)
 
 **Mandatory before stopping**, regardless of sprint size.
 
@@ -9,6 +9,13 @@ canonical ones inside `MTC_COMMAND_CENTER/_AI_MEMORY/`.
 
 ```
 You are running Gate 7 (Memory Write-Back) for Tradingview_LAB_CLEAN.
+
+Actor: **Lead Orchestrator**, after Gate 5 (and Gate 6 if applicable) PASS is verified. Do not
+execute this gate without a confirmed Gate 5 PASS (or PASS-WITH-NITS).
+The implementer may supply factual inputs (commit hashes if authorized,
+test results, exact file lists) to the lead; final write-back content and
+authorized sequencing are Lead-owned. G7 must not require a future commit
+hash - use the hash that exists at write-back time or omit the field.
 
 Do NOT create new files. Update only the existing ones inside
 MTC_COMMAND_CENTER/_AI_MEMORY/.
@@ -32,22 +39,18 @@ Steps:
    - Add new "Immediate" items uncovered during this sprint
      (including out-of-scope items Gate 3 noticed but did not fix).
 
-3. SESSION_LOG.md  (always update)
-   - Append ONE line:
-     "<ISO date> | <model> | <one-sentence summary> | <commit hash>"
-
-4. DECISIONS.md  (update IF a sticky decision was made)
+3. DECISIONS.md  (update IF a sticky decision was made)
    - Append a new D### entry with phase + one-line rationale.
 
-5. ACTIVE_FILES.md  (update IF working set changed)
+4. ACTIVE_FILES.md  (update IF working set changed)
    - Add files now in active rotation.
    - Remove files no longer relevant.
 
-6. PROJECT_MEMORY.md  (update IF a stable repo fact changed)
+5. PROJECT_MEMORY.md  (update IF a stable repo fact changed)
    - Layout change, new module, new contract, new policy doc, etc.
    - Do not log per-session noise here.
 
-7. SESSION_LOCK.md
+6. SESSION_LOCK.md
    - If you held a write lock, release it (set Status: unlocked).
 
 Report:

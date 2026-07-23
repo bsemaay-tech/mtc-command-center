@@ -1,4 +1,4 @@
-# 05 — QA / Test Review  (Gate 4)
+# 05 - QA / Test Review  (Gate 4)
 
 Use **right after Gate 3 (impl)**, before adversarial review.
 
@@ -12,11 +12,15 @@ Use **right after Gate 3 (impl)**, before adversarial review.
 ```
 You are running Gate 4 (QA) for Tradingview_LAB_CLEAN.
 
+Actor: you are the **Implementer** (self-QA). All evidence produced here
+will be reviewed by the Lead at Gate 5. Never claim PASS without concrete,
+reproducible output - the Lead cannot independently verify what you omit.
+
 Steps:
 
 1. TEST SUITE: if the affected module has a test suite, run it. Capture
    the exact command and the pass/fail output. Do not paraphrase
-   failures — quote them.
+   failures - quote them.
 
 2. LINT / TYPECHECK: if configured for the affected language
    (ruff/pyright for Python, etc.), run it. Capture command + output.
@@ -28,14 +32,14 @@ Steps:
 
 4. MANUAL VERIFICATION: if the change is UI / chart / Pine plotting,
    describe what was visually verified. If it cannot be verified
-   without launching the chart, say so explicitly — do NOT claim
+   without launching the chart, say so explicitly - do NOT claim
    success.
 
 5. REGRESSION RISK NOTE: one short paragraph on what could break
    elsewhere. Be specific.
 
 Report format:
-- Commands run + verbatim output (truncated only if huge — keep
+- Commands run + verbatim output (truncated only if huge - keep
   failures intact).
 - PASS / FAIL per check.
 - GATE DECISION: proceed to Gate 5 / loop back to Gate 3 / escalate.
@@ -45,5 +49,4 @@ Never claim PASS without evidence. Never invent test output.
 
 ## WRITE-BACK
 
-- Append a one-line entry to `SESSION_LOG.md` with the QA result.
 - If a new parity edge case was discovered, note it in `NEXT_STEPS.md`.

@@ -6,8 +6,90 @@ Read this file first, then read `MTC_COMMAND_CENTER\_AI_MEMORY\START_HERE.md`.
 Use token-efficient search before broad scans.
 Do not change trading logic, Pine logic, MTC strategy behavior, or TradingView parity without explicit approval.
 
-## TOKEN DISCIPLINE — dispatch mechanical work to Cline CLI first, then fallback cheap models (MANDATORY)
-Expensive orchestrators (Claude, Codex) spend tokens on **decisions, specs, audits** — NOT on mechanical reading/editing. Delegate bounded mechanical work (single/few-file edits, known changes, schema/JSON edits, script writing, audit runs) to a cheap sub-agent. **Cline CLI is the first-choice path** (uses monthly subscription credits before paid API spend); fall back to `_deepseek_driver` when Cline is unavailable, unauthenticated, out of credits, unsuitable, blocked, or when explicit provider routing / DeepSeek API is desired.
+## TWO-TIER OPERATING MODEL (MANDATORY — read before dispatching any task)
+
+The flagship model that receives Barış's task is the **LEAD ORCHESTRATOR** and independent acceptance authority.
+- **Codex is lead:** delegates implementation to Claude Code CLI.
+- **Claude is lead:** delegates implementation to Codex CLI.
+
+The **IMPLEMENTER** (the counterpart flagship) may — only when useful and within scope/safety rails — sub-delegate bounded mechanical work (single/few-file edits, schema/JSON edits, script writing, audit runs) to DeepSeek or Grok via **Cline CLI** (first choice) or **`_deepseek_driver`** (fallback). See TOKEN DISCIPLINE below.
+
+**Lead responsibilities (non-delegable):**
+1. Independently inspect the actual diff/files, check scope and protected surfaces, and run or reproduce proportionate validation — never accept the implementer's self-report alone.
+2. On any failure: send a focused repair prompt to the same counterpart implementer and repeat until an accepting verdict or a concrete blocker. Maximum 3 repair/re-audit rounds; after the third non-accepting verdict, stop and report to Barış.
+3. Repo hygiene/commit/push may begin only after the sequence: accepting G5 verdict, G6 if applicable, G7 handoff — only where task/user authorization permits — then proceed to the next approved task.
+4. Gate 5 is the lead's independent cross-model audit of the implementer's work, not mere report review.
+
+**Implementer responsibilities:** implementation + self-QA (Gates 3–4). Scope, acceptance, repair loop, and authorized Git sequencing belong to the lead. Implementer is explicitly forbidden from commit, push, merge, rebase, and destructive Git operations (`reset --hard`, `restore`, `clean -fdx`, `stash drop`, branch deletion, `push --force`).
+
+**Cheap models (DeepSeek, Cline, Grok) are implementer-tier sub-delegation tools only.** They are never the lead. Fable and Gemini are advisory/non-gate reviewers — they may supplement but never replace a canonical Claude/Codex gate audit. Historical audits remain historical evidence under the policy then in force.
+
+**If the required counterpart CLI/auth is unavailable:** the lead reports that concrete blocker and does not silently replace the counterpart with itself.
+
+Hard safety gates remain unchanged: no Pine/parity/MTC/trading changes without explicit approval, no destructive Git, no secrets, no deployment/live action without explicit authorization.
+
+## CANONICAL AUDIT ROSTER — Gate 5 and Gate 6 (MANDATORY)
+
+Define once here; prompts may cross-reference but must include enough detail to be safely copy-pasted standalone.
+
+### Claude auditor (G5 and G6)
+
+- **Model:** `claude-opus-4-8` | **Effort:** `xhigh` — always, no exceptions.
+- No Sonnet, no implicit/latest alias, no silent fallback.
+- **If exact model/effort unavailable: stop as BLOCK unless Barış explicitly waives it.**
+- Fresh independent session every audit round — never `--resume` or `--continue` from the implementer session.
+- `--fallback-model` forbidden.
+- Example CLI: `claude -p --model claude-opus-4-8 --effort xhigh --no-session-persistence`
+
+### Codex auditor (G5 and G6)
+
+- **Model:** `gpt-5.6-sol` — always, no implicit alias.
+- **Effort `high`** for ordinary Gate 5 audits.
+- **Effort `xhigh`** whenever ANY of these apply: Gate 6 security review; Pine/parity/MTC/trading/protected surface; architecture or cross-cutting change; re-audit after REQUEST_CHANGES or BLOCK.
+- **If exact model/effort unavailable: stop as BLOCK unless Barış explicitly waives it.**
+- Fresh independent session every audit round.
+- Example CLI (ordinary G5): `codex exec --ephemeral --sandbox read-only -m gpt-5.6-sol -c 'model_reasoning_effort="high"' "<audit prompt>"`
+- Example CLI (G6/protected/re-audit): `codex exec --ephemeral --sandbox read-only -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' "<audit prompt>"`
+
+### Audit session contract
+
+Provide only: scope contract, plan (if any), actual diff/files, test evidence, required repo rules.
+Never feed implementer session context or continue it. The lead still owns acceptance and must inspect actual repo state independently.
+Audits are diff-first: unified diff by default; full files only for necessary context with stated reason. If payload too large, split scope; no summary substitutes actual diff.
+
+### Zero-token preflight (before every audit)
+
+```powershell
+claude --help 2>&1 | Select-String -Pattern 'claude-opus-4-8|xhigh'
+codex --version
+```
+Checks syntax/slug exposure, not entitlement. Launch failure on either = BLOCK.
+
+### Verdict standards (all audit gates)
+
+| Verdict | Meaning |
+|---------|---------|
+| **PASS** | Clean — no required changes. |
+| **PASS-WITH-NITS** | Accepting — optional nits only; zero required repairs. Cannot contain a required repair — use REQUEST_CHANGES instead. |
+| **REQUEST_CHANGES** | Non-accepting — contains at least one required repair. |
+| **BLOCK** | Workflow cannot safely continue. |
+
+### Repair loop bound
+
+**Maximum 3 repair/re-audit rounds per task.** After the third non-accepting verdict (REQUEST_CHANGES or BLOCK), stop and report the blocker to Barış. Do not silently enter a fourth round.
+
+### G1 prerequisite for G2
+
+Gate 1 must be complete before Gate 2: objective, exact whitelist, acceptance criteria, safety/authorization, validation plan, contract path.
+
+### Sequence after implementation
+
+Accepting G5 verdict (PASS or PASS-WITH-NITS) → G6 if applicable → G7 handoff → then and only then authorized hygiene/commit/push. G7 must not require a future commit hash.
+
+
+
+## TOKEN DISCIPLINE — implementer-tier sub-delegation to cheap models (MANDATORY)
+Within the two-tier model above, the **IMPLEMENTER** (Claude Code CLI or Codex CLI) may sub-delegate bounded mechanical work to a cheap sub-agent. **Cline CLI is the first-choice path** (uses monthly subscription credits before paid API spend); fall back to `_deepseek_driver` when Cline is unavailable, unauthenticated, out of credits, unsuitable, blocked, or when explicit provider routing / DeepSeek API is desired.
 
 ### Cline CLI (first choice)
 ```

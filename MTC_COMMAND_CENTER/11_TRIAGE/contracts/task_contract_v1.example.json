@@ -1,0 +1,30 @@
+{
+  "version": "1.0",
+  "task_id": "example-task-2026-07-22",
+  "objective": "One-sentence description of what this task accomplishes.",
+  "lead": "Codex",
+  "implementer": "Claude Code CLI (via claude -p)",
+  "files_allowed": [
+    "AGENTS.md",
+    "MTC_COMMAND_CENTER/_AI_MEMORY/AI_RULES.md",
+    "MTC_COMMAND_CENTER/_AI_MEMORY/START_HERE.md"
+  ],
+  "gate_state": "G1_SCOPE",
+  "repair_rounds": 0,
+  "authorization": {
+    "local_edits": true,
+    "commit": false,
+    "push": false,
+    "pr": false,
+    "merge": false,
+    "deploy": false,
+    "live": false
+  },
+  "audit": {
+    "model": "claude-opus-4-8",
+    "effort": "xhigh",
+    "session_mode": "fresh"
+  },
+  "validation": "git diff --check passes; all edits within files_allowed; no SESSION_LOG writes in prompts; no Gemini/Fable gate-reviewer role; exact audit model/effort present; JSON valid.",
+  "updated_at": "2026-07-22T00:00:00Z"
+}

@@ -2,6 +2,8 @@
 
 Generated: 2026-06-06 by Codex GPT-5. These are copy-paste prompts for read-only or bounded review. Do not send secrets. Do not authorize live trading, broker actions, Pine edits, parity edits, or promotion decisions.
 
+> **Two-tier model context:** DeepSeek/Grok dispatch is an **implementer-tier** tool - used by Claude Code CLI or Codex CLI (the counterpart flagship implementer), not dispatched directly by the lead orchestrator. The lead delegates to the counterpart flagship first; that implementer may sub-delegate bounded mechanical work here. See `AGENTS.md` two-tier model.
+
 ## Task 1 - Strategy Family Mapping Audit
 
 Context: `strat_extra_runner.py` added `QL_OLIVER_KELL_PRICE_CYCLE`, `QL_LBR_COIL_BREAKOUT_RANGE_EXPANSION`, and family templates `QL_FAM_PULLBACK_TO_MA`, `QL_FAM_CONSOLIDATION_BREAKOUT`, `QL_FAM_MOMENTUM_CONTINUATION`. B2 now parks STG047/STG054/STG055 because they require equity gap/session/float/halt data.
