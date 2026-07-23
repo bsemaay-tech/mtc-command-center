@@ -1,9 +1,9 @@
 # SPRINT_WORKFLOW
 
 Solo-developer loop for working with multiple AI agents
-(Codex / Claude / Gemini) on this repo.
+(Codex / Claude) on this repo.
 
-A "sprint" here is one focused work unit — anything from a 5-minute
+A "sprint" here is one focused work unit - anything from a 5-minute
 typo fix to a multi-hour feature. Same loop, different depth.
 
 ## The Loop
@@ -56,37 +56,42 @@ typo fix to a multi-hour feature. Same loop, different depth.
 
 ## Cross-Model Pairing
 
-| Step                 | Model role  | Notes                                    |
-|----------------------|-------------|------------------------------------------|
-| Scope (G1)           | Either      | Pick whichever has the freshest context  |
-| Plan (G2)            | Implementer | Same model that will write code          |
-| Impl (G3)            | Implementer | Stay in scope from G1                    |
-| QA (G4)              | Implementer | Self-test before handing off             |
-| Review (G5)          | **Other**   | Must be a different model. Adversarial.  |
-| Security (G6)        | Either      | Skip if not security-touching            |
-| Handoff (G7)         | Implementer | Whoever did the work updates memory      |
+Two-tier model (see `AGENTS.md`): the **Lead** orchestrates + owns acceptance; the **Implementer** (counterpart flagship CLI) does the work. Cline/DeepSeek are the implementer's sub-delegation tools, not the lead's.
+
+| Step                 | Model role      | Notes                                    |
+|----------------------|-----------------|------------------------------------------|
+| Scope (G1)           | **Lead**        | Lead owns scope definition and acceptance authority; surfaces counterpart-unavailable blocker here |
+| Plan (G2)            | Implementer     | Same model that will write code; Lead accepts plan before G3 starts |
+| Impl (G3)            | Implementer     | Stay in scope from G1                    |
+| QA (G4)              | Implementer     | Self-QA; produces evidence for Lead review at G5 |
+| Review (G5)          | **Lead**        | Lead's independent inspection. Exact roster: see `AGENTS.md` CANONICAL AUDIT ROSTER (Claude: `claude-opus-4-8`+`xhigh`; Codex: `gpt-5.6-sol`+`high`/`xhigh`). Fresh session. Verdicts: PASS / PASS-WITH-NITS / REQUEST_CHANGES / BLOCK. <=3 repair rounds. |
+| Security (G6)        | Lead / independent | Must not be the implementer of the same change; Lead retains acceptance. Roster: same as G5 but always `xhigh`. |
+| Handoff (G7)         | **Lead**        | Lead's final repository write-back; executed only after an accepting G5 verdict (PASS or PASS-WITH-NITS) and G6 if applicable. Implementer may supply factual inputs but the write-back is Lead-owned |
 
 If the reviewer model flags something serious: loop back to Plan or Impl.
 Do not merge a review-flagged change without resolving it.
 
 ## Sprint Size Guidance
 
-- **5-minute typo / doc** → G1 (1 line) + G3 + G7. Skip G2, G4, G5, G6.
-- **Single-function fix** → G1 + G3 + G4 + G5 + G7.
-- **Feature / refactor**  → Full loop, all gates.
-- **Pine / parity / MTC** → Full loop **plus** explicit Barış approval
+- **5-minute typo / doc** -> G1 + G3 + G5 + G7. Skip G2, G4, G6.
+- **Single-function fix** -> G1 + G3 + G4 + G5 + G7.
+- **Feature / refactor**  -> Full loop, all gates.
+- **Pine / parity / MTC** -> Full loop **plus** explicit Barış approval
   before G3 starts.
 
 ## When to Stop a Sprint
 
-- Reviewer (G5) finds a blocker → stop, fix or revert.
-- Parity regression risk surfaces → stop, surface to Barış.
-- Scope creep detected → stop, restart at G1 with new scope.
-- Out of context window → stop at the nearest gate boundary, write G7,
-  hand off to next session via `GLOBAL_HANDOFF.md` + `NEXT_STEPS.md`.
+- Reviewer (G5) finds a blocker -> stop, fix or revert.
+- Parity regression risk surfaces -> stop, surface to Barış.
+- Scope creep detected -> stop, restart at G1 with new scope.
+- Out of context window -> stop at the nearest gate boundary. BEFORE an
+  accepting G5 verdict: do NOT write G7 or any repository handoff file;
+  provide only a transient non-repository chat/session handoff for a
+  fresh session. Only after an accepting G5 (and G6 if applicable) may
+  the Lead perform the G7 repository write-back.
 
 ## Entry Points for a Fresh Agent
 
-- Starting cold: `START_HERE.md` → `AI_RULES.md` → this file.
-- Resuming work: `GLOBAL_HANDOFF.md` → `NEXT_STEPS.md` → pick the gate
+- Starting cold: `START_HERE.md` -> `AI_RULES.md` -> this file.
+- Resuming work: `GLOBAL_HANDOFF.md` -> `NEXT_STEPS.md` -> pick the gate
   prompt that matches the next step.

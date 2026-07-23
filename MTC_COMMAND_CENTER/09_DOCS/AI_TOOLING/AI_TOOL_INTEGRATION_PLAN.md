@@ -69,22 +69,37 @@ Before integrating any "workflow/pattern" tool, know these are already in the re
 
 ---
 
-## 3. Model routing — already real, just enforce it
+## 3. Model routing — two-tier policy (canonical: `AGENTS.md` §TWO-TIER OPERATING MODEL)
 
-The backlog's Part 6 / C4 is **already implemented**. Action is *enforcement*, not creation:
+The authoritative routing policy lives in **`AGENTS.md`** at the repo root. This section
+summarizes routing for tool-context; AGENTS.md is the single source of truth.
 
-- **Use the harness for bounded mechanical work** (single/few-file edits, schema/JSON edits,
-  audit runs, script writing): write task JSON → `python _deepseek_driver/ds_agent.py
-  --task <file>` → audit on real data yourself. See `_deepseek_driver/README.md`.
-- **When to route cheap:** large summarization, broad research, repeated audit passes, long
-  log summarization, draft critique, non-final classification.
-- **When NOT to route cheap:** final architecture decisions, registry/schema migration
-  approval, security-sensitive review, live-trading/broker logic, final user-facing verdicts.
+**Two-tier chain:**
+1. The flagship Claude or Codex receiving Barış's task is the **LEAD** and independent
+   acceptance authority. Lead delegates implementation to the **counterpart flagship**
+   (Claude → Codex CLI, Codex → Claude Code CLI).
+2. **Only the counterpart implementer** may optionally sub-delegate bounded mechanical work
+   (single/few-file edits, schema/JSON edits, script writing, audit runs) to cheap models via
+   **Cline CLI** (first choice) or **`_deepseek_driver`** (fallback). See TOKEN DISCIPLINE
+   in `AGENTS.md`.
+
+**Hard constraints:**
+- **Cheap models (DeepSeek, Cline, Grok) are implementer-tier sub-delegation tools only.**
+  They are never the lead, never canonical G5/G6 auditors, and never replace the counterpart
+  flagship.
+- The lead independently inspects actual repo diff/files and validates using the canonical
+  audit roster in `AGENTS.md` — never accepts the implementer's self-report alone.
+
+**Provider/harness operational detail:**
+- **Cline CLI:** `cline --cwd <repo> --auto-approve false "<bounded task>"`
+- **`_deepseek_driver` (fallback):** write task JSON → `python _deepseek_driver/ds_agent.py
+  --task <file>` → audit result on real data yourself. See `_deepseek_driver/README.md`.
 - **Providers:** `deepseek` (primary), `grok`/`xai`, `openrouter` (`:free` = fallback). Keys
   via env only; never assume a key exists, never print one.
-
-> If Barış wants a single canonical "routing policy" page, it should *link to* the harness
-> README, not restate it — one source of truth.
+- **When to route cheap:** large summarization, broad research, repeated audit passes, draft
+  critique, non-final classification.
+- **When NOT to route cheap:** final architecture decisions, registry/schema migration
+  approval, security-sensitive review, live-trading/broker logic, final user-facing verdicts.
 
 ---
 

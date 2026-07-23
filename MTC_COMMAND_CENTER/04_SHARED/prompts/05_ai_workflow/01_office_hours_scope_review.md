@@ -1,4 +1,4 @@
-# 01 — Office Hours Scope Review  (Gate 1)
+# 01 - Office Hours Scope Review  (Gate 1)
 
 Use **before writing any code** for a new task.
 
@@ -13,6 +13,14 @@ Use **before writing any code** for a new task.
 ```
 You are running Gate 1 (Scope Review) for the Tradingview_LAB_CLEAN
 repository. Do not write code yet. Produce a scope contract.
+
+Actor: you are the **Lead Orchestrator**. Scope definition and acceptance
+authority rest with you. If the counterpart implementer CLI is unavailable,
+BLOCK here and surface that fact in item 8 (OPEN QUESTIONS) - do not
+self-implement work assigned to the implementer.
+
+Gate 1 must be complete before Gate 2: produce objective, exact whitelist,
+acceptance criteria, safety/authorization, validation plan, and contract path.
 
 Read:
 - AGENTS.md
@@ -29,7 +37,7 @@ Then output, in this exact order:
 5. FILES FORBIDDEN: cross-checked against DO_NOT_TOUCH.md.
 6. SUCCESS CRITERIA: how we will know it works (tests, manual check,
    parity smoke, visual diff, etc.).
-7. GATE DECISION: proceed to Gate 2 (plan) or Gate 3 (impl) — and why.
+7. GATE DECISION: proceed to Gate 2 (plan) or Gate 3 (impl) - and why.
 8. OPEN QUESTIONS: anything you need from Barış before proceeding.
 
 Refuse to skip any of the eight items.

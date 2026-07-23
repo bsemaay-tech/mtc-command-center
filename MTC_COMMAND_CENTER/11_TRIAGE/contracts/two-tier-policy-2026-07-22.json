@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "task_id": "two-tier-policy-2026-07-22",
+  "objective": "Port the already-reviewed two-tier AI workflow policy migration from reference (C:\\LAB\\Tradingview_LAB_CLEAN) into target (C:\\LAB\\TIERPOL) while preserving newer target master content. Add decision D020. Close all 12 audit defects.",
+  "lead": "Codex",
+  "implementer": "DeepSeek v4 Pro via ClinePass (explicit Barış waiver - Claude unavailable)",
+  "files_allowed": [
+    "AGENTS.md",
+    "MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/00_index.md",
+    "MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/01_office_hours_scope_review.md",
+    "MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/02_engineering_plan_review.md",
+    "MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/03_implementation_task.md",
+    "MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/04_adversarial_code_review.md",
+    "MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/05_qa_test_review.md",
+    "MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/06_security_review.md",
+    "MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/07_handoff_update.md",
+    "MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/08_backtest_launch.md",
+    "MTC_COMMAND_CENTER/09_DOCS/AI_TOOLING/AI_TOOL_INTEGRATION_PLAN.md",
+    "MTC_COMMAND_CENTER/_AI_MEMORY/AI_RULES.md",
+    "MTC_COMMAND_CENTER/_AI_MEMORY/DECISIONS.md",
+    "MTC_COMMAND_CENTER/_AI_MEMORY/DEEPSEEK_DISPATCH.md",
+    "MTC_COMMAND_CENTER/_AI_MEMORY/SPRINT_WORKFLOW.md",
+    "MTC_COMMAND_CENTER/_AI_MEMORY/START_HERE.md",
+    "MTC_COMMAND_CENTER/11_TRIAGE/contracts/README.md",
+    "MTC_COMMAND_CENTER/11_TRIAGE/contracts/task_contract_v1.example.json",
+    "MTC_COMMAND_CENTER/11_TRIAGE/contracts/two-tier-policy-2026-07-22.json"
+  ],
+  "gate_state": "CLOSED",
+  "repair_rounds": 3,
+  "authorization": {
+    "local_edits": true,
+    "commit": true,
+    "push": true,
+    "pr": true,
+    "merge": false,
+    "deploy": false,
+    "live": false
+  },
+  "audit": {
+    "model": "gpt-5.6-sol",
+    "effort": "xhigh",
+    "session_mode": "fresh"
+  },
+  "validation": "PASS — fresh independent Codex gpt-5.6-sol xhigh Gate 5 re-audit completed with no required findings and no optional nits. Verified complete 19-path scope; G7 sequencing; held-out-data virginity; exact Claude/Codex audit roster and effort; fresh sessions; verdict standards; Lead/counterpart roles; cheap-model restrictions; destructive-Git bans; explicit repair waivers; no active SESSION_LOG writes; strict UTF-8 without BOM; exactly one final newline in all 19 files; both JSON parses; and git diff --check. Gate 6 not applicable: documentation/policy-only scope, no security, Pine, parity, MTC, trading, schema, deploy, or live surface. Gate 7 completed by this Lead-owned final contract write-back. Authorized next actions: exact-scope stage, commit, push, and draft PR; merge/deploy/live remain unauthorized.",
+  "updated_at": "2026-07-23T10:13:13Z"
+}
