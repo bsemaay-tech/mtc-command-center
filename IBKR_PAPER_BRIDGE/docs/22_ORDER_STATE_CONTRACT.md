@@ -28,9 +28,11 @@ attribute assignment or `object.__setattr__` on `_pairs` could replace the
 whole tuple wholesale and change every later `can_transition`/
 `normalize_raw_order_status` decision, even though no individual container
 was ever mutated in place. This third repair removes the writable slot
-entirely — see the Immutability invariant (§6) below for the fixed design.
-The immutability and exception sections below describe the thrice-repaired
-behavior.
+entirely, but its zero-slot tuple holder still inherited a layout-compatible
+`__class__` replacement path. This fourth repair adds a read-only `__class__`
+data descriptor for the two owner-approved assignment forms — see the
+Immutability invariant (§6) below. The immutability and exception sections
+below describe the repaired behavior.
 
 ## Problem
 
@@ -153,7 +155,7 @@ Design notes:
   after real reconciliation creates a **new** order/decision_uid; it is
   never modeled as this same order mutating backward.
 
-## Invariants (tested exhaustively in `test_order_state.py`, 85 cases)
+## Invariants (tested exhaustively in `test_order_state.py`, 93 cases)
 
 1. Every one of the 121 ordered `(from, to)` pairs has one deterministic
    legal/illegal answer — `can_transition` is a total pure function over
@@ -203,10 +205,17 @@ Design notes:
      the tuple's own fixed-at-construction storage, not a separate
      attribute) and declares `__slots__ = ()` — and `collections.abc.Mapping`
      itself declares `__slots__ = ()` — so instances have no `__dict__` and
-     no assignable slot of any kind. There is no writable holder left to
-     reassign, so neither plain assignment nor `object.__setattr__` has
-     anywhere to write; both raise `AttributeError` and leave the object,
-     and every later decision, unchanged.
+     no `_pairs` slot. The four retained `_pairs` regression attacks (plain
+     assignment and `object.__setattr__`, against both exports) therefore
+     raise `AttributeError` and leave every later decision unchanged.
+   - **Owner-approved instance-class boundary.** A zero-slot tuple subclass
+     still inherits `object`'s special `__class__` assignment path, which can
+     replace its type with a layout-compatible policy-changing class.
+     `_ImmutableMapping` therefore declares a read-only `__class__` data
+     descriptor. Both `holder.__class__ = Alternate` and
+     `object.__setattr__(holder, "__class__", Alternate)` are tested against
+     both actual exports in fresh processes; all four raise `AttributeError`,
+     preserve `type(holder)`, and leave later policy decisions unchanged.
 
    `can_transition`/`validate_order_transition`/`normalize_raw_order_status`
    perform no mutation and no I/O. A caller can still take
@@ -256,6 +265,11 @@ against order quantity) is out of scope here and belongs to a later task
   reconciliation/recovery (TS-P1-003), or partial-fill protect-or-flatten
   policy (TS-P1-004). This contract only supplies the state vocabulary and
   legality relation those tasks will consume.
+- The holder threat model protects the two instance-level assignment forms
+  named in invariant 6. By explicit owner decision it does **not** claim
+  resistance to direct calls to inherited/base descriptors such as
+  `object.__dict__["__class__"].__set__(holder, Alternate)`, class
+  monkeypatching, module-variable rebinding, `ctypes`, or memory corruption.
 - No exchange call, server, backtest, or deploy action of any kind.
 
 ## Rollback

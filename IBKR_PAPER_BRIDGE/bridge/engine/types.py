@@ -158,18 +158,29 @@ class _ImmutableMapping(tuple, Mapping):
     tuple's own elements, fixed at `tuple.__new__` time. Combined with
     `__slots__ = ()` — and `collections.abc.Mapping` itself declaring
     `__slots__ = ()` — instances have no `__dict__` and no assignable slot of
-    any kind: there is no attribute-holder left to reassign, so neither plain
-    assignment nor `object.__setattr__` has anything to write to. A caller
-    walking `gc.get_referents` transitively from an instance of this class
-    only ever reaches tuples, `frozenset`s, and `OrderState`/`str` values —
-    never a `dict` or `list` it could mutate, and never a writable holder it
-    could replace.
+    any kind, so there is no `_pairs` attribute-holder left to reassign.
+
+    A zero-slot tuple subclass can still inherit `object`'s special
+    `__class__` assignment path and be changed to a layout-compatible class.
+    The read-only `__class__` data descriptor below shadows that inherited
+    path for both ordinary instance assignment and `object.__setattr__`;
+    both raise `AttributeError` before the runtime can replace the type.
+    Direct calls to an inherited/base `__class__` descriptor and broader
+    runtime compromise are outside the owner-approved threat model documented
+    in the contract. A caller walking `gc.get_referents` transitively from an
+    instance of this class only ever reaches tuples, `frozenset`s, and
+    `OrderState`/`str` values — never a `dict` or `list` it could mutate.
     """
 
     __slots__ = ()
 
     def __new__(cls, pairs):
         return super().__new__(cls, tuple(pairs))
+
+    @property
+    def __class__(self):
+        """Expose the actual type while rejecting instance-level replacement."""
+        return type(self)
 
     def __getitem__(self, key):
         for stored_key, value in tuple.__iter__(self):

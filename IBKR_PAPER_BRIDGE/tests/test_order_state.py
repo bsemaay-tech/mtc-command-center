@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import gc
 import itertools
+import os
+import subprocess
+import sys
+import textwrap
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 from pydantic import BaseModel
@@ -445,6 +450,72 @@ def test_raw_aliases_holder_rejects_object_setattr():
     with pytest.raises(AttributeError):
         object.__setattr__(RAW_ORDER_STATUS_ALIASES, "_pairs", (("SUBMITTED", OrderState.FILLED),))
     assert normalize_raw_order_status("SUBMITTED") is before
+
+
+_CLASS_ASSIGNMENT_ATTACK = textwrap.dedent(
+    """
+    import sys
+
+    import bridge.engine.types as bridge_types
+
+    export_name, assignment_mode = sys.argv[1:]
+    holder = (
+        bridge_types.ORDER_STATE_TRANSITIONS
+        if export_name == "transitions"
+        else bridge_types.RAW_ORDER_STATUS_ALIASES
+    )
+    holder_type = type(holder)
+
+    class Alternate(holder_type):
+        __slots__ = ()
+
+        def __getitem__(self, key):
+            if key is bridge_types.OrderState.FILLED:
+                return frozenset({bridge_types.OrderState.OPEN})
+            if key == "OPEN":
+                return bridge_types.OrderState.FILLED
+            return holder_type.__getitem__(self, key)
+
+    def policy_decision():
+        if export_name == "transitions":
+            return bridge_types.can_transition(
+                bridge_types.OrderState.FILLED,
+                bridge_types.OrderState.OPEN,
+            )
+        return bridge_types.normalize_raw_order_status("OPEN")
+
+    before_decision = policy_decision()
+    try:
+        if assignment_mode == "plain":
+            holder.__class__ = Alternate
+        else:
+            object.__setattr__(holder, "__class__", Alternate)
+    except AttributeError:
+        pass
+    else:
+        raise AssertionError("policy holder accepted __class__ replacement")
+
+    assert type(holder) is holder_type
+    assert policy_decision() == before_decision
+    """
+)
+
+
+@pytest.mark.parametrize("export_name", ["transitions", "aliases"])
+@pytest.mark.parametrize("assignment_mode", ["plain", "object_setattr"])
+def test_policy_holder_rejects_class_assignment(export_name, assignment_mode):
+    env = os.environ.copy()
+    env["PYTHONUTF8"] = "1"
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    result = subprocess.run(
+        [sys.executable, "-c", _CLASS_ASSIGNMENT_ATTACK, export_name, assignment_mode],
+        cwd=Path(__file__).resolve().parents[1],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_can_transition_and_validate_are_pure_no_mutation():
