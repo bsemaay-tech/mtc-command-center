@@ -95,8 +95,10 @@ async def _new_run_can_replay_bar_timestamp_from_prior_run(tmp_path) -> None:
     store.set_meta("app_state", "ARMED")
     await second.on_bar(bars[0])
 
+    # Durable cross-run identity blocks the second broker submission:
+    # same intent (strategy + symbol + direction + signal_ts) → BLOCKED
     entries = [row for row in store.get_snapshot()["orders"] if row["role"] == "ENTRY"]
-    assert len(entries) == 2
+    assert len(entries) == 1
 
 
 async def _three_order_rejects_auto_disarm(tmp_path) -> None:
