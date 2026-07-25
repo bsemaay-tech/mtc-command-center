@@ -15,10 +15,11 @@
 
 1. `AGENTS.md` (repo koku)
 2. `MTC_COMMAND_CENTER/_AI_MEMORY/START_HERE.md`
-3. `MTC_COMMAND_CENTER/_AI_MEMORY/AI_RULES.md`
-4. **`MTC_COMMAND_CENTER/03_QUANTLENS/_user_guide/07_BACKTEST_AND_OPTIMIZATION_RULES.md`** <- CANONICAL kurallar (4 gate, classification, promotion, antigravity, morning report)
-5. **`MTC_COMMAND_CENTER/11_TRIAGE/BACKTEST_OPTIMIZATION_RUNBOOK.md`** <- operasyonel yurutme (tool komutlari, worker, monitor)
-6. `MTC_COMMAND_CENTER/11_TRIAGE/lessons_archive/` en yeni 1 dosya
+3. `MTC_COMMAND_CENTER/_AI_MEMORY/COMPONENT_ROUTER.md` -> route to `03_QUANTLENS` component chain: `03_QUANTLENS/AGENTS.md` -> `03_QUANTLENS/_AI_MEMORY/START_HERE.md` -> `CURRENT.md` -> `NEXT_STEPS.md`. Root volatile memory not required for single-component backtest tasks.
+4. `MTC_COMMAND_CENTER/_AI_MEMORY/AI_RULES.md`
+5. **`MTC_COMMAND_CENTER/03_QUANTLENS/_user_guide/07_BACKTEST_AND_OPTIMIZATION_RULES.md`** <- CANONICAL kurallar (4 gate, classification, promotion, antigravity, morning report)
+6. **`MTC_COMMAND_CENTER/11_TRIAGE/BACKTEST_OPTIMIZATION_RUNBOOK.md`** <- operasyonel yurutme (tool komutlari, worker, monitor)
+7. `MTC_COMMAND_CENTER/11_TRIAGE/lessons_archive/` en yeni 1 dosya
 
 Atlama YASAK. Skip yaparsan A1-A15 anti-pattern'lerinden birini tekrarlarsin.
 
@@ -66,6 +67,10 @@ User'la `AskUserQuestion` ile netlestir:
 - Yalniz ingest+analyze mi, backtest mi, ikisi mi?
 - Crash/sapma davranisi (raporla / auto-restart / durdur+uyar)
 - Worker policy (sessiz / hizli / dinamik)
+
+## ⛔ STOP — Barış Approval Required Before Stage 3
+
+**Explicit Barış approval is required before any backtest, optimization, artifact generation, or execution may begin.** This is in addition to all inherited component rules (root `DO_NOT_TOUCH.md`, `03_QUANTLENS/AGENTS.md`). Do not proceed to Stage 3 or beyond without a recorded approval in the current session.
 
 ## Backtest Stage 3 - Implementation (smoke gate dahil)
 
@@ -131,14 +136,21 @@ python aggregate_overnight_iters.py
 1. `lessons_archive/OVERNIGHT_LESSONS_YYYY-MM-DD.md` yaz (ham gozlem, B-numarali bulgular)
 2. Yeni anti-pattern -> `BACKTEST_OPTIMIZATION_RUNBOOK.md` 8 tablosuna ekle
 3. `lessons_archive/OVERNIGHT_LESSONS_INDEX.md` yeni satir
-4. `_AI_MEMORY/GLOBAL_HANDOFF.md` guncelle
-5. `NEXT_STEPS.md` yarin yapilacaklar
+4. `03_QUANTLENS/_AI_MEMORY/CURRENT.md` guncelle (component G7)
+5. `03_QUANTLENS/_AI_MEMORY/NEXT_STEPS.md` yarin yapilacaklar
+6. Cross-component ise: once her etkilenen component'in `_AI_MEMORY/CURRENT.md` + `NEXT_STEPS.md` guncelle; SONRA root `_AI_MEMORY/GLOBAL_HANDOFF.md`'a tek ozlu koordinasyon satiri ekle.
 
 ## WRITE-BACK
 
 Bu prompt biterken zorunlu dosya guncellemeleri:
+
+**Component-scoped (03_QUANTLENS route):**
 - `11_TRIAGE/lessons_archive/OVERNIGHT_LESSONS_YYYY-MM-DD.md` (yeni)
 - `11_TRIAGE/lessons_archive/OVERNIGHT_LESSONS_INDEX.md` (satir ekle)
 - `11_TRIAGE/BACKTEST_OPTIMIZATION_RUNBOOK.md` (anti-pattern merge, CHANGELOG)
-- `_AI_MEMORY/GLOBAL_HANDOFF.md`
-- `_AI_MEMORY/NEXT_STEPS.md`
+- `03_QUANTLENS/_AI_MEMORY/CURRENT.md` (always)
+- `03_QUANTLENS/_AI_MEMORY/NEXT_STEPS.md` (always)
+
+**Cross-component:** update `03_QUANTLENS/_AI_MEMORY/CURRENT.md` + `NEXT_STEPS.md` first, then every additional affected component's `_AI_MEMORY/CURRENT.md` + `NEXT_STEPS.md` (+ `DECISIONS.md` / `ACTIVE_FILES.md` if applicable); root `_AI_MEMORY/GLOBAL_HANDOFF.md` one concise coordination entry last.
+
+**Global/policy:** root `_AI_MEMORY/GLOBAL_HANDOFF.md`, `NEXT_STEPS.md`, `DECISIONS.md`, `ACTIVE_FILES.md`, `PROJECT_MEMORY.md` as applicable.

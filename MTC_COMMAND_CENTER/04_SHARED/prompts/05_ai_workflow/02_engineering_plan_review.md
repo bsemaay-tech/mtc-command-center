@@ -21,6 +21,9 @@ to proceed, loop back to Gate 1, or escalate.
 
 Read:
 - The Gate 1 scope contract for this task.
+- Component-scoped: <component>/_AI_MEMORY/CURRENT.md + DECISIONS.md.
+- Cross-component: every affected component's _AI_MEMORY/CURRENT.md + DECISIONS.md; root volatile memory only when global coordination context is required.
+- Global/policy: root GLOBAL_HANDOFF.md + DECISIONS.md + PROJECT_MEMORY.md.
 - MTC_COMMAND_CENTER/_AI_MEMORY/AI_RULES.md
 - MTC_COMMAND_CENTER/_AI_MEMORY/DO_NOT_TOUCH.md
 - MTC_COMMAND_CENTER/_AI_MEMORY/PROJECT_MEMORY.md
@@ -45,5 +48,6 @@ Refuse to start coding inside this gate.
 
 ## WRITE-BACK
 
-- Update `ACTIVE_FILES.md` if the plan introduces files outside the
-  current working set.
+- **Component-scoped:** update `<component>/_AI_MEMORY/ACTIVE_FILES.md` if the plan introduces files outside the current working set.
+- **Cross-component:** update every affected component's `_AI_MEMORY/ACTIVE_FILES.md` first; add one concise root coordination entry to root `ACTIVE_FILES.md` only when needed.
+- **Global/policy:** update root `ACTIVE_FILES.md`.

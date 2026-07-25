@@ -1,14 +1,18 @@
 # START_HERE
 
-> **CURRENT STATE: read `_AI_MEMORY/GLOBAL_HANDOFF.md` (newest section first) + `NEXT_STEPS.md` for live work.** The older `_AI_MEMORY/CODEX_PICKUP_2026-06-08.md` is historical (most items DONE) - read only for back-context. Everything below is standing reference.
+> **ROUTE FIRST.** After reading root `AGENTS.md` and this file, read `_AI_MEMORY/COMPONENT_ROUTER.md` and identify the component before loading any volatile memory. Component-scoped tasks load the component's `_AI_MEMORY/` chain — they do NOT require root `GLOBAL_HANDOFF.md`, `NEXT_STEPS.md`, `ACTIVE_FILES.md`, or `SESSION_LOG.md`. Root volatile files are read only for cross-component coordination, global/policy tasks, or when historical context spanning multiple components is genuinely needed.
 
-Read order: `AGENTS.md`, this file, `AI_RULES.md`, `PROJECT_MEMORY.md`, `GLOBAL_HANDOFF.md` if needed, `NEXT_STEPS.md`, then project handoff files.
+> **Root volatile state (cross-component / global tasks only): read `_AI_MEMORY/GLOBAL_HANDOFF.md` (newest section first) + `NEXT_STEPS.md`.** The older `_AI_MEMORY/CODEX_PICKUP_2026-06-08.md` is historical (most items DONE) — read only for back-context. Everything below is standing reference.
+
+**Read order (component-scoped task):** root `AGENTS.md` -> this file -> `COMPONENT_ROUTER.md` -> component `AGENTS.md` -> component `_AI_MEMORY/START_HERE.md` -> component `CURRENT.md` -> component `NEXT_STEPS.md`.
+
+**Read order (global/policy task):** root `AGENTS.md` -> this file -> `AI_RULES.md` -> `PROJECT_MEMORY.md` -> `GLOBAL_HANDOFF.md` -> `NEXT_STEPS.md`.
 
 > **MANDATORY TWO-TIER MODEL (see `AGENTS.md` Two-Tier):** Task recipient = **Lead** (Claude CLI *or* Codex CLI - whichever opened the session). Lead orchestrates and owns acceptance. Lead delegates *implementation* to the counterpart flagship CLI (Codex <-> Claude). Cheap models (DeepSeek, Cline) are implementer sub-delegation tools only - never the lead. If the counterpart CLI is unavailable, the lead must surface the blocker and must not self-implement work assigned to the counterpart. Gates G1 (Scope) and G7 (Handoff) are **Lead-owned**. Gates G2-G4 (Plan/Impl/QA) are **Implementer-owned**. Gate G5 (Review) is **Lead-independent-inspection**. See `AI_RULES.md` and `SPRINT_WORKFLOW.md` for gate-level actor assignments.
 
 > **Naming:** "QuantLens" = the research backtest engine/lab under `03_QUANTLENS/` AND the AI **expert-verdict** layer (labels-only opinions; the Scorecard owns all numbers). The old "QuantLens" Gemini pre-screen was renamed "Gemini Pre-Screen" - ignore that usage in pre-2026-06-08 handoff entries.
 
-Workflow gates and prompt templates: see `AI_RULES.md` and `..\04_SHARED\prompts\05_ai_workflow\00_index.md`.
+Workflow gates and prompt templates: see `AI_RULES.md` and `../04_SHARED/prompts/05_ai_workflow/00_index.md`.
 
 Per-job procedures (so every agent does a job the same way): backtest data+launch -> `AGENTS.md` "DATA & LAUNCH"; results -> dashboard -> `..\11_TRIAGE\RESULTS_TO_DASHBOARD_MAP_2026-06-29.md`; AI/QuantLens verdict authoring -> `..\03_QUANTLENS\_user_guide\13_AI_VERDICT_AUTHORING_PROCEDURE.md`.
 

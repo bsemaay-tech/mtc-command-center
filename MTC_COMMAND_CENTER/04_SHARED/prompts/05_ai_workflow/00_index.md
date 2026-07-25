@@ -8,8 +8,9 @@ GStack-inspired, repo-local workflow prompts. Generic across AI agents
 
 1. `AGENTS.md` (repo root)
 2. `MTC_COMMAND_CENTER/_AI_MEMORY/START_HERE.md`
-3. `MTC_COMMAND_CENTER/_AI_MEMORY/AI_RULES.md`
-4. `MTC_COMMAND_CENTER/_AI_MEMORY/SPRINT_WORKFLOW.md`
+3. `MTC_COMMAND_CENTER/_AI_MEMORY/COMPONENT_ROUTER.md` — identify component, then load component local chain before root volatile memory.
+4. `MTC_COMMAND_CENTER/_AI_MEMORY/AI_RULES.md`
+5. `MTC_COMMAND_CENTER/_AI_MEMORY/SPRINT_WORKFLOW.md`
 
 ## Prompts
 
@@ -26,9 +27,7 @@ GStack-inspired, repo-local workflow prompts. Generic across AI agents
 
 ## Conventions
 
-- Every prompt ends with a **WRITE-BACK** block listing which
-  `_AI_MEMORY/` files to update afterward.
-- Prompts do **not** create new memory files at repo root. They update
-  the canonical ones inside `_AI_MEMORY/`.
+- Every prompt ends with a **WRITE-BACK** block. Write-back scope is determined by the route selected at startup per `COMPONENT_ROUTER.md` Section 5: component-scoped tasks update component local `_AI_MEMORY/`; cross-component tasks update each affected component then add one root coordination entry; global tasks use root `_AI_MEMORY/`.
+- Prompts do **not** create new memory files at repo root. They update the canonical ones inside the appropriate `_AI_MEMORY/`.
 - Two-tier model (see `AGENTS.md`): **Lead** owns G1 (scope), G5 (independent review), G6 (or delegates to independent reviewer with lead acceptance), and G7 (final write-back after an accepting G5 verdict (PASS or PASS-WITH-NITS)). **Implementer** owns G2 (plan, passed to lead for acceptance), G3 (impl), and G4 (self-QA producing evidence for lead). Cheap models (DeepSeek, Cline) are implementer sub-delegation only. Fable and Gemini are advisory/non-gate reviewers - they may supplement but never replace a canonical Claude/Codex gate audit.
 - Cross-model review (Gate 5) is mandatory for every repository change/write task, including trivial typo/doc work - it is the **Lead's** independent inspection gate, not the implementer's. See `AGENTS.md` two-tier model and CANONICAL AUDIT ROSTER.

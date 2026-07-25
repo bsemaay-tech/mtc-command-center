@@ -1,5 +1,16 @@
 # NEXT_STEPS
 
+## MODULAR MONOREPO MEMORY ROUTING — GATE 5 PASS 2026-07-25 [AI: Codex]
+
+- **DONE:** one-repository component router and local AI-memory chains implemented for MTC V2,
+  MTC Backtest, QuantLens, Dashboard, and Bridge.
+- **DONE:** root cold-start and workflow prompts use route-scoped context and Gate 7 write-back;
+  root histories are not default component context and `SESSION_LOG.md` remains retired.
+- **DONE:** fresh Codex `gpt-5.6-sol` xhigh final re-audit returned PASS with no nits after all
+  required routing/path repairs.
+- **[AI: Codex]** complete exact-path staging, commit, and push on
+  `codex/modular-monorepo`. No merge, deploy, backtest, or runtime action is part of this task.
+
 ## CRYPTO PAPER BRIDGE P2 — TIMEOUT FIX BUILT; FABLE AUDIT/DEPLOY LOCKED 2026-07-16 [AI: Claude]
 
 Approved 60-to-300-second data-restore timeout wiring is built in commit `79976577` on

@@ -1,5 +1,25 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-07-25 — Modular-monorepo memory routing audited PASS
+
+Kept one repository and preserved all component paths. Root onboarding now routes through
+`_AI_MEMORY/COMPONENT_ROUTER.md` before volatile memory; component-scoped work uses compact local
+memory for MTC V2, MTC Backtest, QuantLens, Dashboard, or Bridge. Cross-component work updates
+every affected local memory first and adds only concise root coordination. Root histories remain
+available for global/policy or explicit historical work; `SESSION_LOG.md` remains retired.
+
+Claude Sonnet 4.6 implemented the documentation/memory migration in isolated worktree
+`C:\LAB\MTC_MODULAR` on `codex/modular-monorepo`. Codex independently inspected the complete
+staged/unstaged/untracked state and ran fresh `gpt-5.6-sol` xhigh Gate 5 audits. Required routing
+and path repairs were closed within the three-round cap; the final fresh re-audit verdict was
+**PASS** with no nits. Default component startup context is approximately 33-36 KB and excludes
+the large root histories. All changed files are Markdown; links, UTF-8/no-BOM, LF, final newline,
+and `git diff --check` pass. No Pine, parity, MTC/trading logic, source, runtime, schema, adapter,
+backtest, artifact, deployment, broker, paper, or live action changed or ran.
+
+Next: exact-path staging, commit, and push of `codex/modular-monorepo`; commit hash intentionally
+omitted because Gate 7 precedes Git hygiene.
+
 ## [Codex GPT-5] 2026-07-15 — P2 race fix deployed; new Day 0 ARMED at 06:48:16Z
 
 Fable audit PASS plus Barış's explicit Task 4/push go satisfied both gates. One restart window

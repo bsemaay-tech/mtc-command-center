@@ -65,6 +65,9 @@ commit hooks. Never recommend force-pushing as a fix.
 
 ## WRITE-BACK
 
-- If a finding is fixed in the same sprint: note in `GLOBAL_HANDOFF.md`.
-- If a finding is deferred: log in `NEXT_STEPS.md` with severity tag.
-- If a sticky security decision was made: log in `DECISIONS.md`.
+- **Component-scoped findings:**
+  - Fixed: note in `<component>/_AI_MEMORY/CURRENT.md`.
+  - Deferred: log in `<component>/_AI_MEMORY/NEXT_STEPS.md` with severity tag.
+  - Sticky security decision: log in `<component>/_AI_MEMORY/DECISIONS.md`.
+- **Cross-component findings:** update every affected relevant component per the above rules first; then add one concise root coordination entry to root `GLOBAL_HANDOFF.md` / `NEXT_STEPS.md` / `DECISIONS.md` as appropriate.
+- **Global/policy findings:** note in root `GLOBAL_HANDOFF.md` (fixed), root `NEXT_STEPS.md` (deferred), root `DECISIONS.md` (sticky decision).

@@ -4,16 +4,30 @@ GStack-inspired workflow rules for any AI agent (Codex / Claude)
 working in this repository. Read **after** `AGENTS.md` and `START_HERE.md`.
 
 This file does **not** replace the existing memory files. It is the rule
-layer on top of them. Canonical state lives in:
+layer on top of them. Canonical state is route-scoped:
 
-- `GLOBAL_HANDOFF.md`   - last session status
+**Component-scoped task** — canonical state is the selected component's local chain only:
+- `<component>/_AI_MEMORY/CURRENT.md`   - live session state
+- `<component>/_AI_MEMORY/NEXT_STEPS.md` - what to do next
+- `<component>/_AI_MEMORY/DECISIONS.md`  - sticky decisions (if applicable)
+- `<component>/_AI_MEMORY/ACTIVE_FILES.md` - current working set (if applicable)
+Do NOT read or write root volatile histories for component-scoped tasks.
+
+**Cross-component task** — canonical state is every affected component's local chain first:
+- Load and update each affected component's `CURRENT.md` / `NEXT_STEPS.md` / `DECISIONS.md` / `ACTIVE_FILES.md` as applicable.
+- Then add one concise coordination entry to root `GLOBAL_HANDOFF.md`.
+- Root `NEXT_STEPS.md` updated only when cross-component next steps need coordination; root volatile reads remain conditional.
+
+**Global/policy task** — canonical state is root memory:
+- `GLOBAL_HANDOFF.md`   - last session status / cross-component coordination
 - `NEXT_STEPS.md`       - what to do next
 - `DECISIONS.md`        - sticky decisions
 - `DO_NOT_TOUCH.md`     - protected files / behaviour
 - `ACTIVE_FILES.md`     - current working set
-- `SESSION_LOG.md`      - RETIRED 2026-07-05 (Barış): do not write; GLOBAL_HANDOFF.md covers it
 - `SESSION_LOCK.md`     - write-session lock state
 - `PROJECT_MEMORY.md`   - stable repo facts (layout, modules, contracts)
+
+**SESSION_LOG.md** — RETIRED: historical-only. Never current state. Never written by any agent.
 
 Strategy-research layer (read before combining strategies/indicators):
 - `STRATEGY_COMPONENT_LIBRARY.md`     - human-readable inventory + combine guidance
@@ -104,12 +118,11 @@ Prompt: `04_SHARED/prompts/05_ai_workflow/06_security_review.md`
 
 Sequence: accepting G5 verdict -> G6 if applicable -> G7 handoff -> then and only then authorized hygiene/commit/push.
 
-Every completed task must update:
-- `GLOBAL_HANDOFF.md`   - always
-- `NEXT_STEPS.md`       - always
-- `DECISIONS.md`        - if a sticky decision was made
-- `ACTIVE_FILES.md`     - if working set changed
-- `PROJECT_MEMORY.md`   - if a stable repo fact changed
+**Write-back scope is determined by the route selected at startup (see `COMPONENT_ROUTER.md` Section 5):**
+
+- **Component-scoped task:** update `<component>/_AI_MEMORY/CURRENT.md` (always) + `<component>/_AI_MEMORY/NEXT_STEPS.md` (always) + `DECISIONS.md` / `ACTIVE_FILES.md` if applicable. Do NOT touch root `GLOBAL_HANDOFF.md`, `NEXT_STEPS.md`, `ACTIVE_FILES.md`, or `SESSION_LOG.md`.
+- **Cross-component task:** update every affected component per the above, then add one concise coordination entry to root `GLOBAL_HANDOFF.md`. Root `NEXT_STEPS.md` updated only for cross-component next steps.
+- **Global/policy task:** use root memory files: `GLOBAL_HANDOFF.md`, `NEXT_STEPS.md`, `DECISIONS.md`, `ACTIVE_FILES.md`, `PROJECT_MEMORY.md`.
 
 Prompt: `04_SHARED/prompts/05_ai_workflow/07_handoff_update.md`
 
@@ -127,13 +140,13 @@ Prompt: `04_SHARED/prompts/05_ai_workflow/07_handoff_update.md`
 
 ## Entry Point for a Fresh Agent
 
-1. Read `AGENTS.md`.
+1. Read root `AGENTS.md`.
 2. Read `_AI_MEMORY/START_HERE.md`.
-3. Read this file (`AI_RULES.md`).
-4. Read `GLOBAL_HANDOFF.md`, `NEXT_STEPS.md`, `DO_NOT_TOUCH.md`.
-5. Pick the right prompt template under
-   `04_SHARED/prompts/05_ai_workflow/` for the current gate.
-   - Backtest data + canonical run -> `AGENTS.md` "DATA & LAUNCH".
+3. Read `_AI_MEMORY/COMPONENT_ROUTER.md` and identify the route.
+4. **Component-scoped route:** load component `AGENTS.md` -> component `_AI_MEMORY/START_HERE.md` -> `CURRENT.md` -> `NEXT_STEPS.md`. Skip root volatile history unless cross-component context is needed.
+5. **Global/policy route:** read this file, `PROJECT_MEMORY.md`, `DO_NOT_TOUCH.md`, `GLOBAL_HANDOFF.md`, `NEXT_STEPS.md`.
+6. Pick the right prompt template under `04_SHARED/prompts/05_ai_workflow/` for the current gate.
+   - Backtest data + canonical run -> root `AGENTS.md` "DATA & LAUNCH".
    - Results -> dashboard -> `11_TRIAGE/RESULTS_TO_DASHBOARD_MAP_2026-06-29.md`.
    - Authoring an AI/QuantLens verdict -> `03_QUANTLENS/_user_guide/13_AI_VERDICT_AUTHORING_PROCEDURE.md`.
-6. After finishing the task: execute Gate 7 (memory write-back).
+7. After finishing the task: execute Gate 7 (scoped memory write-back per COMPONENT_ROUTER.md Section 5).

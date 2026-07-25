@@ -1,8 +1,10 @@
 # PROJECT_MEMORY
 
 Stable repository facts. Update only when a fact actually changes.
-Volatile / per-session state belongs in `GLOBAL_HANDOFF.md`,
-`SESSION_LOG.md`, or `ACTIVE_FILES.md` — not here.
+Component volatile state belongs in that component's `CURRENT.md`, `NEXT_STEPS.md`, and `ACTIVE_FILES.md`.
+Root `GLOBAL_HANDOFF.md` and `NEXT_STEPS.md` are for cross-component and global coordination only.
+`SESSION_LOG.md` is retired historical-only — not a volatile state file.
+Do not write in-progress or per-session state here.
 
 ## Repo Identity
 
@@ -60,18 +62,35 @@ Volatile / per-session state belongs in `GLOBAL_HANDOFF.md`,
 - `04_performance_audit/`
 - `05_ai_workflow/`   — generic GStack-style workflow gates (this layer).
 
+## Modular Memory Architecture
+
+Component-local `_AI_MEMORY/` chains are the canonical onboarding path for component-scoped work. Each component directory (`01_MTC_PROJECT/`, `02_MTC_BACKTEST/`, `03_QUANTLENS/`, `08_DASHBOARD_APP/`, `IBKR_PAPER_BRIDGE/`) contains:
+- `AGENTS.md` — component agent contract (inherits root two-tier by reference).
+- `CLAUDE.md` — component Claude entry point.
+- `_AI_MEMORY/START_HERE.md` — compact component onboarding.
+- `_AI_MEMORY/CURRENT.md` — component live state and objective.
+- `_AI_MEMORY/NEXT_STEPS.md` — component next steps.
+- `_AI_MEMORY/DECISIONS.md` — component sticky decisions.
+- `_AI_MEMORY/ACTIVE_FILES.md` — component working set.
+- `_AI_MEMORY/HANDOFF.md` — compatibility pointer to CURRENT.md.
+
+Routing contract: `_AI_MEMORY/COMPONENT_ROUTER.md`. Component-scoped tasks do NOT load root volatile histories (`GLOBAL_HANDOFF.md`, `NEXT_STEPS.md`, `ACTIVE_FILES.md`); those are read only for cross-component coordination or global/policy tasks. `SESSION_LOG.md` is retired historical-only and is never a normal cold-start file.
+
 ## Cross-References
 
-- Memory entry point: `START_HERE.md`.
+- Memory entry point: `START_HERE.md` -> `COMPONENT_ROUTER.md`.
 - Workflow rules: `AI_RULES.md`.
-- Active working set: `ACTIVE_FILES.md`.
+- Component routing: `COMPONENT_ROUTER.md`.
+- Active working set (global): `ACTIVE_FILES.md`.
 - Pre-merge / pre-commit gates: `REVIEW_CHECKLIST.md`.
 - Sprint loop: `SPRINT_WORKFLOW.md`.
 
 ## What Does NOT Belong Here
 
-- In-progress task notes        → `GLOBAL_HANDOFF.md`
-- "What I did today"            → `SESSION_LOG.md`
-- "What to do next"             → `NEXT_STEPS.md`
-- One-off decisions             → `DECISIONS.md`
-- File-level forbidden zones    → `DO_NOT_TOUCH.md`
+- Component in-progress task notes  → `<component>/_AI_MEMORY/CURRENT.md`
+- Component next steps              → `<component>/_AI_MEMORY/NEXT_STEPS.md`
+- Component one-off decisions       → `<component>/_AI_MEMORY/DECISIONS.md`
+- Cross-component coordination      → root `GLOBAL_HANDOFF.md`
+- Cross-component next steps        → root `NEXT_STEPS.md`
+- File-level forbidden zones        → `DO_NOT_TOUCH.md`
+- Session logs                      → `SESSION_LOG.md` is **retired historical-only**; do not write to it

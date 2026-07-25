@@ -1,25 +1,6 @@
-# HANDOFF
+# HANDOFF - MTC V2 Component
 
-Last updated:
-Updated by:
-Current phase:
-Current status:
+> **Compatibility pointer.** This file is kept for historical references.
+> Live session state is in `CURRENT.md`. Read `CURRENT.md` instead of this file.
 
-## Active objective
-
-## Completed in last session
-
-## Current blockers
-
-## Next 3 actions
-1. 
-2. 
-3. 
-
-## Files changed
-
-## Files to read next
-
-## Warnings
-
-## Do not do
+[Go to CURRENT.md](CURRENT.md)

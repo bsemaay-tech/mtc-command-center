@@ -5,8 +5,9 @@ Use **before writing any code** for a new task.
 ## Inputs to provide
 
 - User request (verbatim).
-- Current `GLOBAL_HANDOFF.md` summary.
-- Relevant `NEXT_STEPS.md` entry, if any.
+- **Component-scoped:** `<component>/_AI_MEMORY/CURRENT.md` summary + `NEXT_STEPS.md` entry if any.
+- **Cross-component:** every affected component's `_AI_MEMORY/CURRENT.md` + `NEXT_STEPS.md`; root `GLOBAL_HANDOFF.md` only when cross-component coordination history is needed.
+- **Global/policy:** root `GLOBAL_HANDOFF.md` summary + root `NEXT_STEPS.md` entry if any.
 
 ## Prompt
 
@@ -23,10 +24,13 @@ Gate 1 must be complete before Gate 2: produce objective, exact whitelist,
 acceptance criteria, safety/authorization, validation plan, and contract path.
 
 Read:
-- AGENTS.md
+- AGENTS.md (root)
+- MTC_COMMAND_CENTER/_AI_MEMORY/COMPONENT_ROUTER.md (identify route)
+- Component-scoped: <component>/AGENTS.md + <component>/_AI_MEMORY/START_HERE.md + CURRENT.md + NEXT_STEPS.md
+- Cross-component: every affected component's AGENTS.md + START_HERE.md + CURRENT.md + NEXT_STEPS.md; root GLOBAL_HANDOFF.md only when coordination history is needed
+- Global/policy: root GLOBAL_HANDOFF.md + root NEXT_STEPS.md
 - MTC_COMMAND_CENTER/_AI_MEMORY/AI_RULES.md
 - MTC_COMMAND_CENTER/_AI_MEMORY/DO_NOT_TOUCH.md
-- MTC_COMMAND_CENTER/_AI_MEMORY/GLOBAL_HANDOFF.md
 
 Then output, in this exact order:
 
@@ -48,5 +52,7 @@ Refuse to start coding inside this gate.
 
 After Gate 1 completes:
 
-- Update `NEXT_STEPS.md` if the scope reframed the next step.
+- **Component-scoped:** update `<component>/_AI_MEMORY/NEXT_STEPS.md` if the scope reframed the next step.
+- **Cross-component:** update every affected component's `_AI_MEMORY/NEXT_STEPS.md` first; add one concise root coordination entry to root `NEXT_STEPS.md` only when coordination or history is needed.
+- **Global/policy:** update root `NEXT_STEPS.md`.
 - No other memory updates required at this gate.

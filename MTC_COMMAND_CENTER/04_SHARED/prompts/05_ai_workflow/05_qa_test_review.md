@@ -49,4 +49,7 @@ Never claim PASS without evidence. Never invent test output.
 
 ## WRITE-BACK
 
-- If a new parity edge case was discovered, note it in `NEXT_STEPS.md`.
+- New parity edge cases or QA discoveries:
+  - **Component-scoped:** note in `<component>/_AI_MEMORY/NEXT_STEPS.md`.
+  - **Cross-component:** note in every affected relevant component's `_AI_MEMORY/NEXT_STEPS.md` first; add one concise root coordination entry to root `NEXT_STEPS.md` only when coordination is needed.
+  - **Global/policy:** note in root `NEXT_STEPS.md`.

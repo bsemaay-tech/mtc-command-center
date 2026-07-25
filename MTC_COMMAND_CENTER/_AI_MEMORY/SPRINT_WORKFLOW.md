@@ -10,7 +10,8 @@ typo fix to a multi-hour feature. Same loop, different depth.
 
 ```
         +-------------------+
-        |  0. ORIENT        |  read GLOBAL_HANDOFF + NEXT_STEPS
+        |  0. ORIENT        |  COMPONENT_ROUTER -> local chain
+        |                   |  (root volatile only if global/cross)
         +---------+---------+
                   |
                   v
@@ -92,6 +93,6 @@ Do not merge a review-flagged change without resolving it.
 
 ## Entry Points for a Fresh Agent
 
-- Starting cold: `START_HERE.md` -> `AI_RULES.md` -> this file.
-- Resuming work: `GLOBAL_HANDOFF.md` -> `NEXT_STEPS.md` -> pick the gate
-  prompt that matches the next step.
+- Starting cold: root `AGENTS.md` -> `START_HERE.md` -> `COMPONENT_ROUTER.md` -> component local chain (or root AI_RULES.md for global tasks).
+- Resuming component work: component `_AI_MEMORY/CURRENT.md` -> `NEXT_STEPS.md` -> pick the gate prompt.
+- Resuming global work: `GLOBAL_HANDOFF.md` -> `NEXT_STEPS.md` -> pick the gate prompt.

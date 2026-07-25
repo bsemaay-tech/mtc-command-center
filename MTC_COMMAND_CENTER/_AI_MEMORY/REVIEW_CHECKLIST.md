@@ -44,14 +44,14 @@ task "done". Tick mentally; if any box fails, fix or escalate.
 - [ ] A different AI model reviewed the diff (Gate 5).
 - [ ] Reviewer findings addressed or explicitly deferred.
 
-## Memory Write-Back (Gate 7)
+## Memory Write-Back (Gate 7 — scoped per COMPONENT_ROUTER.md Section 5)
 
-- [ ] `GLOBAL_HANDOFF.md` updated.
-- [ ] `NEXT_STEPS.md` updated.
-- [ ] `SESSION_LOG.md` got a one-line entry.
-- [ ] `DECISIONS.md` updated if a sticky decision was made.
-- [ ] `ACTIVE_FILES.md` updated if working set changed.
-- [ ] `PROJECT_MEMORY.md` updated if a stable repo fact changed.
+- [ ] Route identified (component / cross-component / global).
+- [ ] **Component-scoped:** `<component>/_AI_MEMORY/CURRENT.md` updated (always). `<component>/_AI_MEMORY/NEXT_STEPS.md` updated (always). `DECISIONS.md` / `ACTIVE_FILES.md` updated if applicable. Root volatile files NOT touched.
+- [ ] **Cross-component:** every affected component updated as above; one concise coordination entry added to root `GLOBAL_HANDOFF.md`.
+- [ ] **Global/policy:** root `GLOBAL_HANDOFF.md`, `NEXT_STEPS.md`, `DECISIONS.md`, `ACTIVE_FILES.md`, `PROJECT_MEMORY.md` updated as applicable.
+- [ ] `SESSION_LOG.md` — RETIRED 2026-07-05; do not write.
+- [ ] `PROJECT_MEMORY.md` updated if a stable repo fact changed (global tasks only).
 
 ## Commit Hygiene
 

@@ -45,4 +45,7 @@ Gate 5, optional Gate 6, and Gate 7 handoff sequence.
 ## WRITE-BACK
 
 - No memory updates inside Gate 3 itself.
-- Out-of-scope items noticed go into `NEXT_STEPS.md` during Gate 7.
+- Out-of-scope items noticed:
+  - **Component-scoped:** go into `<component>/_AI_MEMORY/NEXT_STEPS.md` during Gate 7.
+  - **Cross-component:** go into each affected component's `_AI_MEMORY/NEXT_STEPS.md` where relevant; root coordination entry in root `NEXT_STEPS.md` only when needed. Log to the most relevant component first; never route component findings directly to root.
+  - **Global/policy:** go into root `NEXT_STEPS.md` during Gate 7.

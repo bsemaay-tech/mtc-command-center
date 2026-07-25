@@ -1,5 +1,22 @@
 # ACTIVE_FILES
 
+## 2026-07-25 Codex GPT-5.6-sol — Modular-monorepo memory routing
+- `AGENTS.md`
+- `CLAUDE.md`
+- `MTC_COMMAND_CENTER/_AI_MEMORY/COMPONENT_ROUTER.md`
+- `MTC_COMMAND_CENTER/_AI_MEMORY/START_HERE.md`
+- `MTC_COMMAND_CENTER/_AI_MEMORY/AI_RULES.md`
+- `MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/`
+- `MTC_COMMAND_CENTER/01_MTC_PROJECT/AGENTS.md`
+- `MTC_COMMAND_CENTER/01_MTC_PROJECT/_AI_MEMORY/`
+- `MTC_COMMAND_CENTER/02_MTC_BACKTEST/_AI_MEMORY/`
+- `MTC_COMMAND_CENTER/03_QUANTLENS/_AI_MEMORY/`
+- `MTC_COMMAND_CENTER/08_DASHBOARD_APP/_AI_MEMORY/`
+- `IBKR_PAPER_BRIDGE/_AI_MEMORY/`
+- Result: documentation/memory-only migration; final fresh Codex Sol xhigh Gate 5 PASS with no
+  nits. Component startup context is approximately 33-36 KB; root histories remain available but
+  are no longer default component input.
+
 ## 2026-07-12 Codex GPT-5 — Rounded-price P0 attempt (FAILED CLEANLY)
 - `IBKR_PAPER_BRIDGE/bridge/broker/hyperliquid.py`
 - `IBKR_PAPER_BRIDGE/tools/smoke_p0.py`
