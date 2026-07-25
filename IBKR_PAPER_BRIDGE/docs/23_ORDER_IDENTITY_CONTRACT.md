@@ -82,6 +82,27 @@ OR (state IN ('SUBMITTED','LEGACY_SUBMITTED') AND submitted_ts IS NOT NULL)`
 - DDL, backfill, and schema-version update are all-or-nothing
 - On error: rollback leaves schema_version=2, all legacy data unchanged, no
   order_identity table/index residue
+- **Global coverage invariant**: Before the v3 version bump, every pre-existing
+  legacy trade and order that represents broker/persistence evidence MUST be
+  covered by exactly one reconstructable fingerprint origin (exact
+  `run_id` + `decision_uid`).  Any trade or order that cannot be mapped to
+  exactly one fingerprint origin — including zero matches and multiple/ambiguous
+  origins — fails closed with `MigrationError` and full rollback.
+- **Empty-database exception**: A v2 database with zero `signal_fingerprints`
+  rows may upgrade ONLY when both `orders` and `trades` are also empty.  If
+  either table contains legacy evidence, the migration raises `MigrationError`
+  and rolls back.  A truly empty v2 database (no fingerprints, no trades, no
+  orders) upgrades cleanly at schema_version=3 with zero identities.
+- **Trade coverage**: Every trade must have its `(run_id, entry_decision_uid)`
+  pair match exactly one `order_identity` row (`origin_run_id` +
+  `origin_decision_uid`).  A trade without any matching fingerprint origin is
+  ambiguous evidence and fails closed — it is not silently dropped from the
+  identity ledger.
+- **Order coverage**: Every order must map through its non-null `trade_id` to a
+  trade whose `run_id` and `entry_decision_uid` match exactly one
+  `signal_fingerprint` origin and whose `origin_decision_uid` equals the order's
+  `decision_uid`.  Zero-match, multiple/ambiguous origin, NULL `trade_id`,
+  missing trade, cross-run mismatch, and orphan evidence all fail closed.
 - Backfill: joins exact `run_id`/`decision_uid` to exactly one SIGNAL and one
   RISK_PASS row; zero or duplicates fail closed
 - SIGNAL and order_plan semantics must agree (symbol, direction, timestamp,

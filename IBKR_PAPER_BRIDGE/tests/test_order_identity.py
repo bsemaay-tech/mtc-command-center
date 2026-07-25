@@ -2933,3 +2933,253 @@ def test_repair3_6_nan_stop_loss_rejected():
         compute_request_identity(
             intent_id, "BTC", "LONG", 100.0, 0.1, "MKT", None, float("nan"), 110.0, 1,
         )
+
+
+# ===========================================================================
+# REPAIR-ROUND-4 TARGETED RED/GREEN TESTS
+# ===========================================================================
+
+
+# ---------------------------------------------------------------------------
+# R4-1: Zero fingerprints + trade/order fails with rollback, no v3 residue
+# ---------------------------------------------------------------------------
+
+def test_repair4_1_zero_fingerprints_with_legacy_evidence_fails_rollback(tmp_path):
+    """v2 DB with zero fingerprints but trades+orders must fail migration."""
+    db_path = tmp_path / "bridge.db"
+
+    store = Store(db_path)
+    store.conn.executescript("""
+        CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
+        CREATE TABLE IF NOT EXISTS runs (run_id TEXT PRIMARY KEY, started_ts TEXT, ended_ts TEXT, mode TEXT, network TEXT, config_json TEXT);
+        CREATE TABLE IF NOT EXISTS decisions (id INTEGER PRIMARY KEY, decision_uid TEXT NOT NULL, run_id TEXT, ts TEXT, coin TEXT, stage TEXT, trade_id INTEGER, payload_json TEXT, payload_version INTEGER DEFAULT 1);
+        CREATE TABLE IF NOT EXISTS orders (cloid TEXT PRIMARY KEY, oid INTEGER, group_id TEXT, order_ref TEXT, order_json TEXT, decision_uid TEXT, trade_id INTEGER, role TEXT, status TEXT, qty REAL, filled_qty REAL, avg_fill_px REAL, ts_submit TEXT, ts_last TEXT);
+        CREATE TABLE IF NOT EXISTS trades (trade_id INTEGER PRIMARY KEY, run_id TEXT, coin TEXT, direction TEXT, qty REAL, entry_decision_uid TEXT, signal_ts TEXT, decision_ts TEXT, expected_px REAL, risk_dollars REAL, risk_pct REAL, leverage INTEGER, sl_initial REAL, tp_initial REAL, llm_directive_id INTEGER);
+        CREATE TABLE IF NOT EXISTS signal_fingerprints (run_id TEXT, fingerprint TEXT, decision_uid TEXT, ts TEXT, PRIMARY KEY(run_id, fingerprint));
+    """)
+    store.conn.execute("INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', '2')")
+    store.conn.commit()
+
+    run_id = "v2-legacy"
+    decision_uid = "v2-legacy-decision"
+    ts = "2026-07-06T12:00:00+00:00"
+
+    store.conn.execute(
+        "INSERT INTO runs(run_id, started_ts, mode, network, config_json) VALUES (?, ?, ?, ?, ?)",
+        (run_id, ts, "dry_run", "testnet", "{}"),
+    )
+    # Trade with no fingerprint
+    store.conn.execute(
+        """INSERT INTO trades(trade_id, run_id, coin, direction, qty, entry_decision_uid, signal_ts, decision_ts, expected_px, risk_dollars, risk_pct, leverage, sl_initial, tp_initial, llm_directive_id)
+           VALUES (1, ?, 'BTC', 'LONG', 0.1, ?, ?, ?, 100.0, 0.5, 0.001, 1, 95.0, 110.0, NULL)""",
+        (run_id, decision_uid, ts, ts),
+    )
+    # Order referencing that trade
+    store.conn.execute(
+        """INSERT INTO orders(cloid, oid, group_id, order_ref, order_json, decision_uid, trade_id, role, status, qty)
+           VALUES ('legacy-cloid', 1, 'g', 'ref', '{}', ?, 1, 'ENTRY', 'FILLED', 0.1)""",
+        (decision_uid,),
+    )
+    # Zero fingerprints!
+    store.conn.commit()
+    store.close()
+
+    store2 = Store(db_path)
+    with pytest.raises(MigrationError, match="Zero signal_fingerprints but legacy evidence"):
+        store2.initialize()
+
+    # Schema version unchanged
+    assert store2.get_meta("schema_version") == "2"
+
+    # No order_identity table residue
+    tbl = store2.conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='order_identity'"
+    ).fetchone()
+    assert tbl is None
+
+    # Legacy data untouched
+    trade = store2.conn.execute("SELECT * FROM trades WHERE trade_id = 1").fetchone()
+    assert trade is not None
+    order_row = store2.conn.execute("SELECT * FROM orders WHERE cloid = 'legacy-cloid'").fetchone()
+    assert order_row is not None
+
+    store2.close()
+
+
+# ---------------------------------------------------------------------------
+# R4-2: Mixed valid fingerprint + extra orphan trade/order fails with rollback
+# ---------------------------------------------------------------------------
+
+def test_repair4_2_valid_fingerprint_plus_orphan_evidence_fails_rollback(tmp_path):
+    """One valid fingerprint backfill + an extra orphan trade → fail."""
+    db_path = tmp_path / "bridge.db"
+
+    store = Store(db_path)
+    store.conn.executescript("""
+        CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
+        CREATE TABLE IF NOT EXISTS runs (run_id TEXT PRIMARY KEY, started_ts TEXT, ended_ts TEXT, mode TEXT, network TEXT, config_json TEXT);
+        CREATE TABLE IF NOT EXISTS decisions (id INTEGER PRIMARY KEY, decision_uid TEXT NOT NULL, run_id TEXT, ts TEXT, coin TEXT, stage TEXT, trade_id INTEGER, payload_json TEXT, payload_version INTEGER DEFAULT 1);
+        CREATE TABLE IF NOT EXISTS orders (cloid TEXT PRIMARY KEY, oid INTEGER, group_id TEXT, order_ref TEXT, order_json TEXT, decision_uid TEXT, trade_id INTEGER, role TEXT, status TEXT, qty REAL, filled_qty REAL, avg_fill_px REAL, ts_submit TEXT, ts_last TEXT);
+        CREATE TABLE IF NOT EXISTS trades (trade_id INTEGER PRIMARY KEY, run_id TEXT, coin TEXT, direction TEXT, qty REAL, entry_decision_uid TEXT, signal_ts TEXT, decision_ts TEXT, expected_px REAL, risk_dollars REAL, risk_pct REAL, leverage INTEGER, sl_initial REAL, tp_initial REAL, llm_directive_id INTEGER);
+        CREATE TABLE IF NOT EXISTS signal_fingerprints (run_id TEXT, fingerprint TEXT, decision_uid TEXT, ts TEXT, PRIMARY KEY(run_id, fingerprint));
+    """)
+    store.conn.execute("INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', '2')")
+    store.conn.commit()
+
+    ts = "2026-07-06T12:00:00+00:00"
+    run_good = "run-good"
+    run_bad = "run-orphan"
+    decision_good = "good-decision"
+    decision_orphan = "orphan-decision"
+
+    store.conn.execute(
+        "INSERT INTO runs(run_id, started_ts, mode, network, config_json) VALUES (?, ?, ?, ?, ?)",
+        (run_good, ts, "dry_run", "testnet", "{}"),
+    )
+    store.conn.execute(
+        "INSERT INTO runs(run_id, started_ts, mode, network, config_json) VALUES (?, ?, ?, ?, ?)",
+        (run_bad, ts, "dry_run", "testnet", "{}"),
+    )
+
+    # Valid chain with fingerprint
+    sig = json.dumps({
+        "ts": ts, "symbol": "BTC", "direction": "LONG",
+        "reason": "test", "ref_price": 100.0,
+        "stop_loss": 95.0, "take_profit": 110.0,
+    })
+    risk = json.dumps({
+        "order_plan": {
+            "signal": {"ts": ts, "symbol": "BTC", "direction": "LONG", "ref_price": 100.0,
+                       "stop_loss": 95.0, "take_profit": 110.0},
+            "qty": 0.1, "entry_type": "MKT", "stop_loss": 95.0,
+            "take_profit": 110.0, "leverage": 1,
+        },
+        "gates": [],
+    })
+    store.conn.execute(
+        "INSERT INTO decisions(decision_uid, run_id, ts, coin, stage, payload_json) VALUES (?, ?, ?, ?, 'SIGNAL', ?)",
+        (decision_good, run_good, ts, "BTC", sig),
+    )
+    store.conn.execute(
+        "INSERT INTO decisions(decision_uid, run_id, ts, coin, stage, payload_json) VALUES (?, ?, ?, ?, 'RISK_PASS', ?)",
+        (decision_good, run_good, ts, "BTC", risk),
+    )
+    store.conn.execute(
+        "INSERT INTO signal_fingerprints(run_id, fingerprint, decision_uid, ts) VALUES (?, ?, ?, ?)",
+        (run_good, "fp-good", decision_good, ts),
+    )
+
+    # Orphan trade (no fingerprint, no decisions for its entry_decision_uid)
+    store.conn.execute(
+        """INSERT INTO trades(trade_id, run_id, coin, direction, qty, entry_decision_uid, signal_ts, decision_ts, expected_px, risk_dollars, risk_pct, leverage, sl_initial, tp_initial, llm_directive_id)
+           VALUES (2, ?, 'BTC', 'LONG', 0.1, ?, ?, ?, 100.0, 0.5, 0.001, 1, 95.0, 110.0, NULL)""",
+        (run_bad, decision_orphan, ts, ts),
+    )
+    # Order for the orphan trade
+    store.conn.execute(
+        """INSERT INTO orders(cloid, oid, group_id, order_ref, order_json, decision_uid, trade_id, role, status, qty)
+           VALUES ('orphan-cloid', 1, 'g', 'ref', '{}', ?, 2, 'ENTRY', 'FILLED', 0.1)""",
+        (decision_orphan,),
+    )
+    store.conn.commit()
+    store.close()
+
+    store2 = Store(db_path)
+    with pytest.raises(MigrationError, match="no matching fingerprint origin"):
+        store2.initialize()
+
+    assert store2.get_meta("schema_version") == "2"
+
+    tbl = store2.conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='order_identity'"
+    ).fetchone()
+    assert tbl is None
+
+    store2.close()
+
+
+# ---------------------------------------------------------------------------
+# R4-3: Orphan trade without orders/fingerprint fails with rollback
+# ---------------------------------------------------------------------------
+
+def test_repair4_3_orphan_trade_no_orders_no_fingerprint_fails_rollback(tmp_path):
+    """A trade with no orders and no fingerprint → fail closed."""
+    db_path = tmp_path / "bridge.db"
+
+    store = Store(db_path)
+    store.conn.executescript("""
+        CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
+        CREATE TABLE IF NOT EXISTS runs (run_id TEXT PRIMARY KEY, started_ts TEXT, ended_ts TEXT, mode TEXT, network TEXT, config_json TEXT);
+        CREATE TABLE IF NOT EXISTS trades (trade_id INTEGER PRIMARY KEY, run_id TEXT, coin TEXT, direction TEXT, qty REAL, entry_decision_uid TEXT, signal_ts TEXT, decision_ts TEXT, expected_px REAL, risk_dollars REAL, risk_pct REAL, leverage INTEGER, sl_initial REAL, tp_initial REAL, llm_directive_id INTEGER);
+        CREATE TABLE IF NOT EXISTS signal_fingerprints (run_id TEXT, fingerprint TEXT, decision_uid TEXT, ts TEXT, PRIMARY KEY(run_id, fingerprint));
+    """)
+    store.conn.execute("INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', '2')")
+    store.conn.commit()
+
+    run_id = "v2-orphantrade"
+    decision_uid = "orphan-no-fp"
+    ts = "2026-07-06T12:00:00+00:00"
+
+    store.conn.execute(
+        "INSERT INTO runs(run_id, started_ts, mode, network, config_json) VALUES (?, ?, ?, ?, ?)",
+        (run_id, ts, "dry_run", "testnet", "{}"),
+    )
+    # Trade with no fingerprint and no orders
+    store.conn.execute(
+        """INSERT INTO trades(trade_id, run_id, coin, direction, qty, entry_decision_uid, signal_ts, decision_ts, expected_px, risk_dollars, risk_pct, leverage, sl_initial, tp_initial, llm_directive_id)
+           VALUES (1, ?, 'BTC', 'LONG', 0.1, ?, ?, ?, 100.0, 0.5, 0.001, 1, 95.0, 110.0, NULL)""",
+        (run_id, decision_uid, ts, ts),
+    )
+    # Zero fingerprints
+    store.conn.commit()
+    store.close()
+
+    store2 = Store(db_path)
+    with pytest.raises(MigrationError, match="Zero signal_fingerprints but legacy evidence"):
+        store2.initialize()
+
+    assert store2.get_meta("schema_version") == "2"
+
+    tbl = store2.conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='order_identity'"
+    ).fetchone()
+    assert tbl is None
+
+    store2.close()
+
+
+# ---------------------------------------------------------------------------
+# R4-4: Zero fingerprints + no trades/orders still upgrades successfully
+# ---------------------------------------------------------------------------
+
+def test_repair4_4_zero_fingerprints_empty_legacy_upgrades(tmp_path):
+    """v2 DB with zero fingerprints and no trades/orders upgrades cleanly."""
+    db_path = tmp_path / "bridge.db"
+
+    store = Store(db_path)
+    store.conn.executescript("""
+        CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
+        CREATE TABLE IF NOT EXISTS runs (run_id TEXT PRIMARY KEY, started_ts TEXT, ended_ts TEXT, mode TEXT, network TEXT, config_json TEXT);
+        CREATE TABLE IF NOT EXISTS signal_fingerprints (run_id TEXT, fingerprint TEXT, decision_uid TEXT, ts TEXT, PRIMARY KEY(run_id, fingerprint));
+    """)
+    store.conn.execute("INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', '2')")
+    # No trades, no orders
+    store.conn.commit()
+    store.close()
+
+    store2 = Store(db_path)
+    store2.initialize()
+
+    assert store2.get_meta("schema_version") == "3"
+
+    # order_identity table exists (but empty)
+    tbl = store2.conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='order_identity'"
+    ).fetchone()
+    assert tbl is not None
+
+    snap = store2.get_snapshot()
+    assert "identities" in snap
+    assert len(snap["identities"]) == 0
+
+    store2.close()

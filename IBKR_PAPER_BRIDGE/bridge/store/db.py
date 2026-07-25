@@ -487,7 +487,25 @@ class Store:
         ).fetchall()
 
         if not fp_rows:
-            # No fingerprints to backfill — just bump version
+            # TS-P1-002 repair-round-4: zero fingerprints may upgrade ONLY
+            # when both legacy orders and legacy trades are empty. Any
+            # pre-existing evidence without a reconstructable fingerprint
+            # origin is ambiguous and must fail closed.
+            trade_count_row = self.conn.execute(
+                "SELECT COUNT(*) FROM trades"
+            ).fetchone()
+            order_count_row = self.conn.execute(
+                "SELECT COUNT(*) FROM orders"
+            ).fetchone()
+            trade_count = int(trade_count_row[0]) if trade_count_row else 0
+            order_count = int(order_count_row[0]) if order_count_row else 0
+            if trade_count > 0 or order_count > 0:
+                raise MigrationError(
+                    f"Zero signal_fingerprints but legacy evidence exists: "
+                    f"trades={trade_count} orders={order_count}; "
+                    f"cannot reconstruct identity origins"
+                )
+            # Truly empty v2 database with zero legacy evidence — safe to upgrade
             self.conn.execute(
                 "INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', '3')"
             )
@@ -934,10 +952,117 @@ class Store:
                 ),
             )
 
-        # All rows migrated successfully → bump version
+        # --- TS-P1-002 repair-round-4: global coverage validation ---
+        # Every legacy trade and order must be covered by exactly one
+        # fingerprint origin before the v3 version bump.  Ambiguous or
+        # orphan evidence fails closed.
+        self._validate_global_coverage()
+
+        # All rows migrated and coverage validated → bump version
         self.conn.execute(
             "INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', '3')"
         )
+
+    def _validate_global_coverage(self) -> None:
+        """Validate every legacy trade/order is covered by exactly one identity origin.
+
+        Must be called inside the migration transaction after backfill.
+        Raises MigrationError on any ambiguity, orphan evidence, or
+        cross-wired mapping.
+        """
+        # --- Validate every trade has exactly one matching identity origin ---
+        trade_rows = self.conn.execute(
+            "SELECT trade_id, run_id, entry_decision_uid FROM trades"
+        ).fetchall()
+
+        for trade_row in trade_rows:
+            trade_id = int(trade_row["trade_id"])
+            trade_run_id = str(trade_row["run_id"])
+            trade_ed_uid = str(trade_row["entry_decision_uid"])
+
+            identity_count = self.conn.execute(
+                "SELECT COUNT(*) FROM order_identity "
+                "WHERE origin_run_id = ? AND origin_decision_uid = ?",
+                (trade_run_id, trade_ed_uid),
+            ).fetchone()
+
+            if identity_count[0] == 0:
+                raise MigrationError(
+                    f"Trade trade_id={trade_id} run_id={trade_run_id} "
+                    f"entry_decision_uid={trade_ed_uid} has no matching "
+                    f"fingerprint origin; ambiguous evidence"
+                )
+            if identity_count[0] > 1:
+                raise MigrationError(
+                    f"Trade trade_id={trade_id} run_id={trade_run_id} "
+                    f"entry_decision_uid={trade_ed_uid} has multiple "
+                    f"({identity_count[0]}) matching fingerprint origins; "
+                    f"ambiguous evidence"
+                )
+
+        # --- Validate every order is covered through its trade ---
+        order_rows = self.conn.execute(
+            "SELECT cloid, decision_uid, trade_id FROM orders"
+        ).fetchall()
+
+        for order_row in order_rows:
+            cloid = str(order_row["cloid"])
+            order_decision_uid = str(order_row["decision_uid"])
+            order_trade_id = order_row["trade_id"]
+
+            if order_trade_id is None:
+                raise MigrationError(
+                    f"Order {cloid} has NULL trade_id; "
+                    f"incompatible legacy mapping"
+                )
+
+            trade = self.conn.execute(
+                "SELECT run_id, entry_decision_uid FROM trades WHERE trade_id = ?",
+                (order_trade_id,),
+            ).fetchone()
+
+            if trade is None:
+                raise MigrationError(
+                    f"Order {cloid} references non-existent trade "
+                    f"trade_id={order_trade_id}"
+                )
+
+            trade_run_id = str(trade["run_id"])
+            trade_ed_uid = str(trade["entry_decision_uid"])
+
+            identity_count = self.conn.execute(
+                "SELECT COUNT(*) FROM order_identity "
+                "WHERE origin_run_id = ? AND origin_decision_uid = ?",
+                (trade_run_id, trade_ed_uid),
+            ).fetchone()
+
+            if identity_count[0] == 0:
+                raise MigrationError(
+                    f"Order {cloid} trade_id={order_trade_id} "
+                    f"run_id={trade_run_id} entry_decision_uid={trade_ed_uid} "
+                    f"has no matching fingerprint origin"
+                )
+            if identity_count[0] > 1:
+                raise MigrationError(
+                    f"Order {cloid} trade_id={order_trade_id} "
+                    f"run_id={trade_run_id} entry_decision_uid={trade_ed_uid} "
+                    f"has multiple ({identity_count[0]}) matching fingerprint origins; "
+                    f"ambiguous evidence"
+                )
+
+            # Verify the order's decision_uid matches the identity origin
+            ident = self.conn.execute(
+                "SELECT origin_decision_uid FROM order_identity "
+                "WHERE origin_run_id = ? AND origin_decision_uid = ?",
+                (trade_run_id, trade_ed_uid),
+            ).fetchone()
+
+            if ident is not None and str(ident["origin_decision_uid"]) != order_decision_uid:
+                raise MigrationError(
+                    f"Order {cloid} decision_uid={order_decision_uid} does not match "
+                    f"identity origin_decision_uid={ident['origin_decision_uid']} "
+                    f"for trade_id={order_trade_id}"
+                )
 
     # ------------------------------------------------------------------
     # Identity reservation
