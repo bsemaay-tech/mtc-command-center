@@ -419,6 +419,34 @@ def test_gc_referents_of_raw_aliases_cannot_alter_normalization():
     assert after is OrderState.OPEN
 
 
+def test_transitions_holder_rejects_normal_attribute_assignment():
+    before = can_transition(OrderState.OPEN, OrderState.FILLED)
+    with pytest.raises(AttributeError):
+        ORDER_STATE_TRANSITIONS._pairs = ((OrderState.OPEN, frozenset()),)
+    assert can_transition(OrderState.OPEN, OrderState.FILLED) is before
+
+
+def test_transitions_holder_rejects_object_setattr():
+    before = can_transition(OrderState.OPEN, OrderState.FILLED)
+    with pytest.raises(AttributeError):
+        object.__setattr__(ORDER_STATE_TRANSITIONS, "_pairs", ((OrderState.OPEN, frozenset()),))
+    assert can_transition(OrderState.OPEN, OrderState.FILLED) is before
+
+
+def test_raw_aliases_holder_rejects_normal_attribute_assignment():
+    before = normalize_raw_order_status("SUBMITTED")
+    with pytest.raises(AttributeError):
+        RAW_ORDER_STATUS_ALIASES._pairs = (("SUBMITTED", OrderState.FILLED),)
+    assert normalize_raw_order_status("SUBMITTED") is before
+
+
+def test_raw_aliases_holder_rejects_object_setattr():
+    before = normalize_raw_order_status("SUBMITTED")
+    with pytest.raises(AttributeError):
+        object.__setattr__(RAW_ORDER_STATUS_ALIASES, "_pairs", (("SUBMITTED", OrderState.FILLED),))
+    assert normalize_raw_order_status("SUBMITTED") is before
+
+
 def test_can_transition_and_validate_are_pure_no_mutation():
     before = {state: frozenset(edges) for state, edges in ORDER_STATE_TRANSITIONS.items()}
     for _ in range(3):

@@ -137,40 +137,54 @@ TERMINAL_ORDER_STATES: frozenset[OrderState] = frozenset(
 )
 
 
-class _ImmutableMapping(Mapping):
-    """Read-only Mapping with no mutable object anywhere in its referent graph.
+class _ImmutableMapping(tuple, Mapping):
+    """Read-only Mapping with no mutable object anywhere in its referent graph,
+    and no writable holder attribute that could later replace its contents.
 
     `MappingProxyType(d)` blocks writes *through the proxy*, but `d` itself
     remains a plain `dict` and is returned directly by
     `gc.get_referents(proxy)` — mutating that `dict` still changes what the
     proxy reports, whether or not `d` is bound to a module-level name (audit
-    F1-R). This class instead stores its data as a `tuple` of `(key, value)`
-    pairs. Tuples cannot be mutated in place (no `__setitem__`/`append`/etc.),
-    so even a caller that walks `gc.get_referents` transitively from an
-    instance of this class only ever reaches tuples, `frozenset`s, and
-    `OrderState`/`str` values — never a `dict` or `list` it could mutate to
-    change a later lookup.
+    F1-R). An earlier revision of this class stored its `(key, value)` pairs
+    in an instance attribute (`self._pairs = tuple(pairs)`), which closed the
+    *contents* hole (tuples cannot be mutated in place) but left a second,
+    distinct hole open: `_pairs` was itself a writable slot, so normal
+    attribute assignment or `object.__setattr__` could replace the whole
+    tuple wholesale and change every later `can_transition`/
+    `normalize_raw_order_status` decision, even though no individual
+    container was ever mutated in place (audit finding, this repair).
+    This class closes that hole by not having an instance attribute at all:
+    it subclasses `tuple` directly and stores its `(key, value)` pairs as the
+    tuple's own elements, fixed at `tuple.__new__` time. Combined with
+    `__slots__ = ()` — and `collections.abc.Mapping` itself declaring
+    `__slots__ = ()` — instances have no `__dict__` and no assignable slot of
+    any kind: there is no attribute-holder left to reassign, so neither plain
+    assignment nor `object.__setattr__` has anything to write to. A caller
+    walking `gc.get_referents` transitively from an instance of this class
+    only ever reaches tuples, `frozenset`s, and `OrderState`/`str` values —
+    never a `dict` or `list` it could mutate, and never a writable holder it
+    could replace.
     """
 
-    __slots__ = ("_pairs",)
+    __slots__ = ()
 
-    def __init__(self, pairs) -> None:
-        self._pairs = tuple(pairs)
+    def __new__(cls, pairs):
+        return super().__new__(cls, tuple(pairs))
 
     def __getitem__(self, key):
-        for stored_key, value in self._pairs:
+        for stored_key, value in tuple.__iter__(self):
             if stored_key == key:
                 return value
         raise KeyError(key)
 
     def __iter__(self):
-        return (stored_key for stored_key, _ in self._pairs)
+        return (stored_key for stored_key, _ in tuple.__iter__(self))
 
     def __len__(self) -> int:
-        return len(self._pairs)
+        return tuple.__len__(self)
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}({dict(self._pairs)!r})"
+        return f"{type(self).__name__}({dict(tuple.__iter__(self))!r})"
 
 
 ORDER_STATE_TRANSITIONS: Mapping[OrderState, frozenset[OrderState]] = _ImmutableMapping((

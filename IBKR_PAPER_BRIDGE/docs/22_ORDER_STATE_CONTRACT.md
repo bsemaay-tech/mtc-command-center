@@ -20,8 +20,17 @@ residual findings: F1-R — `MappingProxyType`'s backing `dict` is still a
 mutable object reachable via `gc.get_referents()` regardless of naming; F2-R
 — `type(raw).__name__` is not safe against a hostile metaclass overriding
 class attribute lookup. Both are fixed in the second repair described in
-`11_TRIAGE/CLAUDE_TSP1001_REPAIR2_REPORT_2026-07-20.md`. The immutability and
-exception sections below describe the twice-repaired behavior.
+`11_TRIAGE/CLAUDE_TSP1001_REPAIR2_REPORT_2026-07-20.md`, but that repair
+(commit `a15a6b1f`) stored its tuple of `(key, value)` pairs in a writable
+instance slot (`self._pairs = tuple(pairs)`), which was itself BLOCKed on a
+second re-audit (`11_TRIAGE/CODEX_TSP1001_REAUDIT2_2026-07-21.md`): normal
+attribute assignment or `object.__setattr__` on `_pairs` could replace the
+whole tuple wholesale and change every later `can_transition`/
+`normalize_raw_order_status` decision, even though no individual container
+was ever mutated in place. This third repair removes the writable slot
+entirely — see the Immutability invariant (§6) below for the fixed design.
+The immutability and exception sections below describe the thrice-repaired
+behavior.
 
 ## Problem
 
@@ -164,19 +173,43 @@ Design notes:
    reason-coded; never default to a live/filled state.
 6. `ORDER_STATE_TRANSITIONS` and `RAW_ORDER_STATUS_ALIASES` are instances of
    a private `_ImmutableMapping` class (implements `collections.abc.Mapping`
-   over a `tuple` of `(key, value)` pairs), not `MappingProxyType` over a
-   `dict`. This distinction is load-bearing: `MappingProxyType(d)` blocks
-   writes *through the proxy*, but `d` remains a plain mutable `dict` and is
-   returned directly by Python's standard `gc.get_referents(proxy)` — so
-   mutating it changes later `can_transition`/`normalize_raw_order_status`
-   decisions regardless of whether `d` is bound to any module-level name
-   (audit F1-R). A `tuple` cannot be mutated in place at all, so the entire
-   object graph reachable from either export — checked transitively via
-   `gc.get_referents`, not just one hop — contains only tuples, `frozenset`s,
-   and `OrderState`/`str` values; no `dict`, `list`, or other mutable
-   container exists anywhere in it. `can_transition`/
-   `validate_order_transition`/`normalize_raw_order_status` perform no
-   mutation and no I/O. A caller can still take
+   directly over a `tuple` subclass), not `MappingProxyType` over a `dict`.
+   Two distinct properties are both required here, and neither alone is
+   sufficient:
+
+   - **Immutable contents.** `MappingProxyType(d)` blocks writes *through
+     the proxy*, but `d` remains a plain mutable `dict` and is returned
+     directly by Python's standard `gc.get_referents(proxy)` — so mutating
+     it changes later `can_transition`/`normalize_raw_order_status`
+     decisions regardless of whether `d` is bound to any module-level name
+     (audit F1-R). `_ImmutableMapping` stores its `(key, value)` pairs as
+     the elements of a `tuple` it subclasses, and a `tuple` cannot be
+     mutated in place at all (no `__setitem__`/`append`/etc.), so the
+     entire object graph reachable from either export — checked
+     transitively via `gc.get_referents`, not just one hop — contains only
+     tuples, `frozenset`s, and `OrderState`/`str` values; no `dict`, `list`,
+     or other mutable container exists anywhere in it.
+   - **Intrinsically immutable holder.** Closing the contents hole is not
+     enough on its own: an earlier revision stored those same immutable
+     `(key, value)` pairs in a writable instance attribute
+     (`self._pairs = tuple(pairs)`, declared via `__slots__ = ("_pairs",)`),
+     and that attribute — a holder pointing at the immutable tuple, not the
+     tuple itself — could be replaced wholesale by normal attribute
+     assignment or `object.__setattr__`, changing every later
+     `can_transition`/`normalize_raw_order_status` decision without
+     mutating any individual container in place (2026-07-21 re-audit
+     finding). `_ImmutableMapping` closes this by having no instance
+     attribute at all: it subclasses `tuple` directly (so its data lives in
+     the tuple's own fixed-at-construction storage, not a separate
+     attribute) and declares `__slots__ = ()` — and `collections.abc.Mapping`
+     itself declares `__slots__ = ()` — so instances have no `__dict__` and
+     no assignable slot of any kind. There is no writable holder left to
+     reassign, so neither plain assignment nor `object.__setattr__` has
+     anywhere to write; both raise `AttributeError` and leave the object,
+     and every later decision, unchanged.
+
+   `can_transition`/`validate_order_transition`/`normalize_raw_order_status`
+   perform no mutation and no I/O. A caller can still take
    `dict(ORDER_STATE_TRANSITIONS)`/`dict(RAW_ORDER_STATUS_ALIASES)` to get
    their own independent mutable copy, but mutating that copy cannot affect
    the original.
