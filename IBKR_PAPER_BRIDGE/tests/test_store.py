@@ -1131,3 +1131,717 @@ def test_unauthorized_coverage_pointer_fails_closed_on_reopen(tmp_path):
     with pytest.raises(MigrationError):
         reopened.initialize(target_schema_version=6)
     reopened.close()
+
+
+# ===========================================================================
+# TS-P1-006 - authoritative risk-input snapshot loader
+#
+# Written against docs/27_AUTHORITATIVE_RISK_SNAPSHOT_CONTRACT.md, not against
+# the implementation: an incomplete, superseded, legacy, tampered, stale or
+# unverifiable checkpoint must never be presented to risk as a portfolio view,
+# and there is no "empty snapshot" a caller could mistake for "no exposure".
+# ===========================================================================
+
+
+DEFAULT_RISK_ROWS = {
+    "POSITIONS": [],
+    "BALANCES": [{"equity": 10_000.0, "withdrawable": 9_000.0}],
+    "MARGIN": [{"margin_used": 1_000.0, "available_margin": 9_000.0}],
+}
+
+NOW = datetime(2026, 7, 26, 12, 0, tzinfo=UTC)
+
+
+def _accept_v2(
+    store,
+    *,
+    now,
+    coverage_ms: int,
+    risk_rows=None,
+    payload_version: str | None = None,
+    tamper_rows=None,
+    bypass_accept_validation: bool = False,
+    diffs=(),
+    coverage_start_ms: int = 0,
+):
+    """Accept one checkpoint whose payload carries canonical risk rows.
+
+    ``tamper_rows`` writes *different* row content into the payload while the
+    persisted component provenance (row_count, digest, cursor bounds) still
+    describes the honest rows - the semantic-tamper attack.
+
+    ``bypass_accept_validation`` disables only the *write-side* v2 check, so a
+    test can put evidence on disk that the current writer would have refused:
+    a checkpoint produced by a rollback-era build, a foreign writer, or direct
+    database manipulation. The loader must still refuse it on its own, without
+    relying on the write-side guard having ever run.
+    """
+    from bridge.engine.types import (
+        REQUIRED_RECONCILE_COMPONENTS,
+        RISK_SNAPSHOT_COMPONENTS,
+        SNAPSHOT_PAYLOAD_VERSION_V2,
+        ComponentEvidence,
+        ReconcileAttemptState,
+        ReconcileComponentStatus,
+        reconcile_digest,
+    )
+
+    rows = {**DEFAULT_RISK_ROWS, **(risk_rows or {})}
+    version = payload_version or SNAPSHOT_PAYLOAD_VERSION_V2
+    attempt_id = store.reserve_reconcile_attempt(
+        run_id="run", started_ts=now, deadline_s=5.0, max_skew_s=5.0
+    )
+    components = tuple(
+        ComponentEvidence(
+            kind=kind,
+            source="TEST",
+            status=ReconcileComponentStatus.COMPLETE,
+            observed_ts=now,
+            rows=tuple(rows.get(kind.value, ())),
+            exact=True,
+            complete=True,
+            reason_code="TEST_COMPLETE",
+            cursor_start_ms=(
+                coverage_start_ms if kind.value in {"FILLS", "FUNDING"} else None
+            ),
+            cursor_end_ms=coverage_ms if kind.value in {"FILLS", "FUNDING"} else None,
+        )
+        for kind in REQUIRED_RECONCILE_COMPONENTS
+    )
+    by_kind = {component.kind.value: component for component in components}
+    payload = {
+        "version": version,
+        "run_id": "run",
+        "risk_rows": {
+            kind.value: by_kind[kind.value].canonical_rows()
+            for kind in RISK_SNAPSHOT_COMPONENTS
+        },
+        "risk_row_digests": {
+            kind.value: by_kind[kind.value].digest for kind in RISK_SNAPSHOT_COMPONENTS
+        },
+        "components": {
+            component.kind.value: {
+                "digest": component.digest,
+                "cursor_start_ms": component.cursor_start_ms,
+                "cursor_end_ms": component.cursor_end_ms,
+            }
+            for component in components
+        },
+        "diffs": [diff.canonical() for diff in diffs],
+        "funding_event_ids": [],
+        "funding_event_digests": {},
+    }
+    canonical_hash = reconcile_digest({
+        "version": version,
+        "components": {
+            component.kind.value: component.digest for component in components
+        },
+        "diffs": [diff.canonical() for diff in diffs],
+    })
+    if tamper_rows is not None:
+        # The rows change; row_count, digests, cursor bounds and the canonical
+        # hash all keep describing the honest evidence.
+        payload["risk_rows"] = {**payload["risk_rows"], **tamper_rows}
+    finalize = lambda: store.finalize_reconcile_attempt(  # noqa: E731
+        attempt_id=attempt_id,
+        state=ReconcileAttemptState.COMPLETE,
+        ended_ts=now,
+        duration_ms=1,
+        canonical_hash=canonical_hash,
+        reason_code="ACCEPTED",
+        diffs=diffs,
+        accepted=True,
+        fresh=True,
+        components=components,
+        funding_events=(),
+        snapshot_payload=payload,
+        coverage_upper_bound_ms=coverage_ms,
+    )
+    if bypass_accept_validation:
+        # Keep the descriptor itself so the restore cannot silently turn a
+        # staticmethod into a bound method and leak into later tests.
+        original = Store.__dict__["_validate_v2_risk_rows"]
+        Store._validate_v2_risk_rows = staticmethod(lambda payload, components: None)
+        try:
+            finalize()
+        finally:
+            Store._validate_v2_risk_rows = original
+    else:
+        finalize()
+    return attempt_id
+
+
+def _accept_v1_legacy(store, *, now, coverage_ms: int, coverage_start_ms: int = 0):
+    """Exactly the accepted TS-P1-005 payload: digests and counts, no rows."""
+    from bridge.engine.types import (
+        REQUIRED_RECONCILE_COMPONENTS,
+        SNAPSHOT_PAYLOAD_VERSION_V1,
+        ComponentEvidence,
+        ReconcileAttemptState,
+        ReconcileComponentStatus,
+        reconcile_digest,
+    )
+
+    attempt_id = store.reserve_reconcile_attempt(
+        run_id="run", started_ts=now, deadline_s=5.0, max_skew_s=5.0
+    )
+    components = tuple(
+        ComponentEvidence(
+            kind=kind,
+            source="TEST",
+            status=ReconcileComponentStatus.COMPLETE,
+            observed_ts=now,
+            rows=tuple(DEFAULT_RISK_ROWS.get(kind.value, ())),
+            exact=True,
+            complete=True,
+            reason_code="TEST_COMPLETE",
+            cursor_start_ms=(
+                coverage_start_ms if kind.value in {"FILLS", "FUNDING"} else None
+            ),
+            cursor_end_ms=coverage_ms if kind.value in {"FILLS", "FUNDING"} else None,
+        )
+        for kind in REQUIRED_RECONCILE_COMPONENTS
+    )
+    payload = {
+        "version": SNAPSHOT_PAYLOAD_VERSION_V1,
+        "run_id": "run",
+        "components": {
+            component.kind.value: {
+                "digest": component.digest,
+                "row_count": len(component.rows),
+                "cursor_start_ms": component.cursor_start_ms,
+                "cursor_end_ms": component.cursor_end_ms,
+            }
+            for component in components
+        },
+        "diffs": [],
+        "funding_event_ids": [],
+        "funding_event_digests": {},
+    }
+    canonical_hash = reconcile_digest({
+        "version": SNAPSHOT_PAYLOAD_VERSION_V1,
+        "components": {
+            component.kind.value: component.digest for component in components
+        },
+        "diffs": [],
+    })
+    store.finalize_reconcile_attempt(
+        attempt_id=attempt_id,
+        state=ReconcileAttemptState.COMPLETE,
+        ended_ts=now,
+        duration_ms=1,
+        canonical_hash=canonical_hash,
+        reason_code="ACCEPTED",
+        diffs=(),
+        accepted=True,
+        fresh=True,
+        components=components,
+        funding_events=(),
+        snapshot_payload=payload,
+        coverage_upper_bound_ms=coverage_ms,
+    )
+    return attempt_id
+
+
+def _load(store, *, now, max_age_s: float = 900.0):
+    return store.load_authoritative_risk_snapshot(now=now, max_age_s=max_age_s)
+
+
+def _veto(store, *, now, max_age_s: float = 900.0) -> str:
+    """Assert the load fails closed and return its stable reason code."""
+    from bridge.engine.types import RiskSnapshotUnavailable
+
+    with pytest.raises(RiskSnapshotUnavailable) as excinfo:
+        _load(store, now=now, max_age_s=max_age_s)
+    return excinfo.value.reason_code
+
+
+def test_v2_checkpoint_loads_as_one_immutable_typed_snapshot(tmp_path):
+    from bridge.engine.types import (
+        SNAPSHOT_PAYLOAD_VERSION_V2,
+        AuthoritativeRiskSnapshot,
+    )
+
+    store = _v6_store(tmp_path)
+    attempt = _accept_v2(
+        store,
+        now=NOW,
+        coverage_ms=_ms(NOW),
+        risk_rows={"POSITIONS": [{"symbol": "BTC", "size": 0.0}]},
+    )
+
+    snapshot = _load(store, now=NOW + timedelta(seconds=5))
+    assert isinstance(snapshot, AuthoritativeRiskSnapshot)
+    assert snapshot.payload_version == SNAPSHOT_PAYLOAD_VERSION_V2
+    assert snapshot.attempt_id == attempt
+    assert snapshot.run_id == "run"
+    checkpoint = store.latest_accepted_reconcile_checkpoint()
+    assert snapshot.checkpoint_id == checkpoint["checkpoint_id"]
+    assert snapshot.canonical_hash == checkpoint["canonical_hash"]
+    assert snapshot.equity == 10_000.0
+    assert snapshot.withdrawable == 9_000.0
+    assert snapshot.margin_used == 1_000.0
+    assert snapshot.available_margin == 9_000.0
+    assert snapshot.positions == (("BTC", 0.0),)
+    assert snapshot.has_open_position is False
+    assert snapshot.age_s == 5.0
+    assert snapshot.accepted_ts == NOW
+    assert snapshot.observed_from_ts == NOW and snapshot.observed_to_ts == NOW
+    assert snapshot.coverage_end_ms == _ms(NOW)
+    # The account view handed to the gates is derived, never re-read.
+    account = snapshot.account()
+    assert (account.equity, account.available_margin, account.withdrawable) == (
+        10_000.0,
+        9_000.0,
+        9_000.0,
+    )
+    store.close()
+
+
+def test_snapshot_is_deeply_immutable_with_no_writable_holder(tmp_path):
+    """A frozen dataclass would still expose a writable __dict__ here."""
+    import gc
+
+    store = _v6_store(tmp_path)
+    _accept_v2(
+        store,
+        now=NOW,
+        coverage_ms=_ms(NOW),
+        risk_rows={"POSITIONS": [{"symbol": "BTC", "size": 2.0}]},
+    )
+    snapshot = _load(store, now=NOW)
+
+    for target, name in ((snapshot, "equity"), (snapshot.positions[0], "size")):
+        with pytest.raises(AttributeError):
+            setattr(target, name, 1.0)
+        with pytest.raises(AttributeError):
+            object.__setattr__(target, name, 1.0)
+        with pytest.raises(AttributeError):
+            object.__setattr__(target, "__class__", tuple)
+        with pytest.raises(AttributeError):
+            object.__setattr__(target, "smuggled", 1.0)
+
+    seen: set[int] = set()
+    stack = [snapshot]
+    mutable: list[str] = []
+    while stack:
+        item = stack.pop()
+        if id(item) in seen:
+            continue
+        seen.add(id(item))
+        if isinstance(item, (dict, list, set, bytearray)):
+            mutable.append(type(item).__name__)
+        for referent in gc.get_referents(item):
+            if isinstance(referent, type):
+                continue
+            stack.append(referent)
+    assert mutable == [], f"mutable containers reachable from the snapshot: {mutable}"
+    assert snapshot.equity == 10_000.0
+    assert snapshot.positions[0].size == 2.0
+    store.close()
+
+
+def test_canonical_rows_and_hash_are_row_order_independent(tmp_path):
+    """Permuting the wire order changes neither the hash nor the loaded view."""
+    forward = [
+        {"symbol": "AAA", "size": 1.0},
+        {"symbol": "BBB", "size": -2.0},
+        {"symbol": "CCC", "size": 0.0},
+    ]
+    loaded = []
+    hashes = []
+    for index, rows in enumerate((forward, list(reversed(forward)))):
+        store = _v6_store(tmp_path, name=f"perm-{index}.db")
+        _accept_v2(store, now=NOW, coverage_ms=_ms(NOW), risk_rows={"POSITIONS": rows})
+        hashes.append(store.latest_accepted_reconcile_checkpoint()["canonical_hash"])
+        loaded.append(_load(store, now=NOW).positions)
+        store.close()
+
+    assert hashes[0] == hashes[1], "canonical hash must not depend on row order"
+    assert loaded[0] == loaded[1]
+    # Canonical order is the accepted TS-P1-005 order: the sorted canonical JSON
+    # of the whole row, not the symbol. Both permutations resolve to it exactly.
+    assert [row.symbol for row in loaded[0]] == ["BBB", "CCC", "AAA"]
+    assert [row.size for row in loaded[0]] == [-2.0, 0.0, 1.0]
+
+
+def test_legacy_v1_checkpoint_is_retained_reopenable_and_never_risk_readable(tmp_path):
+    import json
+
+    from bridge.engine.types import (
+        RISK_SNAPSHOT_LEGACY_PAYLOAD,
+        SNAPSHOT_PAYLOAD_VERSION_V1,
+    )
+
+    path = tmp_path / "legacy.db"
+    store = Store(path)
+    store.initialize(target_schema_version=6)
+    attempt = _accept_v1_legacy(store, now=NOW, coverage_ms=_ms(NOW))
+    original = dict(store.latest_accepted_reconcile_checkpoint())
+    assert _veto(store, now=NOW) == RISK_SNAPSHOT_LEGACY_PAYLOAD
+    store.close()
+
+    reopened = Store(path)
+    reopened.initialize(target_schema_version=6)
+    # The predecessor evidence is byte-for-byte retained and still reopenable...
+    survivor = reopened.latest_accepted_reconcile_checkpoint()
+    assert survivor == original
+    assert survivor["attempt_id"] == attempt
+    assert json.loads(survivor["snapshot_json"])["version"] == (
+        SNAPSHOT_PAYLOAD_VERSION_V1
+    )
+    # ...and the predecessor readiness gate still accepts it, which is exactly
+    # why risk needs its own, stricter authority.
+    assert reopened.full_reconcile_ready(now=NOW, max_age_s=900.0) is True
+    assert _veto(reopened, now=NOW) == RISK_SNAPSHOT_LEGACY_PAYLOAD
+
+    # Only a fresh real v2 capture restores risk authority.
+    later = NOW + timedelta(seconds=60)
+    _accept_v2(reopened, now=later, coverage_ms=_ms(later), coverage_start_ms=_ms(NOW))
+    assert _load(reopened, now=later).equity == 10_000.0
+    # The old evidence was not rewritten or deleted.
+    assert reopened.get_reconcile_attempt(attempt)["reason_code"] == "ACCEPTED"
+    assert reopened.count_accepted_reconcile_checkpoints() == 2
+    reopened.close()
+
+
+def test_unknown_payload_version_fails_closed(tmp_path):
+    from bridge.engine.types import RISK_SNAPSHOT_PAYLOAD_VERSION_UNSUPPORTED
+
+    store = _v6_store(tmp_path)
+    _accept_v2(store, now=NOW, coverage_ms=_ms(NOW), payload_version="ts-p9-future")
+    assert _veto(store, now=NOW) == RISK_SNAPSHOT_PAYLOAD_VERSION_UNSUPPORTED
+    store.close()
+
+
+def test_stale_and_future_checkpoints_fail_closed(tmp_path):
+    from bridge.engine.types import RISK_SNAPSHOT_FUTURE_CLOCK, RISK_SNAPSHOT_STALE
+
+    store = _v6_store(tmp_path)
+    _accept_v2(store, now=NOW, coverage_ms=_ms(NOW))
+
+    # Exactly on the bound is still authoritative.
+    assert _load(store, now=NOW + timedelta(seconds=180), max_age_s=180.0).equity
+    assert (
+        _veto(store, now=NOW + timedelta(seconds=181), max_age_s=180.0)
+        == RISK_SNAPSHOT_STALE
+    )
+    # A checkpoint accepted in the future is a clock failure, not a fresh one.
+    assert (
+        _veto(store, now=NOW - timedelta(seconds=1), max_age_s=180.0)
+        == RISK_SNAPSHOT_FUTURE_CLOCK
+    )
+    store.close()
+
+
+def test_a_later_failed_attempt_supersedes_a_young_checkpoint_for_risk(tmp_path):
+    from bridge.engine.types import RISK_SNAPSHOT_SUPERSEDED
+
+    store = _v6_store(tmp_path)
+    _accept_v2(store, now=NOW, coverage_ms=_ms(NOW))
+    assert _load(store, now=NOW).equity == 10_000.0
+
+    _fail_attempt(store, now=NOW + timedelta(seconds=30))
+    assert _veto(store, now=NOW + timedelta(seconds=31)) == RISK_SNAPSHOT_SUPERSEDED
+
+    later = NOW + timedelta(seconds=60)
+    _accept_v2(store, now=later, coverage_ms=_ms(later), coverage_start_ms=_ms(NOW))
+    assert _load(store, now=later).equity == 10_000.0
+    store.close()
+
+
+def test_an_interrupted_capture_supersedes_the_snapshot_after_restart(tmp_path):
+    """Crash/restart may never expose a partial or pre-crash-authoritative view."""
+    from bridge.engine.types import RISK_SNAPSHOT_SUPERSEDED
+
+    path = tmp_path / "crash.db"
+    store = Store(path)
+    store.initialize(target_schema_version=6)
+    _accept_v2(store, now=NOW, coverage_ms=_ms(NOW))
+    dangling = store.reserve_reconcile_attempt(
+        run_id="run",
+        started_ts=NOW + timedelta(seconds=30),
+        deadline_s=5.0,
+        max_skew_s=5.0,
+    )
+    store.close()
+
+    reopened = Store(path)
+    reopened.initialize(target_schema_version=6)
+    # The half-finished capture never published anything.
+    assert reopened.count_accepted_reconcile_checkpoints() == 1
+    assert reopened.get_reconcile_attempt(dangling)["state"] == "COLLECTING"
+    reopened.resolve_interrupted_reconcile_attempts(
+        observed_ts=NOW + timedelta(seconds=35)
+    )
+    assert reopened.get_reconcile_attempt(dangling)["state"] == "INCOMPLETE"
+    assert _veto(reopened, now=NOW + timedelta(seconds=40)) == RISK_SNAPSHOT_SUPERSEDED
+    reopened.close()
+
+
+def test_missing_pointer_dangling_pointer_and_v4_store_fail_closed(tmp_path):
+    from bridge.engine.types import (
+        RISK_SNAPSHOT_NO_CHECKPOINT,
+        RISK_SNAPSHOT_POINTER_DANGLING,
+        RISK_SNAPSHOT_SCHEMA_INACTIVE,
+    )
+    from bridge.store.db import RECONCILE_CHECKPOINT_POINTER_KEY
+
+    v4 = Store(tmp_path / "v4.db")
+    v4.initialize()
+    assert _veto(v4, now=NOW) == RISK_SNAPSHOT_SCHEMA_INACTIVE
+    v4.close()
+
+    store = _v6_store(tmp_path, name="pointer.db")
+    assert _veto(store, now=NOW) == RISK_SNAPSHOT_NO_CHECKPOINT
+    _accept_v2(store, now=NOW, coverage_ms=_ms(NOW))
+    store.set_meta(RECONCILE_CHECKPOINT_POINTER_KEY, "ckpt-v1:" + "0" * 64)
+    assert _veto(store, now=NOW) == RISK_SNAPSHOT_POINTER_DANGLING
+    store.close()
+
+
+def test_semantically_tampered_rows_are_rejected_despite_intact_metadata(tmp_path):
+    """row_count, digests and cursor bounds all still describe the honest rows.
+
+    The evidence is planted with the write-side guard disabled, so this proves
+    the *loader* recomputes semantics rather than trusting stored metadata or
+    the fact that some earlier writer validated it.
+    """
+    from bridge.engine.types import RISK_SNAPSHOT_ROW_DIGEST_MISMATCH
+
+    store = _v6_store(tmp_path)
+    _accept_v2(
+        store,
+        now=NOW,
+        coverage_ms=_ms(NOW),
+        risk_rows={"POSITIONS": [{"symbol": "BTC", "size": 3.0}]},
+        # Same row count, same stored digest, different exposure.
+        tamper_rows={"POSITIONS": [{"symbol": "BTC", "size": 0.0}]},
+        bypass_accept_validation=True,
+    )
+    assert _veto(store, now=NOW) == RISK_SNAPSHOT_ROW_DIGEST_MISMATCH
+    store.close()
+
+    inflated = _v6_store(tmp_path, name="inflate.db")
+    _accept_v2(
+        inflated,
+        now=NOW,
+        coverage_ms=_ms(NOW),
+        tamper_rows={"BALANCES": [{"equity": 10_000_000.0, "withdrawable": 9_000.0}]},
+        bypass_accept_validation=True,
+    )
+    assert _veto(inflated, now=NOW) == RISK_SNAPSHOT_ROW_DIGEST_MISMATCH
+    inflated.close()
+
+
+def test_non_canonical_row_order_in_a_stored_payload_is_rejected(tmp_path):
+    """Canonical order is part of the digested evidence, not a presentation detail."""
+    from bridge.engine.types import RISK_SNAPSHOT_ROW_DIGEST_MISMATCH
+
+    rows = [{"symbol": "AAA", "size": 1.0}, {"symbol": "BBB", "size": 2.0}]
+    store = _v6_store(tmp_path)
+    _accept_v2(
+        store,
+        now=NOW,
+        coverage_ms=_ms(NOW),
+        risk_rows={"POSITIONS": rows},
+        tamper_rows={"POSITIONS": list(reversed(rows))},
+        bypass_accept_validation=True,
+    )
+    assert _veto(store, now=NOW) == RISK_SNAPSHOT_ROW_DIGEST_MISMATCH
+    store.close()
+
+
+@pytest.mark.parametrize(
+    "label, rows, expected",
+    [
+        (
+            "duplicate",
+            {"POSITIONS": [{"symbol": "BTC", "size": 1.0}, {"symbol": "BTC", "size": 2.0}]},
+            "RISK_SNAPSHOT_POSITION_DUPLICATE",
+        ),
+        ("blank-symbol", {"POSITIONS": [{"symbol": "", "size": 1.0}]},
+         "RISK_SNAPSHOT_POSITION_MALFORMED"),
+        ("string-size", {"POSITIONS": [{"symbol": "BTC", "size": "1.0"}]},
+         "RISK_SNAPSHOT_POSITION_MALFORMED"),
+        ("bool-size", {"POSITIONS": [{"symbol": "BTC", "size": True}]},
+         "RISK_SNAPSHOT_POSITION_MALFORMED"),
+        ("missing-size", {"POSITIONS": [{"symbol": "BTC"}]},
+         "RISK_SNAPSHOT_POSITION_MALFORMED"),
+        ("extra-key", {"POSITIONS": [{"symbol": "BTC", "size": 1.0, "extra": 1}]},
+         "RISK_SNAPSHOT_POSITION_MALFORMED"),
+        ("no-balance-row", {"BALANCES": []}, "RISK_SNAPSHOT_ACCOUNT_MALFORMED"),
+        (
+            "two-margin-rows",
+            {
+                "MARGIN": [
+                    {"margin_used": 1_000.0, "available_margin": 9_000.0},
+                    {"margin_used": 2_000.0, "available_margin": 8_000.0},
+                ]
+            },
+            "RISK_SNAPSHOT_ACCOUNT_MALFORMED",
+        ),
+        (
+            "string-money",
+            {"BALANCES": [{"equity": 10_000.0, "withdrawable": "9000"}]},
+            "RISK_SNAPSHOT_ACCOUNT_MALFORMED",
+        ),
+        (
+            "negative-equity",
+            {
+                "BALANCES": [{"equity": -1.0, "withdrawable": 0.0}],
+                "MARGIN": [{"margin_used": 0.0, "available_margin": 0.0}],
+            },
+            "RISK_SNAPSHOT_ACCOUNT_NEGATIVE",
+        ),
+        (
+            "identity-broken",
+            {
+                "BALANCES": [{"equity": 10_000.0, "withdrawable": 9_000.0}],
+                "MARGIN": [{"margin_used": 1_000.0, "available_margin": 8_000.0}],
+            },
+            "RISK_SNAPSHOT_ACCOUNT_INCONSISTENT",
+        ),
+        (
+            "withdrawable-exceeds-equity",
+            {
+                "BALANCES": [{"equity": 1_000.0, "withdrawable": 2_000.0}],
+                "MARGIN": [{"margin_used": 0.0, "available_margin": 1_000.0}],
+            },
+            "RISK_SNAPSHOT_ACCOUNT_INCONSISTENT",
+        ),
+    ],
+)
+def test_malformed_risk_rows_fail_closed_with_a_stable_reason(
+    tmp_path, label, rows, expected
+):
+    store = _v6_store(tmp_path, name=f"malformed-{label}.db")
+    _accept_v2(store, now=NOW, coverage_ms=_ms(NOW), risk_rows=rows)
+    assert _veto(store, now=NOW) == expected
+    store.close()
+
+
+def test_non_finite_money_and_size_never_reach_risk(tmp_path):
+    """NaN/Inf cannot survive canonical JSON, so they are refused at write time."""
+    from bridge.engine.types import RISK_SNAPSHOT_NO_CHECKPOINT
+
+    store = _v6_store(tmp_path)
+    for rows in (
+        {"POSITIONS": [{"symbol": "BTC", "size": float("nan")}]},
+        {"BALANCES": [{"equity": float("inf"), "withdrawable": 0.0}]},
+    ):
+        with pytest.raises(ValueError):
+            _accept_v2(store, now=NOW, coverage_ms=_ms(NOW), risk_rows=rows)
+    assert store.count_accepted_reconcile_checkpoints() == 0
+    assert _veto(store, now=NOW) == RISK_SNAPSHOT_NO_CHECKPOINT
+    store.close()
+
+
+def test_a_v2_payload_that_disagrees_with_its_components_is_never_accepted(tmp_path):
+    from bridge.store.db import ReconcileConflictError
+
+    store = _v6_store(tmp_path)
+    with pytest.raises(
+        ReconcileConflictError, match="RECONCILE_ACCEPT_RISK_ROWS_INVALID"
+    ):
+        _accept_v2(
+            store,
+            now=NOW,
+            coverage_ms=_ms(NOW),
+            risk_rows={"POSITIONS": [{"symbol": "BTC", "size": 1.0}]},
+            # A payload cannot claim rows the capture did not observe.
+            tamper_rows={"POSITIONS": [{"symbol": "BTC", "size": 9.0}]},
+        )
+    assert store.count_accepted_reconcile_checkpoints() == 0
+    store.close()
+
+
+def test_a_read_failure_vetoes_and_never_returns_a_partial_snapshot(tmp_path):
+    import sqlite3
+
+    from bridge.engine.types import RiskSnapshotUnavailable
+
+    store = _v6_store(tmp_path)
+    _accept_v2(store, now=NOW, coverage_ms=_ms(NOW))
+    assert _load(store, now=NOW).equity == 10_000.0
+
+    original = store._risk_component_rows_locked
+
+    def exploding(attempt_id):
+        raise sqlite3.OperationalError("component ledger unavailable")
+
+    store._risk_component_rows_locked = exploding
+    with pytest.raises(RiskSnapshotUnavailable) as excinfo:
+        _load(store, now=NOW)
+    assert excinfo.value.reason_code.startswith("RISK_SNAPSHOT_READ_FAILED")
+    assert "OPERATIONALERROR" in excinfo.value.reason_code
+    # The failed read left no open transaction behind.
+    assert store.conn.in_transaction is False
+
+    store._risk_component_rows_locked = original
+    assert _load(store, now=NOW).equity == 10_000.0
+    store.close()
+
+
+def test_a_concurrent_capture_cannot_mix_two_epochs_into_one_snapshot(tmp_path):
+    """The load pins one epoch; a capture committing mid-read is the next one."""
+    path = tmp_path / "epoch.db"
+    store = Store(path)
+    store.initialize(target_schema_version=6)
+    first = _accept_v2(
+        store,
+        now=NOW,
+        coverage_ms=_ms(NOW),
+        risk_rows={
+            "POSITIONS": [{"symbol": "BTC", "size": 1.0}],
+            "BALANCES": [{"equity": 1_000.0, "withdrawable": 1_000.0}],
+            "MARGIN": [{"margin_used": 0.0, "available_margin": 1_000.0}],
+        },
+    )
+
+    later = NOW + timedelta(seconds=30)
+    competitor = Store(path)
+    interleaved: list[str] = []
+    original = store._risk_component_rows_locked
+
+    def racing(attempt_id):
+        # A whole second capture is accepted on another connection *between*
+        # this load's pointer read and its component read.
+        if not interleaved:
+            interleaved.append(
+                _accept_v2(
+                    competitor,
+                    now=later,
+                    coverage_ms=_ms(later),
+                    coverage_start_ms=_ms(NOW),
+                    risk_rows={
+                        "POSITIONS": [{"symbol": "BTC", "size": 7.0}],
+                        "BALANCES": [{"equity": 9_999.0, "withdrawable": 9_999.0}],
+                        "MARGIN": [{"margin_used": 0.0, "available_margin": 9_999.0}],
+                    },
+                )
+            )
+        return original(attempt_id)
+
+    store._risk_component_rows_locked = racing
+    snapshot = _load(store, now=later)
+    store._risk_component_rows_locked = original
+
+    assert interleaved, "the competing capture must really have committed"
+    # One coherent epoch: never epoch A's identity with epoch B's rows.
+    assert snapshot.attempt_id == first
+    assert snapshot.equity == 1_000.0
+    assert snapshot.positions == (("BTC", 1.0),)
+    assert snapshot.canonical_hash == (
+        store.get_reconcile_attempt(first)["canonical_hash"]
+    )
+    store.close()
+
+    # A fresh load sees the new epoch, whole.
+    reader = Store(path)
+    fresh = _load(reader, now=later)
+    assert fresh.attempt_id == interleaved[0]
+    assert fresh.equity == 9_999.0
+    assert fresh.positions == (("BTC", 7.0),)
+    reader.close()
+    competitor.close()

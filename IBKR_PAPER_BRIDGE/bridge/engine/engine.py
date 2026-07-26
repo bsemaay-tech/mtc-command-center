@@ -22,7 +22,7 @@ from bridge.engine.orders import OrderManager
 from bridge.engine.reconcile import FullReconciler
 from bridge.engine.risk import RiskEngine
 from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
-from bridge.engine.types import Bar, Position
+from bridge.engine.types import Bar, Position, RiskSnapshotUnavailable
 from bridge.engine.window import (
     DEFAULT_STALE_AFTER_S,
     detect_interruption,
@@ -85,6 +85,10 @@ class BridgeEngine:
     _consecutive_reconcile_failures: int = field(default=0, init=False)
     _processed_bar_ts: set[datetime] = field(default_factory=set, init=False)
     risk_input_error: str | None = field(default=None, init=False)
+    # TS-P1-006: the last authoritative-risk-snapshot veto reason. Observable
+    # evidence only; the fail-closed authority is `risk_input_error`, which the
+    # existing sticky DISARM latch in `_app_state()` already honours.
+    risk_snapshot_error: str | None = field(default=None, init=False)
 
     def __post_init__(self) -> None:
         self.reconcile_max_consecutive_failures = max(1, int(self.reconcile_max_consecutive_failures))
@@ -224,9 +228,33 @@ class BridgeEngine:
             # Both gates are required on a v6 store: light reconcile success
             # alone can never arm the bridge.
             raise RuntimeError("full reconciliation incomplete")
+        if self.store.full_reconcile_enabled():
+            # TS-P1-006 readiness is stronger than the predecessor's metadata
+            # checkpoint gate: a legacy v1 checkpoint can remain valid evidence
+            # yet cannot supply authoritative portfolio rows. Refuse ARM until
+            # the exact snapshot that risk would consume is provable.
+            try:
+                self.store.load_authoritative_risk_snapshot(
+                    now=now,
+                    max_age_s=self.full_reconcile_max_age_s(),
+                )
+            except RiskSnapshotUnavailable as exc:
+                self._latch_risk_snapshot_failure(exc.reason_code, now)
+                raise RuntimeError(
+                    f"authoritative risk snapshot unavailable: {exc.reason_code}"
+                ) from None
+            except Exception as exc:  # noqa: BLE001 - unknown evidence is unsafe
+                reason = (
+                    f"RISK_SNAPSHOT_LOAD_FAILED:{type(exc).__name__.upper()}"[:96]
+                )
+                self._latch_risk_snapshot_failure(reason, now)
+                raise RuntimeError(
+                    f"authoritative risk snapshot unavailable: {reason}"
+                ) from None
         self._kill_requested = False
         # Explicit human re-arm clears the sticky risk-input fail-closed latch.
         self.risk_input_error = None
+        self.risk_snapshot_error = None
         self._set_state("ARMED")
         record_window_start(self.store, now)
         await self._publish("status", self.status())
@@ -457,15 +485,48 @@ class BridgeEngine:
         except Exception as exc:  # unknown risk state -> fail closed, never trade blind
             await self._risk_inputs_failed(exc)
             return
-        risk = self.risk_engine.evaluate(
-            signal=signal,
-            account=await self.broker.account(),
-            stop_loss=signal.stop_loss,
-            take_profit=signal.take_profit,
-            open_position=None,
-            realized_today=realized_today,
-            consecutive_losses=consecutive_losses,
-        )
+        if self.store.full_reconcile_enabled():
+            # TS-P1-006: on a v6 store the entry decision consumes exactly one
+            # immutable checkpoint view. `broker.account()` is deliberately not
+            # called and `open_position=None` is deliberately not passed —
+            # those two independently timed point reads are the drift this task
+            # closes. The load is SQLite-only and happens before evaluation and
+            # before any submission.
+            try:
+                snapshot = self.store.load_authoritative_risk_snapshot(
+                    now=datetime.now(UTC),
+                    max_age_s=self.full_reconcile_max_age_s(),
+                )
+            except RiskSnapshotUnavailable as exc:
+                await self._risk_snapshot_failed(
+                    exc.reason_code, decision_uid, signal
+                )
+                return
+            except Exception as exc:  # noqa: BLE001 - unreadable evidence vetoes
+                await self._risk_snapshot_failed(
+                    f"RISK_SNAPSHOT_LOAD_FAILED:{type(exc).__name__.upper()}"[:96],
+                    decision_uid,
+                    signal,
+                )
+                return
+            risk = self.risk_engine.evaluate_authoritative(
+                signal=signal,
+                snapshot=snapshot,
+                stop_loss=signal.stop_loss,
+                take_profit=signal.take_profit,
+                realized_today=realized_today,
+                consecutive_losses=consecutive_losses,
+            )
+        else:
+            risk = self.risk_engine.evaluate(
+                signal=signal,
+                account=await self.broker.account(),
+                stop_loss=signal.stop_loss,
+                take_profit=signal.take_profit,
+                open_position=None,
+                realized_today=realized_today,
+                consecutive_losses=consecutive_losses,
+            )
         if not risk.accepted or risk.plan is None:
             self.store.insert_decision(
                 self.run_id,
@@ -606,6 +667,61 @@ class BridgeEngine:
                 "three consecutive order rejects",
             )
 
+    async def _risk_snapshot_failed(
+        self, reason_code: str, decision_uid: str, signal: object
+    ) -> None:
+        """Veto and DISARM before submission when no snapshot can be proven.
+
+        In-memory state changes first and unconditionally: the DISARMED verdict
+        and its reason must stay observable even when the store that just failed
+        cannot accept the matching writes. Nothing here retries, re-arms, or
+        falls back to a point broker read.
+        """
+        self._latch_risk_snapshot_failure(reason_code, datetime.now(UTC))
+        try:
+            self.store.insert_decision(
+                self.run_id,
+                decision_uid,
+                getattr(signal, "ts", datetime.now(UTC)),
+                getattr(signal, "symbol", self.coin),
+                "RISK_REJECT",
+                {"reason": reason_code, "gates": []},
+            )
+        except Exception:
+            pass
+        try:
+            await self.notifier.send(
+                "ERROR", f"RISK_SNAPSHOT_UNAVAILABLE — DISARMED: {reason_code}"
+            )
+        except Exception:
+            pass
+        try:
+            await self._publish("status", self.status())
+        except Exception:
+            pass
+
+    def _latch_risk_snapshot_failure(
+        self, reason_code: str, observed_ts: datetime
+    ) -> None:
+        """Set the fail-closed snapshot latch before any best-effort write."""
+        self.state = "DISARMED"
+        self.risk_snapshot_error = reason_code
+        self.risk_input_error = f"RISK_SNAPSHOT_UNAVAILABLE: {reason_code}"
+        try:
+            self.store.set_meta("app_state", "DISARMED")
+        except Exception:
+            return
+        try:
+            self.store.insert_event(
+                self.run_id,
+                observed_ts,
+                "ERROR",
+                "RISK_SNAPSHOT_UNAVAILABLE",
+                reason_code,
+            )
+        except Exception:
+            pass
+
     async def _risk_inputs_failed(self, exc: Exception) -> None:
         # Fail closed on unreadable risk inputs. In-memory state changes first:
         # the DISARMED verdict must stay observable even when the store that
@@ -644,6 +760,7 @@ class BridgeEngine:
                 stale_after_s=self.window_stale_after_s,
             ),
             "risk_input_error": self.risk_input_error,
+            "risk_snapshot_error": self.risk_snapshot_error,
             "reconcile_ready": self.reconcile_ready,
             "last_reconcile_ts": self.last_reconcile_ts.isoformat() if self.last_reconcile_ts else None,
             "reconcile_error": self.reconcile_error,

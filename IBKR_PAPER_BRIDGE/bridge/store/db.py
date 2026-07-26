@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import sqlite3
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime, timedelta
@@ -12,12 +13,40 @@ from pathlib import Path
 from typing import Any, Callable, Literal
 
 from bridge.engine.types import (
+    ACCOUNT_IDENTITY_ABS_TOL,
     KNOWN_DURABLE_ORDER_STATUSES,
     LIVE_DURABLE_ORDER_STATUSES,
     PARTIAL_STATE_TRANSITIONS,
     PARTIAL_TERMINAL_STATES,
+    RISK_SNAPSHOT_ACCOUNT_INCONSISTENT,
+    RISK_SNAPSHOT_ACCOUNT_MALFORMED,
+    RISK_SNAPSHOT_ACCOUNT_NEGATIVE,
+    RISK_SNAPSHOT_ATTEMPT_NOT_ACCEPTED,
+    RISK_SNAPSHOT_COMPONENTS,
+    RISK_SNAPSHOT_COMPONENTS_INCOMPLETE,
+    RISK_SNAPSHOT_COVERAGE_UNPROVABLE,
+    RISK_SNAPSHOT_FUTURE_CLOCK,
+    RISK_SNAPSHOT_HASH_MISMATCH,
+    RISK_SNAPSHOT_LEGACY_PAYLOAD,
+    RISK_SNAPSHOT_NO_CHECKPOINT,
+    RISK_SNAPSHOT_PAYLOAD_MALFORMED,
+    RISK_SNAPSHOT_PAYLOAD_VERSION_UNSUPPORTED,
+    RISK_SNAPSHOT_POINTER_DANGLING,
+    RISK_SNAPSHOT_POINTER_MOVED,
+    RISK_SNAPSHOT_POSITION_DUPLICATE,
+    RISK_SNAPSHOT_POSITION_MALFORMED,
+    RISK_SNAPSHOT_READ_FAILED,
+    RISK_SNAPSHOT_ROW_DIGEST_MISMATCH,
+    RISK_SNAPSHOT_ROWS_MISSING,
+    RISK_SNAPSHOT_SCHEMA_INACTIVE,
+    RISK_SNAPSHOT_STALE,
+    RISK_SNAPSHOT_SUPERSEDED,
+    RISK_SNAPSHOT_TRANSACTION_ACTIVE,
+    SNAPSHOT_PAYLOAD_VERSION_V1,
+    SNAPSHOT_PAYLOAD_VERSION_V2,
     ActionOutcome,
     ActionRecordStatus,
+    AuthoritativeRiskSnapshot,
     ComponentEvidence,
     FundingAttribution,
     FundingEventRecord,
@@ -30,6 +59,9 @@ from bridge.engine.types import (
     ReconcileDiffKind,
     ReconcileDiffRecord,
     ReconcileOwnership,
+    RiskPositionRow,
+    RiskSnapshotUnavailable,
+    canonical_reconcile_json,
     reconcile_digest,
 )
 
@@ -4676,6 +4708,14 @@ class Store:
                     "RECONCILE_ACCEPT_HASH_MISMATCH",
                     "snapshot/component/diff evidence does not match canonical hash",
                 )
+            if payload.get("version") == SNAPSHOT_PAYLOAD_VERSION_V2:
+                # TS-P1-006: a v2 payload claims to carry the authoritative
+                # risk-bearing rows, so it is checked against the very
+                # ComponentEvidence being persisted in this same transaction.
+                # A v1 (or any predecessor/test) marker keeps the accepted
+                # TS-P1-005 validation unchanged and is simply never
+                # risk-readable — see load_authoritative_risk_snapshot().
+                self._validate_v2_risk_rows(payload, components)
         checkpoint_id: str | None = None
         self.conn.execute("BEGIN IMMEDIATE")
         try:
@@ -4846,6 +4886,39 @@ class Store:
             self.conn.rollback()
             raise
         return checkpoint_id
+
+    @staticmethod
+    def _validate_v2_risk_rows(
+        payload: Mapping[str, Any], components: Sequence[ComponentEvidence]
+    ) -> None:
+        """A v2 payload must carry exactly the rows it is being accepted with.
+
+        Called only from the accepted branch, after the component set has
+        already been proven complete, so every risk-bearing kind is present.
+        The rows are compared against the *live* ComponentEvidence objects being
+        written in this same transaction — a payload can never claim rows the
+        capture did not actually observe.
+        """
+        by_kind = {component.kind: component for component in components}
+        expected_rows = {
+            kind.value: by_kind[kind].canonical_rows()
+            for kind in RISK_SNAPSHOT_COMPONENTS
+        }
+        expected_digests = {
+            kind.value: by_kind[kind].digest for kind in RISK_SNAPSHOT_COMPONENTS
+        }
+        rows = payload.get("risk_rows")
+        digests = payload.get("risk_row_digests")
+        if not isinstance(rows, Mapping) or not isinstance(digests, Mapping):
+            raise ReconcileConflictError(
+                "RECONCILE_ACCEPT_RISK_ROWS_INVALID",
+                "a v2 snapshot must carry canonical risk rows and their digests",
+            )
+        if dict(rows) != expected_rows or dict(digests) != expected_digests:
+            raise ReconcileConflictError(
+                "RECONCILE_ACCEPT_RISK_ROWS_INVALID",
+                "v2 risk rows do not match the accepted component evidence",
+            )
 
     def _append_funding_event_locked(
         self,
@@ -5178,6 +5251,366 @@ class Store:
         if age < 0:
             return False
         return age <= float(max_age_s)
+
+    # ------------------------------------------------------------------
+    # TS-P1-006 — the authoritative risk-input snapshot loader
+    #
+    # One bounded, SQLite-only read. No broker I/O, no await, no write, and no
+    # transaction that outlives the call. Every exit that is not a fully proven
+    # snapshot raises RiskSnapshotUnavailable with a stable reason code; there
+    # is deliberately no "return None" path a caller could mistake for "no
+    # exposure" and no cached value to fall back to.
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _risk_number(value: object) -> float | None:
+        """Strict numeric read: no bools, no strings, no NaN/Inf.
+
+        String coercion is refused on purpose — accepting ``"0"`` would let a
+        malformed payload present itself as a valid zero balance or a flat
+        position instead of failing closed.
+        """
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            return None
+        number = float(value)
+        return number if math.isfinite(number) else None
+
+    def _risk_component_rows_locked(self, attempt_id: str) -> list[dict[str, Any]]:
+        """Component provenance for one attempt, inside the caller's read epoch."""
+        return [
+            dict(row)
+            for row in self.conn.execute(
+                "SELECT component, status, observed_ts, exact, complete, row_count, "
+                "cursor_start_ms, cursor_end_ms, payload_digest "
+                "FROM reconcile_components WHERE attempt_id = ? ORDER BY component",
+                (attempt_id,),
+            ).fetchall()
+        ]
+
+    def load_authoritative_risk_snapshot(
+        self, *, now: datetime, max_age_s: float
+    ) -> AuthoritativeRiskSnapshot:
+        """Resolve the sole latest-accepted checkpoint as one coherent view.
+
+        Raises :class:`RiskSnapshotUnavailable` — never returns a partial,
+        stale, superseded, legacy or unverifiable snapshot.
+        """
+        if not self.full_reconcile_enabled():
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_SCHEMA_INACTIVE)
+        try:
+            conn = self.conn
+        except sqlite3.Error as exc:
+            raise RiskSnapshotUnavailable(self._risk_read_reason(exc)) from None
+        if conn.in_transaction:
+            # An open transaction here would mean the caller is already mid-write;
+            # joining it could read uncommitted state and could hold SQLite across
+            # the caller's own awaits. Refuse instead.
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_TRANSACTION_ACTIVE)
+        try:
+            # A deferred read transaction pins one epoch at the first SELECT, so
+            # the pointer, checkpoint, attempt, components, diffs and payload are
+            # all read from the same committed state even if another connection
+            # accepts a new capture meanwhile.
+            conn.execute("BEGIN")
+        except sqlite3.Error as exc:
+            raise RiskSnapshotUnavailable(self._risk_read_reason(exc)) from None
+        try:
+            return self._load_risk_snapshot_locked(now=now, max_age_s=max_age_s)
+        except RiskSnapshotUnavailable:
+            raise
+        except Exception as exc:  # noqa: BLE001 - any read failure vetoes
+            raise RiskSnapshotUnavailable(self._risk_read_reason(exc)) from None
+        finally:
+            try:
+                # Read-only by construction: end the epoch without writing.
+                conn.rollback()
+            except sqlite3.Error:
+                pass
+
+    @staticmethod
+    def _risk_read_reason(exc: BaseException) -> str:
+        """Secret-safe reason code for a failed read: type name only."""
+        name = "".join(
+            ch if ch.isalnum() or ch == "_" else "_"
+            for ch in type(exc).__name__.upper()
+        )
+        return f"{RISK_SNAPSHOT_READ_FAILED}:{name}"[:96]
+
+    def _load_risk_snapshot_locked(
+        self, *, now: datetime, max_age_s: float
+    ) -> AuthoritativeRiskSnapshot:
+        pointer = self.get_meta(RECONCILE_CHECKPOINT_POINTER_KEY)
+        if pointer is None:
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_NO_CHECKPOINT)
+        checkpoint = self.conn.execute(
+            "SELECT checkpoint_id, attempt_id, run_id, accepted_ts, canonical_hash, "
+            "snapshot_json FROM reconcile_checkpoints WHERE checkpoint_id = ?",
+            (pointer,),
+        ).fetchone()
+        if checkpoint is None:
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_POINTER_DANGLING)
+        attempt_id = str(checkpoint["attempt_id"])
+        canonical_hash = str(checkpoint["canonical_hash"])
+
+        attempt = self.conn.execute(
+            "SELECT state, complete, fresh, canonical_hash, reason_code "
+            "FROM reconcile_attempts WHERE attempt_id = ?",
+            (attempt_id,),
+        ).fetchone()
+        if (
+            attempt is None
+            or str(attempt["state"]) != ReconcileAttemptState.COMPLETE.value
+            or int(attempt["complete"]) != 1
+            or int(attempt["fresh"]) != 1
+            or str(attempt["reason_code"]) != "ACCEPTED"
+            or str(attempt["canonical_hash"]) != canonical_hash
+        ):
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_ATTEMPT_NOT_ACCEPTED)
+
+        # A young checkpoint may never outvote newer contradicting evidence: a
+        # later failed, conflicting, stale or restart-interrupted attempt is the
+        # latest word on the account.
+        if self.latest_resolved_reconcile_attempt_id() != attempt_id:
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_SUPERSEDED)
+
+        provenance = self._risk_component_rows_locked(attempt_id)
+        by_component = {str(row["component"]): row for row in provenance}
+        if (
+            len(provenance) != len(REQUIRED_RECONCILE_COMPONENTS)
+            or set(by_component) != {kind.value for kind in REQUIRED_RECONCILE_COMPONENTS}
+            or any(
+                str(row["status"]) != ReconcileComponentStatus.COMPLETE.value
+                or int(row["exact"]) != 1
+                or int(row["complete"]) != 1
+                or row["observed_ts"] is None
+                for row in provenance
+            )
+        ):
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_COMPONENTS_INCOMPLETE)
+        try:
+            observed = sorted(
+                self._risk_utc(str(row["observed_ts"])) for row in provenance
+            )
+        except ValueError:
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_COMPONENTS_INCOMPLETE) from None
+
+        payload = self._risk_payload(checkpoint["snapshot_json"])
+        version = payload.get("version")
+        if version == SNAPSHOT_PAYLOAD_VERSION_V1:
+            # Structurally valid predecessor evidence: retained, reopenable, and
+            # never risk-readable. It stores digests and counts, not rows, so no
+            # backfill is even possible — a fresh v2 capture is required.
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_LEGACY_PAYLOAD)
+        if version != SNAPSHOT_PAYLOAD_VERSION_V2:
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_PAYLOAD_VERSION_UNSUPPORTED)
+
+        component_digests = {
+            component: str(row["payload_digest"])
+            for component, row in by_component.items()
+        }
+        diffs = [
+            self._risk_payload(row["payload_json"])
+            for row in self.conn.execute(
+                "SELECT payload_json FROM reconcile_diffs WHERE attempt_id = ? "
+                "ORDER BY seq",
+                (attempt_id,),
+            ).fetchall()
+        ]
+        payload_components = payload.get("components")
+        if not isinstance(payload_components, Mapping):
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_PAYLOAD_MALFORMED)
+        stated_digests = {
+            str(component): (value.get("digest") if isinstance(value, Mapping) else None)
+            for component, value in payload_components.items()
+        }
+        if (
+            stated_digests != component_digests
+            or payload.get("diffs") != diffs
+            or reconcile_digest(
+                {
+                    "version": version,
+                    "components": component_digests,
+                    "diffs": diffs,
+                }
+            )
+            != canonical_hash
+        ):
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_HASH_MISMATCH)
+
+        rows_by_kind = self._risk_rows(payload, by_component)
+        positions = self._risk_positions(rows_by_kind[ReconcileComponentKind.POSITIONS.value])
+        equity, withdrawable, margin_used, available = self._risk_account(
+            rows_by_kind[ReconcileComponentKind.BALANCES.value],
+            rows_by_kind[ReconcileComponentKind.MARGIN.value],
+        )
+
+        try:
+            coverage_end = self._coverage_upper_bound_ms_locked()
+        except ReconcileConflictError:
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_COVERAGE_UNPROVABLE) from None
+        coverage_start = by_component[ReconcileComponentKind.FILLS.value][
+            "cursor_start_ms"
+        ]
+        if coverage_end is None or coverage_start is None:
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_COVERAGE_UNPROVABLE)
+
+        try:
+            accepted_ts = self._risk_utc(str(checkpoint["accepted_ts"]))
+        except ValueError:
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_PAYLOAD_MALFORMED) from None
+        loaded_ts = now.astimezone(UTC) if now.tzinfo else now.replace(tzinfo=UTC)
+        max_age = self._risk_number(max_age_s)
+        if max_age is None or max_age < 0:
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_STALE)
+        age = (loaded_ts - accepted_ts).total_seconds()
+        if age < 0:
+            # A checkpoint accepted in the future is a clock domain failure, not
+            # a very fresh checkpoint.
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_FUTURE_CLOCK)
+        if age > max_age:
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_STALE)
+
+        # Last statement of the epoch: the pointer this view was built from must
+        # still be the pointer. Anything else means the read straddled a commit.
+        if self.get_meta(RECONCILE_CHECKPOINT_POINTER_KEY) != pointer:
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_POINTER_MOVED)
+
+        return AuthoritativeRiskSnapshot(
+            payload_version=str(version),
+            checkpoint_id=str(checkpoint["checkpoint_id"]),
+            attempt_id=attempt_id,
+            run_id=str(checkpoint["run_id"]),
+            canonical_hash=canonical_hash,
+            accepted_ts=accepted_ts,
+            loaded_ts=loaded_ts,
+            observed_from_ts=observed[0],
+            observed_to_ts=observed[-1],
+            coverage_start_ms=int(coverage_start),
+            coverage_end_ms=int(coverage_end),
+            positions=positions,
+            equity=equity,
+            withdrawable=withdrawable,
+            margin_used=margin_used,
+            available_margin=available,
+        )
+
+    @staticmethod
+    def _risk_utc(value: str) -> datetime:
+        parsed = datetime.fromisoformat(value)
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=UTC)
+        return parsed.astimezone(UTC)
+
+    @staticmethod
+    def _risk_payload(raw: object) -> Any:
+        try:
+            return json.loads(str(raw))
+        except (TypeError, ValueError, json.JSONDecodeError):
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_PAYLOAD_MALFORMED) from None
+
+    @staticmethod
+    def _risk_rows(
+        payload: Mapping[str, Any], by_component: Mapping[str, Mapping[str, Any]]
+    ) -> dict[str, list[dict[str, Any]]]:
+        """Recompute every risk row's digest from the row content itself.
+
+        Row count and stored metadata are never taken as proof: the digest is
+        recomputed exactly as ``ComponentEvidence.digest`` does, so evidence
+        edited in place while preserving ``row_count`` and every metadata field
+        still fails. That digest is in turn bound into ``canonical_hash``, which
+        was already verified against the immutable checkpoint above.
+        """
+        required = {kind.value for kind in RISK_SNAPSHOT_COMPONENTS}
+        rows = payload.get("risk_rows")
+        digests = payload.get("risk_row_digests")
+        if (
+            not isinstance(rows, Mapping)
+            or not isinstance(digests, Mapping)
+            or set(rows) != required
+            or set(digests) != required
+        ):
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_ROWS_MISSING)
+        resolved: dict[str, list[dict[str, Any]]] = {}
+        for kind in RISK_SNAPSHOT_COMPONENTS:
+            key = kind.value
+            value = rows[key]
+            if not isinstance(value, list) or any(
+                not isinstance(row, Mapping) for row in value
+            ):
+                raise RiskSnapshotUnavailable(RISK_SNAPSHOT_ROWS_MISSING)
+            normalized = [dict(row) for row in value]
+            canonical = sorted(normalized, key=canonical_reconcile_json)
+            provenance = by_component[key]
+            recomputed = reconcile_digest({
+                "kind": key,
+                "rows": canonical,
+                "cursor_start_ms": provenance["cursor_start_ms"],
+                "cursor_end_ms": provenance["cursor_end_ms"],
+            })
+            if (
+                normalized != canonical
+                or recomputed != str(provenance["payload_digest"])
+                or recomputed != str(digests[key])
+                or len(normalized) != int(provenance["row_count"])
+            ):
+                raise RiskSnapshotUnavailable(RISK_SNAPSHOT_ROW_DIGEST_MISMATCH)
+            resolved[key] = canonical
+        return resolved
+
+    @classmethod
+    def _risk_positions(
+        cls, rows: Sequence[Mapping[str, Any]]
+    ) -> tuple[RiskPositionRow, ...]:
+        positions: list[RiskPositionRow] = []
+        seen: set[str] = set()
+        for row in rows:
+            if set(row) != {"symbol", "size"}:
+                raise RiskSnapshotUnavailable(RISK_SNAPSHOT_POSITION_MALFORMED)
+            symbol = row["symbol"]
+            size = cls._risk_number(row["size"])
+            if not isinstance(symbol, str) or not symbol.strip() or size is None:
+                raise RiskSnapshotUnavailable(RISK_SNAPSHOT_POSITION_MALFORMED)
+            if symbol in seen:
+                raise RiskSnapshotUnavailable(RISK_SNAPSHOT_POSITION_DUPLICATE)
+            seen.add(symbol)
+            positions.append(RiskPositionRow(symbol, size))
+        return tuple(positions)
+
+    @classmethod
+    def _risk_account(
+        cls,
+        balances: Sequence[Mapping[str, Any]],
+        margin: Sequence[Mapping[str, Any]],
+    ) -> tuple[float, float, float, float]:
+        if (
+            len(balances) != 1
+            or len(margin) != 1
+            or set(balances[0]) != {"equity", "withdrawable"}
+            or set(margin[0]) != {"margin_used", "available_margin"}
+        ):
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_ACCOUNT_MALFORMED)
+        equity = cls._risk_number(balances[0]["equity"])
+        withdrawable = cls._risk_number(balances[0]["withdrawable"])
+        margin_used = cls._risk_number(margin[0]["margin_used"])
+        available = cls._risk_number(margin[0]["available_margin"])
+        if None in (equity, withdrawable, margin_used, available):
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_ACCOUNT_MALFORMED)
+        if min(equity, withdrawable, margin_used, available) < 0:
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_ACCOUNT_NEGATIVE)
+        if (
+            withdrawable > equity
+            or margin_used > equity
+            or not math.isclose(
+                available,
+                equity - margin_used,
+                rel_tol=0.0,
+                abs_tol=ACCOUNT_IDENTITY_ABS_TOL,
+            )
+        ):
+            # The same TS-P1-005 arithmetic identity, re-proven at read time
+            # rather than recomputed from a later point read.
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_ACCOUNT_INCONSISTENT)
+        return equity, withdrawable, margin_used, available
 
     def list_funding_events(
         self, *, symbol: str | None = None

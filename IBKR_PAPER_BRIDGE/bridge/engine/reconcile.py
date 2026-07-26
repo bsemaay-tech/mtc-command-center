@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 
 from bridge.engine.types import (
+    ACCOUNT_IDENTITY_ABS_TOL,
     DIFF_ACCOUNT_INCONSISTENT,
     DIFF_EXCHANGE_IDENTITY_CONFLICT,
     DIFF_FOREIGN_ORDER_OBSERVED,
@@ -42,6 +43,8 @@ from bridge.engine.types import (
     FULL_RECONCILE_DEADLINE_S,
     FULL_RECONCILE_MAX_SKEW_S,
     REQUIRED_RECONCILE_COMPONENTS,
+    RISK_SNAPSHOT_COMPONENTS,
+    SNAPSHOT_PAYLOAD_VERSION_V2,
     TERMINAL_ORDER_STATES,
     ComponentEvidence,
     FullReconcileResult,
@@ -59,14 +62,21 @@ from bridge.engine.types import (
     reconcile_digest,
 )
 
-SNAPSHOT_VERSION = "ts-p1-005-snapshot-v1"
+SNAPSHOT_VERSION = SNAPSHOT_PAYLOAD_VERSION_V2
+"""Payload format every *new* accepted capture writes (TS-P1-006).
 
-# Absolute float residue tolerated when re-checking the account identity
-# ``available_margin == equity - margin_used``. It is deliberately far below
-# any economically meaningful amount: this is a float-representation guard,
-# never a permissive band, and it is never applied to quantities (those are
-# compared in exact integer lots).
-ACCOUNT_IDENTITY_ABS_TOL = 1e-6
+The predecessor marker ``ts-p1-005-snapshot-v1`` carried component digests and
+row counts but no authoritative rows, so a checkpoint written by it can never
+reconstruct the portfolio the risk gate has to size against. v1 checkpoints are
+retained byte-for-byte and stay reopenable; they simply cannot authorize v6
+risk, and a fresh real v2 capture is required. See
+``docs/27_AUTHORITATIVE_RISK_SNAPSHOT_CONTRACT.md``.
+"""
+
+# ``ACCOUNT_IDENTITY_ABS_TOL`` now lives in engine/types.py so the reconciler
+# and the TS-P1-006 risk loader share one definition instead of drifting apart.
+# It is re-exported here unchanged for the existing import surface.
+__all__ = ["ACCOUNT_IDENTITY_ABS_TOL", "FullReconciler", "SNAPSHOT_VERSION", "full_writer_guard"]
 
 _FULL_WRITER_GUARDS: dict[str, asyncio.Lock] = {}
 
@@ -683,9 +693,33 @@ class FullReconciler:
         diffs: Sequence[ReconcileDiffRecord],
         funding_events: Sequence[FundingEventRecord],
     ) -> dict[str, Any]:
+        """The immutable checkpoint payload written inside the accept transaction.
+
+        v2 adds ``risk_rows``: the *canonical* rows of the three risk-bearing
+        components, in the same canonical order the component digest is computed
+        over. They are stored rather than re-fetched because a later broker read
+        would be a different observation; storing them is what lets the risk gate
+        size against the very capture that granted full-reconcile readiness.
+
+        The rows are not separately trusted. ``risk_row_digests`` is exactly the
+        component digest, which is itself bound into ``canonical_hash``, so a row
+        edited in place — even one that preserves ``row_count`` and every piece
+        of stored metadata — is rejected when the loader recomputes the chain.
+        """
+        by_kind = {component.kind: component for component in components}
         return {
             "version": SNAPSHOT_VERSION,
             "run_id": self.run_id,
+            "risk_rows": {
+                kind.value: by_kind[kind].canonical_rows()
+                for kind in RISK_SNAPSHOT_COMPONENTS
+                if kind in by_kind
+            },
+            "risk_row_digests": {
+                kind.value: by_kind[kind].digest
+                for kind in RISK_SNAPSHOT_COMPONENTS
+                if kind in by_kind
+            },
             "components": {
                 component.kind.value: {
                     "source": component.source,

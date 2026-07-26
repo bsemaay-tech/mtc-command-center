@@ -974,6 +974,72 @@ def test_a_later_failed_capture_blocks_arm_even_with_a_young_checkpoint(tmp_path
     asyncio.run(_later_failure_blocks_arm(tmp_path))
 
 
+def test_v6_arm_requires_a_risk_readable_snapshot_not_only_metadata_readiness(tmp_path):
+    asyncio.run(_v6_arm_requires_risk_snapshot(tmp_path))
+
+
+async def _v6_arm_requires_risk_snapshot(tmp_path):
+    from bridge.engine.types import (
+        RISK_SNAPSHOT_LEGACY_PAYLOAD,
+        RiskSnapshotUnavailable,
+    )
+
+    store, _broker, engine = _v6_engine(
+        tmp_path, "v6-risk-arm.db", "v6-risk-arm"
+    )
+    accepted = await engine.run_full_reconcile()
+    assert accepted.accepted is True
+    assert engine.full_reconcile_ready() is True
+
+    def legacy_only(*, now, max_age_s):
+        raise RiskSnapshotUnavailable(RISK_SNAPSHOT_LEGACY_PAYLOAD)
+
+    store.load_authoritative_risk_snapshot = legacy_only
+    with pytest.raises(
+        RuntimeError,
+        match=f"authoritative risk snapshot unavailable: {RISK_SNAPSHOT_LEGACY_PAYLOAD}",
+    ):
+        await engine.arm()
+    assert engine.state == "DISARMED"
+    assert store.get_meta("app_state") == "DISARMED"
+    assert engine.risk_snapshot_error == RISK_SNAPSHOT_LEGACY_PAYLOAD
+    assert engine.risk_input_error is not None
+    store.close()
+
+
+def test_v6_signal_risk_never_reads_a_point_account(tmp_path):
+    asyncio.run(_v6_signal_never_reads_point_account(tmp_path))
+
+
+async def _v6_signal_never_reads_point_account(tmp_path):
+    store, broker, engine = _v6_engine(
+        tmp_path, "v6-no-point-account.db", "v6-no-point-account"
+    )
+    accepted = await engine.run_full_reconcile()
+    assert accepted.accepted is True
+    await engine.arm()
+    engine.strategy = FixedSignalStrategy(stop_loss=90.0)
+
+    async def forbidden_account():
+        raise AssertionError("v6 risk must not call broker.account()")
+
+    broker.account = forbidden_account
+    await engine.on_bar(
+        Bar(
+            ts=datetime.now(UTC),
+            open=100,
+            high=101,
+            low=99,
+            close=100,
+            volume=1,
+        )
+    )
+    stages = [row["stage"] for row in store.get_snapshot()["decisions"]]
+    assert "RISK_PASS" in stages
+    assert engine.risk_snapshot_error is None
+    store.close()
+
+
 def test_failed_full_gate_blocks_new_entry_while_persisted_armed(tmp_path):
     asyncio.run(_failed_full_gate_blocks_new_entry(tmp_path))
 

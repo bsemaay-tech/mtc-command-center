@@ -1107,3 +1107,242 @@ class FullReconcileResult:
     @property
     def blocking_diffs(self) -> tuple[ReconcileDiffRecord, ...]:
         return tuple(diff for diff in self.diffs if diff.blocking)
+
+
+# ===========================================================================
+# TS-P1-006 — authoritative risk-input snapshot
+#
+# The v6 risk decision may read exactly one immutable, versioned, fresh,
+# complete, latest-accepted TS-P1-005 checkpoint view. The vocabulary below is
+# the *shape* of that view plus its fail-closed reason codes; the bounded
+# SQLite loader that produces it lives in store/db.py and the consumer is
+# engine/risk.py. See docs/27_AUTHORITATIVE_RISK_SNAPSHOT_CONTRACT.md.
+# ===========================================================================
+
+SNAPSHOT_PAYLOAD_VERSION_V1 = "ts-p1-005-snapshot-v1"
+"""Accepted TS-P1-005 payload marker: metadata/digests only, no rows.
+
+Retained byte-for-byte as historical evidence and still reopenable, but it
+carries no authoritative portfolio rows, so it can never authorize v6 risk.
+"""
+
+SNAPSHOT_PAYLOAD_VERSION_V2 = "ts-p1-006-snapshot-v2"
+"""TS-P1-006 payload marker: v1 content plus canonical risk-bearing rows."""
+
+RISK_SNAPSHOT_COMPONENTS: tuple[ReconcileComponentKind, ...] = (
+    ReconcileComponentKind.BALANCES,
+    ReconcileComponentKind.MARGIN,
+    ReconcileComponentKind.POSITIONS,
+)
+"""The components whose canonical rows a v2 payload must carry, in canonical
+(value-sorted) order. All seven components must still be complete; only these
+three are *read* by risk, so only these three rows are persisted."""
+
+ACCOUNT_IDENTITY_ABS_TOL = 1e-6
+"""Absolute float residue tolerated when re-checking the account identity
+``available_margin == equity - margin_used``.
+
+Deliberately far below any economically meaningful amount: this is a
+float-representation guard, never a permissive band, and it is never applied
+to quantities (those are compared in exact integer lots). Defined here so the
+TS-P1-005 reconciler and the TS-P1-006 risk loader share one definition rather
+than drifting apart; ``reconcile.ACCOUNT_IDENTITY_ABS_TOL`` re-exports it.
+"""
+
+# --- fail-closed reason codes (stable, secret-safe, observable) -------------
+
+RISK_SNAPSHOT_SCHEMA_INACTIVE = "RISK_SNAPSHOT_SCHEMA_INACTIVE"
+RISK_SNAPSHOT_TRANSACTION_ACTIVE = "RISK_SNAPSHOT_TRANSACTION_ACTIVE"
+RISK_SNAPSHOT_NO_CHECKPOINT = "RISK_SNAPSHOT_NO_CHECKPOINT"
+RISK_SNAPSHOT_POINTER_DANGLING = "RISK_SNAPSHOT_POINTER_DANGLING"
+RISK_SNAPSHOT_POINTER_MOVED = "RISK_SNAPSHOT_POINTER_MOVED"
+RISK_SNAPSHOT_ATTEMPT_NOT_ACCEPTED = "RISK_SNAPSHOT_ATTEMPT_NOT_ACCEPTED"
+RISK_SNAPSHOT_SUPERSEDED = "RISK_SNAPSHOT_SUPERSEDED"
+RISK_SNAPSHOT_COMPONENTS_INCOMPLETE = "RISK_SNAPSHOT_COMPONENTS_INCOMPLETE"
+RISK_SNAPSHOT_PAYLOAD_MALFORMED = "RISK_SNAPSHOT_PAYLOAD_MALFORMED"
+RISK_SNAPSHOT_LEGACY_PAYLOAD = "RISK_SNAPSHOT_LEGACY_PAYLOAD"
+RISK_SNAPSHOT_PAYLOAD_VERSION_UNSUPPORTED = "RISK_SNAPSHOT_PAYLOAD_VERSION_UNSUPPORTED"
+RISK_SNAPSHOT_ROWS_MISSING = "RISK_SNAPSHOT_ROWS_MISSING"
+RISK_SNAPSHOT_ROW_DIGEST_MISMATCH = "RISK_SNAPSHOT_ROW_DIGEST_MISMATCH"
+RISK_SNAPSHOT_HASH_MISMATCH = "RISK_SNAPSHOT_HASH_MISMATCH"
+RISK_SNAPSHOT_POSITION_MALFORMED = "RISK_SNAPSHOT_POSITION_MALFORMED"
+RISK_SNAPSHOT_POSITION_DUPLICATE = "RISK_SNAPSHOT_POSITION_DUPLICATE"
+RISK_SNAPSHOT_ACCOUNT_MALFORMED = "RISK_SNAPSHOT_ACCOUNT_MALFORMED"
+RISK_SNAPSHOT_ACCOUNT_NEGATIVE = "RISK_SNAPSHOT_ACCOUNT_NEGATIVE"
+RISK_SNAPSHOT_ACCOUNT_INCONSISTENT = "RISK_SNAPSHOT_ACCOUNT_INCONSISTENT"
+RISK_SNAPSHOT_COVERAGE_UNPROVABLE = "RISK_SNAPSHOT_COVERAGE_UNPROVABLE"
+RISK_SNAPSHOT_FUTURE_CLOCK = "RISK_SNAPSHOT_FUTURE_CLOCK"
+RISK_SNAPSHOT_STALE = "RISK_SNAPSHOT_STALE"
+RISK_SNAPSHOT_READ_FAILED = "RISK_SNAPSHOT_READ_FAILED"
+RISK_SNAPSHOT_REQUIRED = "RISK_SNAPSHOT_REQUIRED"
+
+
+class RiskSnapshotUnavailable(Exception):
+    """No authoritative risk snapshot could be proven.
+
+    Carries a stable ``reason_code`` only — never a payload, path or
+    credential. Every raise site is a veto: the caller must DISARM in memory
+    before any submission and must never fall back to a point broker read, a
+    cached snapshot, or a caller-supplied dictionary.
+    """
+
+    def __init__(self, reason_code: str) -> None:
+        self.reason_code = str(reason_code)[:96]
+        super().__init__(self.reason_code)
+
+
+def _frozen_field(index: int, name: str, doc: str) -> property:
+    """A read-only view onto one slot of a tuple-backed frozen record."""
+
+    def getter(self):
+        return tuple.__getitem__(self, index)
+
+    getter.__name__ = name
+    return property(getter, doc=doc)
+
+
+class _FrozenRecord(tuple):
+    """Deeply immutable tuple-backed record, same threat model as
+    :class:`_ImmutableMapping`.
+
+    A ``@dataclass(frozen=True)`` is *not* enough here: it still gives every
+    instance a writable ``__dict__`` (or, with ``slots=True``, writable slot
+    descriptors), so ``object.__setattr__`` can rewrite equity, a position size
+    or a hash after validation and before the gates read it. Storing the values
+    as the tuple's own elements removes the holder entirely: there is no
+    ``__dict__`` and no assignable slot of any kind, the elements are fixed at
+    ``tuple.__new__`` time, and every field accessor is a read-only property.
+    A caller walking ``gc.get_referents`` transitively from an instance reaches
+    only tuples, ``str``, ``int``, ``float`` and ``datetime`` values — never a
+    ``dict``, ``list`` or ``set`` it could mutate.
+
+    The read-only ``__class__`` data descriptor shadows ``object``'s inherited
+    class-assignment path, so the type cannot be swapped for a layout-compatible
+    one. Direct calls to a base ``__class__`` descriptor and broader runtime
+    compromise stay outside the owner-approved threat model, exactly as
+    documented for ``_ImmutableMapping``.
+    """
+
+    __slots__ = ()
+
+    @property
+    def __class__(self):
+        """Expose the actual type while rejecting instance-level replacement."""
+        return type(self)
+
+
+class RiskPositionRow(_FrozenRecord):
+    """One canonical reconciled position from the accepted capture."""
+
+    __slots__ = ()
+
+    def __new__(cls, symbol: str, size: float) -> RiskPositionRow:
+        return tuple.__new__(cls, (str(symbol), float(size)))
+
+    symbol = _frozen_field(0, "symbol", "Exchange symbol, non-empty and unique.")
+    size = _frozen_field(1, "size", "Signed net position size; finite.")
+
+    def __repr__(self) -> str:
+        return f"RiskPositionRow(symbol={self.symbol!r}, size={self.size!r})"
+
+
+class AuthoritativeRiskSnapshot(_FrozenRecord):
+    """Exactly one immutable, versioned portfolio view for the v6 risk gate.
+
+    Every field originates from the *same* accepted TS-P1-005 capture, resolved
+    through the sole ``reconcile_checkpoint_latest`` pointer inside one bounded
+    SQLite read transaction. Nothing here may be synthesized by a caller, mixed
+    with a later broker read, or reused after it goes stale.
+    """
+
+    __slots__ = ()
+
+    def __new__(
+        cls,
+        *,
+        payload_version: str,
+        checkpoint_id: str,
+        attempt_id: str,
+        run_id: str,
+        canonical_hash: str,
+        accepted_ts: datetime,
+        loaded_ts: datetime,
+        observed_from_ts: datetime,
+        observed_to_ts: datetime,
+        coverage_start_ms: int,
+        coverage_end_ms: int,
+        positions: tuple[RiskPositionRow, ...],
+        equity: float,
+        withdrawable: float,
+        margin_used: float,
+        available_margin: float,
+    ) -> AuthoritativeRiskSnapshot:
+        return tuple.__new__(
+            cls,
+            (
+                str(payload_version),
+                str(checkpoint_id),
+                str(attempt_id),
+                str(run_id),
+                str(canonical_hash),
+                accepted_ts,
+                loaded_ts,
+                observed_from_ts,
+                observed_to_ts,
+                int(coverage_start_ms),
+                int(coverage_end_ms),
+                tuple(positions),
+                float(equity),
+                float(withdrawable),
+                float(margin_used),
+                float(available_margin),
+            ),
+        )
+
+    payload_version = _frozen_field(0, "payload_version", "Checkpoint payload format marker.")
+    checkpoint_id = _frozen_field(1, "checkpoint_id", "Immutable accepted checkpoint identity.")
+    attempt_id = _frozen_field(2, "attempt_id", "Attempt that produced the checkpoint.")
+    run_id = _frozen_field(3, "run_id", "Run that owned the capture.")
+    canonical_hash = _frozen_field(4, "canonical_hash", "Recomputed and verified evidence hash.")
+    accepted_ts = _frozen_field(5, "accepted_ts", "UTC acceptance time of the checkpoint.")
+    loaded_ts = _frozen_field(6, "loaded_ts", "UTC time this view was resolved.")
+    observed_from_ts = _frozen_field(7, "observed_from_ts", "Earliest component observation.")
+    observed_to_ts = _frozen_field(8, "observed_to_ts", "Latest component observation.")
+    coverage_start_ms = _frozen_field(9, "coverage_start_ms", "Proven fills/funding lower bound.")
+    coverage_end_ms = _frozen_field(10, "coverage_end_ms", "Proven fills/funding upper bound.")
+    positions = _frozen_field(11, "positions", "Canonical reconciled positions.")
+    equity = _frozen_field(12, "equity", "Account equity at the observation.")
+    withdrawable = _frozen_field(13, "withdrawable", "Withdrawable balance at the observation.")
+    margin_used = _frozen_field(14, "margin_used", "Margin used at the observation.")
+    available_margin = _frozen_field(15, "available_margin", "Available margin at the observation.")
+
+    @property
+    def age_s(self) -> float:
+        """Seconds between acceptance and the load that produced this view."""
+        return (
+            self.loaded_ts.astimezone(UTC) - self.accepted_ts.astimezone(UTC)
+        ).total_seconds()
+
+    @property
+    def open_positions(self) -> tuple[RiskPositionRow, ...]:
+        """Every reconciled row with nonzero exposure, in canonical order."""
+        return tuple(row for row in self.positions if row.size != 0.0)
+
+    @property
+    def has_open_position(self) -> bool:
+        return bool(self.open_positions)
+
+    def account(self) -> AccountSnapshot:
+        """The account view the existing gates consume, from this epoch only."""
+        return AccountSnapshot(
+            equity=self.equity,
+            available_margin=self.available_margin,
+            withdrawable=self.withdrawable,
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"AuthoritativeRiskSnapshot(checkpoint_id={self.checkpoint_id!r}, "
+            f"attempt_id={self.attempt_id!r}, equity={self.equity!r}, "
+            f"positions={len(self.positions)})"
+        )
