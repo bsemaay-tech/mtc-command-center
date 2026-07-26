@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0.0",
+  "format": "jsonl-one-object-per-line",
+  "required_fields": [
+    "task_id",
+    "description",
+    "prerequisite_task_ids",
+    "authorizer",
+    "executor",
+    "independent_verifier",
+    "publishable_artifact_path",
+    "restricted_raw_evidence_logical_id",
+    "artifact_sha256",
+    "utc_timestamp",
+    "data_classification",
+    "verdict",
+    "stop_retry_history"
+  ],
+  "data_classifications": [
+    "public-sanitized",
+    "restricted-encrypted",
+    "mixed"
+  ],
+  "verdicts": [
+    "PASS",
+    "FAIL",
+    "BLOCKED",
+    "OPEN"
+  ],
+  "publishable_root": "MTC_COMMAND_CENTER/11_TRIAGE/KVM2_PROGRAM/",
+  "restricted_logical_id_pattern": "^RAW-[A-Z0-9-]+$",
+  "sha256_pattern": "^[0-9a-f]{64}$",
+  "timestamp_format": "YYYY-MM-DDTHH:MM:SSZ",
+  "private_identifiers_forbidden": true,
+  "credential_values_forbidden": true
+}
