@@ -644,6 +644,114 @@ def test_rearm_is_refused_when_the_snapshot_is_inexact(tmp_path):
         asyncio.run(engine.arm())
 
 
+def test_submission_boundary_rechecks_recovery_after_final_position_await(tmp_path):
+    asyncio.run(_submission_boundary_recovery_race(tmp_path))
+
+
+async def _submission_boundary_recovery_race(tmp_path):
+    store = Store(tmp_path / "bridge.db")
+    store.initialize(target_schema_version=5)
+    store.create_run("run", "dry_run", "testnet", {})
+    now = datetime(2026, 7, 26, 12, 0, tzinfo=UTC)
+    request_id = "request-v1:" + "e" * 64
+    trade_id = int(
+        store.create_trade(
+            run_id="run",
+            coin="BTC",
+            direction="LONG",
+            qty=2.0,
+            entry_decision_uid="prior-decision",
+            signal_ts=now - timedelta(minutes=1),
+            decision_ts=now - timedelta(minutes=1),
+            expected_px=100.0,
+            risk_dollars=1.0,
+            risk_pct=0.001,
+            leverage=1,
+            sl_initial=95.0,
+            tp_initial=None,
+            llm_directive_id=None,
+        )
+    )
+    store.insert_order(
+        cloid="prior-entry",
+        oid=1,
+        group_id=request_id,
+        order_ref=f"{request_id}:ENTRY",
+        order_json={"symbol": "BTC", "role": "ENTRY"},
+        decision_uid="prior-decision",
+        trade_id=trade_id,
+        role="ENTRY",
+        status="OPEN",
+        qty=2.0,
+    )
+    bars = [
+        Bar(
+            ts=now - timedelta(minutes=1),
+            open=100,
+            high=101,
+            low=99,
+            close=100,
+            volume=1,
+        ),
+        Bar(ts=now, open=100, high=102, low=99, close=100, volume=1),
+    ]
+    broker = MockBroker(bars=bars, starting_equity=1000.0)
+    broker.connected = True
+    broker.orders.append(
+        {
+            "cloid": "prior-entry",
+            "oid": 1,
+            "role": "ENTRY",
+            "status": "OPEN",
+            "qty": 2.0,
+            "avg_fill_px": None,
+            "reduce_only": False,
+            "symbol": "BTC",
+            "direction": "LONG",
+        }
+    )
+    manager = OrderManager(store, broker, "run", pending_grace_s=0)
+    position_reads = 0
+
+    async def positions_with_partial_race():
+        nonlocal position_reads
+        position_reads += 1
+        if position_reads == 2:
+            stale_response: list[Position] = []
+            broker.position = Position(symbol="BTC", size=1.0, entry_px=100.0)
+            manager._ingest_fill(
+                FillEvent(
+                    fill_id="barrier-partial",
+                    cloid="prior-entry",
+                    coin="BTC",
+                    qty=1.0,
+                    px=100.0,
+                    ts=now,
+                    role="ENTRY",
+                )
+            )
+            return stale_response
+        return []
+
+    broker.positions = positions_with_partial_race
+    engine = BridgeEngine(
+        run_id="run",
+        broker=broker,
+        store=store,
+        strategy=FixedSignalStrategy(stop_loss=90.0, take_profit=115.0),
+        risk_engine=RiskEngine(RiskConfig(max_position_notional_pct=0.5)),
+        order_manager=manager,
+        state="ARMED",
+    )
+
+    await engine.on_bar(bars[-1])
+
+    assert store.active_partial_recovery_for_symbol("BTC") is not None
+    assert store.get_meta("app_state") == "DISARMED"
+    assert store.conn.execute("SELECT COUNT(*) FROM submission_attempts").fetchone()[0] == 0
+    assert [row for row in broker.orders if row["cloid"] != "prior-entry"] == []
+
+
 def test_engine_start_drives_partial_recovery_through_reconcile(tmp_path):
     store, broker, manager, engine = _partial_engine(tmp_path)
 

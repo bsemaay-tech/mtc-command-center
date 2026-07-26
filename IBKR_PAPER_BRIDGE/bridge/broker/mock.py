@@ -339,7 +339,7 @@ class MockBroker:
         if self.partial_size_decimals is None:
             return None
         try:
-            return LotUnit(int(self.partial_size_decimals))
+            return LotUnit(self.partial_size_decimals)
         except LotQuantizationError:
             return None
 

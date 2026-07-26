@@ -768,6 +768,17 @@ def test_canonical_order_state_fails_closed_on_non_lot_quantities():
         )
 
 
+def test_canonical_order_state_requires_quantum_and_rejects_overfill():
+    with pytest.raises(LotQuantizationError, match="SIZE_QUANTUM_UNAVAILABLE"):
+        canonical_order_state(
+            raw_status="OPEN", ordered_qty=2.0, filled_qty=1.0
+        )
+    with pytest.raises(LotQuantizationError, match="ORDER_OVERFILL"):
+        canonical_order_state(
+            raw_status="OPEN", ordered_qty=1.0, filled_qty=1.001, lot=LotUnit(3)
+        )
+
+
 def test_canonical_order_state_rejects_non_positive_order_quantity():
     with pytest.raises(LotQuantizationError):
         canonical_order_state(raw_status="OPEN", ordered_qty=0.0, filled_qty=0.0)

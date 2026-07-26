@@ -319,7 +319,8 @@ canonical_order_state(
 | Condition | Canonical state |
 | --- | --- |
 | exchange-confirmed terminal raw status | that terminal state (wins over everything) |
-| `filled >= ordered` | `FILLED` |
+| `filled == ordered` | `FILLED` |
+| `filled > ordered` | quantity-integrity failure |
 | a cancel reserved before I/O, order still live | `PENDING_CANCEL` |
 | `0 < filled < ordered` | `PARTIALLY_FILLED` |
 | otherwise | the normalized raw state |
@@ -344,10 +345,12 @@ durable while the new recovery row tracks the later exposure.
 
 ### Quantity comparison
 
-Comparisons use exact integer lot units (`LotUnit` / `quantize_lots`) when a
-size quantum is known, and exact decimal spelling otherwise. There is no
-epsilon anywhere in the derivation, and a size that is not an exact lot
-multiple raises `LotQuantizationError` rather than rounding.
+Comparisons require exact integer lot units (`LotUnit` / `quantize_lots`).
+There is no epsilon or raw-decimal fallback. Missing/invalid quantum, a size
+that is not an exact lot multiple, and overfill all raise
+`LotQuantizationError` rather than producing a lifecycle state. The engine
+turns such runtime evidence into a durable integrity event and `DISARMED`
+state.
 
 ### Uncertainty representation
 
@@ -364,6 +367,9 @@ and the whole partial-recovery run — serializes through
 `OrderManager.symbol_locks`, a reentrant per-symbol `asyncio.Lock`. Ordinary
 paths re-check recovery ownership after acquiring the lock, and the recovery
 run asserts the lock is held before taking a snapshot or sending any order.
+For new entries, the final ARM/quarantine/recovery checks and
+reservation/send sequence are also inside that same per-symbol lock, closing
+the awaited-position-query race.
 
 ### Duplicate-safe protection amendment
 

@@ -1697,7 +1697,8 @@ def test_symbol_snapshot_is_exact_with_metadata_and_both_reads():
         },
         open_orders=lambda addr: [
             {"cloid": "0xabc", "coin": "BTC", "side": "A", "sz": "1.5",
-             "orderType": "Stop Market", "triggerPx": "95.0"}
+             "status": "OPEN", "orderType": "Stop Market", "triggerPx": "95.0",
+             "reduceOnly": True}
         ],
     )
     broker = HyperliquidBroker(
@@ -1708,6 +1709,171 @@ def test_symbol_snapshot_is_exact_with_metadata_and_both_reads():
     assert snapshot.exact is True
     assert snapshot.net_size == 1.5
     assert [o.role for o in snapshot.open_orders] == ["SL"]
+
+
+def _sdk_recovery_open_order() -> dict:
+    return {
+        "coin": "BTC",
+        "limitPx": "95.0",
+        "oid": 7,
+        "side": "A",
+        "sz": "1.5",
+        "timestamp": 1783890261975,
+        "cloid": "0x" + "a" * 32,
+        "reduceOnly": True,
+        "origSz": "1.5",
+        "orderType": "Stop Market",
+        "triggerPx": "95.0",
+    }
+
+
+def _sdk_recovery_open_order_without(field: str) -> dict:
+    row = _sdk_recovery_open_order()
+    del row[field]
+    return row
+
+
+def test_sdk_open_orders_row_without_status_is_live_recovery_evidence():
+    sdk_row = _sdk_recovery_open_order()
+    cloid = sdk_row["cloid"]
+    info = SimpleNamespace(
+        user_state=lambda addr: {
+            "assetPositions": [{"position": {"coin": "BTC", "szi": "1.5"}}]
+        },
+        open_orders=lambda addr: [sdk_row],
+    )
+    broker = HyperliquidBroker(
+        info_client=info, exchange_client=object(), account_address="0xabc"
+    )
+    broker._size_decimals["BTC"] = 3
+
+    snapshot = asyncio.run(broker.symbol_snapshot("BTC"))
+    result = asyncio.run(broker.query_order(cloid, "BTC"))
+
+    assert snapshot.exact is True
+    assert snapshot.net_size == 1.5
+    assert len(snapshot.open_orders) == 1
+    assert snapshot.open_orders[0].cloid == cloid
+    assert snapshot.open_orders[0].status == "OPEN"
+    assert snapshot.open_orders[0].role == "SL"
+    assert snapshot.open_orders[0].reduce_only is True
+    assert (result.known, result.found, result.terminal) == (True, True, False)
+    assert result.raw_status == "OPEN"
+    assert result.evidence.reason_code == "HL_ORDER_PRESENT"
+    assert "status" not in sdk_row
+
+
+@pytest.mark.parametrize(
+    "raw_orders",
+    [
+        pytest.param({}, id="collection-is-not-a-list"),
+        pytest.param([None], id="row-is-not-a-mapping"),
+        pytest.param(
+            [_sdk_recovery_open_order_without("cloid")], id="missing-cloid"
+        ),
+        pytest.param(
+            [_sdk_recovery_open_order() | {"cloid": "  "}], id="empty-cloid"
+        ),
+        pytest.param(
+            [_sdk_recovery_open_order_without("coin")], id="missing-coin"
+        ),
+        pytest.param(
+            [_sdk_recovery_open_order() | {"side": "X"}], id="unknown-side"
+        ),
+        pytest.param(
+            [_sdk_recovery_open_order_without("sz")], id="missing-size"
+        ),
+        pytest.param(
+            [_sdk_recovery_open_order() | {"sz": "not-a-number"}],
+            id="malformed-size",
+        ),
+        pytest.param(
+            [_sdk_recovery_open_order() | {"sz": "nan"}], id="non-finite-size"
+        ),
+        pytest.param(
+            [_sdk_recovery_open_order() | {"sz": "0"}], id="non-positive-size"
+        ),
+        pytest.param(
+            [_sdk_recovery_open_order_without("reduceOnly")],
+            id="missing-reduce-only",
+        ),
+        pytest.param(
+            [_sdk_recovery_open_order() | {"reduceOnly": 1}],
+            id="non-bool-reduce-only",
+        ),
+    ],
+)
+def test_malformed_recovery_open_order_evidence_fails_closed(raw_orders):
+    info = SimpleNamespace(
+        user_state=lambda addr: {
+            "assetPositions": [{"position": {"coin": "BTC", "szi": "1.5"}}]
+        },
+        open_orders=lambda addr: raw_orders,
+    )
+    broker = HyperliquidBroker(
+        info_client=info, exchange_client=object(), account_address="0xabc"
+    )
+    broker._size_decimals["BTC"] = 3
+
+    snapshot = asyncio.run(broker.symbol_snapshot("BTC"))
+    result = asyncio.run(
+        broker.query_order("0x" + "a" * 32, "BTC")
+    )
+
+    assert snapshot.exact is False
+    assert snapshot.net_size is None
+    assert snapshot.evidence.reason_code == "HL_ORDER_EVIDENCE_MALFORMED"
+    assert result.known is False
+    assert result.found is False
+    assert result.terminal is False
+    assert result.evidence.reason_code == "HL_ORDER_EVIDENCE_MALFORMED"
+
+
+def test_symbol_snapshot_is_inexact_when_any_position_row_misses_coin():
+    info = SimpleNamespace(
+        user_state=lambda addr: {
+            "assetPositions": [{"position": {"szi": "1.0"}}]
+        },
+        open_orders=lambda addr: [],
+    )
+    broker = HyperliquidBroker(
+        info_client=info, exchange_client=object(), account_address="0xabc"
+    )
+    broker._size_decimals["BTC"] = 3
+
+    snapshot = asyncio.run(broker.symbol_snapshot("BTC"))
+
+    assert snapshot.exact is False
+    assert snapshot.net_size is None
+    assert snapshot.evidence.reason_code == "HL_POSITION_EVIDENCE_MALFORMED"
+
+
+def test_symbol_snapshot_is_inexact_when_stop_misses_reduce_only():
+    info = SimpleNamespace(
+        user_state=lambda addr: {
+            "assetPositions": [{"position": {"coin": "BTC", "szi": "1.0"}}]
+        },
+        open_orders=lambda addr: [
+            {
+                "cloid": "0xabc",
+                "coin": "BTC",
+                "side": "A",
+                "sz": "1.0",
+                "status": "OPEN",
+                "orderType": "Stop Market",
+                "triggerPx": "95.0",
+            }
+        ],
+    )
+    broker = HyperliquidBroker(
+        info_client=info, exchange_client=object(), account_address="0xabc"
+    )
+    broker._size_decimals["BTC"] = 3
+
+    snapshot = asyncio.run(broker.symbol_snapshot("BTC"))
+
+    assert snapshot.exact is False
+    assert snapshot.evidence.reason_code == "HL_ORDER_EVIDENCE_MALFORMED"
 
 
 def test_symbol_snapshot_conflicting_positions_are_inexact():
@@ -1740,6 +1906,12 @@ def test_symbol_snapshot_conflicting_positions_are_inexact():
         ),
         ({"status": "order", "order": {"status": "canceled"}}, True, False, True),
         ({"status": "order", "order": {"status": "filled"}}, True, False, True),
+        (
+            {"status": "order", "order": {"status": "future_transient_status"}},
+            False,
+            False,
+            False,
+        ),
         ({"status": "order"}, False, False, False),
         ({"status": "order", "order": {}}, False, False, False),
         ({"status": "weird"}, False, False, False),
@@ -1769,6 +1941,29 @@ def test_query_order_open_order_absence_is_not_authoritative():
     result = asyncio.run(broker.query_order("0xabc", "BTC"))
     assert result.known is False
     assert result.evidence.reason_code == "HL_ORDER_ABSENCE_NOT_AUTHORITATIVE"
+
+
+def test_query_order_open_order_fallback_rejects_malformed_rows():
+    broker = HyperliquidBroker(
+        info_client=SimpleNamespace(
+            open_orders=lambda addr: [
+                {
+                    "cloid": "0xabc",
+                    "coin": "BTC",
+                    "side": "A",
+                    "sz": "1.0",
+                    "status": "OPEN",
+                }
+            ]
+        ),
+        exchange_client=object(),
+        account_address="0xabc",
+    )
+
+    result = asyncio.run(broker.query_order("0xabc", "BTC"))
+
+    assert result.known is False
+    assert result.evidence.reason_code == "HL_ORDER_EVIDENCE_MALFORMED"
 
 
 def test_typed_cancel_transport_failure_is_unknown():

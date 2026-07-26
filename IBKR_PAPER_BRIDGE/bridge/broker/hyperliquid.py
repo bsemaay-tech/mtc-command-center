@@ -9,8 +9,10 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import logging
+import math
 import os
 import re
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from decimal import Decimal, ROUND_DOWN
 
@@ -931,6 +933,9 @@ class HyperliquidBroker:
     # ------------------------------------------------------------------
 
     _LIVE_ORDER_STATUSES = frozenset({"OPEN", "SUBMITTED", "PENDING", "RESTING"})
+    _TERMINAL_ORDER_STATUSES = frozenset(
+        {"FILLED", "CANCELED", "CANCELLED", "REJECTED", "EXPIRED"}
+    )
 
     def lot_unit(self, symbol: str) -> LotUnit | None:
         """Symbol size quantum from exchange metadata; None when unknown."""
@@ -942,11 +947,74 @@ class HyperliquidBroker:
         except (LotQuantizationError, TypeError, ValueError):
             return None
 
+    def _parse_recovery_open_orders(self, raw_orders: object) -> list[BrokerOrder]:
+        """Fail-closed parser for authoritative live open-order evidence."""
+        if not isinstance(raw_orders, list):
+            raise ValueError("order collection")
+        orders: list[BrokerOrder] = []
+        for row in raw_orders:
+            if not isinstance(row, Mapping):
+                raise ValueError("order row")
+            normalized = dict(row)
+            cloid = normalized.get("cloid")
+            coin = normalized.get("coin")
+            side = normalized.get("side")
+            if "reduceOnly" in normalized:
+                reduce_only_raw = normalized["reduceOnly"]
+            elif "reduce_only" in normalized:
+                reduce_only_raw = normalized["reduce_only"]
+            else:
+                raise ValueError("order fields")
+            if "sz" in normalized:
+                size_raw = normalized["sz"]
+            elif "size" in normalized:
+                size_raw = normalized["size"]
+            else:
+                raise ValueError("order fields")
+            try:
+                size = float(size_raw)
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise ValueError("order fields") from exc
+            if (
+                not isinstance(cloid, str)
+                or not cloid.strip()
+                or not isinstance(coin, str)
+                or not coin.strip()
+                or not isinstance(side, str)
+                or side.upper() not in {"A", "B", "BUY", "SELL"}
+                or isinstance(size_raw, bool)
+                or not isinstance(reduce_only_raw, bool)
+                or not math.isfinite(size)
+                or size <= 0
+            ):
+                raise ValueError("order fields")
+            # Successful Info.open_orders membership is itself authoritative
+            # evidence that the row is live. The installed SDK does not
+            # document an embedded status, so normalize a copy for typed
+            # parsing without mutating the SDK-owned mapping.
+            normalized["status"] = "OPEN"
+            try:
+                orders.append(self._parse_order(normalized))
+            except (KeyError, TypeError, ValueError, OverflowError) as exc:
+                raise ValueError("order fields") from exc
+        return orders
+
     async def symbol_snapshot(self, symbol: str) -> SymbolSnapshot:
         """Bounded position + open-order evidence for exactly one symbol."""
         lot = self.lot_unit(symbol)
+        if self.info is None or not hasattr(self.info, "user_state"):
+            return SymbolSnapshot(
+                symbol=symbol,
+                exact=False,
+                net_size=None,
+                open_orders=(),
+                lot=lot,
+                evidence=Evidence("SNAPSHOT", "HL_POSITION_QUERY_FAILED"),
+            )
         try:
-            positions = await self.positions()
+            state = await asyncio.to_thread(
+                self.info.user_state, self.account_address
+            )
         except Exception as exc:  # noqa: BLE001 - any failure is inexact evidence
             return SymbolSnapshot(
                 symbol=symbol, exact=False, net_size=None, open_orders=(), lot=lot,
@@ -954,14 +1022,78 @@ class HyperliquidBroker:
                     "SNAPSHOT", "HL_POSITION_QUERY_FAILED", detail=type(exc).__name__
                 ),
             )
+        if not isinstance(state, dict) or not isinstance(
+            state.get("assetPositions"), list
+        ):
+            return SymbolSnapshot(
+                symbol=symbol,
+                exact=False,
+                net_size=None,
+                open_orders=(),
+                lot=lot,
+                evidence=Evidence("SNAPSHOT", "HL_POSITION_EVIDENCE_MALFORMED"),
+            )
+        positions: list[Position] = []
         try:
-            orders = await self.open_orders()
+            for row in state["assetPositions"]:
+                if not isinstance(row, dict):
+                    raise ValueError("position row")
+                payload = row.get("position", row)
+                if (
+                    not isinstance(payload, dict)
+                    or not isinstance(payload.get("coin"), str)
+                    or not str(payload["coin"]).strip()
+                    or ("szi" not in payload and "size" not in payload)
+                ):
+                    raise ValueError("position fields")
+                raw_size = payload.get("szi", payload.get("size"))
+                parsed_size = float(raw_size)
+                if not math.isfinite(parsed_size):
+                    raise ValueError("position size")
+                parsed = self._parse_position(row)
+                if parsed is None:
+                    raise ValueError("position parse")
+                if parsed.size != 0:
+                    positions.append(parsed)
+        except (TypeError, ValueError, OverflowError):
+            return SymbolSnapshot(
+                symbol=symbol,
+                exact=False,
+                net_size=None,
+                open_orders=(),
+                lot=lot,
+                evidence=Evidence("SNAPSHOT", "HL_POSITION_EVIDENCE_MALFORMED"),
+            )
+        if not hasattr(self.info, "open_orders"):
+            return SymbolSnapshot(
+                symbol=symbol,
+                exact=False,
+                net_size=None,
+                open_orders=(),
+                lot=lot,
+                evidence=Evidence("SNAPSHOT", "HL_OPEN_ORDER_QUERY_FAILED"),
+            )
+        try:
+            raw_orders = await asyncio.to_thread(
+                self.info.open_orders, self.account_address
+            )
         except Exception as exc:  # noqa: BLE001
             return SymbolSnapshot(
                 symbol=symbol, exact=False, net_size=None, open_orders=(), lot=lot,
                 evidence=Evidence(
                     "SNAPSHOT", "HL_OPEN_ORDER_QUERY_FAILED", detail=type(exc).__name__
                 ),
+            )
+        try:
+            orders = self._parse_recovery_open_orders(raw_orders)
+        except (KeyError, TypeError, ValueError, OverflowError):
+            return SymbolSnapshot(
+                symbol=symbol,
+                exact=False,
+                net_size=None,
+                open_orders=(),
+                lot=lot,
+                evidence=Evidence("SNAPSHOT", "HL_ORDER_EVIDENCE_MALFORMED"),
             )
         matching = [p for p in positions if p.symbol == symbol]
         if len(matching) > 1:
@@ -1016,14 +1148,24 @@ class HyperliquidBroker:
                     ),
                 )
             return self._parse_order_query(raw, cloid)
-        # Fall back to the open-order collection: it can only prove presence.
+        # Fall back to the raw open-order collection: it can only prove presence,
+        # and any malformed row makes the entire recovery answer inexact.
+        if not hasattr(self.info, "open_orders"):
+            return OrderQueryResult(
+                known=False,
+                evidence=Evidence("OPEN_ORDERS", "HL_OPEN_ORDER_QUERY_FAILED"),
+            )
         try:
-            orders = await self.open_orders()
+            raw_orders = await asyncio.to_thread(
+                self.info.open_orders, self.account_address
+            )
+            orders = self._parse_recovery_open_orders(raw_orders)
         except Exception as exc:  # noqa: BLE001
             return OrderQueryResult(
                 known=False,
                 evidence=Evidence(
-                    "QUERY_ORDER", "HL_QUERY_FAILED", detail=type(exc).__name__
+                    "OPEN_ORDERS", "HL_ORDER_EVIDENCE_MALFORMED",
+                    detail=type(exc).__name__,
                 ),
             )
         for order in orders:
@@ -1066,6 +1208,13 @@ class HyperliquidBroker:
                 known=False, evidence=Evidence("QUERY_ORDER", "HL_QUERY_STATUS_MISSING")
             )
         normalized = order_status.strip().upper()
+        if normalized not in (
+            cls._LIVE_ORDER_STATUSES | cls._TERMINAL_ORDER_STATUSES
+        ):
+            return OrderQueryResult(
+                known=False,
+                evidence=Evidence("QUERY_ORDER", "HL_QUERY_STATUS_UNKNOWN"),
+            )
         inner = payload.get("order")
         filled: float | None = None
         if isinstance(inner, dict):
@@ -1440,7 +1589,7 @@ class HyperliquidBroker:
             size=self._float(row.get("sz", row.get("size"))),
             status=str(row.get("status", "OPEN")),
             role=role,
-            reduce_only=bool(row.get("reduceOnly", row.get("reduce_only", role in {"SL", "TP"}))),
+            reduce_only=bool(row.get("reduceOnly", row.get("reduce_only", False))),
             trigger_px=trigger_px,
             order_type=order_type,
             order_ref=row.get("orderRef", row.get("order_ref")),
