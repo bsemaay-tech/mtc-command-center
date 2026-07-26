@@ -1696,7 +1696,7 @@ def test_symbol_snapshot_is_exact_with_metadata_and_both_reads():
             "assetPositions": [{"position": {"coin": "BTC", "szi": "1.5"}}]
         },
         open_orders=lambda addr: [
-            {"cloid": "0xabc", "coin": "BTC", "side": "A", "sz": "1.5",
+            {"cloid": "0xabc", "oid": 7, "coin": "BTC", "side": "A", "sz": "1.5",
              "status": "OPEN", "orderType": "Stop Market", "triggerPx": "95.0",
              "reduceOnly": True}
         ],
@@ -2067,3 +2067,399 @@ def test_legacy_cancel_flatten_reprotect_signatures_are_preserved():
     assert list(inspect.signature(broker.reprotect_position).parameters) == [
         "position", "stop_loss", "take_profit", "decision_uid"
     ]
+
+
+# ---------------------------------------------------------------------------
+# TS-P1-005 read-only full-reconciliation evidence
+# ---------------------------------------------------------------------------
+
+from bridge.engine.types import (  # noqa: E402 - grouped with the section it serves
+    ReconcileComponentKind,
+    ReconcileComponentStatus,
+)
+
+
+class ReconcileInfo:
+    """Minimal Info double for the read-only reconciliation surface."""
+
+    def __init__(
+        self,
+        *,
+        state=None,
+        orders=None,
+        fill_pages=None,
+        funding_pages=None,
+        raise_on: str = "",
+    ) -> None:
+        self._state = state
+        self._orders = orders if orders is not None else []
+        self._fill_pages = list(fill_pages or [[]])
+        self._funding_pages = list(funding_pages or [[]])
+        self._raise_on = raise_on
+        self.fill_calls: list[tuple[int, int]] = []
+        self.funding_calls: list[tuple[int, int]] = []
+
+    def user_state(self, address):
+        if self._raise_on == "user_state":
+            raise RuntimeError("boom")
+        return self._state
+
+    def open_orders(self, address):
+        if self._raise_on == "open_orders":
+            raise RuntimeError("boom")
+        return self._orders
+
+    def user_fills_by_time(self, address, start_time, end_time=None):
+        self.fill_calls.append((start_time, end_time))
+        return self._fill_pages[min(len(self.fill_calls) - 1, len(self._fill_pages) - 1)]
+
+    def user_funding_history(self, address, start_time, end_time=None):
+        self.funding_calls.append((start_time, end_time))
+        return self._funding_pages[
+            min(len(self.funding_calls) - 1, len(self._funding_pages) - 1)
+        ]
+
+
+def _reconcile_broker(info) -> HyperliquidBroker:
+    broker = HyperliquidBroker(info_client=info, exchange_client=object())
+    broker._size_decimals = {"BTC": 3}
+    return broker
+
+
+def _hl_state(*, equity="1000", margin_used="100", withdrawable="900", positions=None):
+    return {
+        "marginSummary": {"accountValue": equity, "totalMarginUsed": margin_used},
+        "withdrawable": withdrawable,
+        "assetPositions": positions if positions is not None else [],
+    }
+
+
+def test_portfolio_evidence_is_one_read_for_three_components():
+    info = ReconcileInfo(
+        state=_hl_state(
+            positions=[{"position": {"coin": "BTC", "szi": "0.25"}}]
+        )
+    )
+    broker = _reconcile_broker(info)
+    portfolio = asyncio.run(broker.portfolio_evidence())
+
+    assert portfolio.positions.rows == ({"symbol": "BTC", "size": 0.25},)
+    assert portfolio.balances.rows == ({"equity": 1000.0, "withdrawable": 900.0},)
+    assert portfolio.margin.rows == (
+        {"margin_used": 100.0, "available_margin": 900.0},
+    )
+    # One REST call produces all three; balances/margin add nothing.
+    assert portfolio.positions.call_count == 1
+    assert portfolio.balances.call_count == 0
+    assert portfolio.margin.call_count == 0
+    # Identical source timestamp means zero intra-account skew by construction.
+    assert portfolio.positions.observed_ts == portfolio.balances.observed_ts
+    assert portfolio.margin.observed_ts == portfolio.balances.observed_ts
+
+
+def test_portfolio_evidence_never_clamps_an_inconsistent_account():
+    info = ReconcileInfo(state=_hl_state(equity="100", margin_used="500"))
+    portfolio = asyncio.run(_reconcile_broker(info).portfolio_evidence())
+
+    assert portfolio.balances.status is ReconcileComponentStatus.CONFLICTING
+    assert portfolio.margin.status is ReconcileComponentStatus.CONFLICTING
+    # The raw negative figure is retained, not repaired to zero.
+    assert portfolio.margin.rows[0]["available_margin"] == -400.0
+    assert portfolio.balances.accepted is False
+
+
+def test_portfolio_evidence_fails_closed_on_transport_and_malformed_bodies():
+    failed = asyncio.run(
+        _reconcile_broker(ReconcileInfo(raise_on="user_state")).portfolio_evidence()
+    )
+    assert failed.positions.status is ReconcileComponentStatus.UNAVAILABLE
+    assert failed.positions.rows == ()
+
+    malformed = asyncio.run(
+        _reconcile_broker(ReconcileInfo(state={"assetPositions": "nope"}))
+        .portfolio_evidence()
+    )
+    assert malformed.positions.status is ReconcileComponentStatus.MALFORMED
+
+    nan_position = asyncio.run(
+        _reconcile_broker(
+            ReconcileInfo(
+                state=_hl_state(positions=[{"position": {"coin": "BTC", "szi": "nan"}}])
+            )
+        ).portfolio_evidence()
+    )
+    assert nan_position.positions.status is ReconcileComponentStatus.MALFORMED
+
+
+def test_duplicate_position_rows_are_conflicting_not_summed():
+    info = ReconcileInfo(
+        state=_hl_state(
+            positions=[
+                {"position": {"coin": "BTC", "szi": "0.25"}},
+                {"position": {"coin": "BTC", "szi": "0.50"}},
+            ]
+        )
+    )
+    portfolio = asyncio.run(_reconcile_broker(info).portfolio_evidence())
+    assert portfolio.positions.status is ReconcileComponentStatus.CONFLICTING
+
+
+def test_open_orders_evidence_sorts_and_fails_closed_on_bad_rows():
+    info = ReconcileInfo(
+        orders=[
+            {"cloid": "0xb", "coin": "BTC", "side": "A", "sz": "0.1",
+             "reduceOnly": True, "oid": 2},
+            {"cloid": "0xa", "coin": "BTC", "side": "B", "sz": "0.1",
+             "reduceOnly": False, "oid": 1},
+        ]
+    )
+    evidence = asyncio.run(_reconcile_broker(info).open_orders_evidence())
+    assert [row["cloid"] for row in evidence.rows] == ["0xa", "0xb"]
+    assert evidence.accepted is True
+
+    broken = ReconcileInfo(orders=[{"cloid": "0xa", "coin": "BTC"}])
+    bad = asyncio.run(_reconcile_broker(broken).open_orders_evidence())
+    assert bad.status is ReconcileComponentStatus.MALFORMED
+
+    failed = asyncio.run(
+        _reconcile_broker(ReconcileInfo(raise_on="open_orders")).open_orders_evidence()
+    )
+    assert failed.status is ReconcileComponentStatus.UNAVAILABLE
+
+
+def _fill(hash_value: str, oid: int, time_ms: int) -> dict:
+    return {
+        "coin": "BTC",
+        "side": "B",
+        "px": "100.5",
+        "sz": "0.1",
+        "time": time_ms,
+        "hash": hash_value,
+        "oid": oid,
+        "closedPnl": "0.0",
+        "crossed": True,
+        "dir": "Open Long",
+        "startPosition": "0.0",
+    }
+
+
+def test_fills_evidence_identity_comes_from_documented_fields():
+    info = ReconcileInfo(fill_pages=[[_fill("0xh", 7, 1_700)]])
+    evidence = asyncio.run(
+        _reconcile_broker(info).fills_evidence(start_ms=1_000, end_ms=2_000)
+    )
+    assert evidence.accepted is True
+    assert evidence.rows[0]["event_id"] == "0xh:7:1700"
+    assert evidence.rows[0]["effective_ts_ms"] == 1_700
+    assert evidence.cursor_start_ms == 1_000
+    assert evidence.cursor_end_ms == 2_000
+    assert info.fill_calls == [(1_000, 2_000)]
+
+
+def test_live_and_historical_fill_use_the_same_fallback_identity_and_timestamp():
+    row = {
+        "coin": "BTC",
+        "side": "B",
+        "px": "100",
+        "sz": "0.1",
+        "time": 1_500,
+        "hash": "0xfill",
+        "oid": 7,
+    }
+    historical = HyperliquidBroker._parse_fill_evidence_row(row)
+    broker = HyperliquidBroker(info_client=object(), exchange_client=object())
+    broker._oid_to_cloid[7] = "0xowned"
+    live = broker._parse_fill_event(dict(row))
+
+    assert live is not None
+    assert historical is not None
+    assert live.fill_id == historical["event_id"] == "0xfill:7:1500"
+    assert int(live.ts.timestamp() * 1000) == historical["effective_ts_ms"]
+
+
+def test_full_open_order_evidence_rejects_missing_oid():
+    info = ReconcileInfo(orders=[{
+        "cloid": "0xforeign",
+        "coin": "BTC",
+        "side": "B",
+        "sz": "0.1",
+        "reduceOnly": False,
+    }])
+    evidence = asyncio.run(_reconcile_broker(info).open_orders_evidence())
+    assert evidence.accepted is False
+    assert evidence.status is ReconcileComponentStatus.MALFORMED
+
+
+def test_fills_evidence_walks_pages_and_deduplicates_the_inclusive_boundary(
+    monkeypatch,
+):
+    monkeypatch.setattr(HyperliquidBroker, "HL_FILLS_PAGE_LIMIT", 2)
+    page_one = [_fill("0x1", 1, 1_100), _fill("0x2", 2, 1_200)]
+    # The inclusive next-startTime replays the boundary row.
+    page_two = [_fill("0x2", 2, 1_200), _fill("0x3", 3, 1_300)]
+    info = ReconcileInfo(fill_pages=[page_one, page_two, []])
+    evidence = asyncio.run(
+        _reconcile_broker(info).fills_evidence(start_ms=1_000, end_ms=2_000)
+    )
+
+    assert evidence.accepted is True
+    assert [row["event_id"] for row in evidence.rows] == [
+        "0x1:1:1100", "0x2:2:1200", "0x3:3:1300",
+    ]
+    assert info.fill_calls[0] == (1_000, 2_000)
+    assert info.fill_calls[1] == (1_200, 2_000)
+
+
+def test_fills_evidence_fails_closed_when_the_cursor_stalls(monkeypatch):
+    monkeypatch.setattr(HyperliquidBroker, "HL_FILLS_PAGE_LIMIT", 2)
+    stalled = [_fill("0x1", 1, 1_000), _fill("0x2", 2, 1_000)]
+    info = ReconcileInfo(fill_pages=[stalled])
+    evidence = asyncio.run(
+        _reconcile_broker(info).fills_evidence(start_ms=1_000, end_ms=2_000)
+    )
+    assert evidence.status is ReconcileComponentStatus.TRUNCATED
+    assert evidence.reason_code == "HL_CURSOR_STALLED"
+    assert evidence.accepted is False
+
+
+def test_fills_evidence_fails_closed_at_the_documented_history_limit(monkeypatch):
+    monkeypatch.setattr(HyperliquidBroker, "HL_FILLS_PAGE_LIMIT", 2)
+    monkeypatch.setattr(HyperliquidBroker, "HL_FILLS_HISTORY_LIMIT", 2)
+    info = ReconcileInfo(fill_pages=[[_fill("0x1", 1, 1_100), _fill("0x2", 2, 1_200)]])
+    evidence = asyncio.run(
+        _reconcile_broker(info).fills_evidence(start_ms=1_000, end_ms=2_000)
+    )
+    assert evidence.status is ReconcileComponentStatus.TRUNCATED
+    assert evidence.reason_code == "HL_HISTORY_LIMIT_REACHED"
+
+
+def test_fills_evidence_rejects_malformed_rows_and_inverted_windows():
+    malformed = asyncio.run(
+        _reconcile_broker(
+            ReconcileInfo(fill_pages=[[{"coin": "BTC", "time": 1_100}]])
+        ).fills_evidence(start_ms=1_000, end_ms=2_000)
+    )
+    assert malformed.status is ReconcileComponentStatus.MALFORMED
+
+    inverted = asyncio.run(
+        _reconcile_broker(ReconcileInfo()).fills_evidence(start_ms=2_000, end_ms=1_000)
+    )
+    assert inverted.status is ReconcileComponentStatus.STALE
+    assert inverted.reason_code == "HL_WINDOW_INVERTED"
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"side": "NOT_A_SIDE"},
+        {"sz": "0"},
+        {"sz": "-1"},
+        {"px": "0"},
+        {"px": "-100"},
+        {"time": 999},
+        {"time": 2_001},
+    ],
+)
+def test_fills_evidence_rejects_invalid_semantics_and_out_of_window_rows(overrides):
+    row = _fill("0xbad", 9, 1_500)
+    row.update(overrides)
+    evidence = asyncio.run(
+        _reconcile_broker(ReconcileInfo(fill_pages=[[row]])).fills_evidence(
+            start_ms=1_000, end_ms=2_000
+        )
+    )
+    assert evidence.accepted is False
+    assert evidence.status is ReconcileComponentStatus.MALFORMED
+
+
+def _funding(hash_value: str, time_ms: int, usdc: str = "-1.25", **delta) -> dict:
+    payload = {
+        "coin": "BTC",
+        "fundingRate": "0.0000125",
+        "szi": "0.1",
+        "type": "funding",
+        "usdc": usdc,
+        "nSamples": 1,
+    }
+    payload.update(delta)
+    return {"delta": payload, "hash": hash_value, "time": time_ms}
+
+
+def test_funding_evidence_uses_the_authoritative_event_hash():
+    info = ReconcileInfo(funding_pages=[[_funding("0xfund", 1_400)]])
+    evidence = asyncio.run(
+        _reconcile_broker(info).funding_evidence(start_ms=1_000, end_ms=2_000)
+    )
+    row = evidence.rows[0]
+    assert evidence.accepted is True
+    assert row["event_id"] == "0xfund"          # authoritative hash, never synthesized
+    assert row["symbol"] == "BTC"               # delta.coin
+    assert row["amount_usdc"] == -1.25          # signed delta.usdc
+    assert row["effective_ts_ms"] == 1_400      # record time
+    assert row["funding_rate"] == 0.0000125
+    assert row["n_samples"] == 1
+
+
+@pytest.mark.parametrize(
+    "row",
+    [
+        {"delta": {"coin": "BTC", "type": "funding", "usdc": "-1"}, "time": 1_400},
+        {"delta": {"coin": "BTC", "type": "funding", "usdc": "-1"},
+         "hash": "", "time": 1_400},
+        {"delta": {"coin": "BTC", "type": "deposit", "usdc": "-1"},
+         "hash": "0xf", "time": 1_400},
+        {"delta": {"coin": "", "type": "funding", "usdc": "-1"},
+         "hash": "0xf", "time": 1_400},
+        {"delta": {"coin": "BTC", "type": "funding", "usdc": "nan"},
+         "hash": "0xf", "time": 1_400},
+        {"delta": {"coin": "BTC", "type": "funding", "usdc": "-1"},
+         "hash": "0xf", "time": 0},
+        {"delta": "not-a-mapping", "hash": "0xf", "time": 1_400},
+    ],
+    ids=[
+        "missing-hash", "blank-hash", "wrong-delta-type", "blank-coin",
+        "non-finite-usdc", "invalid-time", "malformed-delta",
+    ],
+)
+def test_funding_evidence_fails_closed_on_unusable_records(row):
+    info = ReconcileInfo(funding_pages=[[row]])
+    evidence = asyncio.run(
+        _reconcile_broker(info).funding_evidence(start_ms=1_000, end_ms=2_000)
+    )
+    assert evidence.status is ReconcileComponentStatus.MALFORMED
+    assert evidence.rows == ()
+
+
+def test_funding_evidence_pagination_progress_and_conflict(monkeypatch):
+    monkeypatch.setattr(HyperliquidBroker, "HL_INFO_PAGE_LIMIT", 2)
+    page_one = [_funding("0xf1", 1_100), _funding("0xf2", 1_200)]
+    page_two = [_funding("0xf2", 1_200), _funding("0xf3", 1_300)]
+    info = ReconcileInfo(funding_pages=[page_one, page_two, []])
+    evidence = asyncio.run(
+        _reconcile_broker(info).funding_evidence(start_ms=1_000, end_ms=2_000)
+    )
+    assert [row["event_id"] for row in evidence.rows] == ["0xf1", "0xf2", "0xf3"]
+    assert info.funding_calls[1] == (1_200, 2_000)
+
+    conflicting = ReconcileInfo(
+        funding_pages=[[_funding("0xf1", 1_100), _funding("0xf1", 1_100, usdc="-9.0")]]
+    )
+    blocked = asyncio.run(
+        _reconcile_broker(conflicting).funding_evidence(start_ms=1_000, end_ms=2_000)
+    )
+    assert blocked.status is ReconcileComponentStatus.CONFLICTING
+    assert blocked.reason_code == "HL_FUNDING_IDENTITY_CONFLICT"
+
+
+def test_reconciliation_reads_are_unavailable_without_an_info_client():
+    broker = HyperliquidBroker(info_client=None, exchange_client=None)
+    portfolio = asyncio.run(broker.portfolio_evidence())
+    orders = asyncio.run(broker.open_orders_evidence())
+    fills = asyncio.run(broker.fills_evidence(start_ms=0, end_ms=1))
+    funding = asyncio.run(broker.funding_evidence(start_ms=0, end_ms=1))
+
+    for component in (portfolio.positions, orders, fills, funding):
+        assert component.status is ReconcileComponentStatus.UNAVAILABLE
+        assert component.reason_code == "HL_NOT_CONFIGURED"
+        assert component.accepted is False
+    assert orders.kind is ReconcileComponentKind.OPEN_ORDERS

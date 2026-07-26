@@ -916,7 +916,17 @@ class OrderManager:
             # succeeded. Quantization failures never reach this fallback.
             return str(raw_status)
 
-    async def sync_broker_state(self) -> None:
+    async def drain_queued_events(self) -> int:
+        """Ingest queued broker callbacks under the per-symbol writer locks.
+
+        Purely local: no broker I/O happens here. TS-P1-005 calls it once,
+        after acquiring the global full-reconcile writer guard and before any
+        evidence is collected, so a full capture always observes one coherent
+        local epoch rather than a half-applied event queue.
+
+        Returns the number of events consumed.
+        """
+        before = len(self._queued_events)
         pending: list[BrokerEvent] = []
         for event in self._queued_events:
             symbol = self._event_symbol(event)
@@ -928,6 +938,10 @@ class OrderManager:
                 if not self._ingest_event(event):
                     pending.append(event)
         self._queued_events = pending
+        return before - len(pending)
+
+    async def sync_broker_state(self) -> None:
+        await self.drain_queued_events()
 
         broker_orders = await self.broker.open_orders()
         for order in broker_orders:
@@ -954,7 +968,16 @@ class OrderManager:
                     status,
                 )
 
-    async def reconcile(self) -> None:
+    async def reconcile(self, *, _full_guard_held: bool = False) -> None:
+        if not _full_guard_held:
+            # Import lazily to avoid a module cycle. Light and full reconciliation
+            # share this database-scoped epoch guard for their entire broker/local
+            # observation window; neither can construct a mixed-state snapshot.
+            from bridge.engine.reconcile import full_writer_guard
+
+            async with full_writer_guard(self.store):
+                await self.reconcile(_full_guard_held=True)
+            return
         await self.recover_unknown_submissions()
         if self.store.has_submission_quarantine():
             # TS-P1-003 quarantine dominates: TS-P1-004 defers completely.

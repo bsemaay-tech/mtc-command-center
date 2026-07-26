@@ -27,12 +27,14 @@ from bridge.broker.base import (
     SubmissionRecoveryRequest,
 )
 from bridge.engine.types import (
+    FULL_RECONCILE_MAX_PAGES,
     AccountSnapshot,
     ActionOutcome,
     Bar,
     BrokerEvent,
     BrokerOrder,
     CancelResult,
+    ComponentEvidence,
     Evidence,
     FillEvent,
     FlattenResult,
@@ -43,7 +45,10 @@ from bridge.engine.types import (
     OrderUpdateEvent,
     OrderView,
     PlaceResult,
+    PortfolioEvidence,
     Position,
+    ReconcileComponentKind,
+    ReconcileComponentStatus,
     SymbolSnapshot,
 )
 from bridge.engine.bars import BarFinalizer, timeframe_delta
@@ -957,6 +962,7 @@ class HyperliquidBroker:
                 raise ValueError("order row")
             normalized = dict(row)
             cloid = normalized.get("cloid")
+            oid = normalized.get("oid")
             coin = normalized.get("coin")
             side = normalized.get("side")
             if "reduceOnly" in normalized:
@@ -978,6 +984,8 @@ class HyperliquidBroker:
             if (
                 not isinstance(cloid, str)
                 or not cloid.strip()
+                or not isinstance(oid, int)
+                or isinstance(oid, bool)
                 or not isinstance(coin, str)
                 or not coin.strip()
                 or not isinstance(side, str)
@@ -1371,6 +1379,533 @@ class HyperliquidBroker:
         outcome, reason = self._classify_exchange_result(raw)
         return FlattenResult(outcome, str(cloid), Evidence("FLATTEN", reason))
 
+    # ------------------------------------------------------------------
+    # TS-P1-005 read-only full-reconciliation evidence
+    #
+    # Bounded REST budget for one whole capture (D2=A, 5s):
+    #   1 × Info.user_state          -> POSITIONS + BALANCES + MARGIN
+    #   1 × Info.open_orders         -> OPEN_ORDERS
+    #   N × Info.user_fills_by_time  -> FILLS   (N = 1 for an ordinary window)
+    #   M × Info.user_funding_history-> FUNDING (M = 1 for an ordinary window)
+    # i.e. 4 calls nominally, hard-capped at 2 + 2×FULL_RECONCILE_MAX_PAGES.
+    #
+    # Pagination follows the documented Info endpoint semantics: a time-range
+    # response carries at most a fixed number of elements, and a larger range
+    # is walked by using the last returned timestamp as the next startTime.
+    # Because that boundary is inclusive, authoritative identities are
+    # deduplicated and strict cursor progress is required; a repeated full page
+    # is truncation, never "the end".
+    # ------------------------------------------------------------------
+
+    HL_FILLS_PAGE_LIMIT = 2000
+    """Documented maximum elements in one ``userFillsByTime`` response."""
+
+    HL_FILLS_HISTORY_LIMIT = 10_000
+    """Documented maximum fills retained; a deeper window is unprovable."""
+
+    HL_INFO_PAGE_LIMIT = 500
+    """Documented maximum elements in one time-ranged Info response."""
+
+    def _reconcile_unavailable(
+        self, kind: ReconcileComponentKind, reason_code: str
+    ) -> ComponentEvidence:
+        return ComponentEvidence(
+            kind=kind,
+            source="HL_INFO",
+            status=ReconcileComponentStatus.UNAVAILABLE,
+            observed_ts=None,
+            reason_code=reason_code,
+        )
+
+    async def portfolio_evidence(self) -> PortfolioEvidence:
+        """Positions, balances and margin from exactly one ``user_state`` read.
+
+        One call for three components removes intra-account skew entirely:
+        the three observations are the same observation.
+        """
+        kinds = (
+            ReconcileComponentKind.POSITIONS,
+            ReconcileComponentKind.BALANCES,
+            ReconcileComponentKind.MARGIN,
+        )
+        if self.info is None or not hasattr(self.info, "user_state"):
+            unavailable = [
+                self._reconcile_unavailable(kind, "HL_NOT_CONFIGURED") for kind in kinds
+            ]
+            return PortfolioEvidence(*unavailable)
+        try:
+            state = await asyncio.to_thread(self.info.user_state, self.account_address)
+        except Exception as exc:  # noqa: BLE001 - a failed read is inexact evidence
+            reason = f"HL_ACCOUNT_QUERY_FAILED:{type(exc).__name__.upper()}"[:96]
+            return PortfolioEvidence(
+                *[self._reconcile_unavailable(kind, reason) for kind in kinds]
+            )
+        observed_ts = datetime.now(UTC)
+
+        def malformed(reason: str) -> PortfolioEvidence:
+            return PortfolioEvidence(*[
+                ComponentEvidence(
+                    kind=kind,
+                    source="HL_INFO",
+                    status=ReconcileComponentStatus.MALFORMED,
+                    observed_ts=observed_ts,
+                    reason_code=reason,
+                )
+                for kind in kinds
+            ])
+
+        if not isinstance(state, Mapping):
+            return malformed("HL_ACCOUNT_EVIDENCE_MALFORMED")
+        raw_positions = state.get("assetPositions")
+        summary = state.get("marginSummary")
+        if not isinstance(raw_positions, list) or not isinstance(summary, Mapping):
+            return malformed("HL_ACCOUNT_EVIDENCE_MALFORMED")
+
+        positions: dict[str, float] = {}
+        for row in raw_positions:
+            if not isinstance(row, Mapping):
+                return malformed("HL_POSITION_EVIDENCE_MALFORMED")
+            payload = row.get("position", row)
+            if not isinstance(payload, Mapping):
+                return malformed("HL_POSITION_EVIDENCE_MALFORMED")
+            coin = payload.get("coin")
+            raw_size = payload.get("szi", payload.get("size"))
+            if (
+                not isinstance(coin, str)
+                or not coin.strip()
+                or isinstance(raw_size, bool)
+                or raw_size is None
+            ):
+                return malformed("HL_POSITION_EVIDENCE_MALFORMED")
+            try:
+                size = float(raw_size)
+            except (TypeError, ValueError, OverflowError):
+                return malformed("HL_POSITION_EVIDENCE_MALFORMED")
+            if not math.isfinite(size):
+                return malformed("HL_POSITION_EVIDENCE_MALFORMED")
+            if coin in positions:
+                return PortfolioEvidence(*[
+                    ComponentEvidence(
+                        kind=kind,
+                        source="HL_INFO",
+                        status=ReconcileComponentStatus.CONFLICTING,
+                        observed_ts=observed_ts,
+                        reason_code="HL_POSITION_CONFLICTING",
+                    )
+                    for kind in kinds
+                ])
+            positions[coin] = size
+
+        equity = self._reconcile_float(summary.get("accountValue"))
+        margin_used = self._reconcile_float(summary.get("totalMarginUsed"))
+        withdrawable = self._reconcile_float(state.get("withdrawable"))
+        if equity is None or margin_used is None or withdrawable is None:
+            return malformed("HL_ACCOUNT_EVIDENCE_MALFORMED")
+        # Deliberately unclamped: the accepted adapter's `max(..., 0.0)` is a
+        # silent repair, which a reconciliation snapshot must never do.
+        available = equity - margin_used
+        inconsistent = (
+            min(equity, margin_used, withdrawable, available) < 0
+            or withdrawable > equity
+            or margin_used > equity
+        )
+        account_status = (
+            ReconcileComponentStatus.CONFLICTING
+            if inconsistent
+            else ReconcileComponentStatus.COMPLETE
+        )
+        account_reason = (
+            "HL_ACCOUNT_ARITHMETIC_INCONSISTENT"
+            if inconsistent
+            else "HL_ACCOUNT_COMPLETE"
+        )
+        return PortfolioEvidence(
+            positions=ComponentEvidence(
+                kind=ReconcileComponentKind.POSITIONS,
+                source="HL_INFO",
+                status=ReconcileComponentStatus.COMPLETE,
+                observed_ts=observed_ts,
+                rows=tuple(
+                    {"symbol": coin, "size": positions[coin]}
+                    for coin in sorted(positions)
+                ),
+                exact=True,
+                complete=True,
+                reason_code="HL_POSITIONS_COMPLETE",
+                call_count=1,
+                page_count=1,
+            ),
+            balances=ComponentEvidence(
+                kind=ReconcileComponentKind.BALANCES,
+                source="HL_INFO",
+                status=account_status,
+                observed_ts=observed_ts,
+                rows=({"equity": equity, "withdrawable": withdrawable},),
+                exact=not inconsistent,
+                complete=not inconsistent,
+                reason_code=account_reason,
+                call_count=0,
+                page_count=1,
+            ),
+            margin=ComponentEvidence(
+                kind=ReconcileComponentKind.MARGIN,
+                source="HL_INFO",
+                status=account_status,
+                observed_ts=observed_ts,
+                rows=({"margin_used": margin_used, "available_margin": available},),
+                exact=not inconsistent,
+                complete=not inconsistent,
+                reason_code=account_reason,
+                call_count=0,
+                page_count=1,
+            ),
+        )
+
+    async def open_orders_evidence(self) -> ComponentEvidence:
+        """Authoritative live open-order rows; ambiguity is never dropped."""
+        kind = ReconcileComponentKind.OPEN_ORDERS
+        if self.info is None or not hasattr(self.info, "open_orders"):
+            return self._reconcile_unavailable(kind, "HL_NOT_CONFIGURED")
+        try:
+            raw_orders = await asyncio.to_thread(
+                self.info.open_orders, self.account_address
+            )
+        except Exception as exc:  # noqa: BLE001
+            return self._reconcile_unavailable(
+                kind, f"HL_OPEN_ORDER_QUERY_FAILED:{type(exc).__name__.upper()}"[:96]
+            )
+        observed_ts = datetime.now(UTC)
+        try:
+            orders = self._parse_recovery_open_orders(raw_orders)
+        except (KeyError, TypeError, ValueError, OverflowError):
+            return ComponentEvidence(
+                kind=kind,
+                source="HL_INFO",
+                status=ReconcileComponentStatus.MALFORMED,
+                observed_ts=observed_ts,
+                reason_code="HL_ORDER_EVIDENCE_MALFORMED",
+            )
+        rows: dict[str, dict[str, object]] = {}
+        for order in orders:
+            row = {
+                "cloid": order.cloid,
+                "oid": order.oid,
+                "coin": order.coin,
+                "side": order.side,
+                "size": float(order.size),
+                "status": str(order.status),
+                "role": str(order.role),
+                "reduce_only": bool(order.reduce_only),
+            }
+            existing = rows.get(order.cloid)
+            if existing is not None and existing != row:
+                return ComponentEvidence(
+                    kind=kind,
+                    source="HL_INFO",
+                    status=ReconcileComponentStatus.CONFLICTING,
+                    observed_ts=observed_ts,
+                    rows=(existing, row),
+                    reason_code="HL_ORDER_IDENTITY_CONFLICT",
+                )
+            rows[order.cloid] = row
+        return ComponentEvidence(
+            kind=kind,
+            source="HL_INFO",
+            status=ReconcileComponentStatus.COMPLETE,
+            observed_ts=observed_ts,
+            rows=tuple(rows[cloid] for cloid in sorted(rows)),
+            exact=True,
+            complete=True,
+            reason_code="HL_OPEN_ORDERS_COMPLETE",
+            call_count=1,
+            page_count=1,
+        )
+
+    async def fills_evidence(
+        self, *, start_ms: int, end_ms: int
+    ) -> ComponentEvidence:
+        """Time-paginated fills; an unprovable window fails closed."""
+        return await self._paged_info_evidence(
+            kind=ReconcileComponentKind.FILLS,
+            method_name="user_fills_by_time",
+            start_ms=start_ms,
+            end_ms=end_ms,
+            page_limit=self.HL_FILLS_PAGE_LIMIT,
+            history_limit=self.HL_FILLS_HISTORY_LIMIT,
+            parse=self._parse_fill_evidence_row,
+        )
+
+    async def funding_evidence(
+        self, *, start_ms: int, end_ms: int
+    ) -> ComponentEvidence:
+        """Time-paginated funding ledger keyed by the exchange event hash."""
+        return await self._paged_info_evidence(
+            kind=ReconcileComponentKind.FUNDING,
+            method_name="user_funding_history",
+            start_ms=start_ms,
+            end_ms=end_ms,
+            page_limit=self.HL_INFO_PAGE_LIMIT,
+            history_limit=None,
+            parse=self._parse_funding_evidence_row,
+        )
+
+    async def _paged_info_evidence(
+        self,
+        *,
+        kind: ReconcileComponentKind,
+        method_name: str,
+        start_ms: int,
+        end_ms: int,
+        page_limit: int,
+        history_limit: int | None,
+        parse,
+    ) -> ComponentEvidence:
+        method = getattr(self.info, method_name, None) if self.info else None
+        if method is None:
+            return self._reconcile_unavailable(kind, "HL_NOT_CONFIGURED")
+        if int(end_ms) < int(start_ms):
+            return ComponentEvidence(
+                kind=kind, source="HL_INFO",
+                status=ReconcileComponentStatus.STALE, observed_ts=None,
+                reason_code="HL_WINDOW_INVERTED",
+                cursor_start_ms=int(start_ms), cursor_end_ms=int(end_ms),
+            )
+
+        def degraded(
+            status: ReconcileComponentStatus,
+            reason: str,
+            calls: int,
+            pages: int,
+            rows: tuple[Mapping[str, object], ...] = (),
+        ) -> ComponentEvidence:
+            return ComponentEvidence(
+                kind=kind,
+                source="HL_INFO",
+                status=status,
+                observed_ts=datetime.now(UTC),
+                rows=rows,
+                reason_code=reason,
+                cursor_start_ms=int(start_ms),
+                cursor_end_ms=int(end_ms),
+                page_count=pages,
+                call_count=calls,
+            )
+
+        collected: dict[str, dict[str, object]] = {}
+        cursor = int(start_ms)
+        pages = 0
+        while True:
+            if pages >= FULL_RECONCILE_MAX_PAGES:
+                return degraded(
+                    ReconcileComponentStatus.TRUNCATED,
+                    "HL_PAGE_BUDGET_EXCEEDED",
+                    pages,
+                    pages,
+                )
+            pages += 1
+            try:
+                raw = await asyncio.to_thread(
+                    method, self.account_address, cursor, int(end_ms)
+                )
+            except Exception as exc:  # noqa: BLE001
+                return degraded(
+                    ReconcileComponentStatus.UNAVAILABLE,
+                    f"HL_{kind.value}_QUERY_FAILED:{type(exc).__name__.upper()}"[:96],
+                    pages,
+                    pages,
+                )
+            if not isinstance(raw, list):
+                return degraded(
+                    ReconcileComponentStatus.MALFORMED,
+                    f"HL_{kind.value}_EVIDENCE_MALFORMED",
+                    pages,
+                    pages,
+                )
+            page_max_ts = cursor
+            for row in raw:
+                parsed = parse(row)
+                if parsed is None:
+                    return degraded(
+                        ReconcileComponentStatus.MALFORMED,
+                        f"HL_{kind.value}_EVIDENCE_MALFORMED",
+                        pages,
+                        pages,
+                    )
+                effective_ts = int(parsed["effective_ts_ms"])
+                if effective_ts < int(start_ms) or effective_ts > int(end_ms):
+                    return degraded(
+                        ReconcileComponentStatus.MALFORMED,
+                        f"HL_{kind.value}_OUTSIDE_WINDOW",
+                        pages,
+                        pages,
+                        (parsed,),
+                    )
+                identity = str(parsed["event_id"])
+                previous = collected.get(identity)
+                if previous is not None:
+                    # Inclusive page boundaries replay rows; an exact replay is
+                    # idempotent, a conflicting redefinition never is.
+                    if previous != parsed:
+                        return degraded(
+                            ReconcileComponentStatus.CONFLICTING,
+                            f"HL_{kind.value}_IDENTITY_CONFLICT",
+                            pages,
+                            pages,
+                            (previous, parsed),
+                        )
+                    continue
+                collected[identity] = parsed
+                page_max_ts = max(page_max_ts, int(parsed["effective_ts_ms"]))
+            if history_limit is not None and len(collected) >= history_limit:
+                # The endpoint only retains a bounded history; a window that
+                # reaches the cap cannot be proven complete.
+                return degraded(
+                    ReconcileComponentStatus.TRUNCATED,
+                    "HL_HISTORY_LIMIT_REACHED",
+                    pages,
+                    pages,
+                )
+            if len(raw) < page_limit:
+                break
+            if page_max_ts <= cursor:
+                # A full page that did not advance the cursor cannot be walked.
+                return degraded(
+                    ReconcileComponentStatus.TRUNCATED,
+                    "HL_CURSOR_STALLED",
+                    pages,
+                    pages,
+                )
+            cursor = page_max_ts
+        return ComponentEvidence(
+            kind=kind,
+            source="HL_INFO",
+            status=ReconcileComponentStatus.COMPLETE,
+            observed_ts=datetime.now(UTC),
+            rows=tuple(collected[key] for key in sorted(collected)),
+            exact=True,
+            complete=True,
+            reason_code=f"HL_{kind.value}_COMPLETE",
+            cursor_start_ms=int(start_ms),
+            cursor_end_ms=int(end_ms),
+            page_count=pages,
+            call_count=pages,
+        )
+
+    @classmethod
+    def _parse_fill_evidence_row(cls, row: object) -> dict[str, object] | None:
+        """Documented ``userFillsByTime`` record; unusable rows fail closed.
+
+        Identity is the documented ``hash``/``oid``/``time`` triple (or the
+        exchange ``tid`` when the response carries one). Nothing is invented.
+        """
+        if not isinstance(row, Mapping):
+            return None
+        coin = row.get("coin")
+        side = row.get("side")
+        raw_time = row.get("time")
+        raw_hash = row.get("hash")
+        oid = row.get("oid")
+        if (
+            not isinstance(coin, str)
+            or not coin.strip()
+            or not isinstance(side, str)
+            or not side.strip()
+            or isinstance(raw_time, bool)
+            or not isinstance(raw_time, int)
+            or raw_time <= 0
+            or not isinstance(raw_hash, str)
+            or not raw_hash.strip()
+            or isinstance(oid, bool)
+            or not isinstance(oid, int)
+        ):
+            return None
+        size = cls._reconcile_float(row.get("sz"))
+        price = cls._reconcile_float(row.get("px"))
+        normalized_side = str(side).upper()
+        if (
+            size is None
+            or price is None
+            or size <= 0
+            or price <= 0
+            or normalized_side not in {"A", "B", "BUY", "SELL"}
+        ):
+            return None
+        tid = row.get("tid")
+        identity = (
+            str(tid)
+            if isinstance(tid, int) and not isinstance(tid, bool)
+            else f"{raw_hash}:{oid}:{raw_time}"
+        )
+        return {
+            "event_id": identity,
+            "fill_hash": raw_hash,
+            "oid": oid,
+            "coin": coin,
+            "side": normalized_side,
+            "size": size,
+            "px": price,
+            "effective_ts_ms": int(raw_time),
+        }
+
+    @classmethod
+    def _parse_funding_evidence_row(cls, row: object) -> dict[str, object] | None:
+        """Documented ``userFunding`` record.
+
+        Shape: ``{delta:{coin,fundingRate,szi,type:'funding',usdc,nSamples},
+        hash, time}``. ``hash`` is the authoritative event identity, ``delta.usdc``
+        the signed amount, ``delta.coin`` the symbol and ``time`` the effective
+        timestamp. A missing/invalid identity, a non-``funding`` delta type or an
+        unparseable amount fails closed — an identity is never synthesized.
+        """
+        if not isinstance(row, Mapping):
+            return None
+        raw_hash = row.get("hash")
+        raw_time = row.get("time")
+        delta = row.get("delta")
+        if (
+            not isinstance(raw_hash, str)
+            or not raw_hash.strip()
+            or isinstance(raw_time, bool)
+            or not isinstance(raw_time, int)
+            or raw_time <= 0
+            or not isinstance(delta, Mapping)
+        ):
+            return None
+        if str(delta.get("type")) != "funding":
+            return None
+        coin = delta.get("coin")
+        if not isinstance(coin, str) or not coin.strip():
+            return None
+        usdc = cls._reconcile_float(delta.get("usdc"))
+        if usdc is None:
+            return None
+        n_samples = delta.get("nSamples")
+        return {
+            "event_id": raw_hash,
+            "symbol": coin,
+            "amount_usdc": usdc,
+            "effective_ts_ms": int(raw_time),
+            "source": "HL_USER_FUNDING",
+            "funding_rate": cls._reconcile_float(delta.get("fundingRate")),
+            "position_szi": cls._reconcile_float(delta.get("szi")),
+            "n_samples": (
+                int(n_samples)
+                if isinstance(n_samples, int) and not isinstance(n_samples, bool)
+                else None
+            ),
+        }
+
+    @staticmethod
+    def _reconcile_float(value: object) -> float | None:
+        """Strict float parse: no default, no coercion of booleans/None."""
+        if value is None or isinstance(value, bool):
+            return None
+        try:
+            number = float(value)  # type: ignore[arg-type]
+        except (TypeError, ValueError, OverflowError):
+            return None
+        return number if math.isfinite(number) else None
+
     def _check_network_lock(self) -> None:
         if self.network != "mainnet":
             return
@@ -1629,8 +2164,25 @@ class HyperliquidBroker:
         spec = self._order_specs.get(cloid, {})
         raw_time = fill.get("time", fill.get("timestamp"))
         ts = datetime.fromtimestamp(float(raw_time) / 1000, tz=UTC) if raw_time is not None else datetime.now(UTC)
+        raw_tid = fill.get("tid")
+        raw_hash = fill.get("hash")
+        fill_id = (
+            str(raw_tid)
+            if isinstance(raw_tid, int) and not isinstance(raw_tid, bool)
+            else (
+                f"{raw_hash}:{oid}:{raw_time}"
+                if isinstance(raw_hash, str)
+                and raw_hash.strip()
+                and isinstance(oid, int)
+                and not isinstance(oid, bool)
+                and raw_time is not None
+                else ""
+            )
+        )
+        if not fill_id:
+            return None
         return FillEvent(
-            fill_id=str(fill.get("tid", fill.get("hash", f"{cloid}:{raw_time}"))),
+            fill_id=fill_id,
             cloid=cloid,
             coin=str(fill.get("coin", spec.get("coin", self.coin))),
             qty=self._float(fill.get("sz", fill.get("qty"))),

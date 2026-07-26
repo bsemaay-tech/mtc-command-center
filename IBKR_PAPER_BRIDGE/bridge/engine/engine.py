@@ -19,6 +19,7 @@ from bridge.engine.bars import BarFeed
 from bridge.engine.llm_gate import NullLLMGate
 from bridge.engine.notify import TelegramNotifier, build_notifier
 from bridge.engine.orders import OrderManager
+from bridge.engine.reconcile import FullReconciler
 from bridge.engine.risk import RiskEngine
 from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
 from bridge.engine.types import Bar, Position
@@ -33,6 +34,14 @@ from bridge.store.db import Store
 
 
 _ROUTINE_FEED_NOTIFICATION_CODES = frozenset({"DISCONNECT", "DATA_RESTORED"})
+
+
+def _safe_full_reconcile_reason(exc: BaseException) -> str:
+    """Secret-safe reason code for a full-capture crash: type name only."""
+    name = "".join(
+        ch if ch.isalnum() or ch == "_" else "_" for ch in type(exc).__name__.upper()
+    )
+    return f"FULL_RECONCILE_CYCLE_FAILED:{name}"[:96]
 
 
 @dataclass
@@ -61,6 +70,14 @@ class BridgeEngine:
     reconcile_ready: bool = False
     last_reconcile_ts: datetime | None = None
     reconcile_error: str | None = None
+    # TS-P1-005: a *separate* readiness gate. `reconcile_ready` above stays
+    # owned by the light `OrderManager.reconcile()` path and can never satisfy
+    # the full gate; full readiness is derived from a fresh accepted v6
+    # checkpoint and is only consulted on a v6-enabled store.
+    full_reconciler: object | None = None
+    last_full_reconcile_ts: datetime | None = None
+    full_reconcile_error: str | None = None
+    full_reconcile_attempt_id: str | None = None
     _feed: BarFeed | None = field(default=None, init=False)
     _tasks: list[asyncio.Task] = field(default_factory=list, init=False)
     _kill_requested: bool = field(default=False, init=False)
@@ -91,6 +108,22 @@ class BridgeEngine:
         elif self.store.partial_recovery_blocks_new_risk():
             self.state = "DISARMED"
             self.store.set_meta("app_state", "DISARMED")
+        if self.store.full_reconcile_enabled():
+            # A capture that never resolved (crash/kill) stays visible as
+            # INCOMPLETE evidence; the prior accepted pointer is untouched and
+            # is now stale until a fresh complete collection replaces it.
+            interrupted = self.store.resolve_interrupted_reconcile_attempts(
+                observed_ts=datetime.now(UTC)
+            )
+            if interrupted:
+                self.full_reconcile_error = "RESTART_INTERRUPTED"
+            if self.full_reconciler is None:
+                self.full_reconciler = FullReconciler(
+                    store=self.store,
+                    broker=self.broker,
+                    run_id=self.run_id,
+                    order_manager=self.order_manager,
+                )
 
     async def start(self, lookback: int = 300) -> None:
         self._ensure_run(mode=self.mode)
@@ -110,6 +143,7 @@ class BridgeEngine:
         self.last_reconcile_ts = datetime.now(UTC)
         self.reconcile_error = None
         record_liveness(self.store, self.last_reconcile_ts)
+        await self.run_full_reconcile()
         await self._publish("status", self.status())
         self._feed = BarFeed(
             broker=self.broker,
@@ -186,6 +220,10 @@ class BridgeEngine:
             self.reconcile_ready = False
             self.reconcile_error = "STALE"
             raise RuntimeError("reconcile evidence stale")
+        if self.store.full_reconcile_enabled() and not self.full_reconcile_ready(now):
+            # Both gates are required on a v6 store: light reconcile success
+            # alone can never arm the bridge.
+            raise RuntimeError("full reconciliation incomplete")
         self._kill_requested = False
         # Explicit human re-arm clears the sticky risk-input fail-closed latch.
         self.risk_input_error = None
@@ -246,6 +284,73 @@ class BridgeEngine:
         self.reconcile_ready = True
         await self._publish("status", self.status())
 
+    def full_reconcile_max_age_s(self) -> float:
+        """Owner-accepted freshness bound, derived from the health cadence.
+
+        Reuses the *existing* accepted light formula rather than introducing a
+        second, unratified constant: the full checkpoint must be no older than
+        three health cycles (floor 30 s). Evaluated at call time, so changing
+        `reconcile_interval_s` moves both bounds together.
+        """
+        return max(self.reconcile_interval_s * 3, 30.0)
+
+    def full_reconcile_ready(self, now: datetime | None = None) -> bool:
+        """Derived from a *fresh accepted v6 checkpoint* — never from the
+        light reconcile path, and never from in-memory state alone."""
+        if not self.store.full_reconcile_enabled():
+            return False
+        if self.full_reconcile_error is not None:
+            # A sticky fail-closed latch: a restart-interrupted capture or any
+            # non-accepting attempt keeps the full gate shut until a *fresh
+            # accept* clears it. Nothing else — not `arm()`, not a light
+            # reconcile recovery — may clear this.
+            return False
+        return self.store.full_reconcile_ready(
+            now=now or datetime.now(UTC),
+            max_age_s=self.full_reconcile_max_age_s(),
+        )
+
+    async def run_full_reconcile(self) -> object | None:
+        """Run one bounded full capture when the v6 ledger is active.
+
+        Never raises for an ordinary failure: the full path carries its own
+        outcome in `full_reconcile_error` and must not be able to consume the
+        light reconcile failure budget or disarm through it.
+        """
+        if not self.store.full_reconcile_enabled() or self.full_reconciler is None:
+            return None
+        try:
+            result = await self.full_reconciler.run_cycle()
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:  # noqa: BLE001 - fail closed on the full gate only
+            self.full_reconcile_error = _safe_full_reconcile_reason(exc)
+            self._record_full_reconcile_block(self.full_reconcile_error)
+            return None
+        self.full_reconcile_attempt_id = result.attempt_id
+        if result.accepted:
+            self.last_full_reconcile_ts = result.ended_ts
+            self.full_reconcile_error = None
+        else:
+            self.full_reconcile_error = result.reason_code
+            self._record_full_reconcile_block(
+                f"{result.state.value}:{result.reason_code}"
+            )
+        return result
+
+    def _record_full_reconcile_block(self, detail: str) -> None:
+        """Best-effort durable note; a broken store must not mask the latch."""
+        try:
+            self.store.insert_event(
+                self.run_id,
+                datetime.now(UTC),
+                "WARN",
+                "FULL_RECONCILE_BLOCKED",
+                detail,
+            )
+        except Exception:  # noqa: BLE001 - the latch above is the real signal
+            self._notify_bg("WARN", f"FULL_RECONCILE_BLOCKED: {detail}")
+
     async def run_replay(self, max_bars: int | None = None) -> None:
         self._ensure_run(mode="dry_run")
         await self.broker.connect()
@@ -258,7 +363,23 @@ class BridgeEngine:
         for bar in replay:
             await self.on_bar(bar, process_broker_bar=True)
 
-    async def on_bar(self, bar: Bar, process_broker_bar: bool = False) -> None:
+    async def on_bar(
+        self,
+        bar: Bar,
+        process_broker_bar: bool = False,
+        *,
+        _full_guard_held: bool = False,
+    ) -> None:
+        if not _full_guard_held:
+            from bridge.engine.reconcile import full_writer_guard
+
+            async with full_writer_guard(self.store):
+                await self.on_bar(
+                    bar,
+                    process_broker_bar=process_broker_bar,
+                    _full_guard_held=True,
+                )
+            return
         if bar.ts in self._processed_bar_ts:
             return
         self._processed_bar_ts.add(bar.ts)
@@ -303,7 +424,14 @@ class BridgeEngine:
             await self._publish("bar", bar.model_dump(mode="json"))
             return
 
-        if self._app_state() != "ARMED" or self._kill_requested:
+        if (
+            self._app_state() != "ARMED"
+            or self._kill_requested
+            or (
+                self.store.full_reconcile_enabled()
+                and not self.full_reconcile_ready()
+            )
+        ):
             await self._publish("bar", bar.model_dump(mode="json"))
             return
         signal = self.strategy.on_bar(self.bars, position=None)
@@ -519,6 +647,14 @@ class BridgeEngine:
             "reconcile_ready": self.reconcile_ready,
             "last_reconcile_ts": self.last_reconcile_ts.isoformat() if self.last_reconcile_ts else None,
             "reconcile_error": self.reconcile_error,
+            "full_reconcile_ready": self.full_reconcile_ready(),
+            "last_full_reconcile_ts": (
+                self.last_full_reconcile_ts.isoformat()
+                if self.last_full_reconcile_ts
+                else None
+            ),
+            "full_reconcile_error": self.full_reconcile_error,
+            "full_reconcile_attempt_id": self.full_reconcile_attempt_id,
             "submission_quarantine_count": self.store.submission_quarantine_count(),
             "partial_recovery_blocking": self.store.partial_recovery_blocks_new_risk(),
             "run_id": self.run_id,
@@ -545,6 +681,17 @@ class BridgeEngine:
                 await self._publish("equity", {"run_id": self.run_id})
 
     async def _run_reconcile_cycle(self) -> bool:
+        light_ok = await self._run_light_reconcile_cycle()
+        # Refresh the *separate* full checkpoint on the same health cadence,
+        # deliberately outside the light try/handler above. A full ledger or
+        # capture failure therefore can never increment
+        # `_consecutive_reconcile_failures`, change `reconcile_ready` /
+        # `reconcile_error`, or disarm through the light budget: it only ever
+        # latches `full_reconcile_error` and shuts the full gate.
+        await self.run_full_reconcile()
+        return light_ok
+
+    async def _run_light_reconcile_cycle(self) -> bool:
         try:
             await self.order_manager.reconcile()
         except asyncio.CancelledError:

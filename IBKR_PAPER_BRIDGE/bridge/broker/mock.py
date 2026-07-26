@@ -5,8 +5,9 @@ from __future__ import annotations
 import csv
 import asyncio
 import itertools
-from dataclasses import dataclass, field
-from datetime import datetime
+import math
+from dataclasses import dataclass, field, replace
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Callable
 
@@ -27,6 +28,7 @@ from bridge.engine.types import (
     BrokerEvent,
     BrokerOrder,
     CancelResult,
+    ComponentEvidence,
     Evidence,
     FillEvent,
     FlattenResult,
@@ -37,7 +39,10 @@ from bridge.engine.types import (
     OrderUpdateEvent,
     OrderView,
     PlaceResult,
+    PortfolioEvidence,
     Position,
+    ReconcileComponentKind,
+    ReconcileComponentStatus,
     SymbolSnapshot,
 )
 
@@ -87,6 +92,33 @@ class MockBroker:
     scripted_flatten: list[ScriptedOutcome] = field(default_factory=list)
     late_entry_fill_on_cancel: float = 0.0
     partial_calls: list[tuple[str, str]] = field(default_factory=list)
+
+    # --- TS-P1-005 full-reconciliation surface (defaults = healthy exchange) ---
+    # Fixtures are plain rows so a test can express *exactly* the adversarial
+    # exchange it wants; every component can be degraded independently.
+    full_open_orders: list[dict] = field(default_factory=list)
+    full_positions: list[dict] = field(default_factory=list)
+    full_account: dict = field(
+        default_factory=lambda: {
+            "equity": 10_000.0,
+            "withdrawable": 10_000.0,
+            "margin_used": 0.0,
+            "available_margin": 10_000.0,
+        }
+    )
+    full_fill_history: list[dict] = field(default_factory=list)
+    full_funding_history: list[dict] = field(default_factory=list)
+    # component name -> "RAISE" | "CRASH" | one of ReconcileComponentStatus
+    # | "NO_TS" | "INEXACT"
+    full_component_failures: dict[str, str] = field(default_factory=dict)
+    # component name -> real awaited delay in seconds, for exercising the
+    # wall-clock capture deadline against an adapter that genuinely hangs.
+    full_component_delays_s: dict[str, float] = field(default_factory=dict)
+    full_row_order_reversed: bool = False
+    full_observed_offsets_s: dict[str, float] = field(default_factory=dict)
+    full_page_size: int = 0
+    full_clock: Callable[[], datetime] | None = None
+    full_calls: list[str] = field(default_factory=list)
 
     @classmethod
     def from_csv(cls, path: str | Path, starting_equity: float = 10_000.0) -> "MockBroker":
@@ -700,3 +732,367 @@ class MockBroker:
         if self.position is not None:
             return self.position.entry_px
         return 0.0
+
+    # ------------------------------------------------------------------
+    # TS-P1-005 read-only full-reconciliation surface
+    # ------------------------------------------------------------------
+
+    def _full_now(self, kind: ReconcileComponentKind) -> datetime:
+        base = self.full_clock() if self.full_clock is not None else datetime.now(UTC)
+        if base.tzinfo is None:
+            base = base.replace(tzinfo=UTC)
+        offset = float(self.full_observed_offsets_s.get(kind.value, 0.0))
+        return base.astimezone(UTC) + timedelta(seconds=offset)
+
+    def _full_rows(self, rows: list[dict]) -> tuple[dict, ...]:
+        ordered = list(rows)
+        if self.full_row_order_reversed:
+            ordered.reverse()
+        return tuple(dict(row) for row in ordered)
+
+    async def _full_delay(self, kind: ReconcileComponentKind) -> None:
+        delay = float(self.full_component_delays_s.get(kind.value, 0.0))
+        if delay > 0:
+            await asyncio.sleep(delay)
+
+    def _full_mode(self, kind: ReconcileComponentKind) -> str | None:
+        mode = self.full_component_failures.get(kind.value)
+        if mode == "RAISE":
+            raise RuntimeError(f"mock {kind.value} evidence unavailable")
+        if mode == "CRASH":
+            # BaseException: models a real process kill mid-collection.
+            raise KeyboardInterrupt(f"mock crash during {kind.value}")
+        return mode
+
+    def _full_component(
+        self,
+        kind: ReconcileComponentKind,
+        rows: list[dict],
+        *,
+        source: str = "MOCK",
+        cursor_start_ms: int | None = None,
+        cursor_end_ms: int | None = None,
+    ) -> ComponentEvidence:
+        mode = self._full_mode(kind)
+        page_count = 1
+        if self.full_page_size > 0 and rows:
+            page_count = (len(rows) + self.full_page_size - 1) // self.full_page_size
+        if mode in {status.value for status in ReconcileComponentStatus} and mode != (
+            ReconcileComponentStatus.COMPLETE.value
+        ):
+            return ComponentEvidence(
+                kind=kind,
+                source=source,
+                status=ReconcileComponentStatus(mode),
+                observed_ts=self._full_now(kind),
+                rows=self._full_rows(rows),
+                exact=False,
+                complete=False,
+                reason_code=f"MOCK_{mode}",
+                cursor_start_ms=cursor_start_ms,
+                cursor_end_ms=cursor_end_ms,
+                page_count=page_count,
+                call_count=page_count,
+            )
+        return ComponentEvidence(
+            kind=kind,
+            source=source,
+            status=ReconcileComponentStatus.COMPLETE,
+            observed_ts=None if mode == "NO_TS" else self._full_now(kind),
+            rows=self._full_rows(rows),
+            exact=mode != "INEXACT",
+            complete=mode != "INEXACT",
+            reason_code="MOCK_COMPLETE",
+            cursor_start_ms=cursor_start_ms,
+            cursor_end_ms=cursor_end_ms,
+            page_count=page_count,
+            call_count=page_count,
+        )
+
+    async def portfolio_evidence(self) -> PortfolioEvidence:
+        self.full_calls.append("portfolio_evidence")
+        await self._full_delay(ReconcileComponentKind.POSITIONS)
+        positions = [
+            {"symbol": str(row.get("symbol", self.coin)), "size": row.get("size")}
+            for row in self.full_positions
+        ]
+        account = dict(self.full_account)
+        # Balances and margin are *derived from the same single read*, so they
+        # cost zero extra calls — mirroring the real adapter's budget.
+        balances = self._full_component(
+            ReconcileComponentKind.BALANCES,
+            [{
+                "equity": account.get("equity"),
+                "withdrawable": account.get("withdrawable"),
+            }],
+        )
+        margin = self._full_component(
+            ReconcileComponentKind.MARGIN,
+            [{
+                "margin_used": account.get("margin_used"),
+                "available_margin": account.get("available_margin"),
+            }],
+        )
+        return PortfolioEvidence(
+            positions=self._full_component(
+                ReconcileComponentKind.POSITIONS, positions
+            ),
+            balances=replace(balances, call_count=0),
+            margin=replace(margin, call_count=0),
+        )
+
+    async def open_orders_evidence(self) -> ComponentEvidence:
+        self.full_calls.append("open_orders_evidence")
+        await self._full_delay(ReconcileComponentKind.OPEN_ORDERS)
+        rows: list[dict] = []
+        seen: dict[str, dict] = {}
+        conflict = False
+        for raw in self.full_open_orders:
+            normalized = {
+                "cloid": raw.get("cloid"),
+                "oid": raw.get("oid"),
+                "coin": raw.get("coin", self.coin),
+                "side": raw.get("side"),
+                "size": raw.get("sz", raw.get("size")),
+                "status": raw.get("status", "OPEN"),
+                "role": raw.get("role", "UNKNOWN"),
+                "reduce_only": bool(raw.get("reduceOnly", raw.get("reduce_only", False))),
+            }
+            if (
+                not isinstance(normalized["cloid"], str)
+                or not str(normalized["cloid"]).strip()
+                or not isinstance(normalized["oid"], int)
+                or isinstance(normalized["oid"], bool)
+                or not isinstance(normalized["coin"], str)
+                or not str(normalized["coin"]).strip()
+                or str(normalized["side"] or "").upper()
+                not in {"A", "B", "BUY", "SELL"}
+                or _mock_float(normalized["size"]) is None
+                or float(normalized["size"]) <= 0
+                or not isinstance(
+                    raw.get("reduceOnly", raw.get("reduce_only", False)), bool
+                )
+            ):
+                component = self._full_component(
+                    ReconcileComponentKind.OPEN_ORDERS, rows + [dict(raw)]
+                )
+                return replace(
+                    component,
+                    status=ReconcileComponentStatus.UNAVAILABLE,
+                    exact=False,
+                    complete=False,
+                    reason_code="MOCK_ORDER_MALFORMED",
+                )
+            identity = str(normalized["cloid"])
+            if identity in seen:
+                if seen[identity] != normalized:
+                    conflict = True
+                    rows.append(normalized)
+                continue
+            seen[identity] = normalized
+            rows.append(normalized)
+        component = self._full_component(ReconcileComponentKind.OPEN_ORDERS, rows)
+        if conflict:
+            return replace(
+                component,
+                status=ReconcileComponentStatus.CONFLICTING,
+                exact=False,
+                complete=False,
+                reason_code="MOCK_ORDER_IDENTITY_CONFLICT",
+            )
+        return component
+
+    async def fills_evidence(
+        self, *, start_ms: int, end_ms: int
+    ) -> ComponentEvidence:
+        self.full_calls.append("fills_evidence")
+        await self._full_delay(ReconcileComponentKind.FILLS)
+        rows: list[dict] = []
+        seen: dict[str, dict] = {}
+        conflict = False
+        for raw in self.full_fill_history:
+            raw_hash = raw.get("hash")
+            raw_tid = raw.get("tid")
+            fill_id = raw.get("fill_id")
+            oid = raw.get("oid")
+            coin = raw.get("coin", self.coin)
+            side = str(raw.get("side") or "").upper()
+            size = _mock_float(raw.get("sz", raw.get("size")))
+            px = _mock_float(raw.get("px"))
+            time_value = raw.get("time", raw.get("time_ms"))
+            valid = (
+                (
+                    (isinstance(fill_id, str) and bool(fill_id.strip()))
+                    or (isinstance(raw_tid, int) and not isinstance(raw_tid, bool))
+                    or (isinstance(raw_hash, str) and bool(raw_hash.strip()))
+                )
+                and isinstance(oid, int)
+                and not isinstance(oid, bool)
+                and isinstance(coin, str)
+                and bool(coin.strip())
+                and side in {"A", "B", "BUY", "SELL"}
+                and size is not None
+                and size > 0
+                and px is not None
+                and px > 0
+                and isinstance(time_value, int)
+                and not isinstance(time_value, bool)
+                and start_ms <= time_value <= end_ms
+            )
+            if not valid:
+                component = self._full_component(
+                    ReconcileComponentKind.FILLS,
+                    rows + [dict(raw)],
+                    cursor_start_ms=start_ms,
+                    cursor_end_ms=end_ms,
+                )
+                return replace(
+                    component,
+                    status=ReconcileComponentStatus.UNAVAILABLE,
+                    exact=False,
+                    complete=False,
+                    reason_code="MOCK_FILLS_MALFORMED",
+                )
+            identity = (
+                str(fill_id)
+                if isinstance(fill_id, str) and fill_id.strip()
+                else (
+                    str(raw_tid)
+                    if isinstance(raw_tid, int) and not isinstance(raw_tid, bool)
+                    else f"{raw_hash}:{oid}:{time_value}"
+                )
+            )
+            normalized = {
+                "event_id": identity,
+                "oid": oid,
+                "coin": coin,
+                "px": px,
+                "size": size,
+                "side": side,
+                "effective_ts_ms": time_value,
+            }
+            identity = str(normalized["event_id"])
+            if identity in seen:
+                if seen[identity] != normalized:
+                    conflict = True
+                    rows.append(normalized)
+                continue
+            seen[identity] = normalized
+            rows.append(normalized)
+        component = self._full_component(
+            ReconcileComponentKind.FILLS,
+            rows,
+            cursor_start_ms=start_ms,
+            cursor_end_ms=end_ms,
+        )
+        if conflict:
+            return replace(
+                component,
+                status=ReconcileComponentStatus.CONFLICTING,
+                exact=False,
+                complete=False,
+                reason_code="MOCK_FILLS_IDENTITY_CONFLICT",
+            )
+        return component
+
+    async def funding_evidence(
+        self, *, start_ms: int, end_ms: int
+    ) -> ComponentEvidence:
+        self.full_calls.append("funding_evidence")
+        await self._full_delay(ReconcileComponentKind.FUNDING)
+        rows: list[dict] = []
+        seen: dict[str, dict] = {}
+        conflict = False
+        for row in self.full_funding_history:
+            time_ms = row.get("time", row.get("effective_ts_ms"))
+            delta = row.get("delta", row)
+            event_id = row.get("hash", row.get("event_id"))
+            symbol = delta.get("coin", row.get("symbol")) if isinstance(delta, dict) else None
+            amount = (
+                _mock_float(delta.get("usdc", row.get("amount_usdc")))
+                if isinstance(delta, dict)
+                else None
+            )
+            time_valid = (
+                isinstance(time_ms, int)
+                and not isinstance(time_ms, bool)
+            )
+            if time_valid and not (start_ms <= time_ms <= end_ms):
+                continue
+            valid = (
+                isinstance(delta, dict)
+                and delta.get("type") == "funding"
+                and isinstance(event_id, str)
+                and bool(event_id.strip())
+                and isinstance(symbol, str)
+                and bool(symbol.strip())
+                and amount is not None
+                and time_valid
+            )
+            if not valid:
+                component = self._full_component(
+                    ReconcileComponentKind.FUNDING,
+                    rows + [dict(row)],
+                    cursor_start_ms=start_ms,
+                    cursor_end_ms=end_ms,
+                )
+                return replace(
+                    component,
+                    status=ReconcileComponentStatus.UNAVAILABLE,
+                    exact=False,
+                    complete=False,
+                    reason_code="MOCK_FUNDING_MALFORMED",
+                )
+            normalized = {
+                "event_id": event_id,
+                "symbol": symbol,
+                "amount_usdc": amount,
+                "effective_ts_ms": time_ms,
+                "source": "MOCK_USER_FUNDING",
+                "funding_rate": _mock_float(delta.get("fundingRate")),
+                "position_szi": _mock_float(delta.get("szi")),
+                "n_samples": delta.get("nSamples"),
+            }
+            key = normalized["event_id"]
+            if isinstance(key, str) and key in seen:
+                # Exact duplicates are idempotent; a conflicting redefinition
+                # of the same identity is never silently resolved.
+                if seen[key] != normalized:
+                    conflict = True
+                    rows.append(normalized)
+                continue
+            if isinstance(key, str):
+                seen[key] = normalized
+            rows.append(normalized)
+        component = self._full_component(
+            ReconcileComponentKind.FUNDING,
+            rows,
+            cursor_start_ms=start_ms,
+            cursor_end_ms=end_ms,
+        )
+        if conflict:
+            return ComponentEvidence(
+                kind=ReconcileComponentKind.FUNDING,
+                source=component.source,
+                status=ReconcileComponentStatus.CONFLICTING,
+                observed_ts=component.observed_ts,
+                rows=component.rows,
+                exact=False,
+                complete=False,
+                reason_code="MOCK_FUNDING_IDENTITY_CONFLICT",
+                cursor_start_ms=start_ms,
+                cursor_end_ms=end_ms,
+                page_count=component.page_count,
+                call_count=component.call_count,
+            )
+        return component
+
+
+def _mock_float(value: object) -> float | None:
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        result = float(value)  # type: ignore[arg-type]
+        return result if math.isfinite(result) else None
+    except (TypeError, ValueError):
+        return None

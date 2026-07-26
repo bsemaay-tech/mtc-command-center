@@ -5,19 +5,32 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Callable, Literal
 
 from bridge.engine.types import (
+    KNOWN_DURABLE_ORDER_STATUSES,
+    LIVE_DURABLE_ORDER_STATUSES,
     PARTIAL_STATE_TRANSITIONS,
     PARTIAL_TERMINAL_STATES,
     ActionOutcome,
     ActionRecordStatus,
+    ComponentEvidence,
+    FundingAttribution,
+    FundingEventRecord,
     PartialActionKind,
     PartialProtectionState,
+    REQUIRED_RECONCILE_COMPONENTS,
+    ReconcileAttemptState,
+    ReconcileComponentKind,
+    ReconcileComponentStatus,
+    ReconcileDiffKind,
+    ReconcileDiffRecord,
+    ReconcileOwnership,
+    reconcile_digest,
 )
 
 
@@ -205,13 +218,27 @@ SCHEMA_VERSION_BASELINE = 4
 SCHEMA_VERSION_PARTIAL_FILL = 5
 """Additive TS-P1-004 partial-fill recovery ledger; opt-in, never automatic."""
 
+SCHEMA_VERSION_FULL_RECONCILE = 6
+"""Additive TS-P1-005 reconciliation ledger; opt-in, never automatic.
+
+The operational baseline stays :data:`SCHEMA_VERSION_BASELINE`. Reaching v6
+requires an explicit ``initialize(target_schema_version=6)`` and goes through
+the proven v4→v5→v6 chain; no caller is upgraded by merely opening a database.
+"""
+
 SUPPORTED_TARGET_SCHEMA_VERSIONS = (
     SCHEMA_VERSION_BASELINE,
     SCHEMA_VERSION_PARTIAL_FILL,
+    SCHEMA_VERSION_FULL_RECONCILE,
 )
+
+RECONCILE_CHECKPOINT_POINTER_KEY = "reconcile_checkpoint_latest"
+"""The single transactional pointer at the latest accepted checkpoint."""
 
 _PARTIAL_RECOVERY_VERSION = "ts-p1-004-recovery-v1"
 _PARTIAL_ACTION_VERSION = "ts-p1-004-action-v1"
+_RECONCILE_ATTEMPT_VERSION = "ts-p1-005-attempt-v1"
+_RECONCILE_CHECKPOINT_VERSION = "ts-p1-005-checkpoint-v1"
 
 _PARTIAL_EVIDENCE_TABLES = (
     "orders",
@@ -227,6 +254,13 @@ _PARTIAL_EVIDENCE_TABLES = (
 )
 
 
+_FULL_RECONCILE_EVIDENCE_TABLES = _PARTIAL_EVIDENCE_TABLES + (
+    "partial_fill_recoveries",
+    "partial_fill_actions",
+    "partial_fill_action_events",
+)
+
+
 class PartialRecoveryConflictError(Exception):
     """Raised when a partial-recovery write would break a durable invariant."""
 
@@ -234,6 +268,36 @@ class PartialRecoveryConflictError(Exception):
         self.code = code
         self.message = message
         super().__init__(f"{code}: {message}")
+
+
+class ReconcileConflictError(Exception):
+    """Raised when a reconciliation write would break a durable invariant."""
+
+    def __init__(self, code: str, message: str) -> None:
+        self.code = code
+        self.message = message
+        super().__init__(f"{code}: {message}")
+
+
+def compute_reconcile_attempt_id(*, run_id: str, seq: int, started_ts: datetime) -> str:
+    """Stable per run/sequence/start attempt identity."""
+    preimage = _canonical_json({
+        "version": _RECONCILE_ATTEMPT_VERSION,
+        "run_id": str(run_id),
+        "seq": int(seq),
+        "started_ts": _to_iso(started_ts),
+    })
+    return f"recon-v1:{hashlib.sha256(preimage.encode('utf-8')).hexdigest()}"
+
+
+def compute_reconcile_checkpoint_id(*, attempt_id: str, canonical_hash: str) -> str:
+    """Checkpoint identity bound 1:1 to its accepted attempt and evidence."""
+    preimage = _canonical_json({
+        "version": _RECONCILE_CHECKPOINT_VERSION,
+        "attempt_id": str(attempt_id),
+        "canonical_hash": str(canonical_hash),
+    })
+    return f"ckpt-v1:{hashlib.sha256(preimage.encode('utf-8')).hexdigest()}"
 
 
 def compute_partial_recovery_id(
@@ -382,14 +446,15 @@ class Store:
     ) -> None:
         """Open/upgrade the database up to ``target_schema_version``.
 
-        The default target stays v4: TS-P1-004 adds schema v5 as an explicit,
-        additive opt-in so that no existing caller — and no existing runtime
-        database — is silently upgraded by merely opening it. Reaching v5
-        requires ``initialize(target_schema_version=5)``.
+        The default target stays v4: TS-P1-004 adds schema v5 and TS-P1-005
+        adds schema v6 as explicit, additive opt-ins so that no existing caller
+        — and no existing runtime database — is silently upgraded by merely
+        opening it. Reaching v5/v6 requires an explicit
+        ``initialize(target_schema_version=5|6)``.
 
-        A database already at v5 is reopened idempotently regardless of the
-        requested target; this code understands v5 and must never downgrade.
-        Unsupported or future versions still fail closed.
+        A database already at v5 or v6 is reopened idempotently regardless of
+        the requested target; this code understands both and must never
+        downgrade. Unsupported or future versions still fail closed.
         """
         if isinstance(target_schema_version, bool) or not isinstance(
             target_schema_version, int
@@ -406,9 +471,23 @@ class Store:
             "CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)"
         )
         existing = self.get_meta("schema_version")
-        if existing == str(SCHEMA_VERSION_PARTIAL_FILL):
+        if existing == str(SCHEMA_VERSION_FULL_RECONCILE):
+            if not self._has_any_full_reconcile_object():
+                # The meta row alone is not proof of a version. A database that
+                # claims v6 while carrying none of the v6 objects is corrupt
+                # metadata — treat it exactly like an unknown version.
+                raise RuntimeError(
+                    f"Unsupported schema_version={existing!r}; "
+                    "cannot initialize safely"
+                )
             # Already migrated: idempotent reopen, never an in-place downgrade.
             self._initialize_v5_idempotent()
+            self._initialize_v6_idempotent()
+            return
+        if existing == str(SCHEMA_VERSION_PARTIAL_FILL):
+            self._initialize_v5_idempotent()
+            if target_schema_version >= SCHEMA_VERSION_FULL_RECONCILE:
+                self._migrate_v5_to_v6()
             return
         if existing is None:
             self._initialize_v4_fresh()
@@ -428,6 +507,9 @@ class Store:
             )
         if target_schema_version >= SCHEMA_VERSION_PARTIAL_FILL:
             self._migrate_v4_to_v5()
+        if target_schema_version >= SCHEMA_VERSION_FULL_RECONCILE:
+            # Proven chained v4→v5→v6; there is no skip migration.
+            self._migrate_v5_to_v6()
 
     def _initialize_v4_fresh(self) -> None:
         self._create_tables_v4()
@@ -879,10 +961,12 @@ class Store:
               SELECT RAISE(ABORT, 'PARTIAL_ACTION_EVENT_APPEND_ONLY');
             END""")
 
-    def _evidence_census(self) -> dict[str, int]:
+    def _evidence_census(
+        self, tables: tuple[str, ...] = _PARTIAL_EVIDENCE_TABLES
+    ) -> dict[str, int]:
         """Row counts of every pre-existing evidence table (migration guard)."""
         census: dict[str, int] = {}
-        for table in _PARTIAL_EVIDENCE_TABLES:
+        for table in tables:
             row = self.conn.execute(
                 "SELECT name FROM sqlite_master WHERE type='table' AND name = ?",
                 (table,),
@@ -1028,6 +1112,516 @@ class Store:
             )
             if cursor.rowcount != 1:
                 raise MigrationError("v4-to-v5 version update rowcount mismatch")
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+
+    # ------------------------------------------------------------------
+    # TS-P1-005 v6 reconciliation ledger (opt-in)
+    # ------------------------------------------------------------------
+
+    _FULL_RECONCILE_OBJECTS = (
+        "reconcile_attempts",
+        "reconcile_components",
+        "reconcile_diffs",
+        "reconcile_checkpoints",
+        "funding_events",
+    )
+
+    def _has_any_full_reconcile_object(self) -> bool:
+        placeholders = ",".join("?" for _ in self._FULL_RECONCILE_OBJECTS)
+        row = self.conn.execute(
+            f"SELECT COUNT(*) FROM sqlite_master WHERE name IN ({placeholders})",
+            self._FULL_RECONCILE_OBJECTS,
+        ).fetchone()
+        return bool(row and int(row[0]) > 0)
+
+    def _initialize_v6_idempotent(self) -> None:
+        """Re-open v6 only when its complete safety topology is canonical."""
+        self._validate_full_reconcile_schema_v6()
+
+    def _create_full_reconcile_tables_v6(self) -> None:
+        """Purely additive DDL for exactly the five approved D4=A objects.
+
+        Callable inside an open transaction. The latest-accepted pointer is a
+        single ``meta`` row written in the same transaction as the checkpoint,
+        so a checkpoint can never become visible without its pointer or the
+        other way round.
+        """
+        attempt_states = ",".join(
+            f"'{state.value}'"
+            for state in sorted(ReconcileAttemptState, key=lambda s: s.value)
+        )
+        component_kinds = ",".join(
+            f"'{kind.value}'"
+            for kind in sorted(ReconcileComponentKind, key=lambda k: k.value)
+        )
+        component_statuses = ",".join(
+            f"'{status.value}'"
+            for status in sorted(ReconcileComponentStatus, key=lambda s: s.value)
+        )
+        diff_kinds = ",".join(
+            f"'{kind.value}'"
+            for kind in sorted(ReconcileDiffKind, key=lambda k: k.value)
+        )
+        ownerships = ",".join(
+            f"'{value.value}'"
+            for value in sorted(ReconcileOwnership, key=lambda o: o.value)
+        )
+        attributions = ",".join(
+            f"'{value.value}'"
+            for value in sorted(FundingAttribution, key=lambda a: a.value)
+        )
+        self.conn.execute(f"""
+            CREATE TABLE IF NOT EXISTS reconcile_attempts (
+              attempt_id TEXT PRIMARY KEY
+                CHECK(length(attempt_id) = 73 AND substr(attempt_id, 1, 9) = 'recon-v1:'
+                      AND NOT substr(attempt_id, 10) GLOB '*[^0-9a-f]*'),
+              run_id TEXT NOT NULL CHECK(run_id != ''),
+              seq INTEGER NOT NULL CHECK(seq > 0),
+              state TEXT NOT NULL CHECK(state IN ({attempt_states})),
+              started_ts TEXT NOT NULL CHECK(started_ts != ''),
+              ended_ts TEXT,
+              duration_ms INTEGER CHECK(duration_ms IS NULL OR duration_ms >= 0),
+              deadline_s REAL NOT NULL CHECK(deadline_s > 0),
+              max_skew_s REAL NOT NULL CHECK(max_skew_s >= 0),
+              complete INTEGER NOT NULL DEFAULT 0 CHECK(complete IN (0, 1)),
+              fresh INTEGER NOT NULL DEFAULT 0 CHECK(fresh IN (0, 1)),
+              canonical_hash TEXT CHECK(canonical_hash IS NULL OR
+                (length(canonical_hash) = 64 AND NOT canonical_hash GLOB '*[^0-9a-f]*')),
+              reason_code TEXT NOT NULL CHECK(
+                length(reason_code) BETWEEN 1 AND 96
+                AND reason_code NOT GLOB '*[^A-Z0-9_:.-]*'
+              ),
+              UNIQUE(run_id, seq),
+              CHECK((state = 'COLLECTING' AND ended_ts IS NULL)
+                    OR (state != 'COLLECTING' AND ended_ts IS NOT NULL))
+            )""")
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_reconcile_attempt_state "
+            "ON reconcile_attempts(state, started_ts)")
+        # An attempt is reserved before broker I/O and resolved exactly once.
+        # Identity, bounds and a terminal verdict are immutable thereafter.
+        self.conn.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_reconcile_attempt_resolve_once
+            BEFORE UPDATE ON reconcile_attempts
+            BEGIN
+              SELECT RAISE(ABORT, 'RECONCILE_ATTEMPT_IMMUTABLE')
+              WHERE OLD.state != 'COLLECTING'
+                 OR NEW.state = 'COLLECTING'
+                 OR NEW.attempt_id != OLD.attempt_id
+                 OR NEW.run_id != OLD.run_id
+                 OR NEW.seq != OLD.seq
+                 OR NEW.started_ts != OLD.started_ts
+                 OR NEW.deadline_s != OLD.deadline_s
+                 OR NEW.max_skew_s != OLD.max_skew_s;
+            END""")
+        self.conn.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_reconcile_attempt_no_delete
+            BEFORE DELETE ON reconcile_attempts
+            BEGIN
+              SELECT RAISE(ABORT, 'RECONCILE_ATTEMPT_IMMUTABLE');
+            END""")
+        self.conn.execute(f"""
+            CREATE TABLE IF NOT EXISTS reconcile_components (
+              component_row_id INTEGER PRIMARY KEY AUTOINCREMENT,
+              attempt_id TEXT NOT NULL REFERENCES reconcile_attempts(attempt_id),
+              component TEXT NOT NULL CHECK(component IN ({component_kinds})),
+              source TEXT NOT NULL CHECK(source != ''),
+              status TEXT NOT NULL CHECK(status IN ({component_statuses})),
+              observed_ts TEXT,
+              exact INTEGER NOT NULL CHECK(exact IN (0, 1)),
+              complete INTEGER NOT NULL CHECK(complete IN (0, 1)),
+              row_count INTEGER NOT NULL CHECK(row_count >= 0),
+              cursor_start_ms INTEGER,
+              cursor_end_ms INTEGER,
+              page_count INTEGER NOT NULL DEFAULT 0 CHECK(page_count >= 0),
+              call_count INTEGER NOT NULL DEFAULT 0 CHECK(call_count >= 0),
+              payload_digest TEXT NOT NULL
+                CHECK(length(payload_digest) = 64 AND NOT payload_digest GLOB '*[^0-9a-f]*'),
+              reason_code TEXT NOT NULL CHECK(
+                length(reason_code) BETWEEN 1 AND 96
+                AND reason_code NOT GLOB '*[^A-Z0-9_:.-]*'
+              ),
+              UNIQUE(attempt_id, component)
+            )""")
+        self.conn.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_reconcile_component_no_update
+            BEFORE UPDATE ON reconcile_components
+            BEGIN
+              SELECT RAISE(ABORT, 'RECONCILE_COMPONENT_APPEND_ONLY');
+            END""")
+        self.conn.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_reconcile_component_no_delete
+            BEFORE DELETE ON reconcile_components
+            BEGIN
+              SELECT RAISE(ABORT, 'RECONCILE_COMPONENT_APPEND_ONLY');
+            END""")
+        self.conn.execute(f"""
+            CREATE TABLE IF NOT EXISTS reconcile_diffs (
+              diff_row_id INTEGER PRIMARY KEY AUTOINCREMENT,
+              attempt_id TEXT NOT NULL REFERENCES reconcile_attempts(attempt_id),
+              seq INTEGER NOT NULL CHECK(seq > 0),
+              kind TEXT NOT NULL CHECK(kind IN ({diff_kinds})),
+              subject TEXT NOT NULL CHECK(subject != ''),
+              reason_code TEXT NOT NULL CHECK(
+                length(reason_code) BETWEEN 1 AND 96
+                AND reason_code NOT GLOB '*[^A-Z0-9_:.-]*'
+              ),
+              ownership TEXT NOT NULL CHECK(ownership IN ({ownerships})),
+              blocking INTEGER NOT NULL CHECK(blocking IN (0, 1)),
+              payload_json TEXT NOT NULL CHECK(payload_json != ''),
+              UNIQUE(attempt_id, seq)
+            )""")
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_reconcile_diff_attempt "
+            "ON reconcile_diffs(attempt_id, seq)")
+        self.conn.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_reconcile_diff_no_update
+            BEFORE UPDATE ON reconcile_diffs
+            BEGIN
+              SELECT RAISE(ABORT, 'RECONCILE_DIFF_APPEND_ONLY');
+            END""")
+        self.conn.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_reconcile_diff_no_delete
+            BEFORE DELETE ON reconcile_diffs
+            BEGIN
+              SELECT RAISE(ABORT, 'RECONCILE_DIFF_APPEND_ONLY');
+            END""")
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS reconcile_checkpoints (
+              checkpoint_id TEXT PRIMARY KEY
+                CHECK(length(checkpoint_id) = 72 AND substr(checkpoint_id, 1, 8) = 'ckpt-v1:'
+                      AND NOT substr(checkpoint_id, 9) GLOB '*[^0-9a-f]*'),
+              attempt_id TEXT UNIQUE NOT NULL REFERENCES reconcile_attempts(attempt_id),
+              run_id TEXT NOT NULL CHECK(run_id != ''),
+              accepted_ts TEXT NOT NULL CHECK(accepted_ts != ''),
+              canonical_hash TEXT NOT NULL
+                CHECK(length(canonical_hash) = 64 AND NOT canonical_hash GLOB '*[^0-9a-f]*'),
+              snapshot_json TEXT NOT NULL CHECK(snapshot_json != ''),
+              reason_code TEXT NOT NULL CHECK(
+                length(reason_code) BETWEEN 1 AND 96
+                AND reason_code NOT GLOB '*[^A-Z0-9_:.-]*'
+              )
+            )""")
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_reconcile_checkpoint_accepted "
+            "ON reconcile_checkpoints(accepted_ts)")
+        self.conn.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_reconcile_checkpoint_no_update
+            BEFORE UPDATE ON reconcile_checkpoints
+            BEGIN
+              SELECT RAISE(ABORT, 'RECONCILE_CHECKPOINT_IMMUTABLE');
+            END""")
+        self.conn.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_reconcile_checkpoint_no_delete
+            BEFORE DELETE ON reconcile_checkpoints
+            BEGIN
+              SELECT RAISE(ABORT, 'RECONCILE_CHECKPOINT_IMMUTABLE');
+            END""")
+        self.conn.execute(f"""
+            CREATE TABLE IF NOT EXISTS funding_events (
+              event_id TEXT PRIMARY KEY CHECK(event_id != ''),
+              symbol TEXT NOT NULL CHECK(symbol != ''),
+              amount_usdc REAL NOT NULL,
+              effective_ts TEXT NOT NULL CHECK(effective_ts != ''),
+              source TEXT NOT NULL CHECK(source != ''),
+              attribution TEXT NOT NULL CHECK(attribution IN ({attributions})),
+              payload_digest TEXT NOT NULL
+                CHECK(length(payload_digest) = 64 AND NOT payload_digest GLOB '*[^0-9a-f]*'),
+              first_seen_attempt_id TEXT NOT NULL
+                REFERENCES reconcile_attempts(attempt_id),
+              recorded_ts TEXT NOT NULL CHECK(recorded_ts != '')
+            )""")
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_funding_event_symbol_time "
+            "ON funding_events(symbol, effective_ts)")
+        self.conn.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_funding_event_no_update
+            BEFORE UPDATE ON funding_events
+            BEGIN
+              SELECT RAISE(ABORT, 'FUNDING_EVENT_APPEND_ONLY');
+            END""")
+        self.conn.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_funding_event_no_delete
+            BEFORE DELETE ON funding_events
+            BEGIN
+              SELECT RAISE(ABORT, 'FUNDING_EVENT_APPEND_ONLY');
+            END""")
+
+    def _validate_full_reconcile_schema_v6(self) -> None:
+        """Compare every v6 object against a canonical in-memory reference.
+
+        Same technique as the accepted v5 validator: exact normalized SQL plus
+        independent PRAGMA topology and foreign-key integrity, so a hand-edited
+        or partially created v6 database fails closed on reopen.
+        """
+        tables = {
+            "reconcile_attempts",
+            "reconcile_components",
+            "reconcile_diffs",
+            "reconcile_checkpoints",
+            "funding_events",
+        }
+
+        reference = Store(Path(":memory:"))
+        reference._conn = sqlite3.connect(":memory:")
+        reference._conn.row_factory = sqlite3.Row
+        reference._conn.execute("PRAGMA foreign_keys=ON")
+        Store._create_full_reconcile_tables_v6(reference)
+
+        def normalized_sql(value: object) -> str:
+            return " ".join(str(value or "").split()).upper()
+
+        def object_signature(
+            conn: sqlite3.Connection,
+        ) -> dict[tuple[str, str], tuple[str, str]]:
+            rows = conn.execute(
+                "SELECT type, name, tbl_name, sql FROM sqlite_master "
+                "WHERE sql IS NOT NULL"
+            ).fetchall()
+            return {
+                (str(row["type"]), str(row["name"])): (
+                    str(row["tbl_name"]),
+                    normalized_sql(row["sql"]),
+                )
+                for row in rows
+                if str(row["tbl_name"]) in tables
+            }
+
+        def pragma_signature(
+            conn: sqlite3.Connection,
+        ) -> dict[str, dict[str, tuple[tuple[object, ...], ...]]]:
+            signature: dict[str, dict[str, tuple[tuple[object, ...], ...]]] = {}
+            for table in sorted(tables):
+                columns = tuple(
+                    tuple(row)
+                    for row in conn.execute(f"PRAGMA table_xinfo('{table}')").fetchall()
+                )
+                foreign_keys = tuple(
+                    sorted(
+                        (
+                            tuple(row)
+                            for row in conn.execute(
+                                f"PRAGMA foreign_key_list('{table}')"
+                            ).fetchall()
+                        ),
+                        key=repr,
+                    )
+                )
+                indexes = []
+                for row in conn.execute(f"PRAGMA index_list('{table}')").fetchall():
+                    index_name = str(row["name"])
+                    index_columns = tuple(
+                        tuple(index_row)
+                        for index_row in conn.execute(
+                            f"PRAGMA index_xinfo('{index_name}')"
+                        ).fetchall()
+                    )
+                    indexes.append((tuple(row)[1:], index_columns))
+                signature[table] = {
+                    "columns": columns,
+                    "foreign_keys": foreign_keys,
+                    "indexes": tuple(sorted(indexes, key=repr)),
+                }
+            return signature
+
+        try:
+            expected_objects = object_signature(reference._conn)
+            actual_objects = object_signature(self.conn)
+            if actual_objects != expected_objects:
+                missing = sorted(set(expected_objects) - set(actual_objects))
+                extra = sorted(set(actual_objects) - set(expected_objects))
+                changed = sorted(
+                    key
+                    for key in set(expected_objects) & set(actual_objects)
+                    if expected_objects[key] != actual_objects[key]
+                )
+                raise MigrationError(
+                    "v6 topology mismatch "
+                    f"missing={missing} extra={extra} changed={changed}"
+                )
+            if pragma_signature(self.conn) != pragma_signature(reference._conn):
+                raise MigrationError("v6 PRAGMA topology mismatch")
+            if self.conn.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
+                raise MigrationError("v6 database integrity check failed")
+            if self.conn.execute("PRAGMA foreign_key_check").fetchall():
+                raise MigrationError("v6 foreign-key integrity check failed")
+            self._validate_reconcile_pointer_v6()
+        finally:
+            reference._conn.close()
+            reference._conn = None
+
+    def _validate_reconcile_pointer_v6(self) -> None:
+        """The sole v6 pointer and its immutable checkpoint must be coherent."""
+        pointer = self.get_meta(RECONCILE_CHECKPOINT_POINTER_KEY)
+        if self.get_meta("reconcile_coverage_upper_bound_ms") is not None:
+            raise MigrationError("v6 contains unauthorized coverage pointer")
+        count = int(
+            self.conn.execute(
+                "SELECT COUNT(*) FROM reconcile_checkpoints"
+            ).fetchone()[0]
+        )
+        if pointer is None:
+            if count:
+                raise MigrationError("v6 accepted checkpoints without a pointer")
+            return
+        row = self.conn.execute(
+            "SELECT checkpoint_id, attempt_id, canonical_hash, snapshot_json "
+            "FROM reconcile_checkpoints WHERE checkpoint_id = ?",
+            (pointer,),
+        ).fetchone()
+        if row is None:
+            raise MigrationError("v6 checkpoint pointer does not resolve")
+        attempt = self.conn.execute(
+            "SELECT canonical_hash, state, complete, fresh, reason_code "
+            "FROM reconcile_attempts WHERE attempt_id = ?",
+            (row["attempt_id"],),
+        ).fetchone()
+        if (
+            attempt is None
+            or str(attempt["canonical_hash"]) != str(row["canonical_hash"])
+            or str(attempt["state"]) != ReconcileAttemptState.COMPLETE.value
+            or int(attempt["complete"]) != 1
+            or int(attempt["fresh"]) != 1
+            or str(attempt["reason_code"]) != "ACCEPTED"
+        ):
+            raise MigrationError("v6 checkpoint attempt evidence is inconsistent")
+        try:
+            snapshot = json.loads(str(row["snapshot_json"]))
+        except (TypeError, ValueError, json.JSONDecodeError):
+            raise MigrationError("v6 checkpoint snapshot is malformed") from None
+        components = self.get_reconcile_components(str(row["attempt_id"]))
+        if (
+            len(components) != len(REQUIRED_RECONCILE_COMPONENTS)
+            or {item["component"] for item in components}
+            != {kind.value for kind in REQUIRED_RECONCILE_COMPONENTS}
+            or any(
+                item["status"] != ReconcileComponentStatus.COMPLETE.value
+                or int(item["exact"]) != 1
+                or int(item["complete"]) != 1
+                or item["observed_ts"] is None
+                for item in components
+            )
+        ):
+            raise MigrationError("v6 checkpoint component evidence is incomplete")
+        diffs = [
+            json.loads(str(item["payload_json"]))
+            for item in self.get_reconcile_diffs(str(row["attempt_id"]))
+        ]
+        component_digests = {
+            str(item["component"]): str(item["payload_digest"])
+            for item in components
+        }
+        recomputed = reconcile_digest(
+            {
+                "version": snapshot.get("version"),
+                "components": component_digests,
+                "diffs": diffs,
+            }
+        )
+        if (
+            recomputed != str(row["canonical_hash"])
+            or {
+                str(key): (
+                    value.get("digest") if isinstance(value, Mapping) else None
+                )
+                for key, value in snapshot.get("components", {}).items()
+            }
+            != component_digests
+            or snapshot.get("diffs") != diffs
+        ):
+            raise MigrationError("v6 checkpoint hash or snapshot evidence mismatch")
+        snapshot_components = snapshot.get("components", {})
+        for item in components:
+            snap = snapshot_components.get(str(item["component"]))
+            if (
+                not isinstance(snap, Mapping)
+                or snap.get("cursor_start_ms") != item["cursor_start_ms"]
+                or snap.get("cursor_end_ms") != item["cursor_end_ms"]
+            ):
+                raise MigrationError("v6 checkpoint cursor evidence mismatch")
+        funding_ids = snapshot.get("funding_event_ids")
+        if not isinstance(funding_ids, list) or any(
+            not isinstance(event_id, str) or not event_id for event_id in funding_ids
+        ):
+            raise MigrationError("v6 checkpoint funding evidence is malformed")
+        funding_digests = snapshot.get("funding_event_digests")
+        if (
+            not isinstance(funding_digests, Mapping)
+            or set(funding_digests) != set(funding_ids)
+        ):
+            raise MigrationError("v6 checkpoint funding digests are malformed")
+        found_funding = (
+            {
+                str(item["event_id"]): str(item["payload_digest"])
+                for item in self.conn.execute(
+                    "SELECT event_id, payload_digest FROM funding_events WHERE event_id IN "
+                    f"({','.join('?' for _ in funding_ids)})",
+                    tuple(funding_ids),
+                ).fetchall()
+            }
+            if funding_ids
+            else {}
+        )
+        if found_funding != dict(funding_digests):
+            raise MigrationError("v6 checkpoint funding ledger evidence is inconsistent")
+        try:
+            self._coverage_upper_bound_ms_locked()
+        except ReconcileConflictError as exc:
+            raise MigrationError(str(exc)) from exc
+
+    def _migrate_v5_to_v6(self) -> None:
+        """Additive v5→v6 upgrade in one rollback-clean transaction.
+
+        DDL, evidence census, topology validation and the version bump share a
+        single ``BEGIN IMMEDIATE``; any failure rolls back to a valid, reopenable
+        v5 database with every pre-existing row untouched. There is no backfill:
+        reconciliation evidence is only ever created by a real capture.
+        """
+        if self.get_meta("schema_version") == str(SCHEMA_VERSION_FULL_RECONCILE):
+            self._initialize_v6_idempotent()
+            return
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            if self.get_meta("schema_version") != str(SCHEMA_VERSION_PARTIAL_FILL):
+                raise MigrationError("v5-to-v6 requires schema_version=5")
+            before = self._evidence_census(_FULL_RECONCILE_EVIDENCE_TABLES)
+            for table in (
+                "reconcile_attempts",
+                "reconcile_components",
+                "reconcile_diffs",
+                "reconcile_checkpoints",
+                "funding_events",
+            ):
+                if self.conn.execute(
+                    "SELECT name FROM sqlite_master WHERE name = ?", (table,)
+                ).fetchone() is not None:
+                    raise MigrationError(
+                        f"v5-to-v6 aborted: pre-existing object {table!r}"
+                    )
+            if self.get_meta(RECONCILE_CHECKPOINT_POINTER_KEY) is not None:
+                raise MigrationError("v5-to-v6 aborted: residual checkpoint pointer")
+            if self.get_meta("reconcile_coverage_upper_bound_ms") is not None:
+                raise MigrationError("v5-to-v6 aborted: residual coverage pointer")
+            self._create_full_reconcile_tables_v6()
+            self._validate_full_reconcile_schema_v6()
+            after = self._evidence_census(_FULL_RECONCILE_EVIDENCE_TABLES)
+            if before != after:
+                raise MigrationError(
+                    "v5-to-v6 must not alter existing evidence rows"
+                )
+            cursor = self.conn.execute(
+                "UPDATE meta SET value = ? "
+                "WHERE key = 'schema_version' AND value = ?",
+                (
+                    str(SCHEMA_VERSION_FULL_RECONCILE),
+                    str(SCHEMA_VERSION_PARTIAL_FILL),
+                ),
+            )
+            if cursor.rowcount != 1:
+                raise MigrationError("v5-to-v6 version update rowcount mismatch")
             self.conn.commit()
         except Exception:
             self.conn.rollback()
@@ -2115,8 +2709,20 @@ class Store:
     # ------------------------------------------------------------------
 
     def partial_protection_enabled(self) -> bool:
-        """True only on a database that carries the v5 recovery ledger."""
-        return self.get_meta("schema_version") == str(SCHEMA_VERSION_PARTIAL_FILL)
+        """True on any database that carries the v5 recovery ledger.
+
+        v6 is strictly additive on top of v5, so the TS-P1-004 ledger is still
+        present and still authoritative there. Comparing for equality with v5
+        alone would silently disable partial-recovery gating on a v6 database —
+        a fail-open the reconciliation task must not introduce.
+        """
+        version = self.get_meta("schema_version")
+        if version is None:
+            return False
+        try:
+            return int(version) >= SCHEMA_VERSION_PARTIAL_FILL
+        except ValueError:
+            return False
 
     def _require_partial_schema(self) -> None:
         if not self.partial_protection_enabled():
@@ -3492,6 +4098,25 @@ class Store:
         )
         return "EXACT_DUPLICATE" if existing == normalized else "CONFLICT"
 
+    def list_fills_for_order(self, cloid: str) -> list[dict[str, Any]]:
+        """Return immutable local fill evidence for one durable order."""
+        return self._rows(
+            """
+            SELECT fill_id, cloid, decision_uid, fill_ts, qty, px, fee, funding
+            FROM fills WHERE cloid = ? ORDER BY fill_ts, fill_id
+            """,
+            (cloid,),
+        )
+
+    def list_all_fills(self) -> list[dict[str, Any]]:
+        """Return the complete immutable local fill ledger."""
+        return self._rows(
+            """
+            SELECT fill_id, cloid, decision_uid, fill_ts, qty, px, fee, funding
+            FROM fills ORDER BY fill_ts, fill_id
+            """
+        )
+
     def create_trade(
         self,
         run_id: str,
@@ -3706,6 +4331,900 @@ class Store:
                 return True
         return False
 
+    # ------------------------------------------------------------------
+    # TS-P1-005 reconciliation ledger access
+    # ------------------------------------------------------------------
+
+    # Derived, never hand-listed: every non-terminal `OrderState`, every
+    # non-terminal raw alias spelling, plus the accepted legacy live spellings
+    # (`ACCEPTED`, `RESTING`, `WAITING_CHILD`). A new non-terminal state or
+    # alias therefore cannot silently fall out of this query. See
+    # `bridge/engine/types.py` for the derivation.
+    _LIVE_LOCAL_ORDER_STATUSES = tuple(sorted(LIVE_DURABLE_ORDER_STATUSES))
+    _KNOWN_LOCAL_ORDER_STATUSES = tuple(sorted(KNOWN_DURABLE_ORDER_STATUSES))
+
+    def _decorate_order_rows(self, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        for row in rows:
+            try:
+                row["symbol"] = str(json.loads(row["order_json"]).get("symbol") or "")
+            except (TypeError, ValueError):
+                row["symbol"] = ""
+        return rows
+
+    def live_local_orders(self) -> list[dict[str, Any]]:
+        """Durable local intent rows that should still exist on the exchange."""
+        placeholders = ",".join("?" for _ in self._LIVE_LOCAL_ORDER_STATUSES)
+        return self._decorate_order_rows(
+            self._rows(
+                f"SELECT * FROM orders WHERE status IN ({placeholders}) ORDER BY cloid",
+                self._LIVE_LOCAL_ORDER_STATUSES,
+            )
+        )
+
+    def local_orders_with_unknown_status(self) -> list[dict[str, Any]]:
+        """Durable order rows whose status is outside the closed status space.
+
+        Such a row is neither provably live nor provably terminal, so it must
+        never be dropped from reconciliation: the caller turns it into a
+        blocking unknown-state diff.
+        """
+        placeholders = ",".join("?" for _ in self._KNOWN_LOCAL_ORDER_STATUSES)
+        return self._decorate_order_rows(
+            self._rows(
+                f"SELECT * FROM orders WHERE status NOT IN ({placeholders}) "
+                "ORDER BY cloid",
+                self._KNOWN_LOCAL_ORDER_STATUSES,
+            )
+        )
+
+    def pending_reconcile_actions(self) -> list[dict[str, Any]]:
+        """Local pending/ambiguous actions that dominate reconciliation.
+
+        TS-P1-003 quarantine and TS-P1-004 recovery rows are *local* authority:
+        a reconciliation snapshot observes them, it never resolves them.
+        """
+        actions: list[dict[str, Any]] = []
+        for row in self._rows(
+            "SELECT attempt_id, state, reason_code FROM submission_attempts "
+            f"WHERE state IN ({','.join('?' for _ in sorted(_QUARANTINE_STATES))}) "
+            "ORDER BY attempt_id",
+            tuple(sorted(_QUARANTINE_STATES)),
+        ):
+            actions.append({
+                "kind": "SUBMISSION_QUARANTINE",
+                "id": str(row["attempt_id"]),
+                "state": str(row["state"]),
+                "symbol": "",
+            })
+        if self.partial_protection_enabled():
+            terminal = sorted(state.value for state in PARTIAL_TERMINAL_STATES)
+            placeholders = ",".join("?" for _ in terminal)
+            for row in self._rows(
+                f"""SELECT recovery_id, symbol, state FROM partial_fill_recoveries
+                    WHERE state NOT IN ({placeholders}) OR state = ?
+                    ORDER BY recovery_id""",
+                (*terminal, PartialProtectionState.UNPROTECTED_ABORT.value),
+            ):
+                actions.append({
+                    "kind": "PARTIAL_RECOVERY",
+                    "id": str(row["recovery_id"]),
+                    "state": str(row["state"]),
+                    "symbol": str(row["symbol"]),
+                })
+        return actions
+
+    def full_reconcile_enabled(self) -> bool:
+        """True only when the opt-in v6 reconciliation ledger is active."""
+        return self.get_meta("schema_version") == str(SCHEMA_VERSION_FULL_RECONCILE)
+
+    def _require_full_reconcile(self) -> None:
+        if not self.full_reconcile_enabled():
+            raise ReconcileConflictError(
+                "FULL_RECONCILE_SCHEMA_INACTIVE",
+                "reconciliation ledger requires schema v6",
+            )
+
+    def reserve_reconcile_attempt(
+        self,
+        *,
+        run_id: str,
+        started_ts: datetime,
+        deadline_s: float,
+        max_skew_s: float,
+    ) -> str:
+        """Durably reserve one attempt *before* any broker I/O begins."""
+        self._require_full_reconcile()
+        if not run_id:
+            raise ReconcileConflictError("RECONCILE_RUN_ID_MISSING", "run_id required")
+        if not (deadline_s > 0) or max_skew_s < 0:
+            raise ReconcileConflictError(
+                "RECONCILE_ENVELOPE_INVALID", "deadline/skew envelope invalid"
+            )
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            row = self.conn.execute(
+                "SELECT COALESCE(MAX(seq), 0) FROM reconcile_attempts WHERE run_id = ?",
+                (run_id,),
+            ).fetchone()
+            seq = int(row[0]) + 1
+            attempt_id = compute_reconcile_attempt_id(
+                run_id=run_id, seq=seq, started_ts=started_ts
+            )
+            self.conn.execute(
+                """
+                INSERT INTO reconcile_attempts(
+                  attempt_id, run_id, seq, state, started_ts, ended_ts, duration_ms,
+                  deadline_s, max_skew_s, complete, fresh, canonical_hash, reason_code
+                ) VALUES (?, ?, ?, 'COLLECTING', ?, NULL, NULL, ?, ?, 0, 0, NULL, ?)
+                """,
+                (
+                    attempt_id,
+                    run_id,
+                    seq,
+                    _to_iso(started_ts),
+                    float(deadline_s),
+                    float(max_skew_s),
+                    "COLLECTING",
+                ),
+            )
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+        return attempt_id
+
+    def finalize_reconcile_attempt(
+        self,
+        *,
+        attempt_id: str,
+        state: ReconcileAttemptState,
+        ended_ts: datetime,
+        duration_ms: int,
+        canonical_hash: str | None,
+        reason_code: str,
+        components: Sequence[ComponentEvidence] = (),
+        diffs: Sequence[ReconcileDiffRecord] = (),
+        funding_events: Sequence[FundingEventRecord] = (),
+        accepted: bool,
+        fresh: bool,
+        snapshot_payload: Mapping[str, Any] | None = None,
+        coverage_upper_bound_ms: int | None = None,
+    ) -> str | None:
+        """Commit one attempt's whole outcome atomically.
+
+        Snapshot rows, component provenance, the diff, the attempt verdict, the
+        immutable checkpoint and the sole latest-accepted pointer share one
+        ``BEGIN IMMEDIATE``. Coverage is derived from the accepted FILLS and
+        FUNDING component bounds, never from a second mutable pointer.
+
+        Returns the new checkpoint id when the attempt was accepted.
+        """
+        self._require_full_reconcile()
+        if accepted and state is not ReconcileAttemptState.COMPLETE:
+            raise ReconcileConflictError(
+                "RECONCILE_ACCEPT_REQUIRES_COMPLETE",
+                f"cannot accept attempt in state {state.value}",
+            )
+        if accepted and not canonical_hash:
+            raise ReconcileConflictError(
+                "RECONCILE_ACCEPT_REQUIRES_HASH", "accepted attempt needs a hash"
+            )
+        if accepted and (
+            coverage_upper_bound_ms is None
+            or isinstance(coverage_upper_bound_ms, bool)
+            or not isinstance(coverage_upper_bound_ms, int)
+        ):
+            # Acceptance *is* the proof that the interval was covered; without a
+            # provable upper bound there is nothing to advance and the next
+            # capture would have no continuous lower bound.
+            raise ReconcileConflictError(
+                "RECONCILE_ACCEPT_REQUIRES_COVERAGE",
+                "accepted attempt needs a fills/funding coverage upper bound",
+            )
+        if accepted and not fresh:
+            raise ReconcileConflictError(
+                "RECONCILE_ACCEPT_REQUIRES_FRESH", "accepted attempt must be fresh"
+            )
+        if accepted and reason_code != "ACCEPTED":
+            raise ReconcileConflictError(
+                "RECONCILE_ACCEPT_REASON_INVALID", "accepted reason must be ACCEPTED"
+            )
+        if accepted and any(diff.blocking for diff in diffs):
+            raise ReconcileConflictError(
+                "RECONCILE_ACCEPT_BLOCKING_DIFF",
+                "accepted attempt cannot contain a blocking diff",
+            )
+        if accepted:
+            kinds = [component.kind for component in components]
+            if (
+                len(kinds) != len(REQUIRED_RECONCILE_COMPONENTS)
+                or set(kinds) != set(REQUIRED_RECONCILE_COMPONENTS)
+                or any(not component.accepted for component in components)
+            ):
+                raise ReconcileConflictError(
+                    "RECONCILE_ACCEPT_COMPONENTS_INVALID",
+                    "accepted attempt requires each complete component exactly once",
+                )
+            for kind in (
+                ReconcileComponentKind.FILLS,
+                ReconcileComponentKind.FUNDING,
+            ):
+                component = next(item for item in components if item.kind is kind)
+                if (
+                    component.cursor_start_ms is None
+                    or component.cursor_end_ms != coverage_upper_bound_ms
+                ):
+                    raise ReconcileConflictError(
+                        "RECONCILE_ACCEPT_COVERAGE_INVALID",
+                        "fills/funding bounds must prove the accepted upper bound",
+                    )
+            coverage_components = [
+                next(item for item in components if item.kind is kind)
+                for kind in (
+                    ReconcileComponentKind.FILLS,
+                    ReconcileComponentKind.FUNDING,
+                )
+            ]
+            if (
+                len({item.cursor_start_ms for item in coverage_components}) != 1
+                or any(
+                    int(item.cursor_start_ms) > int(item.cursor_end_ms)
+                    for item in coverage_components
+                )
+            ):
+                raise ReconcileConflictError(
+                    "RECONCILE_ACCEPT_COVERAGE_INVALID",
+                    "fills/funding coverage bounds must be coherent",
+                )
+            payload = dict(snapshot_payload or {})
+            payload_components = payload.get("components")
+            payload_diffs = payload.get("diffs")
+            if not isinstance(payload_components, Mapping) or not isinstance(
+                payload_diffs, list
+            ):
+                raise ReconcileConflictError(
+                    "RECONCILE_ACCEPT_SNAPSHOT_INVALID",
+                    "accepted snapshot must contain components and diffs",
+                )
+            expected_component_digests = {
+                component.kind.value: component.digest for component in components
+            }
+            funding_component = next(
+                item
+                for item in components
+                if item.kind is ReconcileComponentKind.FUNDING
+            )
+            component_funding_ids = sorted(
+                str(item.get("event_id"))
+                for item in funding_component.canonical_rows()
+                if isinstance(item.get("event_id"), str)
+                and str(item.get("event_id")).strip()
+            )
+            supplied_funding_ids = sorted(event.event_id for event in funding_events)
+            if len(set(component_funding_ids)) != len(component_funding_ids):
+                raise ReconcileConflictError(
+                    "RECONCILE_ACCEPT_FUNDING_LEDGER_MISMATCH",
+                    "funding component contains duplicate event identities",
+                )
+            try:
+                component_funding_digests = {
+                    str(item["event_id"]): FundingEventRecord(
+                        event_id=str(item["event_id"]),
+                        symbol=str(item["symbol"]),
+                        amount_usdc=float(item["amount_usdc"]),
+                        effective_ts=datetime.fromtimestamp(
+                            int(item["effective_ts_ms"]) / 1000, tz=UTC
+                        ),
+                        source=str(item.get("source") or "HL_USER_FUNDING"),
+                        funding_rate=(
+                            None
+                            if item.get("funding_rate") is None
+                            else float(item["funding_rate"])
+                        ),
+                        position_szi=(
+                            None
+                            if item.get("position_szi") is None
+                            else float(item["position_szi"])
+                        ),
+                        n_samples=(
+                            None
+                            if item.get("n_samples") is None
+                            else int(item["n_samples"])
+                        ),
+                    ).digest
+                    for item in funding_component.canonical_rows()
+                }
+            except (KeyError, TypeError, ValueError, OverflowError):
+                raise ReconcileConflictError(
+                    "RECONCILE_ACCEPT_FUNDING_LEDGER_MISMATCH",
+                    "funding component contains malformed authoritative evidence",
+                ) from None
+            supplied_funding_digests = {
+                event.event_id: event.digest for event in funding_events
+            }
+            if (
+                len(component_funding_ids) != len(funding_component.rows)
+                or component_funding_ids != supplied_funding_ids
+                or payload.get("funding_event_ids") != supplied_funding_ids
+                or component_funding_digests != supplied_funding_digests
+                or payload.get("funding_event_digests") != supplied_funding_digests
+            ):
+                raise ReconcileConflictError(
+                    "RECONCILE_ACCEPT_FUNDING_LEDGER_MISMATCH",
+                    "funding component, snapshot, and durable ledger must correspond",
+                )
+            actual_component_digests = {
+                str(kind): (
+                    value.get("digest") if isinstance(value, Mapping) else None
+                )
+                for kind, value in payload_components.items()
+            }
+            expected_diffs = [diff.canonical() for diff in diffs]
+            recomputed_hash = reconcile_digest(
+                {
+                    "version": payload.get("version"),
+                    "components": expected_component_digests,
+                    "diffs": expected_diffs,
+                }
+            )
+            if (
+                actual_component_digests != expected_component_digests
+                or payload_diffs != expected_diffs
+                or recomputed_hash != canonical_hash
+            ):
+                raise ReconcileConflictError(
+                    "RECONCILE_ACCEPT_HASH_MISMATCH",
+                    "snapshot/component/diff evidence does not match canonical hash",
+                )
+        checkpoint_id: str | None = None
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            row = self.conn.execute(
+                "SELECT state, run_id, started_ts, deadline_s, max_skew_s "
+                "FROM reconcile_attempts WHERE attempt_id = ?",
+                (attempt_id,),
+            ).fetchone()
+            if row is None:
+                raise ReconcileConflictError(
+                    "RECONCILE_ATTEMPT_UNKNOWN", f"unknown attempt {attempt_id}"
+                )
+            if str(row["state"]) != ReconcileAttemptState.COLLECTING.value:
+                raise ReconcileConflictError(
+                    "RECONCILE_ATTEMPT_ALREADY_RESOLVED",
+                    f"attempt {attempt_id} is {row['state']}",
+                )
+            run_id = str(row["run_id"])
+            started = datetime.fromisoformat(str(row["started_ts"]))
+            if started.tzinfo is None:
+                started = started.replace(tzinfo=UTC)
+            started = started.astimezone(UTC)
+            resolved_end = ended_ts.astimezone(UTC)
+            if accepted and (
+                resolved_end < started
+                or duration_ms < 0
+                or duration_ms > int(float(row["deadline_s"]) * 1000)
+                or int(coverage_upper_bound_ms) != int(started.timestamp() * 1000)
+            ):
+                raise ReconcileConflictError(
+                    "RECONCILE_ACCEPT_ENVELOPE_INVALID",
+                    "accepted attempt exceeds its durable temporal envelope",
+                )
+            if accepted:
+                previous_coverage = self._coverage_upper_bound_ms_locked()
+                coverage_start = int(coverage_components[0].cursor_start_ms)
+                if (
+                    previous_coverage is not None
+                    and coverage_start > previous_coverage
+                ):
+                    raise ReconcileConflictError(
+                        "RECONCILE_ACCEPT_COVERAGE_GAP",
+                        "accepted coverage must overlap prior durable coverage",
+                    )
+                observed = sorted(
+                    component.observed_ts.astimezone(UTC) for component in components
+                )
+                max_skew = float(row["max_skew_s"])
+                if (
+                    (observed[-1] - observed[0]).total_seconds() > max_skew
+                    or (started - observed[0]).total_seconds() > max_skew
+                    or (observed[-1] - resolved_end).total_seconds() > max_skew
+                ):
+                    raise ReconcileConflictError(
+                        "RECONCILE_ACCEPT_COMPONENT_STALE",
+                        "component timestamps violate the durable skew envelope",
+                    )
+            for component in components:
+                self.conn.execute(
+                    """
+                    INSERT INTO reconcile_components(
+                      attempt_id, component, source, status, observed_ts, exact,
+                      complete, row_count, cursor_start_ms, cursor_end_ms,
+                      page_count, call_count, payload_digest, reason_code
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        attempt_id,
+                        component.kind.value,
+                        component.source,
+                        component.status.value,
+                        _to_iso(component.observed_ts),
+                        1 if component.exact else 0,
+                        1 if component.complete else 0,
+                        len(component.rows),
+                        component.cursor_start_ms,
+                        component.cursor_end_ms,
+                        int(component.page_count),
+                        int(component.call_count),
+                        component.digest,
+                        component.reason_code,
+                    ),
+                )
+            for index, diff in enumerate(diffs, start=1):
+                self.conn.execute(
+                    """
+                    INSERT INTO reconcile_diffs(
+                      attempt_id, seq, kind, subject, reason_code, ownership,
+                      blocking, payload_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        attempt_id,
+                        index,
+                        diff.kind.value,
+                        diff.subject,
+                        diff.reason_code,
+                        diff.ownership.value,
+                        1 if diff.blocking else 0,
+                        _canonical_json(diff.canonical()),
+                    ),
+                )
+            for event in funding_events:
+                self._append_funding_event_locked(
+                    event=event, attempt_id=attempt_id, recorded_ts=ended_ts
+                )
+            cursor = self.conn.execute(
+                """
+                UPDATE reconcile_attempts
+                SET state = ?, ended_ts = ?, duration_ms = ?, complete = ?,
+                    fresh = ?, canonical_hash = ?, reason_code = ?
+                WHERE attempt_id = ? AND state = 'COLLECTING'
+                """,
+                (
+                    state.value,
+                    _to_iso(ended_ts),
+                    int(duration_ms),
+                    1 if state is ReconcileAttemptState.COMPLETE else 0,
+                    1 if fresh else 0,
+                    canonical_hash,
+                    reason_code,
+                    attempt_id,
+                ),
+            )
+            if cursor.rowcount != 1:
+                raise ReconcileConflictError(
+                    "RECONCILE_ATTEMPT_RESOLVE_RACE",
+                    f"attempt {attempt_id} resolve rowcount mismatch",
+            )
+            if accepted:
+                previous_coverage = self._coverage_upper_bound_ms_locked()
+                checkpoint_id = compute_reconcile_checkpoint_id(
+                    attempt_id=attempt_id, canonical_hash=str(canonical_hash)
+                )
+                self.conn.execute(
+                    """
+                    INSERT INTO reconcile_checkpoints(
+                      checkpoint_id, attempt_id, run_id, accepted_ts,
+                      canonical_hash, snapshot_json, reason_code
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        checkpoint_id,
+                        attempt_id,
+                        run_id,
+                        _to_iso(ended_ts),
+                        str(canonical_hash),
+                        _canonical_json(dict(snapshot_payload or {})),
+                        reason_code,
+                    ),
+                )
+                self.conn.execute(
+                    "INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)",
+                    (RECONCILE_CHECKPOINT_POINTER_KEY, checkpoint_id),
+                )
+                if (
+                    previous_coverage is not None
+                    and int(coverage_upper_bound_ms) < previous_coverage
+                ):
+                    # Coverage is monotonic: a bound that moves backwards would
+                    # re-open an interval the ledger already claims as proven.
+                    raise ReconcileConflictError(
+                        "RECONCILE_COVERAGE_REGRESSION",
+                        "coverage upper bound must never move backwards",
+                    )
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+        return checkpoint_id
+
+    def _append_funding_event_locked(
+        self,
+        *,
+        event: FundingEventRecord,
+        attempt_id: str,
+        recorded_ts: datetime,
+    ) -> None:
+        """Append-only funding write; exact replay is idempotent, drift blocks."""
+        existing = self.conn.execute(
+            "SELECT payload_digest FROM funding_events WHERE event_id = ?",
+            (event.event_id,),
+        ).fetchone()
+        digest = event.digest
+        if existing is not None:
+            if str(existing["payload_digest"]) != digest:
+                raise ReconcileConflictError(
+                    "FUNDING_EVENT_IDENTITY_CONFLICT",
+                    f"conflicting payload for funding event {event.event_id}",
+                )
+            return
+        self.conn.execute(
+            """
+            INSERT INTO funding_events(
+              event_id, symbol, amount_usdc, effective_ts, source, attribution,
+              payload_digest, first_seen_attempt_id, recorded_ts
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                event.event_id,
+                event.symbol,
+                _finite_float(float(event.amount_usdc)),
+                _to_iso(event.effective_ts),
+                event.source,
+                event.attribution.value,
+                digest,
+                attempt_id,
+                _to_iso(recorded_ts),
+            ),
+        )
+
+    def resolve_interrupted_reconcile_attempts(
+        self, *, observed_ts: datetime, reason_code: str = "RESTART_INTERRUPTED"
+    ) -> int:
+        """Mark attempts that never resolved (crash/kill) as INCOMPLETE.
+
+        The evidence stays visible and the accepted pointer is not touched: a
+        pre-crash checkpoint is retained but can never be presented as freshly
+        reconciled.
+        """
+        self._require_full_reconcile()
+        cursor = self.conn.execute(
+            """
+            UPDATE reconcile_attempts
+            SET state = ?, ended_ts = ?, duration_ms = 0, complete = 0, fresh = 0,
+                reason_code = ?
+            WHERE state = 'COLLECTING'
+            """,
+            (
+                ReconcileAttemptState.INCOMPLETE.value,
+                _to_iso(observed_ts),
+                reason_code,
+            ),
+        )
+        self.conn.commit()
+        return int(cursor.rowcount)
+
+    def get_reconcile_attempt(self, attempt_id: str) -> dict[str, Any] | None:
+        row = self.conn.execute(
+            "SELECT * FROM reconcile_attempts WHERE attempt_id = ?", (attempt_id,)
+        ).fetchone()
+        return None if row is None else dict(row)
+
+    def list_reconcile_attempts(self, run_id: str | None = None) -> list[dict[str, Any]]:
+        if run_id is None:
+            return self._rows(
+                "SELECT * FROM reconcile_attempts ORDER BY run_id, seq"
+            )
+        return self._rows(
+            "SELECT * FROM reconcile_attempts WHERE run_id = ? ORDER BY seq",
+            (run_id,),
+        )
+
+    def get_reconcile_components(self, attempt_id: str) -> list[dict[str, Any]]:
+        return self._rows(
+            "SELECT * FROM reconcile_components WHERE attempt_id = ? "
+            "ORDER BY component",
+            (attempt_id,),
+        )
+
+    def get_reconcile_diffs(self, attempt_id: str) -> list[dict[str, Any]]:
+        return self._rows(
+            "SELECT * FROM reconcile_diffs WHERE attempt_id = ? ORDER BY seq",
+            (attempt_id,),
+        )
+
+    def latest_accepted_reconcile_checkpoint(self) -> dict[str, Any] | None:
+        """Resolve the single transactional pointer; never a scan-and-guess."""
+        if not self.full_reconcile_enabled():
+            return None
+        pointer = self.get_meta(RECONCILE_CHECKPOINT_POINTER_KEY)
+        if pointer is None:
+            return None
+        row = self.conn.execute(
+            "SELECT * FROM reconcile_checkpoints WHERE checkpoint_id = ?",
+            (pointer,),
+        ).fetchone()
+        if row is None:
+            raise ReconcileConflictError(
+                "RECONCILE_POINTER_DANGLING",
+                "latest-accepted pointer does not resolve",
+            )
+        return dict(row)
+
+    def _coverage_upper_bound_ms_locked(self) -> int | None:
+        """Derive coverage from the sole pointed checkpoint's immutable evidence."""
+        pointer = self.get_meta(RECONCILE_CHECKPOINT_POINTER_KEY)
+        if pointer is None:
+            return None
+        rows = self.conn.execute(
+            """
+            SELECT c.component, c.cursor_start_ms, c.cursor_end_ms
+            FROM reconcile_checkpoints AS p
+            JOIN reconcile_components AS c ON c.attempt_id = p.attempt_id
+            WHERE p.checkpoint_id = ? AND c.component IN ('FILLS', 'FUNDING')
+            ORDER BY c.component
+            """,
+            (pointer,),
+        ).fetchall()
+        if (
+            len(rows) != 2
+            or {str(row["component"]) for row in rows} != {"FILLS", "FUNDING"}
+            or any(
+                row["cursor_start_ms"] is None or row["cursor_end_ms"] is None
+                for row in rows
+            )
+            or len({int(row["cursor_start_ms"]) for row in rows}) != 1
+            or len({int(row["cursor_end_ms"]) for row in rows}) != 1
+        ):
+            raise ReconcileConflictError(
+                "RECONCILE_COVERAGE_EVIDENCE_CORRUPT",
+                "accepted fills/funding coverage evidence is incomplete",
+            )
+        return int(rows[0]["cursor_end_ms"])
+
+    def reconcile_coverage_upper_bound_ms(self) -> int | None:
+        """Upper bound of the fills/funding interval already proven covered."""
+        if not self.full_reconcile_enabled():
+            return None
+        return self._coverage_upper_bound_ms_locked()
+
+    def run_started_ts(self, run_id: str) -> datetime | None:
+        """Durable start of a run, used as the very first coverage lower bound."""
+        row = self.conn.execute(
+            "SELECT started_ts FROM runs WHERE run_id = ?", (run_id,)
+        ).fetchone()
+        if row is None or row["started_ts"] is None:
+            return None
+        try:
+            value = datetime.fromisoformat(str(row["started_ts"]))
+        except ValueError:
+            return None
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=UTC)
+        return value.astimezone(UTC)
+
+    def earliest_reconcile_attempt_started_ts(self) -> datetime | None:
+        """Earliest attempt start in the whole append-only attempt ledger.
+
+        ``reconcile_attempts`` is append-only and its identity and bounds are
+        frozen, so this is a durable floor for "when observation of this
+        account actually began" that survives restarts and a new ``run_id``.
+        It is the only such evidence while nothing has ever been accepted.
+
+        ``started_ts`` is always stored as a fixed-width UTC ISO string
+        (``_to_iso``), so SQL ``MIN`` over the text column is chronological.
+        """
+        if not self.full_reconcile_enabled():
+            return None
+        row = self.conn.execute(
+            "SELECT MIN(started_ts) FROM reconcile_attempts"
+        ).fetchone()
+        if row is None or row[0] is None:
+            return None
+        try:
+            value = datetime.fromisoformat(str(row[0]))
+        except ValueError:
+            return None
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=UTC)
+        return value.astimezone(UTC)
+
+    def count_accepted_reconcile_checkpoints(self) -> int:
+        if not self.full_reconcile_enabled():
+            return 0
+        return int(
+            self.conn.execute(
+                "SELECT COUNT(*) FROM reconcile_checkpoints"
+            ).fetchone()[0]
+        )
+
+    def latest_resolved_reconcile_attempt_id(self) -> str | None:
+        """The most recently *resolved* attempt, whatever its verdict.
+
+        Durable insertion order is authoritative; wall-clock timestamps are
+        evidence, never ordering keys. ``COLLECTING`` rows are excluded: an in-flight
+        capture has not resolved anything yet, and a capture that never
+        resolves is turned into an ``INCOMPLETE`` row on reopen — at which
+        point it does count here.
+        """
+        row = self.conn.execute(
+            "SELECT attempt_id FROM reconcile_attempts WHERE state != 'COLLECTING' "
+            "ORDER BY rowid DESC LIMIT 1"
+        ).fetchone()
+        return None if row is None else str(row["attempt_id"])
+
+    def full_reconcile_ready(self, *, now: datetime, max_age_s: float) -> bool:
+        """Derived readiness: a *fresh, still-current* accepted v6 checkpoint.
+
+        Deliberately independent of the light ``OrderManager.reconcile()``
+        path: no light success can reach this value. A clock rollback (an
+        accepted timestamp in the future) is treated as non-ready.
+
+        Freshness alone is not enough: the pointer's attempt must also be the
+        most recently resolved attempt. Any later failed, conflicting, stale or
+        restart-interrupted attempt therefore makes readiness false until a new
+        capture is accepted, so a still-young checkpoint can never outvote newer
+        contradicting evidence.
+        """
+        checkpoint = self.latest_accepted_reconcile_checkpoint()
+        if checkpoint is None:
+            return False
+        latest_resolved = self.latest_resolved_reconcile_attempt_id()
+        if latest_resolved != str(checkpoint["attempt_id"]):
+            return False
+        attempt = self.conn.execute(
+            "SELECT state, complete, fresh, canonical_hash, reason_code "
+            "FROM reconcile_attempts WHERE attempt_id = ?",
+            (checkpoint["attempt_id"],),
+        ).fetchone()
+        if (
+            attempt is None
+            or str(attempt["state"]) != ReconcileAttemptState.COMPLETE.value
+            or int(attempt["complete"]) != 1
+            or int(attempt["fresh"]) != 1
+            or str(attempt["reason_code"]) != "ACCEPTED"
+            or str(attempt["canonical_hash"]) != str(checkpoint["canonical_hash"])
+        ):
+            return False
+        components = self.get_reconcile_components(str(checkpoint["attempt_id"]))
+        if (
+            len(components) != len(REQUIRED_RECONCILE_COMPONENTS)
+            or {row["component"] for row in components}
+            != {kind.value for kind in REQUIRED_RECONCILE_COMPONENTS}
+            or any(
+                row["status"] != ReconcileComponentStatus.COMPLETE.value
+                or int(row["exact"]) != 1
+                or int(row["complete"]) != 1
+                or row["observed_ts"] is None
+                for row in components
+            )
+        ):
+            return False
+        try:
+            snapshot = json.loads(str(checkpoint["snapshot_json"]))
+            diffs = [
+                json.loads(str(item["payload_json"]))
+                for item in self.get_reconcile_diffs(str(checkpoint["attempt_id"]))
+            ]
+            component_digests = {
+                str(item["component"]): str(item["payload_digest"])
+                for item in components
+            }
+            if (
+                reconcile_digest(
+                    {
+                        "version": snapshot.get("version"),
+                        "components": component_digests,
+                        "diffs": diffs,
+                    }
+                )
+                != str(checkpoint["canonical_hash"])
+                or snapshot.get("diffs") != diffs
+            ):
+                return False
+            snapshot_components = snapshot.get("components", {})
+            if any(
+                not isinstance(snapshot_components.get(str(item["component"])), Mapping)
+                or snapshot_components[str(item["component"])].get("cursor_start_ms")
+                != item["cursor_start_ms"]
+                or snapshot_components[str(item["component"])].get("cursor_end_ms")
+                != item["cursor_end_ms"]
+                for item in components
+            ):
+                return False
+            funding_ids = snapshot.get("funding_event_ids")
+            if not isinstance(funding_ids, list) or any(
+                not isinstance(event_id, str) or not event_id
+                for event_id in funding_ids
+            ):
+                return False
+            funding_digests = snapshot.get("funding_event_digests")
+            if (
+                not isinstance(funding_digests, Mapping)
+                or set(funding_digests) != set(funding_ids)
+            ):
+                return False
+            found_funding = (
+                {
+                    str(item["event_id"]): str(item["payload_digest"])
+                    for item in self.conn.execute(
+                        "SELECT event_id, payload_digest FROM funding_events WHERE event_id IN "
+                        f"({','.join('?' for _ in funding_ids)})",
+                        tuple(funding_ids),
+                    ).fetchall()
+                }
+                if funding_ids
+                else {}
+            )
+            if found_funding != dict(funding_digests):
+                return False
+            if self._coverage_upper_bound_ms_locked() is None:
+                return False
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError, ReconcileConflictError):
+            return False
+        accepted_ts = datetime.fromisoformat(str(checkpoint["accepted_ts"]))
+        if accepted_ts.tzinfo is None:
+            accepted_ts = accepted_ts.replace(tzinfo=UTC)
+        age = (now.astimezone(UTC) - accepted_ts.astimezone(UTC)).total_seconds()
+        if age < 0:
+            return False
+        return age <= float(max_age_s)
+
+    def list_funding_events(
+        self, *, symbol: str | None = None
+    ) -> list[dict[str, Any]]:
+        if not self.full_reconcile_enabled():
+            return []
+        if symbol is None:
+            return self._rows(
+                "SELECT * FROM funding_events ORDER BY effective_ts, event_id"
+            )
+        return self._rows(
+            "SELECT * FROM funding_events WHERE symbol = ? "
+            "ORDER BY effective_ts, event_id",
+            (symbol,),
+        )
+
+    def get_funding_event(self, event_id: str) -> dict[str, Any] | None:
+        row = self.conn.execute(
+            "SELECT * FROM funding_events WHERE event_id = ?", (str(event_id),)
+        ).fetchone()
+        return None if row is None else dict(row)
+
+    def funding_total(
+        self,
+        *,
+        symbol: str | None = None,
+        start_ts: datetime | None = None,
+        end_ts: datetime | None = None,
+        attributed_only: bool = True,
+    ) -> float:
+        """Signed funding total. Never consumed by risk before TS-P1-006."""
+        total = 0.0
+        for row in self.list_funding_events(symbol=symbol):
+            if attributed_only and str(row["attribution"]) != (
+                FundingAttribution.ATTRIBUTED.value
+            ):
+                continue
+            effective = datetime.fromisoformat(str(row["effective_ts"]))
+            if effective.tzinfo is None:
+                effective = effective.replace(tzinfo=UTC)
+            if start_ts is not None and effective < start_ts.astimezone(UTC):
+                continue
+            if end_ts is not None and effective > end_ts.astimezone(UTC):
+                continue
+            total += float(row["amount_usdc"])
+        return total
+
     def trade_costs(self, decision_uid: str) -> float:
         row = self.conn.execute(
             """
@@ -3799,6 +5318,13 @@ class Store:
     def get_order(self, cloid: str) -> dict[str, Any] | None:
         row = self.conn.execute("SELECT * FROM orders WHERE cloid = ?", (cloid,)).fetchone()
         return None if row is None else dict(row)
+
+    def get_order_by_oid(self, oid: int) -> dict[str, Any] | None:
+        """Resolve one durable broker identity; zero or multiple matches are ambiguous."""
+        rows = self.conn.execute(
+            "SELECT * FROM orders WHERE oid = ? ORDER BY cloid", (int(oid),)
+        ).fetchall()
+        return dict(rows[0]) if len(rows) == 1 else None
 
     def get_order_by_ref(self, order_ref: str) -> dict[str, Any] | None:
         """B2 fallback 2: durable identity via our order_ref tag."""

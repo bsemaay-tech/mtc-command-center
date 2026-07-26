@@ -312,6 +312,145 @@ async def _arm_requires_fresh_reconcile_evidence(tmp_path):
     assert "STATE_TRANSITION" in codes
 
 
+def test_v4_engine_arm_is_unaffected_by_full_reconciliation(tmp_path):
+    """A default (v4) store keeps exactly the predecessor ARM behavior."""
+    asyncio.run(_v4_engine_arm_unaffected(tmp_path))
+
+
+async def _v4_engine_arm_unaffected(tmp_path):
+    store = Store(tmp_path / "v4-arm.db")
+    store.initialize()
+    store.create_run("v4-arm", "paper", "testnet", {})
+    engine = BridgeEngine(
+        run_id="v4-arm",
+        broker=MockBroker([], starting_equity=1000),
+        store=store,
+        strategy=NoSignalStrategy(),
+        risk_engine=RiskEngine(RiskConfig()),
+        state="DISARMED",
+    )
+    assert store.full_reconcile_enabled() is False
+    assert engine.full_reconciler is None
+    assert engine.full_reconcile_ready() is False
+
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime.now(UTC)
+    await engine.arm()
+    assert store.get_meta("app_state") == "ARMED"
+    assert engine.status()["full_reconcile_ready"] is False
+
+
+def test_v6_engine_requires_both_reconcile_gates_to_arm(tmp_path):
+    asyncio.run(_v6_engine_requires_both_gates(tmp_path))
+
+
+async def _v6_engine_requires_both_gates(tmp_path):
+    store = Store(tmp_path / "v6-arm.db")
+    store.initialize(target_schema_version=6)
+    store.create_run("v6-arm", "paper", "testnet", {})
+    broker = MockBroker([], starting_equity=1000)
+    broker.full_account = {
+        "equity": 1000.0,
+        "withdrawable": 1000.0,
+        "margin_used": 0.0,
+        "available_margin": 1000.0,
+    }
+    engine = BridgeEngine(
+        run_id="v6-arm",
+        broker=broker,
+        store=store,
+        strategy=NoSignalStrategy(),
+        risk_engine=RiskEngine(RiskConfig()),
+        state="DISARMED",
+    )
+    assert engine.full_reconciler is not None
+
+    # Light reconcile alone is fresh and successful — and still not enough.
+    await engine.order_manager.reconcile()
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime.now(UTC)
+    assert engine.full_reconcile_ready() is False
+    with pytest.raises(RuntimeError, match="full reconciliation incomplete"):
+        await engine.arm()
+    assert store.get_meta("app_state") == "DISARMED"
+
+    result = await engine.run_full_reconcile()
+    assert result.accepted is True, result.reason_code
+    assert engine.full_reconcile_ready() is True
+    await engine.arm()
+    assert store.get_meta("app_state") == "ARMED"
+    assert engine.status()["full_reconcile_ready"] is True
+    assert engine.status()["full_reconcile_attempt_id"] == result.attempt_id
+
+
+def test_v6_engine_blocked_capture_keeps_arm_closed(tmp_path):
+    asyncio.run(_v6_engine_blocked_capture(tmp_path))
+
+
+async def _v6_engine_blocked_capture(tmp_path):
+    from bridge.engine.types import ReconcileComponentKind
+
+    store = Store(tmp_path / "v6-blocked.db")
+    store.initialize(target_schema_version=6)
+    store.create_run("v6-blocked", "paper", "testnet", {})
+    broker = MockBroker([], starting_equity=1000)
+    broker.full_component_failures = {ReconcileComponentKind.FILLS.value: "RAISE"}
+    engine = BridgeEngine(
+        run_id="v6-blocked",
+        broker=broker,
+        store=store,
+        strategy=NoSignalStrategy(),
+        risk_engine=RiskEngine(RiskConfig()),
+        state="DISARMED",
+    )
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime.now(UTC)
+
+    result = await engine.run_full_reconcile()
+    assert result.accepted is False
+    assert engine.full_reconcile_error == result.reason_code
+    assert "FULL_RECONCILE_BLOCKED" in [row["code"] for row in store.get_events()]
+
+    with pytest.raises(RuntimeError, match="full reconciliation incomplete"):
+        await engine.arm()
+    assert store.get_meta("app_state") == "DISARMED"
+
+
+def test_v6_engine_marks_an_interrupted_capture_on_restart(tmp_path):
+    asyncio.run(_v6_engine_marks_interrupted_capture(tmp_path))
+
+
+async def _v6_engine_marks_interrupted_capture(tmp_path):
+    path = tmp_path / "v6-restart.db"
+    store = Store(path)
+    store.initialize(target_schema_version=6)
+    store.create_run("v6-restart", "paper", "testnet", {})
+    dangling = store.reserve_reconcile_attempt(
+        run_id="v6-restart",
+        started_ts=datetime.now(UTC),
+        deadline_s=5.0,
+        max_skew_s=5.0,
+    )
+    store.close()
+
+    reopened = Store(path)
+    reopened.initialize(target_schema_version=6)
+    reopened.create_run("v6-restart-2", "paper", "testnet", {})
+    engine = BridgeEngine(
+        run_id="v6-restart-2",
+        broker=MockBroker([], starting_equity=1000),
+        store=reopened,
+        strategy=NoSignalStrategy(),
+        risk_engine=RiskEngine(RiskConfig()),
+        state="DISARMED",
+    )
+    assert engine.full_reconcile_error == "RESTART_INTERRUPTED"
+    assert reopened.get_reconcile_attempt(dangling)["state"] == "INCOMPLETE"
+    assert reopened.latest_accepted_reconcile_checkpoint() is None
+    assert engine.full_reconcile_ready() is False
+    reopened.close()
+
+
 def test_order_manager_duplicate_and_disarmed_guards(tmp_path):
     asyncio.run(_run_order_manager_guards(tmp_path))
 
@@ -759,3 +898,295 @@ def test_engine_start_drives_partial_recovery_through_reconcile(tmp_path):
 
     recovery = store.latest_partial_recovery_for_symbol("BTC")
     assert recovery["state"] == PartialProtectionState.PROTECTED_PARTIAL.value
+
+
+# ---------------------------------------------------------------------------
+# TS-P1-005 R2 / R3 — readiness recency, and two independent failure budgets
+# ---------------------------------------------------------------------------
+
+
+def _v6_engine(tmp_path, name: str, run_id: str, broker=None):
+    store = Store(tmp_path / name)
+    store.initialize(target_schema_version=6)
+    store.create_run(run_id, "paper", "testnet", {})
+    broker = broker if broker is not None else MockBroker([], starting_equity=1000)
+    broker.full_account = {
+        "equity": 1000.0,
+        "withdrawable": 1000.0,
+        "margin_used": 0.0,
+        "available_margin": 1000.0,
+    }
+    engine = BridgeEngine(
+        run_id=run_id,
+        broker=broker,
+        store=store,
+        strategy=NoSignalStrategy(),
+        risk_engine=RiskEngine(RiskConfig()),
+        state="DISARMED",
+    )
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime.now(UTC)
+    return store, broker, engine
+
+
+def test_full_reconcile_freshness_bound_is_derived_from_the_cadence(tmp_path):
+    asyncio.run(_full_reconcile_freshness_bound(tmp_path))
+
+
+async def _full_reconcile_freshness_bound(tmp_path):
+    from bridge.engine.types import ReconcileComponentKind
+
+    store, _broker, engine = _v6_engine(tmp_path, "v6-fresh.db", "v6-fresh")
+
+    # Exactly the accepted light formula, re-evaluated at call time.
+    for interval, expected in ((60.0, 180.0), (5.0, 30.0), (600.0, 1800.0)):
+        engine.reconcile_interval_s = interval
+        assert engine.full_reconcile_max_age_s() == expected
+        assert expected == max(engine.reconcile_interval_s * 3, 30.0)
+
+    engine.reconcile_interval_s = 60.0
+    result = await engine.run_full_reconcile()
+    assert result.accepted is True, result.reason_code
+
+    seen: list[float] = []
+    real_ready = store.full_reconcile_ready
+
+    def spy(*, now, max_age_s):
+        seen.append(max_age_s)
+        return real_ready(now=now, max_age_s=max_age_s)
+
+    store.full_reconcile_ready = spy
+    assert engine.full_reconcile_ready() is True
+    engine.reconcile_interval_s = 600.0
+    engine.full_reconcile_ready()
+    assert seen == [180.0, 1800.0]
+
+    # The bound is a real bound: an old checkpoint is not ready.
+    store.full_reconcile_ready = real_ready
+    engine.reconcile_interval_s = 60.0
+    stale_now = datetime.now(UTC) + timedelta(seconds=181)
+    assert engine.full_reconcile_ready(stale_now) is False
+    assert ReconcileComponentKind.FILLS.value  # vocabulary is still importable
+    store.close()
+
+
+def test_a_later_failed_capture_blocks_arm_even_with_a_young_checkpoint(tmp_path):
+    asyncio.run(_later_failure_blocks_arm(tmp_path))
+
+
+def test_failed_full_gate_blocks_new_entry_while_persisted_armed(tmp_path):
+    asyncio.run(_failed_full_gate_blocks_new_entry(tmp_path))
+
+
+async def _failed_full_gate_blocks_new_entry(tmp_path):
+    from bridge.engine.types import ReconcileComponentKind
+
+    store, broker, engine = _v6_engine(tmp_path, "v6-entry-gate.db", "v6-entry-gate")
+    accepted = await engine.run_full_reconcile()
+    assert accepted.accepted is True
+    await engine.arm()
+    assert store.get_meta("app_state") == "ARMED"
+
+    broker.full_component_failures = {ReconcileComponentKind.FILLS.value: "RAISE"}
+    failed = await engine.run_full_reconcile()
+    assert failed.accepted is False
+    assert engine.full_reconcile_ready() is False
+
+    class CountingStrategy(NoSignalStrategy):
+        def __init__(self):
+            self.calls = 0
+
+        def on_bar(self, bars, position):
+            self.calls += 1
+            return None
+
+    strategy = CountingStrategy()
+    engine.strategy = strategy
+    bar = Bar(
+        ts=datetime.now(UTC),
+        open=100,
+        high=101,
+        low=99,
+        close=100,
+        volume=1,
+    )
+    await engine.on_bar(bar)
+    assert strategy.calls == 0
+    assert store.get_meta("app_state") == "ARMED"
+    store.close()
+
+
+def test_on_bar_waits_for_the_full_reconcile_epoch_guard(tmp_path):
+    asyncio.run(_on_bar_waits_for_full_guard(tmp_path))
+
+
+async def _on_bar_waits_for_full_guard(tmp_path):
+    from bridge.engine.reconcile import full_writer_guard
+
+    store, _, engine = _v6_engine(tmp_path, "v6-bar-guard.db", "v6-bar-guard")
+    guard = full_writer_guard(store)
+    await guard.acquire()
+    task = asyncio.create_task(engine.on_bar(Bar(
+        ts=datetime.now(UTC),
+        open=100,
+        high=101,
+        low=99,
+        close=100,
+        volume=1,
+    )))
+    await asyncio.sleep(0)
+    await asyncio.sleep(0)
+    assert task.done() is False
+    guard.release()
+    await task
+    store.close()
+
+
+async def _later_failure_blocks_arm(tmp_path):
+    from bridge.engine.types import ReconcileComponentKind
+
+    store, broker, engine = _v6_engine(tmp_path, "v6-later.db", "v6-later")
+
+    accepted = await engine.run_full_reconcile()
+    assert accepted.accepted is True, accepted.reason_code
+    assert engine.full_reconcile_ready() is True
+
+    broker.full_component_failures = {ReconcileComponentKind.FILLS.value: "RAISE"}
+    failed = await engine.run_full_reconcile()
+    assert failed.accepted is False
+
+    # The accepted checkpoint is still young and still the pointer...
+    checkpoint = store.latest_accepted_reconcile_checkpoint()
+    assert checkpoint["attempt_id"] == accepted.attempt_id
+    # ...and it is no longer the latest word, so neither gate is open.
+    assert store.full_reconcile_ready(
+        now=datetime.now(UTC), max_age_s=engine.full_reconcile_max_age_s()
+    ) is False
+    assert engine.full_reconcile_error == failed.reason_code
+    assert engine.full_reconcile_ready() is False
+    with pytest.raises(RuntimeError, match="full reconciliation incomplete"):
+        await engine.arm()
+    assert store.get_meta("app_state") == "DISARMED"
+
+    # Only a fresh accept clears the latch.
+    broker.full_component_failures = {}
+    recovered = await engine.run_full_reconcile()
+    assert recovered.accepted is True, recovered.reason_code
+    assert engine.full_reconcile_error is None
+    assert engine.full_reconcile_ready() is True
+    await engine.arm()
+    assert store.get_meta("app_state") == "ARMED"
+    store.close()
+
+
+def test_a_dangling_capture_resolved_on_reopen_blocks_arm(tmp_path):
+    asyncio.run(_dangling_capture_blocks_arm(tmp_path))
+
+
+async def _dangling_capture_blocks_arm(tmp_path):
+    path = tmp_path / "v6-dangling.db"
+    store = Store(path)
+    store.initialize(target_schema_version=6)
+    store.create_run("v6-dangling", "paper", "testnet", {})
+    broker = MockBroker([], starting_equity=1000)
+    broker.full_account = {
+        "equity": 1000.0,
+        "withdrawable": 1000.0,
+        "margin_used": 0.0,
+        "available_margin": 1000.0,
+    }
+    engine = BridgeEngine(
+        run_id="v6-dangling",
+        broker=broker,
+        store=store,
+        strategy=NoSignalStrategy(),
+        risk_engine=RiskEngine(RiskConfig()),
+        state="DISARMED",
+    )
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime.now(UTC)
+    accepted = await engine.run_full_reconcile()
+    assert accepted.accepted is True, accepted.reason_code
+    assert engine.full_reconcile_ready() is True
+
+    # A capture that is killed before it can resolve.
+    dangling = store.reserve_reconcile_attempt(
+        run_id="v6-dangling",
+        started_ts=datetime.now(UTC),
+        deadline_s=5.0,
+        max_skew_s=5.0,
+    )
+    store.close()
+
+    reopened = Store(path)
+    reopened.initialize(target_schema_version=6)
+    restarted = BridgeEngine(
+        run_id="v6-dangling",
+        broker=broker,
+        store=reopened,
+        strategy=NoSignalStrategy(),
+        risk_engine=RiskEngine(RiskConfig()),
+        state="DISARMED",
+    )
+    restarted.reconcile_ready = True
+    restarted.last_reconcile_ts = datetime.now(UTC)
+
+    assert reopened.get_reconcile_attempt(dangling)["state"] == "INCOMPLETE"
+    assert restarted.full_reconcile_error == "RESTART_INTERRUPTED"
+    # The pre-crash checkpoint is retained but is no longer the latest word.
+    assert (
+        reopened.latest_accepted_reconcile_checkpoint()["attempt_id"]
+        == accepted.attempt_id
+    )
+    assert reopened.full_reconcile_ready(
+        now=datetime.now(UTC), max_age_s=restarted.full_reconcile_max_age_s()
+    ) is False
+    assert restarted.full_reconcile_ready() is False
+    with pytest.raises(RuntimeError, match="full reconciliation incomplete"):
+        await restarted.arm()
+    assert reopened.get_meta("app_state") == "DISARMED"
+    reopened.close()
+
+
+def test_full_ledger_failure_never_consumes_the_light_failure_budget(tmp_path):
+    asyncio.run(_full_failure_keeps_light_budget(tmp_path))
+
+
+async def _full_failure_keeps_light_budget(tmp_path):
+    import sqlite3
+
+    store, _broker, engine = _v6_engine(tmp_path, "v6-budget.db", "v6-budget")
+
+    accepted = await engine.run_full_reconcile()
+    assert accepted.accepted is True, accepted.reason_code
+    await engine.arm()
+    assert store.get_meta("app_state") == "ARMED"
+
+    def exploding_reserve(**_kwargs):
+        raise sqlite3.OperationalError("reconcile ledger unavailable")
+
+    store.reserve_reconcile_attempt = exploding_reserve
+
+    limit = engine.reconcile_max_consecutive_failures
+    assert limit <= 3, "3 cycles must be enough to exhaust the light budget"
+    for _ in range(3):
+        assert await engine._run_reconcile_cycle() is True
+
+    # The light gate is untouched: budget, flags, cadence and ARMED state.
+    assert engine._consecutive_reconcile_failures == 0
+    assert engine.reconcile_ready is True
+    assert engine.reconcile_error is None
+    assert engine.state == "ARMED"
+    assert store.get_meta("app_state") == "ARMED"
+
+    # The full gate carries the whole outcome by itself.
+    assert engine.full_reconcile_error is not None
+    assert engine.full_reconcile_error.startswith("FULL_RECONCILE_CYCLE_FAILED")
+    assert "OPERATIONALERROR" in engine.full_reconcile_error
+    assert engine.full_reconcile_ready() is False
+    assert engine.status()["full_reconcile_ready"] is False
+    codes = [row["code"] for row in store.get_events()]
+    assert codes.count("FULL_RECONCILE_BLOCKED") == 3
+    assert "RECONCILE_FAILED" not in codes
+    assert "RECONCILE_FAILED_TOLERATED" not in codes
+    store.close()

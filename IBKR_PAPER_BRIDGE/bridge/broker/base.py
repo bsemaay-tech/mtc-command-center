@@ -13,11 +13,13 @@ from bridge.engine.types import (
     BrokerEvent,
     BrokerOrder,
     CancelResult,
+    ComponentEvidence,
     FlattenResult,
     LotUnit,
     OrderPlan,
     OrderQueryResult,
     PlaceResult,
+    PortfolioEvidence,
     Position,
     SymbolSnapshot,
 )
@@ -266,4 +268,57 @@ class PartialRecoveryBroker(Protocol):
         self, *, symbol: str, cloid: str, size: float
     ) -> FlattenResult:
         """Reduce-only market close of exactly ``size`` on ``symbol``."""
+        ...
+
+
+# ---------------------------------------------------------------------------
+# TS-P1-005 bounded read-only full-reconciliation surface
+#
+# A *separate* protocol again, following the `PartialRecoveryBroker` precedent
+# above: `Broker` keeps its accepted shape, and an adapter opts in by
+# implementing the read-only methods below. Nothing here may mutate exchange
+# state. `FullReconciler` feature-detects the surface and treats a missing one
+# as "reconciliation unavailable" — a non-accepting attempt, never a success.
+# ---------------------------------------------------------------------------
+
+
+class FullReconciliationUnavailable(RuntimeError):
+    """The adapter cannot serve the bounded full-reconciliation contract."""
+
+    def __init__(self, reason_code: str = "FULL_RECONCILE_API_UNAVAILABLE") -> None:
+        self.reason_code = reason_code
+        super().__init__(reason_code)
+
+
+class FullReconciliationBroker(Protocol):
+    """Read-only authoritative evidence for one full portfolio capture.
+
+    Every method returns typed evidence whose verdict is conservative:
+    transport failures, unparseable bodies, truncated pages and unprovable
+    pagination completeness map to a non-``COMPLETE`` status, never to an
+    empty-but-accepted component.
+    """
+
+    def lot_unit(self, symbol: str) -> LotUnit | None:
+        """Exchange size quantum, or ``None`` when unknown (fail-closed)."""
+        ...
+
+    async def portfolio_evidence(self) -> PortfolioEvidence:
+        """Positions, balances and margin from one account observation."""
+        ...
+
+    async def open_orders_evidence(self) -> ComponentEvidence:
+        """Authoritative live open-order rows for the whole account."""
+        ...
+
+    async def fills_evidence(
+        self, *, start_ms: int, end_ms: int
+    ) -> ComponentEvidence:
+        """Time-paginated fills; incomplete history windows fail closed."""
+        ...
+
+    async def funding_evidence(
+        self, *, start_ms: int, end_ms: int
+    ) -> ComponentEvidence:
+        """Time-paginated funding ledger keyed by the exchange event hash."""
         ...

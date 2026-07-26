@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import math
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from enum import Enum
 from typing import Any, Literal
@@ -365,6 +367,57 @@ def normalize_raw_order_status(raw: object) -> OrderState:
         return RAW_ORDER_STATUS_ALIASES[key]
     except KeyError:
         raise UnknownRawOrderStatusError(raw, "UNRECOGNIZED_RAW_STATUS") from None
+
+
+# ---------------------------------------------------------------------------
+# Durable order-status vocabulary
+#
+# `orders.status` is written from several producers: the canonical
+# `OrderState` values, the raw-alias spellings accepted by
+# `normalize_raw_order_status`, and a small set of legacy spellings that
+# `OrderManager._normalize_success_orders` persists verbatim after a
+# successful submission (`ACCEPTED`, `RESTING`) or for a child order that is
+# still waiting on its parent trigger (`WAITING_CHILD`).
+#
+# The sets below are *derived* from those three sources rather than
+# hand-listed, so a new non-terminal `OrderState` or alias can never silently
+# fall out of the "still live on the exchange" query. Anything outside
+# `KNOWN_DURABLE_ORDER_STATUSES` is an unknown durable state: it is never
+# dropped, it blocks (see `DIFF_LOCAL_ORDER_STATUS_UNKNOWN`).
+# ---------------------------------------------------------------------------
+
+LEGACY_LIVE_ORDER_STATUS_SPELLINGS: frozenset[str] = frozenset({
+    "ACCEPTED",
+    "RESTING",
+    "WAITING_CHILD",
+})
+"""Accepted legacy live spellings persisted by the submission path."""
+
+LIVE_DURABLE_ORDER_STATUSES: frozenset[str] = frozenset(
+    {state.value for state in OrderState if state not in TERMINAL_ORDER_STATES}
+    | {
+        raw
+        for raw, state in RAW_ORDER_STATUS_ALIASES.items()
+        if state not in TERMINAL_ORDER_STATES
+    }
+    | LEGACY_LIVE_ORDER_STATUS_SPELLINGS
+)
+"""Every durable spelling that may still correspond to exchange-side state."""
+
+TERMINAL_DURABLE_ORDER_STATUSES: frozenset[str] = frozenset(
+    {state.value for state in TERMINAL_ORDER_STATES}
+    | {
+        raw
+        for raw, state in RAW_ORDER_STATUS_ALIASES.items()
+        if state in TERMINAL_ORDER_STATES
+    }
+)
+"""Every durable spelling that is provably finished."""
+
+KNOWN_DURABLE_ORDER_STATUSES: frozenset[str] = (
+    LIVE_DURABLE_ORDER_STATUSES | TERMINAL_DURABLE_ORDER_STATUSES
+)
+"""The closed durable status space; anything else fails closed."""
 
 
 # ===========================================================================
@@ -770,3 +823,287 @@ class SymbolSnapshot:
     lot: LotUnit | None
     evidence: Evidence
     observed_ts: datetime | None = None
+
+
+# ---------------------------------------------------------------------------
+# TS-P1-005 full reconciliation vocabulary
+#
+# A full capture is a *composite* of independently fetched components. The
+# types below keep every component's completeness, exactness, source bounds and
+# provenance separate so that a composite can never be called "current" by
+# borrowing a healthy component from another observation.
+# ---------------------------------------------------------------------------
+
+FULL_RECONCILE_DEADLINE_S = 5.0
+"""D2=A: strict wall-clock budget for one whole full capture."""
+
+FULL_RECONCILE_MAX_SKEW_S = 5.0
+"""D2=A: maximum spread between the earliest and latest component source time."""
+
+# NOTE: there is deliberately **no** fixed history-window constant. The
+# fills/funding lower bound is durable coverage continuity, never an arbitrary
+# lookback: coverage is derived from the pointed checkpoint's immutable
+# FILLS/FUNDING component bounds; see `FullReconciler._coverage_bounds`.
+
+FULL_RECONCILE_MAX_PAGES = 32
+"""Bounded page budget per paginated component; exceeding it fails closed."""
+
+
+class ReconcileAttemptState(str, Enum):
+    """Explicit attempt lifecycle — success is never inferred."""
+
+    COLLECTING = "COLLECTING"
+    COMPLETE = "COMPLETE"
+    INCOMPLETE = "INCOMPLETE"
+    CONFLICTING = "CONFLICTING"
+    STALE = "STALE"
+
+
+RECONCILE_TERMINAL_STATES = frozenset({
+    ReconcileAttemptState.COMPLETE,
+    ReconcileAttemptState.INCOMPLETE,
+    ReconcileAttemptState.CONFLICTING,
+    ReconcileAttemptState.STALE,
+})
+
+
+class ReconcileComponentKind(str, Enum):
+    """Every component a complete capture must carry."""
+
+    OPEN_ORDERS = "OPEN_ORDERS"
+    FILLS = "FILLS"
+    POSITIONS = "POSITIONS"
+    BALANCES = "BALANCES"
+    MARGIN = "MARGIN"
+    FUNDING = "FUNDING"
+    PENDING_ACTIONS = "PENDING_ACTIONS"
+
+
+REQUIRED_RECONCILE_COMPONENTS: tuple[ReconcileComponentKind, ...] = tuple(
+    sorted(ReconcileComponentKind, key=lambda kind: kind.value)
+)
+
+
+class ReconcileComponentStatus(str, Enum):
+    COMPLETE = "COMPLETE"
+    UNAVAILABLE = "UNAVAILABLE"
+    TRUNCATED = "TRUNCATED"
+    MALFORMED = "MALFORMED"
+    CONFLICTING = "CONFLICTING"
+    STALE = "STALE"
+
+
+class ReconcileOwnership(str, Enum):
+    """D1=B ownership classes.
+
+    ``FOREIGN_IDENTIFIED`` is reserved for order-level rows carrying a
+    complete, non-owned identity. Anything that cannot be attributed — notably
+    an exchange position with no owned-order lineage — is
+    ``UNKNOWN_OWNERSHIP`` and blocks readiness.
+    """
+
+    OWNED = "OWNED"
+    FOREIGN_IDENTIFIED = "FOREIGN_IDENTIFIED"
+    UNKNOWN_OWNERSHIP = "UNKNOWN_OWNERSHIP"
+
+
+class FundingAttribution(str, Enum):
+    ATTRIBUTED = "ATTRIBUTED"
+    UNATTRIBUTED = "UNATTRIBUTED"
+
+
+class ReconcileDiffKind(str, Enum):
+    ORDER = "ORDER"
+    POSITION = "POSITION"
+    ACCOUNT = "ACCOUNT"
+    FUNDING = "FUNDING"
+    PENDING_ACTION = "PENDING_ACTION"
+
+
+# Reason codes are the durable, secret-safe vocabulary of the diff.
+DIFF_OWNED_ORDER_MISSING = "OWNED_ORDER_MISSING_ON_EXCHANGE"
+DIFF_OWNED_ORDER_QTY_MISMATCH = "OWNED_ORDER_QTY_MISMATCH"
+DIFF_OWNED_ORDER_STATUS_MISMATCH = "OWNED_ORDER_STATUS_MISMATCH"
+DIFF_OWNED_ORDER_UNKNOWN_QUANTUM = "OWNED_ORDER_SIZE_QUANTUM_UNKNOWN"
+DIFF_ORPHAN_OWNED_CLOID = "ORPHAN_OWNED_CLOID"
+DIFF_FOREIGN_ORDER_OBSERVED = "FOREIGN_ORDER_OBSERVED"
+DIFF_EXCHANGE_IDENTITY_CONFLICT = "EXCHANGE_IDENTITY_CONFLICT"
+DIFF_UNKNOWN_OWNERSHIP_ORDER = "UNKNOWN_OWNERSHIP_ORDER"
+DIFF_UNKNOWN_OWNERSHIP_POSITION = "UNKNOWN_OWNERSHIP_POSITION"
+DIFF_POSITION_QTY_MISMATCH = "POSITION_QTY_MISMATCH"
+DIFF_POSITION_UNKNOWN_QUANTUM = "POSITION_SIZE_QUANTUM_UNKNOWN"
+DIFF_ACCOUNT_INCONSISTENT = "ACCOUNT_ARITHMETIC_INCONSISTENT"
+DIFF_PENDING_ACTION_DIVERGENCE = "PENDING_ACTION_DIVERGENCE"
+DIFF_FUNDING_UNATTRIBUTED = "FUNDING_UNATTRIBUTED"
+DIFF_LOCAL_ORDER_STATUS_UNKNOWN = "LOCAL_ORDER_STATUS_UNKNOWN"
+
+# Attempt-level reason codes for durable fills/funding coverage continuity.
+FULL_RECONCILE_COVERAGE_UNPROVABLE = "FULL_RECONCILE_COVERAGE_UNPROVABLE"
+FULL_RECONCILE_COVERAGE_GAP = "FULL_RECONCILE_COVERAGE_GAP"
+
+
+def canonical_reconcile_json(payload: Any) -> str:
+    """Deterministic JSON for hashing: sorted keys, compact, no NaN/Inf."""
+    return json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False,
+        allow_nan=False,
+    )
+
+
+def reconcile_digest(payload: Any) -> str:
+    return hashlib.sha256(canonical_reconcile_json(payload).encode("utf-8")).hexdigest()
+
+
+@dataclass(frozen=True)
+class FundingEventRecord:
+    """One authoritative exchange funding event.
+
+    ``event_id`` is the exchange-provided ``hash`` of the ``userFunding``
+    record. It is never synthesized: a record without a usable hash makes the
+    whole funding component invalid.
+    """
+
+    event_id: str
+    symbol: str
+    amount_usdc: float
+    effective_ts: datetime
+    source: str = "HL_USER_FUNDING"
+    attribution: FundingAttribution = FundingAttribution.ATTRIBUTED
+    funding_rate: float | None = None
+    position_szi: float | None = None
+    n_samples: int | None = None
+
+    def authoritative(self) -> dict[str, Any]:
+        """The exchange-authoritative, immutable content of the event.
+
+        Every field here comes straight from the ``userFunding`` record and can
+        never change for a given ``event_id``. ``attribution`` is deliberately
+        absent: it is *locally derived* from owned-order lineage, so the same
+        unchanged exchange event is UNATTRIBUTED before a symbol has lineage
+        and ATTRIBUTED after it. Hashing it would make the append-only identity
+        digest a function of local state, and a later capture of an untouched
+        event would be rejected as a conflicting redefinition of itself.
+        """
+        return {
+            "event_id": self.event_id,
+            "symbol": self.symbol,
+            "amount_usdc": self.amount_usdc,
+            "effective_ts": self.effective_ts.astimezone(UTC).isoformat(),
+            "source": self.source,
+            "funding_rate": self.funding_rate,
+            "position_szi": self.position_szi,
+            "n_samples": self.n_samples,
+        }
+
+    def canonical(self) -> dict[str, Any]:
+        """Full snapshot view: authoritative content plus local attribution."""
+        return {**self.authoritative(), "attribution": self.attribution.value}
+
+    @property
+    def digest(self) -> str:
+        """Identity digest over exchange-authoritative content only."""
+        return reconcile_digest(self.authoritative())
+
+
+@dataclass(frozen=True)
+class ComponentEvidence:
+    """One fetched component with its own completeness/exactness verdict.
+
+    ``rows`` are already normalized to canonical mappings by the adapter; the
+    reconciler sorts and hashes them, so wire-order differences can never
+    change the resulting checkpoint.
+    """
+
+    kind: ReconcileComponentKind
+    source: str
+    status: ReconcileComponentStatus
+    observed_ts: datetime | None
+    rows: tuple[Mapping[str, Any], ...] = ()
+    exact: bool = False
+    complete: bool = False
+    reason_code: str = "UNSPECIFIED"
+    cursor_start_ms: int | None = None
+    cursor_end_ms: int | None = None
+    page_count: int = 0
+    call_count: int = 0
+
+    @property
+    def accepted(self) -> bool:
+        return (
+            self.status is ReconcileComponentStatus.COMPLETE
+            and self.exact
+            and self.complete
+            and self.observed_ts is not None
+        )
+
+    def canonical_rows(self) -> list[dict[str, Any]]:
+        """Rows in canonical order; identical evidence sorts identically."""
+        normalized = [dict(row) for row in self.rows]
+        return sorted(normalized, key=canonical_reconcile_json)
+
+    @property
+    def digest(self) -> str:
+        """Digest of the *evidence content only* — never of timing metadata."""
+        return reconcile_digest({
+            "kind": self.kind.value,
+            "rows": self.canonical_rows(),
+            "cursor_start_ms": self.cursor_start_ms,
+            "cursor_end_ms": self.cursor_end_ms,
+        })
+
+
+@dataclass(frozen=True)
+class PortfolioEvidence:
+    """Positions, balances and margin derived from one account observation.
+
+    Deriving all three from a single read is deliberate: it removes intra-
+    account skew entirely and keeps the bounded REST budget at one call.
+    """
+
+    positions: ComponentEvidence
+    balances: ComponentEvidence
+    margin: ComponentEvidence
+
+
+@dataclass(frozen=True)
+class ReconcileDiffRecord:
+    kind: ReconcileDiffKind
+    subject: str
+    reason_code: str
+    ownership: ReconcileOwnership
+    blocking: bool
+    local: Mapping[str, Any] | None = None
+    exchange: Mapping[str, Any] | None = None
+
+    def canonical(self) -> dict[str, Any]:
+        return {
+            "kind": self.kind.value,
+            "subject": self.subject,
+            "reason_code": self.reason_code,
+            "ownership": self.ownership.value,
+            "blocking": self.blocking,
+            "local": dict(self.local) if self.local is not None else None,
+            "exchange": dict(self.exchange) if self.exchange is not None else None,
+        }
+
+
+@dataclass(frozen=True)
+class FullReconcileResult:
+    """The complete, immutable outcome of exactly one full capture."""
+
+    attempt_id: str
+    run_id: str
+    state: ReconcileAttemptState
+    started_ts: datetime
+    ended_ts: datetime
+    duration_ms: int
+    components: tuple[ComponentEvidence, ...] = ()
+    diffs: tuple[ReconcileDiffRecord, ...] = ()
+    funding_events: tuple[FundingEventRecord, ...] = ()
+    canonical_hash: str = ""
+    reason_code: str = "NONE"
+    accepted: bool = False
+
+    @property
+    def blocking_diffs(self) -> tuple[ReconcileDiffRecord, ...]:
+        return tuple(diff for diff in self.diffs if diff.blocking)

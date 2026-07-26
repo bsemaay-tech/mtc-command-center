@@ -217,3 +217,166 @@ def test_mock_legacy_surface_is_unchanged():
     assert callable(broker.reprotect_position)
     asyncio.run(broker.flatten("BTC"))
     assert broker.position is None
+
+
+# ---------------------------------------------------------------------------
+# TS-P1-005 read-only full-reconciliation fixtures
+# ---------------------------------------------------------------------------
+
+
+def _full_broker() -> MockBroker:
+    broker = MockBroker(bars=[], coin="BTC")
+    broker.full_open_orders = [
+        {"cloid": "0xa", "oid": 1, "coin": "BTC", "side": "BUY", "sz": 0.1,
+         "role": "ENTRY", "reduceOnly": False, "status": "OPEN"},
+        {"cloid": "0xb", "oid": 2, "coin": "BTC", "side": "SELL", "sz": 0.1,
+         "role": "SL", "reduceOnly": True, "status": "OPEN"},
+    ]
+    broker.full_positions = [{"symbol": "BTC", "size": 0.1}]
+    return broker
+
+
+def test_mock_full_evidence_defaults_to_a_healthy_complete_exchange():
+    from bridge.engine.types import ReconcileComponentStatus
+
+    broker = _full_broker()
+    portfolio = asyncio.run(broker.portfolio_evidence())
+    orders = asyncio.run(broker.open_orders_evidence())
+
+    for component in (portfolio.positions, portfolio.balances, portfolio.margin, orders):
+        assert component.status is ReconcileComponentStatus.COMPLETE
+        assert component.accepted is True
+    assert [row["cloid"] for row in orders.rows] == ["0xa", "0xb"]
+    # Balances/margin are derived from the same single read: zero extra calls.
+    assert portfolio.balances.call_count == 0
+    assert portfolio.margin.call_count == 0
+
+
+def test_mock_full_evidence_row_order_never_changes_the_digest():
+    broker = _full_broker()
+    forward = asyncio.run(broker.open_orders_evidence())
+    broker.full_row_order_reversed = True
+    reversed_rows = asyncio.run(broker.open_orders_evidence())
+
+    assert [row["cloid"] for row in reversed_rows.rows] == ["0xb", "0xa"]
+    assert reversed_rows.digest == forward.digest
+
+
+def test_mock_full_component_failure_injection_is_conservative():
+    from bridge.engine.types import ReconcileComponentKind, ReconcileComponentStatus
+
+    broker = _full_broker()
+    broker.full_component_failures = {
+        ReconcileComponentKind.OPEN_ORDERS.value: "TRUNCATED"
+    }
+    evidence = asyncio.run(broker.open_orders_evidence())
+    assert evidence.status is ReconcileComponentStatus.TRUNCATED
+    assert evidence.accepted is False
+
+    broker.full_component_failures = {ReconcileComponentKind.FILLS.value: "RAISE"}
+    with pytest.raises(RuntimeError):
+        asyncio.run(broker.fills_evidence(start_ms=0, end_ms=10))
+
+    broker.full_component_failures = {ReconcileComponentKind.POSITIONS.value: "CRASH"}
+    with pytest.raises(KeyboardInterrupt):
+        asyncio.run(broker.portfolio_evidence())
+
+
+def test_mock_funding_evidence_windows_and_conflicts():
+    from bridge.engine.types import ReconcileComponentStatus
+
+    broker = _full_broker()
+    broker.full_funding_history = [
+        {"hash": "0xf1", "time": 1_500,
+         "delta": {"coin": "BTC", "type": "funding", "usdc": "-1.5", "nSamples": 1}},
+        {"hash": "0xf2", "time": 9_999,   # outside the window
+         "delta": {"coin": "BTC", "type": "funding", "usdc": "-2.5"}},
+    ]
+    evidence = asyncio.run(broker.funding_evidence(start_ms=1_000, end_ms=2_000))
+    assert [row["event_id"] for row in evidence.rows] == ["0xf1"]
+    assert evidence.rows[0]["amount_usdc"] == -1.5
+    assert evidence.cursor_start_ms == 1_000
+    assert evidence.cursor_end_ms == 2_000
+
+    broker.full_funding_history.append(
+        {"hash": "0xf1", "time": 1_500,
+         "delta": {"coin": "BTC", "type": "funding", "usdc": "-9.5"}}
+    )
+    conflicting = asyncio.run(broker.funding_evidence(start_ms=1_000, end_ms=2_000))
+    assert conflicting.status is ReconcileComponentStatus.CONFLICTING
+    assert conflicting.accepted is False
+
+
+def test_mock_fill_identity_conflict_retains_both_rows():
+    from bridge.engine.types import ReconcileComponentStatus
+
+    broker = _full_broker()
+    broker.full_fill_history = [
+        {"hash": "0xfill", "oid": 1, "coin": "BTC", "side": "B",
+         "sz": "0.1", "px": "100", "time": 1_500},
+        {"hash": "0xfill", "oid": 1, "coin": "BTC", "side": "B",
+         "sz": "0.2", "px": "100", "time": 1_500},
+    ]
+    evidence = asyncio.run(broker.fills_evidence(start_ms=1_000, end_ms=2_000))
+    assert evidence.status is ReconcileComponentStatus.CONFLICTING
+    assert evidence.accepted is False
+    assert len(evidence.rows) == 2
+
+
+def test_mock_rejects_fill_without_a_positive_price():
+    from bridge.engine.types import ReconcileComponentStatus
+
+    broker = _full_broker()
+    broker.full_fill_history = [{
+        "fill_id": "fill-bad",
+        "oid": 1,
+        "coin": "BTC",
+        "side": "BUY",
+        "sz": 0.1,
+        "px": None,
+        "time": 1_500,
+    }]
+
+    evidence = asyncio.run(broker.fills_evidence(start_ms=1_000, end_ms=2_000))
+
+    assert evidence.status is ReconcileComponentStatus.UNAVAILABLE
+    assert evidence.complete is False
+
+
+def test_mock_rejects_non_funding_ledger_rows():
+    from bridge.engine.types import ReconcileComponentStatus
+
+    broker = _full_broker()
+    broker.full_funding_history = [{
+        "hash": "0xdeposit",
+        "time": 1_500,
+        "delta": {"coin": "BTC", "type": "deposit", "usdc": "5.0"},
+    }]
+
+    evidence = asyncio.run(broker.funding_evidence(start_ms=1_000, end_ms=2_000))
+
+    assert evidence.status is ReconcileComponentStatus.UNAVAILABLE
+    assert evidence.complete is False
+
+
+def test_mock_rejects_funding_row_without_explicit_type():
+    from bridge.engine.types import ReconcileComponentStatus
+
+    broker = _full_broker()
+    broker.full_funding_history = [{
+        "hash": "0xmissing-type",
+        "time": 1_500,
+        "delta": {"coin": "BTC", "usdc": "-1.0"},
+    }]
+    evidence = asyncio.run(broker.funding_evidence(start_ms=1_000, end_ms=2_000))
+    assert evidence.status is ReconcileComponentStatus.UNAVAILABLE
+
+
+def test_mock_full_evidence_never_mutates_the_exchange():
+    broker = _full_broker()
+    asyncio.run(broker.portfolio_evidence())
+    asyncio.run(broker.open_orders_evidence())
+    asyncio.run(broker.fills_evidence(start_ms=0, end_ms=10))
+    asyncio.run(broker.funding_evidence(start_ms=0, end_ms=10))
+    assert broker.broker_mutations == []
+    assert broker.orders == []

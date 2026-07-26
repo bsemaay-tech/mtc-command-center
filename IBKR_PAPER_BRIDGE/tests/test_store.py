@@ -350,3 +350,784 @@ def test_unprotected_abort_is_a_sticky_latch(tmp_path):
     assert store.partial_recovery_abort_active("BTC") is True
     assert store.partial_recovery_blocks_new_risk() is True
     assert store.active_partial_recovery_for_symbol("BTC") is None
+
+
+# ---------------------------------------------------------------------------
+# TS-P1-005 schema v6 (opt-in; default target stays v4)
+# ---------------------------------------------------------------------------
+
+_V6_OBJECTS = (
+    "reconcile_attempts",
+    "reconcile_components",
+    "reconcile_diffs",
+    "reconcile_checkpoints",
+    "funding_events",
+)
+
+
+def _existing_objects(store) -> set[str]:
+    rows = store.conn.execute(
+        "SELECT name FROM sqlite_master WHERE type = 'table'"
+    ).fetchall()
+    return {str(row["name"]) for row in rows}
+
+
+def test_v6_capable_build_opened_with_default_target_stays_v4(tmp_path):
+    """The operational baseline is untouched by TS-P1-005."""
+    from bridge.store.db import SCHEMA_VERSION_FULL_RECONCILE, Store
+
+    assert SCHEMA_VERSION_FULL_RECONCILE == 6
+    store = Store(tmp_path / "bridge.db")
+    store.initialize()
+
+    assert store.get_meta("schema_version") == "4"
+    assert store.full_reconcile_enabled() is False
+    assert not (_existing_objects(store) & set(_V6_OBJECTS))
+    assert store.latest_accepted_reconcile_checkpoint() is None
+    store.close()
+
+
+def test_v4_chain_can_reach_v6_and_keeps_v5_ledger(tmp_path):
+    from bridge.store.db import Store
+
+    store = Store(tmp_path / "bridge.db")
+    store.initialize(target_schema_version=6)
+
+    assert store.get_meta("schema_version") == "6"
+    assert set(_V6_OBJECTS) <= _existing_objects(store)
+    # v6 is strictly additive: the v5 recovery ledger is still present and
+    # still authoritative, so partial-fill gating cannot silently switch off.
+    assert {"partial_fill_recoveries", "partial_fill_actions"} <= _existing_objects(store)
+    assert store.partial_protection_enabled() is True
+    assert store.full_reconcile_enabled() is True
+    store.close()
+
+
+def test_v6_database_reopened_with_default_target_is_never_downgraded(tmp_path):
+    from bridge.store.db import Store
+
+    path = tmp_path / "bridge.db"
+    store = Store(path)
+    store.initialize(target_schema_version=6)
+    store.close()
+
+    reopened = Store(path)
+    reopened.initialize()
+    assert reopened.get_meta("schema_version") == "6"
+    assert reopened.full_reconcile_enabled() is True
+    reopened.close()
+
+
+def test_v6_migration_aborts_on_a_preexisting_object_and_rolls_back(tmp_path):
+    from bridge.store.db import MigrationError, Store
+
+    path = tmp_path / "bridge.db"
+    store = Store(path)
+    store.initialize(target_schema_version=5)
+    # Non-canonical residue squatting on a v6 name.
+    store.conn.execute("CREATE TABLE funding_events (bogus TEXT)")
+    store.conn.commit()
+
+    with pytest.raises(MigrationError):
+        store._migrate_v5_to_v6()
+
+    assert store.get_meta("schema_version") == "5"
+    remaining = _existing_objects(store)
+    assert "reconcile_attempts" not in remaining
+    assert "reconcile_checkpoints" not in remaining
+    store.close()
+
+
+def test_schema_version_claiming_v6_without_v6_objects_fails_closed(tmp_path):
+    """A meta row alone is not proof of a version."""
+    from bridge.store.db import Store
+
+    path = tmp_path / "bridge.db"
+    store = Store(path)
+    store.initialize()
+    store.conn.execute(
+        "INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', '6')"
+    )
+    store.conn.commit()
+    store.close()
+
+    reopened = Store(path)
+    with pytest.raises(RuntimeError, match="Unsupported schema_version"):
+        reopened.initialize(target_schema_version=6)
+    reopened.close()
+
+
+def test_v6_reopen_rejects_a_tampered_topology(tmp_path):
+    from bridge.store.db import MigrationError, Store
+
+    path = tmp_path / "bridge.db"
+    store = Store(path)
+    store.initialize(target_schema_version=6)
+    store.conn.execute("DROP TABLE funding_events")
+    store.conn.commit()
+    store.close()
+
+    reopened = Store(path)
+    with pytest.raises(MigrationError):
+        reopened.initialize(target_schema_version=6)
+    reopened.close()
+
+
+def test_v6_checkpoint_pointer_must_resolve_on_reopen(tmp_path):
+    from bridge.store.db import (
+        RECONCILE_CHECKPOINT_POINTER_KEY,
+        MigrationError,
+        Store,
+    )
+
+    path = tmp_path / "bridge.db"
+    store = Store(path)
+    store.initialize(target_schema_version=6)
+    store.set_meta(RECONCILE_CHECKPOINT_POINTER_KEY, "ckpt-v1:" + "0" * 64)
+    store.close()
+
+    reopened = Store(path)
+    with pytest.raises(MigrationError):
+        reopened.initialize(target_schema_version=6)
+    reopened.close()
+
+
+def test_reconcile_attempt_cannot_be_accepted_without_a_complete_state(tmp_path):
+    from bridge.engine.types import ReconcileAttemptState
+    from bridge.store.db import ReconcileConflictError, Store
+
+    now = datetime(2026, 7, 26, 12, 0, tzinfo=UTC)
+    store = Store(tmp_path / "bridge.db")
+    store.initialize(target_schema_version=6)
+    attempt_id = store.reserve_reconcile_attempt(
+        run_id="run", started_ts=now, deadline_s=5.0, max_skew_s=5.0
+    )
+
+    with pytest.raises(ReconcileConflictError):
+        store.finalize_reconcile_attempt(
+            attempt_id=attempt_id,
+            state=ReconcileAttemptState.INCOMPLETE,
+            ended_ts=now,
+            duration_ms=1,
+            canonical_hash="a" * 64,
+            reason_code="BOGUS",
+            accepted=True,
+            fresh=True,
+        )
+    # The attempt is still open and no checkpoint exists.
+    assert store.get_reconcile_attempt(attempt_id)["state"] == "COLLECTING"
+    assert store.count_accepted_reconcile_checkpoints() == 0
+
+    store.finalize_reconcile_attempt(
+        attempt_id=attempt_id,
+        state=ReconcileAttemptState.INCOMPLETE,
+        ended_ts=now,
+        duration_ms=1,
+        canonical_hash=None,
+        reason_code="TESTED",
+        accepted=False,
+        fresh=False,
+    )
+    with pytest.raises(ReconcileConflictError):
+        store.finalize_reconcile_attempt(
+            attempt_id=attempt_id,
+            state=ReconcileAttemptState.COMPLETE,
+            ended_ts=now,
+            duration_ms=1,
+            canonical_hash="b" * 64,
+            reason_code="RETRY",
+            accepted=True,
+            fresh=True,
+        )
+    store.close()
+
+
+def test_reconcile_ledger_methods_refuse_a_v4_store(tmp_path):
+    from bridge.store.db import ReconcileConflictError, Store
+
+    now = datetime(2026, 7, 26, 12, 0, tzinfo=UTC)
+    store = Store(tmp_path / "bridge.db")
+    store.initialize()
+
+    with pytest.raises(ReconcileConflictError):
+        store.reserve_reconcile_attempt(
+            run_id="run", started_ts=now, deadline_s=5.0, max_skew_s=5.0
+        )
+    assert store.latest_accepted_reconcile_checkpoint() is None
+    assert store.count_accepted_reconcile_checkpoints() == 0
+    assert store.list_funding_events() == []
+    assert store.full_reconcile_ready(now=now, max_age_s=900.0) is False
+    store.close()
+
+
+def test_funding_event_identity_conflict_is_refused(tmp_path):
+    from bridge.engine.types import (
+        FundingAttribution,
+        FundingEventRecord,
+        ReconcileAttemptState,
+    )
+    from bridge.store.db import ReconcileConflictError, Store
+
+    now = datetime(2026, 7, 26, 12, 0, tzinfo=UTC)
+    store = Store(tmp_path / "bridge.db")
+    store.initialize(target_schema_version=6)
+
+    def record(amount: float) -> FundingEventRecord:
+        return FundingEventRecord(
+            event_id="0xhash",
+            symbol="BTC",
+            amount_usdc=amount,
+            effective_ts=now,
+            attribution=FundingAttribution.ATTRIBUTED,
+        )
+
+    def finalize(events):
+        attempt_id = store.reserve_reconcile_attempt(
+            run_id="run", started_ts=now, deadline_s=5.0, max_skew_s=5.0
+        )
+        store.finalize_reconcile_attempt(
+            attempt_id=attempt_id,
+            state=ReconcileAttemptState.INCOMPLETE,
+            ended_ts=now,
+            duration_ms=1,
+            canonical_hash=None,
+            reason_code="TESTED",
+            funding_events=events,
+            accepted=False,
+            fresh=False,
+        )
+        return attempt_id
+
+    finalize([record(-1.0)])
+    assert len(store.list_funding_events()) == 1
+    # Exact replay is idempotent.
+    finalize([record(-1.0)])
+    assert len(store.list_funding_events()) == 1
+    # A conflicting redefinition of the same identity is refused.
+    with pytest.raises(ReconcileConflictError):
+        finalize([record(-9.0)])
+    assert len(store.list_funding_events()) == 1
+    assert store.funding_total(symbol="BTC") == -1.0
+    store.close()
+
+
+# ---------------------------------------------------------------------------
+# TS-P1-005 R1 — the live durable status set is derived, never hand-listed
+# ---------------------------------------------------------------------------
+
+_LIVE_STATUS_CASES = (
+    "OPEN",
+    "RESTING",
+    "WAITING_CHILD",
+    "SUBMITTED",
+    "PARTIALLY_FILLED",
+    "PENDING_CANCEL",
+)
+
+_TERMINAL_STATUS_CASES = ("FILLED", "CANCELED", "CANCELLED", "REJECTED", "EXPIRED")
+
+
+def _seed_status_order(store, *, cloid: str, status: str, symbol: str = "BTC") -> None:
+    store.insert_order(
+        cloid=cloid,
+        oid=1,
+        group_id="g",
+        order_ref=f"ref-{cloid}",
+        order_json={"symbol": symbol},
+        decision_uid=f"decision-{cloid}",
+        trade_id=1,
+        role="ENTRY",
+        status=status,
+        qty=0.1,
+    )
+
+
+@pytest.mark.parametrize("status", _LIVE_STATUS_CASES)
+def test_live_local_orders_include_every_derived_live_status(tmp_path, status):
+    """Present: a durable row in any live spelling is visible to reconciliation."""
+    store = Store(tmp_path / "bridge.db")
+    store.initialize()
+    _seed_status_order(store, cloid="0xlive", status=status)
+
+    assert [row["cloid"] for row in store.live_local_orders()] == ["0xlive"]
+    # A live status is a *known* status, so it never doubles as unknown state.
+    assert store.local_orders_with_unknown_status() == []
+    store.close()
+
+
+@pytest.mark.parametrize("status", _TERMINAL_STATUS_CASES)
+def test_live_local_orders_exclude_every_terminal_status(tmp_path, status):
+    """Absent: a provably finished order is neither live nor unknown."""
+    store = Store(tmp_path / "bridge.db")
+    store.initialize()
+    _seed_status_order(store, cloid="0xdone", status=status)
+
+    assert store.live_local_orders() == []
+    assert store.local_orders_with_unknown_status() == []
+    store.close()
+
+
+def test_unknown_durable_status_is_never_silently_dropped(tmp_path):
+    """A status outside the closed space is surfaced, not filtered away."""
+    store = Store(tmp_path / "bridge.db")
+    store.initialize()
+    _seed_status_order(store, cloid="0xweird", status="TRIGGER_PENDING")
+
+    assert store.live_local_orders() == []
+    unknown = store.local_orders_with_unknown_status()
+    assert [row["cloid"] for row in unknown] == ["0xweird"]
+    assert unknown[0]["status"] == "TRIGGER_PENDING"
+    assert unknown[0]["symbol"] == "BTC"
+    store.close()
+
+
+def test_durable_status_space_is_derived_from_the_order_state_contract():
+    """The set follows OrderState/aliases; it cannot silently fall behind."""
+    from bridge.engine.types import (
+        KNOWN_DURABLE_ORDER_STATUSES,
+        LEGACY_LIVE_ORDER_STATUS_SPELLINGS,
+        LIVE_DURABLE_ORDER_STATUSES,
+        RAW_ORDER_STATUS_ALIASES,
+        TERMINAL_DURABLE_ORDER_STATUSES,
+        TERMINAL_ORDER_STATES,
+        OrderState,
+    )
+
+    for state in OrderState:
+        target = (
+            TERMINAL_DURABLE_ORDER_STATUSES
+            if state in TERMINAL_ORDER_STATES
+            else LIVE_DURABLE_ORDER_STATUSES
+        )
+        assert state.value in target, state
+    for raw, state in RAW_ORDER_STATUS_ALIASES.items():
+        target = (
+            TERMINAL_DURABLE_ORDER_STATUSES
+            if state in TERMINAL_ORDER_STATES
+            else LIVE_DURABLE_ORDER_STATUSES
+        )
+        assert raw in target, raw
+    assert {"RESTING", "WAITING_CHILD"} <= LEGACY_LIVE_ORDER_STATUS_SPELLINGS
+    assert LEGACY_LIVE_ORDER_STATUS_SPELLINGS <= LIVE_DURABLE_ORDER_STATUSES
+    assert not (LIVE_DURABLE_ORDER_STATUSES & TERMINAL_DURABLE_ORDER_STATUSES)
+    assert KNOWN_DURABLE_ORDER_STATUSES == (
+        LIVE_DURABLE_ORDER_STATUSES | TERMINAL_DURABLE_ORDER_STATUSES
+    )
+    # The predecessor hand-written list is a strict subset of the derived one.
+    assert {
+        "OPEN", "SUBMITTED", "PENDING", "PENDING_NEW", "ACCEPTED",
+        "PARTIALLY_FILLED", "PENDING_CANCEL",
+    } <= LIVE_DURABLE_ORDER_STATUSES
+
+
+# ---------------------------------------------------------------------------
+# TS-P1-005 R2 / R5 — readiness recency and durable coverage continuity
+# ---------------------------------------------------------------------------
+
+
+def _v6_store(tmp_path, name: str = "bridge.db"):
+    store = Store(tmp_path / name)
+    store.initialize(target_schema_version=6)
+    return store
+
+
+def _ms(value):
+    return int(value.timestamp() * 1000)
+
+
+def _accept(
+    store,
+    *,
+    now,
+    coverage_ms: int,
+    seq_hash: str = "a",
+    diffs=(),
+    duration_ms: int = 1,
+    observed_ts=None,
+    coverage_start_ms: int = 0,
+    funding_rows=(),
+    funding_events=(),
+):
+    from bridge.engine.types import (
+        REQUIRED_RECONCILE_COMPONENTS,
+        ComponentEvidence,
+        ReconcileAttemptState,
+        ReconcileComponentStatus,
+        reconcile_digest,
+    )
+
+    attempt_id = store.reserve_reconcile_attempt(
+        run_id="run", started_ts=now, deadline_s=5.0, max_skew_s=5.0
+    )
+    components = tuple(
+        ComponentEvidence(
+            kind=kind,
+            source="TEST",
+            status=ReconcileComponentStatus.COMPLETE,
+            observed_ts=observed_ts or now,
+            rows=tuple(funding_rows) if kind.value == "FUNDING" else (),
+            exact=True,
+            complete=True,
+            reason_code="TEST_COMPLETE",
+            cursor_start_ms=coverage_start_ms if kind.value in {"FILLS", "FUNDING"} else None,
+            cursor_end_ms=coverage_ms if kind.value in {"FILLS", "FUNDING"} else None,
+        )
+        for kind in REQUIRED_RECONCILE_COMPONENTS
+    )
+    payload = {
+        "version": "test",
+        "components": {
+            component.kind.value: {
+                "digest": component.digest,
+                "cursor_start_ms": component.cursor_start_ms,
+                "cursor_end_ms": component.cursor_end_ms,
+            }
+            for component in components
+        },
+        "diffs": [diff.canonical() for diff in diffs],
+        "funding_event_ids": sorted(event.event_id for event in funding_events),
+        "funding_event_digests": {
+            event.event_id: event.digest for event in funding_events
+        },
+    }
+    canonical_hash = reconcile_digest({
+        "version": payload["version"],
+        "components": {
+            component.kind.value: component.digest for component in components
+        },
+        "diffs": [diff.canonical() for diff in diffs],
+    })
+    store.finalize_reconcile_attempt(
+        attempt_id=attempt_id,
+        state=ReconcileAttemptState.COMPLETE,
+        ended_ts=now,
+        duration_ms=duration_ms,
+        canonical_hash=canonical_hash,
+        reason_code="ACCEPTED",
+        diffs=diffs,
+        accepted=True,
+        fresh=True,
+        components=components,
+        funding_events=funding_events,
+        snapshot_payload=payload,
+        coverage_upper_bound_ms=coverage_ms,
+    )
+    return attempt_id
+
+
+def _fail_attempt(store, *, now, reason: str = "TESTED"):
+    from bridge.engine.types import ReconcileAttemptState
+
+    attempt_id = store.reserve_reconcile_attempt(
+        run_id="run", started_ts=now, deadline_s=5.0, max_skew_s=5.0
+    )
+    store.finalize_reconcile_attempt(
+        attempt_id=attempt_id,
+        state=ReconcileAttemptState.INCOMPLETE,
+        ended_ts=now,
+        duration_ms=1,
+        canonical_hash=None,
+        reason_code=reason,
+        accepted=False,
+        fresh=False,
+    )
+    return attempt_id
+
+
+def test_a_later_failed_attempt_makes_a_young_checkpoint_not_ready(tmp_path):
+    now = datetime(2026, 7, 26, 12, 0, tzinfo=UTC)
+    store = _v6_store(tmp_path)
+    accepted = _accept(store, now=now, coverage_ms=_ms(now))
+
+    assert store.latest_resolved_reconcile_attempt_id() == accepted
+    assert store.full_reconcile_ready(now=now, max_age_s=900.0) is True
+
+    _fail_attempt(store, now=now + timedelta(seconds=30))
+    # The checkpoint is still young and still the accepted pointer - and it is
+    # no longer the most recent word on the account, so it is not ready.
+    assert store.latest_accepted_reconcile_checkpoint()["attempt_id"] == accepted
+    assert (
+        store.full_reconcile_ready(now=now + timedelta(seconds=31), max_age_s=900.0)
+        is False
+    )
+
+    # Only a fresh accept restores readiness.
+    later = now + timedelta(seconds=60)
+    _accept(store, now=later, coverage_ms=_ms(later), seq_hash="b")
+    assert (
+        store.full_reconcile_ready(now=now + timedelta(seconds=61), max_age_s=900.0)
+        is True
+    )
+    store.close()
+
+
+def test_a_restart_interrupted_attempt_makes_readiness_false(tmp_path):
+    path = tmp_path / "bridge.db"
+    now = datetime(2026, 7, 26, 12, 0, tzinfo=UTC)
+    store = Store(path)
+    store.initialize(target_schema_version=6)
+    _accept(store, now=now, coverage_ms=_ms(now))
+    # A capture that never resolved (crash/kill).
+    store.reserve_reconcile_attempt(
+        run_id="run",
+        started_ts=now + timedelta(seconds=30),
+        deadline_s=5.0,
+        max_skew_s=5.0,
+    )
+    store.close()
+
+    reopened = Store(path)
+    reopened.initialize(target_schema_version=6)
+    assert reopened.full_reconcile_ready(now=now, max_age_s=900.0) is True
+    assert (
+        reopened.resolve_interrupted_reconcile_attempts(
+            observed_ts=now + timedelta(seconds=40)
+        )
+        == 1
+    )
+    assert (
+        reopened.full_reconcile_ready(now=now + timedelta(seconds=41), max_age_s=900.0)
+        is False
+    )
+    reopened.close()
+
+
+def test_interrupted_attempt_order_is_wall_clock_rollback_proof(tmp_path):
+    path = tmp_path / "bridge.db"
+    now = datetime(2026, 7, 26, 12, 0, tzinfo=UTC)
+    store = Store(path)
+    store.initialize(target_schema_version=6)
+    accepted = _accept(store, now=now, coverage_ms=_ms(now))
+    interrupted = store.reserve_reconcile_attempt(
+        run_id="run",
+        started_ts=now + timedelta(seconds=30),
+        deadline_s=5.0,
+        max_skew_s=5.0,
+    )
+    store.close()
+
+    reopened = Store(path)
+    reopened.initialize(target_schema_version=6)
+    reopened.resolve_interrupted_reconcile_attempts(
+        observed_ts=now - timedelta(minutes=5)
+    )
+    assert reopened.latest_resolved_reconcile_attempt_id() == interrupted
+    assert reopened.latest_resolved_reconcile_attempt_id() != accepted
+    assert reopened.full_reconcile_ready(now=now, max_age_s=900.0) is False
+    reopened.close()
+
+
+def test_store_cannot_publish_incomplete_or_nonfresh_checkpoint(tmp_path):
+    from bridge.engine.types import ReconcileAttemptState
+    from bridge.store.db import ReconcileConflictError
+
+    now = datetime(2026, 7, 26, 12, 0, tzinfo=UTC)
+    store = _v6_store(tmp_path)
+    for fresh in (False, True):
+        attempt_id = store.reserve_reconcile_attempt(
+            run_id="run", started_ts=now, deadline_s=5.0, max_skew_s=5.0
+        )
+        with pytest.raises(ReconcileConflictError):
+            store.finalize_reconcile_attempt(
+                attempt_id=attempt_id,
+                state=ReconcileAttemptState.COMPLETE,
+                ended_ts=now,
+                duration_ms=1,
+                canonical_hash="a" * 64,
+                reason_code="ACCEPTED",
+                components=(),
+                accepted=True,
+                fresh=fresh,
+                snapshot_payload={"version": "test", "components": {}, "diffs": []},
+                coverage_upper_bound_ms=1_000,
+            )
+    assert store.count_accepted_reconcile_checkpoints() == 0
+    assert store.full_reconcile_ready(now=now, max_age_s=900.0) is False
+    store.close()
+
+
+def test_store_rejects_blocking_diff_and_over_deadline_acceptance(tmp_path):
+    from bridge.engine.types import (
+        ReconcileDiffKind,
+        ReconcileDiffRecord,
+        ReconcileOwnership,
+    )
+    from bridge.store.db import ReconcileConflictError
+
+    now = datetime(2026, 7, 26, 12, 0, tzinfo=UTC)
+    store = _v6_store(tmp_path)
+    blocking = ReconcileDiffRecord(
+        kind=ReconcileDiffKind.ORDER,
+        subject="probe",
+        reason_code="PROBE_BLOCK",
+        ownership=ReconcileOwnership.UNKNOWN_OWNERSHIP,
+        blocking=True,
+    )
+    with pytest.raises(ReconcileConflictError, match="RECONCILE_ACCEPT_BLOCKING_DIFF"):
+        _accept(store, now=now, coverage_ms=_ms(now), diffs=(blocking,))
+    with pytest.raises(ReconcileConflictError, match="RECONCILE_ACCEPT_ENVELOPE_INVALID"):
+        _accept(
+            store,
+            now=now + timedelta(seconds=1),
+            coverage_ms=_ms(now + timedelta(seconds=1)),
+            duration_ms=5_001,
+        )
+    stale_now = now + timedelta(seconds=2)
+    with pytest.raises(ReconcileConflictError, match="RECONCILE_ACCEPT_COMPONENT_STALE"):
+        _accept(
+            store,
+            now=stale_now,
+            coverage_ms=_ms(stale_now),
+            observed_ts=stale_now - timedelta(seconds=6),
+        )
+    assert store.count_accepted_reconcile_checkpoints() == 0
+    store.close()
+
+
+def test_accepted_attempt_requires_and_derives_immutable_coverage(tmp_path):
+    from bridge.engine.types import ReconcileAttemptState
+    from bridge.store.db import ReconcileConflictError
+
+    now = datetime(2026, 7, 26, 12, 0, tzinfo=UTC)
+    store = _v6_store(tmp_path)
+    assert store.reconcile_coverage_upper_bound_ms() is None
+
+    attempt_id = store.reserve_reconcile_attempt(
+        run_id="run", started_ts=now, deadline_s=5.0, max_skew_s=5.0
+    )
+    with pytest.raises(ReconcileConflictError):
+        store.finalize_reconcile_attempt(
+            attempt_id=attempt_id,
+            state=ReconcileAttemptState.COMPLETE,
+            ended_ts=now,
+            duration_ms=1,
+            canonical_hash="a" * 64,
+            reason_code="ACCEPTED",
+            accepted=True,
+            fresh=True,
+            snapshot_payload={"version": "test"},
+        )
+    assert store.get_reconcile_attempt(attempt_id)["state"] == "COLLECTING"
+    assert store.reconcile_coverage_upper_bound_ms() is None
+
+    # A fully proven checkpoint derives coverage from its immutable components.
+    store.finalize_reconcile_attempt(
+        attempt_id=attempt_id,
+        state=ReconcileAttemptState.INCOMPLETE,
+        ended_ts=now,
+        duration_ms=1,
+        canonical_hash=None,
+        reason_code="TESTED",
+        accepted=False,
+        fresh=False,
+    )
+    first_accept = now + timedelta(seconds=1)
+    first_bound = _ms(first_accept)
+    _accept(store, now=first_accept, coverage_ms=first_bound)
+    assert store.reconcile_coverage_upper_bound_ms() == first_bound
+    assert store.get_meta("reconcile_coverage_upper_bound_ms") is None
+
+    # A failed attempt never moves coverage.
+    _fail_attempt(store, now=now + timedelta(seconds=10))
+    assert store.reconcile_coverage_upper_bound_ms() == first_bound
+
+    # Coverage is monotonic: a backwards bound is refused and rolls back whole.
+    with pytest.raises(ReconcileConflictError):
+        rollback = now - timedelta(seconds=20)
+        _accept(store, now=rollback, coverage_ms=_ms(rollback))
+    assert store.reconcile_coverage_upper_bound_ms() == first_bound
+    assert store.count_accepted_reconcile_checkpoints() == 1
+    store.close()
+
+
+def test_store_rejects_discontinuous_accepted_coverage(tmp_path):
+    from bridge.store.db import ReconcileConflictError
+
+    now = datetime(2026, 7, 26, 12, 0, tzinfo=UTC)
+    store = _v6_store(tmp_path)
+    _accept(store, now=now, coverage_ms=_ms(now))
+    later = now + timedelta(seconds=10)
+    with pytest.raises(ReconcileConflictError, match="RECONCILE_ACCEPT_COVERAGE_GAP"):
+        _accept(
+            store,
+            now=later,
+            coverage_start_ms=_ms(now) + 1,
+            coverage_ms=_ms(later),
+        )
+
+
+def test_store_rejects_funding_component_without_ledger_event(tmp_path):
+    from bridge.store.db import ReconcileConflictError
+
+    now = datetime(2026, 7, 26, 12, 0, tzinfo=UTC)
+    store = _v6_store(tmp_path)
+    funding_row = {
+        "event_id": "0xfund",
+        "symbol": "BTC",
+        "amount_usdc": -1.0,
+        "effective_ts_ms": _ms(now),
+        "source": "TEST",
+    }
+    with pytest.raises(
+        ReconcileConflictError, match="RECONCILE_ACCEPT_FUNDING_LEDGER_MISMATCH"
+    ):
+        _accept(
+            store,
+            now=now,
+            coverage_ms=_ms(now),
+            funding_rows=(funding_row,),
+            funding_events=(),
+        )
+    store.close()
+
+
+def test_store_rejects_semantically_different_funding_record(tmp_path):
+    from bridge.engine.types import FundingEventRecord
+    from bridge.store.db import ReconcileConflictError
+
+    now = datetime(2026, 7, 26, 12, 0, tzinfo=UTC)
+    store = _v6_store(tmp_path)
+    component_row = {
+        "event_id": "0xfund-semantic",
+        "symbol": "BTC",
+        "amount_usdc": -1.0,
+        "effective_ts_ms": _ms(now),
+        "source": "TEST",
+        "funding_rate": None,
+        "position_szi": None,
+        "n_samples": None,
+    }
+    different = FundingEventRecord(
+        event_id="0xfund-semantic",
+        symbol="BTC",
+        amount_usdc=-9.0,
+        effective_ts=now,
+        source="TEST",
+    )
+    with pytest.raises(
+        ReconcileConflictError, match="RECONCILE_ACCEPT_FUNDING_LEDGER_MISMATCH"
+    ):
+        _accept(
+            store,
+            now=now,
+            coverage_ms=_ms(now),
+            funding_rows=(component_row,),
+            funding_events=(different,),
+        )
+    assert store.count_accepted_reconcile_checkpoints() == 0
+    store.close()
+
+
+def test_unauthorized_coverage_pointer_fails_closed_on_reopen(tmp_path):
+    from bridge.store.db import MigrationError, Store
+
+    path = tmp_path / "bridge.db"
+    store = Store(path)
+    store.initialize(target_schema_version=6)
+    store.set_meta("reconcile_coverage_upper_bound_ms", "1234")
+    store.close()
+
+    reopened = Store(path)
+    with pytest.raises(MigrationError):
+        reopened.initialize(target_schema_version=6)
+    reopened.close()
