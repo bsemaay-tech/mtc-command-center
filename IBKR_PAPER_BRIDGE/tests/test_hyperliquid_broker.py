@@ -1593,3 +1593,282 @@ def test_rebuild_swap_integrity():
     assert len(order_subs) == 1
 
     assert old_disconnect_after_swap == [True]
+
+
+# ===========================================================================
+# TS-P1-004 strict response -> outcome mapping and bounded snapshot evidence
+# ===========================================================================
+
+from bridge.engine.types import ActionOutcome, LotUnit, SymbolSnapshot  # noqa: E402
+
+_OK_RESTING = {"status": "ok", "response": {"data": {"statuses": [{"resting": {"oid": 7}}]}}}
+_OK_FILLED = {"status": "ok", "response": {"data": {"statuses": [{"filled": {"oid": 7}}]}}}
+_OK_SUCCESS = {"status": "ok", "response": {"data": {"statuses": [{"success": True}]}}}
+
+
+@pytest.mark.parametrize("raw", [_OK_RESTING, _OK_FILLED, _OK_SUCCESS])
+def test_classify_applied_only_on_explicit_success(raw):
+    outcome, _reason = HyperliquidBroker._classify_exchange_result(raw)
+    assert outcome is ActionOutcome.APPLIED
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        None,
+        "boom",
+        123,
+        {},
+        {"status": None},
+        {"status": "weird"},
+        {"status": "ok"},
+        {"status": "ok", "response": "Failure"},
+        {"status": "ok", "response": {"data": {}}},
+        {"status": "ok", "response": {"data": {"statuses": []}}},
+        {"status": "ok", "response": {"data": {"statuses": [{"mystery": 1}]}}},
+        {"status": "err", "response": "internal error, please try again"},
+        {"status": "ok", "response": {"data": {"statuses": [{"error": "rate limited"}]}}},
+    ],
+)
+def test_classify_unknown_for_every_unusable_answer(raw):
+    outcome, reason = HyperliquidBroker._classify_exchange_result(raw)
+    assert outcome is ActionOutcome.UNKNOWN, reason
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        {"status": "err", "response": "Order was never placed, already canceled"},
+        {"status": "err", "response": "order not found"},
+        {
+            "status": "ok",
+            "response": {"data": {"statuses": [{"error": "Invalid order: reduce only"}]}},
+        },
+    ],
+)
+def test_classify_not_applied_only_on_authoritative_rejection(raw):
+    outcome, _reason = HyperliquidBroker._classify_exchange_result(raw)
+    assert outcome is ActionOutcome.NOT_APPLIED
+
+
+def test_lot_unit_requires_exchange_metadata():
+    broker = HyperliquidBroker(info_client=object(), exchange_client=object())
+    assert broker.lot_unit("BTC") is None
+    broker._size_decimals["BTC"] = 3
+    assert broker.lot_unit("BTC") == LotUnit(3)
+    broker._size_decimals["BTC"] = 99
+    assert broker.lot_unit("BTC") is None
+
+
+def test_symbol_snapshot_is_inexact_without_a_size_quantum():
+    info = SimpleNamespace(
+        user_state=lambda addr: {"assetPositions": []},
+        open_orders=lambda addr: [],
+    )
+    broker = HyperliquidBroker(
+        info_client=info, exchange_client=object(), account_address="0xabc"
+    )
+    snapshot = asyncio.run(broker.symbol_snapshot("BTC"))
+    assert isinstance(snapshot, SymbolSnapshot)
+    assert snapshot.exact is False
+    assert snapshot.evidence.reason_code == "HL_SIZE_QUANTUM_MISSING"
+
+
+def test_symbol_snapshot_is_inexact_when_a_read_fails():
+    def boom(addr):
+        raise RuntimeError("transport down")
+
+    broker = HyperliquidBroker(
+        info_client=SimpleNamespace(user_state=boom, open_orders=lambda a: []),
+        exchange_client=object(),
+        account_address="0xabc",
+    )
+    broker._size_decimals["BTC"] = 3
+    snapshot = asyncio.run(broker.symbol_snapshot("BTC"))
+    assert snapshot.exact is False
+    assert snapshot.net_size is None
+    assert snapshot.evidence.reason_code == "HL_POSITION_QUERY_FAILED"
+
+
+def test_symbol_snapshot_is_exact_with_metadata_and_both_reads():
+    info = SimpleNamespace(
+        user_state=lambda addr: {
+            "assetPositions": [{"position": {"coin": "BTC", "szi": "1.5"}}]
+        },
+        open_orders=lambda addr: [
+            {"cloid": "0xabc", "coin": "BTC", "side": "A", "sz": "1.5",
+             "orderType": "Stop Market", "triggerPx": "95.0"}
+        ],
+    )
+    broker = HyperliquidBroker(
+        info_client=info, exchange_client=object(), account_address="0xabc"
+    )
+    broker._size_decimals["BTC"] = 3
+    snapshot = asyncio.run(broker.symbol_snapshot("BTC"))
+    assert snapshot.exact is True
+    assert snapshot.net_size == 1.5
+    assert [o.role for o in snapshot.open_orders] == ["SL"]
+
+
+def test_symbol_snapshot_conflicting_positions_are_inexact():
+    info = SimpleNamespace(
+        user_state=lambda addr: {
+            "assetPositions": [
+                {"position": {"coin": "BTC", "szi": "1.0"}},
+                {"position": {"coin": "BTC", "szi": "2.0"}},
+            ]
+        },
+        open_orders=lambda addr: [],
+    )
+    broker = HyperliquidBroker(
+        info_client=info, exchange_client=object(), account_address="0xabc"
+    )
+    broker._size_decimals["BTC"] = 3
+    snapshot = asyncio.run(broker.symbol_snapshot("BTC"))
+    assert snapshot.exact is False
+    assert snapshot.evidence.reason_code == "HL_POSITION_CONFLICTING"
+
+
+@pytest.mark.parametrize(
+    ("raw", "known", "found", "terminal"),
+    [
+        ({"status": "unknownOid"}, True, False, True),
+        (
+            {"status": "order", "order": {"status": "open",
+                                          "order": {"origSz": "2.0", "sz": "1.0"}}},
+            True, True, False,
+        ),
+        ({"status": "order", "order": {"status": "canceled"}}, True, False, True),
+        ({"status": "order", "order": {"status": "filled"}}, True, False, True),
+        ({"status": "order"}, False, False, False),
+        ({"status": "order", "order": {}}, False, False, False),
+        ({"status": "weird"}, False, False, False),
+        ("garbage", False, False, False),
+    ],
+)
+def test_parse_order_query_is_strict(raw, known, found, terminal):
+    result = HyperliquidBroker._parse_order_query(raw, "0xabc")
+    assert (result.known, result.found, result.terminal) == (known, found, terminal)
+
+
+def test_parse_order_query_computes_filled_size():
+    result = HyperliquidBroker._parse_order_query(
+        {"status": "order",
+         "order": {"status": "open", "order": {"origSz": "2.0", "sz": "0.5"}}},
+        "0xabc",
+    )
+    assert result.filled_size == 1.5
+
+
+def test_query_order_open_order_absence_is_not_authoritative():
+    broker = HyperliquidBroker(
+        info_client=SimpleNamespace(open_orders=lambda addr: []),
+        exchange_client=object(),
+        account_address="0xabc",
+    )
+    result = asyncio.run(broker.query_order("0xabc", "BTC"))
+    assert result.known is False
+    assert result.evidence.reason_code == "HL_ORDER_ABSENCE_NOT_AUTHORITATIVE"
+
+
+def test_typed_cancel_transport_failure_is_unknown():
+    def boom(coin, cloid):
+        raise TimeoutError("gateway timeout")
+
+    broker = HyperliquidBroker(
+        info_client=object(),
+        exchange_client=SimpleNamespace(cancel_by_cloid=boom),
+        account_address="0xabc",
+    )
+    result = asyncio.run(broker.cancel_order_by_cloid("0x" + "1" * 32, "BTC"))
+    assert result.outcome is ActionOutcome.UNKNOWN
+    assert result.evidence.reason_code == "HL_TRANSPORT_FAILED"
+
+
+def test_typed_place_transport_failure_is_unknown():
+    def boom(requests, grouping):
+        raise TimeoutError("gateway timeout")
+
+    broker = HyperliquidBroker(
+        info_client=object(),
+        exchange_client=SimpleNamespace(bulk_orders=boom),
+        account_address="0xabc",
+    )
+    broker._size_decimals["BTC"] = 3
+    result = asyncio.run(
+        broker.place_protective_stop(
+            symbol="BTC", cloid="0x" + "2" * 32, exit_side="SELL",
+            size=1.0, trigger_px=95.0,
+        )
+    )
+    assert result.outcome is ActionOutcome.UNKNOWN
+
+
+def test_typed_flatten_transport_failure_is_unknown():
+    def boom(coin, sz, slippage, cloid):
+        raise TimeoutError("gateway timeout")
+
+    broker = HyperliquidBroker(
+        info_client=object(),
+        exchange_client=SimpleNamespace(market_close=boom),
+        account_address="0xabc",
+    )
+    result = asyncio.run(
+        broker.flatten_reduce_only(symbol="BTC", cloid="0x" + "3" * 32, size=1.0)
+    )
+    assert result.outcome is ActionOutcome.UNKNOWN
+
+
+def test_typed_place_registers_spec_only_when_applied():
+    calls: list[dict] = []
+
+    def bulk_orders(requests, grouping):
+        calls.append({"requests": requests, "grouping": grouping})
+        return _OK_RESTING
+
+    cloid = "0x" + "4" * 32
+    broker = HyperliquidBroker(
+        info_client=object(),
+        exchange_client=SimpleNamespace(bulk_orders=bulk_orders),
+        account_address="0xabc",
+    )
+    broker._size_decimals["BTC"] = 3
+    result = asyncio.run(
+        broker.place_protective_stop(
+            symbol="BTC", cloid=cloid, exit_side="SELL", size=1.0, trigger_px=95.0
+        )
+    )
+    assert result.outcome is ActionOutcome.APPLIED
+    assert calls[0]["requests"][0]["reduce_only"] is True
+    assert calls[0]["requests"][0]["is_buy"] is False
+    assert broker._order_specs[cloid]["role"] == "SL"
+
+
+def test_typed_surface_without_clients_is_not_applied_not_success():
+    broker = HyperliquidBroker(info_client=None, exchange_client=None)
+    cancel = asyncio.run(broker.cancel_order_by_cloid("0x" + "5" * 32, "BTC"))
+    place = asyncio.run(
+        broker.place_protective_stop(
+            symbol="BTC", cloid="0x" + "5" * 32, exit_side="SELL",
+            size=1.0, trigger_px=95.0,
+        )
+    )
+    flat = asyncio.run(
+        broker.flatten_reduce_only(symbol="BTC", cloid="0x" + "5" * 32, size=1.0)
+    )
+    query = asyncio.run(broker.query_order("0x" + "5" * 32, "BTC"))
+    assert cancel.outcome is ActionOutcome.NOT_APPLIED
+    assert place.outcome is ActionOutcome.NOT_APPLIED
+    assert flat.outcome is ActionOutcome.NOT_APPLIED
+    assert query.known is False
+
+
+def test_legacy_cancel_flatten_reprotect_signatures_are_preserved():
+    import inspect
+
+    broker = HyperliquidBroker(info_client=object(), exchange_client=object())
+    assert list(inspect.signature(broker.cancel).parameters) == ["cloid"]
+    assert list(inspect.signature(broker.flatten).parameters) == ["coin"]
+    assert list(inspect.signature(broker.reprotect_position).parameters) == [
+        "position", "stop_loss", "take_profit", "decision_uid"
+    ]
