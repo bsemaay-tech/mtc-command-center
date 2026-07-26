@@ -10,7 +10,7 @@ def test_store_roundtrip_decision_chain_and_schema_version(tmp_path):
     store = Store(db_path)
     store.initialize()
 
-    assert store.get_meta("schema_version") == "3"
+    assert store.get_meta("schema_version") == "4"
 
     run_id = "run-test"
     decision_uid = "decision-001"

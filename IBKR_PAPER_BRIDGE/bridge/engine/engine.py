@@ -10,7 +10,11 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Callable
 
-from bridge.broker.base import Broker
+from bridge.broker.base import (
+    Broker,
+    SubmissionRejectedError,
+    UnknownSubmissionError,
+)
 from bridge.engine.bars import BarFeed
 from bridge.engine.llm_gate import NullLLMGate
 from bridge.engine.notify import TelegramNotifier, build_notifier
@@ -81,6 +85,9 @@ class BridgeEngine:
             self.store.set_meta("app_state", self.state)
         else:
             self.state = persisted
+        if self.store.has_submission_quarantine():
+            self.state = "DISARMED"
+            self.store.set_meta("app_state", "DISARMED")
 
     async def start(self, lookback: int = 300) -> None:
         self._ensure_run(mode=self.mode)
@@ -142,6 +149,10 @@ class BridgeEngine:
         self.store.insert_event(self.run_id, now, "INFO", "ARM_REQUEST", f"state={previous}")
         if previous == "KILLED":
             raise RuntimeError("KILLED requires operator acknowledgement")
+        if self.store.has_submission_quarantine():
+            self.state = "DISARMED"
+            self.store.set_meta("app_state", "DISARMED")
+            raise RuntimeError("submission quarantine blocks ARM")
         if not self.reconcile_ready:
             raise RuntimeError("startup reconcile incomplete")
         max_age = timedelta(seconds=max(self.reconcile_interval_s * 3, 30.0))
@@ -216,6 +227,11 @@ class BridgeEngine:
             if process_bar is not None:
                 process_bar(bar)
         await self.order_manager.sync_broker_state()
+        if self.store.has_submission_quarantine():
+            self.state = "DISARMED"
+            self.store.set_meta("app_state", "DISARMED")
+            await self._publish("bar", bar.model_dump(mode="json"))
+            return
         position = self._position_for(self.coin, await self.broker.positions())
 
         if position is not None:
@@ -314,37 +330,102 @@ class BridgeEngine:
                 decision_uid, risk.plan,
                 strategy_id=getattr(self.strategy, 'id', 'keltner_trail_ema8'),
             )
-        except Exception as exc:
-            self._consecutive_order_rejects += 1
-            self.store.insert_decision(
-                self.run_id,
+        except UnknownSubmissionError as exc:
+            self._unknown_submission_disarm(
+                decision_uid=decision_uid,
+                signal_ts=signal.ts,
+                symbol=signal.symbol,
+                exc=exc,
+            )
+            return
+        except SubmissionRejectedError as exc:
+            self._record_order_rejection(
                 decision_uid,
                 signal.ts,
                 signal.symbol,
-                "REJECTED",
-                {"reason": type(exc).__name__, "detail": str(exc)},
+                exc.reason_code,
             )
-            self.store.insert_event(
-                self.run_id,
-                datetime.now(UTC),
-                "WARN",
-                "ORDER_REJECTED",
-                f"count={self._consecutive_order_rejects}; error={type(exc).__name__}",
+            return
+        except Exception as exc:
+            self._record_order_rejection(
+                decision_uid,
+                signal.ts,
+                signal.symbol,
+                type(exc).__name__,
             )
-            if self._consecutive_order_rejects >= 3:
-                self.disarm()
-                self.store.insert_event(
-                    self.run_id,
-                    datetime.now(UTC),
-                    "WARN",
-                    "ORDER_REJECT_LIMIT",
-                    "three consecutive order rejects",
-                )
             return
         if result is not None:
             self._consecutive_order_rejects = 0
             self.store.insert_decision(self.run_id, decision_uid, signal.ts, signal.symbol, "SUBMITTED", result)
         await self._publish("decision", {"decision_uid": decision_uid})
+
+    def _unknown_submission_disarm(
+        self,
+        *,
+        decision_uid: str,
+        signal_ts: datetime,
+        symbol: str,
+        exc: UnknownSubmissionError,
+    ) -> None:
+        """Immediately quarantine without touching the ordinary reject counter."""
+        self.state = "DISARMED"
+        try:
+            self.store.set_meta("app_state", "DISARMED")
+            self.store.insert_decision(
+                self.run_id,
+                decision_uid,
+                signal_ts,
+                symbol,
+                "UNKNOWN_SUBMISSION",
+                {
+                    "reason_code": exc.reason_code,
+                    "request_id": exc.request_id,
+                    "attempt_id": exc.attempt_id,
+                },
+            )
+            self.store.insert_event(
+                self.run_id,
+                datetime.now(UTC),
+                "ERROR",
+                "UNKNOWN_SUBMISSION",
+                f"request_id={exc.request_id} attempt_id={exc.attempt_id} "
+                f"reason_code={exc.reason_code}",
+            )
+        except Exception:
+            pass
+
+    def _record_order_rejection(
+        self,
+        decision_uid: str,
+        signal_ts: datetime,
+        symbol: str,
+        reason_code: str,
+    ) -> None:
+        self._consecutive_order_rejects += 1
+        self.store.insert_decision(
+            self.run_id,
+            decision_uid,
+            signal_ts,
+            symbol,
+            "REJECTED",
+            {"reason_code": reason_code},
+        )
+        self.store.insert_event(
+            self.run_id,
+            datetime.now(UTC),
+            "WARN",
+            "ORDER_REJECTED",
+            f"count={self._consecutive_order_rejects}; reason_code={reason_code}",
+        )
+        if self._consecutive_order_rejects >= 3:
+            self.disarm()
+            self.store.insert_event(
+                self.run_id,
+                datetime.now(UTC),
+                "WARN",
+                "ORDER_REJECT_LIMIT",
+                "three consecutive order rejects",
+            )
 
     async def _risk_inputs_failed(self, exc: Exception) -> None:
         # Fail closed on unreadable risk inputs. In-memory state changes first:
@@ -387,6 +468,7 @@ class BridgeEngine:
             "reconcile_ready": self.reconcile_ready,
             "last_reconcile_ts": self.last_reconcile_ts.isoformat() if self.last_reconcile_ts else None,
             "reconcile_error": self.reconcile_error,
+            "submission_quarantine_count": self.store.submission_quarantine_count(),
             "run_id": self.run_id,
             "coin": self.coin,
             "timeframe": self.timeframe,
@@ -515,6 +597,13 @@ class BridgeEngine:
             return
 
     def _app_state(self) -> str:
+        if self.store.has_submission_quarantine():
+            self.state = "DISARMED"
+            try:
+                self.store.set_meta("app_state", "DISARMED")
+            except Exception:
+                pass
+            return self.state
         if self.risk_input_error is not None:
             # Sticky fail-closed: after a risk-input failure the engine stays
             # DISARMED until a human re-arms, even if the DISARMED meta write

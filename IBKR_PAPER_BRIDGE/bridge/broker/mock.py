@@ -10,6 +10,16 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
+from bridge.broker.base import (
+    BrokerOutcomeUnknown,
+    BrokerPreSendFailure,
+    EvidenceStatus,
+    RecoveryQueryEvidence,
+    SubmissionDisposition,
+    SubmissionOutcome,
+    SubmissionRecoveryEvidence,
+    SubmissionRecoveryRequest,
+)
 from bridge.engine.types import (
     AccountSnapshot,
     Bar,
@@ -119,46 +129,118 @@ class MockBroker:
     def subscribe_user_events(self, on_event: Callable[[BrokerEvent], None]) -> None:
         self._user_callbacks.append(on_event)
 
-    async def place_bracket(self, plan: OrderPlan) -> dict:
-        if not self.connected:
-            raise RuntimeError("MockBroker is not connected")
-        if len(self.bars) < 2:
-            raise ValueError("MockBroker needs at least two bars for next-open fill")
-
-        entry = self._order(
-            "ENTRY",
-            "OPEN",
-            plan.qty,
-            plan.signal.ref_price,
-            reduce_only=False,
-            signal_ts=plan.signal.ts,
-            direction=plan.signal.direction,
-            symbol=plan.signal.symbol,
-            leverage=plan.leverage,
+    def planned_cloids(self, plan: OrderPlan) -> dict[str, str]:
+        seed = plan.decision_uid or (
+            f"{plan.signal.symbol}:{plan.signal.ts.isoformat()}:{plan.signal.direction}"
         )
-        sl = self._order(
-            "SL",
-            "OPEN",
-            plan.qty,
-            plan.stop_loss,
-            reduce_only=True,
-            trigger_px=plan.stop_loss,
-            direction=plan.signal.direction,
-            symbol=plan.signal.symbol,
-        )
-        result = {"entry": entry, "sl": sl}
+        roles = ["ENTRY", "SL"]
         if plan.take_profit is not None:
-            result["tp"] = self._order(
-                "TP",
+            roles.append("TP")
+        return {role: f"{seed}:{role}" for role in roles}
+
+    async def place_bracket(self, plan: OrderPlan) -> SubmissionOutcome:
+        if not self.connected:
+            raise BrokerPreSendFailure("MOCK_NOT_CONNECTED")
+        if len(self.bars) < 2:
+            raise BrokerPreSendFailure("MOCK_BARS_UNAVAILABLE")
+
+        cloids = self.planned_cloids(plan)
+        write_started = False
+        try:
+            write_started = True
+            entry = self._order(
+                "ENTRY",
                 "OPEN",
                 plan.qty,
-                plan.take_profit,
-                reduce_only=True,
-                trigger_px=plan.take_profit,
+                plan.signal.ref_price,
+                reduce_only=False,
+                signal_ts=plan.signal.ts,
                 direction=plan.signal.direction,
                 symbol=plan.signal.symbol,
+                leverage=plan.leverage,
+                cloid=cloids["ENTRY"],
             )
-        return result
+            sl = self._order(
+                "SL",
+                "OPEN",
+                plan.qty,
+                plan.stop_loss,
+                reduce_only=True,
+                trigger_px=plan.stop_loss,
+                direction=plan.signal.direction,
+                symbol=plan.signal.symbol,
+                cloid=cloids["SL"],
+            )
+            result = {"entry": entry, "sl": sl}
+            if plan.take_profit is not None:
+                result["tp"] = self._order(
+                    "TP",
+                    "OPEN",
+                    plan.qty,
+                    plan.take_profit,
+                    reduce_only=True,
+                    trigger_px=plan.take_profit,
+                    direction=plan.signal.direction,
+                    symbol=plan.signal.symbol,
+                    cloid=cloids["TP"],
+                )
+        except Exception as exc:
+            if write_started:
+                raise BrokerOutcomeUnknown("MOCK_POST_WRITE_FAILURE") from exc
+            raise BrokerPreSendFailure("MOCK_PRE_SEND_FAILURE") from exc
+        return SubmissionOutcome(
+            SubmissionDisposition.VERIFIED_SUCCESS,
+            result,
+            "MOCK_VERIFIED_SUCCESS",
+        )
+
+    async def submission_recovery_evidence(
+        self, request: SubmissionRecoveryRequest
+    ) -> SubmissionRecoveryEvidence:
+        planned = set(map(str, request.planned_cloids.values()))
+        order_cloids = {
+            str(order.get("cloid")) for order in self.orders if order.get("cloid")
+        }
+        open_cloids = {
+            str(order.get("cloid"))
+            for order in self.orders
+            if order.get("cloid")
+            and order.get("status") in {"SUBMITTED", "OPEN"}
+        }
+        fill_cloids = {
+            str(fill.get("cloid")) for fill in self.fills if fill.get("cloid")
+        }
+
+        def query(found: set[str]) -> RecoveryQueryEvidence:
+            owned = tuple(sorted(found & planned))
+            return RecoveryQueryEvidence(
+                EvidenceStatus.FOUND if owned else EvidenceStatus.NOT_FOUND,
+                owned,
+                "MOCK_COMPLETE",
+            )
+
+        direct = {
+            cloid: query({cloid} if cloid in order_cloids or cloid in fill_cloids else set())
+            for cloid in sorted(planned)
+        }
+        position = RecoveryQueryEvidence(
+            EvidenceStatus.FOUND
+            if self.position is not None
+            and self.position.symbol == request.symbol
+            and self.position.size != 0
+            else EvidenceStatus.NOT_FOUND,
+            (),
+            "MOCK_POSITION_COMPLETE",
+        )
+        return SubmissionRecoveryEvidence(
+            request_id=request.request_id,
+            planned_cloids=dict(request.planned_cloids),
+            direct_lookup=direct,
+            open_orders=query(open_cloids),
+            historical_orders=query(order_cloids),
+            fills=query(fill_cloids),
+            position=position,
+        )
 
     async def modify_stop(self, cloid: str, new_stop: float) -> None:
         for order in self.orders:
