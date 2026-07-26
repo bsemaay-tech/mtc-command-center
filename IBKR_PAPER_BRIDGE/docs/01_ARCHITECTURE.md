@@ -484,6 +484,18 @@ Separate from the 60 s light reconciler above, and never a substitute for it.
   into fills and never consumed by risk before TS-P1-006 / full TS-P1-007.
 - Full contract: `26_FULL_RECONCILIATION_CONTRACT.md`.
 
+### 6.5c Authoritative risk-input snapshot — TS-P1-006, opt-in
+
+On schema v6, ARM and every new-entry risk decision resolve one immutable v2
+view from the transactional latest-accepted reconcile pointer. The view carries
+checkpoint/hash/time provenance and canonical positions, balances, and margin
+rows from the same accepted account observation. Risk does not call the point
+`account()` endpoint or accept `open_position=None` on this path. Legacy v1,
+stale, future, superseded, incomplete, malformed, or tampered evidence vetoes
+and DISARMs; there is no fallback. Default v4 behavior and all numeric risk
+policy remain unchanged. Full contract:
+`27_AUTHORITATIVE_RISK_SNAPSHOT_CONTRACT.md`.
+
 ### 6.6 BarFeed staleness
 24/7: if `now − last_bar_update > 2 × timeframe` ⇒ `DATA_STALE` event ⇒ DISARM (PREREG §7). No RTH
 condition — the check runs continuously.

@@ -172,3 +172,12 @@ snapshot feed remain the FULL TS-P1-007 behind TS-P1-005/006, which supersedes t
 it lands. TS-P1-005 has now landed the reconciliation evidence half (opt-in, not activated);
 risk consumption of that evidence is still TS-P1-006. Deploy of this fix is NOT authorized by
 this document — independent audit first, then the standard deploy gate.
+
+## TS-P1-006 update
+
+TS-P1-006 now supplies v6 entry risk with one immutable reconciled
+positions/balances/margin snapshot and removes the v6 point-account input.
+This does **not** supersede the interim realized-PnL or consecutive-loss
+calculation. Funding remains evidence only, the current UTC-day behavior and
+numeric thresholds are unchanged, and broker-reconciled PnL/equity-stop/
+drawdown policy remains TS-P1-007.

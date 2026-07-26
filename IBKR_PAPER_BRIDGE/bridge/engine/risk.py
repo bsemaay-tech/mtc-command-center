@@ -5,7 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-from bridge.engine.types import AccountSnapshot, OrderPlan, Signal
+from bridge.engine.types import (
+    RISK_SNAPSHOT_REQUIRED,
+    AccountSnapshot,
+    AuthoritativeRiskSnapshot,
+    OrderPlan,
+    Signal,
+)
 
 Direction = Literal["BOTH", "LONG_ONLY", "SHORT_ONLY", "NO_TRADE"]
 
@@ -39,6 +45,67 @@ class RiskEngine:
     def __init__(self, config: RiskConfig | None = None) -> None:
         self.config = config or RiskConfig()
 
+    def evaluate_authoritative(
+        self,
+        signal: Signal,
+        snapshot: AuthoritativeRiskSnapshot,
+        stop_loss: float,
+        take_profit: float | None = None,
+        regime: Direction = "BOTH",
+        realized_today: float = 0.0,
+        consecutive_losses: int = 0,
+        leverage: int = 1,
+    ) -> RiskResult:
+        """The only entry-risk path allowed on an opt-in v6 store (TS-P1-006).
+
+        Equity, available margin and open-position exposure are *derived from
+        one immutable checkpoint view*, never from independently timed point
+        reads. There is no dictionary or ``AccountSnapshot`` overload here on
+        purpose: a caller-supplied mapping is exactly the time-of-check /
+        time-of-use hole this path exists to close, so anything that is not a
+        typed :class:`AuthoritativeRiskSnapshot` is a fail-closed veto rather
+        than a fallback.
+
+        Thresholds, gate order and sizing are unchanged; the snapshot only
+        replaces where the inputs come from.
+        """
+        gates: list[dict[str, Any]] = []
+        if not isinstance(snapshot, AuthoritativeRiskSnapshot):
+            return self._reject(
+                "RISK_SNAPSHOT", RISK_SNAPSHOT_REQUIRED, gates, disarm=True
+            )
+        gates.append(
+            self._gate(
+                "RISK_SNAPSHOT",
+                {
+                    "checkpoint_id": snapshot.checkpoint_id,
+                    "attempt_id": snapshot.attempt_id,
+                    "canonical_hash": snapshot.canonical_hash,
+                    "payload_version": snapshot.payload_version,
+                    "accepted_ts": snapshot.accepted_ts.isoformat(),
+                    "age_s": snapshot.age_s,
+                    "positions": len(snapshot.positions),
+                },
+            )
+        )
+        # Any nonzero reconciled position blocks new entry through the existing
+        # NO_OPEN_POSITION gate. Passing None here — as the predecessor did —
+        # would authorize a second entry against exposure the accepted capture
+        # already proved exists.
+        open_positions = snapshot.open_positions
+        return self._evaluate(
+            signal=signal,
+            account=snapshot.account(),
+            stop_loss=stop_loss,
+            take_profit=take_profit,
+            regime=regime,
+            open_position=open_positions[0] if open_positions else None,
+            realized_today=realized_today,
+            consecutive_losses=consecutive_losses,
+            leverage=leverage,
+            gates=gates,
+        )
+
     def evaluate(
         self,
         signal: Signal,
@@ -51,8 +118,41 @@ class RiskEngine:
         consecutive_losses: int = 0,
         leverage: int = 1,
     ) -> RiskResult:
-        gates: list[dict[str, Any]] = []
+        """Predecessor entry point: unchanged, and default v4 behavior.
 
+        Still accepts a mapping or an ``AccountSnapshot`` because the v4/v5
+        path has no checkpoint to derive from. On a v6 store the engine never
+        calls this — see ``BridgeEngine.on_bar``.
+        """
+        return self._evaluate(
+            signal=signal,
+            account=account,
+            stop_loss=stop_loss,
+            take_profit=take_profit,
+            regime=regime,
+            open_position=open_position,
+            realized_today=realized_today,
+            consecutive_losses=consecutive_losses,
+            leverage=leverage,
+            gates=[],
+        )
+
+    def _evaluate(
+        self,
+        *,
+        signal: Signal,
+        account: AccountSnapshot | dict[str, float],
+        stop_loss: float,
+        take_profit: float | None,
+        regime: Direction,
+        open_position: object | None,
+        realized_today: float,
+        consecutive_losses: int,
+        leverage: int,
+        gates: list[dict[str, Any]],
+    ) -> RiskResult:
+        """The one gate sequence. Order, thresholds and sizing are identical for
+        both entry points; only the *provenance* of the inputs differs."""
         if not self.config.app_armed:
             return self._reject("STATE_ARMED", "STATE_NOT_ARMED", gates)
         gates.append(self._gate("STATE_ARMED"))

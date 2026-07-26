@@ -3,6 +3,12 @@
 Status: implemented, **opt-in**. Default schema stays v4; nothing in this
 contract is active on a v4 or v5 runtime database.
 
+TS-P1-006 extension: newly accepted captures use
+`ts-p1-006-snapshot-v2`, adding canonical positions/balances/margin rows to
+the existing immutable checkpoint JSON. Historical v1 checkpoints remain
+valid retained reconciliation evidence but are not risk-readable and cannot
+authorize v6 ARM. See `27_AUTHORITATIVE_RISK_SNAPSHOT_CONTRACT.md`.
+
 Predecessor: TS-P1-004 partial-fill protection (`25_PARTIAL_FILL_PROTECTION_CONTRACT.md`),
 commit `7f72f71c`.
 
