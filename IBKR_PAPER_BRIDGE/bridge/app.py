@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
+from collections.abc import Mapping
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import AsyncIterator
 
 from fastapi import FastAPI
@@ -25,6 +27,46 @@ from bridge.store.db import Store
 from bridge.settings import settings
 
 logger = logging.getLogger(__name__)
+
+#: Infrastructure-only override for the runtime SQLite location. Used by the
+#: Linux deployment (`/var/lib/mtc-bridge/bridge.db`) so the writable state
+#: directory can live outside the read-only release tree. Unset everywhere
+#: else, which keeps the in-repo default untouched.
+STATE_DB_ENV_VAR = "MTC_BRIDGE_STATE_DB"
+
+
+def resolve_state_db_path(
+    cli_value: str | None = None,
+    env: Mapping[str, str] | None = None,
+) -> Path | None:
+    """Resolve the runtime database path from the CLI first, then the env var.
+
+    Returns ``None`` when neither source is set, so ``create_app`` keeps its
+    existing ``<repo>/data/bridge.db`` default. Purely infrastructural: no
+    trading, risk, or strategy behaviour depends on this value.
+
+    Fails closed (``ValueError``) on an empty or relative path rather than
+    silently writing runtime state to an unexpected location.
+    """
+    environ = os.environ if env is None else env
+    raw = cli_value if cli_value is not None else environ.get(STATE_DB_ENV_VAR)
+    if raw is None:
+        return None
+    candidate = raw.strip()
+    if not candidate:
+        raise ValueError(f"--state-db/{STATE_DB_ENV_VAR} is set but empty")
+    path = Path(candidate)
+    posix_path = PurePosixPath(candidate)
+    # The deployment contract is POSIX, but the repository suite also runs on
+    # Windows. Accept a native absolute path or an absolute POSIX path so the
+    # exact Linux value can be validated without weakening the runtime check.
+    if not (path.is_absolute() or posix_path.is_absolute()):
+        raise ValueError(
+            f"--state-db/{STATE_DB_ENV_VAR} must be an absolute path, got a relative one"
+        )
+    if ".." in path.parts or ".." in posix_path.parts:
+        raise ValueError(f"--state-db/{STATE_DB_ENV_VAR} must not contain parent traversal")
+    return path
 
 
 @asynccontextmanager
@@ -161,6 +203,19 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--state-db",
+        default=None,
+        metavar="PATH",
+        help=(
+            "absolute path to the runtime SQLite database; overrides "
+            f"{STATE_DB_ENV_VAR}. Omit both to keep the in-repo default."
+        ),
+    )
     args = parser.parse_args()
-    runtime_app = create_app(dry_run=args.dry_run, start_runtime=True)
+    runtime_app = create_app(
+        dry_run=args.dry_run,
+        store_path=resolve_state_db_path(args.state_db),
+        start_runtime=True,
+    )
     uvicorn.run(runtime_app, host="127.0.0.1", port=8790, reload=False)

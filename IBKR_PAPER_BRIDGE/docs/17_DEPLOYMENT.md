@@ -1,9 +1,15 @@
 # 17_DEPLOYMENT — Köprüyü başka makineye / VPS'e kurma (P2 host taşıma)
 
-Tarih: 2026-07-13. Amaç: Barış'ın planı — gece ev PC (shakedown), gündüz iş PC (~6 gün),
+Tarih: 2026-07-13; KVM2 Linux bölümü 2026-07-26'da güvenli paketle değiştirildi.
+Amaç: Barış'ın planı — gece ev PC (shakedown), gündüz iş PC (~6 gün),
 paralelde VPS kiralanınca kalıcı taşınma. Bu doküman herhangi bir modelin veya Barış'ın tek
 başına uygulayabileceği kadar ayrıntılıdır. **TESTNET-ONLY; mainnet üçlü kilidi her makinede
 geçerli.**
+
+> **KVM2 authority warning:** This document is guidance, not execution
+> authorization. The current lower-level authority is
+> `MTC_COMMAND_CENTER/11_TRIAGE/BRIDGE_VPS_DEPLOY_TASK_LIST_2026-07-25.md`.
+> Install, secrets, cutover, first start, and ARM are separate owner gates.
 
 ## 2026-07-13 P2 runtime isolation requirement
 
@@ -60,35 +66,42 @@ Eski makinede: (1) dashboard'dan **DISARM** (açık pozisyonun SL/TP'si borsada 
 (2) `Stop-ScheduledTask MTC-Bridge-P2` + görevi devre dışı bırak (`Disable-ScheduledTask`) —
 iki makine AYNI ANDA çalışmamalı (duplicate-order koruması var ama tek-yazar ilkesi esas);
 (3) kapat. Yeni makinede: kur (yukarısı) → başlat → `reconcile_ready` bekle → ARM.
-`data/bridge.db` TAŞINMAZ — her host kendi taze DB'siyle yeni run açar; eski DB eski makinede
-arşiv olarak kalır (P2 raporu için kesitleri birleştirilir).
+Eski Windows shakedown taşımalarında taze DB kullanılmış olabilir. KVM2 kesiminde
+bu kural geçerli değildir: P3-01 risk-state seçimi hâlâ **OPEN**. Önerilen yol,
+eski writer tamamen durdurulduktan sonra `tools/wal_state_bundle.py` ile
+WAL-tutarlı migration'dır. Taze DB/reset ancak owner tarafından ayrıca seçilip
+daily-loss, consecutive-loss, order ve foreign-position belirsizliğinde
+fail-closed test edilirse kullanılabilir.
 
-## 3. VPS kurulumu (Linux, ~$5/ay — Hetzner CX11 / DO 1GB yeterli)
+## 3. KVM2 Linux deployment package (preparation only)
 
-1. Ubuntu 24.04; `apt install python3.12 python3-pip git`.
-2. Repo'yu klonla → `pip install -r IBKR_PAPER_BRIDGE/requirements.txt`.
-3. Env: `/etc/systemd/system/mtc-bridge.service`:
-   ```ini
-   [Unit]
-   Description=MTC Crypto Paper Bridge (Hyperliquid TESTNET)
-   After=network-online.target
-   [Service]
-   WorkingDirectory=/opt/Tradingview_LAB_CLEAN/IBKR_PAPER_BRIDGE
-   Environment=PYTHONUTF8=1
-   EnvironmentFile=/etc/mtc-bridge.env    # HL_ACCOUNT_ADDRESS, HL_API_WALLET_KEY(vps agent), TELEGRAM_*
-   ExecStart=/usr/bin/python3 -m bridge.app
-   Restart=always
-   RestartSec=10
-   [Install]
-   WantedBy=multi-user.target
-   ```
-   `chmod 600 /etc/mtc-bridge.env`. Not: Linux'ta winreg yok — env dosyası zorunlu (E1 fallback
-   sadece Windows; process env yeterli olduğu için sorun değil).
-4. `systemctl enable --now mtc-bridge`.
-5. **Güvenlik**: sunucu 127.0.0.1'e bind'li — dışarıdan erişim YOK (doğru). İzleme için SSH
-   tüneli: `ssh -L 8790:127.0.0.1:8790 user@vps` → tarayıcıda localhost:8790. Login+2FA
-   olmadan portu asla dışa açma (mimari §13 kuralı). UFW: sadece SSH.
-6. ARM: tünel üzerinden dashboard/API (yukarıdaki komutun aynısı).
+The old global-pip, root service, `Restart=always`, and `enable --now` recipe has
+been retired. Do not use it.
+
+Canonical inert assets:
+
+- `deploy/linux/README.md` — architecture, paths, safety and gate order;
+- `deploy/linux/COMMANDS.md` — later separately authorized exact commands;
+- `requirements.in` plus exact transitive `requirements.lock` hashes;
+- `deploy/linux/package.sh` — clean exact-SHA payload;
+- `deploy/linux/install.sh` — exact SHA plus payload-manifest hash, Python 3.12
+  per-SHA venv, binary wheels, service installed masked/disabled/unstarted;
+- `deploy/linux/verify.sh` — read-only exact-release assertions;
+- `deploy/linux/rollback.sh` — stop/mask/preserve state, never start or ARM;
+- `tools/wal_state_bundle.py` — WAL-consistent capture and verification.
+
+Target boundaries: root-owned read-only release and venv trees under
+`/opt/mtc-bridge`, dedicated non-login `mtc-bridge`, state under
+`/var/lib/mtc-bridge`, logs under `/var/log/mtc-bridge`, root-owned `0600` env
+contract, and `127.0.0.1:8790` with SSH-only inbound firewall. The first-start
+unit is separate, `Restart=no`, has no enable target, and is installed masked.
+The restart-enabled steady template is separate and is never installed by the
+installer.
+
+No asset here authorizes package installation on KVM2, secret provisioning,
+Windows quiesce, cutover, first start, TESTNET exchange mutation, ARM, or
+deployment. P2-09 and P3-03 Ubuntu evidence, independent audit, and owner gates
+remain open.
 
 ## 4. P2 sayacı kuralı (dürüst kayıt)
 

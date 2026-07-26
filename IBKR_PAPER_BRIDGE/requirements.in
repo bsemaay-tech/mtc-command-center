@@ -1,0 +1,35 @@
+# Direct (first-order) dependencies of the Crypto Paper Bridge.
+#
+# Source of truth for *what* the bridge depends on. Transitive resolution,
+# exact versions and artifact hashes live in `requirements.lock`, which is
+# generated from this file and is the only thing the Linux installer installs.
+#
+# Relationship to `requirements.txt`:
+#   `requirements.txt` is the untouched developer/Windows convenience list and
+#   remains the file hashed by the TS-P0-001 runtime-baseline source scope
+#   (`docs/RUNTIME_BASELINE_CONTRACT.md`). This `.in` file mirrors its direct
+#   entries exactly; it does not replace it.
+#
+# `pytest` is intentionally retained so the locked Linux environment can run the
+# exact-SHA Ubuntu staging matrix (canonical bridge item 9 / KVM2-P3-03) from the
+# same hash-verified environment that will run the service.
+#
+# Regenerate the lock (network access to the package index only, no install):
+#   uv pip compile IBKR_PAPER_BRIDGE/requirements.in \
+#       --generate-hashes --python-version 3.12 --python-platform linux \
+#       --output-file IBKR_PAPER_BRIDGE/requirements.lock
+#
+# Any edit here REQUIRES regenerating `requirements.lock` and re-running the
+# deployment tests; the installer refuses to install an unpinned or
+# unhashed requirement.
+
+fastapi
+uvicorn[standard]
+pydantic>=2
+pydantic-settings
+pyyaml
+httpx
+hyperliquid-python-sdk
+eth-account
+anthropic
+pytest
