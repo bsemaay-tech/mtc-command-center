@@ -138,9 +138,37 @@ decision D017.
 - Paper and dry-run share `data/bridge.db` by default; isolation is enforced at query level
   (repair 1). A dedicated per-environment DB path remains a TS-P2-007 concern.
 
+## D017 update — TS-P1-005 captures funding, and this gate still does not use it
+
+TS-P1-005 (`26_FULL_RECONCILIATION_CONTRACT.md`, owner decision D3=A) closes the *capture* half
+of R-02: a full reconciliation cycle now reads the authoritative Hyperliquid funding ledger
+(`Info.user_funding_history`), keys each event by the exchange-provided `hash`, stores the signed
+`delta.usdc` with its `delta.coin` symbol and `time` effective timestamp, and appends it to the
+opt-in v6 `funding_events` table with an explicit `ATTRIBUTED` / `UNATTRIBUTED` class.
+
+**The interim gate above is deliberately unchanged by that.**
+
+- `Store.trade_costs(decision_uid)` still reads **only** the `fills` table
+  (`SUM(fills.fee) + SUM(fills.funding)`). It does not read `funding_events`.
+- No production path populates `fills.funding`, so production gate PnL remains **gross − fees**,
+  exactly as decided in D017.
+- `funding_events` is evidence, not a risk input. Nothing consumes it before TS-P1-006 / full
+  TS-P1-007.
+- Double counting is therefore structurally impossible: the two stores are disjoint, and the
+  funding ledger is a separate signed event stream rather than a synthesized fill.
+- Regression proof: `tests/test_reconciliation.py::test_funding_ledger_does_not_change_the_interim_risk_result`
+  populates `funding_events` through a real accepted capture and asserts `trade_costs` is
+  numerically identical before, after, and following a reopen.
+- The v6 ledger is opt-in and is not active on the default v4 operational database, so this note
+  describes a capability, not a live change.
+
+D017 remains in force for the interim gate. Whether funding should enter the daily-loss
+calculation — and with which day boundary — stays a TS-P1-006 / full TS-P1-007 decision.
+
 ## Status and follow-up
 
 Interim only. Broker-reconciled PnL, equity-stop, drawdown, day-start equity, and the full
 snapshot feed remain the FULL TS-P1-007 behind TS-P1-005/006, which supersedes this wiring when
-it lands. Deploy of this fix is NOT authorized by this document — independent audit first, then
-the standard deploy gate.
+it lands. TS-P1-005 has now landed the reconciliation evidence half (opt-in, not activated);
+risk consumption of that evidence is still TS-P1-006. Deploy of this fix is NOT authorized by
+this document — independent audit first, then the standard deploy gate.

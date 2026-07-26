@@ -436,6 +436,53 @@ there is NO code path from LLM output to qty, price, leverage, or new-order fiel
   positions traceable to our cloid; foreign positions ⇒ WARN, never touched. Reconciler snapshots
   equity every 60 s into `equity` (feeds max-intraday-DD, PREREG §5) and runs the engine-vs-exchange
   equity divergence check (>0.5% ⇒ WARN, >1% ⇒ DISARM). Also tracks funding payments (log only, v1).
+- **Epoch drain (TS-P1-005):** `drain_queued_events()` ingests queued broker callbacks under the
+  per-symbol writer locks with no broker I/O. The full reconciler calls it once, after taking the
+  global full-writer guard, so a capture always sees one coherent local epoch.
+  `sync_broker_state()` now delegates its first half to it; its behavior is unchanged.
+
+### 6.5b FullReconciler (`engine/reconcile.py`) — TS-P1-005, opt-in
+
+Separate from the 60 s light reconciler above, and never a substitute for it.
+
+- **One bounded capture per cycle**: reserve a durable attempt → take the *global* full-writer
+  guard (an overlapping full attempt is refused, not queued) → drain the event epoch → collect
+  read-only evidence for seven components (open orders, fills, positions, balances, margin,
+  funding, local pending actions) → validate → deterministic diff → **atomically** commit
+  snapshot, diff, provenance, verdict and the latest-accepted pointer, last. No SQLite
+  transaction ever spans broker I/O; lock order is always guard → symbol locks.
+- **Read-only**: zero cancel/adopt/re-protect/flatten/retry. Foreign state is observed, never
+  touched.
+- **Envelope (D2=A)**: 5 s monotonic deadline **enforced during collection** — every adapter await
+  runs under `asyncio.timeout(remaining budget)`, so a hung broker call is cut off in bounded wall
+  time (`STALE` / `FULL_RECONCILE_DEADLINE_EXCEEDED`, no checkpoint) rather than only detected
+  afterwards; the post-hoc monotonic check stays as a second guard. Plus ≤5 s component source
+  skew, fail-closed on clock rollback, future/stale source timestamps and adapter client rebuild.
+  Four bounded REST reads nominally (`user_state` serves positions+balances+margin from one
+  observation).
+- **Fills/funding window**: durable coverage continuity, **no fixed lookback**. Before the first
+  acceptance the lower bound is `min(run's durable started_ts, MIN(reconcile_attempts.started_ts))`,
+  so a restart under a new `run_id` before anything was ever accepted cannot skip the previous
+  run's observation window; after an acceptance every capture starts at the upper bound the last
+  *accepted* checkpoint proved. Failures and downtime widen the next window instead of skipping it;
+  an interval the endpoint cannot prove fails closed.
+- **Separate readiness gate**: `full_reconcile_ready` derives only from a *fresh accepted v6
+  checkpoint* that is also **the most recently resolved attempt**, and the engine additionally
+  latches it shut while `full_reconcile_error` is set (cleared only by a fresh accept). Freshness
+  bound reuses the accepted light formula `max(reconcile_interval_s × 3, 30 s)`. The light
+  `reconcile_ready` keeps its own owner and can never satisfy it; on a v6 store `arm()` requires
+  both. On a v4/v5 store nothing changes.
+- **Separate failure budget**: the full capture runs outside the light reconcile try/handler, so a
+  full ledger/capture failure never touches `reconcile_ready`, the light consecutive-failure
+  budget, or ARMED state — it only latches the full gate.
+- **Persistence**: additive opt-in schema **v6** — `reconcile_attempts`, `reconcile_components`,
+  `reconcile_diffs`, `reconcile_checkpoints`, `funding_events`, plus one transactional `meta`
+  pointer (latest-accepted checkpoint). Coverage derives from that checkpoint's immutable
+  fills/funding component cursor bounds. Default target stays
+  v4; v6 is reached only via the proven v4→v5→v6 chain.
+- **Funding (D3=A)**: a separate signed ledger keyed by the exchange event `hash`, never folded
+  into fills and never consumed by risk before TS-P1-006 / full TS-P1-007.
+- Full contract: `26_FULL_RECONCILIATION_CONTRACT.md`.
 
 ### 6.6 BarFeed staleness
 24/7: if `now − last_bar_update > 2 × timeframe` ⇒ `DATA_STALE` event ⇒ DISARM (PREREG §7). No RTH
@@ -497,9 +544,51 @@ CREATE INDEX idx_trades_run     ON trades(run_id);
 CREATE INDEX idx_events_run_sev ON events(run_id, severity, ts);
 ```
 
+Schema v6 (TS-P1-005 full reconciliation, **additive and opt-in** — the operational baseline
+target stays v4; v6 is reached only via the proven v4→v5→v6 chain and never by merely opening a
+database):
+
+```sql
+CREATE TABLE reconcile_attempts   (attempt_id TEXT PK,          -- recon-v1:<sha256>
+                                   run_id, seq INT, state TEXT, -- COLLECTING/COMPLETE/INCOMPLETE/CONFLICTING/STALE
+                                   started_ts, ended_ts, duration_ms INT,
+                                   deadline_s REAL, max_skew_s REAL,   -- the D2=A envelope, durably recorded
+                                   complete INT, fresh INT, canonical_hash TEXT, reason_code TEXT,
+                                   UNIQUE(run_id, seq));        -- resolvable exactly once; DELETE refused
+CREATE TABLE reconcile_components (component_row_id INTEGER PK, attempt_id → reconcile_attempts,
+                                   component TEXT, source TEXT, status TEXT, observed_ts,
+                                   exact INT, complete INT, row_count INT,
+                                   cursor_start_ms INT, cursor_end_ms INT, page_count INT, call_count INT,
+                                   payload_digest TEXT, reason_code TEXT,
+                                   UNIQUE(attempt_id, component));      -- append-only
+CREATE TABLE reconcile_diffs      (diff_row_id INTEGER PK, attempt_id → reconcile_attempts, seq INT,
+                                   kind TEXT, subject TEXT, reason_code TEXT,
+                                   ownership TEXT,              -- OWNED/FOREIGN_IDENTIFIED/UNKNOWN_OWNERSHIP
+                                   blocking INT, payload_json TEXT,
+                                   UNIQUE(attempt_id, seq));            -- append-only
+CREATE TABLE reconcile_checkpoints(checkpoint_id TEXT PK,       -- ckpt-v1:<sha256>
+                                   attempt_id TEXT UNIQUE → reconcile_attempts, run_id,
+                                   accepted_ts, canonical_hash TEXT, snapshot_json TEXT, reason_code TEXT);
+                                                                        -- fully immutable
+CREATE TABLE funding_events       (event_id TEXT PK,            -- authoritative exchange hash, never synthesized
+                                   symbol, amount_usdc REAL,    -- signed delta.usdc
+                                   effective_ts, source TEXT,
+                                   attribution TEXT,            -- ATTRIBUTED | UNATTRIBUTED, first-seen
+                                   payload_digest TEXT,         -- exchange-authoritative fields ONLY
+                                                                -- (attribution is locally derived → excluded)
+                                   first_seen_attempt_id → reconcile_attempts,
+                                   recorded_ts);                        -- append-only
+-- latest accepted checkpoint pointer: meta['reconcile_checkpoint_latest'],
+-- fills/funding coverage upper bound: derived from that checkpoint's immutable
+-- FILLS/FUNDING reconcile_components cursor_end_ms values (no second pointer).
+-- Coverage is monotonic and advances ONLY on acceptance, so a failed attempt or
+-- a downtime widens the next window instead of leaving an unobserved gap.
+```
+
 Conventions: storage = UTC ISO; **all logic = UTC** (no timezone gymnastics — crypto is 24/7);
-display = local. `meta.schema_version` gates inline migrations. On PUT /api/config while ARMED, a
-`CONFIG_CHANGED` events row records the field-level diff (old→new).
+display = local. `meta.schema_version` gates inline migrations — and a meta row alone is not
+proof of a version: a database claiming v6 without v6 objects fails closed. On PUT /api/config
+while ARMED, a `CONFIG_CHANGED` events row records the field-level diff (old→new).
 
 `decisions.payload_json` is the audit trail Barış asked for (thesis-history idea, adapted: every
 trade's full reasoning chain reconstructable by decision_uid).
