@@ -437,9 +437,9 @@ class HyperliquidBroker:
         except Exception as exc:
             raise BrokerPreSendFailure("HL_REQUEST_BUILD_FAILED") from exc
 
+        if pre_send_guard is not None and not pre_send_guard():
+            raise BrokerPreSendFailure("HL_KILL_PRE_SEND_VETO")
         try:
-            if pre_send_guard is not None and not pre_send_guard():
-                raise BrokerPreSendFailure("HL_KILL_PRE_SEND_VETO")
             raw = await asyncio.to_thread(
                 self.exchange.bulk_orders, requests, grouping=grouping
             )

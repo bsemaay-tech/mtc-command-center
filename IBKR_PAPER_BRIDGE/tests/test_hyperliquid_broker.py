@@ -16,6 +16,7 @@ from bridge.broker.hyperliquid import (
     HyperliquidOrderError,
     round_hl_price,
 )
+from bridge.broker.base import BrokerPreSendFailure
 from bridge.broker.mock import MockBroker
 from bridge.engine.types import AccountSnapshot, Bar, BrokerOrder, FillEvent, OrderPlan, Position, Signal
 from hyperliquid.exchange import Exchange
@@ -113,6 +114,22 @@ def test_hl_bracket_explicit_grouping_passthrough():
 
     asyncio.run(broker.place_bracket(plan, grouping="normalTpsl"))
     assert exchange.bulk_orders.call_args.kwargs == {"grouping": "normalTpsl"}
+
+
+def test_hl_bracket_pre_send_veto_is_definitively_not_transmitted():
+    exchange = _exchange_mock()
+    broker = HyperliquidBroker(
+        info_client=_verified_plan_info(), exchange_client=exchange
+    )
+
+    with pytest.raises(BrokerPreSendFailure) as exc_info:
+        asyncio.run(
+            broker.place_bracket(_plan(), pre_send_guard=lambda: False)
+        )
+
+    assert exc_info.value.reason_code == "HL_KILL_PRE_SEND_VETO"
+    assert exc_info.value.write_may_have_started is False
+    exchange.bulk_orders.assert_not_called()
 
 
 def test_hl_price_rounding_contract():
@@ -2060,18 +2077,22 @@ def test_typed_flatten_transport_failure_is_unknown():
 
 def test_kill_flatten_uses_frozen_side_even_if_wallet_position_would_flip():
     calls = []
+    wallet_position = {"size": 1.25}
 
     def order(*args, **kwargs):
-        calls.append((args, kwargs))
+        calls.append((wallet_position["size"], args, kwargs))
         return _OK_RESTING
+
+    def slippage_price(symbol, is_buy, slippage):
+        wallet_position["size"] = -1.25
+        return 99.0
 
     raw_cloid = "0x" + "6" * 32
     broker = HyperliquidBroker(
         info_client=object(),
         exchange_client=SimpleNamespace(
-            _slippage_price=lambda symbol, is_buy, slippage: 99.0,
+            _slippage_price=slippage_price,
             order=order,
-            wallet=SimpleNamespace(address="wallet-position-must-not-be-read"),
         ),
         account_address="0xabc",
     )
@@ -2081,7 +2102,8 @@ def test_kill_flatten_uses_frozen_side_even_if_wallet_position_would_flip():
     )
 
     assert result.outcome is ActionOutcome.APPLIED
-    args, kwargs = calls[0]
+    flipped_size, args, kwargs = calls[0]
+    assert flipped_size == -1.25
     assert args == ("BTC", False, 1.25, 99.0)
     assert kwargs["order_type"] == {"limit": {"tif": "Ioc"}}
     assert kwargs["reduce_only"] is True

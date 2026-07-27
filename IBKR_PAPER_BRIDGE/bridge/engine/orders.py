@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 import time
 from collections.abc import Mapping
 from contextlib import asynccontextmanager
@@ -418,8 +419,14 @@ class OrderManager:
         trade_directions: dict[int, str] = {}
         trade_decisions: dict[int, str] = {}
         for row in self.store.kill_owned_position_rows(symbol):
+            lineage_run_id = str(row.get("trade_run_id") or "")
+            if lineage_run_id and lineage_run_id != self.run_id:
+                # Valid historical fills from another run are not evidence of
+                # ownership for this run. They are ignored, not reclassified
+                # as corrupt current-run lineage.
+                continue
             if (
-                str(row.get("trade_run_id") or "") != self.run_id
+                not lineage_run_id
                 or str(row.get("trade_coin") or "") != symbol
             ):
                 raise _KillEvidenceFault(
@@ -1122,15 +1129,56 @@ class OrderManager:
                 decision_uid, plan, strategy_id=strategy_id
             )
 
-    def _new_risk_pre_send_allowed(self, symbol: str) -> bool:
+    def _new_risk_pre_send_allowed(
+        self, symbol: str, *, attempt_id: str
+    ) -> bool:
         """Synchronous last-wire veto used by adapters at their write boundary."""
         state = self.store.get_meta("app_state")
+        attempt = self.store.get_submission_attempt(attempt_id)
+        other_quarantine = any(
+            str(row.get("attempt_id") or "") != attempt_id
+            for row in self.store.get_quarantined_submission_attempts()
+        )
         return not (
             self.kill_latched
             or (state is not None and state != "ARMED")
-            or self.store.has_submission_quarantine()
+            or attempt is None
+            or str(attempt.get("state") or "") != "SUBMITTING"
+            or other_quarantine
             or self._partial_recovery_owns(symbol)
         )
+
+    async def _place_bracket_with_guard(
+        self,
+        plan: OrderPlan,
+        *,
+        symbol: str,
+        attempt_id: str,
+    ) -> Any:
+        """Use the adapter boundary guard, retaining legacy fake compatibility."""
+        place_bracket = self.broker.place_bracket
+        guard = lambda: self._new_risk_pre_send_allowed(  # noqa: E731
+            symbol, attempt_id=attempt_id
+        )
+        try:
+            parameters = inspect.signature(place_bracket).parameters.values()
+        except (TypeError, ValueError) as exc:
+            raise BrokerPreSendFailure(
+                "BROKER_PRE_SEND_GUARD_UNAVAILABLE"
+            ) from exc
+        accepts_guard = any(
+            parameter.name == "pre_send_guard"
+            or parameter.kind is inspect.Parameter.VAR_KEYWORD
+            for parameter in parameters
+        )
+        if accepts_guard:
+            return await place_bracket(plan, pre_send_guard=guard)
+        # Legacy in-process fakes predate the protocol extension. Production
+        # adapters implement the guarded branch above; this preserves their
+        # older unit-test contract with the last synchronous manager veto.
+        if not guard():
+            raise BrokerPreSendFailure("KILL_PRE_SEND_VETO")
+        return await place_bracket(plan)
 
     async def _submit_plan_locked(
         self, decision_uid: str, plan: OrderPlan, *, strategy_id: str
@@ -1251,9 +1299,10 @@ class OrderManager:
         plan.decision_uid = request_id
         try:
             try:
-                broker_result = await self.broker.place_bracket(
+                broker_result = await self._place_bracket_with_guard(
                     plan,
-                    pre_send_guard=lambda: self._new_risk_pre_send_allowed(symbol),
+                    symbol=symbol,
+                    attempt_id=attempt_id,
                 )
             except BrokerPreSendFailure as exc:
                 reason_code = self._safe_broker_reason_code(

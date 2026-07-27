@@ -3078,24 +3078,48 @@ def test_kill_filled_qty_without_durable_fill_is_ambiguous_and_never_flattens(tm
     assert store.active_kill_request()["terminal_state"] == "AMBIGUOUS"
 
 
+def test_kill_ignores_another_runs_valid_filled_history(tmp_path):
+    store, broker, engine = _kill_scenario(
+        tmp_path, position_size=1.0, protection=True
+    )
+    now = datetime.now(UTC)
+    store.create_run("other-run", "dry_run", "testnet", {})
+    other_trade_id = store.create_trade(
+        run_id="other-run", coin="BTC", direction="LONG",
+        qty=1.0, entry_decision_uid="other-decision",
+        signal_ts=now, decision_ts=now, expected_px=100.0,
+        risk_dollars=1.0, risk_pct=0.001, leverage=1,
+        sl_initial=95.0, tp_initial=None, llm_directive_id=None,
+    )
+    store.insert_order(
+        cloid="other-filled", oid=99, group_id="other-request",
+        order_ref="other-request:ENTRY",
+        order_json={"symbol": "BTC", "role": "ENTRY"},
+        decision_uid="other-decision", trade_id=other_trade_id,
+        role="ENTRY", status="FILLED", qty=1.0,
+    )
+    store.update_order_status(
+        "other-filled", "FILLED", filled_qty=1.0,
+        avg_fill_px=100.0, ts_last=now,
+    )
+    store.insert_fill(
+        "other-fill", "other-filled", "other-decision", now,
+        1.0, 100.0, 0.0, 0.0,
+    )
+
+    asyncio.run(engine.kill(flatten=False))
+
+    request = store.active_kill_request()
+    assert request["terminal_state"] == "SAFE_RETAINED"
+    assert request["terminal_reason"] != "POSITION_LINEAGE_INCOMPLETE"
+
+
 def test_kill_restart_clock_rollback_never_recreates_write_budget(tmp_path):
     clock = Clock(FROZEN)
     store, broker, engine = _kill_scenario(tmp_path, clock=clock)
     broker.scripted_cancel.append(
         ScriptedOutcome(ActionOutcome.NOT_APPLIED, applied=False, reason_code="NO")
     )
-    original_query = broker.query_order
-
-    async def exact_not_applied(cloid, symbol):
-        if str(cloid) == "owned-entry":
-            return OrderQueryResult(
-                known=True, found=False, terminal=True,
-                cloid="owned-entry", symbol="BTC",
-                evidence=Evidence("QUERY_ORDER", "MOCK_TERMINAL"),
-            )
-        return await original_query(cloid, symbol)
-
-    broker.query_order = exact_not_applied
     asyncio.run(engine.kill(flatten=False))
     clock.now = FROZEN - timedelta(seconds=1)
     restarted = BridgeEngine(

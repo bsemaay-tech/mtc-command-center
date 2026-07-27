@@ -700,6 +700,9 @@ def test_kill_latch_at_paused_write_boundary_vetoes_new_bracket(tmp_path):
             await task
         assert broker.orders == []
         assert store.get_quarantined_submission_attempts() == []
+        attempt = store.get_snapshot()["submission_attempts"][0]
+        assert attempt["state"] == "PRE_SEND_FAILURE"
+        assert attempt["state"] != "UNKNOWN_SUBMISSION"
 
     asyncio.run(run())
 
