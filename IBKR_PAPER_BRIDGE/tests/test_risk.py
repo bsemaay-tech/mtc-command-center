@@ -6,10 +6,20 @@ import pytest
 
 from bridge.engine.risk import RiskConfig, RiskEngine
 from bridge.engine.types import (
+    EXPOSURE_EVIDENCE_INVALID,
+    LIQ_DISTANCE_BREACH,
+    LEVERAGE_EFFECTIVE_BREACH,
+    LEVERAGE_REPORTED_BREACH,
+    PORTFOLIO_GROSS_BREACH,
     RISK_SNAPSHOT_REQUIRED,
     SNAPSHOT_PAYLOAD_VERSION_V2,
+    SNAPSHOT_PAYLOAD_VERSION_V3,
+    SYMBOL_GROSS_BREACH,
+    WALLET_UTIL_BREACH,
     AccountSnapshot,
     AuthoritativeRiskSnapshot,
+    ExposureRiskPolicy,
+    RiskPolicyInvalid,
     RiskPositionRow,
     Signal,
 )
@@ -609,3 +619,374 @@ def test_durable_gates_run_before_sizing_and_emit_ordered_evidence():
     assert detail["baseline_equity"] == 10_000.0
     assert detail["daily_pnl"] == -100.0
     assert detail["threshold"] == -200.0
+
+
+# ===========================================================================
+# TS-P1-008 — exposure, leverage and liquidation controls
+#
+# Opt-in v3 snapshot path. Default v4 and the v2/v6/v7 paths are byte-for-byte
+# unchanged; the v3 rows carry per-position valuation, leverage and a
+# directional liquidation price from the same user_state epoch, and five
+# deterministic fail-closed gates run before NO_OPEN_POSITION.
+# ===========================================================================
+
+
+def _v3_snapshot(
+    *,
+    equity: float = 1000.0,
+    available: float = 1000.0,
+    withdrawable: float = 1000.0,
+    margin_used: float = 0.0,
+    positions: tuple[RiskPositionRow, ...] = (),
+    exposure_policy_version: str | None = None,
+) -> AuthoritativeRiskSnapshot:
+    return AuthoritativeRiskSnapshot(
+        payload_version=SNAPSHOT_PAYLOAD_VERSION_V3,
+        checkpoint_id="ckpt-v1:" + "a" * 64,
+        attempt_id="attempt-v1:" + "b" * 64,
+        run_id="run-risk-v3",
+        canonical_hash="c" * 64,
+        accepted_ts=SNAP_TS,
+        loaded_ts=SNAP_TS + timedelta(seconds=3),
+        observed_from_ts=SNAP_TS,
+        observed_to_ts=SNAP_TS,
+        coverage_start_ms=0,
+        coverage_end_ms=1,
+        positions=positions,
+        equity=equity,
+        withdrawable=withdrawable,
+        margin_used=margin_used,
+        available_margin=available,
+        exposure_policy_version=(
+            exposure_policy_version or RiskEngine().exposure_policy.version
+        ),
+    )
+
+
+def _v3_row(
+    symbol: str = "BTC",
+    size: float = 0.1,
+    *,
+    position_value: float = 100.0,
+    liquidation_px: float | None = 80.0,
+    leverage: int = 1,
+) -> RiskPositionRow:
+    return RiskPositionRow(
+        symbol,
+        size,
+        position_value=position_value,
+        liquidation_px=liquidation_px,
+        leverage=leverage,
+    )
+
+
+def _sym_signal(symbol: str, direction: str = "LONG", ref_price: float = 100.0) -> Signal:
+    return Signal(
+        ts=datetime(2026, 7, 6, tzinfo=UTC),
+        symbol=symbol,
+        direction=direction,
+        reason="test",
+        ref_price=ref_price,
+    )
+
+
+def _exposure_kwargs() -> dict:
+    return dict(
+        max_symbol_gross_pct=0.20,
+        max_portfolio_gross_pct=0.40,
+        max_wallet_margin_util_pct=0.25,
+        max_effective_leverage=1.0,
+        min_liquidation_distance_pct=0.15,
+    )
+
+
+# ---- immutable, versioned exposure policy ----
+
+
+def test_exposure_policy_versions_values_and_is_deterministic():
+    policy = ExposureRiskPolicy.create(
+        policy_id="ts-p1-008-v1", **_exposure_kwargs()
+    )
+    assert policy.policy_id == "ts-p1-008-v1"
+    assert policy.version.startswith("epol-v1:")
+    assert policy.max_symbol_gross_pct == 0.20
+    again = ExposureRiskPolicy.create(policy_id="ts-p1-008-v1", **_exposure_kwargs())
+    assert again.version == policy.version
+    other = ExposureRiskPolicy.create(
+        policy_id="ts-p1-008-v1",
+        max_symbol_gross_pct=0.25,
+        max_portfolio_gross_pct=0.40,
+        max_wallet_margin_util_pct=0.25,
+        max_effective_leverage=1.0,
+        min_liquidation_distance_pct=0.15,
+    )
+    assert other.version != policy.version
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        dict(policy_id="", **_exposure_kwargs()),
+        dict(policy_id="x", max_symbol_gross_pct=0.0, **{k: v for k, v in _exposure_kwargs().items() if k != "max_symbol_gross_pct"}),
+        dict(policy_id="x", max_portfolio_gross_pct=1.5, **{k: v for k, v in _exposure_kwargs().items() if k != "max_portfolio_gross_pct"}),
+        dict(policy_id="x", max_wallet_margin_util_pct=0.0, **{k: v for k, v in _exposure_kwargs().items() if k != "max_wallet_margin_util_pct"}),
+        dict(policy_id="x", max_effective_leverage=0.5, **{k: v for k, v in _exposure_kwargs().items() if k != "max_effective_leverage"}),
+        dict(policy_id="x", min_liquidation_distance_pct=1.5, **{k: v for k, v in _exposure_kwargs().items() if k != "min_liquidation_distance_pct"}),
+    ],
+)
+def test_exposure_policy_rejects_out_of_range_values(kwargs):
+    with pytest.raises(RiskPolicyInvalid):
+        ExposureRiskPolicy.create(**kwargs)
+
+
+# ---- v3 row carries per-position valuation evidence ----
+
+
+def test_v3_position_row_exposes_valuation_and_derived_mark():
+    row = _v3_row("BTC", 0.2, position_value=200.0, liquidation_px=800.0, leverage=1)
+    assert row.position_value == 200.0
+    assert row.liquidation_px == 800.0
+    assert row.leverage == 1
+    assert row.mark_price == 1000.0  # position_value / abs(size)
+    # v2 rows still construct with the predecessor two-arg shape.
+    legacy = RiskPositionRow("BTC", 0.0)
+    assert legacy.position_value is None
+    assert legacy.liquidation_px is None
+    assert legacy.leverage is None
+    assert legacy.mark_price is None
+
+
+# ---- a clean v3 snapshot authorizes; a v2 snapshot skips exposure entirely ----
+
+
+def test_v3_clean_snapshot_passes_every_exposure_gate():
+    engine = RiskEngine()  # defaults are the owner-approved D3A-E policy
+    result = engine.evaluate_authoritative(
+        signal=_signal("LONG", 100.0),
+        snapshot=_v3_snapshot(equity=1000.0, positions=()),
+        stop_loss=95.0,
+    )
+    assert result.accepted is True
+    assert result.plan is not None
+    names = [gate["name"] for gate in result.gate_results]
+    for gate in (
+        "LIQUIDATION_DISTANCE",
+        "EFFECTIVE_LEVERAGE",
+        "SYMBOL_GROSS",
+        "PORTFOLIO_GROSS",
+        "WALLET_UTILIZATION",
+    ):
+        assert gate in names
+    # exposure gates precede the existing NO_OPEN_POSITION gate.
+    assert names.index("WALLET_UTILIZATION") < names.index("NO_OPEN_POSITION")
+
+
+def test_v2_snapshot_does_not_run_exposure_gates():
+    engine = RiskEngine()
+    result = engine.evaluate_authoritative(
+        signal=_signal("LONG", 100.0),
+        snapshot=_snapshot(equity=1000.0),  # payload_version V2
+        stop_loss=95.0,
+    )
+    assert result.accepted is True
+    names = [gate["name"] for gate in result.gate_results]
+    assert "SYMBOL_GROSS" not in names
+    assert "LIQUIDATION_DISTANCE" not in names
+
+
+# ---- liquidation distance: direction, exact boundary, missing, wrong side ----
+
+
+def test_v3_long_liquidation_distance_blocks_at_exact_minimum():
+    # mark 1000, liq 850 -> distance exactly 0.15 -> fail closed at the boundary.
+    pos = _v3_row("BTC", 0.2, position_value=200.0, liquidation_px=850.0, leverage=1)
+    result = RiskEngine().evaluate_authoritative(
+        signal=_signal("LONG", 100.0), snapshot=_v3_snapshot(positions=(pos,)), stop_loss=95.0
+    )
+    assert result.accepted is False
+    assert result.rejection == LIQ_DISTANCE_BREACH
+    assert result.disarm is True
+
+
+def test_v3_long_liquidation_distance_passes_just_outside_minimum():
+    # mark 1000, liq 849 -> distance 0.151 > 0.15 -> passes the liq gate.
+    pos = _v3_row("BTC", 0.18, position_value=180.0, liquidation_px=849.0, leverage=1)
+    result = RiskEngine().evaluate_authoritative(
+        signal=_signal("LONG", 100.0), snapshot=_v3_snapshot(positions=(pos,)), stop_loss=95.0
+    )
+    # It still blocks later on NO_OPEN_POSITION, but NOT on liquidation distance.
+    assert result.rejection != LIQ_DISTANCE_BREACH
+
+
+def test_v3_short_liquidation_distance_blocks_at_exact_minimum():
+    # short: size negative, liq above mark. distance = (liq-mark)/mark.
+    pos = _v3_row("BTC", -0.2, position_value=200.0, liquidation_px=1150.0, leverage=1)
+    result = RiskEngine().evaluate_authoritative(
+        signal=_signal("LONG", 100.0), snapshot=_v3_snapshot(positions=(pos,)), stop_loss=95.0
+    )
+    assert result.accepted is False
+    assert result.rejection == LIQ_DISTANCE_BREACH
+
+
+def test_v3_missing_liquidation_on_nonzero_position_fails_closed():
+    pos = RiskPositionRow("BTC", 0.2, position_value=200.0, liquidation_px=None, leverage=1)
+    result = RiskEngine().evaluate_authoritative(
+        signal=_signal("LONG", 100.0), snapshot=_v3_snapshot(positions=(pos,)), stop_loss=95.0
+    )
+    assert result.accepted is False
+    assert result.rejection == EXPOSURE_EVIDENCE_INVALID
+    assert result.disarm is True
+
+
+def test_v3_wrong_side_liquidation_fails_closed():
+    # long position but liquidation above mark -> wrong-side evidence.
+    pos = _v3_row("BTC", 0.2, position_value=200.0, liquidation_px=1200.0, leverage=1)
+    result = RiskEngine().evaluate_authoritative(
+        signal=_signal("LONG", 100.0), snapshot=_v3_snapshot(positions=(pos,)), stop_loss=95.0
+    )
+    assert result.accepted is False
+    assert result.rejection == EXPOSURE_EVIDENCE_INVALID
+
+
+# ---- reported vs effective leverage ----
+
+
+def test_v3_reported_leverage_above_cap_blocks():
+    pos = _v3_row("BTC", 0.2, position_value=200.0, liquidation_px=800.0, leverage=2)
+    result = RiskEngine().evaluate_authoritative(
+        signal=_signal("LONG", 100.0), snapshot=_v3_snapshot(positions=(pos,)), stop_loss=95.0
+    )
+    assert result.accepted is False
+    assert result.rejection == LEVERAGE_REPORTED_BREACH
+
+
+def test_v3_effective_leverage_above_cap_blocks_even_when_reported_is_one():
+    # six foreign positions, each reported 1x, gross 1200 > 1000 equity.
+    positions = tuple(
+        _v3_row(sym, 0.2, position_value=200.0, liquidation_px=800.0, leverage=1)
+        for sym in ("BTC", "ETH", "SOL", "DOGE", "XRP", "ADA")
+    )
+    result = RiskEngine().evaluate_authoritative(
+        signal=_sym_signal("LINK", "LONG", 100.0),
+        snapshot=_v3_snapshot(equity=1000.0, positions=positions),
+        stop_loss=95.0,
+    )
+    assert result.accepted is False
+    assert result.rejection == LEVERAGE_EFFECTIVE_BREACH
+
+
+# ---- symbol gross exposure counts existing same-symbol position once ----
+
+
+def test_v3_symbol_gross_counts_existing_position_and_blocks():
+    # existing BTC 180 (18%), projected order 100 -> 280 > 200 cap.
+    pos = _v3_row("BTC", 0.18, position_value=180.0, liquidation_px=800.0, leverage=1)
+    result = RiskEngine().evaluate_authoritative(
+        signal=_signal("LONG", 100.0), snapshot=_v3_snapshot(positions=(pos,)), stop_loss=95.0
+    )
+    assert result.accepted is False
+    assert result.rejection == SYMBOL_GROSS_BREACH
+    detail = next(g["detail"] for g in result.gate_results if g["name"] == "SYMBOL_GROSS")
+    assert detail["symbol_gross"] == 280.0
+
+
+def test_v3_projected_order_counted_once_across_retries():
+    # existing BTC 100 (10%) + projected 100 -> 200 == cap -> exact boundary blocks.
+    pos = _v3_row("BTC", 0.1, position_value=100.0, liquidation_px=800.0, leverage=1)
+    engine = RiskEngine()
+    first = engine.evaluate_authoritative(
+        signal=_signal("LONG", 100.0), snapshot=_v3_snapshot(positions=(pos,)), stop_loss=95.0
+    )
+    second = engine.evaluate_authoritative(
+        signal=_signal("LONG", 100.0), snapshot=_v3_snapshot(positions=(pos,)), stop_loss=95.0
+    )
+    assert first.rejection == SYMBOL_GROSS_BREACH
+    assert first.rejection == second.rejection
+    detail = next(g["detail"] for g in first.gate_results if g["name"] == "SYMBOL_GROSS")
+    assert detail["symbol_gross"] == 200.0  # 100 existing + 100 projected, once
+
+
+# ---- portfolio gross exposure: no netting, foreign positions count ----
+
+
+def test_v3_portfolio_gross_does_not_net_offsetting_positions():
+    # three foreign positions, each 15% (under the 20% symbol cap): two long, one short.
+    # gross 450 > 400 portfolio cap; a net view (150) would pass.
+    positions = (
+        _v3_row("BTC", 0.15, position_value=150.0, liquidation_px=800.0, leverage=1),
+        _v3_row("ETH", -0.10, position_value=150.0, liquidation_px=2200.0, leverage=1),  # mark 1500
+        _v3_row("SOL", 0.15, position_value=150.0, liquidation_px=800.0, leverage=1),
+    )
+    result = RiskEngine().evaluate_authoritative(
+        signal=_sym_signal("DOGE", "LONG", 100.0),
+        snapshot=_v3_snapshot(equity=1000.0, positions=positions),
+        stop_loss=95.0,
+    )
+    assert result.accepted is False
+    assert result.rejection == PORTFOLIO_GROSS_BREACH
+    detail = next(g["detail"] for g in result.gate_results if g["name"] == "PORTFOLIO_GROSS")
+    assert detail["portfolio_gross"] == 550.0  # 450 existing + 100 projected
+
+
+def test_v3_foreign_position_counts_for_portfolio_gross():
+    # a single foreign position at 45% of equity breaches portfolio gross directly.
+    pos = _v3_row("FOREIGN", 0.45, position_value=450.0, liquidation_px=800.0, leverage=1)
+    result = RiskEngine().evaluate_authoritative(
+        signal=_signal("LONG", 100.0), snapshot=_v3_snapshot(positions=(pos,)), stop_loss=95.0
+    )
+    assert result.rejection == SYMBOL_GROSS_BREACH
+
+
+# ---- wallet margin utilization from the same checkpoint ----
+
+
+def test_v3_wallet_utilization_blocks_at_exact_cap():
+    # margin_used 250 / equity 1000 = 0.25 == cap -> fail closed.
+    snap = _v3_snapshot(
+        equity=1000.0, margin_used=250.0, available=750.0, withdrawable=750.0, positions=()
+    )
+    result = RiskEngine().evaluate_authoritative(
+        signal=_signal("LONG", 100.0), snapshot=snap, stop_loss=95.0
+    )
+    assert result.accepted is False
+    assert result.rejection == WALLET_UTIL_BREACH
+
+
+# ---- malformed / nonfinite evidence never authorizes ----
+
+
+@pytest.mark.parametrize(
+    "position_value,liquidation_px",
+    [
+        (float("inf"), 800.0),
+        (float("nan"), 800.0),
+        (-1.0, 800.0),
+        (0.0, 800.0),  # zero position value for a nonzero size
+    ],
+)
+def test_v3_malformed_position_evidence_fails_closed(position_value, liquidation_px):
+    pos = RiskPositionRow(
+        "BTC", 0.2, position_value=position_value, liquidation_px=liquidation_px, leverage=1
+    )
+    result = RiskEngine().evaluate_authoritative(
+        signal=_signal("LONG", 100.0), snapshot=_v3_snapshot(positions=(pos,)), stop_loss=95.0
+    )
+    assert result.accepted is False
+    assert result.rejection == EXPOSURE_EVIDENCE_INVALID
+
+
+def test_v3_gate_evidence_records_policy_version_without_secrets():
+    pos = _v3_row("BTC", 0.2, position_value=200.0, liquidation_px=850.0, leverage=1)
+    result = RiskEngine().evaluate_authoritative(
+        signal=_signal("LONG", 100.0), snapshot=_v3_snapshot(positions=(pos,)), stop_loss=95.0
+    )
+    detail = next(g["detail"] for g in result.gate_results if g["name"] == "LIQUIDATION_DISTANCE")
+    # Contract: the reason evidence records metric, scope, threshold, checkpoint
+    # and policy version, without secrets.
+    assert detail["policy_version"].startswith("epol-v1:")
+    assert detail["checkpoint_id"].startswith("ckpt-v1:")
+    assert detail["minimum"] == 0.15
+    dumped = repr(detail)
+    # No wallet/key/credential material is ever embedded in gate evidence.
+    for secret in ("wallet", "api_wallet", "0x", "credential", "secret"):
+        assert secret not in dumped.lower()

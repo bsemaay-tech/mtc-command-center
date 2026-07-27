@@ -119,6 +119,7 @@ class MockBroker:
     full_page_size: int = 0
     full_clock: Callable[[], datetime] | None = None
     full_calls: list[str] = field(default_factory=list)
+    exposure_capture_enabled: bool = False
 
     @classmethod
     def from_csv(cls, path: str | Path, starting_equity: float = 10_000.0) -> "MockBroker":
@@ -812,10 +813,19 @@ class MockBroker:
     async def portfolio_evidence(self) -> PortfolioEvidence:
         self.full_calls.append("portfolio_evidence")
         await self._full_delay(ReconcileComponentKind.POSITIONS)
-        positions = [
-            {"symbol": str(row.get("symbol", self.coin)), "size": row.get("size")}
-            for row in self.full_positions
-        ]
+        positions = []
+        for row in self.full_positions:
+            position_row = {
+                "symbol": str(row.get("symbol", self.coin)),
+                "size": row.get("size"),
+            }
+            if self.exposure_capture_enabled:
+                position_row.update(
+                    position_value=row.get("position_value"),
+                    liquidation_px=row.get("liquidation_px"),
+                    leverage=row.get("leverage"),
+                )
+            positions.append(position_row)
         account = dict(self.full_account)
         # Balances and margin are *derived from the same single read*, so they
         # cost zero extra calls — mirroring the real adapter's budget.

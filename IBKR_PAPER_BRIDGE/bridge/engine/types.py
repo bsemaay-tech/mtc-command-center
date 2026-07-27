@@ -1129,6 +1129,20 @@ carries no authoritative portfolio rows, so it can never authorize v6 risk.
 SNAPSHOT_PAYLOAD_VERSION_V2 = "ts-p1-006-snapshot-v2"
 """TS-P1-006 payload marker: v1 content plus canonical risk-bearing rows."""
 
+SNAPSHOT_PAYLOAD_VERSION_V3 = "ts-p1-008-snapshot-v3"
+"""TS-P1-008 payload marker: v2 content plus per-position valuation, leverage
+and a directional liquidation price for the exposure/leverage/liquidation gates.
+
+A v3 POSITIONS row is the v2 ``{symbol, size}`` schema extended with
+``position_value`` (nonnegative gross mark notional), ``liquidation_px``
+(directional, optional only for a zero-size row) and ``leverage`` (the reported
+exchange leverage). The mark price is derived as ``position_value / abs(size)``
+for any nonzero size, never read from entry or signal price. v3 is produced and
+consumed only on an opt-in schema-v8 store; v4-v7 stores keep v2 byte-for-byte
+and a v2 checkpoint can never authorize v8 risk. See
+``docs/29_TSP1008_EXPOSURE_LEVERAGE_LIQUIDATION.md``.
+"""
+
 RISK_SNAPSHOT_COMPONENTS: tuple[ReconcileComponentKind, ...] = (
     ReconcileComponentKind.BALANCES,
     ReconcileComponentKind.MARGIN,
@@ -1197,6 +1211,33 @@ RISK_CONTROL_ORDER = (
     RISK_CONTROL_MAX_DRAWDOWN,
 )
 
+# TS-P1-008 exposure / leverage / liquidation reason vocabulary. Stable,
+# secret-safe and observable: each records the metric, scope, threshold,
+# checkpoint and policy version without ever embedding secrets. Every code is a
+# fail-closed veto that DISARMs before submission; none authorize a later gate.
+EXPOSURE_EVIDENCE_INVALID = "EXPOSURE_EVIDENCE_INVALID"
+"""A v3 position row is missing, non-finite, negative, zero-for-nonzero-size,
+incoherent with its derived mark, or carries a missing / wrong-side liquidation
+price on a nonzero position (including at 1x). No coercion, clamp or fallback."""
+LIQ_DISTANCE_BREACH = "LIQ_DISTANCE_BREACH"
+"""Directional liquidation distance ``(mark-liq)/mark`` (long) or
+``(liq-mark)/mark`` (short) is at or below the configured minimum."""
+LEVERAGE_REPORTED_BREACH = "LEVERAGE_REPORTED_BREACH"
+"""A reported exchange position leverage is at or above the effective-leverage cap."""
+LEVERAGE_EFFECTIVE_BREACH = "LEVERAGE_EFFECTIVE_BREACH"
+"""Portfolio gross notional / equity (including the projected order once) is at
+or above the effective-leverage cap."""
+SYMBOL_GROSS_BREACH = "SYMBOL_GROSS_BREACH"
+"""Gross mark notional for one symbol (existing rows plus the projected order
+once) is at or above the per-symbol cap; long/short are never netted."""
+PORTFOLIO_GROSS_BREACH = "PORTFOLIO_GROSS_BREACH"
+"""Gross mark notional across the whole wallet (every nonzero row, foreign
+positions included, plus the projected order once) is at or above the portfolio
+cap; offsetting positions are never netted."""
+WALLET_UTIL_BREACH = "WALLET_UTIL_BREACH"
+"""``margin_used / equity`` from the same checkpoint is at or above the wallet
+margin utilization cap."""
+
 
 class RiskPolicyInvalid(ValueError):
     """A durable risk policy is incomplete, non-finite, or unsafe."""
@@ -1253,6 +1294,95 @@ class DurableRiskPolicy:
             max_daily_loss_pct=float(max_daily_loss_pct),
             max_intraday_drawdown_pct=float(max_intraday_drawdown_pct),
             equity_floor_usdc=float(equity_floor_usdc),
+            version=version,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ExposureRiskPolicy:
+    """Immutable, versioned TS-P1-008 exposure / leverage / liquidation policy.
+
+    Mirrors :class:`DurableRiskPolicy`: the five owner-approved thresholds are
+    validated at construction and hashed into an immutable ``version``. A later
+    owner-approved configuration change produces a new version; old checkpoints
+    and decisions retain the exact version and values under which they were
+    evaluated. No dashboard or runtime actor may change these implicitly.
+
+    Percent thresholds are stored as fractions in ``(0, 1]``; the effective
+    leverage multiple is ``>= 1.0``. Every gate is fail-closed at its exact
+    boundary.
+    """
+
+    policy_id: str
+    max_symbol_gross_pct: float
+    max_portfolio_gross_pct: float
+    max_wallet_margin_util_pct: float
+    max_effective_leverage: float
+    min_liquidation_distance_pct: float
+    version: str
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        policy_id: str,
+        max_symbol_gross_pct: float,
+        max_portfolio_gross_pct: float,
+        max_wallet_margin_util_pct: float,
+        max_effective_leverage: float,
+        min_liquidation_distance_pct: float,
+    ) -> ExposureRiskPolicy:
+        if not isinstance(policy_id, str) or not policy_id.strip():
+            raise RiskPolicyInvalid("policy_id is required")
+        pct_values = {
+            "max_symbol_gross_pct": max_symbol_gross_pct,
+            "max_portfolio_gross_pct": max_portfolio_gross_pct,
+            "max_wallet_margin_util_pct": max_wallet_margin_util_pct,
+            "min_liquidation_distance_pct": min_liquidation_distance_pct,
+        }
+        for name, value in pct_values.items():
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise RiskPolicyInvalid(f"{name} must be numeric")
+            if not math.isfinite(float(value)):
+                raise RiskPolicyInvalid(f"{name} must be finite")
+        for name, value in pct_values.items():
+            if not 0.0 < float(value) <= 1.0:
+                raise RiskPolicyInvalid(f"{name} must be in (0, 1]")
+        if isinstance(max_effective_leverage, bool) or not isinstance(
+            max_effective_leverage, (int, float)
+        ):
+            raise RiskPolicyInvalid("max_effective_leverage must be numeric")
+        if not math.isfinite(float(max_effective_leverage)):
+            raise RiskPolicyInvalid("max_effective_leverage must be finite")
+        if float(max_effective_leverage) < 1.0:
+            raise RiskPolicyInvalid("max_effective_leverage must be >= 1.0")
+        if float(max_portfolio_gross_pct) < float(max_symbol_gross_pct):
+            # A portfolio cap below the per-symbol cap is internally contradictory
+            # and would make the symbol gate unreachable; reject at policy build
+            # time rather than silently at evaluation time.
+            raise RiskPolicyInvalid(
+                "max_portfolio_gross_pct must be >= max_symbol_gross_pct"
+            )
+        payload = json.dumps(
+            {
+                "policy_id": policy_id.strip(),
+                "max_symbol_gross_pct": float(max_symbol_gross_pct).hex(),
+                "max_portfolio_gross_pct": float(max_portfolio_gross_pct).hex(),
+                "max_wallet_margin_util_pct": float(max_wallet_margin_util_pct).hex(),
+                "max_effective_leverage": float(max_effective_leverage).hex(),
+                "min_liquidation_distance_pct": float(min_liquidation_distance_pct).hex(),
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        version = f"epol-v1:{hashlib.sha256(payload.encode('utf-8')).hexdigest()}"
+        return cls(
+            policy_id=policy_id.strip(),
+            max_symbol_gross_pct=float(max_symbol_gross_pct),
+            max_portfolio_gross_pct=float(max_portfolio_gross_pct),
+            max_wallet_margin_util_pct=float(max_wallet_margin_util_pct),
+            max_effective_leverage=float(max_effective_leverage),
+            min_liquidation_distance_pct=float(min_liquidation_distance_pct),
             version=version,
         )
 
@@ -1426,17 +1556,66 @@ class _FrozenRecord(tuple):
 
 
 class RiskPositionRow(_FrozenRecord):
-    """One canonical reconciled position from the accepted capture."""
+    """One canonical reconciled position from the accepted capture.
+
+    A v2 row (schema v4-v7) carries only ``symbol`` and ``size``; the v3 fields
+    (:attr:`position_value`, :attr:`liquidation_px`, :attr:`leverage`) are
+    ``None``. A v3 row (schema v8) carries the per-position valuation, the
+    directional liquidation price and the reported leverage from the same
+    ``user_state`` epoch. The mark price is always *derived* from
+    ``position_value / abs(size)`` for a nonzero size, never stored or read from
+    an entry/signal price.
+    """
 
     __slots__ = ()
 
-    def __new__(cls, symbol: str, size: float) -> RiskPositionRow:
-        return tuple.__new__(cls, (str(symbol), float(size)))
+    def __new__(
+        cls,
+        symbol: str,
+        size: float,
+        *,
+        position_value: float | None = None,
+        liquidation_px: float | None = None,
+        leverage: float | None = None,
+    ) -> RiskPositionRow:
+        base = (str(symbol), float(size))
+        if position_value is None and liquidation_px is None and leverage is None:
+            return tuple.__new__(cls, base)
+        return tuple.__new__(cls, base + (position_value, liquidation_px, leverage))
 
     symbol = _frozen_field(0, "symbol", "Exchange symbol, non-empty and unique.")
     size = _frozen_field(1, "size", "Signed net position size; finite.")
+    @property
+    def position_value(self) -> float | None:
+        return self[2] if len(self) == 5 else None
+
+    @property
+    def liquidation_px(self) -> float | None:
+        return self[3] if len(self) == 5 else None
+
+    @property
+    def leverage(self) -> float | None:
+        return self[4] if len(self) == 5 else None
+
+    @property
+    def is_v3(self) -> bool:
+        """True when this row carries TS-P1-008 per-position valuation evidence."""
+        return self.position_value is not None
+
+    @property
+    def mark_price(self) -> float | None:
+        """Derived mark price ``position_value / abs(size)`` for a nonzero v3 row."""
+        if self.position_value is None or self.size == 0.0:
+            return None
+        return self.position_value / abs(self.size)
 
     def __repr__(self) -> str:
+        if self.is_v3:
+            return (
+                f"RiskPositionRow(symbol={self.symbol!r}, size={self.size!r}, "
+                f"position_value={self.position_value!r}, "
+                f"liquidation_px={self.liquidation_px!r}, leverage={self.leverage!r})"
+            )
         return f"RiskPositionRow(symbol={self.symbol!r}, size={self.size!r})"
 
 
@@ -1470,6 +1649,7 @@ class AuthoritativeRiskSnapshot(_FrozenRecord):
         withdrawable: float,
         margin_used: float,
         available_margin: float,
+        exposure_policy_version: str | None = None,
     ) -> AuthoritativeRiskSnapshot:
         return tuple.__new__(
             cls,
@@ -1490,6 +1670,7 @@ class AuthoritativeRiskSnapshot(_FrozenRecord):
                 float(withdrawable),
                 float(margin_used),
                 float(available_margin),
+                None if exposure_policy_version is None else str(exposure_policy_version),
             ),
         )
 
@@ -1509,6 +1690,9 @@ class AuthoritativeRiskSnapshot(_FrozenRecord):
     withdrawable = _frozen_field(13, "withdrawable", "Withdrawable balance at the observation.")
     margin_used = _frozen_field(14, "margin_used", "Margin used at the observation.")
     available_margin = _frozen_field(15, "available_margin", "Available margin at the observation.")
+    exposure_policy_version = _frozen_field(
+        16, "exposure_policy_version", "Policy hash bound into a v3 checkpoint."
+    )
 
     @property
     def age_s(self) -> float:

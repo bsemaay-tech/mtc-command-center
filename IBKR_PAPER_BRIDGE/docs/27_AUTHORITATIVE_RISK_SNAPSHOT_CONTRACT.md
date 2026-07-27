@@ -102,3 +102,11 @@ and policy version. A pointer move, UTC-date
 change, missing baseline, policy mismatch, malformed row, or active durable
 latch fails closed. Schema v4 remains the application default; v6 behavior is
 unchanged when v7 is inactive.
+
+## TS-P1-008 extension
+
+Schema v8 requires `ts-p1-008-snapshot-v3`. Each nonzero position carries
+same-epoch gross mark notional, reported leverage, and directional liquidation
+price, and the checkpoint hash binds the exposure-policy version. Legacy v1/v2
+evidence is retained but cannot authorize v8. Loading, ARM, and entry evaluation
+fail closed on missing, stale, tampered, policy-mismatched, or invalid evidence.

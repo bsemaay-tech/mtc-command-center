@@ -771,3 +771,12 @@ control latch/reset evidence. The reconcile transaction derives them from the
 same accepted account checkpoint; the pure risk engine consumes the paired
 portfolio/daily view. The runtime default remains schema v4, so activation and
 operational migration require separate owner authorization.
+
+# Exposure-control layer (opt-in schema v8)
+
+TS-P1-008 enriches the same accepted account observation with position gross
+mark notional, reported leverage, and liquidation price. Independent risk
+checks symbol/portfolio gross exposure, wallet utilization, effective leverage,
+and directional liquidation distance both at ARM and before submission. The
+one-position gate remains and no scheduler or automatic broker mutation is
+introduced. Default schema remains v4.
