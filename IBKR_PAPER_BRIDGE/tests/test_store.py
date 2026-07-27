@@ -1163,6 +1163,10 @@ def _accept_v2(
     bypass_accept_validation: bool = False,
     diffs=(),
     coverage_start_ms: int = 0,
+    run_id: str = "run",
+    risk_policy=None,
+    funding_rows=(),
+    funding_events=(),
 ):
     """Accept one checkpoint whose payload carries canonical risk rows.
 
@@ -1187,9 +1191,11 @@ def _accept_v2(
     )
 
     rows = {**DEFAULT_RISK_ROWS, **(risk_rows or {})}
+    if funding_rows:
+        rows = {**rows, "FUNDING": list(funding_rows)}
     version = payload_version or SNAPSHOT_PAYLOAD_VERSION_V2
     attempt_id = store.reserve_reconcile_attempt(
-        run_id="run", started_ts=now, deadline_s=5.0, max_skew_s=5.0
+        run_id=run_id, started_ts=now, deadline_s=5.0, max_skew_s=5.0
     )
     components = tuple(
         ComponentEvidence(
@@ -1211,7 +1217,7 @@ def _accept_v2(
     by_kind = {component.kind.value: component for component in components}
     payload = {
         "version": version,
-        "run_id": "run",
+        "run_id": run_id,
         "risk_rows": {
             kind.value: by_kind[kind.value].canonical_rows()
             for kind in RISK_SNAPSHOT_COMPONENTS
@@ -1228,8 +1234,10 @@ def _accept_v2(
             for component in components
         },
         "diffs": [diff.canonical() for diff in diffs],
-        "funding_event_ids": [],
-        "funding_event_digests": {},
+        "funding_event_ids": sorted(event.event_id for event in funding_events),
+        "funding_event_digests": {
+            event.event_id: event.digest for event in funding_events
+        },
     }
     canonical_hash = reconcile_digest({
         "version": version,
@@ -1253,9 +1261,10 @@ def _accept_v2(
         accepted=True,
         fresh=True,
         components=components,
-        funding_events=(),
+        funding_events=funding_events,
         snapshot_payload=payload,
         coverage_upper_bound_ms=coverage_ms,
+        **({} if risk_policy is None else {"risk_policy": risk_policy}),
     )
     if bypass_accept_validation:
         # Keep the descriptor itself so the restore cannot silently turn a
@@ -1845,3 +1854,1012 @@ def test_a_concurrent_capture_cannot_mix_two_epochs_into_one_snapshot(tmp_path):
     assert fresh.positions == (("BTC", 7.0),)
     reader.close()
     competitor.close()
+
+
+# ---------------------------------------------------------------------------
+# TS-P1-007 — durable daily-risk state, exact thresholds and control latches
+#
+# Owner policy (TS_P1_007_GATE1_FINAL.md §11, ratified 2026-07-27):
+#   D1=A whole-account authoritative equity change from the accepted checkpoint
+#   D2=A UTC day; baseline = last accepted checkpoint at/before 00:00 UTC
+#   D3A=2% daily loss, D3B=5% intraday drawdown, D3C=500 USDC equity floor
+#   D4=A sticky latches with human-gated reset/supersession
+#   D5=A opt-in additive schema v7; the default schema stays v4
+#
+# Every assertion below drives real persisted evidence through the production
+# accept path; nothing injects a daily-risk number straight into a gate.
+# ---------------------------------------------------------------------------
+
+D3A_DAILY_LOSS_PCT = 0.02
+D3B_MAX_DRAWDOWN_PCT = 0.05
+D3C_EQUITY_FLOOR_USDC = 500.0
+
+DAY = datetime(2026, 7, 26, 0, 0, tzinfo=UTC)
+
+
+def _policy(**overrides):
+    from bridge.engine.types import DurableRiskPolicy
+
+    values = {
+        "policy_id": "ts-p1-007-v1",
+        "max_daily_loss_pct": D3A_DAILY_LOSS_PCT,
+        "max_intraday_drawdown_pct": D3B_MAX_DRAWDOWN_PCT,
+        "equity_floor_usdc": D3C_EQUITY_FLOOR_USDC,
+    }
+    values.update(overrides)
+    return DurableRiskPolicy.create(**values)
+
+
+def _v7_store(tmp_path, name="risk.db", *, run_id="run", mode="paper", network="testnet"):
+    store = Store(tmp_path / name)
+    store.initialize(target_schema_version=7)
+    store.create_run(run_id, mode, network, {})
+    return store
+
+
+def _equity_rows(equity, *, margin_used=0.0):
+    """Risk rows that satisfy the TS-P1-005 account identity for one equity."""
+    equity = float(equity)
+    margin_used = float(margin_used)
+    return {
+        "POSITIONS": [],
+        "BALANCES": [{"equity": equity, "withdrawable": equity - margin_used}],
+        "MARGIN": [
+            {"margin_used": margin_used, "available_margin": equity - margin_used}
+        ],
+    }
+
+
+def _accept_equity(store, *, now, equity, policy, run_id="run", **kwargs):
+    """One accepted v2 checkpoint whose BALANCES row carries ``equity``."""
+    return _accept_v2(
+        store,
+        now=now,
+        coverage_ms=_ms(now),
+        risk_rows=_equity_rows(equity),
+        run_id=run_id,
+        risk_policy=policy,
+        **kwargs,
+    )
+
+
+def _day_rows(store):
+    return store.list_risk_day_checkpoints()
+
+
+def _latch_rows(store):
+    return store.list_risk_control_latches()
+
+
+# --- D5=A: the opt-in migration itself --------------------------------------
+
+
+def test_v7_is_opt_in_and_the_default_target_still_lands_on_v4(tmp_path):
+    from bridge.store.db import SCHEMA_VERSION_DURABLE_RISK, Store
+
+    assert SCHEMA_VERSION_DURABLE_RISK == 7
+    store = Store(tmp_path / "bridge.db")
+    store.initialize()
+
+    assert store.get_meta("schema_version") == "4"
+    assert store.durable_risk_controls_enabled() is False
+    assert store.full_reconcile_enabled() is False
+    assert store.conn.execute(
+        "SELECT name FROM sqlite_master WHERE name IN "
+        "('risk_day_checkpoints', 'risk_control_latches')"
+    ).fetchall() == []
+    store.close()
+
+
+def test_v4_chain_reaches_v7_and_keeps_every_predecessor_ledger(tmp_path):
+    store, trade_id, _now = _v4_with_trade(tmp_path)
+    orders = [dict(r) for r in store.conn.execute("SELECT * FROM orders")]
+    trades = [dict(r) for r in store.conn.execute("SELECT * FROM trades")]
+    store.close()
+
+    upgraded = Store(tmp_path / "bridge.db")
+    upgraded.initialize(target_schema_version=7)
+
+    assert upgraded.get_meta("schema_version") == "7"
+    objects = _existing_objects(upgraded)
+    assert {"risk_day_checkpoints", "risk_control_latches"} <= objects
+    assert set(_V6_OBJECTS) <= objects
+    assert {"partial_fill_recoveries", "partial_fill_actions"} <= objects
+    # v6 capability must survive the bump, or TS-P1-006 risk silently switches
+    # off the moment TS-P1-007 is enabled.
+    assert upgraded.full_reconcile_enabled() is True
+    assert upgraded.partial_protection_enabled() is True
+    assert upgraded.durable_risk_controls_enabled() is True
+    # Strictly additive: no pre-existing evidence row is touched, no backfill.
+    assert [dict(r) for r in upgraded.conn.execute("SELECT * FROM orders")] == orders
+    assert [dict(r) for r in upgraded.conn.execute("SELECT * FROM trades")] == trades
+    assert _day_rows(upgraded) == []
+    assert _latch_rows(upgraded) == []
+    assert int(trade_id) > 0
+    upgraded.close()
+
+
+def test_v7_migration_rolls_back_to_a_reopenable_v6_and_keeps_failure_evidence(tmp_path):
+    from bridge.store.db import (
+        RISK_CONTROLS_MIGRATION_FAILURE_KEY,
+        MigrationError,
+        Store,
+    )
+
+    path = tmp_path / "bridge.db"
+    store = Store(path)
+    store.initialize(target_schema_version=6)
+    store.create_run("run", "paper", "testnet", {})
+    accepted = _accept_v2(store, now=NOW, coverage_ms=_ms(NOW))
+    before = {
+        table: int(store.conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0])
+        for table in _V6_OBJECTS
+    }
+    store.close()
+
+    class FailingStore(Store):
+        def _validate_durable_risk_schema_v7(self):
+            raise MigrationError("injected v7 validation failure")
+
+    failing = FailingStore(path)
+    with pytest.raises(MigrationError):
+        failing.initialize(target_schema_version=7)
+
+    assert failing.get_meta("schema_version") == "6"
+    assert not (
+        _existing_objects(failing) & {"risk_day_checkpoints", "risk_control_latches"}
+    )
+    assert {
+        table: int(failing.conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0])
+        for table in _V6_OBJECTS
+    } == before
+    # A secret-safe failure record survives outside the rolled-back transaction.
+    failure = failing.get_meta(RISK_CONTROLS_MIGRATION_FAILURE_KEY)
+    assert failure is not None and "injected" not in failure
+    assert failure.startswith("RISK_CONTROLS_MIGRATION_FAILED")
+    failing.close()
+
+    # The predecessor is still a valid, reopenable v6 with its checkpoint intact.
+    reopened = Store(path)
+    reopened.initialize(target_schema_version=6)
+    assert reopened.get_meta("schema_version") == "6"
+    assert reopened.latest_accepted_reconcile_checkpoint()["attempt_id"] == accepted
+    assert reopened.durable_risk_controls_enabled() is False
+    reopened.close()
+
+
+def test_v7_migration_aborts_on_a_preexisting_object_and_rolls_back(tmp_path):
+    from bridge.store.db import MigrationError, Store
+
+    path = tmp_path / "bridge.db"
+    store = Store(path)
+    store.initialize(target_schema_version=6)
+    store.conn.execute("CREATE TABLE risk_control_latches (bogus TEXT)")
+    store.conn.commit()
+
+    with pytest.raises(MigrationError):
+        store._migrate_v6_to_v7()
+
+    assert store.get_meta("schema_version") == "6"
+    assert "risk_day_checkpoints" not in _existing_objects(store)
+    store.close()
+
+
+def test_schema_version_claiming_v7_without_v7_objects_fails_closed(tmp_path):
+    path = tmp_path / "bridge.db"
+    store = Store(path)
+    store.initialize(target_schema_version=6)
+    store.conn.execute(
+        "INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', '7')"
+    )
+    store.conn.commit()
+    store.close()
+
+    reopened = Store(path)
+    with pytest.raises(RuntimeError, match="Unsupported schema_version"):
+        reopened.initialize(target_schema_version=7)
+    reopened.close()
+
+
+def test_v7_reopen_rejects_a_tampered_topology(tmp_path):
+    from bridge.store.db import MigrationError, Store
+
+    path = tmp_path / "bridge.db"
+    store = Store(path)
+    store.initialize(target_schema_version=7)
+    store.conn.execute("DROP TABLE risk_control_latches")
+    store.conn.commit()
+    store.close()
+
+    reopened = Store(path)
+    with pytest.raises(MigrationError):
+        reopened.initialize(target_schema_version=7)
+    reopened.close()
+
+
+def test_v7_reopen_rejects_same_named_trigger_with_wrong_semantics(tmp_path):
+    from bridge.store.db import MigrationError, Store
+
+    path = tmp_path / "bridge.db"
+    store = Store(path)
+    store.initialize(target_schema_version=7)
+    store.conn.execute("DROP TRIGGER risk_day_checkpoints_immutable_update")
+    store.conn.execute(
+        """CREATE TRIGGER risk_day_checkpoints_immutable_update
+           BEFORE INSERT ON risk_day_checkpoints BEGIN SELECT 1; END"""
+    )
+    store.conn.commit()
+    store.close()
+
+    reopened = Store(path)
+    with pytest.raises(MigrationError):
+        reopened.initialize(target_schema_version=7)
+    reopened.close()
+
+
+def test_v7_database_reopened_with_the_default_target_is_never_downgraded(tmp_path):
+    path = tmp_path / "bridge.db"
+    store = Store(path)
+    store.initialize(target_schema_version=7)
+    store.close()
+
+    reopened = Store(path)
+    reopened.initialize()
+    assert reopened.get_meta("schema_version") == "7"
+    assert reopened.durable_risk_controls_enabled() is True
+    reopened.close()
+
+
+# --- D2=A: the UTC day baseline ---------------------------------------------
+
+
+def test_first_v7_day_has_no_baseline_and_risk_blocks_instead_of_inventing_one(tmp_path):
+    from bridge.engine.types import RISK_DAY_BASELINE_MISSING, RiskSnapshotUnavailable
+
+    policy = _policy()
+    store = _v7_store(tmp_path)
+    noon = DAY + timedelta(hours=12)
+    _accept_equity(store, now=noon, equity=10_000.0, policy=policy)
+
+    rows = _day_rows(store)
+    assert len(rows) == 1
+    assert rows[0]["trading_date"] == "2026-07-26"
+    assert rows[0]["equity"] == 10_000.0
+    assert rows[0]["baseline_source"] == "MISSING"
+    assert rows[0]["baseline_equity"] is None
+    assert rows[0]["daily_pnl"] is None
+    assert rows[0]["mode"] == "paper" and rows[0]["network"] == "testnet"
+
+    with pytest.raises(RiskSnapshotUnavailable) as excinfo:
+        store.load_durable_risk_view(
+            now=noon + timedelta(seconds=5),
+            max_age_s=900.0,
+            policy_version=policy.version,
+        )
+    assert excinfo.value.reason_code == RISK_DAY_BASELINE_MISSING
+    store.close()
+
+
+def test_baseline_is_the_last_accepted_checkpoint_at_or_before_utc_midnight(tmp_path):
+    policy = _policy()
+    store = _v7_store(tmp_path)
+
+    # Yesterday: two observations; the later one is the day-start authority.
+    _accept_equity(store, now=DAY - timedelta(hours=6), equity=9_000.0, policy=policy)
+    _accept_equity(store, now=DAY - timedelta(minutes=1), equity=10_000.0, policy=policy)
+    # Exactly 00:00:00Z belongs to the new day *and* is at/before midnight, so it
+    # is the strongest possible baseline for it.
+    midnight = _accept_equity(store, now=DAY, equity=10_500.0, policy=policy)
+    noon = DAY + timedelta(hours=12)
+    _accept_equity(store, now=noon, equity=10_300.0, policy=policy)
+
+    today = [row for row in _day_rows(store) if row["trading_date"] == "2026-07-26"]
+    assert len(today) == 2
+    for row in today:
+        assert row["baseline_source"] == "CHECKPOINT_AT_OR_BEFORE_UTC_MIDNIGHT"
+        assert row["baseline_equity"] == 10_500.0
+        assert row["baseline_ts"].startswith("2026-07-26T00:00:00")
+
+    snapshot, daily = store.load_durable_risk_view(
+        now=noon + timedelta(seconds=5), max_age_s=900.0, policy_version=policy.version
+    )
+    assert daily.baseline_equity == 10_500.0
+    assert daily.equity == 10_300.0 == snapshot.equity
+    # D1=A: whole-account equity change, not a local PnL ledger.
+    assert daily.daily_pnl == -200.0
+    assert daily.checkpoint_id == snapshot.checkpoint_id
+    assert store.get_reconcile_attempt(midnight)["reason_code"] == "ACCEPTED"
+    store.close()
+
+
+def test_a_new_utc_day_blocks_until_a_fresh_checkpoint_establishes_it(tmp_path):
+    from bridge.engine.types import RISK_DAY_DATE_MISMATCH, RiskSnapshotUnavailable
+
+    policy = _policy()
+    store = _v7_store(tmp_path)
+    _accept_equity(store, now=DAY - timedelta(hours=1), equity=10_000.0, policy=policy)
+    _accept_equity(
+        store, now=DAY - timedelta(seconds=1), equity=10_000.0, policy=policy
+    )
+
+    # One second later it is a different UTC day and the newest durable day row
+    # still describes yesterday: D2=A blocks rather than reusing it.
+    with pytest.raises(RiskSnapshotUnavailable) as excinfo:
+        store.load_durable_risk_view(
+            now=DAY, max_age_s=900.0, policy_version=policy.version
+        )
+    assert excinfo.value.reason_code == RISK_DAY_DATE_MISMATCH
+
+    _accept_equity(store, now=DAY + timedelta(minutes=1), equity=9_900.0, policy=policy)
+    _snapshot, daily = store.load_durable_risk_view(
+        now=DAY + timedelta(minutes=2), max_age_s=900.0, policy_version=policy.version
+    )
+    assert daily.trading_date == "2026-07-26"
+    assert daily.baseline_equity == 10_000.0
+    assert daily.daily_pnl == -100.0
+    store.close()
+
+
+def test_clock_rollback_between_accepted_checkpoints_fails_closed(tmp_path):
+    from bridge.store.db import ReconcileConflictError
+
+    policy = _policy()
+    store = _v7_store(tmp_path)
+    _accept_equity(store, now=DAY + timedelta(hours=12), equity=10_000.0, policy=policy)
+
+    with pytest.raises(ReconcileConflictError) as excinfo:
+        _accept_equity(
+            store, now=DAY + timedelta(hours=11), equity=9_000.0, policy=policy
+        )
+    assert excinfo.value.code == "RISK_DAY_CLOCK_ROLLBACK"
+    # The refused accept left one day row and no partial evidence.
+    assert len(_day_rows(store)) == 1
+    store.close()
+
+
+# --- D3/D4: exact boundaries, exactly-once latches --------------------------
+
+
+def test_daily_loss_latches_exactly_once_at_the_exact_boundary(tmp_path):
+    from bridge.engine.types import RISK_CONTROL_DAILY_LOSS
+
+    policy = _policy()
+    store = _v7_store(tmp_path)
+    _accept_equity(
+        store, now=DAY - timedelta(minutes=1), equity=10_000.0, policy=policy
+    )
+
+    # One unit inside the boundary: -1.99% is not a breach.
+    _accept_equity(store, now=DAY + timedelta(hours=1), equity=9_801.0, policy=policy)
+    assert _latch_rows(store) == []
+
+    # Exactly -2.00% of the *day-start* equity blocks.
+    _accept_equity(store, now=DAY + timedelta(hours=2), equity=9_800.0, policy=policy)
+    latches = _latch_rows(store)
+    assert len(latches) == 1
+    assert latches[0]["control"] == RISK_CONTROL_DAILY_LOSS
+    assert latches[0]["record_kind"] == "LATCH"
+    assert latches[0]["scope_key"] == "2026-07-26"
+    assert latches[0]["observed_value"] == -200.0
+    assert latches[0]["threshold_value"] == -200.0
+    assert latches[0]["policy_version"] == policy.version
+    assert latches[0]["equity"] == 9_800.0
+
+    # A further loss cannot duplicate DAILY_LOSS, but an independently crossed
+    # drawdown control must retain its own evidence.
+    _accept_equity(store, now=DAY + timedelta(hours=3), equity=9_000.0, policy=policy)
+    assert [row["control"] for row in _latch_rows(store)] == [
+        "DAILY_LOSS",
+        "MAX_DRAWDOWN",
+    ]
+
+    _snapshot, daily = store.load_durable_risk_view(
+        now=DAY + timedelta(hours=3, seconds=5),
+        max_age_s=900.0,
+        policy_version=policy.version,
+    )
+    assert daily.latched_controls == (
+        RISK_CONTROL_DAILY_LOSS,
+        "MAX_DRAWDOWN",
+    )
+    store.close()
+
+
+def test_daily_loss_denominator_is_day_start_equity_not_current_equity(tmp_path):
+    """The interim gate divided by current equity; the full gate must not.
+
+    A 199 USDC loss is inside the 2% day-start budget (200) but outside the 2%
+    budget the interim gate would compute from current equity (2% of 9,801 =
+    196.02), so the two rules disagree on exactly this evidence.
+    """
+    policy = _policy()
+    store = _v7_store(tmp_path)
+    _accept_equity(
+        store, now=DAY - timedelta(minutes=1), equity=10_000.0, policy=policy
+    )
+    _accept_equity(store, now=DAY + timedelta(hours=1), equity=9_801.0, policy=policy)
+
+    assert _latch_rows(store) == []
+    _snapshot, daily = store.load_durable_risk_view(
+        now=DAY + timedelta(hours=1, seconds=5),
+        max_age_s=900.0,
+        policy_version=policy.version,
+    )
+    assert daily.baseline_equity == 10_000.0
+    assert daily.equity == 9_801.0
+    assert daily.daily_pnl == -199.0
+    assert daily.daily_loss_pct == 0.0199
+    assert -daily.daily_pnl < policy.max_daily_loss_pct * daily.baseline_equity
+    assert -daily.daily_pnl > policy.max_daily_loss_pct * daily.equity
+    store.close()
+
+
+def test_peak_equity_is_monotonic_within_the_day_and_max_drawdown_is_exact(tmp_path):
+    from bridge.engine.types import RISK_CONTROL_MAX_DRAWDOWN
+
+    policy = _policy()
+    store = _v7_store(tmp_path)
+    _accept_equity(
+        store, now=DAY - timedelta(minutes=1), equity=10_000.0, policy=policy
+    )
+    _accept_equity(store, now=DAY + timedelta(hours=1), equity=12_000.0, policy=policy)
+    # Peak rises, then equity falls - the peak must not follow it down.
+    _accept_equity(store, now=DAY + timedelta(hours=2), equity=11_401.0, policy=policy)
+    today = [row for row in _day_rows(store) if row["trading_date"] == "2026-07-26"]
+    assert [row["peak_equity"] for row in today] == [12_000.0, 12_000.0]
+    assert _latch_rows(store) == []
+
+    # Exactly 5% below the peak blocks.
+    _accept_equity(store, now=DAY + timedelta(hours=3), equity=11_400.0, policy=policy)
+    latches = _latch_rows(store)
+    assert len(latches) == 1
+    assert latches[0]["control"] == RISK_CONTROL_MAX_DRAWDOWN
+    assert latches[0]["observed_value"] == 600.0
+    assert latches[0]["threshold_value"] == 600.0
+    assert latches[0]["peak_equity"] == 12_000.0
+    store.close()
+
+
+def test_peak_and_latch_are_reconstructed_identically_after_reopen(tmp_path):
+    policy = _policy()
+    path = tmp_path / "restart.db"
+    store = Store(path)
+    store.initialize(target_schema_version=7)
+    store.create_run("run", "paper", "testnet", {})
+    _accept_equity(
+        store, now=DAY - timedelta(minutes=1), equity=10_000.0, policy=policy
+    )
+    _accept_equity(store, now=DAY + timedelta(hours=1), equity=12_000.0, policy=policy)
+    _accept_equity(store, now=DAY + timedelta(hours=2), equity=11_400.0, policy=policy)
+    before_days = _day_rows(store)
+    before_latches = _latch_rows(store)
+    store.close()
+
+    reopened = Store(path)
+    reopened.initialize(target_schema_version=7)
+    assert _day_rows(reopened) == before_days
+    assert _latch_rows(reopened) == before_latches
+    assert len(before_latches) == 1
+    active = reopened.active_risk_control_latches(
+        run_id="run", now=DAY + timedelta(hours=2, seconds=5)
+    )
+    assert [latch.control for latch in active] == ["MAX_DRAWDOWN"]
+    reopened.close()
+
+
+def test_equity_floor_latches_and_a_new_utc_day_never_clears_it(tmp_path):
+    from bridge.engine.types import RISK_CONTROL_EQUITY_STOP, RISK_LATCH_ACCOUNT_SCOPE
+
+    policy = _policy()
+    store = _v7_store(tmp_path)
+    _accept_equity(
+        store, now=DAY - timedelta(minutes=1), equity=505.0, policy=policy
+    )
+    # One unit above the floor is not a breach.
+    _accept_equity(store, now=DAY + timedelta(hours=1), equity=501.0, policy=policy)
+    assert _latch_rows(store) == []
+    # Exactly at the 500 USDC floor blocks.
+    _accept_equity(store, now=DAY + timedelta(hours=2), equity=500.0, policy=policy)
+    latches = _latch_rows(store)
+    assert len(latches) == 1
+    assert latches[0]["control"] == RISK_CONTROL_EQUITY_STOP
+    assert latches[0]["scope_key"] == RISK_LATCH_ACCOUNT_SCOPE
+    assert latches[0]["observed_value"] == 500.0
+    assert latches[0]["threshold_value"] == 500.0
+
+    # A whole new UTC day, and recovered equity, cannot clear an equity stop.
+    next_day = DAY + timedelta(days=1, hours=2)
+    _accept_equity(store, now=next_day, equity=20_000.0, policy=policy)
+    active = store.active_risk_control_latches(
+        run_id="run", now=next_day + timedelta(seconds=5)
+    )
+    assert [latch.control for latch in active] == [RISK_CONTROL_EQUITY_STOP]
+    store.close()
+
+
+def test_a_daily_latch_stays_active_on_a_new_day_until_human_supersession(tmp_path):
+    policy = _policy()
+    store = _v7_store(tmp_path)
+    _accept_equity(
+        store, now=DAY - timedelta(minutes=1), equity=10_000.0, policy=policy
+    )
+    _accept_equity(store, now=DAY + timedelta(hours=2), equity=9_800.0, policy=policy)
+    assert len(_latch_rows(store)) == 1
+
+    next_day = DAY + timedelta(days=1)
+    _accept_equity(
+        store, now=next_day + timedelta(hours=1), equity=9_800.0, policy=policy
+    )
+    # UTC rollover alone never clears durable evidence.
+    assert len(_latch_rows(store)) == 1
+    active = store.active_risk_control_latches(
+        run_id="run", now=next_day + timedelta(hours=1, seconds=5)
+    )
+    assert [latch.control for latch in active] == ["DAILY_LOSS"]
+    store.close()
+
+
+def test_paper_and_dry_run_on_the_same_utc_date_never_collide(tmp_path):
+    policy = _policy()
+    store = _v7_store(tmp_path, run_id="paper-run", mode="paper", network="testnet")
+    store.create_run("dry-run", "dry_run", "testnet", {})
+
+    _accept_equity(
+        store,
+        now=DAY - timedelta(minutes=2),
+        equity=10_000.0,
+        policy=policy,
+        run_id="paper-run",
+    )
+    _accept_equity(
+        store,
+        now=DAY - timedelta(minutes=1),
+        equity=10_000.0,
+        policy=policy,
+        run_id="dry-run",
+    )
+    # Only the dry-run environment breaches.
+    _accept_equity(
+        store,
+        now=DAY + timedelta(hours=1),
+        equity=9_800.0,
+        policy=policy,
+        run_id="dry-run",
+    )
+    assert [row["mode"] for row in _latch_rows(store)] == ["dry_run"]
+    when = DAY + timedelta(hours=1, seconds=5)
+    assert store.active_risk_control_latches(run_id="paper-run", now=when) == ()
+    assert len(store.active_risk_control_latches(run_id="dry-run", now=when)) == 1
+    store.close()
+
+
+def test_risk_day_rows_and_latches_are_append_only(tmp_path):
+    policy = _policy()
+    store = _v7_store(tmp_path)
+    _accept_equity(
+        store, now=DAY - timedelta(minutes=1), equity=10_000.0, policy=policy
+    )
+    _accept_equity(store, now=DAY + timedelta(hours=2), equity=9_800.0, policy=policy)
+    assert len(_latch_rows(store)) == 1
+
+    for sql in (
+        "UPDATE risk_day_checkpoints SET equity = 1.0",
+        "DELETE FROM risk_day_checkpoints",
+        "UPDATE risk_control_latches SET observed_value = 0.0",
+        "DELETE FROM risk_control_latches",
+    ):
+        with pytest.raises(sqlite3.IntegrityError):
+            store.conn.execute(sql)
+        store.conn.rollback()
+    assert len(_day_rows(store)) == 2
+    assert len(_latch_rows(store)) == 1
+    store.close()
+
+
+# --- D4=A: human-gated reset ------------------------------------------------
+
+
+def test_daily_latch_reset_requires_a_human_and_a_new_utc_day_baseline(tmp_path):
+    from bridge.engine.types import risk_control_reset_token
+    from bridge.store.db import RiskControlConflictError
+
+    policy = _policy()
+    store = _v7_store(tmp_path)
+    _accept_equity(
+        store, now=DAY - timedelta(minutes=1), equity=10_000.0, policy=policy
+    )
+    _accept_equity(store, now=DAY + timedelta(hours=2), equity=9_800.0, policy=policy)
+    latch = _latch_rows(store)[0]
+    token = risk_control_reset_token("DAILY_LOSS", "2026-07-26")
+
+    # Same day: no new baseline exists, so no human may clear it.
+    with pytest.raises(RiskControlConflictError) as excinfo:
+        store.record_risk_control_reset(
+            latch_row_id=latch["latch_row_id"],
+            actor="baris",
+            acknowledgement=token,
+            policy=policy,
+            now=DAY + timedelta(hours=3),
+            max_age_s=7200.0,
+        )
+    assert excinfo.value.code == "RISK_RESET_REQUIRES_NEW_DAY"
+
+    next_day = DAY + timedelta(days=1)
+    _accept_equity(
+        store, now=next_day + timedelta(hours=1), equity=9_900.0, policy=policy
+    )
+
+    # A wrong or automated acknowledgement is refused.
+    with pytest.raises(RiskControlConflictError) as excinfo:
+        store.record_risk_control_reset(
+            latch_row_id=latch["latch_row_id"],
+            actor="baris",
+            acknowledgement="yes",
+            policy=policy,
+            now=next_day + timedelta(hours=2),
+            max_age_s=7200.0,
+        )
+    assert excinfo.value.code == "RISK_RESET_ACKNOWLEDGEMENT_INVALID"
+
+    store.record_risk_control_reset(
+        latch_row_id=latch["latch_row_id"],
+        actor="baris",
+        acknowledgement=token,
+        policy=policy,
+        now=next_day + timedelta(hours=2),
+        max_age_s=7200.0,
+    )
+    rows = _latch_rows(store)
+    assert [row["record_kind"] for row in rows] == ["LATCH", "RESET"]
+    assert rows[1]["supersedes_row_id"] == latch["latch_row_id"]
+    assert rows[1]["actor"] == "baris"
+    # Exactly once: the same latch cannot be reset twice.
+    with pytest.raises(RiskControlConflictError):
+        store.record_risk_control_reset(
+            latch_row_id=latch["latch_row_id"],
+            actor="baris",
+            acknowledgement=token,
+            policy=policy,
+            now=next_day + timedelta(hours=3),
+            max_age_s=7200.0,
+        )
+    store.close()
+
+
+def test_equity_stop_reset_requires_a_fresh_safe_checkpoint(tmp_path):
+    from bridge.engine.types import RISK_LATCH_ACCOUNT_SCOPE, risk_control_reset_token
+    from bridge.store.db import RiskControlConflictError
+
+    policy = _policy(max_daily_loss_pct=0.9, max_intraday_drawdown_pct=0.9)
+    store = _v7_store(tmp_path)
+    _accept_equity(
+        store, now=DAY - timedelta(minutes=1), equity=505.0, policy=policy
+    )
+    _accept_equity(store, now=DAY + timedelta(hours=1), equity=400.0, policy=policy)
+    latch = _latch_rows(store)[0]
+    token = risk_control_reset_token("EQUITY_STOP", RISK_LATCH_ACCOUNT_SCOPE)
+
+    # Still below the floor: acknowledgement alone is not enough.
+    with pytest.raises(RiskControlConflictError) as excinfo:
+        store.record_risk_control_reset(
+            latch_row_id=latch["latch_row_id"],
+            actor="baris",
+            acknowledgement=token,
+            policy=policy,
+            now=DAY + timedelta(hours=2),
+            max_age_s=7200.0,
+        )
+    assert excinfo.value.code == "RISK_RESET_REQUIRES_SAFE_CHECKPOINT"
+
+    _accept_equity(store, now=DAY + timedelta(hours=3), equity=20_000.0, policy=policy)
+    store.record_risk_control_reset(
+        latch_row_id=latch["latch_row_id"],
+        actor="baris",
+        acknowledgement=token,
+        policy=policy,
+        now=DAY + timedelta(hours=4),
+        max_age_s=7200.0,
+    )
+    assert store.active_risk_control_latches(
+        run_id="run", now=DAY + timedelta(hours=4)
+    ) == ()
+
+    # A later breach can latch again; the first latch row is never rewritten.
+    _accept_equity(store, now=DAY + timedelta(hours=5), equity=100.0, policy=policy)
+    rows = _latch_rows(store)
+    assert [row["record_kind"] for row in rows] == [
+        "LATCH",
+        "RESET",
+        "LATCH",
+        "LATCH",
+    ]
+    assert [row["control"] for row in rows[2:]] == [
+        "EQUITY_STOP",
+        "MAX_DRAWDOWN",
+    ]
+    assert rows[0]["generation"] == 1 and rows[2]["generation"] == 2
+    store.close()
+
+
+def test_equity_stop_reset_rejects_substituted_policy_and_stale_evidence(tmp_path):
+    from bridge.engine.types import RISK_LATCH_ACCOUNT_SCOPE, risk_control_reset_token
+    from bridge.store.db import RiskControlConflictError
+
+    policy = _policy(max_daily_loss_pct=0.9, max_intraday_drawdown_pct=0.9)
+    store = _v7_store(tmp_path)
+    _accept_equity(
+        store, now=DAY - timedelta(minutes=1), equity=505.0, policy=policy
+    )
+    _accept_equity(store, now=DAY + timedelta(hours=1), equity=400.0, policy=policy)
+    latch = _latch_rows(store)[0]
+    token = risk_control_reset_token("EQUITY_STOP", RISK_LATCH_ACCOUNT_SCOPE)
+    substituted = _policy(
+        policy_id="unsafe-substitute",
+        max_daily_loss_pct=0.9,
+        max_intraday_drawdown_pct=0.9,
+        equity_floor_usdc=0.0,
+    )
+    with pytest.raises(RiskControlConflictError) as excinfo:
+        store.record_risk_control_reset(
+            latch_row_id=latch["latch_row_id"],
+            actor="baris",
+            acknowledgement=token,
+            policy=substituted,
+            now=DAY + timedelta(hours=1, minutes=1),
+            max_age_s=900.0,
+        )
+    assert excinfo.value.code == "RISK_RESET_POLICY_MISMATCH"
+
+    _accept_equity(store, now=DAY + timedelta(hours=2), equity=1_000.0, policy=policy)
+    with pytest.raises(RiskControlConflictError) as excinfo:
+        store.record_risk_control_reset(
+            latch_row_id=latch["latch_row_id"],
+            actor="baris",
+            acknowledgement=token,
+            policy=policy,
+            now=DAY + timedelta(days=1),
+            max_age_s=900.0,
+        )
+    assert excinfo.value.code == "RISK_RESET_REQUIRES_SAFE_CHECKPOINT"
+    assert [row["record_kind"] for row in _latch_rows(store)] == ["LATCH"]
+    store.close()
+
+
+# --- fail-closed loading ----------------------------------------------------
+
+
+def test_durable_view_binds_one_checkpoint_and_refuses_a_policy_change(tmp_path):
+    from bridge.engine.types import RISK_DAY_POLICY_MISMATCH, RiskSnapshotUnavailable
+
+    policy = _policy()
+    store = _v7_store(tmp_path)
+    _accept_equity(
+        store, now=DAY - timedelta(minutes=1), equity=10_000.0, policy=policy
+    )
+    _accept_equity(store, now=DAY + timedelta(hours=1), equity=9_900.0, policy=policy)
+    now = DAY + timedelta(hours=1, seconds=5)
+
+    snapshot, daily = store.load_durable_risk_view(
+        now=now, max_age_s=900.0, policy_version=policy.version
+    )
+    assert daily.checkpoint_id == snapshot.checkpoint_id
+    assert daily.attempt_id == snapshot.attempt_id
+    assert daily.equity == snapshot.equity
+    assert daily.policy_version == policy.version
+
+    changed = _policy(max_intraday_drawdown_pct=0.10)
+    assert changed.version != policy.version
+    with pytest.raises(RiskSnapshotUnavailable) as excinfo:
+        store.load_durable_risk_view(
+            now=now, max_age_s=900.0, policy_version=changed.version
+        )
+    assert excinfo.value.reason_code == RISK_DAY_POLICY_MISMATCH
+    store.close()
+
+
+def test_durable_view_pins_snapshot_day_state_and_latches_to_one_read_epoch(tmp_path):
+    from bridge.store.db import Store
+
+    policy = _policy()
+    reader = _v7_store(tmp_path, name="epoch.db")
+    _accept_equity(
+        reader, now=DAY - timedelta(minutes=1), equity=10_000.0, policy=policy
+    )
+    first = _accept_equity(
+        reader, now=DAY + timedelta(hours=1), equity=10_000.0, policy=policy
+    )
+    writer = Store(tmp_path / "epoch.db")
+    writer.initialize(target_schema_version=7)
+    original = reader._load_risk_snapshot_locked
+    second: list[str] = []
+
+    def interleave(**kwargs):
+        snapshot = original(**kwargs)
+        second.append(
+            _accept_equity(
+                writer,
+                now=DAY + timedelta(hours=2),
+                equity=9_900.0,
+                policy=policy,
+            )
+        )
+        return snapshot
+
+    reader._load_risk_snapshot_locked = interleave
+    snapshot, daily = reader.load_durable_risk_view(
+        now=DAY + timedelta(hours=2, seconds=5),
+        max_age_s=7200.0,
+        policy_version=policy.version,
+    )
+    reader._load_risk_snapshot_locked = original
+    assert snapshot.attempt_id == first
+    assert daily.checkpoint_id == snapshot.checkpoint_id
+    assert daily.equity == snapshot.equity == 10_000.0
+    latest = reader.load_authoritative_risk_snapshot(
+        now=DAY + timedelta(hours=2, seconds=5), max_age_s=7200.0
+    )
+    assert latest.attempt_id == second[0]
+    assert latest.equity == 9_900.0
+    reader.close()
+    writer.close()
+
+
+def test_durable_view_is_deeply_immutable_and_has_no_writable_holder(tmp_path):
+    policy = _policy()
+    store = _v7_store(tmp_path)
+    _accept_equity(
+        store, now=DAY - timedelta(minutes=1), equity=10_000.0, policy=policy
+    )
+    _accept_equity(store, now=DAY + timedelta(hours=2), equity=9_800.0, policy=policy)
+    _snapshot, daily = store.load_durable_risk_view(
+        now=DAY + timedelta(hours=2, seconds=5),
+        max_age_s=900.0,
+        policy_version=policy.version,
+    )
+    assert not hasattr(daily, "__dict__")
+    for attribute in ("baseline_equity", "peak_equity", "equity"):
+        with pytest.raises((AttributeError, TypeError)):
+            object.__setattr__(daily, attribute, 1.0)
+    with pytest.raises((AttributeError, TypeError)):
+        daily.active_latches = ()
+    store.close()
+
+
+def test_a_v6_store_has_no_durable_risk_state_and_says_so(tmp_path):
+    from bridge.engine.types import RISK_DAY_SCHEMA_INACTIVE, RiskSnapshotUnavailable
+
+    store = _v6_store(tmp_path)
+    _accept_v2(store, now=NOW, coverage_ms=_ms(NOW))
+    # TS-P1-006 behaviour is completely unchanged on v6.
+    assert _load(store, now=NOW + timedelta(seconds=5)).equity == 10_000.0
+    assert store.durable_risk_controls_enabled() is False
+    with pytest.raises(RiskSnapshotUnavailable) as excinfo:
+        store.load_durable_risk_view(
+            now=NOW + timedelta(seconds=5),
+            max_age_s=900.0,
+            policy_version=_policy().version,
+        )
+    assert excinfo.value.reason_code == RISK_DAY_SCHEMA_INACTIVE
+    store.close()
+
+
+def _accept_v1_legacy_with_policy(store, *, now, policy):
+    """A v1 metadata-only checkpoint offered to a v7 store."""
+    original = Store.finalize_reconcile_attempt
+
+    def finalize(self, **kwargs):
+        kwargs.setdefault("risk_policy", policy)
+        return original(self, **kwargs)
+
+    Store.finalize_reconcile_attempt = finalize
+    try:
+        return _accept_v1_legacy(store, now=now, coverage_ms=_ms(now))
+    finally:
+        Store.finalize_reconcile_attempt = original
+
+
+def test_v7_accept_requires_a_policy_and_refuses_a_legacy_payload(tmp_path):
+    from bridge.store.db import ReconcileConflictError
+
+    store = _v7_store(tmp_path)
+    with pytest.raises(ReconcileConflictError) as excinfo:
+        _accept_v2(store, now=NOW, coverage_ms=_ms(NOW))
+    assert excinfo.value.code == "RISK_POLICY_REQUIRED"
+    assert _day_rows(store) == []
+
+    with pytest.raises(ReconcileConflictError) as excinfo:
+        _accept_v1_legacy_with_policy(store, now=NOW, policy=_policy())
+    assert excinfo.value.code == "RISK_DAY_REQUIRES_V2_PAYLOAD"
+    assert _day_rows(store) == []
+    store.close()
+
+
+def _funding_row(event_id, when, amount=-25.0):
+    return {
+        "event_id": event_id,
+        "symbol": "BTC",
+        "amount_usdc": amount,
+        "effective_ts_ms": _ms(when),
+        "source": "HL_USER_FUNDING",
+    }
+
+
+def test_unattributed_funding_inside_the_day_fails_closed(tmp_path):
+    from bridge.engine.types import (
+        RISK_DAY_UNEXPLAINED_CASHFLOW,
+        FundingAttribution,
+        FundingEventRecord,
+        RiskSnapshotUnavailable,
+    )
+
+    policy = _policy()
+    store = _v7_store(tmp_path)
+    _accept_equity(
+        store, now=DAY - timedelta(minutes=1), equity=10_000.0, policy=policy
+    )
+
+    noon = DAY + timedelta(hours=12)
+    effective = noon - timedelta(minutes=5)
+    event = FundingEventRecord(
+        event_id="0xdead",
+        symbol="BTC",
+        amount_usdc=-25.0,
+        effective_ts=effective,
+        source="HL_USER_FUNDING",
+        attribution=FundingAttribution.UNATTRIBUTED,
+    )
+    _accept_v2(
+        store,
+        now=noon,
+        coverage_ms=_ms(noon),
+        risk_rows=_equity_rows(9_950.0),
+        risk_policy=policy,
+        funding_rows=[_funding_row("0xdead", effective)],
+        funding_events=(event,),
+    )
+    with pytest.raises(RiskSnapshotUnavailable) as excinfo:
+        store.load_durable_risk_view(
+            now=noon + timedelta(seconds=5),
+            max_age_s=900.0,
+            policy_version=policy.version,
+        )
+    assert excinfo.value.reason_code == RISK_DAY_UNEXPLAINED_CASHFLOW
+    store.close()
+
+
+def test_funding_is_never_subtracted_twice_from_the_equity_change(tmp_path):
+    from bridge.engine.types import FundingAttribution, FundingEventRecord
+
+    policy = _policy()
+    store = _v7_store(tmp_path)
+    _accept_equity(
+        store, now=DAY - timedelta(minutes=1), equity=10_000.0, policy=policy
+    )
+
+    noon = DAY + timedelta(hours=12)
+    effective = noon - timedelta(minutes=5)
+    event = FundingEventRecord(
+        event_id="0xfeed",
+        symbol="BTC",
+        amount_usdc=-25.0,
+        effective_ts=effective,
+        source="HL_USER_FUNDING",
+        attribution=FundingAttribution.ATTRIBUTED,
+    )
+    _accept_v2(
+        store,
+        now=noon,
+        coverage_ms=_ms(noon),
+        risk_rows=_equity_rows(9_950.0),
+        risk_policy=policy,
+        funding_rows=[_funding_row("0xfeed", effective)],
+        funding_events=(event,),
+    )
+    _snapshot, daily = store.load_durable_risk_view(
+        now=noon + timedelta(seconds=5), max_age_s=900.0, policy_version=policy.version
+    )
+    # D1=A: funding is already inside the authoritative equity move. The ledger
+    # value is retained as a diagnostic column and is NOT subtracted again.
+    assert daily.daily_pnl == -50.0
+    assert daily.funding_attributed_usdc == -25.0
+    store.close()

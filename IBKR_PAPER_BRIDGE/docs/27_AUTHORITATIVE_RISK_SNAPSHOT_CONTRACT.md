@@ -93,3 +93,12 @@ stale/future/superseded/malformed/duplicate/non-finite/negative/tampered
 evidence; concurrent read epochs; crash/restart; nonzero positions; in-memory
 DISARM on read failure; no v6 point-account call; unchanged v4 and interim PnL
 behavior; and unchanged funding non-consumption.
+# TS-P1-007 extension
+
+On an explicitly opened schema-v7 store, the authoritative portfolio snapshot
+is loaded together with its immutable daily-risk state and active latches in one
+bounded SQLite read epoch, bound to the same checkpoint, attempt, run, equity
+and policy version. A pointer move, UTC-date
+change, missing baseline, policy mismatch, malformed row, or active durable
+latch fails closed. Schema v4 remains the application default; v6 behavior is
+unchanged when v7 is inactive.

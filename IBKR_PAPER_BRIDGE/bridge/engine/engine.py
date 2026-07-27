@@ -22,7 +22,14 @@ from bridge.engine.orders import OrderManager
 from bridge.engine.reconcile import FullReconciler
 from bridge.engine.risk import RiskEngine
 from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
-from bridge.engine.types import Bar, Position, RiskSnapshotUnavailable
+from bridge.engine.types import (
+    Bar,
+    Position,
+    RiskSnapshotUnavailable,
+    RISK_CONTROL_DAILY_LOSS,
+    RISK_CONTROL_MAX_DRAWDOWN,
+    risk_control_reset_token,
+)
 from bridge.engine.window import (
     DEFAULT_STALE_AFTER_S,
     detect_interruption,
@@ -57,6 +64,9 @@ class BridgeEngine:
     coin: str = "BTC"
     timeframe: str = "1h"
     mode: str = "dry_run"
+    clock: Callable[[], datetime] = field(
+        default=lambda: datetime.now(UTC), repr=False
+    )
     on_update: Callable[[str, object], object] | None = None
     notifier: TelegramNotifier | None = None
     heartbeat_hours: float = 6.0
@@ -89,6 +99,7 @@ class BridgeEngine:
     # evidence only; the fail-closed authority is `risk_input_error`, which the
     # existing sticky DISARM latch in `_app_state()` already honours.
     risk_snapshot_error: str | None = field(default=None, init=False)
+    risk_control_latch: str | None = field(default=None, init=False)
 
     def __post_init__(self) -> None:
         self.reconcile_max_consecutive_failures = max(1, int(self.reconcile_max_consecutive_failures))
@@ -112,12 +123,20 @@ class BridgeEngine:
         elif self.store.partial_recovery_blocks_new_risk():
             self.state = "DISARMED"
             self.store.set_meta("app_state", "DISARMED")
+        if self.store.durable_risk_controls_enabled():
+            active = self.store.active_risk_control_latches(
+                run_id=self.run_id, now=self.clock()
+            )
+            if active:
+                self.risk_control_latch = active[0].control
+                self.state = "DISARMED"
+                self.store.set_meta("app_state", "DISARMED")
         if self.store.full_reconcile_enabled():
             # A capture that never resolved (crash/kill) stays visible as
             # INCOMPLETE evidence; the prior accepted pointer is untouched and
             # is now stale until a fresh complete collection replaces it.
             interrupted = self.store.resolve_interrupted_reconcile_attempts(
-                observed_ts=datetime.now(UTC)
+                observed_ts=self.clock()
             )
             if interrupted:
                 self.full_reconcile_error = "RESTART_INTERRUPTED"
@@ -127,6 +146,8 @@ class BridgeEngine:
                     broker=self.broker,
                     run_id=self.run_id,
                     order_manager=self.order_manager,
+                    clock=self.clock,
+                    risk_policy=self.risk_engine.policy,
                 )
 
     async def start(self, lookback: int = 300) -> None:
@@ -185,7 +206,7 @@ class BridgeEngine:
         self._tasks.clear()
 
     async def arm(self) -> None:
-        now = datetime.now(UTC)
+        now = self.clock()
         previous = self._app_state()
         self.store.insert_event(self.run_id, now, "INFO", "ARM_REQUEST", f"state={previous}")
         if previous == "KILLED":
@@ -200,6 +221,22 @@ class BridgeEngine:
             self.state = "DISARMED"
             self.store.set_meta("app_state", "DISARMED")
             raise RuntimeError("partial-fill recovery blocks ARM")
+        if self.store.durable_risk_controls_enabled():
+            active = self.store.active_risk_control_latches(
+                run_id=self.run_id, now=now
+            )
+            blocking = tuple(
+                latch
+                for latch in active
+                if latch.control
+                not in {RISK_CONTROL_DAILY_LOSS, RISK_CONTROL_MAX_DRAWDOWN}
+                or latch.trading_date >= now.astimezone(UTC).date().isoformat()
+            )
+            if blocking:
+                self.risk_control_latch = blocking[0].control
+                self.state = "DISARMED"
+                self.store.set_meta("app_state", "DISARMED")
+                raise RuntimeError("risk control latched")
         for pending in self.store.partial_recoveries_awaiting_rearm():
             # PROTECTED_PARTIAL hands the position back only after a fresh
             # exact-quantity snapshot proves protection under the symbol lock.
@@ -234,15 +271,57 @@ class BridgeEngine:
             # yet cannot supply authoritative portfolio rows. Refuse ARM until
             # the exact snapshot that risk would consume is provable.
             try:
-                self.store.load_authoritative_risk_snapshot(
-                    now=now,
-                    max_age_s=self.full_reconcile_max_age_s(),
-                )
+                if self.store.durable_risk_controls_enabled():
+                    _snapshot, daily = self.store.load_durable_risk_view(
+                        now=now,
+                        max_age_s=self.full_reconcile_max_age_s(),
+                        policy_version=self.risk_engine.policy.version,
+                    )
+                    for latch in daily.active_latches:
+                        if (
+                            latch.control
+                            not in {
+                                RISK_CONTROL_DAILY_LOSS,
+                                RISK_CONTROL_MAX_DRAWDOWN,
+                            }
+                            or latch.trading_date >= daily.trading_date
+                        ):
+                            continue
+                        self.store.record_risk_control_reset(
+                            latch_row_id=latch.latch_row_id,
+                            actor="ARM_REQUEST",
+                            acknowledgement=risk_control_reset_token(
+                                latch.control, latch.scope_key
+                            ),
+                            policy=self.risk_engine.policy,
+                            now=now,
+                            max_age_s=self.full_reconcile_max_age_s(),
+                        )
+                    if daily.active_latches:
+                        _snapshot, daily = self.store.load_durable_risk_view(
+                            now=now,
+                            max_age_s=self.full_reconcile_max_age_s(),
+                            policy_version=self.risk_engine.policy.version,
+                        )
+                    if daily.active_latches:
+                        self.risk_control_latch = daily.active_latches[0].control
+                        self.state = "DISARMED"
+                        self.store.set_meta("app_state", "DISARMED")
+                        raise RuntimeError("risk control latched")
+                else:
+                    self.store.load_authoritative_risk_snapshot(
+                        now=now,
+                        max_age_s=self.full_reconcile_max_age_s(),
+                    )
             except RiskSnapshotUnavailable as exc:
                 self._latch_risk_snapshot_failure(exc.reason_code, now)
                 raise RuntimeError(
                     f"authoritative risk snapshot unavailable: {exc.reason_code}"
                 ) from None
+            except RuntimeError as exc:
+                if str(exc) == "risk control latched":
+                    raise
+                raise
             except Exception as exc:  # noqa: BLE001 - unknown evidence is unsafe
                 reason = (
                     f"RISK_SNAPSHOT_LOAD_FAILED:{type(exc).__name__.upper()}"[:96]
@@ -255,6 +334,7 @@ class BridgeEngine:
         # Explicit human re-arm clears the sticky risk-input fail-closed latch.
         self.risk_input_error = None
         self.risk_snapshot_error = None
+        self.risk_control_latch = None
         self._set_state("ARMED")
         record_window_start(self.store, now)
         await self._publish("status", self.status())
@@ -334,7 +414,7 @@ class BridgeEngine:
             # reconcile recovery — may clear this.
             return False
         return self.store.full_reconcile_ready(
-            now=now or datetime.now(UTC),
+            now=now or self.clock(),
             max_age_s=self.full_reconcile_max_age_s(),
         )
 
@@ -354,16 +434,38 @@ class BridgeEngine:
         except Exception as exc:  # noqa: BLE001 - fail closed on the full gate only
             self.full_reconcile_error = _safe_full_reconcile_reason(exc)
             self._record_full_reconcile_block(self.full_reconcile_error)
+            if self.store.durable_risk_controls_enabled():
+                self.disarm()
             return None
         self.full_reconcile_attempt_id = result.attempt_id
         if result.accepted:
             self.last_full_reconcile_ts = result.ended_ts
             self.full_reconcile_error = None
+            if self.store.durable_risk_controls_enabled():
+                active = self.store.active_risk_control_latches(
+                    run_id=self.run_id, now=result.ended_ts
+                )
+                if active:
+                    first_latch = active[0].control
+                    newly_latched = self.risk_control_latch != first_latch
+                    self.risk_control_latch = first_latch
+                    self.state = "DISARMED"
+                    self.store.set_meta("app_state", "DISARMED")
+                    if newly_latched:
+                        self.store.insert_event(
+                            self.run_id,
+                            result.ended_ts,
+                            "WARN",
+                            "RISK_CONTROL_LATCHED",
+                            first_latch,
+                        )
         else:
             self.full_reconcile_error = result.reason_code
             self._record_full_reconcile_block(
                 f"{result.state.value}:{result.reason_code}"
             )
+            if self.store.durable_risk_controls_enabled():
+                self.disarm()
         return result
 
     def _record_full_reconcile_block(self, detail: str) -> None:
@@ -493,10 +595,18 @@ class BridgeEngine:
             # closes. The load is SQLite-only and happens before evaluation and
             # before any submission.
             try:
-                snapshot = self.store.load_authoritative_risk_snapshot(
-                    now=datetime.now(UTC),
-                    max_age_s=self.full_reconcile_max_age_s(),
-                )
+                if self.store.durable_risk_controls_enabled():
+                    snapshot, daily_state = self.store.load_durable_risk_view(
+                        now=self.clock(),
+                        max_age_s=self.full_reconcile_max_age_s(),
+                        policy_version=self.risk_engine.policy.version,
+                    )
+                else:
+                    snapshot = self.store.load_authoritative_risk_snapshot(
+                        now=self.clock(),
+                        max_age_s=self.full_reconcile_max_age_s(),
+                    )
+                    daily_state = None
             except RiskSnapshotUnavailable as exc:
                 await self._risk_snapshot_failed(
                     exc.reason_code, decision_uid, signal
@@ -516,6 +626,8 @@ class BridgeEngine:
                 take_profit=signal.take_profit,
                 realized_today=realized_today,
                 consecutive_losses=consecutive_losses,
+                daily_state=daily_state,
+                require_daily_state=self.store.durable_risk_controls_enabled(),
             )
         else:
             risk = self.risk_engine.evaluate(
@@ -932,6 +1044,13 @@ class BridgeEngine:
             # DISARMED until a human re-arms, even if the DISARMED meta write
             # itself failed and the persisted value still says ARMED.
             self.state = "DISARMED"
+            return self.state
+        if self.risk_control_latch is not None:
+            self.state = "DISARMED"
+            try:
+                self.store.set_meta("app_state", "DISARMED")
+            except Exception:
+                pass
             return self.state
         persisted = self.store.get_meta("app_state")
         if persisted is not None:

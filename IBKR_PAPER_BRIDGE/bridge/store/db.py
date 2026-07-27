@@ -48,6 +48,8 @@ from bridge.engine.types import (
     ActionRecordStatus,
     AuthoritativeRiskSnapshot,
     ComponentEvidence,
+    DailyRiskState,
+    DurableRiskPolicy,
     FundingAttribution,
     FundingEventRecord,
     PartialActionKind,
@@ -60,7 +62,20 @@ from bridge.engine.types import (
     ReconcileDiffRecord,
     ReconcileOwnership,
     RiskPositionRow,
+    RiskControlLatch,
     RiskSnapshotUnavailable,
+    RISK_CONTROL_DAILY_LOSS,
+    RISK_CONTROL_EQUITY_STOP,
+    RISK_CONTROL_MAX_DRAWDOWN,
+    RISK_DAY_BASELINE_MISSING,
+    RISK_DAY_CHECKPOINT_MISMATCH,
+    RISK_DAY_DATE_MISMATCH,
+    RISK_DAY_POLICY_MISMATCH,
+    RISK_DAY_SCHEMA_INACTIVE,
+    RISK_DAY_STATE_MALFORMED,
+    RISK_DAY_UNEXPLAINED_CASHFLOW,
+    RISK_LATCH_ACCOUNT_SCOPE,
+    risk_control_reset_token,
     canonical_reconcile_json,
     reconcile_digest,
 )
@@ -258,14 +273,20 @@ requires an explicit ``initialize(target_schema_version=6)`` and goes through
 the proven v4→v5→v6 chain; no caller is upgraded by merely opening a database.
 """
 
+SCHEMA_VERSION_DURABLE_RISK = 7
+"""Additive TS-P1-007 daily-risk evidence and sticky control latches."""
+
 SUPPORTED_TARGET_SCHEMA_VERSIONS = (
     SCHEMA_VERSION_BASELINE,
     SCHEMA_VERSION_PARTIAL_FILL,
     SCHEMA_VERSION_FULL_RECONCILE,
+    SCHEMA_VERSION_DURABLE_RISK,
 )
 
 RECONCILE_CHECKPOINT_POINTER_KEY = "reconcile_checkpoint_latest"
 """The single transactional pointer at the latest accepted checkpoint."""
+
+RISK_CONTROLS_MIGRATION_FAILURE_KEY = "risk_controls_migration_failure"
 
 _PARTIAL_RECOVERY_VERSION = "ts-p1-004-recovery-v1"
 _PARTIAL_ACTION_VERSION = "ts-p1-004-action-v1"
@@ -304,6 +325,15 @@ class PartialRecoveryConflictError(Exception):
 
 class ReconcileConflictError(Exception):
     """Raised when a reconciliation write would break a durable invariant."""
+
+    def __init__(self, code: str, message: str) -> None:
+        self.code = code
+        self.message = message
+        super().__init__(f"{code}: {message}")
+
+
+class RiskControlConflictError(Exception):
+    """A durable risk latch/reset invariant would be violated."""
 
     def __init__(self, code: str, message: str) -> None:
         self.code = code
@@ -503,6 +533,16 @@ class Store:
             "CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)"
         )
         existing = self.get_meta("schema_version")
+        if existing == str(SCHEMA_VERSION_DURABLE_RISK):
+            if not self._has_any_durable_risk_object():
+                raise RuntimeError(
+                    f"Unsupported schema_version={existing!r}; "
+                    "cannot initialize safely"
+                )
+            self._initialize_v5_idempotent()
+            self._initialize_v6_idempotent()
+            self._initialize_v7_idempotent()
+            return
         if existing == str(SCHEMA_VERSION_FULL_RECONCILE):
             if not self._has_any_full_reconcile_object():
                 # The meta row alone is not proof of a version. A database that
@@ -515,11 +555,15 @@ class Store:
             # Already migrated: idempotent reopen, never an in-place downgrade.
             self._initialize_v5_idempotent()
             self._initialize_v6_idempotent()
+            if target_schema_version >= SCHEMA_VERSION_DURABLE_RISK:
+                self._migrate_v6_to_v7()
             return
         if existing == str(SCHEMA_VERSION_PARTIAL_FILL):
             self._initialize_v5_idempotent()
             if target_schema_version >= SCHEMA_VERSION_FULL_RECONCILE:
                 self._migrate_v5_to_v6()
+            if target_schema_version >= SCHEMA_VERSION_DURABLE_RISK:
+                self._migrate_v6_to_v7()
             return
         if existing is None:
             self._initialize_v4_fresh()
@@ -542,6 +586,8 @@ class Store:
         if target_schema_version >= SCHEMA_VERSION_FULL_RECONCILE:
             # Proven chained v4→v5→v6; there is no skip migration.
             self._migrate_v5_to_v6()
+        if target_schema_version >= SCHEMA_VERSION_DURABLE_RISK:
+            self._migrate_v6_to_v7()
 
     def _initialize_v4_fresh(self) -> None:
         self._create_tables_v4()
@@ -1657,6 +1703,183 @@ class Store:
             self.conn.commit()
         except Exception:
             self.conn.rollback()
+            raise
+
+    def _has_any_durable_risk_object(self) -> bool:
+        row = self.conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE name IN "
+            "('risk_day_checkpoints','risk_control_latches') LIMIT 1"
+        ).fetchone()
+        return row is not None
+
+    def _create_durable_risk_tables_v7(self) -> None:
+        self.conn.execute("""
+            CREATE TABLE risk_day_checkpoints (
+              risk_day_row_id INTEGER PRIMARY KEY,
+              checkpoint_id TEXT NOT NULL UNIQUE
+                REFERENCES reconcile_checkpoints(checkpoint_id),
+              attempt_id TEXT NOT NULL UNIQUE
+                REFERENCES reconcile_attempts(attempt_id),
+              run_id TEXT NOT NULL REFERENCES runs(run_id),
+              mode TEXT NOT NULL,
+              network TEXT NOT NULL,
+              trading_date TEXT NOT NULL,
+              policy_version TEXT NOT NULL,
+              baseline_source TEXT NOT NULL,
+              baseline_checkpoint_id TEXT,
+              baseline_ts TEXT,
+              baseline_equity REAL,
+              peak_equity REAL,
+              equity REAL NOT NULL,
+              daily_pnl REAL,
+              daily_loss_pct REAL,
+              drawdown_pct REAL,
+              realized_pnl_local REAL NOT NULL,
+              funding_attributed_usdc REAL NOT NULL,
+              authoritative INTEGER NOT NULL CHECK(authoritative IN (0,1)),
+              reason_code TEXT NOT NULL,
+              accepted_ts TEXT NOT NULL,
+              recorded_ts TEXT NOT NULL
+            )""")
+        self.conn.execute("""
+            CREATE INDEX risk_day_environment_idx
+            ON risk_day_checkpoints(mode, network, trading_date, accepted_ts)
+        """)
+        self.conn.execute("""
+            CREATE TABLE risk_control_latches (
+              latch_row_id INTEGER PRIMARY KEY,
+              record_kind TEXT NOT NULL CHECK(record_kind IN ('LATCH','RESET')),
+              control TEXT NOT NULL CHECK(control IN
+                ('DAILY_LOSS','MAX_DRAWDOWN','EQUITY_STOP')),
+              scope_key TEXT NOT NULL,
+              mode TEXT NOT NULL,
+              network TEXT NOT NULL,
+              run_id TEXT NOT NULL REFERENCES runs(run_id),
+              trading_date TEXT NOT NULL,
+              checkpoint_id TEXT NOT NULL
+                REFERENCES reconcile_checkpoints(checkpoint_id),
+              supersedes_row_id INTEGER REFERENCES risk_control_latches(latch_row_id),
+              generation INTEGER NOT NULL CHECK(generation > 0),
+              observed_value REAL NOT NULL,
+              threshold_value REAL NOT NULL,
+              baseline_equity REAL NOT NULL,
+              peak_equity REAL NOT NULL,
+              equity REAL NOT NULL,
+              policy_version TEXT NOT NULL,
+              actor TEXT,
+              reason_code TEXT NOT NULL,
+              latched_ts TEXT NOT NULL,
+              recorded_ts TEXT NOT NULL
+            )""")
+        self.conn.execute("""
+            CREATE UNIQUE INDEX risk_control_active_generation
+            ON risk_control_latches(control, mode, network, scope_key, generation,
+                                    record_kind)
+        """)
+        self.conn.execute("""
+            CREATE UNIQUE INDEX risk_control_one_reset
+            ON risk_control_latches(supersedes_row_id)
+            WHERE record_kind = 'RESET'
+        """)
+        for table in ("risk_day_checkpoints", "risk_control_latches"):
+            self.conn.execute(
+                f"""CREATE TRIGGER {table}_immutable_update
+                    BEFORE UPDATE ON {table}
+                    BEGIN SELECT RAISE(ABORT, 'append-only evidence'); END"""
+            )
+            self.conn.execute(
+                f"""CREATE TRIGGER {table}_immutable_delete
+                    BEFORE DELETE ON {table}
+                    BEGIN SELECT RAISE(ABORT, 'append-only evidence'); END"""
+            )
+
+    def _validate_durable_risk_schema_v7(self) -> None:
+        tables = {"risk_day_checkpoints", "risk_control_latches"}
+        reference = Store(Path(":memory:"))
+        reference._conn = sqlite3.connect(":memory:")
+        reference._conn.row_factory = sqlite3.Row
+        reference._conn.execute("PRAGMA foreign_keys=ON")
+        reference._conn.execute(
+            "CREATE TABLE runs (run_id TEXT PRIMARY KEY)"
+        )
+        reference._conn.execute(
+            "CREATE TABLE reconcile_attempts (attempt_id TEXT PRIMARY KEY)"
+        )
+        reference._conn.execute(
+            "CREATE TABLE reconcile_checkpoints (checkpoint_id TEXT PRIMARY KEY)"
+        )
+        Store._create_durable_risk_tables_v7(reference)
+
+        def signature(conn: sqlite3.Connection) -> dict[tuple[str, str], tuple[str, str]]:
+            rows = conn.execute(
+                "SELECT type,name,tbl_name,sql FROM sqlite_master "
+                "WHERE sql IS NOT NULL"
+            ).fetchall()
+            return {
+                (str(row["type"]), str(row["name"])): (
+                    str(row["tbl_name"]),
+                    " ".join(str(row["sql"]).split()).upper(),
+                )
+                for row in rows
+                if str(row["tbl_name"]) in tables
+            }
+
+        expected = signature(reference.conn)
+        actual = signature(self.conn)
+        reference.close()
+        if actual != expected:
+            raise MigrationError("v7 durable-risk topology is incomplete")
+        if self.conn.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
+            raise MigrationError("v7 integrity_check failed")
+        if self.conn.execute("PRAGMA foreign_key_check").fetchall():
+            raise MigrationError("v7 foreign_key_check failed")
+
+    def _initialize_v7_idempotent(self) -> None:
+        self._validate_durable_risk_schema_v7()
+
+    def _migrate_v6_to_v7(self) -> None:
+        if self.get_meta("schema_version") == str(SCHEMA_VERSION_DURABLE_RISK):
+            self._initialize_v7_idempotent()
+            return
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            if self.get_meta("schema_version") != str(SCHEMA_VERSION_FULL_RECONCILE):
+                raise MigrationError("v6-to-v7 requires schema_version=6")
+            for name in ("risk_day_checkpoints", "risk_control_latches"):
+                if self.conn.execute(
+                    "SELECT 1 FROM sqlite_master WHERE name = ?", (name,)
+                ).fetchone():
+                    raise MigrationError(
+                        f"v6-to-v7 aborted: pre-existing object {name!r}"
+                    )
+            before = self._evidence_census(_FULL_RECONCILE_EVIDENCE_TABLES)
+            self._create_durable_risk_tables_v7()
+            self._validate_durable_risk_schema_v7()
+            if self._evidence_census(_FULL_RECONCILE_EVIDENCE_TABLES) != before:
+                raise MigrationError("v6-to-v7 altered predecessor evidence")
+            cursor = self.conn.execute(
+                "UPDATE meta SET value = ? WHERE key='schema_version' AND value=?",
+                (
+                    str(SCHEMA_VERSION_DURABLE_RISK),
+                    str(SCHEMA_VERSION_FULL_RECONCILE),
+                ),
+            )
+            if cursor.rowcount != 1:
+                raise MigrationError("v6-to-v7 version update rowcount mismatch")
+            self.conn.commit()
+        except Exception as exc:
+            self.conn.rollback()
+            try:
+                self.conn.execute(
+                    "INSERT OR REPLACE INTO meta(key,value) VALUES (?,?)",
+                    (
+                        RISK_CONTROLS_MIGRATION_FAILURE_KEY,
+                        f"RISK_CONTROLS_MIGRATION_FAILED:{type(exc).__name__}",
+                    ),
+                )
+                self.conn.commit()
+            except Exception:
+                self.conn.rollback()
             raise
 
     def _migrate_v3_to_v4(self) -> None:
@@ -4446,8 +4669,14 @@ class Store:
         return actions
 
     def full_reconcile_enabled(self) -> bool:
-        """True only when the opt-in v6 reconciliation ledger is active."""
-        return self.get_meta("schema_version") == str(SCHEMA_VERSION_FULL_RECONCILE)
+        """True when the v6 ledger or an additive successor is active."""
+        return self.get_meta("schema_version") in {
+            str(SCHEMA_VERSION_FULL_RECONCILE),
+            str(SCHEMA_VERSION_DURABLE_RISK),
+        }
+
+    def durable_risk_controls_enabled(self) -> bool:
+        return self.get_meta("schema_version") == str(SCHEMA_VERSION_DURABLE_RISK)
 
     def _require_full_reconcile(self) -> None:
         if not self.full_reconcile_enabled():
@@ -4521,6 +4750,7 @@ class Store:
         fresh: bool,
         snapshot_payload: Mapping[str, Any] | None = None,
         coverage_upper_bound_ms: int | None = None,
+        risk_policy: DurableRiskPolicy | None = None,
     ) -> str | None:
         """Commit one attempt's whole outcome atomically.
 
@@ -4532,6 +4762,17 @@ class Store:
         Returns the new checkpoint id when the attempt was accepted.
         """
         self._require_full_reconcile()
+        if accepted and self.durable_risk_controls_enabled():
+            if not isinstance(risk_policy, DurableRiskPolicy):
+                raise ReconcileConflictError(
+                    "RISK_POLICY_REQUIRED",
+                    "schema v7 acceptance requires an approved durable policy",
+                )
+            if (snapshot_payload or {}).get("version") != SNAPSHOT_PAYLOAD_VERSION_V2:
+                raise ReconcileConflictError(
+                    "RISK_DAY_REQUIRES_V2_PAYLOAD",
+                    "schema v7 daily risk requires checkpoint-bound v2 rows",
+                )
         if accepted and state is not ReconcileAttemptState.COMPLETE:
             raise ReconcileConflictError(
                 "RECONCILE_ACCEPT_REQUIRES_COMPLETE",
@@ -4871,6 +5112,15 @@ class Store:
                     "INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)",
                     (RECONCILE_CHECKPOINT_POINTER_KEY, checkpoint_id),
                 )
+                if self.durable_risk_controls_enabled():
+                    self._append_risk_day_state_locked(
+                        checkpoint_id=checkpoint_id,
+                        attempt_id=attempt_id,
+                        run_id=run_id,
+                        accepted_ts=resolved_end,
+                        snapshot_payload=dict(snapshot_payload or {}),
+                        policy=risk_policy,
+                    )
                 if (
                     previous_coverage is not None
                     and int(coverage_upper_bound_ms) < previous_coverage
@@ -4886,6 +5136,244 @@ class Store:
             self.conn.rollback()
             raise
         return checkpoint_id
+
+    def _append_risk_day_state_locked(
+        self,
+        *,
+        checkpoint_id: str,
+        attempt_id: str,
+        run_id: str,
+        accepted_ts: datetime,
+        snapshot_payload: Mapping[str, Any],
+        policy: DurableRiskPolicy,
+    ) -> None:
+        environment = self.conn.execute(
+            "SELECT mode, network FROM runs WHERE run_id=?", (run_id,)
+        ).fetchone()
+        if environment is None:
+            raise ReconcileConflictError("RISK_ENVIRONMENT_MISSING", "run missing")
+        mode, network = str(environment["mode"]), str(environment["network"])
+        accepted_ts = accepted_ts.astimezone(UTC)
+        trading_date = accepted_ts.date().isoformat()
+        day_start = datetime.combine(accepted_ts.date(), datetime.min.time(), tzinfo=UTC)
+
+        previous = self.conn.execute(
+            """SELECT accepted_ts FROM risk_day_checkpoints
+               WHERE mode=? AND network=?
+               ORDER BY accepted_ts DESC LIMIT 1""",
+            (mode, network),
+        ).fetchone()
+        if previous is not None:
+            previous_ts = datetime.fromisoformat(str(previous["accepted_ts"]))
+            if previous_ts.tzinfo is None:
+                previous_ts = previous_ts.replace(tzinfo=UTC)
+            if accepted_ts < previous_ts.astimezone(UTC):
+                raise ReconcileConflictError(
+                    "RISK_DAY_CLOCK_ROLLBACK",
+                    "accepted checkpoint time moved backwards",
+                )
+
+        try:
+            balances = snapshot_payload["risk_rows"]["BALANCES"]
+            if not isinstance(balances, list) or len(balances) != 1:
+                raise ValueError
+            equity = float(balances[0]["equity"])
+            if not math.isfinite(equity) or equity < 0.0:
+                raise ValueError
+        except (KeyError, TypeError, ValueError):
+            raise ReconcileConflictError(
+                "RISK_DAY_STATE_MALFORMED", "authoritative equity is malformed"
+            ) from None
+
+        baseline = self.conn.execute(
+            """SELECT checkpoint_id, accepted_ts, equity
+               FROM risk_day_checkpoints
+               WHERE mode=? AND network=? AND accepted_ts <= ?
+               ORDER BY accepted_ts DESC, risk_day_row_id DESC LIMIT 1""",
+            (mode, network, _to_iso(day_start)),
+        ).fetchone()
+        if accepted_ts == day_start:
+            baseline_checkpoint_id = checkpoint_id
+            baseline_ts = accepted_ts
+            baseline_equity = equity
+        elif baseline is None:
+            baseline_checkpoint_id = None
+            baseline_ts = None
+            baseline_equity = None
+        else:
+            baseline_checkpoint_id = str(baseline["checkpoint_id"])
+            baseline_ts = datetime.fromisoformat(str(baseline["accepted_ts"]))
+            baseline_equity = float(baseline["equity"])
+
+        prior_peak = self.conn.execute(
+            """SELECT MAX(peak_equity) AS peak
+               FROM risk_day_checkpoints
+               WHERE mode=? AND network=? AND trading_date=?""",
+            (mode, network, trading_date),
+        ).fetchone()["peak"]
+        peak_equity = max(
+            equity,
+            baseline_equity if baseline_equity is not None else equity,
+            float(prior_peak) if prior_peak is not None else equity,
+        )
+        funding = self.conn.execute(
+            """SELECT
+                 COALESCE(SUM(CASE WHEN attribution='ATTRIBUTED'
+                                   THEN amount_usdc ELSE 0 END),0) AS attributed,
+                 COALESCE(SUM(CASE WHEN attribution='UNATTRIBUTED'
+                                   THEN 1 ELSE 0 END),0) AS unexplained
+               FROM funding_events
+               WHERE effective_ts >= ? AND effective_ts <= ?""",
+            (_to_iso(day_start), _to_iso(accepted_ts)),
+        ).fetchone()
+        attributed = float(funding["attributed"])
+        unexplained = int(funding["unexplained"]) > 0
+        authoritative = baseline_equity is not None and not unexplained
+        reason = (
+            "AUTHORITATIVE"
+            if authoritative
+            else (
+                RISK_DAY_UNEXPLAINED_CASHFLOW
+                if unexplained
+                else RISK_DAY_BASELINE_MISSING
+            )
+        )
+        baseline_source = (
+            "CHECKPOINT_AT_OR_BEFORE_UTC_MIDNIGHT"
+            if baseline_equity is not None
+            else "MISSING"
+        )
+        daily_pnl_value = (
+            None if baseline_equity is None else equity - float(baseline_equity)
+        )
+        daily_loss_pct_value = (
+            None
+            if baseline_equity is None
+            else max(0.0, -float(daily_pnl_value) / float(baseline_equity))
+        )
+        drawdown_pct_value = max(0.0, (peak_equity - equity) / peak_equity)
+        self.conn.execute(
+            """INSERT INTO risk_day_checkpoints(
+                 checkpoint_id, attempt_id, run_id, mode, network, trading_date,
+                 policy_version, baseline_source, baseline_checkpoint_id, baseline_ts,
+                 baseline_equity, peak_equity, equity, daily_pnl,
+                 daily_loss_pct, drawdown_pct, realized_pnl_local,
+                 funding_attributed_usdc, authoritative, reason_code,
+                 accepted_ts, recorded_ts
+               ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                checkpoint_id,
+                attempt_id,
+                run_id,
+                mode,
+                network,
+                trading_date,
+                policy.version,
+                baseline_source,
+                baseline_checkpoint_id,
+                _to_iso(baseline_ts),
+                baseline_equity,
+                peak_equity,
+                equity,
+                daily_pnl_value,
+                daily_loss_pct_value,
+                drawdown_pct_value,
+                float(self.realized_pnl_today(run_id)),
+                attributed,
+                1 if authoritative else 0,
+                reason,
+                _to_iso(accepted_ts),
+                _to_iso(self.now()),
+            ),
+        )
+        if not authoritative:
+            return
+        daily_pnl = equity - float(baseline_equity)
+        controls = (
+            (
+                RISK_CONTROL_EQUITY_STOP,
+                RISK_LATCH_ACCOUNT_SCOPE,
+                equity,
+                policy.equity_floor_usdc,
+                equity <= policy.equity_floor_usdc,
+            ),
+            (
+                RISK_CONTROL_DAILY_LOSS,
+                trading_date,
+                daily_pnl,
+                -(float(baseline_equity) * policy.max_daily_loss_pct),
+                daily_pnl <= -(float(baseline_equity) * policy.max_daily_loss_pct),
+            ),
+            (
+                RISK_CONTROL_MAX_DRAWDOWN,
+                trading_date,
+                peak_equity - equity,
+                peak_equity * policy.max_intraday_drawdown_pct,
+                peak_equity - equity >= peak_equity * policy.max_intraday_drawdown_pct,
+            ),
+        )
+        for control, scope_key, observed, threshold, breached in controls:
+            if not breached:
+                continue
+            active = self._active_latch_row_locked(
+                mode=mode,
+                network=network,
+                control=control,
+                scope_key=scope_key,
+            )
+            if active is not None:
+                continue
+            generation = int(
+                self.conn.execute(
+                    """SELECT COALESCE(MAX(generation),0)+1 FROM risk_control_latches
+                       WHERE mode=? AND network=? AND control=? AND scope_key=?""",
+                    (mode, network, control, scope_key),
+                ).fetchone()[0]
+            )
+            self.conn.execute(
+                """INSERT INTO risk_control_latches(
+                     record_kind,control,scope_key,mode,network,run_id,trading_date,
+                     checkpoint_id,supersedes_row_id,generation,observed_value,
+                     threshold_value,baseline_equity,peak_equity,equity,
+                     policy_version,actor,reason_code,latched_ts,recorded_ts
+                   ) VALUES ('LATCH',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (
+                    control,
+                    scope_key,
+                    mode,
+                    network,
+                    run_id,
+                    trading_date,
+                    checkpoint_id,
+                    None,
+                    generation,
+                    float(observed),
+                    float(threshold),
+                    float(baseline_equity),
+                    peak_equity,
+                    equity,
+                    policy.version,
+                    None,
+                    f"{control}_LIMIT",
+                    _to_iso(accepted_ts),
+                    _to_iso(self.now()),
+                ),
+            )
+
+    def _active_latch_row_locked(
+        self, *, mode: str, network: str, control: str, scope_key: str
+    ) -> sqlite3.Row | None:
+        return self.conn.execute(
+            """SELECT l.* FROM risk_control_latches l
+               WHERE l.record_kind='LATCH' AND l.mode=? AND l.network=?
+                 AND l.control=? AND l.scope_key=?
+                 AND NOT EXISTS (
+                   SELECT 1 FROM risk_control_latches r
+                   WHERE r.record_kind='RESET'
+                     AND r.supersedes_row_id=l.latch_row_id)
+               ORDER BY l.generation DESC LIMIT 1""",
+            (mode, network, control, scope_key),
+        ).fetchone()
 
     @staticmethod
     def _validate_v2_risk_rows(
@@ -5891,6 +6379,262 @@ class Store:
             return {"gate_results": []}
         payload = json.loads(row["payload_json"] or "{}")
         return {"gate_results": payload.get("gates", [])}
+
+    def list_risk_day_checkpoints(self) -> list[dict[str, Any]]:
+        if not self.durable_risk_controls_enabled():
+            return []
+        return self._rows(
+            "SELECT * FROM risk_day_checkpoints ORDER BY risk_day_row_id"
+        )
+
+    def list_risk_control_latches(self) -> list[dict[str, Any]]:
+        if not self.durable_risk_controls_enabled():
+            return []
+        return self._rows(
+            "SELECT * FROM risk_control_latches ORDER BY latch_row_id"
+        )
+
+    def active_risk_control_latches(
+        self, *, run_id: str, now: datetime
+    ) -> tuple[RiskControlLatch, ...]:
+        if not self.durable_risk_controls_enabled():
+            return ()
+        environment = self.conn.execute(
+            "SELECT mode,network FROM runs WHERE run_id=?", (run_id,)
+        ).fetchone()
+        if environment is None:
+            return ()
+        rows = self._active_risk_control_latch_rows_locked(
+            mode=str(environment["mode"]),
+            network=str(environment["network"]),
+        )
+        return self._risk_control_latches_from_rows(rows)
+
+    def _active_risk_control_latch_rows_locked(
+        self, *, mode: str, network: str
+    ) -> Sequence[sqlite3.Row]:
+        return self.conn.execute(
+            """SELECT l.* FROM risk_control_latches l
+               WHERE l.record_kind='LATCH' AND l.mode=? AND l.network=?
+                 AND NOT EXISTS (
+                   SELECT 1 FROM risk_control_latches r
+                   WHERE r.record_kind='RESET'
+                     AND r.supersedes_row_id=l.latch_row_id)
+               ORDER BY CASE l.control
+                 WHEN 'EQUITY_STOP' THEN 1
+                 WHEN 'DAILY_LOSS' THEN 2 ELSE 3 END, l.latch_row_id""",
+            (mode, network),
+        ).fetchall()
+
+    @staticmethod
+    def _risk_control_latches_from_rows(
+        rows: Sequence[sqlite3.Row],
+    ) -> tuple[RiskControlLatch, ...]:
+        return tuple(
+            RiskControlLatch(
+                latch_row_id=int(row["latch_row_id"]),
+                control=str(row["control"]),
+                scope_key=str(row["scope_key"]),
+                trading_date=str(row["trading_date"]),
+                checkpoint_id=str(row["checkpoint_id"]),
+                generation=int(row["generation"]),
+                observed_value=float(row["observed_value"]),
+                threshold_value=float(row["threshold_value"]),
+                equity=float(row["equity"]),
+                reason_code=str(row["reason_code"]),
+                policy_version=str(row["policy_version"]),
+                latched_ts=datetime.fromisoformat(str(row["latched_ts"])),
+            )
+            for row in rows
+        )
+
+    def load_durable_risk_view(
+        self, *, now: datetime, max_age_s: float, policy_version: str
+    ) -> tuple[AuthoritativeRiskSnapshot, DailyRiskState]:
+        if not self.durable_risk_controls_enabled():
+            raise RiskSnapshotUnavailable(RISK_DAY_SCHEMA_INACTIVE)
+        if self.conn.in_transaction:
+            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_TRANSACTION_ACTIVE)
+        self.conn.execute("BEGIN")
+        try:
+            snapshot = self._load_risk_snapshot_locked(now=now, max_age_s=max_age_s)
+            row = self.conn.execute(
+            """SELECT d.*, r.mode, r.network
+               FROM risk_day_checkpoints d
+               JOIN runs r ON r.run_id=d.run_id
+               WHERE d.checkpoint_id=?""",
+            (snapshot.checkpoint_id,),
+            ).fetchone()
+            if row is None:
+                raise RiskSnapshotUnavailable(RISK_DAY_CHECKPOINT_MISMATCH)
+            if str(row["trading_date"]) != now.astimezone(UTC).date().isoformat():
+                raise RiskSnapshotUnavailable(RISK_DAY_DATE_MISMATCH)
+            if int(row["authoritative"]) != 1:
+                raise RiskSnapshotUnavailable(str(row["reason_code"]))
+            if str(row["policy_version"]) != str(policy_version):
+                raise RiskSnapshotUnavailable(RISK_DAY_POLICY_MISMATCH)
+            if float(row["equity"]) != snapshot.equity:
+                raise RiskSnapshotUnavailable(RISK_DAY_CHECKPOINT_MISMATCH)
+            baseline_ts = datetime.fromisoformat(str(row["baseline_ts"]))
+            accepted_ts = datetime.fromisoformat(str(row["accepted_ts"]))
+            latch_rows = self._active_risk_control_latch_rows_locked(
+                mode=str(row["mode"]), network=str(row["network"])
+            )
+            latches = self._risk_control_latches_from_rows(latch_rows)
+            if self.get_meta(RECONCILE_CHECKPOINT_POINTER_KEY) != snapshot.checkpoint_id:
+                raise RiskSnapshotUnavailable(RISK_SNAPSHOT_POINTER_MOVED)
+            daily = DailyRiskState(
+            mode=str(row["mode"]),
+            network=str(row["network"]),
+            trading_date=str(row["trading_date"]),
+            checkpoint_id=str(row["checkpoint_id"]),
+            attempt_id=str(row["attempt_id"]),
+            run_id=str(row["run_id"]),
+            accepted_ts=accepted_ts,
+            loaded_ts=now.astimezone(UTC),
+            baseline_checkpoint_id=str(row["baseline_checkpoint_id"]),
+            baseline_ts=baseline_ts,
+            baseline_equity=float(row["baseline_equity"]),
+            peak_equity=float(row["peak_equity"]),
+            equity=float(row["equity"]),
+            realized_pnl_local=float(row["realized_pnl_local"]),
+            funding_attributed_usdc=float(row["funding_attributed_usdc"]),
+            policy_version=str(row["policy_version"]),
+            active_latches=latches,
+            )
+            return snapshot, daily
+        except RiskSnapshotUnavailable:
+            raise
+        except Exception as exc:
+            raise RiskSnapshotUnavailable(self._risk_read_reason(exc)) from None
+        finally:
+            self.conn.rollback()
+
+    def record_risk_control_reset(
+        self,
+        *,
+        latch_row_id: int,
+        actor: str,
+        acknowledgement: str,
+        policy: DurableRiskPolicy,
+        now: datetime,
+        max_age_s: float,
+    ) -> int:
+        if not actor.strip():
+            raise RiskControlConflictError(
+                "RISK_RESET_ACTOR_REQUIRED", "human actor is required"
+            )
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            latch = self.conn.execute(
+            "SELECT * FROM risk_control_latches "
+            "WHERE latch_row_id=? AND record_kind='LATCH'",
+            (int(latch_row_id),),
+            ).fetchone()
+            if latch is None:
+                raise RiskControlConflictError(
+                "RISK_RESET_LATCH_UNKNOWN", "latch does not exist"
+                )
+            if str(latch["policy_version"]) != policy.version:
+                raise RiskControlConflictError(
+                    "RISK_RESET_POLICY_MISMATCH", "approved policy must match latch"
+                )
+            if self.conn.execute(
+            "SELECT 1 FROM risk_control_latches "
+            "WHERE record_kind='RESET' AND supersedes_row_id=?",
+            (int(latch_row_id),),
+            ).fetchone():
+                raise RiskControlConflictError(
+                "RISK_RESET_ALREADY_RECORDED", "latch already reset"
+                )
+            expected = risk_control_reset_token(
+            str(latch["control"]), str(latch["scope_key"])
+            )
+            if acknowledgement != expected:
+                raise RiskControlConflictError(
+                "RISK_RESET_ACKNOWLEDGEMENT_INVALID",
+                "exact human acknowledgement is required",
+                )
+            pointer = self.get_meta(RECONCILE_CHECKPOINT_POINTER_KEY)
+            latest = self.conn.execute(
+            """SELECT * FROM risk_day_checkpoints
+               WHERE checkpoint_id=? AND mode=? AND network=?""",
+            (pointer, str(latch["mode"]), str(latch["network"])),
+            ).fetchone()
+            if latest is None or int(latest["authoritative"]) != 1:
+                raise RiskControlConflictError(
+                "RISK_RESET_REQUIRES_SAFE_CHECKPOINT",
+                "fresh authoritative checkpoint is required",
+                )
+            accepted_ts = self._risk_utc(str(latest["accepted_ts"]))
+            observed_now = now.astimezone(UTC)
+            age = (observed_now - accepted_ts).total_seconds()
+            if (
+                not math.isfinite(float(max_age_s))
+                or float(max_age_s) < 0
+                or age < 0
+                or age > float(max_age_s)
+                or str(latest["policy_version"]) != policy.version
+                or self.latest_resolved_reconcile_attempt_id() != str(latest["attempt_id"])
+            ):
+                raise RiskControlConflictError(
+                    "RISK_RESET_REQUIRES_SAFE_CHECKPOINT",
+                    "fresh latest-resolved checkpoint is required",
+                )
+            if str(latch["control"]) in {
+            RISK_CONTROL_DAILY_LOSS,
+            RISK_CONTROL_MAX_DRAWDOWN,
+            } and str(latest["trading_date"]) <= str(latch["trading_date"]):
+                raise RiskControlConflictError(
+                "RISK_RESET_REQUIRES_NEW_DAY", "new UTC-day baseline is required"
+                )
+            if (
+            str(latch["control"]) == RISK_CONTROL_EQUITY_STOP
+                and float(latest["equity"]) <= float(latch["threshold_value"])
+            ):
+                raise RiskControlConflictError(
+                "RISK_RESET_REQUIRES_SAFE_CHECKPOINT",
+                "equity remains below the approved floor",
+                )
+            cursor = self.conn.execute(
+                """INSERT INTO risk_control_latches(
+                     record_kind,control,scope_key,mode,network,run_id,trading_date,
+                     checkpoint_id,supersedes_row_id,generation,observed_value,
+                     threshold_value,baseline_equity,peak_equity,equity,
+                     policy_version,actor,reason_code,latched_ts,recorded_ts
+                   ) VALUES ('RESET',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (
+                    str(latch["control"]),
+                    str(latch["scope_key"]),
+                    str(latch["mode"]),
+                    str(latch["network"]),
+                    str(latest["run_id"]),
+                    str(latest["trading_date"]),
+                    str(latest["checkpoint_id"]),
+                    int(latch_row_id),
+                    int(latch["generation"]),
+                    float(latest["equity"]),
+                    float(latch["threshold_value"]),
+                    float(latest["baseline_equity"]),
+                    float(latest["peak_equity"]),
+                    float(latest["equity"]),
+                    policy.version,
+                    actor.strip(),
+                    "HUMAN_RESET",
+                    _to_iso(now),
+                    _to_iso(self.now()),
+                ),
+            )
+            self.conn.commit()
+            return int(cursor.lastrowid)
+        except sqlite3.IntegrityError as exc:
+            self.conn.rollback()
+            raise RiskControlConflictError(
+                "RISK_RESET_ALREADY_RECORDED", "latch already reset"
+            ) from exc
+        except Exception:
+            self.conn.rollback()
+            raise
 
     def _rows(self, sql: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
         return [dict(row) for row in self.conn.execute(sql, params).fetchall()]

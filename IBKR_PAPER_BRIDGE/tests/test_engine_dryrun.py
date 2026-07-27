@@ -1256,3 +1256,330 @@ async def _full_failure_keeps_light_budget(tmp_path):
     assert "RECONCILE_FAILED" not in codes
     assert "RECONCILE_FAILED_TOLERATED" not in codes
     store.close()
+
+
+# ---------------------------------------------------------------------------
+# TS-P1-007 — durable risk controls on the engine path (opt-in v7)
+#
+# The engine clock, the store clock and the mock adapter's observation clock are
+# one frozen domain, so UTC-day boundaries and freshness are deterministic.
+# Nothing below injects a daily-risk number: every value is derived by a real
+# accepted capture.
+# ---------------------------------------------------------------------------
+
+V7_DAY = datetime(2026, 7, 26, 0, 0, tzinfo=UTC)
+
+
+def _v7_risk_config():
+    return RiskConfig(
+        max_position_notional_pct=0.5,
+        max_daily_loss_pct=0.02,
+        max_intraday_drawdown_pct=0.05,
+        equity_floor_usdc=500.0,
+    )
+
+
+def _set_equity(broker, equity: float) -> None:
+    equity = float(equity)
+    broker.full_account = {
+        "equity": equity,
+        "withdrawable": equity,
+        "margin_used": 0.0,
+        "available_margin": equity,
+    }
+
+
+class _MovableClock:
+    def __init__(self, start: datetime) -> None:
+        self.value = start
+
+    def __call__(self) -> datetime:
+        return self.value
+
+
+def _v7_engine(tmp_path, name, run_id, *, store_cls=Store, equity=10_000.0):
+    """A v7 engine whose whole clock domain starts two hours before the day."""
+    clock = _MovableClock(V7_DAY - timedelta(hours=2))
+    store = store_cls(tmp_path / name, clock=clock)
+    store.initialize(target_schema_version=7)
+    store.create_run(run_id, "paper", "testnet", {})
+    broker = MockBroker([], starting_equity=equity)
+    broker.full_clock = clock
+    _set_equity(broker, equity)
+    engine = BridgeEngine(
+        run_id=run_id,
+        broker=broker,
+        store=store,
+        strategy=NoSignalStrategy(),
+        risk_engine=RiskEngine(_v7_risk_config()),
+        state="DISARMED",
+        clock=clock,
+    )
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = clock.value
+    return store, broker, engine, clock
+
+
+async def _capture_at(engine, broker, clock, when, equity):
+    """One full capture observed at ``when`` with ``equity`` on the account."""
+    clock.value = when
+    _set_equity(broker, equity)
+    engine.last_reconcile_ts = when
+    return await engine.run_full_reconcile()
+
+
+def test_v7_arm_requires_an_established_utc_day_baseline(tmp_path):
+    asyncio.run(_v7_arm_requires_baseline(tmp_path))
+
+
+async def _v7_arm_requires_baseline(tmp_path):
+    from bridge.engine.types import RISK_DAY_BASELINE_MISSING
+
+    store, broker, engine, clock = _v7_engine(tmp_path, "v7-arm.db", "v7-arm")
+
+    # First capture of the very first day: no checkpoint at/before 00:00 UTC.
+    first = await _capture_at(
+        engine, broker, clock, V7_DAY + timedelta(hours=1), 10_000.0
+    )
+    assert first.accepted is True, first.reason_code
+    assert engine.full_reconcile_ready() is True
+    with pytest.raises(RuntimeError, match=RISK_DAY_BASELINE_MISSING):
+        await engine.arm()
+    assert engine.state == "DISARMED"
+    assert engine.risk_snapshot_error == RISK_DAY_BASELINE_MISSING
+
+    # Establish the next day's baseline the approved way: a real accepted
+    # checkpoint at/before its 00:00 UTC boundary.
+    next_day = V7_DAY + timedelta(days=1)
+    await _capture_at(engine, broker, clock, next_day - timedelta(minutes=1), 10_000.0)
+    await _capture_at(engine, broker, clock, next_day + timedelta(hours=1), 9_950.0)
+    await engine.arm()
+    assert store.get_meta("app_state") == "ARMED"
+    assert engine.risk_snapshot_error is None
+    store.close()
+
+
+def test_v7_exact_daily_loss_boundary_latches_and_submits_nothing(tmp_path):
+    asyncio.run(_v7_daily_loss_boundary(tmp_path))
+
+
+async def _v7_daily_loss_boundary(tmp_path):
+    from bridge.engine.types import RISK_CONTROL_DAILY_LOSS
+
+    store, broker, engine, clock = _v7_engine(tmp_path, "v7-daily.db", "v7-daily")
+    await _capture_at(engine, broker, clock, V7_DAY - timedelta(minutes=1), 10_000.0)
+    await _capture_at(engine, broker, clock, V7_DAY + timedelta(hours=1), 9_801.0)
+    await engine.arm()
+    assert store.get_meta("app_state") == "ARMED"
+    assert store.list_risk_control_latches() == []
+
+    # Exactly -2.00% of the day-start equity.
+    await _capture_at(engine, broker, clock, V7_DAY + timedelta(hours=2), 9_800.0)
+    latches = store.list_risk_control_latches()
+    assert len(latches) == 1
+    assert latches[0]["control"] == RISK_CONTROL_DAILY_LOSS
+    # The veto is independent of any strategy signal: the capture alone disarms.
+    assert engine.state == "DISARMED"
+    assert engine.risk_control_latch == RISK_CONTROL_DAILY_LOSS
+    codes = [row["code"] for row in store.get_events()]
+    assert codes.count("RISK_CONTROL_LATCHED") == 1
+
+    # Even a forcibly re-armed persisted state cannot get an order out.
+    engine.state = "ARMED"
+    engine.risk_input_error = None
+    engine.risk_snapshot_error = None
+    engine.risk_control_latch = None
+    store.set_meta("app_state", "ARMED")
+    engine.strategy = FixedSignalStrategy(stop_loss=90.0)
+    clock.value = V7_DAY + timedelta(hours=2, seconds=5)
+    engine.last_reconcile_ts = clock.value
+    await engine.on_bar(
+        Bar(ts=clock.value, open=100, high=101, low=99, close=100, volume=1)
+    )
+    decisions = store.get_snapshot()["decisions"]
+    stages = [row["stage"] for row in decisions]
+    assert "SUBMITTED" not in stages
+    assert "RISK_PASS" not in stages
+    reject = [row for row in decisions if row["stage"] == "RISK_REJECT"][-1]
+    import json as _json
+
+    assert _json.loads(reject["payload_json"])["reason"] == (
+        f"RISK_CONTROL_LATCHED:{RISK_CONTROL_DAILY_LOSS}"
+    )
+    assert engine.state == "DISARMED"
+    assert store.get_meta("app_state") == "DISARMED"
+    # No second latch row: a crossing latches exactly once.
+    assert len(store.list_risk_control_latches()) == 1
+    store.close()
+
+
+def test_v7_manual_arm_is_refused_while_a_latch_is_active(tmp_path):
+    asyncio.run(_v7_manual_arm_refused(tmp_path))
+
+
+async def _v7_manual_arm_refused(tmp_path):
+    store, broker, engine, clock = _v7_engine(tmp_path, "v7-latch-arm.db", "v7-latch-arm")
+    await _capture_at(engine, broker, clock, V7_DAY - timedelta(minutes=1), 10_000.0)
+    await _capture_at(engine, broker, clock, V7_DAY + timedelta(hours=1), 400.0)
+    assert [row["control"] for row in store.list_risk_control_latches()] == [
+        "EQUITY_STOP",
+        "DAILY_LOSS",
+        "MAX_DRAWDOWN",
+    ]
+
+    with pytest.raises(RuntimeError, match="risk control latched"):
+        await engine.arm()
+    assert engine.state == "DISARMED"
+    assert store.get_meta("app_state") == "DISARMED"
+
+    # Recovered equity on a whole new UTC day still cannot arm: an equity stop
+    # is account-scoped and needs an explicit owner acknowledgement.
+    next_day = V7_DAY + timedelta(days=1)
+    await _capture_at(engine, broker, clock, next_day - timedelta(minutes=1), 50_000.0)
+    await _capture_at(engine, broker, clock, next_day + timedelta(hours=1), 50_000.0)
+    with pytest.raises(RuntimeError, match="risk control latched"):
+        await engine.arm()
+    store.close()
+
+
+def test_v7_latch_and_baseline_survive_restart_and_start_disarmed(tmp_path):
+    asyncio.run(_v7_latch_survives_restart(tmp_path))
+
+
+async def _v7_latch_survives_restart(tmp_path):
+    from bridge.engine.types import RISK_CONTROL_DAILY_LOSS
+
+    store, broker, engine, clock = _v7_engine(tmp_path, "v7-restart.db", "v7-restart")
+    await _capture_at(engine, broker, clock, V7_DAY - timedelta(minutes=1), 10_000.0)
+    await _capture_at(engine, broker, clock, V7_DAY + timedelta(hours=1), 9_800.0)
+    assert engine.state == "DISARMED"
+    days_before = store.list_risk_day_checkpoints()
+    latches_before = store.list_risk_control_latches()
+    # Worst case: the persisted state lies and claims ARMED.
+    store.set_meta("app_state", "ARMED")
+    store.close()
+
+    reopened = Store(tmp_path / "v7-restart.db", clock=clock)
+    reopened.initialize(target_schema_version=7)
+    restarted = BridgeEngine(
+        run_id="v7-restart",
+        broker=broker,
+        store=reopened,
+        strategy=NoSignalStrategy(),
+        risk_engine=RiskEngine(_v7_risk_config()),
+        state="DISARMED",
+        clock=clock,
+    )
+    assert reopened.list_risk_day_checkpoints() == days_before
+    assert reopened.list_risk_control_latches() == latches_before
+    assert restarted.risk_control_latch == RISK_CONTROL_DAILY_LOSS
+    assert restarted._app_state() == "DISARMED"
+    assert reopened.get_meta("app_state") == "DISARMED"
+    with pytest.raises(RuntimeError, match="risk control latched"):
+        await restarted.arm()
+    reopened.close()
+
+
+def test_v7_utc_rollover_blocks_until_a_fresh_checkpoint_establishes_the_day(tmp_path):
+    asyncio.run(_v7_utc_rollover_blocks(tmp_path))
+
+
+async def _v7_utc_rollover_blocks(tmp_path):
+    from bridge.engine.types import RISK_DAY_DATE_MISMATCH
+
+    store, broker, engine, clock = _v7_engine(tmp_path, "v7-rollover.db", "v7-rollover")
+    # Establish July 25 from a real checkpoint at/before its UTC boundary,
+    # then prove rollover blocks July 26 until its own baseline exists.
+    await _capture_at(
+        engine, broker, clock, V7_DAY - timedelta(days=1, minutes=1), 10_000.0
+    )
+    await _capture_at(engine, broker, clock, V7_DAY - timedelta(seconds=30), 10_000.0)
+    await engine.arm()
+    assert store.get_meta("app_state") == "ARMED"
+
+    # One second past midnight the newest durable day row still describes
+    # yesterday; D2=A blocks rather than carrying the budget across the boundary.
+    clock.value = V7_DAY + timedelta(seconds=1)
+    engine.last_reconcile_ts = clock.value
+    engine.strategy = FixedSignalStrategy(stop_loss=90.0)
+    await engine.on_bar(
+        Bar(ts=clock.value, open=100, high=101, low=99, close=100, volume=1)
+    )
+    assert engine.risk_snapshot_error == RISK_DAY_DATE_MISMATCH
+    assert engine.state == "DISARMED"
+    stages = [row["stage"] for row in store.get_snapshot()["decisions"]]
+    assert "SUBMITTED" not in stages and "RISK_PASS" not in stages
+    store.close()
+
+
+def test_v7_forced_persistence_failure_disarms_and_retains_evidence(tmp_path):
+    asyncio.run(_v7_persistence_failure(tmp_path))
+
+
+async def _v7_persistence_failure(tmp_path):
+    import sqlite3
+
+    class BrokenRiskDayStore(Store):
+        break_day_state = False
+
+        def _append_risk_day_state_locked(self, **kwargs):
+            if self.break_day_state:
+                raise sqlite3.OperationalError("risk day ledger unavailable")
+            return super()._append_risk_day_state_locked(**kwargs)
+
+    store, broker, engine, clock = _v7_engine(
+        tmp_path, "v7-broken.db", "v7-broken", store_cls=BrokenRiskDayStore
+    )
+    await _capture_at(engine, broker, clock, V7_DAY - timedelta(minutes=1), 10_000.0)
+    await _capture_at(
+        engine, broker, clock, V7_DAY + timedelta(minutes=30), 10_000.0
+    )
+    await engine.arm()
+    assert engine.state == "ARMED"
+    good = store.latest_accepted_reconcile_checkpoint()
+    assert good is not None
+    days_before = store.list_risk_day_checkpoints()
+
+    store.break_day_state = True
+    failed = await _capture_at(
+        engine, broker, clock, V7_DAY + timedelta(hours=1), 9_000.0
+    )
+    assert failed.accepted is False
+    # The accept transaction rolled back whole: no new checkpoint, no new day
+    # row, and the previous pointer is untouched.
+    assert store.latest_accepted_reconcile_checkpoint()["checkpoint_id"] == (
+        good["checkpoint_id"]
+    )
+    assert store.list_risk_day_checkpoints() == days_before
+    # The failure itself is retained as durable append-only evidence.
+    attempts = store.list_reconcile_attempts("v7-broken")
+    assert attempts[-1]["state"] == "INCOMPLETE"
+    assert engine.full_reconcile_error is not None
+    assert engine.full_reconcile_ready() is False
+    assert engine.state == "DISARMED"
+    assert store.get_meta("app_state") == "DISARMED"
+    with pytest.raises(RuntimeError):
+        await engine.arm()
+    assert store.get_meta("app_state") == "DISARMED"
+    store.close()
+
+
+def test_v6_engine_risk_path_is_untouched_by_ts_p1_007(tmp_path):
+    asyncio.run(_v6_path_untouched(tmp_path))
+
+
+async def _v6_path_untouched(tmp_path):
+    store, _broker, engine = _v6_engine(tmp_path, "v6-untouched.db", "v6-untouched")
+    accepted = await engine.run_full_reconcile()
+    assert accepted.accepted is True
+    assert store.durable_risk_controls_enabled() is False
+    await engine.arm()
+    engine.strategy = FixedSignalStrategy(stop_loss=90.0)
+    await engine.on_bar(
+        Bar(ts=datetime.now(UTC), open=100, high=101, low=99, close=100, volume=1)
+    )
+    stages = [row["stage"] for row in store.get_snapshot()["decisions"]]
+    assert "RISK_PASS" in stages
+    assert engine.risk_snapshot_error is None
+    assert engine.risk_control_latch is None
+    store.close()

@@ -181,3 +181,10 @@ This does **not** supersede the interim realized-PnL or consecutive-loss
 calculation. Funding remains evidence only, the current UTC-day behavior and
 numeric thresholds are unchanged, and broker-reconciled PnL/equity-stop/
 drawdown policy remains TS-P1-007.
+# Supersession note
+
+The interim current-equity-denominator daily-loss path remains compatible on
+schemas v4-v6. It is superseded only on the opt-in schema-v7 path by
+checkpoint-bound day-start equity, monotonic peak drawdown, the absolute equity
+floor, and durable append-only control latches. See
+`28_FULL_TSP1007_RISK_CONTROLS.md`.
