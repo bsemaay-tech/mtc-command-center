@@ -188,9 +188,9 @@ def test_mock_installed_stop_is_reduce_only_and_opposite_side():
 def test_mock_flatten_reduces_only_the_requested_size():
     broker = _broker_with_position()
     broker.position = Position(symbol="BTC", size=2.0, entry_px=100.0)
-    asyncio.run(broker.flatten_reduce_only(symbol="BTC", cloid="0xflat", size=1.0))
+    asyncio.run(broker.flatten_reduce_only(symbol="BTC", cloid="0xflat", size=1.0, exit_side="SELL"))
     assert broker.position.size == 1.0
-    asyncio.run(broker.flatten_reduce_only(symbol="BTC", cloid="0xflat2", size=1.0))
+    asyncio.run(broker.flatten_reduce_only(symbol="BTC", cloid="0xflat2", size=1.0, exit_side="SELL"))
     assert broker.position is None
 
 
@@ -204,7 +204,7 @@ def test_mock_kill_mutations_keep_authoritative_full_fixtures_in_sync():
 
     asyncio.run(broker.cancel_order_by_cloid("entry-1", "BTC"))
     asyncio.run(
-        broker.flatten_reduce_only(symbol="BTC", cloid="0xkillflat", size=1.0)
+        broker.flatten_reduce_only(symbol="BTC", cloid="0xkillflat", size=1.0, exit_side="SELL")
     )
 
     assert broker.full_open_orders == []

@@ -178,7 +178,9 @@ class Broker(Protocol):
     def planned_cloids(self, plan: OrderPlan) -> dict[str, str]:
         ...
 
-    async def place_bracket(self, plan: OrderPlan) -> SubmissionOutcome:
+    async def place_bracket(
+        self, plan: OrderPlan, *, pre_send_guard: Callable[[], bool] | None = None
+    ) -> SubmissionOutcome:
         ...
 
     async def submission_recovery_evidence(
@@ -265,7 +267,7 @@ class PartialRecoveryBroker(Protocol):
         ...
 
     async def flatten_reduce_only(
-        self, *, symbol: str, cloid: str, size: float
+        self, *, symbol: str, cloid: str, size: float, exit_side: str
     ) -> FlattenResult:
         """Reduce-only market close of exactly ``size`` on ``symbol``."""
         ...
@@ -289,7 +291,7 @@ class KillRecoveryBroker(Protocol):
         ...
 
     async def flatten_reduce_only(
-        self, *, symbol: str, cloid: str, size: float
+        self, *, symbol: str, cloid: str, size: float, exit_side: str
     ) -> FlattenResult:
         ...
 

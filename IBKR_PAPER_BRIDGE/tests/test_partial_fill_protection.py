@@ -2573,7 +2573,7 @@ class KillRecordingBroker(MockBroker):
 
 class PartialKillFlattenBroker(KillRecordingBroker):
     async def flatten_reduce_only(
-        self, *, symbol: str, cloid: str, size: float
+        self, *, symbol: str, cloid: str, size: float, exit_side: str
     ):
         self.partial_calls.append(("flatten_reduce_only", str(cloid)))
         self._reduce_position(symbol, float(size) / 2.0, cloid)
@@ -2903,6 +2903,10 @@ def test_kill_flatten_true_closes_exact_owned_lots_before_protection_cancel(
     assert broker._find_order("owned-sl")["status"] == "CANCELLED_BY_ENGINE"
     assert store.active_kill_request()["terminal_state"] == "SAFE_FLAT"
     assert store.active_kill_request()["safe_checkpoint_id"] is not None
+    flatten = store.kill_actions_for_episode(
+        store.active_kill_request()["episode_id"], kind="FLATTEN"
+    )[0]
+    assert flatten["exit_side"] == "SELL"
 
 
 @pytest.mark.parametrize("extra", [0.5, -2.0])
@@ -3059,6 +3063,96 @@ def test_kill_partial_flatten_never_mints_second_close(tmp_path):
     ]) == 1
     assert broker.position is not None and broker.position.size == 0.5
     assert store.active_kill_request()["terminal_reason"] == "FLATTEN_PARTIAL"
+
+
+def test_kill_filled_qty_without_durable_fill_is_ambiguous_and_never_flattens(tmp_path):
+    store, broker, engine = _kill_scenario(
+        tmp_path, position_size=1.0, protection=True
+    )
+    store.conn.execute("DELETE FROM fills WHERE cloid='owned-filled'")
+    store.conn.commit()
+
+    asyncio.run(engine.kill(flatten=True))
+
+    assert not [call for call in broker.partial_calls if call[0] == "flatten_reduce_only"]
+    assert store.active_kill_request()["terminal_state"] == "AMBIGUOUS"
+
+
+def test_kill_restart_clock_rollback_never_recreates_write_budget(tmp_path):
+    clock = Clock(FROZEN)
+    store, broker, engine = _kill_scenario(tmp_path, clock=clock)
+    broker.scripted_cancel.append(
+        ScriptedOutcome(ActionOutcome.NOT_APPLIED, applied=False, reason_code="NO")
+    )
+    original_query = broker.query_order
+
+    async def exact_not_applied(cloid, symbol):
+        if str(cloid) == "owned-entry":
+            return OrderQueryResult(
+                known=True, found=False, terminal=True,
+                cloid="owned-entry", symbol="BTC",
+                evidence=Evidence("QUERY_ORDER", "MOCK_TERMINAL"),
+            )
+        return await original_query(cloid, symbol)
+
+    broker.query_order = exact_not_applied
+    asyncio.run(engine.kill(flatten=False))
+    clock.now = FROZEN - timedelta(seconds=1)
+    restarted = BridgeEngine(
+        run_id="kill-run", broker=broker, store=store,
+        strategy=KeltnerTrailEma8(), risk_engine=RiskEngine(RiskConfig()),
+        state="DISARMED", clock=clock,
+    )
+    asyncio.run(restarted.kill(flatten=False))
+    assert [call for call in broker.partial_calls if call[0] == "cancel_order_by_cloid"] == [
+        ("cancel_order_by_cloid", "owned-entry")
+    ]
+
+
+def test_kill_flatten_direct_not_applied_resends_once_same_identity_unknown_never(tmp_path):
+    store, broker, engine = _kill_scenario(
+        tmp_path, position_size=1.0, protection=True
+    )
+    broker.scripted_flatten.extend([
+        ScriptedOutcome(ActionOutcome.NOT_APPLIED, applied=False, reason_code="NO"),
+        ScriptedOutcome(ActionOutcome.UNKNOWN, applied=False, reason_code="TIMEOUT"),
+    ])
+    asyncio.run(engine.kill(flatten=True))
+    asyncio.run(engine.kill(flatten=True))
+    asyncio.run(engine.kill(flatten=True))
+    calls = [call for call in broker.partial_calls if call[0] == "flatten_reduce_only"]
+    assert len(calls) == 2
+    assert calls[0][1] == calls[1][1]
+
+
+def test_kill_flatten_unknown_replay_is_query_only_after_one_write(tmp_path):
+    store, broker, engine = _kill_scenario(
+        tmp_path, position_size=1.0, protection=True
+    )
+    broker.scripted_flatten.append(
+        ScriptedOutcome(ActionOutcome.UNKNOWN, applied=False, reason_code="TIMEOUT")
+    )
+    original_query = broker.query_order
+
+    async def unknown_flatten_only(cloid, symbol):
+        if str(cloid) != "owned-entry" and str(cloid) != "owned-sl":
+            return OrderQueryResult(
+                known=False,
+                evidence=Evidence("QUERY_ORDER", "MOCK_FLATTEN_QUERY_UNAVAILABLE"),
+            )
+        return await original_query(cloid, symbol)
+
+    broker.query_order = unknown_flatten_only
+
+    asyncio.run(engine.kill(flatten=True))
+    asyncio.run(engine.kill(flatten=True))
+
+    calls = [call for call in broker.partial_calls if call[0] == "flatten_reduce_only"]
+    assert len(calls) == 1
+    action = store.kill_actions_for_episode(
+        store.active_kill_request()["episode_id"], kind="FLATTEN"
+    )[0]
+    assert action["current_outcome"] == "UNKNOWN"
 
 
 def test_kill_evidence_write_failure_never_fabricates_completion(

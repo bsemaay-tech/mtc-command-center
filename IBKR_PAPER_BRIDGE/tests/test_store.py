@@ -261,6 +261,7 @@ def test_kill_request_action_event_and_pointer_survive_reopen(tmp_path):
         qty_lots=125,
         cloid=compute_kill_action_cloid(flatten_action_id),
         deadline_ts=datetime.now(UTC) + timedelta(seconds=5),
+        exit_side="SELL",
     )
     assert is_replay is False
     store.record_kill_action_event(

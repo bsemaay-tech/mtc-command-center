@@ -211,7 +211,9 @@ class MockBroker:
             roles.append("TP")
         return {role: f"{seed}:{role}" for role in roles}
 
-    async def place_bracket(self, plan: OrderPlan) -> SubmissionOutcome:
+    async def place_bracket(
+        self, plan: OrderPlan, *, pre_send_guard: Callable[[], bool] | None = None
+    ) -> SubmissionOutcome:
         if not self.connected:
             raise BrokerPreSendFailure("MOCK_NOT_CONNECTED")
         if len(self.bars) < 2:
@@ -220,6 +222,8 @@ class MockBroker:
         cloids = self.planned_cloids(plan)
         write_started = False
         try:
+            if pre_send_guard is not None and not pre_send_guard():
+                raise BrokerPreSendFailure("MOCK_KILL_PRE_SEND_VETO")
             write_started = True
             entry = self._order(
                 "ENTRY",
@@ -461,6 +465,8 @@ class MockBroker:
                 known=True,
                 found=False,
                 terminal=True,
+                cloid=str(cloid),
+                symbol=str(symbol),
                 evidence=Evidence("QUERY_ORDER", "MOCK_ORDER_ABSENT"),
             )
         status = str(order.get("status", "OPEN"))
@@ -479,6 +485,8 @@ class MockBroker:
                 and not isinstance(order.get("oid"), bool)
                 else None
             ),
+            cloid=str(order.get("cloid") or ""),
+            symbol=str(order.get("symbol") or ""),
             evidence=Evidence("QUERY_ORDER", "MOCK_ORDER_FOUND"),
         )
 
@@ -592,8 +600,13 @@ class MockBroker:
         )
 
     async def flatten_reduce_only(
-        self, *, symbol: str, cloid: str, size: float
+        self, *, symbol: str, cloid: str, size: float, exit_side: str
     ) -> FlattenResult:
+        if str(exit_side).upper() not in {"BUY", "SELL"}:
+            return FlattenResult(
+                ActionOutcome.NOT_APPLIED, str(cloid),
+                Evidence("FLATTEN", "MOCK_EXIT_SIDE_INVALID"),
+            )
         self.partial_calls.append(("flatten_reduce_only", str(cloid)))
         script = self._next_script(self.scripted_flatten)
         if script is not None:

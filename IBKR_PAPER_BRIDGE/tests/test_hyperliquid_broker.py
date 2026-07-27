@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
+from copy import deepcopy
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import Mock, create_autospec
@@ -1898,7 +1899,7 @@ def test_symbol_snapshot_conflicting_positions_are_inexact():
 @pytest.mark.parametrize(
     ("raw", "known", "found", "terminal"),
     [
-        ({"status": "unknownOid"}, True, False, True),
+        ({"status": "unknownOid"}, False, False, False),
         (
             {"status": "order", "order": {"status": "open",
                                           "order": {"origSz": "2.0", "sz": "1.0"}}},
@@ -1919,15 +1920,23 @@ def test_symbol_snapshot_conflicting_positions_are_inexact():
     ],
 )
 def test_parse_order_query_is_strict(raw, known, found, terminal):
-    result = HyperliquidBroker._parse_order_query(raw, "0xabc")
+    raw = deepcopy(raw)
+    if isinstance(raw, dict) and raw.get("status") == "order":
+        payload = raw.get("order")
+        if isinstance(payload, dict) and isinstance(payload.get("status"), str):
+            inner = payload.setdefault("order", {})
+            if isinstance(inner, dict):
+                inner.setdefault("cloid", "0xabc")
+                inner.setdefault("coin", "BTC")
+    result = HyperliquidBroker._parse_order_query(raw, "0xabc", "BTC")
     assert (result.known, result.found, result.terminal) == (known, found, terminal)
 
 
 def test_parse_order_query_computes_filled_size():
     result = HyperliquidBroker._parse_order_query(
         {"status": "order",
-         "order": {"status": "open", "order": {"origSz": "2.0", "sz": "0.5"}}},
-        "0xabc",
+         "order": {"status": "open", "order": {"cloid": "0xabc", "coin": "BTC", "origSz": "2.0", "sz": "0.5"}}},
+        "0xabc", "BTC",
     )
     assert result.filled_size == 1.5
 
@@ -1938,14 +1947,33 @@ def test_kill_query_evidence_carries_exact_oid_and_terminal_fill_size():
             "status": "order",
             "order": {
                 "status": "filled",
-                "order": {"oid": 4242, "origSz": "1.25", "sz": "0"},
+                "order": {"oid": 4242, "cloid": "0x" + "a" * 32, "coin": "BTC", "origSz": "1.25", "sz": "0"},
             },
         },
-        "0x" + "a" * 32,
+        "0x" + "a" * 32, "BTC",
     )
     assert result.known is True and result.terminal is True
     assert result.oid == 4242
     assert result.filled_size == 1.25
+
+
+def test_kill_query_rejects_mismatched_returned_cloid_and_coin():
+    result = HyperliquidBroker._parse_order_query(
+        {
+            "status": "order",
+            "order": {
+                "status": "filled",
+                "order": {
+                    "oid": 4242, "cloid": "0x" + "b" * 32,
+                    "coin": "ETH", "origSz": "1.0", "sz": "0",
+                },
+            },
+        },
+        "0x" + "a" * 32,
+        "BTC",
+    )
+    assert result.known is False
+    assert result.evidence.reason_code == "HL_QUERY_IDENTITY_MISMATCH"
 
 
 def test_query_order_open_order_absence_is_not_authoritative():
@@ -2016,42 +2044,49 @@ def test_typed_place_transport_failure_is_unknown():
 
 
 def test_typed_flatten_transport_failure_is_unknown():
-    def boom(coin, sz, slippage, cloid):
+    def boom(*args, **kwargs):
         raise TimeoutError("gateway timeout")
 
     broker = HyperliquidBroker(
         info_client=object(),
-        exchange_client=SimpleNamespace(market_close=boom),
+        exchange_client=SimpleNamespace(_slippage_price=lambda *args: 100.0, order=boom),
         account_address="0xabc",
     )
     result = asyncio.run(
-        broker.flatten_reduce_only(symbol="BTC", cloid="0x" + "3" * 32, size=1.0)
+        broker.flatten_reduce_only(symbol="BTC", cloid="0x" + "3" * 32, size=1.0, exit_side="SELL")
     )
     assert result.outcome is ActionOutcome.UNKNOWN
 
 
-def test_kill_flatten_passes_exact_size_and_stable_cloid_to_sdk_reduce_only_close():
+def test_kill_flatten_uses_frozen_side_even_if_wallet_position_would_flip():
     calls = []
 
-    def market_close(coin, sz, slippage, cloid):
-        calls.append((coin, sz, slippage, cloid))
+    def order(*args, **kwargs):
+        calls.append((args, kwargs))
         return _OK_RESTING
 
     raw_cloid = "0x" + "6" * 32
     broker = HyperliquidBroker(
         info_client=object(),
-        exchange_client=SimpleNamespace(market_close=market_close),
+        exchange_client=SimpleNamespace(
+            _slippage_price=lambda symbol, is_buy, slippage: 99.0,
+            order=order,
+            wallet=SimpleNamespace(address="wallet-position-must-not-be-read"),
+        ),
         account_address="0xabc",
     )
 
     result = asyncio.run(
-        broker.flatten_reduce_only(symbol="BTC", cloid=raw_cloid, size=1.25)
+        broker.flatten_reduce_only(symbol="BTC", cloid=raw_cloid, size=1.25, exit_side="SELL")
     )
 
     assert result.outcome is ActionOutcome.APPLIED
-    assert calls[0][:3] == ("BTC", 1.25, 0.05)
-    assert isinstance(calls[0][3], Cloid)
-    assert calls[0][3].to_raw() == raw_cloid
+    args, kwargs = calls[0]
+    assert args == ("BTC", False, 1.25, 99.0)
+    assert kwargs["order_type"] == {"limit": {"tif": "Ioc"}}
+    assert kwargs["reduce_only"] is True
+    assert isinstance(kwargs["cloid"], Cloid)
+    assert kwargs["cloid"].to_raw() == raw_cloid
 
 
 def test_typed_place_registers_spec_only_when_applied():
@@ -2089,7 +2124,7 @@ def test_typed_surface_without_clients_is_not_applied_not_success():
         )
     )
     flat = asyncio.run(
-        broker.flatten_reduce_only(symbol="BTC", cloid="0x" + "5" * 32, size=1.0)
+        broker.flatten_reduce_only(symbol="BTC", cloid="0x" + "5" * 32, size=1.0, exit_side="SELL")
     )
     query = asyncio.run(broker.query_order("0x" + "5" * 32, "BTC"))
     assert cancel.outcome is ActionOutcome.NOT_APPLIED

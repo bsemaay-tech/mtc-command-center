@@ -418,19 +418,46 @@ class OrderManager:
         trade_directions: dict[int, str] = {}
         trade_decisions: dict[int, str] = {}
         for row in self.store.kill_owned_position_rows(symbol):
-            if str(row.get("trade_run_id") or "") != self.run_id:
-                continue
+            if (
+                str(row.get("trade_run_id") or "") != self.run_id
+                or str(row.get("trade_coin") or "") != symbol
+            ):
+                raise _KillEvidenceFault(
+                    KillTerminalState.AMBIGUOUS, "POSITION_LINEAGE_INCOMPLETE"
+                )
             trade_id = row.get("trade_id")
             direction = str(row.get("trade_direction") or "").upper()
-            if trade_id is None or direction not in {"LONG", "SHORT"}:
+            if (
+                trade_id is None
+                or direction not in {"LONG", "SHORT"}
+                or not str(row.get("decision_uid") or "")
+            ):
                 raise _KillEvidenceFault(
                     KillTerminalState.AMBIGUOUS, "POSITION_LINEAGE_INCOMPLETE"
                 )
             try:
-                filled_lots = quantize_lots(abs(float(row["filled_qty"])), lot)
+                reported_lots = quantize_lots(abs(float(row["filled_qty"])), lot)
+                durable_lots = quantize_lots(
+                    abs(float(row["durable_fill_qty"])), lot
+                )
             except (KeyError, LotQuantizationError, TypeError, ValueError) as exc:
                 reason = getattr(exc, "reason_code", "FILLED_QUANTITY_INVALID")
                 raise _KillEvidenceFault(KillTerminalState.AMBIGUOUS, reason) from exc
+            fill_uids = {
+                value for value in str(
+                    row.get("durable_fill_decision_uids") or ""
+                ).split(",") if value
+            }
+            if (
+                int(row.get("durable_fill_count") or 0) <= 0
+                or durable_lots != reported_lots
+                or fill_uids != {str(row["decision_uid"])}
+                or int(row.get("durable_fill_identity_conflicts") or 0) != 0
+            ):
+                raise _KillEvidenceFault(
+                    KillTerminalState.AMBIGUOUS, "OWNED_FILL_LINEAGE_CONFLICT"
+                )
+            filled_lots = durable_lots
             sign = 1 if direction == "LONG" else -1
             contribution = sign * filled_lots
             if str(row.get("role") or "").upper() != "ENTRY":
@@ -480,11 +507,27 @@ class OrderManager:
         }
 
     def _kill_remaining(self, action: Mapping[str, Any]) -> float:
-        action_id = str(action["action_id"])
-        deadline = datetime.fromisoformat(str(action["deadline_ts"]))
-        if deadline.tzinfo is None:
-            deadline = deadline.replace(tzinfo=UTC)
-        wall_remaining = (deadline.astimezone(UTC) - self._kill_now()).total_seconds()
+        action_id = str(action.get("action_id") or "")
+        try:
+            reserved = datetime.fromisoformat(str(action["reserved_ts"]))
+            deadline = datetime.fromisoformat(str(action["deadline_ts"]))
+            if reserved.tzinfo is None:
+                reserved = reserved.replace(tzinfo=UTC)
+            if deadline.tzinfo is None:
+                deadline = deadline.replace(tzinfo=UTC)
+            reserved = reserved.astimezone(UTC)
+            deadline = deadline.astimezone(UTC)
+        except (KeyError, TypeError, ValueError):
+            return 0.0
+        now = self._kill_now()
+        if (
+            not action_id
+            or deadline <= reserved
+            or (deadline - reserved).total_seconds() > KILL_VERIFY_DEADLINE_S + 0.001
+            or now < reserved
+        ):
+            return 0.0
+        wall_remaining = (deadline - now).total_seconds()
         mono_deadline = self._kill_mono_deadlines.get(action_id)
         if mono_deadline is None:
             mono_deadline = self._monotonic() + max(
@@ -494,6 +537,16 @@ class OrderManager:
         return max(
             0.0,
             min(wall_remaining, mono_deadline - self._monotonic()),
+        )
+
+    @staticmethod
+    def _kill_query_identity_matches(
+        query: Any, *, cloid: str, symbol: str
+    ) -> bool:
+        return (
+            bool(getattr(query, "known", False))
+            and str(getattr(query, "cloid", "") or "") == str(cloid)
+            and str(getattr(query, "symbol", "") or "") == str(symbol)
         )
 
     async def _kill_await(self, action: Mapping[str, Any], awaitable: Any) -> Any:
@@ -546,7 +599,7 @@ class OrderManager:
                 f"CANCEL_QUERY_FAILED_{type(exc).__name__}",
             )
             return False
-        if not query.known:
+        if not self._kill_query_identity_matches(query, cloid=target, symbol=symbol):
             self._kill_record(
                 str(action["action_id"]),
                 "UNKNOWN",
@@ -680,7 +733,7 @@ class OrderManager:
                 f"FLATTEN_QUERY_FAILED_{type(exc).__name__}",
             )
             return "UNKNOWN"
-        if not query.known:
+        if not self._kill_query_identity_matches(query, cloid=cloid, symbol=symbol):
             self._kill_record(
                 action_id,
                 "UNKNOWN",
@@ -713,6 +766,11 @@ class OrderManager:
                     "trade_id": trade_id,
                     "qty": lots_to_size(qty_lots, lot),
                     "filled_qty": lots_to_size(filled_lots, lot),
+                    "decision_uid": str(
+                        (self.store.get_trade(int(trade_id)) or {}).get(
+                            "entry_decision_uid", ""
+                        )
+                    ),
                 },
             )
             self._drain_queued_events_locked(symbol)
@@ -735,6 +793,7 @@ class OrderManager:
         qty_lots: int,
         lot: LotUnit,
         trade_id: int,
+        exit_side: str,
     ) -> str:
         existing = self.store.kill_actions_for_episode(
             episode_id, kind=KillActionKind.FLATTEN.value
@@ -745,6 +804,19 @@ class OrderManager:
                     KillTerminalState.AMBIGUOUS, "FLATTEN_ACTION_AMBIGUOUS"
                 )
             action = existing[0]
+            if str(action.get("exit_side") or "") not in {"BUY", "SELL"}:
+                raise _KillEvidenceFault(
+                    KillTerminalState.AMBIGUOUS, "FLATTEN_EXIT_SIDE_MISSING"
+                )
+            if str(action["current_outcome"]) == ActionOutcome.NOT_APPLIED.value:
+                sent_count = sum(
+                    1 for event in self.store.kill_action_events(str(action["action_id"]))
+                    if str(event["status"]) == "SENT"
+                )
+                if sent_count < 2 and self._kill_remaining(action) > 0:
+                    return await self._kill_send_flatten(
+                        action, symbol=symbol, lot=lot, trade_id=trade_id
+                    )
             return await self._kill_query_flatten(
                 action,
                 symbol=symbol,
@@ -769,6 +841,7 @@ class OrderManager:
             deadline_ts=reserved_ts + timedelta(seconds=KILL_VERIFY_DEADLINE_S),
             action_id=action_id,
             reserved_ts=reserved_ts,
+            exit_side=exit_side,
         )
         if replay and str(action["current_outcome"]) != ActionOutcome.NOT_APPLIED.value:
             return await self._kill_query_flatten(
@@ -778,6 +851,21 @@ class OrderManager:
                 lot=lot,
                 trade_id=trade_id,
             )
+        return await self._kill_send_flatten(
+            action, symbol=symbol, lot=lot, trade_id=trade_id
+        )
+
+    async def _kill_send_flatten(
+        self, action: Mapping[str, Any], *, symbol: str, lot: LotUnit, trade_id: int
+    ) -> str:
+        action_id = str(action["action_id"])
+        cloid = str(action["cloid"])
+        qty_lots = int(action["qty_lots"])
+        exit_side = str(action.get("exit_side") or "")
+        if self._kill_remaining(action) <= 0:
+            return await self._kill_query_flatten(
+                action, symbol=symbol, qty_lots=qty_lots, lot=lot, trade_id=trade_id
+            )
         self._kill_record(action_id, "SENT", "FLATTEN_SEND_STARTED")
         try:
             result = await self._kill_await(
@@ -786,6 +874,7 @@ class OrderManager:
                     symbol=symbol,
                     cloid=cloid,
                     size=lots_to_size(qty_lots, lot),
+                    exit_side=exit_side,
                 ),
             )
         except asyncio.TimeoutError:
@@ -958,6 +1047,7 @@ class OrderManager:
                     qty_lots=position_lots,
                     lot=model["lot"],
                     trade_id=int(trade_id),
+                    exit_side=exit_side_for(float(snapshot.net_size)),
                 )
                 if flattened == "PARTIAL":
                     return {
@@ -1031,6 +1121,16 @@ class OrderManager:
             return await self._submit_plan_locked(
                 decision_uid, plan, strategy_id=strategy_id
             )
+
+    def _new_risk_pre_send_allowed(self, symbol: str) -> bool:
+        """Synchronous last-wire veto used by adapters at their write boundary."""
+        state = self.store.get_meta("app_state")
+        return not (
+            self.kill_latched
+            or (state is not None and state != "ARMED")
+            or self.store.has_submission_quarantine()
+            or self._partial_recovery_owns(symbol)
+        )
 
     async def _submit_plan_locked(
         self, decision_uid: str, plan: OrderPlan, *, strategy_id: str
@@ -1111,9 +1211,8 @@ class OrderManager:
             ),
             "leverage": plan.leverage,
         }
-        # This is the last risk-authority check before the synchronous durable
-        # reservation and the immediately following broker coroutine call.  No
-        # awaited gap exists between this check and reservation.
+        # This authorizes durable reservation only. The adapter receives a
+        # separate synchronous guard and must re-check it at the write boundary.
         state = self.store.get_meta("app_state")
         if (
             self.kill_latched
@@ -1152,7 +1251,10 @@ class OrderManager:
         plan.decision_uid = request_id
         try:
             try:
-                broker_result = await self.broker.place_bracket(plan)
+                broker_result = await self.broker.place_bracket(
+                    plan,
+                    pre_send_guard=lambda: self._new_risk_pre_send_allowed(symbol),
+                )
             except BrokerPreSendFailure as exc:
                 reason_code = self._safe_broker_reason_code(
                     exc.reason_code, "PRE_SEND_FAILURE"
@@ -1188,6 +1290,11 @@ class OrderManager:
             self._quarantine_unknown(attempt_id, "UNTYPED_BROKER_RESULT")
             raise UnknownSubmissionError(
                 "UNTYPED_BROKER_RESULT", request_id, attempt_id
+            )
+        if self.kill_latched:
+            self._quarantine_unknown(attempt_id, "KILL_LATCHED_DURING_TRANSMISSION")
+            raise UnknownSubmissionError(
+                "KILL_LATCHED_DURING_TRANSMISSION", request_id, attempt_id
             )
         if broker_result.disposition is SubmissionDisposition.DEFINITIVE_REJECTION:
             if broker_result.orders:
@@ -3417,10 +3524,18 @@ class OrderManager:
             )
             return None
         known = bool(getattr(result, "known", False))
-        if not known:
+        identity_matches = (
+            str(getattr(result, "cloid", "") or "") == str(cloid)
+            and str(getattr(result, "symbol", "") or "") == symbol
+        )
+        if not known or not identity_matches:
             self.store.record_partial_action_event(
                 action_id=action_id, status=ActionRecordStatus.UNKNOWN.value,
-                reason_code=f"{label}_QUERY_UNKNOWN", evidence_source="BROKER",
+                reason_code=(
+                    f"{label}_QUERY_UNKNOWN" if not known
+                    else f"{label}_QUERY_IDENTITY_MISMATCH"
+                ),
+                evidence_source="BROKER",
                 evidence={},
             )
             return None
@@ -3874,6 +3989,7 @@ class OrderManager:
                 cloid,
                 reservation_lots,
                 reservation_snapshot.lot,
+                exit_side_for(float(reservation_snapshot.net_size)),
             )
         return True
 
@@ -3885,6 +4001,7 @@ class OrderManager:
         cloid: str,
         live_lots: int,
         lot: LotUnit,
+        exit_side: str,
     ) -> None:
         symbol = str(recovery["symbol"])
         self.symbol_locks.require(symbol)
@@ -3895,7 +4012,8 @@ class OrderManager:
         )
         try:
             result = await broker.flatten_reduce_only(
-                symbol=symbol, cloid=cloid, size=lots_to_size(live_lots, lot)
+                symbol=symbol, cloid=cloid, size=lots_to_size(live_lots, lot),
+                exit_side=exit_side,
             )
         except Exception as exc:  # noqa: BLE001
             self._drain_queued_events_locked(symbol)

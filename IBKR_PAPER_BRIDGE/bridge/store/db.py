@@ -2136,6 +2136,7 @@ class Store:
               target TEXT NOT NULL CHECK(length(trim(target)) > 0),
               qty_lots INTEGER,
               cloid TEXT NOT NULL CHECK(length(trim(cloid)) > 0),
+              exit_side TEXT CHECK(exit_side IN ('BUY','SELL')),
               reserved_ts TEXT NOT NULL,
               deadline_ts TEXT NOT NULL,
               current_outcome TEXT NOT NULL CHECK(current_outcome IN
@@ -2190,6 +2191,7 @@ class Store:
               OR OLD.target IS NOT NEW.target
               OR OLD.qty_lots IS NOT NEW.qty_lots
               OR OLD.cloid IS NOT NEW.cloid
+              OR OLD.exit_side IS NOT NEW.exit_side
               OR OLD.reserved_ts IS NOT NEW.reserved_ts
               OR OLD.deadline_ts IS NOT NEW.deadline_ts
             BEGIN SELECT RAISE(ABORT, 'immutable kill action identity'); END""")
@@ -2326,6 +2328,14 @@ class Store:
                 or str(action["cloid"]) != expected_cloid
             ):
                 raise MigrationError("v9 kill action identity mismatch")
+            if str(action["kind"]) == KillActionKind.FLATTEN.value and str(
+                action["exit_side"] or ""
+            ) not in {"BUY", "SELL"}:
+                raise MigrationError("v9 kill flatten exit side missing")
+            if str(action["kind"]) == KillActionKind.CANCEL.value and action[
+                "exit_side"
+            ] is not None:
+                raise MigrationError("v9 cancel carries exit side")
             try:
                 reserved = datetime.fromisoformat(str(action["reserved_ts"]))
                 deadline = datetime.fromisoformat(str(action["deadline_ts"]))
@@ -4978,15 +4988,21 @@ class Store:
         deadline_ts: datetime | str,
         action_id: str | None = None,
         reserved_ts: datetime | str | None = None,
+        exit_side: str | None = None,
     ) -> tuple[bool, dict[str, Any]]:
         self._require_kill_schema()
         action_kind = KillActionKind(str(kind))
         safe_target = str(target).strip()
         safe_cloid = str(cloid).strip()
+        safe_exit_side = None if exit_side is None else str(exit_side).upper()
         if not safe_target or not safe_cloid:
             raise KillConflictError(
                 "KILL_ACTION_MALFORMED", "target and cloid are required"
             )
+        if action_kind is KillActionKind.FLATTEN and safe_exit_side not in {"BUY", "SELL"}:
+            raise KillConflictError("KILL_FLATTEN_EXIT_SIDE_INVALID", "exit side required")
+        if action_kind is KillActionKind.CANCEL and safe_exit_side is not None:
+            raise KillConflictError("KILL_CANCEL_EXIT_SIDE_INVALID", "exit side forbidden")
         expected_id = compute_kill_action_id(
             episode_id=str(episode_id),
             kind=action_kind.value,
@@ -5024,6 +5040,7 @@ class Store:
                     or str(row["target"]) != safe_target
                     or row["qty_lots"] != qty_lots
                     or str(row["cloid"]) != safe_cloid
+                    or row["exit_side"] != safe_exit_side
                 ):
                     raise KillConflictError(
                         "KILL_ACTION_IDENTITY_CONFLICT",
@@ -5048,8 +5065,8 @@ class Store:
             self.conn.execute(
                 """INSERT INTO kill_actions(
                      action_id,episode_id,kind,target,qty_lots,cloid,
-                     reserved_ts,deadline_ts,current_outcome)
-                   VALUES (?,?,?,?,?,?,?,?,'RESERVED')""",
+                     exit_side,reserved_ts,deadline_ts,current_outcome)
+                   VALUES (?,?,?,?,?,?,?,?,?,'RESERVED')""",
                 (
                     stable_id,
                     str(episode_id),
@@ -5057,6 +5074,7 @@ class Store:
                     safe_target,
                     qty_lots,
                     safe_cloid,
+                    safe_exit_side,
                     reserved,
                     deadline,
                 ),
@@ -5066,7 +5084,7 @@ class Store:
                 status="RESERVED",
                 evidence_source="LOCAL",
                 reason_code=f"{action_kind.value}_RESERVED",
-                evidence={"target": safe_target, "qty_lots": qty_lots},
+                evidence={"target": safe_target, "qty_lots": qty_lots, "exit_side": safe_exit_side},
                 observed_ts=reserved,
             )
             self.conn.commit()
@@ -5267,10 +5285,21 @@ class Store:
         return self._rows(
             """SELECT o.*, json_extract(o.order_json,'$.symbol') AS symbol,
                       t.direction AS trade_direction,
-                      t.run_id AS trade_run_id
+                      t.run_id AS trade_run_id,
+                      t.coin AS trade_coin,
+                      COALESCE(SUM(f.qty),0) AS durable_fill_qty,
+                      COUNT(f.fill_id) AS durable_fill_count,
+                      GROUP_CONCAT(DISTINCT f.decision_uid) AS durable_fill_decision_uids,
+                      COALESCE(SUM(CASE
+                        WHEN f.decision_uid IS NULL
+                          OR length(trim(f.decision_uid))=0
+                          OR f.decision_uid != o.decision_uid THEN 1
+                        ELSE 0 END),0) AS durable_fill_identity_conflicts
                FROM orders o LEFT JOIN trades t ON t.trade_id=o.trade_id
-               WHERE o.filled_qty > 0
+               LEFT JOIN fills f ON f.cloid=o.cloid
+               WHERE (o.filled_qty > 0 OR f.fill_id IS NOT NULL)
                  AND json_extract(o.order_json,'$.symbol')=?
+               GROUP BY o.cloid
                ORDER BY o.cloid""",
             (str(symbol),),
         )

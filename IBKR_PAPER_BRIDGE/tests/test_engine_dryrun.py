@@ -12,7 +12,8 @@ from bridge.engine.engine import BridgeEngine
 from bridge.engine.orders import OrderManager
 from bridge.engine.risk import RiskConfig, RiskEngine
 from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
-from bridge.engine.types import Bar, Position, Signal
+from bridge.engine.types import Bar, OrderPlan, Position, Signal
+from bridge.broker.base import SubmissionRejectedError
 from bridge.store.db import Store
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -658,6 +659,49 @@ class RecordingBroker(ProtocolOnlyBroker):
                 "avg_fill_px": plan.signal.ref_price,
             }
         }
+
+
+class PausingKillGuardBroker(MockBroker):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.entered = asyncio.Event()
+        self.resume = asyncio.Event()
+
+    async def place_bracket(self, plan, *, pre_send_guard=None):
+        self.entered.set()
+        await self.resume.wait()
+        return await super().place_bracket(plan, pre_send_guard=pre_send_guard)
+
+
+def test_kill_latch_at_paused_write_boundary_vetoes_new_bracket(tmp_path):
+    async def run() -> None:
+        store = Store(tmp_path / "kill-write-guard.db")
+        store.initialize()
+        store.create_run("guard-run", "dry_run", "testnet", {})
+        store.set_meta("app_state", "ARMED")
+        now = datetime(2026, 7, 26, 12, 0, tzinfo=UTC)
+        bars = [
+            Bar(ts=now - timedelta(minutes=1), open=100, high=101, low=99, close=100, volume=1),
+            Bar(ts=now, open=100, high=101, low=99, close=100, volume=1),
+        ]
+        broker = PausingKillGuardBroker(bars=bars)
+        broker.connected = True
+        manager = OrderManager(store, broker, "guard-run")
+        plan = OrderPlan(
+            signal=Signal(ts=now, symbol="BTC", direction="LONG", reason="test", ref_price=100),
+            qty=0.1, entry_type="MKT", stop_loss=95.0,
+        )
+        task = asyncio.create_task(manager.submit_plan("guard-decision", plan))
+        await broker.entered.wait()
+        manager.kill_latched = True
+        store.set_meta("app_state", "KILLED")
+        broker.resume.set()
+        with pytest.raises(SubmissionRejectedError):
+            await task
+        assert broker.orders == []
+        assert store.get_quarantined_submission_attempts() == []
+
+    asyncio.run(run())
 
 
 class DisarmingGate:

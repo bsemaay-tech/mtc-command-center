@@ -12,7 +12,7 @@ import logging
 import math
 import os
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from decimal import Decimal, ROUND_DOWN
 
@@ -358,7 +358,8 @@ class HyperliquidBroker:
         }
 
     async def place_bracket(
-        self, plan: OrderPlan, grouping: str = "normalTpsl"
+        self, plan: OrderPlan, grouping: str = "normalTpsl", *,
+        pre_send_guard: Callable[[], bool] | None = None,
     ) -> SubmissionOutcome:
         """Place entry + SL + optional TP as a bulk group.
 
@@ -437,6 +438,8 @@ class HyperliquidBroker:
             raise BrokerPreSendFailure("HL_REQUEST_BUILD_FAILED") from exc
 
         try:
+            if pre_send_guard is not None and not pre_send_guard():
+                raise BrokerPreSendFailure("HL_KILL_PRE_SEND_VETO")
             raw = await asyncio.to_thread(
                 self.exchange.bulk_orders, requests, grouping=grouping
             )
@@ -1155,7 +1158,7 @@ class HyperliquidBroker:
                         "QUERY_ORDER", "HL_QUERY_FAILED", detail=type(exc).__name__
                     ),
                 )
-            return self._parse_order_query(raw, cloid)
+            return self._parse_order_query(raw, cloid, symbol)
         # Fall back to the raw open-order collection: it can only prove presence,
         # and any malformed row makes the entire recovery answer inexact.
         if not hasattr(self.info, "open_orders"):
@@ -1178,9 +1181,15 @@ class HyperliquidBroker:
             )
         for order in orders:
             if order.cloid == str(cloid):
+                if str(order.coin) != str(symbol):
+                    return OrderQueryResult(
+                        known=False,
+                        evidence=Evidence("OPEN_ORDERS", "HL_QUERY_IDENTITY_MISMATCH"),
+                    )
                 return OrderQueryResult(
                     known=True, found=True, terminal=False,
                     raw_status=str(order.status),
+                    cloid=str(order.cloid), symbol=str(order.coin),
                     evidence=Evidence("OPEN_ORDERS", "HL_ORDER_PRESENT"),
                 )
         # Absence from the open-order page alone is not proof of terminality.
@@ -1190,7 +1199,9 @@ class HyperliquidBroker:
         )
 
     @classmethod
-    def _parse_order_query(cls, raw: object, cloid: str) -> OrderQueryResult:
+    def _parse_order_query(
+        cls, raw: object, cloid: str, symbol: str
+    ) -> OrderQueryResult:
         if not isinstance(raw, dict):
             return OrderQueryResult(
                 known=False, evidence=Evidence("QUERY_ORDER", "HL_QUERY_UNPARSEABLE")
@@ -1198,8 +1209,8 @@ class HyperliquidBroker:
         status = raw.get("status")
         if isinstance(status, str) and status.lower() in {"unknownoid", "unknown_oid"}:
             return OrderQueryResult(
-                known=True, found=False, terminal=True,
-                evidence=Evidence("QUERY_ORDER", "HL_ORDER_UNKNOWN_OID"),
+                known=False,
+                evidence=Evidence("QUERY_ORDER", "HL_QUERY_IDENTITY_MISSING"),
             )
         if not isinstance(status, str) or status.lower() != "order":
             return OrderQueryResult(
@@ -1224,19 +1235,32 @@ class HyperliquidBroker:
                 evidence=Evidence("QUERY_ORDER", "HL_QUERY_STATUS_UNKNOWN"),
             )
         inner = payload.get("order")
+        if not isinstance(inner, dict):
+            return OrderQueryResult(
+                known=False, evidence=Evidence("QUERY_ORDER", "HL_QUERY_IDENTITY_MISSING")
+            )
+        returned_cloid = str(inner.get("cloid") or "").strip()
+        returned_symbol = str(inner.get("coin") or "").strip()
+        if not returned_cloid or not returned_symbol:
+            return OrderQueryResult(
+                known=False, evidence=Evidence("QUERY_ORDER", "HL_QUERY_IDENTITY_MISSING")
+            )
+        if returned_cloid != str(cloid) or returned_symbol != str(symbol):
+            return OrderQueryResult(
+                known=False, evidence=Evidence("QUERY_ORDER", "HL_QUERY_IDENTITY_MISMATCH")
+            )
         filled: float | None = None
         oid: int | None = None
-        if isinstance(inner, dict):
-            raw_oid = inner.get("oid")
-            if isinstance(raw_oid, int) and not isinstance(raw_oid, bool):
-                oid = raw_oid
-            original = inner.get("origSz")
-            remaining = inner.get("sz")
-            if original is not None and remaining is not None:
-                try:
-                    filled = float(original) - float(remaining)
-                except (TypeError, ValueError):
-                    filled = None
+        raw_oid = inner.get("oid")
+        if isinstance(raw_oid, int) and not isinstance(raw_oid, bool):
+            oid = raw_oid
+        original = inner.get("origSz")
+        remaining = inner.get("sz")
+        if original is not None and remaining is not None:
+            try:
+                filled = float(original) - float(remaining)
+            except (TypeError, ValueError):
+                filled = None
         live = normalized in cls._LIVE_ORDER_STATUSES
         return OrderQueryResult(
             known=True,
@@ -1245,6 +1269,8 @@ class HyperliquidBroker:
             raw_status=normalized,
             filled_size=filled,
             oid=oid,
+            cloid=returned_cloid,
+            symbol=returned_symbol,
             evidence=Evidence("QUERY_ORDER", "HL_QUERY_COMPLETE"),
         )
 
@@ -1361,19 +1387,31 @@ class HyperliquidBroker:
         )
 
     async def flatten_reduce_only(
-        self, *, symbol: str, cloid: str, size: float
+        self, *, symbol: str, cloid: str, size: float, exit_side: str
     ) -> FlattenResult:
-        if self.exchange is None or not hasattr(self.exchange, "market_close"):
+        if self.exchange is None or not hasattr(self.exchange, "order"):
             return FlattenResult(
                 ActionOutcome.NOT_APPLIED, str(cloid),
                 Evidence("FLATTEN", "HL_NOT_CONFIGURED"),
             )
         try:
+            is_buy = str(exit_side).upper() == "BUY"
+            if str(exit_side).upper() not in {"BUY", "SELL"}:
+                return FlattenResult(
+                    ActionOutcome.NOT_APPLIED, str(cloid),
+                    Evidence("FLATTEN", "HL_EXIT_SIDE_INVALID"),
+                )
+            price = await asyncio.to_thread(
+                self.exchange._slippage_price, symbol, is_buy, 0.05
+            )
             raw = await asyncio.to_thread(
-                self.exchange.market_close,
+                self.exchange.order,
                 symbol,
-                sz=abs(float(size)),
-                slippage=0.05,
+                is_buy,
+                abs(float(size)),
+                price,
+                order_type={"limit": {"tif": "Ioc"}},
+                reduce_only=True,
                 cloid=Cloid.from_str(str(cloid)),
             )
         except Exception as exc:  # noqa: BLE001

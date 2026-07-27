@@ -810,6 +810,8 @@ class OrderQueryResult:
     raw_status: str | None = None
     filled_size: float | None = None
     oid: int | None = None
+    cloid: str | None = None
+    symbol: str | None = None
     evidence: Evidence = field(
         default_factory=lambda: Evidence("QUERY_ORDER", "UNSPECIFIED")
     )
