@@ -124,6 +124,7 @@ class FullReconciler:
         monotonic: Callable[[], float] | None = None,
         deadline_s: float = FULL_RECONCILE_DEADLINE_S,
         max_skew_s: float = FULL_RECONCILE_MAX_SKEW_S,
+        risk_policy: object | None = None,
     ) -> None:
         self.store = store
         self.broker = broker
@@ -133,6 +134,7 @@ class FullReconciler:
         self._monotonic: Callable[[], float] = monotonic or time.monotonic
         self.deadline_s = float(deadline_s)
         self.max_skew_s = float(max_skew_s)
+        self.risk_policy = risk_policy
         # Generation identity of the client the capture started with. A broker
         # rebuild mid-collection therefore invalidates the whole attempt.
         self._client_generation: tuple[int, int] | None = None
@@ -377,6 +379,7 @@ class FullReconciler:
             # Only an accepted attempt advances coverage, and it advances to
             # exactly the interval this capture proved.
             coverage_upper_bound_ms=end_ms if accepted else None,
+            risk_policy=self.risk_policy if accepted else None,
         )
         return FullReconcileResult(
             attempt_id=attempt_id,

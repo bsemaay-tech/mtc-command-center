@@ -1176,6 +1176,200 @@ RISK_SNAPSHOT_STALE = "RISK_SNAPSHOT_STALE"
 RISK_SNAPSHOT_READ_FAILED = "RISK_SNAPSHOT_READ_FAILED"
 RISK_SNAPSHOT_REQUIRED = "RISK_SNAPSHOT_REQUIRED"
 
+# TS-P1-007 durable daily-risk reason/control vocabulary.
+RISK_DAY_SCHEMA_INACTIVE = "RISK_DAY_SCHEMA_INACTIVE"
+RISK_DAY_BASELINE_MISSING = "RISK_DAY_BASELINE_MISSING"
+RISK_DAY_DATE_MISMATCH = "RISK_DAY_DATE_MISMATCH"
+RISK_DAY_POLICY_MISMATCH = "RISK_DAY_POLICY_MISMATCH"
+RISK_DAY_CHECKPOINT_MISMATCH = "RISK_DAY_CHECKPOINT_MISMATCH"
+RISK_DAY_STATE_MALFORMED = "RISK_DAY_STATE_MALFORMED"
+RISK_DAY_UNEXPLAINED_CASHFLOW = "RISK_DAY_UNEXPLAINED_CASHFLOW"
+DAILY_RISK_STATE_REQUIRED = "DAILY_RISK_STATE_REQUIRED"
+DAILY_RISK_CHECKPOINT_MISMATCH = "DAILY_RISK_CHECKPOINT_MISMATCH"
+DAILY_RISK_POLICY_MISMATCH = "DAILY_RISK_POLICY_MISMATCH"
+RISK_CONTROL_DAILY_LOSS = "DAILY_LOSS"
+RISK_CONTROL_MAX_DRAWDOWN = "MAX_DRAWDOWN"
+RISK_CONTROL_EQUITY_STOP = "EQUITY_STOP"
+RISK_LATCH_ACCOUNT_SCOPE = "ACCOUNT"
+RISK_CONTROL_ORDER = (
+    RISK_CONTROL_EQUITY_STOP,
+    RISK_CONTROL_DAILY_LOSS,
+    RISK_CONTROL_MAX_DRAWDOWN,
+)
+
+
+class RiskPolicyInvalid(ValueError):
+    """A durable risk policy is incomplete, non-finite, or unsafe."""
+
+
+@dataclass(frozen=True, slots=True)
+class DurableRiskPolicy:
+    policy_id: str
+    max_daily_loss_pct: float
+    max_intraday_drawdown_pct: float
+    equity_floor_usdc: float
+    version: str
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        policy_id: str,
+        max_daily_loss_pct: float,
+        max_intraday_drawdown_pct: float,
+        equity_floor_usdc: float,
+    ) -> DurableRiskPolicy:
+        if not isinstance(policy_id, str) or not policy_id.strip():
+            raise RiskPolicyInvalid("policy_id is required")
+        values = {
+            "max_daily_loss_pct": max_daily_loss_pct,
+            "max_intraday_drawdown_pct": max_intraday_drawdown_pct,
+            "equity_floor_usdc": equity_floor_usdc,
+        }
+        for name, value in values.items():
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise RiskPolicyInvalid(f"{name} must be numeric")
+            if not math.isfinite(float(value)):
+                raise RiskPolicyInvalid(f"{name} must be finite")
+        if not 0.0 < float(max_daily_loss_pct) <= 1.0:
+            raise RiskPolicyInvalid("max_daily_loss_pct must be in (0, 1]")
+        if not 0.0 < float(max_intraday_drawdown_pct) <= 1.0:
+            raise RiskPolicyInvalid("max_intraday_drawdown_pct must be in (0, 1]")
+        if float(equity_floor_usdc) < 0.0:
+            raise RiskPolicyInvalid("equity_floor_usdc must be non-negative")
+        payload = json.dumps(
+            {
+                "policy_id": policy_id.strip(),
+                "max_daily_loss_pct": float(max_daily_loss_pct).hex(),
+                "max_intraday_drawdown_pct": float(max_intraday_drawdown_pct).hex(),
+                "equity_floor_usdc": float(equity_floor_usdc).hex(),
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        version = f"rpol-v1:{hashlib.sha256(payload.encode('utf-8')).hexdigest()}"
+        return cls(
+            policy_id=policy_id.strip(),
+            max_daily_loss_pct=float(max_daily_loss_pct),
+            max_intraday_drawdown_pct=float(max_intraday_drawdown_pct),
+            equity_floor_usdc=float(equity_floor_usdc),
+            version=version,
+        )
+
+
+def risk_control_reset_token(control: str, scope_key: str) -> str:
+    """Exact human acknowledgement token for one immutable latch scope."""
+    return f"ACK TS-P1-007 {str(control)} {str(scope_key)}"
+
+
+def _frozen_field(index: int, name: str, doc: str) -> property:
+    def getter(self):
+        return tuple.__getitem__(self, index)
+
+    getter.__name__ = name
+    return property(getter, doc=doc)
+
+
+class _FrozenRecord(tuple):
+    __slots__ = ()
+
+    @property
+    def __class__(self):
+        return type(self)
+
+
+class RiskControlLatch(_FrozenRecord):
+    __slots__ = ()
+
+    _FIELDS = (
+        "latch_row_id", "control", "scope_key", "trading_date", "checkpoint_id",
+        "generation", "observed_value", "threshold_value", "equity",
+        "reason_code", "policy_version", "latched_ts",
+    )
+
+    def __new__(
+        cls, *, latch_row_id: int, control: str, scope_key: str,
+        trading_date: str, checkpoint_id: str, generation: int,
+        observed_value: float, threshold_value: float, equity: float,
+        reason_code: str, policy_version: str, latched_ts: datetime,
+    ) -> RiskControlLatch:
+        return tuple.__new__(cls, (
+            int(latch_row_id), str(control), str(scope_key), str(trading_date),
+            str(checkpoint_id), int(generation), float(observed_value),
+            float(threshold_value), float(equity), str(reason_code),
+            str(policy_version), latched_ts,
+        ))
+
+    latch_row_id = _frozen_field(0, "latch_row_id", "")
+    control = _frozen_field(1, "control", "")
+    scope_key = _frozen_field(2, "scope_key", "")
+    trading_date = _frozen_field(3, "trading_date", "")
+    checkpoint_id = _frozen_field(4, "checkpoint_id", "")
+    generation = _frozen_field(5, "generation", "")
+    observed_value = _frozen_field(6, "observed_value", "")
+    threshold_value = _frozen_field(7, "threshold_value", "")
+    equity = _frozen_field(8, "equity", "")
+    reason_code = _frozen_field(9, "reason_code", "")
+    policy_version = _frozen_field(10, "policy_version", "")
+    latched_ts = _frozen_field(11, "latched_ts", "")
+
+
+class DailyRiskState(_FrozenRecord):
+    __slots__ = ()
+
+    def __new__(
+        cls, *, mode: str, network: str, trading_date: str,
+        checkpoint_id: str, attempt_id: str, run_id: str,
+        accepted_ts: datetime, loaded_ts: datetime,
+        baseline_checkpoint_id: str, baseline_ts: datetime,
+        baseline_equity: float, peak_equity: float, equity: float,
+        realized_pnl_local: float, funding_attributed_usdc: float,
+        policy_version: str,
+        active_latches: tuple[RiskControlLatch, ...] = (),
+    ) -> DailyRiskState:
+        return tuple.__new__(cls, (
+            str(mode), str(network), str(trading_date), str(checkpoint_id),
+            str(attempt_id), str(run_id), accepted_ts, loaded_ts,
+            str(baseline_checkpoint_id), baseline_ts, float(baseline_equity),
+            float(peak_equity), float(equity), float(realized_pnl_local),
+            float(funding_attributed_usdc), str(policy_version),
+            tuple(active_latches),
+        ))
+
+    mode = _frozen_field(0, "mode", "")
+    network = _frozen_field(1, "network", "")
+    trading_date = _frozen_field(2, "trading_date", "")
+    checkpoint_id = _frozen_field(3, "checkpoint_id", "")
+    attempt_id = _frozen_field(4, "attempt_id", "")
+    run_id = _frozen_field(5, "run_id", "")
+    accepted_ts = _frozen_field(6, "accepted_ts", "")
+    loaded_ts = _frozen_field(7, "loaded_ts", "")
+    baseline_checkpoint_id = _frozen_field(8, "baseline_checkpoint_id", "")
+    baseline_ts = _frozen_field(9, "baseline_ts", "")
+    baseline_equity = _frozen_field(10, "baseline_equity", "")
+    peak_equity = _frozen_field(11, "peak_equity", "")
+    equity = _frozen_field(12, "equity", "")
+    realized_pnl_local = _frozen_field(13, "realized_pnl_local", "")
+    funding_attributed_usdc = _frozen_field(14, "funding_attributed_usdc", "")
+    policy_version = _frozen_field(15, "policy_version", "")
+    active_latches = _frozen_field(16, "active_latches", "")
+
+    @property
+    def daily_pnl(self) -> float:
+        return self.equity - self.baseline_equity
+
+    @property
+    def daily_loss_pct(self) -> float:
+        return max(0.0, -self.daily_pnl / self.baseline_equity)
+
+    @property
+    def drawdown_pct(self) -> float:
+        return max(0.0, (self.peak_equity - self.equity) / self.peak_equity)
+
+    @property
+    def latched_controls(self) -> tuple[str, ...]:
+        return tuple(latch.control for latch in self.active_latches)
+
 
 class RiskSnapshotUnavailable(Exception):
     """No authoritative risk snapshot could be proven.

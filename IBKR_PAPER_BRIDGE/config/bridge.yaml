@@ -10,8 +10,11 @@ broker:
   data_restore_timeout_s: 300
 strategy_file: strategies/keltner_trail_ema8.yaml
 risk:
+  policy_id: ts-p1-007-v1
   risk_pct_per_trade: 0.005
   max_daily_loss_pct: 0.02
+  max_intraday_drawdown_pct: 0.05
+  equity_floor_usdc: 500.0
   max_position_notional_pct: 0.20
   min_stop_distance_pct: 0.001
   min_order_usd: 10

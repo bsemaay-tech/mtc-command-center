@@ -132,8 +132,15 @@ def create_app(
         risk_cfg_raw = bridge_cfg_raw.get("risk", {})
         broker_cfg_raw = bridge_cfg_raw.get("broker", {})
         risk_config = RiskConfig(
+            policy_id=str(risk_cfg_raw.get("policy_id", "ts-p1-007-v1")),
             risk_pct_per_trade=float(risk_cfg_raw.get("risk_pct_per_trade", 0.005)),
             max_daily_loss_pct=float(risk_cfg_raw.get("max_daily_loss_pct", 0.02)),
+            max_intraday_drawdown_pct=float(
+                risk_cfg_raw.get("max_intraday_drawdown_pct", 0.05)
+            ),
+            equity_floor_usdc=float(
+                risk_cfg_raw.get("equity_floor_usdc", 500.0)
+            ),
             max_position_notional_pct=0.5 if dry_run else float(risk_cfg_raw.get("max_position_notional_pct", 0.20)),
             min_stop_distance_pct=float(risk_cfg_raw.get("min_stop_distance_pct", 0.001)),
             min_order_usd=float(risk_cfg_raw.get("min_order_usd", 10)),

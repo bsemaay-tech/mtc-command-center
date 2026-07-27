@@ -763,3 +763,11 @@ cap. Deliberately DEFERRED:
 | Login + 2FA + roles | REQUIRED before any non-localhost exposure | v1 binds to 127.0.0.1 only. |
 | Deployment: local → small VPS (24/7) | after P2 | **Hyperliquid is a pure API — no desktop terminal — so the engine runs directly on a ~$5/mo VPS; no hybrid bridge needed** (this is a concrete win over the IBKR path). Tunnel/remote access stays STRICTLY monitor-only (ARM/DISARM/KILL + config edits blocked remotely) until login+2FA ships. |
 | Multi-strategy portfolio + correlation/exposure gates | v2 | Portfolio-level risk engine; `risk_overrides` is the hook. |
+# Durable risk-control layer (opt-in schema v7)
+
+TS-P1-007 extends the accepted reconciliation boundary with two additive
+persistence objects: immutable checkpoint-bound daily-risk rows and immutable
+control latch/reset evidence. The reconcile transaction derives them from the
+same accepted account checkpoint; the pure risk engine consumes the paired
+portfolio/daily view. The runtime default remains schema v4, so activation and
+operational migration require separate owner authorization.
