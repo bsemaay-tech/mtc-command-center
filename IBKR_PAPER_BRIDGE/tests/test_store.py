@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
+import pytest
+
 from bridge.store.db import Store
 
 
@@ -67,6 +69,253 @@ def test_store_roundtrip_decision_chain_and_schema_version(tmp_path):
     assert snapshot["fills"][0]["fill_id"] == "fill-1"
     assert snapshot["events"][0]["code"] == "TEST_EVENT"
     assert snapshot["bars"][0]["close"] == 104.0
+
+
+# ===========================================================================
+# TS-P1-009 — opt-in v9 kill evidence ledger (RED-first contract)
+# ===========================================================================
+
+
+def _v8_store_for_kill(tmp_path):
+    store = Store(tmp_path / "kill-v9.db")
+    store.initialize(target_schema_version=8)
+    store.create_run("kill-run", "dry_run", "testnet", {})
+    return store
+
+
+def test_v9_is_opt_in_and_creates_only_the_three_kill_objects(tmp_path):
+    default = Store(tmp_path / "default.db")
+    default.initialize()
+    assert default.get_meta("schema_version") == "4"
+    assert default.conn.execute(
+        "SELECT name FROM sqlite_master WHERE name LIKE 'kill_%'"
+    ).fetchall() == []
+
+    upgraded = _v8_store_for_kill(tmp_path)
+    upgraded.initialize(target_schema_version=9)
+
+    assert upgraded.get_meta("schema_version") == "9"
+    objects = {
+        str(row["name"])
+        for row in upgraded.conn.execute(
+            "SELECT name FROM sqlite_master "
+            "WHERE type='table' AND name LIKE 'kill_%'"
+        ).fetchall()
+    }
+    assert objects == {"kill_requests", "kill_actions", "kill_action_events"}
+    assert upgraded.get_meta("kill_request_active") is None
+
+
+@pytest.mark.parametrize("target", [4, 5, 6, 7, 8])
+def test_legacy_v4_through_v8_initialize_never_activates_kill_schema(
+    tmp_path, target
+):
+    store = Store(tmp_path / f"legacy-{target}.db")
+    store.initialize(target_schema_version=target)
+    assert store.get_meta("schema_version") == str(target)
+    assert store.conn.execute(
+        "SELECT name FROM sqlite_master WHERE name LIKE 'kill_%'"
+    ).fetchall() == []
+    assert store.get_meta("kill_request_active") is None
+
+
+def test_v9_reopen_is_idempotent_and_future_target_is_rejected(tmp_path):
+    path = tmp_path / "kill-v9.db"
+    store = _v8_store_for_kill(tmp_path)
+    store.initialize(target_schema_version=9)
+    store.close()
+
+    reopened = Store(path)
+    reopened.initialize()
+    assert reopened.get_meta("schema_version") == "9"
+
+    with pytest.raises(RuntimeError, match="Unsupported target_schema_version"):
+        reopened.initialize(target_schema_version=10)
+    assert reopened.get_meta("schema_version") == "9"
+
+
+def test_v8_to_v9_fault_rolls_back_and_retains_secret_safe_failure_evidence(
+    tmp_path, monkeypatch
+):
+    store = _v8_store_for_kill(tmp_path)
+    before = {
+        str(row["name"])
+        for row in store.conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        ).fetchall()
+    }
+    original = getattr(Store, "_create_kill_evidence_tables_v9", None)
+    assert original is not None
+
+    def fail_after_ddl(self):
+        original(self)
+        raise RuntimeError("secret injected migration detail")
+
+    monkeypatch.setattr(Store, "_create_kill_evidence_tables_v9", fail_after_ddl)
+    with pytest.raises(Exception):
+        store.initialize(target_schema_version=9)
+
+    assert store.get_meta("schema_version") == "8"
+    after = {
+        str(row["name"])
+        for row in store.conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        ).fetchall()
+    }
+    assert after == before
+    failure = store.get_meta("kill_evidence_migration_failure")
+    assert failure is not None
+    assert failure.startswith("KILL_EVIDENCE_MIGRATION_FAILED:")
+    assert "secret" not in failure and "injected" not in failure
+
+    store.close()
+    reopened = Store(tmp_path / "kill-v9.db")
+    reopened.initialize(target_schema_version=8)
+    assert reopened.get_meta("schema_version") == "8"
+
+
+def test_v9_migration_rejects_noncanonical_residue_without_partial_topology(tmp_path):
+    store = _v8_store_for_kill(tmp_path)
+    store.conn.execute("CREATE TABLE kill_actions(bogus TEXT)")
+    store.conn.commit()
+
+    with pytest.raises(Exception, match="pre-existing object|topology"):
+        store.initialize(target_schema_version=9)
+
+    assert store.get_meta("schema_version") == "8"
+    assert store.conn.execute(
+        "SELECT name FROM sqlite_master WHERE name='kill_requests'"
+    ).fetchone() is None
+    assert store.conn.execute(
+        "PRAGMA table_info(kill_actions)"
+    ).fetchall()[0]["name"] == "bogus"
+
+
+def test_v9_migration_meta_failure_rolls_back_to_reopenable_v8(tmp_path):
+    store = _v8_store_for_kill(tmp_path)
+    store.conn.execute(
+        """CREATE TRIGGER fail_v9_meta BEFORE UPDATE ON meta
+           WHEN NEW.key='schema_version' AND NEW.value='9'
+           BEGIN SELECT RAISE(ABORT, 'injected meta failure'); END"""
+    )
+    store.conn.commit()
+
+    with pytest.raises(Exception):
+        store.initialize(target_schema_version=9)
+
+    assert store.get_meta("schema_version") == "8"
+    assert store.conn.execute(
+        "SELECT name FROM sqlite_master WHERE name IN "
+        "('kill_requests','kill_actions','kill_action_events')"
+    ).fetchall() == []
+
+
+def test_v9_migration_rejects_dangling_active_pointer_before_ddl(tmp_path):
+    store = _v8_store_for_kill(tmp_path)
+    store.set_meta("kill_request_active", "kill-v1:" + "f" * 64)
+
+    with pytest.raises(Exception, match="pointer|residual"):
+        store.initialize(target_schema_version=9)
+
+    assert store.get_meta("schema_version") == "8"
+    assert store.get_meta("kill_request_active") == "kill-v1:" + "f" * 64
+    assert store.conn.execute(
+        "SELECT name FROM sqlite_master WHERE name='kill_requests'"
+    ).fetchone() is None
+
+
+def test_v9_migration_retains_legacy_killed_without_inventing_an_episode(tmp_path):
+    store = _v8_store_for_kill(tmp_path)
+    store.set_meta("app_state", "KILLED")
+
+    store.initialize(target_schema_version=9)
+
+    assert store.get_meta("app_state") == "KILLED"
+    assert store.get_meta("kill_request_active") is None
+    assert store.conn.execute("SELECT COUNT(*) FROM kill_requests").fetchone()[0] == 0
+
+
+def test_kill_request_action_event_and_pointer_survive_reopen(tmp_path):
+    store = _v8_store_for_kill(tmp_path)
+    store.initialize(target_schema_version=9)
+    episode = store.begin_kill_episode(
+        run_id="kill-run",
+        symbol="BTC",
+        flatten_requested=True,
+        policy_version="policy-v1",
+    )
+    is_replay, action = store.reserve_kill_action(
+        episode_id=episode["episode_id"],
+        kind="FLATTEN",
+        target="BTC",
+        qty_lots=125,
+        cloid="0x" + "a" * 32,
+        deadline_ts=datetime.now(UTC) + timedelta(seconds=5),
+    )
+    assert is_replay is False
+    store.record_kill_action_event(
+        action_id=action["action_id"],
+        status="UNKNOWN",
+        reason_code="TRANSPORT_TIMEOUT",
+        evidence_source="BROKER",
+        evidence={"digest": "f" * 64},
+    )
+    episode_id = str(episode["episode_id"])
+    action_id = str(action["action_id"])
+    store.close()
+
+    reopened = Store(tmp_path / "kill-v9.db")
+    reopened.initialize()
+    assert reopened.get_meta("app_state") == "KILLED"
+    assert reopened.get_meta("kill_request_active") == episode_id
+    assert reopened.active_kill_request()["episode_id"] == episode_id
+    assert reopened.get_kill_action(action_id)["current_outcome"] == "UNKNOWN"
+    assert [row["status"] for row in reopened.kill_action_events(action_id)] == [
+        "RESERVED",
+        "UNKNOWN",
+    ]
+
+
+def test_kill_action_identity_collision_fails_closed(tmp_path):
+    store = _v8_store_for_kill(tmp_path)
+    store.initialize(target_schema_version=9)
+    episode = store.begin_kill_episode(
+        run_id="kill-run",
+        symbol="BTC",
+        flatten_requested=False,
+        policy_version="policy-v1",
+    )
+    deadline = datetime.now(UTC) + timedelta(seconds=5)
+    _, first = store.reserve_kill_action(
+        episode_id=episode["episode_id"],
+        kind="CANCEL",
+        target="owned-entry",
+        qty_lots=None,
+        cloid="owned-entry",
+        deadline_ts=deadline,
+    )
+    replay, same = store.reserve_kill_action(
+        episode_id=episode["episode_id"],
+        kind="CANCEL",
+        target="owned-entry",
+        qty_lots=None,
+        cloid="owned-entry",
+        deadline_ts=deadline + timedelta(seconds=30),
+    )
+    assert replay is True
+    assert same["action_id"] == first["action_id"]
+    assert same["deadline_ts"] == first["deadline_ts"]
+
+    with pytest.raises(Exception, match="IDENTITY|CONFLICT"):
+        store.reserve_kill_action(
+            episode_id=episode["episode_id"],
+            kind="CANCEL",
+            target="different-entry",
+            qty_lots=None,
+            cloid="different-entry",
+            deadline_ts=deadline,
+            action_id=first["action_id"],
+        )
 
 
 # ===========================================================================

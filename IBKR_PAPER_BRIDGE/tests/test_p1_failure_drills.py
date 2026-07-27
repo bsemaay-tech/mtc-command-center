@@ -37,6 +37,39 @@ def test_drill_kill_mid_await_preempts_submit(tmp_path):
     asyncio.run(_kill_mid_await_preempts_submit(tmp_path))
 
 
+def test_drill_v9_kill_mid_await_persists_episode_before_zero_submit(tmp_path):
+    async def run() -> None:
+        bars = _bars(2)
+        broker = MockBroker(bars=bars, starting_equity=100000)
+        store = Store(tmp_path / "kill-await-v9.db")
+        try:
+            store.initialize(target_schema_version=9)
+        except RuntimeError:
+            store.initialize(target_schema_version=8)
+        store.create_run("kill-await-v9", "dry_run", "testnet", {})
+        store.set_meta("app_state", "ARMED")
+        engine = BridgeEngine(
+            run_id="kill-await-v9",
+            broker=broker,
+            store=store,
+            strategy=AlwaysSignalStrategy(),
+            risk_engine=RiskEngine(RiskConfig(max_position_notional_pct=0.5)),
+            state="ARMED",
+        )
+        engine.llm_gate = KillingGate(engine)
+        await broker.connect()
+
+        await engine.on_bar(bars[0])
+
+        assert engine.state == "KILLED"
+        assert store.get_meta("app_state") == "KILLED"
+        assert store.active_kill_request() is not None
+        assert store.get_snapshot()["orders"] == []
+        assert broker.broker_mutations == []
+
+    asyncio.run(run())
+
+
 def test_drill_data_stale_auto_disarms(tmp_path):
     asyncio.run(_data_stale_auto_disarms(tmp_path))
 

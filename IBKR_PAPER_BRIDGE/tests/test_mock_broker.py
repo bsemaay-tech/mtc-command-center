@@ -144,6 +144,7 @@ def test_mock_query_order_reports_live_then_terminal():
     asyncio.run(broker.cancel_order_by_cloid("entry-1", "BTC"))
     dead = asyncio.run(broker.query_order("entry-1", "BTC"))
     assert dead.known and not dead.found and dead.terminal
+    assert dead.oid == 1
 
 
 def test_mock_cancel_of_absent_or_terminal_order_is_proven_not_applied():
@@ -191,6 +192,28 @@ def test_mock_flatten_reduces_only_the_requested_size():
     assert broker.position.size == 1.0
     asyncio.run(broker.flatten_reduce_only(symbol="BTC", cloid="0xflat2", size=1.0))
     assert broker.position is None
+
+
+def test_mock_kill_mutations_keep_authoritative_full_fixtures_in_sync():
+    broker = _broker_with_position()
+    broker.full_positions = [{"symbol": "BTC", "size": 1.0}]
+    broker.full_open_orders = [{
+        "cloid": "entry-1", "oid": 1, "coin": "BTC", "side": "BUY",
+        "size": 2.0, "role": "ENTRY", "reduce_only": False,
+    }]
+
+    asyncio.run(broker.cancel_order_by_cloid("entry-1", "BTC"))
+    asyncio.run(
+        broker.flatten_reduce_only(symbol="BTC", cloid="0xkillflat", size=1.0)
+    )
+
+    assert broker.full_open_orders == []
+    assert broker.full_positions == []
+    terminal = asyncio.run(broker.query_order("0xkillflat", "BTC"))
+    assert terminal.terminal is True
+    assert terminal.oid is not None
+    assert terminal.filled_size == 1.0
+    assert any(row.get("fill_id") for row in broker.full_fill_history)
 
 
 def test_mock_late_fill_on_cancel_changes_the_position():

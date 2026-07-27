@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import asynccontextmanager
 from pathlib import Path
 from datetime import UTC, datetime, timedelta
 
@@ -51,6 +52,72 @@ def test_reconciler_success_resets_consecutive_failure_budget(tmp_path):
 
 def test_arm_requires_fresh_reconcile_evidence(tmp_path):
     asyncio.run(_arm_requires_fresh_reconcile_evidence(tmp_path))
+
+
+def test_kill_uses_full_writer_then_symbol_lock_order(tmp_path, monkeypatch):
+    async def run() -> None:
+        store = Store(tmp_path / "kill-lock-order.db")
+        try:
+            store.initialize(target_schema_version=9)
+        except RuntimeError:
+            store.initialize(target_schema_version=8)
+        store.create_run("kill-lock-order", "dry_run", "testnet", {})
+        store.set_meta("app_state", "ARMED")
+        broker = MockBroker(bars=[])
+        broker.orders.append({
+            "cloid": "owned-entry", "oid": 1, "role": "ENTRY",
+            "status": "OPEN", "qty": 0.1, "reduce_only": False,
+            "symbol": "BTC", "direction": "LONG",
+        })
+        broker.full_open_orders = [{
+            "cloid": "owned-entry", "oid": 1, "coin": "BTC", "side": "BUY",
+            "size": 0.1, "role": "ENTRY", "reduce_only": False,
+        }]
+        store.insert_order(
+            cloid="owned-entry", oid=1, group_id="request",
+            order_ref="request:ENTRY",
+            order_json={"symbol": "BTC", "role": "ENTRY"},
+            decision_uid="owned", trade_id=None, role="ENTRY",
+            status="OPEN", qty=0.1,
+        )
+        engine = BridgeEngine(
+            run_id="kill-lock-order", broker=broker, store=store,
+            strategy=KeltnerTrailEma8(), risk_engine=RiskEngine(RiskConfig()),
+            state="ARMED",
+        )
+        writer_held = False
+        observations = []
+        from bridge.engine import reconcile as reconcile_module
+
+        original_guard = reconcile_module.full_writer_guard
+
+        @asynccontextmanager
+        async def tracked_guard(target_store):
+            nonlocal writer_held
+            async with original_guard(target_store):
+                writer_held = True
+                try:
+                    yield
+                finally:
+                    writer_held = False
+
+        original_snapshot = broker.symbol_snapshot
+
+        async def checked_snapshot(symbol):
+            observations.append(
+                (writer_held, engine.order_manager.symbol_locks.is_held(symbol))
+            )
+            return await original_snapshot(symbol)
+
+        monkeypatch.setattr(reconcile_module, "full_writer_guard", tracked_guard)
+        monkeypatch.setattr(broker, "symbol_snapshot", checked_snapshot)
+
+        await engine.kill(flatten=False)
+
+        assert observations
+        assert all(full and symbol for full, symbol in observations)
+
+    asyncio.run(run())
 
 
 async def _run_dryrun_replay(tmp_path):
