@@ -53,6 +53,9 @@ from bridge.engine.types import (
     DurableRiskPolicy,
     FundingAttribution,
     FundingEventRecord,
+    KillActionKind,
+    KillTerminalState,
+    KILL_VERIFY_DEADLINE_S,
     PartialActionKind,
     PartialProtectionState,
     REQUIRED_RECONCILE_COMPONENTS,
@@ -291,12 +294,16 @@ mandatory for v8 risk authority; v1/v2 checkpoints stay retained and
 reopenable but can never authorize v8 risk.
 """
 
+SCHEMA_VERSION_KILL_EVIDENCE = 9
+"""Additive TS-P1-009 durable kill episode/action/evidence ledger."""
+
 SUPPORTED_TARGET_SCHEMA_VERSIONS = (
     SCHEMA_VERSION_BASELINE,
     SCHEMA_VERSION_PARTIAL_FILL,
     SCHEMA_VERSION_FULL_RECONCILE,
     SCHEMA_VERSION_DURABLE_RISK,
     SCHEMA_VERSION_EXPOSURE_CONTROLS,
+    SCHEMA_VERSION_KILL_EVIDENCE,
 )
 
 RECONCILE_CHECKPOINT_POINTER_KEY = "reconcile_checkpoint_latest"
@@ -304,11 +311,15 @@ RECONCILE_CHECKPOINT_POINTER_KEY = "reconcile_checkpoint_latest"
 
 RISK_CONTROLS_MIGRATION_FAILURE_KEY = "risk_controls_migration_failure"
 EXPOSURE_CONTROLS_MIGRATION_FAILURE_KEY = "exposure_controls_migration_failure"
+KILL_EVIDENCE_MIGRATION_FAILURE_KEY = "kill_evidence_migration_failure"
+KILL_REQUEST_ACTIVE_KEY = "kill_request_active"
 
 _PARTIAL_RECOVERY_VERSION = "ts-p1-004-recovery-v1"
 _PARTIAL_ACTION_VERSION = "ts-p1-004-action-v1"
 _RECONCILE_ATTEMPT_VERSION = "ts-p1-005-attempt-v1"
 _RECONCILE_CHECKPOINT_VERSION = "ts-p1-005-checkpoint-v1"
+_KILL_EPISODE_VERSION = "ts-p1-009-episode-v1"
+_KILL_ACTION_VERSION = "ts-p1-009-action-v1"
 
 _PARTIAL_EVIDENCE_TABLES = (
     "orders",
@@ -451,6 +462,60 @@ def compute_partial_action_cloid(action_id: str) -> str:
     return f"0x{digest}"
 
 
+def compute_kill_episode_id(
+    *,
+    run_id: str,
+    symbol: str,
+    generation: int,
+    flatten_requested: bool,
+    policy_version: str,
+) -> str:
+    if isinstance(generation, bool) or int(generation) <= 0:
+        raise ValueError("generation must be a positive integer")
+    preimage = _canonical_json({
+        "version": _KILL_EPISODE_VERSION,
+        "run_id": str(run_id),
+        "symbol": str(symbol).upper(),
+        "generation": int(generation),
+        "flatten_requested": bool(flatten_requested),
+        "policy_version": str(policy_version),
+    })
+    return f"kill-v1:{hashlib.sha256(preimage.encode('utf-8')).hexdigest()}"
+
+
+def compute_kill_action_id(
+    *,
+    episode_id: str,
+    kind: str,
+    target: str,
+    qty_lots: int | None = None,
+) -> str:
+    action_kind = KillActionKind(str(kind))
+    safe_target = str(target).strip()
+    if not safe_target:
+        raise ValueError("kill action target must not be blank")
+    if action_kind is KillActionKind.FLATTEN:
+        if isinstance(qty_lots, bool) or not isinstance(qty_lots, int) or qty_lots <= 0:
+            raise ValueError("flatten qty_lots must be a positive integer")
+    elif qty_lots is not None:
+        raise ValueError("cancel qty_lots must be null")
+    preimage = _canonical_json({
+        "version": _KILL_ACTION_VERSION,
+        "episode_id": str(episode_id),
+        "kind": action_kind.value,
+        "target": safe_target,
+        "qty_lots": qty_lots,
+    })
+    return f"killa-v1:{hashlib.sha256(preimage.encode('utf-8')).hexdigest()}"
+
+
+def compute_kill_action_cloid(action_id: str) -> str:
+    digest = hashlib.blake2s(
+        f"{_KILL_ACTION_VERSION}:{action_id}".encode("utf-8"), digest_size=16
+    ).hexdigest()
+    return f"0x{digest}"
+
+
 # ---------------------------------------------------------------------------
 # Custom exceptions
 # ---------------------------------------------------------------------------
@@ -483,6 +548,12 @@ class MigrationError(Exception):
 
     def __init__(self, message: str) -> None:
         super().__init__(f"MIGRATION_FAILED: {message}")
+
+
+class KillConflictError(Exception):
+    def __init__(self, code: str, message: str) -> None:
+        self.code = code
+        super().__init__(f"{code}: {message}")
 
 
 # ---------------------------------------------------------------------------
@@ -550,6 +621,18 @@ class Store:
             "CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)"
         )
         existing = self.get_meta("schema_version")
+        if existing == str(SCHEMA_VERSION_KILL_EVIDENCE):
+            if not self._has_any_kill_evidence_object():
+                raise RuntimeError(
+                    f"Unsupported schema_version={existing!r}; "
+                    "cannot initialize safely"
+                )
+            self._initialize_v5_idempotent()
+            self._initialize_v6_idempotent()
+            self._initialize_v7_idempotent()
+            self._initialize_v8_idempotent()
+            self._initialize_v9_idempotent()
+            return
         if existing == str(SCHEMA_VERSION_EXPOSURE_CONTROLS):
             if not self._has_any_durable_risk_object():
                 # v8 inherits the v7 objects; a meta row alone is not proof.
@@ -562,6 +645,8 @@ class Store:
             self._initialize_v6_idempotent()
             self._initialize_v7_idempotent()
             self._initialize_v8_idempotent()
+            if target_schema_version >= SCHEMA_VERSION_KILL_EVIDENCE:
+                self._migrate_v8_to_v9()
             return
         if existing == str(SCHEMA_VERSION_DURABLE_RISK):
             if not self._has_any_durable_risk_object():
@@ -574,6 +659,8 @@ class Store:
             self._initialize_v7_idempotent()
             if target_schema_version >= SCHEMA_VERSION_EXPOSURE_CONTROLS:
                 self._migrate_v7_to_v8()
+            if target_schema_version >= SCHEMA_VERSION_KILL_EVIDENCE:
+                self._migrate_v8_to_v9()
             return
         if existing == str(SCHEMA_VERSION_FULL_RECONCILE):
             if not self._has_any_full_reconcile_object():
@@ -591,6 +678,8 @@ class Store:
                 self._migrate_v6_to_v7()
             if target_schema_version >= SCHEMA_VERSION_EXPOSURE_CONTROLS:
                 self._migrate_v7_to_v8()
+            if target_schema_version >= SCHEMA_VERSION_KILL_EVIDENCE:
+                self._migrate_v8_to_v9()
             return
         if existing == str(SCHEMA_VERSION_PARTIAL_FILL):
             self._initialize_v5_idempotent()
@@ -600,6 +689,8 @@ class Store:
                 self._migrate_v6_to_v7()
             if target_schema_version >= SCHEMA_VERSION_EXPOSURE_CONTROLS:
                 self._migrate_v7_to_v8()
+            if target_schema_version >= SCHEMA_VERSION_KILL_EVIDENCE:
+                self._migrate_v8_to_v9()
             return
         if existing is None:
             self._initialize_v4_fresh()
@@ -626,6 +717,8 @@ class Store:
             self._migrate_v6_to_v7()
         if target_schema_version >= SCHEMA_VERSION_EXPOSURE_CONTROLS:
             self._migrate_v7_to_v8()
+        if target_schema_version >= SCHEMA_VERSION_KILL_EVIDENCE:
+            self._migrate_v8_to_v9()
 
     def _initialize_v4_fresh(self) -> None:
         self._create_tables_v4()
@@ -1933,9 +2026,12 @@ class Store:
         row that does not actually claim v8.
         """
         self._validate_durable_risk_schema_v7()
-        if self.get_meta("schema_version") != str(SCHEMA_VERSION_EXPOSURE_CONTROLS):
+        if self.get_meta("schema_version") not in {
+            str(SCHEMA_VERSION_EXPOSURE_CONTROLS),
+            str(SCHEMA_VERSION_KILL_EVIDENCE),
+        }:
             raise MigrationError(
-                "v8 reopen requires schema_version=" + str(SCHEMA_VERSION_EXPOSURE_CONTROLS)
+                "v8 topology requires schema_version=8 or additive successor"
             )
 
     def _migrate_v7_to_v8(self) -> None:
@@ -1982,6 +2078,371 @@ class Store:
                     (
                         EXPOSURE_CONTROLS_MIGRATION_FAILURE_KEY,
                         f"EXPOSURE_CONTROLS_MIGRATION_FAILED:{type(exc).__name__}",
+                    ),
+                )
+                self.conn.commit()
+            except Exception:
+                self.conn.rollback()
+            raise
+
+    # ------------------------------------------------------------------
+    # TS-P1-009 v9 durable kill evidence
+    # ------------------------------------------------------------------
+
+    _KILL_EVIDENCE_OBJECTS = (
+        "kill_requests",
+        "kill_actions",
+        "kill_action_events",
+    )
+
+    def _has_any_kill_evidence_object(self) -> bool:
+        placeholders = ",".join("?" for _ in self._KILL_EVIDENCE_OBJECTS)
+        return self.conn.execute(
+            f"SELECT 1 FROM sqlite_master WHERE name IN ({placeholders}) LIMIT 1",
+            self._KILL_EVIDENCE_OBJECTS,
+        ).fetchone() is not None
+
+    def _create_kill_evidence_tables_v9(self) -> None:
+        self.conn.execute("""
+            CREATE TABLE kill_requests (
+              episode_id TEXT PRIMARY KEY,
+              generation INTEGER NOT NULL CHECK(generation > 0),
+              run_id TEXT NOT NULL REFERENCES runs(run_id),
+              symbol TEXT NOT NULL CHECK(length(trim(symbol)) > 0),
+              flatten_requested INTEGER NOT NULL
+                CHECK(flatten_requested IN (0,1)),
+              requested_ts TEXT NOT NULL,
+              policy_version TEXT NOT NULL CHECK(length(trim(policy_version)) > 0),
+              terminal_state TEXT NOT NULL CHECK(terminal_state IN
+                ('IN_PROGRESS','UNRESOLVED','UNKNOWN','AMBIGUOUS',
+                 'PROOF_PENDING','SAFE_RETAINED','SAFE_FLAT')),
+              terminal_reason TEXT NOT NULL,
+              terminal_ts TEXT,
+              safe_checkpoint_id TEXT
+                REFERENCES reconcile_checkpoints(checkpoint_id),
+              safe_checkpoint_ts TEXT,
+              proof_digest TEXT,
+              ack_state TEXT NOT NULL CHECK(ack_state IN
+                ('PENDING','ACKNOWLEDGED')),
+              ack_ts TEXT,
+              UNIQUE(run_id, symbol, generation)
+            )""")
+        self.conn.execute("""
+            CREATE TABLE kill_actions (
+              action_id TEXT PRIMARY KEY,
+              episode_id TEXT NOT NULL
+                REFERENCES kill_requests(episode_id),
+              kind TEXT NOT NULL CHECK(kind IN ('CANCEL','FLATTEN')),
+              target TEXT NOT NULL CHECK(length(trim(target)) > 0),
+              qty_lots INTEGER,
+              cloid TEXT NOT NULL CHECK(length(trim(cloid)) > 0),
+              reserved_ts TEXT NOT NULL,
+              deadline_ts TEXT NOT NULL,
+              current_outcome TEXT NOT NULL CHECK(current_outcome IN
+                ('RESERVED','UNKNOWN','NOT_APPLIED','APPLIED')),
+              UNIQUE(episode_id, kind, target),
+              CHECK(
+                (kind='CANCEL' AND qty_lots IS NULL)
+                OR (kind='FLATTEN' AND qty_lots > 0)
+              )
+            )""")
+        self.conn.execute("""
+            CREATE TABLE kill_action_events (
+              event_row_id INTEGER PRIMARY KEY,
+              action_id TEXT NOT NULL REFERENCES kill_actions(action_id),
+              seq INTEGER NOT NULL CHECK(seq > 0),
+              status TEXT NOT NULL CHECK(status IN
+                ('RESERVED','SENT','APPLIED','NOT_APPLIED','UNKNOWN','EVIDENCE')),
+              evidence_source TEXT NOT NULL,
+              reason_code TEXT NOT NULL,
+              evidence_json TEXT NOT NULL,
+              evidence_digest TEXT NOT NULL,
+              observed_ts TEXT NOT NULL,
+              UNIQUE(action_id, seq)
+            )""")
+        self.conn.execute("""
+            CREATE INDEX kill_request_state_idx
+            ON kill_requests(ack_state, terminal_state, requested_ts)""")
+        self.conn.execute("""
+            CREATE INDEX kill_action_episode_idx
+            ON kill_actions(episode_id, kind, reserved_ts, action_id)""")
+        self.conn.execute("""
+            CREATE TRIGGER kill_requests_identity_immutable
+            BEFORE UPDATE ON kill_requests
+            WHEN OLD.episode_id IS NOT NEW.episode_id
+              OR OLD.generation IS NOT NEW.generation
+              OR OLD.run_id IS NOT NEW.run_id
+              OR OLD.symbol IS NOT NEW.symbol
+              OR OLD.flatten_requested IS NOT NEW.flatten_requested
+              OR OLD.requested_ts IS NOT NEW.requested_ts
+              OR OLD.policy_version IS NOT NEW.policy_version
+            BEGIN SELECT RAISE(ABORT, 'immutable kill request identity'); END""")
+        self.conn.execute("""
+            CREATE TRIGGER kill_requests_immutable_delete
+            BEFORE DELETE ON kill_requests
+            BEGIN SELECT RAISE(ABORT, 'append-only kill evidence'); END""")
+        self.conn.execute("""
+            CREATE TRIGGER kill_actions_identity_immutable
+            BEFORE UPDATE ON kill_actions
+            WHEN OLD.action_id IS NOT NEW.action_id
+              OR OLD.episode_id IS NOT NEW.episode_id
+              OR OLD.kind IS NOT NEW.kind
+              OR OLD.target IS NOT NEW.target
+              OR OLD.qty_lots IS NOT NEW.qty_lots
+              OR OLD.cloid IS NOT NEW.cloid
+              OR OLD.reserved_ts IS NOT NEW.reserved_ts
+              OR OLD.deadline_ts IS NOT NEW.deadline_ts
+            BEGIN SELECT RAISE(ABORT, 'immutable kill action identity'); END""")
+        self.conn.execute("""
+            CREATE TRIGGER kill_actions_immutable_delete
+            BEFORE DELETE ON kill_actions
+            BEGIN SELECT RAISE(ABORT, 'append-only kill evidence'); END""")
+        for suffix in ("update", "delete"):
+            self.conn.execute(f"""
+                CREATE TRIGGER kill_action_events_immutable_{suffix}
+                BEFORE {suffix.upper()} ON kill_action_events
+                BEGIN SELECT RAISE(ABORT, 'append-only kill evidence'); END""")
+
+    def _validate_kill_evidence_schema_v9(self) -> None:
+        reference = Store(Path(":memory:"))
+        reference._conn = sqlite3.connect(":memory:")
+        reference._conn.row_factory = sqlite3.Row
+        reference._conn.execute("PRAGMA foreign_keys=ON")
+        reference._conn.execute(
+            "CREATE TABLE runs (run_id TEXT PRIMARY KEY)"
+        )
+        reference._conn.execute(
+            "CREATE TABLE reconcile_checkpoints (checkpoint_id TEXT PRIMARY KEY)"
+        )
+        Store._create_kill_evidence_tables_v9(reference)
+
+        tables = set(self._KILL_EVIDENCE_OBJECTS)
+
+        def signature(conn: sqlite3.Connection) -> dict[tuple[str, str], tuple[str, str]]:
+            rows = conn.execute(
+                "SELECT type,name,tbl_name,sql FROM sqlite_master "
+                "WHERE sql IS NOT NULL"
+            ).fetchall()
+            return {
+                (str(row["type"]), str(row["name"])): (
+                    str(row["tbl_name"]),
+                    " ".join(str(row["sql"]).split()).upper(),
+                )
+                for row in rows
+                if str(row["tbl_name"]) in tables
+            }
+
+        expected = signature(reference.conn)
+        actual = signature(self.conn)
+        reference.close()
+        if actual != expected:
+            raise MigrationError("v9 kill-evidence topology is incomplete")
+        if self.conn.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
+            raise MigrationError("v9 integrity_check failed")
+        if self.conn.execute("PRAGMA foreign_key_check").fetchall():
+            raise MigrationError("v9 foreign_key_check failed")
+        duplicates = self.conn.execute(
+            "SELECT lower(cloid) FROM kill_actions "
+            "GROUP BY lower(cloid) HAVING COUNT(*) > 1"
+        ).fetchall()
+        if duplicates:
+            raise MigrationError("v9 duplicate action cloid alias")
+        self._validate_kill_pointer_v9()
+        self._validate_kill_rows_v9()
+
+    def _validate_kill_rows_v9(self) -> None:
+        """Re-prove immutable identities, event folding and safe-proof links."""
+        for request in self._rows(
+            "SELECT * FROM kill_requests ORDER BY requested_ts,episode_id"
+        ):
+            expected = compute_kill_episode_id(
+                run_id=str(request["run_id"]),
+                symbol=str(request["symbol"]),
+                generation=int(request["generation"]),
+                flatten_requested=bool(request["flatten_requested"]),
+                policy_version=str(request["policy_version"]),
+            )
+            if str(request["episode_id"]) != expected:
+                raise MigrationError("v9 kill episode identity mismatch")
+            try:
+                datetime.fromisoformat(str(request["requested_ts"]))
+            except (TypeError, ValueError):
+                raise MigrationError("v9 kill request timestamp malformed") from None
+            safe = str(request["terminal_state"]) in {"SAFE_FLAT", "SAFE_RETAINED"}
+            proof_fields = (
+                request["safe_checkpoint_id"],
+                request["safe_checkpoint_ts"],
+                request["proof_digest"],
+            )
+            if safe and request["terminal_ts"] is None:
+                raise MigrationError("v9 safe kill terminal timestamp missing")
+            if not safe and any(value is not None for value in proof_fields):
+                raise MigrationError("v9 unsafe kill request carries safe proof")
+            if any(value is not None for value in proof_fields):
+                if not safe or any(value is None for value in proof_fields):
+                    raise MigrationError("v9 kill safe proof is incomplete")
+                digest = str(request["proof_digest"])
+                if len(digest) != 64 or any(
+                    char not in "0123456789abcdef" for char in digest.lower()
+                ):
+                    raise MigrationError("v9 kill proof digest malformed")
+                checkpoint = self.conn.execute(
+                    "SELECT accepted_ts FROM reconcile_checkpoints "
+                    "WHERE checkpoint_id=?",
+                    (str(request["safe_checkpoint_id"]),),
+                ).fetchone()
+                if (
+                    checkpoint is None
+                    or str(checkpoint["accepted_ts"])
+                    != str(request["safe_checkpoint_ts"])
+                ):
+                    raise MigrationError("v9 kill checkpoint proof mismatch")
+            acknowledged = str(request["ack_state"]) == "ACKNOWLEDGED"
+            if acknowledged and (
+                not safe
+                or request["ack_ts"] is None
+                or any(value is None for value in proof_fields)
+            ):
+                raise MigrationError("v9 acknowledged kill proof is incomplete")
+            if not acknowledged and request["ack_ts"] is not None:
+                raise MigrationError("v9 pending kill carries ack timestamp")
+
+        for action in self._rows(
+            "SELECT * FROM kill_actions ORDER BY episode_id,kind,target"
+        ):
+            expected_id = compute_kill_action_id(
+                episode_id=str(action["episode_id"]),
+                kind=str(action["kind"]),
+                target=str(action["target"]),
+                qty_lots=action["qty_lots"],
+            )
+            expected_cloid = (
+                str(action["target"])
+                if str(action["kind"]) == KillActionKind.CANCEL.value
+                else compute_kill_action_cloid(expected_id)
+            )
+            if (
+                str(action["action_id"]) != expected_id
+                or str(action["cloid"]) != expected_cloid
+            ):
+                raise MigrationError("v9 kill action identity mismatch")
+            try:
+                reserved = datetime.fromisoformat(str(action["reserved_ts"]))
+                deadline = datetime.fromisoformat(str(action["deadline_ts"]))
+                if reserved.tzinfo is None:
+                    reserved = reserved.replace(tzinfo=UTC)
+                if deadline.tzinfo is None:
+                    deadline = deadline.replace(tzinfo=UTC)
+                budget = (deadline - reserved).total_seconds()
+            except (TypeError, ValueError):
+                raise MigrationError("v9 kill action deadline malformed") from None
+            if not (0 < budget <= KILL_VERIFY_DEADLINE_S + 0.001):
+                raise MigrationError("v9 kill action deadline out of bounds")
+            events = self._rows(
+                "SELECT * FROM kill_action_events WHERE action_id=? ORDER BY seq",
+                (str(action["action_id"]),),
+            )
+            if [int(event["seq"]) for event in events] != list(
+                range(1, len(events) + 1)
+            ):
+                raise MigrationError("v9 kill action event sequence malformed")
+            for event in events:
+                payload = str(event["evidence_json"])
+                try:
+                    parsed = json.loads(payload)
+                except (TypeError, ValueError, json.JSONDecodeError):
+                    raise MigrationError("v9 kill evidence JSON malformed") from None
+                if (
+                    not isinstance(parsed, Mapping)
+                    or _canonical_json(dict(parsed)) != payload
+                    or hashlib.sha256(payload.encode("utf-8")).hexdigest()
+                    != str(event["evidence_digest"])
+                ):
+                    raise MigrationError("v9 kill evidence digest mismatch")
+            if not events or str(events[0]["status"]) != "RESERVED":
+                raise MigrationError("v9 kill action reservation evidence missing")
+            if (
+                self._fold_kill_action_outcome_locked(str(action["action_id"]))
+                != str(action["current_outcome"])
+            ):
+                raise MigrationError("v9 kill action folded outcome mismatch")
+
+    def _validate_kill_pointer_v9(self) -> None:
+        pointer = self.get_meta(KILL_REQUEST_ACTIVE_KEY)
+        rows = self.conn.execute(
+            "SELECT episode_id FROM kill_requests WHERE ack_state='PENDING' "
+            "ORDER BY requested_ts, episode_id"
+        ).fetchall()
+        if pointer is None:
+            if rows:
+                raise MigrationError("v9 active kill pointer missing")
+            return
+        if len(rows) != 1 or str(rows[0]["episode_id"]) != pointer:
+            raise MigrationError("v9 active kill pointer dangling or ambiguous")
+
+    def _initialize_v9_idempotent(self) -> None:
+        self._validate_kill_evidence_schema_v9()
+        if self.get_meta("schema_version") != str(SCHEMA_VERSION_KILL_EVIDENCE):
+            raise MigrationError("v9 reopen requires schema_version=9")
+
+    def _all_table_census(self) -> dict[str, int]:
+        result: dict[str, int] = {}
+        rows = self.conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' "
+            "AND name NOT LIKE 'sqlite_%' ORDER BY name"
+        ).fetchall()
+        for row in rows:
+            name = str(row["name"])
+            if name in self._KILL_EVIDENCE_OBJECTS:
+                continue
+            result[name] = int(
+                self.conn.execute(f'SELECT COUNT(*) FROM "{name}"').fetchone()[0]
+            )
+        return result
+
+    def _migrate_v8_to_v9(self) -> None:
+        if self.get_meta("schema_version") == str(SCHEMA_VERSION_KILL_EVIDENCE):
+            self._initialize_v9_idempotent()
+            return
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            if self.get_meta("schema_version") != str(
+                SCHEMA_VERSION_EXPOSURE_CONTROLS
+            ):
+                raise MigrationError("v8-to-v9 requires schema_version=8")
+            self._initialize_v8_idempotent()
+            if self._has_any_kill_evidence_object():
+                raise MigrationError(
+                    "v8-to-v9 aborted: pre-existing object in kill evidence topology"
+                )
+            if self.get_meta(KILL_REQUEST_ACTIVE_KEY) is not None:
+                raise MigrationError(
+                    "v8-to-v9 aborted: residual active kill pointer"
+                )
+            before = self._all_table_census()
+            self._create_kill_evidence_tables_v9()
+            self._validate_kill_evidence_schema_v9()
+            after = self._all_table_census()
+            if before != after:
+                raise MigrationError("v8-to-v9 altered predecessor evidence")
+            cursor = self.conn.execute(
+                "UPDATE meta SET value=? WHERE key='schema_version' AND value=?",
+                (
+                    str(SCHEMA_VERSION_KILL_EVIDENCE),
+                    str(SCHEMA_VERSION_EXPOSURE_CONTROLS),
+                ),
+            )
+            if cursor.rowcount != 1:
+                raise MigrationError("v8-to-v9 version update rowcount mismatch")
+            self.conn.commit()
+        except Exception as exc:
+            self.conn.rollback()
+            try:
+                self.conn.execute(
+                    "INSERT OR IGNORE INTO meta(key,value) VALUES (?,?)",
+                    (
+                        KILL_EVIDENCE_MIGRATION_FAILURE_KEY,
+                        f"KILL_EVIDENCE_MIGRATION_FAILED:{type(exc).__name__}",
                     ),
                 )
                 self.conn.commit()
@@ -4307,6 +4768,653 @@ class Store:
             self.conn.commit()
 
     # ------------------------------------------------------------------
+    # TS-P1-009 durable kill episode/action/evidence API
+    # ------------------------------------------------------------------
+
+    def kill_evidence_enabled(self) -> bool:
+        return self.get_meta("schema_version") == str(SCHEMA_VERSION_KILL_EVIDENCE)
+
+    def _require_kill_schema(self) -> None:
+        if not self.kill_evidence_enabled():
+            raise KillConflictError("KILL_SCHEMA_INACTIVE", "schema v9 is not active")
+
+    def _insert_event_in_tx(
+        self, run_id: str, ts: str, severity: str, code: str, detail: str
+    ) -> None:
+        self.conn.execute(
+            """INSERT INTO events(run_id, ts, severity, code, detail)
+               VALUES (?, ?, ?, ?, ?)""",
+            (str(run_id), ts, str(severity), str(code), str(detail)),
+        )
+
+    def begin_kill_episode(
+        self,
+        *,
+        run_id: str,
+        symbol: str,
+        flatten_requested: bool,
+        policy_version: str,
+    ) -> dict[str, Any]:
+        self._require_kill_schema()
+        safe_run = str(run_id).strip()
+        safe_symbol = str(symbol).strip().upper()
+        safe_policy = str(policy_version).strip()
+        if not safe_run or not safe_symbol or not safe_policy:
+            raise KillConflictError(
+                "KILL_REQUEST_MALFORMED", "run, symbol and policy are required"
+            )
+        now = _to_iso(self._clock()) or ""
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            pointer_row = self.conn.execute(
+                "SELECT value FROM meta WHERE key=?", (KILL_REQUEST_ACTIVE_KEY,)
+            ).fetchone()
+            pointer = None if pointer_row is None else str(pointer_row["value"])
+            if pointer is not None:
+                row = self.conn.execute(
+                    "SELECT * FROM kill_requests WHERE episode_id=?", (pointer,)
+                ).fetchone()
+                if row is None:
+                    raise KillConflictError(
+                        "KILL_POINTER_DANGLING", "active episode does not resolve"
+                    )
+                existing = dict(row)
+                if (
+                    str(existing["run_id"]) != safe_run
+                    or str(existing["symbol"]) != safe_symbol
+                    or bool(existing["flatten_requested"]) != bool(flatten_requested)
+                    or str(existing["policy_version"]) != safe_policy
+                    or str(existing["ack_state"]) != "PENDING"
+                ):
+                    raise KillConflictError(
+                        "KILL_REQUEST_CONFLICT",
+                        "an incompatible episode is already active",
+                    )
+                self.conn.execute(
+                    "INSERT INTO meta(key,value) VALUES ('app_state','KILLED') "
+                    "ON CONFLICT(key) DO UPDATE SET value=excluded.value"
+                )
+                self.conn.commit()
+                return existing
+            request_count = int(
+                self.conn.execute("SELECT COUNT(*) FROM kill_requests").fetchone()[0]
+            )
+            app_row = self.conn.execute(
+                "SELECT value FROM meta WHERE key='app_state'"
+            ).fetchone()
+            if (
+                request_count == 0
+                and app_row is not None
+                and str(app_row["value"]) == "KILLED"
+            ):
+                raise KillConflictError(
+                    "LEGACY_KILLED_EVIDENCE_MISSING",
+                    "owner-directed recovery is required",
+                )
+            generation = int(
+                self.conn.execute(
+                    "SELECT COALESCE(MAX(generation),0)+1 FROM kill_requests "
+                    "WHERE run_id=? AND symbol=?",
+                    (safe_run, safe_symbol),
+                ).fetchone()[0]
+            )
+            episode_id = compute_kill_episode_id(
+                run_id=safe_run,
+                symbol=safe_symbol,
+                generation=generation,
+                flatten_requested=bool(flatten_requested),
+                policy_version=safe_policy,
+            )
+            self.conn.execute(
+                """INSERT INTO kill_requests(
+                     episode_id,generation,run_id,symbol,flatten_requested,
+                     requested_ts,policy_version,terminal_state,terminal_reason,
+                     terminal_ts,safe_checkpoint_id,safe_checkpoint_ts,
+                     proof_digest,ack_state,ack_ts)
+                   VALUES (?,?,?,?,?,?,?,'IN_PROGRESS','KILL_LATCHED',
+                           NULL,NULL,NULL,NULL,'PENDING',NULL)""",
+                (
+                    episode_id,
+                    generation,
+                    safe_run,
+                    safe_symbol,
+                    int(bool(flatten_requested)),
+                    now,
+                    safe_policy,
+                ),
+            )
+            self.conn.execute(
+                "INSERT INTO meta(key,value) VALUES (?,?)",
+                (KILL_REQUEST_ACTIVE_KEY, episode_id),
+            )
+            self.conn.execute(
+                "INSERT INTO meta(key,value) VALUES ('app_state','KILLED') "
+                "ON CONFLICT(key) DO UPDATE SET value=excluded.value"
+            )
+            self._insert_event_in_tx(
+                safe_run,
+                now,
+                "WARN",
+                "KILL_EPISODE_LATCHED",
+                f"episode={episode_id};flatten={int(bool(flatten_requested))}",
+            )
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+        row = self.conn.execute(
+            "SELECT * FROM kill_requests WHERE episode_id=?", (episode_id,)
+        ).fetchone()
+        return dict(row)
+
+    def active_kill_request(self) -> dict[str, Any] | None:
+        self._require_kill_schema()
+        pointer = self.get_meta(KILL_REQUEST_ACTIVE_KEY)
+        if pointer is None:
+            return None
+        row = self.conn.execute(
+            "SELECT * FROM kill_requests WHERE episode_id=?", (pointer,)
+        ).fetchone()
+        if row is None:
+            raise KillConflictError(
+                "KILL_POINTER_DANGLING", "active episode does not resolve"
+            )
+        return dict(row)
+
+    def get_kill_request(self, episode_id: str) -> dict[str, Any] | None:
+        self._require_kill_schema()
+        row = self.conn.execute(
+            "SELECT * FROM kill_requests WHERE episode_id=?", (str(episode_id),)
+        ).fetchone()
+        return None if row is None else dict(row)
+
+    def mark_kill_request_state(
+        self, episode_id: str, state: str, reason_code: str
+    ) -> dict[str, Any]:
+        self._require_kill_schema()
+        terminal_state = KillTerminalState(str(state))
+        safe_reason = self._safe_reason_code(reason_code)
+        terminal_ts = (
+            _to_iso(self._clock())
+            if terminal_state in {
+                KillTerminalState.SAFE_FLAT,
+                KillTerminalState.SAFE_RETAINED,
+            }
+            else None
+        )
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            cursor = self.conn.execute(
+                """UPDATE kill_requests
+                   SET terminal_state=?, terminal_reason=?, terminal_ts=?,
+                       safe_checkpoint_id=NULL, safe_checkpoint_ts=NULL,
+                       proof_digest=NULL
+                   WHERE episode_id=? AND ack_state='PENDING'""",
+                (
+                    terminal_state.value,
+                    safe_reason,
+                    terminal_ts,
+                    str(episode_id),
+                ),
+            )
+            if cursor.rowcount != 1:
+                raise KillConflictError(
+                    "KILL_REQUEST_NOT_ACTIVE", "state update rejected"
+                )
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+        return self.get_kill_request(episode_id) or {}
+
+    def reserve_kill_action(
+        self,
+        *,
+        episode_id: str,
+        kind: str,
+        target: str,
+        qty_lots: int | None,
+        cloid: str,
+        deadline_ts: datetime | str,
+        action_id: str | None = None,
+        reserved_ts: datetime | str | None = None,
+    ) -> tuple[bool, dict[str, Any]]:
+        self._require_kill_schema()
+        action_kind = KillActionKind(str(kind))
+        safe_target = str(target).strip()
+        safe_cloid = str(cloid).strip()
+        if not safe_target or not safe_cloid:
+            raise KillConflictError(
+                "KILL_ACTION_MALFORMED", "target and cloid are required"
+            )
+        expected_id = compute_kill_action_id(
+            episode_id=str(episode_id),
+            kind=action_kind.value,
+            target=safe_target,
+            qty_lots=qty_lots,
+        )
+        expected_cloid = (
+            safe_target
+            if action_kind is KillActionKind.CANCEL
+            else compute_kill_action_cloid(expected_id)
+        )
+        if safe_cloid != expected_cloid:
+            raise KillConflictError(
+                "KILL_ACTION_CLOID_CONFLICT",
+                f"kind={action_kind.value}",
+            )
+        stable_id = expected_id if action_id is None else str(action_id)
+        reserved = _to_iso(reserved_ts) or _to_iso(self._clock()) or ""
+        deadline = _to_iso(deadline_ts)
+        if deadline is None:
+            raise KillConflictError(
+                "KILL_ACTION_DEADLINE_INVALID", "deadline is required"
+            )
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            existing = self.conn.execute(
+                "SELECT * FROM kill_actions WHERE action_id=?", (stable_id,)
+            ).fetchone()
+            if existing is not None:
+                row = dict(existing)
+                if (
+                    stable_id != expected_id
+                    or str(row["episode_id"]) != str(episode_id)
+                    or str(row["kind"]) != action_kind.value
+                    or str(row["target"]) != safe_target
+                    or row["qty_lots"] != qty_lots
+                    or str(row["cloid"]) != safe_cloid
+                ):
+                    raise KillConflictError(
+                        "KILL_ACTION_IDENTITY_CONFLICT",
+                        f"action_id={stable_id}",
+                    )
+                self.conn.commit()
+                return True, row
+            if stable_id != expected_id:
+                raise KillConflictError(
+                    "KILL_ACTION_IDENTITY_CONFLICT",
+                    f"action_id={stable_id}",
+                )
+            alias = self.conn.execute(
+                "SELECT action_id FROM kill_actions WHERE lower(cloid)=lower(?)",
+                (safe_cloid,),
+            ).fetchone()
+            if alias is not None:
+                raise KillConflictError(
+                    "KILL_ACTION_CLOID_ALIAS_CONFLICT",
+                    f"cloid={safe_cloid}",
+                )
+            self.conn.execute(
+                """INSERT INTO kill_actions(
+                     action_id,episode_id,kind,target,qty_lots,cloid,
+                     reserved_ts,deadline_ts,current_outcome)
+                   VALUES (?,?,?,?,?,?,?,?,'RESERVED')""",
+                (
+                    stable_id,
+                    str(episode_id),
+                    action_kind.value,
+                    safe_target,
+                    qty_lots,
+                    safe_cloid,
+                    reserved,
+                    deadline,
+                ),
+            )
+            self._append_kill_action_event_in_tx(
+                action_id=stable_id,
+                status="RESERVED",
+                evidence_source="LOCAL",
+                reason_code=f"{action_kind.value}_RESERVED",
+                evidence={"target": safe_target, "qty_lots": qty_lots},
+                observed_ts=reserved,
+            )
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+        return False, self.get_kill_action(stable_id) or {}
+
+    def _append_kill_action_event_in_tx(
+        self,
+        *,
+        action_id: str,
+        status: str,
+        evidence_source: str,
+        reason_code: str,
+        evidence: Mapping[str, Any],
+        observed_ts: str,
+    ) -> None:
+        if status not in {
+            "RESERVED", "SENT", "APPLIED", "NOT_APPLIED", "UNKNOWN", "EVIDENCE"
+        }:
+            raise KillConflictError("KILL_EVENT_STATUS_INVALID", status)
+        payload = _canonical_json(dict(evidence))
+        digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+        seq = int(
+            self.conn.execute(
+                "SELECT COALESCE(MAX(seq),0)+1 FROM kill_action_events "
+                "WHERE action_id=?",
+                (str(action_id),),
+            ).fetchone()[0]
+        )
+        self.conn.execute(
+            """INSERT INTO kill_action_events(
+                 action_id,seq,status,evidence_source,reason_code,
+                 evidence_json,evidence_digest,observed_ts)
+               VALUES (?,?,?,?,?,?,?,?)""",
+            (
+                str(action_id),
+                seq,
+                status,
+                str(evidence_source) or "LOCAL",
+                self._safe_reason_code(reason_code),
+                payload,
+                digest,
+                observed_ts,
+            ),
+        )
+
+    def _fold_kill_action_outcome_locked(self, action_id: str) -> str:
+        statuses = [
+            str(row["status"])
+            for row in self.conn.execute(
+                "SELECT status FROM kill_action_events WHERE action_id=? "
+                "ORDER BY seq",
+                (str(action_id),),
+            ).fetchall()
+        ]
+        outcome = "RESERVED"
+        for status in statuses:
+            if status == "UNKNOWN" and outcome not in {"APPLIED", "NOT_APPLIED"}:
+                outcome = "UNKNOWN"
+            elif status == "NOT_APPLIED":
+                outcome = "NOT_APPLIED" if outcome != "APPLIED" else "UNKNOWN"
+            elif status == "APPLIED":
+                outcome = "APPLIED"
+        return outcome
+
+    def record_kill_action_event(
+        self,
+        *,
+        action_id: str,
+        status: str,
+        reason_code: str,
+        evidence_source: str = "BROKER",
+        evidence: Mapping[str, Any] | None = None,
+        observed_ts: datetime | str | None = None,
+        local_order_terminal_status: str | None = None,
+        flatten_order: Mapping[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        self._require_kill_schema()
+        now = _to_iso(observed_ts) or _to_iso(self._clock()) or ""
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            action = self.conn.execute(
+                "SELECT * FROM kill_actions WHERE action_id=?", (str(action_id),)
+            ).fetchone()
+            if action is None:
+                raise KillConflictError(
+                    "KILL_ACTION_NOT_FOUND", f"action_id={action_id}"
+                )
+            self._append_kill_action_event_in_tx(
+                action_id=str(action_id),
+                status=str(status),
+                evidence_source=evidence_source,
+                reason_code=reason_code,
+                evidence=evidence or {},
+                observed_ts=now,
+            )
+            folded = self._fold_kill_action_outcome_locked(str(action_id))
+            self.conn.execute(
+                "UPDATE kill_actions SET current_outcome=? WHERE action_id=?",
+                (folded, str(action_id)),
+            )
+            if local_order_terminal_status is not None:
+                cursor = self.conn.execute(
+                    """UPDATE orders SET status=?, ts_last=?
+                       WHERE cloid=?""",
+                    (
+                        str(local_order_terminal_status),
+                        now,
+                        str(action["target"]),
+                    ),
+                )
+                if cursor.rowcount != 1:
+                    raise KillConflictError(
+                        "KILL_LOCAL_ORDER_MISSING",
+                        f"cloid={action['target']}",
+                    )
+            if flatten_order is not None:
+                row = dict(flatten_order)
+                cloid = str(action["cloid"])
+                existing = self.conn.execute(
+                    "SELECT * FROM orders WHERE cloid=?", (cloid,)
+                ).fetchone()
+                normalized = (
+                    row.get("oid"),
+                    str(action["episode_id"]),
+                    str(action_id),
+                    _canonical_json({
+                        "symbol": str(row["symbol"]),
+                        "role": "KILL_FLATTEN",
+                        "reduce_only": True,
+                    }),
+                    str(action["episode_id"]),
+                    int(row["trade_id"]),
+                    "KILL_FLATTEN",
+                    "FILLED",
+                    float(row["qty"]),
+                    float(row["filled_qty"]),
+                    now,
+                    now,
+                )
+                if existing is None:
+                    self.conn.execute(
+                        """INSERT INTO orders(
+                             cloid,oid,group_id,order_ref,order_json,
+                             decision_uid,trade_id,role,status,qty,filled_qty,
+                             avg_fill_px,ts_submit,ts_last)
+                           VALUES (?,?,?,?,?,?,?,?,?,?,?,NULL,?,?)""",
+                        (cloid, *normalized),
+                    )
+                elif (
+                    str(existing["role"]) != "KILL_FLATTEN"
+                    or int(existing["trade_id"]) != int(row["trade_id"])
+                    or float(existing["qty"]) != float(row["qty"])
+                ):
+                    raise KillConflictError(
+                        "KILL_FLATTEN_ORDER_CONFLICT", f"cloid={cloid}"
+                    )
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+        return self.get_kill_action(action_id) or {}
+
+    def get_kill_action(self, action_id: str) -> dict[str, Any] | None:
+        self._require_kill_schema()
+        row = self.conn.execute(
+            "SELECT * FROM kill_actions WHERE action_id=?", (str(action_id),)
+        ).fetchone()
+        return None if row is None else dict(row)
+
+    def kill_actions_for_episode(
+        self, episode_id: str, kind: str | None = None
+    ) -> list[dict[str, Any]]:
+        self._require_kill_schema()
+        if kind is None:
+            return self._rows(
+                "SELECT * FROM kill_actions WHERE episode_id=? "
+                "ORDER BY reserved_ts,action_id",
+                (str(episode_id),),
+            )
+        return self._rows(
+            "SELECT * FROM kill_actions WHERE episode_id=? AND kind=? "
+            "ORDER BY reserved_ts,action_id",
+            (str(episode_id), KillActionKind(str(kind)).value),
+        )
+
+    def kill_action_events(self, action_id: str) -> list[dict[str, Any]]:
+        self._require_kill_schema()
+        return self._rows(
+            "SELECT * FROM kill_action_events WHERE action_id=? ORDER BY seq",
+            (str(action_id),),
+        )
+
+    def kill_owned_position_rows(self, symbol: str) -> list[dict[str, Any]]:
+        self._require_kill_schema()
+        return self._rows(
+            """SELECT o.*, json_extract(o.order_json,'$.symbol') AS symbol,
+                      t.direction AS trade_direction,
+                      t.run_id AS trade_run_id
+               FROM orders o LEFT JOIN trades t ON t.trade_id=o.trade_id
+               WHERE o.filled_qty > 0
+                 AND json_extract(o.order_json,'$.symbol')=?
+               ORDER BY o.cloid""",
+            (str(symbol),),
+        )
+
+    def bind_kill_terminal_proof(
+        self,
+        *,
+        episode_id: str,
+        terminal_state: str,
+        reason_code: str,
+        checkpoint_id: str,
+        proof: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        self._require_kill_schema()
+        state = KillTerminalState(str(terminal_state))
+        if state not in {
+            KillTerminalState.SAFE_FLAT,
+            KillTerminalState.SAFE_RETAINED,
+        }:
+            raise KillConflictError(
+                "KILL_SAFE_STATE_INVALID", state.value
+            )
+        checkpoint = self.conn.execute(
+            "SELECT accepted_ts FROM reconcile_checkpoints WHERE checkpoint_id=?",
+            (str(checkpoint_id),),
+        ).fetchone()
+        if checkpoint is None or self.get_meta(
+            RECONCILE_CHECKPOINT_POINTER_KEY
+        ) != str(checkpoint_id):
+            raise KillConflictError(
+                "KILL_CHECKPOINT_NOT_CURRENT", "safe proof is not pointed"
+            )
+        now = _to_iso(self._clock()) or ""
+        proof_json = _canonical_json(dict(proof))
+        digest = hashlib.sha256(proof_json.encode("utf-8")).hexdigest()
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            if self.get_meta(KILL_REQUEST_ACTIVE_KEY) != str(episode_id):
+                raise KillConflictError(
+                    "KILL_REQUEST_NOT_ACTIVE", "proof episode is not active"
+                )
+            cursor = self.conn.execute(
+                """UPDATE kill_requests
+                   SET terminal_state=?,terminal_reason=?,terminal_ts=?,
+                       safe_checkpoint_id=?,safe_checkpoint_ts=?,proof_digest=?
+                   WHERE episode_id=? AND ack_state='PENDING'""",
+                (
+                    state.value,
+                    self._safe_reason_code(reason_code),
+                    now,
+                    str(checkpoint_id),
+                    str(checkpoint["accepted_ts"]),
+                    digest,
+                    str(episode_id),
+                ),
+            )
+            if cursor.rowcount != 1:
+                raise KillConflictError(
+                    "KILL_REQUEST_NOT_ACTIVE", "proof update rejected"
+                )
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+        return self.get_kill_request(episode_id) or {}
+
+    def acknowledge_kill_evidence(
+        self, *, now: datetime, max_age_s: float
+    ) -> dict[str, Any]:
+        self._require_kill_schema()
+        request = self.active_kill_request()
+        if request is None:
+            raise KillConflictError(
+                "KILL_EVIDENCE_MISSING", "no active kill episode"
+            )
+        if str(request["terminal_state"]) not in {"SAFE_FLAT", "SAFE_RETAINED"}:
+            raise KillConflictError(
+                "KILL_NOT_SAFE", str(request["terminal_reason"])
+            )
+        checkpoint_id = request["safe_checkpoint_id"]
+        proof_digest = str(request["proof_digest"] or "")
+        checkpoint = (
+            self.conn.execute(
+                "SELECT accepted_ts FROM reconcile_checkpoints WHERE checkpoint_id=?",
+                (str(checkpoint_id),),
+            ).fetchone()
+            if checkpoint_id is not None
+            else None
+        )
+        if (
+            checkpoint_id is None
+            or checkpoint is None
+            or request["safe_checkpoint_ts"] is None
+            or str(request["safe_checkpoint_ts"]) != str(checkpoint["accepted_ts"])
+            or len(proof_digest) != 64
+            or any(char not in "0123456789abcdef" for char in proof_digest.lower())
+            or not self.full_reconcile_ready(
+                now=now, max_age_s=max_age_s
+            )
+        ):
+            raise KillConflictError(
+                "KILL_SAFE_PROOF_STALE", "fresh current reconcile is required"
+            )
+        if self.get_meta(RECONCILE_CHECKPOINT_POINTER_KEY) != str(checkpoint_id):
+            raise KillConflictError(
+                "KILL_SAFE_PROOF_MOVED", "checkpoint pointer changed"
+            )
+        ack_ts = _to_iso(now) or ""
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            if self.get_meta(KILL_REQUEST_ACTIVE_KEY) != str(request["episode_id"]):
+                raise KillConflictError(
+                    "KILL_REQUEST_NOT_ACTIVE", "active pointer changed"
+                )
+            cursor = self.conn.execute(
+                """UPDATE kill_requests SET ack_state='ACKNOWLEDGED',ack_ts=?
+                   WHERE episode_id=? AND ack_state='PENDING'""",
+                (ack_ts, str(request["episode_id"])),
+            )
+            if cursor.rowcount != 1:
+                raise KillConflictError(
+                    "KILL_ACK_CONFLICT", "episode was already acknowledged"
+                )
+            self.conn.execute(
+                "DELETE FROM meta WHERE key=?", (KILL_REQUEST_ACTIVE_KEY,)
+            )
+            self.conn.execute(
+                "INSERT INTO meta(key,value) VALUES ('app_state','DISARMED') "
+                "ON CONFLICT(key) DO UPDATE SET value=excluded.value"
+            )
+            self._insert_event_in_tx(
+                str(request["run_id"]),
+                ack_ts,
+                "WARN",
+                "KILL_ACKNOWLEDGED",
+                f"episode={request['episode_id']};checkpoint={checkpoint_id}",
+            )
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+        return self.get_kill_request(str(request["episode_id"])) or {}
+
+    # ------------------------------------------------------------------
     # Existing methods (unchanged signatures)
     # ------------------------------------------------------------------
 
@@ -4781,17 +5889,22 @@ class Store:
             str(SCHEMA_VERSION_FULL_RECONCILE),
             str(SCHEMA_VERSION_DURABLE_RISK),
             str(SCHEMA_VERSION_EXPOSURE_CONTROLS),
+            str(SCHEMA_VERSION_KILL_EVIDENCE),
         }
 
     def durable_risk_controls_enabled(self) -> bool:
         return self.get_meta("schema_version") in {
             str(SCHEMA_VERSION_DURABLE_RISK),
             str(SCHEMA_VERSION_EXPOSURE_CONTROLS),
+            str(SCHEMA_VERSION_KILL_EVIDENCE),
         }
 
     def exposure_controls_enabled(self) -> bool:
-        """True only on an opt-in schema-v8 store (TS-P1-008)."""
-        return self.get_meta("schema_version") == str(SCHEMA_VERSION_EXPOSURE_CONTROLS)
+        """True on opt-in schema v8 and its additive v9 successor."""
+        return self.get_meta("schema_version") in {
+            str(SCHEMA_VERSION_EXPOSURE_CONTROLS),
+            str(SCHEMA_VERSION_KILL_EVIDENCE),
+        }
 
     def _require_full_reconcile(self) -> None:
         if not self.full_reconcile_enabled():
@@ -5861,14 +6974,17 @@ class Store:
                 str(item["component"]): str(item["payload_digest"])
                 for item in components
             }
-            if (
-                reconcile_digest(
-                    {
-                        "version": snapshot.get("version"),
-                        "components": component_digests,
-                        "diffs": diffs,
-                    }
+            hash_payload = {
+                "version": snapshot.get("version"),
+                "components": component_digests,
+                "diffs": diffs,
+            }
+            if snapshot.get("version") == SNAPSHOT_PAYLOAD_VERSION_V3:
+                hash_payload["exposure_policy_version"] = snapshot.get(
+                    "exposure_policy_version"
                 )
+            if (
+                reconcile_digest(hash_payload)
                 != str(checkpoint["canonical_hash"])
                 or snapshot.get("diffs") != diffs
             ):

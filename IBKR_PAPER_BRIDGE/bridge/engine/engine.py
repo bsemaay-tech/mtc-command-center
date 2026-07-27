@@ -37,10 +37,11 @@ from bridge.engine.window import (
     record_window_start,
     window_status,
 )
-from bridge.store.db import Store
+from bridge.store.db import KillConflictError, Store
 
 
 _ROUTINE_FEED_NOTIFICATION_CODES = frozenset({"DISCONNECT", "DATA_RESTORED"})
+_KILL_POLICY_VERSION = "ts-p1-009-d1-d5-v1"
 
 
 def _safe_full_reconcile_reason(exc: BaseException) -> str:
@@ -90,6 +91,7 @@ class BridgeEngine:
     full_reconcile_attempt_id: str | None = None
     _feed: BarFeed | None = field(default=None, init=False)
     _tasks: list[asyncio.Task] = field(default_factory=list, init=False)
+    _full_writer_owner: object | None = field(default=None, init=False)
     _kill_requested: bool = field(default=False, init=False)
     _consecutive_order_rejects: int = field(default=0, init=False)
     _consecutive_reconcile_failures: int = field(default=0, init=False)
@@ -117,7 +119,17 @@ class BridgeEngine:
             self.store.set_meta("app_state", self.state)
         else:
             self.state = persisted
-        if self.store.has_submission_quarantine():
+        active_kill = (
+            self.store.active_kill_request()
+            if self.store.kill_evidence_enabled()
+            else None
+        )
+        if active_kill is not None or self.state == "KILLED":
+            self._kill_requested = True
+            self.order_manager.kill_latched = True
+            self.state = "KILLED"
+            self.store.set_meta("app_state", "KILLED")
+        elif self.store.has_submission_quarantine():
             self.state = "DISARMED"
             self.store.set_meta("app_state", "DISARMED")
         elif self.store.partial_recovery_blocks_new_risk():
@@ -127,7 +139,7 @@ class BridgeEngine:
             active = self.store.active_risk_control_latches(
                 run_id=self.run_id, now=self.clock()
             )
-            if active:
+            if active and not self._kill_requested:
                 self.risk_control_latch = active[0].control
                 self.state = "DISARMED"
                 self.store.set_meta("app_state", "DISARMED")
@@ -352,6 +364,7 @@ class BridgeEngine:
                     f"authoritative risk snapshot unavailable: {reason}"
                 ) from None
         self._kill_requested = False
+        self.order_manager.kill_latched = False
         # Explicit human re-arm clears the sticky risk-input fail-closed latch.
         self.risk_input_error = None
         self.risk_snapshot_error = None
@@ -389,28 +402,77 @@ class BridgeEngine:
         await self._publish("status", self.status())
 
     async def kill(self, flatten: bool = False) -> None:
+        # The only pre-I/O ordering that matters for immediate safety: memory
+        # first. A concurrent submit sees OrderManager.kill_latched even if
+        # persistence itself fails.
         self._kill_requested = True
-        self._set_state("KILLED")
-        async with self.order_manager.symbol_locks.hold(self.coin):
-            # KILL remains a state/latch change, but it may not race the
-            # recovery writer or mutate while TS-P1-003 is quarantined.
+        self.order_manager.kill_latched = True
+        self.state = "KILLED"
+        if not self.store.kill_evidence_enabled():
+            # v9 is explicitly opt-in. Older stores latch KILLED but perform
+            # no best-effort broad mutation and can never acknowledge without
+            # the durable evidence contract.
+            self._set_state("KILLED")
+            await self._publish("status", self.status())
+            return
+        request = self.store.begin_kill_episode(
+            run_id=self.run_id,
+            symbol=self.coin,
+            flatten_requested=bool(flatten),
+            policy_version=_KILL_POLICY_VERSION,
+        )
+        result = await self.order_manager.run_kill_episode(
+            request,
+            full_writer_already_held=(
+                self._full_writer_owner is asyncio.current_task()
+            ),
+        )
+        state = str(result["state"])
+        reason = str(result["reason"])
+        self.store.mark_kill_request_state(
+            str(request["episode_id"]), state, reason
+        )
+        if (
+            state in {"SAFE_FLAT", "SAFE_RETAINED"}
+            and self._full_writer_owner is not asyncio.current_task()
+        ):
+            # The direct symbol proof determines the requested terminal shape.
+            # A fresh accepted full checkpoint additionally binds it for ACK.
+            reconcile = await self.run_full_reconcile()
+            self.state = "KILLED"
+            self.store.set_meta("app_state", "KILLED")
             if (
-                not self.store.has_submission_quarantine()
-                and not self.order_manager._partial_recovery_owns(self.coin)
+                reconcile is not None
+                and bool(getattr(reconcile, "accepted", False))
+                and self.full_reconcile_ready(self.clock())
             ):
-                await self.broker.cancel_all()
-                if flatten:
-                    await self.broker.flatten(self.coin)
+                checkpoint = self.store.latest_accepted_reconcile_checkpoint()
+                if checkpoint is not None:
+                    self.store.bind_kill_terminal_proof(
+                        episode_id=str(request["episode_id"]),
+                        terminal_state=state,
+                        reason_code=reason,
+                        checkpoint_id=str(checkpoint["checkpoint_id"]),
+                        proof=dict(result.get("proof") or {}),
+                    )
+        self.state = "KILLED"
+        self.store.set_meta("app_state", "KILLED")
         await self._publish("status", self.status())
 
     async def acknowledge_kill(self) -> None:
         if self._app_state() != "KILLED":
-            return
+            raise RuntimeError("KILL_NOT_ACTIVE")
+        try:
+            self.store.acknowledge_kill_evidence(
+                now=self.clock(),
+                max_age_s=self.full_reconcile_max_age_s(),
+            )
+        except KillConflictError as exc:
+            raise RuntimeError(str(exc)) from None
         self._kill_requested = False
-        self._set_state("DISARMED")
+        self.order_manager.kill_latched = False
+        self.state = "DISARMED"
         self.reconcile_ready = False
-        await self.order_manager.reconcile()
-        self.reconcile_ready = True
         await self._publish("status", self.status())
 
     def full_reconcile_max_age_s(self) -> float:
@@ -557,11 +619,17 @@ class BridgeEngine:
             from bridge.engine.reconcile import full_writer_guard
 
             async with full_writer_guard(self.store):
-                await self.on_bar(
-                    bar,
-                    process_broker_bar=process_broker_bar,
-                    _full_guard_held=True,
-                )
+                task = asyncio.current_task()
+                self._full_writer_owner = task
+                try:
+                    await self.on_bar(
+                        bar,
+                        process_broker_bar=process_broker_bar,
+                        _full_guard_held=True,
+                    )
+                finally:
+                    if self._full_writer_owner is task:
+                        self._full_writer_owner = None
             return
         if bar.ts in self._processed_bar_ts:
             return
@@ -917,8 +985,24 @@ class BridgeEngine:
             # Store unreadable: report the in-memory state rather than crash
             # the status surface (see _risk_inputs_failed).
             state = self.state
+        kill_episode: dict[str, object] | None = None
+        try:
+            if self.store.kill_evidence_enabled():
+                active = self.store.active_kill_request()
+                if active is not None:
+                    kill_episode = {
+                        "episode_id": str(active["episode_id"]),
+                        "flatten_requested": bool(active["flatten_requested"]),
+                        "terminal_state": str(active["terminal_state"]),
+                        "terminal_reason": str(active["terminal_reason"]),
+                        "safe_checkpoint_id": active["safe_checkpoint_id"],
+                        "ack_state": str(active["ack_state"]),
+                    }
+        except Exception:
+            pass
         return {
             "state": state,
+            "kill_episode": kill_episode,
             "window": window_status(
                 self.store,
                 app_state=state,
@@ -1078,6 +1162,27 @@ class BridgeEngine:
             return
 
     def _app_state(self) -> str:
+        persisted = self.store.get_meta("app_state")
+        active_kill = (
+            self.store.get_meta("kill_request_active")
+            if self.store.kill_evidence_enabled()
+            else None
+        )
+        if (
+            self._kill_requested
+            or bool(getattr(self.order_manager, "kill_latched", False))
+            or self.state == "KILLED"
+            or persisted == "KILLED"
+            or active_kill is not None
+        ):
+            self._kill_requested = True
+            self.order_manager.kill_latched = True
+            self.state = "KILLED"
+            try:
+                self.store.set_meta("app_state", "KILLED")
+            except Exception:
+                pass
+            return self.state
         if self.store.has_submission_quarantine():
             self.state = "DISARMED"
             try:
@@ -1105,7 +1210,6 @@ class BridgeEngine:
             except Exception:
                 pass
             return self.state
-        persisted = self.store.get_meta("app_state")
         if persisted is not None:
             self.state = persisted
         return self.state

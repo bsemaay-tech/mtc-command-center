@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import time
 from collections.abc import Mapping
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 import math
@@ -25,6 +26,7 @@ from bridge.broker.base import (
 )
 from bridge.engine.types import (
     FLATTEN_VERIFY_DEADLINE_S,
+    KILL_VERIFY_DEADLINE_S,
     PARTIAL_TERMINAL_STATES,
     PROTECT_DEADLINE_S,
     ActionOutcome,
@@ -35,6 +37,8 @@ from bridge.engine.types import (
     FillEvent,
     LotQuantizationError,
     LotUnit,
+    KillActionKind,
+    KillTerminalState,
     OrderPlan,
     OrderState,
     OrderUpdateEvent,
@@ -54,6 +58,8 @@ from bridge.store.db import (
     PartialRecoveryConflictError,
     Store,
     compute_intent_identity,
+    compute_kill_action_cloid,
+    compute_kill_action_id,
     compute_partial_action_cloid,
     compute_partial_action_id,
     compute_partial_recovery_id,
@@ -66,6 +72,14 @@ _PARTIAL_RECOVERY_METHODS = (
     "query_order",
     "cancel_order_by_cloid",
     "place_protective_stop",
+    "flatten_reduce_only",
+)
+
+_KILL_RECOVERY_METHODS = (
+    "lot_unit",
+    "symbol_snapshot",
+    "query_order",
+    "cancel_order_by_cloid",
     "flatten_reduce_only",
 )
 
@@ -86,6 +100,15 @@ class SymbolLockNotHeld(RuntimeError):
         self.symbol = symbol
         self.reason_code = "SYMBOL_LOCK_NOT_HELD"
         super().__init__(f"{self.reason_code}: {symbol}")
+
+
+class _KillEvidenceFault(RuntimeError):
+    """Secret-safe local validation failure for one kill observation."""
+
+    def __init__(self, state: KillTerminalState, reason_code: str) -> None:
+        self.state = state
+        self.reason_code = reason_code
+        super().__init__(reason_code)
 
 
 class SymbolLockRegistry:
@@ -179,6 +202,18 @@ def _local_evidence(reason_code: str, detail: str = "") -> Evidence:
     return Evidence("LOCAL", reason_code, detail=detail)
 
 
+@asynccontextmanager
+async def _kill_full_writer_scope(store: Store, *, already_held: bool):
+    """Reuse the caller-owned full writer; otherwise acquire it exactly once."""
+    if already_held:
+        yield
+        return
+    from bridge.engine.reconcile import full_writer_guard
+
+    async with full_writer_guard(store):
+        yield
+
+
 class OrderManager:
     def __init__(
         self,
@@ -201,11 +236,774 @@ class OrderManager:
         # UTC deadline alone (see _deadline_expired).
         self._monotonic: Callable[[], float] = monotonic or time.monotonic
         self._mono_deadlines: dict[str, float] = {}
+        self._kill_mono_deadlines: dict[str, float] = {}
+        # Set before any KILL persistence or broker await. The final submit
+        # boundary consults this in-memory latch even if SQLite is unavailable.
+        self.kill_latched = False
         self.symbol_locks = SymbolLockRegistry()
         self._legacy_partial_scan_done = False
         subscribe = getattr(self.broker, "subscribe_user_events", None)
         if subscribe is not None:
             subscribe(self._queue_event)
+
+    # ------------------------------------------------------------------
+    # TS-P1-009 durable, owned-only kill coordinator
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _kill_reason(value: object, fallback: str = "KILL_EVIDENCE_INVALID") -> str:
+        text = "".join(
+            char if char.isalnum() or char in {"_", "-", ":"} else "_"
+            for char in str(value or fallback).upper()
+        )
+        return (text or fallback)[:96]
+
+    def _kill_now(self) -> datetime:
+        value = self.store._clock()  # trusted local clock used by the ledger
+        if value.tzinfo is None:
+            return value.replace(tzinfo=UTC)
+        return value.astimezone(UTC)
+
+    @staticmethod
+    def _kill_evidence_payload(value: Any) -> dict[str, Any]:
+        evidence = getattr(value, "evidence", value)
+        if isinstance(evidence, Evidence):
+            return evidence.as_payload()
+        return {"source": "LOCAL", "reason_code": "EVIDENCE_UNAVAILABLE"}
+
+    def _kill_broker_available(self) -> bool:
+        return all(callable(getattr(self.broker, name, None)) for name in _KILL_RECOVERY_METHODS)
+
+    async def _kill_snapshot(self, symbol: str) -> SymbolSnapshot:
+        try:
+            snapshot = await asyncio.wait_for(
+                self.broker.symbol_snapshot(symbol),
+                timeout=KILL_VERIFY_DEADLINE_S,
+            )
+        except asyncio.TimeoutError as exc:
+            raise _KillEvidenceFault(
+                KillTerminalState.UNKNOWN, "SYMBOL_SNAPSHOT_TIMEOUT"
+            ) from exc
+        except Exception as exc:
+            raise _KillEvidenceFault(
+                KillTerminalState.UNKNOWN,
+                f"SYMBOL_SNAPSHOT_FAILED_{type(exc).__name__}",
+            ) from exc
+        if (
+            not isinstance(snapshot, SymbolSnapshot)
+            or snapshot.symbol != symbol
+            or not snapshot.exact
+            or snapshot.lot is None
+            or snapshot.net_size is None
+            or snapshot.observed_ts is None
+        ):
+            raise _KillEvidenceFault(
+                KillTerminalState.UNRESOLVED, "SYMBOL_SNAPSHOT_NOT_EXACT"
+            )
+        return snapshot
+
+    def _kill_model(
+        self, snapshot: SymbolSnapshot, *, symbol: str
+    ) -> dict[str, Any]:
+        """Validate the complete observation before authorizing any mutation."""
+        lot = snapshot.lot
+        if lot is None:
+            raise _KillEvidenceFault(
+                KillTerminalState.UNRESOLVED, "SIZE_QUANTUM_UNAVAILABLE"
+            )
+        try:
+            observed_lots = quantize_lots(abs(float(snapshot.net_size)), lot)
+        except (LotQuantizationError, TypeError, ValueError) as exc:
+            reason = getattr(exc, "reason_code", "POSITION_QUANTITY_INVALID")
+            raise _KillEvidenceFault(KillTerminalState.AMBIGUOUS, reason) from exc
+        observed_signed = observed_lots if float(snapshot.net_size) >= 0 else -observed_lots
+
+        exchange_by_alias: dict[str, OrderView] = {}
+        for order in snapshot.open_orders:
+            cloid = str(order.cloid).strip()
+            alias = cloid.casefold()
+            if (
+                not cloid
+                or alias in exchange_by_alias
+                or str(order.coin) != symbol
+                or str(order.side).upper() not in {"BUY", "SELL"}
+                or str(order.status).upper() not in _LIVE_ORDER_STATUSES
+            ):
+                raise _KillEvidenceFault(
+                    KillTerminalState.AMBIGUOUS, "ORDER_IDENTITY_AMBIGUOUS"
+                )
+            try:
+                size_lots = quantize_lots(abs(float(order.size)), lot)
+            except (LotQuantizationError, TypeError, ValueError) as exc:
+                reason = getattr(exc, "reason_code", "ORDER_QUANTITY_INVALID")
+                raise _KillEvidenceFault(KillTerminalState.AMBIGUOUS, reason) from exc
+            if size_lots <= 0:
+                raise _KillEvidenceFault(
+                    KillTerminalState.AMBIGUOUS, "ORDER_QUANTITY_NON_POSITIVE"
+                )
+            exchange_by_alias[alias] = order
+
+        unknown = [
+            row
+            for row in self.store.local_orders_with_unknown_status()
+            if str(row.get("symbol") or "") == symbol
+        ]
+        if unknown:
+            raise _KillEvidenceFault(
+                KillTerminalState.UNRESOLVED, "LOCAL_ORDER_STATUS_UNKNOWN"
+            )
+
+        local_live = [
+            row
+            for row in self.store.live_local_orders()
+            if str(row.get("symbol") or "") == symbol
+        ]
+        local_aliases: set[str] = set()
+        risk_orders: list[tuple[dict[str, Any], OrderView | None]] = []
+        protection_orders: list[tuple[dict[str, Any], OrderView]] = []
+        owned_cloids: set[str] = set()
+        for row in local_live:
+            cloid = str(row.get("cloid") or "").strip()
+            alias = cloid.casefold()
+            if not cloid or alias in local_aliases:
+                raise _KillEvidenceFault(
+                    KillTerminalState.AMBIGUOUS, "LOCAL_ORDER_IDENTITY_AMBIGUOUS"
+                )
+            local_aliases.add(alias)
+            owned_cloids.add(cloid)
+            try:
+                local_lots = quantize_lots(abs(float(row["qty"])), lot)
+            except (KeyError, LotQuantizationError, TypeError, ValueError) as exc:
+                reason = getattr(exc, "reason_code", "LOCAL_ORDER_QUANTITY_INVALID")
+                raise _KillEvidenceFault(KillTerminalState.AMBIGUOUS, reason) from exc
+            if local_lots <= 0:
+                raise _KillEvidenceFault(
+                    KillTerminalState.AMBIGUOUS, "LOCAL_ORDER_QUANTITY_NON_POSITIVE"
+                )
+            observed = exchange_by_alias.get(alias)
+            role = str(row.get("role") or "").upper()
+            if observed is not None:
+                try:
+                    exchange_lots = quantize_lots(abs(float(observed.size)), lot)
+                except (LotQuantizationError, TypeError, ValueError) as exc:
+                    reason = getattr(exc, "reason_code", "ORDER_QUANTITY_INVALID")
+                    raise _KillEvidenceFault(
+                        KillTerminalState.AMBIGUOUS, reason
+                    ) from exc
+                if (
+                    str(observed.cloid) != cloid
+                    or exchange_lots != local_lots
+                    or str(observed.role).upper() not in {role, "UNKNOWN"}
+                ):
+                    raise _KillEvidenceFault(
+                        KillTerminalState.AMBIGUOUS, "OWNED_ORDER_EVIDENCE_CONFLICT"
+                    )
+            if role == "ENTRY":
+                if observed is not None and bool(observed.reduce_only):
+                    raise _KillEvidenceFault(
+                        KillTerminalState.AMBIGUOUS, "ENTRY_REDUCE_ONLY_CONFLICT"
+                    )
+                risk_orders.append((row, observed))
+            else:
+                if observed is not None:
+                    if not bool(observed.reduce_only):
+                        raise _KillEvidenceFault(
+                            KillTerminalState.AMBIGUOUS,
+                            "PROTECTION_NOT_REDUCE_ONLY",
+                        )
+                    protection_orders.append((row, observed))
+
+        expected_signed = 0
+        trade_nets: dict[int, int] = {}
+        trade_directions: dict[int, str] = {}
+        trade_decisions: dict[int, str] = {}
+        for row in self.store.kill_owned_position_rows(symbol):
+            if str(row.get("trade_run_id") or "") != self.run_id:
+                continue
+            trade_id = row.get("trade_id")
+            direction = str(row.get("trade_direction") or "").upper()
+            if trade_id is None or direction not in {"LONG", "SHORT"}:
+                raise _KillEvidenceFault(
+                    KillTerminalState.AMBIGUOUS, "POSITION_LINEAGE_INCOMPLETE"
+                )
+            try:
+                filled_lots = quantize_lots(abs(float(row["filled_qty"])), lot)
+            except (KeyError, LotQuantizationError, TypeError, ValueError) as exc:
+                reason = getattr(exc, "reason_code", "FILLED_QUANTITY_INVALID")
+                raise _KillEvidenceFault(KillTerminalState.AMBIGUOUS, reason) from exc
+            sign = 1 if direction == "LONG" else -1
+            contribution = sign * filled_lots
+            if str(row.get("role") or "").upper() != "ENTRY":
+                contribution *= -1
+            expected_signed += contribution
+            trade_key = int(trade_id)
+            trade_nets[trade_key] = trade_nets.get(trade_key, 0) + contribution
+            trade_directions[trade_key] = direction
+            trade_decisions.setdefault(
+                trade_key, str(row.get("decision_uid") or "")
+            )
+
+        ownership_reason: str | None = None
+        if any(
+            (direction == "LONG" and trade_nets[trade_id] < 0)
+            or (direction == "SHORT" and trade_nets[trade_id] > 0)
+            for trade_id, direction in trade_directions.items()
+        ):
+            ownership_reason = "OWNERSHIP_AMBIGUOUS"
+        contributing_trades = {
+            trade_id for trade_id, net_lots in trade_nets.items() if net_lots != 0
+        }
+        if expected_signed != observed_signed:
+            ownership_reason = "OWNERSHIP_AMBIGUOUS"
+        if expected_signed != 0 and len(contributing_trades) != 1:
+            ownership_reason = "OWNERSHIP_AMBIGUOUS"
+        return {
+            "snapshot": snapshot,
+            "lot": lot,
+            "observed_lots": observed_signed,
+            "expected_lots": expected_signed,
+            "risk_orders": risk_orders,
+            "protection_orders": protection_orders,
+            "owned_cloids": owned_cloids,
+            "trade_id": (
+                next(iter(contributing_trades))
+                if len(contributing_trades) == 1
+                else None
+            ),
+            "decision_uid": (
+                trade_decisions[next(iter(contributing_trades))]
+                if len(contributing_trades) == 1
+                and trade_decisions.get(next(iter(contributing_trades)), "")
+                else None
+            ),
+            "ownership_reason": ownership_reason,
+        }
+
+    def _kill_remaining(self, action: Mapping[str, Any]) -> float:
+        action_id = str(action["action_id"])
+        deadline = datetime.fromisoformat(str(action["deadline_ts"]))
+        if deadline.tzinfo is None:
+            deadline = deadline.replace(tzinfo=UTC)
+        wall_remaining = (deadline.astimezone(UTC) - self._kill_now()).total_seconds()
+        mono_deadline = self._kill_mono_deadlines.get(action_id)
+        if mono_deadline is None:
+            mono_deadline = self._monotonic() + max(
+                0.0, min(KILL_VERIFY_DEADLINE_S, wall_remaining)
+            )
+            self._kill_mono_deadlines[action_id] = mono_deadline
+        return max(
+            0.0,
+            min(wall_remaining, mono_deadline - self._monotonic()),
+        )
+
+    async def _kill_await(self, action: Mapping[str, Any], awaitable: Any) -> Any:
+        remaining = self._kill_remaining(action)
+        if remaining <= 0:
+            if hasattr(awaitable, "close"):
+                awaitable.close()
+            raise asyncio.TimeoutError
+        return await asyncio.wait_for(awaitable, timeout=remaining)
+
+    def _kill_record(
+        self,
+        action_id: str,
+        status: str,
+        reason_code: str,
+        value: Any = None,
+        *,
+        local_order_terminal_status: str | None = None,
+        flatten_order: Mapping[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        return self.store.record_kill_action_event(
+            action_id=action_id,
+            status=status,
+            reason_code=self._kill_reason(reason_code),
+            evidence_source=str(
+                getattr(getattr(value, "evidence", None), "source", "LOCAL")
+            ),
+            evidence=self._kill_evidence_payload(value),
+            observed_ts=self._kill_now(),
+            local_order_terminal_status=local_order_terminal_status,
+            flatten_order=flatten_order,
+        )
+
+    async def _kill_query_cancel(
+        self, action: Mapping[str, Any], *, symbol: str, target: str
+    ) -> bool:
+        try:
+            query = await self._kill_await(
+                action, self.broker.query_order(target, symbol)
+            )
+        except asyncio.TimeoutError:
+            self._kill_record(
+                str(action["action_id"]), "UNKNOWN", "CANCEL_VERIFY_DEADLINE"
+            )
+            return False
+        except Exception as exc:
+            self._kill_record(
+                str(action["action_id"]),
+                "UNKNOWN",
+                f"CANCEL_QUERY_FAILED_{type(exc).__name__}",
+            )
+            return False
+        if not query.known:
+            self._kill_record(
+                str(action["action_id"]),
+                "UNKNOWN",
+                getattr(query.evidence, "reason_code", "CANCEL_QUERY_UNKNOWN"),
+                query,
+            )
+            return False
+        if query.terminal or not query.found:
+            self._kill_record(
+                str(action["action_id"]),
+                "APPLIED",
+                "CANCEL_TERMINAL_QUERY",
+                query,
+                local_order_terminal_status="CANCELLED_BY_ENGINE",
+            )
+            return True
+        self._kill_record(
+            str(action["action_id"]),
+            "NOT_APPLIED",
+            "CANCEL_ORDER_STILL_LIVE",
+            query,
+        )
+        return False
+
+    async def _kill_cancel(
+        self,
+        *,
+        episode_id: str,
+        symbol: str,
+        row: Mapping[str, Any],
+        observed: OrderView | None,
+    ) -> bool:
+        target = str(row["cloid"])
+        action_id = compute_kill_action_id(
+            episode_id=episode_id,
+            kind=KillActionKind.CANCEL.value,
+            target=target,
+            qty_lots=None,
+        )
+        reserved_ts = self._kill_now()
+        replay, action = self.store.reserve_kill_action(
+            episode_id=episode_id,
+            kind=KillActionKind.CANCEL.value,
+            target=target,
+            qty_lots=None,
+            cloid=target,
+            deadline_ts=reserved_ts + timedelta(seconds=KILL_VERIFY_DEADLINE_S),
+            action_id=action_id,
+            reserved_ts=reserved_ts,
+        )
+        if not replay and observed is None:
+            self._kill_record(
+                action_id,
+                "APPLIED",
+                "CANCEL_SNAPSHOT_ABSENT",
+                local_order_terminal_status="CANCELLED_BY_ENGINE",
+            )
+            return True
+        if replay and str(action["current_outcome"]) != ActionOutcome.NOT_APPLIED.value:
+            return await self._kill_query_cancel(
+                action, symbol=symbol, target=target
+            )
+        if replay:
+            # A prior direct query proved NOT_APPLIED. It authorizes this one
+            # same-identity resend; this call never queries and resends in one
+            # replay step.
+            pass
+        self._kill_record(action_id, "SENT", "CANCEL_SEND_STARTED")
+        try:
+            result = await self._kill_await(
+                action, self.broker.cancel_order_by_cloid(target, symbol)
+            )
+        except asyncio.TimeoutError:
+            self._kill_record(action_id, "UNKNOWN", "CANCEL_TRANSPORT_TIMEOUT")
+            return False
+        except Exception as exc:
+            self._kill_record(
+                action_id,
+                "UNKNOWN",
+                f"CANCEL_TRANSPORT_FAILED_{type(exc).__name__}",
+            )
+            return False
+        # A write response is transport evidence only. Even a typed
+        # NOT_APPLIED response cannot authorize resend until direct query
+        # independently proves that outcome.
+        status = (
+            "UNKNOWN"
+            if result.outcome is ActionOutcome.UNKNOWN
+            else "EVIDENCE"
+        )
+        self._kill_record(
+            action_id,
+            status,
+            getattr(result.evidence, "reason_code", "CANCEL_RESULT"),
+            result,
+        )
+        if result.outcome is ActionOutcome.UNKNOWN:
+            return await self._kill_query_cancel(
+                self.store.get_kill_action(action_id) or action,
+                symbol=symbol,
+                target=target,
+            )
+        return await self._kill_query_cancel(
+            self.store.get_kill_action(action_id) or action,
+            symbol=symbol,
+            target=target,
+        )
+
+    async def _kill_query_flatten(
+        self,
+        action: Mapping[str, Any],
+        *,
+        symbol: str,
+        qty_lots: int,
+        lot: LotUnit,
+        trade_id: int,
+    ) -> str:
+        action_id = str(action["action_id"])
+        cloid = str(action["cloid"])
+        try:
+            query = await self._kill_await(
+                action, self.broker.query_order(cloid, symbol)
+            )
+        except asyncio.TimeoutError:
+            self._kill_record(action_id, "UNKNOWN", "FLATTEN_VERIFY_DEADLINE")
+            return "UNKNOWN"
+        except Exception as exc:
+            self._kill_record(
+                action_id,
+                "UNKNOWN",
+                f"FLATTEN_QUERY_FAILED_{type(exc).__name__}",
+            )
+            return "UNKNOWN"
+        if not query.known:
+            self._kill_record(
+                action_id,
+                "UNKNOWN",
+                getattr(query.evidence, "reason_code", "FLATTEN_QUERY_UNKNOWN"),
+                query,
+            )
+            return "UNKNOWN"
+        filled_lots = 0
+        if query.filled_size is not None:
+            try:
+                filled_lots = quantize_lots(abs(float(query.filled_size)), lot)
+            except (LotQuantizationError, TypeError, ValueError):
+                self._kill_record(
+                    action_id, "UNKNOWN", "FLATTEN_FILLED_QUANTITY_INVALID", query
+                )
+                return "UNKNOWN"
+        if query.terminal and query.oid is not None and filled_lots > 0:
+            self._kill_record(
+                action_id,
+                "APPLIED",
+                (
+                    "FLATTEN_TERMINAL_QUERY"
+                    if filled_lots == qty_lots
+                    else "FLATTEN_PARTIAL"
+                ),
+                query,
+                flatten_order={
+                    "oid": int(query.oid),
+                    "symbol": symbol,
+                    "trade_id": trade_id,
+                    "qty": lots_to_size(qty_lots, lot),
+                    "filled_qty": lots_to_size(filled_lots, lot),
+                },
+            )
+            self._drain_queued_events_locked(symbol)
+            return "APPLIED" if filled_lots == qty_lots else "PARTIAL"
+        if query.terminal and filled_lots == 0:
+            self._kill_record(
+                action_id, "NOT_APPLIED", "FLATTEN_DIRECT_NOT_APPLIED", query
+            )
+            return "NOT_APPLIED"
+        self._kill_record(
+            action_id, "UNKNOWN", "FLATTEN_TERMINAL_PROOF_MISSING", query
+        )
+        return "UNKNOWN"
+
+    async def _kill_flatten(
+        self,
+        *,
+        episode_id: str,
+        symbol: str,
+        qty_lots: int,
+        lot: LotUnit,
+        trade_id: int,
+    ) -> str:
+        existing = self.store.kill_actions_for_episode(
+            episode_id, kind=KillActionKind.FLATTEN.value
+        )
+        if existing:
+            if len(existing) != 1:
+                raise _KillEvidenceFault(
+                    KillTerminalState.AMBIGUOUS, "FLATTEN_ACTION_AMBIGUOUS"
+                )
+            action = existing[0]
+            return await self._kill_query_flatten(
+                action,
+                symbol=symbol,
+                qty_lots=int(action["qty_lots"]),
+                lot=lot,
+                trade_id=trade_id,
+            )
+        action_id = compute_kill_action_id(
+            episode_id=episode_id,
+            kind=KillActionKind.FLATTEN.value,
+            target=symbol,
+            qty_lots=qty_lots,
+        )
+        cloid = compute_kill_action_cloid(action_id)
+        reserved_ts = self._kill_now()
+        replay, action = self.store.reserve_kill_action(
+            episode_id=episode_id,
+            kind=KillActionKind.FLATTEN.value,
+            target=symbol,
+            qty_lots=qty_lots,
+            cloid=cloid,
+            deadline_ts=reserved_ts + timedelta(seconds=KILL_VERIFY_DEADLINE_S),
+            action_id=action_id,
+            reserved_ts=reserved_ts,
+        )
+        if replay and str(action["current_outcome"]) != ActionOutcome.NOT_APPLIED.value:
+            return await self._kill_query_flatten(
+                action,
+                symbol=symbol,
+                qty_lots=qty_lots,
+                lot=lot,
+                trade_id=trade_id,
+            )
+        self._kill_record(action_id, "SENT", "FLATTEN_SEND_STARTED")
+        try:
+            result = await self._kill_await(
+                action,
+                self.broker.flatten_reduce_only(
+                    symbol=symbol,
+                    cloid=cloid,
+                    size=lots_to_size(qty_lots, lot),
+                ),
+            )
+        except asyncio.TimeoutError:
+            self._kill_record(action_id, "UNKNOWN", "FLATTEN_TRANSPORT_TIMEOUT")
+            return "UNKNOWN"
+        except Exception as exc:
+            self._kill_record(
+                action_id,
+                "UNKNOWN",
+                f"FLATTEN_TRANSPORT_FAILED_{type(exc).__name__}",
+            )
+            return "UNKNOWN"
+        status = (
+            "UNKNOWN"
+            if result.outcome is ActionOutcome.UNKNOWN
+            else "EVIDENCE"
+        )
+        self._kill_record(
+            action_id,
+            status,
+            getattr(result.evidence, "reason_code", "FLATTEN_RESULT"),
+            result,
+        )
+        if result.outcome is ActionOutcome.UNKNOWN:
+            return await self._kill_query_flatten(
+                self.store.get_kill_action(action_id) or action,
+                symbol=symbol,
+                qty_lots=qty_lots,
+                lot=lot,
+                trade_id=trade_id,
+            )
+        return await self._kill_query_flatten(
+            self.store.get_kill_action(action_id) or action,
+            symbol=symbol,
+            qty_lots=qty_lots,
+            lot=lot,
+            trade_id=trade_id,
+        )
+
+    async def run_kill_episode(
+        self,
+        request: Mapping[str, Any],
+        *,
+        full_writer_already_held: bool = False,
+    ) -> dict[str, Any]:
+        """Resolve one reserved episode under full-writer -> symbol ordering."""
+        episode_id = str(request["episode_id"])
+        symbol = str(request["symbol"])
+        flatten_requested = bool(request["flatten_requested"])
+        if not self._kill_broker_available():
+            return {
+                "state": KillTerminalState.UNRESOLVED.value,
+                "reason": "KILL_BROKER_API_UNAVAILABLE",
+            }
+        if self.symbol_locks.is_held(symbol):
+            return {
+                "state": KillTerminalState.UNRESOLVED.value,
+                "reason": "KILL_LOCK_ORDER_DEFERRED",
+            }
+        async with _kill_full_writer_scope(
+            self.store, already_held=full_writer_already_held
+        ):
+            async with self.symbol_locks.hold(symbol):
+                if self.store.has_submission_quarantine():
+                    return {
+                        "state": KillTerminalState.UNRESOLVED.value,
+                        "reason": "SUBMISSION_QUARANTINE_ACTIVE",
+                    }
+                if self._partial_recovery_owns(symbol):
+                    return {
+                        "state": KillTerminalState.UNRESOLVED.value,
+                        "reason": "PARTIAL_RECOVERY_ACTIVE",
+                    }
+                try:
+                    snapshot = await self._kill_snapshot(symbol)
+                    model = self._kill_model(snapshot, symbol=symbol)
+                except _KillEvidenceFault as fault:
+                    return {
+                        "state": fault.state.value,
+                        "reason": fault.reason_code,
+                    }
+
+                for row, observed in model["risk_orders"]:
+                    if not await self._kill_cancel(
+                        episode_id=episode_id,
+                        symbol=symbol,
+                        row=row,
+                        observed=observed,
+                    ):
+                        return {
+                            "state": KillTerminalState.UNKNOWN.value,
+                            "reason": "CANCEL_TERMINAL_PROOF_MISSING",
+                        }
+
+                if model["ownership_reason"] is not None:
+                    return {
+                        "state": KillTerminalState.AMBIGUOUS.value,
+                        "reason": model["ownership_reason"],
+                    }
+
+                try:
+                    snapshot = await self._kill_snapshot(symbol)
+                    model = self._kill_model(snapshot, symbol=symbol)
+                except _KillEvidenceFault as fault:
+                    return {
+                        "state": fault.state.value,
+                        "reason": fault.reason_code,
+                    }
+                if model["ownership_reason"] is not None:
+                    return {
+                        "state": KillTerminalState.AMBIGUOUS.value,
+                        "reason": model["ownership_reason"],
+                    }
+
+                position_lots = abs(int(model["observed_lots"]))
+                if position_lots == 0:
+                    for row, observed in model["protection_orders"]:
+                        if not await self._kill_cancel(
+                            episode_id=episode_id,
+                            symbol=symbol,
+                            row=row,
+                            observed=observed,
+                        ):
+                            return {
+                                "state": KillTerminalState.UNKNOWN.value,
+                                "reason": "RESIDUAL_PROTECTION_CANCEL_UNKNOWN",
+                            }
+                    return {
+                        "state": KillTerminalState.SAFE_FLAT.value,
+                        "reason": "DIRECT_SAFE_FLAT_PROOF",
+                        "proof": {
+                            "symbol": symbol,
+                            "position_lots": 0,
+                            "snapshot": snapshot.evidence.as_payload(),
+                        },
+                    }
+
+                if not flatten_requested:
+                    protection = self.qualifying_protection(
+                        snapshot,
+                        position_lots=position_lots,
+                        exit_side=exit_side_for(float(snapshot.net_size)),
+                        owned_cloids=set(model["owned_cloids"]),
+                    )
+                    if protection is None:
+                        return {
+                            "state": KillTerminalState.UNRESOLVED.value,
+                            "reason": "EXACT_OWNED_PROTECTION_MISSING",
+                        }
+                    return {
+                        "state": KillTerminalState.SAFE_RETAINED.value,
+                        "reason": "DIRECT_SAFE_RETAINED_PROOF",
+                        "proof": {
+                            "symbol": symbol,
+                            "position_lots": int(model["observed_lots"]),
+                            "protection_cloid": str(protection.cloid),
+                            "snapshot": snapshot.evidence.as_payload(),
+                        },
+                    }
+
+                trade_id = model["trade_id"]
+                if trade_id is None:
+                    return {
+                        "state": KillTerminalState.AMBIGUOUS.value,
+                        "reason": "OWNERSHIP_AMBIGUOUS",
+                    }
+                flattened = await self._kill_flatten(
+                    episode_id=episode_id,
+                    symbol=symbol,
+                    qty_lots=position_lots,
+                    lot=model["lot"],
+                    trade_id=int(trade_id),
+                )
+                if flattened == "PARTIAL":
+                    return {
+                        "state": KillTerminalState.UNKNOWN.value,
+                        "reason": "FLATTEN_PARTIAL",
+                    }
+                if flattened != "APPLIED":
+                    return {
+                        "state": KillTerminalState.UNKNOWN.value,
+                        "reason": "FLATTEN_TERMINAL_PROOF_MISSING",
+                    }
+                try:
+                    snapshot = await self._kill_snapshot(symbol)
+                    model = self._kill_model(snapshot, symbol=symbol)
+                except _KillEvidenceFault as fault:
+                    return {
+                        "state": fault.state.value,
+                        "reason": fault.reason_code,
+                    }
+                if model["ownership_reason"] is not None or int(
+                    model["observed_lots"]
+                ) != 0:
+                    return {
+                        "state": KillTerminalState.UNKNOWN.value,
+                        "reason": "FLATTEN_POSITION_NOT_FLAT",
+                    }
+                for row, observed in model["protection_orders"]:
+                    if not await self._kill_cancel(
+                        episode_id=episode_id,
+                        symbol=symbol,
+                        row=row,
+                        observed=observed,
+                    ):
+                        return {
+                            "state": KillTerminalState.UNKNOWN.value,
+                            "reason": "RESIDUAL_PROTECTION_CANCEL_UNKNOWN",
+                        }
+                return {
+                    "state": KillTerminalState.SAFE_FLAT.value,
+                    "reason": "DIRECT_SAFE_FLAT_PROOF",
+                    "proof": {
+                        "symbol": symbol,
+                        "position_lots": 0,
+                        "snapshot": snapshot.evidence.as_payload(),
+                    },
+                }
 
     # ------------------------------------------------------------------
     # TS-P1-002 identity-based submission
@@ -224,8 +1022,10 @@ class OrderManager:
         symbol = str(plan.signal.symbol)
         async with self.symbol_locks.hold(symbol):
             state = self.store.get_meta("app_state")
-            if (state is not None and state != "ARMED") or self._partial_recovery_owns(
-                symbol
+            if (
+                self.kill_latched
+                or (state is not None and state != "ARMED")
+                or self._partial_recovery_owns(symbol)
             ):
                 return None
             return await self._submit_plan_locked(
@@ -316,7 +1116,8 @@ class OrderManager:
         # awaited gap exists between this check and reservation.
         state = self.store.get_meta("app_state")
         if (
-            (state is not None and state != "ARMED")
+            self.kill_latched
+            or (state is not None and state != "ARMED")
             or self.store.has_submission_quarantine()
             or self._partial_recovery_owns(symbol)
         ):
@@ -1217,7 +2018,11 @@ class OrderManager:
         if order is None:
             return False
         role = str(order["role"])
-        if fill.role != "UNKNOWN" and fill.role != role:
+        kill_close_alias = (
+            role == "KILL_FLATTEN"
+            and str(fill.role).upper() in {"CLOSE", "KILL_FLATTEN"}
+        )
+        if fill.role != "UNKNOWN" and fill.role != role and not kill_close_alias:
             self._quarantine_fill(
                 "FILL_ROLE_CONFLICT",
                 fill,

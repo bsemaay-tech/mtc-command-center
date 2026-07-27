@@ -435,6 +435,9 @@ PROTECT_DEADLINE_S: float = 10.0
 FLATTEN_VERIFY_DEADLINE_S: float = 5.0
 """Non-resetting flatten-verification budget (owner decision 1)."""
 
+KILL_VERIFY_DEADLINE_S: float = 5.0
+"""Per-action, non-resetting cancel/flatten verification budget."""
+
 
 class LotQuantizationError(Exception):
     """Fail-closed: a size could not be expressed in exact integer lot units."""
@@ -530,6 +533,25 @@ class PartialActionKind(str, Enum):
     CANCEL_ENTRY = "CANCEL_ENTRY"
     CANCEL_PROTECTION = "CANCEL_PROTECTION"
     FLATTEN = "FLATTEN"
+
+
+class KillActionKind(str, Enum):
+    """TS-P1-009 deterministic mutation domains."""
+
+    CANCEL = "CANCEL"
+    FLATTEN = "FLATTEN"
+
+
+class KillTerminalState(str, Enum):
+    """Conservative folded state of one durable kill episode."""
+
+    IN_PROGRESS = "IN_PROGRESS"
+    UNRESOLVED = "UNRESOLVED"
+    UNKNOWN = "UNKNOWN"
+    AMBIGUOUS = "AMBIGUOUS"
+    PROOF_PENDING = "PROOF_PENDING"
+    SAFE_RETAINED = "SAFE_RETAINED"
+    SAFE_FLAT = "SAFE_FLAT"
 
 
 class Provenance(str, Enum):
@@ -787,6 +809,7 @@ class OrderQueryResult:
     terminal: bool = False
     raw_status: str | None = None
     filled_size: float | None = None
+    oid: int | None = None
     evidence: Evidence = field(
         default_factory=lambda: Evidence("QUERY_ORDER", "UNSPECIFIED")
     )

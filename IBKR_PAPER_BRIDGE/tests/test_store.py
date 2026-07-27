@@ -4,7 +4,11 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from bridge.store.db import Store
+from bridge.store.db import (
+    Store,
+    compute_kill_action_cloid,
+    compute_kill_action_id,
+)
 
 
 def test_store_roundtrip_decision_chain_and_schema_version(tmp_path):
@@ -244,12 +248,18 @@ def test_kill_request_action_event_and_pointer_survive_reopen(tmp_path):
         flatten_requested=True,
         policy_version="policy-v1",
     )
+    flatten_action_id = compute_kill_action_id(
+        episode_id=episode["episode_id"],
+        kind="FLATTEN",
+        target="BTC",
+        qty_lots=125,
+    )
     is_replay, action = store.reserve_kill_action(
         episode_id=episode["episode_id"],
         kind="FLATTEN",
         target="BTC",
         qty_lots=125,
-        cloid="0x" + "a" * 32,
+        cloid=compute_kill_action_cloid(flatten_action_id),
         deadline_ts=datetime.now(UTC) + timedelta(seconds=5),
     )
     assert is_replay is False

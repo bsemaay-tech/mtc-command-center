@@ -473,6 +473,12 @@ class MockBroker:
             terminal=status not in _LIVE_STATUSES,
             raw_status=status,
             filled_size=filled,
+            oid=(
+                int(order["oid"])
+                if isinstance(order.get("oid"), int)
+                and not isinstance(order.get("oid"), bool)
+                else None
+            ),
             evidence=Evidence("QUERY_ORDER", "MOCK_ORDER_FOUND"),
         )
 
@@ -489,6 +495,10 @@ class MockBroker:
         if script is not None:
             if script.applied and order is not None and str(order.get("status")) in _LIVE_STATUSES:
                 order["status"] = "CANCELLED_BY_ENGINE"
+                self.full_open_orders = [
+                    row for row in self.full_open_orders
+                    if str(row.get("cloid")) != str(cloid)
+                ]
                 self._emit_order_update(order)
             return CancelResult(
                 script.outcome, str(cloid), Evidence("CANCEL", script.reason_code)
@@ -504,6 +514,10 @@ class MockBroker:
                 Evidence("CANCEL", "MOCK_ORDER_ALREADY_TERMINAL"),
             )
         order["status"] = "CANCELLED_BY_ENGINE"
+        self.full_open_orders = [
+            row for row in self.full_open_orders
+            if str(row.get("cloid")) != str(cloid)
+        ]
         self._emit_order_update(order)
         return CancelResult(
             ActionOutcome.APPLIED, str(cloid), Evidence("CANCEL", "MOCK_CANCEL_OK")
@@ -601,15 +615,31 @@ class MockBroker:
         reduce_by = min(abs(current), abs(float(size)))
         close = self._order(
             "CLOSE", "FILLED", reduce_by, px, reduce_only=True, symbol=symbol,
-            cloid=str(cloid),
+            cloid=str(cloid), direction="LONG" if current > 0 else "SHORT",
         )
-        self._record_fill(close, reduce_by, px, datetime.now())
+        fill_ts = (
+            self.full_clock()
+            if self.full_clock is not None
+            else datetime.now(UTC)
+        )
+        self._record_fill(close, reduce_by, px, fill_ts)
         remaining = current - reduce_by if current > 0 else current + reduce_by
         self.position = (
             None
             if remaining == 0
             else self.position.model_copy(update={"size": remaining})
         )
+        matching = [
+            row for row in self.full_positions
+            if str(row.get("symbol", self.coin)) == symbol
+        ]
+        if matching:
+            self.full_positions = [
+                row for row in self.full_positions
+                if str(row.get("symbol", self.coin)) != symbol
+            ]
+            if remaining != 0:
+                self.full_positions.append({"symbol": symbol, "size": remaining})
 
     def process_bar(self, bar: Bar) -> None:
         for order in self.orders:
@@ -704,6 +734,20 @@ class MockBroker:
             "ts": ts,
         }
         self.fills.append(fill)
+        direction = str(order.get("direction", "LONG")).upper()
+        is_entry = str(order.get("role", "")).upper() == "ENTRY"
+        buy = (direction == "LONG") if is_entry else (direction == "SHORT")
+        self.full_fill_history.append({
+            "fill_id": fill["fill_id"],
+            "oid": int(order["oid"]),
+            "coin": str(order.get("symbol", self.coin)),
+            "side": "BUY" if buy else "SELL",
+            "sz": float(qty),
+            "px": float(px),
+            "time": int(
+                (ts if ts.tzinfo is not None else ts.astimezone()).timestamp() * 1000
+            ),
+        })
         event = FillEvent(
             fill_id=fill["fill_id"],
             cloid=fill["cloid"],

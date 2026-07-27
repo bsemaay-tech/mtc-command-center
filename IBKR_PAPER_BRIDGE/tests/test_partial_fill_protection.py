@@ -2426,7 +2426,7 @@ def test_future_or_corrupt_schema_version_fails_closed(tmp_path, version):
         reopened.initialize(target_schema_version=5)
 
 
-@pytest.mark.parametrize("target", [3, 9, True, "5", 4.0])
+@pytest.mark.parametrize("target", [3, 10, True, "5", 4.0])
 def test_unsupported_migration_target_fails_closed(tmp_path, target):
     store = Store(tmp_path / "bridge.db", clock=Clock())
     with pytest.raises(RuntimeError, match="Unsupported target_schema_version"):
@@ -2831,6 +2831,33 @@ def test_kill_transport_unknown_replays_same_identity_query_only(tmp_path):
     }
 
 
+def test_kill_write_not_applied_response_without_direct_query_never_resends(
+    tmp_path,
+):
+    store, broker, engine = _kill_scenario(tmp_path)
+    broker.scripted_cancel.append(
+        ScriptedOutcome(
+            ActionOutcome.NOT_APPLIED,
+            applied=False,
+            reason_code="WRITE_RESPONSE_ONLY",
+        )
+    )
+    broker.partial_query_available = False
+
+    asyncio.run(engine.kill(flatten=False))
+    asyncio.run(engine.kill(flatten=False))
+
+    assert [
+        call
+        for call in broker.broker_mutations
+        if call == ("cancel_order_by_cloid", "owned-entry")
+    ] == [("cancel_order_by_cloid", "owned-entry")]
+    action = store.kill_actions_for_episode(
+        store.active_kill_request()["episode_id"], kind="CANCEL"
+    )[0]
+    assert action["current_outcome"] == "UNKNOWN"
+
+
 def test_kill_cancels_owned_entry_and_preserves_foreign_order(tmp_path):
     store, broker, engine = _kill_scenario(tmp_path, foreign=True)
 
@@ -2853,6 +2880,7 @@ def test_kill_flatten_false_retains_exact_owned_protection(tmp_path):
     assert broker._find_order("owned-sl")["status"] == "OPEN"
     assert ("cancel_order_by_cloid", "owned-sl") not in broker.partial_calls
     assert store.active_kill_request()["terminal_state"] == "SAFE_RETAINED"
+    assert store.active_kill_request()["safe_checkpoint_id"] is not None
 
 
 def test_kill_flatten_true_closes_exact_owned_lots_before_protection_cancel(
@@ -2874,6 +2902,7 @@ def test_kill_flatten_true_closes_exact_owned_lots_before_protection_cancel(
     assert broker.position is None
     assert broker._find_order("owned-sl")["status"] == "CANCELLED_BY_ENGINE"
     assert store.active_kill_request()["terminal_state"] == "SAFE_FLAT"
+    assert store.active_kill_request()["safe_checkpoint_id"] is not None
 
 
 @pytest.mark.parametrize("extra", [0.5, -2.0])

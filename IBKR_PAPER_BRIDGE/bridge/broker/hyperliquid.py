@@ -1225,7 +1225,11 @@ class HyperliquidBroker:
             )
         inner = payload.get("order")
         filled: float | None = None
+        oid: int | None = None
         if isinstance(inner, dict):
+            raw_oid = inner.get("oid")
+            if isinstance(raw_oid, int) and not isinstance(raw_oid, bool):
+                oid = raw_oid
             original = inner.get("origSz")
             remaining = inner.get("sz")
             if original is not None and remaining is not None:
@@ -1240,6 +1244,7 @@ class HyperliquidBroker:
             terminal=not live,
             raw_status=normalized,
             filled_size=filled,
+            oid=oid,
             evidence=Evidence("QUERY_ORDER", "HL_QUERY_COMPLETE"),
         )
 

@@ -271,6 +271,29 @@ class PartialRecoveryBroker(Protocol):
         ...
 
 
+# TS-P1-009 deliberately reuses the proven typed primitives while defining a
+# separate capability boundary from the broad legacy cancel_all/flatten API.
+class KillRecoveryBroker(Protocol):
+    def lot_unit(self, symbol: str) -> LotUnit | None:
+        ...
+
+    async def symbol_snapshot(self, symbol: str) -> SymbolSnapshot:
+        ...
+
+    async def query_order(self, cloid: str, symbol: str) -> OrderQueryResult:
+        ...
+
+    async def cancel_order_by_cloid(
+        self, cloid: str, symbol: str
+    ) -> CancelResult:
+        ...
+
+    async def flatten_reduce_only(
+        self, *, symbol: str, cloid: str, size: float
+    ) -> FlattenResult:
+        ...
+
+
 # ---------------------------------------------------------------------------
 # TS-P1-005 bounded read-only full-reconciliation surface
 #

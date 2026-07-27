@@ -41,7 +41,12 @@ def test_drill_v9_kill_mid_await_persists_episode_before_zero_submit(tmp_path):
     async def run() -> None:
         bars = _bars(2)
         broker = MockBroker(bars=bars, starting_equity=100000)
-        store = Store(tmp_path / "kill-await-v9.db")
+        clock_value = [datetime.now(UTC)]
+
+        def clock():
+            return clock_value[0]
+
+        store = Store(tmp_path / "kill-await-v9.db", clock=clock)
         try:
             store.initialize(target_schema_version=9)
         except RuntimeError:
@@ -54,10 +59,19 @@ def test_drill_v9_kill_mid_await_persists_episode_before_zero_submit(tmp_path):
             store=store,
             strategy=AlwaysSignalStrategy(),
             risk_engine=RiskEngine(RiskConfig(max_position_notional_pct=0.5)),
-            state="ARMED",
+            state="ARMED", clock=clock,
         )
+        broker.full_clock = clock
         engine.llm_gate = KillingGate(engine)
         await broker.connect()
+        midnight = clock_value[0].replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        clock_value[0] = midnight - timedelta(minutes=1)
+        await engine.run_full_reconcile()
+        clock_value[0] = midnight + timedelta(hours=1)
+        await engine.run_full_reconcile()
+        assert engine.full_reconcile_ready()
 
         await engine.on_bar(bars[0])
 
