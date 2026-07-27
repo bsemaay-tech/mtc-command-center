@@ -93,6 +93,10 @@ class BridgeEngine:
     _tasks: list[asyncio.Task] = field(default_factory=list, init=False)
     _full_writer_owner: object | None = field(default=None, init=False)
     _kill_requested: bool = field(default=False, init=False)
+    _kill_recovery_in_flight: int = field(default=0, init=False)
+    _kill_episode_lock: asyncio.Lock = field(
+        default_factory=asyncio.Lock, init=False, repr=False
+    )
     _consecutive_order_rejects: int = field(default=0, init=False)
     _consecutive_reconcile_failures: int = field(default=0, init=False)
     _processed_bar_ts: set[datetime] = field(default_factory=set, init=False)
@@ -402,6 +406,14 @@ class BridgeEngine:
         await self._publish("status", self.status())
 
     async def kill(self, flatten: bool = False) -> None:
+        self._kill_recovery_in_flight += 1
+        try:
+            async with self._kill_episode_lock:
+                await self._run_kill_episode(flatten=flatten)
+        finally:
+            self._kill_recovery_in_flight -= 1
+
+    async def _run_kill_episode(self, *, flatten: bool) -> None:
         # The only pre-I/O ordering that matters for immediate safety: memory
         # first. A concurrent submit sees OrderManager.kill_latched even if
         # persistence itself fails.
@@ -429,9 +441,11 @@ class BridgeEngine:
         )
         state = str(result["state"])
         reason = str(result["reason"])
-        self.store.mark_kill_request_state(
+        marked = self.store.mark_kill_request_state(
             str(request["episode_id"]), state, reason
         )
+        state = str(marked["terminal_state"])
+        reason = str(marked["terminal_reason"])
         if (
             state in {"SAFE_FLAT", "SAFE_RETAINED"}
             and self._full_writer_owner is not asyncio.current_task()
@@ -462,6 +476,8 @@ class BridgeEngine:
     async def acknowledge_kill(self) -> None:
         if self._app_state() != "KILLED":
             raise RuntimeError("KILL_NOT_ACTIVE")
+        if self._kill_recovery_in_flight:
+            raise RuntimeError("KILL_NOT_SAFE:KILL_RECOVERY_IN_PROGRESS")
         try:
             self.store.acknowledge_kill_evidence(
                 now=self.clock(),

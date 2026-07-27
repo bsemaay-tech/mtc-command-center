@@ -2717,6 +2717,28 @@ def _kill_scenario(
     return store, broker, engine
 
 
+def _report_explicit_zero_for_absent_orders(broker):
+    original_query = broker.query_order
+
+    async def explicit_zero(cloid, symbol):
+        result = await original_query(cloid, symbol)
+        if result.known and result.terminal and not result.found:
+            return OrderQueryResult(
+                known=True,
+                found=False,
+                terminal=True,
+                raw_status=result.raw_status,
+                filled_size=0.0,
+                oid=result.oid,
+                cloid=str(cloid),
+                symbol=str(symbol),
+                evidence=Evidence("QUERY_ORDER", "MOCK_EXACT_ZERO_FILL"),
+            )
+        return result
+
+    broker.query_order = explicit_zero
+
+
 def test_kill_duplicate_reuses_episode_and_action_without_second_write(tmp_path):
     store, broker, engine = _kill_scenario(tmp_path)
 
@@ -3078,6 +3100,97 @@ def test_kill_filled_qty_without_durable_fill_is_ambiguous_and_never_flattens(tm
     assert store.active_kill_request()["terminal_state"] == "AMBIGUOUS"
 
 
+def test_kill_unknown_role_risk_increasing_fill_is_ambiguous_and_never_flattens(
+    tmp_path,
+):
+    store, broker, engine = _kill_scenario(
+        tmp_path, position_size=2.0, pending_entry=False
+    )
+    trade = store.get_open_trade_for_coin("kill-run", "BTC")
+    assert trade is not None
+    now = datetime.now(UTC)
+    store.insert_order(
+        cloid="unknown-risk-fill",
+        oid=44,
+        group_id="unknown-request",
+        order_ref="unknown-request:UNKNOWN",
+        order_json={
+            "symbol": "BTC",
+            "role": "UNKNOWN",
+            "side": "BUY",
+            "reduce_only": False,
+        },
+        decision_uid="kill-owned",
+        trade_id=int(trade["trade_id"]),
+        role="UNKNOWN",
+        status="FILLED",
+        qty=1.0,
+        filled_qty=1.0,
+        avg_fill_px=100.0,
+        ts_submit=now,
+        ts_last=now,
+    )
+    store.insert_fill(
+        "unknown-risk-fill-event",
+        "unknown-risk-fill",
+        "kill-owned",
+        now,
+        1.0,
+        100.0,
+        0.0,
+        0.0,
+    )
+    broker.position = Position(
+        symbol="BTC", size=1.0, entry_px=100.0, unrealized=0.0
+    )
+    broker.full_positions = [{"symbol": "BTC", "size": 1.0}]
+
+    asyncio.run(engine.kill(flatten=True))
+
+    request = store.active_kill_request()
+    assert request["terminal_state"] == "AMBIGUOUS"
+    assert not [
+        call for call in broker.partial_calls if call[0] == "flatten_reduce_only"
+    ]
+
+
+def test_kill_exact_ioc_query_fill_without_websocket_fill_reaches_safe_flat_and_ack(
+    tmp_path,
+):
+    store, broker, engine = _kill_scenario(
+        tmp_path, position_size=1.0, pending_entry=False
+    )
+    broker._user_callbacks.clear()
+
+    asyncio.run(engine.kill(flatten=True))
+
+    request = store.active_kill_request()
+    assert request["terminal_state"] == "SAFE_FLAT"
+    action = store.kill_actions_for_episode(
+        request["episode_id"], kind="FLATTEN"
+    )[0]
+    durable_fills = store.list_fills_for_order(action["cloid"])
+    assert len(durable_fills) == 1
+    assert durable_fills[0]["qty"] == 1.0
+    delayed = broker.fills[-1]
+    assert engine.order_manager._ingest_fill(
+        FillEvent(
+            fill_id=delayed["fill_id"],
+            cloid=delayed["cloid"],
+            coin="BTC",
+            qty=delayed["qty"],
+            px=delayed["px"],
+            ts=delayed["ts"],
+            role="CLOSE",
+        )
+    )
+    assert len(store.list_fills_for_order(action["cloid"])) == 1
+    engine.clock = lambda: datetime.now(UTC) + timedelta(seconds=1)
+    asyncio.run(engine.acknowledge_kill())
+    assert engine.state == "DISARMED"
+    assert store.get_kill_request(request["episode_id"])["ack_state"] == "ACKNOWLEDGED"
+
+
 def test_kill_ignores_another_runs_valid_filled_history(tmp_path):
     store, broker, engine = _kill_scenario(
         tmp_path, position_size=1.0, protection=True
@@ -3133,10 +3246,84 @@ def test_kill_restart_clock_rollback_never_recreates_write_budget(tmp_path):
     ]
 
 
+def test_kill_partial_clock_rollback_restart_is_query_only(tmp_path):
+    clock = Clock(FROZEN)
+    store, broker, engine = _kill_scenario(
+        tmp_path,
+        position_size=1.0,
+        pending_entry=False,
+        clock=clock,
+    )
+    _report_explicit_zero_for_absent_orders(broker)
+    broker.scripted_flatten.append(
+        ScriptedOutcome(ActionOutcome.NOT_APPLIED, applied=False, reason_code="NO")
+    )
+    asyncio.run(engine.kill(flatten=True))
+    action = store.kill_actions_for_episode(
+        store.active_kill_request()["episode_id"], kind="FLATTEN"
+    )[0]
+    assert action["current_outcome"] == "NOT_APPLIED"
+
+    clock.now = FROZEN + timedelta(seconds=4)
+    assert 0 < engine.order_manager._kill_remaining(action) <= 1
+    broker.scripted_flatten.append(
+        ScriptedOutcome(ActionOutcome.UNKNOWN, applied=False, reason_code="TIMEOUT")
+    )
+    clock.now = FROZEN + timedelta(seconds=1)
+    asyncio.run(engine.kill(flatten=True))
+    clock.now = FROZEN + timedelta(seconds=2)
+    asyncio.run(engine.kill(flatten=True))
+    assert [
+        call for call in broker.partial_calls if call[0] == "flatten_reduce_only"
+    ] == [("flatten_reduce_only", action["cloid"])]
+    store.close()
+
+    clock.now = FROZEN + timedelta(seconds=3)
+    reopened = Store(tmp_path / "kill.db", clock=clock)
+    reopened.initialize()
+    restarted = BridgeEngine(
+        run_id="kill-run",
+        broker=broker,
+        store=reopened,
+        strategy=KeltnerTrailEma8(),
+        risk_engine=RiskEngine(RiskConfig()),
+        state="DISARMED",
+        clock=clock,
+    )
+    asyncio.run(restarted.kill(flatten=True))
+
+    assert [
+        call for call in broker.partial_calls if call[0] == "flatten_reduce_only"
+    ] == [("flatten_reduce_only", action["cloid"])]
+
+
+def test_kill_terminal_flatten_query_without_fill_size_stays_unknown(tmp_path):
+    store, broker, engine = _kill_scenario(
+        tmp_path, position_size=1.0, pending_entry=False
+    )
+    broker.scripted_flatten.append(
+        ScriptedOutcome(ActionOutcome.NOT_APPLIED, applied=False, reason_code="NO")
+    )
+
+    asyncio.run(engine.kill(flatten=True))
+    action = store.kill_actions_for_episode(
+        store.active_kill_request()["episode_id"], kind="FLATTEN"
+    )[0]
+    assert action["current_outcome"] == "UNKNOWN"
+    assert "NOT_APPLIED" not in {
+        event["status"] for event in store.kill_action_events(action["action_id"])
+    }
+    asyncio.run(engine.kill(flatten=True))
+    assert len(
+        [call for call in broker.partial_calls if call[0] == "flatten_reduce_only"]
+    ) == 1
+
+
 def test_kill_flatten_direct_not_applied_resends_once_same_identity_unknown_never(tmp_path):
     store, broker, engine = _kill_scenario(
         tmp_path, position_size=1.0, protection=True
     )
+    _report_explicit_zero_for_absent_orders(broker)
     broker.scripted_flatten.extend([
         ScriptedOutcome(ActionOutcome.NOT_APPLIED, applied=False, reason_code="NO"),
         ScriptedOutcome(ActionOutcome.UNKNOWN, applied=False, reason_code="TIMEOUT"),
@@ -3177,6 +3364,48 @@ def test_kill_flatten_unknown_replay_is_query_only_after_one_write(tmp_path):
         store.active_kill_request()["episode_id"], kind="FLATTEN"
     )[0]
     assert action["current_outcome"] == "UNKNOWN"
+
+
+def test_kill_replay_in_flight_revokes_old_safe_ack_authority(tmp_path):
+    async def scenario() -> None:
+        store, _broker, engine = _kill_scenario(
+            tmp_path, position_size=0.0, pending_entry=False
+        )
+        await engine.kill(flatten=False)
+        safe = store.active_kill_request()
+        assert safe["terminal_state"] == "SAFE_FLAT"
+        assert safe["safe_checkpoint_id"] is not None
+
+        entered = asyncio.Event()
+        release = asyncio.Event()
+        original_run = engine.order_manager.run_kill_episode
+
+        async def paused_run(request, **kwargs):
+            entered.set()
+            await release.wait()
+            return await original_run(request, **kwargs)
+
+        engine.order_manager.run_kill_episode = paused_run
+        duplicate = asyncio.create_task(engine.kill(flatten=False))
+        await entered.wait()
+
+        ack_error = None
+        try:
+            await engine.acknowledge_kill()
+        except RuntimeError as exc:
+            ack_error = exc
+        release.set()
+        duplicate_result = await asyncio.gather(duplicate, return_exceptions=True)
+
+        assert isinstance(ack_error, RuntimeError)
+        assert "KILL_NOT_SAFE" in str(ack_error)
+        assert duplicate_result == [None]
+        assert engine.state == "KILLED"
+        request = store.active_kill_request()
+        assert request is not None
+        assert request["ack_state"] == "PENDING"
+
+    asyncio.run(scenario())
 
 
 def test_kill_evidence_write_failure_never_fabricates_completion(

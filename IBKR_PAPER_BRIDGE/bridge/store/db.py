@@ -4840,12 +4840,38 @@ class Store:
                         "KILL_REQUEST_CONFLICT",
                         "an incompatible episode is already active",
                     )
+                cursor = self.conn.execute(
+                    """UPDATE kill_requests
+                       SET terminal_state='IN_PROGRESS',
+                           terminal_reason='KILL_RECOVERY_REPLAYED',
+                           terminal_ts=NULL,
+                           safe_checkpoint_id=NULL,
+                           safe_checkpoint_ts=NULL,
+                           proof_digest=NULL
+                       WHERE episode_id=? AND ack_state='PENDING'""",
+                    (pointer,),
+                )
+                if cursor.rowcount != 1:
+                    raise KillConflictError(
+                        "KILL_REQUEST_NOT_ACTIVE",
+                        "replay could not invalidate prior proof",
+                    )
                 self.conn.execute(
                     "INSERT INTO meta(key,value) VALUES ('app_state','KILLED') "
                     "ON CONFLICT(key) DO UPDATE SET value=excluded.value"
                 )
+                self._insert_event_in_tx(
+                    safe_run,
+                    now,
+                    "WARN",
+                    "KILL_EPISODE_REPLAYED",
+                    f"episode={pointer};prior_state={existing['terminal_state']}",
+                )
                 self.conn.commit()
-                return existing
+                replayed = self.conn.execute(
+                    "SELECT * FROM kill_requests WHERE episode_id=?", (pointer,)
+                ).fetchone()
+                return dict(replayed)
             request_count = int(
                 self.conn.execute("SELECT COUNT(*) FROM kill_requests").fetchone()[0]
             )
@@ -5163,6 +5189,7 @@ class Store:
         observed_ts: datetime | str | None = None,
         local_order_terminal_status: str | None = None,
         flatten_order: Mapping[str, Any] | None = None,
+        flatten_fills: Sequence[Mapping[str, Any]] | None = None,
     ) -> dict[str, Any]:
         self._require_kill_schema()
         now = _to_iso(observed_ts) or _to_iso(self._clock()) or ""
@@ -5174,6 +5201,20 @@ class Store:
             if action is None:
                 raise KillConflictError(
                     "KILL_ACTION_NOT_FOUND", f"action_id={action_id}"
+                )
+            if (flatten_order is None) != (flatten_fills is None):
+                raise KillConflictError(
+                    "KILL_FLATTEN_PROOF_INVALID",
+                    "terminal order and fill evidence must be recorded together",
+                )
+            if flatten_order is not None and (
+                str(action["kind"]) != KillActionKind.FLATTEN.value
+                or str(status) != "APPLIED"
+                or not flatten_fills
+            ):
+                raise KillConflictError(
+                    "KILL_FLATTEN_PROOF_INVALID",
+                    "a flatten order requires an APPLIED flatten event",
                 )
             self._append_kill_action_event_in_tx(
                 action_id=str(action_id),
@@ -5206,24 +5247,51 @@ class Store:
             if flatten_order is not None:
                 row = dict(flatten_order)
                 cloid = str(action["cloid"])
+                try:
+                    oid = int(row["oid"])
+                    trade_id = int(row["trade_id"])
+                    qty = float(row["qty"])
+                    filled_qty = float(row["filled_qty"])
+                except (KeyError, TypeError, ValueError, OverflowError) as exc:
+                    raise KillConflictError(
+                        "KILL_FLATTEN_ORDER_MALFORMED",
+                        "terminal fill fields are invalid",
+                    ) from exc
+                decision_uid = str(row.get("decision_uid") or "").strip()
+                symbol = str(row.get("symbol") or "").strip()
+                if (
+                    isinstance(row.get("oid"), bool)
+                    or not decision_uid
+                    or symbol != str(action["target"])
+                    or not math.isfinite(qty)
+                    or not math.isfinite(filled_qty)
+                    or qty <= 0
+                    or filled_qty <= 0
+                    or filled_qty > qty
+                ):
+                    raise KillConflictError(
+                        "KILL_FLATTEN_ORDER_MALFORMED",
+                        "terminal fill fields are invalid",
+                    )
                 existing = self.conn.execute(
                     "SELECT * FROM orders WHERE cloid=?", (cloid,)
                 ).fetchone()
                 normalized = (
-                    row.get("oid"),
+                    oid,
                     str(action["episode_id"]),
                     str(action_id),
                     _canonical_json({
-                        "symbol": str(row["symbol"]),
+                        "symbol": symbol,
                         "role": "KILL_FLATTEN",
                         "reduce_only": True,
+                        "side": str(action["exit_side"]),
                     }),
-                    str(action["episode_id"]),
-                    int(row["trade_id"]),
+                    decision_uid,
+                    trade_id,
                     "KILL_FLATTEN",
                     "FILLED",
-                    float(row["qty"]),
-                    float(row["filled_qty"]),
+                    qty,
+                    filled_qty,
                     now,
                     now,
                 )
@@ -5238,11 +5306,97 @@ class Store:
                     )
                 elif (
                     str(existing["role"]) != "KILL_FLATTEN"
-                    or int(existing["trade_id"]) != int(row["trade_id"])
-                    or float(existing["qty"]) != float(row["qty"])
+                    or int(existing["trade_id"]) != trade_id
+                    or float(existing["qty"]) != qty
+                    or float(existing["filled_qty"]) != filled_qty
+                    or int(existing["oid"]) != oid
+                    or str(existing["group_id"]) != str(action["episode_id"])
+                    or str(existing["order_ref"]) != str(action_id)
+                    or str(existing["decision_uid"]) != decision_uid
                 ):
                     raise KillConflictError(
                         "KILL_FLATTEN_ORDER_CONFLICT", f"cloid={cloid}"
+                    )
+                total_qty = Decimal("0")
+                seen_fill_ids: set[str] = set()
+                for raw_fill in flatten_fills or ():
+                    fill = dict(raw_fill)
+                    fill_id = str(fill.get("fill_id") or "").strip()
+                    fill_ts = _to_iso(fill.get("fill_ts"))
+                    try:
+                        fill_qty = float(fill["qty"])
+                        fill_px = float(fill["px"])
+                        fill_fee = float(fill.get("fee", 0.0))
+                        fill_funding = float(fill.get("funding", 0.0))
+                    except (
+                        KeyError,
+                        TypeError,
+                        ValueError,
+                        OverflowError,
+                    ) as exc:
+                        raise KillConflictError(
+                            "KILL_FLATTEN_FILL_MALFORMED",
+                            "terminal fill fields are invalid",
+                        ) from exc
+                    if (
+                        not fill_id
+                        or fill_id in seen_fill_ids
+                        or fill_ts is None
+                        or not math.isfinite(fill_qty)
+                        or not math.isfinite(fill_px)
+                        or not math.isfinite(fill_fee)
+                        or not math.isfinite(fill_funding)
+                        or fill_qty <= 0
+                        or fill_px <= 0
+                    ):
+                        raise KillConflictError(
+                            "KILL_FLATTEN_FILL_MALFORMED",
+                            "terminal fill fields are invalid",
+                        )
+                    seen_fill_ids.add(fill_id)
+                    total_qty += Decimal(str(fill_qty))
+                    normalized_fill = (
+                        fill_id,
+                        cloid,
+                        decision_uid,
+                        fill_ts,
+                        fill_qty,
+                        fill_px,
+                        fill_fee,
+                        fill_funding,
+                    )
+                    cursor = self.conn.execute(
+                        """INSERT OR IGNORE INTO fills(
+                             fill_id,cloid,decision_uid,fill_ts,qty,px,fee,funding)
+                           VALUES (?,?,?,?,?,?,?,?)""",
+                        normalized_fill,
+                    )
+                    if cursor.rowcount != 1:
+                        prior = self.conn.execute(
+                            """SELECT fill_id,cloid,decision_uid,fill_ts,
+                                      qty,px,fee,funding
+                               FROM fills WHERE fill_id=?""",
+                            (fill_id,),
+                        ).fetchone()
+                        prior_normalized = (
+                            str(prior["fill_id"]),
+                            str(prior["cloid"]),
+                            str(prior["decision_uid"]),
+                            str(prior["fill_ts"]),
+                            float(prior["qty"]),
+                            float(prior["px"]),
+                            float(prior["fee"] or 0.0),
+                            float(prior["funding"] or 0.0),
+                        ) if prior is not None else None
+                        if prior_normalized != normalized_fill:
+                            raise KillConflictError(
+                                "KILL_FLATTEN_FILL_CONFLICT",
+                                f"fill_id={fill_id}",
+                            )
+                if total_qty != Decimal(str(filled_qty)):
+                    raise KillConflictError(
+                        "KILL_FLATTEN_FILL_TOTAL_CONFLICT",
+                        f"cloid={cloid}",
                     )
             self.conn.commit()
         except Exception:
@@ -5280,13 +5434,72 @@ class Store:
             (str(action_id),),
         )
 
+    def observe_kill_action_clock(
+        self, *, action_id: str, observed_ts: datetime | str
+    ) -> bool:
+        """Append the latest safe wall observation; reject clock rollback."""
+        self._require_kill_schema()
+        now = _to_iso(observed_ts)
+        if now is None:
+            return False
+        try:
+            current = datetime.fromisoformat(now)
+            if current.tzinfo is None:
+                current = current.replace(tzinfo=UTC)
+            current = current.astimezone(UTC)
+        except (TypeError, ValueError):
+            return False
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            action = self.conn.execute(
+                "SELECT action_id FROM kill_actions WHERE action_id=?",
+                (str(action_id),),
+            ).fetchone()
+            if action is None:
+                raise KillConflictError(
+                    "KILL_ACTION_NOT_FOUND", f"action_id={action_id}"
+                )
+            observations = self.conn.execute(
+                """SELECT observed_ts FROM kill_action_events
+                   WHERE action_id=?""",
+                (str(action_id),),
+            ).fetchall()
+            if not observations:
+                raise KillConflictError(
+                    "KILL_ACTION_OBSERVATION_MISSING",
+                    f"action_id={action_id}",
+                )
+            prior_values: list[datetime] = []
+            for observation in observations:
+                prior = datetime.fromisoformat(str(observation["observed_ts"]))
+                if prior.tzinfo is None:
+                    prior = prior.replace(tzinfo=UTC)
+                prior_values.append(prior.astimezone(UTC))
+            if current < max(prior_values):
+                self.conn.commit()
+                return False
+            self._append_kill_action_event_in_tx(
+                action_id=str(action_id),
+                status="EVIDENCE",
+                evidence_source="LOCAL",
+                reason_code="KILL_ACTION_CLOCK_OBSERVED",
+                evidence={"observed_ts": now},
+                observed_ts=now,
+            )
+            self.conn.commit()
+            return True
+        except Exception:
+            self.conn.rollback()
+            raise
+
     def kill_owned_position_rows(self, symbol: str) -> list[dict[str, Any]]:
         self._require_kill_schema()
-        return self._rows(
+        rows = self._rows(
             """SELECT o.*, json_extract(o.order_json,'$.symbol') AS symbol,
                       t.direction AS trade_direction,
                       t.run_id AS trade_run_id,
                       t.coin AS trade_coin,
+                      t.entry_decision_uid AS trade_entry_decision_uid,
                       COALESCE(SUM(f.qty),0) AS durable_fill_qty,
                       COUNT(f.fill_id) AS durable_fill_count,
                       GROUP_CONCAT(DISTINCT f.decision_uid) AS durable_fill_decision_uids,
@@ -5303,6 +5516,49 @@ class Store:
                ORDER BY o.cloid""",
             (str(symbol),),
         )
+        for row in rows:
+            row["kill_direct_fill_proven"] = False
+            row["kill_action_qty_lots"] = None
+            row["kill_action_exit_side"] = None
+            if str(row.get("role") or "") != "KILL_FLATTEN":
+                continue
+            proofs = self._rows(
+                """SELECT a.qty_lots,a.exit_side,e.evidence_json
+                   FROM kill_actions a
+                   JOIN kill_action_events e ON e.action_id=a.action_id
+                   WHERE a.action_id=? AND a.episode_id=? AND a.cloid=?
+                     AND a.kind='FLATTEN' AND a.current_outcome='APPLIED'
+                     AND e.status='APPLIED'
+                     AND e.reason_code IN
+                       ('FLATTEN_TERMINAL_QUERY','FLATTEN_PARTIAL')
+                   ORDER BY e.seq DESC""",
+                (
+                    str(row.get("order_ref") or ""),
+                    str(row.get("group_id") or ""),
+                    str(row.get("cloid") or ""),
+                ),
+            )
+            for proof in proofs:
+                try:
+                    payload = json.loads(str(proof["evidence_json"]))
+                    query = payload["query"]
+                    exact = (
+                        isinstance(query, Mapping)
+                        and query.get("known") is True
+                        and query.get("terminal") is True
+                        and int(query["oid"]) == int(row["oid"])
+                        and str(query["cloid"]) == str(row["cloid"])
+                        and str(query["symbol"]) == str(symbol)
+                        and float(query["filled_size"]) == float(row["filled_qty"])
+                    )
+                except (KeyError, TypeError, ValueError, OverflowError):
+                    exact = False
+                if exact:
+                    row["kill_direct_fill_proven"] = True
+                    row["kill_action_qty_lots"] = int(proof["qty_lots"])
+                    row["kill_action_exit_side"] = str(proof["exit_side"])
+                    break
+        return rows
 
     def bind_kill_terminal_proof(
         self,
@@ -5370,62 +5626,97 @@ class Store:
         self, *, now: datetime, max_age_s: float
     ) -> dict[str, Any]:
         self._require_kill_schema()
-        request = self.active_kill_request()
-        if request is None:
-            raise KillConflictError(
-                "KILL_EVIDENCE_MISSING", "no active kill episode"
-            )
-        if str(request["terminal_state"]) not in {"SAFE_FLAT", "SAFE_RETAINED"}:
-            raise KillConflictError(
-                "KILL_NOT_SAFE", str(request["terminal_reason"])
-            )
-        checkpoint_id = request["safe_checkpoint_id"]
-        proof_digest = str(request["proof_digest"] or "")
-        checkpoint = (
-            self.conn.execute(
-                "SELECT accepted_ts FROM reconcile_checkpoints WHERE checkpoint_id=?",
-                (str(checkpoint_id),),
-            ).fetchone()
-            if checkpoint_id is not None
-            else None
-        )
-        if (
-            checkpoint_id is None
-            or checkpoint is None
-            or request["safe_checkpoint_ts"] is None
-            or str(request["safe_checkpoint_ts"]) != str(checkpoint["accepted_ts"])
-            or len(proof_digest) != 64
-            or any(char not in "0123456789abcdef" for char in proof_digest.lower())
-            or not self.full_reconcile_ready(
-                now=now, max_age_s=max_age_s
-            )
-        ):
-            raise KillConflictError(
-                "KILL_SAFE_PROOF_STALE", "fresh current reconcile is required"
-            )
-        if self.get_meta(RECONCILE_CHECKPOINT_POINTER_KEY) != str(checkpoint_id):
-            raise KillConflictError(
-                "KILL_SAFE_PROOF_MOVED", "checkpoint pointer changed"
-            )
         ack_ts = _to_iso(now) or ""
         self.conn.execute("BEGIN IMMEDIATE")
         try:
-            if self.get_meta(KILL_REQUEST_ACTIVE_KEY) != str(request["episode_id"]):
+            pointer = self.get_meta(KILL_REQUEST_ACTIVE_KEY)
+            if pointer is None:
+                raise KillConflictError(
+                    "KILL_EVIDENCE_MISSING", "no active kill episode"
+                )
+            request_row = self.conn.execute(
+                "SELECT * FROM kill_requests WHERE episode_id=?", (pointer,)
+            ).fetchone()
+            if request_row is None:
+                raise KillConflictError(
+                    "KILL_POINTER_DANGLING", "active episode does not resolve"
+                )
+            request = dict(request_row)
+            safe_state = str(request["terminal_state"])
+            if safe_state not in {"SAFE_FLAT", "SAFE_RETAINED"}:
+                raise KillConflictError(
+                    "KILL_NOT_SAFE", str(request["terminal_reason"])
+                )
+            checkpoint_id = request["safe_checkpoint_id"]
+            checkpoint_ts = request["safe_checkpoint_ts"]
+            proof_digest = str(request["proof_digest"] or "")
+            checkpoint = (
+                self.conn.execute(
+                    """SELECT accepted_ts FROM reconcile_checkpoints
+                       WHERE checkpoint_id=?""",
+                    (str(checkpoint_id),),
+                ).fetchone()
+                if checkpoint_id is not None
+                else None
+            )
+            if (
+                self.get_meta("app_state") != "KILLED"
+                or checkpoint_id is None
+                or checkpoint is None
+                or checkpoint_ts is None
+                or str(checkpoint_ts) != str(checkpoint["accepted_ts"])
+                or len(proof_digest) != 64
+                or any(
+                    char not in "0123456789abcdef"
+                    for char in proof_digest.lower()
+                )
+                or not self.full_reconcile_ready(now=now, max_age_s=max_age_s)
+            ):
+                raise KillConflictError(
+                    "KILL_SAFE_PROOF_STALE",
+                    "fresh current reconcile is required",
+                )
+            if self.get_meta(RECONCILE_CHECKPOINT_POINTER_KEY) != str(
+                checkpoint_id
+            ):
+                raise KillConflictError(
+                    "KILL_SAFE_PROOF_MOVED", "checkpoint pointer changed"
+                )
+            if self.get_meta(KILL_REQUEST_ACTIVE_KEY) != str(
+                request["episode_id"]
+            ):
                 raise KillConflictError(
                     "KILL_REQUEST_NOT_ACTIVE", "active pointer changed"
                 )
             cursor = self.conn.execute(
                 """UPDATE kill_requests SET ack_state='ACKNOWLEDGED',ack_ts=?
-                   WHERE episode_id=? AND ack_state='PENDING'""",
-                (ack_ts, str(request["episode_id"])),
+                   WHERE episode_id=? AND ack_state='PENDING'
+                     AND terminal_state=?
+                     AND safe_checkpoint_id=?
+                     AND safe_checkpoint_ts=?
+                     AND proof_digest=?""",
+                (
+                    ack_ts,
+                    str(request["episode_id"]),
+                    safe_state,
+                    str(checkpoint_id),
+                    str(checkpoint_ts),
+                    proof_digest,
+                ),
             )
             if cursor.rowcount != 1:
                 raise KillConflictError(
-                    "KILL_ACK_CONFLICT", "episode was already acknowledged"
+                    "KILL_ACK_CONFLICT",
+                    "safe state or proof changed during acknowledgement",
                 )
-            self.conn.execute(
-                "DELETE FROM meta WHERE key=?", (KILL_REQUEST_ACTIVE_KEY,)
+            cleared = self.conn.execute(
+                "DELETE FROM meta WHERE key=? AND value=?",
+                (KILL_REQUEST_ACTIVE_KEY, str(request["episode_id"])),
             )
+            if cleared.rowcount != 1:
+                raise KillConflictError(
+                    "KILL_ACK_CONFLICT", "active pointer changed"
+                )
             self.conn.execute(
                 "INSERT INTO meta(key,value) VALUES ('app_state','DISARMED') "
                 "ON CONFLICT(key) DO UPDATE SET value=excluded.value"

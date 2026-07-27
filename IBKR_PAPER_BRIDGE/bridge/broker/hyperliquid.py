@@ -439,10 +439,24 @@ class HyperliquidBroker:
 
         if pre_send_guard is not None and not pre_send_guard():
             raise BrokerPreSendFailure("HL_KILL_PRE_SEND_VETO")
+        worker_guard = (
+            getattr(pre_send_guard, "in_memory_only", pre_send_guard)
+            if pre_send_guard is not None
+            else None
+        )
+
+        def guarded_bulk_orders():
+            # The default executor may be saturated after the event-loop
+            # preflight succeeds. Re-read the process-local latch on the worker
+            # thread at the last possible boundary before the SDK write.
+            if worker_guard is not None and not worker_guard():
+                raise BrokerPreSendFailure("HL_KILL_PRE_SEND_VETO")
+            return self.exchange.bulk_orders(requests, grouping=grouping)
+
         try:
-            raw = await asyncio.to_thread(
-                self.exchange.bulk_orders, requests, grouping=grouping
-            )
+            raw = await asyncio.to_thread(guarded_bulk_orders)
+        except BrokerPreSendFailure:
+            raise
         except HyperliquidOrderError:
             raise
         except Exception as exc:
@@ -583,6 +597,9 @@ class HyperliquidBroker:
                 "role": role,
             }
             row = result.get(role.lower())
+            if row is not None:
+                row["side"] = "BUY" if request["is_buy"] else "SELL"
+                row["reduce_only"] = bool(request["reduce_only"])
             if row and row.get("oid") is not None:
                 self._oid_to_cloid[int(row["oid"])] = str(cloid)
 

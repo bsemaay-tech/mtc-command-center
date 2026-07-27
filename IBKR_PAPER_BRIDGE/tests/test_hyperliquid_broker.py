@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
@@ -130,6 +131,52 @@ def test_hl_bracket_pre_send_veto_is_definitively_not_transmitted():
     assert exc_info.value.reason_code == "HL_KILL_PRE_SEND_VETO"
     assert exc_info.value.write_may_have_started is False
     exchange.bulk_orders.assert_not_called()
+
+
+def test_hl_bracket_executor_rechecks_kill_guard_after_queue_delay():
+    async def scenario() -> None:
+        exchange = _exchange_mock()
+        broker = HyperliquidBroker(
+            info_client=_verified_plan_info(), exchange_client=exchange
+        )
+        loop = asyncio.get_running_loop()
+        executor = ThreadPoolExecutor(max_workers=1)
+        loop.set_default_executor(executor)
+        blocker_started = threading.Event()
+        release_blocker = threading.Event()
+        guard_enabled = True
+        guard_calls = 0
+
+        def occupy_executor() -> None:
+            blocker_started.set()
+            release_blocker.wait(timeout=5)
+
+        def guard() -> bool:
+            nonlocal guard_calls
+            guard_calls += 1
+            return guard_enabled
+
+        blocker = asyncio.create_task(asyncio.to_thread(occupy_executor))
+        while not blocker_started.is_set():
+            await asyncio.sleep(0)
+        placement = asyncio.create_task(
+            broker.place_bracket(_plan(), pre_send_guard=guard)
+        )
+        while guard_calls < 1:
+            await asyncio.sleep(0)
+        guard_enabled = False
+        release_blocker.set()
+        await blocker
+
+        with pytest.raises(BrokerPreSendFailure) as exc_info:
+            await placement
+        assert exc_info.value.reason_code == "HL_KILL_PRE_SEND_VETO"
+        assert exc_info.value.write_may_have_started is False
+        assert guard_calls == 2
+        exchange.bulk_orders.assert_not_called()
+        executor.shutdown(wait=True)
+
+    asyncio.run(scenario())
 
 
 def test_hl_price_rounding_contract():
