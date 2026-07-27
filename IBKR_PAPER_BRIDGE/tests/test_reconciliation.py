@@ -17,12 +17,47 @@ import pytest
 
 from bridge.broker.mock import MockBroker
 from bridge.engine.reconcile import FullReconciler
+from bridge.engine.risk import RiskEngine
 from bridge.engine.types import (
     DIFF_EXCHANGE_IDENTITY_CONFLICT,
     ReconcileAttemptState,
     ReconcileComponentKind,
 )
-from bridge.store.db import SCHEMA_VERSION_FULL_RECONCILE, Store
+from bridge.store.db import (
+    SCHEMA_VERSION_EXPOSURE_CONTROLS,
+    SCHEMA_VERSION_FULL_RECONCILE,
+    Store,
+)
+
+
+def test_v8_checkpoint_policy_hash_accepts_and_reopens(tmp_path):
+    db_path = tmp_path / "v8-policy-hash.db"
+    store = Store(db_path)
+    store.initialize(target_schema_version=SCHEMA_VERSION_EXPOSURE_CONTROLS)
+    store.create_run("v8-hash", "dry_run", "testnet", {})
+    risk = RiskEngine()
+    result = asyncio.run(
+        FullReconciler(
+            store=store,
+            broker=MockBroker(bars=[]),
+            run_id="v8-hash",
+            risk_policy=risk.policy,
+            exposure_policy=risk.exposure_policy,
+        ).run_cycle()
+    )
+    assert result.accepted is True
+    pointer = store.get_meta("reconcile_checkpoint_latest")
+    assert pointer
+    store.close()
+
+    reopened = Store(db_path)
+    reopened.initialize(target_schema_version=SCHEMA_VERSION_EXPOSURE_CONTROLS)
+    snapshot = reopened.load_authoritative_risk_snapshot(
+        now=result.ended_ts, max_age_s=60.0
+    )
+    assert snapshot.checkpoint_id == pointer
+    assert snapshot.exposure_policy_version == risk.exposure_policy.version
+    reopened.close()
 
 BASE_TS = datetime(2026, 7, 26, 12, 0, tzinfo=UTC)
 # The run's durable start is the very first fills/funding coverage lower bound

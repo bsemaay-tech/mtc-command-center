@@ -148,6 +148,7 @@ class BridgeEngine:
                     order_manager=self.order_manager,
                     clock=self.clock,
                     risk_policy=self.risk_engine.policy,
+                    exposure_policy=self.risk_engine.exposure_policy,
                 )
 
     async def start(self, lookback: int = 300) -> None:
@@ -277,6 +278,26 @@ class BridgeEngine:
                         max_age_s=self.full_reconcile_max_age_s(),
                         policy_version=self.risk_engine.policy.version,
                     )
+                    exposure_block = self.risk_engine.evaluate_snapshot_exposure(
+                        _snapshot
+                    )
+                    if exposure_block is not None:
+                        self.state = "DISARMED"
+                        self.store.set_meta("app_state", "DISARMED")
+                        self.risk_input_error = (
+                            f"EXPOSURE_CONTROL_BLOCK:{exposure_block}"
+                        )
+                        self.store.insert_event(
+                            self.run_id,
+                            now,
+                            "WARN",
+                            "EXPOSURE_CONTROL_BLOCK",
+                            f"{exposure_block}:checkpoint={_snapshot.checkpoint_id}:"
+                            f"policy={_snapshot.exposure_policy_version}",
+                        )
+                        raise RuntimeError(
+                            f"exposure control blocks ARM: {exposure_block}"
+                        )
                     for latch in daily.active_latches:
                         if (
                             latch.control
@@ -442,6 +463,38 @@ class BridgeEngine:
             self.last_full_reconcile_ts = result.ended_ts
             self.full_reconcile_error = None
             if self.store.durable_risk_controls_enabled():
+                try:
+                    snapshot = self.store.load_authoritative_risk_snapshot(
+                        now=result.ended_ts,
+                        max_age_s=self.full_reconcile_max_age_s(),
+                    )
+                    exposure_block = self.risk_engine.evaluate_snapshot_exposure(
+                        snapshot
+                    )
+                except RiskSnapshotUnavailable as exc:
+                    exposure_block = exc.reason_code
+                    snapshot = None
+                if exposure_block is not None:
+                    self.state = "DISARMED"
+                    self.store.set_meta("app_state", "DISARMED")
+                    self.risk_input_error = (
+                        f"EXPOSURE_CONTROL_BLOCK:{exposure_block}"
+                    )
+                    checkpoint = (
+                        snapshot.checkpoint_id if snapshot is not None else "UNAVAILABLE"
+                    )
+                    policy = (
+                        snapshot.exposure_policy_version
+                        if snapshot is not None
+                        else self.risk_engine.exposure_policy.version
+                    )
+                    self.store.insert_event(
+                        self.run_id,
+                        result.ended_ts,
+                        "WARN",
+                        "EXPOSURE_CONTROL_BLOCK",
+                        f"{exposure_block}:checkpoint={checkpoint}:policy={policy}",
+                    )
                 active = self.store.active_risk_control_latches(
                     run_id=self.run_id, now=result.ended_ts
                 )

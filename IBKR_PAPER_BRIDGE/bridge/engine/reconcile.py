@@ -45,6 +45,7 @@ from bridge.engine.types import (
     REQUIRED_RECONCILE_COMPONENTS,
     RISK_SNAPSHOT_COMPONENTS,
     SNAPSHOT_PAYLOAD_VERSION_V2,
+    SNAPSHOT_PAYLOAD_VERSION_V3,
     TERMINAL_ORDER_STATES,
     ComponentEvidence,
     FullReconcileResult,
@@ -125,6 +126,7 @@ class FullReconciler:
         deadline_s: float = FULL_RECONCILE_DEADLINE_S,
         max_skew_s: float = FULL_RECONCILE_MAX_SKEW_S,
         risk_policy: object | None = None,
+        exposure_policy: object | None = None,
     ) -> None:
         self.store = store
         self.broker = broker
@@ -135,6 +137,7 @@ class FullReconciler:
         self.deadline_s = float(deadline_s)
         self.max_skew_s = float(max_skew_s)
         self.risk_policy = risk_policy
+        self.exposure_policy = exposure_policy
         # Generation identity of the client the capture started with. A broker
         # rebuild mid-collection therefore invalidates the whole attempt.
         self._client_generation: tuple[int, int] | None = None
@@ -160,6 +163,14 @@ class FullReconciler:
         self._deadline_hit = False
         started_ts = self._now()
         mono_start = self._monotonic()
+        # TS-P1-008: tell the adapter, in the same capture, whether to record the
+        # per-position valuation/leverage/liquidation rows. The broker protocol
+        # is unchanged; this is an instance attribute the adapter reads via
+        # getattr, so a single user_state read still produces all three
+        # components and the v3 rows come from the same epoch as the balances.
+        self.broker.exposure_capture_enabled = (
+            getattr(self.store, "exposure_controls_enabled", lambda: False)()
+        )
         overlapped = guard.locked()
         attempt_id = self.store.reserve_reconcile_attempt(
             run_id=self.run_id,
@@ -670,8 +681,20 @@ class FullReconciler:
             )
         return ReconcileAttemptState.COMPLETE, "COMPLETE"
 
-    @staticmethod
+    def _snapshot_version(self) -> str:
+        """The payload version this capture writes.
+
+        TS-P1-008 is opt-in: only a schema-v8 store produces (and risk-reads) a
+        v3 payload with per-position valuation, leverage and liquidation rows.
+        Every other store keeps the TS-P1-006 v2 payload byte-for-byte, so the
+        v4-v7 capture path and its canonical hash are unchanged.
+        """
+        if getattr(self.store, "exposure_controls_enabled", lambda: False)():
+            return SNAPSHOT_PAYLOAD_VERSION_V3
+        return SNAPSHOT_PAYLOAD_VERSION_V2
+
     def _canonical_hash(
+        self,
         components: Sequence[ComponentEvidence],
         diffs: Sequence[ReconcileDiffRecord],
     ) -> str:
@@ -679,16 +702,22 @@ class FullReconciler:
 
         Attempt ids, wall-clock bounds and wire row order are deliberately
         excluded, so identical evidence and identical durable state always
-        produce the same hash.
+        produce the same hash. The payload version is bound into the hash so a
+        v2 and a v3 capture of otherwise-identical evidence can never collide.
         """
-        return reconcile_digest({
-            "version": SNAPSHOT_VERSION,
+        payload: dict[str, Any] = {
+            "version": self._snapshot_version(),
             "components": {
                 component.kind.value: component.digest
                 for component in sorted(components, key=lambda item: item.kind.value)
             },
             "diffs": [diff.canonical() for diff in diffs],
-        })
+        }
+        if self._snapshot_version() == SNAPSHOT_PAYLOAD_VERSION_V3:
+            payload["exposure_policy_version"] = str(
+                getattr(self.exposure_policy, "version", "")
+            )
+        return reconcile_digest(payload)
 
     def _snapshot_payload(
         self,
@@ -710,8 +739,8 @@ class FullReconciler:
         of stored metadata — is rejected when the loader recomputes the chain.
         """
         by_kind = {component.kind: component for component in components}
-        return {
-            "version": SNAPSHOT_VERSION,
+        payload = {
+            "version": self._snapshot_version(),
             "run_id": self.run_id,
             "risk_rows": {
                 kind.value: by_kind[kind].canonical_rows()
@@ -750,6 +779,11 @@ class FullReconciler:
                 for event in sorted(funding_events, key=lambda item: item.event_id)
             },
         }
+        if self._snapshot_version() == SNAPSHOT_PAYLOAD_VERSION_V3:
+            payload["exposure_policy_version"] = str(
+                getattr(self.exposure_policy, "version", "")
+            )
+        return payload
 
     def _fail(
         self,

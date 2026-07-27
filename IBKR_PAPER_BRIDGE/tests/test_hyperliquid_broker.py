@@ -2157,6 +2157,64 @@ def test_portfolio_evidence_is_one_read_for_three_components():
     assert portfolio.margin.observed_ts == portfolio.balances.observed_ts
 
 
+def test_v8_portfolio_evidence_retains_same_epoch_risk_fields():
+    info = ReconcileInfo(
+        state=_hl_state(
+            positions=[{"position": {
+                "coin": "BTC", "szi": "-0.25", "positionValue": "250",
+                "liquidationPx": "1200", "leverage": {"type": "isolated", "value": 1},
+            }}]
+        )
+    )
+    broker = _reconcile_broker(info)
+    broker.exposure_capture_enabled = True
+    portfolio = asyncio.run(broker.portfolio_evidence())
+    assert portfolio.positions.rows == ({
+        "symbol": "BTC", "size": -0.25, "position_value": 250.0,
+        "liquidation_px": 1200.0, "leverage": 1.0,
+    },)
+    assert portfolio.positions.observed_ts == portfolio.balances.observed_ts
+
+
+def test_v8_missing_reported_leverage_is_malformed_not_synthesized():
+    info = ReconcileInfo(
+        state=_hl_state(
+            positions=[{"position": {
+                "coin": "BTC", "szi": "0.1", "positionValue": "100",
+                "liquidationPx": "800",
+            }}]
+        )
+    )
+    broker = _reconcile_broker(info)
+    broker.exposure_capture_enabled = True
+    portfolio = asyncio.run(broker.portfolio_evidence())
+    assert portfolio.positions.status is ReconcileComponentStatus.MALFORMED
+    assert portfolio.positions.rows == ()
+
+
+def test_v8_symbol_aliases_are_rejected_after_normalization():
+    info = ReconcileInfo(
+        state=_hl_state(
+            positions=[
+                {"position": {
+                    "coin": "BTC", "szi": "0.1", "positionValue": "100",
+                    "liquidationPx": "800",
+                    "leverage": {"type": "isolated", "value": 0.5},
+                }},
+                {"position": {
+                    "coin": " btc ", "szi": "0.1", "positionValue": "100",
+                    "liquidationPx": "800",
+                    "leverage": {"type": "isolated", "value": 0.5},
+                }},
+            ]
+        )
+    )
+    broker = _reconcile_broker(info)
+    broker.exposure_capture_enabled = True
+    portfolio = asyncio.run(broker.portfolio_evidence())
+    assert portfolio.positions.status is ReconcileComponentStatus.CONFLICTING
+
+
 def test_portfolio_evidence_never_clamps_an_inconsistent_account():
     info = ReconcileInfo(state=_hl_state(equity="100", margin_used="500"))
     portfolio = asyncio.run(_reconcile_broker(info).portfolio_evidence())

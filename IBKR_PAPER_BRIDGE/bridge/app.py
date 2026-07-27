@@ -146,6 +146,12 @@ def create_app(
             min_order_usd=float(risk_cfg_raw.get("min_order_usd", 10)),
             max_leverage=int(risk_cfg_raw.get("max_leverage", 1)),
             max_consecutive_losses=int(risk_cfg_raw.get("max_consecutive_losses", 3)),
+            exposure_policy_id=str(risk_cfg_raw.get("exposure_policy_id", "ts-p1-008-v1")),
+            max_symbol_gross_pct=float(risk_cfg_raw.get("max_symbol_gross_pct", 0.20)),
+            max_portfolio_gross_pct=float(risk_cfg_raw.get("max_portfolio_gross_pct", 0.40)),
+            max_wallet_margin_util_pct=float(risk_cfg_raw.get("max_wallet_margin_util_pct", 0.25)),
+            max_effective_leverage=float(risk_cfg_raw.get("max_effective_leverage", 1.0)),
+            min_liquidation_distance_pct=float(risk_cfg_raw.get("min_liquidation_distance_pct", 0.15)),
         )
         from bridge.engine.notify import build_notifier
 

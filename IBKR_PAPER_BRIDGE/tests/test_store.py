@@ -1391,7 +1391,7 @@ def test_v2_checkpoint_loads_as_one_immutable_typed_snapshot(tmp_path):
     assert snapshot.withdrawable == 9_000.0
     assert snapshot.margin_used == 1_000.0
     assert snapshot.available_margin == 9_000.0
-    assert snapshot.positions == (("BTC", 0.0),)
+    assert tuple(snapshot.positions[0]) == ("BTC", 0.0)
     assert snapshot.has_open_position is False
     assert snapshot.age_s == 5.0
     assert snapshot.accepted_ts == NOW
@@ -1840,7 +1840,7 @@ def test_a_concurrent_capture_cannot_mix_two_epochs_into_one_snapshot(tmp_path):
     # One coherent epoch: never epoch A's identity with epoch B's rows.
     assert snapshot.attempt_id == first
     assert snapshot.equity == 1_000.0
-    assert snapshot.positions == (("BTC", 1.0),)
+    assert [(p.symbol, p.size) for p in snapshot.positions] == [("BTC", 1.0)]
     assert snapshot.canonical_hash == (
         store.get_reconcile_attempt(first)["canonical_hash"]
     )
@@ -1851,7 +1851,7 @@ def test_a_concurrent_capture_cannot_mix_two_epochs_into_one_snapshot(tmp_path):
     fresh = _load(reader, now=later)
     assert fresh.attempt_id == interleaved[0]
     assert fresh.equity == 9_999.0
-    assert fresh.positions == (("BTC", 7.0),)
+    assert [(p.symbol, p.size) for p in fresh.positions] == [("BTC", 7.0)]
     reader.close()
     competitor.close()
 

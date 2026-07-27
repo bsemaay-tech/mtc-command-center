@@ -44,6 +44,7 @@ from bridge.engine.types import (
     RISK_SNAPSHOT_TRANSACTION_ACTIVE,
     SNAPSHOT_PAYLOAD_VERSION_V1,
     SNAPSHOT_PAYLOAD_VERSION_V2,
+    SNAPSHOT_PAYLOAD_VERSION_V3,
     ActionOutcome,
     ActionRecordStatus,
     AuthoritativeRiskSnapshot,
@@ -276,17 +277,33 @@ the proven v4→v5→v6 chain; no caller is upgraded by merely opening a databas
 SCHEMA_VERSION_DURABLE_RISK = 7
 """Additive TS-P1-007 daily-risk evidence and sticky control latches."""
 
+SCHEMA_VERSION_EXPOSURE_CONTROLS = 8
+"""Additive TS-P1-008 exposure / leverage / liquidation capability.
+
+Strictly a capability/version bump over v7: the daily-risk tables and every
+existing object remain byte-for-byte / topology compatible, and no new
+business-evidence table is added (the richer v3 rows live in the existing
+immutable ``reconcile_checkpoints.snapshot_json``). Reaching v8 requires an
+explicit ``initialize(target_schema_version=8)`` through the proven
+v4->v5->v6->v7 chain; the migration only revalidates the v7 topology, integrity
+and foreign keys and bumps the meta row. A fresh real v3 capture is then
+mandatory for v8 risk authority; v1/v2 checkpoints stay retained and
+reopenable but can never authorize v8 risk.
+"""
+
 SUPPORTED_TARGET_SCHEMA_VERSIONS = (
     SCHEMA_VERSION_BASELINE,
     SCHEMA_VERSION_PARTIAL_FILL,
     SCHEMA_VERSION_FULL_RECONCILE,
     SCHEMA_VERSION_DURABLE_RISK,
+    SCHEMA_VERSION_EXPOSURE_CONTROLS,
 )
 
 RECONCILE_CHECKPOINT_POINTER_KEY = "reconcile_checkpoint_latest"
 """The single transactional pointer at the latest accepted checkpoint."""
 
 RISK_CONTROLS_MIGRATION_FAILURE_KEY = "risk_controls_migration_failure"
+EXPOSURE_CONTROLS_MIGRATION_FAILURE_KEY = "exposure_controls_migration_failure"
 
 _PARTIAL_RECOVERY_VERSION = "ts-p1-004-recovery-v1"
 _PARTIAL_ACTION_VERSION = "ts-p1-004-action-v1"
@@ -533,6 +550,19 @@ class Store:
             "CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)"
         )
         existing = self.get_meta("schema_version")
+        if existing == str(SCHEMA_VERSION_EXPOSURE_CONTROLS):
+            if not self._has_any_durable_risk_object():
+                # v8 inherits the v7 objects; a meta row alone is not proof.
+                raise RuntimeError(
+                    f"Unsupported schema_version={existing!r}; "
+                    "cannot initialize safely"
+                )
+            # Idempotent reopen, never an in-place downgrade.
+            self._initialize_v5_idempotent()
+            self._initialize_v6_idempotent()
+            self._initialize_v7_idempotent()
+            self._initialize_v8_idempotent()
+            return
         if existing == str(SCHEMA_VERSION_DURABLE_RISK):
             if not self._has_any_durable_risk_object():
                 raise RuntimeError(
@@ -542,6 +572,8 @@ class Store:
             self._initialize_v5_idempotent()
             self._initialize_v6_idempotent()
             self._initialize_v7_idempotent()
+            if target_schema_version >= SCHEMA_VERSION_EXPOSURE_CONTROLS:
+                self._migrate_v7_to_v8()
             return
         if existing == str(SCHEMA_VERSION_FULL_RECONCILE):
             if not self._has_any_full_reconcile_object():
@@ -557,6 +589,8 @@ class Store:
             self._initialize_v6_idempotent()
             if target_schema_version >= SCHEMA_VERSION_DURABLE_RISK:
                 self._migrate_v6_to_v7()
+            if target_schema_version >= SCHEMA_VERSION_EXPOSURE_CONTROLS:
+                self._migrate_v7_to_v8()
             return
         if existing == str(SCHEMA_VERSION_PARTIAL_FILL):
             self._initialize_v5_idempotent()
@@ -564,6 +598,8 @@ class Store:
                 self._migrate_v5_to_v6()
             if target_schema_version >= SCHEMA_VERSION_DURABLE_RISK:
                 self._migrate_v6_to_v7()
+            if target_schema_version >= SCHEMA_VERSION_EXPOSURE_CONTROLS:
+                self._migrate_v7_to_v8()
             return
         if existing is None:
             self._initialize_v4_fresh()
@@ -588,6 +624,8 @@ class Store:
             self._migrate_v5_to_v6()
         if target_schema_version >= SCHEMA_VERSION_DURABLE_RISK:
             self._migrate_v6_to_v7()
+        if target_schema_version >= SCHEMA_VERSION_EXPOSURE_CONTROLS:
+            self._migrate_v7_to_v8()
 
     def _initialize_v4_fresh(self) -> None:
         self._create_tables_v4()
@@ -1592,13 +1630,16 @@ class Store:
             str(item["component"]): str(item["payload_digest"])
             for item in components
         }
-        recomputed = reconcile_digest(
-            {
-                "version": snapshot.get("version"),
-                "components": component_digests,
-                "diffs": diffs,
-            }
-        )
+        hash_payload = {
+            "version": snapshot.get("version"),
+            "components": component_digests,
+            "diffs": diffs,
+        }
+        if snapshot.get("version") == SNAPSHOT_PAYLOAD_VERSION_V3:
+            hash_payload["exposure_policy_version"] = snapshot.get(
+                "exposure_policy_version"
+            )
+        recomputed = reconcile_digest(hash_payload)
         if (
             recomputed != str(row["canonical_hash"])
             or {
@@ -1875,6 +1916,72 @@ class Store:
                     (
                         RISK_CONTROLS_MIGRATION_FAILURE_KEY,
                         f"RISK_CONTROLS_MIGRATION_FAILED:{type(exc).__name__}",
+                    ),
+                )
+                self.conn.commit()
+            except Exception:
+                self.conn.rollback()
+            raise
+
+    def _initialize_v8_idempotent(self) -> None:
+        """Reopen a v8 database: v8 inherits the v7 topology, so revalidate it.
+
+        v8 adds no tables; the only thing that distinguishes a v8 database from
+        a v7 one is the ``schema_version`` meta row plus the v3 snapshot payload
+        produced/consumed only on a v8 store. Reopening therefore re-proves the
+        inherited v7 topology, integrity and foreign keys, and rejects any meta
+        row that does not actually claim v8.
+        """
+        self._validate_durable_risk_schema_v7()
+        if self.get_meta("schema_version") != str(SCHEMA_VERSION_EXPOSURE_CONTROLS):
+            raise MigrationError(
+                "v8 reopen requires schema_version=" + str(SCHEMA_VERSION_EXPOSURE_CONTROLS)
+            )
+
+    def _migrate_v7_to_v8(self) -> None:
+        """Capability-only v7 -> v8 bump in one rollback-clean transaction.
+
+        No DDL: the v7 daily-risk tables and every predecessor object are
+        already topology-compatible with v8. The migration revalidates the v7
+        topology, integrity and foreign keys, proves the predecessor evidence
+        census is unchanged, and bumps the meta row. A fresh real v3 capture is
+        still mandatory afterwards for v8 risk authority. Any failure rolls back
+        to a reopenable v7 and records a secret-safe migration failure.
+        """
+        if self.get_meta("schema_version") == str(SCHEMA_VERSION_EXPOSURE_CONTROLS):
+            self._initialize_v8_idempotent()
+            return
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            if self.get_meta("schema_version") != str(SCHEMA_VERSION_DURABLE_RISK):
+                raise MigrationError("v7-to-v8 requires schema_version=7")
+            self._validate_durable_risk_schema_v7()
+            if self.conn.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
+                raise MigrationError("v8 integrity_check failed")
+            if self.conn.execute("PRAGMA foreign_key_check").fetchall():
+                raise MigrationError("v8 foreign_key_check failed")
+            before = self._evidence_census(_FULL_RECONCILE_EVIDENCE_TABLES)
+            # No tables to create; the census must be byte-for-byte unchanged.
+            if self._evidence_census(_FULL_RECONCILE_EVIDENCE_TABLES) != before:
+                raise MigrationError("v7-to-v8 altered predecessor evidence")
+            cursor = self.conn.execute(
+                "UPDATE meta SET value = ? WHERE key='schema_version' AND value=?",
+                (
+                    str(SCHEMA_VERSION_EXPOSURE_CONTROLS),
+                    str(SCHEMA_VERSION_DURABLE_RISK),
+                ),
+            )
+            if cursor.rowcount != 1:
+                raise MigrationError("v7-to-v8 version update rowcount mismatch")
+            self.conn.commit()
+        except Exception as exc:
+            self.conn.rollback()
+            try:
+                self.conn.execute(
+                    "INSERT OR REPLACE INTO meta(key,value) VALUES (?,?)",
+                    (
+                        EXPOSURE_CONTROLS_MIGRATION_FAILURE_KEY,
+                        f"EXPOSURE_CONTROLS_MIGRATION_FAILED:{type(exc).__name__}",
                     ),
                 )
                 self.conn.commit()
@@ -4673,10 +4780,18 @@ class Store:
         return self.get_meta("schema_version") in {
             str(SCHEMA_VERSION_FULL_RECONCILE),
             str(SCHEMA_VERSION_DURABLE_RISK),
+            str(SCHEMA_VERSION_EXPOSURE_CONTROLS),
         }
 
     def durable_risk_controls_enabled(self) -> bool:
-        return self.get_meta("schema_version") == str(SCHEMA_VERSION_DURABLE_RISK)
+        return self.get_meta("schema_version") in {
+            str(SCHEMA_VERSION_DURABLE_RISK),
+            str(SCHEMA_VERSION_EXPOSURE_CONTROLS),
+        }
+
+    def exposure_controls_enabled(self) -> bool:
+        """True only on an opt-in schema-v8 store (TS-P1-008)."""
+        return self.get_meta("schema_version") == str(SCHEMA_VERSION_EXPOSURE_CONTROLS)
 
     def _require_full_reconcile(self) -> None:
         if not self.full_reconcile_enabled():
@@ -4762,7 +4877,29 @@ class Store:
         Returns the new checkpoint id when the attempt was accepted.
         """
         self._require_full_reconcile()
-        if accepted and self.durable_risk_controls_enabled():
+        if accepted and self.exposure_controls_enabled():
+            # TS-P1-008: a v8 store still runs the v7 daily-risk ledger, so the
+            # durable policy is required, but acceptance now requires a v3
+            # payload that carries the per-position valuation, leverage and
+            # directional liquidation evidence the exposure gates consume.
+            if not isinstance(risk_policy, DurableRiskPolicy):
+                raise ReconcileConflictError(
+                    "RISK_POLICY_REQUIRED",
+                    "schema v8 acceptance requires an approved durable policy",
+                )
+            if (snapshot_payload or {}).get("version") != SNAPSHOT_PAYLOAD_VERSION_V3:
+                raise ReconcileConflictError(
+                    "EXPOSURE_REQUIRES_V3_PAYLOAD",
+                    "schema v8 exposure risk requires checkpoint-bound v3 rows",
+                )
+            if not isinstance(
+                (snapshot_payload or {}).get("exposure_policy_version"), str
+            ) or not (snapshot_payload or {}).get("exposure_policy_version"):
+                raise ReconcileConflictError(
+                    "EXPOSURE_POLICY_REQUIRED",
+                    "schema v8 acceptance requires a checkpoint-bound exposure policy",
+                )
+        elif accepted and self.durable_risk_controls_enabled():
             if not isinstance(risk_policy, DurableRiskPolicy):
                 raise ReconcileConflictError(
                     "RISK_POLICY_REQUIRED",
@@ -4933,13 +5070,16 @@ class Store:
                 for kind, value in payload_components.items()
             }
             expected_diffs = [diff.canonical() for diff in diffs]
-            recomputed_hash = reconcile_digest(
-                {
-                    "version": payload.get("version"),
-                    "components": expected_component_digests,
-                    "diffs": expected_diffs,
-                }
-            )
+            hash_payload = {
+                "version": payload.get("version"),
+                "components": expected_component_digests,
+                "diffs": expected_diffs,
+            }
+            if payload.get("version") == SNAPSHOT_PAYLOAD_VERSION_V3:
+                hash_payload["exposure_policy_version"] = payload.get(
+                    "exposure_policy_version"
+                )
+            recomputed_hash = reconcile_digest(hash_payload)
             if (
                 actual_component_digests != expected_component_digests
                 or payload_diffs != expected_diffs
@@ -4949,7 +5089,8 @@ class Store:
                     "RECONCILE_ACCEPT_HASH_MISMATCH",
                     "snapshot/component/diff evidence does not match canonical hash",
                 )
-            if payload.get("version") == SNAPSHOT_PAYLOAD_VERSION_V2:
+            payload_version = payload.get("version")
+            if payload_version == SNAPSHOT_PAYLOAD_VERSION_V2:
                 # TS-P1-006: a v2 payload claims to carry the authoritative
                 # risk-bearing rows, so it is checked against the very
                 # ComponentEvidence being persisted in this same transaction.
@@ -4957,6 +5098,12 @@ class Store:
                 # TS-P1-005 validation unchanged and is simply never
                 # risk-readable — see load_authoritative_risk_snapshot().
                 self._validate_v2_risk_rows(payload, components)
+            elif payload_version == SNAPSHOT_PAYLOAD_VERSION_V3:
+                # TS-P1-008: same write-side guarantee for the richer v3 rows —
+                # the persisted risk rows must be exactly the rows the capture
+                # observed, so a payload can never claim valuation/liquidation
+                # evidence the ComponentEvidence does not carry.
+                self._validate_v3_risk_rows(payload, components)
         checkpoint_id: str | None = None
         self.conn.execute("BEGIN IMMEDIATE")
         try:
@@ -5406,6 +5553,40 @@ class Store:
             raise ReconcileConflictError(
                 "RECONCILE_ACCEPT_RISK_ROWS_INVALID",
                 "v2 risk rows do not match the accepted component evidence",
+            )
+
+    @staticmethod
+    def _validate_v3_risk_rows(
+        payload: Mapping[str, Any], components: Sequence[ComponentEvidence]
+    ) -> None:
+        """A v3 payload must carry exactly the rows it is being accepted with.
+
+        Same write-side contract as :meth:`_validate_v2_risk_rows`, applied to
+        the richer TS-P1-008 POSITIONS rows (which add ``position_value``,
+        ``liquidation_px`` and ``leverage``). The deep equality over the
+        canonical rows is schema-agnostic: a v3 payload can never claim
+        valuation, liquidation or leverage evidence the live ComponentEvidence
+        did not actually observe in the same transaction.
+        """
+        by_kind = {component.kind: component for component in components}
+        expected_rows = {
+            kind.value: by_kind[kind].canonical_rows()
+            for kind in RISK_SNAPSHOT_COMPONENTS
+        }
+        expected_digests = {
+            kind.value: by_kind[kind].digest for kind in RISK_SNAPSHOT_COMPONENTS
+        }
+        rows = payload.get("risk_rows")
+        digests = payload.get("risk_row_digests")
+        if not isinstance(rows, Mapping) or not isinstance(digests, Mapping):
+            raise ReconcileConflictError(
+                "EXPOSURE_ACCEPT_RISK_ROWS_INVALID",
+                "a v3 snapshot must carry canonical risk rows and their digests",
+            )
+        if dict(rows) != expected_rows or dict(digests) != expected_digests:
+            raise ReconcileConflictError(
+                "EXPOSURE_ACCEPT_RISK_ROWS_INVALID",
+                "v3 risk rows do not match the accepted component evidence",
             )
 
     def _append_funding_event_locked(
@@ -5884,13 +6065,25 @@ class Store:
 
         payload = self._risk_payload(checkpoint["snapshot_json"])
         version = payload.get("version")
-        if version == SNAPSHOT_PAYLOAD_VERSION_V1:
-            # Structurally valid predecessor evidence: retained, reopenable, and
-            # never risk-readable. It stores digests and counts, not rows, so no
-            # backfill is even possible — a fresh v2 capture is required.
-            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_LEGACY_PAYLOAD)
-        if version != SNAPSHOT_PAYLOAD_VERSION_V2:
-            raise RiskSnapshotUnavailable(RISK_SNAPSHOT_PAYLOAD_VERSION_UNSUPPORTED)
+        if self.exposure_controls_enabled():
+            # TS-P1-008: v8 risk authority requires a fresh v3 capture. Legacy
+            # v1/v2 checkpoints remain retained and reopenable as historical
+            # evidence, but they carry no per-position valuation, leverage or
+            # liquidation evidence, so they can never authorize v8 risk. No
+            # backfill is possible — a fresh real v3 capture is mandatory.
+            if version != SNAPSHOT_PAYLOAD_VERSION_V3:
+                raise RiskSnapshotUnavailable(RISK_SNAPSHOT_LEGACY_PAYLOAD)
+        else:
+            if version == SNAPSHOT_PAYLOAD_VERSION_V1:
+                # Structurally valid predecessor evidence: retained, reopenable,
+                # and never risk-readable. It stores digests and counts, not
+                # rows, so no backfill is even possible — a fresh v2 capture is
+                # required.
+                raise RiskSnapshotUnavailable(RISK_SNAPSHOT_LEGACY_PAYLOAD)
+            if version != SNAPSHOT_PAYLOAD_VERSION_V2:
+                raise RiskSnapshotUnavailable(
+                    RISK_SNAPSHOT_PAYLOAD_VERSION_UNSUPPORTED
+                )
 
         component_digests = {
             component: str(row["payload_digest"])
@@ -5919,6 +6112,11 @@ class Store:
                     "version": version,
                     "components": component_digests,
                     "diffs": diffs,
+                    **(
+                        {"exposure_policy_version": payload.get("exposure_policy_version")}
+                        if version == SNAPSHOT_PAYLOAD_VERSION_V3
+                        else {}
+                    ),
                 }
             )
             != canonical_hash
@@ -5926,7 +6124,10 @@ class Store:
             raise RiskSnapshotUnavailable(RISK_SNAPSHOT_HASH_MISMATCH)
 
         rows_by_kind = self._risk_rows(payload, by_component)
-        positions = self._risk_positions(rows_by_kind[ReconcileComponentKind.POSITIONS.value])
+        positions = self._risk_positions(
+            rows_by_kind[ReconcileComponentKind.POSITIONS.value],
+            v3=(version == SNAPSHOT_PAYLOAD_VERSION_V3),
+        )
         equity, withdrawable, margin_used, available = self._risk_account(
             rows_by_kind[ReconcileComponentKind.BALANCES.value],
             rows_by_kind[ReconcileComponentKind.MARGIN.value],
@@ -5980,6 +6181,12 @@ class Store:
             withdrawable=withdrawable,
             margin_used=margin_used,
             available_margin=available,
+            exposure_policy_version=(
+                str(payload.get("exposure_policy_version"))
+                if version == SNAPSHOT_PAYLOAD_VERSION_V3
+                and isinstance(payload.get("exposure_policy_version"), str)
+                else None
+            ),
         )
 
     @staticmethod
@@ -6047,21 +6254,68 @@ class Store:
 
     @classmethod
     def _risk_positions(
-        cls, rows: Sequence[Mapping[str, Any]]
+        cls,
+        rows: Sequence[Mapping[str, Any]],
+        *,
+        v3: bool = False,
     ) -> tuple[RiskPositionRow, ...]:
         positions: list[RiskPositionRow] = []
         seen: set[str] = set()
+        # v3 extends the v2 {symbol, size} row with position_value (nonnegative
+        # gross mark notional), liquidation_px (directional, optional only for a
+        # zero-size row) and leverage. The loader validates structure only; the
+        # semantic fail-closed checks (wrong side, nonfinite, incoherent mark)
+        # live in the risk gate that consumes this view.
+        expected = (
+            {"symbol", "size", "position_value", "liquidation_px", "leverage"}
+            if v3
+            else {"symbol", "size"}
+        )
         for row in rows:
-            if set(row) != {"symbol", "size"}:
+            if set(row) != expected:
                 raise RiskSnapshotUnavailable(RISK_SNAPSHOT_POSITION_MALFORMED)
-            symbol = row["symbol"]
+            symbol_raw = row["symbol"]
+            symbol = (
+                symbol_raw.strip().upper()
+                if isinstance(symbol_raw, str)
+                else symbol_raw
+            )
             size = cls._risk_number(row["size"])
             if not isinstance(symbol, str) or not symbol.strip() or size is None:
                 raise RiskSnapshotUnavailable(RISK_SNAPSHOT_POSITION_MALFORMED)
             if symbol in seen:
                 raise RiskSnapshotUnavailable(RISK_SNAPSHOT_POSITION_DUPLICATE)
             seen.add(symbol)
-            positions.append(RiskPositionRow(symbol, size))
+            if v3:
+                position_value = cls._risk_number(row["position_value"])
+                leverage = cls._risk_number(row["leverage"])
+                liquidation_raw = row["liquidation_px"]
+                liquidation_px = (
+                    None
+                    if liquidation_raw is None
+                    else cls._risk_number(liquidation_raw)
+                )
+                # Non-finite valuation/leverage, or a present-but-unparseable
+                # liquidation price, is malformed evidence, never coerced.
+                if position_value is None or leverage is None:
+                    raise RiskSnapshotUnavailable(
+                        RISK_SNAPSHOT_POSITION_MALFORMED
+                    )
+                if liquidation_raw is not None and liquidation_px is None:
+                    raise RiskSnapshotUnavailable(
+                        RISK_SNAPSHOT_POSITION_MALFORMED
+                    )
+                positions.append(
+                    RiskPositionRow(
+                        symbol,
+                        size,
+                        position_value=position_value,
+                        liquidation_px=liquidation_px,
+                        leverage=leverage,
+                    )
+                )
+            else:
+                positions.append(RiskPositionRow(symbol, size))
         return tuple(positions)
 
     @classmethod

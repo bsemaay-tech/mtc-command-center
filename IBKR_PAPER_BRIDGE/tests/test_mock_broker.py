@@ -252,6 +252,17 @@ def test_mock_full_evidence_defaults_to_a_healthy_complete_exchange():
     assert portfolio.margin.call_count == 0
 
 
+def test_mock_v8_position_rows_preserve_risk_fields():
+    broker = _full_broker()
+    broker.exposure_capture_enabled = True
+    broker.full_positions = [{
+        "symbol": "BTC", "size": 0.1, "position_value": 100.0,
+        "liquidation_px": 800.0, "leverage": 1.0,
+    }]
+    rows = asyncio.run(broker.portfolio_evidence()).positions.rows
+    assert rows == (broker.full_positions[0],)
+
+
 def test_mock_full_evidence_row_order_never_changes_the_digest():
     broker = _full_broker()
     forward = asyncio.run(broker.open_orders_evidence())

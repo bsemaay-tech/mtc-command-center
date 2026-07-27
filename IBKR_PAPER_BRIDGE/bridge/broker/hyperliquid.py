@@ -1461,14 +1461,17 @@ class HyperliquidBroker:
         if not isinstance(raw_positions, list) or not isinstance(summary, Mapping):
             return malformed("HL_ACCOUNT_EVIDENCE_MALFORMED")
 
+        capture_exposure = bool(getattr(self, "exposure_capture_enabled", False))
         positions: dict[str, float] = {}
+        rich_rows: dict[str, dict[str, Any]] = {}
         for row in raw_positions:
             if not isinstance(row, Mapping):
                 return malformed("HL_POSITION_EVIDENCE_MALFORMED")
             payload = row.get("position", row)
             if not isinstance(payload, Mapping):
                 return malformed("HL_POSITION_EVIDENCE_MALFORMED")
-            coin = payload.get("coin")
+            coin_raw = payload.get("coin")
+            coin = coin_raw.strip().upper() if isinstance(coin_raw, str) else coin_raw
             raw_size = payload.get("szi", payload.get("size"))
             if (
                 not isinstance(coin, str)
@@ -1495,6 +1498,40 @@ class HyperliquidBroker:
                     for kind in kinds
                 ])
             positions[coin] = size
+            if capture_exposure:
+                # TS-P1-008: from the SAME user_state read, retain the official
+                # positionValue (nonnegative gross mark notional), the reported
+                # leverage and the directional liquidationPx. positionValue is a
+                # required float string in the Hyperliquid contract; a missing
+                # or negative one is malformed evidence, never repaired.
+                # liquidationPx is optional (absent on a flat position) and is
+                # recorded as-is; the risk gate fails closed on a missing price
+                # for a nonzero position.
+                position_value = self._reconcile_float(payload.get("positionValue"))
+                if position_value is None or position_value < 0:
+                    return malformed("HL_POSITION_EVIDENCE_MALFORMED")
+                leverage_raw = payload.get("leverage")
+                if not isinstance(leverage_raw, Mapping) or "value" not in leverage_raw:
+                    return malformed("HL_POSITION_EVIDENCE_MALFORMED")
+                leverage_val = leverage_raw["value"]
+                leverage = self._reconcile_float(leverage_val)
+                if leverage is None or leverage <= 0.0:
+                    return malformed("HL_POSITION_EVIDENCE_MALFORMED")
+                liquidation_raw = payload.get("liquidationPx")
+                liquidation_px = (
+                    None
+                    if liquidation_raw in (None, "")
+                    else self._reconcile_float(liquidation_raw)
+                )
+                if liquidation_raw not in (None, "") and liquidation_px is None:
+                    return malformed("HL_POSITION_EVIDENCE_MALFORMED")
+                rich_rows[coin] = {
+                    "symbol": coin,
+                    "size": size,
+                    "position_value": position_value,
+                    "liquidation_px": liquidation_px,
+                    "leverage": leverage,
+                }
 
         equity = self._reconcile_float(summary.get("accountValue"))
         margin_used = self._reconcile_float(summary.get("totalMarginUsed"))
@@ -1526,7 +1563,9 @@ class HyperliquidBroker:
                 status=ReconcileComponentStatus.COMPLETE,
                 observed_ts=observed_ts,
                 rows=tuple(
-                    {"symbol": coin, "size": positions[coin]}
+                    rich_rows[coin]
+                    if capture_exposure
+                    else {"symbol": coin, "size": positions[coin]}
                     for coin in sorted(positions)
                 ),
                 exact=True,
