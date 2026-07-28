@@ -2458,6 +2458,54 @@ def test_fills_evidence_identity_comes_from_documented_fields():
     assert info.fill_calls == [(1_000, 2_000)]
 
 
+def test_repair4_authoritative_kill_capture_binds_epoch_orders_and_fills():
+    from bridge.engine import types as engine_types
+
+    epoch_type = getattr(engine_types, "KillEvidenceEpoch", None)
+    assert epoch_type is not None, "typed kill epoch is missing"
+    info = ReconcileInfo(
+        state=_hl_state(
+            positions=[{"position": {"coin": "BTC", "szi": "0.1"}}]
+        ),
+        orders=[{
+            "cloid": "0xowned",
+            "coin": "BTC",
+            "side": "A",
+            "sz": "0.1",
+            "reduceOnly": True,
+            "oid": 8,
+        }],
+        fill_pages=[[_fill("0xowned-fill", 7, 1_700)]],
+    )
+    broker = _reconcile_broker(info)
+    assert hasattr(
+        broker, "capture_kill_evidence"
+    ), "authoritative broker capture seam is missing"
+    epoch = epoch_type(
+        episode_id="kill-v1:" + "a" * 64,
+        attempt_no=1,
+        process_uid="repair4-hl",
+        opened_ts_monotonic=10.0,
+    )
+
+    capture = asyncio.run(
+        broker.capture_kill_evidence(
+            epoch=epoch,
+            symbol="BTC",
+            start_ms=1_000,
+            end_ms=2_000,
+        )
+    )
+
+    assert capture.epoch == epoch
+    assert capture.symbol == "BTC"
+    assert capture.accepted is True
+    assert capture.positions.rows == ({"symbol": "BTC", "size": 0.1},)
+    assert capture.open_orders.rows[0]["oid"] == 8
+    assert capture.fills.rows[0]["oid"] == 7
+    assert info.fill_calls == [(1_000, 2_000)]
+
+
 def test_live_and_historical_fill_use_the_same_fallback_identity_and_timestamp():
     row = {
         "coin": "BTC",

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import sqlite3
 from contextlib import asynccontextmanager
 from pathlib import Path
 from datetime import UTC, datetime, timedelta
@@ -12,7 +13,13 @@ from bridge.engine.engine import BridgeEngine
 from bridge.engine.orders import OrderManager
 from bridge.engine.risk import RiskConfig, RiskEngine
 from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
-from bridge.engine.types import Bar, OrderPlan, Position, Signal
+from bridge.engine.types import (
+    Bar,
+    OrderPlan,
+    Position,
+    ReconcileComponentKind,
+    Signal,
+)
 from bridge.broker.base import SubmissionRejectedError
 from bridge.store.db import Store
 
@@ -119,6 +126,206 @@ def test_kill_uses_full_writer_then_symbol_lock_order(tmp_path, monkeypatch):
         assert all(full and symbol for full, symbol in observations)
 
     asyncio.run(run())
+
+
+def _repair4_kill_engine(tmp_path, *, foreign_substitution: bool = False):
+    run_id = "repair4-kill"
+    store = Store(tmp_path / "repair4-kill.db")
+    store.initialize(target_schema_version=9)
+    store.create_run(run_id, "dry_run", "testnet", {})
+    store.set_meta("app_state", "ARMED")
+    entry_ts = datetime.now(UTC) - timedelta(seconds=2)
+    store.conn.execute(
+        "UPDATE runs SET started_ts=? WHERE run_id=?",
+        ((entry_ts - timedelta(seconds=1)).isoformat(), run_id),
+    )
+    store.conn.commit()
+    decision_uid = "repair4-owned-entry"
+    store.insert_decision(
+        run_id, decision_uid, entry_ts, "BTC", "SIGNAL", {"direction": "LONG"}
+    )
+    trade_id = store.create_trade(
+        run_id=run_id,
+        coin="BTC",
+        direction="LONG",
+        qty=1.0,
+        entry_decision_uid=decision_uid,
+        signal_ts=entry_ts,
+        decision_ts=entry_ts,
+        expected_px=100.0,
+        risk_dollars=10.0,
+        risk_pct=0.01,
+        leverage=1,
+        sl_initial=90.0,
+        tp_initial=None,
+        llm_directive_id=None,
+    )
+    store.insert_order(
+        cloid="repair4-entry",
+        oid=101,
+        group_id=decision_uid,
+        order_ref="repair4-entry-ref",
+        order_json={"symbol": "BTC", "role": "ENTRY", "direction": "LONG"},
+        decision_uid=decision_uid,
+        trade_id=trade_id,
+        role="ENTRY",
+        status="FILLED",
+        qty=1.0,
+        filled_qty=1.0,
+        ts_submit=entry_ts,
+        ts_last=entry_ts,
+    )
+    store.insert_fill(
+        "repair4-owned-fill",
+        "repair4-entry",
+        decision_uid,
+        entry_ts,
+        1.0,
+        100.0,
+        0.0,
+        0.0,
+    )
+    store.insert_order(
+        cloid="repair4-sl",
+        oid=102,
+        group_id=decision_uid,
+        order_ref="repair4-sl-ref",
+        order_json={
+            "symbol": "BTC",
+            "role": "SL",
+            "side": "SELL",
+            "reduce_only": True,
+        },
+        decision_uid=decision_uid,
+        trade_id=trade_id,
+        role="SL",
+        status="OPEN",
+        qty=1.0,
+        filled_qty=0.0,
+        ts_submit=entry_ts,
+        ts_last=entry_ts,
+    )
+
+    broker = MockBroker(bars=[])
+    broker.position = Position(symbol="BTC", size=1.0, entry_px=100.0)
+    broker.orders = [{
+        "cloid": "repair4-sl",
+        "oid": 102,
+        "role": "SL",
+        "status": "OPEN",
+        "qty": 1.0,
+        "filled_qty": 0.0,
+        "reduce_only": True,
+        "symbol": "BTC",
+        "direction": "LONG",
+        "trigger_px": 90.0,
+    }]
+    broker.full_positions = [{"symbol": "BTC", "size": 1.0}]
+    broker.full_open_orders = [{
+        "cloid": "repair4-sl",
+        "oid": 102,
+        "coin": "BTC",
+        "side": "SELL",
+        "sz": 1.0,
+        "role": "SL",
+        "reduceOnly": True,
+        "status": "OPEN",
+    }]
+    base_ms = int(entry_ts.timestamp() * 1000)
+    broker.full_fill_history = [{
+        "fill_id": "repair4-owned-fill",
+        "oid": 101,
+        "coin": "BTC",
+        "side": "BUY",
+        "sz": 1.0,
+        "px": 100.0,
+        "time": base_ms,
+    }]
+    if foreign_substitution:
+        broker.full_fill_history.extend([
+            {
+                "fill_id": "repair4-foreign-sell",
+                "oid": 901,
+                "coin": "BTC",
+                "side": "SELL",
+                "sz": 1.0,
+                "px": 100.0,
+                "time": base_ms + 250,
+            },
+            {
+                "fill_id": "repair4-foreign-buy",
+                "oid": 902,
+                "coin": "BTC",
+                "side": "BUY",
+                "sz": 1.0,
+                "px": 100.0,
+                "time": base_ms + 500,
+            },
+        ])
+    engine = BridgeEngine(
+        run_id=run_id,
+        broker=broker,
+        store=store,
+        strategy=KeltnerTrailEma8(),
+        risk_engine=RiskEngine(RiskConfig()),
+        state="ARMED",
+    )
+    return store, broker, engine
+
+
+def test_repair4_a1_same_net_foreign_substitution_is_ambiguous(tmp_path):
+    store, broker, engine = _repair4_kill_engine(
+        tmp_path, foreign_substitution=True
+    )
+
+    asyncio.run(engine.kill(flatten=True))
+
+    request = store.active_kill_request()
+    assert request is not None
+    assert request["terminal_state"] == "AMBIGUOUS"
+    assert request["terminal_reason"] == "OWNERSHIP_AMBIGUOUS"
+    assert broker.broker_mutations == []
+    assert next(
+        row for row in broker.orders if row["cloid"] == "repair4-sl"
+    )["status"] == "OPEN"
+
+
+def test_repair4_a2_capture_failure_is_query_only(tmp_path):
+    store, broker, engine = _repair4_kill_engine(tmp_path)
+    broker.full_component_failures[ReconcileComponentKind.FILLS.value] = "RAISE"
+
+    asyncio.run(engine.kill(flatten=True))
+
+    request = store.active_kill_request()
+    assert engine.state == "KILLED"
+    assert engine.order_manager.kill_latched is True
+    assert broker.broker_mutations == []
+    assert request is not None
+    assert request["terminal_state"] == "UNKNOWN"
+    assert request["terminal_reason"] == "KILL_CAPTURE_FILLS_UNAVAILABLE"
+
+
+def test_repair4_a10_epoch_open_failure_retains_kill_latch(
+    tmp_path, monkeypatch
+):
+    store, broker, engine = _repair4_kill_engine(tmp_path)
+
+    def fail_open(*args, **kwargs):
+        raise sqlite3.OperationalError("injected epoch open fault")
+
+    monkeypatch.setattr(store, "open_kill_epoch", fail_open, raising=False)
+
+    with pytest.raises(sqlite3.OperationalError, match="epoch open fault"):
+        asyncio.run(engine.kill(flatten=True))
+
+    assert engine.state == "KILLED"
+    assert engine.order_manager.kill_latched is True
+    assert broker.broker_mutations == []
+    assert store.get_meta("kill_epoch_active") is None
+    assert store.conn.execute(
+        "SELECT COUNT(*) FROM kill_requests WHERE terminal_state IN "
+        "('SAFE_FLAT','SAFE_RETAINED')"
+    ).fetchone()[0] == 0
 
 
 async def _run_dryrun_replay(tmp_path):

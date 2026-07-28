@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import multiprocessing
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -87,6 +89,99 @@ def _v8_store_for_kill(tmp_path):
     return store
 
 
+def _repair4_stale_bind_worker(
+    db_path, checkpoint_id, ready, release, results
+):
+    from bridge.store.db import Store
+
+    store = Store(db_path)
+    store.initialize()
+    request, epoch = store.open_kill_epoch(
+        run_id="kill-run",
+        symbol="BTC",
+        flatten_requested=True,
+        policy_version="policy-v1",
+        process_uid="repair4-process-old",
+        opened_ts_monotonic=10.0,
+    )
+    store.mark_kill_request_state(
+        epoch=epoch,
+        state="SAFE_FLAT",
+        reason_code="DIRECT_SAFE_FLAT_PROOF",
+    )
+    results.put(("old-open", epoch.as_payload()))
+    ready.set()
+    if not release.wait(15):
+        results.put(("old-error", "release-timeout"))
+        store.close()
+        return
+    try:
+        store.bind_kill_terminal_proof(
+            epoch=epoch,
+            terminal_state="SAFE_FLAT",
+            reason_code="DIRECT_SAFE_FLAT_PROOF",
+            checkpoint_id=checkpoint_id,
+            proof={"symbol": "BTC", "position_lots": 0},
+        )
+    except Exception as exc:  # noqa: BLE001 - report safe class/code only
+        results.put((
+            "old-stale",
+            type(exc).__name__,
+            str(getattr(exc, "reason_code", "")),
+        ))
+    else:
+        results.put(("old-bound", request["episode_id"]))
+    finally:
+        store.close()
+
+
+def _repair4_new_epoch_worker(db_path, results):
+    from bridge.store.db import Store
+
+    store = Store(db_path)
+    store.initialize()
+    _request, epoch = store.open_kill_epoch(
+        run_id="kill-run",
+        symbol="BTC",
+        flatten_requested=True,
+        policy_version="policy-v1",
+        process_uid="repair4-process-new",
+        opened_ts_monotonic=20.0,
+    )
+    results.put(("new-open", epoch.as_payload()))
+    store.close()
+
+
+def _repair4_join(process):
+    process.join(15)
+    if process.is_alive():
+        process.terminate()
+        process.join(5)
+        pytest.fail("repair4 subprocess did not terminate")
+    assert process.exitcode == 0
+
+
+def _repair4_accepted_checkpoint(store):
+    from bridge.broker.mock import MockBroker
+    from bridge.engine.reconcile import FullReconciler
+    from bridge.engine.risk import RiskEngine
+
+    risk = RiskEngine()
+    result = asyncio.run(
+        FullReconciler(
+            store=store,
+            broker=MockBroker(bars=[]),
+            run_id="kill-run",
+            risk_policy=risk.policy,
+            exposure_policy=risk.exposure_policy,
+        ).run_cycle()
+    )
+    assert result.accepted is True
+    checkpoint = store.latest_accepted_reconcile_checkpoint()
+    assert checkpoint is not None
+    return str(checkpoint["checkpoint_id"])
+
+
 def test_v9_is_opt_in_and_creates_only_the_three_kill_objects(tmp_path):
     default = Store(tmp_path / "default.db")
     default.initialize()
@@ -110,6 +205,57 @@ def test_v9_is_opt_in_and_creates_only_the_three_kill_objects(tmp_path):
     assert upgraded.get_meta("kill_request_active") is None
 
 
+def test_repair4_a7_cross_process_stale_bind_is_rejected_and_recorded(tmp_path):
+    assert hasattr(Store, "open_kill_epoch"), "durable epoch OPEN seam is missing"
+    db_path = tmp_path / "repair4-cross-process.db"
+    store = Store(db_path)
+    store.initialize(target_schema_version=8)
+    store.create_run("kill-run", "dry_run", "testnet", {})
+    store.initialize(target_schema_version=9)
+    checkpoint_id = _repair4_accepted_checkpoint(store)
+    store.close()
+
+    context = multiprocessing.get_context("spawn")
+    ready = context.Event()
+    release = context.Event()
+    results = context.Queue()
+    older = context.Process(
+        target=_repair4_stale_bind_worker,
+        args=(db_path, checkpoint_id, ready, release, results),
+    )
+    older.start()
+    assert ready.wait(15), "older recovery never opened attempt 1"
+    old_open = results.get(timeout=5)
+    assert old_open[0] == "old-open"
+
+    newer = context.Process(
+        target=_repair4_new_epoch_worker, args=(db_path, results)
+    )
+    newer.start()
+    _repair4_join(newer)
+    new_open = results.get(timeout=5)
+    assert new_open[0] == "new-open"
+    assert new_open[1]["attempt_no"] == old_open[1]["attempt_no"] + 1
+
+    release.set()
+    _repair4_join(older)
+    stale = results.get(timeout=5)
+    assert stale[:2] == ("old-stale", "KillConflictError")
+    assert stale[2] == "KILL_EPOCH_STALE_WRITE"
+
+    third = Store(db_path)
+    third.initialize()
+    with pytest.raises(Exception, match="KILL_NOT_SAFE|KILL_EPOCH"):
+        third.acknowledge_kill_evidence(
+            now=datetime.now(UTC), max_age_s=900.0
+        )
+    assert "KILL_EPOCH_STALE_WRITE_REJECTED" in {
+        str(row["code"]) for row in third.get_events()
+    }
+    assert third.get_meta("kill_epoch_active") is not None
+    third.close()
+
+
 @pytest.mark.parametrize("target", [4, 5, 6, 7, 8])
 def test_legacy_v4_through_v8_initialize_never_activates_kill_schema(
     tmp_path, target
@@ -121,6 +267,35 @@ def test_legacy_v4_through_v8_initialize_never_activates_kill_schema(
         "SELECT name FROM sqlite_master WHERE name LIKE 'kill_%'"
     ).fetchall() == []
     assert store.get_meta("kill_request_active") is None
+
+
+@pytest.mark.parametrize("target", [4, 5, 6, 7, 8])
+def test_repair4_a12_legacy_reopen_stays_predecessor_and_epoch_inactive(
+    tmp_path, target
+):
+    path = tmp_path / f"repair4-legacy-{target}.db"
+    store = Store(path)
+    store.initialize(target_schema_version=target)
+    before = store.get_snapshot()
+    store.close()
+
+    reopened = Store(path)
+    reopened.initialize(target_schema_version=target)
+    assert reopened.get_meta("schema_version") == str(target)
+    assert reopened.get_snapshot() == before
+    assert reopened.get_meta("kill_request_active") is None
+    assert reopened.get_meta("kill_epoch_active") is None
+    assert hasattr(reopened, "open_kill_epoch"), "epoch seam is missing"
+    with pytest.raises(Exception, match="KILL_SCHEMA_INACTIVE"):
+        reopened.open_kill_epoch(
+            run_id="unused",
+            symbol="BTC",
+            flatten_requested=False,
+            policy_version="policy-v1",
+            process_uid="repair4-legacy",
+            opened_ts_monotonic=1.0,
+        )
+    reopened.close()
 
 
 def test_v9_reopen_is_idempotent_and_future_target_is_rejected(tmp_path):
@@ -176,6 +351,45 @@ def test_v8_to_v9_fault_rolls_back_and_retains_secret_safe_failure_evidence(
     reopened = Store(tmp_path / "kill-v9.db")
     reopened.initialize(target_schema_version=8)
     assert reopened.get_meta("schema_version") == "8"
+
+
+def test_repair4_a13_epoch_topology_fault_rolls_back_to_reopenable_v8(
+    tmp_path, monkeypatch
+):
+    store = _v8_store_for_kill(tmp_path)
+    original = Store._create_kill_evidence_tables_v9
+
+    def fail_after_epoch_ddl(self):
+        original(self)
+        columns = {
+            str(row["name"])
+            for row in self.conn.execute(
+                "PRAGMA table_info(kill_requests)"
+            ).fetchall()
+        }
+        if "epoch_token" not in columns:
+            raise AssertionError("epoch_token column missing")
+        raise RuntimeError("injected epoch topology fault")
+
+    monkeypatch.setattr(
+        Store, "_create_kill_evidence_tables_v9", fail_after_epoch_ddl
+    )
+    with pytest.raises(RuntimeError, match="epoch topology fault"):
+        store.initialize(target_schema_version=9)
+
+    assert store.get_meta("schema_version") == "8"
+    assert store.get_meta("kill_epoch_active") is None
+    assert store.conn.execute(
+        "SELECT name FROM sqlite_master WHERE name LIKE 'kill_%'"
+    ).fetchall() == []
+    failure = store.get_meta("kill_evidence_migration_failure")
+    assert failure == "KILL_EVIDENCE_MIGRATION_FAILED:RUNTIMEERROR"
+    store.close()
+
+    reopened = Store(tmp_path / "kill-v9.db")
+    reopened.initialize(target_schema_version=8)
+    assert reopened.get_meta("schema_version") == "8"
+    reopened.close()
 
 
 def test_v9_migration_rejects_noncanonical_residue_without_partial_topology(tmp_path):
@@ -285,6 +499,79 @@ def test_kill_request_action_event_and_pointer_survive_reopen(tmp_path):
         "RESERVED",
         "UNKNOWN",
     ]
+
+
+def test_repair4_a11_restart_does_not_reset_unknown_action_deadline(tmp_path):
+    assert hasattr(Store, "open_kill_epoch"), "durable epoch OPEN seam is missing"
+    path = tmp_path / "repair4-deadline.db"
+    store = Store(path)
+    store.initialize(target_schema_version=8)
+    store.create_run("kill-run", "dry_run", "testnet", {})
+    store.initialize(target_schema_version=9)
+    request, epoch1 = store.open_kill_epoch(
+        run_id="kill-run",
+        symbol="BTC",
+        flatten_requested=True,
+        policy_version="policy-v1",
+        process_uid="repair4-before-restart",
+        opened_ts_monotonic=100.0,
+    )
+    action_id = compute_kill_action_id(
+        episode_id=request["episode_id"],
+        kind="FLATTEN",
+        target="BTC",
+        qty_lots=1000,
+    )
+    original_deadline = datetime.now(UTC) + timedelta(seconds=5)
+    replay, action = store.reserve_kill_action(
+        epoch=epoch1,
+        episode_id=request["episode_id"],
+        kind="FLATTEN",
+        target="BTC",
+        qty_lots=1000,
+        cloid=compute_kill_action_cloid(action_id),
+        deadline_ts=original_deadline,
+        action_id=action_id,
+        exit_side="SELL",
+    )
+    assert replay is False
+    store.record_kill_action_event(
+        epoch=epoch1,
+        action_id=action_id,
+        status="UNKNOWN",
+        reason_code="TRANSPORT_TIMEOUT",
+    )
+    persisted_deadline = action["deadline_ts"]
+    store.close()
+
+    reopened = Store(path)
+    reopened.initialize()
+    request2, epoch2 = reopened.open_kill_epoch(
+        run_id="kill-run",
+        symbol="BTC",
+        flatten_requested=True,
+        policy_version="policy-v1",
+        process_uid="repair4-after-restart",
+        opened_ts_monotonic=1.0,
+    )
+    replay, after = reopened.reserve_kill_action(
+        epoch=epoch2,
+        episode_id=request2["episode_id"],
+        kind="FLATTEN",
+        target="BTC",
+        qty_lots=1000,
+        cloid=compute_kill_action_cloid(action_id),
+        deadline_ts=datetime.now(UTC) + timedelta(minutes=5),
+        action_id=action_id,
+        exit_side="SELL",
+    )
+    assert replay is True
+    assert after["deadline_ts"] == persisted_deadline
+    assert after["current_outcome"] == "UNKNOWN"
+    assert [
+        row["status"] for row in reopened.kill_action_events(action_id)
+    ] == ["RESERVED", "UNKNOWN"]
+    reopened.close()
 
 
 def test_kill_action_identity_collision_fails_closed(tmp_path):
