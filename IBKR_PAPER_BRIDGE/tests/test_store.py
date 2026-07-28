@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 import multiprocessing
 from datetime import UTC, datetime, timedelta
 
 import pytest
 
 from bridge.store.db import (
+    KillConflictError,
     Store,
     compute_kill_action_cloid,
     compute_kill_action_id,
@@ -182,7 +184,7 @@ def _repair4_accepted_checkpoint(store):
     return str(checkpoint["checkpoint_id"])
 
 
-def test_v9_is_opt_in_and_creates_only_the_three_kill_objects(tmp_path):
+def test_v9_is_opt_in_and_creates_only_the_four_kill_objects(tmp_path):
     default = Store(tmp_path / "default.db")
     default.initialize()
     assert default.get_meta("schema_version") == "4"
@@ -201,7 +203,12 @@ def test_v9_is_opt_in_and_creates_only_the_three_kill_objects(tmp_path):
             "WHERE type='table' AND name LIKE 'kill_%'"
         ).fetchall()
     }
-    assert objects == {"kill_requests", "kill_actions", "kill_action_events"}
+    assert objects == {
+        "kill_requests",
+        "kill_attempts",
+        "kill_actions",
+        "kill_action_events",
+    }
     assert upgraded.get_meta("kill_request_active") is None
 
 
@@ -254,6 +261,163 @@ def test_repair4_a7_cross_process_stale_bind_is_rejected_and_recorded(tmp_path):
     }
     assert third.get_meta("kill_epoch_active") is not None
     third.close()
+
+
+def test_repair4_a6_epoch_is_required_and_active_token_cannot_be_adopted(
+    tmp_path,
+):
+    for operation in ("BIND_PROOF", "CLOSE_EPOCH"):
+        path = tmp_path / f"repair4-owner-{operation.lower()}.db"
+        older = Store(path)
+        older.initialize(target_schema_version=8)
+        older.create_run("kill-run", "dry_run", "testnet", {})
+        older.initialize(target_schema_version=9)
+        checkpoint_id = _repair4_accepted_checkpoint(older)
+        _request, _epoch1 = older.open_kill_epoch(
+            run_id="kill-run",
+            symbol="BTC",
+            flatten_requested=True,
+            policy_version="policy-v1",
+            process_uid="repair4-owner-old",
+            opened_ts_monotonic=10.0,
+        )
+        newer = Store(path)
+        newer.initialize()
+        _request2, epoch2 = newer.open_kill_epoch(
+            run_id="kill-run",
+            symbol="BTC",
+            flatten_requested=True,
+            policy_version="policy-v1",
+            process_uid="repair4-owner-new",
+            opened_ts_monotonic=20.0,
+        )
+        newer.bind_kill_terminal_proof(
+            epoch=epoch2,
+            terminal_state="SAFE_FLAT",
+            reason_code="DIRECT_SAFE_FLAT_PROOF",
+            checkpoint_id=checkpoint_id,
+            proof={"symbol": "BTC", "position_lots": 0},
+        )
+        adopted, state = older._parse_kill_epoch_token(
+            older.get_meta("kill_epoch_active")
+        )
+        assert adopted == epoch2
+        assert state == "OPEN"
+
+        with pytest.raises(KillConflictError, match="KILL_EPOCH_STALE_WRITE"):
+            if operation == "BIND_PROOF":
+                older.bind_kill_terminal_proof(
+                    epoch=adopted,
+                    terminal_state="SAFE_FLAT",
+                    reason_code="DIRECT_SAFE_FLAT_PROOF",
+                    checkpoint_id=checkpoint_id,
+                    proof={"symbol": "BTC", "position_lots": 0},
+                )
+            else:
+                older.close_kill_epoch(epoch=adopted)
+        newer.close()
+        older.close()
+
+    for method_name in (
+        "mark_kill_request_state",
+        "reserve_kill_action",
+        "_append_kill_action_event_in_tx",
+        "record_kill_action_event",
+        "observe_kill_action_clock",
+        "bind_kill_terminal_proof",
+    ):
+        parameter = inspect.signature(getattr(Store, method_name)).parameters[
+            "epoch"
+        ]
+        assert parameter.default is inspect.Parameter.empty, method_name
+
+
+def test_repair4_a8_stale_rejection_append_failure_is_observable(
+    tmp_path, monkeypatch
+):
+    store = _v8_store_for_kill(tmp_path)
+    store.initialize(target_schema_version=9)
+    request, epoch1 = store.open_kill_epoch(
+        run_id="kill-run",
+        symbol="BTC",
+        flatten_requested=True,
+        policy_version="policy-v1",
+        process_uid="repair4-stale-old",
+        opened_ts_monotonic=10.0,
+    )
+    store.open_kill_epoch(
+        run_id="kill-run",
+        symbol="BTC",
+        flatten_requested=True,
+        policy_version="policy-v1",
+        process_uid="repair4-stale-new",
+        opened_ts_monotonic=20.0,
+    )
+
+    def fail_stale_append(*_args, **_kwargs):
+        raise RuntimeError("injected stale rejection append failure")
+
+    monkeypatch.setattr(store, "_insert_event_in_tx", fail_stale_append)
+
+    with pytest.raises(KillConflictError) as failure:
+        store.mark_kill_request_state(
+            epoch=epoch1,
+            episode_id=request["episode_id"],
+            state="UNKNOWN",
+            reason_code="STALE_ATTEMPT",
+        )
+    assert failure.value.reason_code == "KILL_STALE_EVIDENCE_RECORD_FAILED"
+
+
+def test_repair4_a9_replay_appends_immutable_attempt_history(tmp_path):
+    store = _v8_store_for_kill(tmp_path)
+    store.initialize(target_schema_version=9)
+    checkpoint_id = _repair4_accepted_checkpoint(store)
+    request, epoch1 = store.open_kill_epoch(
+        run_id="kill-run",
+        symbol="BTC",
+        flatten_requested=True,
+        policy_version="policy-v1",
+        process_uid="repair4-history-old",
+        opened_ts_monotonic=10.0,
+    )
+    first = store.bind_kill_terminal_proof(
+        epoch=epoch1,
+        terminal_state="SAFE_FLAT",
+        reason_code="DIRECT_SAFE_FLAT_PROOF",
+        checkpoint_id=checkpoint_id,
+        proof={"symbol": "BTC", "position_lots": 0},
+    )
+    first_digest = first["proof_digest"]
+
+    _request2, epoch2 = store.open_kill_epoch(
+        run_id="kill-run",
+        symbol="BTC",
+        flatten_requested=True,
+        policy_version="policy-v1",
+        process_uid="repair4-history-new",
+        opened_ts_monotonic=20.0,
+    )
+
+    attempts = [
+        dict(row)
+        for row in store.conn.execute(
+            "SELECT * FROM kill_attempts WHERE episode_id=? ORDER BY attempt_no",
+            (request["episode_id"],),
+        ).fetchall()
+    ]
+    assert [row["attempt_no"] for row in attempts] == [1, 2]
+    assert attempts[0]["terminal_state"] == "SAFE_FLAT"
+    assert attempts[0]["proof_digest"] == first_digest
+    assert attempts[1]["terminal_state"] == "IN_PROGRESS"
+    assert attempts[1]["proof_digest"] is None
+    assert epoch2.attempt_no == 2
+    with pytest.raises(Exception, match="immutable prior kill attempt"):
+        store.conn.execute(
+            """UPDATE kill_attempts SET terminal_reason='REWRITTEN'
+               WHERE episode_id=? AND attempt_no=1""",
+            (request["episode_id"],),
+        )
 
 
 @pytest.mark.parametrize("target", [4, 5, 6, 7, 8])
@@ -427,7 +591,7 @@ def test_v9_migration_meta_failure_rolls_back_to_reopenable_v8(tmp_path):
     assert store.get_meta("schema_version") == "8"
     assert store.conn.execute(
         "SELECT name FROM sqlite_master WHERE name IN "
-        "('kill_requests','kill_actions','kill_action_events')"
+        "('kill_requests','kill_attempts','kill_actions','kill_action_events')"
     ).fetchall() == []
 
 
@@ -459,11 +623,13 @@ def test_v9_migration_retains_legacy_killed_without_inventing_an_episode(tmp_pat
 def test_kill_request_action_event_and_pointer_survive_reopen(tmp_path):
     store = _v8_store_for_kill(tmp_path)
     store.initialize(target_schema_version=9)
-    episode = store.begin_kill_episode(
+    episode, epoch = store.open_kill_epoch(
         run_id="kill-run",
         symbol="BTC",
         flatten_requested=True,
         policy_version="policy-v1",
+        process_uid="store-roundtrip",
+        opened_ts_monotonic=1.0,
     )
     flatten_action_id = compute_kill_action_id(
         episode_id=episode["episode_id"],
@@ -472,6 +638,7 @@ def test_kill_request_action_event_and_pointer_survive_reopen(tmp_path):
         qty_lots=125,
     )
     is_replay, action = store.reserve_kill_action(
+        epoch=epoch,
         episode_id=episode["episode_id"],
         kind="FLATTEN",
         target="BTC",
@@ -482,6 +649,7 @@ def test_kill_request_action_event_and_pointer_survive_reopen(tmp_path):
     )
     assert is_replay is False
     store.record_kill_action_event(
+        epoch=epoch,
         action_id=action["action_id"],
         status="UNKNOWN",
         reason_code="TRANSPORT_TIMEOUT",
@@ -580,14 +748,17 @@ def test_repair4_a11_restart_does_not_reset_unknown_action_deadline(tmp_path):
 def test_kill_action_identity_collision_fails_closed(tmp_path):
     store = _v8_store_for_kill(tmp_path)
     store.initialize(target_schema_version=9)
-    episode = store.begin_kill_episode(
+    episode, epoch = store.open_kill_epoch(
         run_id="kill-run",
         symbol="BTC",
         flatten_requested=False,
         policy_version="policy-v1",
+        process_uid="store-collision",
+        opened_ts_monotonic=1.0,
     )
     deadline = datetime.now(UTC) + timedelta(seconds=5)
     _, first = store.reserve_kill_action(
+        epoch=epoch,
         episode_id=episode["episode_id"],
         kind="CANCEL",
         target="owned-entry",
@@ -596,6 +767,7 @@ def test_kill_action_identity_collision_fails_closed(tmp_path):
         deadline_ts=deadline,
     )
     replay, same = store.reserve_kill_action(
+        epoch=epoch,
         episode_id=episode["episode_id"],
         kind="CANCEL",
         target="owned-entry",
@@ -609,6 +781,7 @@ def test_kill_action_identity_collision_fails_closed(tmp_path):
 
     with pytest.raises(Exception, match="IDENTITY|CONFLICT"):
         store.reserve_kill_action(
+            epoch=epoch,
             episode_id=episode["episode_id"],
             kind="CANCEL",
             target="different-entry",

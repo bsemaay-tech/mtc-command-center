@@ -26,7 +26,6 @@ from bridge.engine.risk import RiskEngine
 from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
 from bridge.engine.types import (
     Bar,
-    FULL_RECONCILE_MAX_SKEW_S,
     KillEvidenceEpoch,
     Position,
     RiskSnapshotUnavailable,
@@ -46,6 +45,9 @@ from bridge.store.db import KillConflictError, Store
 
 _ROUTINE_FEED_NOTIFICATION_CODES = frozenset({"DISCONNECT", "DATA_RESTORED"})
 _KILL_POLICY_VERSION = "ts-p1-009-d1-d5-v1"
+# Read-only ownership evidence must not inherit a local-clock upper ceiling.
+# Year 9999 is an open practical bound for the venue's millisecond API.
+_KILL_CAPTURE_OPEN_END_MS = 253_402_300_799_999
 
 
 def _safe_full_reconcile_reason(exc: BaseException) -> str:
@@ -446,17 +448,10 @@ class BridgeEngine:
             opened_ts_monotonic=self._kill_monotonic(),
         )
         start_ms = self.store.kill_capture_start_ms(self.run_id, self.coin)
-        now = self.clock()
-        if now.tzinfo is None:
-            now = now.replace(tzinfo=UTC)
-        # The injected action clock may roll back. That must never recreate a
-        # write budget, but it must not suppress the read-only pre-mutation
-        # capture either. Widen the evidence query through the current UTC
-        # observation; action deadlines remain governed by Store/monotonic time.
-        capture_end = max(now.astimezone(UTC), datetime.now(UTC)) + timedelta(
-            seconds=FULL_RECONCILE_MAX_SKEW_S
-        )
-        end_ms = int(capture_end.timestamp() * 1000)
+        # This is a read-only query. A local or injected clock must never cap
+        # exchange evidence server-side and hide later venue-stamped fills.
+        # Action deadlines remain governed by Store/monotonic time.
+        end_ms = _KILL_CAPTURE_OPEN_END_MS
 
         async def capture_evidence():
             if (

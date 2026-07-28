@@ -20,6 +20,7 @@ from bridge.broker.hyperliquid import (
 from bridge.broker.base import BrokerPreSendFailure
 from bridge.broker.mock import MockBroker
 from bridge.engine.types import AccountSnapshot, Bar, BrokerOrder, FillEvent, OrderPlan, Position, Signal
+from bridge.store.db import KillConflictError, Store
 from hyperliquid.exchange import Exchange
 from hyperliquid.utils.signing import order_request_to_order_wire, order_type_to_wire
 from hyperliquid.utils.types import Cloid
@@ -2120,6 +2121,62 @@ def test_typed_flatten_transport_failure_is_unknown():
         broker.flatten_reduce_only(symbol="BTC", cloid="0x" + "3" * 32, size=1.0, exit_side="SELL")
     )
     assert result.outcome is ActionOutcome.UNKNOWN
+
+
+def test_repair4_a5_epoch_rechecked_inside_hl_flatten_write_boundary(tmp_path):
+    store = Store(tmp_path / "repair4-hl-epoch-boundary.db")
+    store.initialize(target_schema_version=9)
+    store.create_run("repair4-hl-boundary", "dry_run", "testnet", {})
+    _request, epoch = store.open_kill_epoch(
+        run_id="repair4-hl-boundary",
+        symbol="BTC",
+        flatten_requested=True,
+        policy_version="policy-v1",
+        process_uid="repair4-hl-old",
+        opened_ts_monotonic=10.0,
+    )
+    writes: list[str] = []
+
+    def slippage_price(*_args):
+        store.open_kill_epoch(
+            run_id="repair4-hl-boundary",
+            symbol="BTC",
+            flatten_requested=True,
+            policy_version="policy-v1",
+            process_uid="repair4-hl-new",
+            opened_ts_monotonic=20.0,
+        )
+        return 100.0
+
+    def order(*_args, **_kwargs):
+        writes.append("order")
+        return _OK_RESTING
+
+    broker = HyperliquidBroker(
+        info_client=object(),
+        exchange_client=SimpleNamespace(
+            _slippage_price=slippage_price,
+            order=order,
+        ),
+        account_address="0xabc",
+    )
+
+    with pytest.raises(KillConflictError, match="KILL_EPOCH_STALE_WRITE"):
+        asyncio.run(
+            broker.kill_flatten_reduce_only(
+                symbol="BTC",
+                cloid="0x" + "3" * 32,
+                size=1.0,
+                exit_side="SELL",
+                epoch=epoch,
+                epoch_guard=store.assert_kill_epoch_active,
+            )
+        )
+
+    assert writes == []
+    assert "KILL_EPOCH_STALE_WRITE_REJECTED" in {
+        str(row["code"]) for row in store.get_events()
+    }
 
 
 def test_kill_flatten_uses_frozen_side_even_if_wallet_position_would_flip():

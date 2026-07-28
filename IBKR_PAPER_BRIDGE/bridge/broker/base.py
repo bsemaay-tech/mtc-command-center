@@ -298,14 +298,28 @@ class KillRecoveryBroker(Protocol):
     async def query_order(self, cloid: str, symbol: str) -> OrderQueryResult:
         ...
 
-    async def cancel_order_by_cloid(
-        self, cloid: str, symbol: str
+    async def kill_cancel_order_by_cloid(
+        self,
+        cloid: str,
+        symbol: str,
+        *,
+        epoch: KillEvidenceEpoch,
+        epoch_guard: Callable[[KillEvidenceEpoch], None],
     ) -> CancelResult:
+        """KILL-only cancel fenced inside the adapter's final write boundary."""
         ...
 
-    async def flatten_reduce_only(
-        self, *, symbol: str, cloid: str, size: float, exit_side: str
+    async def kill_flatten_reduce_only(
+        self,
+        *,
+        symbol: str,
+        cloid: str,
+        size: float,
+        exit_side: str,
+        epoch: KillEvidenceEpoch,
+        epoch_guard: Callable[[KillEvidenceEpoch], None],
     ) -> FlattenResult:
+        """KILL-only flatten fenced inside the adapter's final write boundary."""
         ...
 
 

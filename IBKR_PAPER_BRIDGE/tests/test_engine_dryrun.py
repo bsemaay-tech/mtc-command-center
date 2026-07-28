@@ -305,6 +305,64 @@ def test_repair4_a2_capture_failure_is_query_only(tmp_path):
     assert request["terminal_reason"] == "KILL_CAPTURE_FILLS_UNAVAILABLE"
 
 
+def test_repair4_a3_clock_underbound_cannot_hide_foreign_replacement(tmp_path):
+    store, broker, engine = _repair4_kill_engine(
+        tmp_path, foreign_substitution=True
+    )
+    future_ms = int((datetime.now(UTC) + timedelta(seconds=60)).timestamp() * 1000)
+    broker.full_fill_history[-2]["time"] = future_ms
+    broker.full_fill_history[-1]["time"] = future_ms + 1
+    engine.clock = lambda: datetime.now(UTC) - timedelta(seconds=60)
+    original_capture = broker.capture_kill_evidence
+
+    async def server_filtered_capture(*, epoch, symbol, start_ms, end_ms):
+        complete_history = broker.full_fill_history
+        broker.full_fill_history = [
+            row
+            for row in complete_history
+            if int(row.get("time", row.get("time_ms", 0))) <= int(end_ms)
+        ]
+        try:
+            return await original_capture(
+                epoch=epoch,
+                symbol=symbol,
+                start_ms=start_ms,
+                end_ms=end_ms,
+            )
+        finally:
+            broker.full_fill_history = complete_history
+
+    broker.capture_kill_evidence = server_filtered_capture
+
+    asyncio.run(engine.kill(flatten=True))
+
+    request = store.active_kill_request()
+    assert request is not None
+    assert broker.broker_mutations == []
+    assert request["terminal_state"] == "AMBIGUOUS", request
+    assert request["terminal_reason"] == "OWNERSHIP_AMBIGUOUS"
+
+
+def test_repair4_a4_flatten_and_residual_cancel_each_recapture(tmp_path):
+    store, broker, engine = _repair4_kill_engine(tmp_path)
+    capture_count = 0
+    original_capture = broker.capture_kill_evidence
+
+    async def counted_capture(**kwargs):
+        nonlocal capture_count
+        capture_count += 1
+        return await original_capture(**kwargs)
+
+    broker.capture_kill_evidence = counted_capture
+
+    asyncio.run(engine.kill(flatten=True))
+
+    request = store.active_kill_request()
+    assert request is not None
+    assert request["terminal_state"] == "SAFE_FLAT"
+    assert capture_count >= 3
+
+
 def test_repair4_a10_epoch_open_failure_retains_kill_latch(
     tmp_path, monkeypatch
 ):

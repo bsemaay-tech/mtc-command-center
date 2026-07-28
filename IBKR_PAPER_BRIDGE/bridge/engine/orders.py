@@ -60,6 +60,7 @@ from bridge.engine.types import (
 )
 from bridge.store.db import (
     IdentityCollisionError,
+    KillConflictError,
     OrderCollisionError,
     PartialRecoveryConflictError,
     Store,
@@ -86,8 +87,8 @@ _KILL_RECOVERY_METHODS = (
     "capture_kill_evidence",
     "symbol_snapshot",
     "query_order",
-    "cancel_order_by_cloid",
-    "flatten_reduce_only",
+    "kill_cancel_order_by_cloid",
+    "kill_flatten_reduce_only",
 )
 
 _LIVE_ORDER_STATUSES = frozenset({
@@ -305,6 +306,44 @@ class OrderManager:
     def _assert_kill_epoch_active(self) -> None:
         self.store.assert_kill_epoch_active(self._kill_epoch())
 
+    def _require_kill_capture(
+        self, capture: Any, *, symbol: str
+    ) -> KillEvidenceCapture:
+        if not isinstance(capture, KillEvidenceCapture):
+            raise _KillEvidenceFault(
+                KillTerminalState.UNKNOWN, "KILL_CAPTURE_UNAVAILABLE"
+            )
+        if capture.epoch != self._kill_epoch() or capture.symbol != symbol:
+            raise _KillEvidenceFault(
+                KillTerminalState.UNKNOWN, "KILL_CAPTURE_EPOCH_MISMATCH"
+            )
+        if not capture.accepted:
+            invalid = next(
+                component
+                for component in (
+                    capture.positions,
+                    capture.open_orders,
+                    capture.fills,
+                )
+                if not component.accepted
+            )
+            ambiguous = invalid.status in {
+                ReconcileComponentStatus.MALFORMED,
+                ReconcileComponentStatus.CONFLICTING,
+            } or any(
+                marker in str(invalid.reason_code).upper()
+                for marker in ("MALFORMED", "CONFLICT")
+            )
+            raise _KillEvidenceFault(
+                (
+                    KillTerminalState.AMBIGUOUS
+                    if ambiguous
+                    else KillTerminalState.UNKNOWN
+                ),
+                invalid.reason_code if ambiguous else capture.reason_code,
+            )
+        return capture
+
     async def _kill_snapshot(self, symbol: str) -> SymbolSnapshot:
         try:
             snapshot = await asyncio.wait_for(
@@ -338,7 +377,7 @@ class OrderManager:
         snapshot: SymbolSnapshot,
         *,
         symbol: str,
-        capture: KillEvidenceCapture | None = None,
+        capture: KillEvidenceCapture,
     ) -> dict[str, Any]:
         """Validate the complete observation before authorizing any mutation."""
         lot = snapshot.lot
@@ -639,94 +678,93 @@ class OrderManager:
             ownership_reason = "OWNERSHIP_AMBIGUOUS"
         if expected_signed != 0 and len(contributing_trades) != 1:
             ownership_reason = "OWNERSHIP_AMBIGUOUS"
-        if capture is not None:
-            if (
-                capture.epoch != self._kill_epoch()
-                or capture.symbol != symbol
-                or not capture.accepted
-            ):
-                raise _KillEvidenceFault(
-                    KillTerminalState.UNKNOWN, capture.reason_code
-                )
-            try:
-                position_rows = [
-                    dict(row)
-                    for row in capture.positions.canonical_rows()
-                    if str(row.get("symbol") or "") == symbol
-                ]
-                if len(position_rows) > 1:
-                    raise ValueError
-                captured_size = (
-                    0.0
-                    if not position_rows
-                    else float(position_rows[0]["size"])
-                )
-                captured_lots = quantize_lots(abs(captured_size), lot)
-                captured_signed = (
-                    captured_lots if captured_size >= 0 else -captured_lots
-                )
-                if captured_signed != observed_signed:
-                    raise ValueError
+        if (
+            capture.epoch != self._kill_epoch()
+            or capture.symbol != symbol
+            or not capture.accepted
+        ):
+            raise _KillEvidenceFault(
+                KillTerminalState.UNKNOWN, capture.reason_code
+            )
+        try:
+            position_rows = [
+                dict(row)
+                for row in capture.positions.canonical_rows()
+                if str(row.get("symbol") or "") == symbol
+            ]
+            if len(position_rows) > 1:
+                raise ValueError
+            captured_size = (
+                0.0
+                if not position_rows
+                else float(position_rows[0]["size"])
+            )
+            captured_lots = quantize_lots(abs(captured_size), lot)
+            captured_signed = (
+                captured_lots if captured_size >= 0 else -captured_lots
+            )
+            if captured_signed != observed_signed:
+                raise ValueError
 
-                capture_orders: dict[str, Mapping[str, Any]] = {}
-                for raw in capture.open_orders.canonical_rows():
-                    if str(raw.get("coin") or "") != symbol:
-                        continue
-                    alias = str(raw.get("cloid") or "").casefold()
-                    if not alias or alias in capture_orders:
-                        raise ValueError
-                    capture_orders[alias] = raw
-                if set(capture_orders) != set(exchange_by_alias):
+            capture_orders: dict[str, Mapping[str, Any]] = {}
+            for raw in capture.open_orders.canonical_rows():
+                if str(raw.get("coin") or "") != symbol:
+                    continue
+                alias = str(raw.get("cloid") or "").casefold()
+                if not alias or alias in capture_orders:
                     raise ValueError
-                for alias, raw in capture_orders.items():
-                    observed = exchange_by_alias[alias]
-                    raw_side = str(raw.get("side") or "").upper()
-                    side = {"A": "SELL", "B": "BUY"}.get(
-                        raw_side, raw_side
-                    )
-                    raw_size = raw.get("size", raw.get("sz"))
-                    if (
-                        side != str(observed.side).upper()
-                        or quantize_lots(raw_size, lot)
-                        != quantize_lots(observed.size, lot)
-                        or bool(raw.get("reduce_only", False))
-                        != bool(observed.reduce_only)
-                    ):
-                        raise ValueError
-
-                captured_identities: set[tuple[str, int]] = set()
-                captured_lots_by_oid: dict[int, int] = {}
-                for raw in capture.fills.canonical_rows():
-                    if str(raw.get("coin") or "") != symbol:
-                        continue
-                    event_id = str(raw.get("event_id") or "").strip()
-                    oid = int(raw["oid"])
-                    identity = (event_id, oid)
-                    fill_lots = quantize_lots(raw["size"], lot)
-                    if (
-                        not event_id
-                        or isinstance(raw.get("oid"), bool)
-                        or fill_lots <= 0
-                        or identity in captured_identities
-                    ):
-                        raise ValueError
-                    captured_identities.add(identity)
-                    captured_lots_by_oid[oid] = (
-                        captured_lots_by_oid.get(oid, 0) + fill_lots
-                    )
+                capture_orders[alias] = raw
+            if set(capture_orders) != set(exchange_by_alias):
+                raise ValueError
+            for alias, raw in capture_orders.items():
+                observed = exchange_by_alias[alias]
+                raw_side = str(raw.get("side") or "").upper()
+                side = {"A": "SELL", "B": "BUY"}.get(
+                    raw_side, raw_side
+                )
+                raw_size = raw.get("size", raw.get("sz"))
                 if (
-                    captured_identities != durable_capture_identities
-                    or captured_lots_by_oid != durable_capture_lots_by_oid
+                    side != str(observed.side).upper()
+                    or quantize_lots(raw_size, lot)
+                    != quantize_lots(observed.size, lot)
+                    or bool(raw.get("reduce_only", False))
+                    != bool(observed.reduce_only)
                 ):
-                    ownership_reason = "OWNERSHIP_AMBIGUOUS"
-            except (
-                KeyError,
-                LotQuantizationError,
-                TypeError,
-                ValueError,
-                OverflowError,
+                    raise ValueError
+
+            captured_identities: set[tuple[str, int]] = set()
+            captured_lots_by_oid: dict[int, int] = {}
+            for raw in capture.fills.canonical_rows():
+                if str(raw.get("coin") or "") != symbol:
+                    continue
+                event_id = str(raw.get("event_id") or "").strip()
+                oid = int(raw["oid"])
+                identity = (event_id, oid)
+                fill_lots = quantize_lots(raw["size"], lot)
+                if (
+                    not event_id
+                    or isinstance(raw.get("oid"), bool)
+                    or fill_lots <= 0
+                    or identity in captured_identities
+                ):
+                    raise ValueError
+                captured_identities.add(identity)
+                captured_lots_by_oid[oid] = (
+                    captured_lots_by_oid.get(oid, 0) + fill_lots
+                )
+            if (
+                captured_identities != durable_capture_identities
+                or captured_lots_by_oid != durable_capture_lots_by_oid
             ):
                 ownership_reason = "OWNERSHIP_AMBIGUOUS"
+        except (
+            KeyError,
+            LotQuantizationError,
+            TypeError,
+            ValueError,
+            OverflowError,
+        ):
+            ownership_reason = "OWNERSHIP_AMBIGUOUS"
         return {
             "snapshot": snapshot,
             "lot": lot,
@@ -952,11 +990,19 @@ class OrderManager:
         self._assert_kill_epoch_active()
         try:
             result = await self._kill_await(
-                action, self.broker.cancel_order_by_cloid(target, symbol)
+                action,
+                self.broker.kill_cancel_order_by_cloid(
+                    target,
+                    symbol,
+                    epoch=self._kill_epoch(),
+                    epoch_guard=self.store.assert_kill_epoch_active,
+                ),
             )
         except asyncio.TimeoutError:
             self._kill_record(action_id, "UNKNOWN", "CANCEL_TRANSPORT_TIMEOUT")
             return False
+        except KillConflictError:
+            raise
         except Exception as exc:
             self._kill_record(
                 action_id,
@@ -1275,16 +1321,20 @@ class OrderManager:
         try:
             result = await self._kill_await(
                 action,
-                self.broker.flatten_reduce_only(
+                self.broker.kill_flatten_reduce_only(
                     symbol=symbol,
                     cloid=cloid,
                     size=lots_to_size(qty_lots, lot),
                     exit_side=exit_side,
+                    epoch=self._kill_epoch(),
+                    epoch_guard=self.store.assert_kill_epoch_active,
                 ),
             )
         except asyncio.TimeoutError:
             self._kill_record(action_id, "UNKNOWN", "FLATTEN_TRANSPORT_TIMEOUT")
             return "UNKNOWN"
+        except KillConflictError:
+            raise
         except Exception as exc:
             self._kill_record(
                 action_id,
@@ -1362,37 +1412,9 @@ class OrderManager:
                         "reason": "PARTIAL_RECOVERY_ACTIVE",
                     }
                 try:
-                    capture = await capture_evidence()
-                    if not isinstance(capture, KillEvidenceCapture):
-                        return {
-                            "state": KillTerminalState.UNKNOWN.value,
-                            "reason": "KILL_CAPTURE_UNAVAILABLE",
-                        }
-                    if not capture.accepted:
-                        invalid = next(
-                            component
-                            for component in (
-                                capture.positions,
-                                capture.open_orders,
-                                capture.fills,
-                            )
-                            if not component.accepted
-                        )
-                        if invalid.status in {
-                            ReconcileComponentStatus.MALFORMED,
-                            ReconcileComponentStatus.CONFLICTING,
-                        } or any(
-                            marker in str(invalid.reason_code).upper()
-                            for marker in ("MALFORMED", "CONFLICT")
-                        ):
-                            return {
-                                "state": KillTerminalState.AMBIGUOUS.value,
-                                "reason": invalid.reason_code,
-                            }
-                        return {
-                            "state": KillTerminalState.UNKNOWN.value,
-                            "reason": capture.reason_code,
-                        }
+                    capture = self._require_kill_capture(
+                        await capture_evidence(), symbol=symbol
+                    )
                     self._assert_kill_epoch_active()
                     snapshot = await self._kill_snapshot(symbol)
                     model = self._kill_model(
@@ -1423,8 +1445,14 @@ class OrderManager:
                         }
 
                 try:
+                    capture = self._require_kill_capture(
+                        await capture_evidence(), symbol=symbol
+                    )
+                    self._assert_kill_epoch_active()
                     snapshot = await self._kill_snapshot(symbol)
-                    model = self._kill_model(snapshot, symbol=symbol)
+                    model = self._kill_model(
+                        snapshot, symbol=symbol, capture=capture
+                    )
                 except _KillEvidenceFault as fault:
                     return {
                         "state": fault.state.value,
@@ -1507,8 +1535,14 @@ class OrderManager:
                         "reason": "FLATTEN_TERMINAL_PROOF_MISSING",
                     }
                 try:
+                    capture = self._require_kill_capture(
+                        await capture_evidence(), symbol=symbol
+                    )
+                    self._assert_kill_epoch_active()
                     snapshot = await self._kill_snapshot(symbol)
-                    model = self._kill_model(snapshot, symbol=symbol)
+                    model = self._kill_model(
+                        snapshot, symbol=symbol, capture=capture
+                    )
                 except _KillEvidenceFault as fault:
                     return {
                         "state": fault.state.value,

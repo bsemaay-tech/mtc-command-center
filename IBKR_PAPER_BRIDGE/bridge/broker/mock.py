@@ -533,6 +533,18 @@ class MockBroker:
             ActionOutcome.APPLIED, str(cloid), Evidence("CANCEL", "MOCK_CANCEL_OK")
         )
 
+    async def kill_cancel_order_by_cloid(
+        self,
+        cloid: str,
+        symbol: str,
+        *,
+        epoch: KillEvidenceEpoch,
+        epoch_guard: Callable[[KillEvidenceEpoch], None],
+    ) -> CancelResult:
+        """KILL-only seam: validate the token in the final synchronous slice."""
+        epoch_guard(epoch)
+        return await self.cancel_order_by_cloid(cloid, symbol)
+
     def _apply_late_entry_fill(self, cancel_cloid: str) -> None:
         """Simulate a fill that lands between the cancel request and its ack."""
         qty = float(self.late_entry_fill_on_cancel)
@@ -620,6 +632,25 @@ class MockBroker:
         self._reduce_position(symbol, size, cloid)
         return FlattenResult(
             ActionOutcome.APPLIED, str(cloid), Evidence("FLATTEN", "MOCK_FLATTEN_OK")
+        )
+
+    async def kill_flatten_reduce_only(
+        self,
+        *,
+        symbol: str,
+        cloid: str,
+        size: float,
+        exit_side: str,
+        epoch: KillEvidenceEpoch,
+        epoch_guard: Callable[[KillEvidenceEpoch], None],
+    ) -> FlattenResult:
+        """KILL-only seam: validate the token immediately before mock mutation."""
+        epoch_guard(epoch)
+        return await self.flatten_reduce_only(
+            symbol=symbol,
+            cloid=cloid,
+            size=size,
+            exit_side=exit_side,
         )
 
     def _reduce_position(self, symbol: str, size: float, cloid: str) -> None:
@@ -1047,7 +1078,6 @@ class MockBroker:
                 and px > 0
                 and isinstance(time_value, int)
                 and not isinstance(time_value, bool)
-                and start_ms <= time_value <= end_ms
             )
             if not valid:
                 component = self._full_component(
@@ -1063,6 +1093,11 @@ class MockBroker:
                     complete=False,
                     reason_code="MOCK_FILLS_MALFORMED",
                 )
+            # Hyperliquid applies the requested time window server-side. Mirror
+            # that behavior so the mock cannot expose rows the real adapter
+            # would never receive.
+            if not (start_ms <= time_value <= end_ms):
+                continue
             identity = (
                 str(fill_id)
                 if isinstance(fill_id, str) and fill_id.strip()

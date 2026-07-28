@@ -33,9 +33,10 @@ epoch = (episode_id, attempt_no, process_uid, opened_ts_monotonic)
   deadline after restart.
 
 The canonical epoch token is compact, sorted JSON containing those four fields plus
-`state = OPEN | CLOSED`. The two CAS anchors are:
+`state = OPEN | CLOSED`. `kill_attempts` appends one row per attempt and retains that attempt's
+terminal state, checkpoint, and proof. The current-attempt projection and two CAS anchors are:
 
-- `kill_requests.epoch_token`; and
+- `kill_requests.epoch_token`;
 - `meta.kill_epoch_active`.
 
 Both must contain the same canonical token. `meta.kill_request_active` continues to identify the
@@ -49,15 +50,16 @@ LATCH -> OPEN -> CAPTURE -> PROVE -> MUTATE -> RECONCILE -> BIND -> CLOSE
 
 1. **LATCH** — set in-memory KILLED and `OrderManager.kill_latched` before persistence or broker
    I/O.
-2. **OPEN** — under `BEGIN IMMEDIATE`, create attempt 1 or CAS-replace the prior attempt with
-   `attempt_no + 1`. A replay clears old terminal/checkpoint/proof authority but retains the same
-   episode and actions.
+2. **OPEN** — under `BEGIN IMMEDIATE`, create attempt 1 or append `attempt_no + 1` and move the
+   active projection/token. A replay invalidates old authority but never rewrites the prior
+   attempt's terminal/checkpoint/proof history; the same episode and actions are retained.
 3. **CAPTURE** — under the full-writer guard and then the symbol lock, collect typed authoritative
    positions, open orders, and fill history bound to the open epoch.
 4. **PROVE** — intersect the capture with durable local lineage. Absence of contradiction is not
    positive ownership proof.
 5. **MUTATE** — cancel only exact owned risk orders or send the one deterministic exact-lot
-   reduce-only flatten. Assert the epoch immediately before broker mutation.
+   reduce-only flatten. The KILL-only broker contract carries the epoch and guard into the adapter;
+   Hyperliquid revalidates in the same worker-thread function immediately before the SDK write.
 6. **RECONCILE** — after a direct safe symbol proof, run the existing full reconciliation. The
    additive KILL capture seam does not create or alter a reconciliation checkpoint.
 7. **BIND** — bind the current accepted checkpoint and terminal proof only through epoch CAS.
@@ -73,10 +75,10 @@ No SQLite transaction spans broker I/O.
 | EP-1 | No broker mutation occurs outside an open epoch owned by the current process. |
 | EP-2 | Ownership proof and mutation use the same epoch. Epoch *n* cannot authorize epoch *n+1*. |
 | EP-3 | Every durable request-state mark, action write, proof bind, and close is CAS-guarded by the active epoch. |
-| EP-4 | A stale epoch write is rejected and a secret-safe `KILL_EPOCH_STALE_WRITE_REJECTED` event is appended. |
+| EP-4 | A stale epoch write is rejected and a secret-safe `KILL_EPOCH_STALE_WRITE_REJECTED` event is appended; an append failure is observable and fail-closed. |
 | EP-5 | OPEN failure leaves the in-memory KILL latch set, performs no broker mutation, and fabricates no completion. |
 | EP-6 | Reserved for S2. S1 does not change or claim the finding-5 consistency matrix; the accepted TS-P1-004 same-identity retry law remains binding. |
-| EP-7 | Historical request/action/event evidence is retained; epoch replay invalidates authority without rewriting identity or deadlines. |
+| EP-7 | Historical request/attempt/action/event evidence is retained; replay appends an attempt and moves only active authority without rewriting prior attempt history, action identity, or deadlines. |
 | EP-8 | ACK requires the active epoch to be `CLOSED` with a fresh current accepted checkpoint and proof bound in that epoch. |
 
 ## Authoritative capture and positive ownership
@@ -92,7 +94,9 @@ accepted:
 - unavailable, truncated, or stale capture is `UNKNOWN` and query-only;
 - malformed or conflicting capture is `AMBIGUOUS` and permits no mutation.
 
-Before any cancel or flatten, the model requires:
+Every mutation phase calls the idempotent capture seam again and passes a mandatory (never
+optional) accepted capture into the model. Before the initial owned-risk cancellation phase, the
+flatten decision, and the post-flatten residual-protection cancellation phase, the model requires:
 
 - exact agreement between the captured position and the direct symbol snapshot;
 - exact agreement between captured and direct open-order identity, side, size, and reduce-only
@@ -108,11 +112,12 @@ the same signed net is not ownership. The extra captured fill identities cannot 
 owned set, so the episode becomes `OWNERSHIP_AMBIGUOUS` before an owned pending order, protection
 order, or position is mutated.
 
-The capture lower bound covers durable run/fill lineage. Its read-only upper bound uses the later
-of the injected action clock and current UTC, widened only by the accepted full-reconcile skew
-tolerance. This prevents an injected action-clock rollback from suppressing capture. It does not
-alter action reservation, wall deadlines, process-local monotonic deadlines, or resend authority.
-If a valid capture interval still cannot be proved, mutation remains forbidden.
+The capture lower bound covers durable run/fill lineage. Its read-only upper bound is the
+clock-independent year-9999 millisecond ceiling, so the venue cannot server-filter a legitimate
+exchange-stamped fill merely because the local clock is behind. This does not alter action
+reservation, wall deadlines, process-local monotonic deadlines, or resend authority. If a valid
+capture interval still cannot be proved, mutation remains forbidden. The mock mirrors the venue's
+server-side window filtering so tests cannot rely on rows the real adapter would not return.
 
 ## CAS-protected write surface
 
@@ -125,10 +130,14 @@ The active open token is checked in the same transaction as each durable write:
 - terminal checkpoint/proof binding; and
 - epoch close.
 
-The check requires both `meta.kill_epoch_active` and the request row to match the caller's exact
-open token. A newer OPEN changes both anchors. An older process can then neither publish a stale
-safe proof nor continue state/action writes. Rejection is rolled back, recorded as stale evidence
-outside the failed transaction, and raised to the caller.
+The check requires `meta.kill_epoch_active`, the request projection, and the appended attempt row
+to match the caller's exact open token. Store-local possession must also match the epoch returned
+by that Store's own `open_kill_epoch`; reading the current token never grants ownership. All six
+write helpers require the `epoch` keyword. A newer OPEN changes active authority, so an older
+process can neither adopt the token, publish a stale safe proof, close it, nor continue
+state/action writes. Rejection is rolled back, recorded outside the failed transaction, and
+raised. Failure to record that rejection is itself raised as
+`KILL_STALE_EVIDENCE_RECORD_FAILED`.
 
 This closes the second finding-6 route: guarding only `bind_kill_terminal_proof` would still allow
 an older process to mark terminal state, reserve an action, or append outcome evidence after a
@@ -136,8 +145,9 @@ newer attempt began. Those writes now share the same CAS boundary as proof bindi
 
 ## Replay, restart, and the same-identity retry law
 
-Opening a newer attempt invalidates prior safe proof authority; it does not mint a new episode,
-action identity, cloid, reservation time, or deadline.
+Opening a newer attempt appends an immutable `kill_attempts` row and moves the request/meta active
+projection. Prior terminal state and proof remain readable and become trigger-protected from
+updates. Replay does not mint a new episode, action identity, cloid, reservation time, or deadline.
 
 - Existing `UNKNOWN` or `RESERVED` action: query the same identity only.
 - Existing direct-query `NOT_APPLIED`: at most one later same-identity resend while the original
@@ -163,9 +173,10 @@ transitions only to DISARMED. It never arms.
 
 ## Migration and predecessor behavior
 
-Schema v9 adds the epoch token column to the unshipped KILL request topology and uses
+Schema v9 defines four unshipped KILL tables, including append-only `kill_attempts`, and uses
 `meta.kill_epoch_active` as its CAS anchor. Migration remains v8 to v9 under `BEGIN IMMEDIATE` and
-validates canonical topology, token/pointer agreement, and episode identity before commit.
+validates canonical topology, active attempt/projection/token agreement, retained attempt proofs,
+and episode identity before commit.
 
 Any DDL, topology, token, pointer, or meta failure rolls back to a reopenable v8. The
 secret-safe migration-failure marker records only the exception type after rollback. Ordinary

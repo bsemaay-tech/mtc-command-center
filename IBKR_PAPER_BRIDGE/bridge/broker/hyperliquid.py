@@ -60,6 +60,14 @@ LIVE_ACK = "I_UNDERSTAND_THIS_IS_REAL_MONEY"
 logger = logging.getLogger(__name__)
 
 
+class _KillMutationEpochRejected(RuntimeError):
+    """Carries a fencing rejection across ``asyncio.to_thread`` unchanged."""
+
+    def __init__(self, cause: Exception) -> None:
+        self.cause = cause
+        super().__init__(type(cause).__name__)
+
+
 def round_hl_price(price: float, size_decimals: int) -> float:
     """Round positive prices down to Hyperliquid wire constraints."""
     value = Decimal(str(price))
@@ -1338,6 +1346,36 @@ class HyperliquidBroker:
         return ActionOutcome.APPLIED, "HL_APPLIED"
 
     async def cancel_order_by_cloid(self, cloid: str, symbol: str) -> CancelResult:
+        return await self._cancel_order_by_cloid(
+            cloid=cloid,
+            symbol=symbol,
+            epoch=None,
+            epoch_guard=None,
+        )
+
+    async def kill_cancel_order_by_cloid(
+        self,
+        cloid: str,
+        symbol: str,
+        *,
+        epoch: KillEvidenceEpoch,
+        epoch_guard: Callable[[KillEvidenceEpoch], None],
+    ) -> CancelResult:
+        return await self._cancel_order_by_cloid(
+            cloid=cloid,
+            symbol=symbol,
+            epoch=epoch,
+            epoch_guard=epoch_guard,
+        )
+
+    async def _cancel_order_by_cloid(
+        self,
+        *,
+        cloid: str,
+        symbol: str,
+        epoch: KillEvidenceEpoch | None,
+        epoch_guard: Callable[[KillEvidenceEpoch], None] | None,
+    ) -> CancelResult:
         if self.exchange is None or not hasattr(self.exchange, "cancel_by_cloid"):
             return CancelResult(
                 ActionOutcome.NOT_APPLIED, str(cloid),
@@ -1345,10 +1383,21 @@ class HyperliquidBroker:
             )
         spec = self._order_specs.get(str(cloid), {})
         coin = str(spec.get("coin", symbol or self.coin))
-        try:
-            raw = await asyncio.to_thread(
-                self.exchange.cancel_by_cloid, coin, Cloid.from_str(str(cloid))
+
+        def guarded_cancel():
+            if epoch is not None and epoch_guard is not None:
+                try:
+                    epoch_guard(epoch)
+                except Exception as exc:  # fencing failures are hard aborts
+                    raise _KillMutationEpochRejected(exc) from exc
+            return self.exchange.cancel_by_cloid(
+                coin, Cloid.from_str(str(cloid))
             )
+
+        try:
+            raw = await asyncio.to_thread(guarded_cancel)
+        except _KillMutationEpochRejected as exc:
+            raise exc.cause from exc
         except Exception as exc:  # noqa: BLE001 - transport failure is UNKNOWN
             return CancelResult(
                 ActionOutcome.UNKNOWN, str(cloid),
@@ -1408,6 +1457,44 @@ class HyperliquidBroker:
     async def flatten_reduce_only(
         self, *, symbol: str, cloid: str, size: float, exit_side: str
     ) -> FlattenResult:
+        return await self._flatten_reduce_only(
+            symbol=symbol,
+            cloid=cloid,
+            size=size,
+            exit_side=exit_side,
+            epoch=None,
+            epoch_guard=None,
+        )
+
+    async def kill_flatten_reduce_only(
+        self,
+        *,
+        symbol: str,
+        cloid: str,
+        size: float,
+        exit_side: str,
+        epoch: KillEvidenceEpoch,
+        epoch_guard: Callable[[KillEvidenceEpoch], None],
+    ) -> FlattenResult:
+        return await self._flatten_reduce_only(
+            symbol=symbol,
+            cloid=cloid,
+            size=size,
+            exit_side=exit_side,
+            epoch=epoch,
+            epoch_guard=epoch_guard,
+        )
+
+    async def _flatten_reduce_only(
+        self,
+        *,
+        symbol: str,
+        cloid: str,
+        size: float,
+        exit_side: str,
+        epoch: KillEvidenceEpoch | None,
+        epoch_guard: Callable[[KillEvidenceEpoch], None] | None,
+    ) -> FlattenResult:
         if self.exchange is None or not hasattr(self.exchange, "order"):
             return FlattenResult(
                 ActionOutcome.NOT_APPLIED, str(cloid),
@@ -1423,16 +1510,26 @@ class HyperliquidBroker:
             price = await asyncio.to_thread(
                 self.exchange._slippage_price, symbol, is_buy, 0.05
             )
-            raw = await asyncio.to_thread(
-                self.exchange.order,
-                symbol,
-                is_buy,
-                abs(float(size)),
-                price,
-                order_type={"limit": {"tif": "Ioc"}},
-                reduce_only=True,
-                cloid=Cloid.from_str(str(cloid)),
-            )
+
+            def guarded_flatten():
+                if epoch is not None and epoch_guard is not None:
+                    try:
+                        epoch_guard(epoch)
+                    except Exception as exc:  # fencing failures are hard aborts
+                        raise _KillMutationEpochRejected(exc) from exc
+                return self.exchange.order(
+                    symbol,
+                    is_buy,
+                    abs(float(size)),
+                    price,
+                    order_type={"limit": {"tif": "Ioc"}},
+                    reduce_only=True,
+                    cloid=Cloid.from_str(str(cloid)),
+                )
+
+            raw = await asyncio.to_thread(guarded_flatten)
+        except _KillMutationEpochRejected as exc:
+            raise exc.cause from exc
         except Exception as exc:  # noqa: BLE001
             return FlattenResult(
                 ActionOutcome.UNKNOWN, str(cloid),

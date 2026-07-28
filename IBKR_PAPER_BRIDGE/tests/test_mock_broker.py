@@ -357,6 +357,26 @@ def test_mock_fill_identity_conflict_retains_both_rows():
     assert len(evidence.rows) == 2
 
 
+def test_repair4_a3_mock_matches_server_side_fill_window_filtering():
+    broker = _full_broker()
+    broker.full_fill_history = [{
+        "fill_id": "future-fill",
+        "oid": 1,
+        "coin": "BTC",
+        "side": "BUY",
+        "sz": 0.1,
+        "px": 100.0,
+        "time": 9_999,
+    }]
+
+    evidence = asyncio.run(
+        broker.fills_evidence(start_ms=1_000, end_ms=2_000)
+    )
+
+    assert evidence.accepted is True
+    assert evidence.rows == ()
+
+
 def test_mock_rejects_fill_without_a_positive_price():
     from bridge.engine.types import ReconcileComponentStatus
 
