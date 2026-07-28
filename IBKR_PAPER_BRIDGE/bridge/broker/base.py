@@ -15,6 +15,8 @@ from bridge.engine.types import (
     CancelResult,
     ComponentEvidence,
     FlattenResult,
+    KillEvidenceCapture,
+    KillEvidenceEpoch,
     LotUnit,
     OrderPlan,
     OrderQueryResult,
@@ -280,6 +282,17 @@ class KillRecoveryBroker(Protocol):
         ...
 
     async def symbol_snapshot(self, symbol: str) -> SymbolSnapshot:
+        ...
+
+    async def capture_kill_evidence(
+        self,
+        *,
+        epoch: KillEvidenceEpoch,
+        symbol: str,
+        start_ms: int,
+        end_ms: int,
+    ) -> KillEvidenceCapture:
+        """Fresh authoritative positions, orders and fills before mutation."""
         ...
 
     async def query_order(self, cloid: str, symbol: str) -> OrderQueryResult:

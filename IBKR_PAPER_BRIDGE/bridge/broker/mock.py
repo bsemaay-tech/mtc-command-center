@@ -32,6 +32,8 @@ from bridge.engine.types import (
     Evidence,
     FillEvent,
     FlattenResult,
+    KillEvidenceCapture,
+    KillEvidenceEpoch,
     LotQuantizationError,
     LotUnit,
     OrderPlan,
@@ -906,6 +908,47 @@ class MockBroker:
             ),
             balances=replace(balances, call_count=0),
             margin=replace(margin, call_count=0),
+        )
+
+    async def capture_kill_evidence(
+        self,
+        *,
+        epoch: KillEvidenceEpoch,
+        symbol: str,
+        start_ms: int,
+        end_ms: int,
+    ) -> KillEvidenceCapture:
+        """Capture the same authoritative mock fixtures used by reconciliation."""
+
+        def unavailable(kind: ReconcileComponentKind) -> ComponentEvidence:
+            return ComponentEvidence(
+                kind=kind,
+                source="MOCK",
+                status=ReconcileComponentStatus.UNAVAILABLE,
+                observed_ts=None,
+                reason_code=f"MOCK_{kind.value}_UNAVAILABLE",
+            )
+
+        try:
+            positions = (await self.portfolio_evidence()).positions
+        except Exception:
+            positions = unavailable(ReconcileComponentKind.POSITIONS)
+        try:
+            orders = await self.open_orders_evidence()
+        except Exception:
+            orders = unavailable(ReconcileComponentKind.OPEN_ORDERS)
+        try:
+            fills = await self.fills_evidence(
+                start_ms=int(start_ms), end_ms=int(end_ms)
+            )
+        except Exception:
+            fills = unavailable(ReconcileComponentKind.FILLS)
+        return KillEvidenceCapture(
+            epoch=epoch,
+            symbol=str(symbol),
+            positions=positions,
+            open_orders=orders,
+            fills=fills,
         )
 
     async def open_orders_evidence(self) -> ComponentEvidence:

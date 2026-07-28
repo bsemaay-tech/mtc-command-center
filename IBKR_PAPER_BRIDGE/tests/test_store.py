@@ -383,7 +383,10 @@ def test_repair4_a13_epoch_topology_fault_rolls_back_to_reopenable_v8(
         "SELECT name FROM sqlite_master WHERE name LIKE 'kill_%'"
     ).fetchall() == []
     failure = store.get_meta("kill_evidence_migration_failure")
-    assert failure == "KILL_EVIDENCE_MIGRATION_FAILED:RUNTIMEERROR"
+    # Reason codes fold the raw exception class name, matching the established
+    # RISK_CONTROLS_MIGRATION_FAILED / EXPOSURE_CONTROLS_MIGRATION_FAILED
+    # convention from TS-P1-007/008. Do not uppercase it here.
+    assert failure == "KILL_EVIDENCE_MIGRATION_FAILED:RuntimeError"
     store.close()
 
     reopened = Store(tmp_path / "kill-v9.db")

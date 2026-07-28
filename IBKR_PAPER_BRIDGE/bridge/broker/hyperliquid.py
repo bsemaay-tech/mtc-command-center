@@ -38,6 +38,8 @@ from bridge.engine.types import (
     Evidence,
     FillEvent,
     FlattenResult,
+    KillEvidenceCapture,
+    KillEvidenceEpoch,
     LotQuantizationError,
     LotUnit,
     OrderPlan,
@@ -1718,6 +1720,46 @@ class HyperliquidBroker:
             reason_code="HL_OPEN_ORDERS_COMPLETE",
             call_count=1,
             page_count=1,
+        )
+
+    async def capture_kill_evidence(
+        self,
+        *,
+        epoch: KillEvidenceEpoch,
+        symbol: str,
+        start_ms: int,
+        end_ms: int,
+    ) -> KillEvidenceCapture:
+        """One authoritative pre-mutation positions/orders/fills observation."""
+        try:
+            positions = (await self.portfolio_evidence()).positions
+        except Exception:
+            positions = self._reconcile_unavailable(
+                ReconcileComponentKind.POSITIONS,
+                "HL_POSITION_QUERY_FAILED",
+            )
+        try:
+            orders = await self.open_orders_evidence()
+        except Exception:
+            orders = self._reconcile_unavailable(
+                ReconcileComponentKind.OPEN_ORDERS,
+                "HL_OPEN_ORDER_QUERY_FAILED",
+            )
+        try:
+            fills = await self.fills_evidence(
+                start_ms=int(start_ms), end_ms=int(end_ms)
+            )
+        except Exception:
+            fills = self._reconcile_unavailable(
+                ReconcileComponentKind.FILLS,
+                "HL_FILLS_QUERY_FAILED",
+            )
+        return KillEvidenceCapture(
+            epoch=epoch,
+            symbol=str(symbol),
+            positions=positions,
+            open_orders=orders,
+            fills=fills,
         )
 
     async def fills_evidence(

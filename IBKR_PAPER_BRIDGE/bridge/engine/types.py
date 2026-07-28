@@ -554,6 +554,34 @@ class KillTerminalState(str, Enum):
     SAFE_FLAT = "SAFE_FLAT"
 
 
+@dataclass(frozen=True)
+class KillEvidenceEpoch:
+    """Durable fencing token for exactly one KILL recovery attempt."""
+
+    episode_id: str
+    attempt_no: int
+    process_uid: str
+    opened_ts_monotonic: float
+
+    def __post_init__(self) -> None:
+        if not str(self.episode_id).strip():
+            raise ValueError("episode_id is required")
+        if isinstance(self.attempt_no, bool) or int(self.attempt_no) <= 0:
+            raise ValueError("attempt_no must be positive")
+        if not str(self.process_uid).strip():
+            raise ValueError("process_uid is required")
+        if not math.isfinite(float(self.opened_ts_monotonic)):
+            raise ValueError("opened_ts_monotonic must be finite")
+
+    def as_payload(self) -> dict[str, Any]:
+        return {
+            "episode_id": str(self.episode_id),
+            "attempt_no": int(self.attempt_no),
+            "process_uid": str(self.process_uid),
+            "opened_ts_monotonic": float(self.opened_ts_monotonic),
+        }
+
+
 class Provenance(str, Enum):
     """Ownership verdict for the authoritative symbol state."""
 
@@ -1075,6 +1103,33 @@ class ComponentEvidence:
             "cursor_start_ms": self.cursor_start_ms,
             "cursor_end_ms": self.cursor_end_ms,
         })
+
+
+@dataclass(frozen=True)
+class KillEvidenceCapture:
+    """Fresh pre-mutation positions/orders/fills bound to one epoch."""
+
+    epoch: KillEvidenceEpoch
+    symbol: str
+    positions: ComponentEvidence
+    open_orders: ComponentEvidence
+    fills: ComponentEvidence
+
+    @property
+    def accepted(self) -> bool:
+        return bool(
+            str(self.symbol).strip()
+            and self.positions.accepted
+            and self.open_orders.accepted
+            and self.fills.accepted
+        )
+
+    @property
+    def reason_code(self) -> str:
+        for component in (self.positions, self.open_orders, self.fills):
+            if not component.accepted:
+                return f"KILL_CAPTURE_{component.kind.value}_UNAVAILABLE"
+        return "KILL_CAPTURE_COMPLETE"
 
 
 @dataclass(frozen=True)

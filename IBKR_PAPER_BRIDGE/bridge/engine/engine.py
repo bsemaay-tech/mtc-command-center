@@ -5,7 +5,9 @@ from __future__ import annotations
 import asyncio
 import inspect
 import sqlite3
+import time
 import traceback
+import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Callable
@@ -24,6 +26,8 @@ from bridge.engine.risk import RiskEngine
 from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
 from bridge.engine.types import (
     Bar,
+    FULL_RECONCILE_MAX_SKEW_S,
+    KillEvidenceEpoch,
     Position,
     RiskSnapshotUnavailable,
     RISK_CONTROL_DAILY_LOSS,
@@ -96,6 +100,12 @@ class BridgeEngine:
     _kill_recovery_in_flight: int = field(default=0, init=False)
     _kill_episode_lock: asyncio.Lock = field(
         default_factory=asyncio.Lock, init=False, repr=False
+    )
+    _kill_process_uid: str = field(
+        default_factory=lambda: uuid.uuid4().hex, init=False, repr=False
+    )
+    _kill_monotonic: Callable[[], float] = field(
+        default=time.monotonic, init=False, repr=False
     )
     _consecutive_order_rejects: int = field(default=0, init=False)
     _consecutive_reconcile_failures: int = field(default=0, init=False)
@@ -427,14 +437,45 @@ class BridgeEngine:
             self._set_state("KILLED")
             await self._publish("status", self.status())
             return
-        request = self.store.begin_kill_episode(
+        request, epoch = self.store.open_kill_epoch(
             run_id=self.run_id,
             symbol=self.coin,
             flatten_requested=bool(flatten),
             policy_version=_KILL_POLICY_VERSION,
+            process_uid=self._kill_process_uid,
+            opened_ts_monotonic=self._kill_monotonic(),
         )
+        start_ms = self.store.kill_capture_start_ms(self.run_id, self.coin)
+        now = self.clock()
+        if now.tzinfo is None:
+            now = now.replace(tzinfo=UTC)
+        # The injected action clock may roll back. That must never recreate a
+        # write budget, but it must not suppress the read-only pre-mutation
+        # capture either. Widen the evidence query through the current UTC
+        # observation; action deadlines remain governed by Store/monotonic time.
+        capture_end = max(now.astimezone(UTC), datetime.now(UTC)) + timedelta(
+            seconds=FULL_RECONCILE_MAX_SKEW_S
+        )
+        end_ms = int(capture_end.timestamp() * 1000)
+
+        async def capture_evidence():
+            if (
+                start_ms is None
+                or end_ms < int(start_ms)
+                or self.full_reconciler is None
+            ):
+                return None
+            return await self.full_reconciler.capture_kill_evidence(
+                epoch=epoch,
+                symbol=self.coin,
+                start_ms=int(start_ms),
+                end_ms=end_ms,
+            )
+
         result = await self.order_manager.run_kill_episode(
             request,
+            epoch=epoch,
+            capture_evidence=capture_evidence,
             full_writer_already_held=(
                 self._full_writer_owner is asyncio.current_task()
             ),
@@ -442,7 +483,9 @@ class BridgeEngine:
         state = str(result["state"])
         reason = str(result["reason"])
         marked = self.store.mark_kill_request_state(
-            str(request["episode_id"]), state, reason
+            epoch=epoch,
+            state=state,
+            reason_code=reason,
         )
         state = str(marked["terminal_state"])
         reason = str(marked["terminal_reason"])
@@ -452,6 +495,7 @@ class BridgeEngine:
         ):
             # The direct symbol proof determines the requested terminal shape.
             # A fresh accepted full checkpoint additionally binds it for ACK.
+            self.store.assert_kill_epoch_active(epoch)
             reconcile = await self.run_full_reconcile()
             self.state = "KILLED"
             self.store.set_meta("app_state", "KILLED")
@@ -463,12 +507,13 @@ class BridgeEngine:
                 checkpoint = self.store.latest_accepted_reconcile_checkpoint()
                 if checkpoint is not None:
                     self.store.bind_kill_terminal_proof(
-                        episode_id=str(request["episode_id"]),
+                        epoch=epoch,
                         terminal_state=state,
                         reason_code=reason,
                         checkpoint_id=str(checkpoint["checkpoint_id"]),
                         proof=dict(result.get("proof") or {}),
                     )
+                    self.store.close_kill_epoch(epoch=epoch)
         self.state = "KILLED"
         self.store.set_meta("app_state", "KILLED")
         await self._publish("status", self.status())

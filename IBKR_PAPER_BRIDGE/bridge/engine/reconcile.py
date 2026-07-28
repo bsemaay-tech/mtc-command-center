@@ -51,6 +51,8 @@ from bridge.engine.types import (
     FullReconcileResult,
     FundingAttribution,
     FundingEventRecord,
+    KillEvidenceCapture,
+    KillEvidenceEpoch,
     LotQuantizationError,
     ReconcileAttemptState,
     ReconcileComponentKind,
@@ -203,6 +205,70 @@ class FullReconciler:
             )
         finally:
             guard.release()
+
+    async def capture_kill_evidence(
+        self,
+        *,
+        epoch: KillEvidenceEpoch,
+        symbol: str,
+        start_ms: int,
+        end_ms: int,
+    ) -> KillEvidenceCapture:
+        """Additive pre-mutation capture that never writes a checkpoint."""
+
+        def unavailable(kind: ReconcileComponentKind) -> ComponentEvidence:
+            return ComponentEvidence(
+                kind=kind,
+                source="BROKER",
+                status=ReconcileComponentStatus.UNAVAILABLE,
+                observed_ts=None,
+                reason_code=f"KILL_CAPTURE_{kind.value}_UNAVAILABLE",
+            )
+
+        self.store.assert_kill_epoch_active(epoch)
+        capture_method = getattr(self.broker, "capture_kill_evidence", None)
+        if not callable(capture_method):
+            return KillEvidenceCapture(
+                epoch=epoch,
+                symbol=str(symbol),
+                positions=unavailable(ReconcileComponentKind.POSITIONS),
+                open_orders=unavailable(ReconcileComponentKind.OPEN_ORDERS),
+                fills=unavailable(ReconcileComponentKind.FILLS),
+            )
+        try:
+            capture = await asyncio.wait_for(
+                capture_method(
+                    epoch=epoch,
+                    symbol=str(symbol),
+                    start_ms=int(start_ms),
+                    end_ms=int(end_ms),
+                ),
+                timeout=self.deadline_s,
+            )
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            capture = KillEvidenceCapture(
+                epoch=epoch,
+                symbol=str(symbol),
+                positions=unavailable(ReconcileComponentKind.POSITIONS),
+                open_orders=unavailable(ReconcileComponentKind.OPEN_ORDERS),
+                fills=unavailable(ReconcileComponentKind.FILLS),
+            )
+        self.store.assert_kill_epoch_active(epoch)
+        if (
+            not isinstance(capture, KillEvidenceCapture)
+            or capture.epoch != epoch
+            or capture.symbol != str(symbol)
+        ):
+            return KillEvidenceCapture(
+                epoch=epoch,
+                symbol=str(symbol),
+                positions=unavailable(ReconcileComponentKind.POSITIONS),
+                open_orders=unavailable(ReconcileComponentKind.OPEN_ORDERS),
+                fills=unavailable(ReconcileComponentKind.FILLS),
+            )
+        return capture
 
     # ------------------------------------------------------------------
     # collection

@@ -54,6 +54,7 @@ from bridge.engine.types import (
     FundingAttribution,
     FundingEventRecord,
     KillActionKind,
+    KillEvidenceEpoch,
     KillTerminalState,
     KILL_VERIFY_DEADLINE_S,
     PartialActionKind,
@@ -313,6 +314,7 @@ RISK_CONTROLS_MIGRATION_FAILURE_KEY = "risk_controls_migration_failure"
 EXPOSURE_CONTROLS_MIGRATION_FAILURE_KEY = "exposure_controls_migration_failure"
 KILL_EVIDENCE_MIGRATION_FAILURE_KEY = "kill_evidence_migration_failure"
 KILL_REQUEST_ACTIVE_KEY = "kill_request_active"
+KILL_EPOCH_ACTIVE_KEY = "kill_epoch_active"
 
 _PARTIAL_RECOVERY_VERSION = "ts-p1-004-recovery-v1"
 _PARTIAL_ACTION_VERSION = "ts-p1-004-action-v1"
@@ -553,6 +555,7 @@ class MigrationError(Exception):
 class KillConflictError(Exception):
     def __init__(self, code: str, message: str) -> None:
         self.code = code
+        self.reason_code = code
         super().__init__(f"{code}: {message}")
 
 
@@ -2113,6 +2116,7 @@ class Store:
                 CHECK(flatten_requested IN (0,1)),
               requested_ts TEXT NOT NULL,
               policy_version TEXT NOT NULL CHECK(length(trim(policy_version)) > 0),
+              epoch_token TEXT NOT NULL,
               terminal_state TEXT NOT NULL CHECK(terminal_state IN
                 ('IN_PROGRESS','UNRESOLVED','UNKNOWN','AMBIGUOUS',
                  'PROOF_PENDING','SAFE_RETAINED','SAFE_FLAT')),
@@ -2270,6 +2274,14 @@ class Store:
                 datetime.fromisoformat(str(request["requested_ts"]))
             except (TypeError, ValueError):
                 raise MigrationError("v9 kill request timestamp malformed") from None
+            try:
+                request_epoch, request_epoch_state = (
+                    self._parse_kill_epoch_token(request["epoch_token"])
+                )
+            except KillConflictError as exc:
+                raise MigrationError("v9 kill epoch token malformed") from exc
+            if request_epoch.episode_id != str(request["episode_id"]):
+                raise MigrationError("v9 kill epoch episode mismatch")
             safe = str(request["terminal_state"]) in {"SAFE_FLAT", "SAFE_RETAINED"}
             proof_fields = (
                 request["safe_checkpoint_id"],
@@ -2304,6 +2316,7 @@ class Store:
                 not safe
                 or request["ack_ts"] is None
                 or any(value is None for value in proof_fields)
+                or request_epoch_state != "CLOSED"
             ):
                 raise MigrationError("v9 acknowledged kill proof is incomplete")
             if not acknowledged and request["ack_ts"] is not None:
@@ -2379,16 +2392,29 @@ class Store:
 
     def _validate_kill_pointer_v9(self) -> None:
         pointer = self.get_meta(KILL_REQUEST_ACTIVE_KEY)
+        epoch_pointer = self.get_meta(KILL_EPOCH_ACTIVE_KEY)
         rows = self.conn.execute(
-            "SELECT episode_id FROM kill_requests WHERE ack_state='PENDING' "
+            "SELECT episode_id,epoch_token FROM kill_requests "
+            "WHERE ack_state='PENDING' "
             "ORDER BY requested_ts, episode_id"
         ).fetchall()
         if pointer is None:
-            if rows:
+            if rows or epoch_pointer is not None:
                 raise MigrationError("v9 active kill pointer missing")
             return
-        if len(rows) != 1 or str(rows[0]["episode_id"]) != pointer:
+        if (
+            len(rows) != 1
+            or str(rows[0]["episode_id"]) != pointer
+            or epoch_pointer is None
+            or str(rows[0]["epoch_token"]) != epoch_pointer
+        ):
             raise MigrationError("v9 active kill pointer dangling or ambiguous")
+        try:
+            epoch, _state = self._parse_kill_epoch_token(epoch_pointer)
+        except KillConflictError as exc:
+            raise MigrationError("v9 active kill epoch malformed") from exc
+        if epoch.episode_id != pointer:
+            raise MigrationError("v9 active kill epoch mismatch")
 
     def _initialize_v9_idempotent(self) -> None:
         self._validate_kill_evidence_schema_v9()
@@ -2428,6 +2454,10 @@ class Store:
             if self.get_meta(KILL_REQUEST_ACTIVE_KEY) is not None:
                 raise MigrationError(
                     "v8-to-v9 aborted: residual active kill pointer"
+                )
+            if self.get_meta(KILL_EPOCH_ACTIVE_KEY) is not None:
+                raise MigrationError(
+                    "v8-to-v9 aborted: residual active kill epoch"
                 )
             before = self._all_table_census()
             self._create_kill_evidence_tables_v9()
@@ -4797,22 +4827,159 @@ class Store:
             (str(run_id), ts, str(severity), str(code), str(detail)),
         )
 
-    def begin_kill_episode(
+    @staticmethod
+    def _kill_epoch_token(epoch: KillEvidenceEpoch, state: str) -> str:
+        if state not in {"OPEN", "CLOSED"}:
+            raise KillConflictError("KILL_EPOCH_STATE_INVALID", str(state))
+        return _canonical_json({**epoch.as_payload(), "state": state})
+
+    @staticmethod
+    def _parse_kill_epoch_token(value: object) -> tuple[KillEvidenceEpoch, str]:
+        try:
+            payload = json.loads(str(value))
+            if not isinstance(payload, Mapping):
+                raise ValueError
+            state = str(payload["state"])
+            epoch = KillEvidenceEpoch(
+                episode_id=str(payload["episode_id"]),
+                attempt_no=int(payload["attempt_no"]),
+                process_uid=str(payload["process_uid"]),
+                opened_ts_monotonic=float(payload["opened_ts_monotonic"]),
+            )
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+            raise KillConflictError(
+                "KILL_EPOCH_MALFORMED", "epoch token is not canonical"
+            ) from exc
+        if state not in {"OPEN", "CLOSED"}:
+            raise KillConflictError(
+                "KILL_EPOCH_MALFORMED", "epoch state is invalid"
+            )
+        if Store._kill_epoch_token(epoch, state) != str(value):
+            raise KillConflictError(
+                "KILL_EPOCH_MALFORMED", "epoch token is not canonical"
+            )
+        return epoch, state
+
+    def _active_kill_epoch(self, *, require_open: bool = True) -> KillEvidenceEpoch:
+        token = self.get_meta(KILL_EPOCH_ACTIVE_KEY)
+        if token is None:
+            raise KillConflictError(
+                "KILL_EPOCH_INACTIVE", "no durable kill epoch is active"
+            )
+        epoch, state = self._parse_kill_epoch_token(token)
+        if require_open and state != "OPEN":
+            raise KillConflictError(
+                "KILL_EPOCH_CLOSED", "the active epoch is already closed"
+            )
+        return epoch
+
+    def _coerce_kill_epoch(
+        self,
+        epoch: KillEvidenceEpoch | None,
+        *,
+        episode_id: str | None = None,
+        require_open: bool = True,
+    ) -> KillEvidenceEpoch:
+        resolved = (
+            self._active_kill_epoch(require_open=require_open)
+            if epoch is None
+            else epoch
+        )
+        if episode_id is not None and resolved.episode_id != str(episode_id):
+            raise KillConflictError(
+                "KILL_EPOCH_STALE_WRITE", "episode does not match epoch"
+            )
+        return resolved
+
+    def _assert_kill_epoch_in_tx(
+        self, epoch: KillEvidenceEpoch, *, require_open: bool = True
+    ) -> str:
+        row = self.conn.execute(
+            "SELECT value FROM meta WHERE key=?", (KILL_EPOCH_ACTIVE_KEY,)
+        ).fetchone()
+        if row is None:
+            raise KillConflictError(
+                "KILL_EPOCH_STALE_WRITE", "active epoch is missing"
+            )
+        expected = self._kill_epoch_token(
+            epoch, "OPEN" if require_open else "CLOSED"
+        )
+        if str(row["value"]) != expected:
+            raise KillConflictError(
+                "KILL_EPOCH_STALE_WRITE", "epoch compare-and-set rejected"
+            )
+        request = self.conn.execute(
+            "SELECT epoch_token,ack_state FROM kill_requests WHERE episode_id=?",
+            (epoch.episode_id,),
+        ).fetchone()
+        if (
+            request is None
+            or str(request["epoch_token"]) != expected
+            or str(request["ack_state"]) != "PENDING"
+        ):
+            raise KillConflictError(
+                "KILL_EPOCH_STALE_WRITE", "request epoch changed"
+            )
+        return expected
+
+    def assert_kill_epoch_active(self, epoch: KillEvidenceEpoch) -> None:
+        self._require_kill_schema()
+        self._assert_kill_epoch_in_tx(epoch)
+
+    def _record_stale_epoch_rejection(
+        self, epoch: KillEvidenceEpoch, operation: str
+    ) -> None:
+        try:
+            request = self.conn.execute(
+                "SELECT run_id FROM kill_requests WHERE episode_id=?",
+                (epoch.episode_id,),
+            ).fetchone()
+            if request is None:
+                return
+            now = _to_iso(self._clock()) or ""
+            self.conn.execute("BEGIN IMMEDIATE")
+            self._insert_event_in_tx(
+                str(request["run_id"]),
+                now,
+                "WARN",
+                "KILL_EPOCH_STALE_WRITE_REJECTED",
+                (
+                    f"episode={epoch.episode_id};attempt={epoch.attempt_no};"
+                    f"process={epoch.process_uid};operation={operation}"
+                ),
+            )
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+
+    def open_kill_epoch(
         self,
         *,
         run_id: str,
         symbol: str,
         flatten_requested: bool,
         policy_version: str,
-    ) -> dict[str, Any]:
+        process_uid: str,
+        opened_ts_monotonic: float,
+    ) -> tuple[dict[str, Any], KillEvidenceEpoch]:
         self._require_kill_schema()
         safe_run = str(run_id).strip()
         safe_symbol = str(symbol).strip().upper()
         safe_policy = str(policy_version).strip()
-        if not safe_run or not safe_symbol or not safe_policy:
+        safe_process = str(process_uid).strip()
+        if not safe_run or not safe_symbol or not safe_policy or not safe_process:
             raise KillConflictError(
-                "KILL_REQUEST_MALFORMED", "run, symbol and policy are required"
+                "KILL_REQUEST_MALFORMED",
+                "run, symbol, policy and process are required",
             )
+        try:
+            opened_mono = float(opened_ts_monotonic)
+            if not math.isfinite(opened_mono):
+                raise ValueError
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise KillConflictError(
+                "KILL_EPOCH_MALFORMED", "monotonic open time is invalid"
+            ) from exc
         now = _to_iso(self._clock()) or ""
         self.conn.execute("BEGIN IMMEDIATE")
         try:
@@ -4840,6 +5007,17 @@ class Store:
                         "KILL_REQUEST_CONFLICT",
                         "an incompatible episode is already active",
                     )
+                prior_token = str(existing["epoch_token"])
+                prior_epoch, _prior_state = self._parse_kill_epoch_token(
+                    prior_token
+                )
+                epoch = KillEvidenceEpoch(
+                    episode_id=pointer,
+                    attempt_no=prior_epoch.attempt_no + 1,
+                    process_uid=safe_process,
+                    opened_ts_monotonic=opened_mono,
+                )
+                token = self._kill_epoch_token(epoch, "OPEN")
                 cursor = self.conn.execute(
                     """UPDATE kill_requests
                        SET terminal_state='IN_PROGRESS',
@@ -4847,14 +5025,27 @@ class Store:
                            terminal_ts=NULL,
                            safe_checkpoint_id=NULL,
                            safe_checkpoint_ts=NULL,
-                           proof_digest=NULL
-                       WHERE episode_id=? AND ack_state='PENDING'""",
-                    (pointer,),
+                           proof_digest=NULL,
+                           epoch_token=?
+                       WHERE episode_id=? AND ack_state='PENDING'
+                         AND epoch_token=?""",
+                    (token, pointer, prior_token),
                 )
                 if cursor.rowcount != 1:
                     raise KillConflictError(
                         "KILL_REQUEST_NOT_ACTIVE",
                         "replay could not invalidate prior proof",
+                    )
+                epoch_cursor = self.conn.execute(
+                    """INSERT INTO meta(key,value) VALUES (?,?)
+                       ON CONFLICT(key) DO UPDATE SET value=excluded.value
+                       WHERE meta.value=?""",
+                    (KILL_EPOCH_ACTIVE_KEY, token, prior_token),
+                )
+                if epoch_cursor.rowcount != 1:
+                    raise KillConflictError(
+                        "KILL_EPOCH_OPEN_CONFLICT",
+                        "active epoch compare-and-set failed",
                     )
                 self.conn.execute(
                     "INSERT INTO meta(key,value) VALUES ('app_state','KILLED') "
@@ -4871,7 +5062,7 @@ class Store:
                 replayed = self.conn.execute(
                     "SELECT * FROM kill_requests WHERE episode_id=?", (pointer,)
                 ).fetchone()
-                return dict(replayed)
+                return dict(replayed), epoch
             request_count = int(
                 self.conn.execute("SELECT COUNT(*) FROM kill_requests").fetchone()[0]
             )
@@ -4901,13 +5092,21 @@ class Store:
                 flatten_requested=bool(flatten_requested),
                 policy_version=safe_policy,
             )
+            epoch = KillEvidenceEpoch(
+                episode_id=episode_id,
+                attempt_no=1,
+                process_uid=safe_process,
+                opened_ts_monotonic=opened_mono,
+            )
+            token = self._kill_epoch_token(epoch, "OPEN")
             self.conn.execute(
                 """INSERT INTO kill_requests(
                      episode_id,generation,run_id,symbol,flatten_requested,
-                     requested_ts,policy_version,terminal_state,terminal_reason,
+                     requested_ts,policy_version,epoch_token,
+                     terminal_state,terminal_reason,
                      terminal_ts,safe_checkpoint_id,safe_checkpoint_ts,
                      proof_digest,ack_state,ack_ts)
-                   VALUES (?,?,?,?,?,?,?,'IN_PROGRESS','KILL_LATCHED',
+                   VALUES (?,?,?,?,?,?,?,?,'IN_PROGRESS','KILL_LATCHED',
                            NULL,NULL,NULL,NULL,'PENDING',NULL)""",
                 (
                     episode_id,
@@ -4917,11 +5116,16 @@ class Store:
                     int(bool(flatten_requested)),
                     now,
                     safe_policy,
+                    token,
                 ),
             )
             self.conn.execute(
                 "INSERT INTO meta(key,value) VALUES (?,?)",
                 (KILL_REQUEST_ACTIVE_KEY, episode_id),
+            )
+            self.conn.execute(
+                "INSERT INTO meta(key,value) VALUES (?,?)",
+                (KILL_EPOCH_ACTIVE_KEY, token),
             )
             self.conn.execute(
                 "INSERT INTO meta(key,value) VALUES ('app_state','KILLED') "
@@ -4941,7 +5145,26 @@ class Store:
         row = self.conn.execute(
             "SELECT * FROM kill_requests WHERE episode_id=?", (episode_id,)
         ).fetchone()
-        return dict(row)
+        return dict(row), epoch
+
+    def begin_kill_episode(
+        self,
+        *,
+        run_id: str,
+        symbol: str,
+        flatten_requested: bool,
+        policy_version: str,
+    ) -> dict[str, Any]:
+        """Compatibility wrapper; new runtime callers retain the returned epoch."""
+        request, _epoch = self.open_kill_epoch(
+            run_id=run_id,
+            symbol=symbol,
+            flatten_requested=flatten_requested,
+            policy_version=policy_version,
+            process_uid=f"legacy-{id(self):x}",
+            opened_ts_monotonic=0.0,
+        )
+        return request
 
     def active_kill_request(self) -> dict[str, Any] | None:
         self._require_kill_schema()
@@ -4965,9 +5188,18 @@ class Store:
         return None if row is None else dict(row)
 
     def mark_kill_request_state(
-        self, episode_id: str, state: str, reason_code: str
+        self,
+        episode_id: str | None = None,
+        state: str = "",
+        reason_code: str = "",
+        *,
+        epoch: KillEvidenceEpoch | None = None,
     ) -> dict[str, Any]:
         self._require_kill_schema()
+        resolved_epoch = self._coerce_kill_epoch(
+            epoch, episode_id=episode_id
+        )
+        stable_episode_id = resolved_epoch.episode_id
         terminal_state = KillTerminalState(str(state))
         safe_reason = self._safe_reason_code(reason_code)
         terminal_ts = (
@@ -4980,17 +5212,20 @@ class Store:
         )
         self.conn.execute("BEGIN IMMEDIATE")
         try:
+            token = self._assert_kill_epoch_in_tx(resolved_epoch)
             cursor = self.conn.execute(
                 """UPDATE kill_requests
                    SET terminal_state=?, terminal_reason=?, terminal_ts=?,
                        safe_checkpoint_id=NULL, safe_checkpoint_ts=NULL,
                        proof_digest=NULL
-                   WHERE episode_id=? AND ack_state='PENDING'""",
+                   WHERE episode_id=? AND ack_state='PENDING'
+                     AND epoch_token=?""",
                 (
                     terminal_state.value,
                     safe_reason,
                     terminal_ts,
-                    str(episode_id),
+                    stable_episode_id,
+                    token,
                 ),
             )
             if cursor.rowcount != 1:
@@ -4998,14 +5233,22 @@ class Store:
                     "KILL_REQUEST_NOT_ACTIVE", "state update rejected"
                 )
             self.conn.commit()
-        except Exception:
+        except Exception as exc:
             self.conn.rollback()
+            if (
+                isinstance(exc, KillConflictError)
+                and exc.reason_code == "KILL_EPOCH_STALE_WRITE"
+            ):
+                self._record_stale_epoch_rejection(
+                    resolved_epoch, "MARK_STATE"
+                )
             raise
-        return self.get_kill_request(episode_id) or {}
+        return self.get_kill_request(stable_episode_id) or {}
 
     def reserve_kill_action(
         self,
         *,
+        epoch: KillEvidenceEpoch | None = None,
         episode_id: str,
         kind: str,
         target: str,
@@ -5017,6 +5260,9 @@ class Store:
         exit_side: str | None = None,
     ) -> tuple[bool, dict[str, Any]]:
         self._require_kill_schema()
+        resolved_epoch = self._coerce_kill_epoch(
+            epoch, episode_id=episode_id
+        )
         action_kind = KillActionKind(str(kind))
         safe_target = str(target).strip()
         safe_cloid = str(cloid).strip()
@@ -5054,6 +5300,7 @@ class Store:
             )
         self.conn.execute("BEGIN IMMEDIATE")
         try:
+            self._assert_kill_epoch_in_tx(resolved_epoch)
             existing = self.conn.execute(
                 "SELECT * FROM kill_actions WHERE action_id=?", (stable_id,)
             ).fetchone()
@@ -5106,6 +5353,7 @@ class Store:
                 ),
             )
             self._append_kill_action_event_in_tx(
+                epoch=resolved_epoch,
                 action_id=stable_id,
                 status="RESERVED",
                 evidence_source="LOCAL",
@@ -5114,14 +5362,22 @@ class Store:
                 observed_ts=reserved,
             )
             self.conn.commit()
-        except Exception:
+        except Exception as exc:
             self.conn.rollback()
+            if (
+                isinstance(exc, KillConflictError)
+                and exc.reason_code == "KILL_EPOCH_STALE_WRITE"
+            ):
+                self._record_stale_epoch_rejection(
+                    resolved_epoch, "RESERVE_ACTION"
+                )
             raise
         return False, self.get_kill_action(stable_id) or {}
 
     def _append_kill_action_event_in_tx(
         self,
         *,
+        epoch: KillEvidenceEpoch | None = None,
         action_id: str,
         status: str,
         evidence_source: str,
@@ -5133,7 +5389,10 @@ class Store:
             "RESERVED", "SENT", "APPLIED", "NOT_APPLIED", "UNKNOWN", "EVIDENCE"
         }:
             raise KillConflictError("KILL_EVENT_STATUS_INVALID", status)
-        payload = _canonical_json(dict(evidence))
+        payload_data = dict(evidence)
+        if epoch is not None:
+            payload_data["epoch"] = epoch.as_payload()
+        payload = _canonical_json(payload_data)
         digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
         seq = int(
             self.conn.execute(
@@ -5181,6 +5440,7 @@ class Store:
     def record_kill_action_event(
         self,
         *,
+        epoch: KillEvidenceEpoch | None = None,
         action_id: str,
         status: str,
         reason_code: str,
@@ -5192,9 +5452,11 @@ class Store:
         flatten_fills: Sequence[Mapping[str, Any]] | None = None,
     ) -> dict[str, Any]:
         self._require_kill_schema()
+        resolved_epoch = self._coerce_kill_epoch(epoch)
         now = _to_iso(observed_ts) or _to_iso(self._clock()) or ""
         self.conn.execute("BEGIN IMMEDIATE")
         try:
+            self._assert_kill_epoch_in_tx(resolved_epoch)
             action = self.conn.execute(
                 "SELECT * FROM kill_actions WHERE action_id=?", (str(action_id),)
             ).fetchone()
@@ -5217,6 +5479,7 @@ class Store:
                     "a flatten order requires an APPLIED flatten event",
                 )
             self._append_kill_action_event_in_tx(
+                epoch=resolved_epoch,
                 action_id=str(action_id),
                 status=str(status),
                 evidence_source=evidence_source,
@@ -5399,8 +5662,15 @@ class Store:
                         f"cloid={cloid}",
                     )
             self.conn.commit()
-        except Exception:
+        except Exception as exc:
             self.conn.rollback()
+            if (
+                isinstance(exc, KillConflictError)
+                and exc.reason_code == "KILL_EPOCH_STALE_WRITE"
+            ):
+                self._record_stale_epoch_rejection(
+                    resolved_epoch, "RECORD_ACTION_EVENT"
+                )
             raise
         return self.get_kill_action(action_id) or {}
 
@@ -5435,10 +5705,15 @@ class Store:
         )
 
     def observe_kill_action_clock(
-        self, *, action_id: str, observed_ts: datetime | str
+        self,
+        *,
+        epoch: KillEvidenceEpoch | None = None,
+        action_id: str,
+        observed_ts: datetime | str,
     ) -> bool:
         """Append the latest safe wall observation; reject clock rollback."""
         self._require_kill_schema()
+        resolved_epoch = self._coerce_kill_epoch(epoch)
         now = _to_iso(observed_ts)
         if now is None:
             return False
@@ -5451,6 +5726,7 @@ class Store:
             return False
         self.conn.execute("BEGIN IMMEDIATE")
         try:
+            self._assert_kill_epoch_in_tx(resolved_epoch)
             action = self.conn.execute(
                 "SELECT action_id FROM kill_actions WHERE action_id=?",
                 (str(action_id),),
@@ -5479,6 +5755,7 @@ class Store:
                 self.conn.commit()
                 return False
             self._append_kill_action_event_in_tx(
+                epoch=resolved_epoch,
                 action_id=str(action_id),
                 status="EVIDENCE",
                 evidence_source="LOCAL",
@@ -5488,8 +5765,15 @@ class Store:
             )
             self.conn.commit()
             return True
-        except Exception:
+        except Exception as exc:
             self.conn.rollback()
+            if (
+                isinstance(exc, KillConflictError)
+                and exc.reason_code == "KILL_EPOCH_STALE_WRITE"
+            ):
+                self._record_stale_epoch_rejection(
+                    resolved_epoch, "OBSERVE_ACTION_CLOCK"
+                )
             raise
 
     def kill_owned_position_rows(self, symbol: str) -> list[dict[str, Any]]:
@@ -5502,6 +5786,7 @@ class Store:
                       t.entry_decision_uid AS trade_entry_decision_uid,
                       COALESCE(SUM(f.qty),0) AS durable_fill_qty,
                       COUNT(f.fill_id) AS durable_fill_count,
+                      GROUP_CONCAT(DISTINCT f.fill_id) AS durable_fill_ids,
                       GROUP_CONCAT(DISTINCT f.decision_uid) AS durable_fill_decision_uids,
                       COALESCE(SUM(CASE
                         WHEN f.decision_uid IS NULL
@@ -5560,16 +5845,48 @@ class Store:
                     break
         return rows
 
+    def kill_capture_start_ms(self, run_id: str, symbol: str) -> int | None:
+        """Earliest durable run/fill bound needed for positive ownership proof."""
+        candidates: list[datetime] = []
+        started = self.run_started_ts(str(run_id))
+        if started is not None:
+            candidates.append(started)
+        row = self.conn.execute(
+            """SELECT MIN(f.fill_ts) AS first_fill
+               FROM fills f
+               JOIN orders o ON o.cloid=f.cloid
+               JOIN trades t ON t.trade_id=o.trade_id
+               WHERE t.run_id=? AND t.coin=?
+                 AND json_extract(o.order_json,'$.symbol')=?""",
+            (str(run_id), str(symbol), str(symbol)),
+        ).fetchone()
+        if row is not None and row["first_fill"] is not None:
+            try:
+                first = datetime.fromisoformat(str(row["first_fill"]))
+                if first.tzinfo is None:
+                    first = first.replace(tzinfo=UTC)
+                candidates.append(first.astimezone(UTC))
+            except (TypeError, ValueError):
+                return None
+        if not candidates:
+            return None
+        return int(min(candidates).astimezone(UTC).timestamp() * 1000)
+
     def bind_kill_terminal_proof(
         self,
         *,
-        episode_id: str,
+        epoch: KillEvidenceEpoch | None = None,
+        episode_id: str | None = None,
         terminal_state: str,
         reason_code: str,
         checkpoint_id: str,
         proof: Mapping[str, Any],
     ) -> dict[str, Any]:
         self._require_kill_schema()
+        resolved_epoch = self._coerce_kill_epoch(
+            epoch, episode_id=episode_id
+        )
+        stable_episode_id = resolved_epoch.episode_id
         state = KillTerminalState(str(terminal_state))
         if state not in {
             KillTerminalState.SAFE_FLAT,
@@ -5578,22 +5895,27 @@ class Store:
             raise KillConflictError(
                 "KILL_SAFE_STATE_INVALID", state.value
             )
-        checkpoint = self.conn.execute(
-            "SELECT accepted_ts FROM reconcile_checkpoints WHERE checkpoint_id=?",
-            (str(checkpoint_id),),
-        ).fetchone()
-        if checkpoint is None or self.get_meta(
-            RECONCILE_CHECKPOINT_POINTER_KEY
-        ) != str(checkpoint_id):
-            raise KillConflictError(
-                "KILL_CHECKPOINT_NOT_CURRENT", "safe proof is not pointed"
-            )
         now = _to_iso(self._clock()) or ""
         proof_json = _canonical_json(dict(proof))
         digest = hashlib.sha256(proof_json.encode("utf-8")).hexdigest()
         self.conn.execute("BEGIN IMMEDIATE")
         try:
-            if self.get_meta(KILL_REQUEST_ACTIVE_KEY) != str(episode_id):
+            token = self._assert_kill_epoch_in_tx(resolved_epoch)
+            checkpoint = self.conn.execute(
+                "SELECT accepted_ts FROM reconcile_checkpoints "
+                "WHERE checkpoint_id=?",
+                (str(checkpoint_id),),
+            ).fetchone()
+            if (
+                checkpoint is None
+                or self.get_meta(RECONCILE_CHECKPOINT_POINTER_KEY)
+                != str(checkpoint_id)
+            ):
+                raise KillConflictError(
+                    "KILL_CHECKPOINT_NOT_CURRENT",
+                    "safe proof is not pointed",
+                )
+            if self.get_meta(KILL_REQUEST_ACTIVE_KEY) != stable_episode_id:
                 raise KillConflictError(
                     "KILL_REQUEST_NOT_ACTIVE", "proof episode is not active"
                 )
@@ -5601,7 +5923,8 @@ class Store:
                 """UPDATE kill_requests
                    SET terminal_state=?,terminal_reason=?,terminal_ts=?,
                        safe_checkpoint_id=?,safe_checkpoint_ts=?,proof_digest=?
-                   WHERE episode_id=? AND ack_state='PENDING'""",
+                   WHERE episode_id=? AND ack_state='PENDING'
+                     AND epoch_token=?""",
                 (
                     state.value,
                     self._safe_reason_code(reason_code),
@@ -5609,7 +5932,8 @@ class Store:
                     str(checkpoint_id),
                     str(checkpoint["accepted_ts"]),
                     digest,
-                    str(episode_id),
+                    stable_episode_id,
+                    token,
                 ),
             )
             if cursor.rowcount != 1:
@@ -5617,10 +5941,80 @@ class Store:
                     "KILL_REQUEST_NOT_ACTIVE", "proof update rejected"
                 )
             self.conn.commit()
-        except Exception:
+        except Exception as exc:
             self.conn.rollback()
+            if (
+                isinstance(exc, KillConflictError)
+                and exc.reason_code == "KILL_EPOCH_STALE_WRITE"
+            ):
+                self._record_stale_epoch_rejection(
+                    resolved_epoch, "BIND_PROOF"
+                )
             raise
-        return self.get_kill_request(episode_id) or {}
+        return self.get_kill_request(stable_episode_id) or {}
+
+    def close_kill_epoch(
+        self, *, epoch: KillEvidenceEpoch
+    ) -> dict[str, Any]:
+        """CAS-close a proof-bound epoch; only then can ACK consume it."""
+        self._require_kill_schema()
+        now = _to_iso(self._clock()) or ""
+        open_token = self._kill_epoch_token(epoch, "OPEN")
+        closed_token = self._kill_epoch_token(epoch, "CLOSED")
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            self._assert_kill_epoch_in_tx(epoch)
+            request = self.conn.execute(
+                "SELECT * FROM kill_requests WHERE episode_id=?",
+                (epoch.episode_id,),
+            ).fetchone()
+            if (
+                request is None
+                or str(request["terminal_state"])
+                not in {"SAFE_FLAT", "SAFE_RETAINED"}
+                or request["safe_checkpoint_id"] is None
+                or request["safe_checkpoint_ts"] is None
+                or request["proof_digest"] is None
+            ):
+                raise KillConflictError(
+                    "KILL_EPOCH_PROOF_MISSING",
+                    "terminal proof must be bound before close",
+                )
+            request_cursor = self.conn.execute(
+                """UPDATE kill_requests SET epoch_token=?
+                   WHERE episode_id=? AND ack_state='PENDING'
+                     AND epoch_token=?""",
+                (closed_token, epoch.episode_id, open_token),
+            )
+            epoch_cursor = self.conn.execute(
+                "UPDATE meta SET value=? WHERE key=? AND value=?",
+                (closed_token, KILL_EPOCH_ACTIVE_KEY, open_token),
+            )
+            if request_cursor.rowcount != 1 or epoch_cursor.rowcount != 1:
+                raise KillConflictError(
+                    "KILL_EPOCH_STALE_WRITE",
+                    "epoch close compare-and-set rejected",
+                )
+            self._insert_event_in_tx(
+                str(request["run_id"]),
+                now,
+                "WARN",
+                "KILL_EPOCH_CLOSED",
+                (
+                    f"episode={epoch.episode_id};attempt={epoch.attempt_no};"
+                    f"process={epoch.process_uid}"
+                ),
+            )
+            self.conn.commit()
+        except Exception as exc:
+            self.conn.rollback()
+            if (
+                isinstance(exc, KillConflictError)
+                and exc.reason_code == "KILL_EPOCH_STALE_WRITE"
+            ):
+                self._record_stale_epoch_rejection(epoch, "CLOSE_EPOCH")
+            raise
+        return self.get_kill_request(epoch.episode_id) or {}
 
     def acknowledge_kill_evidence(
         self, *, now: datetime, max_age_s: float
@@ -5642,6 +6036,16 @@ class Store:
                     "KILL_POINTER_DANGLING", "active episode does not resolve"
                 )
             request = dict(request_row)
+            epoch_token = str(request.get("epoch_token") or "")
+            _epoch, epoch_state = self._parse_kill_epoch_token(epoch_token)
+            if (
+                epoch_state != "CLOSED"
+                or self.get_meta(KILL_EPOCH_ACTIVE_KEY) != epoch_token
+            ):
+                raise KillConflictError(
+                    "KILL_EPOCH_NOT_CLOSED",
+                    "ACK requires the active closed proof epoch",
+                )
             safe_state = str(request["terminal_state"])
             if safe_state not in {"SAFE_FLAT", "SAFE_RETAINED"}:
                 raise KillConflictError(
@@ -5716,6 +6120,14 @@ class Store:
             if cleared.rowcount != 1:
                 raise KillConflictError(
                     "KILL_ACK_CONFLICT", "active pointer changed"
+                )
+            epoch_cleared = self.conn.execute(
+                "DELETE FROM meta WHERE key=? AND value=?",
+                (KILL_EPOCH_ACTIVE_KEY, epoch_token),
+            )
+            if epoch_cleared.rowcount != 1:
+                raise KillConflictError(
+                    "KILL_ACK_CONFLICT", "epoch pointer changed"
                 )
             self.conn.execute(
                 "INSERT INTO meta(key,value) VALUES ('app_state','DISARMED') "

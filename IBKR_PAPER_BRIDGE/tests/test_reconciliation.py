@@ -225,7 +225,22 @@ def test_repair4_a14_in_epoch_capture_is_additive_to_full_reconcile(tmp_path):
     assert store.count_accepted_reconcile_checkpoints() == before_count
     assert reconciler.deadline_s == before_deadline
 
-    result = run_cycle(store, broker, clock)
+    # This store is opened at v8, where accepted checkpoints require approved
+    # durable policies (TS-P1-008). The bare `run_cycle` helper builds a
+    # policy-less reconciler for the v6 default, so it must not be used here.
+    risk = RiskEngine()
+    broker.full_clock = clock.now
+    result = asyncio.run(
+        FullReconciler(
+            store=store,
+            broker=broker,
+            run_id="run-recon",
+            clock=clock.now,
+            monotonic=clock.monotonic,
+            risk_policy=risk.policy,
+            exposure_policy=risk.exposure_policy,
+        ).run_cycle()
+    )
     assert result.accepted is True
     assert store.count_accepted_reconcile_checkpoints() == before_count + 1
     assert store.full_reconcile_ready(now=clock.now(), max_age_s=30.0) is True
