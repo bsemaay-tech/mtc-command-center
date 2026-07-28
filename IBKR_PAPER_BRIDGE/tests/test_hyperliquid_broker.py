@@ -2123,6 +2123,74 @@ def test_typed_flatten_transport_failure_is_unknown():
     assert result.outcome is ActionOutcome.UNKNOWN
 
 
+def _repair4_projected_epoch_guard(store):
+    event_loop_thread = threading.get_ident()
+    full_guard_threads: list[int] = []
+    worker_guard_threads: list[int] = []
+
+    def full_guard(epoch):
+        thread_id = threading.get_ident()
+        full_guard_threads.append(thread_id)
+        if thread_id != event_loop_thread:
+            raise AssertionError("SQLite epoch guard reached an executor thread")
+        store.assert_kill_epoch_active(epoch)
+
+    def in_memory_only(epoch):
+        worker_guard_threads.append(threading.get_ident())
+        if store._owned_kill_epoch != epoch:
+            raise KillConflictError(
+                "KILL_EPOCH_STALE_WRITE",
+                "the worker does not own the process-local epoch",
+            )
+
+    full_guard.in_memory_only = in_memory_only
+    return full_guard, event_loop_thread, full_guard_threads, worker_guard_threads
+
+
+def test_repair4_d1_hl_worker_uses_process_local_epoch_projection(tmp_path):
+    store = Store(tmp_path / "repair4-hl-worker-projection.db")
+    store.initialize(target_schema_version=9)
+    store.create_run("repair4-hl-worker", "dry_run", "testnet", {})
+    _request, epoch = store.open_kill_epoch(
+        run_id="repair4-hl-worker",
+        symbol="BTC",
+        flatten_requested=True,
+        policy_version="policy-v1",
+        process_uid="repair4-hl-worker",
+        opened_ts_monotonic=10.0,
+    )
+    guard, event_loop_thread, full_threads, worker_threads = (
+        _repair4_projected_epoch_guard(store)
+    )
+    writes: list[str] = []
+    broker = HyperliquidBroker(
+        info_client=object(),
+        exchange_client=SimpleNamespace(
+            _slippage_price=lambda *_args: 100.0,
+            order=lambda *_args, **_kwargs: writes.append("order") or _OK_RESTING,
+        ),
+        account_address="0xabc",
+    )
+
+    guard(epoch)
+    asyncio.run(
+        broker.kill_flatten_reduce_only(
+            symbol="BTC",
+            cloid="0x" + "3" * 32,
+            size=1.0,
+            exit_side="SELL",
+            epoch=epoch,
+            epoch_guard=guard,
+        )
+    )
+
+    assert writes == ["order"]
+    assert full_threads == [event_loop_thread]
+    assert worker_threads and all(
+        thread_id != event_loop_thread for thread_id in worker_threads
+    )
+
+
 def test_repair4_a5_epoch_rechecked_inside_hl_flatten_write_boundary(tmp_path):
     store = Store(tmp_path / "repair4-hl-epoch-boundary.db")
     store.initialize(target_schema_version=9)
@@ -2135,18 +2203,10 @@ def test_repair4_a5_epoch_rechecked_inside_hl_flatten_write_boundary(tmp_path):
         process_uid="repair4-hl-old",
         opened_ts_monotonic=10.0,
     )
+    guard, event_loop_thread, full_threads, worker_threads = (
+        _repair4_projected_epoch_guard(store)
+    )
     writes: list[str] = []
-
-    def slippage_price(*_args):
-        store.open_kill_epoch(
-            run_id="repair4-hl-boundary",
-            symbol="BTC",
-            flatten_requested=True,
-            policy_version="policy-v1",
-            process_uid="repair4-hl-new",
-            opened_ts_monotonic=20.0,
-        )
-        return 100.0
 
     def order(*_args, **_kwargs):
         writes.append("order")
@@ -2155,10 +2215,22 @@ def test_repair4_a5_epoch_rechecked_inside_hl_flatten_write_boundary(tmp_path):
     broker = HyperliquidBroker(
         info_client=object(),
         exchange_client=SimpleNamespace(
-            _slippage_price=slippage_price,
+            _slippage_price=lambda *_args: 100.0,
             order=order,
         ),
         account_address="0xabc",
+    )
+
+    # The durable SQLite preflight has returned before another attempt
+    # supersedes this epoch. The worker projection must still veto the write.
+    guard(epoch)
+    store.open_kill_epoch(
+        run_id="repair4-hl-boundary",
+        symbol="BTC",
+        flatten_requested=True,
+        policy_version="policy-v1",
+        process_uid="repair4-hl-new",
+        opened_ts_monotonic=20.0,
     )
 
     with pytest.raises(KillConflictError, match="KILL_EPOCH_STALE_WRITE"):
@@ -2169,14 +2241,66 @@ def test_repair4_a5_epoch_rechecked_inside_hl_flatten_write_boundary(tmp_path):
                 size=1.0,
                 exit_side="SELL",
                 epoch=epoch,
-                epoch_guard=store.assert_kill_epoch_active,
+                epoch_guard=guard,
             )
         )
 
     assert writes == []
-    assert "KILL_EPOCH_STALE_WRITE_REJECTED" in {
-        str(row["code"]) for row in store.get_events()
-    }
+    assert full_threads == [event_loop_thread]
+    assert worker_threads and all(
+        thread_id != event_loop_thread for thread_id in worker_threads
+    )
+
+
+def test_repair4_a5_cancel_epoch_rechecked_inside_hl_write_boundary(tmp_path):
+    store = Store(tmp_path / "repair4-hl-cancel-epoch-boundary.db")
+    store.initialize(target_schema_version=9)
+    store.create_run("repair4-hl-cancel", "dry_run", "testnet", {})
+    _request, epoch = store.open_kill_epoch(
+        run_id="repair4-hl-cancel",
+        symbol="BTC",
+        flatten_requested=True,
+        policy_version="policy-v1",
+        process_uid="repair4-hl-cancel-old",
+        opened_ts_monotonic=10.0,
+    )
+    guard, event_loop_thread, full_threads, worker_threads = (
+        _repair4_projected_epoch_guard(store)
+    )
+    writes: list[str] = []
+    broker = HyperliquidBroker(
+        info_client=object(),
+        exchange_client=SimpleNamespace(
+            cancel_by_cloid=lambda *_args: writes.append("cancel") or _OK_RESTING
+        ),
+        account_address="0xabc",
+    )
+
+    guard(epoch)
+    store.open_kill_epoch(
+        run_id="repair4-hl-cancel",
+        symbol="BTC",
+        flatten_requested=True,
+        policy_version="policy-v1",
+        process_uid="repair4-hl-cancel-new",
+        opened_ts_monotonic=20.0,
+    )
+
+    with pytest.raises(KillConflictError, match="KILL_EPOCH_STALE_WRITE"):
+        asyncio.run(
+            broker.kill_cancel_order_by_cloid(
+                "0x" + "4" * 32,
+                "BTC",
+                epoch=epoch,
+                epoch_guard=guard,
+            )
+        )
+
+    assert writes == []
+    assert full_threads == [event_loop_thread]
+    assert worker_threads and all(
+        thread_id != event_loop_thread for thread_id in worker_threads
+    )
 
 
 def test_kill_flatten_uses_frozen_side_even_if_wallet_position_would_flip():

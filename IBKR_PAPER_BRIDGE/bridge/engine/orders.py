@@ -306,6 +306,15 @@ class OrderManager:
     def _assert_kill_epoch_active(self) -> None:
         self.store.assert_kill_epoch_active(self._kill_epoch())
 
+    def _kill_epoch_guard(self) -> Callable[[KillEvidenceEpoch], None]:
+        def guard(epoch: KillEvidenceEpoch) -> None:
+            self.store.assert_kill_epoch_active(epoch)
+
+        guard.in_memory_only = (  # type: ignore[attr-defined]
+            self.store.assert_kill_epoch_owned_in_memory
+        )
+        return guard
+
     def _require_kill_capture(
         self, capture: Any, *, symbol: str
     ) -> KillEvidenceCapture:
@@ -995,7 +1004,7 @@ class OrderManager:
                     target,
                     symbol,
                     epoch=self._kill_epoch(),
-                    epoch_guard=self.store.assert_kill_epoch_active,
+                    epoch_guard=self._kill_epoch_guard(),
                 ),
             )
         except asyncio.TimeoutError:
@@ -1327,7 +1336,7 @@ class OrderManager:
                     size=lots_to_size(qty_lots, lot),
                     exit_side=exit_side,
                     epoch=self._kill_epoch(),
-                    epoch_guard=self.store.assert_kill_epoch_active,
+                    epoch_guard=self._kill_epoch_guard(),
                 ),
             )
         except asyncio.TimeoutError:

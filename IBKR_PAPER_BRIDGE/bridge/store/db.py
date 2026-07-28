@@ -553,10 +553,22 @@ class MigrationError(Exception):
 
 
 class KillConflictError(Exception):
-    def __init__(self, code: str, message: str) -> None:
+    def __init__(
+        self,
+        code: str,
+        message: str,
+        *,
+        cause_reason_code: str | None = None,
+    ) -> None:
         self.code = code
         self.reason_code = code
-        super().__init__(f"{code}: {message}")
+        self.cause_reason_code = cause_reason_code
+        cause = (
+            f"; caused_by={cause_reason_code}"
+            if cause_reason_code is not None
+            else ""
+        )
+        super().__init__(f"{code}: {message}{cause}")
 
 
 # ---------------------------------------------------------------------------
@@ -5050,6 +5062,16 @@ class Store:
                 self._record_stale_epoch_rejection(epoch, "ASSERT_ACTIVE")
             raise
 
+    def assert_kill_epoch_owned_in_memory(
+        self, epoch: KillEvidenceEpoch
+    ) -> None:
+        """Worker-safe process-local projection; never reaches SQLite."""
+        if self._owned_kill_epoch != epoch:
+            raise KillConflictError(
+                "KILL_EPOCH_STALE_WRITE",
+                "the caller does not own the process-local epoch",
+            )
+
     def _record_stale_epoch_rejection(
         self, epoch: KillEvidenceEpoch, operation: str
     ) -> None:
@@ -5061,6 +5083,7 @@ class Store:
             raise KillConflictError(
                 "KILL_STALE_EVIDENCE_RECORD_FAILED",
                 "stale rejection request is missing",
+                cause_reason_code="KILL_EPOCH_STALE_WRITE",
             )
         try:
             now = _to_iso(self._clock()) or ""
@@ -5081,6 +5104,7 @@ class Store:
             raise KillConflictError(
                 "KILL_STALE_EVIDENCE_RECORD_FAILED",
                 f"stale rejection append failed: {type(exc).__name__}",
+                cause_reason_code="KILL_EPOCH_STALE_WRITE",
             ) from exc
 
     def open_kill_epoch(
@@ -5092,6 +5116,7 @@ class Store:
         policy_version: str,
         process_uid: str,
         opened_ts_monotonic: float,
+        app_state_precommitted: bool = False,
     ) -> tuple[dict[str, Any], KillEvidenceEpoch]:
         self._require_kill_schema()
         safe_run = str(run_id).strip()
@@ -5221,6 +5246,7 @@ class Store:
                 request_count == 0
                 and app_row is not None
                 and str(app_row["value"]) == "KILLED"
+                and not app_state_precommitted
             ):
                 raise KillConflictError(
                     "LEGACY_KILLED_EVIDENCE_MISSING",

@@ -72,7 +72,7 @@ No SQLite transaction spans broker I/O.
 
 | ID | Contract |
 |---|---|
-| EP-1 | No broker mutation occurs outside an open epoch owned by the current process. |
+| EP-1 | Repository code checks an open epoch owned by the current process at the last local broker-mutation guard. Hyperliquid exposes no venue-side fencing token, so a residual supersede check/use window remains between that guard and venue receipt; this contract reduces but cannot eliminate that race. |
 | EP-2 | Ownership proof and mutation use the same epoch. Epoch *n* cannot authorize epoch *n+1*. |
 | EP-3 | Every durable request-state mark, action write, proof bind, and close is CAS-guarded by the active epoch. |
 | EP-4 | A stale epoch write is rejected and a secret-safe `KILL_EPOCH_STALE_WRITE_REJECTED` event is appended; an append failure is observable and fail-closed. |

@@ -1383,11 +1383,16 @@ class HyperliquidBroker:
             )
         spec = self._order_specs.get(str(cloid), {})
         coin = str(spec.get("coin", symbol or self.coin))
+        worker_epoch_guard = (
+            getattr(epoch_guard, "in_memory_only", epoch_guard)
+            if epoch_guard is not None
+            else None
+        )
 
         def guarded_cancel():
-            if epoch is not None and epoch_guard is not None:
+            if epoch is not None and worker_epoch_guard is not None:
                 try:
-                    epoch_guard(epoch)
+                    worker_epoch_guard(epoch)
                 except Exception as exc:  # fencing failures are hard aborts
                     raise _KillMutationEpochRejected(exc) from exc
             return self.exchange.cancel_by_cloid(
@@ -1510,11 +1515,16 @@ class HyperliquidBroker:
             price = await asyncio.to_thread(
                 self.exchange._slippage_price, symbol, is_buy, 0.05
             )
+            worker_epoch_guard = (
+                getattr(epoch_guard, "in_memory_only", epoch_guard)
+                if epoch_guard is not None
+                else None
+            )
 
             def guarded_flatten():
-                if epoch is not None and epoch_guard is not None:
+                if epoch is not None and worker_epoch_guard is not None:
                     try:
-                        epoch_guard(epoch)
+                        worker_epoch_guard(epoch)
                     except Exception as exc:  # fencing failures are hard aborts
                         raise _KillMutationEpochRejected(exc) from exc
                 return self.exchange.order(

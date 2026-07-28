@@ -367,6 +367,8 @@ def test_repair4_a8_stale_rejection_append_failure_is_observable(
             reason_code="STALE_ATTEMPT",
         )
     assert failure.value.reason_code == "KILL_STALE_EVIDENCE_RECORD_FAILED"
+    assert failure.value.cause_reason_code == "KILL_EPOCH_STALE_WRITE"
+    assert "caused_by=KILL_EPOCH_STALE_WRITE" in str(failure.value)
 
 
 def test_repair4_a9_replay_appends_immutable_attempt_history(tmp_path):

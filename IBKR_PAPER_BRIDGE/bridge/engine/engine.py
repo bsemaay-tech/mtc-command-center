@@ -432,21 +432,32 @@ class BridgeEngine:
         self._kill_requested = True
         self.order_manager.kill_latched = True
         self.state = "KILLED"
+        # Persist the latch before epoch OPEN. A failed OPEN must never leave a
+        # restart able to recover the prior ARMED state.
+        self._set_state("KILLED")
         if not self.store.kill_evidence_enabled():
             # v9 is explicitly opt-in. Older stores latch KILLED but perform
             # no best-effort broad mutation and can never acknowledge without
             # the durable evidence contract.
-            self._set_state("KILLED")
             await self._publish("status", self.status())
             return
-        request, epoch = self.store.open_kill_epoch(
-            run_id=self.run_id,
-            symbol=self.coin,
-            flatten_requested=bool(flatten),
-            policy_version=_KILL_POLICY_VERSION,
-            process_uid=self._kill_process_uid,
-            opened_ts_monotonic=self._kill_monotonic(),
-        )
+        try:
+            request, epoch = self.store.open_kill_epoch(
+                run_id=self.run_id,
+                symbol=self.coin,
+                flatten_requested=bool(flatten),
+                policy_version=_KILL_POLICY_VERSION,
+                process_uid=self._kill_process_uid,
+                opened_ts_monotonic=self._kill_monotonic(),
+                app_state_precommitted=True,
+            )
+        except Exception:
+            # OPEN is a safety boundary: retain the durable latch written
+            # above and leave the episode query-only with no mutation token.
+            self._kill_requested = True
+            self.order_manager.kill_latched = True
+            self.state = "KILLED"
+            raise
         start_ms = self.store.kill_capture_start_ms(self.run_id, self.coin)
         # This is a read-only query. A local or injected clock must never cap
         # exchange evidence server-side and hide later venue-stamped fills.

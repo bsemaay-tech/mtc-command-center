@@ -343,24 +343,65 @@ def test_repair4_a3_clock_underbound_cannot_hide_foreign_replacement(tmp_path):
     assert request["terminal_reason"] == "OWNERSHIP_AMBIGUOUS"
 
 
-def test_repair4_a4_flatten_and_residual_cancel_each_recapture(tmp_path):
+@pytest.mark.parametrize(
+    ("inject_at_capture", "expected_state", "expected_reason", "expected_mutations"),
+    [
+        (2, "AMBIGUOUS", "OWNERSHIP_AMBIGUOUS", []),
+        (3, "UNKNOWN", "FLATTEN_POSITION_NOT_FLAT", ["flatten_reduce_only"]),
+    ],
+)
+def test_repair4_a4_flatten_and_residual_cancel_each_use_fresh_capture(
+    tmp_path,
+    inject_at_capture,
+    expected_state,
+    expected_reason,
+    expected_mutations,
+):
     store, broker, engine = _repair4_kill_engine(tmp_path)
     capture_count = 0
     original_capture = broker.capture_kill_evidence
+    base_ms = int(datetime.now(UTC).timestamp() * 1000)
 
-    async def counted_capture(**kwargs):
+    async def capture_with_interphase_foreign_fill(**kwargs):
         nonlocal capture_count
         capture_count += 1
+        if capture_count == inject_at_capture:
+            broker.full_fill_history.extend(
+                [
+                    {
+                        "fill_id": f"repair4-phase-{inject_at_capture}-foreign-sell",
+                        "oid": 910 + inject_at_capture,
+                        "coin": "BTC",
+                        "side": "SELL",
+                        "sz": 1.0,
+                        "px": 100.0,
+                        "time": base_ms,
+                    },
+                    {
+                        "fill_id": f"repair4-phase-{inject_at_capture}-foreign-buy",
+                        "oid": 920 + inject_at_capture,
+                        "coin": "BTC",
+                        "side": "BUY",
+                        "sz": 1.0,
+                        "px": 100.0,
+                        "time": base_ms + 1,
+                    },
+                ]
+            )
         return await original_capture(**kwargs)
 
-    broker.capture_kill_evidence = counted_capture
+    broker.capture_kill_evidence = capture_with_interphase_foreign_fill
 
     asyncio.run(engine.kill(flatten=True))
 
     request = store.active_kill_request()
     assert request is not None
-    assert request["terminal_state"] == "SAFE_FLAT"
-    assert capture_count >= 3
+    assert request["terminal_state"] == expected_state
+    assert request["terminal_reason"] == expected_reason
+    assert [kind for kind, _cloid in broker.broker_mutations] == expected_mutations
+    assert next(
+        row for row in broker.orders if row["cloid"] == "repair4-sl"
+    )["status"] == "OPEN"
 
 
 def test_repair4_a10_epoch_open_failure_retains_kill_latch(
@@ -378,7 +419,10 @@ def test_repair4_a10_epoch_open_failure_retains_kill_latch(
 
     assert engine.state == "KILLED"
     assert engine.order_manager.kill_latched is True
+    assert store.get_meta("app_state") == "KILLED"
+    assert engine._app_state() == "KILLED"
     assert broker.broker_mutations == []
+    assert store.active_kill_request() is None
     assert store.get_meta("kill_epoch_active") is None
     assert store.conn.execute(
         "SELECT COUNT(*) FROM kill_requests WHERE terminal_state IN "
