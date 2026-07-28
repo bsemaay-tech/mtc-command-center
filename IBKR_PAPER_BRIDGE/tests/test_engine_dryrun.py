@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import sqlite3
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 from datetime import UTC, datetime, timedelta
@@ -21,7 +22,7 @@ from bridge.engine.types import (
     Signal,
 )
 from bridge.broker.base import SubmissionRejectedError
-from bridge.store.db import Store
+from bridge.store.db import KillConflictError, Store
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -428,6 +429,75 @@ def test_repair4_a10_epoch_open_failure_retains_kill_latch(
         "SELECT COUNT(*) FROM kill_requests WHERE terminal_state IN "
         "('SAFE_FLAT','SAFE_RETAINED')"
     ).fetchone()[0] == 0
+
+
+def test_repair4_f1_legacy_killed_without_evidence_is_rejected_by_kill(tmp_path):
+    store, broker, engine = _repair4_kill_engine(tmp_path)
+    store.set_meta("app_state", "KILLED")
+    assert store.conn.execute("SELECT COUNT(*) FROM kill_requests").fetchone()[0] == 0
+
+    with pytest.raises(
+        KillConflictError, match="LEGACY_KILLED_EVIDENCE_MISSING"
+    ) as failure:
+        asyncio.run(engine.kill(flatten=True))
+
+    assert failure.value.reason_code == "LEGACY_KILLED_EVIDENCE_MISSING"
+    assert store.get_meta("app_state") == "KILLED"
+    assert store.conn.execute("SELECT COUNT(*) FROM kill_requests").fetchone()[0] == 0
+    assert broker.broker_mutations == []
+
+
+def test_repair4_f4_worker_rejection_is_recorded_on_event_loop(
+    tmp_path, monkeypatch
+):
+    store, broker, engine = _repair4_kill_engine(tmp_path)
+    observer = Store(store.db_path)
+    observer.initialize(target_schema_version=9)
+    event_loop_thread = threading.get_ident()
+    record_threads: list[int] = []
+    original_record = store._record_stale_epoch_rejection
+
+    def tracked_record(epoch, operation):
+        record_threads.append(threading.get_ident())
+        return original_record(epoch, operation)
+
+    async def reject_at_worker_boundary(
+        *,
+        symbol,
+        cloid,
+        size,
+        exit_side,
+        epoch,
+        epoch_guard,
+        worker_epoch_guard=None,
+    ):
+        epoch_guard(epoch)
+        store._owned_kill_epoch = None
+        worker_guard = worker_epoch_guard or getattr(
+            epoch_guard, "in_memory_only"
+        )
+        worker_guard(epoch)
+        raise AssertionError("worker guard must reject")
+
+    monkeypatch.setattr(
+        store, "_record_stale_epoch_rejection", tracked_record
+    )
+    monkeypatch.setattr(
+        broker, "kill_flatten_reduce_only", reject_at_worker_boundary
+    )
+
+    with pytest.raises(KillConflictError, match="KILL_EPOCH_STALE_WRITE"):
+        asyncio.run(engine.kill(flatten=True))
+
+    stale_events = [
+        row
+        for row in observer.get_events()
+        if row["code"] == "KILL_EPOCH_STALE_WRITE_REJECTED"
+    ]
+    assert len(stale_events) == 1
+    assert record_threads == [event_loop_thread]
+    assert observer.get_meta("kill_epoch_active") is not None
+    observer.close()
 
 
 async def _run_dryrun_replay(tmp_path):

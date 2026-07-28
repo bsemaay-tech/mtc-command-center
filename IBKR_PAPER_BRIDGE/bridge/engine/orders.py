@@ -308,11 +308,8 @@ class OrderManager:
 
     def _kill_epoch_guard(self) -> Callable[[KillEvidenceEpoch], None]:
         def guard(epoch: KillEvidenceEpoch) -> None:
-            self.store.assert_kill_epoch_active(epoch)
+            self.store.assert_kill_epoch_active_for_mutation(epoch)
 
-        guard.in_memory_only = (  # type: ignore[attr-defined]
-            self.store.assert_kill_epoch_owned_in_memory
-        )
         return guard
 
     def _require_kill_capture(
@@ -1005,12 +1002,19 @@ class OrderManager:
                     symbol,
                     epoch=self._kill_epoch(),
                     epoch_guard=self._kill_epoch_guard(),
+                    worker_epoch_guard=(
+                        self.store.assert_kill_epoch_owned_in_memory
+                    ),
                 ),
             )
         except asyncio.TimeoutError:
             self._kill_record(action_id, "UNKNOWN", "CANCEL_TRANSPORT_TIMEOUT")
             return False
-        except KillConflictError:
+        except KillConflictError as exc:
+            if exc.reason_code == "KILL_EPOCH_STALE_WRITE":
+                self.store.record_kill_epoch_stale_write_rejection(
+                    self._kill_epoch(), "CANCEL_MUTATION_BOUNDARY"
+                )
             raise
         except Exception as exc:
             self._kill_record(
@@ -1337,12 +1341,19 @@ class OrderManager:
                     exit_side=exit_side,
                     epoch=self._kill_epoch(),
                     epoch_guard=self._kill_epoch_guard(),
+                    worker_epoch_guard=(
+                        self.store.assert_kill_epoch_owned_in_memory
+                    ),
                 ),
             )
         except asyncio.TimeoutError:
             self._kill_record(action_id, "UNKNOWN", "FLATTEN_TRANSPORT_TIMEOUT")
             return "UNKNOWN"
-        except KillConflictError:
+        except KillConflictError as exc:
+            if exc.reason_code == "KILL_EPOCH_STALE_WRITE":
+                self.store.record_kill_epoch_stale_write_rejection(
+                    self._kill_epoch(), "FLATTEN_MUTATION_BOUNDARY"
+                )
             raise
         except Exception as exc:
             self._kill_record(

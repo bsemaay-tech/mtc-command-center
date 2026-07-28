@@ -432,6 +432,7 @@ class BridgeEngine:
         self._kill_requested = True
         self.order_manager.kill_latched = True
         self.state = "KILLED"
+        prior_state = self.store.get_meta("app_state")
         # Persist the latch before epoch OPEN. A failed OPEN must never leave a
         # restart able to recover the prior ARMED state.
         self._set_state("KILLED")
@@ -449,7 +450,7 @@ class BridgeEngine:
                 policy_version=_KILL_POLICY_VERSION,
                 process_uid=self._kill_process_uid,
                 opened_ts_monotonic=self._kill_monotonic(),
-                app_state_precommitted=True,
+                app_state_precommitted=(prior_state != "KILLED"),
             )
         except Exception:
             # OPEN is a safety boundary: retain the durable latch written

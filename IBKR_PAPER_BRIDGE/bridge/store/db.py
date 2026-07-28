@@ -5054,13 +5054,19 @@ class Store:
         return expected
 
     def assert_kill_epoch_active(self, epoch: KillEvidenceEpoch) -> None:
-        self._require_kill_schema()
         try:
-            self._assert_kill_epoch_in_tx(epoch)
+            self.assert_kill_epoch_active_for_mutation(epoch)
         except KillConflictError as exc:
             if exc.reason_code == "KILL_EPOCH_STALE_WRITE":
                 self._record_stale_epoch_rejection(epoch, "ASSERT_ACTIVE")
             raise
+
+    def assert_kill_epoch_active_for_mutation(
+        self, epoch: KillEvidenceEpoch
+    ) -> None:
+        """Event-loop durable guard whose caller records any stale rejection."""
+        self._require_kill_schema()
+        self._assert_kill_epoch_in_tx(epoch)
 
     def assert_kill_epoch_owned_in_memory(
         self, epoch: KillEvidenceEpoch
@@ -5071,6 +5077,12 @@ class Store:
                 "KILL_EPOCH_STALE_WRITE",
                 "the caller does not own the process-local epoch",
             )
+
+    def record_kill_epoch_stale_write_rejection(
+        self, epoch: KillEvidenceEpoch, operation: str
+    ) -> None:
+        """Append EP-4 evidence on the event loop after a mutation veto."""
+        self._record_stale_epoch_rejection(epoch, operation)
 
     def _record_stale_epoch_rejection(
         self, epoch: KillEvidenceEpoch, operation: str

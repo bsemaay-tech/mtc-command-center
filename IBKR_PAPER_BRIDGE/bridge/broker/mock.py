@@ -540,9 +540,11 @@ class MockBroker:
         *,
         epoch: KillEvidenceEpoch,
         epoch_guard: Callable[[KillEvidenceEpoch], None],
+        worker_epoch_guard: Callable[[KillEvidenceEpoch], None],
     ) -> CancelResult:
         """KILL-only seam: validate the token in the final synchronous slice."""
         epoch_guard(epoch)
+        worker_epoch_guard(epoch)
         return await self.cancel_order_by_cloid(cloid, symbol)
 
     def _apply_late_entry_fill(self, cancel_cloid: str) -> None:
@@ -643,9 +645,11 @@ class MockBroker:
         exit_side: str,
         epoch: KillEvidenceEpoch,
         epoch_guard: Callable[[KillEvidenceEpoch], None],
+        worker_epoch_guard: Callable[[KillEvidenceEpoch], None],
     ) -> FlattenResult:
         """KILL-only seam: validate the token immediately before mock mutation."""
         epoch_guard(epoch)
+        worker_epoch_guard(epoch)
         return await self.flatten_reduce_only(
             symbol=symbol,
             cloid=cloid,

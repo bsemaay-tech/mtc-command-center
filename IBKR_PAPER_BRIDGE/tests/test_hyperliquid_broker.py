@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
@@ -2123,7 +2124,7 @@ def test_typed_flatten_transport_failure_is_unknown():
     assert result.outcome is ActionOutcome.UNKNOWN
 
 
-def _repair4_projected_epoch_guard(store):
+def _repair4_projected_epoch_guard(store, *, legacy_projection=True):
     event_loop_thread = threading.get_ident()
     full_guard_threads: list[int] = []
     worker_guard_threads: list[int] = []
@@ -2131,11 +2132,9 @@ def _repair4_projected_epoch_guard(store):
     def full_guard(epoch):
         thread_id = threading.get_ident()
         full_guard_threads.append(thread_id)
-        if thread_id != event_loop_thread:
-            raise AssertionError("SQLite epoch guard reached an executor thread")
         store.assert_kill_epoch_active(epoch)
 
-    def in_memory_only(epoch):
+    def worker_guard(epoch):
         worker_guard_threads.append(threading.get_ident())
         if store._owned_kill_epoch != epoch:
             raise KillConflictError(
@@ -2143,14 +2142,24 @@ def _repair4_projected_epoch_guard(store):
                 "the worker does not own the process-local epoch",
             )
 
-    full_guard.in_memory_only = in_memory_only
-    return full_guard, event_loop_thread, full_guard_threads, worker_guard_threads
+    if legacy_projection:
+        full_guard.in_memory_only = worker_guard
+    return (
+        full_guard,
+        worker_guard,
+        event_loop_thread,
+        full_guard_threads,
+        worker_guard_threads,
+    )
 
 
-def test_repair4_d1_hl_worker_uses_process_local_epoch_projection(tmp_path):
-    store = Store(tmp_path / "repair4-hl-worker-projection.db")
+def test_repair4_f3_plain_durable_guard_never_runs_in_executor(tmp_path):
+    path = tmp_path / "repair4-hl-worker-projection.db"
+    store = Store(path)
     store.initialize(target_schema_version=9)
     store.create_run("repair4-hl-worker", "dry_run", "testnet", {})
+    observer = Store(path)
+    observer.initialize(target_schema_version=9)
     _request, epoch = store.open_kill_epoch(
         run_id="repair4-hl-worker",
         symbol="BTC",
@@ -2159,8 +2168,8 @@ def test_repair4_d1_hl_worker_uses_process_local_epoch_projection(tmp_path):
         process_uid="repair4-hl-worker",
         opened_ts_monotonic=10.0,
     )
-    guard, event_loop_thread, full_threads, worker_threads = (
-        _repair4_projected_epoch_guard(store)
+    guard, worker_guard, event_loop_thread, full_threads, worker_threads = (
+        _repair4_projected_epoch_guard(store, legacy_projection=False)
     )
     writes: list[str] = []
     broker = HyperliquidBroker(
@@ -2172,30 +2181,50 @@ def test_repair4_d1_hl_worker_uses_process_local_epoch_projection(tmp_path):
         account_address="0xabc",
     )
 
-    guard(epoch)
+    parameters = inspect.signature(
+        broker.kill_flatten_reduce_only
+    ).parameters
+    kwargs = {
+        "symbol": "BTC",
+        "cloid": "0x" + "3" * 32,
+        "size": 1.0,
+        "exit_side": "SELL",
+        "epoch": epoch,
+        "epoch_guard": guard,
+    }
+    if "worker_epoch_guard" in parameters:
+        kwargs["worker_epoch_guard"] = worker_guard
     asyncio.run(
-        broker.kill_flatten_reduce_only(
-            symbol="BTC",
-            cloid="0x" + "3" * 32,
-            size=1.0,
-            exit_side="SELL",
-            epoch=epoch,
-            epoch_guard=guard,
-        )
+        broker.kill_flatten_reduce_only(**kwargs)
     )
 
+    assert "worker_epoch_guard" in parameters
+    assert (
+        parameters["worker_epoch_guard"].default
+        is inspect.Parameter.empty
+    )
+    cancel_worker = inspect.signature(
+        broker.kill_cancel_order_by_cloid
+    ).parameters["worker_epoch_guard"]
+    assert cancel_worker.default is inspect.Parameter.empty
     assert writes == ["order"]
     assert full_threads == [event_loop_thread]
     assert worker_threads and all(
         thread_id != event_loop_thread for thread_id in worker_threads
     )
+    missing_worker = dict(kwargs)
+    missing_worker.pop("worker_epoch_guard")
+    with pytest.raises(TypeError):
+        asyncio.run(broker.kill_flatten_reduce_only(**missing_worker))
+    observer.close()
 
 
-def test_repair4_a5_epoch_rechecked_inside_hl_flatten_write_boundary(tmp_path):
-    store = Store(tmp_path / "repair4-hl-epoch-boundary.db")
-    store.initialize(target_schema_version=9)
-    store.create_run("repair4-hl-boundary", "dry_run", "testnet", {})
-    _request, epoch = store.open_kill_epoch(
+def test_repair4_f2_epoch_rechecked_after_hl_slippage_round_trip(tmp_path):
+    path = tmp_path / "repair4-hl-epoch-boundary.db"
+    older = Store(path)
+    older.initialize(target_schema_version=9)
+    older.create_run("repair4-hl-boundary", "dry_run", "testnet", {})
+    _request, epoch = older.open_kill_epoch(
         run_id="repair4-hl-boundary",
         symbol="BTC",
         flatten_requested=True,
@@ -2203,10 +2232,23 @@ def test_repair4_a5_epoch_rechecked_inside_hl_flatten_write_boundary(tmp_path):
         process_uid="repair4-hl-old",
         opened_ts_monotonic=10.0,
     )
-    guard, event_loop_thread, full_threads, worker_threads = (
-        _repair4_projected_epoch_guard(store)
+    newer = Store(path)
+    newer.initialize(target_schema_version=9)
+    guard, worker_guard, event_loop_thread, full_threads, worker_threads = (
+        _repair4_projected_epoch_guard(older)
     )
     writes: list[str] = []
+
+    def slippage_price(*_args):
+        newer.open_kill_epoch(
+            run_id="repair4-hl-boundary",
+            symbol="BTC",
+            flatten_requested=True,
+            policy_version="policy-v1",
+            process_uid="repair4-hl-new",
+            opened_ts_monotonic=20.0,
+        )
+        return 100.0
 
     def order(*_args, **_kwargs):
         writes.append("order")
@@ -2215,48 +2257,47 @@ def test_repair4_a5_epoch_rechecked_inside_hl_flatten_write_boundary(tmp_path):
     broker = HyperliquidBroker(
         info_client=object(),
         exchange_client=SimpleNamespace(
-            _slippage_price=lambda *_args: 100.0,
+            _slippage_price=slippage_price,
             order=order,
         ),
         account_address="0xabc",
     )
 
-    # The durable SQLite preflight has returned before another attempt
-    # supersedes this epoch. The worker projection must still veto the write.
-    guard(epoch)
-    store.open_kill_epoch(
-        run_id="repair4-hl-boundary",
-        symbol="BTC",
-        flatten_requested=True,
-        policy_version="policy-v1",
-        process_uid="repair4-hl-new",
-        opened_ts_monotonic=20.0,
-    )
-
     with pytest.raises(KillConflictError, match="KILL_EPOCH_STALE_WRITE"):
-        asyncio.run(
-            broker.kill_flatten_reduce_only(
-                symbol="BTC",
-                cloid="0x" + "3" * 32,
-                size=1.0,
-                exit_side="SELL",
-                epoch=epoch,
-                epoch_guard=guard,
-            )
+        kwargs = dict(
+            symbol="BTC",
+            cloid="0x" + "3" * 32,
+            size=1.0,
+            exit_side="SELL",
+            epoch=epoch,
+            epoch_guard=guard,
         )
+        if "worker_epoch_guard" in inspect.signature(
+            broker.kill_flatten_reduce_only
+        ).parameters:
+            kwargs["worker_epoch_guard"] = worker_guard
+        asyncio.run(broker.kill_flatten_reduce_only(**kwargs))
 
     assert writes == []
     assert full_threads == [event_loop_thread]
-    assert worker_threads and all(
-        thread_id != event_loop_thread for thread_id in worker_threads
-    )
+    assert worker_threads == []
+    assert len(
+        [
+            row
+            for row in older.get_events()
+            if row["code"] == "KILL_EPOCH_STALE_WRITE_REJECTED"
+        ]
+    ) == 1
+    newer.close()
+    older.close()
 
 
-def test_repair4_a5_cancel_epoch_rechecked_inside_hl_write_boundary(tmp_path):
-    store = Store(tmp_path / "repair4-hl-cancel-epoch-boundary.db")
-    store.initialize(target_schema_version=9)
-    store.create_run("repair4-hl-cancel", "dry_run", "testnet", {})
-    _request, epoch = store.open_kill_epoch(
+def test_repair4_f2_cancel_uses_two_store_durable_boundary(tmp_path):
+    path = tmp_path / "repair4-hl-cancel-epoch-boundary.db"
+    older = Store(path)
+    older.initialize(target_schema_version=9)
+    older.create_run("repair4-hl-cancel", "dry_run", "testnet", {})
+    _request, epoch = older.open_kill_epoch(
         run_id="repair4-hl-cancel",
         symbol="BTC",
         flatten_requested=True,
@@ -2264,8 +2305,10 @@ def test_repair4_a5_cancel_epoch_rechecked_inside_hl_write_boundary(tmp_path):
         process_uid="repair4-hl-cancel-old",
         opened_ts_monotonic=10.0,
     )
-    guard, event_loop_thread, full_threads, worker_threads = (
-        _repair4_projected_epoch_guard(store)
+    newer = Store(path)
+    newer.initialize(target_schema_version=9)
+    guard, worker_guard, event_loop_thread, full_threads, worker_threads = (
+        _repair4_projected_epoch_guard(older)
     )
     writes: list[str] = []
     broker = HyperliquidBroker(
@@ -2276,8 +2319,7 @@ def test_repair4_a5_cancel_epoch_rechecked_inside_hl_write_boundary(tmp_path):
         account_address="0xabc",
     )
 
-    guard(epoch)
-    store.open_kill_epoch(
+    newer.open_kill_epoch(
         run_id="repair4-hl-cancel",
         symbol="BTC",
         flatten_requested=True,
@@ -2287,20 +2329,32 @@ def test_repair4_a5_cancel_epoch_rechecked_inside_hl_write_boundary(tmp_path):
     )
 
     with pytest.raises(KillConflictError, match="KILL_EPOCH_STALE_WRITE"):
+        kwargs = dict(
+            epoch=epoch,
+            epoch_guard=guard,
+        )
+        if "worker_epoch_guard" in inspect.signature(
+            broker.kill_cancel_order_by_cloid
+        ).parameters:
+            kwargs["worker_epoch_guard"] = worker_guard
         asyncio.run(
             broker.kill_cancel_order_by_cloid(
-                "0x" + "4" * 32,
-                "BTC",
-                epoch=epoch,
-                epoch_guard=guard,
+                "0x" + "4" * 32, "BTC", **kwargs
             )
         )
 
     assert writes == []
     assert full_threads == [event_loop_thread]
-    assert worker_threads and all(
-        thread_id != event_loop_thread for thread_id in worker_threads
-    )
+    assert worker_threads == []
+    assert len(
+        [
+            row
+            for row in older.get_events()
+            if row["code"] == "KILL_EPOCH_STALE_WRITE_REJECTED"
+        ]
+    ) == 1
+    newer.close()
+    older.close()
 
 
 def test_kill_flatten_uses_frozen_side_even_if_wallet_position_would_flip():

@@ -305,6 +305,7 @@ class KillRecoveryBroker(Protocol):
         *,
         epoch: KillEvidenceEpoch,
         epoch_guard: Callable[[KillEvidenceEpoch], None],
+        worker_epoch_guard: Callable[[KillEvidenceEpoch], None],
     ) -> CancelResult:
         """KILL-only cancel fenced inside the adapter's final write boundary."""
         ...
@@ -318,6 +319,7 @@ class KillRecoveryBroker(Protocol):
         exit_side: str,
         epoch: KillEvidenceEpoch,
         epoch_guard: Callable[[KillEvidenceEpoch], None],
+        worker_epoch_guard: Callable[[KillEvidenceEpoch], None],
     ) -> FlattenResult:
         """KILL-only flatten fenced inside the adapter's final write boundary."""
         ...

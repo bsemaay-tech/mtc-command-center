@@ -1351,6 +1351,7 @@ class HyperliquidBroker:
             symbol=symbol,
             epoch=None,
             epoch_guard=None,
+            worker_epoch_guard=None,
         )
 
     async def kill_cancel_order_by_cloid(
@@ -1360,12 +1361,14 @@ class HyperliquidBroker:
         *,
         epoch: KillEvidenceEpoch,
         epoch_guard: Callable[[KillEvidenceEpoch], None],
+        worker_epoch_guard: Callable[[KillEvidenceEpoch], None],
     ) -> CancelResult:
         return await self._cancel_order_by_cloid(
             cloid=cloid,
             symbol=symbol,
             epoch=epoch,
             epoch_guard=epoch_guard,
+            worker_epoch_guard=worker_epoch_guard,
         )
 
     async def _cancel_order_by_cloid(
@@ -1375,6 +1378,7 @@ class HyperliquidBroker:
         symbol: str,
         epoch: KillEvidenceEpoch | None,
         epoch_guard: Callable[[KillEvidenceEpoch], None] | None,
+        worker_epoch_guard: Callable[[KillEvidenceEpoch], None] | None,
     ) -> CancelResult:
         if self.exchange is None or not hasattr(self.exchange, "cancel_by_cloid"):
             return CancelResult(
@@ -1383,11 +1387,6 @@ class HyperliquidBroker:
             )
         spec = self._order_specs.get(str(cloid), {})
         coin = str(spec.get("coin", symbol or self.coin))
-        worker_epoch_guard = (
-            getattr(epoch_guard, "in_memory_only", epoch_guard)
-            if epoch_guard is not None
-            else None
-        )
 
         def guarded_cancel():
             if epoch is not None and worker_epoch_guard is not None:
@@ -1400,6 +1399,11 @@ class HyperliquidBroker:
             )
 
         try:
+            if epoch is not None and epoch_guard is not None:
+                try:
+                    epoch_guard(epoch)
+                except Exception as exc:  # fencing failures are hard aborts
+                    raise _KillMutationEpochRejected(exc) from exc
             raw = await asyncio.to_thread(guarded_cancel)
         except _KillMutationEpochRejected as exc:
             raise exc.cause from exc
@@ -1469,6 +1473,7 @@ class HyperliquidBroker:
             exit_side=exit_side,
             epoch=None,
             epoch_guard=None,
+            worker_epoch_guard=None,
         )
 
     async def kill_flatten_reduce_only(
@@ -1480,6 +1485,7 @@ class HyperliquidBroker:
         exit_side: str,
         epoch: KillEvidenceEpoch,
         epoch_guard: Callable[[KillEvidenceEpoch], None],
+        worker_epoch_guard: Callable[[KillEvidenceEpoch], None],
     ) -> FlattenResult:
         return await self._flatten_reduce_only(
             symbol=symbol,
@@ -1488,6 +1494,7 @@ class HyperliquidBroker:
             exit_side=exit_side,
             epoch=epoch,
             epoch_guard=epoch_guard,
+            worker_epoch_guard=worker_epoch_guard,
         )
 
     async def _flatten_reduce_only(
@@ -1499,6 +1506,7 @@ class HyperliquidBroker:
         exit_side: str,
         epoch: KillEvidenceEpoch | None,
         epoch_guard: Callable[[KillEvidenceEpoch], None] | None,
+        worker_epoch_guard: Callable[[KillEvidenceEpoch], None] | None,
     ) -> FlattenResult:
         if self.exchange is None or not hasattr(self.exchange, "order"):
             return FlattenResult(
@@ -1514,11 +1522,6 @@ class HyperliquidBroker:
                 )
             price = await asyncio.to_thread(
                 self.exchange._slippage_price, symbol, is_buy, 0.05
-            )
-            worker_epoch_guard = (
-                getattr(epoch_guard, "in_memory_only", epoch_guard)
-                if epoch_guard is not None
-                else None
             )
 
             def guarded_flatten():
@@ -1537,6 +1540,11 @@ class HyperliquidBroker:
                     cloid=Cloid.from_str(str(cloid)),
                 )
 
+            if epoch is not None and epoch_guard is not None:
+                try:
+                    epoch_guard(epoch)
+                except Exception as exc:  # fencing failures are hard aborts
+                    raise _KillMutationEpochRejected(exc) from exc
             raw = await asyncio.to_thread(guarded_flatten)
         except _KillMutationEpochRejected as exc:
             raise exc.cause from exc
