@@ -6295,9 +6295,12 @@ class Store:
                 try:
                     fill_qty = Decimal(str(fill["qty"]))
                     fill_px = Decimal(str(fill["px"]))
+                    fill_fee = Decimal(str(fill["fee"]))
+                    fill_funding = Decimal(str(fill["funding"]))
                     fill_ts = datetime.fromisoformat(str(fill["fill_ts"]))
                 except (
                     InvalidOperation,
+                    KeyError,
                     TypeError,
                     ValueError,
                     OverflowError,
@@ -6313,6 +6316,8 @@ class Store:
                     or str(fill["decision_uid"]) != decision_uid
                     or not fill_qty.is_finite()
                     or not fill_px.is_finite()
+                    or not fill_fee.is_finite()
+                    or not fill_funding.is_finite()
                     or fill_qty <= 0
                     or fill_px <= 0
                     or fill_ts.tzinfo is None
@@ -6339,6 +6344,217 @@ class Store:
             )
         return lifecycles
 
+    @staticmethod
+    def _kill_lifecycle_utc(value: Any) -> datetime:
+        try:
+            parsed = datetime.fromisoformat(str(value))
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise KillConflictError(
+                "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                "flatten lifecycle timestamp is invalid",
+            ) from exc
+        if parsed.tzinfo is None:
+            raise KillConflictError(
+                "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                "flatten lifecycle timestamp is not timezone-aware",
+            )
+        return parsed.astimezone(UTC)
+
+    def _expected_kill_flatten_closure_in_tx(
+        self, lifecycle: Mapping[str, Any]
+    ) -> dict[str, Any]:
+        order = lifecycle["order"]
+        trade = lifecycle["trade"]
+        fills = lifecycle["fills"]
+        try:
+            trade_id = int(order["trade_id"])
+            decision_uid = str(order["decision_uid"])
+            totals = self.trade_fill_totals(trade_id)
+            entry_qty = float(totals["entry_qty"] or trade["qty"])
+            entry_px = float(
+                totals["entry_vwap"]
+                if totals["entry_vwap"] is not None
+                else trade["entry_px"] or trade["expected_px"]
+            )
+            exit_qty = float(totals["exit_qty"])
+            exit_px = float(totals["exit_vwap"])
+            costs = float(self.trade_costs(decision_uid))
+            durable_exit_ts = self._kill_lifecycle_utc(fills[-1]["fill_ts"])
+            aggregate_exit_ts = self._kill_lifecycle_utc(
+                totals["exit_last_ts"]
+            )
+        except KillConflictError:
+            raise
+        except (
+            InvalidOperation,
+            KeyError,
+            TypeError,
+            ValueError,
+            OverflowError,
+        ) as exc:
+            raise KillConflictError(
+                "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                "flatten lifecycle aggregate is invalid",
+            ) from exc
+        direction = str(trade.get("direction") or "")
+        if (
+            direction not in {"LONG", "SHORT"}
+            or not all(
+                math.isfinite(value)
+                for value in (entry_qty, entry_px, exit_qty, exit_px, costs)
+            )
+            or entry_qty <= 0
+            or entry_px <= 0
+            or exit_qty <= 0
+            or exit_px <= 0
+            or not math.isclose(
+                exit_qty, entry_qty, rel_tol=0.0, abs_tol=1e-12
+            )
+            or aggregate_exit_ts != durable_exit_ts
+        ):
+            raise KillConflictError(
+                "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                "flatten lifecycle aggregate is incomplete or conflicting",
+            )
+        try:
+            if self.has_live_entry_remainder(trade_id):
+                raise KillConflictError(
+                    "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                    "flatten lifecycle has a live entry remainder",
+                )
+        except (InvalidOperation, TypeError, ValueError, OverflowError) as exc:
+            raise KillConflictError(
+                "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                "flatten lifecycle entry remainder is invalid",
+            ) from exc
+        sign = 1 if direction == "LONG" else -1
+        gross = (exit_px - entry_px) * entry_qty * sign
+        pnl = gross - costs
+        if not math.isfinite(gross) or not math.isfinite(pnl):
+            raise KillConflictError(
+                "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                "flatten lifecycle PnL is invalid",
+            )
+        return {
+            "trade_id": trade_id,
+            "run_id": str(trade["run_id"]),
+            "decision_uid": decision_uid,
+            "coin": str(trade["coin"]),
+            "exit_ts": durable_exit_ts,
+            "exit_px": exit_px,
+            "exit_reason": "KILL_FLATTEN",
+            "pnl": pnl,
+            "payload": {
+                "exit_reason": "KILL_FLATTEN",
+                "pnl": pnl,
+                "pnl_gross": gross,
+                "costs": costs,
+                "entry_basis_px": entry_px,
+                "exit_vwap": exit_px,
+                "qty": entry_qty,
+            },
+        }
+
+    def _assert_kill_flatten_closure_in_tx(
+        self, lifecycle: Mapping[str, Any]
+    ) -> dict[str, Any]:
+        expected = self._expected_kill_flatten_closure_in_tx(lifecycle)
+        trade = self.conn.execute(
+            "SELECT * FROM trades WHERE trade_id=?",
+            (expected["trade_id"],),
+        ).fetchone()
+        decisions = self.conn.execute(
+            """SELECT * FROM decisions
+               WHERE trade_id=? AND stage='TRADE_CLOSED'
+               ORDER BY id""",
+            (expected["trade_id"],),
+        ).fetchall()
+        if trade is None or len(decisions) != 1:
+            raise KillConflictError(
+                "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                "flatten lifecycle requires exactly one close decision",
+            )
+        trade_row = dict(trade)
+        decision = dict(decisions[0])
+        try:
+            trade_exit_ts = self._kill_lifecycle_utc(trade_row["exit_ts"])
+            decision_ts = self._kill_lifecycle_utc(decision["ts"])
+            trade_exit_px = float(trade_row["exit_px"])
+            trade_pnl = float(trade_row["pnl"])
+            payload = json.loads(str(decision["payload_json"]))
+            payload_version = int(decision["payload_version"])
+        except KillConflictError:
+            raise
+        except (
+            json.JSONDecodeError,
+            KeyError,
+            TypeError,
+            ValueError,
+            OverflowError,
+        ) as exc:
+            raise KillConflictError(
+                "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                "flatten lifecycle closure evidence is malformed",
+            ) from exc
+        expected_payload = expected["payload"]
+        numeric_payload_keys = {
+            "pnl",
+            "pnl_gross",
+            "costs",
+            "entry_basis_px",
+            "exit_vwap",
+            "qty",
+        }
+        try:
+            payload_matches = (
+                isinstance(payload, Mapping)
+                and set(payload) == set(expected_payload)
+                and payload.get("exit_reason") == expected_payload["exit_reason"]
+                and all(
+                    math.isfinite(float(payload[key]))
+                    and math.isclose(
+                        float(payload[key]),
+                        float(expected_payload[key]),
+                        rel_tol=0.0,
+                        abs_tol=1e-12,
+                    )
+                    for key in numeric_payload_keys
+                )
+            )
+        except (KeyError, TypeError, ValueError, OverflowError):
+            payload_matches = False
+        if (
+            trade_exit_ts != expected["exit_ts"]
+            or decision_ts != expected["exit_ts"]
+            or not math.isfinite(trade_exit_px)
+            or not math.isfinite(trade_pnl)
+            or not math.isclose(
+                trade_exit_px,
+                expected["exit_px"],
+                rel_tol=0.0,
+                abs_tol=1e-12,
+            )
+            or not math.isclose(
+                trade_pnl,
+                expected["pnl"],
+                rel_tol=0.0,
+                abs_tol=1e-12,
+            )
+            or str(trade_row.get("exit_reason") or "")
+            != expected["exit_reason"]
+            or str(decision.get("decision_uid") or "")
+            != expected["decision_uid"]
+            or str(decision.get("run_id") or "") != expected["run_id"]
+            or str(decision.get("coin") or "") != expected["coin"]
+            or payload_version != 1
+            or not payload_matches
+        ):
+            raise KillConflictError(
+                "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                "flatten lifecycle closure does not match durable evidence",
+            )
+        return expected
+
     def applied_kill_flatten_lifecycles(
         self,
         *,
@@ -6353,6 +6569,24 @@ class Store:
             run_id=run_id,
             symbol=symbol,
         )
+
+    def validate_applied_kill_flatten_lifecycle_closures(
+        self,
+        *,
+        episode_id: str,
+        run_id: str,
+        symbol: str,
+    ) -> list[dict[str, Any]]:
+        """Require every APPLIED flatten to have one exact durable closure."""
+        self._require_kill_schema()
+        lifecycles = self._applied_kill_flatten_lifecycles_in_tx(
+            episode_id=episode_id,
+            run_id=run_id,
+            symbol=symbol,
+        )
+        for lifecycle in lifecycles:
+            self._assert_kill_flatten_closure_in_tx(lifecycle)
+        return lifecycles
 
     def kill_action_events(self, action_id: str) -> list[dict[str, Any]]:
         self._require_kill_schema()
@@ -6763,15 +6997,7 @@ class Store:
                             "KILL_FLATTEN_TRADE_OPEN",
                             "APPLIED flatten still maps to an open trade",
                         )
-                    if (
-                        trade["exit_px"] is None
-                        or trade["pnl"] is None
-                        or str(trade["exit_reason"] or "") != "KILL_FLATTEN"
-                    ):
-                        raise KillConflictError(
-                            "KILL_FLATTEN_LIFECYCLE_CONFLICT",
-                            "APPLIED flatten lifecycle closure is invalid",
-                        )
+                    self._assert_kill_flatten_closure_in_tx(lifecycle)
             checkpoint_id = request["safe_checkpoint_id"]
             checkpoint_ts = request["safe_checkpoint_ts"]
             proof_digest = str(request["proof_digest"] or "")

@@ -1265,7 +1265,20 @@ class OrderManager:
                 flatten_fills=flatten_fills,
             )
             self._assert_kill_epoch_active()
-            for raw_fill in flatten_fills:
+            lifecycle_fills = (
+                [
+                    max(
+                        flatten_fills,
+                        key=lambda item: (
+                            str(item["fill_ts"]),
+                            str(item["fill_id"]),
+                        ),
+                    )
+                ]
+                if filled_lots == qty_lots
+                else flatten_fills
+            )
+            for raw_fill in lifecycle_fills:
                 if not self._ingest_fill(
                     FillEvent(
                         fill_id=str(raw_fill["fill_id"]),
@@ -1645,80 +1658,48 @@ class OrderManager:
                     KillTerminalState.UNKNOWN,
                     "FLATTEN_PARTIAL",
                 )
-            for raw_fill in fills:
-                self._assert_kill_epoch_active()
-                if not self._ingest_fill(
-                    FillEvent(
-                        fill_id=str(raw_fill["fill_id"]),
-                        cloid=str(raw_fill["cloid"]),
-                        coin=symbol,
-                        qty=float(raw_fill["qty"]),
-                        px=float(raw_fill["px"]),
-                        ts=raw_fill["fill_ts"],
-                        fee=float(raw_fill.get("fee", 0.0)),
-                        funding=float(raw_fill.get("funding", 0.0)),
-                        role="CLOSE",
-                    )
-                ):
-                    raise _KillEvidenceFault(
-                        KillTerminalState.UNKNOWN,
-                        "FLATTEN_LIFECYCLE_INGEST_FAILED",
-                    )
+            raw_fill = fills[-1]
             self._assert_kill_epoch_active()
-            trade_id = int(order["trade_id"])
-            trade = self.store.get_trade(trade_id)
+            if not self._ingest_fill(
+                FillEvent(
+                    fill_id=str(raw_fill["fill_id"]),
+                    cloid=str(raw_fill["cloid"]),
+                    coin=symbol,
+                    qty=float(raw_fill["qty"]),
+                    px=float(raw_fill["px"]),
+                    ts=raw_fill["fill_ts"],
+                    fee=float(raw_fill["fee"]),
+                    funding=float(raw_fill["funding"]),
+                    role="CLOSE",
+                )
+            ):
+                raise _KillEvidenceFault(
+                    KillTerminalState.UNKNOWN,
+                    "FLATTEN_LIFECYCLE_INGEST_FAILED",
+                )
+            self._assert_kill_epoch_active()
+            trade = self.store.get_trade(int(order["trade_id"]))
             if trade is None or trade["exit_ts"] is None:
                 raise _KillEvidenceFault(
                     KillTerminalState.UNKNOWN,
                     "FLATTEN_LIFECYCLE_OPEN",
                 )
-            totals = self.store.trade_fill_totals(trade_id)
-            try:
-                exit_ts = datetime.fromisoformat(str(trade["exit_ts"]))
-                durable_exit_ts = datetime.fromisoformat(
-                    str(fills[-1]["fill_ts"])
-                )
-                if exit_ts.tzinfo is None:
-                    exit_ts = exit_ts.replace(tzinfo=UTC)
-                if durable_exit_ts.tzinfo is None:
-                    durable_exit_ts = durable_exit_ts.replace(tzinfo=UTC)
-                entry_qty = float(totals["entry_qty"] or trade["qty"])
-                entry_px = float(
-                    totals["entry_vwap"]
-                    if totals["entry_vwap"] is not None
-                    else trade["entry_px"] or trade["expected_px"]
-                )
-                exit_px = float(totals["exit_vwap"])
-                sign = 1 if str(trade["direction"]) == "LONG" else -1
-                expected_pnl = (
-                    (exit_px - entry_px) * entry_qty * sign
-                    - self.store.trade_costs(str(order["decision_uid"]))
-                )
-            except (TypeError, ValueError, OverflowError) as exc:
-                raise _KillEvidenceFault(
-                    KillTerminalState.AMBIGUOUS,
-                    "KILL_FLATTEN_LIFECYCLE_CONFLICT",
-                ) from exc
-            if (
-                str(trade["exit_reason"] or "") != "KILL_FLATTEN"
-                or trade["exit_px"] is None
-                or trade["pnl"] is None
-                or exit_ts.astimezone(UTC)
-                != durable_exit_ts.astimezone(UTC)
-                or not math.isclose(
-                    float(trade["exit_px"]), exit_px, rel_tol=0.0, abs_tol=1e-12
-                )
-                or not math.isclose(
-                    float(trade["pnl"]),
-                    expected_pnl,
-                    rel_tol=0.0,
-                    abs_tol=1e-12,
-                )
-            ):
-                raise _KillEvidenceFault(
-                    KillTerminalState.AMBIGUOUS,
-                    "KILL_FLATTEN_LIFECYCLE_CONFLICT",
-                )
+        self._assert_kill_epoch_active()
+        try:
+            self.store.validate_applied_kill_flatten_lifecycle_closures(
+                episode_id=episode_id,
+                run_id=self.run_id,
+                symbol=symbol,
+            )
+        except KillConflictError as exc:
+            stale = exc.reason_code in {
+                "KILL_EPOCH_STALE_WRITE",
+                "KILL_REQUEST_NOT_ACTIVE",
+            }
+            raise _KillEvidenceFault(
+                KillTerminalState.UNKNOWN if stale else KillTerminalState.AMBIGUOUS,
+                exc.reason_code,
+            ) from exc
 
     async def run_kill_episode(
         self,
