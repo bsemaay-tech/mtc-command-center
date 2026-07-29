@@ -8,7 +8,7 @@ import math
 import sqlite3
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Callable, Literal
 
@@ -6140,6 +6140,220 @@ class Store:
             (str(episode_id), KillActionKind(str(kind)).value),
         )
 
+    def _applied_kill_flatten_lifecycles_in_tx(
+        self,
+        *,
+        episode_id: str,
+        run_id: str,
+        symbol: str,
+    ) -> list[dict[str, Any]]:
+        """Return fully identity-checked durable APPLIED flatten lifecycles."""
+        stable_episode_id = str(episode_id)
+        stable_run_id = str(run_id)
+        stable_symbol = str(symbol)
+        request = self.conn.execute(
+            "SELECT * FROM kill_requests WHERE episode_id=?",
+            (stable_episode_id,),
+        ).fetchone()
+        if (
+            request is None
+            or self.get_meta(KILL_REQUEST_ACTIVE_KEY) != stable_episode_id
+            or str(request["run_id"]) != stable_run_id
+            or str(request["symbol"]) != stable_symbol
+            or str(request["ack_state"]) != "PENDING"
+        ):
+            raise KillConflictError(
+                "KILL_REQUEST_NOT_ACTIVE",
+                "flatten lifecycle episode is not the active request",
+            )
+        action_rows = self.conn.execute(
+            """SELECT * FROM kill_actions
+               WHERE episode_id=? AND kind='FLATTEN'
+                 AND current_outcome='APPLIED'
+               ORDER BY reserved_ts,action_id""",
+            (stable_episode_id,),
+        ).fetchall()
+        lifecycles: list[dict[str, Any]] = []
+        for action_row in action_rows:
+            action = dict(action_row)
+            try:
+                qty_lots = int(action["qty_lots"])
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise KillConflictError(
+                    "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                    "flatten action quantity is invalid",
+                ) from exc
+            expected_action_id = compute_kill_action_id(
+                episode_id=stable_episode_id,
+                kind=KillActionKind.FLATTEN.value,
+                target=stable_symbol,
+                qty_lots=qty_lots,
+            )
+            expected_cloid = compute_kill_action_cloid(expected_action_id)
+            if (
+                isinstance(action.get("qty_lots"), bool)
+                or qty_lots <= 0
+                or str(action["target"]) != stable_symbol
+                or str(action["action_id"]) != expected_action_id
+                or str(action["cloid"]) != expected_cloid
+                or str(action.get("exit_side") or "") not in {"BUY", "SELL"}
+            ):
+                raise KillConflictError(
+                    "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                    "flatten action identity is invalid",
+                )
+            applied_event = self.conn.execute(
+                """SELECT 1 FROM kill_action_events
+                   WHERE action_id=? AND status='APPLIED' LIMIT 1""",
+                (expected_action_id,),
+            ).fetchone()
+            order_row = self.conn.execute(
+                "SELECT * FROM orders WHERE cloid=?",
+                (expected_cloid,),
+            ).fetchone()
+            if applied_event is None or order_row is None:
+                raise KillConflictError(
+                    "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                    "coupled APPLIED order evidence is missing",
+                )
+            order = dict(order_row)
+            trade_id = order.get("trade_id")
+            decision_uid = str(order.get("decision_uid") or "").strip()
+            try:
+                ordered_qty = Decimal(str(order["qty"]))
+                filled_qty = Decimal(str(order["filled_qty"]))
+                stable_trade_id = int(trade_id)
+                order_payload = json.loads(str(order.get("order_json") or "{}"))
+            except (
+                InvalidOperation,
+                TypeError,
+                ValueError,
+                OverflowError,
+                json.JSONDecodeError,
+            ) as exc:
+                raise KillConflictError(
+                    "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                    "flatten order binding is invalid",
+                ) from exc
+            if (
+                isinstance(trade_id, bool)
+                or not decision_uid
+                or not ordered_qty.is_finite()
+                or not filled_qty.is_finite()
+                or ordered_qty <= 0
+                or filled_qty <= 0
+                or filled_qty > ordered_qty
+                or str(order["role"]) != "KILL_FLATTEN"
+                or str(order["group_id"]) != stable_episode_id
+                or str(order["order_ref"]) != expected_action_id
+                or not isinstance(order_payload, Mapping)
+                or str(order_payload.get("symbol") or "") != stable_symbol
+                or str(order_payload.get("role") or "") != "KILL_FLATTEN"
+                or order_payload.get("reduce_only") is not True
+                or str(order_payload.get("side") or "")
+                != str(action["exit_side"])
+            ):
+                raise KillConflictError(
+                    "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                    "flatten order does not bind to the active action",
+                )
+            trade_row = self.conn.execute(
+                "SELECT * FROM trades WHERE trade_id=?",
+                (stable_trade_id,),
+            ).fetchone()
+            if trade_row is None:
+                raise KillConflictError(
+                    "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                    "flatten trade binding is missing",
+                )
+            trade = dict(trade_row)
+            expected_exit_side = (
+                "SELL" if str(trade.get("direction") or "") == "LONG" else "BUY"
+            )
+            if (
+                str(trade.get("direction") or "") not in {"LONG", "SHORT"}
+                or str(trade["run_id"]) != stable_run_id
+                or str(trade["coin"]) != stable_symbol
+                or str(trade["entry_decision_uid"]) != decision_uid
+                or str(action["exit_side"]) != expected_exit_side
+            ):
+                raise KillConflictError(
+                    "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                    "flatten trade does not bind to the active request",
+                )
+            fill_rows = self.conn.execute(
+                """SELECT fill_id,cloid,decision_uid,fill_ts,qty,px,fee,funding
+                   FROM fills WHERE cloid=? ORDER BY fill_ts,fill_id""",
+                (expected_cloid,),
+            ).fetchall()
+            durable_qty = Decimal("0")
+            fills: list[dict[str, Any]] = []
+            seen_fill_ids: set[str] = set()
+            for fill_row in fill_rows:
+                fill = dict(fill_row)
+                fill_id = str(fill.get("fill_id") or "").strip()
+                try:
+                    fill_qty = Decimal(str(fill["qty"]))
+                    fill_px = Decimal(str(fill["px"]))
+                    fill_ts = datetime.fromisoformat(str(fill["fill_ts"]))
+                except (
+                    InvalidOperation,
+                    TypeError,
+                    ValueError,
+                    OverflowError,
+                ) as exc:
+                    raise KillConflictError(
+                        "KILL_FLATTEN_FILL_CONFLICT",
+                        "durable flatten fill is malformed",
+                    ) from exc
+                if (
+                    not fill_id
+                    or fill_id in seen_fill_ids
+                    or str(fill["cloid"]) != expected_cloid
+                    or str(fill["decision_uid"]) != decision_uid
+                    or not fill_qty.is_finite()
+                    or not fill_px.is_finite()
+                    or fill_qty <= 0
+                    or fill_px <= 0
+                    or fill_ts.tzinfo is None
+                ):
+                    raise KillConflictError(
+                        "KILL_FLATTEN_FILL_CONFLICT",
+                        "durable flatten fill identity is invalid",
+                    )
+                seen_fill_ids.add(fill_id)
+                durable_qty += fill_qty
+                fills.append(fill)
+            if not fills or durable_qty != filled_qty:
+                raise KillConflictError(
+                    "KILL_FLATTEN_FILL_TOTAL_CONFLICT",
+                    "durable flatten fill total is incomplete",
+                )
+            lifecycles.append(
+                {
+                    "action": action,
+                    "order": order,
+                    "trade": trade,
+                    "fills": fills,
+                }
+            )
+        return lifecycles
+
+    def applied_kill_flatten_lifecycles(
+        self,
+        *,
+        episode_id: str,
+        run_id: str,
+        symbol: str,
+    ) -> list[dict[str, Any]]:
+        """Read restart-recoverable APPLIED flatten evidence for one episode."""
+        self._require_kill_schema()
+        return self._applied_kill_flatten_lifecycles_in_tx(
+            episode_id=episode_id,
+            run_id=run_id,
+            symbol=symbol,
+        )
+
     def kill_action_events(self, action_id: str) -> list[dict[str, Any]]:
         self._require_kill_schema()
         return self._rows(
@@ -6528,6 +6742,36 @@ class Store:
                 raise KillConflictError(
                     "KILL_NOT_SAFE", str(request["terminal_reason"])
                 )
+            if safe_state == "SAFE_FLAT":
+                lifecycles = self._applied_kill_flatten_lifecycles_in_tx(
+                    episode_id=str(request["episode_id"]),
+                    run_id=str(request["run_id"]),
+                    symbol=str(request["symbol"]),
+                )
+                for lifecycle in lifecycles:
+                    order = lifecycle["order"]
+                    trade = lifecycle["trade"]
+                    if Decimal(str(order["filled_qty"])) != Decimal(
+                        str(order["qty"])
+                    ):
+                        raise KillConflictError(
+                            "KILL_FLATTEN_PARTIAL",
+                            "partial flatten evidence cannot authorize SAFE_FLAT",
+                        )
+                    if trade["exit_ts"] is None:
+                        raise KillConflictError(
+                            "KILL_FLATTEN_TRADE_OPEN",
+                            "APPLIED flatten still maps to an open trade",
+                        )
+                    if (
+                        trade["exit_px"] is None
+                        or trade["pnl"] is None
+                        or str(trade["exit_reason"] or "") != "KILL_FLATTEN"
+                    ):
+                        raise KillConflictError(
+                            "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                            "APPLIED flatten lifecycle closure is invalid",
+                        )
             checkpoint_id = request["safe_checkpoint_id"]
             checkpoint_ts = request["safe_checkpoint_ts"]
             proof_digest = str(request["proof_digest"] or "")

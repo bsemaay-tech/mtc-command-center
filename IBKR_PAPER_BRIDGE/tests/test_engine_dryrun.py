@@ -766,6 +766,168 @@ def test_s2_a5_kill_flatten_closes_trade_lifecycle_once_before_ack(tmp_path):
     ) == 1
 
 
+def test_s2_a5_crash_restart_recovers_kill_flatten_before_safe_flat(tmp_path, monkeypatch):
+    store, broker, engine = _repair4_kill_engine(tmp_path)
+    db_path = store.db_path
+    open_trade = store.get_open_trade_for_coin("repair4-kill", "BTC")
+    assert open_trade is not None
+    trade_id = int(open_trade["trade_id"])
+    decision_uid = str(open_trade["entry_decision_uid"])
+
+    def crash_after_coupled_flatten_commit(_fill):
+        request = store.active_kill_request()
+        assert request is not None
+        action = store.kill_actions_for_episode(
+            request["episode_id"], kind="FLATTEN"
+        )[0]
+        assert action["current_outcome"] == "APPLIED"
+        durable_fills = store.list_fills_for_order(action["cloid"])
+        assert len(durable_fills) == 1
+        assert [
+            event["status"]
+            for event in store.kill_action_events(action["action_id"])
+            if event["status"] == "APPLIED"
+        ] == ["APPLIED"]
+        stranded = store.get_trade(trade_id)
+        assert stranded is not None
+        assert stranded["exit_ts"] is None
+        raise RuntimeError("INJECTED_AFTER_APPLIED_FLATTEN_COMMIT")
+
+    monkeypatch.setattr(
+        engine.order_manager, "_ingest_fill", crash_after_coupled_flatten_commit
+    )
+    with pytest.raises(
+        RuntimeError, match="INJECTED_AFTER_APPLIED_FLATTEN_COMMIT"
+    ):
+        asyncio.run(engine.kill(flatten=True))
+
+    request = store.active_kill_request()
+    assert request is not None
+    flatten_action = store.kill_actions_for_episode(
+        request["episode_id"], kind="FLATTEN"
+    )[0]
+    durable_flatten_fills = store.list_fills_for_order(flatten_action["cloid"])
+    assert flatten_action["current_outcome"] == "APPLIED"
+    assert len(durable_flatten_fills) == 1
+    assert broker.position is None
+    assert store.get_trade(trade_id)["exit_ts"] is None
+
+    broker._user_callbacks.clear()
+    store.close()
+    restarted_store = Store(db_path)
+    restarted_store.initialize(target_schema_version=9)
+    restarted_engine = BridgeEngine(
+        run_id="repair4-kill",
+        broker=broker,
+        store=restarted_store,
+        strategy=KeltnerTrailEma8(),
+        risk_engine=RiskEngine(RiskConfig()),
+        state="KILLED",
+    )
+
+    asyncio.run(restarted_engine.kill(flatten=True))
+
+    recovered_request = restarted_store.active_kill_request()
+    assert recovered_request is not None
+    assert recovered_request["episode_id"] == request["episode_id"]
+    assert recovered_request["terminal_state"] == "SAFE_FLAT"
+    recovered_trade = restarted_store.get_trade(trade_id)
+    assert recovered_trade is not None
+    durable_fill = durable_flatten_fills[0]
+    recovered_lifecycle = {
+        key: recovered_trade[key]
+        for key in ("exit_ts", "exit_px", "exit_reason", "pnl")
+    }
+    assert recovered_lifecycle == {
+        "exit_ts": durable_fill["fill_ts"],
+        "exit_px": durable_fill["px"],
+        "exit_reason": "KILL_FLATTEN",
+        "pnl": pytest.approx(0.0),
+    }
+    assert restarted_store.get_open_trade_for_coin("repair4-kill", "BTC") is None
+    assert len(
+        [
+            row
+            for row in restarted_store.get_decision_chain(decision_uid)
+            if row["stage"] == "TRADE_CLOSED"
+        ]
+    ) == 1
+
+    asyncio.run(restarted_engine.kill(flatten=True))
+
+    replayed_trade = restarted_store.get_trade(trade_id)
+    assert replayed_trade is not None
+    assert {
+        key: replayed_trade[key]
+        for key in ("exit_ts", "exit_px", "exit_reason", "pnl")
+    } == recovered_lifecycle
+    assert len(
+        [
+            row
+            for row in restarted_store.get_decision_chain(decision_uid)
+            if row["stage"] == "TRADE_CLOSED"
+        ]
+    ) == 1
+
+    asyncio.run(restarted_engine.acknowledge_kill())
+    acknowledged = restarted_store.get_kill_request(request["episode_id"])
+    assert acknowledged is not None
+    assert acknowledged["ack_state"] == "ACKNOWLEDGED"
+    assert restarted_engine.state == "DISARMED"
+
+
+def test_s2_a5_ack_rejects_stranded_applied_flatten_open_trade(tmp_path, monkeypatch):
+    store, broker, engine = _repair4_kill_engine(tmp_path)
+    db_path = store.db_path
+    trade = store.get_open_trade_for_coin("repair4-kill", "BTC")
+    assert trade is not None
+    trade_id = int(trade["trade_id"])
+
+    def crash_after_coupled_flatten_commit(_fill):
+        raise RuntimeError("INJECTED_AFTER_APPLIED_FLATTEN_COMMIT")
+
+    monkeypatch.setattr(
+        engine.order_manager, "_ingest_fill", crash_after_coupled_flatten_commit
+    )
+    with pytest.raises(
+        RuntimeError, match="INJECTED_AFTER_APPLIED_FLATTEN_COMMIT"
+    ):
+        asyncio.run(engine.kill(flatten=True))
+
+    broker._user_callbacks.clear()
+    store.close()
+    stranded_store = Store(db_path)
+    stranded_store.initialize(target_schema_version=9)
+    stranded_engine = BridgeEngine(
+        run_id="repair4-kill",
+        broker=broker,
+        store=stranded_store,
+        strategy=KeltnerTrailEma8(),
+        risk_engine=RiskEngine(RiskConfig()),
+        state="KILLED",
+    )
+    monkeypatch.setattr(
+        stranded_engine.order_manager,
+        "_recover_applied_kill_flatten_lifecycles",
+        lambda **_kwargs: None,
+        raising=False,
+    )
+
+    asyncio.run(stranded_engine.kill(flatten=True))
+
+    request = stranded_store.active_kill_request()
+    assert request is not None
+    assert request["terminal_state"] == "SAFE_FLAT"
+    assert request["safe_checkpoint_id"] is not None
+    assert stranded_store.get_trade(trade_id)["exit_ts"] is None
+    with pytest.raises(RuntimeError, match="KILL_FLATTEN_TRADE_OPEN"):
+        asyncio.run(stranded_engine.acknowledge_kill())
+    rejected = stranded_store.get_kill_request(request["episode_id"])
+    assert rejected is not None
+    assert rejected["ack_state"] == "PENDING"
+    assert stranded_store.get_meta("app_state") == "KILLED"
+
+
 async def _run_dryrun_replay(tmp_path):
     store = Store(tmp_path / "bridge.db")
     store.initialize()

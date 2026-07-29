@@ -1583,6 +1583,143 @@ class OrderManager:
             trade_id=trade_id,
         )
 
+    def _recover_applied_kill_flatten_lifecycles(
+        self,
+        *,
+        episode_id: str,
+        symbol: str,
+        lot: LotUnit,
+    ) -> None:
+        """Close durable APPLIED flatten lifecycles after a process restart."""
+        self._assert_kill_epoch_active()
+        try:
+            lifecycles = self.store.applied_kill_flatten_lifecycles(
+                episode_id=episode_id,
+                run_id=self.run_id,
+                symbol=symbol,
+            )
+        except KillConflictError as exc:
+            stale = exc.reason_code in {
+                "KILL_EPOCH_STALE_WRITE",
+                "KILL_REQUEST_NOT_ACTIVE",
+            }
+            raise _KillEvidenceFault(
+                KillTerminalState.UNKNOWN if stale else KillTerminalState.AMBIGUOUS,
+                exc.reason_code,
+            ) from exc
+        for lifecycle in lifecycles:
+            action = lifecycle["action"]
+            order = lifecycle["order"]
+            fills = lifecycle["fills"]
+            try:
+                action_lots = int(action["qty_lots"])
+                ordered_lots = quantize_lots(order["qty"], lot)
+                durable_lots = sum(
+                    quantize_lots(fill["qty"], lot) for fill in fills
+                )
+                reported_lots = quantize_lots(order["filled_qty"], lot)
+            except (
+                KeyError,
+                LotQuantizationError,
+                TypeError,
+                ValueError,
+                OverflowError,
+            ) as exc:
+                reason = getattr(exc, "reason_code", "KILL_FLATTEN_QUANTITY_CONFLICT")
+                raise _KillEvidenceFault(
+                    KillTerminalState.AMBIGUOUS, reason
+                ) from exc
+            if (
+                action_lots <= 0
+                or ordered_lots != action_lots
+                or durable_lots != reported_lots
+                or durable_lots <= 0
+                or durable_lots > ordered_lots
+            ):
+                raise _KillEvidenceFault(
+                    KillTerminalState.AMBIGUOUS,
+                    "KILL_FLATTEN_QUANTITY_CONFLICT",
+                )
+            if durable_lots < ordered_lots:
+                raise _KillEvidenceFault(
+                    KillTerminalState.UNKNOWN,
+                    "FLATTEN_PARTIAL",
+                )
+            for raw_fill in fills:
+                self._assert_kill_epoch_active()
+                if not self._ingest_fill(
+                    FillEvent(
+                        fill_id=str(raw_fill["fill_id"]),
+                        cloid=str(raw_fill["cloid"]),
+                        coin=symbol,
+                        qty=float(raw_fill["qty"]),
+                        px=float(raw_fill["px"]),
+                        ts=raw_fill["fill_ts"],
+                        fee=float(raw_fill.get("fee", 0.0)),
+                        funding=float(raw_fill.get("funding", 0.0)),
+                        role="CLOSE",
+                    )
+                ):
+                    raise _KillEvidenceFault(
+                        KillTerminalState.UNKNOWN,
+                        "FLATTEN_LIFECYCLE_INGEST_FAILED",
+                    )
+            self._assert_kill_epoch_active()
+            trade_id = int(order["trade_id"])
+            trade = self.store.get_trade(trade_id)
+            if trade is None or trade["exit_ts"] is None:
+                raise _KillEvidenceFault(
+                    KillTerminalState.UNKNOWN,
+                    "FLATTEN_LIFECYCLE_OPEN",
+                )
+            totals = self.store.trade_fill_totals(trade_id)
+            try:
+                exit_ts = datetime.fromisoformat(str(trade["exit_ts"]))
+                durable_exit_ts = datetime.fromisoformat(
+                    str(fills[-1]["fill_ts"])
+                )
+                if exit_ts.tzinfo is None:
+                    exit_ts = exit_ts.replace(tzinfo=UTC)
+                if durable_exit_ts.tzinfo is None:
+                    durable_exit_ts = durable_exit_ts.replace(tzinfo=UTC)
+                entry_qty = float(totals["entry_qty"] or trade["qty"])
+                entry_px = float(
+                    totals["entry_vwap"]
+                    if totals["entry_vwap"] is not None
+                    else trade["entry_px"] or trade["expected_px"]
+                )
+                exit_px = float(totals["exit_vwap"])
+                sign = 1 if str(trade["direction"]) == "LONG" else -1
+                expected_pnl = (
+                    (exit_px - entry_px) * entry_qty * sign
+                    - self.store.trade_costs(str(order["decision_uid"]))
+                )
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise _KillEvidenceFault(
+                    KillTerminalState.AMBIGUOUS,
+                    "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                ) from exc
+            if (
+                str(trade["exit_reason"] or "") != "KILL_FLATTEN"
+                or trade["exit_px"] is None
+                or trade["pnl"] is None
+                or exit_ts.astimezone(UTC)
+                != durable_exit_ts.astimezone(UTC)
+                or not math.isclose(
+                    float(trade["exit_px"]), exit_px, rel_tol=0.0, abs_tol=1e-12
+                )
+                or not math.isclose(
+                    float(trade["pnl"]),
+                    expected_pnl,
+                    rel_tol=0.0,
+                    abs_tol=1e-12,
+                )
+            ):
+                raise _KillEvidenceFault(
+                    KillTerminalState.AMBIGUOUS,
+                    "KILL_FLATTEN_LIFECYCLE_CONFLICT",
+                )
+
     async def run_kill_episode(
         self,
         request: Mapping[str, Any],
@@ -1680,6 +1817,17 @@ class OrderManager:
 
                 position_lots = abs(int(model["observed_lots"]))
                 if position_lots == 0:
+                    try:
+                        self._recover_applied_kill_flatten_lifecycles(
+                            episode_id=episode_id,
+                            symbol=symbol,
+                            lot=model["lot"],
+                        )
+                    except _KillEvidenceFault as fault:
+                        return {
+                            "state": fault.state.value,
+                            "reason": fault.reason_code,
+                        }
                     for row, observed in model["protection_orders"]:
                         if not await self._kill_cancel(
                             episode_id=episode_id,
@@ -1768,6 +1916,17 @@ class OrderManager:
                     return {
                         "state": KillTerminalState.UNKNOWN.value,
                         "reason": "FLATTEN_POSITION_NOT_FLAT",
+                    }
+                try:
+                    self._recover_applied_kill_flatten_lifecycles(
+                        episode_id=episode_id,
+                        symbol=symbol,
+                        lot=model["lot"],
+                    )
+                except _KillEvidenceFault as fault:
+                    return {
+                        "state": fault.state.value,
+                        "reason": fault.reason_code,
                     }
                 for row, observed in model["protection_orders"]:
                     if not await self._kill_cancel(
