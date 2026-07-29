@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import sqlite3
 import threading
 from contextlib import asynccontextmanager
@@ -765,6 +766,95 @@ def test_s2_a5_kill_flatten_closes_trade_lifecycle_once_before_ack(tmp_path):
             if row["stage"] == "TRADE_CLOSED"
         ]
     ) == 1
+
+
+@pytest.mark.parametrize(
+    ("mutation_name", "mutated_qty"),
+    [
+        ("boolean", True),
+        ("numeric_string", "1.0"),
+        ("sub_tolerance", 1.0 + 5e-13),
+    ],
+    ids=["boolean", "numeric-string", "sub-tolerance"],
+)
+def test_s2_r3_ack_rejects_noncanonical_close_payload_number(
+    tmp_path, mutation_name, mutated_qty
+):
+    store, _broker, engine = _repair4_kill_engine(tmp_path)
+
+    asyncio.run(engine.kill(flatten=True))
+
+    request = store.active_kill_request()
+    assert request is not None
+    assert request["terminal_state"] == "SAFE_FLAT"
+    decisions = store.conn.execute(
+        """SELECT id,payload_json FROM decisions
+           WHERE stage='TRADE_CLOSED'
+           ORDER BY id"""
+    ).fetchall()
+    assert len(decisions) == 1
+    payload = json.loads(str(decisions[0]["payload_json"]))
+    assert type(payload["qty"]) is float
+    assert payload["qty"] == 1.0
+    if mutation_name == "sub_tolerance":
+        assert mutated_qty != payload["qty"]
+        assert 0.0 < abs(mutated_qty - payload["qty"]) < 1e-12
+    payload["qty"] = mutated_qty
+    store.conn.execute(
+        "UPDATE decisions SET payload_json=? WHERE id=?",
+        (
+            json.dumps(payload, sort_keys=True, separators=(",", ":")),
+            decisions[0]["id"],
+        ),
+    )
+    store.conn.commit()
+
+    with pytest.raises(
+        RuntimeError, match="KILL_FLATTEN_LIFECYCLE_CONFLICT"
+    ):
+        asyncio.run(engine.acknowledge_kill())
+
+    rejected = store.get_kill_request(request["episode_id"])
+    assert rejected is not None
+    assert rejected["ack_state"] == "PENDING"
+    assert store.get_meta("app_state") == "KILLED"
+    assert engine.state == "KILLED"
+
+
+def test_s2_r3_ack_accepts_untouched_canonical_close_payload_numbers(tmp_path):
+    store, _broker, engine = _repair4_kill_engine(tmp_path)
+
+    asyncio.run(engine.kill(flatten=True))
+
+    request = store.active_kill_request()
+    assert request is not None
+    assert request["terminal_state"] == "SAFE_FLAT"
+    decisions = store.conn.execute(
+        """SELECT payload_json FROM decisions
+           WHERE stage='TRADE_CLOSED'
+           ORDER BY id"""
+    ).fetchall()
+    assert len(decisions) == 1
+    payload = json.loads(str(decisions[0]["payload_json"]))
+    assert all(
+        type(payload[key]) is float
+        for key in (
+            "pnl",
+            "pnl_gross",
+            "costs",
+            "entry_basis_px",
+            "exit_vwap",
+            "qty",
+        )
+    )
+
+    asyncio.run(engine.acknowledge_kill())
+
+    acknowledged = store.get_kill_request(request["episode_id"])
+    assert acknowledged is not None
+    assert acknowledged["ack_state"] == "ACKNOWLEDGED"
+    assert store.get_meta("app_state") == "DISARMED"
+    assert engine.state == "DISARMED"
 
 
 def test_s2_a5_crash_restart_recovers_kill_flatten_before_safe_flat(tmp_path, monkeypatch):

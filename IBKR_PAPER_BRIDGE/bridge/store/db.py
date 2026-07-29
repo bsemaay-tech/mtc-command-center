@@ -6511,13 +6511,9 @@ class Store:
                 and set(payload) == set(expected_payload)
                 and payload.get("exit_reason") == expected_payload["exit_reason"]
                 and all(
-                    math.isfinite(float(payload[key]))
-                    and math.isclose(
-                        float(payload[key]),
-                        float(expected_payload[key]),
-                        rel_tol=0.0,
-                        abs_tol=1e-12,
-                    )
+                    type(payload[key]) is type(expected_payload[key])
+                    and math.isfinite(payload[key])
+                    and payload[key] == expected_payload[key]
                     for key in numeric_payload_keys
                 )
             )
