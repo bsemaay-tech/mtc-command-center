@@ -431,6 +431,38 @@ def test_repair4_a10_epoch_open_failure_retains_kill_latch(
     ).fetchone()[0] == 0
 
 
+def test_repair4_f5_prior_state_read_failure_precommits_killed(
+    tmp_path, monkeypatch
+):
+    store, broker, engine = _repair4_kill_engine(tmp_path)
+    observer = Store(store.db_path)
+    observer.initialize(target_schema_version=9)
+    original_get_meta = store.get_meta
+
+    def fail_prior_state_read(key):
+        if key == "app_state":
+            raise sqlite3.OperationalError("injected prior state read fault")
+        return original_get_meta(key)
+
+    monkeypatch.setattr(store, "get_meta", fail_prior_state_read)
+
+    with pytest.raises(sqlite3.OperationalError, match="prior state read fault"):
+        asyncio.run(engine.kill(flatten=True))
+
+    assert engine.state == "KILLED"
+    assert engine.order_manager.kill_latched is True
+    assert observer.get_meta("app_state") == "KILLED"
+    assert broker.broker_mutations == []
+    assert observer.active_kill_request() is None
+    assert observer.get_meta("kill_request_active") is None
+    assert observer.get_meta("kill_epoch_active") is None
+    assert observer.conn.execute(
+        "SELECT COUNT(*) FROM kill_requests WHERE terminal_state IN "
+        "('SAFE_FLAT','SAFE_RETAINED')"
+    ).fetchone()[0] == 0
+    observer.close()
+
+
 def test_repair4_f1_legacy_killed_without_evidence_is_rejected_by_kill(tmp_path):
     store, broker, engine = _repair4_kill_engine(tmp_path)
     store.set_meta("app_state", "KILLED")

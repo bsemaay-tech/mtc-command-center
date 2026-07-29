@@ -432,7 +432,17 @@ class BridgeEngine:
         self._kill_requested = True
         self.order_manager.kill_latched = True
         self.state = "KILLED"
-        prior_state = self.store.get_meta("app_state")
+        try:
+            prior_state = self.store.get_meta("app_state")
+        except Exception:
+            # Observation failure cannot skip the durable latch attempt. Abort
+            # before epoch OPEN regardless; memory remains KILLED if the store
+            # is also unable to accept the precommit.
+            try:
+                self._set_state("KILLED")
+            except Exception:
+                pass
+            raise
         # Persist the latch before epoch OPEN. A failed OPEN must never leave a
         # restart able to recover the prior ARMED state.
         self._set_state("KILLED")
