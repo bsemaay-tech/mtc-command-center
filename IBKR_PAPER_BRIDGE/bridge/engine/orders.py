@@ -880,6 +880,8 @@ class OrderManager:
         value: Any = None,
         *,
         local_order_terminal_status: str | None = None,
+        cancel_order: Mapping[str, Any] | None = None,
+        cancel_fills: Sequence[Mapping[str, Any]] | None = None,
         flatten_order: Mapping[str, Any] | None = None,
         flatten_fills: Sequence[Mapping[str, Any]] | None = None,
     ) -> dict[str, Any]:
@@ -894,6 +896,8 @@ class OrderManager:
             evidence=self._kill_evidence_payload(value),
             observed_ts=self._kill_now(),
             local_order_terminal_status=local_order_terminal_status,
+            cancel_order=cancel_order,
+            cancel_fills=cancel_fills,
             flatten_order=flatten_order,
             flatten_fills=flatten_fills,
         )
@@ -926,12 +930,133 @@ class OrderManager:
             )
             return False
         if query.terminal or not query.found:
+            order = self.store.get_order(target)
+            terminal_status = "CANCELLED_BY_ENGINE"
+            cancel_order: dict[str, Any] | None = None
+            cancel_fills: list[dict[str, Any]] | None = None
+            if order is None:
+                self._kill_record(
+                    str(action["action_id"]),
+                    "UNKNOWN",
+                    "CANCEL_LOCAL_ORDER_MISSING",
+                    query,
+                )
+                return False
+            if query.filled_size is not None:
+                lot = self._broker_lot_unit(symbol)
+                if lot is None:
+                    self._kill_record(
+                        str(action["action_id"]),
+                        "UNKNOWN",
+                        "CANCEL_SIZE_QUANTUM_UNAVAILABLE",
+                        query,
+                    )
+                    return False
+                try:
+                    ordered_lots = quantize_lots(float(order["qty"]), lot)
+                    queried_lots = quantize_lots(query.filled_size, lot)
+                    durable_qty, _ = self.store.order_fill_totals(target)
+                    durable_lots = quantize_lots(durable_qty, lot)
+                except (
+                    KeyError,
+                    LotQuantizationError,
+                    TypeError,
+                    ValueError,
+                    OverflowError,
+                ):
+                    self._kill_record(
+                        str(action["action_id"]),
+                        "UNKNOWN",
+                        "CANCEL_FILLED_QUANTITY_INVALID",
+                        query,
+                    )
+                    return False
+                if (
+                    ordered_lots <= 0
+                    or queried_lots < durable_lots
+                    or queried_lots > ordered_lots
+                ):
+                    self._kill_record(
+                        str(action["action_id"]),
+                        "UNKNOWN",
+                        "CANCEL_FILLED_QUANTITY_INVALID",
+                        query,
+                    )
+                    return False
+                terminal_status = (
+                    "FILLED"
+                    if queried_lots == ordered_lots
+                    else "CANCELLED_BY_ENGINE"
+                )
+                if queried_lots > durable_lots:
+                    try:
+                        local_oid = int(order["oid"])
+                        order_payload = json.loads(str(order["order_json"]))
+                    except (
+                        KeyError,
+                        TypeError,
+                        ValueError,
+                        OverflowError,
+                        json.JSONDecodeError,
+                    ):
+                        self._kill_record(
+                            str(action["action_id"]),
+                            "UNKNOWN",
+                            "CANCEL_FILL_IDENTITY_INVALID",
+                            query,
+                        )
+                        return False
+                    expected_side = str(order_payload.get("side") or "").upper()
+                    if (
+                        isinstance(order.get("oid"), bool)
+                        or query.oid is None
+                        or isinstance(query.oid, bool)
+                        or int(query.oid) != local_oid
+                        or str(order.get("role") or "") != "ENTRY"
+                        or expected_side not in {"BUY", "SELL"}
+                    ):
+                        self._kill_record(
+                            str(action["action_id"]),
+                            "UNKNOWN",
+                            "CANCEL_FILL_IDENTITY_INVALID",
+                            query,
+                        )
+                        return False
+                    durable_fills = {
+                        str(row["fill_id"]): row
+                        for row in self.store.list_fills_for_order(target)
+                    }
+                    cancel_fills = await self._kill_exact_order_fills(
+                        action,
+                        query=query,
+                        symbol=symbol,
+                        expected_side=expected_side,
+                        expected_new_lots=queried_lots - durable_lots,
+                        lot=lot,
+                        durable_fills=durable_fills,
+                    )
+                    if cancel_fills is None:
+                        self._kill_record(
+                            str(action["action_id"]),
+                            "UNKNOWN",
+                            "CANCEL_FILL_EVIDENCE_MISSING",
+                            query,
+                        )
+                        return False
+                    cancel_order = {
+                        "oid": local_oid,
+                        "filled_qty": lots_to_size(queried_lots, lot),
+                    }
             self._kill_record(
                 str(action["action_id"]),
                 "APPLIED",
                 "CANCEL_TERMINAL_QUERY",
                 query,
-                local_order_terminal_status="CANCELLED_BY_ENGINE",
+                local_order_terminal_status=(
+                    terminal_status if cancel_order is None else None
+                ),
+                cancel_order=cancel_order,
+                cancel_fills=cancel_fills,
             )
             return True
         self._kill_record(
@@ -1100,11 +1225,12 @@ class OrderManager:
             )
             return "UNKNOWN"
         if query.terminal and query.oid is not None and filled_lots > 0:
-            flatten_fills = await self._kill_exact_flatten_fills(
+            flatten_fills = await self._kill_exact_order_fills(
                 action,
                 query=query,
                 symbol=symbol,
-                filled_lots=filled_lots,
+                expected_side=str(action.get("exit_side") or ""),
+                expected_new_lots=filled_lots,
                 lot=lot,
             )
             if flatten_fills is None:
@@ -1138,7 +1264,40 @@ class OrderManager:
                 },
                 flatten_fills=flatten_fills,
             )
+            self._assert_kill_epoch_active()
+            for raw_fill in flatten_fills:
+                if not self._ingest_fill(
+                    FillEvent(
+                        fill_id=str(raw_fill["fill_id"]),
+                        cloid=cloid,
+                        coin=symbol,
+                        qty=float(raw_fill["qty"]),
+                        px=float(raw_fill["px"]),
+                        ts=raw_fill["fill_ts"],
+                        fee=float(raw_fill.get("fee", 0.0)),
+                        funding=float(raw_fill.get("funding", 0.0)),
+                        role="CLOSE",
+                    )
+                ):
+                    self._kill_record(
+                        action_id,
+                        "UNKNOWN",
+                        "FLATTEN_LIFECYCLE_INGEST_FAILED",
+                        query,
+                    )
+                    return "UNKNOWN"
             self._drain_queued_events_locked(symbol)
+            trade = self.store.get_trade(int(trade_id))
+            if filled_lots == qty_lots and (
+                trade is None or trade["exit_ts"] is None
+            ):
+                self._kill_record(
+                    action_id,
+                    "UNKNOWN",
+                    "FLATTEN_LIFECYCLE_OPEN",
+                    query,
+                )
+                return "UNKNOWN"
             return "APPLIED" if filled_lots == qty_lots else "PARTIAL"
         if query.terminal and filled_lots == 0:
             self._kill_record(
@@ -1150,16 +1309,18 @@ class OrderManager:
         )
         return "UNKNOWN"
 
-    async def _kill_exact_flatten_fills(
+    async def _kill_exact_order_fills(
         self,
         action: Mapping[str, Any],
         *,
         query: OrderQueryResult,
         symbol: str,
-        filled_lots: int,
+        expected_side: str,
+        expected_new_lots: int,
         lot: LotUnit,
+        durable_fills: Mapping[str, Mapping[str, Any]] | None = None,
     ) -> list[dict[str, Any]] | None:
-        """Fetch exact immutable fill identities for a query-proven KILL IOC."""
+        """Fetch exact immutable fill identities for a query-proven order delta."""
         fetch = getattr(self.broker, "fills_evidence", None)
         if not callable(fetch) or query.oid is None:
             return None
@@ -1189,7 +1350,10 @@ class OrderManager:
             return None
         if not bool(getattr(evidence, "accepted", False)):
             return None
-        expected_side = str(action.get("exit_side") or "")
+        normalized_side = str(expected_side or "").upper()
+        if normalized_side not in {"BUY", "SELL"}:
+            return None
+        prior = dict(durable_fills or {})
         rows: list[dict[str, Any]] = []
         seen: set[str] = set()
         total_lots = 0
@@ -1207,6 +1371,8 @@ class OrderManager:
                 qty_lots = quantize_lots(raw["size"], lot)
                 px = float(raw["px"])
                 effective_ts_ms = int(raw["effective_ts_ms"])
+                fee = float(raw.get("fee", 0.0) or 0.0)
+                funding = float(raw.get("funding", 0.0) or 0.0)
             except (
                 KeyError,
                 LotQuantizationError,
@@ -1219,15 +1385,43 @@ class OrderManager:
                 not event_id
                 or event_id in seen
                 or str(raw.get("coin") or "") != symbol
-                or side != expected_side
+                or side != normalized_side
                 or qty_lots <= 0
                 or not math.isfinite(px)
                 or px <= 0
+                or not math.isfinite(fee)
+                or not math.isfinite(funding)
                 or effective_ts_ms < start_ms
                 or effective_ts_ms > end_ms
             ):
                 return None
             seen.add(event_id)
+            if event_id in prior:
+                durable = prior[event_id]
+                try:
+                    durable_ts = datetime.fromisoformat(str(durable["fill_ts"]))
+                    if durable_ts.tzinfo is None:
+                        durable_ts = durable_ts.replace(tzinfo=UTC)
+                    durable_ts_ms = int(
+                        durable_ts.astimezone(UTC).timestamp() * 1000
+                    )
+                    durable_lots = quantize_lots(durable["qty"], lot)
+                    durable_px = float(durable["px"])
+                except (
+                    KeyError,
+                    LotQuantizationError,
+                    TypeError,
+                    ValueError,
+                    OverflowError,
+                ):
+                    return None
+                if (
+                    durable_lots != qty_lots
+                    or durable_px != px
+                    or durable_ts_ms != effective_ts_ms
+                ):
+                    return None
+                continue
             total_lots += qty_lots
             rows.append(
                 {
@@ -1237,11 +1431,11 @@ class OrderManager:
                     ),
                     "qty": lots_to_size(qty_lots, lot),
                     "px": px,
-                    "fee": 0.0,
-                    "funding": 0.0,
+                    "fee": fee,
+                    "funding": funding,
                 }
             )
-        if not rows or total_lots != filled_lots:
+        if not rows or total_lots != expected_new_lots:
             return None
         return rows
 
@@ -2778,7 +2972,13 @@ class OrderManager:
                     int(trade_id), float(totals["entry_vwap"]), str(totals["entry_first_ts"])
                 )
             self._observe_entry_fill(order, order_filled_qty)
-        elif trade_id is not None and role in {"SL", "TP", "TRAIL", "CLOSE"}:
+        elif trade_id is not None and role in {
+            "SL",
+            "TP",
+            "TRAIL",
+            "CLOSE",
+            "KILL_FLATTEN",
+        }:
             trade = self.store.get_trade(int(trade_id))
             if trade is not None:
                 totals = self.store.trade_fill_totals(int(trade_id))

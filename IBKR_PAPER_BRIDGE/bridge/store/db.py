@@ -5663,6 +5663,8 @@ class Store:
         evidence: Mapping[str, Any] | None = None,
         observed_ts: datetime | str | None = None,
         local_order_terminal_status: str | None = None,
+        cancel_order: Mapping[str, Any] | None = None,
+        cancel_fills: Sequence[Mapping[str, Any]] | None = None,
         flatten_order: Mapping[str, Any] | None = None,
         flatten_fills: Sequence[Mapping[str, Any]] | None = None,
     ) -> dict[str, Any]:
@@ -5679,6 +5681,21 @@ class Store:
                 raise KillConflictError(
                     "KILL_ACTION_NOT_FOUND", f"action_id={action_id}"
                 )
+            if (cancel_order is None) != (cancel_fills is None):
+                raise KillConflictError(
+                    "KILL_CANCEL_PROOF_INVALID",
+                    "terminal order and fill evidence must be recorded together",
+                )
+            if cancel_order is not None and (
+                str(action["kind"]) != KillActionKind.CANCEL.value
+                or str(status) != "APPLIED"
+                or not cancel_fills
+                or local_order_terminal_status is not None
+            ):
+                raise KillConflictError(
+                    "KILL_CANCEL_PROOF_INVALID",
+                    "cancel fill evidence requires one APPLIED cancel event",
+                )
             if (flatten_order is None) != (flatten_fills is None):
                 raise KillConflictError(
                     "KILL_FLATTEN_PROOF_INVALID",
@@ -5692,6 +5709,11 @@ class Store:
                 raise KillConflictError(
                     "KILL_FLATTEN_PROOF_INVALID",
                     "a flatten order requires an APPLIED flatten event",
+                )
+            if cancel_order is not None and flatten_order is not None:
+                raise KillConflictError(
+                    "KILL_ACTION_PROOF_INVALID",
+                    "one action event cannot record cancel and flatten evidence",
                 )
             self._append_kill_action_event_in_tx(
                 epoch=resolved_epoch,
@@ -5722,6 +5744,212 @@ class Store:
                         "KILL_LOCAL_ORDER_MISSING",
                         f"cloid={action['target']}",
                     )
+            if cancel_order is not None:
+                row = dict(cancel_order)
+                cloid = str(action["target"])
+                try:
+                    oid = int(row["oid"])
+                    filled_qty = float(row["filled_qty"])
+                except (KeyError, TypeError, ValueError, OverflowError) as exc:
+                    raise KillConflictError(
+                        "KILL_CANCEL_ORDER_MALFORMED",
+                        "terminal fill fields are invalid",
+                    ) from exc
+                existing = self.conn.execute(
+                    "SELECT * FROM orders WHERE cloid=?", (cloid,)
+                ).fetchone()
+                if existing is None:
+                    raise KillConflictError(
+                        "KILL_LOCAL_ORDER_MISSING", f"cloid={cloid}"
+                    )
+                trade_id = existing["trade_id"]
+                decision_uid = str(existing["decision_uid"] or "").strip()
+                try:
+                    existing_oid = int(existing["oid"])
+                    ordered_qty = float(existing["qty"])
+                    prior_rows = self.conn.execute(
+                        """SELECT fill_id,cloid,decision_uid,fill_ts,
+                                  qty,px,fee,funding
+                           FROM fills WHERE cloid=?
+                           ORDER BY fill_ts,fill_id""",
+                        (cloid,),
+                    ).fetchall()
+                    prior_qty = sum(
+                        (Decimal(str(prior["qty"])) for prior in prior_rows),
+                        Decimal("0"),
+                    )
+                except (TypeError, ValueError, OverflowError) as exc:
+                    raise KillConflictError(
+                        "KILL_CANCEL_ORDER_MALFORMED",
+                        "durable order fields are invalid",
+                    ) from exc
+                if (
+                    isinstance(row.get("oid"), bool)
+                    or isinstance(existing["oid"], bool)
+                    or existing_oid != oid
+                    or str(existing["role"]) != "ENTRY"
+                    or trade_id is None
+                    or not decision_uid
+                    or not math.isfinite(ordered_qty)
+                    or not math.isfinite(filled_qty)
+                    or ordered_qty <= 0
+                    or filled_qty <= 0
+                    or filled_qty > ordered_qty
+                ):
+                    raise KillConflictError(
+                        "KILL_CANCEL_ORDER_MALFORMED",
+                        "terminal fill fields are invalid",
+                    )
+                trade = self.conn.execute(
+                    "SELECT * FROM trades WHERE trade_id=?", (int(trade_id),)
+                ).fetchone()
+                if (
+                    trade is None
+                    or trade["exit_ts"] is not None
+                    or str(trade["entry_decision_uid"]) != decision_uid
+                ):
+                    raise KillConflictError(
+                        "KILL_CANCEL_TRADE_CONFLICT", f"cloid={cloid}"
+                    )
+                expected_total = Decimal(str(filled_qty))
+                ordered_total = Decimal(str(ordered_qty))
+                new_total = Decimal("0")
+                seen_fill_ids: set[str] = set()
+                for raw_fill in cancel_fills or ():
+                    fill = dict(raw_fill)
+                    fill_id = str(fill.get("fill_id") or "").strip()
+                    fill_ts = _to_iso(fill.get("fill_ts"))
+                    try:
+                        fill_qty = float(fill["qty"])
+                        fill_px = float(fill["px"])
+                        fill_fee = float(fill.get("fee", 0.0))
+                        fill_funding = float(fill.get("funding", 0.0))
+                    except (
+                        KeyError,
+                        TypeError,
+                        ValueError,
+                        OverflowError,
+                    ) as exc:
+                        raise KillConflictError(
+                            "KILL_CANCEL_FILL_MALFORMED",
+                            "terminal fill fields are invalid",
+                        ) from exc
+                    if (
+                        not fill_id
+                        or fill_id in seen_fill_ids
+                        or fill_ts is None
+                        or not math.isfinite(fill_qty)
+                        or not math.isfinite(fill_px)
+                        or not math.isfinite(fill_fee)
+                        or not math.isfinite(fill_funding)
+                        or fill_qty <= 0
+                        or fill_px <= 0
+                    ):
+                        raise KillConflictError(
+                            "KILL_CANCEL_FILL_MALFORMED",
+                            "terminal fill fields are invalid",
+                        )
+                    seen_fill_ids.add(fill_id)
+                    new_total += Decimal(str(fill_qty))
+                    normalized_fill = (
+                        fill_id,
+                        cloid,
+                        decision_uid,
+                        fill_ts,
+                        fill_qty,
+                        fill_px,
+                        fill_fee,
+                        fill_funding,
+                    )
+                    cursor = self.conn.execute(
+                        """INSERT OR IGNORE INTO fills(
+                             fill_id,cloid,decision_uid,fill_ts,qty,px,fee,funding)
+                           VALUES (?,?,?,?,?,?,?,?)""",
+                        normalized_fill,
+                    )
+                    if cursor.rowcount != 1:
+                        prior = self.conn.execute(
+                            """SELECT fill_id,cloid,decision_uid,fill_ts,
+                                      qty,px,fee,funding
+                               FROM fills WHERE fill_id=?""",
+                            (fill_id,),
+                        ).fetchone()
+                        prior_normalized = (
+                            str(prior["fill_id"]),
+                            str(prior["cloid"]),
+                            str(prior["decision_uid"]),
+                            str(prior["fill_ts"]),
+                            float(prior["qty"]),
+                            float(prior["px"]),
+                            float(prior["fee"] or 0.0),
+                            float(prior["funding"] or 0.0),
+                        ) if prior is not None else None
+                        if prior_normalized != normalized_fill:
+                            raise KillConflictError(
+                                "KILL_CANCEL_FILL_CONFLICT",
+                                f"fill_id={fill_id}",
+                            )
+                if (
+                    prior_qty + new_total != expected_total
+                    or expected_total > ordered_total
+                ):
+                    raise KillConflictError(
+                        "KILL_CANCEL_FILL_TOTAL_CONFLICT", f"cloid={cloid}"
+                    )
+                all_fills = self.conn.execute(
+                    """SELECT fill_ts,qty,px FROM fills
+                       WHERE cloid=? ORDER BY fill_ts,fill_id""",
+                    (cloid,),
+                ).fetchall()
+                durable_total = sum(
+                    (Decimal(str(fill["qty"])) for fill in all_fills),
+                    Decimal("0"),
+                )
+                durable_notional = sum(
+                    (
+                        Decimal(str(fill["qty"])) * Decimal(str(fill["px"]))
+                        for fill in all_fills
+                    ),
+                    Decimal("0"),
+                )
+                if durable_total != expected_total or not all_fills:
+                    raise KillConflictError(
+                        "KILL_CANCEL_FILL_TOTAL_CONFLICT", f"cloid={cloid}"
+                    )
+                terminal_status = (
+                    "FILLED"
+                    if durable_total == ordered_total
+                    else "CANCELLED_BY_ENGINE"
+                )
+                avg_fill_px = float(durable_notional / durable_total)
+                self.conn.execute(
+                    """UPDATE orders
+                       SET status=?,filled_qty=?,avg_fill_px=?,ts_last=?
+                       WHERE cloid=?""",
+                    (
+                        terminal_status,
+                        float(durable_total),
+                        avg_fill_px,
+                        now,
+                        cloid,
+                    ),
+                )
+                first_fill_ts = str(all_fills[0]["fill_ts"])
+                last_fill_ts = str(all_fills[-1]["fill_ts"])
+                self.conn.execute(
+                    """UPDATE trades
+                       SET entry_px=?,entry_ts=?,
+                           first_fill_ts=COALESCE(first_fill_ts,?),
+                           last_fill_ts=?
+                       WHERE trade_id=? AND exit_ts IS NULL""",
+                    (
+                        avg_fill_px,
+                        first_fill_ts,
+                        first_fill_ts,
+                        last_fill_ts,
+                        int(trade_id),
+                    ),
+                )
             if flatten_order is not None:
                 row = dict(flatten_order)
                 cloid = str(action["cloid"])

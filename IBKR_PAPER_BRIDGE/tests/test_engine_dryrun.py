@@ -16,6 +16,7 @@ from bridge.engine.risk import RiskConfig, RiskEngine
 from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
 from bridge.engine.types import (
     Bar,
+    FillEvent,
     OrderPlan,
     Position,
     ReconcileComponentKind,
@@ -530,6 +531,239 @@ def test_repair4_f4_worker_rejection_is_recorded_on_event_loop(
     assert record_threads == [event_loop_thread]
     assert observer.get_meta("kill_epoch_active") is not None
     observer.close()
+
+
+def test_s2_a4_cancel_discovered_entry_fill_persists_immutable_evidence_and_ownership(
+    tmp_path,
+):
+    run_id = "s2-a4-cancel-fill"
+    now = datetime.now(UTC)
+    store = Store(tmp_path / "s2-a4-cancel-fill.db")
+    store.initialize(target_schema_version=9)
+    store.create_run(run_id, "dry_run", "testnet", {})
+    store.set_meta("app_state", "ARMED")
+    store.conn.execute(
+        "UPDATE runs SET started_ts=? WHERE run_id=?",
+        ((now - timedelta(seconds=1)).isoformat(), run_id),
+    )
+    store.conn.commit()
+    decision_uid = "s2-a4-owned-entry"
+    store.insert_decision(
+        run_id, decision_uid, now, "BTC", "SIGNAL", {"direction": "LONG"}
+    )
+    trade_id = store.create_trade(
+        run_id=run_id,
+        coin="BTC",
+        direction="LONG",
+        qty=0.25,
+        entry_decision_uid=decision_uid,
+        signal_ts=now,
+        decision_ts=now,
+        expected_px=101.0,
+        risk_dollars=1.0,
+        risk_pct=0.001,
+        leverage=1,
+        sl_initial=95.0,
+        tp_initial=None,
+        llm_directive_id=None,
+    )
+    store.insert_order(
+        cloid="s2-a4-entry",
+        oid=701,
+        group_id=decision_uid,
+        order_ref="s2-a4-entry-ref",
+        order_json={
+            "symbol": "BTC",
+            "role": "ENTRY",
+            "direction": "LONG",
+            "side": "BUY",
+            "reduce_only": False,
+        },
+        decision_uid=decision_uid,
+        trade_id=trade_id,
+        role="ENTRY",
+        status="OPEN",
+        qty=0.25,
+        ts_submit=now,
+        ts_last=now,
+    )
+    broker = MockBroker(
+        bars=[
+            Bar(
+                ts=now,
+                open=101.0,
+                high=101.0,
+                low=101.0,
+                close=101.0,
+                volume=1.0,
+            )
+        ]
+    )
+    broker.orders = [
+        {
+            "cloid": "s2-a4-entry",
+            "oid": 701,
+            "role": "ENTRY",
+            "status": "OPEN",
+            "qty": 0.25,
+            "filled_qty": 0.0,
+            "reduce_only": False,
+            "symbol": "BTC",
+            "direction": "LONG",
+        }
+    ]
+    broker.full_open_orders = [
+        {
+            "cloid": "s2-a4-entry",
+            "oid": 701,
+            "coin": "BTC",
+            "side": "BUY",
+            "size": 0.25,
+            "role": "ENTRY",
+            "reduce_only": False,
+            "status": "OPEN",
+        }
+    ]
+    engine = BridgeEngine(
+        run_id=run_id,
+        broker=broker,
+        store=store,
+        strategy=KeltnerTrailEma8(),
+        risk_engine=RiskEngine(RiskConfig()),
+        state="ARMED",
+    )
+    broker._user_callbacks.clear()
+    broker.late_entry_fill_on_cancel = 0.25
+    original_cancel = broker.cancel_order_by_cloid
+
+    async def cancel_with_authoritative_position(cloid, symbol):
+        result = await original_cancel(cloid, symbol)
+        assert broker.position is not None
+        broker.full_positions = [
+            {"symbol": symbol, "size": float(broker.position.size)}
+        ]
+        return result
+
+    broker.cancel_order_by_cloid = cancel_with_authoritative_position
+
+    asyncio.run(engine.kill(flatten=False))
+
+    terminal_query = asyncio.run(broker.query_order("s2-a4-entry", "BTC"))
+    assert terminal_query.terminal is True
+    assert terminal_query.filled_size == 0.25
+    assert terminal_query.oid == 701
+    assert terminal_query.cloid == "s2-a4-entry"
+    assert terminal_query.symbol == "BTC"
+    observed_fill = broker.fills[-1]
+    durable_fills = store.list_fills_for_order("s2-a4-entry")
+    durable_totals = store.trade_fill_totals(trade_id)
+    local_order = store.get_order("s2-a4-entry")
+    request = store.active_kill_request()
+    assert local_order is not None
+    assert request is not None
+    assert {
+        "fills": [
+            {
+                "fill_id": row["fill_id"],
+                "cloid": row["cloid"],
+                "decision_uid": row["decision_uid"],
+                "qty": row["qty"],
+                "px": row["px"],
+                "fee": row["fee"],
+                "funding": row["funding"],
+            }
+            for row in durable_fills
+        ],
+        "order_status": local_order["status"],
+        "order_filled_qty": local_order["filled_qty"],
+        "durable_owned_qty": (
+            durable_totals["entry_qty"] - durable_totals["exit_qty"]
+        ),
+        "observed_position_qty": float(broker.position.size),
+        "safe_from_stale_ownership": request["terminal_state"]
+        in {"SAFE_FLAT", "SAFE_RETAINED"},
+    } == {
+        "fills": [
+            {
+                "fill_id": observed_fill["fill_id"],
+                "cloid": "s2-a4-entry",
+                "decision_uid": decision_uid,
+                "qty": 0.25,
+                "px": 101.0,
+                "fee": 0.0,
+                "funding": 0.0,
+            }
+        ],
+        "order_status": "FILLED",
+        "order_filled_qty": 0.25,
+        "durable_owned_qty": 0.25,
+        "observed_position_qty": 0.25,
+        "safe_from_stale_ownership": False,
+    }
+
+
+def test_s2_a5_kill_flatten_closes_trade_lifecycle_once_before_ack(tmp_path):
+    store, broker, engine = _repair4_kill_engine(tmp_path)
+    open_trade = store.get_open_trade_for_coin("repair4-kill", "BTC")
+    assert open_trade is not None
+    trade_id = int(open_trade["trade_id"])
+    decision_uid = str(open_trade["entry_decision_uid"])
+    assert store.list_fills_for_order("repair4-entry")
+
+    asyncio.run(engine.kill(flatten=True))
+
+    request = store.active_kill_request()
+    assert request is not None
+    assert request["terminal_state"] == "SAFE_FLAT"
+    flatten_action = store.kill_actions_for_episode(
+        request["episode_id"], kind="FLATTEN"
+    )[0]
+    durable_flatten_fills = store.list_fills_for_order(flatten_action["cloid"])
+    assert len(durable_flatten_fills) == 1
+
+    asyncio.run(engine.acknowledge_kill())
+
+    acknowledged = store.get_kill_request(request["episode_id"])
+    assert acknowledged is not None
+    assert acknowledged["ack_state"] == "ACKNOWLEDGED"
+    assert engine.state == "DISARMED"
+    closed_trade = store.get_trade(trade_id)
+    assert closed_trade is not None
+    closed_lifecycle = {
+        key: closed_trade[key]
+        for key in ("exit_ts", "exit_px", "exit_reason", "pnl")
+    }
+    assert all(closed_lifecycle[key] is not None for key in closed_lifecycle)
+    assert closed_lifecycle["exit_reason"] == "KILL_FLATTEN"
+    assert store.get_open_trade_for_coin("repair4-kill", "BTC") is None
+
+    durable_fill = durable_flatten_fills[0]
+    replay = OrderManager(store=store, broker=broker, run_id="repair4-kill")
+    replay_event = FillEvent(
+        fill_id=durable_fill["fill_id"],
+        cloid=durable_fill["cloid"],
+        coin="BTC",
+        qty=durable_fill["qty"],
+        px=durable_fill["px"],
+        ts=datetime.fromisoformat(durable_fill["fill_ts"]),
+        role="CLOSE",
+    )
+    assert replay._ingest_fill(replay_event) is True
+    assert replay._ingest_fill(replay_event) is True
+    replayed_trade = store.get_trade(trade_id)
+    assert replayed_trade is not None
+    assert {
+        key: replayed_trade[key]
+        for key in ("exit_ts", "exit_px", "exit_reason", "pnl")
+    } == closed_lifecycle
+    assert store.get_open_trade_for_coin("repair4-kill", "BTC") is None
+    assert len(
+        [
+            row
+            for row in store.get_decision_chain(decision_uid)
+            if row["stage"] == "TRADE_CLOSED"
+        ]
+    ) == 1
 
 
 async def _run_dryrun_replay(tmp_path):
