@@ -15,8 +15,8 @@ anchors. **Nothing accepted is ever lost — every accepted artifact is a pushed
 | WP-S branch / worktree | `feature/ts-p1-009b-s2-closure` @ `C:/WPS` |
 | **S2 ACCEPTED at** | **`0c65a73196428ac1da758c4c80ce7282a7ab46fe`** — both canonical auditors PASS-WITH-NITS, 0 required |
 | Test floor | `2 failed, 1118 passed` at `0c65a731` (`--ignore=TSP1009B.pytest_tmp_s1r1 -p no:randomly`, CWD `IBKR_PAPER_BRIDGE`) |
-| In flight | minimum S3 (scope frozen in the WP-S record §8), then its own Gate-5 |
-| Hours consumed | WP-0 2.0/2 · WP-S 6.0/12 · no contingency, no WP-R overrun |
+| **STOPPED AT** | **S3 round 2 `e78eff596fa38ea5af5972fe80337e3d63202109` — NON-ACCEPTING, 1 required finding, awaiting an owner decision on the round bound. See `11_TRIAGE/WPS_S3_AUDIT_ROUND2_BLOCKER_2026-07-31.md`.** |
+| Hours consumed | WP-0 2.0/2 · WP-S 12.0/12 (allocation full) · contingency 1.5/5 · WP-R 2.0/6 |
 
 **Next authorised step after S3 is accepted:** merge the WP-S branch, then WP-L Phase 1 as
 **verification only** (finding F-0-1: the Linux package at `6fe0130f` is already an ancestor of

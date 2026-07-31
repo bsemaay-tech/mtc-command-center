@@ -76,6 +76,23 @@ if worktree_dirty; then
   exit 2
 fi
 
+# Fail fast if the command cannot possibly write $OUT.
+#
+# Learned the expensive way on 2026-07-31: a Gate-5 audit was dispatched through
+# this wrapper without `-o <out_file>` in the codex argv. Every run succeeded and
+# wrote its verdict only to the log, but $OUT stayed empty, so the wrapper judged
+# each one a "lost run" and re-ran it. Five complete xhigh audits were paid for
+# and discarded. A missing output flag must be a usage error, never a retry loop.
+case " $* " in
+  *" $OUT "*) : ;;
+  *)
+    log "REFUSING TO START: '$OUT' does not appear in the command arguments."
+    log "The wrapper decides success by whether that file was written, so the"
+    log "command must direct its output there (for codex: -o \"$OUT\")."
+    exit 4
+    ;;
+esac
+
 for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   wait_for_net || exit 3
   log "attempt $attempt/$MAX_ATTEMPTS: $*"
