@@ -1,6 +1,384 @@
 # NEXT_STEPS
 
-## ✅ P2 DAY 0 v5 ARMED 2026-07-16T13:41:26.908952Z — 300s timeout fix DEPLOYED + field-proven during the gate
+## GLM SUPPLEMENTAL ROUTING POLICY — IMPLEMENTED 2026-07-27
+
+Policy codified in `AGENTS.md` §GLM SUPPLEMENTAL ROUTING (canonical, do not copy table elsewhere). Cross-references added to all required files. Stale `claude-opus-4-8` → `claude-opus-5` fixed in `SPRINT_WORKFLOW.md`.
+
+- **[AI: Barış] AUTHORIZE (separate gate):** reconfigure the external helper that currently hard-maps all three tiers to GLM-5.2. No external config was changed in this update; this requires explicit Barış authorization before any helper change.
+- **[AI: Any] MONITOR (Sep 2026):** temporary 1× off-peak quota cap expires Sep 2026. When quota rules change or new model entitlements are confirmed, update `AGENTS.md` §GLM SUPPLEMENTAL ROUTING (time-stamped facts are there).
+- **[AI: Any] VERIFY on route change:** if active Z.AI route changes, confirm GLM-5.1 Coding Plan entitlement and update Tier 3 in `AGENTS.md` accordingly.
+- **[AI: Any] HOLD:** no runtime, tool, broker, Pine, or schema changes in scope. Changes are doc/memory only.
+
+## KVM2 MASTER PROGRAM — REPAIR CYCLE 2 ACTIVE / CLAUDE QUOTA BLOCKER (2026-07-26)
+
+- **[AI: Codex] SCHEDULED:** one-time same-thread continuation
+  `resume-kvm2-plan-repair-after-claude-reset` will run at 10:51
+  Europe/Chisinau after the reported Claude reset.
+- **[AI: Claude] FIRST AFTER 10:50 EUROPE/CHISINAU:** run the preserved focused
+  repair prompt
+  `11_TRIAGE/KVM2_MASTER_PLAN_REPAIR_CYCLE2_ROUND1_PROMPT_2026-07-26.md`
+  against only the two plan documents and joint audit prompt. This is repair
+  round 1 of the newly authorized cycle; do not replace Claude with another
+  implementer.
+- **[AI: Codex] THEN:** independently verify 77 unique exact Evidence/Stop task
+  blocks, hashes, task counts, P5-05A/P5-06 and P6-03/P6-04/P6-05 dependencies,
+  Phase-9 independent Gate 6 manifest acceptance and install→observe→remove
+  sequencing, authority separation, privacy, sizes, crosswalk 1–10, and all
+  original R3/DS findings.
+- **[AI: Codex + Claude Opus] AUDIT:** only after lead validation passes, run fresh
+  exact `gpt-5.6-sol` `xhigh` and `claude-opus-5` `xhigh` no-fallback audits. A
+  non-accepting verdict returns to the same Claude implementer; maximum three
+  repair/re-audit rounds in this new cycle.
+- **[AI: Any] HOLD:** the current working hashes are not execution acceptance.
+  No VPS/runtime, install, secret, network, deploy, cutover, TESTNET, ARM, lab,
+  reprovision, purchase, mainnet, staging, commit, push, or PR action.
+
+Current unaccepted working hashes: master
+`3C61B08B17867C2EEB602FD407CF327C95FF7446DB492304DDB6A926A3E8EF3C`;
+execution companion
+`CB4C686A161CA8D40DC6C1C235B6371A4ADE1DCDDA23D2535259F39E0177C885`.
+
+## KVM2 MASTER PROGRAM — FINAL AUDIT REQUEST_CHANGES / LOOP EXHAUSTED (2026-07-26)
+
+Canonical joint inputs:
+
+- `11_TRIAGE/KVM2_AI_LAB_AND_BRIDGE_MASTER_PLAN_2026-07-25.md`
+- `11_TRIAGE/KVM2_AI_LAB_AND_BRIDGE_EXECUTION_TASKS_2026-07-25.md`
+- `11_TRIAGE/KVM2_MASTER_PLAN_MULTI_MODEL_AUDIT_REPORT_2026-07-26.md`
+
+- **[AI: Barış] NEW-CYCLE GATE:** explicitly authorize a new bounded repair cycle.
+  The prior three-round repair/re-audit limit is exhausted; do not silently start
+  a fourth round.
+- **[AI: Claude] REQUIRED REPAIR:** apply only R3-01 through R3-07 and DS-F-01
+  from the consolidated report. Preserve preparation-only status and all runtime
+  authority separations.
+- **[AI: Codex] REQUIRED RE-AUDIT:** after new joint hashes are frozen,
+  independently reproduce the dependency graph, authority chain, task schema,
+  crosswalk, privacy scan, and all required findings at exact
+  `gpt-5.6-sol` `xhigh`.
+- **[AI: Claude] DEFERRED CANONICAL AUDIT:** when credits are available, run a
+  fresh exact `claude-opus-5` `xhigh`, no-fallback/no-resume audit. The current
+  missing Opus verdict is not evidence.
+- **[AI: Any] HOLD:** no install, deploy, secret transfer, runtime/API/process,
+  cutover, TESTNET, ARM, lab admission, network change, reprovision, purchase,
+  or mainnet action. The lower Bridge VPS Deploy task remains BLOCKED.
+
+Frozen current hashes: master
+`10C79396D63DE330BD4F920146B8CDB0C39C10C342233AEAE4E1C8B9CCD12F02`;
+execution companion
+`8706621CE52010465B408B265267F7320078E2A79F01533E85513335619615D9`.
+
+## KVM2 MASTER PROGRAM — PLAN READY / ALL EXECUTION GATED (2026-07-25)
+
+Canonical master plan:
+`11_TRIAGE/KVM2_AI_LAB_AND_BRIDGE_MASTER_PLAN_2026-07-25.md`.
+
+- **[AI: Any] FIRST:** re-verify drift-prone VPS, repo, PR, SHA, Windows writer,
+  bridge state, listener, and audit facts. Resolve the audit-model wording conflict
+  between current `AGENTS.md`/D020 and the older Bridge VPS task before launching
+  any audit.
+- **[AI: Claude] PREPARATION:** produce the two-profile clean rebuild kit
+  (`temporary-testnet-lab` and `future-trading-only`) with trusted inputs, locked
+  dependencies, service/firewall/ownership manifests, secret inventory without
+  values, consistent state recovery, encrypted off-host restore proof, teardown,
+  credential rotation, and reproducible bootstrap evidence. Do not install.
+- **[AI: Any] AUDIT:** submit the immutable master plan and each executable child
+  artifact to fresh exact-model Gate 5/Gate 6 review under the current canonical
+  roster. Maximum three non-accepting repair rounds; no fallback.
+- **[AI: Barış] OWNER GATES:** bridge deploy, cutover, ARM, each AI-lab workload,
+  network exposure, destructive reprovision, purchase, and mainnet remain separate
+  explicit decisions. AI-lab admission is forbidden until the canonical
+  bridge-only stability window is accepted.
+- **[AI: Any] HOLD:** no GitHub self-hosted runner, public bridge/webhook control
+  path, agent Docker socket, heavy backtest, local large LLM, or mainnet on the
+  mixed/lab image.
+
+No install, deploy, secret, runtime, cutover, TESTNET, ARM, lab, network,
+reprovision, purchase, or mainnet action is currently authorized.
+
+## BRIDGE VPS DEPLOY — VPS READY / DEPLOY BLOCKED (2026-07-25)
+
+Canonical preparation task:
+`11_TRIAGE/BRIDGE_VPS_DEPLOY_TASK_LIST_2026-07-25.md`.
+
+- **[AI: Claude] BUILD/AUDIT HANDOFF GATE:** prepare an exact clean merged release
+  SHA containing accepted TS-P0 plus Linux deployment repairs, pinned/hash-locked
+  Python 3.12 venv dependencies, non-root hardened systemd, private loopback-only
+  control access, state-continuity policy, and complete release/rollback evidence.
+  Obtain fresh independent Gate 5 and Gate 6 acceptance; do not deploy.
+- **[AI: Any] READ-ONLY VERIFICATION GATE:** before any owner decision, re-verify
+  live PR/SHA/runtime/reconcile/order/position/port/audit state because the task
+  snapshot can drift. Preserve the dirty-main-worktree ban and single-writer stop
+  sequence. The current exact `gpt-5.6-sol` `xhigh` verdict is **BLOCK with zero
+  optional nits**; the HTTP-429 Opus attempt is not evidence.
+- **[AI: Barış] OWNER GATES:** formally choose database migration versus a
+  conservative risk-state reset; later authorize deploy only after exact audits;
+  authorize ARM separately, if ever. The >=10-day counter starts only at the final
+  approved VPS ARM. No current merge/deploy/install/secret/runtime/TESTNET/ARM
+  authority; mainnet remains forbidden.
+
+## TS-P1-001 SECOND-REPAIR RE-AUDIT BLOCK — immutable holder repair required
+
+- **[AI: Claude] NOW:** run
+  `11_TRIAGE/CLAUDE_TSP1001_REPAIR3_PROMPT_2026-07-21.md` against exact parent
+  `a15a6b1f6648016fe99278fe993daa2c1b49b923`. Fix only the writable `_pairs`
+  holder; create one new local child commit.
+- **[AI: Codex] AFTER REPAIR:** independently audit the new immutable commit without
+  repairing it in the audit pass.
+- **[AI: Baris] OWNER GATE:** only after technical PASS, accept or reject the PROPOSED
+  TS-P1-001 contract and five open design questions.
+- **[AI: Any] HOLD:** do not create or execute TS-P1-002; no push/PR/merge/migration/
+  testnet/P2RT/deployment authority.
+
+Verified: parent RED 5 failed/80 passed; repaired focused 85/85; full 303/303 both
+CWDs; compile clean; oracle 44/121; F2-R closed. Residual direct-slot mutation evidence
+is in `11_TRIAGE/CODEX_TSP1001_REAUDIT2_2026-07-21.md` (**BLOCK**).
+
+## TS-P1-001 RE-AUDIT BLOCK — second bounded repair required
+
+- **[AI: Claude] NOW:** run
+  `11_TRIAGE/CLAUDE_TSP1001_REPAIR2_PROMPT_2026-07-20.md` against exact parent
+  `851d88a084875e48b63fba455cb7b27f357c5ac4`. Fix only mutable proxy referents and
+  hostile-metaclass error escape; create one new local child commit.
+- **[AI: Codex] AFTER REPAIR:** independently re-audit the new immutable commit; do
+  not repair it in the audit pass.
+- **[AI: Baris] OWNER GATE:** only after technical PASS, accept or reject the PROPOSED
+  TS-P1-001 invariant contract and its five open design questions.
+- **[AI: Any] HOLD:** do not create or execute TS-P1-002. No push, PR mutation, merge,
+  migration, testnet, P2RT, or deployment authority is implied.
+
+Verified evidence: repair regressions RED on parent (5 failed/75 passed), repaired
+focused 80/80, full 298/298 from both CWDs, compile clean, scope clean, oracle 44/121.
+Residual F1-R/F2-R runtime attacks are in
+`11_TRIAGE/CODEX_TSP1001_REAUDIT_2026-07-20.md` (**BLOCK**).
+
+## TS-P1-001 AUDIT BLOCK — repair commit and independent re-audit required
+
+- **[AI: Claude] NOW:** run
+  `11_TRIAGE/CLAUDE_TSP1001_REPAIR_PROMPT_2026-07-20.md` in a fresh session against
+  audited parent `5140e062b8c1f3fcc78e96c7357060c60a51285d`. Fix only the reproduced
+  mutable-policy and exception-contract findings; create one new local repair commit.
+- **[AI: Codex] AFTER REPAIR:** independently re-audit the new immutable commit. Do
+  not act as builder in the re-audit pass.
+- **[AI: Baris] OWNER GATE:** after a passing re-audit, accept or reject the PROPOSED
+  TS-P1-001 invariant contract, including the five open design questions.
+- **[AI: Any] HOLD:** do not create or execute a TS-P1-002 build prompt yet. No push,
+  PR mutation, merge, migration, testnet, P2RT, or deployment authority is implied.
+
+Audit evidence: `11_TRIAGE/CODEX_TSP1001_AUDIT_2026-07-20.md` (**BLOCK**). Scope,
+semantic parent RED, 74 focused tests, 292 full tests from both CWDs, compile, and the
+121-pair/44-legal oracle passed; the mutable backing seeds and unsafe/unreason-coded
+exceptions block acceptance.
+
+## 🟦 39-TASK SEQUENCE START — TS-P1-001 builder then independent Codex audit
+
+Barış selected the workflow: Claude builds one backlog task and reports; Codex audits
+the immutable commit, routes BLOCK back to repair or PASS forward to the next task.
+First task: TS-P1-001 canonical order-state invariants. Prompts:
+
+- Claude builder: `11_TRIAGE/CLAUDE_TSP1001_BUILD_PROMPT_2026-07-20.md`
+- Codex auditor/manager: `11_TRIAGE/CODEX_TSP1001_AUDIT_MANAGER_PROMPT_2026-07-20.md`
+
+One task at a time. No next task, push, merge, deploy, migration, or testnet action is
+implied by build/audit success. TS-P1-001 invariant contract remains Barış-accepted only
+after the independent audit and explicit owner review.
+
+## ✅ TS-P0 DOCUMENTATION CLOSEOUT DONE — PR #25 ready at `cfb08b81`
+
+N3/N4/N5 are closed. The tracked contract markers and N5 limitation were committed
+as `cfb08b81` and pushed; PR #25 is OPEN, non-draft, CLEAN, with available checks
+passing: https://github.com/bsemaay-tech/mtc-command-center/pull/25. N3/N4 live only
+in pre-existing untracked main-worktree docs and remain deliberately uncommitted;
+they were not smuggled into the TSP0 branch.
+
+- **[AI: Barış] MERGE GATE:** still requires an explicit “merge PR #25” instruction.
+- **[AI: Barış] DEPLOY GATE/TIMING:** separately decide after merge and after the chosen
+  Day 1 v2 checkpoint; deployment would interrupt the current window.
+- **[AI: Codex|Claude] NEXT LARGE TASK AFTER TS-P0 MERGE:** design TS-P1-001 canonical
+  order-state invariant contract for Barış review; no implementation before its gate.
+
+Report: `11_TRIAGE/CODEX_TSP0_DOC_CLOSEOUT_REPORT_2026-07-20.md`.
+
+## ✅ TS-P0 published + Day 1 v2 OPEN 2026-07-20
+
+Owner gates are closed: hash scope approved, release-evidence contract approved, and
+sticky reset policy confirmed with 300-second tolerance. Exact audited commit
+`44338d61` was pushed on `feature/ts-p0-baseline`; draft PR #25 targets `master`:
+https://github.com/bsemaay-tech/mtc-command-center/pull/25. **No merge or deploy.**
+
+Day 1 v2: monitoring PC awake policy verified (sleep/hibernate/lid action all disabled
+on AC and DC); exactly one task start and one ARM succeeded. Run
+`paper-20260720090332` is ARMED paper/testnet from `2026-07-20T09:05:10Z`, task Running,
+fresh reconcile, positions/orders empty, P2RT clean at `008e065e`, thresholds unchanged.
+Record: `11_TRIAGE/CODEX_TSP0_PUBLICATION_DAY1V2_2026-07-20.md`.
+
+- **[AI: Any] MONITOR DAY 1 v2 READ-ONLY:** keep evidence categories separate; any
+  interruption resets the continuous window under the confirmed sticky policy.
+- **[AI: Codex] NEXT DOCS-ONLY CLOSEOUT:** execute
+  `11_TRIAGE/CODEX_TSP0_REMAINING_DOCS_PROMPT_2026-07-20.md` for N3/N4/N5 and approval
+  markers. No commit/push/PR mutation until a separate reviewed docs-only gate.
+- **[AI: Barış] PR #25:** merge and deploy remain explicitly unapproved.
+
+## ✅ INCIDENT FOLLOW-UP 2026-07-20: Day 1 v1 closed; Day 1 v2 opened
+
+Bridge died with system sleep; logon-trigger restart at 08:57 died again in ~66s
+(second standby). Continuous window = ARM 18:52Z → ~04:27Z ≈ **9h35m**, then INTERRUPTED.
+Not related to any TSP0 session. Record: `11_TRIAGE/INCIDENT_D1V1_SLEEP_STOP_2026-07-20.md`.
+
+- **RESOLVED:** Barış selected the awake-PC policy and authorized Day 1 v2. Exactly one
+  task start and one ARM succeeded; see the top entry and execution record.
+- **STANDING LIMIT:** local remains validation-tier; definitive uninterrupted evidence
+  remains planned for VPS.
+
+## ✅ TS-P0 BLOCK REPAIR RE-AUDIT PASS 2026-07-20 — published at `44338d61`
+
+Fable independently re-audited the Codex nine-file repair: **PASS, zero new findings**
+(`11_TRIAGE/FABLE_TSP0_BLOCK_REPAIR_AUDIT_2026-07-20.md`). Reproduced: 218×2 both CWDs;
+RED 9F/45P vs HEAD (copy-aside, byte-exact restore); F1a×4/F1b/F2×5/F3 replays all
+fail-closed; overbroad-denylist attack clean (real-tree hash set unchanged); real-pair
+exit 2 incl. `repo_dirty`; P2RT untouched. Auditor committed the audited state as
+**`44338d61`** to end the uncommitted-repair hazard. Barış later closed all three owner
+gates and authorized exact-SHA publication; draft PR #25 is open with no merge/deploy.
+
+- **[AI: Any] DOCS NITS (small, unblocked):** close N3 integration-note, N4 three stale
+  ADR "Proposed status" sentences, N5 symlink limitation — docs-only pass.
+- **DONE:** hash scope approved; release contract approved; sticky reset policy confirmed
+  with 300-second tolerance; exact `44338d61` pushed and draft PR #25 opened.
+- **[AI: Barış] REMAINING GATE:** any docs follow-up commit/push, PR merge, or deploy needs
+  a separate explicit instruction.
+
+Repair report: `11_TRIAGE/CODEX_TSP0_BLOCK_REPAIR_REPORT_2026-07-19.md`.
+
+## ⛔ CODEX TS-P0 CROSS-AUDIT BLOCK 2026-07-19 — repair before push/PR
+
+- **[AI: Claude] TS-P0-003 REQUIRED REPAIR:** malformed persisted timestamp
+  evidence (especially `window_interrupted_ts`) must fail DOWN, and future
+  liveness must not count as fresh. Add committed invalid-meta/future-clock tests.
+- **[AI: DeepSeek] TS-P0-002 REQUIRED REPAIR:** validate manifest container and
+  scalar types before dereference; re-signed `"hashes": []` must return a
+  structured exit 2 without traceback. Add wrong-shape tests.
+- **[AI: DeepSeek] TS-P0-001 REQUIRED REPAIR:** extend/document secret exclusions
+  for conventional `*.env` and `*.secrets`; decide `key.txt`; add spy/no-leak tests.
+- **[AI: Codex] RE-AUDIT AFTER REPAIR:** rerun focused 14/11/21, 210/210 both
+  CWDs, real-pair integration, and the three failed adversarial probes. Keep
+  `C:\P2RT` read-only. Report: `11_TRIAGE/CODEX_TSP0_AUDIT_2026-07-19.md`.
+- **[AI: Barış] PUSH/PR GATE:** remains blocked. The final-HEAD integration's
+  third `source_tree_hash_mismatch` reason is correct and must not be removed by
+  weakening the declared hash scope.
+
+## ✅ DEPLOYED + WINDOW OPEN 2026-07-19 — Day 1 v1 ARMED on `008e065e`; monitor + TS-P0-001 next
+
+Barış approved and Fable executed the full deploy gate: PR #24 merged (`008e065e`),
+`C:\P2RT` deployed + verified (32/164 tests in deployed tree), `MTC-Bridge-P2` started
+18:50:25Z, run `paper-20260719185026` paper/testnet ARMED ~18:52:44Z. Record:
+`11_TRIAGE/DEPLOY_TSP1007_WINDOW_D1_2026-07-19.md`.
+
+- **[AI: Any] WINDOW MONITORING:** check bridge log + `/api/status` + events periodically;
+  this window's risk-gate enforcement evidence COUNTS (first deployed audited wiring).
+  Categories stay separate (connectivity / reconnect / scheduler / risk-enforcement).
+  Definitive ≥10d D3 on VPS remains end-of-month plan.
+- ~~**[AI: Claude] PHASE 0 BUILD CHAIN (Barış directed 2026-07-19, Fable builds)**~~
+  **DONE 2026-07-19:** TS-P0-001..004 built in `C:\TSP0` (`feature/ts-p0-baseline`,
+  commits `fa449ce2`/`42d0ca9f`/`7777273f` + docs-only P0-004), 210/210 both CWDs,
+  no push/deploy, window untouched. Report: `11_TRIAGE/FABLE_TSP0_BUILD_REPORT_2026-07-19.md`.
+- ~~**[AI: Codex] INDEPENDENT TS-P0 AUDIT**~~ **FABLE AUDIT DONE 2026-07-19:
+  PASS-WITH-NITS** (`11_TRIAGE/FABLE_TSP0_INDEPENDENT_AUDIT_2026-07-19.md`).
+  Fresh Fable session executed the full 12-point checklist: 210/210 both CWDs,
+  3 RED proofs reproduced, real-pair integration exit 2 + P2RT untouched, re-sign
+  attack caught, exhaustive window sweep verified. 5 nits: N1 release_evidence
+  exit-1 crash on re-signed non-dict `hashes`; N2 `prod.env` denylist gap;
+  N3 handoff's stale integration expectation (3 drift reasons at HEAD is CORRECT);
+  N4 three residual "Proposed status" sentences (ADR-0020:62/0025:51/0029:49);
+  N5 symlink digest-oracle note. **[AI: Barış]** decide: accept Fable audit or
+  also run Codex cross-audit per `CODEX_TSP0_AUDIT_PROMPT_2026-07-19.md`; push/PR
+  of `feature/ts-p0-baseline` stays gated until then.
+- **[AI: Codex|Claude] TS-P0 NIT-FIX BUILD (after Codex audit reconciled):**
+  execute `11_TRIAGE/TSP0_NITFIX_BUILD_PROMPT_2026-07-19.md` — N1 exit-code fix
+  (TDD, subprocess RED), N2 conditional on Barış hash-scope answer, N4 three ADR
+  wording fixes, N5+N3 doc corrections; one commit in C:\TSP0, no push. Stage 2
+  push/PR separately gated on Barış's 3 approvals.
+- **[AI: Barış] TS-P0 decisions after audit:** (1) TS-P0-001 hash scope confirm
+  (RUNTIME_BASELINE_CONTRACT.md), (2) TS-P0-002 release-evidence contract approval
+  (currently DRAFT), (3) TS-P0-003 window reset-policy confirm (currently PROPOSED).
+- **[AI: Claude|Codex] NON-BLOCKING NITS (fold into full TS-P1-007):**
+  add committed tests for `ORDER_OVERFILL` + `FILL_ROLE_CONFLICT`; persist the conflicting
+  role fill as evidence (retention asymmetry); close the narrow ENTRY_REMAINDER_LIVE
+  crash window (missed DISARM only); fix stale "INSERT OR REPLACE" comment at
+  `tests/test_interim_risk_wiring.py:674`.
+- **[AI: Barış]** live/mainnet remains BLOCKED (gate unsigned); D017 funding exclusion
+  stands until TS-P1-005 funding ledger.
+
+## ✅ INTERIM TS-P1-007 ROUND-4 AUDIT PASS-WITH-NITS 2026-07-19 — deploy executed above
+
+Fable independently audited `acb83b5b` and issued **PASS-WITH-NITS**
+(`11_TRIAGE/FABLE_INTERIM_TSP1007_ROUND4_AUDIT_2026-07-19.md`). All builder evidence
+reproduced (32×2 focused, 164×2 full, parent red 8F/24P exact-match, half-exit 1F vs
+`066b49cc`) plus 14 independent adversarial probes, all pass. All five round-3 BLOCK
+findings closed.
+
+## INTERIM TS-P1-007 ROUND-4 REPAIR BUILT 2026-07-18 - audited PASS-WITH-NITS above
+
+Codex commit **`acb83b5b`** in clean `C:\P1IF` repairs the round-3 late/conflicting-fill,
+partial-decision, live-entry-remainder, overfill, atomic-close, and semantic-test findings.
+Evidence: **32x2 focused; 1x2 regression; 164x2 full; parent semantic red 8F/24P; old-code
+half-exit red 1F; final clean 32P**. Audit brief:
+`11_TRIAGE/FABLE_INTERIM_TSP1007_ROUND4_AUDIT_HANDOFF_2026-07-19.md`.
+
+- ~~**[AI: Claude] FABLE INDEPENDENT AUDIT 2026-07-19**~~ DONE 2026-07-19: PASS-WITH-NITS.
+- **[AI: Barış] DEPLOY GATE:** remains separate and unspent. No push, PR, merge, or deploy before
+  explicit owner approval. D017 funding exclusion is unchanged.
+- The round-3 repair bullets immediately below are completed by `acb83b5b` and now
+  independently confirmed by Fable; retained as audit trace.
+
+## ⛔ INTERIM TS-P1-007 ROUND-3 RE-AUDIT BLOCKED 2026-07-18 — do not push/deploy
+
+Codex audited `3fa13f3e` code plus documentation-only D017 commit `b11a2e36`. Scope and reported suites passed (**24×2 focused; 156×2 full; regression ×2; semantic red 5F/19P**), but late/conflicting fills can still rewrite closed PnL or leave unprotected exposure. Report: `11_TRIAGE/CODEX_INTERIM_TSP1007_REAUDIT2_2026-07-18.md`.
+
+- **[AI: Claude] REQUIRED REPAIR:** closed trades must be immutable. Detect `exit_qty > entry_qty`, mixed SL/TP/CLOSE races, and any distinct post-close fill; persist the anomaly separately and force reconciliation/quarantine without rewriting canonical PnL. Make close + `TRADE_CLOSED` atomic.
+- **[AI: Claude] REQUIRED REPAIR:** replace mutable `INSERT OR REPLACE` fill semantics with insert-once outcomes. Exact duplicates are no-ops; changed payloads for an existing `fill_id` fail closed; partial-exit decisions remain idempotent across restart.
+- **[AI: Claude] REQUIRED REPAIR:** do not terminally close a flat partial entry while its owned entry remainder is live. Cancel/confirm or quarantine it; a later entry fill must never become `FOREIGN_POSITION_IGNORED`. Add restart/reconcile proof.
+- **[AI: Claude|DeepSeek] TEST REPAIR:** make the half-exit engine test cross the old `-2000` daily boundary; its current old-code phantom loss is only `-100`, so the test is not semantic red evidence.
+- **[AI: Codex] RE-AUDIT:** rerun both-CWD suites and semantic red proof, plus mixed SL/TP, conflicting duplicate, partial-decision duplicate, late-entry, crash-window, and reconciliation attacks.
+- **[AI: Barış] DEPLOY GATE:** remains separate and unspent. D017 funding exclusion is accepted and is not the current blocker; no monitoring window may count before a non-BLOCK audit and separate deploy approval.
+
+## 2026-07-18 REVIEW OUTCOME — pending Barış approvals + corrections applied [AI: Fable]
+
+Devil's-advocate review of the 2026-07-17 package: **PROCEED WITH REQUIRED CORRECTIONS** (full record: GLOBAL_HANDOFF 2026-07-18). Corrections applied same day. Pending Barış approvals, in priority order:
+
+1. ⛔ **Interim TS-P1-007 round-3 audit BLOCK.** D017 accepted interim funding exclusion, but `3fa13f3e` remains unsafe under post-close overfill/mixed-role fills, conflicting duplicate IDs, and late fills from a remaining partial-entry order. Complete the narrow repairs above, then independent re-audit; no push/PR/deploy or risk-control monitoring window yet.
+2. ✅ **PR #23 MERGED 2026-07-18T12:20:45Z** (merge commit `abda6717`; Barış approval, executed by Fable). Verified: `74e0990b` is an ancestor of `origin/master` and `git diff 74e0990b origin/master -- IBKR_PAPER_BRIDGE/` is empty — master bridge tree is byte-identical to the deployed runtime. TS-P0-001 manifests must baseline against post-merge master.
+3. ✅ **ADR ratification COMPLETE — D016 + same-day addendum (2026-07-18):** Barış accepted ALL TWELVE (ADR-0018 through 0029); files + index flipped. Qualifications: 0020/0024 direction-only (evidence-gated); 0029 framework-only — live gate UNSIGNED, live/mainnet BLOCKED, nothing operational signed.
+4. ✅ **Scheduler policy — DONE 2026-07-18:** `StopIfGoingOnBatteries=False` on `MTC-Bridge-P2` (set by Fable; task stayed `Ready`); Task Scheduler history ENABLED (Barış ran the admin wevtutil command). `DisallowStartIfOnBatteries` remains True (untouched — task will not START while on battery; flag to Barış if unwanted).
+
+## TRADING-SYSTEM ROADMAP — SINGLE IMMEDIATE NEXT TASK 2026-07-17 [AI: DeepSeek]
+
+**TS-P0-001 — Add a read-only repository/runtime baseline manifest and drift checker.**
+
+Governing ADRs: ADR-0019 and ADR-0027. Canonical task card:
+`09_DOCS\ROADMAPS\TRADING_SYSTEM\05_IMPLEMENTATION_BACKLOG.md#ts-p0-001--add-a-read-only-repositoryruntime-baseline-manifest-and-drift-checker`.
+
+Exact scope:
+
+- Add an offline CLI that compares an explicitly supplied repository root and runtime root.
+- Read Git HEAD/status and selected bridge source/config hashes; emit deterministic JSON and Markdown evidence.
+- Exit `0` for exact clean match, `2` for drift/dirty/missing runtime, and `3` for invalid evidence input.
+
+Required files:
+
+- `IBKR_PAPER_BRIDGE\tools\check_runtime_baseline.py`
+- `IBKR_PAPER_BRIDGE\tests\test_runtime_baseline.py`
+- `IBKR_PAPER_BRIDGE\docs\RUNTIME_BASELINE_CONTRACT.md`
+- One dated run report plus normal `GLOBAL_HANDOFF.md`/`NEXT_STEPS.md`/`ACTIVE_FILES.md` updates.
+
+Acceptance criteria and tests:
+
+- Manifest reports schema version, canonical paths, repository/runtime commits and dirty flags, selected hashes, config hash and explicit verdict.
+- Unit coverage: clean match, commit drift, dirty repo/runtime, missing runtime, changed config, invalid Git output, stable ordering, secret-safe output and no-mutation behavior.
+- One audited read-only local invocation must report the current repository/runtime relationship while leaving both trees unchanged.
+
+Explicit out of scope: no branch merge, checkout, deploy, restart, ARM/DISARM/KILL, HTTP/exchange call, credential read, database or scheduler action, dependency/config/schema change, or trading/risk/order/strategy behavior change. `C:\P2RT` remains protected. The bridge API was unavailable during the 2026-07-17 roadmap baseline, so the prior Day 0 v5 window must not be represented as currently active or uninterrupted.
+
+## ❌ P2 DAY 0 v5 CLOSED 2026-07-18 — killed by scheduler battery policy 2026-07-16 ~17:32 (see `11_TRIAGE/INCIDENT_P2_BATTERY_STOP_2026-07-16.md`); 300s fix remains deployed + field-proven; NO active window; daily D3 check suspended until next approved window
 
 Task B (`79976577`+`74e0990b`, PR #23 draft) Fable-audited **PASS** and deployed same day:
 P2RT detached `74e0990b`, 132×2 both CWDs (incl. inside P2RT), supervisor `MTC-Bridge-P2`, run
@@ -1259,3 +1637,7 @@ Must obey 7-gate workflow (AI_RULES.md). Start at Gate 1.
 - Validation: `node --check` PASS; API unittest discovery `39 tests` PASS; `/healthz` `overall_ok=True` and `mode=read_only`; served HTML/CSS/JS marker checks PASS; forbidden execution wording and hardcoded pilot data search PASS.
 - Visual QA limitation: Browser screenshots remain blocked by enterprise policy for `127.0.0.1:8765`; no alternate browser workaround used. Direct served CSS/JS checks are recorded in `GLOBAL_HANDOFF.md`.
 - Future [AI: Codex|Claude]: if Browser localhost policy becomes available, capture visual screenshots for Home, Pipeline, Registry, Strategy Intelligence, Planner, Explorer, Leaderboard, Diagnostics, and Read Model.
+
+### TS-P1-001 | Canonical order-state machine | REPAIRED TWICE 2026-07-20, awaiting third re-audit (Claude Sonnet 5) [AI: Codex|Baris]
+Built in `C:\TSP1001` (branch `feature/ts-p1-001-order-state`, base `cfb08b81` = TS-P0 HEAD/PR #25). Build commit `5140e062` BLOCKed (F1 named mutable seed dicts, F2 unreason-coded/repr-unsafe exceptions) → repair `851d88a0` BLOCKed again on re-audit (F1-R: `MappingProxyType`'s backing dict is still reachable via standard `gc.get_referents()` regardless of naming; F2-R: `type(raw).__name__` unsafe against a hostile metaclass) → second repair `a15a6b1f6648016fe99278fe993daa2c1b49b923` (parent verified = `851d88a0`, same 3 files) replaces `MappingProxyType(dict)` with a private tuple-backed `_ImmutableMapping` (no dict/list anywhere in its `gc.get_referents` closure) and makes `UnknownRawOrderStatusError`'s message a constant per reason_code touching no attribute of `raw` at all. 85 tests focused, 303/303 full suite both required CWDs.
+Next: [AI: Codex] independent re-audit of `a15a6b1f` (see `11_TRIAGE/CLAUDE_TSP1001_REPAIR2_REPORT_2026-07-20.md`). [AI: Baris] accept or reject the invariant contract only after re-audit passes — 5 open design questions unchanged by either repair round (PENDING→SUBMITTED alias choice, PENDING_CANCEL→OPEN cancel-reject edge, direct terminal edges bypassing PENDING_CANCEL, WAITING_CHILD exclusion, UNKNOWN_SUBMISSION's wide resolution set). Blocks TS-P1-002 (durable identity) which depends on P1-001.

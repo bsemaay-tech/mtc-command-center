@@ -25,6 +25,9 @@ Strategy-research layer (read before combining strategies/indicators):
 ## 7 Gates (must pass before claiming "done")
 
 ### Gate 1 — Scope Review (before coding)
+
+**Actor: Lead Orchestrator.** Scope definition and acceptance authority rest with the lead. If the counterpart implementer CLI is unavailable, surface the blocker here and do not self-implement.
+
 - Restate user request in 1–2 lines.
 - User value: why does this matter?
 - Smallest safe change that delivers value.
@@ -35,6 +38,9 @@ Strategy-research layer (read before combining strategies/indicators):
 Prompt: `04_SHARED/prompts/05_ai_workflow/01_office_hours_scope_review.md`
 
 ### Gate 2 — Engineering Plan (before architecture change)
+
+**Actor: Implementer.** Produces the plan; passes it to the Lead for acceptance before Gate 3 may begin.
+
 - Data flow diagram or description.
 - Affected modules.
 - Edge cases.
@@ -45,6 +51,9 @@ Skip Gate 2 for trivial doc / typo / single-line fixes.
 Prompt: `04_SHARED/prompts/05_ai_workflow/02_engineering_plan_review.md`
 
 ### Gate 3 — Implementation
+
+**Actor: Implementer.**
+
 - Minimal diff.
 - No unrelated edits.
 - No speculative features, no premature abstractions.
@@ -53,6 +62,9 @@ Prompt: `04_SHARED/prompts/05_ai_workflow/02_engineering_plan_review.md`
 Prompt: `04_SHARED/prompts/05_ai_workflow/03_implementation_task.md`
 
 ### Gate 4 — QA / Tests
+
+**Actor: Implementer (self-QA).** Produces concrete evidence for Lead review at Gate 5. Do not claim PASS without verifiable output.
+
 - Run tests if a suite exists.
 - Run lint / typecheck if configured.
 - Note parity regression risk explicitly (parity suite = sacred).
@@ -60,21 +72,33 @@ Prompt: `04_SHARED/prompts/05_ai_workflow/03_implementation_task.md`
 
 Prompt: `04_SHARED/prompts/05_ai_workflow/05_qa_test_review.md`
 
-### Gate 5 — Adversarial Cross-Model Review
-- Reviewer model **must differ** from implementer model.
+### Gate 5 — Adversarial Cross-Model Review (Lead's independent inspection)
+- The **LEAD ORCHESTRATOR** runs this gate — not the implementer. See two-tier model in `AGENTS.md`.
+- **Exact model/effort required** — see `AGENTS.md` §CANONICAL AUDIT ROSTER. Claude auditor: `claude-opus-5` + `xhigh`. Codex auditor: `gpt-5.6-sol` + `high` (ordinary G5) or `xhigh` (protected/re-audit). No Sonnet, no implicit alias, no silent fallback — BLOCK if unavailable unless Barış waives.
+- **Fresh independent session every round** — never resume or continue the implementer session.
+- The lead independently inspects the actual diff/files; accepting the implementer's self-report alone is not Gate 5.
 - Reviewer reads adversarially: assume the diff is wrong, prove otherwise.
-- Flag: missing edge cases, hidden coupling, parity risk, DO_NOT_TOUCH
-  violations, scope creep.
+- Flag: missing edge cases, hidden coupling, parity risk, DO_NOT_TOUCH violations, scope creep.
+- Verdicts: **PASS** / **PASS-WITH-NITS** (accepting, optional nits only) / **REQUEST_CHANGES** (required repair) / **BLOCK** (cannot continue). PASS-WITH-NITS cannot contain a required repair.
+- On REQUEST_CHANGES or BLOCK: lead sends focused repair prompt to the same counterpart implementer. **Maximum 3 repair/re-audit rounds.** After the third non-accepting verdict, stop and report to Barış.
 
 Prompt: `04_SHARED/prompts/05_ai_workflow/04_adversarial_code_review.md`
 
 ### Gate 6 — Security Review (only if scope hits security surface)
+
+**Actor: Lead or designated independent reviewer** — must not be the implementer of the change under review. Lead retains final acceptance authority.
+**Exact model/effort:** Gate 6 always uses `xhigh`. Claude auditor: exact `claude-opus-5` xhigh. Codex auditor: exact `gpt-5.6-sol` xhigh.
+**Verdicts:** PASS / PASS-WITH-NITS / REQUEST_CHANGES / BLOCK.
+
 - Secrets, auth, network calls, file system writes, eval / exec, subprocess.
 - Skip for pure doc / Pine plotting / cosmetic changes.
 
 Prompt: `04_SHARED/prompts/05_ai_workflow/06_security_review.md`
 
 ### Gate 7 — Memory Write-Back (mandatory before stopping)
+
+**Actor: Lead Orchestrator**, after accepting Gate 5 verdict (PASS or PASS-WITH-NITS) is verified. Implementer may supply factual inputs (commit hashes, test results, file lists); final write-back and authorized sequencing are Lead-owned. Do not execute without an accepting Gate 5 verdict (PASS or PASS-WITH-NITS).
+
 Every completed task must update:
 - `GLOBAL_HANDOFF.md`   — always
 - `NEXT_STEPS.md`       — always
@@ -107,3 +131,7 @@ Prompt: `04_SHARED/prompts/05_ai_workflow/07_handoff_update.md`
    - Results → dashboard → `11_TRIAGE/RESULTS_TO_DASHBOARD_MAP_2026-06-29.md`.
    - Authoring an AI/QuantLens verdict → `03_QUANTLENS/_user_guide/13_AI_VERDICT_AUTHORING_PROCEDURE.md`.
 6. After finishing the task: execute Gate 7 (memory write-back).
+
+## GLM Supplemental Routing
+
+For Z.AI Coding Plan model selection when sub-delegating, see `AGENTS.md` §GLM SUPPLEMENTAL ROUTING (canonical source; routing table not copied here). GLM never replaces the mandatory Gate 5/6 audit roster (`claude-opus-5` xhigh / `gpt-5.6-sol` high/xhigh — §CANONICAL AUDIT ROSTER) or the counterpart flagship implementer. Every delegated GLM task requires a routing record (classification, protected flag, model+provider, cheaper-model rationale, exact paths, budget, fallback, external API credits).

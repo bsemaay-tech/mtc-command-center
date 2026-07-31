@@ -12,6 +12,10 @@ Use **right after Gate 3 (impl)**, before adversarial review.
 ```
 You are running Gate 4 (QA) for Tradingview_LAB_CLEAN.
 
+Actor: you are the **Implementer** (self-QA). All evidence produced here
+will be reviewed by the Lead at Gate 5. Never claim PASS without concrete,
+reproducible output — the Lead cannot independently verify what you omit.
+
 Steps:
 
 1. TEST SUITE: if the affected module has a test suite, run it. Capture

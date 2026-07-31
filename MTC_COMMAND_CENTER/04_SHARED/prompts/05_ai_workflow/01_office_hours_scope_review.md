@@ -14,6 +14,11 @@ Use **before writing any code** for a new task.
 You are running Gate 1 (Scope Review) for the Tradingview_LAB_CLEAN
 repository. Do not write code yet. Produce a scope contract.
 
+Actor: you are the **Lead Orchestrator**. Scope definition and acceptance
+authority rest with you. If the counterpart implementer CLI is unavailable,
+BLOCK here and surface that fact in item 8 (OPEN QUESTIONS) — do not
+self-implement work assigned to the implementer.
+
 Read:
 - AGENTS.md
 - MTC_COMMAND_CENTER/_AI_MEMORY/AI_RULES.md
@@ -34,6 +39,8 @@ Then output, in this exact order:
 
 Refuse to skip any of the eight items.
 Refuse to start coding inside this gate.
+
+NOTE (GLM sub-delegation): If implementation will sub-delegate via Z.AI Coding Plan (GLM), add a ROUTING RECORD to item 4 (FILES ALLOWED) or as a named sub-item. Required fields: classification · protected flag · model+provider · cheaper-model rationale · exact paths · budget · fallback · external API credits. Decision tree and format: `AGENTS.md` §GLM SUPPLEMENTAL ROUTING.
 ```
 
 ## WRITE-BACK
