@@ -1,5 +1,39 @@
 # GLOBAL_HANDOFF
 
+## RESUME HERE — 50-Hour MVP, live continuation package (2026-07-31)
+
+If this session died (power, network, quota, context), a fresh session resumes from these immutable
+anchors. **Nothing accepted is ever lost — every accepted artifact is a pushed commit.**
+
+| Anchor | Value |
+|---|---|
+| Authorisation | `11_TRIAGE/OWNER_AUTH_50H_EXECUTION_PROMPT_2026-07-31.md` (standing; Claude Lead, Codex implementer) |
+| Accepted plan blob SHA-256 | `a07c90cc49a4f34910f82bd9c94ba4fb71d76b511bc2cabe0bd727faf57fe3ee` (hash the **committed blob**, never the working copy) |
+| `origin/master` | `2ebb0475dd56094e53ac2cb64e52cf3cf335f099` |
+| WP-0 record | `11_TRIAGE/WP0_SCOPE_BASELINE_RECORD_2026-07-31.md` (commit `4d2228cf`, merged via PR #36) |
+| WP-S record | `11_TRIAGE/WPS_TSP1009B_S2_CLOSURE_RECORD_2026-07-31.md` (commit `225c53c6`) |
+| WP-S branch / worktree | `feature/ts-p1-009b-s2-closure` @ `C:/WPS` |
+| **S2 ACCEPTED at** | **`0c65a73196428ac1da758c4c80ce7282a7ab46fe`** — both canonical auditors PASS-WITH-NITS, 0 required |
+| Test floor | `2 failed, 1118 passed` at `0c65a731` (`--ignore=TSP1009B.pytest_tmp_s1r1 -p no:randomly`, CWD `IBKR_PAPER_BRIDGE`) |
+| In flight | minimum S3 (scope frozen in the WP-S record §8), then its own Gate-5 |
+| Hours consumed | WP-0 2.0/2 · WP-S 6.0/12 · no contingency, no WP-R overrun |
+
+**Next authorised step after S3 is accepted:** merge the WP-S branch, then WP-L Phase 1 as
+**verification only** (finding F-0-1: the Linux package at `6fe0130f` is already an ancestor of
+master and byte-identical, so nothing is ported and no cross-branch Git operation occurs), then
+WP-I readiness artifacts. **No Ubuntu execution of any kind before Gate A.**
+
+**Known external ceiling:** WP-L Phase 2, WP-I staging verification, WP-A and WP-V all require a
+named Ubuntu 24.04 host *and a way to reach it*. Credentials are owner-held and must never be
+handled by an agent. All local work stops at the assembled Gate-A checklist until that access
+exists.
+
+**Power/network resilience:** this site switches between mains and generator, and DNS drops during
+the transition — it killed one implementer dispatch (120k tokens, zero output). Dispatch every
+long-running CLI call through `MTC_COMMAND_CENTER/tools/resilient_dispatch.sh`, which waits for real
+connectivity, retries lost runs with backoff, and **refuses to retry if the worktree is dirty**
+(a blind re-run can double-apply a partial edit into an artifact about to be frozen for audit).
+
 ## [Claude Opus 5] 2026-07-31 — 50-Hour MVP execution STARTED; WP-0 complete and merged
 
 Owner issued a standing authorisation (`11_TRIAGE/OWNER_AUTH_50H_EXECUTION_PROMPT_2026-07-31.md`, committed) to execute the accepted 50-Hour DISARMED Safety MVP autonomously from WP-0 through completion. It supersedes the plan's §23c/§39-10 actor assignment **for this execution only**: **Claude `claude-opus-5` is Lead Orchestrator and sole acceptance authority; Codex CLI `gpt-5.6-sol` is the counterpart flagship implementer.** No safety, testing, scope, audit, model, or evidence requirement is weakened. The authorisation also grants in advance the three approvals the plan gates separately (WP-V deployment, ARM, first TESTNET paper order); every objective Gate A/B/C prerequisite still applies in full, and the TESTNET phase still needs its own pre-registration through one fresh Gate-5 audit before it may start.
