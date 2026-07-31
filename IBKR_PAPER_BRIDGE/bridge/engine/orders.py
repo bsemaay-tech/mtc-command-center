@@ -237,6 +237,9 @@ class OrderManager:
         self.run_id = run_id
         self._submitted: set[str] = set()
         self._synced_fills: set[str] = set()
+        self._deferred_kill_fills: dict[
+            str, tuple[KillEvidenceEpoch | None, tuple[object, ...]]
+        ] = {}
         self._queued_events: list[BrokerEvent] = []
         self.pending_grace_s = pending_grace_s
         # Injected monotonic runtime clock. Its values are process-local and
@@ -2669,9 +2672,54 @@ class OrderManager:
         self.symbol_locks.require(symbol)
         pending: list[BrokerEvent] = []
         for event in self._queued_events:
-            if self._event_symbol(event) != symbol or not self._ingest_event(event):
+            if (
+                self._event_symbol(event) != symbol
+                or not self._ingest_queued_event(event)
+            ):
                 pending.append(event)
         self._queued_events = pending
+
+    def _defer_kill_lifecycle_event(
+        self, event: BrokerEvent, *, reason_code: str
+    ) -> bool:
+        if not isinstance(event, FillEvent):
+            return False
+        order = self.store.get_order(event.cloid)
+        if (
+            order is None
+            or str(order.get("role")) != "KILL_FLATTEN"
+            or order.get("trade_id") is None
+            or not str(order.get("group_id") or "")
+        ):
+            return False
+        self.store.record_kill_lifecycle_deferral(
+            episode_id=str(order["group_id"]),
+            trade_id=int(order["trade_id"]),
+            fill_id=event.fill_id,
+            reason_code=reason_code,
+        )
+        self._deferred_kill_fills[event.fill_id] = (
+            self._active_kill_epoch,
+            self._fill_delivery_identity(event),
+        )
+        return True
+
+    def _ingest_queued_event(self, event: BrokerEvent) -> bool:
+        if isinstance(event, FillEvent):
+            deferred = self._deferred_kill_fills.get(event.fill_id)
+            if deferred == (
+                self._active_kill_epoch,
+                self._fill_delivery_identity(event),
+            ):
+                return False
+        try:
+            return self._ingest_event(event)
+        except KillConflictError as exc:
+            if self._defer_kill_lifecycle_event(
+                event, reason_code=exc.reason_code
+            ):
+                return False
+            raise
 
     def _canonical_status(
         self,
@@ -2724,11 +2772,11 @@ class OrderManager:
         for event in self._queued_events:
             symbol = self._event_symbol(event)
             if symbol is None:
-                if not self._ingest_event(event):
+                if not self._ingest_queued_event(event):
                     pending.append(event)
                 continue
             async with self.symbol_locks.hold(symbol):
-                if not self._ingest_event(event):
+                if not self._ingest_queued_event(event):
                     pending.append(event)
         self._queued_events = pending
         return before - len(pending)
@@ -2968,7 +3016,34 @@ class OrderManager:
                 )
         return None
 
+    @property
+    def deferred_event_queue_depth(self) -> int:
+        return len(self._queued_events)
+
+    @staticmethod
+    def _fill_delivery_identity(fill: FillEvent) -> tuple[object, ...]:
+        return tuple(
+            getattr(fill, field)
+            for field in (
+                "fill_id", "cloid", "coin", "qty", "px",
+                "ts", "fee", "funding", "role",
+            )
+        )
+
+    @classmethod
+    def _same_fill_delivery(cls, left: FillEvent, right: FillEvent) -> bool:
+        return cls._fill_delivery_identity(left) == cls._fill_delivery_identity(right)
+
     def _queue_event(self, event: BrokerEvent) -> None:
+        if isinstance(event, FillEvent):
+            for index, queued in enumerate(self._queued_events):
+                if (
+                    isinstance(queued, FillEvent)
+                    and queued.fill_id == event.fill_id
+                    and self._same_fill_delivery(queued, event)
+                ):
+                    self._queued_events[index] = event
+                    return
         self._queued_events.append(event)
 
     def _ingest_event(self, event: BrokerEvent) -> bool:
@@ -3004,7 +3079,10 @@ class OrderManager:
         return True
 
     def _ingest_fill(self, fill: FillEvent) -> bool:
-        if fill.fill_id in self._synced_fills:
+        if (
+            fill.fill_id in self._synced_fills
+            and fill.fill_id not in self._deferred_kill_fills
+        ):
             return True
         order = self.store.get_order(fill.cloid)
         if order is None:
@@ -3046,6 +3124,7 @@ class OrderManager:
         if trade is not None and trade["exit_ts"] is not None:
             if outcome == "EXACT_DUPLICATE":
                 self._synced_fills.add(fill.fill_id)
+                self._deferred_kill_fills.pop(fill.fill_id, None)
                 return True
             self._quarantine_fill(
                 "POST_CLOSE_FILL",
@@ -3209,6 +3288,12 @@ class OrderManager:
                         # the event queued so a later epoch-owning kill recovery
                         # can close the lifecycle; the Store independently
                         # rejects every direct unowned KILL_FLATTEN close.
+                        if not self._defer_kill_lifecycle_event(
+                            fill, reason_code="KILL_EPOCH_REQUIRED"
+                        ):
+                            raise RuntimeError(
+                                "KILL_LIFECYCLE_DEFERRAL_IDENTITY_MISSING"
+                            )
                         return False
                     closed = self.store.close_trade_once_with_decision(
                         trade_id=int(trade_id),
@@ -3247,6 +3332,7 @@ class OrderManager:
                         trade_id=int(trade_id),
                     )
         self._synced_fills.add(fill.fill_id)
+        self._deferred_kill_fills.pop(fill.fill_id, None)
         return True
 
     def _has_live_entry_remainder_exact(

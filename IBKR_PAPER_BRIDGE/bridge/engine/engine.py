@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import json
 import sqlite3
 import time
 import traceback
@@ -1068,19 +1069,37 @@ class BridgeEngine:
             if self.store.kill_evidence_enabled():
                 active = self.store.active_kill_request()
                 if active is not None:
+                    terminal_state = str(active["terminal_state"])
+                    epoch_closed = False
+                    try:
+                        epoch_closed = (
+                            json.loads(str(active["epoch_token"])).get("state")
+                            == "CLOSED"
+                        )
+                    except (AttributeError, TypeError, ValueError, json.JSONDecodeError):
+                        pass
                     kill_episode = {
                         "episode_id": str(active["episode_id"]),
                         "flatten_requested": bool(active["flatten_requested"]),
-                        "terminal_state": str(active["terminal_state"]),
+                        "terminal_state": terminal_state,
                         "terminal_reason": str(active["terminal_reason"]),
                         "safe_checkpoint_id": active["safe_checkpoint_id"],
                         "ack_state": str(active["ack_state"]),
+                        "lifecycle_state": (
+                            "AWAITING_ACK"
+                            if epoch_closed
+                            and terminal_state in {"SAFE_FLAT", "SAFE_RETAINED"}
+                            else "AWAITING_EPOCH_RECOVERY"
+                        ),
                     }
         except Exception:
             pass
         return {
             "state": state,
             "kill_episode": kill_episode,
+            "deferred_event_queue_depth": int(
+                getattr(self.order_manager, "deferred_event_queue_depth", 0)
+            ),
             "window": window_status(
                 self.store,
                 app_state=state,

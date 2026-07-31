@@ -832,6 +832,28 @@ def _v4_with_trade(tmp_path, *, target=4):
     return store, int(trade_id), now
 
 
+def test_lifecycle_close_requires_a_clean_connection_with_runtime_guard(tmp_path):
+    store, trade_id, now = _v4_with_trade(tmp_path)
+    store.conn.execute("BEGIN IMMEDIATE")
+    try:
+        with pytest.raises(RuntimeError, match="clean connection"):
+            store.close_trade_once_with_decision(
+                trade_id=trade_id,
+                run_id="run",
+                decision_uid="d1",
+                coin="BTC",
+                exit_px=101.0,
+                exit_ts=now,
+                exit_reason="CLOSE",
+                pnl=2.0,
+                payload={"exit_reason": "CLOSE"},
+            )
+        assert store.conn.in_transaction is True
+    finally:
+        store.conn.rollback()
+        store.close()
+
+
 def test_default_initialize_stays_on_schema_v4(tmp_path):
     store = Store(tmp_path / "bridge.db")
     store.initialize()

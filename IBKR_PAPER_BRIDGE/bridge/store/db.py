@@ -5119,6 +5119,84 @@ class Store:
                 cause_reason_code="KILL_EPOCH_STALE_WRITE",
             ) from exc
 
+    def record_kill_lifecycle_deferral(
+        self,
+        *,
+        episode_id: str,
+        trade_id: int,
+        fill_id: str,
+        reason_code: str,
+    ) -> None:
+        """Append one secret-safe event for a deferred KILL lifecycle fill.
+
+        ``BEGIN IMMEDIATE`` serializes the identity check and append across
+        Store instances. Exact episode/trade/fill/reason replay therefore sees
+        the existing row instead of growing the event log on every drain.
+        """
+        self._require_kill_schema()
+        if self.conn.in_transaction:
+            raise KillConflictError(
+                "KILL_LIFECYCLE_DEFERRAL_RECORD_FAILED",
+                "deferral evidence requires a clean connection",
+                cause_reason_code=str(reason_code),
+            )
+        safe_episode = str(episode_id)
+        safe_fill = str(fill_id)
+        safe_reason = "".join(
+            char if char.isalnum() or char in {"_", "-"} else "_"
+            for char in str(reason_code).upper()
+        )[:96]
+        detail = (
+            "episode_sha256="
+            f"{hashlib.sha256(safe_episode.encode('utf-8')).hexdigest()};"
+            f"trade_id={int(trade_id)};fill_sha256="
+            f"{hashlib.sha256(safe_fill.encode('utf-8')).hexdigest()};"
+            f"reason={safe_reason}"
+        )
+        try:
+            self.conn.execute("BEGIN IMMEDIATE")
+            identity = self.conn.execute(
+                """SELECT r.run_id
+                   FROM kill_requests AS r
+                   JOIN orders AS o
+                     ON o.group_id=r.episode_id
+                    AND o.role='KILL_FLATTEN'
+                    AND o.trade_id=?
+                   JOIN fills AS f
+                     ON f.cloid=o.cloid
+                    AND f.fill_id=?
+                   WHERE r.episode_id=?""",
+                (int(trade_id), safe_fill, safe_episode),
+            ).fetchone()
+            if identity is None:
+                raise LookupError("durable KILL lifecycle identity is missing")
+            existing = self.conn.execute(
+                """SELECT 1 FROM events
+                   WHERE run_id=? AND code=? AND detail=?
+                   LIMIT 1""",
+                (
+                    str(identity["run_id"]),
+                    "KILL_EPOCH_LIFECYCLE_DEFERRED",
+                    detail,
+                ),
+            ).fetchone()
+            if existing is None:
+                self._insert_event_in_tx(
+                    str(identity["run_id"]),
+                    _to_iso(self._clock()) or "",
+                    "WARN",
+                    "KILL_EPOCH_LIFECYCLE_DEFERRED",
+                    detail,
+                )
+            self.conn.commit()
+        except Exception as exc:
+            self.conn.rollback()
+            raise KillConflictError(
+                "KILL_LIFECYCLE_DEFERRAL_RECORD_FAILED",
+                f"deferral evidence append failed: {type(exc).__name__}",
+                cause_reason_code=safe_reason,
+            ) from exc
+
     def open_kill_epoch(
         self,
         *,
@@ -7361,9 +7439,10 @@ class Store:
                 )
         if resolved_epoch is not None:
             resolved_epoch = self._require_kill_epoch(resolved_epoch)
-        assert not self.conn.in_transaction, (
-            "lifecycle close requires a clean connection before its safety transaction"
-        )
+        if self.conn.in_transaction:
+            raise RuntimeError(
+                "lifecycle close requires a clean connection before its safety transaction"
+            )
         self.conn.execute("BEGIN IMMEDIATE")
         try:
             if resolved_epoch is None:
@@ -7377,6 +7456,8 @@ class Store:
                 )
             else:
                 epoch_token = self._assert_kill_epoch_in_tx(resolved_epoch)
+                # Keep the epoch predicate on the UPDATE as defence in depth if
+                # the preceding assertion is ever reordered or refactored.
                 cursor = self.conn.execute(
                     """
                     UPDATE trades

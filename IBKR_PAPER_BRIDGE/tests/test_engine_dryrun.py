@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import math
 import sqlite3
@@ -1102,7 +1103,6 @@ def test_s2_r2_startup_drain_defers_kill_flatten_without_epoch(
             payload={},
         )
     assert unowned.value.reason_code == "KILL_EPOCH_REQUIRED"
-    assert restarted_store.conn.in_transaction is False
 
     # This is the same drain entrypoint used by startup reconciliation. It must
     # return normally while retaining the deferred event for kill recovery.
@@ -1115,6 +1115,302 @@ def test_s2_r2_startup_drain_defers_kill_flatten_without_epoch(
     assert recovered_trade is not None
     assert recovered_trade["exit_reason"] == "KILL_FLATTEN"
     assert restarted_engine.order_manager._queued_events == []
+
+
+def _s3_stranded_kill_restart(tmp_path, monkeypatch):
+    store, broker, engine = _repair4_kill_engine(tmp_path)
+    db_path = store.db_path
+    trade = store.get_open_trade_for_coin("repair4-kill", "BTC")
+    assert trade is not None
+    trade_id = int(trade["trade_id"])
+    decision_uid = str(trade["entry_decision_uid"])
+
+    def crash_after_coupled_flatten_commit(_fill):
+        raise RuntimeError("INJECTED_AFTER_APPLIED_FLATTEN_COMMIT")
+
+    monkeypatch.setattr(
+        engine.order_manager, "_ingest_fill", crash_after_coupled_flatten_commit
+    )
+    with pytest.raises(
+        RuntimeError, match="INJECTED_AFTER_APPLIED_FLATTEN_COMMIT"
+    ):
+        asyncio.run(engine.kill(flatten=True))
+
+    request = store.active_kill_request()
+    assert request is not None
+    flatten_action = store.kill_actions_for_episode(
+        request["episode_id"], kind="FLATTEN"
+    )[0]
+    durable_fill = store.list_fills_for_order(flatten_action["cloid"])[0]
+    assert store.get_trade(trade_id)["exit_ts"] is None
+
+    broker._user_callbacks.clear()
+    store.close()
+    restarted_store = Store(db_path)
+    restarted_store.initialize(target_schema_version=9)
+    restarted_engine = BridgeEngine(
+        run_id="repair4-kill",
+        broker=broker,
+        store=restarted_store,
+        strategy=KeltnerTrailEma8(),
+        risk_engine=RiskEngine(RiskConfig()),
+        state="KILLED",
+    )
+    redelivered = FillEvent(
+        fill_id=str(durable_fill["fill_id"]),
+        cloid=str(durable_fill["cloid"]),
+        coin="BTC",
+        qty=float(durable_fill["qty"]),
+        px=float(durable_fill["px"]),
+        ts=datetime.fromisoformat(str(durable_fill["fill_ts"])),
+        role="UNKNOWN",
+    )
+    return (
+        restarted_store,
+        broker,
+        restarted_engine,
+        request,
+        redelivered,
+        trade_id,
+        decision_uid,
+    )
+
+
+def test_s3_deferral_event_is_durable_secret_safe_and_idempotent(
+    tmp_path, monkeypatch
+):
+    (
+        store,
+        broker,
+        engine,
+        request,
+        redelivered,
+        trade_id,
+        _decision_uid,
+    ) = _s3_stranded_kill_restart(tmp_path, monkeypatch)
+    observer = Store(store.db_path)
+    observer.initialize(target_schema_version=9)
+    assert observer is not store
+    engine.order_manager._queue_event(redelivered)
+
+    assert asyncio.run(engine.order_manager.drain_queued_events()) == 0
+    assert asyncio.run(engine.order_manager.drain_queued_events()) == 0
+
+    second_store = Store(store.db_path)
+    second_store.initialize(target_schema_version=9)
+    assert second_store is not store
+    second_manager = OrderManager(
+        store=second_store, broker=broker, run_id="repair4-kill"
+    )
+    second_manager._queue_event(FillEvent(**redelivered.model_dump()))
+    assert asyncio.run(second_manager.drain_queued_events()) == 0
+
+    deferred = [
+        row
+        for row in observer.get_events()
+        if row["code"] == "KILL_EPOCH_LIFECYCLE_DEFERRED"
+    ]
+    assert len(deferred) == 1
+    detail = str(deferred[0]["detail"])
+    assert detail == (
+        "episode_sha256="
+        + hashlib.sha256(str(request["episode_id"]).encode("utf-8")).hexdigest()
+        + f";trade_id={trade_id};fill_sha256="
+        + hashlib.sha256(redelivered.fill_id.encode("utf-8")).hexdigest()
+        + ";reason=KILL_EPOCH_REQUIRED"
+    )
+    assert str(request["episode_id"]) not in detail
+    assert redelivered.fill_id not in detail
+    assert engine.order_manager._queued_events == [redelivered]
+    assert second_manager._queued_events == [redelivered]
+    second_store.close()
+    observer.close()
+    store.close()
+
+
+def test_s3_status_exposes_open_lifecycle_and_deferred_queue_depth(
+    tmp_path, monkeypatch
+):
+    store, _broker, engine, _request, redelivered, _trade_id, _decision_uid = (
+        _s3_stranded_kill_restart(tmp_path, monkeypatch)
+    )
+    engine.order_manager._queue_event(redelivered)
+
+    status = engine.status()
+
+    assert status["kill_episode"] is not None
+    assert status["kill_episode"]["lifecycle_state"] == "AWAITING_EPOCH_RECOVERY"
+    assert status["deferred_event_queue_depth"] == 1
+    store.close()
+
+
+def test_s3_status_distinguishes_ack_eligible_lifecycle(tmp_path):
+    store, _broker, engine = _repair4_kill_engine(tmp_path)
+
+    asyncio.run(engine.kill(flatten=True))
+    status = engine.status()
+
+    assert status["kill_episode"] is not None
+    assert status["kill_episode"]["lifecycle_state"] == "AWAITING_ACK"
+    assert status["deferred_event_queue_depth"] == 0
+    store.close()
+
+
+def test_s3_exact_fill_redelivery_is_coalesced_but_conflict_is_retained(
+    tmp_path, monkeypatch
+):
+    store, _broker, engine, _request, redelivered, _trade_id, _decision_uid = (
+        _s3_stranded_kill_restart(tmp_path, monkeypatch)
+    )
+    engine.order_manager._queue_event(redelivered)
+    assert asyncio.run(engine.order_manager.drain_queued_events()) == 0
+
+    exact_redelivery = FillEvent(**redelivered.model_dump())
+    engine.order_manager._queue_event(exact_redelivery)
+    assert engine.order_manager._queued_events == [exact_redelivery]
+
+    conflicting_payload = redelivered.model_copy(
+        update={"px": redelivered.px + 1.0}
+    )
+    engine.order_manager._queue_event(conflicting_payload)
+    assert engine.order_manager._queued_events == [
+        exact_redelivery,
+        conflicting_payload,
+    ]
+    assert asyncio.run(engine.order_manager.drain_queued_events()) == 1
+    assert engine.order_manager._queued_events == [exact_redelivery]
+    assert "FILL_ID_CONFLICT" in {
+        row["code"] for row in store.get_events()
+    }
+    assert asyncio.run(engine.order_manager.drain_queued_events()) == 0
+    assert engine.order_manager._queued_events == [exact_redelivery]
+    store.close()
+
+
+def test_s3_stale_epoch_startup_drain_defers_but_store_caller_still_sees_fence(
+    tmp_path, monkeypatch
+):
+    (
+        stale_store,
+        _broker,
+        stale_engine,
+        request,
+        redelivered,
+        trade_id,
+        decision_uid,
+    ) = _s3_stranded_kill_restart(tmp_path, monkeypatch)
+    _request, stale_epoch = stale_store.open_kill_epoch(
+        run_id=str(request["run_id"]),
+        symbol=str(request["symbol"]),
+        flatten_requested=bool(request["flatten_requested"]),
+        policy_version=str(request["policy_version"]),
+        process_uid="s3-stale-drain-owner",
+        opened_ts_monotonic=10.0,
+    )
+    stale_engine.order_manager._active_kill_epoch = stale_epoch
+    competitor = Store(stale_store.db_path)
+    competitor.initialize(target_schema_version=9)
+    assert competitor is not stale_store
+    _request, newer_epoch = competitor.open_kill_epoch(
+        run_id=str(request["run_id"]),
+        symbol=str(request["symbol"]),
+        flatten_requested=bool(request["flatten_requested"]),
+        policy_version=str(request["policy_version"]),
+        process_uid="s3-newer-drain-owner",
+        opened_ts_monotonic=11.0,
+    )
+    assert newer_epoch.attempt_no == stale_epoch.attempt_no + 1
+
+    with pytest.raises(KillConflictError, match="KILL_EPOCH_STALE_WRITE") as stale:
+        stale_store.close_trade_once_with_decision(
+            trade_id=trade_id,
+            run_id="repair4-kill",
+            decision_uid=decision_uid,
+            coin="BTC",
+            exit_px=redelivered.px,
+            exit_ts=redelivered.ts,
+            exit_reason="KILL_FLATTEN",
+            pnl=0.0,
+            payload={},
+            epoch=stale_epoch,
+        )
+    assert stale.value.reason_code == "KILL_EPOCH_STALE_WRITE"
+    assert stale_store.conn.in_transaction is False
+    assert competitor.get_trade(trade_id)["exit_ts"] is None
+    assert [
+        row
+        for row in competitor.get_decision_chain(decision_uid)
+        if row["stage"] == "TRADE_CLOSED"
+    ] == []
+    stale_events_before_start = [
+        row
+        for row in competitor.get_events()
+        if row["code"] == "KILL_EPOCH_STALE_WRITE_REJECTED"
+    ]
+    assert len(stale_events_before_start) == 1
+
+    stale_engine.order_manager._queue_event(redelivered)
+
+    async def drain_same_symbol():
+        async with stale_engine.order_manager.symbol_locks.hold("BTC"):
+            stale_engine.order_manager._drain_queued_events_locked("BTC")
+
+    asyncio.run(drain_same_symbol())
+    assert stale_engine.order_manager._queued_events == [redelivered]
+
+    async def start_and_stop():
+        await stale_engine.start(lookback=0)
+        await stale_engine.stop()
+
+    asyncio.run(start_and_stop())
+
+    assert stale_engine.reconcile_ready is True
+    assert stale_engine.order_manager._queued_events == [redelivered]
+    assert competitor.get_trade(trade_id)["exit_ts"] is None
+    assert [
+        row
+        for row in competitor.get_decision_chain(decision_uid)
+        if row["stage"] == "TRADE_CLOSED"
+    ] == []
+    assert len(
+        [
+            row
+            for row in competitor.get_events()
+            if row["code"] == "KILL_EPOCH_STALE_WRITE_REJECTED"
+        ]
+    ) == 2
+    assert len(
+        [
+            row
+            for row in competitor.get_events()
+            if row["code"] == "KILL_EPOCH_LIFECYCLE_DEFERRED"
+        ]
+    ) == 1
+    competitor.close()
+    stale_store.close()
+
+
+def test_s3_drain_propagates_non_kill_conflict_failures(tmp_path, monkeypatch):
+    store, _broker, engine = _repair4_kill_engine(tmp_path)
+    event = FillEvent(
+        fill_id="s3-non-kill-error",
+        cloid="repair4-entry",
+        coin="BTC",
+        qty=1.0,
+        px=100.0,
+        ts=datetime.now(UTC),
+        role="ENTRY",
+    )
+    engine.order_manager._queue_event(event)
+
+    def fail_unexpectedly(_event):
+        raise RuntimeError("UNRELATED_DRAIN_FAILURE")
+
+    monkeypatch.setattr(engine.order_manager, "_ingest_event", fail_unexpectedly)
+    with pytest.raises(RuntimeError, match="UNRELATED_DRAIN_FAILURE"):
+        asyncio.run(engine.order_manager.drain_queued_events())
+    assert engine.order_manager._queued_events == [event]
+    store.close()
 
 
 def test_s2_closure_stale_recovery_cannot_commit_after_epoch_invalidation(

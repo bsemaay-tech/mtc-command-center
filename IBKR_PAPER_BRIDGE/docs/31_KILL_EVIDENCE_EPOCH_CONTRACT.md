@@ -1,8 +1,9 @@
 # TS-P1-009B Kill Evidence Epoch Contract
 
 Status: implemented for the opt-in schema-v9 KILL capability, including S2 lifecycle-close
-integrity and fencing. The default schema target remains v4. This contract does not activate v9,
-migrate a runtime database, start the bridge, or authorize broker activity.
+integrity/fencing and minimum-S3 lifecycle liveness. The default schema target remains v4. This
+contract does not activate v9, migrate a runtime database, start the bridge, or authorize broker
+activity.
 
 This document extends `30_TSP1009_KILL_EVIDENCE_RECOVERY.md`. That document remains authoritative
 for owned-only action identity, deadlines, direct-query proof, retention, and ACK freshness.
@@ -17,7 +18,7 @@ The epoch and lifecycle fence close three failure classes:
    its observation; and
 3. a KILL flatten could appear complete without one exact, epoch-owned trade lifecycle close.
 
-S3 and TS-P1-010 are outside this change.
+Further S3 work and TS-P1-010 are outside this change.
 
 ## Epoch identity and durable anchors
 
@@ -78,7 +79,7 @@ No SQLite transaction spans broker I/O.
 | EP-3 | Every durable request-state mark, action write, proof bind, and close is CAS-guarded by the active epoch. |
 | EP-4 | A stale epoch write is rejected and a secret-safe `KILL_EPOCH_STALE_WRITE_REJECTED` event is appended; an append failure is observable and fail-closed. |
 | EP-5 | OPEN failure leaves the in-memory KILL latch set, performs no broker mutation, and fabricates no completion. |
-| EP-6 | Every applied KILL flatten has exactly one close decision and one matching `trades` closure; both must exactly match the durable fill-derived lifecycle evidence. |
+| EP-6 | Every fully applied / ACK-eligible KILL flatten has exactly one close decision and one matching `trades` closure; both must exactly match the durable fill-derived lifecycle evidence. |
 | EP-7 | Historical request/attempt/action/event evidence is retained; replay appends an attempt and moves only active authority without rewriting prior attempt history, action identity, or deadlines. |
 | EP-8 | ACK requires the active epoch to be `CLOSED` with a fresh current accepted checkpoint and proof bound in that epoch. |
 
@@ -163,12 +164,39 @@ predicate before appending the close decision. A stale non-`None` epoch rolls th
 back, records `KILL_EPOCH_STALE_WRITE_REJECTED`, and raises `KILL_EPOCH_STALE_WRITE`; no lifecycle
 close or decision can commit.
 
-A startup or periodic reconcile drain has no kill authority, so its epoch is `None`. If such a
-drain encounters a complete durable KILL flatten, the order manager returns `False` to the existing
-event-drain deferral mechanism. The event remains queued, the lifecycle remains open, and startup
-is not aborted. A later `/api/kill` recovery opens and owns an epoch and may retry the same durable
-event. The store still rejects every direct KILL-flatten lifecycle-close request that omits an
-epoch with `KILL_EPOCH_REQUIRED`; deferral does not weaken the write rule.
+A new manager starts with no retained kill epoch. A running manager deliberately retains its last
+epoch as historical callback context, but retention is not authority: the store rejects a stale
+retained epoch with `KILL_EPOCH_STALE_WRITE`. When a startup or periodic reconcile drain encounters
+a complete durable KILL flatten with no epoch, or catches that exact store conflict for a stale
+epoch, it leaves the event queued rather than unwinding startup. A later `/api/kill` recovery opens
+and owns an epoch and may retry the same durable event. The store still rejects every direct
+KILL-flatten lifecycle-close request that omits an epoch with `KILL_EPOCH_REQUIRED`; drain
+containment does not weaken the write rule.
+
+The first deferral appends `KILL_EPOCH_LIFECYCLE_DEFERRED`. Its detail contains only SHA-256
+digests of episode/fill identity, the numeric trade ID, and a bounded reason code. The store checks
+that binding against the durable request/order/fill join and performs the lookup-plus-append under
+`BEGIN IMMEDIATE`. Repeated drains across Store instances therefore retain one row for the same
+episode/trade/fill/reason. Failure to append the evidence is raised and remains fail-closed.
+
+Both the global reconcile drain and the same-symbol locked drain contain only
+`KillConflictError` from a durably bound KILL-flatten fill. Other exception classes, and a
+`KillConflictError` that cannot be bound to that lifecycle, still propagate. Direct store callers
+also still receive the conflict after the rejected lifecycle transaction rolls back and EP-4
+evidence is appended. Once a drain has deferred an unchanged fill under the same absent or stale
+epoch context, later cycles retain it without repeating the rejected store call; a newly opened
+epoch changes that context and permits the retry.
+
+The status payload exposes `kill_episode.lifecycle_state = AWAITING_EPOCH_RECOVERY` while the
+active episode still needs recovery, `AWAITING_ACK` once it is safe and ACK-eligible, and
+`deferred_event_queue_depth` for the current in-memory queue. This is a minimal liveness surface,
+not the deferred TS-P5-001 operations read-model redesign.
+
+Queue growth uses option (a): an exact redelivery with the same `fill_id` and identical canonical
+fill fields replaces its queued copy. A different payload reusing the same `fill_id` is not
+coalesced, so the existing immutable-fill conflict/quarantine path remains observable and no
+distinct broker evidence is silently dropped. Distinct fill identities remain unbounded; bounding
+them with a durable overflow latch is outside this minimum option-(a) disposition.
 
 ## Replay, restart, and the same-identity retry law
 
