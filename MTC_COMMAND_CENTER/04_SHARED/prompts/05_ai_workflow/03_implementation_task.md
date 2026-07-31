@@ -1,4 +1,6 @@
-# 03 — Implementation Task  (Gate 3)
+# 03 — Implementation Task  (Gate 3 — Implementer)
+
+This gate is executed by the **IMPLEMENTER** (Claude Code CLI when Codex leads; Codex CLI when Claude leads). The lead's acceptance gate is Gate 5 — see `AGENTS.md` two-tier model.
 
 Use **only after Gate 1 (and Gate 2 if non-trivial) have passed**.
 
@@ -25,6 +27,8 @@ Constraints:
 - Errors only at real boundaries. No defensive try/except around code
   that cannot fail.
 - Match existing code style. Look at neighbouring files first.
+- You (the implementer) may sub-delegate bounded mechanical work (single/few-file edits, schema/JSON, script writing) to DeepSeek or Grok via Cline CLI or `_deepseek_driver`, or to GLM via Z.AI Coding Plan — audit sub-agent results yourself before handing off to the lead; do not pass sub-agent reports up as your own verification. **GLM sub-delegation requires a routing record before dispatch** (classification · protected flag · model+provider · cheaper-model rationale · exact paths · budget · fallback · external API credits); use the decision tree in `AGENTS.md` §GLM SUPPLEMENTAL ROUTING to select the cheapest capable tier.
+- Do **NOT** commit, push, merge, rebase, or run any destructive git operation (`reset --hard`, `clean -fdx`, `restore`, `stash drop`, branch deletion). Git sequencing is Lead-only, after an accepting Gate 5 audit, and only where explicitly authorized by Barış.
 
 Workflow:
 1. Restate the scope and file whitelist in one line.

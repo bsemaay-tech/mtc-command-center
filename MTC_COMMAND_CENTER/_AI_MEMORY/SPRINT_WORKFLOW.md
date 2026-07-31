@@ -56,15 +56,17 @@ typo fix to a multi-hour feature. Same loop, different depth.
 
 ## Cross-Model Pairing
 
-| Step                 | Model role  | Notes                                    |
-|----------------------|-------------|------------------------------------------|
-| Scope (G1)           | Either      | Pick whichever has the freshest context  |
-| Plan (G2)            | Implementer | Same model that will write code          |
-| Impl (G3)            | Implementer | Stay in scope from G1                    |
-| QA (G4)              | Implementer | Self-test before handing off             |
-| Review (G5)          | **Other**   | Must be a different model. Adversarial.  |
-| Security (G6)        | Either      | Skip if not security-touching            |
-| Handoff (G7)         | Implementer | Whoever did the work updates memory      |
+Two-tier model (see `AGENTS.md`): the **Lead** orchestrates + owns acceptance; the **Implementer** (counterpart flagship CLI) does the work. Cline/DeepSeek are the implementer's sub-delegation tools, not the lead's.
+
+| Step                 | Model role      | Notes                                    |
+|----------------------|-----------------|------------------------------------------|
+| Scope (G1)           | **Lead**        | Lead owns scope definition and acceptance authority; surfaces counterpart-unavailable blocker here |
+| Plan (G2)            | Implementer     | Same model that will write code; Lead accepts plan before G3 starts |
+| Impl (G3)            | Implementer     | Stay in scope from G1                    |
+| QA (G4)              | Implementer     | Self-QA; produces evidence for Lead review at G5 |
+| Review (G5)          | **Lead**        | Lead's independent inspection. Exact roster: see `AGENTS.md` §CANONICAL AUDIT ROSTER (Claude: `claude-opus-5`+`xhigh`; Codex: `gpt-5.6-sol`+`high`/`xhigh`). Fresh session. Verdicts: PASS / PASS-WITH-NITS / REQUEST_CHANGES / BLOCK. ≤3 repair rounds. |
+| Security (G6)        | Lead / independent | Must not be the implementer of the same change; Lead retains acceptance. Roster: same as G5 but always `xhigh`. |
+| Handoff (G7)         | **Lead**        | Lead authors final write-back after an accepting G5 verdict (PASS or PASS-WITH-NITS); implementer supplies factual inputs |
 
 If the reviewer model flags something serious: loop back to Plan or Impl.
 Do not merge a review-flagged change without resolving it.

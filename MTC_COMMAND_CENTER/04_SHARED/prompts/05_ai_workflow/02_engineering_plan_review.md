@@ -15,6 +15,10 @@ fixes.
 You are running Gate 2 (Engineering Plan Review) for
 Tradingview_LAB_CLEAN. Do not write code yet. Produce a plan.
 
+Actor: you are the **Implementer**. After producing this plan, pass it to
+the Lead for acceptance before Gate 3 may begin. The Lead decides whether
+to proceed, loop back to Gate 1, or escalate.
+
 Read:
 - The Gate 1 scope contract for this task.
 - MTC_COMMAND_CENTER/_AI_MEMORY/AI_RULES.md

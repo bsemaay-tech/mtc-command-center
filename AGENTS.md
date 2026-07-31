@@ -6,8 +6,68 @@ Read this file first, then read `MTC_COMMAND_CENTER\_AI_MEMORY\START_HERE.md`.
 Use token-efficient search before broad scans.
 Do not change trading logic, Pine logic, MTC strategy behavior, or TradingView parity without explicit approval.
 
-## TOKEN DISCIPLINE — dispatch mechanical work to Cline CLI first, then fallback cheap models (MANDATORY)
-Expensive orchestrators (Claude, Codex) spend tokens on **decisions, specs, audits** — NOT on mechanical reading/editing. Delegate bounded mechanical work (single/few-file edits, known changes, schema/JSON edits, script writing, audit runs) to a cheap sub-agent. **Cline CLI is the first-choice path** (uses monthly subscription credits before paid API spend); fall back to `_deepseek_driver` when Cline is unavailable, unauthenticated, out of credits, unsuitable, blocked, or when explicit provider routing / DeepSeek API is desired.
+## TWO-TIER OPERATING MODEL (MANDATORY — read before dispatching any task)
+
+The flagship model that receives Barış's task is the **LEAD ORCHESTRATOR** and independent acceptance authority.
+- **Codex is lead:** delegates implementation to Claude Code CLI.
+- **Claude is lead:** delegates implementation to Codex CLI.
+
+The **IMPLEMENTER** (the counterpart flagship) may — only when useful and within scope/safety rails — sub-delegate bounded mechanical work (single/few-file edits, schema/JSON edits, script writing, audit runs) to DeepSeek or Grok via **Cline CLI** (first choice) or **`_deepseek_driver`** (fallback). See TOKEN DISCIPLINE below.
+
+**Lead responsibilities (non-delegable):**
+1. Independently inspect the actual diff/files, check scope and protected surfaces, and run or reproduce proportionate validation — never accept the implementer's self-report alone.
+2. On any failure: send a focused repair prompt to the same counterpart implementer and repeat until an accepting verdict or a concrete blocker. Maximum 3 repair/re-audit rounds; after the third non-accepting verdict, stop and report to Barış.
+3. Repo hygiene may begin only after an accepting audit verdict (PASS or PASS-WITH-NITS) — only where task/user authorization permits — commit/push and proceed to the next approved task.
+4. Gate 5 is the lead's independent cross-model audit of the implementer's work, not mere report review.
+
+**Implementer responsibilities:** implementation + self-QA (Gates 3–4). Scope, acceptance, repair loop, and authorized Git sequencing belong to the lead.
+
+**If the required counterpart CLI/auth is unavailable:** the lead reports that concrete blocker and does not silently replace the counterpart with itself.
+
+Hard safety gates remain unchanged: no Pine/parity/MTC/trading changes without explicit approval, no destructive Git, no secrets, no deployment/live action without explicit authorization.
+
+## CANONICAL AUDIT ROSTER — Gate 5 and Gate 6 (MANDATORY)
+
+Define once here; prompts may cross-reference but must include enough detail to be safely copy-pasted standalone.
+
+### Claude auditor (G5 and G6)
+
+- **Model:** `claude-opus-5` | **Effort:** `xhigh` — always, no exceptions.
+- No Sonnet, no implicit/latest alias, no silent fallback.
+- **If exact model/effort unavailable: stop as BLOCK unless Barış explicitly waives it.**
+- Fresh independent session every audit round — never `--resume` or `--continue` from the implementer session.
+- Example CLI: `claude -p --model claude-opus-5 --effort xhigh --no-session-persistence`
+
+### Codex auditor (G5 and G6)
+
+- **Model:** `gpt-5.6-sol` — always, no implicit alias.
+- **Effort `high`** for ordinary Gate 5 audits.
+- **Effort `xhigh`** whenever ANY of these apply: Gate 6 security review; Pine/parity/MTC/trading/protected surface; architecture or cross-cutting change; re-audit after REQUEST_CHANGES or BLOCK.
+- **If exact model/effort unavailable: stop as BLOCK unless Barış explicitly waives it.**
+- Fresh independent session every audit round.
+- Example CLI (ordinary G5): `codex exec --ephemeral --sandbox read-only -m gpt-5.6-sol -c "model_reasoning_effort=high" <audit_prompt_file>`
+- Example CLI (G6/protected/re-audit): `codex exec --ephemeral --sandbox read-only -m gpt-5.6-sol -c "model_reasoning_effort=xhigh" <audit_prompt_file>`
+
+### Audit session contract
+
+Provide only: scope contract, plan (if any), actual diff/files, test evidence, required repo rules.
+Never feed implementer session context or continue it. The lead still owns acceptance and must inspect actual repo state independently.
+
+### Verdict standards (all audit gates)
+
+| Verdict | Meaning |
+|---------|---------|
+| **PASS** | Clean — no required changes. |
+| **PASS-WITH-NITS** | Accepting — optional nits only; zero required repairs. Cannot contain a required repair — use REQUEST_CHANGES instead. |
+| **REQUEST_CHANGES** | Non-accepting — contains at least one required repair. |
+| **BLOCK** | Workflow cannot safely continue. |
+
+### Repair loop bound
+
+**Maximum 3 repair/re-audit rounds per task.** After the third non-accepting verdict (REQUEST_CHANGES or BLOCK), stop and report the blocker to Barış. Do not silently enter a fourth round.
+
+## TOKEN DISCIPLINE — implementer-tier sub-delegation to cheap models (MANDATORY)
+Within the two-tier model above, the **IMPLEMENTER** (Claude Code CLI or Codex CLI) may sub-delegate bounded mechanical work to a cheap sub-agent. **Cline CLI is the first-choice path** (uses monthly subscription credits before paid API spend); fall back to `_deepseek_driver` when Cline is unavailable, unauthenticated, out of credits, unsuitable, blocked, or when explicit provider routing / DeepSeek API is desired.
 
 ### Cline CLI (first choice)
 ```
@@ -26,6 +86,86 @@ Use `cline-pass/deepseek-v4-pro` when the task needs stronger reasoning. Add `--
 - Safety (enforced in harness, not promptable away): HARD denylist `*.pine`/`parity`/`MTC_V2`/`.git` never writable; `06_SCHEMAS` only via `schema_allow`; writes limited to `allow`; `run_python` read-only; no git/commit; `read_file` capped 60KB (pre-extract small samples for huge files).
 - Hand-edit yourself only for a trivial 1-liner cheaper than a dispatch round-trip. Serialize same-file tasks; parallelize disjoint ones.
 Update relevant handoff files before stopping after approved write sessions.
+
+## GLM SUPPLEMENTAL ROUTING — QUOTA-EFFICIENT (CANONICAL)
+
+Single authoritative source for Z.AI Coding Plan model selection when sub-delegating via GLM models. Other memory files cross-reference here; do not copy the routing table elsewhere. GLM never replaces the mandatory audit roster (§CANONICAL AUDIT ROSTER) or the counterpart flagship implementer.
+
+### Official facts (Lead-verified 2026-07-27 — time-sensitive; re-verify before acting after quota/model changes)
+
+- Sources: https://docs.z.ai/devpack/faq · https://docs.z.ai/devpack/latest-model · https://docs.z.ai/guides/overview/pricing · https://docs.z.ai/guides/llm/glm-4.7
+- **Coding Plan entitlement:** GLM-5.2, GLM-5-Turbo, GLM-4.7. Quota: 5.2/Turbo 3× peak, 2× off-peak; **temporary 1× off-peak cap through Sep 2026** (verify after Sep).
+- **Z.AI recommendation:** 4.7 for routine/general; 5.2 for high-difficulty.
+- **API tier** lists 5.2, 5.1, 4.7, 4.5-Air — API listing alone does **not** prove Coding Plan entitlement.
+- **GLM-5.1** is NOT confirmed in the Coding Plan FAQ; do not assume entitlement. If absent on the active route, tighten scope with 4.7 or escalate directly to 5.2 if the task genuinely requires flagship.
+- **GLM-4.7:** confirmed Coding Plan, agentic coding, 200K context.
+- **Default Z.AI mapping example** (Haiku → 4.5-Air, Sonnet/Opus → 5.2) is the provider default for generic use. **Repo intentionally overrides this** — use the routing table below, not the provider default.
+- **External helper status:** the current helper hard-maps all three tiers to 5.2 and is **out of scope**. Routine work must not use the fixed helper merely because it exists. Reconfiguring the helper requires separate Barış authorization; no external config was changed in this policy update.
+
+### Canonical routing tiers
+
+| Tier | Model | Use when |
+|------|-------|----------|
+| 1 — cheapest | 4.5-Air (only if active route explicitly supports it; else 4.7) | Discovery · targeted rg · format · small docs · simple JSON/YAML · log summary · bounded mechanics with no protected-surface impact |
+| 2 — standard | GLM-4.7 | Ordinary coding · narrow bug · focused test · routine review/inspection · bounded unprotected multi-file |
+| 3 — intermediate | GLM-5.1 **only if active route/entitlement explicitly confirms it** | Moderate debug · cross-file · concurrency/persistence repair · bounded architecture. If absent: use Tier 2 with tighter scope, or jump to Tier 4 if classification genuinely requires flagship. |
+| 4 — flagship | GLM-5.2 | Difficult architecture · protected (Bridge/trading/risk/identity/persistence/concurrency/migration/broker) code · adversarial safety · complex post-audit repair · exact-model user request. **Never merely because available.** |
+
+**Mapping shorthand:** Haiku → cheapest verified (4.5-Air if route supports, else 4.7) · Sonnet → 4.7 · Opus → 5.2 only when classification requires.
+
+### Cheapest-capable decision tree
+
+```
+Is the task discovery / format / rg / small-doc / bounded-mechanics?
+  YES → Tier 1 (4.5-Air if route supports; else Tier 2)
+  NO ↓
+Is the task ordinary coding / narrow bug / focused test / routine inspection / bounded unprotected multi-file?
+  YES → Tier 2 (GLM-4.7)
+  NO ↓
+Is GLM-5.1 explicitly confirmed on the active route AND the task is moderate debug / cross-file / concurrency / bounded architecture?
+  YES → Tier 3 (GLM-5.1)
+  NO or UNSURE → skip to ↓
+Does the task touch: difficult architecture; protected surface (Bridge/trading/risk/identity/persistence/concurrency/migration/broker); adversarial safety; complex post-audit repair; or is an exact-model user request?
+  YES → Tier 4 (GLM-5.2)
+  NO → can Tier 2 handle with tighter scope? Tighten and use 4.7. If not, escalate with written evidence.
+```
+
+### Six routing examples
+
+| # | Task | Protected? | Tier / Model |
+|---|------|------------|--------------|
+| 1 | Update cross-reference in a memory doc (simple docs) | No | Tier 1 — 4.5-Air |
+| 2 | Rename constant in a test file (mechanical test update) | No | Tier 1 — 4.5-Air (or Tier 2 if route lacks 4.5-Air) |
+| 3 | Fix typo in Bridge order-formatter — Gate 1 has explicitly classified this exact path as unprotected; no broker, order-behavior, risk, persistence, concurrency, or evidence impact (ordinary Bridge bug, Gate 1-proven unprotected) | No (Gate 1 explicit) | Tier 2 — 4.7 |
+| 4 | Repair idempotency logic in Bridge order executor touching risk/persistence (protected) | Yes | Tier 4 — 5.2 |
+| 5 | Gate-5 adversarial audit of a cross-file refactor (Gate-5 audit) | Yes (audit surface) | **Canonical roster only** — `claude-opus-5` xhigh or `gpt-5.6-sol` high/xhigh; GLM is not a Gate-5 auditor |
+| 6 | Barış requests exact GLM-5.2 for a specific bounded task (exact-model request) | N/A | Tier 4 — 5.2 (honor; no silent fallback or downgrade) |
+
+> **Bridge default:** Any Bridge task not explicitly proven unprotected by Gate 1 classification defaults to protected — route to Tier 4 / GLM-5.2.
+
+### Mandatory context rules for GLM tasks
+
+- **Targeted rg first** — never recursively search `C:\` or drive/repo root. Use exact path allowlist per task.
+- Line/symbol reads before full-file reads for large sources. Default max full-file: **400–500 lines** unless the task contract requires the complete file.
+- Batch independent read-only checks in one call. Avoid many tiny turns.
+- Fresh session when context is excessive. No `--resume`/`--continue` unless Barış explicitly authorizes.
+- `--no-session-persistence` does **not** reduce active context or save quota.
+- Lead provides compact evidence package for Tier 4 (5.2) tasks — do not feed whole-session context to the GLM call.
+- Exact permissions in task JSON to avoid denial loops.
+- Stop broad exploration once evidence is found. Record measured token/context consumption after unexpectedly large runs.
+
+### Required routing record — every delegated/sub-delegated GLM task
+
+```
+Classification      : <tier + task type>
+Protected           : <yes / no + reason>
+Model + provider    : <GLM-X.Y via Z.AI Coding Plan>
+Cheaper-model rationale : <why not one tier lower>
+Exact paths         : <allow list>
+Context/tool budget : <estimate>
+Fallback            : <if entitlement unavailable>
+External API credits: <yes / no>
+```
 
 ## PARALLEL AGENT SAFETY — COMMIT AFTER EVERY AGENT (MANDATORY)
 When multiple agents work on shared files (app.js, styles.css, etc.) in sequence or parallel:

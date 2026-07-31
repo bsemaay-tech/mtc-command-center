@@ -73,9 +73,10 @@ Before integrating any "workflow/pattern" tool, know these are already in the re
 
 The backlog's Part 6 / C4 is **already implemented**. Action is *enforcement*, not creation:
 
-- **Use the harness for bounded mechanical work** (single/few-file edits, schema/JSON edits,
+- **Implementer-tier only — use the harness for bounded mechanical work** (single/few-file edits, schema/JSON edits,
   audit runs, script writing): write task JSON → `python _deepseek_driver/ds_agent.py
-  --task <file>` → audit on real data yourself. See `_deepseek_driver/README.md`.
+  --task <file>` → audit on real data yourself before reporting to the lead. See `_deepseek_driver/README.md`.
+  The **lead** does not directly dispatch to the harness — the lead delegates implementation to the counterpart flagship CLI first (see `AGENTS.md` two-tier model).
 - **When to route cheap:** large summarization, broad research, repeated audit passes, long
   log summarization, draft critique, non-final classification.
 - **When NOT to route cheap:** final architecture decisions, registry/schema migration
@@ -85,6 +86,8 @@ The backlog's Part 6 / C4 is **already implemented**. Action is *enforcement*, n
 
 > If Barış wants a single canonical "routing policy" page, it should *link to* the harness
 > README, not restate it — one source of truth.
+
+> **Z.AI GLM supplemental routing:** the canonical Z.AI Coding Plan model-selection policy is now in `AGENTS.md` §GLM SUPPLEMENTAL ROUTING. It follows the same enforcement principle (one canonical source, cross-references only, no table copies elsewhere). The harness `_deepseek_driver/` covers DeepSeek/Grok/OpenRouter; GLM routing has separate entitlement rules. Reconfiguring the external helper (currently hard-maps all tiers to GLM-5.2) requires separate Barış authorization.
 
 ---
 

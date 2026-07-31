@@ -1,4 +1,6 @@
-# 08 — Backtest Launch (Gate 0 + Gate 6 = HARD)
+# 08 — Backtest Launch
+
+> WORKFLOW MAPPING: The numbered sections below are backtest-domain Stages, not replacements for repository Gates G1-G7. Lead/Implementer ownership and acceptance follow `AGENTS.md` and `AI_RULES.md`.
 
 > **Bu prompt'u kullan:** HER backtest. Üç senaryo da aynı gate'ler:
 > - **In-day single strategy** ("BTC 1h'de bu RSI stratejisini test et")
@@ -9,7 +11,7 @@
 >
 > **MTC V2 BIG_OVERNIGHT için:** `01_MTC_PROJECT/docs/optimization/BIG_OVERNIGHT_OPTIMIZATION_RUNBOOK.md`'a git, oradan devam et. Aşağıdaki adımlar QuantLens research içindir.
 
-## Gate 0 — ZORUNLU PRE-READ (iki dosya)
+## Backtest Stage 0 — ZORUNLU PRE-READ (iki dosya)
 
 1. `AGENTS.md` (repo kökü)
 2. `MTC_COMMAND_CENTER/_AI_MEMORY/START_HERE.md`
@@ -20,16 +22,16 @@
 
 Atlama YASAK. Skip yaparsan A1-A15 anti-pattern'lerinden birini tekrarlarsın.
 
-## Gate 1 — Scope
+## Backtest Stage 1 — Scope
 
 - **Senaryo:** in-day single / sprint / overnight?
 - Kapsam ne? (1 strateji × 1 sembol / mevcut grid sweep / yeni transcript triage)
 - Worker sayısı (runbook §5 tablo: in-day 4-8, sprint 16-20, overnight 16, parity gece 16)
 - Süre bütçesi (`--time-budget-minutes` / loop `DEADLINE`)
-- **Runtime ↔ budget kontrolü (A22, ZORUNLU — "just start"ta bile):** Gate-0'da en yeni `lessons_archive/*` oku. Birkaç hücre smoke ile runtime'ı tahmin et. Sweep budget'tan KISA bitecekse: YA heavy-validation tier ekle (±2 grid, 50k bootstrap, multi-seed DSR, CPCV-all, PBO, +sembol/TF) YA DA makineyi bırak (idle box'ı keep-awake'te tutma). Deterministik sweep'i tekrar koşma = sıfır bilgi (A19).
+- **Runtime ↔ budget kontrolü (A22, ZORUNLU — "just start"ta bile):** Stage-0'da en yeni `lessons_archive/*` oku. Birkaç hücre smoke ile runtime'ı tahmin et. Sweep budget'tan KISA bitecekse: YA heavy-validation tier ekle (±2 grid, 50k bootstrap, multi-seed DSR, CPCV-all, PBO, +sembol/TF) YA DA makineyi bırak (idle box'ı keep-awake'te tutma). Deterministik sweep'i tekrar koşma = sıfır bilgi (A19).
 - OUTPUT_DIR (CLEAN repo default — env override gerek mi)
 
-### Gate 1.1 — Held-out-data virginity (MANDATORY)
+### Backtest Stage 1.1 — Held-out-data virginity (MANDATORY)
 
 `RESEARCH_RUN_REGISTRY.json` is a dashboard index, not a complete evidence inventory. Before
 freezing any held-out strategy/symbol/timeframe/window scope, recursively scan prior result JSONs
@@ -38,7 +40,7 @@ symbol, timeframe, and observation window. Disclose every hit in the pre-registr
 requires an amended scope and fresh written approval before execution; never silently replace or
 drop a cell. Registry lookup alone never proves virginity.
 
-### Gate 1.5 — In-day single strategy minimum akış (kısa)
+### Backtest Stage 1.5 — In-day single strategy minimum akış (kısa)
 Aşağıdakileri ATLAMA bile in-day 5dk run'da:
 ```bash
 # Veri validation (rules §3)
@@ -58,14 +60,14 @@ python tools/generate_morning_report.py --single-candidate <id>
 ```
 Single-strategy ≠ "hızlı için 4-gate atla". Süre az, gate'ler aynı.
 
-## Gate 2 — Plan
+## Backtest Stage 2 — Plan
 
 User'la `AskUserQuestion` ile netleştir:
 - Yalnız ingest+analyze mı, backtest mi, ikisi mi?
 - Crash/sapma davranışı (raporla / auto-restart / durdur+uyar)
 - Worker policy (sessiz / hızlı / dinamik)
 
-## Gate 3 — Implementation (smoke gate dahil)
+## Backtest Stage 3 — Implementation (smoke gate dahil)
 
 ### 3.1 Path audit
 ```python
@@ -92,7 +94,7 @@ echo $! > overnight_runs/loop.pid
 ```
 **Background, not foreground.** UI session kapansa loop devam etmeli.
 
-## Gate 4 — Monitor (ÇİFT KANAL)
+## Backtest Stage 4 — Monitor (ÇİFT KANAL)
 
 ### 4a. taskschd (admin PS, tek sefer):
 ```powershell
@@ -107,12 +109,12 @@ echo $! > overnight_runs/loop.pid
 
 İki kanal bağımsız. Biri kopsa diğeri devam. **A2 anti-pattern**.
 
-## Gate 5 — Cross-model review
+## Backtest Stage 5 — Cross-model review
 
 QuantLens research = parity touch DEĞİL → Gate 5 opsiyonel (ama önerilir).
 MTC V2 / Pine üzerinde değişiklik varsa Gate 5 **zorunlu** (Codex / Gemini'ye review attır).
 
-## Gate 6 — QA (post-loop)
+## Backtest Stage 6 — QA (post-loop)
 
 ```bash
 ls overnight_runs/MEGA_results_iter_*.json | wc -l   # ≥1 iter geçmeli
@@ -125,7 +127,7 @@ Aggregate analyzer:
 python aggregate_overnight_iters.py
 ```
 
-## Gate 7 — Handoff (zorunlu)
+## Backtest Stage 7 — Handoff (zorunlu)
 
 1. `lessons_archive/OVERNIGHT_LESSONS_YYYY-MM-DD.md` yaz (ham gözlem, B-numaralı bulgular)
 2. Yeni anti-pattern → `BACKTEST_OPTIMIZATION_RUNBOOK.md` §8 tablosuna ekle
