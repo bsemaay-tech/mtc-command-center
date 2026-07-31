@@ -592,24 +592,6 @@ table.grid-table .empty-cell { text-align: center; color: var(--muted); padding:
 .si-hero-id { font-size: 20px; font-weight: 800; color: var(--text-strong); margin: 6px 0; letter-spacing: -0.01em; }
 .si-hero-thesis { font-size: 12.5px; color: #cbd5e1; line-height: 1.65; max-width: 640px; margin: 0; }
 .si-hero-meta { font-family: var(--mono); font-size: 10.5px; color: var(--faint); margin-top: 8px; word-break: break-all; }
-.si-gate-panel {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-  padding: 16px 18px;
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius);
-  background: var(--panel);
-  align-self: flex-start;
-}
-.si-gate-cell { display: flex; flex-direction: column; gap: 5px; padding-right: 18px; border-right: 1px solid var(--border-soft); }
-.si-gate-cell:last-child { border-right: none; padding-right: 0; }
-.si-gate-cell .lbl { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
-.si-gate-cell .val { font-family: var(--mono); font-weight: 800; font-size: 15px; }
-.si-gate-cell .val.ok { color: var(--emerald); }
-.si-gate-cell .val.bad { color: var(--red); }
-.si-gate-cell .val.locked { color: var(--muted); font-size: 12px; }
-
 .workflow-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-soft); }
 .workflow-card {
   display: block;
@@ -664,23 +646,6 @@ table.grid-table .empty-cell { text-align: center; color: var(--muted); padding:
 }
 .si-section.secondary .si-section-head h3 { font-size: 14px; color: var(--text); }
 .si-section.secondary > .panel { background: transparent; }
-
-/* gate status summary cards */
-.gate-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.gate-card {
-  position: relative;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  overflow: hidden;
-}
-.gate-card.ok { border-color: rgba(16,90,60,0.55); background: rgba(6,40,28,0.18); }
-.gate-card.bad { border-color: rgba(120,40,40,0.55); background: rgba(40,12,12,0.18); }
-.gate-card.locked { opacity: .65; }
-.gate-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-.gate-card h4 { margin: 0; font-size: 12.5px; font-weight: 700; color: var(--text); }
-.gate-card p { margin: 5px 0 0; font-size: 10.5px; color: var(--muted); line-height: 1.5; max-width: 230px; }
 
 /* rail cards */
 .rail-card { background: var(--panel); border: 1px solid var(--border-soft); border-radius: var(--radius); padding: 15px 16px; }
@@ -904,7 +869,7 @@ pre.json {
 @media (max-width: 860px) {
   .sidebar { display: none; }
   .metric-grid { grid-template-columns: repeat(2, 1fr); }
-  .gate-summary-grid, .rule-grid, .workflow-bar, .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .rule-grid, .workflow-bar, .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
 }
 
 /* ---------------- Validation Terminal ---------------- */

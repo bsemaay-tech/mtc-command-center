@@ -1,11 +1,28 @@
-# FAZ 3B — STAGE-2 CONFIRMATION RUN PRE-REGISTRATION (DRAFT — AWAITING BARIŞ APPROVAL)
+# FAZ 3B — STAGE-2 CONFIRMATION RUN PRE-REGISTRATION (BLOCKED — GATE-5 FATAL, NOT APPROVABLE)
 
-> Status: **DRAFT — NOT APPROVED. Awaiting (1) Codex Gate-5 adversarial review, (2) Barış
-> written approval sentence → to be recorded as D016 in `_AI_MEMORY/DECISIONS.md`.**
-> No run, no smoke test, no runner-script code, no engine edit is authorized until D016
-> exists. Per D013/D015 the Stage-2 run gate is separate from everything approved so far.
-> Written 2026-07-13, BEFORE any Stage-2 run design was executed and before any Stage-2
-> result of any kind exists. Drafted by Claude Fable 5; completed and audited by Codex GPT-5.
+> Status: **BLOCKED BY GATE-5 ADVERSARIAL REVIEW (2026-07-13) — this draft can NEVER
+> receive D016.** Codex findings
+> (`11_TRIAGE/CODEX_GATE5_FINDINGS_FAZ3B_STAGE2_2026-07-13.md`, commit `1859910c`) were
+> independently verified by Fable on the raw artifacts and code the same day. The two
+> unfixable-by-editing defects: (1) **all six proposed "held-out" symbols already have
+> GEN_KELTNER_BREAKOUT 1h × 16-trial rows on the identical 2020-07-27→2026-06-26 window**
+> in `05_BACKTEST_RESULTS/overnight_multiasset_2026-06-29/` (the June-29 sweep covered ALL
+> 51 bundle symbols at Keltner 1h — no untouched 1h symbol exists in this bundle); the §3
+> virginity claim relied on `RESEARCH_RUN_REGISTRY.json`, which is an incomplete ledger,
+> not an evidence inventory — drafting error acknowledged by the author (Fable).
+> (2) **the §6 gauntlet is not executable as written:** `cpcv_validator.py` and
+> `multiwindow_oos.py` never pass `exit_mode` into `simulate_slice` (default `fixed_2R`),
+> so they would silently score the wrong exit; `probabilistic_pbo.py` has no
+> per-configuration return matrix. Confirmation of this family requires a NEW
+> pre-registration on genuinely untouched data (pre-frozen forward window or new dataset)
+> plus exit-aware gauntlet tooling under its own review. This document is retained
+> unedited below as the honest record of what was proposed and why it failed review.
+> D016 later selected Path A only in
+> `FAZ3B_STAGE2_FORWARD_CONFIRM_PREREG_2026-07-13.md`; D016 does not authorize this
+> blocked draft or any run/tool work.
+> No run, no smoke test, no runner-script code, no engine edit is or ever was authorized.
+> Written 2026-07-13 by Claude Fable 5; Gate-5 review by Codex GPT-5; review audited and
+> this banner added by Claude Fable 5.
 >
 > Format follows `FAZ3B_STAGE1_SWEEP_PREREG_2026-07-05.md` for continuity.
 > Binding parents: D013 (two-stage DSR discipline), D015 (Stage-1 approval; Stage-2

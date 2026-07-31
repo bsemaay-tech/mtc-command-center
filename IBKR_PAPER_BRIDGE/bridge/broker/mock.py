@@ -5,21 +5,63 @@ from __future__ import annotations
 import csv
 import asyncio
 import itertools
-from dataclasses import dataclass, field
-from datetime import datetime
+import math
+from dataclasses import dataclass, field, replace
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Callable
 
+from bridge.broker.base import (
+    BrokerOutcomeUnknown,
+    BrokerPreSendFailure,
+    EvidenceStatus,
+    RecoveryQueryEvidence,
+    SubmissionDisposition,
+    SubmissionOutcome,
+    SubmissionRecoveryEvidence,
+    SubmissionRecoveryRequest,
+)
 from bridge.engine.types import (
     AccountSnapshot,
+    ActionOutcome,
     Bar,
     BrokerEvent,
     BrokerOrder,
+    CancelResult,
+    ComponentEvidence,
+    Evidence,
     FillEvent,
+    FlattenResult,
+    LotQuantizationError,
+    LotUnit,
     OrderPlan,
+    OrderQueryResult,
     OrderUpdateEvent,
+    OrderView,
+    PlaceResult,
+    PortfolioEvidence,
     Position,
+    ReconcileComponentKind,
+    ReconcileComponentStatus,
+    SymbolSnapshot,
 )
+
+_LIVE_STATUSES = frozenset({"SUBMITTED", "OPEN", "PENDING"})
+
+
+@dataclass
+class ScriptedOutcome:
+    """One forced broker verdict, with the exchange effect stated separately.
+
+    ``outcome`` is what the adapter *reports*; ``applied`` is what actually
+    happened on the exchange. The two are deliberately independent so tests can
+    build the dangerous cases — reported UNKNOWN but really applied, reported
+    UNKNOWN and really not applied — that a real transport failure produces.
+    """
+
+    outcome: ActionOutcome
+    applied: bool = True
+    reason_code: str = "MOCK_SCRIPTED"
 
 
 @dataclass
@@ -37,6 +79,47 @@ class MockBroker:
     _user_callbacks: list[Callable[[BrokerEvent], None]] = field(default_factory=list)
     _bar_callbacks: list[Callable[[Bar], None]] = field(default_factory=list)
     resubscribe_count: int = 0
+
+    # --- TS-P1-004 partial-recovery surface (defaults = healthy exchange) ---
+    partial_size_decimals: int | None = 3
+    partial_snapshot_exact: bool = True
+    partial_snapshot_available: bool = True
+    partial_query_available: bool = True
+    partial_foreign_orders: list[dict] = field(default_factory=list)
+    partial_extra_position: float = 0.0
+    scripted_place: list[ScriptedOutcome] = field(default_factory=list)
+    scripted_cancel: list[ScriptedOutcome] = field(default_factory=list)
+    scripted_flatten: list[ScriptedOutcome] = field(default_factory=list)
+    late_entry_fill_on_cancel: float = 0.0
+    partial_calls: list[tuple[str, str]] = field(default_factory=list)
+
+    # --- TS-P1-005 full-reconciliation surface (defaults = healthy exchange) ---
+    # Fixtures are plain rows so a test can express *exactly* the adversarial
+    # exchange it wants; every component can be degraded independently.
+    full_open_orders: list[dict] = field(default_factory=list)
+    full_positions: list[dict] = field(default_factory=list)
+    full_account: dict = field(
+        default_factory=lambda: {
+            "equity": 10_000.0,
+            "withdrawable": 10_000.0,
+            "margin_used": 0.0,
+            "available_margin": 10_000.0,
+        }
+    )
+    full_fill_history: list[dict] = field(default_factory=list)
+    full_funding_history: list[dict] = field(default_factory=list)
+    # component name -> "RAISE" | "CRASH" | one of ReconcileComponentStatus
+    # | "NO_TS" | "INEXACT"
+    full_component_failures: dict[str, str] = field(default_factory=dict)
+    # component name -> real awaited delay in seconds, for exercising the
+    # wall-clock capture deadline against an adapter that genuinely hangs.
+    full_component_delays_s: dict[str, float] = field(default_factory=dict)
+    full_row_order_reversed: bool = False
+    full_observed_offsets_s: dict[str, float] = field(default_factory=dict)
+    full_page_size: int = 0
+    full_clock: Callable[[], datetime] | None = None
+    full_calls: list[str] = field(default_factory=list)
+    exposure_capture_enabled: bool = False
 
     @classmethod
     def from_csv(cls, path: str | Path, starting_equity: float = 10_000.0) -> "MockBroker":
@@ -119,46 +202,118 @@ class MockBroker:
     def subscribe_user_events(self, on_event: Callable[[BrokerEvent], None]) -> None:
         self._user_callbacks.append(on_event)
 
-    async def place_bracket(self, plan: OrderPlan) -> dict:
-        if not self.connected:
-            raise RuntimeError("MockBroker is not connected")
-        if len(self.bars) < 2:
-            raise ValueError("MockBroker needs at least two bars for next-open fill")
-
-        entry = self._order(
-            "ENTRY",
-            "OPEN",
-            plan.qty,
-            plan.signal.ref_price,
-            reduce_only=False,
-            signal_ts=plan.signal.ts,
-            direction=plan.signal.direction,
-            symbol=plan.signal.symbol,
-            leverage=plan.leverage,
+    def planned_cloids(self, plan: OrderPlan) -> dict[str, str]:
+        seed = plan.decision_uid or (
+            f"{plan.signal.symbol}:{plan.signal.ts.isoformat()}:{plan.signal.direction}"
         )
-        sl = self._order(
-            "SL",
-            "OPEN",
-            plan.qty,
-            plan.stop_loss,
-            reduce_only=True,
-            trigger_px=plan.stop_loss,
-            direction=plan.signal.direction,
-            symbol=plan.signal.symbol,
-        )
-        result = {"entry": entry, "sl": sl}
+        roles = ["ENTRY", "SL"]
         if plan.take_profit is not None:
-            result["tp"] = self._order(
-                "TP",
+            roles.append("TP")
+        return {role: f"{seed}:{role}" for role in roles}
+
+    async def place_bracket(self, plan: OrderPlan) -> SubmissionOutcome:
+        if not self.connected:
+            raise BrokerPreSendFailure("MOCK_NOT_CONNECTED")
+        if len(self.bars) < 2:
+            raise BrokerPreSendFailure("MOCK_BARS_UNAVAILABLE")
+
+        cloids = self.planned_cloids(plan)
+        write_started = False
+        try:
+            write_started = True
+            entry = self._order(
+                "ENTRY",
                 "OPEN",
                 plan.qty,
-                plan.take_profit,
-                reduce_only=True,
-                trigger_px=plan.take_profit,
+                plan.signal.ref_price,
+                reduce_only=False,
+                signal_ts=plan.signal.ts,
                 direction=plan.signal.direction,
                 symbol=plan.signal.symbol,
+                leverage=plan.leverage,
+                cloid=cloids["ENTRY"],
             )
-        return result
+            sl = self._order(
+                "SL",
+                "OPEN",
+                plan.qty,
+                plan.stop_loss,
+                reduce_only=True,
+                trigger_px=plan.stop_loss,
+                direction=plan.signal.direction,
+                symbol=plan.signal.symbol,
+                cloid=cloids["SL"],
+            )
+            result = {"entry": entry, "sl": sl}
+            if plan.take_profit is not None:
+                result["tp"] = self._order(
+                    "TP",
+                    "OPEN",
+                    plan.qty,
+                    plan.take_profit,
+                    reduce_only=True,
+                    trigger_px=plan.take_profit,
+                    direction=plan.signal.direction,
+                    symbol=plan.signal.symbol,
+                    cloid=cloids["TP"],
+                )
+        except Exception as exc:
+            if write_started:
+                raise BrokerOutcomeUnknown("MOCK_POST_WRITE_FAILURE") from exc
+            raise BrokerPreSendFailure("MOCK_PRE_SEND_FAILURE") from exc
+        return SubmissionOutcome(
+            SubmissionDisposition.VERIFIED_SUCCESS,
+            result,
+            "MOCK_VERIFIED_SUCCESS",
+        )
+
+    async def submission_recovery_evidence(
+        self, request: SubmissionRecoveryRequest
+    ) -> SubmissionRecoveryEvidence:
+        planned = set(map(str, request.planned_cloids.values()))
+        order_cloids = {
+            str(order.get("cloid")) for order in self.orders if order.get("cloid")
+        }
+        open_cloids = {
+            str(order.get("cloid"))
+            for order in self.orders
+            if order.get("cloid")
+            and order.get("status") in {"SUBMITTED", "OPEN"}
+        }
+        fill_cloids = {
+            str(fill.get("cloid")) for fill in self.fills if fill.get("cloid")
+        }
+
+        def query(found: set[str]) -> RecoveryQueryEvidence:
+            owned = tuple(sorted(found & planned))
+            return RecoveryQueryEvidence(
+                EvidenceStatus.FOUND if owned else EvidenceStatus.NOT_FOUND,
+                owned,
+                "MOCK_COMPLETE",
+            )
+
+        direct = {
+            cloid: query({cloid} if cloid in order_cloids or cloid in fill_cloids else set())
+            for cloid in sorted(planned)
+        }
+        position = RecoveryQueryEvidence(
+            EvidenceStatus.FOUND
+            if self.position is not None
+            and self.position.symbol == request.symbol
+            and self.position.size != 0
+            else EvidenceStatus.NOT_FOUND,
+            (),
+            "MOCK_POSITION_COMPLETE",
+        )
+        return SubmissionRecoveryEvidence(
+            request_id=request.request_id,
+            planned_cloids=dict(request.planned_cloids),
+            direct_lookup=direct,
+            open_orders=query(open_cloids),
+            historical_orders=query(order_cloids),
+            fills=query(fill_cloids),
+            position=position,
+        )
 
     async def modify_stop(self, cloid: str, new_stop: float) -> None:
         for order in self.orders:
@@ -208,6 +363,253 @@ class MockBroker:
             cloid=f"mock-reprotect-{decision_uid}-sl",
         )
         return {"sl": sl}
+
+    # ------------------------------------------------------------------
+    # TS-P1-004 typed, bounded partial-recovery surface
+    # ------------------------------------------------------------------
+
+    def lot_unit(self, symbol: str) -> LotUnit | None:
+        if self.partial_size_decimals is None:
+            return None
+        try:
+            return LotUnit(self.partial_size_decimals)
+        except LotQuantizationError:
+            return None
+
+    @property
+    def broker_mutations(self) -> list[tuple[str, str]]:
+        """Only the calls that can change exchange state."""
+        return [
+            call
+            for call in self.partial_calls
+            if call[0] in {"cancel_order_by_cloid", "place_protective_stop", "flatten_reduce_only"}
+        ]
+
+    async def symbol_snapshot(self, symbol: str) -> SymbolSnapshot:
+        self.partial_calls.append(("symbol_snapshot", symbol))
+        lot = self.lot_unit(symbol)
+        if not self.partial_snapshot_available:
+            return SymbolSnapshot(
+                symbol=symbol,
+                exact=False,
+                net_size=None,
+                open_orders=(),
+                lot=lot,
+                evidence=Evidence("SNAPSHOT", "MOCK_SNAPSHOT_UNAVAILABLE"),
+            )
+        net = 0.0
+        if self.position is not None and self.position.symbol == symbol:
+            net = float(self.position.size)
+        net += float(self.partial_extra_position)
+        views: list[OrderView] = []
+        for order in self.orders:
+            if str(order.get("status")) not in _LIVE_STATUSES:
+                continue
+            if str(order.get("symbol", self.coin)) != symbol:
+                continue
+            views.append(self._order_view(order))
+        for foreign in self.partial_foreign_orders:
+            if str(foreign.get("symbol", self.coin)) != symbol:
+                continue
+            views.append(self._order_view(foreign))
+        return SymbolSnapshot(
+            symbol=symbol,
+            exact=bool(self.partial_snapshot_exact and lot is not None),
+            net_size=net,
+            open_orders=tuple(views),
+            lot=lot,
+            evidence=Evidence("SNAPSHOT", "MOCK_SNAPSHOT_COMPLETE"),
+            observed_ts=datetime.now(),
+        )
+
+    def _order_view(self, order: dict) -> OrderView:
+        direction = str(order.get("direction", "LONG"))
+        role = str(order.get("role", "UNKNOWN"))
+        is_entry = role == "ENTRY"
+        is_buy = (direction == "LONG") if is_entry else (direction == "SHORT")
+        return OrderView(
+            cloid=str(order.get("cloid", "")),
+            coin=str(order.get("symbol", self.coin)),
+            side="BUY" if is_buy else "SELL",
+            size=float(order.get("qty", 0.0)),
+            role=role,
+            reduce_only=bool(order.get("reduce_only", False)),
+            trigger_px=order.get("trigger_px"),
+            status=str(order.get("status", "OPEN")),
+            order_ref=order.get("order_ref"),
+        )
+
+    def _find_order(self, cloid: str) -> dict | None:
+        for order in self.orders:
+            if str(order.get("cloid")) == str(cloid):
+                return order
+        for order in self.partial_foreign_orders:
+            if str(order.get("cloid")) == str(cloid):
+                return order
+        return None
+
+    async def query_order(self, cloid: str, symbol: str) -> OrderQueryResult:
+        self.partial_calls.append(("query_order", str(cloid)))
+        if not self.partial_query_available:
+            return OrderQueryResult(
+                known=False,
+                evidence=Evidence("QUERY_ORDER", "MOCK_QUERY_UNAVAILABLE"),
+            )
+        order = self._find_order(cloid)
+        if order is None:
+            return OrderQueryResult(
+                known=True,
+                found=False,
+                terminal=True,
+                evidence=Evidence("QUERY_ORDER", "MOCK_ORDER_ABSENT"),
+            )
+        status = str(order.get("status", "OPEN"))
+        filled = sum(
+            float(fill["qty"]) for fill in self.fills if str(fill["cloid"]) == str(cloid)
+        )
+        return OrderQueryResult(
+            known=True,
+            found=status in _LIVE_STATUSES,
+            terminal=status not in _LIVE_STATUSES,
+            raw_status=status,
+            filled_size=filled,
+            evidence=Evidence("QUERY_ORDER", "MOCK_ORDER_FOUND"),
+        )
+
+    @staticmethod
+    def _next_script(script: list[ScriptedOutcome]) -> ScriptedOutcome | None:
+        return script.pop(0) if script else None
+
+    async def cancel_order_by_cloid(self, cloid: str, symbol: str) -> CancelResult:
+        self.partial_calls.append(("cancel_order_by_cloid", str(cloid)))
+        if self.late_entry_fill_on_cancel:
+            self._apply_late_entry_fill(str(cloid))
+        script = self._next_script(self.scripted_cancel)
+        order = self._find_order(cloid)
+        if script is not None:
+            if script.applied and order is not None and str(order.get("status")) in _LIVE_STATUSES:
+                order["status"] = "CANCELLED_BY_ENGINE"
+                self._emit_order_update(order)
+            return CancelResult(
+                script.outcome, str(cloid), Evidence("CANCEL", script.reason_code)
+            )
+        if order is None:
+            return CancelResult(
+                ActionOutcome.NOT_APPLIED, str(cloid),
+                Evidence("CANCEL", "MOCK_ORDER_ABSENT"),
+            )
+        if str(order.get("status")) not in _LIVE_STATUSES:
+            return CancelResult(
+                ActionOutcome.NOT_APPLIED, str(cloid),
+                Evidence("CANCEL", "MOCK_ORDER_ALREADY_TERMINAL"),
+            )
+        order["status"] = "CANCELLED_BY_ENGINE"
+        self._emit_order_update(order)
+        return CancelResult(
+            ActionOutcome.APPLIED, str(cloid), Evidence("CANCEL", "MOCK_CANCEL_OK")
+        )
+
+    def _apply_late_entry_fill(self, cancel_cloid: str) -> None:
+        """Simulate a fill that lands between the cancel request and its ack."""
+        qty = float(self.late_entry_fill_on_cancel)
+        self.late_entry_fill_on_cancel = 0.0
+        order = self._find_order(cancel_cloid)
+        if order is None or str(order.get("role")) != "ENTRY":
+            return
+        px = self._last_price()
+        direction = str(order.get("direction", "LONG"))
+        side = 1 if direction == "LONG" else -1
+        symbol = str(order.get("symbol", self.coin))
+        if self.position is None:
+            self.position = Position(
+                symbol=symbol, size=qty * side, entry_px=px, unrealized=0.0
+            )
+        else:
+            self.position = self.position.model_copy(
+                update={"size": self.position.size + qty * side}
+            )
+        self._record_fill(order, qty, px, datetime.now())
+
+    async def place_protective_stop(
+        self,
+        *,
+        symbol: str,
+        cloid: str,
+        exit_side: str,
+        size: float,
+        trigger_px: float,
+    ) -> PlaceResult:
+        self.partial_calls.append(("place_protective_stop", str(cloid)))
+        script = self._next_script(self.scripted_place)
+        direction = "LONG" if str(exit_side).upper() == "SELL" else "SHORT"
+        if script is not None:
+            if script.applied:
+                self._install_stop(symbol, cloid, direction, size, trigger_px)
+            return PlaceResult(
+                script.outcome, str(cloid), None, Evidence("PLACE", script.reason_code)
+            )
+        order = self._install_stop(symbol, cloid, direction, size, trigger_px)
+        return PlaceResult(
+            ActionOutcome.APPLIED,
+            str(cloid),
+            int(order["oid"]),
+            Evidence("PLACE", "MOCK_PLACE_OK"),
+        )
+
+    def _install_stop(
+        self, symbol: str, cloid: str, direction: str, size: float, trigger_px: float
+    ) -> dict:
+        existing = self._find_order(cloid)
+        if existing is not None:
+            existing["status"] = "OPEN"
+            existing["qty"] = float(size)
+            existing["trigger_px"] = float(trigger_px)
+            return existing
+        return self._order(
+            "SL",
+            "OPEN",
+            float(size),
+            float(trigger_px),
+            reduce_only=True,
+            trigger_px=float(trigger_px),
+            direction=direction,
+            symbol=symbol,
+            cloid=str(cloid),
+        )
+
+    async def flatten_reduce_only(
+        self, *, symbol: str, cloid: str, size: float
+    ) -> FlattenResult:
+        self.partial_calls.append(("flatten_reduce_only", str(cloid)))
+        script = self._next_script(self.scripted_flatten)
+        if script is not None:
+            if script.applied:
+                self._reduce_position(symbol, size, cloid)
+            return FlattenResult(
+                script.outcome, str(cloid), Evidence("FLATTEN", script.reason_code)
+            )
+        self._reduce_position(symbol, size, cloid)
+        return FlattenResult(
+            ActionOutcome.APPLIED, str(cloid), Evidence("FLATTEN", "MOCK_FLATTEN_OK")
+        )
+
+    def _reduce_position(self, symbol: str, size: float, cloid: str) -> None:
+        if self.position is None or self.position.symbol != symbol:
+            return
+        px = self._last_price()
+        current = float(self.position.size)
+        reduce_by = min(abs(current), abs(float(size)))
+        close = self._order(
+            "CLOSE", "FILLED", reduce_by, px, reduce_only=True, symbol=symbol,
+            cloid=str(cloid),
+        )
+        self._record_fill(close, reduce_by, px, datetime.now())
+        remaining = current - reduce_by if current > 0 else current + reduce_by
+        self.position = (
+            None
+            if remaining == 0
+            else self.position.model_copy(update={"size": remaining})
+        )
 
     def process_bar(self, bar: Bar) -> None:
         for order in self.orders:
@@ -331,3 +733,376 @@ class MockBroker:
         if self.position is not None:
             return self.position.entry_px
         return 0.0
+
+    # ------------------------------------------------------------------
+    # TS-P1-005 read-only full-reconciliation surface
+    # ------------------------------------------------------------------
+
+    def _full_now(self, kind: ReconcileComponentKind) -> datetime:
+        base = self.full_clock() if self.full_clock is not None else datetime.now(UTC)
+        if base.tzinfo is None:
+            base = base.replace(tzinfo=UTC)
+        offset = float(self.full_observed_offsets_s.get(kind.value, 0.0))
+        return base.astimezone(UTC) + timedelta(seconds=offset)
+
+    def _full_rows(self, rows: list[dict]) -> tuple[dict, ...]:
+        ordered = list(rows)
+        if self.full_row_order_reversed:
+            ordered.reverse()
+        return tuple(dict(row) for row in ordered)
+
+    async def _full_delay(self, kind: ReconcileComponentKind) -> None:
+        delay = float(self.full_component_delays_s.get(kind.value, 0.0))
+        if delay > 0:
+            await asyncio.sleep(delay)
+
+    def _full_mode(self, kind: ReconcileComponentKind) -> str | None:
+        mode = self.full_component_failures.get(kind.value)
+        if mode == "RAISE":
+            raise RuntimeError(f"mock {kind.value} evidence unavailable")
+        if mode == "CRASH":
+            # BaseException: models a real process kill mid-collection.
+            raise KeyboardInterrupt(f"mock crash during {kind.value}")
+        return mode
+
+    def _full_component(
+        self,
+        kind: ReconcileComponentKind,
+        rows: list[dict],
+        *,
+        source: str = "MOCK",
+        cursor_start_ms: int | None = None,
+        cursor_end_ms: int | None = None,
+    ) -> ComponentEvidence:
+        mode = self._full_mode(kind)
+        page_count = 1
+        if self.full_page_size > 0 and rows:
+            page_count = (len(rows) + self.full_page_size - 1) // self.full_page_size
+        if mode in {status.value for status in ReconcileComponentStatus} and mode != (
+            ReconcileComponentStatus.COMPLETE.value
+        ):
+            return ComponentEvidence(
+                kind=kind,
+                source=source,
+                status=ReconcileComponentStatus(mode),
+                observed_ts=self._full_now(kind),
+                rows=self._full_rows(rows),
+                exact=False,
+                complete=False,
+                reason_code=f"MOCK_{mode}",
+                cursor_start_ms=cursor_start_ms,
+                cursor_end_ms=cursor_end_ms,
+                page_count=page_count,
+                call_count=page_count,
+            )
+        return ComponentEvidence(
+            kind=kind,
+            source=source,
+            status=ReconcileComponentStatus.COMPLETE,
+            observed_ts=None if mode == "NO_TS" else self._full_now(kind),
+            rows=self._full_rows(rows),
+            exact=mode != "INEXACT",
+            complete=mode != "INEXACT",
+            reason_code="MOCK_COMPLETE",
+            cursor_start_ms=cursor_start_ms,
+            cursor_end_ms=cursor_end_ms,
+            page_count=page_count,
+            call_count=page_count,
+        )
+
+    async def portfolio_evidence(self) -> PortfolioEvidence:
+        self.full_calls.append("portfolio_evidence")
+        await self._full_delay(ReconcileComponentKind.POSITIONS)
+        positions = []
+        for row in self.full_positions:
+            position_row = {
+                "symbol": str(row.get("symbol", self.coin)),
+                "size": row.get("size"),
+            }
+            if self.exposure_capture_enabled:
+                position_row.update(
+                    position_value=row.get("position_value"),
+                    liquidation_px=row.get("liquidation_px"),
+                    leverage=row.get("leverage"),
+                )
+            positions.append(position_row)
+        account = dict(self.full_account)
+        # Balances and margin are *derived from the same single read*, so they
+        # cost zero extra calls — mirroring the real adapter's budget.
+        balances = self._full_component(
+            ReconcileComponentKind.BALANCES,
+            [{
+                "equity": account.get("equity"),
+                "withdrawable": account.get("withdrawable"),
+            }],
+        )
+        margin = self._full_component(
+            ReconcileComponentKind.MARGIN,
+            [{
+                "margin_used": account.get("margin_used"),
+                "available_margin": account.get("available_margin"),
+            }],
+        )
+        return PortfolioEvidence(
+            positions=self._full_component(
+                ReconcileComponentKind.POSITIONS, positions
+            ),
+            balances=replace(balances, call_count=0),
+            margin=replace(margin, call_count=0),
+        )
+
+    async def open_orders_evidence(self) -> ComponentEvidence:
+        self.full_calls.append("open_orders_evidence")
+        await self._full_delay(ReconcileComponentKind.OPEN_ORDERS)
+        rows: list[dict] = []
+        seen: dict[str, dict] = {}
+        conflict = False
+        for raw in self.full_open_orders:
+            normalized = {
+                "cloid": raw.get("cloid"),
+                "oid": raw.get("oid"),
+                "coin": raw.get("coin", self.coin),
+                "side": raw.get("side"),
+                "size": raw.get("sz", raw.get("size")),
+                "status": raw.get("status", "OPEN"),
+                "role": raw.get("role", "UNKNOWN"),
+                "reduce_only": bool(raw.get("reduceOnly", raw.get("reduce_only", False))),
+            }
+            if (
+                not isinstance(normalized["cloid"], str)
+                or not str(normalized["cloid"]).strip()
+                or not isinstance(normalized["oid"], int)
+                or isinstance(normalized["oid"], bool)
+                or not isinstance(normalized["coin"], str)
+                or not str(normalized["coin"]).strip()
+                or str(normalized["side"] or "").upper()
+                not in {"A", "B", "BUY", "SELL"}
+                or _mock_float(normalized["size"]) is None
+                or float(normalized["size"]) <= 0
+                or not isinstance(
+                    raw.get("reduceOnly", raw.get("reduce_only", False)), bool
+                )
+            ):
+                component = self._full_component(
+                    ReconcileComponentKind.OPEN_ORDERS, rows + [dict(raw)]
+                )
+                return replace(
+                    component,
+                    status=ReconcileComponentStatus.UNAVAILABLE,
+                    exact=False,
+                    complete=False,
+                    reason_code="MOCK_ORDER_MALFORMED",
+                )
+            identity = str(normalized["cloid"])
+            if identity in seen:
+                if seen[identity] != normalized:
+                    conflict = True
+                    rows.append(normalized)
+                continue
+            seen[identity] = normalized
+            rows.append(normalized)
+        component = self._full_component(ReconcileComponentKind.OPEN_ORDERS, rows)
+        if conflict:
+            return replace(
+                component,
+                status=ReconcileComponentStatus.CONFLICTING,
+                exact=False,
+                complete=False,
+                reason_code="MOCK_ORDER_IDENTITY_CONFLICT",
+            )
+        return component
+
+    async def fills_evidence(
+        self, *, start_ms: int, end_ms: int
+    ) -> ComponentEvidence:
+        self.full_calls.append("fills_evidence")
+        await self._full_delay(ReconcileComponentKind.FILLS)
+        rows: list[dict] = []
+        seen: dict[str, dict] = {}
+        conflict = False
+        for raw in self.full_fill_history:
+            raw_hash = raw.get("hash")
+            raw_tid = raw.get("tid")
+            fill_id = raw.get("fill_id")
+            oid = raw.get("oid")
+            coin = raw.get("coin", self.coin)
+            side = str(raw.get("side") or "").upper()
+            size = _mock_float(raw.get("sz", raw.get("size")))
+            px = _mock_float(raw.get("px"))
+            time_value = raw.get("time", raw.get("time_ms"))
+            valid = (
+                (
+                    (isinstance(fill_id, str) and bool(fill_id.strip()))
+                    or (isinstance(raw_tid, int) and not isinstance(raw_tid, bool))
+                    or (isinstance(raw_hash, str) and bool(raw_hash.strip()))
+                )
+                and isinstance(oid, int)
+                and not isinstance(oid, bool)
+                and isinstance(coin, str)
+                and bool(coin.strip())
+                and side in {"A", "B", "BUY", "SELL"}
+                and size is not None
+                and size > 0
+                and px is not None
+                and px > 0
+                and isinstance(time_value, int)
+                and not isinstance(time_value, bool)
+                and start_ms <= time_value <= end_ms
+            )
+            if not valid:
+                component = self._full_component(
+                    ReconcileComponentKind.FILLS,
+                    rows + [dict(raw)],
+                    cursor_start_ms=start_ms,
+                    cursor_end_ms=end_ms,
+                )
+                return replace(
+                    component,
+                    status=ReconcileComponentStatus.UNAVAILABLE,
+                    exact=False,
+                    complete=False,
+                    reason_code="MOCK_FILLS_MALFORMED",
+                )
+            identity = (
+                str(fill_id)
+                if isinstance(fill_id, str) and fill_id.strip()
+                else (
+                    str(raw_tid)
+                    if isinstance(raw_tid, int) and not isinstance(raw_tid, bool)
+                    else f"{raw_hash}:{oid}:{time_value}"
+                )
+            )
+            normalized = {
+                "event_id": identity,
+                "oid": oid,
+                "coin": coin,
+                "px": px,
+                "size": size,
+                "side": side,
+                "effective_ts_ms": time_value,
+            }
+            identity = str(normalized["event_id"])
+            if identity in seen:
+                if seen[identity] != normalized:
+                    conflict = True
+                    rows.append(normalized)
+                continue
+            seen[identity] = normalized
+            rows.append(normalized)
+        component = self._full_component(
+            ReconcileComponentKind.FILLS,
+            rows,
+            cursor_start_ms=start_ms,
+            cursor_end_ms=end_ms,
+        )
+        if conflict:
+            return replace(
+                component,
+                status=ReconcileComponentStatus.CONFLICTING,
+                exact=False,
+                complete=False,
+                reason_code="MOCK_FILLS_IDENTITY_CONFLICT",
+            )
+        return component
+
+    async def funding_evidence(
+        self, *, start_ms: int, end_ms: int
+    ) -> ComponentEvidence:
+        self.full_calls.append("funding_evidence")
+        await self._full_delay(ReconcileComponentKind.FUNDING)
+        rows: list[dict] = []
+        seen: dict[str, dict] = {}
+        conflict = False
+        for row in self.full_funding_history:
+            time_ms = row.get("time", row.get("effective_ts_ms"))
+            delta = row.get("delta", row)
+            event_id = row.get("hash", row.get("event_id"))
+            symbol = delta.get("coin", row.get("symbol")) if isinstance(delta, dict) else None
+            amount = (
+                _mock_float(delta.get("usdc", row.get("amount_usdc")))
+                if isinstance(delta, dict)
+                else None
+            )
+            time_valid = (
+                isinstance(time_ms, int)
+                and not isinstance(time_ms, bool)
+            )
+            if time_valid and not (start_ms <= time_ms <= end_ms):
+                continue
+            valid = (
+                isinstance(delta, dict)
+                and delta.get("type") == "funding"
+                and isinstance(event_id, str)
+                and bool(event_id.strip())
+                and isinstance(symbol, str)
+                and bool(symbol.strip())
+                and amount is not None
+                and time_valid
+            )
+            if not valid:
+                component = self._full_component(
+                    ReconcileComponentKind.FUNDING,
+                    rows + [dict(row)],
+                    cursor_start_ms=start_ms,
+                    cursor_end_ms=end_ms,
+                )
+                return replace(
+                    component,
+                    status=ReconcileComponentStatus.UNAVAILABLE,
+                    exact=False,
+                    complete=False,
+                    reason_code="MOCK_FUNDING_MALFORMED",
+                )
+            normalized = {
+                "event_id": event_id,
+                "symbol": symbol,
+                "amount_usdc": amount,
+                "effective_ts_ms": time_ms,
+                "source": "MOCK_USER_FUNDING",
+                "funding_rate": _mock_float(delta.get("fundingRate")),
+                "position_szi": _mock_float(delta.get("szi")),
+                "n_samples": delta.get("nSamples"),
+            }
+            key = normalized["event_id"]
+            if isinstance(key, str) and key in seen:
+                # Exact duplicates are idempotent; a conflicting redefinition
+                # of the same identity is never silently resolved.
+                if seen[key] != normalized:
+                    conflict = True
+                    rows.append(normalized)
+                continue
+            if isinstance(key, str):
+                seen[key] = normalized
+            rows.append(normalized)
+        component = self._full_component(
+            ReconcileComponentKind.FUNDING,
+            rows,
+            cursor_start_ms=start_ms,
+            cursor_end_ms=end_ms,
+        )
+        if conflict:
+            return ComponentEvidence(
+                kind=ReconcileComponentKind.FUNDING,
+                source=component.source,
+                status=ReconcileComponentStatus.CONFLICTING,
+                observed_ts=component.observed_ts,
+                rows=component.rows,
+                exact=False,
+                complete=False,
+                reason_code="MOCK_FUNDING_IDENTITY_CONFLICT",
+                cursor_start_ms=start_ms,
+                cursor_end_ms=end_ms,
+                page_count=component.page_count,
+                call_count=component.call_count,
+            )
+        return component
+
+
+def _mock_float(value: object) -> float | None:
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        result = float(value)  # type: ignore[arg-type]
+        return result if math.isfinite(result) else None
+    except (TypeError, ValueError):
+        return None

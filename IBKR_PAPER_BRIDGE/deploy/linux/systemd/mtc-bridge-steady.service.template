@@ -1,0 +1,86 @@
+# MTC Crypto Paper Bridge — STEADY (restart-enabled) profile.
+#
+# ############################################################################
+# # GATED ARTIFACT — NOT INSTALLED BY install.sh, NOT ENABLED BY ANY SCRIPT.  #
+# ############################################################################
+#
+# This file exists so the restart-enabled profile can be reviewed and hashed
+# ahead of time. It is deliberately inert:
+#
+#   * install.sh refuses to copy it and asserts it is absent from the unit
+#     directory; verify.sh fails if it ever appears.
+#   * Admitting it requires, in order: the KVM2-P2-04 fault-injection matrix
+#     (crash / kill / reboot) proving DISARMED startup, reconcile gating, state
+#     continuity, duplicate prevention and restart throttling; fresh Gate 5 and
+#     Gate 6 acceptance of THIS profile; and a new KVM2-P5-03A baseline hash.
+#   * Swapping profiles after P5-03A invalidates P5-06 through P5-10, which must
+#     then be rerun against the new hash before Phase 6 can open.
+#
+# It still carries no [Install] section: even after admission, enabling it at
+# boot must be a separate, explicit, recorded action.
+#
+# `@RELEASE_SHA@` is substituted with the exact 40-hex release commit.
+
+[Unit]
+Description=MTC Crypto Paper Bridge (Hyperliquid TESTNET) — steady restart-enabled profile
+Documentation=file:///opt/mtc-bridge/releases/@RELEASE_SHA@/IBKR_PAPER_BRIDGE/deploy/linux/README.md
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=600
+StartLimitBurst=3
+
+[Service]
+Type=exec
+User=mtc-bridge
+Group=mtc-bridge
+WorkingDirectory=/opt/mtc-bridge/releases/@RELEASE_SHA@/IBKR_PAPER_BRIDGE
+ExecStart=/opt/mtc-bridge/venvs/@RELEASE_SHA@/bin/python -m bridge.app
+
+Environment=PYTHONUTF8=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=MTC_BRIDGE_STATE_DB=/var/lib/mtc-bridge/bridge.db
+EnvironmentFile=/etc/mtc-bridge/mtc-bridge.env
+
+KillSignal=SIGTERM
+KillMode=mixed
+TimeoutStartSec=120
+TimeoutStopSec=45
+FinalKillSignal=SIGKILL
+
+# The ONLY difference from the first-start profile: bounded automatic restart,
+# hard-throttled by StartLimitIntervalSec/StartLimitBurst above.
+Restart=on-failure
+RestartSec=30
+
+SyslogIdentifier=mtc-bridge
+StandardOutput=append:/var/log/mtc-bridge/bridge.log
+StandardError=append:/var/log/mtc-bridge/bridge.err.log
+
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+PrivateTmp=yes
+PrivateDevices=yes
+PrivateUsers=no
+ProtectSystem=strict
+ProtectHome=yes
+ProtectProc=invisible
+ProcSubset=pid
+ProtectClock=yes
+ProtectHostname=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+UMask=0077
+RemoveIPC=yes
+
+ReadWritePaths=/var/lib/mtc-bridge /var/log/mtc-bridge

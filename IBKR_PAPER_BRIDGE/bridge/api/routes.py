@@ -9,6 +9,7 @@ from typing import Any
 import yaml
 from fastapi import FastAPI, Header, HTTPException, Request
 
+from bridge.engine.window import DEFAULT_STALE_AFTER_S, window_status
 from bridge.store.db import Store
 
 
@@ -20,14 +21,30 @@ def load_config() -> dict[str, Any]:
 def init_runtime_state(app: FastAPI, store: Store | None = None) -> None:
     if store is not None and store.get_meta("app_state") is None:
         store.set_meta("app_state", "DISARMED")
+    app_state = (store.get_meta("app_state") if store is not None else None) or "DISARMED"
     app.state.bridge_status = {
-        "state": store.get_meta("app_state") if store is not None else "DISARMED",
+        "state": app_state,
         "mode": "paper",
         "network": "testnet",
         "exchange_conn": "mock",
         "regime": "BOTH",
         "state_version": 1,
         "reconcile_ready": False,
+        # TS-P0-003: honest window state from persisted evidence; a DOWN
+        # bridge (no fresh liveness) can never present as an active window.
+        "window": (
+            window_status(store, app_state=app_state)
+            if store is not None
+            else {
+                "state": "DOWN",
+                "started_ts": None,
+                "last_alive_ts": None,
+                "interrupted_ts": None,
+                "reset_ts": None,
+                "stale_after_s": DEFAULT_STALE_AFTER_S,
+                "error": "no_store",
+            }
+        ),
     }
     app.state.bridge_store = store
     app.state.bridge_config = load_config()

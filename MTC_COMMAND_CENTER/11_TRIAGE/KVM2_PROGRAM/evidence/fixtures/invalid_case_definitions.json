@@ -1,0 +1,32 @@
+[
+  {
+    "case": "private_path",
+    "mutation": "replace publishable path with a synthetic absolute user path",
+    "expected": "reject"
+  },
+  {
+    "case": "public_ip",
+    "mutation": "append a reserved documentation-network IPv4 literal",
+    "expected": "reject"
+  },
+  {
+    "case": "hostname",
+    "mutation": "append a synthetic SSH connection detail",
+    "expected": "reject"
+  },
+  {
+    "case": "credential",
+    "mutation": "append a synthetic credential-shaped value",
+    "expected": "reject"
+  },
+  {
+    "case": "path_escape",
+    "mutation": "replace publishable path with a parent-directory traversal",
+    "expected": "reject"
+  },
+  {
+    "case": "malformed_row",
+    "mutation": "remove one required field",
+    "expected": "reject"
+  }
+]

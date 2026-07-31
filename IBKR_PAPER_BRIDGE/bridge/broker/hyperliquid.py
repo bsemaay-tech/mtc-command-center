@@ -9,20 +9,47 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import logging
+import math
 import os
 import re
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from decimal import Decimal, ROUND_DOWN
 
+from bridge.broker.base import (
+    BrokerOutcomeUnknown,
+    BrokerPreSendFailure,
+    EvidenceStatus,
+    RecoveryQueryEvidence,
+    SubmissionDisposition,
+    SubmissionOutcome,
+    SubmissionRecoveryEvidence,
+    SubmissionRecoveryRequest,
+)
 from bridge.engine.types import (
+    FULL_RECONCILE_MAX_PAGES,
     AccountSnapshot,
+    ActionOutcome,
     Bar,
     BrokerEvent,
     BrokerOrder,
+    CancelResult,
+    ComponentEvidence,
+    Evidence,
     FillEvent,
+    FlattenResult,
+    LotQuantizationError,
+    LotUnit,
     OrderPlan,
+    OrderQueryResult,
     OrderUpdateEvent,
+    OrderView,
+    PlaceResult,
+    PortfolioEvidence,
     Position,
+    ReconcileComponentKind,
+    ReconcileComponentStatus,
+    SymbolSnapshot,
 )
 from bridge.engine.bars import BarFinalizer, timeframe_delta
 from hyperliquid.utils.types import Cloid
@@ -51,16 +78,28 @@ def round_hl_price(price: float, size_decimals: int) -> float:
     return float(value.quantize(quantum, rounding=ROUND_DOWN))
 
 
-class BrokerRefusedLive(RuntimeError):
-    pass
+class BrokerRefusedLive(BrokerPreSendFailure):
+    def __init__(self, message: str) -> None:
+        self.reason_code = "HL_LIVE_LOCK_REFUSED"
+        self.disposition = SubmissionDisposition.DEFINITIVE_REJECTION
+        self.write_may_have_started = False
+        RuntimeError.__init__(self, message)
 
 
-class HyperliquidNotConfigured(RuntimeError):
-    pass
+class HyperliquidNotConfigured(BrokerPreSendFailure):
+    def __init__(self, message: str) -> None:
+        self.reason_code = "HL_NOT_CONFIGURED"
+        self.disposition = SubmissionDisposition.DEFINITIVE_REJECTION
+        self.write_may_have_started = False
+        RuntimeError.__init__(self, message)
 
 
-class HyperliquidOrderError(RuntimeError):
-    pass
+class HyperliquidOrderError(BrokerOutcomeUnknown):
+    def __init__(self, message: str, reason_code: str = "HL_OUTCOME_UNKNOWN") -> None:
+        self.reason_code = reason_code
+        self.disposition = SubmissionDisposition.OUTCOME_UNKNOWN
+        self.write_may_have_started = True
+        RuntimeError.__init__(self, message)
 
 
 class HyperliquidBroker:
@@ -94,6 +133,7 @@ class HyperliquidBroker:
         self._bar_subscriptions: list[tuple[str, str, object, BarFinalizer]] = []
         self._user_callbacks: list[object] = []
         self._user_channels_subscribed = False
+        self.rebuilding = False
         self.raw_event_hook = None  # optional diagnostic tap (B3/B6 probes)
         self._oid_to_cloid: dict[int, str] = {}
         self._size_decimals: dict[str, int] = {}
@@ -101,31 +141,54 @@ class HyperliquidBroker:
 
     async def connect(self) -> None:
         self._check_network_lock()
+        # Invariant: Info REST methods including user_state remain usable on
+        # the old client while only websocket subscriptions are dead;
+        # BarFeed owns bar staleness detection.
         # B1 completion: a dead SDK websocket cannot be revived by
         # re-subscribing on the same Info object (observed live 2026-07-13:
         # exchange closed the socket with "Expired"; every resubscribe then
         # raised WebSocketConnectionClosedException). Rebuild the clients.
-        if self._owns_clients and self.info is not None:
-            manager = getattr(self.info, "ws_manager", None)
-            is_alive = getattr(manager, "is_alive", None)
-            if manager is not None and callable(is_alive) and not is_alive():
+        old_info = None
+        swapped = False
+        try:
+            needs_rebuild = self.info is None or self.exchange is None
+            if self._owns_clients and self.info is not None:
+                manager = getattr(self.info, "ws_manager", None)
+                is_alive = getattr(manager, "is_alive", None)
+                if manager is not None and callable(is_alive) and not is_alive():
+                    old_info = self.info
+                    self.rebuilding = True
+                    needs_rebuild = True
+            if needs_rebuild:
+                new_info, new_exchange = await asyncio.to_thread(self._build_sdk_clients)
+                # Subscribe every stored candle subscription on the new Info
+                # BEFORE it is exposed via self.info.
+                for coin, tf, receive, _finalizer in self._bar_subscriptions:
+                    await asyncio.to_thread(
+                        new_info.subscribe,
+                        {"type": "candle", "coin": coin, "interval": tf},
+                        receive,
+                    )
+                # One tuple assignment exposes the replacement pair together.
+                self.info, self.exchange = new_info, new_exchange
+                swapped = True
+                self._user_channels_subscribed = False
+            await self._detect_account_mode()
+            await self._load_size_decimals()
+            if hasattr(self.exchange, "update_leverage"):
+                await asyncio.to_thread(self.exchange.update_leverage, self.leverage, self.coin, is_cross=False)
+            if self._user_callbacks:
+                self._subscribe_user_channels()
+            self.connected = True
+        finally:
+            self.rebuilding = False
+            # Best-effort disconnect of the old dead websocket only AFTER
+            # the swap so there is never a window with no live Info.
+            if swapped and old_info is not None:
                 try:
-                    await asyncio.to_thread(getattr(self.info, "disconnect_websocket", lambda: None))
+                    await asyncio.to_thread(getattr(old_info, "disconnect_websocket", lambda: None))
                 except Exception:  # noqa: BLE001 - old socket is already dead
                     pass
-                self.info = None
-                self.exchange = None
-                self._user_channels_subscribed = False
-        if self.info is None or self.exchange is None:
-            await asyncio.to_thread(self._build_sdk_clients)
-            self._user_channels_subscribed = False
-        await self._detect_account_mode()
-        await self._load_size_decimals()
-        if hasattr(self.exchange, "update_leverage"):
-            await asyncio.to_thread(self.exchange.update_leverage, self.leverage, self.coin, is_cross=False)
-        if self._user_callbacks:
-            self._subscribe_user_channels()
-        self.connected = True
 
     async def disconnect(self) -> None:
         try:
@@ -272,27 +335,31 @@ class HyperliquidBroker:
         return True
 
     async def resubscribe(self) -> None:
+        """Idempotent: connect() already re-registers everything when it
+        rebuilds dead clients; the SDK raises NotImplementedError on
+        duplicate userEvents/orderUpdates subscriptions (live incident
+        2026-07-13 08:04-08:17Z: every reconnect retry died on this).
+        Candle re-subscription is also skipped when the ws is alive —
+        subscriptions only vanish when the socket (and thus Info) is
+        replaced, which connect() now handles."""
         if self.info is None or not hasattr(self.info, "subscribe"):
             raise HyperliquidNotConfigured("Info client not configured")
-        for coin, tf, receive, _ in self._bar_subscriptions:
-            await asyncio.to_thread(
-                self.info.subscribe,
-                {"type": "candle", "coin": coin, "interval": tf},
-                receive,
-            )
-        if self._user_callbacks:
-            await asyncio.to_thread(
-                self.info.subscribe,
-                {"type": "userEvents", "user": self.account_address},
-                self._receive_user_message,
-            )
-            await asyncio.to_thread(
-                self.info.subscribe,
-                {"type": "orderUpdates", "user": self.account_address},
-                self._receive_user_message,
-            )
+        if self._user_callbacks and not self._user_channels_subscribed:
+            await asyncio.to_thread(self._subscribe_user_channels)
 
-    async def place_bracket(self, plan: OrderPlan, grouping: str = "normalTpsl") -> dict:
+    def planned_cloids(self, plan: OrderPlan) -> dict[str, str]:
+        decision_uid = plan.decision_uid or (
+            f"{plan.signal.symbol}:{plan.signal.ts.isoformat()}:{plan.signal.direction}"
+        )
+        roles = ("entry", "sl", "tp") if plan.take_profit is not None else ("entry", "sl")
+        return {
+            role.upper(): cloid
+            for role, cloid in self.compute_cloids(decision_uid, roles).items()
+        }
+
+    async def place_bracket(
+        self, plan: OrderPlan, grouping: str = "normalTpsl"
+    ) -> SubmissionOutcome:
         """Place entry + SL + optional TP as a bulk group.
 
         Default ``grouping="normalTpsl"`` sends entry and trigger orders in a
@@ -304,58 +371,92 @@ class HyperliquidBroker:
         ``reprotect_position`` continues to use ``positionTpsl`` because it
         protects an already-open position.
         """
-        if self.exchange is None or not hasattr(self.exchange, "order"):
+        if self.exchange is None or not hasattr(self.exchange, "bulk_orders"):
             raise HyperliquidNotConfigured("Exchange client not configured")
-        is_entry_buy = plan.signal.direction == "LONG"
-        is_exit_buy = not is_entry_buy
-        entry_cloid = self._cloid(plan, "entry")
-        sl_cloid = self._cloid(plan, "sl")
-        entry_px = self._round_price(
-            plan.signal.symbol,
-            plan.limit_price if plan.entry_type == "LMT" else plan.signal.ref_price,
-        )
-        stop_px = self._round_price(plan.signal.symbol, plan.stop_loss)
-        entry_type = {"limit": {"tif": "Gtc" if plan.entry_type == "LMT" else "Ioc"}}
-
-        # The installed SDK's TriggerOrderType requires ``tpsl`` regardless
-        # of grouping. With ``na`` it remains an independently submitted
-        # trigger, rather than a normal-TPSL-linked child.
-        sl_trigger = {"triggerPx": stop_px, "isMarket": True, "tpsl": "sl"}
-
-        requests = [
-            self._request(plan.signal.symbol, is_entry_buy, plan.qty, entry_px, entry_type, False, entry_cloid),
-            self._request(
+        try:
+            planned = self.planned_cloids(plan)
+            is_entry_buy = plan.signal.direction == "LONG"
+            is_exit_buy = not is_entry_buy
+            entry_cloid = Cloid.from_str(planned["ENTRY"])
+            sl_cloid = Cloid.from_str(planned["SL"])
+            entry_px = self._round_price(
                 plan.signal.symbol,
-                is_exit_buy,
-                plan.qty,
-                stop_px,
-                {"trigger": sl_trigger},
-                True,
-                sl_cloid,
-            ),
-        ]
-        roles: list[tuple[str, Cloid, float | None]] = [("ENTRY", entry_cloid, None), ("SL", sl_cloid, stop_px)]
-        if plan.take_profit is not None:
-            tp_cloid = self._cloid(plan, "tp")
-            take_profit_px = self._round_price(plan.signal.symbol, plan.take_profit)
-            tp_trigger = {"triggerPx": take_profit_px, "isMarket": True, "tpsl": "tp"}
-            requests.append(
+                plan.limit_price if plan.entry_type == "LMT" else plan.signal.ref_price,
+            )
+            stop_px = self._round_price(plan.signal.symbol, plan.stop_loss)
+            entry_type = {"limit": {"tif": "Gtc" if plan.entry_type == "LMT" else "Ioc"}}
+            # TriggerOrderType requires ``tpsl`` even with grouping="na".
+            sl_trigger = {"triggerPx": stop_px, "isMarket": True, "tpsl": "sl"}
+            requests = [
+                self._request(
+                    plan.signal.symbol,
+                    is_entry_buy,
+                    plan.qty,
+                    entry_px,
+                    entry_type,
+                    False,
+                    entry_cloid,
+                ),
                 self._request(
                     plan.signal.symbol,
                     is_exit_buy,
                     plan.qty,
-                    take_profit_px,
-                    {"trigger": tp_trigger},
+                    stop_px,
+                    {"trigger": sl_trigger},
                     True,
-                    tp_cloid,
+                    sl_cloid,
+                ),
+            ]
+            roles: list[tuple[str, Cloid, float | None]] = [
+                ("ENTRY", entry_cloid, None),
+                ("SL", sl_cloid, stop_px),
+            ]
+            if plan.take_profit is not None:
+                tp_cloid = Cloid.from_str(planned["TP"])
+                take_profit_px = self._round_price(
+                    plan.signal.symbol, plan.take_profit
                 )
-            )
-            roles.append(("TP", tp_cloid, take_profit_px))
+                tp_trigger = {
+                    "triggerPx": take_profit_px,
+                    "isMarket": True,
+                    "tpsl": "tp",
+                }
+                requests.append(
+                    self._request(
+                        plan.signal.symbol,
+                        is_exit_buy,
+                        plan.qty,
+                        take_profit_px,
+                        {"trigger": tp_trigger},
+                        True,
+                        tp_cloid,
+                    )
+                )
+                roles.append(("TP", tp_cloid, take_profit_px))
+        except Exception as exc:
+            raise BrokerPreSendFailure("HL_REQUEST_BUILD_FAILED") from exc
 
-        raw = await asyncio.to_thread(self.exchange.bulk_orders, requests, grouping=grouping)
-        return await self._verify_positioned_orders(
-            raw, roles, requests, plan.qty, plan.signal.symbol
-        )
+        try:
+            raw = await asyncio.to_thread(
+                self.exchange.bulk_orders, requests, grouping=grouping
+            )
+        except HyperliquidOrderError:
+            raise
+        except Exception as exc:
+            raise HyperliquidOrderError(
+                "Hyperliquid write outcome unknown", "HL_BULK_WRITE_EXCEPTION"
+            ) from exc
+        try:
+            return await self._verify_positioned_orders(
+                raw, roles, requests, plan.qty, plan.signal.symbol
+            )
+        except HyperliquidOrderError:
+            raise
+        except Exception as exc:
+            raise HyperliquidOrderError(
+                "Hyperliquid post-write verification failed",
+                "HL_POST_SEND_VERIFICATION_FAILED",
+            ) from exc
 
     async def _verify_positioned_orders(
         self,
@@ -364,7 +465,7 @@ class HyperliquidBroker:
         requests: list[dict],
         qty: float,
         symbol: str,
-    ) -> dict[str, dict]:
+    ) -> SubmissionOutcome:
         """Verify bulk-placed orders via open_orders; authoritative verification.
 
         Every submitted cloid (including SL/TP triggers) MUST be visible in
@@ -374,17 +475,46 @@ class HyperliquidBroker:
         redacted raw response.
         """
         statuses = self._extract_statuses(raw)
-        # Map statuses to roles by positional index; statuses may be fewer than
-        # the number of requests in positionTpsl groups.
+        if len(statuses) > len(roles):
+            raise HyperliquidOrderError(
+                "cloid result missing from open_orders or result cardinality mismatched",
+                "HL_RESULT_CARDINALITY_MISMATCH",
+            )
         role_to_status: dict[str, dict] = {}
         for idx, (role, _cloid, _tp) in enumerate(roles):
-            if idx < len(statuses):
-                role_to_status[role] = statuses[idx]
-            else:
-                # No individual status for this role — must be verified below
-                role_to_status[role] = {}
+            role_to_status[role] = statuses[idx] if idx < len(statuses) else {}
 
         errors = [str(s.get("error")) for s in statuses if "error" in s]
+        conclusive_rejections = (
+            len(statuses) == len(roles)
+            and all(
+                "error" in status
+                and not any(
+                    key in status for key in ("resting", "filled", "pending_child")
+                )
+                for status in statuses
+            )
+        )
+        if conclusive_rejections:
+            return SubmissionOutcome(
+                SubmissionDisposition.DEFINITIVE_REJECTION,
+                {},
+                "HL_ALL_ORDERS_REJECTED",
+            )
+        if errors:
+            raise HyperliquidOrderError(
+                "; ".join(self._safe_exchange_message(error) for error in errors),
+                "HL_MIXED_BULK_RESULT",
+            )
+        for status in statuses:
+            compatible = sum(
+                key in status for key in ("resting", "filled", "pending_child")
+            )
+            if compatible != 1:
+                raise HyperliquidOrderError(
+                    "Hyperliquid status was malformed",
+                    "HL_STATUS_MALFORMED",
+                )
 
         # Ground-truth query: every order we own that is live on the exchange
         open_orders = await self.open_orders()
@@ -453,10 +583,245 @@ class HyperliquidBroker:
             if row and row.get("oid") is not None:
                 self._oid_to_cloid[int(row["oid"])] = str(cloid)
 
-        if errors:
-            raise HyperliquidOrderError("; ".join(errors))
+        return SubmissionOutcome(
+            (
+                SubmissionDisposition.VERIFIED_SUCCESS
+                if len(statuses) == len(roles)
+                else SubmissionDisposition.OUTCOME_UNKNOWN
+            ),
+            result,
+            (
+                "HL_VERIFIED_SUCCESS"
+                if len(statuses) == len(roles)
+                else "HL_RESULT_CARDINALITY_MISMATCH"
+            ),
+        )
 
-        return result
+    async def submission_recovery_evidence(
+        self, request: SubmissionRecoveryRequest
+    ) -> SubmissionRecoveryEvidence:
+        """Collect conservative, request-specific evidence without write calls."""
+        planned = set(map(str, request.planned_cloids.values()))
+        direct: dict[str, RecoveryQueryEvidence] = {}
+        lookup = (
+            getattr(self.info, "query_order_by_cloid", None)
+            if self.info is not None
+            else None
+        )
+        for cloid in sorted(planned):
+            if not callable(lookup):
+                direct[cloid] = RecoveryQueryEvidence(
+                    EvidenceStatus.UNAVAILABLE, (), "HL_DIRECT_LOOKUP_UNAVAILABLE"
+                )
+                continue
+            try:
+                raw = await asyncio.to_thread(
+                    lookup, self.account_address, Cloid.from_str(cloid)
+                )
+            except Exception:
+                direct[cloid] = RecoveryQueryEvidence(
+                    EvidenceStatus.QUERY_FAILED, (), "HL_DIRECT_LOOKUP_FAILED"
+                )
+                continue
+            found = self._collect_cloids(raw) & planned
+            if cloid in found:
+                direct[cloid] = RecoveryQueryEvidence(
+                    EvidenceStatus.FOUND, (cloid,), "HL_DIRECT_FOUND"
+                )
+            elif self._is_authoritative_not_found(raw):
+                direct[cloid] = RecoveryQueryEvidence(
+                    EvidenceStatus.NOT_FOUND, (), "HL_DIRECT_NOT_FOUND"
+                )
+            else:
+                direct[cloid] = RecoveryQueryEvidence(
+                    EvidenceStatus.CONFLICTING, tuple(sorted(found)),
+                    "HL_DIRECT_MALFORMED",
+                )
+
+        open_evidence = await self._collection_recovery_evidence(
+            ("open_orders",),
+            planned,
+            (self.account_address,),
+            "HL_OPEN_ORDERS",
+        )
+        history_evidence = await self._collection_recovery_evidence(
+            ("historical_orders",),
+            planned,
+            (self.account_address,),
+            "HL_HISTORY",
+        )
+
+        start_ms = int(datetime.fromisoformat(request.window_start).timestamp() * 1000)
+        end_ms = int(datetime.now(UTC).timestamp() * 1000)
+        fills_method = (
+            getattr(self.info, "user_fills_by_time", None)
+            if self.info is not None
+            else None
+        )
+        if callable(fills_method):
+            fills_evidence = await self._collection_recovery_evidence(
+                ("user_fills_by_time",),
+                planned,
+                (self.account_address, start_ms, end_ms),
+                "HL_FILLS",
+            )
+        else:
+            unbounded_fills = (
+                getattr(self.info, "user_fills", None)
+                if self.info is not None
+                else None
+            )
+            if not callable(unbounded_fills):
+                fills_evidence = RecoveryQueryEvidence(
+                    EvidenceStatus.UNAVAILABLE, (), "HL_FILLS_UNAVAILABLE"
+                )
+            else:
+                try:
+                    raw_fills = await asyncio.to_thread(
+                        unbounded_fills, self.account_address
+                    )
+                    found_fills = self._collect_cloids(raw_fills) & planned
+                    fills_evidence = RecoveryQueryEvidence(
+                        EvidenceStatus.FOUND
+                        if found_fills
+                        else EvidenceStatus.TRUNCATED,
+                        tuple(sorted(found_fills)),
+                        "HL_FILLS_FOUND"
+                        if found_fills
+                        else "HL_FILLS_WINDOW_UNPROVEN",
+                    )
+                except Exception:
+                    fills_evidence = RecoveryQueryEvidence(
+                        EvidenceStatus.QUERY_FAILED, (), "HL_FILLS_FAILED"
+                    )
+
+        position_evidence = await self._position_recovery_evidence(request.symbol)
+        return SubmissionRecoveryEvidence(
+            request_id=request.request_id,
+            planned_cloids=dict(request.planned_cloids),
+            direct_lookup=direct,
+            open_orders=open_evidence,
+            historical_orders=history_evidence,
+            fills=fills_evidence,
+            position=position_evidence,
+        )
+
+    async def _collection_recovery_evidence(
+        self,
+        method_names: tuple[str, ...],
+        planned: set[str],
+        args: tuple[object, ...],
+        code_prefix: str,
+    ) -> RecoveryQueryEvidence:
+        method = None
+        if self.info is not None:
+            method = next(
+                (
+                    getattr(self.info, name)
+                    for name in method_names
+                    if callable(getattr(self.info, name, None))
+                ),
+                None,
+            )
+        if method is None:
+            return RecoveryQueryEvidence(
+                EvidenceStatus.UNAVAILABLE, (), f"{code_prefix}_UNAVAILABLE"
+            )
+        try:
+            raw = await asyncio.to_thread(method, *args)
+        except Exception:
+            return RecoveryQueryEvidence(
+                EvidenceStatus.QUERY_FAILED, (), f"{code_prefix}_FAILED"
+            )
+        if isinstance(raw, dict) and any(
+            bool(raw.get(flag)) for flag in ("truncated", "hasMore", "has_more")
+        ):
+            found = self._collect_cloids(raw) & planned
+            return RecoveryQueryEvidence(
+                EvidenceStatus.FOUND if found else EvidenceStatus.TRUNCATED,
+                tuple(sorted(found)),
+                f"{code_prefix}_FOUND"
+                if found
+                else f"{code_prefix}_TRUNCATED",
+            )
+        rows: object = raw
+        if isinstance(raw, dict):
+            rows = raw.get("data", raw.get("orders", raw.get("fills")))
+        if not isinstance(rows, list):
+            return RecoveryQueryEvidence(
+                EvidenceStatus.CONFLICTING, (), f"{code_prefix}_MALFORMED"
+            )
+        found = self._collect_cloids(rows) & planned
+        return RecoveryQueryEvidence(
+            EvidenceStatus.FOUND if found else EvidenceStatus.NOT_FOUND,
+            tuple(sorted(found)),
+            f"{code_prefix}_FOUND" if found else f"{code_prefix}_NOT_FOUND",
+        )
+
+    async def _position_recovery_evidence(
+        self, symbol: str
+    ) -> RecoveryQueryEvidence:
+        method = (
+            getattr(self.info, "user_state", None)
+            if self.info is not None
+            else None
+        )
+        if not callable(method):
+            return RecoveryQueryEvidence(
+                EvidenceStatus.UNAVAILABLE, (), "HL_POSITION_UNAVAILABLE"
+            )
+        try:
+            raw = await asyncio.to_thread(method, self.account_address)
+        except Exception:
+            return RecoveryQueryEvidence(
+                EvidenceStatus.QUERY_FAILED, (), "HL_POSITION_FAILED"
+            )
+        if not isinstance(raw, dict) or not isinstance(
+            raw.get("assetPositions", []), list
+        ):
+            return RecoveryQueryEvidence(
+                EvidenceStatus.CONFLICTING, (), "HL_POSITION_MALFORMED"
+            )
+        for row in raw.get("assetPositions", []):
+            position = self._parse_position(row)
+            if position is not None and position.symbol == symbol and position.size != 0:
+                return RecoveryQueryEvidence(
+                    EvidenceStatus.FOUND, (), "HL_POSITION_EXPOSURE"
+                )
+        return RecoveryQueryEvidence(
+            EvidenceStatus.NOT_FOUND, (), "HL_POSITION_FLAT"
+        )
+
+    @classmethod
+    def _collect_cloids(cls, value: object) -> set[str]:
+        found: set[str] = set()
+        if isinstance(value, dict):
+            for key, child in value.items():
+                if str(key).lower() in {
+                    "cloid",
+                    "clientorderid",
+                    "client_order_id",
+                } and child is not None:
+                    found.add(str(child))
+                else:
+                    found.update(cls._collect_cloids(child))
+        elif isinstance(value, (list, tuple)):
+            for child in value:
+                found.update(cls._collect_cloids(child))
+        return found
+
+    @staticmethod
+    def _is_authoritative_not_found(raw: object) -> bool:
+        if not isinstance(raw, dict):
+            return False
+        status = str(raw.get("status", raw.get("error", ""))).lower()
+        return status in {
+            "unknownoid",
+            "unknown_oid",
+            "notfound",
+            "not_found",
+            "order not found",
+        }
 
     async def modify_stop(self, cloid: str, new_stop: float) -> None:
         if self.exchange is None or not hasattr(self.exchange, "modify_order"):
@@ -562,13 +927,1031 @@ class HyperliquidBroker:
             raw, roles, requests, abs(position.size), position.symbol
         )
 
+    # ------------------------------------------------------------------
+    # TS-P1-004 typed, bounded partial-recovery surface
+    #
+    # Strict response mapping only. `status=ok` plus a resting/filled/success
+    # status is APPLIED; an *authoritative* not-found/already-canceled/
+    # validation rejection is NOT_APPLIED; everything else — timeout, transport
+    # error, unparseable body, missing status, unexpected shape — is UNKNOWN.
+    # There is no optimistic branch anywhere in this section.
+    # ------------------------------------------------------------------
+
+    _LIVE_ORDER_STATUSES = frozenset({"OPEN", "SUBMITTED", "PENDING", "RESTING"})
+    _TERMINAL_ORDER_STATUSES = frozenset(
+        {"FILLED", "CANCELED", "CANCELLED", "REJECTED", "EXPIRED"}
+    )
+
+    def lot_unit(self, symbol: str) -> LotUnit | None:
+        """Symbol size quantum from exchange metadata; None when unknown."""
+        decimals = self._size_decimals.get(str(symbol))
+        if decimals is None:
+            return None
+        try:
+            return LotUnit(int(decimals))
+        except (LotQuantizationError, TypeError, ValueError):
+            return None
+
+    def _parse_recovery_open_orders(self, raw_orders: object) -> list[BrokerOrder]:
+        """Fail-closed parser for authoritative live open-order evidence."""
+        if not isinstance(raw_orders, list):
+            raise ValueError("order collection")
+        orders: list[BrokerOrder] = []
+        for row in raw_orders:
+            if not isinstance(row, Mapping):
+                raise ValueError("order row")
+            normalized = dict(row)
+            cloid = normalized.get("cloid")
+            oid = normalized.get("oid")
+            coin = normalized.get("coin")
+            side = normalized.get("side")
+            if "reduceOnly" in normalized:
+                reduce_only_raw = normalized["reduceOnly"]
+            elif "reduce_only" in normalized:
+                reduce_only_raw = normalized["reduce_only"]
+            else:
+                raise ValueError("order fields")
+            if "sz" in normalized:
+                size_raw = normalized["sz"]
+            elif "size" in normalized:
+                size_raw = normalized["size"]
+            else:
+                raise ValueError("order fields")
+            try:
+                size = float(size_raw)
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise ValueError("order fields") from exc
+            if (
+                not isinstance(cloid, str)
+                or not cloid.strip()
+                or not isinstance(oid, int)
+                or isinstance(oid, bool)
+                or not isinstance(coin, str)
+                or not coin.strip()
+                or not isinstance(side, str)
+                or side.upper() not in {"A", "B", "BUY", "SELL"}
+                or isinstance(size_raw, bool)
+                or not isinstance(reduce_only_raw, bool)
+                or not math.isfinite(size)
+                or size <= 0
+            ):
+                raise ValueError("order fields")
+            # Successful Info.open_orders membership is itself authoritative
+            # evidence that the row is live. The installed SDK does not
+            # document an embedded status, so normalize a copy for typed
+            # parsing without mutating the SDK-owned mapping.
+            normalized["status"] = "OPEN"
+            try:
+                orders.append(self._parse_order(normalized))
+            except (KeyError, TypeError, ValueError, OverflowError) as exc:
+                raise ValueError("order fields") from exc
+        return orders
+
+    async def symbol_snapshot(self, symbol: str) -> SymbolSnapshot:
+        """Bounded position + open-order evidence for exactly one symbol."""
+        lot = self.lot_unit(symbol)
+        if self.info is None or not hasattr(self.info, "user_state"):
+            return SymbolSnapshot(
+                symbol=symbol,
+                exact=False,
+                net_size=None,
+                open_orders=(),
+                lot=lot,
+                evidence=Evidence("SNAPSHOT", "HL_POSITION_QUERY_FAILED"),
+            )
+        try:
+            state = await asyncio.to_thread(
+                self.info.user_state, self.account_address
+            )
+        except Exception as exc:  # noqa: BLE001 - any failure is inexact evidence
+            return SymbolSnapshot(
+                symbol=symbol, exact=False, net_size=None, open_orders=(), lot=lot,
+                evidence=Evidence(
+                    "SNAPSHOT", "HL_POSITION_QUERY_FAILED", detail=type(exc).__name__
+                ),
+            )
+        if not isinstance(state, dict) or not isinstance(
+            state.get("assetPositions"), list
+        ):
+            return SymbolSnapshot(
+                symbol=symbol,
+                exact=False,
+                net_size=None,
+                open_orders=(),
+                lot=lot,
+                evidence=Evidence("SNAPSHOT", "HL_POSITION_EVIDENCE_MALFORMED"),
+            )
+        positions: list[Position] = []
+        try:
+            for row in state["assetPositions"]:
+                if not isinstance(row, dict):
+                    raise ValueError("position row")
+                payload = row.get("position", row)
+                if (
+                    not isinstance(payload, dict)
+                    or not isinstance(payload.get("coin"), str)
+                    or not str(payload["coin"]).strip()
+                    or ("szi" not in payload and "size" not in payload)
+                ):
+                    raise ValueError("position fields")
+                raw_size = payload.get("szi", payload.get("size"))
+                parsed_size = float(raw_size)
+                if not math.isfinite(parsed_size):
+                    raise ValueError("position size")
+                parsed = self._parse_position(row)
+                if parsed is None:
+                    raise ValueError("position parse")
+                if parsed.size != 0:
+                    positions.append(parsed)
+        except (TypeError, ValueError, OverflowError):
+            return SymbolSnapshot(
+                symbol=symbol,
+                exact=False,
+                net_size=None,
+                open_orders=(),
+                lot=lot,
+                evidence=Evidence("SNAPSHOT", "HL_POSITION_EVIDENCE_MALFORMED"),
+            )
+        if not hasattr(self.info, "open_orders"):
+            return SymbolSnapshot(
+                symbol=symbol,
+                exact=False,
+                net_size=None,
+                open_orders=(),
+                lot=lot,
+                evidence=Evidence("SNAPSHOT", "HL_OPEN_ORDER_QUERY_FAILED"),
+            )
+        try:
+            raw_orders = await asyncio.to_thread(
+                self.info.open_orders, self.account_address
+            )
+        except Exception as exc:  # noqa: BLE001
+            return SymbolSnapshot(
+                symbol=symbol, exact=False, net_size=None, open_orders=(), lot=lot,
+                evidence=Evidence(
+                    "SNAPSHOT", "HL_OPEN_ORDER_QUERY_FAILED", detail=type(exc).__name__
+                ),
+            )
+        try:
+            orders = self._parse_recovery_open_orders(raw_orders)
+        except (KeyError, TypeError, ValueError, OverflowError):
+            return SymbolSnapshot(
+                symbol=symbol,
+                exact=False,
+                net_size=None,
+                open_orders=(),
+                lot=lot,
+                evidence=Evidence("SNAPSHOT", "HL_ORDER_EVIDENCE_MALFORMED"),
+            )
+        matching = [p for p in positions if p.symbol == symbol]
+        if len(matching) > 1:
+            return SymbolSnapshot(
+                symbol=symbol, exact=False, net_size=None, open_orders=(), lot=lot,
+                evidence=Evidence("SNAPSHOT", "HL_POSITION_CONFLICTING"),
+            )
+        net = float(matching[0].size) if matching else 0.0
+        views = tuple(
+            OrderView(
+                cloid=order.cloid,
+                coin=order.coin,
+                side=order.side,
+                size=float(order.size),
+                role=str(order.role),
+                reduce_only=bool(order.reduce_only),
+                trigger_px=order.trigger_px,
+                status=str(order.status),
+                order_ref=order.order_ref,
+            )
+            for order in orders
+            if order.coin == symbol
+        )
+        return SymbolSnapshot(
+            symbol=symbol,
+            exact=lot is not None,
+            net_size=net,
+            open_orders=views,
+            lot=lot,
+            evidence=Evidence(
+                "SNAPSHOT",
+                "HL_SNAPSHOT_COMPLETE" if lot is not None else "HL_SIZE_QUANTUM_MISSING",
+            ),
+            observed_ts=datetime.now(UTC),
+        )
+
+    async def query_order(self, cloid: str, symbol: str) -> OrderQueryResult:
+        """Direct single-order lookup; an unusable answer stays UNKNOWN."""
+        if self.info is None:
+            return OrderQueryResult(
+                known=False, evidence=Evidence("QUERY_ORDER", "HL_NOT_CONFIGURED")
+            )
+        lookup = getattr(self.info, "query_order_by_cloid", None)
+        if callable(lookup):
+            try:
+                raw = await asyncio.to_thread(lookup, self.account_address, Cloid.from_str(str(cloid)))
+            except Exception as exc:  # noqa: BLE001
+                return OrderQueryResult(
+                    known=False,
+                    evidence=Evidence(
+                        "QUERY_ORDER", "HL_QUERY_FAILED", detail=type(exc).__name__
+                    ),
+                )
+            return self._parse_order_query(raw, cloid)
+        # Fall back to the raw open-order collection: it can only prove presence,
+        # and any malformed row makes the entire recovery answer inexact.
+        if not hasattr(self.info, "open_orders"):
+            return OrderQueryResult(
+                known=False,
+                evidence=Evidence("OPEN_ORDERS", "HL_OPEN_ORDER_QUERY_FAILED"),
+            )
+        try:
+            raw_orders = await asyncio.to_thread(
+                self.info.open_orders, self.account_address
+            )
+            orders = self._parse_recovery_open_orders(raw_orders)
+        except Exception as exc:  # noqa: BLE001
+            return OrderQueryResult(
+                known=False,
+                evidence=Evidence(
+                    "OPEN_ORDERS", "HL_ORDER_EVIDENCE_MALFORMED",
+                    detail=type(exc).__name__,
+                ),
+            )
+        for order in orders:
+            if order.cloid == str(cloid):
+                return OrderQueryResult(
+                    known=True, found=True, terminal=False,
+                    raw_status=str(order.status),
+                    evidence=Evidence("OPEN_ORDERS", "HL_ORDER_PRESENT"),
+                )
+        # Absence from the open-order page alone is not proof of terminality.
+        return OrderQueryResult(
+            known=False,
+            evidence=Evidence("OPEN_ORDERS", "HL_ORDER_ABSENCE_NOT_AUTHORITATIVE"),
+        )
+
+    @classmethod
+    def _parse_order_query(cls, raw: object, cloid: str) -> OrderQueryResult:
+        if not isinstance(raw, dict):
+            return OrderQueryResult(
+                known=False, evidence=Evidence("QUERY_ORDER", "HL_QUERY_UNPARSEABLE")
+            )
+        status = raw.get("status")
+        if isinstance(status, str) and status.lower() in {"unknownoid", "unknown_oid"}:
+            return OrderQueryResult(
+                known=True, found=False, terminal=True,
+                evidence=Evidence("QUERY_ORDER", "HL_ORDER_UNKNOWN_OID"),
+            )
+        if not isinstance(status, str) or status.lower() != "order":
+            return OrderQueryResult(
+                known=False, evidence=Evidence("QUERY_ORDER", "HL_QUERY_UNEXPECTED")
+            )
+        payload = raw.get("order")
+        if not isinstance(payload, dict):
+            return OrderQueryResult(
+                known=False, evidence=Evidence("QUERY_ORDER", "HL_QUERY_UNPARSEABLE")
+            )
+        order_status = payload.get("status")
+        if not isinstance(order_status, str) or not order_status.strip():
+            return OrderQueryResult(
+                known=False, evidence=Evidence("QUERY_ORDER", "HL_QUERY_STATUS_MISSING")
+            )
+        normalized = order_status.strip().upper()
+        if normalized not in (
+            cls._LIVE_ORDER_STATUSES | cls._TERMINAL_ORDER_STATUSES
+        ):
+            return OrderQueryResult(
+                known=False,
+                evidence=Evidence("QUERY_ORDER", "HL_QUERY_STATUS_UNKNOWN"),
+            )
+        inner = payload.get("order")
+        filled: float | None = None
+        if isinstance(inner, dict):
+            original = inner.get("origSz")
+            remaining = inner.get("sz")
+            if original is not None and remaining is not None:
+                try:
+                    filled = float(original) - float(remaining)
+                except (TypeError, ValueError):
+                    filled = None
+        live = normalized in cls._LIVE_ORDER_STATUSES
+        return OrderQueryResult(
+            known=True,
+            found=live,
+            terminal=not live,
+            raw_status=normalized,
+            filled_size=filled,
+            evidence=Evidence("QUERY_ORDER", "HL_QUERY_COMPLETE"),
+        )
+
+    _NOT_APPLIED_MARKERS = (
+        "order was never placed",
+        "never placed",
+        "order not found",
+        "was not found",
+        "already canceled",
+        "already cancelled",
+        "cannot be canceled",
+        "invalid order",
+        "reduce only",
+        "insufficient",
+    )
+
+    @classmethod
+    def _classify_exchange_result(cls, raw: object) -> tuple[ActionOutcome, str]:
+        """Strict response -> outcome mapping. Anything unexpected is UNKNOWN."""
+        if not isinstance(raw, dict):
+            return ActionOutcome.UNKNOWN, "HL_RESPONSE_NOT_OBJECT"
+        status = raw.get("status")
+        if not isinstance(status, str):
+            return ActionOutcome.UNKNOWN, "HL_STATUS_MISSING"
+        if status.lower() == "err":
+            message = cls._safe_exchange_message(raw.get("response"), cap=256).lower()
+            if any(marker in message for marker in cls._NOT_APPLIED_MARKERS):
+                return ActionOutcome.NOT_APPLIED, "HL_DEFINITIVE_REJECTION"
+            return ActionOutcome.UNKNOWN, "HL_ERROR_NOT_AUTHORITATIVE"
+        if status.lower() != "ok":
+            return ActionOutcome.UNKNOWN, "HL_STATUS_UNEXPECTED"
+        try:
+            statuses = cls._extract_statuses(raw)
+        except Exception:  # noqa: BLE001 - unparseable body is never a success
+            return ActionOutcome.UNKNOWN, "HL_RESPONSE_UNPARSEABLE"
+        if not statuses:
+            return ActionOutcome.UNKNOWN, "HL_STATUSES_EMPTY"
+        for entry in statuses:
+            if "error" in entry:
+                message = cls._safe_exchange_message(entry.get("error"), cap=256).lower()
+                if any(marker in message for marker in cls._NOT_APPLIED_MARKERS):
+                    return ActionOutcome.NOT_APPLIED, "HL_DEFINITIVE_REJECTION"
+                return ActionOutcome.UNKNOWN, "HL_ERROR_NOT_AUTHORITATIVE"
+            if not ({"resting", "filled", "success", "pending_child"} & set(entry)):
+                return ActionOutcome.UNKNOWN, "HL_STATUS_UNRECOGNIZED"
+        return ActionOutcome.APPLIED, "HL_APPLIED"
+
+    async def cancel_order_by_cloid(self, cloid: str, symbol: str) -> CancelResult:
+        if self.exchange is None or not hasattr(self.exchange, "cancel_by_cloid"):
+            return CancelResult(
+                ActionOutcome.NOT_APPLIED, str(cloid),
+                Evidence("CANCEL", "HL_NOT_CONFIGURED"),
+            )
+        spec = self._order_specs.get(str(cloid), {})
+        coin = str(spec.get("coin", symbol or self.coin))
+        try:
+            raw = await asyncio.to_thread(
+                self.exchange.cancel_by_cloid, coin, Cloid.from_str(str(cloid))
+            )
+        except Exception as exc:  # noqa: BLE001 - transport failure is UNKNOWN
+            return CancelResult(
+                ActionOutcome.UNKNOWN, str(cloid),
+                Evidence("CANCEL", "HL_TRANSPORT_FAILED", detail=type(exc).__name__),
+            )
+        outcome, reason = self._classify_exchange_result(raw)
+        return CancelResult(outcome, str(cloid), Evidence("CANCEL", reason))
+
+    async def place_protective_stop(
+        self,
+        *,
+        symbol: str,
+        cloid: str,
+        exit_side: str,
+        size: float,
+        trigger_px: float,
+    ) -> PlaceResult:
+        if self.exchange is None or not hasattr(self.exchange, "bulk_orders"):
+            return PlaceResult(
+                ActionOutcome.NOT_APPLIED, str(cloid), None,
+                Evidence("PLACE", "HL_NOT_CONFIGURED"),
+            )
+        is_buy = str(exit_side).upper() == "BUY"
+        try:
+            rounded = self._round_price(symbol, trigger_px)
+        except Exception as exc:  # noqa: BLE001 - never send an unrounded price
+            return PlaceResult(
+                ActionOutcome.NOT_APPLIED, str(cloid), None,
+                Evidence("PLACE", "HL_PRICE_INVALID", detail=type(exc).__name__),
+            )
+        typed_cloid = Cloid.from_str(str(cloid))
+        request = self._request(
+            symbol,
+            is_buy,
+            float(size),
+            rounded,
+            {"trigger": {"triggerPx": rounded, "isMarket": True, "tpsl": "sl"}},
+            True,
+            typed_cloid,
+        )
+        try:
+            raw = await asyncio.to_thread(
+                self.exchange.bulk_orders, [request], grouping="positionTpsl"
+            )
+        except Exception as exc:  # noqa: BLE001
+            return PlaceResult(
+                ActionOutcome.UNKNOWN, str(cloid), None,
+                Evidence("PLACE", "HL_TRANSPORT_FAILED", detail=type(exc).__name__),
+            )
+        outcome, reason = self._classify_exchange_result(raw)
+        if outcome is ActionOutcome.APPLIED:
+            self._order_specs[str(cloid)] = {**request, "role": "SL"}
+        return PlaceResult(
+            outcome, str(cloid), self._extract_oid(raw), Evidence("PLACE", reason)
+        )
+
+    async def flatten_reduce_only(
+        self, *, symbol: str, cloid: str, size: float
+    ) -> FlattenResult:
+        if self.exchange is None or not hasattr(self.exchange, "market_close"):
+            return FlattenResult(
+                ActionOutcome.NOT_APPLIED, str(cloid),
+                Evidence("FLATTEN", "HL_NOT_CONFIGURED"),
+            )
+        try:
+            raw = await asyncio.to_thread(
+                self.exchange.market_close,
+                symbol,
+                sz=abs(float(size)),
+                slippage=0.05,
+                cloid=Cloid.from_str(str(cloid)),
+            )
+        except Exception as exc:  # noqa: BLE001
+            return FlattenResult(
+                ActionOutcome.UNKNOWN, str(cloid),
+                Evidence("FLATTEN", "HL_TRANSPORT_FAILED", detail=type(exc).__name__),
+            )
+        outcome, reason = self._classify_exchange_result(raw)
+        return FlattenResult(outcome, str(cloid), Evidence("FLATTEN", reason))
+
+    # ------------------------------------------------------------------
+    # TS-P1-005 read-only full-reconciliation evidence
+    #
+    # Bounded REST budget for one whole capture (D2=A, 5s):
+    #   1 × Info.user_state          -> POSITIONS + BALANCES + MARGIN
+    #   1 × Info.open_orders         -> OPEN_ORDERS
+    #   N × Info.user_fills_by_time  -> FILLS   (N = 1 for an ordinary window)
+    #   M × Info.user_funding_history-> FUNDING (M = 1 for an ordinary window)
+    # i.e. 4 calls nominally, hard-capped at 2 + 2×FULL_RECONCILE_MAX_PAGES.
+    #
+    # Pagination follows the documented Info endpoint semantics: a time-range
+    # response carries at most a fixed number of elements, and a larger range
+    # is walked by using the last returned timestamp as the next startTime.
+    # Because that boundary is inclusive, authoritative identities are
+    # deduplicated and strict cursor progress is required; a repeated full page
+    # is truncation, never "the end".
+    # ------------------------------------------------------------------
+
+    HL_FILLS_PAGE_LIMIT = 2000
+    """Documented maximum elements in one ``userFillsByTime`` response."""
+
+    HL_FILLS_HISTORY_LIMIT = 10_000
+    """Documented maximum fills retained; a deeper window is unprovable."""
+
+    HL_INFO_PAGE_LIMIT = 500
+    """Documented maximum elements in one time-ranged Info response."""
+
+    def _reconcile_unavailable(
+        self, kind: ReconcileComponentKind, reason_code: str
+    ) -> ComponentEvidence:
+        return ComponentEvidence(
+            kind=kind,
+            source="HL_INFO",
+            status=ReconcileComponentStatus.UNAVAILABLE,
+            observed_ts=None,
+            reason_code=reason_code,
+        )
+
+    async def portfolio_evidence(self) -> PortfolioEvidence:
+        """Positions, balances and margin from exactly one ``user_state`` read.
+
+        One call for three components removes intra-account skew entirely:
+        the three observations are the same observation.
+        """
+        kinds = (
+            ReconcileComponentKind.POSITIONS,
+            ReconcileComponentKind.BALANCES,
+            ReconcileComponentKind.MARGIN,
+        )
+        if self.info is None or not hasattr(self.info, "user_state"):
+            unavailable = [
+                self._reconcile_unavailable(kind, "HL_NOT_CONFIGURED") for kind in kinds
+            ]
+            return PortfolioEvidence(*unavailable)
+        try:
+            state = await asyncio.to_thread(self.info.user_state, self.account_address)
+        except Exception as exc:  # noqa: BLE001 - a failed read is inexact evidence
+            reason = f"HL_ACCOUNT_QUERY_FAILED:{type(exc).__name__.upper()}"[:96]
+            return PortfolioEvidence(
+                *[self._reconcile_unavailable(kind, reason) for kind in kinds]
+            )
+        observed_ts = datetime.now(UTC)
+
+        def malformed(reason: str) -> PortfolioEvidence:
+            return PortfolioEvidence(*[
+                ComponentEvidence(
+                    kind=kind,
+                    source="HL_INFO",
+                    status=ReconcileComponentStatus.MALFORMED,
+                    observed_ts=observed_ts,
+                    reason_code=reason,
+                )
+                for kind in kinds
+            ])
+
+        if not isinstance(state, Mapping):
+            return malformed("HL_ACCOUNT_EVIDENCE_MALFORMED")
+        raw_positions = state.get("assetPositions")
+        summary = state.get("marginSummary")
+        if not isinstance(raw_positions, list) or not isinstance(summary, Mapping):
+            return malformed("HL_ACCOUNT_EVIDENCE_MALFORMED")
+
+        capture_exposure = bool(getattr(self, "exposure_capture_enabled", False))
+        positions: dict[str, float] = {}
+        rich_rows: dict[str, dict[str, Any]] = {}
+        for row in raw_positions:
+            if not isinstance(row, Mapping):
+                return malformed("HL_POSITION_EVIDENCE_MALFORMED")
+            payload = row.get("position", row)
+            if not isinstance(payload, Mapping):
+                return malformed("HL_POSITION_EVIDENCE_MALFORMED")
+            coin_raw = payload.get("coin")
+            coin = coin_raw.strip().upper() if isinstance(coin_raw, str) else coin_raw
+            raw_size = payload.get("szi", payload.get("size"))
+            if (
+                not isinstance(coin, str)
+                or not coin.strip()
+                or isinstance(raw_size, bool)
+                or raw_size is None
+            ):
+                return malformed("HL_POSITION_EVIDENCE_MALFORMED")
+            try:
+                size = float(raw_size)
+            except (TypeError, ValueError, OverflowError):
+                return malformed("HL_POSITION_EVIDENCE_MALFORMED")
+            if not math.isfinite(size):
+                return malformed("HL_POSITION_EVIDENCE_MALFORMED")
+            if coin in positions:
+                return PortfolioEvidence(*[
+                    ComponentEvidence(
+                        kind=kind,
+                        source="HL_INFO",
+                        status=ReconcileComponentStatus.CONFLICTING,
+                        observed_ts=observed_ts,
+                        reason_code="HL_POSITION_CONFLICTING",
+                    )
+                    for kind in kinds
+                ])
+            positions[coin] = size
+            if capture_exposure:
+                # TS-P1-008: from the SAME user_state read, retain the official
+                # positionValue (nonnegative gross mark notional), the reported
+                # leverage and the directional liquidationPx. positionValue is a
+                # required float string in the Hyperliquid contract; a missing
+                # or negative one is malformed evidence, never repaired.
+                # liquidationPx is optional (absent on a flat position) and is
+                # recorded as-is; the risk gate fails closed on a missing price
+                # for a nonzero position.
+                position_value = self._reconcile_float(payload.get("positionValue"))
+                if position_value is None or position_value < 0:
+                    return malformed("HL_POSITION_EVIDENCE_MALFORMED")
+                leverage_raw = payload.get("leverage")
+                if not isinstance(leverage_raw, Mapping) or "value" not in leverage_raw:
+                    return malformed("HL_POSITION_EVIDENCE_MALFORMED")
+                leverage_val = leverage_raw["value"]
+                leverage = self._reconcile_float(leverage_val)
+                if leverage is None or leverage <= 0.0:
+                    return malformed("HL_POSITION_EVIDENCE_MALFORMED")
+                liquidation_raw = payload.get("liquidationPx")
+                liquidation_px = (
+                    None
+                    if liquidation_raw in (None, "")
+                    else self._reconcile_float(liquidation_raw)
+                )
+                if liquidation_raw not in (None, "") and liquidation_px is None:
+                    return malformed("HL_POSITION_EVIDENCE_MALFORMED")
+                rich_rows[coin] = {
+                    "symbol": coin,
+                    "size": size,
+                    "position_value": position_value,
+                    "liquidation_px": liquidation_px,
+                    "leverage": leverage,
+                }
+
+        equity = self._reconcile_float(summary.get("accountValue"))
+        margin_used = self._reconcile_float(summary.get("totalMarginUsed"))
+        withdrawable = self._reconcile_float(state.get("withdrawable"))
+        if equity is None or margin_used is None or withdrawable is None:
+            return malformed("HL_ACCOUNT_EVIDENCE_MALFORMED")
+        # Deliberately unclamped: the accepted adapter's `max(..., 0.0)` is a
+        # silent repair, which a reconciliation snapshot must never do.
+        available = equity - margin_used
+        inconsistent = (
+            min(equity, margin_used, withdrawable, available) < 0
+            or withdrawable > equity
+            or margin_used > equity
+        )
+        account_status = (
+            ReconcileComponentStatus.CONFLICTING
+            if inconsistent
+            else ReconcileComponentStatus.COMPLETE
+        )
+        account_reason = (
+            "HL_ACCOUNT_ARITHMETIC_INCONSISTENT"
+            if inconsistent
+            else "HL_ACCOUNT_COMPLETE"
+        )
+        return PortfolioEvidence(
+            positions=ComponentEvidence(
+                kind=ReconcileComponentKind.POSITIONS,
+                source="HL_INFO",
+                status=ReconcileComponentStatus.COMPLETE,
+                observed_ts=observed_ts,
+                rows=tuple(
+                    rich_rows[coin]
+                    if capture_exposure
+                    else {"symbol": coin, "size": positions[coin]}
+                    for coin in sorted(positions)
+                ),
+                exact=True,
+                complete=True,
+                reason_code="HL_POSITIONS_COMPLETE",
+                call_count=1,
+                page_count=1,
+            ),
+            balances=ComponentEvidence(
+                kind=ReconcileComponentKind.BALANCES,
+                source="HL_INFO",
+                status=account_status,
+                observed_ts=observed_ts,
+                rows=({"equity": equity, "withdrawable": withdrawable},),
+                exact=not inconsistent,
+                complete=not inconsistent,
+                reason_code=account_reason,
+                call_count=0,
+                page_count=1,
+            ),
+            margin=ComponentEvidence(
+                kind=ReconcileComponentKind.MARGIN,
+                source="HL_INFO",
+                status=account_status,
+                observed_ts=observed_ts,
+                rows=({"margin_used": margin_used, "available_margin": available},),
+                exact=not inconsistent,
+                complete=not inconsistent,
+                reason_code=account_reason,
+                call_count=0,
+                page_count=1,
+            ),
+        )
+
+    async def open_orders_evidence(self) -> ComponentEvidence:
+        """Authoritative live open-order rows; ambiguity is never dropped."""
+        kind = ReconcileComponentKind.OPEN_ORDERS
+        if self.info is None or not hasattr(self.info, "open_orders"):
+            return self._reconcile_unavailable(kind, "HL_NOT_CONFIGURED")
+        try:
+            raw_orders = await asyncio.to_thread(
+                self.info.open_orders, self.account_address
+            )
+        except Exception as exc:  # noqa: BLE001
+            return self._reconcile_unavailable(
+                kind, f"HL_OPEN_ORDER_QUERY_FAILED:{type(exc).__name__.upper()}"[:96]
+            )
+        observed_ts = datetime.now(UTC)
+        try:
+            orders = self._parse_recovery_open_orders(raw_orders)
+        except (KeyError, TypeError, ValueError, OverflowError):
+            return ComponentEvidence(
+                kind=kind,
+                source="HL_INFO",
+                status=ReconcileComponentStatus.MALFORMED,
+                observed_ts=observed_ts,
+                reason_code="HL_ORDER_EVIDENCE_MALFORMED",
+            )
+        rows: dict[str, dict[str, object]] = {}
+        for order in orders:
+            row = {
+                "cloid": order.cloid,
+                "oid": order.oid,
+                "coin": order.coin,
+                "side": order.side,
+                "size": float(order.size),
+                "status": str(order.status),
+                "role": str(order.role),
+                "reduce_only": bool(order.reduce_only),
+            }
+            existing = rows.get(order.cloid)
+            if existing is not None and existing != row:
+                return ComponentEvidence(
+                    kind=kind,
+                    source="HL_INFO",
+                    status=ReconcileComponentStatus.CONFLICTING,
+                    observed_ts=observed_ts,
+                    rows=(existing, row),
+                    reason_code="HL_ORDER_IDENTITY_CONFLICT",
+                )
+            rows[order.cloid] = row
+        return ComponentEvidence(
+            kind=kind,
+            source="HL_INFO",
+            status=ReconcileComponentStatus.COMPLETE,
+            observed_ts=observed_ts,
+            rows=tuple(rows[cloid] for cloid in sorted(rows)),
+            exact=True,
+            complete=True,
+            reason_code="HL_OPEN_ORDERS_COMPLETE",
+            call_count=1,
+            page_count=1,
+        )
+
+    async def fills_evidence(
+        self, *, start_ms: int, end_ms: int
+    ) -> ComponentEvidence:
+        """Time-paginated fills; an unprovable window fails closed."""
+        return await self._paged_info_evidence(
+            kind=ReconcileComponentKind.FILLS,
+            method_name="user_fills_by_time",
+            start_ms=start_ms,
+            end_ms=end_ms,
+            page_limit=self.HL_FILLS_PAGE_LIMIT,
+            history_limit=self.HL_FILLS_HISTORY_LIMIT,
+            parse=self._parse_fill_evidence_row,
+        )
+
+    async def funding_evidence(
+        self, *, start_ms: int, end_ms: int
+    ) -> ComponentEvidence:
+        """Time-paginated funding ledger keyed by the exchange event hash."""
+        return await self._paged_info_evidence(
+            kind=ReconcileComponentKind.FUNDING,
+            method_name="user_funding_history",
+            start_ms=start_ms,
+            end_ms=end_ms,
+            page_limit=self.HL_INFO_PAGE_LIMIT,
+            history_limit=None,
+            parse=self._parse_funding_evidence_row,
+        )
+
+    async def _paged_info_evidence(
+        self,
+        *,
+        kind: ReconcileComponentKind,
+        method_name: str,
+        start_ms: int,
+        end_ms: int,
+        page_limit: int,
+        history_limit: int | None,
+        parse,
+    ) -> ComponentEvidence:
+        method = getattr(self.info, method_name, None) if self.info else None
+        if method is None:
+            return self._reconcile_unavailable(kind, "HL_NOT_CONFIGURED")
+        if int(end_ms) < int(start_ms):
+            return ComponentEvidence(
+                kind=kind, source="HL_INFO",
+                status=ReconcileComponentStatus.STALE, observed_ts=None,
+                reason_code="HL_WINDOW_INVERTED",
+                cursor_start_ms=int(start_ms), cursor_end_ms=int(end_ms),
+            )
+
+        def degraded(
+            status: ReconcileComponentStatus,
+            reason: str,
+            calls: int,
+            pages: int,
+            rows: tuple[Mapping[str, object], ...] = (),
+        ) -> ComponentEvidence:
+            return ComponentEvidence(
+                kind=kind,
+                source="HL_INFO",
+                status=status,
+                observed_ts=datetime.now(UTC),
+                rows=rows,
+                reason_code=reason,
+                cursor_start_ms=int(start_ms),
+                cursor_end_ms=int(end_ms),
+                page_count=pages,
+                call_count=calls,
+            )
+
+        collected: dict[str, dict[str, object]] = {}
+        cursor = int(start_ms)
+        pages = 0
+        while True:
+            if pages >= FULL_RECONCILE_MAX_PAGES:
+                return degraded(
+                    ReconcileComponentStatus.TRUNCATED,
+                    "HL_PAGE_BUDGET_EXCEEDED",
+                    pages,
+                    pages,
+                )
+            pages += 1
+            try:
+                raw = await asyncio.to_thread(
+                    method, self.account_address, cursor, int(end_ms)
+                )
+            except Exception as exc:  # noqa: BLE001
+                return degraded(
+                    ReconcileComponentStatus.UNAVAILABLE,
+                    f"HL_{kind.value}_QUERY_FAILED:{type(exc).__name__.upper()}"[:96],
+                    pages,
+                    pages,
+                )
+            if not isinstance(raw, list):
+                return degraded(
+                    ReconcileComponentStatus.MALFORMED,
+                    f"HL_{kind.value}_EVIDENCE_MALFORMED",
+                    pages,
+                    pages,
+                )
+            page_max_ts = cursor
+            for row in raw:
+                parsed = parse(row)
+                if parsed is None:
+                    return degraded(
+                        ReconcileComponentStatus.MALFORMED,
+                        f"HL_{kind.value}_EVIDENCE_MALFORMED",
+                        pages,
+                        pages,
+                    )
+                effective_ts = int(parsed["effective_ts_ms"])
+                if effective_ts < int(start_ms) or effective_ts > int(end_ms):
+                    return degraded(
+                        ReconcileComponentStatus.MALFORMED,
+                        f"HL_{kind.value}_OUTSIDE_WINDOW",
+                        pages,
+                        pages,
+                        (parsed,),
+                    )
+                identity = str(parsed["event_id"])
+                previous = collected.get(identity)
+                if previous is not None:
+                    # Inclusive page boundaries replay rows; an exact replay is
+                    # idempotent, a conflicting redefinition never is.
+                    if previous != parsed:
+                        return degraded(
+                            ReconcileComponentStatus.CONFLICTING,
+                            f"HL_{kind.value}_IDENTITY_CONFLICT",
+                            pages,
+                            pages,
+                            (previous, parsed),
+                        )
+                    continue
+                collected[identity] = parsed
+                page_max_ts = max(page_max_ts, int(parsed["effective_ts_ms"]))
+            if history_limit is not None and len(collected) >= history_limit:
+                # The endpoint only retains a bounded history; a window that
+                # reaches the cap cannot be proven complete.
+                return degraded(
+                    ReconcileComponentStatus.TRUNCATED,
+                    "HL_HISTORY_LIMIT_REACHED",
+                    pages,
+                    pages,
+                )
+            if len(raw) < page_limit:
+                break
+            if page_max_ts <= cursor:
+                # A full page that did not advance the cursor cannot be walked.
+                return degraded(
+                    ReconcileComponentStatus.TRUNCATED,
+                    "HL_CURSOR_STALLED",
+                    pages,
+                    pages,
+                )
+            cursor = page_max_ts
+        return ComponentEvidence(
+            kind=kind,
+            source="HL_INFO",
+            status=ReconcileComponentStatus.COMPLETE,
+            observed_ts=datetime.now(UTC),
+            rows=tuple(collected[key] for key in sorted(collected)),
+            exact=True,
+            complete=True,
+            reason_code=f"HL_{kind.value}_COMPLETE",
+            cursor_start_ms=int(start_ms),
+            cursor_end_ms=int(end_ms),
+            page_count=pages,
+            call_count=pages,
+        )
+
+    @classmethod
+    def _parse_fill_evidence_row(cls, row: object) -> dict[str, object] | None:
+        """Documented ``userFillsByTime`` record; unusable rows fail closed.
+
+        Identity is the documented ``hash``/``oid``/``time`` triple (or the
+        exchange ``tid`` when the response carries one). Nothing is invented.
+        """
+        if not isinstance(row, Mapping):
+            return None
+        coin = row.get("coin")
+        side = row.get("side")
+        raw_time = row.get("time")
+        raw_hash = row.get("hash")
+        oid = row.get("oid")
+        if (
+            not isinstance(coin, str)
+            or not coin.strip()
+            or not isinstance(side, str)
+            or not side.strip()
+            or isinstance(raw_time, bool)
+            or not isinstance(raw_time, int)
+            or raw_time <= 0
+            or not isinstance(raw_hash, str)
+            or not raw_hash.strip()
+            or isinstance(oid, bool)
+            or not isinstance(oid, int)
+        ):
+            return None
+        size = cls._reconcile_float(row.get("sz"))
+        price = cls._reconcile_float(row.get("px"))
+        normalized_side = str(side).upper()
+        if (
+            size is None
+            or price is None
+            or size <= 0
+            or price <= 0
+            or normalized_side not in {"A", "B", "BUY", "SELL"}
+        ):
+            return None
+        tid = row.get("tid")
+        identity = (
+            str(tid)
+            if isinstance(tid, int) and not isinstance(tid, bool)
+            else f"{raw_hash}:{oid}:{raw_time}"
+        )
+        return {
+            "event_id": identity,
+            "fill_hash": raw_hash,
+            "oid": oid,
+            "coin": coin,
+            "side": normalized_side,
+            "size": size,
+            "px": price,
+            "effective_ts_ms": int(raw_time),
+        }
+
+    @classmethod
+    def _parse_funding_evidence_row(cls, row: object) -> dict[str, object] | None:
+        """Documented ``userFunding`` record.
+
+        Shape: ``{delta:{coin,fundingRate,szi,type:'funding',usdc,nSamples},
+        hash, time}``. ``hash`` is the authoritative event identity, ``delta.usdc``
+        the signed amount, ``delta.coin`` the symbol and ``time`` the effective
+        timestamp. A missing/invalid identity, a non-``funding`` delta type or an
+        unparseable amount fails closed — an identity is never synthesized.
+        """
+        if not isinstance(row, Mapping):
+            return None
+        raw_hash = row.get("hash")
+        raw_time = row.get("time")
+        delta = row.get("delta")
+        if (
+            not isinstance(raw_hash, str)
+            or not raw_hash.strip()
+            or isinstance(raw_time, bool)
+            or not isinstance(raw_time, int)
+            or raw_time <= 0
+            or not isinstance(delta, Mapping)
+        ):
+            return None
+        if str(delta.get("type")) != "funding":
+            return None
+        coin = delta.get("coin")
+        if not isinstance(coin, str) or not coin.strip():
+            return None
+        usdc = cls._reconcile_float(delta.get("usdc"))
+        if usdc is None:
+            return None
+        n_samples = delta.get("nSamples")
+        return {
+            "event_id": raw_hash,
+            "symbol": coin,
+            "amount_usdc": usdc,
+            "effective_ts_ms": int(raw_time),
+            "source": "HL_USER_FUNDING",
+            "funding_rate": cls._reconcile_float(delta.get("fundingRate")),
+            "position_szi": cls._reconcile_float(delta.get("szi")),
+            "n_samples": (
+                int(n_samples)
+                if isinstance(n_samples, int) and not isinstance(n_samples, bool)
+                else None
+            ),
+        }
+
+    @staticmethod
+    def _reconcile_float(value: object) -> float | None:
+        """Strict float parse: no default, no coercion of booleans/None."""
+        if value is None or isinstance(value, bool):
+            return None
+        try:
+            number = float(value)  # type: ignore[arg-type]
+        except (TypeError, ValueError, OverflowError):
+            return None
+        return number if math.isfinite(number) else None
+
     def _check_network_lock(self) -> None:
         if self.network != "mainnet":
             return
         if not (self.enable_live and self.live_ack == LIVE_ACK and self.strategy_live_allowed):
             raise BrokerRefusedLive("mainnet requires CLI flag, HL_LIVE_ACK, and strategy live_allowed")
 
-    def _build_sdk_clients(self) -> None:
+    def _build_sdk_clients(self) -> tuple[object, object]:
         if not self.account_address or not self.api_wallet_key:
             raise HyperliquidNotConfigured("HL_ACCOUNT_ADDRESS and HL_API_WALLET_KEY are required")
         from eth_account import Account
@@ -578,8 +1961,9 @@ class HyperliquidBroker:
 
         base_url = constants.TESTNET_API_URL if self.network == "testnet" else constants.MAINNET_API_URL
         wallet = Account.from_key(self.api_wallet_key)
-        self.info = Info(base_url, skip_ws=False)
-        self.exchange = Exchange(wallet, base_url, account_address=self.account_address)
+        new_info = Info(base_url, skip_ws=False)
+        new_exchange = Exchange(wallet, base_url, account_address=self.account_address)
+        return new_info, new_exchange
 
     async def _detect_account_mode(self) -> None:
         if self.info is None or not hasattr(self.info, "query_user_abstraction_state"):
@@ -625,7 +2009,8 @@ class HyperliquidBroker:
 
     @staticmethod
     def _order_result(role: str, cloid: Cloid, raw: object, qty: float, trigger_px: float | None = None) -> dict:
-        result = {"cloid": str(cloid), "oid": None, "role": role, "status": "OPEN", "qty": qty}
+        status = "FILLED" if isinstance(raw, dict) and "filled" in raw else "OPEN"
+        result = {"cloid": str(cloid), "oid": None, "role": role, "status": status, "qty": qty}
         oid = HyperliquidBroker._extract_oid(raw)
         if oid is not None:
             result["oid"] = oid
@@ -778,7 +2163,7 @@ class HyperliquidBroker:
             size=self._float(row.get("sz", row.get("size"))),
             status=str(row.get("status", "OPEN")),
             role=role,
-            reduce_only=bool(row.get("reduceOnly", row.get("reduce_only", role in {"SL", "TP"}))),
+            reduce_only=bool(row.get("reduceOnly", row.get("reduce_only", False))),
             trigger_px=trigger_px,
             order_type=order_type,
             order_ref=row.get("orderRef", row.get("order_ref")),
@@ -818,8 +2203,25 @@ class HyperliquidBroker:
         spec = self._order_specs.get(cloid, {})
         raw_time = fill.get("time", fill.get("timestamp"))
         ts = datetime.fromtimestamp(float(raw_time) / 1000, tz=UTC) if raw_time is not None else datetime.now(UTC)
+        raw_tid = fill.get("tid")
+        raw_hash = fill.get("hash")
+        fill_id = (
+            str(raw_tid)
+            if isinstance(raw_tid, int) and not isinstance(raw_tid, bool)
+            else (
+                f"{raw_hash}:{oid}:{raw_time}"
+                if isinstance(raw_hash, str)
+                and raw_hash.strip()
+                and isinstance(oid, int)
+                and not isinstance(oid, bool)
+                and raw_time is not None
+                else ""
+            )
+        )
+        if not fill_id:
+            return None
         return FillEvent(
-            fill_id=str(fill.get("tid", fill.get("hash", f"{cloid}:{raw_time}"))),
+            fill_id=fill_id,
             cloid=cloid,
             coin=str(fill.get("coin", spec.get("coin", self.coin))),
             qty=self._float(fill.get("sz", fill.get("qty"))),

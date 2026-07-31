@@ -164,13 +164,14 @@ geçilmez.
 
 ### FAZ D — P2: canlı testnet döngüsü (Barış TAMAMINI önceden onayladı — §0-4)
 
-- [ ] **D1. ARM öncesi kontrol listesi** (hepsi otomatik doğrulanabilir):
+- [x] **D1. ARM öncesi kontrol listesi — PASS 2026-07-13** (hepsi otomatik doğrulanabilir):
   suite yeşil ×2 CWD · B1-B6 kapalı · C2 görevi aktif · C3 config commit'li · testnet bakiye
   ≥900 USDC · reconcile temiz · Telegram heartbeat çalışıyor · `p0_smoke_log.json` +
   `smoke_fill` PASS kayıtlı.
-- [ ] **D2. ARM** — dashboard (127.0.0.1:8790) veya `POST /api/arm` (X-Confirm nonce ile).
-  Onay: §0-4. ARM anı = P2 gün 0; `GLOBAL_HANDOFF` + `03_STATUS`'a kayıt.
-- [ ] **D3. İzleme dönemi (≥10 takvim günü, 24/7)**:
+- [x] **D2. ARM — PASS 2026-07-13T13:00:28.6218649Z** — exactly one `POST /api/arm`,
+  audit events `ARM_REQUEST` + `DISARMED->ARMED`; immediate positions/orders empty.
+  Fresh approval: Barış 2026-07-13 after incident containment and repaired real reconnect gate.
+- [ ] **D3. İzleme dönemi (≥10 takvim günü, 24/7) — ACTIVE, Day 0 = 2026-07-13**:
   - Günlük (herhangi bir model, read-only): `/api/status`, `/api/events?severity=WARN`,
     equity eğrisi, açık pozisyon+SL tutarlılığı; anomali → Telegram zaten atmış olmalı.
   - Config DEĞİŞTİRİLMEZ; kod DEĞİŞTİRİLMEZ (kritik güvenlik hatası hariç — o zaman DISARM →

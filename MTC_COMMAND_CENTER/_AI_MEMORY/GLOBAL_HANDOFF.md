@@ -605,6 +605,44 @@ whitelist). Fable finished the consolidation on real refs:
   harmless; a future session can tidy. Stale worktrees C:/BTOL + C:/FZ3G5 (both merged) can be
   removed later; C:/BFIX pruned.
 
+## [Codex GPT-5] 2026-07-15 — P2 race fix deployed; new Day 0 ARMED at 06:48:16Z
+
+Fable audit PASS plus Barış's explicit Task 4/push go satisfied both gates. One restart window
+deployed detached `C:\P2RT` from `54278b66` to audited tip `cc4ce67d` (race fix `da44d1ff` plus
+Telegram test isolation and golden). Preflight was DISARMED/testnet/paper with positions/orders
+`[]`; both P2RT suites passed `127 passed, 1 warning`. `Stop-ScheduledTask` left child PID `54192`
+alive, so that orphan was terminated once before checkout; port 8790 was closed before sync.
+
+New run `paper-20260715063657` started DISARMED and passed a 10m29s flat observation. Natural
+cycle: `06:47:06.153686Z DISCONNECT -> 06:47:14.370206Z RECONNECT attempt=1 ->
+06:47:39.560468Z DATA_RESTORED`; reconcile `06:47:26.646538Z` succeeded inside the rebuild
+window. Exactly one ARM used `X-Confirm: 2`: `06:48:16.616853Z ARM_REQUEST` then
+`06:48:16.619336Z DISARMED->ARMED`. Post-ARM reconciles at `06:48:28.376718Z` and
+`06:49:29.975312Z` were clean. Final API: ARMED, reconcile-ready, positions/orders `[]`; event
+counts: one ARM request, one ARMED transition, zero ERROR/`RECONCILE_FAILED`/
+`RECONCILE_DEFERRED`. Telegram notifier was enabled and the transition invoked the existing
+`state -> ARMED` notification path; no delivery receipt is persisted. The
+`2026-07-15T06:48:16.619336Z` ARMED transition timestamp is the new P2 Day 0. Full record:
+`IBKR_PAPER_BRIDGE/docs/03_STATUS.md`.
+
+Next: resume D3 daily read-only monitoring for at least 10 uninterrupted calendar days. Any
+DISARM or critical runtime change requires investigation and a fresh complete gate; mainnet
+remains forbidden.
+
+## [Codex GPT-5] 2026-07-14 — P2 race fix built at da44d1ff; Fable audit and deploy approval pending
+
+Executed Tasks 1–3 of `11_TRIAGE/CODEX_P2_RACE_FIX_PROMPT_2026-07-14.md` in the dedicated
+`C:\BFIX` worktree. Commit `da44d1ff` replaces the reconnect-time null-client window with a
+local-build/candle-resubscribe/atomic-swap path, adds the narrow `RECONCILE_DEFERRED` defense for
+`HyperliquidNotConfigured` only while `broker.rebuilding`, and preserves single-strike fail-closed
+behavior for all other cases. Five new deterministic tests cover the real blocked-build race,
+defer contract, fail-closed regressions, and swap integrity. Independent suites passed from both
+required CWDs: `127 passed, 1 warning` each. Staged secret grep was zero; `HL_LIVE_ACK` was unset.
+Builder report: `11_TRIAGE/P2_RACE_FIX_REPORT_2026-07-14.md`.
+
+**STOP boundary:** no deployment, runtime restart, API/broker call, ARM, Day-0 reset, push, or
+`C:\P2RT` mutation occurred. Fable must audit first; Task 4 stays locked until Fable PASS plus
+Barış's explicit go.
 ## [Claude Fable 5] 2026-07-15 — OUTAGE-TOLERANCE FIX AUDIT: PASS + operational finding: P2 bridge process is DOWN (DISARMED/flat/safe)
 
 **Code audit (Task 1-4, `0e644b52`): PASS on real code + runs.**
@@ -967,6 +1005,19 @@ DISARMED with exchange positions/orders empty. Runtime moved to isolated `C:\P2R
 `12:57:21Z DISCONNECT -> 12:57:29Z RECONNECT attempt=1 -> 12:57:39Z DATA_RESTORED`, then
 reconciles at `12:58:29Z` and `12:59:30Z`; no retry/stale/reconcile failure. ARM audit contains one
 `ARM_REQUEST` and one `DISARMED->ARMED`. Post-ARM reconciles at `13:01:32Z` and `13:02:34Z`
+remained ARMED with no positions/orders. D3 ≥10-day monitoring is active. Evidence:
+`IBKR_PAPER_BRIDGE/docs/19_P2_RECONNECT_INCIDENT_2026-07-13.md`.
+
+## [Codex GPT-5] 2026-07-13 — Real QuantLens Keltner golden completed
+
+Commits `bcecdce0`, `04048a0b`, and `5d7e9208` registered the additive QuantLens plumbing strategy
+and produced **858 real signals over 48,077 BTCUSD 1h bars**. Golden run id:
+`QL_MEGA_KELTNER_TRAIL_EMA8_BTCUSD_1h_2026-06-28_01a3f1255e29`. Codex verification found
+deterministic regeneration exactly equal to the saved golden; both bridge test CWDs passed
+(`114 passed, 1 warning`). No bridge runtime, protected scope, exchange, or LLM changes. Entry
+signals are 858/858 identical. At report time, exits were not parity-claimed because bridge
+`trail_level` was SMA-8 while QuantLens used EMA-8; `f209acd2` later corrected that calculation,
+but the golden remains entry-signal evidence only. See `IBKR_PAPER_BRIDGE/docs/18_GOLDEN_REPORT.md`.
 remained ARMED with no positions/orders. D3 >=10-day monitoring is active. Evidence committed on
 `feature/ibkr-bridge-final` at `59352bb3`:
 `IBKR_PAPER_BRIDGE/docs/19_P2_RECONNECT_INCIDENT_2026-07-13.md`.
@@ -1223,6 +1274,37 @@ dimensions A-I, mandatory ≥5 improvements + ≥5 features + top-3 verdict, out
 `docs/audits/AUDIT_<model>_<date>.md` on own branch, report file is the only allowed write.
 Next: Barış runs external audits → Claude triages audits + adopts → pre-reg approval → build day
 per 02_BUILD_PLAN_1DAY.md → P0 smoke (approval-gated).
+## [Codex GPT-5] 2026-07-13 — Impeccable Strategy Detail pilot complete
+
+Finished the two queued R3 polish items on `feature/mcc-ui-impeccable-fixes`: fix 4 full-credit
+note dedup is screenshot-verified in `adeb889b`; fix 5 makes the sticky right rail the canonical
+gate verdict and removes dead duplicate helpers/CSS in `93114a61`, with committed before/after
+screenshots. Live `:8765/dashboard` verification on
+`QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK` confirmed no hero gate KPI panel, no Gate Status
+Summary grid, and one Decision Summary rail. `node --check` PASS; focused a11y tests `2 passed`.
+The canonical dashboard API suite also passed: `Ran 120 tests`, `OK`.
+Honest re-score: **32/40 Good** (from 30/40), with loading skeleton, shortcuts, and taxonomy density
+still open quality gaps. Report: `11_TRIAGE/UI_AUDITS/IMPECCABLE_PILOT_R3/CRITIQUE_RESCORE_2026-07-13.md`.
+Frontend/docs only; no backend, data-contract, engine, Pine, parity, schema, or execution change.
+## [Codex GPT-5] 2026-07-13 — D016 Path A frozen; deferred forward confirmation only
+
+Barış approved Claude's recommended Path A: “yol a onaylıyorum sen işlemi yap.” Recorded D016 and created `00_AGENT_PROTOCOLS/FAZ3B_STAGE2_FORWARD_CONFIRM_PREREG_2026-07-13.md`. The genuinely future temporal holdout is fixed now: 1h sessions 2026-07-14 through 2028-07-13, earliest evaluation 2028-07-14; symbols/groups SPY+IWM (broad market), XLF+XLE (cyclical sectors), XLV+XLP (defensive sectors); primary Keltner `{50,10,2.0}` only, with four diagnostic-only star neighbors. Confirmation requires EXIT-INCREMENTAL evidence in at least two groups. No AAPL reference and no substitutions.
+
+D016 is deliberately narrow: scope freeze and passive calendar accrual only. It does not approve exit-aware CPCV/multi-window/PBO code, data ingestion, runner/smoke/backtest/gauntlet execution, paper/live trading, or promotion. The original Stage-2 draft remains permanently blocked. Next approval-gated item is the exit-aware tooling contract; future evaluation additionally requires a complete artifact-level historical trial ledger, post-window data inventory, fresh Gate-5, and one-shot execution approval.
+
+## [Codex GPT-5] 2026-07-13 — FAZ 3B Stage-2 pre-registration drafted; D016 required
+
+Completed and audited the document-only Stage-2 confirmation pre-registration at
+`00_AGENT_PROTOCOLS/FAZ3B_STAGE2_CONFIRM_PREREG_2026-07-13.md`. It carries forward the clean
+Stage-1 lead (GEN_KELTNER_BREAKOUT × AAPL × 1h × trail_ema8, STRONG_PASS, union-DSR 0.581) while
+controlling the KELTNER-1h confound with held-out GOOGL/META/AMD/NFLX/DIA/IWM decision cells,
+fixed_2R twins, and AAPL reference-only rows. Exact scope: one strategy, one timeframe, two exits,
+12 literal winner-neighborhood configs, 14 result rows / 168 new trials, union family N=219.
+Promotion gates and outcome actions are frozen in writing: union-DSR ≥0.95, BH-FDR, positive
+buy-and-hold alpha, CPCV ≥0.70, PBO<0.5, canonical 3/5 multi-window plus ≥70% neighbor stability.
+Status remains **DRAFT — AWAITING BARIŞ APPROVAL**. Next: Gate-5 review, apply required edits, then
+Barış approval recorded as D016. No runner code, smoke, run, engine/Pine/parity/registry/schema edit,
+or trading action occurred.
 
 ## Claude Opus 4.8 2026-07-05 (6) — audit cleanup (4 remaining items) done + pushed to origin/master
 
@@ -3660,3 +3742,72 @@ Codex re-audited repair commit `851d88a0` and issued **BLOCK** again (`11_TRIAGE
 Second repair commit `a15a6b1f6648016fe99278fe993daa2c1b49b923` (parent verified exactly `851d88a084875e48b63fba455cb7b27f357c5ac4`, same 3 files): replaced `MappingProxyType(dict)` entirely with a small private `_ImmutableMapping(collections.abc.Mapping)` backed by a `tuple` of `(key, value)` pairs (`__slots__`, no `__dict__`) for both `ORDER_STATE_TRANSITIONS` and `RAW_ORDER_STATUS_ALIASES` — tuples can't be mutated in place, so no `dict`/`list` exists anywhere in either export's transitive `gc.get_referents` closure (confirmed: 56 and 20 referents walked, zero mutable containers). `UnknownRawOrderStatusError`'s message is now a constant string per `reason_code`, touching no attribute of `raw`/`type(raw)` at all (not even `__name__`), uniformly across all three reason codes. Added 5 regression tests (80→85): hostile-metaclass test, plus transitive gc-referent scan + mutation-attempt tests for both exports. Full suite 303/303 (218+85) identical both required CWDs. Fresh-process re-probes confirm both residual findings closed.
 
 Full detail: `11_TRIAGE/CLAUDE_TSP1001_REPAIR2_REPORT_2026-07-20.md`. Next: independent Codex re-audit of `a15a6b1f`; TS-P1-002 remains blocked until re-audit passes and Barış accepts the PROPOSED contract (5 open design questions still unresolved, unchanged by either repair round). No push/PR/P2RT/next-task action.
+## Codex GPT-5 2026-07-15 — P2 outage-tolerance Tasks 1-4 built; audit pending
+
+Built the approved paper-testnet outage-tolerance change on `feature/ibkr-bridge-final` in dedicated worktree `C:\BTOL`. Code commit `0e644b52` adds three-consecutive-failure reconcile tolerance with success reset, a config-driven nine-attempt/315-second websocket reconnect budget, and explicit Telegram suppression for routine disconnect/first-reconnect/data-restored chatter while retaining all DB events and escalated alerts.
+
+Deterministic coverage includes third-strike disarm, 2-fail/success/2-fail reset, rebuild defer versus genuine nonconfiguration, 195-second simulated recovery without stale, 315-second exhaustion with real stale-disarm callback, and notifier/store separation. Full suites passed from both required CWDs: `130 passed` from `C:\BTOL` and `130 passed` from `C:\BTOL\IBKR_PAPER_BRIDGE`. Staged 64+-hex secret scan: zero matches.
+
+Detailed evidence and honest delegation anomalies: `MTC_COMMAND_CENTER/11_TRIAGE/P2_OUTAGE_TOLERANCE_REPORT_2026-07-15.md`. `C:\P2RT` remains untouched at detached `cc4ce67d`; no deploy, restart, ARM, push, or PR merge was performed. Task 5 requires Fable PASS plus Barış go. Task 6 remains post-audit.
+
+## Codex GPT-5 2026-07-15 — P2 Day 0 v4 deployed; post-ARM audit pending
+
+After Fable PASS and Barış's one-ARM go, deployed audited tip `1465f8f0` to the detached
+`C:\P2RT` worktree through the existing `MTC-Bridge-P2` scheduled task. Both P2RT suites passed
+`130 passed, 1 warning`. Run `paper-20260715105547` started DISARMED, testnet, reconcile-ready,
+and flat.
+
+The DISARMED gate began at `10:56:23.8748664Z`, stayed flat and error-free, and observed the
+required `11:07:13.425338Z DISCONNECT -> 11:07:20.454025Z RECONNECT attempt=1 ->
+11:07:21.465900Z DATA_RESTORED` cycle. `/api/bars` then advanced from the `10:00Z` bar
+(`1784109600`) to the newly persisted `11:00Z` bar (`1784113200`) at `12:00:37.9423549Z`.
+
+Exactly one ARM used `X-Confirm: 2`: event id 839 `ARM_REQUEST` at `12:02:42.853744Z`, followed
+by event id 840 `DISARMED->ARMED` at `12:02:42.856537Z`. Clean post-ARM reconciles landed at
+`12:03:27.534022Z` and `12:04:28.442119Z`; state remained ARMED with positions/orders `[]`, one
+ARM request, one ARMED transition, and zero post-ARM bad events. The state-notification code path
+ran, but Telegram delivery is not externally observable from the bridge logs and is not claimed.
+
+Day 0 v4 is validation-tier. The planned July 18 PC-off is a window boundary; definitive D3
+starts on the VPS. Task 5 runtime work is complete. Task 6 PR merges and Fable post-ARM audit
+remain to be closed in this session.
+## [Codex GPT-5] 2026-07-13 — Gate-5 adversarial review
+
+Completed the written-only Gate-5 review of `00_AGENT_PROTOCOLS/FAZ3B_STAGE2_CONFIRM_PREREG_2026-07-13.md`. Overall verdict: **FATAL; D016 blocked on the current draft.** All six proposed held-out decision symbols already have prior `GEN_KELTNER_BREAKOUT` 1h results on the identical 2020-07-27 through 2026-06-26 observation window. The existing CPCV and multi-window tools also omit `exit_mode` and therefore silently score `fixed_2R`, while the PBO tool lacks the required per-configuration common-period matrix.
+
+Deliverable: `11_TRIAGE/CODEX_GATE5_FINDINGS_FAZ3B_STAGE2_2026-07-13.md`, with A–J verdicts, evidence, apply-ready required edits, non-blocking improvements, and explicit unverifiable items. No backtest, smoke, runner, CPCV, PBO, multi-window, pytest, paper-trading, or live action was executed. Stop point: Fable synthesis and pre-reg repair; a second adversarial re-review is required before Baris considers D016.
+
+## Codex GPT-5 2026-07-15 — Task 6 stopped at PR #19 registry conflict
+
+PR #16 merged remotely as `20237733`. In isolated `C:\P2MERGE`, PR #17 merged locally as
+`60415b08` and PR #18 as `89725dfe`; each conflicted only in `GLOBAL_HANDOFF.md` and received a
+full union resolution with zero secret matches. Neither local merge was pushed.
+
+PR #19 then conflicted in `05_REGISTRY/RESEARCH_RUN_REGISTRY.json` as well as the two approved
+memory files. This triggered the prompt's explicit stop condition. The #19 merge was aborted,
+local master is clean at `89725dfe`, remote master remains `20237733`, and PRs #17–#19 remain
+OPEN. No final master suite was claimed because all four PRs did not land.
+
+Full Task-5 live evidence and Task-6 stopped-state evidence:
+`MTC_COMMAND_CENTER/11_TRIAGE/P2_DAY0_V4_DEPLOY_REPORT_2026-07-15.md`. The live bridge remained
+ARMED/reconcile-ready/flat at the final check. Fable must audit before any registry-conflict
+resolution or further merge action.
+
+## [Codex GPT-5] 2026-07-16 — P2 data-restore timeout fix built; Fable audit locked
+
+Built the approved 60-to-300-second post-reconnect data-restore timeout on
+`feature/ibkr-bridge-final` in isolated `C:\BTL2`. Implementation commit `79976577` adds only
+the broker YAML value and `app.py`/`BridgeEngine` wiring; `bars.py`, notification behavior,
+reconcile behavior, trading logic, and protected scopes are unchanged.
+
+Test-first evidence: the final focused set failed on exact pre-fix production files with
+`1 failed, 2 passed` (missing engine/config wiring). After the fix, the focused set passed
+`3 passed`; both complete suites passed `132 passed, 1 warning` from the repo root and bridge
+CWD. The tests cover fresh data at 240 seconds, explicit legacy 60-second stale/disarm, never-
+fresh stale/disarm after 300 seconds, and YAML-to-`BarFeed` wiring. Staged 64+-hex secret scan
+was zero.
+
+No real-data run, broker/API action, deploy, restart, DISARM, or ARM occurred. `C:\P2RT` remains
+clean and detached at `1465f8f0`. Detailed evidence:
+`MTC_COMMAND_CENTER/11_TRIAGE/P2_DATA_RESTORE_TIMEOUT_REPORT_2026-07-16.md`. STOP for Fable to
+audit real code, independently rerun suites and the pre-fix failure, and record PASS before deploy.

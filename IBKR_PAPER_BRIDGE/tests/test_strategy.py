@@ -5,6 +5,8 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+import pytest
+
 from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
 from bridge.engine.types import Bar
 
@@ -61,13 +63,62 @@ def test_keltner_strategy_matches_golden_signal_timestamps():
     assert comparable == expected
 
 
-def test_keltner_strategy_trail_level_uses_ema8_for_long_position():
+def _synthetic_bars(closes: list[float]) -> list[Bar]:
+    return [
+        Bar(
+            ts=datetime(2026, 1, 1),
+            open=close,
+            high=close,
+            low=close,
+            close=close,
+            volume=0,
+        )
+        for close in closes
+    ]
+
+
+def test_trail_level_ema8_exact_recursive_match():
+    """Synthetic prices where last-8 SMA != full-history EMA; verify exact recursive EMA."""
+    closes = [10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0]
+    bars = _synthetic_bars(closes)
     strategy = KeltnerTrailEma8()
-    bars = _load_bars(FIXTURES / "BTC_1h_real.csv")[:30]
 
     class Position:
         size = 1.0
 
     trail = strategy.trail_level(bars, Position())
     assert trail is not None
-    assert trail > 0
+    assert sum(closes[-8:]) / 8 == 65.0
+    assert trail == pytest.approx(68.64558996000855, rel=1e-12)
+
+
+def test_trail_level_ema8_long_short_same_level():
+    """Both long and short position produce identical trail level."""
+    closes = [10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0]
+    bars = _synthetic_bars(closes)
+    strategy = KeltnerTrailEma8()
+
+    class PositionLong:
+        size = 1.0
+
+    class PositionShort:
+        size = -1.0
+
+    long_trail = strategy.trail_level(bars, PositionLong())
+    short_trail = strategy.trail_level(bars, PositionShort())
+
+    assert long_trail is not None
+    assert short_trail is not None
+    assert long_trail == short_trail
+
+
+def test_trail_level_ema8_insufficient_history():
+    """Return None when fewer bars than trail_ema."""
+    closes = [10.0, 20.0, 30.0, 40.0]  # only 4 bars, trail_ema=8
+    bars = _synthetic_bars(closes)
+    strategy = KeltnerTrailEma8()
+
+    class Position:
+        size = 1.0
+
+    assert strategy.trail_level(bars, Position()) is None

@@ -31,6 +31,15 @@ Atlama YASAK. Skip yaparsan A1-A15 anti-pattern'lerinden birini tekrarlarsın.
 - **Runtime ↔ budget kontrolü (A22, ZORUNLU — "just start"ta bile):** Stage-0'da en yeni `lessons_archive/*` oku. Birkaç hücre smoke ile runtime'ı tahmin et. Sweep budget'tan KISA bitecekse: YA heavy-validation tier ekle (±2 grid, 50k bootstrap, multi-seed DSR, CPCV-all, PBO, +sembol/TF) YA DA makineyi bırak (idle box'ı keep-awake'te tutma). Deterministik sweep'i tekrar koşma = sıfır bilgi (A19).
 - OUTPUT_DIR (CLEAN repo default — env override gerek mi)
 
+### Backtest Stage 1.1 — Held-out-data virginity (MANDATORY)
+
+`RESEARCH_RUN_REGISTRY.json` is a dashboard index, not a complete evidence inventory. Before
+freezing any held-out strategy/symbol/timeframe/window scope, recursively scan prior result JSONs
+under both `03_QUANTLENS/05_BACKTEST_RESULTS/` and `03_QUANTLENS/research/` for the same strategy,
+symbol, timeframe, and observation window. Disclose every hit in the pre-registration. A hit
+requires an amended scope and fresh written approval before execution; never silently replace or
+drop a cell. Registry lookup alone never proves virginity.
+
 ### Backtest Stage 1.5 — In-day single strategy minimum akış (kısa)
 Aşağıdakileri ATLAMA bile in-day 5dk run'da:
 ```bash
@@ -102,7 +111,8 @@ echo $! > overnight_runs/loop.pid
 
 ## Backtest Stage 5 — Cross-model review
 
-Repository Gate 5 remains mandatory for every non-trivial backtest-related change. Use the exact `AGENTS.md` CANONICAL AUDIT ROSTER: Claude audit equals `claude-opus-5` plus `xhigh`; Codex audit equals `gpt-5.6-sol` plus `high` for an ordinary review or `xhigh` for protected surfaces and every re-audit after `REQUEST_CHANGES` or `BLOCK`. Every audit round uses a fresh independent session. Verdicts are `PASS` / `PASS-WITH-NITS` / `REQUEST_CHANGES` / `BLOCK`, with at most 3 repair/re-audit rounds. MTC V2, Pine, parity, trading, and other protected-surface changes still require explicit Barış approval before implementation.
+QuantLens research = parity touch DEĞİL → Gate 5 opsiyonel (ama önerilir).
+MTC V2 / Pine üzerinde değişiklik varsa Gate 5 **zorunlu** (Codex / Gemini'ye review attır).
 
 ## Backtest Stage 6 — QA (post-loop)
 
@@ -122,7 +132,7 @@ python aggregate_overnight_iters.py
 1. `lessons_archive/OVERNIGHT_LESSONS_YYYY-MM-DD.md` yaz (ham gözlem, B-numaralı bulgular)
 2. Yeni anti-pattern → `BACKTEST_OPTIMIZATION_RUNBOOK.md` §8 tablosuna ekle
 3. `lessons_archive/OVERNIGHT_LESSONS_INDEX.md` yeni satır
-4. `_AI_MEMORY/GLOBAL_HANDOFF.md` güncelle
+4. `_AI_MEMORY/GLOBAL_HANDOFF.md` + `SESSION_LOG.md` güncelle
 5. `NEXT_STEPS.md` yarın yapılacaklar
 
 ## WRITE-BACK
@@ -132,4 +142,5 @@ Bu prompt biterken zorunlu dosya güncellemeleri:
 - `11_TRIAGE/lessons_archive/OVERNIGHT_LESSONS_INDEX.md` (satır ekle)
 - `11_TRIAGE/BACKTEST_OPTIMIZATION_RUNBOOK.md` (anti-pattern merge, CHANGELOG)
 - `_AI_MEMORY/GLOBAL_HANDOFF.md`
+- `_AI_MEMORY/SESSION_LOG.md`
 - `_AI_MEMORY/NEXT_STEPS.md`

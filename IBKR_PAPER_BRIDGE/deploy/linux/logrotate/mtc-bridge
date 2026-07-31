@@ -1,0 +1,26 @@
+# /etc/logrotate.d/mtc-bridge — persistent bridge log rotation.
+#
+# The unit writes with StandardOutput=append:, so the file handle stays open for
+# the process lifetime. `copytruncate` therefore rotates without needing a
+# service restart — restarting the bridge to rotate a log is forbidden.
+#
+# Frozen policy (KVM2-P2-04): daily, 30 generations retained, compressed with a
+# one-generation delay, size-triggered early rotation at 64M, empty files
+# skipped, missing files tolerated. The forced-rotation test that proves this
+# works (`logrotate -f /etc/logrotate.d/mtc-bridge`) runs at KVM2-P4-07, before
+# the first DISARMED start is accepted.
+
+/var/log/mtc-bridge/*.log {
+    daily
+    rotate 30
+    size 64M
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    dateext
+    dateformat -%Y%m%d
+    su mtc-bridge mtc-bridge
+    create 0640 mtc-bridge mtc-bridge
+}
