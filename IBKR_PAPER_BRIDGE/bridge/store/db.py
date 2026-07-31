@@ -6360,6 +6360,20 @@ class Store:
             )
         return parsed.astimezone(UTC)
 
+    @staticmethod
+    def _canonical_trade_close_values(
+        *,
+        direction: str,
+        entry_qty: float,
+        entry_px: float,
+        exit_px: float,
+        costs: float,
+    ) -> tuple[float, float]:
+        """Return the one canonical gross/PnL computation used at write and verify."""
+        sign = 1 if direction == "LONG" else -1
+        gross = (exit_px - entry_px) * entry_qty * sign
+        return gross, gross - costs
+
     def _expected_kill_flatten_closure_in_tx(
         self, lifecycle: Mapping[str, Any]
     ) -> dict[str, Any]:
@@ -6427,9 +6441,13 @@ class Store:
                 "KILL_FLATTEN_LIFECYCLE_CONFLICT",
                 "flatten lifecycle entry remainder is invalid",
             ) from exc
-        sign = 1 if direction == "LONG" else -1
-        gross = (exit_px - entry_px) * entry_qty * sign
-        pnl = gross - costs
+        gross, pnl = self._canonical_trade_close_values(
+            direction=direction,
+            entry_qty=entry_qty,
+            entry_px=entry_px,
+            exit_px=exit_px,
+            costs=costs,
+        )
         if not math.isfinite(gross) or not math.isfinite(pnl):
             raise KillConflictError(
                 "KILL_FLATTEN_LIFECYCLE_CONFLICT",
@@ -6522,20 +6540,12 @@ class Store:
         if (
             trade_exit_ts != expected["exit_ts"]
             or decision_ts != expected["exit_ts"]
+            or type(trade_row.get("exit_px")) is not type(expected["exit_px"])
+            or type(trade_row.get("pnl")) is not type(expected["pnl"])
             or not math.isfinite(trade_exit_px)
             or not math.isfinite(trade_pnl)
-            or not math.isclose(
-                trade_exit_px,
-                expected["exit_px"],
-                rel_tol=0.0,
-                abs_tol=1e-12,
-            )
-            or not math.isclose(
-                trade_pnl,
-                expected["pnl"],
-                rel_tol=0.0,
-                abs_tol=1e-12,
-            )
+            or trade_exit_px != expected["exit_px"]
+            or trade_pnl != expected["pnl"]
             or str(trade_row.get("exit_reason") or "")
             != expected["exit_reason"]
             or str(decision.get("decision_uid") or "")
@@ -7336,10 +7346,25 @@ class Store:
         exit_reason: str,
         pnl: float,
         payload: dict[str, Any],
+        *,
+        epoch: KillEvidenceEpoch | None = None,
     ) -> bool:
         """Atomically close one open trade and append its close decision."""
         ts_iso = _to_iso(exit_ts)
-        with self.conn:
+        resolved_epoch = epoch
+        if exit_reason == "KILL_FLATTEN":
+            self._require_kill_schema()
+            if resolved_epoch is None:
+                raise KillConflictError(
+                    "KILL_EPOCH_REQUIRED",
+                    "kill flatten lifecycle close requires the caller-owned epoch",
+                )
+        if resolved_epoch is not None:
+            resolved_epoch = self._require_kill_epoch(resolved_epoch)
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            if resolved_epoch is not None:
+                self._assert_kill_epoch_in_tx(resolved_epoch)
             cursor = self.conn.execute(
                 """
                 UPDATE trades
@@ -7349,6 +7374,7 @@ class Store:
                 (exit_px, ts_iso, exit_reason, pnl, trade_id),
             )
             if cursor.rowcount != 1:
+                self.conn.rollback()
                 return False
             self.conn.execute(
                 """
@@ -7358,6 +7384,18 @@ class Store:
                 """,
                 (decision_uid, run_id, ts_iso, coin, trade_id, _json(payload)),
             )
+            self.conn.commit()
+        except Exception as exc:
+            self.conn.rollback()
+            if (
+                resolved_epoch is not None
+                and isinstance(exc, KillConflictError)
+                and exc.reason_code == "KILL_EPOCH_STALE_WRITE"
+            ):
+                self._record_stale_epoch_rejection(
+                    resolved_epoch, "CLOSE_TRADE_LIFECYCLE"
+                )
+            raise
         return True
 
     def _run_environment(self, run_id: str) -> tuple[str, str]:

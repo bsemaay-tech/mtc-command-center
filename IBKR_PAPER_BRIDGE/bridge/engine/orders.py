@@ -3188,10 +3188,14 @@ class OrderManager:
                         self._synced_fills.add(fill.fill_id)
                         return True
                     exit_vwap = float(totals["exit_vwap"])
-                    sign = 1 if trade["direction"] == "LONG" else -1
-                    gross = (exit_vwap - entry_px) * entry_qty * sign
                     costs = self.store.trade_costs(str(order["decision_uid"]))
-                    pnl = gross - costs
+                    gross, pnl = self.store._canonical_trade_close_values(
+                        direction=str(trade["direction"]),
+                        entry_qty=entry_qty,
+                        entry_px=entry_px,
+                        exit_px=exit_vwap,
+                        costs=costs,
+                    )
                     closed = self.store.close_trade_once_with_decision(
                         trade_id=int(trade_id),
                         run_id=self.run_id,
@@ -3210,6 +3214,11 @@ class OrderManager:
                             "exit_vwap": exit_vwap,
                             "qty": entry_qty,
                         },
+                        epoch=(
+                            self._active_kill_epoch
+                            if role == "KILL_FLATTEN"
+                            else None
+                        ),
                     )
                     if not closed:
                         self._quarantine_fill(
