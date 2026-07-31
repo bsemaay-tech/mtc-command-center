@@ -1,5 +1,501 @@
 # GLOBAL_HANDOFF
 
+## [Claude Opus 5] 2026-07-30 — 50-Hour Plan documentation repair/audit cycle ACCEPTED
+
+Owner-authorized documentation-only repair + audit cycle on `09_DOCS/ROADMAPS/TRADING_SYSTEM/TRADING SYSTEM — 50-HOUR ACCELERATED IMPLEMENTATION PLAN.md`. **ACCEPTED** — both canonical audits returned PASS-WITH-NITS with zero required repairs. Baseline `87a25792` (owner-supplied hash verified) → **final `a07c90cc49a4f34910f82bd9c94ba4fb71d76b511bc2cabe0bd727faf57fe3ee`** (1879 lines). Roles: Claude `claude-opus-5` Lead/acceptance, Codex CLI `gpt-5.6-sol` sole document implementer, canonical auditors Claude `claude-opus-5` xhigh (fresh) + Codex `gpt-5.6-sol` xhigh (ephemeral read-only), DeepSeek CLI read-only supplemental. Two non-accepting rounds used of three permitted.
+
+Four commissioned repairs all verified fixed: (1) **staging lifecycle** — 5 premature-discard sites removed; single Gate-A-authorized host now retained through WP-L Phase 2 → WP-I staging verification → WP-A, discarded only after WP-A + evidence capture; new canonical `## Staging Host Lifecycle` block in §18. (2) **contingency/audit sequencing** — §34 no longer draws WP-R after the SHA freeze; audits sit at real checkpoints in both §23a and §34; explicit repair→refreeze→re-audit loop in six places; WP-R strictly audit-only; unfunded routes openly BLOCK-routed. (3) **model roles** — prior GLM-5.2 edit marked verbatim a **"docs-only and non-precedential exception"** in §23c and §39-10, denying GLM/DeepSeek/Grok/NVIDIA/Cline any protected Bridge/core-runtime implementation or canonical G5/G6 audit authority. (4) **terminology** — zero bare "Phase 2"; three binding terms in new §6.1.
+
+Two extra defects found mid-cycle and fixed: **Audit-1 double-funding** (§16 budgeted 2h+2h of G5/6 inside WP-S while §20/§34 assigned Audit 1 to WP-R — resolved with no number change: WP-S funds the first pass only, `Gate-5/6`→`Gate-5`, WP-R funds Audit 2/3/Gate-6 + all re-audits); and the **post-discard repair loop being unexecutable/unfunded/unrouted** (a repair at Audit 3/Gate-6 would invalidate WP-A Ubuntu evidence after the only host was gone — resolved by declaring Audit 3/Gate-6 artifact+evidence-level with no Ubuntu execution, then splitting post-discard repairs into Case 1 hostless loop vs Case 2 → BLOCK, with a new Gate-A-class authorization named as outside the budget).
+
+Budget unchanged and independently recomputed by both auditors: 2+12+8+6+3+6+8+5 = **50 h**; WP-S 4/2/4/2 = 12; WP-L (2+3+1)+2 = 8. Safety boundary verified intact: DISARMED endpoint, TESTNET/paper-simulated only, mainnet forbidden, ARM + first paper order + soak outside budget requiring separate owner gates, no invented thresholds/credentials/secrets.
+
+8 optional nits carried forward (none blocking) — see the record. **No Git command was run**; repo state identical to cycle start plus this record (89 porcelain entries). Target file remains untracked, so no committed baseline exists and neither auditor could diff against a prior revision — both recommend committing. Tooling: **Cline CLI is broken** (`Cannot find module .../cline/bin/cline`), affecting the AGENTS.md TOKEN DISCIPLINE first-choice path; DeepSeek CLI used instead.
+
+Full detail: `11_TRIAGE/PLAN50H_REPAIR_AUDIT_CYCLE_2026-07-30.md`. Next: owner decides plan acceptance, whether to commit the roadmap directory, and whether to apply nits. **No WP-0, implementation, VPS, staging, TESTNET, deployment or ARM action has begun or is authorized by this cycle.**
+
+## [Claude Sonnet 4.6] 2026-07-27 — GLM quota-efficient supplemental routing policy
+
+Implemented `AGENTS.md` §GLM SUPPLEMENTAL ROUTING as the canonical single-source Z.AI Coding Plan model-selection policy (facts Lead-verified 2026-07-27, time-sensitive). Four-tier routing table added: cheapest (4.5-Air if route supports) → GLM-4.7 → GLM-5.1 (only if entitlement confirmed) → GLM-5.2 (protected/flagship only, never merely because available). Cheapest-capable decision tree and six examples (simple docs, mechanical test update, ordinary Bridge bug, protected risk/persistence, Gate-5 audit, exact-model request) added. Mandatory context rules (targeted rg, 400–500-line max, fresh session, no blind resume) and per-task routing record format defined. Stale `claude-opus-4-8` corrected to `claude-opus-5` in `SPRINT_WORKFLOW.md`. Cross-references (not table copies) added to: `AI_RULES.md`, `START_HERE.md`, `DEEPSEEK_DISPATCH.md`, `AI_TOOL_INTEGRATION_PLAN.md`, prompt index `00_index.md`, `01_office_hours_scope_review.md`, `03_implementation_task.md`. External helper reconfiguration (currently hard-maps all three tiers to GLM-5.2) is a **separate Barış authorization**; no external config was changed in this session. No commit/push/PR occurred; all changes are in the dirty worktree pending Lead acceptance.
+
+## [Codex GPT-5.6-sol] 2026-07-26 — KVM2 repair cycle 2 authorized; Claude quota blocker after lead validation
+
+Barış explicitly authorized a fresh documentation repair/re-audit cycle. Claude
+Sonnet completed the main R3-01–R3-07/DS-F-01 rewrite of the joint plan. Current
+working hashes (not accepted/frozen for execution):
+
+- master:
+  `3C61B08B17867C2EEB602FD407CF327C95FF7446DB492304DDB6A926A3E8EF3C`
+  (34,879 bytes);
+- execution companion:
+  `CB4C686A161CA8D40DC6C1C235B6371A4ADE1DCDDA23D2535259F39E0177C885`
+  (58,050 bytes; 77 unique task IDs).
+
+Lead validation did not accept Claude's all-green self-report. Seven focused defects
+remain: exact `Evidence:` fields on P0-04A/P5-03A; two stale 71-task references;
+P5-06 must depend on executed ARM P5-05A and P5-05A must verify the P5-03A unit
+hash; P6-03/P6-04/P6-05 prerequisites must be explicit; Phase-9 removal must occur
+after observation without implying a second install; and the exact immutable
+Phase-9 manifest must receive fresh independent Gate 6 acceptance before P9-02A.
+The last finding came from a read-only Cline preflight and was independently
+accepted by the Codex lead; Cline's separate historical-hash objection was rejected
+because the cited hash is explicitly an initial/superseded input and the current
+joint hash contract lives in the audit prompt. The exact focused repair prompt is
+preserved at
+`11_TRIAGE/KVM2_MASTER_PLAN_REPAIR_CYCLE2_ROUND1_PROMPT_2026-07-26.md`.
+
+The same Claude counterpart retry made no edits because the Claude account hit its
+session limit; reported reset: 2026-07-26 10:50 Europe/Chisinau. Repo rules forbid
+silent implementer substitution. A one-time same-thread continuation is active for
+10:51 (`resume-kvm2-plan-repair-after-claude-reset`). Fresh Codex/Opus audits have
+not started. The
+plan remains **PREPARATION ONLY / EXECUTION BLOCKED**. No VPS/runtime, credential,
+network, deploy, TESTNET, ARM, lab, Git, commit, push, or PR action occurred.
+
+## [Codex GPT-5.6-sol] 2026-07-26 — KVM2 master program final audit REQUEST_CHANGES; three-round loop exhausted
+
+Frozen joint program:
+
+- `11_TRIAGE/KVM2_AI_LAB_AND_BRIDGE_MASTER_PLAN_2026-07-25.md`
+  (`10C79396D63DE330BD4F920146B8CDB0C39C10C342233AEAE4E1C8B9CCD12F02`)
+- `11_TRIAGE/KVM2_AI_LAB_AND_BRIDGE_EXECUTION_TASKS_2026-07-25.md`
+  (`8706621CE52010465B408B265267F7320078E2A79F01533E85513335619615D9`)
+- sanitized consolidated evidence:
+  `11_TRIAGE/KVM2_MASTER_PLAN_MULTI_MODEL_AUDIT_REPORT_2026-07-26.md`
+
+The split is mechanically valid and audit-readable: master 34,300 bytes,
+companion 52,786 bytes, 71/71 unique AI/Evidence/Stop task blocks, phases 0–11,
+and bridge crosswalk items 1–10 exactly once. It is **not accepted as executable**.
+
+Final fresh audit round: exact Codex CLI `gpt-5.6-sol` `xhigh` returned
+`REQUEST_CHANGES` with seven required repairs. Direct `deepseek-v4-pro` returned
+`PASS-WITH-NITS` while also declaring one MEDIUM required repair, so its accepting
+label is invalid under the verdict contract. Grok `grok-4` returned `PASS`.
+Cline metadata `cline-pass/deepseek-v4-pro` returned `PASS-WITH-NITS` but its prose
+identity was inconsistent. Exact `claude-opus-5` `xhigh` remains unrun/deferred
+because credits are unavailable; no fallback is permitted.
+
+Required next repair set: remove the P5-09/P6 kill-test cycle; add post-rollback
+recovery-start and bounded ARM execution; force restart-profile requalification;
+add Phase-9 named service admission; make Option B clean proof equivalent to
+Option A; separate ledger initialization from path freeze; deterministically
+enumerate the source-scenario reconciliation; freeze the P5-10 isolation-design
+filename. The three-round limit is exhausted, so no fourth repair was started.
+
+All older KVM2 plan hashes/task counts in lower handoff sections are superseded.
+The lower-level Bridge VPS Deploy task remains authoritative and BLOCKED. No
+install, deploy, secret, runtime, cutover, TESTNET, ARM, lab, network,
+reprovision, purchase, mainnet, staging, commit, push, or PR action occurred.
+
+## [Codex] 2026-07-25 — KVM2 bridge-first AI-lab master plan prepared; execution remains BLOCKED
+
+Canonical lifecycle plan:
+`11_TRIAGE/KVM2_AI_LAB_AND_BRIDGE_MASTER_PLAN_2026-07-25.md`. It contains 12
+dependency-ordered phases and 55 owner-tagged tasks covering live-state refresh,
+the clean rebuild kit, canonical bridge gates, bounded cutover, bridge-only
+stability, AI-lab admission, low-risk lab rollout, MTC visibility, optional
+services, and the later mainnet host fork. SHA-256:
+`5FD6B6A70EF8A255B569B83E999F1164D3DB38F18278DD46FEECEF22D8BEE637`.
+
+Owner lifecycle decision: KVM2 is bridge-first for TESTNET; after accepted
+bridge-only stability it may host one isolated, individually approved lab workload
+at a time. Mainnet requires either destructive clean reprovision into the
+trading-only profile with full credential rotation and verified-only restore, or a
+separate clean trading VPS. A lab snapshot or agent uninstall is never clean-host
+evidence.
+
+The master plan has received only Codex lead structural/security review, not the
+required fresh cross-model Gate 5/Gate 6 audits. The Claude drafting attempt was
+blocked by session quota and the bounded cheap drafting paths produced no artifact;
+Codex authored the operational specification directly and validated 55/55 task
+blocks for owner, evidence, stop condition, unique ID, secret scan, and 12-phase
+coverage. The existing Bridge VPS task remains authoritative and **BLOCKED**. No
+install, deploy, secret, runtime, cutover, TESTNET, ARM, lab, network, reprovision,
+purchase, or mainnet action occurred or is authorized.
+
+## [Codex GPT-5.6-sol] 2026-07-25 — Bridge VPS Deploy task captured; VPS ready, deploy BLOCKED
+
+Preparation-only task:
+`11_TRIAGE/BRIDGE_VPS_DEPLOY_TASK_LIST_2026-07-25.md`. The hardened Hostinger KVM2
+Ubuntu 24.04 baseline is ready, but there is no canonical clean merged and audited
+deploy SHA. Windows `C:\P2RT` remains the active writer at `008e065e`; PR #25 is
+open/unmerged at `cfb08b81`; local TS-P1-001 remains unpublished and unaccepted.
+
+Independent exact `gpt-5.6-sol` `xhigh` Gate-5/Gate-6 verdict: **BLOCK, zero
+optional nits**. The confirmed Opus 5 attempt hit subscription HTTP 429 before a
+verdict; a fresh exact `claude-opus-5` `xhigh` no-fallback/no-resume audit is
+deferred and the failed attempt is not evidence. No merge, deploy, install, secret
+transfer, runtime/API/scheduler/process, broker/exchange, TESTNET, or ARM action
+occurred or is authorized.
+
+## [Codex] 2026-07-21 — TS-P1-001 second-repair re-audit BLOCK at `a15a6b1f`
+
+Codex independently re-audited clean commit
+`a15a6b1f6648016fe99278fe993daa2c1b49b923`, exact child of `851d88a0`.
+Scope, semantic RED (5 failed/80 passed), 85 focused, both 303-test full-suite CWDs,
+compile, hostile-metaclass closure, GC closure, and the 44/121 oracle reproduced.
+Verdict remains **BLOCK**: `_ImmutableMapping.__slots__ = ("_pairs",)` leaves a
+writable holder; direct `_pairs` assignment replaces the tuple and changes both later
+transition and normalization decisions. F2-R is closed. No audited-tree edit, push,
+PR/merge/deploy, P2RT runtime action, or TS-P1-002 work occurred.
+
+Evidence: `11_TRIAGE/CODEX_TSP1001_REAUDIT2_2026-07-21.md`. The only next prompt is
+`11_TRIAGE/CLAUDE_TSP1001_REPAIR3_PROMPT_2026-07-21.md`, limited to making the holder
+itself immutable and requiring another child commit plus independent re-audit.
+
+## [Codex] 2026-07-20 — TS-P1-001 repair re-audit BLOCK at `851d88a0`
+
+Codex independently re-audited clean repair commit
+`851d88a084875e48b63fba455cb7b27f357c5ac4`, exact child of blocked commit
+`5140e062...`. The repair's semantic RED (5 failed/75 passed on parent), 80 focused
+tests, both 298-test full-suite CWD runs, compile, three-file scope, and document-derived
+121-pair/44-legal oracle all reproduced. Verdict remains **BLOCK**: standard-library
+`gc.get_referents()` exposes each `MappingProxyType` backing dict and mutation changes
+later public decisions; `type(raw).__name__` can execute hostile metaclass code and
+raise `RuntimeError` outside `UnknownRawOrderStatusError`. No audited-tree edit, push,
+PR/merge/deploy, P2RT runtime action, or TS-P1-002 execution occurred.
+
+Evidence: `11_TRIAGE/CODEX_TSP1001_REAUDIT_2026-07-20.md`. The only next prompt is
+`11_TRIAGE/CLAUDE_TSP1001_REPAIR2_PROMPT_2026-07-20.md`, limited to the two reproduced
+residual findings and requiring a new child commit plus another independent re-audit.
+Owner acceptance and TS-P1-002 remain blocked.
+
+## [Codex] 2026-07-20 — TS-P1-001 independent audit BLOCK at `5140e062`
+
+Codex independently audited the clean one-commit `C:\TSP1001` implementation at
+`5140e062b8c1f3fcc78e96c7357060c60a51285d` against exact base `cfb08b81`.
+Scope, semantic parent RED, 74 focused tests, both 292-test full-suite CWD runs,
+compile, status inventory, and an independent 121-pair/44-legal transition oracle
+were verified. Verdict is **BLOCK**: module-visible mutable backing dictionaries can
+alter the exported transition/alias policies after import, and the exception contract
+is not safely reason-coded (`IllegalOrderTransitionError` lacks `reason_code`; hostile
+raw-status `__repr__` can leak or raise outside `UnknownRawOrderStatusError`). No
+audited-tree repair, push, PR mutation, merge, deploy, P2RT runtime action, or
+TS-P1-002 execution occurred.
+
+Evidence: `11_TRIAGE/CODEX_TSP1001_AUDIT_2026-07-20.md`. The only next prompt is
+`11_TRIAGE/CLAUDE_TSP1001_REPAIR_PROMPT_2026-07-20.md`, limited to the reproduced
+findings and requiring a new repair commit plus independent Codex re-audit. Baris must
+accept or reject the PROPOSED invariant contract only after a repair passes re-audit;
+TS-P1-002 remains blocked until then.
+
+## [Codex] 2026-07-20 — 39-task build/audit sequence prepared; TS-P1-001 first
+
+Barış will run separate Claude builder and Codex auditor chats for the remaining full
+backlog. Codex prepared two self-contained prompts. Claude builds TS-P1-001 in isolated
+`C:\TSP1001` from TS-P0 head `cfb08b81`, creates one local commit and builder report,
+with no push/runtime action. Codex then independently audits scope, semantic RED, two-CWD
+suites, an independent transition oracle, and 12 adversarial probes. BLOCK produces a
+Claude repair prompt; PASS produces the TS-P1-002 builder prompt. No task advances,
+publishes, merges, or deploys automatically.
+
+Prompts: `11_TRIAGE/CLAUDE_TSP1001_BUILD_PROMPT_2026-07-20.md` and
+`11_TRIAGE/CODEX_TSP1001_AUDIT_MANAGER_PROMPT_2026-07-20.md`.
+
+## [Codex] 2026-07-20 — TS-P0 docs closed; PR #25 ready at `cfb08b81`
+
+N3/N4/N5 documentation closeout is complete. N3's commit-specific integration
+correction and the three N4 ADR status-rationale corrections were applied to the
+pre-existing untracked main-worktree documents and left uncommitted. In clean
+`C:\TSP0`, N5 plus the D018 hash-scope/release-contract/reset-policy markers formed
+an exact three-document diff. Diff check and repo guard passed; no code/tests/config
+changed. Commit `cfb08b81` was pushed to `feature/ts-p0-baseline`, PR #25 body was
+updated, all available checks passed, and the PR was marked ready for review.
+
+Merge decision: NO-GO without a separate explicit merge sentence. Deploy decision:
+NO-GO while PR is unmerged and Day 1 v2 is active, because runtime replacement would
+interrupt the window. No P2RT/API/scheduler/runtime access in the docs session. Report:
+`11_TRIAGE/CODEX_TSP0_DOC_CLOSEOUT_REPORT_2026-07-20.md`.
+
+## [Codex] 2026-07-20 — TS-P0 published as draft PR #25; Day 1 v2 ARMED
+
+Barış approved the TS-P0 hash scope, release-evidence contract, and sticky reset
+policy with the 300-second tolerance, then authorized publication of exact audited
+commit `44338d61`. Codex pushed `feature/ts-p0-baseline` and opened draft PR #25
+against `master`: https://github.com/bsemaay-tech/mtc-command-center/pull/25. Remote
+head is exactly `44338d61275499f2019011cd06e6f27007f6cbcf`; no new commit, merge, or
+deploy occurred.
+
+The active MONSTER power plan was verified already safe for the window: sleep,
+hibernate, and lid-close action are all zero/disabled for AC and DC. With P2RT clean
+at `008e065e`, API down, and task Ready, Codex made exactly one task-start call at
+09:03:30Z. New run `paper-20260720090332` reconciled clean in paper/testnet with raw
+positions/orders `[]`/`[]`. Exactly one ARM call at 09:05:10Z (`X-Confirm: 2`) returned
+200 and produced one `ARM_REQUEST` plus one `DISARMED->ARMED` transition; state version
+is 4. Task remains Running, reconcile fresh, exposure empty, thresholds unchanged.
+No retry, deploy, threshold/strategy change, or mainnet action. Record:
+`11_TRIAGE/CODEX_TSP0_PUBLICATION_DAY1V2_2026-07-20.md`. Next fresh-session prompt:
+`11_TRIAGE/CODEX_TSP0_REMAINING_DOCS_PROMPT_2026-07-20.md`.
+
+## [Claude Fable 5] 2026-07-20 — TS-P0 repair re-audit PASS + commit `44338d61`; SEPARATE incident: Day 1 v1 window down (sleep)
+
+**Re-audit:** Fable independently audited Codex's uncommitted nine-file BLOCK repair in
+`C:\TSP0`. **PASS, zero new findings**
+(`11_TRIAGE/FABLE_TSP0_BLOCK_REPAIR_AUDIT_2026-07-20.md`). Reproduced: scope exact
+(9 files, HEAD `7777273f`); 218×2 both CWDs; RED **9F/45P** vs HEAD via copy-aside with
+sha256-verified byte-exact restore (no `git restore` on uncommitted work); F1a all four
+meta keys ⇒ DOWN `invalid_meta:<key>`; F1b future liveness ⇒ DOWN `future_liveness`
+(300s boundary still RUNNING); F2 hashes=[]/str/None + scalar/nested types ⇒ structured
+exit 2, no tracebacks; F3 10 dangerous names denied / 9 legitimate names in scope;
+**overbroad-denylist attack: real-tree hashed-file set identical old vs new tool**;
+real-pair exit 2 incl. `repo_dirty`; P2RT clean `008e065e`. Auditor then committed the
+audited state: **`44338d61`** (local, no push) — ends the uncommitted-repair wipe hazard.
+Remaining: docs nits N3/N4/N5; Barış gates (hash scope, DRAFT contract, reset policy,
+push/PR).
+
+**Incident (unrelated to TSP0):** Day 1 v1 bridge window DOWN — system sleep 07:27
+killed task+supervisor (TaskScheduler 201 + Kernel-Power 42); logon restart 08:57:44
+died ~66s later (`0xC000013A`, second standby). Continuous window = 18:52Z→~04:27Z ≈
+**9h35m**, then INTERRUPTED; the 66s zombie does not extend it. No unilateral restart.
+Record + Barış decisions (restart Day 1 v2? sleep policy?):
+`11_TRIAGE/INCIDENT_D1V1_SLEEP_STOP_2026-07-20.md`.
+
+## [Codex] 2026-07-19 — TS-P0 BLOCK repairs built; independent re-audit next
+
+Codex repaired all three authoritative BLOCK findings in `C:\TSP0` as an
+uncommitted nine-file diff: expanded secret filename exclusion + spy test;
+structured manifest type validation; malformed/future window evidence now
+fails DOWN. TDD evidence: pre-fix **6F/37P** for new B/C tests; post-fix focused
+**54P**, full **218P ×2 CWDs**. Direct attacks now pass: five secret edges
+denied; re-signed `hashes=[]` exits 2/no traceback; four malformed meta keys
+and future liveness all DOWN with explicit errors. Read-only real-pair run exit
+2 has four expected reasons including `repo_dirty`; P2RT stayed clean at
+`008e065e`. No commit/push/PR/deploy. Report:
+`11_TRIAGE/CODEX_TSP0_BLOCK_REPAIR_REPORT_2026-07-19.md`. Next prompt:
+`11_TRIAGE/TSP0_BLOCK_REPAIR_REAUDIT_PROMPT_2026-07-19.md`.
+
+## [Claude Fable 5] 2026-07-19 — TS-P0 verification pass: Codex BLOCK CONFIRMED (authoritative)
+
+Orchestrator-Fable ran a third independent pass over `C:\TSP0` HEAD `7777273f`,
+reproducing the load-bearing claims of BOTH prior audits. Build-quality claims
+hold (210×2 both CWDs, RED proof, diff isolation, real-pair exit 2 with the
+correct three reasons, byte-stability, P2RT untouched + window ARMED). **All
+Codex BLOCK findings independently reproduced on real code:** F1a corrupt
+`window_interrupted_ts` ⇒ interruption vanishes ⇒ RUNNING; F1b future
+`last_alive_ts` ⇒ never stale ⇒ RUNNING for a dead bridge; F2 `"hashes": []`
+⇒ TypeError exit 1; F3 `prod.env`/`my.secrets`/`key.txt` opened+hashed. F1a/F1b
+break TS-P0-003's core acceptance property ⇒ **BLOCK outranks the earlier
+PASS-WITH-NITS; repairs required before push/PR** (repair list in NEXT_STEPS
+stands). Lesson recorded: the first audit swept only well-formed parsed
+evidence; attack the storage-encoding layer and clock domain too. Report:
+`11_TRIAGE/FABLE_TSP0_AUDIT_VERIFICATION_2026-07-19.md`. Read-only session;
+TSP0/P2RT clean; no push/deploy/ARM.
+
+## [Codex] 2026-07-19 — TS-P0 audit BLOCK
+
+Codex independently audited `C:\TSP0` HEAD `7777273f` from the self-contained
+prompt and issued **BLOCK**. Verified: exact 3-commit chain/scope, 210/210 both
+CWDs, baseline 164 in removed throwaway worktree, focused 14/11/21, all three
+RED proofs, release re-sign attack, exit matrix, byte stability, ADR closure,
+and P2RT no-mutation. Blocking reproductions: (1) malformed
+`window_interrupted_ts` and future liveness can both produce RUNNING;
+(2) re-signed `"hashes": []` makes `release_evidence validate` exit 1 with a
+traceback; (3) `prod.env`/`my.secrets`/`key.txt` are opened and hashed despite
+the secret-safety boundary. The final-HEAD real-pair integration correctly has
+three reasons including `source_tree_hash_mismatch`; the earlier two-reason
+claim applied only at Task A. Report:
+`11_TRIAGE/CODEX_TSP0_AUDIT_2026-07-19.md`. No push/PR/deploy/commit; TSP0 and
+P2RT clean at their original HEADs.
+
+## [Claude Fable 5] 2026-07-19 — TS-P0 INDEPENDENT AUDIT: **PASS-WITH-NITS**
+
+Fresh Fable session (no builder context) executed the full 12-point adversarial
+checklist from `FABLE_TSP0_AUDIT_HANDOFF_2026-07-19.md` on real code/runs:
+worktree facts exact (`C:\TSP0` HEAD `7777273f` clean), **210/210 both CWDs**,
+all 3 TDD RED proofs reproduced, integration vs real pair exit 2 with P2RT
+porcelain/HEAD untouched, subprocess exit codes 0/2/3 + byte-stable JSON probed,
+tamper+re-sign attack caught by live-state compare, secret spy-hash + no-mutation
+tests verified, window never-false-active property confirmed in code AND sweep,
+no pre-existing test edited, Task D ADR edits verified. **No BLOCK.** 5 nits
+(N1 release_evidence exit-1 crash on re-signed non-dict `hashes` [reproduced];
+N2 `prod.env`/`config.env` denylist gap [reproduced]; N3 handoff §Integration
+expectation stale — 3 drift reasons at HEAD is correct behavior; N4 three
+residual stale "Proposed status" rationale sentences; N5 symlink digest-oracle
+note). Report: `11_TRIAGE/FABLE_TSP0_INDEPENDENT_AUDIT_2026-07-19.md`. Barış
+gate unchanged: hash-scope confirm, release-contract approval, reset-policy
+confirm; push/PR still blocked; optional Codex cross-audit remains available.
+
+## [Claude Fable 5] 2026-07-19 — TS-P0 BUILD CHAIN DONE (001–004) in C:\TSP0; awaiting independent Fable audit
+
+Owner-directed Fable build session executed the full Phase 0 chain in worktree
+**`C:\TSP0`** (branch `feature/ts-p0-baseline`, base `008e065e`; NO push/PR/merge; P2RT
+strictly read-only; window untouched — end proof: HEAD `008e065e` clean, `/api/status`
+ARMED, run `paper-20260719185026`, fresh reconcile 19:37Z). One commit per code task:
+**TS-P0-001 `fa449ce2`** (check_runtime_baseline.py, 14 tests, RUNTIME_BASELINE_CONTRACT;
+integration vs real pair exit 2 with ONLY commit-mismatch reasons; CRLF-normalization
+finding documented), **TS-P0-002 `42d0ca9f`** (release_evidence.py create/validate,
+11 tests, RELEASE_EVIDENCE_CONTRACT **DRAFT pending Barış**), **TS-P0-003 `7777273f`**
+(bridge/engine/window.py honest window state RUNNING/DOWN/INTERRUPTED/RESET, additive
+status()['window'], 21 tests incl. exhaustive never-false-active sweep; reset policy
+**PROPOSED pending Barış**; P2RT NOT redeployed). **TS-P0-004** verify-and-record done:
+all 12 ADRs Accepted per D016 verified; 3 stale "Proposed" wordings fixed (docs-only,
+untracked ADR dir, main worktree); report `11_TRIAGE/FABLE_TSP0004_ADR_CLOSURE_REPORT_2026-07-19.md`.
+Suites: baseline 164 re-verified at `008e065e` → 177 → 189 → **210 passed both CWDs**;
+TDD RED proofs captured per task. Deliverables: `11_TRIAGE/FABLE_TSP0_BUILD_REPORT_2026-07-19.md`
++ `11_TRIAGE/FABLE_TSP0_AUDIT_HANDOFF_2026-07-19.md` (12-point adversarial checklist).
+STOP honored before Phase 1. Open Barış items: hash-scope confirm, release-contract
+approval, reset-policy confirm.
+
+## [Claude Fable 5] 2026-07-19 — DEPLOY GATE SPENT: PR #24 merged, P2RT on `008e065e`, Day 1 v1 window OPEN + ARMED
+
+Barış explicitly approved the deploy gate ("Push/PR of feature/interim-daily-loss-wiring →
+deploy to C:\P2RT → fresh monitoring window"). Executed: branch pushed; **PR #24 merged**
+(merge commit **`008e065e`**, SHAs preserved, `acb83b5b` ancestor of origin/master; repo
+guard PASS pre-merge). **Deployed**: `C:\P2RT` fetched + detached at `008e065e` from clean
+`74e0990b`; delta = exactly the TS-P1-007 files; deploy verification in deployed tree =
+**32 focused + 164 full passed**. **Fresh window Day 1 v1 OPEN**: `MTC-Bridge-P2` started
+2026-07-19T18:50:25Z on AC (StopIfGoingOnBatteries=False, DisallowStartIfOnBatteries=True
+unchanged); run **`paper-20260719185026`**, paper/testnet/hyperliquid, BTC 1h; first
+reconcile clean; `risk_input_error` null; 300s restore fix present; **one ARM**
+~18:52:44Z per Day 0 v5 runbook precedent → state ARMED. Thresholds unchanged (0.02 daily,
+3 streak, 0.005/trade, 1x isolated). This is the FIRST window whose risk-gate enforcement
+evidence may count (deployed runtime now contains audited wiring); categories stay
+separate. Record: `11_TRIAGE/DEPLOY_TSP1007_WINDOW_D1_2026-07-19.md`. Mainnet untouched;
+strategy/schema/config unchanged; mcc_readonly dashboard left running; `C:\P1IF` clean.
+
+## [Claude Fable 5] 2026-07-19 — Interim TS-P1-007 round-4 independent audit: PASS-WITH-NITS
+
+Fable independently audited `acb83b5b` (parent `b11a2e36`, `C:\P1IF`,
+`feature/interim-daily-loss-wiring`). Scope verified: exactly the four claimed files
+(417+/33−), no threshold/strategy/config/schema/protected-path change; `update_trade_exit`
+has zero production callers; engine gate wiring (`engine.py:240-252`) intact. **All builder
+evidence reproduced this session:** focused 32×2 CWDs, full 164×2 CWDs (1 pre-existing
+Starlette warning), parent semantic red **8F/24P with the exact same eight failures**,
+half-exit red **1F vs `066b49cc`** (its correct old-code target — passes vs `b11a2e36` as
+the builder honestly disclosed), clean blob-verified restores after every step. Plus **14
+independent adversarial probes, all pass**: per-order overfill, role conflict, 5×
+fill_id-mutation immutability (fee/ts/qty/funding/px), streak max−1 engine-path boundary,
+CANCELED-remainder close semantics, float-dust close, post-close ENTRY fill immutability,
+exact post-close redelivery no-op, double-close refusal, trade-level dust overfill.
+
+**Verdict: PASS-WITH-NITS.** No path rewrites canonical closed PnL, corrupts a gate input,
+duplicates accounting, or leaves owned exposure foreign-classified. All five round-3 BLOCK
+findings verifiably closed. Six non-blocking nits (untested ORDER_OVERFILL /
+FILL_ROLE_CONFLICT codes, role-conflict evidence-retention asymmetry, narrow
+ENTRY_REMAINDER_LIVE crash window missing only the DISARM, quarantined rows counted in
+totals, one stale test comment) — details + follow-ups in
+`11_TRIAGE/FABLE_INTERIM_TSP1007_ROUND4_AUDIT_2026-07-19.md`. This clears the independent-
+audit gate ONLY: push/PR/merge/deploy/`C:\P2RT`/ARM/monitoring-window remain a separate
+unspent Barış approval. This session: read-only + local tests; `C:\P1IF` left clean at
+`acb83b5b`; no runtime/network/scheduler/credential action.
+
+## [Codex GPT-5] 2026-07-18 - Interim TS-P1-007 round-4 repair ready for Fable audit
+
+Codex repaired the round-3 BLOCK findings in isolated worktree `C:\P1IF` and committed
+**`acb83b5b`** on `feature/interim-daily-loss-wiring` (parent `b11a2e36`). Exact scope is four
+files: Store, OrderManager, focused tests, and doc 20. Fill IDs are insert-once; changed
+duplicates quarantine without replacing facts; closed trades cannot be rewritten by distinct
+late SL/TP/CLOSE fills; order/trade overfills DISARM; a live partial-entry remainder keeps its
+trade owned/open across restart; and guarded trade close plus `TRADE_CLOSED` is one SQLite
+transaction with exact-fill restart recovery. The half-exit gate test is now semantic.
+
+Evidence: focused **32 passed from both CWDs**, blocking-rebuild regression **1 passed from both
+CWDs**, full suite **164 passed / 1 existing warning from both CWDs**. Semantic red against
+parent `b11a2e36` was **8 failed / 24 passed**, followed by exact blob/index restoration, clean
+status, and final **32 passed**. Target worktree is clean. Fable's 2026-07-19 independent-audit
+brief is `MTC_COMMAND_CENTER/11_TRIAGE/FABLE_INTERIM_TSP1007_ROUND4_AUDIT_HANDOFF_2026-07-19.md`.
+D017 funding exclusion is unchanged. The repaired half-exit test separately failed 1/1 against
+its true old-code target `066b49cc`, then HEAD was restored clean.
+No push/PR/deploy/runtime/network/scheduler/credential/exchange/testnet/paper/ARM action;
+`C:\P2RT` untouched. Deploy approval remains separate and
+unspent pending Fable's non-BLOCK verdict.
+
+## [Codex GPT-5] 2026-07-18 — Interim TS-P1-007 round-3 re-audit: BLOCK
+
+Codex audited the `3fa13f3e` production/test code on real runs. The clean worktree had advanced to documentation-only `b11a2e36` (parent `3fa13f3e`) to record D017; `bridge/` and `tests/` are byte-identical between the two commits. Scope passed: the R-01 repair is exactly four files over `066b49cc`, with no threshold/config/schema/strategy/protected-path change. Evidence reproduced from both CWDs: **24 focused passes twice, 156 full-suite passes twice, blocking-rebuild regression twice**. Semantic red proof against `066b49cc`: **5 failed / 19 passed**, then exact restore and clean status.
+
+**Verdict BLOCK.** Three real fill-path state-corruption cases remain: (1) after an SL closed a 200-unit trade at `-2000`, a late TP fill recomputed cumulative exit VWAP and overwrote PnL to `0`, clearing daily loss and streak while the original `TRADE_CLOSED` decision remained; (2) `fills` uses `INSERT OR REPLACE`, so a same-`fill_id` payload changed after restart rewrote `-11` into `+10`, and exact partial-fill redelivery duplicated `TRADE_PARTIAL_EXIT`; (3) a one-of-two partial entry can exit and mark the trade closed while the remaining entry order stays live—its later fill creates exposure that reconcile reports as `FOREIGN_POSITION_IGNORED` with no reprotect/flatten. The half-exit engine test is also vacuous against old code: its phantom loss is `-100`, not beyond the `-2000` limit.
+
+D017 funding exclusion is accurately disclosed and accepted: interim production gate PnL is gross minus fees; funding attribution remains deferred with explicit revisit triggers. It is not this round's blocker. Authoritative report: `MTC_COMMAND_CENTER/11_TRIAGE/CODEX_INTERIM_TSP1007_REAUDIT2_2026-07-18.md`. Required next repair: immutable closed trades/fill IDs, overfill/post-close quarantine, partial-entry remainder cancellation/quarantine, atomic close+decision, and adversarial restart tests. No push/deploy/runtime/network/scheduler/credential/exchange/testnet/paper/ARM action; `C:\P2RT` untouched; deploy gate remains unspent.
+
+## [Claude Fable 5] 2026-07-18 (latest) — R-01 repaired `3fa13f3e`; R-02 RESOLVED by D017 (Barış accepted funding exclusion); round-3 audit target `b11a2e36`
+
+**UPDATE:** Barış answered "(a)" — interim funding exclusion ACCEPTED, recorded as `DECISIONS.md` **D017** and committed into doc 20 (`b11a2e36`, docs-only). Round-3 Codex audit prompt updated (target `b11a2e36`; funding absence no longer a BLOCK condition; audit the disclosure). Worktree clean. Details below.
+
+**R-01 repaired in commit `3fa13f3e`** (branch `feature/interim-daily-loss-wiring`, `C:\P1IF`, 4 files): fill accounting is now cumulative and derived from persisted fills. Orders flip to FILLED only when fills reach ordered qty (partials keep resting status so grace/pending logic still sees a live order); trade entry price = entry-fill VWAP (first-fill ts); exit fills contribute actual qty; trade closes ONLY when cumulative exit qty reaches the entry basis → exit VWAP + net PnL + one idempotent `TRADE_CLOSED`; earlier partial exits persist `TRADE_PARTIAL_EXIT` and contribute nothing to either gate; duplicate redelivered fills coalesce on `fill_id`. Codex's split-entry (−10-for-0) and split-exit (+20-for-0) reproductions are now direct test cases.
+
+**Evidence:** 6 new tests (split entry VWAP, split exit no-premature-close, split exit + fees net loss, duplicate-fill idempotence across managers, partial-entry restart, half-exit engine-path) → focused **24 passed both CWDs**, full suite **156 passed**. Semantic red proof vs `066b49cc`: **5 failed / 19 passed** (the half-exit engine-path case passes both ways because the old full-close loss stayed inside the daily limit — recorded honestly per R-03). NOTE: red proof was run BEFORE committing via `git restore` and wiped the uncommitted repairs once — they were re-applied and re-verified; lesson: red-proof by restore only on committed state, or stash.
+
+**R-02 funding — NOT repaired by code; awaiting Barış decision:** no production path populates `fills.funding` (Hyperliquid adapter maps fee only; no funding-ledger subscription). Production gate PnL is therefore gross − fees. Options: (a) accept funding exclusion for the interim gate (doc 20 now discloses it; full funding attribution lands with TS-P1-005/full TS-P1-007), or (b) order a funding-ledger build now (new subscription + signed attribution + day boundaries — materially bigger scope). Fable recommendation: (a) — BTC 1h single-position paper; fees dominate; funding belongs with reconciliation. **Round-3 Codex re-audit should launch after Barış answers**, since (b) would change the diff under audit. Target commit for re-audit: `3fa13f3e`. No push/deploy; deploy gate unspent.
+
+## [Codex GPT-5] 2026-07-18 — Interim TS-P1-007 repair re-audit: BLOCK
+
+Codex independently re-audited `C:\P1IF` commit `066b49cc` against repair parent `6fa0c831` and base `abda6717`. Scope is exactly the approved five files; risk defaults, config, schema, strategy, and protected paths are unchanged. Real execution from both CWDs reproduced **18 focused passes twice, 150 full-suite passes twice, and the Hyperliquid blocking-rebuild regression twice**. The requested three-production-file red run produced **18 failed**, but all 18 stopped at the old Store's missing `clock=` constructor; a process compatibility shim reached semantics and produced **14 failed, 4 passed**. The tree was restored clean.
+
+**Verdict BLOCK.** `OrderManager._ingest_fill` is not partial-fill safe: it overwrites entry price with the latest entry fill, treats every exit fill as a full-quantity close, and overwrites final PnL. Reproductions: split entry true PnL `0` persisted `-10`; split exit true final PnL `0` persisted `+20`. Also, the production Hyperliquid parser never populates `FillEvent.funding`; a literal `funding=7` parsed as `0.0`, and no other production funding writer exists. Both defects can make DAILY_LOSS or CONSECUTIVE_LOSS trigger wrongly or fail to trigger.
+
+Prior repairs for mode/network isolation, sticky DB-read fail-close, canonical bounded UTC timestamps, current-equity disclosure, deterministic clock, and missing-run reconcile telemetry fallback were verified. Authoritative report: `MTC_COMMAND_CENTER/11_TRIAGE/CODEX_INTERIM_TSP1007_REAUDIT_2026-07-18.md`. Next: repair cumulative partial-fill accounting and wire an evidenced real funding ledger/payload path, correct red-proof claims, then independent re-audit. No push/deploy/runtime/network/scheduler/credential/exchange/testnet/paper/ARM action occurred; `C:\P2RT` was untouched. The separate Barış deploy gate remains unspent.
+
+## [Claude Fable 5] 2026-07-18 (latest) — Codex BLOCK repairs ALL LANDED: `066b49cc`; 150 tests green; awaiting Codex re-audit
+
+All findings from the Codex BLOCK below verified real on code and repaired in commit **`066b49cc`** (branch `feature/interim-daily-loss-wiring`, worktree `C:\P1IF`, 5 files):
+
+- **F-01:** `realized_pnl_today`/`consecutive_closed_losses` now take `run_id`, join `trades`→`runs`, and scope to that run's `mode`+`network` — cross-run restart history preserved inside one environment, dry-run/replay rows can no longer trip/reset paper gates; unknown `run_id` raises (fail closed). Reconcile equity TELEMETRY alone degrades to `0.0` on `LookupError` (real DB errors still propagate to the reconcile failure budget).
+- **F-02:** `trades.pnl` is now NET: gross minus `Store.trade_costs(decision_uid)` = Σfee+Σfunding (debit-positive, rebates negative); `TRADE_CLOSED` records `pnl`/`pnl_gross`/`costs`.
+- **F-03:** risk-input read failure → in-memory DISARM first, best-effort meta+`RISK_INPUT_FAILED` event, fail-silent notify; **sticky latch**: `_app_state()` reports DISARMED while `risk_input_error` set even if the disarm write failed and meta still says ARMED; only human `arm()` clears it; `status()` exposes `risk_input_error` and survives broken meta reads; failed bar is not retried.
+- **F-04:** `_to_iso` canonicalizes strings via `fromisoformat` to aware-UTC ISO (invalid raises, naive=UTC, applies to injected `now` too); daily query uses half-open `[UTC midnight, next midnight)`.
+- **F-05:** doc 20 discloses current-equity base, unwired `risk_days`, shared-DB + query-level isolation, DB-failure/non-retryable-bar semantics.
+- **F-06:** `Store(db_path, clock=...)` seam; all engine-path tests frozen-clock. **F-07** index: deferred to TS-P2-006 per audit.
+
+Evidence: focused **18 passed**; full suite **150 passed, 17.38s** both after fixing the regression this repair itself exposed (`test_positions_and_reconcile_use_old_client_during_blocking_rebuild` — pre-run reconcile hit the new LookupError; also explained the 315s suite stall). Red-proof: **18/18 FAIL** with the three production files stashed to `6fa0c831` state, tree restored clean (mix of semantic + signature failures — new params don't exist pre-repair). NOT pushed, NOT deployed. **Next: Codex re-audit of `066b49cc`** via `11_TRIAGE/CODEX_INTERIM_TSP1007_AUDIT_PROMPT_2026-07-18.md` (target commit updated); then push/PR + Barış deploy gate; no monitoring window before deploy.
+
+## [Codex GPT-5] 2026-07-18 — Interim TS-P1-007 independent audit: BLOCK
+
+Codex independently audited `C:\P1IF` commit `6fa0c831` against base `abda6717` on real code and test runs. Scope integrity passed: exactly the approved five files, correct base, no threshold/config/schema/strategy/protected-path change. Post-fix evidence reproduced from both supported CWDs: focused **8 passed** twice; full suite **140 passed, 1 warning** twice. A bounded three-production-file pre-fix restore reproduced **5 failed, 3 passed**, then `HEAD` was restored and `C:\P1IF` verified clean.
+
+**Verdict BLOCK.** Two independently reproduced safety defects: (1) paper and `--dry-run` default to the same `data/bridge.db`, while both new queries aggregate all run modes, so replay rows can wrongly trip/reset paper gates; (2) `OrderManager._ingest_fill` stores fee/funding but persists gross price-delta `trades.pnl`, so a net losing trade can be recorded as zero/win and evade both DAILY_LOSS and CONSECUTIVE_LOSS. Also required: observable fail-closed handling for query DB errors (current result: exception, zero submit, but state remains ARMED/bar processed/no risk event), canonical bounded UTC timestamp handling, explicit current-equity/day-start limitation docs, and midnight-stable tests.
+
+Authoritative report: `MTC_COMMAND_CENTER/11_TRIAGE/CODEX_INTERIM_TSP1007_AUDIT_2026-07-18.md`. No production fix, deploy, push, runtime, scheduler, credential, exchange, testnet, paper, ARM/DISARM/KILL, threshold, config, schema, strategy, Pine, parity, or `C:\P2RT` action occurred. Next: Claude/DeepSeek prepares the narrow required repair set on `feature/interim-daily-loss-wiring`; Codex re-audits independently. Deploy remains a separate Barış-gated step only after a non-BLOCK verdict.
+
+## [Claude Fable 5] 2026-07-18 (later) — D016 ADR ratification + interim TS-P1-007 BUILT (140 tests) + scheduler policy done
+
+**D016 recorded in `DECISIONS.md`:** Barış ratified ADR-0018/0019/0020/0021/0022/0023/0024/0025/0027 (0020/0024 = direction only, evidence-gated; TS-P0-004 route question thereby DECIDED). Files + `ADR_INDEX.md` flipped to Accepted citing D016. **D016 ADDENDUM (same day): after discussion, Barış also ratified ADR-0026/0028/0029 ("ratify the last three") — ALL TWELVE new ADRs now Accepted.** 0029 = gate framework only: live gate stays UNSIGNED, live/mainnet stays BLOCKED. 0026/0028 boundaries (LLM advisory-only, MTC dashboard read-only) are now binding owner decisions.
+
+**Interim TS-P1-007 BUILT (Barış approved execution):** worktree `C:\P1IF`, branch `feature/interim-daily-loss-wiring`, base `abda6717` (post-PR-#23 master), commit `6fa0c831`, exactly 5 files. `Store.realized_pnl_today()` + `Store.consecutive_closed_losses()` (cross-run, restart-proof), engine `evaluate()` now receives both, reconcile equity rows record real realized_today. 8 engine-path tests (boundary/day-scope/streak-reset/restart/equity-row); full suite **140 passed**, zero regressions; **5/8 proven FAIL pre-fix** via stash. NOT pushed, NOT deployed — next: independent Codex audit on real code, then push/PR + standard deploy gate. Reports: `11_TRIAGE/INTERIM_TSP1007_BUILD_REPORT_2026-07-18.md` + committed `IBKR_PAPER_BRIDGE/docs/20_INTERIM_TSP1007_RISK_WIRING.md`. Thresholds unchanged; no runtime/scheduler/credential/exchange action; `C:\P2RT` untouched.
+
+**Also executed on Barış instruction:** PR #23 merged earlier today (`abda6717`, drift closed); `StopIfGoingOnBatteries=False` on `MTC-Bridge-P2`; Task Scheduler history ENABLED by Barış (admin wevtutil). `DisallowStartIfOnBatteries` still True (untouched). No active monitoring window; next window only after this fix deploys.
+
+## [Claude Fable 5] 2026-07-18 — Devil's-advocate review of the 3-task planning package: PROCEED WITH REQUIRED CORRECTIONS; Barış decisions applied
+
+Adversarial review of the 2026-07-17 consolidation/ADR/roadmap package (run reports under `C:\LAB\Trading Bot Research\#03 Deep research\90_RUN_REPORTS\`). Package verified as honest and code-grounded: consolidation counts independently re-verified (30 sections, 64 longlist, 18 shortlist, 40 CLM, 26 OQ); baseline's 20-file/1,499-deletion shared-vs-deployed bridge divergence reproduced exactly via `git diff --stat 74e0990b 70586cf5 -- IBKR_PAPER_BRIDGE/` (deployed runtime is AHEAD; draft PR #23 is the pending merge-back and must be linked to GAP-001 so drift is never "fixed" toward the older shared branch).
+
+**Critical finding (verified in shared branch AND deployed `74e0990b`): DAILY_LOSS and CONSECUTIVE_LOSS risk gates are inert by construction.** `bridge/engine/engine.py` calls `risk_engine.evaluate()` without `realized_today`/`consecutive_losses` (defaults 0.0/0 → gates can never trigger); `bridge/engine/orders.py:157` hardcodes `realized_today=0.0` into the equity ledger; `db.py::upsert_risk_day` has zero callers; `tests/test_risk.py:43` passes only by direct parameter injection, so the 132-test suite gives false confidence. Every accepted trade logs `DAILY_LOSS: PASS` for a control that cannot fail.
+
+**Barış decisions (2026-07-18):**
+1. **ADR ratification:** ADR-0019/0021/0022/0023/0026/0027/0028 were never owner-ratified → all downgraded to Proposed (files + `ADR_INDEX.md` corrected). All of ADR-0018–0029 now Proposed; acceptance requires explicit Barış approval recorded in ONE consolidated dated `DECISIONS.md` entry. Safety boundaries (unsigned live gate, advisory-only LLM, read-only MTC dashboard) remain in force regardless.
+2. **Bridge stop root cause = scheduler battery policy**, not manual shutdown: `MTC-Bridge-P2` has `StopIfGoingOnBatteries=true`; bridge log ended ~2026-07-16 17:32; Kernel-Power 105 `AcOnline=false` 17:33:46; task result `0x8007042B`. **Day 0 v5 window CLOSED/RESET** (lived ~4h from 13:41:26Z). Incident note: `11_TRIAGE/INCIDENT_P2_BATTERY_STOP_2026-07-16.md`. No active monitoring window exists.
+3. **Interim TS-P1-007 expedited:** wire persisted/reconciled `realized_today`/`consecutive_losses` through the operational engine path with engine-path/boundary/restart proof, ahead of the P1-005/006 chain. No thresholds, strategy changes, ARM, or external execution approved. Inert gates are NOT accepted: no risk-control monitoring window before this lands. Recorded in the backlog amendment log (`05_IMPLEMENTATION_BACKLOG.md`) and roadmap stop rules (`04_IMPLEMENTATION_ROADMAP.md`).
+
+**Pending Barış approvals:** (a) consolidated ADR ratification entry in `DECISIONS.md`; (b) execution approval for interim TS-P1-007; (c) PR #23 merge decision (closes current drift instance; re-baseline TS-P0-001 manifest after merge); (d) scheduler battery-policy change + enable Task Scheduler history.
+
+**UPDATE 2026-07-18 (same day, Barış decisions executed):** (b) interim TS-P1-007 execution APPROVED — next implementation session, fresh branch off post-merge master. (c) PR #23 MERGED at 2026-07-18T12:20:45Z, merge commit `abda6717`; verified `74e0990b` ancestor of `origin/master` and `git diff 74e0990b origin/master -- IBKR_PAPER_BRIDGE/` empty — master bridge tree byte-identical to deployed runtime, drift instance CLOSED. (d) `StopIfGoingOnBatteries` set False on `MTC-Bridge-P2` (task stayed `Ready`; `DisallowStartIfOnBatteries` still True, untouched); Task Scheduler history enable needs admin: `wevtutil sl Microsoft-Windows-TaskScheduler/Operational /e:true`. (a) ADR ratification still open — explanation delivered, awaiting Barış's list of accepted ADR numbers. **TS-P0-001 remains the next implementation task** (no approval blockers). No code, runtime, scheduler, credential, or exchange state was changed in this session; edits were documentation only (ADR statuses/index, roadmap/backlog/baseline/gap-audit amendments, incident note, memory files).
+
+## [Codex GPT-5] 2026-07-17 — Trading-system baseline, gap audit, roadmap, backlog, and gates created
+
+Created the canonical planning package under `09_DOCS/ROADMAPS/TRADING_SYSTEM/`: verified current-system baseline, 40-row gap audit, incremental target architecture, 43-task roadmap/backlog, validation/release gates, dependency map, risk register, test strategy, and phase execution protocol. Research-workspace folders `06_IMPLEMENTATION_ROADMAP`, `07_IMPLEMENTATION_BACKLOG`, and `08_VALIDATION_GATES` now contain pointers only. No implementation task was executed.
+
+Canonical files: baseline `01_CURRENT_SYSTEM_BASELINE.md`; gap audit `02_CURRENT_SYSTEM_GAP_AUDIT.md`; target architecture `03_TARGET_ARCHITECTURE.md`; roadmap `04_IMPLEMENTATION_ROADMAP.md`; backlog `05_IMPLEMENTATION_BACKLOG.md`; validation gates `06_VALIDATION_AND_RELEASE_GATES.md`.
+
+The most important baseline finding is a release-identity gap: the active shared branch is `feature/donchian-crypto-ladder` at `70586cf5`, while clean isolated runtime `C:\P2RT` is detached at `74e0990b`; their bridge trees differ materially. Read-only process/port checks found no bridge listener on 8790 and the scheduler task in `Ready`, so Day 0 v5 is historical/interrupted evidence, not a currently verified monitoring window. `C:\P2RT`, scheduler, database, credentials, testnet/paper state, and runtime config were not modified.
+
+Critical gaps include runtime drift, canonical unknown/partial order states, complete reconciliation, real realized-PnL/drawdown/exposure/liquidation inputs, backup/restore/corruption evidence, unpinned dependencies/SBOM, and an authoritative monitoring read model. ADR-0018/0020/0024/0025/0029 remain Proposed; live remains blocked by the unsigned gate.
+
+**Single next implementation task:** TS-P0-001, an offline read-only repository/runtime drift checker and evidence manifest. Exact files, tests and out-of-scope rules are in `09_DOCS/ROADMAPS/TRADING_SYSTEM/05_IMPLEMENTATION_BACKLOG.md`. `SESSION_LOG.md` remains retired and unchanged.
+
+## [Codex GPT-5] 2026-07-17 — Trading-platform ADR package created
+
+Created the canonical ADR package in `09_DOCS/ADR/`: new `README.md`, `ADR_INDEX.md`, and ADR-0018 through ADR-0029. New statuses: Accepted = ADR-0019 (mode separation), ADR-0021 (official SDK + selective CCXT Hyperliquid policy), ADR-0022 (independent risk veto), ADR-0023 (idempotent order/reconciliation), ADR-0026 (LLM advisory-only boundary), ADR-0027 (supply-chain/secrets), ADR-0028 (read-only dashboard); Proposed = ADR-0018 (continue current system pending gap audit), ADR-0020 (hybrid validation pending engine/collector audit), ADR-0024 (storage split pending benchmark), ADR-0025 (build-versus-borrow pending gap audit), ADR-0029 (promotion gates; live remains blocked and the live gate is unsigned). No Deferred ADRs.
+
+No implementation, dependency, schema, connector, database, risk parameter, scheduled task, credential, testnet, paper, or live/runtime change occurred. Existing ADR-0001 through ADR-0017 were not modified. The research pointer `C:\LAB\Trading Bot Research\#03 Deep research\05_ARCHITECTURE_DECISIONS\README.md` now references the canonical repo index; ADRs were not duplicated outside the repo. `SESSION_LOG.md` remains unchanged because `AI_RULES.md` retired it. **Next task:** create the current-system gap audit, phased implementation roadmap, implementation backlog, and validation gates from the consolidated research and ADRs; do not implement in that task.
+
+## [Codex GPT-5] 2026-07-17 — Authoritative trading-bot research package consolidated
+
+Created the documentation-only research package at `C:\LAB\Trading Bot Research\#03 Deep research\`. Canonical report: `01_CONSOLIDATED_REPORT\CONSOLIDATED_TRADING_BOT_RESEARCH_2026-07-17.md`; claim authority: `02_EVIDENCE_REGISTER\CLAIM_EVIDENCE_REGISTER.md`. Eight root Markdown reports were indexed and preserved unchanged; two visual assets were recorded as supporting evidence. No source code, runtime configuration, scheduled task, database, credential, Hyperliquid testnet/paper state, or live state was changed.
+
+Accepted direction: continue the existing Python system; use the official Hyperliquid SDK behind a project adapter, CCXT with native critical-path overrides, VectorBT for rapid sweeps, hftbacktest for microstructure validation, and the existing event-driven engine plus controlled Optuna use. Build risk, order-state/reconciliation, recovery, and audit ownership internally. Use Freqtrade as the general benchmark, NautilusTrader as the architecture reference, and Hummingbot as the market-making reference. LLMs remain analysis/audit only with no direct order authority.
+
+Rejected or unresolved: do not fork Intelligent Trading Bot/LLM-TradeBot as the production core; do not copy Passivbot grid/martingale strategy logic; correct NautilusTrader=LGPL-3.0 and Passivbot=Unlicense; exact connector feature parity, hftbacktest Hyperliquid collector coverage, current-system gaps, database choice, and implementation details remain open. No ADR or implementation work has started. **Next task: create technical Architecture Decision Records from the consolidated research report and evidence register.** `SESSION_LOG.md` was read but not modified because `AI_RULES.md` retired it on 2026-07-05.
+
 ## [Claude Fable 5] 2026-07-16 — TASK B AUDIT: PASS + DEPLOYED. **Day 0 v5 = 2026-07-16T13:41:26.908952Z** — with LIVE field proof of the 300s fix during the gate
 
 **Audit PASS** (`11_TRIAGE/FABLE_AUDIT_P2_TIMEOUT_FIX_2026-07-16.md`) of Codex Task B
@@ -3137,3 +3633,30 @@ Validation: `node --check MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/web/app.js` P
 Visual QA notes: Browser screenshots could not be captured because the in-app Browser policy blocks `127.0.0.1:8765`, and no alternate browser workaround was used. Direct served-route inspection confirms the visual contract changed from the light skeleton to dark reference structures. Cheap-agent review was attempted through `_deepseek_driver`, but the agent drifted into unrelated files and hit `max_iters` without a usable report; no writes occurred.
 
 No backtest, optimization, worker, Pine, MTC_V2, parity, strategy logic, live trading, broker path, API write behavior, or execution/write-back path was launched or modified.
+
+## Claude Sonnet 5 2026-07-20 - TS-P1-001 canonical order-state machine built (PROPOSED, unaudited)
+
+Built TS-P1-001 (backlog row, ADR-0023) per `00_AGENT_PROTOCOLS/../11_TRIAGE/CLAUDE_TSP1001_BUILD_PROMPT_2026-07-20.md` in isolated worktree `C:\TSP1001`, branch `feature/ts-p1-001-order-state`, from the TS-P0 baseline HEAD `cfb08b819aa9890725344e8315571299718cd554` (PR #25, still unmerged, untouched by this session).
+
+Additive-only diff, 3 files: `IBKR_PAPER_BRIDGE/bridge/engine/types.py` (new `OrderState` 11-state str-Enum + `ORDER_STATE_TRANSITIONS`/`TERMINAL_ORDER_STATES`/`can_transition`/`validate_order_transition`/`normalize_raw_order_status`/`RAW_ORDER_STATUS_ALIASES` + two dedicated exceptions), `IBKR_PAPER_BRIDGE/tests/test_order_state.py` (new, 74 tests), `IBKR_PAPER_BRIDGE/docs/22_ORDER_STATE_CONTRACT.md` (new contract, status PROPOSED). No other file touched; not wired into `orders.py`/`db.py`/broker adapters/engine/API — pure model only.
+
+TDD: RED confirmed (ImportError on the new symbols against unmodified base) before implementing; GREEN 74/74 focused; full suite 292/292 (218 baseline + 74 new) identical from both required CWDs (`C:\TSP1001` and `C:\TSP1001\IBKR_PAPER_BRIDGE`); `py_compile` clean. Repo guard PASS before staging and after commit; staged set verified exactly 3 files; single commit `5140e062b8c1f3fcc78e96c7357060c60a51285d`. Not pushed, no PR touched, no P2RT/server/broker/deploy action.
+
+Full detail, adversarial self-review, raw-status inventory, and open design questions for Barış/Codex: `11_TRIAGE/CLAUDE_TSP1001_BUILD_REPORT_2026-07-20.md`. Next: independent Codex Gate-5 audit on the real diff, then Barış acceptance of the invariant contract.
+
+## Claude Sonnet 5 2026-07-20 - TS-P1-001 BLOCK repair (F1 mutable backing, F2 unsafe exceptions)
+
+Codex Gate-5 audited commit `5140e062` and issued **BLOCK**
+(`11_TRIAGE/CODEX_TSP1001_AUDIT_2026-07-20.md`): F1 — `_ORDER_STATE_TRANSITIONS_SEED`/`_RAW_ORDER_STATUS_ALIASES_SEED` were module-visible mutable dicts backing the "immutable" `MappingProxyType` exports, so a caller mutating the named dict could make `FILLED -> OPEN` legal or `OPEN` normalize to `FILLED`; F2 — `IllegalOrderTransitionError` had no `reason_code`, and `UnknownRawOrderStatusError` interpolated `repr(raw)`, so a hostile `__repr__` could leak text into the message or raise `RuntimeError` instead of the dedicated exception. Both independently reproduced before editing.
+
+Repair commit `851d88a084875e48b63fba455cb7b27f357c5ac4` (parent verified exactly `5140e062b8c1f3fcc78e96c7357060c60a51285d`, same 3 files, no other scope change): removed both seed names — the dict literals are now inlined directly as `MappingProxyType({...})` arguments so no module-level name backs them; `IllegalOrderTransitionError` now carries `reason_code="ILLEGAL_ORDER_TRANSITION"`; `UnknownRawOrderStatusError` now reports only `type(raw).__name__`, never `repr`/`str` of the raw value. Added 6 regression tests (74→80), including a name-agnostic module scan so a renamed seed would still be caught. Full suite 298/298 (218+80) identical both required CWDs. Fresh-process re-probes confirm both findings closed (121-pair oracle still 44 legal, zero mismatch; hostile-repr objects no longer leak/crash). Contract doc updated to match repaired guarantees precisely.
+
+Full detail: `11_TRIAGE/CLAUDE_TSP1001_REPAIR_REPORT_2026-07-20.md`. Next: independent Codex re-audit of `851d88a0`; TS-P1-002 remains blocked until re-audit passes and Barış accepts the PROPOSED contract (5 open design questions still unresolved, unchanged by this repair). No push/PR/P2RT/next-task action.
+
+## Claude Sonnet 5 2026-07-20 - TS-P1-001 second BLOCK repair (F1-R gc-referent, F2-R hostile metaclass)
+
+Codex re-audited repair commit `851d88a0` and issued **BLOCK** again (`11_TRIAGE/CODEX_TSP1001_REAUDIT_2026-07-20.md`): F1-R — both `MappingProxyType` exports still had a mutable `dict` referent reachable via the standard-library `gc.get_referents()` API (independent of any name), so mutating that referent still changed `can_transition`/`normalize_raw_order_status` decisions; F2-R — `type(raw).__name__` is dispatched through `raw`'s metaclass, so a hostile metaclass overriding `__getattribute__` for `"__name__"` raised `RuntimeError` instead of the promised `UnknownRawOrderStatusError`. Both independently reproduced before editing (`gc_dict_referents=1/1`, `policy_changed=True`; hostile-metaclass `RuntimeError`).
+
+Second repair commit `a15a6b1f6648016fe99278fe993daa2c1b49b923` (parent verified exactly `851d88a084875e48b63fba455cb7b27f357c5ac4`, same 3 files): replaced `MappingProxyType(dict)` entirely with a small private `_ImmutableMapping(collections.abc.Mapping)` backed by a `tuple` of `(key, value)` pairs (`__slots__`, no `__dict__`) for both `ORDER_STATE_TRANSITIONS` and `RAW_ORDER_STATUS_ALIASES` — tuples can't be mutated in place, so no `dict`/`list` exists anywhere in either export's transitive `gc.get_referents` closure (confirmed: 56 and 20 referents walked, zero mutable containers). `UnknownRawOrderStatusError`'s message is now a constant string per `reason_code`, touching no attribute of `raw`/`type(raw)` at all (not even `__name__`), uniformly across all three reason codes. Added 5 regression tests (80→85): hostile-metaclass test, plus transitive gc-referent scan + mutation-attempt tests for both exports. Full suite 303/303 (218+85) identical both required CWDs. Fresh-process re-probes confirm both residual findings closed.
+
+Full detail: `11_TRIAGE/CLAUDE_TSP1001_REPAIR2_REPORT_2026-07-20.md`. Next: independent Codex re-audit of `a15a6b1f`; TS-P1-002 remains blocked until re-audit passes and Barış accepts the PROPOSED contract (5 open design questions still unresolved, unchanged by either repair round). No push/PR/P2RT/next-task action.
