@@ -1,5 +1,57 @@
 # NEXT_STEPS
 
+## ✅ P2 DAY 0 v5 ARMED 2026-07-16T13:41:26.908952Z — 300s timeout fix DEPLOYED + field-proven during the gate
+
+Task B (`79976577`+`74e0990b`, PR #23 draft) Fable-audited **PASS** and deployed same day:
+P2RT detached `74e0990b`, 132×2 both CWDs (incl. inside P2RT), supervisor `MTC-Bridge-P2`, run
+`paper-20260716132819`, >13-min gate, ONE ARM, flat. **Live proof: a real HL outage during the
+gate ended with the first fresh bar 118s after reconnect — the old 60s trigger (v4 killer)
+would have disarmed; the 300s window absorbed it** (zero DATA_STALE/ERROR). Full record:
+`11_TRIAGE/FABLE_AUDIT_P2_TIMEOUT_FIX_2026-07-16.md` + GLOBAL_HANDOFF same date.
+- **[AI: Any]** daily D3 check: `/api/status` ARMED + fresh reconcile + `[]`/`[]` + P2RT pinned
+  `74e0990b` clean. Benign ~10-min feed cycles + `RECONCILE_FAILED_TOLERATED` WARNs = expected.
+  **Jul-18 planned PC-off = window boundary (v5 resets), NOT an incident.** Definitive ≥10-day
+  D3 on the VPS (end of month).
+- **[AI: Codex]** NEXT: PR #22 edit round —
+  `11_TRIAGE/CODEX_PR22_REQUIRED_EDITS_PROMPT_2026-07-16.md` (10 required edits + A2
+  claim-narrowing + adversarial tests proven failing on `f72b377a`); STOP for Fable re-review.
+- **[AI: Claude]** re-review the edit round on real code; then the single formal run-approval
+  question to Barış.
+- **[AI: Barış]** merge decisions: PR #23 (deployed fix), PRs #20/#21 (docs-only) — any time.
+
+## ~~🔴 P2 DISARMED — Day 0 v4 died 2026-07-15T20:22:44Z~~ RESOLVED by Day 0 v5 above
+
+Day 0 v4 lived 8h20m; reconcile N=3 tolerance WORKED; killer was `data_restore_timeout_s=60s`.
+Barış approved 60→300s 2026-07-16 → Codex Task A (Gate-5, BLOCK, Fable-verified) + Task B
+(timeout fix) both delivered 2026-07-16; deploy = Day 0 v5 (section above).
+
+## 🔴 FAZ3B PR #22 — independent Gate-5 = BLOCK (Fable-verified 2026-07-16); 10 REQUIRED EDITS queued
+
+Codex Gate-5 (`11_TRIAGE/CODEX_GATE5_FINDINGS_PR22_2026-07-16.md`) found 4 FATAL areas; Fable
+confirmed ALL on real code (`11_TRIAGE/FABLE_AUDIT_CODEX_GATE5_PR22_2026-07-16.md`): A4 primary
+DSR non-executable (engine NaN at grid_n=1, no du_cell tool exists), A5 gauntlet geometry
+mutable/unasserted, A6 runner argv+manifest+commit+post-run guard bypasses, A9 pre-reg §8↔§10
+decision-table contradictions. 108/108 tests reproduce; engine byte-identity holds; virginity
+scan clean (local corpus). **No run, no approval question, D016 unspent** until:
+- **[AI: Codex]** execute `11_TRIAGE/CODEX_PR22_REQUIRED_EDITS_PROMPT_2026-07-16.md` (after
+  Task B): 10 edits + A2 claim-narrowing + adversarial tests proven failing on `f72b377a`.
+- **[AI: Claude]** independent re-review of the edit round on real code; then present the
+  run-approval question to Barış.
+
+## ✅ P2 DAY 0 v4 ARMED 2026-07-15T12:02:42.856537Z + ALL PRs MERGED (Fable audit PASS)
+
+Outage-tolerance fix deployed (P2RT detached `1465f8f0`, 130 tests); one ARM; zero
+FAILED/TOLERATED/STALE since; flat. **Master consolidated `8721bce0`: PR #16/#17/#18/#19 all
+MERGED** (Fable finished #19 registry + handoff union after Codex correctly stopped; e0651f94
+Day-0-v4 report folded in; bridge suite 130 on master). Full record: GLOBAL_HANDOFF
+`[Claude Fable 5] 2026-07-15 — DEPLOY (Day 0 v4) + PR MERGE AUDIT`.
+- **[AI: Any]** daily D3 check unchanged; **Day 0 v4 resets at the Jul 18 planned PC-off — that
+  is a window boundary, NOT a safety incident.** Definitive ≥10-day D3 runs on the VPS (end of
+  month). Benign feed noise now suppressed from Telegram; `RECONCILE_FAILED_TOLERATED` (WARN, no
+  disarm) during a real outage = correct new behavior, not a failure.
+- **[AI: Any, low priority]** tidy master `NEXT_STEPS.md` union artifacts (superseded FAZ3B/bridge
+  sections) next session; remove merged worktrees C:/BTOL, C:/FZ3G5.
+
 ## CRYPTO PAPER BRIDGE P2 — TIMEOUT FIX BUILT; FABLE AUDIT/DEPLOY LOCKED 2026-07-16 [AI: Claude]
 
 Approved 60-to-300-second data-restore timeout wiring is built in commit `79976577` on
