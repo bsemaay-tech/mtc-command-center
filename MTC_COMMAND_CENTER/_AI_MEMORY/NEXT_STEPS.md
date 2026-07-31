@@ -1,5 +1,21 @@
 # NEXT_STEPS
 
+## 50-HOUR DISARMED SAFETY MVP — EXECUTING (2026-07-31)
+
+Standing owner authorisation: `11_TRIAGE/OWNER_AUTH_50H_EXECUTION_PROMPT_2026-07-31.md`.
+Accepted plan blob SHA-256 `a07c90cc49a4f34910f82bd9c94ba4fb71d76b511bc2cabe0bd727faf57fe3ee`.
+Roles for this execution only: **Claude Lead/acceptance, Codex `gpt-5.6-sol` implementer.**
+WP-0 record: `11_TRIAGE/WP0_SCOPE_BASELINE_RECORD_2026-07-31.md`. Baseline `origin/master` `2ebb0475`.
+
+- **[AI: Claude] DONE — WP-0 (2.0 / 2 h):** baseline re-based to live master (delta docs-only, Bridge tree byte-identical), Gate-1 S2 new-cycle authorisation recorded, path allowlist frozen, release plan fixed, Linux semantic-port manifest written, DISARMED invariant map produced. Merged via PR #36.
+- **[AI: Codex] ACTIVE — WP-S round 1 (12 h budget):** close S2 blocker B1 (`db.py:6527-6538` sub-1e-12 tolerance on durable `trades.exit_px`/`pnl` while the payload check is exact) and B2 (`orders.py:1662-1680` epoch asserted around, not inside, the `_ingest_fill` commit). Worktree `C:/WPS`, branch `feature/ts-p1-009b-s2-closure` from `678e8b94`. **NEW cycle, max 3 non-accepting rounds; the historical loop stays closed.**
+- **[AI: Claude] THEN:** independently inspect the real diff, reproduce the suite against the `2 failed / 1113 passed` floor, freeze the checkpoint SHA, then run **Audit 1 (Gate-5)** in a fresh independent session — Codex `gpt-5.6-sol` xhigh, never `--resume`. Only after an accepting S2 verdict: dispatch minimum S3, then its own Gate-5.
+- **[AI: Claude] AFTER Audit 1 accepts:** WP-L Phase 1 — **verification only**, since F-0-1 proved the Linux package at `6fe0130f` is already an ancestor of master and byte-identical. **No porting, no cherry-pick, no cross-branch Git operation. No Ubuntu execution of any kind before Gate A.**
+- **[AI: Claude] CARRY TO WP-A:** **I-R4 SIGTERM clean-shutdown** is the highest-risk minimum restart invariant. `engine.stop()` (`engine.py:228-235`) cancels tasks and stops the feed but writes no DISARMED state and closes no store; no test asserts "no dangling state". §19 forbids SMALL-GAP treatment here — resolve it with executed evidence on the retained staging host, or BLOCK. **No shutdown-path code change is authorised on the strength of the WP-0 record alone.**
+- **[AI: Claude] BEFORE any TESTNET work:** write the TESTNET-phase pre-registration (scope, invariants, abort conditions, sizing source, evidence) and pass it through one fresh Gate-5 audit. The 50-hour plan's acceptance does **not** cover the TESTNET phase.
+- **[AI: Barış] LIVE-CAPITAL GATE — unchanged:** every action with possible economic effect stays un-authorised and must be asked for explicitly. Mainnet readiness work with no economic effect is authorised; mainnet capital is not.
+- **[AI: Any] HOLD:** no Ubuntu execution, staging, VPS, deployment, TESTNET, ARM, broker, or runtime action is authorised until its own documented gate prerequisites objectively pass.
+
 ## GLM SUPPLEMENTAL ROUTING POLICY — IMPLEMENTED 2026-07-27
 
 Policy codified in `AGENTS.md` §GLM SUPPLEMENTAL ROUTING (canonical, do not copy table elsewhere). Cross-references added to all required files. Stale `claude-opus-4-8` → `claude-opus-5` fixed in `SPRINT_WORKFLOW.md`.

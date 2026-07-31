@@ -1,5 +1,27 @@
 # GLOBAL_HANDOFF
 
+## [Claude Opus 5] 2026-07-31 — 50-Hour MVP execution STARTED; WP-0 complete and merged
+
+Owner issued a standing authorisation (`11_TRIAGE/OWNER_AUTH_50H_EXECUTION_PROMPT_2026-07-31.md`, committed) to execute the accepted 50-Hour DISARMED Safety MVP autonomously from WP-0 through completion. It supersedes the plan's §23c/§39-10 actor assignment **for this execution only**: **Claude `claude-opus-5` is Lead Orchestrator and sole acceptance authority; Codex CLI `gpt-5.6-sol` is the counterpart flagship implementer.** No safety, testing, scope, audit, model, or evidence requirement is weakened. The authorisation also grants in advance the three approvals the plan gates separately (WP-V deployment, ARM, first TESTNET paper order); every objective Gate A/B/C prerequisite still applies in full, and the TESTNET phase still needs its own pre-registration through one fresh Gate-5 audit before it may start.
+
+**WP-0 COMPLETE (2.0 / 2 h), merged to `origin/master` via PR #36 → `2ebb0475`** (record commit `4d2228cf`). Full record: `11_TRIAGE/WP0_SCOPE_BASELINE_RECORD_2026-07-31.md`.
+
+Plan artifact identity re-verified from the **committed blob**: SHA-256 `a07c90cc49a4f34910f82bd9c94ba4fb71d76b511bc2cabe0bd727faf57fe3ee`, blob `9ecae648`, 85 016 bytes — matches the accepted hash. The working copy hashes differently (CRLF on checkout) and is never used as identity. The plan document is **not edited**; its 8 optional nits stay unapplied.
+
+**Baseline re-based** from the plan's stale `3cccc4c2` to live `origin/master` `561be664`. The 14-commit delta is **documentation-only** — `git diff --name-only 3cccc4c2..origin/master` for `IBKR_PAPER_BRIDGE` and for `'*.py'` are both empty, so the Bridge tree is byte-identical and no plan assumption about code is invalidated.
+
+**F-0-1 — the "old-base Linux package" premise is stale.** `6fe0130f` is an **ancestor** of master; the whole `deploy/linux/` package, `requirements.{in,lock,txt}`, and the 35 Linux/deployment tests are already merged and byte-identical to the old-base version. Nothing needs porting and **no cross-branch Git operation occurs in WP-L**, which reduces to verification of the already-merged package. Not a safety defect — it makes WP-L strictly smaller — so it is recorded and reported, not quietly patched into the plan. The plan's caveat that the package is builder-self-QA-only and independently unaccepted still binds: being on master is not acceptance.
+
+**F-0-2 — both S2 blockers reproduced on real source** (not restated from a report): `db.py:6527-6538` compares durable `trades.exit_px`/`pnl` with `abs_tol=1e-12` while the parallel decision-payload check ten lines above is exact — a live sub-1e-12 tampering window reaching ACK/DISARM; and `orders.py:1662-1680` asserts epoch ownership on either side of the `_ingest_fill` commit instead of inside it, so a superseded recovery can durably commit a lifecycle close before the fault raises.
+
+**DISARMED VPS invariant map:** 0 FULL-TASK gaps; 1 SMALL-GAP (outbound-network inventory) already owed by WP-I under its own hours, so it draws no contingency; 1 open item carried to WP-A — **I-R4 SIGTERM clean-shutdown**. The startup fail-closed at `app.py:109-110` (non-KILLED forced to DISARMED every start) carries most of that safety property, but "no dangling state" is an Ubuntu-execution fact unprovable on Windows. §19 forbids SMALL-GAP treatment for the four minimum restart invariants, so I-R4 is neither pre-classified FULL-TASK nor silently marked COVERED. A fourth honest operational state, **COVERED-STATIC**, is recorded for invariants proven only by Windows-side structural tests against Linux artifacts; each must be promoted by executed-Ubuntu evidence in WP-L Phase 2 / WP-I staging / WP-A.
+
+**Frozen test floor at `678e8b94`: `2 failed, 1113 passed`** (`--ignore=TSP1009B.pytest_tmp_s1r1`, Python 3.14.2 / pytest 9.0.2). Both failures pre-existing and outside the WP-S allowlist: the stale KVM2 ledger hash and the stale `schema_version == "2"` expectation against default v4.
+
+**WP-S IN PROGRESS.** Isolated worktree `C:/WPS`, branch `feature/ts-p1-009b-s2-closure`, cut from the exact blocked artifact `678e8b94`. Branching from `678e8b94` rather than `origin/master` is a recorded deliberate deviation, safe because `merge-base(678e8b94, origin/master) = 3cccc4c2` and the Bridge tree is byte-identical between `3cccc4c2` and `561be664`. Round 1 of the NEW owner-authorised S2 cycle is dispatched to Codex `gpt-5.6-sol` xhigh as implementer; the historical exhausted loop stays closed.
+
+No implementation, staging, Ubuntu execution, VPS, deployment, TESTNET, ARM, broker, runtime, or live-capital action has occurred.
+
 ## [Claude Opus 5] 2026-07-30 — 50-Hour Plan documentation repair/audit cycle ACCEPTED
 
 Owner-authorized documentation-only repair + audit cycle on `09_DOCS/ROADMAPS/TRADING_SYSTEM/TRADING SYSTEM — 50-HOUR ACCELERATED IMPLEMENTATION PLAN.md`. **ACCEPTED** — both canonical audits returned PASS-WITH-NITS with zero required repairs. Baseline `87a25792` (owner-supplied hash verified) → **final `a07c90cc49a4f34910f82bd9c94ba4fb71d76b511bc2cabe0bd727faf57fe3ee`** (1879 lines). Roles: Claude `claude-opus-5` Lead/acceptance, Codex CLI `gpt-5.6-sol` sole document implementer, canonical auditors Claude `claude-opus-5` xhigh (fresh) + Codex `gpt-5.6-sol` xhigh (ephemeral read-only), DeepSeek CLI read-only supplemental. Two non-accepting rounds used of three permitted.
