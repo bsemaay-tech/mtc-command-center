@@ -1103,6 +1103,7 @@ def test_s2_r2_startup_drain_defers_kill_flatten_without_epoch(
             payload={},
         )
     assert unowned.value.reason_code == "KILL_EPOCH_REQUIRED"
+    assert restarted_store.conn.in_transaction is False
 
     # This is the same drain entrypoint used by startup reconciliation. It must
     # return normally while retaining the deferred event for kill recovery.
@@ -1174,6 +1175,17 @@ def _s3_stranded_kill_restart(tmp_path, monkeypatch):
         trade_id,
         decision_uid,
     )
+
+
+def _s3_open_epoch(store, request, *, process_uid, opened_ts_monotonic):
+    return store.open_kill_epoch(
+        run_id=str(request["run_id"]),
+        symbol=str(request["symbol"]),
+        flatten_requested=bool(request["flatten_requested"]),
+        policy_version=str(request["policy_version"]),
+        process_uid=process_uid,
+        opened_ts_monotonic=opened_ts_monotonic,
+    )[1]
 
 
 def test_s3_deferral_event_is_durable_secret_safe_and_idempotent(
@@ -1410,6 +1422,220 @@ def test_s3_drain_propagates_non_kill_conflict_failures(tmp_path, monkeypatch):
     with pytest.raises(RuntimeError, match="UNRELATED_DRAIN_FAILURE"):
         asyncio.run(engine.order_manager.drain_queued_events())
     assert engine.order_manager._queued_events == [event]
+    store.close()
+
+
+def test_s3_r2_durable_close_invalidates_unchanged_deferral_suppression(
+    tmp_path, monkeypatch
+):
+    (
+        stale_store,
+        broker,
+        stale_engine,
+        request,
+        redelivered,
+        trade_id,
+        _decision_uid,
+    ) = _s3_stranded_kill_restart(tmp_path, monkeypatch)
+    stale_epoch = _s3_open_epoch(
+        stale_store,
+        request,
+        process_uid="s3-r2-f1-stale",
+        opened_ts_monotonic=10.0,
+    )
+    stale_engine.order_manager._active_kill_epoch = stale_epoch
+
+    winner_store = Store(stale_store.db_path)
+    winner_store.initialize(target_schema_version=9)
+    assert winner_store is not stale_store
+    winner_epoch = _s3_open_epoch(
+        winner_store,
+        request,
+        process_uid="s3-r2-f1-winner",
+        opened_ts_monotonic=11.0,
+    )
+    winner_manager = OrderManager(
+        store=winner_store, broker=broker, run_id="repair4-kill"
+    )
+    winner_manager._active_kill_epoch = winner_epoch
+
+    stale_engine.order_manager._queue_event(redelivered)
+    assert asyncio.run(stale_engine.order_manager.drain_queued_events()) == 0
+    assert stale_engine.order_manager._queued_events == [redelivered]
+
+    winner_manager._queue_event(FillEvent(**redelivered.model_dump()))
+    assert asyncio.run(winner_manager.drain_queued_events()) == 1
+    assert winner_store.get_trade(trade_id)["exit_ts"] is not None
+
+    assert asyncio.run(stale_engine.order_manager.drain_queued_events()) == 1
+    assert stale_engine.order_manager._queued_events == []
+    assert stale_engine.order_manager._deferred_kill_fills == {}
+    winner_store.close()
+    stale_store.close()
+
+
+def test_s3_r2_ep4_append_failure_is_not_converted_to_deferral(
+    tmp_path, monkeypatch
+):
+    (
+        stale_store,
+        _broker,
+        stale_engine,
+        request,
+        redelivered,
+        _trade_id,
+        _decision_uid,
+    ) = _s3_stranded_kill_restart(tmp_path, monkeypatch)
+    stale_epoch = _s3_open_epoch(
+        stale_store,
+        request,
+        process_uid="s3-r2-f2-stale",
+        opened_ts_monotonic=10.0,
+    )
+    stale_engine.order_manager._active_kill_epoch = stale_epoch
+    observer = Store(stale_store.db_path)
+    observer.initialize(target_schema_version=9)
+    assert observer is not stale_store
+    _s3_open_epoch(
+        observer,
+        request,
+        process_uid="s3-r2-f2-winner",
+        opened_ts_monotonic=11.0,
+    )
+
+    original_insert = stale_store._insert_event_in_tx
+
+    def fail_only_ep4(run_id, ts, severity, code, detail):
+        if code == "KILL_EPOCH_STALE_WRITE_REJECTED":
+            raise RuntimeError("injected EP-4 append failure")
+        return original_insert(run_id, ts, severity, code, detail)
+
+    monkeypatch.setattr(stale_store, "_insert_event_in_tx", fail_only_ep4)
+    stale_engine.order_manager._queue_event(redelivered)
+    consumed = None
+    raised_reason = None
+    try:
+        consumed = asyncio.run(stale_engine.order_manager.drain_queued_events())
+    except KillConflictError as exc:
+        raised_reason = exc.reason_code
+
+    events = observer.get_events()
+    actual = (
+        raised_reason,
+        consumed,
+        len([row for row in events if row["code"] == "KILL_EPOCH_STALE_WRITE_REJECTED"]),
+        [
+            str(row["detail"]).rsplit(";reason=", 1)[-1]
+            for row in events
+            if row["code"] == "KILL_EPOCH_LIFECYCLE_DEFERRED"
+        ],
+    )
+    assert actual == ("KILL_STALE_EVIDENCE_RECORD_FAILED", None, 0, [])
+    assert stale_engine.order_manager._queued_events == [redelivered]
+    observer.close()
+    stale_store.close()
+
+
+def test_s3_r2_canonical_then_conflicting_fill_reaches_quarantine(
+    tmp_path, monkeypatch
+):
+    store, _broker, engine, request, redelivered, _trade_id, _decision_uid = (
+        _s3_stranded_kill_restart(tmp_path, monkeypatch)
+    )
+    engine.order_manager._queue_event(redelivered)
+    assert asyncio.run(engine.order_manager.drain_queued_events()) == 0
+    epoch = _s3_open_epoch(
+        store,
+        request,
+        process_uid="s3-r2-f3-owner",
+        opened_ts_monotonic=10.0,
+    )
+    engine.order_manager._active_kill_epoch = epoch
+    conflicting = redelivered.model_copy(update={"px": redelivered.px + 1.0})
+    engine.order_manager._queue_event(conflicting)
+    assert engine.order_manager._queued_events == [redelivered, conflicting]
+
+    assert asyncio.run(engine.order_manager.drain_queued_events()) == 2
+    assert engine.order_manager._queued_events == []
+    conflicts = [
+        row for row in store.get_events() if row["code"] == "FILL_ID_CONFLICT"
+    ]
+    assert len(conflicts) == 1
+    store.close()
+
+
+@pytest.mark.parametrize("missing_column", ["group_id", "trade_id"])
+def test_s3_r2_incomplete_kill_identity_is_contained_at_startup(
+    tmp_path, monkeypatch, missing_column
+):
+    store, _broker, engine, _request, redelivered, trade_id, decision_uid = (
+        _s3_stranded_kill_restart(tmp_path, monkeypatch)
+    )
+    store.conn.execute(
+        f"UPDATE orders SET {missing_column}=NULL WHERE cloid=?",
+        (redelivered.cloid,),
+    )
+    store.conn.commit()
+    observer = Store(store.db_path)
+    observer.initialize(target_schema_version=9)
+    assert observer is not store
+    engine.order_manager._queue_event(redelivered)
+
+    async def start_and_stop():
+        await engine.start(lookback=0)
+        await engine.stop()
+
+    asyncio.run(start_and_stop())
+
+    assert engine.reconcile_ready is True
+    assert engine.order_manager._queued_events == []
+    assert observer.get_trade(trade_id)["exit_ts"] is None
+    assert [
+        row
+        for row in observer.get_decision_chain(decision_uid)
+        if row["stage"] == "TRADE_CLOSED"
+    ] == []
+    identity_faults = [
+        row
+        for row in observer.get_events()
+        if row["code"] == "KILL_LIFECYCLE_IDENTITY_MISSING"
+    ]
+    assert len(identity_faults) == 1
+    assert f"missing={missing_column}" in str(identity_faults[0]["detail"])
+    assert observer.get_meta("app_state") in {"DISARMED", "KILLED"}
+    observer.close()
+    store.close()
+
+
+def test_s3_r2_consumed_quantity_fault_clears_deferred_fill_cache(
+    tmp_path, monkeypatch
+):
+    store, _broker, engine, request, redelivered, _trade_id, _decision_uid = (
+        _s3_stranded_kill_restart(tmp_path, monkeypatch)
+    )
+    observer = Store(store.db_path)
+    observer.initialize(target_schema_version=9)
+    assert observer is not store
+    engine.order_manager._queue_event(redelivered)
+    assert asyncio.run(engine.order_manager.drain_queued_events()) == 0
+    assert redelivered.fill_id in engine.order_manager._deferred_kill_fills
+
+    epoch = _s3_open_epoch(
+        store,
+        request,
+        process_uid="s3-r2-f5-owner",
+        opened_ts_monotonic=10.0,
+    )
+    engine.order_manager._active_kill_epoch = epoch
+    monkeypatch.setattr(engine.order_manager, "_broker_lot_unit", lambda _coin: None)
+
+    assert asyncio.run(engine.order_manager.drain_queued_events()) == 1
+    assert engine.order_manager._queued_events == []
+    assert engine.order_manager._deferred_kill_fills == {}
+    assert "FILL_QUANTITY_INTEGRITY" in {
+        row["code"] for row in observer.get_events()
+    }
+    observer.close()
     store.close()
 
 

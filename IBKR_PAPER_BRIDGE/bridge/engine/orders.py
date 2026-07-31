@@ -236,7 +236,7 @@ class OrderManager:
         self.broker = broker
         self.run_id = run_id
         self._submitted: set[str] = set()
-        self._synced_fills: set[str] = set()
+        self._synced_fills: dict[str, tuple[object, ...]] = {}
         self._deferred_kill_fills: dict[
             str, tuple[KillEvidenceEpoch | None, tuple[object, ...]]
         ] = {}
@@ -2711,10 +2711,27 @@ class OrderManager:
                 self._active_kill_epoch,
                 self._fill_delivery_identity(event),
             ):
-                return False
+                order = self.store.get_order(event.cloid)
+                trade = (
+                    self.store.get_trade(int(order["trade_id"]))
+                    if order is not None
+                    and str(order.get("role")) == "KILL_FLATTEN"
+                    and order.get("trade_id") is not None
+                    and str(order.get("group_id") or "")
+                    else None
+                )
+                if trade is not None and trade.get("exit_ts") is None:
+                    return False
         try:
             return self._ingest_event(event)
         except KillConflictError as exc:
+            # Exhaustive containment allowlist by reason-code enumeration.
+            # Every other KillConflictError is a fail-closed evidence/schema fault.
+            if exc.reason_code not in {
+                "KILL_EPOCH_REQUIRED",
+                "KILL_EPOCH_STALE_WRITE",
+            }:
+                raise
             if self._defer_kill_lifecycle_event(
                 event, reason_code=exc.reason_code
             ):
@@ -3034,6 +3051,12 @@ class OrderManager:
     def _same_fill_delivery(cls, left: FillEvent, right: FillEvent) -> bool:
         return cls._fill_delivery_identity(left) == cls._fill_delivery_identity(right)
 
+    def _mark_fill_consumed(self, fill: FillEvent) -> None:
+        self._synced_fills.setdefault(
+            fill.fill_id, self._fill_delivery_identity(fill)
+        )
+        self._deferred_kill_fills.pop(fill.fill_id, None)
+
     def _queue_event(self, event: BrokerEvent) -> None:
         if isinstance(event, FillEvent):
             for index, queued in enumerate(self._queued_events):
@@ -3079,15 +3102,41 @@ class OrderManager:
         return True
 
     def _ingest_fill(self, fill: FillEvent) -> bool:
+        synced_delivery = self._synced_fills.get(fill.fill_id)
         if (
-            fill.fill_id in self._synced_fills
+            synced_delivery is not None
             and fill.fill_id not in self._deferred_kill_fills
         ):
+            if synced_delivery != self._fill_delivery_identity(fill):
+                self._quarantine_fill(
+                    "FILL_ID_CONFLICT",
+                    fill,
+                    f"synced fill_id reused with different payload: {fill.fill_id}",
+                )
+            self._mark_fill_consumed(fill)
             return True
         order = self.store.get_order(fill.cloid)
         if order is None:
             return False
         role = str(order["role"])
+        trade_id = order["trade_id"]
+        trade = self.store.get_trade(int(trade_id)) if trade_id is not None else None
+        if role == "KILL_FLATTEN":
+            missing_identity = []
+            if not str(order.get("group_id") or ""):
+                missing_identity.append("group_id")
+            if trade_id is None:
+                missing_identity.append("trade_id")
+            elif trade is None:
+                missing_identity.append("trade_row")
+            if missing_identity:
+                self._quarantine_fill(
+                    "KILL_LIFECYCLE_IDENTITY_MISSING",
+                    fill,
+                    f"cloid={fill.cloid} missing={','.join(missing_identity)}",
+                )
+                self._mark_fill_consumed(fill)
+                return True
         kill_close_alias = (
             role == "KILL_FLATTEN"
             and str(fill.role).upper() in {"CLOSE", "KILL_FLATTEN"}
@@ -3098,11 +3147,9 @@ class OrderManager:
                 fill,
                 f"event_role={fill.role} stored_role={role} cloid={fill.cloid}",
             )
-            self._synced_fills.add(fill.fill_id)
+            self._mark_fill_consumed(fill)
             return True
 
-        trade_id = order["trade_id"]
-        trade = self.store.get_trade(int(trade_id)) if trade_id is not None else None
         outcome = self.store.insert_fill(
             fill_id=fill.fill_id,
             cloid=fill.cloid,
@@ -3119,19 +3166,18 @@ class OrderManager:
                 fill,
                 f"immutable fill_id reused with different payload: {fill.fill_id}",
             )
-            self._synced_fills.add(fill.fill_id)
+            self._deferred_kill_fills.pop(fill.fill_id, None)
             return True
         if trade is not None and trade["exit_ts"] is not None:
             if outcome == "EXACT_DUPLICATE":
-                self._synced_fills.add(fill.fill_id)
-                self._deferred_kill_fills.pop(fill.fill_id, None)
+                self._mark_fill_consumed(fill)
                 return True
             self._quarantine_fill(
                 "POST_CLOSE_FILL",
                 fill,
                 f"trade_id={trade_id} role={role} canonical_exit_ts={trade['exit_ts']}",
             )
-            self._synced_fills.add(fill.fill_id)
+            self._mark_fill_consumed(fill)
             return True
 
         # Cumulative order accounting: an order becomes FILLED only when its
@@ -3146,7 +3192,7 @@ class OrderManager:
                 detail=f"fill_id={fill.fill_id} cloid={fill.cloid} "
                 "reason=SIZE_QUANTUM_UNAVAILABLE",
             )
-            self._synced_fills.add(fill.fill_id)
+            self._mark_fill_consumed(fill)
             return True
         try:
             event_lots = quantize_lots(fill.qty, lot)
@@ -3163,7 +3209,7 @@ class OrderManager:
                 detail=f"fill_id={fill.fill_id} cloid={fill.cloid} "
                 f"reason={exc.reason_code}",
             )
-            self._synced_fills.add(fill.fill_id)
+            self._mark_fill_consumed(fill)
             return True
         if filled_lots > ordered_lots:
             self._quarantine_fill(
@@ -3172,7 +3218,7 @@ class OrderManager:
                 f"cloid={fill.cloid} filled_lots={filled_lots} "
                 f"ordered_lots={ordered_lots}",
             )
-            self._synced_fills.add(fill.fill_id)
+            self._mark_fill_consumed(fill)
             return True
         status = self._canonical_status(
             order=order,
@@ -3221,7 +3267,7 @@ class OrderManager:
                         detail=f"fill_id={fill.fill_id} trade_id={trade_id} "
                         f"reason={exc.reason_code}",
                     )
-                    self._synced_fills.add(fill.fill_id)
+                    self._mark_fill_consumed(fill)
                     return True
                 if exit_lots > entry_lots:
                     self._quarantine_fill(
@@ -3230,7 +3276,7 @@ class OrderManager:
                         f"trade_id={trade_id} exit_lots={exit_lots} "
                         f"entry_lots={entry_lots}",
                     )
-                    self._synced_fills.add(fill.fill_id)
+                    self._mark_fill_consumed(fill)
                     return True
                 if exit_lots == entry_lots:
                     try:
@@ -3244,7 +3290,7 @@ class OrderManager:
                             detail=f"fill_id={fill.fill_id} trade_id={trade_id} "
                             f"reason={exc.reason_code}",
                         )
-                        self._synced_fills.add(fill.fill_id)
+                        self._mark_fill_consumed(fill)
                         return True
                     if live_entry_remainder:
                         if outcome == "INSERTED":
@@ -3267,7 +3313,7 @@ class OrderManager:
                                 fill,
                                 f"trade_id={trade_id} flat_qty={exit_qty} owned entry remainder can still fill",
                             )
-                        self._synced_fills.add(fill.fill_id)
+                        self._mark_fill_consumed(fill)
                         return True
                     exit_vwap = float(totals["exit_vwap"])
                     costs = self.store.trade_costs(str(order["decision_uid"]))
@@ -3331,8 +3377,7 @@ class OrderManager:
                         {"exit_reason": role, "exit_qty": exit_qty, "entry_qty": entry_qty},
                         trade_id=int(trade_id),
                     )
-        self._synced_fills.add(fill.fill_id)
-        self._deferred_kill_fills.pop(fill.fill_id, None)
+        self._mark_fill_consumed(fill)
         return True
 
     def _has_live_entry_remainder_exact(

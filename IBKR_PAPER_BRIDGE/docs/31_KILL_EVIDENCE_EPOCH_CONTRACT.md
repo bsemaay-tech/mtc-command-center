@@ -179,13 +179,20 @@ that binding against the durable request/order/fill join and performs the lookup
 `BEGIN IMMEDIATE`. Repeated drains across Store instances therefore retain one row for the same
 episode/trade/fill/reason. Failure to append the evidence is raised and remains fail-closed.
 
-Both the global reconcile drain and the same-symbol locked drain contain only
-`KillConflictError` from a durably bound KILL-flatten fill. Other exception classes, and a
-`KillConflictError` that cannot be bound to that lifecycle, still propagate. Direct store callers
-also still receive the conflict after the rejected lifecycle transaction rolls back and EP-4
-evidence is appended. Once a drain has deferred an unchanged fill under the same absent or stale
-epoch context, later cycles retain it without repeating the rejected store call; a newly opened
-epoch changes that context and permits the retry.
+Both the global reconcile drain and the same-symbol locked drain use an exhaustive containment
+allowlist: only `KILL_EPOCH_REQUIRED` and `KILL_EPOCH_STALE_WRITE` from a durably bound
+KILL-flatten fill may be deferred. Every other `KillConflictError`, including evidence-append and
+schema failures, propagates fail-closed. Other exception classes and a listed conflict that cannot
+be bound to that lifecycle also propagate. Direct store callers still receive the conflict after
+the rejected lifecycle transaction rolls back and EP-4 evidence is appended. Once a drain has
+deferred an unchanged fill under the same absent or stale epoch context, later cycles retain it
+without repeating the rejected store call; a newly opened epoch or a durable trade closure changes
+that context and permits the retry.
+
+A schema-admitted `KILL_FLATTEN` order missing its episode, trade identity, or durable trade row is
+quarantined as `KILL_LIFECYCLE_IDENTITY_MISSING` and keeps the application fail-closed without
+unwinding startup or silently disappearing. Every path that consumes a deferred fill also evicts
+its deferred-cache entry.
 
 The status payload exposes `kill_episode.lifecycle_state = AWAITING_EPOCH_RECOVERY` while the
 active episode still needs recovery, `AWAITING_ACK` once it is safe and ACK-eligible, and
