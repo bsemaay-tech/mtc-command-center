@@ -1,0 +1,91 @@
+# MTC Crypto Paper Bridge — FIRST-START unit (Hyperliquid TESTNET only).
+#
+# Separately named and separately hashed from the steady profile on purpose.
+# This is the ONLY unit install.sh installs, and it is installed MASKED.
+#
+#   * Restart=no            — a crash must stay crashed and be inspected by a
+#                             human (KVM2 P2-04 / P5-03A). Automatic restart is
+#                             prohibited until DISARMED startup, reconcile
+#                             gating, state continuity, duplicate prevention and
+#                             throttling are separately proven and accepted.
+#   * No [Install] section  — `systemctl enable` is structurally impossible, so
+#                             this unit can never be pulled in at boot.
+#   * Installed masked      — starting it requires an explicit `systemctl unmask`
+#                             performed under the separate KVM2-P4-06 first-start
+#                             authorization, exactly once.
+#
+# `@RELEASE_SHA@` is substituted by install.sh with the exact 40-hex release
+# commit, so the unit names one immutable release path and can never drift to a
+# mutable "current" symlink.
+
+[Unit]
+Description=MTC Crypto Paper Bridge (Hyperliquid TESTNET) — first DISARMED start
+Documentation=file:///opt/mtc-bridge/releases/@RELEASE_SHA@/IBKR_PAPER_BRIDGE/deploy/linux/README.md
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+[Service]
+Type=exec
+User=mtc-bridge
+Group=mtc-bridge
+WorkingDirectory=/opt/mtc-bridge/releases/@RELEASE_SHA@/IBKR_PAPER_BRIDGE
+ExecStart=/opt/mtc-bridge/venvs/@RELEASE_SHA@/bin/python -m bridge.app
+
+# The release tree is root-owned and read-only; never write bytecode into it.
+Environment=PYTHONUTF8=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+# Runtime SQLite lives in the writable state directory, not in the release tree.
+Environment=MTC_BRIDGE_STATE_DB=/var/lib/mtc-bridge/bridge.db
+# Root-owned 0600 file; provisioned only under the separate KVM2-P4-03 secret
+# authorization. HL_LIVE_ACK must never appear in it.
+EnvironmentFile=/etc/mtc-bridge/mtc-bridge.env
+
+# --- graceful stop ---------------------------------------------------------
+KillSignal=SIGTERM
+KillMode=mixed
+TimeoutStartSec=120
+TimeoutStopSec=45
+FinalKillSignal=SIGKILL
+
+# --- restart policy: none, plus throttling if a future profile enables it ---
+Restart=no
+RestartSec=30
+
+# --- persistent, rotatable logs -------------------------------------------
+SyslogIdentifier=mtc-bridge
+StandardOutput=append:/var/log/mtc-bridge/bridge.log
+StandardError=append:/var/log/mtc-bridge/bridge.err.log
+
+# --- privilege separation and sandboxing ----------------------------------
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+PrivateTmp=yes
+PrivateDevices=yes
+PrivateUsers=no
+ProtectSystem=strict
+ProtectHome=yes
+ProtectProc=invisible
+ProcSubset=pid
+ProtectClock=yes
+ProtectHostname=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+UMask=0077
+RemoveIPC=yes
+
+# ProtectSystem=strict makes the whole filesystem read-only for this service;
+# these two directories are the only writable surfaces it gets.
+ReadWritePaths=/var/lib/mtc-bridge /var/log/mtc-bridge

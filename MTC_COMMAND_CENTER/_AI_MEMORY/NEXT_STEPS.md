@@ -52,6 +52,55 @@ Day-0-v4 report folded in; bridge suite 130 on master). Full record: GLOBAL_HAND
 - **[AI: Any, low priority]** tidy master `NEXT_STEPS.md` union artifacts (superseded FAZ3B/bridge
   sections) next session; remove merged worktrees C:/BTOL, C:/FZ3G5.
 
+## CRYPTO PAPER BRIDGE P2 — TIMEOUT FIX BUILT; FABLE AUDIT/DEPLOY LOCKED 2026-07-16 [AI: Claude]
+
+Approved 60-to-300-second data-restore timeout wiring is built in commit `79976577` on
+`feature/ibkr-bridge-final`. Final focused tests failed on pre-fix code (`1 failed, 2 passed`), then
+passed after the fix (`3 passed`); both full suites pass `132 passed, 1 warning` from both
+supported CWDs. `bars.py` is unchanged. Report:
+`11_TRIAGE/P2_DATA_RESTORE_TIMEOUT_REPORT_2026-07-16.md`.
+
+- **[AI: Claude]** independently audit real code at `79976577`, rerun both full suites, and
+  reproduce the focused failure against pre-fix code. Do not trust the Codex report.
+- **[AI: Claude|Codex]** only after Fable records PASS, execute the existing single testnet
+  deploy window: detach `C:\P2RT` to the audited tip, rerun both suites, supervisor start,
+  at least 10-minute gate including verified fresh bars, then exactly one authorized ARM.
+- **[AI: Any]** until audit PASS, keep the runtime DISARMED and leave clean detached
+  `C:\P2RT` at `1465f8f0`. Mainnet remains forbidden.
+
+## SUPERSEDED — CRYPTO PAPER BRIDGE P2 ARMED, NEW DAY 0 2026-07-15T06:48:16.619336Z
+
+Fable-audited race fix `da44d1ff` is deployed in detached `C:\P2RT` at `cc4ce67d`. Run
+`paper-20260715063657` passed the required 10-minute reconnect gate and two post-ARM reconciles.
+Exactly one ARM request/transition occurred; final state was ARMED and reconcile-ready with
+positions/orders `[]` and zero ERROR/reconcile-failure/defer events.
+
+- **[AI: Any]** daily read-only D3 check: state/reconcile freshness, WARN/ERROR events, equity,
+  process/commit identity, all positions/orders, and native stops for any owned position.
+- **[AI: Claude|Codex]** on any safety anomaly: preserve evidence, DISARM safely if necessary,
+  diagnose, and do not repeat ARM without a fresh complete gate.
+- **[AI: Barış]** keep the host/supervisor available for at least 10 uninterrupted calendar days;
+  any shutdown or critical runtime change resets the P2 clock.
+- Evidence: `IBKR_PAPER_BRIDGE/docs/03_STATUS.md` and
+  `MTC_COMMAND_CENTER/11_TRIAGE/P2_RACE_FIX_REPORT_2026-07-14.md`.
+
+## SUPERSEDED — P2 RACE FIX BUILT; AUDIT/DEPLOY LOCKED 2026-07-14
+
+Commit `da44d1ff` on `feature/ibkr-bridge-final` implements the atomic reconnect client swap,
+narrow rebuild-only reconcile deferral, and deterministic regressions. Both full suites passed
+`127 passed, 1 warning`; report: `11_TRIAGE/P2_RACE_FIX_REPORT_2026-07-14.md`.
+
+- **[AI: Claude]** Fable adversarial audit on the real commit and independent suite rerun.
+- **[AI: Barış]** only after Fable PASS, explicitly approve or reject Task 4's single deploy/re-arm
+  window. No approval is inferred from the build request.
+- **[AI: Claude|Codex]** after both gates, execute Task 4 exactly once with its stop conditions;
+  otherwise leave `C:\P2RT` and the DISARMED runtime untouched.
+
+## SUPERSEDED — P2 ARMED, D3 STARTED 2026-07-13
+
+Day 0 started `2026-07-13T13:00:28.6218649Z` after incident containment, commit `59c334c0`, full
+tests `119 passed` from both roots, and a real
+`DISCONNECT -> RECONNECT -> DATA_RESTORED -> two reconciles` gate. Runtime is pinned at `C:\P2RT`;
 ## BRANCH CONSOLIDATION — FABLE AUDIT DONE 2026-07-13: content PASS + 1 MAJOR finding
 
 Codex's queue 2a–2c + Telegram test-isolation work **VERIFIED PASS** on real code/runs (Fable,
@@ -127,6 +176,7 @@ Task Scheduler must never be redirected to the parallel-agent research checkout.
   process/commit, all positions/orders, and native stops for any owned position.
 - **[AI: Claude|Codex]** any safety anomaly: preserve evidence, DISARM safely if needed, diagnose;
   do not repeat ARM without a fresh complete gate.
+- Evidence: `IBKR_PAPER_BRIDGE/docs/19_P2_RECONNECT_INCIDENT_2026-07-13.md`.
 - ~~**[AI: Codex]** test-suite Telegram leak fix~~ **DONE 2026-07-13** in `960369b9`: autouse
   conftest fixture patches `resolve_telegram_credentials` at both import sites; focused tests
   `2 passed`, both full suites `122 passed`. Runtime code untouched. `C:\P2RT` was not synced, so
@@ -167,11 +217,16 @@ The US-equities-10m Donchian lead does NOT transfer to crypto 1h/4h. Verdict rep
   authoritative task ladder from here to P2 (testnet live loop).** Barış 2026-07-12 blanket-approved
   ALL of it incl. bounded P0 smokes until pass, B6 fill smoke, and ALL of Phase D (P2 ARM). Any model
   picks the first unchecked box in its §3 and executes per its §1 rules WITHOUT asking; human input
-  only at its §0-İ points (Telegram creds, PC uptime, mainnet=forbidden, QuantLens registration).
+  only at its §0-İ points (Telegram creds, PC uptime, mainnet=forbidden; QuantLens registration İ4
+  is now complete).
   P1 audited PASS; P0 attempt 6 proved the wire format (resting entry + `waitingForFill` child); W1
   (pending-child parser) is the current first task.
-- P3 later (≥30d, slippage + signal-parity report to `11_TRIAGE/`); parity blocked until
-  `keltner_trail_ema8` is registered in QuantLens ([AI: Barış] İ4 approval).
+- ~~**[AI: Barış]** approve QuantLens İ4 registration and unblock the real golden.~~ **DONE
+  2026-07-13**: `keltner_trail_ema8` is registered and the real golden is ready; 858/858 entry
+  signals match. Evidence: `IBKR_PAPER_BRIDGE/docs/18_GOLDEN_REPORT.md`. Honest caveat: the
+  bridge exit trail is SMA-8 while QuantLens `trail_ema8` is EMA-8, so exit parity is not claimed.
+- **[AI: Claude|Codex]** P3 later (≥30d): produce the slippage + operational signal-parity report
+  to `11_TRIAGE/`; the QuantLens/golden prerequisite is complete.
 
 ## 🔧 MCC APP AUDIT FOLLOW-UPS (audit 2026-07-05: `11_TRIAGE/MCC_APP_AUDIT_2026-07-05.md`; Barış answered all open questions; quick wins DONE same session on `feature/mcc-audit-fixes`)
 - ~~fix backtest_reader nested-run glob + heartbeat_reader parents index~~ DONE 2026-07-05 (115 tests pass; July runs + heartbeat visible).
@@ -187,12 +242,28 @@ The US-equities-10m Donchian lead does NOT transfer to crypto 1h/4h. Verdict rep
 - **[AI: Barış]** run-manifest discovery contract (audit §6.1) — decide if wanted before next big orchestrated sweep.
 
 
+## FAZ 3B — SWEPT EXIT_MODE (D016 Path A scope freeze approved; passive accrual only)
 ## 🔶 FAZ 3B — SWEPT EXIT_MODE (Stage-2 prereg BLOCKED by Gate-5 FATAL 2026-07-13 — D016 decision now = path choice)
 Scope: `00_AGENT_PROTOCOLS/FAZ3B_EXIT_SWEEP_SCOPE.md`. Chain D013→D014→D015 done: engine landed,
 self-parity byte-identical (goldens never recaptured), Stage-1 discovery run COMPLETE 2026-07-05
 (`03_QUANTLENS/research/faz3b_stage1_20260705/STAGE1_REPORT.md`): H1 confirmed at 1h — clean cell
 GEN_KELTNER_BREAKOUT × AAPL × 1h × trail_ema8 STRONG_PASS union-DSR 0.581; H0 holds at 10m;
 honest confound: first-ever 1h fixed_2R baseline itself robust on KELTNER SPY/QQQ. PR #15 merged.
+- ~~Original Stage-2 draft + Gate-5~~ **CLOSED/BLOCKED 2026-07-13**: Codex FATAL findings
+  `11_TRIAGE/CODEX_GATE5_FINDINGS_FAZ3B_STAGE2_2026-07-13.md` were independently confirmed by
+  Fable; all six proposed held-out symbols were historically contaminated, the 12-grid was
+  re-optimization, and existing gauntlet tools were exit-blind. The old draft can never run.
+- ~~**[AI: Barış] choose Path A/B**~~ **DONE — D016 PATH A APPROVED 2026-07-13**. New temporal
+  holdout frozen in `00_AGENT_PROTOCOLS/FAZ3B_STAGE2_FORWARD_CONFIRM_PREREG_2026-07-13.md`:
+  scored 1h sessions 2026-07-14 through 2028-07-13; SPY/IWM, XLF/XLE, XLV/XLP across three
+  diversity groups; primary `{50,10,2.0}` only plus four diagnostic star points. Earliest possible
+  evaluation 2028-07-14. Today: zero compute and no data ingestion.
+- **[AI: Codex, needs separate Barış approval]** build exit-aware CPCV/multi-window/PBO tooling
+  exactly to the new prereg section 8 contract; default fixed-2R self-parity must stay byte-identical.
+- **[AI: Any]** before any future-data unblinding, complete the artifact-level historical Keltner
+  trial ledger. Registry-only checks are forbidden; scan result JSONs in both backtest-result roots.
+- **[AI: Barış]** after the fixed window closes: separately approve non-performance data inventory,
+  then Gate-5, then exactly one smoke/full evaluation. D016 itself authorizes none of these.
 - ~~draft Stage-2 pre-reg~~ DONE 2026-07-13, then ~~Gate-5 adversarial review~~ **DONE 2026-07-13
   — VERDICT FATAL, Fable-verified on raw artifacts/code (findings `1859910c`, banner `f32a354c`,
   PR #18):** (1) all 6 "held-out" symbols already swept — June-29 overnight covered ALL 51 bundle
@@ -285,15 +356,15 @@ Largest sweep to date: 7,140 cells (51 sym × 7 TF × 20 strat) on `native_multi
 2-round cold-onboarding audit (6 models). Closed all consensus gaps → onboarding now uniform across all 7 job types (backtest/scoring/dashboard/verdict/memory/git/tools). Fixes: repo-identity + DATA & LAUNCH (PR #5); W3 results→dashboard map + runner/DSR/pickup doc-sync (PR #6); W4 verdict authoring procedure `03_QUANTLENS/_user_guide/13_AI_VERDICT_AUTHORING_PROCEDURE.md` (PR #7); engine soft-guard for unset MEGA_BUNDLE_MANIFEST (PR #8). Audit prompts: `11_TRIAGE/COLD_ONBOARDING_AUDIT_PROMPT_{,v2_}2026-06-29.md` [AI: Any].
 **Optional follow-ups [AI: Claude|Barış]:** (1) re-run the v2 audit as a regression to confirm W3/W4 now score PASS; (2) promote v2 prompt to a permanent `_AI_MEMORY/ONBOARDING_SELFTEST.md` run after every onboarding-contract change; (3) author real QuantLens verdicts using the new procedure (212 strategies currently un-verdicted/`NEEDS_CLARIFICATION`).
 
-## ▶ IMPECCABLE UI PILOT (2026-06-21, Claude Opus 4.8) — branch `feature/ui-impeccable-pilot`, RESUME HERE
-Setup DONE: product context `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/MCC_PRODUCT_CONTEXT.md` + design context `MTC_COMMAND_CENTER/11_TRIAGE/STRATEGY_INTELLIGENCE_DESIGN_CONTEXT.md` (North Star "The Quiet Terminal"; preserves existing dark command-center identity) + `.claude/launch.json`. Critique DONE on Strategy-Detail = **30/40 Good** (`.impeccable/critique/2026-06-21T15-56-19Z__r-08-dashboard-app-apps-web-app-js-strategy-detail.md`).
-**NEXT = polish pass, per-issue with screenshot-verify (Barış's review style). Not started (credit out).** Frontend = single files `08_DASHBOARD_APP/apps/web/{app.js,styles.css}`. Backlog from critique, severity order:
+## ✅ IMPECCABLE UI PILOT (2026-06-21 → 2026-07-13) — COMPLETE on `feature/mcc-ui-impeccable-fixes`
+Setup DONE: product context `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/MCC_PRODUCT_CONTEXT.md` + design context `MTC_COMMAND_CENTER/11_TRIAGE/STRATEGY_INTELLIGENCE_DESIGN_CONTEXT.md` (North Star "The Quiet Terminal"; preserves existing dark command-center identity) + `.claude/launch.json`. Original Strategy-Detail critique = **30/40 Good** (`.impeccable/critique/2026-06-21T15-56-19Z__r-08-dashboard-app-apps-web-app-js-strategy-detail.md`).
+Polish pass **COMPLETE**; honest re-score = **32/40 Good** (not inflated to impeccable): `MTC_COMMAND_CENTER/11_TRIAGE/UI_AUDITS/IMPECCABLE_PILOT_R3/CRITIQUE_RESCORE_2026-07-13.md`. Frontend scope remained `08_DASHBOARD_APP/apps/web/{app.js,styles.css}`.
 1. ~~[P1] a11y contrast~~ **DONE 2026-06-28 (DeepSeek v4 Pro + Codex + Claude audit)** — empty-state values now use `--muted #94a3b8` (~7.4:1 on all dark backgrounds, AA safe). Styled via `styles.css` only (10 selectors). Claude audit: PASS WITH NITS; no code fix required. Temporary reports removed after audit.
 2. ~~[P1] a11y focus~~ **DONE 2026-06-28 (Codex GPT-5 + Claude audit PASS WITH NITS)** — global `:focus-visible` ring added, the 4 STAGE workflow cards are native `<button type="button">` controls, reduced-motion CSS disables the pulsing amber dot, and `tests/test_strategy_detail_a11y_static.py` guards the contract. Claude audit required no code fix.
 3. ~~[P2] side-stripe bars~~ **DONE 2026-06-21 (Claude Opus 4.8, commit `0172d940`)** — `.gate-card .bar` was removed and replaced with full-border tint + faint background per state.
-4. **[P2] boilerplate dedup** — Gate1/1B criteria lists: show note only on non-full-credit rows; let green `n/n` chip speak for full credit (kills ~15 identical "Full credit…" lines).
-5. **[P2] triple gate-state** — keep the persistent right rail as canonical verdict; collapse/trim the top KPI strip + Gate Status cards duplication (this is the R2-14 dedup keystone).
-Constraints: NO trading/Pine/MTC_V2/parity/schema/data-contract change; visual/a11y/wording only. Verify each fix live at `:8765/dashboard` (Claude-in-Chrome; `window.openStrategy('QL_2026-05-01_US_EQUITIES_10M_8EMA_PULLBACK')`) + `node --check app.js`. Re-run `/impeccable critique` after to track the score. See [[mcc-ui-review-state]] for R1/R2 history (this is effectively Round 3).
+4. ~~[P2] boilerplate dedup~~ **DONE** — implementation `6da2735c`; before/after screenshot evidence committed in `adeb889b`. Full-credit notes are hidden; partial/zero notes remain.
+5. ~~[P2] triple gate-state~~ **DONE** — implementation `e819ac02`; dead helper/CSS cleanup + before/after evidence committed in `93114a61`. Persistent right rail is canonical.
+Verification: live `:8765/dashboard` Strategy Detail, committed screenshots under `11_TRIAGE/UI_AUDITS/IMPECCABLE_PILOT_R3/screenshots/`, `node --check` PASS, focused a11y test `2 passed`, canonical dashboard API suite `120 tests` / `OK`. No trading/Pine/MTC_V2/parity/schema/data-contract change.
 
 ## ▶ AI TOOL INTEGRATION ROADMAP (filed 2026-06-20, Claude Opus 4.8) — STATUS 2026-06-22: ALL PHASES 1–5 COMPLETE. Remaining = operator config only (n8n notify channel) + re-open DEFERs (LiteParse on scanned PDF, Claude-Video on indicator-screencast, Taste-Skill on a marketing page).
 Source backlog + actionable plan + Claude critique live in `09_DOCS\AI_TOOLING\`:
@@ -1259,3 +1330,16 @@ Must obey 7-gate workflow (AI_RULES.md). Start at Gate 1.
 - Validation: `node --check` PASS; API unittest discovery `39 tests` PASS; `/healthz` `overall_ok=True` and `mode=read_only`; served HTML/CSS/JS marker checks PASS; forbidden execution wording and hardcoded pilot data search PASS.
 - Visual QA limitation: Browser screenshots remain blocked by enterprise policy for `127.0.0.1:8765`; no alternate browser workaround used. Direct served CSS/JS checks are recorded in `GLOBAL_HANDOFF.md`.
 - Future [AI: Codex|Claude]: if Browser localhost policy becomes available, capture visual screenshots for Home, Pipeline, Registry, Strategy Intelligence, Planner, Explorer, Leaderboard, Diagnostics, and Read Model.
+
+### P2-OUTAGE-TOLERANCE-AUDIT | DONE 2026-07-15 | code `0e644b52` [AI: Claude]
+- Fable independently audited the outage-tolerance build PASS; Barış then authorized the single deploy/re-ARM window.
+
+### P2-DAY0-V4-POST-ARM-AUDIT | OPEN 2026-07-15 | runtime `1465f8f0` [AI: Claude]
+- Audit run `paper-20260715105547`, the single `12:02:42.856537Z` ARMED transition, fresh-bar proof, two post-ARM reconciles, empty positions/orders, and final master merge evidence.
+- Monitor Day 0 v4 as validation-tier until the planned July 18 PC-off; record that shutdown as a planned boundary, not a safety incident. [AI: Any]
+- Start definitive D3 only after VPS migration at end of month. [AI: Barış|Claude]
+
+### P2-PR-MERGE-REGISTRY-CONFLICT | BLOCKED 2026-07-15 | PR #19 [AI: Claude|Barış]
+- PR #16 is merged remotely at `20237733`; PRs #17–#19 remain open.
+- Local isolated master contains unpushed #17/#18 merge commits `60415b08` and `89725dfe`.
+- PR #19 adds an out-of-scope conflict in `05_REGISTRY/RESEARCH_RUN_REGISTRY.json`; do not resolve or push without Fable review and explicit direction. The attempted #19 merge was aborted cleanly.

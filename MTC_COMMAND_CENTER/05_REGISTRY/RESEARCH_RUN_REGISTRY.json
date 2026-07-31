@@ -1,7 +1,22 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-07-13T08:25:46.193365+00:00",
+  "generated_at": "2026-07-13T17:00:00+00:00",
   "research_runs": [
+    {
+      "research_run_id": "overnight_multiasset_2026-06-29",
+      "status": "COMPLETE",
+      "date": "2026-06-29",
+      "run_dir": "03_QUANTLENS/05_BACKTEST_RESULTS/overnight_multiasset_2026-06-29",
+      "report_path": "03_QUANTLENS/05_BACKTEST_RESULTS/overnight_multiasset_2026-06-29/MORNING_REPORT.md",
+      "data_bundle": "native_multiasset_alpaca_2026-06-28",
+      "strategy_count": 20,
+      "symbol_count": 51,
+      "timeframe_count": 7,
+      "result_row_count": 7140,
+      "outcome": "Full multi-asset sweep: robust_final=0; nothing promotable. GEN_KELTNER_BREAKOUT 1h was evaluated for all 51 bundle symbols, so the bundle contains no historically untouched Keltner 1h symbol.",
+      "tier": "research",
+      "approval": "Historical completed overnight research run; contemporaneous approval and closeout are recorded in GLOBAL_HANDOFF.md."
+    },
     {
       "research_run_id": "faz3b_stage1_20260705",
       "status": "COMPLETE",

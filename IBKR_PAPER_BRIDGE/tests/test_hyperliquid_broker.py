@@ -1238,7 +1238,11 @@ def test_real_captured_order_update_payload_parses_to_typed_event():
 
 def test_connect_rebuilds_clients_when_owned_ws_is_dead():
     """B1 completion: live 'Expired' socket close (2026-07-13) proved a dead
-    Info cannot be re-subscribed; connect() must rebuild owned clients."""
+    Info cannot be re-subscribed; connect() must rebuild owned clients.
+
+    Updated for P2: _build_sdk_clients now returns a (new_info, new_exchange)
+    tuple instead of mutating self.info / self.exchange directly.
+    """
     broker = HyperliquidBroker()  # owns clients (none injected)
     dead_info = FakeInfo(size="0")
     dead_info.ws_manager = SimpleNamespace(is_alive=lambda: False)
@@ -1249,18 +1253,19 @@ def test_connect_rebuilds_clients_when_owned_ws_is_dead():
     broker._user_channels_subscribed = True
 
     fresh_info = FakeInfo(size="0")
+    fresh_exchange = _exchange_mock()
     rebuilds: list[bool] = []
 
     def fake_build():
         rebuilds.append(True)
-        broker.info = fresh_info
-        broker.exchange = _exchange_mock()
+        return fresh_info, fresh_exchange
 
     broker._build_sdk_clients = fake_build
     asyncio.run(broker.connect())
 
     assert rebuilds == [True]
     assert broker.info is fresh_info
+    assert broker.exchange is fresh_exchange
     channels = [sub[0]["type"] for sub in fresh_info.subscriptions]
     assert "userEvents" in channels and "orderUpdates" in channels
 
@@ -1292,3 +1297,1227 @@ def test_engine_default_notifier_is_disabled(tmp_path):
         risk_engine=RiskEngine(RiskConfig()),
     )
     assert engine.notifier is not None and engine.notifier.enabled is False
+
+
+# ── P2: race-fix rebuild / reconcile tests ─────────────────────────────
+
+
+def test_positions_and_reconcile_use_old_client_during_blocking_rebuild(tmp_path):
+    """P2: REST methods including positions() remain usable on the old Info
+    client while _build_sdk_clients is blocking mid-rebuild, so the engine
+    neither records RECONCILE_FAILED nor disarms."""
+    from bridge.engine.engine import BridgeEngine
+    from bridge.engine.risk import RiskConfig, RiskEngine
+    from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
+    from bridge.store.db import Store
+
+    old_info = FakeInfo(size="0.5", with_summary=True)
+    old_info.ws_manager = SimpleNamespace(is_alive=lambda: False)
+    old_info.disconnect_websocket = lambda: None
+
+    broker = HyperliquidBroker(account_address="0xabc")
+    broker.info = old_info
+    broker.exchange = _exchange_mock()
+    broker._owns_clients = True
+
+    build_started = threading.Event()
+    build_may_finish = threading.Event()
+    new_info = FakeInfo(size="0")
+    new_exchange = _exchange_mock()
+
+    def blocking_build():
+        build_started.set()
+        build_may_finish.wait()
+        return new_info, new_exchange
+
+    broker._build_sdk_clients = blocking_build
+
+    store = Store(tmp_path / "blocked-rebuild.db")
+    store.initialize()
+    engine = BridgeEngine(
+        run_id="blocked-rebuild",
+        broker=broker,
+        store=store,
+        strategy=KeltnerTrailEma8(),
+        risk_engine=RiskEngine(RiskConfig()),
+    )
+    engine._set_state("ARMED")
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime(2026, 7, 13, 8, 0, tzinfo=UTC)
+
+    async def run_test():
+        connect_task = asyncio.create_task(broker.connect())
+        await asyncio.to_thread(build_started.wait)
+        # Mid-rebuild: old client still assigned, rebuilding flag is set
+        assert broker.rebuilding is True
+        assert broker.info is old_info
+        positions = await broker.positions()
+        assert len(positions) == 1
+        assert positions[0].symbol == "BTC"
+        assert await engine._run_reconcile_cycle() is True
+        assert engine._app_state() == "ARMED"
+        event_codes = [event["code"] for event in store.get_events()]
+        assert "RECONCILE_FAILED" not in event_codes
+        assert "RECONCILE_DEFERRED" not in event_codes
+        # Release the builder
+        build_may_finish.set()
+        await connect_task
+        assert broker.info is new_info
+        assert broker.exchange is new_exchange
+        assert broker.rebuilding is False
+
+    asyncio.run(run_test())
+
+
+def test_reconcile_during_rebuild_defers_not_disarms(tmp_path):
+    """P2: when HyperliquidNotConfigured is raised during reconcile AND the
+    broker is rebuilding, the cycle is deferred — no RECONCILE_FAILED event,
+    no disarm, reconcile health fields preserved."""
+    from bridge.engine.engine import BridgeEngine
+    from bridge.engine.risk import RiskConfig, RiskEngine
+    from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
+    from bridge.store.db import Store
+
+    store = Store(tmp_path / "defer.db")
+    store.initialize()
+
+    # Broker with no info → positions() raises HyperliquidNotConfigured
+    broker = HyperliquidBroker(account_address="0xabc")
+    broker.info = None
+    broker.exchange = _exchange_mock()
+    broker.rebuilding = True  # mid-rebuild
+
+    engine = BridgeEngine(
+        run_id="defer",
+        broker=broker,
+        store=store,
+        strategy=KeltnerTrailEma8(),
+        risk_engine=RiskEngine(RiskConfig()),
+    )
+    # Manually set ARMED with fresh reconcile health
+    engine._set_state("ARMED")
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime(2026, 7, 13, 8, 0, tzinfo=UTC)
+    engine.reconcile_error = None
+
+    result = asyncio.run(engine._run_reconcile_cycle())
+
+    # Must return False (deferred, not failed)
+    assert result is False
+    # State preserved — NOT disarmed
+    assert engine._app_state() == "ARMED"
+    assert engine.reconcile_ready is True
+    assert engine.last_reconcile_ts == datetime(2026, 7, 13, 8, 0, tzinfo=UTC)
+    assert engine.reconcile_error is None
+    assert engine._consecutive_reconcile_failures == 0
+
+    # Verify RECONCILE_DEFERRED event was stored
+    events = store.get_events()
+    deferred = [e for e in events if e["code"] == "RECONCILE_DEFERRED"]
+    assert len(deferred) == 1
+    assert deferred[0]["severity"] == "WARN"
+    assert deferred[0]["detail"] == "broker rebuilding"
+
+    # Verify NO RECONCILE_FAILED event
+    failed = [e for e in events if e["code"] == "RECONCILE_FAILED"]
+    assert len(failed) == 0
+
+
+def test_hyperliquid_not_configured_without_rebuild_counts_toward_threshold(tmp_path):
+    """Only the rebuild case defers; genuine nonconfiguration consumes
+    the same three-strike failure budget and then disarms."""
+    from bridge.engine.engine import BridgeEngine
+    from bridge.engine.risk import RiskConfig, RiskEngine
+    from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
+    from bridge.store.db import Store
+
+    store = Store(tmp_path / "failclosed.db")
+    store.initialize()
+
+    broker = HyperliquidBroker(account_address="0xabc")
+    broker.info = None  # will cause HyperliquidNotConfigured
+    broker.exchange = _exchange_mock()
+    broker.rebuilding = False  # NOT rebuilding
+
+    engine = BridgeEngine(
+        run_id="failclosed",
+        broker=broker,
+        store=store,
+        strategy=KeltnerTrailEma8(),
+        risk_engine=RiskEngine(RiskConfig()),
+    )
+    engine._set_state("ARMED")
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime(2026, 7, 13, 8, 0, tzinfo=UTC)
+
+    assert asyncio.run(engine._run_reconcile_cycle()) is False
+    assert engine._app_state() == "ARMED"
+    assert asyncio.run(engine._run_reconcile_cycle()) is False
+    assert engine._app_state() == "ARMED"
+    assert asyncio.run(engine._run_reconcile_cycle()) is False
+    assert engine._app_state() == "DISARMED"
+    assert engine.reconcile_ready is False
+    assert engine.reconcile_error == "HyperliquidNotConfigured"
+
+    events = store.get_events()
+    failed = [e for e in events if e["code"] == "RECONCILE_FAILED"]
+    assert len(failed) == 1
+    tolerated = [e for e in events if e["code"] == "RECONCILE_FAILED_TOLERATED"]
+    assert [e["detail"] for e in reversed(tolerated)] == [
+        "consecutive=1/3; error=HyperliquidNotConfigured",
+        "consecutive=2/3; error=HyperliquidNotConfigured",
+    ]
+    deferred = [e for e in events if e["code"] == "RECONCILE_DEFERRED"]
+    assert len(deferred) == 0
+
+
+def test_different_exception_during_rebuild_uses_failure_threshold(tmp_path):
+    """P2: any exception other than HyperliquidNotConfigured, even while
+    rebuilding, must follow the existing fail-closed path."""
+    from bridge.engine.engine import BridgeEngine
+    from bridge.engine.risk import RiskConfig, RiskEngine
+    from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
+    from bridge.store.db import Store
+
+    store = Store(tmp_path / "other_exc.db")
+    store.initialize()
+
+    # Use a broker whose positions() raises ValueError (not HyperliquidNotConfigured)
+    class _ValueErrorInfo:
+        def user_state(self, address):
+            raise ValueError("something else broke")
+
+        def open_orders(self, address):
+            return []
+
+        def subscribe(self, *args, **kwargs):
+            pass
+
+    broker = HyperliquidBroker(account_address="0xabc")
+    broker.info = _ValueErrorInfo()
+    broker.exchange = _exchange_mock()
+    broker.rebuilding = True  # rebuilding, but different exception
+
+    engine = BridgeEngine(
+        run_id="other_exc",
+        broker=broker,
+        store=store,
+        strategy=KeltnerTrailEma8(),
+        risk_engine=RiskEngine(RiskConfig()),
+    )
+    engine._set_state("ARMED")
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime(2026, 7, 13, 8, 0, tzinfo=UTC)
+
+    for _ in range(2):
+        assert asyncio.run(engine._run_reconcile_cycle()) is False
+        assert engine._app_state() == "ARMED"
+    result = asyncio.run(engine._run_reconcile_cycle())
+
+    assert result is False
+    # Must disarm — different exception is not deferred
+    assert engine._app_state() == "DISARMED"
+    assert engine.reconcile_ready is False
+
+    events = store.get_events()
+    failed = [e for e in events if e["code"] == "RECONCILE_FAILED"]
+    assert len(failed) == 1
+    deferred = [e for e in events if e["code"] == "RECONCILE_DEFERRED"]
+    assert len(deferred) == 0
+
+
+def test_rebuild_swap_integrity():
+    """P2: during dead-owned-websocket rebuild, every stored candle
+    subscription is registered on the new Info BEFORE it is exposed;
+    userEvents/orderUpdates are each subscribed exactly once; and the
+    old dead websocket is disconnected only AFTER the atomic swap."""
+    old_info = FakeInfo(size="0")
+    old_info.ws_manager = SimpleNamespace(is_alive=lambda: False)
+    old_disconnect_after_swap: list[bool] = []
+
+    def old_disconnect():
+        old_disconnect_after_swap.append(broker.info is new_info)
+
+    old_info.disconnect_websocket = old_disconnect
+
+    new_info = FakeInfo(size="0")
+    new_exchange = _exchange_mock()
+
+    broker = HyperliquidBroker(account_address="0xabc")
+    broker.info = old_info
+    broker.exchange = _exchange_mock()
+    broker._owns_clients = True
+    broker._user_callbacks.append(lambda e: None)
+
+    # Register a candle subscription before connect
+    candle_received: list[object] = []
+
+    def on_bar(bar):
+        candle_received.append(bar)
+
+    from bridge.engine.bars import BarFinalizer
+    broker.subscribe_bars("ETH", "4h", on_bar)
+
+    def tracking_build():
+        return new_info, new_exchange
+
+    broker._build_sdk_clients = tracking_build
+
+    # Patch new_info.subscribe to capture when subscriptions happen
+    original_new_subscribe = new_info.subscribe
+    new_subscribe_calls: list[dict] = []
+
+    def tracking_subscribe(subscription, callback):
+        new_subscribe_calls.append({"sub": subscription, "exposed": broker.info is new_info})
+        return original_new_subscribe(subscription, callback)
+
+    new_info.subscribe = tracking_subscribe
+
+    asyncio.run(broker.connect())
+
+    # After connect, new_info is exposed
+    assert broker.info is new_info
+    assert broker.exchange is new_exchange
+
+    # Every candle subscription must have been registered BEFORE exposure
+    candle_subs = [c for c in new_subscribe_calls if c["sub"]["type"] == "candle"]
+    assert len(candle_subs) >= 1  # our ETH candle sub
+    assert all(not c["exposed"] for c in candle_subs), (
+        "candle subscriptions must be registered BEFORE new_info is exposed"
+    )
+
+    # userEvents and orderUpdates each exactly once
+    user_subs = [c for c in new_subscribe_calls if c["sub"]["type"] == "userEvents"]
+    order_subs = [c for c in new_subscribe_calls if c["sub"]["type"] == "orderUpdates"]
+    assert len(user_subs) == 1
+    assert len(order_subs) == 1
+
+    assert old_disconnect_after_swap == [True]
+
+
+# ===========================================================================
+# TS-P1-004 strict response -> outcome mapping and bounded snapshot evidence
+# ===========================================================================
+
+from bridge.engine.types import ActionOutcome, LotUnit, SymbolSnapshot  # noqa: E402
+
+_OK_RESTING = {"status": "ok", "response": {"data": {"statuses": [{"resting": {"oid": 7}}]}}}
+_OK_FILLED = {"status": "ok", "response": {"data": {"statuses": [{"filled": {"oid": 7}}]}}}
+_OK_SUCCESS = {"status": "ok", "response": {"data": {"statuses": [{"success": True}]}}}
+
+
+@pytest.mark.parametrize("raw", [_OK_RESTING, _OK_FILLED, _OK_SUCCESS])
+def test_classify_applied_only_on_explicit_success(raw):
+    outcome, _reason = HyperliquidBroker._classify_exchange_result(raw)
+    assert outcome is ActionOutcome.APPLIED
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        None,
+        "boom",
+        123,
+        {},
+        {"status": None},
+        {"status": "weird"},
+        {"status": "ok"},
+        {"status": "ok", "response": "Failure"},
+        {"status": "ok", "response": {"data": {}}},
+        {"status": "ok", "response": {"data": {"statuses": []}}},
+        {"status": "ok", "response": {"data": {"statuses": [{"mystery": 1}]}}},
+        {"status": "err", "response": "internal error, please try again"},
+        {"status": "ok", "response": {"data": {"statuses": [{"error": "rate limited"}]}}},
+    ],
+)
+def test_classify_unknown_for_every_unusable_answer(raw):
+    outcome, reason = HyperliquidBroker._classify_exchange_result(raw)
+    assert outcome is ActionOutcome.UNKNOWN, reason
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        {"status": "err", "response": "Order was never placed, already canceled"},
+        {"status": "err", "response": "order not found"},
+        {
+            "status": "ok",
+            "response": {"data": {"statuses": [{"error": "Invalid order: reduce only"}]}},
+        },
+    ],
+)
+def test_classify_not_applied_only_on_authoritative_rejection(raw):
+    outcome, _reason = HyperliquidBroker._classify_exchange_result(raw)
+    assert outcome is ActionOutcome.NOT_APPLIED
+
+
+def test_lot_unit_requires_exchange_metadata():
+    broker = HyperliquidBroker(info_client=object(), exchange_client=object())
+    assert broker.lot_unit("BTC") is None
+    broker._size_decimals["BTC"] = 3
+    assert broker.lot_unit("BTC") == LotUnit(3)
+    broker._size_decimals["BTC"] = 99
+    assert broker.lot_unit("BTC") is None
+
+
+def test_symbol_snapshot_is_inexact_without_a_size_quantum():
+    info = SimpleNamespace(
+        user_state=lambda addr: {"assetPositions": []},
+        open_orders=lambda addr: [],
+    )
+    broker = HyperliquidBroker(
+        info_client=info, exchange_client=object(), account_address="0xabc"
+    )
+    snapshot = asyncio.run(broker.symbol_snapshot("BTC"))
+    assert isinstance(snapshot, SymbolSnapshot)
+    assert snapshot.exact is False
+    assert snapshot.evidence.reason_code == "HL_SIZE_QUANTUM_MISSING"
+
+
+def test_symbol_snapshot_is_inexact_when_a_read_fails():
+    def boom(addr):
+        raise RuntimeError("transport down")
+
+    broker = HyperliquidBroker(
+        info_client=SimpleNamespace(user_state=boom, open_orders=lambda a: []),
+        exchange_client=object(),
+        account_address="0xabc",
+    )
+    broker._size_decimals["BTC"] = 3
+    snapshot = asyncio.run(broker.symbol_snapshot("BTC"))
+    assert snapshot.exact is False
+    assert snapshot.net_size is None
+    assert snapshot.evidence.reason_code == "HL_POSITION_QUERY_FAILED"
+
+
+def test_symbol_snapshot_is_exact_with_metadata_and_both_reads():
+    info = SimpleNamespace(
+        user_state=lambda addr: {
+            "assetPositions": [{"position": {"coin": "BTC", "szi": "1.5"}}]
+        },
+        open_orders=lambda addr: [
+            {"cloid": "0xabc", "oid": 7, "coin": "BTC", "side": "A", "sz": "1.5",
+             "status": "OPEN", "orderType": "Stop Market", "triggerPx": "95.0",
+             "reduceOnly": True}
+        ],
+    )
+    broker = HyperliquidBroker(
+        info_client=info, exchange_client=object(), account_address="0xabc"
+    )
+    broker._size_decimals["BTC"] = 3
+    snapshot = asyncio.run(broker.symbol_snapshot("BTC"))
+    assert snapshot.exact is True
+    assert snapshot.net_size == 1.5
+    assert [o.role for o in snapshot.open_orders] == ["SL"]
+
+
+def _sdk_recovery_open_order() -> dict:
+    return {
+        "coin": "BTC",
+        "limitPx": "95.0",
+        "oid": 7,
+        "side": "A",
+        "sz": "1.5",
+        "timestamp": 1783890261975,
+        "cloid": "0x" + "a" * 32,
+        "reduceOnly": True,
+        "origSz": "1.5",
+        "orderType": "Stop Market",
+        "triggerPx": "95.0",
+    }
+
+
+def _sdk_recovery_open_order_without(field: str) -> dict:
+    row = _sdk_recovery_open_order()
+    del row[field]
+    return row
+
+
+def test_sdk_open_orders_row_without_status_is_live_recovery_evidence():
+    sdk_row = _sdk_recovery_open_order()
+    cloid = sdk_row["cloid"]
+    info = SimpleNamespace(
+        user_state=lambda addr: {
+            "assetPositions": [{"position": {"coin": "BTC", "szi": "1.5"}}]
+        },
+        open_orders=lambda addr: [sdk_row],
+    )
+    broker = HyperliquidBroker(
+        info_client=info, exchange_client=object(), account_address="0xabc"
+    )
+    broker._size_decimals["BTC"] = 3
+
+    snapshot = asyncio.run(broker.symbol_snapshot("BTC"))
+    result = asyncio.run(broker.query_order(cloid, "BTC"))
+
+    assert snapshot.exact is True
+    assert snapshot.net_size == 1.5
+    assert len(snapshot.open_orders) == 1
+    assert snapshot.open_orders[0].cloid == cloid
+    assert snapshot.open_orders[0].status == "OPEN"
+    assert snapshot.open_orders[0].role == "SL"
+    assert snapshot.open_orders[0].reduce_only is True
+    assert (result.known, result.found, result.terminal) == (True, True, False)
+    assert result.raw_status == "OPEN"
+    assert result.evidence.reason_code == "HL_ORDER_PRESENT"
+    assert "status" not in sdk_row
+
+
+@pytest.mark.parametrize(
+    "raw_orders",
+    [
+        pytest.param({}, id="collection-is-not-a-list"),
+        pytest.param([None], id="row-is-not-a-mapping"),
+        pytest.param(
+            [_sdk_recovery_open_order_without("cloid")], id="missing-cloid"
+        ),
+        pytest.param(
+            [_sdk_recovery_open_order() | {"cloid": "  "}], id="empty-cloid"
+        ),
+        pytest.param(
+            [_sdk_recovery_open_order_without("coin")], id="missing-coin"
+        ),
+        pytest.param(
+            [_sdk_recovery_open_order() | {"side": "X"}], id="unknown-side"
+        ),
+        pytest.param(
+            [_sdk_recovery_open_order_without("sz")], id="missing-size"
+        ),
+        pytest.param(
+            [_sdk_recovery_open_order() | {"sz": "not-a-number"}],
+            id="malformed-size",
+        ),
+        pytest.param(
+            [_sdk_recovery_open_order() | {"sz": "nan"}], id="non-finite-size"
+        ),
+        pytest.param(
+            [_sdk_recovery_open_order() | {"sz": "0"}], id="non-positive-size"
+        ),
+        pytest.param(
+            [_sdk_recovery_open_order_without("reduceOnly")],
+            id="missing-reduce-only",
+        ),
+        pytest.param(
+            [_sdk_recovery_open_order() | {"reduceOnly": 1}],
+            id="non-bool-reduce-only",
+        ),
+    ],
+)
+def test_malformed_recovery_open_order_evidence_fails_closed(raw_orders):
+    info = SimpleNamespace(
+        user_state=lambda addr: {
+            "assetPositions": [{"position": {"coin": "BTC", "szi": "1.5"}}]
+        },
+        open_orders=lambda addr: raw_orders,
+    )
+    broker = HyperliquidBroker(
+        info_client=info, exchange_client=object(), account_address="0xabc"
+    )
+    broker._size_decimals["BTC"] = 3
+
+    snapshot = asyncio.run(broker.symbol_snapshot("BTC"))
+    result = asyncio.run(
+        broker.query_order("0x" + "a" * 32, "BTC")
+    )
+
+    assert snapshot.exact is False
+    assert snapshot.net_size is None
+    assert snapshot.evidence.reason_code == "HL_ORDER_EVIDENCE_MALFORMED"
+    assert result.known is False
+    assert result.found is False
+    assert result.terminal is False
+    assert result.evidence.reason_code == "HL_ORDER_EVIDENCE_MALFORMED"
+
+
+def test_symbol_snapshot_is_inexact_when_any_position_row_misses_coin():
+    info = SimpleNamespace(
+        user_state=lambda addr: {
+            "assetPositions": [{"position": {"szi": "1.0"}}]
+        },
+        open_orders=lambda addr: [],
+    )
+    broker = HyperliquidBroker(
+        info_client=info, exchange_client=object(), account_address="0xabc"
+    )
+    broker._size_decimals["BTC"] = 3
+
+    snapshot = asyncio.run(broker.symbol_snapshot("BTC"))
+
+    assert snapshot.exact is False
+    assert snapshot.net_size is None
+    assert snapshot.evidence.reason_code == "HL_POSITION_EVIDENCE_MALFORMED"
+
+
+def test_symbol_snapshot_is_inexact_when_stop_misses_reduce_only():
+    info = SimpleNamespace(
+        user_state=lambda addr: {
+            "assetPositions": [{"position": {"coin": "BTC", "szi": "1.0"}}]
+        },
+        open_orders=lambda addr: [
+            {
+                "cloid": "0xabc",
+                "coin": "BTC",
+                "side": "A",
+                "sz": "1.0",
+                "status": "OPEN",
+                "orderType": "Stop Market",
+                "triggerPx": "95.0",
+            }
+        ],
+    )
+    broker = HyperliquidBroker(
+        info_client=info, exchange_client=object(), account_address="0xabc"
+    )
+    broker._size_decimals["BTC"] = 3
+
+    snapshot = asyncio.run(broker.symbol_snapshot("BTC"))
+
+    assert snapshot.exact is False
+    assert snapshot.evidence.reason_code == "HL_ORDER_EVIDENCE_MALFORMED"
+
+
+def test_symbol_snapshot_conflicting_positions_are_inexact():
+    info = SimpleNamespace(
+        user_state=lambda addr: {
+            "assetPositions": [
+                {"position": {"coin": "BTC", "szi": "1.0"}},
+                {"position": {"coin": "BTC", "szi": "2.0"}},
+            ]
+        },
+        open_orders=lambda addr: [],
+    )
+    broker = HyperliquidBroker(
+        info_client=info, exchange_client=object(), account_address="0xabc"
+    )
+    broker._size_decimals["BTC"] = 3
+    snapshot = asyncio.run(broker.symbol_snapshot("BTC"))
+    assert snapshot.exact is False
+    assert snapshot.evidence.reason_code == "HL_POSITION_CONFLICTING"
+
+
+@pytest.mark.parametrize(
+    ("raw", "known", "found", "terminal"),
+    [
+        ({"status": "unknownOid"}, True, False, True),
+        (
+            {"status": "order", "order": {"status": "open",
+                                          "order": {"origSz": "2.0", "sz": "1.0"}}},
+            True, True, False,
+        ),
+        ({"status": "order", "order": {"status": "canceled"}}, True, False, True),
+        ({"status": "order", "order": {"status": "filled"}}, True, False, True),
+        (
+            {"status": "order", "order": {"status": "future_transient_status"}},
+            False,
+            False,
+            False,
+        ),
+        ({"status": "order"}, False, False, False),
+        ({"status": "order", "order": {}}, False, False, False),
+        ({"status": "weird"}, False, False, False),
+        ("garbage", False, False, False),
+    ],
+)
+def test_parse_order_query_is_strict(raw, known, found, terminal):
+    result = HyperliquidBroker._parse_order_query(raw, "0xabc")
+    assert (result.known, result.found, result.terminal) == (known, found, terminal)
+
+
+def test_parse_order_query_computes_filled_size():
+    result = HyperliquidBroker._parse_order_query(
+        {"status": "order",
+         "order": {"status": "open", "order": {"origSz": "2.0", "sz": "0.5"}}},
+        "0xabc",
+    )
+    assert result.filled_size == 1.5
+
+
+def test_query_order_open_order_absence_is_not_authoritative():
+    broker = HyperliquidBroker(
+        info_client=SimpleNamespace(open_orders=lambda addr: []),
+        exchange_client=object(),
+        account_address="0xabc",
+    )
+    result = asyncio.run(broker.query_order("0xabc", "BTC"))
+    assert result.known is False
+    assert result.evidence.reason_code == "HL_ORDER_ABSENCE_NOT_AUTHORITATIVE"
+
+
+def test_query_order_open_order_fallback_rejects_malformed_rows():
+    broker = HyperliquidBroker(
+        info_client=SimpleNamespace(
+            open_orders=lambda addr: [
+                {
+                    "cloid": "0xabc",
+                    "coin": "BTC",
+                    "side": "A",
+                    "sz": "1.0",
+                    "status": "OPEN",
+                }
+            ]
+        ),
+        exchange_client=object(),
+        account_address="0xabc",
+    )
+
+    result = asyncio.run(broker.query_order("0xabc", "BTC"))
+
+    assert result.known is False
+    assert result.evidence.reason_code == "HL_ORDER_EVIDENCE_MALFORMED"
+
+
+def test_typed_cancel_transport_failure_is_unknown():
+    def boom(coin, cloid):
+        raise TimeoutError("gateway timeout")
+
+    broker = HyperliquidBroker(
+        info_client=object(),
+        exchange_client=SimpleNamespace(cancel_by_cloid=boom),
+        account_address="0xabc",
+    )
+    result = asyncio.run(broker.cancel_order_by_cloid("0x" + "1" * 32, "BTC"))
+    assert result.outcome is ActionOutcome.UNKNOWN
+    assert result.evidence.reason_code == "HL_TRANSPORT_FAILED"
+
+
+def test_typed_place_transport_failure_is_unknown():
+    def boom(requests, grouping):
+        raise TimeoutError("gateway timeout")
+
+    broker = HyperliquidBroker(
+        info_client=object(),
+        exchange_client=SimpleNamespace(bulk_orders=boom),
+        account_address="0xabc",
+    )
+    broker._size_decimals["BTC"] = 3
+    result = asyncio.run(
+        broker.place_protective_stop(
+            symbol="BTC", cloid="0x" + "2" * 32, exit_side="SELL",
+            size=1.0, trigger_px=95.0,
+        )
+    )
+    assert result.outcome is ActionOutcome.UNKNOWN
+
+
+def test_typed_flatten_transport_failure_is_unknown():
+    def boom(coin, sz, slippage, cloid):
+        raise TimeoutError("gateway timeout")
+
+    broker = HyperliquidBroker(
+        info_client=object(),
+        exchange_client=SimpleNamespace(market_close=boom),
+        account_address="0xabc",
+    )
+    result = asyncio.run(
+        broker.flatten_reduce_only(symbol="BTC", cloid="0x" + "3" * 32, size=1.0)
+    )
+    assert result.outcome is ActionOutcome.UNKNOWN
+
+
+def test_typed_place_registers_spec_only_when_applied():
+    calls: list[dict] = []
+
+    def bulk_orders(requests, grouping):
+        calls.append({"requests": requests, "grouping": grouping})
+        return _OK_RESTING
+
+    cloid = "0x" + "4" * 32
+    broker = HyperliquidBroker(
+        info_client=object(),
+        exchange_client=SimpleNamespace(bulk_orders=bulk_orders),
+        account_address="0xabc",
+    )
+    broker._size_decimals["BTC"] = 3
+    result = asyncio.run(
+        broker.place_protective_stop(
+            symbol="BTC", cloid=cloid, exit_side="SELL", size=1.0, trigger_px=95.0
+        )
+    )
+    assert result.outcome is ActionOutcome.APPLIED
+    assert calls[0]["requests"][0]["reduce_only"] is True
+    assert calls[0]["requests"][0]["is_buy"] is False
+    assert broker._order_specs[cloid]["role"] == "SL"
+
+
+def test_typed_surface_without_clients_is_not_applied_not_success():
+    broker = HyperliquidBroker(info_client=None, exchange_client=None)
+    cancel = asyncio.run(broker.cancel_order_by_cloid("0x" + "5" * 32, "BTC"))
+    place = asyncio.run(
+        broker.place_protective_stop(
+            symbol="BTC", cloid="0x" + "5" * 32, exit_side="SELL",
+            size=1.0, trigger_px=95.0,
+        )
+    )
+    flat = asyncio.run(
+        broker.flatten_reduce_only(symbol="BTC", cloid="0x" + "5" * 32, size=1.0)
+    )
+    query = asyncio.run(broker.query_order("0x" + "5" * 32, "BTC"))
+    assert cancel.outcome is ActionOutcome.NOT_APPLIED
+    assert place.outcome is ActionOutcome.NOT_APPLIED
+    assert flat.outcome is ActionOutcome.NOT_APPLIED
+    assert query.known is False
+
+
+def test_legacy_cancel_flatten_reprotect_signatures_are_preserved():
+    import inspect
+
+    broker = HyperliquidBroker(info_client=object(), exchange_client=object())
+    assert list(inspect.signature(broker.cancel).parameters) == ["cloid"]
+    assert list(inspect.signature(broker.flatten).parameters) == ["coin"]
+    assert list(inspect.signature(broker.reprotect_position).parameters) == [
+        "position", "stop_loss", "take_profit", "decision_uid"
+    ]
+
+
+# ---------------------------------------------------------------------------
+# TS-P1-005 read-only full-reconciliation evidence
+# ---------------------------------------------------------------------------
+
+from bridge.engine.types import (  # noqa: E402 - grouped with the section it serves
+    ReconcileComponentKind,
+    ReconcileComponentStatus,
+)
+
+
+class ReconcileInfo:
+    """Minimal Info double for the read-only reconciliation surface."""
+
+    def __init__(
+        self,
+        *,
+        state=None,
+        orders=None,
+        fill_pages=None,
+        funding_pages=None,
+        raise_on: str = "",
+    ) -> None:
+        self._state = state
+        self._orders = orders if orders is not None else []
+        self._fill_pages = list(fill_pages or [[]])
+        self._funding_pages = list(funding_pages or [[]])
+        self._raise_on = raise_on
+        self.fill_calls: list[tuple[int, int]] = []
+        self.funding_calls: list[tuple[int, int]] = []
+
+    def user_state(self, address):
+        if self._raise_on == "user_state":
+            raise RuntimeError("boom")
+        return self._state
+
+    def open_orders(self, address):
+        if self._raise_on == "open_orders":
+            raise RuntimeError("boom")
+        return self._orders
+
+    def user_fills_by_time(self, address, start_time, end_time=None):
+        self.fill_calls.append((start_time, end_time))
+        return self._fill_pages[min(len(self.fill_calls) - 1, len(self._fill_pages) - 1)]
+
+    def user_funding_history(self, address, start_time, end_time=None):
+        self.funding_calls.append((start_time, end_time))
+        return self._funding_pages[
+            min(len(self.funding_calls) - 1, len(self._funding_pages) - 1)
+        ]
+
+
+def _reconcile_broker(info) -> HyperliquidBroker:
+    broker = HyperliquidBroker(info_client=info, exchange_client=object())
+    broker._size_decimals = {"BTC": 3}
+    return broker
+
+
+def _hl_state(*, equity="1000", margin_used="100", withdrawable="900", positions=None):
+    return {
+        "marginSummary": {"accountValue": equity, "totalMarginUsed": margin_used},
+        "withdrawable": withdrawable,
+        "assetPositions": positions if positions is not None else [],
+    }
+
+
+def test_portfolio_evidence_is_one_read_for_three_components():
+    info = ReconcileInfo(
+        state=_hl_state(
+            positions=[{"position": {"coin": "BTC", "szi": "0.25"}}]
+        )
+    )
+    broker = _reconcile_broker(info)
+    portfolio = asyncio.run(broker.portfolio_evidence())
+
+    assert portfolio.positions.rows == ({"symbol": "BTC", "size": 0.25},)
+    assert portfolio.balances.rows == ({"equity": 1000.0, "withdrawable": 900.0},)
+    assert portfolio.margin.rows == (
+        {"margin_used": 100.0, "available_margin": 900.0},
+    )
+    # One REST call produces all three; balances/margin add nothing.
+    assert portfolio.positions.call_count == 1
+    assert portfolio.balances.call_count == 0
+    assert portfolio.margin.call_count == 0
+    # Identical source timestamp means zero intra-account skew by construction.
+    assert portfolio.positions.observed_ts == portfolio.balances.observed_ts
+    assert portfolio.margin.observed_ts == portfolio.balances.observed_ts
+
+
+def test_v8_portfolio_evidence_retains_same_epoch_risk_fields():
+    info = ReconcileInfo(
+        state=_hl_state(
+            positions=[{"position": {
+                "coin": "BTC", "szi": "-0.25", "positionValue": "250",
+                "liquidationPx": "1200", "leverage": {"type": "isolated", "value": 1},
+            }}]
+        )
+    )
+    broker = _reconcile_broker(info)
+    broker.exposure_capture_enabled = True
+    portfolio = asyncio.run(broker.portfolio_evidence())
+    assert portfolio.positions.rows == ({
+        "symbol": "BTC", "size": -0.25, "position_value": 250.0,
+        "liquidation_px": 1200.0, "leverage": 1.0,
+    },)
+    assert portfolio.positions.observed_ts == portfolio.balances.observed_ts
+
+
+def test_v8_missing_reported_leverage_is_malformed_not_synthesized():
+    info = ReconcileInfo(
+        state=_hl_state(
+            positions=[{"position": {
+                "coin": "BTC", "szi": "0.1", "positionValue": "100",
+                "liquidationPx": "800",
+            }}]
+        )
+    )
+    broker = _reconcile_broker(info)
+    broker.exposure_capture_enabled = True
+    portfolio = asyncio.run(broker.portfolio_evidence())
+    assert portfolio.positions.status is ReconcileComponentStatus.MALFORMED
+    assert portfolio.positions.rows == ()
+
+
+def test_v8_symbol_aliases_are_rejected_after_normalization():
+    info = ReconcileInfo(
+        state=_hl_state(
+            positions=[
+                {"position": {
+                    "coin": "BTC", "szi": "0.1", "positionValue": "100",
+                    "liquidationPx": "800",
+                    "leverage": {"type": "isolated", "value": 0.5},
+                }},
+                {"position": {
+                    "coin": " btc ", "szi": "0.1", "positionValue": "100",
+                    "liquidationPx": "800",
+                    "leverage": {"type": "isolated", "value": 0.5},
+                }},
+            ]
+        )
+    )
+    broker = _reconcile_broker(info)
+    broker.exposure_capture_enabled = True
+    portfolio = asyncio.run(broker.portfolio_evidence())
+    assert portfolio.positions.status is ReconcileComponentStatus.CONFLICTING
+
+
+def test_portfolio_evidence_never_clamps_an_inconsistent_account():
+    info = ReconcileInfo(state=_hl_state(equity="100", margin_used="500"))
+    portfolio = asyncio.run(_reconcile_broker(info).portfolio_evidence())
+
+    assert portfolio.balances.status is ReconcileComponentStatus.CONFLICTING
+    assert portfolio.margin.status is ReconcileComponentStatus.CONFLICTING
+    # The raw negative figure is retained, not repaired to zero.
+    assert portfolio.margin.rows[0]["available_margin"] == -400.0
+    assert portfolio.balances.accepted is False
+
+
+def test_portfolio_evidence_fails_closed_on_transport_and_malformed_bodies():
+    failed = asyncio.run(
+        _reconcile_broker(ReconcileInfo(raise_on="user_state")).portfolio_evidence()
+    )
+    assert failed.positions.status is ReconcileComponentStatus.UNAVAILABLE
+    assert failed.positions.rows == ()
+
+    malformed = asyncio.run(
+        _reconcile_broker(ReconcileInfo(state={"assetPositions": "nope"}))
+        .portfolio_evidence()
+    )
+    assert malformed.positions.status is ReconcileComponentStatus.MALFORMED
+
+    nan_position = asyncio.run(
+        _reconcile_broker(
+            ReconcileInfo(
+                state=_hl_state(positions=[{"position": {"coin": "BTC", "szi": "nan"}}])
+            )
+        ).portfolio_evidence()
+    )
+    assert nan_position.positions.status is ReconcileComponentStatus.MALFORMED
+
+
+def test_duplicate_position_rows_are_conflicting_not_summed():
+    info = ReconcileInfo(
+        state=_hl_state(
+            positions=[
+                {"position": {"coin": "BTC", "szi": "0.25"}},
+                {"position": {"coin": "BTC", "szi": "0.50"}},
+            ]
+        )
+    )
+    portfolio = asyncio.run(_reconcile_broker(info).portfolio_evidence())
+    assert portfolio.positions.status is ReconcileComponentStatus.CONFLICTING
+
+
+def test_open_orders_evidence_sorts_and_fails_closed_on_bad_rows():
+    info = ReconcileInfo(
+        orders=[
+            {"cloid": "0xb", "coin": "BTC", "side": "A", "sz": "0.1",
+             "reduceOnly": True, "oid": 2},
+            {"cloid": "0xa", "coin": "BTC", "side": "B", "sz": "0.1",
+             "reduceOnly": False, "oid": 1},
+        ]
+    )
+    evidence = asyncio.run(_reconcile_broker(info).open_orders_evidence())
+    assert [row["cloid"] for row in evidence.rows] == ["0xa", "0xb"]
+    assert evidence.accepted is True
+
+    broken = ReconcileInfo(orders=[{"cloid": "0xa", "coin": "BTC"}])
+    bad = asyncio.run(_reconcile_broker(broken).open_orders_evidence())
+    assert bad.status is ReconcileComponentStatus.MALFORMED
+
+    failed = asyncio.run(
+        _reconcile_broker(ReconcileInfo(raise_on="open_orders")).open_orders_evidence()
+    )
+    assert failed.status is ReconcileComponentStatus.UNAVAILABLE
+
+
+def _fill(hash_value: str, oid: int, time_ms: int) -> dict:
+    return {
+        "coin": "BTC",
+        "side": "B",
+        "px": "100.5",
+        "sz": "0.1",
+        "time": time_ms,
+        "hash": hash_value,
+        "oid": oid,
+        "closedPnl": "0.0",
+        "crossed": True,
+        "dir": "Open Long",
+        "startPosition": "0.0",
+    }
+
+
+def test_fills_evidence_identity_comes_from_documented_fields():
+    info = ReconcileInfo(fill_pages=[[_fill("0xh", 7, 1_700)]])
+    evidence = asyncio.run(
+        _reconcile_broker(info).fills_evidence(start_ms=1_000, end_ms=2_000)
+    )
+    assert evidence.accepted is True
+    assert evidence.rows[0]["event_id"] == "0xh:7:1700"
+    assert evidence.rows[0]["effective_ts_ms"] == 1_700
+    assert evidence.cursor_start_ms == 1_000
+    assert evidence.cursor_end_ms == 2_000
+    assert info.fill_calls == [(1_000, 2_000)]
+
+
+def test_live_and_historical_fill_use_the_same_fallback_identity_and_timestamp():
+    row = {
+        "coin": "BTC",
+        "side": "B",
+        "px": "100",
+        "sz": "0.1",
+        "time": 1_500,
+        "hash": "0xfill",
+        "oid": 7,
+    }
+    historical = HyperliquidBroker._parse_fill_evidence_row(row)
+    broker = HyperliquidBroker(info_client=object(), exchange_client=object())
+    broker._oid_to_cloid[7] = "0xowned"
+    live = broker._parse_fill_event(dict(row))
+
+    assert live is not None
+    assert historical is not None
+    assert live.fill_id == historical["event_id"] == "0xfill:7:1500"
+    assert int(live.ts.timestamp() * 1000) == historical["effective_ts_ms"]
+
+
+def test_full_open_order_evidence_rejects_missing_oid():
+    info = ReconcileInfo(orders=[{
+        "cloid": "0xforeign",
+        "coin": "BTC",
+        "side": "B",
+        "sz": "0.1",
+        "reduceOnly": False,
+    }])
+    evidence = asyncio.run(_reconcile_broker(info).open_orders_evidence())
+    assert evidence.accepted is False
+    assert evidence.status is ReconcileComponentStatus.MALFORMED
+
+
+def test_fills_evidence_walks_pages_and_deduplicates_the_inclusive_boundary(
+    monkeypatch,
+):
+    monkeypatch.setattr(HyperliquidBroker, "HL_FILLS_PAGE_LIMIT", 2)
+    page_one = [_fill("0x1", 1, 1_100), _fill("0x2", 2, 1_200)]
+    # The inclusive next-startTime replays the boundary row.
+    page_two = [_fill("0x2", 2, 1_200), _fill("0x3", 3, 1_300)]
+    info = ReconcileInfo(fill_pages=[page_one, page_two, []])
+    evidence = asyncio.run(
+        _reconcile_broker(info).fills_evidence(start_ms=1_000, end_ms=2_000)
+    )
+
+    assert evidence.accepted is True
+    assert [row["event_id"] for row in evidence.rows] == [
+        "0x1:1:1100", "0x2:2:1200", "0x3:3:1300",
+    ]
+    assert info.fill_calls[0] == (1_000, 2_000)
+    assert info.fill_calls[1] == (1_200, 2_000)
+
+
+def test_fills_evidence_fails_closed_when_the_cursor_stalls(monkeypatch):
+    monkeypatch.setattr(HyperliquidBroker, "HL_FILLS_PAGE_LIMIT", 2)
+    stalled = [_fill("0x1", 1, 1_000), _fill("0x2", 2, 1_000)]
+    info = ReconcileInfo(fill_pages=[stalled])
+    evidence = asyncio.run(
+        _reconcile_broker(info).fills_evidence(start_ms=1_000, end_ms=2_000)
+    )
+    assert evidence.status is ReconcileComponentStatus.TRUNCATED
+    assert evidence.reason_code == "HL_CURSOR_STALLED"
+    assert evidence.accepted is False
+
+
+def test_fills_evidence_fails_closed_at_the_documented_history_limit(monkeypatch):
+    monkeypatch.setattr(HyperliquidBroker, "HL_FILLS_PAGE_LIMIT", 2)
+    monkeypatch.setattr(HyperliquidBroker, "HL_FILLS_HISTORY_LIMIT", 2)
+    info = ReconcileInfo(fill_pages=[[_fill("0x1", 1, 1_100), _fill("0x2", 2, 1_200)]])
+    evidence = asyncio.run(
+        _reconcile_broker(info).fills_evidence(start_ms=1_000, end_ms=2_000)
+    )
+    assert evidence.status is ReconcileComponentStatus.TRUNCATED
+    assert evidence.reason_code == "HL_HISTORY_LIMIT_REACHED"
+
+
+def test_fills_evidence_rejects_malformed_rows_and_inverted_windows():
+    malformed = asyncio.run(
+        _reconcile_broker(
+            ReconcileInfo(fill_pages=[[{"coin": "BTC", "time": 1_100}]])
+        ).fills_evidence(start_ms=1_000, end_ms=2_000)
+    )
+    assert malformed.status is ReconcileComponentStatus.MALFORMED
+
+    inverted = asyncio.run(
+        _reconcile_broker(ReconcileInfo()).fills_evidence(start_ms=2_000, end_ms=1_000)
+    )
+    assert inverted.status is ReconcileComponentStatus.STALE
+    assert inverted.reason_code == "HL_WINDOW_INVERTED"
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"side": "NOT_A_SIDE"},
+        {"sz": "0"},
+        {"sz": "-1"},
+        {"px": "0"},
+        {"px": "-100"},
+        {"time": 999},
+        {"time": 2_001},
+    ],
+)
+def test_fills_evidence_rejects_invalid_semantics_and_out_of_window_rows(overrides):
+    row = _fill("0xbad", 9, 1_500)
+    row.update(overrides)
+    evidence = asyncio.run(
+        _reconcile_broker(ReconcileInfo(fill_pages=[[row]])).fills_evidence(
+            start_ms=1_000, end_ms=2_000
+        )
+    )
+    assert evidence.accepted is False
+    assert evidence.status is ReconcileComponentStatus.MALFORMED
+
+
+def _funding(hash_value: str, time_ms: int, usdc: str = "-1.25", **delta) -> dict:
+    payload = {
+        "coin": "BTC",
+        "fundingRate": "0.0000125",
+        "szi": "0.1",
+        "type": "funding",
+        "usdc": usdc,
+        "nSamples": 1,
+    }
+    payload.update(delta)
+    return {"delta": payload, "hash": hash_value, "time": time_ms}
+
+
+def test_funding_evidence_uses_the_authoritative_event_hash():
+    info = ReconcileInfo(funding_pages=[[_funding("0xfund", 1_400)]])
+    evidence = asyncio.run(
+        _reconcile_broker(info).funding_evidence(start_ms=1_000, end_ms=2_000)
+    )
+    row = evidence.rows[0]
+    assert evidence.accepted is True
+    assert row["event_id"] == "0xfund"          # authoritative hash, never synthesized
+    assert row["symbol"] == "BTC"               # delta.coin
+    assert row["amount_usdc"] == -1.25          # signed delta.usdc
+    assert row["effective_ts_ms"] == 1_400      # record time
+    assert row["funding_rate"] == 0.0000125
+    assert row["n_samples"] == 1
+
+
+@pytest.mark.parametrize(
+    "row",
+    [
+        {"delta": {"coin": "BTC", "type": "funding", "usdc": "-1"}, "time": 1_400},
+        {"delta": {"coin": "BTC", "type": "funding", "usdc": "-1"},
+         "hash": "", "time": 1_400},
+        {"delta": {"coin": "BTC", "type": "deposit", "usdc": "-1"},
+         "hash": "0xf", "time": 1_400},
+        {"delta": {"coin": "", "type": "funding", "usdc": "-1"},
+         "hash": "0xf", "time": 1_400},
+        {"delta": {"coin": "BTC", "type": "funding", "usdc": "nan"},
+         "hash": "0xf", "time": 1_400},
+        {"delta": {"coin": "BTC", "type": "funding", "usdc": "-1"},
+         "hash": "0xf", "time": 0},
+        {"delta": "not-a-mapping", "hash": "0xf", "time": 1_400},
+    ],
+    ids=[
+        "missing-hash", "blank-hash", "wrong-delta-type", "blank-coin",
+        "non-finite-usdc", "invalid-time", "malformed-delta",
+    ],
+)
+def test_funding_evidence_fails_closed_on_unusable_records(row):
+    info = ReconcileInfo(funding_pages=[[row]])
+    evidence = asyncio.run(
+        _reconcile_broker(info).funding_evidence(start_ms=1_000, end_ms=2_000)
+    )
+    assert evidence.status is ReconcileComponentStatus.MALFORMED
+    assert evidence.rows == ()
+
+
+def test_funding_evidence_pagination_progress_and_conflict(monkeypatch):
+    monkeypatch.setattr(HyperliquidBroker, "HL_INFO_PAGE_LIMIT", 2)
+    page_one = [_funding("0xf1", 1_100), _funding("0xf2", 1_200)]
+    page_two = [_funding("0xf2", 1_200), _funding("0xf3", 1_300)]
+    info = ReconcileInfo(funding_pages=[page_one, page_two, []])
+    evidence = asyncio.run(
+        _reconcile_broker(info).funding_evidence(start_ms=1_000, end_ms=2_000)
+    )
+    assert [row["event_id"] for row in evidence.rows] == ["0xf1", "0xf2", "0xf3"]
+    assert info.funding_calls[1] == (1_200, 2_000)
+
+    conflicting = ReconcileInfo(
+        funding_pages=[[_funding("0xf1", 1_100), _funding("0xf1", 1_100, usdc="-9.0")]]
+    )
+    blocked = asyncio.run(
+        _reconcile_broker(conflicting).funding_evidence(start_ms=1_000, end_ms=2_000)
+    )
+    assert blocked.status is ReconcileComponentStatus.CONFLICTING
+    assert blocked.reason_code == "HL_FUNDING_IDENTITY_CONFLICT"
+
+
+def test_reconciliation_reads_are_unavailable_without_an_info_client():
+    broker = HyperliquidBroker(info_client=None, exchange_client=None)
+    portfolio = asyncio.run(broker.portfolio_evidence())
+    orders = asyncio.run(broker.open_orders_evidence())
+    fills = asyncio.run(broker.fills_evidence(start_ms=0, end_ms=1))
+    funding = asyncio.run(broker.funding_evidence(start_ms=0, end_ms=1))
+
+    for component in (portfolio.positions, orders, fills, funding):
+        assert component.status is ReconcileComponentStatus.UNAVAILABLE
+        assert component.reason_code == "HL_NOT_CONFIGURED"
+        assert component.accepted is False
+    assert orders.kind is ReconcileComponentKind.OPEN_ORDERS

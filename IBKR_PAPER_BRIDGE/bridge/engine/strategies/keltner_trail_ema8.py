@@ -63,11 +63,22 @@ class KeltnerTrailEma8:
     def trail_level(
         self, bars: Sequence[Bar], position: Position
     ) -> float | None:
-        """Return updated trailing stop level or None."""
-        if len(bars) < self.trail_ema:
+        """Return updated trailing stop level or None.
+
+        Exact mirror of QuantLens mega_walk_forward.py ema():
+        pandas Series.ewm(span=n, adjust=False, min_periods=n).mean().
+        Alpha = 2/(n+1); recursive seed is FIRST close (not SMA);
+        returns None until n closes.
+        """
+        n = self.trail_ema
+        if len(bars) < n:
             return None
-        closes = [bar.close for bar in bars[-self.trail_ema :]]
-        return mean(closes)
+        closes = [bar.close for bar in bars]
+        alpha = 2.0 / (n + 1)
+        val: float = closes[0]  # seed: first close
+        for c in closes[1:]:
+            val = c * alpha + val * (1 - alpha)
+        return val
 
     @staticmethod
     def _true_range(bar: Bar, prev_close: float | None) -> float:

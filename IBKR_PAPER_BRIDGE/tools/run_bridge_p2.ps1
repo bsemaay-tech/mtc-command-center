@@ -1,7 +1,7 @@
 # C2: P2 supervisor wrapper - restarts the bridge on crash, logs to data/logs.
 # Registered as Task Scheduler job "MTC-Bridge-P2" (at logon). Testnet only.
 $ErrorActionPreference = 'Continue'
-$root = 'C:\LAB\Tradingview_LAB_CLEAN\IBKR_PAPER_BRIDGE'
+$root = Split-Path -Parent $PSScriptRoot
 $logDir = Join-Path $root 'data\logs'
 New-Item -ItemType Directory -Force $logDir | Out-Null
 Set-Location $root
