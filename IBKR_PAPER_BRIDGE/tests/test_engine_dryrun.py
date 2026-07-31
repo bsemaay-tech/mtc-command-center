@@ -1024,6 +1024,99 @@ def test_s2_a5_crash_restart_recovers_kill_flatten_before_safe_flat(tmp_path, mo
     assert restarted_engine.state == "DISARMED"
 
 
+def test_s2_r2_startup_drain_defers_kill_flatten_without_epoch(
+    tmp_path, monkeypatch
+):
+    store, broker, engine = _repair4_kill_engine(tmp_path)
+    db_path = store.db_path
+    trade = store.get_open_trade_for_coin("repair4-kill", "BTC")
+    assert trade is not None
+    trade_id = int(trade["trade_id"])
+    decision_uid = str(trade["entry_decision_uid"])
+
+    def crash_after_coupled_flatten_commit(_fill):
+        raise RuntimeError("INJECTED_AFTER_APPLIED_FLATTEN_COMMIT")
+
+    monkeypatch.setattr(
+        engine.order_manager, "_ingest_fill", crash_after_coupled_flatten_commit
+    )
+    with pytest.raises(
+        RuntimeError, match="INJECTED_AFTER_APPLIED_FLATTEN_COMMIT"
+    ):
+        asyncio.run(engine.kill(flatten=True))
+
+    request = store.active_kill_request()
+    assert request is not None
+    flatten_action = store.kill_actions_for_episode(
+        request["episode_id"], kind="FLATTEN"
+    )[0]
+    durable_fill = store.list_fills_for_order(flatten_action["cloid"])[0]
+    assert store.get_trade(trade_id)["exit_ts"] is None
+
+    broker._user_callbacks.clear()
+    store.close()
+    restarted_store = Store(db_path)
+    restarted_store.initialize(target_schema_version=9)
+    restarted_engine = BridgeEngine(
+        run_id="repair4-kill",
+        broker=broker,
+        store=restarted_store,
+        strategy=KeltnerTrailEma8(),
+        risk_engine=RiskEngine(RiskConfig()),
+        state="KILLED",
+    )
+    redelivered = FillEvent(
+        fill_id=str(durable_fill["fill_id"]),
+        cloid=str(durable_fill["cloid"]),
+        coin="BTC",
+        qty=float(durable_fill["qty"]),
+        px=float(durable_fill["px"]),
+        ts=datetime.fromisoformat(str(durable_fill["fill_ts"])),
+        role="UNKNOWN",
+    )
+    restarted_engine.order_manager._queue_event(redelivered)
+    assert restarted_engine.order_manager._active_kill_epoch is None
+
+    consumed = asyncio.run(restarted_engine.order_manager.drain_queued_events())
+
+    assert consumed == 0
+    assert restarted_engine.order_manager._queued_events == [redelivered]
+    deferred_trade = restarted_store.get_trade(trade_id)
+    assert deferred_trade is not None
+    assert deferred_trade["exit_ts"] is None
+    assert [
+        row
+        for row in restarted_store.get_decision_chain(decision_uid)
+        if row["stage"] == "TRADE_CLOSED"
+    ] == []
+    with pytest.raises(KillConflictError, match="KILL_EPOCH_REQUIRED") as unowned:
+        restarted_store.close_trade_once_with_decision(
+            trade_id=trade_id,
+            run_id="repair4-kill",
+            decision_uid=decision_uid,
+            coin="BTC",
+            exit_px=float(durable_fill["px"]),
+            exit_ts=str(durable_fill["fill_ts"]),
+            exit_reason="KILL_FLATTEN",
+            pnl=0.0,
+            payload={},
+        )
+    assert unowned.value.reason_code == "KILL_EPOCH_REQUIRED"
+    assert restarted_store.conn.in_transaction is False
+
+    # This is the same drain entrypoint used by startup reconciliation. It must
+    # return normally while retaining the deferred event for kill recovery.
+    asyncio.run(restarted_engine.order_manager.sync_broker_state())
+    assert restarted_engine.order_manager._queued_events == [redelivered]
+
+    asyncio.run(restarted_engine.kill(flatten=True))
+
+    recovered_trade = restarted_store.get_trade(trade_id)
+    assert recovered_trade is not None
+    assert recovered_trade["exit_reason"] == "KILL_FLATTEN"
+    assert restarted_engine.order_manager._queued_events == []
+
+
 def test_s2_closure_stale_recovery_cannot_commit_after_epoch_invalidation(
     tmp_path, monkeypatch
 ):
@@ -1085,7 +1178,6 @@ def test_s2_closure_stale_recovery_cannot_commit_after_epoch_invalidation(
             process_uid="s2-closure-competing-owner",
             opened_ts_monotonic=active_epoch.opened_ts_monotonic + 1.0,
         )
-        assert newer_epoch.attempt_no == active_epoch.attempt_no + 1
         invalidations.append((active_epoch, newer_epoch))
         return original_ingest(fill)
 
@@ -1099,6 +1191,7 @@ def test_s2_closure_stale_recovery_cannot_commit_after_epoch_invalidation(
         asyncio.run(recovery_engine.kill(flatten=True))
 
     assert len(invalidations) == 1
+    assert invalidations[0][1].attempt_no == invalidations[0][0].attempt_no + 1
     durable_trade = competitor.get_trade(trade_id)
     assert durable_trade is not None
     assert durable_trade["exit_ts"] is None
@@ -1138,7 +1231,6 @@ def test_s2_closure_live_flatten_cannot_commit_after_epoch_invalidation(
             process_uid="s2-closure-live-competing-owner",
             opened_ts_monotonic=active_epoch.opened_ts_monotonic + 1.0,
         )
-        assert newer_epoch.attempt_no == active_epoch.attempt_no + 1
         invalidations.append((active_epoch, newer_epoch))
         return original_ingest(fill)
 
@@ -1152,6 +1244,7 @@ def test_s2_closure_live_flatten_cannot_commit_after_epoch_invalidation(
         asyncio.run(engine.kill(flatten=True))
 
     assert len(invalidations) == 1
+    assert invalidations[0][1].attempt_no == invalidations[0][0].attempt_no + 1
     flatten_action = competitor.kill_actions_for_episode(
         competitor.active_kill_request()["episode_id"], kind="FLATTEN"
     )[0]

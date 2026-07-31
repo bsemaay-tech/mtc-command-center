@@ -7361,18 +7361,42 @@ class Store:
                 )
         if resolved_epoch is not None:
             resolved_epoch = self._require_kill_epoch(resolved_epoch)
+        assert not self.conn.in_transaction, (
+            "lifecycle close requires a clean connection before its safety transaction"
+        )
         self.conn.execute("BEGIN IMMEDIATE")
         try:
-            if resolved_epoch is not None:
-                self._assert_kill_epoch_in_tx(resolved_epoch)
-            cursor = self.conn.execute(
-                """
-                UPDATE trades
-                SET exit_px = ?, exit_ts = ?, exit_reason = ?, pnl = ?
-                WHERE trade_id = ? AND exit_ts IS NULL
-                """,
-                (exit_px, ts_iso, exit_reason, pnl, trade_id),
-            )
+            if resolved_epoch is None:
+                cursor = self.conn.execute(
+                    """
+                    UPDATE trades
+                    SET exit_px = ?, exit_ts = ?, exit_reason = ?, pnl = ?
+                    WHERE trade_id = ? AND exit_ts IS NULL
+                    """,
+                    (exit_px, ts_iso, exit_reason, pnl, trade_id),
+                )
+            else:
+                epoch_token = self._assert_kill_epoch_in_tx(resolved_epoch)
+                cursor = self.conn.execute(
+                    """
+                    UPDATE trades
+                    SET exit_px = ?, exit_ts = ?, exit_reason = ?, pnl = ?
+                    WHERE trade_id = ? AND exit_ts IS NULL
+                      AND EXISTS (
+                        SELECT 1 FROM kill_requests
+                        WHERE episode_id = ? AND epoch_token = ?
+                      )
+                    """,
+                    (
+                        exit_px,
+                        ts_iso,
+                        exit_reason,
+                        pnl,
+                        trade_id,
+                        resolved_epoch.episode_id,
+                        epoch_token,
+                    ),
+                )
             if cursor.rowcount != 1:
                 self.conn.rollback()
                 return False

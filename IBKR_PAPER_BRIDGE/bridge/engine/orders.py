@@ -245,6 +245,9 @@ class OrderManager:
         self._monotonic: Callable[[], float] = monotonic or time.monotonic
         self._mono_deadlines: dict[str, float] = {}
         self._kill_mono_deadlines: dict[str, float] = {}
+        # This retains the last opened epoch even after episode completion; it is
+        # historical callback context, not an authority guarantee. Every lifecycle
+        # close is fenced again by the Store, which rejects a stale retained epoch.
         self._active_kill_epoch: KillEvidenceEpoch | None = None
         # Set before any KILL persistence or broker await. The final submit
         # boundary consults this in-memory latch even if SQLite is unavailable.
@@ -3196,6 +3199,17 @@ class OrderManager:
                         exit_px=exit_vwap,
                         costs=costs,
                     )
+                    close_epoch = (
+                        self._active_kill_epoch
+                        if role == "KILL_FLATTEN"
+                        else None
+                    )
+                    if role == "KILL_FLATTEN" and close_epoch is None:
+                        # Startup/reconcile drains have no kill authority. Keep
+                        # the event queued so a later epoch-owning kill recovery
+                        # can close the lifecycle; the Store independently
+                        # rejects every direct unowned KILL_FLATTEN close.
+                        return False
                     closed = self.store.close_trade_once_with_decision(
                         trade_id=int(trade_id),
                         run_id=self.run_id,
@@ -3214,11 +3228,7 @@ class OrderManager:
                             "exit_vwap": exit_vwap,
                             "qty": entry_qty,
                         },
-                        epoch=(
-                            self._active_kill_epoch
-                            if role == "KILL_FLATTEN"
-                            else None
-                        ),
+                        epoch=close_epoch,
                     )
                     if not closed:
                         self._quarantine_fill(

@@ -1,22 +1,23 @@
 # TS-P1-009B Kill Evidence Epoch Contract
 
-Status: implemented for the opt-in schema-v9 KILL capability. The default schema target remains
-v4. This contract does not activate v9, migrate a runtime database, start the bridge, or authorize
-broker activity.
+Status: implemented for the opt-in schema-v9 KILL capability, including S2 lifecycle-close
+integrity and fencing. The default schema target remains v4. This contract does not activate v9,
+migrate a runtime database, start the bridge, or authorize broker activity.
 
 This document extends `30_TSP1009_KILL_EVIDENCE_RECOVERY.md`. That document remains authoritative
 for owned-only action identity, deadlines, direct-query proof, retention, and ACK freshness.
 
 ## Objective and scope
 
-The epoch closes two failure classes:
+The epoch and lifecycle fence close three failure classes:
 
 1. a same-net exchange position could contain foreign replacement fills while appearing equal to
    the locally derived owned net; and
 2. an older recovery process could publish state or proof after a newer recovery had invalidated
-   its observation.
+   its observation; and
+3. a KILL flatten could appear complete without one exact, epoch-owned trade lifecycle close.
 
-Findings 2, 3, 4, 5, the prior NIT, S2/S3, and TS-P1-010 are outside this change.
+S3 and TS-P1-010 are outside this change.
 
 ## Epoch identity and durable anchors
 
@@ -77,7 +78,7 @@ No SQLite transaction spans broker I/O.
 | EP-3 | Every durable request-state mark, action write, proof bind, and close is CAS-guarded by the active epoch. |
 | EP-4 | A stale epoch write is rejected and a secret-safe `KILL_EPOCH_STALE_WRITE_REJECTED` event is appended; an append failure is observable and fail-closed. |
 | EP-5 | OPEN failure leaves the in-memory KILL latch set, performs no broker mutation, and fabricates no completion. |
-| EP-6 | Reserved for S2. S1 does not change or claim the finding-5 consistency matrix; the accepted TS-P1-004 same-identity retry law remains binding. |
+| EP-6 | Every applied KILL flatten has exactly one close decision and one matching `trades` closure; both must exactly match the durable fill-derived lifecycle evidence. |
 | EP-7 | Historical request/attempt/action/event evidence is retained; replay appends an attempt and moves only active authority without rewriting prior attempt history, action identity, or deadlines. |
 | EP-8 | ACK requires the active epoch to be `CLOSED` with a fresh current accepted checkpoint and proof bound in that epoch. |
 
@@ -127,21 +128,47 @@ The active open token is checked in the same transaction as each durable write:
 - action reservation/replay;
 - action-event append and folded outcome;
 - durable action-clock observation;
+- the atomic trade-lifecycle close and `TRADE_CLOSED` decision append;
 - terminal checkpoint/proof binding; and
 - epoch close.
 
 The check requires `meta.kill_epoch_active`, the request projection, and the appended attempt row
 to match the caller's exact open token. Store-local possession must also match the epoch returned
-by that Store's own `open_kill_epoch`; reading the current token never grants ownership. All six
-write helpers require the `epoch` keyword. A newer OPEN changes active authority, so an older
-process can neither adopt the token, publish a stale safe proof, close it, nor continue
-state/action writes. Rejection is rolled back, recorded outside the failed transaction, and
-raised. Failure to record that rejection is itself raised as
-`KILL_STALE_EVIDENCE_RECORD_FAILED`.
+by that Store's own `open_kill_epoch`; reading the current token never grants ownership. All
+epoch-fenced write helpers require the `epoch` keyword. A newer OPEN changes active authority, so
+an older process can neither adopt the token, publish a stale safe proof, close it, nor continue
+state/action writes. Rejection is rolled back, recorded outside the failed transaction, and raised.
+Failure to record that rejection is itself raised as `KILL_STALE_EVIDENCE_RECORD_FAILED`.
 
 This closes the second finding-6 route: guarding only `bind_kill_terminal_proof` would still allow
 an older process to mark terminal state, reserve an action, or append outcome evidence after a
 newer attempt began. Those writes now share the same CAS boundary as proof binding and close.
+
+## Kill-flatten lifecycle exactness and drain deferral
+
+An applied KILL flatten is ACK-eligible only when the durable close decision payload **and** the
+matching `trades` row exactly equal the lifecycle recomputed from immutable fills. Numeric payload
+types, keys, timestamps, exit price, reason, gross PnL, costs, net PnL, entry basis, exit VWAP, and
+quantity are exact comparisons; a representable numeric change is a conflict rather than an
+accepted approximation.
+
+The `exit_qty` versus `entry_qty` comparison deliberately retains an absolute `1e-12` tolerance.
+That comparison establishes aggregate *completeness* before closure evidence is derived; it does
+not validate persisted decision or trade-row integrity. Once derived, the persisted decision
+payload and `trades` closure must match exactly as described above.
+
+The lifecycle close runs under `BEGIN IMMEDIATE`. In that same transaction it validates the
+caller-owned open epoch and binds the exact `epoch_token` again in the fenced `UPDATE trades`
+predicate before appending the close decision. A stale non-`None` epoch rolls the transaction
+back, records `KILL_EPOCH_STALE_WRITE_REJECTED`, and raises `KILL_EPOCH_STALE_WRITE`; no lifecycle
+close or decision can commit.
+
+A startup or periodic reconcile drain has no kill authority, so its epoch is `None`. If such a
+drain encounters a complete durable KILL flatten, the order manager returns `False` to the existing
+event-drain deferral mechanism. The event remains queued, the lifecycle remains open, and startup
+is not aborted. A later `/api/kill` recovery opens and owns an epoch and may retry the same durable
+event. The store still rejects every direct KILL-flatten lifecycle-close request that omits an
+epoch with `KILL_EPOCH_REQUIRED`; deferral does not weaken the write rule.
 
 ## Replay, restart, and the same-identity retry law
 
