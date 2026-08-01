@@ -21,6 +21,7 @@ separation, no restart throttling, no explicit state/log ownership.
 | `verify.sh` | Read-only assertion pass over an installed release. Changes nothing. |
 | `rollback.sh` | Stop + mask + optionally re-bind to a prior installed SHA. Never starts, never deletes state. |
 | `verify_lock.py` | Offline parser for exact+hashed lock entries and exact installed distribution versions. |
+| `SECURITY_BASELINE.md` | WP-I pre-Gate-A pinned inventory, content-redacted secret-scan contract/result, and outbound-network inventory. Static evidence only. |
 | `lib/common.sh` | Shared layout constants and fail-closed assertions (including the read-only UFW SSH-only check). |
 | `systemd/mtc-bridge-first-start.service.template` | The only unit `install.sh` installs. `Restart=no`, no `[Install]` section, installed masked. |
 | `systemd/mtc-bridge-steady.service.template` | Restart-enabled profile. **Gated artifact — never installed or enabled by any script here.** |
@@ -121,6 +122,9 @@ never deletes, moves or resets `/var/lib/mtc-bridge`. Risk history is evidence.
   `--python-version 3.12 --python-platform linux`. Resolution is not the same as
   a successful install; the Ubuntu install itself remains
   `BLOCKED/UNVERIFIED` at KVM2-P3-03.
+- `SECURITY_BASELINE.md` records the minimum WP-I security evidence and egress
+  inventory. It is PRE-GATE-A / STATIC ONLY and is not an Ubuntu, built-payload,
+  deployment, runtime, or destination-egress-control result.
 - Egress is unrestricted (`RestrictAddressFamilies` limits families, not
   destinations). The bridge needs outbound HTTPS to the exchange. Per-destination
   egress control is deferred to the Phase 6 network gate.
