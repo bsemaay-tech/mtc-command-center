@@ -259,11 +259,26 @@ addresses the first two directly; the third needs the close path to re-derive it
 than trusting a validation performed earlier in the call. **The Lead recommendation of option 1 is
 unchanged and strengthened.**
 
-### Auditor 3 (DeepSeek V4 Flash) and auditor 4 (GLM-5.2)
+### Auditor 3 (DeepSeek V4 Flash) and auditor 4 (GLM-5.2) — both recorded as gaps
 
-DeepSeek V4 Flash was still executing when this record was written; its verdict will be appended and
-cannot change the outcome, since both flagships have already refused. GLM-5.2's route remains
-unconfirmed on this machine and is recorded as a gap, never as acceptance, per D025 rule 1.
+**DeepSeek V4 Flash is reachable but could not complete this audit.** A direct probe returned
+`PROBE_OK`, confirming the Cline route works. Two full audit attempts on `732b37c3` both ended in
+`EXIT=124` — a timeout — first at 15 minutes, then at **50 minutes**. It produced no verdict either
+time.
+
+**GLM-5.2's route is unconfirmed on this machine.** `glm` is not on PATH and a Cline `-P zai` probe
+did not return within two minutes.
+
+Per **D025 rule 1, non-execution is never acceptance**: both are recorded as gaps in this round's
+evidence, not as passes. Neither absence changes the outcome, since both flagships independently
+returned REQUEST_CHANGES.
+
+**Operational guidance for the next cycle.** The failure is scope, not capability. This audit asks
+for a full-diff review *plus* an exhaustive exception-path enumeration *plus* a ~2-minute suite run —
+too much for a fast, cheap model in one pass. To make auditor 3 usable, split its brief: give it the
+**round delta only** (`git diff <prev>..<head>`), a single focused question, and let the flagships
+carry the exhaustive enumeration. A narrow DeepSeek pass that finishes is worth more than a broad one
+that times out.
 
 ## 11. Safety statement
 
