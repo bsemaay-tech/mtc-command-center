@@ -1,38 +1,128 @@
 # GLOBAL_HANDOFF
 
-## RESUME HERE — 50-Hour MVP, live continuation package (2026-07-31)
+## RESUME HERE — 50-Hour DISARMED Safety MVP, live continuation package (2026-08-01)
 
-If this session died (power, network, quota, context), a fresh session resumes from these immutable
-anchors. **Nothing accepted is ever lost — every accepted artifact is a pushed commit.**
+**A fresh agent should be able to continue from this block alone, with no handoff prompt.** Read
+`AGENTS.md`, then `_AI_MEMORY/START_HERE.md`, then this. Nothing accepted is ever lost — every
+accepted artifact is a pushed commit.
+
+### What this programme is
+
+Deliver **one Ubuntu KVM2 VPS deployed and verified DISARMED** (non-trading, state-safe,
+private/loopback-only, restartable, reconcilable, observable) inside a hard 50 active-engineering-hour
+ceiling. Hyperliquid **TESTNET / paper-simulated only**; mainnet and real capital forbidden.
+
+### Immutable anchors
 
 | Anchor | Value |
 |---|---|
-| Authorisation | `11_TRIAGE/OWNER_AUTH_50H_EXECUTION_PROMPT_2026-07-31.md` (standing; Claude Lead, Codex implementer) |
-| Accepted plan blob SHA-256 | `a07c90cc49a4f34910f82bd9c94ba4fb71d76b511bc2cabe0bd727faf57fe3ee` (hash the **committed blob**, never the working copy) |
+| Standing authorisation | `11_TRIAGE/OWNER_AUTH_50H_EXECUTION_PROMPT_2026-07-31.md` |
+| Accepted plan | `09_DOCS/ROADMAPS/TRADING_SYSTEM/TRADING SYSTEM — 50-HOUR ACCELERATED IMPLEMENTATION PLAN.md` |
+| Plan blob SHA-256 | `a07c90cc49a4f34910f82bd9c94ba4fb71d76b511bc2cabe0bd727faf57fe3ee` — **hash the committed blob** (`git show origin/master:"<path>" \| sha256sum`), never the working copy; CRLF makes the on-disk hash differ and it is never the artifact identity |
+| **Do not edit the plan** | Its accepting verdict is bound to that hash. A genuine defect is a blocker to report, not a doc to patch. 8 optional nits deliberately unapplied. |
 | `origin/master` | `2ebb0475dd56094e53ac2cb64e52cf3cf335f099` |
-| WP-0 record | `11_TRIAGE/WP0_SCOPE_BASELINE_RECORD_2026-07-31.md` (commit `4d2228cf`, merged via PR #36) |
-| WP-S record | `11_TRIAGE/WPS_TSP1009B_S2_CLOSURE_RECORD_2026-07-31.md` (commit `225c53c6`) |
+| Records branch | `feature/donchian-crypto-ladder` |
 | WP-S branch / worktree | `feature/ts-p1-009b-s2-closure` @ `C:/WPS` |
-| **S2 ACCEPTED at** | **`0c65a73196428ac1da758c4c80ce7282a7ab46fe`** — both canonical auditors PASS-WITH-NITS, 0 required |
-| Test floor | `2 failed, 1118 passed` at `0c65a731` (`--ignore=TSP1009B.pytest_tmp_s1r1 -p no:randomly`, CWD `IBKR_PAPER_BRIDGE`) |
-| **STOPPED AT** | **S3 round 2 `e78eff596fa38ea5af5972fe80337e3d63202109` — NON-ACCEPTING, 1 required finding, awaiting an owner decision on the round bound. See `11_TRIAGE/WPS_S3_AUDIT_ROUND2_BLOCKER_2026-07-31.md`.** |
-| Hours consumed | WP-0 2.0/2 · WP-S 12.0/12 (allocation full) · contingency 1.5/5 · WP-R 2.0/6 |
 
-**Next authorised step after S3 is accepted:** merge the WP-S branch, then WP-L Phase 1 as
-**verification only** (finding F-0-1: the Linux package at `6fe0130f` is already an ancestor of
-master and byte-identical, so nothing is ported and no cross-branch Git operation occurs), then
-WP-I readiness artifacts. **No Ubuntu execution of any kind before Gate A.**
+### Roles for this execution only
 
-**Known external ceiling:** WP-L Phase 2, WP-I staging verification, WP-A and WP-V all require a
-named Ubuntu 24.04 host *and a way to reach it*. Credentials are owner-held and must never be
-handled by an agent. All local work stops at the assembled Gate-A checklist until that access
-exists.
+**Claude `claude-opus-5` is Lead Orchestrator and acceptance authority; Codex CLI `gpt-5.6-sol` is
+the counterpart flagship implementer.** This supersedes the plan's §23c/§39-10 actor assignment and
+weakens no safety, testing, scope, audit, model, or evidence requirement. The standing prompt also
+grants the WP-V deployment approval, the ARM gate, and the first TESTNET paper order in advance —
+every objective Gate A/B/C prerequisite still applies in full, and the TESTNET phase still needs its
+own pre-registration through one fresh Gate-5 audit before it may begin.
 
-**Power/network resilience:** this site switches between mains and generator, and DNS drops during
-the transition — it killed one implementer dispatch (120k tokens, zero output). Dispatch every
-long-running CLI call through `MTC_COMMAND_CENTER/tools/resilient_dispatch.sh`, which waits for real
-connectivity, retries lost runs with backoff, and **refuses to retry if the worktree is dirty**
-(a blind re-run can double-apply a partial edit into an artifact about to be frozen for audit).
+### Canonical audit roster — CHANGED 2026-08-01 (D025)
+
+Four canonical Gate-5/Gate-6 auditors: `claude-opus-5` xhigh · `gpt-5.6-sol` xhigh ·
+`cline-pass/deepseek-v4-flash` via Cline · GLM-5.2 via Z.AI. Binding rules in `AGENTS.md`
+§CANONICAL AUDIT ROSTER: an auditor that cannot execute the suite must BLOCK (non-execution is never
+acceptance); a required finding from any auditor binds once the Lead reproduces it on real source;
+acceptance needs both flagships accepting plus no unresolved reproduced required finding. Audit
+authority only — no implementation authority for secondary models.
+
+### Progress
+
+| WP | Budget | State |
+|---|---:|---|
+| WP-0 Scope/Baseline | 2 h | **DONE, merged** — PR #36, record commit `4d2228cf` |
+| WP-S S2 closure | — | **ACCEPTED at `0c65a731`** — both flagships PASS-WITH-NITS, 0 required |
+| WP-S minimum S3 | — | **round 3 (final) frozen at `732b37c39612082958d2863681e75d17aabae088`, audits in flight** |
+| WP-L / WP-I / WP-A / WP-V | 8/6/3/8 h | not started — gated on Audit 1 accepting |
+
+Hours: **WP-0 2.0/2 · WP-S 12.0/12 (full) · contingency 1.5/5 · WP-R 2.0/6.** ~17.5 of 50 plan-hours
+consumed in ~6 h wall-clock.
+
+### Test contract
+
+Run from `C:/WPS/IBKR_PAPER_BRIDGE`:
+`python -m pytest -q --ignore=TSP1009B.pytest_tmp_s1r1 -p no:randomly`
+
+`--ignore` is mandatory — `TSP1009B.pytest_tmp_s1r1/` is ACL-locked and plain `pytest` aborts
+collection with `PermissionError`. Never pass `--basetemp` inside `.pytest_cache` (623 errors).
+
+| Artifact | Result |
+|---|---|
+| `678e8b94` entry floor | 2 failed, 1113 passed |
+| `0c65a731` accepted S2 | 2 failed, 1118 passed |
+| `732b37c3` S3 final | **2 failed, 1140 passed** |
+
+The two failures — stale KVM2 ledger hash, stale `schema_version == "2"` against default v4 — fail
+identically on the `origin/master` Bridge tree, are pre-existing, and are outside every allowlist.
+**Do not "fix" them.**
+
+### Two findings that change the plan's premises
+
+- **F-0-1** — the "old-base Linux package" at `6fe0130f` is an **ancestor of master**. The whole
+  `deploy/linux/` package, lockfiles and 35 Linux tests are already merged and byte-identical.
+  **Nothing is ported; WP-L reduces to verification and performs no cross-branch Git operation.**
+- **F-0-2** — both S2 blockers were reproduced by the Lead on real source before any dispatch, not
+  taken from a report.
+
+### Next authorised step
+
+Audit 1 accepting → merge WP-S → **WP-L Phase 1 as verification only** → WP-I readiness artifacts →
+assemble Gate A. **No Ubuntu execution of any kind before Gate A.**
+
+Route WP-I's mechanical work (SBOM, secret scan, outbound-network inventory, lockfile verification)
+to **Cline first** — it is repaired and owner-verified at `3.0.48`. First genuinely Cline-shaped
+work in this programme.
+
+### Known external ceiling
+
+WP-L Phase 2, WP-I staging verification, WP-A and WP-V all require a named Ubuntu 24.04 host **and a
+way to reach it**. Credentials are owner-held and must never be handled by an agent. All local work
+stops at the assembled Gate-A checklist until that access exists.
+
+### Operational hazards — do not rediscover these
+
+1. Codex refuses to implement unless the prompt explicitly overrides the two-tier role. Prefix every
+   implementation dispatch with the owner's role assignment or it delegates to Claude CLI, gets
+   `ConnectionRefused`, and returns BLOCKED with no edits.
+2. **Codex cannot run Git** — its sandbox has read-only `.git`. The Lead performs every Git operation.
+3. A hook flips `HEAD` back to `master` between tool calls. Commit with one inline
+   `checkout; add <explicit paths>; commit`.
+4. `git checkout master` fails in the shared checkout. Merge in a temporary worktree, push, remove it.
+5. **Codex `--ephemeral -s read-only` cannot run pytest** (`No usable temporary directory found`) and
+   will BLOCK on missing evidence regardless of code quality. Give auditors a dedicated worktree at
+   the frozen SHA with `-s workspace-write`, then verify `git status --porcelain` is empty to prove
+   they edited nothing.
+6. Dispatch long CLI calls through `MTC_COMMAND_CENTER/tools/resilient_dispatch.sh` — this site
+   switches between mains and generator and DNS drops during the transition. The wrapper waits for
+   real connectivity, retries lost runs, refuses to retry on a dirty worktree, and **refuses to start
+   unless the output path appears in the command arguments** (a missing `-o` once cost five
+   duplicate xhigh audits).
+7. DeepSeek and Grok CLIs need the prompt as a **flag value**, not stdin, and crashed on memory when
+   run concurrently with pytest. Run heavy dispatches sequentially.
+
+### The lesson this task keeps teaching
+
+Across seven rounds on TS-P1-009B, **the new required finding has almost always lived in that
+round's own repair** — each fix closed the probed path and opened its neighbour. Always require the
+implementer to name the *second route* and prove it closed, and to state what the repair traded
+away. And the two-auditor split has paid off every single round: each auditor caught what the other
+missed.
 
 ## [Claude Opus 5] 2026-07-31 — 50-Hour MVP execution STARTED; WP-0 complete and merged
 

@@ -20,8 +20,38 @@ Volatile / per-session state belongs in `GLOBAL_HANDOFF.md`,
   - `_AI_MEMORY/`                      — AI memory + rules (this folder).
   - `02_MTC_BACKTEST/`                 — Python backtester + parity suite.
   - `04_SHARED/`                       — shared Pine modules + prompts.
+  - `tools/`                           — repo-level helpers, incl. `repo_guard.ps1` and `resilient_dispatch.sh`.
   - other numbered subprojects.
+- `IBKR_PAPER_BRIDGE/`                 — the Trading System runtime (see below).
 - `docs/migration_manifests/`          — migration policy + audit reports.
+
+## Trading System / IBKR_PAPER_BRIDGE
+
+Despite the legacy name, this is the **Hyperliquid** paper/TESTNET execution bridge — the runtime
+the Trading System roadmap hardens. Stable facts:
+
+- Layout: `bridge/{api,broker,engine,store}/`, `config/`, `deploy/linux/`, `docs/`, `tests/`,
+  `requirements.{in,lock,txt}`.
+- Runtime entry `bridge/app.py`; FastAPI + uvicorn, bound to `127.0.0.1:8790` (loopback only).
+- **Startup is fail-closed:** `app.py` forces `app_state` to `DISARMED` on every start unless it is
+  `KILLED`. ARM is an explicit API action; there is no automatic ARM.
+- Operational DB is **SQLite, WAL**, single `Store` per connection. Every mutating store method is
+  one explicit `BEGIN IMMEDIATE` transaction — the connection is created with the sqlite3 default
+  `isolation_level`, so a caller must never leave an implicit transaction open.
+- Schema: **default target v4**; v9 is the opt-in KILL-evidence capability. Migrations are additive
+  with no downgrade path, and `_migrate_v8_to_v9` preserves the predecessor row census by design.
+- `deploy/linux/` holds the complete Ubuntu deployment package — installer, rollback, verify,
+  logrotate, env template, and two systemd unit templates. The **steady (restart-enabled) profile is
+  deliberately inert**: no script installs or enables it. Both templates are loopback-only, hardened,
+  `KillSignal=SIGTERM`, `TimeoutStopSec=45`.
+- Test suite lives in `IBKR_PAPER_BRIDGE/tests/` and must be run with CWD `IBKR_PAPER_BRIDGE` and
+  `--ignore=TSP1009B.pytest_tmp_s1r1` — that directory is ACL-locked and plain `pytest` aborts
+  collection with `PermissionError`.
+- Two suite failures are **pre-existing and out of scope** on every branch: the stale KVM2 evidence
+  ledger hash, and `test_invariants_preserve_risk_and_history` asserting `schema_version == "2"`
+  against the current default v4.
+- Contracts are documented per task under `IBKR_PAPER_BRIDGE/docs/` (`22_ORDER_STATE` …
+  `31_KILL_EVIDENCE_EPOCH_CONTRACT`).
 
 ## Key Contracts
 

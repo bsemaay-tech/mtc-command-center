@@ -48,6 +48,25 @@ Define once here; prompts may cross-reference but must include enough detail to 
 - Example CLI (ordinary G5): `codex exec --ephemeral --sandbox read-only -m gpt-5.6-sol -c "model_reasoning_effort=high" <audit_prompt_file>`
 - Example CLI (G6/protected/re-audit): `codex exec --ephemeral --sandbox read-only -m gpt-5.6-sol -c "model_reasoning_effort=xhigh" <audit_prompt_file>`
 
+### DeepSeek V4 Flash auditor (G5 and G6) — canonical auditor 3
+
+- **Model:** `cline-pass/deepseek-v4-flash` via Cline CLI. **Owner-authorised 2026-08-01 (D025).**
+- Example CLI: `cline -P cline-pass -m cline-pass/deepseek-v4-flash --auto-approve false --cwd <audit worktree> "<audit prompt>"`
+- Fresh independent session every audit round. Read-only intent; audit in a dedicated worktree at the frozen SHA, then verify `git status --porcelain` is empty to prove it edited nothing.
+
+### GLM-5.2 auditor (G5 and G6) — canonical auditor 4
+
+- **Model:** `GLM-5.2` via the Z.AI Coding Plan route. **Owner-authorised 2026-08-01 (D025).**
+- Fresh independent session every audit round; same worktree-isolation and cleanliness proof as above.
+
+### Four-auditor acceptance rule (D025 — governs all four entries above)
+
+1. **A canonical auditor that cannot execute the mandated test suite must return BLOCK.** Non-execution is never acceptance. Codex already applies this to itself; it now binds every auditor. If a model can read the diff but not reproduce the evidence, its opinion is supplemental for that round regardless of the label it prints.
+2. **A required finding from ANY canonical auditor is binding — after the Lead reproduces it on real source.** This is not a weakening: `AGENTS.md` already requires independent Lead inspection, and it stops a weaker model burning a capped repair round on a finding that does not reproduce. A finding the Lead cannot reproduce is recorded as unreproduced with the evidence, not silently dropped.
+3. **Acceptance requires accepting verdicts from both flagship auditors** (`claude-opus-5` xhigh and `gpt-5.6-sol` xhigh) **plus no unresolved reproduced required finding from any auditor.** The flagships remain the acceptance floor because they are the two that have historically executed the suite and found real defects; auditors 3 and 4 add detection, not a veto based on an unexecuted read.
+4. **Known failure mode, do not forget it:** GLM-5.2 once returned PASS-WITH-NITS on a commit carrying two severe defects while being unable to run the suite at all. Rule 1 exists because of that exact event.
+5. This roster expansion supersedes the older restriction (including the 50-hour plan §23c/§39-10 wording, and D024's advisory-only limit) **for audit authority only**. It grants **no** implementation authority: protected Bridge/core-runtime implementation remains with the flagship implementer, and secondary models still may not implement protected work.
+
 ### Audit session contract
 
 Provide only: scope contract, plan (if any), actual diff/files, test evidence, required repo rules.
