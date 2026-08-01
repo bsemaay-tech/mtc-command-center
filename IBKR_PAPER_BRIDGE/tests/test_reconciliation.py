@@ -186,6 +186,66 @@ def build_reconciler(store: Store, broker: MockBroker, clock: FrozenClock) -> Fu
     )
 
 
+def test_repair4_a14_in_epoch_capture_is_additive_to_full_reconcile(tmp_path):
+    assert hasattr(
+        FullReconciler, "capture_kill_evidence"
+    ), "in-epoch capture seam is missing"
+    store = open_store(
+        tmp_path / "repair4-additive-capture.db",
+        version=SCHEMA_VERSION_EXPOSURE_CONTROLS,
+    )
+    seed_owned_order(store)
+    store.initialize(target_schema_version=9)
+    broker = healthy_broker()
+    clock = FrozenClock()
+    reconciler = build_reconciler(store, broker, clock)
+    request, epoch = store.open_kill_epoch(
+        run_id="run-recon",
+        symbol="BTC",
+        flatten_requested=False,
+        policy_version="policy-v1",
+        process_uid="repair4-capture",
+        opened_ts_monotonic=clock.monotonic(),
+    )
+    assert request["episode_id"] == epoch.episode_id
+    before_count = store.count_accepted_reconcile_checkpoints()
+    before_deadline = reconciler.deadline_s
+
+    capture = asyncio.run(
+        reconciler.capture_kill_evidence(
+            epoch=epoch,
+            symbol="BTC",
+            start_ms=int(RUN_STARTED_TS.timestamp() * 1000),
+            end_ms=int(clock.now().timestamp() * 1000),
+        )
+    )
+
+    assert capture.epoch == epoch
+    assert capture.accepted is True
+    assert store.count_accepted_reconcile_checkpoints() == before_count
+    assert reconciler.deadline_s == before_deadline
+
+    # This store is opened at v8, where accepted checkpoints require approved
+    # durable policies (TS-P1-008). The bare `run_cycle` helper builds a
+    # policy-less reconciler for the v6 default, so it must not be used here.
+    risk = RiskEngine()
+    broker.full_clock = clock.now
+    result = asyncio.run(
+        FullReconciler(
+            store=store,
+            broker=broker,
+            run_id="run-recon",
+            clock=clock.now,
+            monotonic=clock.monotonic,
+            risk_policy=risk.policy,
+            exposure_policy=risk.exposure_policy,
+        ).run_cycle()
+    )
+    assert result.accepted is True
+    assert store.count_accepted_reconcile_checkpoints() == before_count + 1
+    assert store.full_reconcile_ready(now=clock.now(), max_age_s=30.0) is True
+
+
 # ---------------------------------------------------------------------------
 # Predecessor RED 1 — complete deterministic capture
 # ---------------------------------------------------------------------------

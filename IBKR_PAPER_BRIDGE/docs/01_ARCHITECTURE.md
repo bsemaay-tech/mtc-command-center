@@ -137,7 +137,8 @@ App-level states (persisted, shown as dashboard pill):
 DISARMED ──[ARM click + confirm]──► ARMED ──signals may trade──► (stays ARMED)
 ARMED ──[DISARM click | abort criterion §PREREG-7]──► DISARMED (cancels working entry orders;
                                                        SL/TP triggers of open position stay working)
-ANY ──[KILL click]──► KILLED (cancel ALL orders; optional flatten checkbox; requires app restart + ack to re-arm)
+ANY ──[KILL click]──► KILLED (latch first; owned-only cancel; optional exact-owned flatten;
+                              evidence-gated ACK reaches DISARMED, never ARMED)
 ```
 
 Per-trade decision lifecycle (each transition = one row in `decisions`):
@@ -169,9 +170,12 @@ Rules (AMENDED 2026-07-06 per audit round; Hyperliquid-adapted):
   increase exposure. (Decided against freeze; see 05_AUDIT_RESOLUTION.)
 - **DISARM side-effects:** cancel working entry orders, trigger an IMMEDIATE reconcile pass (not
   wait 60 s), and confirm the SL/TP triggers match current position qty.
-- **KILLED persists:** `app_state` in the `meta` table; a process restart comes up KILLED (not
-  DISARMED) until explicit operator ack via `/api/kill/ack`. Restart always creates a NEW `run_id`;
-  the old run's data is read-only journal history.
+- **KILLED persists:** on opt-in schema v9, `app_state`, the active episode pointer, immutable
+  request/action identity and append-only broker/query evidence survive restart. Restart resumes
+  UNKNOWN or reserved actions by querying the same identity; it never resends without direct
+  `NOT_APPLIED` proof and never auto-ACKs or auto-ARMs. Explicit `/api/kill/ack` requires a fresh
+  current accepted reconciliation checkpoint bound to the safe terminal proof and reaches
+  DISARMED. Pre-v9 stores retain the KILLED latch but cannot perform or ACK the v9 coordinator.
 - **On restart / reconnect:** Reconciler runs BEFORE ARM is possible (ARM button disabled with
   "Resolving exchange state…" until reconcile completes). Adoption/re-protect rules per §6.1
   (re-protect first; own-cloid only; foreign positions untouched + WARN).
@@ -196,6 +200,11 @@ class Broker(Protocol):
     async def cancel_all(self) -> None
     async def flatten(self, coin) -> None
 ```
+
+TS-P1-009 does not change those broad legacy methods. Its separate
+`KillRecoveryBroker` capability uses only `lot_unit`, exact `symbol_snapshot`, direct
+`query_order`, `cancel_order_by_cloid`, and exact-size `flatten_reduce_only`. The coordinator
+never calls `cancel_all()` or the broad `flatten()` path.
 
 `HyperliquidBroker` implementation notes (for the builder) — **this section is the binding
 contract:**
@@ -597,6 +606,29 @@ CREATE TABLE funding_events       (event_id TEXT PK,            -- authoritative
 -- a downtime widens the next window instead of leaving an unobserved gap.
 ```
 
+Schema v9 (TS-P1-009 kill evidence, **additive and opt-in**; source v8 only):
+
+```sql
+CREATE TABLE kill_requests      (episode_id TEXT PK, generation INT, run_id, symbol,
+                                 flatten_requested INT, requested_ts, policy_version,
+                                 terminal_state, terminal_reason, terminal_ts,
+                                 safe_checkpoint_id → reconcile_checkpoints,
+                                 safe_checkpoint_ts, proof_digest, ack_state, ack_ts);
+CREATE TABLE kill_actions       (action_id TEXT PK, episode_id → kill_requests,
+                                 kind, target, qty_lots, cloid, reserved_ts,
+                                 deadline_ts, current_outcome);
+CREATE TABLE kill_action_events (event_row_id INTEGER PK, action_id → kill_actions,
+                                 seq INT, status, evidence_source, reason_code,
+                                 evidence_json, evidence_digest, observed_ts);
+-- sole transactional active pointer: meta['kill_request_active']
+```
+
+Request and action identity fields are immutable; action events are append-only. Migration runs
+under `BEGIN IMMEDIATE`, performs no broker I/O, preserves predecessor evidence, and rolls back
+cleanly to reopenable v8 on any DDL/meta/pointer failure. Default initialization is still v4;
+opening v4-v8 never creates these objects. Full contract:
+`30_TSP1009_KILL_EVIDENCE_RECOVERY.md`.
+
 Conventions: storage = UTC ISO; **all logic = UTC** (no timezone gymnastics — crypto is 24/7);
 display = local. `meta.schema_version` gates inline migrations — and a meta row alone is not
 proof of a version: a database claiming v6 without v6 objects fails closed. On PUT /api/config
@@ -623,7 +655,7 @@ GET  /api/bars?n=300        from the bars TABLE (not a live exchange call); shap
 GET  /api/gates/latest      structured gate_results of the most recent decision (Gate Monitor source)
 GET  /api/snapshot          one-shot full state: status+positions+orders+last trades+latest gates
 GET  /api/runs/{run_id}     run record incl. config snapshot (System page)
-POST /api/kill/ack          operator ack to leave persisted KILLED state after restart
+POST /api/kill/ack          evidence-gated operator ACK; result is DISARMED
 ```
 WS `/ws`: server pushes `{topic, data}` for topics: `status`, `bar`, `decision`, `order`,
 `position`, `equity`, `directive`, `event`. **Reconnect contract:** on every WS `open` the server
@@ -634,6 +666,8 @@ monotonic `state_version`.
 Confirmation model:
 - Mutating ops (ARM, PUT config while ARMED) require header `X-Confirm: <state_version>`; server
   rejects on mismatch (stale tab). Version is pushed on every WS status update.
+- KILL ACK also requires the current `X-Confirm` value plus a fresh pointed safe-terminal
+  reconciliation proof. ACK itself is never cancel/flatten evidence and never reaches ARMED.
 - **KILL and DISARM are NEVER nonce-blocked** — safety actions must not fail on stale UI state.
   KILL uses its own two-step confirm (modal) client-side.
 
@@ -780,3 +814,18 @@ checks symbol/portfolio gross exposure, wallet utilization, effective leverage,
 and directional liquidation distance both at ARM and before submission. The
 one-position gate remains and no scheduler or automatic broker mutation is
 introduced. Default schema remains v4.
+
+# Kill evidence and recovery layer (opt-in schema v9)
+
+TS-P1-009 replaces the broad best-effort KILL path only when v9 is explicitly active. Memory is
+latched first; one transaction persists KILLED, the immutable request, and the active pointer
+before broker I/O. Mutation takes the full-writer guard before the symbol writer and uses only
+proven-owned identities. Cancel and flatten have separate fixed five-second monotonic/UTC
+verification budgets. UNKNOWN, deadline, crash, partial application, quarantine, or ownership
+ambiguity remains KILLED and query-only until direct evidence resolves the same identity.
+
+Entries are always cancelled first. Owned reduce-only protection is retained unless exact owned
+lots are flattened and an authoritative flat snapshot has been observed; only then may residual
+owned protection be cancelled. A fresh accepted reconciliation checkpoint binds the safe terminal
+proof required by ACK. Default schema remains v4; no migration, activation, exchange call, or
+runtime start is automatic.

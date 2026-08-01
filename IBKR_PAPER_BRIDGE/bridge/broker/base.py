@@ -15,6 +15,8 @@ from bridge.engine.types import (
     CancelResult,
     ComponentEvidence,
     FlattenResult,
+    KillEvidenceCapture,
+    KillEvidenceEpoch,
     LotUnit,
     OrderPlan,
     OrderQueryResult,
@@ -178,7 +180,9 @@ class Broker(Protocol):
     def planned_cloids(self, plan: OrderPlan) -> dict[str, str]:
         ...
 
-    async def place_bracket(self, plan: OrderPlan) -> SubmissionOutcome:
+    async def place_bracket(
+        self, plan: OrderPlan, *, pre_send_guard: Callable[[], bool] | None = None
+    ) -> SubmissionOutcome:
         ...
 
     async def submission_recovery_evidence(
@@ -265,9 +269,59 @@ class PartialRecoveryBroker(Protocol):
         ...
 
     async def flatten_reduce_only(
-        self, *, symbol: str, cloid: str, size: float
+        self, *, symbol: str, cloid: str, size: float, exit_side: str
     ) -> FlattenResult:
         """Reduce-only market close of exactly ``size`` on ``symbol``."""
+        ...
+
+
+# TS-P1-009 deliberately reuses the proven typed primitives while defining a
+# separate capability boundary from the broad legacy cancel_all/flatten API.
+class KillRecoveryBroker(Protocol):
+    def lot_unit(self, symbol: str) -> LotUnit | None:
+        ...
+
+    async def symbol_snapshot(self, symbol: str) -> SymbolSnapshot:
+        ...
+
+    async def capture_kill_evidence(
+        self,
+        *,
+        epoch: KillEvidenceEpoch,
+        symbol: str,
+        start_ms: int,
+        end_ms: int,
+    ) -> KillEvidenceCapture:
+        """Fresh authoritative positions, orders and fills before mutation."""
+        ...
+
+    async def query_order(self, cloid: str, symbol: str) -> OrderQueryResult:
+        ...
+
+    async def kill_cancel_order_by_cloid(
+        self,
+        cloid: str,
+        symbol: str,
+        *,
+        epoch: KillEvidenceEpoch,
+        epoch_guard: Callable[[KillEvidenceEpoch], None],
+        worker_epoch_guard: Callable[[KillEvidenceEpoch], None],
+    ) -> CancelResult:
+        """KILL-only cancel fenced inside the adapter's final write boundary."""
+        ...
+
+    async def kill_flatten_reduce_only(
+        self,
+        *,
+        symbol: str,
+        cloid: str,
+        size: float,
+        exit_side: str,
+        epoch: KillEvidenceEpoch,
+        epoch_guard: Callable[[KillEvidenceEpoch], None],
+        worker_epoch_guard: Callable[[KillEvidenceEpoch], None],
+    ) -> FlattenResult:
+        """KILL-only flatten fenced inside the adapter's final write boundary."""
         ...
 
 

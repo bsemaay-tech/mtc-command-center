@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 import threading
+from concurrent.futures import ThreadPoolExecutor
+from copy import deepcopy
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import Mock, create_autospec
@@ -15,8 +18,10 @@ from bridge.broker.hyperliquid import (
     HyperliquidOrderError,
     round_hl_price,
 )
+from bridge.broker.base import BrokerPreSendFailure
 from bridge.broker.mock import MockBroker
 from bridge.engine.types import AccountSnapshot, Bar, BrokerOrder, FillEvent, OrderPlan, Position, Signal
+from bridge.store.db import KillConflictError, Store
 from hyperliquid.exchange import Exchange
 from hyperliquid.utils.signing import order_request_to_order_wire, order_type_to_wire
 from hyperliquid.utils.types import Cloid
@@ -112,6 +117,68 @@ def test_hl_bracket_explicit_grouping_passthrough():
 
     asyncio.run(broker.place_bracket(plan, grouping="normalTpsl"))
     assert exchange.bulk_orders.call_args.kwargs == {"grouping": "normalTpsl"}
+
+
+def test_hl_bracket_pre_send_veto_is_definitively_not_transmitted():
+    exchange = _exchange_mock()
+    broker = HyperliquidBroker(
+        info_client=_verified_plan_info(), exchange_client=exchange
+    )
+
+    with pytest.raises(BrokerPreSendFailure) as exc_info:
+        asyncio.run(
+            broker.place_bracket(_plan(), pre_send_guard=lambda: False)
+        )
+
+    assert exc_info.value.reason_code == "HL_KILL_PRE_SEND_VETO"
+    assert exc_info.value.write_may_have_started is False
+    exchange.bulk_orders.assert_not_called()
+
+
+def test_hl_bracket_executor_rechecks_kill_guard_after_queue_delay():
+    async def scenario() -> None:
+        exchange = _exchange_mock()
+        broker = HyperliquidBroker(
+            info_client=_verified_plan_info(), exchange_client=exchange
+        )
+        loop = asyncio.get_running_loop()
+        executor = ThreadPoolExecutor(max_workers=1)
+        loop.set_default_executor(executor)
+        blocker_started = threading.Event()
+        release_blocker = threading.Event()
+        guard_enabled = True
+        guard_calls = 0
+
+        def occupy_executor() -> None:
+            blocker_started.set()
+            release_blocker.wait(timeout=5)
+
+        def guard() -> bool:
+            nonlocal guard_calls
+            guard_calls += 1
+            return guard_enabled
+
+        blocker = asyncio.create_task(asyncio.to_thread(occupy_executor))
+        while not blocker_started.is_set():
+            await asyncio.sleep(0)
+        placement = asyncio.create_task(
+            broker.place_bracket(_plan(), pre_send_guard=guard)
+        )
+        while guard_calls < 1:
+            await asyncio.sleep(0)
+        guard_enabled = False
+        release_blocker.set()
+        await blocker
+
+        with pytest.raises(BrokerPreSendFailure) as exc_info:
+            await placement
+        assert exc_info.value.reason_code == "HL_KILL_PRE_SEND_VETO"
+        assert exc_info.value.write_may_have_started is False
+        assert guard_calls == 2
+        exchange.bulk_orders.assert_not_called()
+        executor.shutdown(wait=True)
+
+    asyncio.run(scenario())
 
 
 def test_hl_price_rounding_contract():
@@ -1898,7 +1965,7 @@ def test_symbol_snapshot_conflicting_positions_are_inexact():
 @pytest.mark.parametrize(
     ("raw", "known", "found", "terminal"),
     [
-        ({"status": "unknownOid"}, True, False, True),
+        ({"status": "unknownOid"}, False, False, False),
         (
             {"status": "order", "order": {"status": "open",
                                           "order": {"origSz": "2.0", "sz": "1.0"}}},
@@ -1919,17 +1986,60 @@ def test_symbol_snapshot_conflicting_positions_are_inexact():
     ],
 )
 def test_parse_order_query_is_strict(raw, known, found, terminal):
-    result = HyperliquidBroker._parse_order_query(raw, "0xabc")
+    raw = deepcopy(raw)
+    if isinstance(raw, dict) and raw.get("status") == "order":
+        payload = raw.get("order")
+        if isinstance(payload, dict) and isinstance(payload.get("status"), str):
+            inner = payload.setdefault("order", {})
+            if isinstance(inner, dict):
+                inner.setdefault("cloid", "0xabc")
+                inner.setdefault("coin", "BTC")
+    result = HyperliquidBroker._parse_order_query(raw, "0xabc", "BTC")
     assert (result.known, result.found, result.terminal) == (known, found, terminal)
 
 
 def test_parse_order_query_computes_filled_size():
     result = HyperliquidBroker._parse_order_query(
         {"status": "order",
-         "order": {"status": "open", "order": {"origSz": "2.0", "sz": "0.5"}}},
-        "0xabc",
+         "order": {"status": "open", "order": {"cloid": "0xabc", "coin": "BTC", "origSz": "2.0", "sz": "0.5"}}},
+        "0xabc", "BTC",
     )
     assert result.filled_size == 1.5
+
+
+def test_kill_query_evidence_carries_exact_oid_and_terminal_fill_size():
+    result = HyperliquidBroker._parse_order_query(
+        {
+            "status": "order",
+            "order": {
+                "status": "filled",
+                "order": {"oid": 4242, "cloid": "0x" + "a" * 32, "coin": "BTC", "origSz": "1.25", "sz": "0"},
+            },
+        },
+        "0x" + "a" * 32, "BTC",
+    )
+    assert result.known is True and result.terminal is True
+    assert result.oid == 4242
+    assert result.filled_size == 1.25
+
+
+def test_kill_query_rejects_mismatched_returned_cloid_and_coin():
+    result = HyperliquidBroker._parse_order_query(
+        {
+            "status": "order",
+            "order": {
+                "status": "filled",
+                "order": {
+                    "oid": 4242, "cloid": "0x" + "b" * 32,
+                    "coin": "ETH", "origSz": "1.0", "sz": "0",
+                },
+            },
+        },
+        "0x" + "a" * 32,
+        "BTC",
+    )
+    assert result.known is False
+    assert result.evidence.reason_code == "HL_QUERY_IDENTITY_MISMATCH"
 
 
 def test_query_order_open_order_absence_is_not_authoritative():
@@ -2000,18 +2110,287 @@ def test_typed_place_transport_failure_is_unknown():
 
 
 def test_typed_flatten_transport_failure_is_unknown():
-    def boom(coin, sz, slippage, cloid):
+    def boom(*args, **kwargs):
         raise TimeoutError("gateway timeout")
 
     broker = HyperliquidBroker(
         info_client=object(),
-        exchange_client=SimpleNamespace(market_close=boom),
+        exchange_client=SimpleNamespace(_slippage_price=lambda *args: 100.0, order=boom),
         account_address="0xabc",
     )
     result = asyncio.run(
-        broker.flatten_reduce_only(symbol="BTC", cloid="0x" + "3" * 32, size=1.0)
+        broker.flatten_reduce_only(symbol="BTC", cloid="0x" + "3" * 32, size=1.0, exit_side="SELL")
     )
     assert result.outcome is ActionOutcome.UNKNOWN
+
+
+def _repair4_projected_epoch_guard(store, *, legacy_projection=True):
+    event_loop_thread = threading.get_ident()
+    full_guard_threads: list[int] = []
+    worker_guard_threads: list[int] = []
+
+    def full_guard(epoch):
+        thread_id = threading.get_ident()
+        full_guard_threads.append(thread_id)
+        store.assert_kill_epoch_active(epoch)
+
+    def worker_guard(epoch):
+        worker_guard_threads.append(threading.get_ident())
+        if store._owned_kill_epoch != epoch:
+            raise KillConflictError(
+                "KILL_EPOCH_STALE_WRITE",
+                "the worker does not own the process-local epoch",
+            )
+
+    if legacy_projection:
+        full_guard.in_memory_only = worker_guard
+    return (
+        full_guard,
+        worker_guard,
+        event_loop_thread,
+        full_guard_threads,
+        worker_guard_threads,
+    )
+
+
+def test_repair4_f3_plain_durable_guard_never_runs_in_executor(tmp_path):
+    path = tmp_path / "repair4-hl-worker-projection.db"
+    store = Store(path)
+    store.initialize(target_schema_version=9)
+    store.create_run("repair4-hl-worker", "dry_run", "testnet", {})
+    observer = Store(path)
+    observer.initialize(target_schema_version=9)
+    _request, epoch = store.open_kill_epoch(
+        run_id="repair4-hl-worker",
+        symbol="BTC",
+        flatten_requested=True,
+        policy_version="policy-v1",
+        process_uid="repair4-hl-worker",
+        opened_ts_monotonic=10.0,
+    )
+    guard, worker_guard, event_loop_thread, full_threads, worker_threads = (
+        _repair4_projected_epoch_guard(store, legacy_projection=False)
+    )
+    writes: list[str] = []
+    broker = HyperliquidBroker(
+        info_client=object(),
+        exchange_client=SimpleNamespace(
+            _slippage_price=lambda *_args: 100.0,
+            order=lambda *_args, **_kwargs: writes.append("order") or _OK_RESTING,
+        ),
+        account_address="0xabc",
+    )
+
+    parameters = inspect.signature(
+        broker.kill_flatten_reduce_only
+    ).parameters
+    kwargs = {
+        "symbol": "BTC",
+        "cloid": "0x" + "3" * 32,
+        "size": 1.0,
+        "exit_side": "SELL",
+        "epoch": epoch,
+        "epoch_guard": guard,
+    }
+    if "worker_epoch_guard" in parameters:
+        kwargs["worker_epoch_guard"] = worker_guard
+    asyncio.run(
+        broker.kill_flatten_reduce_only(**kwargs)
+    )
+
+    assert "worker_epoch_guard" in parameters
+    assert (
+        parameters["worker_epoch_guard"].default
+        is inspect.Parameter.empty
+    )
+    cancel_worker = inspect.signature(
+        broker.kill_cancel_order_by_cloid
+    ).parameters["worker_epoch_guard"]
+    assert cancel_worker.default is inspect.Parameter.empty
+    assert writes == ["order"]
+    assert full_threads == [event_loop_thread]
+    assert worker_threads and all(
+        thread_id != event_loop_thread for thread_id in worker_threads
+    )
+    missing_worker = dict(kwargs)
+    missing_worker.pop("worker_epoch_guard")
+    with pytest.raises(TypeError):
+        asyncio.run(broker.kill_flatten_reduce_only(**missing_worker))
+    observer.close()
+
+
+def test_repair4_f2_epoch_rechecked_after_hl_slippage_round_trip(tmp_path):
+    path = tmp_path / "repair4-hl-epoch-boundary.db"
+    older = Store(path)
+    older.initialize(target_schema_version=9)
+    older.create_run("repair4-hl-boundary", "dry_run", "testnet", {})
+    _request, epoch = older.open_kill_epoch(
+        run_id="repair4-hl-boundary",
+        symbol="BTC",
+        flatten_requested=True,
+        policy_version="policy-v1",
+        process_uid="repair4-hl-old",
+        opened_ts_monotonic=10.0,
+    )
+    newer = Store(path)
+    newer.initialize(target_schema_version=9)
+    guard, worker_guard, event_loop_thread, full_threads, worker_threads = (
+        _repair4_projected_epoch_guard(older)
+    )
+    writes: list[str] = []
+
+    def slippage_price(*_args):
+        newer.open_kill_epoch(
+            run_id="repair4-hl-boundary",
+            symbol="BTC",
+            flatten_requested=True,
+            policy_version="policy-v1",
+            process_uid="repair4-hl-new",
+            opened_ts_monotonic=20.0,
+        )
+        return 100.0
+
+    def order(*_args, **_kwargs):
+        writes.append("order")
+        return _OK_RESTING
+
+    broker = HyperliquidBroker(
+        info_client=object(),
+        exchange_client=SimpleNamespace(
+            _slippage_price=slippage_price,
+            order=order,
+        ),
+        account_address="0xabc",
+    )
+
+    with pytest.raises(KillConflictError, match="KILL_EPOCH_STALE_WRITE"):
+        kwargs = dict(
+            symbol="BTC",
+            cloid="0x" + "3" * 32,
+            size=1.0,
+            exit_side="SELL",
+            epoch=epoch,
+            epoch_guard=guard,
+        )
+        if "worker_epoch_guard" in inspect.signature(
+            broker.kill_flatten_reduce_only
+        ).parameters:
+            kwargs["worker_epoch_guard"] = worker_guard
+        asyncio.run(broker.kill_flatten_reduce_only(**kwargs))
+
+    assert writes == []
+    assert full_threads == [event_loop_thread]
+    assert worker_threads == []
+    assert len(
+        [
+            row
+            for row in older.get_events()
+            if row["code"] == "KILL_EPOCH_STALE_WRITE_REJECTED"
+        ]
+    ) == 1
+    newer.close()
+    older.close()
+
+
+def test_repair4_f2_cancel_uses_two_store_durable_boundary(tmp_path):
+    path = tmp_path / "repair4-hl-cancel-epoch-boundary.db"
+    older = Store(path)
+    older.initialize(target_schema_version=9)
+    older.create_run("repair4-hl-cancel", "dry_run", "testnet", {})
+    _request, epoch = older.open_kill_epoch(
+        run_id="repair4-hl-cancel",
+        symbol="BTC",
+        flatten_requested=True,
+        policy_version="policy-v1",
+        process_uid="repair4-hl-cancel-old",
+        opened_ts_monotonic=10.0,
+    )
+    newer = Store(path)
+    newer.initialize(target_schema_version=9)
+    guard, worker_guard, event_loop_thread, full_threads, worker_threads = (
+        _repair4_projected_epoch_guard(older)
+    )
+    writes: list[str] = []
+    broker = HyperliquidBroker(
+        info_client=object(),
+        exchange_client=SimpleNamespace(
+            cancel_by_cloid=lambda *_args: writes.append("cancel") or _OK_RESTING
+        ),
+        account_address="0xabc",
+    )
+
+    newer.open_kill_epoch(
+        run_id="repair4-hl-cancel",
+        symbol="BTC",
+        flatten_requested=True,
+        policy_version="policy-v1",
+        process_uid="repair4-hl-cancel-new",
+        opened_ts_monotonic=20.0,
+    )
+
+    with pytest.raises(KillConflictError, match="KILL_EPOCH_STALE_WRITE"):
+        kwargs = dict(
+            epoch=epoch,
+            epoch_guard=guard,
+        )
+        if "worker_epoch_guard" in inspect.signature(
+            broker.kill_cancel_order_by_cloid
+        ).parameters:
+            kwargs["worker_epoch_guard"] = worker_guard
+        asyncio.run(
+            broker.kill_cancel_order_by_cloid(
+                "0x" + "4" * 32, "BTC", **kwargs
+            )
+        )
+
+    assert writes == []
+    assert full_threads == [event_loop_thread]
+    assert worker_threads == []
+    assert len(
+        [
+            row
+            for row in older.get_events()
+            if row["code"] == "KILL_EPOCH_STALE_WRITE_REJECTED"
+        ]
+    ) == 1
+    newer.close()
+    older.close()
+
+
+def test_kill_flatten_uses_frozen_side_even_if_wallet_position_would_flip():
+    calls = []
+    wallet_position = {"size": 1.25}
+
+    def order(*args, **kwargs):
+        calls.append((wallet_position["size"], args, kwargs))
+        return _OK_RESTING
+
+    def slippage_price(symbol, is_buy, slippage):
+        wallet_position["size"] = -1.25
+        return 99.0
+
+    raw_cloid = "0x" + "6" * 32
+    broker = HyperliquidBroker(
+        info_client=object(),
+        exchange_client=SimpleNamespace(
+            _slippage_price=slippage_price,
+            order=order,
+        ),
+        account_address="0xabc",
+    )
+
+    result = asyncio.run(
+        broker.flatten_reduce_only(symbol="BTC", cloid=raw_cloid, size=1.25, exit_side="SELL")
+    )
+
+    assert result.outcome is ActionOutcome.APPLIED
+    flipped_size, args, kwargs = calls[0]
+    assert flipped_size == -1.25
+    assert args == ("BTC", False, 1.25, 99.0)
+    assert kwargs["order_type"] == {"limit": {"tif": "Ioc"}}
+    assert kwargs["reduce_only"] is True
+    assert isinstance(kwargs["cloid"], Cloid)
+    assert kwargs["cloid"].to_raw() == raw_cloid
 
 
 def test_typed_place_registers_spec_only_when_applied():
@@ -2049,7 +2428,7 @@ def test_typed_surface_without_clients_is_not_applied_not_success():
         )
     )
     flat = asyncio.run(
-        broker.flatten_reduce_only(symbol="BTC", cloid="0x" + "5" * 32, size=1.0)
+        broker.flatten_reduce_only(symbol="BTC", cloid="0x" + "5" * 32, size=1.0, exit_side="SELL")
     )
     query = asyncio.run(broker.query_order("0x" + "5" * 32, "BTC"))
     assert cancel.outcome is ActionOutcome.NOT_APPLIED
@@ -2311,6 +2690,54 @@ def test_fills_evidence_identity_comes_from_documented_fields():
     assert evidence.rows[0]["effective_ts_ms"] == 1_700
     assert evidence.cursor_start_ms == 1_000
     assert evidence.cursor_end_ms == 2_000
+    assert info.fill_calls == [(1_000, 2_000)]
+
+
+def test_repair4_authoritative_kill_capture_binds_epoch_orders_and_fills():
+    from bridge.engine import types as engine_types
+
+    epoch_type = getattr(engine_types, "KillEvidenceEpoch", None)
+    assert epoch_type is not None, "typed kill epoch is missing"
+    info = ReconcileInfo(
+        state=_hl_state(
+            positions=[{"position": {"coin": "BTC", "szi": "0.1"}}]
+        ),
+        orders=[{
+            "cloid": "0xowned",
+            "coin": "BTC",
+            "side": "A",
+            "sz": "0.1",
+            "reduceOnly": True,
+            "oid": 8,
+        }],
+        fill_pages=[[_fill("0xowned-fill", 7, 1_700)]],
+    )
+    broker = _reconcile_broker(info)
+    assert hasattr(
+        broker, "capture_kill_evidence"
+    ), "authoritative broker capture seam is missing"
+    epoch = epoch_type(
+        episode_id="kill-v1:" + "a" * 64,
+        attempt_no=1,
+        process_uid="repair4-hl",
+        opened_ts_monotonic=10.0,
+    )
+
+    capture = asyncio.run(
+        broker.capture_kill_evidence(
+            epoch=epoch,
+            symbol="BTC",
+            start_ms=1_000,
+            end_ms=2_000,
+        )
+    )
+
+    assert capture.epoch == epoch
+    assert capture.symbol == "BTC"
+    assert capture.accepted is True
+    assert capture.positions.rows == ({"symbol": "BTC", "size": 0.1},)
+    assert capture.open_orders.rows[0]["oid"] == 8
+    assert capture.fills.rows[0]["oid"] == 7
     assert info.fill_calls == [(1_000, 2_000)]
 
 

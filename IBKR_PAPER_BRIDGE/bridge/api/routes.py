@@ -123,13 +123,22 @@ def install_routes(app: FastAPI) -> None:
         return dict(request.app.state.bridge_status)
 
     @app.post("/api/kill/ack")
-    async def kill_ack(request: Request) -> dict[str, Any]:
+    async def kill_ack(
+        request: Request, x_confirm: int | None = Header(default=None)
+    ) -> dict[str, Any]:
+        _require_confirm(request, x_confirm)
         engine = _engine(request)
         if engine is not None:
-            await engine.acknowledge_kill()
+            try:
+                await engine.acknowledge_kill()
+            except RuntimeError as exc:
+                raise HTTPException(status_code=409, detail=str(exc)) from exc
             request.app.state.bridge_status.update(engine.status())
         else:
-            _set_state(request, "DISARMED")
+            raise HTTPException(
+                status_code=409,
+                detail="durable kill evidence coordinator unavailable",
+            )
         await _bump_and_broadcast(request, "status", dict(request.app.state.bridge_status))
         return dict(request.app.state.bridge_status)
 
