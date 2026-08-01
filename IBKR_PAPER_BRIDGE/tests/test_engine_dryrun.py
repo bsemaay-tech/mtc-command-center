@@ -21,6 +21,7 @@ from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
 from bridge.engine.types import (
     Bar,
     FillEvent,
+    OrderUpdateEvent,
     OrderPlan,
     Position,
     ReconcileComponentKind,
@@ -28,6 +29,7 @@ from bridge.engine.types import (
 )
 from bridge.broker.base import SubmissionRejectedError
 from bridge.store.db import KillConflictError, Store
+from bridge.store.db import DURABLE_EVENT_COLUMN_TYPES
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -2011,6 +2013,135 @@ def test_s3_r3_deferral_evidence_store_failure_still_propagates(
     assert engine.order_manager._deferred_kill_fills == {}
     assert redelivered.fill_id not in engine.order_manager._synced_fills
     assert store.get_meta("app_state") == "KILLED"
+    store.close()
+
+
+_S3T_D_CORRUPTION_CASES = (
+    pytest.param(None, "NULL", id="null"),
+    pytest.param("not-a-number", "NON_NUMERIC_TEXT", id="non_numeric_text"),
+    pytest.param(sqlite3.Binary(b"wrong-storage"), "STORAGE_CLASS", id="blob"),
+    pytest.param(str(-(2**64)), "INT64_RANGE", id="int64_underflow"),
+    pytest.param(str(2**64), "INT64_RANGE", id="int64_overflow"),
+    # Python's sqlite3 adapter normalizes NaN to SQL NULL; the boundary must
+    # still contain the schema-observed value rather than letting it escape.
+    pytest.param(float("nan"), "NULL", id="nan_normalized_to_null"),
+    pytest.param(float("inf"), "NON_FINITE", id="positive_infinity"),
+    pytest.param(float("-inf"), "NON_FINITE", id="negative_infinity"),
+)
+
+
+@pytest.mark.parametrize(
+    ("table", "column", "expected_type"),
+    [
+        pytest.param(table, column, expected_type, id=f"{table}.{column}")
+        for (table, column), expected_type in DURABLE_EVENT_COLUMN_TYPES.items()
+    ],
+)
+@pytest.mark.parametrize(("corrupt_value", "reason_case"), _S3T_D_CORRUPTION_CASES)
+def test_s3t_d_registry_generated_durable_corruption_matrix(
+    tmp_path,
+    monkeypatch,
+    table,
+    column,
+    expected_type,
+    corrupt_value,
+    reason_case,
+):
+    """Every registered queued-event durable read is startup-containable."""
+    del expected_type  # the registry drives collection; the boundary owns parsing
+    store, _broker, engine, _request, redelivered, trade_id, decision_uid = (
+        _s3_stranded_kill_restart(tmp_path, monkeypatch)
+    )
+    if table == "trades":
+        # Force the legacy durable-trade basis branch instead of the preferred
+        # entry-fill aggregate branch so every registered trades column is read.
+        store.conn.execute("DELETE FROM fills WHERE cloid='repair4-entry'")
+        store.conn.execute(
+            "UPDATE trades SET entry_px=100.0 WHERE trade_id=?", (trade_id,)
+        )
+        store.conn.commit()
+    identity = {
+        "orders": ("cloid", redelivered.cloid),
+        "fills": ("fill_id", redelivered.fill_id),
+        "trades": ("trade_id", trade_id),
+    }[table]
+    key_column, key_value = identity
+    store.conn.execute(
+        f"UPDATE {table} SET {column}=? WHERE {key_column}=?",
+        (corrupt_value, key_value),
+    )
+    store.conn.commit()
+    engine.order_manager._queue_event(redelivered)
+
+    async def start_probe_and_stop():
+        await engine.start(lookback=0)
+        status = engine.status()
+        with pytest.raises(
+            RuntimeError, match="KILLED requires operator acknowledgement"
+        ):
+            await engine.arm()
+        with pytest.raises(RuntimeError, match="KILL_"):
+            await engine.acknowledge_kill()
+        await engine.stop()
+        return status
+
+    status = asyncio.run(start_probe_and_stop())
+
+    reason_code = f"DURABLE_{table}_{column}_{reason_case}".upper()
+    evidence = store.get_events()
+    assert any(
+        row["code"] == reason_code or reason_code in str(row["detail"])
+        for row in evidence
+    )
+    assert status["state"] == "KILLED"
+    assert store.get_meta("app_state") == "KILLED"
+    assert store.get_trade(trade_id)["exit_ts"] is None
+    assert [
+        row
+        for row in store.get_decision_chain(decision_uid)
+        if row["stage"] == "TRADE_CLOSED"
+    ] == []
+    assert engine.order_manager._queued_events == []
+    assert engine.order_manager._deferred_kill_fills == {}
+    assert redelivered.fill_id in engine.order_manager._synced_fills
+    store.close()
+
+
+def test_s3t_c_event_symbol_contains_int64_overflow_at_startup(tmp_path):
+    store, _broker, engine = _repair4_kill_engine(tmp_path)
+    trade = store.get_open_trade_for_coin("repair4-kill", "BTC")
+    assert trade is not None
+    trade_id = int(trade["trade_id"])
+    store.conn.execute(
+        "UPDATE orders SET trade_id=? WHERE cloid='repair4-sl'", (str(2**64),)
+    )
+    store.conn.commit()
+    event = OrderUpdateEvent(
+        cloid="repair4-sl",
+        status="OPEN",
+        ts=datetime.now(UTC),
+    )
+    engine.order_manager._queue_event(event)
+
+    async def start_probe_and_stop():
+        await engine.start(lookback=0)
+        with pytest.raises(
+            RuntimeError, match="KILLED requires operator acknowledgement"
+        ):
+            await engine.arm()
+        with pytest.raises(RuntimeError, match="KILL_"):
+            await engine.acknowledge_kill()
+        await engine.stop()
+
+    asyncio.run(start_probe_and_stop())
+
+    reason_code = "DURABLE_ORDERS_TRADE_ID_INT64_RANGE"
+    evidence = [row for row in store.get_events() if row["code"] == reason_code]
+    assert evidence
+    assert engine.order_manager._queued_events == []
+    assert engine.order_manager._deferred_kill_fills == {}
+    assert store.get_meta("app_state") == "KILLED"
+    assert store.get_trade(trade_id)["exit_ts"] is None
     store.close()
 
 

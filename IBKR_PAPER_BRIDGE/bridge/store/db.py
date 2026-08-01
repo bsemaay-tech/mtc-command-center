@@ -10,6 +10,7 @@ from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, Callable, Literal
 
 from bridge.engine.types import (
@@ -569,6 +570,143 @@ class KillConflictError(Exception):
             else ""
         )
         super().__init__(f"{code}: {message}{cause}")
+
+
+# ---------------------------------------------------------------------------
+# S3-STRUCT durable-row boundary for queued broker events
+# ---------------------------------------------------------------------------
+
+SQLITE_SIGNED_INT_MIN = -(2**63)
+SQLITE_SIGNED_INT_MAX = 2**63 - 1
+
+# This is the single source of truth for every conversion-sensitive value read
+# from orders/fills/trades while ingesting a queued broker event. Tests derive
+# their corruption matrix directly from this registry.
+DURABLE_EVENT_COLUMN_TYPES: Mapping[
+    tuple[str, str], Literal["INT64", "FINITE_FLOAT"]
+] = MappingProxyType({
+    ("orders", "trade_id"): "INT64",
+    ("orders", "qty"): "FINITE_FLOAT",
+    ("orders", "filled_qty"): "FINITE_FLOAT",
+    ("fills", "qty"): "FINITE_FLOAT",
+    ("fills", "px"): "FINITE_FLOAT",
+    ("fills", "fee"): "FINITE_FLOAT",
+    ("fills", "funding"): "FINITE_FLOAT",
+    ("trades", "qty"): "FINITE_FLOAT",
+    ("trades", "entry_px"): "FINITE_FLOAT",
+    ("trades", "expected_px"): "FINITE_FLOAT",
+})
+
+
+class DurableRowFault(RuntimeError):
+    """A schema-admitted durable value failed the queued-event read contract."""
+
+    def __init__(self, table: str, column: str, case: str) -> None:
+        self.table = table
+        self.column = column
+        self.case = case
+        self.reason_code = f"DURABLE_{table}_{column}_{case}".upper()
+        super().__init__(self.reason_code)
+
+
+class ValidatedDurableRow(Mapping[str, Any]):
+    """Lazy typed view: registered durable values cannot bypass validation."""
+
+    def __init__(
+        self,
+        accessor: "DurableRowAccessor",
+        table: str,
+        row: Mapping[str, Any],
+    ) -> None:
+        self._accessor = accessor
+        self._table = table
+        self._row = row
+
+    def __getitem__(self, column: str) -> Any:
+        value = self._row[column]
+        if (self._table, column) not in self._accessor.registry:
+            return value
+        return self._accessor.read(self._table, column, value)
+
+    def __iter__(self):
+        keys = getattr(self._row, "keys", None)
+        return iter(keys() if callable(keys) else self._row)
+
+    def __len__(self) -> int:
+        return len(self._row)
+
+
+class DurableRowAccessor:
+    """Registry-driven, type-total boundary for queued-event durable reads."""
+
+    def __init__(
+        self,
+        registry: Mapping[tuple[str, str], Literal["INT64", "FINITE_FLOAT"]],
+    ) -> None:
+        self.registry = registry
+
+    @staticmethod
+    def _fault(table: str, column: str, case: str) -> DurableRowFault:
+        return DurableRowFault(table, column, case)
+
+    def read(self, table: str, column: str, value: object) -> int | float:
+        expected = self.registry[(table, column)]
+        if value is None:
+            raise self._fault(table, column, "NULL")
+        if isinstance(value, bool):
+            raise self._fault(table, column, "STORAGE_CLASS")
+
+        if expected == "INT64":
+            if type(value) is int:
+                parsed = value
+            elif isinstance(value, str):
+                candidate = value.strip()
+                digits = candidate[1:] if candidate[:1] in {"+", "-"} else candidate
+                if not digits or not digits.isdecimal():
+                    raise self._fault(table, column, "NON_NUMERIC_TEXT")
+                try:
+                    parsed = int(candidate)
+                except (TypeError, ValueError, OverflowError):
+                    raise self._fault(table, column, "INT64_RANGE") from None
+            elif isinstance(value, float):
+                if not math.isfinite(value):
+                    raise self._fault(table, column, "NON_FINITE")
+                if value < SQLITE_SIGNED_INT_MIN or value > SQLITE_SIGNED_INT_MAX:
+                    raise self._fault(table, column, "INT64_RANGE")
+                raise self._fault(table, column, "STORAGE_CLASS")
+            else:
+                raise self._fault(table, column, "STORAGE_CLASS")
+            if parsed < SQLITE_SIGNED_INT_MIN or parsed > SQLITE_SIGNED_INT_MAX:
+                raise self._fault(table, column, "INT64_RANGE")
+            return parsed
+
+        if isinstance(value, str):
+            try:
+                numeric_text = Decimal(value.strip())
+            except (InvalidOperation, ValueError):
+                raise self._fault(table, column, "NON_NUMERIC_TEXT") from None
+            if not numeric_text.is_finite():
+                raise self._fault(table, column, "NON_FINITE")
+            raise self._fault(table, column, "STORAGE_CLASS")
+        if type(value) is int:
+            if value < SQLITE_SIGNED_INT_MIN or value > SQLITE_SIGNED_INT_MAX:
+                raise self._fault(table, column, "INT64_RANGE")
+            raise self._fault(table, column, "STORAGE_CLASS")
+        if type(value) is not float:
+            raise self._fault(table, column, "STORAGE_CLASS")
+        if not math.isfinite(value):
+            raise self._fault(table, column, "NON_FINITE")
+        if value < SQLITE_SIGNED_INT_MIN or value > SQLITE_SIGNED_INT_MAX:
+            raise self._fault(table, column, "INT64_RANGE")
+        return value
+
+    def row(
+        self, table: str, row: Mapping[str, Any] | None
+    ) -> ValidatedDurableRow | None:
+        return None if row is None else ValidatedDurableRow(self, table, row)
+
+
+DURABLE_EVENT_ROWS = DurableRowAccessor(DURABLE_EVENT_COLUMN_TYPES)
 
 
 # ---------------------------------------------------------------------------
@@ -5119,6 +5257,48 @@ class Store:
                 cause_reason_code="KILL_EPOCH_STALE_WRITE",
             ) from exc
 
+    def _record_kill_lifecycle_binding_rejection(
+        self, epoch: KillEvidenceEpoch, trade_id: int, operation: str
+    ) -> None:
+        """Durably record a rolled-back active-epoch lifecycle binding veto."""
+        request = self.conn.execute(
+            "SELECT run_id FROM kill_requests WHERE episode_id=?",
+            (epoch.episode_id,),
+        ).fetchone()
+        if request is None:
+            raise KillConflictError(
+                "KILL_LIFECYCLE_EVIDENCE_RECORD_FAILED",
+                "binding rejection request is missing",
+                cause_reason_code="KILL_LIFECYCLE_IDENTITY_MISSING",
+            )
+        detail = (
+            f"episode={epoch.episode_id};trade_id={trade_id};operation={operation}"
+        )
+        try:
+            self.conn.execute("BEGIN IMMEDIATE")
+            existing = self.conn.execute(
+                """SELECT 1 FROM events
+                   WHERE run_id=? AND code='KILL_LIFECYCLE_IDENTITY_MISSING'
+                     AND detail=? LIMIT 1""",
+                (str(request["run_id"]), detail),
+            ).fetchone()
+            if existing is None:
+                self._insert_event_in_tx(
+                    str(request["run_id"]),
+                    _to_iso(self._clock()) or "",
+                    "ERROR",
+                    "KILL_LIFECYCLE_IDENTITY_MISSING",
+                    detail,
+                )
+            self.conn.commit()
+        except Exception as exc:
+            self.conn.rollback()
+            raise KillConflictError(
+                "KILL_LIFECYCLE_EVIDENCE_RECORD_FAILED",
+                f"binding rejection append failed: {type(exc).__name__}",
+                cause_reason_code="KILL_LIFECYCLE_IDENTITY_MISSING",
+            ) from exc
+
     def record_kill_lifecycle_deferral(
         self,
         *,
@@ -7330,15 +7510,17 @@ class Store:
         ).fetchone()
         if row is None:
             return "CONFLICT"
+        durable = DURABLE_EVENT_ROWS.row("fills", row)
+        assert durable is not None
         existing = (
-            str(row["fill_id"]),
-            str(row["cloid"]),
-            str(row["decision_uid"]),
-            str(row["fill_ts"]),
-            float(row["qty"]),
-            float(row["px"]),
-            float(row["fee"] or 0.0),
-            float(row["funding"] or 0.0),
+            str(durable["fill_id"]),
+            str(durable["cloid"]),
+            str(durable["decision_uid"]),
+            str(durable["fill_ts"]),
+            durable["qty"],
+            durable["px"],
+            durable["fee"],
+            durable["funding"],
         )
         return "EXACT_DUPLICATE" if existing == normalized else "CONFLICT"
 
@@ -7467,6 +7649,17 @@ class Store:
                 )
             else:
                 epoch_token = self._assert_kill_epoch_in_tx(resolved_epoch)
+                binding = self.conn.execute(
+                    """SELECT 1 FROM orders
+                       WHERE role='KILL_FLATTEN' AND group_id=? AND trade_id=?
+                       LIMIT 1""",
+                    (resolved_epoch.episode_id, trade_id),
+                ).fetchone()
+                if binding is None:
+                    raise KillConflictError(
+                        "KILL_LIFECYCLE_IDENTITY_MISSING",
+                        "trade is no longer bound to the active kill episode",
+                    )
                 # Keep the epoch predicate on the UPDATE as defence in depth if
                 # the preceding assertion is ever reordered or refactored.
                 cursor = self.conn.execute(
@@ -7475,8 +7668,14 @@ class Store:
                     SET exit_px = ?, exit_ts = ?, exit_reason = ?, pnl = ?
                     WHERE trade_id = ? AND exit_ts IS NULL
                       AND EXISTS (
-                        SELECT 1 FROM kill_requests
-                        WHERE episode_id = ? AND epoch_token = ?
+                       SELECT 1 FROM kill_requests
+                         WHERE episode_id = ? AND epoch_token = ?
+                       )
+                      AND EXISTS (
+                        SELECT 1 FROM orders
+                        WHERE role = 'KILL_FLATTEN'
+                          AND group_id = ?
+                          AND trade_id = trades.trade_id
                       )
                     """,
                     (
@@ -7487,6 +7686,7 @@ class Store:
                         trade_id,
                         resolved_epoch.episode_id,
                         epoch_token,
+                        resolved_epoch.episode_id,
                     ),
                 )
             if cursor.rowcount != 1:
@@ -7510,6 +7710,14 @@ class Store:
             ):
                 self._record_stale_epoch_rejection(
                     resolved_epoch, "CLOSE_TRADE_LIFECYCLE"
+                )
+            elif (
+                resolved_epoch is not None
+                and isinstance(exc, KillConflictError)
+                and exc.reason_code == "KILL_LIFECYCLE_IDENTITY_MISSING"
+            ):
+                self._record_kill_lifecycle_binding_rejection(
+                    resolved_epoch, trade_id, "CLOSE_TRADE_LIFECYCLE"
                 )
             raise
         return True
@@ -7568,7 +7776,9 @@ class Store:
         ).fetchall()
         qty = Decimal(0)
         notional = Decimal(0)
-        for row in rows:
+        for raw_row in rows:
+            row = DURABLE_EVENT_ROWS.row("fills", raw_row)
+            assert row is not None
             row_qty = Decimal(str(row["qty"]))
             row_px = Decimal(str(row["px"]))
             qty += row_qty
@@ -7595,7 +7805,9 @@ class Store:
             "ENTRY": {"qty": Decimal(0), "notional": Decimal(0), "first": None, "last": None},
             "EXIT": {"qty": Decimal(0), "notional": Decimal(0), "first": None, "last": None},
         }
-        for row in rows:
+        for raw_row in rows:
+            row = DURABLE_EVENT_ROWS.row("fills", raw_row)
+            assert row is not None
             side = str(row["side"])
             aggregate = aggregates[side]
             qty = Decimal(str(row["qty"]))
@@ -9346,14 +9558,19 @@ class Store:
         return total
 
     def trade_costs(self, decision_uid: str) -> float:
-        row = self.conn.execute(
-            """
-            SELECT COALESCE(SUM(fee), 0.0) + COALESCE(SUM(funding), 0.0)
-            FROM fills WHERE decision_uid = ?
-            """,
+        rows = self.conn.execute(
+            "SELECT fee, funding FROM fills WHERE decision_uid = ?",
             (decision_uid,),
-        ).fetchone()
-        return float(row[0]) if row and row[0] is not None else 0.0
+        ).fetchall()
+        total = Decimal(0)
+        for raw_row in rows:
+            row = DURABLE_EVENT_ROWS.row("fills", raw_row)
+            assert row is not None
+            total += Decimal(str(row["fee"])) + Decimal(str(row["funding"]))
+        parsed = float(total)
+        if not math.isfinite(parsed):
+            raise DurableRowFault("fills", "fee", "NON_FINITE")
+        return parsed
 
     def insert_equity(
         self,
@@ -9421,6 +9638,32 @@ class Store:
         self.conn.commit()
         return int(cursor.lastrowid)
 
+    def record_durable_event_fault(
+        self,
+        run_id: str,
+        ts: datetime | str,
+        reason_code: str,
+        detail: str,
+    ) -> None:
+        """Idempotently append one typed durable-row fault observation."""
+        if self.conn.in_transaction:
+            raise RuntimeError("durable-row fault evidence requires a clean connection")
+        try:
+            self.conn.execute("BEGIN IMMEDIATE")
+            existing = self.conn.execute(
+                """SELECT 1 FROM events
+                   WHERE run_id=? AND code=? AND detail=? LIMIT 1""",
+                (run_id, reason_code, detail),
+            ).fetchone()
+            if existing is None:
+                self._insert_event_in_tx(
+                    run_id, _to_iso(ts) or "", "ERROR", reason_code, detail
+                )
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+
     def claim_signal_fingerprint(self, run_id: str, fingerprint: str, decision_uid: str, ts: datetime | str) -> bool:
         try:
             self.conn.execute(
@@ -9438,6 +9681,15 @@ class Store:
     def get_order(self, cloid: str) -> dict[str, Any] | None:
         row = self.conn.execute("SELECT * FROM orders WHERE cloid = ?", (cloid,)).fetchone()
         return None if row is None else dict(row)
+
+    def get_durable_event_order(
+        self, cloid: str
+    ) -> ValidatedDurableRow | None:
+        """Typed orders-row view for queued broker-event ingestion only."""
+        row = self.conn.execute(
+            "SELECT * FROM orders WHERE cloid = ?", (cloid,)
+        ).fetchone()
+        return DURABLE_EVENT_ROWS.row("orders", None if row is None else dict(row))
 
     def get_order_by_oid(self, oid: int) -> dict[str, Any] | None:
         """Resolve one durable broker identity; zero or multiple matches are ambiguous."""
@@ -9486,6 +9738,15 @@ class Store:
         row = self.conn.execute("SELECT * FROM trades WHERE trade_id = ?", (trade_id,)).fetchone()
         return None if row is None else dict(row)
 
+    def get_durable_event_trade(
+        self, trade_id: int
+    ) -> ValidatedDurableRow | None:
+        """Typed trades-row view for queued broker-event ingestion only."""
+        row = self.conn.execute(
+            "SELECT * FROM trades WHERE trade_id = ?", (trade_id,)
+        ).fetchone()
+        return DURABLE_EVENT_ROWS.row("trades", None if row is None else dict(row))
+
     def get_open_trade_for_coin(self, run_id: str, coin: str) -> dict[str, Any] | None:
         row = self.conn.execute(
             """
@@ -9502,6 +9763,18 @@ class Store:
             "SELECT * FROM orders WHERE trade_id = ? ORDER BY ts_submit",
             (trade_id,),
         )
+
+    def get_durable_event_orders_for_trade(
+        self, trade_id: int
+    ) -> list[ValidatedDurableRow]:
+        """Typed orders-row views for queued broker-event ingestion only."""
+        return [
+            ValidatedDurableRow(DURABLE_EVENT_ROWS, "orders", row)
+            for row in self._rows(
+                "SELECT * FROM orders WHERE trade_id = ? ORDER BY ts_submit",
+                (trade_id,),
+            )
+        ]
 
     def update_trade_entry(self, trade_id: int, entry_px: float, entry_ts: datetime | str) -> None:
         self.conn.execute(

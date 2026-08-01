@@ -199,6 +199,40 @@ status and events. A second-Store invalidation between validation and the `BEGIN
 check is classified and quarantined the same way. Evidence-store write failures, including
 `KILL_STALE_EVIDENCE_RECORD_FAILED` and a failed quarantine/deferral append, still propagate.
 
+## S3-STRUCT durable-row boundary and active-episode lifecycle binding
+
+Queued broker-event ingestion reads conversion-sensitive `orders`, `fills`, and `trades` values
+through the module-level `DURABLE_EVENT_ROWS` accessor in `bridge/store/db.py`. Its declared
+`DURABLE_EVENT_COLUMN_TYPES` registry is the sole source of truth for the boundary and its
+generated acceptance matrix:
+
+- `orders.trade_id` as signed SQLite int64;
+- `orders.qty` and `orders.filled_qty` as finite floats;
+- `fills.qty`, `fills.px`, `fills.fee`, and `fills.funding` as finite floats; and
+- `trades.qty`, `trades.entry_px`, and `trades.expected_px` as finite floats.
+
+The typed row view validates registered values lazily when a reachable consumer reads them. It
+classifies SQL NULL, non-numeric text, unexpected storage classes, signed-int64 overflow or
+underflow, and non-finite values as `DurableRowFault`. The stable reason code has the form
+`DURABLE_<TABLE>_<COLUMN>_<CASE>`. Both queued-event drains contain that typed fault at their entry
+boundary, retain `app_state=KILLED`, append the reason code as durable evidence, consume the faulting
+delivery once, and clear any matching deferred-map entry. The accessor also governs duplicate-fill
+classification, order/trade fill aggregation, fee/funding cost aggregation, `_event_symbol`, and
+`_canonical_status`; the former `_parse_store_trade_id` and `_store_float` paths no longer exist.
+
+For an epoch-owned `KILL_FLATTEN` close, `close_trade_once_with_decision` now re-derives the current
+binding inside its existing `BEGIN IMMEDIATE`. The fenced `UPDATE` keeps the existing
+`_assert_kill_epoch_in_tx` and `kill_requests(episode_id, epoch_token)` predicates and adds an
+`orders` existence conjunct requiring `role='KILL_FLATTEN'`, the active `group_id`, and the closing
+`trade_id`. A missing binding rolls back, appends `KILL_LIFECYCLE_IDENTITY_MISSING`, and raises to the
+caller without closing the trade or writing `TRADE_CLOSED`. Ordinary closes with no epoch retain
+their prior behavior.
+
+Identity and schema-capability faults remain containable. Evidence-store outages remain
+propagating failures. In particular, `KILL_STALE_EVIDENCE_RECORD_FAILED` still propagates: when the
+durable evidence store cannot record its own failure, halting with the durable KILL latch is the
+only honest fail-closed outcome.
+
 The status payload exposes `kill_episode.lifecycle_state = AWAITING_EPOCH_RECOVERY` while the
 active episode still needs recovery, `AWAITING_ACK` once it is safe and ACK-eligible, and
 `deferred_event_queue_depth` for the current in-memory queue. This is a minimal liveness surface,

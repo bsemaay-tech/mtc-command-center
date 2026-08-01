@@ -13,6 +13,8 @@ from bridge.store.db import (
     compute_kill_action_cloid,
     compute_kill_action_id,
 )
+from bridge.store.db import DURABLE_EVENT_COLUMN_TYPES, DURABLE_EVENT_ROWS
+from bridge.store.db import DurableRowFault
 
 
 def test_store_roundtrip_decision_chain_and_schema_version(tmp_path):
@@ -830,6 +832,107 @@ def _v4_with_trade(tmp_path, *, target=4):
         decision_uid="d1", trade_id=trade_id, role="ENTRY", status="OPEN", qty=2.0,
     )
     return store, int(trade_id), now
+
+
+@pytest.mark.parametrize(
+    ("table", "column", "expected_type"),
+    [
+        pytest.param(table, column, expected_type, id=f"{table}.{column}")
+        for (table, column), expected_type in DURABLE_EVENT_COLUMN_TYPES.items()
+    ],
+)
+def test_s3t_a_registry_accepts_valid_typed_values(table, column, expected_type):
+    value = 7 if expected_type == "INT64" else 7.25
+    assert DURABLE_EVENT_ROWS.read(table, column, value) == value
+
+
+@pytest.mark.parametrize(
+    ("table", "column"),
+    [
+        pytest.param(table, column, id=f"{table}.{column}")
+        for table, column in DURABLE_EVENT_COLUMN_TYPES
+    ],
+)
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
+def test_s3t_a_registry_rejects_each_raw_non_finite_value(table, column, value):
+    with pytest.raises(
+        DurableRowFault,
+        match=f"DURABLE_{table}_{column}_NON_FINITE".upper(),
+    ):
+        DURABLE_EVENT_ROWS.read(table, column, value)
+
+
+def test_s3t_d_active_epoch_two_store_binding_break_rolls_back_and_records(
+    tmp_path,
+):
+    store, trade_id, now = _v4_with_trade(tmp_path, target=9)
+    request, epoch = store.open_kill_epoch(
+        run_id="run",
+        symbol="BTC",
+        flatten_requested=True,
+        policy_version="policy-v1",
+        process_uid="s3t-binding-owner",
+        opened_ts_monotonic=10.0,
+    )
+    store.insert_order(
+        cloid="kill-flatten-1",
+        oid=201,
+        group_id=request["episode_id"],
+        order_ref="kill-flatten-1:KILL_FLATTEN",
+        order_json={"symbol": "BTC", "role": "KILL_FLATTEN"},
+        decision_uid="d1",
+        trade_id=trade_id,
+        role="KILL_FLATTEN",
+        status="FILLED",
+        qty=2.0,
+        filled_qty=2.0,
+        ts_submit=now,
+        ts_last=now,
+    )
+    competitor = Store(store.db_path)
+    competitor.initialize(target_schema_version=9)
+
+    # Store 1 has validated and owns the active epoch. Store 2 breaks only the
+    # order-to-episode binding before Store 1 begins its close transaction.
+    assert store.get_order("kill-flatten-1")["group_id"] == request["episode_id"]
+    competitor.conn.execute(
+        "UPDATE orders SET group_id=NULL WHERE cloid='kill-flatten-1'"
+    )
+    competitor.conn.commit()
+
+    with pytest.raises(
+        KillConflictError, match="KILL_LIFECYCLE_IDENTITY_MISSING"
+    ) as rejected:
+        store.close_trade_once_with_decision(
+            trade_id=trade_id,
+            run_id="run",
+            decision_uid="d1",
+            coin="BTC",
+            exit_px=101.0,
+            exit_ts=now,
+            exit_reason="KILL_FLATTEN",
+            pnl=2.0,
+            payload={"exit_reason": "KILL_FLATTEN"},
+            epoch=epoch,
+        )
+
+    assert rejected.value.reason_code == "KILL_LIFECYCLE_IDENTITY_MISSING"
+    assert store.conn.in_transaction is False
+    assert competitor.get_trade(trade_id)["exit_ts"] is None
+    assert [
+        row
+        for row in competitor.get_decision_chain("d1")
+        if row["stage"] == "TRADE_CLOSED"
+    ] == []
+    identity_events = [
+        row
+        for row in competitor.get_events()
+        if row["code"] == "KILL_LIFECYCLE_IDENTITY_MISSING"
+    ]
+    assert len(identity_events) == 1
+    assert f"trade_id={trade_id}" in identity_events[0]["detail"]
+    competitor.close()
+    store.close()
 
 
 def test_lifecycle_close_requires_a_clean_connection_with_runtime_guard(tmp_path):
