@@ -173,10 +173,18 @@ Every failure carries the same verdict:
 'changed_components': ['wal', 'shm']            'changed_during_hash': False   (for the db itself)
 ```
 
-The main database is stable across the capture. What drifts are SQLite's **`-wal` and `-shm` sidecar
-files**, which are necessarily touched on Linux merely by opening a WAL-mode database. `_file_snapshot`
+**Established:** the main database is stable across the capture (`changed_during_hash: False`); what
+the tool reports as changed are SQLite's **`-wal` and `-shm` sidecar files**. `_file_snapshot`
 brackets each component's read with `lstat()` and compares `_stable_metadata`
-(`tools/wal_state_bundle.py:423`, including `ctime_ns`), so the capture trips its own drift detector.
+(`tools/wal_state_bundle.py:423`, which includes `ctime_ns`).
+
+**A lead for the implementer, not a conclusion:** after a clean `close()` of a WAL-mode SQLite
+database, only `bridge.db` exists on disk — the `-wal` and `-shm` files are created by whoever next
+*opens* it. The capture opens the source in order to read it. So the sidecars plausibly transition
+absent → present *during* the very window the tool brackets, which would explain the verdict without
+any metadata subtlety at all. This was not proven here: a direct probe was blocked because
+`wal_state_bundle.py` requires the full bridge schema and rejects a toy database. Someone should
+confirm it against the real fixture before designing the fix.
 
 **Why this matters beyond a test count:** `wal_state_bundle.py` is the tool `COMMANDS.md` Stage E uses
 to capture the WAL-consistent state bundle for the **KVM2 ordered single-writer cutover**, and that
