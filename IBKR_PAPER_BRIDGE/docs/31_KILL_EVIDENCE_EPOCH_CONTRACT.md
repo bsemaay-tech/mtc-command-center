@@ -228,6 +228,17 @@ binding inside its existing `BEGIN IMMEDIATE`. The fenced `UPDATE` keeps the exi
 caller without closing the trade or writing `TRADE_CLOSED`. Ordinary closes with no epoch retain
 their prior behavior.
 
+The close-conflict recovery path retains the identity validated before the transaction and compares
+the event order against it after rollback. A disappeared row, changed role, changed or cleared
+`group_id`, and changed `trade_id` are reported respectively as
+`KILL_LIFECYCLE_ORDER_ROW_MISSING`, `KILL_LIFECYCLE_ROLE_CHANGED`,
+`KILL_LIFECYCLE_GROUP_ID_CHANGED`, and `KILL_LIFECYCLE_TRADE_ID_CHANGED`. The registry declaring
+those binding elements also generates a four-case, active-epoch second-Store mutation matrix. Each
+case changes a well-formed binding after validation and immediately before the real close
+transaction, then proves normal startup return, durable named evidence, fail-closed state, and
+consistent queue/deferred bookkeeping. Ordinary non-KILL identity probing retains the
+not-applicable `(None, None, ())` result.
+
 Identity and schema-capability faults remain containable. Evidence-store outages remain
 propagating failures. In particular, `KILL_STALE_EVIDENCE_RECORD_FAILED` still propagates: when the
 durable evidence store cannot record its own failure, halting with the durable KILL latch is the

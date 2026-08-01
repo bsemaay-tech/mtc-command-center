@@ -16,6 +16,7 @@ import pytest
 from bridge.broker.mock import MockBroker
 from bridge.engine.engine import BridgeEngine
 from bridge.engine.orders import OrderManager
+from bridge.engine.orders import KILL_LIFECYCLE_BINDING_FAULT_REASONS
 from bridge.engine.risk import RiskConfig, RiskEngine
 from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
 from bridge.engine.types import (
@@ -1985,6 +1986,104 @@ def test_s3_r3_two_store_identity_invalidation_is_quarantined_not_raised(
     ]
     assert status["state"] == "KILLED"
     assert status["deferred_event_queue_depth"] == 0
+    competitor.close()
+    store.close()
+
+
+@pytest.mark.parametrize(
+    ("binding_element", "expected_fault"),
+    [
+        pytest.param(binding_element, expected_fault, id=binding_element)
+        for binding_element, expected_fault in (
+            KILL_LIFECYCLE_BINDING_FAULT_REASONS.items()
+        )
+    ],
+)
+def test_s3t_d_active_epoch_binding_mutation_matrix_is_quarantined(
+    tmp_path, monkeypatch, binding_element, expected_fault
+):
+    """Each well-formed post-validation binding mutation is startup-contained."""
+    store, _broker, engine, request, redelivered, trade_id, decision_uid = (
+        _s3_stranded_kill_restart(tmp_path, monkeypatch)
+    )
+    epoch = _s3_open_epoch(
+        store,
+        request,
+        process_uid=f"s3t-binding-{binding_element}",
+        opened_ts_monotonic=10.0,
+    )
+    engine.order_manager._active_kill_epoch = epoch
+    competitor = Store(store.db_path)
+    competitor.initialize(target_schema_version=9)
+    assert competitor is not store
+    original_close = store.close_trade_once_with_decision
+    interleaved: list[str] = []
+
+    def invalidate_binding_before_close(**kwargs):
+        if not interleaved:
+            if binding_element == "orders.role":
+                competitor.conn.execute(
+                    "UPDATE orders SET role='CLOSE' WHERE cloid=?",
+                    (redelivered.cloid,),
+                )
+            elif binding_element == "orders.group_id":
+                competitor.conn.execute(
+                    "UPDATE orders SET group_id=? WHERE cloid=?",
+                    (f"{request['episode_id']}-other", redelivered.cloid),
+                )
+            elif binding_element == "orders.trade_id":
+                competitor.conn.execute(
+                    "UPDATE orders SET trade_id=? WHERE cloid=?",
+                    (trade_id + 1000, redelivered.cloid),
+                )
+            elif binding_element == "orders.row":
+                competitor.conn.execute(
+                    "DELETE FROM orders WHERE cloid=?", (redelivered.cloid,)
+                )
+            else:  # pragma: no cover - registry growth must add a mutation above
+                raise AssertionError(f"unhandled binding element: {binding_element}")
+            competitor.conn.commit()
+            interleaved.append(binding_element)
+        return original_close(**kwargs)
+
+    monkeypatch.setattr(
+        store, "close_trade_once_with_decision", invalidate_binding_before_close
+    )
+    engine.order_manager._queue_event(redelivered)
+
+    async def start_probe_and_stop():
+        await engine.start(lookback=0)
+        status = engine.status()
+        with pytest.raises(
+            RuntimeError, match="KILLED requires operator acknowledgement"
+        ):
+            await engine.arm()
+        with pytest.raises(RuntimeError, match="KILL_"):
+            await engine.acknowledge_kill()
+        await engine.stop()
+        return status
+
+    status = asyncio.run(start_probe_and_stop())
+
+    assert interleaved == [binding_element]
+    assert engine.reconcile_ready is True
+    evidence = [
+        row
+        for row in competitor.get_events()
+        if row["code"] == "KILL_LIFECYCLE_IDENTITY_MISSING"
+    ]
+    assert any(expected_fault in str(row["detail"]) for row in evidence)
+    assert status["state"] == "KILLED"
+    assert competitor.get_meta("app_state") == "KILLED"
+    assert competitor.get_trade(trade_id)["exit_ts"] is None
+    assert [
+        row
+        for row in competitor.get_decision_chain(decision_uid)
+        if row["stage"] == "TRADE_CLOSED"
+    ] == []
+    assert engine.order_manager._queued_events == []
+    assert engine.order_manager._deferred_kill_fills == {}
+    assert redelivered.fill_id in engine.order_manager._synced_fills
     competitor.close()
     store.close()
 

@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 import math
+from types import MappingProxyType
 from typing import Any, Callable, Literal
 
 from bridge.broker.base import (
@@ -105,6 +106,13 @@ _LIVE_ORDER_STATUSES = frozenset({
 _KILL_LIFECYCLE_DEFERRED = "DEFERRED"
 _KILL_LIFECYCLE_CONSUMED = "CONSUMED"
 _KILL_LIFECYCLE_UNBOUND = "UNBOUND"
+
+KILL_LIFECYCLE_BINDING_FAULT_REASONS: Mapping[str, str] = MappingProxyType({
+    "orders.role": "KILL_LIFECYCLE_ROLE_CHANGED",
+    "orders.group_id": "KILL_LIFECYCLE_GROUP_ID_CHANGED",
+    "orders.trade_id": "KILL_LIFECYCLE_TRADE_ID_CHANGED",
+    "orders.row": "KILL_LIFECYCLE_ORDER_ROW_MISSING",
+})
 
 
 class SymbolLockNotHeld(RuntimeError):
@@ -2723,17 +2731,40 @@ class OrderManager:
         self._queued_events = pending
 
     def _kill_lifecycle_identity(
-        self, order: Mapping[str, Any] | None
+        self,
+        order: Mapping[str, Any] | None,
+        *,
+        expected_identity: tuple[str, int] | None = None,
     ) -> tuple[
         tuple[str, int] | None,
         Mapping[str, Any] | None,
         tuple[str, ...],
     ]:
-        """Validate the full durable identity required by the deferral store."""
-        if order is None or str(order.get("role")) != "KILL_FLATTEN":
+        """Validate a kill binding, optionally against its pre-close identity."""
+        if order is None:
+            if expected_identity is not None:
+                return None, None, (
+                    "order_row:"
+                    f"{KILL_LIFECYCLE_BINDING_FAULT_REASONS['orders.row']}",
+                )
+            return None, None, ()
+        if str(order.get("role")) != "KILL_FLATTEN":
+            if expected_identity is not None:
+                return None, None, (
+                    "role:"
+                    f"{KILL_LIFECYCLE_BINDING_FAULT_REASONS['orders.role']}",
+                )
             return None, None, ()
         missing_identity: list[str] = []
         episode_id = str(order.get("group_id") or "")
+        if (
+            expected_identity is not None
+            and episode_id != expected_identity[0]
+        ):
+            return None, None, (
+                "group_id:"
+                f"{KILL_LIFECYCLE_BINDING_FAULT_REASONS['orders.group_id']}",
+            )
         if not episode_id:
             missing_identity.append("group_id")
         try:
@@ -2741,6 +2772,15 @@ class OrderManager:
         except DurableRowFault as fault:
             trade_id = None
             missing_identity.append(f"trade_id:{fault.reason_code}")
+        if (
+            expected_identity is not None
+            and trade_id is not None
+            and trade_id != expected_identity[1]
+        ):
+            return None, None, (
+                "trade_id:"
+                f"{KILL_LIFECYCLE_BINDING_FAULT_REASONS['orders.trade_id']}",
+            )
         trade = (
             self.store.get_durable_event_trade(trade_id)
             if trade_id is not None
@@ -2807,10 +2847,11 @@ class OrderManager:
             # first validation. That ordinary identity race is quarantined;
             # evidence-store write failures remain uncontained and propagate.
             _identity, _trade, missing_identity = self._kill_lifecycle_identity(
-                self.store.get_durable_event_order(event.cloid)
+                self.store.get_durable_event_order(event.cloid),
+                expected_identity=resolved_identity,
             )
             self._quarantine_kill_lifecycle_identity(
-                event, missing_identity or ("episode",)
+                event, missing_identity or ("KILL_LIFECYCLE_BINDING_CHANGED",)
             )
             self._mark_fill_consumed(event)
             return _KILL_LIFECYCLE_CONSUMED
@@ -3542,26 +3583,42 @@ class OrderManager:
                             identity=kill_identity,
                         )
                         return disposition == _KILL_LIFECYCLE_CONSUMED
-                    closed = self.store.close_trade_once_with_decision(
-                        trade_id=trade_id,
-                        run_id=self.run_id,
-                        decision_uid=str(order["decision_uid"]),
-                        coin=str(trade["coin"]),
-                        exit_px=exit_vwap,
-                        exit_ts=fill.ts,
-                        exit_reason=role,
-                        pnl=pnl,
-                        payload={
-                            "exit_reason": role,
-                            "pnl": pnl,
-                            "pnl_gross": gross,
-                            "costs": costs,
-                            "entry_basis_px": entry_px,
-                            "exit_vwap": exit_vwap,
-                            "qty": entry_qty,
-                        },
-                        epoch=close_epoch,
-                    )
+                    try:
+                        closed = self.store.close_trade_once_with_decision(
+                            trade_id=trade_id,
+                            run_id=self.run_id,
+                            decision_uid=str(order["decision_uid"]),
+                            coin=str(trade["coin"]),
+                            exit_px=exit_vwap,
+                            exit_ts=fill.ts,
+                            exit_reason=role,
+                            pnl=pnl,
+                            payload={
+                                "exit_reason": role,
+                                "pnl": pnl,
+                                "pnl_gross": gross,
+                                "costs": costs,
+                                "entry_basis_px": entry_px,
+                                "exit_vwap": exit_vwap,
+                                "qty": entry_qty,
+                            },
+                            epoch=close_epoch,
+                        )
+                    except KillConflictError as exc:
+                        if (
+                            role != "KILL_FLATTEN"
+                            or exc.reason_code
+                            != "KILL_LIFECYCLE_IDENTITY_MISSING"
+                        ):
+                            raise
+                        disposition = self._defer_kill_lifecycle_event(
+                            fill,
+                            reason_code=exc.reason_code,
+                            identity=kill_identity,
+                        )
+                        if disposition == _KILL_LIFECYCLE_CONSUMED:
+                            return True
+                        raise
                     if not closed:
                         self._quarantine_fill(
                             "TRADE_CLOSE_RACE",
