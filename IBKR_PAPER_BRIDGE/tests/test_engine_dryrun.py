@@ -9,6 +9,7 @@ import sqlite3
 import threading
 from contextlib import asynccontextmanager
 from dataclasses import replace
+from decimal import InvalidOperation
 from pathlib import Path
 from datetime import UTC, datetime, timedelta
 
@@ -23,6 +24,7 @@ from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
 from bridge.engine.types import (
     Bar,
     FillEvent,
+    LotQuantizationError,
     OrderUpdateEvent,
     OrderPlan,
     Position,
@@ -160,10 +162,15 @@ def test_kill_uses_full_writer_then_symbol_lock_order(tmp_path, monkeypatch):
     asyncio.run(run())
 
 
-def _repair4_kill_engine(tmp_path, *, foreign_substitution: bool = False):
+def _repair4_kill_engine(
+    tmp_path,
+    *,
+    foreign_substitution: bool = False,
+    target_schema_version: int = 9,
+):
     run_id = "repair4-kill"
     store = Store(tmp_path / "repair4-kill.db")
-    store.initialize(target_schema_version=9)
+    store.initialize(target_schema_version=target_schema_version)
     store.create_run(run_id, "dry_run", "testnet", {})
     store.set_meta("app_state", "ARMED")
     entry_ts = datetime.now(UTC) - timedelta(seconds=2)
@@ -2314,6 +2321,155 @@ def test_s3_r3_deferral_evidence_store_failure_still_propagates(
     store.close()
 
 
+_S3_R4_CLEAN_DURABLE_FILL_CORRUPTION_CASES = (
+    pytest.param(
+        "repair4-sl",
+        "SL",
+        id="non_kill_exit_reaches_trade_fill_totals",
+    ),
+    pytest.param(
+        "repair4-entry",
+        "ENTRY",
+        id="new_same_order_fill_reaches_order_fill_totals",
+    ),
+)
+
+
+@pytest.mark.parametrize(
+    ("event_cloid", "event_role"),
+    _S3_R4_CLEAN_DURABLE_FILL_CORRUPTION_CASES,
+)
+def test_s3_r4_clean_armed_durable_fill_corruption_kills_and_blocks_arm(
+    tmp_path, event_cloid, event_role
+):
+    """A fresh queued delivery cannot downgrade durable corruption to DISARMED."""
+    store, _broker, engine = _repair4_kill_engine(
+        tmp_path, target_schema_version=4
+    )
+    assert engine.state == "ARMED"
+    assert store.get_meta("app_state") == "ARMED"
+    assert store.get_meta("kill_request_active") is None
+    assert engine.order_manager.kill_latched is False
+    store.conn.execute(
+        "UPDATE fills SET qty='not-a-number' WHERE fill_id='repair4-owned-fill'"
+    )
+    store.conn.commit()
+    queued = FillEvent(
+        fill_id=f"s3-r4-{event_role.lower()}-new-fill",
+        cloid=event_cloid,
+        coin="BTC",
+        qty=1.0,
+        px=99.0,
+        ts=datetime.now(UTC),
+        role=event_role,
+    )
+    engine.order_manager._queue_event(queued)
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = engine.clock()
+
+    assert asyncio.run(engine.order_manager.drain_queued_events()) == 1
+    assert any(
+        row["fill_id"] == queued.fill_id
+        for row in store.list_fills_for_order(event_cloid)
+    )
+    with pytest.raises(
+        RuntimeError, match="KILLED requires operator acknowledgement"
+    ):
+        asyncio.run(engine.arm())
+
+    reason_code = "DURABLE_FILLS_QTY_NON_NUMERIC_TEXT"
+    event_codes = {row["code"] for row in store.get_events()}
+    assert reason_code in event_codes
+    assert "FILL_QUANTITY_INTEGRITY" not in event_codes
+    assert engine.order_manager.kill_latched is True
+    assert store.get_meta("app_state") == "KILLED"
+    assert store.get_meta("kill_request_active") is None
+    store.close()
+
+
+@pytest.mark.parametrize(
+    ("store_method", "fault_type", "expected_reason"),
+    (
+        pytest.param(
+            "order_fill_totals",
+            InvalidOperation,
+            "ORDER_FILL_TOTAL_INVALID",
+            id="invalid_operation",
+        ),
+        pytest.param(
+            "order_fill_totals",
+            TypeError,
+            "ORDER_FILL_TOTAL_INVALID",
+            id="type_error",
+        ),
+        pytest.param(
+            "order_fill_totals",
+            ValueError,
+            "ORDER_FILL_TOTAL_INVALID",
+            id="value_error",
+        ),
+        pytest.param(
+            "order_fill_totals",
+            OverflowError,
+            "ORDER_FILL_TOTAL_INVALID",
+            id="overflow_error",
+        ),
+        pytest.param(
+            "trade_fill_totals",
+            LotQuantizationError,
+            "ORDINARY_LOT_FAULT",
+            id="lot_quantization_error",
+        ),
+    ),
+)
+def test_s3_r4_ordinary_quantity_faults_remain_disarmed(
+    tmp_path,
+    monkeypatch,
+    store_method,
+    fault_type,
+    expected_reason,
+):
+    store, _broker, engine = _repair4_kill_engine(
+        tmp_path, target_schema_version=4
+    )
+
+    def raise_ordinary_fault(*_args, **_kwargs):
+        raise fault_type(
+            "ORDINARY_LOT_FAULT"
+            if fault_type is LotQuantizationError
+            else "ordinary conversion fault"
+        )
+
+    monkeypatch.setattr(store, store_method, raise_ordinary_fault)
+    queued = FillEvent(
+        fill_id=f"s3-r4-ordinary-{fault_type.__name__}",
+        cloid="repair4-sl",
+        coin="BTC",
+        qty=1.0,
+        px=99.0,
+        ts=datetime.now(UTC),
+        role="SL",
+    )
+    engine.order_manager._queue_event(queued)
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = engine.clock()
+
+    assert asyncio.run(engine.order_manager.drain_queued_events()) == 1
+    quantity_faults = [
+        row for row in store.get_events()
+        if row["code"] == "FILL_QUANTITY_INTEGRITY"
+    ]
+    assert len(quantity_faults) == 1
+    assert f"reason={expected_reason}" in str(quantity_faults[0]["detail"])
+    assert engine.order_manager.kill_latched is False
+    assert store.get_meta("app_state") == "DISARMED"
+
+    asyncio.run(engine.arm())
+    assert engine.state == "ARMED"
+    assert store.get_meta("app_state") == "ARMED"
+    store.close()
+
+
 _S3T_D_CORRUPTION_CASES = (
     pytest.param(None, "NULL", id="null"),
     pytest.param("not-a-number", "NON_NUMERIC_TEXT", id="non_numeric_text"),
@@ -2365,7 +2521,16 @@ def test_s3t_d_registry_generated_durable_corruption_matrix(
         (corrupt_value, key_value),
     )
     store.conn.commit()
-    engine.order_manager._queue_event(redelivered)
+    reason_code = f"DURABLE_{table}_{column}_{reason_case}".upper()
+    null_is_accepted = contract.nullable and reason_case == "NULL"
+    queued_event = redelivered
+    if (table, column) == ("orders", "trade_id") and not null_is_accepted:
+        queued_event = OrderUpdateEvent(
+            cloid=redelivered.cloid,
+            status="OPEN",
+            ts=datetime.now(UTC),
+        )
+    engine.order_manager._queue_event(queued_event)
 
     async def start_probe_and_stop():
         await engine.start(lookback=0)
@@ -2381,9 +2546,8 @@ def test_s3t_d_registry_generated_durable_corruption_matrix(
 
     status = asyncio.run(start_probe_and_stop())
 
-    reason_code = f"DURABLE_{table}_{column}_{reason_case}".upper()
     evidence = store.get_events()
-    null_is_accepted = contract.nullable and reason_case == "NULL"
+    event_codes = {row["code"] for row in evidence}
     if null_is_accepted:
         assert not any(
             row["code"] == reason_code or reason_code in str(row["detail"])
@@ -2409,13 +2573,13 @@ def test_s3t_d_registry_generated_durable_corruption_matrix(
             assert redelivered.fill_id in engine.order_manager._deferred_kill_fills
             assert redelivered.fill_id not in engine.order_manager._synced_fills
     else:
-        assert any(
-            row["code"] == reason_code or reason_code in str(row["detail"])
-            for row in evidence
-        )
+        assert reason_code in event_codes
+        assert "FILL_QUANTITY_INTEGRITY" not in event_codes
+        assert engine.order_manager.kill_latched is True
         assert engine.order_manager._queued_events == []
         assert engine.order_manager._deferred_kill_fills == {}
-        assert redelivered.fill_id in engine.order_manager._synced_fills
+        if isinstance(queued_event, FillEvent):
+            assert redelivered.fill_id in engine.order_manager._synced_fills
     assert status["state"] == "KILLED"
     assert store.get_meta("app_state") == "KILLED"
     assert store.get_trade(trade_id)["exit_ts"] is None

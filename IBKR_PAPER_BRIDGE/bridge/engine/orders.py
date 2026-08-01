@@ -3372,6 +3372,8 @@ class OrderManager:
         # current status so pending/grace logic still sees a live order.
         try:
             order_filled_qty, order_vwap = self.store.order_fill_totals(fill.cloid)
+        except DurableRowFault as fault:
+            return self._contain_durable_row_fault(fill, fault)
         except (InvalidOperation, TypeError, ValueError, OverflowError):
             self._quantity_integrity_fault(
                 symbol=str(fill.coin),
@@ -3441,6 +3443,8 @@ class OrderManager:
                     if entry_total_qty > 0 and totals["entry_vwap"] is not None
                     else None
                 )
+            except DurableRowFault as fault:
+                return self._contain_durable_row_fault(fill, fault)
             except (
                 InvalidOperation,
                 TypeError,
@@ -3492,6 +3496,8 @@ class OrderManager:
                         )
                     entry_lots = quantize_lots(entry_qty, lot)
                     exit_lots = quantize_lots(exit_qty, lot)
+                except DurableRowFault as fault:
+                    return self._contain_durable_row_fault(fill, fault)
                 except (
                     InvalidOperation,
                     TypeError,
@@ -3524,6 +3530,8 @@ class OrderManager:
                         live_entry_remainder = self._has_live_entry_remainder_exact(
                             trade_id, lot
                         )
+                    except DurableRowFault as fault:
+                        return self._contain_durable_row_fault(fill, fault)
                     except LotQuantizationError as exc:
                         self._quantity_integrity_fault(
                             symbol=str(fill.coin),
@@ -3566,6 +3574,8 @@ class OrderManager:
                             exit_px=exit_vwap,
                             costs=costs,
                         )
+                    except DurableRowFault as fault:
+                        return self._contain_durable_row_fault(fill, fault)
                     except (
                         InvalidOperation,
                         TypeError,
@@ -3671,6 +3681,8 @@ class OrderManager:
                 continue
             try:
                 filled_qty, _ = self.store.order_fill_totals(str(order["cloid"]))
+            except DurableRowFault:
+                raise
             except (InvalidOperation, TypeError, ValueError, OverflowError) as exc:
                 raise LotQuantizationError("ORDER_FILL_TOTAL_INVALID") from exc
             filled_lots = quantize_lots(filled_qty, lot)
