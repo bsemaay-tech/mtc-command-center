@@ -205,10 +205,24 @@ MTC_COMMAND_CENTER/11_TRIAGE/KVM2_PROGRAM/evidence/ledger_schema.json
   CR bytes in file   : 36
 ```
 
-The recorded hash **is** the LF hash; the committed file carries CRLF. Moving to Linux cannot fix it,
-because the CRLF travels with the file. So this is not an independent pre-existing failure at all —
-it is the same repo-wide CRLF defect as #1, and **fixing #1 should make it pass**, removing one of the
-two failures the programme has been carrying as accepted baseline noise.
+The recorded hash **is** the LF hash — and it is exactly the committed blob's hash, since the blob is
+LF (867 bytes, `f4cdece5…`). The *artifact copy* carries CRLF because `git archive` converted it, so
+moving to Linux cannot fix it: the CRLF travels with the payload.
+
+**Confirmed empirically, not merely inferred.** Normalising just that one file on the recon copy:
+
+```
+before :  903 bytes   sha256 b6580e31…
+after  :  867 bytes   sha256 f4cdece5…   = exactly what EVIDENCE_LEDGER.jsonl records
+test   :  1 passed in 0.35s
+```
+
+So this is **not an independent pre-existing failure at all** — it is defect 1, and a correctly built
+payload makes it pass. One of the two failures the programme has carried as accepted baseline noise
+simply disappears.
+
+That puts the true Linux floor for a correctly-built payload at **25** failures, not 26: ~21
+`wal_state_bundle` (3b) and 2 `order_state` gc-referents (3a), plus the `schema_version == "2"` case.
 
 ### 3d — the tests do catch CRLF; they were simply never run on Linux
 
