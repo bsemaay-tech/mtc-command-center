@@ -1,6 +1,6 @@
 # S3-STRUCT — GATE-5 CANONICAL AUDIT BRIEF (2026-08-01)
 
-> **Fill `<FROZEN_SHA>` before dispatch.** Everything else is stable across rounds. This brief is
+> **Fill `34d35286` before dispatch.** Everything else is stable across rounds. This brief is
 > written to be pasted standalone: an auditor needs nothing but this file and the worktree.
 
 ## 0. WHAT YOU ARE
@@ -38,8 +38,8 @@ paste its final line.
 
 - Repo: MTC Command Center, Bridge subtree `IBKR_PAPER_BRIDGE/`
 - Branch: `feature/ts-p1-009b-s2-closure`
-- **Frozen SHA: `<FROZEN_SHA>`**
-- Round delta: `git diff 732b37c3..<FROZEN_SHA>`
+- **Frozen SHA: `34d35286`**
+- Round delta: `git diff 732b37c3..34d35286`
 - Predecessor (the rejected artifact): `732b37c3`
 - Last accepted artifact: `0c65a731` (S2 closure, both flagships PASS-WITH-NITS)
 
@@ -197,7 +197,7 @@ from v4 · alerting redesign · re-opening accepted S2 mechanisms.
 
 1. **Suite executed?** Paste the literal final `pytest` line. If you could not run it, return `BLOCK`.
 2. **Third failure?** Anything beyond the two pre-existing failures is a required finding.
-3. **Existing tests weakened?** `git diff 732b37c3..<FROZEN_SHA> -- IBKR_PAPER_BRIDGE/tests/` and read
+3. **Existing tests weakened?** `git diff 732b37c3..34d35286 -- IBKR_PAPER_BRIDGE/tests/` and read
    every `-` line. Any deleted, skipped, `xfail`-ed or loosened existing assertion is a **required**
    finding. **This rule was broken once already in this programme — check it, do not assume.**
 4. **One boundary or scattered guards?** Name the construct. If you cannot name one, say so.
@@ -210,7 +210,7 @@ from v4 · alerting redesign · re-opening accepted S2 mechanisms.
 8. **Boundary totality.** Can any input make the accessor itself raise? Consider `bytes`/`memoryview`
    storage class, `Decimal('NaN')`, subnormals, `bool` where `int` is expected, and a value exactly at
    `±2**63`.
-9. **Allowlist respected?** `git diff --name-only 732b37c3..<FROZEN_SHA>`.
+9. **Allowlist respected?** `git diff --name-only 732b37c3..34d35286`.
 10. **Anything that reaches a broker, network, ARM, or live path?** There must be none. This cycle is
     DISARMED-only.
 
