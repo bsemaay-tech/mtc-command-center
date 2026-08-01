@@ -33,7 +33,19 @@ not improvise one, and never paste a secret into a session.
 | OS | Ubuntu 24.04 LTS, clean install |
 | Disposability | **Must be expendable.** We will break it, wipe it, and redo. |
 | Reachability | Reachable from the operating session |
-| Forbidden | The active KVM2 host. It is doing live work; a first-ever install must not land there. |
+| Forbidden | The active KVM2 host — **because it is the programme's deployment target, not because it is busy.** |
+
+**Why staging must not be KVM2.** The plan's objective is *"deliver one Ubuntu KVM2 VPS deployed and
+verified DISARMED"* — KVM2 **is** the destination. Rehearsing the install there destroys the evidence
+the final deployment is supposed to produce: after three half-finished attempts, nobody can show
+whether the working system is a clean install or a survivor of leftovers and hand-fixes. The
+programme already states the rule in one line — *"a lab snapshot or agent uninstall is never
+clean-host evidence"* — so "we'll clean it up afterwards" does not restore provability. Rehearse on a
+machine we can destroy; install on KVM2 once, cleanly, using what the rehearsal taught us.
+
+> Lead correction (2026-08-02): an earlier verbal explanation justified this as "KVM2 is currently
+> running live work." That was asserted without verification and the records do not support it — the
+> active paper-bridge writer is `C:\P2RT` on Windows, not KVM2. The reason above is the recorded one.
 
 Acceptable sources, cheapest first: a Hyper-V VM on this Windows machine (Hyper-V is present; VM
 inventory access is currently denied and would need enabling) · a new VirtualBox or QEMU VM · a
