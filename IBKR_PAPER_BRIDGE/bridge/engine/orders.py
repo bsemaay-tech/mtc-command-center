@@ -2765,6 +2765,15 @@ class OrderManager:
                 "group_id:"
                 f"{KILL_LIFECYCLE_BINDING_FAULT_REASONS['orders.group_id']}",
             )
+        active_epoch = self._active_kill_epoch
+        if (
+            active_epoch is not None
+            and episode_id != active_epoch.episode_id
+        ):
+            return None, None, (
+                "group_id:"
+                f"{KILL_LIFECYCLE_BINDING_FAULT_REASONS['orders.group_id']}",
+            )
         if not episode_id:
             missing_identity.append("group_id")
         try:
@@ -2772,6 +2781,10 @@ class OrderManager:
         except DurableRowFault as fault:
             trade_id = None
             missing_identity.append(f"trade_id:{fault.reason_code}")
+        if trade_id is None and not any(
+            item.startswith("trade_id") for item in missing_identity
+        ):
+            missing_identity.append("trade_id")
         if (
             expected_identity is not None
             and trade_id is not None
@@ -3472,7 +3485,11 @@ class OrderManager:
                         entry_qty = trade["qty"]
                         stored_entry_px = trade["entry_px"]
                         expected_entry_px = trade["expected_px"]
-                        entry_px = stored_entry_px or expected_entry_px
+                        entry_px = (
+                            stored_entry_px
+                            if stored_entry_px is not None
+                            else expected_entry_px
+                        )
                     entry_lots = quantize_lots(entry_qty, lot)
                     exit_lots = quantize_lots(exit_qty, lot)
                 except (
@@ -3616,9 +3633,11 @@ class OrderManager:
                             reason_code=exc.reason_code,
                             identity=kill_identity,
                         )
-                        if disposition == _KILL_LIFECYCLE_CONSUMED:
-                            return True
-                        raise
+                        # A durable deferral is an expected retry disposition,
+                        # including an ABA-restored binding after the close
+                        # transaction vetoes. Direct callers receive False and
+                        # translate it to their existing UNKNOWN outcome.
+                        return disposition == _KILL_LIFECYCLE_CONSUMED
                     if not closed:
                         self._quarantine_fill(
                             "TRADE_CLOSE_RACE",

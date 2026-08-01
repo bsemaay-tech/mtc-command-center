@@ -11,7 +11,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, Callable, Literal
+from typing import Any, Callable, Literal, NamedTuple
 
 from bridge.engine.types import (
     ACCOUNT_IDENTITY_ABS_TOL,
@@ -579,26 +579,35 @@ class KillConflictError(Exception):
 SQLITE_SIGNED_INT_MIN = -(2**63)
 SQLITE_SIGNED_INT_MAX = 2**63 - 1
 
+class DurableColumnContract(NamedTuple):
+    """Declared storage and SQL-NULL contract for one durable column."""
+
+    value_type: Literal["INT64", "FINITE_FLOAT"]
+    nullable: bool
+
+
 # This is the single source of truth for every conversion-sensitive value read
-# from orders/fills/trades while ingesting a queued broker event. Tests derive
-# their corruption matrix directly from this registry.
+# from orders/fills/trades while ingesting a queued broker event. Nullability is
+# derived from the durable writers: unbound orders may have no trade_id and a
+# new trade has no entry_px until an entry fill; every other registered value is
+# supplied by its writer. Tests derive both acceptance and fault matrices here.
 DURABLE_EVENT_COLUMN_TYPES: Mapping[
-    tuple[str, str], Literal["INT64", "FINITE_FLOAT"]
+    tuple[str, str], DurableColumnContract
 ] = MappingProxyType({
-    ("orders", "trade_id"): "INT64",
-    ("orders", "qty"): "FINITE_FLOAT",
-    ("orders", "filled_qty"): "FINITE_FLOAT",
-    ("fills", "qty"): "FINITE_FLOAT",
-    ("fills", "px"): "FINITE_FLOAT",
-    ("fills", "fee"): "FINITE_FLOAT",
-    ("fills", "funding"): "FINITE_FLOAT",
-    ("trades", "qty"): "FINITE_FLOAT",
-    ("trades", "entry_px"): "FINITE_FLOAT",
-    ("trades", "expected_px"): "FINITE_FLOAT",
+    ("orders", "trade_id"): DurableColumnContract("INT64", True),
+    ("orders", "qty"): DurableColumnContract("FINITE_FLOAT", False),
+    ("orders", "filled_qty"): DurableColumnContract("FINITE_FLOAT", False),
+    ("fills", "qty"): DurableColumnContract("FINITE_FLOAT", False),
+    ("fills", "px"): DurableColumnContract("FINITE_FLOAT", False),
+    ("fills", "fee"): DurableColumnContract("FINITE_FLOAT", False),
+    ("fills", "funding"): DurableColumnContract("FINITE_FLOAT", False),
+    ("trades", "qty"): DurableColumnContract("FINITE_FLOAT", False),
+    ("trades", "entry_px"): DurableColumnContract("FINITE_FLOAT", True),
+    ("trades", "expected_px"): DurableColumnContract("FINITE_FLOAT", False),
 })
 
 
-class DurableRowFault(RuntimeError):
+class DurableRowFault(ValueError):
     """A schema-admitted durable value failed the queued-event read contract."""
 
     def __init__(self, table: str, column: str, case: str) -> None:
@@ -641,7 +650,7 @@ class DurableRowAccessor:
 
     def __init__(
         self,
-        registry: Mapping[tuple[str, str], Literal["INT64", "FINITE_FLOAT"]],
+        registry: Mapping[tuple[str, str], DurableColumnContract],
     ) -> None:
         self.registry = registry
 
@@ -649,10 +658,13 @@ class DurableRowAccessor:
     def _fault(table: str, column: str, case: str) -> DurableRowFault:
         return DurableRowFault(table, column, case)
 
-    def read(self, table: str, column: str, value: object) -> int | float:
-        expected = self.registry[(table, column)]
+    def read(self, table: str, column: str, value: object) -> int | float | None:
+        contract = self.registry[(table, column)]
         if value is None:
+            if contract.nullable:
+                return None
             raise self._fault(table, column, "NULL")
+        expected = contract.value_type
         if isinstance(value, bool):
             raise self._fault(table, column, "STORAGE_CLASS")
 

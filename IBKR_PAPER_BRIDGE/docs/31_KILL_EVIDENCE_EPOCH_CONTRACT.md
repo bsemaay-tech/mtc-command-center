@@ -204,21 +204,37 @@ check is classified and quarantined the same way. Evidence-store write failures,
 Queued broker-event ingestion reads conversion-sensitive `orders`, `fills`, and `trades` values
 through the module-level `DURABLE_EVENT_ROWS` accessor in `bridge/store/db.py`. Its declared
 `DURABLE_EVENT_COLUMN_TYPES` registry is the sole source of truth for the boundary and its
-generated acceptance matrix:
+generated acceptance matrix. Every entry declares both the storage type and whether SQL NULL is a
+legitimate absent value:
 
-- `orders.trade_id` as signed SQLite int64;
+- `orders.trade_id` as nullable signed SQLite int64 because an unbound order may be persisted
+  without a trade;
 - `orders.qty` and `orders.filled_qty` as finite floats;
 - `fills.qty`, `fills.px`, `fills.fee`, and `fills.funding` as finite floats; and
-- `trades.qty`, `trades.entry_px`, and `trades.expected_px` as finite floats.
+- `trades.qty` and `trades.expected_px` as finite floats, plus nullable finite-float
+  `trades.entry_px` because trade creation omits it until an ENTRY fill establishes the basis.
+
+All columns except `orders.trade_id` and `trades.entry_px` are non-nullable at this boundary: their
+writers always supply/coerce them, even though the legacy SQLite schema has no `NOT NULL`
+constraints. A legitimate NULL returns `None` for the caller to handle. The generated matrix proves
+that behavior as well as proving that NULL faults for the other eight columns. In particular, a
+NULL `trades.entry_px` selects `trades.expected_px`; it cannot preempt that fallback.
 
 The typed row view validates registered values lazily when a reachable consumer reads them. It
-classifies SQL NULL, non-numeric text, unexpected storage classes, signed-int64 overflow or
-underflow, and non-finite values as `DurableRowFault`. The stable reason code has the form
+classifies inadmissible SQL NULL, non-numeric text, unexpected storage classes, signed-int64
+overflow or underflow, and non-finite values as `DurableRowFault`. The stable reason code has the form
 `DURABLE_<TABLE>_<COLUMN>_<CASE>`. Both queued-event drains contain that typed fault at their entry
 boundary, retain `app_state=KILLED`, append the reason code as durable evidence, consume the faulting
 delivery once, and clear any matching deferred-map entry. The accessor also governs duplicate-fill
 classification, order/trade fill aggregation, fee/funding cost aggregation, `_event_symbol`, and
 `_canonical_status`; the former `_parse_store_trade_id` and `_store_float` paths no longer exist.
+
+`DurableRowFault` is a distinct `ValueError` subclass, not a bare built-in conversion exception.
+This preserves its stable type and reason code while making it satisfy every existing
+conversion-fault containment contract that already catches `ValueError`. A generated transitive
+Store-call-graph test invokes every public kill-closure API reaching the boundary and proves that
+NULL and non-numeric durable fill values emerge as `KillConflictError`, never as a bare
+`DurableRowFault`.
 
 For an epoch-owned `KILL_FLATTEN` close, `close_trade_once_with_decision` now re-derives the current
 binding inside its existing `BEGIN IMMEDIATE`. The fenced `UPDATE` keeps the existing
@@ -229,15 +245,20 @@ caller without closing the trade or writing `TRADE_CLOSED`. Ordinary closes with
 their prior behavior.
 
 The close-conflict recovery path retains the identity validated before the transaction and compares
-the event order against it after rollback. A disappeared row, changed role, changed or cleared
-`group_id`, and changed `trade_id` are reported respectively as
+the event order against it after rollback. While an epoch is active, initial identity validation
+also requires the order `group_id` to equal that active epoch's episode. A disappeared row, changed
+role, changed or cleared `group_id`, and changed `trade_id` are reported respectively as
 `KILL_LIFECYCLE_ORDER_ROW_MISSING`, `KILL_LIFECYCLE_ROLE_CHANGED`,
 `KILL_LIFECYCLE_GROUP_ID_CHANGED`, and `KILL_LIFECYCLE_TRADE_ID_CHANGED`. The registry declaring
-those binding elements also generates a four-case, active-epoch second-Store mutation matrix. Each
-case changes a well-formed binding after validation and immediately before the real close
-transaction, then proves normal startup return, durable named evidence, fail-closed state, and
-consistent queue/deferred bookkeeping. Ordinary non-KILL identity probing retains the
-not-applicable `(None, None, ())` result.
+those binding elements generates the active-epoch second-Store mutation matrix. Its four declared
+binding mutations are supplemented by two registry-driven edge cases: an active episode A with an
+older order still bound to retained episode B, and an ABA window that changes the binding, lets the
+real close transaction veto, then restores it before the independent deferral transaction. The ABA
+case proves that a successfully recorded `DEFERRED` disposition returns `False` from `_ingest_fill`
+instead of re-raising the close conflict; both direct kill-lifecycle callers therefore enter their
+existing UNKNOWN handling. `CONSUMED` still returns `True`, and deferral/evidence-store write
+failures still propagate. Ordinary non-KILL identity probing retains the not-applicable
+`(None, None, ())` result.
 
 Identity and schema-capability faults remain containable. Evidence-store outages remain
 propagating failures. In particular, `KILL_STALE_EVIDENCE_RECORD_FAILED` still propagates: when the

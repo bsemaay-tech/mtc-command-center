@@ -835,15 +835,38 @@ def _v4_with_trade(tmp_path, *, target=4):
 
 
 @pytest.mark.parametrize(
-    ("table", "column", "expected_type"),
+    ("table", "column", "contract"),
     [
-        pytest.param(table, column, expected_type, id=f"{table}.{column}")
-        for (table, column), expected_type in DURABLE_EVENT_COLUMN_TYPES.items()
+        pytest.param(table, column, contract, id=f"{table}.{column}")
+        for (table, column), contract in DURABLE_EVENT_COLUMN_TYPES.items()
     ],
 )
-def test_s3t_a_registry_accepts_valid_typed_values(table, column, expected_type):
-    value = 7 if expected_type == "INT64" else 7.25
+def test_s3t_a_registry_accepts_valid_typed_values(table, column, contract):
+    value = 7 if contract.value_type == "INT64" else 7.25
     assert DURABLE_EVENT_ROWS.read(table, column, value) == value
+
+
+@pytest.mark.parametrize(
+    ("table", "column", "contract"),
+    [
+        pytest.param(table, column, contract, id=f"{table}.{column}")
+        for (table, column), contract in DURABLE_EVENT_COLUMN_TYPES.items()
+    ],
+)
+def test_s3t_a_registry_generates_nullability_contract(table, column, contract):
+    if contract.nullable:
+        assert DURABLE_EVENT_ROWS.read(table, column, None) is None
+        return
+    with pytest.raises(
+        DurableRowFault,
+        match=f"DURABLE_{table}_{column}_NULL".upper(),
+    ):
+        DURABLE_EVENT_ROWS.read(table, column, None)
+
+
+def test_s3t_a_durable_row_fault_is_a_distinct_conversion_fault():
+    assert issubclass(DurableRowFault, ValueError)
+    assert DurableRowFault is not ValueError
 
 
 @pytest.mark.parametrize(

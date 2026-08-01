@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import inspect
 import json
 import math
 import sqlite3
@@ -29,10 +30,32 @@ from bridge.engine.types import (
     Signal,
 )
 from bridge.broker.base import SubmissionRejectedError
-from bridge.store.db import KillConflictError, Store
+from bridge.store.db import DurableRowFault, KillConflictError, Store
 from bridge.store.db import DURABLE_EVENT_COLUMN_TYPES
 
 FIXTURES = Path(__file__).parent / "fixtures"
+
+
+def _public_store_apis_reaching(target: str) -> tuple[str, ...]:
+    """Derive public Store entrypoints that transitively call one method."""
+    methods = dict(inspect.getmembers(Store, predicate=inspect.isfunction))
+    reachable = {target}
+    changed = True
+    while changed:
+        changed = False
+        for caller, function in methods.items():
+            if caller in reachable:
+                continue
+            source = inspect.getsource(function)
+            if any(f"self.{callee}(" in source for callee in reachable):
+                reachable.add(caller)
+                changed = True
+    return tuple(sorted(name for name in reachable if not name.startswith("_")))
+
+
+_S3T_KILL_CLOSURE_PUBLIC_APIS = _public_store_apis_reaching(
+    "_assert_kill_flatten_closure_in_tx"
+)
 
 
 def test_dryrun_replay_creates_trade_and_decision_chain(tmp_path):
@@ -916,6 +939,65 @@ def test_s2_closure_ack_rejects_any_representable_trade_row_tamper(
     assert rejected["ack_state"] == "PENDING"
     assert store.get_meta("app_state") == "KILLED"
     assert engine.state == "KILLED"
+
+
+def test_s3t_a_kill_closure_public_api_enumeration_is_generated():
+    assert _S3T_KILL_CLOSURE_PUBLIC_APIS
+    assert all(not name.startswith("_") for name in _S3T_KILL_CLOSURE_PUBLIC_APIS)
+
+
+@pytest.mark.parametrize("api_name", _S3T_KILL_CLOSURE_PUBLIC_APIS)
+@pytest.mark.parametrize(
+    ("column", "contract"),
+    [
+        pytest.param(column, contract, id=column)
+        for (table, column), contract in DURABLE_EVENT_COLUMN_TYPES.items()
+        if table == "fills" and not contract.nullable
+    ],
+)
+@pytest.mark.parametrize(
+    "corrupt_value",
+    [
+        pytest.param(None, id="null"),
+        pytest.param("not-a-number", id="non-numeric-text"),
+    ],
+)
+def test_s3t_a_generated_kill_public_store_api_fault_containment(
+    tmp_path, api_name, column, contract, corrupt_value
+):
+    """No public kill-closure API leaks the typed conversion fault."""
+    del contract
+    store, _broker, engine = _repair4_kill_engine(tmp_path)
+    asyncio.run(engine.kill(flatten=True))
+    request = store.active_kill_request()
+    assert request is not None
+    entry_fill = store.list_fills_for_order("repair4-entry")[0]
+    store.conn.execute(
+        f"UPDATE fills SET {column}=? WHERE fill_id=?",
+        (corrupt_value, entry_fill["fill_id"]),
+    )
+    store.conn.commit()
+
+    available_arguments = {
+        "episode_id": str(request["episode_id"]),
+        "run_id": "repair4-kill",
+        "symbol": "BTC",
+        "now": engine.clock(),
+        "max_age_s": engine.full_reconcile_max_age_s(),
+    }
+    public_api = getattr(store, api_name)
+    arguments = {
+        name: available_arguments[name]
+        for name in inspect.signature(public_api).parameters
+    }
+    with pytest.raises(KillConflictError) as failure:
+        public_api(**arguments)
+
+    assert not isinstance(failure.value, DurableRowFault)
+    assert failure.value.reason_code == "KILL_FLATTEN_LIFECYCLE_CONFLICT"
+    assert store.conn.in_transaction is False
+    assert store.get_kill_request(str(request["episode_id"]))["ack_state"] == "PENDING"
+    store.close()
 
 
 def test_s2_a5_crash_restart_recovers_kill_flatten_before_safe_flat(tmp_path, monkeypatch):
@@ -2088,6 +2170,123 @@ def test_s3t_d_active_epoch_binding_mutation_matrix_is_quarantined(
     store.close()
 
 
+_S3T_D_ACTIVE_EPOCH_EDGE_CASES = (
+    pytest.param("stale_episode", id="stale-a-epoch-b-order"),
+    pytest.param("aba_restore_after_veto", id="aba-restore-after-veto"),
+)
+
+
+@pytest.mark.parametrize("edge_case", _S3T_D_ACTIVE_EPOCH_EDGE_CASES)
+def test_s3t_d_active_epoch_edge_case_matrix(tmp_path, monkeypatch, edge_case):
+    store, _broker, engine, request, redelivered, trade_id, decision_uid = (
+        _s3_stranded_kill_restart(tmp_path, monkeypatch)
+    )
+    manager = engine.order_manager
+    original_episode = str(request["episode_id"])
+
+    if edge_case == "stale_episode":
+        # Retire only the old pointer so a real generation-A epoch can become
+        # active while the well-formed generation-B order/request remain.
+        store.conn.execute(
+            "UPDATE kill_requests SET ack_state='ACKNOWLEDGED',ack_ts=? "
+            "WHERE episode_id=?",
+            (datetime.now(UTC).isoformat(), original_episode),
+        )
+        store.conn.execute(
+            "DELETE FROM meta WHERE key IN ('kill_request_active','kill_epoch_active')"
+        )
+        store.conn.commit()
+        active_request, active_epoch = store.open_kill_epoch(
+            run_id=str(request["run_id"]),
+            symbol=str(request["symbol"]),
+            flatten_requested=bool(request["flatten_requested"]),
+            policy_version=str(request["policy_version"]),
+            process_uid="s3t-active-a-stale-b",
+            opened_ts_monotonic=30.0,
+            app_state_precommitted=True,
+        )
+        assert str(active_request["episode_id"]) != original_episode
+        manager._active_kill_epoch = active_epoch
+
+        assert manager._ingest_fill(redelivered) is True
+
+        evidence = store.get_events()
+        assert any(
+            row["code"] == "KILL_LIFECYCLE_IDENTITY_MISSING"
+            and "KILL_LIFECYCLE_GROUP_ID_CHANGED" in str(row["detail"])
+            for row in evidence
+        )
+        assert not any(
+            row["code"] == "KILL_EPOCH_LIFECYCLE_DEFERRED" for row in evidence
+        )
+        assert manager._deferred_kill_fills == {}
+        assert redelivered.fill_id in manager._synced_fills
+    else:
+        assert edge_case == "aba_restore_after_veto"
+        active_epoch = _s3_open_epoch(
+            store,
+            request,
+            process_uid="s3t-active-aba-owner",
+            opened_ts_monotonic=30.0,
+        )
+        manager._active_kill_epoch = active_epoch
+        competitor = Store(store.db_path)
+        competitor.initialize(target_schema_version=9)
+        original_close = store.close_trade_once_with_decision
+        transitions: list[str] = []
+
+        def veto_then_restore_binding(**kwargs):
+            competitor.conn.execute(
+                "UPDATE orders SET group_id=? WHERE cloid=?",
+                (f"{original_episode}-aba", redelivered.cloid),
+            )
+            competitor.conn.commit()
+            transitions.append("changed")
+            try:
+                return original_close(**kwargs)
+            except KillConflictError as exc:
+                assert exc.reason_code == "KILL_LIFECYCLE_IDENTITY_MISSING"
+                competitor.conn.execute(
+                    "UPDATE orders SET group_id=? WHERE cloid=?",
+                    (original_episode, redelivered.cloid),
+                )
+                competitor.conn.commit()
+                transitions.append("restored")
+                raise
+
+        monkeypatch.setattr(
+            store, "close_trade_once_with_decision", veto_then_restore_binding
+        )
+
+        assert manager._ingest_fill(redelivered) is False
+
+        assert transitions == ["changed", "restored"]
+        assert competitor.get_order(redelivered.cloid)["group_id"] == original_episode
+        assert redelivered.fill_id in manager._deferred_kill_fills
+        assert redelivered.fill_id not in manager._synced_fills
+        deferred = [
+            row
+            for row in competitor.get_events()
+            if row["code"] == "KILL_EPOCH_LIFECYCLE_DEFERRED"
+        ]
+        assert len(deferred) == 1
+        assert "reason=KILL_LIFECYCLE_IDENTITY_MISSING" in str(
+            deferred[0]["detail"]
+        )
+        competitor.close()
+
+    durable_trade = store.get_trade(trade_id)
+    assert durable_trade is not None
+    assert durable_trade["exit_ts"] is None
+    assert [
+        row
+        for row in store.get_decision_chain(decision_uid)
+        if row["stage"] == "TRADE_CLOSED"
+    ] == []
+    assert store.get_meta("app_state") == "KILLED"
+    store.close()
+
+
 def test_s3_r3_deferral_evidence_store_failure_still_propagates(
     tmp_path, monkeypatch
 ):
@@ -2130,10 +2329,10 @@ _S3T_D_CORRUPTION_CASES = (
 
 
 @pytest.mark.parametrize(
-    ("table", "column", "expected_type"),
+    ("table", "column", "contract"),
     [
-        pytest.param(table, column, expected_type, id=f"{table}.{column}")
-        for (table, column), expected_type in DURABLE_EVENT_COLUMN_TYPES.items()
+        pytest.param(table, column, contract, id=f"{table}.{column}")
+        for (table, column), contract in DURABLE_EVENT_COLUMN_TYPES.items()
     ],
 )
 @pytest.mark.parametrize(("corrupt_value", "reason_case"), _S3T_D_CORRUPTION_CASES)
@@ -2142,12 +2341,11 @@ def test_s3t_d_registry_generated_durable_corruption_matrix(
     monkeypatch,
     table,
     column,
-    expected_type,
+    contract,
     corrupt_value,
     reason_case,
 ):
     """Every registered queued-event durable read is startup-containable."""
-    del expected_type  # the registry drives collection; the boundary owns parsing
     store, _broker, engine, _request, redelivered, trade_id, decision_uid = (
         _s3_stranded_kill_restart(tmp_path, monkeypatch)
     )
@@ -2155,9 +2353,6 @@ def test_s3t_d_registry_generated_durable_corruption_matrix(
         # Force the legacy durable-trade basis branch instead of the preferred
         # entry-fill aggregate branch so every registered trades column is read.
         store.conn.execute("DELETE FROM fills WHERE cloid='repair4-entry'")
-        store.conn.execute(
-            "UPDATE trades SET entry_px=100.0 WHERE trade_id=?", (trade_id,)
-        )
         store.conn.commit()
     identity = {
         "orders": ("cloid", redelivered.cloid),
@@ -2188,10 +2383,39 @@ def test_s3t_d_registry_generated_durable_corruption_matrix(
 
     reason_code = f"DURABLE_{table}_{column}_{reason_case}".upper()
     evidence = store.get_events()
-    assert any(
-        row["code"] == reason_code or reason_code in str(row["detail"])
-        for row in evidence
-    )
+    null_is_accepted = contract.nullable and reason_case == "NULL"
+    if null_is_accepted:
+        assert not any(
+            row["code"] == reason_code or reason_code in str(row["detail"])
+            for row in evidence
+        )
+        if (table, column) == ("orders", "trade_id"):
+            assert any(
+                row["code"] == "KILL_LIFECYCLE_IDENTITY_MISSING"
+                and "missing=trade_id" in str(row["detail"])
+                for row in evidence
+            )
+            assert engine.order_manager._queued_events == []
+            assert engine.order_manager._deferred_kill_fills == {}
+            assert redelivered.fill_id in engine.order_manager._synced_fills
+        else:
+            assert (table, column) == ("trades", "entry_px")
+            assert any(
+                row["code"] == "KILL_EPOCH_LIFECYCLE_DEFERRED"
+                and "reason=KILL_EPOCH_REQUIRED" in str(row["detail"])
+                for row in evidence
+            )
+            assert engine.order_manager._queued_events == [redelivered]
+            assert redelivered.fill_id in engine.order_manager._deferred_kill_fills
+            assert redelivered.fill_id not in engine.order_manager._synced_fills
+    else:
+        assert any(
+            row["code"] == reason_code or reason_code in str(row["detail"])
+            for row in evidence
+        )
+        assert engine.order_manager._queued_events == []
+        assert engine.order_manager._deferred_kill_fills == {}
+        assert redelivered.fill_id in engine.order_manager._synced_fills
     assert status["state"] == "KILLED"
     assert store.get_meta("app_state") == "KILLED"
     assert store.get_trade(trade_id)["exit_ts"] is None
@@ -2200,9 +2424,47 @@ def test_s3t_d_registry_generated_durable_corruption_matrix(
         for row in store.get_decision_chain(decision_uid)
         if row["stage"] == "TRADE_CLOSED"
     ] == []
-    assert engine.order_manager._queued_events == []
-    assert engine.order_manager._deferred_kill_fills == {}
-    assert redelivered.fill_id in engine.order_manager._synced_fills
+    store.close()
+
+
+def test_s3t_d_nullable_entry_px_uses_expected_px_basis_in_active_epoch(
+    tmp_path, monkeypatch
+):
+    store, _broker, engine, request, redelivered, trade_id, decision_uid = (
+        _s3_stranded_kill_restart(tmp_path, monkeypatch)
+    )
+    contract = DURABLE_EVENT_COLUMN_TYPES[("trades", "entry_px")]
+    assert contract.nullable is True
+    store.conn.execute("DELETE FROM fills WHERE cloid='repair4-entry'")
+    store.conn.commit()
+    before = store.get_trade(trade_id)
+    assert before is not None
+    assert before["entry_px"] is None
+    assert before["expected_px"] == 100.0
+    epoch = _s3_open_epoch(
+        store,
+        request,
+        process_uid="s3t-nullable-entry-basis",
+        opened_ts_monotonic=20.0,
+    )
+    engine.order_manager._active_kill_epoch = epoch
+
+    assert engine.order_manager._ingest_fill(redelivered) is True
+
+    closed = store.get_trade(trade_id)
+    assert closed is not None
+    assert closed["exit_reason"] == "KILL_FLATTEN"
+    decisions = [
+        row
+        for row in store.get_decision_chain(decision_uid)
+        if row["stage"] == "TRADE_CLOSED"
+    ]
+    assert len(decisions) == 1
+    assert decisions[0]["payload"]["entry_basis_px"] == before["expected_px"]
+    assert not any(
+        row["code"] == "DURABLE_TRADES_ENTRY_PX_NULL"
+        for row in store.get_events()
+    )
     store.close()
 
 
