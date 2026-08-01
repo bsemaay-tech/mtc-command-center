@@ -48,7 +48,8 @@ authority only — no implementation authority for secondary models.
 |---|---:|---|
 | WP-0 Scope/Baseline | 2 h | **DONE, merged** — PR #36, record commit `4d2228cf` |
 | WP-S S2 closure | — | **ACCEPTED at `0c65a731`** — both flagships PASS-WITH-NITS, 0 required |
-| WP-S minimum S3 | — | **HARD STOP — round 3 (final) `732b37c39612082958d2863681e75d17aabae088` NOT ACCEPTED, 2 required findings. Loop exhausted. See `11_TRIAGE/WPS_S3_HARD_STOP_2026-08-01.md`. Awaiting an owner decision between four options.** |
+| WP-S minimum S3 | — | **NOT ACCEPTED at `732b37c3`** — 3 rounds spent, 5 required findings from both flagships |
+| **S3-STRUCT (current)** | owner-extended | **AUTHORISED 2026-08-01 (D027), not started.** Structural fix. Full Gate-1 scope + execution recipe: `11_TRIAGE/WPS_S3_STRUCTURAL_CYCLE_HANDOFF_2026-08-01.md` |
 | WP-L / WP-I / WP-A / WP-V | 8/6/3/8 h | not started — gated on Audit 1 accepting |
 
 Hours: **WP-0 2.0/2 · WP-S 12.0/12 (full) · contingency 1.5/5 · WP-R 2.0/6.** ~17.5 of 50 plan-hours
@@ -80,7 +81,22 @@ identically on the `origin/master` Bridge tree, are pre-existing, and are outsid
 - **F-0-2** — both S2 blockers were reproduced by the Lead on real source before any dispatch, not
   taken from a report.
 
-### CURRENT BLOCKER — read this before planning anything
+### CURRENT WORK — S3-STRUCT, authorised 2026-08-01 (D027)
+
+**Start here: `11_TRIAGE/WPS_S3_STRUCTURAL_CYCLE_HANDOFF_2026-08-01.md`.** It is written as a
+standalone handoff — Gate-1 scope, allowlist, exact CLI recipe, ten operational hazards, funding
+position, and definition of done.
+
+Three items: **S3T-A** a validated accessor boundary over durable `orders`/`fills`/`trades` reads
+that returns a containable fault instead of raising; **S3T-B** a close path that re-derives, inside
+its existing `BEGIN IMMEDIATE`, that the trade is still bound to the active episode; **S3T-C** every
+drain entry point (`_event_symbol`, `_canonical_status`) routed through the boundary. **S3T-D is the
+deliverable that makes this structural** — a matrix-generated acceptance suite over every durable
+column × {NULL, non-numeric TEXT, out-of-range int, non-finite float}, asserting `start()` returns
+normally, durable evidence exists, and the system stays fail-closed. A test covering only the five
+known findings does not close the class.
+
+### WHY — read before planning anything
 
 **WP-S is stopped and every downstream package is blocked**, because plan §23b step 7 gates WP-L
 Phase 1 on Audit 1 accepting. There is no independent authorised stream to continue meanwhile.

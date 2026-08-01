@@ -1,45 +1,46 @@
 # NEXT_STEPS
 
-## 50-HOUR DISARMED SAFETY MVP — EXECUTING (updated 2026-08-01)
+## 50-HOUR DISARMED SAFETY MVP — S3-STRUCT CYCLE AUTHORISED (2026-08-01)
 
-Full continuation package: `_AI_MEMORY/GLOBAL_HANDOFF.md` **RESUME HERE** block — read that first,
-it is written so a fresh agent needs no handoff prompt. Authorisation
-`11_TRIAGE/OWNER_AUTH_50H_EXECUTION_PROMPT_2026-07-31.md`. Plan blob
-`a07c90cc49a4f34910f82bd9c94ba4fb71d76b511bc2cabe0bd727faf57fe3ee` (hash the committed blob).
+**START HERE:** `11_TRIAGE/WPS_S3_STRUCTURAL_CYCLE_HANDOFF_2026-08-01.md` — standalone handoff with
+Gate-1 scope, allowlist, exact CLI recipe, ten operational hazards, funding position and definition
+of done. Then `_AI_MEMORY/GLOBAL_HANDOFF.md` RESUME HERE. Authorisation
+`11_TRIAGE/OWNER_AUTH_50H_EXECUTION_PROMPT_2026-07-31.md` + **D027**.
 Roles this execution only: **Claude Lead/acceptance, Codex `gpt-5.6-sol` implementer.**
 
-- **[AI: Claude] DONE — WP-0 (2.0/2 h):** merged via PR #36. Baseline re-based to live master (delta
-  docs-only, Bridge tree byte-identical); Gate-1 S2 new-cycle authorisation; path allowlist frozen;
-  release plan fixed; Linux semantic-port manifest; DISARMED invariant map (0 FULL-TASK gaps).
-- **[AI: Claude] DONE — WP-S S2 closure:** **ACCEPTED at `0c65a731`**, both flagship auditors
-  PASS-WITH-NITS, zero required. Record `11_TRIAGE/WPS_TSP1009B_S2_CLOSURE_RECORD_2026-07-31.md`.
-- **[AI: Claude] ACTIVE — WP-S minimum S3, round 3 (FINAL):** frozen at
-  `732b37c39612082958d2863681e75d17aabae088`, suite `2 failed, 1140 passed`. Canonical audits in
-  flight. **No fourth round** — a non-accepting verdict stops WP-S and goes to Barış. Blocker
-  history: `11_TRIAGE/WPS_S3_AUDIT_ROUND2_BLOCKER_2026-07-31.md`.
-- **[AI: Claude] NEXT after Audit 1 accepts:** merge WP-S to master and verify ancestry, then
-  **WP-L Phase 1 as verification only** — F-0-1 proved the Linux package at `6fe0130f` is already an
-  ancestor of master and byte-identical, so there is **no porting and no cross-branch Git
-  operation**. **No Ubuntu execution of any kind before Gate A.**
-- **[AI: Cline] THEN — WP-I mechanical artifacts:** SBOM/dependency inventory, repository + artifact
-  secret scan, outbound-network inventory, lockfile verification against current head, staging test
-  plan, rollback procedure. All unprotected and bounded; Cline is repaired and owner-verified at
-  `3.0.48` and is first choice. Lead audits every result on real data — never the report.
-- **[AI: Claude] CARRY TO WP-A — I-R4 SIGTERM clean shutdown:** the highest-risk minimum restart
-  invariant. `engine.stop()` cancels tasks and stops the feed but writes no DISARMED state and closes
-  no store; no test asserts "no dangling state". §19 forbids SMALL-GAP treatment for the four minimum
-  restart invariants — resolve with executed evidence on the retained staging host, or BLOCK.
-  **No shutdown-path code change is authorised on the strength of the WP-0 record alone.**
-- **[AI: Claude] BEFORE any TESTNET work:** write the TESTNET-phase pre-registration (scope,
-  invariants, abort conditions, sizing source, evidence to capture) and pass it through **one fresh
-  Gate-5 audit**. The 50-hour plan's acceptance does not cover the TESTNET phase.
+- **[AI: Claude] DONE — WP-0 (2.0/2 h):** merged via PR #36.
+- **[AI: Claude] DONE — WP-S S2 closure:** **ACCEPTED at `0c65a731`**, both flagships PASS-WITH-NITS.
+- **[AI: Claude] HARD-STOPPED — minimum S3:** `732b37c3` NOT accepted after 3 rounds. Five required
+  findings, both flagships, three classes. Record `11_TRIAGE/WPS_S3_HARD_STOP_2026-08-01.md`.
+- **[AI: Codex] NEXT — S3-STRUCT round 1 (D027):** structural fix. **S3T-A** validated accessor
+  boundary over durable `orders`/`fills`/`trades` reads returning a containable fault instead of
+  raising · **S3T-B** close path re-derives, inside its existing `BEGIN IMMEDIATE`, that the trade is
+  still bound to the active episode · **S3T-C** `_event_symbol` and `_canonical_status` routed
+  through the boundary · **S3T-D** matrix-generated acceptance suite over every durable column ×
+  {NULL, non-numeric TEXT, out-of-range int, non-finite float}. **A hand-listed test covering only
+  the five known findings does not close the class and will not be accepted.**
+- **[AI: Claude] THEN:** independently reproduce representative REDs, re-run the suite against the
+  `2 failed, 1140 passed` floor, freeze the SHA, dispatch canonical audits. Max 3 non-accepting
+  rounds; a third stops the cycle and goes to Barış.
+- **[AI: Claude] AFTER Audit 1 accepts:** merge WP-S, then **WP-L Phase 1 as verification only** —
+  F-0-1 proved the Linux package at `6fe0130f` is already an ancestor of master and byte-identical,
+  so there is no porting and no cross-branch Git operation. **No Ubuntu execution before Gate A.**
+- **[AI: Cline] THEN — WP-I mechanical artifacts:** SBOM, secret scan, outbound-network inventory,
+  lockfile verification, staging test plan, rollback procedure. Unprotected and bounded; Cline is
+  owner-verified at `3.0.48`. Lead audits every result on real data, never the report.
+- **[AI: Claude] CARRY TO WP-A — I-R4 SIGTERM clean shutdown:** highest-risk minimum restart
+  invariant. §19 forbids SMALL-GAP treatment — resolve with executed evidence on the retained
+  staging host, or BLOCK. No shutdown-path code change authorised on the WP-0 record alone.
+- **[AI: Claude] BEFORE any TESTNET work:** write the TESTNET-phase pre-registration and pass it
+  through one fresh Gate-5 audit. The 50-hour plan's acceptance does not cover that phase.
+- **[AI: Barış] BUDGET:** S3-STRUCT does not fit the remaining 2.0 h of contingency. Hours are
+  recorded as an owner-authorised extension, not absorbed. If implementation exceeds ~6 h it is
+  reported rather than continued quietly.
 - **[AI: Barış] EXTERNAL CEILING:** WP-L Phase 2, WP-I staging, WP-A and WP-V need a named Ubuntu
   24.04 host **and access to it**. Credentials are owner-held and must never be handled by an agent.
-  All local work stops at the assembled Gate-A checklist until that exists.
-- **[AI: Barış] LIVE-CAPITAL GATE — unchanged:** every action with possible economic effect stays
-  un-authorised and must be asked for explicitly. Mainnet readiness work with no economic effect is
+- **[AI: Barış] LIVE-CAPITAL GATE — unchanged.** Mainnet readiness work with no economic effect is
   authorised; mainnet capital is not.
-- **[AI: Any] HOLD:** no Ubuntu execution, staging, VPS, deployment, TESTNET, ARM, broker, or runtime
+- **[AI: Any] HOLD:** no Ubuntu execution, staging, VPS, deployment, TESTNET, ARM, broker or runtime
   action until its own documented gate prerequisites objectively pass.
 
 ## CANONICAL AUDIT ROSTER EXPANDED — D025 (2026-08-01)
