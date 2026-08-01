@@ -1,5 +1,16 @@
 # NEXT_STEPS
 
+## 50-HOUR DISARMED SAFETY MVP — WP-L/WP-I LOCAL ACCEPTED; GATE A HOST-BLOCKED (2026-08-01)
+
+**START HERE:** `11_TRIAGE/WPI_CANDIDATE_ACCEPTANCE_RECORD_2026-08-01.md` — local/static WP-I candidate evidence accepted. Then `_AI_MEMORY/GLOBAL_HANDOFF.md` RESUME HERE. Acceptance scope is owner-continuity / Claude-waiver local/static WP-I candidate evidence only.
+
+- **[AI: Codex] DONE — WP-L Phase 1:** verification only, accepted. WPL branch `codex/50h-wpl-verification` pushed at `d9d38d9b…`; record `11_TRIAGE/WPL_PHASE1_VERIFICATION_RECORD_2026-08-01.md`.
+- **[AI: Codex] DONE — WP-I local/candidate evidence:** accepted. Candidate SHA `1adf9ae5…`, path `C:\WPI_ARTIFACTS\1adf9ae5…`, manifest `bfefea2f…`; 7,060 manifest entries / 7,061 files / 1,051,904,669 bytes / nine content-redacted categories all zero. Record `11_TRIAGE/WPI_CANDIDATE_ACCEPTANCE_RECORD_2026-08-01.md`.
+- **[AI: Barış] NEXT — identify one expendable Ubuntu 24.04 host and non-secret reachability:** credentials owner-held and never handled by an agent. Active KVM2 is forbidden as a substitute.
+- **[AI: Codex] THEN — Gate A verification:** followed by WP-L Phase 2, WP-I staging, Audit 2, WP-A on the same retained host.
+- **[AI: Any] HOLD:** active KVM2 and all ARM / order / live-capital actions.
+- **[AI: Any] HOURS:** historical hours remain **20.5 h used / 29.5 h remaining**; exact WP-L / WP-I booking deferred to **Lead Gate-7**.
+
 ## 50-HOUR DISARMED SAFETY MVP — S3-STRUCT CYCLE AUTHORISED (2026-08-01)
 
 **START HERE:** `11_TRIAGE/WPS_S3_STRUCTURAL_CYCLE_HANDOFF_2026-08-01.md` — standalone handoff with

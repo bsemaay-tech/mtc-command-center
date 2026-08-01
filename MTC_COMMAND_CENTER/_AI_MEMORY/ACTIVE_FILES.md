@@ -1,5 +1,29 @@
 # ACTIVE_FILES
 
+## 2026-08-01 Codex GPT-5.6-sol — WP-L/WP-I accepted local evidence; external host blocker
+
+Active record files (this programme):
+- `MTC_COMMAND_CENTER\11_TRIAGE\WPI_CANDIDATE_ACCEPTANCE_RECORD_2026-08-01.md` (NEW — local/static WP-I candidate evidence accepted)
+- `MTC_COMMAND_CENTER\11_TRIAGE\WPI_READINESS_RECORD_2026-08-01.md`
+- `MTC_COMMAND_CENTER\11_TRIAGE\WPL_PHASE1_VERIFICATION_RECORD_2026-08-01.md`
+- `MTC_COMMAND_CENTER\11_TRIAGE\OWNER_AUTH_50H_EXECUTION_PROMPT_2026-07-31.md` — standing authorisation
+- `MTC_COMMAND_CENTER\11_TRIAGE\WP0_SCOPE_BASELINE_RECORD_2026-07-31.md`
+
+WPL branch / worktree:
+- Branch `codex/50h-wpl-verification` pushed at `d9d38d9b8e658d5853903cfc7779bc5ba56bfea2`; worktree `C:\WPL`.
+
+Candidate artifact:
+- Release SHA `1adf9ae51b0ddfe81057860aec5c23bb842f5a84`; path `C:\WPI_ARTIFACTS\1adf9ae51b0ddfe81057860aec5c23bb842f5a84`; manifest SHA-256 `bfefea2f825c8ba8a4c2289cd6ed90c74b51b15bc603cd5589db8815493ced02`.
+
+Main records commits:
+- `05acaadf` static docs, `52f33bdc` candidate evidence, `ad0c3dd7` WPL record.
+
+User untracked handoff preservation:
+- `MTC_COMMAND_CENTER\11_TRIAGE\NEXT_SESSION_HANDOFF_2026-08-01.md` is user-owned untracked and remains unstaged.
+
+Blocker and no-action boundary:
+- Gate A **BLOCKED** solely because no named/reachable expendable Ubuntu 24.04 staging host exists; active KVM2 forbidden. Static evidence is not Ubuntu/install/runtime evidence. No Ubuntu/service/broker/order/ARM/TESTNET order/mainnet/wallet/credential-value/live-capital action.
+
 ## 2026-08-01 Claude Opus 5 — 50-Hour DISARMED Safety MVP (WP-0 done, WP-S final round)
 
 Working set. Branch `feature/ts-p1-009b-s2-closure` @ worktree `C:/WPS`; records on
