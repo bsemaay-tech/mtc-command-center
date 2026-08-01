@@ -49,8 +49,25 @@ non-execution, never acceptance.
 Flipping `--auto-approve` was rejected as a fix: auto-approving a model with shell access inside a
 git worktree is a genuine write risk, including `git push`, and the `git status --porcelain` check
 catches a write only after it has happened. The delivery was changed instead — the narrow brief only
-needed one file's round-2 delta, so the diff is now **inline in the prompt** and the auditor needs no
-tools at all. That also removes the exploration that caused both of last cycle's timeouts.
+needed one file's round-2 delta, so the diff was put **inline in the prompt** and the auditor needed
+no tools at all. That also removed the exploration that caused both of last cycle's timeouts.
+
+**Attempt 2 also failed, for an unrelated reason.** With the diff inline it began echoing the diff
+back verbatim rather than analysing it, and the response stream then broke on a malformed provider
+chunk:
+
+```
+JSON Parse error: Expected '}' — model deepseek/deepseek-v4-flash
+```
+
+No verdict either time. Two attempts, two distinct causes — a harness approval gate and a provider
+stream fault — on top of last cycle's two timeouts. Auditor 3 is recorded as **non-execution** for
+round 2 and no third attempt was spent, the round already being settled by two flagship
+`REQUEST_CHANGES` verdicts.
+
+**Standing conclusion for this auditor:** four failed dispatches across two cycles, never once
+producing a verdict. It should not be treated as reliable round-gating detection until one dispatch
+completes end to end; budget it as opportunistic only.
 
 ## The three required findings
 
