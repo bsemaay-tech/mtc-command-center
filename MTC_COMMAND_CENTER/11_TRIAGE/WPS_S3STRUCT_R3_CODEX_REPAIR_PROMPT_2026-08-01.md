@@ -13,9 +13,13 @@ already committed by the Lead).
 
 ## 1. THIS IS THE LAST REPAIRABLE ROUND
 
-Round 2 (`216682ba`) was **not accepted**: `REQUEST_CHANGES` from canonical auditor `claude-opus-5`
-xhigh, both findings **reproduced by the Lead on real source**. Suite was clean —
-`2 failed, 1266 passed`, no third failure, no weakened tests, allowlist exact.
+Round 2 (`216682ba`) was **not accepted**: `REQUEST_CHANGES` from **both** canonical flagships —
+`claude-opus-5` xhigh (R-1, R-2) and `gpt-5.6-sol` xhigh (R-3). Every finding was **reproduced by the
+Lead on real source** before it bound. Both ran the suite independently and both reported it clean —
+`2 failed, 1266 passed`, no third failure, no weakened tests, allowlist exact. Both also verified
+their audit worktrees were untouched afterwards.
+
+Three required findings. Fix all three in this round.
 
 **Two of three non-accepting rounds are spent.** If round 3 does not produce an accepting verdict
 from both flagships, the Lead stops and reports a failed cycle to the owner. There is no round 4.
@@ -130,22 +134,41 @@ Enumerate them and close them systematically. Two candidate strategies, your cho
 `Store` API reachable from the kill-evidence or ACK paths. Generate that check rather than listing
 the two sites above.
 
-## 4. ALSO REQUIRED — fold in N-5 and N-4
+## 4. R-3 (REQUIRED) — `DEFERRED` is reachable and escapes; both flagships found it independently
 
-**N-5.** The round-2 rationale claimed `record_kill_lifecycle_deferral` was "strictly stronger" than
-the close-path predicate. **It is not, and the Lead's acceptance of that reasoning was wrong.** The
-close binds on `resolved_epoch.episode_id` (`db.py:7656`); the deferral binds on `orders.group_id`
-via `kill_identity[0]` (`db.py:5338-5352`); `_kill_lifecycle_identity` never requires them to be
-equal — it only requires `get_kill_request(episode_id)` to exist. With active epoch **A** and a
-well-formed `KILL_FLATTEN` order still bound to an older, still-present episode **B**, the close
-vetoes and the deferral succeeds. `DEFERRED` is reachable **with no second `Store` at all**.
+**Contain the `DEFERRED` result. Do not rely on it being unreachable.** The round-2 rationale — that
+`record_kill_lifecycle_deferral` is "strictly stronger" than the close-path predicate, so `DEFERRED`
+cannot occur — **is wrong, and the Lead's acceptance of it was wrong.** Both canonical flagships
+attacked it independently and both broke it, by different mechanisms:
 
-Make the invariant true: when an epoch is active, `_kill_lifecycle_identity` must require the order's
-`group_id` to equal the active episode. Add a generated case for the A/B mismatch.
+- **`gpt-5.6-sol`, the load-bearing one:** the comparison only ever held for a single database
+  snapshot. `close_trade_once_with_decision` **rolls back and returns** before
+  `record_kill_lifecycle_deferral` opens its **own separate** `BEGIN IMMEDIATE` (`db.py:5337-5377`).
+  An ABA restoration in that window — `Store` 2 changes `group_id`, the close vetoes, `group_id` is
+  restored and committed before the deferral runs — makes the already-inserted fill satisfy the
+  deferral query. `_defer_kill_lifecycle_event` returns `DEFERRED`, and `orders.py:3621` re-raises.
+- **`claude-opus-5`:** even in one snapshot the predicates differ. The close binds on
+  `resolved_epoch.episode_id` (`db.py:7656`); the deferral binds on `orders.group_id` via
+  `kill_identity[0]`; `_kill_lifecycle_identity` never requires them equal — only that
+  `get_kill_request(episode_id)` exists. With active epoch **A** and a well-formed `KILL_FLATTEN`
+  order still bound to an older, still-present episode **B**, the close vetoes and the deferral
+  succeeds — **no second `Store` needed at all**.
 
-**N-4.** With N-5 enforced and `_ingest_queued_event` already allowlisting
-`KILL_LIFECYCLE_IDENTITY_MISSING`, the `raise` on `DEFERRED` at `orders.py:3621` is redundant and
-re-defers the same fill. Remove the asymmetry with its sibling handler, which returns `False`.
+**Why it escapes.** The re-raise at `orders.py:3621` is inside `_ingest_fill`. The queued drains
+contain it, but the **direct kill-lifecycle callers at `orders.py:1302` and `orders.py:1683` do not
+pass through `_ingest_queued_event`'s containment handler** — Lead-verified on real source. The
+conflict escapes there, inside the active kill episode.
+
+**Required:** contain the `DEFERRED` disposition at `orders.py:3607-3621` so no `KillConflictError`
+leaves `_ingest_fill` on this path, and remove the asymmetry with the sibling handler roughly forty
+lines above, which returns `False`. Because two independent transactions can never give a
+snapshot-based argument, **correctness here must not depend on the predicate relationship at all.**
+
+Additionally make the single-snapshot invariant true anyway, as defence in depth: when an epoch is
+active, `_kill_lifecycle_identity` must require the order's `group_id` to equal the active episode.
+
+**Add both cases to the registry-driven active-epoch matrix** — the A/B stale-episode mismatch, and
+the ABA restore-after-veto window. Hand-written one-offs will be rejected.
 
 **Explicitly deferred to TS-P1-010 — do NOT fix these now:** N-1 (int64 range check applied to
 `FINITE_FLOAT`), N-2 (two reason codes for one storage-class fault), N-3 (asymmetric TEXT policy
@@ -197,8 +220,10 @@ Masking line removed : <yes + where; the matrix arm must now fail without the fi
 R-2 strategy         : <which of the two strategies, and the justification>
 R-2 completeness     : <how you enumerated every affected caller, and the proof it is complete>
 R-2 generated check  : <the test that proves no bare DurableRowFault escapes those APIs>
-N-5 invariant        : <where group_id is now compared to the active epoch + the A/B case>
-N-4 removed          : <yes + the resulting disposition on DEFERRED>
+R-3 DEFERRED contained : <the new disposition; proof no KillConflictError leaves _ingest_fill here>
+R-3 direct callers     : <proof orders.py:1302 and :1683 can no longer see this conflict>
+R-3 invariant          : <where group_id is now compared to the active epoch>
+R-3 generated cases    : <the A/B stale-episode case and the ABA restore-after-veto case>
 Matrix totals        : <columns x cases, including the nullable-by-design accept cases>
 files changed        : <exact list>
 tests added          : <names>
