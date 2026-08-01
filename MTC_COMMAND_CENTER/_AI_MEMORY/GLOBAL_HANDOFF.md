@@ -1,5 +1,56 @@
 # GLOBAL_HANDOFF
 
+## [Claude Opus 5] 2026-08-02 — Gate A EXECUTED and FAILED at A-2; WP-I candidate must be rebuilt
+
+**RESUME HERE.** Full standalone handoff: `11_TRIAGE/NEXT_SESSION_HANDOFF_2026-08-03.md`.
+
+### What happened
+
+Hyper-V access was restored (owner restarted; the earlier sign-out had never taken — the newest
+logon session predated it). A clean expendable VM `GATEA-STAGING` was built from verified Canonical
+media, and **Gate A was executed for real for the first time.**
+
+**A-0 PASS · A-1 PASS · A-2 FAIL.** The gate stopped there, as the runbook requires.
+
+### The four defects
+
+| # | Defect |
+|---|---|
+| 1 | **CRLF in committed blobs** — 19/19 `*.sh`, both systemd unit templates, logrotate policy, env template. `install.sh` dies at line 37 with `$'\r': command not found`. Present on `origin/master`. **This is the A-2 FAIL.** |
+| 2 | **`lib/common.sh:98` can never seal a venv** — `find "$root" -perm /222` has no `-type` filter; symlink modes are always 0777 on Linux and meaningless; a venv always has symlinks. |
+| 3 | **The suite floor is wrong** — the recorded `2 failed, 1304 passed` was measured on **Python 3.14**; the locked runtime is **3.12**. On the real runtime: **26 failed, 1280 passed**. ~21 are `wal_state_bundle` reporting `source_changed_during_capture` on SQLite's `wal`/`shm` sidecars — that is the **Stage E cutover tool**, so the KVM2 cutover as written cannot produce a valid state bundle on Linux. |
+| 4 | **The service cannot start without broker credentials**, which Gate A §0 forbids — so **A-4 is unexecutable as pre-registered**. Needs an owner decision. |
+
+### Anchors — the candidate artifact is dead
+
+`1adf9ae51b0ddfe81057860aec5c23bb842f5a84` / manifest `bfefea2f…ced02` **must be rebuilt.** A
+corrected payload produces a new `RELEASE_SHA` and manifest hash; every record quoting the old values
+becomes historical, and Gate A must re-run from A-0.
+
+`origin/master` unchanged at `637307e8`. Records branch `feature/donchian-crypto-ladder` at
+`d82b4501`.
+
+### Not established — do not let anyone claim otherwise
+
+A-3…A-9 were **never run as gate checks**. The **ARM-refusal path is UNTESTED** (the script logged a
+PASS on a connection-refused after the service died — worthless, counted nowhere). A-5 never ran.
+Everything past A-2 is explicitly-labelled reconnaissance on a normalised **copy** and cannot be
+cited as gate evidence. WP-L Phase 2, WP-I staging, Audit 2 and WP-A are blocked behind the rebuild.
+
+### Records
+
+`11_TRIAGE/GATE_A_RESULT_2026-08-02.md` · `GATE_A_RECON_DEFECT_LIST_2026-08-02.md` ·
+`GATE_A_PREREGISTRATION_ADDENDUM_A_2026-08-02.md` · `GATE_A_STAGING_HOST_PROVENANCE_2026-08-02.md`.
+Commits `27a3a9d7`, `027f6b33`, `55bf677f`, `aede7078`, `9b3d27c1`, `d82b4501`.
+
+### Safety
+
+No ARM, order, broker connection, TESTNET, mainnet, wallet action or credential value at any point.
+KVM2 never touched. **WP-V/KVM2 deliberately NOT started** — the standing rule requires telling Barış
+before that install begins, and he was asleep; it is moot until the rebuild anyway.
+
+---
+
 ## [Codex GPT-5.6-sol] 2026-08-01 — WP-L and WP-I local evidence accepted; Gate A host-blocked
 
 **RESUME HERE — WP-L Phase 1 + WP-I local/static/candidate evidence ACCEPTED; Gate A host-blocked.**
