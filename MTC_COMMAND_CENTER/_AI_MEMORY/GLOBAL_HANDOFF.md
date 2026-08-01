@@ -48,7 +48,7 @@ authority only — no implementation authority for secondary models.
 |---|---:|---|
 | WP-0 Scope/Baseline | 2 h | **DONE, merged** — PR #36, record commit `4d2228cf` |
 | WP-S S2 closure | — | **ACCEPTED at `0c65a731`** — both flagships PASS-WITH-NITS, 0 required |
-| WP-S minimum S3 | — | **round 3 (final) frozen at `732b37c39612082958d2863681e75d17aabae088`, audits in flight** |
+| WP-S minimum S3 | — | **HARD STOP — round 3 (final) `732b37c39612082958d2863681e75d17aabae088` NOT ACCEPTED, 2 required findings. Loop exhausted. See `11_TRIAGE/WPS_S3_HARD_STOP_2026-08-01.md`. Awaiting an owner decision between four options.** |
 | WP-L / WP-I / WP-A / WP-V | 8/6/3/8 h | not started — gated on Audit 1 accepting |
 
 Hours: **WP-0 2.0/2 · WP-S 12.0/12 (full) · contingency 1.5/5 · WP-R 2.0/6.** ~17.5 of 50 plan-hours
@@ -80,7 +80,29 @@ identically on the `origin/master` Bridge tree, are pre-existing, and are outsid
 - **F-0-2** — both S2 blockers were reproduced by the Lead on real source before any dispatch, not
   taken from a report.
 
-### Next authorised step
+### CURRENT BLOCKER — read this before planning anything
+
+**WP-S is stopped and every downstream package is blocked**, because plan §23b step 7 gates WP-L
+Phase 1 on Audit 1 accepting. There is no independent authorised stream to continue meanwhile.
+
+Two required findings survive at `732b37c3`, both reproduced by an auditor and re-verified by the
+Lead on real source: `db.py:7338-7339` converts `fills.qty`/`px` without a guard, ahead of every
+guard round 3 added; and `orders.py:2670` (`_event_symbol`) still uses raw `int(order["trade_id"])`
+while `_parse_store_trade_id` exists and is applied at only two other sites.
+
+**The structural diagnosis matters more than either finding.** Three S3 rounds each closed the
+defect they were handed and left the same *class* open elsewhere: schema-admitted data reaching an
+unguarded conversion on the drain path, escaping through an unguarded `BridgeEngine.start()` with no
+durable evidence. Repairs were applied point-by-point at the call sites each audit named. **Guard the
+entry point, not one line** — a validated accessor boundary over `orders`/`fills`/`trades` is the
+fix that would actually close the class, and it is larger than "minimum S3", which is why it needs an
+owner decision rather than a fourth round of the same strategy.
+
+**S2 remains ACCEPTED at `0c65a731` and is unaffected.** The unfixed defects need a corrupted durable
+database to trigger; they are startup-liveness faults that fail closed and stopped — safe, not
+available. No exposure, no unowned kill close, no weakened S2 guarantee.
+
+### Next authorised step once the owner decides
 
 Audit 1 accepting → merge WP-S → **WP-L Phase 1 as verification only** → WP-I readiness artifacts →
 assemble Gate A. **No Ubuntu execution of any kind before Gate A.**
