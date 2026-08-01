@@ -16,7 +16,7 @@ media, and **Gate A was executed for real for the first time.**
 
 | # | Defect |
 |---|---|
-| 1 | **CRLF in committed blobs** — 19/19 `*.sh`, both systemd unit templates, logrotate policy, env template. `install.sh` dies at line 37 with `$'\r': command not found`. Present on `origin/master`. **This is the A-2 FAIL.** |
+| 1 | **CRLF in the built payload** — `install.sh` dies at line 37 with `$'\r': command not found`. **The repository is CLEAN**; committed blobs are LF-only. `package.sh:73` runs bare `git archive` under `core.autocrlf=true`, so the export converts. One-line build fix, no renormalisation. **This is the A-2 FAIL.** |
 | 2 | **`lib/common.sh:98` can never seal a venv** — `find "$root" -perm /222` has no `-type` filter; symlink modes are always 0777 on Linux and meaningless; a venv always has symlinks. |
 | 3 | **The suite floor is wrong** — the recorded `2 failed, 1304 passed` was measured on **Python 3.14**; the locked runtime is **3.12**. On the real runtime: **26 failed, 1280 passed**. ~21 are `wal_state_bundle` reporting `source_changed_during_capture` on SQLite's `wal`/`shm` sidecars — that is the **Stage E cutover tool**, so the KVM2 cutover as written cannot produce a valid state bundle on Linux. |
 | 4 | **The service cannot start without broker credentials**, which Gate A §0 forbids — so **A-4 is unexecutable as pre-registered**. Needs an owner decision. |

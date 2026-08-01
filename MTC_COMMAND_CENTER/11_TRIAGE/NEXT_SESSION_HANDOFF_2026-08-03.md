@@ -29,7 +29,7 @@ bounded `KVM2-P4-02` attempt would have been spent on a payload that could never
 
 | # | Defect | Status |
 |---|---|---|
-| 1 | **CRLF in committed blobs.** 19/19 `*.sh`, both systemd unit templates, logrotate policy, env template. `install.sh` dies at line 37 with `$'\r': command not found`. Present on `origin/master`, not just the candidate. | **This is the A-2 FAIL** |
+| 1 | **CRLF in the built payload.** `install.sh` dies at line 37 with `$'\r': command not found`. **The repository is CLEAN** — committed blobs are LF-only. `package.sh:73` runs bare `git archive` while the repo has `core.autocrlf=true`, so the export converts. One-line build fix. | **This is the A-2 FAIL** |
 | 2 | **`lib/common.sh:98` can never seal a venv.** `find "$root" -perm /222` has no `-type` filter; symlink modes are always 0777 on Linux and meaningless. A venv always has symlinks. | Blocks install even after #1 |
 | 3 | **The suite floor is wrong.** Recorded `2 failed, 1304 passed` was measured on **Python 3.14**; the locked runtime is **3.12** and the dev machine has no 3.12. On the real runtime: **26 failed, 1280 passed**. | Baseline invalid |
 | 4 | **The service cannot start without broker credentials**, which Gate A §0 forbids. A-4 is unexecutable as pre-registered. | **Needs your decision** |
@@ -83,10 +83,12 @@ the production service against a test fixture must not be used to manufacture an
 
 ## 5. Required repair (implementer work — deliberately NOT performed)
 
-1. Add real `.gitattributes` normalisation: `*.sh`, `*.py`, `*.service`, `*.template`,
-   `logrotate/*`, env template → `eol=lf`. `* text=auto` alone is what failed.
-2. `git add --renormalize` the affected paths and commit. **The committed bytes must change** — a
-   working-copy fix is exactly the mistake that caused this.
+1. **Fix the build, not the repo.** `package.sh:73` must export without line-ending conversion:
+   `git -c core.autocrlf=false -c core.eol=lf archive …`. Verified to produce byte-exact LF output
+   equal to the blob sizes. Building on Linux would also work.
+2. Optionally add explicit `eol=lf` attributes for `IBKR_PAPER_BRIDGE/deploy/linux/**` so the export
+   is deterministic whatever a builder's local `core.autocrlf` is. **Do NOT `git add --renormalize`**
+   — the committed bytes are already correct.
 3. Fix `lib/common.sh:98` →
    `find "$root" \( -type f -o -type d \) -perm /222 -print -quit`. If symlink *targets* matter,
    write that as its own assertion rather than conflating it with write bits.
@@ -96,12 +98,11 @@ the production service against a test fixture must not be used to manufacture an
    record quoting `1adf9ae5…` / `bfefea2f…` becomes historical.
 7. Re-run Gate A **from A-0**. Nothing below A-2 is established for a corrected artifact.
 
-**Scope the renormalisation deliberately** — a repo-wide `git add --renormalize .` would produce an
-enormous diff across parity fixtures and generated data.
-
-**Renormalisation does NOT threaten TS-P0-001.** `docs/RUNTIME_BASELINE_CONTRACT.md` lines 67-68
-normalise CRLF to LF *before* hashing, by design, so `source_tree_hash` does not move. This was
-checked specifically because the fear that it would is what makes the fix look dangerous.
+**The repository needs no content change at all.** An earlier version of this handoff called for a
+repo-wide renormalisation; that was based on a root-cause attribution that an independent
+`gpt-5.6-sol` audit refuted, and it is withdrawn. Committed blobs are LF; only the export was wrong.
+(TS-P0-001 was never at risk either way — `RUNTIME_BASELINE_CONTRACT.md` lines 67-68 normalise CRLF
+to LF before hashing.)
 
 ## 6. The staging host — keep it
 

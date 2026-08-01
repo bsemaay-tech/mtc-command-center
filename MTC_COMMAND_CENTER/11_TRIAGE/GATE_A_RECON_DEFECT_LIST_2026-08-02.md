@@ -22,10 +22,20 @@ make anything pass.**
 
 ## Defect 1 — CRLF line endings (this is the Gate A A-2 FAIL)
 
-Full evidence in `GATE_A_RESULT_2026-08-02.md`. Summary: 19 of 19 shell scripts, both systemd unit
-templates, the logrotate policy and the env contract are committed with CRLF. `install.sh` dies on
-line 37 with `$'\r': command not found`. Root cause is the committed blob — `git archive` exported
-exactly what was committed, and the defect is present on `origin/master`.
+Full evidence in `GATE_A_RESULT_2026-08-02.md`. Summary: in the **artifact**, 19 of 19 shell scripts,
+both systemd unit templates, the logrotate policy and the env contract carry CRLF. `install.sh` dies
+on line 37 with `$'\r': command not found`.
+
+> **ROOT CAUSE CORRECTED 2026-08-02.** This originally read "root cause is the committed blob …
+> present on `origin/master`". **Wrong**, and caught by an independent `gpt-5.6-sol` audit. The
+> committed blobs are **LF-only**; the repository is clean. Proof without any pipe: blob sizes
+> (`git cat-file -s`) are 19,908 / 8,153 / 3,489 / 867 against artifact sizes 20,342 / 8,373 / 3,580
+> / 903 — each diff exactly that file's CR count — and `od` finds zero `0x0d` bytes in the blobs.
+> The CRLF is introduced at **build time**: `package.sh:73` runs bare `git archive` while the repo
+> has `core.autocrlf=true`. Demonstrated: `git archive` → 20,342 bytes;
+> `git -c core.autocrlf=false -c core.eol=lf archive` → 19,908 = the blob size.
+> The original measurement used `git cat-file blob … | grep -c $'\r'` through a Git Bash pipe that
+> translated git's stdout — the exact trap this programme already documents.
 
 **Recon patch 1:** `sed -i 's/\r$//'` over 24 files (`*.sh`, `*.service`, `*.template`, `*.env`,
 `logrotate/*`), then `RELEASE_SHA256SUMS` regenerated to match.
@@ -327,16 +337,25 @@ different `autocrlf` settings. Changing committed line endings therefore does no
 the obvious fear — that renormalising would invalidate the runtime baseline — would otherwise have
 made the fix look far more dangerous than it is.
 
-**Scope the renormalisation deliberately.** A repo-wide `git add --renormalize .` would produce an
-enormous diff across parity fixtures and generated data. The minimum correct scope is the files Linux
-actually parses: `IBKR_PAPER_BRIDGE/deploy/linux/**`, plus any `*.sh` intended to run on Linux.
-`.gitattributes` needs explicit `eol=lf` rules for those paths — `* text=auto` alone is what failed
-here, because it normalises at `git add` time and these files were staged on Windows before it
-applied.
+**Do NOT renormalise committed content.** *(Corrected — the original text here called for
+`git add --renormalize`, which was based on the wrong root cause.)* The committed bytes are already
+LF and correct. The fix belongs in the build:
 
-**A rebuild changes the programme's anchors.** A corrected payload produces a new `RELEASE_SHA` and a
-new `RELEASE_SHA256SUMS` SHA-256. Every record quoting `1adf9ae5…` / `bfefea2f…` becomes historical,
-and Gate A must re-run from A-0.
+```bash
+# package.sh:73 — export without line-ending conversion
+git -c core.autocrlf=false -c core.eol=lf archive "${RELEASE_SHA}" ...
+```
+
+Optionally add explicit `eol=lf` attributes for `IBKR_PAPER_BRIDGE/deploy/linux/**` and the other
+Linux-parsed paths so the export is deterministic whatever a builder's local `core.autocrlf` is.
+That changes attributes, not content.
+
+**A rebuild still changes the programme's anchors.** Fixing `package.sh` requires a commit, so expect
+both `RELEASE_SHA` and the `RELEASE_SHA256SUMS` SHA-256 to move; records quoting `1adf9ae5…` /
+`bfefea2f…` become historical, and Gate A must re-run from A-0.
+
+**TS-P0-001 was never at risk** — and now doubly so, since committed content is not being touched at
+all. (`RUNTIME_BASELINE_CONTRACT.md` lines 67-68 normalise CRLF to LF before hashing in any case.)
 
 ## Safety
 

@@ -105,27 +105,45 @@ policy and the env contract are all affected, so a "fixed" install would still h
 file carrying `\r` into `ExecStart`, and a logrotate policy systemd-parsed with trailing carriage
 returns.
 
-### 4.3 Root cause — the committed blob, not the build
+### 4.3 Root cause — the BUILD step, not the committed blobs
+
+> **CORRECTED 2026-08-02.** This section originally asserted the opposite — that the CRLF was in
+> Git's object database and present on `origin/master`. **That was wrong.** It was measured with
+> `git cat-file blob … | grep -c $'\r'` through a Git Bash pipe that translated git's stdout, i.e.
+> the exact trap this programme already documents ("verify artifact identity from the committed
+> blob, never the working copy"). An independent `gpt-5.6-sol` audit caught it. The corrected
+> finding is below, established by a method that involves no pipe.
+
+Object size needs no pipe and cannot be translated:
+
+| Path | blob (`git cat-file -s`) | artifact on disk | diff |
+|---|---:|---:|---:|
+| `install.sh` | 19,908 | 20,342 | **434** |
+| `lib/common.sh` | 8,153 | 8,373 | **220** |
+| `systemd/mtc-bridge-first-start.service.template` | 3,489 | 3,580 | **91** |
+| `evidence/ledger_schema.json` | 867 | 903 | **36** |
+
+Each diff equals that file's CR count exactly. Counting `0x0d` bytes in the blob via `od` (no text
+pipe) returns **0**.
+
+**The committed blobs are LF-only. The repository is clean.** The CRLF is introduced at payload
+build time: `package.sh:73` runs bare `git archive`, and the repo has `core.autocrlf=true`, so the
+export applies CRLF conversion on Windows.
+
+Proven directly:
 
 ```
-git cat-file blob 1adf9ae5:IBKR_PAPER_BRIDGE/deploy/linux/install.sh | grep -c $'\r'   →  434
+git archive 1adf9ae5 …/install.sh                          →  20,342 bytes   (CRLF — the corrupt artifact)
+git -c core.autocrlf=false -c core.eol=lf archive …        →  19,908 bytes   = exactly the blob size
 ```
 
-The CRLF is in Git's object database. It is therefore **not** caused by checkout, by
-`core.autocrlf=true`, by `package.sh`, or by `git archive` — `git archive` faithfully exported what
-was committed. The repository's `.gitattributes` carries only `* text=auto`, which normalises at
-`git add` time; these Linux assets were authored and staged on Windows with CRLF already baked in.
+So `origin/master` is **not** defective, and no renormalisation of committed content is required.
+The earlier claim that "19 of 19 committed `*.sh` files carry CRLF" is withdrawn — those files are
+LF in Git and appear as CRLF only in a Windows working copy, which `core.autocrlf=true` produces by
+design.
 
-**The defect is present on `origin/master`, not only on the candidate branch:**
-
-```
-CR=434 install.sh          CR=252 verify.sh        CR=220 lib/common.sh
-CR=185 rollback.sh         CR= 92 package.sh       CR=102 verify_lock.py
-CR= 91 first-start.service.template                CR= 86 steady.service.template
-CR= 38 env template        CR= 26 logrotate/mtc-bridge
-CR=266 COMMANDS.md         CR=144 README.md
-repo-wide: 19 of 19 committed *.sh files carry CRLF
-```
+The A-2 **FAIL stands unchanged**: the artifact that was hash-verified and transferred does carry
+CRLF and cannot execute. Only the attribution moved — from the repository to the build step.
 
 ### 4.4 Why every prior check passed
 
@@ -144,14 +162,24 @@ disposable host before KVM2 — had this been attempted directly on KVM2, the on
 
 ## 5. Required repair (implementer work — not performed here)
 
-1. Add real normalisation rules to `.gitattributes` — at minimum `*.sh`, `*.py`, `*.service`,
-   `*.template`, `logrotate/*` and the env template forced to `eol=lf`.
-2. `git add --renormalize` the affected paths and commit. The **committed bytes** must change; a
-   working-copy-only fix is exactly the mistake that produced this.
-3. Rebuild the WP-I payload from the corrected commit. This yields a **new `RELEASE_SHA` and a new
-   `RELEASE_SHA256SUMS` SHA-256** — every frozen anchor in the programme records that quotes
-   `1adf9ae5…` / `bfefea2f…` becomes historical.
-4. Re-run Gate A from A-0. Nothing below A-2 has been established for the corrected artifact.
+Much smaller than first thought, because the repository is clean:
+
+1. **Fix the build.** `package.sh:73` must export without line-ending conversion —
+   `git -c core.autocrlf=false -c core.eol=lf archive …`, or build the payload on Linux. Verified to
+   produce byte-exact LF output equal to the blob sizes.
+2. **Belt and braces:** add explicit `eol=lf` attributes for the Linux-parsed paths
+   (`IBKR_PAPER_BRIDGE/deploy/linux/**`, `*.sh`, `*.service`, `*.template`, `logrotate/*`, the env
+   template) so the export is deterministic regardless of a builder's local `core.autocrlf`. This
+   changes attributes, **not** committed content.
+3. **No `git add --renormalize`.** The committed bytes are already correct; rewriting them would
+   produce a large diff for no benefit and move hashes unnecessarily.
+4. Fix `lib/common.sh:98` (defect 2 in the recon list) —
+   `find "$root" \( -type f -o -type d \) -perm /222 -print -quit`.
+5. Rebuild the WP-I payload. This still yields a **new `RELEASE_SHA256SUMS` SHA-256** (the payload
+   bytes change), so records quoting `bfefea2f…` become historical. `RELEASE_SHA` may stay
+   `1adf9ae5…` if no commit is needed for step 1 — but step 1 *does* need a commit to `package.sh`,
+   so expect both anchors to move.
+6. Re-run Gate A from A-0. Nothing below A-2 has been established for the corrected artifact.
 
 The Lead did **not** patch the artifact, the repo, or the host to make the install proceed. Doing so
 would have converted the gate's finding into a hidden hand-fix, which is the failure mode the
