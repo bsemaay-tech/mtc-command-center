@@ -212,6 +212,111 @@ discrepancy rather than adopting whichever number is convenient.
 
 ---
 
+---
+
+## Defect 4 — the service cannot start without broker credentials, which Gate A forbids
+
+**This is the most consequential finding, because it makes A-4 unexecutable as written.**
+
+Starting the installed unit fails in 620 ms:
+
+```
+RuntimeError: Hyperliquid credentials not found: set both HL_ACCOUNT_ADDRESS
+and HL_API_WALLET_KEY in the process environment or in HKEY_CURRENT_USER\Environment
+  bridge/app.py:229  -> create_app(... start_runtime=True)
+  bridge/app.py:114  -> runtime_broker = broker or _build_broker(root, dry_run)
+  bridge/app.py:201  -> resolve_hyperliquid_credentials()
+```
+
+The unit's `ExecStart` is `python -m bridge.app` with **no** `--dry-run`, so a real
+`HyperliquidBroker` is constructed at startup and credentials are mandatory.
+
+### The contradiction
+
+| Source | Requirement |
+|---|---|
+| Gate A runbook §0 | *"DISARMED only. No ARM. No order. **No broker credentials.**"* |
+| Gate A runbook A-4 | *"**Start the service.** Confirm `app_state` is durably not `ARMED` …"* |
+| The artifact | refuses to start unless `HL_ACCOUNT_ADDRESS` + `HL_API_WALLET_KEY` are present |
+
+These cannot all hold. A-4 — described in the runbook as *"the most important check in the gate"* and
+*"the whole point of the 50 hours"* — **cannot be executed under Gate A's own stated boundary.**
+
+Note this is *not* a contradiction with `COMMANDS.md`, whose ordering is deliberate: Stage D
+(`KVM2-P4-03`, secret provisioning) precedes Stage F (`KVM2-P4-06/07`, the one DISARMED start). The
+conflict is between the artifact's startup requirement and **Gate A's** credential-free boundary.
+
+### The one genuinely good thing this proved
+
+The failure is **fail-closed**, and that is worth recording as evidence in its own right.
+`app.py:106-110` initialises the store and writes `app_state=DISARMED` *before* `_build_broker` is
+reached (`:113-114`). So a credential-absent start leaves the system durably DISARMED rather than in
+an ambiguous state. Observed:
+
+```
+db app_state = DISARMED          NRestarts = 0  (Restart=no held)
+no listener on 8790              no broker connect/auth lines in the journal
+```
+
+That is a real, if partial, piece of A-4's substance: the system's behaviour under missing
+credentials is safe.
+
+### Why `--dry-run` is not the answer
+
+`_build_broker` avoids credentials only when `dry_run=True`, in which case it wires
+`MockBroker.from_csv(root/"tests"/"fixtures"/"BTC_1h.csv")`. Starting the production service against
+a test fixture is not a legitimate DISARMED start and must not be used to manufacture an A-4 pass.
+
+### Decision required from the owner — not the Lead's to make
+
+Either:
+
+- **(a)** give the bridge a genuine credential-free DISARMED start mode. A bridge that is DISARMED
+  and cannot trade arguably should not need trading credentials merely to boot; or
+- **(b)** re-scope A-4 to run after Stage D with TESTNET credentials provisioned — which breaches
+  Gate A's §0 boundary and therefore needs explicit owner authorisation.
+
+Both change the programme's plan, so neither was chosen here.
+
+---
+
+## Recon results for A-8 and A-9
+
+Run for completeness while the host was available. Still **not** Gate A evidence.
+
+**A-8 — loopback-only exposure.** No non-loopback listener on 8790. Host listeners are SSH (22) and
+systemd-resolved (127.0.0.53/127.0.0.54:53) only. `ufw` active, default-deny inbound, SSH-only.
+
+**A-9 — secret scan on the INSTALLED tree.** Zero hits across all nine signature categories, on both
+`/opt/mtc-bridge/releases/1adf9ae5…` and `/etc/mtc-bridge`:
+
+```
+private_key_block 0   aws_access_key 0   github_token 0   slack_token 0   openai_token 0
+anthropic_token 0     xai_token 0        telegram_bot_token 0            ethereum_private_key 0
+TOTAL_CATEGORY_PATH_HITS=0   (both trees)
+
+/etc/mtc-bridge/mtc-bridge.env  600 root:root   definition lines: 0   HL_LIVE_ACK lines: 0
+```
+
+`SECURITY_BASELINE.md` states its own scan *"excludes … an after-build scan of the immutable
+payload."* This is that missing scan, and it is clean.
+
+**A-5 could not run** — it requires a running service, which defect 4 prevents.
+
+---
+
+## A correction to my own method, recorded deliberately
+
+The A-4 script contained the exact flaw this programme keeps paying for. It handled one vacuous-pass
+trap (a wrong `x-confirm` header returns 409, which resembles a real ARM refusal) but left another
+open: when the service failed to start, `curl` returned `http=000` (connection refused) and the
+script logged `PASS ARM did not succeed`.
+
+**That "PASS" is worthless** — nothing was listening, so nothing was tested. It is not counted as
+evidence anywhere in this file, and the ARM-refusal path remains **untested**. Recording this because
+"always ask what would make the assertion fail" is the programme's own rule, and a check that passes
+because the target is absent is precisely the failure mode it warns about.
+
 ## Repair notes for the implementer
 
 **The runtime-baseline contract is NOT at risk from renormalisation.**
