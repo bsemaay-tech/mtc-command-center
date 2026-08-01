@@ -81,7 +81,39 @@ identically on the `origin/master` Bridge tree, are pre-existing, and are outsid
 - **F-0-2** — both S2 blockers were reproduced by the Lead on real source before any dispatch, not
   taken from a report.
 
-### CURRENT WORK — S3-STRUCT **STOPPED AT THE ROUND BOUND 2026-08-01. OWNER DECISION NEEDED.**
+### CURRENT WORK — S3-STRUCT **ACCEPTED AND MERGED 2026-08-01. WP-S CLOSED.**
+
+**Record: `11_TRIAGE/WPS_S3STRUCT_ACCEPTANCE_RECORD_2026-08-01.md`** — supersedes the hard-stop
+document below, which is retained for its findings history.
+
+Accepted artifact `16cbc717`; merge commit **`637307e8` on `origin/master`**. Both flagships
+accepting — `gpt-5.6-sol` xhigh **PASS**, `claude-opus-5` xhigh **PASS-WITH-NITS**, zero required
+findings, each having executed the suite in an isolated worktree verified unmodified afterwards.
+Merge was 21 files, all under `IBKR_PAPER_BRIDGE/`, zero conflicts. Suite on the merged tree:
+**`2 failed, 1304 passed`** — the two pre-existing failures only. Ancestry verified: both `16cbc717`
+and the accepted S2 `0c65a731` are ancestors of `origin/master`.
+
+**Audit 1 is accepted, so plan §23b step 7 no longer gates WP-L Phase 1.** WP-L Phase 1 is
+**verification only** (F-0-1: the Linux package at `6fe0130f` is already an ancestor of master and
+byte-identical — nothing is ported, no cross-branch Git operation). Not started; needs its own
+go-ahead. No broker, network, ARM, TESTNET, VPS or runtime action occurred in this cycle.
+
+**Two lessons to carry into the next cycle.** A generated matrix passed while proving nothing twice
+here — once masked by `UPDATE trades SET entry_px=100.0`, once by a fixture that starts `KILLED` and
+re-derives it. Always ask what would make the assertion fail; round 4 was verified by re-running its
+new cases against the predecessor and observing them fail. And "prove the enumeration complete" needs
+its boundary named — round 3 proved completeness over the `Store` call graph and never entered
+`OrderManager`, which is exactly where the defect lived.
+
+**Owner action outstanding:** refresh `ZAI_GLM_CODING_PLAN_KEY` in Windows Credential Manager —
+auditor 4's route (`Invoke-GlmAudit.ps1` → `glm.ps1` → Z.AI, **not** Cline) returned
+`401 token expired or incorrect`. Deferred nits and the one genuinely unrouted read
+(`_recover_applied_kill_flatten_lifecycles`, reachable only via `engine.kill()`) are itemised in §
+"Deferred to TS-P1-010" of the acceptance record.
+
+---
+
+### SUPERSEDED — S3-STRUCT hard stop (retained for findings history)
 
 **Start here: `11_TRIAGE/WPS_S3STRUCT_HARD_STOP_2026-08-01.md`** — three rounds, every finding, what
 the boundary achieved, the safety position, and the recommendation. The original scope document is
