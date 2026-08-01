@@ -3,6 +3,12 @@
 - Date: 2026-08-01
 - Status: **PRE-GATE-A / STATIC ONLY**
 - Frozen source: `637307e83951ffe23e768ed8e50ddaf8712b0660`
+- Candidate release SHA: `1adf9ae51b0ddfe81057860aec5c23bb842f5a84`
+- Stable artifact path: `C:\WPI_ARTIFACTS\1adf9ae51b0ddfe81057860aec5c23bb842f5a84`
+- Built from clean `C:\WPL` using existing `package.sh`; RELEASE_SHA matched; RELEASE_SHA256SUMS SHA-256 `bfefea2f825c8ba8a4c2289cd6ed90c74b51b15bc603cd5589db8815493ced02`; `sha256sum -c` exited 0 for every entry.
+- 7,061 regular files and 1,051,904,669 bytes scanned.
+- After-build content-redacted path-hit counts: private_key_block=0, aws_access_key=0, github_token=0, slack_token=0, openai_token=0, anthropic_token=0, xai_token=0, telegram_bot_token=0, ethereum_private_key=0, TOTAL_CATEGORY_PATH_HITS=0; no value printed.
+- Candidate/path manifest and repository/payload scan: statically/local satisfied.
 - Execution boundary: no Ubuntu install, service action, backup/restore, rollback,
   reboot, SIGTERM, broker, exchange, TESTNET, mainnet, order, or live-capital
   action has occurred.
@@ -50,9 +56,7 @@ tree for high-confidence private-key and provider-token signatures:
 Result on 2026-08-01: **zero category/path hits across the frozen tracked
 tree**. Because `package.sh` constructs its source tree with `git archive` of
 that exact commit, the scan covers the source files that would enter the
-payload. No payload was built in this work package, so generated `RELEASE_SHA`
-and `RELEASE_SHA256SUMS` files were not separately scanned and no built-artifact
-path is claimed.
+payload. Built payload at `C:\WPI_ARTIFACTS\1adf9ae51b0ddfe81057860aec5c23bb842f5a84` with RELEASE_SHA=1adf9ae51b0ddfe81057860aec5c23bb842f5a84; RELEASE_SHA256SUMS SHA-256 bfefea2f825c8ba8a4c2289cd6ed90c74b51b15bc603cd5589db8815493ced02; `sha256sum -c` exit 0 on all 7,060 manifest entries; the payload contains 7,061 regular files; after-build content-redacted scan zero hits.
 
 | Signature category | Frozen-tree category/path hits |
 |---|---:|
@@ -82,10 +86,9 @@ represented as a clean rerun in this artifact.
 
 Limitations: `git grep -I` excludes binary blobs; the scan excludes untracked
 and ignored files, Git history other than the frozen tree, process environment,
-OS credential stores, user registries, shell history, and remote systems. It is
+OS credential stores, user registries, shell history, and remote systems. After-build scan of the immutable payload occurred and returned zero hits. It is
 signature-based rather than entropy-based and does not replace a dedicated
-secret-scanning product or an after-build scan of the immutable payload. A
-future match must be handled without printing the value and is a hard BLOCK
+secret-scanning product. A future match must be handled without printing the value and is a hard BLOCK
 until the owner confirms remediation.
 
 ## 3. Outbound-network inventory
@@ -264,6 +267,17 @@ parent settings environment. In both earlier auditor runs, pytest collection
 may have loaded credential values into `Settings()` in memory; no disclosure
 was observed.
 
+### Payload verification (read-only)
+
+```powershell
+$payload = 'C:\WPI_ARTIFACTS\1adf9ae51b0ddfe81057860aec5c23bb842f5a84'
+$releaseSha = (Get-Content -Raw -LiteralPath (Join-Path $payload 'RELEASE_SHA')).Trim()
+if ($releaseSha -ne '1adf9ae51b0ddfe81057860aec5c23bb842f5a84') { throw 'RELEASE_SHA mismatch' }
+$manifestHash = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $payload 'RELEASE_SHA256SUMS')).Hash.ToLower()
+if ($manifestHash -ne 'bfefea2f825c8ba8a4c2289cd6ed90c74b51b15bc603cd5589db8815493ced02') { throw 'manifest hash mismatch' }
+& 'C:\Program Files\Git\bin\bash.exe' -lc "cd '/c/WPI_ARTIFACTS/1adf9ae51b0ddfe81057860aec5c23bb842f5a84' && sha256sum -c RELEASE_SHA256SUMS >/dev/null" ; if ($LASTEXITCODE -ne 0) { throw 'sha256sum verify failed' }
+```
+
 ### Runtime endpoint selection and unused-client search
 
 ```powershell
@@ -282,7 +296,4 @@ if ($LASTEXITCODE -ne 0) { throw "SDK constant inspection failed with exit $LAST
 
 ## 6. Static conclusion
 
-The pinned inventory, content-redacted repository scan, and outbound-network
-inventory are complete as local artifacts. The outbound-network SMALL-GAP is
-therefore closed **as an artifact only**. Ubuntu and immutable built-payload
-proof remain open and cannot be promoted by this document.
+The pinned inventory, content-redacted repository scan, outbound-network inventory, and immutable built-payload verification are complete as local artifacts. The outbound-network SMALL-GAP is therefore closed **as an artifact only**. Only Ubuntu/install/runtime proof remains open.

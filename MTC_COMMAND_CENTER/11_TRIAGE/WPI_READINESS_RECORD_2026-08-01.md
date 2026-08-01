@@ -4,14 +4,15 @@
 - Work package: WP-I — Reproducible Deps, systemd, State, Rollback, Ubuntu Staging
 - Status: **PRE-GATE-A / STATIC ONLY**
 - Frozen source HEAD: `637307e83951ffe23e768ed8e50ddaf8712b0660`
+- Candidate release SHA: `1adf9ae51b0ddfe81057860aec5c23bb842f5a84`
+- Stable artifact path: `C:\WPI_ARTIFACTS\1adf9ae51b0ddfe81057860aec5c23bb842f5a84`
+- Built from clean `C:\WPL` using existing `package.sh`; RELEASE_SHA matched; RELEASE_SHA256SUMS SHA-256 `bfefea2f825c8ba8a4c2289cd6ed90c74b51b15bc603cd5589db8815493ced02`; `sha256sum -c` exited 0 for every entry.
+- 7,061 regular files and 1,051,904,669 bytes scanned.
+- After-build content-redacted path-hit counts: private_key_block=0, aws_access_key=0, github_token=0, slack_token=0, openai_token=0, anthropic_token=0, xai_token=0, telegram_bot_token=0, ethereum_private_key=0, TOTAL_CATEGORY_PATH_HITS=0; no value printed.
+- Candidate/path manifest and repository/payload scan: statically/local satisfied.
 - Overall readiness verdict: **BLOCK — NOT READY FOR FINAL GATE A**
 
-WP-I's bounded local/static documentation and validation are complete at this
-source, including the outbound-network SMALL-GAP artifact. The overall final
-Gate A request remains blocked by missing objective evidence named in the plan:
-there is no materialized candidate payload/path manifest at this frozen source
-and no named expendable Ubuntu 24.04 staging host is recorded. Neither fact may
-be invented inside this allowlist.
+Artifact evidence (payload path, manifest, RELEASE_SHA, after-build scan) is complete. The only remaining blocker is the unnamed/unreachable expendable Ubuntu 24.04 host.
 
 ## 1. Gate-1 classification and scope
 
@@ -57,14 +58,15 @@ remains post-Gate-A work on the retained authorised staging host.
 | Rollback procedure | **SATISFIED-STATIC** | `rollback.sh` requires state and release manifest hashes, stops/masks, preserves state, verifies exact rollback payload/venv, and never starts/enables/unmasks; focused rollback test passes | Execute and evidence rollback on staging; any recovery start remains separately gated |
 | Expendable staging lifecycle | **DOCUMENTED / NOT EXECUTED** | Plan section 18 and deployment `README.md` retain one Gate-A-authorised host through `WP-L Phase 2 — Ubuntu revalidation`, WP-I staging verification, and WP-A; discard follows evidence capture | Identify the named Ubuntu 24.04 host before final Gate A, then execute only after that gate |
 | Pinned/SBOM-equivalent inventory | **SATISFIED-STATIC** | `IBKR_PAPER_BRIDGE/deploy/linux/SECURITY_BASELINE.md` section 1 | Confirm exact installed inventory; a formal CycloneDX/SPDX SBOM is outside this minimum baseline |
-| Repository/payload secret scan | **PARTIAL-STATIC** | Content-redacted high-confidence scan of every non-binary tracked blob at the frozen HEAD returned zero category/path hits; tracked source is payload-equivalent because `package.sh` uses `git archive` | Build the immutable candidate payload, record its exact path/hash manifest, and scan that built artifact before final Gate A can be declared ready |
+| Repository/payload secret scan | **SATISFIED-STATIC / LOCAL ARTIFACT** | SHA `1adf9ae51b0ddfe81057860aec5c23bb842f5a84`; path `C:\WPI_ARTIFACTS\1adf9ae51b0ddfe81057860aec5c23bb842f5a84`; manifest hash `bfefea2f825c8ba8a4c2289cd6ed90c74b51b15bc603cd5589db8815493ced02`; 7061 files / 1051904669 bytes; zero hits | Only Ubuntu revalidation owed |
 | Outbound-network inventory | **SATISFIED-STATIC — SMALL-GAP CLOSED AS ARTIFACT ONLY** | `SECURITY_BASELINE.md` separates Hyperliquid TESTNET, optional Telegram, package-index installation, the local listener, mainnet, and unused settings | Capture actual Ubuntu DNS/HTTPS/WebSocket destinations; confirm no mainnet traffic and loopback-only bind |
 | No public surface / no mainnet / no order / no secret value | **SATISFIED-STATIC WITH TEST-ENV CAVEAT** | `app.py` binds `127.0.0.1:8790` and constructs only `network="testnet"`; no credential value was intentionally inspected, printed, copied into output, or persisted; earlier unsanitized pytest collection inherited settings variables and may have loaded their values into `Settings()` in memory; no disclosure was observed; fresh tests used credential-scrubbed child environments | Reconfirm on the authorised host; any public bind, mainnet attempt, order, or secret disclosure is BLOCK |
 
 ## 4. Reproduced local evidence
 
-Environment: Windows, Python 3.14.2. No Ubuntu or shell-script execution was
-performed.
+Environment: Windows, Python 3.14.2. Local `package.sh` execution produced the
+recorded immutable candidate; no Ubuntu, install, deployment, or runtime shell
+execution was performed.
 
 Focused deployment command:
 
@@ -116,6 +118,17 @@ hits. The targeted runtime source search returned
 TESTNET `https://api.hyperliquid-testnet.xyz` and the unselected mainnet base;
 the mainnet branch is forbidden in this program.
 
+Payload verification (read-only) observed RELEASE_SHA=1adf9ae51b0ddfe81057860aec5c23bb842f5a84, manifest hash bfefea2f825c8ba8a4c2289cd6ed90c74b51b15bc603cd5589db8815493ced02, sha256sum -c exit 0 on all 7,060 manifest entries (distinct from 7,061 scanned payload files), and nine zero category counts.
+
+```powershell
+$payload = 'C:\WPI_ARTIFACTS\1adf9ae51b0ddfe81057860aec5c23bb842f5a84'
+$releaseSha = (Get-Content -Raw -LiteralPath (Join-Path $payload 'RELEASE_SHA')).Trim()
+if ($releaseSha -ne '1adf9ae51b0ddfe81057860aec5c23bb842f5a84') { throw 'RELEASE_SHA mismatch' }
+$manifestHash = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $payload 'RELEASE_SHA256SUMS')).Hash.ToLower()
+if ($manifestHash -ne 'bfefea2f825c8ba8a4c2289cd6ed90c74b51b15bc603cd5589db8815493ced02') { throw 'manifest hash mismatch' }
+& 'C:\Program Files\Git\bin\bash.exe' -lc "cd '/c/WPI_ARTIFACTS/1adf9ae51b0ddfe81057860aec5c23bb842f5a84' && sha256sum -c RELEASE_SHA256SUMS >/dev/null" ; if ($LASTEXITCODE -ne 0) { throw 'sha256sum verify failed' }
+```
+
 Lead-provided broader focused result: **1 failed, 34 passed**. Its sole failure
 is the Windows CRLF working-copy hash of `ledger_schema.json` differing from the
 canonical Git blob; it is not classified as a WP-I defect and is not converted
@@ -130,12 +143,11 @@ objective item in the plan's PRE-STAGING checklist.
 
 | Missing objective prerequisite | Exact evidence | Disposition |
 |---|---|---|
-| Exact candidate release artifact path manifest | No materialized payload or recorded payload path/manifest hash exists at this frozen source. `COMMANDS.md` remains a command template without a resolved candidate payload path or manifest hash, and this work was forbidden from running `package.sh`. The source SHA alone is not the artifact-path manifest required by Gate A. | **BLOCK** until the Lead builds/identifies the immutable candidate locally, records its exact path and manifest SHA-256, and completes the after-build secret scan without exposing values |
-| Named expendable Ubuntu 24.04 staging host identified, not deployed | No host identity was supplied or found in the reviewed WP-0, plan, README, or COMMANDS evidence. Inventing a hostname, IP, user, or credential is forbidden. | **BLOCK** until the owner/Lead records the non-secret host identifier. Identification is not deployment and authorises no access or execution |
+| Named expendable Ubuntu 24.04 staging host identified, not deployed | No host identity was supplied or found in the reviewed WP-0, plan, README, or COMMANDS evidence. Inventing a hostname, IP, user, or credential is forbidden. The active KVM2 host is forbidden as a substitute. | **BLOCK** until the owner/Lead records the non-secret host identifier. Identification is not deployment and authorises no access or execution |
 
 Accordingly, the only honest verdict is **BLOCK — NOT READY FOR FINAL GATE A**.
 This verdict does not allege a WP-I code defect. It preserves the distinction
-between locally complete static preparation and the two missing gate inputs.
+between locally complete static preparation and the one missing gate input.
 Gate A itself would authorise only one named expendable Ubuntu staging action;
 it would not mean that staging, Ubuntu proof, or WP-A had already occurred.
 
