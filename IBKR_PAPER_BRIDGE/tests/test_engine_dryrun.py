@@ -1639,6 +1639,381 @@ def test_s3_r2_consumed_quantity_fault_clears_deferred_fill_cache(
     store.close()
 
 
+@pytest.mark.parametrize(
+    ("column", "value", "missing_identity"),
+    [
+        ("group_id", "dangling-episode", "episode"),
+        ("trade_id", "not-an-integer", "trade_id"),
+    ],
+)
+def test_s3_r3_invalid_durable_kill_identity_is_consumed_at_startup(
+    tmp_path, monkeypatch, column, value, missing_identity
+):
+    store, _broker, engine, _request, redelivered, trade_id, decision_uid = (
+        _s3_stranded_kill_restart(tmp_path, monkeypatch)
+    )
+    store.conn.execute(
+        f"UPDATE orders SET {column}=? WHERE cloid=?",
+        (value, redelivered.cloid),
+    )
+    store.conn.commit()
+    observer = Store(store.db_path)
+    observer.initialize(target_schema_version=9)
+    assert observer is not store
+    engine.order_manager._queue_event(redelivered)
+
+    async def start_probe_and_stop():
+        await engine.start(lookback=0)
+        status = engine.status()
+        with pytest.raises(RuntimeError, match="KILLED requires operator acknowledgement"):
+            await engine.arm()
+        with pytest.raises(RuntimeError, match="KILL_"):
+            await engine.acknowledge_kill()
+        await engine.stop()
+        return status
+
+    status = asyncio.run(start_probe_and_stop())
+
+    assert engine.reconcile_ready is True
+    assert engine.order_manager._queued_events == []
+    assert engine.order_manager._deferred_kill_fills == {}
+    assert engine.order_manager._synced_fills[redelivered.fill_id] == (
+        engine.order_manager._fill_delivery_identity(redelivered)
+    )
+    assert observer.get_trade(trade_id)["exit_ts"] is None
+    assert [
+        row
+        for row in observer.get_decision_chain(decision_uid)
+        if row["stage"] == "TRADE_CLOSED"
+    ] == []
+    identity_faults = [
+        row
+        for row in observer.get_events()
+        if row["code"] == "KILL_LIFECYCLE_IDENTITY_MISSING"
+    ]
+    assert len(identity_faults) == 1
+    assert f"missing={missing_identity}" in str(identity_faults[0]["detail"])
+    assert not [
+        row
+        for row in observer.get_events()
+        if row["code"] == "KILL_EPOCH_LIFECYCLE_DEFERRED"
+    ]
+    assert status["state"] == "KILLED"
+    assert status["deferred_event_queue_depth"] == 0
+    assert observer.get_meta("app_state") == "KILLED"
+    observer.close()
+    store.close()
+
+
+def _s3_schema_admitted_kill_fill(tmp_path, target_schema_version):
+    run_id = f"s3-r3-schema-v{target_schema_version}"
+    store = Store(tmp_path / f"schema-v{target_schema_version}.db")
+    store.initialize(target_schema_version=target_schema_version)
+    store.create_run(run_id, "dry_run", "testnet", {})
+    store.set_meta("app_state", "ARMED")
+    entry_ts = datetime.now(UTC) - timedelta(seconds=2)
+    decision_uid = f"s3-r3-entry-v{target_schema_version}"
+    store.insert_decision(
+        run_id, decision_uid, entry_ts, "BTC", "SIGNAL", {"direction": "LONG"}
+    )
+    trade_id = store.create_trade(
+        run_id=run_id,
+        coin="BTC",
+        direction="LONG",
+        qty=1.0,
+        entry_decision_uid=decision_uid,
+        signal_ts=entry_ts,
+        decision_ts=entry_ts,
+        expected_px=100.0,
+        risk_dollars=10.0,
+        risk_pct=0.01,
+        leverage=1,
+        sl_initial=90.0,
+        tp_initial=None,
+        llm_directive_id=None,
+    )
+    entry_cloid = f"s3-r3-entry-v{target_schema_version}"
+    store.insert_order(
+        cloid=entry_cloid,
+        oid=1,
+        group_id=decision_uid,
+        order_ref=f"{entry_cloid}:ENTRY",
+        order_json={"symbol": "BTC", "role": "ENTRY"},
+        decision_uid=decision_uid,
+        trade_id=trade_id,
+        role="ENTRY",
+        status="FILLED",
+        qty=1.0,
+        filled_qty=1.0,
+        ts_submit=entry_ts,
+        ts_last=entry_ts,
+    )
+    store.insert_fill(
+        f"s3-r3-entry-fill-v{target_schema_version}",
+        entry_cloid,
+        decision_uid,
+        entry_ts,
+        1.0,
+        100.0,
+        0.0,
+        0.0,
+    )
+    kill_cloid = f"s3-r3-kill-v{target_schema_version}"
+    store.insert_order(
+        cloid=kill_cloid,
+        oid=2,
+        group_id=f"s3-r3-episode-v{target_schema_version}",
+        order_ref=f"{kill_cloid}:KILL_FLATTEN",
+        order_json={"symbol": "BTC", "role": "KILL_FLATTEN"},
+        decision_uid=decision_uid,
+        trade_id=trade_id,
+        role="KILL_FLATTEN",
+        status="SUBMITTED",
+        qty=1.0,
+        filled_qty=0.0,
+        ts_submit=entry_ts,
+        ts_last=entry_ts,
+    )
+    broker = MockBroker(bars=[])
+    engine = BridgeEngine(
+        run_id=run_id,
+        broker=broker,
+        store=store,
+        strategy=KeltnerTrailEma8(),
+        risk_engine=RiskEngine(RiskConfig()),
+        state="ARMED",
+    )
+    redelivered = FillEvent(
+        fill_id=f"s3-r3-kill-fill-v{target_schema_version}",
+        cloid=kill_cloid,
+        coin="BTC",
+        qty=1.0,
+        px=99.0,
+        ts=datetime.now(UTC),
+        role="UNKNOWN",
+    )
+    return store, engine, redelivered, trade_id, decision_uid
+
+
+@pytest.mark.parametrize(
+    (
+        "target_schema_version",
+        "migrate_to_v9",
+        "expected_missing",
+        "expected_ack_failure",
+    ),
+    [
+        (4, False, "kill_schema", "KILL_SCHEMA_INACTIVE"),
+        (8, False, "kill_schema", "KILL_SCHEMA_INACTIVE"),
+        (8, True, "episode", "KILL_EVIDENCE_MISSING"),
+    ],
+)
+def test_s3_r3_schema_capability_and_preserved_v8_order_are_contained(
+    tmp_path,
+    target_schema_version,
+    migrate_to_v9,
+    expected_missing,
+    expected_ack_failure,
+):
+    store, engine, redelivered, trade_id, decision_uid = (
+        _s3_schema_admitted_kill_fill(tmp_path, target_schema_version)
+    )
+    if migrate_to_v9:
+        store.initialize(target_schema_version=9)
+        assert store.conn.execute("SELECT COUNT(*) FROM kill_requests").fetchone()[0] == 0
+    observer = Store(store.db_path)
+    observer.initialize(
+        target_schema_version=9 if migrate_to_v9 else target_schema_version
+    )
+    assert observer is not store
+    engine.order_manager._queue_event(redelivered)
+
+    async def start_probe_and_stop():
+        await engine.start(lookback=0)
+        status = engine.status()
+        with pytest.raises(RuntimeError, match="KILLED requires operator acknowledgement"):
+            await engine.arm()
+        with pytest.raises(RuntimeError, match=expected_ack_failure):
+            await engine.acknowledge_kill()
+        await engine.stop()
+        return status
+
+    status = asyncio.run(start_probe_and_stop())
+
+    assert engine.order_manager._queued_events == []
+    assert engine.order_manager._deferred_kill_fills == {}
+    assert redelivered.fill_id in engine.order_manager._synced_fills
+    assert observer.get_trade(trade_id)["exit_ts"] is None
+    assert [
+        row
+        for row in observer.get_decision_chain(decision_uid)
+        if row["stage"] == "TRADE_CLOSED"
+    ] == []
+    identity_faults = [
+        row
+        for row in observer.get_events()
+        if row["code"] == "KILL_LIFECYCLE_IDENTITY_MISSING"
+    ]
+    assert len(identity_faults) == 1
+    assert f"missing={expected_missing}" in str(identity_faults[0]["detail"])
+    assert status["state"] == "KILLED"
+    assert status["kill_episode"] is None
+    assert status["deferred_event_queue_depth"] == 0
+    assert observer.get_meta("app_state") == "KILLED"
+    observer.close()
+    store.close()
+
+
+def test_s3_r3_deferred_suppression_revalidates_identity_without_raising(
+    tmp_path, monkeypatch
+):
+    store, _broker, engine, _request, redelivered, trade_id, decision_uid = (
+        _s3_stranded_kill_restart(tmp_path, monkeypatch)
+    )
+    competitor = Store(store.db_path)
+    competitor.initialize(target_schema_version=9)
+    assert competitor is not store
+    engine.order_manager._queue_event(redelivered)
+    assert asyncio.run(engine.order_manager.drain_queued_events()) == 0
+    assert redelivered.fill_id in engine.order_manager._deferred_kill_fills
+
+    competitor.conn.execute(
+        "UPDATE orders SET trade_id=? WHERE cloid=?",
+        ("not-an-integer", redelivered.cloid),
+    )
+    competitor.conn.commit()
+
+    async def start_and_stop():
+        await engine.start(lookback=0)
+        await engine.stop()
+
+    asyncio.run(start_and_stop())
+
+    assert engine.order_manager._queued_events == []
+    assert engine.order_manager._deferred_kill_fills == {}
+    assert redelivered.fill_id in engine.order_manager._synced_fills
+    assert competitor.get_trade(trade_id)["exit_ts"] is None
+    assert [
+        row
+        for row in competitor.get_decision_chain(decision_uid)
+        if row["stage"] == "TRADE_CLOSED"
+    ] == []
+    identity_faults = [
+        row
+        for row in competitor.get_events()
+        if row["code"] == "KILL_LIFECYCLE_IDENTITY_MISSING"
+    ]
+    assert len(identity_faults) == 1
+    assert "missing=trade_id" in str(identity_faults[0]["detail"])
+    competitor.close()
+    store.close()
+
+
+@pytest.mark.parametrize(
+    ("mutation", "expected_missing"),
+    [("group_id", "group_id"), ("trade_row", "trade_row")],
+)
+def test_s3_r3_two_store_identity_invalidation_is_quarantined_not_raised(
+    tmp_path, monkeypatch, mutation, expected_missing
+):
+    store, _broker, engine, _request, redelivered, trade_id, decision_uid = (
+        _s3_stranded_kill_restart(tmp_path, monkeypatch)
+    )
+    competitor = Store(store.db_path)
+    competitor.initialize(target_schema_version=9)
+    assert competitor is not store
+    original_totals = store.trade_fill_totals
+    interleaved = []
+
+    def invalidate_binding_after_initial_validation(target_trade_id):
+        totals = original_totals(target_trade_id)
+        if not interleaved:
+            if mutation == "group_id":
+                competitor.conn.execute(
+                    "UPDATE orders SET group_id=NULL WHERE cloid=?",
+                    (redelivered.cloid,),
+                )
+            else:
+                competitor.conn.execute(
+                    "DELETE FROM trades WHERE trade_id=?", (trade_id,)
+                )
+            competitor.conn.commit()
+            interleaved.append(True)
+        return totals
+
+    monkeypatch.setattr(
+        store, "trade_fill_totals", invalidate_binding_after_initial_validation
+    )
+    engine.order_manager._queue_event(redelivered)
+
+    async def start_probe_and_stop():
+        await engine.start(lookback=0)
+        status = engine.status()
+        with pytest.raises(RuntimeError, match="KILLED requires operator acknowledgement"):
+            await engine.arm()
+        with pytest.raises(RuntimeError, match="KILL_"):
+            await engine.acknowledge_kill()
+        await engine.stop()
+        return status
+
+    status = asyncio.run(start_probe_and_stop())
+
+    assert interleaved, "the second Store must invalidate the binding after validation"
+    assert engine.order_manager._queued_events == []
+    assert engine.order_manager._deferred_kill_fills == {}
+    assert redelivered.fill_id in engine.order_manager._synced_fills
+    durable_trade = competitor.get_trade(trade_id)
+    assert durable_trade is None or durable_trade["exit_ts"] is None
+    assert [
+        row
+        for row in competitor.get_decision_chain(decision_uid)
+        if row["stage"] == "TRADE_CLOSED"
+    ] == []
+    identity_faults = [
+        row
+        for row in competitor.get_events()
+        if row["code"] == "KILL_LIFECYCLE_IDENTITY_MISSING"
+    ]
+    assert len(identity_faults) == 1
+    assert f"missing={expected_missing}" in str(identity_faults[0]["detail"])
+    assert not [
+        row
+        for row in competitor.get_events()
+        if row["code"] == "KILL_EPOCH_LIFECYCLE_DEFERRED"
+    ]
+    assert status["state"] == "KILLED"
+    assert status["deferred_event_queue_depth"] == 0
+    competitor.close()
+    store.close()
+
+
+def test_s3_r3_deferral_evidence_store_failure_still_propagates(
+    tmp_path, monkeypatch
+):
+    store, _broker, engine, _request, redelivered, _trade_id, _decision_uid = (
+        _s3_stranded_kill_restart(tmp_path, monkeypatch)
+    )
+    original_insert = store._insert_event_in_tx
+
+    def fail_deferral_append(run_id, ts, severity, code, detail):
+        if code == "KILL_EPOCH_LIFECYCLE_DEFERRED":
+            raise RuntimeError("injected deferral evidence-store failure")
+        return original_insert(run_id, ts, severity, code, detail)
+
+    monkeypatch.setattr(store, "_insert_event_in_tx", fail_deferral_append)
+    engine.order_manager._queue_event(redelivered)
+
+    with pytest.raises(KillConflictError) as failure:
+        asyncio.run(engine.start(lookback=0))
+
+    assert failure.value.reason_code == "KILL_LIFECYCLE_DEFERRAL_RECORD_FAILED"
+    assert engine.order_manager._queued_events == [redelivered]
+    assert engine.order_manager._deferred_kill_fills == {}
+    assert redelivered.fill_id not in engine.order_manager._synced_fills
+    assert store.get_meta("app_state") == "KILLED"
+    store.close()
+
+
 def test_s2_closure_stale_recovery_cannot_commit_after_epoch_invalidation(
     tmp_path, monkeypatch
 ):

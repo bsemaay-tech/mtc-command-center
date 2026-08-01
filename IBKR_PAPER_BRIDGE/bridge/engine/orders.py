@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 import math
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
 from bridge.broker.base import (
     Broker,
@@ -99,6 +99,10 @@ _LIVE_ORDER_STATUSES = frozenset({
     "PARTIALLY_FILLED",
     "PENDING_CANCEL",
 })
+
+_KILL_LIFECYCLE_DEFERRED = "DEFERRED"
+_KILL_LIFECYCLE_CONSUMED = "CONSUMED"
+_KILL_LIFECYCLE_UNBOUND = "UNBOUND"
 
 
 class SymbolLockNotHeld(RuntimeError):
@@ -2679,30 +2683,124 @@ class OrderManager:
                 pending.append(event)
         self._queued_events = pending
 
-    def _defer_kill_lifecycle_event(
-        self, event: BrokerEvent, *, reason_code: str
-    ) -> bool:
-        if not isinstance(event, FillEvent):
-            return False
-        order = self.store.get_order(event.cloid)
-        if (
-            order is None
-            or str(order.get("role")) != "KILL_FLATTEN"
-            or order.get("trade_id") is None
-            or not str(order.get("group_id") or "")
-        ):
-            return False
-        self.store.record_kill_lifecycle_deferral(
-            episode_id=str(order["group_id"]),
-            trade_id=int(order["trade_id"]),
-            fill_id=event.fill_id,
-            reason_code=reason_code,
+    @staticmethod
+    def _parse_store_trade_id(value: object) -> int | None:
+        """Return one exact integer identity without leaking conversion errors."""
+        if type(value) is int:
+            return value
+        if not isinstance(value, str):
+            return None
+        candidate = value.strip()
+        digits = candidate[1:] if candidate[:1] in {"+", "-"} else candidate
+        if not digits or not digits.isdecimal():
+            return None
+        try:
+            return int(candidate)
+        except (TypeError, ValueError, OverflowError):
+            return None
+
+    @staticmethod
+    def _store_float(value: object, reason_code: str) -> float:
+        """Parse one durable numeric value as a finite float or fail as evidence."""
+        try:
+            parsed = float(value)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise LotQuantizationError(reason_code) from exc
+        if not math.isfinite(parsed):
+            raise LotQuantizationError(reason_code)
+        return parsed
+
+    def _kill_lifecycle_identity(
+        self, order: Mapping[str, Any] | None
+    ) -> tuple[
+        tuple[str, int] | None,
+        Mapping[str, Any] | None,
+        tuple[str, ...],
+    ]:
+        """Validate the full durable identity required by the deferral store."""
+        if order is None or str(order.get("role")) != "KILL_FLATTEN":
+            return None, None, ()
+        missing_identity: list[str] = []
+        episode_id = str(order.get("group_id") or "")
+        if not episode_id:
+            missing_identity.append("group_id")
+        trade_id = self._parse_store_trade_id(order.get("trade_id"))
+        trade = self.store.get_trade(trade_id) if trade_id is not None else None
+        if trade_id is None:
+            missing_identity.append("trade_id")
+        elif trade is None:
+            missing_identity.append("trade_row")
+        if not self.store.kill_evidence_enabled():
+            missing_identity.append("kill_schema")
+        elif episode_id and self.store.get_kill_request(episode_id) is None:
+            missing_identity.append("episode")
+        if missing_identity:
+            return None, trade, tuple(missing_identity)
+        return (episode_id, trade_id), trade, ()
+
+    def _quarantine_kill_lifecycle_identity(
+        self, fill: FillEvent, missing_identity: Sequence[str]
+    ) -> None:
+        """Persist the identity fault while retaining the durable KILL latch."""
+        self.kill_latched = True
+        self.store.set_meta("app_state", "KILLED")
+        self.store.insert_event(
+            self.run_id,
+            fill.ts,
+            "ERROR",
+            "KILL_LIFECYCLE_IDENTITY_MISSING",
+            f"fill_id={fill.fill_id} cloid={fill.cloid} "
+            f"missing={','.join(missing_identity)}",
         )
+
+    def _defer_kill_lifecycle_event(
+        self,
+        event: BrokerEvent,
+        *,
+        reason_code: str,
+        identity: tuple[str, int] | None = None,
+    ) -> Literal["DEFERRED", "CONSUMED", "UNBOUND"]:
+        if not isinstance(event, FillEvent):
+            return _KILL_LIFECYCLE_UNBOUND
+        resolved_identity = identity
+        if resolved_identity is None:
+            order = self.store.get_order(event.cloid)
+            resolved_identity, _trade, missing_identity = (
+                self._kill_lifecycle_identity(order)
+            )
+            if missing_identity:
+                self._quarantine_kill_lifecycle_identity(event, missing_identity)
+                self._mark_fill_consumed(event)
+                return _KILL_LIFECYCLE_CONSUMED
+            if resolved_identity is None:
+                return _KILL_LIFECYCLE_UNBOUND
+        episode_id, trade_id = resolved_identity
+        try:
+            self.store.record_kill_lifecycle_deferral(
+                episode_id=episode_id,
+                trade_id=trade_id,
+                fill_id=event.fill_id,
+                reason_code=reason_code,
+            )
+        except KillConflictError as exc:
+            if exc.reason_code != "KILL_LIFECYCLE_IDENTITY_MISSING":
+                raise
+            # A second Store may invalidate the order/request binding after the
+            # first validation. That ordinary identity race is quarantined;
+            # evidence-store write failures remain uncontained and propagate.
+            _identity, _trade, missing_identity = self._kill_lifecycle_identity(
+                self.store.get_order(event.cloid)
+            )
+            self._quarantine_kill_lifecycle_identity(
+                event, missing_identity or ("episode",)
+            )
+            self._mark_fill_consumed(event)
+            return _KILL_LIFECYCLE_CONSUMED
         self._deferred_kill_fills[event.fill_id] = (
             self._active_kill_epoch,
             self._fill_delivery_identity(event),
         )
-        return True
+        return _KILL_LIFECYCLE_DEFERRED
 
     def _ingest_queued_event(self, event: BrokerEvent) -> bool:
         if isinstance(event, FillEvent):
@@ -2712,15 +2810,20 @@ class OrderManager:
                 self._fill_delivery_identity(event),
             ):
                 order = self.store.get_order(event.cloid)
-                trade = (
-                    self.store.get_trade(int(order["trade_id"]))
-                    if order is not None
-                    and str(order.get("role")) == "KILL_FLATTEN"
-                    and order.get("trade_id") is not None
-                    and str(order.get("group_id") or "")
-                    else None
+                identity, trade, missing_identity = self._kill_lifecycle_identity(
+                    order
                 )
-                if trade is not None and trade.get("exit_ts") is None:
+                if missing_identity:
+                    self._quarantine_kill_lifecycle_identity(
+                        event, missing_identity
+                    )
+                    self._mark_fill_consumed(event)
+                    return True
+                if (
+                    identity is not None
+                    and trade is not None
+                    and trade.get("exit_ts") is None
+                ):
                     return False
         try:
             return self._ingest_event(event)
@@ -2732,10 +2835,13 @@ class OrderManager:
                 "KILL_EPOCH_STALE_WRITE",
             }:
                 raise
-            if self._defer_kill_lifecycle_event(
+            disposition = self._defer_kill_lifecycle_event(
                 event, reason_code=exc.reason_code
-            ):
+            )
+            if disposition == _KILL_LIFECYCLE_DEFERRED:
                 return False
+            if disposition == _KILL_LIFECYCLE_CONSUMED:
+                return True
             raise
 
     def _canonical_status(
@@ -3119,24 +3225,27 @@ class OrderManager:
         if order is None:
             return False
         role = str(order["role"])
-        trade_id = order["trade_id"]
-        trade = self.store.get_trade(int(trade_id)) if trade_id is not None else None
+        raw_trade_id = order["trade_id"]
+        trade_id = self._parse_store_trade_id(raw_trade_id)
+        kill_identity: tuple[str, int] | None = None
         if role == "KILL_FLATTEN":
-            missing_identity = []
-            if not str(order.get("group_id") or ""):
-                missing_identity.append("group_id")
-            if trade_id is None:
-                missing_identity.append("trade_id")
-            elif trade is None:
-                missing_identity.append("trade_row")
+            kill_identity, trade, missing_identity = (
+                self._kill_lifecycle_identity(order)
+            )
             if missing_identity:
+                self._quarantine_kill_lifecycle_identity(fill, missing_identity)
+                self._mark_fill_consumed(fill)
+                return True
+        else:
+            if raw_trade_id is not None and trade_id is None:
                 self._quarantine_fill(
-                    "KILL_LIFECYCLE_IDENTITY_MISSING",
+                    "FILL_TRADE_ID_INVALID",
                     fill,
-                    f"cloid={fill.cloid} missing={','.join(missing_identity)}",
+                    f"cloid={fill.cloid} role={role}",
                 )
                 self._mark_fill_consumed(fill)
                 return True
+            trade = self.store.get_trade(trade_id) if trade_id is not None else None
         kill_close_alias = (
             role == "KILL_FLATTEN"
             and str(fill.role).upper() in {"CLOSE", "KILL_FLATTEN"}
@@ -3183,7 +3292,17 @@ class OrderManager:
         # Cumulative order accounting: an order becomes FILLED only when its
         # persisted fills reach the ordered quantity; a partial fill keeps the
         # current status so pending/grace logic still sees a live order.
-        order_filled_qty, order_vwap = self.store.order_fill_totals(fill.cloid)
+        try:
+            order_filled_qty, order_vwap = self.store.order_fill_totals(fill.cloid)
+        except (InvalidOperation, TypeError, ValueError, OverflowError):
+            self._quantity_integrity_fault(
+                symbol=str(fill.coin),
+                observed_ts=fill.ts,
+                detail=f"fill_id={fill.fill_id} cloid={fill.cloid} "
+                "reason=ORDER_FILL_TOTAL_INVALID",
+            )
+            self._mark_fill_consumed(fill)
+            return True
         lot = self._broker_lot_unit(str(fill.coin))
         if lot is None:
             self._quantity_integrity_fault(
@@ -3196,7 +3315,9 @@ class OrderManager:
             return True
         try:
             event_lots = quantize_lots(fill.qty, lot)
-            ordered_lots = quantize_lots(float(order["qty"]), lot)
+            ordered_lots = quantize_lots(
+                self._store_float(order["qty"], "ORDER_QUANTITY_INVALID"), lot
+            )
             filled_lots = quantize_lots(order_filled_qty, lot)
             if event_lots <= 0:
                 raise LotQuantizationError("NON_POSITIVE_FILL_QUANTITY")
@@ -3234,10 +3355,39 @@ class OrderManager:
             ts_last=fill.ts,
         )
         if trade_id is not None and role == "ENTRY":
-            totals = self.store.trade_fill_totals(int(trade_id))
-            if totals["entry_qty"] > 0 and totals["entry_vwap"] is not None:
+            try:
+                totals = self.store.trade_fill_totals(trade_id)
+                entry_total_qty = self._store_float(
+                    totals["entry_qty"], "TRADE_ENTRY_QUANTITY_INVALID"
+                )
+                entry_vwap = (
+                    self._store_float(
+                        totals["entry_vwap"], "TRADE_ENTRY_PRICE_INVALID"
+                    )
+                    if entry_total_qty > 0 and totals["entry_vwap"] is not None
+                    else None
+                )
+            except (
+                InvalidOperation,
+                TypeError,
+                ValueError,
+                OverflowError,
+                LotQuantizationError,
+            ) as exc:
+                reason_code = getattr(
+                    exc, "reason_code", "TRADE_FILL_TOTAL_INVALID"
+                )
+                self._quantity_integrity_fault(
+                    symbol=str(fill.coin),
+                    observed_ts=fill.ts,
+                    detail=f"fill_id={fill.fill_id} trade_id={trade_id} "
+                    f"reason={reason_code}",
+                )
+                self._mark_fill_consumed(fill)
+                return True
+            if entry_vwap is not None:
                 self.store.update_trade_entry(
-                    int(trade_id), float(totals["entry_vwap"]), str(totals["entry_first_ts"])
+                    trade_id, entry_vwap, str(totals["entry_first_ts"])
                 )
             self._observe_entry_fill(order, order_filled_qty)
         elif trade_id is not None and role in {
@@ -3247,25 +3397,47 @@ class OrderManager:
             "CLOSE",
             "KILL_FLATTEN",
         }:
-            trade = self.store.get_trade(int(trade_id))
+            if role != "KILL_FLATTEN":
+                trade = self.store.get_trade(trade_id)
             if trade is not None:
-                totals = self.store.trade_fill_totals(int(trade_id))
-                exit_qty = float(totals["exit_qty"])
-                if totals["entry_qty"] > 0 and totals["entry_vwap"] is not None:
-                    entry_qty = float(totals["entry_qty"])
-                    entry_px = float(totals["entry_vwap"])
-                else:
-                    entry_qty = float(trade["qty"])
-                    entry_px = float(trade["entry_px"] or trade["expected_px"])
                 try:
+                    totals = self.store.trade_fill_totals(trade_id)
+                    exit_qty = self._store_float(
+                        totals["exit_qty"], "TRADE_EXIT_QUANTITY_INVALID"
+                    )
+                    entry_total_qty = self._store_float(
+                        totals["entry_qty"], "TRADE_ENTRY_QUANTITY_INVALID"
+                    )
+                    if entry_total_qty > 0 and totals["entry_vwap"] is not None:
+                        entry_qty = entry_total_qty
+                        entry_px = self._store_float(
+                            totals["entry_vwap"], "TRADE_ENTRY_PRICE_INVALID"
+                        )
+                    else:
+                        entry_qty = self._store_float(
+                            trade["qty"], "TRADE_ENTRY_QUANTITY_INVALID"
+                        )
+                        entry_px = self._store_float(
+                            trade["entry_px"] or trade["expected_px"],
+                            "TRADE_ENTRY_PRICE_INVALID",
+                        )
                     entry_lots = quantize_lots(entry_qty, lot)
                     exit_lots = quantize_lots(exit_qty, lot)
-                except LotQuantizationError as exc:
+                except (
+                    InvalidOperation,
+                    TypeError,
+                    ValueError,
+                    OverflowError,
+                    LotQuantizationError,
+                ) as exc:
+                    reason_code = getattr(
+                        exc, "reason_code", "TRADE_FILL_TOTAL_INVALID"
+                    )
                     self._quantity_integrity_fault(
                         symbol=str(fill.coin),
                         observed_ts=fill.ts,
                         detail=f"fill_id={fill.fill_id} trade_id={trade_id} "
-                        f"reason={exc.reason_code}",
+                        f"reason={reason_code}",
                     )
                     self._mark_fill_consumed(fill)
                     return True
@@ -3281,7 +3453,7 @@ class OrderManager:
                 if exit_lots == entry_lots:
                     try:
                         live_entry_remainder = self._has_live_entry_remainder_exact(
-                            int(trade_id), lot
+                            trade_id, lot
                         )
                     except LotQuantizationError as exc:
                         self._quantity_integrity_fault(
@@ -3306,7 +3478,7 @@ class OrderManager:
                                     "entry_qty": entry_qty,
                                     "entry_remainder_live": True,
                                 },
-                                trade_id=int(trade_id),
+                                trade_id=trade_id,
                             )
                             self._quarantine_fill(
                                 "ENTRY_REMAINDER_LIVE",
@@ -3315,15 +3487,36 @@ class OrderManager:
                             )
                         self._mark_fill_consumed(fill)
                         return True
-                    exit_vwap = float(totals["exit_vwap"])
-                    costs = self.store.trade_costs(str(order["decision_uid"]))
-                    gross, pnl = self.store._canonical_trade_close_values(
-                        direction=str(trade["direction"]),
-                        entry_qty=entry_qty,
-                        entry_px=entry_px,
-                        exit_px=exit_vwap,
-                        costs=costs,
-                    )
+                    try:
+                        exit_vwap = self._store_float(
+                            totals["exit_vwap"], "TRADE_EXIT_PRICE_INVALID"
+                        )
+                        costs = self.store.trade_costs(str(order["decision_uid"]))
+                        gross, pnl = self.store._canonical_trade_close_values(
+                            direction=str(trade["direction"]),
+                            entry_qty=entry_qty,
+                            entry_px=entry_px,
+                            exit_px=exit_vwap,
+                            costs=costs,
+                        )
+                    except (
+                        InvalidOperation,
+                        TypeError,
+                        ValueError,
+                        OverflowError,
+                        LotQuantizationError,
+                    ) as exc:
+                        reason_code = getattr(
+                            exc, "reason_code", "TRADE_CLOSE_VALUE_INVALID"
+                        )
+                        self._quantity_integrity_fault(
+                            symbol=str(fill.coin),
+                            observed_ts=fill.ts,
+                            detail=f"fill_id={fill.fill_id} trade_id={trade_id} "
+                            f"reason={reason_code}",
+                        )
+                        self._mark_fill_consumed(fill)
+                        return True
                     close_epoch = (
                         self._active_kill_epoch
                         if role == "KILL_FLATTEN"
@@ -3334,15 +3527,14 @@ class OrderManager:
                         # the event queued so a later epoch-owning kill recovery
                         # can close the lifecycle; the Store independently
                         # rejects every direct unowned KILL_FLATTEN close.
-                        if not self._defer_kill_lifecycle_event(
-                            fill, reason_code="KILL_EPOCH_REQUIRED"
-                        ):
-                            raise RuntimeError(
-                                "KILL_LIFECYCLE_DEFERRAL_IDENTITY_MISSING"
-                            )
-                        return False
+                        disposition = self._defer_kill_lifecycle_event(
+                            fill,
+                            reason_code="KILL_EPOCH_REQUIRED",
+                            identity=kill_identity,
+                        )
+                        return disposition == _KILL_LIFECYCLE_CONSUMED
                     closed = self.store.close_trade_once_with_decision(
-                        trade_id=int(trade_id),
+                        trade_id=trade_id,
                         run_id=self.run_id,
                         decision_uid=str(order["decision_uid"]),
                         coin=str(trade["coin"]),
@@ -3375,7 +3567,7 @@ class OrderManager:
                         trade["coin"],
                         "TRADE_PARTIAL_EXIT",
                         {"exit_reason": role, "exit_qty": exit_qty, "entry_qty": entry_qty},
-                        trade_id=int(trade_id),
+                        trade_id=trade_id,
                     )
         self._mark_fill_consumed(fill)
         return True
@@ -3392,9 +3584,14 @@ class OrderManager:
                 "PENDING_CANCEL",
             }:
                 continue
-            filled_qty, _ = self.store.order_fill_totals(str(order["cloid"]))
+            try:
+                filled_qty, _ = self.store.order_fill_totals(str(order["cloid"]))
+            except (InvalidOperation, TypeError, ValueError, OverflowError) as exc:
+                raise LotQuantizationError("ORDER_FILL_TOTAL_INVALID") from exc
             filled_lots = quantize_lots(filled_qty, lot)
-            ordered_lots = quantize_lots(float(order["qty"]), lot)
+            ordered_lots = quantize_lots(
+                self._store_float(order["qty"], "ORDER_QUANTITY_INVALID"), lot
+            )
             if filled_lots < ordered_lots:
                 return True
         return False

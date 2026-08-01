@@ -182,17 +182,22 @@ episode/trade/fill/reason. Failure to append the evidence is raised and remains 
 Both the global reconcile drain and the same-symbol locked drain use an exhaustive containment
 allowlist: only `KILL_EPOCH_REQUIRED` and `KILL_EPOCH_STALE_WRITE` from a durably bound
 KILL-flatten fill may be deferred. Every other `KillConflictError`, including evidence-append and
-schema failures, propagates fail-closed. Other exception classes and a listed conflict that cannot
-be bound to that lifecycle also propagate. Direct store callers still receive the conflict after
-the rejected lifecycle transaction rolls back and EP-4 evidence is appended. Once a drain has
-deferred an unchanged fill under the same absent or stale epoch context, later cycles retain it
-without repeating the rejected store call; a newly opened epoch or a durable trade closure changes
-that context and permits the retry.
+unexpected schema-store failures, propagates fail-closed. Other exception classes and a listed
+conflict that cannot be identified as a KILL lifecycle also propagate. Direct store callers still
+receive the conflict after the rejected lifecycle transaction rolls back and EP-4 evidence is
+appended. Once a drain has deferred an unchanged fill under the same absent or stale epoch context,
+later cycles retain it without repeating the rejected store call; a newly opened epoch or a durable
+trade closure changes that context and permits the retry.
 
-A schema-admitted `KILL_FLATTEN` order missing its episode, trade identity, or durable trade row is
-quarantined as `KILL_LIFECYCLE_IDENTITY_MISSING` and keeps the application fail-closed without
-unwinding startup or silently disappearing. Every path that consumes a deferred fill also evicts
-its deferred-cache entry.
+A schema-admitted `KILL_FLATTEN` order is quarantined as
+`KILL_LIFECYCLE_IDENTITY_MISSING` when its group, integer trade identity, durable trade row, or
+durably bound `kill_requests.episode_id` is missing. The same containment applies when the healthy
+store is on an inactive pre-v9 kill schema: that is an admitted capability mismatch, not an
+evidence-store outage. The fill is consumed, its queue and deferred-cache entries are cleared, the
+durable application state remains `KILLED`, and startup returns normally with the fault visible in
+status and events. A second-Store invalidation between validation and the `BEGIN IMMEDIATE` binding
+check is classified and quarantined the same way. Evidence-store write failures, including
+`KILL_STALE_EVIDENCE_RECORD_FAILED` and a failed quarantine/deferral append, still propagate.
 
 The status payload exposes `kill_episode.lifecycle_state = AWAITING_EPOCH_RECOVERY` while the
 active episode still needs recovery, `AWAITING_ACK` once it is safe and ACK-eligible, and

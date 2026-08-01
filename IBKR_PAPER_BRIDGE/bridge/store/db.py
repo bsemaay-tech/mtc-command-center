@@ -5159,9 +5159,11 @@ class Store:
                 """SELECT r.run_id
                    FROM kill_requests AS r
                    JOIN orders AS o
-                     ON o.group_id=r.episode_id
-                    AND o.role='KILL_FLATTEN'
-                    AND o.trade_id=?
+                      ON o.group_id=r.episode_id
+                     AND o.role='KILL_FLATTEN'
+                     AND o.trade_id=?
+                   JOIN trades AS t
+                     ON t.trade_id=o.trade_id
                    JOIN fills AS f
                      ON f.cloid=o.cloid
                     AND f.fill_id=?
@@ -5169,7 +5171,11 @@ class Store:
                 (int(trade_id), safe_fill, safe_episode),
             ).fetchone()
             if identity is None:
-                raise LookupError("durable KILL lifecycle identity is missing")
+                raise KillConflictError(
+                    "KILL_LIFECYCLE_IDENTITY_MISSING",
+                    "durable KILL lifecycle identity is missing",
+                    cause_reason_code=safe_reason,
+                )
             existing = self.conn.execute(
                 """SELECT 1 FROM events
                    WHERE run_id=? AND code=? AND detail=?
@@ -5191,6 +5197,11 @@ class Store:
             self.conn.commit()
         except Exception as exc:
             self.conn.rollback()
+            if (
+                isinstance(exc, KillConflictError)
+                and exc.reason_code == "KILL_LIFECYCLE_IDENTITY_MISSING"
+            ):
+                raise
             raise KillConflictError(
                 "KILL_LIFECYCLE_DEFERRAL_RECORD_FAILED",
                 f"deferral evidence append failed: {type(exc).__name__}",
