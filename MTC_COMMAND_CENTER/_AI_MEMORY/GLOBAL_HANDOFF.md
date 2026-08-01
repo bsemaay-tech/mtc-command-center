@@ -81,11 +81,53 @@ identically on the `origin/master` Bridge tree, are pre-existing, and are outsid
 - **F-0-2** — both S2 blockers were reproduced by the Lead on real source before any dispatch, not
   taken from a report.
 
-### CURRENT WORK — S3-STRUCT, authorised 2026-08-01 (D027)
+### CURRENT WORK — S3-STRUCT **STOPPED AT THE ROUND BOUND 2026-08-01. OWNER DECISION NEEDED.**
 
-**Start here: `11_TRIAGE/WPS_S3_STRUCTURAL_CYCLE_HANDOFF_2026-08-01.md`.** It is written as a
-standalone handoff — Gate-1 scope, allowlist, exact CLI recipe, ten operational hazards, funding
-position, and definition of done.
+**Start here: `11_TRIAGE/WPS_S3STRUCT_HARD_STOP_2026-08-01.md`** — three rounds, every finding, what
+the boundary achieved, the safety position, and the recommendation. The original scope document is
+`11_TRIAGE/WPS_S3_STRUCTURAL_CYCLE_HANDOFF_2026-08-01.md` (Gate-1 scope, allowlist, CLI recipe, ten
+operational hazards, funding position).
+
+**Three non-accepting rounds are spent; no fourth was started.** Branch
+`feature/ts-p1-009b-s2-closure` is at `dffbaf41`, pushed. `origin/master` untouched at `2ebb0475`.
+Nothing merged, nothing deployed, no broker/network/ARM/TESTNET action at any point.
+
+| Round | SHA | Suite (Lead-verified) | Verdict |
+|---|---|---|---|
+| 1 | `34d35286` | 2F / 1262P | REQUEST_CHANGES (`gpt-5.6-sol`) |
+| 2 | `216682ba` | 2F / 1266P | REQUEST_CHANGES (both flagships, 3 findings) |
+| 3 | `dffbaf41` | 2F / 1297P | REQUEST_CHANGES (both flagships, same defect, independent reproductions) |
+
+**What the cycle achieved — do not rebuild it.** One registry-driven boundary
+(`DurableRowAccessor` / `ValidatedDurableRow` / `DURABLE_EVENT_ROWS` over
+`DURABLE_EVENT_COLUMN_TYPES`), routed by store methods returning lazy validated row views; both
+legacy helpers deleted; `DurableColumnContract(value_type, nullable)` with all ten declarations
+verified against their writers; class-C join intact with the epoch fence; `DEFERRED` contained. **Both
+flagships confirm no unrouted durable read of a registered column survives on the queued-event
+reachable set** — the thing three earlier rounds never achieved. Suite 1140 → 1297 passing.
+
+**The blocking defect.** Round 3 made `DurableRowFault` a `ValueError` subclass to fix the store-side
+contracts, which also hands it to the pre-existing engine-side quantity-integrity handlers
+(`orders.py:3375/3444/3495/3569/3674` → `_quantity_integrity_fault`), landing **`DISARMED` instead of
+`KILLED` with ARM reachable**. At `216682ba` the same fault was a `RuntimeError`, was not caught
+there, and reached the drain → `KILLED`, ARM refused. **This is the first defect in the programme that
+fails open**, so `dffbaf41` must NOT merge — it is less safe than its predecessor on a reachable path.
+`216682ba` must not merge either (round-2 findings).
+
+**Twice this cycle a green matrix proved nothing** — round 2's `UPDATE trades SET entry_px=100.0`
+masked the state every trade starts in, and round 3's fixture starts already `KILLED` so
+`assert app_state == "KILLED"` cannot fail on this defect. Treat "the generated matrix passes" as
+weak evidence unless the assertion can fail.
+
+**S2 remains ACCEPTED at `0c65a731` and is unaffected.** All S3 work is unmerged on a feature branch.
+The unfixed defects need a corrupted durable database; no exposure, no unowned kill close, no
+weakened S2 guarantee.
+
+**Owner decision needed** — recommendation is one bounded round scoped to round-3 R-1 alone (a
+routing fix plus a *discriminating* matrix assertion), with two honest alternatives in §7 of the hard
+stop. Also needs owner action: refresh `ZAI_GLM_CODING_PLAN_KEY` in Windows Credential Manager —
+auditor 4's route (`Invoke-GlmAudit.ps1` → `glm.ps1` → Z.AI, **not** Cline) ran and returned
+`401 token expired or incorrect`.
 
 Three items: **S3T-A** a validated accessor boundary over durable `orders`/`fills`/`trades` reads
 that returns a containable fault instead of raising; **S3T-B** a close path that re-derives, inside
