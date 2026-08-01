@@ -217,6 +217,54 @@ audits, and a 15-minute timeout that killed a DeepSeek audit mid-run.
 - **GLM-5.2's route is unconfirmed on this machine.** Under D025 rule 1 its absence is recorded as a
   gap, never treated as acceptance.
 
+## 10a. Second flagship verdict — both flagships non-accepting, and one finding is worse than liveness
+
+Codex `gpt-5.6-sol` xhigh (re-dispatched with the reframed prompt; **zero content-filter hits**)
+returned **REQUEST_CHANGES with three required findings, no optional ones**. Both flagship auditors
+are therefore non-accepting, independently, on the same frozen commit.
+
+| Codex finding | Relation to §3 |
+|---|---|
+| 3 — `insert_fill` converts existing `qty`/`px` with bare `float()` on the duplicate path | **Same defect as R-1**, found independently by both flagships |
+| 1 — `_parse_store_trade_id` is exception-total but not range-safe: a Unicode-decimal string above `2^63-1` parses in Python and then raises `OverflowError` when sqlite3 binds it; `_ingest_queued_event` catches only `KillConflictError`, so both drains unwind `start()` without quarantine evidence | Same class as R-2 — the parser was made total against *type*, not against the *storage boundary* it feeds |
+| 2 — **late binding loss can still authorise an active-epoch close** | **New, and more serious than any liveness fault** |
+
+### Codex finding 2 — the close path never re-binds the trade to the episode
+
+With active epoch A: Store 1 validates a `KILL_FLATTEN` order bound to episode A / trade T; Store 2
+then clears or changes `orders.group_id`; Store 1 continues down the active-epoch branch and **closes
+T and writes `TRADE_CLOSED`, with no identity quarantine**.
+
+`close_trade_once_with_decision` fences the *epoch* — `_assert_kill_epoch_in_tx` plus
+`AND EXISTS (SELECT 1 FROM kill_requests WHERE episode_id=? AND epoch_token=?)` — but that predicate
+proves only that the epoch token is current. **Lead-verified by direct source read: the fenced
+`UPDATE` contains no join back to `orders`,** so nothing confirms the trade being closed is still
+bound to the active episode. That is the missing sixth close-path predicate.
+
+Codex also identifies why the round-3 test suite did not catch it: the new two-`Store` test at
+`test_engine_dryrun.py:1916` runs with **no active epoch**, so it proves the deferral store's
+`BEGIN IMMEDIATE` binding check contains the race — it never exercises the close path at all.
+
+This matters more than R-1/R-2 because it is a **correctness** gap rather than a startup-liveness
+gap: it sits in B2's territory, the property S2 was accepted for. It does not invalidate the
+accepted S2 artifact `0c65a731` — the defect is reachable only through S3's own identity-validation
+path, which does not exist at `0c65a731` — but it must be closed before any S3 artifact is accepted.
+
+### Effect on §8's options
+
+Option 2 ("one more narrow round on R-1 and R-2") is now materially weaker: there are **five**
+required findings across the two flagships, spanning three distinct classes — unguarded conversion,
+storage-boundary range safety, and a missing close-path binding predicate. Option 1's structural fix
+addresses the first two directly; the third needs the close path to re-derive its binding rather
+than trusting a validation performed earlier in the call. **The Lead recommendation of option 1 is
+unchanged and strengthened.**
+
+### Auditor 3 (DeepSeek V4 Flash) and auditor 4 (GLM-5.2)
+
+DeepSeek V4 Flash was still executing when this record was written; its verdict will be appended and
+cannot change the outcome, since both flagships have already refused. GLM-5.2's route remains
+unconfirmed on this machine and is recorded as a gap, never as acceptance, per D025 rule 1.
+
 ## 11. Safety statement
 
 No implementation outside the frozen allowlist. No risk threshold invented or changed. No
