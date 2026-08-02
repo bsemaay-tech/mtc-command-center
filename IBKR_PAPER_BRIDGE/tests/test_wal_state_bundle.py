@@ -7,10 +7,12 @@ runtime, no C:\\P2RT, no service, no network.
 from __future__ import annotations
 
 import json
+import shutil
 import sqlite3
 import threading
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -227,6 +229,20 @@ def test_manifest_records_online_backup_and_both_ends_integrity(source_db, bundl
     assert snapshot["before"]["db"]["sha256"] == m["source"]["db_sha256"]
 
 
+def test_connect_readonly_reads_schema_before_returning(source_db):
+    wal_path = source_db.with_name(source_db.name + "-wal")
+    shm_path = source_db.with_name(source_db.name + "-shm")
+    assert not wal_path.exists()
+    assert not shm_path.exists()
+
+    conn = wal._connect_readonly(source_db)
+    try:
+        assert wal_path.exists()
+        assert shm_path.exists()
+    finally:
+        conn.close()
+
+
 def test_stable_wal_source_without_arrival_sidecars_is_not_reported_as_drift(
     source_db, bundle_dir, capsys, monkeypatch
 ):
@@ -244,11 +260,15 @@ def test_stable_wal_source_without_arrival_sidecars_is_not_reported_as_drift(
     def connect_with_delayed_attach(database, *args, **kwargs):
         conn = real_connect(database, *args, **kwargs)
         if str(database) == source_uri:
-            conn.set_trace_callback(
-                lambda statement: main_db_read.__setitem__("started", True)
-                if statement.strip().upper() != "SELECT 1"
-                else None
-            )
+            def authorizer(action, table, _column, _database, _trigger):
+                if action == sqlite3.SQLITE_READ and table in {
+                    "sqlite_master",
+                    "sqlite_schema",
+                }:
+                    main_db_read["started"] = True
+                return sqlite3.SQLITE_OK
+
+            conn.set_authorizer(authorizer)
         return conn
 
     def snapshot_with_delayed_sidecars(source):
@@ -271,7 +291,12 @@ def test_stable_wal_source_without_arrival_sidecars_is_not_reported_as_drift(
             }
         return result
 
-    monkeypatch.setattr(wal.sqlite3, "connect", connect_with_delayed_attach)
+    sqlite3_shim = SimpleNamespace(
+        connect=connect_with_delayed_attach,
+        Error=sqlite3.Error,
+        Row=sqlite3.Row,
+    )
+    monkeypatch.setattr(wal, "sqlite3", sqlite3_shim)
     monkeypatch.setattr(wal, "_source_snapshot", snapshot_with_delayed_sidecars)
 
     rc, report = create(source_db, bundle_dir, capsys)
@@ -284,6 +309,41 @@ def test_stable_wal_source_without_arrival_sidecars_is_not_reported_as_drift(
     assert capture["before"]["shm"]["present"] is True
     assert capture["changed_components"] == []
     assert capture["invariants_changed"] is False
+
+
+def test_hot_wal_without_shm_is_rejected_before_connecting(
+    tmp_path, bundle_dir
+):
+    live_db = tmp_path / "live" / "bridge.db"
+    store = Store(live_db)
+    _seed(store)
+    live_wal = live_db.with_name(live_db.name + "-wal")
+    live_shm = live_db.with_name(live_db.name + "-shm")
+    crashed_db = tmp_path / "crashed" / "bridge.db"
+    crashed_db.parent.mkdir(parents=True)
+    crashed_wal = crashed_db.with_name(crashed_db.name + "-wal")
+    crashed_shm = crashed_db.with_name(crashed_db.name + "-shm")
+
+    try:
+        assert live_wal.stat().st_size > 0
+        assert live_shm.is_file()
+        shutil.copy2(live_db, crashed_db)
+        shutil.copy2(live_wal, crashed_wal)
+        assert crashed_wal.stat().st_size > 0
+        assert not crashed_shm.exists()
+
+        with pytest.raises(wal.BundleError) as exc_info:
+            wal.create_bundle(crashed_db, bundle_dir, timestamp=TS)
+
+        assert str(exc_info.value) == (
+            "source database has a hot WAL without -shm and cannot be opened "
+            "read-only; recover it under separate authorization first"
+        )
+        assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
+        assert not (bundle_dir / wal.MANIFEST_NAME).exists()
+        assert not crashed_shm.exists()
+    finally:
+        store.close()
 
 
 def test_capture_drift_ignores_arrival_to_before_shm_only_change():
@@ -378,7 +438,9 @@ def test_invariants_preserve_risk_and_history(source_db, bundle_dir, capsys):
     inv = read_manifest(bundle_dir)["invariants"]
 
     assert inv["app_state"] == "DISARMED"
-    assert inv["schema_version"] == "2"
+    # The merged TS-P1 chain moved the operational baseline from v2 to v4;
+    # this assertion was never updated with Store.initialize()'s default.
+    assert inv["schema_version"] == "4"
     assert inv["open_trades"] == 1
     assert inv["live_orders"] == 1
     assert inv["closed_trades"] == 3

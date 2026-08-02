@@ -219,6 +219,13 @@ def _connect_readonly(path: Path) -> sqlite3.Connection:
     here; recovering it needs a read-write connection and therefore a separate
     owner authorization — it is never done silently by this tool.
     """
+    wal = path.with_name(path.name + "-wal")
+    shm = path.with_name(path.name + "-shm")
+    if wal.is_file() and not shm.is_file():
+        raise BundleError(
+            "source database has a hot WAL without -shm and cannot be opened "
+            "read-only; recover it under separate authorization first"
+        )
     try:
         uri = f"{path.resolve().as_uri()}?mode=ro"
     except ValueError as exc:  # pragma: no cover - defensive
@@ -229,10 +236,8 @@ def _connect_readonly(path: Path) -> sqlite3.Connection:
         # SELECT may not attach the WAL, so its sidecars could otherwise be
         # materialised later by our own integrity check and misreported as
         # source-writer drift.
-        conn.execute("SELECT name FROM sqlite_schema LIMIT 1").fetchone()
+        conn.execute("SELECT name FROM sqlite_master LIMIT 1").fetchone()
     except sqlite3.Error as exc:
-        wal = path.with_name(path.name + "-wal")
-        shm = path.with_name(path.name + "-shm")
         if wal.is_file() and not shm.is_file():
             raise BundleError(
                 "source database has a hot WAL without -shm and cannot be opened "
