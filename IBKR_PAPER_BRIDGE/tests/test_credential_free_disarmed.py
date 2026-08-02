@@ -157,10 +157,12 @@ def test_ordinary_credentialed_runtime_still_uses_existing_broker_path(
         built.append((root, dry_run))
         return broker_marker
 
+    monkeypatch.setenv(_START_MODE_ENV_VAR, _CREDENTIAL_FREE_DISARMED)
     monkeypatch.setattr(bridge_app, "_build_broker", build_broker)
     app = bridge_app.create_app(
         store_path=tmp_path / "ordinary.db",
         start_runtime=True,
+        start_mode=_CREDENTIALED,
     )
     try:
         assert len(built) == 1
@@ -192,11 +194,12 @@ def test_invalid_explicit_start_mode_fails_before_broker_selection(
             start_mode="disarmed-ish",
         )
 
-    monkeypatch.setenv(_START_MODE_ENV_VAR, "disarmed-ish")
-    with pytest.raises(ValueError, match=_START_MODE_ENV_VAR):
-        bridge_app.create_app(
-            store_path=tmp_path / "invalid-environment.db",
-            start_runtime=True,
-        )
+    for invalid_environment in ("", "disarmed-ish"):
+        monkeypatch.setenv(_START_MODE_ENV_VAR, invalid_environment)
+        with pytest.raises(ValueError, match=_START_MODE_ENV_VAR):
+            bridge_app.create_app(
+                store_path=tmp_path / "invalid-environment.db",
+                start_runtime=True,
+            )
 
     assert broker_calls == []
