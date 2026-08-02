@@ -147,6 +147,30 @@ are **not** addressed by this repair and are correctly out of its scope:
 - 2 `test_order_state.py` gc-referents — defect 3a, Python 3.12 vs 3.14
 - the `schema_version == "2"` case
 
+### 3.5 No Windows regression
+
+Validating only on Linux would have been half the job. The full suite was re-run on Windows
+(Python 3.14) from the fix branch worktree:
+
+```
+2 failed, 1304 passed, 1 warning in 134.16s
+```
+
+**Exactly the recorded floor.** The repair changes nothing for Windows.
+
+It also names the two known failures precisely, which the programme had only described loosely:
+
+```
+FAILED tests/test_linux_deployment.py::test_canonical_ledger_and_all_three_row_fixtures_validate
+FAILED tests/test_wal_state_bundle.py::test_invariants_preserve_risk_and_history
+```
+
+And it confirms the scope warning the `gpt-5.6-sol` audit raised: **the ledger test still fails on
+Windows.** The `package.sh` fix cures the *payload*, not the Windows *working copy*, which
+`core.autocrlf=true` still checks out as CRLF. Curing that would need an `.gitattributes` `eol=lf`
+decision — deliberately out of scope here, because that decision interacts with defect 4 and belongs
+to the owner. So on Linux the ledger test passes; on Windows it does not.
+
 ## 4. What this does NOT do
 
 - **Does not repair defect 3a or 3b.** The Linux floor is still 25, not 2. `wal_state_bundle` remains
