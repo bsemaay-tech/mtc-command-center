@@ -79,18 +79,44 @@ arrival -> before  changed: ['wal', 'shm']
 before  -> after   changed: []                <- no drift reported
 ```
 
-The sidecars are materialised at **different points** on the two stacks. The carve-out in
-`_capture_changed_components()` (lines ~491-500, plus the `component in {"db","wal"}` restriction at
-line ~507 that excludes `shm` from the arrival→before comparison) tolerates **only** the
-materialise-at-connect ordering. It was evidently written against observed Windows behaviour and
-encodes it as an assumption.
+The sidecars are materialised at **different points** on the two stacks.
+
+### CORRECTION 2026-08-03 — the probe above did not isolate `connect()`
+
+The Windows row was originally read as *"the sidecars are materialised at `connect()`"*. **That is
+wrong**, and an independent `claude-opus-5` xhigh Gate 5 audit of `f1ac2565` falsified it by
+measuring the step the probe above skipped:
+
+```
+Windows / py3.14.2 / SQLite 3.50.4
+  (wal, shm) after connect()                       = (False, False)
+  (wal, shm) after SELECT 1                        = (True,  True)
+  (wal, shm) after SELECT name FROM sqlite_master  = (True,  True)
+```
+
+The probe measured `connect()` **and** `SELECT 1` together and attributed the result to `connect()`.
+The real distinction is:
+
+| Stack | WAL attaches on | Falls |
+|---|---|---|
+| Windows / SQLite 3.50.4 | the **first statement of any kind**, including a constant `SELECT 1` | inside `_connect_readonly`, *before* the bracket opens |
+| Linux / SQLite 3.45.1 | the first statement that **reads a table** | at `_integrity_check`, *after* the bracket opens |
+
+So on Windows the tool's own attach already landed in the arrival→before window, where the existing
+carve-out handles it. On Linux it landed inside the measured window. The conclusion and the repair
+are unchanged — a table-reading statement in `_connect_readonly` attaches on both — but the stated
+reason was wrong and would mislead the next reader.
+
+The commit message of `f1ac2565` carries the same error ("observed on Windows … at connect time").
+It is recorded here rather than rewritten, because the commit is pushed.
 
 ### Honest limit on this evidence
 
 The two stacks differ in OS **and** in Python/SQLite version. This establishes that the two
-configurations behave differently; it does **not** isolate the OS as the cause. The repair is
-therefore required to be correct for either ordering and is forbidden from branching on
-`sys.platform`.
+configurations behave differently; it does **not** isolate the OS as the cause — and given the
+correction above, the SQLite version is at least as likely to be the operative difference as the
+kernel. The repair is therefore required to be correct for either ordering and is forbidden from
+branching on `sys.platform`.
 
 This also means the earlier framing — *"SQLite's sidecar files are necessarily touched on Linux by
 opening a WAL-mode database"* — was directionally right about the symptom but asserted a cause that
