@@ -116,8 +116,24 @@ Still broken after it, by design: defects **3a, 3b and 4**. The Linux floor is 2
 `wal_state_bundle` (the Stage E cutover tool) is still broken on Linux; and A-4 is still
 unexecutable, so the ARM-refusal path remains untested.
 
-**Before merging:** it needs a Gate 5 audit at the canonical floor. Codex implemented it, so Codex
-cannot be one of its auditors this round.
+**Before merging — and there is a roster problem you should know about.** Gate 5 in the two-tier
+sense is satisfied: Codex implemented, the Lead (`claude-opus-5`) independently audited the shell
+correctness and validated it end-to-end on both platforms. But `AGENTS.md`'s acceptance floor demands
+**both flagship auditors accepting**, and for *this* diff that floor cannot be met:
+
+- `gpt-5.6-sol` **wrote** it — it cannot audit its own work.
+- `claude-opus-5` is the Lead that audited it — a fresh session is possible but it is the same model.
+- Auditor 4 (GLM-5.2) is **401-blocked**; auditor 3 (`deepseek-v4-flash`) has never once returned a
+  verdict in four dispatches.
+
+So there is no path to the canonical two-flagship floor for this branch as it stands. Your options:
+have Claude re-implement it independently so Codex can audit, accept a single-flagship verdict as a
+deliberate waiver (as was done for WP-I), or fix the GLM route first. **The Lead did not choose** —
+it is an acceptance-standard question, which is yours.
+
+No audit was spent on it overnight, deliberately: a single verdict could not complete the floor
+anyway, and the repair is already backed by end-to-end evidence on both platforms including a
+falsification test.
 
 ## 5. Required repair (steps 1-3 DONE on the branch above; the rest outstanding)
 

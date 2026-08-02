@@ -27,6 +27,22 @@ verdict **REQUEST_CHANGES**) was commissioned to falsify the Lead's findings. It
 CRLF root-cause attribution, corrected two overstatements, and identified defect 5. All findings were
 reproduced on real source and applied. The A-2 FAIL is unaffected.
 
+### Defects 1, 2 and 5 are already fixed and validated
+
+Branch **`codex/gate-a-build-determinism` @ `a1dd5b46`** — pushed, **not merged**. Codex implemented,
+Lead audited and validated. Record: `11_TRIAGE/GATE_A_REPAIR_VALIDATION_2026-08-02.md`.
+
+Two files, three hunks. Build is now deterministic (same `RELEASE_SHA` → identical manifest
+`d25d4464…` under different `core.autocrlf` settings). The new CR guard was **falsified deliberately**
+and does fail. The fixed payload **installs on Ubuntu unaided** — `install.sh` EXIT=0, venv sealed,
+unit masked, `verify.sh` VERIFY PASS, no host file edited. `test_linux_deployment.py`: **34 passed, 0
+failed** (was 4 failed). Windows floor **unchanged at 2 failed, 1304 passed** — no regression.
+
+**Acceptance is blocked by a roster problem**, not by the code: `gpt-5.6-sol` wrote it,
+`claude-opus-5` audited it, GLM-5.2 is 401-blocked and DeepSeek has never returned a verdict — so the
+two-flagship floor cannot be met for this branch. That is an owner decision, and the Lead did not
+take it.
+
 ### Anchors — the candidate artifact is dead
 
 `1adf9ae51b0ddfe81057860aec5c23bb842f5a84` / manifest `bfefea2f…ced02` **must be rebuilt.** A
