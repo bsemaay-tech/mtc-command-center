@@ -1,5 +1,18 @@
 # NEXT_STEPS
 
+## GATE A CONTINUOUS-PROGRESS OWNER WAIVER — 3B ACCEPTED (2026-08-03)
+
+- **[AI: Codex] DONE — 3B SOURCE CANDIDATE:** `7aad0377106c7bb1ebcf79990051806d2e6ce0d7`
+  accepted under Barış's explicit waiver of the unavailable-Claude roster dependency. Evidence:
+  `11_TRIAGE/GATE_A_3B_SHM_VALIDATION_ACCEPTANCE_2026-08-03.md`.
+- **[AI: Codex] NEXT — BUILD:** repair the two reproduced `c5a4070a` test defects, prove D026 and
+  Windows/Linux evidence, freeze, independently audit, and publish only after acceptance.
+- **[AI: Codex] THEN — QUEUE C:** repair the public-factory environment fail-open behavior and the
+  vacuous broker-absence assertion on `5a9bb922`, then D026/platform/audit closure.
+- **[AI: Any] HOLD:** no Queue D, integration, artifact rebuild, Gate A rerun, master merge,
+  deployment, service/runtime, credentials, broker, ARM, orders, TESTNET/mainnet, Pine/parity/MTC
+  trading change, wallet, or economic action.
+
 ## GLM SUPPLEMENTAL ROUTING POLICY — IMPLEMENTED 2026-07-27
 
 Policy codified in `AGENTS.md` §GLM SUPPLEMENTAL ROUTING (canonical, do not copy table elsewhere). Cross-references added to all required files. Stale `claude-opus-4-8` → `claude-opus-5` fixed in `SPRINT_WORKFLOW.md`.

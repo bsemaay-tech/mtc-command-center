@@ -1,5 +1,19 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-08-03 — Gate A defect 3b accepted under explicit no-Claude owner waiver
+
+Barış explicitly waived the unavailable-Claude roster dependency and directed Codex to continue with
+self/alternative-model audits without pausing. Frozen product commit `7aad0377106c7bb1ebcf79990051806d2e6ce0d7`
+is **ACCEPTED for source-candidate purposes** on independent Codex xhigh PASS, executing GLM-5.2
+PASS-WITH-NITS, D026 `9 RED -> 9 GREEN`, Windows `1 failed, 1338 passed` versus exact-parent
+`1 failed, 1309 passed`, and locked Linux `2 failed, 1337 passed` versus exact-parent
+`2 failed, 1308 passed`. Fresh 2026-08-03 module recheck: 74/74 on Windows and locked Linux.
+
+Canonical record: `11_TRIAGE/GATE_A_3B_SHM_VALIDATION_ACCEPTANCE_2026-08-03.md`. Feature-branch
+publication only; no integration, artifact rebuild, Gate A rerun, deployment, runtime, credential,
+broker, ARM, order, TESTNET/mainnet, Pine/parity/MTC/trading, or economic action is authorized.
+Next: repair and re-audit build `c5a4070a`, then Queue C `5a9bb922`; Queue D remains stopped.
+
 ## [Claude Opus 5] 2026-07-30 — 50-Hour Plan documentation repair/audit cycle ACCEPTED
 
 Owner-authorized documentation-only repair + audit cycle on `09_DOCS/ROADMAPS/TRADING_SYSTEM/TRADING SYSTEM — 50-HOUR ACCELERATED IMPLEMENTATION PLAN.md`. **ACCEPTED** — both canonical audits returned PASS-WITH-NITS with zero required repairs. Baseline `87a25792` (owner-supplied hash verified) → **final `a07c90cc49a4f34910f82bd9c94ba4fb71d76b511bc2cabe0bd727faf57fe3ee`** (1879 lines). Roles: Claude `claude-opus-5` Lead/acceptance, Codex CLI `gpt-5.6-sol` sole document implementer, canonical auditors Claude `claude-opus-5` xhigh (fresh) + Codex `gpt-5.6-sol` xhigh (ephemeral read-only), DeepSeek CLI read-only supplemental. Two non-accepting rounds used of three permitted.
