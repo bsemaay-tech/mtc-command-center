@@ -29,6 +29,29 @@ def test_start_mode_requires_explicit_selection() -> None:
     ) == _CREDENTIAL_FREE_DISARMED
 
 
+def test_create_app_honors_environment_mode_before_broker_selection(
+    tmp_path, monkeypatch
+) -> None:
+    broker_calls: list[bool] = []
+
+    def build_broker(_root, dry_run):
+        broker_calls.append(dry_run)
+        return object()
+
+    monkeypatch.setenv(_START_MODE_ENV_VAR, _CREDENTIAL_FREE_DISARMED)
+    monkeypatch.setattr(bridge_app, "_build_broker", build_broker)
+    app = bridge_app.create_app(
+        store_path=tmp_path / "environment-mode.db",
+        start_runtime=True,
+    )
+    try:
+        assert app.state.credential_free_disarmed is True
+        assert app.state.bridge_engine is None
+        assert broker_calls == []
+    finally:
+        _close_store(app)
+
+
 def test_credential_free_runtime_skips_credentials_registry_and_broker(
     tmp_path, monkeypatch
 ) -> None:
@@ -61,7 +84,7 @@ def test_credential_free_runtime_skips_credentials_registry_and_broker(
     )
     try:
         assert app.state.bridge_engine is None
-        assert not hasattr(app.state, "bridge_broker")
+        assert app.state.credential_free_disarmed is True
         with TestClient(app) as client:
             assert client.get("/api/status").status_code == 200
     finally:
@@ -167,6 +190,13 @@ def test_invalid_explicit_start_mode_fails_before_broker_selection(
             store_path=tmp_path / "invalid.db",
             start_runtime=True,
             start_mode="disarmed-ish",
+        )
+
+    monkeypatch.setenv(_START_MODE_ENV_VAR, "disarmed-ish")
+    with pytest.raises(ValueError, match=_START_MODE_ENV_VAR):
+        bridge_app.create_app(
+            store_path=tmp_path / "invalid-environment.db",
+            start_runtime=True,
         )
 
     assert broker_calls == []

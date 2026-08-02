@@ -105,10 +105,10 @@ def create_app(
     store_path: str | Path | None = None,
     start_runtime: bool = False,
     broker=None,
-    start_mode: str = CREDENTIALED_START_MODE,
+    start_mode: str | None = None,
 ) -> FastAPI:
-    """Build an import-safe FastAPI app without exchange or LLM calls."""
-    start_mode = resolve_start_mode(cli_value=start_mode, env={})
+    """Build an import-safe FastAPI app, resolving start mode from arg then env."""
+    start_mode = resolve_start_mode(cli_value=start_mode)
     credential_free_disarmed = start_mode == CREDENTIAL_FREE_DISARMED_START_MODE
     if credential_free_disarmed and dry_run:
         raise ValueError("credential-free DISARMED start mode cannot use --dry-run")
