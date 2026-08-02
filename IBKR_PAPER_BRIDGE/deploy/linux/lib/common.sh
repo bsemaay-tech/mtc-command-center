@@ -95,7 +95,7 @@ assert_mode_owner() {
 assert_no_writable_paths() {
   # The release tree must carry no write bit for anyone.
   local root="$1" offenders
-  offenders="$(find "$root" -perm /222 -print -quit 2>/dev/null || true)"
+  offenders="$(find "$root" \( -type f -o -type d \) -perm /222 -print -quit 2>/dev/null || true)"
   if [ -n "$offenders" ]; then
     fail "writable path inside immutable release: $offenders"; return 1
   fi

@@ -71,7 +71,8 @@ fi
 mkdir -p "${OUT}"
 
 log "exporting ${RELEASE_SHA} via git archive"
-git -C "${REPO}" archive --format=tar "${RELEASE_SHA}" | tar -x -C "${OUT}"
+git -c core.autocrlf=false -c core.eol=lf -C "${REPO}" \
+  archive --format=tar "${RELEASE_SHA}" | tar -x -C "${OUT}"
 
 printf '%s\n' "${RELEASE_SHA}" > "${OUT}/RELEASE_SHA"
 
@@ -79,6 +80,21 @@ MTC_FAILURES=0
 assert_regular_directory_tree "${OUT}" || true
 [ "${MTC_FAILURES}" -eq 0 ] \
   || die "archive contains a symlink or special filesystem entry"
+
+log "verifying LF-only payload files contain no CR bytes"
+while IFS= read -r -d '' payload_file; do
+  if LC_ALL=C grep -qU $'\r' "${payload_file}"; then
+    die "archive contains CR byte in LF-required file: ${payload_file#"${OUT}/"}"
+  else
+    grep_status="$?"
+    [ "${grep_status}" -eq 1 ] \
+      || die "cannot inspect LF-required file for CR bytes: ${payload_file#"${OUT}/"}"
+  fi
+done < <(
+  find "${OUT}" -type f \
+    \( -path "${OUT}/IBKR_PAPER_BRIDGE/deploy/linux/*" -o -name '*.sh' \) \
+    -print0
+)
 
 log "generating RELEASE_SHA256SUMS"
 ( cd "${OUT}" \
