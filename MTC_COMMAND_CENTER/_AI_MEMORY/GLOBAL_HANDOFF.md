@@ -1,5 +1,15 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-08-02 — temporary Lead takeover during Claude quota window
+
+**RESUME HERE:** `11_TRIAGE/CODEX_TAKEOVER_HANDOFF_2026-08-02.md` is the standalone Codex app
+takeover prompt. Owner-authorized temporary roster: Codex app Lead, isolated secondary-account Codex
+CLI implementer, exact GLM-5.2 executing cross-model auditor. Build repair round 2 is already running
+in `C:\GATEAFIX`; do not start another writer there. Then adjudicate 3b `df00634f`, dispatch the
+approved credential-free DISARMED start repair, integrate once, rebuild once, and rerun Gate A from
+A-0 on `GATEA-STAGING`. Temporary verdicts must be labelled and receive fresh Claude Opus 5 xhigh
+retrospective audit when quota returns. DISARMED only; KVM2 remains untouched.
+
 ## [Claude Opus 5] 2026-08-02 — Gate A EXECUTED and FAILED at A-2; WP-I candidate must be rebuilt
 
 **RESUME HERE.** Full standalone handoff: `11_TRIAGE/NEXT_SESSION_HANDOFF_2026-08-03.md`.

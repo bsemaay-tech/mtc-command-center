@@ -1,5 +1,18 @@
 # NEXT_STEPS
 
+## CODEX TAKEOVER — CLAUDE QUOTA WINDOW (2026-08-02)
+
+- **[AI: Codex] START HERE:** `11_TRIAGE/CODEX_TAKEOVER_HANDOFF_2026-08-02.md`.
+- **[AI: Codex] ACTIVE:** collect the already-running build repair round 2 in `C:\GATEAFIX`; no
+  concurrent writer. Independently audit actual diff/evidence, then exact GLM-5.2 executing audit.
+- **[AI: Codex] NEXT:** adjudicate defect 3b at `df00634f`, then implement the owner-approved explicit
+  credential-free DISARMED start mode, integrate accepted commits, rebuild once, and Gate A from A-0.
+- **[AI: Any] TEMPORARY ROSTER:** Codex app Lead + isolated secondary Codex CLI implementer + GLM-5.2
+  cross-model auditor. Mark temporary acceptance honestly; fresh Claude Opus 5 xhigh retrospective
+  audit is owed when quota returns.
+- **[AI: Any] HOLD:** no master merge during the temporary window; no KVM2/WP-V, credentials, broker
+  connection, TESTNET, mainnet, ARM transition, order, or live-capital action.
+
 ## AI ACCOUNT / PROVIDER ROUTING — INSTALLED (2026-08-02)
 
 - **[AI: Any] USE:** canonical secret-free index `AI_ACCOUNT_AND_MODEL_ROUTING.md` for Codex account homes and GLM, Cline, DeepSeek, Grok/xAI, and NVIDIA NIM routes; re-check all usage figures live.
