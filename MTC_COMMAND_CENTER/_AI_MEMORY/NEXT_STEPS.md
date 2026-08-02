@@ -1,5 +1,11 @@
 # NEXT_STEPS
 
+## AI ACCOUNT / PROVIDER ROUTING — INSTALLED (2026-08-02)
+
+- **[AI: Any] USE:** canonical secret-free index `AI_ACCOUNT_AND_MODEL_ROUTING.md` for Codex account homes and GLM, Cline, DeepSeek, Grok/xAI, and NVIDIA NIM routes; re-check all usage figures live.
+- **[AI: Claude] MANDATORY:** launch Codex only through `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-CodexForClaude.ps1`; default `secondary` keeps `C:\Users\BarışSemaay\.codex` reserved for the Codex desktop app.
+- **[AI: Barış] OPTIONAL/PENDING:** complete device authorization for the isolated `fourth` route (`C:\Users\BarışSemaay\.codex-bsemaay`) when useful. It was still unauthenticated and at 0% until its 2026-08-08 reset at this handoff.
+
 ## 50-HOUR DISARMED SAFETY MVP — WP-L/WP-I LOCAL ACCEPTED; GATE A HOST-BLOCKED (2026-08-01)
 
 **START HERE:** `11_TRIAGE/WPI_CANDIDATE_ACCEPTANCE_RECORD_2026-08-01.md` — local/static WP-I candidate evidence accepted. Then `_AI_MEMORY/GLOBAL_HANDOFF.md` RESUME HERE. Acceptance scope is owner-continuity / Claude-waiver local/static WP-I candidate evidence only.
