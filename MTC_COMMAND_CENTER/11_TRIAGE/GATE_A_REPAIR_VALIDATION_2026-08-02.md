@@ -187,3 +187,51 @@ No ARM, no order, no broker connection, no TESTNET, no mainnet, no wallet action
 value. The env file was created empty (`0600 root:root`, zero definitions) and never populated;
 `HL_LIVE_ACK` never set. The service was never started. All work confined to the disposable
 `GATEA-STAGING` VM. KVM2 untouched.
+
+## 6. Codex takeover — build repair round 2 closure
+
+The temporary Codex Lead collected the exited implementer's two-file result, independently reviewed
+the actual diff, reproduced its tests on the target stack, and froze the candidate as:
+
+- branch: `codex/gate-a-build-determinism`
+- candidate: `c5a4070a4836bbb9ee010dc63db69313066667c4`
+- pushed: yes; branch and origin matched `0 0`
+- changed by round 2: `deploy/linux/package.sh` and `tests/test_linux_deployment.py`
+- complete branch scope from `origin/master`: those two files plus the previously accepted
+  `deploy/linux/lib/common.sh`
+
+Lead execution on `GATEA-STAGING` (Ubuntu 24.04, Python 3.12.3, SQLite 3.45.1):
+
+- `bash -n`: PASS for `package.sh` and `lib/common.sh`
+- focused deployment file: **46 passed, 0 failed**
+- D026 candidate GREEN: **7 passed**
+- D026 deliberate mutations: all seven guards turned RED with pytest exit 1 — writable FIFO,
+  missing-root fail-open, disabled CR guard at a metacharacter output path, locale-dependent
+  manifest collation, unpinned `tar.umask`, bypassed export-inventory comparison, and late EXIT
+  trap leaking partial `mktemp` allocations
+- full Linux floor: **25 failed, 1293 passed, 1 warning** across 1,318 tests; failures were only the
+  known 23-test defect-3b cascade plus two Python-3.12 `order_state` GC-referent cases
+- full Windows Python 3.14.2 floor: **2 failed, 1316 passed, 1 warning**; exactly the known ledger
+  working-copy CRLF and stale schema-version assertions
+
+Audit disposition:
+
+- round-2 GLM execution exceeded the 15-minute wrapper ceiling before returning a verdict and was
+  classified **BLOCK** under D025; its orphaned child exited and its exact scratch was absent
+- fresh isolated secondary-account Codex `gpt-5.6-sol` xhigh was supplemental only and returned
+  **BLOCK** because the managed sandbox downgraded to read-only and rejected Git/Hyper-V commands;
+  it executed no acceptance tests and raised no product finding
+- final permitted round-3 GLM-5.2 executing audit returned **PASS** on the frozen SHA after
+  independently reproducing 46/46 GREEN, all seven behavioral RED mutations, the exact
+  25/1293/1 Linux floor, hashes, Bash syntax, local cleanliness, and exact scratch removal
+
+**Acceptance provenance:**
+
+`TEMPORARY OWNER-AUTHORIZED CODEX+GLM ACCEPTED — CLAUDE RETROSPECTIVE AUDIT OWED`
+
+This accepts the build branch only. It is not a Gate A pass, is not merged to `master`, and does
+not authorize KVM2. A fresh `claude-opus-5` xhigh retrospective audit of frozen
+`c5a4070a4836bbb9ee010dc63db69313066667c4` remains mandatory before any master merge or KVM2 action.
+
+Safety remained DISARMED and source/test-only. No service, deployment, credential lookup/value,
+broker connection, ARM, order, TESTNET, mainnet, wallet, KVM2, or economic action occurred.

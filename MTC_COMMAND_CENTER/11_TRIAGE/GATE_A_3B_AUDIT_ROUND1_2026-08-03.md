@@ -95,3 +95,40 @@ wallet action, no credential value. No service started. No installer, verifier, 
 firewall command run. Work confined to a throwaway copy on the disposable staging VM; the `~/payload`
 and `~/fixpay` evidence trees were restored and re-verified against the manifest. KVM2 untouched;
 `KVM2-Ubuntu-2404-Staging` remains powered off and quarantined.
+
+## 7. Codex takeover — `df00634f` evidence and three-result hard stop
+
+The temporary Codex Lead independently inspected frozen candidate
+`df00634fc2e5fb19cddb34a6ad16d9764c4779a4` and reproduced strong product evidence on
+`GATEA-STAGING`:
+
+- focused `tests/test_wal_state_bundle.py`: **45 passed**
+- real crashed-writer source: non-empty WAL, no SHM; rejected with `connect_calls=0`, no created
+  SHM, no bundle database, and no manifest
+- genuine concurrent-writer detector: **10/10** separate passes
+- exact `SELECT 2` mutation: both attachment guards RED; whole file restored **25 failed,
+  20 passed**
+- complete locked Bridge suite: **2 failed, 1308 passed, 1 warning**; only the two known
+  Python-3.12 `order_state` GC-referent failures remained
+- bundle `SCHEMA_VERSION`, `MANIFEST_NAME`, and `BUNDLE_DB_NAME` unchanged
+
+That evidence does **not** override D025's executing-auditor requirement:
+
+1. The first takeover GLM session printed PASS, but the Lead classified it **BLOCK** because it
+   created a new venv instead of using the locked interpreter, omitted the 1,310-test floor and raw
+   command ledger, used `SELECT 1` instead of the mandated `SELECT 2`, and did not prove five
+   independent concurrent repetitions.
+2. A fresh GLM retry returned explicit **BLOCK** because the Windows argument route truncated the
+   quoted mutation instruction before the model received it. It completed focused/hot-WAL/concurrent
+   checks but could not execute D026 or the full floor as specified.
+3. Counting the documented `f1ac2565` non-accepting Gate-5 result plus these two non-accepting
+   executing-audit attempts reaches the branch's maximum-three-result ceiling.
+
+**HARD STOP:** no fourth 3b audit or repair round was launched. Candidate `df00634f` remains pushed,
+clean, and **not accepted**. Integration and Gate A rebuild remain blocked on 3b. Reopening requires
+an owner-directed new cycle or the required retrospective flagship path; the temporary Lead did not
+silently waive the ceiling.
+
+Safety remained read-only and DISARMED. All exact Lead/GLM scratch roots were validated and removed.
+No service, deployment, credential, broker, ARM, order, TESTNET, mainnet, wallet, KVM2, or economic
+action occurred.

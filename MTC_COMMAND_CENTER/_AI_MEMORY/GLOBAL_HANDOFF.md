@@ -1,5 +1,29 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-08-02 - Gate A takeover: build accepted; defect 3b hard-stopped
+
+**Current result:** build-determinism candidate
+`c5a4070a4836bbb9ee010dc63db69313066667c4` is pushed and accepted under the exact provenance
+label `TEMPORARY OWNER-AUTHORIZED CODEX+GLM ACCEPTED - CLAUDE RETROSPECTIVE AUDIT OWED`.
+Lead reproduced 46 focused GREEN tests, all seven D026 RED mutations, the exact Linux
+`25 failed, 1293 passed, 1 warning` floor, and the Windows
+`2 failed, 1316 passed, 1 warning` floor. The final permitted GLM-5.2 audit independently executed
+the same evidence and returned PASS. This is build-branch acceptance only: it is not merged, is not
+a Gate A pass, and requires fresh `claude-opus-5` xhigh retrospective audit before master or KVM2.
+
+**Defect 3b:** frozen candidate `df00634fc2e5fb19cddb34a6ad16d9764c4779a4` has strong Lead
+evidence, including a real hot-WAL/no-SHM rejection, 10/10 concurrent-writer runs, exact `SELECT 2`
+RED mutation, and a `2 failed, 1308 passed, 1 warning` locked-runtime floor. It is nevertheless
+**not accepted**: the documented non-accepting audit plus two takeover audit failures reached the
+maximum-three-result ceiling. No fourth round was launched. Reopening requires an owner-directed
+new cycle or the required retrospective flagship route.
+
+**NEXT:** Queue C may proceed independently only while the temporary owner-authorized roster is
+still active: implement and audit the explicit credential-free, truthful DISARMED start mode with
+zero broker/network/credential construction and D026 RED/GREEN proof. Queue D integration, rebuild,
+Gate A rerun, master merge, KVM2, credentials, broker connection, ARM, orders, TESTNET, mainnet, and
+economic action remain blocked.
+
 ## [Codex GPT-5.6-sol] 2026-08-02 — temporary Lead takeover during Claude quota window
 
 **RESUME HERE:** `11_TRIAGE/CODEX_TAKEOVER_HANDOFF_2026-08-02.md` is the standalone Codex app

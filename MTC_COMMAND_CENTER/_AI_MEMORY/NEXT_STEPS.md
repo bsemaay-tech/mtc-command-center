@@ -1,5 +1,22 @@
 # NEXT_STEPS
 
+## GATE A CODEX TAKEOVER - BUILD ACCEPTED / 3B HARD STOP (2026-08-02)
+
+- **[AI: Claude] REQUIRED RETROSPECTIVE:** audit frozen build candidate
+  `c5a4070a4836bbb9ee010dc63db69313066667c4` with exact `claude-opus-5` xhigh before any master
+  merge or KVM2 action.
+- **[AI: Any] BUILD DONE:** `codex/gate-a-build-determinism` is pushed and temporarily accepted as
+  `TEMPORARY OWNER-AUTHORIZED CODEX+GLM ACCEPTED - CLAUDE RETROSPECTIVE AUDIT OWED`. It is not
+  merged and is not a Gate A pass. Evidence: `11_TRIAGE/GATE_A_REPAIR_VALIDATION_2026-08-02.md`.
+- **[AI: Baris] 3B HARD STOP:** `df00634f` is not accepted after the maximum three non-accepting
+  audit results. Do not launch round 4. Reopen only as an owner-directed new cycle or through the
+  required retrospective flagship route. Evidence: `11_TRIAGE/GATE_A_3B_AUDIT_ROUND1_2026-08-03.md`.
+- **[AI: Codex] NEXT, ONLY IF TEMPORARY ROSTER REMAINS ACTIVE:** Queue C - explicit credential-free,
+  truthful DISARMED start mode; no broker/network/credential construction; prove ARM rejection and
+  D026 RED/GREEN without fake credentials.
+- **[AI: Any] HOLD:** Queue D integration/rebuild/Gate A rerun; master merge; KVM2; credentials;
+  broker connection; ARM; orders; TESTNET; mainnet; wallet or economic action.
+
 ## CODEX TAKEOVER — CLAUDE QUOTA WINDOW (2026-08-02)
 
 - **[AI: Codex] START HERE:** `11_TRIAGE/CODEX_TAKEOVER_HANDOFF_2026-08-02.md`.
