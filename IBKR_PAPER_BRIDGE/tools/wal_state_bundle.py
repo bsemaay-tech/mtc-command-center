@@ -225,7 +225,11 @@ def _connect_readonly(path: Path) -> sqlite3.Connection:
         raise BundleError("cannot resolve source database path") from exc
     try:
         conn = sqlite3.connect(uri, uri=True)
-        conn.execute("SELECT 1")
+        # Touch the main database before the capture bracket opens. A constant
+        # SELECT may not attach the WAL, so its sidecars could otherwise be
+        # materialised later by our own integrity check and misreported as
+        # source-writer drift.
+        conn.execute("SELECT name FROM sqlite_schema LIMIT 1").fetchone()
     except sqlite3.Error as exc:
         wal = path.with_name(path.name + "-wal")
         shm = path.with_name(path.name + "-shm")

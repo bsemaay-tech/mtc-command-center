@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -224,6 +225,65 @@ def test_manifest_records_online_backup_and_both_ends_integrity(source_db, bundl
     for component in ("db", "wal", "shm"):
         assert isinstance(snapshot["before"][component]["present"], bool)
     assert snapshot["before"]["db"]["sha256"] == m["source"]["db_sha256"]
+
+
+def test_stable_wal_source_without_arrival_sidecars_is_not_reported_as_drift(
+    source_db, bundle_dir, capsys, monkeypatch
+):
+    """Emulate stacks where WAL sidecars appear only on the first main-DB read."""
+    wal_path = source_db.with_name(source_db.name + "-wal")
+    shm_path = source_db.with_name(source_db.name + "-shm")
+    assert not wal_path.exists()
+    assert not shm_path.exists()
+
+    real_connect = wal.sqlite3.connect
+    real_snapshot = wal._source_snapshot
+    source_uri = f"{source_db.resolve().as_uri()}?mode=ro"
+    main_db_read = {"started": False}
+
+    def connect_with_delayed_attach(database, *args, **kwargs):
+        conn = real_connect(database, *args, **kwargs)
+        if str(database) == source_uri:
+            conn.set_trace_callback(
+                lambda statement: main_db_read.__setitem__("started", True)
+                if statement.strip().upper() != "SELECT 1"
+                else None
+            )
+        return conn
+
+    def snapshot_with_delayed_sidecars(source):
+        result = real_snapshot(source)
+        if Path(source).resolve() != source_db.resolve():
+            return result
+        if not main_db_read["started"]:
+            result["wal"] = {"present": False}
+            result["shm"] = {"present": False}
+        else:
+            result["wal"] = {
+                "present": True,
+                "sha256": wal._sha256_bytes(b""),
+                "changed_during_hash": False,
+            }
+            result["shm"] = {
+                "present": True,
+                "sha256": "a" * 64,
+                "changed_during_hash": False,
+            }
+        return result
+
+    monkeypatch.setattr(wal.sqlite3, "connect", connect_with_delayed_attach)
+    monkeypatch.setattr(wal, "_source_snapshot", snapshot_with_delayed_sidecars)
+
+    rc, report = create(source_db, bundle_dir, capsys)
+
+    assert rc == 0, report
+    capture = read_manifest(bundle_dir)["source"]["capture_snapshot"]
+    assert capture["arrival"]["wal"]["present"] is False
+    assert capture["arrival"]["shm"]["present"] is False
+    assert capture["before"]["wal"]["present"] is True
+    assert capture["before"]["shm"]["present"] is True
+    assert capture["changed_components"] == []
+    assert capture["invariants_changed"] is False
 
 
 def test_capture_drift_ignores_arrival_to_before_shm_only_change():
@@ -503,6 +563,73 @@ def test_non_summary_source_mutation_during_capture_fails_closed(
     assert rc == 2
     assert report["failures"] == ["source_changed_during_capture"]
     assert calls["n"] == 3
+    assert not (bundle_dir / wal.MANIFEST_NAME).exists()
+    assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
+
+
+def test_concurrent_writer_during_capture_still_fails_closed(
+    source_db, bundle_dir, capsys, monkeypatch
+):
+    """A real writer thread commits after the capture bracket has opened."""
+    real_connect = wal._connect_readonly
+    wrapped = {"done": False}
+    writer_started = threading.Event()
+    writer_finished = threading.Event()
+    writer_errors = []
+
+    class ConcurrentWriterBackupProxy:
+        def __init__(self, conn):
+            self.conn = conn
+
+        def execute(self, *args, **kwargs):
+            return self.conn.execute(*args, **kwargs)
+
+        def backup(self, target):
+            def write_during_capture():
+                writer_started.set()
+                try:
+                    writer = sqlite3.connect(source_db)
+                    try:
+                        writer.execute(
+                            "UPDATE orders SET order_json = ? WHERE cloid = ?",
+                            ('{"symbol":"ETH","concurrent":"changed"}', "cloid-0"),
+                        )
+                        writer.commit()
+                    finally:
+                        writer.close()
+                except Exception as exc:  # surfaced in the test thread below
+                    writer_errors.append(exc)
+                finally:
+                    writer_finished.set()
+
+            thread = threading.Thread(target=write_during_capture, daemon=True)
+            thread.start()
+            assert writer_started.wait(timeout=5)
+            assert writer_finished.wait(timeout=10)
+            thread.join(timeout=5)
+            assert not thread.is_alive()
+            assert writer_errors == []
+            return self.conn.backup(target)
+
+        def close(self):
+            self.conn.close()
+
+    def connect_with_concurrent_writer(path):
+        conn = real_connect(path)
+        if Path(path).resolve() == source_db.resolve() and not wrapped["done"]:
+            wrapped["done"] = True
+            return ConcurrentWriterBackupProxy(conn)
+        return conn
+
+    monkeypatch.setattr(wal, "_connect_readonly", connect_with_concurrent_writer)
+    rc, report = create(source_db, bundle_dir, capsys)
+
+    assert wrapped["done"] is True
+    assert writer_started.is_set()
+    assert writer_finished.is_set()
+    assert rc == 2
+    assert report["failures"] == ["source_changed_during_capture"]
+    assert report["drift_evidence"]["changed_components"]
     assert not (bundle_dir / wal.MANIFEST_NAME).exists()
     assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
 
