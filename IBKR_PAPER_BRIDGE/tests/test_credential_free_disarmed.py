@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import runpy
+import sys
+import types
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -50,6 +54,43 @@ def test_create_app_honors_environment_mode_before_broker_selection(
         assert broker_calls == []
     finally:
         _close_store(app)
+
+
+def test_cli_explicit_mode_overrides_invalid_environment_before_app_creation(
+    tmp_path, monkeypatch
+) -> None:
+    uvicorn_calls: list[tuple[object, dict[str, object]]] = []
+    fake_uvicorn = types.ModuleType("uvicorn")
+
+    def run(app, **kwargs) -> None:
+        uvicorn_calls.append((app, kwargs))
+
+    fake_uvicorn.run = run
+    monkeypatch.setitem(sys.modules, "uvicorn", fake_uvicorn)
+    monkeypatch.setenv(_START_MODE_ENV_VAR, "disarmed-ish")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "bridge.app",
+            "--start-mode",
+            _CREDENTIAL_FREE_DISARMED,
+            "--state-db",
+            str(tmp_path / "cli-precedence.db"),
+        ],
+    )
+
+    with pytest.warns(RuntimeWarning, match="bridge\\.app"):
+        runpy.run_module("bridge.app", run_name="__main__")
+
+    assert len(uvicorn_calls) == 1
+    runtime_app, kwargs = uvicorn_calls[0]
+    try:
+        assert runtime_app.state.credential_free_disarmed is True
+        assert runtime_app.state.bridge_engine is None
+        assert kwargs == {"host": "127.0.0.1", "port": 8790, "reload": False}
+    finally:
+        _close_store(runtime_app)
 
 
 def test_credential_free_runtime_skips_credentials_registry_and_broker(
