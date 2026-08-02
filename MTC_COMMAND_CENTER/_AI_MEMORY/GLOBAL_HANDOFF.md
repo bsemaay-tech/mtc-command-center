@@ -4250,3 +4250,49 @@ audit real code, independently rerun suites and the pre-fix failure, and record 
 Created the secret-free operational index `_AI_MEMORY/AI_ACCOUNT_AND_MODEL_ROUTING.md` and linked it from `START_HERE.md`. It records four isolated Codex homes plus GLM, Cline, DeepSeek, Grok/xAI, and NVIDIA NIM routes while keeping `AGENTS.md` canonical for policy.
 
 Installed `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-CodexForClaude.ps1`. Claude must use it instead of bare `codex`: default `secondary` maps to `.codex-hesap2`; optional routes are `fourth` and `free`; the desktop `.codex` home is not selectable and is explicitly guarded. Lead verification: parser clean; secondary/free login status PASS; fourth NOT logged in; all version routes PASS; desktop route rejected; parent `CODEX_HOME` restored. Fourth device authorization remains pending and its recorded quota was 0% until 2026-08-08 08:49 local. No auth/key/token value was read or stored.
+
+## [Claude Opus 5] 2026-08-02 — Gate A: both frozen candidates audited by the Claude flagship; Codex CLI cannot execute on this host
+
+Picked up the Gate A recovery after the Codex quota ran out, as the canonical `claude-opus-5` xhigh
+executing auditor. Two records written:
+`11_TRIAGE/GATE_A_C5A4070A_RETROSPECTIVE_AUDIT_2026-08-02.md` and
+`11_TRIAGE/GATE_A_QUEUE_C_FLAGSHIP_AUDIT_2026-08-02.md`.
+
+**Build branch `c5a4070a` — ACCEPT.** The owed Claude retrospective audit is discharged. Every
+recorded number reproduced exactly: Windows `2 failed, 1316 passed, 1 warning`; Linux focused
+`46 passed`; Linux full `25 failed, 1293 passed, 1 warning` on the locked interpreter, with failure
+composition checked, not just counts. D026 was run the way the rule asks — the candidate's tests
+against the exact parent product code — giving `12 failed, 34 passed`, of which 11 are new tests;
+restoring gives 46/46 and an empty `git status`. New evidence this audit adds: the `core.eol=lf` pin
+was falsified on Windows against a `* text=auto` fixture and proved load-bearing (payload 17 bytes
+with the pin, 19 with CRLF without it) and the new inventory assertion fails the build closed when it
+is removed. Two non-blocking nits: one new test asserts on the text of a code comment, and the
+locale test fails rather than skips where `en_US.UTF-8` is not generated.
+
+**Queue C `5a9bb922` — ACCEPT with one required cleanup.** Windows `2 failed, 1309 passed`; Linux
+focused `5 passed`; **Linux full `25 failed, 1286 passed, 1 warning`, established here for the first
+time** — the previous record claimed no Linux count. D026 exact-parent gives `4 failed, 1 passed`
+(the one pass is the no-regression test, correctly green on both sides), candidate `5 passed`.
+Independent falsification: removing the `/api/arm` 409 makes a credential-free bridge answer `200`
+and durably record itself **ARMED** with no broker and no credentials — the guard is a real safety
+property. Required cleanup F1: `tests/test_credential_free_disarmed.py:64`'s
+`assert not hasattr(app.state, "bridge_broker")` is **vacuous** — that attribute is never set
+anywhere, measured `False` in both modes. Non-blocking only because the same test's other guards are
+parent-RED.
+
+**Neither branch is canonically accepted.** D025 rule 3 needs both flagships, and `gpt-5.6-sol`
+returned no verdict because **Codex CLI 0.145.0 cannot execute anything in an audit worktree on this
+host**: it wraps every command as `powershell.exe -Command …` and reports `sandbox: read-only`
+regardless of `--sandbox workspace-write`, `--sandbox=workspace-write`, or
+`-c sandbox_mode=workspace-write`; outside a trusted project directory every such call is
+`rejected: blocked by policy`. Reproduced four times, down to a one-line `git rev-parse HEAD`. The
+same call succeeds with cwd `C:\LAB\Tradingview_LAB_CLEAN`, which holds a `trust_level = "trusted"`
+entry, so the block is trust-scoped. Adding `[projects.…]` entries for the audit worktrees to
+`.codex-hesap2\config.toml` (lower- and exact-case) changed nothing; the file was restored. This is
+the same mechanism behind round 2's supplemental BLOCK and the 3b SSH denial — now diagnosed rather
+than observed. **Owner decision required** on how to restore a second executing flagship.
+
+Defect 3b `df00634f` was not touched: it stands at its three-result hard stop and needs an
+owner-directed new cycle. No integration, rebuild, Gate A rerun, or master merge was attempted.
+Safety unchanged: DISARMED, source/test only, no service, credential, registry, broker, ARM, order,
+TESTNET, mainnet, wallet, deployment, or economic action. `KVM2-Ubuntu-2404-Staging` remains off.

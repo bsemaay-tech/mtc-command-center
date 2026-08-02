@@ -1841,3 +1841,33 @@ Next: [AI: Codex] independent re-audit of `a15a6b1f` (see `11_TRIAGE/CLAUDE_TSP1
 - PR #16 is merged remotely at `20237733`; PRs #17–#19 remain open.
 - Local isolated master contains unpushed #17/#18 merge commits `60415b08` and `89725dfe`.
 - PR #19 adds an out-of-scope conflict in `05_REGISTRY/RESEARCH_RUN_REGISTRY.json`; do not resolve or push without Fable review and explicit direction. The attempted #19 merge was aborted cleanly.
+
+### GATE-A-SECOND-FLAGSHIP | BLOCKED 2026-08-02 | `c5a4070a` + `5a9bb922` [AI: Barış]
+- Both frozen candidates now hold an executing **ACCEPT** from `claude-opus-5` xhigh. Records:
+  `11_TRIAGE/GATE_A_C5A4070A_RETROSPECTIVE_AUDIT_2026-08-02.md`,
+  `11_TRIAGE/GATE_A_QUEUE_C_FLAGSHIP_AUDIT_2026-08-02.md`.
+- D025 rule 3 still needs `gpt-5.6-sol`. It cannot execute: Codex CLI 0.145.0 forces every command
+  through `powershell.exe -Command` and stays `sandbox: read-only`, which is `blocked by policy`
+  outside a trusted project directory. Quota is not the constraint — `.codex-hesap2` has ~99% left.
+- [AI: Barış] choose one: (a) authorize `--dangerously-bypass-approvals-and-sandbox` for audit-only
+  Codex runs; (b) mark the audit worktrees trusted from an interactive `codex` session, which this
+  non-interactive harness cannot do; (c) downgrade/upgrade the Codex CLI to a build whose `--sandbox`
+  flag is honoured; (d) substitute a different canonical auditor for the second flagship slot.
+- Until then: **do not** integrate, rebuild the payload, rerun Gate A, merge to `master`, or touch
+  KVM2 on either branch.
+
+### GATE-A-QUEUE-C-F1 | OPEN 2026-08-02 | `5a9bb922` [AI: Codex|Claude]
+- `tests/test_credential_free_disarmed.py:64` — `assert not hasattr(app.state, "bridge_broker")` is
+  vacuous; `app.state.bridge_broker` is never set anywhere in `bridge/` and measures `False` in both
+  start modes. Replace with a real check, e.g. `"bridge.broker.hyperliquid" not in sys.modules`
+  after a credential-free start. Fold into the next authorized touch of this branch — it does not
+  justify a repair round of its own.
+
+### GATE-A-BUILD-NITS | OPEN 2026-08-02 | `c5a4070a` [AI: Codex|Claude]
+- N1 `test_package_builder_pins_export_inputs_and_has_fail_closed_cr_guard` asserts on the text of a
+  code comment. Prefer the behavioural fixture recorded in the retrospective audit §4.
+- N2 `test_package_manifest_is_identical_across_c_and_en_us_utf8_locales` fails rather than skips on
+  a builder without a generated `en_US.UTF-8` locale.
+
+### GATE-A-3B | HARD STOP unchanged 2026-08-02 | `df00634f` [AI: Barış]
+- Untouched this session. Three-result ceiling reached; reopening needs an owner-directed new cycle.
