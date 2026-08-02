@@ -9,13 +9,19 @@ Audit worktree: `C:\GAAUD_C5` (fresh, detached, clean at close)
 This closes the debt recorded as
 `TEMPORARY OWNER-AUTHORIZED CODEX+GLM ACCEPTED — CLAUDE RETROSPECTIVE AUDIT OWED`.
 
-## 1. Verdict
+## 1. Verdict — classification corrected 2026-08-02
 
-**ACCEPT** — flagship 2 of 2. Two non-blocking nits, §5.
+**Claude accepting verdict / Lead verification.** Two non-blocking nits, §5.
 
-The second flagship verdict (`gpt-5.6-sol` xhigh) could **not** be obtained; see §6. Under D025 rule 3
-acceptance requires both flagships, so **this branch is one accepting flagship short of canonical
-acceptance.** It remains unmerged, is not a Gate A pass, and authorizes no KVM2 action.
+This work was performed in the recovery session in which the same model also acted as Lead — it was
+**not** a fresh independent auditor session. On the owner's instruction it is therefore recorded as
+Lead verification, **not** a canonical flagship verdict, and a fresh no-resume `claude-opus-5` xhigh
+auditor session was launched separately on the exact frozen SHA.
+
+The `gpt-5.6-sol` flagship verdict was unobtainable at the time of writing; see §6 for the diagnosis
+and the handoff for its resolution. **Do not label this branch fully accepted until the D025 rule 3
+flagship floor is satisfied.** It remains unmerged, is not a Gate A pass, and authorizes no KVM2
+action.
 
 ## 2. Executed evidence — every number reproduced independently
 
@@ -170,10 +176,15 @@ audit3b                             12M     audit-opus5                        1
 
 Roughly 620 MB. A filename scan for credential-shaped files returns only pytest fixtures
 (`test_secret_safe_output*`, `malformed-extra-key.db`) — **no credential material is present**, and
-the VM is disposable, so this is a hygiene and record-accuracy defect, not a safety breach. It was
-left in place rather than deleted: removing another agent's evidence tree is the owner's call, not
-this auditor's, and the discrepancy itself is the finding. The reusable lesson is the programme's
-own: a cleanup claim is not evidence until someone lists the directory afterwards.
+the VM is disposable, so this is a hygiene and record-accuracy defect, not a safety breach.
+
+**Owner disposition, 2026-08-02:** the two earlier "scratch removed" claims are inaccurate and are
+corrected here; the trees are now **intentionally retained**, because the executing flagship audits
+still need the Linux host. Deletion is deferred until all three Gate A audit closures and their
+evidence capture are complete, and is then limited to the exact validated audit-scratch paths, with
+a credential-material check and a written cleanup record. **No agent may delete another agent's
+evidence tree while an audit is active.** The reusable lesson is the programme's own: a cleanup claim
+is not evidence until someone lists the directory afterwards.
 
 ## 9. This audit's own scratch
 

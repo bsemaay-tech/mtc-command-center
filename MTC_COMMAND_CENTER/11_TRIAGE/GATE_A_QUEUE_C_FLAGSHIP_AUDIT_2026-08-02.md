@@ -10,15 +10,19 @@ Supersedes the blocked disposition in `GATE_A_CREDENTIAL_FREE_DISARMED_CANDIDATE
 which recorded two GLM attempts that returned no ledger. This is the fresh canonical executing audit
 that record asked for.
 
-## 1. Verdict
+## 1. Verdict — classification corrected 2026-08-02
 
-**ACCEPT** — flagship 2 of 2, with one required cleanup (§5, F1) that is **not** blocking because the
-test containing it is independently non-vacuous.
+**Claude accepting verdict / Lead verification**, with one verified optional nit (§5, F1).
 
-No `gpt-5.6-sol` verdict is available: Codex CLI cannot execute on this host. The diagnosis is in
-`GATE_A_C5A4070A_RETROSPECTIVE_AUDIT_2026-08-02.md` §6 and applies unchanged here. Under **D025 rule
-3** this branch is therefore **one accepting flagship short of canonical acceptance** — do not
-integrate, rebuild, rerun Gate A, merge, or touch KVM2 on this record.
+This work was performed in the recovery session in which the same model also acted as Lead — not a
+fresh independent auditor session. On the owner's instruction it is recorded as Lead verification,
+**not** a canonical flagship verdict, and a fresh no-resume `claude-opus-5` xhigh auditor session was
+launched separately on the exact frozen SHA.
+
+No `gpt-5.6-sol` verdict was available at the time of writing: Codex CLI could not execute on this
+host. The diagnosis is in `GATE_A_C5A4070A_RETROSPECTIVE_AUDIT_2026-08-02.md` §6. Under **D025 rule
+3** this branch is **not** canonically accepted — do not integrate, rebuild, rerun Gate A, merge, or
+touch KVM2 on this record, and do not label it fully accepted until the flagship floor is satisfied.
 
 ## 2. Executed evidence
 
@@ -88,7 +92,7 @@ unchanged, the store still reads `DISARMED`, and a restart on the same database 
 
 ## 5. Findings
 
-**F1 — required cleanup, non-blocking: one assertion is vacuous.**
+**F1 — verified optional nit, non-blocking: one assertion is vacuous.**
 `tests/test_credential_free_disarmed.py:64`
 
 ```python
@@ -105,8 +109,13 @@ credential-free   has state.bridge_broker : False
 The assertion cannot fail in any mode, on the candidate or on the parent. It is exactly the class of
 assertion D026 exists to stop. It is not blocking because the same test's other guards — a patched
 `_build_broker` that raises, `calls == []`, and `bridge_engine is None` — do turn RED against the
-parent. Replace it with something that measures the actual property, e.g. asserting
-`"bridge.broker.hyperliquid" not in sys.modules` after a credential-free start.
+parent.
+
+**Owner disposition, 2026-08-02: leave it unchanged for now.** Editing the frozen candidate to
+delete a non-blocking assertion would invalidate the SHA that every audit in this cycle is measuring,
+which costs more than the nit. The cleanup is scheduled separately, after Gate A, unless a flagship
+reproduces it as a *required* finding. The replacement, when it happens, should measure the actual
+property — e.g. `"bridge.broker.hyperliquid" not in sys.modules` after a credential-free start.
 
 **F2 — nit, documentation only.** The candidate record says the mode is "selectable through
 `--start-mode` or `MTC_BRIDGE_START_MODE`". `create_app` calls `resolve_start_mode(cli_value=start_mode, env={})`
