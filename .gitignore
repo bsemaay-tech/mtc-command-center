@@ -164,6 +164,9 @@ Temp/
 # Local Codex/session metadata
 .codex/
 
+# Local aionrs assistant scaffolding (machine-specific skill symlinks)
+.aionrs/
+
 # Accidental command-output typo
 tatus --short
 
