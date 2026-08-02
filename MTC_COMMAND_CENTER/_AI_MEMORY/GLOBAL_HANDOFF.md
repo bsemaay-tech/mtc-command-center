@@ -1,5 +1,17 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-08-03 — Gate A build repair accepted under no-Claude owner waiver
+
+Build-determinism repair `82e92c98fdc24cfc1632960460d3ac7e4131db25` is **ACCEPTED for
+source-candidate purposes**. It fixes the two reproduced test defects with a one-file test diff:
+unavailable `en_US.UTF-8` is an environment SKIP, and the comment-coupled assertion is replaced by a
+behavioral `core.eol=lf` guard. D026, Windows `2 failed, 1317 passed`, locked Linux
+`25 failed, 1294 passed`, GLM-5.2 PASS-WITH-NITS, and fresh Codex xhigh PASS all reproduced.
+
+Record: `11_TRIAGE/GATE_A_BUILD_REPAIR_ACCEPTANCE_2026-08-03.md`. Feature-branch publication only;
+no integration, artifact rebuild, Gate A rerun, deployment, runtime, credential, broker, ARM, order,
+TESTNET/mainnet, Pine/parity/MTC/trading, or economic action. Next: Queue C repair/audit closure.
+
 ## [Claude Opus 5] 2026-07-30 — 50-Hour Plan documentation repair/audit cycle ACCEPTED
 
 Owner-authorized documentation-only repair + audit cycle on `09_DOCS/ROADMAPS/TRADING_SYSTEM/TRADING SYSTEM — 50-HOUR ACCELERATED IMPLEMENTATION PLAN.md`. **ACCEPTED** — both canonical audits returned PASS-WITH-NITS with zero required repairs. Baseline `87a25792` (owner-supplied hash verified) → **final `a07c90cc49a4f34910f82bd9c94ba4fb71d76b511bc2cabe0bd727faf57fe3ee`** (1879 lines). Roles: Claude `claude-opus-5` Lead/acceptance, Codex CLI `gpt-5.6-sol` sole document implementer, canonical auditors Claude `claude-opus-5` xhigh (fresh) + Codex `gpt-5.6-sol` xhigh (ephemeral read-only), DeepSeek CLI read-only supplemental. Two non-accepting rounds used of three permitted.

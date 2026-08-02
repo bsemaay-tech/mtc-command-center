@@ -1,5 +1,16 @@
 # NEXT_STEPS
 
+## GATE A BUILD REPAIR ACCEPTED — CONTINUOUS PROGRESS (2026-08-03)
+
+- **[AI: Codex] DONE — BUILD SOURCE CANDIDATE:** `82e92c98fdc24cfc1632960460d3ac7e4131db25`
+  accepted under Barış's no-Claude owner waiver. Record:
+  `11_TRIAGE/GATE_A_BUILD_REPAIR_ACCEPTANCE_2026-08-03.md`.
+- **[AI: Codex] NEXT — QUEUE C:** close independent audit and publish the repaired credential-free
+  DISARMED branch only after acceptance.
+- **[AI: Any] HOLD:** no Queue D, integration, artifact rebuild, Gate A rerun, master merge,
+  deployment, service/runtime, credentials, broker, ARM, orders, TESTNET/mainnet, Pine/parity/MTC
+  trading change, wallet, or economic action.
+
 ## GLM SUPPLEMENTAL ROUTING POLICY — IMPLEMENTED 2026-07-27
 
 Policy codified in `AGENTS.md` §GLM SUPPLEMENTAL ROUTING (canonical, do not copy table elsewhere). Cross-references added to all required files. Stale `claude-opus-4-8` → `claude-opus-5` fixed in `SPRINT_WORKFLOW.md`.
