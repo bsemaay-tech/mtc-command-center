@@ -4194,3 +4194,9 @@ No real-data run, broker/API action, deploy, restart, DISARM, or ARM occurred. `
 clean and detached at `1465f8f0`. Detailed evidence:
 `MTC_COMMAND_CENTER/11_TRIAGE/P2_DATA_RESTORE_TIMEOUT_REPORT_2026-07-16.md`. STOP for Fable to
 audit real code, independently rerun suites and the pre-fix failure, and record PASS before deploy.
+
+## [Codex GPT-5.6-sol] 2026-08-02 — Isolated Codex account and provider routing
+
+Created the secret-free operational index `_AI_MEMORY/AI_ACCOUNT_AND_MODEL_ROUTING.md` and linked it from `START_HERE.md`. It records four isolated Codex homes plus GLM, Cline, DeepSeek, Grok/xAI, and NVIDIA NIM routes while keeping `AGENTS.md` canonical for policy.
+
+Installed `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-CodexForClaude.ps1`. Claude must use it instead of bare `codex`: default `secondary` maps to `.codex-hesap2`; optional routes are `fourth` and `free`; the desktop `.codex` home is not selectable and is explicitly guarded. Lead verification: parser clean; secondary/free login status PASS; fourth NOT logged in; all version routes PASS; desktop route rejected; parent `CODEX_HOME` restored. Fourth device authorization remains pending and its recorded quota was 0% until 2026-08-08 08:49 local. No auth/key/token value was read or stored.

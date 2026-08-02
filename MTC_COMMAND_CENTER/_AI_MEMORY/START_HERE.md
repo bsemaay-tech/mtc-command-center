@@ -16,6 +16,8 @@ AI tool auto-use (MarkItDown for binary docs, Graphify for impact questions, Cod
 
 GLM supplemental routing (Z.AI Coding Plan model selection for sub-delegation): see `AGENTS.md` §GLM SUPPLEMENTAL ROUTING (canonical; cheapest-capable tier first; routing record required per task; GLM never replaces the mandatory audit roster).
 
+Account homes, wrappers, and credential *source* names (Codex `CODEX_HOME` routes + mandatory Claude→Codex launcher, GLM, Cline, DeepSeek, Grok, NVIDIA NIM): `AI_ACCOUNT_AND_MODEL_ROUTING.md` — operational index only, no secrets; usage figures there are a dated snapshot and must be re-checked. `AGENTS.md` stays canonical for roster/tiers/policy.
+
 HER backtest / optimizasyon için (in-day tek strateji, sprint, overnight — fark etmez) **zorunlu pre-read iki dosya:**
 1. Canonical kurallar: `..\03_QUANTLENS\_user_guide\07_BACKTEST_AND_OPTIMIZATION_RULES.md` (4 gate, buy&hold + alpha, DSR, BH-FDR, classification, promotion levels, antigravity checklist)
 2. Operasyonel runbook: `..\11_TRIAGE\BACKTEST_OPTIMIZATION_RUNBOOK.md`
