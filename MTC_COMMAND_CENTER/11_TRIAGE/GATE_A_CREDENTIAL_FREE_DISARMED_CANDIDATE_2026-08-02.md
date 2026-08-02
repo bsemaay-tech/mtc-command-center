@@ -1,7 +1,7 @@
 # Gate A credential-free DISARMED candidate - frozen, not accepted
 
-Date: 2026-08-02  
-Lead: Codex app, `gpt-5.6-sol` xhigh  
+Date: 2026-08-02
+Lead: Codex app, `gpt-5.6-sol` xhigh
 Safety state: DISARMED, source/test only
 
 ## 1. Frozen candidate
