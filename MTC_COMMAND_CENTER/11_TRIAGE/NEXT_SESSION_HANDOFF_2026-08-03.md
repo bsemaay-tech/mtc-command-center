@@ -33,6 +33,12 @@ bounded `KVM2-P4-02` attempt would have been spent on a payload that could never
 | 2 | **`lib/common.sh:98` can never seal a venv.** `find "$root" -perm /222` has no `-type` filter; symlink modes are always 0777 on Linux and meaningless. A venv always has symlinks. | Blocks install even after #1 |
 | 3 | **The suite floor is wrong.** Recorded `2 failed, 1304 passed` was measured on **Python 3.14**; the locked runtime is **3.12** and the dev machine has no 3.12. On the real runtime: **26 failed, 1280 passed**. | Baseline invalid |
 | 4 | **The service cannot start without broker credentials**, which Gate A §0 forbids. A-4 is unexecutable as pre-registered. | **Needs your decision** |
+| 5 | **The build is not reproducible.** The same `RELEASE_SHA` yields different payload bytes and a different manifest hash depending on the builder's line-ending config. Defect 1 is a *symptom* of this. | The real disease |
+
+**An independent `gpt-5.6-sol` xhigh audit was commissioned specifically to falsify these findings**
+(`GATE_A_INDEPENDENT_AUDIT_2026-08-02.md`). Verdict **REQUEST_CHANGES**: it refuted my original CRLF
+root-cause attribution, corrected two overstatements, and identified defect 5 as the thing I had
+missed. All findings were reproduced on real source and applied. The A-2 FAIL itself is unaffected.
 
 Full evidence, including exact hashes, CR counts, root-cause attribution and the falsification of
 prediction P3, is in `GATE_A_RECON_DEFECT_LIST_2026-08-02.md`.

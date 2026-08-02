@@ -20,6 +20,12 @@ media, and **Gate A was executed for real for the first time.**
 | 2 | **`lib/common.sh:98` can never seal a venv** — `find "$root" -perm /222` has no `-type` filter; symlink modes are always 0777 on Linux and meaningless; a venv always has symlinks. |
 | 3 | **The suite floor is wrong** — the recorded `2 failed, 1304 passed` was measured on **Python 3.14**; the locked runtime is **3.12**. On the real runtime: **26 failed, 1280 passed**. ~21 are `wal_state_bundle` reporting `source_changed_during_capture` on SQLite's `wal`/`shm` sidecars — that is the **Stage E cutover tool**, so the KVM2 cutover as written cannot produce a valid state bundle on Linux. |
 | 4 | **The service cannot start without broker credentials**, which Gate A §0 forbids — so **A-4 is unexecutable as pre-registered**. Needs an owner decision. |
+| 5 | **The build is not reproducible** — the same `RELEASE_SHA` yields different payload bytes and manifest hash depending on the builder's line-ending config. Defect 1 is a symptom of this. The artifact model itself is unsound until export is pinned. |
+
+An independent **`gpt-5.6-sol` xhigh audit** (`11_TRIAGE/GATE_A_INDEPENDENT_AUDIT_2026-08-02.md`,
+verdict **REQUEST_CHANGES**) was commissioned to falsify the Lead's findings. It refuted the original
+CRLF root-cause attribution, corrected two overstatements, and identified defect 5. All findings were
+reproduced on real source and applied. The A-2 FAIL is unaffected.
 
 ### Anchors — the candidate artifact is dead
 
