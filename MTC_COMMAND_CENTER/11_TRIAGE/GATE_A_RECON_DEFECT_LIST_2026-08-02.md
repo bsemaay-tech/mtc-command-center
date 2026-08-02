@@ -94,8 +94,24 @@ sealing step deliberately restricts its own `chmod` calls to `-type d` and `-typ
 The assertion passes on the release tree only because `assert_regular_directory_tree` guarantees the
 release contains no symlinks at all. A venv created by `python -m venv` **always** contains symlinks.
 
-**Therefore this installer could never have sealed any venv, on staging or on KVM2.** It is not
-environment-specific and would have consumed the single bounded `KVM2-P4-02` attempt.
+**Therefore this installer cannot seal the venv it actually creates, on staging or on KVM2**, and
+would have consumed the single bounded `KVM2-P4-02` attempt.
+
+> **Scope corrected 2026-08-02** after `gpt-5.6-sol` audit. The original wording — "could never pass
+> on *any* venv, always, on any host" — was overstated. A venv with no symlinks at all could pass;
+> the claim is not universal.
+>
+> It survives for every path this installer takes, and the obvious escape does not work. Reproduced
+> on the host, sealing exactly as `install.sh:317-319` does:
+>
+> ```
+> default venv (what install.sh:291 creates): ASSERTION FIRES -> bin/python   (lrwxrwxrwx)
+> --copies venv (the hypothetical escape)   : ASSERTION FIRES -> lib64 -> lib (lrwxrwxrwx)
+> ```
+>
+> `--copies` removes the three `bin/*` symlinks but CPython still creates `lib64 -> lib` on 64-bit
+> POSIX, so the assertion fires anyway. And `install.sh:290` does not pass `--copies`. The
+> operational conclusion is unchanged; only the universal phrasing was wrong.
 
 ### Suggested fix (implementer's call, not applied to the repo)
 
@@ -283,7 +299,15 @@ conflict is between the artifact's startup requirement and **Gate A's** credenti
 The failure is **fail-closed**, and that is worth recording as evidence in its own right.
 `app.py:106-110` initialises the store and writes `app_state=DISARMED` *before* `_build_broker` is
 reached (`:113-114`). So a credential-absent start leaves the system durably DISARMED rather than in
-an ambiguous state. Observed:
+an ambiguous state.
+
+> **Qualified 2026-08-02** after `gpt-5.6-sol` audit: this holds for a **fresh or non-`KILLED`**
+> database only. `app.py:109` reads `if store.get_meta("app_state") != "KILLED"` before writing
+> DISARMED, so an existing `KILLED` state is deliberately preserved rather than overwritten — which
+> is correct behaviour, not a defect. The original wording implied the DISARMED write was
+> unconditional. It is not.
+
+Observed:
 
 ```
 db app_state = DISARMED          NRestarts = 0  (Restart=no held)
@@ -348,6 +372,40 @@ script logged `PASS ARM did not succeed`.
 evidence anywhere in this file, and the ARM-refusal path remains **untested**. Recording this because
 "always ask what would make the assertion fail" is the programme's own rule, and a check that passes
 because the target is absent is precisely the failure mode it warns about.
+
+---
+
+## Defect 5 — the build is not reproducible, and that is the real disease
+
+Raised by the `gpt-5.6-sol` audit as *"the most important missed defect"*, and it is right. Defects 1
+and 5-as-symptoms are downstream of this:
+
+**The same `RELEASE_SHA` produces different payload bytes, and therefore a different
+`RELEASE_SHA256SUMS` hash, depending on the builder's line-ending configuration.**
+
+```
+git archive 1adf9ae5 …/install.sh                       ->  20,342 bytes   manifest hash bfefea2f…
+git -c core.autocrlf=false -c core.eol=lf archive …     ->  19,908 bytes   different manifest entirely
+```
+
+That silently breaks the artifact model the whole programme rests on. `--release-sha` and
+`--manifest-sha256` are supposed to bind a payload to a commit; if the commit alone does not
+determine the bytes, two "identical" builds are not identical, and a manifest hash recorded on one
+machine is meaningless on another.
+
+The durable repair is therefore not "strip the CRLF" but **pin export behaviour** so that a given
+`RELEASE_SHA` always yields byte-identical output — via explicit `eol=lf` attributes, an
+`autocrlf`-independent `git archive` invocation in `package.sh`, or building only on Linux. Ideally
+`package.sh` should also *assert* the property: re-export and compare, or verify a known manifest
+hash, so a misconfigured builder fails loudly instead of shipping a subtly different payload.
+
+### A scope trap in the narrow fix
+
+An `eol=lf` rule covering only `IBKR_PAPER_BRIDGE/deploy/linux/**` would fix the installer but **not**
+the ledger failure (3c) — `ledger_schema.json` lives under
+`MTC_COMMAND_CENTER/11_TRIAGE/KVM2_PROGRAM/evidence/`. Any fix scoped to the deployment directory
+alone leaves that test failing and leaves other payload files environment-dependent. Whatever is
+chosen must cover everything the payload contains, not just the scripts that happen to be executed.
 
 ## Repair notes for the implementer
 
