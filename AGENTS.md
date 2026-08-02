@@ -85,6 +85,30 @@ Never feed implementer session context or continue it. The lead still owns accep
 
 **Maximum 3 repair/re-audit rounds per task.** After the third non-accepting verdict (REQUEST_CHANGES or BLOCK), stop and report the blocker to Barış. Do not silently enter a fourth round.
 
+### D026 — FALSIFIED-TEST RULE: a regression test is not evidence until it has been shown to fail (MANDATORY)
+
+**Owner-ratified 2026-08-03.** A regression test claimed as evidence that a specific defect is closed **does not count as closure evidence** until it has been demonstrated:
+
+1. **RED** against the exact pre-fix/reverted behaviour — or against an equivalent deliberate mutation/falsification — and
+2. **GREEN** with the fix in place,
+
+with the **commands and their real output recorded** in the evidence package. Asserting that a test covers a defect is not the same as showing it fails without the fix.
+
+- If safe reversion is impractical, an **independent mutation/falsification** is required instead. If neither is done, the test is classified **supplemental — not closure evidence**, and the defect is not closed.
+- **Binds implementers and auditors alike.** Implementers must produce the demonstration; auditors must check it rather than accept the claim, and must state for each new test whether they verified it.
+- Applies with particular force to **protected Bridge, build, deployment, persistence, concurrency and safety defects**.
+- **Does not** require mutating every unrelated legacy test. It governs tests offered as proof that a named defect is fixed.
+
+**Why this exists — three real instances in a single session (2026-08-03), all on protected surfaces:**
+
+| Defect | The test | How it failed |
+|---|---|---|
+| 3b `wal_state_bundle` | drift regression test | Discriminated on the string literal `"SELECT 1"`. Swapping the fix for `SELECT 2` — which touches no table and leaves the defect fully intact — left it **green**. |
+| Build determinism | writable-path test | Asserted `returncode == 0`, which the *old* predicate also returned. Its only real guard sat in an `except OSError` branch that never executes on Linux, the deployment platform. |
+| Build determinism | metacharacter-path test | Built an **LF-only** fixture and asserted success. The defective code succeeded too, while silently skipping inspection. |
+
+In every case the test looked correct on review and was only exposed when someone deliberately broke the code underneath it. Two were caught by cross-model Gate 5 audit, not by the implementer or the Lead.
+
 ## TOKEN DISCIPLINE — implementer-tier sub-delegation to cheap models (MANDATORY)
 Within the two-tier model above, the **IMPLEMENTER** (Claude Code CLI or Codex CLI) may sub-delegate bounded mechanical work to a cheap sub-agent. **Cline CLI is the first-choice path** (uses monthly subscription credits before paid API spend); fall back to `_deepseek_driver` when Cline is unavailable, unauthenticated, out of credits, unsuitable, blocked, or when explicit provider routing / DeepSeek API is desired.
 
