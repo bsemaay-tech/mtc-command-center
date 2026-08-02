@@ -79,6 +79,52 @@ def run_bash(script: str, *args: Path | str) -> subprocess.CompletedProcess[str]
     )
 
 
+def git(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    result = subprocess.run(
+        ["git", "-C", str(repo), *args],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    return result
+
+
+def make_package_fixture(repo: Path, files: dict[str, bytes]) -> str:
+    repo.mkdir()
+    git(repo, "init", "-q")
+    git(repo, "config", "core.autocrlf", "false")
+    for relative, content in files.items():
+        path = repo / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+    git(repo, "add", "--all")
+    git(
+        repo,
+        "-c",
+        "user.name=Deployment Test",
+        "-c",
+        "user.email=deployment-test@example.invalid",
+        "commit",
+        "-q",
+        "-m",
+        "fixture",
+    )
+    release_sha = git(repo, "rev-parse", "HEAD").stdout.strip()
+    assert re.fullmatch(r"[0-9a-f]{40}", release_sha)
+    return release_sha
+
+
+def run_package(repo: Path, output: Path, release_sha: str) -> subprocess.CompletedProcess[str]:
+    return run_bash(
+        'bash "$1" --release-sha "$2" --repo "$3" --out "$4"',
+        LINUX / "package.sh",
+        release_sha,
+        repo,
+        output,
+    )
+
+
 def test_requirements_in_mirrors_untouched_requirements_txt():
     assert direct_requirements(BRIDGE_ROOT / "requirements.in") == direct_requirements(
         BRIDGE_ROOT / "requirements.txt"
@@ -222,6 +268,49 @@ def test_payload_tree_rejects_symlinks_and_special_entries(tmp_path):
         assert "non-regular filesystem entry" in result.stderr
 
 
+def test_writable_path_assertion_ignores_symlink_but_rejects_regular_file(tmp_path):
+    common = LINUX / "lib" / "common.sh"
+    immutable = tmp_path / "immutable"
+    immutable.mkdir()
+    target = immutable / "target"
+    target.write_text("read-only", encoding="utf-8")
+    os.chmod(target, 0o444)
+    link = immutable / "python"
+    try:
+        link.symlink_to(target)
+    except OSError:
+        assert '! -type l -perm /222' in read(common)
+    else:
+        os.chmod(immutable, 0o555)
+        try:
+            result = run_bash(
+                '. "$1"; MTC_FAILURES=0; assert_no_writable_paths "$2"',
+                common,
+                immutable,
+            )
+        finally:
+            os.chmod(immutable, 0o755)
+        assert result.returncode == 0, result.stderr
+
+    writable = tmp_path / "writable"
+    writable.mkdir()
+    regular = writable / "regular"
+    regular.write_text("writable", encoding="utf-8")
+    os.chmod(regular, 0o666)
+    os.chmod(writable, 0o555)
+    try:
+        result = run_bash(
+            '. "$1"; MTC_FAILURES=0; assert_no_writable_paths "$2"',
+            common,
+            writable,
+        )
+    finally:
+        os.chmod(writable, 0o755)
+        os.chmod(regular, 0o644)
+    assert result.returncode != 0
+    assert "writable path inside immutable release" in result.stderr
+
+
 def test_package_and_install_enforce_complete_regular_file_inventory():
     package = read(LINUX / "package.sh")
     common = read(LINUX / "lib" / "common.sh")
@@ -321,6 +410,72 @@ def test_package_builder_requires_clean_exact_head_and_external_output():
     assert "archive --format=tar" in script
     assert "--out must be outside the repository worktree" in script
     assert "RELEASE_SHA256SUMS" in script
+
+
+def test_package_builder_pins_export_inputs_and_has_fail_closed_cr_guard():
+    script = read(LINUX / "package.sh")
+    compact = " ".join(script.split())
+    assert "-c core.autocrlf=false -c core.eol=lf -c tar.umask=0022" in compact
+    assert "`* text=auto`" in script
+    assert 'git -C "${REPO}" ls-tree -rz --long "${RELEASE_SHA}"' in script
+    assert "exported file inventory or sizes differ from release commit tree" in script
+    assert 'cd "${OUT}"' in script
+    assert "-path './IBKR_PAPER_BRIDGE/deploy/linux/*'" in script
+    assert '> "${CR_INVENTORY}"' in script
+    assert '"${LF_REQUIRED_COUNT}" -gt 0' in script
+    assert "export LC_ALL=C" in script
+
+
+def test_package_cr_guard_rejects_cr_bytes(tmp_path):
+    repo = tmp_path / "repo"
+    release_sha = make_package_fixture(repo, {"bad.sh": b"#!/bin/sh\r\nexit 0\r\n"})
+    result = run_package(repo, tmp_path / "payload", release_sha)
+    assert result.returncode != 0
+    assert "archive contains CR byte in LF-required file: bad.sh" in result.stderr
+
+
+def test_package_cr_guard_propagates_find_failure(tmp_path):
+    repo = tmp_path / "repo"
+    release_sha = make_package_fixture(repo, {"good.sh": b"#!/bin/sh\nexit 0\n"})
+    result = run_bash(
+        r'''
+find() {
+  for find_arg in "$@"; do
+    if [ "${find_arg}" = './IBKR_PAPER_BRIDGE/deploy/linux/*' ]; then
+      printf '%s\n' 'simulated CR-inventory find failure' >&2
+      return 73
+    fi
+  done
+  command find "$@"
+}
+. "$1" --release-sha "$2" --repo "$3" --out "$4"
+''',
+        LINUX / "package.sh",
+        release_sha,
+        repo,
+        tmp_path / "payload",
+    )
+    assert result.returncode != 0
+    assert "simulated CR-inventory find failure" in result.stderr
+    assert "cannot inventory LF-required payload files" in result.stderr
+
+
+def test_package_cr_guard_rejects_zero_file_inventory(tmp_path):
+    repo = tmp_path / "repo"
+    release_sha = make_package_fixture(repo, {"README.md": b"fixture\n"})
+    result = run_package(repo, tmp_path / "payload", release_sha)
+    assert result.returncode != 0
+    assert "no LF-required payload files were found to inspect" in result.stderr
+
+
+def test_package_cr_guard_handles_metacharacter_output_path(tmp_path):
+    repo = tmp_path / "repo"
+    relative = "IBKR_PAPER_BRIDGE/deploy/linux/env/mtc-bridge.env.template"
+    release_sha = make_package_fixture(repo, {relative: b"# LF-only fixture\n"})
+    output = tmp_path / "payload[meta]"
+    result = run_package(repo, output, release_sha)
+    assert result.returncode == 0, result.stderr
+    assert (output / "RELEASE_SHA256SUMS").is_file()
 
 
 def test_closed_port_assertion_rejects_an_orphan_loopback_listener():

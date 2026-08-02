@@ -47,7 +47,7 @@ done
 [ -n "${REPO}" ]        || die "--repo is required"
 [ -n "${OUT}" ]         || die "--out is required"
 require_release_sha "${RELEASE_SHA}"
-require_cmd git tar sha256sum sort realpath
+require_cmd git tar sha256sum sort realpath cmp mktemp
 
 git -C "${REPO}" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
   || die "--repo is not a git worktree"
@@ -71,8 +71,40 @@ fi
 mkdir -p "${OUT}"
 
 log "exporting ${RELEASE_SHA} via git archive"
-git -c core.autocrlf=false -c core.eol=lf -C "${REPO}" \
+# Both line-ending pins are required: the repository's `* text=auto`
+# attribute makes core.eol load-bearing.  On Windows, its native default would
+# emit CRLF even with core.autocrlf=false.
+git -c core.autocrlf=false -c core.eol=lf -c tar.umask=0022 -C "${REPO}" \
   archive --format=tar "${RELEASE_SHA}" | tar -x -C "${OUT}"
+
+TREE_RAW="$(mktemp)"
+EXPECTED_INVENTORY="$(mktemp)"
+ACTUAL_INVENTORY="$(mktemp)"
+CR_INVENTORY="$(mktemp)"
+cleanup_package_temps() {
+  rm -f -- "${TREE_RAW}" "${EXPECTED_INVENTORY}" \
+    "${ACTUAL_INVENTORY}" "${CR_INVENTORY}"
+}
+trap cleanup_package_temps EXIT
+
+log "verifying exported inventory and sizes match the release commit"
+if ! git -C "${REPO}" ls-tree -rz --long "${RELEASE_SHA}" > "${TREE_RAW}"; then
+  die "cannot inventory release commit tree"
+fi
+: > "${EXPECTED_INVENTORY}"
+while IFS= read -r -d '' tree_entry; do
+  tree_metadata="${tree_entry%%$'\t'*}"
+  tree_path="${tree_entry#*$'\t'}"
+  tree_size="${tree_metadata##* }"
+  printf '%s\t%s\0' "${tree_size}" "${tree_path}" >> "${EXPECTED_INVENTORY}"
+done < "${TREE_RAW}"
+if ! (cd "${OUT}" && find . -type f -printf '%s\t%P\0') > "${ACTUAL_INVENTORY}"; then
+  die "cannot inventory exported payload files"
+fi
+LC_ALL=C sort -z -o "${EXPECTED_INVENTORY}" "${EXPECTED_INVENTORY}"
+LC_ALL=C sort -z -o "${ACTUAL_INVENTORY}" "${ACTUAL_INVENTORY}"
+cmp -s "${EXPECTED_INVENTORY}" "${ACTUAL_INVENTORY}" \
+  || die "exported file inventory or sizes differ from release commit tree"
 
 printf '%s\n' "${RELEASE_SHA}" > "${OUT}/RELEASE_SHA"
 
@@ -82,23 +114,32 @@ assert_regular_directory_tree "${OUT}" || true
   || die "archive contains a symlink or special filesystem entry"
 
 log "verifying LF-only payload files contain no CR bytes"
+if ! (
+  cd "${OUT}"
+  find . -type f \
+    \( -path './IBKR_PAPER_BRIDGE/deploy/linux/*' -o -name '*.sh' \) \
+    -print0
+) > "${CR_INVENTORY}"; then
+  die "cannot inventory LF-required payload files"
+fi
+LF_REQUIRED_COUNT=0
 while IFS= read -r -d '' payload_file; do
-  if LC_ALL=C grep -qU $'\r' "${payload_file}"; then
-    die "archive contains CR byte in LF-required file: ${payload_file#"${OUT}/"}"
+  LF_REQUIRED_COUNT=$((LF_REQUIRED_COUNT + 1))
+  if LC_ALL=C grep -qU $'\r' "${OUT}/${payload_file#./}"; then
+    die "archive contains CR byte in LF-required file: ${payload_file#./}"
   else
     grep_status="$?"
     [ "${grep_status}" -eq 1 ] \
-      || die "cannot inspect LF-required file for CR bytes: ${payload_file#"${OUT}/"}"
+      || die "cannot inspect LF-required file for CR bytes: ${payload_file#./}"
   fi
-done < <(
-  find "${OUT}" -type f \
-    \( -path "${OUT}/IBKR_PAPER_BRIDGE/deploy/linux/*" -o -name '*.sh' \) \
-    -print0
-)
+done < "${CR_INVENTORY}"
+[ "${LF_REQUIRED_COUNT}" -gt 0 ] \
+  || die "no LF-required payload files were found to inspect"
 
 log "generating RELEASE_SHA256SUMS"
-( cd "${OUT}" \
-  && find . -type f '!' -name RELEASE_SHA256SUMS -print0 \
+( export LC_ALL=C
+  cd "${OUT}"
+  find . -type f '!' -name RELEASE_SHA256SUMS -print0 \
      | sort -z \
      | xargs -0 sha256sum > RELEASE_SHA256SUMS )
 
