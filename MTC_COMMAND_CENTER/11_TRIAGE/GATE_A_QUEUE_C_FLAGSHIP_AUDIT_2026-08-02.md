@@ -38,7 +38,13 @@ The Linux floor is established here for the first time. The two Windows failures
 ledger working-copy CRLF and stale `schema_version` cases. The 25 Linux failures are the known
 defect-3b `test_wal_state_bundle.py` cascade plus the two Python-3.12 `test_order_state.py`
 GC-referent cases — the same composition as every other branch off this parent, with nothing new
-introduced by Queue C.
+introduced by Queue C. Counted, not assumed:
+
+```
+23 FAILED tests/test_wal_state_bundle.py
+ 2 FAILED tests/test_order_state.py
+ 0 FAILED anywhere else
+```
 
 Collection totals corroborate each other: 1311 tests on **both** platforms — parent 1306 plus this
 branch's 5 new tests.

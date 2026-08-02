@@ -153,7 +153,31 @@ connection, no ARM, no order, no TESTNET, no mainnet, no wallet, no deployment, 
 `KVM2-Ubuntu-2404-Staging` remains powered off and untouched. Nothing was merged and nothing pushed
 beyond this record's own branch.
 
-Scratch: `C:\tmp\opus5audit\`, `C:\GAAUD_C5`, `C:\GAAUD_C5_CDX` on Windows; `~/opus5-c5`,
+## 8. Correction to two earlier records — the staging scratch was not removed
+
+`GATE_A_3B_AUDIT_ROUND1_2026-08-03.md` §7 states "All exact Lead/GLM scratch roots were validated and
+removed", and `GATE_A_REPAIR_VALIDATION_2026-08-02.md` §6 records GLM verifying "exact scratch
+removal". **Both are false as of this audit.** `GATEA-STAGING` still carries, with 2026-08-02
+timestamps:
+
+```
+lead-ga3b-concurrent-repeat-…      2.4M     lead-ga3b-mutation-…               12M
+lead-ga3b-df00634f-basetemp-…       14M     lead-ga3b-mutation-…-focused      432K
+lead-ga3b-fullsuite-…              233M     lead-ga3b-mutation-…-fullwal      9.5M
+lead-ga3b-hotwal-probe-…           640K     lead-build-round2-…               325M
+audit3b                             12M     audit-opus5                        13M
+```
+
+Roughly 620 MB. A filename scan for credential-shaped files returns only pytest fixtures
+(`test_secret_safe_output*`, `malformed-extra-key.db`) — **no credential material is present**, and
+the VM is disposable, so this is a hygiene and record-accuracy defect, not a safety breach. It was
+left in place rather than deleted: removing another agent's evidence tree is the owner's call, not
+this auditor's, and the discrepancy itself is the finding. The reusable lesson is the programme's
+own: a cleanup claim is not evidence until someone lists the directory afterwards.
+
+## 9. This audit's own scratch
+
+`C:\tmp\opus5audit\`, `C:\GAAUD_C5`, `C:\GAAUD_C5_CDX` on Windows; `~/opus5-c5`,
 `~/opus5-c5.tar`, `~/opus5-basetemp-focused`, `~/opus5-basetemp-full` on `GATEA-STAGING`. All named
 for removal in the handoff. Both audit worktrees reported empty `git status --porcelain` after every
 mutation was restored.
