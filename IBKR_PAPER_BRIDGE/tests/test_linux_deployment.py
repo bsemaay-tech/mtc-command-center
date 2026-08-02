@@ -491,7 +491,6 @@ def test_package_builder_pins_export_inputs_and_has_fail_closed_cr_guard():
     script = read(LINUX / "package.sh")
     compact = " ".join(script.split())
     assert "-c core.autocrlf=false -c core.eol=lf -c tar.umask=0022" in compact
-    assert "`* text=auto`" in script
     assert 'git -C "${REPO}" ls-tree -rz --long "${RELEASE_SHA}"' in script
     assert "exported file inventory or sizes differ from release commit tree" in script
     assert 'cd "${OUT}"' in script
@@ -503,8 +502,11 @@ def test_package_builder_pins_export_inputs_and_has_fail_closed_cr_guard():
 
 def test_package_manifest_is_identical_across_c_and_en_us_utf8_locales(tmp_path):
     locale_probe = run_bash("locale charmap", env={"LC_ALL": "en_US.UTF-8"})
-    assert locale_probe.returncode == 0, locale_probe.stderr
-    assert locale_probe.stdout.strip() == "UTF-8"
+    if locale_probe.returncode != 0 or locale_probe.stdout.strip().upper() not in {
+        "UTF-8",
+        "UTF8",
+    }:
+        pytest.skip("en_US.UTF-8 locale is not generated on this builder")
 
     repo = tmp_path / "repo"
     release_sha = make_package_fixture(
@@ -529,6 +531,26 @@ def test_package_manifest_is_identical_across_c_and_en_us_utf8_locales(tmp_path)
     assert file_sha256(output_c / "RELEASE_SHA256SUMS") == file_sha256(
         output_utf8 / "RELEASE_SHA256SUMS"
     )
+
+
+def test_package_core_eol_pin_overrides_text_auto_and_repo_crlf(tmp_path):
+    relative = "IBKR_PAPER_BRIDGE/deploy/linux/README.md"
+    expected = b"line one\nline two\n"
+    repo = tmp_path / "repo"
+    release_sha = make_package_fixture(
+        repo,
+        {
+            ".gitattributes": b"* text=auto\n",
+            relative: expected,
+        },
+    )
+    git(repo, "config", "core.eol", "crlf")
+
+    output = tmp_path / "payload"
+    result = run_package(repo, output, release_sha)
+
+    assert result.returncode == 0, result.stderr
+    assert (output / relative).read_bytes() == expected
 
 
 def test_package_conflicting_tar_umask_cannot_change_manifest_or_modes(tmp_path):
