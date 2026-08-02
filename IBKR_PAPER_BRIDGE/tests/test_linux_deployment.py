@@ -7,6 +7,7 @@ secret, or contacts a network endpoint.
 from __future__ import annotations
 
 import copy
+import hashlib
 import importlib.util
 import json
 import os
@@ -64,7 +65,14 @@ def bash_executable() -> str:
     pytest.skip("bash is required for deterministic deployment-shell checks")
 
 
-def run_bash(script: str, *args: Path | str) -> subprocess.CompletedProcess[str]:
+def run_bash(
+    script: str,
+    *args: Path | str,
+    env: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess[str]:
+    process_env = os.environ.copy()
+    if env:
+        process_env.update(env)
     return subprocess.run(
         [
             bash_executable(),
@@ -76,6 +84,7 @@ def run_bash(script: str, *args: Path | str) -> subprocess.CompletedProcess[str]
         text=True,
         capture_output=True,
         check=False,
+        env=process_env,
     )
 
 
@@ -115,14 +124,31 @@ def make_package_fixture(repo: Path, files: dict[str, bytes]) -> str:
     return release_sha
 
 
-def run_package(repo: Path, output: Path, release_sha: str) -> subprocess.CompletedProcess[str]:
+def run_package(
+    repo: Path,
+    output: Path,
+    release_sha: str,
+    *,
+    env: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess[str]:
     return run_bash(
         'bash "$1" --release-sha "$2" --repo "$3" --out "$4"',
         LINUX / "package.sh",
         release_sha,
         repo,
         output,
+        env=env,
     )
+
+
+def file_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def bash_mode(path: Path) -> str:
+    result = run_bash("stat -c '%a' \"$1\"", path)
+    assert result.returncode == 0, result.stderr
+    return result.stdout.strip()
 
 
 def test_requirements_in_mirrors_untouched_requirements_txt():
@@ -311,6 +337,55 @@ def test_writable_path_assertion_ignores_symlink_but_rejects_regular_file(tmp_pa
     assert "writable path inside immutable release" in result.stderr
 
 
+def test_writable_path_assertion_rejects_writable_fifo(tmp_path):
+    common = LINUX / "lib" / "common.sh"
+    immutable = tmp_path / "fifo-root"
+    immutable.mkdir()
+    fifo = immutable / "writable-fifo"
+    find_override = ""
+    if os.name == "nt":
+        # MSYS reports every directory as mode 0755 even after chmod. Exclude
+        # only the fixture root so the real FIFO remains the behavioral target.
+        find_override = r'''
+find() {
+  root="$1"
+  shift
+  command find "${root}" -mindepth 1 "$@"
+}
+'''
+    try:
+        result = run_bash(
+            find_override
+            + r'''
+umask 022
+mkfifo "$2/writable-fifo"
+chmod 0555 "$2"
+. "$1"
+MTC_FAILURES=0
+assert_no_writable_paths "$2"
+''',
+            common,
+            immutable,
+        )
+    finally:
+        os.chmod(immutable, 0o755)
+        fifo.unlink(missing_ok=True)
+    assert result.returncode != 0
+    assert "writable path inside immutable release" in result.stderr
+
+
+def test_writable_path_assertion_fails_closed_for_missing_root(tmp_path):
+    common = LINUX / "lib" / "common.sh"
+    missing = tmp_path / "does-not-exist"
+    result = run_bash(
+        '. "$1"; MTC_FAILURES=0; assert_no_writable_paths "$2"',
+        common,
+        missing,
+    )
+    assert result.returncode != 0
+    assert "cannot inventory writable paths" in result.stderr
+
+
 def test_package_and_install_enforce_complete_regular_file_inventory():
     package = read(LINUX / "package.sh")
     common = read(LINUX / "lib" / "common.sh")
@@ -426,6 +501,93 @@ def test_package_builder_pins_export_inputs_and_has_fail_closed_cr_guard():
     assert "export LC_ALL=C" in script
 
 
+def test_package_manifest_is_identical_across_c_and_en_us_utf8_locales(tmp_path):
+    locale_probe = run_bash("locale charmap", env={"LC_ALL": "en_US.UTF-8"})
+    assert locale_probe.returncode == 0, locale_probe.stderr
+    assert locale_probe.stdout.strip() == "UTF-8"
+
+    repo = tmp_path / "repo"
+    release_sha = make_package_fixture(
+        repo,
+        {
+            "IBKR_PAPER_BRIDGE/deploy/linux/README.md": b"deployment fixture\n",
+            "a-b.sh": b"#!/bin/sh\n",
+            "a_b.sh": b"#!/bin/sh\n",
+        },
+    )
+    output_c = tmp_path / "payload-c"
+    output_utf8 = tmp_path / "payload-en-us"
+    result_c = run_package(repo, output_c, release_sha, env={"LC_ALL": "C"})
+    result_utf8 = run_package(
+        repo,
+        output_utf8,
+        release_sha,
+        env={"LC_ALL": "en_US.UTF-8"},
+    )
+    assert result_c.returncode == 0, result_c.stderr
+    assert result_utf8.returncode == 0, result_utf8.stderr
+    assert file_sha256(output_c / "RELEASE_SHA256SUMS") == file_sha256(
+        output_utf8 / "RELEASE_SHA256SUMS"
+    )
+
+
+def test_package_conflicting_tar_umask_cannot_change_manifest_or_modes(tmp_path):
+    relative = "IBKR_PAPER_BRIDGE/deploy/linux/README.md"
+    repo = tmp_path / "repo"
+    release_sha = make_package_fixture(repo, {relative: b"deployment fixture\n"})
+
+    git(repo, "config", "tar.umask", "0000")
+    output_permissive = tmp_path / "payload-umask-0000"
+    result_permissive = run_package(repo, output_permissive, release_sha)
+    git(repo, "config", "tar.umask", "0077")
+    output_restrictive = tmp_path / "payload-umask-0077"
+    result_restrictive = run_bash(
+        r'''
+TAR_CAPTURE_ROOT="$5"
+tar() {
+  archive_file="${TAR_CAPTURE_ROOT}/captured.tar"
+  cat > "${archive_file}"
+  archive_mode="$(command tar --force-local -tvf "${archive_file}" \
+    | awk '$NF == "IBKR_PAPER_BRIDGE/deploy/linux/README.md" { print $1; exit }')"
+  [ "${archive_mode}" = '-rw-r--r--' ] || {
+    printf 'unexpected archive mode: %s\n' "${archive_mode}" >&2
+    return 73
+  }
+  command tar "$@" < "${archive_file}"
+}
+. "$1" --release-sha "$2" --repo "$3" --out "$4"
+''',
+        LINUX / "package.sh",
+        release_sha,
+        repo,
+        output_restrictive,
+        tmp_path,
+    )
+
+    assert result_permissive.returncode == 0, result_permissive.stderr
+    assert result_restrictive.returncode == 0, result_restrictive.stderr
+    assert file_sha256(output_permissive / "RELEASE_SHA256SUMS") == file_sha256(
+        output_restrictive / "RELEASE_SHA256SUMS"
+    )
+    assert bash_mode(output_permissive / relative) == "644"
+    assert bash_mode(output_restrictive / relative) == "644"
+
+
+def test_package_rejects_export_ignore_inventory_divergence(tmp_path):
+    repo = tmp_path / "repo"
+    release_sha = make_package_fixture(
+        repo,
+        {
+            ".gitattributes": b"omitted.txt export-ignore\n",
+            "omitted.txt": b"must remain in the release inventory\n",
+            "IBKR_PAPER_BRIDGE/deploy/linux/README.md": b"deployment fixture\n",
+        },
+    )
+    result = run_package(repo, tmp_path / "payload", release_sha)
+    assert result.returncode != 0
+    assert "exported file inventory or sizes differ from release commit tree" in result.stderr
+
+
 def test_package_cr_guard_rejects_cr_bytes(tmp_path):
     repo = tmp_path / "repo"
     release_sha = make_package_fixture(repo, {"bad.sh": b"#!/bin/sh\r\nexit 0\r\n"})
@@ -460,22 +622,55 @@ find() {
     assert "cannot inventory LF-required payload files" in result.stderr
 
 
-def test_package_cr_guard_rejects_zero_file_inventory(tmp_path):
+def test_package_cr_guard_rejects_missing_deployment_directory_inventory(tmp_path):
     repo = tmp_path / "repo"
-    release_sha = make_package_fixture(repo, {"README.md": b"fixture\n"})
+    release_sha = make_package_fixture(repo, {"outside.sh": b"#!/bin/sh\n"})
     result = run_package(repo, tmp_path / "payload", release_sha)
     assert result.returncode != 0
-    assert "no LF-required payload files were found to inspect" in result.stderr
+    assert "no deployment LF-required payload files were found to inspect" in result.stderr
 
 
 def test_package_cr_guard_handles_metacharacter_output_path(tmp_path):
     repo = tmp_path / "repo"
     relative = "IBKR_PAPER_BRIDGE/deploy/linux/env/mtc-bridge.env.template"
-    release_sha = make_package_fixture(repo, {relative: b"# LF-only fixture\n"})
+    release_sha = make_package_fixture(repo, {relative: b"# env with CR\r\nKEY=1\r\n"})
     output = tmp_path / "payload[meta]"
     result = run_package(repo, output, release_sha)
-    assert result.returncode == 0, result.stderr
-    assert (output / "RELEASE_SHA256SUMS").is_file()
+    assert result.returncode != 0
+    assert "archive contains CR byte in LF-required file" in result.stderr
+
+
+def test_package_cleans_partial_temp_allocations_when_mktemp_fails(tmp_path):
+    repo = tmp_path / "repo"
+    release_sha = make_package_fixture(
+        repo,
+        {"IBKR_PAPER_BRIDGE/deploy/linux/README.md": b"deployment fixture\n"},
+    )
+    package_temps = tmp_path / "package-temps"
+    package_temps.mkdir()
+    result = run_bash(
+        r'''
+PACKAGE_TEMP_ROOT="$5"
+mktemp() {
+  printf 'call\n' >> "${PACKAGE_TEMP_ROOT}/calls"
+  call_number="$(wc -l < "${PACKAGE_TEMP_ROOT}/calls")"
+  if [ "${call_number}" -eq 3 ]; then
+    return 73
+  fi
+  temp_path="${PACKAGE_TEMP_ROOT}/temp-${call_number}"
+  : > "${temp_path}"
+  printf '%s\n' "${temp_path}"
+}
+. "$1" --release-sha "$2" --repo "$3" --out "$4"
+''',
+        LINUX / "package.sh",
+        release_sha,
+        repo,
+        tmp_path / "payload",
+        package_temps,
+    )
+    assert result.returncode != 0
+    assert list(package_temps.glob("temp-*")) == []
 
 
 def test_closed_port_assertion_rejects_an_orphan_loopback_listener():
