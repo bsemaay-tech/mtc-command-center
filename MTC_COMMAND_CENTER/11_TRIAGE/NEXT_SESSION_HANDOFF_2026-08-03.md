@@ -87,7 +87,39 @@ the production service against a test fixture must not be used to manufacture an
 - **A-5 never ran** — it needs a live service.
 - WP-L Phase 2, WP-I staging, Audit 2 and WP-A are all **blocked** behind the rebuild.
 
-## 5. Required repair (implementer work — deliberately NOT performed)
+## 4b. Defects 1, 2 and 5 are ALREADY FIXED and validated — branch waiting for you
+
+Branch **`codex/gate-a-build-determinism` @ `a1dd5b46`** (pushed, **not merged**, no Gate 5 audit yet).
+Codex implemented; Lead audited and validated. Full evidence:
+`GATE_A_REPAIR_VALIDATION_2026-08-02.md`.
+
+Two files, three hunks: pin `git archive` to `core.autocrlf=false core.eol=lf` per-invocation, add a
+post-export assertion that fails the build on any surviving CR byte, and give
+`assert_no_writable_paths` a `-type` filter.
+
+What it demonstrably achieves:
+
+- **Deterministic build** — rebuilding the same `RELEASE_SHA` with `core.autocrlf` forced to a
+  different value produces an identical manifest `d25d4464…`. Payload files now equal their committed
+  blob sizes exactly.
+- **The new guard was falsified deliberately** — a temporary commit carrying a real CRLF blob made
+  the build die. It is not decorative.
+- **Installs on Ubuntu unaided** — `install.sh` EXIT=0, both release tree and venv sealed, unit
+  masked, not started, no secret, no firewall change; `verify.sh` **VERIFY PASS**. No host file was
+  edited, which was A-2's FAIL condition.
+- **`test_linux_deployment.py`: 34 passed, 0 failed** (was 4 failed / 30 passed). The ledger-hash
+  test the programme has carried as an accepted pre-existing failure was never a defect — it was
+  this build bug.
+- Full suite: **25 failed, 1281 passed**, matching the prediction made before the run.
+
+Still broken after it, by design: defects **3a, 3b and 4**. The Linux floor is 25, not 2;
+`wal_state_bundle` (the Stage E cutover tool) is still broken on Linux; and A-4 is still
+unexecutable, so the ARM-refusal path remains untested.
+
+**Before merging:** it needs a Gate 5 audit at the canonical floor. Codex implemented it, so Codex
+cannot be one of its auditors this round.
+
+## 5. Required repair (steps 1-3 DONE on the branch above; the rest outstanding)
 
 1. **Fix the build, not the repo.** `package.sh:73` must export without line-ending conversion:
    `git -c core.autocrlf=false -c core.eol=lf archive …`. Verified to produce byte-exact LF output
