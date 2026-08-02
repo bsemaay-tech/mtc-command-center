@@ -1,5 +1,18 @@
 # NEXT_STEPS
 
+## QUEUE C FROZEN / EXECUTING AUDIT BLOCKED (2026-08-02)
+
+- **[AI: Claude] NEXT AFTER ROSTER RESTORATION:** fresh canonical executing audit of frozen
+  credential-free DISARMED candidate `5a9bb922d5255c6a9cb2e8d8b3e7bf9305438002`; reproduce exact
+  parent RED, candidate GREEN, and full Windows/Linux floors. It is pushed but **not accepted**.
+- **[AI: Any] EVIDENCE:**
+  `11_TRIAGE/GATE_A_CREDENTIAL_FREE_DISARMED_CANDIDATE_2026-08-02.md` records exact scope, Lead
+  RED/GREEN, unchanged Windows floor, both D025 audit BLOCKs, safety, and cleanup.
+- **[AI: Any] DO NOT CLAIM:** Queue C has no temporary acceptance label. Two GLM sessions returned
+  no complete executing ledger before timeout/window expiry.
+- **[AI: Any] HOLD:** Queue D integration/rebuild/Gate A rerun remains blocked by the defect-3b hard
+  stop; no master merge, KVM2, credentials, broker, ARM, orders, TESTNET, mainnet, or economic action.
+
 ## GATE A CODEX TAKEOVER - BUILD ACCEPTED / 3B HARD STOP (2026-08-02)
 
 - **[AI: Claude] REQUIRED RETROSPECTIVE:** audit frozen build candidate

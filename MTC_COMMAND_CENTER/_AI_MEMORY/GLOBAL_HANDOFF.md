@@ -1,5 +1,20 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-08-02 - Queue C frozen but not accepted
+
+Credential-free DISARMED start candidate `5a9bb922d5255c6a9cb2e8d8b3e7bf9305438002` is pushed on
+`codex/gate-a-credential-free-disarmed`, exact three-file scope. Lead independently reproduced
+candidate GREEN (`5 passed`), exact-parent RED (`4 failed, 1 passed`), and the unchanged Windows
+floor (`2 failed, 1309 passed, 1 warning`). Two fresh GLM-5.2 executing audits returned no complete
+ledger before timeout/window expiry and are D025 BLOCK. Therefore the candidate is **NOT ACCEPTED**
+and carries no temporary acceptance label. Full record:
+`11_TRIAGE/GATE_A_CREDENTIAL_FREE_DISARMED_CANDIDATE_2026-08-02.md`.
+
+**NEXT:** fresh canonical executing audit after renewed owner authority or restored roster. Queue D
+remains blocked by the independent defect-3b three-result hard stop. No integration, rebuild, Gate A
+rerun, master merge, KVM2, credentials, broker connection, ARM, orders, TESTNET, mainnet, or economic
+action.
+
 ## [Codex GPT-5.6-sol] 2026-08-02 - Gate A takeover: build accepted; defect 3b hard-stopped
 
 **Current result:** build-determinism candidate
