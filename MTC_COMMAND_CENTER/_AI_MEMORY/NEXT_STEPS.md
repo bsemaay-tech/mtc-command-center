@@ -1,5 +1,23 @@
 # NEXT_STEPS
 
+## GATE A — ALL THREE FROZEN CANDIDATES NOT ACCEPTED (2026-08-02)
+
+- **[AI: Barış] NEXT — OWNER AUTHORIZATION REQUIRED:** open a new protected Bridge repair cycle for
+  defect 3b candidate `df00634fc2e5fb19cddb34a6ad16d9764c4779a4`. A non-empty WAL plus a
+  zero-byte SHM bypasses the preconnection guard; Lead reproduced `CAPTURED`, three SQLite connects,
+  SHM `0 -> 32768`, and bundle/manifest creation on Windows and locked Linux. Repair must refuse
+  absent, empty, or invalid SHM before any connection and must provide D026 RED/GREEN evidence.
+- **[AI: Any] 3B RECORD:**
+  `11_TRIAGE/GATE_A_3B_RETROSPECTIVE_FLAGSHIP_ROUND_2026-08-02.md`. Retrospective round 1 is
+  **NOT ACCEPTED / REQUEST_CHANGES**. Claude quota interruption produced no verdict; both detached
+  auditor worktrees are restored and clean at `df00634f`.
+- **[AI: Any] BUILD:** `c5a4070a` remains **NOT ACCEPTED** under
+  `11_TRIAGE/GATE_A_C5A4070A_FLAGSHIP_ROUND_2026-08-02.md`.
+- **[AI: Any] QUEUE C:** `5a9bb922` remains **NOT ACCEPTED** under
+  `11_TRIAGE/GATE_A_QUEUE_C_FLAGSHIP_ROUND_2026-08-02.md`.
+- **[AI: Any] HOLD:** no Queue D integration, artifact rebuild, Gate A rerun, master merge, KVM2,
+  credentials, broker connection, ARM, orders, TESTNET, mainnet, wallet, or economic action.
+
 ## QUEUE C FROZEN / EXECUTING AUDIT BLOCKED (2026-08-02)
 
 - **[AI: Claude] NEXT AFTER ROSTER RESTORATION:** fresh canonical executing audit of frozen

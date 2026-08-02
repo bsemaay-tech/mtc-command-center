@@ -1,5 +1,25 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-08-02 — Defect 3b retrospective round 1 NOT ACCEPTED
+
+Fresh canonical `gpt-5.6-sol` xhigh audit of frozen candidate
+`df00634fc2e5fb19cddb34a6ad16d9764c4779a4` returned **REQUEST_CHANGES**: a non-empty WAL paired
+with a present but zero-byte SHM bypasses the preconnection guard; SQLite rebuilds the SHM from 0 to
+32768 bytes, the tool makes three connections, reports `CAPTURED`, and writes the bundle and manifest.
+The Lead independently reproduced the same result on Windows Python 3.14.2 / SQLite 3.50.4 and the
+locked Linux Python 3.12.3 / SQLite 3.45.1. D025 rule 2 therefore makes the finding binding.
+
+The fresh Claude audit returned no verdict: quota 429 stopped it immediately after staging the M1
+parent tool. The exact mutation was restored and both detached 3b audit worktrees are clean at
+`df00634f`. Full evidence and provenance:
+`11_TRIAGE/GATE_A_3B_RETROSPECTIVE_FLAGSHIP_ROUND_2026-08-02.md`.
+
+**Current Gate A disposition:** build `c5a4070a` **NOT ACCEPTED**; Queue C `5a9bb922` **NOT
+ACCEPTED**; defect 3b `df00634f` **NOT ACCEPTED**. Queue D integration, artifact rebuild, Gate A
+rerun, master merge, and KVM2 remain blocked. The next action requires a separate owner-authorized
+protected Bridge repair cycle for the zero-byte/invalid-SHM case. No source repair, merge,
+deployment, credential, broker, ARM, order, TESTNET, mainnet, KVM2, or economic action occurred.
+
 ## [Codex GPT-5.6-sol] 2026-08-02 - Queue C frozen but not accepted
 
 Credential-free DISARMED start candidate `5a9bb922d5255c6a9cb2e8d8b3e7bf9305438002` is pushed on
