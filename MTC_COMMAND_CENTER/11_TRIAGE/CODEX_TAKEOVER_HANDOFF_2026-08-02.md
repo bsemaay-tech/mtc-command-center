@@ -152,15 +152,18 @@ At handoff creation:
 - `KVM2-Ubuntu-2404-Staging` remains powered off and quarantined; the real KVM2 path remains out of
   scope.
 
-At handoff creation a Codex CLI process was **actively editing `C:\GATEAFIX`** for build repair
-round 2. Its tracked diff touched only:
+During handoff preparation a Codex CLI process was editing `C:\GATEAFIX` for build repair round 2.
+At the final refresh the process had exited and the uncommitted tracked diff remained. It touched
+only:
 
 - `IBKR_PAPER_BRIDGE/deploy/linux/package.sh`
 - `IBKR_PAPER_BRIDGE/tests/test_linux_deployment.py`
 
-Do not launch another writer, clean the worktree, switch it, or kill that process. Rediscover the
-process and wait for its atomic result. If it has exited, collect its output and inspect all residue
-before deciding whether anything is stale. Existing uncommitted changes belong to that implementer.
+First rediscover the process state in case it changed again. If no writer exists, collect and
+adjudicate the uncommitted result; do not assume exit means success. Inspect the exact diff, tests,
+and all residue before deciding whether anything is stale. Existing uncommitted changes belong to
+that implementer. Do not clean or switch the worktree, and do not launch another writer there until
+the result has been accepted or a focused repair prompt is ready.
 
 ## 4. Execution queue — proceed automatically
 

@@ -3,8 +3,9 @@
 ## CODEX TAKEOVER — CLAUDE QUOTA WINDOW (2026-08-02)
 
 - **[AI: Codex] START HERE:** `11_TRIAGE/CODEX_TAKEOVER_HANDOFF_2026-08-02.md`.
-- **[AI: Codex] ACTIVE:** collect the already-running build repair round 2 in `C:\GATEAFIX`; no
-  concurrent writer. Independently audit actual diff/evidence, then exact GLM-5.2 executing audit.
+- **[AI: Codex] ACTIVE:** collect the exited build repair round 2's two-file uncommitted result in
+  `C:\GATEAFIX`; independently audit actual diff/evidence, then exact GLM-5.2 executing audit. Do not
+  launch another writer there first.
 - **[AI: Codex] NEXT:** adjudicate defect 3b at `df00634f`, then implement the owner-approved explicit
   credential-free DISARMED start mode, integrate accepted commits, rebuild once, and Gate A from A-0.
 - **[AI: Any] TEMPORARY ROSTER:** Codex app Lead + isolated secondary Codex CLI implementer + GLM-5.2
