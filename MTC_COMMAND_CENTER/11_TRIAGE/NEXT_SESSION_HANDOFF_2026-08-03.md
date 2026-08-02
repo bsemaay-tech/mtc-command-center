@@ -223,6 +223,63 @@ brand-new task still need Barış explicitly.
    `401 token expired or incorrect`. Needed for Audit 2's roster, not for Gate A.
 4. Decide the fate of `KVM2-Ubuntu-2404-Staging` (§7).
 
+## 10b. Session accounting — 2026-08-02 night session
+
+**Wall clock:** ~00:58 → 08:51 = **7 h 53 min**, continuous.
+
+**Measured cost:** CodeBurn read `$15.78 / 110 calls` at session start and `$81.03 / 423 calls` at
+end → **≈ $65 and ≈ 313 calls** for this session. Per-session *token* totals are not separable —
+`codeburn models` reports cumulative figures across all time, so any token number quoted for this
+session alone would be invented. Spend and call count are the honest measurables.
+
+**Models actually used — only two:**
+
+| Model | Role | Outcome |
+|---|---|---|
+| `claude-opus-5` | Lead Orchestrator — all diagnosis, all Git, all host work, all validation | Found the five defects; **also made the root-cause error the audit caught** |
+| `gpt-5.6-sol` xhigh | Independent auditor of the Gate A findings | **REQUEST_CHANGES** — refuted the Lead's root cause, found defect 5. Highest-value single action of the night |
+| `gpt-5.6-sol` high | Implementer of the repair | Clean, minimal 3-hunk diff, correct first time |
+
+**Deliberately not used:**
+
+- **GLM-5.2** — route returns `401 token expired`. Blocked, not skipped.
+- **`deepseek-v4-flash` via Cline** — four failed dispatches across two prior cycles, never once a
+  verdict. The standing rule is opportunistic-only, never round-gating.
+- **Cline / DeepSeek for cheap mechanical work** — there was almost none. The night was diagnosis,
+  acceptance authority, and a protected deployment surface, all of which `AGENTS.md` keeps off the
+  cheap tier.
+- **Subagents** — not requested.
+
+**What worked best, honestly:** commissioning the adversarial audit. It cost one dispatch and turned
+a wrong, invasive repair (repo-wide content renormalisation) into a correct two-line build fix. The
+Lead's own diagnosis found the defects but got the cause backwards; the audit is what made the
+finding safe to act on.
+
+## 10c. Hours against the 50-hour plan — and a warning
+
+Prior state: **20.5 used / 29.5 remaining**.
+
+This session delivered roughly **7–8 plan-hours** of work in 7 h 53 min wall clock: staging host
+build, Gate A A-0/A-1/A-2 execution, reconnaissance covering much of A-3/A-8/A-9's substance, partial
+WP-L Phase 2 Ubuntu revalidation evidence, and a WP-I build repair with end-to-end validation on both
+platforms.
+
+Booked conservatively that leaves **≈ 21–22 h remaining**. But that number is misleading on its own,
+and the warning matters more than the arithmetic:
+
+**New, unbudgeted work was discovered.** The original 29.5 h assumed Gate A would pass and the chain
+would run `WP-L Phase 2 → WP-I staging → Audit 2 → WP-A → WP-V`. Instead:
+
+- Defect **3b** (`wal_state_bundle` broken on Linux) is the **Stage E cutover tool**. Nobody has
+  scoped a fix. It is not small, and WP-V depends on it.
+- Defect **3a** means the entire test baseline must be re-established on Python 3.12.
+- Defect **4** may require a new credential-free DISARMED start mode — a code change to the bridge,
+  not a config tweak.
+- The artifact must be rebuilt and **Gate A re-run from A-0**, which was budgeted once, not twice.
+
+None of that was in the 29.5 h. Treat the remaining budget as **at risk**, and re-plan before
+assuming WP-V still fits.
+
 ## 11. Lessons this cycle added
 
 1. **A hash-verified artifact can still be unrunnable.** Every prior WP-I check hashed files, and a
