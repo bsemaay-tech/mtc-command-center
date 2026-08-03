@@ -1,5 +1,16 @@
 # NEXT_STEPS
 
+## GATE A OVERNIGHT QUEUE — SOURCE CANDIDATES CLOSED (2026-08-03)
+
+- **[AI: Any] DONE:** 3b evidence branch `20de117f`; final product `7aad0377`.
+- **[AI: Any] DONE:** build evidence branch `0bdf8cf4`; final product `82e92c98`.
+- **[AI: Any] DONE:** Queue C evidence branch `a0275b5c`; final product `17402a58`.
+- **[AI: Any] READ-ONLY RECORD:**
+  `11_TRIAGE/GATE_A_OVERNIGHT_MORNING_REPORT_2026-08-03.md`.
+- **[AI: Barış] HOLD / NEW SCOPE REQUIRED:** Queue D, integration, artifact rebuild, Gate A rerun,
+  `master` merge, deployment, service/runtime, credentials, broker, ARM, orders, TESTNET/mainnet,
+  Pine/parity/MTC/trading changes, wallet, and economic action.
+
 ## GLM SUPPLEMENTAL ROUTING POLICY — IMPLEMENTED 2026-07-27
 
 Policy codified in `AGENTS.md` §GLM SUPPLEMENTAL ROUTING (canonical, do not copy table elsewhere). Cross-references added to all required files. Stale `claude-opus-4-8` → `claude-opus-5` fixed in `SPRINT_WORKFLOW.md`.
