@@ -14,9 +14,18 @@ candidates were subsequently repaired and accepted under Barış's explicit no-C
 - **[AI: Any] NEXT — close five evidence gaps before Gate A restarts:** (a) re-run and **persist**
   the locked-Linux full suite from a corrected LF snapshot of `ebada020` and compare failure node
   IDs against the `637307e8` floor — the only Linux log on disk is the bare-archive falsification
-  run and is **not** candidate evidence; (b) write the integration record; (c) write the artifact
-  identity + secret-scan record; (d) dispatch canonical D025 executing audits of `ebada020` itself;
-  (e) re-verify `GATEA-STAGING` liveness read-only.
+  run and is **not** candidate evidence; (b) write the integration record; (c) **DONE** — artifact
+  identity + secret-scan record at
+  `11_TRIAGE/GATE_A_ARTIFACT_IDENTITY_AND_SECRET_SCAN_EBADA020_2026-08-03.md`: manifest hash
+  recomputed and matching, nine-category content-redacted scan **0 hits**, built payload shell
+  scripts **0 CR bytes** so the A-2 defect is absent from this payload; (d) dispatch canonical D025
+  executing audits of `ebada020` itself; (e) re-verify `GATEA-STAGING` liveness read-only.
+- **[AI: Barış] DECISION — artifact doc drift:** the rebuilt `ebada020` artifact is missing
+  `deploy/linux/SECURITY_BASELINE.md` and `11_TRIAGE/WPI_READINESS_RECORD_2026-08-01.md` (7,060 →
+  7,059 entries) because both live on the records branch and never landed on `origin/master`.
+  Neither is referenced by Bridge source or the Gate A runbook — documentation drift, not a
+  functional blocker. Accept the drift, or land the docs and rebuild (new SHA, current artifact
+  identity invalidated). **Do not rebuild unilaterally.**
 - **[AI: Any] THEN — Gate A from A-0:** transfer as a **single tar**, run A-0…A-9 per
   `11_TRIAGE/GATE_A_PREREGISTRATION_AND_STAGING_RUNBOOK_2026-08-01.md` + Addendum A, stop at the
   first FAIL, write `GATE_A_RESULT_2026-08-03.md` either way. A-0 has not been entered; the last

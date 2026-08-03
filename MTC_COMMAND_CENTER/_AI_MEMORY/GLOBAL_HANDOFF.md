@@ -51,8 +51,16 @@ verdict is still the 2026-08-02 **FAIL at A-2**; A-3…A-9 have never been execu
    run. It must not be cited as candidate evidence.
 2. No integration record document — the branch carries only code.
 3. No independent audit of the integrated SHA `ebada020` itself.
-4. No artifact identity / secret-scan evidence record.
+4. ~~No artifact identity / secret-scan evidence record.~~ **CLOSED same day** —
+   `11_TRIAGE/GATE_A_ARTIFACT_IDENTITY_AND_SECRET_SCAN_EBADA020_2026-08-03.md`. Manifest hash
+   recomputed and matching; nine-category content-redacted scan **0 hits**; built payload's five
+   Linux shell scripts carry **0 CR bytes**, so the A-2 defect is absent from this payload.
 5. `GATEA-STAGING` liveness is an unverified snapshot claim.
+6. **NEW:** the rebuilt artifact dropped `deploy/linux/SECURITY_BASELINE.md` and
+   `11_TRIAGE/WPI_READINESS_RECORD_2026-08-01.md` (7,060 → 7,059 entries) — both live on the records
+   branch and never landed on `origin/master`. Neither is referenced by Bridge source or the Gate A
+   runbook, so it is documentation drift, not a functional blocker, but it is a **Barış decision**:
+   accept it, or land the docs and rebuild at a new SHA. Do not rebuild unilaterally.
 
 ### Safety
 

@@ -32,9 +32,16 @@ session's transcript is not evidence.
    b. Write the integration record on codex/gate-a-integration: exact scope, the single
       test_wal_state_bundle.py conflict and its resolution, the ledger LF refresh, and both
       platform floors.
-   c. Write the artifact identity + secret-scan evidence record for the ebada020 artifact.
+   c. DONE 2026-08-03 — artifact identity + secret-scan record is written at
+      11_TRIAGE/GATE_A_ARTIFACT_IDENTITY_AND_SECRET_SCAN_EBADA020_2026-08-03.md. Manifest hash
+      recomputed and matching, nine-category content-redacted scan = 0 hits, built payload shell
+      scripts = 0 CR bytes. Re-verify it rather than redoing it.
    d. Dispatch canonical executing audits of the integrated SHA ebada020 itself under D025.
    e. Re-verify GATEA-STAGING liveness (host, IP, Python 3.12.3, SQLite 3.45.1) read-only.
+   f. Put gap 6 to Barış: the rebuilt artifact is missing two accepted WP-I documents
+      (deploy/linux/SECURITY_BASELINE.md and 11_TRIAGE/WPI_READINESS_RECORD_2026-08-01.md) because
+      they never landed on origin/master. Documentation drift, not a functional blocker. Accepting
+      it costs nothing; fixing it means a new SHA and a rebuild. Do not rebuild unilaterally.
 2. Only after 1a-1d hold, transfer the frozen artifact as a single tar (never as loose files) and
    run Gate A from A-0 through A-9 per
    GATE_A_PREREGISTRATION_AND_STAGING_RUNBOOK_2026-08-01.md as amended by
