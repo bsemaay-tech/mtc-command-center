@@ -117,25 +117,37 @@ then transfer, then Gate A from A-0.* The last filesystem write is the artifact 
 
 ## 5. Gaps that must be closed before Gate A restarts
 
-1. **Locked-Linux full-suite evidence at `ebada020` is missing.** Only the bare-archive
-   falsification run persisted. Re-run the complete suite from the corrected LF snapshot and save
-   the log, then compare failure node IDs against the `637307e8` parent floor. Do not accept the
-   integration on the Windows result alone.
+1. ~~**Locked-Linux full-suite evidence at `ebada020` is missing.**~~ **CLOSED 2026-08-03** — the
+   Lead recovered SSH access to `GATEA-STAGING` from local evidence and executed both floors on the
+   locked runtime (Ubuntu 24.04.4, Python 3.12.3, SQLite 3.45.1): candidate `2 failed, 1357 passed`
+   vs parent `637307e8` `25 failed, 1281 passed`, **zero new failure node IDs**, 23 failures fixed.
+   The 2 remaining are the known pre-existing Python-3.12 order-state GC assertions, present on the
+   parent too. Logs `C:\tmp\LINUX_FULL_EBADA020_LEAD_2026-08-03.log` and
+   `C:\tmp\LINUX_FULL_PARENT_637307E8_LEAD_2026-08-03.log`. Detail:
+   `GATE_A_INTEGRATION_RECORD_EBADA020_2026-08-03.md` §7.
 2. ~~**No integration record document exists.**~~ **PARTIALLY CLOSED 2026-08-03** —
    `GATE_A_INTEGRATION_RECORD_EBADA020_2026-08-03.md` records the merge structure, the nine-file
    scope, the single conflict with its before/after and justification, the ledger LF refresh with
    matching hashes, and the Windows floor. **The Linux floor stays `PENDING` inside that record**
    until gap 1 closes. It is committed on the records branch, not on `codex/gate-a-integration`, so
    that branch's head stays equal to the artifact's build SHA.
-3. **No independent audit of the integrated SHA.** The four inputs were each audited; `ebada020`
-   itself has not been. The canonical roster still applies to the merged result.
+3. **Partially closed — `ebada020` still NOT ACCEPTED.** GLM-5.2 round 1 returned BLOCK
+   (environmental); round 2, with owner-granted permissions, executed and returned
+   **`PASS-WINDOWS-ONLY-WITH-NITS` with zero required findings**, independently reproducing
+   `1359 passed` and the artifact identity. **The second flagship `gpt-5.6-sol` xhigh has not run,
+   and that is now the sole remaining acceptance blocker.** Record:
+   `GATE_A_INTEGRATION_AUDIT_ROUND1_EBADA020_2026-08-03.md`.
 4. ~~**Artifact identity/secret-scan record not written.**~~ **CLOSED 2026-08-03** —
    `GATE_A_ARTIFACT_IDENTITY_AND_SECRET_SCAN_EBADA020_2026-08-03.md`. Manifest hash independently
    recomputed and matching; content-redacted scan over the frozen tree returned **0 hits in all nine
    categories**; the built payload's five Linux shell scripts carry **0 CR bytes**, so the A-2 defect
    is not present in this payload.
-5. **`GATEA-STAGING` liveness is a snapshot claim.** Re-verify the host, IP, Python 3.12.3 and
-   SQLite 3.45.1 before any transfer.
+5. ~~**`GATEA-STAGING` liveness is a snapshot claim.**~~ **CLOSED 2026-08-03** — host reachable at
+   `172.24.55.233`, verified `gatea-staging` / Ubuntu 24.04.4 LTS / Python 3.12.3 / SQLite 3.45.1.
+   SSH details were recovered from local evidence, not supplied: user `gatea`, identity
+   `C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519`, recorded verbatim in
+   `CODEX_TAKEOVER_HANDOFF_2026-08-02.md:125`. No key content was read, printed, copied or changed;
+   KVM2 was not touched.
 6. ~~**NEW — the rebuilt artifact dropped two accepted WP-I documents.**~~ **DECIDED BY BARIŞ
    2026-08-03 — option (a): the drift is ACCEPTED. No rebuild. `ebada020` stays the frozen build
    SHA, and `deploy/linux/SECURITY_BASELINE.md` is authoritative on the records branch only.**

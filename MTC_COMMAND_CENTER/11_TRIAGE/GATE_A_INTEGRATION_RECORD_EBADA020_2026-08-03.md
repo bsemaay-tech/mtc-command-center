@@ -1,11 +1,12 @@
 # Gate A integration record — `ebada020` (2026-08-03)
 
-**Status: PARTIAL — NOT AN ACCEPTANCE.** Everything below is first-hand Lead verification against
-the frozen tree. Two items are deliberately left open and are called out as `PENDING`: the
-locked-Linux floor (§6) and the D025 executing audit of the integrated SHA (§8). Do not read this
-record as Queue D acceptance.
+**Status: NOT AN ACCEPTANCE.** Everything below is first-hand Lead verification against the frozen
+tree. **Both platform floors are now closed** (§7) — the locked-Linux floor was executed on
+`GATEA-STAGING` on 2026-08-03 and the candidate introduces no new failure. What remains open is the
+D025 auditor requirement (§8): one auditor returned a qualified Windows-only accept, the second
+flagship has not run. Do not read this record as Queue D acceptance.
 
-Closes gap 2 of `GATE_A_QUEUE_D_INTEGRATION_STATUS_2026-08-03.md` for its Linux-independent part.
+Closes gap 2 of `GATE_A_QUEUE_D_INTEGRATION_STATUS_2026-08-03.md` in full.
 
 ---
 
@@ -122,28 +123,65 @@ Verified now, in `C:\GATEAINTEGRATION`:
 | Platform | Result | Evidence |
 |---|---|---|
 | Windows full suite | **`1359 passed, 1 warning`** — Lead-reproduced | original `C:\tmp\gatea_integration_windows_full_ebada020.txt` (`136.91s`); independent Lead rerun in fresh detached worktree `C:\GAAUD_INT_GLM` gave `1359 passed, 1 warning in 130.09s` |
-| Locked Linux full suite | **PENDING — no valid evidence exists** | see below |
+| Locked Linux full suite | **`2 failed, 1357 passed, 1 warning` — CLOSED 2026-08-03** | `C:\tmp\LINUX_FULL_EBADA020_LEAD_2026-08-03.log` |
+| Locked Linux parent floor | `25 failed, 1281 passed, 1 warning` | `C:\tmp\LINUX_FULL_PARENT_637307E8_LEAD_2026-08-03.log` |
 
-**The Linux floor is open and must not be treated as satisfied.** The only Linux log on disk,
-`C:\tmp\gatea-integration-linux-full-ebada020.log` (`16 failed, 1343 passed`), was written at
-05:04:45, which is *before* the corrected LF snapshot `gatea-integration-ebada020-lf2.tar` was
-created at 05:05:28. That log therefore belongs to the deliberate bare-`git archive` falsification
-run, which reproduces the historical CRLF defect on purpose. It is falsification evidence, not
-candidate evidence, and citing it as a candidate floor would be wrong.
+### Locked-Linux execution — Lead, on `GATEA-STAGING`
 
-Required to close: build a corrected snapshot with `git -c core.eol=lf archive`, verify zero CR
-bytes in `deploy/linux/*.sh`, run the complete suite on the locked runtime, **persist the log**, and
-compare failure node IDs against the `637307e8` parent floor. No new failure node ID is the bar.
+Host verified before use: `gatea-staging`, Ubuntu 24.04.4 LTS, **Python 3.12.3, SQLite 3.45.1** —
+the locked runtime. KVM2 was not touched.
+
+Provenance of the source under test: the corrected LF snapshot
+`gatea-integration-ebada020-lf2.tar` was already on the host and hashes **byte-identical** to the
+local copy (`1f1a7531…79fce8`). A **fresh** workspace was extracted from that verified tar rather
+than trusting any pre-existing directory. Verified on Linux after extraction:
+
+| Check | Result |
+|---|---|
+| `deploy/linux/{install,package,rollback,verify}.sh` + `lib/common.sh` | **CR = 0** on all five |
+| `ledger_schema.json` SHA-256 | `f4cdece5…bda90e` — canonical |
+| Conflict site line 890 | `str(SCHEMA_VERSION_BASELINE)` |
+
+Interpreter: the existing hash-locked venv on the host,
+`/opt/mtc-bridge/venvs/a1dd5b467b12421f632bf3d8462a7244b39b2287/bin/python`, pytest 9.1.1. It is
+root-owned and read-only; nothing was installed and the host was not modified. Note that this venv's
+SHA is an earlier installed release, **not** `ebada020` — it is the fixed interpreter, while the
+source under test is the `ebada020` snapshot. Candidate and parent ran on the **same** interpreter,
+which is the only thing that makes the floor comparison meaningful.
+
+```
+python3 -m pytest IBKR_PAPER_BRIDGE/tests -q -p no:randomly -p no:cacheprovider --basetemp=...
+candidate ebada020 → 2 failed, 1357 passed, 1 warning in 132.90s
+parent    637307e8 → 25 failed, 1281 passed, 1 warning in 131.76s
+```
+
+**Failure node ID comparison — the actual bar:**
+
+- **New failures in the candidate: NONE.** `comm -23 candidate parent` is empty.
+- Failures **fixed** by the candidate: **23**, all in `test_wal_state_bundle.py`.
+- The 2 remaining candidate failures are present on the parent too and are the known pre-existing
+  Python-3.12 order-state GC assertions:
+  `test_order_state.py::test_gc_referents_of_transitions_contain_no_mutable_container` and
+  `::test_gc_referents_of_raw_aliases_contain_no_mutable_container`.
+
+The candidate therefore introduces no new locked-Linux failure and removes 23. The superseded log
+`C:\tmp\gatea-integration-linux-full-ebada020.log` (`16 failed, 1343 passed`) remains what it always
+was — the deliberate bare-`git archive` falsification run — and must never be cited as a floor.
 
 ## 8. Audit status
 
 The four input lines were each independently audited and accepted. **The integrated SHA `ebada020`
-is still NOT ACCEPTED.** Round 1 ran on 2026-08-03: GLM-5.2 returned **BLOCK** because its session
-could not execute `pytest` or read the artifact directory — environmental, with **zero required
-findings and zero nits against the candidate**. Its read-only work was fully reproduced by the Lead,
-including the decisive result that the merge dropped, duplicated and weakened no test. The second
-flagship (`gpt-5.6-sol` xhigh) has not run. Record:
-`GATE_A_INTEGRATION_AUDIT_ROUND1_EBADA020_2026-08-03.md`.
+is still NOT ACCEPTED**, because D025 acceptance needs both flagships and only one auditor has run.
+
+- **Round 1 (GLM-5.2): BLOCK** — environmental. Its session could not execute `pytest` or read the
+  artifact directory. **Zero required findings, zero nits.**
+- **Round 2 (GLM-5.2, permissions granted): `PASS-WINDOWS-ONLY-WITH-NITS`** — it executed the
+  Windows suite and reproduced `1359 passed, 1 warning`, verified the artifact identity and the
+  absence of the A-2 CR defect, and completed the silent-merge analysis with **zero required
+  findings** and one cosmetic nit. It correctly declined to claim the Linux floor.
+- **Second flagship `gpt-5.6-sol` xhigh: not run.** This is the only remaining acceptance blocker.
+
+Record: `GATE_A_INTEGRATION_AUDIT_ROUND1_EBADA020_2026-08-03.md`.
 
 ## 9. Related evidence
 

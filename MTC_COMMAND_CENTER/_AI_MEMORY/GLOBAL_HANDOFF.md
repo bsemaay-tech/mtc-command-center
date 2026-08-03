@@ -43,6 +43,40 @@ Last filesystem write is the artifact manifest at **05:10:54**. The identity/sec
 the transfer, and **Gate A itself were never started — A-0 was not entered.** Gate A's last real
 verdict is still the 2026-08-02 **FAIL at A-2**; A-3…A-9 have never been executed.
 
+### UPDATE 2026-08-03 (later) — both floors closed, one auditor accepted
+
+`GATEA-STAGING` is reachable and was used. SSH details were **recovered from local evidence, not
+supplied**: user `gatea`, identity `C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519`, recorded verbatim in
+`11_TRIAGE/CODEX_TAKEOVER_HANDOFF_2026-08-02.md:125`. No key content was read, printed, copied or
+changed. KVM2 untouched.
+
+**Locked-Linux floor CLOSED.** Host verified `gatea-staging` / Ubuntu 24.04.4 / Python 3.12.3 /
+SQLite 3.45.1. A fresh workspace was extracted from the byte-identical corrected LF snapshot
+(`1f1a7531…`), and Linux-side checks confirmed 0 CR in all five `deploy/linux` shells plus the
+canonical ledger hash. Both suites ran on the same host-locked venv
+(`/opt/mtc-bridge/venvs/a1dd5b46…`, pytest 9.1.1 — root-owned, read-only, nothing installed):
+
+```
+candidate ebada020 → 2 failed, 1357 passed, 1 warning
+parent    637307e8 → 25 failed, 1281 passed, 1 warning
+new failure node IDs in candidate: NONE   ·   fixed by candidate: 23
+```
+
+The 2 remaining are the known pre-existing Python-3.12 order-state GC assertions, present on the
+parent too. Logs `C:\tmp\LINUX_FULL_EBADA020_LEAD_2026-08-03.log` and
+`…PARENT_637307E8_LEAD_2026-08-03.log`.
+
+**Audit round 2 accepted, qualified.** With owner-granted `--dangerously-skip-permissions` scoped to
+the disposable worktree plus read-only `C:\WPI_ARTIFACTS`, GLM-5.2 executed and returned
+**`PASS-WINDOWS-ONLY-WITH-NITS`, zero required findings** — independently reproducing
+`1359 passed`, the artifact identity, the absence of the A-2 CR defect, and manifest internal
+consistency. **`ebada020` is still NOT ACCEPTED: the second flagship `gpt-5.6-sol` xhigh has not
+run, and that is now the only remaining blocker.**
+
+**Operational lesson:** `glm.ps1` creates a fresh empty `CLAUDE_CONFIG_DIR` per run, so an
+unmodified GLM session has no permissions and no approver — structurally incapable of executing, and
+therefore a guaranteed D025 BLOCK. Always launch GLM audits with an explicit permissions mode.
+
 ### Five gaps that block the Gate A restart
 
 1. **Locked-Linux evidence at `ebada020` is missing.** The only persisted Linux log

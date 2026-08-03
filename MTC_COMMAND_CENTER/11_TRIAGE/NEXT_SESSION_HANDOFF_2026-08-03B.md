@@ -24,12 +24,16 @@ I authorize you to continue autonomously through the ordered queue below. Verify
 yourself against the repository, the filesystem and real logs before relying on it — the previous
 session's transcript is not evidence.
 
-1. Close the recorded evidence gaps (status report §5 — six gaps; b, c and f are already done or
-   settled, so a, d and e are what remain), in this order:
-   a. Re-run the complete locked-Linux suite from a corrected LF snapshot of ebada020 and PERSIST
-      the log. Compare failure node IDs against the 637307e8 parent floor. The only Linux log
-      currently on disk is the deliberate bare-archive falsification run and must not be cited as
-      candidate evidence.
+1. Evidence gaps: FIVE OF SIX ARE CLOSED. The only one left is the second flagship audit (1d).
+   a. DONE 2026-08-03 — locked-Linux floor executed on GATEA-STAGING. Candidate ebada020
+      "2 failed, 1357 passed" vs parent 637307e8 "25 failed, 1281 passed": ZERO new failure node
+      IDs, 23 fixed, the 2 remaining are the known Python-3.12 order-state GC assertions present on
+      the parent too. Logs C:\tmp\LINUX_FULL_EBADA020_LEAD_2026-08-03.log and
+      C:\tmp\LINUX_FULL_PARENT_637307E8_LEAD_2026-08-03.log.
+      HOST ACCESS, already recovered — do not re-derive it: 172.24.55.233, user gatea, identity
+      C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519. Run suites with the host-locked venv
+      /opt/mtc-bridge/venvs/a1dd5b46.../bin/python (pytest 9.1.1, root-owned read-only — install
+      nothing). Never touch KVM2. Never read or copy key contents.
    b. DONE except its Linux line — 11_TRIAGE/GATE_A_INTEGRATION_RECORD_EBADA020_2026-08-03.md
       already records the merge structure, the nine-file scope, the single test_wal_state_bundle.py
       conflict with before/after and justification, the ledger LF refresh, and the Windows floor.
@@ -40,17 +44,19 @@ session's transcript is not evidence.
       11_TRIAGE/GATE_A_ARTIFACT_IDENTITY_AND_SECRET_SCAN_EBADA020_2026-08-03.md. Manifest hash
       recomputed and matching, nine-category content-redacted scan = 0 hits, built payload shell
       scripts = 0 CR bytes. Re-verify it rather than redoing it.
-   d. Dispatch canonical executing audits of the integrated SHA ebada020 itself under D025.
-      Round 1 already ran on 2026-08-03: GLM-5.2 returned BLOCK, environmental not substantive —
-      its session could not execute pytest (allowlist gate, not sandbox) or read C:\WPI_ARTIFACTS.
-      Zero required findings, zero nits, and every read-only claim was reproduced by the Lead.
-      Record: 11_TRIAGE/GATE_A_INTEGRATION_AUDIT_ROUND1_EBADA020_2026-08-03.md. Reusable prompt:
-      C:\tmp\glm_integration_audit_ebada020_prompt.md. Audit worktree C:\GAAUD_INT_GLM is detached
-      at ebada020 and clean — reuse it.
-      BEFORE dispatching round 2, make sure the auditor session's allowlist permits
-      `python -m pytest` and reading C:\WPI_ARTIFACTS\ebada020..., or you will buy the same BLOCK
-      again. Still owed: the second flagship gpt-5.6-sol xhigh.
-   e. Re-verify GATEA-STAGING liveness (host, IP, Python 3.12.3, SQLite 3.45.1) read-only.
+   d. THE ONLY REMAINING BLOCKER. GLM-5.2 has finished: round 1 BLOCK (environmental — its session
+      could not execute), round 2 with granted permissions returned PASS-WINDOWS-ONLY-WITH-NITS
+      with ZERO required findings, independently reproducing 1359 passed, the artifact identity,
+      the absence of the A-2 CR defect, and manifest internal consistency.
+      STILL OWED: the second flagship gpt-5.6-sol xhigh audit of ebada020. Run it and ebada020 can
+      be accepted. Reusable prompt C:\tmp\glm_round2_prompt.md; detached worktree C:\GAAUD_INT_GLM
+      is at ebada020 and clean.
+      LAUNCH RULE: glm.ps1 creates a fresh empty CLAUDE_CONFIG_DIR per run, so an unmodified GLM
+      session has no permissions and no approver and will always D025-BLOCK. Launch any GLM audit
+      with an explicit permissions mode plus --add-dir for what it must read.
+      Record: 11_TRIAGE/GATE_A_INTEGRATION_AUDIT_ROUND1_EBADA020_2026-08-03.md.
+   e. DONE 2026-08-03 — GATEA-STAGING verified live: gatea-staging, Ubuntu 24.04.4 LTS,
+      Python 3.12.3, SQLite 3.45.1, reachable at 172.24.55.233.
    f. SETTLED — Barış accepted the artifact doc drift on 2026-08-03 (option a). The artifact ships
       without deploy/linux/SECURITY_BASELINE.md and 11_TRIAGE/WPI_READINESS_RECORD_2026-08-01.md.
       No rebuild. ebada020 stays the frozen build SHA. Do not reopen this.

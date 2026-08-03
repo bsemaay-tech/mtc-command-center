@@ -1,8 +1,16 @@
-# Integration audit round 1 — `ebada020` (2026-08-03)
+# Integration audit rounds 1–2 — `ebada020` (2026-08-03)
 
-**Result: `ebada020` is NOT ACCEPTED.** One canonical auditor returned **BLOCK**, the second
-flagship has not run, and the locked-Linux floor does not exist. This record exists so the BLOCK is
-not mistaken for a defect finding, and so the auditor's read-only work is not thrown away.
+**Result: `ebada020` is NOT ACCEPTED — but only because the second flagship has not run.**
+
+- Round 1 (GLM-5.2): **BLOCK**, environmental — could not execute.
+- Round 2 (GLM-5.2, permissions granted by the owner): **`PASS-WINDOWS-ONLY-WITH-NITS`**, executed,
+  zero required findings.
+- Second flagship `gpt-5.6-sol` xhigh: **not run** — the sole remaining acceptance blocker.
+- Locked-Linux floor: **closed separately by the Lead** on `GATEA-STAGING`, see
+  `GATE_A_INTEGRATION_RECORD_EBADA020_2026-08-03.md` §7.
+
+This record exists so the round-1 BLOCK is not mistaken for a defect finding, and so the auditor's
+read-only work is not thrown away.
 
 Companion records: `GATE_A_INTEGRATION_RECORD_EBADA020_2026-08-03.md`,
 `GATE_A_ARTIFACT_IDENTITY_AND_SECRET_SCAN_EBADA020_2026-08-03.md`.
@@ -91,18 +99,63 @@ and they are in fact equal, so nothing is wrong with the candidate — but an au
 equality over a mangled transcription is worth recording. Treat pasted hashes in auditor reports as
 claims to re-measure, never as measurements.
 
+## 5b. Round 2 — same auditor, permissions granted
+
+Barış authorized `--dangerously-skip-permissions` for round 2 with an explicit isolation boundary:
+the existing detached disposable worktree only, read-only access to `C:\WPI_ARTIFACTS`, and no
+KVM2, credentials, SSH keys, secrets, production configuration or live trading systems.
+
+| Item | Value |
+|---|---|
+| Command | `glm.ps1 -p <prompt> --dangerously-skip-permissions --add-dir C:\WPI_ARTIFACTS`, cwd `C:\GAAUD_INT_GLM` |
+| Prompt | `C:\tmp\glm_round2_prompt.md` — round-1 prompt verbatim plus the read-only prefix and a round-2 preamble |
+| Report | `C:\tmp\GLM_AUDIT_INTEGRATION_EBADA020_ROUND2_2026-08-03.txt` |
+| Worktree before | `ebada020`, detached, clean — recorded by the Lead |
+| Worktree after | `ebada020`, detached, clean — confirmed by the auditor and by the Lead |
+
+**Verdict: `PASS-WINDOWS-ONLY-WITH-NITS`. Zero required findings.**
+
+Executed evidence it produced:
+
+- Windows full suite: `1359 passed, 1 warning in 136.00s`, exit 0 — an exact match to the claimed
+  floor, produced independently.
+- Artifact read and verified: `RELEASE_SHA` equals the source commit; `RELEASE_SHA256SUMS` hashes to
+  `8fc30864…4700c9`; all five `deploy/linux/*.sh` carry **0** CR bytes, so **the A-2 defect is
+  absent**; and the manifest is internally consistent — the five recorded shell hashes match the
+  actual bytes, over a 7059-line manifest rather than a stub. The internal-consistency check is
+  stronger than what the Lead record had, and it is a genuine addition.
+- Scope, ancestry, conflict site and ledger LF: all re-confirmed, matching §3.
+
+Its silent-merge analysis went further than round 1 and found no defect. The sharpest observation:
+credential-free DISARMED **forbids** `--dry-run` and **does not** call
+`store.set_meta("app_state", "DISARMED")` — only the dry-run path does — so it cannot contaminate
+the persisted meta that the WAL tool reads at `wal_state_bundle.py:459`. By suppressing the engine it
+also reduces concurrent store writes, making capture strictly safer rather than riskier.
+
+**Optional nit (non-binding):** `bridge/app.py`'s `__main__` block resolves `--start-mode` twice —
+once before `create_app(...)` and again inside it. Idempotent and functionally correct; cosmetic
+redundancy only. Not reproduced or acted on.
+
+It correctly declined to claim the locked-Linux floor, and correctly refused to cite the
+falsification log. It also declined to update handoff files, stating that audit mode overrides the
+repository's handoff directive — the right call for an auditor.
+
 ## 6. D025 status — what is still owed
 
 | Requirement | State |
 |---|---|
-| First canonical executing auditor | **BLOCK** (environmental) — does not count as accepting |
-| Second flagship (`gpt-5.6-sol` xhigh) | **not run** |
-| Locked-Linux full-suite floor | **does not exist** |
-| Required findings outstanding | none reproduced — none were raised |
+| First canonical auditor, round 1 | **BLOCK** (environmental) — does not count as accepting |
+| First canonical auditor, round 2 | **`PASS-WINDOWS-ONLY-WITH-NITS`**, executed, zero required findings |
+| Second flagship (`gpt-5.6-sol` xhigh) | **not run — the sole remaining acceptance blocker** |
+| Locked-Linux full-suite floor | **CLOSED** by the Lead on `GATEA-STAGING`: candidate `2 failed, 1357 passed`, parent `25 failed, 1281 passed`, **zero new failure node IDs**, 23 fixed |
+| Required findings outstanding | none — none were raised in either round |
 
-To convert this to an accepting round, an auditor session needs an allowlist that permits
-`python -m pytest` and read access to `C:\WPI_ARTIFACTS\ebada020…`. Everything non-executing is
-already verified and clean; only execution-based evidence is missing.
+**Lesson recorded.** The round-1 BLOCK was caused by `glm.ps1` creating a fresh empty
+`CLAUDE_CONFIG_DIR` per invocation, so every GLM session starts with no permissions and no approver.
+That isolation is deliberate and correct for credential hygiene, but it makes an unmodified GLM
+session structurally incapable of executing anything — a guaranteed D025 BLOCK. Any future GLM audit
+must be launched with an explicit permissions mode and the directories it needs, or its verdict is
+predetermined and worthless.
 
 ## 7. Boundary
 

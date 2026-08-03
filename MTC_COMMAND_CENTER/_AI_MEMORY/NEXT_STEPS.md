@@ -11,15 +11,31 @@ candidates were subsequently repaired and accepted under Barış's explicit no-C
   residual `ebb750da` PASS. Integrated into `codex/gate-a-integration` = `ebada020` (pushed, clean,
   nine-file diff vs `origin/master`). Windows full `1359 passed`. Artifact rebuilt exactly once:
   `C:\WPI_ARTIFACTS\ebada020…\`, manifest `8FC30864…4700C9`, 7059 entries.
-- **[AI: Any] NEXT — close five evidence gaps before Gate A restarts:** (a) re-run and **persist**
-  the locked-Linux full suite from a corrected LF snapshot of `ebada020` and compare failure node
-  IDs against the `637307e8` floor — the only Linux log on disk is the bare-archive falsification
-  run and is **not** candidate evidence; (b) write the integration record; (c) **DONE** — artifact
+- **[AI: Any] NEXT — ONLY ONE BLOCKER LEFT: run the second flagship `gpt-5.6-sol` xhigh audit of
+  `ebada020`.** Reusable prompt `C:\tmp\glm_round2_prompt.md`, detached worktree `C:\GAAUD_INT_GLM`
+  (clean, at `ebada020`). After it accepts, Gate A can restart at A-0.
+- **[AI: Any] GATEA-STAGING IS LIVE AND USABLE:** `172.24.55.233`, user `gatea`, identity
+  `C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519` (recovered from
+  `11_TRIAGE/CODEX_TAKEOVER_HANDOFF_2026-08-02.md:125`). Verified `gatea-staging` / Ubuntu 24.04.4 /
+  Python 3.12.3 / SQLite 3.45.1. Host-locked venv for suites:
+  `/opt/mtc-bridge/venvs/a1dd5b46…/bin/python` (pytest 9.1.1, root-owned read-only — do not install
+  anything). **Never touch KVM2; never handle key contents.**
+- **[AI: Any] LOCKED-LINUX FLOOR CLOSED:** candidate `ebada020` `2 failed, 1357 passed` vs parent
+  `637307e8` `25 failed, 1281 passed` — **zero new failure node IDs, 23 fixed**. The 2 remaining are
+  the known Python-3.12 order-state GC assertions, present on the parent. Logs
+  `C:\tmp\LINUX_FULL_EBADA020_LEAD_2026-08-03.log`, `…PARENT_637307E8_LEAD_2026-08-03.log`.
+- **[AI: Any] GLM LAUNCH RULE:** `glm.ps1` makes a fresh empty `CLAUDE_CONFIG_DIR` per run, so an
+  unmodified GLM session can execute nothing and will always D025-BLOCK. Launch with an explicit
+  permissions mode and `--add-dir` for what it must read, or its verdict is predetermined.
+- **[AI: Any] SUPERSEDED — original five-gap list:** (a) **DONE**, see locked-Linux floor above;
+  (b) write the integration record; (c) **DONE** — artifact
   identity + secret-scan record at
   `11_TRIAGE/GATE_A_ARTIFACT_IDENTITY_AND_SECRET_SCAN_EBADA020_2026-08-03.md`: manifest hash
   recomputed and matching, nine-category content-redacted scan **0 hits**, built payload shell
-  scripts **0 CR bytes** so the A-2 defect is absent from this payload; (d) dispatch canonical D025
-  executing audits of `ebada020` itself; (e) re-verify `GATEA-STAGING` liveness read-only.
+  scripts **0 CR bytes** so the A-2 defect is absent from this payload; (d) **PARTIAL** — GLM-5.2
+  round 1 BLOCK (environmental), round 2 with granted permissions
+  **`PASS-WINDOWS-ONLY-WITH-NITS`, zero required findings**; second flagship still owed;
+  (e) **DONE** — host verified live, see above.
 - **[AI: Any] DECIDED 2026-08-03 — artifact doc drift ACCEPTED (Barış, option a):** the rebuilt
   `ebada020` artifact ships without `deploy/linux/SECURITY_BASELINE.md` and
   `11_TRIAGE/WPI_READINESS_RECORD_2026-08-01.md` (7,060 → 7,059 entries) because both live on the
