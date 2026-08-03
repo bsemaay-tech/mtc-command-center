@@ -5,6 +5,7 @@
 - **[AI: Any] DONE:** 3b evidence branch `20de117f`; final product `7aad0377`.
 - **[AI: Any] DONE:** build evidence branch `0bdf8cf4`; final product `82e92c98`.
 - **[AI: Any] DONE:** Queue C evidence branch `a0275b5c`; final product `17402a58`.
+- **[AI: Any] DONE:** residual evidence-test branch `3121e7c7`; final product `ebb750da`.
 - **[AI: Any] READ-ONLY RECORD:**
   `11_TRIAGE/GATE_A_OVERNIGHT_MORNING_REPORT_2026-08-03.md`.
 - **[AI: Barış] HOLD / NEW SCOPE REQUIRED:** Queue D, integration, artifact rebuild, Gate A rerun,

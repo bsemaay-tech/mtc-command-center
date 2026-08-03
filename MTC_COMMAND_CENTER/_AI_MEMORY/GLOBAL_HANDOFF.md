@@ -9,7 +9,13 @@ validation, executing Codex xhigh acceptance, and executing GLM acceptance. Queu
 repair round after Codex reproduced the CLI-precedence regression. Consolidated record:
 `11_TRIAGE/GATE_A_OVERNIGHT_MORNING_REPORT_2026-08-03.md`.
 
-No source candidate is in `master`. Pairwise merge-tree probes are conflict-marker clean, but no
+The two pre-existing Windows-only evidence-test failures were then repaired in isolation: product
+`ebb750da`, published evidence head `3121e7c7`. D026 is parent `2 failed` to candidate `2 passed`;
+Windows full is `1306 passed`; locked Linux candidate and parent are both `25 failed, 1281 passed`
+with identical failure node IDs. Fresh executing Codex xhigh and GLM-5.2 audits both returned PASS.
+
+No source candidate or residual repair is in `master`. Pairwise merge-tree probes for the ordered
+three candidates are conflict-marker clean, but no
 Queue D, integration, artifact rebuild, Gate A rerun, merge, deployment, runtime, credential, broker,
 ARM/order, TESTNET/mainnet, Pine/parity/MTC/trading, or economic action is authorized by this record.
 

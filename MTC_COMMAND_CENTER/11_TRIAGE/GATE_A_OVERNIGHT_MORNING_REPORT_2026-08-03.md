@@ -7,11 +7,16 @@ Barış's explicit no-Claude owner waiver. Each accepted line is published on it
 branch. None is merged into `master`; Queue D, integration, artifact rebuild, deployment, runtime,
 broker, trading, and economic action remain stopped.
 
+The two pre-existing Windows-only evidence-test failures observed during the queue were subsequently
+repaired and independently accepted on a fourth isolated evidence branch. That repair is likewise
+not integrated into `master`.
+
 | Ordered item | Original frozen candidate | Final product SHA | Published evidence head | Result |
 |---|---|---|---|---|
 | Gate A 3b SHM validation | `7aad0377` | `7aad0377` | `20de117f` | **PASS** |
 | Build determinism | `c5a4070a` | `82e92c98` | `0bdf8cf4` | **PASS** after repair |
 | Queue C credential-free DISARMED | `5a9bb922` | `17402a58` | `a0275b5c` | **PASS** after one audit repair round |
+| Residual evidence tests | `637307e8` | `ebb750da` | `3121e7c7` | **PASS** after isolated repair |
 
 ## Validation and audit evidence
 
@@ -62,7 +67,22 @@ Read-only residual diagnosis sharpened the two Windows failures:
   validation, not a changed canonical ledger artifact.
 - `test_invariants_preserve_risk_and_history` hardcodes schema version `2`, while
   `SCHEMA_VERSION_BASELINE = 4` and the fixture calls ordinary `Store.initialize()`. The failure is a
-  stale test expectation. No residual fix or artifact regeneration was performed in this queue.
+  stale test expectation.
+
+### Residual evidence-test repair
+
+- Exact scope: `.gitattributes` and `tests/test_wal_state_bundle.py`; the ledger blob and all runtime
+  code are unchanged.
+- D026: exact parent `637307e8` **RED `2 failed` → candidate GREEN `2 passed`**.
+- Windows full: `1306 passed`, including canonical LF ledger hash `f4cdece5...`.
+- Locked Linux full: candidate and parent each `25 failed, 1281 passed`, with identical failure node
+  IDs; candidate ledger node `1 passed`.
+- Independent executing verdicts: `gpt-5.6-sol` xhigh **PASS** and GLM-5.2 **PASS**, both with no
+  required findings.
+- Acceptance record:
+  `11_TRIAGE/GATE_A_RESIDUAL_EVIDENCE_TEST_REPAIR_ACCEPTANCE_2026-08-03.md` on the residual branch.
+
+No artifact regeneration occurred.
 
 ## Refs, ancestry, and worktrees
 
@@ -72,6 +92,7 @@ Read-only residual diagnosis sharpened the two Windows failures:
   - `codex/gate-a-3b-shm-validation` → `20de117f4a7d57e131803a195627e2af9c208cd9`
   - `codex/gate-a-build-determinism` → `0bdf8cf44941501180c319886701abfeddd8f952`
   - `codex/gate-a-credential-free-disarmed` → `a0275b5ce90ea57018bdd6a699917a3222564d5b`
+  - `codex/gate-a-residual-evidence-tests` → `3121e7c7ffe0921fed7340af5be34dbf412e3774`
 - All three descend from `637307e8`; they are respectively 4, 5, and 5 commits ahead. None is an
   ancestor of `origin/master`.
 - Read-only pairwise `git merge-tree` simulations over the final product commits reported zero
