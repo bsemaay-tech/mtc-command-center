@@ -68,6 +68,11 @@ parent failure-name comparisons show no new full-suite failure in any accepted l
   case-sensitive conflict markers for 3b+build, 3b+Queue C, and build+Queue C. This is conflict
   readiness evidence only, not an integration verdict.
 - Candidate and audit worktrees ended at their recorded SHAs with empty index/worktree status.
+- The primary root worktree is clean. The global registry is **not** wholly clean: unrelated,
+  pre-existing dirty worktrees remain at `C:/CDXFAILOVER` (1 entry), `C:/KVM2GLM` (10),
+  `C:/KVM2P03` (52), `C:/LAB/MTC_AIONUI_PILOT` (206), the `C:/TSP1002*` group
+  (13/5/5/5), the `C:/TSP1003*` group (8/3/10/9/11), and the dirty `C:/TSP1004*` members
+  (15/255/11). They are outside this queue and were not modified or cleaned.
 
 ## Safety boundary
 
