@@ -29,19 +29,21 @@ session's transcript is not evidence.
       the log. Compare failure node IDs against the 637307e8 parent floor. The only Linux log
       currently on disk is the deliberate bare-archive falsification run and must not be cited as
       candidate evidence.
-   b. Write the integration record on codex/gate-a-integration: exact scope, the single
-      test_wal_state_bundle.py conflict and its resolution, the ledger LF refresh, and both
-      platform floors.
+   b. DONE except its Linux line — 11_TRIAGE/GATE_A_INTEGRATION_RECORD_EBADA020_2026-08-03.md
+      already records the merge structure, the nine-file scope, the single test_wal_state_bundle.py
+      conflict with before/after and justification, the ledger LF refresh, and the Windows floor.
+      Fill in its §7 Linux row once 1a produces a real log. NEVER commit to
+      codex/gate-a-integration — its head must stay equal to the artifact's build SHA ebada020.
+      Records go on feature/donchian-crypto-ladder.
    c. DONE 2026-08-03 — artifact identity + secret-scan record is written at
       11_TRIAGE/GATE_A_ARTIFACT_IDENTITY_AND_SECRET_SCAN_EBADA020_2026-08-03.md. Manifest hash
       recomputed and matching, nine-category content-redacted scan = 0 hits, built payload shell
       scripts = 0 CR bytes. Re-verify it rather than redoing it.
    d. Dispatch canonical executing audits of the integrated SHA ebada020 itself under D025.
    e. Re-verify GATEA-STAGING liveness (host, IP, Python 3.12.3, SQLite 3.45.1) read-only.
-   f. Put gap 6 to Barış: the rebuilt artifact is missing two accepted WP-I documents
-      (deploy/linux/SECURITY_BASELINE.md and 11_TRIAGE/WPI_READINESS_RECORD_2026-08-01.md) because
-      they never landed on origin/master. Documentation drift, not a functional blocker. Accepting
-      it costs nothing; fixing it means a new SHA and a rebuild. Do not rebuild unilaterally.
+   f. SETTLED — Barış accepted the artifact doc drift on 2026-08-03 (option a). The artifact ships
+      without deploy/linux/SECURITY_BASELINE.md and 11_TRIAGE/WPI_READINESS_RECORD_2026-08-01.md.
+      No rebuild. ebada020 stays the frozen build SHA. Do not reopen this.
 2. Only after 1a-1d hold, transfer the frozen artifact as a single tar (never as loose files) and
    run Gate A from A-0 through A-9 per
    GATE_A_PREREGISTRATION_AND_STAGING_RUNBOOK_2026-08-01.md as amended by

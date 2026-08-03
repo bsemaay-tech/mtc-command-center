@@ -49,18 +49,25 @@ verdict is still the 2026-08-02 **FAIL at A-2**; A-3…A-9 have never been execu
    (`C:\tmp\gatea-integration-linux-full-ebada020.log`, `16 failed, 1343 passed`, written 05:04:45)
    predates the corrected LF snapshot (05:05:28) and is the deliberate bare-archive falsification
    run. It must not be cited as candidate evidence.
-2. No integration record document — the branch carries only code.
+2. ~~No integration record document~~ **PARTIALLY CLOSED same day** —
+   `11_TRIAGE/GATE_A_INTEGRATION_RECORD_EBADA020_2026-08-03.md`: merge structure, nine-file scope,
+   the single `test_wal_state_bundle.py` conflict with before/after and justification, the ledger LF
+   refresh (blob and working tree both `f4cdece5…`, 0 CR bytes), Windows floor `1359 passed`. The
+   **Linux floor stays `PENDING`** inside it and it is explicitly **not an acceptance**. It lives on
+   the records branch: **never commit to `codex/gate-a-integration`**, whose head must stay equal to
+   the artifact's build SHA `ebada020`.
 3. No independent audit of the integrated SHA `ebada020` itself.
 4. ~~No artifact identity / secret-scan evidence record.~~ **CLOSED same day** —
    `11_TRIAGE/GATE_A_ARTIFACT_IDENTITY_AND_SECRET_SCAN_EBADA020_2026-08-03.md`. Manifest hash
    recomputed and matching; nine-category content-redacted scan **0 hits**; built payload's five
    Linux shell scripts carry **0 CR bytes**, so the A-2 defect is absent from this payload.
 5. `GATEA-STAGING` liveness is an unverified snapshot claim.
-6. **NEW:** the rebuilt artifact dropped `deploy/linux/SECURITY_BASELINE.md` and
-   `11_TRIAGE/WPI_READINESS_RECORD_2026-08-01.md` (7,060 → 7,059 entries) — both live on the records
-   branch and never landed on `origin/master`. Neither is referenced by Bridge source or the Gate A
-   runbook, so it is documentation drift, not a functional blocker, but it is a **Barış decision**:
-   accept it, or land the docs and rebuild at a new SHA. Do not rebuild unilaterally.
+6. ~~NEW: the rebuilt artifact dropped two accepted WP-I documents~~ — **DECIDED BY BARIŞ, option
+   (a): drift ACCEPTED, no rebuild.** `deploy/linux/SECURITY_BASELINE.md` and
+   `11_TRIAGE/WPI_READINESS_RECORD_2026-08-01.md` are absent from the artifact (7,060 → 7,059
+   entries) because both live on the records branch and never landed on `origin/master`. Neither is
+   referenced by Bridge source or the Gate A runbook. `ebada020` **stays** the frozen build SHA; the
+   security baseline is authoritative on the records branch.
 
 ### Safety
 

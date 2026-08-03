@@ -20,12 +20,18 @@ candidates were subsequently repaired and accepted under Barış's explicit no-C
   recomputed and matching, nine-category content-redacted scan **0 hits**, built payload shell
   scripts **0 CR bytes** so the A-2 defect is absent from this payload; (d) dispatch canonical D025
   executing audits of `ebada020` itself; (e) re-verify `GATEA-STAGING` liveness read-only.
-- **[AI: Barış] DECISION — artifact doc drift:** the rebuilt `ebada020` artifact is missing
-  `deploy/linux/SECURITY_BASELINE.md` and `11_TRIAGE/WPI_READINESS_RECORD_2026-08-01.md` (7,060 →
-  7,059 entries) because both live on the records branch and never landed on `origin/master`.
-  Neither is referenced by Bridge source or the Gate A runbook — documentation drift, not a
-  functional blocker. Accept the drift, or land the docs and rebuild (new SHA, current artifact
-  identity invalidated). **Do not rebuild unilaterally.**
+- **[AI: Any] DECIDED 2026-08-03 — artifact doc drift ACCEPTED (Barış, option a):** the rebuilt
+  `ebada020` artifact ships without `deploy/linux/SECURITY_BASELINE.md` and
+  `11_TRIAGE/WPI_READINESS_RECORD_2026-08-01.md` (7,060 → 7,059 entries) because both live on the
+  records branch and never landed on `origin/master`. Neither is referenced by Bridge source or the
+  Gate A runbook. **No rebuild. `ebada020` stays the frozen build SHA; the security baseline is
+  authoritative on the records branch.**
+- **[AI: Any] INTEGRATION RECORD (partial):**
+  `11_TRIAGE/GATE_A_INTEGRATION_RECORD_EBADA020_2026-08-03.md` — merge structure, nine-file scope,
+  the single `test_wal_state_bundle.py` conflict with before/after and justification, the ledger LF
+  refresh with matching `f4cdece5…` hashes, Windows floor `1359 passed`. **Linux floor is `PENDING`
+  inside it. It is NOT an acceptance.** Committed on the records branch on purpose — never commit to
+  `codex/gate-a-integration`, whose head must stay equal to the artifact's build SHA `ebada020`.
 - **[AI: Any] THEN — Gate A from A-0:** transfer as a **single tar**, run A-0…A-9 per
   `11_TRIAGE/GATE_A_PREREGISTRATION_AND_STAGING_RUNBOOK_2026-08-01.md` + Addendum A, stop at the
   first FAIL, write `GATE_A_RESULT_2026-08-03.md` either way. A-0 has not been entered; the last

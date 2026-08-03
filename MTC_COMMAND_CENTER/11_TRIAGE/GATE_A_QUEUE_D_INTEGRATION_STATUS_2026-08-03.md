@@ -121,8 +121,12 @@ then transfer, then Gate A from A-0.* The last filesystem write is the artifact 
    falsification run persisted. Re-run the complete suite from the corrected LF snapshot and save
    the log, then compare failure node IDs against the `637307e8` parent floor. Do not accept the
    integration on the Windows result alone.
-2. **No integration record document exists.** `codex/gate-a-integration` carries only the nine code
-   files — no acceptance record, no conflict-resolution record, no validation ledger. Write one.
+2. ~~**No integration record document exists.**~~ **PARTIALLY CLOSED 2026-08-03** —
+   `GATE_A_INTEGRATION_RECORD_EBADA020_2026-08-03.md` records the merge structure, the nine-file
+   scope, the single conflict with its before/after and justification, the ledger LF refresh with
+   matching hashes, and the Windows floor. **The Linux floor stays `PENDING` inside that record**
+   until gap 1 closes. It is committed on the records branch, not on `codex/gate-a-integration`, so
+   that branch's head stays equal to the artifact's build SHA.
 3. **No independent audit of the integrated SHA.** The four inputs were each audited; `ebada020`
    itself has not been. The canonical roster still applies to the merged result.
 4. ~~**Artifact identity/secret-scan record not written.**~~ **CLOSED 2026-08-03** —
@@ -132,7 +136,10 @@ then transfer, then Gate A from A-0.* The last filesystem write is the artifact 
    is not present in this payload.
 5. **`GATEA-STAGING` liveness is a snapshot claim.** Re-verify the host, IP, Python 3.12.3 and
    SQLite 3.45.1 before any transfer.
-6. **NEW — the rebuilt artifact dropped two accepted WP-I documents.**
+6. ~~**NEW — the rebuilt artifact dropped two accepted WP-I documents.**~~ **DECIDED BY BARIŞ
+   2026-08-03 — option (a): the drift is ACCEPTED. No rebuild. `ebada020` stays the frozen build
+   SHA, and `deploy/linux/SECURITY_BASELINE.md` is authoritative on the records branch only.**
+   Original finding retained below for provenance.
    `IBKR_PAPER_BRIDGE/deploy/linux/SECURITY_BASELINE.md` and
    `11_TRIAGE/WPI_READINESS_RECORD_2026-08-01.md` are in the accepted `1adf9ae5…` artifact but
    absent from `ebada020…` (7,060 → 7,059 entries), because they live on the records branch and
