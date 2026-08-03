@@ -54,6 +54,16 @@ The residual Windows/Linux failures cited above are pre-existing KVM2 ledger/WAL
 Python-3.12 order-state GC assertions, or the known locked-Linux WAL capture cascade. Candidate and
 parent failure-name comparisons show no new full-suite failure in any accepted line.
 
+Read-only residual diagnosis sharpened the two Windows failures:
+
+- The ledger row expects SHA-256 `f4cdece5...`, which exactly matches the committed LF
+  `ledger_schema.json` bytes. The Windows checkout is `i/lf w/crlf` under `text=auto` and hashes to
+  `b6580e31...`; the validator hashes converted working-tree bytes. This is EOL-sensitive evidence
+  validation, not a changed canonical ledger artifact.
+- `test_invariants_preserve_risk_and_history` hardcodes schema version `2`, while
+  `SCHEMA_VERSION_BASELINE = 4` and the fixture calls ordinary `Store.initialize()`. The failure is a
+  stale test expectation. No residual fix or artifact regeneration was performed in this queue.
+
 ## Refs, ancestry, and worktrees
 
 - Remote `master` and local `origin/master` both resolve to
