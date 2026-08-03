@@ -87,6 +87,14 @@ def install_routes(app: FastAPI) -> None:
     @app.post("/api/arm")
     async def arm(request: Request, x_confirm: int | None = Header(default=None)) -> dict[str, Any]:
         _require_confirm(request, x_confirm)
+        if getattr(request.app.state, "credential_free_disarmed", False):
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "ARM unavailable in credential-free DISARMED start mode; "
+                    "exchange access is disabled"
+                ),
+            )
         engine = _engine(request)
         if engine is not None:
             try:
