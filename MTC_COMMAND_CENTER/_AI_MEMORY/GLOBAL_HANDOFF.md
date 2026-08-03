@@ -1,5 +1,68 @@
 # GLOBAL_HANDOFF
 
+## [Claude Opus 5] 2026-08-03 — Gate A repairs ACCEPTED and integrated at `ebada020`; Queue D stopped one step before A-0
+
+**RESUME HERE:** `11_TRIAGE/NEXT_SESSION_HANDOFF_2026-08-03B.md`. Full verified status:
+`11_TRIAGE/GATE_A_QUEUE_D_INTEGRATION_STATUS_2026-08-03.md`.
+
+Three overnight Codex runs (2026-08-03, ≈5 h 40 m wall) closed all four Gate A blocking defects and
+began Queue D. The third run's credit window expired mid-queue. This entry is Lead re-verification
+from the repository and filesystem, not a transcript summary.
+
+### Accepted under Barış's explicit no-Claude owner waiver
+
+| Item | Frozen candidate | Final product | Published head | Result |
+|---|---|---|---|---|
+| Gate A 3b — WAL/SHM validation | `7aad0377` | `7aad0377` | `20de117f` | **PASS** |
+| Build determinism (the A-2 CRLF FAIL) | `c5a4070a` | `82e92c98` | `0bdf8cf4` | **PASS after repair** |
+| Queue C — credential-free DISARMED | `5a9bb922` | `17402a58` | `a0275b5c` | **PASS after repair** |
+| Residual evidence tests | `637307e8` | `ebb750da` | `3121e7c7` | **PASS after repair** |
+
+Executing verdicts came from `gpt-5.6-sol` xhigh and GLM-5.2, both running the suite as D025
+requires. Evidence: `11_TRIAGE/GATE_A_OVERNIGHT_MORNING_REPORT_2026-08-03.md` on
+`codex/gate-a-overnight-report` (`b5a48e6f`).
+
+### Queue D progress — verified
+
+- **Integrated:** `codex/gate-a-integration` = `ebada020a59edf539f60acfbb3a6bf870c8679e9`, pushed,
+  worktree clean at `C:\GATEAINTEGRATION`. All four product SHAs are ancestors; the diff against
+  `origin/master` is exactly the nine-file union — no scope creep. The one predicted textual
+  conflict (`tests/test_wal_state_bundle.py`, 3b literal `"4"` vs. derived
+  `str(SCHEMA_VERSION_BASELINE)`) reproduced once and nowhere else, resolved by keeping 3b's comment
+  and the derived constant.
+- **Windows full at `ebada020`: `1359 passed, 1 warning`** — verified in
+  `C:\tmp\gatea_integration_windows_full_ebada020.txt`.
+- **Artifact rebuilt exactly once** at `C:\WPI_ARTIFACTS\ebada020a59edf539f60acfbb3a6bf870c8679e9\`
+  — `RELEASE_SHA` = `ebada020…`, manifest SHA-256
+  `8FC30864BA342E53DCFC6B2938124F91D005F02671A332580A723F38FD4700C9`, 7059 entries. Hash
+  independently recomputed and matches.
+
+### Where it stopped, exactly
+
+Last filesystem write is the artifact manifest at **05:10:54**. The identity/secret-scan freeze,
+the transfer, and **Gate A itself were never started — A-0 was not entered.** Gate A's last real
+verdict is still the 2026-08-02 **FAIL at A-2**; A-3…A-9 have never been executed.
+
+### Five gaps that block the Gate A restart
+
+1. **Locked-Linux evidence at `ebada020` is missing.** The only persisted Linux log
+   (`C:\tmp\gatea-integration-linux-full-ebada020.log`, `16 failed, 1343 passed`, written 05:04:45)
+   predates the corrected LF snapshot (05:05:28) and is the deliberate bare-archive falsification
+   run. It must not be cited as candidate evidence.
+2. No integration record document — the branch carries only code.
+3. No independent audit of the integrated SHA `ebada020` itself.
+4. No artifact identity / secret-scan evidence record.
+5. `GATEA-STAGING` liveness is an unverified snapshot claim.
+
+### Safety
+
+`origin/master` is unchanged at `637307e8`; nothing Gate A is merged. No deployment, service or
+runtime change, credential handling, broker call, ARM, order, TESTNET, mainnet, KVM2,
+Pine/parity/MTC/trading change, wallet or economic action occurred.
+
+**Housekeeping:** the main checkout's local `master` ref is stale at `8721bce0` (78 behind
+`origin/master`, clean ancestor). Always resolve `origin/master`.
+
 ## [Codex GPT-5.6-sol] 2026-08-02 — Defect 3b retrospective round 1 NOT ACCEPTED
 
 Fresh canonical `gpt-5.6-sol` xhigh audit of frozen candidate

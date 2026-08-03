@@ -1,6 +1,39 @@
 # NEXT_STEPS
 
-## GATE A — ALL THREE FROZEN CANDIDATES NOT ACCEPTED (2026-08-02)
+## GATE A — FOUR REPAIRS ACCEPTED, INTEGRATED AT `ebada020`, RERUN PENDING (2026-08-03)
+
+**START HERE:** `11_TRIAGE/NEXT_SESSION_HANDOFF_2026-08-03B.md`, then
+`11_TRIAGE/GATE_A_QUEUE_D_INTEGRATION_STATUS_2026-08-03.md`.
+This section **supersedes** the 2026-08-02 "ALL THREE NOT ACCEPTED" section below — all four
+candidates were subsequently repaired and accepted under Barış's explicit no-Claude owner waiver.
+
+- **[AI: Any] STATE:** 3b `7aad0377` PASS · build `82e92c98` PASS · Queue C `17402a58` PASS ·
+  residual `ebb750da` PASS. Integrated into `codex/gate-a-integration` = `ebada020` (pushed, clean,
+  nine-file diff vs `origin/master`). Windows full `1359 passed`. Artifact rebuilt exactly once:
+  `C:\WPI_ARTIFACTS\ebada020…\`, manifest `8FC30864…4700C9`, 7059 entries.
+- **[AI: Any] NEXT — close five evidence gaps before Gate A restarts:** (a) re-run and **persist**
+  the locked-Linux full suite from a corrected LF snapshot of `ebada020` and compare failure node
+  IDs against the `637307e8` floor — the only Linux log on disk is the bare-archive falsification
+  run and is **not** candidate evidence; (b) write the integration record; (c) write the artifact
+  identity + secret-scan record; (d) dispatch canonical D025 executing audits of `ebada020` itself;
+  (e) re-verify `GATEA-STAGING` liveness read-only.
+- **[AI: Any] THEN — Gate A from A-0:** transfer as a **single tar**, run A-0…A-9 per
+  `11_TRIAGE/GATE_A_PREREGISTRATION_AND_STAGING_RUNBOOK_2026-08-01.md` + Addendum A, stop at the
+  first FAIL, write `GATE_A_RESULT_2026-08-03.md` either way. A-0 has not been entered; the last
+  real verdict is the 2026-08-02 **FAIL at A-2**, and A-3…A-9 have never run.
+- **[AI: Any] TRAPS:** bare `git archive` on Windows converts to CRLF and reproduces the A-2 failure
+  — use `git -c core.eol=lf archive` and verify zero CR bytes; a `.gitattributes` rule does not
+  retroactively renormalise an already-checked-out file; an auditor that cannot execute must BLOCK.
+- **[AI: Any] REFS:** `origin/master` `637307e8` (unchanged, nothing merged). Main checkout's local
+  `master` is stale at `8721bce0` — always resolve `origin/master`.
+- **[AI: Barış] HOURS:** ≈33–36 h of 50 estimated used, ≈14–17 h remaining, exact booking deferred
+  to Lead Gate-7. WP-A + WP-R + WP-V total 17 h and are all still ahead. **Re-plan before
+  committing to the remainder.**
+- **[AI: Any] HOLD:** no master merge, WP-V/deployment, service or runtime change, credentials,
+  broker connection, ARM, orders, TESTNET, mainnet, KVM2, Pine/parity/MTC/trading change, or
+  economic action.
+
+## GATE A — ALL THREE FROZEN CANDIDATES NOT ACCEPTED (2026-08-02) — SUPERSEDED, see above
 
 - **[AI: Barış] NEXT — OWNER AUTHORIZATION REQUIRED:** open a new protected Bridge repair cycle for
   defect 3b candidate `df00634fc2e5fb19cddb34a6ad16d9764c4779a4`. A non-empty WAL plus a
