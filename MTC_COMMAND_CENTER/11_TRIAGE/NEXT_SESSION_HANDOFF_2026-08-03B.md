@@ -24,7 +24,8 @@ I authorize you to continue autonomously through the ordered queue below. Verify
 yourself against the repository, the filesystem and real logs before relying on it — the previous
 session's transcript is not evidence.
 
-1. Close the five recorded evidence gaps (status report §5), in this order:
+1. Close the recorded evidence gaps (status report §5 — six gaps; b, c and f are already done or
+   settled, so a, d and e are what remain), in this order:
    a. Re-run the complete locked-Linux suite from a corrected LF snapshot of ebada020 and PERSIST
       the log. Compare failure node IDs against the 637307e8 parent floor. The only Linux log
       currently on disk is the deliberate bare-archive falsification run and must not be cited as
@@ -40,6 +41,15 @@ session's transcript is not evidence.
       recomputed and matching, nine-category content-redacted scan = 0 hits, built payload shell
       scripts = 0 CR bytes. Re-verify it rather than redoing it.
    d. Dispatch canonical executing audits of the integrated SHA ebada020 itself under D025.
+      Round 1 already ran on 2026-08-03: GLM-5.2 returned BLOCK, environmental not substantive —
+      its session could not execute pytest (allowlist gate, not sandbox) or read C:\WPI_ARTIFACTS.
+      Zero required findings, zero nits, and every read-only claim was reproduced by the Lead.
+      Record: 11_TRIAGE/GATE_A_INTEGRATION_AUDIT_ROUND1_EBADA020_2026-08-03.md. Reusable prompt:
+      C:\tmp\glm_integration_audit_ebada020_prompt.md. Audit worktree C:\GAAUD_INT_GLM is detached
+      at ebada020 and clean — reuse it.
+      BEFORE dispatching round 2, make sure the auditor session's allowlist permits
+      `python -m pytest` and reading C:\WPI_ARTIFACTS\ebada020..., or you will buy the same BLOCK
+      again. Still owed: the second flagship gpt-5.6-sol xhigh.
    e. Re-verify GATEA-STAGING liveness (host, IP, Python 3.12.3, SQLite 3.45.1) read-only.
    f. SETTLED — Barış accepted the artifact doc drift on 2026-08-03 (option a). The artifact ships
       without deploy/linux/SECURITY_BASELINE.md and 11_TRIAGE/WPI_READINESS_RECORD_2026-08-01.md.

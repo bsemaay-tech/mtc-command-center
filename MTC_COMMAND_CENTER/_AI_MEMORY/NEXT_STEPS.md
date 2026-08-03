@@ -26,6 +26,15 @@ candidates were subsequently repaired and accepted under Barış's explicit no-C
   records branch and never landed on `origin/master`. Neither is referenced by Bridge source or the
   Gate A runbook. **No rebuild. `ebada020` stays the frozen build SHA; the security baseline is
   authoritative on the records branch.**
+- **[AI: Any] INTEGRATION AUDIT ROUND 1 — `ebada020` NOT ACCEPTED:** GLM-5.2 returned **BLOCK** on
+  2026-08-03, **environmental not substantive** — its session could not execute `pytest` (allowlist
+  gate, not sandbox) or read `C:\WPI_ARTIFACTS`. **Zero required findings, zero nits.** Every
+  read-only claim was reproduced by the Lead, including the decisive one: **the merge dropped,
+  duplicated and weakened no test** (name sets HEAD ≡ `f6478e53`, `ebb750da` a strict subset).
+  Lead-reproduced Windows floor `1359 passed, 1 warning in 130.09s` in fresh worktree
+  `C:\GAAUD_INT_GLM`. Still owed: second flagship `gpt-5.6-sol` xhigh, and the Linux floor. Record
+  `11_TRIAGE/GATE_A_INTEGRATION_AUDIT_ROUND1_EBADA020_2026-08-03.md`. **To make an auditor session
+  count, its allowlist must permit `python -m pytest` and reading `C:\WPI_ARTIFACTS\ebada020…`.**
 - **[AI: Any] INTEGRATION RECORD (partial):**
   `11_TRIAGE/GATE_A_INTEGRATION_RECORD_EBADA020_2026-08-03.md` — merge structure, nine-file scope,
   the single `test_wal_state_bundle.py` conflict with before/after and justification, the ledger LF

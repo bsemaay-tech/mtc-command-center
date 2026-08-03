@@ -121,7 +121,7 @@ Verified now, in `C:\GATEAINTEGRATION`:
 
 | Platform | Result | Evidence |
 |---|---|---|
-| Windows full suite | **`1359 passed, 1 warning in 136.91s`** | `C:\tmp\gatea_integration_windows_full_ebada020.txt` |
+| Windows full suite | **`1359 passed, 1 warning`** — Lead-reproduced | original `C:\tmp\gatea_integration_windows_full_ebada020.txt` (`136.91s`); independent Lead rerun in fresh detached worktree `C:\GAAUD_INT_GLM` gave `1359 passed, 1 warning in 130.09s` |
 | Locked Linux full suite | **PENDING — no valid evidence exists** | see below |
 
 **The Linux floor is open and must not be treated as satisfied.** The only Linux log on disk,
@@ -138,8 +138,12 @@ compare failure node IDs against the `637307e8` parent floor. No new failure nod
 ## 8. Audit status
 
 The four input lines were each independently audited and accepted. **The integrated SHA `ebada020`
-itself has not been audited.** D025 applies to the merged result: canonical executing auditors, and
-an auditor that cannot execute the suite must BLOCK.
+is still NOT ACCEPTED.** Round 1 ran on 2026-08-03: GLM-5.2 returned **BLOCK** because its session
+could not execute `pytest` or read the artifact directory — environmental, with **zero required
+findings and zero nits against the candidate**. Its read-only work was fully reproduced by the Lead,
+including the decisive result that the merge dropped, duplicated and weakened no test. The second
+flagship (`gpt-5.6-sol` xhigh) has not run. Record:
+`GATE_A_INTEGRATION_AUDIT_ROUND1_EBADA020_2026-08-03.md`.
 
 ## 9. Related evidence
 

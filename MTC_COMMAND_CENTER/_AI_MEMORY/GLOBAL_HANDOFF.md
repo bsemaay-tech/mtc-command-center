@@ -56,7 +56,15 @@ verdict is still the 2026-08-02 **FAIL at A-2**; A-3…A-9 have never been execu
    **Linux floor stays `PENDING`** inside it and it is explicitly **not an acceptance**. It lives on
    the records branch: **never commit to `codex/gate-a-integration`**, whose head must stay equal to
    the artifact's build SHA `ebada020`.
-3. No independent audit of the integrated SHA `ebada020` itself.
+3. **Round 1 ran, `ebada020` still NOT ACCEPTED.** GLM-5.2 returned **BLOCK** — environmental, not
+   substantive: its session could not execute `pytest` (allowlist gate, confirmed not a sandbox
+   issue) or read `C:\WPI_ARTIFACTS`. **Zero required findings, zero nits.** It correctly refused the
+   `PASS-WINDOWS-ONLY` option available to it, which is the BLOCK-on-non-execution rule working as
+   designed. All its read-only claims were reproduced by the Lead — decisively, **the merge dropped,
+   duplicated and weakened no test**. Lead-reproduced Windows floor `1359 passed, 1 warning in
+   130.09s` in fresh detached worktree `C:\GAAUD_INT_GLM`. Second flagship `gpt-5.6-sol` xhigh has
+   not run. Record `11_TRIAGE/GATE_A_INTEGRATION_AUDIT_ROUND1_EBADA020_2026-08-03.md`. **An auditor
+   session only counts if its allowlist permits `python -m pytest` and reading the artifact dir.**
 4. ~~No artifact identity / secret-scan evidence record.~~ **CLOSED same day** —
    `11_TRIAGE/GATE_A_ARTIFACT_IDENTITY_AND_SECRET_SCAN_EBADA020_2026-08-03.md`. Manifest hash
    recomputed and matching; nine-category content-redacted scan **0 hits**; built payload's five
