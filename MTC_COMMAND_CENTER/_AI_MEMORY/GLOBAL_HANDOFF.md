@@ -15,7 +15,9 @@ Windows full is `1306 passed`; locked Linux candidate and parent are both `25 fa
 with identical failure node IDs. Fresh executing Codex xhigh and GLM-5.2 audits both returned PASS.
 
 No source candidate or residual repair is in `master`. Pairwise merge-tree probes for the ordered
-three candidates are conflict-marker clean, but no
+three candidates are conflict-marker clean. The residual repair is marker-clean with build and
+Queue C but has one textual overlap with 3b at the WAL schema assertion (`"4"` versus
+`str(SCHEMA_VERSION_BASELINE)`); resolving it is integration work and remains stopped. No
 Queue D, integration, artifact rebuild, Gate A rerun, merge, deployment, runtime, credential, broker,
 ARM/order, TESTNET/mainnet, Pine/parity/MTC/trading, or economic action is authorized by this record.
 

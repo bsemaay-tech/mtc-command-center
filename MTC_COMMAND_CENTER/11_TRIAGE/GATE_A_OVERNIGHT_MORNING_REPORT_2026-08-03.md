@@ -98,6 +98,11 @@ No artifact regeneration occurred.
 - Read-only pairwise `git merge-tree` simulations over the final product commits reported zero
   case-sensitive conflict markers for 3b+build, 3b+Queue C, and build+Queue C. This is conflict
   readiness evidence only, not an integration verdict.
+- Extending the same read-only probe to the residual product found zero conflict markers with build
+  or Queue C, but one textual conflict with 3b in `tests/test_wal_state_bundle.py`: 3b carries a
+  documented literal `"4"`, while the residual repair derives `str(SCHEMA_VERSION_BASELINE)`.
+  Resolving that overlap belongs to a separately authorized integration scope; neither isolated
+  accepted candidate was changed here.
 - Candidate and audit worktrees ended at their recorded SHAs with empty index/worktree status.
 - The primary root worktree is clean. The global registry is **not** wholly clean: unrelated,
   pre-existing dirty worktrees remain at `C:/CDXFAILOVER` (1 entry), `C:/KVM2GLM` (10),
