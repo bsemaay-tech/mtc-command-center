@@ -1,5 +1,17 @@
 # NEXT_STEPS
 
+## GATE A RESIDUAL EVIDENCE TESTS — REPAIR ACCEPTED (2026-08-03)
+
+- **[AI: Any] DONE:** residual evidence-test candidate `ebb750da`, direct from `637307e8`.
+- **[AI: Any] VERIFIED:** D026 parent `2 failed` to candidate `2 passed`; Windows full
+  `1306 passed`; locked Linux candidate/parent both `25 failed, 1281 passed` with identical failures.
+- **[AI: Any] AUDITED:** fresh executing Codex xhigh and GLM-5.2 both PASS.
+- **[AI: Any] READ-ONLY RECORD:**
+  `11_TRIAGE/GATE_A_RESIDUAL_EVIDENCE_TEST_REPAIR_ACCEPTANCE_2026-08-03.md`.
+- **[AI: Barış] HOLD / NEW SCOPE REQUIRED:** Queue D, integration, artifact rebuild, Gate A rerun,
+  `master` merge, deployment, service/runtime, credentials, broker, ARM, orders, TESTNET/mainnet,
+  Pine/parity/MTC/trading changes, wallet, and economic action.
+
 ## GLM SUPPLEMENTAL ROUTING POLICY — IMPLEMENTED 2026-07-27
 
 Policy codified in `AGENTS.md` §GLM SUPPLEMENTAL ROUTING (canonical, do not copy table elsewhere). Cross-references added to all required files. Stale `claude-opus-4-8` → `claude-opus-5` fixed in `SPRINT_WORKFLOW.md`.

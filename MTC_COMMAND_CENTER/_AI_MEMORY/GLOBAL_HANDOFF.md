@@ -1,5 +1,19 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-08-03 — Residual Gate A evidence-test repair accepted
+
+The two pre-existing Windows-only failures exposed by the overnight Gate A audits are repaired at
+`ebb750dafd71c5d1293a9524846a00cd33b212bc`, a direct child of `637307e8`. Exact scope is
+`.gitattributes` plus `IBKR_PAPER_BRIDGE/tests/test_wal_state_bundle.py`; no runtime or ledger-content
+change. D026 is `2 failed` on the exact parent to `2 passed` on the candidate. Windows full suite is
+`1306 passed`; locked Linux candidate and parent are both `25 failed, 1281 passed` with identical
+failure node IDs. Fresh executing Codex xhigh and GLM-5.2 audits both returned PASS with no required
+findings. Full record: `11_TRIAGE/GATE_A_RESIDUAL_EVIDENCE_TEST_REPAIR_ACCEPTANCE_2026-08-03.md`.
+
+This is source-candidate evidence only. No Queue D, integration, artifact rebuild, Gate A rerun,
+merge, deployment, runtime, credential, broker, ARM/order, TESTNET/mainnet, Pine/parity/MTC/trading,
+or economic action is authorized.
+
 ## [Claude Opus 5] 2026-07-30 — 50-Hour Plan documentation repair/audit cycle ACCEPTED
 
 Owner-authorized documentation-only repair + audit cycle on `09_DOCS/ROADMAPS/TRADING_SYSTEM/TRADING SYSTEM — 50-HOUR ACCELERATED IMPLEMENTATION PLAN.md`. **ACCEPTED** — both canonical audits returned PASS-WITH-NITS with zero required repairs. Baseline `87a25792` (owner-supplied hash verified) → **final `a07c90cc49a4f34910f82bd9c94ba4fb71d76b511bc2cabe0bd727faf57fe3ee`** (1879 lines). Roles: Claude `claude-opus-5` Lead/acceptance, Codex CLI `gpt-5.6-sol` sole document implementer, canonical auditors Claude `claude-opus-5` xhigh (fresh) + Codex `gpt-5.6-sol` xhigh (ephemeral read-only), DeepSeek CLI read-only supplemental. Two non-accepting rounds used of three permitted.
