@@ -1,5 +1,47 @@
 # GLOBAL_HANDOFF
 
+## [GLM-5.2] 2026-08-08 — Gate A rerun checkpoint through A-3
+
+**Bounded documentation checkpoint by GLM-5.2 — not an implementation or audit.** The exact Claude
+Opus 5 implementation call was attempted first but returned `session limit — resets 11:50pm` before
+any edit, so this was routed to GLM-5.2 as **bounded documentation only**, not a substitute for a
+mandatory flagship audit or protected implementation. Only the three `_AI_MEMORY` / `11_TRIAGE`
+handoff files were edited; no code, scripts, artifacts, results, staging action, commit, push, or git
+mutation. Full evidence: `11_TRIAGE/NEXT_SESSION_HANDOFF_2026-08-08.md`; ordered actions:
+`_AI_MEMORY/NEXT_STEPS.md`.
+
+**Gate A is IN PROGRESS through A-3; A-4 has not started.** Owner (Barış) explicitly authorized the
+preregistered `gatea-staging` teardown/rerun sequence; **no credential, broker, successful ARM, order,
+TESTNET/mainnet, master merge, or economic action is authorized.** The service remains
+masked/inactive; no credentials were loaded.
+
+Lead-verified results through A-3 (full per-step detail in the triage handoff): host teardown **PASS**
+(leftovers `0`, evidence `/home/gatea/teardown-ebada020-20260808B`); run-kit B tar verified
+(`ac0fbaf2…c0fb`, `61440` B, exact 9 members, seven manifest entries OK, six scripts `bash -n` clean);
+product tar `/home/gatea/payload_2ce41e34.tar` matched (`d78b9e82…05f2`, `1047265280` B); **A-0 PASS**
+(release `2ce41e34bceb599d80af24c5c33d835820ec321b`, manifest
+`edb0fd34…20d26`, 7059 entries / 7060 regular files / `1033362481` B / nonregular `0` / CR bytes `0`);
+**A-1 PASS** (Ubuntu 24.04.4, kernel `6.8.0-136-generic`, x86_64, Python 3.12.3, required commands,
+UFW active/default deny/SSH only, clean install paths/user/process/port); **A-2 PASS** (dry-run side
+effects `0`, install+verify PASS, unit SHA `538c1c60…79bd`, masked/inactive/not enabled, env
+assignments `0`, no credential material, release/venv sealed; D.5 override probe → verify rc `1` with
+guard, byte-identical restore, post-restore verify rc `0`; pre-start `systemctl show -p Environment`
+was empty and must be recaptured after start in A-4); **A-3 PASS under Addendum D** (pytest rc `1`,
+`2 failed, 1358 passed, 1 warning in 169.85s (0:02:49)`, exactly the two permitted
+`test_order_state.py` gc-referents node IDs; log `/home/gatea/gatea-A3-suite-20260808B.log`).
+
+**Run-kit checker defect, not a candidate failure:** the B A-3 wrapper falsely rejected the valid
+summary because `grep -qxF` did not allow pytest's elapsed suffix, and the first SSH wrapper timeout
+did not kill the remote suite. **GLM-5.2 repair round 1 accepted by Codex** — old predicate RED on the
+real log, repaired predicate GREEN; prefix collision, changed counts, arbitrary suffix, non-terminal
+summary, malformed clock, and missing `s` all rejected; `bash -n` both files rc `0`; falsification
+`10 passed, 0 failed`, rc `0`. **The corrected checker has NOT yet been propagated/frozen/transferred
+to staging.**
+
+**Preserve old `GATE_A_RESULT_2026-08-08.md`; write `GATE_A_RESULT_2026-08-08B.md` later.**
+
+---
+
 ## [GPT-5 Codex] 2026-08-08 — Gate A 20260808B local run kit validated; staging authorization still required
 
 **Current record:** `11_TRIAGE/GATE_A_LOCAL_RUN_KIT_2026-08-08B.md`, then

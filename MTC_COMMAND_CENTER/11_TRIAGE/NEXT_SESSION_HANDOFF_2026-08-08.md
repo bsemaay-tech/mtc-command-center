@@ -1,5 +1,55 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ NEWEST CHECKPOINT — GLM-5.2 bounded documentation: Gate A reran through A-3 (2026-08-08)
+>
+> **Routing:** the exact Claude Opus 5 implementation call was attempted first but returned
+> `session limit — resets 11:50pm` before any edit. This checkpoint was therefore routed to **GLM-5.2
+> as bounded documentation only** — not a substitute for a mandatory flagship audit or protected
+> implementation. Only the three `_AI_MEMORY` / `11_TRIAGE` handoff files were edited; no code,
+> scripts, artifacts, results, staging action, commit, push, or git mutation occurred.
+>
+> **Authorization scope:** owner (Barış) explicitly authorized the preregistered `gatea-staging`
+> teardown/rerun sequence; **no credential, broker, successful ARM, order, TESTNET/mainnet, master
+> merge, or economic action is authorized.** Gate A is **IN PROGRESS after A-3**; A-4 has **not**
+> started; the service remains **masked/inactive** and **no credentials were loaded.**
+>
+> **Lead-verified facts through A-3 (recorded exactly):**
+>
+> - **Host teardown:** `gatea-staging` `172.24.55.233` verified Ubuntu 24.04; old `ebada020`
+>   installation masked/inactive, no listener/process; bounded teardown **PASS** with leftovers `0`;
+>   evidence retained at `/home/gatea/teardown-ebada020-20260808B`.
+> - **Run-kit B tar** transferred and verified: SHA-256
+>   `ac0fbaf2fefa8241c5c92f5bf35a3f9fc5258a4b7e30614988ed305afa61c0fb`, `61440` bytes, exact 9 members,
+>   seven manifest entries OK, all six scripts `bash -n` clean.
+> - **Product tar** `/home/gatea/payload_2ce41e34.tar` matched SHA-256
+>   `d78b9e82e4138714fd5eabfb4996d8d831f28d14cf0b9e1149c8751739fe05f2`, `1047265280` bytes.
+> - **A-0 PASS:** release `2ce41e34bceb599d80af24c5c33d835820ec321b`; manifest
+>   `edb0fd34e3d976b872868cc3dfbf745cbc4b08f6c4c5d21b8d6cda47a3e20d26`; 7059 manifest entries, 7060
+>   regular files, `1033362481` bytes, nonregular `0`, full manifest check clean, CR bytes `0`.
+> - **A-1 PASS:** Ubuntu 24.04.4, kernel `6.8.0-136-generic`, x86_64, Python 3.12.3, required commands,
+>   UFW active/default deny/SSH only, clean install paths/user/process/port.
+> - **A-2 PASS:** dry-run side effects `0`; install and verify PASS; unit SHA
+>   `538c1c6038b475e87fb0e9b9c35fd4ebd8451b40ff93538f8fea5aa0b49279bd`; masked/inactive/not enabled;
+>   env assignments `0`; no credential material; release/venv sealed. D.5 override probe caused verify
+>   rc `1` with guard, byte-identical restore, post-restore verify rc `0`. The pre-start
+>   `systemctl show -p Environment` output was empty and **must be captured again after start in A-4**.
+> - **A-3 product suite PASS under Addendum D:** pytest rc `1`, terminal
+>   `2 failed, 1358 passed, 1 warning in 169.85s (0:02:49)`, and exactly the two permitted
+>   `test_order_state.py` gc-referents node IDs. Real log retained at
+>   `/home/gatea/gatea-A3-suite-20260808B.log`.
+> - **Checker defect — not a candidate failure:** the B A-3 wrapper falsely rejected the valid summary
+>   because `grep -qxF` did not allow pytest's elapsed suffix; the first SSH wrapper timeout did not
+>   kill the remote suite. This is a run-kit checker defect, not a candidate failure.
+> - **GLM-5.2 repair round 1 accepted by Codex:** old predicate RED on the real log; repaired predicate
+>   GREEN; prefix collision, changed counts, arbitrary suffix, non-terminal summary, malformed clock,
+>   and missing `s` all rejected; `bash -n` both files rc `0`; falsification `10 passed, 0 failed`,
+>   rc `0`. **The corrected checker has NOT yet been propagated/frozen/transferred to staging.**
+>
+> **Preserve old `GATE_A_RESULT_2026-08-08.md`; later write `GATE_A_RESULT_2026-08-08B.md`.** Ordered
+> next steps are in `_AI_MEMORY/NEXT_STEPS.md`.
+>
+> ---
+
 > ## ▶ CURRENT STATE — PICK UP EXACTLY HERE
 >
 > The accepted repair candidate remains **`2ce41e34` under D025**. The locally prepared 20260808B
