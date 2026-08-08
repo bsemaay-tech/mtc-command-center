@@ -1,5 +1,57 @@
 # Gate A local run kit — `2ce41e34` — 2026-08-08C (evidence-checker repair only)
 
+## Addendum — run-kit C transferred; retained-log A-3 postcheck PASS (2026-08-08)
+
+> Newest update to this record. The "next unit" defined below was executed on `gatea-staging`: the C tar
+> was transferred (B left intact) and the retained-log A-3 postcheck PASSED. This addendum records that
+> execution and marks the next unit complete; it does not alter candidate acceptance, the product bits,
+> the artifact, D025 acceptance, or the repair-round count. No pytest rerun.
+> No product code or product artifact changed; no install, service start, credentials,
+> broker/exchange access, successful ARM, orders, TESTNET/mainnet, master merge, or economic action. The
+> authorized staging actions in this unit were exactly run-kit C transfer/verification and read-only
+> retained-log A-3 postcheck/replay, producing the two recorded logs. The GLM worker itself only edited
+> documentation and did not perform staging/Git mutation.
+
+**Transfer + remote verification (B intact).** Tar transferred to
+`/home/gatea/gatea-run-kit-20260808C-2ce41e34.tar`. Remote direct verification on `gatea-staging`: tar
+SHA-256 `4ee5ba920800ceff8f55338bcba5b388d39d2457f9970795af89c9333767f855`, `53760` bytes, exact 9
+members; extracted to `/home/gatea/gatea-run-kit-20260808C-2ce41e34`; 7 manifest entries; `sha256sum -c`
+all seven OK; six `bash -n` PASS; corrected remote `gatea_A3.sh`
+`2bfec1c230d77d70f30bda5560f824fe970b4c2fca098d3fdda49129f2465d1c` OK.
+
+**Retained-log A-3 postcheck — PASS (no pytest rerun).** Retained suite log
+`/home/gatea/gatea-A3-suite-20260808B.log` SHA-256
+`569e79c7d68623b9f2ad51ee48053a04e6938e3277398861760dc1dd8d61c848` verified. Outer retained log contains
+exact `pytest rc=1`; terminal `2 failed, 1358 passed, 1 warning in 169.85s (0:02:49)` matches the
+corrected anchored optional-elapsed regex; observed failures exactly equal the two permitted
+`test_order_state.py` gc-referents node IDs both ways; failures `0`; `A-3 CHECKER PASS`.
+
+**Canonical VM evidence logs.** `/home/gatea/gatea-A3-postcheck-20260808C.log` and clean replay
+`/home/gatea/gatea-A3-postcheck-20260808C-clean.log`: both SHA-256
+`56a80d53155ac73b39dac064260ff702532fad36562eafbbe75f28c2f6414878`, `738` bytes, byte-identical.
+Clean-replay postcheck script SHA-256
+`19003ef03c0ccc433990b761feee89b613497d13e3bc312b816639e67c8415f1`; runner SHA-256
+`7a03c61dec9333e71d98115cb0f781b06ba2639d8a513781d600213061c6da16`; both `bash -n` rc `0` and 0 CR.
+
+**Transport noise — recorded transparently, not concealed.** The first stdin stream via PowerShell
+inserted a BOM before the shebang and printed a harmless `#!/usr/bin/env` command error outside the
+captured log after the postcheck had already returned PASS (the captured log itself was clean). A second
+byte-preserving Git Bash stream replay to the separate clean log had no transport error and produced the
+same 738 bytes/hash/PASS. This is non-gate transport noise.
+
+**State after postcheck.** Service reverified `inactive`, `masked`, listener 8790 absent; no credentials
+loaded. Gate A IN PROGRESS after accepted A-3; A-4 has not started. Existing owner authorization covers
+A-4 within the preregistered sequence; hard exclusions unchanged (credentials, broker/exchange access,
+successful ARM, orders, TESTNET/mainnet, master merge, economic action).
+
+**Next step.** `[AI: Claude]` execute the transferred C `gatea_A4.sh` under Addendum D, capturing all
+seven conditions (active/running; loopback 127.0.0.1:8790 only; status durably not ARMED; application-level
+exact credential-free 409 with correct X-Confirm; no broker attempt in journal/bridge.err.log/sockets;
+persisted DISARMED and unchanged version; resolved running environment/start mode). Stop at first FAIL.
+On failure run only read-only diagnostic as needed, then stop+mask the service and write result/memory.
+On PASS update `_AI_MEMORY` before preregistering the exact A-5–A-9 commands; do not improvise them.
+Preserve old `GATE_A_RESULT_2026-08-08.md`; later write `GATE_A_RESULT_2026-08-08B.md`.
+
 ## Scope — what this is, and what it is not
 
 This is an **evidence-checker repair only.** It corrects the A-3 run-script checker that
