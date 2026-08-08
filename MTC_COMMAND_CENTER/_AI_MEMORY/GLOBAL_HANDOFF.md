@@ -1,5 +1,46 @@
 # GLOBAL_HANDOFF
 
+## [Claude Opus 5] 2026-08-08 — `ebada020` ACCEPTED; Gate A RUNNING, A-0→A-3 all PASS
+
+**RESUME HERE:** `11_TRIAGE/GATE_A_RESULT_2026-08-08.md` (live scoreboard), then
+`11_TRIAGE/GATE_A_INTEGRATION_FLAGSHIP_AUDITS_EBADA020_2026-08-08.md` and
+`11_TRIAGE/GATE_A_PREREGISTRATION_ADDENDUM_B_2026-08-08.md`.
+
+**D025 satisfied — `ebada020a59edf539f60acfbb3a6bf870c8679e9` is ACCEPTED.** Both flagships accepting,
+zero required findings from any auditor: `gpt-5.6-sol` xhigh **PASS**, `claude-opus-5` xhigh
+**PASS-WITH-NITS** (accepting per `AGENTS.md:80`). Round 4 relied on the record for nothing — it
+executed the locked-Linux floor itself, making the verdict full-platform. Codex route used:
+`-Account free` → `.codex_OLD` (`bsemaay2@gmail.com`, **now Plus**, `gpt-5.6-sol` xhigh proven live).
+
+**Gate A rerun in progress on `gatea-staging`, authorised by Barış 2026-08-08.**
+
+| Check | Result |
+|---|---|
+| A-0 identity after transfer | **PASS** — one tar; manifest `8fc30864…`, 7059 entries, 7060 files, 1 033 359 158 B, full `sha256sum -c` rc=0; **0 CR bytes on all five `deploy/linux/*.sh` — the 2026-08-02 A-2 defect is disproved on Linux** |
+| A-1 clean-host | **PASS**, 0 failures (after the documented teardown below) |
+| A-2 install from artifact only | **PASS** — dry run exit 0 with 0 side effects, real install exit 0, `verify.sh` exit 0, **no host file had to be edited** |
+| A-3 Linux suite | **PASS** — `2 failed, 1357 passed, 1 warning in 210.32s`, node IDs exactly the pre-registered pair, 0 unexpected |
+| A-4 … A-9 | pending |
+
+**Two owner-authorised cleanups, both recorded.** ≈12 G of prior audit debris wiped (64% → 30% disk
+used), and a **stale bridge install left by the failed 2026-08-02 attempt** (release `a1dd5b46…`, unit
+`active=failed`, masked) torn down explicitly because `rollback.sh` is a roll-back-*to-a-release* tool,
+not an uninstaller. Teardown leftovers 0; evidence preserved to `~/teardown-a1dd5b46-20260808/`.
+**Supersedes Addendum B's venv pin:** that install's venv was the `a1dd5b46…` interpreter all prior
+Linux evidence used. A-3 ran on the venv **A-2 installed** instead — same 3.12.3 / pytest 9.1.1, and
+strictly better evidence.
+
+**A-4 carries a declared risk — flagship NIT 1, Lead-reproduced.** The credential-free DISARMED start
+mode is not reachable from any shipped deploy artifact: zero `start-mode` hits under `deploy/`, both
+unit templates `ExecStart=… python -m bridge.app`, env template does not name the variable, resolver
+defaults to **credentialed**. A-4's FAIL condition is **not** softened — arming, a broker connection
+attempt, or an ambiguous state still fails. Binding follow-up before any DISARMED VPS deploy: "did not
+arm" is weaker than "cannot arm, having never held credentials".
+
+Docs line: `feature/donchian-crypto-ladder`. `origin/master` unchanged at `637307e8` — nothing merged.
+
+---
+
 ## [Claude Opus 5] 2026-08-03 — Gate A repairs ACCEPTED and integrated at `ebada020`; Queue D stopped one step before A-0
 
 **RESUME HERE:** `11_TRIAGE/NEXT_SESSION_HANDOFF_2026-08-03B.md`. Full verified status:

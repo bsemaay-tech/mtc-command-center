@@ -1,10 +1,29 @@
 # NEXT_STEPS
 
-## GATE A — `ebada020` ACCEPTED, RUN AUTHORIZATION IS THE ONLY THING LEFT (2026-08-08)
+## GATE A — RUNNING ON `ebada020`; A-0→A-3 ALL PASS (2026-08-08)
 
-**START HERE:** `11_TRIAGE/GATE_A_INTEGRATION_FLAGSHIP_AUDITS_EBADA020_2026-08-08.md`, then
+**START HERE:** `11_TRIAGE/GATE_A_RESULT_2026-08-08.md` — live scoreboard, updated per check. Then
+`11_TRIAGE/GATE_A_INTEGRATION_FLAGSHIP_AUDITS_EBADA020_2026-08-08.md` and
 `11_TRIAGE/GATE_A_PREREGISTRATION_ADDENDUM_B_2026-08-08.md`.
 This section supersedes the 2026-08-03 section below.
+
+- **[AI: Any] GATE A LIVE STATE:** A-0 **PASS** · A-1 **PASS** · A-2 **PASS** · A-3 **PASS** ·
+  A-4…A-9 pending. Rule in force: **stop at the first FAIL.** Host logs on `gatea-staging`:
+  `~/gatea-A0A1-20260808.log`, `~/gatea-A2-dryrun-20260808.log`, `~/gatea-A2-install-20260808.log`,
+  `~/gatea-A3-suite-20260808.log`, `~/gatea-A3-20260808.log`, `~/gatea-teardown-20260808.log`.
+  Step scripts `/tmp/a01.sh`, `/tmp/a2.sh`, `/tmp/a3.sh` (sources in `C:\tmp\gatea_*.sh`).
+- **[AI: Any] THE 2026-08-02 A-2 FAILURE IS DISPROVED ON LINUX, not inferred from Windows.** After a
+  real one-tar transfer: `install.sh`/`common.sh`/`package.sh`/`rollback.sh`/`verify.sh` all `cr=0`.
+- **[AI: Any] A-2 PASSED WITH NO HOST EDITS**, so the artifact is self-contained — the thing WP-I
+  exists to prove. `verify.sh` exit 0 on every assertion; unit masked, unstarted, unenabled; env file
+  600 `root:root` with zero populated assignments.
+- **[AI: Any] ADDENDUM B VENV PIN IS SUPERSEDED.** The stale 2026-08-02 install was torn down (see
+  result doc §1), and its venv was the `a1dd5b46…` interpreter all prior Linux evidence used. A-3 ran
+  on the venv **A-2 installed** — same CPython 3.12.3 / pytest 9.1.1, expectation unaffected.
+- **[AI: Any] NEXT — A-4, the gate's most important check**, carrying the declared NIT 1 risk. Record
+  which start mode the service selects and whether any broker connection is attempted. Method is
+  pre-registered: the unit installs masked with `Restart=no`, so A-4 needs `systemctl unmask` then
+  `systemctl start`.
 
 - **[AI: Any] D025 SATISFIED — `ebada020` IS ACCEPTED.** Both flagships accepting with zero required
   findings from any auditor: `gpt-5.6-sol` xhigh **PASS** (round 3) and `claude-opus-5` xhigh
