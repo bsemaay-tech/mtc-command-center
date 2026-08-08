@@ -41,12 +41,19 @@
   `C:\tmp\gatea-a0-offline-bb964b4106b24ea192f830065a1b9992` was refused twice by local command
   policy after exact path verification; the directory remains isolated under `C:\tmp` and must be
   removed only by an allowed exact-literal cleanup. **Do not claim it was removed.**
+- **[AI: Any] SINGLE RUN-KIT BUNDLE FROZEN — NOT TRANSFERRED.**
+  `C:\WPI_ARTIFACTS\gatea-run-kit-20260808B-2ce41e34.tar`, SHA-256
+  `ac0fbaf2fefa8241c5c92f5bf35a3f9fc5258a4b7e30614988ed305afa61c0fb`, `61440` B, exact 9-member
+  archive. All seven manifest entries match; all six archived shell files have 0 CR bytes. README
+  hash `45b480ac5ce949f051e4f30753a5e85c7871b634f0ca9b1b646ae24927981353`; it explicitly says local
+  preparation only, not authorized to transfer or run.
 - **[AI: Barış] HARD GATE — explicit staging authorization required.** No host contact, transfer,
   teardown, install, service start, credential, broker/exchange access, ARM request, order,
   TESTNET/mainnet, or economic action occurred. The old host state was not rechecked.
-- **[AI: Claude|Codex] AFTER AUTHORIZATION ONLY.** Verify the six local hashes; run the prepared
-  teardown and require leftovers `0`; transfer the one tar; run Gate A from A-0 under Addendum D and
-  stop at first FAIL. Bind A-4 to corrected step 8; capture `systemctl show -p Environment`,
+- **[AI: Claude|Codex] AFTER AUTHORIZATION ONLY.** Transfer the run-kit bundle, verify its tar hash
+  and `SHA256SUMS`, then run the prepared teardown and require leftovers `0`; transfer the one
+  product tar; run Gate A from A-0 under Addendum D and stop at first FAIL. Bind A-4 to corrected
+  step 8; capture `systemctl show -p Environment`,
   `bridge.err.log`, and verifier override rejection/restoration/clean re-verification. Preserve the
   old result and write `GATE_A_RESULT_2026-08-08B.md`.
 - **[AI: Any] WHILE THE GATE IS CLOSED.** Continue only safe local evidence/package validation and

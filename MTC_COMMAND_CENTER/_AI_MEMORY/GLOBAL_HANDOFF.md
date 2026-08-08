@@ -59,6 +59,15 @@ under `C:\tmp` and must be removed only by an allowed exact-literal cleanup — 
 removed.** Candidate/artifact/acceptance/repair-round state unchanged; no staging contact or
 hard-gated action; explicit staging authorization still required.
 
+The final local-only run-kit bundle is frozen at
+`C:\WPI_ARTIFACTS\gatea-run-kit-20260808B-2ce41e34.tar`: SHA-256
+`ac0fbaf2fefa8241c5c92f5bf35a3f9fc5258a4b7e30614988ed305afa61c0fb`, `61440` bytes, exact 9-member
+set. In-memory archive verification matched all seven `SHA256SUMS` entries (six scripts plus README)
+and confirmed zero CR bytes in every archived shell file. The README hash is
+`45b480ac5ce949f051e4f30753a5e85c7871b634f0ca9b1b646ae24927981353` and explicitly says local
+preparation only, not authorized to transfer or run. The bundle was not transferred or executed and
+does not change the staging gate.
+
 ---
 
 ## [Claude Opus 5] 2026-08-08 — owner operating preference recorded

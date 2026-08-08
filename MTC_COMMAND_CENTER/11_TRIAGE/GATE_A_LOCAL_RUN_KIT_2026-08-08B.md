@@ -117,6 +117,23 @@ removed.
 **Candidate/artifact/acceptance/repair-round state unchanged; no staging contact or hard-gated
 action. Explicit staging authorization still required.**
 
+## Frozen run-kit bundle — prepared, not transferred
+
+The six validated scripts are also frozen into one local transport bundle:
+
+- Directory: `C:\WPI_ARTIFACTS\gatea-run-kit-20260808B-2ce41e34`
+- Tar: `C:\WPI_ARTIFACTS\gatea-run-kit-20260808B-2ce41e34.tar`
+- Tar SHA-256: `ac0fbaf2fefa8241c5c92f5bf35a3f9fc5258a4b7e30614988ed305afa61c0fb`
+- Tar bytes: `61440`
+- Members: `9` — one root directory plus `README.txt`, `SHA256SUMS`, and the six scripts
+- Manifest entries: `7` — the six scripts plus `README.txt`
+- README SHA-256: `45b480ac5ce949f051e4f30753a5e85c7871b634f0ca9b1b646ae24927981353`
+
+The tar was opened and verified without extraction: its member set is exact; all seven manifest
+hashes match the archived bytes; all six archived shell files contain zero CR bytes. The README is
+explicit: `LOCAL PREPARATION ONLY - NOT AUTHORIZED TO TRANSFER OR RUN.` The bundle was **not
+transferred or executed** and creates no staging authorization.
+
 ## Safety state and authorization boundary
 
 The old `ebada020` staging install remains masked, inactive, with no listener, no credentials,
@@ -129,9 +146,9 @@ Explicit staging authorization is still required before any host contact or dest
    `C:\tmp\gatea-a0-offline-bb964b4106b24ea192f830065a1b9992` directory via an allowed exact-literal
    cleanup. It remains isolated under `C:\tmp`; it was not removed in this work unit.
 2. **[AI: Barış]** Explicitly authorize staging contact and the bounded teardown/rerun window.
-3. Once authorized, verify all six local script hashes, run teardown first and require leftovers
-   `0`, transfer the single frozen tar, then run Gate A from A-0 under Addendum D and stop at the
-   first FAIL.
+3. Once authorized, transfer the run-kit bundle, verify its tar hash, extract it, and verify
+   `SHA256SUMS`; run teardown first and require leftovers `0`; transfer the single frozen product
+   tar; then run Gate A from A-0 under Addendum D and stop at the first FAIL.
 4. Bind A-4 to the corrected step-8 result. `stale state_version` is non-evidence and fails A-4.
    Capture `systemctl show -p Environment`, `bridge.err.log`, and verifier override-rejection,
    restoration, and clean re-verification evidence.

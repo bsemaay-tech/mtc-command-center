@@ -45,9 +45,17 @@
 > repair-round state unchanged; no staging contact or hard-gated action; explicit staging
 > authorization still required.
 >
+> **Frozen local-only run-kit bundle:**
+> `C:\WPI_ARTIFACTS\gatea-run-kit-20260808B-2ce41e34.tar`, SHA-256
+> `ac0fbaf2fefa8241c5c92f5bf35a3f9fc5258a4b7e30614988ed305afa61c0fb`, `61440` B, exact 9-member
+> archive. All seven manifest entries match and all six shell files have 0 CR bytes. Its README
+> explicitly says local preparation only, not authorized to transfer or run. The bundle was **not
+> transferred or executed** and does not change the staging gate.
+>
 > **Next steps:** when local command policy permits, remove only the exact disposable directory named
-> above. After explicit staging authorization, verify the six script hashes; run the prepared teardown
-> first and require leftovers `0`; transfer the one tar; run Gate A from A-0 under Addendum D and stop
+> above. After explicit staging authorization, transfer the run-kit bundle, verify its tar hash and
+> `SHA256SUMS`, run the prepared teardown first and require leftovers `0`, transfer the one product
+> tar, and run Gate A from A-0 under Addendum D and stop
 > at first FAIL; bind A-4 to the corrected step-8 result; capture `systemctl show -p Environment`,
 > `bridge.err.log`, and verifier override rejection/restoration/clean re-verification; preserve the
 > old result and write `GATE_A_RESULT_2026-08-08B.md`. Update `_AI_MEMORY/` before the next work unit.
