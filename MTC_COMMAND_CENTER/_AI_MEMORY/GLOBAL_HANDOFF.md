@@ -31,6 +31,34 @@ Explicit Barış authorization remains required before any staging contact or te
 continue only safe local evidence/package and record-consistency work, updating `_AI_MEMORY/` before
 the next work unit.
 
+**Offline validation and supplemental audit (same 20260808B checkpoint):** Offline local A-0 executed
+against the real frozen tar in a fresh disposable HOME and passed every A-0 identity check: tar SHA
+`d78b9e82e4138714fd5eabfb4996d8d831f28d14cf0b9e1149c8751739fe05f2`, tar bytes `1047265280`;
+`RELEASE_SHA` exact `2ce41e34bceb599d80af24c5c33d835820ec321b`; manifest SHA
+`edb0fd34e3d976b872868cc3dfbf745cbc4b08f6c4c5d21b8d6cda47a3e20d26`; 7059 manifest entries; 7060
+regular files; 1033362481 total payload bytes; 0 non-regular entries; `sha256sum -c` rc 0 with 0
+output/problem lines; all five `deploy/linux/*.sh` had 0 CR bytes. The same script then stopped at
+A-1 because this workstation is Windows and `/etc/os-release` is absent — **A-1 was NOT
+executed/accepted and no Linux or Gate A claim is promoted.** DeepSeek supplemental audit attempt 1
+exhausted `max_iters` with no verdict; the focused retry read all ten files but stopped without
+finish/verdict — **DeepSeek is supplemental non-accepting evidence only.** Lead classification: the
+claimed A-4 `start_rc` pipeline loss did not reproduce (`set -o pipefail` returned upstream rc 7);
+A-4 now records `start_rc` explicitly as `PIPESTATUS[0]`. The A-3 substring concern reproduced
+(`grep -qF` could match `12 failed...`); changed locally to `grep -qxF`, exact fixture rc 0 and
+prefixed fixture rc 1. Possible metadata exposure did not reproduce as credentials at this candidate,
+but A-4 and A-4_diag were hardened to query only meta keys `app_state` and `schema_version`. The
+one-tar-home uniqueness point remains informational; the one exact tar under test passed all identity
+checks. After hardening, all six scripts pass `bash -n`; the exact embedded A-4 five-case no-network
+falsification still passes; the real in-process refusal test still passes `1 passed, 1 warning in
+0.52s`. **Replaced script hashes:** A3 `33934221be2955c04bb8944807c65a51496c8e8780a076b81a3860472f604443`
+/ 4064 B; A4 `78aa7fca7bfe7eb256a562d08d61e7d16b4ffcd3b164b89a5df420a01a8fd9b4` / 16228 B; A4_diag
+`f75912a2298b2611d70d20998b711e1af54f1900b3af77441595de960f0f101d` / 3053 B; unchanged hashes remain
+as written. Cleanup of the disposable `C:\tmp\gatea-a0-offline-bb964b4106b24ea192f830065a1b9992` was
+refused twice by local command policy after exact path verification; the directory remains isolated
+under `C:\tmp` and must be removed only by an allowed exact-literal cleanup — **do not claim it was
+removed.** Candidate/artifact/acceptance/repair-round state unchanged; no staging contact or
+hard-gated action; explicit staging authorization still required.
+
 ---
 
 ## [Claude Opus 5] 2026-08-08 — owner operating preference recorded

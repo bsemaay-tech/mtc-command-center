@@ -25,7 +25,28 @@
 > Barış authorization is still required. The old `ebada020` host state was not rechecked in this work;
 > its last verified state remains masked, inactive, no listener, no credentials, nothing armed.
 >
-> **Next steps after explicit authorization:** verify the six script hashes; run the prepared teardown
+> **Offline validation and supplemental audit (same 20260808B checkpoint):** offline local A-0 passed
+> every A-0 identity check against the real frozen tar in a fresh disposable HOME (tar SHA
+> `d78b9e82…fe05f2`, `1047265280` B; `RELEASE_SHA` exact `2ce41e34…`; manifest `edb0fd34…20d26`;
+> 7059 entries / 7060 regular files / 1033362481 B / 0 non-regular; `sha256sum -c` rc 0, 0 problem
+> lines; 0 CR bytes on all five `deploy/linux/*.sh`). The same script then stopped at A-1 because this
+> workstation is Windows and `/etc/os-release` is absent — **A-1 was NOT executed/accepted; no Linux
+> or Gate A claim is promoted.** DeepSeek supplemental audit attempt 1 exhausted `max_iters` with no
+> verdict and the focused retry stopped without finish/verdict — **supplemental non-accepting evidence
+> only.** Hardening: A-4 records `start_rc` as `PIPESTATUS[0]`; A-3 uses `grep -qxF`; A-4/A-4_diag
+> query only meta keys `app_state` and `schema_version`; all six scripts pass `bash -n`; the exact
+> embedded A-4 five-case no-network falsification and the real in-process refusal test
+> (`1 passed, 1 warning in 0.52s`) still pass. Replaced hashes (A3 `33934221…604443`/4064 B, A4
+> `78aa7fca…fd9b4`/16228 B, A4_diag `f75912a2…f101d`/3053 B) are in the run kit; unchanged hashes
+> remain as written. Cleanup of the disposable
+> `C:\tmp\gatea-a0-offline-bb964b4106b24ea192f830065a1b9992` was refused twice by local command
+> policy after exact path verification; it remains isolated under `C:\tmp` and must be removed only by
+> an allowed exact-literal cleanup — **do not claim it was removed.** Candidate/artifact/acceptance/
+> repair-round state unchanged; no staging contact or hard-gated action; explicit staging
+> authorization still required.
+>
+> **Next steps:** when local command policy permits, remove only the exact disposable directory named
+> above. After explicit staging authorization, verify the six script hashes; run the prepared teardown
 > first and require leftovers `0`; transfer the one tar; run Gate A from A-0 under Addendum D and stop
 > at first FAIL; bind A-4 to the corrected step-8 result; capture `systemctl show -p Environment`,
 > `bridge.err.log`, and verifier override rejection/restoration/clean re-verification; preserve the

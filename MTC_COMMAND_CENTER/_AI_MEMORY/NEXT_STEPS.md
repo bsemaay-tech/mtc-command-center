@@ -17,7 +17,30 @@
   exact credential-free 409, and requires unchanged status/version afterward.
 - **[AI: Any] LOCAL VALIDATION.** Five no-network falsification cases passed: bad mode and boolean
   version blocked with zero POST; exact refusal passed; stale-confirm and changed-version failed.
-  The candidate's real in-process refusal test passed `1 passed, 1 warning in 0.67s`.
+  The candidate's real in-process refusal test passed `1 passed, 1 warning in 0.52s`.
+- **[AI: Any] OFFLINE A-0 PASS / A-1 PLATFORM STOP.** Offline local A-0 executed against the real
+  frozen tar in a fresh disposable HOME and passed every A-0 identity check (tar SHA
+  `d78b9e82e4138714fd5eabfb4996d8d831f28d14cf0b9e1149c8751739fe05f2`, `1047265280` B; `RELEASE_SHA`
+  exact `2ce41e34…`; manifest `edb0fd34…20d26`; 7059 entries / 7060 regular files / 1033362481 B /
+  0 non-regular; `sha256sum -c` rc 0, 0 problem lines; 0 CR bytes on all five `deploy/linux/*.sh`).
+  The same script then stopped at A-1 because this workstation is Windows and `/etc/os-release` is
+  absent — **A-1 was NOT executed/accepted; no Linux or Gate A claim is promoted.**
+- **[AI: Any] DEEPSEEK NO-VERDICT — supplemental only.** Attempt 1 exhausted `max_iters` with no
+  verdict; the focused retry read all ten files but stopped without finish/verdict. DeepSeek is
+  supplemental non-accepting evidence only.
+- **[AI: Any] HARDENING.** A-4 `start_rc` now recorded explicitly as `PIPESTATUS[0]` (the claimed
+  pipeline loss did not reproduce; `set -o pipefail` returned upstream rc 7). A-3 changed to
+  `grep -qxF` (the `grep -qF` substring concern reproduced; exact fixture rc 0, prefixed rc 1). A-4
+  and A-4_diag hardened to query only meta keys `app_state` and `schema_version`. All six scripts
+  pass `bash -n`; the exact embedded A-4 five-case no-network falsification still passes; the real
+  in-process refusal test still passes `1 passed, 1 warning in 0.52s`.
+- **[AI: Any] NEW HASHES BY REFERENCE.** Replaced script hashes are recorded in the run kit: A3
+  `33934221…604443` / 4064 B; A4 `78aa7fca…fd9b4` / 16228 B; A4_diag `f75912a2…f101d` / 3053 B;
+  unchanged hashes remain as written.
+- **[AI: Any] CLEANUP RESIDUE.** Cleanup of the disposable
+  `C:\tmp\gatea-a0-offline-bb964b4106b24ea192f830065a1b9992` was refused twice by local command
+  policy after exact path verification; the directory remains isolated under `C:\tmp` and must be
+  removed only by an allowed exact-literal cleanup. **Do not claim it was removed.**
 - **[AI: Barış] HARD GATE — explicit staging authorization required.** No host contact, transfer,
   teardown, install, service start, credential, broker/exchange access, ARM request, order,
   TESTNET/mainnet, or economic action occurred. The old host state was not rechecked.
