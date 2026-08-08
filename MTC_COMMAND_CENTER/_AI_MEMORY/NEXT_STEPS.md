@@ -31,7 +31,33 @@ This section supersedes the 2026-08-03 section below.
   `Aug 01 23:35:27`. It was invisible on 2026-08-02 because that run died at A-2 and never reached
   A-4. Fixing the CRLF defect is what let the gate get far enough to expose this. `ebada020` is not
   retroactively rejected — the gap is in `deploy/`, outside the nine-file merge scope.
-- **[AI: Barış] NEXT STEP NEEDS YOUR AUTHORIZATION — product change.** No product code was touched.
+- **[AI: Any] A-4 REPAIR IS BUILT AND COMMITTED — `ed3d0534` on `codex/gate-a-disarmed-start-mode`**
+  (branched from `ebada020`, pushed). Barış authorised the **small fix only** on 2026-08-08; the deeper
+  change is deferred (see below). Three files, 6 insertions, 1 deletion:
+  `deploy/linux/systemd/mtc-bridge-first-start.service.template` gains
+  `Environment=MTC_BRIDGE_START_MODE=credential_free_disarmed`; `deploy/linux/verify.sh` adds it to the
+  unit-assertion list so every install re-checks it on the host; `tests/test_linux_deployment.py`
+  asserts the first-start unit declares it **and that the steady unit does not** (steady is the future
+  credentialed profile — pinning DISARMED there would be wrong).
+  Placed in the unit rather than the `EnvironmentFile` (contract-only, values never written) and rather
+  than an `ExecStart` flag (the unit is hashed into `install_manifest.json` as
+  `first_start_unit_sha256`, so it cannot drift silently) — the precedent the template already states
+  for `MTC_BRIDGE_STATE_DB`. Name and value taken from `bridge/app.py:30,32`, not guessed.
+  **D026 honoured:** real `AssertionError` at `test_linux_deployment.py:226` against the unmodified
+  template (`1 failed, 1 passed`) before the fix, green after. Lead reproduced the full Windows suite
+  independently: **`1359 passed, 1 warning in 198.90s`**. Implemented by Codex `gpt-5.6-sol` under Lead
+  scope; diff, constants, D026 evidence and suite all verified against the files, not the report.
+  Log `C:\tmp\CODEX_DISARMED_START_MODE_IMPL_2026-08-08.txt`, spec
+  `C:\tmp\codex_disarmed_start_mode_impl.md`, worktree `C:\GADISARM`.
+- **[AI: Barış] STILL GATED — nothing further has been done.** Three things remain and each needs your
+  go: (1) rebuild the deployment artifact from the new SHA — **artifact generation requires approval**
+  per the repo guard; (2) a D025 flagship round on the new SHA — two flagship audits, a real budget
+  cost; (3) Gate A rerun from A-0. Until then `ebada020` remains the last accepted candidate and the
+  new commit is **unaudited**.
+- **[AI: Barış] DEFERRED BY OWNER DECISION — do not slip it in:** whether module-level `create_app()`
+  at `bridge/app.py:282` should construct a broker at import time at all. Barış chose the small fix
+  only. "Told not to ask for credentials" is weaker than "cannot ask"; revisit as its own decision.
+- **[AI: Barış] SUPERSEDED — the original authorization note read:** product change needed.
   Wire `--start-mode credential_free_disarmed` into both unit templates (or `MTC_BRIDGE_START_MODE`
   into the env template + `install.sh`), and consider whether `app.py:282` should construct a broker at
   import time at all on a first DISARMED start. Fold in the cosmetic-but-misleading
