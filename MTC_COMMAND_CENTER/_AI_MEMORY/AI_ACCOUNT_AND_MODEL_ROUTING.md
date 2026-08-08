@@ -18,8 +18,14 @@ The **home → account** mapping in the table below is a **recorded setup fact**
 |---|---|---|---|---|---|
 | **desktop / default** | `C:\Users\BarışSemaay\.codex` | `bs***y3@gmail.com` | Plus | 72% | **Reserved for the Codex desktop/app side.** Not selectable from the launcher. |
 | **secondary** ✅ | `C:\Users\BarışSemaay\.codex-hesap2` | `bs***y4@gmail.com` | Plus | 99% | **Claude's default Codex CLI route.** |
-| **free** | `C:\Users\BarışSemaay\.codex_OLD` | `bs***y2@gmail.com` | Free | 100% of its 30-day allowance | **Fallback only.** Plan tier alone does not disqualify it: it may serve a mandated flagship run **only if a fresh probe on this route proves the exact required model and reasoning effort are actually available there**. If the probe does not prove that, do not run — **never silently downgrade the model or effort, and never substitute a different model** for a mandated one. |
+| **free** ✅ | `C:\Users\BarışSemaay\.codex_OLD` | `bs***y2@gmail.com` | **Plus** (upgraded 2026-08-08 — the label "free" is now only a route name) | available 2026-08-08 | **Verified flagship-capable 2026-08-08.** `login status` = logged in; a live probe returned header `model: gpt-5.6-sol / reasoning effort: xhigh` and completed. Carried the whole binding D025 flagship audit of `ebada020`. The rule below still applies to every future run: probe first, **never silently downgrade the model or effort, and never substitute a different model** for a mandated one. |
 | **fourth** | `C:\Users\BarışSemaay\.codex-bsemaay` | `bsemaay@gmail.com` | Plus | **0%** until reset **2026-08-08 08:49 local** | Isolated home directory exists; **browser/device authorization was still pending when this file was written.** The wrapper supports the route, but it is not a verified logged-in route. |
+
+> **Correction 2026-08-08 — this table said `free` was plan Free. It is not, and two other things here can mislead:**
+>
+> 1. **The account was upgraded to ChatGPT Plus**, so a "Free tier" reading of this route is wrong. `gpt-5.6-sol` at `xhigh` is proven live on it.
+> 2. **`models_cache.json` in a home is not evidence of model availability.** `.codex_OLD`'s cache still lists no `GPT-5.6-Sol` because it was written while the account was Free. **A live probe overrides the cache** — do not conclude a model is unavailable from a stale cache file.
+> 3. **`secondary` is the documented default but was credit-exhausted** by the 2026-08-03 overnight run. Do not route a mandated flagship there on the strength of the "99%" snapshot above; snapshots in this file are dated and must be re-checked, as §15 already warns.
 
 ### Hard rules
 
@@ -34,6 +40,22 @@ The **home → account** mapping in the table below is a **recorded setup fact**
 `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-CodexForClaude.ps1`
 
 Sets `CODEX_HOME` for the child invocation only, restores or removes the prior process value in `finally`, preserves the child exit code, fails clearly when the selected home or the CLI is missing, and resolves the CLI to the installed `C:\Users\BarışSemaay\AppData\Roaming\npm\codex.ps1` (with a `Get-Command` fallback restricted to real executables/scripts). It reads no credential.
+
+> **Calling convention — bare Codex flags DO NOT WORK (verified 2026-08-08).** PowerShell tries to bind `-m` / `-c` as script parameters before `ValueFromRemainingArguments` sees them, so
+>
+> ```powershell
+> # FAILS: "A positional parameter cannot be found that accepts argument 'exec'"
+> & .\Invoke-CodexForClaude.ps1 -Account free exec --sandbox read-only -m gpt-5.6-sol -c "model_reasoning_effort=xhigh" prompt
+> ```
+>
+> Build an array and pass it explicitly instead:
+>
+> ```powershell
+> $a = @('exec','--sandbox','read-only','-m','gpt-5.6-sol','-c','model_reasoning_effort=xhigh', $promptText)
+> & .\Invoke-CodexForClaude.ps1 -Account free -CodexArgs $a
+> ```
+>
+> **Two more traps paid for in the same session.** Codex refuses commands as `blocked by policy` under `sandbox: read-only` outside a trusted project dir — for an isolated audit worktree, `--dangerously-bypass-approvals-and-sandbox` clears it and the run header should then read `sandbox: danger-full-access`. And outside a git repo, `exec` aborts with *"Not inside a trusted directory and --skip-git-repo-check was not specified"*, so a scratch-dir probe needs `--skip-git-repo-check`.
 
 ```powershell
 # default route (secondary) — any Codex args are forwarded verbatim

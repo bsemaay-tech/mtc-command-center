@@ -2,7 +2,8 @@
 
 ## GATE A — RUN COMPLETE: A-0→A-3 PASS, **A-4 FAIL**, stopped per first-FAIL rule (2026-08-08)
 
-**START HERE:** `11_TRIAGE/GATE_A_RESULT_2026-08-08.md` — full result with the A-4 traceback. Then
+**START HERE:** `11_TRIAGE/NEXT_SESSION_HANDOFF_2026-08-08.md` (standalone pickup, supersedes
+`…_2026-08-03B.md`), then `11_TRIAGE/GATE_A_RESULT_2026-08-08.md` for the A-4 traceback,
 `11_TRIAGE/GATE_A_INTEGRATION_FLAGSHIP_AUDITS_EBADA020_2026-08-08.md` and
 `11_TRIAGE/GATE_A_PREREGISTRATION_ADDENDUM_B_2026-08-08.md`.
 This section supersedes the 2026-08-03 section below.
