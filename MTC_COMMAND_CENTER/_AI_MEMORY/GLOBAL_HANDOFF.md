@@ -1,5 +1,32 @@
 # GLOBAL_HANDOFF
 
+## [Claude Opus 5] 2026-08-08 — owner operating preference recorded
+
+Documentation-only entry. **No project state changed** — the accepted-`2ce41e34` current-state section
+immediately below remains the live pickup, and everything it gates stays gated.
+
+Barış's standing operating preference is now durable in
+`_AI_MEMORY/PROJECT_MEMORY.md` → *Owner operating preference — autonomous continuation checkpoints*:
+
+1. Every completed work unit ends with explicit practical next steps (flagship-audit-report style).
+2. Before starting the next work unit, update the relevant `_AI_MEMORY/` records so current state and
+   the next action are durable.
+3. Continue autonomously through the next safe, already-authorized work unit — no waiting for routine
+   input, no routine questions when the handoff already determines the next action.
+4. Use available subscription routes proactively (including Claude while quota allows), keeping the
+   exact-model, counterpart, canonical-audit, token/cost-routing, and independent Lead-verification
+   rules intact.
+5. **Hard gates are unaffected:** master merge, destructive Git, staging/deployment, credentials,
+   broker/exchange access, ARM/orders, TESTNET/mainnet, Pine/parity/MTC/trading changes, and economic
+   action still need Barış's explicit authorization. At a hard gate, continue safe preparation and
+   evidence work and record the exact authorization still required.
+
+Files touched: `PROJECT_MEMORY.md`, `GLOBAL_HANDOFF.md`, `NEXT_STEPS.md`. Docs line
+`feature/donchian-crypto-ladder`, based on `44c6cdb0`. No stage, no commit, no push, no branch change,
+no product file, no Gate A action.
+
+---
+
 ## [GPT-5 Codex] 2026-08-08 — A-4 repair `2ce41e34` ACCEPTED and packaged; Gate A rerun awaiting staging authorization
 
 **Supersedes the `[Claude Opus 5] 2026-08-08 (evening)` entry immediately below** (which records round-1

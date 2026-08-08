@@ -46,6 +46,15 @@ round-1 bullet trail). That older top status is preserved below as history. Live
   drop-ins — future scoped follow-up; (2) steady profile has no start-mode pin (correct for now) — address
   at the steady profile's future gate; (3) remaining cosmetic / over-strict / test-structure notes are
   non-blocking.
+- **[AI: Any] OWNER OPERATING PROTOCOL (recorded 2026-08-08; full text in `PROJECT_MEMORY.md` →
+  *Owner operating preference*).** End every work unit with explicit practical next steps; refresh
+  `_AI_MEMORY/` records before starting the next one; continue autonomously through the next safe,
+  already-authorized work unit without routine questions; use available subscription routes
+  proactively while keeping exact-model / counterpart / canonical-audit / token-routing /
+  Lead-verification rules intact. **The current hard gate is staging authorization from Barış:** safe
+  preparation and evidence work may continue autonomously (docs, audits, artifact verification, host
+  scripts staged locally in `C:\tmp`), but transfer, teardown, install, and the Gate A rerun may not —
+  at that gate, record the exact authorization required instead of crossing it.
 
 ---
 

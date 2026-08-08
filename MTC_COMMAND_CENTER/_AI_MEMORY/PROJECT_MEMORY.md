@@ -11,6 +11,29 @@ Volatile / per-session state belongs in `GLOBAL_HANDOFF.md`,
   and MTC (Master Trading Core) workflow command center.
 - Primary developer: Barış (solo).
 
+## Owner operating preference — autonomous continuation checkpoints
+
+Standing instruction from Barış (recorded 2026-08-08). Applies to every AI agent on this repo.
+
+1. **End every completed work unit with explicit, practical next steps** — concrete commands, file
+   paths, and the chosen default path, in the style of the Claude flagship audit reports in
+   `11_TRIAGE/`.
+2. **Before starting the next work unit, update the relevant `_AI_MEMORY/` records** so current state
+   and the next action are durable for whoever picks up next (`GLOBAL_HANDOFF.md`, `NEXT_STEPS.md`,
+   and this file when a stable fact changes).
+3. **Continue autonomously through the next safe, already-authorized work unit.** Do not wait for
+   routine user input and do not ask routine questions when the handoff already determines the next
+   action.
+4. **Use available subscription routes proactively**, including Claude when quota allows, while
+   preserving the existing exact-model, counterpart, canonical-audit, token/cost-routing, and
+   independent Lead-verification rules (`AI_ACCOUNT_AND_MODEL_ROUTING.md`, D025/D026).
+5. **This preference does not waive any hard gate.** Merge to master, destructive Git, staging or
+   deployment action, credential handling, broker/exchange access, ARM or order placement,
+   TESTNET/mainnet action, changes to Pine / parity / MTC / trading behavior, and any economic action
+   still require Barış's explicit authorization. At a hard gate: keep doing the safe preparation and
+   evidence work, then **record the exact authorization still required** — never cross the gate to
+   avoid asking.
+
 ## Top-Level Layout
 
 - `AGENTS.md`                          — agent contract (read first).
