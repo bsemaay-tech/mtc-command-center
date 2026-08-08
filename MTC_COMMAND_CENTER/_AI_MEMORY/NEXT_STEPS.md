@@ -49,11 +49,31 @@ This section supersedes the 2026-08-03 section below.
   scope; diff, constants, D026 evidence and suite all verified against the files, not the report.
   Log `C:\tmp\CODEX_DISARMED_START_MODE_IMPL_2026-08-08.txt`, spec
   `C:\tmp\codex_disarmed_start_mode_impl.md`, worktree `C:\GADISARM`.
-- **[AI: Barış] STILL GATED — nothing further has been done.** Three things remain and each needs your
-  go: (1) rebuild the deployment artifact from the new SHA — **artifact generation requires approval**
-  per the repo guard; (2) a D025 flagship round on the new SHA — two flagship audits, a real budget
-  cost; (3) Gate A rerun from A-0. Until then `ebada020` remains the last accepted candidate and the
-  new commit is **unaudited**.
+- **[AI: Any] ARTIFACT REBUILT AND VERIFIED at `ed3d0534`** (Barış authorised review + rebuild + rerun
+  on 2026-08-08). `C:\WPI_ARTIFACTS\ed3d053432fb496123ac43bcb7d40cfb64edbb8b`, manifest
+  **`8964CC43B802BADA1AD5611E5B445E19B4332C45133AF3E8473A85BB57E7EE4B`**, 7059 entries, 7060 files,
+  1 033 359 494 bytes (+336 B over `ebada020` = the six added lines), **0 CR bytes on all five
+  `deploy/linux/*.sh`**, fix present in the built payload at
+  `…/mtc-bridge-first-start.service.template:42`, steady template correctly clean. Built once via
+  `package.sh --release-sha ed3d0534… --repo C:\GADISARM --out …`, exit 0. Frozen in
+  `11_TRIAGE/GATE_A_PREREGISTRATION_ADDENDUM_C_2026-08-08.md` (`783335e3`), which also **re-registers
+  A-4's expectation in advance** — seven conditions, and an application-level arm refusal is required
+  (`Errno 111 Connection refused` explicitly does not count).
+- **[AI: Any] ⚠ TWO FLAGSHIP AUDITS WERE IN FLIGHT AND WERE LOST TO A PLANNED SHUTDOWN 2026-08-08.**
+  They must be **re-dispatched from scratch**; nothing usable was captured. Everything needed is on
+  disk: prompt `C:\tmp\gatea_disarm_fix_audit_prompt.md`, worktrees `C:\GAAUD_DISARM` (Codex) and
+  `C:\GAAUD_DISARM_CLA` (Claude), both detached at `ed3d0534` and clean. Separate worktrees are
+  deliberate so concurrent suite runs cannot disturb each other. Dispatch forms:
+  - Codex: `$a=@('exec','--dangerously-bypass-approvals-and-sandbox','-m','gpt-5.6-sol','-c','model_reasoning_effort=xhigh', $shortPointerPrompt)` then
+    `& Invoke-CodexForClaude.ps1 -Account free -CodexArgs $a` — **the prompt must be a short quote-free
+    pointer to the prompt file**, see the routing doc's launcher note.
+  - Claude: `claude -p $prompt --model claude-opus-5 --effort xhigh --no-session-persistence --dangerously-skip-permissions`
+- **[AI: Any] `ed3d0534` IS STILL UNAUDITED AND UNACCEPTED. `ebada020` remains the last accepted
+  candidate.** A rebuilt artifact is not acceptance. **Gate A must not start** until both flagships
+  accept with no unresolved reproduced required finding.
+- **[AI: Any] BEFORE A-0 NEXT TIME:** the `ebada020` install is still on `gatea-staging` and A-1 will
+  fail 7 of 8 assertions against it. Tear it down first with the proven `C:\tmp\gatea_teardown.sh`
+  (leftovers 0 last time). `rollback.sh` takes `--to-release-sha` and is **not** an uninstaller.
 - **[AI: Barış] DEFERRED BY OWNER DECISION — do not slip it in:** whether module-level `create_app()`
   at `bridge/app.py:282` should construct a broker at import time at all. Barış chose the small fix
   only. "Told not to ask for credentials" is weaker than "cannot ask"; revisit as its own decision.

@@ -1,4 +1,74 @@
-# NEXT SESSION HANDOFF — Gate A ran, A-4 FAILED, repair needs authorization (2026-08-08)
+# NEXT SESSION HANDOFF — A-4 repaired and packaged; two flagship audits owed (2026-08-08)
+
+> ## ▶ PICK UP EXACTLY HERE
+>
+> Session paused for a planned shutdown on 2026-08-08. **Nothing is broken and nothing is half-written
+> to disk.** Everything below §"Since this handoff was first written" is current; the sections after it
+> describe the earlier A-4 failure and remain accurate as background.
+>
+> **State:** the A-4 repair is built, verified and committed at **`ed3d0534`** on
+> `codex/gate-a-disarmed-start-mode` (pushed). The deployment artifact is rebuilt and verified at
+> `C:\WPI_ARTIFACTS\ed3d053432fb496123ac43bcb7d40cfb64edbb8b`. Gate A is fully pre-registered for the
+> rerun in `GATE_A_PREREGISTRATION_ADDENDUM_C_2026-08-08.md`.
+>
+> **First action next session — re-dispatch the two flagship audits of `ed3d0534`.** They were running
+> when the machine was shut down and were lost; nothing usable was captured, so they start from
+> scratch. Prompt is written and on disk at `C:\tmp\gatea_disarm_fix_audit_prompt.md`. Worktrees
+> `C:\GAAUD_DISARM` (Codex) and `C:\GAAUD_DISARM_CLA` (Claude) are detached at `ed3d0534` and clean —
+> **verify that before reusing them.**
+>
+> **Then, only if both accept:** tear down the stale `ebada020` install on `gatea-staging` with
+> `C:\tmp\gatea_teardown.sh`, transfer the new artifact as one tar, and run Gate A from **A-0** per
+> Addendum C. Stop at the first FAIL. Write `GATE_A_RESULT_2026-08-08B.md`, keeping the first result
+> document intact.
+>
+> **`ed3d0534` is UNAUDITED.** `ebada020` is still the last accepted candidate. A rebuilt artifact is
+> not acceptance.
+
+---
+
+## Since this handoff was first written (2026-08-08, later the same day)
+
+| Step | State |
+|---|---|
+| A-4 repair implemented | **`ed3d0534`**, 3 files, 6 insertions, 1 deletion. Codex `gpt-5.6-sol` under Lead scope; Lead verified diff, constants, D026 red-then-green and suite against the files |
+| Lead suite reproduction | `1359 passed, 1 warning in 198.90s` — matches the floor |
+| Artifact rebuilt | manifest `8964CC43…EE4B`, 7059 entries, 7060 files, 1 033 359 494 B, 0 CR bytes on all five deploy scripts, fix present in payload, steady clean |
+| Gate A re-baselined | `GATE_A_PREREGISTRATION_ADDENDUM_C_2026-08-08.md` (`783335e3`) |
+| **Two flagship audits of `ed3d0534`** | **OWED — dispatched, then lost to the shutdown. Re-run from scratch.** |
+| Gate A rerun | **not started**, correctly blocked on the audits |
+
+**What the repair does:** pins `Environment=MTC_BRIDGE_START_MODE=credential_free_disarmed` in the
+first-start unit, adds the same declaration to `verify.sh`'s unit-assertion list so every install
+re-checks it on the host, and asserts in the deployment tests that the first-start unit declares it
+while the **steady** unit does not. Placed in the unit rather than the `EnvironmentFile` (contract-only,
+values never written) or an `ExecStart` flag (the unit is hashed into `install_manifest.json`, so it
+cannot drift silently). Name and value read from `bridge/app.py:30,32`, not guessed.
+
+**Deferred by explicit owner decision — do not slip it into a later commit:** whether module-level
+`create_app()` at `bridge/app.py:282` should construct a broker at import time at all. Barış chose the
+small fix only, on the reasoning that it is sufficient for a staging gate and the deeper change does
+not fit the remaining budget. "Told not to ask for credentials" is weaker than "cannot ask" — revisit
+as its own decision, not as a side effect.
+
+**A-4's bar is higher now, and it is pre-registered.** Addendum C §C.4 lists seven conditions. The one
+that failed before must now genuinely hold: `POST /api/arm` must be **refused by the application**, and
+a connection refusal explicitly does not count. Also pre-recorded: read
+`/var/log/mtc-bridge/bridge.err.log`, because the unit appends stderr to a file and tracebacks never
+reach `journalctl`.
+
+**Open question the rerun should answer (recording obligation, not pass/fail):** `EnvironmentFile` is
+declared *after* the unit's `Environment=` lines, so if an operator ever placed
+`MTC_BRIDGE_START_MODE` in that file, systemd's precedence decides whether pinned DISARMED survives.
+Establish it by execution rather than assumption.
+
+**Machine note:** `GATEA-STAGING` is a Hyper-V VM on this workstation, so it stops with the machine.
+Nothing was running on it at shutdown — the `ebada020` install is installed-but-masked, inactive, no
+listener, nothing armed, no credentials provisioned.
+
+---
+
+## Original handoff — Gate A ran, A-4 FAILED (2026-08-08, earlier)
 
 **Supersedes `NEXT_SESSION_HANDOFF_2026-08-03B.md` entirely.** That file's "single remaining blocker"
 (the second flagship audit) is closed, and Gate A has since run.
