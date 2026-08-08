@@ -1,5 +1,37 @@
 # GLOBAL_HANDOFF
 
+## [Claude Opus 5] 2026-08-08 (evening) — A-4 repair `ed3d0534` audited: **NOT ACCEPTED**, 1 binding finding
+
+**RESUME HERE:** `11_TRIAGE/NEXT_SESSION_HANDOFF_2026-08-08.md`, then
+`11_TRIAGE/GATE_A_DISARM_FIX_AUDIT_ROUND1_ED3D0534_2026-08-08.md`.
+
+The A-4 repair was built (`ed3d0534`), the artifact rebuilt and verified (manifest `8964CC43…`), Gate A
+re-baselined (Addendum C), and both flagships audited it. **Acceptance failed:** `claude-opus-5` xhigh
+**PASS-WITH-NITS** (0 required), `gpt-5.6-sol` xhigh **REQUEST_CHANGES** (1 required finding). D025
+rule 3 needs both accepting. **Both found the same defect independently**, differing only on severity.
+
+**Binding finding, Lead-reproduced:** `EnvironmentFile=` **overrides** `Environment=` in systemd, so the
+start-mode pin at `…first-start.service.template:42` is defeated by any `MTC_BRIDGE_START_MODE=`
+written into `/etc/mtc-bridge/mtc-bridge.env` (declared line 45) — and `verify.sh:138` rejects only
+`HL_LIVE_ACK=`, so the verifier reports PASS while the override wins. The DISARMED property is
+**conventional, not enforced**. Minimum repair: `verify.sh` must reject that variable in the env file,
+plus a regression test. Precedence itself is documented, not executed — no systemd on this workstation;
+capture `systemctl show -p Environment mtc-bridge-first-start.service` on staging next round.
+
+**Correction:** `ed3d0534`'s commit message and Addendum C called the pin undriftable. True for *unit*
+drift; wrong in general — the env file is a second, unguarded channel that outranks the unit.
+
+**The repair itself works.** Both flagships ran a real `python -m bridge.app` with no credentials:
+listener on `127.0.0.1:8790`, status `DISARMED / credential_free_disarmed`, and **`POST /api/arm` → 409
+"ARM unavailable in credential-free DISARMED start mode"** — the application-level refusal A-4 could
+not obtain. Near-miss values fail closed with `ValueError`.
+
+**`ebada020` remains the last accepted candidate. Gate A must not start.** The rebuilt artifact is a
+valid build of an unaccepted commit — do not transfer or install it. Repair round 1 of max 3 available.
+No product code changed in response to the audit; the repair needs Barış's authorization.
+
+---
+
 ## [Claude Opus 5] 2026-08-08 — `ebada020` ACCEPTED; Gate A run **A-0→A-3 PASS, A-4 FAIL**
 
 **RESUME HERE:** `11_TRIAGE/NEXT_SESSION_HANDOFF_2026-08-08.md` — standalone pickup, supersedes

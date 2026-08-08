@@ -59,18 +59,42 @@ This section supersedes the 2026-08-03 section below.
   `11_TRIAGE/GATE_A_PREREGISTRATION_ADDENDUM_C_2026-08-08.md` (`783335e3`), which also **re-registers
   A-4's expectation in advance** — seven conditions, and an application-level arm refusal is required
   (`Errno 111 Connection refused` explicitly does not count).
-- **[AI: Any] ⚠ TWO FLAGSHIP AUDITS WERE IN FLIGHT AND WERE LOST TO A PLANNED SHUTDOWN 2026-08-08.**
-  They must be **re-dispatched from scratch**; nothing usable was captured. Everything needed is on
-  disk: prompt `C:\tmp\gatea_disarm_fix_audit_prompt.md`, worktrees `C:\GAAUD_DISARM` (Codex) and
-  `C:\GAAUD_DISARM_CLA` (Claude), both detached at `ed3d0534` and clean. Separate worktrees are
-  deliberate so concurrent suite runs cannot disturb each other. Dispatch forms:
-  - Codex: `$a=@('exec','--dangerously-bypass-approvals-and-sandbox','-m','gpt-5.6-sol','-c','model_reasoning_effort=xhigh', $shortPointerPrompt)` then
-    `& Invoke-CodexForClaude.ps1 -Account free -CodexArgs $a` — **the prompt must be a short quote-free
-    pointer to the prompt file**, see the routing doc's launcher note.
-  - Claude: `claude -p $prompt --model claude-opus-5 --effort xhigh --no-session-persistence --dangerously-skip-permissions`
-- **[AI: Any] `ed3d0534` IS STILL UNAUDITED AND UNACCEPTED. `ebada020` remains the last accepted
-  candidate.** A rebuilt artifact is not acceptance. **Gate A must not start** until both flagships
-  accept with no unresolved reproduced required finding.
+- **[AI: Any] BOTH FLAGSHIP AUDITS OF `ed3d0534` COMPLETED 2026-08-08 — `ed3d0534` IS NOT ACCEPTED.**
+  Record: `11_TRIAGE/GATE_A_DISARM_FIX_AUDIT_ROUND1_ED3D0534_2026-08-08.md`.
+  `claude-opus-5` xhigh **PASS-WITH-NITS** (0 required, `1359 passed`); `gpt-5.6-sol` xhigh
+  **REQUEST_CHANGES** (1 required finding). D025 rule 3 needs both accepting, so acceptance fails.
+  **Both found the same defect independently** — they differ only on severity, and the stricter reading
+  governs. Reports `C:\tmp\CLAUDE_AUDIT_DISARM_FIX_2026-08-08.txt`,
+  `C:\tmp\CODEX_AUDIT_DISARM_FIX_2026-08-08.txt`.
+- **[AI: Barış] THE BINDING FINDING — Lead-reproduced, so it binds.** `EnvironmentFile=` **overrides**
+  `Environment=` in systemd, so the start-mode "pin" at
+  `mtc-bridge-first-start.service.template:42` is defeated by any
+  `MTC_BRIDGE_START_MODE=credentialed` written into `/etc/mtc-bridge/mtc-bridge.env` (declared at
+  line 45). And `verify.sh:138` rejects only `HL_LIVE_ACK=` in the env file — Lead confirmed the sole
+  `MTC_BRIDGE_START_MODE` occurrence in `verify.sh` is line 166, the *unit* needle, **not** an env-file
+  rejection. So the verifier passes while the override wins. **The DISARMED property is currently
+  conventional, not enforced.**
+  **Minimum repair (both auditors agree, within existing scope):** `verify.sh` must reject any
+  `MTC_BRIDGE_START_MODE=` in `${MTC_ENV_FILE}`, plus a regression test proving the rejection. Fold in
+  the docs nit — the README and env template document `MTC_BRIDGE_STATE_DB` but say nothing about the
+  start mode; "set by the unit; defining it here would override the unit" is now literally true.
+- **[AI: Any] CORRECTION TO THE RECORD:** `ed3d0534`'s commit message and Addendum C §C.1 justified the
+  placement as "cannot drift silently". True for **unit** drift (`verify.sh:184-190` `cmp -s` plus
+  `first_start_unit_sha256`), **wrong as a general claim** — the env file is a second, unguarded
+  channel that outranks the unit. Placement is still correct; the rationale was overstated.
+- **[AI: Any] EXECUTION LIMIT — settle it on the host next round.** Neither auditor could execute
+  systemd precedence (no systemd/WSL on this workstation); both cite `man systemd.exec`. One command on
+  staging settles it and must be captured:
+  `systemctl show -p Environment mtc-bridge-first-start.service`.
+- **[AI: Any] THE REPAIR ITSELF WORKS — do not mistake this for a failed fix.** Both flagships ran a
+  real `python -m bridge.app` with no credentials: listener on `127.0.0.1:8790`, `GET /api/status` →
+  `200 DISARMED / credential_free_disarmed / exchange_enabled=False`, **`POST /api/arm` → 409
+  `"ARM unavailable in credential-free DISARMED start mode"`**, status unchanged after. That is exactly
+  the application-level refusal A-4 could not obtain. Near-miss values raise `ValueError` (fail closed),
+  never silently degrade to `credentialed`. D026 falsified in both directions.
+- **[AI: Any] `ebada020` remains the last accepted candidate. Gate A must not start.** The rebuilt
+  artifact `C:\WPI_ARTIFACTS\ed3d0534…` is a valid build of an **unaccepted** commit — **do not transfer
+  or install it.** Repair round 1 of a maximum 3 is available.
 - **[AI: Any] BEFORE A-0 NEXT TIME:** the `ebada020` install is still on `gatea-staging` and A-1 will
   fail 7 of 8 assertions against it. Tear it down first with the proven `C:\tmp\gatea_teardown.sh`
   (leftovers 0 last time). `rollback.sh` takes `--to-release-sha` and is **not** an uninstaller.

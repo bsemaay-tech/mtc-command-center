@@ -2,28 +2,47 @@
 
 > ## ▶ PICK UP EXACTLY HERE
 >
-> Session paused for a planned shutdown on 2026-08-08. **Nothing is broken and nothing is half-written
-> to disk.** Everything below §"Since this handoff was first written" is current; the sections after it
-> describe the earlier A-4 failure and remain accurate as background.
+> Session closed cleanly on 2026-08-08. **Nothing is broken, nothing is half-written, no work is in
+> flight.** Both flagship audits finished before shutdown.
 >
-> **State:** the A-4 repair is built, verified and committed at **`ed3d0534`** on
-> `codex/gate-a-disarmed-start-mode` (pushed). The deployment artifact is rebuilt and verified at
-> `C:\WPI_ARTIFACTS\ed3d053432fb496123ac43bcb7d40cfb64edbb8b`. Gate A is fully pre-registered for the
-> rerun in `GATE_A_PREREGISTRATION_ADDENDUM_C_2026-08-08.md`.
+> **State:** the A-4 repair is built and committed at **`ed3d0534`**, the artifact is rebuilt and
+> verified, Gate A is pre-registered in Addendum C — and **`ed3d0534` was audited and NOT ACCEPTED.**
+> `claude-opus-5` xhigh returned PASS-WITH-NITS; `gpt-5.6-sol` xhigh returned **REQUEST_CHANGES** with
+> one required finding, which the Lead reproduced. D025 rule 3 needs both accepting.
 >
-> **First action next session — re-dispatch the two flagship audits of `ed3d0534`.** They were running
-> when the machine was shut down and were lost; nothing usable was captured, so they start from
-> scratch. Prompt is written and on disk at `C:\tmp\gatea_disarm_fix_audit_prompt.md`. Worktrees
-> `C:\GAAUD_DISARM` (Codex) and `C:\GAAUD_DISARM_CLA` (Claude) are detached at `ed3d0534` and clean —
-> **verify that before reusing them.**
+> **THE ONE THING TO FIX — needs Barış's authorization first, it is a product change.**
+> `EnvironmentFile=` **overrides** `Environment=` in systemd. So the start-mode pin at
+> `deploy/linux/systemd/mtc-bridge-first-start.service.template:42` is defeated by any
+> `MTC_BRIDGE_START_MODE=credentialed` written into `/etc/mtc-bridge/mtc-bridge.env` (declared at
+> line 45) — and `verify.sh:138` rejects only `HL_LIVE_ACK=`, so the verifier reports PASS while the
+> override wins.
 >
-> **Then, only if both accept:** tear down the stale `ebada020` install on `gatea-staging` with
-> `C:\tmp\gatea_teardown.sh`, transfer the new artifact as one tar, and run Gate A from **A-0** per
-> Addendum C. Stop at the first FAIL. Write `GATE_A_RESULT_2026-08-08B.md`, keeping the first result
-> document intact.
+> **Minimum repair, agreed by both auditors, inside the existing file family:**
+> 1. `deploy/linux/verify.sh` — reject any `MTC_BRIDGE_START_MODE=` definition in `${MTC_ENV_FILE}`,
+>    one needle in the same section as the existing `HL_LIVE_ACK` check at line 138.
+> 2. `tests/test_linux_deployment.py` — regression test proving that rejection, falsified first (D026).
+> 3. Docs nit, ride along: `deploy/linux/README.md` and `deploy/linux/env/mtc-bridge.env.template` say
+>    nothing about the start mode, while `MTC_BRIDGE_STATE_DB` gets both. Add "set by the unit;
+>    defining it here would override the unit" — now literally true.
 >
-> **`ed3d0534` is UNAUDITED.** `ebada020` is still the last accepted candidate. A rebuilt artifact is
-> not acceptance.
+> **Then:** new SHA → rebuild artifact → **repair round 2 of max 3** with both flagships → only then
+> tear down the stale `ebada020` install on `gatea-staging` with `C:\tmp\gatea_teardown.sh`, transfer
+> the new artifact as one tar, and run Gate A from **A-0** per Addendum C. Stop at the first FAIL.
+> Write `GATE_A_RESULT_2026-08-08B.md`, keeping the first result document intact.
+>
+> **Capture on the host next round** — the one thing neither auditor could execute (no systemd on this
+> workstation), so precedence currently rests on `man systemd.exec`:
+> `systemctl show -p Environment mtc-bridge-first-start.service`
+>
+> **`ebada020` is still the last accepted candidate.** The rebuilt artifact
+> `C:\WPI_ARTIFACTS\ed3d0534…` is a valid build of an **unaccepted** commit — **do not transfer or
+> install it.**
+>
+> **Do not mistake this for a failed repair.** Both flagships ran a real `python -m bridge.app` with no
+> credentials and got a listener on `127.0.0.1:8790`, status `DISARMED / credential_free_disarmed`, and
+> **`POST /api/arm` → 409 "ARM unavailable in credential-free DISARMED start mode"** — exactly the
+> application-level refusal A-4 could not obtain. The fix works; it is the *enforcement* of it that has
+> a hole.
 
 ---
 
