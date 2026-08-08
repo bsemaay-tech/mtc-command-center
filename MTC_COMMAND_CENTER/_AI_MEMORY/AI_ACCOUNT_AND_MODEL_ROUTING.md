@@ -56,6 +56,20 @@ Sets `CODEX_HOME` for the child invocation only, restores or removes the prior p
 > ```
 >
 > **Two more traps paid for in the same session.** Codex refuses commands as `blocked by policy` under `sandbox: read-only` outside a trusted project dir — for an isolated audit worktree, `--dangerously-bypass-approvals-and-sandbox` clears it and the run header should then read `sandbox: danger-full-access`. And outside a git repo, `exec` aborts with *"Not inside a trusted directory and --skip-git-repo-check was not specified"*, so a scratch-dir probe needs `--skip-git-repo-check`.
+>
+> **A prompt containing double quotes cannot be passed as an argv element.** PowerShell 5.1 does not escape embedded double quotes when handing an argument to a native exe, so the prompt is word-split and Codex dies with e.g. `error: unexpected argument 'DISARMED,' found`. Markdown prompts using only backticks survive by luck; any prompt quoting shell or code will not.
+>
+> **Piping the prompt on stdin does NOT work through this launcher** — it is a `[CmdletBinding()]` script with no pipeline-bound parameter, so the pipeline object fails to bind, stdin never reaches the child, and Codex reports `No prompt provided via stdin`. Do not "fix" this by calling `codex` directly with a hand-set `CODEX_HOME`; the launcher is mandatory.
+>
+> **Working pattern: keep the rich prompt in a file and pass a short, quote-free pointer as the prompt.** Codex reads the file itself.
+>
+> ```powershell
+> $short = 'Read the file C:\tmp\my_prompt.md in full. It is your complete task specification. Execute it exactly as written.'
+> $a = @('exec','--dangerously-bypass-approvals-and-sandbox','-m','gpt-5.6-sol','-c','model_reasoning_effort=high', $short)
+> & .\Invoke-CodexForClaude.ps1 -Account free -CodexArgs $a
+> ```
+>
+> This also keeps the dispatched specification on disk as a reviewable artefact, which is worth having independently of the quoting problem.
 
 ```powershell
 # default route (secondary) — any Codex args are forwarded verbatim
