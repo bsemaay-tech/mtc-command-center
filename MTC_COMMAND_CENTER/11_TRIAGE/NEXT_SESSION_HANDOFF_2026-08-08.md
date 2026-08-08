@@ -1,6 +1,39 @@
-# NEXT SESSION HANDOFF — A-4 repair `2ce41e34` ACCEPTED and packaged; Gate A rerun awaiting explicit staging authorization (2026-08-08)
+# NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
 > ## ▶ CURRENT STATE — PICK UP EXACTLY HERE
+>
+> The accepted repair candidate remains **`2ce41e34` under D025**. The locally prepared 20260808B
+> Gate A run kit is now validated and recorded in
+> `11_TRIAGE/GATE_A_LOCAL_RUN_KIT_2026-08-08B.md`. This work did not change product code, the
+> candidate, the artifact, acceptance, or the repair-round count. **Gate A has not rerun.**
+>
+> The frozen single transfer tar is ready locally but **not transferred**:
+> `C:\WPI_ARTIFACTS\2ce41e34bceb599d80af24c5c33d835820ec321b.tar`, SHA-256
+> `d78b9e82e4138714fd5eabfb4996d8d831f28d14cf0b9e1149c8751739fe05f2`, `1047265280` bytes.
+> Six scripts in `C:\tmp` are re-baselined to Addendum D and pass Git Bash `bash -n`; their exact
+> hashes are frozen in the run-kit record.
+>
+> **Important A-4 correction:** `/api/arm` checks `X-Confirm` before the credential-free guard.
+> Therefore a POST without the current confirmation value can only return `409 stale state_version`,
+> which is non-evidence and fails A-4. Corrected `C:\tmp\gatea_A4.sh` first requires the running
+> process to report the exact credential-free/DISARMED fail-closed fields and a valid state version;
+> any mismatch exits with `BLOCKED - NO POST ISSUED`. Only after those preconditions pass does it send
+> `X-Confirm`, require the exact credential-free 409, and prove state/version remain unchanged.
+> Five no-network falsification cases and the candidate's real in-process refusal test passed.
+>
+> **DO NOT contact staging, transfer, tear down, install, start the service, or run Gate A.** Explicit
+> Barış authorization is still required. The old `ebada020` host state was not rechecked in this work;
+> its last verified state remains masked, inactive, no listener, no credentials, nothing armed.
+>
+> **Next steps after explicit authorization:** verify the six script hashes; run the prepared teardown
+> first and require leftovers `0`; transfer the one tar; run Gate A from A-0 under Addendum D and stop
+> at first FAIL; bind A-4 to the corrected step-8 result; capture `systemctl show -p Environment`,
+> `bridge.err.log`, and verifier override rejection/restoration/clean re-verification; preserve the
+> old result and write `GATE_A_RESULT_2026-08-08B.md`. Update `_AI_MEMORY/` before the next work unit.
+>
+> ---
+>
+> ## PRIOR PICKUP — accepted-candidate state before local run-kit validation
 >
 > Session closed cleanly on 2026-08-08. **Nothing is broken, nothing is half-written, no work is in
 > flight.** The A-4 repair candidate is **accepted** and the artifact is built and verified.

@@ -1,5 +1,36 @@
 # NEXT_STEPS
 
+## GATE A — 20260808B local run kit validated; staging authorization still required (2026-08-08)
+
+**This is the live pickup.** Full evidence and all six hashes:
+`11_TRIAGE/GATE_A_LOCAL_RUN_KIT_2026-08-08B.md`. Candidate acceptance remains unchanged at
+`2ce41e34bceb599d80af24c5c33d835820ec321b`; Gate A has not rerun.
+
+- **[AI: Any] LOCAL PREPARATION COMPLETE.** The single transfer tar is frozen and not transferred.
+  Six A-0/A-1, A-2, A-3, A-4, A-4 diagnostic, and teardown scripts are re-baselined to Addendum D;
+  all pass Git Bash `bash -n`. A-0/A-2/A-3 claims are exit-bearing, and teardown is exact-target,
+  fresh-evidence, no-overwrite, and explicitly not authorized to run.
+- **[AI: Any] A-4 SCRIPT EVIDENCE DEFECT CORRECTED — candidate unchanged.** The route checks
+  `X-Confirm` before the credential-free guard. Therefore `409 stale state_version` is non-evidence
+  and fails A-4. Corrected step 8 first requires exact credential-free/DISARMED fail-closed status;
+  any mismatch exits `2` with zero POST. Only then it sends the returned state version, requires the
+  exact credential-free 409, and requires unchanged status/version afterward.
+- **[AI: Any] LOCAL VALIDATION.** Five no-network falsification cases passed: bad mode and boolean
+  version blocked with zero POST; exact refusal passed; stale-confirm and changed-version failed.
+  The candidate's real in-process refusal test passed `1 passed, 1 warning in 0.67s`.
+- **[AI: Barış] HARD GATE — explicit staging authorization required.** No host contact, transfer,
+  teardown, install, service start, credential, broker/exchange access, ARM request, order,
+  TESTNET/mainnet, or economic action occurred. The old host state was not rechecked.
+- **[AI: Claude|Codex] AFTER AUTHORIZATION ONLY.** Verify the six local hashes; run the prepared
+  teardown and require leftovers `0`; transfer the one tar; run Gate A from A-0 under Addendum D and
+  stop at first FAIL. Bind A-4 to corrected step 8; capture `systemctl show -p Environment`,
+  `bridge.err.log`, and verifier override rejection/restoration/clean re-verification. Preserve the
+  old result and write `GATE_A_RESULT_2026-08-08B.md`.
+- **[AI: Any] WHILE THE GATE IS CLOSED.** Continue only safe local evidence/package validation and
+  record-consistency work. Update `_AI_MEMORY/` before starting the next work unit.
+
+---
+
 ## GATE A — A-4 repair `2ce41e34` ACCEPTED and packaged; Gate A rerun awaiting staging authorization (2026-08-08)
 
 **This section supersedes the `## GATE A — RUN COMPLETE … A-4 FAIL` section immediately below** (and its

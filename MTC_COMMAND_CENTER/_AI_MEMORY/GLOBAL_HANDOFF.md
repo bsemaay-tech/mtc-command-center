@@ -1,5 +1,38 @@
 # GLOBAL_HANDOFF
 
+## [GPT-5 Codex] 2026-08-08 — Gate A 20260808B local run kit validated; staging authorization still required
+
+**Current record:** `11_TRIAGE/GATE_A_LOCAL_RUN_KIT_2026-08-08B.md`, then
+`11_TRIAGE/NEXT_SESSION_HANDOFF_2026-08-08.md`.
+
+The accepted candidate remains `2ce41e34bceb599d80af24c5c33d835820ec321b`; no product,
+candidate, artifact, acceptance, or repair-round state changed. Gate A has not rerun. The frozen
+single-tar input is locally ready but not transferred: SHA-256
+`d78b9e82e4138714fd5eabfb4996d8d831f28d14cf0b9e1149c8751739fe05f2`, `1047265280` bytes.
+
+Six `C:\tmp\gatea_*.sh` scripts were re-baselined to Addendum D and all pass Git Bash `bash -n`.
+A-0 now binds non-regular and manifest checks; A-2 binds dry-run/env/override/restore checks; A-3
+requires pytest rc `1`, exact `2 failed, 1358 passed, 1 warning`, and exact failure-node set equality;
+teardown is exact-target, fresh-evidence, no-overwrite, and explicitly
+`LOCAL PREPARATION ONLY — NOT AUTHORISED TO RUN`. Exact hashes are in the current record.
+
+A local A-4 script defect was found and corrected without changing the candidate: `/api/arm` calls
+`_require_confirm()` before the credential-free guard, so a POST without `X-Confirm` can only prove
+`stale state_version`, not the required application refusal. Corrected step 8 performs an exact
+fail-closed status precheck and sends no POST on any mismatch; only then does it use the returned
+state version as `X-Confirm`, require the exact credential-free 409, and prove state/version remain
+unchanged. Five patched-urllib falsification cases passed, including two zero-POST blocks; the real
+in-process regression test passed `1 passed, 1 warning in 0.67s`.
+
+No host contact, transfer, teardown, install, service start, credential, broker/exchange access,
+ARM request, order, TESTNET/mainnet, or economic action occurred. The old staging state was not
+rechecked; its last verified state remains masked/inactive/no listener/no credentials/nothing armed.
+Explicit Barış authorization remains required before any staging contact or teardown. Until then,
+continue only safe local evidence/package and record-consistency work, updating `_AI_MEMORY/` before
+the next work unit.
+
+---
+
 ## [Claude Opus 5] 2026-08-08 — owner operating preference recorded
 
 Documentation-only entry. **No project state changed** — the accepted-`2ce41e34` current-state section
