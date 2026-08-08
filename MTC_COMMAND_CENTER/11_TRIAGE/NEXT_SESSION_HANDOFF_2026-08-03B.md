@@ -13,12 +13,29 @@ Read AGENTS.md, then MTC_COMMAND_CENTER/_AI_MEMORY/START_HERE.md, then
 MTC_COMMAND_CENTER/11_TRIAGE/GATE_A_QUEUE_D_INTEGRATION_STATUS_2026-08-03.md,
 then MTC_COMMAND_CENTER/11_TRIAGE/NEXT_SESSION_HANDOFF_2026-08-03B.md.
 
+Records state as of docs commit ba228339 on feature/donchian-crypto-ladder (pushed).
+
 Context: Gate A's four blocking defects are repaired and independently accepted. They are
 integrated into frozen commit ebada020 on branch codex/gate-a-integration (pushed, clean).
-The Windows full suite passes there (1359 passed). The deployment artifact was rebuilt exactly
+BOTH platform floors are closed. Windows: 1359 passed, 1 warning. Locked Linux, executed on
+GATEA-STAGING: candidate 2 failed / 1357 passed versus parent 637307e8 25 failed / 1281 passed,
+with ZERO new failure node IDs and 23 failures fixed; the 2 survivors are the known Python 3.12
+order-state GC assertions present on the parent too. The deployment artifact was rebuilt exactly
 once from that SHA into C:\WPI_ARTIFACTS\ebada020a59edf539f60acfbb3a6bf870c8679e9\
-(RELEASE_SHA ebada020..., manifest SHA-256 8FC30864...4700C9, 7059 entries).
-The previous session stopped immediately before Gate A would restart at A-0.
+(RELEASE_SHA ebada020..., manifest SHA-256 8FC30864...4700C9, 7059 entries), and its five
+deploy/linux/*.sh carry zero CR bytes, so the defect that failed Gate A at A-2 is absent.
+
+D025 audit state: GLM-5.2 round 1 returned BLOCK for an environmental reason (its session could
+not execute). Round 2, with owner-granted permissions, executed and returned
+PASS-WINDOWS-ONLY-WITH-NITS with ZERO required findings.
+
+THE SINGLE REMAINING BLOCKER is the second flagship audit: Codex gpt-5.6-sol xhigh on ebada020.
+Its prompt is already written at
+MTC_COMMAND_CENTER/11_TRIAGE/CODEX_GATE_A_INTEGRATION_AUDIT_PROMPT_EBADA020_2026-08-03.md.
+Nothing else stands between the project and restarting Gate A at A-0.
+
+D025 is NOT to be relaxed or changed. Two flagships are required. Do not substitute a third
+GLM round, a Lead opinion, or an owner waiver for the Codex audit unless Baris says so in writing.
 
 I authorize you to continue autonomously through the ordered queue below. Verify every claim
 yourself against the repository, the filesystem and real logs before relying on it — the previous
@@ -49,8 +66,15 @@ session's transcript is not evidence.
       with ZERO required findings, independently reproducing 1359 passed, the artifact identity,
       the absence of the A-2 CR defect, and manifest internal consistency.
       STILL OWED: the second flagship gpt-5.6-sol xhigh audit of ebada020. Run it and ebada020 can
-      be accepted. Reusable prompt C:\tmp\glm_round2_prompt.md; detached worktree C:\GAAUD_INT_GLM
-      is at ebada020 and clean.
+      be accepted. THE PROMPT IS ALREADY WRITTEN — use
+      MTC_COMMAND_CENTER/11_TRIAGE/CODEX_GATE_A_INTEGRATION_AUDIT_PROMPT_EBADA020_2026-08-03.md,
+      not C:\tmp\glm_round2_prompt.md (that one is addressed to GLM and carries a GLM-specific
+      round-2 preamble). Detached worktree C:\GAAUD_INT_GLM is at ebada020 and clean; reuse it.
+      Launch Codex only via C:\Users\BarısSemaay\AI_CLI_HELPERS\Invoke-CodexForClaude.ps1
+      (default -Account secondary). Before dispatching, confirm C:\GAAUD_INT_GLM is a trusted
+      directory for that session: Codex CLI has repeatedly run sandbox: read-only and refused every
+      command as blocked by policy outside a trusted project dir, which is not a quota problem and
+      has already caused Gate A auditor BLOCKs.
       LAUNCH RULE: glm.ps1 creates a fresh empty CLAUDE_CONFIG_DIR per run, so an unmodified GLM
       session has no permissions and no approver and will always D025-BLOCK. Launch any GLM audit
       with an explicit permissions mode plus --add-dir for what it must read.
@@ -75,6 +99,42 @@ ARM, orders, TESTNET, mainnet, KVM2, Pine/parity/MTC/trading changes, or any eco
 ---
 
 ## Facts the new session must not have to rediscover
+
+### Records baseline
+
+All records referenced here are committed and pushed at **`ba228339`** on
+`feature/donchian-crypto-ladder`. That is the docs line — `_AI_MEMORY` and `11_TRIAGE` records are
+committed there, never on `codex/gate-a-integration`.
+
+### GATEA-STAGING access — already recovered, do not re-derive
+
+| Item | Value |
+|---|---|
+| Host | `GATEA-STAGING`, verified `gatea-staging`, Ubuntu 24.04.4 LTS |
+| IP | `172.24.55.233` |
+| User | `gatea` |
+| Identity file | `C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519` |
+| Source of truth | recorded verbatim at `CODEX_TAKEOVER_HANDOFF_2026-08-02.md:125` |
+| Runtime | Python 3.12.3, SQLite 3.45.1 — the locked runtime |
+| Suite interpreter | `/opt/mtc-bridge/venvs/a1dd5b467b12421f632bf3d8462a7244b39b2287/bin/python`, pytest 9.1.1 |
+
+There is no `~/.ssh/config`. `~/.ssh/` holds only `hostinger_kvm2`, which is **KVM2 — forbidden, do
+not touch**. The host venv is root-owned and read-only: **install nothing, modify nothing.** Never
+read, print, copy, rotate or modify key contents. `python3` on the host has no pytest — use the
+locked venv path above or you will get `No module named pytest`.
+
+### Persisted evidence logs
+
+```
+C:\tmp\LINUX_FULL_EBADA020_LEAD_2026-08-03.log        candidate  2 failed, 1357 passed
+C:\tmp\LINUX_FULL_PARENT_637307E8_LEAD_2026-08-03.log parent    25 failed, 1281 passed
+C:\tmp\gatea_integration_windows_full_ebada020.txt    Windows  1359 passed
+C:\tmp\GLM_AUDIT_INTEGRATION_EBADA020_2026-08-03.txt        GLM round 1 (BLOCK)
+C:\tmp\GLM_AUDIT_INTEGRATION_EBADA020_ROUND2_2026-08-03.txt GLM round 2 (PASS-WINDOWS-ONLY-WITH-NITS)
+```
+
+`C:\tmp\gatea-integration-linux-full-ebada020.log` is the deliberate bare-`git archive`
+falsification run. **Never cite it as candidate evidence.**
 
 ### Refs (re-verify, do not trust)
 
