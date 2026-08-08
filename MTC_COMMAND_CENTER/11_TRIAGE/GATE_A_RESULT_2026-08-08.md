@@ -1,6 +1,18 @@
 # GATE A RESULT — rerun on the accepted candidate `ebada020` (2026-08-08)
 
-**Live record, updated as each check completes.** Required deliverable of
+## VERDICT: **GATE A FAILS AT A-4.** A-0, A-1, A-2 and A-3 pass. Stopped per the first-FAIL rule.
+
+The candidate is **not** at fault for A-4. The four repairs did what they were accepted to do — A-2, the
+step that failed on 2026-08-02, now passes cleanly. A-4 fails because **the shipped deploy artifact
+never selects the credential-free DISARMED start mode**, so the service tries to build a Hyperliquid
+broker on startup, cannot resolve credentials from an intentionally-unset env file, and exits 1 before
+it ever listens. That is flagship **NIT 1**, reproduced in production form. Full detail in §6.
+
+**Safety posture is good:** it fails *closed*. `app_state` persisted as `DISARMED`, zero broker
+connection attempts, no listener ever opened. The failure is that the service does not run at all,
+which makes A-4's required "the ARM path refuses" confirmation impossible to obtain.
+
+**Required deliverable of**
 `GATE_A_PREREGISTRATION_AND_STAGING_RUNBOOK_2026-08-01.md` §5, as amended by
 `GATE_A_PREREGISTRATION_ADDENDUM_A_2026-08-02.md` and
 `GATE_A_PREREGISTRATION_ADDENDUM_B_2026-08-08.md`.
@@ -22,12 +34,15 @@
 | A-1 clean-host preconditions | **PASS** (after documented teardown, §1) | `~/gatea-A0A1-20260808.log` |
 | A-2 install from artifact only | **PASS** | `~/gatea-A2-dryrun-20260808.log`, `~/gatea-A2-install-20260808.log` |
 | A-3 Linux test suite | **PASS** | `~/gatea-A3-suite-20260808.log`, `~/gatea-A3-20260808.log` |
-| A-4 starts DISARMED and stays that way | pending | |
-| A-5 restart safety | pending | |
-| A-6 reconcile completes | pending | |
-| A-7 observability | pending | |
-| A-8 loopback-only exposure | pending | |
-| A-9 no secrets on disk | pending | |
+| A-4 starts DISARMED and stays that way | **FAIL** | `~/gatea-A4-20260808.log`, `~/gatea-A4-diag-20260808.log`, `/var/log/mtc-bridge/bridge.err.log` |
+| A-5 restart safety | **NOT RUN** — first-FAIL rule | |
+| A-6 reconcile completes | **NOT RUN** — first-FAIL rule | |
+| A-7 observability | **NOT RUN** — first-FAIL rule | |
+| A-8 loopback-only exposure | **NOT RUN** — first-FAIL rule | |
+| A-9 no secrets on disk | **NOT RUN** — first-FAIL rule | |
+
+A-5 through A-9 were **not** attempted. The runbook requires stopping at the first FAIL, and every one
+of them presupposes a running service.
 
 ---
 
@@ -163,3 +178,139 @@ separately. **Out of Gate A scope — they are not regressions of this candidate
 The runbook's older A-3 expectation (the KVM2 ledger-hash test and the `schema_version == "2"` test)
 is obsolete: both were fixed by the repairs, and the ledger test passing here confirms the CRLF
 diagnosis rather than a real defect — recorded as Addendum B §B.2 requires.
+
+## 6. A-4 — starts DISARMED and stays that way: **FAIL**
+
+Method as pre-registered (Addendum A §A.4): `systemctl unmask` then `systemctl start`.
+
+### 6.1 What happened
+
+```
+systemctl unmask  -> Removed "/etc/systemd/system/mtc-bridge-first-start.service"
+systemctl start   -> exit 0 (systemd accepted the job)
+unit result       -> Active: failed (Result: exit-code), status=1/FAILURE, Duration: 482ms
+Main PID 177417   -> ExecStart=…/bin/python -m bridge.app  (code=exited, status=1/FAILURE)
+listener on 8790  -> none, ever
+```
+
+### 6.2 Root cause — exact, from `/var/log/mtc-bridge/bridge.err.log`
+
+The unit routes stderr to a file (`StandardError=append:/var/log/mtc-bridge/bridge.err.log`), which is
+why the journal showed only systemd's own lines and no traceback:
+
+```
+Traceback (most recent call last):
+  File ".../bridge/app.py", line 282, in <module>
+    runtime_app = create_app(
+  File ".../bridge/app.py", line 150, in create_app
+    runtime_broker = broker or _build_broker(root, dry_run)
+  File ".../bridge/app.py", line 244, in _build_broker
+    account_address, api_wallet_key, _source = resolve_hyperliquid_credentials()
+  File ".../bridge/settings.py", line 113, in resolve_hyperliquid_credentials
+    raise RuntimeError(
+RuntimeError: Hyperliquid credentials not found: set both HL_ACCOUNT_ADDRESS and
+HL_API_WALLET_KEY in the process environment or in HKEY_CURRENT_USER\Environment
+```
+
+Module-level `create_app(...)` at `app.py:282` builds a broker unconditionally, and the broker
+constructor resolves credentials. The env file is contract-only and `install.sh` deliberately leaves
+every variable unset, so the resolver raises and the process dies before binding a port.
+
+### 6.3 Confirmed on the host: the start mode really is `credentialed`
+
+Executed as the service account against the installed release:
+
+```
+START_MODE_ENV_VAR    : MTC_BRIDGE_START_MODE
+resolved start mode   : credentialed          <-- NIT 1, in production
+CREDENTIAL_FREE const : credential_free_disarmed
+```
+
+The installed unit's `ExecStart` is bare `python -m bridge.app` with no `--start-mode`, and the env
+file names no `MTC_BRIDGE_START_MODE`. So the credential-free DISARMED path that `17402a58` added and
+that both flagships verified in-process **is unreachable from the deployment**. Exactly what flagship
+NIT 1 predicted and what Addendum B §B.3 declared in advance.
+
+### 6.4 Why this is a FAIL and not a pass with a nit
+
+A-4 requires three confirmations: `app_state` durably not `ARMED`, **the ARM path refuses**, and no
+broker connection attempted. Two hold. The third **cannot be obtained** — there is no listener, so
+`POST /api/arm` returns `Errno 111 Connection refused` rather than a refusal from the application.
+
+A required confirmation that cannot be performed is not a pass. The same principle D025 rule 1 applies
+to auditors applies here: non-execution is never acceptance. And the runbook's own framing — *"a pass
+here is the whole point of the 50 hours"* — means the service running DISARMED, which did not happen.
+
+Recorded precisely, without overclaiming: **the service did not arm, and made no broker connection
+attempt.** The exception is raised while *constructing* the broker, before any network I/O; the journal
+shows zero connection lines and `ss -tnp` shows zero sockets owned by the service. It fails closed.
+
+### 6.5 Evidence that the persisted state is unambiguous
+
+The store was created and initialised before the failure, and it recorded the safe state:
+
+```
+/var/lib/mtc-bridge/bridge.db   188416 B, mode 600, owner mtc-bridge:mtc-bridge
+meta = [('schema_version', '4'), ('app_state', 'DISARMED')]
+tables = bars, decisions, directives, equity, events, fills, llm_calls, meta,
+         order_identity, orders, risk_days, runs, signal_fingerprints,
+         submission_attempts, submission_recovery_evidence, trades
+```
+
+So the *persisted* state is not ambiguous. What is unobservable is the *running* state, because there
+is no running service.
+
+### 6.6 This failure is pre-existing, not introduced by `ebada020`
+
+The journal for this unit carries an identical failure from the earlier attempt:
+
+```
+Aug 01 23:35:27  mtc-bridge-first-start.service: Main process exited, code=exited, status=1/FAILURE
+Aug 08 12:23:44  mtc-bridge-first-start.service: Main process exited, code=exited, status=1/FAILURE
+```
+
+It was invisible on 2026-08-02 because that run FAILED at A-2 and never reached A-4. Fixing the CRLF
+defect is what allowed the gate to advance far enough to expose this one. **No repair regressed
+anything; the gate simply got further than it ever had.**
+
+### 6.7 Secondary defect noticed while diagnosing — not the A-4 cause
+
+`resolve_hyperliquid_credentials()` (`bridge/settings.py:113`) tells a Linux operator to set variables
+"in `HKEY_CURRENT_USER\Environment`" — a Windows registry path, in the failure message of a
+Linux-only systemd service. Cosmetic, but actively misleading on the deployment target. Worth folding
+into the NIT 1 repair rather than tracking separately.
+
+**One diagnostic artefact, flagged so nobody mistakes it for a finding:** a by-hand
+`sudo -u mtc-bridge … python -m bridge.app` reproduction returned
+`ModuleNotFoundError: No module named 'bridge'`. That is the Lead's invocation missing the unit's
+working directory, not a product defect. The authoritative error is the traceback in §6.2.
+
+### 6.8 Host left in the documented safe posture
+
+After collecting evidence the unit was returned to its installed contract — `systemctl reset-failed`
+then `systemctl mask`:
+
+```
+is-active : inactive     is-enabled: masked     listener on 8790: none
+```
+
+The install itself is left in place at `ebada020…` so the A-4 repair can be retested without a
+reinstall. Nothing was armed, no credential was provisioned, no firewall rule changed.
+
+## 7. What is required before Gate A can be rerun
+
+**The fix is a product change and needs its own authorization — none was taken here.** No product code
+was modified during this run.
+
+1. **Wire the start mode into the deploy artifact** (NIT 1). Either `ExecStart=… -m bridge.app
+   --start-mode credential_free_disarmed` in both unit templates, or `MTC_BRIDGE_START_MODE` named in
+   the env template and set by `install.sh`. Fold in §6.7's Windows-registry message while there.
+2. Consider whether module-level `create_app()` at `app.py:282` should build a broker at import time
+   at all — a first DISARMED start arguably should not construct a broker under any mode.
+3. That changes product code, so it needs a new frozen SHA, a rebuilt artifact, and a fresh flagship
+   round under D025. `ebada020` stays the accepted candidate for what it was accepted for; it is not
+   retroactively rejected by an A-4 failure caused by an out-of-scope `deploy/` gap.
+4. Rerun Gate A from **A-0** on the new SHA. A-0→A-3 passing here is strong evidence the rerun will
+   reach A-4 again quickly.
+5. NIT 3 remains separately owed: the two CPython-3.12 gc-referents failures will be on the deployed
+   host until scoped and fixed.

@@ -1,6 +1,6 @@
 # GLOBAL_HANDOFF
 
-## [Claude Opus 5] 2026-08-08 — `ebada020` ACCEPTED; Gate A RUNNING, A-0→A-3 all PASS
+## [Claude Opus 5] 2026-08-08 — `ebada020` ACCEPTED; Gate A run **A-0→A-3 PASS, A-4 FAIL**
 
 **RESUME HERE:** `11_TRIAGE/GATE_A_RESULT_2026-08-08.md` (live scoreboard), then
 `11_TRIAGE/GATE_A_INTEGRATION_FLAGSHIP_AUDITS_EBADA020_2026-08-08.md` and
@@ -20,7 +20,32 @@ executed the locked-Linux floor itself, making the verdict full-platform. Codex 
 | A-1 clean-host | **PASS**, 0 failures (after the documented teardown below) |
 | A-2 install from artifact only | **PASS** — dry run exit 0 with 0 side effects, real install exit 0, `verify.sh` exit 0, **no host file had to be edited** |
 | A-3 Linux suite | **PASS** — `2 failed, 1357 passed, 1 warning in 210.32s`, node IDs exactly the pre-registered pair, 0 unexpected |
-| A-4 … A-9 | pending |
+| A-4 starts DISARMED and stays that way | **FAIL** — service exits 1 in 482 ms, never listens |
+| A-5 … A-9 | **NOT RUN** — first-FAIL rule; each presupposes a running service |
+
+**A-4 is the blocker, and it is flagship NIT 1 in production form.** `bridge/app.py:282` module-level
+`create_app()` → `:150` → `_build_broker` `:244` → `settings.py:113`
+`RuntimeError: Hyperliquid credentials not found`. Confirmed on the host: `resolve_start_mode` →
+**`credentialed`**, because the installed unit's `ExecStart` is bare `python -m bridge.app` and the env
+file names no `MTC_BRIDGE_START_MODE`. The credential-free DISARMED path exists in code and is
+unreachable from the deployment.
+
+**It fails closed.** No arm, **zero** broker connection attempts (the exception fires while
+*constructing* the broker, before any network I/O), no listener ever opened, store persisted
+`app_state=DISARMED`. A-4 fails because its required "ARM path refuses" confirmation is
+**unobtainable** — `POST /api/arm` gives `Errno 111 Connection refused` — not because anything armed.
+
+**Not a regression of `ebada020`:** the identical failure sits in the journal at `Aug 01 23:35:27`. It
+was invisible on 2026-08-02 because that run died at A-2. Fixing the CRLF defect is what let the gate
+reach far enough to expose it. The gap is in `deploy/`, outside the nine-file merge scope, so
+`ebada020` is not retroactively rejected.
+
+**Repair needs owner authorization — no product code was touched.** Wire the start mode into both unit
+templates (or the env template + `install.sh`), consider whether `app.py:282` should build a broker at
+import at all, and fix `settings.py:113` telling a Linux operator to use
+`HKEY_CURRENT_USER\Environment`. That implies a new frozen SHA, rebuilt artifact, fresh flagship round,
+then Gate A from A-0. Host left safe and reusable: unit re-masked, `inactive`, no listener, install
+retained at `ebada020…`.
 
 **Two owner-authorised cleanups, both recorded.** ≈12 G of prior audit debris wiped (64% → 30% disk
 used), and a **stale bridge install left by the failed 2026-08-02 attempt** (release `a1dd5b46…`, unit

@@ -1,17 +1,45 @@
 # NEXT_STEPS
 
-## GATE A — RUNNING ON `ebada020`; A-0→A-3 ALL PASS (2026-08-08)
+## GATE A — RUN COMPLETE: A-0→A-3 PASS, **A-4 FAIL**, stopped per first-FAIL rule (2026-08-08)
 
-**START HERE:** `11_TRIAGE/GATE_A_RESULT_2026-08-08.md` — live scoreboard, updated per check. Then
+**START HERE:** `11_TRIAGE/GATE_A_RESULT_2026-08-08.md` — full result with the A-4 traceback. Then
 `11_TRIAGE/GATE_A_INTEGRATION_FLAGSHIP_AUDITS_EBADA020_2026-08-08.md` and
 `11_TRIAGE/GATE_A_PREREGISTRATION_ADDENDUM_B_2026-08-08.md`.
 This section supersedes the 2026-08-03 section below.
 
-- **[AI: Any] GATE A LIVE STATE:** A-0 **PASS** · A-1 **PASS** · A-2 **PASS** · A-3 **PASS** ·
-  A-4…A-9 pending. Rule in force: **stop at the first FAIL.** Host logs on `gatea-staging`:
-  `~/gatea-A0A1-20260808.log`, `~/gatea-A2-dryrun-20260808.log`, `~/gatea-A2-install-20260808.log`,
-  `~/gatea-A3-suite-20260808.log`, `~/gatea-A3-20260808.log`, `~/gatea-teardown-20260808.log`.
-  Step scripts `/tmp/a01.sh`, `/tmp/a2.sh`, `/tmp/a3.sh` (sources in `C:\tmp\gatea_*.sh`).
+- **[AI: Any] GATE A RESULT:** A-0 **PASS** · A-1 **PASS** · A-2 **PASS** · A-3 **PASS** ·
+  **A-4 FAIL** · A-5…A-9 **NOT RUN** (first-FAIL rule; all of them presuppose a running service).
+  Host logs on `gatea-staging`: `~/gatea-A0A1-20260808.log`, `~/gatea-A2-dryrun-20260808.log`,
+  `~/gatea-A2-install-20260808.log`, `~/gatea-A3-suite-20260808.log`, `~/gatea-A3-20260808.log`,
+  `~/gatea-A4-20260808.log`, `~/gatea-A4-diag-20260808.log`, `~/gatea-teardown-20260808.log`,
+  and `/var/log/mtc-bridge/bridge.err.log`. Step scripts `/tmp/a01.sh`, `/tmp/a2.sh`, `/tmp/a3.sh`,
+  `/tmp/a4.sh`, `/tmp/a4d.sh` (sources in `C:\tmp\gatea_*.sh`).
+- **[AI: Barış] A-4 FAIL CAUSE — flagship NIT 1, now in production form. THIS IS THE BLOCKER.** The
+  service exits 1 in 482 ms and never listens. `bridge/app.py:282` module-level `create_app()` →
+  `:150` → `_build_broker` `:244` → `settings.py:113`
+  `RuntimeError: Hyperliquid credentials not found`. Confirmed on the host:
+  `resolve_start_mode` → **`credentialed`**, because the unit's `ExecStart` is bare
+  `python -m bridge.app` and the env file names no `MTC_BRIDGE_START_MODE`. The credential-free
+  DISARMED path exists in code and is unreachable from the deployment.
+- **[AI: Any] IT FAILS CLOSED — record this accurately.** No arm, **zero** broker connection attempts
+  (exception is raised while *constructing* the broker, before any network I/O), no listener ever
+  opened, and the store persisted `app_state=DISARMED` / `schema_version=4`. A-4 fails because its
+  required "the ARM path refuses" confirmation is **unobtainable** (`Errno 111 Connection refused`),
+  not because anything armed. Non-execution is never acceptance.
+- **[AI: Any] NOT A REGRESSION OF `ebada020`.** The identical failure is in the journal from
+  `Aug 01 23:35:27`. It was invisible on 2026-08-02 because that run died at A-2 and never reached
+  A-4. Fixing the CRLF defect is what let the gate get far enough to expose this. `ebada020` is not
+  retroactively rejected — the gap is in `deploy/`, outside the nine-file merge scope.
+- **[AI: Barış] NEXT STEP NEEDS YOUR AUTHORIZATION — product change.** No product code was touched.
+  Wire `--start-mode credential_free_disarmed` into both unit templates (or `MTC_BRIDGE_START_MODE`
+  into the env template + `install.sh`), and consider whether `app.py:282` should construct a broker at
+  import time at all on a first DISARMED start. Fold in the cosmetic-but-misleading
+  `HKEY_CURRENT_USER\Environment` Windows registry path in `settings.py:113`'s Linux failure message.
+  That means a new frozen SHA, a rebuilt artifact, a fresh flagship round, then Gate A again from A-0.
+- **[AI: Any] HOST LEFT SAFE AND REUSABLE:** unit `reset-failed` then re-`mask`ed →
+  `is-active inactive`, `is-enabled masked`, no listener on 8790. The `ebada020` install is left in
+  place so the A-4 repair can be retested without reinstalling. Nothing armed, no credential
+  provisioned, no firewall change.
 - **[AI: Any] THE 2026-08-02 A-2 FAILURE IS DISPROVED ON LINUX, not inferred from Windows.** After a
   real one-tar transfer: `install.sh`/`common.sh`/`package.sh`/`rollback.sh`/`verify.sh` all `cr=0`.
 - **[AI: Any] A-2 PASSED WITH NO HOST EDITS**, so the artifact is self-contained — the thing WP-I
