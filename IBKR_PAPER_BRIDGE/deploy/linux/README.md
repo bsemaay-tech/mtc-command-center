@@ -109,6 +109,12 @@ environment; `install.sh` refuses to run if it is set in the invoking shell and
 `--state-db` / `MTC_BRIDGE_STATE_DB` plumbing in `bridge/app.py`. With no
 override set, the application keeps its existing in-repo default unchanged.
 
+**Start mode is unit-owned, not env-owned.** The first-start unit pins
+`MTC_BRIDGE_START_MODE=credential_free_disarmed` via `Environment=`. Defining
+`MTC_BRIDGE_START_MODE` in `/etc/mtc-bridge/mtc-bridge.env` would let the env
+file override that hashed, accepted DISARMED mode, so `verify.sh` rejects any
+`MTC_BRIDGE_START_MODE=` assignment — bare or `export` — found in the env file.
+
 **Rollback preserves evidence.** `rollback.sh` stops and masks the service and
 never deletes, moves or resets `/var/lib/mtc-bridge`. Risk history is evidence.
 

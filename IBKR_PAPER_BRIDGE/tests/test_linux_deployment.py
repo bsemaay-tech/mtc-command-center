@@ -733,6 +733,50 @@ def test_verifier_is_read_only_and_binds_release_unit_venv_and_manifest():
         assert token in read(LINUX / "verify.sh")
 
 
+def test_verifier_rejects_start_mode_defined_in_env_file(tmp_path):
+    # Behavioral regression: extract the real MTC_BRIDGE_START_MODE env-file
+    # guard block from verify.sh and execute it with stub fail/pass functions
+    # and a temporary env file. This is not a source-string assertion — the
+    # extracted block is the code under test. It must reject a bare or exported
+    # definition and accept commented/clean content, matching leading whitespace
+    # and the optional `export` form, while never reading the assigned value.
+    lines = read(LINUX / "verify.sh").splitlines()
+    start = None
+    for i, line in enumerate(lines):
+        if re.match(r"^\s*if\b", line) and "MTC_BRIDGE_START_MODE=" in line and "MTC_ENV_FILE" in line:
+            start = i
+            break
+    assert start is not None, "MTC_BRIDGE_START_MODE env-file guard not found in verify.sh"
+    guard = None
+    for j in range(start + 1, len(lines)):
+        if lines[j].strip() == "fi":
+            guard = "\n".join(lines[start : j + 1])
+            break
+    assert guard, "MTC_BRIDGE_START_MODE env-file guard has no closing fi"
+
+    harness = (
+        'fail() { printf "FAIL_BRANCH\\n"; }\n'
+        'pass() { printf "PASS_BRANCH\\n"; }\n'
+        'MTC_ENV_FILE="$1"\n'
+        + guard
+        + "\n"
+    )
+
+    cases = [
+        ("bare_assignment", "MTC_BRIDGE_START_MODE=credentialed\n", "FAIL_BRANCH"),
+        ("export_assignment", "export MTC_BRIDGE_START_MODE=credentialed\n", "FAIL_BRANCH"),
+        ("indented_assignment", "\tMTC_BRIDGE_START_MODE=credentialed\n", "FAIL_BRANCH"),
+        ("commented_assignment", "# MTC_BRIDGE_START_MODE=credentialed\n", "PASS_BRANCH"),
+        ("clean_content", "# only an unrelated name here\nHL_API_WALLET_KEY\n", "PASS_BRANCH"),
+    ]
+    for name, content, expected in cases:
+        env_file = tmp_path / f"{name}.env"
+        env_file.write_text(content, encoding="utf-8")
+        result = run_bash(harness, env_file)
+        assert result.returncode == 0, (name, result.returncode, result.stderr)
+        assert result.stdout.strip() == expected, (name, result.stdout)
+
+
 def test_rollback_is_exact_preserves_state_and_never_starts():
     script = read(LINUX / "rollback.sh")
     commands = noncomment_shell(LINUX / "rollback.sh")
