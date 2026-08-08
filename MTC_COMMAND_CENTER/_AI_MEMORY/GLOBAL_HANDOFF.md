@@ -1,5 +1,16 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-08-09 — Gate A E Codex rerun 2 still environment-BLOCKED
+
+Fresh xhigh audit `C:\GAEAX2` at `61d88f12` could write temp/pycache but Codex's subprocess removed
+Git coreutils from inherited PATH, leaving `mkdir` absent and Windows `timeout.exe`; E was RED 18/28
+and verdict BLOCK. Lead immediately reproduced exact no-PATH-edit D RED 6/28 and E GREEN 28/28 in
+the same clean worktree with Git Bash `/usr/bin/timeout`. No source defect reproduced; D025 still
+requires an executing accepting Codex audit. Next is a fresh dedicated unsandboxed command runtime
+with strict read-only instructions. No integration, package, transfer, or staging action yet.
+
+---
+
 ## [Codex GPT-5.6-sol] 2026-08-09 — Gate A E canonical round 1 BLOCK; executable Codex rerun required
 
 Candidate `61d88f12054c` remains frozen and unintegrated. Claude Opus 5 xhigh executed D RED/E GREEN

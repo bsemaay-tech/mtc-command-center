@@ -1,5 +1,18 @@
 # NEXT_STEPS
 
+## GATE A — Codex audit rerun 2 still environment-BLOCKED; unsandboxed read-only-intent rerun next (2026-08-09)
+
+Codex xhigh rerun at clean detached `C:\GAEAX2` gained writable temp/pycache but its subprocess
+sanitized PATH: Git coreutils were absent, `mkdir` failed, and Windows `timeout.exe` was selected;
+E ended 18/28 and verdict stayed BLOCK. Lead then ran the exact no-PATH-edit commands in the same
+worktree: D RED 6/28, E GREEN 28/28 with Git Bash and `/usr/bin/timeout` coreutils 8.32; status clean.
+
+**Next:** third fresh Codex xhigh audit at frozen `61d88f12`, dedicated worktree, unsandboxed command
+runtime under strict read-only instructions. Do not integrate/package/transfer/stage until Codex
+executes and accepts. A-5 remains FAIL; A-6..A-9 NOT RUN.
+
+---
+
 ## GATE A — E canonical audit round 1 BLOCK; fresh executable Codex audit next (2026-08-09)
 
 Frozen E candidate `61d88f12054c`: Claude Opus 5 xhigh **PASS** after executing D RED and E GREEN

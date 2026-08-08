@@ -1,5 +1,17 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ NEWEST CHECKPOINT — Codex audit rerun 2 still environment-BLOCKED (2026-08-09)
+>
+> Fresh Codex xhigh at clean detached `C:\GAEAX2` could use writable temp/pycache, but the Codex
+> subprocess sanitized PATH: Git coreutils disappeared, `mkdir` failed, and Windows `timeout.exe`
+> was selected. E was RED 18/28; verdict BLOCK. Lead then ran the exact no-PATH-edit commands in the
+> same worktree: D RED 6/28 and E GREEN 28/28 with Git Bash `/usr/bin/timeout`; status remained
+> clean. No source defect reproduced, but D025 acceptance remains blocked. **Next:** third fresh
+> Codex xhigh at frozen `61d88f12`, dedicated worktree, unsandboxed command runtime under strict
+> read-only instructions. No integration/package/transfer/staging. A-5 FAIL; A-6..A-9 NOT RUN.
+>
+> ---
+
 > ## ▶ NEWEST CHECKPOINT — E canonical audit round 1 BLOCK; executable Codex rerun next (2026-08-09)
 >
 > Frozen candidate `61d88f12054c` remains unintegrated/unpackaged/untransferred/unrun. Claude Opus

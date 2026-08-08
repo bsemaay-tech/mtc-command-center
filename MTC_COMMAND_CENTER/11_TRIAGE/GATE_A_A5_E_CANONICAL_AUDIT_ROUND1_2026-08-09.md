@@ -1,5 +1,25 @@
 # Gate A A5 E — canonical audit round 1 (2026-08-09)
 
+## Audit-environment rerun 2 — still BLOCK (newest)
+
+Fresh Codex `gpt-5.6-sol` xhigh at detached `C:\GAEAX2`, still frozen at `61d88f12`, had writable
+temp/pycache and completed syntax/compile/static checks, but its Codex subprocess sanitized PATH:
+Git Bash inherited no Git coreutils, `mkdir` was missing, and `timeout` resolved to Windows
+`/c/Windows/system32/timeout`. Mandatory D was RED; E was RED at 18/28. Verdict: **BLOCK**.
+
+The Lead immediately ran the exact commands, with no PATH edit, in that same detached worktree
+outside the Codex subprocess: D was RED 6/28, E was GREEN 28/28, selected Bash was
+`C:\Program Files\Git\bin\bash.exe`, and GNU timeout was `/usr/bin/timeout` coreutils 8.32. The
+worktree remained clean. This proves the second BLOCK is caused by Codex's command environment, not
+by the frozen files, but D025 still forbids counting it as acceptance.
+
+**Next:** a third fresh Codex audit at the same frozen SHA using an unsandboxed command runtime but
+strict read-only audit instructions and a dedicated disposable worktree. It must run the default
+commands without a PATH edit and finish clean. Report:
+`C:\WPI_ARTIFACTS\gatea-e-audit-codex-round2.md`.
+
+---
+
 ## Frozen candidate
 
 - Candidate commit: `61d88f12054cdc81896ca7596c699aff1a7b9a71`
