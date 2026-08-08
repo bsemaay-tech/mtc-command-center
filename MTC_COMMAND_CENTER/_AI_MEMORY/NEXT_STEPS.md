@@ -1,5 +1,54 @@
 # NEXT_STEPS
 
+## GATE A — run-kit D packaged, transferred, extracted, and verified; A-5 first next (2026-08-09)
+
+**Bounded documentation checkpoint by GLM-5.2 — records the Lead-performed package/transfer/verify
+unit only.** The Lead-accepted run-kit D source was packaged, transferred to `gatea-staging`,
+extracted, and independently re-verified. **A-0..A-4 remain PASS; A-5..A-9 remain NOT RUN.** **No
+Gate-A script ran** during packaging, transfer, extraction, or verification. No product code or
+product artifact changed; no credential, broker/exchange access, successful ARM, order,
+TESTNET/mainnet, wallet, master merge, or economic action is authorized or occurred. Full standalone
+record: `11_TRIAGE/GATE_A_RUN_KIT_D_PACKAGE_TRANSFER_2026-08-09.md`.
+
+**Package identity (exact):**
+- Accepted tar `C:\WPI_ARTIFACTS\gatea-run-kit-20260808D-2ce41e34.tar`, SHA-256
+  `e8a52e3cdeaa9da9315d0cbeb1fde7dd75e9ecc8a4ad4c926e4084c37c55e0d3`, `71680` bytes; 9 tar members
+  (root + 8 files); 8 extracted files; 7 manifest lines; all hashes verified; all members CR=0.
+- A first `git archive` attempt exported CRLF and was **rejected before transfer**, preserved at
+  `C:\WPI_ARTIFACTS\gatea-run-kit-20260808D-2ce41e34.rejected-crlf.tar` (SHA-256
+  `66ce7a1e148d17626f68962ccdd3bb6bcacdf4c49a6eb815713caa64899634a8`, `71680` bytes). The accepted
+  package was rebuilt from raw committed blobs with `git cat-file blob` (no worktree/archive
+  line-ending conversion).
+- Transferred to `/home/gatea/gatea-run-kit-20260808D-2ce41e34.tar` (same SHA-256/bytes/member set)
+  and extracted to `/home/gatea/gatea-run-kit-20260808D-2ce41e34`. A clean remote re-verification
+  passed: 7 manifest members verified; `bash -n` for A5/A6/A7/A8/A9; file count 8; manifest lines 7;
+  every file CR=0; byte/LF counts and embedded-Python-block compiles match the standalone record.
+- **Transport defect recorded, not concealed:** the first remote verifier had a PowerShell-to-SSH
+  quoting defect (`test: \\8: integer expression expected`) after extraction; no Gate-A script ran —
+  a verifier transport defect, not a package or Gate-A failure. The clean re-verification then passed.
+- Staging remained safe and unchanged: service active/static, exact credential-free DISARMED, no
+  credentials, no broker, state version 1.
+
+**Next steps contract — A-5 first:**
+
+- **[AI: Claude] EXECUTE A-5 ONLY** from `/home/gatea/gatea-run-kit-20260808D-2ce41e34/gatea_A5.sh`.
+  Preserve and inspect `/home/gatea/gatea-A5-20260808D.log`; independently verify
+  service/API/DB/listener/systemd state before assigning a verdict. This is the next executable
+  action because it is protected staging verification.
+- **[AI: Claude] STOP ON FIRST GENUINE FAIL** and perform the preregistered safe response
+  (`11_TRIAGE/GATE_A_A5_A9_PREREGISTRATION_2026-08-08D.md` §5); **do not run A-6.**
+- **[AI: Claude] IF A-5 PASSES,** update the relevant `_AI_MEMORY` files before starting A-6.
+- **[AI: Claude] CONTINUE ONE GATE AT A TIME** under the existing preregistration (A-5 → A-6 → A-7 →
+  A-8 remote+host → A-9), updating `_AI_MEMORY` (`NEXT_STEPS.md`, `GLOBAL_HANDOFF.md`) and
+  `11_TRIAGE/NEXT_SESSION_HANDOFF_2026-08-08.md` before each next gate.
+- **[AI: Any] STATE.** Candidate `2ce41e34…` and the product/artifact unchanged; no gate result
+  beyond A-0..A-4 PASS. Hard exclusions unchanged: no credentials, broker/exchange access, successful
+  ARM, orders, TESTNET/mainnet, wallet, master merge, or economic action. The service intentionally
+  remains active/static, loopback-only, credential-free DISARMED, `state_version=1`, no
+  broker/credentials — the prerequisite for A-5.
+
+---
+
 ## GATE A - run-kit D source ACCEPTED by Lead; package/transfer checkpoint next (2026-08-08)
 
 **Lead final verdict: ACCEPT.** The third/final repair round is independently accepted. All five

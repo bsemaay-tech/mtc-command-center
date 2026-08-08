@@ -1,5 +1,45 @@
 # GLOBAL_HANDOFF
 
+## [GLM-5.2] 2026-08-09 — Gate A run-kit D package and staging transfer checkpoint
+
+**Bounded documentation checkpoint by GLM-5.2 — records the Lead-performed package/transfer/verify
+unit only; no gate ran.** The Lead-accepted run-kit D source was packaged, transferred to
+`gatea-staging`, extracted, and independently re-verified. **A-0..A-4 remain PASS; A-5..A-9 remain
+NOT RUN.** **No Gate-A script ran** during packaging, transfer, extraction, or verification. No
+product code or product artifact changed; no credential, broker/exchange access, successful ARM,
+order, TESTNET/mainnet, wallet, master merge, or economic action is authorized or occurred. Standalone
+record: `11_TRIAGE/GATE_A_RUN_KIT_D_PACKAGE_TRANSFER_2026-08-09.md`. Active integration branch before
+this task: `feature/donchian-crypto-ladder` at `acc41e73` (`acc41e732d0825058e25e7e89652d61811a8cde6`).
+Accepted source candidate unchanged: `2ce41e34bceb599d80af24c5c33d835820ec321b`.
+
+A first `git archive` packaging attempt exported CRLF and was **rejected before transfer** (preserved
+at `C:\WPI_ARTIFACTS\gatea-run-kit-20260808D-2ce41e34.rejected-crlf.tar`, SHA-256
+`66ce7a1e148d17626f68962ccdd3bb6bcacdf4c49a6eb815713caa64899634a8`, `71680` bytes). The accepted
+package was rebuilt from raw committed blobs with `git cat-file blob` (no worktree/archive
+line-ending conversion): `C:\WPI_ARTIFACTS\gatea-run-kit-20260808D-2ce41e34.tar`, SHA-256
+`e8a52e3cdeaa9da9315d0cbeb1fde7dd75e9ecc8a4ad4c926e4084c37c55e0d3`, `71680` bytes; 9 tar members
+(root + 8 files), 8 extracted files, 7 manifest lines, all hashes verified, all members CR=0, Bash +
+PowerShell parser + embedded-Python syntax checks passed. Transferred to
+`/home/gatea/gatea-run-kit-20260808D-2ce41e34.tar` (same SHA-256/bytes/member set) and extracted to
+`/home/gatea/gatea-run-kit-20260808D-2ce41e34`.
+
+**Transport defect recorded, not concealed:** the first remote verifier had a PowerShell-to-SSH
+quoting defect after extraction (`test: \\8: integer expression expected`); **no Gate-A script ran**
+— a verifier transport defect, not a package or Gate-A failure. A clean remote re-verification then
+passed: 7 manifest members verified; `bash -n` for A5/A6/A7/A8/A9; file count 8; manifest lines 7;
+every file CR=0; byte/LF counts (README 13934/197, SHA256SUMS 551/7, A5 9719/261, A6 13863/283, A7
+6191/139, A8 4124/108, A8_host 3195/87, A9 3937/109); embedded Python blocks compiled (A5 3, A6 3,
+A7 2, A8 1, A9 0). Staging remained safe and unchanged: service active/static, exact credential-free
+DISARMED, no credentials, no broker, state version 1.
+
+**Next (A-5 first, strict order, stop at first genuine FAIL):** `[AI: Claude]` execute A-5 only from
+`/home/gatea/gatea-run-kit-20260808D-2ce41e34/gatea_A5.sh`; preserve and inspect
+`/home/gatea/gatea-A5-20260808D.log` and independently verify service/API/DB/listener/systemd state
+before a verdict; on a genuine FAIL perform the preregistered safe response and do not run A-6; on
+PASS update `_AI_MEMORY` before A-6; continue one gate at a time under the existing preregistration.
+Hard exclusions unchanged: no credentials, broker/exchange, successful ARM, orders, TESTNET/mainnet,
+wallet, master merge, or economic action. Ordered actions: `_AI_MEMORY/NEXT_STEPS.md`.
+
 ## [Claude Fable 5] 2026-08-08 — AI routing audit: OmniRoute REJECTED; provider snapshot refreshed; Claude Max recorded
 
 **A ChatGPT-authored "MASTER TASK — multi-model AI routing workflow" mega-prompt was audited and REJECTED as-written** (Lead: Claude Fable 5). Reasons: it would have created a second routing taxonomy (FREE_FAST/CHEAP_CODER/…/R0–R4) competing with the canonical `AGENTS.md` system; it carried stale/wrong provider facts; and it anchored on installing OmniRoute, an unverified key-holding router. A bounded replacement dispatch (single-file doc update, spec at `C:\tmp\DISPATCH_ROUTING_SNAPSHOT_UPDATE_2026-08-08.md`) was implemented by **Codex `gpt-5.6-sol` (route `secondary`, effort medium)** and Lead-audited **PASS-WITH-NITS**.
