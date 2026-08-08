@@ -1,5 +1,30 @@
 # NEXT_STEPS
 
+## GATE A — reran through A-3; A-4 not started; Gate A IN PROGRESS (2026-08-08)
+
+**Bounded documentation checkpoint by GLM-5.2.** The exact Claude Opus 5 implementation call was
+attempted first but returned `session limit — resets 11:50pm` before any edit; this checkpoint is
+bounded documentation only, not a substitute for a flagship audit or protected implementation. The
+corrected A-3 checker has NOT yet been propagated/frozen/transferred to staging. Full evidence:
+`11_TRIAGE/NEXT_SESSION_HANDOFF_2026-08-08.md`.
+
+- **[AI: Claude] FREEZE A CORRECTED RUN-KIT REVISION.** Do not overwrite run-kit B silently. Regenerate
+  `SHA256SUMS`/tar, independently verify member set / hash / `bash -n` syntax / falsification, document
+  it, transfer only the correction/revision, and verify the remote hash.
+- **[AI: Claude] RE-RUN ONLY THE A-3 CHECKER POST-PROCESSING** against the already-completed retained
+  suite log; do not rerun the 170-second product suite unless necessary. Require wrapper/checker PASS.
+- **[AI: Claude] RUN A-4 UNDER ADDENDUM D.** Capture all seven conditions plus the resolved
+  `systemctl show -p Environment`, `bridge.err.log`, listener, status, the exact application 409,
+  unchanged state/version, and no broker attempt. Stop at first FAIL and leave the service
+  masked/inactive on failure.
+- **[AI: Claude] IF A-4 PASSES,** recover and preregister the exact A-5 through A-9 commands before
+  execution; do not improvise protected tests. Continue the first-FAIL rule.
+- **[AI: Claude] WRITE `GATE_A_RESULT_2026-08-08B.md`,** update `_AI_MEMORY`, then — only after the
+  Gate A verdict — consider separately authorized follow-up. No master merge/deploy/credentials/broker/
+  ARM/orders.
+
+---
+
 ## GATE A — 20260808B local run kit validated; staging authorization still required (2026-08-08)
 
 **This is the live pickup.** Full evidence and all six hashes:
