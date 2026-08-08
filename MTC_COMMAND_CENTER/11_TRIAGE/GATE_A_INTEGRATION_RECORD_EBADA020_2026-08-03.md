@@ -91,7 +91,18 @@ Verified: `SCHEMA_VERSION_BASELINE = 4` at `IBKR_PAPER_BRIDGE/bridge/store/db.py
 sides agree on today's value and the merge changes no behaviour. Keeping 3b's comment preserves the
 reason the assertion exists; taking the residual branch's derived constant removes a literal that
 would silently go stale the next time the baseline moves — which is precisely the class of defect
-the residual repair was accepted for. **The strictly weaker option would have been keeping `"4"`.**
+the residual repair was accepted for.
+
+**Correction, 2026-08-08 (flagship NIT 2, reproduced).** This record originally claimed the derived
+form was *strictly more robust* and that keeping `"4"` was *strictly weaker*. That overstates it. The
+`claude-opus-5` xhigh flagship mutation-tested both: raising `SCHEMA_VERSION_BASELINE` 4→5 while
+leaving the producer literal at `"4"` makes the derived form **and** the WAL branch's literal fail
+identically, ERRORing at fixture setup with `MigrationError: MIGRATION_FAILED: v4-to-v5 requires
+schema_version=4` (`db.py:1477`) before line 890 is ever evaluated. No mutation was found where the
+derived form fails and the literal passes. The resolution is correct either way and better for
+maintenance — it auto-follows a coordinated bump instead of needing a stale-literal edit — but it is
+**not stronger at detection**. Only the justification was wrong, not the resolution. The assertion is
+separately proven non-vacuous: mutating the producer literal at `db.py:896` to `"5"` makes it FAIL.
 
 Read-only pairwise `git merge-tree` probes found this conflict in exactly one file pair
 (3b × residual) and zero conflicts in every other pair. Reproduced here: the conflict occurs at this
