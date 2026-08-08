@@ -91,11 +91,11 @@ successful ARM, orders, TESTNET/mainnet, master merge, and economic action.
 
 ## Next unit (precise definition)
 
-1. **[AI: Claude|Codex] TRANSFER RUN-KIT C ONLY; DO NOT REPLACE/DELETE B.** Transfer only the run-kit C
+1. **[AI: Claude] TRANSFER RUN-KIT C ONLY; DO NOT REPLACE/DELETE B.** Transfer only the run-kit C
    tar to `/home/gatea/gatea-run-kit-20260808C-2ce41e34.tar`; verify exact tar SHA-256
    `4ee5ba92…7f855`, `53760` bytes, and the exact 9-member set (root dir + 8 files); extract to
    `/home/gatea/gatea-run-kit-20260808C-2ce41e34`; run `sha256sum -c` and the six `bash -n` checks.
-2. **[AI: Claude|Codex] RE-CHECK A-3 WITHOUT RERUNNING PYTEST.** Against the retained
+2. **[AI: Claude] RE-CHECK A-3 WITHOUT RERUNNING PYTEST.** Against the retained
    `/home/gatea/gatea-A3-suite-20260808B.log`: require the last non-empty line to match the corrected
    anchored optional-elapsed regex; require `/home/gatea/gatea-A3-20260808B.log` to contain the exact
    line `pytest rc=1`; require exact two-way equality between the observed `FAILED ` node-ID lines and

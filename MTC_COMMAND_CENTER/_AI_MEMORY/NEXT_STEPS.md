@@ -20,11 +20,11 @@ checker falsification `10 passed, 0 failed`, rc `0`. Cleanup of
 `C:\tmp\gatea-c-verify-929e34808c0e47699d8964f879309072` blocked by policy after exact-path check —
 remains isolated, not in either tar, not in repo, not removed.
 
-- **[AI: Claude|Codex] TRANSFER RUN-KIT C ONLY — DO NOT REPLACE/DELETE B.** Transfer only the run-kit C
+- **[AI: Claude] TRANSFER RUN-KIT C ONLY — DO NOT REPLACE/DELETE B.** Transfer only the run-kit C
   tar to `/home/gatea/gatea-run-kit-20260808C-2ce41e34.tar`; verify exact tar SHA-256
   `4ee5ba92…7f855`, `53760` bytes, and the exact 9-member set (root dir + 8 files); extract to
   `/home/gatea/gatea-run-kit-20260808C-2ce41e34`; run `sha256sum -c` and the six `bash -n` checks.
-- **[AI: Claude|Codex] RE-CHECK A-3 WITHOUT RERUNNING PYTEST.** Against the retained
+- **[AI: Claude] RE-CHECK A-3 WITHOUT RERUNNING PYTEST.** Against the retained
   `/home/gatea/gatea-A3-suite-20260808B.log`: require the last non-empty line to match the corrected
   anchored optional-elapsed regex; require `/home/gatea/gatea-A3-20260808B.log` to contain the exact
   line `pytest rc=1`; require exact two-way equality between observed `FAILED ` node-ID lines and the
