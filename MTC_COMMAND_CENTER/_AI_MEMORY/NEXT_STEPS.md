@@ -1,5 +1,58 @@
 # NEXT_STEPS
 
+## GATE A — corrected A-3 checker frozen as run-kit C (evidence-checker repair only) (2026-08-08)
+
+**Bounded documentation checkpoint by GLM-5.2 — evidence-checker repair only, not an implementation or
+audit.** Freezes the corrected A-3 run-script checker as run-kit **C**; does not alter candidate
+acceptance, the product bits, the artifact, D025 acceptance, or the repair-round count. Run-kit B is
+preserved unchanged; C differs only in `gatea_A3.sh` and the README. No transfer or remote execution is
+claimed — validated locally only; the checker has **not** been re-run on staging. Full record:
+`11_TRIAGE/GATE_A_LOCAL_RUN_KIT_2026-08-08C.md` (cites the B record and the A-3 checkpoint).
+
+Frozen run-kit C bundle (local, not transferred): `C:\WPI_ARTIFACTS\gatea-run-kit-20260808C-2ce41e34`
+(+ `.tar`); tar SHA-256 `4ee5ba920800ceff8f55338bcba5b388d39d2457f9970795af89c9333767f855`; `53760` B;
+exact 9 members (root dir + `README.txt`, `SHA256SUMS`, six scripts); 7 manifest entries. Corrected
+`gatea_A3.sh` `2bfec1c230d77d70f30bda5560f824fe970b4c2fca098d3fdda49129f2465d1c` / `5087` B (B:
+`33934221…604443` / `4064`). README `47278c48…2883`. Five unchanged: A0_A1 `0d456a8e…f1c11`, A2
+`07a715aa…c053`, A4 `78aa7fca…fd9b4`, A4_diag `f75912a2…f101d`, teardown `19016d8f…c0b3`. Independent
+validation: 8 files / 7 manifest entries; `sha256sum -c` all OK; six `bash -n` rc `0`; 0 CR bytes;
+checker falsification `10 passed, 0 failed`, rc `0`. Cleanup of
+`C:\tmp\gatea-c-verify-929e34808c0e47699d8964f879309072` blocked by policy after exact-path check —
+remains isolated, not in either tar, not in repo, not removed.
+
+- **[AI: Claude] TRANSFER RUN-KIT C ONLY — DO NOT REPLACE/DELETE B.** Transfer only the run-kit C
+  tar to `/home/gatea/gatea-run-kit-20260808C-2ce41e34.tar`; verify exact tar SHA-256
+  `4ee5ba92…7f855`, `53760` bytes, and the exact 9-member set (root dir + 8 files); extract to
+  `/home/gatea/gatea-run-kit-20260808C-2ce41e34`; run `sha256sum -c` and the six `bash -n` checks.
+- **[AI: Claude] RE-CHECK A-3 WITHOUT RERUNNING PYTEST.** Against the retained
+  `/home/gatea/gatea-A3-suite-20260808B.log`: require the last non-empty line to match the corrected
+  anchored optional-elapsed regex; require `/home/gatea/gatea-A3-20260808B.log` to contain the exact
+  line `pytest rc=1`; require exact two-way equality between observed `FAILED ` node-ID lines and the
+  two permitted `test_order_state.py` gc-referents failures. Preserve output at
+  `/home/gatea/gatea-A3-postcheck-20260808C.log`. Any mismatch is Gate A FAIL; otherwise A-3 checker
+  PASS.
+- **[AI: Any] UPDATE `_AI_MEMORY/` BEFORE A-4.**
+- **[AI: Claude] RUN A-4 EXACTLY UNDER ADDENDUM D AND STOP AT FIRST FAIL.** Bind A-4 to the corrected
+  step-8 result. No credentials/broker/successful ARM/orders/TESTNET/mainnet/master merge/economic
+  action. Capture `systemctl show -p Environment`, `bridge.err.log`, listener, status, the exact
+  application 409, unchanged state/version, and no broker attempt. Leave the service masked/inactive on
+  failure.
+- **[AI: Any] STATE UNCHANGED BY THIS C FREEZE UNIT.** Candidate `2ce41e34…` accepted;
+  product/artifact/staging install not modified during this unit; Gate A IN PROGRESS through A-3; A-4
+  not started; current accepted `2ce41e34` install masked/inactive/not enabled, no listener, no
+  credentials. No staging contact, teardown, install, service start, credential, broker/exchange
+  access, ARM, order, TESTNET/mainnet, master merge, or economic action occurred **in this C freeze
+  unit** — this scopes only the C unit; A-0 through A-3 of the overall rerun did run on `gatea-staging`
+  (see the A-3 rerun checkpoint). The owner already explicitly authorized the preregistered
+  `gatea-staging` teardown/rerun sequence, so no additional authorization is required to transfer
+  run-kit C, run the retained-log A-3 postcheck, or run A-4 within that sequence; hard exclusions
+  remain (credentials, broker/exchange access, successful ARM, orders, TESTNET/mainnet, master merge,
+  economic action).
+- **[AI: Any] CLEANUP RESIDUE.** `C:\tmp\gatea-c-verify-929e34808c0e47699d8964f879309072` remains
+  isolated; remove only by an allowed exact-literal cleanup. **Do not claim it was removed.**
+
+---
+
 ## GATE A — reran through A-3; A-4 not started; Gate A IN PROGRESS (2026-08-08)
 
 **Bounded documentation checkpoint by GLM-5.2.** The exact Claude Opus 5 implementation call was
