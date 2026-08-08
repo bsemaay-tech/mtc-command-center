@@ -223,6 +223,7 @@ def test_first_start_unit_is_separate_masked_design_and_restart_no():
     assert "\n[Install]\n" not in unit
     assert "venvs/@RELEASE_SHA@/bin/python -m bridge.app" in unit
     assert "MTC_BRIDGE_STATE_DB=/var/lib/mtc-bridge/bridge.db" in unit
+    assert "MTC_BRIDGE_START_MODE=credential_free_disarmed" in unit
     assert "PrivateTmp=yes" in unit
     assert "KillSignal=SIGTERM" in unit
     assert "TimeoutStopSec=45" in unit
@@ -236,6 +237,7 @@ def test_steady_unit_is_separate_restart_enabled_and_not_enableable():
     assert "\nRestart=on-failure\n" in unit
     assert "\n[Install]\n" not in unit
     assert "venvs/@RELEASE_SHA@/bin/python -m bridge.app" in unit
+    assert "MTC_BRIDGE_START_MODE=credential_free_disarmed" not in unit
     assert "PrivateTmp=yes" in unit
     assert "StartLimitIntervalSec=600" in unit
     assert "StartLimitBurst=3" in unit

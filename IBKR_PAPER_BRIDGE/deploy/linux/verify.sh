@@ -162,7 +162,8 @@ if [ -f "${MTC_UNIT_DIR}/${MTC_FIRST_START_UNIT}" ]; then
       'TimeoutStopSec=45' \
       'StartLimitBurst=3' \
       "ReadWritePaths=${MTC_STATE_DIR} ${MTC_LOG_DIR}" \
-      "MTC_BRIDGE_STATE_DB=${MTC_STATE_DB}" ; do
+      "MTC_BRIDGE_STATE_DB=${MTC_STATE_DB}" \
+      'MTC_BRIDGE_START_MODE=credential_free_disarmed' ; do
     if grep -qF "${needle}" "${unit}"; then
       pass "unit declares ${needle}"
     else
