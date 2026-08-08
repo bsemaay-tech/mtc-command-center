@@ -4,8 +4,12 @@
 
 **Bounded documentation checkpoint by GLM-5.2 — records the executed next unit of the run-kit C
 checkpoint (evidence-checker repair only).** It does not alter candidate acceptance, the product bits,
-the artifact, D025 acceptance, or the repair-round count. No pytest rerun; no code, scripts, artifacts,
-results, staging action, commit, push, or git mutation occurred. Full record:
+the artifact, D025 acceptance, or the repair-round count. No pytest rerun.
+No product code or product artifact changed; no install, service start, credentials,
+broker/exchange access, successful ARM, orders, TESTNET/mainnet, master merge, or economic action. The
+authorized staging actions in this unit were exactly run-kit C transfer/verification and read-only
+retained-log A-3 postcheck/replay, producing the two recorded logs. The GLM worker itself only edited
+documentation and did not perform staging/Git mutation. Full record:
 `11_TRIAGE/GATE_A_LOCAL_RUN_KIT_2026-08-08C.md` (addendum). Ordered actions:
 `_AI_MEMORY/NEXT_STEPS.md`.
 

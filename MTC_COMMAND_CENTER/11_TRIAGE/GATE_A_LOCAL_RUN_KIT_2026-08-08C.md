@@ -5,8 +5,12 @@
 > Newest update to this record. The "next unit" defined below was executed on `gatea-staging`: the C tar
 > was transferred (B left intact) and the retained-log A-3 postcheck PASSED. This addendum records that
 > execution and marks the next unit complete; it does not alter candidate acceptance, the product bits,
-> the artifact, D025 acceptance, or the repair-round count. No pytest rerun; no code/scripts/artifacts/
-> results/staging action/commit/push/git mutation.
+> the artifact, D025 acceptance, or the repair-round count. No pytest rerun.
+> No product code or product artifact changed; no install, service start, credentials,
+> broker/exchange access, successful ARM, orders, TESTNET/mainnet, master merge, or economic action. The
+> authorized staging actions in this unit were exactly run-kit C transfer/verification and read-only
+> retained-log A-3 postcheck/replay, producing the two recorded logs. The GLM worker itself only edited
+> documentation and did not perform staging/Git mutation.
 
 **Transfer + remote verification (B intact).** Tar transferred to
 `/home/gatea/gatea-run-kit-20260808C-2ce41e34.tar`. Remote direct verification on `gatea-staging`: tar

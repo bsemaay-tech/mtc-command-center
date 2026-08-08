@@ -5,8 +5,13 @@
 > **Supersedes the C-freeze "next unit" below as live state.** The next unit defined there (transfer the
 > run-kit C tar; re-check A-3 without rerunning pytest) was executed on `gatea-staging`. This records the
 > result; it does not alter candidate acceptance, the product bits, the artifact, D025 acceptance, or the
-> repair-round count. No pytest rerun; no code/scripts/artifacts/results/staging action/commit/push/git
-> mutation. Full record: `11_TRIAGE/GATE_A_LOCAL_RUN_KIT_2026-08-08C.md` (addendum). Ordered actions:
+> repair-round count. No pytest rerun.
+> No product code or product artifact changed; no install, service start, credentials,
+> broker/exchange access, successful ARM, orders, TESTNET/mainnet, master merge, or economic action. The
+> authorized staging actions in this unit were exactly run-kit C transfer/verification and read-only
+> retained-log A-3 postcheck/replay, producing the two recorded logs. The GLM worker itself only edited
+> documentation and did not perform staging/Git mutation. Full record:
+> `11_TRIAGE/GATE_A_LOCAL_RUN_KIT_2026-08-08C.md` (addendum). Ordered actions:
 > `_AI_MEMORY/NEXT_STEPS.md`.
 >
 > **Transfer + remote verification (B intact):** tar SHA-256
