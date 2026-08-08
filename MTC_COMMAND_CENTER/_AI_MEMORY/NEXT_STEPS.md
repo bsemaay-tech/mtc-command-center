@@ -1,6 +1,51 @@
 # NEXT_STEPS
 
-## GATE A — FOUR REPAIRS ACCEPTED, INTEGRATED AT `ebada020`, RERUN PENDING (2026-08-03)
+## GATE A — `ebada020` ACCEPTED, RUN AUTHORIZATION IS THE ONLY THING LEFT (2026-08-08)
+
+**START HERE:** `11_TRIAGE/GATE_A_INTEGRATION_FLAGSHIP_AUDITS_EBADA020_2026-08-08.md`, then
+`11_TRIAGE/GATE_A_PREREGISTRATION_ADDENDUM_B_2026-08-08.md`.
+This section supersedes the 2026-08-03 section below.
+
+- **[AI: Any] D025 SATISFIED — `ebada020` IS ACCEPTED.** Both flagships accepting with zero required
+  findings from any auditor: `gpt-5.6-sol` xhigh **PASS** (round 3) and `claude-opus-5` xhigh
+  **PASS-WITH-NITS** (round 4, accepting per `AGENTS.md:80`). Round 4 relied on the record for nothing
+  — it executed the locked-Linux floor itself and reproduced it exactly, making the verdict
+  full-platform rather than Windows-only. Reports
+  `C:\tmp\CODEX_SOL_AUDIT_INTEGRATION_EBADA020_2026-08-08.txt`,
+  `C:\tmp\CLAUDE_FLAGSHIP_AUDIT_INTEGRATION_EBADA020_2026-08-08.txt`.
+- **[AI: Barış] BLOCKED ON YOU — Gate A execution authorization.** Everything is pre-registered and
+  ready. Gate A installs and starts a service on the staging host, which the standing hard-stop list
+  names as requiring a new explicit instruction. Nothing else blocks A-0.
+- **[AI: Any] GATE A INPUTS ARE RE-BASELINED — use Addendum B, not runbook §2.** The runbook and
+  Addendum A still freeze the superseded artifact `1adf9ae5…`/`bfefea2f…`/7060 entries, and A-3 still
+  expects failures the repairs fixed. Authoritative: artifact
+  `C:\WPI_ARTIFACTS\ebada020a59edf539f60acfbb3a6bf870c8679e9`, manifest `8FC30864…4700C9`, **7059
+  entries, 7060 files, 1 033 359 158 bytes**. A-3 expects `2 failed, 1357 passed` with the only
+  permitted failures being the two `test_order_state.py` gc-referents tests.
+- **[AI: Any] A-4 RISK DECLARED IN ADVANCE (flagship NIT 1, Lead-reproduced).** The credential-free
+  DISARMED start mode is **not reachable from any shipped deploy artifact** — zero `start-mode` hits
+  under `deploy/`, both unit templates `ExecStart=… python -m bridge.app`, env template does not name
+  the variable, resolver defaults to **credentialed**. The service under test will start credentialed
+  against an env file `install.sh` leaves unset. A-4's FAIL condition is NOT softened. Binding
+  follow-up before any DISARMED VPS deploy: "did not arm" is weaker than "cannot arm, having never
+  held credentials".
+- **[AI: Barış] STAGING HOST IS NOT A CLEAN HOST — decide the cleanup scope before A-0.** `/` is 64%
+  full, 14 G free of 39 G, and `~gatea` holds ≈14 G of accumulated audit debris from many prior rounds
+  (`lead-ga3br2-*` 2 G each, `payload*`/`fixpay*`/`recon` ≈1 G each, `opus5-audit-20260808` 544 M plus
+  four `v2_*`/`sub_*` tars). Some of it is cited evidence in accepted records, so the Lead did not
+  delete any of it. A-1 is a *clean-host* precondition and A-9 rescans the installed tree.
+- **[AI: Any] CARRIED NITS:** NIT 3 — the two surviving gc-referents failures are CPython
+  3.12-dependent and the production venv **is** 3.12, so the production floor is amber; scoped fix
+  owed. Stale docs — `AI_ACCOUNT_AND_MODEL_ROUTING.md:21` still calls the `.codex_OLD` route Free (it
+  is Plus, `gpt-5.6-sol` xhigh proven live), and `Invoke-CodexForClaude.ps1` needs its Codex flags
+  passed as `-CodexArgs $array` or PowerShell rejects `exec`.
+
+---
+
+## GATE A — FOUR REPAIRS ACCEPTED, INTEGRATED AT `ebada020`, RERUN PENDING (2026-08-03, SUPERSEDED)
+
+**Superseded by the section above.** Its "only one blocker left" line is closed: the
+`gpt-5.6-sol` audit ran on 2026-08-08 and a `claude-opus-5` flagship round was added.
 
 **START HERE:** `11_TRIAGE/NEXT_SESSION_HANDOFF_2026-08-03B.md`, then
 `11_TRIAGE/GATE_A_QUEUE_D_INTEGRATION_STATUS_2026-08-03.md`.
