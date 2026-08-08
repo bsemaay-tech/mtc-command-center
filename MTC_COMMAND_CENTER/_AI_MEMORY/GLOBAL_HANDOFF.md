@@ -1,5 +1,303 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-08-09 — Gate A E round 2 Lead re-audit ACCEPT; canonical audits next
+
+Default D RED/E GREEN reproduced without PATH override; E passed 28/28 plus syntax, compile, byte and
+scope checks. Lead preliminary ACCEPT freezes the candidate for four fresh canonical audits. This is
+not final acceptance or staging authorization; E remains unpackaged/untransferred/unrun. Gate state
+and hard exclusions unchanged.
+
+---
+
+## [Claude Opus 5] 2026-08-09 — Gate A E repair round 2: portable GNU-timeout harness implemented; pending Lead re-audit
+
+**The Lead's round-2 finding is accepted and repaired, in the test only.** The round-1 regression
+test resolved its deadline guard with Python's `shutil.which("timeout")` — it asked **Windows**,
+which answers `C:\Windows\system32\timeout.EXE` (an unrelated console-pause command, rc `1`).
+Everything else in the repair asks **Bash**: the script's own
+`TIMEOUT_BIN="$(command -v timeout || true)"`, its step1 guard
+`"$TIMEOUT_BIN" --signal=TERM --kill-after=2 0.5 "${BASH:-bash}" -c 'sleep 30'`, and the test's own
+behavioural harness under `bash -s`. So the check that exists to make non-execution visible became
+the **only** failure while the mechanism it was checking worked. `find_timeout()` is deleted;
+`probe_deadline_guard(bash_exe)` now feeds a guard script to the **already-selected Bash over the
+same `bash -s` stdin transport the harness uses** (non-login on purpose — a login shell could
+source a profile adding directories the harness's child shells never see) and requires all four
+facts together: non-empty `command -v timeout`; **not** under a Windows `system32` directory
+(native and MSYS spellings both rejected); `timeout --version` rc `0` naming **GNU coreutils**;
+and the kill probe returning **`124`**. **No `PATH` override is required, requested or accepted.**
+Nothing was weakened — the check is strictly stronger and all **28** named checks survive
+unrenamed and unrelaxed.
+
+**Lead round-1 evidence, preserved exactly (it supports the source timing repair):** default exact
+D → **RED** as required; default E → **RED at 27/28 PASS**, the single failure being
+`env_deadline_guard_available_and_working`; the **same** E test with
+`C:\Program Files\Git\usr\bin` prepended to `PATH` → **GREEN 28/28, rc 0**, the blocked 45 s probe
+ending in **3.7 s** under a 3 s deadline with **no surviving child**, and the pre-repair mutation
+at **18.8 s** against the repaired wait's **2.6 s**.
+
+**`gatea_A5.sh` was NOT touched.** SHA-256 still
+`fe06f79e36432a8fa81e4a1c17dc470acd8d03099aa735faa76f737212451380`, `22531` bytes, `466` LF lines —
+re-verified this session; that identity is the proof round 2 changed nothing on the staging side,
+and the script correctly still emits `A5_kit_repair_round=1`. New identities:
+`test_gatea_A5_readiness.py` `67823a70d3d4854404cfd15372cd1cf90bb0d6a820caf9858a0448f52ed59c8f`
+(`53208` bytes / `1164` lines), `README.txt`
+`56d688653f90b9cafaed2b57b85455d5b89dd9197b9058e2d49a07969fa097d8` (`29397` bytes / `415` lines);
+CR count **0** across all three kit members.
+
+**D026 BLOCK, stated plainly — this unit could not observe its own repair working.** `bash`,
+`bash -lc`, `bash -n`, `python <script>`, `python --version` and `python -m py_compile` were all
+refused (`This command requires approval`), and filesystem access outside `C:\GA5E` is sandboxed
+off. The round-2 change is **reviewed, not executed**. The Lead's round-1 pair does **not** close
+round 2, because its GREEN half needed the hand-prepended `PATH` that round 2 exists to eliminate.
+**Owed:** the default-command RED (exact D) / GREEN (E) pair run **exactly as printed, with no
+`PATH` override**, `SUMMARY total=28`, and the resolved `GUARD_bin` + `bash=` lines recorded.
+
+**Gate state unchanged: A-0..A-4 PASS · A-5 FAIL (run-kit D) · A-6..A-9 NOT RUN.** E is
+**implemented locally; NOT accepted, NOT committed, NOT packaged, NOT transferred, NOT run.**
+Worktree `C:\GA5E`, branch `codex/gatea-a5-readiness-e`, baseline `123bb0c4`. Run-kit D and every
+D report/evidence file untouched; staging unchanged and safe. No Git, SSH/SCP, staging/service,
+package/transfer/deploy, credential, broker/exchange, ARM, order, TESTNET/mainnet, wallet, merge
+or economic action. **Repair rounds 1 and 2 of 3 consumed — one remains.** Records:
+`11_TRIAGE/GATE_A_A5_REPAIR_IMPLEMENTATION_2026-08-09E.md` (§1.1, §6.1, §7b, §8),
+`11_TRIAGE/GATE_A_A5_REPAIR_PREREGISTRATION_2026-08-09E.md` (§4.4),
+`11_TRIAGE/GATE_A_RUN_KIT_E_2026-08-09/README.txt`.
+
+---
+
+## [Codex GPT-5.6-sol] 2026-08-09 — Gate A E round-1 re-audit: source passes, Windows harness needs repair round 2
+
+Default E reached `27/28` PASS but its environment guard selected Windows `timeout.EXE`; with Git
+Bash `usr\bin` first on PATH the exact run was GREEN `28/28`, terminated the blocked probe, left no
+child, and falsified the attempt-count mutation. Lead **REQUEST_CHANGES, repair round 2**: resolve GNU
+timeout through selected Bash so the default command passes, preserve all checks, update records and
+restore NEXT_STEPS CRLF. Source timing repair is supported but E is not accepted. No staging action;
+gate state and hard exclusions unchanged.
+
+---
+
+## [Claude Opus 5] 2026-08-09 — Gate A E repair round 1: hard readiness deadline implemented; pending Lead re-audit
+
+**The Lead's binding timing finding is accepted and repaired.** Protected run-kit repair by the
+counterpart flagship implementer `claude-opus-5` (AGENTS.md two-tier model) in the isolated
+worktree `C:\GA5E`, branch `codex/gatea-a5-readiness-e`, baseline `123bb0c4`
+(`123bb0c49129b29f625fb0c922968ddf8feaed06`). **Revision E is implemented locally and is NOT
+accepted, NOT committed, NOT packaged, NOT transferred, NOT run.** Gate state unchanged:
+**A-0..A-4 PASS · A-5 FAIL (run-kit D) · A-6..A-9 NOT RUN.** Candidate
+`2ce41e34bceb599d80af24c5c33d835820ec321b` and the product/artifact are unchanged. No Git
+command, SSH/SCP, staging/service operation, package/transfer/deploy, broker/exchange, ARM,
+order, TESTNET/mainnet, wallet, credential read, merge or economic action was performed; run-kit
+D and every D report/evidence file were left untouched; staging is unchanged and safe. Records:
+`11_TRIAGE/GATE_A_A5_REPAIR_IMPLEMENTATION_2026-08-09E.md`,
+`11_TRIAGE/GATE_A_A5_REPAIR_PREREGISTRATION_2026-08-09E.md`,
+`11_TRIAGE/GATE_A_RUN_KIT_E_2026-08-09/README.txt`.
+
+**Lead-run round-0 evidence, preserved exactly.** Exact pre-fix D → `rc=1`, `RESULT=RED`,
+**14 checks / 3 PASS / 11 FAIL**, `152 ms`. First E draft → `rc=0`, `RESULT=GREEN`, **14/14
+PASS**, `7935 ms`. Independent `bash -n` rc `0`; independent `python -m py_compile` rc `0`;
+hashes, byte counts, LF and CR-count-0 evidence reproduced. **Binding finding accepted without
+qualification:** `retry 30 post_start_ready` was attempt-count bounded, not time bounded —
+`check_api`'s `urllib.request.urlopen(..., timeout=10)` can consume ten seconds per attempt and
+`retry` sleeps one second after each failure, so a listener-present / API-stalled service could
+keep the wait running for about **330 seconds** while the marker `ready_max_wait_s=30` and all
+matching documentation asserted a 30 s ceiling. The immediate-return stubs could not detect it.
+
+**The repair.** The post-start path no longer contains an attempt-count wait.
+`wait_ready_deadline "$READY_MAX_S"` (`READY_MAX_S=30` **seconds**) fixes a **monotonic
+wall-clock deadline** once — from `/proc/uptime`, Linux `CLOCK_BOOTTIME`, which never steps
+backwards on an NTP/operator clock change — immediately after the single explicit start, and
+charges **probe duration (active + listener + API) and the inter-attempt backoff to that one
+budget**. Every attempt runs through `run_bounded` under GNU coreutils `timeout` with the
+**remaining** time as its hard bound; without `--foreground`, `timeout` signals the child's
+**entire process group**, so SIGTERM at the bound — and SIGKILL `KILL_GRACE_S=2 s` later if the
+probe ignores SIGTERM — reaches the probe shell **and every descendant** (the venv python, its
+`ss` subprocess, a stalled socket read). **No probe child can outlive the bound**, and a killed
+attempt only ever interrupts a read-only operation. The backoff is clamped to the remaining
+budget and the deadline is re-checked before every attempt and every sleep. All three conditions
+are still required in the **same** attempt (`ActiveState=active` + nonempty loopback-only `:8790`
+listener + exact credential-free DISARMED `/api/status`), so systemd-active alone can still never
+satisfy the wait; step5 still re-runs both checks **in full, unsuppressed**, and the final
+`check_api` keeps its own `timeout=10` — only the readiness path is bounded. **Honest bound,
+stated identically in the script, the marker, the failure reason, the README, the preregistration
+and the records:** the operation returns at 30 s of monotonic time, **plus at most 2 s** if and
+only if a probe ignores SIGTERM and must be SIGKILLed, plus ordinary scheduling slop — not a bare
+ceiling claim, not an attempt count. **The mechanism is asserted, not assumed:** four new step1
+preconditions record and require `A5_ready_clock=proc_uptime`, a non-empty `A5_timeout_bin`,
+`A5_timeout_guard_rc=124` (a 0.5 s bound on a 30 s sleep must really time out) and
+`A5_ready_probe_export_rc=0` (the readiness functions must be visible in the bounded child
+shell). New staging prerequisites: GNU coreutils `timeout` on `PATH` and a readable
+`/proc/uptime`; a missing one is a precondition FAIL, never a silent unbounded probe.
+
+**Real evidence produced this session (read-only).** `diff --strip-trailing-cr` frozen D → E is
+**exactly eight hunks** (`2c2`, `4a5,37`, `20c53,77`, `46a104,107`, `53c114,120`, `172a240,356`,
+`188a373,392`, `229c433,434`) with **exactly one D line replaced** (`retry 30 wait_active …`);
+the `retry` helper's code is byte-for-byte unchanged (comment-only truthfulness fix) and is still
+used for the cheap step3 dead-window wait; `fail "` sites go D `24` → E `28` (all 24 preserved
+plus the 4 new guard preconditions), so no D assertion, dead-window proof, DB/API/listener
+condition, hard exclusion, no-clobber behaviour, authorized SIGKILL, `Restart=no` requirement or
+exactly-one-explicit-start contract was weakened. CR count **0** for all three kit members and
+the preregistration. `wc -c -l`: README `25117`/`359`, `gatea_A5.sh` `22531`/`466`, test
+`47557`/`1071`, preregistration `27070`/`415`. SHA-256: `gatea_A5.sh`
+`fe06f79e36432a8fa81e4a1c17dc470acd8d03099aa735faa76f737212451380`, test
+`f5651aa6c6c7fc3e88958e4780c38c898fd1dc6d2ccf00828a4af2fc355713f2`, README
+`8127afb360e4ce1f60cc695a3b2f64890049b079b21af9037630328fca237aee` — these **supersede** the
+round-0 hashes, which now identify only the discarded first draft. Ripgrep confirms
+`ready_max_wait_s`, `30 s maximum`, `30-second maximum` and `30 attempts` appear **nowhere** in
+the script.
+
+**D026 extended so the timing defect is falsified behaviourally (28 named checks).** The test
+extracts the script's real constants block and its real `mono_now_ds` / `run_bounded` /
+`ready_probe_once` / `wait_ready_deadline` definitions and runs them against local stubs,
+including a probe that blocks far past the deadline. The falsification pair runs inline on
+**every** invocation with identical stubs and an identical nominal bound:
+`mutation_pre_repair_attempt_count_wait_violates_deadline` drives the **verbatim pre-repair
+wait** (the script's own `retry` helper plus the old `post_start_ready`) against an 8 s-blocking
+API stub with a nominal bound of 2 and requires it to be **measured overrunning** that bound
+(≈ 17 s), while `behaviour_repaired_deadline_beats_pre_repair_on_same_stub` requires the repaired
+wait to exit nonzero at the deadline in under half that wall time.
+`behaviour_deadline_terminates_blocked_probe` (45 s probe under a 3 s deadline, ≤ 9 s exit) and
+`behaviour_no_probe_child_survives_deadline` (the probe process must be **gone**, not orphaned)
+prove termination rather than waiting-it-out. `env_deadline_guard_available_and_working` makes
+non-execution visible — missing or non-functional GNU `timeout` ⇒ **RED**, never an unearned
+green (D025 rule 1). Forbidden commands are shadowed twice (exported functions **and** PATH
+shims) and every shim writes to a log the harness reports, so the readiness path's diagnostics
+suppression cannot hide one. The tolerance budget (6 s) names every source: 2 s kill-grace + 1 s
+coarse-clock rounding + 3 s process/scheduler slop; the overrun it must detect is ≈ 8× the bound.
+
+**HONEST BLOCK — the round-1 D026 demonstration is still owed.** `bash`, `bash -n`,
+`python <script>`, `python -c` and `python -m py_compile` are all outside this session's
+permission allowlist; every attempt returned `This command requires approval` through both the
+Bash and PowerShell tools (only `python --version` → `Python 3.14.2` was permitted). **The
+repaired script and the extended test have never been executed.** Per `AGENTS.md` D026 the
+extended test is therefore **supplemental — NOT closure evidence** and **the timing defect is NOT
+closed**; nothing may be packaged, transferred or rerun on this record alone. The exact commands
+and the binding pass criteria are in `GATE_A_A5_REPAIR_IMPLEMENTATION_2026-08-09E.md` §8: GREEN
+counts only if `mutation_pre_repair_attempt_count_wait_violates_deadline`,
+`behaviour_repaired_deadline_beats_pre_repair_on_same_stub`,
+`behaviour_deadline_terminates_blocked_probe`, `behaviour_no_probe_child_survives_deadline` and
+`env_deadline_guard_available_and_working` each PASS individually.
+
+**Next:** Lead runs the RED/GREEN + `bash -n` + `py_compile` evidence and re-audits the **actual
+files**, then fresh canonical audits in new independent sessions — `claude-opus-5` xhigh **and**
+`gpt-5.6-sol` xhigh, D025 binding (non-execution ⇒ BLOCK; **repair round 1 of 3 consumed**).
+Only after acceptance: commit, package from raw committed blobs, transfer, re-verify remotely
+(including `command -v timeout` and a readable `/proc/uptime`), and rerun **A-5 only**. Gate state
+remains A-0..A-4 PASS, A-5 FAIL, A-6..A-9 NOT RUN; D evidence is immutable; staging is safe; hard
+exclusions unchanged.
+
+---
+
+## [Codex GPT-5.6-sol] 2026-08-09 — Gate A E Lead audit REQUEST_CHANGES: wall-clock bound is false
+
+Codex Lead independently reproduced D026 and inspected the actual source. Exact D was RED (`rc=1`,
+`3/14` PASS); E was GREEN (`rc=0`, `14/14` PASS), including delayed readiness, active-only timeout,
+API-not-exact timeout, and forbidden-command isolation. Independent `bash -n` and `py_compile`
+returned `0`; LF/CR/hash/byte evidence reproduced.
+
+**Binding required finding:** the implementation is not a 30-second maximum as claimed. Its
+`retry 30 post_start_ready` is attempt-count bounded, while `post_start_ready` calls `check_api`
+whose local HTTP open has `timeout=10`; `retry` then sleeps one second. With a bound listener and a
+stalled API, the current path can take about 330 seconds. The structured marker
+`ready_max_wait_s=30` and all matching documentation are therefore false. The regression harness
+uses immediate stubs and misses this case. Lead verdict **REQUEST_CHANGES, repair round 1**.
+
+Next: same Claude Opus 5 counterpart must implement a real monotonic 30-second deadline including
+probe duration, limit each readiness API call to remaining time, preserve the final full check and
+all D assertions, and extend D026 with a slow/hanging-API RED-on-current-E / GREEN-on-repair case.
+Update all E records and memory, then Lead re-audits before canonical audits. No staging action;
+E remains unaccepted, unpackaged, untransferred, and unrun. Gate state remains A-0..A-4 PASS,
+A-5 FAIL, A-6..A-9 NOT RUN; D evidence is immutable; hard exclusions unchanged.
+
+---
+
+## [Claude Opus 5] 2026-08-09 — Gate A A-5 readiness repair E implemented; pending independent audit
+
+**Protected run-kit repair by the counterpart flagship implementer `claude-opus-5`** (AGENTS.md
+two-tier model) in the isolated worktree `C:\GA5E`, branch `codex/gatea-a5-readiness-e`, baseline
+`123bb0c4` (`123bb0c49129b29f625fb0c922968ddf8feaed06`). **Revision E is implemented locally and
+is NOT packaged, NOT transferred, NOT audited, NOT accepted, NOT run.** Gate state unchanged:
+**A-0..A-4 PASS · A-5 FAIL (run-kit D) · A-6..A-9 NOT RUN.** Accepted source candidate unchanged:
+`2ce41e34bceb599d80af24c5c33d835820ec321b`. No Git command was run; no SSH/SCP, staging/service
+operation, package/transfer/deploy, broker/exchange, ARM, order, TESTNET/mainnet, wallet,
+credential read, or economic action was performed; no product code or artifact changed; run-kit D
+and all D reports/evidence were left untouched. Standalone records:
+`11_TRIAGE/GATE_A_A5_REPAIR_IMPLEMENTATION_2026-08-09E.md`,
+`11_TRIAGE/GATE_A_A5_REPAIR_PREREGISTRATION_2026-08-09E.md`.
+
+**What was built.** `11_TRIAGE/GATE_A_RUN_KIT_E_2026-08-09/` — an **A-5-only repair kit**
+(`README.txt`, `gatea_A5.sh`, `test_gatea_A5_readiness.py`) that supersedes run-kit D **for the
+A-5 rerun only**. **A-6..A-9 remain NOT RUN and remain governed by the accepted run-kit D
+source** until A-5 PASSES and `_AI_MEMORY` is updated. New no-clobber evidence log
+`/home/gatea/gatea-A5-20260809E.log`; planned new remote extraction path
+`/home/gatea/gatea-run-kit-20260809E-2ce41e34`; the frozen D log
+`/home/gatea/gatea-A5-20260808D.log` (SHA-256
+`3e282516dfea7e66d9196ad5f3d929b7d1a50257bae501a5b89c35e007eb31c9`, `1933` bytes) is never
+overwritten or reused.
+
+**The repair.** After the single explicit `sudo systemctl start` and before the step5 post
+assertions, `retry 30 post_start_ready` performs a bounded **30-second maximum**
+application-readiness wait satisfied only when **all three** hold in the **same attempt**:
+systemd `ActiveState=active` (`wait_active`) **plus** a nonempty loopback-only `:8790` listener
+set (`check_listener_loopback_only`) **plus** `GET /api/status` HTTP 200 exact credential-free
+DISARMED (`check_api`). The function returns nonzero at the first failing check, so
+`ActiveState=active` **alone can never satisfy the wait** — the exact defect that produced the D
+FAIL. Only per-attempt diagnostics are suppressed; step5 re-runs both checks **in full,
+unsuppressed**, as the authoritative post evidence. On timeout: explicit `fail`, nonzero exit,
+**no second start**, no auto-restart/mask (first-FAIL response stays with the Lead). One
+structured marker `A5_READY=yes ready_requires=… ready_max_wait_s=30 ready_second_start=none` on
+success. A real `diff` against frozen D shows **exactly six hunks** (header wording, the E scope
+block, `LOG=`, two header echoes, the readiness function, the retry/marker replacement); `fail "`
+sites are unchanged at **24 in both**, so no D assertion, dead-window proof, DB/API/listener
+condition, hard exclusion, no-clobber behaviour, authorized SIGKILL, `Restart=no` requirement, or
+exactly-one-explicit-start contract was weakened.
+
+**HONEST GAP — D026 IS NOT SATISFIED.** The **RED and GREEN runs were NOT executed.** `bash` and
+`python <script>` are outside this session's Bash-tool permission allowlist — every attempt
+returned `This command requires approval` (read-only `diff`/`sha256sum`/`wc`/`grep` were allowed;
+`python --version` → `Python 3.14.2` was allowed). `bash -n` on E and `python -m py_compile` on
+the test were blocked for the same reason. Per `AGENTS.md` D026 the new regression test is
+therefore **supplemental — NOT closure evidence**, and **the readiness defect is NOT closed.**
+The two exact closing commands and their expected output are recorded in
+`GATE_A_A5_REPAIR_IMPLEMENTATION_2026-08-09E.md` §8. Evidence that *was* produced: the D→E
+`diff`; `fail "` parity 24/24; **CR bytes 0** for all three kit E members and both new reports;
+`wc -c -l` README `16847`/`254`, `gatea_A5.sh` `12960`/`309`, test `23140`/`580`; SHA-256
+`gatea_A5.sh` `2a8521b66eef00a58b1cde07342dcf812a3d1640d5b439f567512d944c604066`, test
+`a32f85fc3ab9341029c31627876346db19e0c4704de9a317f181371c9ee2aa22`, README
+`bdd638475bb971bfbafd8bb877b5d3ccb5e6922d18b9dbbf2ebcca104f6ce727`.
+
+**The regression test (design).** `test_gatea_A5_readiness.py`, standard library only,
+`--script <path>`, local-only, never run on staging and never executing the Gate-A script. It
+extracts the script's **real** `retry` and combined-readiness function definitions and runs them
+under `bash -s` in a private temp dir against stubs (systemd active immediately; listener absent
+for the first attempts then present; API exact only when ready), with `sudo`/`systemctl`/`ss`/
+`journalctl`/`curl`/`wget`/`nc`/`sqlite3` shadowed by FORBIDDEN-marker aborts. 13 named checks:
+2 static (`bash -n`; every `<<'PYEOF'` heredoc `compile()`s), 5 structural (exactly one explicit
+start; the first post-start `retry` is bounded at 30 and targets a function requiring all three
+checks; each check short-circuits to `return 1`; both final post assertions still run after the
+readiness retry; no bare `sleep` used as the proof), and 6 behavioural (delayed readiness
+succeeds on attempt 3; the retry really waited; per-attempt noise suppressed; **always-missing
+listener times out** under a small test-only bound; listener-up-but-API-not-exact times out; no
+forbidden command invoked) **plus a negative control** proving the same real `retry` with a
+synthetic active-only readiness function *would* have passed — so the timeout results cannot be a
+broken harness.
+
+**Next (in order; `[AI: Claude]`).** 1) **Produce the D026 evidence first** — run the §8 RED and
+GREEN commands plus `bash -n` and `py_compile`, and record real commands/exit codes/output; if
+GREEN fails, fix the code, never the test. 2) **Lead independently inspect the actual E diff and
+files** and reproduce the RED/GREEN, syntax, compile, CR and byte/hash evidence. 3) **Fresh
+canonical audits** — `claude-opus-5` xhigh **and** `gpt-5.6-sol` xhigh, new independent sessions;
+D025 binds (non-execution ⇒ BLOCK; any reproduced required finding is binding; max 3 rounds);
+this is a **new runtime-defect repair unit** not covered by the three prior D source-review
+rounds. 4) **Only after an accepting audit:** package from **raw committed blobs**
+(`git cat-file blob`, never a bare `git archive` on Windows — that exported CRLF and was rejected
+in the D round), verify LF/CR-0/hashes/bytes/member set/tar identity, transfer and extract to the
+**new** remote path, re-verify. 5) **Rerun A-5 (E) only**, once, evidence log confirmed absent;
+preserve D evidence; **stop on first genuine FAIL**; **A-6 remains blocked** until A-5 PASSES and
+memory is updated. Hard exclusions unchanged: no credentials, broker/exchange, successful ARM,
+orders, TESTNET/mainnet, wallet, master merge, or economic action. Ordered actions:
+`_AI_MEMORY/NEXT_STEPS.md`.
+
+---
+
 ## [GLM-5.2] 2026-08-09 — Gate A A-5 FAIL: post-start readiness race; staging remains safe
 
 **Bounded documentation checkpoint by GLM-5.2 — records the Lead-performed A-5 staging execution +
