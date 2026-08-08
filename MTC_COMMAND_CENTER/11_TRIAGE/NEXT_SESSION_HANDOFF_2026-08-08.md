@@ -1,5 +1,81 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ NEWEST CHECKPOINT — GLM-5.2 bounded documentation: Gate A A-4 PASS; seven conditions evidenced (2026-08-08)
+>
+> **Supersedes the A-3 postcheck block below as live state.** Lead verdict: **Gate A A-4 PASS under Addendum
+> D** (§D.4 / §C.4). Gate A is **IN PROGRESS through A-4**; **A-5–A-9 NOT RUN** (first-FAIL rule). Candidate
+> `2ce41e34…` and the product/artifact are **unchanged** by this unit; candidate acceptance, D025
+> acceptance, and the repair-round count unaltered. No pytest rerun. Full record:
+> `11_TRIAGE/GATE_A_A4_PASS_2026-08-08C.md`. Ordered actions: `_AI_MEMORY/NEXT_STEPS.md`.
+>
+> **Worker scope (accurate).** GLM-5.2 **only edited documentation** (the four files named in the task). The
+> A-4 staging execution and the read-only on-disk diagnostics recorded here were **authorized staging actions
+> performed earlier** under the owner-approved preregistered `gatea-staging` rerun sequence and their results
+> were **Lead-verified before this checkpoint** — this is **not** "no staging action or diagnostic results
+> occurred"; they did, within the authorized boundary, and the GLM worker recorded rather than performed or
+> mutated them. No product/artifact change; no install mutation, credential, broker/exchange access,
+> successful ARM, orders, TESTNET/mainnet, master merge, or economic action.
+>
+> **Main A-4 execution (run-kit C `gatea_A4.sh`, SHA-256 `78aa7fca…fd9b4`).** Main log
+> `/home/gatea/gatea-A4-20260808C.log`, SHA-256
+> `19ed99773ca8dbfb84bfc6a93289daf4077419dd6d46c23343f5d4cfbf007c06`, `10152` B; script exit `0` bound to
+> the step-8 refusal-probe exit `0`. Service start exit `0`; active/running PID `183225`; unit static;
+> resolved running `Environment=` exactly includes `MTC_BRIDGE_STATE_DB=/var/lib/mtc-bridge/bridge.db` and
+> `MTC_BRIDGE_START_MODE=credential_free_disarmed`; env file remained empty / no credentials. Listener
+> exactly local `127.0.0.1:8790`; no non-loopback listener. GET `/api/status` 200: state `DISARMED`, mode
+> `credential_free_disarmed`, network/exchange_conn/credential_lookup disabled, `exchange_enabled=false`,
+> `arm_enabled=false`, `state_version=1`. All fail-closed preconditions passed before POST; POST `/api/arm`
+> with `X-Confirm: 1` returned application HTTP **409**, exact body `ARM unavailable in credential-free
+> DISARMED start mode; exchange access is disabled`; post GET remained identical `DISARMED`, `state_version`
+> unchanged `1`. No broker attempt in journal, `/var/log/mtc-bridge/bridge.err.log`, or outbound sockets;
+> errlog only normal Uvicorn startup, SHA-256
+> `179d162d67d0aa48e66fe51cb1ca7184bf6cff2d759ce74807417f27d71d0f24`, `199` B.
+>
+> **Main-script evidence defect and Lead closure.** The main script's step 0 and step 10 nested
+> `sudo bash -c` SQLite commands had shell-quoting syntax errors, so the main script could not itself
+> harvest its planned pre/post SQLite meta reads — a run-script evidence-harvesting defect, not a candidate
+> defect; the step-8 refusal probe (gate-critical) and other steps are unaffected. The Lead therefore **did
+> not accept A-4 from the main exit alone** and obtained canonical read-only evidence instead. `dbdiag3`
+> closes the required post-attempt persisted-DB evidence; `postdiag2` separately closes the pre-POST
+> timing gap for listener/sockets/logs/environment/API. A-4 PASS rests on the main log **plus** those two
+> canonical clean read-only logs.
+>
+> **Canonical read-only diagnostics (helper defects superseded; non-accepting/noncanonical logs preserved).**
+> Canonical DB log `/home/gatea/gatea-A4-dbdiag3-20260808C.log`, SHA-256
+> `530f846c7fc2f4f50de6a13eecd2274726b32947082dfcbf9ffaa12baef8a5c8`, `497` B: active; WAL/SHM present; meta
+> exactly `app_state=DISARMED` / `schema_version=4`; `PRAGMA quick_check=ok`; PASS; rc `0`. Canonical post
+> log `/home/gatea/gatea-A4-postdiag2-20260808C.log`, SHA-256
+> `ed06554cf93951921b15d378b9c2ac01f019c7c58815942cdf561e5168672183`, `1111` B: active; running env exact;
+> local-address column exactly `127.0.0.1:8790`; journal/errlog/outbound broker hits all `0`; API exact
+> credential-free `DISARMED`, `state_version=1`; failures `0`, rc `0`. Superseded helper logs preserved:
+> dbdiag `2c31405659ace6c2acb0d5f21e02fbd9761ecfefc9ad44a35d523664c686cf08` (`558` B, falsely expected stale
+> schema `2`, exited `1`); dbdiag2 `b4488d46559610c532e93b044fbb3073905fc330f102e1fe2b3aae502a411341`
+> (`497` B, accepted schema `4` but PASS line said schema `2`, noncanonical); postdiag
+> `043d59017eea1887943ce41bfbdb45d17a1d83bd6a2a806df411433d6f39bfb6` (`1079` B, misread `ss` peer
+> `0.0.0.0:*` as local exposure, exited `1`).
+>
+> **Seven-condition map — all hold, each with primary evidence plus independent read-only confirmation.**
+> (1) active/running PID `183225` (main + postdiag2); (2) `127.0.0.1:8790` only (main + postdiag2
+> local-address); (3) `GET /api/status` durably `DISARMED` (main pre/post + postdiag2); (4) application
+> HTTP `409` refusal, not connection-refused (main step-8 probe, exit `0`); (5) no broker attempt (main +
+> postdiag2); (6) persisted `app_state=DISARMED`, `state_version=1` unchanged (main pre/post GET + dbdiag3);
+> (7) resolved start mode `credential_free_disarmed` recorded (main `Environment=` + postdiag2). The helper
+> defects are run-script-only; no criterion went unobtained.
+>
+> **State.** The service **intentionally remains active/static**, loopback-only, credential-free `DISARMED`,
+> `state_version=1`, no broker connection, no credentials — the prerequisite for the A-5 unclean-restart
+> test. Existing authorization covers preregistered A-5–A-9 only; hard exclusions unchanged (credentials,
+> broker/exchange access, successful ARM, orders, TESTNET/mainnet, master merge, economic action).
+>
+> **Next step only:** `[AI: Claude]` first recover the exact A-5–A-9 commands from the canonical runbook and
+> addenda and preregister a bounded command/evidence plan (do not improvise protected tests); then execute
+> **A-5 first** (unclean kill/restart; state/DB consistency / `DISARMED`), stopping at first FAIL — on
+> failure preserve evidence, stop+mask the service safely, and write result/memory, on PASS update
+> `_AI_MEMORY` before A-6. `[AI: Any]` preserve old `GATE_A_RESULT_2026-08-08.md`; final rerun record
+> `GATE_A_RESULT_2026-08-08B.md`.
+>
+> ---
+
 > ## ▶ NEWEST CHECKPOINT — GLM-5.2 bounded documentation: run-kit C transferred; A-3 retained-log postcheck PASS (2026-08-08)
 >
 > **Supersedes the C-freeze "next unit" below as live state.** The next unit defined there (transfer the

@@ -1,5 +1,46 @@
 # NEXT_STEPS
 
+## GATE A — A-4 PASS (run-kit C); seven conditions evidenced; A-5 first next (2026-08-08)
+
+**Bounded documentation checkpoint by GLM-5.2 — records the already-executed, already-Lead-verified A-4
+step.** GLM-5.2 **only edited documentation** (the four files named in the task). The A-4 staging execution
+and the read-only on-disk diagnostics recorded here were **authorized staging actions performed earlier**
+under the owner-approved preregistered `gatea-staging` rerun sequence and their results were
+**Lead-verified before this checkpoint** — this is **not** "no staging action or diagnostic results
+occurred"; they did, within the authorized boundary. Lead verdict: **Gate A A-4 PASS under Addendum D**
+(§D.4 / §C.4). Gate A is **IN PROGRESS through A-4**; **A-5–A-9 NOT RUN**. Candidate `2ce41e34…` and the
+product/artifact are unchanged; no pytest rerun; candidate acceptance, D025 acceptance, and the
+repair-round count unaltered. No product/artifact change; no credential, broker/exchange access, successful
+ARM, orders, TESTNET/mainnet, master merge, or economic action. Full record:
+`11_TRIAGE/GATE_A_A4_PASS_2026-08-08C.md`.
+
+A-4 PASS rests on main log `/home/gatea/gatea-A4-20260808C.log` (SHA-256
+`19ed99773ca8dbfb84bfc6a93289daf4077419dd6d46c23343f5d4cfbf007c06`, `10152` B, script exit `0` bound to
+the step-8 application-refusal probe exit `0`) **plus** two canonical clean read-only logs: DB
+`/home/gatea/gatea-A4-dbdiag3-20260808C.log` (`530f846c…8a5c8`, `497` B; meta exactly
+`app_state=DISARMED` / `schema_version=4`; `PRAGMA quick_check=ok`; PASS; rc `0`) and post
+`/home/gatea/gatea-A4-postdiag2-20260808C.log` (`ed06554c…72183`, `1111` B; local-address exactly
+`127.0.0.1:8790`; broker hits `0`; API `DISARMED` / `state_version=1`; rc `0`). The main script's step 0
+and step 10 nested `sudo bash -c` SQLite quoting errors and the dbdiag/dbdiag2/postdiag helper
+false-negatives are run-script-only defects; each missing/false-negative check was reproduced and replaced
+by a canonical clean read-only log — no criterion went unobtained. All seven conditions hold.
+
+- **[AI: Claude] PREREGISTER A-5–A-9 BEFORE EXECUTION.** Recover the exact A-5–A-9 commands from the
+  canonical runbook and addenda and preregister a bounded command/evidence plan. Do not improvise protected
+  tests.
+- **[AI: Claude] EXECUTE A-5 FIRST — STOP AT FIRST FAIL.** A-5 is the unclean kill/restart test (state/DB
+  consistency / `DISARMED`). On PASS update `_AI_MEMORY` before A-6. On failure preserve evidence, stop+mask
+  the service safely, and write result/memory.
+- **[AI: Any] RESULT DOCUMENT.** Preserve old `GATE_A_RESULT_2026-08-08.md`; the final rerun record will be
+  `GATE_A_RESULT_2026-08-08B.md`.
+- **[AI: Any] STATE.** The service **intentionally remains active/static**, loopback-only, credential-free
+  `DISARMED`, `state_version=1`, no broker connection, no credentials — the prerequisite for the A-5
+  unclean-restart test. Existing authorization covers preregistered A-5–A-9 only; hard exclusions unchanged
+  (credentials, broker/exchange access, successful ARM, orders, TESTNET/mainnet, master merge, economic
+  action).
+
+---
+
 ## GATE A — run-kit C transferred; A-3 retained-log postcheck PASS (2026-08-08)
 
 **Bounded documentation checkpoint by GLM-5.2 — records the executed next unit of the run-kit C
