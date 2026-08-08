@@ -1,5 +1,19 @@
 # NEXT_STEPS
 
+## GATE A — Codex REQUEST_CHANGES reproduced; final repair round 3 next (2026-08-09)
+
+The executable Codex xhigh audit ran D RED/E GREEN 28/28 and found one required boundary defect:
+after a successful bounded probe, E records a new monotonic time but returns success even when that
+time is past the deadline. Lead reproduced exact frozen behavior with budget 1s and readings
+`0,0,11`: SUCCESS, elapsed 11ds, rc0. Finding is binding.
+
+**Next:** Claude Opus 5 final repair round 3: reject post-probe success beyond deadline; add a
+focused D026 boundary RED/GREEN test; preserve every existing check and safety property; update
+records. Then Lead re-audit and fresh canonical audits. No integration/package/transfer/staging.
+A-5 FAIL; A-6..A-9 NOT RUN. A further non-accepting source verdict after round 3 is a hard stop.
+
+---
+
 ## GATE A — Codex audit rerun 2 still environment-BLOCKED; unsandboxed read-only-intent rerun next (2026-08-09)
 
 Codex xhigh rerun at clean detached `C:\GAEAX2` gained writable temp/pycache but its subprocess

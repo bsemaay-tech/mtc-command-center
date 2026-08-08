@@ -1,5 +1,17 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ NEWEST CHECKPOINT — Codex boundary finding reproduced; final repair round 3 (2026-08-09)
+>
+> Fresh unsandboxed-command/read-only-intent Codex xhigh executed D RED, E GREEN 28/28, syntax,
+> compile, diff review and clean status, then returned REQUEST_CHANGES. E's successful-probe branch
+> reads monotonic time but returns success even when it is past the deadline. Lead reproduced exact
+> frozen behavior with 1s budget/readings `0,0,11`: SUCCESS, elapsed 11ds, rc0. **Next:** Claude Opus
+> 5 final repair round 3; reject late success and add focused D026 RED/GREEN while preserving every
+> existing check. Then Lead and fresh canonical re-audits. No integration/package/transfer/staging.
+> A-5 FAIL; A-6..A-9 NOT RUN. A further non-accepting source verdict is a hard stop.
+>
+> ---
+
 > ## ▶ NEWEST CHECKPOINT — Codex audit rerun 2 still environment-BLOCKED (2026-08-09)
 >
 > Fresh Codex xhigh at clean detached `C:\GAEAX2` could use writable temp/pycache, but the Codex

@@ -1,5 +1,16 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-08-09 — Gate A E boundary defect reproduced; final repair round 3
+
+Fresh Codex xhigh finally executed all mandatory evidence and returned REQUEST_CHANGES: E's
+successful-probe branch never checks whether its post-probe monotonic reading crossed the deadline.
+Lead reproduced exact frozen behavior at 1s with readings `0,0,11`: SUCCESS at 11ds, rc0. This is a
+binding source defect. Final repair round 3 goes to Claude Opus 5 with a D026 boundary RED/GREEN
+test, preservation of all existing checks, and no integration/staging authority. A-5 remains FAIL;
+A-6..A-9 NOT RUN. Any later non-accepting source verdict is the three-round hard stop.
+
+---
+
 ## [Codex GPT-5.6-sol] 2026-08-09 — Gate A E Codex rerun 2 still environment-BLOCKED
 
 Fresh xhigh audit `C:\GAEAX2` at `61d88f12` could write temp/pycache but Codex's subprocess removed

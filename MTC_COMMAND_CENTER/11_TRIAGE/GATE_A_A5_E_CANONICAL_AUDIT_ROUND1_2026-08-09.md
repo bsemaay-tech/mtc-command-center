@@ -1,5 +1,29 @@
 # Gate A A5 E — canonical audit round 1 (2026-08-09)
 
+## Audit rerun 3 — REQUEST_CHANGES; Lead reproduced boundary defect (newest)
+
+Fresh unsandboxed-command, read-only-intent Codex `gpt-5.6-sol` xhigh at detached `C:\GAEAX3`
+executed mandatory D RED, E GREEN 28/28, Bash syntax, external-cache pycompile, source/diff review,
+and clean-worktree proof. Verdict: **REQUEST_CHANGES** on one required source finding.
+
+At `GATE_A_RUN_KIT_E_2026-08-09/gatea_A5.sh:332-335`, a successful bounded probe causes a new
+monotonic read and unconditional success; it never rejects a post-probe `now` beyond `deadline`.
+Lead reproduced against the frozen committed function with a 1-second budget and readings
+`0, 0, 11`: `BOUNDARY_RESULT=SUCCESS`, `BOUNDARY_ELAPSED_DS=11`, `HARNESS_rc=0`. The worktree stayed
+clean. The finding is binding: E can claim readiness after its hard deadline.
+
+**Final repair round 3:** after a successful probe, read monotonic time, record elapsed, and return
+failure if the deadline has been exceeded before returning success. Add a focused boundary
+regression that is RED against exact `61d88f12` behavior (or an equivalent verbatim mutation) and
+GREEN with the repair; preserve all existing tests and safety assertions. Update evidence and
+current memory. Then Lead re-audits and fresh canonical audits repeat. Any further non-accepting
+source verdict after this final repair round is a hard stop under the three-round bound.
+
+Report: `C:\WPI_ARTIFACTS\gatea-e-audit-codex-round3.md`; Lead harness:
+`C:\WPI_ARTIFACTS\gatea-e-boundary-repro.sh`.
+
+---
+
 ## Audit-environment rerun 2 — still BLOCK (newest)
 
 Fresh Codex `gpt-5.6-sol` xhigh at detached `C:\GAEAX2`, still frozen at `61d88f12`, had writable
