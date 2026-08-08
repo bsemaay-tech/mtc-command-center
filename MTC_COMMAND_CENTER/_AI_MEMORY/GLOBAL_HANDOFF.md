@@ -1,5 +1,54 @@
 # GLOBAL_HANDOFF
 
+## [GLM-5.2] 2026-08-08 — Corrected Gate A run-kit C frozen
+
+**Bounded documentation checkpoint by GLM-5.2 — evidence-checker repair only.** This freezes the
+corrected A-3 run-script checker as run-kit **C** and records it. It **does not alter candidate
+acceptance, the product bits, the artifact, D025 acceptance, or the repair-round count.** Run-kit B is
+preserved unchanged; C differs only in the corrected A-3 checker (`gatea_A3.sh`) and the README — the
+other five scripts are byte-identical to B. No transfer or remote execution is claimed: the C bundle
+was frozen and validated locally only and the checker has **not** been re-run on staging. No code,
+scripts, artifacts, results, staging action, transfer, commit, push, or git mutation occurred. Full
+record: `11_TRIAGE/GATE_A_LOCAL_RUN_KIT_2026-08-08C.md` (cites the B record and the A-3 checkpoint).
+Ordered actions: `_AI_MEMORY/NEXT_STEPS.md`.
+
+**Frozen run-kit C bundle (local, not transferred):** directory + tar
+`C:\WPI_ARTIFACTS\gatea-run-kit-20260808C-2ce41e34(.tar)`; tar SHA-256
+`4ee5ba920800ceff8f55338bcba5b388d39d2457f9970795af89c9333767f855`; tar bytes `53760`; exact 9 members
+(root dir + `README.txt`, `SHA256SUMS`, six scripts); 7 manifest entries. Corrected `gatea_A3.sh`
+SHA-256 `2bfec1c230d77d70f30bda5560f824fe970b4c2fca098d3fdda49129f2465d1c`, `5087` bytes (was B
+`33934221…604443` / `4064`). README SHA-256 `47278c48e1e183c15013be583279dcec0e82db88174427e53ba8906fccd12883`.
+Five unchanged script hashes: A0_A1 `0d456a8e…f1c11`, A2 `07a715aa…c053`, A4 `78aa7fca…fd9b4`,
+A4_diag `f75912a2…f101d`, teardown `19016d8f…c0b3`.
+
+**Independent local validation of the frozen C tar:** extracted to a unique disposable `C:\tmp`
+directory → 8 files, 7 manifest entries; `sha256sum -c` all OK; six `bash -n` rc `0`; every shell 0 CR
+bytes; corrected A-3 checker falsification RED/GREEN `10 passed, 0 failed`, rc `0`. Cleanup of the
+disposable `C:\tmp\gatea-c-verify-929e34808c0e47699d8964f879309072` was blocked by local command policy
+after exact path verification; it remains isolated under `C:\tmp`, is **not** in either tar, is **not**
+in the repo, and was not removed.
+
+**State unchanged by this C freeze unit:** candidate `2ce41e34…` accepted; product/artifact/staging
+install not modified during this unit; Gate A IN PROGRESS through A-3; A-4 not started; current
+accepted `2ce41e34` install masked/inactive/not enabled, no listener, no credentials. No host contact,
+teardown, install, service start, credential, broker/exchange access, ARM, order, TESTNET/mainnet,
+master merge, or economic action occurred **in this C freeze unit** — this scopes only the C unit; A-0
+through A-3 of the overall rerun did run on `gatea-staging` (see the A-3 rerun checkpoint below). The
+owner already explicitly authorized the preregistered `gatea-staging` teardown/rerun sequence, so no
+additional authorization is required to transfer run-kit C, run the retained-log A-3 postcheck, or run
+A-4 within that sequence; hard exclusions remain (credentials, broker/exchange access, successful ARM,
+orders, TESTNET/mainnet, master merge, economic action).
+
+**Next unit (precise):** (1) transfer run-kit C tar only to
+`/home/gatea/gatea-run-kit-20260808C-2ce41e34.tar`; verify hash/bytes/9-member set; extract to
+`/home/gatea/gatea-run-kit-20260808C-2ce41e34`; `sha256sum -c` + six `bash -n`. **Do not replace/delete
+B.** (2) Re-check A-3 without rerunning pytest: against `/home/gatea/gatea-A3-suite-20260808B.log`
+require last non-empty line to match the corrected anchored optional-elapsed regex; require
+`/home/gatea/gatea-A3-20260808B.log` to contain exact line `pytest rc=1`; require exact two-way equality
+between observed `FAILED ` node-ID lines and the two permitted gc-referents failures; preserve output
+at `/home/gatea/gatea-A3-postcheck-20260808C.log` — any mismatch is Gate A FAIL, else A-3 checker PASS.
+(3) Update `_AI_MEMORY` before A-4. (4) Run A-4 exactly under Addendum D, stop at first FAIL.
+
 ## [GLM-5.2] 2026-08-08 — Gate A rerun checkpoint through A-3
 
 **Bounded documentation checkpoint by GLM-5.2 — not an implementation or audit.** The exact Claude
