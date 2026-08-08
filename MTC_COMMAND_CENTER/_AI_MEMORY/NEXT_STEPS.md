@@ -1,5 +1,71 @@
 # NEXT_STEPS
 
+## GATE A — A-5 FAIL (run-kit D): reproduced post-start readiness race; staging safe; protected run-kit repair next (2026-08-09)
+
+**Bounded documentation checkpoint by GLM-5.2 — records the Lead-performed A-5 staging execution +
+read-only diagnostics only.** A-5 ran exactly once from
+`/home/gatea/gatea-run-kit-20260808D-2ce41e34/gatea_A5.sh` over the preregistered key-only SSH route
+and returned a genuine **exit `1`** (elapsed about `4.7 s`). **Verdict (honest): A-0..A-4 PASS ·
+A-5 FAIL · A-6..A-9 NOT RUN.** The frozen script's `wait_active` returned on systemd-active and then
+immediately asserted the post-start loopback listener, which the application had not yet bound
+(`listener_count=0` → `RESULT=FAIL` → `A5_FAIL reason=post listener not loopback-only`; trap `rc=1`).
+A-5 **cannot be promoted to PASS** from later diagnostics. **Lead diagnosis: reproduced run-kit
+readiness-race defect** — the kit lacks a bounded application-readiness wait after the explicit
+`start`; it is **not** a product persistence/DISARMED invariant failure (store stayed `DISARMED` /
+`schema_version=4`, counts unchanged, `state_version=1`, unit reached `Result=success`, listener came
+up loopback-only). Full standalone record:
+`11_TRIAGE/GATE_A_A5_FAIL_2026-08-09D.md`.
+
+**Evidence identity (exact):**
+- Remote evidence log `/home/gatea/gatea-A5-20260808D.log`; local preserved copy
+  `C:\WPI_ARTIFACTS\gatea-A5-20260808D.log`; both SHA-256
+  `3e282516dfea7e66d9196ad5f3d929b7d1a50257bae501a5b89c35e007eb31c9`, `1933` bytes; remote mode
+  `664`, owner/group `gatea`.
+- Independent preflight immediately before A-5 PASS: evidence log absent; `gatea_A5.sh: OK` vs
+  `SHA256SUMS`; service active/static, `Restart=no`, `MainPID=183225`, `NRestarts=0`,
+  `Result=success`, `ExecMainStatus=0`; listener exactly `127.0.0.1:8790`; API HTTP 200 exact
+  credential-free DISARMED, mode `credential_free_disarmed`, `state_version=1`,
+  network/exchange_conn/credential_lookup disabled, `exchange_enabled=false`, `arm_enabled=false`;
+  DB `quick_check=ok`, `app_state=DISARMED`, `schema_version=4`.
+- A-5 in-script: all pre-checks PASS; frozen authorized SIGKILL
+  (`sudo systemctl kill --kill-whom=main --signal=SIGKILL mtc-bridge-first-start.service`); dead-window
+  proof PASS (MainPID0, old PID gone, 3 s wait, ActiveState failed, no listener, NRestarts 0,
+  Result signal, ExecMainStatus 9); exactly one `reset-failed`+`start`; post `MainPID=187338`,
+  `NRestarts=0`, `Restart=no`; then the failing post-start listener check (`listener_count=0`).
+- Independent post-failure verification a few seconds later PASS: unit loaded/static, active/running,
+  `MainPID=187338`, `Restart=no`, `NRestarts=0`, `Result=success`, `ExecMainCode=0`,
+  `ExecMainStatus=0`; listener count 1 exactly `127.0.0.1:8790`, non-loopback 0; API exact
+  credential-free DISARMED, same `state_version=1` and disabled fields; DB `quick_check=ok`,
+  `app_state=DISARMED`, `schema_version=4`, exact same table counts as preflight;
+  `POSTFAIL_SAFE_STATE=PASS`. Because staging was independently proven safe, active, loopback-only,
+  credential-free DISARMED, and DB-consistent, **the conditional stop/mask response was not required
+  and was not performed.**
+
+**Next steps contract — protected run-kit repair (`[AI: Claude]`):**
+
+- **[AI: Claude] REPAIR A-5 IN A NEW RUN-KIT REVISION** (do not mutate the preserved remote D
+  kit/log `/home/gatea/gatea-A5-20260808D.log`): add a bounded post-start readiness wait requiring
+  systemd active **plus** loopback listener **plus** exact credential-free DISARMED API before the
+  final assertions.
+- **[AI: Claude] APPLY D026** (`AGENTS.md`): demonstrate RED against the exact readiness-race
+  behavior or an equivalent deliberate falsification/mutation, then GREEN with the fix; record
+  commands and real output.
+- **[AI: Claude] INDEPENDENT AUDIT** of the actual repair and protected surface under the canonical
+  roster / Lead acceptance rules — this is a new runtime-defect repair unit; the prior three
+  source-review rounds do **not** count as testing this runtime defect.
+- **[AI: Claude] PREREGISTER / PACKAGE / TRANSFER A NEW REVISION** with a new evidence-log identifier
+  (for example revision E); verify hashes/bytes/LF/member set before any rerun. **Do not overwrite D
+  evidence.**
+- **[AI: Claude] RERUN A-5 ONLY** after the repaired revision is accepted and staged; **stop again on
+  any genuine FAIL.** **A-6 remains blocked** until A-5 passes and memory is updated.
+- **[AI: Any] STATE.** Candidate `2ce41e34…` and the product/artifact unchanged; no gate result
+  beyond A-0..A-4 PASS and A-5 FAIL. Hard exclusions unchanged: no credentials, broker/exchange
+  access, successful ARM, orders, TESTNET/mainnet, wallet, master merge, or economic action. The
+  service remains active/static, loopback-only, credential-free DISARMED, `state_version=1`, no
+  broker/credentials.
+
+---
+
 ## GATE A — run-kit D packaged, transferred, extracted, and verified; A-5 first next (2026-08-09)
 
 **Bounded documentation checkpoint by GLM-5.2 — records the Lead-performed package/transfer/verify
