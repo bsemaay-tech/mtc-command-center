@@ -2,7 +2,7 @@
 
 > **Scope.** This file is an **operational index**: which account home, which wrapper, which credential *source name*. It is **not** a policy table. `AGENTS.md` remains the canonical authority for the audit roster, model tiers, protected-surface restrictions, and token discipline. Where the two ever disagree, `AGENTS.md` wins.
 
-> **⚠️ USAGE FIGURES ARE A TIME-STAMPED SNAPSHOT — 2026-08-02.** Every "% remaining", plan tier, and reset time below was true only at the moment it was written. Quota moves continuously and rolls over on its own schedule. **Never route a task on the strength of a number in this file. Re-check the live account before you spend it** — via the account's live usage/dashboard view in the provider console. (`login status` does **not** report quota; see §1.) Treat a stale number as unknown, not as headroom.
+> **⚠️ USAGE FIGURES ARE A TIME-STAMPED SNAPSHOT — 2026-08-08.** Every "% remaining", plan tier, and reset time below was true only at the moment it was written. Quota moves continuously and rolls over on its own schedule. **Never route a task on the strength of a number in this file. Re-check the live account before you spend it** — via the account's live usage/dashboard view in the provider console. (`login status` does **not** report quota; see §1.) Treat a stale number as unknown, not as headroom.
 
 > **No secrets here, ever.** This file names credential *sources* (Windows Credential Manager target names, environment variable names) and nothing else. Never store, echo, paste, or log a token, key, or `auth.json` value into this repo. The launcher does not read `auth.json`; neither should you.
 
@@ -14,18 +14,19 @@ Account identity is selected **only** by the process-scoped `CODEX_HOME` environ
 
 The **home → account** mapping in the table below is a **recorded setup fact** (how these homes were provisioned). It is *not* re-proven by any command in this file; treat it as documentation that can drift, and re-establish it out of band if it matters.
 
-| Route | `CODEX_HOME` | Account | Plan | Remaining (2026-08-02 snapshot) | Use |
+| Route | `CODEX_HOME` | Account | Plan | Status (2026-08-08 snapshot) | Use |
 |---|---|---|---|---|---|
-| **desktop / default** | `C:\Users\BarışSemaay\.codex` | `bs***y3@gmail.com` | Plus | 72% | **Reserved for the Codex desktop/app side.** Not selectable from the launcher. |
-| **secondary** ✅ | `C:\Users\BarışSemaay\.codex-hesap2` | `bs***y4@gmail.com` | Plus | 99% | **Claude's default Codex CLI route.** |
-| **free** ✅ | `C:\Users\BarışSemaay\.codex_OLD` | `bs***y2@gmail.com` | **Plus** (upgraded 2026-08-08 — the label "free" is now only a route name) | available 2026-08-08 | **Verified flagship-capable 2026-08-08.** `login status` = logged in; a live probe returned header `model: gpt-5.6-sol / reasoning effort: xhigh` and completed. Carried the whole binding D025 flagship audit of `ebada020`. The rule below still applies to every future run: probe first, **never silently downgrade the model or effort, and never substitute a different model** for a mandated one. |
-| **fourth** | `C:\Users\BarışSemaay\.codex-bsemaay` | `bsemaay@gmail.com` | Plus | **0%** until reset **2026-08-08 08:49 local** | Isolated home directory exists; **browser/device authorization was still pending when this file was written.** The wrapper supports the route, but it is not a verified logged-in route. |
+| **desktop / default** | `C:\Users\BarışSemaay\.codex` | `bs***y3@gmail.com` | Plus | Authenticated (owner probe 2026-08-08) | **Reserved for the Codex desktop/app side.** Not selectable from the launcher. |
+| **secondary** ✅ | `C:\Users\BarışSemaay\.codex-hesap2` | `bs***y4@gmail.com` | Plus | Authenticated (owner probe 2026-08-08) | **Claude's default Codex CLI route.** |
+| **free** ✅ | `C:\Users\BarışSemaay\.codex_OLD` | `bs***y2@gmail.com` | **ChatGPT Pro ($100/mo)** — owner-confirmed upgrade 2026-08-08; route name `free` is historical only | Authenticated (owner probe 2026-08-08) | **Usable, but coordinate before large dispatches.** The owner actively uses this same Pro account in the Codex Windows desktop app, so heavy CLI spend on this route competes directly with the owner's desktop usage. The rule below still applies to every future run: probe first, **never silently downgrade the model or effort, and never substitute a different model** for a mandated one. |
+| **fourth** | `C:\Users\BarışSemaay\.codex-bsemaay` | `bsemaay@gmail.com` | Plus | Authenticated and usable (owner probe 2026-08-08) | Isolated launcher route; default remains `secondary`. |
 
-> **Correction 2026-08-08 — this table said `free` was plan Free. It is not, and two other things here can mislead:**
+> **History correction 2026-08-08 — dated status superseded by owner confirmation:**
 >
-> 1. **The account was upgraded to ChatGPT Plus**, so a "Free tier" reading of this route is wrong. `gpt-5.6-sol` at `xhigh` is proven live on it.
+> 1. `.codex_OLD` was recorded as Free and then corrected to Plus on 2026-08-08; the owner-confirmed current plan is **ChatGPT Pro ($100/mo)**, upgraded 2026-08-08. The route name `free` is historical only.
 > 2. **`models_cache.json` in a home is not evidence of model availability.** `.codex_OLD`'s cache still lists no `GPT-5.6-Sol` because it was written while the account was Free. **A live probe overrides the cache** — do not conclude a model is unavailable from a stale cache file.
-> 3. **`secondary` is the documented default but was credit-exhausted** by the 2026-08-03 overnight run. Do not route a mandated flagship there on the strength of the "99%" snapshot above; snapshots in this file are dated and must be re-checked, as §15 already warns.
+> 3. `.codex-bsemaay` was recorded as awaiting browser/device authorization on 2026-08-02; owner probe on 2026-08-08 confirmed it authenticated and usable.
+> 4. **`secondary` is the documented default but was credit-exhausted** by the 2026-08-03 overnight run. Do not route a mandated flagship there on the strength of an old snapshot; snapshots in this file are dated and must be re-checked, as the warning above states.
 
 ### Hard rules
 
@@ -81,10 +82,10 @@ Sets `CODEX_HOME` for the child invocation only, restores or removes the prior p
 # explicit secondary
 & "C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-CodexForClaude.ps1" -Account secondary login status
 
-# fourth (quota-reset / pending-auth route)
+# fourth (authenticated isolated route; owner-confirmed 2026-08-08)
 & "C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-CodexForClaude.ps1" -Account fourth login status
 
-# free fallback
+# historical `free` route name; owner-confirmed ChatGPT Pro 2026-08-08
 & "C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-CodexForClaude.ps1" -Account free --version
 
 # a real bounded run on the default route
@@ -111,6 +112,8 @@ To establish **identity or remaining quota**, use the live method instead — th
 
 Canonical GLM **model tiers and the cheapest-capable decision tree** live in `AGENTS.md` §GLM SUPPLEMENTAL ROUTING. Do not copy that table here. Do **not** ask for or paste a Z.AI key anywhere — the wrapper pulls it from Credential Manager and never prints it.
 
+**Current state (2026-08-08): WORKING.** Snapshot: 5-hour quota 0% used; weekly quota 51% used, resetting Aug 9 at 11:26; MCP quota 0% used, resetting Aug 26 at 11:26. The plan auto-renews Aug 26 at $16.20. Route remains `glm.ps1` plus Credential Manager target `ZAI_GLM_CODING_PLAN_KEY`.
+
 ---
 
 ## 3. Cline
@@ -122,6 +125,8 @@ Canonical GLM **model tiers and the cheapest-capable decision tree** live in `AG
 | Stronger reasoning | `cline-pass/deepseek-v4-pro` |
 
 Cline is **not a flagship substitute**. For audits it must run in an **isolated worktree** at the frozen SHA, and cleanliness must be proven afterwards (`git status --porcelain` empty). Implementation authority and the four-auditor acceptance rule remain as written in `AGENTS.md`.
+
+**Current state (2026-08-08):** the Cline CLI harness is installed and verified at version 3.0.51; it remains the first-choice sub-delegation harness per `AGENTS.md`. The separate ClinePass subscription is **PAUSED** because of an unpaid invoice and has 0 credits (owner-confirmed 2026-08-08), so it is not usable as capacity. Consequently D025 canonical auditor 3 (`cline-pass/deepseek-v4-flash`) is **BLOCKED** until the subscription is reactivated and a live probe passes. This does not mean the Cline harness itself is broken.
 
 ---
 
@@ -136,6 +141,8 @@ Cline is **not a flagship substitute**. For audits it must run in an **isolated 
 
 > Paths are repo paths. Do **not** hardcode a temporary worktree root (`C:\AIROUTE`, `C:\G5R`, …); resolve from the checkout you are working in, or from the canonical checkout above.
 
+**Current state (2026-08-08): WORKING.** Balance snapshot: approximately $2.90. Route remains `_deepseek_driver` with credential environment name `DEEPSEEK_API_KEY`.
+
 ---
 
 ## 5. Grok / xAI
@@ -148,6 +155,8 @@ Same driver as above.
 | Provider id | `grok` / `xai` |
 | Model | `grok-4` |
 | Credential **env name** | `XAI_API_KEY` |
+
+**Current state (2026-08-08): NOT USABLE.** A 2026-08-08 model-list probe returned HTTP 403 (access/key/project issue). Keep the configuration, but do not re-probe routinely until the owner repairs access.
 
 ---
 
@@ -177,7 +186,7 @@ Standalone TOML files — **templates / config snapshots**, recording the intend
 >
 > **Consequence:** using NVIDIA NIM is a *setup* task, not a copy-paste task. A future route must be **configured separately** — the intended config placed under a launcher-selectable `CODEX_HOME`, or expressed as `-c` overrides — and then **freshly probed end to end** (LiteLLM listener up on `http://localhost:4000`, intended model id answering) before anything is dispatched to it. Do not invent or guess a command; record the one that is proven to work, once one exists.
 
-**Last known result (2026-08-02 snapshot, re-verify):** the NVIDIA DeepSeek tool cycle passed; the MiniMax continuation hit **HTTP 429**.
+**Current state (2026-08-08):** NVIDIA NIM's direct API is **WORKING**; a 2026-08-08 probe listed approximately 100 models. The local LiteLLM proxy at `localhost:4000` is **DOWN**. The warning above remains controlling: there is still no verified end-to-end Codex-side launch command, so NIM use remains a setup task.
 
 ---
 
@@ -186,4 +195,43 @@ Standalone TOML files — **templates / config snapshots**, recording the intend
 - `AGENTS.md` is canonical for: audit roster, model tiers, protected-surface restrictions, token discipline. This file duplicates none of it.
 - Account selection is **process-scoped `CODEX_HOME` only**. No global env edits, no `codex login` juggling on a shared home.
 - **Never store or print token / key / `auth.json` values.** Name the credential source, never the secret.
-- Every usage number in §1 is a **2026-08-02 snapshot** and must be freshly checked before it is relied on.
+- Every usage number in §1 is a **2026-08-08 snapshot** and must be freshly checked before it is relied on.
+
+---
+
+## 8. Claude accounts (Pro + Max)
+
+| Account | Subscription state (2026-08-08) | CLI profile / isolation | Operational status (2026-08-08) |
+|---|---|---|---|
+| Claude Pro — `bsemaay@gmail.com` | Pro, approximately $20/mo; subscription active | Default profile at `%USERPROFILE%\.claude` is authenticated | Usable; its 5-hour quota window was exhausted at confirmation time and was expected to reopen within approximately two hours of the 2026-08-08 evening confirmation. |
+| Claude Max — `bsemaay3@gmail.com` | Separate Max account, approximately $100/mo; purchased 2026-08-08 | **Mandatory launcher:** `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-ClaudeMax.ps1`. It scopes `CLAUDE_CONFIG_DIR` to `C:\Users\BarışSemaay\.claude-max` for the child invocation and restores the prior value afterward; leak-restore fix applied 2026-08-08. | CLI verified usable through the isolated launcher on 2026-08-08. |
+
+Never authenticate Max into the default `.claude` profile, and never log the Pro profile out. A purchased/active subscription, a configured isolated CLI profile, and a verified working CLI route are distinct states; the table records each separately.
+
+---
+
+## 9. Installed local AI tooling & router decision (2026-08-08)
+
+### Verified local inventory
+
+- `cline` 3.0.51 (npm).
+- `opencode` (npm), installed but unvalidated as a worker harness.
+- `9router` (npm), installed but unconfigured.
+- `litellm` under `~\.local\bin`; its proxy is currently down.
+- Codex CLI and Claude CLI installed.
+- GLM wrapper at `C:\Users\BarışSemaay\bin\glm.ps1`; it is not on `PATH` as `glm`.
+- OmniRoute is **not installed**.
+
+### Other API routes
+
+- **OpenRouter — NOT USABLE (2026-08-08).** Effective balance is -$1.4393 ($10.00 purchased, $11.4393 used), so paid calls and likely free calls are blocked. Keep its configuration as a dormant future fallback; do not delete it.
+- **FreeModel — NOT READY (2026-08-08).** Pro runs until Sep 4 with manual renewal and no auto-charge, but the account is not verified. It is outside active routing.
+
+### Lead router decision (2026-08-08)
+
+OmniRoute, or any new aggregation router, will **not** be installed:
+
+1. Every premium subscription route (four Codex accounts, Claude Pro, Claude Max, and the GLM Coding Plan) is native-client-only. A third-party router cannot aggregate them without unsupported authentication behavior and Terms-of-Service risk.
+2. The only live API providers a router could pool are NVIDIA NIM direct and DeepSeek (approximately $2.90). Two providers do not justify a new always-on, key-holding daemon.
+3. Provider fallback already exists in the repository through `_deepseek_driver/provider.py` (`deepseek` / `grok` / `openrouter` with per-call fallback), Cline profiles, `glm.ps1`, and the allowlisted Codex launcher.
+4. `9router` and `litellm` stay installed but **DORMANT**. They are candidates for a future dedicated setup task only if a concrete gap is demonstrated, such as a NIM-backed worker harness. Reopening this decision requires a flagship-led evaluation; it is not the default.
