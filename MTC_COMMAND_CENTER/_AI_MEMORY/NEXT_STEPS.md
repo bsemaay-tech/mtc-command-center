@@ -1,5 +1,50 @@
 # NEXT_STEPS
 
+## GATE A — run-kit C transferred; A-3 retained-log postcheck PASS (2026-08-08)
+
+**Bounded documentation checkpoint by GLM-5.2 — records the executed next unit of the run-kit C
+checkpoint (evidence-checker repair only).** Does not alter candidate acceptance, the product bits, the
+artifact, D025 acceptance, or the repair-round count. No pytest rerun; no code/scripts/artifacts/results/
+staging action/commit/push/git mutation. Full record: `11_TRIAGE/GATE_A_LOCAL_RUN_KIT_2026-08-08C.md`
+(addendum).
+
+The two "next unit" actions from the section below (transfer run-kit C; re-check A-3 without rerunning
+pytest) are now DONE on `gatea-staging`. Transfer (B intact): tar SHA-256
+`4ee5ba920800ceff8f55338bcba5b388d39d2457f9970795af89c9333767f855`, `53760` B, exact 9 members at
+`/home/gatea/gatea-run-kit-20260808C-2ce41e34.tar`; extracted to
+`/home/gatea/gatea-run-kit-20260808C-2ce41e34`; 7 manifest entries; `sha256sum -c` all seven OK; six
+`bash -n` PASS; corrected remote `gatea_A3.sh`
+`2bfec1c230d77d70f30bda5560f824fe970b4c2fca098d3fdda49129f2465d1c` OK. A-3 postcheck PASS (no pytest
+rerun): retained `/home/gatea/gatea-A3-suite-20260808B.log` SHA-256
+`569e79c7d68623b9f2ad51ee48053a04e6938e3277398861760dc1dd8d61c848`; outer log exact `pytest rc=1`;
+terminal `2 failed, 1358 passed, 1 warning in 169.85s (0:02:49)` matches the corrected anchored
+optional-elapsed regex; observed failures exactly equal the two permitted `test_order_state.py`
+gc-referents node IDs both ways; failures `0`; `A-3 CHECKER PASS`. Canonical VM logs
+`/home/gatea/gatea-A3-postcheck-20260808C.log` and `…-clean.log`: both SHA-256
+`56a80d53155ac73b39dac064260ff702532fad36562eafbbe75f28c2f6414878`, `738` B, byte-identical.
+
+Transport noise recorded transparently (not concealed): the first PowerShell stdin stream inserted a BOM
+before the shebang and printed a harmless `#!/usr/bin/env` command error outside the captured log after
+the postcheck had already returned PASS (the captured log was clean); a second byte-preserving Git Bash
+replay to the separate clean log had no transport error and reproduced the same 738 bytes/hash/PASS.
+Clean-replay postcheck script `19003ef0…415f1`; runner `7a03c61d…6da16`; both `bash -n` rc `0`, 0 CR.
+
+- **[AI: Claude] EXECUTE A-4 UNDER ADDENDUM D — STOP AT FIRST FAIL.** Run the transferred C `gatea_A4.sh`
+  on `gatea-staging` and capture all seven conditions: active/running; loopback 127.0.0.1:8790 only;
+  status durably not ARMED; application-level exact credential-free 409 with correct `X-Confirm`; no
+  broker attempt in journal/`bridge.err.log`/sockets; persisted `DISARMED` and unchanged version;
+  resolved running environment/start mode. On failure run only read-only diagnostic as needed, then
+  stop+mask the service and write result/memory. On PASS update `_AI_MEMORY` before preregistering the
+  exact A-5–A-9 commands — do not improvise them.
+- **[AI: Any] RESULT DOCUMENT.** Preserve old `GATE_A_RESULT_2026-08-08.md`; later write
+  `GATE_A_RESULT_2026-08-08B.md`.
+- **[AI: Any] STATE.** After postcheck the service was reverified `inactive`/`masked`, listener 8790
+  absent, no credentials loaded. Gate A IN PROGRESS after accepted A-3; A-4 not started. Existing owner
+  authorization covers A-4 within the preregistered sequence; hard exclusions unchanged (credentials,
+  broker/exchange access, successful ARM, orders, TESTNET/mainnet, master merge, economic action).
+
+---
+
 ## GATE A — corrected A-3 checker frozen as run-kit C (evidence-checker repair only) (2026-08-08)
 
 **Bounded documentation checkpoint by GLM-5.2 — evidence-checker repair only, not an implementation or
