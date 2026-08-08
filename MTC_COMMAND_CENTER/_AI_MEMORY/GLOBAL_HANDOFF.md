@@ -1,5 +1,44 @@
 # GLOBAL_HANDOFF
 
+## [GPT-5 Codex] 2026-08-08 — A-4 repair `2ce41e34` ACCEPTED and packaged; Gate A rerun awaiting staging authorization
+
+**Supersedes the `[Claude Opus 5] 2026-08-08 (evening)` entry immediately below** (which records round-1
+`ed3d0534` as NOT ACCEPTED). That entry is preserved below as history.
+
+**RESUME HERE:** `11_TRIAGE/NEXT_SESSION_HANDOFF_2026-08-08.md` (current-state pickup at top), then
+`11_TRIAGE/GATE_A_DISARM_FIX_AUDIT_ROUND2_2CE41E34_2026-08-08.md` and
+`11_TRIAGE/GATE_A_PREREGISTRATION_ADDENDUM_D_2026-08-08.md`.
+
+The round-1 env-override defect is repaired. Candidate **`2ce41e34` is ACCEPTED under D025** as the repair
+candidate: `gpt-5.6-sol` xhigh **PASS**, `claude-opus-5` xhigh **PASS-WITH-NITS** (0 required), `GLM-5.2`
+**PASS** and executed the suite; DeepSeek V4 Flash returned a non-execution BLOCK (`No access to ClinePass
+subscription models yet.`) — supplemental per D025, no veto. Both flagships accept and no reproduced
+required finding remains.
+
+**The repair (4 files, 59 insertions):** `verify.sh` now rejects any `MTC_BRIDGE_START_MODE=` definition in
+`${MTC_ENV_FILE}` (the `EnvironmentFile=`-overrides-`Environment=` channel that defeated `ed3d0534`), a new
+behavior test proves the rejection, and the README/env template document that the variable is unit-set and
+must not be defined in the env file. Lead evidence: targeted `1 passed in 0.81s`, deployment file
+`48 passed in 12.57s`, full suite `1360 passed, 1 warning in 122.86s` (floor +1 — one new test function).
+D026 honored: two mutations independently RED, GREEN restored.
+
+**Artifact built and verified:** `C:\WPI_ARTIFACTS\2ce41e34bceb599d80af24c5c33d835820ec321b`, manifest
+`EDB0FD34E3D976B872868CC3DFBF745CBC4B08F6C4C5D21B8D6CDA47A3E20D26`, 7059 entries / 7060 files /
+1 033 362 481 B, 0 CR bytes on all five `deploy/linux/*.sh`; first-start pin 1, steady pin 0, env guard 1,
+behavioral test 1. Gate A inputs re-baselined in Addendum D (Linux A-3 expected `2 failed, 1358 passed,
+1 warning`, same two pre-registered failures).
+
+**This accepts the repair CANDIDATE, not the Gate A result.** Gate A has not rerun; A-4 is historically
+failed until the `2ce41e34` artifact passes on staging. **No transfer, install, teardown, or Gate A run is
+authorized** — those await explicit staging authorization from Barış. The old `ebada020` install on
+`gatea-staging` remains masked, inactive, no listener, no credentials, nothing armed. `2ce41e34` supersedes
+the unaccepted `ed3d0534`; do not transfer/install the `ed3d0534` artifact.
+
+Docs line: `feature/donchian-crypto-ladder`. `origin/master` unchanged at `637307e8` — nothing merged, no
+push, no stage, no Gate A rerun.
+
+---
+
 ## [Claude Opus 5] 2026-08-08 (evening) — A-4 repair `ed3d0534` audited: **NOT ACCEPTED**, 1 binding finding
 
 **RESUME HERE:** `11_TRIAGE/NEXT_SESSION_HANDOFF_2026-08-08.md`, then

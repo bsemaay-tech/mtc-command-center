@@ -1,6 +1,56 @@
-# NEXT SESSION HANDOFF — A-4 repaired and packaged; two flagship audits owed (2026-08-08)
+# NEXT SESSION HANDOFF — A-4 repair `2ce41e34` ACCEPTED and packaged; Gate A rerun awaiting explicit staging authorization (2026-08-08)
 
-> ## ▶ PICK UP EXACTLY HERE
+> ## ▶ CURRENT STATE — PICK UP EXACTLY HERE
+>
+> Session closed cleanly on 2026-08-08. **Nothing is broken, nothing is half-written, no work is in
+> flight.** The A-4 repair candidate is **accepted** and the artifact is built and verified.
+>
+> **State:** the env-override defect from round 1 is repaired and the new candidate
+> **`2ce41e34` is ACCEPTED under D025** (`11_TRIAGE/GATE_A_DISARM_FIX_AUDIT_ROUND2_2CE41E34_2026-08-08.md`):
+> `gpt-5.6-sol` xhigh **PASS**, `claude-opus-5` xhigh **PASS-WITH-NITS** (0 required), `GLM-5.2` **PASS**
+> and executed the suite; DeepSeek V4 Flash returned a non-execution BLOCK (`No access to ClinePass
+> subscription models yet.`), which is supplemental per D025 and does not veto acceptance. The accepted
+> artifact is at `C:\WPI_ARTIFACTS\2ce41e34bceb599d80af24c5c33d835820ec321b` (manifest
+> `EDB0FD34…20D26`, 7059 entries / 7060 files / 1 033 362 481 B, 0 CR bytes on all five deploy scripts;
+> first-start pin 1, steady pin 0, env guard 1, behavioral test 1). Gate A inputs are re-baselined in
+> `GATE_A_PREREGISTRATION_ADDENDUM_D_2026-08-08.md`.
+>
+> **This accepts the repair CANDIDATE, not the Gate A result.** Gate A has not rerun. A-4 remains
+> historically failed until the `2ce41e34` artifact passes on staging.
+>
+> **DO NOT transfer, install, tear down, or run Gate A.** Those await explicit staging authorization from
+> Barış. The old `ebada020` install is still on `gatea-staging`: **masked, inactive, no listener on 8790,
+> no credentials provisioned, nothing armed** — left in a known safe state pending the authorized
+> clean-host teardown. `2ce41e34` supersedes the unaccepted `ed3d0534`; do not transfer or install the
+> `ed3d0534` artifact.
+>
+> **Next safe step (owner-gated):**
+> 1. Barış authorizes staging action.
+> 2. Tear down the stale `ebada020` install on `gatea-staging` with the proven `C:\tmp\gatea_teardown.sh`
+>    (leftovers 0 last time). `rollback.sh` takes `--to-release-sha` and is **not** an uninstaller.
+> 3. Transfer the `2ce41e34` artifact as **one tar**.
+> 4. Run Gate A from **A-0** per Addendum D, stopping at the first FAIL. Expected Linux A-3:
+>    `2 failed, 1358 passed, 1 warning` (the same two pre-registered gc-referents failures; one new
+>    passing test function). **Required host evidence** for the A-4 round (capture verbatim, redact any
+>    value): `systemctl show -p Environment mtc-bridge-first-start.service`, and an explicit verifier
+>    rejection of a temporary `MTC_BRIDGE_START_MODE=` env-file override (then remove the temp line and
+>    re-run `verify.sh` to confirm a clean PASS).
+> 5. Preserve the existing `GATE_A_RESULT_2026-08-08.md` intact and write
+>    `GATE_A_RESULT_2026-08-08B.md` for the new run, either way.
+>
+> **Hard stop — unchanged:** merge to master, WP-V / deployment, credential handling, broker or exchange
+> access, ARM, orders, TESTNET, mainnet, KVM2, Pine/parity/MTC/trading changes, any economic action.
+>
+> ---
+>
+> The blocks below this line are the **prior** state (round-1 `ed3d0534`, NOT ACCEPTED) preserved as
+> history. They remain accurate for how the repair got here; the section above is the live pickup.
+
+---
+
+# (HISTORY — round 1, `ed3d0534`, superseded by the current state above)
+
+> ## ▶ PICK UP EXACTLY HERE (round-1 state — superseded 2026-08-08 by the section above)
 >
 > Session closed cleanly on 2026-08-08. **Nothing is broken, nothing is half-written, no work is in
 > flight.** Both flagship audits finished before shutdown.

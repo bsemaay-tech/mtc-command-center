@@ -1,5 +1,54 @@
 # NEXT_STEPS
 
+## GATE A — A-4 repair `2ce41e34` ACCEPTED and packaged; Gate A rerun awaiting staging authorization (2026-08-08)
+
+**This section supersedes the `## GATE A — RUN COMPLETE … A-4 FAIL` section immediately below** (and its
+round-1 bullet trail). That older top status is preserved below as history. Live pickup:
+`11_TRIAGE/NEXT_SESSION_HANDOFF_2026-08-08.md`.
+
+- **[AI: Any] THE A-4 REPAIR CANDIDATE IS ACCEPTED — `2ce41e34`.** Round 2 closes the round-1 env-override
+  defect. **ACCEPTED under D025** per
+  `11_TRIAGE/GATE_A_DISARM_FIX_AUDIT_ROUND2_2CE41E34_2026-08-08.md`: `gpt-5.6-sol` xhigh **PASS**,
+  `claude-opus-5` xhigh **PASS-WITH-NITS** (0 required), `GLM-5.2` **PASS** (executed the suite);
+  DeepSeek V4 Flash returned a non-execution BLOCK (`No access to ClinePass subscription models yet.`) —
+  supplemental per D025, no veto. Both flagships accept; no reproduced required finding remains.
+- **[AI: Any] THE REPAIR — 4 files, 59 insertions.** `deploy/linux/verify.sh` rejects any
+  `MTC_BRIDGE_START_MODE=` definition in `${MTC_ENV_FILE}` (the channel that defeated `ed3d0534`: systemd
+  `EnvironmentFile=` overrides `Environment=`); a new behavior test proves the rejection; `README.md` and
+  `env/mtc-bridge.env.template` document the variable as unit-set. No product-runtime file touched.
+- **[AI: Any] LEAD EVIDENCE at `2ce41e34`.** Targeted `1 passed in 0.81s`; deployment file `48 passed in
+  12.57s`; full suite **`1360 passed, 1 warning in 122.86s`** (Windows floor +1 over `1359` — one new test
+  function). D026 honored: RED-A (require-export / bare-assignment mutation) and RED-B (invert branches)
+  both independently RED, expected `FAIL_BRANCH` vs actual `PASS_BRANCH`; GREEN restored.
+- **[AI: Any] ARTIFACT VERIFIED.** `C:\WPI_ARTIFACTS\2ce41e34bceb599d80af24c5c33d835820ec321b`, manifest
+  `EDB0FD34E3D976B872868CC3DFBF745CBC4B08F6C4C5D21B8D6CDA47A3E20D26`, 7059 entries / 7060 files /
+  1 033 362 481 B, **0 CR bytes on all five `deploy/linux/*.sh`**; payload property counts: first-start
+  pin 1, steady pin 0, env guard 1, behavioral test 1.
+- **[AI: Any] GATE A INPUTS RE-BASELINED — Addendum D.** `GATE_A_PREREGISTRATION_ADDENDUM_D_2026-08-08.md`
+  supersedes Addendum C **only** for frozen candidate/artifact/test-count facts; C.2 (host prep) and C.4
+  (A-4 seven-condition standard) remain in force by reference. Expected Linux A-3: **`2 failed, 1358
+  passed, 1 warning`** — same two pre-registered `test_order_state.py` gc-referents failures, one new
+  passing test function; **expected count, must be checked on the host.**
+- **[AI: Barış] ACCEPTANCE IS OF THE CANDIDATE, NOT GATE A. Gate A has not rerun; A-4 stays historically
+  failed.** **Do NOT transfer, install, tear down, or run Gate A** until Barış authorizes staging action.
+  The old `ebada020` install on `gatea-staging` is masked / inactive / no listener / no credentials /
+  nothing armed. `2ce41e34` supersedes the unaccepted `ed3d0534`; do not transfer or install the
+  `ed3d0534` artifact.
+- **[AI: Barış] NEXT SAFE STEP (owner-gated).** (1) Barış authorizes staging action; (2) tear down the
+  stale `ebada020` install with proven `C:\tmp\gatea_teardown.sh` (`rollback.sh` is not an uninstaller);
+  (3) transfer the `2ce41e34` artifact as **one tar**; (4) run Gate A from **A-0** per Addendum D, stop at
+  first FAIL, capturing **required host evidence** for A-4: `systemctl show -p Environment
+  mtc-bridge-first-start.service`, and an explicit verifier rejection of a temporary
+  `MTC_BRIDGE_START_MODE=` env-file override (redact any value; remove the temp line after and re-run
+  `verify.sh` for a clean PASS); (5) preserve `GATE_A_RESULT_2026-08-08.md` intact, write
+  `GATE_A_RESULT_2026-08-08B.md` for the new run either way.
+- **[AI: Any] QUEUED NITS (not repaired here, no product edits).** (1) verifier does not inspect systemd
+  drop-ins — future scoped follow-up; (2) steady profile has no start-mode pin (correct for now) — address
+  at the steady profile's future gate; (3) remaining cosmetic / over-strict / test-structure notes are
+  non-blocking.
+
+---
+
 ## GATE A — RUN COMPLETE: A-0→A-3 PASS, **A-4 FAIL**, stopped per first-FAIL rule (2026-08-08)
 
 **START HERE:** `11_TRIAGE/NEXT_SESSION_HANDOFF_2026-08-08.md` (standalone pickup, supersedes
