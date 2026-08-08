@@ -11,6 +11,127 @@
 - **ClinePass PAUSED (unpaid invoice, 0 credits)** → D025 canonical auditor 3 blocked until reactivated + live probe. Cline harness itself fine (3.0.51). Grok/xAI 403; OpenRouter balance negative — both NOT USABLE, configs kept.
 
 First dispatch attempt failed instructively: under `--sandbox workspace-write` the run still came up `read-only` and Codex misread itself as Lead, trying to launch Claude as implementer (blocked, no spend). Fix: explicit ROLE clause in the dispatch + `--dangerously-bypass-approvals-and-sandbox`. Keep both in future Codex implementation dispatches.
+## [Codex GPT-5] 2026-08-08 - Gate A run-kit D source accepted; package/transfer next
+
+**Lead final verdict: ACCEPT after the third/final repair round.** Independent checks: five Bash
+scripts `bash -n` rc 0; A-8 PowerShell parser errors 0; all embedded Python heredocs compile;
+`git diff --check` clean; new kit/preregistration files LF-only, zero CR. The Lead verified the
+actual scripts against installed accepted candidate `2ce41e34...`, including local `ss` column index
+3 (never peer index 4), A-6 nonzero failure propagation, pre-import env-key removal without value
+output/persistence, disabled notifier, partial-start stop, exact non-recursive SQLite cleanup,
+A-7 API==DB assertion, A-8 remote+host dual proof, and A-9 `grep -l` nine-category redaction.
+
+No gate ran: **A-5..A-9 NOT RUN**. Source is accepted but not packaged/transferred/executed. No
+product/artifact, credential, broker/exchange, successful ARM, order, TESTNET/mainnet, wallet,
+master-merge, or economic action changed/occurred. Next bounded unit: package run-kit D, transfer and
+verify it only, then update `_AI_MEMORY` before A-5. Preserve B/C and stop at first genuine FAIL.
+
+## [GLM-5.2] 2026-08-08 — Gate A run-kit D A-6/A-7 repair round 3 (NOT RUN; bindings await Lead final acceptance)
+
+**Final focused repair round. Same worktree and unit as rounds 1-2.** Edited only the task-named
+files: `gatea_A6.sh`, `gatea_A7.sh`, `README.txt` in `11_TRIAGE/GATE_A_RUN_KIT_D_2026-08-08/`, the
+preregistration doc `GATE_A_A5_A9_PREREGISTRATION_2026-08-08D.md` (new §13), and these three
+memory/handoff prepends. **A-5..A-9 are NOT RUN.** No product code/artifact changed; no new
+files/Git/SSH/staging/execution/product edits/credentials/ARM/orders/broker-network
+access/packaging/transfer. No gate result is claimed. Candidate `2ce41e34…` unchanged; A-0..A-4
+PASS remain the last completed state.
+
+Round-3 repairs: (1) **A-6 pre-import env isolation** — the six keys (`HL_ACCOUNT_ADDRESS`,
+`HL_API_WALLET_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `MTC_BRIDGE_START_MODE`,
+`MTC_BRIDGE_STATE_DB`) are popped via `os.environ.pop` BEFORE `from bridge.app import create_app` /
+`from bridge.broker.mock import MockBroker` and before explicit app construction (order: stdlib
+imports + release `sys.path`; pop loop; then bridge imports; then `create_app(...)`), so even
+module-level default app construction cannot see the parent values; (2) **A-6 wording** —
+`os.environ.pop` removes and discards process-local values; no value is printed/copied/persisted/
+retained; it is NOT claimed the values are "never read"; Gate-A preconditions already established
+the keys absent (clearing is defense in depth); the env FILE is not opened by A6 (A-9 keeps its
+truthful statement: scans bytes but emits paths/counts only); (3) **A-7 explicit equality** — after
+separately validating API state and DB `app_state`, A-7 explicitly asserts and records
+`db_app == api_state` (not merely the two DISARMED checks); on mismatch it exits nonzero; all
+existing A-7 checks preserved.
+
+Lead re-audit evidence (supplied; syntax/compile only — worker did NOT run it): all five Bash
+scripts `bash -n` rc 0; PS parser 0 errors; `git diff --check` clean; every embedded Python heredoc
+compiled (A-5 3, A-6 3, A-7 2, A-8 1). Round-2 lifecycle/sidecar/notifier work accepted. STATUS
+unchanged: A-5..A-9 NOT RUN, not packaged/transferred; the round-3 bindings await the Lead's final
+acceptance. **Routing:** Tier 4 protected Gate-A restart/persistence/reconcile evidence tooling +
+docs; GLM-5.2 via Z.AI Coding Plan (owner exact-model request + protected safety evidence); no
+external API credits; no fallback/downgrade. GLM does not replace the mandatory audit roster; this
+is implementation/tooling, not a Gate-5 audit. Ordered actions: `_AI_MEMORY/NEXT_STEPS.md`.
+
+## [GLM-5.2] 2026-08-08 — Gate A run-kit D A-6 repair round 2 (NOT RUN; bindings await Lead re-audit)
+
+**Bounded GLM-5.2 follow-up — repairs exactly the three remaining REQUIRED A-6 defects in
+`gatea_A6.sh` only (A5/A7/A8/A8_host/A9 unchanged).** Edited only the task-named files: `gatea_A6.sh`
++ `README.txt` in `11_TRIAGE/GATE_A_RUN_KIT_D_2026-08-08/`, the preregistration doc
+`11_TRIAGE/GATE_A_A5_A9_PREREGISTRATION_2026-08-08D.md` (new §12), and these three memory/handoff
+prepends. **A-5..A-9 are NOT RUN.** No product code/artifact changed; no packaging/transfer/install/
+service mutation, credential, broker/exchange access, successful ARM, order, TESTNET/mainnet, wallet,
+master merge, or economic action occurred. No gate result is claimed. Candidate `2ce41e34…` is
+unchanged; A-0..A-4 PASS remain the last completed state.
+
+A-6 round-2 repairs (all in `gatea_A6.sh`): **partial-start cleanup** — `stop_required` is set before
+`engine.start()` so `finally` always attempts `engine.stop()` whenever start was invoked (including
+after a timeout/start exception); a stop exception stays nonzero; if start already failed, the
+original start exception is preserved while the stop failure is still recorded (no false PASS).
+**SQLite sidecar cleanup** — strict target validation (exact `/home/gatea/gatea-A6-temp.` prefix +
+exactly six alphanumeric chars, a real directory, not a symlink); delete only maxdepth-1 regular
+files exactly named `bridge.db` / `bridge.db-wal` / `bridge.db-shm`; require no entries remain then
+`rmdir`; never recursive; an invalid target or residue forces nonzero (a valid run no longer falsely
+fails on leftover WAL/SHM sidecars). **Notifier/outbound hardening** — pop the six env keys
+(`HL_ACCOUNT_ADDRESS`, `HL_API_WALLET_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`,
+`MTC_BRIDGE_START_MODE`, `MTC_BRIDGE_STATE_DB`) before `create_app` without reading/printing values;
+explicit `start_mode='credentialed'` + temp `store_path` + injected `MockBroker(bars=[])`; require
+`engine.notifier is None or engine.notifier.enabled is False`; print only
+`notifier_disabled=true/false`; bind it into the PASS assertion; no env value printed. STATUS
+unchanged: A-5..A-9 NOT RUN, not packaged/transferred; the round-2 bindings await the Lead's final
+re-audit. Worker validation beyond provided Lead evidence is not claimed. **Routing:** Tier 4
+protected Gate-A restart/persistence/reconcile evidence tooling + docs; GLM-5.2 via Z.AI Coding Plan
+(owner exact-model request + protected safety evidence); no external API credits; no
+fallback/downgrade. GLM does not replace the mandatory audit roster; this is implementation/tooling,
+not a Gate-5 audit. Ordered actions: `_AI_MEMORY/NEXT_STEPS.md`.
+
+## [GLM-5.2] 2026-08-08 — Gate A run-kit D A-5..A-9 source/preregistration (Lead-audit repair round 1; NOT RUN)
+
+**Bounded GLM-5.2 tooling/documentation checkpoint — freezes run-kit D SOURCE and the
+A-5..A-9 preregistration only.** GLM-5.2 edited only the task-named files: the preregistration
+doc `11_TRIAGE/GATE_A_A5_A9_PREREGISTRATION_2026-08-08D.md`, the run-kit D members
+(`README.txt` + `gatea_A5.sh`/`gatea_A6.sh`/`gatea_A7.sh`/`gatea_A8.sh`/`gatea_A8_host.ps1`/
+`gatea_A9.sh` under `11_TRIAGE/GATE_A_RUN_KIT_D_2026-08-08/`), and this memory/handoff prepend.
+**A-5..A-9 are NOT RUN.** No product code or product artifact changed; no packaging, transfer,
+install, service mutation, credential, broker/exchange access, successful ARM, order,
+TESTNET/mainnet, wallet, master merge, or economic action occurred. No gate result is claimed.
+Candidate `2ce41e34…` is unchanged; A-0..A-4 PASS remain the last completed state.
+
+Run-kit D freezes the A-5..A-9 scripts per the shared contract (`set -Eeuo pipefail`; fixed
+`/home/gatea` evidence log per gate that refuses overwrite; venv Python for all JSON/SQLite
+work — never the `sqlite3` CLI; `EXIT` trap records exact rc; ends `A-<n> PASS` only if all
+assertions hold; never hashes its own open log; never `POST /api/arm`; A-5/A-6/A-7/A-8 do not
+read the env file while A-9 scans bytes under the release + `/etc/mtc-bridge` (incl. the
+root-readable env file) via `grep -l`, emitting paths only — no value/matched text printed,
+copied, or persisted (category counts + paths only)): A-5 unclean SIGKILL/manual-restart
+consistency (Restart=no; byte-identical logical DB
+snapshot); A-6 in-process empty-startup reconcile dry-run (injected `MockBroker(bars=[])`, temp
+DB, no network); A-7 read-only status/DB/log/journal evidence; A-8 remote loopback-binding
+proof + Windows host `TcpClient` probes (two-part gate — neither alone passes); A-9
+content-redacted 9-ERE secret scan of the release + `/etc/mtc-bridge` only. **Not
+packaged/transferred/executed.**
+
+**Lead-audit repair round 1 (Lead source review authoritative over the implementer's older
+records-branch read) — see prereg §9:** the installed candidate IS authoritative, so A-6
+restores `start_mode='credentialed'` (MockBroker blocks `_build_broker`/credentials/network);
+the false PASS is fixed (nonzero on timeout / start exception / failed assertion / stop
+exception; `try/finally` always stops; requires `status()['deferred_event_queue_depth']==0` AND
+`len(_queued_events)==0`); A-6 temp cleanup is validated (no `rm -rf`); A-5/A-8 use the `ss`
+LOCAL column (index 3); A-8 host exits nonzero on probe fail; A-9 uses `-e`/`--`, canonical
+names, and a truthful content statement. Lead evidence already supplied: `bash -n` all 5 rc 0,
+PS parser 0, CR=0 (syntax/byte checks only); repaired bindings await re-audit. STATUS
+unchanged: A-5..A-9 NOT RUN, not packaged/transferred.
+
+**Routing:** Tier 4 protected Gate-A restart/persistence/reconcile evidence tooling + docs;
+GLM-5.2 via Z.AI Coding Plan (owner exact-model request + protected safety evidence); no
+external API credits; no fallback/downgrade. GLM does not replace the mandatory audit roster;
+this is implementation/tooling, not a Gate-5 audit. Ordered actions: `_AI_MEMORY/NEXT_STEPS.md`.
 
 ## [GLM-5.2] 2026-08-08 — Gate A A-4 PASS; seven conditions evidenced
 
