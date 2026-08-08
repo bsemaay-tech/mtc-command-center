@@ -1,5 +1,64 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ NEWEST CHECKPOINT — GLM-5.2 bounded documentation: Gate A run-kit D packaged, transferred, extracted, and verified; A-5 first next (2026-08-09)
+>
+> **Supersedes the "Lead ACCEPTED run-kit D source; package/transfer next" block below as live state
+> for *next action*** (the run-kit D source acceptance, A-0..A-4 PASS, and the repair-round blocks
+> below remain unchanged history). **A-0..A-4 remain PASS; A-5..A-9 remain NOT RUN.** The Lead-accepted
+> run-kit D source was packaged, transferred to `gatea-staging`, extracted, and independently
+> re-verified. **No Gate-A script ran** during packaging, transfer, extraction, or verification. No
+> product code or product artifact changed; no credential, broker/exchange access, successful ARM,
+> order, TESTNET/mainnet, wallet, master merge, or economic action is authorized or occurred. The
+> packaging/transfer/extraction/verification actions recorded were authorized Lead staging actions
+> under the preregistered `gatea-staging` Gate A rerun sequence; GLM-5.2 recorded them and edited only
+> the four task-named files (this handoff prepend plus `_AI_MEMORY/NEXT_STEPS.md`,
+> `_AI_MEMORY/GLOBAL_HANDOFF.md`, and the new standalone
+> `11_TRIAGE/GATE_A_RUN_KIT_D_PACKAGE_TRANSFER_2026-08-09.md`). Standalone record:
+> `11_TRIAGE/GATE_A_RUN_KIT_D_PACKAGE_TRANSFER_2026-08-09.md`. Active integration branch before this
+> task: `feature/donchian-crypto-ladder` at `acc41e73` (`acc41e732d0825058e25e7e89652d61811a8cde6`).
+> Accepted source candidate unchanged: `2ce41e34bceb599d80af24c5c33d835820ec321b`.
+>
+> **Package identity (exact).** A first `git archive` packaging attempt exported CRLF and was
+> **rejected before transfer** — preserved (not deleted) at
+> `C:\WPI_ARTIFACTS\gatea-run-kit-20260808D-2ce41e34.rejected-crlf.tar`, SHA-256
+> `66ce7a1e148d17626f68962ccdd3bb6bcacdf4c49a6eb815713caa64899634a8`, `71680` bytes. The accepted
+> package was rebuilt from raw committed blobs with `git cat-file blob` (reads from the object
+> database, avoiding worktree/archive line-ending conversion):
+> `C:\WPI_ARTIFACTS\gatea-run-kit-20260808D-2ce41e34.tar`, SHA-256
+> `e8a52e3cdeaa9da9315d0cbeb1fde7dd75e9ecc8a4ad4c926e4084c37c55e0d3`, `71680` bytes; **9 tar members
+> (root dir + 8 files), 8 extracted files, 7 manifest lines**, all manifest hashes verified, all
+> members CR count `0`, Bash + PowerShell parser + embedded-Python syntax checks passed. Transferred
+> to `/home/gatea/gatea-run-kit-20260808D-2ce41e34.tar` preserving the exact same SHA-256, bytes, and
+> member set, and extracted to `/home/gatea/gatea-run-kit-20260808D-2ce41e34`.
+>
+> **Transport defect recorded, not concealed.** The first remote verifier had a PowerShell-to-SSH
+> quoting defect after extraction and emitted `test: \\8: integer expression expected`; **no Gate-A
+> script ran** — this is a verifier transport defect, not a package or Gate-A failure. A clean remote
+> re-verification then passed: all 7 manifest members verified; `bash -n` passed for A5/A6/A7/A8/A9;
+> exact extracted file count 8 and exact member set; manifest lines 7; every file CR count 0;
+> byte/LF counts README 13934/197, SHA256SUMS 551/7, A5 9719/261, A6 13863/283, A7 6191/139, A8
+> 4124/108, A8_host 3195/87, A9 3937/109; embedded Python blocks compiled A5 3, A6 3, A7 2, A8 1,
+> A9 0.
+>
+> **Staging safety — unchanged after transfer/verification.** Service active/static; exact
+> credential-free DISARMED status; no credentials; no broker; state version 1. This is the A-5
+> prerequisite state, preserved through the package/transfer/verify unit.
+>
+> **Next steps contract — A-5 first (state clearly):**
+> 1. `[AI: Claude]` **Execute A-5 only** from `/home/gatea/gatea-run-kit-20260808D-2ce41e34/gatea_A5.sh`.
+> 2. `[AI: Claude]` **Preserve and inspect** `/home/gatea/gatea-A5-20260808D.log`; independently
+>    verify service/API/DB/listener/systemd state before assigning a verdict.
+> 3. `[AI: Claude]` **Stop on the first genuine FAIL** and perform the preregistered safe response
+>    (`GATE_A_A5_A9_PREREGISTRATION_2026-08-08D.md` §5); **do not run A-6.**
+> 4. `[AI: Claude]` **If A-5 passes,** update the relevant `_AI_MEMORY` files before starting A-6.
+> 5. `[AI: Claude]` **Continue one gate at a time** under the existing preregistration. Hard
+>    exclusions remain: no credentials, broker/exchange, successful ARM, orders, TESTNET/mainnet,
+>    wallet, master merge, or economic action.
+>
+> Ordered actions: `_AI_MEMORY/NEXT_STEPS.md`. Live state: `_AI_MEMORY/GLOBAL_HANDOFF.md`.
+>
+> ---
+
 > ## NEWEST CHECKPOINT - Lead ACCEPTED run-kit D source; package/transfer next (2026-08-08)
 >
 > Supersedes the repair-round-3 block below as live next action. Codex Lead independently accepted
