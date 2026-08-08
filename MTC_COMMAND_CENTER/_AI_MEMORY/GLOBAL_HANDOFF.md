@@ -1,5 +1,19 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-08-09 — Gate A E canonical round 1 BLOCK; executable Codex rerun required
+
+Candidate `61d88f12054c` remains frozen and unintegrated. Claude Opus 5 xhigh executed D RED/E GREEN
+28/28 and returned PASS. Codex 5.6-sol xhigh returned BLOCK because its sandbox could not create a
+usable temp/pycache and its selected fallback Bash exposed Windows `timeout.exe`, so mandatory E
+did not complete. Lead and Claude execution do not override that D025 BLOCK. DeepSeek ClinePass was
+unavailable; GLM-5.2 could not execute tools; both are supplemental with no required finding. All
+audit worktrees are clean. Next action is a fresh Codex xhigh audit in a writable isolated runtime;
+no integration, package, transfer, or staging action before acceptance. Gate state unchanged.
+
+Record: `11_TRIAGE/GATE_A_A5_E_CANONICAL_AUDIT_ROUND1_2026-08-09.md`.
+
+---
+
 ## [Codex GPT-5.6-sol] 2026-08-09 — Gate A E round 2 Lead re-audit ACCEPT; canonical audits next
 
 Default D RED/E GREEN reproduced without PATH override; E passed 28/28 plus syntax, compile, byte and

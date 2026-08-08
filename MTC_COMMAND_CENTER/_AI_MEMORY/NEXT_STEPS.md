@@ -1,5 +1,21 @@
 # NEXT_STEPS
 
+## GATE A — E canonical audit round 1 BLOCK; fresh executable Codex audit next (2026-08-09)
+
+Frozen E candidate `61d88f12054c`: Claude Opus 5 xhigh **PASS** after executing D RED and E GREEN
+28/28. Codex 5.6-sol xhigh **BLOCK** because its assigned sandbox had no usable writable temp or
+pycache and its fallback Bash exposed Windows `timeout.exe`; it could not complete mandatory E.
+DeepSeek ClinePass was unavailable and GLM-5.2 execution was denied, so both are supplemental
+BLOCKs with no required finding. All four detached audit worktrees are clean.
+
+**Next:** fresh Codex 5.6-sol xhigh audit in a new detached worktree with writable temp/pycache and
+normal Git Bash resolution. It must execute exact D RED/E GREEN, syntax/compile, inspect the frozen
+diff, and prove cleanliness. Do not integrate, package, transfer, or touch staging before an
+accepting Codex verdict. State: A-0..A-4 PASS; A-5 FAIL; A-6..A-9 NOT RUN. Record:
+`11_TRIAGE/GATE_A_A5_E_CANONICAL_AUDIT_ROUND1_2026-08-09.md`.
+
+---
+
 ## GATE A — E repair round 2 Lead re-audit ACCEPT; four fresh canonical audits next (2026-08-09)
 
 Default exact D is RED; E is GREEN **28/28**, no PATH override. GNU timeout, hard deadline,

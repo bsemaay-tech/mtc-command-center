@@ -1,5 +1,19 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ NEWEST CHECKPOINT — E canonical audit round 1 BLOCK; executable Codex rerun next (2026-08-09)
+>
+> Frozen candidate `61d88f12054c` remains unintegrated/unpackaged/untransferred/unrun. Claude Opus
+> 5 xhigh executed D RED and E GREEN 28/28 and returned PASS. Codex 5.6-sol xhigh returned BLOCK:
+> its sandbox had no usable writable temp/pycache and its fallback Bash exposed Windows
+> `timeout.exe`, so mandatory E did not complete. DeepSeek ClinePass was unavailable; GLM-5.2 was
+> denied execution; both are supplemental BLOCKs with no required finding. All four detached audit
+> worktrees are clean. **Next:** fresh Codex xhigh audit in a new detached worktree with writable
+> temp/pycache and normal Git Bash. No integration/package/transfer/staging before acceptance.
+> A-5 remains FAIL; A-6..A-9 NOT RUN. Repair rounds remain 2/3; this is an audit environment rerun.
+> Record: `11_TRIAGE/GATE_A_A5_E_CANONICAL_AUDIT_ROUND1_2026-08-09.md`.
+>
+> ---
+
 > ## ▶ NEWEST CHECKPOINT — E round 2 Lead re-audit ACCEPT; four canonical audits next (2026-08-09)
 >
 > Default D is RED; E is GREEN 28/28 without PATH override. GNU timeout, hard deadline,
