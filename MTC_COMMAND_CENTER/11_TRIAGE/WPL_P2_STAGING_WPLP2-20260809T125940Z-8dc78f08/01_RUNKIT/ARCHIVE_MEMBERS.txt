@@ -1,0 +1,31 @@
+runkit.tar — uncompressed, GNU tar format, deterministic
+archive_bytes 102400
+archive_sha256 618f7640fcb99a42abbe3d440710829e7be61f986050eb330035e46b3e11ac53
+member_count 9
+order: §8.1 table order (fixed, not directory-scan order)
+normalization: mtime=0 mode=0644 uid=0 gid=0 uname='' gname='' type=REG, no dir members
+trailing bytes are the tar end-of-archive marker plus 10240-byte record padding
+determinism: independent runs of this builder writing to different output paths
+produce a byte-identical archive; the digest above is reproducible.
+
+-- member listing (python tarfile) --
+RP0-LIB.sh       0o644   18968 REG   uid=0 gid=0 uname='' gname='' mtime=0
+RP0-BOOTSTRAP.sh 0o644    1937 REG   uid=0 gid=0 uname='' gname='' mtime=0
+RP1-B3.sh        0o644    5759 REG   uid=0 gid=0 uname='' gname='' mtime=0
+RP3-C2A-POST.sh  0o644    5308 REG   uid=0 gid=0 uname='' gname='' mtime=0
+RP3-C2B-POST.sh  0o644    3804 REG   uid=0 gid=0 uname='' gname='' mtime=0
+RP4-C3.py        0o644   12770 REG   uid=0 gid=0 uname='' gname='' mtime=0
+RP5-C4A.sh       0o644   19353 REG   uid=0 gid=0 uname='' gname='' mtime=0
+RP5-C4B.sh       0o644   12110 REG   uid=0 gid=0 uname='' gname='' mtime=0
+RP5-C4C.sh       0o644   12089 REG   uid=0 gid=0 uname='' gname='' mtime=0
+
+-- cross-check: C:\Program Files\Git\usr\bin\tar.EXE -tvf runkit.tar  (rc=0) --
+-rw-r--r-- 0/0           18968 1970-01-01 02:00 RP0-LIB.sh
+-rw-r--r-- 0/0            1937 1970-01-01 02:00 RP0-BOOTSTRAP.sh
+-rw-r--r-- 0/0            5759 1970-01-01 02:00 RP1-B3.sh
+-rw-r--r-- 0/0            5308 1970-01-01 02:00 RP3-C2A-POST.sh
+-rw-r--r-- 0/0            3804 1970-01-01 02:00 RP3-C2B-POST.sh
+-rw-r--r-- 0/0           12770 1970-01-01 02:00 RP4-C3.py
+-rw-r--r-- 0/0           19353 1970-01-01 02:00 RP5-C4A.sh
+-rw-r--r-- 0/0           12110 1970-01-01 02:00 RP5-C4B.sh
+-rw-r--r-- 0/0           12089 1970-01-01 02:00 RP5-C4C.sh

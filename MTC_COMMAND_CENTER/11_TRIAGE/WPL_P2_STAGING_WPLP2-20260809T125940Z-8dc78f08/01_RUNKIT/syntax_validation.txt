@@ -1,0 +1,97 @@
+WP-L Phase 2 Stage 1 — syntax validation (real commands, real rc, real output)
+OS temp root used for compiled artifacts and tar unpack: C:\Users\BARSEM~1\AppData\Local\Temp\wplp2_s1_vrztw_hf
+No __pycache__ is created inside the repo: every py_compile call passes an
+explicit cfile under the OS temp root.
+
+--- bash -n RP0-LIB.sh
+$ "C:\Program Files\Git\usr\bin\bash.EXE" -n C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\01_RUNKIT\RP0-LIB.sh
+rc=0
+output: <empty>
+
+--- bash -n RP0-BOOTSTRAP.sh
+$ "C:\Program Files\Git\usr\bin\bash.EXE" -n C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\01_RUNKIT\RP0-BOOTSTRAP.sh
+rc=0
+output: <empty>
+
+--- bash -n RP1-B3.sh
+$ "C:\Program Files\Git\usr\bin\bash.EXE" -n C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\01_RUNKIT\RP1-B3.sh
+rc=0
+output: <empty>
+
+--- bash -n RP3-C2A-POST.sh
+$ "C:\Program Files\Git\usr\bin\bash.EXE" -n C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\01_RUNKIT\RP3-C2A-POST.sh
+rc=0
+output: <empty>
+
+--- bash -n RP3-C2B-POST.sh
+$ "C:\Program Files\Git\usr\bin\bash.EXE" -n C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\01_RUNKIT\RP3-C2B-POST.sh
+rc=0
+output: <empty>
+
+--- bash -n RP5-C4A.sh
+$ "C:\Program Files\Git\usr\bin\bash.EXE" -n C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\01_RUNKIT\RP5-C4A.sh
+rc=0
+output: <empty>
+
+--- bash -n RP5-C4B.sh
+$ "C:\Program Files\Git\usr\bin\bash.EXE" -n C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\01_RUNKIT\RP5-C4B.sh
+rc=0
+output: <empty>
+
+--- bash -n RP5-C4C.sh
+$ "C:\Program Files\Git\usr\bin\bash.EXE" -n C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\01_RUNKIT\RP5-C4C.sh
+rc=0
+output: <empty>
+
+--- py_compile RP4-C3.py (cfile in OS temp)
+$ C:\Python314\python.exe -c "import py_compile,sys; py_compile.compile(sys.argv[1], cfile=sys.argv[2], doraise=True)" C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\01_RUNKIT\RP4-C3.py C:\Users\BARSEM~1\AppData\Local\Temp\wplp2_s1_vrztw_hf\RP4-C3.pyc
+rc=0
+output: <empty>
+
+--- py_compile RP3-C2A-POST embedded heredoc 1/1 [ADDITIONAL (outside the specified Stage 1 heredoc scope)] (457 bytes, sha256 3c1a1cdf089550cd1857bec9bb3507d38cca029e00417df2d9cfdb6007a8f4d0) — OS temp only
+$ C:\Python314\python.exe -c "import py_compile,sys; py_compile.compile(sys.argv[1], cfile=sys.argv[2], doraise=True)" C:\Users\BARSEM~1\AppData\Local\Temp\wplp2_s1_vrztw_hf\RP3-C2A-POST_heredoc1.py C:\Users\BARSEM~1\AppData\Local\Temp\wplp2_s1_vrztw_hf\RP3-C2A-POST_heredoc1.pyc
+rc=0
+output: <empty>
+
+--- py_compile RP5-C4A embedded heredoc 1/2 [SCOPE] (1421 bytes, sha256 78c515e49b9491419bb7a279ef861d90f7e60acf11e52f8e734d7294e69fe7b6) — OS temp only
+$ C:\Python314\python.exe -c "import py_compile,sys; py_compile.compile(sys.argv[1], cfile=sys.argv[2], doraise=True)" C:\Users\BARSEM~1\AppData\Local\Temp\wplp2_s1_vrztw_hf\RP5-C4A_heredoc1.py C:\Users\BARSEM~1\AppData\Local\Temp\wplp2_s1_vrztw_hf\RP5-C4A_heredoc1.pyc
+rc=0
+output: <empty>
+
+--- py_compile RP5-C4A embedded heredoc 2/2 [SCOPE] (2739 bytes, sha256 7c3992eae2f58566ff9b0c7b77fa5802b14f7cb9571dc78c438b3b29972461da) — OS temp only
+$ C:\Python314\python.exe -c "import py_compile,sys; py_compile.compile(sys.argv[1], cfile=sys.argv[2], doraise=True)" C:\Users\BARSEM~1\AppData\Local\Temp\wplp2_s1_vrztw_hf\RP5-C4A_heredoc2.py C:\Users\BARSEM~1\AppData\Local\Temp\wplp2_s1_vrztw_hf\RP5-C4A_heredoc2.pyc
+rc=0
+output: <empty>
+
+--- py_compile RP5-C4B embedded heredoc 1/1 [SCOPE] (8086 bytes, sha256 2ef65676f0921817cd8768b3349ec0e5a2090f48ae65e36b5f2cfc9ff95423c5) — OS temp only
+$ C:\Python314\python.exe -c "import py_compile,sys; py_compile.compile(sys.argv[1], cfile=sys.argv[2], doraise=True)" C:\Users\BARSEM~1\AppData\Local\Temp\wplp2_s1_vrztw_hf\RP5-C4B_heredoc1.py C:\Users\BARSEM~1\AppData\Local\Temp\wplp2_s1_vrztw_hf\RP5-C4B_heredoc1.pyc
+rc=0
+output: <empty>
+
+--- py_compile RP5-C4C embedded heredoc 1/1 [SCOPE] (8268 bytes, sha256 081a5c14095d9fbfeabc357ee8d02e682414919ccc494b1ccafa3af85e7a47ae) — OS temp only
+$ C:\Python314\python.exe -c "import py_compile,sys; py_compile.compile(sys.argv[1], cfile=sys.argv[2], doraise=True)" C:\Users\BARSEM~1\AppData\Local\Temp\wplp2_s1_vrztw_hf\RP5-C4C_heredoc1.py C:\Users\BARSEM~1\AppData\Local\Temp\wplp2_s1_vrztw_hf\RP5-C4C_heredoc1.pyc
+rc=0
+output: <empty>
+
+--- self-QA
+$ <in-process> "reread 9 block files from disk; extract runkit.tar to OS temp; byte-compare"
+rc=0
+output:
+disk   RP0-LIB        lines=370 sha256=4a404d7b90d83aef47b3593757f86e3699b3bc2dd772f51df63ead4f10d9ab48 OK
+disk   RP0-BOOTSTRAP  lines= 36 sha256=e7d748f6b41c6156de4d5c5e2d93c2b08729b1f85377b132660424024815bb33 OK
+disk   RP1-B3         lines=117 sha256=f40411b053779b28ec9d970d7e5610fe5f363acbc48ee487d07ebce2638a69af OK
+disk   RP3-C2A-POST   lines=104 sha256=e233d29b005964e84cd6cbc2af50deccd83bb281dac39696e47de1c8890b5a27 OK
+disk   RP3-C2B-POST   lines= 74 sha256=26a1010cd9380289c5b90c08845b2af6ec31074fc5145241978a714b930bb412 OK
+disk   RP4-C3         lines=295 sha256=0520cc901e56a66fe61e0df9edc0ed33fa4b05c09d62ba8f7471ef9ff688e4a5 OK
+disk   RP5-C4A        lines=374 sha256=a5b1b2e4d4e5227b3bb1f0ea31e9e547040231913445970efe1046f4eba9e0f2 OK
+disk   RP5-C4B        lines=249 sha256=10c4b3231042101ed9049dbf57ec3123ce902e9b18136769728a1a2e92f4037e OK
+disk   RP5-C4C        lines=228 sha256=de7301f1deb752bcc63d818348c2fdc33372a6b7d7d4f377b62bdf27d313e3a8 OK
+untar  RP0-LIB        bytes= 18968 sha256=4a404d7b90d83aef47b3593757f86e3699b3bc2dd772f51df63ead4f10d9ab48 IDENTICAL
+untar  RP0-BOOTSTRAP  bytes=  1937 sha256=e7d748f6b41c6156de4d5c5e2d93c2b08729b1f85377b132660424024815bb33 IDENTICAL
+untar  RP1-B3         bytes=  5759 sha256=f40411b053779b28ec9d970d7e5610fe5f363acbc48ee487d07ebce2638a69af IDENTICAL
+untar  RP3-C2A-POST   bytes=  5308 sha256=e233d29b005964e84cd6cbc2af50deccd83bb281dac39696e47de1c8890b5a27 IDENTICAL
+untar  RP3-C2B-POST   bytes=  3804 sha256=26a1010cd9380289c5b90c08845b2af6ec31074fc5145241978a714b930bb412 IDENTICAL
+untar  RP4-C3         bytes= 12770 sha256=0520cc901e56a66fe61e0df9edc0ed33fa4b05c09d62ba8f7471ef9ff688e4a5 IDENTICAL
+untar  RP5-C4A        bytes= 19353 sha256=a5b1b2e4d4e5227b3bb1f0ea31e9e547040231913445970efe1046f4eba9e0f2 IDENTICAL
+untar  RP5-C4B        bytes= 12110 sha256=10c4b3231042101ed9049dbf57ec3123ce902e9b18136769728a1a2e92f4037e IDENTICAL
+untar  RP5-C4C        bytes= 12089 sha256=de7301f1deb752bcc63d818348c2fdc33372a6b7d7d4f377b62bdf27d313e3a8 IDENTICAL
