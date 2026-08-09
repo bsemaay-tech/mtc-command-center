@@ -1,5 +1,18 @@
 # NEXT_STEPS
 
+## WP-L P2 — DeepSeek checklist audit route unavailable (2026-08-09)
+
+Fresh isolated worktree `C:\WP2CL` at exact `313bc187` remained clean. ClinePass DeepSeek V4 Flash
+returned `hook dispatch failed: session.hook requires a valid hook event payload` and `No access to
+ClinePass subscription models yet` before reading/auditing. No verdict and no repair round.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Any]** Continue the same read-only checklist audit through an available subscription route.
+- **[AI: Codex]** Treat DeepSeek as non-execution; do not use paid API fallback merely to manufacture a
+  verdict and do not weaken the canonical acceptance floor.
+- **[AI: Claude]** The audited one-file repair prompt remains ready for the first exact account window.
+
 ## WP-L P2 — Lead acceptance/falsification checklist prepared (2026-08-09)
 
 Prepared future verification contract:

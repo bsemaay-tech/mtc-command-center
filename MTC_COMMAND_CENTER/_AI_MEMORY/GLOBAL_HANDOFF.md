@@ -1,5 +1,12 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6] 2026-08-09 — DeepSeek checklist audit non-execution
+
+ClinePass DeepSeek V4 Flash failed before audit with the known hook-payload error plus no subscription
+model access. Isolated `C:\WP2CL` stayed clean at `313bc187`; no verdict and no repair round. Continue the
+read-only checklist audit through an available subscription route. Do not count this as acceptance or use
+paid API fallback merely to obtain a label.
+
 ## [Codex GPT-5.6] 2026-08-09 — Lead proposal-repair acceptance checklist prepared
 
 Created `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_LEAD_ACCEPTANCE_CHECKLIST_2026-08-09.md`. It maps

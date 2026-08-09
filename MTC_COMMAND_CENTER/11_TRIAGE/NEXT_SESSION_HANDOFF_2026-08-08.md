@@ -1,5 +1,12 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ PICK UP EXACTLY HERE — DeepSeek checklist audit did not execute (Codex GPT-5.6, 2026-08-09)
+>
+> ClinePass DeepSeek V4 Flash failed before audit: invalid hook event payload plus no subscription-model
+> access. `C:\WP2CL` is clean at exact `313bc187`; no verdict/repair round. Continue the read-only checklist
+> audit through an available subscription. The Claude repair prompt remains ready; no host/authority gate
+> changed.
+
 > ## ▶ PICK UP EXACTLY HERE — Lead F1-F9 acceptance checklist prepared (Codex GPT-5.6, 2026-08-09)
 >
 > `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_LEAD_ACCEPTANCE_CHECKLIST_2026-08-09.md` now maps RP0-RP6 and
