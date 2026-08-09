@@ -1,5 +1,47 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ NEWEST CHECKPOINT — final repair round 3 Lead re-audit ACCEPT; canonical audits next (2026-08-09)
+>
+> Lead independently reproduced exact D RED 6/29, exact `61d88f12` RED 28/29 solely on the new
+> boundary check, and repaired E GREEN 29/29. All 28 prior checks remain; equality/past-deadline
+> success is rejected; termination/no survivor, mutation timing, forbidden-command isolation,
+> syntax/compile, immutable D and scope pass. One wording inconsistency was corrected and E reran
+> GREEN. Final kit: script `74161fb4…`/25066 B/497 LF; test `0e50ebb9…`/59469 B/1265 LF; README
+> `60bb9caf…`/35289 B/495 LF; all CR0. **Next:** commit/freeze and four fresh canonical audits.
+> No integration/package/transfer/staging before both flagship verdicts accept. A-5 FAIL;
+> A-6..A-9 NOT RUN. Repair budget exhausted; any reproduced required source finding is hard stop.
+>
+> ---
+
+> ## ▶ NEWEST CHECKPOINT — final repair round 3 IMPLEMENTED, not accepted (2026-08-09)
+>
+> `wait_ready_deadline`'s successful-probe branch now recomputes `rem_ds=$(( deadline - now ))`
+> after the post-probe monotonic reading and returns failure when `rem_ds <= 0`. The equality
+> boundary is stated once and applied identically at all three guards — **`now >= deadline` is
+> expiry** — the same rule round 1 already used at the other two. `READY_ELAPSED_DS` /
+> `READY_ATTEMPTS` are set on every path; a late success takes the ordinary expiry path
+> (`fail()`, nonzero exit, no second start). Hard bounded termination, exactly one explicit
+> start, the three-condition readiness definition, the step1 guard preconditions, the full
+> unsuppressed step5 checks and no-clobber are preserved. Script emits
+> `A5_kit_repair_round=3`; D→E diff still 8 hunks; `fail "` sites still 24 → 28.
+>
+> One focused named check added, **28 → 29**, nothing renamed/removed/weakened/skipped:
+> `behaviour_probe_success_at_or_after_deadline_is_rejected` (real wait/runner/probe, only
+> `mono_now_ds()` replaced by a scripted reading sequence; covers 30 ds vs 30 ds equality and
+> 31 ds vs 30 ds past-the-deadline).
+>
+> D026, documented default commands, no PATH override: pre-repair `61d88f12` blob materialized
+> outside the repo → **RED 28/29** (single failure = the new check, `HARNESS_rc=0`); repaired E
+> → **GREEN 29/29** rc 0; frozen run-kit D control → **RED 6/29**. `bash -n` rc 0;
+> `py_compile` rc 0 (cache outside the repo); `git diff --check` rc 0. Kit: `gatea_A5.sh`
+> `25066` B/`74161fb4…`, test `59469` B/`0e50ebb9…`, README `35289` B/`60bb9caf…`, all CR 0.
+>
+> **NOT accepted, NOT integrated, NOT committed, NOT packaged, NOT transferred, NOT run.**
+> **Next:** Lead re-audit, then fresh canonical audits. A-5 FAIL; A-6..A-9 NOT RUN. All three
+> repair rounds consumed — a further non-accepting source verdict is a hard stop.
+>
+> ---
+
 > ## ▶ NEWEST CHECKPOINT — Codex boundary finding reproduced; final repair round 3 (2026-08-09)
 >
 > Fresh unsandboxed-command/read-only-intent Codex xhigh executed D RED, E GREEN 28/28, syntax,

@@ -49,6 +49,25 @@ identical stubs and an identical nominal bound:
 A third scenario blocks a probe for far longer than any test deadline and then proves the
 probe process is GONE afterwards - the deadline terminates the probe, it does not wait it out.
 
+DEFECT 4 - readiness emitted PAST the deadline (round-1 source, Lead-reproduced Codex finding
+2026-08-09, repair round 3).  ``wait_ready_deadline`` checked the deadline before every attempt
+and before every backoff sleep, but its SUCCESSFUL-probe branch took the post-probe monotonic
+reading, recorded it as the elapsed time, and returned 0 without comparing it to the deadline.
+A probe that reported success only after the deadline had passed was accepted as readiness, so
+the script could print ``A5_READY=yes`` with an elapsed time larger than its own hard bound.
+The Lead reproduced the frozen function with a one-second budget and the monotonic sequence
+``0, 0, 11``: ``SUCCESS``, elapsed ``11`` deciseconds, rc ``0``.  Every earlier scenario here
+drove the wait to deadline EXPIRY or to an in-time success, so none of them could see it.
+
+    behaviour_probe_success_at_or_after_deadline_is_rejected
+
+covers it.  It replaces ONLY ``mono_now_ds`` with a scripted reading sequence -- the real
+``wait_ready_deadline``, the real ``run_bounded`` and the real probe still run, against real
+fast stubs -- so a successful probe lands on a post-probe reading that has reached the
+deadline.  Both sides of the documented equality boundary are exercised: exactly AT the
+deadline (``now >= deadline`` is expiry) and one decisecond past it.  The wait must return
+nonzero for both while still recording the measured elapsed deciseconds.
+
 Safety
 ------
 Local-only test artifact.  It is NEVER executed on gatea-staging and it never executes the
@@ -179,6 +198,42 @@ SYNTHETIC_ACTIVE_ONLY_PROBE_TMPL = """%s() {
     wait_active || return 1
     return 0
 }"""
+
+# Boundary scenario (repair round 3): an injected monotonic clock that makes the probe report
+# success only AFTER the deadline.  It replaces the script's real mono_now_ds() with a scripted
+# reading sequence and changes nothing else -- the REAL wait_ready_deadline(), run_bounded() and
+# probe still run, with real fast stubs, so the only thing under test is the wait's own handling
+# of a post-probe reading that has crossed the deadline.
+#
+# Reading sequence (the same shape the Lead used to reproduce the defect on the frozen source):
+#     call 1  -> 0            the wait fixes t0 = 0, so deadline = max_s * 10
+#     call 2  -> 0            the pre-attempt guard sees the full budget remaining, and the
+#                             fast stubs make the bounded probe SUCCEED
+#     call 3+ -> $MONO_LATE_DS   the post-probe reading, at or past the deadline
+# Pre-repair, call 3 was recorded as elapsed and success was returned unconditionally.  The
+# repaired wait must reject it.  The counter lives in a file because each call is made inside
+# `$( )`, i.e. in a subshell.
+LATE_CLOCK_OVERRIDE = """mono_now_ds() {
+    local n
+    n=$(cat "$MONO_TICK_FILE" 2>/dev/null || true)
+    [[ "$n" =~ ^[0-9]+$ ]] || n=0
+    printf '%s\\n' "$(( n + 1 ))" > "$MONO_TICK_FILE"
+    if (( n < 2 )); then
+        printf '0\\n'
+    else
+        printf '%s\\n' "$MONO_LATE_DS"
+    fi
+}"""
+
+# Nominal budget handed to the wait in the boundary scenario, and the two post-probe readings
+# it is run against.  Both must be rejected:
+#   * exactly AT the deadline  -- the documented equality boundary (`now >= deadline` is expiry)
+#   * one decisecond PAST it   -- the Lead's reproduced case
+LATE_SUCCESS_DEADLINE_S = 3
+LATE_SUCCESS_READINGS_DS = (
+    LATE_SUCCESS_DEADLINE_S * 10,       # equality: now == deadline
+    LATE_SUCCESS_DEADLINE_S * 10 + 1,   # strictly after the deadline
+)
 
 
 # --------------------------------------------------------------------------------------
@@ -370,7 +425,12 @@ WORK="$PWD"
 ATTEMPTS="$WORK/attempts";                 : > "$ATTEMPTS"
 GATEA_FORBIDDEN_LOG="$WORK/forbidden.log"; : > "$GATEA_FORBIDDEN_LOG"
 PROBE_PID_FILE="$WORK/probe_pid";          : > "$PROBE_PID_FILE"
-export ATTEMPTS GATEA_FORBIDDEN_LOG PROBE_PID_FILE
+# Tick counter for the optional injected monotonic clock (boundary scenario only). It is a
+# FILE, not a variable, because the wait reads its clock through `$(mono_now_ds)` command
+# substitution -- a SUBSHELL, whose variable writes would be discarded.
+MONO_TICK_FILE="$WORK/mono_ticks";         : > "$MONO_TICK_FILE"
+MONO_LATE_DS=__MONO_LATE_DS__
+export ATTEMPTS GATEA_FORBIDDEN_LOG PROBE_PID_FILE MONO_TICK_FILE MONO_LATE_DS
 
 STUB_ACTIVE_RC=__ACTIVE_RC__
 STUB_LISTENER_READY_AT=__LISTENER_READY_AT__
@@ -483,6 +543,10 @@ sleep 1   # let any signalled probe child finish dying before the survivor test
 printf 'HARNESS_rc=%s\n' "$_rc"
 printf 'HARNESS_attempts=%s\n' "$(_attempts)"
 printf 'HARNESS_elapsed=%s\n' "$(( _t1 - _t0 ))"
+# What the wait itself recorded on its own clock. `none` when the target call is the
+# pre-repair construct, which sets neither variable.
+printf 'HARNESS_ready_elapsed_ds=%s\n' "${READY_ELAPSED_DS:-none}"
+printf 'HARNESS_ready_attempts=%s\n' "${READY_ATTEMPTS:-none}"
 printf 'HARNESS_forbidden=%s\n' "$(wc -l < "$GATEA_FORBIDDEN_LOG" | tr -d ' ')"
 if [[ -s "$PROBE_PID_FILE" ]]; then
     _pp=$(cat "$PROBE_PID_FILE")
@@ -603,13 +667,14 @@ def probe_deadline_guard(bash_exe):
 
 def run_harness(bash_exe, consts, funcs_text, exports, target_call, active_rc,
                 listener_ready_at, api_ready_at, api_slow_s, override="",
-                proc_timeout=180):
+                proc_timeout=180, mono_late_ds=0):
     """Execute the harness in a private temp dir; return (proc, metrics, wall_seconds)."""
     script = (HARNESS_TEMPLATE
               .replace("__ACTIVE_RC__", str(active_rc))
               .replace("__LISTENER_READY_AT__", str(listener_ready_at))
               .replace("__API_READY_AT__", str(api_ready_at))
               .replace("__API_SLOW_S__", str(api_slow_s))
+              .replace("__MONO_LATE_DS__", str(mono_late_ds))
               .replace("__CONSTS__", consts)
               .replace("__FUNCS__", funcs_text)
               .replace("__OVERRIDE__", override)
@@ -961,6 +1026,7 @@ def main(argv=None):
         "behaviour_no_probe_child_survives_deadline",
         "mutation_pre_repair_attempt_count_wait_violates_deadline",
         "behaviour_repaired_deadline_beats_pre_repair_on_same_stub",
+        "behaviour_probe_success_at_or_after_deadline_is_rejected",
         "behaviour_active_only_deadline_expires",
         "behaviour_listener_up_but_api_not_exact_deadline_expires",
         "behaviour_no_forbidden_command_invoked",
@@ -1086,6 +1152,41 @@ def main(argv=None):
             "<= %ds AND less than half the pre-repair wall %.1fs: %s"
             % (AB_SLOW_PROBE_S, AB_BOUND, wall_d, AB_BOUND + DEADLINE_TOLERANCE_S, wall_c,
                describe(proc_d, met_d, wall_d)),
+        )
+
+        # --- the repair-round-3 boundary regression -------------------------------------
+        # A probe that reports SUCCESS only once the deadline has been reached must NOT be
+        # accepted as readiness. The real wait, the real bounded runner and the real probe all
+        # run; only mono_now_ds() is replaced, by a scripted reading sequence, so the scenario
+        # is deterministic instead of depending on a race. Both readings are exercised: exactly
+        # AT the deadline (the documented equality boundary) and one decisecond past it (the
+        # Lead's reproduced case, which the frozen pre-repair source returned rc 0 for).
+        late_details = []
+        late_ok = True
+        for late_ds in LATE_SUCCESS_READINGS_DS:
+            proc_h, met_h, wall_h = run_harness(
+                bash_exe, consts, funcs_text, exports,
+                '%s %d' % (ready["name"], LATE_SUCCESS_DEADLINE_S),
+                active_rc=0, listener_ready_at=1, api_ready_at=1, api_slow_s=0,
+                override=LATE_CLOCK_OVERRIDE, mono_late_ds=late_ds)
+            runs.append(("late_success_%dds" % late_ds, proc_h, met_h))
+            ok_h = (proc_h.returncode == 0
+                    and met_h.get("HARNESS_rc") == "1"
+                    and met_h.get("HARNESS_ready_elapsed_ds") == str(late_ds)
+                    and met_h.get("HARNESS_ready_attempts") == "1")
+            late_ok = late_ok and ok_h
+            late_details.append(
+                "post-probe reading %dds vs deadline %dds (%s) -> %s"
+                % (late_ds, LATE_SUCCESS_DEADLINE_S * 10,
+                   "equal" if late_ds == LATE_SUCCESS_DEADLINE_S * 10 else "past",
+                   describe(proc_h, met_h, wall_h)))
+        record(
+            "behaviour_probe_success_at_or_after_deadline_is_rejected",
+            late_ok,
+            "the probe SUCCEEDS but the post-probe monotonic reading has reached the "
+            "deadline; the wait must return nonzero (HARNESS_rc=1) and still record the "
+            "measured elapsed deciseconds and one attempt, never emit readiness past its "
+            "own hard bound: %s" % " | ".join(late_details),
         )
 
         # Scenario E: systemd active on EVERY attempt, listener + API never available.

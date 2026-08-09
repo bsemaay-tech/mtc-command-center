@@ -1,5 +1,262 @@
 # GATE A — A-5 READINESS REPAIR, IMPLEMENTATION RECORD (run-kit E, 2026-08-09)
 
+## ▶ NEWEST — FINAL REPAIR ROUND 3: the deadline boundary on the success path (2026-08-09)
+
+> **STATUS: ROUND 3 IMPLEMENTED LOCALLY. NOT Lead-accepted, NOT integrated, NOT committed, NOT
+> packaged, NOT transferred, NOT run.** A-5 has **not** been rerun. Gate state unchanged:
+> **A-0..A-4 PASS · A-5 FAIL (run-kit D) · A-6..A-9 NOT RUN.** Run-kit D and every D
+> evidence artifact are immutable and untouched; staging is unchanged and safe. **Round 3 is
+> the last allowed source repair round** — a further non-accepting source verdict is a hard
+> stop, not a round 4.
+
+Implementer: counterpart flagship `claude-opus-5`, worktree `C:\GA5E`, branch
+`codex/gatea-a5-readiness-e`. Frozen source candidate under repair: `61d88f12054cdc81896ca7596c699aff1a7b9a71`.
+Product candidate unchanged: `2ce41e34bceb599d80af24c5c33d835820ec321b`.
+
+### R3.1 The binding finding (reproduced, accepted without qualification)
+
+A fresh Codex `gpt-5.6-sol` xhigh canonical audit executed the mandatory evidence in full —
+exact D RED, E **GREEN 28 of 28**, `bash -n`, `python -m py_compile`, frozen-diff review, clean
+worktree — and returned **REQUEST_CHANGES** on one required **source** finding at
+`GATE_A_RUN_KIT_E_2026-08-09/gatea_A5.sh:332-335`:
+
+> In `wait_ready_deadline`, the successful-probe branch reads `now=$(mono_now_ds)`, records
+> elapsed, and returns `0` **without verifying `now <= deadline`**.
+
+Lead reproduction against the exact committed function, budget 1 s, monotonic readings
+`0, 0, 11`:
+
+```
+BOUNDARY_RESULT=SUCCESS
+BOUNDARY_ELAPSED_DS=11
+HARNESS_rc=0
+```
+
+i.e. readiness declared at 1.1 s against a 1.0 s hard deadline. **Accepted without
+qualification.** E could have printed its positive readiness marker with `ready_elapsed_s`
+larger than `ready_deadline_s`, contradicting the preregistered contract. Nothing in the round-1
+mechanics is retracted — the deadline is monotonic, every attempt is hard-bounded and really
+terminated, backoff is clamped. The one missing guard was on the way **out** of a successful
+attempt: round 1 checked the deadline before each attempt and before each sleep, and nowhere
+else.
+
+### R3.2 The repair (smallest correct change)
+
+`wait_ready_deadline()`, successful-probe branch — four added lines plus comments:
+
+```bash
+if run_bounded "$rem_ds" ready_probe_once; then
+    now=$(mono_now_ds)
+    READY_ELAPSED_DS=$(( now - t0 ))
+    rem_ds=$(( deadline - now ))
+    if (( rem_ds <= 0 )); then
+        return 1                  # succeeded, but only at/after the deadline: NOT readiness
+    fi
+    return 0
+fi
+```
+
+**The equality boundary, defined once and applied identically at all three guards:** a
+monotonic reading `now` has **EXPIRED** the deadline when `now >= deadline`, i.e. when
+`deadline - now <= 0`. **Equality is expiry.** That is the rule round 1 already used at its two
+guards — round 3 does not redefine it, it applies it at the third — and no existing
+preregistration required a different one. All three guards use the same predicate form,
+`(( rem_ds <= 0 ))` on a freshly computed `rem_ds=$(( deadline - now ))`, so a single
+reading can never count as expired at one guard and in time at another. `READY_ELAPSED_DS` and
+`READY_ATTEMPTS` are still set on **every** path, so the failure reason reports what was really
+measured, and a late success takes the ordinary deadline-expiry path: `fail()`, nonzero exit,
+**no second start**, no auto-restart, no mask.
+
+Also in the script: the header gains a `REPAIR ROUND 3` block, `wait_ready_deadline`'s contract
+comment gains the boundary statement, and the header evidence line becomes
+`A5_kit_repair_round=3` (there was deliberately never a round-2 value — round 2 did not touch
+the script).
+
+**Preserved unweakened:** hard bounded termination (SIGTERM at the bound, SIGKILL after
+`KILL_GRACE_S=2 s`, whole process group); exactly one explicit `reset-failed` + `start`;
+active + loopback-only listener + exact credential-free DISARMED API satisfied in **one**
+attempt; the four step1 guard preconditions; the full unsuppressed step5 re-runs including
+`check_api`'s own `urllib timeout=10`; the dead-window proof; the DB snapshot comparison; the
+no-clobber evidence-log guard; every hard exclusion. The `diff --strip-trailing-cr` against
+frozen D is **still exactly eight hunks** — `2c2`, `4a5,53`, `20c69,93`, `46a120,123`,
+`53c130,136`, `172a256,387`, `188a404,423`, `229c464,465` — the round-3 edit landing inside two
+that already existed and creating none. `fail "` sites remain **24 (D) → 28 (E)**.
+
+### R3.3 The focused regression (one added check; 28 → 29; nothing renamed, removed or skipped)
+
+`behaviour_probe_success_at_or_after_deadline_is_rejected`. It runs the **real**
+`wait_ready_deadline`, the **real** `run_bounded` and the **real** probe against real fast
+stubs, replacing **only** `mono_now_ds()` with a scripted reading sequence (`0`, `0`, then a
+late reading), so a successful probe deterministically lands on a post-probe reading that has
+reached the deadline — the Lead's reproduction shape, made deterministic instead of racy. The
+tick counter is a **file**, because the wait reads its clock through `$(mono_now_ds)` command
+substitution, i.e. in a subshell whose variable writes would be discarded. Both sides of the
+boundary are exercised in one check: exactly **at** the deadline (30 ds vs 30 ds) and **one
+decisecond past** it (31 ds vs 30 ds). Both must return `HARNESS_rc=1` while still recording
+the measured elapsed deciseconds and one attempt. The harness gained two reported facts,
+`HARNESS_ready_elapsed_ds` and `HARNESS_ready_attempts`, so the check asserts what the wait
+itself measured rather than only its return code.
+
+The test's own safety envelope is unchanged: no `systemctl`/`sudo`/`ss`/`journalctl`/`ssh`/
+`scp`/network/Bridge-venv reach (function shadow + PATH shims + shim log), private temp dir,
+`bash -n` parse-only, and the Gate-A script is never executed.
+
+### R3.4 D026 evidence — REAL commands, REAL output, this session
+
+Environment: `bash` `/usr/bin/bash` GNU 5.2.37 (MSYS), `command -v timeout` → `/usr/bin/timeout`
+(GNU coreutils 8.32), `python` 3.14.2. **No `PATH` override.** All commands from the repo root.
+
+**(a) RED — exact pre-repair `61d88f12` behaviour.** The pre-repair script no longer exists on
+disk, so the frozen blob was materialized **outside the repo** (run-kit D untouched, nothing in
+the repo written):
+
+```
+mkdir -p /c/tmp/GATEA_A5_PREREPAIR
+git show 61d88f12054cdc81896ca7596c699aff1a7b9a71:MTC_COMMAND_CENTER/11_TRIAGE/GATE_A_RUN_KIT_E_2026-08-09/gatea_A5.sh > /c/tmp/GATEA_A5_PREREPAIR/gatea_A5.sh
+```
+
+Materialized blob: `22531` bytes, CR `0`, SHA-256
+`fe06f79e36432a8fa81e4a1c17dc470acd8d03099aa735faa76f737212451380` — identical to the recorded
+round-1/round-2 script identity, so this **is** the audited source.
+
+```
+python MTC_COMMAND_CENTER/11_TRIAGE/GATE_A_RUN_KIT_E_2026-08-09/test_gatea_A5_readiness.py --script /c/tmp/GATEA_A5_PREREPAIR/gatea_A5.sh
+```
+
+```
+SUMMARY total=29 passed=28 failed=1
+RESULT=RED
+rc=1
+```
+
+The **single** failure is the new check, with the defect measured directly:
+
+```
+[FAIL] behaviour_probe_success_at_or_after_deadline_is_rejected -- …
+  post-probe reading 30ds vs deadline 30ds (equal) -> HARNESS_rc=0 HARNESS_ready_elapsed_ds=30 HARNESS_ready_attempts=1
+  post-probe reading 31ds vs deadline 30ds (past)  -> HARNESS_rc=0 HARNESS_ready_elapsed_ds=31 HARNESS_ready_attempts=1
+```
+
+This is a **tight** falsification: everything the round-1 source got right still passes 28/29,
+and only the boundary defect fails. `HARNESS_rc=0` with `ready_elapsed_ds=31` against a 30 ds
+deadline is the Lead's `0, 0, 11` reproduction at test scale.
+
+**(b) GREEN — the repaired E source.**
+
+```
+python MTC_COMMAND_CENTER/11_TRIAGE/GATE_A_RUN_KIT_E_2026-08-09/test_gatea_A5_readiness.py --script MTC_COMMAND_CENTER/11_TRIAGE/GATE_A_RUN_KIT_E_2026-08-09/gatea_A5.sh
+```
+
+```
+bash=C:\Program Files\Git\usr\bin\bash.EXE
+GUARD_bin=/usr/bin/timeout   timeout (GNU coreutils) 8.32   kill_rc=124
+SUMMARY total=29 passed=29 failed=0
+RESULT=GREEN
+rc=0
+```
+
+with the new check now reading
+
+```
+[PASS] behaviour_probe_success_at_or_after_deadline_is_rejected -- …
+  post-probe reading 30ds vs deadline 30ds (equal) -> HARNESS_rc=1 HARNESS_ready_elapsed_ds=30 HARNESS_ready_attempts=1
+  post-probe reading 31ds vs deadline 30ds (past)  -> HARNESS_rc=1 HARNESS_ready_elapsed_ds=31 HARNESS_ready_attempts=1
+```
+
+and every pre-existing check still passing, including the round-1 pair on the same run: the
+verbatim pre-repair attempt-count wait measured at **18.7 s** against its nominal 2 s bound
+while the repaired wait returned at **2.5 s** on identical stubs, and the 45 s blocked probe
+ended in **3.5 s** under a 3 s deadline with `HARNESS_probe_survivor=no`.
+
+**(c) Preserved control — exact frozen run-kit D (read-only; D is never edited).**
+
+```
+python MTC_COMMAND_CENTER/11_TRIAGE/GATE_A_RUN_KIT_E_2026-08-09/test_gatea_A5_readiness.py --script MTC_COMMAND_CENTER/11_TRIAGE/GATE_A_RUN_KIT_D_2026-08-08/gatea_A5.sh
+```
+
+```
+SUMMARY total=29 passed=6 failed=23
+RESULT=RED
+rc=1
+```
+
+D still reaches none of the three checks from a post-start wait, so the behavioural scenarios —
+including the new one — report `cannot exercise the real definitions`. This stays the separate,
+broader control; (a) is the round-3-specific falsification.
+
+**(d) Static / hygiene, run with the documented default commands.**
+
+| Command | Result |
+|---|---|
+| `bash -n …/GATE_A_RUN_KIT_E_2026-08-09/gatea_A5.sh` | rc `0` |
+| `PYTHONPYCACHEPREFIX=/c/tmp/ga5e_pycache python -m py_compile …/test_gatea_A5_readiness.py` | rc `0` (byte-cache written **outside** the repo) |
+| `git diff --check` | rc `0`, no whitespace errors |
+| `git status --porcelain` | exactly two modified paths: `gatea_A5.sh`, `test_gatea_A5_readiness.py` at the time of the check; the record/memory edits followed |
+| `git rev-parse --abbrev-ref HEAD` | `codex/gatea-a5-readiness-e` |
+
+`bash -n` also runs inside the test as `static_bash_n_syntax_ok`, and every `<<'PYEOF'` heredoc
+`compile()`s as `static_embedded_python_heredocs_compile` (3 blocks). Both PASS on E.
+
+### R3.5 Round-3 file identities (the values a Lead re-hash must reproduce)
+
+| Path | Bytes | LF lines | CR bytes | SHA-256 | Round 3 |
+|---|---|---|---|---|---|
+| `11_TRIAGE/GATE_A_RUN_KIT_E_2026-08-09/README.txt` | `35289` | `495` | `0` | `60bb9cafb2bb26400333c35d1570300fa5bb03c7bd7ad2411f3d4810e06f007f` | **rewritten** |
+| `11_TRIAGE/GATE_A_RUN_KIT_E_2026-08-09/gatea_A5.sh` | `25066` | `497` | `0` | `74161fb4544baed3bc79587a2ad86068714b3873ce946769c012d167672ed8a3` | **repaired** |
+| `11_TRIAGE/GATE_A_RUN_KIT_E_2026-08-09/test_gatea_A5_readiness.py` | `59469` | `1265` | `0` | `0e50ebb967af606e6194d7547e22f75fa4bf5b44c086554af1542733bb7a0145` | **extended** |
+
+These **supersede** the round-2 values (README `56d68865…`/`29397`, script
+`fe06f79e…`/`22531`, test `67823a70…`/`53208`), which now identify the **pre-repair** source.
+The script's round-1/2 hash `fe06f79e…` must **never** be used for packaging again — it is the
+defective source, and it is exactly the blob used for the RED in R3.4(a). All three members
+remain UTF-8, LF-only, CR count `0`. Git reports the usual repo-wide
+`LF will be replaced by CRLF` warning for the tracked `.sh`/`.py`; packaging must therefore
+still be built from **raw committed blobs**, never a bare `git archive` on Windows.
+
+**Also written this round (prose records / memory, not packaged):**
+`GATE_A_A5_REPAIR_PREREGISTRATION_2026-08-09E.md` (§4.5 added; §4.1/§4.3/§5/§9/§10 updated),
+this record, `GATE_A_A5_E_CANONICAL_AUDIT_ROUND1_2026-08-09.md`, `_AI_MEMORY/NEXT_STEPS.md`,
+`_AI_MEMORY/GLOBAL_HANDOFF.md`, `11_TRIAGE/NEXT_SESSION_HANDOFF_2026-08-08.md`.
+**Not touched:** every run-kit D file, every D report/evidence file, all product code and
+artifacts, every other repo file.
+
+**Line endings of the three memory files — stated plainly.** Their WORKING-COPY CR bytes went
+from `3004` / `5419` / `1048` to `0`: the editor rewrote each file LF-only. This changes nothing
+committed. The committed blobs are already LF-only (`git show HEAD:<path> | tr -cd '\r' | wc -c`
+→ `0` for all three) and this repo has `core.autocrlf=true`, so the CRLF a Windows checkout
+presents is added on checkout and stripped on staging. `git diff --numstat` confirms the shape:
+`42 / 0`, `37 / 0`, `29 / 0` — **pure insertions, zero deletions, no whole-file churn** — so
+every prior checkpoint is preserved byte-for-byte in the committed content and the newest
+section is simply prepended. The three record files and all three kit members are LF-only with
+CR count `0` in the working copy as well.
+
+### R3.6 Actions NOT performed by this unit
+
+No Git write of any kind (no commit, push, checkout, switch, reset, stash, clean, revert,
+delete — only read-only `show` / `diff` / `status` / `rev-parse`); no integration or merge; no
+packaging, transfer, SSH or SCP; no staging or service operation; no Gate-A execution; no
+broker/exchange access; no ARM; no order; no TESTNET/mainnet; no wallet; no credential read or
+print; no economic action; no product code or artifact change; no edit to run-kit D or any D
+evidence; no sub-delegation. One file was written outside the repo, under `C:\tmp`: the
+materialized pre-repair blob used for the RED, plus the Python byte-cache directory.
+
+### R3.7 Residual risk and what the Lead must still check
+
+1. **The evidence here is the implementer's own.** Under D026 it is supplemental until the Lead
+   reruns it. The exact commands are in R3.4; they need no `PATH` override.
+2. **The boundary check uses an injected clock.** That is deliberate — a real-time race at the
+   deadline edge is not reproducible on demand — but it means the check proves the *branch
+   logic*, not the host clock. The unmodified real-clock scenarios (delayed success, blocked
+   probe, active-only, listener-up/API-not-exact) still cover the rest.
+3. **Windows vs Linux.** These runs are Git Bash on Windows, where MSYS emulates process groups
+   and `mono_now_ds()` takes the `$SECONDS` fallback. Re-running the whole test under
+   WSL/Linux additionally exercises the `/proc/uptime` path and native process groups, and is
+   the stronger check.
+4. **Nothing about A-5's gate state changed.** A-5 is still FAIL under frozen run-kit D
+   evidence; only the tooling for a future rerun was repaired.
+
+---
+
 ## LEAD RE-AUDIT ACCEPTANCE CHECKPOINT — repair round 2 (2026-08-09)
 
 With no PATH override, exact D returned `rc=1`, `RESULT=RED`; E returned `rc=0`, `RESULT=GREEN`,

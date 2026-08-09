@@ -1,5 +1,65 @@
 # NEXT_STEPS
 
+## GATE A — final repair round 3 Lead re-audit ACCEPT; freeze and canonical audits next (2026-08-09)
+
+Lead independently reproduced D RED 6/29, exact `61d88f12` RED 28/29 solely on the boundary check,
+and repaired E GREEN 29/29. Existing 28 checks are preserved; equality/past-deadline success is
+rejected; blocked child termination/no survivor, mutation timing, forbidden-command isolation,
+syntax, compile, immutable D, scope and diff checks pass. A wording inconsistency was corrected
+before freeze and E reran GREEN. Final identities: script `25066` B / `497` LF / CR0 /
+`74161fb4…`; test `59469` B / `1265` LF / CR0 / `0e50ebb9…`; README `35289` B / `495` LF / CR0 /
+`60bb9caf…`.
+
+- **[AI: Codex] NEXT:** commit/freeze the exact repaired candidate; run fresh Claude Opus 5 xhigh,
+  Codex 5.6-sol xhigh, DeepSeek V4 Flash and GLM-5.2 canonical audits at that SHA. Mandatory D RED,
+  pre-repair RED, E GREEN and executable syntax/compile evidence; both flagship verdicts accepting.
+- **[AI: Any] HOLD:** no integration/package/transfer/staging before canonical acceptance. A-5 FAIL;
+  A-6..A-9 NOT RUN. Repair budget exhausted; any reproduced required source finding is hard stop.
+
+---
+
+## GATE A — final repair round 3 IMPLEMENTED (not accepted); Lead re-audit next (2026-08-09)
+
+The reproduced boundary defect is repaired. `wait_ready_deadline`'s successful-probe branch now
+recomputes `rem_ds=$(( deadline - now ))` after the post-probe monotonic reading and returns
+failure when `rem_ds <= 0`. The equality boundary is stated once and applied identically at all
+three guards — **`now >= deadline` is expiry** — which is the rule round 1 already used at the
+other two. `READY_ELAPSED_DS`/`READY_ATTEMPTS` are set on every path; a late success takes the
+ordinary expiry path (`fail()`, nonzero exit, no second start). Header now emits
+`A5_kit_repair_round=3`. D→E diff still exactly 8 hunks; `fail "` sites still 24 (D) → 28 (E).
+
+One focused named check added, **28 → 29**, nothing renamed/removed/weakened/skipped:
+`behaviour_probe_success_at_or_after_deadline_is_rejected` — real wait/runner/probe with only
+`mono_now_ds()` replaced by a scripted reading sequence, covering both the equality reading
+(30 ds vs 30 ds) and the past-the-deadline reading (31 ds vs 30 ds).
+
+D026 executed with the documented default commands, no PATH override, GNU coreutils 8.32:
+exact pre-repair `61d88f12` blob materialized outside the repo → **RED 28/29** with the single
+failure being the new check at `HARNESS_rc=0`; repaired E → **GREEN 29/29** rc 0; exact frozen
+run-kit D control → **RED 6/29**. `bash -n` rc 0; `python -m py_compile` rc 0 with the
+byte-cache outside the repo; `git diff --check` rc 0. All kit members UTF-8/LF, CR 0.
+
+- **[AI: Claude] LEAD RE-AUDIT the actual files and evidence** — never this self-report. Rerun
+  all three D026 runs (README §1, §1b, §2), `bash -n`, `python -m py_compile`, and re-hash the
+  three kit members: `gatea_A5.sh` `25066` B / `497` LF / `74161fb4…`;
+  `test_gatea_A5_readiness.py` `59469` B / `1265` LF / `0e50ebb9…`; `README.txt` `35289` B /
+  `495` LF / `60bb9caf…`. The old script hash `fe06f79e…` is now the DEFECTIVE source and must
+  never be packaged.
+- **[AI: Claude] THEN FRESH CANONICAL AUDITS** per D025 in new detached worktrees with a normal
+  Git Bash environment and writable temp/pycache. Every auditor must execute D RED, pre-repair
+  RED and E GREEN; non-execution is BLOCK, never acceptance.
+- **[AI: Claude] ONLY AFTER ACCEPTANCE:** commit, package from raw committed blobs (never a bare
+  `git archive` on Windows), transfer to `/home/gatea/gatea-run-kit-20260809E-2ce41e34`, verify,
+  then rerun A-5 once with `/home/gatea/gatea-A5-20260809E.log` confirmed absent.
+- **[AI: Any] REPAIR BUDGET EXHAUSTED.** All three rounds are consumed. A further non-accepting
+  source verdict is a hard stop — report to Barış, do not repair again.
+- **[AI: Any] SAFETY STATE:** no staging action in this unit; no Git write, no integration, no
+  package/transfer. Run-kit D and every D evidence artifact are immutable and untouched. A-5
+  remains FAIL; A-6..A-9 NOT RUN. Record:
+  `11_TRIAGE/GATE_A_A5_REPAIR_IMPLEMENTATION_2026-08-09E.md` §R3.
+
+---
+
 ## GATE A — Codex REQUEST_CHANGES reproduced; final repair round 3 next (2026-08-09)
 
 The executable Codex xhigh audit ran D RED/E GREEN 28/28 and found one required boundary defect:

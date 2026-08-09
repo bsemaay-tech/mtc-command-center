@@ -35,6 +35,22 @@
 # by the REMAINING budget, so a blocked probe cannot extend it. wait_ready_deadline()
 # states the exact contract and its honest, bounded termination tolerance.
 #
+# REPAIR ROUND 3 (2026-08-09, FINAL) - THE DEADLINE BOUNDARY ON THE SUCCESS PATH.
+# Round 1 checked the deadline before every attempt and before every backoff sleep, but the
+# SUCCESSFUL-probe branch of wait_ready_deadline() took its post-probe monotonic reading,
+# recorded the elapsed time, and returned 0 WITHOUT comparing that reading to the deadline.
+# A probe that reported success only after the deadline had already passed was therefore
+# accepted as readiness, so the script could emit the positive readiness marker with an
+# elapsed time larger than its own hard bound - contradicting the preregistered contract. There
+# is still exactly ONE line in this script that prints that marker. The Lead reproduced the
+# exact committed function with a one-second budget and the monotonic sequence 0, 0, 11:
+# result SUCCESS, elapsed 11 deciseconds, rc 0. That finding is accepted without qualification.
+# The success branch now re-checks the deadline with the SAME rule the other two guards use -
+# see THE EQUALITY BOUNDARY in wait_ready_deadline() - and returns failure if the post-probe
+# reading is at or past the deadline. Nothing else changed: the bounded termination guarantee,
+# the exactly-one-explicit-start contract, the three-condition readiness definition, the final
+# full unsuppressed checks and the no-clobber behaviour are all exactly as round 1 left them.
+#
 # AUTHORIZED ONLY FOR THE OWNER-APPROVED PREREGISTERED GATE A RERUN on gatea-staging.
 # Proves: with Restart=no, SIGKILL of the main process does NOT auto-restart; after one
 # explicit start the service returns to the identical credential-free DISARMED state and
@@ -102,7 +118,7 @@ echo "A5_candidate=2ce41e34bceb599d80af24c5c33d835820ec321b"
 echo "A5_db=$DB"
 echo "A5_py=$PY"
 echo "A5_kit_revision=E"
-echo "A5_kit_repair_round=1"
+echo "A5_kit_repair_round=3"
 echo "A5_readiness=monotonic_wall_clock_deadline ready_deadline_s=$READY_MAX_S ready_poll_s=$READY_POLL_S ready_kill_grace_s=$KILL_GRACE_S"
 echo "A5_supersedes=run-kit D for the A-5 rerun only; A-6..A-9 remain NOT RUN under run-kit D"
 echo "A5_note=no POST /api/arm; env file contents not read"
@@ -304,16 +320,23 @@ ready_probe_once() {
 #     extending it (this is the repair-round-1 defect);
 #   * the backoff after a failed attempt is clamped to the remaining budget, so it can never
 #     sleep past the deadline;
-#   * the deadline is re-checked before every attempt and before every sleep, and the loop
-#     returns nonzero the moment the remaining budget reaches zero.
+#   * the deadline is re-checked before every attempt, AFTER a SUCCESSFUL attempt, and before
+#     every sleep, and the loop returns nonzero the moment the remaining budget reaches zero.
+# THE EQUALITY BOUNDARY (repair round 3), stated once and applied identically at all three
+# guards: a monotonic reading `now` has EXPIRED the deadline when `now >= deadline`, i.e. when
+# `deadline - now <= 0`. Equality is expiry. All three guards use the same predicate form -
+# `(( rem_ds <= 0 ))` on a freshly computed `rem_ds=$(( deadline - now ))` - so the
+# same reading can never count as expired at one guard and in time at another. Readiness is
+# therefore only ever emitted for a post-probe reading STRICTLY BEFORE the deadline.
 # HONEST BOUND: the readiness operation returns at <max_seconds> of monotonic time, plus at
 # most KILL_GRACE_S seconds IF AND ONLY IF a probe ignores SIGTERM and must be SIGKILLed,
 # plus ordinary process scheduling slop. That deadline-plus-bounded-termination statement -
 # not a bare ceiling claim, and not an attempt count - is what the marker, the failure reason
 # and the records all state. It is NOT a claim that a probe may never take longer than one
 # second; it is a claim that no probe may push the operation past the deadline.
-# Returns 0 on readiness; nonzero on deadline expiry. Sets READY_ATTEMPTS and
-# READY_ELAPSED_DS (tenths of a second) either way, for the marker / failure reason.
+# Returns 0 on readiness; nonzero on deadline expiry, INCLUDING the case where the probe
+# itself succeeded but only after the deadline had passed. Sets READY_ATTEMPTS and
+# READY_ELAPSED_DS (tenths of a second) on every path, for the marker / failure reason.
 wait_ready_deadline() {
     local max_s="$1"
     local t0 deadline now rem_ds
@@ -332,6 +355,14 @@ wait_ready_deadline() {
         if run_bounded "$rem_ds" ready_probe_once; then
             now=$(mono_now_ds)
             READY_ELAPSED_DS=$(( now - t0 ))
+            rem_ds=$(( deadline - now ))
+            # Repair round 3. A successful probe is NOT readiness unless the post-probe
+            # monotonic reading is still strictly before the deadline. Same expiry rule as the
+            # two other guards (THE EQUALITY BOUNDARY above): rem_ds <= 0 is expiry. Without
+            # this the wait could emit readiness with an elapsed time past its own hard bound.
+            if (( rem_ds <= 0 )); then
+                return 1
+            fi
             return 0
         fi
         now=$(mono_now_ds)

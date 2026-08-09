@@ -5,23 +5,30 @@ REPAIR ROUND 1 (script)    - hard monotonic wall-clock readiness deadline
 REPAIR ROUND 2 (test only) - the deadline guard is resolved and exercised through the
                              selected Bash, so the documented default command passes on a
                              canonical Windows workstation with NO PATH override
+REPAIR ROUND 3 (script)    - FINAL. The successful-probe branch now rejects a post-probe
+                             monotonic reading that has reached the deadline, so readiness
+                             can never be emitted past the script's own hard bound
 ================================================================================
 
-NOTE ON THE TWO ROUNDS. Round 2 changed the LOCAL regression test and these records ONLY.
-gatea_A5.sh is BYTE-IDENTICAL to the round-1 file and therefore still emits
-A5_kit_repair_round=1 - that field records the round of the SCRIPT's readiness repair, which
-round 2 did not touch. The staging-side contract, the readiness semantics, the step1
-preconditions and every assertion below are exactly as round 1 left them.
+NOTE ON THE THREE ROUNDS. Round 2 changed the LOCAL regression test and these records ONLY;
+it did not touch gatea_A5.sh. Rounds 1 and 3 are the SCRIPT's readiness repairs, so the script
+now emits A5_kit_repair_round=3 - that field records the round of the SCRIPT's readiness
+repair, and there was deliberately never a round-2 value for it. Round 3 changes ONE branch of
+wait_ready_deadline() plus its comments and that header field. Everything else - the staging-
+side contract, the three-condition readiness definition, the bounded-probe termination
+guarantee, the step1 preconditions and every assertion below - is exactly as round 1 left it.
 
 AUTHORIZED ONLY FOR THE OWNER-APPROVED PREREGISTERED GATE A RERUN on gatea-staging.
 This kit exercises a DISARMED staging service. It does not change product code.
 Hard exclusions (unchanged): no credential value, broker/exchange access, successful ARM,
 order, TESTNET/mainnet, wallet, master merge, or economic action. First genuine FAIL stops.
 
-STATUS: LOCAL REPAIR SOURCE ONLY. REPAIR ROUND 2 IMPLEMENTED LOCALLY; PENDING LEAD RE-AUDIT
-AND CANONICAL AUDITS. NOT accepted, NOT committed, NOT packaged, NOT transferred, NOT
-executed. A-5 has NOT been rerun. Gate state is unchanged: A-0..A-4 PASS; A-5 FAIL (run-kit D,
-2026-08-09); A-6..A-9 NOT RUN. (AGENTS.md canonical audit roster + D025/D026.)
+STATUS: LOCAL REPAIR SOURCE ONLY. FINAL REPAIR ROUND 3 IMPLEMENTED LOCALLY; PENDING LEAD
+RE-AUDIT AND FRESH CANONICAL AUDITS. NOT accepted, NOT integrated, NOT committed, NOT packaged,
+NOT transferred, NOT executed. A-5 has NOT been rerun. Gate state is unchanged: A-0..A-4 PASS;
+A-5 FAIL (run-kit D, 2026-08-09); A-6..A-9 NOT RUN. (AGENTS.md canonical audit roster +
+D025/D026.) Round 3 is the LAST allowed source repair round: a further non-accepting source
+verdict is a hard stop, not a round 4.
 
 --------------------------------------------------------------------------------
 SCOPE: WHAT REVISION E IS AND IS NOT
@@ -115,12 +122,54 @@ system32 `timeout.EXE` is rejected explicitly and can never satisfy the check. A
 checks are preserved; nothing was weakened to make the check pass; gatea_A5.sh is unchanged.
 
 --------------------------------------------------------------------------------
+WHY THIS IS REPAIR ROUND 3 - DEFECT 4, READINESS EMITTED PAST THE DEADLINE (round-1 source)
+--------------------------------------------------------------------------------
+A fresh Codex `gpt-5.6-sol` xhigh canonical audit executed the mandatory evidence in full -
+exact D RED, E GREEN 28 of 28, `bash -n`, `python -m py_compile`, frozen-diff review, clean
+worktree - and then returned REQUEST_CHANGES on one required SOURCE finding:
+
+    In wait_ready_deadline(), the SUCCESSFUL-probe branch read the post-probe monotonic
+    time and recorded it as the elapsed time, then returned 0 WITHOUT comparing it to the
+    deadline. Round 1 guarded the deadline before every attempt and before every backoff
+    sleep, but not on the way out of a successful attempt. A probe that reported success
+    only after the deadline had passed was therefore accepted as readiness.
+
+The Lead reproduced the exact committed function with a one-second budget and the monotonic
+reading sequence 0, 0, 11:
+
+    BOUNDARY_RESULT=SUCCESS
+    BOUNDARY_ELAPSED_DS=11
+    HARNESS_rc=0
+
+i.e. readiness declared at 1.1 s against a 1.0 s hard deadline. The finding is binding and is
+accepted without qualification: E could have printed its positive readiness marker with an
+elapsed time larger than its own bound, contradicting the preregistered contract. Nothing in
+the round-1 mechanics is retracted - the deadline really is monotonic, probes really are
+hard-bounded and terminated, and backoff really is clamped. The single missing guard was on
+the success path.
+
+Round 3 adds that guard and states the equality boundary once, explicitly:
+
+    A monotonic reading `now` has EXPIRED the deadline when `now >= deadline`, i.e. when
+    `deadline - now <= 0`. EQUALITY IS EXPIRY.
+
+That is the rule round 1 already used at its two guards; round 3 does not change it, it applies
+it at the third. All three guards use the same predicate form - `(( rem_ds <= 0 ))` on a freshly
+computed `rem_ds=$(( deadline - now ))` - so one reading can never count as expired
+at one guard and in time at another. Readiness is emitted only for a post-probe reading STRICTLY
+BEFORE the deadline; otherwise the wait returns nonzero, the script fails via fail(), no second
+start is performed, and the measured attempts and elapsed time are reported.
+
+The regression test gains one focused named check for this, and every existing named check is
+preserved unchanged: total is now 29.
+
+--------------------------------------------------------------------------------
 EXACTLY WHAT E CHANGES vs THE FROZEN D gatea_A5.sh
 --------------------------------------------------------------------------------
 gatea_A5.sh is a copy of the frozen D member and differs ONLY in:
 
 (1) Revision / date / header / path wording for E (plus the new header evidence lines
-    A5_kit_revision=E, A5_kit_repair_round=1, A5_readiness=..., A5_supersedes=...).
+    A5_kit_revision=E, A5_kit_repair_round=3, A5_readiness=..., A5_supersedes=...).
 (2) A NEW no-clobber evidence log: LOG="/home/gatea/gatea-A5-20260809E.log".
 (3) The runtime readiness repair: the E readiness-deadline constants block, mono_now_ds(),
     run_bounded(), ready_probe_once(), wait_ready_deadline(), the `export -f` transport
@@ -148,7 +197,7 @@ no POST /api/arm; the env file is never read; all hard exclusions; and no auto-r
 on the script's own failure.
 
 --------------------------------------------------------------------------------
-THE READINESS CONTRACT (the repair, as repaired in round 1)
+THE READINESS CONTRACT (as repaired in round 1 and bounded on the success path in round 3)
 --------------------------------------------------------------------------------
 After `sudo systemctl start "$UNIT"` and BEFORE the step5 post assertions, the script runs
 
@@ -190,6 +239,14 @@ WHAT MAKES THE 30 s REAL (this is the round-1 repair):
   read-only operation (systemctl show / ss / GET /api/status); it writes nothing.
 - BACKOFF CANNOT OVERSHOOT. The sleep after a failed attempt is clamped to the remaining
   budget, and the deadline is re-checked before every attempt and before every sleep.
+- SUCCESS IS ALSO BOUNDED (this is the round-3 repair). After a SUCCESSFUL bounded probe the
+  wait takes one more monotonic reading, records it as the elapsed time, and then re-checks the
+  deadline with the SAME rule as the other two guards: `deadline - now <= 0` is expiry, and
+  EQUALITY IS EXPIRY. A probe that reports success only at or after the deadline is NOT
+  readiness - the wait returns nonzero and the script fails via fail(), reporting the measured
+  attempts and elapsed time, with no second start. Readiness is emitted only for a post-probe
+  reading strictly before the deadline, so the positive marker can never carry an elapsed time
+  larger than the bound it claims.
 - HONEST BOUND, STATED IDENTICALLY EVERYWHERE. The readiness operation returns at 30 s of
   monotonic time, PLUS at most KILL_GRACE_S=2 s if and only if a probe ignores SIGTERM and
   must be SIGKILLed, PLUS ordinary process-scheduling slop. That is the claim - no more.
@@ -282,9 +339,32 @@ two of its scenarios deliberately block a stub readiness probe.
    monotonic clock, no bounded probe runner, no readiness marker and no guard preconditions.
    (Read-only on D; D is never edited.)
 
+1b) D026 RED FOR THE ROUND-3 DEFECT - the test MUST exit NONZERO against the exact PRE-REPAIR
+   round-1 script. That script is not on disk any more, so materialize the frozen blob OUTSIDE
+   the repo (run-kit D and every D artefact stay untouched, and nothing in the repo is written):
+     mkdir -p /c/tmp/GATEA_A5_PREREPAIR
+     git show 61d88f12054cdc81896ca7596c699aff1a7b9a71:MTC_COMMAND_CENTER/11_TRIAGE/GATE_A_RUN_KIT_E_2026-08-09/gatea_A5.sh > /c/tmp/GATEA_A5_PREREPAIR/gatea_A5.sh
+     python MTC_COMMAND_CENTER/11_TRIAGE/GATE_A_RUN_KIT_E_2026-08-09/test_gatea_A5_readiness.py --script /c/tmp/GATEA_A5_PREREPAIR/gatea_A5.sh
+   The materialized blob must be 22531 bytes, CR count 0, SHA-256
+   fe06f79e36432a8fa81e4a1c17dc470acd8d03099aa735faa76f737212451380.
+   Expect RESULT=RED with SUMMARY total=29 passed=28 failed=1 and the SINGLE failure being
+     behaviour_probe_success_at_or_after_deadline_is_rejected
+   reporting HARNESS_rc=0 for BOTH a post-probe reading of 30 ds (equal to the deadline) and 31
+   ds (past it). This is the tight falsification: everything the round-1 source got right still
+   passes, and only the boundary defect fails. Step 1 stays as the separate, broader control.
+
 2) D026 GREEN - the same test MUST exit ZERO against E:
      python MTC_COMMAND_CENTER/11_TRIAGE/GATE_A_RUN_KIT_E_2026-08-09/test_gatea_A5_readiness.py --script MTC_COMMAND_CENTER/11_TRIAGE/GATE_A_RUN_KIT_E_2026-08-09/gatea_A5.sh
-   Expect RESULT=GREEN with, in particular, these four named checks passing:
+   Expect RESULT=GREEN with, in particular, these five named checks passing:
+     behaviour_probe_success_at_or_after_deadline_is_rejected
+         THIS IS THE ROUND-3 REPAIR. The real wait, the real bounded runner and the real probe
+         run against real fast stubs, with ONLY mono_now_ds() replaced by a scripted reading
+         sequence, so a successful probe lands on a post-probe reading that has reached the
+         deadline. Both sides of the documented equality boundary are exercised - exactly AT
+         the deadline (30 ds vs 30 ds) and one decisecond past it (31 ds vs 30 ds) - and the
+         wait must return HARNESS_rc=1 for both while still recording the measured elapsed
+         deciseconds and one attempt. The same check reports HARNESS_rc=0 against the
+         pre-repair source in step 1b; that RED/GREEN pair is the round-3 D026 evidence.
      mutation_pre_repair_attempt_count_wait_violates_deadline
          the VERBATIM pre-repair wait (the script's own `retry` helper driving the old
          post_start_ready) is run against an 8 s-blocking API stub with a nominal bound of 2
@@ -315,8 +395,8 @@ two of its scenarios deliberately block a stub readiness probe.
    `timeout` is genuinely missing, is not GNU, or does not return 124 on a blocked child, the
    test still goes RED rather than claiming a green it did not earn (D025 rule 1 -
    non-execution is never acceptance).
-   Expect SUMMARY total=28. The run prints the `bash=` line it selected and the check prints
-   the `command -v timeout` path it resolved through that Bash: RECORD BOTH.
+   Expect SUMMARY total=29 passed=29 failed=0. The run prints the `bash=` line it selected and
+   the check prints the `command -v timeout` path it resolved through that Bash: RECORD BOTH.
 
    PLATFORM NOTE. The run target is Linux, where process groups are native; this test may be
    run on Windows Git Bash, where MSYS emulates them. If behaviour_no_probe_child_survives_

@@ -1,5 +1,56 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-08-09 — Gate A E final repair Lead re-audit ACCEPT; canonical audits next
+
+Lead inspected the actual final-round diff and reproduced D RED 6/29, exact `61d88f12` RED 28/29
+solely on the new boundary check, and repaired E GREEN 29/29. All prior checks remain; late success
+at/eclipsing the deadline is rejected; termination/no-survivor, mutation timing, safety isolation,
+syntax/compile, frozen-D identity and scope pass. Lead corrected one wording inconsistency (“one
+expression” versus three guards sharing one predicate form), refreshed hashes, and reran E GREEN.
+Final identities: script `74161fb4…`/25066 B/497 LF; test `0e50ebb9…`/59469 B/1265 LF; README
+`60bb9caf…`/35289 B/495 LF; all CR0. Preliminary ACCEPT permits only commit/freeze and fresh
+canonical audits. No integration, package, transfer, or staging; A-5 FAIL; A-6..A-9 NOT RUN.
+Repair budget exhausted; any reproduced required source finding is hard stop.
+
+---
+
+## [Claude Opus 5] 2026-08-09 — Gate A E final repair round 3 implemented; NOT accepted
+
+The reproduced boundary defect is repaired in `wait_ready_deadline`: after a successful bounded
+probe the wait takes its post-probe monotonic reading, records elapsed, recomputes
+`rem_ds=$(( deadline - now ))`, and returns failure when `rem_ds <= 0`. The equality boundary is
+defined once and applied identically at all three guards — **`now >= deadline` is expiry** —
+which is the rule round 1 already used at the other two, so one reading can never be expired at
+one guard and in time at another. `READY_ELAPSED_DS`/`READY_ATTEMPTS` are still set on every
+path and a late success takes the ordinary expiry route (`fail()`, nonzero exit, no second
+start, no auto-restart/mask). Hard bounded termination, exactly-one-explicit-start, the
+three-condition readiness definition, the four step1 guard preconditions, the full unsuppressed
+step5 checks and no-clobber are all preserved. Script now emits `A5_kit_repair_round=3`; the
+D→E diff is still exactly 8 hunks and `fail "` sites still 24 (D) → 28 (E).
+
+Regression: one focused named check added, **28 → 29**, nothing renamed, removed, weakened or
+skipped — `behaviour_probe_success_at_or_after_deadline_is_rejected`, which drives the real
+wait/runner/probe with only `mono_now_ds()` replaced by a scripted reading sequence and covers
+both the equality reading (30 ds vs 30 ds) and the past-the-deadline reading (31 ds vs 30 ds).
+
+D026 executed with the documented default commands and no PATH override (Git Bash, GNU
+coreutils 8.32): exact pre-repair `61d88f12` blob materialized outside the repo → **RED**
+`total=29 passed=28 failed=1`, the single failure being the new check at `HARNESS_rc=0` for both
+readings; repaired E → **GREEN** `29/29`, rc 0; exact frozen run-kit D → **RED** `6/29` as the
+preserved broader control. `bash -n` rc 0; `python -m py_compile` rc 0 with the byte-cache
+outside the repo; `git diff --check` rc 0. Kit identities: `gatea_A5.sh` `25066` B/`497` LF/
+`74161fb4…`, `test_gatea_A5_readiness.py` `59469` B/`1265` LF/`0e50ebb9…`, `README.txt` `35289`
+B/`495` LF/`60bb9caf…`, all CR 0. The former script hash `fe06f79e…` is now the defective source.
+
+**NOT Lead-accepted, NOT integrated, NOT committed, NOT packaged, NOT transferred, NOT run.** No
+Git write, no staging/service action, no broker/ARM/economic action, no product change, no edit
+to run-kit D or any D evidence. A-5 remains FAIL; A-6..A-9 NOT RUN. All three repair rounds are
+consumed — a further non-accepting source verdict is a hard stop, not a round 4. Next: Lead
+re-audit, then fresh canonical audits. Record:
+`11_TRIAGE/GATE_A_A5_REPAIR_IMPLEMENTATION_2026-08-09E.md` §R3.
+
+---
+
 ## [Codex GPT-5.6-sol] 2026-08-09 — Gate A E boundary defect reproduced; final repair round 3
 
 Fresh Codex xhigh finally executed all mandatory evidence and returned REQUEST_CHANGES: E's
