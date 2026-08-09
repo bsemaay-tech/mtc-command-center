@@ -1,5 +1,16 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ PICK UP EXACTLY HERE — F1-F9 repair specification authored; audit next (Codex GPT-5.6, 2026-08-09)
+>
+> Lead authored `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_REPAIR_SPEC_2026-08-09.md`. It is specification
+> only: no rejected proposal/product/runtime/host edit. RP0-RP6 cover the nine audit findings; C1 remains
+> blocked on exact exit-tuple and safe active-writer-baseline gaps; C5 remains blocked; every future
+> helper carries explicit RED/GREEN falsifications and no-clobber/fail-closed acceptance.
+>
+> **Next safe unit:** freeze and independently audit this specification. Do not implement or transfer
+> scripts yet. The spec does not reopen the exhausted `C:\PGRK` loop and grants no host, credential,
+> broker/TESTNET, ARM/order, WP-V/KVM2/master, old-payload, or economic-action authority.
+
 > ## ▶ PICK UP EXACTLY HERE — `779bd038` proposal REQUEST_CHANGES (Codex GPT-5.6, 2026-08-09)
 >
 > **Do not transfer or execute any script in

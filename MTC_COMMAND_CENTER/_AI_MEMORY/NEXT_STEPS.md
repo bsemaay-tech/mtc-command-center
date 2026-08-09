@@ -1,5 +1,25 @@
 # NEXT_STEPS
 
+## WP-L P2 — F1-F9 bounded repair specification authored; audit next (2026-08-09)
+
+Lead-only specification (no proposal/product edit, no host action):
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_REPAIR_SPEC_2026-08-09.md`. It freezes a future one-file repair
+scope for rejected proposal `779bd038`: RP0 evidence bootstrap/status mapping; RP1 exact B3 admission;
+RP2 C1 remains BLOCKED on exact exit tuple + safe active-writer baseline; RP3 two preregistered C2
+branches with real invariant baselines; RP4 correct `sqlite3.Connection` + `invariants_hash` restore;
+RP5 dry-run/no-clobber/invariant C4; RP6 C5 remains blocked. It specifies required RED/GREEN
+falsifications and a three-round future repair cap. It does not reopen or repair `C:\PGRK`.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Codex|Claude]** Freeze and independently audit the repair specification itself before any
+  counterpart edits the rejected proposal.
+- **[AI: Claude]** No implementation yet. After spec acceptance and a confirmed new bounded proposal
+  cycle, edit only `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_2026-08-09.md`.
+- **[AI: Any]** No host/server execution, script transfer, credentials, broker/TESTNET, ARM, orders,
+  WP-V, KVM2, master merge, old-payload deletion, or economic action. Exact 50 h balance remains NOT
+  REPRODUCIBLE.
+
 ## WP-L P2 — `779bd038` command-gap proposal REQUEST_CHANGES (read-only audit, 2026-08-09)
 
 Independent Lead audit record:

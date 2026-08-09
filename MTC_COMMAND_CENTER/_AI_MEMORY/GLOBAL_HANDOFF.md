@@ -1,5 +1,16 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6] 2026-08-09 — F1-F9 bounded proposal-repair specification authored
+
+Lead authored `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_REPAIR_SPEC_2026-08-09.md`; no rejected proposal,
+product, deploy, runtime, tool, test, schema, or host state was changed. The spec freezes one-file future
+scope, separates RP0-RP6, keeps C1 blocked on its exit/baseline gaps, keeps C5 blocked, requires exact
+candidate APIs and no-clobber evidence, and names RED/GREEN falsifications for every audit finding.
+
+**PICK UP EXACTLY HERE:** independently audit and freeze the specification before any implementation.
+Do not treat authoring as acceptance; do not dispatch a proposal edit yet. This task is separate from
+the exhausted `C:\PGRK` design loop and grants no host or trading/deployment authority.
+
 ## [Codex GPT-5.6] 2026-08-09 — `779bd038` command-gap proposal audit REQUEST_CHANGES
 
 Read-only independent audit completed against exact candidate `2ce41e34`; standalone record:
