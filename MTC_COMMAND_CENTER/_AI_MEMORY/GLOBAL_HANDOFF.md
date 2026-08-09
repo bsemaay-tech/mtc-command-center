@@ -1,5 +1,14 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-08-09 — Gate A E package built and locally verified
+
+Raw `b2c369f7` blobs produced a deterministic five-member tar, SHA-256 `895fe530…f1cef`, 133120 B.
+Manifest/hashes/LF/CR/modes/extraction pass; extracted D RED 6/29, pre-repair RED 28/29, E GREEN
+29/29; syntax rc0. Package remains local only. Next: remote absence preflight, transfer,
+extract/re-verify, then memory checkpoint before A-5. Gate state unchanged.
+
+---
+
 ## [Codex GPT-5.6-sol] 2026-08-09 — Accepted E integrated and pushed
 
 Active feature branch fast-forwarded `123bb0c4 → 7453ea7f` and pushed successfully. Canonically

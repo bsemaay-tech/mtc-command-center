@@ -1,5 +1,20 @@
 # NEXT_STEPS
 
+## GATE A — E package built and locally verified; transfer/re-verify next (2026-08-09)
+
+Raw committed `b2c369f7` blobs produced
+`C:\WPI_ARTIFACTS\gatea-run-kit-20260809E-2ce41e34.tar`, SHA-256
+`895fe530f4fe85b9dc0c86332776899c88492197c2748c1de14f950f0e6f1cef`, 133120 B. Exact five-member
+archive, manifest, LF/CR, modes and extracted bytes pass. Extracted package test: D RED 6/29,
+pre-repair RED 28/29, E GREEN 29/29; Bash syntax and manifest rc0.
+
+- **[AI: Codex] NEXT:** verify remote tar/extraction/E-log paths absent, transfer tar, verify tar
+  hash, extract, verify members/manifest/mode/syntax and run extracted E local-only regression.
+- **[AI: Any] HOLD:** update memory before A-5. No staging service action yet; A-5 FAIL;
+  A-6..A-9 NOT RUN. Record: `11_TRIAGE/GATE_A_A5_E_PACKAGE_2026-08-09.md`.
+
+---
+
 ## GATE A — accepted E integrated and pushed; raw-blob package next (2026-08-09)
 
 Active `feature/donchian-crypto-ladder` fast-forwarded cleanly from `123bb0c4` to

@@ -1,5 +1,15 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ NEWEST CHECKPOINT — E package built/local verified; transfer next (2026-08-09)
+>
+> Raw accepted blobs produced `gatea-run-kit-20260809E-2ce41e34.tar`, SHA-256
+> `895fe530…f1cef`, 133120 B, exact five members. Manifest/LF/CR/modes/extracted bytes pass;
+> extracted D RED 6/29, pre-repair RED 28/29, E GREEN 29/29; syntax rc0. Package is local only.
+> **Next:** remote absence preflight, transfer, verify hash, extract/re-verify, then memory checkpoint
+> before A-5. A-5 FAIL; A-6..A-9 NOT RUN.
+>
+> ---
+
 > ## ▶ NEWEST CHECKPOINT — accepted E integrated/pushed; raw-blob package next (2026-08-09)
 >
 > Active feature branch fast-forwarded `123bb0c4 → 7453ea7f` and pushed. Accepted source remains
