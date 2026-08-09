@@ -1,0 +1,11 @@
+B3W_header base_run=WPLP2B-20260809T210610Z-834380c5 runid=WPLP2B-20260809T210610Z-834380c5-B3B stage=b3b
+B3W_block path=/home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5/kit/extracted/RP0-LIB.sh sha256=4a404d7b90d83aef47b3593757f86e3699b3bc2dd772f51df63ead4f10d9ab48
+B3W_block path=/home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5/kit/extracted/RP0-BOOTSTRAP.sh sha256=e7d748f6b41c6156de4d5c5e2d93c2b08729b1f85377b132660424024815bb33
+B3W_block path=/home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5/kit/extracted/RP1-B3.sh sha256=6f3ea022b68d80a552c4ebcb771bbb2a707bdab46a383d605ffc5b88b884becc
+RP0_NOTE component_ok name=RUNID value=WPLP2B-20260809T210610Z-834380c5-B3B
+RP0_NOTE component_ok name=EV_STAGE_ID value=b3b
+RP0_NOTE evidence_parent_ok path=/home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5/evidence owner=gatea:gatea mode=700
+RP0_NOTE evidence_parent_ok path=/home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5/evidence/runkit owner=gatea:gatea mode=700
+RP0_NOTE leaf_contained dir=/home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5/evidence/runkit name=WPLP2B-20260809T210610Z-834380c5-B3B
+RP0_NOTE evidence_dir_allocated dir=/home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5/evidence/runkit/WPLP2B-20260809T210610Z-834380c5-B3B
+RP0_NOTE leaf_contained dir=/home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5/evidence/runkit/WPLP2B-20260809T210610Z-834380c5-B3B name=b3b.log
