@@ -1,5 +1,34 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ NEWEST CHECKPOINT — Gate A post-Gate transition inventory complete (read-only); old install already absent (2026-08-09)
+>
+> Post-Gate transition inventory is **complete and read-only**. Gate A A-0..A-9 PASS remains **staging
+> acceptance only** — no ARM, credential load, broker connectivity, orders, TESTNET/mainnet, production
+> promotion, or master merge is authorized or implied. **Critical correction:** the old installed release
+> `ebada020a59edf539f60acfbb3a6bf870c8679e9` and its venv are **already absent** (teardown evidence
+> `/home/gatea/teardown-ebada020-20260808B` exists), so **no old-install cleanup mutation is required**;
+> the prior "THEN perform old-install cleanup" framing in the A-9 final checkpoints below is moot. Only
+> installed release: `/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b` (root mode `555`)
+> + venv counterpart (root mode `555`); **no** steady/legacy `mtc-bridge` unit; **no**
+> `current`/`previous` symlinks under `/opt/mtc-bridge`. Staging safe: `mtc-bridge-first-start.service`
+> active/running PID `189813`, `Restart=no`, `NRestarts=0`, exactly one `127.0.0.1:8790` listener,
+> credential-free DISARMED `state_version=1`, all flags off, no credentials/broker/orders. Candidate
+> `2ce41e34…321b` and repo HEAD `5af8178b` unchanged.
+>
+> **PICK UP EXACTLY HERE:** (1) read-only discover the canonical post-Gate workflow, roadmap, WP-V /
+> deployment / promotion gates, and whether explicit transition authority exists; (2) do not rerun Gate A
+> or mutate staging during discovery; (3) keep the service credential-free DISARMED; (4) do not delete the
+> inert old payload archive `/home/gatea/payload_ebada020.tar` absent explicit archive-cleanup scope. Stop
+> and report if no authority is found.
+>
+> Worker scope: GLM-5.2 only edited the four task-named files (this prepend plus
+> `_AI_MEMORY/NEXT_STEPS.md`, `_AI_MEMORY/GLOBAL_HANDOFF.md`, and the new
+> `11_TRIAGE/GATE_A_POST_GATE_TRANSITION_INVENTORY_2026-08-09.md`); it ran no SSH, Gate-A script, scan,
+> sudo, service, package, Git, staging-mutation, credential-read, or broker/network command. Record:
+> `11_TRIAGE/GATE_A_POST_GATE_TRANSITION_INVENTORY_2026-08-09.md`.
+>
+> ---
+
 > ## ▶ NEWEST CHECKPOINT — Gate A A-0..A-9 PASS; final staging acceptance (2026-08-09)
 >
 > A-9 executed exactly once at branch checkpoint `6073c30c`; accepted candidate
