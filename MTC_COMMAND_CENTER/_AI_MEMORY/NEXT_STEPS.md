@@ -3315,11 +3315,20 @@ Launched by DeepSeek v4 Pro. 59 strategies, 20 workers, ~210K evals/iter, target
 - Screenshot: `C:\tmp\hermes_desktop_final.png`.
 - Choose cost/routing policy before using Hermes for live agent sessions.
 
-### HERMES-004 | AWAITING APPROVAL | Install proposed MTC memory package into Hermes core memory [AI: Baris]
-- Package path: `_HERMES_MEMORY_IMPORT/`
-- Proposed target: `%USERPROFILE%\.hermes\memories\USER.md` + `MEMORY.md`
-- Current state: no existing USER.md/MEMORY.md found in Hermes core; directory exists.
-- Approval required before any copy/install.
+### HERMES-004 | CLOSED 2026-08-09 (superseded) | Install proposed MTC memory package into Hermes core memory
+- Package path moved to archive: `C:\LAB\MTC_LOCAL_ONLY_ARCHIVE\2026-06-21\_HERMES_MEMORY_IMPORT\`
+- Closure reason (Claude Fable 5, verified on disk): live Hermes memory already exists at
+  `%LOCALAPPDATA%\hermes\memories\USER.md` + `MEMORY.md` (written 2026-06-05..07) and is NEWER and richer
+  than the proposed package (adds token discipline / ds_agent rules, Telegram gateway watchdog runbook,
+  multi-agent landscape). Installing the June package would be a downgrade. No copy performed.
+- Residual: live MEMORY.md still tells Hermes to update SESSION_LOG.md (retired 2026-07-05) — fix when
+  Hermes is next actively used.
+
+### HERMES-005 | OPEN 2026-08-09 | openai-codex token invalidated → re-auth [AI: Baris]
+- Diagnosis (request dump 2026-08-09): HTTP 401 `token_invalidated` from `chatgpt.com/backend-api/codex` —
+  not quota. `auth reset` + desktop restart did not help; OAuth device token itself is dead.
+- Fix: `hermes auth add openai-codex --type oauth` → complete device-code sign-in in browser with the
+  ChatGPT Pro account. DeepSeek provider verified working meanwhile (`-m deepseek-v4-pro --provider deepseek`).
 
 ## SP-005 Wave A status update (2026-06-04)
 
