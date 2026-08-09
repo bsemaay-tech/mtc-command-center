@@ -40,6 +40,14 @@ milestone so the next fresh session resumes cleanly.
 
 ## Milestone log (newest first — update on every milestone)
 
+- 2026-08-10 ~01:15: **Audit 2 readiness package committed** (`e1944484`) — five
+  auditor-facing artifacts; 14 items PRESENT, 9 PRODUCED-AT-FREEZE, 9 BLOCKED-UPSTREAM;
+  four freeze gates of which only WP-L P2 closure is satisfied. Lead correction appended
+  locating the audit-report REDs so confirmed closures aren't downgraded. WP-I round 1.3
+  independently verified CLOSED by GLM (`2f5523c9`). Non-gated backlog now exhausted —
+  everything remaining needs owner authority (WP-I authority + budget lift; root for
+  RPD-VERIFY). Next: keep generating prep, morning summary ~06:30 + push notification.
+
 - 2026-08-10 ~00:50: **WP-L P2 UNIT CLOSED** (`6370e1fe`) — closure record + evidence
   index over all nine stage dirs, four-RUNID ledger, 2.6 h booked (~26.9 h left). WP-I
   round 1.3 closed F3+F4 (`fe8f1b11`), so the whole Codex audit is now applied; GLM
