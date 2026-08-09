@@ -40,6 +40,11 @@ milestone so the next fresh session resumes cleanly.
 
 ## Milestone log (newest first — update on every milestone)
 
+- 2026-08-09 ~22:55: audit 5 BLOCK, converging — code+arithmetic PASS, sole survivor
+  = section-4 SELF_QA setup block not copy-paste runnable. Tight doc round 6 dispatched
+  (Max, `b4ld284dy`) to make it runnable; code hash-frozen. Committed `158bb953`.
+  CONVERGENCE STOP: if audit 6 BLOCKs again same-class → escalate to owner (MSYS
+  literal-D026 tooling limit), do NOT auto-round 7. On PASS → Stage 1B re-freeze.
 - 2026-08-09 ~22:40: round 5 consumed + committed (`fd193857`). Code freeze verified
   by cmp/hash (RP1-B3 `6f3ea022`, RPD-VERIFY `3b9e78e8`, DESIGN_NOTES byte-identical);
   only SELF_QA.md rewritten. Narrow Codex doc re-audit 5 dispatched (`audit5/`). Next:
