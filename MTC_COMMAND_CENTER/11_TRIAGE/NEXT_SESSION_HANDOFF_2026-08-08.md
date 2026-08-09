@@ -1,5 +1,15 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ NEWEST CHECKPOINT — E transferred/verified; A-5 safe preflight PASS (2026-08-09)
+>
+> Remote tar/member/manifest/mode/syntax/LF/CR and Linux E GREEN 29/29 all pass. E log absent;
+> service active/running PID187338, Restart=no/NRestarts0; one loopback listener; exact HTTP200
+> credential-free DISARMED state_version1; arm/credential/broker/exchange/network all off.
+> **Next:** run A-5 E exactly once, preserve/copy/hash evidence, independently postcheck, update
+> memory. Stop A-6 on genuine FAIL. Record: `11_TRIAGE/GATE_A_A5_E_TRANSFER_2026-08-09.md`.
+>
+> ---
+
 > ## ▶ NEWEST CHECKPOINT — E package built/local verified; transfer next (2026-08-09)
 >
 > Raw accepted blobs produced `gatea-run-kit-20260809E-2ce41e34.tar`, SHA-256

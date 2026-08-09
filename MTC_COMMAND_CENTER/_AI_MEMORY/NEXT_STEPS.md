@@ -1,5 +1,20 @@
 # NEXT_STEPS
 
+## GATE A — E transferred/remote-verified; safe preflight PASS; run A-5 once next (2026-08-09)
+
+Remote tar hash, exact members, manifest, mode, syntax, LF/CR and Linux E regression GREEN 29/29 all
+pass at `/home/gatea/gatea-run-kit-20260809E-2ce41e34`. Immediate preflight: E log absent; service
+active/running PID187338, Restart=no, NRestarts=0; one loopback listener; exact HTTP200
+credential-free DISARMED state_version1; arm/credentials/broker/exchange/network all off.
+
+- **[AI: Codex] NEXT:** execute A-5 exactly once with
+  `bash /home/gatea/gatea-run-kit-20260809E-2ce41e34/gatea_A5.sh`; preserve the E log.
+- **[AI: Codex] AFTER RUN:** copy/hash evidence locally, independently postcheck service/listener/API,
+  update memory. Stop A-6 on genuine FAIL; A-6 only after A-5 PASS and checkpoint.
+- Record: `11_TRIAGE/GATE_A_A5_E_TRANSFER_2026-08-09.md`.
+
+---
+
 ## GATE A — E package built and locally verified; transfer/re-verify next (2026-08-09)
 
 Raw committed `b2c369f7` blobs produced

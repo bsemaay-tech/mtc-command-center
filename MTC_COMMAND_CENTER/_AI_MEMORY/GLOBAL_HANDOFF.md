@@ -1,5 +1,15 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-08-09 — E transferred/verified; A-5 safe preflight PASS
+
+Remote tar/extraction verifies fully, including Linux E GREEN 29/29. E log absent; service
+active/running PID187338, Restart=no/NRestarts0; one loopback listener; exact HTTP200 credential-free
+DISARMED state_version1; all arm/credential/broker/exchange/network flags off. Next is the single
+preregistered A-5 E execution, then evidence preservation/postcheck/memory before A-6. No service
+action occurred in this checkpoint. Record: `11_TRIAGE/GATE_A_A5_E_TRANSFER_2026-08-09.md`.
+
+---
+
 ## [Codex GPT-5.6-sol] 2026-08-09 — Gate A E package built and locally verified
 
 Raw `b2c369f7` blobs produced a deterministic five-member tar, SHA-256 `895fe530…f1cef`, 133120 B.
