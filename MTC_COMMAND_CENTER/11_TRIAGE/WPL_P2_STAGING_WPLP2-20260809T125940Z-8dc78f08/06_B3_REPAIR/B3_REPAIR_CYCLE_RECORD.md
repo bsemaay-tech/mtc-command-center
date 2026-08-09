@@ -92,3 +92,20 @@ the standing grant for this class of survivor. Round 5 scope is locked to
 to round 4 (verified by hash after). If a round-5 re-audit still finds a REQUIRED
 code defect (not doc), THAT escalates. Audit-4 nit 2 (over-broad mid-table wording)
 folded into the same round.
+
+## Round 5 audit → tight doc round 6 (last mechanical layer)
+
+Audit 5 (`audit5/AUDIT5_REPORT.md`) BLOCK, but strictly narrower and converging:
+**code freeze PASS** (all three non-QA files byte-identical, hashes match), **nit 2 +
+arithmetic PASS**. Round 5 closed the command-level placeholders; the sole survivor is
+the section-4 shared declaration block those commands source — `QA=<prose>` (not
+runnable Bash), `B="<repo>/..."` (a repo-root placeholder the kickoff did not permit),
+and the line-381 shared capture recipe. Every actual closure command still reproduces
+correctly (the auditor independently re-ran five and confirmed). Under standing
+authority this is the narrowest doc survivor and it is converging (round 4:
+command-level placeholders → round 5: setup block only), so round 6 is authorized —
+scoped to making the section-4 declaration block copy-paste runnable and nothing else.
+**Convergence stop set: if audit 6 BLOCKs again on the same D026 exact-command class,
+escalate to owner** — that would indicate the QA-authoring approach cannot satisfy
+literal-D026 in this MSYS harness, a tooling-limit judgment that belongs to the owner,
+not another auto-round. Code stays frozen at the round-4 hashes.
