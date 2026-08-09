@@ -1,5 +1,14 @@
 # NEXT_STEPS
 
+## WP-L P2 — Codex fourth-account package audit non-execution (2026-08-09)
+
+Fresh `gpt-5.6-sol` xhigh fourth-account audit returned `BLOCK` without reading package files because the
+prompt's phrase `do not run host commands` was interpreted as forbidding local read-only file/Git access.
+No file changed and no package finding was produced. This is audit-prompt non-execution, not rejection.
+
+**PICK UP EXACTLY HERE:** retry fresh with local read-only `rg`/file/Git commands explicitly allowed and
+remote host/SSH/service/reboot/rollback plus all mutation still forbidden. Do not count a repair round.
+
 ## WP-L P2 — Lead acceptance checklist ACCEPTED PASS-WITH-NITS (2026-08-09)
 
 Fresh GLM-5.2 re-audit accepted exact checklist commit

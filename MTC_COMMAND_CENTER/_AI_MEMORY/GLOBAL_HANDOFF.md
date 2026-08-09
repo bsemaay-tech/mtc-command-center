@@ -1,5 +1,11 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6] 2026-08-09 — Fourth-account package audit needs fresh retry
+
+`gpt-5.6-sol` xhigh returned non-executing `BLOCK`: ambiguous `no host commands` wording prevented local
+read-only file/status access. It produced no package finding and changed nothing. Retry fresh with local
+read-only inspection explicitly permitted while all remote/server and mutation actions remain forbidden.
+
 ## [Codex GPT-5.6] 2026-08-09 — Lead acceptance checklist accepted PASS-WITH-NITS
 
 Fresh GLM-5.2 re-audit accepted byte-exact checklist commit `456968bb`: zero required repairs, clean Git

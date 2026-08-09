@@ -1,5 +1,11 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ PICK UP EXACTLY HERE — Codex package audit non-execution; retry fresh (Codex GPT-5.6, 2026-08-09)
+>
+> Fourth-account `gpt-5.6-sol` xhigh returned `BLOCK` before file reads because `no host commands` was
+> interpreted to ban local read-only inspection. No package finding/edit/repair round. Retry fresh with
+> local read-only file/Git commands allowed; keep remote host/SSH/service/reboot/rollback and mutation banned.
+
 > ## ▶ PICK UP EXACTLY HERE — Lead checklist accepted PASS-WITH-NITS (Codex GPT-5.6, 2026-08-09)
 >
 > Fresh GLM-5.2 re-audit accepted exact `456968bb`: zero required repairs, clean Git status, prior source
