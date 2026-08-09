@@ -2,11 +2,19 @@
 
 > ## ⚠ STATUS: PROPOSED ONLY — not accepted, not executed, not preregistered, not authorized.
 >
-> **Repair round 1 of at most 3** against the accepted repair specification
+> **Repair round 2 of at most 3** against the accepted repair specification
 > `WPL_P2_COMMAND_GAP_PROPOSALS_REPAIR_SPEC_2026-08-09.md` at commit
 > `9ac60ac652f4a221316465cdbc24516aa391f5ce`, implementing RP0–RP6 in response to findings
 > F1–F9 of `WPL_P2_COMMAND_GAP_PROPOSALS_AUDIT_2026-08-09.md` (the single authorized round-1
 > audit of the rejected source proposal `779bd038957a192db47ff7ad68eb51304a2fba46`).
+>
+> Round 2 repairs exactly the five reproduced findings **R1–R5** of
+> `WPL_P2_PROPOSALS_REAUDIT_ROUND1_2026-08-09.md`, which returned REQUEST_CHANGES against the
+> round-1 repair at commit `7194b895` (blob `690d40f5cdbb66efd24cf6c63a8bf661cbe961ee`):
+> R1 evidence-leaf containment (RP0), R2 C2 post-reboot cgroup/`app_state` postconditions (RP3),
+> R3 mandatory candidate re-verification (RP4), R4 fresh verified post-rollback bundle (RP5), and
+> R5 dry-run fingerprint adjudication (RP5). Nothing else was rewritten, and every item declared
+> BLOCKED in round 1 stays BLOCKED.
 >
 > No block in this document has been run against a host. No host was touched to produce it —
 > no SSH, transport, `sudo`, `systemctl`, network, staging, credential, broker or Git-history
@@ -223,6 +231,43 @@ rp0_require_canonical_dir() {
     return 0
 }
 
+# --- preregistered identifier must be ONE safe path component --------------
+# args: <variable name> <value>
+# A run ID or stage ID that carries a separator, `.`, `..`, a leading `-`, or
+# any character outside [A-Za-z0-9._-] can place the ACTIVE evidence leaf beside
+# or above the directory §1.5 later hashes. Non-empty is not the predicate:
+# `EV_STAGE_ID=../escaped` is non-empty and escapes the closed tree, which
+# silently defeats the remote/local binding while the run still reports success.
+rp0_require_safe_component() {
+    local name="$1" val="$2"
+    case "$val" in
+        ""|"."|"..")       rp0_fail "component_reserved name=$name value=[$val]";     return 1 ;;
+        -*)                rp0_fail "component_leading_dash name=$name value=[$val]"; return 1 ;;
+        *[!A-Za-z0-9._-]*) rp0_fail "component_charset name=$name value=[$val]";      return 1 ;;
+    esac
+    rp0_note "component_ok name=$name value=$val"
+    return 0
+}
+
+# --- prove a derived path is a DIRECT child of the allocated directory -----
+# args: <allocated dir> <derived leaf>
+# Independent of the string check above, and applied after allocation: the leaf
+# must be spelled exactly `<dir>/<basename>`, and its canonical parent must be
+# the canonical allocated directory. A symlinked intermediate is therefore
+# refused too, even when every literal component looked safe.
+rp0_require_leaf_inside() {
+    local dir="$1" leaf="$2" base parent canon_dir canon_parent
+    base="${leaf##*/}"
+    parent="${leaf%/*}"
+    [ "$leaf" = "$dir/$base" ] || { rp0_fail "leaf_not_direct_child dir=$dir leaf=$leaf"; return 1; }
+    canon_dir="$(readlink -f -- "$dir")"       || { rp0_stop "canonicalization_failed path=$dir";    return 3; }
+    canon_parent="$(readlink -f -- "$parent")" || { rp0_stop "canonicalization_failed path=$parent"; return 3; }
+    [ "$canon_parent" = "$canon_dir" ] \
+        || { rp0_fail "leaf_parent_escapes dir=$canon_dir parent=$canon_parent leaf=$leaf"; return 1; }
+    rp0_note "leaf_contained dir=$canon_dir name=$base"
+    return 0
+}
+
 # --- create-once evidence directory ----------------------------------------
 # ONE plain `mkdir -m 0700`. Never `mkdir -p`: a missing intermediate must fail,
 # not be silently manufactured. Any non-zero rc is STOP and burns the run ID.
@@ -299,6 +344,51 @@ rp0_show_property() {
     printf '%s\n' "$out"; return 0
 }
 
+# --- systemd cgroup survivors: fail-closed, three outcomes -----------------
+# "No writer pattern match and no listener" does NOT prove the unit is empty: a
+# process that no longer matches the writer pattern, or that never opened the
+# control port, still survives inside the unit's cgroup. Prints the survivor
+# count for the whole cgroup SUBTREE. An unreadable property, an unparsable
+# property line, a walk error, `find` stderr with rc 0, or an unreadable
+# `cgroup.procs` is COULD NOT EVALUATE — never "0 survivors". Only an explicitly
+# empty ControlGroup, or a cgroup directory classified absent, is zero.
+rp0_cgroup_survivors() {
+    local unit="$1" root="${RP0_CGROUP_ROOT:-/sys/fs/cgroup}"
+    local out rc=0 cg dir kind err detail content f total=0
+    local -a procfiles=() pids=()
+    out="$(systemctl show -p ControlGroup -- "$unit" 2>/dev/null)" || rc=$?
+    [ "$rc" -eq 0 ] || { rp0_stop "cgroup_property_failed unit=$unit rc=$rc"; return 3; }
+    case "$out" in
+        ControlGroup=*) cg="${out#ControlGroup=}" ;;
+        *) rp0_stop "cgroup_property_unparsable unit=$unit out=[$out]"; return 3 ;;
+    esac
+    if [ -z "$cg" ]; then printf '0\n'; return 0; fi
+    kind="$(rp0_probe_path "$root")" || return 3
+    [ "$kind" = "dir" ] || { rp0_stop "cgroup_root_kind=$kind path=$root"; return 3; }
+    dir="$root$cg"
+    kind="$(rp0_probe_path "$dir")" || return 3
+    case "$kind" in
+        absent) printf '0\n'; return 0 ;;
+        dir)    : ;;
+        *)      rp0_stop "cgroup_dir_kind=$kind path=$dir"; return 3 ;;
+    esac
+    err="$(mktemp)" || { rp0_stop "cgroup_tempfile_failed unit=$unit"; return 3; }
+    rc=0
+    out="$(find "$dir" -type f -name cgroup.procs -print 2>"$err")" || rc=$?
+    detail="$(tr -d '\r\n' <"$err")"; rm -f "$err"
+    [ "$rc" -eq 0 ] || { rp0_stop "cgroup_walk_failed dir=$dir rc=$rc detail=$detail"; return 3; }
+    [ -z "$detail" ] || { rp0_stop "cgroup_walk_stderr dir=$dir detail=$detail"; return 3; }
+    if [ -n "$out" ]; then mapfile -t procfiles <<<"$out"; fi
+    for f in "${procfiles[@]}"; do
+        rc=0
+        content="$(LC_ALL=C cat -- "$f" 2>/dev/null)" || rc=$?
+        [ "$rc" -eq 0 ] || { rp0_stop "cgroup_procs_unreadable file=$f rc=$rc"; return 3; }
+        if [ -n "$content" ]; then mapfile -t pids <<<"$content"; total=$(( total + ${#pids[@]} )); fi
+    done
+    printf '%s\n' "$total"
+    return 0
+}
+
 # --- pipeline discipline ---------------------------------------------------
 # Rule: any pipeline runs under `set -o pipefail` AND its complete component
 # status vector (${PIPESTATUS[@]}) is adjudicated; empty output is never
@@ -332,16 +422,25 @@ set -Eeuo pipefail
 : "${EV_RUNKIT_MODE:?preregistered runkit octal mode is required}"
 : "${EV_STAGE_ID:?preregistered stage identifier is required}"
 
+# Non-empty is NOT sufficient. Both identifiers name ONE component each; a
+# separator or `..` would put the active evidence leaf outside the tree that
+# §1.5 hashes, so the remote/local binding would attest to the wrong bytes.
+rp0_require_safe_component RUNID       "$RUNID"       || exit $?
+rp0_require_safe_component EV_STAGE_ID "$EV_STAGE_ID" || exit $?
+
 # Parent chain first: canonical, non-link, preregistered owner and mode.
 rp0_require_canonical_dir "$EV_PARENT" "$EV_PARENT_OWNER" "$EV_PARENT_MODE" || exit $?
 rp0_require_canonical_dir "$EV_RUNKIT" "$EV_RUNKIT_OWNER" "$EV_RUNKIT_MODE" || exit $?
 
 # One-shot create-once allocation; the run ID is burned on any failure.
 EV_DIR="$EV_RUNKIT/$RUNID"
+rp0_require_leaf_inside "$EV_RUNKIT" "$EV_DIR" || exit $?
 rp0_allocate_evidence_dir "$EV_DIR" || exit $?
 
-# Only now may output be redirected, and only into the directory just created.
+# Only now may output be redirected, and only into the directory just created,
+# after the derived leaf is PROVEN to be a direct child of it.
 EV_LOG="$EV_DIR/${EV_STAGE_ID}.log"
+rp0_require_leaf_inside "$EV_DIR" "$EV_LOG" || exit $?
 rp0_open_evidence_leaf "$EV_LOG" || exit $?
 
 printf 'RP0_EVIDENCE run_id=%s dir=%s leaf=%s\n' "$RUNID" "$EV_DIR" "$EV_LOG"
@@ -370,6 +469,12 @@ All six are exercised locally in §8: (1) existing regular evidence leaf; (2) da
 symlink; (3) parent path replaced by a symlink; (4) denied/path-probe error; (5) `pgrep`
 synthetic rc `2` with empty output; (6) `systemctl is-enabled` synthetic non-token error with
 empty output.
+
+A seventh is required and is also exercised in §8: **(7) evidence-tree escape** — a preregistered
+identifier carrying a separator or `..` (`EV_STAGE_ID=../escaped`, and the same for `RUNID`) must
+be refused before allocation, so the active leaf can never sit outside the directory §1.5 hashes.
+An eighth, **(8) cgroup-survivor evaluation failure**, covers the predicate added for RP3/RP5: an
+unreadable or unparsable cgroup property is STOP, never "no survivor".
 
 ---
 
@@ -684,6 +789,7 @@ PORT="8790"
 : "${C2_BASELINE_INVARIANTS_JSON:?preregistered pre-reboot protected-invariant document is required}"
 : "${C2_POST_INVARIANTS_SHA256:?post-reboot invariant hash, produced by the accepted quiescent capture, is required}"
 : "${C2_POST_INVARIANTS_JSON:?post-reboot protected-invariant document is required}"
+: "${PY:?candidate venv interpreter path is required}"
 
 c2a_stop() { printf 'C2A_STOP reason=%s\n' "$*"; exit 3; }
 c2a_fail() { printf 'C2A_FAIL reason=%s\n' "$*"; exit 1; }
@@ -727,9 +833,40 @@ listeners="$(rp0_listener_count "$PORT")" || exit 3
 printf 'C2A_listener_count=%s\n' "$listeners"
 [ "$listeners" -eq 0 ] || c2a_fail "control port $PORT has a listener after reboot"
 
-printf 'C2A_SECTION step4_protected_invariant_equality\n'
+# A cgroup survivor is a THIRD, independent way the unit can still hold a
+# process: it need not match the writer pattern and need not hold the port.
+# Omitting this check was the gap; the predicate is fail-closed (STOP on any
+# unevaluable property, walk or read).
+cgsurv="$(rp0_cgroup_survivors "$UNIT")" || exit 3
+printf 'C2A_cgroup_survivors=%s\n' "$cgsurv"
+[ "$cgsurv" -eq 0 ] || c2a_fail "the unit cgroup still holds $cgsurv process(es) after reboot"
+
+printf 'C2A_SECTION step4_app_state_not_armed\n'
+# ABSOLUTE assertion, not a comment and not implied by equality: equality alone
+# would happily accept "ARMED before the reboot and ARMED after it".
+app_state=""; asrc=0
+app_state="$("$PY" - "$C2_POST_INVARIANTS_JSON" <<'PYEOF'
+import json, sys
+try:
+    with open(sys.argv[1], "r", encoding="utf-8") as handle:
+        doc = json.load(handle)
+except Exception as exc:
+    print(f"app_state_document_unreadable: {exc.__class__.__name__}: {exc}", file=sys.stderr)
+    raise SystemExit(3)
+if not isinstance(doc, dict) or "app_state" not in doc:
+    print("app_state_field_missing", file=sys.stderr)
+    raise SystemExit(3)
+print("" if doc["app_state"] is None else str(doc["app_state"]))
+PYEOF
+)" || asrc=$?
+[ "$asrc" -eq 0 ] || c2a_stop "app_state_unevaluable path=$C2_POST_INVARIANTS_JSON rc=$asrc"
+printf 'C2A_app_state=%s\n' "$app_state"
+[ "$app_state" != "ARMED" ] || c2a_fail "app_state=ARMED after reboot; the unit must not return armed"
+
+printf 'C2A_SECTION step5_protected_invariant_equality\n'
 # EXACT equality of both the candidate invariants hash and the invariant document.
-# Presence, size, "recorded", or `app_state != ARMED` alone are NOT this predicate.
+# Presence, size or "recorded" are NOT this predicate; `app_state != ARMED` is a
+# separate REQUIRED assertion (step 4) and never a substitute for equality.
 [ "$C2_POST_INVARIANTS_SHA256" = "$C2_BASELINE_INVARIANTS_SHA256" ] \
     || c2a_fail "protected invariants hash differs across reboot (baseline=$C2_BASELINE_INVARIANTS_SHA256 post=$C2_POST_INVARIANTS_SHA256)"
 cmp -s -- "$C2_BASELINE_INVARIANTS_JSON" "$C2_POST_INVARIANTS_JSON" \
@@ -829,6 +966,12 @@ listeners="$(rp0_listener_count "$PORT")" || exit 3
 printf 'C2B_listener_count=%s\n' "$listeners"
 [ "$listeners" -eq 0 ] || c2b_fail "control port $PORT has a listener after a masked reboot"
 
+# Third independent survivor class, fail-closed exactly as in Scenario A. A
+# masked unit whose cgroup still holds a process is not a DISARMED host.
+cgsurv="$(rp0_cgroup_survivors "$UNIT")" || exit 3
+printf 'C2B_cgroup_survivors=%s\n' "$cgsurv"
+[ "$cgsurv" -eq 0 ] || c2b_fail "the unit cgroup still holds $cgsurv process(es) after a masked reboot"
+
 printf 'C2B_SECTION step4_protected_invariant_equality\n'
 # Comparison basis is the POST-STOP / PRE-REBOOT quiescent baseline, never the pre-stop one.
 [ "$C2_POST_INVARIANTS_SHA256" = "$C2_QUIESCENT_INVARIANTS_SHA256" ] \
@@ -858,6 +1001,15 @@ C2-F1, C2-F2, C2-F4 and C2-F5 are already closed at the predicate level by the R
 falsifications executed in §8 (`rp0_is_enabled_token` and `rp0_probe_path`); the entries above
 remain required at the SCENARIO level once a scenario is authorized. C2-F3, C2-F6 and C2-F7 are
 scenario-level only and are NOT claimed closed by this document.
+
+  C2-F8  a cgroup survivor is caught in BOTH scenarios even when no writer pattern matches and
+         no listener is present, and an unevaluable cgroup property is STOP, never "no survivor";
+  C2-F9  `app_state = ARMED` after the reboot fails Scenario A even when the invariant documents
+         are equal on both sides.
+
+C2-F8 and C2-F9 are exercised at PREDICATE/BLOCK level in §8.6. That is evidence about the block
+text under local stubs; both scenarios remain BLOCKED and neither entry is claimed closed at the
+scenario level.
 ```
 
 ---
@@ -932,17 +1084,54 @@ def load_candidate_api(release_root: Path):
     try:
         from tools.wal_state_bundle import (  # noqa: E402
             BUNDLE_DB_NAME, FORBIDDEN_SIDECARS, MANIFEST_NAME,
-            collect_invariants, invariants_hash,
+            collect_invariants, invariants_hash, verify_bundle,
         )
     except Exception as exc:  # import/tool error is never a FAIL
         raise Stop(f"candidate_api_import_failed: {exc.__class__.__name__}: {exc}") from exc
     return {
         "collect_invariants": collect_invariants,
         "invariants_hash": invariants_hash,
+        "verify_bundle": verify_bundle,
         "MANIFEST_NAME": MANIFEST_NAME,
         "BUNDLE_DB_NAME": BUNDLE_DB_NAME,
         "FORBIDDEN_SIDECARS": FORBIDDEN_SIDECARS,
     }
+
+
+def candidate_verify(api, bundle_dir: Path, expect_bundle_db_sha256: str,
+                     expect_invariants_sha256: str, out=print) -> None:
+    """Re-verify the accepted bundle with the CANDIDATE's own verification, in
+    THIS evaluation, with both exact expected hashes.
+
+    `verify_bundle(bundle_dir, expect_bundle_sha256, expect_invariants_sha256)`
+    (wal_state_bundle.py:1125-1205) additionally validates the full manifest
+    contract, the manifest integrity hash, the source/arrival snapshot contract,
+    the sidecar-hash contract, source and bundle integrity/FK cleanliness, and
+    the re-derived invariants. A prior `verify` PASS is a statement about a past
+    run; the local checks further down are a partial reimplementation. Neither
+    is this predicate, and neither replaces it.
+
+    Fail-closed adjudication: an exception is COULD NOT EVALUATE, and only the
+    exact accepted verdict `(0, "VALID")` may proceed. Both expected hashes are
+    REQUIRED by the candidate itself: it raises `BundleError` when either is
+    missing or is not 64 hex characters.
+    """
+    try:
+        code, report = api["verify_bundle"](
+            bundle_dir=bundle_dir,
+            expect_bundle_sha256=expect_bundle_db_sha256,
+            expect_invariants_sha256=expect_invariants_sha256,
+        )
+    except Exception as exc:
+        raise Stop(f"candidate_verify_unevaluable: {exc.__class__.__name__}: {exc}") from exc
+    verdict = report.get("verdict")
+    failures = report.get("failures")
+    out(f"C3_candidate_verify_rc={code} verdict={verdict} failures={failures}")
+    if code != 0 or verdict != "VALID":
+        raise Fail(
+            f"candidate verify did not return the accepted verdict "
+            f"(rc={code} verdict={verdict} failures={failures})"
+        )
 
 
 def sha256_file(path: Path) -> str:
@@ -1012,8 +1201,14 @@ def assert_no_sidecars(db_path: Path, forbidden) -> None:
 
 
 def run(source_db: Path, bundle_dir: Path, restore_root: Path, release_root: Path,
-        expect_manifest_file_sha256: str, out=print) -> int:
-    """One evaluation. Preserves EVERY artifact: nothing is deleted on any path."""
+        expect_manifest_file_sha256: str, expect_bundle_db_sha256: str,
+        expect_invariants_sha256: str, out=print) -> int:
+    """One evaluation. Preserves EVERY artifact: nothing is deleted on any path.
+
+    The three `expect_*` arguments are the externally recorded acceptance values
+    for this bundle. They are inputs, never read back out of the manifest: a
+    manifest cannot attest to its own acceptance.
+    """
     api = load_candidate_api(release_root)
     manifest_path = bundle_dir / api["MANIFEST_NAME"]
     bundle_db = bundle_dir / api["BUNDLE_DB_NAME"]
@@ -1036,7 +1231,20 @@ def run(source_db: Path, bundle_dir: Path, restore_root: Path, release_root: Pat
     expect_invariants_sha = manifest["invariants_sha256"]
     expect_invariants = manifest["invariants"]
 
-    # 2. Bundle DB hash equality, and no sidecar in the bundle root.
+    # 2. The manifest's own hashes must be the externally recorded accepted
+    #    ones. Without this, every check below would be self-referential.
+    if expect_bundle_db_sha != expect_bundle_db_sha256:
+        raise Fail("manifest bundle db_sha256 is not the externally recorded accepted value")
+    if expect_invariants_sha != expect_invariants_sha256:
+        raise Fail("manifest invariants_sha256 is not the externally recorded accepted value")
+
+    # 3. MANDATORY candidate re-verification, with both exact expected hashes,
+    #    BEFORE anything is restored. Nothing below may run if it does not
+    #    return the exact accepted verdict.
+    candidate_verify(api, bundle_dir, expect_bundle_db_sha256,
+                     expect_invariants_sha256, out=out)
+
+    # 4. Bundle DB hash equality, and no sidecar in the bundle root.
     if not bundle_db.is_file() or bundle_db.is_symlink():
         raise Fail(f"bundle database is not a regular file: {bundle_db}")
     actual_bundle_db_sha = sha256_file(bundle_db)
@@ -1045,7 +1253,7 @@ def run(source_db: Path, bundle_dir: Path, restore_root: Path, release_root: Pat
         raise Fail("bundle database sha256 does not match the accepted manifest value")
     assert_no_sidecars(bundle_db, api["FORBIDDEN_SIDECARS"])
 
-    # 3. Fresh, no-clobber restore root. NEVER deleted, on any exit path.
+    # 5. Fresh, no-clobber restore root. NEVER deleted, on any exit path.
     if restore_root.is_symlink():
         raise Fail(f"restore root is a symlink: {restore_root}")
     if restore_root.exists():
@@ -1056,7 +1264,7 @@ def run(source_db: Path, bundle_dir: Path, restore_root: Path, release_root: Pat
         raise Stop(f"restore_root_allocation_failed: {exc.__class__.__name__}: {exc}") from exc
     restored_db = restore_root / "restored.db"
 
-    # 4. Read-only source connection; restore via src_conn.backup(dst_conn).
+    # 6. Read-only source connection; restore via src_conn.backup(dst_conn).
     src_conn = open_readonly(bundle_db)
     try:
         dst_conn = restore_into(src_conn, restored_db)
@@ -1064,7 +1272,7 @@ def run(source_db: Path, bundle_dir: Path, restore_root: Path, release_root: Pat
         src_conn.close()
 
     try:
-        # 5. quick_check and foreign_key_check on the RESTORED connection.
+        # 7. quick_check and foreign_key_check on the RESTORED connection.
         qc, fk = integrity_and_fk(dst_conn)
         out(f"C3_restored_quick_check={qc}")
         out(f"C3_restored_fk_violations={fk}")
@@ -1073,7 +1281,7 @@ def run(source_db: Path, bundle_dir: Path, restore_root: Path, release_root: Pat
         if fk != 0:
             raise Fail(f"restored foreign_key_check found {fk} violation(s)")
 
-        # 6. Candidate public API on the RESTORED CONNECTION, then candidate hash.
+        # 8. Candidate public API on the RESTORED CONNECTION, then candidate hash.
         try:
             restored_invariants = api["collect_invariants"](dst_conn)
             restored_hash = api["invariants_hash"](restored_invariants)
@@ -1083,7 +1291,7 @@ def run(source_db: Path, bundle_dir: Path, restore_root: Path, release_root: Pat
     finally:
         dst_conn.close()
 
-    # 7. Protected equality: the candidate hash AND every protected field.
+    # 9. Protected equality: the candidate hash AND every protected field.
     if restored_hash != expect_invariants_sha:
         raise Fail("restored invariants hash does not equal the accepted bundle value")
     for field in PROTECTED_FIELDS:
@@ -1091,7 +1299,7 @@ def run(source_db: Path, bundle_dir: Path, restore_root: Path, release_root: Pat
             raise Fail(f"protected invariant field differs after restore: {field}")
     out("C3_protected_fields_equal=yes")
 
-    # 8. Identity separation and sidecar absence in the restore root.
+    # 10. Identity separation and sidecar absence in the restore root.
     idents = {
         "source": identity(source_db),
         "bundle": identity(bundle_db),
@@ -1110,10 +1318,12 @@ def run(source_db: Path, bundle_dir: Path, restore_root: Path, release_root: Pat
 def main(argv) -> int:
     """Artifacts are preserved under distinct labels; nothing is published as
     accepted on a failing path and nothing partial is ever deleted."""
-    (source_db, bundle_dir, restore_root, release_root, expect_manifest_file_sha256) = argv[1:6]
+    (source_db, bundle_dir, restore_root, release_root, expect_manifest_file_sha256,
+     expect_bundle_db_sha256, expect_invariants_sha256) = argv[1:8]
     try:
         return run(Path(source_db), Path(bundle_dir), Path(restore_root),
-                   Path(release_root), expect_manifest_file_sha256)
+                   Path(release_root), expect_manifest_file_sha256,
+                   expect_bundle_db_sha256, expect_invariants_sha256)
     except Fail as exc:
         print(f"C3_FAIL reason={exc}")
         print(f"C3_ARTIFACTS_PRESERVED label=failed root={restore_root}")
@@ -1130,10 +1340,21 @@ if __name__ == "__main__":
 
 ### 5.3 Prerequisite and disposition
 
-Prerequisite: a candidate `create` **without** `--allow-live-source`, followed by a `verify`
-PASS, already exists for the bundle directory; the manifest's
-`source.changed_during_capture` is `false`; and the manifest **file** SHA-256 was recorded
-externally at that time. This wrapper consumes an already-accepted bundle; it creates none.
+Prerequisite: a candidate `create` **without** `--allow-live-source` already exists for the bundle
+directory; the manifest's `source.changed_during_capture` is `false`; and the manifest **file**
+SHA-256, the bundle `db_sha256` and the `invariants_sha256` were all recorded externally at
+acceptance time. This wrapper consumes an already-accepted bundle; it creates none.
+
+**The prior `verify` PASS is a prerequisite, never the predicate.** A past PASS attests to the
+bundle as it was then. Step 3 of the block therefore re-runs the candidate's own
+`verify_bundle(bundle_dir, expect_bundle_sha256, expect_invariants_sha256)` **in this evaluation**,
+with both externally recorded hashes, and proceeds only on the exact `(0, VALID)` verdict. That
+call — not the local checks around it — is what binds the full manifest contract, the manifest
+integrity hash, the source/arrival snapshot contract, the sidecar-hash contract, source and bundle
+integrity/FK cleanliness and the re-derived invariants. Equivalently at the CLI:
+`python -m tools.wal_state_bundle verify --bundle-dir <dir> --expect-bundle-sha256 <db-sha>
+--expect-invariants-sha256 <inv-sha>` (`wal_state_bundle.py:1232-1235`), whose rc `0` is the same
+verdict, rc `2` is INVALID, and rc `3` is a tool error that must be read as STOP.
 
 FAIL disposition: drift, corruption, hash inequality, identity aliasing or a sidecar is a STOP
 requiring Lead adjudication. STOP disposition: an import, connection, backup or integrity tool
@@ -1144,8 +1365,9 @@ root and every partial artifact are preserved and their exact path is printed.
 
 Exercised locally in §8: old path argument raises the reproduced `AttributeError`; wrong
 invariant; wrong DB hash; wrong external manifest-file SHA; pre-existing destination; aliased
-inode; sidecar appearance; failed backup/open; failed integrity/FK; and partial-output
-preservation.
+inode; sidecar appearance; failed backup/open; failed integrity/FK; partial-output
+preservation; **a bundle the candidate `verify` rejects but every local check accepts**; and
+**preregistered expected hashes that the candidate `verify` refuses**.
 
 **One required RP4 falsification is NOT closed.** The *dangling destination link* case could not
 be constructed at the Python level on the local harness — CPython there cannot create a symlink
@@ -1191,7 +1413,8 @@ set -Eeuo pipefail
 UNIT="mtc-bridge-first-start.service"
 MASK_PATH="/etc/systemd/system/$UNIT"
 UNIT_FILE="/usr/local/lib/systemd/system/$UNIT"
-ROLLBACK_SH="/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE/deploy/linux/rollback.sh"
+RELEASE_ROOT="/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE"
+ROLLBACK_SH="$RELEASE_ROOT/deploy/linux/rollback.sh"
 ROLLBACK_MANIFEST="/etc/mtc-bridge/rollback_manifest.json"
 STEADY_UNIT_A="/usr/local/lib/systemd/system/mtc-bridge-steady.service"
 STEADY_UNIT_B="/etc/systemd/system/mtc-bridge-steady.service"
@@ -1205,31 +1428,52 @@ PORT="8790"
 : "${C4_START_ACTIVE:?preregistered starting ActiveState is required}"
 : "${C4_START_ENABLED:?preregistered starting is-enabled token is required}"
 : "${C4_PRE_INVARIANTS_SHA256:?preregistered pre-rollback protected-invariant hash is required}"
-: "${C4_POST_INVARIANTS_SHA256:?post-rollback protected-invariant hash from the fresh accepted bundle is required}"
+# The post-rollback side is an ARTIFACT, not a string. A fresh candidate bundle
+# must exist, its manifest FILE sha and both content hashes must have been
+# recorded externally by the separately authorized capture, and the candidate's
+# own verification must accept it. Two matching strings prove nothing.
+: "${C4_POST_BUNDLE_DIR:?fresh post-rollback candidate bundle directory is required}"
+: "${C4_POST_MANIFEST_SHA256:?externally recorded fresh post-rollback manifest FILE sha256 is required}"
+: "${C4_POST_BUNDLE_DB_SHA256:?externally recorded fresh post-rollback bundle db sha256 is required}"
+: "${C4_POST_INVARIANTS_SHA256:?externally recorded fresh post-rollback invariants sha256 is required}"
 : "${PY:?candidate venv interpreter path is required}"
 
 c4_stop() { printf 'C4_STOP reason=%s\n' "$*"; exit 3; }
 c4_fail() { printf 'C4_FAIL reason=%s\n' "$*"; exit 1; }
 
+# Three outcomes, like every other predicate: a hash that CANNOT be taken is
+# never rendered as a value. Callers adjudicate rc 3 themselves.
 c4_sha256() {
-    local p="$1" out
-    out="$(LC_ALL=C sha256sum -- "$p")" || c4_stop "sha256_failed path=$p"
+    local p="$1" out rc=0
+    out="$(LC_ALL=C sha256sum -- "$p" 2>&1)" || rc=$?
+    if [ "$rc" -ne 0 ]; then
+        printf 'C4_STOP reason=sha256_failed path=%s rc=%s detail=%s\n' "$p" "$rc" "$out" >&2
+        return 3
+    fi
     printf '%s\n' "${out%% *}"
+    return 0
 }
 
 # Fingerprint used to prove the dry run mutated NOTHING.
+# EVERY component is evaluated and adjudicated in its OWN assignment before the
+# final `printf`. Nesting a probe or a hash inside the printf arguments makes
+# `printf`'s status the function status, so a STOP is rendered as an empty field
+# and the function still succeeds — that was the defect. A component that cannot
+# be evaluated returns 3 here, and no before/after equality is ever computed.
 c4_fingerprint() {
-    local a e m l w
-    a="$(rp0_show_property "$UNIT" ActiveState)" || exit 3
-    e="$(rp0_is_enabled_token "$UNIT")"          || exit 3
-    m="$(rp0_probe_path "$MASK_PATH")"           || exit 3
-    l="$(rp0_listener_count "$PORT")"            || exit 3
-    w=0; rp0_pgrep_status 'bridge\.app' >/dev/null || w=$?
-    [ "$w" -eq 0 ] || [ "$w" -eq 1 ] || exit 3
-    printf 'active=%s enabled=%s mask=%s listeners=%s writers_rc=%s manifest=%s c3=%s\n' \
-        "$a" "$e" "$m" "$l" "$w" \
-        "$(rp0_probe_path "$ROLLBACK_MANIFEST")" \
-        "$(c4_sha256 "$C4_STATE_MANIFEST_FILE")"
+    local a e m l w g r c
+    a="$(rp0_show_property "$UNIT" ActiveState)"       || return 3
+    e="$(rp0_is_enabled_token "$UNIT")"                || return 3
+    m="$(rp0_probe_path "$MASK_PATH")"                 || return 3
+    l="$(rp0_listener_count "$PORT")"                  || return 3
+    w=0; rp0_pgrep_status 'bridge\.app' >/dev/null     || w=$?
+    [ "$w" -eq 0 ] || [ "$w" -eq 1 ]                   || return 3
+    g="$(rp0_cgroup_survivors "$UNIT")"                || return 3
+    r="$(rp0_probe_path "$ROLLBACK_MANIFEST")"         || return 3
+    c="$(c4_sha256 "$C4_STATE_MANIFEST_FILE")"         || return 3
+    printf 'active=%s enabled=%s mask=%s listeners=%s writers_rc=%s cgroup=%s manifest=%s c3=%s\n' \
+        "$a" "$e" "$m" "$l" "$w" "$g" "$r" "$c"
+    return 0
 }
 
 printf 'C4_SECTION step0_prerequisites\n'
@@ -1237,7 +1481,7 @@ printf 'C4_SECTION step0_prerequisites\n'
 # 1. accepted C3 manifest file plus its externally recorded FILE sha256.
 kind="$(rp0_probe_path "$C4_STATE_MANIFEST_FILE")" || exit 3
 [ "$kind" = "regular" ] || c4_fail "C3 manifest kind=$kind path=$C4_STATE_MANIFEST_FILE"
-got="$(c4_sha256 "$C4_STATE_MANIFEST_FILE")"
+got="$(c4_sha256 "$C4_STATE_MANIFEST_FILE")" || c4_stop "c3_manifest_hash_unevaluable path=$C4_STATE_MANIFEST_FILE"
 [ "$got" = "$C4_STATE_MANIFEST_SHA256" ] || c4_fail "C3 manifest file sha256=$got expected=$C4_STATE_MANIFEST_SHA256"
 printf 'C4_c3_manifest_sha256=%s\n' "$got"
 
@@ -1253,7 +1497,7 @@ for p in "$STEADY_UNIT_A" "$STEADY_UNIT_B"; do
     kind="$(rp0_probe_path "$p")" || exit 3
     [ "$kind" = "absent" ] || c4_fail "unexpected steady unit kind=$kind path=$p"
 done
-got="$(c4_sha256 "$ROLLBACK_SH")"
+got="$(c4_sha256 "$ROLLBACK_SH")" || c4_stop "rollback_sh_hash_unevaluable path=$ROLLBACK_SH"
 [ "$got" = "$C4_ROLLBACK_SH_SHA256" ] || c4_fail "rollback.sh sha256=$got expected=$C4_ROLLBACK_SH_SHA256"
 
 # 4. preregistered starting state captured and matched.
@@ -1265,7 +1509,7 @@ printf 'C4_start_active=%s C4_start_enabled=%s\n' "$active" "$enabled"
 
 unit_kind="$(rp0_probe_path "$UNIT_FILE")" || exit 3
 if [ "$unit_kind" = "regular" ]; then
-    installed_unit_sha="$(c4_sha256 "$UNIT_FILE")"
+    installed_unit_sha="$(c4_sha256 "$UNIT_FILE")" || c4_stop "installed_unit_hash_unevaluable path=$UNIT_FILE"
     [ "$C4_EXPECT_UNIT_SHA256" != "ABSENT_PREREGISTERED" ] \
         || c4_fail "installed unit present but its absence was preregistered"
     [ "$installed_unit_sha" = "$C4_EXPECT_UNIT_SHA256" ] \
@@ -1281,7 +1525,7 @@ fi
 printf 'C4_installed_unit_kind=%s\n' "$unit_kind"
 
 printf 'C4_SECTION step1_mutation_free_dry_run\n'
-fp_before="$(c4_fingerprint)"
+fp_before="$(c4_fingerprint)" || c4_stop "fingerprint_unevaluable phase=before"
 dry_out="$(MTC_DRY_RUN=1 "$ROLLBACK_SH" --dry-run \
     --state-manifest-file "$C4_STATE_MANIFEST_FILE" \
     --state-manifest-sha256 "$C4_STATE_MANIFEST_SHA256" 2>&1)" || c4_fail "rollback.sh --dry-run exited nonzero"
@@ -1290,7 +1534,7 @@ LC_ALL=C grep -qF -- "[dry-run] systemctl stop $UNIT" <<<"$dry_out" \
     || c4_fail "dry run did not print the expected stop line"
 LC_ALL=C grep -qF -- "[dry-run] systemctl mask $UNIT" <<<"$dry_out" \
     || c4_fail "dry run did not print the expected mask line"
-fp_after="$(c4_fingerprint)"
+fp_after="$(c4_fingerprint)" || c4_stop "fingerprint_unevaluable phase=after"
 [ "$fp_before" = "$fp_after" ] || c4_fail "dry run mutated observable state: [$fp_before] -> [$fp_after]"
 kind="$(rp0_probe_path "$ROLLBACK_MANIFEST")" || exit 3
 [ "$kind" = "absent" ] || c4_fail "dry run created a rollback manifest ($kind)"
@@ -1327,6 +1571,12 @@ esac
 listeners="$(rp0_listener_count "$PORT")" || exit 3
 printf 'C4_listener_count=%s\n' "$listeners"
 [ "$listeners" -eq 0 ] || c4_fail "control port $PORT still has a listener after rollback"
+
+# Third survivor class, fail-closed: a stopped-and-masked unit whose cgroup
+# still holds a process has not been stopped.
+cgsurv="$(rp0_cgroup_survivors "$UNIT")" || exit 3
+printf 'C4_cgroup_survivors=%s\n' "$cgsurv"
+[ "$cgsurv" -eq 0 ] || c4_fail "the unit cgroup still holds $cgsurv process(es) after rollback stop+mask"
 
 printf 'C4_SECTION step4_rollback_manifest\n'
 kind="$(rp0_probe_path "$ROLLBACK_MANIFEST")" || exit 3
@@ -1383,12 +1633,136 @@ if problems:
 print("C4_manifest_fields_validated=all")
 PYEOF
 
-printf 'C4_SECTION step5_protected_invariant_equality\n'
-# Fresh post-rollback candidate bundle must verify, and its protected invariants
-# must equal the preregistered pre-rollback values. Filename and byte-count
-# equality are DIAGNOSTIC ONLY and are never described as byte equality.
-[ "$C4_POST_INVARIANTS_SHA256" = "$C4_PRE_INVARIANTS_SHA256" ] \
-    || c4_fail "protected invariants changed across rollback (pre=$C4_PRE_INVARIANTS_SHA256 post=$C4_POST_INVARIANTS_SHA256)"
+printf 'C4_SECTION step5_fresh_post_rollback_bundle_and_invariant_equality\n'
+# A FRESH post-rollback candidate bundle must exist, the candidate's own
+# verification must accept it against both externally recorded hashes, and only
+# then may its protected invariants be compared with the pre-rollback values.
+#
+# String equality of two supplied variables is NOT this predicate: it passes for
+# stale values, for values never derived from any bundle, and for the accepted
+# C3 bundle handed back as its own "post" artifact. The validator therefore also
+# binds the PRE value to the already hash-checked accepted C3 manifest, refuses a
+# post bundle that IS the C3 bundle, and requires the fresh capture to be dated
+# after the rollback this very block just recorded. Filename and byte-count
+# equality remain DIAGNOSTIC ONLY and are never described as byte equality.
+pbrc=0
+"$PY" - "$RELEASE_ROOT" "$C4_STATE_MANIFEST_FILE" "$C4_PRE_INVARIANTS_SHA256" \
+    "$C4_POST_BUNDLE_DIR" "$C4_POST_MANIFEST_SHA256" "$C4_POST_BUNDLE_DB_SHA256" \
+    "$C4_POST_INVARIANTS_SHA256" "$ROLLBACK_MANIFEST" <<'PYEOF' || pbrc=$?
+import hashlib, json, os, sys
+from pathlib import Path
+
+(release_root, c3_manifest, pre_inv_sha, post_dir, post_manifest_sha,
+ post_db_sha, post_inv_sha, rollback_manifest) = sys.argv[1:9]
+
+PROTECTED_FIELDS = (
+    "schema_version", "app_state", "counts", "open_trades", "live_orders",
+    "closed_trades", "max_ids", "environments", "risk_days",
+)
+
+
+def stop(reason):
+    print(f"C4_STOP reason={reason}")
+    raise SystemExit(3)
+
+
+sys.path.insert(0, release_root)
+try:
+    from tools.wal_state_bundle import MANIFEST_NAME, verify_bundle
+except Exception as exc:
+    stop(f"candidate_api_import_failed: {exc.__class__.__name__}: {exc}")
+
+
+def sha256_file(path):
+    try:
+        digest = hashlib.sha256()
+        with open(path, "rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+        return digest.hexdigest()
+    except OSError as exc:
+        stop(f"hash_failed path={path} {exc.__class__.__name__}: {exc}")
+
+
+def load(path):
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            return json.load(handle)
+    except Exception as exc:
+        stop(f"unreadable_json path={path} {exc.__class__.__name__}: {exc}")
+
+
+problems = []
+post_manifest_path = Path(post_dir) / MANIFEST_NAME
+if post_manifest_path.is_symlink() or not post_manifest_path.is_file():
+    stop(f"post_bundle_manifest_not_a_regular_file path={post_manifest_path}")
+
+# 1. the post bundle must be a DIFFERENT artifact from the accepted C3 bundle.
+try:
+    pre_id, post_id = os.lstat(c3_manifest), os.lstat(post_manifest_path)
+except OSError as exc:
+    stop(f"identity_probe_failed: {exc.__class__.__name__}: {exc}")
+print(f"C4_post_bundle_identity=({post_id.st_dev},{post_id.st_ino}) "
+      f"c3_identity=({pre_id.st_dev},{pre_id.st_ino})")
+if (pre_id.st_dev, pre_id.st_ino) == (post_id.st_dev, post_id.st_ino):
+    problems.append("post bundle manifest IS the accepted C3 manifest: no fresh capture happened")
+
+# 2. externally recorded manifest FILE sha of the fresh capture.
+actual_post_manifest_sha = sha256_file(post_manifest_path)
+print(f"C4_post_manifest_file_sha256={actual_post_manifest_sha}")
+if actual_post_manifest_sha != post_manifest_sha:
+    problems.append("fresh bundle manifest FILE sha256 does not match the recorded capture value")
+
+pre_manifest = load(c3_manifest)
+post_manifest = load(post_manifest_path)
+rollback_record = load(rollback_manifest)
+
+# 3. neither hash may be a free string: each must be its own bundle's value.
+if pre_manifest.get("invariants_sha256") != pre_inv_sha:
+    problems.append("preregistered pre-rollback hash is not bound to the accepted C3 bundle")
+if post_manifest.get("invariants_sha256") != post_inv_sha:
+    problems.append("recorded post-rollback hash is not the fresh bundle's own value")
+
+# 4. freshness: captured strictly AFTER the rollback recorded in step 4.
+captured = str(post_manifest.get("generated_at_utc", ""))
+rolled = str(rollback_record.get("rolled_back_at_utc", ""))
+print(f"C4_post_bundle_generated_at_utc={captured} rolled_back_at_utc={rolled}")
+if not captured or not rolled:
+    stop("capture_or_rollback_timestamp_missing")
+if captured <= rolled:
+    problems.append(f"post bundle predates the rollback ({captured} <= {rolled}): it is stale")
+
+# 5. candidate verification with BOTH exact expected hashes; fail-closed.
+try:
+    code, report = verify_bundle(bundle_dir=Path(post_dir),
+                                 expect_bundle_sha256=post_db_sha,
+                                 expect_invariants_sha256=post_inv_sha)
+except Exception as exc:
+    stop(f"candidate_verify_unevaluable: {exc.__class__.__name__}: {exc}")
+print(f"C4_post_bundle_verify_rc={code} verdict={report.get('verdict')} "
+      f"failures={report.get('failures')}")
+if code != 0 or report.get("verdict") != "VALID":
+    problems.append(f"candidate verify rejected the fresh post-rollback bundle: {report.get('failures')}")
+
+# 6. protected equality: the candidate hash AND every protected field.
+if post_inv_sha != pre_inv_sha:
+    problems.append(f"protected invariants changed across rollback (pre={pre_inv_sha} post={post_inv_sha})")
+pre_inv = pre_manifest.get("invariants", {})
+post_inv = post_manifest.get("invariants", {})
+for field in PROTECTED_FIELDS:
+    if pre_inv.get(field) != post_inv.get(field):
+        problems.append(f"protected invariant field differs across rollback: {field}")
+
+if problems:
+    print("C4_post_bundle_problems=" + "; ".join(problems))
+    raise SystemExit(1)
+print("C4_post_rollback_bundle_verified=yes")
+PYEOF
+case "$pbrc" in
+    0) : ;;
+    1) c4_fail "fresh post-rollback bundle binding failed (see C4_post_bundle_problems)" ;;
+    *) c4_stop "post_rollback_bundle_unevaluable rc=$pbrc" ;;
+esac
 printf 'C4_invariants_equal=yes sha256=%s\n' "$C4_POST_INVARIANTS_SHA256"
 
 printf 'C4_SECTION done\n'
@@ -1399,7 +1773,9 @@ printf 'C4 PASS (unit stopped and masked; no start, unmask or recovery is author
 
 Exercised locally in §8: pre-existing regular rollback manifest; dangling manifest link; dry-run
 that mutates; same-size protected DB mutation; wrong state-manifest hash; wrong mask target;
-unexpected rebind flag; and failed post-rollback invariant equality.
+unexpected rebind flag; failed post-rollback invariant equality; **a dry-run fingerprint component
+that cannot be evaluated**; **a post-rollback value not bound to any fresh verified bundle**; and
+**a stale post bundle captured before the rollback**.
 
 ---
 
@@ -1426,17 +1802,27 @@ of that authority exists here, and none is implied by anything in this document.
 ### 8.1 What was executed, and what was not
 
 Every RP0, RP1, RP4 and RP5 falsification that can be exercised without a real host was run
-**locally, for real**, in a **fresh OS temporary root**, before this document was returned.
+**locally, for real**, in a **fresh OS temporary root**, before this document was returned. Repair
+round 2 added a second, independent root for the R1-R5 repairs; **the round-1 root is preserved
+untouched and nothing in either root is deleted.**
 
-- **Preserved evidence root (exact path):**
-  `C:\Users\BARSEM~1\AppData\Local\Temp\D026.mR6q2g`
-  (POSIX form `/tmp/D026.mR6q2g`). Nothing in it is deleted. Full transcript:
-  `D026_FULL_TRANSCRIPT.md`, 1605 lines, SHA-256
+- **Round-1 preserved evidence root (exact path, unchanged):**
+  `C:\Users\BARSEM~1\AppData\Local\Temp\D026.mR6q2g` (POSIX form `/tmp/D026.mR6q2g`).
+  Transcript `D026_FULL_TRANSCRIPT.md`, 1605 lines, SHA-256
   `1bbb4a469aa1503d0d5aa4775835a97c4e6bccfb3c301fde61b9be3703a742e1`.
+- **Round-2 preserved evidence root (exact path):**
+  `C:\Users\BARSEM~1\AppData\Local\Temp\D026R2.87imLE` (POSIX form `/tmp/D026R2.87imLE`).
+  Transcript `D026_R2_TRANSCRIPT.md`, 286 lines, SHA-256
+  `e6c991f1a34dcc12ea7af0b3a9bf34070aa6a3016b4f44d826138e432eeed68c`, produced in one pass by the
+  preserved `run_all_final.sh`. Runner scripts, stub trees and every fixture are preserved beside
+  it. Re-running it allocates fresh identifiers, so a reproduction will differ in inode numbers
+  and run IDs; every rc and every quoted reason line is deterministic.
 - **The harness executes the blocks in this document, not a paraphrase.** Each runner extracts
-  its block from this file by `BLOCK-ID` marker and executes that extracted text. Each RED
-  extracts the **exact rejected text** from
-  `git show 779bd038957a192db47ff7ad68eb51304a2fba46:<this file>` at the named line range.
+  its block from this file by `BLOCK-ID` marker and executes that extracted text. Round-1 REDs
+  extract the **exact rejected text** from
+  `git show 779bd038957a192db47ff7ad68eb51304a2fba46:<this file>`. Round-2 REDs extract the
+  **exact round-1 repaired text** from `git show 7194b895:<this file>` by the same marker — the
+  seven round-1 digests reproduce byte for byte, so each R1-R5 RED is the audited blob itself.
 - **Nothing host-side was touched.** No `/home/gatea`, no real `systemctl`, no candidate
   `rollback.sh`, no host, no SSH, no transport, no credential, no broker, no order. `systemctl`,
   `pgrep`, `ss` and the rollback script are **local stubs**; the candidate `rollback.sh` is
@@ -1446,38 +1832,47 @@ Every RP0, RP1, RP4 and RP5 falsification that can be exercised without a real h
   represent POSIX mode bits. Where a fixture needs `0555`/`0444`/`0020`/`0002`/`0640`, `stat`
   and `find` answer from a per-case fixture table modelling documented GNU semantics
   (`-perm /222` = any write bit; `-perm -0200` = owner write only). `mkdir -m` is stubbed for
-  the same reason, preserving only its create-once semantics. Everything else is real:
-  real files, real MSYS symlinks, real `readlink`, `sha256sum`, `find -printf`, `mktemp`,
-  `grep`, `/proc/uptime`, real Python, real SQLite, and the real candidate
-  `wal_state_bundle` module (blob `26c077e650ab88ba2086efa3a80790769bc055b1`).
-- **RP5 path rewrite.** The RP5 harness copy differs from the published block **only** in six
-  absolute path constants, repointed at the fixture root. Every predicate and comparison line is
-  byte-identical; the exact diff is in the transcript. The rejected RED block's `mktemp` was
-  shimmed away from `/home/gatea` — that is the only change to the rejected text, and it exists
-  precisely so the harness could not touch that path.
+  the same reason, preserving only its create-once semantics. Round 2 adds three disclosed stubs:
+  a `systemctl show -p ControlGroup` responder, a fixture cgroup tree under `RP0_CGROUP_ROOT`
+  holding real `cgroup.procs` files, and a **local stub `rollback.sh`** that models only the
+  stop+mask-only no-rebind path and the manifest the candidate writes. Round 2 also interposes a
+  `python` wrapper that translates POSIX argument paths to Windows paths before exec'ing the real
+  CPython, because this MSYS shell hands POSIX paths to a Windows interpreter; it adds, removes
+  and reinterprets no argument. Everything else is real: real files, real MSYS symlinks, real
+  `readlink`, `sha256sum`, `find`, `mktemp`, `grep`, `/proc/uptime`, real Python, real SQLite, and
+  the real candidate `wal_state_bundle` module (blob `26c077e650ab88ba2086efa3a80790769bc055b1`),
+  including its own `create` and `verify_bundle`.
+- **Path rewrites.** The RP5 harness copy differs from the published block **only** in six
+  absolute path constants (`MASK_PATH`, `UNIT_FILE`, `RELEASE_ROOT`, `ROLLBACK_MANIFEST`,
+  `STEADY_UNIT_A`, `STEADY_UNIT_B`) repointed at the fixture root; the RP3 copies differ only in
+  `FRAGMENT`/`MASK_PATH`. Every predicate and comparison line is byte-identical, and both diffs
+  are preserved in the round-2 root. The round-1 RED block's `mktemp` was shimmed away from
+  `/home/gatea` — that is the only change to rejected text, and it exists precisely so the
+  harness could not touch that path.
 
 **Block identity, syntax and import validation.** SHA-256 of each block exactly as extracted
-from this file by its `BLOCK-ID` marker up to (not including) the closing fence, LF line endings:
+from this file by its `BLOCK-ID` marker up to (not including) the closing fence, LF line endings.
+Round 2 writes every extracted copy in binary with LF, so the digest of the file the harness
+actually executed equals the digest below.
 
 | Block | Lines | SHA-256 (LF) | Check | Result |
 |---|---|---|---|---|
-| `RP0-LIB` | 167 | `ecb665f4bf0480c5bf352f15d931ec471053f1dffafa196b3bd536d2944e4a8c` | `bash -n` | OK |
-| `RP0-BOOTSTRAP` | 27 | `d909ceafced6364a1869f97a24b70864cd88800ce8ac85bc06f85d1e37d21934` | `bash -n` | OK |
+| `RP0-LIB` | 249 | `4cc7ceff721c0eac5beb645a01bbca0630256f3e1d3ee7ad82d5db3ad7467dc8` | `bash -n` | OK |
+| `RP0-BOOTSTRAP` | 36 | `e7d748f6b41c6156de4d5c5e2d93c2b08729b1f85377b132660424024815bb33` | `bash -n` | OK |
 | `RP1-B3` | 117 | `f40411b053779b28ec9d970d7e5610fe5f363acbc48ee487d07ebce2638a69af` | `bash -n` | OK |
-| `RP3-C2A-POST` | 72 | `e17a8e329332b76e4e925a3ecb7a4c3fa723f31e81180aa29e541c1c7592e9f9` | `bash -n` | OK |
-| `RP3-C2B-POST` | 68 | `6ed407359886c44dea9e68884461664ed98aefaec8ac39b4f536fe2cbe3a3cf5` | `bash -n` | OK |
-| `RP4-C3` | 237 | `4e1b7c6499d342beb6eb6db971bbed7652e4b8f833be31a0e39033f6da4262a1` | `py_compile` | OK |
-| `RP5-C4` | 214 | `e13b86664943369a3221d9364300e22077d3bee2fe68a975d521549d27721ee0` | `bash -n` | OK |
+| `RP3-C2A-POST` | 104 | `e233d29b005964e84cd6cbc2af50deccd83bb281dac39696e47de1c8890b5a27` | `bash -n` | OK |
+| `RP3-C2B-POST` | 74 | `26a1010cd9380289c5b90c08845b2af6ec31074fc5145241978a714b930bb412` | `bash -n` | OK |
+| `RP4-C3` | 295 | `0520cc901e56a66fe61e0df9edc0ed33fa4b05c09d62ba8f7471ef9ff688e4a5` | `py_compile` | OK |
+| `RP5-C4` | 366 | `dbab23064cc25f5b2837caa534b204aa07d07ee263f1c6c3193c11a8cfbab6c4` | `bash -n` | OK |
 
-Reproduction note: the RP4 runner writes its extracted copy through CPython text mode, so the
-on-disk copy it executes carries CRLF line endings. Content is otherwise byte-identical to the
-block above; the transcript's `04f359064aa1cbc7…` is that CRLF copy's digest, and
-`4e1b7c6499d342be…` is the LF digest a Lead reproduction will compute from this file.
+`RP1-B3` is unchanged in round 2 and keeps its round-1 digest; the round-1 evidence in §8.3 still
+stands for it. The other six blocks changed and were re-validated above.
 
-`RP3-C2A-POST` and `RP3-C2B-POST` are **syntax-validated only**. Their adjudication was not
-exercised end to end because the scenarios they belong to are BLOCKED on C1-GAP-B (§4.1); their
-shared predicates come from `RP0-LIB`, which is exercised below. **No C1, C2-scenario or C5
-falsification is claimed closed.**
+`RP3-C2A-POST` and `RP3-C2B-POST` were **syntax-validated only in round 1**. Round 2 additionally
+exercises them **at stub level** (§8.6) to falsify the two postconditions added there. That is
+predicate evidence about the block text, **not scenario closure**: both C2 scenarios remain
+BLOCKED on C1-GAP-B, no real baseline capture exists, and **no C1, C2-scenario or C5 falsification
+is claimed closed.**
 
 ### 8.2 RP0 — evidence channel and predicate bootstrap (F1, shared F9)
 
@@ -1495,6 +1890,18 @@ RED = exact rejected text, lines `122-127` (log guard), `275-279` (`pgrep`), `38
 | R0-6 | `is-enabled` non-token error, empty output | `0` | `C2A_is_enabled=Failed to get unit file state: Connection timed out` → `RED_OLD_BLOCK_CONCLUDED_UNMASKED` | `3` | `RP0_STOP reason=is_enabled_unadjudicable … rc=4 token=[]` |
 | R0-7 | positive control, clean fixture | — | — | `0` | parent chain OK, `evidence_dir_allocated`, leaf created and holding `RP0_EVIDENCE run_id=RUN-7 …` |
 | R0-8 | positive control, documented `static` token | — | — | `0` | `rp0_is_enabled_token` returns `static` for rc `1` |
+
+**Round 2 — evidence-tree escape (finding R1).** RED = the exact round-1 `RP0-LIB` +
+`RP0-BOOTSTRAP` (blob digests `ecb665f4…` / `d909ceaf…`, reproduced from `7194b895`); GREEN = the
+blocks above. Same fixture, same stubs, same runner; only the identifier values differ.
+
+| # | Falsification | RED rc | RED observed | GREEN rc | GREEN observed |
+|---|---|---|---|---|---|
+| R1-1 | **`EV_STAGE_ID=../escaped-t` (R1)** | `0` | allocation and the block both succeed; `leaf created outside EV_DIR: fx_r1/parent/runkit/escaped-t.log`, `files inside EV_DIR: 0` — §1.5 would hash an empty tree while the real evidence sits beside it | `1` | `RP0_FAIL reason=component_charset name=EV_STAGE_ID value=[../escaped-g]`; nothing created |
+| R1-2 | **`RUNID=../evilrun-t` (R1)** | `0` | `evidence_dir_allocated dir=…/runkit/../evilrun-t`; the whole evidence **directory** lands outside the runkit (`fx_r1/parent/evilrun-t`) | `1` | `RP0_FAIL reason=component_charset name=RUNID value=[../evilrun-g]`; nothing created |
+| R1-3 | second containment layer, called directly with the string validator bypassed | — | — | `1`,`1`,`0` | `leaf_not_direct_child` for `…/RUN-TRAV/../escaped.log` **and** for a sibling-directory leaf; `leaf_contained` rc `0` for a genuine direct child |
+| R1-4 | positive control, clean identifiers | — | — | `0` | `component_ok` ×2, `leaf_contained` ×2, `evidence_dir_allocated`, leaf `…/RUN-R2-OK2/stage-c2.log` created **inside** `EV_DIR` |
+| R1-5 | cgroup property unreadable / blank (falsification 8) | — | — | `3` | see §8.6 R2-3 and R2-3b: `RP0_STOP reason=cgroup_property_failed …` and `RP0_STOP reason=cgroup_property_unparsable … out=[]` |
 
 ### 8.3 RP1 — B3 bounded admission (F2)
 
@@ -1535,6 +1942,22 @@ produced by the candidate's own `create` subcommand (`rc=0`, verdict `CAPTURED`)
 | R4-8 | corrupted bundle DB | `3` | `C3_STOP reason=integrity_probe_failed: DatabaseError: database disk image is malformed`; `C3_ARTIFACTS_PRESERVED label=stopped root=…` |
 | R4-9 | real foreign-key violation in the restored DB | `1` | `C3_restored_quick_check=ok`, `C3_restored_fk_violations=1`, `C3_FAIL reason=restored foreign_key_check found 1 violation(s)` |
 
+**Round 2 — mandatory candidate re-verification (finding R3).** RED = the exact round-1 `RP4-C3`
+(blob digest `4e1b7c64…`); GREEN = the block above. Fully real: real CPython, real SQLite, the real
+candidate module, and a real bundle produced by the candidate's own `create`
+(`verdict=CAPTURED`, `invariants_sha256=3de368ef…`). The tampered cases alter **only manifest
+fields that no local check in either block reads**, and the externally recorded manifest-FILE SHA
+is taken from the tampered file — so manifest-identity equality is satisfied and only the
+candidate's own verification can see the defect.
+
+| # | Fixture | RED rc | RED observed | GREEN rc | GREEN observed |
+|---|---|---|---|---|---|
+| R3-0 | positive control, untampered accepted bundle | — | — | `0` | `C3_candidate_verify_rc=0 verdict=VALID failures=[]`, then `quick_check=ok`, `fk=0`, restored hash equal, three distinct inodes, `C3 PASS` |
+| R3-1 | **manifest `source.integrity_check` tampered (R3)** | `0` | `C3 PASS` — every local check passes; the block never asks the candidate | `1` | `C3_candidate_verify_rc=2 verdict=INVALID failures=['source_checks_not_clean']` → `C3_FAIL`, artifacts preserved |
+| R3-2 | **manifest records bundle sidecars (R3)** | `0` | `C3 PASS` — `assert_no_sidecars` inspects the filesystem, never the manifest's own record | `1` | `C3_candidate_verify_rc=2 verdict=INVALID failures=['manifest_records_bundle_sidecars']` → `C3_FAIL` |
+| R3-3 | manifest `bundle.db_sha256` is not a SHA-256 | `1` | fails, but as `C3_FAIL reason=bundle database sha256 does not match…` — a candidate **contract** violation misread as drift, and only after the restore | `3` | `C3_STOP reason=candidate_verify_unevaluable: BundleError: expect_bundle_sha256 must be exactly 64 hex characters`, before any restore |
+| R3-4 | preregistered invariants hash is not the manifest's | — | RED takes no such argument | `1` | `C3_FAIL reason=manifest invariants_sha256 is not the externally recorded accepted value` |
+
 ### 8.5 RP5 — C4 rollback stop+mask-only (F7, F8)
 
 RED = exact rejected C4 text, lines `751-786`. GREEN = this document's `RP5-C4`.
@@ -1552,15 +1975,84 @@ RED = exact rejected C4 text, lines `751-786`. GREEN = this document's `RP5-C4`.
 | R5-8 | failed post-rollback invariant equality | `0` | `C4 PASS` — no invariant comparison exists in the rejected block | `1` | `C4_FAIL reason=protected invariants changed across rollback (pre=INV-BASELINE post=INV-DRIFTED)` |
 | R5-9 | rollback manifest mode drift `0640`→`0644` | `0` | `C4 PASS` — the mode is printed, never asserted | `1` | `C4_FAIL reason=rollback manifest mode=644 expected 640` |
 
-### 8.6 Standing D026 gaps — explicitly not closed
+**Round-1 rows R5-4 and R5-8 are superseded.** They proved only that two *unequal* injected
+strings are rejected. They did **not** establish that the post-rollback value comes from a fresh
+verified bundle, which is the actual persistence predicate; that gap is finding R4 and is closed
+by the round-2 table below, not by those rows.
+
+**Round 2 — fresh verified post-rollback bundle and fingerprint adjudication (findings R4, R5).**
+RED = the exact round-1 `RP5-C4` (blob digest `e13b8666…`); GREEN = the block above. The fixture
+holds three **real** candidate bundles created by the candidate's own `create` from one unchanged
+source database, so their protected invariants are genuinely equal
+(`3de368ef…`) while the artifacts are distinct: `bundle_pre` (accepted C3, captured
+`2026-08-09T12:00:00Z`), `bundle_post` (`12:45:00Z`, after the stub rollback's recorded
+`12:30:00Z`) and `bundle_stale` (`11:00:00Z`).
+
+| # | Fixture | RED rc | RED observed | GREEN rc | GREEN observed |
+|---|---|---|---|---|---|
+| R4-0 | positive control | — | — | `0` | `C4_post_bundle_verify_rc=0 verdict=VALID failures=[]`, distinct pre/post identity pairs, `generated_at_utc=2026-08-09T12:45:00Z > rolled_back_at_utc=2026-08-09T12:30:00Z`, `C4_post_rollback_bundle_verified=yes`, `C4_cgroup_survivors=0`, `C4 PASS` |
+| R4-1 | **unbound strings — the exact audited reproduction (R4)** | `0` | `C4_c3_manifest_sha256=fd51e6c3…` over a dummy `{"accepted":"c3-bundle-manifest"}` file, `C4_invariants_equal=yes sha256=INV-BASELINE`, `C4 PASS` | `3` | `C4_STOP reason=candidate_verify_unevaluable: BundleError: expect_invariants_sha256 must be exactly 64 hex characters` → `C4_STOP reason=post_rollback_bundle_unevaluable rc=3` |
+| R4-2 | **accepted C3 bundle re-submitted as the "fresh" post bundle (R4)** | `0` | `C4 PASS` — two equal strings are all the rejected predicate ever compares | `1` | `C4_post_bundle_problems=post bundle manifest IS the accepted C3 manifest: no fresh capture happened; post bundle predates the rollback (12:00:00Z <= 12:30:00Z): it is stale` |
+| R4-3 | stale bundle captured **before** the rollback | `0` | `C4 PASS` | `1` | `C4_post_bundle_problems=post bundle predates the rollback (2026-08-09T11:00:00Z <= 2026-08-09T12:30:00Z): it is stale` — candidate verify had already returned `VALID`, so only the freshness binding catches it |
+| R4-4 | post manifest FILE sha ≠ the recorded capture value | `0` | `C4 PASS` | `1` | `C4_post_bundle_problems=fresh bundle manifest FILE sha256 does not match the recorded capture value` |
+| R4-5 | **cgroup survivor after rollback (R4)** | `0` | `C4 PASS` — no cgroup predicate exists; the writer pattern and the port both report clean | `1` | `C4_cgroup_survivors=1` → `C4_FAIL reason=the unit cgroup still holds 1 process(es) after rollback stop+mask` |
+| R4-6 | fresh bundle the candidate `verify` rejects | `0` | `C4 PASS` | `1` | `C4_post_bundle_verify_rc=2 verdict=INVALID failures=['source_checks_not_clean']` → `C4_FAIL` |
+| R4-7 | regression: dry run that mutates | — | — | `1` | `C4_FAIL reason=dry run mutated observable state: [… cgroup=0 manifest=absent …] -> [active=inactive enabled=masked mask=link_live …]` — the fingerprint now also carries the cgroup count |
+| R4-8 | regression: rebind field in the rollback manifest | — | — | `1` | `C4_manifest_problems=rollback_release_sha='deadbeef…' expected ''` → `C4_FAIL` |
+| R4-9 | regression: pre-existing regular rollback manifest (F7) | — | — | `1` | `C4_FAIL reason=rollback manifest must be absent as object AND link, found regular`; prior record `{"PRIOR":"ROLLBACK-RECORD-2026-08-01"}` **intact** |
+
+**Fingerprint adjudication (R5).** The exact `c4_sha256` + `c4_fingerprint` text was extracted from
+each version and executed with the surrounding predicates stubbed, so the only variable is the
+function body itself.
+
+| # | Condition | RED rc | RED observed | GREEN rc | GREEN observed |
+|---|---|---|---|---|---|
+| R5-10 | clean control | `0` | full fingerprint string | `0` | full fingerprint string, now including `cgroup=0` |
+| R5-11 | **rollback-manifest path probe returns STOP (R5)** | `0` | `FINGERPRINT=[… writers_rc=1 manifest= c3=cbf30559…]` — the STOP became an **empty field** and the function still succeeded | `3` | `FINGERPRINT_RC=3`, `FINGERPRINT=[]`; no before/after equality is computed |
+| R5-12 | **C3 manifest hash cannot be taken (R5)** | `0` | worse than an empty field: `c3=C4_STOP reason=sha256_failed path=…` — the STOP **message** is captured as the hash value, so two failing fingerprints could compare equal | `3` | `C4_STOP reason=sha256_failed … rc=1 detail=sha256sum: … No such file or directory` on stderr, `FINGERPRINT_RC=3`, `FINGERPRINT=[]` |
+
+### 8.6 RP3 — C2 post-reboot postconditions (F4/F5 follow-up, finding R2)
+
+**Status first: this closes nothing at the scenario level.** Both C2 scenarios remain BLOCKED on
+C1-GAP-B, no real pre-mutation baseline exists, and no host was involved. What is exercised below
+is the **block text** of the two post-reboot assertion halves under local stubs, to falsify the two
+postconditions that were missing. RED = the exact round-1 `RP3-C2A-POST` / `RP3-C2B-POST` (blob
+digests `e17a8e32…` / `6ed40735…`); GREEN = the blocks above. `systemctl`, `pgrep` and `ss` are
+stubs; the cgroup tree is a fixture directory with real `cgroup.procs` files; the invariant
+documents are fixtures supplied as the blocks' declared INPUTS.
+
+| # | Fixture | RED rc | RED observed | GREEN rc | GREEN observed |
+|---|---|---|---|---|---|
+| R2-1 | **Scenario A: one cgroup survivor, no writer match, no listener (R2)** | `0` | `C2A_writers=0`, `C2A_listener_count=0`, `C2A PASS` — a surviving process is simply invisible to the two predicates present | `1` | `C2A_cgroup_survivors=1` → `C2A_FAIL reason=the unit cgroup still holds 1 process(es) after reboot` |
+| R2-2 | **Scenario A: `app_state=ARMED` on both sides (R2)** | `0` | `C2A_invariants_equal=yes`, `C2A PASS` — equality accepts "ARMED before, ARMED after"; the round-1 block mentioned `app_state != ARMED` only in a comment | `1` | `C2A_app_state=ARMED` → `C2A_FAIL reason=app_state=ARMED after reboot; the unit must not return armed` |
+| R2-3 | cgroup property unreadable (`systemctl show` rc 1) | — | no predicate exists | `3` | `RP0_STOP reason=cgroup_property_failed unit=mtc-bridge-first-start.service rc=1` |
+| R2-3b | cgroup property blank / unparsable | — | no predicate exists | `3` | `RP0_STOP reason=cgroup_property_unparsable unit=… out=[]` — never "no survivor" |
+| R2-4 | Scenario A positive control | — | — | `0` | `C2A_cgroup_survivors=0`, `C2A_app_state=DISARMED`, `C2A_invariants_equal=yes`, `C2A PASS` |
+| R2-5 | **Scenario B: two cgroup survivors (R2)** | `0` | `C2B PASS` | `1` | `C2B_cgroup_survivors=2` → `C2B_FAIL reason=the unit cgroup still holds 2 process(es) after a masked reboot` |
+| R2-6 | Scenario B positive control | — | — | `0` | `C2B_cgroup_survivors=0`, `C2B_invariants_equal=yes`, `C2B PASS` |
+
+### 8.7 Standing D026 gaps — explicitly not closed
 
 1. **R4-5** (dangling restore destination, Python level) — no execution route on this machine.
+   Unchanged in round 2: CPython here still cannot create a symlink (`WinError 1314`).
 2. **All C1 falsifications** (`C1-F1`…`C1-F9`, §3.3) — C1 is BLOCKED; manufacturing runs for a
    blocked path is forbidden.
 3. **All scenario-level C2 falsifications** (`C2-F1`…`C2-F7`, §4.6) — the scenarios are BLOCKED
    on C1-GAP-B. The predicate-level cases `C2-F1`, `C2-F2`, `C2-F4` and `C2-F5` are covered by
-   the RP0-LIB runs above; `C2-F3`, `C2-F6` and `C2-F7` are **not claimed closed**.
+   the RP0-LIB runs above; `C2-F3`, `C2-F6` and `C2-F7` are **not claimed closed**. §8.6 exercises
+   the two **newly added postconditions** of the post-reboot blocks at stub level only; it makes
+   no scenario-level claim and does not close any entry in §4.6.
 4. **C5** — has no procedure and therefore no falsification.
+5. **The real `/sys/fs/cgroup` semantics** were not exercised: this machine has no systemd, so the
+   cgroup predicate ran against a fixture tree and a stub `systemctl show -p ControlGroup`. The
+   adjudication logic is falsified; its behaviour against a live cgroup v2 hierarchy is not.
+6. **The candidate `rollback.sh` itself was never run** — round 2 used a local stub for it, exactly
+   as round 1 did. Every RP5 claim is about this document's block, never about the candidate
+   script's own behaviour.
+7. **An arbitrary-target mask link** could not be presented on this MSYS mount: `ln -s` to a
+   non-`/dev/null` target materialises a copy, so the repaired block refused the fixture as
+   `kind=regular` rather than as a wrong link target. The round-1 `R5-6` record stands on its own
+   evidence; round 2 makes no new claim for that case.
 
 The Lead is expected to reproduce every claimed run independently. Nothing in this section is a
 verdict.
@@ -1570,8 +2062,9 @@ verdict.
 ## 9. What this document is not
 
 - **Not an execution record.** No block above has been run against a host; no host was touched.
-- **Not acceptance.** The Lead and fresh auditors own acceptance. This is repair round 1 of at
-  most 3 for this proposal-repair cycle.
+- **Not acceptance.** The Lead and fresh auditors own acceptance. This is repair round 2 of at
+  most 3 for this proposal-repair cycle; it repairs exactly the five reproduced findings R1-R5 of
+  the re-audit at `WPL_P2_PROPOSALS_REAUDIT_ROUND1_2026-08-09.md` and claims nothing beyond them.
 - **Not permission to extract scripts.** Turning any block into a deployable file is a separate,
   not-yet-granted authorization (repair spec §9.5).
 - **Not host authority, budget lift, or per-mutation authorization.** Those remain separate
