@@ -1,5 +1,16 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-08-09 — Canonical audits need Codex evidence-capture rerun
+
+Claude Opus 5 xhigh executed mandatory D/pre-repair/E and returned PASS-WITH-NITS with zero required
+repairs. Codex xhigh returned one-word PASS, but its transcript was discarded by the wrapper, so
+mandatory execution is not independently evidenced and the verdict is not yet counted. DeepSeek
+ClinePass is unavailable; GLM-5.2 returned non-execution BLOCK with static source clean. All audit
+worktrees clean. Next is a fresh Codex xhigh audit at `b2c369f7` with JSON transcript capture. No
+integration/package/transfer/staging; repair budget exhausted.
+
+---
+
 ## [Codex GPT-5.6-sol] 2026-08-09 — Final Gate A E source frozen at `b2c369f7`
 
 Lead-accepted round-3 candidate is committed at

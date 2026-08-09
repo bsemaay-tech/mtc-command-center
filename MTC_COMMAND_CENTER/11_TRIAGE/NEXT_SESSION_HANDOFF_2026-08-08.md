@@ -1,5 +1,16 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ NEWEST CHECKPOINT — Claude accepts; Codex evidence-capture rerun required (2026-08-09)
+>
+> At frozen `b2c369f7`, Claude Opus 5 xhigh executed all evidence and returned PASS-WITH-NITS,
+> zero required repairs. Codex xhigh returned one-word PASS, but the wrapper discarded its command
+> transcript, so D025 execution is not independently proven and it is not counted yet. DeepSeek
+> route unavailable; GLM non-execution BLOCK/static clean; all worktrees clean. **Next:** fresh
+> Codex xhigh in a new detached worktree with captured JSON execution transcript. No
+> integration/package/transfer/staging; repair budget exhausted.
+>
+> ---
+
 > ## ▶ NEWEST CHECKPOINT — final E source frozen at `b2c369f7`; canonical audits next (2026-08-09)
 >
 > Lead-accepted round-3 source/test/docs are committed at

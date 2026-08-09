@@ -1,5 +1,20 @@
 # NEXT_STEPS
 
+## GATE A — round-3 canonical audits: Claude accepts; Codex evidence-capture rerun required (2026-08-09)
+
+At frozen source `b2c369f7`: Claude Opus 5 xhigh executed all three cases and returned
+**PASS-WITH-NITS**, zero required repairs. Codex 5.6-sol xhigh returned **PASS** but its final report
+was one word and the wrapper discarded its execution transcript, so D025 execution cannot yet be
+independently confirmed; do not count it as acceptance. DeepSeek ClinePass route is unavailable;
+GLM-5.2 could not execute tools and returned BLOCK after clean static review. All worktrees clean.
+
+- **[AI: Codex] NEXT:** fresh Codex xhigh audit in a new detached worktree with JSON execution
+  transcript captured; require explicit D RED 6/29, `61d88f12` RED 28/29, E GREEN 29/29,
+  syntax/compile, source/diff and clean status in the final evidence.
+- **[AI: Any] HOLD:** no integration/package/transfer/staging. Repair budget exhausted.
+
+---
+
 ## GATE A — final E source frozen at `b2c369f7`; four canonical audits running next (2026-08-09)
 
 Lead-accepted round-3 source/test/docs are committed at
