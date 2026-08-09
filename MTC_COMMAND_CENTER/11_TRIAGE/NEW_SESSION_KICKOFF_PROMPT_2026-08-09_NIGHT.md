@@ -40,6 +40,14 @@ milestone so the next fresh session resumes cleanly.
 
 ## Milestone log (newest first — update on every milestone)
 
+- 2026-08-09 ~23:25: **AUDIT 6 PASS — B3-GAP-ENV repair cycle ACCEPTED** (zero findings;
+  auditor paste-and-ran the QA prerequisite + four closure blocks verbatim, all
+  reproduced; code hashes frozen). Committed `e76d78ea`. Stage 1B re-freeze dispatched
+  to Max (`bm3rkwjd8`, `07_RUNKIT_B/`): ten blocks, two provenance classes (8 from the
+  accepted blob + repaired RP1-B3 `6f3ea022` replacing the old `f40411b0` + new
+  RPD-VERIFY `3b9e78e8`), deterministic archive, evidence records. Next: verify + commit
+  the kit → WP-L P2 unit closure record. REMEMBER: the Stage 2/3 preregistration is VOID
+  for the new kit; transport/host execution needs a new prereg AND owner authorization.
 - 2026-08-09 ~23:10: round 6 consumed + committed (`3a358ffa`). Section 4 now literally
   paste-and-run (absolute `B`, `QA="$(mktemp -d)"`, helpers+preludes restated inline);
   code freeze re-verified by `cmp` on all three files. FINAL auto-round audit 6
