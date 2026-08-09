@@ -1,5 +1,34 @@
 # GLOBAL_HANDOFF
 
+## [GLM-5.2] 2026-08-09 — Gate A A-8 remote+host preflight PASS
+
+Lead-performed read-only, non-executing two-part A-8 preflight at checkpoint `4caa553f`; accepted
+candidate `2ce41e34` unchanged. Neither A-8 script ran. Accepted D tar
+`/home/gatea/gatea-run-kit-20260808D-2ce41e34.tar` (SHA-256 `e8a52e3c…e0d3`, 71680 B); all seven
+manifest members OK. Remote packaged A-8 `/home/gatea/gatea-run-kit-20260808D-2ce41e34/gatea_A8.sh`:
+SHA-256 `1fa14524…9d19`, 4124 B, CR0, bash syntax rc0; remote evidence
+`/home/gatea/gatea-A8-20260808D.log` absent. Remote production safe: active/running PID189813,
+Restart=no/NRestarts0, one `127.0.0.1:8790` listener, exact HTTP200 credential-free DISARMED
+state_version1 and all network/exchange/credential/ARM flags off; `ip -brief address` available and
+exact `sudo ufw status verbose` noninteractive with output suppressed; `A8_REMOTE_PREFLIGHT=PASS`.
+Accepted Windows host packaged A-8
+`C:\WPI_ARTIFACTS\gatea-run-kit-20260808D-2ce41e34\gatea_A8_host.ps1`: SHA-256 `57899687…b281`,
+3195 B, CR0/LF-only, PowerShell parser errors 0; host evidence
+`C:\WPI_ARTIFACTS\gatea-A8-host-20260808D.log` absent. Windows host port-22 reachability control to
+172.24.55.233 passed within 3000 ms, proving host route/SSH control; port8790 deliberately not
+probed (reserved for the actual host A-8 script); `A8_HOST_PREFLIGHT=PASS`. Local evidence
+`C:\WPI_ARTIFACTS\preflight_gatea_a8_remote_d.out/.err` and `preflight_gatea_a8_host_d.out/.err`;
+both rc0, stderr empty. Gate state **A-0..A-7 PASS; A-8..A-9 NOT RUN**. Next: execute the remote A-8
+half once with `bash /home/gatea/gatea-run-kit-20260808D-2ce41e34/gatea_A8.sh`; iff it ends `A-8
+PASS`, execute the host half once with `powershell -NoProfile -ExecutionPolicy Bypass -File
+C:\WPI_ARTIFACTS\gatea-run-kit-20260808D-2ce41e34\gatea_A8_host.ps1`; A-8 PASS needs remote `A-8
+PASS` and host `port22_ok=True`/`port8790_ok=False`/`host_probe_ok=True`/`A8_HOST_PASS`/rc0;
+preserve/hash both evidence logs, postcheck, memory before A-9; no A-9 on genuine A-8 FAIL, and if
+the remote half fails do not run the host half. Record:
+`11_TRIAGE/GATE_A_A8_PREFLIGHT_2026-08-09D.md`.
+
+---
+
 ## [Claude Opus 5] 2026-08-09 — Gate A A-7 PASS under run-kit D
 
 A-7 ran exactly once at checkpoint `519223e2` via
