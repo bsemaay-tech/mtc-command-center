@@ -2598,7 +2598,7 @@ actually executed equals the digest below.
 
 | Block | Lines | SHA-256 (LF) | Check | Result |
 |---|---|---|---|---|
-| `RP0-LIB` | 249 | `4cc7ceff721c0eac5beb645a01bbca0630256f3e1d3ee7ad82d5db3ad7467dc8` | `bash -n` | OK |
+| `RP0-LIB` | 370 | `4a404d7b90d83aef47b3593757f86e3699b3bc2dd772f51df63ead4f10d9ab48` | `bash -n` | OK |
 | `RP0-BOOTSTRAP` | 36 | `e7d748f6b41c6156de4d5c5e2d93c2b08729b1f85377b132660424024815bb33` | `bash -n` | OK |
 | `RP1-B3` | 117 | `f40411b053779b28ec9d970d7e5610fe5f363acbc48ee487d07ebce2638a69af` | `bash -n` | OK |
 | `RP3-C2A-POST` | 104 | `e233d29b005964e84cd6cbc2af50deccd83bb281dac39696e47de1c8890b5a27` | `bash -n` | OK |
