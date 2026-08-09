@@ -1,843 +1,1587 @@
 # WP-L Phase 2 — Command-Gap Proposals for Gate-A Post-Gate Matrix (2026-08-09)
 
-> ## ⚠ STATUS: PROPOSED ONLY — not accepted, not executed, not preregistered.
-> **Drafted by subagent (sonnet) under T2 tier; requires Lead review before any use.**
-> No command in this document has been run. No host was touched to produce it. No SSH,
-> sudo, systemctl, network, staging, or Git command was executed while drafting it — this
-> was a read-only documentation task (source files read, one new local file written). Per
-> `OWNER_DECISION_AUDIT_TIERS_2026-08-09.md` §2, this is a T2 (docs/prereg text) surface:
-> single reviewer, single round, medium effort — **not** the two-flagship T0 bar that
-> `deploy/linux/verify.sh`, systemd units, and rollback scripts themselves require. Nothing
-> here may be run until (a) a human with the matrix's own authority (§1 of the gap matrix;
-> G7/budget was cleared by `OWNER_DECISION_AUDIT_TIERS_2026-08-09.md` §1, and WP-L Phase 2 +
-> WP-I staging execution is authorized per `WPL_PHASE2_DISPATCH_PROMPT_2026-08-09.md` — but each
-> specific mutating step still follows that dispatch's own gating) is satisfied, and
-> (b) a qualified reviewer has checked every path, hash, flag, and citation below against
-> the frozen candidate `2ce41e34bceb599d80af24c5c33d835820ec321b` source, not against this
-> document.
+> ## ⚠ STATUS: PROPOSED ONLY — not accepted, not executed, not preregistered, not authorized.
+>
+> **Repair round 1 of at most 3** against the accepted repair specification
+> `WPL_P2_COMMAND_GAP_PROPOSALS_REPAIR_SPEC_2026-08-09.md` at commit
+> `9ac60ac652f4a221316465cdbc24516aa391f5ce`, implementing RP0–RP6 in response to findings
+> F1–F9 of `WPL_P2_COMMAND_GAP_PROPOSALS_AUDIT_2026-08-09.md` (the single authorized round-1
+> audit of the rejected source proposal `779bd038957a192db47ff7ad68eb51304a2fba46`).
+>
+> No block in this document has been run against a host. No host was touched to produce it —
+> no SSH, transport, `sudo`, `systemctl`, network, staging, credential, broker or Git-history
+> action was taken while repairing it. The only execution performed is the local, host-free
+> D026 falsification harness recorded in §8, which runs in a fresh OS temporary root against
+> local stubs.
+>
+> This document is a **design artifact**. It is **not** acceptance, **not** permission to
+> extract any block into a runnable file, **not** host authorization, **not** a statement that
+> the server is ready, and **not** a closure, reopening or repair of the separate blocked
+> `C:\PGRK` design loop. Per `OWNER_DECISION_AUDIT_TIERS_2026-08-09.md` §5 the *repaired
+> proposal document* — this file — carries the full **T0-grade** review bar: Lead verification
+> with independently reproduced falsifications, then flagship re-audit. Every path, mode, hash,
+> flag, status token and API claim below must be re-checked against the frozen candidate
+> `2ce41e34bceb599d80af24c5c33d835820ec321b` source, never against this document and never
+> against a documentation-branch checkout.
 
 ---
 
-## 0. Scope and sources
+## 0. Scope, sources, and block classification
 
-This document drafts exact, copy-pasteable command blocks for the **COMMAND GAP** markers in
-`GATE_A_POST_GATE_PREREGISTRATION_GAP_MATRIX_2026-08-09.md` (hereafter "the gap matrix"), in the
-Gate-A house style established by the accepted run-kit D/E scripts
-(`GATE_A_RUN_KIT_D_2026-08-08/gatea_A7.sh`, `gatea_A8.sh`, `gatea_A9.sh`) and recorded in
-`GATE_A_A9_PASS_FINAL_2026-08-09D.md`. Constraints honoured throughout, per the gap matrix and
-`OWNER_DECISION_AUDIT_TIERS_2026-08-09.md`:
+### 0.1 What this covers
 
-- The bridge stays **DISARMED and credential-free** in every script below. No script reads
+Design for the **COMMAND GAP** markers in
+`GATE_A_POST_GATE_PREREGISTRATION_GAP_MATRIX_2026-08-09.md` (hereafter "the gap matrix").
+Candidate identity throughout: **`2ce41e34bceb599d80af24c5c33d835820ec321b`**. Candidate blobs
+used for every source claim below (frozen in
+`WPL_P2_COMMAND_GAP_PROPOSALS_CANDIDATE_ANCHOR_MAP_2026-08-09.md`):
+
+| Candidate path | Git blob |
+|---|---|
+| `IBKR_PAPER_BRIDGE/tools/wal_state_bundle.py` | `26c077e650ab88ba2086efa3a80790769bc055b1` |
+| `IBKR_PAPER_BRIDGE/deploy/linux/lib/common.sh` | `db11010a24edfbb96ba80ec1fbe1db3ff29193c9` |
+| `IBKR_PAPER_BRIDGE/deploy/linux/verify.sh` | `5cfefd709202ff504ae7b7fc3504b8c0b00900b6` |
+| `IBKR_PAPER_BRIDGE/deploy/linux/rollback.sh` | `4b36674dcb1baa7c3b119cac98f8e6017b1f1566` |
+| `.../systemd/mtc-bridge-first-start.service.template` | `c18232549d96aa200d8c7f796e64de743288940c` |
+
+| # | Gap matrix marker | Repair item | Section | Status of this design |
+|---|---|---|---|---|
+| 1 | **B3** (concrete instance of **G2**) | RP1 | §2 | **EXECUTABLE PROPOSAL BLOCK** |
+| 2 | **C1 / E8** (WP0 I-R4) | RP2 | §3 | **BLOCKED** — two open design gaps |
+| 3 | **C2** (with **G1**'s two mask scenarios) | RP3 | §4 | **BLOCKED** on the C1-GAP-B baseline method; post-reboot halves are executable proposal blocks that STOP without the baseline |
+| 4 | **C3** restore-into-temp | RP4 | §5 | **EXECUTABLE PROPOSAL BLOCK** |
+| 5 | **C4** rollback stop+mask-only | RP5 | §6 | **EXECUTABLE PROPOSAL BLOCK** |
+| — | **C5** egress capture | RP6 | §7 | **BLOCKED** — authority statement only, no procedure |
+| — | shared evidence + predicate bootstrap | RP0 | §1 | **EXECUTABLE PROPOSAL BLOCK** |
+
+### 0.2 Block classification legend — read before reading any fenced block
+
+Every fenced block in this document carries exactly one of these markers on its first line:
+
+- `# ===== BLOCK-ID: <id> ===== [EXECUTABLE PROPOSAL BLOCK]`
+  An **API-consistent design block**. Every such block is syntax/import validated; `RP0-LIB`,
+  `RP0-BOOTSTRAP`, `RP1-B3`, `RP4-C3` and `RP5-C4` additionally have their adjudication
+  exercised locally, RED and GREEN, in a fresh temporary root (§8). `RP3-C2A-POST` and
+  `RP3-C2B-POST` are syntax-validated only, because the scenarios they serve are BLOCKED (§4.1).
+  None of them is **host-runnable**: no block has been run against `/home/gatea`, a real
+  `systemctl`, the candidate `rollback.sh`, or any host, and extracting one into a deployable
+  file is a **separate, not-yet-granted authorization**.
+- `[BLOCKED DESIGN — NON-RUNNABLE]`
+  Requirements expressed deliberately as `text`, never as a command sequence, because at least
+  one prerequisite is an unresolved design gap. Converting one of these into commands is a stop
+  condition (repair spec §10), not an improvement.
+
+### 0.3 Outcome vocabulary — three outcomes everywhere, never two
+
+Every path, process, systemd and pipeline predicate in this document resolves to exactly one of:
+
+| Outcome | rc | Meaning |
+|---|---|---|
+| **TRUE** | `0` | The predicate held, on evidence. |
+| **FALSE** | `1` | The predicate genuinely did not hold, on evidence. |
+| **COULD NOT EVALUATE** | `3` | A tool, permission, parse or status error prevented adjudication. **This is always STOP.** |
+
+A `COULD NOT EVALUATE` is never re-read as FALSE, never re-read as "absent", never re-read as
+"no process", and never re-read as "unmasked". Empty output alone never establishes absence.
+`|| true` does not appear on any predicate path in this document.
+
+### 0.4 Standing constraints honoured by every block
+
+- The bridge stays **DISARMED and credential-free**. No block reads
   `/etc/mtc-bridge/mtc-bridge.env` contents, prints a secret, or issues `POST /api/arm`.
-- The first-start unit has `Restart=no` and no `[Install]` section; the steady unit is
-  gated/inert and also has no `[Install]` (gap-matrix §A4). A reboot **preserves** rather than
-  creates mask state (gap-matrix §G1). No script below assumes an auto-start or an auto-restart
-  promise.
-- The env file cannot override the pinned start mode
-  (`2ce41e34…321b:…/verify.sh:143-146` rejects any `MTC_BRIDGE_START_MODE=` assignment in the
-  env file) — no script below attempts to set or rely on such an override.
-- Any HTTP probe is a loopback-only, GET-only call to `http://127.0.0.1:8790/api/status`
-  (never `/api/arm`, never a non-loopback address).
-- Candidate identity throughout: **`2ce41e34bceb599d80af24c5c33d835820ec321b`**. All paths and
-  line citations below are candidate-qualified per the gap matrix's own G8 mitigation — do not
-  re-derive them from the documentation checkout.
-
-**Gaps covered (5 of the 5 requested at minimum).** One further COMMAND GAP marker exists in the
-matrix (C5, egress capture) and is explicitly addressed in §6 below as **not safely specifiable**
-— it is blocked on an authority class (credentials + broker/TESTNET network access) that this
-task's own constraints forbid touching even in draft form.
-
-| # | Gap matrix marker | Predicate | Proposed artifact |
-|---|---|---|---|
-| 1 | **B3** — "a single bounded post-start permissions-subcheck command is not yet authored" (also the concrete instance of **G2**'s general "bounded subchecks replace a failing full `verify.sh`") | paths/ownership/permissions correct post-start | §2 — `wplp2_B3_permissions.sh` |
-| 2 | **C1 / E8** — "no existing verifier that asserts 'no dangling state after SIGTERM'" (WP0 I-R4, OPEN) | clean SIGTERM shutdown, no dangling state | §3 — `wplp2_C1_sigterm_no_dangling.sh` |
-| 3 | **C2** — post-reboot DISARMED subcheck, "must be designed first"; **G1**'s two distinct mask scenarios | reboot leaves the bridge DISARMED-by-absence, in the *preregistered* mask state | §4 — `wplp2_C2A_postreboot_unmasked.sh`, `wplp2_C2Bpre_stop_mask.sh`, `wplp2_C2Bpost_postreboot_masked.sh` |
-| 4 | **C3** restore-into-temp — "does not exist and must be authored locally" (`wal_state_bundle.py` exposes only `create`/`verify`, no `restore`) | a restored temp copy re-derives the same invariants | §5 — `wplp2_C3restore_wrapper.sh` |
-| 5 | **C4** — "the stop+mask-only run-kit step (with the C3 manifest hash wired in) is not yet authored" | rollback stops+masks, preserves state, proves zero writers, no rebind attempted | §6 — `wplp2_C4_rollback_stop_mask.sh` |
-| — | **C5** — egress capture, "COMMAND GAP until the separate credential/network authority exists" | TESTNET-only egress, no mainnet | §7 — **not drafted; see reasoning** |
-
-## 1. Shared script contract (every script below)
-
-Identical to the accepted run-kit D/E contract, unchanged:
-
-- `set -Eeuo pipefail`.
-- A **fixed, no-clobber evidence log** under `/home/gatea/`: if the log path already exists the
-  script refuses to run and exits **2** — this is the *only* meaning of rc 2. It never overwrites
-  prior evidence.
-- `exec > "$LOG" 2>&1` immediately after the no-clobber check; an `EXIT` trap prints
-  `<ID>_TRAP_EXIT rc=<n>` as the last line, whatever the outcome.
-- A `fail()` helper: prints `<ID>_FAIL reason=…` and exits **1**. Every assertion failure —
-  including a mismatch a human might consider "probably fine" — goes through `fail()`. A script
-  ends with exactly `<ID> PASS` on its last content line **only if every assertion held**.
-- **rc contract:** `0` = full PASS (last line is `<ID> PASS`); `1` = an assertion failed, or a
-  required precondition (unset variable, `mktemp` failure, `sudo` failure) was not met —
-  requires Lead adjudication, never auto-dismissed; `2` = the no-clobber guard fired (log path
-  already exists) — re-run with a new log name after confirming the prior evidence is intentional.
-- **A script never hashes its own still-open log from inside itself.** SHA-256 pairing is a
-  separate post-run step, run after the script has exited and the log is closed:
-  ```bash
-  sha256sum /home/gatea/<log-name>.log
-  stat -c '%s' /home/gatea/<log-name>.log
-  ```
-  Record the remote hash/size, transfer the log, and record the local hash/size identically —
-  the same no-clobber + paired-hash convention `GATE_A_A9_PASS_FINAL_2026-08-09D.md` used for
-  `gatea-A9-20260808D.log` (remote/local SHA-256 identical, byte count recorded).
-- No script reads env-file contents, prints a secret, or issues `POST /api/arm`. Any HTTP call is
-  a loopback-only `GET` on `127.0.0.1:8790`.
-- **First-FAIL stops.** If any script in a sequence fails, preserve its log, run only read-only
-  diagnostics, and stop — do not improvise the next step or auto-retry.
+- The env file cannot override the pinned start mode — the candidate rejects any
+  `MTC_BRIDGE_START_MODE=` assignment in the env file (`verify.sh:143-146`). No block attempts
+  or relies on such an override.
+- The first-start unit has `Restart=no` and **no `[Install]` section** (template `:55`; no
+  `^[Install]$` anywhere in the 93-line blob; comment `:11-12` states enable is structurally
+  unavailable). The steady unit is gated/inert and never installed. No block below starts,
+  enables, unmasks or arms anything.
+- Any HTTP probe is loopback-only, `GET`-only, on `http://127.0.0.1:8790/api/status`.
+- No block deletes, renames aside, retries in place, or truncates prior evidence.
 
 ---
 
-## 2. Gap 1 — B3: post-start bounded permissions/ownership subcheck
+## 1. RP0 — shared evidence channel and predicate bootstrap
 
-Replaces the parts of a full `deploy/linux/verify.sh` run that assert filesystem
-ownership/permissions (`2ce41e34…321b:…/verify.sh` §2 lines 77–102, §4 lines 123–136). A full
-`verify.sh` run is not usable post-start: it also asserts the unit is **masked** and **inactive**
-(lines 206–214), which after Gate-A it is neither (Gap G2) — running it whole would produce a
-fabricated FAIL. This script asserts only the ownership/mode facts from the filesystem matrix
-(`KVM2_PROGRAM/boundaries/IDENTITY_AND_FILESYSTEM.md`) and the gap matrix (§A3/§A4/§B1a), using
-read-only `stat`/`find` only — no file content is ever read.
+Closes **F1** (every proposed evidence log could follow a dangling symlink) and the shared part
+of **F9** (process/tool failures collapsed).
+
+### 1.1 What was wrong and what replaces it
+
+The rejected proposal used a **fixed** evidence path under `/home/gatea/` guarded only by
+`[[ -e "$LOG" ]]` before `exec > "$LOG" 2>&1`. `-e` is **false** for a dangling symlink, so the
+redirection then followed the link and created/truncated its target — destroying evidence
+outside the intended path while the document claimed global no-clobber. The replacement is a
+**preregistered per-run evidence tree**, allocated create-once, with a canonical non-link parent
+proven first.
+
+### 1.2 Preregistration and operator-side transport evidence (design requirement)
+
+```text
+[BLOCKED-FREE DESIGN REQUIREMENT — not a command sequence]
+
+Before any remote invocation the operator preregisters, locally and immutably:
+
+  RUNID                 a fresh run identifier, never reused. If allocation fails for any
+                        reason the identifier is BURNED: it is never retried in place.
+  EV_PARENT             the exact evidence parent path, expected owner:group, expected mode
+  EV_RUNKIT             the exact runkit directory, expected owner:group, expected mode
+  EV_STAGE_ID           the stage identifier that names the single evidence leaf
+  expected SHA-256 of every proposed block that the stage will carry
+
+The transport itself is evidence. The operator-side transport record MUST capture, from the
+first byte and independently of anything the remote side writes:
+
+  - the exact remote argv actually sent,
+  - the complete transport stdout,
+  - the complete transport stderr,
+  - the transport exit status.
+
+Reason: every failure BEFORE remote evidence allocation succeeds is invisible to a remote-only
+log. Those failures are exactly the ones that decide whether the run ID is burned.
+
+This document does not contain a transport command line. Transport is a separate authorization.
+```
+
+### 1.3 Shared library — three-outcome predicates
 
 ```bash
-#!/usr/bin/env bash
-# WP-L Phase 2 -- B3 post-start permissions/ownership subcheck (PROPOSED, NOT EXECUTED)
-# Candidate: 2ce41e34bceb599d80af24c5c33d835820ec321b (credential-free DISARMED)
-# Replaces a full deploy/linux/verify.sh run post-start (Gap G2: verify.sh also asserts
-# masked+inactive, so a full run intentionally fails once the service is unmasked/active).
-# Read-only stat/find only. No file content is read, no credential value, no POST /api/arm,
-# no broker/exchange/order/TESTNET/mainnet/economic action. First genuine FAIL stops.
+# ===== BLOCK-ID: RP0-LIB ===== [EXECUTABLE PROPOSAL BLOCK]
+# WP-L Phase 2 — shared evidence + predicate bootstrap library (PROPOSED DESIGN).
+# Candidate: 2ce41e34bceb599d80af24c5c33d835820ec321b (credential-free DISARMED).
+# NOT host-authorized. Definitions only: sourcing this block performs no filesystem,
+# service, network, credential or economic action.
+#
+# rc contract for every predicate defined here:
+#   0 = TRUE   1 = FALSE   3 = COULD NOT EVALUATE (always STOP)
+RP0_STOP_RC=3
+
+rp0_stop() { printf 'RP0_STOP reason=%s\n' "$*" >&2; return "$RP0_STOP_RC"; }
+rp0_fail() { printf 'RP0_FAIL reason=%s\n' "$*" >&2; return 1; }
+rp0_note() { printf 'RP0_NOTE %s\n' "$*"; }
+
+# --- monotonic clock -------------------------------------------------------
+# Wall-clock seconds are not a bound. /proc/uptime is monotonic; if it cannot be
+# read, elapsed time COULD NOT BE EVALUATED and the caller must STOP.
+rp0_monotonic_ms() {
+    local up rest
+    read -r up rest < /proc/uptime || { rp0_stop "monotonic_clock_unreadable"; return 3; }
+    LC_ALL=C awk -v u="$up" 'BEGIN { printf "%.0f\n", u * 1000 }'
+}
+
+# --- three-outcome path classification -------------------------------------
+# Prints exactly one of: absent regular dir link_live link_dangling other
+# rc 0 = classified, rc 3 = COULD NOT EVALUATE. A probe error is NEVER "absent",
+# and a dangling link is NEVER "absent" — that conflation was defect F1.
+# `stat` without -L does not dereference, so a dangling link is still classified.
+rp0_probe_path() {
+    local p="$1" kind rc=0 err detail
+    err="$(mktemp)" || { rp0_stop "probe_tempfile_failed path=$p"; return 3; }
+    kind="$(LC_ALL=C stat -c '%F' -- "$p" 2>"$err")" || rc=$?
+    if [ "$rc" -eq 0 ]; then
+        case "$kind" in
+            "symbolic link")
+                rc=0
+                LC_ALL=C stat -L -c '%F' -- "$p" >/dev/null 2>"$err" || rc=$?
+                if [ "$rc" -eq 0 ]; then printf 'link_live\n'; rm -f "$err"; return 0; fi
+                detail="$(tr -d '\r\n' <"$err")"; rm -f "$err"
+                case "$detail" in
+                    *"No such file or directory"*) printf 'link_dangling\n'; return 0 ;;
+                esac
+                rp0_stop "link_target_probe_error path=$p rc=$rc detail=$detail"; return 3 ;;
+            "regular file"|"regular empty file") printf 'regular\n'; rm -f "$err"; return 0 ;;
+            "directory")                         printf 'dir\n';     rm -f "$err"; return 0 ;;
+            *)                                   printf 'other\n';   rm -f "$err"; return 0 ;;
+        esac
+    fi
+    detail="$(tr -d '\r\n' <"$err")"; rm -f "$err"
+    case "$detail" in
+        *"No such file or directory"*) printf 'absent\n'; return 0 ;;
+    esac
+    rp0_stop "path_probe_error path=$p rc=$rc detail=$detail"
+    return 3
+}
+
+# --- canonical non-link parent with preregistered owner/mode ---------------
+# args: <path> <expected owner:group> <expected octal mode>
+rp0_require_canonical_dir() {
+    local p="$1" want_own="$2" want_mode="${3#0}" kind canon own mode
+    kind="$(rp0_probe_path "$p")" || return 3
+    case "$kind" in
+        dir) : ;;
+        absent)                  rp0_fail "evidence_parent_absent path=$p"; return 1 ;;
+        link_live|link_dangling) rp0_fail "evidence_parent_is_symlink kind=$kind path=$p"; return 1 ;;
+        *)                       rp0_fail "evidence_parent_kind=$kind path=$p"; return 1 ;;
+    esac
+    canon="$(readlink -f -- "$p")" || { rp0_stop "canonicalization_failed path=$p"; return 3; }
+    [ "$canon" = "$p" ] || { rp0_fail "evidence_parent_not_canonical path=$p canonical=$canon"; return 1; }
+    own="$(LC_ALL=C stat -c '%U:%G' -- "$p")" || { rp0_stop "owner_probe_failed path=$p"; return 3; }
+    mode="$(LC_ALL=C stat -c '%a' -- "$p")"   || { rp0_stop "mode_probe_failed path=$p"; return 3; }
+    [ "$own" = "$want_own" ]   || { rp0_fail "evidence_parent_owner=$own expected=$want_own path=$p"; return 1; }
+    [ "$mode" = "$want_mode" ] || { rp0_fail "evidence_parent_mode=$mode expected=$want_mode path=$p"; return 1; }
+    rp0_note "evidence_parent_ok path=$p owner=$own mode=$mode"
+    return 0
+}
+
+# --- create-once evidence directory ----------------------------------------
+# ONE plain `mkdir -m 0700`. Never `mkdir -p`: a missing intermediate must fail,
+# not be silently manufactured. Any non-zero rc is STOP and burns the run ID.
+rp0_allocate_evidence_dir() {
+    local evdir="$1" out rc=0
+    out="$(mkdir -m 0700 -- "$evdir" 2>&1)" || rc=$?
+    if [ "$rc" -ne 0 ]; then
+        rp0_stop "evidence_allocation_failed dir=$evdir rc=$rc detail=$out run_id_burned=yes"
+        return 3
+    fi
+    rp0_note "evidence_dir_allocated dir=$evdir"
+    return 0
+}
+
+# --- create-once evidence leaf ---------------------------------------------
+# `noclobber` makes the shell open with O_CREAT|O_EXCL, so an existing regular
+# file, a LIVE symlink and a DANGLING symlink are all refused with EEXIST. This
+# is the exact predicate the rejected `[[ -e "$LOG" ]]` guard did not provide.
+# No append, no truncation of an existing path, no rename-aside, no retry.
+rp0_open_evidence_leaf() {
+    local leaf="$1" rc=0 kind size
+    set -o noclobber
+    : > "$leaf" || rc=$?
+    set +o noclobber
+    if [ "$rc" -ne 0 ]; then
+        rp0_stop "evidence_leaf_not_creatable leaf=$leaf rc=$rc"; return 3
+    fi
+    kind="$(rp0_probe_path "$leaf")" || return 3
+    [ "$kind" = "regular" ] || { rp0_stop "evidence_leaf_kind=$kind leaf=$leaf"; return 3; }
+    size="$(LC_ALL=C stat -c '%s' -- "$leaf")" || { rp0_stop "evidence_leaf_stat_failed leaf=$leaf"; return 3; }
+    [ "$size" = "0" ] || { rp0_stop "evidence_leaf_not_empty leaf=$leaf size=$size"; return 3; }
+    exec > "$leaf" 2>&1
+    return 0
+}
+
+# --- pgrep: 0 matched / 1 none / anything else STOP ------------------------
+# Defect F9 was `pgrep ... || true` plus "empty temp file means no process".
+# rc 2 (syntax/fatal) with empty output then read as "no writer survived".
+rp0_pgrep_status() {
+    local pat="$1" out rc=0
+    out="$(pgrep -af "$pat" 2>&1)" || rc=$?
+    case "$rc" in
+        0) printf '%s\n' "$out"; return 0 ;;
+        1) if [ -n "$out" ]; then rp0_stop "pgrep_rc1_with_output pattern=$pat out=$out"; return 3; fi
+           return 1 ;;
+        *) rp0_stop "pgrep_status pattern=$pat rc=$rc out=$out"; return 3 ;;
+    esac
+}
+
+# --- systemctl is-enabled: token and status adjudicated TOGETHER -----------
+# Defect F4/F9 was `systemctl is-enabled ... || true`, after which empty or
+# error output satisfied `!= masked`. A preregistered token may only PASS when
+# the command status is one of the documented token-producing statuses.
+# Blank or unparsable output is STOP.
+rp0_is_enabled_token() {
+    local unit="$1" out rc=0
+    out="$(systemctl is-enabled -- "$unit" 2>/dev/null)" || rc=$?
+    case "$rc:$out" in
+        0:enabled|0:enabled-runtime|0:alias|0:linked|0:linked-runtime|0:generated)
+            printf '%s\n' "$out"; return 0 ;;
+        1:static|1:masked|1:masked-runtime|1:disabled|1:indirect|1:transient)
+            printf '%s\n' "$out"; return 0 ;;
+    esac
+    rp0_stop "is_enabled_unadjudicable unit=$unit rc=$rc token=[$out]"
+    return 3
+}
+
+# --- systemctl show: one property, status adjudicated ----------------------
+rp0_show_property() {
+    local unit="$1" prop="$2" out rc=0
+    out="$(systemctl show -p "$prop" --value -- "$unit" 2>/dev/null)" || rc=$?
+    if [ "$rc" -ne 0 ]; then rp0_stop "systemctl_show_failed unit=$unit prop=$prop rc=$rc"; return 3; fi
+    if [ -z "$out" ]; then rp0_stop "systemctl_show_blank unit=$unit prop=$prop"; return 3; fi
+    printf '%s\n' "$out"; return 0
+}
+
+# --- pipeline discipline ---------------------------------------------------
+# Rule: any pipeline runs under `set -o pipefail` AND its complete component
+# status vector (${PIPESTATUS[@]}) is adjudicated; empty output is never
+# sufficient. Where a pipeline can be avoided it is avoided — that is strictly
+# stronger than adjudicating one. The listener count below uses no pipeline.
+rp0_listener_count() {
+    local port="$1" raw rc=0
+    local -a lines=()
+    raw="$(ss -H -ltn "sport = :${port}" 2>&1)" || rc=$?
+    if [ "$rc" -ne 0 ]; then rp0_stop "ss_status port=$port rc=$rc out=$raw"; return 3; fi
+    if [ -n "$raw" ]; then mapfile -t lines <<<"$raw"; fi
+    printf '%s\n' "${#lines[@]}"
+    return 0
+}
+```
+
+### 1.4 Bootstrap sequence
+
+```bash
+# ===== BLOCK-ID: RP0-BOOTSTRAP ===== [EXECUTABLE PROPOSAL BLOCK]
+# Runs after RP0-LIB is sourced. Preregistered inputs only; nothing is derived
+# at run time, nothing is defaulted, nothing is created with `mkdir -p`.
 set -Eeuo pipefail
 
-REL="/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b"
-VENV="/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b"
+: "${RUNID:?preregistered run identifier is required}"
+: "${EV_PARENT:?preregistered evidence parent is required}"
+: "${EV_PARENT_OWNER:?preregistered evidence parent owner:group is required}"
+: "${EV_PARENT_MODE:?preregistered evidence parent octal mode is required}"
+: "${EV_RUNKIT:?preregistered runkit directory is required}"
+: "${EV_RUNKIT_OWNER:?preregistered runkit owner:group is required}"
+: "${EV_RUNKIT_MODE:?preregistered runkit octal mode is required}"
+: "${EV_STAGE_ID:?preregistered stage identifier is required}"
+
+# Parent chain first: canonical, non-link, preregistered owner and mode.
+rp0_require_canonical_dir "$EV_PARENT" "$EV_PARENT_OWNER" "$EV_PARENT_MODE" || exit $?
+rp0_require_canonical_dir "$EV_RUNKIT" "$EV_RUNKIT_OWNER" "$EV_RUNKIT_MODE" || exit $?
+
+# One-shot create-once allocation; the run ID is burned on any failure.
+EV_DIR="$EV_RUNKIT/$RUNID"
+rp0_allocate_evidence_dir "$EV_DIR" || exit $?
+
+# Only now may output be redirected, and only into the directory just created.
+EV_LOG="$EV_DIR/${EV_STAGE_ID}.log"
+rp0_open_evidence_leaf "$EV_LOG" || exit $?
+
+printf 'RP0_EVIDENCE run_id=%s dir=%s leaf=%s\n' "$RUNID" "$EV_DIR" "$EV_LOG"
+```
+
+### 1.5 Closing and binding the evidence tree (post-exit, operator-side)
+
+```text
+[BLOCKED-FREE DESIGN REQUIREMENT — runs only after the stage process has exited]
+
+A process never hashes its own still-open evidence. After the stage exits and the tree is
+closed, the operator hashes the CLOSED TREE externally, remote side and again locally after
+transfer, and binds the two:
+
+  find <EV_DIR> -type f -print0 | sort -z | xargs -0 sha256sum   # per-file digests
+  find <EV_DIR> -type f -printf '%P %s\n' | sort                 # names and byte counts
+
+Both sides must produce an identical per-file digest set. The pair is recorded against RUNID.
+A remote-only or local-only hash is not a binding. Transfer is a separate authorization and no
+transport command appears in this document.
+```
+
+### 1.6 Required RP0 falsifications
+
+All six are exercised locally in §8: (1) existing regular evidence leaf; (2) dangling evidence
+symlink; (3) parent path replaced by a symlink; (4) denied/path-probe error; (5) `pgrep`
+synthetic rc `2` with empty output; (6) `systemctl is-enabled` synthetic non-token error with
+empty output.
+
+---
+
+## 2. RP1 — B3 bounded post-start permissions/ownership subcheck
+
+Closes **F2**. A full `deploy/linux/verify.sh` run is not usable post-start: it also asserts the
+unit is masked and inactive (`verify.sh:207-214`), which after Gate-A it is neither, so a whole
+run would produce a fabricated FAIL (Gap G2). This block reproduces only the filesystem
+predicates of `verify.sh:79-81`, `:105-106`, `:124-128` and `:129-135`, at **candidate strength**.
+
+### 2.1 What was wrong
+
+| Rejected behaviour | Candidate requirement | Repair |
+|---|---|---|
+| accepted root mode `^(555\|444)$` | exactly `0555 root:root` (`verify.sh:79,105` via `common.sh:80-93`) | exact `0555 root:root`; `0444` is a mismatch |
+| `find ... -perm -0200` (owner-write only) | `find "$root" ! -type l -perm /222 -print -quit` (`common.sh:98`) | candidate `/222` any-write-bit predicate, reproduced verbatim |
+| claimed to reproduce `verify.sh:123-136` but never checked the binding at `:129-135` | install manifest must bind **both** the release SHA and the release/payload manifest SHA | both silent fixed-string bindings checked |
+| whole-tree `find` called "bounded" | candidate `-quit` only shortens a *failing* sweep | honest: full walk of a clean tree, under a preregistered budget, exceeding it is STOP |
+| `find` failure fell through to an empty-PASS | `common.sh:98-100` fails closed | tool failure is STOP, including partial output |
+
+### 2.2 Block
+
+```bash
+# ===== BLOCK-ID: RP1-B3 ===== [EXECUTABLE PROPOSAL BLOCK]
+# WP-L Phase 2 — B3 post-start permissions/ownership subcheck (PROPOSED DESIGN).
+# Candidate: 2ce41e34bceb599d80af24c5c33d835820ec321b. NOT host-authorized.
+# Read-only `stat`/`find`/silent `grep` only. No file content is printed, no
+# credential value is read, no POST /api/arm, no broker/exchange/order/TESTNET/
+# mainnet/economic action. Requires RP0-LIB sourced and RP0-BOOTSTRAP completed.
+set -Eeuo pipefail
+
+CAND="2ce41e34bceb599d80af24c5c33d835820ec321b"
+REL="/opt/mtc-bridge/releases/$CAND"
+VENV="/opt/mtc-bridge/venvs/$CAND"
 STATE_DIR="/var/lib/mtc-bridge"
 LOG_DIR="/var/log/mtc-bridge"
-ETC_DIR="/etc/mtc-bridge"
+CONF_DIR="/etc/mtc-bridge"
 ENV_FILE="/etc/mtc-bridge/mtc-bridge.env"
-MANIFEST="/etc/mtc-bridge/install_manifest.json"
+INSTALL_MANIFEST="/etc/mtc-bridge/install_manifest.json"
 UNIT_FILE="/usr/local/lib/systemd/system/mtc-bridge-first-start.service"
-LOG="/home/gatea/gatea-WPLP2-B3-20260809.log"
 
-if [[ -e "$LOG" ]]; then
-    printf 'ERROR: evidence log already exists (%s); refusing to overwrite\n' "$LOG" >&2
-    exit 2
-fi
+# Preregistered, never derived here:
+: "${B3_RELEASE_MANIFEST_SHA256:?preregistered accepted RELEASE_SHA256SUMS sha256 is required}"
+: "${B3_SWEEP_BUDGET_S:?preregistered per-tree sweep budget in seconds is required}"
 
-exec > "$LOG" 2>&1
+b3_stop() { printf 'B3_STOP reason=%s\n' "$*"; exit 3; }
+b3_fail() { printf 'B3_FAIL reason=%s\n' "$*"; exit 1; }
 
-finish() {
-    local rc=$?
-    printf '\nB3_TRAP_EXIT rc=%s\n' "$rc"
-}
-trap finish EXIT
-
-fail() {
-    printf 'B3_FAIL reason=%s\n' "$*"
-    exit 1
-}
-
-echo "B3_SECTION header"
-echo "B3_candidate=2ce41e34bceb599d80af24c5c33d835820ec321b"
-echo "B3_note=read-only stat/find only; no file content read; no POST /api/arm; env file contents not read"
-
-check_path() {
-    # args: path expect_owner expect_group expect_mode_regex label
-    local p="$1" eo="$2" eg="$3" emre="$4" label="$5"
-    if sudo test -L "$p"; then fail "$label ($p) is a symlink"; fi
-    sudo test -e "$p" || fail "$label ($p) missing"
-    local meta ow gr mo
-    meta=$(sudo stat -c '%U %G %a' "$p") || fail "$label ($p) stat failed"
-    ow=$(awk '{print $1}' <<<"$meta"); gr=$(awk '{print $2}' <<<"$meta"); mo=$(awk '{print $3}' <<<"$meta")
-    echo "B3_stat path=$p owner=$ow group=$gr mode=$mo"
-    [[ "$ow" == "$eo" ]] || fail "$label ($p) owner=$ow expected $eo"
-    [[ "$gr" == "$eg" ]] || fail "$label ($p) group=$gr expected $eg"
-    [[ "$mo" =~ $emre ]]  || fail "$label ($p) mode=$mo does not match /$emre/"
+# --- exact mode + owner, candidate strength --------------------------------
+# Reproduces candidate common.sh assert_mode_owner (:80-93): exact octal mode and
+# exact owner:group. There is no accepted alternative mode.
+b3_assert_mode_owner() {
+    local p="$1" want_mode="${2#0}" want_own="$3" kind mode own
+    kind="$(rp0_probe_path "$p")" || exit 3
+    case "$kind" in
+        regular|dir) : ;;
+        absent)                  b3_fail "missing path=$p" ;;
+        link_live|link_dangling) b3_fail "canonical deployment path is a symlink kind=$kind path=$p" ;;
+        *)                       b3_fail "unexpected object kind=$kind path=$p" ;;
+    esac
+    mode="$(LC_ALL=C stat -c '%a' -- "$p")"   || b3_stop "mode_probe_failed path=$p"
+    own="$(LC_ALL=C stat -c '%U:%G' -- "$p")" || b3_stop "owner_probe_failed path=$p"
+    printf 'B3_stat path=%s owner=%s mode=%s\n' "$p" "$own" "$mode"
+    [ "$mode" = "$want_mode" ] || b3_fail "path=$p mode=$mode expected=$want_mode"
+    [ "$own"  = "$want_own"  ] || b3_fail "path=$p owner=$own expected=$want_own"
 }
 
-echo "B3_SECTION release_tree"
-check_path "$REL" root root '^(555|444)$' "release_root"
-writable=$(sudo find "$REL" -perm -0200 2>&1) || fail "find over release tree failed"
-[[ -z "$writable" ]] || { echo "B3_writable_paths_begin"; printf '%s\n' "$writable"; echo "B3_writable_paths_end"; fail "release tree has a write bit set somewhere"; }
+# --- candidate any-write-bit sweep, budgeted, fail-closed ------------------
+# Candidate common.sh:95-105 predicate, reproduced verbatim:
+#     find "$root" ! -type l -perm /222 -print -quit
+# `/222` matches ANY write bit (owner, group OR other). `-perm -0200` is
+# owner-write-only and silently passes a 0020 or 0002 offender — that was F2.
+# Honest cost: `-quit` shortens only a FAILING sweep; a clean tree is a full
+# walk. The operator preregisters B3_SWEEP_BUDGET_S; exceeding it is STOP.
+b3_assert_no_writable_paths() {
+    local root="$1" offenders errf rc=0 t0 t1 elapsed_s
+    errf="$(mktemp)" || b3_stop "sweep_tempfile_failed root=$root"
+    t0="$(rp0_monotonic_ms)" || exit 3
+    offenders="$(find "$root" ! -type l -perm /222 -print -quit 2>"$errf")" || rc=$?
+    t1="$(rp0_monotonic_ms)" || exit 3
+    if [ "$rc" -ne 0 ]; then
+        b3_stop "writable_inventory_failed root=$root rc=$rc detail=$(tr -d '\r\n' <"$errf") partial=[$offenders]"
+    fi
+    rm -f "$errf"
+    elapsed_s=$(( (t1 - t0) / 1000 ))
+    printf 'B3_sweep root=%s elapsed_s=%s budget_s=%s\n' "$root" "$elapsed_s" "$B3_SWEEP_BUDGET_S"
+    [ "$elapsed_s" -le "$B3_SWEEP_BUDGET_S" ] \
+        || b3_stop "sweep_budget_exceeded root=$root elapsed_s=$elapsed_s budget_s=$B3_SWEEP_BUDGET_S"
+    [ -z "$offenders" ] || b3_fail "writable path inside immutable tree: $offenders"
+    printf 'B3_no_write_bit root=%s\n' "$root"
+}
 
-echo "B3_SECTION venv_tree"
-check_path "$VENV" root root '^(555|444)$' "venv_root"
-venv_writable=$(sudo find "$VENV" -perm -0200 2>&1) || fail "find over venv tree failed"
-[[ -z "$venv_writable" ]] || { echo "B3_venv_writable_begin"; printf '%s\n' "$venv_writable"; echo "B3_venv_writable_end"; fail "venv tree has a write bit set somewhere"; }
+# --- install-manifest binding, silent, three-outcome ----------------------
+# Candidate verify.sh:129-135 binds BOTH the candidate release SHA and the
+# release/payload manifest SHA. `grep -qsF` prints nothing, so no unrelated
+# manifest content reaches the evidence log. rc 0 = bound, rc 1 = not bound,
+# any other rc = read/tool error = STOP (never "not bound").
+b3_assert_manifest_binding() {
+    local manifest="$1" release_sha="$2" manifest_sha="$3" kind rc=0
+    kind="$(rp0_probe_path "$manifest")" || exit 3
+    [ "$kind" = "regular" ] || b3_fail "install manifest kind=$kind path=$manifest"
+    LC_ALL=C grep -qsF -- "\"release_sha\": \"$release_sha\"" "$manifest" || rc=$?
+    case "$rc" in
+        0) : ;;
+        1) b3_fail "install manifest does not bind release_sha" ;;
+        *) b3_stop "install_manifest_unreadable path=$manifest grep_rc=$rc" ;;
+    esac
+    rc=0
+    LC_ALL=C grep -qsF -- "\"release_manifest_sha256\": \"$manifest_sha\"" "$manifest" || rc=$?
+    case "$rc" in
+        0) : ;;
+        1) b3_fail "install manifest does not bind release_manifest_sha256" ;;
+        *) b3_stop "install_manifest_unreadable path=$manifest grep_rc=$rc" ;;
+    esac
+    printf 'B3_manifest_binding path=%s bound=both\n' "$manifest"
+}
 
-echo "B3_SECTION state_and_log_dirs"
-check_path "$STATE_DIR" mtc-bridge mtc-bridge '^750$' "state_dir"
-check_path "$LOG_DIR" mtc-bridge mtc-bridge '^750$' "log_dir"
+printf 'B3_SECTION header candidate=%s\n' "$CAND"
 
-echo "B3_SECTION etc_dir"
-check_path "$ETC_DIR" root root '^750$' "etc_dir"
-check_path "$ENV_FILE" root root '^600$' "env_file"
-check_path "$MANIFEST" root root '^640$' "install_manifest"
+printf 'B3_SECTION release_tree\n'
+b3_assert_mode_owner "$REL" 0555 root:root
+b3_assert_no_writable_paths "$REL"
 
-echo "B3_SECTION unit_file"
-check_path "$UNIT_FILE" root root '^644$' "installed_unit_file"
+printf 'B3_SECTION venv_tree\n'
+b3_assert_mode_owner "$VENV" 0555 root:root
+b3_assert_no_writable_paths "$VENV"
 
-echo "B3_SECTION done"
-echo "B3 PASS"
+printf 'B3_SECTION ancillary_paths\n'
+b3_assert_mode_owner "$STATE_DIR"        0750 mtc-bridge:mtc-bridge
+b3_assert_mode_owner "$LOG_DIR"          0750 mtc-bridge:mtc-bridge
+b3_assert_mode_owner "$CONF_DIR"         0750 root:root
+b3_assert_mode_owner "$ENV_FILE"         0600 root:root
+b3_assert_mode_owner "$INSTALL_MANIFEST" 0640 root:root
+b3_assert_mode_owner "$UNIT_FILE"        0644 root:root
+
+printf 'B3_SECTION manifest_binding\n'
+b3_assert_manifest_binding "$INSTALL_MANIFEST" "$CAND" "$B3_RELEASE_MANIFEST_SHA256"
+
+printf 'B3_SECTION done\n'
+printf 'B3 PASS\n'
 ```
 
-**PASS:** every `check_path` and every `find -perm -0200` sweep passes; last line is `B3 PASS`.
-**FAIL disposition:** any mode/owner/group drift, symlink, or stray write bit is a STOP requiring
-Lead adjudication (candidate-repair question, not a documentation outcome) — matches the gap
-matrix's own B3 failure disposition ("mode/owner drift = STOP").
+**Candidate anchors for each asserted value.** `0555 root:root` release and venv roots —
+`verify.sh:79,105`. `/222` sweep — `common.sh:98`, invoked at `verify.sh:80,106`. State/log
+`0750 mtc-bridge:mtc-bridge`, conf `0750 root:root`, env `0600 root:root`, install manifest
+`0640 root:root` — `verify.sh:124-128`. Manifest binding — `verify.sh:129-135`. Installed unit
+`0644 root:root` — the candidate installs it with `install -o root -g root -m 0644`
+(`rollback.sh:149`); `verify.sh:156` asserts only that it is a regular file, so this mode claim
+rests on the installer anchor, not on `verify.sh`.
+
+**FAIL disposition:** any mode/owner drift, symlink at a canonical deployment path, any write
+bit, or a missing binding is a **STOP requiring Lead adjudication** — a candidate-repair
+question, not a documentation outcome. **STOP disposition:** any `stat`, `find`, `grep`,
+`mktemp` or clock error stops the stage with rc 3; it is never re-read as a PASS.
+
+### 2.3 Required RP1 fixtures
+
+Exercised locally in §8: root mode `0444`; group-writable-only child (`0020`); other-writable-only
+child (`0002`); wrong candidate SHA; wrong payload-manifest SHA; unreadable manifest; failed
+`find` after emitting partial output; and one ancillary-path mode/owner drift fixture.
 
 ---
 
-## 3. Gap 2 — C1: post-SIGTERM no-dangling-state check (WP0 I-R4)
+## 3. RP2 — C1 graceful-stop verification remains **BLOCKED**
 
-Closes the explicitly OPEN predicate: "no test asserts SIGTERM/lifespan shutdown leaves no
-dangling state" (WP0 I-R4, gap-matrix §C1). Uses the unit's own directives
-(`KillSignal=SIGTERM` `:48`, `KillMode=mixed` `:49`, `TimeoutStopSec=45` `:51`,
-`FinalKillSignal=SIGKILL` `:52`) as the pass/fail boundary: an elapsed stop time at or above 45 s
-is itself evidence SIGKILL fired, not a clean SIGTERM exit. **Mutation class: `mutating-host`** —
-this script issues one `systemctl stop`; it does **not** perform the separate recovery start
-(KVM2-P4-08A/B is a distinct, separately authorised step) and deliberately leaves the unit
-stopped afterward.
+Closes **F3** only through prior gap closure. **There is no runnable C1 block in this document,
+and adding one is a stop condition.** The rejected proposal's C1 script is removed, not softened.
 
-```bash
-#!/usr/bin/env bash
-# WP-L Phase 2 -- C1 post-SIGTERM no-dangling-state check (PROPOSED, NOT EXECUTED)
-# Candidate: 2ce41e34bceb599d80af24c5c33d835820ec321b (credential-free DISARMED)
-# Mutation class: mutating-host (one authorised `systemctl stop`). Requires its own explicit
-# authority + budget lift beyond WP-L Phase 2 preparation (gap-matrix §1); PROPOSED ONLY.
-# Closes WP0 I-R4 (OPEN). Does NOT perform the separate recovery start (KVM2-P4-08A/B is a
-# distinct, separately authorised step) -- the unit is left stopped on exit.
-# No credential value is read. Only HTTP call is one loopback GET of /api/status BEFORE the
-# stop, for the record -- no POST /api/arm. No broker/exchange/order/TESTNET/mainnet/economic
-# action. First genuine FAIL stops.
-set -Eeuo pipefail
+### 3.1 Why the rejected C1 could not close WP0 I-R4
 
-UNIT="mtc-bridge-first-start.service"
-PY="/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python"
-DB="/var/lib/mtc-bridge/bridge.db"
-LOG="/home/gatea/gatea-WPLP2-C1-20260809.log"
+- It recorded **no protected persistent-state baseline before the stop**, so its post-stop DB
+  check proved only integrity and `app_state != ARMED`. Any same-size or otherwise valid change
+  to orders, trades, fills, risk days, environments, counts or max IDs passed unnoticed. The
+  candidate exposes the exact invariant set at `wal_state_bundle.py:417-467` and its hash at
+  `:561-562`; nothing less is a persistence proof.
+- Its SIGTERM predicate used `date +%s` (one-second resolution) and accepted exactly 45 s while
+  its own prose classified `>= 45` as timeout/SIGKILL evidence.
+- It recorded only `Result`, not a preregistered exit tuple, and no bounded journal evidence.
+- Source intent is not host proof: the candidate's credential-free shutdown path having no
+  engine stop does not establish what a real SIGTERM produced.
 
-if [[ -e "$LOG" ]]; then
-    printf 'ERROR: evidence log already exists (%s); refusing to overwrite\n' "$LOG" >&2
-    exit 2
-fi
+### 3.2 The two open gaps
 
-exec > "$LOG" 2>&1
+```text
+[BLOCKED DESIGN — NON-RUNNABLE]
 
-PROCS_FILE=""
-finish() {
-    local rc=$?
-    [[ -n "$PROCS_FILE" && -f "$PROCS_FILE" ]] && rm -f "$PROCS_FILE"
-    printf '\nC1_TRAP_EXIT rc=%s\n' "$rc"
-}
-trap finish EXIT
+C1-GAP-A — exact successful shutdown tuple
+  The candidate's uvicorn/systemd SIGTERM result must be pinned from the exact locked
+  dependency version and the systemd mapping, and the accepted
+      ExecMainCode / ExecMainStatus / Result
+  tuple must be FROZEN BEFORE any stop is issued.
+  Not acceptable as closure: `Result=success` alone; elapsed time alone; a tuple observed
+  post-hoc and then declared to have been the expectation.
+  The unit template alone cannot close this. KillSignal=SIGTERM (:48), KillMode=mixed (:49),
+  TimeoutStopSec=45 (:51), FinalKillSignal=SIGKILL (:52) and Restart=no (:55) bound the
+  mechanism; they do not predict the successful exit tuple.
 
-fail() {
-    printf 'C1_FAIL reason=%s\n' "$*"
-    exit 1
-}
+C1-GAP-B — safe active-writer pre-stop baseline
+  An exact method must be specified AND INDEPENDENTLY ACCEPTED for capturing the candidate
+  `wal_state_bundle` protected invariants while the service is ACTIVE, without using the
+  warning-class `--allow-live-source` as proof and without mutating or unsafely locking the
+  production database. The baseline must exist BEFORE `systemctl stop`.
+  Note the candidate's own constraint: `_connect_readonly` (:342-381) fails closed when the
+  source has a hot WAL without a usable `-shm`, and recovering that needs a read-write
+  connection under separate owner authorization. A method that ignores this is not safe.
 
-echo "C1_SECTION header"
-echo "C1_unit=$UNIT"
-echo "C1_candidate=2ce41e34bceb599d80af24c5c33d835820ec321b"
-echo "C1_note=one authorised systemctl stop; GET-only loopback probe before stop; no env-file read; no POST /api/arm; recovery start is a separate, later step"
-
-# ---- step 0: pre-stop status (loopback GET only, read-only) --------------------
-echo "C1_SECTION step0_pre_stop_status"
-pre_out=$(curl -sS --max-time 5 http://127.0.0.1:8790/api/status) || fail "pre-stop GET /api/status failed"
-echo "C1_pre_stop_status=$pre_out"
-pre_nrestarts=$(systemctl show -p NRestarts --value "$UNIT") || fail "pre-stop NRestarts read failed"
-echo "C1_pre_stop_nrestarts=$pre_nrestarts"
-[[ "$pre_nrestarts" == "0" ]] || fail "pre-stop NRestarts != 0 ($pre_nrestarts) -- do not proceed"
-
-# ---- step 1: one authorised stop; bounded elapsed time -------------------------
-echo "C1_SECTION step1_stop"
-t0=$(date +%s)
-sudo systemctl stop "$UNIT" || fail "systemctl stop exited nonzero"
-t1=$(date +%s)
-elapsed=$((t1 - t0))
-echo "C1_elapsed_s=$elapsed"
-(( elapsed <= 45 )) || fail "stop took ${elapsed}s (>= TimeoutStopSec=45) -- SIGKILL likely fired"
-
-# ---- step 2: systemd's own verdict on how the unit stopped ---------------------
-echo "C1_SECTION step2_systemd_verdict"
-result=$(systemctl show -p Result --value "$UNIT") || fail "Result read failed"
-active=$(systemctl show -p ActiveState --value "$UNIT") || fail "ActiveState read failed"
-nrestarts=$(systemctl show -p NRestarts --value "$UNIT") || fail "post-stop NRestarts read failed"
-echo "C1_result=$result C1_active=$active C1_nrestarts=$nrestarts"
-[[ "$result" == "success" ]] || fail "systemd Result != success ($result) -- abnormal stop (watchdog/timeout/core-dump)"
-[[ "$active" == "inactive" ]] || fail "ActiveState != inactive ($active)"
-[[ "$nrestarts" == "$pre_nrestarts" ]] || fail "NRestarts changed across stop ($pre_nrestarts -> $nrestarts)"
-
-# ---- step 3: no dangling bridge.app writer, no listener ------------------------
-echo "C1_SECTION step3_no_writer_no_listener"
-PROCS_FILE=$(mktemp /home/gatea/gatea-C1-procs.XXXXXX) || fail "mktemp failed"
-pgrep -af 'bridge\.app' >"$PROCS_FILE" 2>&1 || true
-if [[ -s "$PROCS_FILE" ]]; then
-    echo "C1_dangling_procs_begin"; cat "$PROCS_FILE"; echo "C1_dangling_procs_end"
-    fail "a bridge.app process survived the stop"
-fi
-listeners=$(ss -H -ltn 'sport = :8790' | wc -l)
-echo "C1_listener_count=$listeners"
-[[ "$listeners" -eq 0 ]] || fail "control port 8790 still has a listener after stop"
-
-# ---- step 4: DB integrity + app_state, read-only --------------------------------
-echo "C1_SECTION step4_db"
-db_out=$(sudo "$PY" - "$DB" <<'PYEOF'
-import sqlite3, sys
-db = sys.argv[1]
-con = sqlite3.connect("file:%s?mode=ro" % db, uri=True)
-qc = con.execute("PRAGMA quick_check").fetchall()[0][0]
-fk = con.execute("PRAGMA foreign_key_check").fetchall()
-meta = dict(con.execute("SELECT key, value FROM meta").fetchall())
-con.close()
-print("db_quick_check=%s" % qc)
-print("db_foreign_key_violations=%d" % len(fk))
-print("db_app_state=%s" % meta.get("app_state"))
-print("db_schema_version=%s" % meta.get("schema_version"))
-PYEOF
-) || fail "post-stop DB read failed"
-printf '%s\n' "$db_out"
-db_qc=$(sed -n 's/^db_quick_check=//p' <<<"$db_out")
-db_fk=$(sed -n 's/^db_foreign_key_violations=//p' <<<"$db_out")
-db_app=$(sed -n 's/^db_app_state=//p' <<<"$db_out")
-[[ "$db_qc" == "ok" ]] || fail "post-stop quick_check != ok ($db_qc)"
-[[ "$db_fk" == "0" ]] || fail "post-stop foreign_key_check found $db_fk violation(s)"
-[[ "$db_app" != "ARMED" ]] || fail "post-stop app_state is ARMED -- must never be ARMED"
-
-echo "C1_SECTION done"
-echo "C1 PASS"
+STATUS: both gaps OPEN. No partial PASS exists while either is open. Editing prose cannot
+convert them into execution readiness.
 ```
 
-**PASS:** clean exit ≤45 s, `Result=success`, `NRestarts` unchanged, zero `bridge.app` processes,
-zero listeners, `quick_check=ok`, zero FK violations, `app_state != ARMED`.
-**FAIL disposition:** timeout-to-SIGKILL, a dangling writer, or invariant drift is a STOP and a
-candidate-repair question (matches gap-matrix §C1), not a documentation outcome. **D026:** a new
-SIGTERM-shutdown regression test offered as closure must still be shown RED-then-GREEN, per §5 of
-the gap matrix — this script is a host proof, not a substitute for that test.
+### 3.3 Future requirements, preserved as non-runnable design
+
+```text
+[BLOCKED DESIGN — NON-RUNNABLE — applies only once BOTH gaps above are closed]
+
+A future C1 command design must require, all of them, with three-outcome predicates:
+
+  1. monotonic high-resolution elapsed time STRICTLY BELOW the timeout boundary
+     (strictly < 45 s; equality is timeout evidence, not success);
+  2. the exact frozen ExecMainCode/ExecMainStatus/Result tuple from C1-GAP-A;
+  3. a bounded journal window for the stop, carrying no timeout, SIGKILL or result-signal
+     marker; an unreadable or truncated journal is STOP, not absence of markers;
+  4. zero bridge.app writers, zero listeners on 127.0.0.1:8790 and zero cgroup survivors,
+     each adjudicated with the fail-closed tool statuses of RP0-LIB;
+  5. a post-stop quiescent bundle whose protected invariants HASH and FIELDS equal the genuine
+     pre-stop baseline of C1-GAP-B, with `app_state` never `ARMED`;
+  6. integrity and foreign-key checks run on a SAFE COPY, never on the production database;
+  7. no recovery start of any kind inside C1 — KVM2-P4-08A/B remains separate.
+
+Deferred explicit C1 falsification list. This list is NOT exercised in this document because
+C1 is blocked; it becomes MANDATORY, RED and GREEN, if and only if both gaps close:
+
+  C1-F1  stop elapsed exactly at the 45 s boundary is rejected, not accepted;
+  C1-F2  a one-second-resolution clock is rejected in favour of a monotonic source;
+  C1-F3  an exit tuple that differs from the frozen tuple in ANY component fails;
+  C1-F4  `Result=success` with a SIGKILL marker present in the journal window fails;
+  C1-F5  an unreadable or truncated journal window is STOP, not PASS;
+  C1-F6  a same-size, valid mutation of a protected table between baseline and post-stop
+         bundle is detected by invariant-hash inequality;
+  C1-F7  a missing pre-stop baseline is STOP, never "compare against post-stop only";
+  C1-F8  `pgrep` rc 2 with empty output is STOP, never "no writer survived";
+  C1-F9  integrity/FK executed against the production database instead of a safe copy fails
+         the design review.
+```
 
 ---
 
-## 4. Gap 3 — C2: post-reboot DISARMED subcheck (both mask paths, per G1)
+## 4. RP3 — C2 post-reboot DISARMED subcheck (both mask paths, per G1)
 
-Gap-matrix §C2 requires preregistering **one of two distinct scenarios**, not a single script that
-branches at runtime on whatever it finds — a runtime branch would let a wrong assumption slip
-through silently. Two independent, fully-specified paths follow:
+Closes **F4** and **F5**. Two **preregistered** scenarios; the scenario is chosen and recorded
+**before** the reboot and **never** branched on the state observed afterwards. A runtime branch
+lets a wrong assumption pass silently — that was the shape of F4.
 
-- **Scenario A** — plain reboot from the current accepted state (active, unmasked). Expected:
-  `inactive` + **unmasked**.
-- **Scenario B** — a separately authorised pre-reboot `stop`+`mask` step, then reboot. Expected:
-  `inactive` + **masked**.
+### 4.1 Status of this section
 
-In both scenarios the safety predicate is **DISARMED-by-absence**: no process, no listener, and
-persisted DB state not `ARMED`. Per Gap G1, the absence of `[Install]` on either unit template is
-**not** treated as a product defect here, and no script below starts the unit to "check" it.
+```text
+[SCENARIO-LEVEL STATUS]
 
-### 4a. Scenario A — post-reboot assertion, expect unmasked
+Scenario A — plain reboot, expect inactive + exact `static`, unmasked. TERMINAL branch.
+Scenario B — separately authorized pre-reboot stop+mask, then reboot, expect inactive + masked.
+
+BOTH scenarios require a REAL PRE-MUTATION protected-invariant baseline captured while the
+service is still active. That capture method is exactly C1-GAP-B and it is OPEN. Therefore:
+
+  * the pre-reboot baseline step of BOTH scenarios is BLOCKED and is not expressed as a command;
+  * Scenario B additionally depends on RP2's baseline method for its pre-stop persistence
+    predicate, and its stop+mask mutation inherits that block;
+  * the POST-REBOOT assertion halves are executable proposal blocks. They require the
+    preregistered baseline as an INPUT and STOP when it is absent, so neither scenario can
+    produce a PASS while C1-GAP-B is open.
+
+Scenario A is TERMINAL. Reaching C1 afterwards requires a separately authorized recovery start
+plus a fresh Stage-B admission; neither is part of C2-A and neither is authorized here.
+```
+
+### 4.2 Scenario A — preregistered pre-reboot state and baseline
+
+```text
+[BLOCKED DESIGN — NON-RUNNABLE]
+
+Preregistered BEFORE the reboot, and recorded:
+
+  * ActiveState = active
+  * is-enabled token = exactly `static`
+    (the first-start unit has NO [Install] section, so the unmasked token is `static`.
+     "anything except masked" is NOT the predicate — that was F4.)
+  * canonical fragment path = /usr/local/lib/systemd/system/mtc-bridge-first-start.service
+  * mask path /etc/systemd/system/mtc-bridge-first-start.service: NO object and NO link
+  * protected-invariant baseline captured by the C1-GAP-B method  <-- OPEN, BLOCKS THIS STEP
+
+The reboot itself is a separately authorized host mutation. This document issues no reboot.
+```
+
+### 4.3 Scenario A — post-reboot assertion
 
 ```bash
-#!/usr/bin/env bash
-# WP-L Phase 2 -- C2-A post-reboot DISARMED subcheck, SCENARIO A: plain reboot from the
-# current unmasked/active state (PROPOSED, NOT EXECUTED)
-# Expected result: inactive + UNMASKED (no pre-reboot mask step was authorised in this
-# scenario). Candidate: 2ce41e34bceb599d80af24c5c33d835820ec321b.
-# Per Gap G1: the first-start unit has Restart=no and no [Install] section, so it cannot
-# auto-start at boot; the steady profile is gated/inert/never installed. This script does
-# NOT start the unit, does NOT assume any auto-restart, and does NOT infer a product defect
-# from the absence of [Install]. It asserts the state found AFTER an already-authorised,
-# separately-performed reboot -- it does not reboot the host itself.
-# Read-only only: no service mutation, no credential read, no POST /api/arm. First genuine
-# FAIL stops.
+# ===== BLOCK-ID: RP3-C2A-POST ===== [EXECUTABLE PROPOSAL BLOCK]
+# WP-L Phase 2 — C2 Scenario A post-reboot assertion (PROPOSED DESIGN).
+# Candidate: 2ce41e34bceb599d80af24c5c33d835820ec321b. NOT host-authorized.
+# Read-only: no service mutation, no reboot, no start, no unmask, no credential
+# read, no POST /api/arm. Requires RP0-LIB and RP0-BOOTSTRAP. The scenario is
+# preregistered; this block NEVER selects a branch from what it observes.
 set -Eeuo pipefail
 
 UNIT="mtc-bridge-first-start.service"
-UNIT_LINK="/etc/systemd/system/${UNIT}"
-PY="/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python"
-DB="/var/lib/mtc-bridge/bridge.db"
-LOG="/home/gatea/gatea-WPLP2-C2A-20260809.log"
+FRAGMENT="/usr/local/lib/systemd/system/$UNIT"
+MASK_PATH="/etc/systemd/system/$UNIT"
+PORT="8790"
 
-if [[ -e "$LOG" ]]; then
-    printf 'ERROR: evidence log already exists (%s); refusing to overwrite\n' "$LOG" >&2
-    exit 2
-fi
+: "${C2_SCENARIO:?preregistered scenario identifier is required}"
+: "${C2_BASELINE_INVARIANTS_SHA256:?preregistered pre-reboot protected-invariant hash is required}"
+: "${C2_BASELINE_INVARIANTS_JSON:?preregistered pre-reboot protected-invariant document is required}"
+: "${C2_POST_INVARIANTS_SHA256:?post-reboot invariant hash, produced by the accepted quiescent capture, is required}"
+: "${C2_POST_INVARIANTS_JSON:?post-reboot protected-invariant document is required}"
 
-exec > "$LOG" 2>&1
+c2a_stop() { printf 'C2A_STOP reason=%s\n' "$*"; exit 3; }
+c2a_fail() { printf 'C2A_FAIL reason=%s\n' "$*"; exit 1; }
 
-PROCS_FILE=""
-finish() {
-    local rc=$?
-    [[ -n "$PROCS_FILE" && -f "$PROCS_FILE" ]] && rm -f "$PROCS_FILE"
-    printf '\nC2A_TRAP_EXIT rc=%s\n' "$rc"
-}
-trap finish EXIT
+[ "$C2_SCENARIO" = "A_plain_reboot_expect_static_unmasked" ] \
+    || c2a_fail "wrong preregistered scenario: $C2_SCENARIO"
 
-fail() {
-    printf 'C2A_FAIL reason=%s\n' "$*"
-    exit 1
-}
+# The baseline is an INPUT. Its absence is STOP, never "compare post against post".
+for f in "$C2_BASELINE_INVARIANTS_JSON" "$C2_POST_INVARIANTS_JSON"; do
+    kind="$(rp0_probe_path "$f")" || exit 3
+    [ "$kind" = "regular" ] || c2a_stop "invariant_document_kind=$kind path=$f"
+done
 
-echo "C2A_SECTION header"
-echo "C2A_scenario=A_plain_reboot_expect_unmasked"
+printf 'C2A_SECTION step1_active_state\n'
+active="$(rp0_show_property "$UNIT" ActiveState)" || exit 3
+printf 'C2A_active=%s\n' "$active"
+[ "$active" = "inactive" ] || c2a_fail "ActiveState=$active expected inactive (unexpected auto-start)"
 
-echo "C2A_SECTION step1_active_state"
-active=$(systemctl show -p ActiveState --value "$UNIT") || fail "ActiveState read failed"
-echo "C2A_active=$active"
-[[ "$active" == "inactive" ]] || fail "unit is not inactive after reboot (ActiveState=$active) -- unexpected auto-start"
+printf 'C2A_SECTION step2_enablement_and_mask\n'
+enabled="$(rp0_is_enabled_token "$UNIT")" || exit 3
+printf 'C2A_is_enabled=%s\n' "$enabled"
+[ "$enabled" = "static" ] || c2a_fail "is-enabled=$enabled expected exactly static"
 
-echo "C2A_SECTION step2_mask_state"
-enabled=$(systemctl is-enabled "$UNIT" 2>&1) || true
-echo "C2A_is_enabled=$enabled"
-if sudo test -L "$UNIT_LINK"; then
-    target=$(sudo readlink -f "$UNIT_LINK")
-    echo "C2A_unit_link_target=$target"
-    [[ "$target" != "/dev/null" ]] || fail "unit is masked (symlinked to /dev/null) -- expected unmasked in scenario A"
-fi
-[[ "$enabled" != "masked" ]] || fail "systemctl is-enabled reports masked -- expected unmasked in scenario A"
+frag_kind="$(rp0_probe_path "$FRAGMENT")" || exit 3
+[ "$frag_kind" = "regular" ] || c2a_fail "canonical fragment kind=$frag_kind path=$FRAGMENT"
 
-echo "C2A_SECTION step3_no_writer_no_listener"
-PROCS_FILE=$(mktemp /home/gatea/gatea-C2A-procs.XXXXXX) || fail "mktemp failed"
-pgrep -af 'bridge\.app' >"$PROCS_FILE" 2>&1 || true
-if [[ -s "$PROCS_FILE" ]]; then
-    echo "C2A_dangling_procs_begin"; cat "$PROCS_FILE"; echo "C2A_dangling_procs_end"
-    fail "a bridge.app process is running after reboot with no authorised start"
-fi
-listeners=$(ss -H -ltn 'sport = :8790' | wc -l)
-echo "C2A_listener_count=$listeners"
-[[ "$listeners" -eq 0 ]] || fail "control port 8790 has a listener after reboot with no authorised start"
+mask_kind="$(rp0_probe_path "$MASK_PATH")" || exit 3
+printf 'C2A_mask_path_kind=%s\n' "$mask_kind"
+[ "$mask_kind" = "absent" ] || c2a_fail "mask path must be absent as object AND link, found $mask_kind"
 
-echo "C2A_SECTION step4_db"
-db_app=$(sudo "$PY" - "$DB" <<'PYEOF'
-import sqlite3, sys
-con = sqlite3.connect("file:%s?mode=ro" % sys.argv[1], uri=True)
-meta = dict(con.execute("SELECT key, value FROM meta").fetchall())
-con.close()
-print(meta.get("app_state"))
-PYEOF
-) || fail "post-reboot DB read failed"
-echo "C2A_db_app_state=$db_app"
-[[ "$db_app" != "ARMED" ]] || fail "persisted app_state is ARMED after reboot"
+printf 'C2A_SECTION step3_no_writer_no_listener\n'
+procs=""; prc=0
+procs="$(rp0_pgrep_status 'bridge\.app')" || prc=$?
+case "$prc" in
+    0) printf 'C2A_dangling_procs_begin\n%s\nC2A_dangling_procs_end\n' "$procs"
+       c2a_fail "a bridge.app process is running after reboot with no authorised start" ;;
+    1) printf 'C2A_writers=0\n' ;;
+    *) exit 3 ;;
+esac
+listeners="$(rp0_listener_count "$PORT")" || exit 3
+printf 'C2A_listener_count=%s\n' "$listeners"
+[ "$listeners" -eq 0 ] || c2a_fail "control port $PORT has a listener after reboot"
 
-echo "C2A_SECTION done"
-echo "C2A PASS"
+printf 'C2A_SECTION step4_protected_invariant_equality\n'
+# EXACT equality of both the candidate invariants hash and the invariant document.
+# Presence, size, "recorded", or `app_state != ARMED` alone are NOT this predicate.
+[ "$C2_POST_INVARIANTS_SHA256" = "$C2_BASELINE_INVARIANTS_SHA256" ] \
+    || c2a_fail "protected invariants hash differs across reboot (baseline=$C2_BASELINE_INVARIANTS_SHA256 post=$C2_POST_INVARIANTS_SHA256)"
+cmp -s -- "$C2_BASELINE_INVARIANTS_JSON" "$C2_POST_INVARIANTS_JSON" \
+    || c2a_fail "protected invariant documents differ across reboot"
+printf 'C2A_invariants_equal=yes sha256=%s\n' "$C2_POST_INVARIANTS_SHA256"
+
+printf 'C2A_SECTION done\n'
+printf 'C2A PASS (terminal branch: no recovery start is authorised by this result)\n'
 ```
 
-### 4b. Scenario B — pre-reboot stop+mask, then post-reboot assertion, expect masked
+### 4.4 Scenario B — pre-reboot stop+mask
 
-Two scripts: the pre-reboot mutation, run and confirmed PASS *before* the reboot, and the
-post-reboot assertion, run *after*.
+```text
+[BLOCKED DESIGN — NON-RUNNABLE]
+
+Scenario B's pre-stop persistence predicate depends on RP2's genuine pre-stop baseline method
+(C1-GAP-B, OPEN). Its mutations are therefore NOT expressed as commands here. Recorded design:
+
+  * `stop` and `mask` are two SEPARATE, SEPARATELY NAMED mutations, each with its own
+    preregistered pre-state, its own authorization, and its own evidence leaf. They are never
+    a single fused step.
+  * required post-stop/pre-reboot state, adjudicated with the RP0-LIB predicates:
+      - ActiveState = inactive
+      - mask path /etc/systemd/system/mtc-bridge-first-start.service is a LIVE symlink whose
+        RAW target is exactly `/dev/null` (not merely "some link", not merely "resolves
+        somewhere") and whose is-enabled token is exactly `masked`
+      - zero writers, zero listeners, zero cgroup survivors
+  * a post-stop / pre-reboot QUIESCENT protected-invariant baseline is captured and recorded.
+    This baseline is the comparison basis after the reboot. The pre-stop baseline is captured
+    separately and is what the stop itself is measured against.
+  * no start, unmask, recovery or arm action is part of Scenario B.
+
+Because a stop precedes the reboot in this scenario, the post-reboot comparison basis MUST be
+the post-stop/pre-reboot quiescent baseline. Comparing post-reboot state against the pre-STOP
+baseline would make any change caused by the stop indistinguishable from reboot drift — that
+conflation was F5.
+```
+
+### 4.5 Scenario B — post-reboot assertion
 
 ```bash
-#!/usr/bin/env bash
-# WP-L Phase 2 -- C2-B-PRE authorised pre-reboot stop+mask (PROPOSED, NOT EXECUTED)
-# Must run and PASS before the reboot in Scenario B. Mutation class: mutating-host.
-# Candidate: 2ce41e34bceb599d80af24c5c33d835820ec321b. No credential read, no POST /api/arm.
+# ===== BLOCK-ID: RP3-C2B-POST ===== [EXECUTABLE PROPOSAL BLOCK]
+# WP-L Phase 2 — C2 Scenario B post-reboot assertion (PROPOSED DESIGN).
+# Candidate: 2ce41e34bceb599d80af24c5c33d835820ec321b. NOT host-authorized.
+# Runs only in the preregistered Scenario B, after C2-B-PRE completed and the
+# separately authorized reboot occurred. Read-only; no mutation of any kind.
 set -Eeuo pipefail
 
 UNIT="mtc-bridge-first-start.service"
-LOG="/home/gatea/gatea-WPLP2-C2Bpre-20260809.log"
+MASK_PATH="/etc/systemd/system/$UNIT"
+PORT="8790"
 
-if [[ -e "$LOG" ]]; then
-    printf 'ERROR: evidence log already exists (%s); refusing to overwrite\n' "$LOG" >&2
-    exit 2
-fi
+: "${C2_SCENARIO:?preregistered scenario identifier is required}"
+: "${C2_QUIESCENT_INVARIANTS_SHA256:?post-stop/pre-reboot quiescent invariant hash is required}"
+: "${C2_QUIESCENT_INVARIANTS_JSON:?post-stop/pre-reboot quiescent invariant document is required}"
+: "${C2_POST_INVARIANTS_SHA256:?post-reboot invariant hash is required}"
+: "${C2_POST_INVARIANTS_JSON:?post-reboot invariant document is required}"
 
-exec > "$LOG" 2>&1
+c2b_stop() { printf 'C2B_STOP reason=%s\n' "$*"; exit 3; }
+c2b_fail() { printf 'C2B_FAIL reason=%s\n' "$*"; exit 1; }
 
-finish() {
-    local rc=$?
-    printf '\nC2BPRE_TRAP_EXIT rc=%s\n' "$rc"
-}
-trap finish EXIT
+[ "$C2_SCENARIO" = "B_pre_reboot_stop_mask_expect_masked" ] \
+    || c2b_fail "wrong preregistered scenario: $C2_SCENARIO"
 
-fail() {
-    printf 'C2BPRE_FAIL reason=%s\n' "$*"
-    exit 1
-}
+for f in "$C2_QUIESCENT_INVARIANTS_JSON" "$C2_POST_INVARIANTS_JSON"; do
+    kind="$(rp0_probe_path "$f")" || exit 3
+    [ "$kind" = "regular" ] || c2b_stop "invariant_document_kind=$kind path=$f"
+done
 
-echo "C2BPRE_SECTION header"
-sudo systemctl stop "$UNIT" || fail "stop failed"
-sudo systemctl mask "$UNIT" || fail "mask failed"
-active=$(systemctl show -p ActiveState --value "$UNIT") || fail "ActiveState read failed"
-enabled=$(systemctl is-enabled "$UNIT" 2>&1) || true
-echo "C2BPRE_active=$active C2BPRE_is_enabled=$enabled"
-[[ "$active" == "inactive" ]] || fail "not inactive after stop ($active)"
-[[ "$enabled" == "masked" ]] || fail "not masked after mask ($enabled)"
+printf 'C2B_SECTION step1_active_state\n'
+active="$(rp0_show_property "$UNIT" ActiveState)" || exit 3
+printf 'C2B_active=%s\n' "$active"
+[ "$active" = "inactive" ] || c2b_fail "ActiveState=$active expected inactive"
 
-echo "C2BPRE_SECTION done"
-echo "C2BPRE PASS"
+printf 'C2B_SECTION step2_mask_survived_reboot\n'
+enabled="$(rp0_is_enabled_token "$UNIT")" || exit 3
+printf 'C2B_is_enabled=%s\n' "$enabled"
+[ "$enabled" = "masked" ] || c2b_fail "is-enabled=$enabled expected exactly masked"
+
+mask_kind="$(rp0_probe_path "$MASK_PATH")" || exit 3
+printf 'C2B_mask_path_kind=%s\n' "$mask_kind"
+[ "$mask_kind" = "link_live" ] || c2b_fail "mask path kind=$mask_kind expected a live symlink"
+raw_target="$(readlink -- "$MASK_PATH")" || c2b_stop "mask_link_read_failed path=$MASK_PATH"
+printf 'C2B_mask_raw_target=%s\n' "$raw_target"
+[ "$raw_target" = "/dev/null" ] || c2b_fail "mask link raw target=$raw_target expected exactly /dev/null"
+
+printf 'C2B_SECTION step3_no_writer_no_listener\n'
+procs=""; prc=0
+procs="$(rp0_pgrep_status 'bridge\.app')" || prc=$?
+case "$prc" in
+    0) printf 'C2B_dangling_procs_begin\n%s\nC2B_dangling_procs_end\n' "$procs"
+       c2b_fail "a bridge.app process is running after a masked reboot" ;;
+    1) printf 'C2B_writers=0\n' ;;
+    *) exit 3 ;;
+esac
+listeners="$(rp0_listener_count "$PORT")" || exit 3
+printf 'C2B_listener_count=%s\n' "$listeners"
+[ "$listeners" -eq 0 ] || c2b_fail "control port $PORT has a listener after a masked reboot"
+
+printf 'C2B_SECTION step4_protected_invariant_equality\n'
+# Comparison basis is the POST-STOP / PRE-REBOOT quiescent baseline, never the pre-stop one.
+[ "$C2_POST_INVARIANTS_SHA256" = "$C2_QUIESCENT_INVARIANTS_SHA256" ] \
+    || c2b_fail "protected invariants hash differs across reboot (quiescent=$C2_QUIESCENT_INVARIANTS_SHA256 post=$C2_POST_INVARIANTS_SHA256)"
+cmp -s -- "$C2_QUIESCENT_INVARIANTS_JSON" "$C2_POST_INVARIANTS_JSON" \
+    || c2b_fail "protected invariant documents differ across reboot"
+printf 'C2B_invariants_equal=yes sha256=%s\n' "$C2_POST_INVARIANTS_SHA256"
+
+printf 'C2B_SECTION done\n'
+printf 'C2B PASS (no start, unmask or recovery action is authorised by this result)\n'
 ```
 
-```bash
-#!/usr/bin/env bash
-# WP-L Phase 2 -- C2-B-POST post-reboot DISARMED subcheck, SCENARIO B: expect masked
-# (PROPOSED, NOT EXECUTED). Run only after C2-B-PRE PASSed and the reboot occurred.
-# Candidate: 2ce41e34bceb599d80af24c5c33d835820ec321b. Read-only only: no service mutation,
-# no credential read, no POST /api/arm. First genuine FAIL stops.
-set -Eeuo pipefail
+### 4.6 Required RP3 falsifications
 
-UNIT="mtc-bridge-first-start.service"
-UNIT_LINK="/etc/systemd/system/${UNIT}"
-PY="/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python"
-DB="/var/lib/mtc-bridge/bridge.db"
-LOG="/home/gatea/gatea-WPLP2-C2Bpost-20260809.log"
+```text
+[DEFERRED — these become mandatory RED/GREEN when C1-GAP-B closes and a scenario is authorized]
 
-if [[ -e "$LOG" ]]; then
-    printf 'ERROR: evidence log already exists (%s); refusing to overwrite\n' "$LOG" >&2
-    exit 2
-fi
+  C2-F1  failed `systemctl is-enabled` (non-token rc) is STOP, never "not masked";
+  C2-F2  blank is-enabled token is STOP, never "not masked";
+  C2-F3  a mask-path link resolving to an ARBITRARY target is rejected in both scenarios;
+  C2-F4  a DANGLING mask-path link is rejected, and is never read as "absent"/"unmasked";
+  C2-F5  an unexpected REGULAR FILE at the mask path is rejected in both scenarios;
+  C2-F6  a same-size content mutation of a protected table is caught by invariant inequality;
+  C2-F7  the wrong preregistered scenario fails immediately, before any assertion.
 
-exec > "$LOG" 2>&1
-
-PROCS_FILE=""
-finish() {
-    local rc=$?
-    [[ -n "$PROCS_FILE" && -f "$PROCS_FILE" ]] && rm -f "$PROCS_FILE"
-    printf '\nC2BPOST_TRAP_EXIT rc=%s\n' "$rc"
-}
-trap finish EXIT
-
-fail() {
-    printf 'C2BPOST_FAIL reason=%s\n' "$*"
-    exit 1
-}
-
-echo "C2BPOST_SECTION header"
-echo "C2BPOST_scenario=B_pre_reboot_mask_expect_masked"
-
-echo "C2BPOST_SECTION step1_active_state"
-active=$(systemctl show -p ActiveState --value "$UNIT") || fail "ActiveState read failed"
-echo "C2BPOST_active=$active"
-[[ "$active" == "inactive" ]] || fail "unit is not inactive after reboot (ActiveState=$active)"
-
-echo "C2BPOST_SECTION step2_mask_state"
-enabled=$(systemctl is-enabled "$UNIT" 2>&1) || true
-echo "C2BPOST_is_enabled=$enabled"
-sudo test -L "$UNIT_LINK" || fail "unit link ($UNIT_LINK) is not a symlink -- expected masked (-> /dev/null) in scenario B"
-target=$(sudo readlink -f "$UNIT_LINK")
-echo "C2BPOST_unit_link_target=$target"
-[[ "$target" == "/dev/null" ]] || fail "unit link target is not /dev/null ($target) -- mask did not survive reboot"
-[[ "$enabled" == "masked" ]] || fail "systemctl is-enabled != masked ($enabled) -- expected masked in scenario B"
-
-echo "C2BPOST_SECTION step3_no_writer_no_listener"
-PROCS_FILE=$(mktemp /home/gatea/gatea-C2Bpost-procs.XXXXXX) || fail "mktemp failed"
-pgrep -af 'bridge\.app' >"$PROCS_FILE" 2>&1 || true
-if [[ -s "$PROCS_FILE" ]]; then
-    echo "C2BPOST_dangling_procs_begin"; cat "$PROCS_FILE"; echo "C2BPOST_dangling_procs_end"
-    fail "a bridge.app process is running after a masked reboot"
-fi
-listeners=$(ss -H -ltn 'sport = :8790' | wc -l)
-echo "C2BPOST_listener_count=$listeners"
-[[ "$listeners" -eq 0 ]] || fail "control port 8790 has a listener after a masked reboot"
-
-echo "C2BPOST_SECTION step4_db"
-db_app=$(sudo "$PY" - "$DB" <<'PYEOF'
-import sqlite3, sys
-con = sqlite3.connect("file:%s?mode=ro" % sys.argv[1], uri=True)
-meta = dict(con.execute("SELECT key, value FROM meta").fetchall())
-con.close()
-print(meta.get("app_state"))
-PYEOF
-) || fail "post-reboot DB read failed"
-echo "C2BPOST_db_app_state=$db_app"
-[[ "$db_app" != "ARMED" ]] || fail "persisted app_state is ARMED after a masked reboot"
-
-echo "C2BPOST_SECTION done"
-echo "C2BPOST PASS"
+C2-F1, C2-F2, C2-F4 and C2-F5 are already closed at the predicate level by the RP0-LIB
+falsifications executed in §8 (`rp0_is_enabled_token` and `rp0_probe_path`); the entries above
+remain required at the SCENARIO level once a scenario is authorized. C2-F3, C2-F6 and C2-F7 are
+scenario-level only and are NOT claimed closed by this document.
 ```
-
-**PASS (either scenario):** the *preregistered* mask state for that scenario, no writer, no
-listener, DB state not `ARMED`. **FAIL disposition:** any writer, listener, `ARMED` state, or
-mask-state mismatch against the scenario's own prediction is a STOP (matches gap-matrix §C2).
 
 ---
 
-## 5. Gap 4 — C3: restore-into-temp wrapper around `wal_state_bundle.py`
+## 5. RP4 — C3 restore-into-temp verification wrapper
 
-`2ce41e34…321b:IBKR_PAPER_BRIDGE/tools/wal_state_bundle.py` exposes exactly **two** subcommands
-under a required subparser (`:1216`) — `create` (`:1218`) and `verify` (`:1232`). There is **no**
-`restore` subcommand, which is exactly why this wrapper is needed (gap-matrix §C3). It must never
-invent a subcommand the tool does not have; instead it copies the bundle's own already-`verify`
--PASSed database bytes into an independent temp path and re-derives invariants there using the
-tool's own public `collect_invariants` (`:417`), then compares against the invariants hash already
-recorded by a prior `verify` PASS.
+Closes **F6**. The candidate `wal_state_bundle.py` exposes exactly two subcommands under a
+required subparser — `create` (`:1218`) and `verify` (`:1232`); there is no `restore`. This
+wrapper never invents one.
 
-**Prerequisite (must already exist before this runs):** a `create` (never `--allow-live-source`
-for this proof) + `verify` PASS already exists for `$BUNDLE_DIR`, with `EXPECT_BUNDLE_SHA256` /
-`EXPECT_INVARIANTS_SHA256` already recorded from that PASS (the C3 capture flow already described
-in the gap matrix; this wrapper does not create a manifest, only consumes an already-accepted one).
+### 5.1 What was wrong
 
-**Open technical point — flag before use, do not treat as settled.** This wrapper assumes
-`collect_invariants(db_path)` returns a JSON-serialisable structure and that hashing
-`json.dumps(inv, sort_keys=True, separators=(",", ":"))` reproduces the same
-`EXPECT_INVARIANTS_SHA256` the tool's own `verify` subcommand already computed. That
-canonicalisation must be confirmed against the actual `verify` implementation at
-`2ce41e34…321b:tools/wal_state_bundle.py` before this script is finalised for execution. If the
-hash format cannot be matched byte-for-byte, compare the invariants **structurally** (dict
-equality) instead of by hash, and treat a hash-format mismatch alone as inconclusive — not as FAIL
-evidence of drift. This caveat exists precisely so nobody upgrades an untested assumption into an
-observed fact, per the gap matrix's own G10 mitigation.
+The rejected wrapper called `collect_invariants(db_path)`. The candidate's public
+`collect_invariants` takes an **open `sqlite3.Connection`** (`:417`) and its first operation
+reaches `conn.execute` (`:425` via `_table_names` at `:400-402`), so a string argument raises
+`AttributeError: 'str' object has no attribute 'execute'` — reproduced in §8. The rejected
+wrapper also:
 
-```bash
-#!/usr/bin/env bash
-# WP-L Phase 2 -- C3-RESTORE restore-into-temp wrapper around wal_state_bundle.py
-# (PROPOSED, NOT EXECUTED). Candidate: 2ce41e34bceb599d80af24c5c33d835820ec321b.
-# wal_state_bundle.py exposes only `create` and `verify` -- no `restore` subcommand
-# (2ce41e34...321b:IBKR_PAPER_BRIDGE/tools/wal_state_bundle.py:1216,:1218,:1232). This
-# wrapper proves "restored into a temp copy re-derives the same invariants" by copying the
-# bundle's already-verified database bytes into a fresh, independent temp path and
-# re-deriving invariants with the tool's own public collect_invariants (:417), then
-# comparing against the invariants hash already recorded by `verify`.
-# PREREQUISITE: a `create` (never --allow-live-source) + `verify` PASS already exists for
-# BUNDLE_DIR, with EXPECT_BUNDLE_SHA256 / EXPECT_INVARIANTS_SHA256 already recorded from
-# that PASS. The exact bundle-internal database filename is NOT assumed -- step 1 discovers
-# it and FAILS CLOSED on anything other than exactly one match, rather than guessing.
-# CAVEAT (see prose above): the invariants-hash canonicalisation used here must be confirmed
-# against the tool's own `verify` implementation before this script is finalised.
-# Never touches /var/lib/mtc-bridge/bridge.db (the active DB) -- only the bundle copy and a
-# temp restore target are read/copied. No credential read, no POST /api/arm. First genuine
-# FAIL stops.
-set -Eeuo pipefail
+- re-implemented the invariants hash instead of calling public `invariants_hash` (`:561-562`);
+- carried an "open technical point" caveat about canonicalization on its PASS path, which was
+  both stale — candidate `_canonical_json` at `:212-213` is exactly
+  `json.dumps(..., sort_keys=True, separators=(",", ":"))` — and misdirected. **That caveat is
+  deleted, not softened: no acknowledged assumption remains on any PASS path in this document.**
+- copied bytes with `cp` and called it a restore;
+- printed `restored_sha` without ever comparing it;
+- deleted the restore directory with `sudo rm -rf` in an EXIT trap on **every** exit, destroying
+  the primary artifact on failure.
 
-PY="/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python"
-TOOL="/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE/tools/wal_state_bundle.py"
-RELEASE_ROOT="/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE"
-BUNDLE_DIR="${BUNDLE_DIR:?set BUNDLE_DIR to the already-verified bundle directory}"
-EXPECT_BUNDLE_SHA256="${EXPECT_BUNDLE_SHA256:?set to the value already recorded by the prior verify PASS}"
-EXPECT_INVARIANTS_SHA256="${EXPECT_INVARIANTS_SHA256:?set to the value already recorded by the prior verify PASS}"
-LOG="/home/gatea/gatea-WPLP2-C3restore-20260809.log"
+### 5.2 Design
 
-if [[ -e "$LOG" ]]; then
-    printf 'ERROR: evidence log already exists (%s); refusing to overwrite\n' "$LOG" >&2
-    exit 2
-fi
+```python
+# ===== BLOCK-ID: RP4-C3 ===== [EXECUTABLE PROPOSAL BLOCK]
+"""WP-L Phase 2 — C3 restore-into-temp verification (PROPOSED DESIGN).
 
-exec > "$LOG" 2>&1
+Candidate: 2ce41e34bceb599d80af24c5c33d835820ec321b. NOT host-authorized.
 
-TMPDIR2=""
-finish() {
-    local rc=$?
-    [[ -n "$TMPDIR2" && -d "$TMPDIR2" ]] && sudo rm -rf -- "$TMPDIR2"
-    printf '\nC3RESTORE_TRAP_EXIT rc=%s\n' "$rc"
-}
-trap finish EXIT
+Uses only the candidate's public API. Never invents a `restore` subcommand, never
+copies files and calls it a restore, never deletes an artifact, never touches the
+production database read-write, never reads a credential, never issues POST /api/arm.
 
-fail() {
-    printf 'C3RESTORE_FAIL reason=%s\n' "$*"
-    exit 1
-}
+rc contract: 0 = PASS, 1 = FAIL, 3 = COULD NOT EVALUATE (STOP).
+"""
 
-echo "C3RESTORE_SECTION header"
-echo "C3RESTORE_bundle_dir=$BUNDLE_DIR"
+import hashlib
+import json
+import os
+import sqlite3
+import sys
+from pathlib import Path
 
-echo "C3RESTORE_SECTION step0_reverify"
-"$PY" "$TOOL" verify --bundle-dir "$BUNDLE_DIR" \
-    --expect-bundle-sha256 "$EXPECT_BUNDLE_SHA256" \
-    --expect-invariants-sha256 "$EXPECT_INVARIANTS_SHA256" \
-    || fail "bundle failed re-verification before restore"
+PASS_RC, FAIL_RC, STOP_RC = 0, 1, 3
 
-echo "C3RESTORE_SECTION step1_locate"
-mapfile -t cands < <(find "$BUNDLE_DIR" -maxdepth 1 -type f -name '*.db')
-echo "C3RESTORE_candidate_count=${#cands[@]}"
-[[ "${#cands[@]}" -eq 1 ]] || fail "expected exactly one *.db file directly under $BUNDLE_DIR, found ${#cands[@]}"
-BUNDLE_DB="${cands[0]}"
-echo "C3RESTORE_bundle_db=$BUNDLE_DB"
-sudo test -f "$BUNDLE_DB" || fail "$BUNDLE_DB is not a regular file"
-sudo test -L "$BUNDLE_DB" && fail "$BUNDLE_DB is a symlink"
+# Protected invariant fields, exactly the keys candidate collect_invariants
+# returns (wal_state_bundle.py:457-467).
+PROTECTED_FIELDS = (
+    "schema_version", "app_state", "counts", "open_trades", "live_orders",
+    "closed_trades", "max_ids", "environments", "risk_days",
+)
 
-echo "C3RESTORE_SECTION step2_restore_into_temp"
-TMPDIR2=$(mktemp -d /home/gatea/gatea-C3-restore.XXXXXX) || fail "mktemp -d failed"
-chmod 700 "$TMPDIR2"
-RESTORED_DB="$TMPDIR2/restored.db"
-sudo cp --no-clobber -- "$BUNDLE_DB" "$RESTORED_DB" || fail "copy into temp failed"
-sudo chown "$(id -u):$(id -g)" "$RESTORED_DB" || true
-restored_sha=$(sha256sum "$RESTORED_DB" | awk '{print $1}')
-echo "C3RESTORE_restored_sha256=$restored_sha"
 
-echo "C3RESTORE_SECTION step3_reverify_restored"
-out=$("$PY" - "$RESTORED_DB" "$RELEASE_ROOT" <<'PYEOF'
-import sys, sqlite3, json, hashlib
-db_path, release_root = sys.argv[1], sys.argv[2]
-sys.path.insert(0, release_root)
-from tools.wal_state_bundle import collect_invariants
-con = sqlite3.connect("file:%s?mode=ro" % db_path, uri=True)
-qc = con.execute("PRAGMA quick_check").fetchall()[0][0]
-fk = con.execute("PRAGMA foreign_key_check").fetchall()
-con.close()
-print("restored_quick_check=%s" % qc)
-print("restored_fk_violations=%d" % len(fk))
-inv = collect_invariants(db_path)
-canon = json.dumps(inv, sort_keys=True, separators=(",", ":")).encode()
-print("restored_invariants_sha256=%s" % hashlib.sha256(canon).hexdigest())
-PYEOF
-) || fail "restored-copy integrity/invariants re-derivation failed"
-printf '%s\n' "$out"
-r_qc=$(sed -n 's/^restored_quick_check=//p' <<<"$out")
-r_fk=$(sed -n 's/^restored_fk_violations=//p' <<<"$out")
-r_inv=$(sed -n 's/^restored_invariants_sha256=//p' <<<"$out")
-[[ "$r_qc" == "ok" ]] || fail "restored copy quick_check != ok ($r_qc)"
-[[ "$r_fk" == "0" ]] || fail "restored copy has $r_fk foreign-key violation(s)"
-[[ "$r_inv" == "$EXPECT_INVARIANTS_SHA256" ]] || fail "restored invariants hash mismatch (got $r_inv, expected $EXPECT_INVARIANTS_SHA256) -- see canonicalisation caveat above before escalating"
+class Fail(Exception):
+    """A genuine predicate failure."""
 
-echo "C3RESTORE_SECTION done"
-echo "C3RESTORE PASS"
+
+class Stop(Exception):
+    """Could not evaluate — always stops the stage, never re-read as FAIL."""
+
+
+def load_candidate_api(release_root: Path):
+    """Import the candidate's own public API. No reimplementation of its logic."""
+    sys.path.insert(0, str(release_root))
+    try:
+        from tools.wal_state_bundle import (  # noqa: E402
+            BUNDLE_DB_NAME, FORBIDDEN_SIDECARS, MANIFEST_NAME,
+            collect_invariants, invariants_hash,
+        )
+    except Exception as exc:  # import/tool error is never a FAIL
+        raise Stop(f"candidate_api_import_failed: {exc.__class__.__name__}: {exc}") from exc
+    return {
+        "collect_invariants": collect_invariants,
+        "invariants_hash": invariants_hash,
+        "MANIFEST_NAME": MANIFEST_NAME,
+        "BUNDLE_DB_NAME": BUNDLE_DB_NAME,
+        "FORBIDDEN_SIDECARS": FORBIDDEN_SIDECARS,
+    }
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def identity(path: Path):
+    """(device, inode) from lstat — never follows a link."""
+    st = os.lstat(path)
+    return (st.st_dev, st.st_ino)
+
+
+def open_readonly(db_path: Path) -> sqlite3.Connection:
+    """Open the bundle DB strictly read-only, in the candidate's own URI form
+    (`mode=ro`, wal_state_bundle.py:342-381). The source is never mutated."""
+    try:
+        uri = f"{db_path.resolve().as_uri()}?mode=ro"
+        conn = sqlite3.connect(uri, uri=True)
+        conn.execute("SELECT name FROM sqlite_master LIMIT 1").fetchone()
+    except (OSError, ValueError, sqlite3.Error) as exc:
+        raise Stop(f"readonly_open_failed: {exc.__class__.__name__}: {exc}") from exc
+    return conn
+
+
+def restore_into(src_conn: sqlite3.Connection, dst_path: Path) -> sqlite3.Connection:
+    """Restore through the EXACT candidate primitive `src_conn.backup(dst_conn)`
+    (wal_state_bundle.py:797-806) into a FRESH destination. A file copy is not a
+    restore. The destination must not pre-exist as an object OR as a link."""
+    if dst_path.is_symlink():
+        raise Fail(f"restore destination is a symlink: {dst_path}")
+    if dst_path.exists():
+        raise Fail(f"restore destination already exists: {dst_path}")
+    try:
+        dst_conn = sqlite3.connect(str(dst_path))
+        src_conn.backup(dst_conn)
+        dst_conn.execute("PRAGMA journal_mode=DELETE")
+        dst_conn.commit()
+    except (OSError, sqlite3.Error) as exc:
+        raise Stop(f"backup_failed: {exc.__class__.__name__}: {exc}") from exc
+    return dst_conn
+
+
+def integrity_and_fk(conn: sqlite3.Connection):
+    """quick_check and foreign_key_check on the RESTORED connection."""
+    try:
+        qc = ";".join(str(r[0]) for r in conn.execute("PRAGMA quick_check").fetchall())
+        fk = len(conn.execute("PRAGMA foreign_key_check").fetchall())
+    except sqlite3.Error as exc:
+        raise Stop(f"integrity_probe_failed: {exc.__class__.__name__}: {exc}") from exc
+    return qc, fk
+
+
+def assert_no_sidecars(db_path: Path, forbidden) -> None:
+    """No `-wal`/`-shm`/`-journal` beside the bundle or restored database
+    (candidate forbidden set, wal_state_bundle.py:87, :568-569)."""
+    present = [
+        db_path.with_name(db_path.name + suffix).name
+        for suffix in forbidden
+        if db_path.with_name(db_path.name + suffix).exists()
+    ]
+    if present:
+        raise Fail(f"sidecar present beside {db_path.name}: {','.join(present)}")
+
+
+def run(source_db: Path, bundle_dir: Path, restore_root: Path, release_root: Path,
+        expect_manifest_file_sha256: str, out=print) -> int:
+    """One evaluation. Preserves EVERY artifact: nothing is deleted on any path."""
+    api = load_candidate_api(release_root)
+    manifest_path = bundle_dir / api["MANIFEST_NAME"]
+    bundle_db = bundle_dir / api["BUNDLE_DB_NAME"]
+
+    # 1. External manifest-FILE sha, recorded separately from the hashes the
+    #    manifest embeds. A manifest cannot attest to its own file identity.
+    if not manifest_path.is_file():
+        raise Stop(f"bundle manifest is not a regular file: {manifest_path}")
+    actual_manifest_file_sha = sha256_file(manifest_path)
+    out(f"C3_manifest_file_sha256={actual_manifest_file_sha}")
+    if actual_manifest_file_sha != expect_manifest_file_sha256:
+        raise Fail("bundle manifest FILE sha256 does not match the accepted value")
+
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise Stop(f"manifest_unreadable: {exc.__class__.__name__}: {exc}") from exc
+
+    expect_bundle_db_sha = manifest["bundle"]["db_sha256"]
+    expect_invariants_sha = manifest["invariants_sha256"]
+    expect_invariants = manifest["invariants"]
+
+    # 2. Bundle DB hash equality, and no sidecar in the bundle root.
+    if not bundle_db.is_file() or bundle_db.is_symlink():
+        raise Fail(f"bundle database is not a regular file: {bundle_db}")
+    actual_bundle_db_sha = sha256_file(bundle_db)
+    out(f"C3_bundle_db_sha256={actual_bundle_db_sha}")
+    if actual_bundle_db_sha != expect_bundle_db_sha:
+        raise Fail("bundle database sha256 does not match the accepted manifest value")
+    assert_no_sidecars(bundle_db, api["FORBIDDEN_SIDECARS"])
+
+    # 3. Fresh, no-clobber restore root. NEVER deleted, on any exit path.
+    if restore_root.is_symlink():
+        raise Fail(f"restore root is a symlink: {restore_root}")
+    if restore_root.exists():
+        raise Fail(f"restore root already exists: {restore_root}")
+    try:
+        restore_root.mkdir(mode=0o700)
+    except OSError as exc:
+        raise Stop(f"restore_root_allocation_failed: {exc.__class__.__name__}: {exc}") from exc
+    restored_db = restore_root / "restored.db"
+
+    # 4. Read-only source connection; restore via src_conn.backup(dst_conn).
+    src_conn = open_readonly(bundle_db)
+    try:
+        dst_conn = restore_into(src_conn, restored_db)
+    finally:
+        src_conn.close()
+
+    try:
+        # 5. quick_check and foreign_key_check on the RESTORED connection.
+        qc, fk = integrity_and_fk(dst_conn)
+        out(f"C3_restored_quick_check={qc}")
+        out(f"C3_restored_fk_violations={fk}")
+        if qc != "ok":
+            raise Fail(f"restored quick_check != ok ({qc})")
+        if fk != 0:
+            raise Fail(f"restored foreign_key_check found {fk} violation(s)")
+
+        # 6. Candidate public API on the RESTORED CONNECTION, then candidate hash.
+        try:
+            restored_invariants = api["collect_invariants"](dst_conn)
+            restored_hash = api["invariants_hash"](restored_invariants)
+        except Exception as exc:
+            raise Stop(f"invariant_derivation_failed: {exc.__class__.__name__}: {exc}") from exc
+        out(f"C3_restored_invariants_sha256={restored_hash}")
+    finally:
+        dst_conn.close()
+
+    # 7. Protected equality: the candidate hash AND every protected field.
+    if restored_hash != expect_invariants_sha:
+        raise Fail("restored invariants hash does not equal the accepted bundle value")
+    for field in PROTECTED_FIELDS:
+        if restored_invariants.get(field) != expect_invariants.get(field):
+            raise Fail(f"protected invariant field differs after restore: {field}")
+    out("C3_protected_fields_equal=yes")
+
+    # 8. Identity separation and sidecar absence in the restore root.
+    idents = {
+        "source": identity(source_db),
+        "bundle": identity(bundle_db),
+        "restored": identity(restored_db),
+    }
+    out("C3_identity=" + json.dumps({k: list(v) for k, v in idents.items()}, sort_keys=True))
+    if len(set(idents.values())) != 3:
+        raise Fail(f"source/bundle/restored are not three distinct files: {idents}")
+    assert_no_sidecars(restored_db, api["FORBIDDEN_SIDECARS"])
+    out("C3_sidecars_absent=yes")
+
+    out("C3 PASS")
+    return PASS_RC
+
+
+def main(argv) -> int:
+    """Artifacts are preserved under distinct labels; nothing is published as
+    accepted on a failing path and nothing partial is ever deleted."""
+    (source_db, bundle_dir, restore_root, release_root, expect_manifest_file_sha256) = argv[1:6]
+    try:
+        return run(Path(source_db), Path(bundle_dir), Path(restore_root),
+                   Path(release_root), expect_manifest_file_sha256)
+    except Fail as exc:
+        print(f"C3_FAIL reason={exc}")
+        print(f"C3_ARTIFACTS_PRESERVED label=failed root={restore_root}")
+        return FAIL_RC
+    except Stop as exc:
+        print(f"C3_STOP reason={exc}")
+        print(f"C3_ARTIFACTS_PRESERVED label=stopped root={restore_root}")
+        return STOP_RC
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv))
 ```
 
-**PASS:** re-`verify` PASS, exactly one candidate db file, restored copy `quick_check=ok`, zero FK
-violations, invariants hash matches. **FAIL disposition:** drift/corruption/hash mismatch is a
-STOP per gap-matrix §C3 — but per the caveat above, a hash-format mismatch alone must first be
-checked against the canonicalisation assumption before being escalated as data drift. **D026:**
-the existing `wal_state_bundle` tests remain existing coverage, not new closure evidence for a
-newly named defect (gap-matrix §C3, §5).
+### 5.3 Prerequisite and disposition
+
+Prerequisite: a candidate `create` **without** `--allow-live-source`, followed by a `verify`
+PASS, already exists for the bundle directory; the manifest's
+`source.changed_during_capture` is `false`; and the manifest **file** SHA-256 was recorded
+externally at that time. This wrapper consumes an already-accepted bundle; it creates none.
+
+FAIL disposition: drift, corruption, hash inequality, identity aliasing or a sidecar is a STOP
+requiring Lead adjudication. STOP disposition: an import, connection, backup or integrity tool
+error stops the stage with rc 3 and is never re-read as drift. On **both** paths the restore
+root and every partial artifact are preserved and their exact path is printed.
+
+### 5.4 Required RP4 falsifications
+
+Exercised locally in §8: old path argument raises the reproduced `AttributeError`; wrong
+invariant; wrong DB hash; wrong external manifest-file SHA; pre-existing destination; aliased
+inode; sidecar appearance; failed backup/open; failed integrity/FK; and partial-output
+preservation.
+
+**One required RP4 falsification is NOT closed.** The *dangling destination link* case could not
+be constructed at the Python level on the local harness — CPython there cannot create a symlink
+(`WinError 1314`) and does not recognise a junction or the MSYS `.lnk` emulation as one. It is
+recorded as **BLOCKED, not closed** (§8.4 R4-5, §8.6). The equivalent shell-level predicate is
+closed by §8.2 R0-2.
 
 ---
 
-## 6. Gap 5 — C4: rollback stop+mask-only (no rebind)
+## 6. RP5 — C4 rollback stop+mask-only (no rebind)
 
-Uses the candidate's own `deploy/linux/rollback.sh` (blob `4b36674dcb1baa7c3b119cac98f8e6017b1f1566`,
-**ref-invariant**) with **neither** `--to-release-sha` **nor** `--to-manifest-sha256` supplied, so
-the release-rebind pairing guard (`:65`) is never entered — Gap G3's unmet prerequisite (no second
-installed immutable release exists; only `2ce41e34…321b` is installed) does not block this
-stop+mask-only proof. `--state-manifest-file` / `--state-manifest-sha256` are hard-required
-(`:57-58`); they must be the **same** accepted state-bundle manifest hash already produced and
-`verify`-PASSed by the C3 flow — this script does not create a manifest, only consumes an
-already-accepted one.
+Closes **F7** and **F8**. Uses the candidate's own `deploy/linux/rollback.sh`
+(blob `4b36674dcb1baa7c3b119cac98f8e6017b1f1566`) with **neither** `--to-release-sha` **nor**
+`--to-manifest-sha256`, so the rebind pairing guard (`:63-68`) is never entered and the rebind
+install/daemon-reload/remask branch (`:117-155`) is skipped.
+
+### 6.1 What was wrong
+
+- The rejected block invoked the real rollback immediately without asserting
+  `/etc/mtc-bridge/rollback_manifest.json` absent. The candidate guard at `:70-71` calls
+  `assert_not_symlink` **only**; `:157-180` then writes with an unconditional `cat >`, which
+  **overwrites an existing regular manifest** and destroys the earlier rollback record.
+- It had no dry-run rehearsal, although `rollback.sh:48` supports `--dry-run` and `common.sh:42-48`
+  routes every mutating command through `run()`, which prints and returns without executing when
+  `MTC_DRY_RUN=1`.
+- It compared only `find` output containing basename and byte count, then called the result
+  "byte-for-byte" preservation. **Any same-size content change passed.**
+- It never validated the rollback manifest's fields, and never proved the mask link resolves
+  exactly to `/dev/null`.
+
+### 6.2 Block
 
 ```bash
-#!/usr/bin/env bash
-# WP-L Phase 2 -- C4 rollback: stop+mask-only, no rebind (PROPOSED, NOT EXECUTED)
-# Candidate: 2ce41e34bceb599d80af24c5c33d835820ec321b.
-# Uses rollback.sh (blob 4b36674dcb1baa7c3b119cac98f8e6017b1f1566, ref-invariant) with
-# NEITHER --to-release-sha NOR --to-manifest-sha256, so the rebind pairing guard (:65) is
-# never entered -- Gap G3's unmet prerequisite (no second installed release) does not block
-# this stop+mask-only proof. --state-manifest-file / --state-manifest-sha256 are hard-
-# required (:57-58) and must be an already-accepted hash from the C3 flow; this script does
-# not create a manifest. Mutation class: mutating-host (systemctl stop :82, mask :86). No
-# credential read, no POST /api/arm. First genuine FAIL stops.
+# ===== BLOCK-ID: RP5-C4 ===== [EXECUTABLE PROPOSAL BLOCK]
+# WP-L Phase 2 — C4 rollback stop+mask-only, no rebind (PROPOSED DESIGN).
+# Candidate: 2ce41e34bceb599d80af24c5c33d835820ec321b. NOT host-authorized.
+# Mutation class: mutating-host. Requires its own explicit named authority and
+# budget lift; this document grants none. No credential read, no POST /api/arm,
+# no broker/exchange/order/TESTNET/mainnet/economic action, no start, no unmask.
+# Requires RP0-LIB and RP0-BOOTSTRAP.
 set -Eeuo pipefail
 
 UNIT="mtc-bridge-first-start.service"
+MASK_PATH="/etc/systemd/system/$UNIT"
+UNIT_FILE="/usr/local/lib/systemd/system/$UNIT"
 ROLLBACK_SH="/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE/deploy/linux/rollback.sh"
-STATE_MANIFEST_FILE="${STATE_MANIFEST_FILE:?set to the path of the already-accepted state-bundle manifest}"
-STATE_MANIFEST_SHA256="${STATE_MANIFEST_SHA256:?set to the already-accepted manifest SHA-256 (from C3)}"
 ROLLBACK_MANIFEST="/etc/mtc-bridge/rollback_manifest.json"
-STATE_DIR="/var/lib/mtc-bridge"
-LOG="/home/gatea/gatea-WPLP2-C4-20260809.log"
+STEADY_UNIT_A="/usr/local/lib/systemd/system/mtc-bridge-steady.service"
+STEADY_UNIT_B="/etc/systemd/system/mtc-bridge-steady.service"
+PORT="8790"
 
-if [[ -e "$LOG" ]]; then
-    printf 'ERROR: evidence log already exists (%s); refusing to overwrite\n' "$LOG" >&2
-    exit 2
-fi
+# Preregistered, never derived here:
+: "${C4_STATE_MANIFEST_FILE:?accepted C3 bundle manifest file path is required}"
+: "${C4_STATE_MANIFEST_SHA256:?externally recorded C3 manifest FILE sha256 is required}"
+: "${C4_ROLLBACK_SH_SHA256:?preregistered candidate rollback.sh sha256 is required}"
+: "${C4_EXPECT_UNIT_SHA256:?preregistered installed first-start unit sha256, or the literal ABSENT_PREREGISTERED}"
+: "${C4_START_ACTIVE:?preregistered starting ActiveState is required}"
+: "${C4_START_ENABLED:?preregistered starting is-enabled token is required}"
+: "${C4_PRE_INVARIANTS_SHA256:?preregistered pre-rollback protected-invariant hash is required}"
+: "${C4_POST_INVARIANTS_SHA256:?post-rollback protected-invariant hash from the fresh accepted bundle is required}"
+: "${PY:?candidate venv interpreter path is required}"
 
-exec > "$LOG" 2>&1
+c4_stop() { printf 'C4_STOP reason=%s\n' "$*"; exit 3; }
+c4_fail() { printf 'C4_FAIL reason=%s\n' "$*"; exit 1; }
 
-PROCS_FILE=""
-finish() {
-    local rc=$?
-    [[ -n "$PROCS_FILE" && -f "$PROCS_FILE" ]] && rm -f "$PROCS_FILE"
-    printf '\nC4_TRAP_EXIT rc=%s\n' "$rc"
+c4_sha256() {
+    local p="$1" out
+    out="$(LC_ALL=C sha256sum -- "$p")" || c4_stop "sha256_failed path=$p"
+    printf '%s\n' "${out%% *}"
 }
-trap finish EXIT
 
-fail() {
-    printf 'C4_FAIL reason=%s\n' "$*"
-    exit 1
+# Fingerprint used to prove the dry run mutated NOTHING.
+c4_fingerprint() {
+    local a e m l w
+    a="$(rp0_show_property "$UNIT" ActiveState)" || exit 3
+    e="$(rp0_is_enabled_token "$UNIT")"          || exit 3
+    m="$(rp0_probe_path "$MASK_PATH")"           || exit 3
+    l="$(rp0_listener_count "$PORT")"            || exit 3
+    w=0; rp0_pgrep_status 'bridge\.app' >/dev/null || w=$?
+    [ "$w" -eq 0 ] || [ "$w" -eq 1 ] || exit 3
+    printf 'active=%s enabled=%s mask=%s listeners=%s writers_rc=%s manifest=%s c3=%s\n' \
+        "$a" "$e" "$m" "$l" "$w" \
+        "$(rp0_probe_path "$ROLLBACK_MANIFEST")" \
+        "$(c4_sha256 "$C4_STATE_MANIFEST_FILE")"
 }
 
-echo "C4_SECTION header"
-echo "C4_state_manifest_file=$STATE_MANIFEST_FILE"
-echo "C4_state_manifest_sha256=$STATE_MANIFEST_SHA256"
-echo "C4_note=no --to-release-sha / --to-manifest-sha256 supplied: stop+mask-only, no rebind attempted"
+printf 'C4_SECTION step0_prerequisites\n'
 
-echo "C4_SECTION step0_pre_state_snapshot"
-pre_files=$(sudo find "$STATE_DIR" -maxdepth 1 -type f -printf '%f %s\n' | sort)
-echo "C4_pre_state_files_begin"; printf '%s\n' "$pre_files"; echo "C4_pre_state_files_end"
+# 1. accepted C3 manifest file plus its externally recorded FILE sha256.
+kind="$(rp0_probe_path "$C4_STATE_MANIFEST_FILE")" || exit 3
+[ "$kind" = "regular" ] || c4_fail "C3 manifest kind=$kind path=$C4_STATE_MANIFEST_FILE"
+got="$(c4_sha256 "$C4_STATE_MANIFEST_FILE")"
+[ "$got" = "$C4_STATE_MANIFEST_SHA256" ] || c4_fail "C3 manifest file sha256=$got expected=$C4_STATE_MANIFEST_SHA256"
+printf 'C4_c3_manifest_sha256=%s\n' "$got"
 
-echo "C4_SECTION step1_rollback_stop_mask"
-sudo "$ROLLBACK_SH" \
-    --state-manifest-file "$STATE_MANIFEST_FILE" \
-    --state-manifest-sha256 "$STATE_MANIFEST_SHA256" \
-    || fail "rollback.sh (stop+mask-only) exited nonzero"
+# 2. rollback-manifest path proven absent as OBJECT AND LINK, immediately before use.
+#    The candidate guard (:70-71) rejects a symlink only; it supplies NO regular-file
+#    no-clobber protection, and :157-180 overwrites with an unconditional `cat >`.
+kind="$(rp0_probe_path "$ROLLBACK_MANIFEST")" || exit 3
+printf 'C4_rollback_manifest_pre_kind=%s\n' "$kind"
+[ "$kind" = "absent" ] || c4_fail "rollback manifest must be absent as object AND link, found $kind"
 
-echo "C4_SECTION step2_postcheck"
-active=$(systemctl show -p ActiveState --value "$UNIT") || fail "ActiveState read failed"
-enabled=$(systemctl is-enabled "$UNIT" 2>&1) || true
-echo "C4_active=$active C4_is_enabled=$enabled"
-[[ "$active" == "inactive" ]] || fail "unit not inactive after rollback ($active)"
-[[ "$enabled" == "masked" ]] || fail "unit not masked after rollback ($enabled)"
+# 3. steady unit absent at both paths; candidate script and C3 manifest re-hashed.
+for p in "$STEADY_UNIT_A" "$STEADY_UNIT_B"; do
+    kind="$(rp0_probe_path "$p")" || exit 3
+    [ "$kind" = "absent" ] || c4_fail "unexpected steady unit kind=$kind path=$p"
+done
+got="$(c4_sha256 "$ROLLBACK_SH")"
+[ "$got" = "$C4_ROLLBACK_SH_SHA256" ] || c4_fail "rollback.sh sha256=$got expected=$C4_ROLLBACK_SH_SHA256"
 
-PROCS_FILE=$(mktemp /home/gatea/gatea-C4-procs.XXXXXX) || fail "mktemp failed"
-pgrep -af 'bridge\.app' >"$PROCS_FILE" 2>&1 || true
-if [[ -s "$PROCS_FILE" ]]; then
-    echo "C4_dangling_procs_begin"; cat "$PROCS_FILE"; echo "C4_dangling_procs_end"
-    fail "a bridge.app process survived rollback stop+mask"
+# 4. preregistered starting state captured and matched.
+active="$(rp0_show_property "$UNIT" ActiveState)" || exit 3
+enabled="$(rp0_is_enabled_token "$UNIT")"         || exit 3
+printf 'C4_start_active=%s C4_start_enabled=%s\n' "$active" "$enabled"
+[ "$active"  = "$C4_START_ACTIVE"  ] || c4_fail "starting ActiveState=$active expected=$C4_START_ACTIVE"
+[ "$enabled" = "$C4_START_ENABLED" ] || c4_fail "starting is-enabled=$enabled expected=$C4_START_ENABLED"
+
+unit_kind="$(rp0_probe_path "$UNIT_FILE")" || exit 3
+if [ "$unit_kind" = "regular" ]; then
+    installed_unit_sha="$(c4_sha256 "$UNIT_FILE")"
+    [ "$C4_EXPECT_UNIT_SHA256" != "ABSENT_PREREGISTERED" ] \
+        || c4_fail "installed unit present but its absence was preregistered"
+    [ "$installed_unit_sha" = "$C4_EXPECT_UNIT_SHA256" ] \
+        || c4_fail "installed unit sha256=$installed_unit_sha expected=$C4_EXPECT_UNIT_SHA256"
+    expect_manifest_unit_sha="$C4_EXPECT_UNIT_SHA256"
+elif [ "$unit_kind" = "absent" ]; then
+    [ "$C4_EXPECT_UNIT_SHA256" = "ABSENT_PREREGISTERED" ] \
+        || c4_fail "installed unit absent but a hash was preregistered"
+    expect_manifest_unit_sha=""
+else
+    c4_fail "installed unit kind=$unit_kind path=$UNIT_FILE"
 fi
-listeners=$(ss -H -ltn 'sport = :8790' | wc -l)
-echo "C4_listener_count=$listeners"
-[[ "$listeners" -eq 0 ]] || fail "control port 8790 still has a listener after rollback"
+printf 'C4_installed_unit_kind=%s\n' "$unit_kind"
 
-echo "C4_SECTION step3_state_preserved"
-post_files=$(sudo find "$STATE_DIR" -maxdepth 1 -type f -printf '%f %s\n' | sort)
-echo "C4_post_state_files_begin"; printf '%s\n' "$post_files"; echo "C4_post_state_files_end"
-[[ "$pre_files" == "$post_files" ]] || fail "state directory file set/sizes changed across rollback"
+printf 'C4_SECTION step1_mutation_free_dry_run\n'
+fp_before="$(c4_fingerprint)"
+dry_out="$(MTC_DRY_RUN=1 "$ROLLBACK_SH" --dry-run \
+    --state-manifest-file "$C4_STATE_MANIFEST_FILE" \
+    --state-manifest-sha256 "$C4_STATE_MANIFEST_SHA256" 2>&1)" || c4_fail "rollback.sh --dry-run exited nonzero"
+printf 'C4_dry_run_output_begin\n%s\nC4_dry_run_output_end\n' "$dry_out"
+LC_ALL=C grep -qF -- "[dry-run] systemctl stop $UNIT" <<<"$dry_out" \
+    || c4_fail "dry run did not print the expected stop line"
+LC_ALL=C grep -qF -- "[dry-run] systemctl mask $UNIT" <<<"$dry_out" \
+    || c4_fail "dry run did not print the expected mask line"
+fp_after="$(c4_fingerprint)"
+[ "$fp_before" = "$fp_after" ] || c4_fail "dry run mutated observable state: [$fp_before] -> [$fp_after]"
+kind="$(rp0_probe_path "$ROLLBACK_MANIFEST")" || exit 3
+[ "$kind" = "absent" ] || c4_fail "dry run created a rollback manifest ($kind)"
+printf 'C4_dry_run_mutation_free=yes\n'
 
-echo "C4_SECTION step4_rollback_manifest"
-sudo test -f "$ROLLBACK_MANIFEST" || fail "$ROLLBACK_MANIFEST was not written"
-rm_meta=$(sudo stat -c '%U %G %a' "$ROLLBACK_MANIFEST") || fail "stat on rollback manifest failed"
-echo "C4_rollback_manifest_stat=$rm_meta"
+printf 'C4_SECTION step2_single_real_invocation\n'
+# Exactly one invocation. No --to-release-sha, no --to-manifest-sha256: no rebind.
+"$ROLLBACK_SH" \
+    --state-manifest-file "$C4_STATE_MANIFEST_FILE" \
+    --state-manifest-sha256 "$C4_STATE_MANIFEST_SHA256" \
+    || c4_fail "rollback.sh (stop+mask-only) exited nonzero"
 
-echo "C4_SECTION done"
-echo "C4 PASS"
+printf 'C4_SECTION step3_postconditions\n'
+active="$(rp0_show_property "$UNIT" ActiveState)" || exit 3
+enabled="$(rp0_is_enabled_token "$UNIT")"         || exit 3
+printf 'C4_post_active=%s C4_post_enabled=%s\n' "$active" "$enabled"
+[ "$active"  = "inactive" ] || c4_fail "ActiveState=$active expected inactive"
+[ "$enabled" = "masked"   ] || c4_fail "is-enabled=$enabled expected exactly masked"
+
+mask_kind="$(rp0_probe_path "$MASK_PATH")" || exit 3
+[ "$mask_kind" = "link_live" ] || c4_fail "mask path kind=$mask_kind expected a live symlink"
+raw_target="$(readlink -- "$MASK_PATH")" || c4_stop "mask_link_read_failed path=$MASK_PATH"
+printf 'C4_mask_raw_target=%s\n' "$raw_target"
+[ "$raw_target" = "/dev/null" ] || c4_fail "mask link raw target=$raw_target expected exactly /dev/null"
+
+procs=""; prc=0
+procs="$(rp0_pgrep_status 'bridge\.app')" || prc=$?
+case "$prc" in
+    0) printf 'C4_dangling_procs_begin\n%s\nC4_dangling_procs_end\n' "$procs"
+       c4_fail "a bridge.app process survived rollback stop+mask" ;;
+    1) printf 'C4_writers=0\n' ;;
+    *) exit 3 ;;
+esac
+listeners="$(rp0_listener_count "$PORT")" || exit 3
+printf 'C4_listener_count=%s\n' "$listeners"
+[ "$listeners" -eq 0 ] || c4_fail "control port $PORT still has a listener after rollback"
+
+printf 'C4_SECTION step4_rollback_manifest\n'
+kind="$(rp0_probe_path "$ROLLBACK_MANIFEST")" || exit 3
+[ "$kind" = "regular" ] || c4_fail "rollback manifest kind=$kind expected a newly created regular file"
+rm_mode="$(LC_ALL=C stat -c '%a' -- "$ROLLBACK_MANIFEST")"   || c4_stop "rollback_manifest_mode_probe_failed"
+rm_own="$(LC_ALL=C stat -c '%U:%G' -- "$ROLLBACK_MANIFEST")" || c4_stop "rollback_manifest_owner_probe_failed"
+printf 'C4_rollback_manifest_mode=%s owner=%s\n' "$rm_mode" "$rm_own"
+[ "$rm_mode" = "640" ]      || c4_fail "rollback manifest mode=$rm_mode expected 640"
+[ "$rm_own"  = "root:root" ] || c4_fail "rollback manifest owner=$rm_own expected root:root"
+
+# Every expected field and value validated. In no-rebind mode the candidate
+# leaves rollback_release_sha and rollback_release_manifest_sha256 EMPTY
+# (rollback.sh:164-165 with unset TARGET_*), while first_start_unit_sha256 is
+# the INSTALLED unit hash when that unit is present (:113-116, :168) and empty
+# only when the unit file is absent.
+"$PY" - "$ROLLBACK_MANIFEST" "$C4_STATE_MANIFEST_SHA256" "$UNIT" "$expect_manifest_unit_sha" <<'PYEOF' \
+    || c4_fail "rollback manifest field validation failed"
+import json, re, sys
+path, state_sha, unit, expect_unit_sha = sys.argv[1:5]
+with open(path, "r", encoding="utf-8") as handle:
+    m = json.load(handle)
+expected = {
+    "schema_version": "1.0.0",
+    "rollback_release_sha": "",
+    "rollback_release_manifest_sha256": "",
+    "state_bundle_manifest_sha256": state_sha,
+    "first_start_unit": unit,
+    "first_start_unit_sha256": expect_unit_sha,
+    "first_start_unit_state": "masked",
+    "service_active": False,
+    "service_enabled": False,
+    "service_started_by_this_script": False,
+    "state_dir_preserved": True,
+    "secrets_touched": False,
+    "firewall_modified": False,
+    "windows_writer_restored": False,
+}
+problems = []
+missing = sorted((set(expected) | {"rolled_back_at_utc"}) - set(m))
+if missing:
+    problems.append(f"missing_fields={missing}")
+extra = sorted(set(m) - set(expected) - {"rolled_back_at_utc"})
+if extra:
+    problems.append(f"unexpected_fields={extra}")
+for key, want in expected.items():
+    got = m.get(key)
+    if got != want or type(got) is not type(want):
+        problems.append(f"{key}={got!r} expected {want!r}")
+if not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", str(m.get("rolled_back_at_utc", ""))):
+    problems.append(f"rolled_back_at_utc={m.get('rolled_back_at_utc')!r}")
+if problems:
+    print("C4_manifest_problems=" + "; ".join(problems))
+    raise SystemExit(1)
+print("C4_manifest_fields_validated=all")
+PYEOF
+
+printf 'C4_SECTION step5_protected_invariant_equality\n'
+# Fresh post-rollback candidate bundle must verify, and its protected invariants
+# must equal the preregistered pre-rollback values. Filename and byte-count
+# equality are DIAGNOSTIC ONLY and are never described as byte equality.
+[ "$C4_POST_INVARIANTS_SHA256" = "$C4_PRE_INVARIANTS_SHA256" ] \
+    || c4_fail "protected invariants changed across rollback (pre=$C4_PRE_INVARIANTS_SHA256 post=$C4_POST_INVARIANTS_SHA256)"
+printf 'C4_invariants_equal=yes sha256=%s\n' "$C4_POST_INVARIANTS_SHA256"
+
+printf 'C4_SECTION done\n'
+printf 'C4 PASS (unit stopped and masked; no start, unmask or recovery is authorised by this result)\n'
 ```
 
-**PASS:** masked, inactive, no `bridge.app` writer, port closed, state-dir file set unchanged
-byte-for-byte, `rollback_manifest.json` written. **FAIL disposition:** a surviving writer or state
-loss is a STOP (matches gap-matrix §C4). **D026:** n/a — operational proof, not a regression test.
+### 6.3 Required RP5 falsifications
+
+Exercised locally in §8: pre-existing regular rollback manifest; dangling manifest link; dry-run
+that mutates; same-size protected DB mutation; wrong state-manifest hash; wrong mask target;
+unexpected rebind flag; and failed post-rollback invariant equality.
 
 ---
 
-## 7. C5 (egress capture) — not drafted, and why
+## 7. RP6 — C5 (egress capture) remains **BLOCKED**
 
-The gap matrix marks C5 (`api.hyperliquid-testnet.xyz`-only egress, no mainnet, Telegram
-disposition) as a **COMMAND GAP** but is explicit that it is **"not a current-unit item"**: at the
-candidate, the deployed credential-free DISARMED start mode constructs **no broker at all**
-(`2ce41e34…321b:bridge/app.py:149`), so there is no broker egress to capture from the current
-staging runtime **at any authority level**. A real capture would require a **different,
-separately authorised start mode** plus **credential and broker/TESTNET network authority** — none
-of which this task, or the standing budget/authority envelope (§1 of the gap matrix, Gap G7), makes
-available.
+```text
+[BLOCKED DESIGN — NON-RUNNABLE — AUTHORITY STATEMENT ONLY]
 
-This proposal deliberately does **not** draft a command for C5, for two independent reasons:
+At the candidate, the deployed credential-free DISARMED start mode constructs NO BROKER AT ALL,
+so there is no broker egress to capture from the current staging runtime at any authority level.
 
-1. **This task's own constraints forbid it.** Any exact command here would necessarily either read
-   credential material, select a non-DISARMED start mode, or open outbound broker/exchange network
-   access — all explicitly out of bounds for this drafting task ("no credential reads," "no ARM,"
-   DISARMED-only).
-2. **Drafting it would itself be a small act of scope creep the matrix warns against.** A
-   plausible-looking but unauthorised capture procedure, sitting in a proposal file, risks being
-   copy-pasted under time pressure before the credential/network authority genuinely exists —
-   exactly the failure mode Gate-A's own house rules exist to prevent ("do not improvise… where an
-   exact safe command cannot yet be specified, the cell reads COMMAND GAP rather than improvising
-   one").
+C5 therefore remains an open COMMAND GAP. This repair cycle adds NO command, NO credential name
+or value procedure, NO alternate start mode, NO TESTNET endpoint, NO network allow rule, NO ARM
+request and NO order action.
 
-C5 should stay an open COMMAND GAP until a human with explicit credential + broker/TESTNET network
-authority scopes it — at which point it needs its own T0-tier two-flagship review
-(`OWNER_DECISION_AUDIT_TIERS_2026-08-09.md` §2), not a T2 documentation pass.
+Scoping C5 requires a human with explicit credential and broker/TESTNET network authority. None
+of that authority exists here, and none is implied by anything in this document.
+```
 
 ---
 
-## 8. What this document is not
+## 8. D026 local falsification evidence
 
-- Not an execution record. No script above has run; no host was touched.
-- Not a preregistration acceptance. Every log path, flag, and citation must be checked by a Lead
-  against the frozen candidate `2ce41e34bceb599d80af24c5c33d835820ec321b` source before any of
-  this is treated as ready to run.
-- Not an authorisation. Every script marked `mutating-host` (C1, C2-B-PRE, C4) additionally
-  requires its own explicit named authority + budget lift per gap-matrix §1 — none of that
-  authority is granted by this document.
-- Not a change to any existing file. No product code, run-kit script, test, or prior
-  preregistration record was edited to produce this proposal.
+### 8.1 What was executed, and what was not
 
-**Suggested next step (for the Lead, not self-executing):** review this file against the gap
-matrix and `2ce41e34…321b` source; if accepted, fold the accepted scripts into a numbered run-kit
-package (mirroring `GATE_A_RUN_KIT_D_2026-08-08/`) with its own README, local `bash -n` syntax
-validation, and manifest/tar packaging step — before any transfer or execution is even considered.
+Every RP0, RP1, RP4 and RP5 falsification that can be exercised without a real host was run
+**locally, for real**, in a **fresh OS temporary root**, before this document was returned.
+
+- **Preserved evidence root (exact path):**
+  `C:\Users\BARSEM~1\AppData\Local\Temp\D026.mR6q2g`
+  (POSIX form `/tmp/D026.mR6q2g`). Nothing in it is deleted. Full transcript:
+  `D026_FULL_TRANSCRIPT.md`, 1605 lines, SHA-256
+  `1bbb4a469aa1503d0d5aa4775835a97c4e6bccfb3c301fde61b9be3703a742e1`.
+- **The harness executes the blocks in this document, not a paraphrase.** Each runner extracts
+  its block from this file by `BLOCK-ID` marker and executes that extracted text. Each RED
+  extracts the **exact rejected text** from
+  `git show 779bd038957a192db47ff7ad68eb51304a2fba46:<this file>` at the named line range.
+- **Nothing host-side was touched.** No `/home/gatea`, no real `systemctl`, no candidate
+  `rollback.sh`, no host, no SSH, no transport, no credential, no broker, no order. `systemctl`,
+  `pgrep`, `ss` and the rollback script are **local stubs**; the candidate `rollback.sh` is
+  **never invoked**.
+- **Environment:** Git Bash / MSYS2 bash 5.2.37 on Windows 11, CPython 3.14.2, SQLite 3.50.4.
+- **Honest stub scope.** The harness filesystem is an MSYS `noacl` NTFS mount that cannot
+  represent POSIX mode bits. Where a fixture needs `0555`/`0444`/`0020`/`0002`/`0640`, `stat`
+  and `find` answer from a per-case fixture table modelling documented GNU semantics
+  (`-perm /222` = any write bit; `-perm -0200` = owner write only). `mkdir -m` is stubbed for
+  the same reason, preserving only its create-once semantics. Everything else is real:
+  real files, real MSYS symlinks, real `readlink`, `sha256sum`, `find -printf`, `mktemp`,
+  `grep`, `/proc/uptime`, real Python, real SQLite, and the real candidate
+  `wal_state_bundle` module (blob `26c077e650ab88ba2086efa3a80790769bc055b1`).
+- **RP5 path rewrite.** The RP5 harness copy differs from the published block **only** in six
+  absolute path constants, repointed at the fixture root. Every predicate and comparison line is
+  byte-identical; the exact diff is in the transcript. The rejected RED block's `mktemp` was
+  shimmed away from `/home/gatea` — that is the only change to the rejected text, and it exists
+  precisely so the harness could not touch that path.
+
+**Block identity, syntax and import validation.** SHA-256 of each block exactly as extracted
+from this file by its `BLOCK-ID` marker up to (not including) the closing fence, LF line endings:
+
+| Block | Lines | SHA-256 (LF) | Check | Result |
+|---|---|---|---|---|
+| `RP0-LIB` | 167 | `ecb665f4bf0480c5bf352f15d931ec471053f1dffafa196b3bd536d2944e4a8c` | `bash -n` | OK |
+| `RP0-BOOTSTRAP` | 27 | `d909ceafced6364a1869f97a24b70864cd88800ce8ac85bc06f85d1e37d21934` | `bash -n` | OK |
+| `RP1-B3` | 117 | `f40411b053779b28ec9d970d7e5610fe5f363acbc48ee487d07ebce2638a69af` | `bash -n` | OK |
+| `RP3-C2A-POST` | 72 | `e17a8e329332b76e4e925a3ecb7a4c3fa723f31e81180aa29e541c1c7592e9f9` | `bash -n` | OK |
+| `RP3-C2B-POST` | 68 | `6ed407359886c44dea9e68884461664ed98aefaec8ac39b4f536fe2cbe3a3cf5` | `bash -n` | OK |
+| `RP4-C3` | 237 | `4e1b7c6499d342beb6eb6db971bbed7652e4b8f833be31a0e39033f6da4262a1` | `py_compile` | OK |
+| `RP5-C4` | 214 | `e13b86664943369a3221d9364300e22077d3bee2fe68a975d521549d27721ee0` | `bash -n` | OK |
+
+Reproduction note: the RP4 runner writes its extracted copy through CPython text mode, so the
+on-disk copy it executes carries CRLF line endings. Content is otherwise byte-identical to the
+block above; the transcript's `04f359064aa1cbc7…` is that CRLF copy's digest, and
+`4e1b7c6499d342be…` is the LF digest a Lead reproduction will compute from this file.
+
+`RP3-C2A-POST` and `RP3-C2B-POST` are **syntax-validated only**. Their adjudication was not
+exercised end to end because the scenarios they belong to are BLOCKED on C1-GAP-B (§4.1); their
+shared predicates come from `RP0-LIB`, which is exercised below. **No C1, C2-scenario or C5
+falsification is claimed closed.**
+
+### 8.2 RP0 — evidence channel and predicate bootstrap (F1, shared F9)
+
+RED = exact rejected text, lines `122-127` (log guard), `275-279` (`pgrep`), `388-395`
+(`is-enabled`). GREEN = this document's `RP0-LIB` / `RP0-BOOTSTRAP`.
+
+| # | Falsification | RED rc | RED observed | GREEN rc | GREEN observed |
+|---|---|---|---|---|---|
+| R0-1 | existing regular evidence leaf | `2` | old `[[ -e ]]` guard **already refuses**; prior evidence intact — **recorded as no-defect at this point**, not as a manufactured RED | `3` | `RP0_STOP reason=evidence_leaf_not_creatable … rc=1`; prior evidence intact |
+| R0-1b | retry-in-place / run-ID reuse | `0` | the rejected rc-2 contract permits a re-run with a new leaf name in the same directory; a second leaf was created | `3` | `RP0_STOP reason=evidence_allocation_failed … File exists run_id_burned=yes` |
+| R0-2 | **dangling evidence symlink (F1)** | `0` | `-e` false for a dangling link → guard passed → redirection followed the link and **created the target outside the evidence path** (`victim exists after RED: yes`) | `3` | `RP0_STOP reason=evidence_leaf_not_creatable`; `victim exists after GREEN: no` |
+| R0-3 | parent replaced by a symlink | `0` | no parent-chain check exists; wrote through the link into the real target directory | `1` | `RP0_FAIL reason=evidence_parent_is_symlink kind=link_live` |
+| R0-4 | denied / path-probe error | `0` | under a stub `stat` returning rc 1 "Permission denied", the old block never probes and proceeds | `3` | `RP0_STOP reason=path_probe_error … rc=1 detail=… Permission denied` |
+| R0-5 | `pgrep` rc `2`, empty output | `0` | `RED_OLD_BLOCK_CONCLUDED_NO_WRITER_SURVIVED` | `3` | `RP0_STOP reason=pgrep_status pattern=bridge\.app rc=2 out=` |
+| R0-6 | `is-enabled` non-token error, empty output | `0` | `C2A_is_enabled=Failed to get unit file state: Connection timed out` → `RED_OLD_BLOCK_CONCLUDED_UNMASKED` | `3` | `RP0_STOP reason=is_enabled_unadjudicable … rc=4 token=[]` |
+| R0-7 | positive control, clean fixture | — | — | `0` | parent chain OK, `evidence_dir_allocated`, leaf created and holding `RP0_EVIDENCE run_id=RUN-7 …` |
+| R0-8 | positive control, documented `static` token | — | — | `0` | `rp0_is_enabled_token` returns `static` for rc `1` |
+
+### 8.3 RP1 — B3 bounded admission (F2)
+
+RED = exact rejected B3 text, lines `144-181`, except R1 `B3-8` which uses a deliberate mutation
+of the repaired helper (a mode **set** `^(want|770)$` instead of the candidate's exact mode).
+GREEN = this document's `RP1-B3`.
+
+| # | Fixture | RED rc | RED observed | GREEN rc | GREEN observed |
+|---|---|---|---|---|---|
+| B3-0 | candidate-conformant baseline | `0` | `B3 PASS` | `0` | `B3 PASS` |
+| B3-1 | release root mode `0444` | `0` | `B3 PASS` — the regex `^(555\|444)$` accepts it | `1` | `B3_FAIL … mode=444 expected=555` |
+| B3-2 | group-writable-only child `0020` | `0` | `B3 PASS` — `-perm -0200` does not match a group-only write bit | `1` | `B3_FAIL reason=writable path inside immutable tree: …/lib/group_writable_0020` |
+| B3-3 | other-writable-only child `0002` | `0` | `B3 PASS` — same owner-write-only blind spot | `1` | `B3_FAIL reason=writable path inside immutable tree: …/lib/other_writable_0002` |
+| B3-4 | wrong candidate release SHA | `0` | `B3 PASS` — the rejected block has no binding check at all | `1` | `B3_FAIL reason=install manifest does not bind release_sha` |
+| B3-5 | wrong release/payload manifest SHA | `0` | `B3 PASS` | `1` | `B3_FAIL reason=install manifest does not bind release_manifest_sha256` |
+| B3-6 | unreadable install manifest (`grep` rc 2) | `0` | `B3 PASS` | `3` | `B3_STOP reason=install_manifest_unreadable … grep_rc=2` |
+| B3-7 | failed `find` after partial output | `1` | `B3_FAIL reason=find over release tree failed` — fails, but as an assertion failure with the tool error text conflated into the offender variable | `3` | `B3_STOP reason=writable_inventory_failed … rc=1 detail=… Permission denied partial=[…/partial_entry]` — the two outcome classes are kept apart and the partial output is preserved |
+| B3-7b | `find` rc `0` with stderr noise | `1` | `B3_FAIL reason=release tree has a write bit set somewhere` — a **fabricated offender**, because `2>&1` puts stderr into the offender variable | `0` | `B3 PASS` — stderr is captured separately |
+| B3-8 | ancillary path mode drift `0750`→`0770` | `0` | `B3 PASS` under the mutated mode-set comparison | `1` | `B3_FAIL reason=path=/var/log/mtc-bridge mode=770 expected=750` |
+
+### 8.4 RP4 — C3 restore-into-temp (F6)
+
+**Fully real execution:** real CPython, real SQLite, the real candidate module, real bundles
+produced by the candidate's own `create` subcommand (`rc=0`, verdict `CAPTURED`). No stub.
+
+| # | Fixture | rc | Observed |
+|---|---|---|---|
+| R4-0 | positive control | `0` | `C3_restored_quick_check=ok`, `C3_restored_fk_violations=0`, `C3_restored_invariants_sha256=76af567e…` equal to the candidate-produced `invariants_sha256`, `C3_protected_fields_equal=yes`, three distinct inodes, `C3_sidecars_absent=yes`, `C3 PASS` |
+| R4-1 **RED** | exact rejected call `collect_invariants(<str path>)` | `1` | `AttributeError: 'str' object has no attribute 'execute'` at candidate `wal_state_bundle.py:401` via `:425` — the F6 defect, reproduced |
+| R4-1 **GREEN** | `collect_invariants(conn)` + candidate `invariants_hash` | `0` | `GREEN_invariants_sha256=76af567ea61fcf3de52bd0e1cd2fec9591f9bbd21837aaec2cfdf343070b1318` |
+| R4-2 | wrong invariant in the accepted bundle | `1` | `C3_FAIL reason=protected invariant field differs after restore: counts`; `C3_ARTIFACTS_PRESERVED label=failed root=…`; `restored.db exists = True` |
+| R4-3 | wrong bundle DB hash | `1` | `C3_FAIL reason=bundle database sha256 does not match the accepted manifest value` |
+| R4-3b | wrong external manifest-**file** SHA | `1` | `C3_FAIL reason=bundle manifest FILE sha256 does not match the accepted value` |
+| R4-4 | pre-existing restore destination | `1` | `C3_FAIL reason=restore root already exists: …`; prior artifact intact (`b'PRIOR-ARTIFACT'`) |
+| R4-5 | dangling restore-destination link | — | **NOT EXERCISED — BLOCKED.** `os.symlink` refused (`WinError 1314`, privilege not held); a junction is not `Path.is_symlink()`; MSYS `.lnk` emulation is invisible to CPython. **Not claimed closed.** The equivalent shell-level predicate is closed by R0-2. |
+| R4-6 | aliased inode (real hard link) | `1` | `C3_FAIL reason=source/bundle/restored are not three distinct files: {…}` with the two identical `(device, inode)` pairs printed |
+| R4-7 | sidecar appearance | `1` | `C3_FAIL reason=sidecar present beside bridge.db: bridge.db-wal` |
+| R4-8 | corrupted bundle DB | `3` | `C3_STOP reason=integrity_probe_failed: DatabaseError: database disk image is malformed`; `C3_ARTIFACTS_PRESERVED label=stopped root=…` |
+| R4-9 | real foreign-key violation in the restored DB | `1` | `C3_restored_quick_check=ok`, `C3_restored_fk_violations=1`, `C3_FAIL reason=restored foreign_key_check found 1 violation(s)` |
+
+### 8.5 RP5 — C4 rollback stop+mask-only (F7, F8)
+
+RED = exact rejected C4 text, lines `751-786`. GREEN = this document's `RP5-C4`.
+
+| # | Fixture | RED rc | RED observed | GREEN rc | GREEN observed |
+|---|---|---|---|---|---|
+| R5-0 | positive control | — | — | `0` | `C4_dry_run_mutation_free=yes`, mask raw target `/dev/null`, `C4_rollback_manifest_mode=640 owner=root:root`, `C4_manifest_fields_validated=all`, `C4 PASS` |
+| R5-1 | **pre-existing regular rollback manifest (F7)** | `0` | `C4 PASS` — and the prior record `{"PRIOR":"ROLLBACK-RECORD-2026-08-01"}` **was overwritten** by the unconditional `cat >` | `1` | `C4_FAIL reason=rollback manifest must be absent as object AND link, found regular`; prior record **intact** |
+| R5-2 | dangling rollback-manifest link | `1` | `C4_FAIL reason=rollback.sh (stop+mask-only) exited nonzero` — it fails, but only **after** invoking the mutating script | `1` | `C4_FAIL … found link_live` — refused **before** any invocation; the link target was never created |
+| R5-3 | dry run that mutates | `0` | `C4 PASS` — the rejected block performs no dry-run rehearsal at all | `1` | `C4_FAIL reason=dry run mutated observable state: [active=active enabled=static mask=absent …] -> [active=inactive enabled=masked mask=link_live …]` |
+| R5-4 | **same-size protected DB mutation (F8)** | see note | the rejected `find -printf '%f %s'` snapshots are **EQUAL** before and after a real SQLite mutation (`orders.status 'OPEN'→'FILL'`, `trades.pnl -5.0→-9.0`, `size_before=size_after`), so the rejected block reports "byte-for-byte preservation" — a **false PASS** | `1` | `C4_FAIL reason=protected invariants changed across rollback (pre=91189251… post=1927f86b…)` using the candidate `invariants_hash` |
+| R5-5 | wrong accepted C3 state-manifest hash | `1` | `C4_FAIL reason=rollback.sh … exited nonzero` — caught only by the candidate script, after invocation | `1` | `C4_FAIL reason=C3 manifest file sha256=baa13447… expected=eeee…` — caught at prerequisite 1 |
+| R5-6 | wrong mask-link target | `0` | `C4 PASS` — only `is-enabled == masked` is checked | `1` | `C4_FAIL reason=mask link raw target=…/decoy_target expected exactly /dev/null` |
+| R5-7 | unexpected rebind fields in the manifest | `0` | `C4 PASS` — the manifest is only `stat`-ed, never validated | `1` | `C4_manifest_problems=rollback_release_sha='deadbeef…' expected ''; rollback_release_manifest_sha256='bbbb…' expected ''` |
+| R5-8 | failed post-rollback invariant equality | `0` | `C4 PASS` — no invariant comparison exists in the rejected block | `1` | `C4_FAIL reason=protected invariants changed across rollback (pre=INV-BASELINE post=INV-DRIFTED)` |
+| R5-9 | rollback manifest mode drift `0640`→`0644` | `0` | `C4 PASS` — the mode is printed, never asserted | `1` | `C4_FAIL reason=rollback manifest mode=644 expected 640` |
+
+### 8.6 Standing D026 gaps — explicitly not closed
+
+1. **R4-5** (dangling restore destination, Python level) — no execution route on this machine.
+2. **All C1 falsifications** (`C1-F1`…`C1-F9`, §3.3) — C1 is BLOCKED; manufacturing runs for a
+   blocked path is forbidden.
+3. **All scenario-level C2 falsifications** (`C2-F1`…`C2-F7`, §4.6) — the scenarios are BLOCKED
+   on C1-GAP-B. The predicate-level cases `C2-F1`, `C2-F2`, `C2-F4` and `C2-F5` are covered by
+   the RP0-LIB runs above; `C2-F3`, `C2-F6` and `C2-F7` are **not claimed closed**.
+4. **C5** — has no procedure and therefore no falsification.
+
+The Lead is expected to reproduce every claimed run independently. Nothing in this section is a
+verdict.
+
+---
+
+## 9. What this document is not
+
+- **Not an execution record.** No block above has been run against a host; no host was touched.
+- **Not acceptance.** The Lead and fresh auditors own acceptance. This is repair round 1 of at
+  most 3 for this proposal-repair cycle.
+- **Not permission to extract scripts.** Turning any block into a deployable file is a separate,
+  not-yet-granted authorization (repair spec §9.5).
+- **Not host authority, budget lift, or per-mutation authorization.** Those remain separate
+  later gates. Every block marked `mutating-host` (only RP5/C4 remains) additionally requires
+  its own explicit named authority.
+- **Not a statement that the server is ready.**
+- **Not a closure, reopening or repair of the separate blocked `C:\PGRK` design loop.** RP0
+  specifies a possible closure route for a similar pre-evidence-root contradiction; it does not
+  close, reopen or repair that draft.
+- **Not a claim of exact 50-hour reproducibility.** The ledger baseline is the owner-ratified
+  figure in `OWNER_DECISION_AUDIT_TIERS_2026-08-09.md` §1; this document reconstructs nothing.
+- **Not a change to any other file.** No product, deployment, runtime, tool, test, schema,
+  prompt, handoff or AI-memory file was edited to produce this repair.
