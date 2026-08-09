@@ -1,7 +1,7 @@
-# Evidence index - staging unit WPLP2-20260809T125940Z-8dc78f08
+# Evidence index - staging unit WPLP2-20260809T125940Z-8dc78f08 (+ B3B successor)
 
-Generated mechanically 2026-08-09 night for Audit 2 consumption. Every hash below
-recomputed from the working tree at generation time (not copied from records).
+Generated mechanically 2026-08-10 for Audit 2 consumption. Every hash recomputed
+from the working tree at generation time (not copied from records).
 
 ## 01_RUNKIT
 
@@ -120,13 +120,139 @@ recomputed from the working tree at generation time (not copied from records).
 | operator_record/TRANSPORT_SHA256SUMS.txt | 1073 | 328f16ca47948a072e954c8e6868742105fcf281aa7267025826fe09d89f2256 |
 | STAGE3B_TRANSPORT_RECORD.md | 3637 | d54775dcb76483a1bcf920e02623b88c664b779cadf7c6a7973dc8fb55beb8dc |
 
+## 06_B3_REPAIR
+
+| file | bytes | sha256 |
+|---|---:|---|
+| audit1/AUDIT1_REPORT.md | 15667 | c92d0fccc12676cee7df5f6ce5fbc64b5f79f33f4707b2cc5820b9be62623163 |
+| AUDIT1_KICKOFF_CODEX.md | 3422 | 1fd9ad6c1f80ad22a4fe2484767058833d57b46b703790f84a591f29874d834c |
+| audit2/AUDIT2_REPORT.md | 17493 | a37c927f40cc25b430df62c46a6d5c10463ed4d98b36838128e679e7f2b7004c |
+| AUDIT2_KICKOFF_CODEX.md | 2264 | cd948468dc30144bd4117a36663cc4944309ce44af75003d30964635e707e29b |
+| audit3/AUDIT3_REPORT.md | 8918 | 501c093ae327a0a70f419d4ab08fd1dc5bafcc00e90d294e590149ba1c5190b0 |
+| AUDIT3_KICKOFF_CODEX.md | 1474 | e2bf78c7511729922920cc0c0be0607eb3d920be31d531a7b4db8f418d735af2 |
+| audit4/AUDIT4_REPORT.md | 6571 | e5e5ab685a50c1f45bab24a0a143873a6a4aef34c2c1161fbd8d68ad7f08df76 |
+| AUDIT4_KICKOFF_CODEX.md | 1654 | 2cce5a2fd053a2d192fb9563ea6ffc31462778f89f468c95d8c36079e3b265e4 |
+| audit5/AUDIT5_REPORT.md | 3605 | d2c0975ade6dca50342c0881a74af0ac1f60ed5eb0633540443038cbe910fdf7 |
+| AUDIT5_KICKOFF_CODEX.md | 1838 | c79fcf2c98bac450f15ef268912d91b752e0db3456ce0717e171e747501d5e32 |
+| audit6/AUDIT6_REPORT.md | 6059 | d3a3f85f40c5437b2ebb1ddb77b9ffe7d3ba494727a0ed0c243040e111425344 |
+| AUDIT6_KICKOFF_CODEX.md | 2447 | ba76e3ca0118e5edca4cf2781fd7c1603bece6bbc387ea4ac04a946a3aef2d43 |
+| B3_REPAIR_CYCLE_RECORD.md | 6790 | b1e997d4c9a1cceb9d9e357e6b71b7f7589930666c555308492fdab450cef8d5 |
+| KICKOFF_B3_GAP_ENV_OPTION1.md | 5767 | 2c6f05cd2f820653c7fdb0e6f0d887b27c19bebca088de7e3d7fdb1762f47f2f |
+| round1/DESIGN_NOTES.md | 16910 | 455cf34ab20f8920b76c3240c386a39e703024c0ae5f727c5e3a583fb319f40e |
+| round1/RP1-B3.sh | 13004 | 03152789e7cc3deb5adff113f6a81bff3cdaf04ff4311730ab82d02d5d9622a7 |
+| round1/RPD-VERIFY.sh | 9835 | 610996deec81dc25ef7252b77a6a585779df16acb0ce9258a634e54bd08a98ba |
+| round1/SELF_QA.md | 16706 | 8fa5894110421a4fe79ed5eb7753ec4f0e3f6ea54bb87e5ac3a124f1c22546fb |
+| round2/DESIGN_NOTES.md | 29720 | ec3810cb8c88728a10f48b71cff6991b42d8123cf01e054d3f5a276ba11409b2 |
+| round2/RP1-B3.sh | 27997 | 88ff0f23851b544e956a013c095b34180c0db04def85f04612b704348a1c2248 |
+| round2/RPD-VERIFY.sh | 29005 | 8e6edeeb232f4ed8a728810cfb4b3c5c7a9a21c0549d1d1f5a157e0d678650a9 |
+| round2/SELF_QA.md | 28572 | a80e565eca2590a990249e9ca806ae9057f73ff1dc48331645dec2196ad7b8dd |
+| ROUND2_KICKOFF.md | 3970 | 9252faa329b2933a1ab9257783f66d03b7e67975e65b67d4f5237a338b537673 |
+| round3/DESIGN_NOTES.md | 36532 | 238520b0dbe01096ac92947aad62ae4dcfa7e5248465ba280950ed52d6603a8b |
+| round3/RP1-B3.sh | 36297 | e561e8b4cf5444bebf2293046a3ea649712d3b229bd380e1c69364ab552397dd |
+| round3/RPD-VERIFY.sh | 42340 | f4c5d61de7e55bd7f2fc9f6a73754a093cb114b1c8316b85a683a78f833e63a2 |
+| round3/SELF_QA.md | 48930 | 448e3e1ffb3ef42dac1c87ce31f69573334ec4066fa1398f2b831ca039297365 |
+| ROUND3_KICKOFF.md | 3169 | eeda9140aaa0d4e13eb77c05739f687ba6abc2757dad63b223babdd2fb72ca7a |
+| round4/DESIGN_NOTES.md | 45712 | 103ffe3811dfd7764bf1b4d9bc47489fbe3cb2d72bca7c5c32e461a82440f23b |
+| round4/RP1-B3.sh | 37896 | 6f3ea022b68d80a552c4ebcb771bbb2a707bdab46a383d605ffc5b88b884becc |
+| round4/RPD-VERIFY.sh | 43940 | 3b9e78e87cecdc10ab1a10d14e79dbff530968e4075277117743c88976fa813c |
+| round4/SELF_QA.md | 69469 | 47d9c9f74ebab41e82e2edf5ee2e550768b8e541cbde8ec1ccea7dbee557a9a8 |
+| ROUND4_KICKOFF_PREPARED_NOT_DISPATCHED.md | 2787 | 4cf43909633095ee9997bbd75f0f8d04bd724cc3bda448fb7a1b061201a62db8 |
+| round5/DESIGN_NOTES.md | 45712 | 103ffe3811dfd7764bf1b4d9bc47489fbe3cb2d72bca7c5c32e461a82440f23b |
+| round5/RP1-B3.sh | 37896 | 6f3ea022b68d80a552c4ebcb771bbb2a707bdab46a383d605ffc5b88b884becc |
+| round5/RPD-VERIFY.sh | 43940 | 3b9e78e87cecdc10ab1a10d14e79dbff530968e4075277117743c88976fa813c |
+| round5/SELF_QA.md | 92455 | 0d0e8c6bf8b096fae421c990ec317687985c210f747bb869d6348b6e2ceb4d40 |
+| ROUND5_KICKOFF_DOC_ONLY.md | 3663 | d4d2119b0f5899c35d4f64bd5e321e81b375344d5ba1810a45b45c260d8ae935 |
+| round6/DESIGN_NOTES.md | 45712 | 103ffe3811dfd7764bf1b4d9bc47489fbe3cb2d72bca7c5c32e461a82440f23b |
+| round6/RP1-B3.sh | 37896 | 6f3ea022b68d80a552c4ebcb771bbb2a707bdab46a383d605ffc5b88b884becc |
+| round6/RPD-VERIFY.sh | 43940 | 3b9e78e87cecdc10ab1a10d14e79dbff530968e4075277117743c88976fa813c |
+| round6/SELF_QA.md | 112208 | 5022afb70daa2a578018265f4eb35135fe5956c35e3482301e6de2387180d755 |
+| ROUND6_KICKOFF_DOC_ONLY.md | 3855 | 3c91cbb56daaeaba7eb9e7a2cbf3b5862088ddfa79378b61d68403c9b5bee4c4 |
+
+## 07_RUNKIT_B
+
+| file | bytes | sha256 |
+|---|---:|---|
+| ARCHIVE_MEMBERS_B.txt | 3098 | d87f81215ae187a773ffd361e204a542fdf314070ba67ebccb078feb02c0f422 |
+| BLOCK_IDENTITIES_B.tsv | 1991 | f852bcee89279c7ec927109dbd899bf14c6c8719b6056579b57eed9c92792cc4 |
+| KICKOFF_STAGE1B_REFREEZE.md | 4213 | 55630664d9d23d694763fe18307b5e2840c1cbeebbdae4b0fb05450adbbf830c |
+| RP0-BOOTSTRAP.sh | 1937 | e7d748f6b41c6156de4d5c5e2d93c2b08729b1f85377b132660424024815bb33 |
+| RP0-LIB.sh | 18968 | 4a404d7b90d83aef47b3593757f86e3699b3bc2dd772f51df63ead4f10d9ab48 |
+| RP1-B3.sh | 37896 | 6f3ea022b68d80a552c4ebcb771bbb2a707bdab46a383d605ffc5b88b884becc |
+| RP3-C2A-POST.sh | 5308 | e233d29b005964e84cd6cbc2af50deccd83bb281dac39696e47de1c8890b5a27 |
+| RP3-C2B-POST.sh | 3804 | 26a1010cd9380289c5b90c08845b2af6ec31074fc5145241978a714b930bb412 |
+| RP4-C3.py | 12770 | 0520cc901e56a66fe61e0df9edc0ed33fa4b05c09d62ba8f7471ef9ff688e4a5 |
+| RP5-C4A.sh | 19353 | a5b1b2e4d4e5227b3bb1f0ea31e9e547040231913445970efe1046f4eba9e0f2 |
+| RP5-C4B.sh | 12110 | 10c4b3231042101ed9049dbf57ec3123ce902e9b18136769728a1a2e92f4037e |
+| RP5-C4C.sh | 12089 | de7301f1deb752bcc63d818348c2fdc33372a6b7d7d4f377b62bdf27d313e3a8 |
+| RPD-VERIFY.sh | 43940 | 3b9e78e87cecdc10ab1a10d14e79dbff530968e4075277117743c88976fa813c |
+| runkit_b.tar | 184320 | 888bec17cbea99a781368b7c3747d6a9085840005a686000bedaadcacb44246b |
+| runkit_b.tar.sha256 | 79 | dbe5de80619254ae4bc6f409ae1ff7c53a67d8aa1be6ec5848501a4ccf2b342b |
+| SOURCE_IDENTITY_B.txt | 3732 | 3f1151af6d7e94babe6ba819681850e7b6516f4878f308ecf2b135e79332d0b0 |
+| stage1b_build.py | 43041 | c59989113045af8874f0827e17b5938c2133dd7e0cbe60f45cebd6055bdd128c |
+| STAGE1B_RECORD.md | 14300 | 15f3811b30a085a9bf303fcc104fe7517f6ae0e87d4b853034c83aacc73142a8 |
+| syntax_validation_b.txt | 14378 | 1fc3ba141d90ea62bffac590085ec09e635f3916d5bd83959a2aba33e1006b85 |
+
+## 08_PREREG_B3B
+
+| file | bytes | sha256 |
+|---|---:|---|
+| KICKOFF_STAGE2B_PREREG.md | 6673 | 4ed6a4d43837450db0b5689ad3cbe3f313925f6fe6408cbbe7375257466c7c52 |
+| preflight_probe.sh | 599 | 1ad9bac190331268092f6e6ac6ed271942ab26d3ba6d718830e3069159700223 |
+| preflight_probe_output.txt | 515 | 25af68b78e975d1b04e0b74b72cbcfd4b803e578a918287e64ab89ec13085b24 |
+| PREREG_B3B_SHA256SUMS.txt | 877 | e537d18b770797af84e7903dd5b2cf9f30a89e2d966054970d5c082d61993509 |
+| PREREGISTRATION_B3B.md | 20703 | d829f7eb3b914f8d5288315dc7cf0c039e84129937cb9a75e88eae48266c8694 |
+| remote_close_tree_b3b.sh | 4305 | 5a9cfd5e8cec5960670fd46339f8fb15c355e2de23a34d878c0dc0e69cc50dcb |
+| remote_extract_verify_b3b.sh | 6155 | 68007732d8088f076575bd71a59e987e6f677602e272a4f36b19215e31d39750 |
+| remote_setup_b3b.sh | 3244 | 242b14ce848607ed1ae58a50d2effe03fcb13549867629578cf74d0e0a3b3866 |
+| run_b3b.sh | 2264 | 17b19bf605823297b33459b9f0f9e1f76c3e8a284609c8523ce6f95e67c80c0a |
+| SELF_QA_B3B.md | 14509 | 25489607938c6c78a3a7e9ad3174521db9874c4d01ce17bc4d5dfc88c5df924a |
+| TRANSPORT_PLAN_B3B.tsv | 3522 | a518c2fe3cc15cd4892839dd29caa21c14a358577b4269d1ddf753a6ef9a447b |
+| transport_runner_b3b.ps1 | 14342 | 90f9e19987f7136831ea2c63527eae1f8caf41276ef0602797359a2d6dcad41a |
+
+## 09_TRANSPORT_B3B
+
+| file | bytes | sha256 |
+|---|---:|---|
+| operator_record/evidence/WPLP2B-20260809T210610Z-834380c5-B3B/b3b.log | 3329 | 7b383ab5194972fca9511ae7068509929fab652c980953864ae93aa3ae60fa16 |
+| operator_record/ops/01.argv | 230 | f2417533cd26e73932cf28359108898eb374b15a231472a5f57ac9390a86fd20 |
+| operator_record/ops/01.rc | 2 | 9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa |
+| operator_record/ops/01.stderr | 0 | e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
+| operator_record/ops/01.stdout | 1343 | 35425dd24d459ad642659f64734fa7a03a3eede5f98ec9a4bed65d77c3b971d6 |
+| operator_record/ops/02.argv | 249 | a673236230d5c677afe964a6b21f48d8c17bc4e72689af98f83140422964f544 |
+| operator_record/ops/02.rc | 2 | 9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa |
+| operator_record/ops/02.stderr | 0 | e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
+| operator_record/ops/02.stdout | 0 | e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
+| operator_record/ops/03.argv | 387 | 8107e74e6608dd01dbcfe6c08080676682530c2da3c370dc46e4debc6f562890 |
+| operator_record/ops/03.rc | 2 | 9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa |
+| operator_record/ops/03.stderr | 0 | e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
+| operator_record/ops/03.stdout | 1730 | d2606dde952583bd7ab4175eb91dd7bf4188b1931af62c934b7cd20a6876bb78 |
+| operator_record/ops/04.argv | 169 | 388320996b9d1418634593c88617d7a8e37d255835b2f9c41c64d8e8d7056d8a |
+| operator_record/ops/04.rc | 2 | 9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa |
+| operator_record/ops/04.stderr | 0 | e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
+| operator_record/ops/04.stdout | 1474 | ea3bc5ab736ddaa1b7f5be39a2db8bfd52eb7095ae3b4e8987039b08a4f17a12 |
+| operator_record/ops/05.argv | 320 | 9fb2eb4d0bc4da4efd68ee45c6a2eaa9b201ba40d7505fd18a6e720bc2b940db |
+| operator_record/ops/05.rc | 2 | 9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa |
+| operator_record/ops/05.stderr | 0 | e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
+| operator_record/ops/05.stdout | 1046 | 5792218c435d939d024dee4bbf2db29b06779a2ebaa584c92a35f53c0ef08a43 |
+| operator_record/ops/06.argv | 277 | f46e0820b7ff5c08eb6cb4e7ea03ae5ad0b2371091de84c297df072df04f0c91 |
+| operator_record/ops/06.rc | 2 | 9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa |
+| operator_record/ops/06.stderr | 0 | e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
+| operator_record/ops/06.stdout | 0 | e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
+| operator_record/ops/07.argv | 63 | 43ec564358dcfaec26c05efb39f99cfc3082c1d978ed4692de9b5360c2eaedc1 |
+| operator_record/ops/07.rc | 2 | 9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa |
+| operator_record/ops/07.stderr | 1 | 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b |
+| operator_record/ops/07.stdout | 1 | 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b |
+| operator_record/TRANSPORT_RECORD.txt | 8942 | 0a59362e5674065a581417e9d7218158546a9b549a9d0f7169dcc5d690514878 |
+| operator_record/TRANSPORT_SHA256SUMS.txt | 2318 | e77cb37a156887eeb2fb899cc61fd7696dbe65041c512438f21b36e68cfc693b |
+| STAGE3B_B3B_RECORD.md | 4488 | adc9a4947a5475abacf019c2045b6ad90c0c9a829b54c9aa702c82cf9e0b45f7 |
+
 ## RUNID ledger
 
 | RUNID | stage | state | evidence binding |
 |---|---|---|---|
-| WPLP2-20260809T125940Z-8dc78f08-B3 | B3 admission | BURNED (STOP rc 3, B3-GAP-ENV) | b3.log 079d6ac9... 1784 B; set b25612df... (03_TRANSPORT) |
-| WPLP2-20260809T125940Z-8dc78f08-R45 | R4-5 | BURNED (never allocated; collateral skip) | none - no evidence tree ever existed |
-| WPLP2-20260809T125940Z-8dc78f08-R45B | R4-5 re-attempt | CONSUMED (PASS) | r45b.log 00078e7e... 4521 B; set 1f74d69a... (05_TRANSPORT_R45B) |
+| WPLP2-20260809T125940Z-8dc78f08-B3 | B3 original | BURNED (STOP rc 3, B3-GAP-ENV) | b3.log 079d6ac9... 1784 B; set b25612df... |
+| WPLP2-20260809T125940Z-8dc78f08-R45 | R4-5 | BURNED (never allocated) | none |
+| WPLP2-20260809T125940Z-8dc78f08-R45B | R4-5 retry | CONSUMED (PASS) | r45b.log 00078e7e... 4521 B; set 1f74d69a... |
+| WPLP2B-20260809T210610Z-834380c5-B3B | B3 repaired | CONSUMED (PASS) | b3b.log; set d572afe7... |
 
-Operator-side create-once record roots (outside repo, no-clobber):
-`C:\WPI_ARTIFACTS\WPLP2_TRANSPORT_WPLP2-20260809T125940Z-8dc78f08` and `...-R45B`.
+Operator-side create-once record roots (outside repo, no-clobber): `C:\WPI_ARTIFACTS\WPLP2_TRANSPORT_WPLP2-20260809T125940Z-8dc78f08`, the same suffixed `-R45B`, and `C:\WPI_ARTIFACTS\WPLP2B_TRANSPORT_WPLP2B-20260809T210610Z-834380c5`.
