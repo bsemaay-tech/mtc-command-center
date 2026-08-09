@@ -1,5 +1,28 @@
 # NEXT_STEPS
 
+## WP-L P2 UNIT CLOSED + WP-I draft audit-clean (2026-08-10 overnight)
+
+**WP-L P2 unit closed** (`6370e1fe`): `UNIT_CLOSURE_RECORD.md` + `EVIDENCE_INDEX.md` over all
+nine stage dirs, four-RUNID ledger. Both checks ever authorized to run (R4-5, repaired B3)
+ran and PASSED on the real host. Booked 2.6 h → ~26.9 h remaining.
+
+**WP-I draft is audit-clean** at round 1.3 (`fe8f1b11`, verified `2f5523c9`): Max authored →
+GLM reviewed → Codex audited (6 findings) → GLM repaired F1/F2/F5/F6 → Codex repaired F3/F4 →
+GLM independently verified both CLOSED with no regression.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Barış]** WP-I is NOT dispatchable and needs TWO things only you can give: explicit
+  written host-contact authority for the WP-I unit, and a budget lift (the 50 h balance is
+  recorded NOT REPRODUCIBLE). Until both exist, no WP-I host execution may be planned or run.
+- **[AI: Barış]** `RPD-VERIFY.sh` is accepted and sits in the kit but has NEVER executed — it
+  is root-side and no root/sudo was granted. It holds the three checks B3 defers, including
+  the unresolved `bridge.env` naming risk. Opening a privileged channel is your call.
+- **[AI: Any]** Next natural unit is Audit 2 per the v2 checklist (`AUDIT2_EVIDENCE_CHECKLIST_DRAFT_2026-08-09.md`),
+  which now has the §2b transport-evidence package. Its dispatcher must resolve the GLM
+  supplemental-vs-omitted flag.
+- **[AI: Any]** Routing is Codex-first, Max last resort (`STANDING_AUTONOMY_AUTHORITY` §A2).
+
 ## WP-L P2 — repaired B3 PASSED ON THE HOST; B3-GAP-ENV CLOSED (2026-08-09 night)
 
 **The gap is closed end to end.** Owner authorized host execution in-session; a new
