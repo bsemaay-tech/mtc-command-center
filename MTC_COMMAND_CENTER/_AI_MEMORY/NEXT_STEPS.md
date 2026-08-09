@@ -1,5 +1,18 @@
 # NEXT_STEPS
 
+## GATE A — final E source frozen at `b2c369f7`; four canonical audits running next (2026-08-09)
+
+Lead-accepted round-3 source/test/docs are committed at
+`b2c369f73abd3d90b17000e601c6f9cdc21c4cf1`; branch was clean immediately after commit. This is
+the exact canonical audit target. No integration, push, package, transfer, or staging action yet.
+
+- **[AI: Codex] RUN:** fresh Claude Opus 5 xhigh, Codex 5.6-sol xhigh, DeepSeek V4 Flash and
+  GLM-5.2 audits at `b2c369f7`; require D RED 6/29, exact `61d88f12` RED 28/29, E GREEN 29/29,
+  source/diff/syntax/compile and final cleanliness. Both flagship verdicts must accept.
+- **[AI: Any] HOLD:** A-5 FAIL; A-6..A-9 NOT RUN. Repair budget exhausted.
+
+---
+
 ## GATE A — final repair round 3 Lead re-audit ACCEPT; freeze and canonical audits next (2026-08-09)
 
 Lead independently reproduced D RED 6/29, exact `61d88f12` RED 28/29 solely on the boundary check,

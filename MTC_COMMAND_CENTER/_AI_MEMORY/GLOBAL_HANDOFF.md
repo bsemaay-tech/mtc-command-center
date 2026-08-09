@@ -1,5 +1,14 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-08-09 — Final Gate A E source frozen at `b2c369f7`
+
+Lead-accepted round-3 candidate is committed at
+`b2c369f73abd3d90b17000e601c6f9cdc21c4cf1`; worktree clean after commit. Four fresh canonical
+audits at that exact SHA are next. No integration/push/package/transfer/staging; A-5 remains FAIL,
+A-6..A-9 NOT RUN; repair budget exhausted.
+
+---
+
 ## [Codex GPT-5.6-sol] 2026-08-09 — Gate A E final repair Lead re-audit ACCEPT; canonical audits next
 
 Lead inspected the actual final-round diff and reproduced D RED 6/29, exact `61d88f12` RED 28/29

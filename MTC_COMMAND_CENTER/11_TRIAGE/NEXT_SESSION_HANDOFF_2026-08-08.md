@@ -1,5 +1,14 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ NEWEST CHECKPOINT — final E source frozen at `b2c369f7`; canonical audits next (2026-08-09)
+>
+> Lead-accepted round-3 source/test/docs are committed at
+> `b2c369f73abd3d90b17000e601c6f9cdc21c4cf1`; clean after commit. Four fresh canonical audits at
+> that exact SHA are next. No integration/push/package/transfer/staging. A-5 FAIL; A-6..A-9 NOT
+> RUN; repair budget exhausted.
+>
+> ---
+
 > ## ▶ NEWEST CHECKPOINT — final repair round 3 Lead re-audit ACCEPT; canonical audits next (2026-08-09)
 >
 > Lead independently reproduced exact D RED 6/29, exact `61d88f12` RED 28/29 solely on the new
