@@ -1,5 +1,11 @@
 # GLOBAL_HANDOFF
 
+## [Claude Fable 5] 2026-08-09 — TencentDB Agent Memory decision + TOOL-OFFLOAD v1 + REPO_MAP + Hermes status
+
+Evaluated TencentDB-Agent-Memory (v2.0.0, 2026-08-03) against a ChatGPT/YouTube report. **Decision: NOT installed in this repo** (governance conflict with canonical `_AI_MEMORY`, open prompt-cache regression upstream #120, no native Codex support, 6-day-old v2). Hermes-sandbox pilot approved in principle but **blocked: no Docker on machine**. Full record: `11_TRIAGE/TENCENTDB_AGENT_MEMORY_DECISION_2026-08-09.md`. Adopted two daemon-free patterns instead: `_AI_MEMORY/TOOL_OUTPUT_OFFLOAD_PROTOCOL.md` (TOOL-OFFLOAD v1, active convention) and `_AI_MEMORY/REPO_MAP.md` (250-line module map; DeepSeek-generated from mechanical inventory, Lead-audited; 16 sections marked `(inferred)`; regenerate after structural merges). Hermes findings: CLI one-shot works (`hermes -z ... --cli`); DeepSeek provider replied HERMES-OK; primary `openai-codex`/gpt-5.6-sol backend gives no response — "credential pool: no available entries" since 2026-08-08 (ChatGPT Pro quota/credential). HERMES-004 memory import still awaits Barış.
+
+**PICK UP EXACTLY HERE:** nothing pending from this thread except Barış decisions: (a) install Docker Desktop → then Lead/Codex installs TencentDB for Hermes pilot (Hermes must NOT self-install), (b) fix/refresh openai-codex credentials for Hermes, (c) HERMES-004 approval. WP-L P2 queue unaffected.
+
 ## [Codex GPT-5.6] 2026-08-09 — Round-2 package Claude flagship accepted
 
 Fresh `.claude-max` `claude-opus-5` xhigh returned `PASS-WITH-NITS`, zero required findings, on exact
