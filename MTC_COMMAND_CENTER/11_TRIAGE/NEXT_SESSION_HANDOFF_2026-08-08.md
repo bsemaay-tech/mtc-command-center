@@ -1,5 +1,14 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ PICK UP EXACTLY HERE — package `3fa33555` Claude flagship PASS-WITH-NITS (Codex GPT-5.6, 2026-08-09)
+>
+> Fresh `.claude-max` `claude-opus-5` xhigh accepted exact package `3fa33555`, zero required findings,
+> clean isolated worktree. Record:
+> `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_DISPATCH_PACKAGE_ROUND2_AUDIT_2026-08-09.md`.
+>
+> Fresh Codex xhigh + GLM audits of the same exact package next. Proposal remains 0/3; do not implement or
+> take host action until the package floor is complete.
+
 > ## ▶ PICK UP EXACTLY HERE — package repair round 2/3; flagship re-audit required (Codex GPT-5.6, 2026-08-09)
 >
 > GLM accepted package round 1; Codex found three Lead-reproduced defects: superseded pins, wrong

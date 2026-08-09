@@ -1,5 +1,17 @@
 # NEXT_STEPS
 
+## WP-L P2 — round-2 package Claude flagship PASS-WITH-NITS (2026-08-09)
+
+Fresh `.claude-max` `claude-opus-5` xhigh audit accepted exact package `3fa33555`: zero required findings,
+clean isolated worktree. Record:
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_DISPATCH_PACKAGE_ROUND2_AUDIT_2026-08-09.md`.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Codex]** Fresh fourth-account `gpt-5.6-sol` xhigh audit of byte-exact `3fa33555`.
+- **[AI: Any]** Fresh GLM-5.2 detection audit; DeepSeek nonexecution never acceptance.
+- **[AI: Claude]** Do not implement yet; package awaits Codex and unresolved-finding floor.
+
 ## WP-L P2 — dispatch package repair round 2/3; canonical re-audit next (2026-08-09)
 
 Round-1 package re-audits: GLM `PASS-WITH-NITS`; Codex `REQUEST_CHANGES`. Lead reproduced three findings:
