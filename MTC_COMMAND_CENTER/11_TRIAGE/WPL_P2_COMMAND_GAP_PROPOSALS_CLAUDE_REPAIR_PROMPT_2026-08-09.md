@@ -62,10 +62,12 @@ proposal/design artifact, not host authorization and not extracted runnable file
    Include every required RED/GREEN case.
 6. RP5/C4: enforce rollback-manifest object-and-link no-clobber, accepted C3 evidence, exact starting
    state, a mutation-free dry run, then one stop+mask-only invocation. Pass no rebind SHA arguments and
-   state explicitly that the resulting rollback-manifest no-rebind fields must be empty. Require exact
-   mask/link/status/process outcomes, a newly created rollback manifest at exactly `0640 root:root` with
-   every expected field/value validated, and fresh post-rollback protected-invariant equality.
-   Filename/size equality is diagnostic only. Include every required RED/GREEN case.
+   require `rollback_release_sha` and `rollback_release_manifest_sha256` empty. Require
+   `first_start_unit_sha256` to equal the preregistered installed first-start unit hash when that unit is
+   present, and empty only if its absence was preregistered. Require exact mask/link/status/process
+   outcomes, a newly created rollback manifest at exactly `0640 root:root` with every expected field/value
+   validated, and fresh post-rollback protected-invariant equality. Filename/size equality is diagnostic
+   only. Include every required RED/GREEN case.
 7. RP6/C5: keep only the authority statement. Add no executable credential, network, broker, alternate
    start, TESTNET, ARM, or order procedure.
 

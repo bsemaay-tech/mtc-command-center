@@ -1,5 +1,19 @@
 # NEXT_STEPS
 
+## WP-L P2 — post-acceptance package defect repaired; re-audit required (2026-08-09)
+
+GLM source audit found and Lead reproduced that no-rebind `first_start_unit_sha256` is the installed unit
+hash when present, not empty. The bad rule entered as an optional audit nit and propagated into the
+prompt/checklist; prior package acceptances are superseded. Exact repair record:
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_DISPATCH_PACKAGE_POST_ACCEPTANCE_REPAIR_2026-08-09.md`.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Any]** Freeze and fresh re-audit repaired package; do not dispatch Claude yet.
+- **[AI: Codex]** Require executing GLM-5.2 and `gpt-5.6-sol` xhigh re-audits before package acceptance.
+- **[AI: Claude]** Proposal implementation remains 0/3; wait for repaired-package acceptance.
+- **[AI: Any]** No host/authority hold changed.
+
 ## WP-L P2 — candidate anchor map frozen (2026-08-09)
 
 Created `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_CANDIDATE_ANCHOR_MAP_2026-08-09.md` with exact candidate

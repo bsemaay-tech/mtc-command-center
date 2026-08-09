@@ -53,7 +53,7 @@ Lead reads each exact candidate blob, not the live branch copy, and records line
 - `IBKR_PAPER_BRIDGE/deploy/linux/verify.sh`: exact `0555`, ownership, candidate/payload manifest binding,
   ancillary path requirements;
 - `IBKR_PAPER_BRIDGE/deploy/linux/rollback.sh`: dry-run behavior, symlink guard, stop/mask operations,
-  unconditional rollback-manifest creation, no-rebind field behavior;
+  unconditional rollback-manifest creation, and exact no-rebind field derivation;
 - first-start systemd template: no `[Install]`, restart/timeout/final-signal settings and canonical unit
   path assumptions.
 
@@ -149,8 +149,10 @@ rebind SHA arguments.
 
 Require: inactive; exact `is-enabled=masked`; exact `/dev/null` link; zero writer/listener/cgroup with
 error adjudication; newly created `0640 root:root` rollback manifest; every field validated including
-empty no-rebind fields; fresh post-rollback bundle verifies and protected invariants equal the genuine
-pre-rollback values. Filename/size is diagnostic only.
+empty `rollback_release_sha` and `rollback_release_manifest_sha256`; `first_start_unit_sha256` equals the
+preregistered installed first-start unit hash when present and is empty only if absence was preregistered;
+fresh post-rollback bundle verifies and protected invariants equal the genuine pre-rollback values.
+Filename/size is diagnostic only.
 
 Local RED/GREEN with command/systemd stubs: pre-existing regular manifest; dangling manifest link;
 dry-run mutation; same-size protected mutation; wrong state-manifest hash; wrong mask target; unexpected

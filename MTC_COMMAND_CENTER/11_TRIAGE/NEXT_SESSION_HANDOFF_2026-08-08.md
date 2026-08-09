@@ -1,5 +1,14 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ PICK UP EXACTLY HERE — package defect repaired; prior acceptances superseded (Codex GPT-5.6, 2026-08-09)
+>
+> Candidate no-rebind `first_start_unit_sha256` is the installed unit hash when present, not empty; only
+> target-release fields are empty. Lead reproduced and repaired prompt/checklist/map. Record:
+> `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_DISPATCH_PACKAGE_POST_ACCEPTANCE_REPAIR_2026-08-09.md`.
+>
+> Fresh GLM-5.2 + Codex xhigh package re-audits are required before Claude dispatch. Proposal remains 0/3;
+> no host/authority gate changed.
+
 > ## ▶ PICK UP EXACTLY HERE — frozen candidate anchor map ready (Codex GPT-5.6, 2026-08-09)
 >
 > `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_CANDIDATE_ANCHOR_MAP_2026-08-09.md` freezes candidate `2ce41e34`

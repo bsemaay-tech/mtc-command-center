@@ -1,5 +1,12 @@
 # WP-L P2 proposal-repair specification — independent audit (2026-08-09)
 
+> **Post-audit correction (2026-08-09):** optional nit 2 below was source-wrong and is withdrawn. In
+> candidate no-rebind rollback, only `rollback_release_sha` and
+> `rollback_release_manifest_sha256` are empty. `first_start_unit_sha256` equals the installed unit hash
+> when present (`rollback.sh:113-116,168`). The accepted specification itself did not require all fields
+> empty, so its contract verdict remains; affected downstream prompt/checklist acceptances are superseded
+> pending fresh re-audit.
+
 ## Verdict
 
 **PASS-WITH-NITS.** Exact audited commit:
@@ -46,7 +53,8 @@ manifest write; first-start template no `[Install]`, timeout and final signal.
 ## Optional nits — accepted, not required
 
 1. Add one ancillary-path mode/owner drift fixture to RP1 for symmetry.
-2. State explicitly that stop+mask-only C4 requires empty no-rebind fields in the rollback manifest.
+2. **WITHDRAWN by post-audit correction above:** the original empty-all-no-rebind-fields nit was
+   candidate-source wrong.
 3. When C1's two gaps eventually close, add its own explicit falsification list.
 4. Name the restore primitive as `src_conn.backup(dst_conn)` with read-only source/fresh destination.
 

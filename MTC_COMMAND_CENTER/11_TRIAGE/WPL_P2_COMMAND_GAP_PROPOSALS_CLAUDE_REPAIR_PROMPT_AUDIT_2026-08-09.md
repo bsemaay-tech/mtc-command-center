@@ -1,5 +1,10 @@
 # WP-L P2 Claude repair prompt — GLM-5.2 audit (2026-08-09)
 
+> **SUPERSEDED (2026-08-09):** post-acceptance candidate-source audit reproduced a required defect in the
+> folded optional no-rebind-field wording. This historical verdict does not accept the repaired prompt;
+> fresh re-audit is required. See
+> `WPL_P2_COMMAND_GAP_PROPOSALS_DISPATCH_PACKAGE_POST_ACCEPTANCE_REPAIR_2026-08-09.md`.
+
 ## Verdict
 
 **PASS-WITH-NITS. Zero required repairs.** The durable prompt is safe to dispatch as fresh Claude

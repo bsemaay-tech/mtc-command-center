@@ -1,5 +1,10 @@
 # WP-L P2 dispatch package — Codex fourth-account audit (2026-08-09)
 
+> **SUPERSEDED (2026-08-09):** a later candidate-source audit found and Lead reproduced an incorrect
+> no-rebind-field expectation missed by this audit. This historical verdict cannot authorize dispatch of
+> the repaired package. Fresh GLM and Codex re-audits are required. See
+> `WPL_P2_COMMAND_GAP_PROPOSALS_DISPATCH_PACKAGE_POST_ACCEPTANCE_REPAIR_2026-08-09.md`.
+
 ## Verdict
 
 **PASS-WITH-NITS. Zero required findings.** Fresh `gpt-5.6-sol` xhigh review accepted the audited Claude

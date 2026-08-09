@@ -1,5 +1,16 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6] 2026-08-09 — Post-acceptance dispatch-package defect repaired
+
+GLM anchor-map audit exposed a candidate-fidelity defect missed by prior audits: in no-rebind rollback,
+`first_start_unit_sha256` is the installed unit hash when present; only the two target-release fields are
+empty. Lead reproduced `rollback.sh:113-116,164-168`, repaired prompt/checklist/map, and superseded prior
+package acceptances. Record:
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_DISPATCH_PACKAGE_POST_ACCEPTANCE_REPAIR_2026-08-09.md`.
+
+**PICK UP EXACTLY HERE:** fresh GLM + Codex xhigh package re-audits. Do not dispatch Claude until both
+accept. Proposal implementation remains 0/3; all authority holds remain.
+
 ## [Codex GPT-5.6] 2026-08-09 — Frozen candidate anchor map prepared
 
 `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_CANDIDATE_ANCHOR_MAP_2026-08-09.md` records exact candidate

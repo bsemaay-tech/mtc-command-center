@@ -37,7 +37,7 @@ file-copy substitute, or custom JSON hash is not candidate fidelity.
 
 - `:41-48` — mutating candidate commands pass through `run()`; `MTC_DRY_RUN=1` prints and returns without
   executing the command.
-- `:95-104` — `assert_no_writable_paths`; exact predicate is
+- `:95-105` — `assert_no_writable_paths`; exact predicate is
   `find "$root" ! -type l -perm /222 -print -quit`, and `find` failure is a candidate failure.
 
 The old checklist pointer `deploy/linux/common.sh` is absent at the candidate. The exact path includes
@@ -49,30 +49,36 @@ The old checklist pointer `deploy/linux/common.sh` is absent at the candidate. T
 - `:82-98` — release manifest file hash, payload `sha256sum`, and exact release marker are separate checks.
 - `:105-106` — venv root requires exact `0555 root:root` and `/222` scan.
 - `:124-128` — exact state/log/config/env/install-manifest modes and owners.
-- `:129-134` — install manifest must bind both candidate release SHA and release/payload manifest SHA.
+- `:129-135` — install manifest must bind both candidate release SHA and release/payload manifest SHA.
 - `:138-146` — candidate fails if env file defines `HL_LIVE_ACK` or `MTC_BRIDGE_START_MODE`.
-- `:155-190` — installed unit path/content, exact release and venv bindings, and unit contract checks.
+- `:155-197` — installed unit path/content, exact release and venv bindings, and unit contract checks.
 
 Proposal implications: B3 cannot call a full post-start `verify.sh`, but its bounded substitute must not
 weaken these relevant predicates or collapse read/tool errors into PASS.
 
 ## 4. `deploy/linux/rollback.sh`
 
-- `:42-50` — parses paired rebind arguments, required state-manifest arguments, and `--dry-run`.
+- `:42-52` — parses paired rebind arguments, required state-manifest arguments, and `--dry-run`.
 - `:57-68` — state manifest/hash required; rebind SHA arguments must be supplied together when either is
   present.
-- `:70-76` — rollback-manifest guard calls `assert_not_symlink` only; it does not reject an existing
+- `:70-78` — rollback-manifest guard calls `assert_not_symlink` only; it does not reject an existing
   regular file. Steady unit presence is rejected.
-- `:79-100` — stop/mask behavior and candidate post-stop local checks; dry-run goes through `run()`.
+- `:79-101` — stop/mask behavior and candidate post-stop local checks; dry-run goes through `run()`.
+- `:113-116` — `UNIT_SHA` is populated from the currently installed first-start unit when present,
+  independently of the later rebind branch.
 - `:148-155` — rebind-only unit installation/daemon-reload/mask path.
 - `:157-180` — when not dry-run, rollback manifest is unconditionally written with `cat >`, then
-  `root:root` and `0640`. No-rebind fields derive from empty `TARGET_SHA`, `TARGET_MANIFEST_SHA256`, and
-  `UNIT_SHA`.
+  `root:root` and `0640`. In no-rebind mode, `rollback_release_sha` and
+  `rollback_release_manifest_sha256` are empty; `first_start_unit_sha256` equals the installed unit hash
+  when present and is empty only when that unit file is absent.
 
 Proposal implications: C4 must prove manifest object-and-link absence immediately before use, validate a
-mutation-free dry run, invoke stop+mask only with no rebind arguments, require exact empty no-rebind
-fields, and prove protected invariant equality. The candidate's symlink-only guard does not supply
-regular-file no-clobber protection.
+mutation-free dry run, invoke candidate rollback once without rebind arguments, require the two empty
+target-release fields plus the exact preregistered installed-unit hash/absence result, and prove protected
+invariant equality. The candidate's symlink-only guard does not supply regular-file no-clobber protection.
+
+Stop/mask at `:79-86` is unconditional. A no-rebind invocation deliberately omits both target SHA
+arguments, so the additional rebind install/daemon-reload/remask branch at `:117-155` is skipped.
 
 ## 5. First-start unit template
 

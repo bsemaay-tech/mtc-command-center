@@ -1,5 +1,10 @@
 # WP-L P2 Lead acceptance checklist — audit and repair record (2026-08-09)
 
+> **SUPERSEDED (2026-08-09):** post-acceptance candidate-source audit reproduced a required defect in the
+> no-rebind-field expectation. Byte-exact checklist `456968bb` is no longer accepted; the repaired
+> checklist requires fresh audit. See
+> `WPL_P2_COMMAND_GAP_PROPOSALS_DISPATCH_PACKAGE_POST_ACCEPTANCE_REPAIR_2026-08-09.md`.
+
 ## Round 1 verdict
 
 **REQUEST_CHANGES.** GLM-5.2 executed a read-only four-file audit of checklist commit `313bc187` and
