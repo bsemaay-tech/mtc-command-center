@@ -1,5 +1,20 @@
 # NEXT_STEPS
 
+## WP-L P2 — dispatch package repair round 2/3; canonical re-audit next (2026-08-09)
+
+Round-1 package re-audits: GLM `PASS-WITH-NITS`; Codex `REQUEST_CHANGES`. Lead reproduced three findings:
+superseded normative pins, incorrect GLM+Codex acceptance floor, and missing implementer-executed D026
+evidence. Round-2 repair removes old pins, restores Claude+Codex flagship floor, requires safe local actual
+RED/GREEN commands+outputs, and corrects `verify.sh:155-205`. Record:
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_DISPATCH_PACKAGE_POST_ACCEPTANCE_REPAIR_2026-08-09.md`.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Claude]** Fresh Opus-5 xhigh package audit first; not implementation.
+- **[AI: Codex]** Fresh `gpt-5.6-sol` xhigh package re-audit; GLM fresh detection audit.
+- **[AI: Claude]** Proposal implementation stays 0/3 until canonical package floor accepts.
+- **[AI: Any]** No host/authority hold changed.
+
 ## WP-L P2 — post-acceptance package defect repaired; re-audit required (2026-08-09)
 
 GLM source audit found and Lead reproduced that no-rebind `first_start_unit_sha256` is the installed unit

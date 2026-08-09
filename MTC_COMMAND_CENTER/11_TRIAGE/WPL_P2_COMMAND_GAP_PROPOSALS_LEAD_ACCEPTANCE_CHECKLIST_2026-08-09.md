@@ -10,7 +10,9 @@ Frozen authorities:
 
 - candidate: `2ce41e34bceb599d80af24c5c33d835820ec321b`;
 - accepted repair specification: `9ac60ac652f4a221316465cdbc24516aa391f5ce`;
-- audited dispatch prompt checkpoint: `fbb5ca61a1a2bc368fd7b9bbf7f356d440e5bf20`;
+- repaired dispatch package: exact commit frozen and accepted by the fresh canonical package audits;
+- historical prompt checkpoint `fbb5ca61a1a2bc368fd7b9bbf7f356d440e5bf20` is superseded and MUST NOT
+  be used as a dispatch source;
 - rejected proposal baseline: `779bd038957a192db47ff7ad68eb51304a2fba46`;
 - required findings: F1-F9 in `WPL_P2_COMMAND_GAP_PROPOSALS_AUDIT_2026-08-09.md`.
 
@@ -28,6 +30,7 @@ proposal_blob_before    : <git rev-parse HEAD:<proposal path>>
 proposal_sha_after      : <frozen implementation commit>
 proposal_blob_after     : <git rev-parse <sha>:<proposal path>>
 candidate_sha           : 2ce41e34bceb599d80af24c5c33d835820ec321b
+dispatch_package_sha    : <exact repaired package commit accepted by fresh canonical package audits>
 repair_round            : 1/3, 2/3, or 3/3
 ```
 

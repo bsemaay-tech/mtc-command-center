@@ -1,5 +1,15 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ PICK UP EXACTLY HERE — package repair round 2/3; flagship re-audit required (Codex GPT-5.6, 2026-08-09)
+>
+> GLM accepted package round 1; Codex found three Lead-reproduced defects: superseded pins, wrong
+> acceptance floor, and no implementer-executed D026 evidence. Round 2 repairs all three and corrects the
+> unit range. Record:
+> `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_DISPATCH_PACKAGE_POST_ACCEPTANCE_REPAIR_2026-08-09.md`.
+>
+> Fresh Claude Opus-5 xhigh + Codex xhigh package audits must accept; GLM re-audits. Proposal remains 0/3;
+> do not dispatch implementation or take host action before package acceptance.
+
 > ## ▶ PICK UP EXACTLY HERE — package defect repaired; prior acceptances superseded (Codex GPT-5.6, 2026-08-09)
 >
 > Candidate no-rebind `first_start_unit_sha256` is the installed unit hash when present, not empty; only

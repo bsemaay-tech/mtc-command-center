@@ -1,5 +1,16 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6] 2026-08-09 — Dispatch package repair round 2/3
+
+Round-1 re-audit split: GLM accepted, Codex found three required defects. Lead reproduced and repaired
+superseded normative pins, the wrong GLM+Codex acceptance floor, and missing implementer-executed D026
+evidence; `verify.sh` range is corrected to `155-205`. Full record:
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_DISPATCH_PACKAGE_POST_ACCEPTANCE_REPAIR_2026-08-09.md`.
+
+**PICK UP EXACTLY HERE:** fresh Claude Opus-5 xhigh + Codex xhigh package audits must accept; GLM runs
+fresh detection audit. Only then start a separate fresh Claude implementation session. Proposal remains
+0/3 and all authority holds remain.
+
 ## [Codex GPT-5.6] 2026-08-09 — Post-acceptance dispatch-package defect repaired
 
 GLM anchor-map audit exposed a candidate-fidelity defect missed by prior audits: in no-rebind rollback,

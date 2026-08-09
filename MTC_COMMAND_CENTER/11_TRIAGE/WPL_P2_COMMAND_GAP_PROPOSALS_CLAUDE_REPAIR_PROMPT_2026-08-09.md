@@ -76,6 +76,26 @@ blocks, not host-runnable) and which are blocked future design. No acknowledged 
 a PASS path. Do not claim acceptance, closure of `C:\PGRK`, permission to extract scripts, exact 50-hour
 reproducibility, or server readiness.
 
+## Required implementer D026 evidence
+
+For every applicable RP0, RP1, RP4, and RP5 falsification that can be exercised without a real host,
+execute genuine local RED and GREEN before returning:
+
+- RED uses the exact rejected/pre-fix block or an equivalent deliberate mutation that preserves the named
+  defect; GREEN uses the repaired proposed helper/block;
+- use a fresh OS temporary root and local command/systemd/rollback stubs only; never touch `/home/gatea`,
+  run real `systemctl`, invoke candidate `rollback.sh`, contact a host, or extract a deployable script;
+- the harness must exercise the actual proposed predicate/helper text under stub control, not a
+  reimplementation of its logic;
+- use proven Git Bash/WSL, or a Python `subprocess` harness that invokes the actual proposed snippet and
+  stub executables. If no safe execution route exists, stop as `BLOCK` rather than claiming closure;
+- record each command, actual RED output/rc, and actual GREEN output/rc in a concise D026 evidence section
+  inside the writable proposal document and in your final report;
+- preserve the fresh temporary evidence directory on any failure and report its exact path.
+
+C1 and blocked C2 dependencies remain non-executable; C5 has no procedure. Do not manufacture D026 runs
+for those blocked paths. Lead will independently reproduce every claimed local falsification.
+
 ## Self-QA and response contract
 
 Before returning:
@@ -84,8 +104,10 @@ Before returning:
 2. Run `git status --short` and prove only the exact writable file changed during your task.
 3. Re-read the edited document against RP0-RP6 and F1-F9.
 4. Re-check every candidate API/mode/status/hash claim against the exact named candidate anchors.
-5. Do not execute proposed shell/Python blocks on a host. Local static inspection only.
+5. Do not execute proposed shell/Python blocks on a host. Execution is limited to the safe local temporary
+   D026 harness above; all other review is static.
 
-Return a compact implementation report containing: changed file, RP0-RP6 mapping, self-QA commands and
-results, any unresolved blocker, and the exact final `git status --short`. Do not claim PASS; the Lead and
-fresh auditors own acceptance. This is repair round 1 of at most 3 for this new proposal-repair cycle.
+Return a compact implementation report containing: changed file, RP0-RP6 mapping, D026 command/output
+matrix, self-QA commands and results, any unresolved blocker, and the exact final `git status --short`.
+Do not claim PASS; the Lead and fresh auditors own acceptance. This is repair round 1 of at most 3 for
+this new proposal-repair cycle.

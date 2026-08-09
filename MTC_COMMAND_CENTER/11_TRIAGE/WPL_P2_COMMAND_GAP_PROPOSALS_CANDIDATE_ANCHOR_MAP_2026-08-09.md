@@ -51,7 +51,7 @@ The old checklist pointer `deploy/linux/common.sh` is absent at the candidate. T
 - `:124-128` — exact state/log/config/env/install-manifest modes and owners.
 - `:129-135` — install manifest must bind both candidate release SHA and release/payload manifest SHA.
 - `:138-146` — candidate fails if env file defines `HL_LIVE_ACK` or `MTC_BRIDGE_START_MODE`.
-- `:155-197` — installed unit path/content, exact release and venv bindings, and unit contract checks.
+- `:155-205` — installed unit path/content, exact release and venv bindings, and unit contract checks.
 
 Proposal implications: B3 cannot call a full post-start `verify.sh`, but its bounded substitute must not
 weaken these relevant predicates or collapse read/tool errors into PASS.
@@ -108,8 +108,11 @@ map. A live-branch match is not candidate evidence.
 
 ## 7. Next steps
 
-1. Dispatch the audited Claude repair prompt at the first exact account-capacity window.
+1. Do not dispatch until the repaired package commit has fresh `claude-opus-5` xhigh and
+   `gpt-5.6-sol` xhigh accepting verdicts plus no unresolved Lead-reproduced required finding from any
+   canonical auditor.
 2. Freeze the resulting one-file proposal commit.
-3. Use this map plus byte-exact accepted checklist `456968bb` for Lead reproduction.
+3. Use this map plus the repaired checklist from that same accepted package commit. Historical checklist
+   `456968bb` is superseded and MUST NOT be used.
 4. Preserve genuine local RED/GREEN commands and outputs; text assertions are not D026 evidence.
 5. No host/script transfer/trading/deployment authority follows from this map.
