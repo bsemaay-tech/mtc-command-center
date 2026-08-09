@@ -40,6 +40,13 @@ milestone so the next fresh session resumes cleanly.
 
 ## Milestone log (newest first — update on every milestone)
 
+- 2026-08-10 ~00:50: **WP-L P2 UNIT CLOSED** (`6370e1fe`) — closure record + evidence
+  index over all nine stage dirs, four-RUNID ledger, 2.6 h booked (~26.9 h left). WP-I
+  round 1.3 closed F3+F4 (`fe8f1b11`), so the whole Codex audit is now applied; GLM
+  verifying independently. Next: consume GLM verdict → commit → morning summary ~06:30.
+  Still true: RPD-VERIFY never executed (root-side, no root granted); C1–C5 BLOCKED;
+  WP-I not dispatchable (needs host-contact authority + budget lift).
+
 - 2026-08-10 ~00:15: **REPAIRED B3 PASSED ON THE HOST — B3-GAP-ENV CLOSED.** Owner
   authorized host execution + Codex-first routing (`STANDING_AUTONOMY_AUTHORITY` §A1–A3).
   Stage 1B kit committed `979e4322` (10 blocks, archive `888bec17`, deterministic).
