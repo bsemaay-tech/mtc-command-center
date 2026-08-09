@@ -56,3 +56,12 @@ rulebook we froze says three rounds is the limit, so I stopped and am asking:
 
 Default if you say nothing: it stays blocked (Option B) — nothing runs on the staging
 machine either way without your separate go-ahead.
+
+## AUTHORIZATION UPDATE — 2026-08-09 ~21:35 local
+
+Barış authorized **Option A** in-session (direct answer to the Lead's question:
+"Yes, run round 4"). Bounded round 4 dispatched to Claude Max per
+`ROUND4_KICKOFF_PREPARED_NOT_DISPATCHED.md` (scope: exactly the two audit-3
+survivors). On closure-audit PASS: Stage 1B runkit re-freeze proceeds. Host-execution
+authorization is NOT included — running the repaired B3 against staging remains a
+separate future owner decision.
