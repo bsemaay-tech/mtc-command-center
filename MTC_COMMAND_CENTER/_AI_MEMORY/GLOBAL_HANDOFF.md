@@ -1,5 +1,16 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6] 2026-08-09 — Exact Claude proposal-repair prompt ready
+
+Created `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_CLAUDE_REPAIR_PROMPT_2026-08-09.md`. The standalone
+contract freezes accepted spec `9ac60ac6`, permits only the rejected proposal document to change,
+implements RP0-RP6, folds all four optional nits, and explicitly preserves C1/C5 blocks and every host,
+budget, credential, broker, TESTNET, ARM/order, WP-V/KVM2/master/old-payload/economic hold.
+
+**PICK UP EXACTLY HERE:** verify the alternate Claude CLI route, dispatch repair round 1/3 if exact
+flagship access is available, then independently audit the actual one-file diff. Do not use GLM/DeepSeek
+as the protected-scope implementer and do not trust the counterpart report without reproduction.
+
 ## [Codex GPT-5.6] 2026-08-09 — F1-F9 repair specification accepted PASS-WITH-NITS
 
 Exact commit `9ac60ac652f4a221316465cdbc24516aa391f5ce` is accepted as a **specification contract only**.

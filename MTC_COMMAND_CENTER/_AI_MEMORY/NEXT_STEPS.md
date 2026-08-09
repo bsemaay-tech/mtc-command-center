@@ -1,5 +1,21 @@
 # NEXT_STEPS
 
+## WP-L P2 — exact Claude repair prompt ready (2026-08-09)
+
+Durable counterpart contract:
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_CLAUDE_REPAIR_PROMPT_2026-08-09.md`. It freezes accepted spec
+`9ac60ac6`, limits writes to the rejected proposal document, implements RP0-RP6, folds the four optional
+nits, and preserves every host/trading/deployment hold.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Codex]** Verify the alternate Claude CLI account without exposing credentials.
+- **[AI: Claude]** If exact flagship access is available, execute this prompt as repair round 1/3.
+- **[AI: Codex]** Independently inspect the resulting one-file diff and reproduce F1-F9 closure before
+  freezing or auditing it. Do not accept the implementer report by itself.
+- **[AI: Any]** No host action, script extraction, budget lift, credential/broker/TESTNET/ARM/order action,
+  WP-V/KVM2/master/old-payload action, or reopening of `C:\PGRK` is authorized.
+
 ## WP-L P2 — F1-F9 repair specification ACCEPTED PASS-WITH-NITS (2026-08-09)
 
 Accepted exact commit `9ac60ac652f4a221316465cdbc24516aa391f5ce`. GLM-5.2 executed the independent

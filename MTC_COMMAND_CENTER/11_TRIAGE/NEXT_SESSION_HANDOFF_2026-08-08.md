@@ -1,5 +1,15 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ PICK UP EXACTLY HERE — exact Claude proposal-repair prompt ready (Codex GPT-5.6, 2026-08-09)
+>
+> Use `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_CLAUDE_REPAIR_PROMPT_2026-08-09.md`. It freezes accepted
+> spec `9ac60ac6`, allows one proposal file only, implements RP0-RP6, folds all optional nits, and keeps
+> C1/C5 blocked. Verify the alternate Claude CLI account; if exact flagship access works, dispatch repair
+> round 1/3. Lead must inspect the real diff and reproduce F1-F9 before acceptance.
+>
+> No host/script transfer/budget/credential/broker/TESTNET/ARM/order/WP-V/KVM2/master/old-payload/
+> economic action is authorized. Do not reopen `C:\PGRK`; exact 50 h balance remains NOT REPRODUCIBLE.
+
 > ## ▶ PICK UP EXACTLY HERE — F1-F9 repair spec ACCEPTED PASS-WITH-NITS (Codex GPT-5.6, 2026-08-09)
 >
 > Exact accepted spec commit: `9ac60ac652f4a221316465cdbc24516aa391f5ce`. GLM-5.2 executed
