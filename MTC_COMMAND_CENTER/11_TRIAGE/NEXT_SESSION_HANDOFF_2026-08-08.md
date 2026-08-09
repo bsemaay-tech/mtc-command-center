@@ -1,5 +1,29 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ NEWEST CHECKPOINT — A-7 preflight PASS; execute A-7 D next (2026-08-09)
+>
+> Lead-performed read-only A-7 preflight at checkpoint `cfccd617`; accepted candidate `2ce41e34`
+> unchanged. Remote D tar `/home/gatea/gatea-run-kit-20260808D-2ce41e34.tar` (SHA-256
+> `e8a52e3c…e0d3`, 71680 B) and extracted kit verify: seven SHA256SUMS OK, A-7 syntax rc0, A-7
+> script SHA-256 `1b3dd379…9445f` / 6191 B / CR0. A-7 evidence log absent. Production safe:
+> active/running PID189813, Restart=no/NRestarts0, one `127.0.0.1:8790` listener, exact HTTP200
+> credential-free DISARMED state_version1, all network/exchange/credential/ARM flags off.
+> Noninteractive command-family sudo preflight (protected output suppressed): installed-candidate
+> Python executable, DB path readable, both documented log files regular with stat/sha256sum,
+> journalctl works; only booleans/identities printed, no DB rows/log/journal/credential/env values.
+> First verifier stopped at generic `sudo -n -v` (`a password is required`) — verifier-design
+> defect, not an A-7 or sudo failure: timestamp validation is not a valid proxy for
+> command-specific NOPASSWD rules; no A-7 script ran. Only `sudo -n -v` removed, exact command
+> families reran rc0 `A7_PREFLIGHT=PASS` (`C:\WPI_ARTIFACTS\preflight_gatea_a7_d.v2.out`, stderr
+> empty). **Gate state A-0..A-6 PASS; A-7..A-9 NOT RUN (A-7 not executed). Next:** execute A-7 once
+> with `bash /home/gatea/gatea-run-kit-20260808D-2ce41e34/gatea_A7.sh`, preserve/hash
+> `/home/gatea/gatea-A7-20260808D.log`, inspect exact API/DB equality and log/journal evidence
+> without exposing credential content, independently postcheck unchanged production safe state,
+> memory before A-8. Do not run A-8 on genuine A-7 FAIL. Record:
+> `11_TRIAGE/GATE_A_A7_PREFLIGHT_2026-08-09D.md`.
+>
+> ---
+
 > ## ▶ NEWEST CHECKPOINT — A-6 PASS under run-kit D; A-7 preflight next (2026-08-09)
 >
 > A-6 executed exactly once at checkpoint `b8776ca6` with
