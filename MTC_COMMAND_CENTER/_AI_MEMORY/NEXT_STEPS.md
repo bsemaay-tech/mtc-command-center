@@ -1,5 +1,46 @@
 # NEXT_STEPS
 
+## GATE A — A-8 PASS under run-kit D; A-9 preflight next (2026-08-09)
+
+Both A-8 halves executed exactly once at checkpoint `8cba7897`; accepted candidate
+`2ce41e34bceb599d80af24c5c33d835820ec321b` unchanged. Remote:
+`bash /home/gatea/gatea-run-kit-20260808D-2ce41e34/gatea_A8.sh`, SSH rc0, transport stdout/stderr
+empty because the script redirects to its no-clobber evidence log. Evidence
+`/home/gatea/gatea-A8-20260808D.log` preserved to `C:\WPI_ARTIFACTS\gatea-A8-20260808D.log`;
+remote/local SHA-256 identical `a7ef34a1…829f0d7`, 1087 B; exactly one `A-8 PASS`, one
+`A8_TRAP_EXIT rc=0`, one `RESULT=PASS`, zero `A8_FAIL`/`RESULT=FAIL`. In-script: `ss_rc=0`,
+`listener_count` 1, `local_addresses` exactly `127.0.0.1:8790`, non-loopback/wildcard/VM-IP listener
+lists empty, `A8_ufw_rc=0`; IP and UFW evidence captured in the log with the raw payload
+deliberately not reproduced. Host: one run of
+`powershell -NoProfile -ExecutionPolicy Bypass -File C:\WPI_ARTIFACTS\gatea-run-kit-20260808D-2ce41e34\gatea_A8_host.ps1`,
+rc0, command stderr empty, stdout exactly including `port22_ok=True`, empty `port22_err`,
+`port8790_ok=False`, `port8790_err=timeout_3000ms`, `host_probe_ok=True`, `A8_HOST_PASS`. Host
+evidence `C:\WPI_ARTIFACTS\gatea-A8-host-20260808D.log`: SHA-256 `abad3225…03fee2e6`, 321 B, UTF-8
+no BOM, CR0/LF-only, fixed VM/candidate/timeout and the same booleans — note `A8_HOST_PASS` is
+command stdout and is not stored in the evidence log. Independent postchecks both rc0 with empty
+stderr: `C:\WPI_ARTIFACTS\postcheck_gatea_a8_remote_d.out` (evidence hash/bytes/markers/binding
+assertions, exact credential-free DISARMED API, production active/running PID189813, Restart=no,
+NRestarts0, one loopback listener) → `A8_REMOTE_POSTCHECK=PASS`; and
+`C:\WPI_ARTIFACTS\postcheck_gatea_a8_host_d.out` (evidence hash/bytes/no BOM/CR0, command stdout
+includes `A8_HOST_PASS`, independent `TcpClient` reprobe port22 True and port8790 False) →
+`A8_HOST_POSTCHECK=PASS`. Combined acceptance held, so A-8 PASS. Contract held: no `/api/arm`, env
+file not opened, no credential content, no broker/exchange/order/economic action, read-only
+networking and firewall evidence only.
+
+- **[AI: Codex] NEXT:** preflight the accepted D A-9 script — identity and syntax, absence of the
+  remote A-9 log, safe service, the exact scan roots and command permissions, and the
+  output-redaction contract. A-9 truthfully reads bytes under the release directory and
+  `/etc/mtc-bridge` including the environment file, but may emit only category counts and matching
+  paths, never matched text or values. Do not execute A-9 during preflight.
+- **[AI: Codex] THEN:** update `_AI_MEMORY` before execution.
+- **[AI: Codex] THEN:** execute A-9 exactly once, only after the preflight checkpoint; preserve and
+  hash the evidence, and inspect only counts and paths, never matched content. A genuine A-9 hit or
+  failure is BLOCK/FAIL and stops Gate A completion.
+- Gate state: **A-0..A-8 PASS; A-9 NOT RUN.** Record:
+  `11_TRIAGE/GATE_A_A8_PASS_2026-08-09D.md`.
+
+---
+
 ## GATE A — A-8 remote+host preflight PASS; execute preregistered A-8 D next (2026-08-09)
 
 Lead-performed read-only, non-executing two-part A-8 preflight at checkpoint `4caa553f`; accepted
