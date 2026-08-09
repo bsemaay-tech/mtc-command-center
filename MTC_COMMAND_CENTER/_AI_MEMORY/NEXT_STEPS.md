@@ -1,5 +1,21 @@
 # NEXT_STEPS
 
+## WP-L P2 — Lead acceptance/falsification checklist prepared (2026-08-09)
+
+Prepared future verification contract:
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_LEAD_ACCEPTANCE_CHECKLIST_2026-08-09.md`. It maps F1-F9 and
+RP0-RP6 to exact scope/source checks and local D026 RED/GREEN fixtures. It forbids host/service/reboot/
+rollback execution and does not pre-accept a future Claude result.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Any]** Read-only adversarially audit this checklist against the accepted spec and D025/D026.
+- **[AI: Claude]** Dispatch the already-audited repair prompt through the first available exact flagship
+  route; freeze its one-file diff before another agent touches it.
+- **[AI: Codex]** Run the accepted checklist against the actual repaired proposal before canonical audit.
+- **[AI: Any]** All host, script extraction, budget, credential/broker/TESTNET/ARM/order, WP-V/KVM2/
+  master/old-payload/economic and `C:\PGRK` holds remain unchanged.
+
 ## WP-L P2 — Claude repair prompt audited and hardened (2026-08-09)
 
 GLM-5.2 executed a five-file read-only contract audit: `PASS-WITH-NITS`, zero required repairs, clean

@@ -1,5 +1,15 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ PICK UP EXACTLY HERE — Lead F1-F9 acceptance checklist prepared (Codex GPT-5.6, 2026-08-09)
+>
+> `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_LEAD_ACCEPTANCE_CHECKLIST_2026-08-09.md` now maps RP0-RP6 and
+> F1-F9 to exact scope/source checks and local D026 RED/GREEN fixtures. It forbids host/service/reboot/
+> rollback execution and is not pre-acceptance.
+>
+> Read-only audit the checklist; dispatch the already-audited Claude repair prompt at the first exact
+> account-capacity window; then freeze and independently inspect the one-file result. No authority hold
+> changed.
+
 > ## ▶ PICK UP EXACTLY HERE — Claude repair prompt audited/hardened (Codex GPT-5.6, 2026-08-09)
 >
 > GLM-5.2 returned `PASS-WITH-NITS`, zero required repairs, clean Git status. Lead folded all four optional

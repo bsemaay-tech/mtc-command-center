@@ -1,5 +1,15 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6] 2026-08-09 — Lead proposal-repair acceptance checklist prepared
+
+Created `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_LEAD_ACCEPTANCE_CHECKLIST_2026-08-09.md`. It maps
+F1-F9/RP0-RP6 to frozen-scope checks, candidate-anchor reproduction, and local D026 RED/GREEN fixtures
+without authorizing host/service/reboot/rollback execution. It is preparation only, not acceptance.
+
+**PICK UP EXACTLY HERE:** read-only audit the checklist; dispatch the already-audited Claude repair prompt
+when an exact route has capacity; then freeze and independently verify the actual one-file diff. All
+authority holds remain exact.
+
 ## [Codex GPT-5.6] 2026-08-09 — Claude repair prompt accepted PASS-WITH-NITS
 
 GLM-5.2 completed the read-only prompt audit with `PASS-WITH-NITS`, zero required repairs, and clean Git
