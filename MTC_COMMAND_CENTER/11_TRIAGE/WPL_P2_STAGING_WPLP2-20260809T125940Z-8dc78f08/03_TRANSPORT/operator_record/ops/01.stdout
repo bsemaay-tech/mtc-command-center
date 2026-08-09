@@ -1,0 +1,11 @@
+SETUP_NOTE base_component_ok value=WPLP2-20260809T125940Z-8dc78f08
+SETUP_NOTE base_absent path=/home/gatea/wpl_p2_staging_WPLP2-20260809T125940Z-8dc78f08
+SETUP_NOTE allocated path=/home/gatea/wpl_p2_staging_WPLP2-20260809T125940Z-8dc78f08
+SETUP_NOTE allocated path=/home/gatea/wpl_p2_staging_WPLP2-20260809T125940Z-8dc78f08/evidence
+SETUP_NOTE allocated path=/home/gatea/wpl_p2_staging_WPLP2-20260809T125940Z-8dc78f08/evidence/runkit
+SETUP_NOTE allocated path=/home/gatea/wpl_p2_staging_WPLP2-20260809T125940Z-8dc78f08/kit
+SETUP_NOTE dir_ok path=/home/gatea/wpl_p2_staging_WPLP2-20260809T125940Z-8dc78f08 owner=gatea:gatea mode=700
+SETUP_NOTE dir_ok path=/home/gatea/wpl_p2_staging_WPLP2-20260809T125940Z-8dc78f08/evidence owner=gatea:gatea mode=700
+SETUP_NOTE dir_ok path=/home/gatea/wpl_p2_staging_WPLP2-20260809T125940Z-8dc78f08/evidence/runkit owner=gatea:gatea mode=700
+SETUP_NOTE dir_ok path=/home/gatea/wpl_p2_staging_WPLP2-20260809T125940Z-8dc78f08/kit owner=gatea:gatea mode=700
+SETUP PASS base=/home/gatea/wpl_p2_staging_WPLP2-20260809T125940Z-8dc78f08 evidence=/home/gatea/wpl_p2_staging_WPLP2-20260809T125940Z-8dc78f08/evidence runkit=/home/gatea/wpl_p2_staging_WPLP2-20260809T125940Z-8dc78f08/evidence/runkit kit=/home/gatea/wpl_p2_staging_WPLP2-20260809T125940Z-8dc78f08/kit owner=gatea:gatea mode=700
