@@ -1,5 +1,22 @@
 # GLOBAL_HANDOFF
 
+## [GLM-5.2] 2026-08-09 — Gate A A-6 preflight PASS; execute A-6 next
+
+Read-only A-6 preflight at checkpoint `e48cba48`; accepted candidate `2ce41e34` unchanged. Remote D
+tar `/home/gatea/gatea-run-kit-20260808D-2ce41e34.tar` (SHA-256 `e8a52e3c…e0d3`, 71680 B) and
+extracted kit verify: seven SHA256SUMS OK, A-6 syntax rc0, A-6 script SHA-256 `4bd3cbc3…6625` /
+13863 B / CR0. A-6 log absent, no A-6 temp leftover. Production safe: active/running PID189813,
+Restart=no/NRestarts0, one `127.0.0.1:8790` listener, exact HTTP200 credential-free DISARMED
+state_version1, all external/ARM flags off; systemctl resolves exactly
+`MTC_BRIDGE_START_MODE=credential_free_disarmed` (no secret/unrelated value printed). First verifier
+stopped on `kill -0` "Operation not permitted" (root PID; read-only verifier defect, no Gate-A
+script ran); replaced with `test -d /proc/189813`, rerun rc0 `A6_PREFLIGHT=PASS`. Gate state
+unchanged A-0..A-5 PASS; A-6..A-9 NOT RUN (A-6 not executed). Next: execute A-6 once, then
+preserve/hash `/home/gatea/gatea-A6-20260808D.log`, postcheck, memory before A-7. Record:
+`11_TRIAGE/GATE_A_A6_PREFLIGHT_2026-08-09D.md`.
+
+---
+
 ## [Codex GPT-5.6-sol] 2026-08-09 — Gate A A-5 PASS under run-kit E
 
 A-5 ran once and passed. Evidence SHA `83d947a3…d19c`, 3284 B, trap rc0; authorized SIGKILL proved

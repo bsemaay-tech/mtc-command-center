@@ -1,5 +1,28 @@
 # NEXT_STEPS
 
+## GATE A — A-6 preflight PASS; execute preregistered A-6 D next (2026-08-09)
+
+Lead-performed read-only A-6 preflight at checkpoint `e48cba48`; accepted candidate `2ce41e34`
+unchanged. Remote D tar `/home/gatea/gatea-run-kit-20260808D-2ce41e34.tar` (SHA-256
+`e8a52e3c…e0d3`, 71680 B) and extracted kit verify: seven SHA256SUMS members OK, A-6 syntax rc0,
+A-6 script SHA-256 `4bd3cbc3…6625` / 13863 B / CR0. A-6 evidence log absent, no A-6 temp leftover.
+Production safe: active/running PID189813, Restart=no/NRestarts0, one `127.0.0.1:8790` listener,
+exact HTTP200 credential-free DISARMED state_version1, all external/ARM flags off; systemctl resolves
+exactly `MTC_BRIDGE_START_MODE=credential_free_disarmed` (no secret/unrelated value printed). First
+verifier stopped on `kill -0` "Operation not permitted" (root PID; read-only verifier defect, not a
+Gate-A failure; no Gate-A script ran); replaced with `test -d /proc/189813`, rerun rc0
+`A6_PREFLIGHT=PASS`.
+
+- **[AI: Codex] NEXT:** execute A-6 exactly once with
+  `bash /home/gatea/gatea-run-kit-20260808D-2ce41e34/gatea_A6.sh`.
+- **[AI: Codex] AFTER A-6:** preserve/hash `/home/gatea/gatea-A6-20260808D.log`, independently verify
+  no temp leftover and unchanged PID/service/listener/API, record verdict, update memory before A-7.
+  Do not run A-7 on genuine A-6 FAIL.
+- Gate state: **A-0..A-5 PASS; A-6..A-9 NOT RUN** (A-6 not executed). Record:
+  `11_TRIAGE/GATE_A_A6_PREFLIGHT_2026-08-09D.md`.
+
+---
+
 ## GATE A — A-5 PASS under E; A-6 preregistered D gate next (2026-08-09)
 
 A-5 E executed once, rc0. Evidence remote/local SHA-256 `83d947a3…d19c`, 3284 B; old PID187338
