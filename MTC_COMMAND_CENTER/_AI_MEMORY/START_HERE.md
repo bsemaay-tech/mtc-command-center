@@ -28,6 +28,13 @@ Akış: `..\04_SHARED\prompts\05_ai_workflow\08_backtest_launch.md`. Single-stra
 
 Do not change trading logic, Pine logic, MTC behavior, or parity checks without explicit approval.
 
+**Before designing or auditing any executable check/block/preregistration, read
+`..\11_TRIAGE\DESIGN_DEFECT_PATTERNS_2026-08-10.md`.** Ten recurring defect patterns
+distilled from 24 required findings across seven adversarial audits, each with the
+falsification that exposes it and a rule to apply before writing code. The first one —
+an inability to evaluate must STOP, never FAIL — accounts for the single most expensive
+gap of that cycle and recurred independently in a second artefact the same night.
+
 ## Strategy research (combining existing strategies/indicators)
 
 Before any strategy-research session, read in this order:
