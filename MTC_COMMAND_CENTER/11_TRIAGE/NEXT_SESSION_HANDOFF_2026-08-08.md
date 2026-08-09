@@ -1,5 +1,17 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ PICK UP EXACTLY HERE — F1-F9 repair spec ACCEPTED PASS-WITH-NITS (Codex GPT-5.6, 2026-08-09)
+>
+> Exact accepted spec commit: `9ac60ac652f4a221316465cdbc24516aa391f5ce`. GLM-5.2 executed
+> candidate-source audit and returned `PASS-WITH-NITS`, zero required repairs; Lead reproduced RP0-RP6.
+> Codex secondary timed out; Claude alternate account returned session-limit/no verdict. Full record:
+> `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_REPAIR_SPEC_AUDIT_2026-08-09.md`.
+>
+> **Next safe unit:** prepare the exact one-file Claude implementation prompt. Do not dispatch to
+> GLM/DeepSeek; current known Claude reset times are 11:10 (`.claude-max`) and 13:50 (`.claude`). This
+> acceptance does not authorize host execution. `779bd038` remains rejected, `C:\PGRK` remains blocked,
+> and all budget/credential/broker/TESTNET/ARM/order/WP-V/KVM2/master/old-payload/economic holds remain.
+
 > ## ▶ PICK UP EXACTLY HERE — F1-F9 repair specification authored; audit next (Codex GPT-5.6, 2026-08-09)
 >
 > Lead authored `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_REPAIR_SPEC_2026-08-09.md`. It is specification

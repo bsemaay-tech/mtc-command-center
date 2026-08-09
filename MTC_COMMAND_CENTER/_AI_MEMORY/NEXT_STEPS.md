@@ -1,5 +1,25 @@
 # NEXT_STEPS
 
+## WP-L P2 — F1-F9 repair specification ACCEPTED PASS-WITH-NITS (2026-08-09)
+
+Accepted exact commit `9ac60ac652f4a221316465cdbc24516aa391f5ce`. GLM-5.2 executed the independent
+read-only candidate-source audit and returned `PASS-WITH-NITS`, zero required repairs; Lead reproduced
+RP0-RP6 and all candidate anchors. Codex secondary timed out at 604 s; Claude alternate account returned
+session-limit/no verdict. Those are supplemental non-execution. Full record:
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_REPAIR_SPEC_AUDIT_2026-08-09.md`.
+
+Optional nits: ancillary path fixture; explicit empty C4 no-rebind fields; deferred C1 falsification list;
+name `src_conn.backup(dst_conn)`. None weakens the accepted contract.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Codex]** Prepare the exact one-file counterpart implementation prompt from the accepted spec.
+- **[AI: Claude]** Implement only when an exact counterpart flagship CLI account is available; current
+  known account resets are 11:10 (`.claude-max`) and 13:50 (`.claude`). Do not substitute GLM/DeepSeek.
+- **[AI: Any]** Acceptance is specification-only. Rejected proposal `779bd038` remains non-executable;
+  `C:\PGRK` remains blocked; no host/script transfer/credentials/broker/TESTNET/ARM/orders/WP-V/KVM2/
+  master/old-payload/economic action. Exact 50 h balance remains NOT REPRODUCIBLE.
+
 ## WP-L P2 — F1-F9 bounded repair specification authored; audit next (2026-08-09)
 
 Lead-only specification (no proposal/product edit, no host action):

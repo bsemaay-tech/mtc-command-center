@@ -1,5 +1,16 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6] 2026-08-09 — F1-F9 repair specification accepted PASS-WITH-NITS
+
+Exact commit `9ac60ac652f4a221316465cdbc24516aa391f5ce` is accepted as a **specification contract only**.
+GLM-5.2 executed candidate-source review and returned `PASS-WITH-NITS`, zero required repairs; Lead
+reproduced RP0-RP6. Codex secondary timed out and Claude returned account-limit/no verdict. Full record:
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_REPAIR_SPEC_AUDIT_2026-08-09.md`.
+
+**PICK UP EXACTLY HERE:** prepare the one-file counterpart prompt. Do not implement with GLM/DeepSeek;
+wait for an exact flagship Claude CLI route. Proposal `779bd038` remains rejected/non-executable,
+`C:\PGRK` remains blocked, and every host/budget/trading/deployment hold remains unchanged.
+
 ## [Codex GPT-5.6] 2026-08-09 — F1-F9 bounded proposal-repair specification authored
 
 Lead authored `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_REPAIR_SPEC_2026-08-09.md`; no rejected proposal,
