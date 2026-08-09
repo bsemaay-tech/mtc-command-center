@@ -1,5 +1,31 @@
 # NEXT_STEPS
 
+## GATE A — post-Gate transition inventory complete (read-only); old install already absent (2026-08-09)
+
+Post-Gate transition inventory is **complete and read-only**. Gate A A-0..A-9 PASS remains **staging
+acceptance only**. **Critical correction:** the old installed release `ebada020a59edf539f60acfbb3a6bf870c8679e9`
+and its venv are **already absent** (teardown evidence `/home/gatea/teardown-ebada020-20260808B` exists),
+so **no old-install cleanup mutation is required** — the prior "THEN perform old-install cleanup" step is
+moot. Only installed release: `/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b` (root
+mode `555`) + venv counterpart (root mode `555`); **no** steady/legacy `mtc-bridge` unit; **no**
+`current`/`previous` symlinks under `/opt/mtc-bridge`. Service `mtc-bridge-first-start.service`
+active/running PID `189813`, `Restart=no`, `NRestarts=0`, exactly one `127.0.0.1:8790` listener, DISARMED
+`state_version=1`, all flags off. Candidate `2ce41e34…321b` unchanged; repo HEAD `5af8178b`.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Any]** Read-only discover the canonical post-Gate workflow, roadmap, and WP-V / deployment /
+  promotion gate chain; determine whether explicit transition authority exists. If none, record a blocker.
+- **[AI: Any]** Do not rerun Gate A or mutate staging during discovery; keep the service credential-free
+  DISARMED.
+- **[AI: Barış]** Deletion of `/home/gatea/payload_ebada020.tar` (inert, 1,039,774,720 B) requires a
+  separate explicit archive-cleanup scope — not authorized here.
+- **[AI: Barış]** ARM, credential load, broker connectivity, orders, TESTNET/mainnet, production
+  promotion, and master merge each require separate explicit owner authorization; Gate-A PASS grants none.
+- Record: `11_TRIAGE/GATE_A_POST_GATE_TRANSITION_INVENTORY_2026-08-09.md`.
+
+---
+
 ## GATE A — A-0..A-9 PASS; final staging acceptance; post-Gate inventory next (2026-08-09)
 
 A-9 executed exactly once at branch checkpoint `6073c30c`; accepted candidate
