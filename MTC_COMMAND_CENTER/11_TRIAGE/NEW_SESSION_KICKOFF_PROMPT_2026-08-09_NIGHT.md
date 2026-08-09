@@ -40,6 +40,10 @@ milestone so the next fresh session resumes cleanly.
 
 ## Milestone log (newest first — update on every milestone)
 
+- 2026-08-09 ~22:15: B3 round 4 consumed + committed (`04eddf90`); diff vs round 3 =
+  exactly the two fixes (read-error STOP in both blocks; D026 QA). Narrow Codex
+  closure audit 4 dispatched. Next: on PASS → Stage 1B runkit re-freeze (repaired
+  RP1-B3 + new RPD-VERIFY → new block identities → new tar) → WP-L P2 unit closure.
 - 2026-08-09 ~22:05: GLM WP-I draft review integrated as round 1.1 (F1
   interpreter-exec STOP added to rows 18/19 + preflight; N1 reused-script
   disposition; N2 listener wording; SELF_QA addendum). B3 round 4 (Max) still in
