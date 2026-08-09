@@ -1,11 +1,46 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ PICK UP EXACTLY HERE — candidate provenance repair accepted (Codex GPT-5.6, 2026-08-09)
+>
+> **Next autonomous safe unit:** author and audit the corrected **local-only run-kit design contract**
+> using candidate-qualified product reads. Cover Stage B static admission; C1 graceful stop and
+> no-dangling-state; C2 reboot; C3 no-clobber bundle plus restore-into-temp; C4 stop+mask rollback; keep
+> C5 egress blocked. Do not implement the run kit until the design is independently accepted. **No
+> staging/server execution.**
+>
+> **Accepted state:** live commits `970c95a6` + `03444271`; audited snapshot
+> `2fa120b928045704405c0a5156d73b3b930d1837`; candidate
+> `2ce41e34bceb599d80af24c5c33d835820ec321b` unchanged. Candidate and documentation branch diverge at
+> merge base `4d2228cf8985ce755c398cceff23f777a99d5404`; never infer candidate behavior from a differing
+> documentation-branch blob.
+>
+> **Corrected facts:** all 11 WP0-mapped symbols exist at the candidate; symbol 11 is at
+> `IBKR_PAPER_BRIDGE/tests/test_partial_fill_protection.py:2765`; WP0 remains correct and untouched.
+> Lock values: blob object ID `47f53fa227bf0f18b9bf9bd77e060d8856961728`; expected LF package
+> content SHA-256 `a1881296c8cb6e0e9df33554aa2a25652cfeba2506530c74c7845ba2f58bf66e`;
+> `40873556a7f4586d77f165b985863138c9fc95b095da64ac52456b8c49098ec3` is only the local CRLF
+> checkout hash and is never a Linux predicate. Actual installed-host lock hash remains **NOT IN
+> EVIDENCE** as read-only item B1a.
+>
+> **Safety and audits:** first-start pins credential-free DISARMED, env override is rejected, and no
+> broker is constructed in that mode; the steady template has no start-mode pin and requires future
+> admission preregistration. Claude `PASS-WITH-NITS`; Codex `PASS`; GLM `PASS`; DeepSeek supplemental
+> `BLOCK` because neither route could execute the mandated suite. All worktrees clean; Lead reproduction
+> passed; no required finding remains.
+>
+> **Unchanged holds:** retain `GATEA-STAGING` credential-free DISARMED. Exact 50 h balance is NOT
+> REPRODUCIBLE. No server execution, WP-V, KVM2, master merge, credentials, broker/TESTNET, ARM, orders,
+> old-payload deletion, or economic action without the required human budget decision and named lift.
+>
+> Canonical records: `11_TRIAGE/GATE_A_POST_GATE_PROVENANCE_REPAIR_2026-08-09.md` and
+> `11_TRIAGE/GATE_A_POST_GATE_PREREGISTRATION_GAP_MATRIX_2026-08-09.md`.
+
 > ## ▶ NEWEST CHECKPOINT — GLM-5.2 post-Gate preregistration & gap matrix (WP-L Phase 2 → WP-I → Audit 2 → WP-A) (read-only) (2026-08-09)
 >
 > **PICK UP EXACTLY HERE:** (1) next autonomous safe unit is **local run-kit design/validation only** —
 > author the Group B read-only post-start subchecks and the five **COMMAND GAP** procedures (post-start
 > verifier, post-SIGTERM no-dangling-state, post-reboot subcheck, restore-into-temp wrapper,
-> stop+mask-only rollback step) as *designs*, and refresh the stale WP0 I-R2 evidence-map node;
+> stop+mask-only rollback step) as *designs* from candidate-qualified reads; WP0 requires no refresh;
 > **no staging execution**. (2) Keep `GATEA-STAGING` **retained and credential-free DISARMED — do not
 > discard it** (needed through WP-A). (3) **No server execution** until a human budget re-plan / ceiling
 > extension resolves the budget-evidence blocker (exact 50 h balance NOT REPRODUCIBLE) **and** a named
@@ -23,9 +58,9 @@
 > checks · C mutating host checks · D Audit 2 (current `AGENTS.md` four-auditor D025 contract, **not**
 > older plan §1020 Codex-only wording) · E WP-A targeted Ubuntu verification. All host commands marked
 > **NOT EXECUTED**. 56-entry hash-locked closure re-confirmed at the candidate checkout (56 entries,
-> 1345 hashes). The map contains **10 existing requested test symbols plus 1 stale/absent WP0 symbol**:
-> `test_kill_restart_after_request_commit_keeps_killed_and_resumes_once` (an evidence-map problem, not a
-> product defect). D026 binds: existing tests are not new closure evidence for a newly named defect.
+> 1345 hashes). **Superseded by the accepted provenance repair above:** all 11 requested symbols exist
+> at the candidate; symbol 11 resolves to `:2765`; WP0 is correct and untouched. D026 binds: existing
+> tests are not new closure evidence for a newly named defect.
 >
 > **Gaps recorded:** (G1) "reboot DISARMED" must be defined precisely — first-start `Restart=no` + no
 > `[Install]` = cannot auto-start; steady profile gated/inert/no-`[Install]`. Reboot preserves mask
@@ -42,8 +77,9 @@
 >
 > **Lead acceptance corrections:** actual TESTNET egress observation needs credentials plus
 > broker/TESTNET network authority, **not ARM**; any future capture remains DISARMED and no-order.
-> Candidate lock SHA-256 was re-derived as
-> `40873556a7f4586d77f165b985863138c9fc95b095da64ac52456b8c49098ec3`.
+> **Superseded hash correction:** expected LF package-content SHA-256 is
+> `a1881296c8cb6e0e9df33554aa2a25652cfeba2506530c74c7845ba2f58bf66e`; `40873556…` is only a local
+> CRLF checkout hash and must never be a Linux predicate.
 >
 > **Blockers:** (1) budget — 50 h balance not reproducible (`GATE_A_50H_LEDGER_RECONSTRUCTION_2026-08-09.md`);
 > (2) authority — WP-V/KVM2/master/credentials/broker/ARM/orders/TESTNET-mainnet/economic action each need

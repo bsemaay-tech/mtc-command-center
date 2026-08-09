@@ -1,5 +1,45 @@
 # NEXT_STEPS
 
+## GATE A — candidate provenance repair ACCEPTED; run-kit design contract next (2026-08-09)
+
+**Accepted live commits:** `970c95a6` + `03444271`; frozen audited snapshot
+`2fa120b928045704405c0a5156d73b3b930d1837`. Candidate
+`2ce41e34bceb599d80af24c5c33d835820ec321b` is unchanged. The documentation branch and candidate
+diverge at merge base `4d2228cf8985ce755c398cceff23f777a99d5404`; product, deploy, runtime,
+tool, and differing-test facts must be candidate-qualified.
+
+**Corrected facts:** all 11 WP0-mapped test symbols exist at the candidate; symbol 11 is
+`IBKR_PAPER_BRIDGE/tests/test_partial_fill_protection.py:2765`. WP0 is correct and remains untouched.
+Lock provenance is: Git blob object ID `47f53fa227bf0f18b9bf9bd77e060d8856961728`; expected raw LF
+blob/package content SHA-256 `a1881296c8cb6e0e9df33554aa2a25652cfeba2506530c74c7845ba2f58bf66e`;
+local Windows CRLF checkout SHA-256 `40873556a7f4586d77f165b985863138c9fc95b095da64ac52456b8c49098ec3`
+is never a candidate/Linux/host predicate. The observed installed-host lock hash is **NOT IN EVIDENCE**
+and remains open as read-only item B1a.
+
+**Candidate safety:** the first-start unit pins `credential_free_disarmed`, the env-file verifier rejects
+an override, and the application constructs no broker in that mode. The ref-invariant steady template
+does not carry the start-mode pin; treat that as a future admission prerequisite, not a current defect.
+
+**Acceptance:** Claude Opus 5 xhigh `PASS-WITH-NITS`; Codex gpt-5.6-sol xhigh `PASS`; GLM-5.2
+`PASS`. DeepSeek V4 Flash could not run through ClinePass, and the fallback driver could not execute
+the mandated Git/hash suite, so its result is supplemental `BLOCK`/non-execution. All four audit
+worktrees stayed clean; the Lead reproduced the decisive claims; no required finding remains.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Claude]** Author the corrected **local-only run-kit design contract** from candidate-qualified
+  product reads. It must cover Stage B static admission, C1 graceful stop/no-dangling-state, C2 reboot,
+  C3 no-clobber bundle/restore-into-temp, C4 stop+mask rollback, and blocked C5 egress. Design only.
+- **[AI: Claude|Codex]** Independently audit that design before any implementation. Stage-B/run-kit
+  implementation begins only after design acceptance.
+- **[AI: Any]** Keep `GATEA-STAGING` retained and credential-free DISARMED. No server execution,
+  credential load, broker/TESTNET access, ARM, order, WP-V, KVM2, master merge, or economic action.
+- **[AI: Barış]** Budget/authority holds are unchanged: exact 50 h balance remains NOT REPRODUCIBLE;
+  server execution requires a human re-plan/ceiling extension and any separately named authority lift.
+
+**Canonical records:** `11_TRIAGE/GATE_A_POST_GATE_PROVENANCE_REPAIR_2026-08-09.md` and
+`11_TRIAGE/GATE_A_POST_GATE_PREREGISTRATION_GAP_MATRIX_2026-08-09.md`.
+
 ## GATE A — Post-Gate preregistration & gap matrix (WP-L Phase 2 → WP-I → Audit 2 → WP-A) (read-only) (2026-08-09)
 
 **Read-only documentation unit; no staging command run.** Starting HEAD `52b8f496`; candidate
@@ -18,10 +58,10 @@ only — reuse its immutable evidence where predicates overlap, but it is not WP
 **Matrix groups:** A reusable immutable Gate-A evidence · B read-only post-start host checks · C
 mutating host checks · D Audit 2 (current `AGENTS.md` four-auditor D025 contract, **not** older plan
 wording) · E WP-A targeted Ubuntu verification. All host commands **NOT EXECUTED**; **COMMAND GAP**
-markers where an exact safe command is not yet specified. The map has **10 existing requested test
-symbols plus 1 stale/absent WP0 symbol**
-(`test_kill_restart_after_request_commit_keeps_killed_and_resumes_once`), which is an evidence-map
-problem, not a product defect. D026 binds (existing tests ≠ new closure evidence).
+markers where an exact safe command is not yet specified. **Superseded by the accepted provenance
+repair above:** all 11 requested symbols exist at the candidate, including
+`test_kill_restart_after_request_commit_keeps_killed_and_resumes_once` at `:2765`; WP0 is correct and
+untouched. D026 still binds (existing tests ≠ new closure evidence).
 
 **Key gaps:** (G1) reboot DISARMED must be defined precisely — first-start `Restart=no` + no `[Install]`
 = cannot auto-start; steady profile gated/inert/no-`[Install]`; reboot preserves mask state, so plain
@@ -33,8 +73,9 @@ post-start — use bounded subchecks. (G3) rollback rebind unmet prerequisite (o
 post-Gate. (G7) exact 50 h balance NOT REPRODUCIBLE → all host execution blocked.
 
 **Lead correction:** actual TESTNET egress observation needs credentials plus broker/TESTNET network
-authority, **not ARM**; any future capture remains DISARMED and no-order. Candidate lock SHA-256 was
-re-derived as `40873556a7f4586d77f165b985863138c9fc95b095da64ac52456b8c49098ec3`.
+authority, **not ARM**; any future capture remains DISARMED and no-order. **Superseded hash correction:**
+the expected LF package-content SHA-256 is `a1881296c8cb6e0e9df33554aa2a25652cfeba2506530c74c7845ba2f58bf66e`;
+`40873556…` is only a local CRLF checkout hash and must never be used as a Linux predicate.
 
 **Blockers:** (1) budget — 50 h balance not reproducible; human re-plan/ceiling extension required
 before any server-executed WP-L/WP-I/WP-A work. (2) authority — WP-V/KVM2/master/credentials/broker/
@@ -45,7 +86,7 @@ ARM/orders/TESTNET-mainnet/economic action each need a new named lift.
 - **[AI: Any]** Next autonomous safe unit = **local run-kit design/validation only**: author Group B
   read-only subchecks + the five COMMAND-GAP procedures (post-start verifier, post-SIGTERM
   no-dangling-state, post-reboot subcheck, restore-into-temp wrapper, stop+mask-only rollback step) as
-  *designs*; refresh the stale WP0 I-R2 evidence-map node. **No staging execution.**
+  *designs* from candidate-qualified reads; WP0 requires no refresh. **No staging execution.**
 - **[AI: Any]** Keep `GATEA-STAGING` retained, active, credential-free DISARMED; do not discard (needed
   through WP-A).
 - **[AI: Barış]** Re-plan remaining hours vs the hard 50 h ceiling, or issue an explicit ceiling
