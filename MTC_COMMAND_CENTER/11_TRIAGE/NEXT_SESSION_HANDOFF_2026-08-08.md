@@ -1,5 +1,42 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ NEWEST CHECKPOINT — A-9 redaction-aware preflight PASS; execute A-9 D next (2026-08-09)
+>
+> Lead-performed read-only, non-executing A-9 preflight at checkpoint `0641c534`; accepted candidate
+> `2ce41e34bceb599d80af24c5c33d835820ec321b` unchanged. The A-9 script did not run and the real
+> release and `/etc` roots were not scanned; GLM-5.2 only edited documentation (the four task-named
+> files) and recorded this preflight. Accepted D tar
+> `/home/gatea/gatea-run-kit-20260808D-2ce41e34.tar` (SHA-256 `e8a52e3c…e0d3`, 71680 B); all seven
+> manifest members OK. Accepted A-9 script
+> `/home/gatea/gatea-run-kit-20260808D-2ce41e34/gatea_A9.sh`: SHA-256 `2c7e73be…fada4d`, 3937 B,
+> CR0, bash syntax rc0; A-9 evidence `/home/gatea/gatea-A9-20260808D.log` absent; zero
+> `/home/gatea/gatea-A9-err.*` leftovers before and after cleanup. Exact real scan roots verified
+> present and readable — `/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b` and
+> `/etc/mtc-bridge`; venv and `/home/gatea` excluded by the accepted script. Static contract
+> verified: nine canonical category names in order; `sudo grep -RIlE --binary-files=without-match
+> -e $ere -- $REL $ETC`; per-category rc/count; path list only on hit; A-9 truthfully reads bytes in
+> the exact real roots including the root-readable env file but emits only category counts and
+> matching paths, never matched text or values; any count>0 is FAIL/BLOCK and rc>1 is FAIL.
+> Permission/redaction falsification: one disposable `/home/gatea/gatea-A9-preflight.<6>` temp with
+> one synthetic token-like line was created; the exact `grep -l` command returned exactly the
+> synthetic file path and no matched text/value; the synthetic value was never printed; guarded
+> nonrecursive cleanup removed temp file and dir; real release and `/etc` roots were NOT scanned
+> during preflight; `grep_path_only_fixture_falsification=true`; post-cleanup no A9-preflight/A9-err
+> leftovers. Production safe: active/running PID189813, Restart=no, NRestarts0, one loopback
+> listener, exact HTTP200 credential-free DISARMED state_version1 and all external/ARM flags off.
+> Local evidence `C:\WPI_ARTIFACTS\preflight_gatea_a9_d.out/.err`, rc0, stderr empty;
+> `A9_PREFLIGHT=PASS`. **Gate state A-0..A-8 PASS; A-9 NOT RUN. Next:** execute A-9 exactly once
+> with `bash /home/gatea/gatea-run-kit-20260808D-2ce41e34/gatea_A9.sh`; preserve/hash
+> `/home/gatea/gatea-A9-20260808D.log` and inspect only per-category rc/count and matching paths,
+> never matched text/value; PASS requires nine categories each rc=1 and matches=0, `A9_any_hit=0`,
+> one `A-9 PASS`, trap rc0, no `A9_FAIL`/grep-error blocks, and no temp leftover; any hit/nonzero
+> error is FAIL/BLOCK and stops Gate A completion; then independently postcheck the safe service and
+> update `_AI_MEMORY` with the final Gate A verdict, and do not clean the old deployment or start
+> another gate until the final checkpoint is accepted. Record:
+> `11_TRIAGE/GATE_A_A9_PREFLIGHT_2026-08-09D.md`.
+>
+> ---
+
 > ## ▶ NEWEST CHECKPOINT — A-8 PASS under run-kit D; A-9 preflight next (2026-08-09)
 >
 > Both A-8 halves executed exactly once at checkpoint `8cba7897`; accepted candidate
