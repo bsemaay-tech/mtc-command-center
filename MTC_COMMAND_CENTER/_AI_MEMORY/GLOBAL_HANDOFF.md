@@ -1,5 +1,75 @@
 # GLOBAL_HANDOFF
 
+## [Claude Opus 5] 2026-08-09 — Gate A post-Gate roadmap and authority discovery (read-only)
+
+**Conclusion (lead):** **WP-V is NOT next, and Gate-A PASS does not make it next.** Gate A A-0..A-9 PASS
+is **staging acceptance only**. The canonical plan puts four whole units between Gate A and any
+deployment gate, and **no record proves WP-L Phase 2, WP-I staging verification, Audit 2, or WP-A
+completed after the final Gate-A pass.** This is **read-only discovery — no staging command was run**
+(no SSH, Gate-A script, scan, sudo, service, package, Git, staging mutation, credential read, or
+broker/network command). Starting HEAD `51e666b0`; product candidate remains
+`2ce41e34bceb599d80af24c5c33d835820ec321b`.
+
+**Canonical sequence (plan §23a, exact):** 3 one named expendable Ubuntu staging action; 4 Audit 2 after
+WP-L Phase 2 + WP-I staging verification; 5 WP-A on the retained host; 6 discard host only after WP-A
+evidence; 7 freeze final exact SHA/artifact; 8 Audit 3 Gate-5 + Gate-6; 9 Gate B; 10 WP-V only after
+deployment approval; 11 Gate C. `GATE_A_PREREGISTRATION_AND_STAGING_RUNBOOK_2026-08-01.md:137` gives the
+immediate chain `Gate A verification → WP-L Phase 2 → WP-I staging → Audit 2 → WP-A`, all DISARMED, and
+records that **Audit 2 restores the flagship acceptance floor** (WP-I's acceptance currently rests on one
+owner-waived DeepSeek pass, not two flagship auditors).
+
+**Evidence still owed.** `WPL_PHASE1_VERIFICATION_RECORD_2026-08-01.md:17` — Phase 1 was verification
+only, no Ubuntu execution; Ubuntu evidence owed in Phase 2 / WP-A. `WPI_READINESS_RECORD_2026-08-01.md:45-46`
+— Phase 2 had not occurred. Same record `:154-168` lists the retained-host evidence still owed: exact
+56-entry lock parity; masked/inactive install and DISARMED start; reboot DISARMED; systemd/SIGTERM;
+SQLite backup/restore; rollback; actual egress with no mainnet; WP-A restart/reconnect/stale-data
+invariants.
+
+**Host.** `GATEA-STAGING` is the named clean expendable host
+(`GATE_A_STAGING_HOST_PROVENANCE_2026-08-02.md:105-117`). The current inventory proves it **still exists
+and remains safely active/running, credential-free DISARMED, only candidate `2ce41e34…321b` installed —
+it has not been discarded.** Step 6 (discard) is not reached; the host steps 3–5 require is available.
+
+**Authority (conservative result).** `OWNER_AUTH_50H_EXECUTION_PROMPT_2026-07-31.md:20-56` is standing
+owner authorization for WP-L, WP-I, WP-A, WP-R, WP-V, Ubuntu staging, the named expendable host, KVM2
+deployment, and pre-grants WP-V / ARM / first-TESTNET approval — **subject to every objective
+prerequisite.** Narrower later constraints control this transition:
+`CODEX_TAKEOVER_HANDOFF_2026-08-02.md:261-263` forbids master, KVM2, WP-V, or deployment beyond
+`GATEA-STAGING` in the temporary window; `NEXT_SESSION_HANDOFF_2026-08-08.md:1452-1454` requires a new
+explicit instruction for WP-V/deployment/KVM2 and the other protected/economic actions. A generic
+autonomous-continuation instruction does not name or lift those task-specific high-risk stops. So:
+**authorized now** — read-only/local preparation, evidence reconstruction, scoped docs, prerequisites
+planning; **not authorized now** — WP-V, KVM2, master merge, credential load, broker/exchange access,
+ARM, orders, TESTNET/mainnet, economic action, deletion of the old payload. **Do not infer WP-V authority
+from Gate-A PASS or from generic continue wording.**
+
+**Budget blocker.** `NEXT_SESSION_HANDOFF_2026-08-08.md:1489-1492` — ≈14–17 h remained before that
+session; WP-A (3 h) + WP-R (6 h) + WP-V (8 h) total 17 h and are all still ahead; Gate-A
+repairs/rebuild/audits were unbudgeted; re-plan before committing to the remainder. The exact current
+hour ledger is **not reconstructed**. Hard 50 h ceiling, no silent overrun.
+
+**Line-citation provenance.** The `NEXT_SESSION_HANDOFF_2026-08-08.md` line citations `1452-1454` (that
+file's **Hard stop** block) and `1489-1492` (its `## Budget` section) are taken from starting HEAD
+`51e666b0`. That file was later prepended, so these citations are shifted by the prepend (+59 lines
+added, 0 deleted) and the cited content now sits ~59 lines later in the working copy; locate it by the
+stable target text `Hard stop — unchanged, needs a new explicit instruction from Barış` and `## Budget`
+instead of raw line numbers.
+
+**PICK UP EXACTLY HERE — next safe unit (autonomous, read-only/local; the budget blocker does not require
+idling):** (1) reconstruct package-by-package hour accounting and classify Gate-A repair work against
+contingency vs outside-budget **without inventing hours**; (2) build the post-Gate preregistration/gap
+matrix for WP-L Phase 2 + WP-I staging verification + Audit 2 + WP-A from existing records and exact
+candidate/service state; (3) **no server execution** until that package proves command scope, evidence
+outputs, stop conditions, and budget/authority fit; (4) keep `GATEA-STAGING` retained and credential-free
+DISARMED — do not discard it. Continue independent safe units rather than asking routine questions.
+
+**Stop conditions:** any request to execute WP-V/KVM2/master/ARM/credentials/broker/orders/economic
+actions without an explicit named lift; any required Phase 2 / WP-I / WP-A evidence that would need a
+product repair; any budget claim that cannot be evidenced; any service drift. Record:
+`11_TRIAGE/GATE_A_POST_GATE_ROADMAP_AUTHORITY_DISCOVERY_2026-08-09.md`.
+
+---
+
 ## [GLM-5.2] 2026-08-09 — Gate A post-Gate transition inventory checkpoint (read-only)
 
 **Conclusion (lead):** Gate A A-0..A-9 PASS remains **staging acceptance only** — no ARM, credential
