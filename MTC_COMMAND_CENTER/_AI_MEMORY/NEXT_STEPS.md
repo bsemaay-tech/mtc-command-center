@@ -1,5 +1,22 @@
 # NEXT_STEPS
 
+## WP-L P2 — overnight Stage 3/3B done; B3 round 4 in flight (2026-08-09 night)
+
+State: R4-5 CLOSED on Linux (banked, bound). B3 blocked on `B3-GAP-ENV` → Option 1 repair cycle ran 3
+rounds, owner authorized bounded round 4 (two narrow fixes). Standing autonomy authority active
+(`11_TRIAGE/STANDING_AUTONOMY_AUTHORITY_2026-08-09.md`). Paste-ready continuation prompt:
+`11_TRIAGE/NEW_SESSION_KICKOFF_PROMPT_2026-08-09_NIGHT.md`.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Claude Lead]** Consume B3 round 4 (Max task) → spot-verify diff = exactly 2 fixes → commit →
+  dispatch narrow Codex closure audit (`06_B3_REPAIR/`, PASS/BLOCK only).
+- **[AI: Claude Lead]** On PASS: Stage 1B runkit re-freeze (repaired RP1-B3 + new RPD-VERIFY, new block
+  identities, new tar) + WP-L P2 unit closure record. Host execution of repaired B3 = separate owner gate.
+- **[AI: Claude Lead]** Integrate GLM review of `WPI_PREREG_DRAFT_ROUND1/` when its report lands.
+- **[AI: Any]** Morning summary ~06:30 + push notification; update this file + GLOBAL_HANDOFF at each
+  milestone (owner instruction: model can silently drop Fable→Opus; a fresh session must resume cleanly).
+
 ## WP-L P2 — round-2 package Claude flagship PASS-WITH-NITS (2026-08-09)
 
 Fresh `.claude-max` `claude-opus-5` xhigh audit accepted exact package `3fa33555`: zero required findings,

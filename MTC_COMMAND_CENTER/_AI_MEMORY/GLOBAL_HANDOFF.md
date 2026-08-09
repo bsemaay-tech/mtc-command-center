@@ -1,5 +1,30 @@
 # GLOBAL_HANDOFF
 
+## [Claude Fable 5] 2026-08-09 NIGHT — Stage 3/3B executed; B3 repair cycle; standing autonomy authority
+
+Overnight autonomous Lead run on `feature/donchian-crypto-ladder` (14+ commits, `7e9d1c4a`..`2d9ec6d6`+).
+**Stage 3 first host contact (owner-authorized, evidence-only):** transport ops 01–04 PASS (9/9 blocks
+verified remotely); **B3 STOP rc 3** — new design gap `B3-GAP-ENV` (unprivileged `gatea` cannot stat inside
+`/etc/mtc-bridge` 750 root:root; checks 1–3 all HELD); first-FAIL engaged; evidence closed/bound.
+**Stage 3B: R4-5 PASS** under fresh RUNID `-R45B` — RP4-C3 `restore_into` symlink guard proven load-bearing
+with real Linux symlinks (RED mutant wrote SQLite outside restore root; GREEN raised exact predicted Fail).
+**B3-GAP-ENV Option 1 repair cycle** (owner-resolved, delegated Max↔Codex xhigh): rounds 1–3 + audits 1–3 →
+BLOCK-at-round-3 with only 2 narrow survivors (6/8 verified CLOSED); owner authorized bounded round 4
+in-session (~21:35); round 4 running at write time. Also done: WP-I prereg draft round 1
+(`WPI_PREREG_DRAFT_ROUND1/`, placeholder RUNIDs, 22-check feasibility), Audit 2 checklist v2 (GLM 8-finding
+review applied, new §2b transport-evidence package), `EVIDENCE_INDEX.md`, proposal-doc R4-5 closure note.
+**NEW GOVERNANCE: `11_TRIAGE/STANDING_AUTONOMY_AUTHORITY_2026-08-09.md`** — owner grant: never idle on
+reversible/in-repo decisions, repair cycles auto-continue past round 3 on narrow survivors, spend Max
+credits to converge; HARD GATES unchanged (host mutation / real-host execution of repaired blocks /
+credentials / ARM / orders / broker / TESTNET / mainnet / master merge / WP-V). Also in auto-memory
+`overnight-autonomy-rules`. Ledger: Stage3+3B 0.4h booked; night block 0.9h proposed (~27.4h remaining).
+
+**PICK UP EXACTLY HERE:** read `11_TRIAGE/NEW_SESSION_KICKOFF_PROMPT_2026-08-09_NIGHT.md` (paste-ready
+continuation prompt, kept current at each milestone). Live sequence: B3 round 4 (Max) → Lead spot-verify +
+commit → narrow Codex closure audit (2 findings + regression sweep) → on PASS Stage 1B runkit re-freeze →
+WP-L P2 unit closure record. Parallel: GLM review of WP-I draft → integrate. Then morning summary ~06:30.
+Single-writer: ONE Lead session only drives this; check for a live sibling before dispatching.
+
 ## [Claude Fable 5] 2026-08-09 — TencentDB Agent Memory decision + TOOL-OFFLOAD v1 + REPO_MAP + Hermes status
 
 Evaluated TencentDB-Agent-Memory (v2.0.0, 2026-08-03) against a ChatGPT/YouTube report. **Decision: NOT installed in this repo** (governance conflict with canonical `_AI_MEMORY`, open prompt-cache regression upstream #120, no native Codex support, 6-day-old v2). Hermes-sandbox pilot approved in principle but **blocked: no Docker on machine**. Full record: `11_TRIAGE/TENCENTDB_AGENT_MEMORY_DECISION_2026-08-09.md`. Adopted two daemon-free patterns instead: `_AI_MEMORY/TOOL_OUTPUT_OFFLOAD_PROTOCOL.md` (TOOL-OFFLOAD v1, active convention) and `_AI_MEMORY/REPO_MAP.md` (250-line module map; DeepSeek-generated from mechanical inventory, Lead-audited; 16 sections marked `(inferred)`; regenerate after structural merges). Hermes findings: CLI one-shot works (`hermes -z ... --cli`); DeepSeek provider replied HERMES-OK; primary `openai-codex`/gpt-5.6-sol backend gives no response — "credential pool: no available entries" since 2026-08-08 (ChatGPT Pro quota/credential). HERMES-004 memory import still awaits Barış.
