@@ -56,7 +56,25 @@ Effort discipline: **xhigh is T0-only.** No xhigh sessions for T1/T2/T3 work.
   REQUEST_CHANGES, so Codex closes it). **No 4-model re-audit.** GLM/DeepSeek are not invoked
   for this item.
 
-## 5. Unchanged boundaries
+## 5. Process correction — meta-artifacts are never separately audited (added ~11:30)
+
+Applying §2–§3 to the WP-L P2 proposal-repair chain, by owner authority:
+
+- **Prompts, checklists, dispatch packages, repair specs, and other process artifacts are T3**:
+  implementer/Lead self-check only. They are never given their own model-audit rounds. The
+  2026-08-09 morning chain (9 meta-documents, ~3 h, audits of prompts and checklists of repairs)
+  must not be repeated.
+- The pending "fresh Claude/Codex/GLM package re-audit" round demanded before the Claude proposal
+  repair is **WAIVED**. The Claude counterpart repair (round 1/3) is dispatched directly against
+  the frozen spec `9ac60ac6` + hardened prompt, by the Lead, now.
+- Rigor concentrates where it belongs: the **repaired proposal document** (the artifact whose
+  scripts would eventually touch the staging host) receives the full T0-grade review — Lead
+  verification with reproduced falsifications, then Codex flagship re-audit. That bar is unchanged
+  from the repair spec §9; only the audit-of-process layers above it are removed.
+- `WPL_P2_COMMAND_GAP_PROPOSALS_AUDIT_2026-08-09.md` (F1–F9) is recognized as the **single
+  authorized round-1 audit** of the proposals; its findings stand.
+
+## 6. Unchanged boundaries
 
 This decision changes audit process only. Still requiring explicit separate Barış
 authorization: WP-V, KVM2 production deployment, master merge, credential loading, broker or
