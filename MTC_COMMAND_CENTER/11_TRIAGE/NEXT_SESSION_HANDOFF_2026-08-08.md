@@ -1,5 +1,66 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ NEWEST CHECKPOINT — GLM-5.2 post-Gate preregistration & gap matrix (WP-L Phase 2 → WP-I → Audit 2 → WP-A) (read-only) (2026-08-09)
+>
+> **PICK UP EXACTLY HERE:** (1) next autonomous safe unit is **local run-kit design/validation only** —
+> author the Group B read-only post-start subchecks and the five **COMMAND GAP** procedures (post-start
+> verifier, post-SIGTERM no-dangling-state, post-reboot subcheck, restore-into-temp wrapper,
+> stop+mask-only rollback step) as *designs*, and refresh the stale WP0 I-R2 evidence-map node;
+> **no staging execution**. (2) Keep `GATEA-STAGING` **retained and credential-free DISARMED — do not
+> discard it** (needed through WP-A). (3) **No server execution** until a human budget re-plan / ceiling
+> extension resolves the budget-evidence blocker (exact 50 h balance NOT REPRODUCIBLE) **and** a named
+> authority lift covers any WP-V/KVM2/credential/broker/ARM/order/TESTNET-mainnet/economic action.
+>
+> **Conclusion:** the correct post-Gate sequence **`WP-L Phase 2 → WP-I staging verification → Audit 2 →
+> WP-A`** is verified from source (roadmap §23a steps 3–5 + §"Audit 2" lines 863/972–973/1199;
+> runbook `:137`). Its obligations, reusable evidence, and unresolved command gaps are explicitly
+> mapped; it is **not execution-ready**. **Do not start WP-V; do not rerun Gate A.** Gate-A A-0..A-9
+> PASS is staging acceptance only — reuse its immutable evidence where predicates overlap, but it is not
+> WP-L/WP-I/WP-A completion. Full record:
+> `11_TRIAGE/GATE_A_POST_GATE_PREREGISTRATION_GAP_MATRIX_2026-08-09.md`.
+>
+> **Matrix groups:** A reusable immutable Gate-A evidence (no host action) · B read-only post-start host
+> checks · C mutating host checks · D Audit 2 (current `AGENTS.md` four-auditor D025 contract, **not**
+> older plan §1020 Codex-only wording) · E WP-A targeted Ubuntu verification. All host commands marked
+> **NOT EXECUTED**. 56-entry hash-locked closure re-confirmed at the candidate checkout (56 entries,
+> 1345 hashes). The map contains **10 existing requested test symbols plus 1 stale/absent WP0 symbol**:
+> `test_kill_restart_after_request_commit_keeps_killed_and_resumes_once` (an evidence-map problem, not a
+> product defect). D026 binds: existing tests are not new closure evidence for a newly named defect.
+>
+> **Gaps recorded:** (G1) "reboot DISARMED" must be defined precisely — first-start `Restart=no` + no
+> `[Install]` = cannot auto-start; steady profile gated/inert/no-`[Install]`. Reboot preserves mask
+> state: plain reboot from the current unmasked state expects inactive+unmasked; inactive+masked
+> requires a separate authorised pre-reboot mask step. Either path must prove no process/listener/order
+> and DB not ARMED; do not yet call the missing `[Install]` a defect. (G2) full `verify.sh` is a
+> masked/unstarted verifier and **intentionally fails post-start** —
+> use bounded subchecks, do not prescribe it now. (G3) rollback stop+mask is feasible but release-rebind
+> has an **unmet prerequisite** (only candidate `2ce41e34…321b` installed; old install already absent) —
+> do not invent a target. (G5) A-5 proved SIGKILL/restart/integrity/DISARMED, **not** graceful SIGTERM or
+> reboot; A-6 empty-broker startup ≠ queue/full-reconcile (schema-4 disables it). (G6) README "never
+> executed" text is stale after Gate A (cite historically). (G7) exact 50 h balance NOT REPRODUCIBLE →
+> all host execution blocked.
+>
+> **Lead acceptance corrections:** actual TESTNET egress observation needs credentials plus
+> broker/TESTNET network authority, **not ARM**; any future capture remains DISARMED and no-order.
+> Candidate lock SHA-256 was re-derived as
+> `40873556a7f4586d77f165b985863138c9fc95b095da64ac52456b8c49098ec3`.
+>
+> **Blockers:** (1) budget — 50 h balance not reproducible (`GATE_A_50H_LEDGER_RECONSTRUCTION_2026-08-09.md`);
+> (2) authority — WP-V/KVM2/master/credentials/broker/ARM/orders/TESTNET-mainnet/economic action each need
+> a new named lift. The broad standing authorisation does **not** override the narrower budget/safety hold.
+>
+> **Routing:** Tier 4 protected Bridge safety/evidence preregistration; GLM-5.2 via Z.AI Coding Plan;
+> owner exact-model request. Worker scope: GLM-5.2 edited only the four task-named files (this prepend
+> plus `_AI_MEMORY/NEXT_STEPS.md`, `_AI_MEMORY/GLOBAL_HANDOFF.md`, and the new gap-matrix record) and ran
+> no SSH/Gate-A-script/sudo/systemctl/reboot/test/package/Git/staging-mutation/credential-read/
+> broker-network command. Note: this prepend shifts the line numbers of the older checkpoints below it
+> further down; locate cited blocks by their stable header text, not raw line numbers.
+>
+> **Stop conditions:** any WP-V/KVM2/master/ARM/credentials/broker/orders/economic action without a named
+> lift; any evidence needing a product repair; any unevidenced hour claim; inventing a rollback target,
+> running `verify.sh` wholesale post-start, or destructively testing the active DB; any service drift on
+> `GATEA-STAGING`.
+
 > ## ▶ NEWEST CHECKPOINT — GLM-5.2 bounded documentation: 50h ledger reconstructed; current exact balance NOT REPRODUCIBLE (read-only) (2026-08-09)
 >
 > **PICK UP EXACTLY HERE:** (1) read-only/local preregistration gap matrix for **WP-L Phase 2 + WP-I
