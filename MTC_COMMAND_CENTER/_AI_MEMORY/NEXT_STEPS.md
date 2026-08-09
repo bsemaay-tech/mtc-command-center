@@ -1,5 +1,23 @@
 # NEXT_STEPS
 
+## GATE A — run-kit E canonically ACCEPTED at `b2c369f7`; integrate/package next (2026-08-09)
+
+Claude Opus 5 xhigh and Codex 5.6-sol xhigh both executed D RED 6/29, exact pre-repair E RED
+28/29, repaired E GREEN 29/29, syntax/compile/hash/diff/clean checks and returned
+**PASS-WITH-NITS** with zero required repairs. DeepSeek ClinePass is unavailable and GLM-5.2 could
+not execute; both are supplemental BLOCKs with clean/no-finding static results. No unresolved
+reproduced required finding. D025/D026 acceptance is satisfied for source `b2c369f7`.
+
+- **[AI: Codex] NEXT:** fast-forward active `feature/donchian-crypto-ladder` to the accepted
+  candidate/history and push; then build E from raw committed blobs and verify locally.
+- **[AI: Codex] AFTER PACKAGE CHECKPOINT:** transfer/extract/re-verify on staging, update memory,
+  confirm E log absent, then run A-5 exactly once. Stop on genuine FAIL; A-6 only after A-5 PASS
+  and a new memory checkpoint.
+- **[AI: Any] SAFETY:** A-5 remains FAIL until rerun; A-6..A-9 NOT RUN. Hard exclusions unchanged.
+  Record: `11_TRIAGE/GATE_A_A5_E_CANONICAL_ACCEPTANCE_2026-08-09.md`.
+
+---
+
 ## GATE A — round-3 canonical audits: Claude accepts; Codex evidence-capture rerun required (2026-08-09)
 
 At frozen source `b2c369f7`: Claude Opus 5 xhigh executed all three cases and returned

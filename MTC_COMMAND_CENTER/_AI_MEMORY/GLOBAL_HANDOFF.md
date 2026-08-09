@@ -1,5 +1,18 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-08-09 — Gate A A5 run-kit E canonically accepted
+
+Frozen source `b2c369f7` is accepted: Claude Opus 5 xhigh and Codex 5.6-sol xhigh both executed the
+mandatory D RED 6/29, exact pre-repair E RED 28/29, repaired E GREEN 29/29 plus
+syntax/compile/hash/diff/clean checks and returned PASS-WITH-NITS with zero required repairs.
+DeepSeek route unavailable and GLM non-execution BLOCK are supplemental with no source finding.
+No unresolved reproduced required finding. Next: integrate/push active feature branch, package from
+raw committed blobs, verify, transfer/re-verify, memory checkpoint, then A-5 once. A-5 remains FAIL
+until rerun; A-6..A-9 NOT RUN. Record:
+`11_TRIAGE/GATE_A_A5_E_CANONICAL_ACCEPTANCE_2026-08-09.md`.
+
+---
+
 ## [Codex GPT-5.6-sol] 2026-08-09 — Canonical audits need Codex evidence-capture rerun
 
 Claude Opus 5 xhigh executed mandatory D/pre-repair/E and returned PASS-WITH-NITS with zero required

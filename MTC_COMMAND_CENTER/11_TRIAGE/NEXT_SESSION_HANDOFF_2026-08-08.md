@@ -1,5 +1,17 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ NEWEST CHECKPOINT — run-kit E canonically ACCEPTED at `b2c369f7` (2026-08-09)
+>
+> Claude Opus 5 xhigh and Codex 5.6-sol xhigh both executed D RED 6/29, exact pre-repair E
+> RED 28/29, repaired E GREEN 29/29 plus syntax/compile/hash/diff/clean checks and returned
+> PASS-WITH-NITS, zero required repairs. DeepSeek unavailable/GLM non-execution are supplemental
+> BLOCKs with no source finding. No unresolved reproduced finding. **Next:** integrate/push active
+> feature branch; package E from raw committed blobs; verify; transfer/extract/re-verify; memory
+> checkpoint; run A-5 once. A-5 remains FAIL; A-6..A-9 NOT RUN. Record:
+> `11_TRIAGE/GATE_A_A5_E_CANONICAL_ACCEPTANCE_2026-08-09.md`.
+>
+> ---
+
 > ## ▶ NEWEST CHECKPOINT — Claude accepts; Codex evidence-capture rerun required (2026-08-09)
 >
 > At frozen `b2c369f7`, Claude Opus 5 xhigh executed all evidence and returned PASS-WITH-NITS,

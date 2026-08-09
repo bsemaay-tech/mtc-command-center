@@ -46,7 +46,7 @@ after the post-probe reading and returns failure when `rem_ds <= 0`. The equalit
 stated once and applied identically at all three guards: **`now >= deadline` is expiry**, which
 is the rule round 1 already used at the other two. `READY_ELAPSED_DS` / `READY_ATTEMPTS` are set
 on every path; a late success takes the ordinary expiry path (`fail()`, nonzero exit, no second
-start). Header field is now `A5_kit_repair_round=3`. The D→D diff is still exactly eight hunks
+start). Header field is now `A5_kit_repair_round=3`. The D→E diff is still exactly eight hunks
 and `fail "` sites are still 24 (D) → 28 (E).
 
 One focused named check was added, **28 → 29**, nothing renamed, removed, weakened or skipped:
