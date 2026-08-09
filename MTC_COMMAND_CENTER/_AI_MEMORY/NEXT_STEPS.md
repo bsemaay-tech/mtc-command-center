@@ -1,5 +1,63 @@
 # NEXT_STEPS
 
+## GATE A — Post-Gate preregistration & gap matrix (WP-L Phase 2 → WP-I → Audit 2 → WP-A) (read-only) (2026-08-09)
+
+**Read-only documentation unit; no staging command run.** Starting HEAD `52b8f496`; candidate
+`2ce41e34…321b` unchanged. Full record:
+`11_TRIAGE/GATE_A_POST_GATE_PREREGISTRATION_GAP_MATRIX_2026-08-09.md`. Worker scope: GLM-5.2 edited
+only the four task-named files and ran no SSH/Gate-A-script/sudo/systemctl/reboot/test/package/Git/
+staging-mutation/credential-read/broker-network command.
+
+**Result:** the correct post-Gate sequence **`WP-L Phase 2 → WP-I staging verification → Audit 2 →
+WP-A`** is verified from source (roadmap §23a steps 3–5 + §"Audit 2"; runbook `:137`). Its obligations,
+reusable evidence, and unresolved command gaps are explicitly mapped; it is **not execution-ready**.
+**Do not start WP-V; do not rerun Gate A.** Gate-A A-0..A-9 PASS is staging acceptance
+only — reuse its immutable evidence where predicates overlap, but it is not WP-L/WP-I/WP-A completion.
+56-entry hash-locked closure re-confirmed at the candidate checkout (56 entries, 1345 hashes).
+
+**Matrix groups:** A reusable immutable Gate-A evidence · B read-only post-start host checks · C
+mutating host checks · D Audit 2 (current `AGENTS.md` four-auditor D025 contract, **not** older plan
+wording) · E WP-A targeted Ubuntu verification. All host commands **NOT EXECUTED**; **COMMAND GAP**
+markers where an exact safe command is not yet specified. The map has **10 existing requested test
+symbols plus 1 stale/absent WP0 symbol**
+(`test_kill_restart_after_request_commit_keeps_killed_and_resumes_once`), which is an evidence-map
+problem, not a product defect. D026 binds (existing tests ≠ new closure evidence).
+
+**Key gaps:** (G1) reboot DISARMED must be defined precisely — first-start `Restart=no` + no `[Install]`
+= cannot auto-start; steady profile gated/inert/no-`[Install]`; reboot preserves mask state, so plain
+reboot from the current unmasked state expects inactive+unmasked, while inactive+masked requires a
+separate pre-reboot mask step. Either path must prove no process/listener/order and DB not ARMED; no
+defect yet. (G2) full `verify.sh` intentionally fails
+post-start — use bounded subchecks. (G3) rollback rebind unmet prerequisite (only candidate installed).
+(G5) A-5 = SIGKILL not SIGTERM/reboot; A-6 ≠ queue/full-reconcile. (G6) README "never executed" stale
+post-Gate. (G7) exact 50 h balance NOT REPRODUCIBLE → all host execution blocked.
+
+**Lead correction:** actual TESTNET egress observation needs credentials plus broker/TESTNET network
+authority, **not ARM**; any future capture remains DISARMED and no-order. Candidate lock SHA-256 was
+re-derived as `40873556a7f4586d77f165b985863138c9fc95b095da64ac52456b8c49098ec3`.
+
+**Blockers:** (1) budget — 50 h balance not reproducible; human re-plan/ceiling extension required
+before any server-executed WP-L/WP-I/WP-A work. (2) authority — WP-V/KVM2/master/credentials/broker/
+ARM/orders/TESTNET-mainnet/economic action each need a new named lift.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Any]** Next autonomous safe unit = **local run-kit design/validation only**: author Group B
+  read-only subchecks + the five COMMAND-GAP procedures (post-start verifier, post-SIGTERM
+  no-dangling-state, post-reboot subcheck, restore-into-temp wrapper, stop+mask-only rollback step) as
+  *designs*; refresh the stale WP0 I-R2 evidence-map node. **No staging execution.**
+- **[AI: Any]** Keep `GATEA-STAGING` retained, active, credential-free DISARMED; do not discard (needed
+  through WP-A).
+- **[AI: Barış]** Re-plan remaining hours vs the hard 50 h ceiling, or issue an explicit ceiling
+  extension, before any server-executed post-Gate work.
+- **[AI: Barış]** Named explicit lift required before WP-V/KVM2/master/credentials/broker/ARM/orders/
+  TESTNET-mainnet/economic action/old-payload deletion.
+
+**Stop conditions:** any WP-V/KVM2/master/ARM/credentials/broker/orders/economic action without a named
+lift; any evidence needing a product repair; any unevidenced hour claim; inventing a rollback target,
+running `verify.sh` wholesale post-start, or destructively testing the active DB; any service drift on
+`GATEA-STAGING`.
+
 ## GATE A — 50h ledger reconstructed; current exact balance NOT REPRODUCIBLE (read-only) (2026-08-09)
 
 **Read-only documentation checkpoint; no staging command run.** Starting HEAD `921449f1`. Full record:
