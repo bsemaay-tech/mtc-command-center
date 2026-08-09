@@ -76,6 +76,107 @@
 > unchanged, and all substantive gap conclusions (G1, G2, G3, G5, G6, G7) survive — only their
 > citations were repaired.
 
+> # ⛔ ROUND-2 SUPERSEDING CORRECTION — 2026-08-09 (lock byte provenance)
+>
+> **Applied by:** a second, fresh `claude-opus-5` (xhigh) documentation-only repair session, same
+> two-file scope, at documentation HEAD `f8a6bc0f1a7fa00fcd1637297e05424732386da7`.
+> **Full evidence:** `GATE_A_POST_GATE_PROVENANCE_REPAIR_2026-08-09.md` §2.7 (reproduction), §4.1,
+> §5.1, §6.7, §10.
+> **Where this block conflicts with anything below — including the round-1 block above — this block
+> governs.**
+>
+> **The defect.** Three different values were collapsed into one "candidate lock hash":
+>
+> | Value | What it actually is | Status |
+> |---|---|---|
+> | `47f53fa227bf0f18b9bf9bd77e060d8856961728` | **Git blob object ID (SHA-1)** of `requirements.lock` — hashes `"blob 117762\0" + content`, *not* the content | ✅ correct, and ref-invariant at `2ce41e34…321b`, `851d2aa5`, `f8a6bc0f` **and** frozen source `637307e8` |
+> | `a1881296c8cb6e0e9df33554aa2a25652cfeba2506530c74c7845ba2f58bf66e` | **SHA-256 of the raw blob content** (LF, **117 762 B**) — the candidate lock's real content identity, and the **expected** byte value of the deployed LF payload | ✅ **use this** — as the *expected* value; see the round-3 block for what has and has not been observed on the host |
+> | `40873556a7f4586d77f165b985863138c9fc95b095da64ac52456b8c49098ec3` | **SHA-256 of a Windows CRLF worktree checkout** (**119 274 B**), produced by `core.autocrlf=true` + `* text=auto` on the documentation machine | ⛔ **not a candidate or host value — do not cite** |
+>
+> `119 274 − 117 762 = 1 512` = exactly the blob's line count: one `\r` per line, nothing else.
+>
+> **Why this matters here.** It is not a labelling nicety — it is a live host predicate this matrix
+> was about to preregister. At the candidate:
+> `…/deploy/linux/package.sh:78-83` builds the payload with
+> `git -c core.autocrlf=false -c core.eol=lf … archive` (its comment at `:79-81` names the Windows
+> CRLF hazard by name); `…/deploy/linux/install.sh:401,416` hashes the **installed** lock and writes
+> it to `/etc/mtc-bridge/install_manifest.json` as `requirements_lock_sha256`;
+> `…/deploy/linux/verify.sh:82-91` re-verifies every release file against `RELEASE_SHA256SUMS`.
+> The installed lock is therefore **expected** to hash to `a1881296…` (⛔ round-3 precision:
+> expected **by construction**; no observed host read of that value exists in the located evidence —
+> see the round-3 block above). **A3's "Output artifact" line invited a run-kit author to preregister
+> `40873556…` as the expected value — a hash of no byte stream the candidate contains, so against a
+> host that does match the payload it fails and raises a fabricated lock-drift STOP on a protected
+> surface.**
+>
+> **This was already right before it was broken.** `SECURITY_BASELINE.md:28-29` records "Git blob"
+> and "Raw Git-blob SHA-256" as two separate rows with exactly these values, and its own snippet at
+> `:155-174` derives them the same way (`git cat-file blob` → `hashlib.sha256` at `:172-174`);
+> `WPI_READINESS_RECORD_2026-08-01.md:52` records both.
+> `40873556…` exists in no product file and in no record predating 2026-08-08.
+>
+> **Also corrected in round 2:**
+>
+> 1. **A3's "lock-identity precision" caveat is withdrawn.** The lock blob at `637307e8` is *also*
+>    `47f53fa2…`, so `SECURITY_BASELINE.md`'s lock identity **is** the current candidate's. There is
+>    no separate "`1adf9ae5` lock blob hash" to avoid citing.
+> 2. **The remaining bare product/deploy citations are now qualified** — the ones round 1 corrected
+>    were qualified, but the ones it did not dispute were left as bare `<path>` references, which
+>    G8's own rule classes as unverified. See the new §4b and repair-record §6.7.
+> 3. **"Line numbers coincide" ≠ "blob is ref-invariant."** Three of the seven cited test files are
+>    byte-identical on both refs; a fourth agreed by luck. See §4 and repair-record §5.1.
+> 4. **The gated steady profile carries no start-mode pin** (§0.6 applies to the first-start unit
+>    only). Recorded in A4 as a preregistration prerequisite — **not** as a defect.
+>
+> **What round 2 does NOT change.** No product defect. Candidate unchanged. No staging action, test
+> execution, or Git mutation. The 56-entry / 1345-hash counts stand (re-derived again). Every
+> round-1 conclusion other than the lock-hash label stands, G4 stays withdrawn, and WP0 stays
+> uneditable.
+
+> # ⛔ ROUND-3 SUPERSEDING CORRECTION — 2026-08-09 (expected payload bytes vs observed host bytes)
+>
+> **Applied by:** a third, fresh `claude-opus-5` (xhigh) documentation-only repair session, same
+> two-file scope, at documentation HEAD `f8a6bc0f1a7fa00fcd1637297e05424732386da7` (rounds 1–2 present
+> as uncommitted changes to these two files; nothing committed, no Git mutation).
+> **Full evidence:** `GATE_A_POST_GATE_PROVENANCE_REPAIR_2026-08-09.md` §2.7(e), §2.7(g), §3, §11.
+> **Where this block conflicts with anything below — including both blocks above — this block
+> governs.**
+>
+> **What stands.** `a1881296c8cb6e0e9df33554aa2a25652cfeba2506530c74c7845ba2f58bf66e` remains the
+> correct **expected source/payload byte hash** of `requirements.lock` — SHA-256 of the raw **LF**
+> Git-blob content, re-derived a third time this round (`git cat-file blob 47f53fa2… | sha256sum`;
+> `git cat-file -s` → `117762`), and the byte stream the LF-pinned `git archive` ships
+> (`2ce41e34…321b:…/deploy/linux/package.sh:78-83`). `40873556…` stays withdrawn — that conclusion is
+> byte arithmetic over the blob and depends on nothing corrected here.
+>
+> **What is corrected.** Rounds 1–2 stated as **fact** that the lock installed on `GATEA-STAGING`
+> hashes to `a1881296…` and that `/etc/mtc-bridge/install_manifest.json` → `requirements_lock_sha256`
+> carries it. That is a **derivation from source and packaging mechanics, not an observation.**
+> **No Gate-A evidence located in this repair records the observed SHA-256 of
+> `/opt/mtc-bridge/releases/2ce41e34…321b/IBKR_PAPER_BRIDGE/requirements.lock`, nor the observed
+> `requirements_lock_sha256` on the host.** What the evidence actually holds (repair-record §2.7g):
+> the transition inventory's read of that manifest records **boolean/schema fields only, no hash of
+> any kind**; `install.sh` writes `LOCK_SHA` into the manifest (`:416`) but never logs it (`:431-433`),
+> so it is not expected in the A-2 capture either; and the only local `verify_lock` /
+> `RELEASE_SHA256SUMS` PASS records belong to the **superseded** `ebada020` and `1adf9ae5` releases and
+> carry package **counts**, never a lock hash.
+>
+> | Value class | Status in this matrix |
+> |---|---|
+> | Expected source/payload byte hash (LF, 117 762 B) `a1881296…` | ✅ **Established.** Preregister as the *expected* value. |
+> | Observed installed-host value — `sha256sum` of the installed lock / manifest `requirements_lock_sha256` | ⛔ **NOT IN EVIDENCE.** An open read-only host predicate, blocked by §1. Never write it as known. |
+> | Windows worktree checkout SHA-256 (CRLF, 119 274 B) `40873556…` | ⛔ **Never cite** (unchanged). |
+>
+> **Effect on preregistration (A3, B1).** The lock comparison is a predicate **to be tested**, not a
+> restatement of a verified fact. On a mismatch against `a1881296…` the disposition is **investigate
+> read-only**, weighing a wrong expected value *and* genuine drift — do not auto-classify either way.
+> Round 2's "documentation error, not lock drift" disposition is specific to the withdrawn
+> `40873556…` and does not transfer.
+>
+> **What round 3 does NOT change.** No product defect. Candidate unchanged. No staging action, no host
+> read, no test execution, no Git mutation, no commit. Counts 56 / 1345 stand. G4 stays withdrawn,
+> WP0 stays uneditable, and every other round-1 and round-2 conclusion stands.
+
 - **Date:** 2026-08-09.
 - **Model / route:** GLM-5.2 via the Z.AI Coding Plan route (owner-requested exact model).
 - **Session type:** Bounded documentation unit, **read-only / local**. Starting documentation HEAD
@@ -97,15 +198,26 @@
   symbols plus 1 stale/absent symbol**~~ (**SUPERSEDED 2026-08-09 — see below**); reboot does **not**
   create a mask (the currently running unit is unmasked, so its post-reboot mask state must be
   preregistered rather than assumed); and credentialed TESTNET egress observation does **not** require
-  ARM. ARM remains forbidden. Codex also re-derived the candidate lock blob SHA-256 as
-  `40873556a7f4586d77f165b985863138c9fc95b095da64ac52456b8c49098ec3` (56 entries, 1345 hashes).
+  ARM. ARM remains forbidden. ~~Codex also re-derived the candidate lock blob SHA-256 as
+  `40873556a7f4586d77f165b985863138c9fc95b095da64ac52456b8c49098ec3` (56 entries, 1345 hashes).~~
+  **⛔ SUPERSEDED 2026-08-09 (round 2) — see the next two bullets.**
 - **⛔ Superseding correction to the first Lead item:** the test map contains **11 existing symbols
   and zero stale symbols** at the frozen candidate. The "10 + 1 stale" reading inherited the
   authoring session's wrong ref; it is a fact about `851d2aa5`, not about `2ce41e34…321b`. The other
-  two Lead corrections stand. The lock SHA-256 also stands unchanged, and is now doubly safe: the
-  `requirements.lock` blob is **byte-identical on both refs**
-  (`47f53fa227bf0f18b9bf9bd77e060d8856961728`), so that hash is ref-invariant. Re-derived at the
-  candidate this unit: **56** `==`-pinned entries, **1345** `--hash=sha256:` lines.
+  two Lead corrections stand.
+- **⛔ Superseding correction to the fourth Lead item (round 2) — the lock hash.** The counts are
+  right (**56** `==`-pinned entries, **1345** `--hash=sha256:` lines, re-derived at the candidate
+  twice), and the blob **is** byte-identical across refs
+  (`47f53fa227bf0f18b9bf9bd77e060d8856961728`) — but the value `40873556…` is **not** a candidate
+  lock hash and round 1 was wrong to bless it. It is the SHA-256 of a **Windows CRLF worktree
+  checkout** (119 274 B). The lock's content SHA-256 is
+  **`a1881296c8cb6e0e9df33554aa2a25652cfeba2506530c74c7845ba2f58bf66e`** (LF, 117 762 B), and *that*
+  is what blob identity makes ref-invariant. Note also that `47f53fa2…` is a **blob object ID**, not
+  a content hash — calling it "the lock blob SHA-256" conflated two different hashes of two
+  different inputs. Reproduction: repair-record §2.7.
+  ⛔ **Round-3 scope on this same value:** `a1881296…` is the **expected** source/payload byte hash.
+  The staging host's own value — installed lock, and manifest `requirements_lock_sha256` — has never
+  been read in any located evidence (round-3 block; §4b; repair-record §2.7g).
 
 > **Reader contract.** This is a *preregistration* matrix: it records what each obligation is, what
 > evidence already exists, and the exact method that *would* close it — but it executes nothing on the
@@ -135,11 +247,32 @@
    state 5). Therefore **no host execution may be authorised or performed in this unit**; local /
    read-only preparation continues.
 5. **56-entry hash-locked closure confirmed at the candidate** (re-verified at
-   `2ce41e34…321b` by the repair unit): `requirements.lock` has **56** `==`-pinned entries and
-   **1345** `--hash=sha256:` lines (≥1 hash per entry); `verify_lock.py` rejects
-   URLs/VCS/index-overrides and requires exact `==` + ≥1 hash. Both blobs are **identical on the
+   `2ce41e34…321b` by both repair rounds):
+   `2ce41e34…321b:IBKR_PAPER_BRIDGE/requirements.lock` has **56** `==`-pinned entries and
+   **1345** `--hash=sha256:` lines (≥1 hash per entry);
+   `2ce41e34…321b:IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py` (blob `8ccd6f32…`) rejects
+   URLs/VCS/index-overrides and requires exact `==` + ≥1 hash (`parse_lock` at `:28`), and prints
+   the count it actually parsed rather than a constant (`:97`). Both blobs are **identical on the
    documentation and candidate refs**, so this pair of facts is ref-invariant and was the one class
    of product claim the original provenance defect could not corrupt.
+   **⛔ Round-2 precision — the lock's three identities, none interchangeable:**
+   - **Git blob object ID (SHA-1):** `47f53fa227bf0f18b9bf9bd77e060d8856961728` — ref-invariant at
+     `2ce41e34…321b`, `851d2aa5`, `f8a6bc0f` and frozen source `637307e8`.
+   - **Raw blob content SHA-256 (LF, 117 762 B):**
+     `a1881296c8cb6e0e9df33554aa2a25652cfeba2506530c74c7845ba2f58bf66e` — **the value to
+     preregister, as the *expected* one**; it is what the LF-pinned `git archive` ships, and therefore
+     what `install.sh` is expected to record as `requirements_lock_sha256` and what
+     `RELEASE_SHA256SUMS` is expected to re-verify.
+   - **Windows worktree CRLF checkout SHA-256 (119 274 B):** `40873556…` — a local artifact of this
+     documentation machine. **Never a candidate or host value.**
+   - **⛔ Observed installed-host value (round 3): NOT IN EVIDENCE.** Neither a `sha256sum` of
+     `/opt/mtc-bridge/releases/2ce41e34…321b/IBKR_PAPER_BRIDGE/requirements.lock` nor the host's
+     `/etc/mtc-bridge/install_manifest.json` → `requirements_lock_sha256` has been captured in any
+     record located by the repair unit. This is a **fourth, distinct identity** — an open read-only
+     host predicate — and `a1881296…` is its *expected*, not its confirmed, value.
+
+   Derive the content hash as `git cat-file blob 47f53fa2… | sha256sum`. Do **not** hash the file
+   from a Windows checkout, and do **not** write the derived value as though the host had been read.
 6. **⛔ NEW (candidate-only; omitted by the original authoring session) — the deployed candidate
    enforces credential-free DISARMED start mode at three layers.** None of this exists in the
    documentation-branch deploy tree (`git grep MTC_BRIDGE_START_MODE 851d2aa5 --
@@ -202,7 +335,10 @@ must be **reused, not re-run**. None of them is, by itself, WP-L/WP-I/WP-A compl
 
 ### A1 — Frozen product candidate identity
 - **Predicate:** the deployed artifact equals the accepted frozen candidate.
-- **Canonical source:** `GATE_A_A9_PASS_FINAL_2026-08-09D.md`; `deploy/linux/README.md`.
+- **Canonical source:** `GATE_A_A9_PASS_FINAL_2026-08-09D.md`;
+  `2ce41e34…321b:IBKR_PAPER_BRIDGE/deploy/linux/README.md` (⛔ round-2 qualification — candidate blob
+  `f3f1d75e7e…`, **differs** from the documentation blob `666b79d834…`; cite the candidate, and cite
+  its "never been executed" lines only as historical — G6).
 - **Existing evidence:** candidate `2ce41e34bceb599d80af24c5c33d835820ec321b`; A-0..A-9 ran against
   exactly this SHA; transition inventory confirms only this release is installed at
   `/opt/mtc-bridge/releases/2ce41e34…321b`.
@@ -244,21 +380,47 @@ must be **reused, not re-run**. None of them is, by itself, WP-L/WP-I/WP-A compl
 - **Remaining evidence:** this is **PRE-GATE-A / STATIC ONLY** — it is not a runtime egress capture,
   not an Ubuntu install result, and not destination-egress control. Runtime egress / TESTNET-only /
   no-mainnet remain owed (see C5).
-- **⚠ Lock-identity precision:** the lock blob/SHA-256 recorded in SECURITY_BASELINE is for frozen
-  source `637307e8` / candidate `1adf9ae5…`. The current candidate is `2ce41e34…321b`. The
-  *property* (56 exact+hashed entries; `verify_lock.py` contract) is source-invariant and was
-  re-confirmed **at the candidate** by the repair unit (56 entries, 1345 hashes), and the exact lock
-  **blob SHA-256 re-derived by the Lead at `2ce41e34…321b` is
-  `40873556a7f4586d77f165b985863138c9fc95b095da64ac52456b8c49098ec3`.** Do not cite the
-  `1adf9ae5` blob hash as the current candidate's.
-- **✅ Provenance-safe:** `requirements.lock` (`47f53fa2…`) and `verify_lock.py` (`8ccd6f32…`) are
-  **byte-identical on the documentation and candidate refs**, so the Lead's SHA-256 remains valid
-  without re-derivation and this A3 lock claim is unaffected by the provenance defect.
+- **~~⚠ Lock-identity precision:~~ ⛔ WITHDRAWN AND REPLACED (round 2).** The withdrawn text read:
+  *"the lock blob/SHA-256 recorded in SECURITY_BASELINE is for frozen source `637307e8` / candidate
+  `1adf9ae5…` … the exact lock blob SHA-256 re-derived by the Lead at `2ce41e34…321b` is
+  `40873556…`. Do not cite the `1adf9ae5` blob hash as the current candidate's."* Both halves are
+  wrong:
+  - `git rev-parse 637307e8:IBKR_PAPER_BRIDGE/requirements.lock` → `47f53fa2…` — the **same blob**
+    as the candidate's. SECURITY_BASELINE's lock identity therefore **is** the current candidate's,
+    and there is no distinct "`1adf9ae5` lock blob hash" to avoid citing.
+  - The value to cite is the one SECURITY_BASELINE already records at `:29`:
+    **`a1881296c8cb6e0e9df33554aa2a25652cfeba2506530c74c7845ba2f58bf66e`** (raw blob content, LF,
+    117 762 B). `40873556…` is a Windows CRLF worktree checkout hash (119 274 B) and is **not** a
+    candidate or host value.
+  The *property* (56 exact+hashed entries; `verify_lock.py` contract) is source-invariant and was
+  re-confirmed at the candidate in both rounds (56 entries, 1345 hashes).
+- **✅ Provenance-safe:** `2ce41e34…321b:IBKR_PAPER_BRIDGE/requirements.lock` (`47f53fa2…`) and
+  `2ce41e34…321b:IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py` (`8ccd6f32…`) are **byte-identical
+  on the documentation and candidate refs**, so this A3 lock claim is unaffected by the *provenance*
+  defect. ⛔ **Round-2 caveat:** ref-invariance protects the **blob**, not the number attached to it.
+  The wrong hash was recorded *despite* the blob being identical, because it was taken from a
+  Windows checkout instead of from the blob. "Ref-invariant" is not a licence to skip re-derivation.
 - **Mutation class:** `local-static`. **Authority/budget:** none.
-- **Output artifact:** the re-derived candidate lock blob SHA-256 (to be recorded when computed; NOT
-  YET recorded here). **PASS:** 56 entries, every entry exact+hashed, no URL/VCS/index override.
-  **Failure disposition:** a non-hashed or count-drifting lock is a product-SHA change (STOP; not a
-  documentation unit). **D026:** n/a (inventory, not a regression test).
+- **Output artifact (⛔ RECORDED round 2; ⛔ scoped round 3):** lock **blob object ID**
+  `47f53fa227bf0f18b9bf9bd77e060d8856961728`; lock **raw content SHA-256 (LF, 117 762 B)**
+  `a1881296c8cb6e0e9df33554aa2a25652cfeba2506530c74c7845ba2f58bf66e`, derived by
+  `git cat-file blob 47f53fa2… | sha256sum`. **This is the value a run-kit step must preregister as
+  the *expected* one** when comparing against `/etc/mtc-bridge/install_manifest.json` →
+  `requirements_lock_sha256` (written by `2ce41e34…321b:…/deploy/linux/install.sh:401,416`) or against
+  `RELEASE_SHA256SUMS` (re-verified by `…/verify.sh:82-91`).
+  ⛔ **Round-3 boundary — the host side of this comparison is still open.** Both values above are
+  **source-derived**. No located Gate-A evidence records the **observed** installed-lock SHA-256 or
+  the host manifest's `requirements_lock_sha256` (repair-record §2.7g): the transition inventory read
+  that manifest for boolean/schema fields only, `install.sh` never logs `LOCK_SHA`, and the local
+  `verify_lock`/`RELEASE_SHA256SUMS` PASS records belong to the superseded `ebada020` / `1adf9ae5`
+  releases and carry counts, not hashes. So this A3 artifact closes the **static/local** predicate
+  only; the host comparison remains a preregistered, unexecuted read-only step (B1), blocked by §1.
+  **PASS (static, satisfied):** 56 entries, every entry exact+hashed, no URL/VCS/index override.
+  **Failure disposition:** a non-hashed or count-drifting lock in **source** is a product-SHA change
+  (STOP; not a documentation unit). A **host** mismatch against `a1881296…`, whenever that comparison
+  is first authorised and run, is **investigate read-only** — weigh a wrong expected value *and*
+  genuine drift before escalating or dismissing; do not auto-classify. **D026:** n/a (inventory, not a
+  regression test).
 
 ### A4 — Unit-template static invariants (design facts)
 - **Predicate:** the installed unit declares the safety-critical directives.
@@ -278,9 +440,27 @@ must be **reused, not re-run**. None of them is, by itself, WP-L/WP-I/WP-A compl
   `ProtectSystem=strict`, `NoNewPrivileges=yes`, `KillSignal=SIGTERM`, `TimeoutStopSec=45`,
   `StartLimitBurst=3`, `ReadWritePaths=<state> <log>`, `MTC_BRIDGE_STATE_DB=<db>`, and
   `MTC_BRIDGE_START_MODE=credential_free_disarmed`.
+- **⛔ Candidate line anchors (round 2 — the directives above were previously asserted without
+  them).** At `2ce41e34…321b:IBKR_PAPER_BRIDGE/deploy/linux/systemd/mtc-bridge-first-start.service.template`
+  (blob `c1823254…`): `Environment=MTC_BRIDGE_STATE_DB=…` **:40**;
+  `Environment=MTC_BRIDGE_START_MODE=credential_free_disarmed` **:42**; `KillSignal=SIGTERM` **:48**;
+  `KillMode=mixed` **:49**; `TimeoutStopSec=45` **:51**; `FinalKillSignal=SIGKILL` **:52**;
+  `Restart=no` **:55**. The only `[Install]` match in the file is the explanatory comment at **:11**
+  — there is **no** `[Install]` section.
 - **Remaining evidence:** the *template* is static; the *rendered/installed* unit on the host is
-  verified by A4-staging (B2). The **steady** profile (`mtc-bridge-steady.service.template`,
-  `Restart=on-failure`) is a **gated artifact** — never installed/enabled; itself has no `[Install]`.
+  verified by A4-staging (B2). The **steady** profile
+  (`2ce41e34…321b:IBKR_PAPER_BRIDGE/deploy/linux/systemd/mtc-bridge-steady.service.template`,
+  blob `121229ea5b…` — ⛔ round-2 finding: **ref-invariant**, byte-identical on both refs, so this
+  one sub-claim was never at provenance risk) is a **gated artifact** — never installed/enabled;
+  `Restart=on-failure` at **:52**; itself has no `[Install]` (only the comment at **:19**).
+- **⛔ Start-mode asymmetry (round 2, NEW — preregistration prerequisite, NOT a defect claim).** The
+  steady template carries **no** `Environment=MTC_BRIDGE_START_MODE=` line; its `Environment=` set is
+  **:39-41** only (`PYTHONUTF8`, `PYTHONDONTWRITEBYTECODE`, `MTC_BRIDGE_STATE_DB`). The three-layer
+  credential-free DISARMED enforcement of §0.6 is therefore a property of the **first-start unit**,
+  not of the candidate in general. This is **not** a product defect — the steady profile is gated,
+  never installed, never enabled, and its admission is a separately authorised Gate-B / WP-V step.
+  It is recorded so that no future admission preregistration assumes the pin carries over: it does
+  not, and §0.6 as written could invite that assumption.
 - **Mutation class:** `local-static`. **Authority/budget:** none.
 - **Output artifact:** cited inline. **PASS:** template matches the accepted release template byte-for
   byte (`2ce41e34…321b:…/verify.sh:186-195` `cmp`; ⛔ was cited as "lines 182–190"). **Failure
@@ -312,10 +492,17 @@ must be **reused, not re-run**. None of them is, by itself, WP-L/WP-I/WP-A compl
 ### A6 — Lock / `verify_lock.py` contract
 - **Predicate:** an offline, network-free verifier proves every lock entry is exact+hashed and (with
   `--check-installed`) that the installed venv distribution set equals the lock.
-- **Canonical source:** `deploy/linux/verify_lock.py`.
-- **Existing evidence:** `parse_lock` rejects URLs/VCS/index overrides, requires exact `==` + ≥1
-  `--hash=sha256:` per entry; `--check-installed` compares installed vs expected, allowing only the
-  `pip`/`setuptools` bootstrap set; prints `packages=<n>`. Re-confirmed this unit: 56 entries.
+- **Canonical source (⛔ round-2 qualification):**
+  `2ce41e34…321b:IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py`, blob `8ccd6f329154422a85b8e7663e6a079dbd47b4fd`
+  — **ref-invariant** (byte-identical on both refs), so either checkout would have given the same
+  answer here; it is written candidate-qualified anyway, per G8.
+- **Existing evidence (with candidate anchors, round 2):** `parse_lock` (**:28**) rejects
+  URLs/VCS/index overrides and requires exact `==` + ≥1 `--hash=sha256:` per entry;
+  `--check-installed` (**:78**, parsed in `main` at **:75**) compares installed vs expected, allowing
+  only the `pip`/`setuptools` bootstrap set; the PASS line at **:97** is
+  `print(f"verify_lock: PASS: {mode}; packages={len(expected)}")` — i.e. B1's expected `packages=56`
+  is emitted from the count actually parsed out of the lock, **not** a hard-coded constant, so the
+  number is evidence rather than an echo. Re-confirmed in both rounds: 56 entries.
 - **Mutation class:** `local-static` (the tool) / `read-only-host` (the `--check-installed` run).
 - **Authority/budget:** the *local* parse needs none; the *host* `--check-installed` run is a B1 host
   check (preregistered, not run).
@@ -335,7 +522,17 @@ fails post-start). All **NOT EXECUTED**.
   exactly equals the 56-entry lock.
 - **Canonical source:** `WPI_READINESS_RECORD_2026-08-01.md` §6 ("installed distribution set exactly
   equals the 56-entry lock"); `2ce41e34…321b:…/deploy/linux/verify.sh` **§3 lines 103–122**
-  (⛔ was "lines 104–121"); `verify_lock.py` (blob `8ccd6f32…`, ref-invariant).
+  (⛔ was "lines 104–121"); `2ce41e34…321b:…/deploy/linux/verify_lock.py` (blob `8ccd6f32…`,
+  ref-invariant; contract anchors in A6).
+- **⛔ Hash-preregistration warning (round 2).** If this step is ever extended to also assert the
+  *lock file's* identity on the host — e.g. against `/etc/mtc-bridge/install_manifest.json` →
+  `requirements_lock_sha256` (written by `2ce41e34…321b:…/deploy/linux/install.sh:401,416`) or
+  against `RELEASE_SHA256SUMS` (re-verified by `…/verify.sh:82-91`) — the expected value is the raw
+  blob content SHA-256 **`a1881296c8cb6e0e9df33554aa2a25652cfeba2506530c74c7845ba2f58bf66e`**, not
+  `40873556…`. The payload is built LF-pinned (`…/package.sh:78-83`). A mismatch caused by using the
+  Windows worktree hash is a **documentation error, not lock drift**, and must not be escalated.
+  ⛔ **Round-3 addition:** that extension is a **new capture**, not a re-check of something already
+  known — the host value has never been read. It is specified separately as **B1a** below.
 - **Existing evidence:** static lock is 56 exact+hashed (A3/A6); venv path is
   `/opt/mtc-bridge/venvs/2ce41e34…321b`. **Not yet proven on Ubuntu at the candidate.**
 - **Remaining evidence:** the runtime `--check-installed` PASS against the live venv.
@@ -352,6 +549,35 @@ fails post-start). All **NOT EXECUTED**.
   (blocked, §1). **Output artifact:** the command's stdout (no-clobber capture path assigned at
   execution; NOT YET CREATED). **PASS:** exit 0, `packages=56`. **Failure disposition:** missing/extra
   distro = STOP (product/install drift). **D026:** n/a (parity proof, not a regression test).
+
+### ⛔ B1a — installed `requirements.lock` byte identity on the host (NEW, round 3 — OPEN capture)
+- **Predicate:** the `requirements.lock` **installed** at
+  `/opt/mtc-bridge/releases/2ce41e34…321b/IBKR_PAPER_BRIDGE/` is byte-identical to the frozen
+  candidate's LF payload, and the host manifest's `requirements_lock_sha256` agrees.
+- **Canonical source (expected value, source-derived):** `git cat-file blob 47f53fa2… | sha256sum`
+  → `a1881296c8cb6e0e9df33554aa2a25652cfeba2506530c74c7845ba2f58bf66e` (LF, 117 762 B), shipped by the
+  LF-pinned export at `2ce41e34…321b:…/deploy/linux/package.sh:78-83`, hashed and recorded at
+  `…/install.sh:401,416`, re-verified against `RELEASE_SHA256SUMS` at `…/verify.sh:82-91`.
+- **⛔ Existing evidence: NONE.** This is why B1a exists. No located Gate-A evidence records either the
+  observed installed-lock SHA-256 or the host's `requirements_lock_sha256`: the transition inventory
+  read `/etc/mtc-bridge/install_manifest.json` for boolean/schema fields only; `install.sh` writes
+  `LOCK_SHA` into the manifest but never logs it (`:431-433` print the release and **unit** hashes); and
+  the only local `verify_lock` / `RELEASE_SHA256SUMS` PASS records belong to the superseded `ebada020`
+  and `1adf9ae5` releases and carry package **counts**, not hashes. Enumeration: repair-record §2.7g.
+- **Remaining evidence:** one read-only host read, captured with its command and output.
+- **Proposed command (NOT EXECUTED), read-only:**
+  ```bash
+  sha256sum /opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE/requirements.lock
+  # expect: a1881296c8cb6e0e9df33554aa2a25652cfeba2506530c74c7845ba2f58bf66e
+  # optional corroboration (root read; the manifest is 0640 root:root):
+  #   grep -o '"requirements_lock_sha256": *"[0-9a-f]\{64\}"' /etc/mtc-bridge/install_manifest.json
+  ```
+- **Mutation class:** `read-only-host`. **Authority/budget:** host access + budget lift required
+  (blocked, §1). **Output artifact:** captured stdout, no-clobber path (NOT YET CREATED).
+  **PASS:** observed value equals `a1881296…`. **Failure disposition:** **investigate read-only** —
+  weigh a wrong expected value *and* genuine drift; re-check the derivation chain (blob → LF-pinned
+  export → manifest-verified install) before escalating a STOP or dismissing one. **D026:** n/a
+  (capture, not a regression test).
 
 ### B2 — systemd runtime identity (active, `Restart=no`, bound to exact SHA/venv)
 - **Predicate:** the running unit is the accepted first-start unit, active, `Restart=no`,
@@ -445,8 +671,12 @@ beyond this unit. None is authorised now. Each is marked **NOT EXECUTED**.
   (then `FinalKillSignal=SIGKILL`); `NRestarts` stays 0; the DB is consistent afterward; no dangling
   state. (WP0 I-R4, **explicitly OPEN**: "No test asserts SIGTERM/lifespan shutdown leaves no dangling
   state.")
-- **Canonical source:** `WP0_SCOPE_BASELINE_RECORD_2026-07-31.md` I-R4 (line 366); unit template
-  `KillSignal=SIGTERM`/`TimeoutStopSec=45`/`FinalKillSignal=SIGKILL`.
+- **Canonical source:** `WP0_SCOPE_BASELINE_RECORD_2026-07-31.md` I-R4 (line 366, documentation
+  branch); ⛔ **round-2 qualification of the unit-template half** —
+  `2ce41e34…321b:IBKR_PAPER_BRIDGE/deploy/linux/systemd/mtc-bridge-first-start.service.template`
+  (blob `c1823254…`, **candidate-only**): `KillSignal=SIGTERM` **:48**, `KillMode=mixed` **:49**,
+  `TimeoutStopSec=45` **:51**, `FinalKillSignal=SIGKILL` **:52**. Round 1 left this as a bare "unit
+  template" reference even though the template blob differs between refs.
 - **Existing evidence:** the unit *configures* SIGTERM (template). A-5 proved **SIGKILL** + restart +
   state integrity + DISARMED — **not** graceful SIGTERM, **not** host reboot (Gap G5).
 - **Proposed method (NOT EXECUTED):** `systemctl stop` once; capture exit timing, `NRestarts`,
@@ -472,8 +702,13 @@ beyond this unit. None is authorised now. Each is marked **NOT EXECUTED**.
   **DISARMED-by-absence** (no process/listener/order), NOT an auto-restarted DISARMED service. Do **not**
   infer an auto-restart promise; do **not** yet label the absence of `[Install]`/auto-start as a
   product defect (Gap G1).
-- **Canonical source:** `WPI_READINESS_RECORD_2026-08-01.md` §6 ("reboot DISARMED"); first-start +
-  steady templates; roadmap line 773 ("survives reboot DISARMED").
+- **Canonical source:** `WPI_READINESS_RECORD_2026-08-01.md` §6 ("reboot DISARMED"); roadmap line 773
+  ("survives reboot DISARMED"); ⛔ **round-2 qualification of the template half** — first-start
+  template `2ce41e34…321b:…/systemd/mtc-bridge-first-start.service.template` (blob `c1823254…`,
+  candidate-only; `Restart=no` **:55**, no `[Install]` section) and steady template
+  `2ce41e34…321b:…/systemd/mtc-bridge-steady.service.template` (blob `121229ea…`, **ref-invariant**;
+  `Restart=on-failure` **:52**, no `[Install]`). Both anchors underwrite G1's "cannot auto-start at
+  boot" premise, which round 1 asserted from bare "templates".
 - **Existing evidence:** template facts (A4); A-5 did **not** reboot the host.
 - **Proposed method (NOT EXECUTED):** first preregister one of two distinct scenarios: (A) plain
   reboot from the current unmasked state, expecting inactive+unmasked; or (B) separately authorised
@@ -497,8 +732,10 @@ beyond this unit. None is authorised now. Each is marked **NOT EXECUTED**.
   that re-derives the same invariants; the **active database is never destructively tested.**
 - **Canonical source:** `2ce41e34…321b:IBKR_PAPER_BRIDGE/tools/wal_state_bundle.py`
   (blob `26c077e650…` — **differs** from the documentation blob `aaa29182…`; the doc blob must not be
-  used for line references); `deploy/linux/COMMANDS.md` Stage E (blob `3deeefc8…`, ref-invariant);
-  roadmap line 773; WPI §6 ("SQLite backup/restore and risk/history continuity").
+  used for line references); `2ce41e34…321b:IBKR_PAPER_BRIDGE/deploy/linux/COMMANDS.md` **Stage E at
+  :116** (blob `3deeefc8…`, ref-invariant — ⛔ round-2: stage heading anchors are A :20, B :44,
+  C :63, D :96, E :116, F :205, G :240); roadmap line 773; WPI §6 ("SQLite backup/restore and
+  risk/history continuity").
 - **Existing evidence (re-verified at the candidate):** `wal_state_bundle.py` is offline/read-only
   against source, uses the SQLite online-backup API `src.backup(dst)` (`…:801`) rather than copying
   the db/wal/shm trio, runs `PRAGMA integrity_check` / `PRAGMA foreign_key_check` on both ends
@@ -540,12 +777,22 @@ beyond this unit. None is authorised now. Each is marked **NOT EXECUTED**.
 - **Predicate:** rollback stops and masks the service, preserves `/var/lib/mtc-bridge` state, and proves
   zero local writers; an optional release-rebind re-points the unit to a previously installed immutable
   release.
-- **Canonical source:** `deploy/linux/rollback.sh`; `COMMANDS.md` Stage G; roadmap/WPI §6.
-- **Existing evidence:** `rollback.sh` requires `--state-manifest-file` + `--state-manifest-sha256`
-  (the accepted state-bundle manifest hash), stops (SIGTERM, 45 s) then masks, asserts no
-  `bridge.app` writer and a closed control port, preserves state, and writes
-  `/etc/mtc-bridge/rollback_manifest.json`. The `--to-release-sha`/`--to-manifest-sha256` pair is
-  **optional** — stop+mask works without a target.
+- **Canonical source (⛔ round-2 qualification — round 1 left both of these bare):**
+  `2ce41e34…321b:IBKR_PAPER_BRIDGE/deploy/linux/rollback.sh`, blob
+  `4b36674dcb1baa7c3b119cac98f8e6017b1f1566` (**ref-invariant**);
+  `2ce41e34…321b:IBKR_PAPER_BRIDGE/deploy/linux/COMMANDS.md` **Stage G at :240** (blob `3deeefc8…`,
+  ref-invariant); roadmap/WPI §6.
+- **Existing evidence (with candidate anchors, round 2):** `rollback.sh` usage banner **:25-27**;
+  flag parsing `--to-release-sha` **:44**, `--to-manifest-sha256` **:45**, `--state-manifest-file`
+  **:46**, `--state-manifest-sha256` **:47**; the two hard requirements at **:57-58**
+  (`"--state-manifest-file is required"`, `"--state-manifest-sha256 is required"`) — i.e. the
+  accepted state-bundle manifest hash is mandatory; `systemctl stop` **:82** then `systemctl mask`
+  **:86** (and **:153** on the rebind path); target-release manifest verification **:122-124**;
+  `/etc/mtc-bridge/rollback_manifest.json` written from the path set at **:70**. It asserts no
+  `bridge.app` writer and a closed control port and preserves state. The
+  `--to-release-sha`/`--to-manifest-sha256` pair is **optional but paired** — the guard at **:65**
+  (`"--to-release-sha and --to-manifest-sha256 must be supplied together"`) rejects one without the
+  other; stop+mask works with neither.
 - **⚠ Unmet prerequisite (Gap G3):** a meaningful **release-rebind** additionally requires an
   **already-installed previous immutable release**. The transition inventory shows **only** candidate
   `2ce41e34…321b` is installed (the old `ebada020…` install + venv are already absent). Therefore a
@@ -774,8 +1021,11 @@ evidence for a newly named defect (§5).
   fail**. **Do not prescribe it in the current state.** Use the bounded read-only subchecks of
   Group B (or design a missing post-start verifier) — `COMMANDS.md` Stage F (blob `3deeefc8…`,
   ref-invariant) states the mask assertion is intentionally no longer applicable post-start.
-- **G3 — rollback rebind has an unmet prerequisite.** `rollback.sh` can stop+mask without a target
-  (requires the accepted state-manifest hash) but **mutates service state**; a meaningful release-rebind
+- **G3 — rollback rebind has an unmet prerequisite.** ✅ **Conclusion stands; citation qualified in
+  round 2.** `2ce41e34…321b:IBKR_PAPER_BRIDGE/deploy/linux/rollback.sh` (blob `4b36674d…`,
+  **ref-invariant**) can stop+mask without a target
+  (requires the accepted state-manifest hash, **:57-58**) but **mutates service state** (`systemctl
+  stop` **:82**, `systemctl mask` **:86**); a meaningful release-rebind
   additionally requires an **already-installed previous immutable release**, and only candidate
   `2ce41e34…321b` is installed (old `ebada020…` install + venv already absent). A prior-release rollback
   proof has an **unmet prerequisite**. Do not invent a target or run rollback.
@@ -824,6 +1074,41 @@ evidence for a newly named defect (§5).
   `git show`/`git grep` at the candidate or from installed-host / Gate-A evidence explicitly tied to
   it. A bare `<path>:<line>` in a post-Gate record is to be treated as **unverified**. Full analysis:
   `GATE_A_POST_GATE_PROVENANCE_REPAIR_2026-08-09.md`.
+- **⛔ G9 (NEW, round 2) — hash provenance is not stated, and the working tree is not the payload.**
+  The G8 mitigation fixed *path* provenance but said nothing about *hash* provenance, and the same
+  class of error immediately recurred one level down: a hash of the Windows worktree file
+  (`40873556…`, CRLF, 119 274 B) was recorded as the frozen candidate's lock hash and declared
+  exempt from re-derivation on the strength of blob identity. This repo is `core.autocrlf=true` with
+  `* text=auto` (`git ls-files --eol` → `i/lf  w/crlf`), and **this `requirements.lock` checkout
+  differs from the committed and deployed bytes because line-ending conversion is proven for it;
+  other text files subject to that conversion may differ too, so candidate content hashes must be
+  derived from Git blob/archive bytes rather than assumed from a converted worktree**. The
+  candidate's own packager knows this — it pins
+  `-c core.autocrlf=false -c core.eol=lf` for `git archive`
+  (`2ce41e34…321b:…/deploy/linux/package.sh:78-83`, comment at `:79-81`). The error was live, not
+  cosmetic: `install.sh:401,416` records the installed lock hash in
+  `/etc/mtc-bridge/install_manifest.json` and `verify.sh:82-91` re-verifies the release tree against
+  `RELEASE_SHA256SUMS`, so preregistering the CRLF value would have raised a **fabricated lock-drift
+  STOP against a host that matches the payload**. **Mitigation (binding from now on):** every hash in
+  a post-Gate record must name its input using exactly one of *Git blob object ID (SHA-1)* / *raw blob
+  content SHA-256 (LF)* / *worktree checkout SHA-256*; content hashes are derived with
+  `git cat-file blob <id> | sha256sum`, never by hashing a Windows checkout; and "the blob is
+  ref-invariant" licences reuse of the **blob ID**, never of an unverified number attached to it.
+  Values: §4b. Full analysis: `GATE_A_POST_GATE_PROVENANCE_REPAIR_2026-08-09.md` §2.7.
+- **⛔ G10 (NEW, round 3) — a derived expectation was recorded as an observed host fact.** G8 fixed
+  *path* provenance and G9 fixed *hash-input* provenance; neither constrained **epistemic** provenance,
+  and the same error recurred one level further out. Rounds 1–2 wrote that the lock installed on
+  `GATEA-STAGING` "therefore hashes to `a1881296…`" and that
+  `/etc/mtc-bridge/install_manifest.json` → `requirements_lock_sha256` carries that value. The
+  derivation is sound — LF-pinned export (`package.sh:78-83`) → hashed at install (`install.sh:401`) →
+  recorded (`:416`) → re-verified against `RELEASE_SHA256SUMS` (`verify.sh:82-91`) — but **no located
+  Gate-A evidence records either observed value** (repair-record §2.7g). Recording it as settled turns
+  an untested predicate into apparent evidence, and pre-commits the diagnosis of any future mismatch.
+  **Mitigation (binding from now on):** every hash in a post-Gate record carries **two** labels —
+  *what was hashed* (G9) **and** *expected-from-source* vs *observed-on-host*. An expectation is
+  written as "expected …, to be compared against"; an observation requires a captured command and its
+  output. Where the observation has not been made, the record says so and carries it as an open
+  predicate (B1a). Full analysis: `GATE_A_POST_GATE_PROVENANCE_REPAIR_2026-08-09.md` §2.7(g), §3.
 
 ---
 
@@ -854,7 +1139,21 @@ missing symbol. `WP0_SCOPE_BASELINE_RECORD_2026-07-31.md` lines 308 and 364 are 
 be edited.**
 
 **D026 caveat.** These rows prove *existence* by `git grep`, not execution. No test was run in the
-authoring unit or in the repair unit. Existence is not closure — see §5.
+authoring unit or in either repair unit. Existence is not closure — see §5.
+
+**⛔ Round-2 precision — "(coincides)" is two different things.** Four rows show the same line number
+on both refs, but only three of them are *structurally* safe: their **files** are byte-identical
+across the refs. The fourth agreed by luck.
+
+| # | File | Blob status | Why the numbers agree |
+|---|---|---|---|
+| 1 | `tests/test_interim_risk_wiring.py` | **ref-invariant** `29214adae7…` | Structural — same bytes on both refs; `:333` cannot disagree |
+| 3 | `tests/test_window_state.py` | **ref-invariant** `e9d3912958…` | Structural (`:82`) |
+| 9 | `tests/test_bars.py` | **ref-invariant** `17453080ed…` | Structural (`:27`) |
+| 6 | `tests/test_p1_failure_drills.py` | **differs** (`9e50c1b51c…` vs `f2e3a32171…`) | **Coincidence only** — divergence in this file starts after line 16; rows 7 and 8 in the *same file* shift by 47 |
+
+Do not generalise from a matching line number to a matching file. Rows 1, 3 and 9 were harmless to
+read from the documentation checkout; row 6 must still be treated as candidate-sourced.
 
 ### 4a. Corrected `verify.sh` section map (candidate `2ce41e34…321b`, blob `5cfefd7092…`)
 
@@ -882,6 +1181,63 @@ Use only the candidate column below.
 | — zero `bridge.app` writer | 243–247 | ~~237–241~~ |
 | — control port closed | 248 | ~~242~~ |
 | §9 summary | 252– | — |
+
+### 4b. Blob ledger and lock identity (⛔ NEW, round 2)
+
+Every product/deploy/tool path this matrix cites, with its blob on both sides. Round 1's superseding
+block left six of these as an unresolved "differ / differ"; they are resolved here so the table is
+checkable rather than asserted. Documentation column verified identical at `851d2aa5` **and** the
+current HEAD `f8a6bc0f` (the intervening commits are documentation-only).
+
+**Ref-invariant (nine) — either citation valid; the provenance defect could not have corrupted these:**
+
+| Path (under `IBKR_PAPER_BRIDGE/`) | Blob (both refs) |
+|---|---|
+| `requirements.lock` | `47f53fa227bf0f18b9bf9bd77e060d8856961728` |
+| `deploy/linux/verify_lock.py` | `8ccd6f329154422a85b8e7663e6a079dbd47b4fd` |
+| `deploy/linux/rollback.sh` | `4b36674dcb1baa7c3b119cac98f8e6017b1f1566` |
+| `deploy/linux/COMMANDS.md` | `3deeefc8da2984d5220482f065e569b74874847a` |
+| `deploy/linux/install.sh` | `40983e5a675728dbdefe68e46dfe6d055d2841a1` |
+| `deploy/linux/systemd/mtc-bridge-steady.service.template` | `121229ea5b0fc8c67c8bc5e49d4ffcc3f25f4fba` |
+| `tests/test_bars.py` | `17453080ed330ed2f4cc72bbe5e245164420a2ad` |
+| `tests/test_interim_risk_wiring.py` | `29214adae7006ac6b60bf53240b2e507f3ad858d` |
+| `tests/test_window_state.py` | `e9d39129587f7d8e2b26e2f3d5221b7a02d4b106` |
+
+**Candidate-only (twelve) — cite `2ce41e34…321b` and nothing else:**
+
+| Path (under `IBKR_PAPER_BRIDGE/`) | Candidate `2ce41e34…321b` | Documentation |
+|---|---|---|
+| `deploy/linux/verify.sh` | `5cfefd709202ff504ae7b7fc3504b8c0b00900b6` | `bce1f0e23e63f9a8d168c751aec99ac84d1334c7` |
+| `deploy/linux/systemd/mtc-bridge-first-start.service.template` | `c18232549d96aa200d8c7f796e64de743288940c` | `b175ced7f36df52ad2e55532264f36f49fdc8281` |
+| `deploy/linux/README.md` | `f3f1d75e7e4369609cd0eb299466b2ceb62a0a16` | `666b79d834f50433cd0cba7c88224fb674fdbb56` |
+| `deploy/linux/env/mtc-bridge.env.template` | `c03d6e47ab57c00ef95f4122607fc7ba88119e35` | `fbf8cb833c58a30c8262f14027512bbfdedae3e8` |
+| `deploy/linux/lib/common.sh` | `db11010a24edfbb96ba80ec1fbe1db3ff29193c9` | `7d5aa166ac2f3b703e9543a42d49564c66e34002` |
+| `deploy/linux/package.sh` | `add6478d33cce8d929d58f895407abe01d51da20` | `150c18c36447ecc122332a992581ca6d9bba4007` |
+| `tools/wal_state_bundle.py` | `26c077e650ab88ba2086efa3a80790769bc055b1` | `aaa2918229a1367ebf1fb6a458a4e65673dc180e` |
+| `bridge/app.py` | `572c4178fe804da17601eefd898027e9261492e6` | `6d0abc6351a0d20aef324fb00b936c0f189d036f` |
+| `tests/test_partial_fill_protection.py` | `7b0b9ea36dd8b15108f6befcbcb00015ed2f51fb` | `42c55c09afc93edb4d7364008da4b702176721c3` |
+| `tests/test_api.py` | `40d31925ac93c4bfe13a877f060b5abaf6c0cd6e` | `d9da63e7f66afd6db7e24eef774296dce9487c16` |
+| `tests/test_wal_state_bundle.py` | `07de7b206f56c7442c3ea07ec160dc7ef2497415` | `edc02108c9829aa7b2409fd3eca774d00cb1b5b2` |
+| `tests/test_p1_failure_drills.py` | `9e50c1b51cd6d60967f5481adfeda9779815efd9` | `f2e3a32171c12c53bd31bba35dbcc691417b53b6` |
+
+**Presence asymmetry:** `deploy/linux/SECURITY_BASELINE.md` — **ABSENT** at the candidate, present on
+the documentation branch (`8db2e6dd7e782c96f585f6672c4489c4ce5c1488`, unchanged at `f8a6bc0f`);
+`tests/test_credential_free_disarmed.py` — present at the candidate
+(`ce0ae7c24f795dc8e5d56bf7cca82e1a75351402`), **ABSENT** on the documentation branch.
+
+**Lock identity — the one value the whole matrix depends on:**
+
+| Kind | Value | Use |
+|---|---|---|
+| Git blob object ID (SHA-1) | `47f53fa227bf0f18b9bf9bd77e060d8856961728` | Ref identity. Same at `2ce41e34…321b`, `851d2aa5`, `f8a6bc0f`, `637307e8`. **Not** a content hash |
+| Raw blob content SHA-256 (LF, 117 762 B) | `a1881296c8cb6e0e9df33554aa2a25652cfeba2506530c74c7845ba2f58bf66e` | ✅ **Preregister this — as the *expected* value.** Source-derived: the committed bytes, hence the bytes the LF-pinned archive ships, hence the value `RELEASE_SHA256SUMS` and `install_manifest.json` → `requirements_lock_sha256` are **expected** to carry |
+| Worktree checkout SHA-256 (CRLF, 119 274 B) | `40873556a7f4586d77f165b985863138c9fc95b095da64ac52456b8c49098ec3` | ⛔ **Never cite.** Local Windows artifact; `119 274 − 117 762 = 1 512` = the blob's line count |
+| ⛔ **Observed installed-host value** (round 3) — `sha256sum` of the installed lock, and the host manifest's `requirements_lock_sha256` | **NOT IN EVIDENCE** | ⛔ **Open predicate, not a fact.** Never captured in any located record (repair-record §2.7g). Closable by one authorised read-only host read (B1a); blocked by §1 |
+
+Derivation of the expected value: `git cat-file blob 47f53fa227bf0f18b9bf9bd77e060d8856961728 |
+sha256sum`. Full reproduction, the operational chain (`package.sh:78-83` → `install.sh:401,416` →
+`verify.sh:82-91`), and the enumeration of what the Gate-A evidence does **not** contain are in
+`GATE_A_POST_GATE_PROVENANCE_REPAIR_2026-08-09.md` §2.7 and §2.7(g).
 
 ---
 
@@ -944,11 +1300,24 @@ output recorded (`AGENTS.md` §D026, owner-ratified 2026-08-03).
 - **~~Stale node to refresh (local): the absent symbol in WP0 I-R2 (G4).~~ ⛔ WITHDRAWN** — all 11
   symbols exist at the frozen candidate; WP0 is correct; there is no refresh item and no edit to
   make. See the withdrawn G4 and the corrected §4.
-- **⛔ Provenance defect (G8, new, documentation-only):** this matrix originally sourced product
-  facts from the divergent documentation checkout. Repaired 2026-08-09; **no product defect, no
-  candidate change, no staging action**. Residual propagation of the withdrawn G4 claim survives in
-  three files outside this document's scope — `NEXT_SESSION_HANDOFF_2026-08-08.md:27`,
-  `_AI_MEMORY/GLOBAL_HANDOFF.md:28`, `_AI_MEMORY/NEXT_STEPS.md:23` — and is handed to the Lead.
+- **⛔ Open evidence item (round 3, B1a):** the **observed** installed-lock hash on `GATEA-STAGING` —
+  `sha256sum` of `/opt/mtc-bridge/releases/2ce41e34…321b/IBKR_PAPER_BRIDGE/requirements.lock`, or the
+  host manifest's `requirements_lock_sha256` — is **not in any located Gate-A evidence**. The expected
+  value `a1881296…` is established from source; the comparison is not yet made. This is a **capture
+  gap**, not a defect and not a drift signal: one bounded read-only host read closes it, and that read
+  is blocked with all other host action under §1.
+- **⛔ Provenance defects (G8 + G9 + G10, documentation-only):** this matrix originally sourced product
+  facts from the divergent documentation checkout (**G8**, repaired round 1); the round-1 repair then
+  recorded a Windows worktree hash as the candidate's lock hash (**G9**, repaired round 2); and rounds
+  1–2 recorded a source-derived expectation as an observed host fact (**G10**, repaired round 3).
+  **No product defect, no candidate change, no staging action, no test run in any round.**
+  Residual propagation survives in three files outside this document's scope, each carrying **both**
+  errors — the withdrawn G4 symbol claim and the wrong lock hash:
+  `NEXT_SESSION_HANDOFF_2026-08-08.md:27` and `:46`; `_AI_MEMORY/GLOBAL_HANDOFF.md:28` and `:49`;
+  `_AI_MEMORY/NEXT_STEPS.md:23` and `:37`. Handed to the Lead.
+- **⛔ Round-2 note on what the repairs did *not* reach:** both rounds corrected *citations*. No
+  obligation, gap conclusion, blocker, or authority statement in this matrix changed in either
+  round, and the two blockers below still bind.
 
 ## Next steps (execution order)
 
@@ -956,13 +1325,26 @@ output recorded (`AGENTS.md` §D026, owner-ratified 2026-08-03).
    subcheck** set (Group B) and the four **COMMAND GAP** procedures (C1 post-stop verifier, C2
    post-reboot subcheck, C3 restore-into-temp wrapper, C4 stop+mask-only rollback step) as *designs*,
    with exact commands, no-clobber output paths, preregistered predicates, and stop conditions. **No
-   staging execution.** ⛔ **Take every product/deploy/tool line anchor from §4/§4a or re-derive it at
-   `2ce41e34…321b`; do not read product facts from the documentation checkout (G8).**
+   staging execution.** ⛔ **Take every product/deploy/tool line anchor from §4/§4a/§4b or re-derive
+   it at `2ce41e34…321b`; do not read product facts from the documentation checkout (G8).**
+   ⛔ **Take every hash from §4b, labelled by kind; never hash a file out of this Windows worktree
+   (G9). Where a run-kit step compares the lock on the host, the expected value is the raw blob
+   content SHA-256 `a1881296c8cb6e0e9df33554aa2a25652cfeba2506530c74c7845ba2f58bf66e` — not
+   `40873556…`.**
+   ⛔ **Write that comparison as a predicate, not a restatement (G10): the host value has never been
+   read (§4b, B1a). The step reads "expected `a1881296…`, to be compared against
+   `install_manifest.json` → `requirements_lock_sha256` / `sha256sum` of the installed lock", with a
+   captured-output artifact and an investigate-read-only failure disposition — never "confirms the
+   installed lock hash".**
    ⛔ **The former instruction to "refresh the stale WP0 I-R2 evidence-map node (G4)" is CANCELLED —
    G4 is withdrawn, WP0 is correct, and `WP0_SCOPE_BASELINE_RECORD_2026-07-31.md` must not be
    edited.**
-1a. **[Lead]** Propagate the G4 withdrawal to the three files outside this document's write scope
-   that still carry the false claim: `NEXT_SESSION_HANDOFF_2026-08-08.md:27`,
+1a. **[Lead]** Propagate **both** corrections to the three files outside this document's write scope.
+   Each carries the withdrawn G4 symbol claim **and** the wrong lock hash — symbol lines
+   `NEXT_SESSION_HANDOFF_2026-08-08.md:27`, `GLOBAL_HANDOFF.md:28`, `NEXT_STEPS.md:23`; hash lines
+   `NEXT_SESSION_HANDOFF_2026-08-08.md:46`, `GLOBAL_HANDOFF.md:49`, `NEXT_STEPS.md:37`. For the hash
+   lines, replace `40873556…` with content SHA-256 `a1881296…` (blob ID `47f53fa2…`), or drop the
+   value and cite §4b. Original G4 propagation list: `NEXT_SESSION_HANDOFF_2026-08-08.md:27`,
    `_AI_MEMORY/GLOBAL_HANDOFF.md:28`, `_AI_MEMORY/NEXT_STEPS.md:23`.
 2. **[AI: Any]** Keep `GATEA-STAGING` retained, active, credential-free DISARMED; take no service,
    package, credential, or network action against it. Do not discard it (needed through WP-A).
@@ -972,9 +1354,12 @@ output recorded (`AGENTS.md` §D026, owner-ratified 2026-08-03).
    broker/exchange access, ARM, orders, TESTNET/mainnet, economic action, or old-payload deletion.
 
 **Next autonomous safe unit:** local run-kit design/validation **only** (step 1), with **no staging
-execution**, unless this matrix reveals a more urgent read-only prerequisite — **it does not**: every
-read-only host fact the matrix depends on is already captured by the post-Gate transition inventory,
-so the matrix adds value through *run-kit / evidence-method design*, which is local. Server execution
+execution**. ⛔ **Round-3 amendment to the former "it does not" claim:** the matrix now names one
+read-only host fact that is **not** yet captured — the installed `requirements.lock` byte identity
+(**B1a**). That does not change the next unit: B1a is a *host* read and stays blocked on Blockers 1–2
+like every other host action; it is preregistered here, not performed. Every **other** read-only host
+fact the matrix depends on is already captured by the post-Gate transition inventory, so the matrix
+still adds its value through *run-kit / evidence-method design*, which is local. Server execution
 remains blocked on Blockers 1–2.
 
 ## Stop conditions
@@ -990,6 +1375,25 @@ remains blocked on Blockers 1–2.
   claim. WP0 lines 308 and 364 are correct at the frozen candidate.
 - ⛔ Any citation of documentation-checkout product blobs as candidate behaviour, or any bare
   `<path>:<line>` product citation in a post-Gate record (G8).
+- ⛔ **(round 2, G9)** Any use of `40873556a7f4586d77f165b985863138c9fc95b095da64ac52456b8c49098ec3`
+  as a candidate, payload, or host lock value — in particular as a preregistered PASS predicate
+  against `/etc/mtc-bridge/install_manifest.json` → `requirements_lock_sha256` or against
+  `RELEASE_SHA256SUMS`. A mismatch produced that way is a **documentation error, not lock drift**,
+  and must not be escalated as a STOP or treated as candidate/host drift.
+- ⛔ **(round 2, G9)** Any hash recorded without stating what was hashed (Git blob object ID vs raw
+  blob content vs worktree checkout), or derived by hashing a file out of this Windows worktree.
+- ⛔ **(round 2)** Any assumption that the gated steady profile inherits the first-start unit's
+  `MTC_BRIDGE_START_MODE=credential_free_disarmed` pin — it does not (A4).
+- ⛔ **(round 3, G10)** Any statement that the installed `/opt/mtc-bridge/…/requirements.lock`, or the
+  host's `install_manifest.json` → `requirements_lock_sha256`, **is** `a1881296…` as an observed fact,
+  absent a captured read-only host read recorded with its command and output. The accurate status is
+  **expected `a1881296…`, unobserved** (§4b, B1a).
+- ⛔ **(round 3, G10)** Any automatic disposition of a host mismatch **against `a1881296…`** — neither
+  "documentation error" nor "lock drift" may be assumed. Investigate read-only, check both the
+  expected-value derivation and the host, then escalate or dismiss. Round 2's automatic
+  documentation-error ruling applies only to the withdrawn `40873556…`.
+- ⛔ **(round 3)** Any execution of the B1a read-only host read — or any other host contact — without
+  the named authority/budget lift required by §1.
 - Any service drift on `GATEA-STAGING` (more than one listener, non-loopback bind, ARM enabled,
   credentials present, or an unexpected second release).
 
@@ -1038,5 +1442,99 @@ Commands            : read-only Git only (rev-parse, merge-base, cat-file, grep,
                       status). No SSH/sudo/systemctl/reboot/service/test/package/network/broker/
                       exchange/credential/ARM/order/staging-host command. No Git mutation.
 WP0                 : NOT edited; proposed deletion cancelled.
+Memory/handoff      : none in this unit; Gate-7 write-back belongs to the Lead after acceptance.
+```
+
+### Repair addendum 2 — 2026-08-09 (lock byte provenance + remaining candidate qualification)
+
+```
+Repair unit         : claude-opus-5, effort xhigh, fresh independent implementer session (round 2).
+Repaired commit     : f8a6bc0f1a7fa00fcd1637297e05424732386da7, clean worktree C:\PGR.
+Defects             : G9 (new) — a Windows CRLF worktree hash (40873556…, 119 274 B) was recorded as
+                      the frozen candidate's lock blob SHA-256 and declared exempt from
+                      re-derivation; the correct raw-blob content SHA-256 is a1881296… (LF,
+                      117 762 B) and the blob object ID is 47f53fa2… . Also: product/deploy/tool
+                      citations round 1 did not dispute were left bare, contrary to G8's own rule.
+Refs                : documentation HEAD f8a6bc0f (detached, clean; round-1 HEAD 851d2aa5 — no
+                      product-blob drift between them, all §4b paths re-resolved and identical);
+                      frozen candidate 2ce41e34bceb599d80af24c5c33d835820ec321b (UNCHANGED);
+                      merge base 4d2228cf…, divergence re-proven (both --is-ancestor tests exit 1).
+Corrections applied : round-2 superseding block (top); Lead-corrections item 4 superseded; §0.5 lock
+                      identity triple; A1 README qualified; A3 lock-identity caveat withdrawn and
+                      replaced, Output artifact now recorded; A4 first-start anchors + steady-profile
+                      blob and start-mode asymmetry; A6 verify_lock.py qualified with anchors;
+                      B1 hash-preregistration warning; C1/C2 template anchors; C3/C4 COMMANDS.md +
+                      rollback.sh qualified with anchors; G3 qualified; §4 coincidence-vs-ref-
+                      invariance table; §4b blob ledger and lock identity (NEW); G9 added; §7 verdict;
+                      Next steps 1 and 1a; stop conditions extended.
+Values of record    : lock blob object ID  47f53fa227bf0f18b9bf9bd77e060d8856961728 (ref-invariant
+                                           at 2ce41e34…321b, 851d2aa5, f8a6bc0f, 637307e8);
+                      lock content SHA-256 a1881296c8cb6e0e9df33554aa2a25652cfeba2506530c74c7845ba2f58bf66e
+                                           (LF, 117 762 B) — the value to preregister;
+                      worktree artifact    40873556a7f4586d77f165b985863138c9fc95b095da64ac52456b8c49098ec3
+                                           (CRLF, 119 274 B) — never cite;
+                      counts               56 ==-pinned entries, 1345 --hash=sha256: lines.
+Full evidence       : GATE_A_POST_GATE_PROVENANCE_REPAIR_2026-08-09.md §2.7, §2.8, §4.1, §4.2, §5.1,
+                      §6.7, §10.
+Product change      : none. No candidate change. No product/deploy/test file written.
+Commands            : read-only Git only (rev-parse, merge-base, cat-file, ls-files --eol, grep,
+                      config --get, status) plus local sha256sum/wc over the worktree lock file.
+                      No SSH/sudo/systemctl/reboot/service/test/package-install/network/broker/
+                      exchange/credential/ARM/order/staging-host command. No Git mutation. No commit.
+WP0                 : NOT edited; G4 stays withdrawn; proposed deletion stays cancelled.
+Out of scope        : NEXT_SESSION_HANDOFF_2026-08-08.md, _AI_MEMORY/GLOBAL_HANDOFF.md,
+                      _AI_MEMORY/NEXT_STEPS.md — each carries both errors; handed to the Lead.
+Memory/handoff      : none in this unit; Gate-7 write-back belongs to the Lead after acceptance.
+```
+
+### Repair addendum 3 — 2026-08-09 (expected payload bytes vs observed installed-host bytes)
+
+```
+Repair unit         : claude-opus-5, effort xhigh, fresh independent implementer session (round 3).
+Repaired at         : documentation HEAD f8a6bc0f1a7fa00fcd1637297e05424732386da7, worktree C:\PGR,
+                      with rounds 1-2 present as uncommitted changes to these two files only.
+                      Nothing committed or staged; no Git mutation of any kind.
+Defect              : G10 (new) — rounds 1-2 recorded a source-derived expectation as an observed
+                      host fact: "the installed lock therefore hashes to a1881296…", attributed to
+                      /etc/mtc-bridge/install_manifest.json → requirements_lock_sha256. No Gate-A
+                      evidence located in this repair records the observed installed-lock SHA-256 or
+                      the host manifest value.
+Retained            : a1881296c8cb6e0e9df33554aa2a25652cfeba2506530c74c7845ba2f58bf66e as the correct
+                      EXPECTED source/payload byte hash for the LF archive (re-derived this round;
+                      git cat-file -s → 117762). 40873556… stays withdrawn (byte arithmetic over the
+                      blob, independent of any host claim); blob ID 47f53fa2… stays ref-invariant;
+                      counts 56 / 1345 stand; G4 stays withdrawn; WP0 stays uneditable.
+Now open            : B1a — observed installed-host lock hash NOT IN EVIDENCE; closable by one
+                      authorised read-only host read; blocked by §1.
+Evidence of absence : transition inventory's install_manifest read records boolean/schema fields
+                      only, no hash field; install.sh writes LOCK_SHA to the manifest (:416) but
+                      never logs it (:431-433); the only local verify_lock / RELEASE_SHA256SUMS PASS
+                      records belong to the superseded ebada020 and 1adf9ae5 releases and carry
+                      package counts, not hashes. The Lead has read C:\WPI_ARTIFACTS\ locally:
+                      ...\2ce41e34…321b\RELEASE_SHA256SUMS:99 records the EXPECTED package-member
+                      hash a1881296… for ./IBKR_PAPER_BRIDGE/requirements.lock, and
+                      post_gate_transition_inventory_detail_20260809.out records
+                      requirements_lock_sha256 only as a manifest_top_keys entry without printing
+                      its value. No targeted local-artifact hit supplies the observed installed-host
+                      lock hash or manifest field value. /home/gatea/ remains uninspected; no host
+                      was contacted.
+Corrections applied : round-3 superseding block (top); round-2 block sentences qualified; Lead-
+                      corrections round-2 bullet scoped; §0.5 lock identities 3→4 with the observed
+                      value marked NOT IN EVIDENCE; A3 Output artifact scoped to static/local with an
+                      investigate-read-only host disposition; B1 warning cross-referenced and new
+                      Group-B item B1a added (proposed read-only command, NOT EXECUTED, blocked);
+                      G9 wording; G10 added; §4b lock-identity table row added; §7 open evidence
+                      item, G8+G9+G10 summary and the "next autonomous safe unit" claim amended;
+                      Next steps 1; stop conditions; this addendum.
+Product change      : none. No candidate change. No product/deploy/test file written.
+Commands            : read-only Git only (rev-parse, cat-file blob/-s) plus local read-only content
+                      search and one read of the ref-invariant install.sh. No SSH/sudo/systemctl/
+                      reboot/service/test/package-install/network/broker/exchange/credential/ARM/
+                      order/staging-host command. No host contacted. No Git mutation. No commit.
+WP0                 : NOT edited; G4 stays withdrawn; proposed deletion stays cancelled.
+Out of scope        : NEXT_SESSION_HANDOFF_2026-08-08.md, _AI_MEMORY/GLOBAL_HANDOFF.md,
+                      _AI_MEMORY/NEXT_STEPS.md — when the Lead replaces 40873556… there, label the
+                      replacement "expected raw blob content SHA-256 (LF), source-derived"; do not
+                      restate it as the installed-host value.
 Memory/handoff      : none in this unit; Gate-7 write-back belongs to the Lead after acceptance.
 ```
