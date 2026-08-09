@@ -65,3 +65,30 @@ Barış authorized **Option A** in-session (direct answer to the Lead's question
 survivors). On closure-audit PASS: Stage 1B runkit re-freeze proceeds. Host-execution
 authorization is NOT included — running the repaired B3 against staging remains a
 separate future owner decision.
+
+## Round 4 audit → doc-only round 5 (standing-authority auto-continue)
+
+Audit 4 (`audit4/AUDIT4_REPORT.md`) verdict BLOCK, but the split is decisive:
+
+- **Finding 1 (CODE — mount read-error arm): CLOSED, independently verified.** Both
+  blocks STOP rc 3 on the directory-source fixture; unterminated-record arm still
+  STOPs; regression sweep confirms the executable diff is confined to the intended
+  branch and no audit-3 CLOSED path was weakened. Round-4 script hashes recorded:
+  `RP1-B3.sh 6f3ea022…`, `RPD-VERIFY.sh 3b9e78e8…`.
+- **Finding 2 (DOCUMENTATION — D026 exact-command recording in `SELF_QA.md`):
+  survives.** Several closure tests are recorded as parameterized recipes + value
+  tables (`<FIX>`, `STUB_CASE=<CASE>`, dependence on prior `arm.sh` state) rather than
+  literal exact commands. The auditor confirms these are reproducible but not
+  "exact executable" per D026. This is a QA-writeup defect, not a code defect.
+
+**Decision (Lead, under `STANDING_AUTONOMY_AUTHORITY_2026-08-09.md`): auto-continue with
+a DOC-ONLY round 5, not owner escalation.** The standing grant explicitly makes the
+round limit a quality cadence and directs auto-continuation on NARROW survivors
+(mechanical fixes, QA/doc gaps); a survivor escalates to the owner only if it is
+architectural or needs a hard gate. This survivor is neither — it is `SELF_QA.md`
+prose. The AUDIT4 kickoff's "no round 5, escalate" line predates and is overridden by
+the standing grant for this class of survivor. Round 5 scope is locked to
+`SELF_QA.md` ONLY; `RP1-B3.sh`, `RPD-VERIFY.sh`, `DESIGN_NOTES.md` stay byte-identical
+to round 4 (verified by hash after). If a round-5 re-audit still finds a REQUIRED
+code defect (not doc), THAT escalates. Audit-4 nit 2 (over-broad mid-table wording)
+folded into the same round.
