@@ -1,5 +1,43 @@
 # NEXT_STEPS
 
+## GATE A — A-6 PASS under run-kit D; A-7 preflight next (2026-08-09)
+
+A-6 executed exactly once at checkpoint `b8776ca6` with
+`bash /home/gatea/gatea-run-kit-20260808D-2ce41e34/gatea_A6.sh`; SSH rc0, transport stdout/stderr
+empty because the script redirects to its no-clobber evidence log. Evidence
+`/home/gatea/gatea-A6-20260808D.log` preserved to `C:\WPI_ARTIFACTS\gatea-A6-20260808D.log`;
+remote/local SHA-256 identical `75ed4262…488c`, 2007 B; exactly one `A-6 PASS`, one
+`A6_TRAP_EXIT rc=0`, four `RESULT=PASS`, zero `A6_FAIL`/`RESULT=FAIL`. Production unchanged before
+and after: active, MainPID189813, exact HTTP200 DISARMED, mode credential_free_disarmed,
+state_version1, all network/exchange/credential/ARM flags off. Isolated temp app: engine present,
+notifier_disabled=true, DISARMED, dry_run, reconcile_ready True/error None, queue depth 0,
+queued_events_len 0, MockBroker connected orders0/fills0/position None, engine stopped,
+`RESULT=PASS`; temp DB quick_check ok, app_state DISARMED, schema_version4. Scope is empty-broker
+startup/no raise/no hang/no leftover queue — not queue-drain-under-load and not full reconcile
+(schema4 baseline disables it). Temp `/home/gatea/gatea-A6-temp.FLfBfh` cleaned; postcheck found
+zero `/home/gatea/gatea-A6-temp.*` leftovers. Accepted postcheck rc0
+(`C:\WPI_ARTIFACTS\postcheck_gatea_a6_d.v2.out`, stderr empty): hash/bytes/markers, cleanup,
+active/running PID189813, Restart=no, NRestarts0, one `127.0.0.1:8790` listener, exact
+credential-free DISARMED API. The first postcheck attempted one extra out-of-contract read-only open
+of `/var/lib/mtc-bridge/bridge.db` as unprivileged `gatea` after all prior assertions passed;
+SQLite returned `unable to open database file` — a verifier permission defect, not an A-6 failure
+(A-6 targets only its temp DB; production PID/API unchanged). That probe was removed and v2 passed;
+A-7 itself preregisteredly uses sudo for the production persisted-state check. Hardening held: no
+`/api/arm`, env file not opened, six process env keys removed/discarded before bridge imports with
+no values printed/copied/persisted/retained, MockBroker `bars=[]` blocked credential resolver and
+broker/exchange network, notifier absent/disabled bound into PASS.
+
+- **[AI: Codex] NEXT:** independently verify accepted D kit A-7 identity/syntax, A-7 evidence log
+  absent, service safe, and that preregistered A-7 sudo permissions are noninteractive/available
+  without printing protected content; checkpoint memory before execution.
+- **[AI: Codex] THEN:** execute A-7 exactly once with
+  `bash /home/gatea/gatea-run-kit-20260808D-2ce41e34/gatea_A7.sh`, preserve/hash evidence,
+  independently postcheck. Do not run A-8 on genuine A-7 FAIL.
+- Gate state: **A-0..A-6 PASS; A-7..A-9 NOT RUN.** Record:
+  `11_TRIAGE/GATE_A_A6_PASS_2026-08-09D.md`.
+
+---
+
 ## GATE A — A-6 preflight PASS; execute preregistered A-6 D next (2026-08-09)
 
 Lead-performed read-only A-6 preflight at checkpoint `e48cba48`; accepted candidate `2ce41e34`
