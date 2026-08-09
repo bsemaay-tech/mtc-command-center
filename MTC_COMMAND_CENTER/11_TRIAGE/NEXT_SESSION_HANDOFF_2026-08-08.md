@@ -1,5 +1,23 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ PICK UP EXACTLY HERE — `779bd038` proposal REQUEST_CHANGES (Codex GPT-5.6, 2026-08-09)
+>
+> **Do not transfer or execute any script in
+> `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_2026-08-09.md`.** Read-only Lead audit reproduced nine required
+> findings: dangling-link log clobber; B3 mode/write-bit/manifest-binding false PASSes; C1 missing a
+> pre-stop invariant baseline and exact graceful-exit proof; C2-A fail-open mask checks; no C2 pre/post
+> persistence equality; C3 calls `collect_invariants` with a path instead of a connection and raises
+> `AttributeError`; C4 can overwrite its prior rollback manifest; C4's filename+size comparison is not
+> byte-for-byte state proof; and `pgrep || true` collapses tool/fatal errors. C5 remains blocked.
+>
+> Full record: `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_AUDIT_2026-08-09.md`. Claude and GLM timed out;
+> DeepSeek routes produced no verdict; all worktrees stayed clean. No host command ran.
+>
+> **Next safe unit:** write a bounded no-edit repair specification for findings F1-F9. This proposal
+> task is separate from the exhausted `C:\PGRK` design loop. No repair implementation or host action yet.
+> Exact 50 h balance remains NOT REPRODUCIBLE; all credential/broker/TESTNET/ARM/order/WP-V/KVM2/master/
+> old-payload/economic-action holds remain.
+
 > ## ▶ PICK UP EXACTLY HERE — local run-kit design BLOCKED after third repair round (Codex GPT-5.6, 2026-08-09)
 >
 > **Do not commit, integrate, implement, or audit the current draft.** Its final Lead review found a

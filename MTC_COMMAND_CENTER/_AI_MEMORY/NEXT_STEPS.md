@@ -1,5 +1,32 @@
 # NEXT_STEPS
 
+## WP-L P2 — `779bd038` command-gap proposal REQUEST_CHANGES (read-only audit, 2026-08-09)
+
+Independent Lead audit record:
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_AUDIT_2026-08-09.md`. **Do not transfer or execute the proposed
+scripts.** Required defects reproduced: dangling-link evidence clobber in every script; B3 accepts `0444`,
+misses group/other write bits, and omits manifest binding; C1 has no pre-stop invariant baseline and an
+insufficient exit/timeout proof; C2-A can convert failed `is-enabled`/link probes into an unmasked PASS;
+both reboot scenarios lack pre/post persistence equality; C3 passes a path to candidate
+`collect_invariants(Connection)` and raises `AttributeError`; C4 can overwrite the rollback manifest and
+calls filename+size equality "byte-for-byte" preservation; `pgrep || true` collapses fatal/tool errors.
+C5 correctly remains blocked.
+
+External review status: Claude Opus 5 xhigh and GLM-5.2 each timed out at 604 s with no verdict;
+DeepSeek ClinePass failed subscription/hook access; API fallback exhausted 24 iterations without a
+verdict. These are supplemental non-execution. All audit worktrees remained clean. Codex Lead reproduced
+the decisive findings against candidate `2ce41e34`.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Codex]** Next autonomous safe unit: write a bounded, no-edit repair specification for
+  `779bd038` F1-F9, explicitly separating the proposal repair from the exhausted `C:\PGRK` design loop.
+- **[AI: Claude]** Implement only after that specification is frozen and a new bounded implementation
+  cycle is authorised; protected Bridge design work must not be routed to a secondary model.
+- **[AI: Any]** No host/server execution, script transfer, credentials, broker/TESTNET, ARM, orders,
+  WP-V, KVM2, master merge, old-payload deletion, or economic action. Exact 50 h balance remains NOT
+  REPRODUCIBLE.
+
 ## GATE A — local run-kit design BLOCKED after third repair round (2026-08-09)
 
 **Do not commit, integrate, implement, or audit the current draft.** Lead inspection after the third

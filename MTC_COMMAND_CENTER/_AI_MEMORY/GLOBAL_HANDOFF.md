@@ -1,5 +1,24 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6] 2026-08-09 — `779bd038` command-gap proposal audit REQUEST_CHANGES
+
+Read-only independent audit completed against exact candidate `2ce41e34`; standalone record:
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_AUDIT_2026-08-09.md`. The proposal is **not execution-ready**.
+Lead reproduced nine required findings: global dangling-symlink log clobber; B3 permission/binding false
+PASSes; C1 missing pre-stop invariants and insufficient graceful-exit proof; C2-A fail-open mask checks;
+both C2 scenarios lacking persistence equality; C3 wrong `collect_invariants` argument (exact
+`AttributeError`); C4 rollback-manifest overwrite; C4 filename+size comparison mislabeled byte-for-byte;
+and repeated rc collapse through `pgrep || true`. C5 correctly remains blocked.
+
+Claude Opus 5 xhigh and GLM-5.2 timed out with no verdict; DeepSeek ClinePass failed access and its API
+fallback exhausted its bounded iterations. All are supplemental non-execution; all detached worktrees
+stayed clean. No host action occurred.
+
+**PICK UP EXACTLY HERE:** next safe unit is a Lead-authored, no-edit repair specification for F1-F9.
+Do not repair or execute the proposal in the audit unit, and do not use this separate task to reopen the
+exhausted `C:\PGRK` design loop. All budget, staging, deployment, credential, broker, ARM, order, and
+economic-action holds remain unchanged.
+
 ## [Codex GPT-5.6] 2026-08-09 — Local run-kit design blocked at third repair round
 
 **Outcome: BLOCK.** The candidate-qualified post-Gate run-kit design remains unaccepted and uncommitted.
