@@ -48,7 +48,8 @@ Lead reads each exact candidate blob, not the live branch copy, and records line
 
 - `IBKR_PAPER_BRIDGE/tools/wal_state_bundle.py`: `collect_invariants(connection)`,
   `invariants_hash(invariants)`, verify/create public API, protected fields, DB/hash semantics;
-- `IBKR_PAPER_BRIDGE/deploy/linux/common.sh`: any-write-bit `/222` predicate;
+- `IBKR_PAPER_BRIDGE/deploy/linux/lib/common.sh`: any-write-bit `/222` predicate
+  (`assert_no_writable_paths`, `find ... -perm /222`);
 - `IBKR_PAPER_BRIDGE/deploy/linux/verify.sh`: exact `0555`, ownership, candidate/payload manifest binding,
   ancillary path requirements;
 - `IBKR_PAPER_BRIDGE/deploy/linux/rollback.sh`: dry-run behavior, symlink guard, stop/mask operations,
@@ -83,6 +84,8 @@ Local falsification matrix (old proposal = RED; repaired helper/design = GREEN):
 
 No fixture may touch `/home/gatea`; use a fresh local temporary root and command stubs. Preserve RED/GREEN
 commands and outputs in the evidence package. Text claiming the fixtures exist is not D026 evidence.
+Before relying on POSIX-shell rows, prove Git Bash/WSL availability; otherwise use equivalent Python
+`subprocess` stubs. If neither safe route executes the mandated row, §8 requires `BLOCK`.
 
 ## 4. RP1/B3 checks — F2
 
@@ -164,8 +167,9 @@ Unexecuted claimed falsification is never `CLOSED`. Any open reproduced required
 
 After Lead reproduction, freeze the one-file implementation commit and send only the scope contract,
 actual diff/file, candidate anchors, local RED/GREEN outputs, and repo rules to fresh canonical auditors.
-Acceptance still requires both flagship auditors plus no unresolved reproduced finding. A secondary
-auditor's unexecuted PASS is supplemental. Maximum three repair/re-audit rounds; never enter round 4.
+Acceptance still requires `claude-opus-5` xhigh and `gpt-5.6-sol` xhigh accepting verdicts plus no
+unresolved reproduced required finding from any canonical auditor. A secondary auditor's unexecuted PASS
+is supplemental. Maximum three repair/re-audit rounds; never enter round 4.
 
 ## 9. Next steps
 

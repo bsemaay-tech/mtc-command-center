@@ -1,5 +1,14 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ PICK UP EXACTLY HERE — Lead checklist round 1 repaired, not accepted (Codex GPT-5.6, 2026-08-09)
+>
+> GLM-5.2 `REQUEST_CHANGES`: checklist `313bc187` named the wrong `/222` source path. Lead reproduced and
+> repaired it to `deploy/linux/lib/common.sh`, then added the two optional standalone hardenings. Record:
+> `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_LEAD_ACCEPTANCE_CHECKLIST_AUDIT_2026-08-09.md`.
+>
+> Fresh re-audit next. Checklist audit is 1/3; proposal implementation is still 0/3. The audited Claude
+> prompt remains ready; no host/authority gate changed.
+
 > ## ▶ PICK UP EXACTLY HERE — DeepSeek checklist audit did not execute (Codex GPT-5.6, 2026-08-09)
 >
 > ClinePass DeepSeek V4 Flash failed before audit: invalid hook event payload plus no subscription-model

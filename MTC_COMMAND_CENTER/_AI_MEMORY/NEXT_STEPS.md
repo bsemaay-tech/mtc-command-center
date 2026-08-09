@@ -1,5 +1,19 @@
 # NEXT_STEPS
 
+## WP-L P2 — Lead checklist round 1 repaired; re-audit next (2026-08-09)
+
+GLM-5.2 returned `REQUEST_CHANGES` on checklist commit `313bc187`: candidate `/222` anchor incorrectly
+named `deploy/linux/common.sh`; exact path is `deploy/linux/lib/common.sh`. Lead reproduced absent/present
+blob checks and the exact symbol. Round-1 repair plus two optional standalone hardenings are recorded in
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_LEAD_ACCEPTANCE_CHECKLIST_AUDIT_2026-08-09.md`.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Any]** Freeze and fresh re-audit the repaired checklist; it is not accepted yet.
+- **[AI: Claude]** Proposal implementation is still 0/3 and may start from the separately audited prompt
+  when exact account capacity returns.
+- **[AI: Codex]** Keep checklist repair accounting separate from proposal repair accounting; no host action.
+
 ## WP-L P2 — DeepSeek checklist audit route unavailable (2026-08-09)
 
 Fresh isolated worktree `C:\WP2CL` at exact `313bc187` remained clean. ClinePass DeepSeek V4 Flash

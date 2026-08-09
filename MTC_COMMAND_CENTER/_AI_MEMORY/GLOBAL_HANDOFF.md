@@ -1,5 +1,15 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6] 2026-08-09 — Lead checklist round 1 repaired after REQUEST_CHANGES
+
+GLM-5.2 found one reproduced required defect in checklist `313bc187`: the candidate `/222` anchor omitted
+the `lib/` directory. Lead confirmed old path rc 128, corrected path rc 0, symbol and `verify.sh` call
+sites. The exact repair and two optional standalone hardenings are in
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_LEAD_ACCEPTANCE_CHECKLIST_AUDIT_2026-08-09.md`.
+
+**PICK UP EXACTLY HERE:** fresh re-audit the repaired checklist. Checklist audit is round 1/3; proposal
+implementation remains 0/3. No host or authority gate changed.
+
 ## [Codex GPT-5.6] 2026-08-09 — DeepSeek checklist audit non-execution
 
 ClinePass DeepSeek V4 Flash failed before audit with the known hook-payload error plus no subscription
