@@ -1,5 +1,14 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ NEWEST CHECKPOINT — accepted E integrated/pushed; raw-blob package next (2026-08-09)
+>
+> Active feature branch fast-forwarded `123bb0c4 → 7453ea7f` and pushed. Accepted source remains
+> `b2c369f7`; later commits are records only. **Next:** build E package from raw committed blobs,
+> create manifest/tar, extract locally, and reproduce package D RED/pre-repair RED/E GREEN plus
+> syntax/hash/LF/CR/member checks. No transfer/staging yet. A-5 FAIL; A-6..A-9 NOT RUN.
+>
+> ---
+
 > ## ▶ NEWEST CHECKPOINT — run-kit E canonically ACCEPTED at `b2c369f7` (2026-08-09)
 >
 > Claude Opus 5 xhigh and Codex 5.6-sol xhigh both executed D RED 6/29, exact pre-repair E

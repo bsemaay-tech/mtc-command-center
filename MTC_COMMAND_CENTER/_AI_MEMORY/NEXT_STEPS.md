@@ -1,5 +1,19 @@
 # NEXT_STEPS
 
+## GATE A — accepted E integrated and pushed; raw-blob package next (2026-08-09)
+
+Active `feature/donchian-crypto-ladder` fast-forwarded cleanly from `123bb0c4` to
+`7453ea7ffb427d86d5d2a9a65143603873d18906` and pushed to origin. Accepted source remains exact
+`b2c369f7`; later commits are audit/current-memory records only. No package, transfer, or staging
+action yet.
+
+- **[AI: Codex] NEXT:** build `gatea-run-kit-20260809E-2ce41e34` from raw committed kit blobs at
+  `b2c369f7`, add SHA256SUMS, create deterministic tar, extract locally and re-run package-level
+  D RED/pre-repair RED/E GREEN plus syntax/hash/LF/CR/member checks.
+- **[AI: Any] HOLD:** update memory again before transfer. A-5 FAIL; A-6..A-9 NOT RUN.
+
+---
+
 ## GATE A — run-kit E canonically ACCEPTED at `b2c369f7`; integrate/package next (2026-08-09)
 
 Claude Opus 5 xhigh and Codex 5.6-sol xhigh both executed D RED 6/29, exact pre-repair E RED

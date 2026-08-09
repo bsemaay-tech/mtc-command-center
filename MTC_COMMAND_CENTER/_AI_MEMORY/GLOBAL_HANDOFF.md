@@ -1,5 +1,14 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-08-09 — Accepted E integrated and pushed
+
+Active feature branch fast-forwarded `123bb0c4 → 7453ea7f` and pushed successfully. Canonically
+accepted source is still `b2c369f7`; later commits are docs/current-memory only. Next is raw-blob
+package construction and local extracted verification. No package/transfer/staging action yet;
+A-5 FAIL; A-6..A-9 NOT RUN.
+
+---
+
 ## [Codex GPT-5.6-sol] 2026-08-09 — Gate A A5 run-kit E canonically accepted
 
 Frozen source `b2c369f7` is accepted: Claude Opus 5 xhigh and Codex 5.6-sol xhigh both executed the
