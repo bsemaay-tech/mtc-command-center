@@ -1,5 +1,13 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ PICK UP EXACTLY HERE — alternate Claude account capacity-blocked (Codex GPT-5.6, 2026-08-09)
+>
+> At 10:10 +03:00, explicit `.claude` execution of the frozen repair prompt returned session-limit/reset
+> 13:50 before any edit; worktree clean, no repair round consumed. `.claude-max` has the earlier observed
+> 11:10 reset. Continue read-only prompt/evidence checks, then dispatch fresh repair round 1/3 through the
+> first exact Claude flagship route that becomes available. No secondary protected implementation or host
+> action is authorized.
+
 > ## ▶ PICK UP EXACTLY HERE — exact Claude proposal-repair prompt ready (Codex GPT-5.6, 2026-08-09)
 >
 > Use `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_CLAUDE_REPAIR_PROMPT_2026-08-09.md`. It freezes accepted

@@ -1,5 +1,20 @@
 # NEXT_STEPS
 
+## WP-L P2 — alternate Claude route checked; capacity blocked (2026-08-09 10:10 +03:00)
+
+Explicit `.claude` dispatch of the frozen one-file repair prompt returned before any edit with:
+`You've hit your session limit · resets 1:50pm (Europe/Chisinau)`. Working tree remained clean. The
+separate `.claude-max` route's previously observed reset is 11:10. This is an account-capacity blocker,
+not a repair verdict, and it consumes no repair round.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Any]** Read-only audit the durable dispatch prompt while Claude is unavailable.
+- **[AI: Claude]** At the first available exact flagship route, execute repair round 1/3 from the frozen
+  prompt; do not resume a prior implementation/audit session.
+- **[AI: Codex]** Continue independent scope/evidence checks; do not substitute GLM/DeepSeek as protected
+  implementer and do not perform host actions.
+
 ## WP-L P2 — exact Claude repair prompt ready (2026-08-09)
 
 Durable counterpart contract:

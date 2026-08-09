@@ -1,5 +1,15 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6] 2026-08-09 — Alternate Claude account also capacity-blocked
+
+At 10:10 Europe/Chisinau, explicit `CLAUDE_CONFIG_DIR=.claude` dispatch of the frozen repair prompt
+returned session-limit/reset 13:50 before editing. The worktree stayed clean. `.claude-max` remains the
+earlier route with reset 11:10. No repair round was consumed.
+
+**PICK UP EXACTLY HERE:** perform only read-only prompt/evidence preparation until an exact Claude
+flagship route is available, then execute fresh repair round 1/3. Do not substitute a secondary model as
+protected implementer; all host/trading/deployment holds remain.
+
 ## [Codex GPT-5.6] 2026-08-09 — Exact Claude proposal-repair prompt ready
 
 Created `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_CLAUDE_REPAIR_PROMPT_2026-08-09.md`. The standalone
