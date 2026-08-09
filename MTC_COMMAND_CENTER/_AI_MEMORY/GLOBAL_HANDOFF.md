@@ -1,5 +1,16 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6-sol] 2026-08-09 — Gate A A-5 PASS under run-kit E
+
+A-5 ran once and passed. Evidence SHA `83d947a3…d19c`, 3284 B, trap rc0; authorized SIGKILL proved
+no auto-restart, one explicit start recovered exact application readiness in 1.1s/2 attempts, DB
+snapshot identical. Independent postcheck: active/running PID189813, Restart=no/NRestarts0, one
+loopback listener, exact credential-free DISARMED state_version1, all external/ARM flags off, DB
+invariant. Gate state A-0..A-5 PASS; A-6..A-9 NOT RUN. Next: verify/run preregistered A-6 D only,
+then checkpoint before A-7. Record: `11_TRIAGE/GATE_A_A5_PASS_2026-08-09E.md`.
+
+---
+
 ## [Codex GPT-5.6-sol] 2026-08-09 — E transferred/verified; A-5 safe preflight PASS
 
 Remote tar/extraction verifies fully, including Linux E GREEN 29/29. E log absent; service

@@ -1,5 +1,17 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ NEWEST CHECKPOINT — A-5 PASS under run-kit E; A-6 next (2026-08-09)
+>
+> A-5 executed once and passed. Log SHA `83d947a3…d19c`, 3284 B, trap rc0; old PID187338 died
+> with no auto-restart, one explicit start produced PID189813 and exact readiness in 1.1s/2
+> attempts; DB snapshot identical. Independent postcheck confirms active/running, Restart=no,
+> NRestarts0, one loopback listener, exact credential-free DISARMED state_version1, all external/
+> ARM flags off, DB invariant. **Gate state A-0..A-5 PASS; A-6..A-9 NOT RUN. Next:** verify/run
+> preregistered A-6 D only, preserve/postcheck, memory before A-7. Record:
+> `11_TRIAGE/GATE_A_A5_PASS_2026-08-09E.md`.
+>
+> ---
+
 > ## ▶ NEWEST CHECKPOINT — E transferred/verified; A-5 safe preflight PASS (2026-08-09)
 >
 > Remote tar/member/manifest/mode/syntax/LF/CR and Linux E GREEN 29/29 all pass. E log absent;

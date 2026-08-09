@@ -1,5 +1,21 @@
 # NEXT_STEPS
 
+## GATE A — A-5 PASS under E; A-6 preregistered D gate next (2026-08-09)
+
+A-5 E executed once, rc0. Evidence remote/local SHA-256 `83d947a3…d19c`, 3284 B; old PID187338
+died with MainPID0/no listener/NRestarts0, exactly one explicit start produced PID189813; readiness
+active+loopback+exact DISARMED in 1.1s/2 attempts; post listener/API PASS; DB snapshot identical;
+trap rc0. Independent postcheck confirms active/running, Restart=no/NRestarts0, one loopback
+listener, exact credential-free DISARMED state_version1, all external/ARM flags off, DB invariant.
+
+- **[AI: Codex] NEXT:** recover/verify the exact preregistered A-6 command and contract from accepted
+  run-kit D; confirm A-6 log absent and live safe state, then execute A-6 only.
+- **[AI: Codex] AFTER A-6:** preserve/hash evidence, independent postcheck, update memory before A-7.
+- Gate state: **A-0..A-5 PASS; A-6..A-9 NOT RUN.** Record:
+  `11_TRIAGE/GATE_A_A5_PASS_2026-08-09E.md`.
+
+---
+
 ## GATE A — E transferred/remote-verified; safe preflight PASS; run A-5 once next (2026-08-09)
 
 Remote tar hash, exact members, manifest, mode, syntax, LF/CR and Linux E regression GREEN 29/29 all
