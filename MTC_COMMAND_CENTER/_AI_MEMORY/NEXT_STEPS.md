@@ -1,5 +1,44 @@
 # NEXT_STEPS
 
+## GATE A — A-7 PASS under run-kit D; A-8 preflight next (2026-08-09)
+
+A-7 executed exactly once at checkpoint `519223e2` with
+`bash /home/gatea/gatea-run-kit-20260808D-2ce41e34/gatea_A7.sh`; SSH rc0, transport stdout/stderr
+empty because the script redirects to its no-clobber evidence log. Accepted candidate `2ce41e34`
+unchanged. Evidence `/home/gatea/gatea-A7-20260808D.log` preserved to
+`C:\WPI_ARTIFACTS\gatea-A7-20260808D.log`; remote/local SHA-256 identical `09443b51…2bbf5`, 4269 B;
+exactly one `A-7 PASS`, one `A7_TRAP_EXIT rc=0`, one `RESULT=PASS`, zero `A7_FAIL`/`RESULT=FAIL`.
+API: HTTP200, DISARMED, mode credential_free_disarmed, state_version1, reconcile_ready False
+(expected, not required true), reconcile_error None, all network/exchange/credential/ARM flags off.
+Production DB via preregistered read-only sudo: quick_check ok, app_state DISARMED, schema_version4,
+explicit cross-source equality `A7_db_app_eq_api_state=DISARMED==DISARMED`. Point-in-time documented
+logs: `bridge.log` 1554 B, mode600 root:root, SHA `efda2d19…d02d`; `bridge.err.log` 597 B, mode600
+root:root, SHA `0b906765…d207`. Journal query succeeded with exactly 22 payload lines bounded by
+begin/end; `A7_journal_credgrep=not performed (forbidden by contract)`, raw payload deliberately not
+printed into Lead output. Accepted postcheck rc0 (`C:\WPI_ARTIFACTS\postcheck_gatea_a7_d.v2.out`,
+stderr empty): evidence hash/bytes/markers, exact DISARMED API, production DB
+quickcheck/appstate/schema, explicit evidence equality, journal count/bounds, current logs
+regular/non-empty, service active/running PID189813, Restart=no, NRestarts0, one loopback listener.
+The first postcheck passed API and production DB, then stopped because it over-strictly required the
+current mutable `bridge.log` hash to equal A-7's point-in-time snapshot; independent GET status
+checks append benign lines (1554 → 1616 → 1678 B, current hash at accepted v2 `d6bb3a2a…5b13ab`,
+`bridge.err.log` unchanged at 597 B/same hash) — a verifier-design defect, not an A-7 failure. V2
+validates the authoritative snapshot identity inside the immutable A-7 evidence and that current
+logs are regular/non-empty, instead of demanding a live append-only log stay byte-identical; no raw
+log content printed. Contract held: no `/api/arm`, env file not opened, no `/api/health`, no
+credential grep or content, read-only production inspection.
+
+- **[AI: Codex] NEXT:** preflight both accepted D A-8 scripts (`gatea_A8.sh` remote and
+  `gatea_A8_host.ps1` Windows host) — exact hashes/syntax, remote and host evidence paths absent,
+  service safe, required host/SSH connectivity — without executing A-8.
+- **[AI: Codex] THEN:** update `_AI_MEMORY`, execute the preregistered A-8 remote+host sequence
+  exactly once, preserve/hash both evidence logs, independently postcheck. Do not run A-9 on genuine
+  A-8 FAIL.
+- Gate state: **A-0..A-7 PASS; A-8..A-9 NOT RUN.** Record:
+  `11_TRIAGE/GATE_A_A7_PASS_2026-08-09D.md`.
+
+---
+
 ## GATE A — A-7 preflight PASS; execute preregistered A-7 D next (2026-08-09)
 
 Lead-performed read-only A-7 preflight at checkpoint `cfccd617`; accepted candidate `2ce41e34`
