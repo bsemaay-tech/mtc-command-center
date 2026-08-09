@@ -38,10 +38,19 @@ Items 2-3 were optional audit nits; both tighten standalone reproducibility with
 
 ## Current status and next steps
 
-Round 1 is repaired but **not yet accepted**. Freeze this repair commit and run a fresh read-only
-re-audit. Do not dispatch the checklist against a proposal until an accepting verdict is reproduced.
-All host/trading/deployment holds remain; the separately audited Claude proposal-repair prompt remains
-ready for its first account-capacity window.
+Fresh GLM-5.2 re-audit of exact repaired commit
+`456968bbc694c90d7c30878059a96020c298d8a7` returned **PASS-WITH-NITS**, zero required repairs, and clean
+Git status. It independently reproduced the corrected candidate path, symbol, `/222` predicate and
+`verify.sh` call sites; both optional round-1 hardenings were confirmed correct. The checklist is accepted
+as the Lead verification contract for the future proposal repair.
+
+One optional wording nit remains unapplied: clarify that a Python subprocess fixture must exercise the
+real candidate predicate/tooling under stub control, not reimplement predicate logic. Existing D026 and
+non-execution=`BLOCK` language already prevents false acceptance. It is intentionally left unapplied so
+the accepted SHA remains byte-identical to the re-audited artifact.
+
+Next: dispatch the separately audited Claude proposal-repair prompt at the first account-capacity window,
+freeze its one-file diff, and execute the accepted checklist. All host/trading/deployment holds remain.
 
 ## Routing record
 
@@ -55,3 +64,6 @@ Context/tool budget     : four-file read-only audit; GLM completed in 319 second
 Fallback                : Lead reproduction; no secondary protected implementation
 External API credits    : no
 ```
+
+Re-audit routing was the same Tier 4 GLM-5.2 Coding Plan route with a five-file compact allowlist; it
+completed in 210 seconds. DeepSeek remained supplemental non-execution.

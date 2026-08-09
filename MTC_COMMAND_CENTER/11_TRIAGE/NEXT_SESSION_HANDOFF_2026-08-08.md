@@ -1,5 +1,14 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ PICK UP EXACTLY HERE — Lead checklist accepted PASS-WITH-NITS (Codex GPT-5.6, 2026-08-09)
+>
+> Fresh GLM-5.2 re-audit accepted exact `456968bb`: zero required repairs, clean Git status, prior source
+> anchor defect independently closed. Record:
+> `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_LEAD_ACCEPTANCE_CHECKLIST_AUDIT_2026-08-09.md`.
+>
+> At first exact Claude capacity, dispatch proposal round 1/3 from the audited prompt; freeze the one-file
+> result and execute checklist `456968bb`. No host/authority gate changed.
+
 > ## ▶ PICK UP EXACTLY HERE — Lead checklist round 1 repaired, not accepted (Codex GPT-5.6, 2026-08-09)
 >
 > GLM-5.2 `REQUEST_CHANGES`: checklist `313bc187` named the wrong `/222` source path. Lead reproduced and

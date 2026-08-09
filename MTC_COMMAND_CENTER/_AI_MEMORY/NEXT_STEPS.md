@@ -1,5 +1,22 @@
 # NEXT_STEPS
 
+## WP-L P2 — Lead acceptance checklist ACCEPTED PASS-WITH-NITS (2026-08-09)
+
+Fresh GLM-5.2 re-audit accepted exact checklist commit
+`456968bbc694c90d7c30878059a96020c298d8a7`: `PASS-WITH-NITS`, zero required repairs, clean Git status.
+Corrected candidate path/symbol/predicate/call sites and both optional hardenings were reproduced. Full
+record: `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_LEAD_ACCEPTANCE_CHECKLIST_AUDIT_2026-08-09.md`.
+
+One optional wording nit is intentionally unapplied to preserve exact audited SHA; current D026 and
+non-execution=`BLOCK` language already prevents the hypothetical false acceptance.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Claude]** At first exact account capacity, run audited repair prompt as proposal round 1/3.
+- **[AI: Codex]** Freeze the returned one-file diff and execute exact accepted checklist `456968bb`.
+- **[AI: Any]** No host/script extraction/budget/credential/broker/TESTNET/ARM/order/WP-V/KVM2/master/
+  old-payload/economic action or `C:\PGRK` reopening is authorized.
+
 ## WP-L P2 — Lead checklist round 1 repaired; re-audit next (2026-08-09)
 
 GLM-5.2 returned `REQUEST_CHANGES` on checklist commit `313bc187`: candidate `/222` anchor incorrectly

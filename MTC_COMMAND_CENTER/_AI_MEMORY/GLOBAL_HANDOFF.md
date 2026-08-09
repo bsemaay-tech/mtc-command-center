@@ -1,5 +1,15 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6] 2026-08-09 — Lead acceptance checklist accepted PASS-WITH-NITS
+
+Fresh GLM-5.2 re-audit accepted byte-exact checklist commit `456968bb`: zero required repairs, clean Git
+status, corrected candidate anchor independently reproduced. Full record:
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_LEAD_ACCEPTANCE_CHECKLIST_AUDIT_2026-08-09.md`.
+
+**PICK UP EXACTLY HERE:** dispatch the separately audited Claude proposal-repair prompt when an exact
+account route has capacity; freeze the one-file result and execute checklist `456968bb`. All authority
+holds remain unchanged.
+
 ## [Codex GPT-5.6] 2026-08-09 — Lead checklist round 1 repaired after REQUEST_CHANGES
 
 GLM-5.2 found one reproduced required defect in checklist `313bc187`: the candidate `/222` anchor omitted
