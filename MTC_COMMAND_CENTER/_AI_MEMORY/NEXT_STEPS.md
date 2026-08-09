@@ -1,5 +1,21 @@
 # NEXT_STEPS
 
+## WP-L P2 — Claude repair prompt audited and hardened (2026-08-09)
+
+GLM-5.2 executed a five-file read-only contract audit: `PASS-WITH-NITS`, zero required repairs, clean
+worktree. Full record:
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_CLAUDE_REPAIR_PROMPT_AUDIT_2026-08-09.md`. Lead folded all four
+optional hardenings into the durable prompt without changing scope or authority.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Claude]** Execute the audited prompt as fresh repair round 1/3 through the first available exact
+  flagship account route.
+- **[AI: Codex]** While capacity is blocked, prepare only read-only Lead acceptance/falsification checks;
+  after implementation, inspect actual diff and reproduce F1-F9 before freezing it.
+- **[AI: Any]** No host, script extraction, budget, credential/broker/TESTNET/ARM/order, WP-V/KVM2/master/
+  old-payload/economic action or `C:\PGRK` reopening is authorized.
+
 ## WP-L P2 — alternate Claude route checked; capacity blocked (2026-08-09 10:10 +03:00)
 
 Explicit `.claude` dispatch of the frozen one-file repair prompt returned before any edit with:

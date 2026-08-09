@@ -1,5 +1,15 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ PICK UP EXACTLY HERE — Claude repair prompt audited/hardened (Codex GPT-5.6, 2026-08-09)
+>
+> GLM-5.2 returned `PASS-WITH-NITS`, zero required repairs, clean Git status. Lead folded all four optional
+> hardenings into the durable prompt. Full record:
+> `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_CLAUDE_REPAIR_PROMPT_AUDIT_2026-08-09.md`.
+>
+> Dispatch fresh Claude repair round 1/3 through the first exact account route with capacity. Until then,
+> continue only read-only Lead acceptance/falsification preparation. No secondary protected implementation,
+> host action, script extraction, credential/broker/TESTNET/ARM/order/economic action, or `C:\PGRK` reopen.
+
 > ## ▶ PICK UP EXACTLY HERE — alternate Claude account capacity-blocked (Codex GPT-5.6, 2026-08-09)
 >
 > At 10:10 +03:00, explicit `.claude` execution of the frozen repair prompt returned session-limit/reset

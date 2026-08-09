@@ -1,5 +1,16 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6] 2026-08-09 — Claude repair prompt accepted PASS-WITH-NITS
+
+GLM-5.2 completed the read-only prompt audit with `PASS-WITH-NITS`, zero required repairs, and clean Git
+status. Record: `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_CLAUDE_REPAIR_PROMPT_AUDIT_2026-08-09.md`.
+Lead reproduced and folded all four optional hardenings into the durable prompt; one-file scope, C1/C5
+blocks, three-round cap, and all authority holds remain exact.
+
+**PICK UP EXACTLY HERE:** use the audited prompt for fresh Claude repair round 1/3 when either exact
+account route has capacity. Until then, only Lead read-only acceptance/falsification preparation may
+continue; no secondary protected implementation or host action.
+
 ## [Codex GPT-5.6] 2026-08-09 — Alternate Claude account also capacity-blocked
 
 At 10:10 Europe/Chisinau, explicit `CLAUDE_CONFIG_DIR=.claude` dispatch of the frozen repair prompt

@@ -40,7 +40,8 @@ proposal/design artifact, not host authorization and not extracted runnable file
 
 1. RP0: replace fixed evidence-log destinations with the preregistered run-ID, operator-captured
    pre-allocation transport evidence, canonical non-link parent check, one-shot `mkdir -m 0700`, and
-   create-once leaf design. Every path/process/systemd/pipeline predicate must have true, false, and
+   create-once leaf design. Hash the closed evidence tree externally after script exit and bind the
+   remote/local hashes. Every path/process/systemd/pipeline predicate must have true, false, and
    could-not-evaluate outcomes; the third is STOP. Include the six required RED/GREEN falsifications.
 2. RP1/B3: require exact `0555 root:root`, candidate `/222` any-write-bit semantics, an honestly bounded
    or explicitly budgeted sweep, candidate/payload manifest binding, exact ancillary path checks, and
@@ -54,21 +55,24 @@ proposal/design artifact, not host authorization and not extracted runnable file
    post-reboot equality, exact systemd token/status handling, exact mask target, and all required
    falsifications. Do not turn blocked dependencies into commands.
 5. RP4/C3: use a read-only `sqlite3.Connection`; restore through the exact primitive
-   `src_conn.backup(dst_conn)` into a fresh destination; run checks on the restored connection; call
-   `collect_invariants(restored_connection)` and candidate `invariants_hash(invariants)`; require protected
-   equality, identity separation, sidecar absence, and external manifest-file SHA. Preserve both success
-   and failure evidence; never delete partial artifacts. Include every required RED/GREEN case.
+   `src_conn.backup(dst_conn)` into a fresh destination; run `quick_check` and `foreign_key_check` on the
+   restored connection; call `collect_invariants(restored_connection)` and candidate
+   `invariants_hash(invariants)`; require protected equality, identity separation, sidecar absence, and
+   external manifest-file SHA. Preserve both success and failure evidence; never delete partial artifacts.
+   Include every required RED/GREEN case.
 6. RP5/C4: enforce rollback-manifest object-and-link no-clobber, accepted C3 evidence, exact starting
    state, a mutation-free dry run, then one stop+mask-only invocation. Pass no rebind SHA arguments and
    state explicitly that the resulting rollback-manifest no-rebind fields must be empty. Require exact
-   mask/link/status/process outcomes and fresh post-rollback protected-invariant equality. Filename/size
-   equality is diagnostic only. Include every required RED/GREEN case.
+   mask/link/status/process outcomes, a newly created rollback manifest at exactly `0640 root:root` with
+   every expected field/value validated, and fresh post-rollback protected-invariant equality.
+   Filename/size equality is diagnostic only. Include every required RED/GREEN case.
 7. RP6/C5: keep only the authority statement. Add no executable credential, network, broker, alternate
    start, TESTNET, ARM, or order procedure.
 
-The repaired document must visibly mark which blocks are executable proposals and which are blocked
-future design. No acknowledged assumption may remain on a PASS path. Do not claim acceptance, closure of
-`C:\PGRK`, permission to extract scripts, exact 50-hour reproducibility, or server readiness.
+The repaired document must visibly mark which blocks are executable proposals (API-consistent design
+blocks, not host-runnable) and which are blocked future design. No acknowledged assumption may remain on
+a PASS path. Do not claim acceptance, closure of `C:\PGRK`, permission to extract scripts, exact 50-hour
+reproducibility, or server readiness.
 
 ## Self-QA and response contract
 
