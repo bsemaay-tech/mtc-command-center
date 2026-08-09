@@ -40,6 +40,13 @@ milestone so the next fresh session resumes cleanly.
 
 ## Milestone log (newest first — update on every milestone)
 
+- 2026-08-09 ~23:10: round 6 consumed + committed (`3a358ffa`). Section 4 now literally
+  paste-and-run (absolute `B`, `QA="$(mktemp -d)"`, helpers+preludes restated inline);
+  code freeze re-verified by `cmp` on all three files. FINAL auto-round audit 6
+  dispatched (`be5qijups`) — it must paste-and-run the blocks itself. On PASS → B3
+  repair ACCEPTED → Stage 1B runkit re-freeze → WP-L P2 unit closure. On same-class
+  BLOCK → escalate to owner (do NOT open round 7); the kickoff asks the auditor to
+  classify the residue as document-fixable vs inherent MSYS/D026 limit.
 - 2026-08-09 ~22:55: audit 5 BLOCK, converging — code+arithmetic PASS, sole survivor
   = section-4 SELF_QA setup block not copy-paste runnable. Tight doc round 6 dispatched
   (Max, `b4ld284dy`) to make it runnable; code hash-frozen. Committed `158bb953`.
