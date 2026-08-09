@@ -1,0 +1,8 @@
+PROBE_BEGIN purpose=resolve_service_account_name_to_numeric_ids readonly=yes
+PROBE_passwd mtc-bridge:x:999:988:MTC Crypto Paper Bridge service account:/var/lib/mtc-bridge:/usr/sbin/nologin
+PROBE_group mtc-bridge:x:988:
+PROBE_stat /var/lib/mtc-bridge uid=999 gid=988 owner=mtc-bridge:mtc-bridge mode=750
+PROBE_stat /var/log/mtc-bridge uid=999 gid=988 owner=mtc-bridge:mtc-bridge mode=750
+PROBE_stat /etc/mtc-bridge uid=0 gid=0 owner=root:root mode=750
+PROBE_unit_identity User=mtc-bridge Group=mtc-bridge 
+PROBE_END
