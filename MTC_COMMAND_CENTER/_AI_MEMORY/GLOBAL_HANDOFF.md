@@ -1,5 +1,14 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6] 2026-08-09 — Frozen candidate anchor map prepared
+
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_CANDIDATE_ANCHOR_MAP_2026-08-09.md` records exact candidate
+`2ce41e34` blob IDs and line-qualified anchors for C3/B3/C4/C1/C2 verification, including corrected
+`deploy/linux/lib/common.sh`. It is read-only evidence, not proposal or host acceptance.
+
+**PICK UP EXACTLY HERE:** at first exact Claude capacity run proposal round 1/3, freeze one-file result,
+then verify against this map and checklist `456968bb`. All holds remain.
+
 ## [Codex GPT-5.6] 2026-08-09 — Dispatch package accepted by fourth-account Codex
 
 Fresh exact `gpt-5.6-sol` xhigh read-only audit accepted the Claude prompt + Lead checklist package:

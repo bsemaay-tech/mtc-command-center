@@ -1,5 +1,17 @@
 # NEXT_STEPS
 
+## WP-L P2 — candidate anchor map frozen (2026-08-09)
+
+Created `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_CANDIDATE_ANCHOR_MAP_2026-08-09.md` with exact candidate
+`2ce41e34` paths, Git blob IDs, line-qualified APIs/predicates, and proposal implications for
+`wal_state_bundle.py`, `lib/common.sh`, `verify.sh`, `rollback.sh`, and first-start systemd template.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Claude]** Run proposal round 1/3 from the audited prompt when exact account capacity returns.
+- **[AI: Codex]** Freeze the one-file result; verify against anchor map + checklist `456968bb`.
+- **[AI: Any]** This map is read-only evidence, not host/script/trading/deployment authority.
+
 ## WP-L P2 — dispatch package accepted by fourth-account Codex (2026-08-09)
 
 Fresh `gpt-5.6-sol` xhigh fourth-account audit returned `PASS-WITH-NITS`, zero required findings, after

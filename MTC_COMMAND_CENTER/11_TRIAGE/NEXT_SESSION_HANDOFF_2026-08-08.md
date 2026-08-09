@@ -1,5 +1,12 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ PICK UP EXACTLY HERE — frozen candidate anchor map ready (Codex GPT-5.6, 2026-08-09)
+>
+> `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_CANDIDATE_ANCHOR_MAP_2026-08-09.md` freezes candidate `2ce41e34`
+> blob IDs and exact source lines for future Lead verification. At first exact Claude capacity, run
+> proposal round 1/3; freeze the one-file result and verify against this map + checklist `456968bb`.
+> No host/authority gate changed.
+
 > ## ▶ PICK UP EXACTLY HERE — dispatch package Codex PASS-WITH-NITS (Codex GPT-5.6, 2026-08-09)
 >
 > Fourth-account `gpt-5.6-sol` xhigh accepted the audited prompt + checklist package: zero required
