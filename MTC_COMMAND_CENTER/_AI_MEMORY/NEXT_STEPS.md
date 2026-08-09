@@ -1,5 +1,29 @@
 # NEXT_STEPS
 
+## WP-L P2 — repaired B3 PASSED ON THE HOST; B3-GAP-ENV CLOSED (2026-08-09 night)
+
+**The gap is closed end to end.** Owner authorized host execution in-session; a new
+preregistration (`08_PREREG_B3B/`, unit `WPLP2B-20260809T210610Z-834380c5`) was committed at
+`bf395dab` BEFORE any invocation, then Stage 3B-B3B ran: **TR_RUN PASS, 7/7 ops rc=0, `B3 PASS`**
+(`09_TRANSPORT_B3B/`, commit `b3682bd5`). Re-frozen kit `runkit_b.tar` `888bec17…` verified
+remotely (10/10 blocks). Evidence closed, retrieved, digest-set bound.
+
+Numeric service identity resolved without circularity: `install.sh` allocates the account
+dynamically, so the NAME is the contract — a recorded `getent` preflight probe gave uid **999**,
+gid **988** (they differ). B3 proves the state/log dirs belong to the account systemd runs.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Claude Lead]** Write the WP-L P2 unit closure record (Stage 1→3B, repair cycle rounds
+  1–6 + audits 1–6, re-freeze, B3B execution) and close the unit.
+- **[AI: Any]** `RPD-VERIFY.sh` is accepted and travels in the kit but has NEVER executed — it is
+  root-side. Running it needs root on the host, which is NOT granted. Treat as design-only until
+  the owner opens a privileged channel.
+- **[AI: Any]** WP-I draft is at round 1.2 (Codex audit applied by GLM). F3/F4 (system-manager
+  access) remain OPEN for a successor round. WP-I is NOT dispatchable: it still needs explicit
+  host-contact authority and a budget lift.
+- **[AI: Any]** Routing is now Codex-first, Max last resort (`STANDING_AUTONOMY_AUTHORITY` §A2).
+
 ## WP-L P2 — B3 repair ACCEPTED (audit 6 PASS); Stage 1B re-freeze in flight (2026-08-09 night)
 
 State: R4-5 CLOSED on Linux (banked, bound). **B3-GAP-ENV Option 1 repair cycle ACCEPTED at round 6**

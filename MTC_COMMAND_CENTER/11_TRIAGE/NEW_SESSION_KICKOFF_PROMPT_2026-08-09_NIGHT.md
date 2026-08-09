@@ -40,6 +40,15 @@ milestone so the next fresh session resumes cleanly.
 
 ## Milestone log (newest first — update on every milestone)
 
+- 2026-08-10 ~00:15: **REPAIRED B3 PASSED ON THE HOST — B3-GAP-ENV CLOSED.** Owner
+  authorized host execution + Codex-first routing (`STANDING_AUTONOMY_AUTHORITY` §A1–A3).
+  Stage 1B kit committed `979e4322` (10 blocks, archive `888bec17`, deterministic).
+  Stage 2B prereg written by Codex, Lead-completed, committed `bf395dab` BEFORE execution.
+  Stage 3B-B3B: TR_RUN PASS 7/7, `B3 PASS`, evidence bound — commit `b3682bd5`.
+  WP-I round 1.2 (Codex audit → GLM repair) committed `4b991679`.
+  Next: WP-L P2 unit closure record; then morning summary. RPD-VERIFY still never
+  executed (root-side, no root granted). WP-I not dispatchable (needs authority + budget).
+
 - 2026-08-09 ~23:25: **AUDIT 6 PASS — B3-GAP-ENV repair cycle ACCEPTED** (zero findings;
   auditor paste-and-ran the QA prerequisite + four closure blocks verbatim, all
   reproduced; code hashes frozen). Committed `e76d78ea`. Stage 1B re-freeze dispatched
