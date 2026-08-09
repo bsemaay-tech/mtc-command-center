@@ -182,6 +182,13 @@ authored for WP-I and pinned at Stage 1.
 | `run_ro.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 05 stdin - RO wrapper |
 | `TRANSPORT_PLAN.tsv` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | the ordered op list; pinned inside the runner |
 
+Reused-script disposition (GLM review N1, mirroring the Stage 2 template §10
+discipline): `remote_setup.sh`, `remote_extract_verify.sh` and `remote_close_tree.sh`
+are each **kept byte-identical** to the Stage-2-accepted artifacts at the digests
+above - reviewed for contract fit against the WP-I op list, unchanged contract, no
+edit; any future byte change to any of them voids this draft's §4 and re-opens
+review.
+
 Both wrappers inherit the two repairs the Stage 2 wrappers needed: block paths are
 refused if they are symlinks (`-f` dereferences, so `-f` alone is not a refusal),
 and any child process reads from `/dev/null`, because the wrapper itself arrives on
@@ -299,7 +306,8 @@ into the matrix section 0.3 and B1/B2/B3/B6) is: only release `2ce41e34...321b`
 installed at mode `555`; venv counterpart `555`; `/etc/mtc-bridge` metadata only,
 `install_manifest.json` 1007 B mode `640`; unit fragment 3736 B mode `644`;
 first-start unit active with `Restart=no`, `NRestarts=0`, MainPID 189813; exactly one
-loopback listener `127.0.0.1:8790`; credential-free DISARMED `state_version=1` with
+bridge listener on `127.0.0.1:8790` (sshd:22 is necessarily also listening - see named
+risk R5, wording per GLM review N2); credential-free DISARMED `state_version=1` with
 all credential/network/exchange/ARM flags off.
 
 Outcome grammar, unchanged from the accepted Stage 2 contract: **rc 0 = PASS**,
@@ -348,8 +356,8 @@ replacement at run time, which is the whole reason the tool list is preregistere
 | 15 | B3s metadata dirs | `stat` of `/etc/mtc-bridge` is `0750 root:root`; of `WPI_STATE_DIR` and `WPI_LOG_DIR` is `0750 <state-owner>:<state-group>` | `B3_FAIL reason=path=<p> mode=<m> owner=<o> expected=<mode> <owner>` |
 | 16 | B3s scope | the block contains no path with prefix `/etc/mtc-bridge/`, `<WPI_STATE_DIR>/` or `<WPI_LOG_DIR>/` | not a run-time predicate: a Stage-1 path-scope proof failure (section 10.2) blocks the freeze, so this can never divergence at run time |
 | 17 | B1a lock bytes | `sha256sum` of the installed `requirements.lock` equals `a1881296...bf66e`, size 117762 | `B1a_FAIL reason=installed_lock_digest_mismatch observed=<h> expected=a1881296...bf66e` - disposition **investigate read-only**: weigh a wrong expected value *and* genuine drift, re-check blob -> LF-pinned export -> manifest-verified install before escalating a STOP or dismissing one |
-| 18 | B1 interpreter | `<venv>/bin/python -V` reports a `3.12.` version | `B1_FAIL reason=interpreter_version observed=<v> expected=3.12.*` |
-| 19 | B1 lock parity | `verify_lock.py --check-installed` exits 0 and prints `verify_lock: PASS: lock+installed; packages=56` | `B1_FAIL reason=lock_installed_parity rc=<n> last_line=<l>`; and `B1_STOP reason=metadata_unreadable path=<p>` for any distribution metadata the process cannot read |
+| 18 | B1 interpreter | `<venv>/bin/python -V` reports a `3.12.` version; **preflight (GLM F1): `test -x <venv>/bin/python` as `gatea` must succeed first** | `B1_STOP reason=interpreter_not_executable path=<venv>/bin/python` on exec/EACCES/126 denial (never a version FAIL); `B1_FAIL reason=interpreter_version observed=<v> expected=3.12.*` only after the interpreter demonstrably ran |
+| 19 | B1 lock parity | `verify_lock.py --check-installed` exits 0 and prints `verify_lock: PASS: lock+installed; packages=56` | `B1_FAIL reason=lock_installed_parity rc=<n> last_line=<l>`; `B1_STOP reason=metadata_unreadable path=<p>` for any distribution metadata the process cannot read; and row 18's `interpreter_not_executable` STOP disqualifies this row entirely (an interpreter that cannot start never reaches metadata) |
 | 20 | B5 endpoint | `GET /api/status` returns HTTP 200 | `B5_STOP reason=status_endpoint_http code=<c>` - a 401/403 is could-not-evaluate, not a safety finding |
 | 21 | B5 flags | `state` DISARMED, `state_version` 1, `mode` `credential_free_disarmed`, `network` disabled, `exchange_conn` disabled, `exchange_enabled` false, `credential_lookup` disabled, `arm_enabled` false | `B5_FAIL reason=flag_mismatch field=<f> observed=<v> expected=<v>`; and `B5_STOP reason=schema_unexpected field=<f>` if a preregistered key is absent under a different spelling - **named risk R4**: these key names come from matrix prose, not from an observed response body |
 | 22 | B6 listener set | exactly one listening socket on port 8790, local address `127.0.0.1` | `B6_FAIL reason=listener_set_unexpected observed=<lines> expected=1x127.0.0.1:8790` |
@@ -364,6 +372,14 @@ indistinguishable from a distribution that is not installed, so an unreadable
 correct host, which is the same shape of error as tonight's, arriving through a
 different door. If row 14 STOPs, row 19 must STOP too and must never be reported as
 a parity FAIL.
+
+**Interpreter-exec extension (GLM review F1, applied round 1.1).** The recorded host
+state proves the venv tree is `0555` (traverse+read for other) but records no per-file
+execute bit for `<venv>/bin/python`. Executing it is not a privileged action, so B1
+stays INCLUDE - but an exec denial must surface as row 18's dedicated
+`interpreter_not_executable` STOP, never as a version or parity FAIL. A false FAIL
+against a correct host is exactly the B3-GAP-ENV failure shape arriving through a
+different door, and this table exists to make that shape impossible.
 
 **Named risks carried into dispatch.**
 

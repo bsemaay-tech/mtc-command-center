@@ -40,6 +40,10 @@ milestone so the next fresh session resumes cleanly.
 
 ## Milestone log (newest first — update on every milestone)
 
+- 2026-08-09 ~22:05: GLM WP-I draft review integrated as round 1.1 (F1
+  interpreter-exec STOP added to rows 18/19 + preflight; N1 reused-script
+  disposition; N2 listener wording; SELF_QA addendum). B3 round 4 (Max) still in
+  flight — next: consume it → narrow Codex closure audit → Stage 1B re-freeze.
 - 2026-08-09 ~21:50: GLOBAL_HANDOFF + NEXT_STEPS updated; B3 round 4 (Max) and GLM
   WP-I draft review both in flight. Next: consume round 4 → narrow Codex closure
   audit → Stage 1B re-freeze on PASS.

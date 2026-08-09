@@ -336,3 +336,17 @@ kit built or archive frozen.
 
 The untracked working-tree files noted in the session's starting git status were not
 touched.
+
+---
+
+## Round 1.1 addendum (Lead integration of GLM review, 2026-08-09 night)
+
+GLM F1 correction to M4-9's scope: the "per-file modes inside the trees are
+unrecorded" premise limits not only the write-bit sweep (row 12) but also
+**interpreter execution** (rows 18/19) - nothing recorded proves
+`<venv>/bin/python` carries the "other" execute bit. The draft now routes an exec
+denial to `B1_STOP reason=interpreter_not_executable` (row 18 preflight `test -x`),
+so a non-executable interpreter can never be misread as a version or parity FAIL.
+Also applied: N1 reused-script disposition note (draft section 4), N2 listener
+wording (draft section 8 intro). Review report:
+`11_TRIAGE/WPI_DRAFT_GLM_REVIEW_2026-08-09.md`. B1 remains INCLUDE-READ-ONLY.
