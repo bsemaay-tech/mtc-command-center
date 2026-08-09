@@ -40,6 +40,13 @@ milestone so the next fresh session resumes cleanly.
 
 ## Milestone log (newest first — update on every milestone)
 
+- 2026-08-09 ~22:30: audit 4 = code CLOSED (finding 1), sole survivor is DOC-only
+  (finding 2, SELF_QA exact-command recording). Per standing authority = narrow
+  doc/QA survivor → auto-continue, NOT owner escalation. Doc-only round 5 dispatched
+  to Max (task, rewrites round5/SELF_QA.md only; code files pre-copied byte-identical,
+  hash-enforced). Committed `d5f0177e`. Next: consume round 5 → verify code hashes
+  unchanged (RP1-B3 `6f3ea022`, RPD-VERIFY `3b9e78e8`) → narrow doc re-audit → on
+  PASS Stage 1B re-freeze.
 - 2026-08-09 ~22:15: B3 round 4 consumed + committed (`04eddf90`); diff vs round 3 =
   exactly the two fixes (read-error STOP in both blocks; D026 QA). Narrow Codex
   closure audit 4 dispatched. Next: on PASS → Stage 1B runkit re-freeze (repaired
