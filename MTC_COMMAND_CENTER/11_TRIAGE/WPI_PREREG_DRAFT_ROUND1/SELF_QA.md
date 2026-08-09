@@ -1,4 +1,4 @@
-# SELF_QA - WP-I preregistration draft, round 1.2
+# SELF_QA - WP-I preregistration draft, round 1.3
 
 How every feasibility call in `WPI_CHECK_FEASIBILITY.tsv` and every expectation row
 in `WPI_PREREGISTRATION_DRAFT.md` section 8 was arrived at, and - equally - which of
@@ -96,9 +96,11 @@ enumerating distribution metadata. A metadata directory an unprivileged process
 cannot read is indistinguishable from a distribution that is not installed - so an
 unreadable `.dist-info` would surface as a **missing distribution**, i.e. a FAIL
 against a correct host. That is tonight's failure shape (an unreachable path read as
-a finding) arriving through a different door, so I bound row 19 to row 14: the venv
-walk must complete with zero permission diagnostics before a parity FAIL is
-admissible, and if the walk STOPs, B1 STOPs.
+a finding) arriving through a different door, so I bound row 19 to row 13: the venv
+walk must finish within budget, exit 0 and have an empty complete diagnostic stream
+before a parity FAIL is admissible. Round 1.3 additionally forbids streaming partial
+walk stdout into either the writable-path or metadata parser. If the walk STOPs, B1
+STOPs and its partial stdout is not result evidence.
 
 **Q6 - B1a `partial`.**
 Two halves, opposite calls. The `sha256sum` half is M2 on the same 0555 argument as
@@ -113,13 +115,16 @@ root:root)" in B1a's own command block - the privilege requirement was written d
 and then the check was still listed as a read-only host step. That is the same class
 of slip as B3-GAP-ENV, one line earlier in the document.
 
-**Q7 - B2 feasible `yes`.**
-M1 + M2. M1: the unit fragment is recorded at 3736 B mode `644`, so it is
-world-readable and can be read, grepped and hashed by any local user. M2:
-`systemctl is-active`, `systemctl show -p`, and `systemctl cat` are read-only state
-queries; polkit gates *job* operations (start/stop/mask), not property reads.
-I also pinned `--no-pager` - not a feasibility issue but a determinism one, so the
-captured bytes cannot depend on whether a tty was allocated.
+**Q7 - B2 feasible `partial` after round 1.3 F3.**
+M1 + M2 + M4. The direct fragment half remains feasible: the unit fragment is
+recorded at 3736 B mode `0644`, so it can be read, grepped and hashed by `gatea`.
+The manager-backed half is only conditionally feasible. Read-only intent does not
+prove that `systemctl` exists, that the login's PID/mount namespace can reach the
+intended system manager, or that D-Bus/polkit policy authorizes the query. Those
+facts are unverified (M4-12). P0 therefore requires both tool presence and an actual
+parseable manager response. If that precondition cannot hold unprivileged, rows 1-5
+move to DEFER-ROOT-SIDE; invocation/access/parse failure is B2_STOP, not drift.
+`--no-pager` remains pinned so captured bytes cannot depend on a tty.
 
 **Q8 - the grep repair in B2 row 6.**
 Derived from the accepted three-outcome contract. The matrix's B2 command is
@@ -154,16 +159,14 @@ happen over frozen bytes before the archive is sealed. The allowlist in draft se
 10.1 is written as paths-plus-reasons rather than a bare list, so the proof is
 reviewable rather than merely mechanical. `RP1-B3.sh` would have failed it.
 
-**Q11 - B4 feasible `yes`, with a capture-shape constraint.**
-M2: `systemctl show -p <property>` is an unprivileged read. The constraint I added -
-explicit `-p` selection, never a bare `systemctl show` - is not about feasibility. A
-bare `show` emits the unit's entire property set including the full `Environment=`
-list, and an evidence contract that captures whatever happens to be in a service's
-environment is one host-configuration change away from banking a secret into a
-committed record. The candidate forbids credential env for this unit
-(`verify.sh:143-146` rejects any `MTC_BRIDGE_START_MODE=` in the env file, and the
-start mode resolves no credentials at all), but the capture rule should not depend on
-the target's good behaviour.
+**Q11 - B4 feasible `partial`, with a capture-shape constraint.**
+M2 + M4. An explicitly selected `systemctl show -p <property>` is read-only, but it
+is not proven accessible to `gatea`: the same systemctl/bus/namespace/policy M4-12
+precondition as B2 applies. Rows 8-9 are INCLUDE-READ-ONLY only after P0 proves
+manager readiness; otherwise all manager-backed B4 properties move to
+DEFER-ROOT-SIDE. Every access or parse failure is B4_STOP before comparison.
+Explicit `-p` selection, never a bare `systemctl show`, remains required because a
+bare query emits the full `Environment=` list and could bank an unrelated secret.
 
 **Q12 - B5 `partial`, and why the two gaps are STOPs not FAILs.**
 M2 for the reachable half: a loopback TCP connection from a local process is not
@@ -176,9 +179,10 @@ FAIL would manufacture a finding. The same logic is why the P0 preflight exists 
 all: it converts two run-time surprises into a preregistered precondition.
 
 **Q13 - B6 `partial`, and the listener-count reading.**
-M2 for `ss`: `/proc/net/tcp` and `/proc/net/tcp6` are readable by any user and list
-every socket system-wide; only the socket-to-process mapping (`ss -p`) requires
-privilege, and it is excluded from the argv. M1 + M2 for `ufw`: it is a root-only
+M2 for `ss`: `/proc/net/tcp` and `/proc/net/tcp6` are readable by any user but list
+sockets only in the caller's network namespace; round 1.2 therefore requires the
+caller/service namespace binding before interpretation. Only the socket-to-process
+mapping (`ss -p`) requires privilege and is excluded from the argv. M1 + M2 for `ufw`: it is a root-only
 administrative tool, and the matrix's B6 pairs it with A-8's `rc=0` capture, which
 was a Gate-A (privileged) run, not an unprivileged one.
 The reading risk is worth stating: the sources say "exactly one listener,
@@ -224,7 +228,8 @@ none was invented to make a row look complete.
 | draft section 8 row(s) | source of the expected value | class |
 |---|---|---|
 | 8.1 rows 1-2 (identity, groups) | `gatea` is the recorded login user of the SSH route (`PREREGISTRATION.md` section 2); "not in the `root` group" is stated by the adjudication | M1 |
-| 8.1 rows 3-5 (tool presence) | none - these exist *because* the tools are unverified (M4-3) | M4 |
+| 8.1 rows 3-6 (tool presence) | none - these exist *because* the tools are unverified (M4-3 and M4-12) | M4 |
+| 8.1 row 7 (system-manager readiness) | none - round 1.3 F3 adds the invocation/bus/namespace/authorization/parse precondition because read-only intent does not establish access | M4-12 |
 | 8.2 rows 1-4 (active, NRestarts, Restart, MainPID) | transition inventory as carried into matrix section 0.3 and `PREREGISTRATION.md` section 8: active, `Restart=no`, `NRestarts=0`, MainPID 189813 | M1 |
 | 8.2 row 5 (candidate binding) | matrix B2 proposed command (`releases/2ce41e34`, `venvs/2ce41e34`) | M1 |
 | 8.2 row 6 (no `[Install]`) | matrix A4: the only `[Install]` match in the template is the explanatory comment at `:11`; matrix B2 asserts the same of the installed fragment | M1 |
@@ -232,8 +237,9 @@ none was invented to make a row look complete.
 | 8.2 row 8 (sandboxing properties) | matrix A4 needle set at `verify.sh:160-171` and the template line anchors (`KillSignal` :48, `KillMode` :49, `TimeoutStopSec` :51, `FinalKillSignal` :52, `Restart=no` :55) | M1 |
 | 8.2 row 9 (start mode) | matrix section 0.6 and A4: template line 42, required needle at `verify.sh:171` | M1 |
 | 8.2 rows 10-11 (0555 roots) | transition inventory (release root mode 555, venv counterpart 555) | M1 |
-| 8.2 rows 12-13 (write bits, 120 s budget) | matrix B3 predicate; budget and its rationale carried unchanged from `PREREGISTRATION.md` section 2 | M1 |
-| 8.2 row 14 (walk completeness) | none - added by me as the precondition for row 19 (see Q5) | derived |
+| 8.2 row 12 (120 s budget) | budget and its rationale carried unchanged from `PREREGISTRATION.md` section 2 | M1 |
+| 8.2 row 13 (walk completeness) | derived STOP-first precondition for rows 14 and 19; round 1.3 requires atomic stdout/stderr/rc/elapsed capture and complete diagnostics adjudicated before stdout | derived (Codex F4) |
+| 8.2 row 14 (write bits) | matrix B3 predicate, admissible only from a proven complete rc-0 diagnostic-free walk | M1 + derived ordering |
 | 8.2 row 15 (metadata dir modes) | matrix B3 predicate: conf `0750 root:root`, state+log `0750 mtc-bridge:mtc-bridge`; adjudication independently confirms `/etc/mtc-bridge` `root:root` `750` | M1 |
 | 8.2 row 17 (lock digest, 117762 B) | matrix A3/B1a rounds 2-3: `a1881296...bf66e`, LF, 117762 B, source-derived | M1 |
 | 8.2 row 18 (Python 3.12) | matrix B1 predicate; patch version unrecorded, so the predicate is a `3.12.` prefix | M1 |
@@ -275,8 +281,8 @@ Listed so a reviewer can attack them directly rather than reconstruct them.
    field names in row 21 come from matrix prose and from `app.py:138-147` as quoted,
    not from a captured body. Handling: risk R4; a missing or differently-spelled key
    is `B5_STOP reason=schema_unexpected`, a non-200 is `B5_STOP`, never a FAIL.
-3. **`curl`, `ss` and `sha256sum` presence on the host is unobserved.** Handling: P0
-   preflight rows 3-5, STOP with **no substitution** - preregistering a fallback that
+3. **`curl`, `ss`, `sha256sum` and `systemctl` presence on the host is unobserved.** Handling: P0
+   preflight rows 3-6, STOP with **no substitution** - preregistering a fallback that
    was never reviewed is how improvisation gets in.
 4. **`gatea`'s supplementary group list is unobserved.** The adjudication establishes
    only that `gatea` is not in `root`. Whether it is in the state/log group is
@@ -315,6 +321,12 @@ Listed so a reviewer can attack them directly rather than reconstruct them.
     `B6_STOP reason=service_netns_unreadable` and routes the listener-set half to
     RPD-VERIFY. The caller's own identity (`/proc/self/ns/net`) is always readable, so
     the precondition is fail-closed, not silently skipped.
+12. **Whether `gatea` can reach and query the intended system manager is unverified.**
+    Tool presence, system-bus availability, PID/mount-namespace identity and
+    D-Bus/polkit authorization are not established by the Inputs. Handling: P0 rows
+    6-7 must prove tool presence and a parseable manager response. Failure is
+    `P0_STOP reason=system_manager_unreachable`; manager-backed B2/B4 rows then route
+    to RPD-VERIFY and cannot become unit-state or property FAILs.
 
 ## 5. What this unit did and did not do
 
@@ -368,7 +380,8 @@ and leaves F3 and F4 (system-manager access, both HIGH in the audit) for a succe
 round; they are noted as OPEN below, not silently dropped. All four applied findings
 are one defect class: an inability-to-evaluate must STOP (rc 3), never FAIL (rc 1).
 
-**F1 - B1 metadata readability (HIGH).** The row-14 `find` guard proves traversal and
+**F1 - B1 metadata readability (HIGH).** The then-row-14 `find` guard (renumbered
+row 13 in round 1.3) proves traversal and
 stat-ability, not regular-file readability, so an unreadable `*.dist-info/METADATA`
 (mode 000, a denying ACL, or an LSM rule) could reach the parity check and be reported
 as package drift. Applied: row 19 now carries an explicit preflight readability
@@ -378,10 +391,11 @@ nonzero verifier rc never becomes `B1_FAIL reason=lock_installed_parity`; only a
 positively-distinguished installed-set mismatch may, and every open/parse/permission/
 LSM/traversal error or indistinguishable verifier error is `B1_STOP`. B1 stays
 INCLUDE-READ-ONLY (readability of 0555-tree metadata is itself unprivileged); no class
-change. The TSV B1 disposition records the rule. Additionally, row 14's inline
+change. The TSV B1 disposition records the rule. Additionally, then-row 14's inline
 cross-reference ("this STOP disqualifies row 18") was a stale round-1.1 artifact -
 parity was row 18 before the interpreter row was inserted, shifting it to row 19 - so
-it contradicted the binding ordering rule (row 14 gates row 19, not the interpreter at
+it contradicted that round's binding ordering rule (then-row 14, now row 13, gates
+row 19, not the interpreter at
 row 18). Corrected to "row 19 (parity)" so the table matches its own ordering rule,
 which F1 makes central. No predicate changed; a cross-reference only.
 
@@ -419,11 +433,11 @@ change; TSV unaffected.
 for the root-owned service process is unverified (ptrace/yama gating); handled
 fail-closed - EACCES is `B6_STOP` and routes the listener-set half to RPD-VERIFY.
 
-**F3 / F4 remain OPEN (out of scope this round).** The audit's F3 (B2/B4
+**F3 / F4 remained OPEN in round 1.2 (out of scope for that round).** The audit's F3 (B2/B4
 system-manager access failure misread as host drift) and F4 (B3 partial-`find` output
-inspected before adjudicating walk failure) are HIGH but are not in this round's
-contract. They are recorded here so a successor round picks them up; nothing in this
-round addresses them, and no claim is made that the audit is fully resolved.
+inspected before adjudicating walk failure) were HIGH but were not in that round's
+contract. Round 1.2 recorded them for a successor rather than silently dropping
+them. The round-1.3 section below supersedes this historical open-items statement.
 
 **Constraint compliance this round.** Still a DRAFT: no concrete one-use RUNID, unit
 id, or collision-prone record root minted - the `<ALLOCATE-AT-DISPATCH>` /
@@ -438,3 +452,54 @@ binding audit) and the three deliverables, plus `AGENTS.md` and `START_HERE.md` 
 repo mandate. No other file was read; no host contact; no Git action. Written: the
 same three deliverables, in place. The round-1.1 GLM-review addendum above stands
 unchanged.
+
+---
+
+## Round 1.3 addendum (Codex audit F3 and F4 closed, 2026-08-10)
+
+This documentation-only repair closes the two findings round 1.2 explicitly left
+open. The shared rule is binding throughout the draft: inability to evaluate is STOP
+(rc 3); only a probe that ran to a complete, parseable result may observe deviant
+state and FAIL (rc 1). The round-1.2 open-items list is superseded. **F3 and F4 are
+now closed.**
+
+**F3 - B2/B4 system-manager access (HIGH), closed.** The draft now adds `systemctl`
+presence and actual system-manager query readiness to P0. Readiness covers process
+invocation, the system bus, the login's PID/mount namespace, D-Bus/polkit
+authorization and parseable complete output; tool presence alone is insufficient.
+Every affected expectation row now has a dedicated STOP before its FAIL comparison:
+B2 rows 1-5 use `system_manager_unreachable`, `unit_property_unreadable` or
+`unit_definition_unreadable`; B4 rows 8-9 use `unit_property_unreadable`. The binding
+adjudication order captures stdout/stderr/rc/elapsed, resolves access and parse errors
+first, and compares output only afterward. A valid `inactive` state remains an
+evaluable B2 FAIL even if `systemctl is-active` uses a nonzero result rc; an absent or
+error result STOPs. The general STOP list now names `systemctl` and the system bus.
+Feasibility changed: B2 and B4 are `partial`, with manager-backed predicates
+INCLUDE-READ-ONLY only after P0 readiness and DEFER-ROOT-SIDE if that precondition
+cannot be established as `gatea`; B2's direct fragment read/grep/hash half remains
+unprivileged. The TSV and RPD-VERIFY list record the split and reason.
+
+**F4 - B3 partial `find` output (HIGH), closed.** Each filesystem walk is now atomic
+for adjudication: stdout, stderr, rc and elapsed time are captured without streaming
+stdout to a result parser. The binding order is timeout/budget first, then exit status
+and the complete diagnostic stream, then stdout. Any LSM, ACL, mount, permission or
+traversal error, or any nonzero rc, produces STOP. Rows were reordered so budget and
+walk completeness (rows 12-13) precede writable-path interpretation (row 14), and
+row 14 explicitly admits FAIL only from a complete rc-0 diagnostic-free sweep. Thus
+a writable pathname emitted before a later EACCES remains partial output and cannot
+accuse a correct host. The rule is generalized to metadata enumeration and every
+other command whose stdout the draft interprets. Stage-1 frozen-block acceptance now
+requires an adversarial transcript demonstrating partial pathname output followed by
+an access/traversal error yields `B3_STOP`, never `B3_FAIL`.
+
+**Earlier-round protections preserved.** No concrete RUNID, unit id or record root
+was minted; all `<ALLOCATE-AT-DISPATCH>` and `<PIN-BEFORE-DISPATCH>` placeholders
+remain. No mutating check was added. The round-1.2 requirement for explicit written
+host-contact/transport authority and the budget lift remains necessary before any
+successor is dispatchable.
+
+**What round 1.3 read and wrote.** Read only `KICKOFF_ROUND13_F3F4.md`,
+`../WPI_DRAFT_CODEX_AUDIT_2026-08-09.md` and the three deliverables. Wrote only the
+three deliverables in place. No host contact, command against a host, Git action,
+RUNID allocation, unit-id allocation, record-root creation or file outside the three
+deliverables was performed.

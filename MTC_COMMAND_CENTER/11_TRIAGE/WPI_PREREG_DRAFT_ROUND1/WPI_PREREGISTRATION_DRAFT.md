@@ -1,4 +1,4 @@
-# WP-I staging verification - preregistration DRAFT (round 1.2)
+# WP-I staging verification - preregistration DRAFT (round 1.3)
 
 Status: **DRAFT - NOT A PREREGISTRATION, NOT DISPATCHABLE, NO HOST CONTACT HAS OCCURRED**
 
@@ -16,14 +16,14 @@ identifier here is a marked placeholder. Writing this document authorizes nothin
 not transport, not host contact, not a socket, not a RUNID. Section 12 states
 exactly what has and has not happened.
 
-**Round 1.2 (Codex audit REQUEST_CHANGES applied).** This round applies the four
-in-scope findings from `WPI_DRAFT_CODEX_AUDIT_2026-08-09.md` - F1 (B1 metadata
-readability), F2 (B6 network-namespace binding), F5 (hash could-not-read divergence)
-and F6 (dispatch authority discipline). All four are the same defect class as
-`B3-GAP-ENV`: an inability-to-evaluate must STOP (rc 3), never FAIL (rc 1). F3 and F4
-(system-manager access) are HIGH in the audit but are **out of scope for this round**
-per the round contract; they remain OPEN for a successor round and are recorded as
-such in `SELF_QA.md`, not silently resolved.
+**Round 1.3 (Codex audit F3 and F4 applied).** Round 1.2 closed F1, F2, F5 and F6.
+This round closes the two findings it left open: F3 (B2/B4 system-manager access)
+and F4 (B3 partial-walk output). They share the existing `B3-GAP-ENV` rule: an
+inability-to-evaluate must STOP (rc 3), never FAIL (rc 1). A manager query is not a
+unit-state observation until invocation, bus, namespace, authorization and parsing
+have succeeded. A filesystem sweep is not a finding until its timeout, exit status
+and complete diagnostics prove the walk finished successfully. F3 and F4 are now
+closed; `SELF_QA.md` records the exact changes and supersedes the round-1.2 open list.
 
 Three things must happen before any successor of this document is dispatchable, and
 each is named at the point where it bites: Stage 1 must freeze and hash the blocks
@@ -202,17 +202,30 @@ authored for WP-I and pinned at Stage 1.
 | `run_ro.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 05 stdin - RO wrapper |
 | `TRANSPORT_PLAN.tsv` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | the ordered op list; pinned inside the runner |
 
-Reused-script disposition (GLM review N1, mirroring the Stage 2 template §10
+Reused-script disposition (GLM review N1, mirroring the Stage 2 template section 10
 discipline): `remote_setup.sh`, `remote_extract_verify.sh` and `remote_close_tree.sh`
 are each **kept byte-identical** to the Stage-2-accepted artifacts at the digests
 above - reviewed for contract fit against the WP-I op list, unchanged contract, no
-edit; any future byte change to any of them voids this draft's §4 and re-opens
+edit; any future byte change to any of them voids this draft's section 4 and re-opens
 review.
 
 Both wrappers inherit the two repairs the Stage 2 wrappers needed: block paths are
 refused if they are symlinks (`-f` dereferences, so `-f` alone is not a refusal),
 and any child process reads from `/dev/null`, because the wrapper itself arrives on
 ssh stdin and a child that read stdin would consume the rest of the script.
+
+Stage 1 adversarial acceptance of `RP6-P0.sh`, `RP7-WPI-RO.sh` and both wrappers must
+also demonstrate the round-1.3 STOP-first contract before any bytes are frozen:
+
+- missing `systemctl`, denied D-Bus/polkit access, or an unavailable manager namespace
+  produces P0/B2/B4 STOP and cannot reach a unit-state or property comparison; and
+- a `find ... -perm /222` fixture that emits a writable pathname and then encounters
+  an LSM, ACL, mount or traversal error produces `B3_STOP`, never `B3_FAIL`.
+
+The accepted implementation must capture stdout, stderr, rc and elapsed time for
+each probe, adjudicate timeout/rc/the complete diagnostic stream first, and expose
+stdout to result comparison only after that gate holds. An assertion of this order
+without the adversarial transcript is not block acceptance.
 
 The complete set, including the successor of this document, is checksummed in
 `WPI_PREREG_SHA256SUMS.txt` at dispatch.
@@ -351,33 +364,39 @@ env-file naming risk remains *unresolved*, not *triggered*.
 | 3 | `ss` present | `command -v ss` resolves | `P0_STOP reason=missing_tool tool=ss` |
 | 4 | `curl` present | `command -v curl` resolves | `P0_STOP reason=missing_tool tool=curl` |
 | 5 | `sha256sum` present | `command -v sha256sum` resolves | `P0_STOP reason=missing_tool tool=sha256sum` |
+| 6 | `systemctl` present | `command -v systemctl` resolves | `P0_STOP reason=missing_tool tool=systemctl` |
+| 7 | system-manager query readiness | `systemctl` can execute, reach the intended system manager over its system bus from the login's PID/mount namespace, pass D-Bus/polkit authorization, and return a parseable manager response | `P0_STOP reason=system_manager_unreachable rc=<n> detail=<d>` for invocation, bus, namespace, authorization or parse failure |
 
 Row 2 is an inversion worth stating plainly: **more privilege than the ledger assumed
 is a STOP, not a bonus.** If `gatea` turns out to be in the state/log group, the
 feasibility ledger's premises are wrong, several DEFER-ROOT-SIDE calls were wrong,
 and the correct response is re-adjudication of the scope - not a run that quietly
-reaches further than the document it was preregistered under. Rows 3-5 fail closed
+reaches further than the document it was preregistered under. Rows 3-6 fail closed
 to STOP with **no substitution**: a missing tool is not an invitation to improvise a
 replacement at run time, which is the whole reason the tool list is preregistered.
+Row 7 is not inferred from tool presence. It must exercise a harmless manager query
+and distinguish a valid manager response from an invocation, D-Bus, polkit, PID/mount
+namespace or parse error. If row 7 cannot hold as `gatea`, manager-backed B2/B4 checks
+move to RPD-VERIFY; they do not accuse the host from an empty or error result.
 
 ### 8.2 RO stage - one row per admitted check
 
 | # | check | predicted outcome if it holds | exact predicted first divergence if it does not |
 |---|---|---|---|
-| 1 | B2 active | `systemctl is-active` prints `active` | `B2_FAIL reason=unit_not_active state=<s> expected=active` |
-| 2 | B2 restart count | `NRestarts` is `0` | `B2_FAIL reason=nrestarts_nonzero value=<n> expected=0` |
-| 3 | B2 restart policy | `Restart` is `no` | `B2_FAIL reason=restart_policy value=<v> expected=no` |
-| 4 | B2 process identity | `MainPID` is `189813` | `B2_FAIL reason=mainpid_changed value=<p> expected=189813` - **named risk R3**: with `Restart=no` a live unit cannot have self-restarted, so a changed MainPID means a manual restart between the transition inventory and dispatch. That is a FAIL requiring Lead adjudication, never a silent re-pin |
-| 5 | B2 candidate binding | `systemctl cat --no-pager` shows both `releases/2ce41e34...321b` and `venvs/2ce41e34...321b` | `B2_FAIL reason=unit_not_bound_to_candidate missing=<releases|venvs>` |
+| 1 | B2 active | `systemctl is-active` returns a parseable unit state and that state is `active` | `B2_STOP reason=system_manager_unreachable operation=is-active rc=<n> detail=<d>` for invocation, bus, namespace, authorization or parse failure; after manager reachability is proven, a valid state such as `inactive` is evaluable and becomes `B2_FAIL reason=unit_not_active state=<s> expected=active` even when `is-active` uses a nonzero result rc |
+| 2 | B2 restart count | `NRestarts` is `0` | `B2_STOP reason=unit_property_unreadable prop=NRestarts rc=<n> detail=<d>` before comparison on any manager/query/parse error; only a successfully read value may become `B2_FAIL reason=nrestarts_nonzero value=<n> expected=0` |
+| 3 | B2 restart policy | `Restart` is `no` | `B2_STOP reason=unit_property_unreadable prop=Restart rc=<n> detail=<d>` before comparison on any manager/query/parse error; only a successfully read value may become `B2_FAIL reason=restart_policy value=<v> expected=no` |
+| 4 | B2 process identity | `MainPID` is `189813` | `B2_STOP reason=unit_property_unreadable prop=MainPID rc=<n> detail=<d>` before comparison on any manager/query/parse error; only a successfully read value may become `B2_FAIL reason=mainpid_changed value=<p> expected=189813` - **named risk R3**: with `Restart=no` a live unit cannot have self-restarted, so a changed MainPID means a manual restart between the transition inventory and dispatch. That is a FAIL requiring Lead adjudication, never a silent re-pin |
+| 5 | B2 candidate binding | `systemctl cat --no-pager` returns a complete, parseable unit rendering that shows both `releases/2ce41e34...321b` and `venvs/2ce41e34...321b` | `B2_STOP reason=unit_definition_unreadable operation=cat rc=<n> detail=<d>` before stdout interpretation on any invocation, bus, namespace, authorization, incomplete-output or parse error; only a complete successful rendering may become `B2_FAIL reason=unit_not_bound_to_candidate missing=<releases|venvs>` |
 | 6 | B2 no `[Install]` | no `^\[Install\]` line in the fragment | `B2_FAIL reason=install_section_present path=<p>`; and, separately, `B2_STOP reason=grep_error rc=<n> path=<p>` for any grep rc outside {0,1} - the matrix's `&& echo BAD || echo OK` form collapses grep's error class into `OK` and must not be carried forward |
 | 7 | B2 fragment identity | `sha256sum` equals `WPI_UNIT_FRAGMENT_SHA256`, size 3736 | `B2_FAIL reason=unit_fragment_digest_mismatch observed=<h> expected=<h>` admissible only after `sha256sum` exited 0 and emitted a syntactically valid 64-hex digest plus the 3736-byte count; `B2_STOP reason=fragment_unreadable rc=<n> path=<p>` for any `sha256sum` open/read/permission/LSM/parent-traversal error - the digest is compared only after a successful rc-0 read, never against possibly empty output |
-| 8 | B4 sandboxing | each named property equals the template-declared value (`PrivateTmp`, `ProtectSystem`, `NoNewPrivileges`, `RestrictAddressFamilies`, `CapabilityBoundingSet`, `ReadWritePaths`, `KillSignal`, `KillMode`, `TimeoutStopSec`, `FinalKillSignal`) | `B4_FAIL reason=property_mismatch prop=<P> observed=<v> expected=<v>` |
-| 9 | B4 start mode | effective environment carries `MTC_BRIDGE_START_MODE=credential_free_disarmed` | `B4_FAIL reason=start_mode_missing_or_altered observed=<v>` |
+| 8 | B4 sandboxing | each named property is successfully read and equals the template-declared value (`PrivateTmp`, `ProtectSystem`, `NoNewPrivileges`, `RestrictAddressFamilies`, `CapabilityBoundingSet`, `ReadWritePaths`, `KillSignal`, `KillMode`, `TimeoutStopSec`, `FinalKillSignal`) | `B4_STOP reason=unit_property_unreadable prop=<P> rc=<n> detail=<d>` before comparison on any invocation, bus, namespace, authorization, incomplete-output or parse error; only a successfully read property may become `B4_FAIL reason=property_mismatch prop=<P> observed=<v> expected=<v>` |
+| 9 | B4 start mode | the explicitly selected effective environment property is successfully read and carries `MTC_BRIDGE_START_MODE=credential_free_disarmed` | `B4_STOP reason=unit_property_unreadable prop=Environment rc=<n> detail=<d>` before stdout interpretation on any manager/query/parse error; only a complete successful property result may become `B4_FAIL reason=start_mode_missing_or_altered observed=<v>` |
 | 10 | B3s release root | `/opt/mtc-bridge/releases/2ce41e34...321b` is `0555 root:root` | `B3_FAIL reason=path=<p> mode=<m> owner=<o> expected=0555 root:root` |
 | 11 | B3s venv root | venv root is `0555 root:root` | same grammar as row 10 |
-| 12 | B3s write bits | no write bit anywhere in either tree | `B3_FAIL reason=writable_path_inside_immutable_tree path=<p>` |
-| 13 | B3s sweep budget | both sweeps finish inside 120 s | `B3_STOP reason=sweep_budget_exceeded root=<r> elapsed_s=<n> budget_s=120` |
-| 14 | B3s walk completeness | both walks emit **zero** permission diagnostics | `B3_STOP reason=walk_permission_error root=<r> path=<p>` - and this STOP disqualifies row 19 (parity), see the ordering rule below |
+| 12 | B3s sweep budget | each sweep's stdout, stderr, rc and elapsed time are captured atomically and the sweep finishes inside 120 s | `B3_STOP reason=sweep_budget_exceeded root=<r> elapsed_s=<n> budget_s=120`; timeout is adjudicated before rc, diagnostics or stdout |
+| 13 | B3s walk completeness | after row 12 holds, each complete diagnostic stream is empty and `find` exits 0; no LSM, ACL, mount or traversal error occurred | `B3_STOP reason=walk_permission_error root=<r> path=<p>` for permission/ACL/LSM denial; `B3_STOP reason=walk_incomplete root=<r> rc=<n> detail=<d>` for any other nonzero rc or mount/traversal/diagnostic error. Either STOP disqualifies rows 14 and 19 |
+| 14 | B3s write bits | only after rows 12-13 prove a complete rc-0 sweep may the captured stdout be interpreted; it contains no writable pathname in either tree | `B3_FAIL reason=writable_path_inside_immutable_tree path=<p>` is admissible only from stdout of a sweep already proven complete; partial stdout is discarded as result evidence and can produce only the row-12/13 STOP |
 | 15 | B3s metadata dirs | `stat` of `/etc/mtc-bridge` is `0750 root:root`; of `WPI_STATE_DIR` and `WPI_LOG_DIR` is `0750 <state-owner>:<state-group>` | `B3_FAIL reason=path=<p> mode=<m> owner=<o> expected=<mode> <owner>` |
 | 16 | B3s scope | the block contains no path with prefix `/etc/mtc-bridge/`, `<WPI_STATE_DIR>/` or `<WPI_LOG_DIR>/` | not a run-time predicate: a Stage-1 path-scope proof failure (section 10.2) blocks the freeze, so this can never divergence at run time |
 | 17 | B1a lock bytes | `sha256sum` of the installed `requirements.lock` equals `a1881296...bf66e`, size 117762 | `B1a_FAIL reason=installed_lock_digest_mismatch observed=<h> expected=a1881296...bf66e` admissible only after `sha256sum` exited 0 and emitted a syntactically valid 64-hex digest plus the 117762-byte count - disposition **investigate read-only**: weigh a wrong expected value *and* genuine drift, re-check blob -> LF-pinned export -> manifest-verified install before escalating a STOP or dismissing one; `B1a_STOP reason=installed_lock_unreadable rc=<n> path=<p>` for any `sha256sum` open/read/permission/LSM/parent-traversal error (a parent below the recorded 0555 release root, a named ACL, or an LSM rule can deny the read even though the root is 0555) |
@@ -389,9 +408,9 @@ replacement at run time, which is the whole reason the tool list is preregistere
 | 23 | B6 no wildcard | no `0.0.0.0`, `::` or VM-IP listener on 8790 (subject to the row-22 namespace binding) | `B6_FAIL reason=nonloopback_listener addr=<a>` admissible only after the row-22 namespace binding held |
 | 24 | B6 external closed | operator-side TCP connect to `172.24.55.233:8790` is refused or times out | `B6_FAIL reason=host_reachable_8790 outcome=connected` |
 
-**Binding ordering rule.** Row 19 is admissible **only** after row 14 has held for
+**Binding ordering rule.** Row 19 is admissible **only** after row 13 has held for
 the venv tree, row 18's interpreter has demonstrably run, and the row-19
-metadata-readability precondition has passed. The row-14 `find` guard proves
+metadata-readability precondition has passed. The row-13 `find` guard proves
 traversal and stat-ability of the tree, **not** regular-file readability: a
 `*.dist-info/METADATA` at mode `000`, under a named ACL denying `gatea`, or denied by
 an LSM rule is stat-able by `find` yet unreadable to the verifying process.
@@ -399,7 +418,18 @@ an LSM rule is stat-able by `find` yet unreadable to the verifying process.
 objects; an unreadable one is indistinguishable from a distribution that is not
 installed, so it would surface as a *missing distribution* - a false FAIL against a
 correct host, which is the same shape of error as tonight's, arriving through a
-different door. If row 14 STOPs, row 19 must STOP too and must never be reported as
+different door. If row 12 or 13 STOPs, row 14 is not evaluated, row 19 must STOP too,
+and neither a writable-path FAIL nor a parity FAIL may be reported from partial output.
+
+**Atomic-walk adjudication rule (Codex audit F4, applied round 1.3).** For every
+filesystem walk, including the immutable-tree write-bit sweeps and any metadata
+enumeration feeding row 19, the wrapper captures stdout, stderr, rc and elapsed time
+without streaming stdout into a result parser. It adjudicates in this binding order:
+(1) timeout/budget, (2) exit status plus the complete diagnostic stream, and only then
+(3) stdout. A timeout, nonzero rc, or any LSM, ACL, mount, permission or traversal
+diagnostic is `B3_STOP`/`B1_STOP` as applicable. A pathname emitted before the later
+error is partial output and cannot become `B3_FAIL`. Only a proven complete rc-0,
+diagnostic-free walk exposes stdout for writable-path or metadata interpretation.
 a parity FAIL.
 
 **Metadata-readability adjudication rule (Codex audit F1, applied round 1.2).** Row
@@ -413,9 +443,30 @@ extra distribution, having read every object) is the **only** input that may bec
 traversal error from the preflight or from the verifier, and every other nonzero
 verifier rc that did not positively distinguish a mismatch, is `B1_STOP`. A generic
 nonzero verifier rc must never become `B1_FAIL reason=lock_installed_parity`. This
-makes the row-14 traversal guard non-sufficient by construction, exactly as the audit
+makes the row-13 traversal guard non-sufficient by construction, exactly as the audit
 requires, and is the same defect class as `B3-GAP-ENV` - an inability-to-evaluate
 misread as a host finding.
+
+**System-manager adjudication rule (Codex audit F3, applied round 1.3).** P0 first
+requires `systemctl`, then separately proves query readiness against the intended
+system manager. Every B2/B4 manager probe captures stdout, stderr, rc and elapsed
+time. Invocation, missing-tool, D-Bus, polkit, PID/mount-namespace, authorization,
+timeout, incomplete-output and parse errors are adjudicated as P0/B2/B4 STOP before
+any stdout is compared. `systemctl is-active` is not classified by numeric rc alone:
+if the manager returned a valid state such as `inactive`, the probe ran and the state
+is an evaluable B2 FAIL; if no valid state was obtained, it is STOP. `show` and `cat`
+must likewise return complete, parseable results before a missing value or mismatch
+may FAIL. If readiness cannot be established as `gatea`, the affected manager-backed
+checks move to RPD-VERIFY.
+
+**General probe-output precedence (binding on every interpreted stdout).** Every
+`stat`, `find`, `grep`, `ss`, `curl`, `sha256sum`, `readlink`, `systemctl`, `mktemp`
+and verifier invocation captures stdout, stderr, rc and elapsed time. Timeout,
+invocation/access/traversal errors, complete diagnostics and parse validity are
+adjudicated before stdout is treated as an observation. Defined result statuses such
+as grep no-match and a valid inactive unit state remain evaluable only when the tool
+actually ran and returned a complete parseable result. Partial or error-path stdout
+is evidence of the attempted probe, never evidence of host drift.
 
 **Interpreter-exec extension (GLM review F1, applied round 1.1).** The recorded host
 state proves the venv tree is `0555` (traverse+read for other) but records no per-file
@@ -468,8 +519,9 @@ fails regardless of which namespace `ss` observed.
 
 Any `FAIL` is a **STOP requiring Lead adjudication** - a candidate-repair question,
 not a documentation outcome. Any `STOP` from a `stat`, `find`, `grep`, `ss`, `curl`,
-`sha256sum`, `readlink`, `mktemp` or clock error, or any internal open/parse/permission
-error raised by `verify_lock.py`, stops the stage and is never re-read as a PASS.
+`sha256sum`, `readlink`, `systemctl`, system-bus query, `mktemp` or clock error, or any
+internal open/parse/permission error raised by `verify_lock.py`, stops the stage and
+is never re-read as a PASS. Probe error adjudication always precedes stdout comparison.
 
 **Scope of the WP-I claim, preregistered.** A clean RO stage admits exactly this:
 the running unit is the accepted first-start unit bound to the frozen candidate,
@@ -532,6 +584,10 @@ run plan.**
   release-manifest binding, and the `requirements_lock_sha256` corroboration of B1a.
 - Any per-file mode or ownership assertion *inside* the state and log directories.
 - `ufw status` (B6's firewall half).
+- B2 rows 1-5 and B4 rows 8-9 if `gatea` cannot establish P0 system-manager query
+  readiness because `systemctl`, the system bus, the intended PID/mount namespace or
+  D-Bus/polkit authorization is unavailable. Direct fragment reads in B2 rows 6-7
+  remain unprivileged; manager-backed state/property claims require RPD-VERIFY.
 
 **Everything the Stage 2 template excludes, excluded here on the same terms.**
 
