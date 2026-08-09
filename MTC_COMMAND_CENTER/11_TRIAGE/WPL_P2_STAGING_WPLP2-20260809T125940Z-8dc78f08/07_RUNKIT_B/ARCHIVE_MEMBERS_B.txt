@@ -1,0 +1,45 @@
+runkit_b.tar - uncompressed, GNU tar format, deterministic
+archive_bytes 184320
+archive_sha256 888bec17cbea99a781368b7c3747d6a9085840005a686000bedaadcacb44246b
+member_count 10
+order: Stage 1 S8.1 table order for the nine operator-channel blocks with RP1-B3
+  replaced in place, then the new root/deploy-channel block RPD-VERIFY appended
+  as the tenth member (fixed, not directory-scan order)
+normalization: mtime=0 mode=0644 uid=0 gid=0 uname='' gname='' type=REG, no dir members
+trailing bytes are the tar end-of-archive marker plus 10240-byte record padding
+provenance: 8 members accepted_blob, 2 members repair_round6 (RP1-B3, RPD-VERIFY)
+superseded: the old RP1-B3 payload (sha256 f40411b053779b28ec9d970d7e5610fe5f363acbc48ee487d07ebce2638a69af)
+  is NOT an archive member and its digest string appears nowhere in the archive
+
+determinism: this archive was rebuilt twice by independent child processes of
+this builder, each writing into a different, previously non-existent output
+path. All three digests are identical, so an independent rebuild reproduces
+the archive byte-for-byte.
+  canonical   888bec17cbea99a781368b7c3747d6a9085840005a686000bedaadcacb44246b  C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\07_RUNKIT_B
+  rebuild_a   888bec17cbea99a781368b7c3747d6a9085840005a686000bedaadcacb44246b  C:\Users\BARSEM~1\AppData\Local\Temp\wplp2_s1b_yy6k3alz\rebuild_a
+  rebuild_b   888bec17cbea99a781368b7c3747d6a9085840005a686000bedaadcacb44246b  C:\Users\BARSEM~1\AppData\Local\Temp\wplp2_s1b_yy6k3alz\rebuild_b
+  result      MATCH (byte-for-byte reproducible)
+
+-- member listing (python tarfile) --
+RP0-LIB.sh       0o644   18968 REG   uid=0 gid=0 uname='' gname='' mtime=0
+RP0-BOOTSTRAP.sh 0o644    1937 REG   uid=0 gid=0 uname='' gname='' mtime=0
+RP1-B3.sh        0o644   37896 REG   uid=0 gid=0 uname='' gname='' mtime=0
+RP3-C2A-POST.sh  0o644    5308 REG   uid=0 gid=0 uname='' gname='' mtime=0
+RP3-C2B-POST.sh  0o644    3804 REG   uid=0 gid=0 uname='' gname='' mtime=0
+RP4-C3.py        0o644   12770 REG   uid=0 gid=0 uname='' gname='' mtime=0
+RP5-C4A.sh       0o644   19353 REG   uid=0 gid=0 uname='' gname='' mtime=0
+RP5-C4B.sh       0o644   12110 REG   uid=0 gid=0 uname='' gname='' mtime=0
+RP5-C4C.sh       0o644   12089 REG   uid=0 gid=0 uname='' gname='' mtime=0
+RPD-VERIFY.sh    0o644   43940 REG   uid=0 gid=0 uname='' gname='' mtime=0
+
+-- cross-check: C:\Windows\system32\tar.EXE -tvf runkit_b.tar  (rc=0) --
+-rw-r--r--  0 0      0       18968 Oca 01  1970 RP0-LIB.sh
+-rw-r--r--  0 0      0        1937 Oca 01  1970 RP0-BOOTSTRAP.sh
+-rw-r--r--  0 0      0       37896 Oca 01  1970 RP1-B3.sh
+-rw-r--r--  0 0      0        5308 Oca 01  1970 RP3-C2A-POST.sh
+-rw-r--r--  0 0      0        3804 Oca 01  1970 RP3-C2B-POST.sh
+-rw-r--r--  0 0      0       12770 Oca 01  1970 RP4-C3.py
+-rw-r--r--  0 0      0       19353 Oca 01  1970 RP5-C4A.sh
+-rw-r--r--  0 0      0       12110 Oca 01  1970 RP5-C4B.sh
+-rw-r--r--  0 0      0       12089 Oca 01  1970 RP5-C4C.sh
+-rw-r--r--  0 0      0       43940 Oca 01  1970 RPD-VERIFY.sh
