@@ -2936,6 +2936,14 @@ documents are fixtures supplied as the blocks' declared INPUTS.
 
 1. **R4-5** (dangling restore destination, Python level) — no execution route on this machine.
    Unchanged in round 2: CPython here still cannot create a symlink (`WinError 1314`).
+   **[STATUS UPDATE 2026-08-09 night, post-acceptance: CLOSED on Linux.** Executed on
+   `GATEA-STAGING` with real symlinks under fresh preregistration `…-R45B`: RED mutant
+   (guard deleted, delta exactly two lines) wrote a real SQLite DB outside the restore
+   root through the dangling link; GREEN accepted bytes raised exactly
+   `restore destination is a symlink`. Guard proven load-bearing; guard-scope claim only,
+   C3 still BLOCKED. Evidence bound in
+   `WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08/05_TRANSPORT_R45B/`. This dated note
+   is the only post-acceptance edit to this document; no accepted design text changed.]
 2. **All C1 falsifications** (`C1-F1`…`C1-F9`, §3.3) — C1 is BLOCKED; manufacturing runs for a
    blocked path is forbidden.
 3. **All scenario-level C2 falsifications** (`C2-F1`…`C2-F7`, §4.6) — the scenarios are BLOCKED
