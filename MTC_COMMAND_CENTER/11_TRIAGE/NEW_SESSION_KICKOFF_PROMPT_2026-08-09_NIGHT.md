@@ -40,6 +40,12 @@ milestone so the next fresh session resumes cleanly.
 
 ## Milestone log (newest first — update on every milestone)
 
+- 2026-08-09 ~22:40: round 5 consumed + committed (`fd193857`). Code freeze verified
+  by cmp/hash (RP1-B3 `6f3ea022`, RPD-VERIFY `3b9e78e8`, DESIGN_NOTES byte-identical);
+  only SELF_QA.md rewritten. Narrow Codex doc re-audit 5 dispatched (`audit5/`). Next:
+  on PASS the whole B3 repair is accepted → Stage 1B runkit re-freeze (repaired
+  RP1-B3 + new RPD-VERIFY → new BLOCK_IDENTITIES → new runkit.tar via a re-run of the
+  Stage 1 builder pointed at the round5 blocks) → WP-L P2 unit closure record.
 - 2026-08-09 ~22:30: audit 4 = code CLOSED (finding 1), sole survivor is DOC-only
   (finding 2, SELF_QA exact-command recording). Per standing authority = narrow
   doc/QA survivor → auto-continue, NOT owner escalation. Doc-only round 5 dispatched
