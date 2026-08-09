@@ -1,5 +1,28 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ PICK UP EXACTLY HERE — local run-kit design BLOCKED after third repair round (Codex GPT-5.6, 2026-08-09)
+>
+> **Do not commit, integrate, implement, or audit the current draft.** Its final Lead review found a
+> pre-`<EVROOT>` evidence contradiction: the design requires every host command/STOP to be recorded
+> under `<EVROOT>`, but `RK-B0` verifies the interpreter, creates the timestamp, and creates the
+> parent/leaf paths before `<EVROOT>` exists. Parent canonical/non-symlink proof and the no-clobber
+> `EXPECTATIONS.md` transfer are also not fully specified. This was the third non-accepting repair
+> round; no fourth silent repair is allowed.
+>
+> Draft preserved only at `C:\PGRK`, base `4599b466`, untracked path
+> `MTC_COMMAND_CENTER/11_TRIAGE/GATE_A_POST_GATE_LOCAL_RUN_KIT_DESIGN_2026-08-09.md`, SHA-256
+> `d12e25fb06273b006c47342fac093d4afc99e32bda815fb5e428b8a3da584107`, 194207 bytes / 2332 lines.
+> It was not frozen or canonically audited. Full record:
+> `11_TRIAGE/GATE_A_POST_GATE_LOCAL_RUN_KIT_DESIGN_BLOCKER_2026-08-09.md`.
+>
+> **Next autonomous safe unit:** read-only independent audit of live commit `779bd038` and
+> `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_2026-08-09.md`. This is a separate audit task, not a fourth
+> repair. A new design repair cycle requires explicit owner direction and must first close the bootstrap
+> evidence channel. `D-GAP-C1-1` and `D-GAP-C1-3` remain blocking.
+>
+> **Safety unchanged:** no host command ran. Keep staging credential-free DISARMED; exact 50 h balance
+> remains NOT REPRODUCIBLE; no WP-V/KVM2/master/credentials/broker/TESTNET/ARM/orders/economic action.
+
 > ## ▶ PICK UP EXACTLY HERE — candidate provenance repair accepted (Codex GPT-5.6, 2026-08-09)
 >
 > **Next autonomous safe unit:** author and audit the corrected **local-only run-kit design contract**

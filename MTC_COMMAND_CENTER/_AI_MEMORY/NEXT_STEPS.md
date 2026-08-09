@@ -1,5 +1,32 @@
 # NEXT_STEPS
 
+## GATE A — local run-kit design BLOCKED after third repair round (2026-08-09)
+
+**Do not commit, integrate, implement, or audit the current draft.** Lead inspection after the third
+non-accepting repair round found an evidence-root bootstrap contradiction: `RK-B0` requires every host
+command and STOP to be captured under `<EVROOT>`, but it verifies Python, allocates the timestamp, and
+creates the parent/leaf directories before `<EVROOT>` exists. Parent canonical/non-symlink proof and the
+no-clobber `EXPECTATIONS.md` transfer are also not closed. A fourth silent repair is forbidden.
+
+Unaccepted draft: `C:\PGRK`, base `4599b466`, one untracked file
+`11_TRIAGE/GATE_A_POST_GATE_LOCAL_RUN_KIT_DESIGN_2026-08-09.md`, SHA-256
+`d12e25fb06273b006c47342fac093d4afc99e32bda815fb5e428b8a3da584107`, 194207 bytes / 2332 lines.
+No canonical audit was launched and no host action occurred. Full blocker record:
+`11_TRIAGE/GATE_A_POST_GATE_LOCAL_RUN_KIT_DESIGN_BLOCKER_2026-08-09.md`.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Any]** Next autonomous safe unit: read-only independent audit of live commit `779bd038` and
+  `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_2026-08-09.md`. Determine candidate qualification, scope,
+  command safety, and whether any bootstrap evidence is reusable. This is separate from the blocked
+  design and does not reopen its repair loop.
+- **[AI: Barış]** A new repair cycle for the `C:\PGRK` design requires explicit owner direction. The
+  cycle must first close the pre-`<EVROOT>` evidence channel; `D-GAP-C1-1` and `D-GAP-C1-3` remain
+  independently blocking.
+- **[AI: Any]** Keep all existing holds: no server execution, credential/broker/TESTNET action, ARM,
+  orders, WP-V, KVM2, master merge, old-payload deletion, or economic action. Exact 50 h balance remains
+  NOT REPRODUCIBLE.
+
 ## GATE A — candidate provenance repair ACCEPTED; run-kit design contract next (2026-08-09)
 
 **Accepted live commits:** `970c95a6` + `03444271`; frozen audited snapshot

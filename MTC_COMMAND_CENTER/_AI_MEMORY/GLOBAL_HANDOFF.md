@@ -1,5 +1,25 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6] 2026-08-09 — Local run-kit design blocked at third repair round
+
+**Outcome: BLOCK.** The candidate-qualified post-Gate run-kit design remains unaccepted and uncommitted.
+After three non-accepting repair rounds, Lead inspection reproduced a final required defect: `RK-B0`
+claims every host command and STOP is captured under `<EVROOT>`, but its interpreter check, timestamp,
+parent creation, and leaf creation all run before `<EVROOT>` exists. The design also does not fully bind
+parent canonical/non-symlink safety or the no-clobber `EXPECTATIONS.md` transfer during that bootstrap.
+Repo rules prohibit a silent fourth repair.
+
+Preserved draft: `C:\PGRK` at base `4599b466`; one untracked 2332-line / 194207-byte file with SHA-256
+`d12e25fb06273b006c47342fac093d4afc99e32bda815fb5e428b8a3da584107`. It was not frozen, integrated, or
+sent to canonical audit. No host/runtime action occurred. Full record:
+`11_TRIAGE/GATE_A_POST_GATE_LOCAL_RUN_KIT_DESIGN_BLOCKER_2026-08-09.md`.
+
+**PICK UP EXACTLY HERE:** next safe unit is a separate read-only audit of live commit `779bd038` and
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_2026-08-09.md`; do not treat that proposed document as accepted
+and do not use the audit to launder a fourth repair of the blocked design. Reopening the design repair
+loop needs explicit owner direction. `D-GAP-C1-1`, `D-GAP-C1-3`, the non-reproducible 50 h balance, and
+all named host/trading/deployment authority holds remain unchanged.
+
 ## [Codex GPT-5.6] 2026-08-09 — Post-Gate candidate provenance repair accepted
 
 **Outcome:** accepted and integrated as live commits `970c95a6` + `03444271`; exact audited snapshot
