@@ -1,4 +1,4 @@
-# SELF_QA - WP-I preregistration draft, round 1
+# SELF_QA - WP-I preregistration draft, round 1.2
 
 How every feasibility call in `WPI_CHECK_FEASIBILITY.tsv` and every expectation row
 in `WPI_PREREGISTRATION_DRAFT.md` section 8 was arrived at, and - equally - which of
@@ -237,9 +237,9 @@ none was invented to make a row look complete.
 | 8.2 row 15 (metadata dir modes) | matrix B3 predicate: conf `0750 root:root`, state+log `0750 mtc-bridge:mtc-bridge`; adjudication independently confirms `/etc/mtc-bridge` `root:root` `750` | M1 |
 | 8.2 row 17 (lock digest, 117762 B) | matrix A3/B1a rounds 2-3: `a1881296...bf66e`, LF, 117762 B, source-derived | M1 |
 | 8.2 row 18 (Python 3.12) | matrix B1 predicate; patch version unrecorded, so the predicate is a `3.12.` prefix | M1 |
-| 8.2 row 19 (`packages=56`) | matrix A6: the PASS line prints the count actually parsed (`verify_lock.py:97`), not a constant - which is why the number is evidence rather than an echo | M1 |
+| 8.2 row 19 (`packages=56`) | matrix A6: the PASS line prints the count actually parsed (`verify_lock.py:97`), not a constant - which is why the number is evidence rather than an echo | M1 (round 1.2: +metadata-readability precondition, Codex F1) |
 | 8.2 rows 20-21 (status flags) | matrix B5 and section 0.6 (`app.py:138-147`): `mode`, `network`, `exchange_conn`, `exchange_enabled`, `credential_lookup`, `arm_enabled`; `state_version=1` from matrix section 0.3 | M1 for the values, M4-2 for the key names |
-| 8.2 rows 22-23 (listener set) | matrix section 0.3 and B6; A-8 capture | M1 + M4-5 on the reading |
+| 8.2 rows 22-23 (listener set) | matrix section 0.3 and B6; A-8 capture | M1 + M4-5 on the reading (round 1.2: +namespace-binding precondition, Codex F2; new M4-11) |
 | 8.2 row 24 (external closed) | A-8 `port8790_ok=False` | M1 |
 
 Divergence strings follow the accepted grammar rather than a new one: `<CHECK>_FAIL
@@ -308,6 +308,13 @@ Listed so a reviewer can attack them directly rather than reconstruct them.
     **unresolved, not triggered**, and this draft does not adjudicate it - permission
     denial precedes the existence question for any unprivileged operator. It is
     listed in draft section 9 under RPD-VERIFY, exactly as the adjudication leaves it.
+11. **Whether `gatea` can `readlink /proc/<MainPID>/ns/net`** for the root-owned
+    service process is unverified (ptrace/yama gating on a root-owned PID typically
+    returns EACCES to an unprivileged reader). Handling: rows 22-23 preregister the
+    namespace-binding precondition (Codex F2); an EACCES is
+    `B6_STOP reason=service_netns_unreadable` and routes the listener-set half to
+    RPD-VERIFY. The caller's own identity (`/proc/self/ns/net`) is always readable, so
+    the precondition is fail-closed, not silently skipped.
 
 ## 5. What this unit did and did not do
 
@@ -350,3 +357,84 @@ so a non-executable interpreter can never be misread as a version or parity FAIL
 Also applied: N1 reused-script disposition note (draft section 4), N2 listener
 wording (draft section 8 intro). Review report:
 `11_TRIAGE/WPI_DRAFT_GLM_REVIEW_2026-08-09.md`. B1 remains INCLUDE-READ-ONLY.
+
+---
+
+## Round 1.2 addendum (Codex audit REQUEST_CHANGES applied, 2026-08-09)
+
+The binding audit (`WPI_DRAFT_CODEX_AUDIT_2026-08-09.md`) returned REQUEST_CHANGES.
+This round applies the four findings in this round's scope contract - F1, F2, F5, F6 -
+and leaves F3 and F4 (system-manager access, both HIGH in the audit) for a successor
+round; they are noted as OPEN below, not silently dropped. All four applied findings
+are one defect class: an inability-to-evaluate must STOP (rc 3), never FAIL (rc 1).
+
+**F1 - B1 metadata readability (HIGH).** The row-14 `find` guard proves traversal and
+stat-ability, not regular-file readability, so an unreadable `*.dist-info/METADATA`
+(mode 000, a denying ACL, or an LSM rule) could reach the parity check and be reported
+as package drift. Applied: row 19 now carries an explicit preflight readability
+precondition over every metadata object the verifier consumes (every `*.dist-info`
+directory and its `METADATA`/`RECORD`), and a fixed adjudication rule - a generic
+nonzero verifier rc never becomes `B1_FAIL reason=lock_installed_parity`; only a
+positively-distinguished installed-set mismatch may, and every open/parse/permission/
+LSM/traversal error or indistinguishable verifier error is `B1_STOP`. B1 stays
+INCLUDE-READ-ONLY (readability of 0555-tree metadata is itself unprivileged); no class
+change. The TSV B1 disposition records the rule. Additionally, row 14's inline
+cross-reference ("this STOP disqualifies row 18") was a stale round-1.1 artifact -
+parity was row 18 before the interpreter row was inserted, shifting it to row 19 - so
+it contradicted the binding ordering rule (row 14 gates row 19, not the interpreter at
+row 18). Corrected to "row 19 (parity)" so the table matches its own ordering rule,
+which F1 makes central. No predicate changed; a cross-reference only.
+
+**F2 - B6 network-namespace binding (HIGH).** `ss -ltn` observes the caller's netns,
+not the service's, so a login in a private netns could yield a false B6_FAIL or a
+false PASS. Applied: rows 22-23 now require the namespace binding proven
+(`readlink /proc/self/ns/net` == `readlink /proc/<MainPID>/ns/net`); a mismatch is
+`B6_STOP reason=netns_mismatch`, an unreadable service netns identity is
+`B6_STOP reason=service_netns_unreadable`. **Class change:** B6's listener-set half
+moves from unconditionally INCLUDE-READ-ONLY to INCLUDE-READ-ONLY *conditional on the
+netns binding being establishable unprivileged* / DEFER-ROOT-SIDE *(the netns binding
+itself if the service netns identity is unreadable by `gatea`)*. The TSV B6 row is
+updated, including correcting the prior claim that `ss` lists sockets system-wide - it
+lists the caller's netns. The operator-side external probe (row 24) is unchanged as
+independent corroboration.
+
+**F5 - hash could-not-read divergence (MEDIUM).** Rows 7 (B2 fragment) and 17 (B1a
+installed lock) named only digest-mismatch FAILs. Applied: each now carries an
+explicit hash-error STOP (`fragment_unreadable`, `installed_lock_unreadable`) for any
+`sha256sum` open/read/permission/LSM/parent-traversal error, and a digest mismatch is
+admissible only after rc 0 plus a syntactically valid 64-hex digest and the byte
+count - never compared against possibly empty output. No class change (hash-unreadable
+is a runtime could-not-evaluate, not a privilege need); TSV B2/B1a dispositions note
+the STOP forms.
+
+**F6 - dispatch authority discipline (MEDIUM).** The three pre-dispatch items (freeze
+blocks, fill pins, allocate/test identifiers) read as an exhaustive gate despite the
+document's own authority/budget blocker. Applied: the three items are now stated
+**necessary but not sufficient**, with two added gates - explicit written
+host-contact/transport authority and the required budget lift - and `-Execute`/
+`-Confirm` are stated as technical interlocks on the runner, not authority. No class
+change; TSV unaffected.
+
+**New residual premise (M4-11).** Whether `gatea` can `readlink /proc/<MainPID>/ns/net`
+for the root-owned service process is unverified (ptrace/yama gating); handled
+fail-closed - EACCES is `B6_STOP` and routes the listener-set half to RPD-VERIFY.
+
+**F3 / F4 remain OPEN (out of scope this round).** The audit's F3 (B2/B4
+system-manager access failure misread as host drift) and F4 (B3 partial-`find` output
+inspected before adjudicating walk failure) are HIGH but are not in this round's
+contract. They are recorded here so a successor round picks them up; nothing in this
+round addresses them, and no claim is made that the audit is fully resolved.
+
+**Constraint compliance this round.** Still a DRAFT: no concrete one-use RUNID, unit
+id, or collision-prone record root minted - the `<ALLOCATE-AT-DISPATCH>` /
+`<PIN-BEFORE-DISPATCH>` discipline is intact. No check was weakened: every edit adds a
+precondition or a STOP form; no existing FAIL, STOP, caveat, or named risk was removed.
+No mutating check was preregistered (readability, readlink and sha256sum probes are
+read-only). The one factual correction (TSV B6 `ss` scope) replaces a claim the audit
+proved false; no truthful caveat was deleted.
+
+**What this round read and wrote.** Read: `WPI_DRAFT_CODEX_AUDIT_2026-08-09.md` (the
+binding audit) and the three deliverables, plus `AGENTS.md` and `START_HERE.md` per
+repo mandate. No other file was read; no host contact; no Git action. Written: the
+same three deliverables, in place. The round-1.1 GLM-review addendum above stands
+unchanged.
