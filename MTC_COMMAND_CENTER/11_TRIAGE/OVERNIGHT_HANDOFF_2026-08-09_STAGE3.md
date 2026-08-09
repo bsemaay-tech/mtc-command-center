@@ -1,8 +1,63 @@
 # OVERNIGHT HANDOFF — WP-L P2 Stage 3 onward (2026-08-09 evening → morning)
 
 New Lead session (Claude Fable 5) picks up here. This file is self-contained; read it plus
-`AGENTS.md`. Owner (Barış) wants a continuous all-night autonomous session; **start Stage 3 now**
-and keep the pipeline moving until morning or a real blocker.
+`AGENTS.md`.
+
+## STANDING RULES (v2 addendum, 2026-08-09 night — owner-stated, binding every session)
+
+1. **NEVER STOP UNTIL MORNING.** This is a continuous autonomous session. Do not end your turn with a
+   report and go idle. When the main path is owner-gated, pull the next item from the FALLBACK
+   BACKLOG below and keep working. Maintain a self-paced `/loop` the whole night; the loop only ends
+   at the morning summary (~06:30) or if literally every backlog item is exhausted AND every
+   remaining path needs owner input — and even then keep the heartbeat armed, do not terminate.
+2. **PRESERVE FABLE CREDITS — DELEGATE.** You (Fable, the Lead) orchestrate, verify, commit, and
+   decide. You do NOT do heavy generation/implementation/audit yourself. Dispatch all substantial
+   work to cheaper/other agents: Codex `gpt-5.6-sol` xhigh (audits, host-side execution units),
+   Claude Max `claude-opus-5` xhigh (counterpart implementation), GLM-5.2 (second-opinion audits),
+   DeepSeek (mechanical). Fable stays lightweight: read results, spot-verify, commit, route. Invocation
+   syntax is in the "Operating rules" section below.
+3. **ENGLISH ONLY.** All your output and every document/commit/record you write is in English, even
+   when the owner writes in Turkish. No exceptions.
+4. **ALWAYS END WITH NEXT STEPS.** Every time a task completes, write the next actions to take. If
+   anything is needed from the owner, call it out explicitly and separately — and phrase what you
+   need from the owner in plain, non-technical language (the rest can be technical). Choose a default
+   path so work continues without waiting.
+
+## Current status (verified, HEAD `d5b97594` on `feature/donchian-crypto-ladder`)
+
+Overnight Stage 3 already ran: transport op 01–04 PASS (kit uploaded, remote 9/9 block hashes
+verified); **B3 STOP (rc 3)** on a real design gap `B3-GAP-ENV` (see below); **Stage 3B R4-5 PASS**
+(the last Windows-unclosable fixture is now closed — RP4-C3 symlink guard proven load-bearing).
+Commits `7e9d1c4a`, `ee49a945`, `d5b97594`. Zero service mutation, zero ARM, single-writer held.
+Ledger ~28.3 h remaining. Power fix verified (sleep/hibernate=0).
+
+### B3-GAP-ENV — RESOLVED to Option 1 (autonomous, no owner gate needed)
+
+`OVERNIGHT_RESULT_2026-08-09_STAGE3.md` raised three options. **Option 1 (repair the design) is the
+authorized path and needs NO new owner gate** — it is design/doc/audit work identical in tier to
+today's accepted 3×3 cycle, touches no host, mutates nothing. Options 2 and 3 require host mutation
+and are NOT authorized (do not pursue them). So: **proceed autonomously with Option 1** — move the
+env-file/manifest-binding admission out of unprivileged RP1-B3 into a root-side deploy-time verify
+(T0 design), keep B3's checks 1–3 + ancillary modes unprivileged, then run the full repair→re-audit
+cycle (Claude Max implements ↔ Codex re-audits, ≤3 rounds), and re-freeze Stage 1 run-kit (block
+hash changes → new frozen kit; a frozen accepted block may never be edited silently). This is the
+night's primary fuel. Delegate it per rule 2.
+
+## FALLBACK BACKLOG (non-blocked work — pull in order whenever the main path waits)
+
+1. **B3-GAP-ENV Option 1 repair cycle** (primary — see above): design repair → re-audit → runkit
+   re-freeze. Many hours of legitimate delegated work; do this first.
+2. **WP-I staging-verification prereg**: draft the WP-I preregistration for its non-BLOCKED checks,
+   same rigor as Stage 2 (delegate to Claude Max; Lead verifies + commits).
+3. **Audit 2 evidence checklist**: expand/verify the existing draft
+   (`AUDIT2_EVIDENCE_CHECKLIST_DRAFT_2026-08-09.md`) against the accepted designs and banked evidence.
+4. **Proposal status update**: R4-5 is now closed on Linux — update the proposal doc's open-item
+   list to reflect it (T3 self-verify, single commit).
+5. **Evidence index**: build a per-stage evidence index (RUNID → files → hashes) for the staging unit
+   so Audit 2 can consume it fast.
+Only after all five are exhausted may the loop idle to pure heartbeat — and even then, keep prepping.
+
+Owner (Barış) wants a continuous all-night autonomous session; keep the pipeline moving until morning.
 
 ## Where we are (verified, HEAD `210b0168` on `feature/donchian-crypto-ladder`)
 
