@@ -1,5 +1,45 @@
 # GLOBAL_HANDOFF
 
+## [Claude Opus 5] 2026-08-09 — Gate A A-0..A-9 PASS; final staging acceptance
+
+A-9 executed exactly once at branch checkpoint `6073c30c`; accepted candidate
+`2ce41e34bceb599d80af24c5c33d835820ec321b` unchanged. Command:
+`bash /home/gatea/gatea-run-kit-20260808D-2ce41e34/gatea_A9.sh`; SSH rc0 with empty transport
+stdout/stderr because the script redirects to its no-clobber evidence log. Evidence
+`/home/gatea/gatea-A9-20260808D.log`, preserved at `C:\WPI_ARTIFACTS\gatea-A9-20260808D.log`;
+remote/local SHA-256 identical
+`23d61687ce6cbf290b134d6bd72763f7bb4be27b15daae457373d6bb004bd5e9`, 876 B. Exactly nine canonical
+category lines in order — `private_key_block`, `aws_access_key`, `github_token`, `slack_token`,
+`openai_token`, `anthropic_token`, `xai_token`, `telegram_bot_token`, `ethereum_private_key` — every
+line exactly `rc=1 matches=0`; `A9_any_hit=0`; one `A-9 PASS`; one `A9_TRAP_EXIT rc=0`; zero
+`A9_FAIL`, zero path blocks, zero grep-error blocks. No matched path, text, or value existed or was
+printed. Exact scan roots recorded: the release candidate root and `/etc/mtc-bridge`; venv and
+`/home/gatea` excluded. A-9 truthfully read bytes including the root-readable env file while
+`grep -l` emitted no matched content; no secret value entered Lead output. Independent postcheck rc0
+artifact `C:\WPI_ARTIFACTS\postcheck_gatea_a9_d.out` (stderr empty) confirmed evidence hash/bytes,
+all nine exact rc1/matches0 lines, aggregate hit0/PASS/trap/no-fail/no-path/no-error, zero A9
+err/preflight temp leftovers, exact safe API, service active/running PID189813, Restart=no,
+NRestarts0, one loopback listener; `A9_POSTCHECK=PASS`. **Final Gate-A verdict: A-0 through A-9
+PASS.** A-5 used accepted run-kit E; A-6 through A-9 used accepted run-kit D; the candidate remained
+`2ce41e34…321b`. Current staging remains safe: active/static (Restart=no), PID189813, NRestarts0,
+loopback-only `127.0.0.1:8790`, exact credential-free DISARMED `state_version=1`, all
+credential/network/exchange/ARM flags off; no credentials loaded, no broker/exchange/order action.
+This is **staging Gate-A acceptance only** — evidence-backed, but it does not itself authorize or
+claim old-install deletion, master merge, production/live capital, successful ARM, orders,
+TESTNET/mainnet, wallet, or economic action. Claude Opus 5 only edited documentation (the four
+task-named files). Next, in default autonomous order: (1) read-only post-Gate transition inventory —
+reconstruct exact A-0..A-9 reports/hashes, identify the exact old masked installation targets versus
+the accepted current candidate, verify current systemd/release/symlink/package state without reading
+secrets, and write a cleanup/cutover scope checkpoint, with no deletion or mutation in that unit;
+(2) only after exact-target verification and a fresh `_AI_MEMORY` checkpoint, perform any
+already-authorized old-install cleanup with explicit paths and recoverable/safe ordering, preserving
+the accepted candidate and evidence, recording a blocker rather than guessing where authorization
+scope is not explicit; (3) do not rerun Gate A, ARM, load credentials, connect broker/exchange,
+place orders, merge master, or begin TESTNET/mainnet/economic action merely because Gate A passed.
+Record: `11_TRIAGE/GATE_A_A9_PASS_FINAL_2026-08-09D.md`.
+
+---
+
 ## [GLM-5.2] 2026-08-09 — Gate A A-9 redaction-aware preflight PASS
 
 Lead-performed read-only, non-executing A-9 preflight at checkpoint `0641c534`; accepted candidate
