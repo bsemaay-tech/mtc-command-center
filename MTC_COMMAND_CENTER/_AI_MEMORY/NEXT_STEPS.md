@@ -1,5 +1,21 @@
 # NEXT_STEPS
 
+## WP-L P2 — dispatch package accepted by fourth-account Codex (2026-08-09)
+
+Fresh `gpt-5.6-sol` xhigh fourth-account audit returned `PASS-WITH-NITS`, zero required findings, after
+446 s with exact candidate/source and byte-equality checks; Git status clean. Record:
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_DISPATCH_PACKAGE_CODEX_AUDIT_2026-08-09.md`.
+
+The one optional wording nit matches GLM and remains unapplied to preserve checklist `456968bb`. This is
+package acceptance only; proposal implementation remains 0/3.
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Claude]** Run audited one-file prompt at first exact account-capacity window, proposal round 1/3.
+- **[AI: Codex]** Freeze result and execute checklist `456968bb`; future proposal acceptance still needs
+  fresh canonical protected-scope audit.
+- **[AI: Any]** No host/authority hold changed.
+
 ## WP-L P2 — Codex fourth-account package audit non-execution (2026-08-09)
 
 Fresh `gpt-5.6-sol` xhigh fourth-account audit returned `BLOCK` without reading package files because the

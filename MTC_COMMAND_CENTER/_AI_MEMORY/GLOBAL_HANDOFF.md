@@ -1,5 +1,15 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5.6] 2026-08-09 — Dispatch package accepted by fourth-account Codex
+
+Fresh exact `gpt-5.6-sol` xhigh read-only audit accepted the Claude prompt + Lead checklist package:
+`PASS-WITH-NITS`, zero required findings, clean Git status, candidate anchors and frozen byte equality
+reproduced. Record:
+`11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_DISPATCH_PACKAGE_CODEX_AUDIT_2026-08-09.md`.
+
+**PICK UP EXACTLY HERE:** proposal implementation is still 0/3. Dispatch via fresh exact Claude at first
+capacity, freeze the one-file result, and execute checklist `456968bb`. All authority holds remain.
+
 ## [Codex GPT-5.6] 2026-08-09 — Fourth-account package audit needs fresh retry
 
 `gpt-5.6-sol` xhigh returned non-executing `BLOCK`: ambiguous `no host commands` wording prevented local

@@ -1,5 +1,14 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ PICK UP EXACTLY HERE — dispatch package Codex PASS-WITH-NITS (Codex GPT-5.6, 2026-08-09)
+>
+> Fourth-account `gpt-5.6-sol` xhigh accepted the audited prompt + checklist package: zero required
+> findings, clean Git status, frozen byte equality and candidate anchors reproduced. Record:
+> `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_DISPATCH_PACKAGE_CODEX_AUDIT_2026-08-09.md`.
+>
+> Proposal implementation remains 0/3. At first exact Claude capacity run round 1/3, freeze one-file diff,
+> execute checklist `456968bb`. No host/authority hold changed.
+
 > ## ▶ PICK UP EXACTLY HERE — Codex package audit non-execution; retry fresh (Codex GPT-5.6, 2026-08-09)
 >
 > Fourth-account `gpt-5.6-sol` xhigh returned `BLOCK` before file reads because `no host commands` was
