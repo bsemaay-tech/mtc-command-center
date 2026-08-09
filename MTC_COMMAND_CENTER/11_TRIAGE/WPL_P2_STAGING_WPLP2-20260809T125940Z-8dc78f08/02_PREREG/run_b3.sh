@@ -5,11 +5,21 @@
 #
 # Every value below is a pinned constant. Nothing is derived at run time,
 # nothing is defaulted, nothing is read from the target host to decide what to
-# assert. In particular B3_RELEASE_MANIFEST_SHA256 was derived LOCALLY in Stage
-# 2 by running the candidate's own `IBKR_PAPER_BRIDGE/deploy/linux/package.sh`
-# in a clean detached clone at the frozen candidate, and is NEVER read back out
-# of the target's /etc/mtc-bridge/install_manifest.json — a manifest cannot
-# attest to its own acceptance.
+# assert. In particular B3_RELEASE_MANIFEST_SHA256 is NEVER read back out of the
+# target's /etc/mtc-bridge/install_manifest.json — a manifest cannot attest to
+# its own acceptance.
+#
+# B3_RELEASE_MANIFEST_SHA256 provenance: derived LOCALLY and READ-ONLY in Stage
+# 2 by `derive_candidate_release_manifest.py`, which reconstructs the payload
+# manifest `package.sh` emits for the frozen candidate using `git show
+# <sha>:<path> --` only. package.sh itself was NOT run: it requires repo HEAD to
+# BE the release sha, which would mean moving HEAD off the working branch. The
+# reconstruction proves byte fidelity per file by recomputing git's own object
+# id over the bytes it read. The value below is `sha256` of the resulting
+# `CANDIDATE_RELEASE_SHA256SUMS` in this directory, and it independently equals
+# the manifest SHA recorded for the real frozen payload tar by the offline A-0
+# identity check in `GATE_A_LOCAL_RUN_KIT_2026-08-08B.md` (same 7059 entries).
+# Full record: `CANDIDATE_RELEASE_DERIVATION.md`.
 #
 # This wrapper performs read-only `stat`/`find`/silent `grep` work only, via
 # RP1-B3. No service is started, stopped, enabled, disabled or masked; no unit
@@ -48,6 +58,10 @@ b3w_stop() { printf 'B3W_STOP reason=%s\n' "$*" >&2; exit 3; }
 # the same read, not two reads separated by an unobserved window.
 require_block() {
     local path="$1" want="$2" out got
+    # `-f` dereferences, so a symlink pointing at correct bytes would satisfy it
+    # while the object actually sourced lives somewhere else. Refuse the link
+    # itself first; op 04 left these as plain 0444 regular files.
+    [ ! -L "$path" ] || b3w_stop "block_is_symlink path=$path"
     [ -f "$path" ] || b3w_stop "block_missing path=$path"
     out="$(LC_ALL=C sha256sum -- "$path")" || b3w_stop "block_hash_failed path=$path"
     got="${out%% *}"
