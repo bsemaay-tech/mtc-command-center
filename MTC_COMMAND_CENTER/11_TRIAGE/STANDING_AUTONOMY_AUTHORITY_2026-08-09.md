@@ -58,6 +58,53 @@ morning summary (~06:30) or on an explicit "stop" from Barış. If the entire no
 backlog is genuinely exhausted, the Lead GENERATES more prep work (next-WP drafts,
 deeper evidence indexing, audit-readiness packaging) rather than going idle.
 
+## AMENDMENT — 2026-08-09 ~23:35 (owner, in-session, before going to sleep)
+
+Barış granted three changes. They are binding from this point.
+
+### A1. Repaired B3 MAY run on the staging host
+
+"Onarılmış B3'ü host'ta çalıştırmak için izin veriyorum." The repaired `RP1-B3.sh`
+(`6f3ea022…`, audit-6 accepted) is authorized to execute against `GATEA-STAGING`.
+Conditions that remain in force and are NOT waived by this grant:
+
+- A **new preregistration is mandatory first** — the Stage 2/3 preregistration is void
+  for the re-frozen kit (block hashes and archive digest changed). Same rigor: one-use
+  RUNID, pinned argv, create-once record root, expectation table, first-FAIL, evidence
+  closed by a separate invocation, remote-vs-local binding.
+- B3 remains **read-only**: `stat`/`find`/silent `grep`, no file content printed, no
+  mutation of any host object outside the run's own create-once evidence tree.
+- `RPD-VERIFY.sh` is **root-side and stays design-only** — this grant does not confer
+  root, sudo, group/ACL changes, or any privileged execution.
+- Everything else still hard-gated: service stop/start/enable/mask, reboot, rollback,
+  credential load, ARM, orders, broker/exchange, TESTNET/mainnet, master merge,
+  WP-V/KVM2, payload-archive deletion, host reprovisioning.
+
+### A2. Model routing — preserve Claude Max credits
+
+"Görevleri neden Codex SOL high modeline vermiyorsun? Claude kredisi çok sınırlı…
+ağırlıklı olarak Codex ve ChatGPT Pro ve GLM aboneliklerini kullan. Claude MAX'i bunlar
+biterse kullan çünkü kredi az kaldı."
+
+Binding delegation order from now on:
+
+1. **Codex `gpt-5.6-sol`** (ChatGPT Pro, `-Account secondary`) — default for BOTH
+   implementation and audit. Use `model_reasoning_effort=high` normally; reserve `xhigh`
+   for T0 acceptance-critical audits.
+2. **GLM-5.2** — reviews, second opinions, documentation passes.
+3. **DeepSeek** — mechanical/bulk work.
+4. **Claude Max `claude-opus-5`** — LAST RESORT only, when the above are exhausted,
+   blocked, or demonstrably unable to do the task. Credits are nearly spent.
+
+Note the consequence for adversarial cycles: when Codex implements, the auditor must be
+a different agent (GLM, or Max only if unavoidable) so implementation and audit are
+never the same model instance. Record the routing choice in each unit's record.
+
+### A3. Owner asleep — no questions
+
+Continue fully autonomously. Do not ask anything; choose the recommended default, log
+it, and keep working to the morning summary.
+
 ## Precedence
 
 This document is subordinate to the safety rules and the hard gates above; it overrides
