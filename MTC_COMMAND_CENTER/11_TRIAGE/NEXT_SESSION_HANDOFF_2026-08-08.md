@@ -1,5 +1,65 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
+> ## ▶ NEWEST CHECKPOINT — GLM-5.2 bounded documentation: 50h ledger reconstructed; current exact balance NOT REPRODUCIBLE (read-only) (2026-08-09)
+>
+> **PICK UP EXACTLY HERE:** (1) read-only/local preregistration gap matrix for **WP-L Phase 2 + WP-I
+> staging verification + Audit 2 + WP-A** with exact command scope, evidence paths, PASS/FAIL, stop
+> conditions, and per-unit authority/budget status; (2) **no server execution** until a human budget
+> re-plan or explicit ceiling extension resolves the budget-evidence blocker (the current exact balance is
+> not reproducible); (3) keep `GATEA-STAGING` **retained and credential-free DISARMED — do not discard
+> it**; (4) never invent or retroactively book hours.
+>
+> **Conclusion:** the **current exact 50-hour used/remaining balance is NOT REPRODUCIBLE.** Last exact
+> booked checkpoint (`WPL_PHASE1_VERIFICATION_RECORD_2026-08-01.md:134`) is **20.5 used / 29.5 nominal
+> remainder** (WP-0 2.0 + WP-S 12.0 + contingency 3.0 + WP-R 3.5). Hard 50 h ceiling allocation: WP-0 2 ·
+> WP-S 12 · WP-L 8 · WP-I 6 · WP-A 3 · WP-R 6 · WP-V 8 · contingency 5
+> (`GATE_A_QUEUE_D_INTEGRATION_STATUS_2026-08-03.md:168`).
+>
+> **Five-state classification:** (1) EXACT BOOKED historical checkpoint 20.5 used / 29.5 nominal remainder;
+> (2) OUTSIDE the 50 h ledger — **S3-STRUCT actual = UNEVIDENCED** (owner-authorized extension beyond
+> contingency; the ~6 h figure is a warning threshold, **not an exact actual**; never record S3 actual as
+> 6 h; `WPS_S3STRUCT_ACCEPTANCE_RECORD_2026-08-01.md:150-153`); (3) APPROXIMATE NON-LEDGER Aug03 only
+> ≈33–36 used / ≈14–17 remaining, exact booking deferred to Lead Gate-7 and never finalized
+> (`GATE_A_QUEUE_D_INTEGRATION_STATUS_2026-08-03.md:182-186`); (4) UNBOOKED/UNCLASSIFIED — exact WP-L/WP-I
+> booking and all post-Aug03 Gate-A work (Aug08/09 repair, rebuild, audits, package transfer, A0-A9 rerun
+> and evidence) carry **no package actual-hour record**; the repair queue is *"unplanned work that did not
+> exist in the original 29.5 h"* (same record `:186`); (5) **CURRENT EXACT USED AND REMAINING — NOT
+> REPRODUCIBLE.**
+>
+> **Arithmetic-only balances frozen at the 20.5 h checkpoint (NOT currently available):** WP-0 0 · WP-S 0
+> · WP-L 8 · WP-I 6 · WP-A 3 · WP-R 2.5 · WP-V 8 · contingency 2 = 29.5. Later work exists but is
+> **unbooked and unclassified** — whether it reduces the historical nominal 29.5, and by how much, cannot
+> be derived; never call these currently available and never subtract new work from them as live.
+>
+> **Two corrections:** *"repair budget exhausted"* = **repair-round count** (`AGENTS.md`, max 3
+> repair/re-audit rounds), **not** that proof contingency = 0 — contingency had **2.0 h left** at the exact
+> checkpoint and no later record books Gate-A work to contingency or an extension. **S3-STRUCT actual is
+> UNEVIDENCED, never 6 h.**
+>
+> **Consequence:** budget compliance for any server-executed post-Gate work cannot be proven against the
+> hard 50 h ceiling. **Do not commit server execution against the unknown hard ceiling.** This is a
+> budget-evidence blocker; it does not require idling — autonomous read-only/local preparation continues.
+>
+> **Routing evidence:** ClinePass DeepSeek V4 Flash had no subscription access; the `deepseek-chat` harness
+> (`_deepseek_driver`) stopped without finishing due to path-resolution loops. **No allowlisted repository
+> target changed**, but the harness persisted its report and transcript at
+> `C:/tmp/gatea_hour_ledger_ds_report.md` and removed the temporary task JSON — so do **not** read the
+> route as mutating nothing globally. **DeepSeek did not produce this checkpoint — GLM-5.2 did.** Worker
+> scope: GLM-5.2 only edited the four task-named files (this prepend plus
+> `_AI_MEMORY/NEXT_STEPS.md`, `_AI_MEMORY/GLOBAL_HANDOFF.md`, and the new
+> `11_TRIAGE/GATE_A_50H_LEDGER_RECONSTRUCTION_2026-08-09.md`) and ran no SSH, Gate-A script, scan, sudo,
+> service, package, Git, staging-mutation, credential-read, or broker/network command. Note: this prepend
+> shifts the line numbers of the older checkpoints below it further down; locate cited blocks by their
+> stable header text, not raw line numbers.
+>
+> **Stop conditions:** any request to execute WP-V/KVM2/master/ARM/credentials/broker/orders/economic
+> action without an explicit named lift; any required Phase 2/WP-I/WP-A evidence that would need a product
+> repair; any budget/hour claim not evidenced against the record's §2 anchors; any attempt to invent/round/
+> retroactively book hours; any service drift. Record:
+> `11_TRIAGE/GATE_A_50H_LEDGER_RECONSTRUCTION_2026-08-09.md`.
+>
+> ---
+
 > ## ▶ NEWEST CHECKPOINT — Post-Gate roadmap + authority discovery (read-only); WP-V is NOT next (2026-08-09)
 >
 > **PICK UP EXACTLY HERE:** (1) reconstruct package-by-package hour accounting and classify Gate-A repair

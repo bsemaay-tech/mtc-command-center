@@ -1,5 +1,40 @@
 # NEXT_STEPS
 
+## GATE A — 50h ledger reconstructed; current exact balance NOT REPRODUCIBLE (read-only) (2026-08-09)
+
+**Read-only documentation checkpoint; no staging command run.** Starting HEAD `921449f1`. Full record:
+`11_TRIAGE/GATE_A_50H_LEDGER_RECONSTRUCTION_2026-08-09.md`.
+
+**Result (five states):** (1) EXACT BOOKED checkpoint **20.5 used / 29.5 nominal remainder**
+(`WPL_PHASE1_VERIFICATION_RECORD_2026-08-01.md:134`: WP-0 2.0 + WP-S 12.0 + contingency 3.0 + WP-R 3.5);
+(2) S3-STRUCT actual **UNEVIDENCED** — outside the 50 h ledger; ~6 h was a warning threshold, not an
+actual; never record as 6 h (`WPS_S3STRUCT_ACCEPTANCE_RECORD_2026-08-01.md:150-153`); (3) APPROXIMATE
+NON-LEDGER Aug03 only ≈33–36 used / ≈14–17 remaining, exact booking deferred
+(`GATE_A_QUEUE_D_INTEGRATION_STATUS_2026-08-03.md:182-186`); (4) UNBOOKED/UNCLASSIFIED — exact WP-L/WP-I
+booking and all post-Aug03 Gate-A work, **no package actual-hour record** (repair queue = *"unplanned work
+that did not exist in the original 29.5 h"*, same record `:186`); (5) **CURRENT EXACT USED AND REMAINING =
+NOT REPRODUCIBLE.** Never invent or retroactively book hours. Hard 50 h ceiling: WP-0 2 · WP-S 12 · WP-L 8
+· WP-I 6 · WP-A 3 · WP-R 6 · WP-V 8 · contingency 5.
+
+**Consequence:** budget compliance for server-executed post-Gate work cannot be proven; do not commit
+server execution against the unknown hard ceiling. Budget-evidence blocker, not idle. *"Repair budget
+exhausted"* = repair-round count (max 3), **not** contingency = 0 (contingency had 2.0 h left). Routing:
+ClinePass DeepSeek V4 Flash had no subscription; the `deepseek-chat` harness stopped unfinished on
+path-resolution loops — **no allowlisted repository target changed**, but it persisted its report and
+transcript at `C:/tmp/gatea_hour_ledger_ds_report.md` and removed the temporary task JSON (do **not** read
+the route as mutating nothing globally); **DeepSeek did not produce this — GLM-5.2 did.**
+
+**PICK UP EXACTLY HERE:**
+
+- **[AI: Any]** Build the read-only/local preregistration gap matrix for **WP-L Phase 2 + WP-I staging
+  verification + Audit 2 + WP-A** — exact command scope, evidence paths, PASS/FAIL, stop conditions,
+  per-unit authority/budget status. No server execution.
+- **[AI: Any]** Keep `GATEA-STAGING` retained and credential-free DISARMED — **do not discard it.**
+- **[AI: Barış]** Re-plan the remaining hours against the 50 h ceiling, or issue an explicit ceiling
+  extension, before any server-executed post-Gate work.
+- **[AI: Barış]** WP-V / KVM2 / master / credentials / broker / ARM / orders / TESTNET/mainnet / economic
+  action / old-payload deletion each need a **new explicit named lift.**
+
 ## GATE A — post-Gate roadmap + authority discovery complete (read-only); WP-V is NOT next (2026-08-09)
 
 **Read-only discovery only — no staging command was run.** Starting HEAD `51e666b0`; product candidate
