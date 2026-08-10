@@ -221,17 +221,34 @@ p0_count_substr() {
 
 # --- name=value lookup over a space-separated map, builtins only ------------
 # Used for the tool pin table and for resolved tool paths. The unquoted
-# expansion of the map is deliberate and safe: every value that can enter either
-# map is refused earlier unless it is printable and contains no whitespace, so a
-# path that could split is a STOP before it ever reaches this function.
+# expansion of the map is deliberate for WORD SPLITTING - the maps are
+# space-separated - and it is made safe against BOTH splitting and pathname
+# expansion: every value that can enter either map is refused earlier unless it
+# is printable and contains no whitespace (so a value that could split is a STOP
+# before it reaches this function), the pin-path charset gate refuses the glob
+# metacharacters `*`, `?` and `[` (Finding 3), AND the split below runs under
+# `set -f` so a metacharacter some future map admits still splits literally
+# rather than being rewritten by cwd entries. The earlier "deliberate and safe"
+# comment certified safety against word splitting only and was silent about the
+# pathname expansion the same unquoted expansion performs; that gap is closed.
 p0_lookup() {
     local map="$1" want="$2" e
     P0_LOOKUP=""
+    # Pathname expansion is disabled for the split (Finding 3, Claude round-6
+    # re-audit): the unquoted `$map` performs word splitting AND pathname
+    # expansion. Word splitting is intended; pathname expansion is not, and a
+    # value carrying a glob metacharacter would otherwise be rewritten by cwd
+    # entries. Pin paths are refused those bytes at the input charset gate; this
+    # `set -f` is defense in depth over every map this helper ever splits. Glob
+    # mode is restored to the block default (on) on both exits, matching the two
+    # existing `set -f`/`set +f` pairs (nit 1 remains open for all three).
+    set -f
     for e in $map; do
         case "$e" in
-            "$want"=*) P0_LOOKUP="${e#*=}"; return 0 ;;
+            "$want"=*) P0_LOOKUP="${e#*=}"; set +f; return 0 ;;
         esac
     done
+    set +f
     return 1
 }
 
@@ -492,6 +509,18 @@ for p0_pin in $P0_TOOL_PINS; do
     case "$p0_pin_path" in
         *[![:print:]]*|*[[:space:]]*)
             p0_stop "input_pin_charset tool=$p0_pin_name expected=printable_without_whitespace" ;;
+    esac
+    # F3 (Claude round-6 re-audit): a pin path may otherwise carry a glob
+    # metacharacter (`*`, `?` or `[`), and `p0_lookup`'s unquoted map split would
+    # hand it to pathname expansion. A pin like `stat=/usr/bin/sta*` was admitted
+    # at rc 0; in a cwd crafted so the expansion equals the PATH-resolved path it
+    # could become a silently accepted `pinned_absolute`, contradicting the rule
+    # that preregistered input must STOP rather than be laundered. Refuse the
+    # three glob metacharacters here; `p0_lookup` additionally splits under
+    # `set -f`, so the defense holds even for a value that reached it.
+    case "$p0_pin_path" in
+        *'*'*|*'?'*|*'['*)
+            p0_stop "input_pin_charset tool=$p0_pin_name expected=printable_without_glob_metacharacters" ;;
     esac
     # `python3` is the one pinned tool whose VALUE is itself a freeze-gate
     # identity, because the RO stage's two accepting adjudicators execute that
@@ -871,12 +900,33 @@ p0_record_identity() {
         *[!0-9]*) p0_stop "identity_probe_unparsable field=gid value=[$gid] expected=decimal_digits" ;;
     esac
     p0_capture_numeric gids -G; gids="$P0_CAPTURE"
+    # F2 (Claude round-6 re-audit): the same defect class the round-5 F3 repair
+    # closed for `P0_FORBIDDEN_GIDS` - validation applied to the items an UNQUOTED
+    # `for g in $gids` produced, instead of to the raw `id -G` value, so pathname
+    # expansion ran first. With gids='*' (or '0*', '?') and a cwd holding a
+    # numeric-named entry, the wildcard expanded to that name, the per-item check
+    # passed, and a malformed response was laundered into `form=numeric_only`; in
+    # an empty cwd the same response STOPped, so the verdict depended on cwd. The
+    # downstream whole-word intersection then matched the RAW `" $gids "` string,
+    # so `" 0* "` never contained `" 0 "` and `capability_wider_than_ledger` did
+    # not fire for a response that literally began with the forbidden gid. Same
+    # two defenses as the F3 input gate: (1) grammar-check the COMPLETE raw
+    # capture against digits-plus-separators BEFORE any expansion, so a wildcard
+    # or any non-digit/non-space byte is a STOP regardless of cwd; (2) split with
+    # pathname expansion disabled (`set -f`) so no surviving metacharacter reaches
+    # the per-item check. The per-item check is retained as the second layer.
+    case "$gids" in
+        *[!0-9[:space:]]*)
+            p0_stop "group_query_not_evaluable rc=0 detail=[response_not_decimal_gid_list]" ;;
+    esac
+    set -f
     for g in $gids; do
         case "$g" in
             *[!0-9]*) p0_stop "group_query_not_evaluable rc=0 detail=[response_not_decimal_gid_list]" ;;
         esac
         count=$(( count + 1 ))
     done
+    set +f
     [ "$count" -ge 1 ] || p0_stop "group_query_not_evaluable rc=0 detail=[response_empty]"
     printf 'P0_identity uid=%s gid=%s gids=[%s] gid_count=%s form=numeric_only\n' \
         "$uid" "$gid" "$gids" "$count"
@@ -1492,8 +1542,21 @@ p0_assert_interpreter_executable() {
     # that under the previous bytes (SELF_QA_RP6.md, R4 F1 fence).
     # The child also verifies its OWN startup rather than trusting that the flag
     # words survived: if `sys.flags.isolated` and `sys.flags.no_site` are not both
-    # set it refuses to report a version and says so. Deleting ` -S` from this
-    # line therefore cannot silently restore the hole - it produces a named STOP.
+    # set it refuses to report a version and says so. That self-check guards only
+    # against ACCIDENTAL flag-word loss - it runs inside the `-c` body, which a
+    # cooperating venv permits, so it catches the case where the words are dropped
+    # but the interpreter still reaches the body. It is NOT a substitute for
+    # `-S`, and the earlier claim that deleting ` -S` "cannot silently restore the
+    # hole - it produces a named STOP" was false and is retracted. A HOSTILE
+    # `.pth` in this venv's `site-packages` runs at `site` startup when `-S` is
+    # removed, BEFORE the `-c` body is compiled, so it can write the forged `P0PY`
+    # line and `os._exit(0)` and the self-check never runs: against such a `.pth`
+    # the no-`-S` mutant returns rc 0 with no STOP and the forged accepted line
+    # (SELF_QA_RP6.md R6-F1 adversarial-`.pth` fence, RED). ` -S` itself is the
+    # control that closes the channel - with it present `site` startup never runs,
+    # the hostile `.pth` is never processed, and the `-c` body the self-check
+    # guards is the one that actually executes (GREEN) - so the load-bearing
+    # protection is ` -S`, not the self-check.
     # Only `sys` is imported and only one line is written to stdout.
     raw="$(LC_ALL=C "$P0_ENV" -i LC_ALL=C "$py" -I -S -c 'import sys
 if not (sys.flags.isolated and sys.flags.no_site):

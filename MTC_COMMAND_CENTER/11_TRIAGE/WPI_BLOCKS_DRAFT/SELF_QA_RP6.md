@@ -2446,9 +2446,17 @@ below) and never written.
   `-P` and `-s` but NOT `-S`, so the previous bytes imported `site`, processed the
   judged venv's `site-packages`, and executed every `import` line in its `*.pth`
   files before the `-c` body. The `-c` body additionally refuses to report a
-  version unless `sys.flags.isolated` and `sys.flags.no_site` are both set, so
-  deleting ` -S` cannot silently restore the hole — it produces the named
-  `interpreter_startup_not_isolated` STOP. The false sentences are corrected at
+  version unless `sys.flags.isolated` and `sys.flags.no_site` are both set; that
+  self-check guards only ACCIDENTAL flag-word loss (it runs inside the `-c` body,
+  which a cooperating venv permits). It is NOT a substitute for `-S`: a HOSTILE
+  `.pth` runs at `site` startup when `-S` is removed, BEFORE the `-c` body is
+  compiled, so it can write the forged `P0PY` line and `os._exit(0)` and the
+  self-check never runs — against it the no-`-S` mutant returns rc 0 with no STOP
+  and the forged accepted line (R6-F1 adversarial-`.pth` fence below, RED). The
+  load-bearing control is `-S` itself (the hostile `.pth` is never processed with
+  it present); the round-4 sentence that claimed deleting ` -S` "cannot silently
+  restore the hole — it produces the named `interpreter_startup_not_isolated`
+  STOP" was false and is retracted (round 6). The false sentences are corrected at
   three sites: the `MUTATION SURFACE` header paragraph, the section comment that
   said "nothing is written and nothing is installed", and the terminal
   `P0_claim scope=… mutation=none_in_this_block`, which becomes
@@ -2672,6 +2680,16 @@ req_in  F1_PRE_STILL_ACCEPTED2  "$f1_pre_out"     'exec=ok env=cleared isolated=
 req_eq  F1_POST_MARKER_ABSENT   "$f1_post_marker" no
 req_eq  F1_POST_RC              "$f1_post_rc"     0
 req_in  F1_POST_ACCEPTED        "$f1_post_out"    'exec=ok env=cleared isolated=yes site_startup=disabled startup_flags=self_verified_isolated_and_no_site venv_pth_and_sitecustomize=not_executed'
+# ROUND-6 DISCLOSURE (Finding 1): these four F1_MUTANT_* assertions pass only
+# because this fence's fixture `.pth` (the zzforge.pth line written above)
+# COOPERATES - it writes the marker but does NOT `os._exit`, so the `-c` body
+# still runs and the child self-check fires. They prove the self-check catches
+# ACCIDENTAL flag-word loss; they do NOT prove it contains a hostile venv. The
+# honest bound - a hostile `.pth` that `os._exit(0)`s before the `-c` body, so the
+# self-check never runs - is the R6-F1 adversarial-`.pth` fence in the R6 section
+# below, under which the no-`-S` mutant is NOT caught (rc 0, marker created,
+# forged line accepted, no STOP). `-S` is the load-bearing control; the claim
+# that deleting ` -S` produces a named STOP is retracted at every site (round 6).
 req_eq  F1_MUTANT_MARKER        "$f1_mut_marker"  yes
 req_eq  F1_MUTANT_RC            "$f1_mut_rc"      3
 req_in  F1_MUTANT_STOP          "$f1_mut_out"     'P0_STOP reason=interpreter_startup_not_isolated'
@@ -3310,10 +3328,18 @@ in both.
   arbitrary code from the judged venv ran with this block's authority while the
   block reported success. The repaired bytes print the accepted line with
   `site_startup=disabled … venv_pth_and_sitecustomize=not_executed` and create no
-  marker. Deleting ` -S` from the repaired bytes recreates the marker *and* is
-  killed by the child's own startup guard (`P0PY_STARTUP_UNPROVEN isolated=1
-  no_site=0` → rc 3), so the fix cannot be undone silently. The `.pth`-removed
-  control proves the marker comes from the forged line and from nothing else.
+  marker. Deleting ` -S` from the repaired bytes recreates the marker; whether
+  the block catches that depends on the `.pth`. The round-4 fixture `.pth`
+  cooperates (no `os._exit`), so the child's startup guard fires
+  (`P0PY_STARTUP_UNPROVEN isolated=1 no_site=0` → rc 3) — that is the self-check's
+  ACCIDENTAL-loss guard, not containment of a hostile venv. A hostile `.pth` that
+  `os._exit(0)`s after forging the `P0PY` line defeats the guard entirely (the
+  `-c` body never runs), so against it the no-`-S` mutant is NOT caught: rc 0,
+  marker created, forged accepted line, no STOP (R6-F1 adversarial-`.pth` fence
+  below). `-S`, not the guard, is what contains a hostile venv, and the round-4
+  claim that deleting ` -S` "cannot be undone silently" is retracted (round 6).
+  The `.pth`-removed control proves the marker comes from the forged line and from
+  nothing else.
 - **F2.** The pre-fix stalled arm produced **zero** `P0_STOP` lines, zero output
   and required `EXTERNAL_WATCHDOG_RC=124`. The repaired stalled arm returned its
   own `P0_STOP reason=system_manager_unreachable rc=124
@@ -4145,3 +4171,466 @@ is exactly the surface the three findings concern. No host was contacted, no
 network command was run, no host file content was printed, and nothing was
 committed. Four files touched only (`RP6-P0.sh`, this file, `STATUS_RP6_P0.md`,
 `RP6_REPAIR_R5_REPORT.md`).
+
+---
+
+## R6 — three Claude flagship re-audit findings (round 6, GLM-5.2 implementer)
+
+Added by GLM-5.2 as IMPLEMENTER for the bounded round-6 repair of the Claude
+flagship re-audit findings (`RP6_CLAUDE_REAUDIT_R5_2026-08-10.md` F1–F3).
+Claude is this block's auditor for these findings, so implementer/auditor
+separation holds; GLM-5.2 also implemented round 5, which is permitted. Round 6
+is authorised by owner grant #7 (2026-08-10), which lifts the T0 round cap for
+this block set — rounds continue until both flagships accept. The acceptance
+standard is unchanged. Status stays **REPAIRED-PENDING-T0-REAUDIT** — the block
+is not frozen, accepted, dispatchable, or authorised for host execution.
+
+The three fixes (each names the line range it touches in the repaired bytes;
+every arm not named below is byte-identical to the round-5 bytes):
+
+- **F1 (MEDIUM, carried from round 4 — round 5 neither addressed nor disclosed
+  it).** `RP6-P0.sh` interpreter-section comment (~lines 1493-1525). The block
+  claimed deleting ` -S` "cannot silently restore the hole — it produces a named
+  STOP". That is false: the child's `sys.flags` self-check runs inside the `-c`
+  body, so a HOSTILE `.pth` that runs at `site` startup when `-S` is removed can
+  write the forged `P0PY` line and `os._exit(0)` BEFORE the `-c` body is compiled,
+  defeating the self-check entirely; the no-`-S` mutant then returns rc 0 with no
+  STOP and the forged accepted line. The claim is retracted and restated
+  truthfully at every in-scope site: the self-check guards only ACCIDENTAL
+  flag-word loss; ` -S` itself is the control that contains a hostile venv. The
+  launch line (`-I -S -c`, ~line 1561) and every executable arm are unchanged.
+- **F2 (MEDIUM, NEW).** `RP6-P0.sh` `p0_record_identity` `gids` handling (~lines
+  903-924). The raw `id -G` capture was validated only after an UNQUOTED
+  `for g in $gids`, so pathname expansion ran first — the same class as the
+  round-5 F3 input-gate defect. Same two defenses as F3: (1) a complete-value
+  grammar gate `*[!0-9[:space:]]*` on the raw capture BEFORE any expansion; (2)
+  `set -f` around the per-item split. This removes all three wrongs the auditor
+  named: the cwd-dependent verdict, the false `form=numeric_only`, and the
+  whole-word intersection matching the RAW string so `" 0* "` never matched
+  `" 0 "` (a laundered value now STOPs before it reaches the intersection).
+- **F3 (LOW/MEDIUM).** `RP6-P0.sh` `p0_lookup` comment + body (~lines 222-247)
+  and the pin-path charset gate (~lines 513-524). The gate admitted `*`, `?` and
+  `[`, and `p0_lookup`'s unquoted map split handed them to pathname expansion.
+  Refuse the three glob metacharacters at the charset gate
+  (`expected=printable_without_glob_metacharacters`), AND run `p0_lookup`'s split
+  under `set -f` (defense in depth over every map), and correct the comment so it
+  certifies safety against pathname expansion, not only word splitting.
+
+### Disposition of every finding (round 6) — explicit, including non-repairs
+
+- **Claude F1 (carried): REPAIRED in scope; one site out of scope, disclosed.**
+  The false claim is retracted at the three in-scope sites — the `RP6-P0.sh`
+  source comment, this file's R4 prose (above, "was false and is retracted"), and
+  this file's R4 "what each arm establishes" note (above, retracted). The fourth
+  site the audit named, `RP6_REPAIR_R4_REPORT.md:88`, is NOT in this round's
+  four-file allowlist (`RP6-P0.sh`, `SELF_QA_RP6.md`, `STATUS_RP6_P0.md`,
+  `RP6_REPAIR_R6_REPORT.md`), so it was NOT touched and still carries the stale
+  sentence; that residual is flagged for the Lead/owner and is unchanged in
+  bytes. The cooperating fixture is superseded as load-bearing evidence by the
+  R6-F1 adversarial-`.pth` fence below, and its limitation is disclosed in place
+  at the `F1_MUTANT_*` assertions (round-6 disclosure comment).
+- **Claude F2 (new): REPAIRED in the block.** Grammar gate + `set -f` on `gids`.
+- **Claude F3 (new): REPAIRED in the block.** Pin glob refusal + `p0_lookup`
+  `set -f` + corrected comment.
+- **Codex round-5 F1/F2/F3: unchanged, still CLOSED.** No round-6 edit touches
+  the pin-parse post-loop gate, the `type -t` prerequisite, or the
+  `P0_FORBIDDEN_GIDS` gate, so the Codex closures stand.
+- **Round-4 nits 1-6 and round-5 nit 3: still open (optional).** Untouched, as
+  permitted. **Nit 1** (`set +f` restores to block-default ON rather than saving
+  caller state) now applies to THREE `set -f`/`set +f` pairs (the F3 input gate,
+  the F2 gids split, and `p0_lookup`); all restore to the block default (glob on),
+  no caller sits inside a deliberate `noglob` region, and a full save/restore
+  remains a future optional hardening.
+
+### QA execution status: PENDING (this session gates interpreter/script execution)
+
+The GLM-5.2 implementer session's Bash tool gates `bash -n`, script execution and
+process substitution (every `bash -n`, `bash --noprofile --norc` arm run, heredoc
+and `python -m venv` returned *requires approval* and was not approved this turn)
+— the identical blocker the C13, R5 and earlier GLM rounds recorded. Per the
+kickoff and AGENTS.md (D026 / Pattern 10; GLM known-failure-mode of the
+four-auditor rule 4), this is reported rather than papered over with fabricated
+output. **The Lead must execute the three R6 harnesses below and `bash -n` in an
+unhindered Git Bash, as it did for round 5.**
+
+What IS real and was computed in-session by read-only tools (sha256sum / wc / tr
+/ grep are NOT gated):
+- new `RP6-P0.sh` SHA-256 `75db028e76438bc88caba19b9c3b6411e5f573f7b6c2bd13c3883d24e4389570`,
+  93421 bytes;
+- baseline (round-5) `490e3e4edfec811dee3dc90c6693e8ebeb865eb946a431ff017de58e66f0ce5f`,
+  89029 bytes — verified BEFORE the first edit;
+- the three block edits are grep-confirmed at their sites (F1 retraction at the
+  comment, F2 gate + `set -f`, F3 glob gate + `p0_lookup set -f`); the launch
+  line is still `-I -S -c`; CR bytes = 0 (edits introduced no CR); and no arm
+  outside the three named sites changed.
+
+What is PENDING: `bash -n`; the three R6 harnesses below; and the five prior
+mandated fences re-run against the new bytes (the R4 D026 fence, the full-block
+fence, etc.) to confirm no regression in the unchanged arms.
+
+### R6-F1 harness — adversarial `.pth` (replaces the cooperating fixture)
+
+```text
+# R6_F1_HARNESS_BEGIN
+#!/usr/bin/env bash
+set +e
+cd /c/LAB/Tradingview_LAB_CLEAN
+target='MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh'
+Q="$(mktemp -d)"; trap 'rm -rf -- "$Q"' EXIT
+exfn() { sed -n "/^$2() {$/,/^}$/p" "$1"; }
+
+# REAL venv, REAL interpreter, ADVERSARIAL `.pth`. The R4/R5 fixture cooperated
+# (wrote a marker but did NOT os._exit), so the `-c` body still ran and the child
+# self-check fired - which is why the old F1_MUTANT_* assertions passed. This
+# hostile `.pth` does what a real hostile venv does when `-S` is absent: it runs
+# at site startup BEFORE the `-c` body, writes a marker, writes the forged
+# accepted `P0PY 9.9` line, and `os._exit(0)` so the self-check NEVER runs.
+PYEXE="$(command -v python || command -v python3)"
+"$PYEXE" -m venv "$Q/venv" >/dev/null 2>&1
+vpy="$Q/venv/bin/python"; [ -x "$vpy" ] || vpy="$Q/venv/Scripts/python.exe"
+sp=""
+for cand in "$Q/venv"/lib/python*/site-packages "$Q/venv/Lib/site-packages"; do
+    [ -d "$cand" ] && sp="$cand"
+done
+[ -n "$sp" ] || { printf 'R6_F1_FIXTURE_BROKEN no_site_packages\n'; exit 1; }
+marker="$Q/pth_marker.txt"; mforge="$marker"
+if command -v cygpath >/dev/null 2>&1; then mforge="$(cygpath -m "$marker")"; fi
+printf "import os,sys; open('%s','w').write('PTH_EXECUTED'); sys.stdout.write('P0PY 9.9'); sys.stdout.flush(); os._exit(0)\n" "$mforge" > "$sp/zzadv.pth"
+printf 'R6_F1_FIXTURE adversarial_pth=[%s]\n' "$(cat "$sp/zzadv.pth")"
+
+build_arm() { # mutate -> stdout arm script; repaired source is the R6 bytes
+    local mutate="${1:-no}"
+    {
+        printf '%s\n' 'set -Eeuo pipefail' \
+            'P0_SAFE=""; P0_COUNT=0; P0_KIND=""; P0_FKIND=""; P0_SHAPE=""' \
+            'P0_META_KIND=""; P0_META_MODE=""; P0_META_OWNER=""' \
+            'P0_EACCES_TEXT="Permission denied"; P0_ENOENT_TEXT="No such file or directory"'
+        printf 'P0_STAT=%q\nP0_ENV=%q\n' "$(command -v stat)" "$(command -v env)"
+        printf '%s\n' 'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }' \
+            'p0_fail(){ printf "P0_FAIL reason=%s\n" "$*"; exit 1; }'
+        exfn "$target" p0_sanitize
+        exfn "$target" p0_count_substr
+        exfn "$target" p0_classify_stat_shape
+        exfn "$target" p0_probe_kind
+        exfn "$target" p0_record_metadata
+        if [ "$mutate" = drop_S ]; then
+            exfn "$target" p0_assert_interpreter_executable | sed 's/ -I -S -c / -I -c /'
+        else
+            exfn "$target" p0_assert_interpreter_executable
+        fi
+        printf 'p0_assert_interpreter_executable %q\n' "$vpy"
+    }
+}
+run_arm() { local rc=0 out; out="$(bash --noprofile --norc "$1" 2>&1)" || rc=$?; A_OUT="$out"; A_RC="$rc"; }
+contains() { case "$1" in *"$2"*) return 0;; *) return 1;; esac; }
+R6_F1_PASS=0; R6_F1_FAIL=0
+ok()  { printf 'ASSERT_MET %s\n' "$1";   R6_F1_PASS=$((R6_F1_PASS+1)); }
+bad() { printf 'ASSERT_UNMET %s\n' "$1"; R6_F1_FAIL=$((R6_F1_FAIL+1)); }
+
+build_arm no     > "$Q/delivered.sh"
+build_arm drop_S > "$Q/mutant.sh"
+
+rm -f "$marker"; run_arm "$Q/delivered.sh"; g_rc="$A_RC"; g_out="$A_OUT"; g_m=no; [ -f "$marker" ] && g_m=yes
+printf -- '--- R6_F1 GREEN delivered -I -S, hostile .pth neutralised\n%s\nRC=%s MARKER=%s\n' "$g_out" "$g_rc" "$g_m"
+if [ "$g_rc" = 0 ] && [ "$g_m" = no ] && ! contains "$g_out" 'reported_version=9.9' && contains "$g_out" 'P0_interpreter path='; then ok 'GREEN delivered rc=0 marker=no real_version pth_not_executed';
+else bad "GREEN delivered rc=$g_rc marker=$g_m out=[$g_out]"; fi
+
+rm -f "$marker"; run_arm "$Q/mutant.sh"; m_rc="$A_RC"; m_out="$A_OUT"; m_m=no; [ -f "$marker" ] && m_m=yes
+printf -- '--- R6_F1 RED mutant -I -c, hostile .pth forges + defeats self-check\n%s\nRC=%s MARKER=%s\n' "$m_out" "$m_rc" "$m_m"
+if [ "$m_rc" = 0 ] && [ "$m_m" = yes ] && contains "$m_out" 'reported_version=9.9' && ! contains "$m_out" 'interpreter_startup_not_isolated'; then ok 'RED mutant rc=0 marker=yes forged_version self_check_defeated_no_STOP';
+else bad "RED mutant rc=$m_rc marker=$m_m out=[$m_out]"; fi
+
+if [ "$g_m" = no ] && [ "$m_m" = yes ]; then ok 'CONTRAST minus_S_load_bearing green_marker=no red_marker=yes';
+else bad "CONTRAST green_marker=$g_m red_marker=$m_m"; fi
+
+printf 'R6_F1_QA_SUMMARY cases=3 pass=%s fail=%s result=%s\n' \
+    "$R6_F1_PASS" "$R6_F1_FAIL" "$([ "$R6_F1_FAIL" = 0 ] && echo PASS || echo FAIL)"
+# R6_F1_HARNESS_END
+```
+
+Invocation (line-offset independent):
+`sed -n '/R6_F1_HARNESS_BEGIN/,/R6_F1_HARNESS_END/p' SELF_QA_RP6.md | bash --noprofile --norc`
+
+Expected polarity (PENDING real run — design intent, not executed output):
+
+| arm | `.pth` | expect rc | marker | version line | self-check STOP? | polarity |
+|---|---|---|---|---|---|---|
+| delivered (`-I -S`) | adversarial | 0 | **no** | real (`3.x`) | n/a (`-c` body ran, passed) | GREEN: `-S` neutralises the hostile `.pth` |
+| mutant (`-I -c`, `-S` deleted) | adversarial | 0 | **yes** | forged (`9.9`) | **no** (`os._exit` before `-c` body) | RED: self-check defeated, mutant admits |
+
+The contrast IS the finding: the SAME hostile `.pth` is neutralised with `-S`
+(marker no, real version) and forges the accepted line without `-S` (marker yes,
+forged `9.9`, no STOP). The self-check never ran in the RED arm, proving it is
+not a substitute for `-S`. This is the honest bound the round-4/R5 cooperating
+fixture could not establish.
+
+### R6-F2 harness — `gids` grammar gate + noglob (cwd must not rewrite the verdict)
+
+```text
+# R6_F2_HARNESS_BEGIN
+#!/usr/bin/env bash
+set +e
+cd /c/LAB/Tradingview_LAB_CLEAN
+target='MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh'
+Q="$(mktemp -d)"; trap 'rm -rf -- "$Q"' EXIT
+exfn() { sed -n "/^$2() {$/,/^}$/p" "$1"; }
+
+# Shim `id`: uid/gid fixed at 1001; -G prints $R6_GIDS_ENV (the controllable host
+# response). The arm runs in a chosen cwd so pathname expansion is driven by real
+# directory entries, exactly as the auditor's falsification did.
+mkdir -p "$Q/bin"
+cat > "$Q/bin/id" <<'EOF'
+#!/usr/bin/env bash
+case "$1" in -u) printf '1001\n' ;; -g) printf '1001\n' ;; -G) printf '%s\n' "$R6_GIDS_ENV" ;; esac
+EOF
+chmod +x "$Q/bin/id"
+
+build_f2() { # variant -> stdout arm script
+    local variant="$1"
+    {
+        printf '%s\n' 'set -Eeuo pipefail' 'export LC_ALL=C' 'P0_SAFE="" P0_CAPTURE=""'
+        printf '%s\n' 'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }'
+        printf 'P0_ID=%q\n' "$Q/bin/id"
+        exfn "$target" p0_sanitize
+        exfn "$target" p0_capture_numeric
+        if [ "$variant" = repaired ]; then
+            exfn "$target" p0_record_identity      # VERBATIM R6 source (gate + set -f)
+        else
+            # prer6 replica: round-5 defect - NO whole-value grammar gate, NO set -f
+            cat <<'REPLICA'
+p0_record_identity() {
+    local uid gid gids g count=0 f
+    p0_capture_numeric uid -u; uid="$P0_CAPTURE"
+    case "$uid" in *[!0-9]*) p0_stop "identity_probe_unparsable field=uid value=[$uid] expected=decimal_digits" ;; esac
+    p0_capture_numeric gid -g; gid="$P0_CAPTURE"
+    case "$gid" in *[!0-9]*) p0_stop "identity_probe_unparsable field=gid value=[$gid] expected=decimal_digits" ;; esac
+    p0_capture_numeric gids -G; gids="$P0_CAPTURE"
+    for g in $gids; do
+        case "$g" in *[!0-9]*) p0_stop "group_query_not_evaluable rc=0 detail=[response_not_decimal_gid_list]" ;; esac
+        count=$(( count + 1 ))
+    done
+    [ "$count" -ge 1 ] || p0_stop "group_query_not_evaluable rc=0 detail=[response_empty]"
+    printf 'P0_identity uid=%s gid=%s gids=[%s] gid_count=%s form=numeric_only\n' "$uid" "$gid" "$gids" "$count"
+    for f in $P0_FORBIDDEN_GIDS; do
+        case " $gids " in *" $f "*) p0_stop "capability_wider_than_ledger gid=$f caller_gids=[$gids]" ;; esac
+    done
+    printf 'P0_identity_admitted uid=%s forbidden_gids=[%s] intersection=empty\n' "$uid" "$P0_FORBIDDEN_GIDS"
+}
+REPLICA
+        fi
+        printf 'P0_FORBIDDEN_GIDS=%q\n' "0 988"
+        printf '%s\n' 'p0_record_identity'
+    }
+}
+run_f2() { # variant gids cwd -> F2_RC, F2_OUT
+    local variant="$1" gids="$2" cwd="$3" arm="$Q/f2-$variant.sh" rc=0 out
+    build_f2 "$variant" > "$arm"
+    out="$(cd "$cwd" && R6_GIDS_ENV="$gids" bash --noprofile --norc "$arm" 2>&1)" || rc=$?
+    F2_RC="$rc"; F2_OUT="$out"
+}
+contains() { case "$1" in *"$2"*) return 0;; *) return 1;; esac; }
+R6_F2_PASS=0; R6_F2_FAIL=0
+ok()  { printf 'ASSERT_MET %s\n' "$1";   R6_F2_PASS=$((R6_F2_PASS+1)); }
+bad() { printf 'ASSERT_UNMET %s\n' "$1"; R6_F2_FAIL=$((R6_F2_FAIL+1)); }
+
+NUM4242="$(mktemp -d)"; : > "$NUM4242/4242"
+NUM0="$(mktemp -d)";    : > "$NUM0/0"
+NUM7="$(mktemp -d)";    : > "$NUM7/7"
+EMP="$(mktemp -d)"
+
+run_f2 prer6 '*'   "$NUM4242"
+if [ "$F2_RC" = 0 ] && contains "$F2_OUT" 'form=numeric_only'; then ok 'prer6 STAR NUM4242 rc=0 admitted polarity=RED';
+else bad "prer6 STAR NUM4242 rc=$F2_RC polarity=RED out=[$F2_OUT]"; fi
+run_f2 prer6 '*'   "$EMP"
+if [ "$F2_RC" = 3 ] && contains "$F2_OUT" 'response_not_decimal_gid_list'; then ok 'prer6 STAR EMP rc=3 per_item_stop polarity=RED_documents_cwd_dependence';
+else bad "prer6 STAR EMP rc=$F2_RC polarity=RED out=[$F2_OUT]"; fi
+run_f2 prer6 '0*'  "$NUM0"
+if [ "$F2_RC" = 0 ] && contains "$F2_OUT" 'intersection=empty'; then ok 'prer6 ZERO_STAR NUM0 rc=0 admitted_hides_root polarity=RED';
+else bad "prer6 ZERO_STAR NUM0 rc=$F2_RC polarity=RED out=[$F2_OUT]"; fi
+run_f2 prer6 '?'   "$NUM7"
+if [ "$F2_RC" = 0 ] && contains "$F2_OUT" 'intersection=empty'; then ok 'prer6 QMARK NUM7 rc=0 admitted polarity=RED';
+else bad "prer6 QMARK NUM7 rc=$F2_RC polarity=RED out=[$F2_OUT]"; fi
+
+run_f2 repaired '*'   "$NUM4242"
+if [ "$F2_RC" = 3 ] && contains "$F2_OUT" 'response_not_decimal_gid_list'; then ok 'repaired STAR NUM4242 rc=3 grammar_stop polarity=GREEN';
+else bad "repaired STAR NUM4242 rc=$F2_RC polarity=GREEN out=[$F2_OUT]"; fi
+run_f2 repaired '*'   "$EMP"
+if [ "$F2_RC" = 3 ] && contains "$F2_OUT" 'response_not_decimal_gid_list'; then ok 'repaired STAR EMP rc=3 grammar_stop polarity=GREEN_identical_regardless_of_cwd';
+else bad "repaired STAR EMP rc=$F2_RC polarity=GREEN out=[$F2_OUT]"; fi
+run_f2 repaired '0*'  "$NUM0"
+if [ "$F2_RC" = 3 ] && contains "$F2_OUT" 'response_not_decimal_gid_list'; then ok 'repaired ZERO_STAR NUM0 rc=3 grammar_stop polarity=GREEN';
+else bad "repaired ZERO_STAR NUM0 rc=$F2_RC polarity=GREEN out=[$F2_OUT]"; fi
+run_f2 repaired '?'   "$NUM7"
+if [ "$F2_RC" = 3 ] && contains "$F2_OUT" 'response_not_decimal_gid_list'; then ok 'repaired QMARK NUM7 rc=3 grammar_stop polarity=GREEN';
+else bad "repaired QMARK NUM7 rc=$F2_RC polarity=GREEN out=[$F2_OUT]"; fi
+run_f2 repaired '1001 0' "$EMP"
+if [ "$F2_RC" = 3 ] && contains "$F2_OUT" 'capability_wider_than_ledger gid=0'; then ok 'repaired HONEST_ROOT_GROUP rc=3 root_caught polarity=GREEN_no_regression';
+else bad "repaired HONEST_ROOT_GROUP rc=$F2_RC polarity=GREEN out=[$F2_OUT]"; fi
+run_f2 repaired '1001 100' "$EMP"
+if [ "$F2_RC" = 0 ] && contains "$F2_OUT" 'intersection=empty'; then ok 'repaired HONEST_CLEAN rc=0 admitted polarity=GREEN_no_regression';
+else bad "repaired HONEST_CLEAN rc=$F2_RC polarity=GREEN out=[$F2_OUT]"; fi
+
+rm -rf "$NUM4242" "$NUM0" "$NUM7" "$EMP"
+printf 'R6_F2_QA_SUMMARY cases=10 pass=%s fail=%s result=%s\n' \
+    "$R6_F2_PASS" "$R6_F2_FAIL" "$([ "$R6_F2_FAIL" = 0 ] && echo PASS || echo FAIL)"
+# R6_F2_HARNESS_END
+```
+
+Invocation: `sed -n '/R6_F2_HARNESS_BEGIN/,/R6_F2_HARNESS_END/p' SELF_QA_RP6.md | bash --noprofile --norc`
+
+Expected polarity (PENDING real run):
+
+| variant | `id -G` | cwd | expect rc | expect token | polarity |
+|---|---|---|---|---|---|
+| prer6 | `*` | `{4242}` | 0 | `form=numeric_only` | RED (cwd rewrote verdict) |
+| prer6 | `*` | `{}` | 3 | `response_not_decimal_gid_list` | RED (same input, different verdict → cwd dependence) |
+| prer6 | `0*` | `{0}` | 0 | `intersection=empty` | RED (`0*`→`0`, hides root gid) |
+| prer6 | `?` | `{7}` | 0 | `intersection=empty` | RED |
+| repaired | `*` | `{4242}` | 3 | `response_not_decimal_gid_list` | GREEN |
+| repaired | `*` | `{}` | 3 | `response_not_decimal_gid_list` | GREEN (identical STOP regardless of cwd) |
+| repaired | `0*` | `{0}` | 3 | `response_not_decimal_gid_list` | GREEN |
+| repaired | `?` | `{7}` | 3 | `response_not_decimal_gid_list` | GREEN |
+| repaired | `1001 0` | `{}` | 3 | `capability_wider_than_ledger gid=0` | GREEN (root group still caught) |
+| repaired | `1001 100` | `{}` | 0 | `intersection=empty` | GREEN (clean response still admitted) |
+
+The two prer6 `*` rows ARE the defect (same input, verdict changes with cwd); the
+repaired rows STOP identically in both cwds. The auditor's `HONEST_ROOT_GROUP`
+(`1001 0`) still STOPs with `capability_wider_than_ledger gid=0` — the capability
+ledger is no longer launderable.
+
+### R6-F3 harness — pin-path glob refusal + `p0_lookup` noglob
+
+```text
+# R6_F3_HARNESS_BEGIN
+#!/usr/bin/env bash
+set +e
+cd /c/LAB/Tradingview_LAB_CLEAN
+target='MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh'
+Q="$(mktemp -d)"; trap 'rm -rf -- "$Q"' EXIT
+exfn() { sed -n "/^$2() {$/,/^}$/p" "$1"; }
+p0_stop() { printf 'P0_STOP reason=%s\n' "$*"; exit 3; }
+contains() { case "$1" in *"$2"*) return 0;; *) return 1;; esac; }
+R6_F3_PASS=0; R6_F3_FAIL=0
+ok()  { printf 'ASSERT_MET %s\n' "$1";   R6_F3_PASS=$((R6_F3_PASS+1)); }
+bad() { printf 'ASSERT_UNMET %s\n' "$1"; R6_F3_FAIL=$((R6_F3_FAIL+1)); }
+
+# (1) pin-path charset gate replica. prer6 = round-5 (printable/ws only);
+# repaired = + glob-metacharacter refusal (the R6 fix). Drives the auditor's own
+# `stat=/usr/bin/sta*` pin.
+run_pin() {
+    local variant="$1" pins="$2" p0_pin p0_pin_name p0_pin_path
+    P0_PIN_COUNT=0
+    for p0_pin in $pins; do
+        case "$p0_pin" in *=*) : ;; *) p0_stop "input_pin_malformed" ;; esac
+        p0_pin_name="${p0_pin%%=*}"; p0_pin_path="${p0_pin#*=}"
+        case "$p0_pin_path" in /*) : ;; *) p0_stop "input_pin_not_absolute tool=$p0_pin_name" ;; esac
+        case "$p0_pin_path" in *[![:print:]]*|*[[:space:]]*) p0_stop "input_pin_charset tool=$p0_pin_name expected=printable_without_whitespace" ;; esac
+        if [ "$variant" = repaired ]; then
+            case "$p0_pin_path" in *'*'*|*'?'*|*'['*) p0_stop "input_pin_charset tool=$p0_pin_name expected=printable_without_glob_metacharacters" ;; esac
+        fi
+        P0_PIN_COUNT=$(( P0_PIN_COUNT + 1 ))
+    done
+    printf 'PIN_ACCEPTED count=%s\n' "$P0_PIN_COUNT"
+}
+OUT="$(run_pin prer6 'stat=/usr/bin/sta* python3=/opt/py312/bin/python3.12')"; RC=$?
+if [ "$RC" = 0 ] && contains "$OUT" 'count=2'; then ok 'prer6 GLOB_STAR_PIN rc=0 admitted polarity=RED';
+else bad "prer6 GLOB_STAR_PIN rc=$RC polarity=RED out=[$OUT]"; fi
+OUT="$(run_pin repaired 'stat=/usr/bin/sta* python3=/opt/py312/bin/python3.12')"; RC=$?
+if [ "$RC" = 3 ] && contains "$OUT" 'printable_without_glob_metacharacters'; then ok 'repaired GLOB_STAR_PIN rc=3 glob_refused polarity=GREEN';
+else bad "repaired GLOB_STAR_PIN rc=$RC polarity=GREEN out=[$OUT]"; fi
+OUT="$(run_pin repaired 'stat=/usr/bin/stat python3=/opt/py312/bin/python3.12')"; RC=$?
+if [ "$RC" = 0 ] && contains "$OUT" 'count=2'; then ok 'repaired CLEAN_PIN rc=0 admitted polarity=GREEN_no_regression';
+else bad "repaired CLEAN_PIN rc=$RC polarity=GREEN out=[$OUT]"; fi
+OUT="$(run_pin repaired 'stat=/usr/bin/que?stion python3=/opt/py312/bin/python3.12')"; RC=$?
+if [ "$RC" = 3 ] && contains "$OUT" 'printable_without_glob_metacharacters'; then ok 'repaired QMARK_PIN rc=3 glob_refused polarity=GREEN';
+else bad "repaired QMARK_PIN rc=$RC polarity=GREEN out=[$OUT]"; fi
+OUT="$(run_pin repaired 'stat=/usr/bin/[x] python3=/opt/py312/bin/python3.12')"; RC=$?
+if [ "$RC" = 3 ] && contains "$OUT" 'printable_without_glob_metacharacters'; then ok 'repaired BRACKET_PIN rc=3 glob_refused polarity=GREEN';
+else bad "repaired BRACKET_PIN rc=$RC polarity=GREEN out=[$OUT]"; fi
+
+# (2) p0_lookup split. WITHOUT set -f a map value carrying a glob char is rewritten
+# by cwd entries; WITH set -f (the R6 fix, verbatim) it splits literally.
+mkdir -p "$Q/cwd"; touch "$Q/cwd/a=bX" "$Q/cwd/a=bY"
+build_lk() { # variant -> stdout arm script
+    {
+        printf '%s\n' 'set +e'
+        if [ "$1" = repaired ]; then
+            exfn "$target" p0_lookup
+        else
+            cat <<'REPLICA'
+p0_lookup() {
+    local map="$1" want="$2" e
+    P0_LOOKUP=""
+    for e in $map; do
+        case "$e" in "$want"=*) P0_LOOKUP="${e#*=}"; return 0 ;; esac
+    done
+    return 1
+}
+REPLICA
+        fi
+        printf '%s\n' 'p0_lookup "a=b*" a' 'printf "LOOKUP_RESULT=[%s] rc=%s\n" "$P0_LOOKUP" "$?"'
+    }
+}
+build_lk prer6 > "$Q/lk-prer6.sh"; build_lk repaired > "$Q/lk-repaired.sh"
+OUT="$(cd "$Q/cwd" && bash --noprofile --norc "$Q/lk-prer6.sh" 2>&1)"
+if contains "$OUT" 'LOOKUP_RESULT=[bX]' || contains "$OUT" 'LOOKUP_RESULT=[bY]'; then ok "prer6 LOOKUP cwd_rewrote_glob out=[$OUT] polarity=RED";
+else bad "prer6 LOOKUP expected cwd rewrite out=[$OUT]"; fi
+OUT="$(cd "$Q/cwd" && bash --noprofile --norc "$Q/lk-repaired.sh" 2>&1)"
+if contains "$OUT" 'LOOKUP_RESULT=[b*]'; then ok "repaired LOOKUP literal_not_rewritten out=[$OUT] polarity=GREEN";
+else bad "repaired LOOKUP expected literal [b*] out=[$OUT]"; fi
+
+printf 'R6_F3_QA_SUMMARY cases=7 pass=%s fail=%s result=%s\n' \
+    "$R6_F3_PASS" "$R6_F3_FAIL" "$([ "$R6_F3_FAIL" = 0 ] && echo PASS || echo FAIL)"
+# R6_F3_HARNESS_END
+```
+
+Invocation: `sed -n '/R6_F3_HARNESS_BEGIN/,/R6_F3_HARNESS_END/p' SELF_QA_RP6.md | bash --noprofile --norc`
+
+Expected polarity (PENDING real run):
+
+| check | variant | input | expect rc | expect token | polarity |
+|---|---|---|---|---|---|
+| pin gate | prer6 | `stat=/usr/bin/sta*` | 0 | `count=2` (glob admitted) | RED |
+| pin gate | repaired | `stat=/usr/bin/sta*` | 3 | `printable_without_glob_metacharacters` | GREEN |
+| pin gate | repaired | `stat=/usr/bin/stat` | 0 | `count=2` | GREEN (clean pin still admitted) |
+| pin gate | repaired | `stat=/usr/bin/que?stion` | 3 | `printable_without_glob_metacharacters` | GREEN |
+| pin gate | repaired | `stat=/usr/bin/[x]` | 3 | `printable_without_glob_metacharacters` | GREEN |
+| lookup | prer6 | map `a=b*`, cwd has `a=bX`/`a=bY` | — | `LOOKUP_RESULT=[bX]` (cwd rewrote) | RED |
+| lookup | repaired | map `a=b*`, cwd has `a=bX`/`a=bY` | — | `LOOKUP_RESULT=[b*]` (literal) | GREEN |
+
+The auditor's own `stat=/usr/bin/sta*` pin flips from admitted (rc 0) to a
+glob-metacharacter STOP (rc 3), and `p0_lookup`'s unquoted split stops being
+rewritten by the cwd.
+
+### R6 artefact measurements (real, computed in-session; QA execution PENDING)
+
+- Repaired `RP6-P0.sh` SHA-256:
+  `75db028e76438bc88caba19b9c3b6411e5f573f7b6c2bd13c3883d24e4389570`
+- Repaired `RP6-P0.sh` byte count: `93421` (was `89029`; +4392 B of comments + the
+  F2 grammar gate/set-f, the F3 glob gate, and `p0_lookup`'s set-f). LF-only, no
+  BOM, CR bytes = 0 (edits introduced no CR).
+- Audited pre-R6 baseline SHA-256:
+  `490e3e4edfec811dee3dc90c6693e8ebeb865eb946a431ff017de58e66f0ce5f`, 89029 B —
+  verified BEFORE the first edit (kickoff baseline).
+- `bash -n RP6-P0.sh` → **PENDING** (session gates `bash -n`).
+- The three edits are grep-confirmed at their sites; the launch line is still
+  `-I -S -c`; no arm outside the three named sites changed.
+- The five prior mandated fences were NOT re-run this turn (session gates bash);
+  the Lead must re-run them against the new bytes — in particular the full-block
+  D026 fence (`sed -n '1678,2068p'`) and the R4 D026 fence
+  (`sed -n '2545,2989p'`) to confirm no regression in the unchanged arms.
+- `shellcheck` is not installed in this environment and was not run.
+
+### R6 explicit local limit
+
+The complete P0 block was not run, for the same reasons every earlier round
+records: it needs the accepted RP0 library and bootstrap, Linux `/proc` namespace
+objects, the preregistered per-SHA venv, `getent`/`systemctl` on the host, and a
+reachable system manager — none present in this Git Bash environment. The three
+R6 harnesses above isolate just the repaired predicates (the F1 interpreter arm
+with a REAL adversarial venv `.pth`; the F2 `gids` arm with a REAL shim `id` and
+REAL cwd-driven pathname expansion; the F3 pin gate and `p0_lookup` split), which
+is exactly the surface the three findings concern. No host was contacted, no
+network command was run, no host file content was printed, and nothing was
+committed. Four files touched only (`RP6-P0.sh`, this file, `STATUS_RP6_P0.md`,
+`RP6_REPAIR_R6_REPORT.md`).

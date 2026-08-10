@@ -1,4 +1,104 @@
-# RP6-P0 — status: ROUND-5-REPAIRED-PENDING-T0-REAUDIT
+# RP6-P0 — status: ROUND-6-REPAIRED-PENDING-T0-REAUDIT
+
+Updated 2026-08-10 by the round-6 implementer (GLM-5.2, fresh session) for the
+three Claude flagship re-audit findings (`RP6_CLAUDE_REAUDIT_R5_2026-08-10.md`
+F1–F3). Audit tier: **T0** (host/execution-domain preflight). GLM-5.2 implemented
+only; Claude is this block's auditor for these findings, so implementer/auditor
+separation holds (GLM-5.2 also implemented round 5, which is permitted). Round 6
+is authorised by owner grant #7 (2026-08-10), which lifts the T0 round cap for
+this block set — rounds continue until both flagships accept; the acceptance
+standard is unchanged. The block remains a draft: not frozen, accepted,
+dispatchable, or authorised for host execution.
+
+**QA execution was PENDING at implementer hand-off; the Lead has now EXECUTED it.**
+The GLM-5.2 session gates `bash -n` and script execution (same blocker the C13
+and round-5 GLM rounds recorded), so it recorded the R6 evidence as PENDING
+rather than fabricate output — the correct behaviour under D026. The Lead ran all
+of it in an unhindered Git Bash on 2026-08-10 against the round-6 bytes
+`75db028e…` / 93421 B:
+
+```text
+bash -n RP6-P0.sh                  -> rc 0, BASH_N=PASS
+CR bytes (tr -cd '\r' | wc -c)     -> 0
+R6-F1 adversarial .pth             -> R6_F1_QA_SUMMARY cases=3  pass=3  fail=0 result=PASS
+R6-F2 gids grammar + noglob        -> R6_F2_QA_SUMMARY cases=10 pass=10 fail=0 result=PASS
+R6-F3 pin-glob + p0_lookup         -> R6_F3_QA_SUMMARY cases=7  pass=7  fail=0 result=PASS
+five prior mandated fences, all rc 0 against the NEW bytes:
+  backstop        C13_R3_BACKSTOP_QA_SUMMARY inputs=2 mutations=2 cases=4 result=PASS
+  full-block D026 RP6_FULLBLOCK_D026_SUMMARY … result=PASS
+  freeze gate     F2_FREEZE_GATE_QA_SUMMARY placeholder_rc=3 filled_fixture_rc=0 result=PASS
+  R4 D026         RP6_R4_D026_SUMMARY findings=4 pth_forge=real_venv
+                  manager_bound=real_timeout inventory_basis=23e55667@d6a976aa result=PASS
+  C13 R4b         C13_R4B_ARM_QA_SUMMARY cases=27 result=PASS
+```
+
+**Lead finding — fence addressing is fragile and MUST be fixed before freeze.**
+The five prior fences are addressed by absolute LINE RANGES. Round 6 grew this
+file, so the recorded ranges `2545,2989` and `3353,3518` now cut into prose: they
+returned `rc 2` / no summary on first run and looked like regressions. They are
+not — re-run at their true boundaries (R4 D026 `2553,3007`; C13 R4b `3379,3544`)
+both return `result=PASS` at rc 0. Every future round shifts them again. The R5
+and R6 harnesses already use `BEGIN`/`END` markers and are immune. **Action for
+the next round: give all five prior fences marker pairs and record marker-based
+invocations instead of line numbers.** A freeze whose evidence cannot be re-run
+by a third party is not freeze-grade evidence.
+
+Round-6 disposition (Claude re-audit findings F1–F3) — full record in
+`RP6_REPAIR_R6_REPORT.md`; harnesses + expected polarity in `SELF_QA_RP6.md` §R6.
+The disposition of EVERY finding is stated explicitly, including non-repairs:
+
+- **F1 (MEDIUM, carried from round 4 — round 5 left it unaddressed) — REPAIRED
+  in scope; one site out of scope, disclosed.** The false "` -S` cannot be
+  silently deleted / it produces a named STOP" claim is retracted at every
+  in-scope site (the block's interpreter-section comment, `SELF_QA_RP6.md`'s R4
+  prose and arm note, and the round-4 F1 bullet below) and restated truthfully:
+  the child's `sys.flags` self-check guards only ACCIDENTAL flag-word loss (it
+  runs inside the `-c` body); a HOSTILE `.pth` that `os._exit(0)`s at `site`
+  startup defeats it, so ` -S` — not the self-check — is the load-bearing control
+  that contains a hostile venv. The cooperating fixture is superseded by an
+  ADVERSARIAL `.pth` (writes marker + forged `P0PY` line + `os._exit(0)`); under
+  it the no-`-S` mutant is NOT caught (rc 0, marker created, forged accepted
+  line, no STOP), which the claim now states plainly. The fourth site the audit
+  named, `RP6_REPAIR_R4_REPORT.md:88`, is NOT in this round's four-file allowlist
+  and was left untouched/stale, flagged for the Lead.
+- **F2 (MEDIUM, NEW) — REPAIRED.** The raw `id -G` `gids` capture is now
+  grammar-gated against `*[!0-9[:space:]]*` BEFORE any expansion, and the
+  per-item split runs under `set -f` — the F3 pattern applied to `gids`. `*`,
+  `0*`, `?` now STOP as `group_query_not_evaluable … response_not_decimal_gid_list`
+  identically in an empty and a numeric-named cwd; the false `form=numeric_only`
+  and the laundered whole-word intersection are gone; `HONEST_ROOT_GROUP`
+  (`1001 0`) still STOPs with `capability_wider_than_ledger gid=0`.
+- **F3 (LOW/MEDIUM, NEW) — REPAIRED.** The pin-path charset gate refuses `*`,
+  `?`, `[` (`expected=printable_without_glob_metacharacters`); `p0_lookup`'s
+  unquoted map split runs under `set -f`; the "deliberate and safe" comment now
+  certifies safety against pathname expansion, not only word splitting.
+- **Codex round-5 F1/F2/F3 — unchanged, still CLOSED** (no round-6 edit touches
+  the pin post-loop gate, the `type -t` prerequisite, or the `P0_FORBIDDEN_GIDS`
+  gate). **Round-4 nits 1-6 and round-5 nit 3 — still open (optional)**,
+  untouched as permitted. Nit 1 (`set +f` restores to block-default ON, not
+  caller-saved state) now spans three pairs; a full save/restore remains a future
+  optional hardening.
+
+Current executable identity (round-6 bytes; QA PENDING Lead execution):
+
+```text
+sha256=75db028e76438bc88caba19b9c3b6411e5f573f7b6c2bd13c3883d24e4389570
+bytes=93421
+bash_n=PASS (Lead-executed 2026-08-10, rc 0)
+line_endings=LF_only
+bom=none
+superseded_round5_sha256=490e3e4edfec811dee3dc90c6693e8ebeb865eb946a431ff017de58e66f0ce5f
+superseded_round5_bytes=89029
+frozen_ro_basis=RP7-WPI-RO.sh@d6a976aa sha256=23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad bytes=70941
+```
+
+The freeze gate is unchanged in COUNT (still six `<PIN-AT-FREEZE>` literals), so
+no end-to-end `P0 PASS` is possible and nothing here is dispatchable regardless
+of this round's verdict.
+
+---
+
+# Prior status history — round 5 (REPAIRED-PENDING-T0-REAUDIT, superseded by round 6)
 
 Updated 2026-08-10 by the round-5 implementer (GLM-5.2, fresh session) for the
 three Codex final-audit findings (`RP6_CODEX_FINAL_AUDIT_2026-08-10.md` F1–F3).
@@ -114,16 +214,21 @@ frozen_ro_basis=RP7-WPI-RO.sh@d6a976aa sha256=23e55667bec2453e21605b3551d5802b9c
 Round-4 disposition (Codex T0 findings 1-4) — full record in
 `RP6_REPAIR_R4_REPORT.md`, evidence in `SELF_QA_RP6.md`:
 
-- **F1 (HIGH) — CLOSED.** The interpreter probe runs `-I -S`, not `-I`. `-I`
-  implies `-E`/`-P`/`-s` but not `-S`, so the previous bytes imported `site` and
+- **F1 (HIGH) — CLOSED (interpreter isolation); the `-S` sub-claim was NARROWED
+  in round 6.** The interpreter probe runs `-I -S`, not `-I`. `-I` implies
+  `-E`/`-P`/`-s` but not `-S`, so the previous bytes imported `site` and
   executed the judged venv's `*.pth` `import` lines before the `-c` body. The
-  child now also refuses to report a version unless `sys.flags.isolated` and
-  `sys.flags.no_site` are both set, so deleting ` -S` yields a named
-  `interpreter_startup_not_isolated` STOP instead of a silent hole. Every false
-  sentence is corrected: the `MUTATION SURFACE` header, the "nothing is written"
-  comment, and `P0_claim … mutation=none_in_this_block`, which becomes
-  `mutation=no_filesystem_write_primitive_in_this_shell_source`, with
-  `behaviour_inside_any_executed_tool_binary` added to `does_not_establish`.
+  child also refuses to report a version unless `sys.flags.isolated` and
+  `sys.flags.no_site` are both set. Round 6 retracts this bullet's earlier
+  sentence that this means deleting ` -S` "yields a named
+  `interpreter_startup_not_isolated` STOP instead of a silent hole": that holds
+  only against a COOPERATING `.pth` (no `os._exit`); a HOSTILE `.pth` that
+  `os._exit(0)`s before the `-c` body defeats the self-check, so ` -S` (not the
+  self-check) is the load-bearing control (see round 6 / R6-F1). Every other
+  false sentence was corrected here in round 4: the `MUTATION SURFACE` header,
+  the "nothing is written" comment, and `P0_claim … mutation=none_in_this_block`,
+  which becomes `mutation=no_filesystem_write_primitive_in_this_shell_source`,
+  with `behaviour_inside_any_executed_tool_binary` added to `does_not_establish`.
   Falsified on a REAL venv with a REAL executable `.pth`: pre-fix bytes create the
   marker and still print the accepted line; repaired bytes do not.
 - **F2 (MEDIUM) — CLOSED.** Row 9 is bounded by the pinned `timeout` placed INSIDE
