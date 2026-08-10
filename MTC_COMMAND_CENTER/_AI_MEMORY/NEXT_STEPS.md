@@ -1,5 +1,33 @@
 # NEXT_STEPS
 
+## ALL FOUR OWNER GATES GRANTED — WP-I is the active workstream (2026-08-10 morning)
+
+Barış granted, and asked not to be asked again (recorded in
+`11_TRIAGE/NEW_SESSION_KICKOFF_PROMPT_2026-08-09_NIGHT.md`, top section):
+**WP-I host-contact authority**, **WP-I budget lift**, **root on the staging host for
+`RPD-VERIFY`** (read-only block; root to run it, NOT blanket mutation authority), and the
+**retroactive defect-catalogue pass** over the accepted WP-I draft. RP6-P0 repair waits
+until the WP-I direction settles.
+
+Ledger: **24.9 h used / 25.1 h remaining** (`11_TRIAGE/LEDGER_STATUS_2026-08-10.md`).
+
+**PICK UP EXACTLY HERE — in this order:**
+
+1. **[AI: Codex]** Retroactive catalogue pass over the accepted WP-I draft. A known
+   instance is already found: the identity row specifies a name-based check (Pattern 8) —
+   repair the draft, not the block. Sweep for the other nine patterns too.
+2. **[AI: Claude Lead]** Finalize the WP-I preregistration: allocate identifiers, fill
+   every `<PIN-BEFORE-DISPATCH>` from its cited record, run Stage 1 freeze. Commit the
+   preregistration BEFORE any invocation.
+3. **[AI: Claude Lead]** Execute WP-I read-only scope, then run `RPD-VERIFY` as root —
+   this closes the three checks B3 defers and the long-open `bridge.env` naming question.
+4. **[AI: Any]** Close WP-I with evidence, then dispatch Audit 2 (readiness package is
+   already assembled at `11_TRIAGE/AUDIT2_READINESS_PACKAGE/`).
+5. **[AI: Any]** RP6-P0 repair, scope in `WPI_BLOCKS_DRAFT/LEAD_ADJUDICATION_RP6_2026-08-10.md`.
+
+Still hard-gated: credentials, ARM, orders, broker/exchange, TESTNET/mainnet, master merge,
+WP-V/KVM2, payload-archive deletion, host reprovisioning, service-state mutation.
+
 ## WP-L P2 UNIT CLOSED + WP-I draft audit-clean (2026-08-10 overnight)
 
 **WP-L P2 unit closed** (`6370e1fe`): `UNIT_CLOSURE_RECORD.md` + `EVIDENCE_INDEX.md` over all

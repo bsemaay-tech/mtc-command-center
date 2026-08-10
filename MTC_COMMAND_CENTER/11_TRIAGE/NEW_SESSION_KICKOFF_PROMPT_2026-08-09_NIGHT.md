@@ -1,8 +1,35 @@
 # NEW-SESSION KICKOFF PROMPT (paste this into a fresh Claude session verbatim)
 
-> Maintained by the night Lead at each milestone. If the running session dies (model
-> drop Fable→Opus, crash, sleep), paste the block below into a new session as the
-> first message. It is self-contained.
+> **THIS FILE LIVES AT:**
+> `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\NEW_SESSION_KICKOFF_PROMPT_2026-08-09_NIGHT.md`
+>
+> If you are a fresh session and someone told you "read the handoff prompt", this is it.
+> If you cannot find it, run:
+> `git -C C:\LAB\Tradingview_LAB_CLEAN ls-files "*NEW_SESSION_KICKOFF*"`
+>
+> Maintained by the Lead at each milestone. If the running session dies (model drop
+> Fable→Opus, crash, sleep), paste the block below into a new session as the first
+> message. It is self-contained.
+
+---
+
+## OWNER AUTHORIZATIONS ALREADY GRANTED — DO NOT ASK AGAIN
+
+Barış granted these explicitly on 2026-08-10 and said he should not be asked again. Treat
+them as standing. Asking again wastes his time and stalls the pipeline.
+
+| # | Granted | Scope and limits |
+|---|---|---|
+| 1 | **WP-I host-contact authority** | WP-I may contact `GATEA-STAGING` and execute its authorized read-only scope. This clears one of the two gates the WP-I draft named. |
+| 2 | **WP-I budget lift** | The 50-hour ceiling is lifted for WP-I. This clears the second gate. WP-I is now **dispatchable** once its preregistration is finalized (identifiers allocated, values pinned, Stage 1 freeze done). |
+| 3 | **Root on the staging host for `RPD-VERIFY`** | You may run `RPD-VERIFY.sh` as root on `GATEA-STAGING`. **Scope limit that still holds:** RPD-VERIFY is read-only by design — root is granted to *run that block*, not as blanket authority to mutate. No service stop/start/enable/mask, no reboot, no chmod/chown outside a run's own create-once tree, no reprovisioning. Running it closes the three checks B3 defers and the `bridge.env` naming question. |
+| 4 | **Retroactive defect-catalogue pass over the accepted WP-I draft** | Approved. Apply `DESIGN_DEFECT_PATTERNS_2026-08-10.md` to the whole accepted draft, not just the rows earlier audits reached. A known instance is already recorded: the identity row specifies a name-based check (Pattern 8) — repair the draft, not the block. |
+| 5 | **RP6-P0 repair — sequencing decision** | Do it *after* the WP-I direction is settled, not before. Scope is already written in `WPI_BLOCKS_DRAFT/LEAD_ADJUDICATION_RP6_2026-08-10.md`. |
+
+**Still hard-gated — these were NOT granted and still require a fresh explicit Barış
+authorization:** credential load, ARM, orders, broker/exchange contact, TESTNET/mainnet,
+master merge, WP-V/KVM2, deleting the old payload archive, host reprovisioning, and any
+service-state mutation on any host.
 
 ---
 
@@ -36,9 +63,63 @@ language. Morning ~06:30: summary + push notification. Update
 `_AI_MEMORY/GLOBAL_HANDOFF.md`, `_AI_MEMORY/NEXT_STEPS.md`, and THIS file at every
 milestone so the next fresh session resumes cleanly.
 
+## HOW TO WORK — the rules that make this session productive
+
+**1. Multi-agent delegation is mandatory, not optional.** You (the Lead) orchestrate,
+verify, adjudicate and commit. You do NOT do heavy generation, implementation or auditing
+yourself. Dispatch it:
+
+| Agent | Invocation | Use for |
+|---|---|---|
+| Codex `gpt-5.6-sol` | `Invoke-CodexForClaude.ps1 -Account secondary -CodexArgs @('exec','-m','gpt-5.6-sol','-c','model_reasoning_effort=high','--dangerously-bypass-approvals-and-sandbox',$prompt)` | **Default for implementation AND audit.** Use `xhigh` only for T0 acceptance-critical audits. |
+| GLM-5.2 | `Invoke-GlmAudit.ps1` (read-only) / `Invoke-GlmTask.ps1 -PermissionMode acceptEdits` (writes) | Reviews, second opinions, documentation repair. |
+| DeepSeek | `_deepseek_driver` | Mechanical/bulk work. |
+| Claude Max `claude-opus-5` | `Invoke-ClaudeMax.ps1 --print $prompt --model claude-opus-5 --effort xhigh --dangerously-skip-permissions` (NOT `-p`) | **LAST RESORT ONLY** — credits nearly exhausted. |
+
+**Every dispatch prompt must state:** "The repository's two-tier counterpart-implementer
+rule is suspended by owner amendment A2/A2a. Implement this yourself. Do not sub-delegate
+to Claude Max." Without that line, Codex hands the work to Max and silently burns the
+credits this rule exists to protect — this actually happened on 2026-08-10.
+
+**Keep implementer and auditor different agents** — alternate Codex and GLM across rounds.
+Never let one agent audit its own work.
+
+**2. Token discipline.** Fable Lead stays lightweight: read results, spot-verify, commit,
+route. Do not read whole large files when a `grep`/`Select-String` with context answers the
+question. Give each delegate a narrow, explicit input list — it both saves tokens and stops
+it wandering. Prefer one well-scoped dispatch over three vague ones.
+
+**3. Never idle.** If the main path is gated, pull the next non-gated item. If the backlog
+is genuinely exhausted, GENERATE prep (readiness packages, next-WP drafts, deeper evidence
+packaging) — but do not manufacture low-value documents just to look busy. If nothing of
+real value remains, say so plainly rather than padding.
+
+**4. Repair cycles continue past the round limit.** The ≤3-round rule is a quality cadence,
+not a stop sign. When a cycle hits its limit with only NARROW survivors (mechanical fixes,
+documentation/QA gaps), open a bounded fix round automatically and re-audit until PASS.
+Escalate only if a survivor is architectural or needs a hard gate.
+
+**5. Do not ask about reversible in-repo work.** Pick the recommended default, proceed, log
+the choice in the commit. Reserve questions for the hard-gated list above.
+
+**6. Always end with numbered next steps and a chosen default.** Owner-facing asks in plain
+non-technical language, stated separately from the technical detail.
+
+**7. Evidence discipline** (the whole point of this project): an inability to evaluate is a
+STOP, never a FAIL. Preregister before executing and commit the preregistration first, so
+ordering is provable from git history. A check that cannot fail proves nothing. Read
+`DESIGN_DEFECT_PATTERNS_2026-08-10.md` before designing or auditing any executable block.
+
 ---
 
 ## Milestone log (newest first — update on every milestone)
+
+- 2026-08-10 ~06:40: **Owner granted all four pending authorizations** (WP-I host contact,
+  WP-I budget lift, root for RPD-VERIFY, retroactive catalogue pass) — recorded above, do
+  not re-ask. Ledger status published: **24.9 h used / 25.1 h remaining**, last night cost
+  4.4 h of plan time. WP-I is now the active workstream and is dispatchable once its
+  preregistration is finalized. See `LEDGER_STATUS_2026-08-10.md` and
+  `MORNING_SUMMARY_2026-08-10.md`.
 
 - 2026-08-10 ~01:15: **Audit 2 readiness package committed** (`e1944484`) — five
   auditor-facing artifacts; 14 items PRESENT, 9 PRODUCED-AT-FREEZE, 9 BLOCKED-UPSTREAM;
