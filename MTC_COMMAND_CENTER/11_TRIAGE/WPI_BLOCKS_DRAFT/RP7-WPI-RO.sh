@@ -183,6 +183,9 @@ wpi_alloc_read_diag() {
 
 # Run one evidence-producing child from EV_DIR, with a cleared environment,
 # fixed locale/PATH/TMPDIR, absolute argv[0], and separate create-once streams.
+# The bounding wrapper is inside the cleared environment, not outside it: env is
+# the first exec, so timeout - the process that decides whether a probe was
+# bounded - runs under the same cleared environment as the probe it bounds.
 wpi_capture() {
     local label="$1"; shift
     local start end rc=0
@@ -194,8 +197,8 @@ wpi_capture() {
     wpi_clock_ms; start="$WPI_LINE"
     (
         cd "$EV_DIR" || exit 125
-        exec "$WPI_TIMEOUT" --signal=TERM --kill-after=5s "${WPI_SWEEP_BUDGET_S}s" \
-            "$WPI_ENV" -i LC_ALL=C PATH=/usr/bin:/bin HOME=/nonexistent TMPDIR="$EV_DIR" "$@"
+        exec "$WPI_ENV" -i LC_ALL=C PATH=/usr/bin:/bin HOME=/nonexistent TMPDIR="$EV_DIR" \
+            "$WPI_TIMEOUT" --signal=TERM --kill-after=5s "${WPI_SWEEP_BUDGET_S}s" "$@"
     ) >"$WPI_CAP_OUT" 2>"$WPI_CAP_ERR" || rc=$?
     wpi_clock_ms; end="$WPI_LINE"
     WPI_CAP_RC="$rc"
@@ -239,10 +242,12 @@ wpi_lstat() {
     if [ "$WPI_CAP_RC" -ne 0 ]; then
         wpi_require_empty_file "$prefix" "path_not_evaluable $path_field rc=$WPI_CAP_RC" "$WPI_CAP_OUT"
         wpi_single_record "$prefix" "path_not_evaluable $path_field rc=$WPI_CAP_RC" "$WPI_CAP_ERR"
+        # Only the diagnostic forms the pinned absolute argv[0] can itself produce
+        # are accepted as proof of absence. A basename-prefixed diagnostic did not
+        # come from the invocation this block controls.
         case "$WPI_LINE" in
             "$WPI_STAT: cannot statx '$path': No such file or directory"|"$WPI_STAT: cannot stat '$path': No such file or directory"|\
-            "${WPI_STAT##*/}: cannot statx '$path': No such file or directory"|"${WPI_STAT##*/}: cannot stat '$path': No such file or directory"|\
-            "$WPI_STAT: cannot stat '$path': No such file or directory (os error 2)"|"${WPI_STAT##*/}: cannot stat '$path': No such file or directory (os error 2)")
+            "$WPI_STAT: cannot stat '$path': No such file or directory (os error 2)")
                 WPI_META_KIND=absent; WPI_META_MODE=""; WPI_META_OWNER=""; WPI_META_ID=""; WPI_META_SIZE=""; return 0 ;;
             *) wpi_stop "$prefix" "path_not_evaluable $path_field rc=$WPI_CAP_RC detail=unclassified_diagnostic diagnostic_file=$WPI_CAP_ERR" ;;
         esac
@@ -266,6 +271,7 @@ wpi_kind_token() {
         directory) WPI_LINE=directory ;;
         'regular file'|'regular empty file') WPI_LINE=regular ;;
         'symbolic link') WPI_LINE=symlink ;;
+        absent) WPI_LINE=absent ;;
         *) WPI_LINE=other ;;
     esac
 }
@@ -284,7 +290,10 @@ wpi_walk_components() {
     wpi_require_path_structure "$prefix" "$path" component_walk
     wpi_render_path "$path"; walk_path_field="$WPI_PATH_FIELD"
     wpi_lstat "$prefix" /
-    [ "$WPI_META_KIND" = directory ] || wpi_stop "$prefix" "path_not_evaluable path=/ detail=root_kind_$WPI_META_KIND"
+    if [ "$WPI_META_KIND" != directory ]; then
+        wpi_kind_token "$WPI_META_KIND"
+        wpi_stop "$prefix" "path_not_evaluable path=/ detail=root_kind_$WPI_LINE"
+    fi
     [ "$WPI_META_OWNER" = 0:0 ] || wpi_stop "$prefix" "path_not_evaluable path=/ owner_numeric=$WPI_META_OWNER expected=0:0"
     rest="${path#/}"
     IFS='/' read -r -a WPI_COMPONENTS <<< "$rest"
@@ -389,38 +398,88 @@ wpi_capture_mountinfo_snapshot() {
     WPI_LINE="$snapshot"
 }
 
+# normalised_path_projection_v2. Three record types, emitted in this fixed order:
+#   kind=point         one per preregistered point path, its EFFECTIVE covering
+#                      mount (longest mount point, last such record in mountinfo
+#                      order) plus the number of records sharing that mount point,
+#                      so a mount stacked on an existing mount point is visible
+#                      instead of silently collapsed;
+#   kind=subtree       every mountinfo record at or below a preregistered root, in
+#                      mountinfo order, so a bind or overlay mount anywhere inside a
+#                      trusted subtree changes the digest even though the root's own
+#                      covering mount is unchanged;
+#   kind=subtree_count one per root, the number of its subtree records.
+# v1 projected 18 point paths only and was therefore blind to both cases.
 wpi_build_mount_projection() {
-    local snapshot="$1" projection path mp best=-1 best_len=-1 i len
-    local -a paths=(
+    local snapshot="$1" projection path mp best=-1 best_len=-1 i len shared
+    local r rprefix subtree_records seen_roots=" "
+    local -a points=(
         "$WPI_STAT" "$WPI_READLINK" "$WPI_ENV" "$WPI_FIND" "$WPI_SHA256SUM"
         "$WPI_SYSTEMCTL" "$WPI_SS" "$WPI_CURL" "$WPI_TIMEOUT"
         "$WPI_RELEASE_ROOT" "$WPI_VENV_ROOT" "$WPI_UNIT_FRAGMENT"
         "$WPI_STATE_DIR" "$WPI_LOG_DIR" "$WPI_CONF_DIR"
+        "$WPI_RELEASE_ROOT/IBKR_PAPER_BRIDGE/requirements.lock"
+        "$WPI_RELEASE_ROOT/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py"
         /proc/self/mountinfo /proc/self/ns/net "/proc/$WPI_MAINPID/ns/net"
     )
+    local -a root_candidates=(
+        "$WPI_RELEASE_ROOT" "$WPI_VENV_ROOT" "$WPI_CONF_DIR" "$WPI_STATE_DIR" "$WPI_LOG_DIR"
+        "${WPI_STAT%/*}" "${WPI_READLINK%/*}" "${WPI_ENV%/*}" "${WPI_FIND%/*}"
+        "${WPI_SHA256SUM%/*}" "${WPI_SYSTEMCTL%/*}" "${WPI_SS%/*}" "${WPI_CURL%/*}"
+        "${WPI_TIMEOUT%/*}"
+    )
+    local -a roots=()
+    for r in "${root_candidates[@]}"; do
+        [ -n "$r" ] || r=/
+        case "$seen_roots" in *" $r "*) continue ;; esac
+        seen_roots="$seen_roots$r "
+        roots+=("$r")
+    done
     wpi_parse_mountinfo "$snapshot"
     WPI_PROBE_SEQ=$(( WPI_PROBE_SEQ + 1 ))
     projection="$EV_DIR/ro.$(printf '%04d' "$WPI_PROBE_SEQ").mount_projection.tsv"
     wpi_alloc_leaf "$projection"
-    for path in "${paths[@]}"; do
+    for path in "${points[@]}"; do
         best=-1; best_len=-1
         for ((i=0; i<${#WPI_MI_POINT[@]}; i++)); do
             mp="${WPI_MI_POINT[$i]}"
             if [ "$mp" = / ] || [ "$path" = "$mp" ] || [[ "$path" == "$mp/"* ]]; then
                 len=${#mp}
-                if [ "$len" -gt "$best_len" ]; then best="$i"; best_len="$len"; fi
+                # -ge, not -gt: a later record at the same mount point shadows the
+                # earlier one, so the last match is the effective mount.
+                if [ "$len" -ge "$best_len" ]; then best="$i"; best_len="$len"; fi
             fi
         done
         [ "$best" -ge 0 ] || wpi_stop RP7 "mount_projection_unbound path=$path"
-        printf 'path=%s\tdevice=%s\troot=%s\tmount_point=%s\tfstype=%s\tsource=%s\n' \
+        shared=0
+        for ((i=0; i<${#WPI_MI_POINT[@]}; i++)); do
+            [ "${WPI_MI_POINT[$i]}" = "${WPI_MI_POINT[$best]}" ] || continue
+            shared=$(( shared + 1 ))
+        done
+        printf 'kind=point\tpath=%s\tdevice=%s\troot=%s\tmount_point=%s\tfstype=%s\tsource=%s\tshared_mount_point_records=%s\n' \
             "$path" "${WPI_MI_DEVICE[$best]}" "${WPI_MI_ROOT[$best]}" \
-            "${WPI_MI_POINT[$best]}" "${WPI_MI_FSTYPE[$best]}" "${WPI_MI_SOURCE[$best]}" \
+            "${WPI_MI_POINT[$best]}" "${WPI_MI_FSTYPE[$best]}" "${WPI_MI_SOURCE[$best]}" "$shared" \
+            >>"$projection" || wpi_stop RP7 "mount_projection_write_failed path=$projection"
+    done
+    for r in "${roots[@]}"; do
+        subtree_records=0
+        rprefix="${r%/}/"
+        for ((i=0; i<${#WPI_MI_POINT[@]}; i++)); do
+            mp="${WPI_MI_POINT[$i]}"
+            [ "$mp" = "$r" ] || [[ "$mp" == "$rprefix"* ]] || continue
+            subtree_records=$(( subtree_records + 1 ))
+            printf 'kind=subtree\tsubtree_root=%s\tseq=%s\tdevice=%s\troot=%s\tmount_point=%s\tfstype=%s\tsource=%s\n' \
+                "$r" "$subtree_records" "${WPI_MI_DEVICE[$i]}" "${WPI_MI_ROOT[$i]}" \
+                "$mp" "${WPI_MI_FSTYPE[$i]}" "${WPI_MI_SOURCE[$i]}" \
+                >>"$projection" || wpi_stop RP7 "mount_projection_write_failed path=$projection"
+        done
+        printf 'kind=subtree_count\tsubtree_root=%s\trecords=%s\n' "$r" "$subtree_records" \
             >>"$projection" || wpi_stop RP7 "mount_projection_write_failed path=$projection"
     done
     wpi_sha_file RP7 mount_projection_unreadable "$projection"
     WPI_MOUNT_PROJECTION_DIGEST="$WPI_LINE"
-    printf 'RP7_mount_projection paths=%s raw_snapshot=%s projection=%s sha256=%s content=not_printed\n' \
-        "${#paths[@]}" "$snapshot" "$projection" "$WPI_MOUNT_PROJECTION_DIGEST"
+    printf 'RP7_mount_projection format=normalised_path_projection_v2 points=%s roots=%s mount_records=%s raw_snapshot=%s projection=%s sha256=%s content=not_printed\n' \
+        "${#points[@]}" "${#roots[@]}" "${#WPI_MI_POINT[@]}" "$snapshot" "$projection" "$WPI_MOUNT_PROJECTION_DIGEST"
 }
 
 wpi_sha_file() {
@@ -442,7 +501,7 @@ wpi_mount_guard_begin() {
     wpi_capture_mountinfo_snapshot; snapshot="$WPI_LINE"
     wpi_build_mount_projection "$snapshot"
     [ "$WPI_MOUNT_PROJECTION_DIGEST" = "$WPI_ATTESTED_MOUNTINFO_SHA256" ] || \
-        wpi_stop RP7 "mount_topology_mismatch observed=$WPI_MOUNT_PROJECTION_DIGEST attested=$WPI_ATTESTED_MOUNTINFO_SHA256 format=normalised_path_projection_v1"
+        wpi_stop RP7 "mount_topology_mismatch observed=$WPI_MOUNT_PROJECTION_DIGEST attested=$WPI_ATTESTED_MOUNTINFO_SHA256 format=normalised_path_projection_v2"
     WPI_MOUNT_BEFORE="$WPI_MOUNT_PROJECTION_DIGEST"
     WPI_MOUNT_GUARD_ACTIVE=yes
 }
@@ -454,17 +513,25 @@ wpi_mount_guard_end() {
     wpi_build_mount_projection "$snapshot"
     WPI_MOUNT_GUARD_ACTIVE=no
     [ "$WPI_MOUNT_PROJECTION_DIGEST" = "$before" ] || \
-        wpi_stop RP7 "mount_topology_changed before=$before after=$WPI_MOUNT_PROJECTION_DIGEST format=normalised_path_projection_v1"
+        wpi_stop RP7 "mount_topology_changed before=$before after=$WPI_MOUNT_PROJECTION_DIGEST format=normalised_path_projection_v2"
 }
 
 wpi_bind_tool() {
-    local name="$1" path="$2"
+    local name="$1" path="$2" attestation
     wpi_require_absolute "WPI_TOOL_PINS.$name" "$path"
     [ -x "$path" ] || wpi_stop RP7 "tool_not_evaluable tool=$name path=$path detail=not_executable"
     wpi_walk_components RP7 "$path" regular "" 0:0 path_absent path_metadata_mismatch stop "tool_not_evaluable tool=$name"
     case "$WPI_META_MODE" in ???) : ;; *) wpi_stop RP7 "tool_not_evaluable tool=$name path=$path detail=mode_grammar" ;; esac
     [ $(( 8#$WPI_META_MODE & 8#022 )) -eq 0 ] || wpi_stop RP7 "tool_not_evaluable tool=$name path=$path mode=$WPI_META_MODE detail=group_or_world_writable"
-    printf 'RP7_tool name=%s path=%s owner_numeric=0:0 mode=%s kind=regular resolution=pinned_absolute\n' "$name" "$path" "$WPI_META_MODE"
+    # Truthfulness of the binding claim: stat, env, sha256sum and timeout are the
+    # instruments the mount projection and this very binding are built from, so
+    # they are exercised before any RP7_tool line exists. They attest themselves;
+    # the remaining five are bound by already-attested instruments.
+    case "$name" in
+        stat|env|sha256sum|timeout) attestation=self ;;
+        *) attestation=bound_instrument ;;
+    esac
+    printf 'RP7_tool name=%s path=%s owner_numeric=0:0 mode=%s kind=regular resolution=pinned_absolute attestation=%s\n' "$name" "$path" "$WPI_META_MODE" "$attestation"
 }
 
 wpi_validate_inputs() {
@@ -561,7 +628,9 @@ wpi_assert_evidence_leaf_bound() {
 wpi_run_find() {
     local prefix="$1" label="$2" root="$3" elapsed_s; shift 3
     wpi_capture "$label" "$WPI_FIND" "$root" "$@"
-    elapsed_s=$(( (WPI_CAP_ELAPSED_MS + 999) / 1000 ))
+    # Whole seconds actually elapsed (truncated), so elapsed_s never disagrees
+    # with the elapsed_ms it renders. Enforcement below is on milliseconds.
+    elapsed_s=$(( WPI_CAP_ELAPSED_MS / 1000 ))
     if [ "$WPI_CAP_RC" -eq 124 ] || [ "$WPI_CAP_ELAPSED_MS" -gt $(( WPI_SWEEP_BUDGET_S * 1000 )) ]; then
         wpi_stop "$prefix" "sweep_budget_exceeded root=$root elapsed_s=$elapsed_s elapsed_ms=$WPI_CAP_ELAPSED_MS budget_s=$WPI_SWEEP_BUDGET_S"
     fi
@@ -577,7 +646,7 @@ wpi_assert_tree() {
     wpi_mount_guard_begin
     wpi_walk_components B3 "$root" directory 0555 0:0
     wpi_run_find B3 "${label}_writable" "$root" -perm /222 -print0
-    out="$WPI_CAP_OUT"; find_elapsed="$WPI_CAP_ELAPSED_MS"; find_elapsed_s=$(( (find_elapsed + 999) / 1000 ))
+    out="$WPI_CAP_OUT"; find_elapsed="$WPI_CAP_ELAPSED_MS"; find_elapsed_s=$(( find_elapsed / 1000 ))
     [ -r "$out" ] && [ -f "$out" ] || wpi_stop B3 "walk_incomplete root=$root detail=stdout_not_readable_regular"
     if [ -s "$out" ]; then
         wpi_alloc_read_diag writable_paths; diag="$WPI_READ_DIAG"
@@ -643,7 +712,8 @@ wpi_assert_interpreter() {
         'regular file'|'regular empty file')
             [ "$WPI_META_OWNER" = 0:0 ] || wpi_stop B1 "interpreter_object_unbound kind=regular owner_numeric=$WPI_META_OWNER expected=0:0"
             : ;;
-        *) wpi_stop B1 "interpreter_object_unbound kind=$WPI_META_KIND target=none" ;;
+        *) wpi_kind_token "$WPI_META_KIND"
+           wpi_stop B1 "interpreter_object_unbound kind=$WPI_LINE target=none" ;;
     esac
     [ -x "$py" ] || wpi_stop B1 "interpreter_not_executable path=$py mechanism=access_builtin_x"
     wpi_mount_guard_end

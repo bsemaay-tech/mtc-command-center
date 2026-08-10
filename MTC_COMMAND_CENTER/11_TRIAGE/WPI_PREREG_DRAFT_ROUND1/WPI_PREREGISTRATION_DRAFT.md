@@ -264,9 +264,42 @@ Before `RP6-P0.sh` is frozen, a root-authorised deploy channel outside the ssh l
 domain must attest the staging guest's user, mount, PID and network namespace identities
 and the canonical root-mount identity plus accepted mount topology for every
 preregistered host path. The mount-topology attestation is the SHA-256 of
-`normalised_path_projection_v1`: one ordered TSV record per preregistered path,
-`path=<p> device=<major:minor> root=<r> mount_point=<m> fstype=<f> source=<s>`;
-the run captures `/proc/self/mountinfo` once into a create-once evidence leaf,
+`normalised_path_projection_v2`, an ordered TSV (TAB-separated fields, LF records)
+carrying three record kinds in this fixed order:
+
+1. `kind=point / path=<p> / device=<major:minor> / root=<r> / mount_point=<m> /
+   fstype=<f> / source=<s> / shared_mount_point_records=<n>` - one per preregistered
+   point path, in the order: the nine tool pins, `WPI_RELEASE_ROOT`, `WPI_VENV_ROOT`,
+   `WPI_UNIT_FRAGMENT`, `WPI_STATE_DIR`, `WPI_LOG_DIR`, `WPI_CONF_DIR`,
+   `<release>/IBKR_PAPER_BRIDGE/requirements.lock`,
+   `<release>/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py`, `/proc/self/mountinfo`,
+   `/proc/self/ns/net`, `/proc/<MainPID>/ns/net` - twenty records. The projected mount
+   is the **effective** one: the longest matching mount point, and among equally long
+   matches the **last** record in `mountinfo` order, because a later record at the same
+   mount point shadows the earlier one. `shared_mount_point_records` is the number of
+   records sharing the winning mount point, so a stacked mount is visible in the
+   projection rather than silently collapsed.
+2. `kind=subtree / subtree_root=<R> / seq=<i> / device=… / root=… / mount_point=… /
+   fstype=… / source=…` - every `mountinfo` record whose mount point is at or below a
+   preregistered root, in `mountinfo` order, for each root in the fixed order
+   `WPI_RELEASE_ROOT`, `WPI_VENV_ROOT`, `WPI_CONF_DIR`, `WPI_STATE_DIR`, `WPI_LOG_DIR`,
+   then each tool's directory, de-duplicated on first appearance (six roots under the
+   pinned `/usr/bin/<tool>` set).
+3. `kind=subtree_count / subtree_root=<R> / records=<n>` - one per root, in the same
+   root order.
+
+The subtree closure is load-bearing, not decoration: the objects the RO stage digests,
+executes and enumerates - `requirements.lock`, `verify_lock.py`, `<venv>/bin/python`,
+`<venv>/lib/python3.12/site-packages` and every `*.dist-info` member - lie *below* the
+preregistered roots, where a point-only projection cannot observe a bind or overlay
+mount because the roots' own covering mounts are unchanged. The superseded
+`normalised_path_projection_v1` projected eighteen point paths only, resolved ties to
+the *first* matching record, and was therefore blind to both a decoy mount inside a
+trusted subtree and a mount stacked on an existing mount point - the exact
+substitutions this binding exists to prevent. The deploy channel must attest the
+complete v2 record set; a per-path covering-mount list is not sufficient.
+
+The run captures `/proc/self/mountinfo` once into a create-once evidence leaf,
 parses and hashes that same leaf, derives exactly this projection, and compares
 its digest with the literal embedded at freeze. The exact attested values and their producing
 record are embedded in the frozen P0 block; they are never learned or re-pinned from
@@ -459,13 +492,13 @@ move to RPD-VERIFY; they do not accuse the host from an empty or error result.
 | 14 | B3s write bits | only after rows 12-13 prove a complete rc-0 sweep may the captured stdout be interpreted; it contains no writable pathname in either tree | `B3_FAIL reason=writable_path_inside_immutable_tree path=<p> count=<n>` is admissible only from stdout of a sweep already proven complete; an unsafe-to-render but valid absolute pathname uses `path=[unrenderable] path_sha256=<h> count=<n>`. Partial stdout is discarded as result evidence and can produce only the row-12/13 STOP |
 | 15 | B3s metadata dirs | component-wise `lstat` of `/etc/mtc-bridge` proves a non-symlink directory at numeric `0750 0:0`; `WPI_STATE_DIR` and `WPI_LOG_DIR` prove non-symlink directories at numeric `0750 999:988`, the preregistered numeric allocation of the named `mtc-bridge` account (names diagnostic only) | `B3_FAIL reason=path_absent path=<p>` on positively established ENOENT; `B3_FAIL reason=path_metadata_mismatch path=<p> kind=<k> mode=<m> owner_numeric=<u:g> expected=<kind,mode,u:g>` after a successful `lstat`; `B3_STOP reason=path_not_evaluable path=<p> rc=<n> detail=<d>` on invocation/access/traversal/ambiguous error |
 | 16 | B3s scope | the block contains no path with prefix `/etc/mtc-bridge/`, `<WPI_STATE_DIR>/` or `<WPI_LOG_DIR>/` | not a run-time predicate: a Stage-1 path-scope proof failure (section 10.2) blocks the freeze, so this can never divergence at run time |
-| 17 | B1a lock bytes | after path-object binding, `sha256sum` of the installed non-symlink regular `requirements.lock` equals `a1881296...bf66e`, size 117762 | `B1a_FAIL reason=installed_lock_absent path=<p>` on positively established ENOENT; `B1a_FAIL reason=installed_lock_object_unexpected kind=<k>` for a symlink/non-regular leaf; `B1a_FAIL reason=installed_lock_digest_mismatch observed=<h> expected=a1881296...bf66e` only after `sha256sum` exited 0 and emitted a syntactically valid 64-hex digest plus the 117762-byte count - disposition **investigate read-only**: weigh a wrong expected value *and* genuine drift, re-check blob -> LF-pinned export -> manifest-verified install before escalating a STOP or dismissing one; `B1a_STOP reason=installed_lock_unreadable rc=<n> path=<p>` for invocation, permission, LSM, ambiguous-ENOENT or parent-traversal error |
+| 17 | B1a lock bytes | after path-object binding, `sha256sum` of the installed non-symlink regular `requirements.lock` equals `a1881296...bf66e`, size 117762 | `B1a_FAIL reason=installed_lock_absent path=<p>` on positively established ENOENT; `B1a_FAIL reason=installed_lock_object_unexpected kind=<k>` for a symlink/non-regular leaf; `B1a_FAIL reason=installed_lock_digest_mismatch observed_bytes=<n> expected_bytes=117762` when the successfully `lstat`-ed size diverges, which is adjudicated before the digest; `B1a_FAIL reason=installed_lock_digest_mismatch observed=<h> expected=a1881296...bf66e` only after `sha256sum` exited 0 and emitted a syntactically valid 64-hex digest plus the 117762-byte count - disposition **investigate read-only**: weigh a wrong expected value *and* genuine drift, re-check blob -> LF-pinned export -> manifest-verified install before escalating a STOP or dismissing one; `B1a_STOP reason=installed_lock_unreadable rc=<n> path=<p>` for invocation, permission, LSM, ambiguous-ENOENT or parent-traversal error |
 | 18 | B1 interpreter | after path-object binding, `<venv>/bin/python` is a non-symlink regular file; its execute is a separately bounded post-binding observation, `-V` demonstrably runs, and reports a `3.12.` version | `B1_FAIL reason=interpreter_absent path=<venv>/bin/python` on positively established ENOENT; `B1_STOP reason=interpreter_not_executable path=<venv>/bin/python` on access/exec/EACCES/126 denial (never a version FAIL); every observed symlink or other object is `B1_STOP reason=interpreter_object_unbound kind=<k> target=<sanitised-t>` routed to Lead adjudication; `B1_FAIL reason=interpreter_version observed=unpreregistered_version expected=3.12.*` is the accepted content-suppressed rendering after the regular file demonstrably ran |
-| 19 | B1 lock parity | `verify_lock.py --check-installed` exits 0 and emits its structurally parsed PASS result with `packages=56`; **preflight (Codex F1): after path-object binding and a complete metadata enumeration, every `*.dist-info` directory and its required `METADATA` and `RECORD` under `<WPI_VENV_ROOT>/lib/python3.12/site-packages` is proven present and open+readable by `gatea` before parity runs** | `B1_FAIL reason=distribution_metadata_absent path=<p>` when complete enumeration of a readable bound parent positively establishes a required member is missing; unsafe-to-render valid paths use `path=[unrenderable] path_sha256=<h>`; enumeration budget/traversal failures use the row-12/13 tokens under prefix `B1`; `B1_FAIL reason=lock_installed_parity observed=<detail>` ONLY when the verifier ran clean and structurally distinguished a genuine named missing/extra distribution, never on a generic nonzero rc or substring; `B1_STOP reason=metadata_unreadable path=<p>` for open/parse/EACCES/LSM/traversal error; `B1_STOP reason=verifier_not_evaluable rc=<n> detail=<d>` for any other nonzero verifier rc that did not positively distinguish a mismatch. Row 18's STOP and this row's completeness/readability precondition each disqualify parity entirely |
+| 19 | B1 lock parity | `verify_lock.py --check-installed` exits 0 and emits its structurally parsed PASS result with `packages=56`; **preflight (Codex F1): after path-object binding and a complete metadata enumeration, every `*.dist-info` directory and its required `METADATA` and `RECORD` under `<WPI_VENV_ROOT>/lib/python3.12/site-packages` is proven present and open+readable by `gatea` before parity runs** | `B1_FAIL reason=distribution_metadata_absent path=<p>` when complete enumeration of a readable bound parent positively establishes a required member is missing; unsafe-to-render valid paths use `path=[unrenderable] path_sha256=<h>`; the component walk of `site-packages` and of each `*.dist-info` directory carries the default walk outcome, so a positively absent component is `B1_FAIL reason=path_absent path=<p>` and a deviant one is `B1_FAIL reason=path_metadata_mismatch path=<p> kind=<k> mode=<m> owner_numeric=<u:g> expected=<kind,mode,u:g>`; enumeration budget/traversal failures use the row-12/13 tokens under prefix `B1`; `B1_FAIL reason=lock_installed_parity observed=<detail>` ONLY when the verifier ran clean and structurally distinguished a genuine named missing/extra distribution, never on a generic nonzero rc or substring; `B1_STOP reason=metadata_unreadable path=<p>` for open/parse/EACCES/LSM/traversal error; `B1_STOP reason=verifier_not_evaluable rc=<n> detail=<d>` for any other nonzero verifier rc that did not positively distinguish a mismatch. Row 18's STOP and this row's completeness/readability precondition each disqualify parity entirely |
 | 19a | B1 verifier identity | before row 19 parity executes, the non-symlink regular `verify_lock.py` is component/mount-bound, size 3735, and SHA-256 `d951e0ee...a451e5`; execution is separately bounded after that pre-exec window closes | `B1_FAIL reason=verifier_absent path=<p>` on positive ENOENT; `B1_FAIL reason=verifier_object_unexpected path=<p> kind=<k>`; `B1_FAIL reason=verifier_digest_mismatch observed=<h> expected=<h>` or the corresponding `observed_bytes=<n> expected_bytes=3735`; `B1_STOP reason=verifier_unreadable path=<p> rc=<n> detail=<d>` when identity cannot be evaluated |
 | 20 | B5 endpoint | only after the row-22 service-netns binding precondition, `GET /api/status` completes and returns HTTP 200 | `B5_STOP reason=status_endpoint_not_evaluable rc=<n> detail=<d>` for invocation, transport, timeout, incomplete/malformed response or unbound namespace; a complete valid 401/403 is `B5_STOP reason=status_endpoint_access_denied code=<c>`; any other complete valid non-200 response is an observed deviant state and becomes `B5_FAIL reason=status_endpoint_unexpected_http code=<c>` |
 | 21 | B5 flags | only after row 20, the complete response body is strict JSON (duplicate keys and NaN/Infinity/-Infinity rejected), has the required top-level shape and exact typed fields, and reports `state` DISARMED, `state_version` 1, `mode` `credential_free_disarmed`, `network` disabled, `exchange_conn` disabled, `exchange_enabled` false, `credential_lookup` disabled, `arm_enabled` false | `B5_STOP reason=status_body_unreadable_or_unparseable detail=<d>` for incomplete/read/strict-JSON/duplicate-key/top-level-shape failure; absent preregistered key -> `B5_STOP reason=schema_unexpected field=<f>`; present key with wrong type -> `B5_FAIL reason=flag_mismatch field=<f> observed_type=<t> expected_type=<t>`; wrong typed value -> `B5_FAIL reason=flag_mismatch field=<f> observed_sha256=<h> expected=preregistered_typed_value`, the accepted content-suppressed rendering - **named risk R4**: these key names come from matrix prose, not from an observed response body |
-| 22 | B5/B6 service network-namespace binding and B6 listener set | before either `curl` (rows 20-21) or `ss` (rows 22-23) output is interpreted, `readlink /proc/self/ns/net` equals `readlink /proc/<MainPID>/ns/net` (MainPID from row 4); then the unfiltered complete `ss -H -ltn` output is captured whole as a create-once evidence leaf, every socket row is structurally parsed, and only then the block scopes to port 8790 and requires exactly one listener at `127.0.0.1` | `B6_STOP reason=netns_mismatch caller=<i> service=<i>` if identities differ; `B6_STOP reason=service_netns_unreadable path=/proc/<pid>/ns/net rc=<n>` if the identity cannot be read, routing both B5 and the listener-set half to RPD-VERIFY; `B6_STOP reason=listener_inventory_unreadable_or_unparseable rc=<n> detail=<d>` on invocation/read/timeout/incomplete/table-grammar error; `B6_FAIL reason=listener_set_unexpected observed_count=<n> expected=1x127.0.0.1:8790` is the accepted content-suppressed rendering only after binding and a complete structural parse |
+| 22 | B5/B6 service network-namespace binding and B6 listener set | before either `curl` (rows 20-21) or `ss` (rows 22-23) output is interpreted, `readlink /proc/self/ns/net` equals `readlink /proc/<MainPID>/ns/net` (MainPID from row 4); then the unfiltered complete `ss -H -ltn` output is captured whole as a create-once evidence leaf, every socket row is structurally parsed, and only then the block scopes to port 8790 and requires exactly one listener at `127.0.0.1` | `B6_STOP reason=netns_mismatch caller=<i> service=<i>` if identities differ; `B6_STOP reason=service_netns_unreadable path=/proc/<pid>/ns/net rc=<n>` if the identity cannot be read, routing both B5 and the listener-set half to RPD-VERIFY; `B6_STOP reason=listener_inventory_unreadable_or_unparseable rc=<n> detail=<d>` on invocation/read/timeout/incomplete/table-grammar error; `B6_FAIL reason=listener_set_unexpected observed_count=<n> expected=1x127.0.0.1:8790` is the accepted content-suppressed rendering only after binding and a complete structural parse; a structurally parsed port-8790 row whose local address is neither `127.0.0.1` nor one of row 23's wildcard/VM addresses is `B6_FAIL reason=listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790` - the address itself is suppressed, so this is the accepted rendering rather than an `addr=<a>` echo |
 | 23 | B6 no wildcard | no structurally parsed port-8790 row has local address `0.0.0.0`, `::` or the VM IP, subject to row 22 | `B6_FAIL reason=nonloopback_listener addr=<a>` admissible only after row 22's namespace binding and complete table parse held; substring matching of `ss` text is not admissible |
 | 24 | B6 external closed | a bounded operator-side TCP probe completes with the classified result `connection_refused` or `timeout` for `172.24.55.233:8790` | `B6_FAIL reason=host_reachable_8790 outcome=connected` only after a completed connection; `B6_STOP reason=external_probe_not_evaluable outcome=<o> rc=<n> detail=<d>` for invocation, local socket, routing, cancellation, clock or unclassified errors |
 
@@ -476,13 +509,39 @@ proves the expected directory/regular-file kind, rejects `.`/`..`, alternate spe
 and every unpreregistered live or dangling symlink, and compares numeric ownership.
 No venv-interpreter symlink is accepted: an observed symlink STOPs for Lead adjudication.
 For each mount observation, `/proc/self/mountinfo` is copied once into a create-once
-evidence leaf; that same leaf is structurally parsed and hashed. The ordered per-path
-covering-mount projection (`device`, `root`, `mount point`, `fstype`, `source`) is hashed
-and compared with the literal deploy-channel-attested `normalised_path_projection_v1`
-digest so an overlay or bind mount cannot substitute a decoy object. A missing leaf
-under a successfully searched, bound parent is evaluable FAIL; inability to inspect a
-component or mount record is STOP. Parent, mount and leaf checks are one atomic
-observation, not evidence gathered in different stages.
+evidence leaf; that same leaf is structurally parsed and hashed. The ordered
+`normalised_path_projection_v2` record set defined in section 4 - effective covering
+mount per point path, subtree closure below every preregistered root, and per-root
+counts - is hashed and compared with the literal deploy-channel-attested digest, so an
+overlay or bind mount cannot substitute a decoy object anywhere inside a trusted
+subtree. A missing leaf under a successfully searched, bound parent is evaluable FAIL;
+inability to inspect a component or mount record is STOP. Parent, mount and leaf checks
+are one atomic observation, not evidence gathered in different stages.
+
+**Preregistered `binding=` vocabulary.** The binding tokens are evidence, so their set
+is fixed here and no other spelling is admissible: `binding=component_and_mount` (leaf
+and every component bound inside an open mount window - metadata directories and
+regular-file digests), `binding=component_and_mount_window_closed` (the same, with the
+window proven closed before the result line - immutable-tree rows),
+`binding=window_open_pending_close` (a per-member result emitted while the enclosing
+window is still open, closed later by the section's own guard - metadata members),
+`binding=equal` (the two namespace identities compared equal),
+`preexec_binding=component_and_mount_window_closed` and
+`verifier_preexec_binding=component_mount_digest_window_closed` (the pre-exec object
+binding of an object that is then executed, the second including its digest), and
+`exec_binding=separate_bounded_exec` (the execution itself, a separately bounded
+observation after that window closed).
+
+**Instrument-attestation disclosure (round-3, auditor finding 3).** Each `RP7_tool`
+binding line carries `resolution=pinned_absolute attestation=<a>`. `attestation=self`
+is emitted for `stat`, `env`, `sha256sum` and `timeout`: the mount projection and the
+tool binding itself are *built with* those four, so they are exercised before any tool
+binding line exists and they attest their own integrity. `attestation=bound_instrument`
+is emitted for `readlink`, `find`, `systemctl`, `ss` and `curl`, which are bound by
+already-attested instruments. This is a disclosed property of the design, not a defect
+to be discovered at adjudication: a digest comparison needs a digest tool, and the
+pinned absolute path plus the non-group/world-writable mode check are what stand behind
+the first four.
 
 **Binding ordering rule.** Row 19 is admissible **only** after row 13 has held for
 the venv tree, row 18's interpreter has demonstrably run, and the row-19
@@ -550,9 +609,12 @@ is evidence of the attempted probe, never evidence of host drift.
 **Probe execution-environment rule (catalogue Pattern 4).** Evidence-producing
 children run from a fixed trusted working directory with a cleared environment, fixed
 `LC_ALL=C`, a minimal pinned PATH or absolute helper paths, and a run-owned TMPDIR that
-cannot name a protected host directory. Each helper is bound by non-following kind,
-numeric ownership and non-group/world-writable mode before execution; any accepted
-symlink has an explicitly preregistered target chain. Python runs isolated with Python
+cannot name a protected host directory. The bounding wrapper is **inside** the cleared
+environment, not outside it: the cleared-environment exec comes first and the pinned
+`timeout` is its argument, so the process that decides whether a probe was bounded runs
+under the same cleared environment as the probe it bounds. Each helper is bound by
+non-following kind, numeric ownership and non-group/world-writable mode before
+execution; any accepted symlink has an explicitly preregistered target chain. Python runs isolated with Python
 environment variables removed. This rule binds the unprivileged blocks for evidence
 integrity and binds RPD-VERIFY additionally because its children execute with root
 authority. An inherited PATH, PYTHONPATH, cwd or TMPDIR can never select code or a
