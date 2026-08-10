@@ -328,10 +328,21 @@ P0_RO_TOOLS="$P0_RP7_RO_TOOLS $P0_P0_ONLY_TOOLS"
 printf 'P0_SECTION header candidate=%s block=RP6-P0 stage=p0\n' "$P0_CAND"
 printf 'P0_SECTION prerequisites\n'
 
-command -v rp0_require_safe_component >/dev/null 2>&1 \
-    || p0_stop "rp0_lib_not_sourced predicate=rp0_require_safe_component"
-command -v rp0_allocate_evidence_dir >/dev/null 2>&1 \
-    || p0_stop "rp0_lib_not_sourced predicate=rp0_allocate_evidence_dir"
+# F2 (Codex final-audit round-5): `command -v` only proves a name resolves; it
+# accepts a PATH executable (or alias) of the same name, and the block then
+# CALLS the first symbol below. That made the RP0-LIB "sourced" claim
+# satisfiable by an unrelated PATH file - a pre-inventory child-execution channel
+# before P0 has established any tool premise. The accepted RP0-LIB symbols are
+# sourced SHELL FUNCTIONS, so assert command TYPE with a builtin: an exact
+# `type -t ... = function` check for both symbols before either is called. A
+# PATH-shadow file or alias of either name no longer satisfies the source
+# precondition and is never executed; a genuinely sourced function still resolves
+# to `function`. (`command -v` is still correct inside p0_resolve_tool below,
+# where the intent IS to resolve a PATH tool to an absolute path.)
+[ "$(type -t rp0_require_safe_component 2>/dev/null)" = function ] \
+    || p0_stop "rp0_lib_not_sourced predicate=rp0_require_safe_component detail=not_a_shell_function"
+[ "$(type -t rp0_allocate_evidence_dir 2>/dev/null)" = function ] \
+    || p0_stop "rp0_lib_not_sourced predicate=rp0_allocate_evidence_dir detail=not_a_shell_function"
 
 [ -n "${RUNID:-}" ]       || p0_stop "rp0_bootstrap_not_run detail=RUNID_unset"
 [ -n "${EV_STAGE_ID:-}" ] || p0_stop "rp0_bootstrap_not_run detail=EV_STAGE_ID_unset"
@@ -391,11 +402,30 @@ p0_require_uint P0_STATE_GID "${P0_STATE_GID:-}" 1
 [ -n "${P0_FORBIDDEN_GIDS:-}" ] \
     || p0_stop "input_missing name=P0_FORBIDDEN_GIDS detail=preregistered_numeric_gid_list_never_derived_here"
 : "${P0_FORBIDDEN_GIDS:?preregistered numeric forbidden-gid list is required}"
+# F3 (Codex final-audit round-5): the raw value was split by an UNQUOTED
+# `for ... in $P0_FORBIDDEN_GIDS`, so pathname expansion ran BEFORE
+# p0_require_uint saw each item. With P0_FORBIDDEN_GIDS='*' and a cwd holding
+# entries named 0 and 988, the wildcard expanded to those two numeric names and
+# the malformed ledger was admitted (count=2); the same input in an empty cwd
+# STOPped, so cwd contents rewrote the ledger. Two independent defenses: (1)
+# validate the COMPLETE raw value against an exact digits-plus-separator grammar
+# BEFORE any expansion, so a wildcard or any non-digit/non-space byte is a STOP
+# regardless of cwd; (2) split with pathname expansion disabled (`set -f`) so no
+# surviving metacharacter can ever reach the per-item check. `set -f`/`set +f`
+# toggles only the glob flag and leaves the block's `-Eeuo pipefail` intact; on
+# the in-loop STOP path p0_stop exits the shell, so re-enabling is unreachable
+# and irrelevant there.
+case "$P0_FORBIDDEN_GIDS" in
+    *[!0-9[:space:]]*)
+        p0_stop "input_charset name=P0_FORBIDDEN_GIDS value=[$P0_FORBIDDEN_GIDS] expected=decimal_digits_and_separators_only" ;;
+esac
 P0_FORBIDDEN_GID_COUNT=0
+set -f
 for p0_g in $P0_FORBIDDEN_GIDS; do
     p0_require_uint P0_FORBIDDEN_GIDS_ENTRY "$p0_g" 0
     P0_FORBIDDEN_GID_COUNT=$(( P0_FORBIDDEN_GID_COUNT + 1 ))
 done
+set +f
 [ "$P0_FORBIDDEN_GID_COUNT" -ge 1 ] \
     || p0_stop "input_range name=P0_FORBIDDEN_GIDS value=[$P0_FORBIDDEN_GIDS] expected=at_least_one_numeric_gid"
 
@@ -478,6 +508,20 @@ for p0_pin in $P0_TOOL_PINS; do
     P0_PIN_SEEN="$P0_PIN_SEEN$p0_pin_name "
     P0_PIN_COUNT=$(( P0_PIN_COUNT + 1 ))
 done
+
+# F1 (Codex final-audit round-5): the python3 freeze gate is load-bearing and
+# its polarity was backwards. Supplying a python3 pin engages the
+# P0_FIXED_TRUSTED_PYTHON checks inside the loop; OMITTING it left
+# P0_TRUSTED_PYTHON_BOUND=no and skipped those checks entirely, so the sixth
+# <PIN-AT-FREEZE> gate could be defeated by omission (a PIN_NONE or
+# PIN_NO_PYTHON prelude reached the tool inventory at rc 0). After parsing every
+# pin, REQUIRE that an explicit python3 entry was bound to
+# P0_FIXED_TRUSTED_PYTHON before any host observation below. The detail field
+# distinguishes omission (this post-loop gate) from a still-unfilled deploy-
+# channel placeholder (the in-loop gate above): both are rc 3 under the same
+# freeze-gate reason, so every missing-python3 prelude now STOPs the same way.
+[ "$P0_TRUSTED_PYTHON_BOUND" = yes ] \
+    || p0_stop "input_pin_freeze_unfilled tool=python3 name=P0_FIXED_TRUSTED_PYTHON detail=trusted_python_pin_omitted_freeze_gate_load_bearing"
 
 # Row 8 deploy-channel attestation inputs. The prelude supplies each value and
 # the frozen block carries an identical literal. Missing input, an unfilled
@@ -839,11 +883,18 @@ p0_record_identity() {
     # The preregistered login comparison is made after the unique `gatea`
     # record is available, so every `identity_unexpected` line has one grammar.
     # Whole-word match on the space-padded list, so gid 0 does not match gid 10.
+    # F3 (Codex final-audit round-5): P0_FORBIDDEN_GIDS is already grammar-bound
+    # to digits-plus-separators at the input gate above, so a wildcard cannot
+    # reach here. Pathname expansion is additionally disabled (`set -f`) as
+    # defense in depth so this intersection loop is non-globbing by construction
+    # regardless of cwd; the whole-word `case` match is unaffected by glob mode.
+    set -f
     for f in $P0_FORBIDDEN_GIDS; do
         case " $gids " in
             *" $f "*) p0_stop "capability_wider_than_ledger gid=$f caller_gids=[$gids]" ;;
         esac
     done
+    set +f
     printf 'P0_identity_admitted uid=%s forbidden_gids=[%s] intersection=empty\n' \
         "$uid" "$P0_FORBIDDEN_GIDS"
 }

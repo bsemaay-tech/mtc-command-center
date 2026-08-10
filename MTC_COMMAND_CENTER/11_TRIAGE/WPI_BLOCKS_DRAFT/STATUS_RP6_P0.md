@@ -1,4 +1,89 @@
-# RP6-P0 — status: ROUND-4-REPAIRED-PENDING-T0-REAUDIT
+# RP6-P0 — status: ROUND-5-REPAIRED-PENDING-T0-REAUDIT
+
+Updated 2026-08-10 by the round-5 implementer (GLM-5.2, fresh session) for the
+three Codex final-audit findings (`RP6_CODEX_FINAL_AUDIT_2026-08-10.md` F1–F3).
+Audit tier: **T0** (host/execution-domain preflight). GLM-5.2 implemented only;
+it did not audit this block, so implementer/auditor separation holds. The
+round-4 Codex audit closed the four round-4 findings, but its independent
+whole-block sweep returned a non-accepting T0 verdict with three NEW required
+repairs (F1 HIGH freeze-gate polarity; F2/F3 MEDIUM). Round 5 closes those three.
+**Cap note:** the final-audit report itself states it "authorizes no additional
+repair/audit round," and T0 is capped at 3; this round is therefore presented
+for Lead adjudication of whether the owner amendment covering round 4 extends to
+this round. Acceptance still requires fresh independent `claude-opus-5` xhigh
+and `gpt-5.6-sol` xhigh verdicts. The block remains a draft: not frozen,
+accepted, dispatchable, or authorised for host execution.
+
+**QA execution was PENDING at implementer hand-off; the Lead has now EXECUTED it.**
+The GLM-5.2 session gates `bash -n` and script execution (same blocker the C13
+GLM-5.2 round recorded), so it recorded the evidence as PENDING rather than
+fabricate output — the correct behaviour under D026. The Lead ran all of it in an
+unhindered Git Bash on 2026-08-10 against the round-5 bytes `490e3e4e…` / 89029 B:
+
+```text
+bash -n RP6-P0.sh                      -> rc 0, BASH_N=PASS
+CR bytes (tr -cd '\r' | wc -c)         -> 0
+R5-F1 python3 freeze-gate polarity     -> R5_F1_QA_SUMMARY cases=6 pass=6 fail=0 result=PASS
+R5-F2 RP0 symbol type assertion        -> R5_F2_QA_SUMMARY cases=4 pass=4 fail=0 result=PASS
+R5-F3 forbidden-GID grammar + set -f   -> R5_F3_QA_SUMMARY cases=5 pass=5 fail=0 result=PASS
+five prior mandated fences, all rc 0:
+  952,1035    backstop            cases=4  PASS
+  1678,2068   full-block D026     RP6_FULLBLOCK_D026_SUMMARY … result=PASS
+  2286,2319   freeze-literal gate PASS
+  2545,2989   R4 D026             PASS
+  3353,3518   C13 R4b             C13_R4B_ARM_QA_SUMMARY cases=27 result=PASS
+```
+
+No regression: every `ASSERT_UNMET`/`FAIL` token in those transcripts sits on a
+pre-fix or mutant variant (the intended RED polarity) — none on a repaired or
+current variant, verified by filtering the transcripts. QA is therefore real
+executed evidence, not design intent, and the block is ready for T0 re-audit
+dispatch.
+
+Round-5 disposition (Codex final-audit findings F1–F3) — full record in
+`RP6_REPAIR_R5_REPORT.md`; harnesses + expected polarity in `SELF_QA_RP6.md` §R5:
+
+- **F1 (HIGH) — REPAIRED IN THE BLOCK.** After the pin-parse loop, REQUIRE
+  `P0_TRUSTED_PYTHON_BOUND=yes`, so omitting the `python3` pin is a named rc-3
+  STOP (`input_pin_freeze_unfilled tool=python3 …
+  detail=trusted_python_pin_omitted_freeze_gate_load_bearing`) rather than a
+  bypass. Freeze-gate polarity is now correct: omission STOPs, presence (with the
+  deploy-channel value filled) passes. The in-loop placeholder gate
+  (`detail=deploy_channel_value_never_derived_here`) is preserved unchanged.
+- **F2 (MEDIUM) — REPAIRED IN THE BLOCK.** The two RP0-symbol prerequisite
+  checks now use an exact builtin `type -t … = function` assertion instead of
+  `command -v`, so a PATH executable (or alias) of the same name is rejected at
+  rc 3 (`… detail=not_a_shell_function`) and — critically — is never called,
+  closing the pre-inventory child-execution channel. Genuine sourced functions
+  still pass. (`command -v` remains correct inside `p0_resolve_tool`, where the
+  intent is to resolve a PATH tool to an absolute path.)
+- **F3 (MEDIUM) — REPAIRED IN THE BLOCK.** `P0_FORBIDDEN_GIDS` is now
+  grammar-gated against `*[!0-9[:space:]]*` BEFORE any expansion, and both split
+  loops (the input gate and the capability intersection loop) run with pathname
+  expansion disabled (`set -f`). A wildcard or any non-digit/non-space byte is a
+  STOP (`input_charset … expected=decimal_digits_and_separators_only`)
+  regardless of cwd; valid lists are still admitted.
+
+Current executable identity (round-5 bytes; QA EXECUTED by the Lead, see above):
+
+```text
+sha256=490e3e4edfec811dee3dc90c6693e8ebeb865eb946a431ff017de58e66f0ce5f
+bytes=89029
+bash_n=PASS (Lead-executed 2026-08-10, rc 0)
+line_endings=LF_only
+bom=none
+superseded_round4_sha256=e93d07adcc9ae03ad15e0b0f10c76be54517251ab461c8fe789d160072d253c6
+superseded_round4_bytes=85540
+frozen_ro_basis=RP7-WPI-RO.sh@d6a976aa sha256=23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad bytes=70941
+```
+
+The freeze gate is unchanged in COUNT (still six `<PIN-AT-FREEZE>` literals); F1
+makes the sixth one (`P0_FIXED_TRUSTED_PYTHON`) load-bearing by construction
+instead of by operator choice.
+
+---
+
+# Prior status history — round 4 and earlier (REPAIRED-PENDING-AUDIT, do not treat as accepted)
 
 Updated 2026-08-10 by the round-4 implementer (`claude-opus-5` xhigh, fresh
 session). Audit tier: **T0** (host/execution-domain preflight). The second-flagship
@@ -13,7 +98,7 @@ independent `claude-opus-5` xhigh and `gpt-5.6-sol` xhigh verdicts. The block
 remains a draft: not frozen, accepted, dispatchable, or authorised for host
 execution.
 
-Current executable identity:
+Round-4 executable identity (superseded by the round-5 bytes above):
 
 ```text
 sha256=e93d07adcc9ae03ad15e0b0f10c76be54517251ab461c8fe789d160072d253c6

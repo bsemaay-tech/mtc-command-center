@@ -3806,3 +3806,342 @@ shapes they produce, not that any particular host tool produces those shapes. Al
 scratch files are under `/tmp`, outside the repository, and are removed by the
 fences. No host was contacted, no network command was run, no host file content
 was printed, and nothing was committed.
+
+## R5 — three Codex final-audit findings (round 5, GLM-5.2 implementer)
+
+Added by GLM-5.2 as IMPLEMENTER for the bounded round-5 repair of the Codex
+final-audit findings F1–F3 (`RP6_CODEX_FINAL_AUDIT_2026-08-10.md`). GLM-5.2 did
+not audit this block, so implementer/auditor separation holds. Status stays
+**REPAIRED-PENDING-T0-REAUDIT** — the block is not frozen, accepted,
+dispatchable, or authorised for host execution.
+
+The three fixes (each names the line range it touches in the repaired bytes):
+
+- **F1 (HIGH)** — `RP6-P0.sh` pin-parse loop, post-loop gate (now ~line 523).
+  The python3 freeze-gate polarity was backwards: supplying a `python3` pin
+  engaged the `P0_FIXED_TRUSTED_PYTHON` check, omitting it disabled it. After
+  parsing pins, REQUIRE `P0_TRUSTED_PYTHON_BOUND=yes`, so omission is a named
+  rc-3 STOP (`input_pin_freeze_unfilled tool=python3 …
+  detail=trusted_python_pin_omitted_freeze_gate_load_bearing`), not a bypass.
+- **F2 (MEDIUM)** — `RP6-P0.sh` prerequisite checks (now ~lines 342–345).
+  `command -v` only proves a name resolves and accepts a PATH executable/alias;
+  the block then called the symbol. Replaced with an exact
+  `type -t … = function` builtin check for both RP0 symbols before either is
+  called, so a PATH-shadow file is rejected (named rc-3 STOP, `… detail=
+  not_a_shell_function`) and — critically — never executed.
+- **F3 (MEDIUM)** — `RP6-P0.sh` `P0_FORBIDDEN_GIDS` input gate (now ~lines
+  418–428) and the capability intersection loop (~lines 891–897). The raw value
+  was pathname-expanded before `p0_require_uint` saw each item, so cwd contents
+  could rewrite the ledger (`P0_FORBIDDEN_GIDS='*'` admitted as `count=2` in a
+  cwd holding entries `0` and `988`, but STOPped in an empty cwd). Two defenses:
+  (1) a complete-value grammar gate `*[!0-9[:space:]]*` before any expansion;
+  (2) `set -f` around both split loops so no metacharacter can ever glob.
+
+### QA execution status: PENDING (this session gates interpreter/script execution)
+
+The GLM-5.2 implementer session's Bash tool gates `bash -n`, script execution,
+and process substitution (every `bash -n`, `bash -c`, heredoc and off-tree run
+returned *requires approval* and was not approved this turn) — the identical
+blocker the C13 GLM-5.2 round recorded. Per the kickoff (lines 51–53) and
+AGENTS.md, this is reported rather than papered over with fabricated output
+(D026 / Pattern 10; GLM known-failure-mode of the four-auditor rule 4).
+
+What IS real and was computed in-session by read-only tools (sha256sum / wc /
+grep are NOT gated):
+- new `RP6-P0.sh` SHA-256 `490e3e4edfec811dee3dc90c6693e8ebeb865eb946a431ff017de58e66f0ce5f`,
+  89029 bytes;
+- baseline `e93d07adcc9ae03ad15e0b0f10c76be54517251ab461c8fe789d160072d253c6`,
+  85540 bytes — verified BEFORE the first edit;
+- the three edits are present at the expected sites (grep-confirmed).
+
+What is PENDING and must be run by the Lead in an unhindered Git Bash: `bash -n`,
+the three R5 harnesses below, and the five prior mandated fences re-run against
+the new bytes. Each harness is self-contained (local replicas of the block's
+predicates; no RP0-LIB / bootstrap / Linux `/proc` needed) and is extracted by
+marker range so the invocation is line-offset independent.
+
+### R5-F1 harness — python3 freeze-gate polarity (omission must STOP)
+
+```text
+# R5_F1_HARNESS_BEGIN
+#!/usr/bin/env bash
+set +e
+p0_stop() { printf 'P0_STOP reason=%s\n' "$*"; exit 3; }
+# Faithful replica of the RP6-P0.sh pin-parse python3-binding plus the new
+# post-loop gate. variant=prer5 omits the post-loop gate (the defect); the D026
+# mutation is "delete the post-loop gate".
+run_f1() {
+    local variant="$1" pins="$2" frozen="$3"
+    P0_FIXED_TRUSTED_PYTHON="$frozen"
+    P0_TRUSTED_PYTHON_BOUND=no
+    P0_PIN_COUNT=0
+    local p0_pin p0_pin_name p0_pin_path
+    for p0_pin in $pins; do
+        case "$p0_pin" in *=*) : ;; *) p0_stop "input_pin_malformed name=P0_TOOL_PINS entry=[$p0_pin]" ;; esac
+        p0_pin_name="${p0_pin%%=*}"; p0_pin_path="${p0_pin#*=}"
+        if [ "$p0_pin_name" = python3 ]; then
+            [ "$P0_FIXED_TRUSTED_PYTHON" != '<PIN-AT-FREEZE>' ] \
+                || p0_stop "input_pin_freeze_unfilled tool=python3 name=P0_FIXED_TRUSTED_PYTHON detail=deploy_channel_value_never_derived_here"
+            [ "$p0_pin_path" = "$P0_FIXED_TRUSTED_PYTHON" ] \
+                || p0_stop "input_pin_not_frozen_trusted_python tool=python3 pinned=$p0_pin_path frozen=$P0_FIXED_TRUSTED_PYTHON"
+            P0_TRUSTED_PYTHON_BOUND=yes
+        fi
+        P0_PIN_COUNT=$(( P0_PIN_COUNT + 1 ))
+    done
+    if [ "$variant" = repaired ]; then
+        [ "$P0_TRUSTED_PYTHON_BOUND" = yes ] \
+            || p0_stop "input_pin_freeze_unfilled tool=python3 name=P0_FIXED_TRUSTED_PYTHON detail=trusted_python_pin_omitted_freeze_gate_load_bearing"
+    fi
+    printf 'PIN_INPUT_ACCEPTED count=%s trusted_python_bound=%s fixed=[%s]\n' \
+        "$P0_PIN_COUNT" "$P0_TRUSTED_PYTHON_BOUND" "$P0_FIXED_TRUSTED_PYTHON"
+}
+contains() { case "$1" in *"$2"*) return 0;; *) return 1;; esac; }
+R5_F1_PASS=0; R5_F1_FAIL=0
+ok()  { printf 'ASSERT_MET %s\n' "$1";   R5_F1_PASS=$((R5_F1_PASS+1)); }
+bad() { printf 'ASSERT_UNMET %s\n' "$1"; R5_F1_FAIL=$((R5_F1_FAIL+1)); }
+
+OUT="$(run_f1 prer5 '' '<PIN-AT-FREEZE>')"; RC=$?
+if [ "$RC" = 0 ] && contains "$OUT" 'trusted_python_bound=no'; then ok 'variant=prer5 case=PIN_NONE rc=0 omission_admitted polarity=RED';
+else bad "variant=prer5 case=PIN_NONE rc=$RC polarity=RED out=[$OUT]"; fi
+OUT="$(run_f1 prer5 'stat=/usr/bin/stat' '<PIN-AT-FREEZE>')"; RC=$?
+if [ "$RC" = 0 ] && contains "$OUT" 'trusted_python_bound=no'; then ok 'variant=prer5 case=PIN_NO_PYTHON rc=0 omission_admitted polarity=RED';
+else bad "variant=prer5 case=PIN_NO_PYTHON rc=$RC polarity=RED out=[$OUT]"; fi
+OUT="$(run_f1 repaired '' '<PIN-AT-FREEZE>')"; RC=$?
+if [ "$RC" = 3 ] && contains "$OUT" 'trusted_python_pin_omitted_freeze_gate_load_bearing'; then ok 'variant=repaired case=PIN_NONE rc=3 omission_stop polarity=GREEN';
+else bad "variant=repaired case=PIN_NONE rc=$RC polarity=GREEN out=[$OUT]"; fi
+OUT="$(run_f1 repaired 'stat=/usr/bin/stat' '<PIN-AT-FREEZE>')"; RC=$?
+if [ "$RC" = 3 ] && contains "$OUT" 'trusted_python_pin_omitted_freeze_gate_load_bearing'; then ok 'variant=repaired case=PIN_NO_PYTHON rc=3 omission_stop polarity=GREEN';
+else bad "variant=repaired case=PIN_NO_PYTHON rc=$RC polarity=GREEN out=[$OUT]"; fi
+OUT="$(run_f1 repaired 'python3=/opt/py312/bin/python3.12' '/opt/py312/bin/python3.12')"; RC=$?
+if [ "$RC" = 0 ] && contains "$OUT" 'trusted_python_bound=yes'; then ok 'variant=repaired case=PIN_WITH_PYTHON_FILLED rc=0 complete_pin_set_green polarity=GREEN';
+else bad "variant=repaired case=PIN_WITH_PYTHON_FILLED rc=$RC polarity=GREEN out=[$OUT]"; fi
+OUT="$(run_f1 repaired 'python3=/opt/py312/bin/python3.12' '<PIN-AT-FREEZE>')"; RC=$?
+if [ "$RC" = 3 ] && contains "$OUT" 'deploy_channel_value_never_derived_here'; then ok 'variant=repaired case=PIN_WITH_PYTHON_PLACEHOLDER rc=3 in_loop_gate_preserved polarity=GREEN';
+else bad "variant=repaired case=PIN_WITH_PYTHON_PLACEHOLDER rc=$RC polarity=GREEN out=[$OUT]"; fi
+
+printf 'R5_F1_QA_SUMMARY cases=6 pass=%s fail=%s result=%s\n' \
+    "$R5_F1_PASS" "$R5_F1_FAIL" "$([ "$R5_F1_FAIL" = 0 ] && echo PASS || echo FAIL)"
+# R5_F1_HARNESS_END
+```
+
+Invocation (line-offset independent):
+`sed -n '/R5_F1_HARNESS_BEGIN/,/R5_F1_HARNESS_END/p' SELF_QA_RP6.md | bash --noprofile --norc`
+
+Expected polarity (PENDING real run — this is design intent, not executed output):
+
+| variant | case | expect rc | expect token | polarity |
+|---|---|---|---|---|
+| prer5 (gate deleted) | PIN_NONE | 0 | `trusted_python_bound=no` | RED (defect: omission admitted) |
+| prer5 (gate deleted) | PIN_NO_PYTHON | 0 | `trusted_python_bound=no` | RED (defect: omission admitted) |
+| repaired | PIN_NONE | 3 | `trusted_python_pin_omitted_…` | GREEN (omission STOPs) |
+| repaired | PIN_NO_PYTHON | 3 | `trusted_python_pin_omitted_…` | GREEN (omission STOPs) |
+| repaired | PIN_WITH_PYTHON (freeze filled) | 0 | `trusted_python_bound=yes` | GREEN (complete pin set still passes) |
+| repaired | PIN_WITH_PYTHON (placeholder) | 3 | `deploy_channel_value_never_derived_here` | GREEN (in-loop gate preserved) |
+
+The auditor's own fixture row flips: `PIN_NONE rc=0`/`PIN_NO_PYTHON rc=0` on the
+pre-fix bytes become rc-3 STOPs on the repaired bytes, while the complete pin set
+stays GREEN.
+
+### R5-F2 harness — RP0 symbol TYPE must be `function`, not a PATH file
+
+```text
+# R5_F2_HARNESS_BEGIN
+#!/usr/bin/env bash
+set +e
+p0_stop() { printf 'P0_STOP reason=%s\n' "$*"; exit 3; }
+# Replica of the prerequisite check. variant=prer5 = command -v (the defect);
+# variant=repaired = exact `type -t = function`. The block then CALLS the symbol;
+# a PATH-shadow file that runs is detected via an on-disk marker.
+run_f2() {
+    local variant="$1"
+    if [ "$variant" = repaired ]; then
+        [ "$(type -t rp0_require_safe_component 2>/dev/null)" = function ] \
+            || p0_stop "rp0_lib_not_sourced predicate=rp0_require_safe_component detail=not_a_shell_function"
+        [ "$(type -t rp0_allocate_evidence_dir 2>/dev/null)" = function ] \
+            || p0_stop "rp0_lib_not_sourced predicate=rp0_allocate_evidence_dir detail=not_a_shell_function"
+    else
+        command -v rp0_require_safe_component >/dev/null 2>&1 \
+            || p0_stop "rp0_lib_not_sourced predicate=rp0_require_safe_component"
+        command -v rp0_allocate_evidence_dir >/dev/null 2>&1 \
+            || p0_stop "rp0_lib_not_sourced predicate=rp0_allocate_evidence_dir"
+    fi
+    rp0_require_safe_component >/dev/null 2>&1 || true
+    printf 'PREREQ_CHECK_PASSED\n'
+}
+R5_F2_DIR="$(mktemp -d)"; R5_F2_MARKER="$R5_F2_DIR/marker"
+make_shadow() {
+    rm -f "$R5_F2_MARKER"
+    cat > "$R5_F2_DIR/rp0_require_safe_component" <<EOF
+#!/bin/sh
+printf 'SHADOW_EXEC\n' >> "$R5_F2_MARKER"
+exit 0
+EOF
+    cat > "$R5_F2_DIR/rp0_allocate_evidence_dir" <<'EOF'
+#!/bin/sh
+exit 0
+EOF
+    chmod +x "$R5_F2_DIR/rp0_require_safe_component" "$R5_F2_DIR/rp0_allocate_evidence_dir"
+}
+drop_funcs() { unset -f rp0_require_safe_component rp0_allocate_evidence_dir 2>/dev/null || true; }
+marker_has() { [ -f "$R5_F2_MARKER" ] && [ -s "$R5_F2_MARKER" ]; }
+contains() { case "$1" in *"$2"*) return 0;; *) return 1;; esac; }
+R5_F2_PASS=0; R5_F2_FAIL=0
+ok()  { printf 'ASSERT_MET %s\n' "$1";   R5_F2_PASS=$((R5_F2_PASS+1)); }
+bad() { printf 'ASSERT_UNMET %s\n' "$1"; R5_F2_FAIL=$((R5_F2_FAIL+1)); }
+OLDPATH="$PATH"
+
+drop_funcs; make_shadow
+PATH="$R5_F2_DIR:$OLDPATH"; OUT="$(run_f2 prer5)"; RC=$?; PATH="$OLDPATH"
+if [ "$RC" = 0 ] && marker_has; then ok 'variant=prer5 case=PATH_SHADOW rc=0 shadow_executed=yes polarity=RED';
+else bad "variant=prer5 case=PATH_SHADOW rc=$RC shadow_executed=$(marker_has&&echo yes||echo no) polarity=RED out=[$OUT]"; fi
+
+drop_funcs; make_shadow
+PATH="$R5_F2_DIR:$OLDPATH"; OUT="$(run_f2 repaired)"; RC=$?; PATH="$OLDPATH"
+if [ "$RC" = 3 ] && ! marker_has && contains "$OUT" 'not_a_shell_function'; then ok 'variant=repaired case=PATH_SHADOW rc=3 shadow_executed=no polarity=GREEN';
+else bad "variant=repaired case=PATH_SHADOW rc=$RC shadow_executed=$(marker_has&&echo yes||echo no) polarity=GREEN out=[$OUT]"; fi
+
+rp0_require_safe_component() { :; }; rp0_allocate_evidence_dir() { :; }; make_shadow
+PATH="$R5_F2_DIR:$OLDPATH"; OUT="$(run_f2 repaired)"; RC=$?; PATH="$OLDPATH"
+if [ "$RC" = 0 ] && ! marker_has; then ok 'variant=repaired case=REAL_FUNCTIONS rc=0 shadow_executed=no polarity=GREEN';
+else bad "variant=repaired case=REAL_FUNCTIONS rc=$RC polarity=GREEN out=[$OUT]"; fi
+drop_funcs
+
+rp0_require_safe_component() { :; }; rp0_allocate_evidence_dir() { :; }; make_shadow
+PATH="$R5_F2_DIR:$OLDPATH"; OUT="$(run_f2 prer5)"; RC=$?; PATH="$OLDPATH"
+if [ "$RC" = 0 ]; then ok 'variant=prer5 case=REAL_FUNCTIONS rc=0 polarity=GREEN';
+else bad "variant=prer5 case=REAL_FUNCTIONS rc=$RC polarity=GREEN out=[$OUT]"; fi
+drop_funcs
+
+rm -rf "$R5_F2_DIR"
+printf 'R5_F2_QA_SUMMARY cases=4 pass=%s fail=%s result=%s\n' \
+    "$R5_F2_PASS" "$R5_F2_FAIL" "$([ "$R5_F2_FAIL" = 0 ] && echo PASS || echo FAIL)"
+# R5_F2_HARNESS_END
+```
+
+Invocation: `sed -n '/R5_F2_HARNESS_BEGIN/,/R5_F2_HARNESS_END/p' SELF_QA_RP6.md | bash --noprofile --norc`
+
+Expected polarity (PENDING real run):
+
+| variant | case | expect rc | marker (shadow ran?) | polarity |
+|---|---|---|---|---|
+| prer5 (`command -v`) | PATH shadow, no functions | 0 | yes (file executed) | RED (defect) |
+| repaired (`type -t`) | PATH shadow, no functions | 3 (`not_a_shell_function`) | **no** (rejected AND not executed) | GREEN |
+| repaired (`type -t`) | genuine functions (shadow files shadowed) | 0 | no | GREEN (real sourced fns still pass) |
+| prer5 (`command -v`) | genuine functions | 0 | — | GREEN (command -v is not wrong for real fns) |
+
+The auditor's PATH-shadow fixture flips: on pre-fix bytes the shadow is accepted
+and executes (marker written); on repaired bytes it is rejected at rc 3 and never
+runs (marker absent).
+
+### R5-F3 harness — forbidden-GID grammar gate + noglob (cwd must not rewrite the ledger)
+
+```text
+# R5_F3_HARNESS_BEGIN
+#!/usr/bin/env bash
+set +e
+p0_stop() { printf 'P0_STOP reason=%s\n' "$*"; exit 3; }
+p0_require_uint() {
+    local name="$1" val="$2" min="$3"
+    [ -n "$val" ] || p0_stop "input_missing name=$name detail=preregistered_numeric_value_never_derived_here"
+    case "$val" in *[!0-9]*) p0_stop "input_charset name=$name expected=decimal_digits" ;; esac
+    [ "$val" -ge "$min" ] || p0_stop "input_range name=$name value=$val expected_min=$min"
+}
+# Replica of the input gate. variant=prer5 = no grammar gate, no set -f (the
+# defect); variant=repaired = grammar gate + set -f. cwd drives pathname expansion.
+run_f3() {
+    local variant="$1"
+    [ -n "${P0_FORBIDDEN_GIDS:-}" ] || p0_stop "input_missing name=P0_FORBIDDEN_GIDS detail=preregistered_numeric_gid_list_never_derived_here"
+    if [ "$variant" = repaired ]; then
+        case "$P0_FORBIDDEN_GIDS" in
+            *[!0-9[:space:]]*) p0_stop "input_charset name=P0_FORBIDDEN_GIDS value=[$P0_FORBIDDEN_GIDS] expected=decimal_digits_and_separators_only" ;;
+        esac
+    fi
+    P0_FORBIDDEN_GID_COUNT=0
+    local p0_g
+    if [ "$variant" = repaired ]; then set -f; fi
+    for p0_g in $P0_FORBIDDEN_GIDS; do
+        p0_require_uint P0_FORBIDDEN_GIDS_ENTRY "$p0_g" 0
+        P0_FORBIDDEN_GID_COUNT=$(( P0_FORBIDDEN_GID_COUNT + 1 ))
+    done
+    if [ "$variant" = repaired ]; then set +f; fi
+    [ "$P0_FORBIDDEN_GID_COUNT" -ge 1 ] || p0_stop "input_range name=P0_FORBIDDEN_GIDS value=[$P0_FORBIDDEN_GIDS] expected=at_least_one_numeric_gid"
+    printf 'FORBIDDEN_INPUT_ACCEPTED raw=[%s] count=%s\n' "$P0_FORBIDDEN_GIDS" "$P0_FORBIDDEN_GID_COUNT"
+}
+NUM="$(mktemp -d)"; : > "$NUM/0"; : > "$NUM/988"
+EMP="$(mktemp -d)"
+OLDPWD="$(pwd)"
+contains() { case "$1" in *"$2"*) return 0;; *) return 1;; esac; }
+R5_F3_PASS=0; R5_F3_FAIL=0
+ok()  { printf 'ASSERT_MET %s\n' "$1";   R5_F3_PASS=$((R5_F3_PASS+1)); }
+bad() { printf 'ASSERT_UNMET %s\n' "$1"; R5_F3_FAIL=$((R5_F3_FAIL+1)); }
+
+cd "$NUM"; P0_FORBIDDEN_GIDS='*'; OUT="$(run_f3 prer5)"; RC=$?; cd "$OLDPWD"
+if [ "$RC" = 0 ] && contains "$OUT" 'count=2'; then ok 'variant=prer5 case=STAR_NUMERIC_CWD rc=0 admitted_count=2 polarity=RED';
+else bad "variant=prer5 case=STAR_NUMERIC_CWD rc=$RC polarity=RED out=[$OUT]"; fi
+
+cd "$EMP"; P0_FORBIDDEN_GIDS='*'; OUT="$(run_f3 prer5)"; RC=$?; cd "$OLDPWD"
+if [ "$RC" = 3 ] && contains "$OUT" 'input_charset'; then ok 'variant=prer5 case=STAR_EMPTY_CWD rc=3 charset_stop polarity=RED_documents_cwd_dependence';
+else bad "variant=prer5 case=STAR_EMPTY_CWD rc=$RC polarity=RED out=[$OUT]"; fi
+
+cd "$NUM"; P0_FORBIDDEN_GIDS='*'; OUT="$(run_f3 repaired)"; RC=$?; cd "$OLDPWD"
+if [ "$RC" = 3 ] && contains "$OUT" 'decimal_digits_and_separators_only'; then ok 'variant=repaired case=STAR_NUMERIC_CWD rc=3 grammar_stop polarity=GREEN';
+else bad "variant=repaired case=STAR_NUMERIC_CWD rc=$RC polarity=GREEN out=[$OUT]"; fi
+
+cd "$EMP"; P0_FORBIDDEN_GIDS='*'; OUT="$(run_f3 repaired)"; RC=$?; cd "$OLDPWD"
+if [ "$RC" = 3 ] && contains "$OUT" 'decimal_digits_and_separators_only'; then ok 'variant=repaired case=STAR_EMPTY_CWD rc=3 grammar_stop polarity=GREEN';
+else bad "variant=repaired case=STAR_EMPTY_CWD rc=$RC polarity=GREEN out=[$OUT]"; fi
+
+cd "$NUM"; P0_FORBIDDEN_GIDS='0 988'; OUT="$(run_f3 repaired)"; RC=$?; cd "$OLDPWD"
+if [ "$RC" = 0 ] && contains "$OUT" 'count=2'; then ok 'variant=repaired case=VALID_LIST rc=0 admitted_count=2 polarity=GREEN_no_regression';
+else bad "variant=repaired case=VALID_LIST rc=$RC polarity=GREEN out=[$OUT]"; fi
+
+rm -rf "$NUM" "$EMP"
+printf 'R5_F3_QA_SUMMARY cases=5 pass=%s fail=%s result=%s\n' \
+    "$R5_F3_PASS" "$R5_F3_FAIL" "$([ "$R5_F3_FAIL" = 0 ] && echo PASS || echo FAIL)"
+# R5_F3_HARNESS_END
+```
+
+Invocation: `sed -n '/R5_F3_HARNESS_BEGIN/,/R5_F3_HARNESS_END/p' SELF_QA_RP6.md | bash --noprofile --norc`
+
+Expected polarity (PENDING real run):
+
+| variant | case (cwd) | expect rc | expect token | polarity |
+|---|---|---|---|---|
+| prer5 (no gate, no noglob) | `*`, cwd has `0`+`988` | 0 | `count=2` | RED (defect: cwd rewrote ledger) |
+| prer5 (no gate, no noglob) | `*`, empty cwd | 3 | `input_charset` (per-item) | RED (same input, different verdict → cwd dependence) |
+| repaired (gate + noglob) | `*`, cwd has `0`+`988` | 3 | `decimal_digits_and_separators_only` | GREEN |
+| repaired (gate + noglob) | `*`, empty cwd | 3 | `decimal_digits_and_separators_only` | GREEN (identical STOP regardless of cwd) |
+| repaired (gate + noglob) | `0 988`, cwd has `0`+`988` | 0 | `count=2` | GREEN (valid input still admitted) |
+
+The contrast between the two prer5 `*` rows IS the defect (same input, verdict
+changes with cwd); repaired bytes STOP identically in both cwds. The auditor's
+fixture flips from `count=2` (admit) to a grammar STOP.
+
+### R5 artefact measurements (real, computed in-session; QA execution PENDING)
+
+- Repaired `RP6-P0.sh` SHA-256:
+  `490e3e4edfec811dee3dc90c6693e8ebeb865eb946a431ff017de58e66f0ce5f`
+- Repaired `RP6-P0.sh` byte count: `89029` (was `85540`; +3489 B of comments +
+  the three gates). LF-only, no BOM (edits introduced no CR).
+- Audited pre-R5 baseline SHA-256:
+  `e93d07adcc9ae03ad15e0b0f10c76be54517251ab461c8fe789d160072d253c6`, 85540 B —
+  verified BEFORE the first edit (kickoff baseline).
+- `bash -n RP6-P0.sh` → **PENDING** (session gates `bash -n`).
+- The three edits are grep-confirmed at their expected sites; no other arm changed.
+- The five prior mandated fences were NOT re-run this turn (session gates bash);
+  the Lead must re-run them against the new bytes — in particular the full-block
+  D026 fence (`sed -n '1678,2068p'`) and the R4 D026 fence
+  (`sed -n '2545,2989p'`) to confirm no regression in the unchanged arms.
+- `shellcheck` is not installed in this environment and was not run.
+
+### R5 explicit local limit
+
+The complete P0 block was not run, for the same reasons every earlier round
+records: it needs the accepted RP0 library and bootstrap, Linux `/proc` namespace
+objects, the preregistered per-SHA venv, `getent`/`systemctl` on the host, and a
+reachable system manager — none present in this Git Bash environment. The three
+harnesses above isolate just the repaired predicates with local replicas, which
+is exactly the surface the three findings concern. No host was contacted, no
+network command was run, no host file content was printed, and nothing was
+committed. Four files touched only (`RP6-P0.sh`, this file, `STATUS_RP6_P0.md`,
+`RP6_REPAIR_R5_REPORT.md`).
