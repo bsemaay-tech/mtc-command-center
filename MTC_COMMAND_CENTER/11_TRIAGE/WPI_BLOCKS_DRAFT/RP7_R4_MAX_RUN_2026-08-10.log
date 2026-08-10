@@ -1,0 +1,30 @@
+﻿Round 4 complete.
+
+## Completion summary — RP7-WPI-RO repair round 4
+
+**Baseline verified before first edit:** `1d118d15…6a7f4e`, 58012 B (also re-derived independently from `git show HEAD:…`, from which the round-3 function bodies were extracted verbatim for the RED arms).
+
+**Repaired identity:** `bytes=70941`, `sha256=23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad`, `bash -n` rc 0. All files written UNIX LF, verified 0 CR bytes.
+
+### The five findings
+
+| | closure | load-bearing falsification |
+|---|---|---|
+| **F1 BLOCK** | Both accepting adjudicators moved off the judged venv onto a pinned system interpreter under `-I -S`, each refusing to produce a result unless `sys.flags.isolated`/`no_site` hold and no `site`/`sitecustomize`/`usercustomize` is loaded. `python3` added as the tenth bound tool and 21st projection point. | **Executed**, two real `python -m venv`: a `.pth` and a `sitecustomize.py` that write a marker and print the exact accepted line. Round-3 bytes → PASS on a deviant host + mutation (rc 0, marker present); round-4 bytes → truthful FAIL, marker absent. A third arm pins the *same* venv interpreter so the isolated variable is `-S` alone. |
+| **F2 HIGH** | Row 22 is two-phase: parse to clean EOF recording only sanitised counters, then apply wildcard/address/count FAILs. | Both auditor orderings: `red_wildcard_first_rc=1 red_malformed_first_rc=3` → `green 3/3`. Positive controls keep a complete wildcard table at rc 1 and a good table at rc 0. |
+| **F3 HIGH** | One explicit discovery universe enforced twice — unfiltered depth-1 enumeration in the preflight, an independent scan in the trusted driver, and `importlib.metadata`'s implicit `sys.path` discovery replaced by that list. | The auditor's own `ghost.egg-info` fixture: round-3 body returns rc 0 declaring `complete=yes readable=yes`; round-4 returns rc 3 `format=egg_info`. Plus `pth`, `startup_hook`, `zip`, non-directory `.dist-info`, readable, absent, unreadable, and the `stage=verifier` pair. |
+| **F4 MEDIUM** | `netns binding → status 20-21 → listener 22-23`. | Two-deviation host state; the GREEN order is **extracted from the frozen `wpi_main` at run time**, so the arm can't pass if the order is wrong. RED first result is B6, GREEN is B5. |
+| **F5 LOW** | Row-specific unreadable tokens threaded through `wpi_lstat`/`wpi_walk_components`; row-specific leaf `*_owner_unexpected`; row-17 `kind=<k>` only; last two raw `%F` sites tokenised. | Five RED/GREEN pairs against a stat that really errors and a multi-word kind. |
+
+**Verifier is real, not a stand-in:** the parity arms drive the actual candidate `verify_lock.py` — the fence LF-normalises the worktree copy and asserts 3735 B / `d951e0ee…a451e5`, exactly `WPI_VERIFY_LOCK_SHA256`.
+
+**QA fence:** `QA_PASS all_assertions=yes`, exit 0. Per the kickoff, the published fence was **re-extracted from `SELF_QA_RP7.md`** — byte-identical to the file that ran — and **re-run green**. Every round-3 arm carried forward and still holds.
+
+**Freeze-gate inputs (2):** `WPI_FIXED_ATTESTED_MOUNT_PROJECTION_SHA256` (now over 21 point paths) and the new `WPI_FIXED_TRUSTED_PYTHON` — `/usr/bin/python3` is a symlink on the target family and `wpi_bind_tool` admits no symlinked object, so the resolved `/usr/bin/python3.<minor>` must be pinned; the QA records the executed proof that an unresolved pin is refused rather than followed.
+
+**Files:** `RP7-WPI-RO.sh`, `SELF_QA_RP7.md`, `STATUS_RP7.md`, new `RP7_REPAIR_R4_REPORT.md`, and narrow draft edits (§4 point set + trusted-interpreter paragraph; §8.2 rows 17/19/19a/21/22; the attestation, metadata-readability, probe-execution-environment, probe-output-precedence and namespace-binding paragraphs the findings name). **Not committed.** No host or network contact.
+
+Two things to flag:
+
+- **Draft scope.** The kickoff scoped draft edits to "§8.2 rows the fixes name". Four findings also name a binding paragraph as a location, and F1's new pin makes §4's "nine tool pins / twenty records" factually wrong if left alone, so I edited those too rather than ship a draft that contradicts the bytes. The exact surfaces are enumerated in the report; rows 10-16, 18, 20, 23 and 24 are untouched.
+- **`RP7_R4_MAX_RUN_2026-08-10.log`** (a pre-existing empty untracked file) is held open by another process — writing it returned `Device or resource busy`. It isn't in the deliverable set and the complete transcript is published in `SELF_QA_RP7.md`, so I left it rather than contend for it.

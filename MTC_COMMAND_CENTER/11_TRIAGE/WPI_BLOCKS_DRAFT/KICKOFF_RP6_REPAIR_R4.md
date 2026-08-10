@@ -6,12 +6,18 @@ flagship audit (`RP6_CODEX_T0_AUDIT_2026-08-10.md`, BLOCK 4) raised the SAME F1 
 three contract fixes. Round 4. You are Claude Opus 5 xhigh, implementer. Working dir:
 C:\LAB\Tradingview_LAB_CLEAN. No host/network. No commit.
 
-**GATE: dispatch this ONLY after RP7 round 4 is committed** — F3 references RP7's final
-frozen tool set (RP7 R4 adds `python3`), so it must target settled RP7 bytes, not a
-moving worktree. The Lead fills the RP7 frozen basis SHA + tool set below before dispatch.
+**GATE SATISFIED** — RP7 round 4 is committed. F3 targets these settled bytes, verified
+by the Lead from the frozen file:
 
-- RP7 frozen basis for F3: commit `<FILL: RP7 R4 commit>`, RO tool set `<FILL: from
-  frozen RP7-WPI-RO.sh>`.
+- **RP7 frozen basis for F3:** commit `d6a976aa`, `RP7-WPI-RO.sh` SHA-256
+  `23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad`, 70941 B.
+- **RP7 RO tool set (10, from the frozen `WPI_TOOL_PINS` validator at `:594`):**
+  `stat readlink env find sha256sum systemctl ss curl timeout python3`.
+  Note `python3` is new in R4 (the trusted interpreter for both adjudicators) and
+  carries a `WPI_FIXED_TRUSTED_PYTHON` freeze-gate pin because `/usr/bin/python3` is a
+  symlink on the target family and no symlinked object is admitted.
+- P0-only dependencies stay P0's own (e.g. `id`, `getent`); the drift test compares the
+  RO half against the frozen RP7 list above.
 
 ## Inputs (relative to `MTC_COMMAND_CENTER/11_TRIAGE/`)
 

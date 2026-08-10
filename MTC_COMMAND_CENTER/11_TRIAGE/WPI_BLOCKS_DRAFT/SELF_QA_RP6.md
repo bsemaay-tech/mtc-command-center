@@ -2426,3 +2426,1383 @@ untouched. The block remains a DRAFT that cannot GREEN end-to-end until the
 deploy channel mints and embeds the five attestation literals. No repository file
 outside the five whitelisted paths plus the prereg draft's §8.1 row 1 was written,
 and no commit was made.
+
+---
+
+# Repair round 4 — the four Codex flagship T0 findings
+
+Implementer: `claude-opus-5`, xhigh, fresh session, 2026-08-10, local Git Bash
+5.2.37 `--noprofile --norc` only. Contract:
+`RP6_CODEX_T0_AUDIT_2026-08-10.md` findings 1-4, via `KICKOFF_RP6_REPAIR_R4.md`.
+Owner authorised exceeding the recorded T0 cap for the identical venv
+site-startup security class already resolved on RP7; the Lead extended that
+authorisation to RP6-P0. No host contact, no network command, no SSH/SCP, no
+RUNID, no commit. RP7 and the transport tree were READ (the frozen RO basis
+below) and never written.
+
+## R4 — repair decisions
+
+- **F1 (HIGH).** The probe now launches `"$py" -I -S -c …`. `-I` implies `-E`,
+  `-P` and `-s` but NOT `-S`, so the previous bytes imported `site`, processed the
+  judged venv's `site-packages`, and executed every `import` line in its `*.pth`
+  files before the `-c` body. The `-c` body additionally refuses to report a
+  version unless `sys.flags.isolated` and `sys.flags.no_site` are both set, so
+  deleting ` -S` cannot silently restore the hole — it produces the named
+  `interpreter_startup_not_isolated` STOP. The false sentences are corrected at
+  three sites: the `MUTATION SURFACE` header paragraph, the section comment that
+  said "nothing is written and nothing is installed", and the terminal
+  `P0_claim scope=… mutation=none_in_this_block`, which becomes
+  `mutation=no_filesystem_write_primitive_in_this_shell_source
+  child_side_effects=not_attested_except_venv_startup_which_is_disabled
+  interpreter_launch=isolated_and_no_site`, with
+  `behaviour_inside_any_executed_tool_binary` added to `does_not_establish`.
+- **F2 (MEDIUM).** `p0_assert_system_manager_ready` launches
+  `env -i LC_ALL=C <pinned timeout> --signal=TERM --kill-after=5s 10s <pinned
+  systemctl> …` — cleared-environment exec FIRST, pinned `timeout` as its
+  argument, exactly as the round-1.4 probe-execution-environment rule requires.
+  `P0_MANAGER_QUERY_BUDGET_S=10` / `P0_MANAGER_QUERY_KILL_AFTER_S=5` are frozen
+  block literals, not operator inputs. rc 124 maps to
+  `manager_query_deadline_exceeded`, 137 to `manager_query_killed_after_deadline`,
+  125 to `bounding_wrapper_failed`; all remain `system_manager_unreachable` at
+  exit 3. Elapsed seconds come from the `SECONDS` builtin — no clock tool, no new
+  status to adjudicate — and are recorded as a diagnostic that no branch reads.
+- **F3 (MEDIUM).** The inventory is regenerated from the FROZEN RO executable
+  rather than from prose: `P0_RP7_RO_TOOLS` mirrors the ten tools
+  `RP7-WPI-RO.sh` pins at the gated basis (commit `d6a976aa`, SHA-256
+  `23e55667…a0aad`, 70941 B) and `P0_P0_ONLY_TOOLS` carries `id` and `getent`.
+  `grep` and `awk` are dropped — neither stage invokes either. `timeout` becomes a
+  first-class resolved tool (`P0_TIMEOUT`). `python3` is inventoried but never
+  executed by P0; its pin is bound to the new `P0_FIXED_TRUSTED_PYTHON`
+  freeze-gate literal, and because that pin is the resolved non-symlink leaf while
+  PATH still spells `/usr/bin/python3`, `p0_resolve_tool` admits a canonicalised
+  match for `python3` ALONE — a shadowing `python3` canonicalises elsewhere and
+  still STOPs, and every other tool keeps exact pin/PATH equality.
+- **F4 (LOW/MED).** `p0_resolve_passwd` exports `P0_PW_RC`. The status sentinel is
+  read from the LAST capture field, so even a NUL-corrupted capture records the
+  resolver's real status; `na` survives only for the two shapes that fail before
+  any status exists. Both `identity_unresolvable` callers emit `rc=<n|na>`. The
+  valid-no-match token was aligned by the FIRST of the two options the finding
+  offers: `state_account_resolution_unexpected` is now preregistered verbatim in
+  row 3 rather than changed in the block, because positive absence of a
+  dynamically allocated account is a host observation and collapsing it into
+  `identity_unresolvable` would lose that distinction.
+
+## R4 — status of the two earlier C13 fences (they are now RED, on purpose)
+
+The F4 repair changes the `identity_unresolvable` output grammar by making `rc=`
+mandatory. The C13 R3 fence (lines 664-787) and the C13 R4 fence (lines
+1181-1346) assert the OLD grammar by substring, so against the round-4 bytes they
+now fail — and **that failure is itself the falsification**: the exact assertions
+that break are precisely the lines that lacked the field the audit required. Both
+sections are left byte-untouched as the honest record of their own rounds. Their
+real output against the round-4 bytes:
+
+```text
+=== C13_R3_16 at lines 664,787, run against the round-4 bytes ===
+process_rc=1 cases_ok=13 cases_bad=3
+ASSERT_UNMET variant=repaired mode=mtc_rc2_diag expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[getent: sss_nss: connection to the name service timed out]] polarity=GREEN
+ASSERT_UNMET variant=repaired mode=mtc_rc2_partial expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[mtc-bridge:x:999]] polarity=GREEN
+ASSERT_UNMET variant=repaired mode=gatea_rc2_diag expected_rc=3 subst=[identity_unresolvable account=gatea detail=[getent: nss module returned SERVBUSY for gatea]] polarity=GREEN
+C13_R3_ARM_QA_SUMMARY cases=16 result=FAIL
+=== C13_R4_27 at lines 1181,1346, run against the round-4 bytes ===
+process_rc=1 cases_ok=19 cases_bad=6
+ASSERT_UNMET variant=repaired mode=mtc_rc2_diag expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[getent: sss_nss: connection to the name service timed out]] polarity=GREEN
+ASSERT_UNMET variant=repaired mode=mtc_rc2_partial expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[mtc-bridge:x:999]] polarity=GREEN
+ASSERT_UNMET variant=repaired mode=gatea_rc2_diag expected_rc=3 subst=[identity_unresolvable account=gatea detail=[getent: nss module returned SERVBUSY for gatea]] polarity=GREEN
+ASSERT_UNMET variant=repaired mode=mtc_rc2_newline expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[newline_only_capture_at_rc2]] polarity=GREEN
+ASSERT_UNMET variant=repaired mode=mtc_rc2_newlines3 expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[newline_only_capture_at_rc2]] polarity=GREEN
+ASSERT_UNMET variant=repaired mode=gatea_rc2_newline expected_rc=3 subst=[identity_unresolvable account=gatea detail=[newline_only_capture_at_rc2]] polarity=GREEN
+C13_R4_ARM_QA_SUMMARY cases=27 result=FAIL
+```
+
+They are **SUPERSEDED** by the R4b harness below, which contains every one of
+their 27 cases verbatim with only the three broken assertion strings corrected to
+the round-4 grammar (twelve `run_case` lines in total, listed in
+`RP6_REPAIR_R4_REPORT.md`), and by the exact-LINE cases in the R4 D026 fence.
+
+## R4 — D026 fence for findings 1-4 (executable, real fixtures)
+
+Every RED arm executes the **audited pre-fix bytes** — commit `bbb40ab6`,
+`2d9b166e…96289e`, 71743 B, the exact object the Codex T0 audit BLOCKed — pinned
+by revision, never `HEAD`. F1's fixture is a REAL `python -m venv` environment
+carrying a REAL executable `.pth`, driven through the block's REAL
+`p0_assert_interpreter_executable` with the REAL `env -i` and the REAL
+interpreter: nothing about interpreter selection, flag words or startup behaviour
+is simulated. F2 uses the REAL GNU `timeout` and a stalling shim, with the
+audit's own external watchdog placed OUTSIDE the delivered function so that
+"did it need an external kill?" is the measurement. F3 reads the FROZEN RP7 bytes
+by revision and verifies their SHA-256 and byte count before comparing.
+
+Two substitutions are disclosed, both narrow. (1) `systemctl` and `getent` are
+shims — this Windows-hosted session has neither, and neither is the subject of any
+finding. (2) The `python3` pin/PATH canonicalisation arm renders its symlink
+through a deterministic `readlink` shim, because Git Bash cannot create a native
+symlink here (`ln -s … : Operation not permitted`); only link RESOLUTION is
+substituted, and every comparison under test is the block's own. The `/tmp/tmp.*`
+scratch root is random per run, so a transcript comparison must normalise it.
+
+```bash
+set -Eeuo pipefail
+cd /c/LAB/Tradingview_LAB_CLEAN
+target='MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh'
+ro='MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh'
+# IMMUTABLE pre-repair revision: bbb40ab6 is the round-3 commit whose bytes the
+# Codex T0 audit BLOCKed (2d9b166e..., 71743 B). Never HEAD.
+pre_rev=bbb40ab6
+# The gated FROZEN RO basis named by the kickoff. F3 compares against these bytes
+# and against no worktree copy, because RP7 is under concurrent edit.
+ro_rev=d6a976aa
+ro_sha_expected=23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad
+ro_bytes_expected=70941
+Q="$(mktemp -d)"
+trap 'rm -rf -- "$Q"' EXIT
+git show "$pre_rev:$target" > "$Q/pre.sh"
+cp -- "$target" "$Q/post.sh"
+git show "$ro_rev:$ro" > "$Q/ro_frozen.sh"
+printf 'RED_SOURCE rev=%s sha256=%s bytes=%s\n' "$pre_rev" \
+    "$(sha256sum < "$Q/pre.sh" | cut -d' ' -f1)" "$(wc -c < "$Q/pre.sh")"
+printf 'RO_FROZEN_BASIS rev=%s sha256=%s bytes=%s\n' "$ro_rev" \
+    "$(sha256sum < "$Q/ro_frozen.sh" | cut -d' ' -f1)" "$(wc -c < "$Q/ro_frozen.sh")"
+
+FAILED=0
+exfn() { sed -n "/^$2() {$/,/^}$/p" "$1"; }
+
+note()   { printf 'ASSERT_MET label=%s %s\n' "$1" "$2"; }
+bad()    { printf 'ASSERT_UNMET label=%s %s\n' "$1" "$2"; FAILED=1; }
+req_eq() {  # label actual expected
+    if [ "$2" = "$3" ]; then note "$1" "value=[$2]"; else bad "$1" "value=[$2] expected=[$3]"; fi
+}
+req_in() {  # label haystack needle
+    case "$2" in *"$3"*) note "$1" "token=[$3]" ;; *) bad "$1" "token_absent=[$3]" ;; esac
+}
+req_out() { # label haystack forbidden
+    case "$2" in *"$3"*) bad "$1" "forbidden_token_present=[$3]" ;; *) note "$1" "forbidden_token_absent=[$3]" ;; esac
+}
+has_line() { # output want -> 0 if some line equals want EXACTLY
+    local line
+    while IFS= read -r line; do
+        if [ "$line" = "$2" ]; then return 0; fi
+    done <<< "$1"
+    return 1
+}
+req_line() {   # label output want   (exact whole-line, not substring)
+    if has_line "$2" "$3"; then note "$1" "exact_line=[$3]"; else bad "$1" "exact_line_absent=[$3]"; fi
+}
+req_noline() { # label output want   (RED: the exact line must NOT be produced)
+    if has_line "$2" "$3"; then bad "$1" "exact_line_present=[$3]"; else note "$1" "exact_line_absent_as_required=[$3]"; fi
+}
+run_arm() { # arm -> QA_OUT / QA_RC
+    local rc=0 out
+    out="$(bash --noprofile --norc "$1" 2>&1)" || rc=$?
+    QA_OUT="$out"; QA_RC="$rc"
+}
+
+# ===========================================================================
+# F1 (HIGH) - the read-only interpreter probe executed venv startup code.
+# REAL venv, REAL interpreter, REAL executable `.pth`. No interpreter, flag or
+# startup behaviour is simulated: the only fixture is the forged `.pth` line.
+# ===========================================================================
+printf '\n=== F1 executable .pth forge ===\n'
+PYEXE="$(command -v python || command -v python3)"
+"$PYEXE" -m venv "$Q/venv" >/dev/null 2>&1
+vpy="$Q/venv/bin/python"; [ -x "$vpy" ] || vpy="$Q/venv/Scripts/python.exe"
+sp=""
+for cand in "$Q/venv"/lib/python*/site-packages "$Q/venv/Lib/site-packages"; do
+    if [ -d "$cand" ]; then sp="$cand"; fi
+done
+[ -n "$sp" ] || { printf 'FIXTURE_BROKEN no_site_packages\n'; exit 1; }
+marker="$Q/pth_marker.txt"
+mforge="$marker"
+if command -v cygpath >/dev/null 2>&1; then mforge="$(cygpath -m "$marker")"; fi
+printf "import os; open('%s','w').write('PTH_EXECUTED')\n" "$mforge" > "$sp/zzforge.pth"
+printf 'F1_FIXTURE venv=%s interpreter=%s site_packages=%s pth=%s\nF1_PTH_LINE %s\n' \
+    "${Q##*/}/venv" "${vpy##*/}" "${sp##*/}" "zzforge.pth" "$(cat "$sp/zzforge.pth")"
+
+build_f1_arm() {
+    local src="$1" arm="$2" mutate="${3:-no}"
+    {
+        printf '%s\n' 'set -Eeuo pipefail' \
+            'P0_SAFE=""; P0_COUNT=0; P0_KIND=""; P0_FKIND=""; P0_SHAPE=""' \
+            'P0_META_KIND=""; P0_META_MODE=""; P0_META_OWNER=""' \
+            'P0_EACCES_TEXT="Permission denied"; P0_ENOENT_TEXT="No such file or directory"'
+        printf 'P0_STAT=%q\nP0_ENV=%q\n' "$(command -v stat)" "$(command -v env)"
+        printf '%s\n' 'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }' \
+            'p0_fail(){ printf "P0_FAIL reason=%s\n" "$*"; exit 1; }'
+        exfn "$src" p0_sanitize
+        exfn "$src" p0_count_substr
+        exfn "$src" p0_classify_stat_shape
+        exfn "$src" p0_probe_kind
+        exfn "$src" p0_record_metadata
+        if [ "$mutate" = drop_S ]; then
+            exfn "$src" p0_assert_interpreter_executable | sed 's/ -I -S -c / -I -c /'
+        else
+            exfn "$src" p0_assert_interpreter_executable
+        fi
+        printf 'p0_assert_interpreter_executable %q\n' "$vpy"
+    } > "$arm"
+}
+f1_case() { # label arm
+    rm -f "$marker"
+    run_arm "$2"
+    local m=no c=""
+    if [ -f "$marker" ]; then m=yes; c="$(cat "$marker")"; fi
+    printf -- '--- %s\n%s\nARM_RC=%s MARKER_CREATED=%s MARKER_CONTENT=[%s]\n' "$1" "$QA_OUT" "$QA_RC" "$m" "$c"
+    F1_MARKER="$m"
+}
+
+build_f1_arm "$Q/pre.sh"  "$Q/f1-pre.sh"
+build_f1_arm "$Q/post.sh" "$Q/f1-post.sh"
+build_f1_arm "$Q/post.sh" "$Q/f1-post-dropS.sh" drop_S
+
+f1_case 'F1 RED  pre-fix bytes, -I only, forged .pth' "$Q/f1-pre.sh"
+f1_pre_marker="$F1_MARKER"; f1_pre_rc="$QA_RC"; f1_pre_out="$QA_OUT"
+f1_case 'F1 GREEN repaired bytes, -I -S, same forged .pth' "$Q/f1-post.sh"
+f1_post_marker="$F1_MARKER"; f1_post_rc="$QA_RC"; f1_post_out="$QA_OUT"
+f1_case 'F1 RED  repaired bytes with " -S" deleted (mutant)' "$Q/f1-post-dropS.sh"
+f1_mut_marker="$F1_MARKER"; f1_mut_rc="$QA_RC"; f1_mut_out="$QA_OUT"
+mv "$sp/zzforge.pth" "$Q/zzforge.pth.disabled"
+f1_case 'F1 CONTROL pre-fix bytes, .pth removed' "$Q/f1-pre.sh"
+f1_ctl_marker="$F1_MARKER"; f1_ctl_rc="$QA_RC"; f1_ctl_out="$QA_OUT"
+mv "$Q/zzforge.pth.disabled" "$sp/zzforge.pth"
+
+req_eq  F1_PRE_MARKER_CREATED   "$f1_pre_marker"  yes
+req_eq  F1_PRE_RC               "$f1_pre_rc"      0
+req_in  F1_PRE_STILL_ACCEPTED   "$f1_pre_out"     'P0_interpreter path='
+req_in  F1_PRE_STILL_ACCEPTED2  "$f1_pre_out"     'exec=ok env=cleared isolated=yes'
+req_eq  F1_POST_MARKER_ABSENT   "$f1_post_marker" no
+req_eq  F1_POST_RC              "$f1_post_rc"     0
+req_in  F1_POST_ACCEPTED        "$f1_post_out"    'exec=ok env=cleared isolated=yes site_startup=disabled startup_flags=self_verified_isolated_and_no_site venv_pth_and_sitecustomize=not_executed'
+req_eq  F1_MUTANT_MARKER        "$f1_mut_marker"  yes
+req_eq  F1_MUTANT_RC            "$f1_mut_rc"      3
+req_in  F1_MUTANT_STOP          "$f1_mut_out"     'P0_STOP reason=interpreter_startup_not_isolated'
+req_in  F1_MUTANT_FLAGS         "$f1_mut_out"     'P0PY_STARTUP_UNPROVEN isolated=1 no_site=0'
+req_eq  F1_CONTROL_MARKER       "$f1_ctl_marker"  no
+req_eq  F1_CONTROL_RC           "$f1_ctl_rc"      0
+# the sentence half of the finding
+pre_scope="$(grep '^printf .P0_claim scope=' "$Q/pre.sh")"
+post_scope="$(grep '^printf .P0_claim scope=' "$Q/post.sh")"
+req_in  F1_CLAIM_RED            "$pre_scope"      'mutation=none_in_this_block'
+req_out F1_CLAIM_GREEN_NO_FALSE "$post_scope"     'mutation=none_in_this_block'
+req_in  F1_CLAIM_GREEN          "$post_scope"     'mutation=no_filesystem_write_primitive_in_this_shell_source'
+req_in  F1_CLAIM_GREEN_CHILD    "$post_scope"     'child_side_effects=not_attested_except_venv_startup_which_is_disabled'
+req_in  F1_CLAIM_GREEN_LAUNCH   "$post_scope"     'interpreter_launch=isolated_and_no_site'
+req_in  F1_CLAIM_RESIDUAL       "$(grep '^printf .P0_claim does_not_establish=' "$Q/post.sh")" \
+        'behaviour_inside_any_executed_tool_binary'
+req_in  F1_SOURCE_RED_COMMENT   "$(cat "$Q/pre.sh")" 'nothing is written and nothing is installed'
+req_out F1_SOURCE_GREEN_COMMENT "$(cat "$Q/post.sh")" 'nothing is written and nothing is installed'
+
+# ===========================================================================
+# F2 (MEDIUM) - row 9 had no bound. RED needs an EXTERNAL kill; GREEN returns
+# its own reasoned STOP. Real `env -i`, real GNU `timeout`, real deadline.
+# ===========================================================================
+printf '\n=== F2 bounded manager query ===\n'
+printf '%s\n' '#!/bin/bash' 'printf "Version=252\n"' > "$Q/systemctl-fast"
+printf '%s\n' '#!/bin/bash' 'sleep 60' 'printf "Version=252\n"' > "$Q/systemctl-stall"
+chmod +x "$Q/systemctl-fast" "$Q/systemctl-stall"
+build_f2_arm() {
+    local src="$1" arm="$2" shim="$3" budget="${4:-}"
+    {
+        printf '%s\n' 'set -Eeuo pipefail' 'P0_SAFE=""'
+        printf 'P0_ENV=%q\nP0_SYSTEMCTL=%q\nP0_TIMEOUT=%q\n' \
+            "$(command -v env)" "$shim" "$(command -v timeout)"
+        grep -E '^P0_MANAGER_QUERY_(BUDGET|KILL_AFTER)_S=' "$src" \
+            || printf '%s\n' 'P0_MANAGER_QUERY_BUDGET_S=absent_in_this_source' \
+                             'P0_MANAGER_QUERY_KILL_AFTER_S=absent_in_this_source'
+        [ -z "$budget" ] || printf 'P0_MANAGER_QUERY_BUDGET_S=%s\n' "$budget"
+        printf '%s\n' 'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }'
+        exfn "$src" p0_sanitize
+        exfn "$src" p0_assert_system_manager_ready
+        printf '%s\n' 'p0_assert_system_manager_ready'
+    } > "$arm"
+}
+# The external watchdog is the audit's own instrument. It sits OUTSIDE the
+# delivered function, so whether it had to fire is the whole measurement.
+watched() { # label arm watchdog_s -> W_RC W_OUT W_EL
+    local rc=0 out el t0="$SECONDS"
+    set +e
+    out="$(timeout --signal=TERM --kill-after=3s "${3}s" bash --noprofile --norc "$2" 2>&1)"; rc=$?
+    set -e
+    el=$(( SECONDS - t0 ))
+    W_RC="$rc"; W_OUT="$out"; W_EL="$el"
+    local stops=0 line
+    while IFS= read -r line; do case "$line" in P0_STOP*) stops=$(( stops + 1 )) ;; esac; done <<< "$out"
+    W_STOPS="$stops"
+    printf -- '--- %s\n%s\nEXTERNAL_WATCHDOG_RC=%s ELAPSED_S=%s P0_STOP_LINES=%s\n' "$1" "$out" "$rc" "$el" "$stops"
+}
+build_f2_arm "$Q/pre.sh"  "$Q/f2-pre-fast.sh"   "$Q/systemctl-fast"
+build_f2_arm "$Q/post.sh" "$Q/f2-post-fast.sh"  "$Q/systemctl-fast"
+build_f2_arm "$Q/pre.sh"  "$Q/f2-pre-stall.sh"  "$Q/systemctl-stall"
+build_f2_arm "$Q/post.sh" "$Q/f2-post-stall.sh" "$Q/systemctl-stall"
+build_f2_arm "$Q/post.sh" "$Q/f2-post-stall-bigbudget.sh" "$Q/systemctl-stall" 600
+
+watched 'F2 REGRESSION pre-fix bytes, responsive manager' "$Q/f2-pre-fast.sh" 30
+f2prf_rc="$W_RC"; f2prf_out="$W_OUT"
+watched 'F2 GREEN repaired bytes, responsive manager' "$Q/f2-post-fast.sh" 30
+f2pof_rc="$W_RC"; f2pof_out="$W_OUT"
+watched 'F2 RED  pre-fix bytes, stalled manager (needs the EXTERNAL kill)' "$Q/f2-pre-stall.sh" 6
+f2prs_rc="$W_RC"; f2prs_out="$W_OUT"; f2prs_stops="$W_STOPS"
+watched 'F2 GREEN repaired bytes, stalled manager (own bounded STOP)' "$Q/f2-post-stall.sh" 40
+f2pos_rc="$W_RC"; f2pos_out="$W_OUT"; f2pos_stops="$W_STOPS"; f2pos_el="$W_EL"
+watched 'F2 RED  repaired bytes, budget literal raised to 600s (mutant)' "$Q/f2-post-stall-bigbudget.sh" 6
+f2pob_rc="$W_RC"; f2pob_stops="$W_STOPS"
+
+req_eq  F2_PRE_FAST_RC        "$f2prf_rc"   0
+req_in  F2_PRE_FAST_ANSWER    "$f2prf_out"  'P0_system_manager_ready bus=system query=show_property_Version response_key=Version response_value=[252]'
+req_out F2_PRE_FAST_UNBOUND   "$f2prf_out"  'bound=pinned_timeout_inside_cleared_env'
+req_eq  F2_POST_FAST_RC       "$f2pof_rc"   0
+req_in  F2_POST_FAST_ANSWER   "$f2pof_out"  'response_value=[252] env=cleared bound=pinned_timeout_inside_cleared_env budget_s=10 kill_after_s=5 elapsed_s='
+req_eq  F2_PRE_STALL_EXTKILL  "$f2prs_rc"   124
+req_eq  F2_PRE_STALL_NO_STOP  "$f2prs_stops" 0
+req_eq  F2_PRE_STALL_SILENT   "$f2prs_out"  ''
+req_eq  F2_POST_STALL_RC      "$f2pos_rc"   3
+req_eq  F2_POST_STALL_ONE_STOP "$f2pos_stops" 1
+req_in  F2_POST_STALL_REASON  "$f2pos_out"  'P0_STOP reason=system_manager_unreachable rc=124 detail=manager_query_deadline_exceeded budget_s=10 elapsed_s='
+req_in  F2_POST_STALL_TEXT    "$f2pos_out"  'text=[]'
+if [ "$f2pos_el" -lt 40 ]; then note F2_POST_STALL_NO_EXTERNAL_KILL "elapsed_s=$f2pos_el watchdog_s=40"
+else bad F2_POST_STALL_NO_EXTERNAL_KILL "elapsed_s=$f2pos_el"; fi
+req_eq  F2_BUDGET_IS_LOADBEARING "$f2pob_rc" 124
+req_eq  F2_BUDGET_MUTANT_NO_STOP "$f2pob_stops" 0
+# the bound is INSIDE the cleared environment, not outside it
+req_in  F2_ORDER_ENV_FIRST "$(sed -n '/p0_assert_system_manager_ready() {/,/^}$/p' "$Q/post.sh" | tr -s ' ')" \
+        '"$P0_ENV" -i LC_ALL=C "$P0_TIMEOUT" \'
+req_out F2_PRE_HAS_NO_BOUND "$(sed -n '/p0_assert_system_manager_ready() {/,/^}$/p' "$Q/pre.sh")" 'P0_TIMEOUT'
+
+# ===========================================================================
+# F3 (MEDIUM) - the RO tool inventory was stale. The drift test re-derives the
+# RO half from the FROZEN RP7 bytes, three independent places inside them.
+# ===========================================================================
+printf '\n=== F3 RO inventory drift ===\n'
+req_eq RO_BASIS_SHA   "$(sha256sum < "$Q/ro_frozen.sh" | cut -d' ' -f1)" "$ro_sha_expected"
+req_eq RO_BASIS_BYTES "$(wc -c < "$Q/ro_frozen.sh")" "$ro_bytes_expected"
+norm() { printf '%s\n' $1 | sort | tr '\n' ' '; }
+ro_case="$(sed -n 's/^[[:space:]]*case "\$pin_name" in \([a-z0-9|]*\)) : ;;.*/\1/p' "$Q/ro_frozen.sh" | tr '|' ' ')"
+ro_bind="$(sed -n 's/^[[:space:]]*for name in \(stat readlink[a-z0-9 ]*\); do$/\1/p' "$Q/ro_frozen.sh")"
+ro_count="$(sed -n 's/^[[:space:]]*\[ "\$pin_count" -eq \([0-9]*\) \].*/\1/p' "$Q/ro_frozen.sh")"
+printf 'RO_FROZEN_VALIDATOR_SET   [%s]\nRO_FROZEN_BINDING_SET     [%s]\nRO_FROZEN_DECLARED_COUNT  %s\n' \
+    "$ro_case" "$ro_bind" "$ro_count"
+eval "$(grep -E '^P0_(RP7_RO_TOOLS|P0_ONLY_TOOLS|RO_TOOLS)=' "$Q/post.sh")"
+printf 'P0_RO_HALF                [%s]\nP0_ONLY_HALF              [%s]\nP0_FULL_INVENTORY         [%s]\n' \
+    "$P0_RP7_RO_TOOLS" "$P0_P0_ONLY_TOOLS" "$P0_RO_TOOLS"
+req_eq DRIFT_P0_VS_RO_VALIDATOR "$(norm "$P0_RP7_RO_TOOLS")" "$(norm "$ro_case")"
+req_eq DRIFT_P0_VS_RO_BINDING   "$(norm "$P0_RP7_RO_TOOLS")" "$(norm "$ro_bind")"
+n_ro=0; for t in $P0_RP7_RO_TOOLS; do n_ro=$(( n_ro + 1 )); done
+n_all=0; for t in $P0_RO_TOOLS; do n_all=$(( n_all + 1 )); done
+req_eq DRIFT_RO_HALF_COUNT "$n_ro" "$ro_count"
+req_eq DRIFT_FULL_COUNT    "$n_all" 12
+for t in timeout python3 id getent; do req_in "DRIFT_PRESENT_$t" " $P0_RO_TOOLS " " $t "; done
+for t in grep awk; do req_out "DRIFT_DROPPED_$t" " $P0_RO_TOOLS " " $t "; done
+# RED: the audited pre-fix inventory fails the same drift test.
+pre_inv="$(sed -n 's/^P0_RO_TOOLS="\(.*\)"$/\1/p' "$Q/pre.sh")"
+printf 'PRE_FULL_INVENTORY        [%s]\n' "$pre_inv"
+drift_pre=PASS
+for t in timeout python3; do case " $pre_inv " in *" $t "*) : ;; *) drift_pre=FAIL ;; esac; done
+for t in grep awk;         do case " $pre_inv " in *" $t "*) drift_pre=FAIL ;; esac; done
+req_eq DRIFT_RED_PRE_FAILS "$drift_pre" FAIL
+# the executable half: drive the REAL pin validator with a COMPLETE RP7 pin set.
+RP7PINS='stat=/usr/bin/stat readlink=/usr/bin/readlink env=/usr/bin/env find=/usr/bin/find sha256sum=/usr/bin/sha256sum systemctl=/usr/bin/systemctl ss=/usr/bin/ss curl=/usr/bin/curl timeout=/usr/bin/timeout python3=/usr/bin/python3.12'
+build_pin_arm() {
+    local src="$1" arm="$2" trusted="$3"
+    {
+        printf '%s\n' 'set -Eeuo pipefail' 'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }'
+        grep -E '^P0_(RP7_RO_TOOLS|P0_ONLY_TOOLS|RO_TOOLS)=' "$src"
+        printf 'P0_FIXED_TRUSTED_PYTHON=%q\n' "$trusted"
+        sed -n '/^P0_TOOL_PINS="${P0_TOOL_PINS:-}"/,/^# Row 8 deploy-channel attestation inputs/p' "$src" | sed '$d'
+        printf '%s\n' 'printf "P0_PINS_ACCEPTED count=%s trusted_python_pin=%s\n" "$P0_PIN_COUNT" "${P0_TRUSTED_PYTHON_BOUND:-absent}"'
+    } > "$arm"
+}
+pin_case() { # label src trusted pins
+    local arm="$Q/pin-$$.sh" rc=0 out
+    build_pin_arm "$2" "$arm" "$3"
+    set +e
+    out="$(P0_TOOL_PINS="$4" bash --noprofile --norc "$arm" 2>&1)"; rc=$?
+    set -e
+    printf -- '--- %s\n%s\nARM_RC=%s\n' "$1" "$out" "$rc"
+    PIN_OUT="$out"; PIN_RC="$rc"
+}
+pin_case 'F3 RED  pre-fix pin validator, complete RP7 pin set' "$Q/pre.sh" '<PIN-AT-FREEZE>' "$RP7PINS"
+req_eq PIN_RED_RC "$PIN_RC" 3
+req_line PIN_RED_EXACT "$PIN_OUT" 'P0_STOP reason=input_pin_unknown_tool name=P0_TOOL_PINS tool=timeout inventory=[stat readlink id env find grep sha256sum awk systemctl ss curl getent]'
+pin_case 'F3 GREEN repaired pin validator, complete RP7 pin set, frozen python filled' "$Q/post.sh" '/usr/bin/python3.12' "$RP7PINS"
+req_eq PIN_GREEN_RC "$PIN_RC" 0
+req_line PIN_GREEN_EXACT "$PIN_OUT" 'P0_PINS_ACCEPTED count=10 trusted_python_pin=yes'
+pin_case 'F3 GREEN repaired validator, python3 pin present, freeze pin unfilled' "$Q/post.sh" '<PIN-AT-FREEZE>' "$RP7PINS"
+req_eq PIN_FREEZE_RC "$PIN_RC" 3
+req_line PIN_FREEZE_EXACT "$PIN_OUT" 'P0_STOP reason=input_pin_freeze_unfilled tool=python3 name=P0_FIXED_TRUSTED_PYTHON detail=deploy_channel_value_never_derived_here'
+pin_case 'F3 GREEN repaired validator, python3 pin disagrees with the frozen value' "$Q/post.sh" '/usr/bin/python3.12' 'python3=/usr/bin/python3.13'
+req_eq PIN_WRONGPY_RC "$PIN_RC" 3
+req_line PIN_WRONGPY_EXACT "$PIN_OUT" 'P0_STOP reason=input_pin_not_frozen_trusted_python tool=python3 pinned=/usr/bin/python3.13 frozen=/usr/bin/python3.12'
+pin_case 'F3 GREEN repaired validator, a pin for the DROPPED grep is now unknown' "$Q/post.sh" '/usr/bin/python3.12' 'grep=/usr/bin/grep'
+req_eq PIN_GREP_RC "$PIN_RC" 3
+req_line PIN_GREP_EXACT "$PIN_OUT" 'P0_STOP reason=input_pin_unknown_tool name=P0_TOOL_PINS tool=grep inventory=[stat readlink env find sha256sum systemctl ss curl timeout python3 id getent]'
+pin_case 'F3 REGRESSION repaired validator, pre-fix P0 pin set containing grep/awk' "$Q/pre.sh" '<PIN-AT-FREEZE>' 'grep=/usr/bin/grep awk=/usr/bin/awk'
+req_eq PIN_PRE_ACCEPTS_GREP_RC "$PIN_RC" 0
+# `timeout` is now looked up as a first-class resolved tool, not merely listed.
+req_in F3_TIMEOUT_RESOLVED "$(cat "$Q/post.sh")" 'p0_lookup "$P0_TOOLS_RESOLVED" timeout   || p0_stop "missing_tool tool=timeout detail=absent_from_resolved_map"'
+req_out F3_TIMEOUT_ABSENT_PRE "$(cat "$Q/pre.sh")" 'P0_TIMEOUT='
+
+# --- the python3 pin/PATH canonicalization allowance, with a readlink shim ---
+# Git Bash cannot create a native symlink (Operation not permitted), so the link
+# is rendered by a deterministic `readlink` shim. Only link RESOLUTION is
+# substituted; every comparison under test is the block's own.
+printf '%s\n' '#!/bin/bash' \
+    'p="${@: -1}"' \
+    'case "$p" in' \
+    '  */bin/python3) printf "%s\n" "${p%/*}/python3.12" ;;' \
+    '  */decoy/python3) printf "%s\n" "${p%/*}/python3.9" ;;' \
+    '  *) printf "%s\n" "$p" ;;' \
+    'esac' > "$Q/readlink-canon"
+chmod +x "$Q/readlink-canon"
+mkdir -p "$Q/bin" "$Q/decoy"
+for f in "$Q/bin/python3" "$Q/bin/python3.12" "$Q/decoy/python3" "$Q/decoy/python3.9" "$Q/bin/stat" "$Q/bin/other"; do
+    printf '%s\n' '#!/bin/bash' 'exit 0' > "$f"; chmod +x "$f"
+done
+build_resolve_arm() {
+    local src="$1" arm="$2" tool="$3" seen="$4" pins="$5"
+    {
+        printf '%s\n' 'set -Eeuo pipefail' \
+            'P0_SAFE=""; P0_LOOKUP=""; P0_RESOLUTION=""; P0_TOOLS_RESOLVED=""; P0_TOOLS_RESOLUTION=""' \
+            'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }'
+        printf 'P0_TOOL_PINS=%q\nFIXTURE_RESOLVED=%q\n' "$pins" "$seen"
+        printf 'P0_TOOLS_RESOLVED=%q\n' " readlink=$Q/readlink-canon"
+        printf '%s\n' 'command(){ if [ "$1" = -v ]; then printf "%s\n" "$FIXTURE_RESOLVED"; return 0; fi; builtin command "$@"; }'
+        exfn "$src" p0_sanitize
+        exfn "$src" p0_prepare_readlink_detail
+        exfn "$src" p0_lookup
+        exfn "$src" p0_resolve_tool
+        printf 'p0_resolve_tool %q\n' "$tool"
+        printf '%s\n' 'printf "RESOLVED_MAP [%s]\nRESOLUTION_MAP [%s]\n" "$P0_TOOLS_RESOLVED" "$P0_TOOLS_RESOLUTION"'
+    } > "$arm"
+}
+resolve_case() { # label tool seen pins
+    local arm="$Q/res-$$.sh" rc=0 out
+    build_resolve_arm "$Q/post.sh" "$arm" "$2" "$3" "$4"
+    set +e
+    out="$(bash --noprofile --norc "$arm" 2>&1)"; rc=$?
+    set -e
+    printf -- '--- %s\n%s\nARM_RC=%s\n' "$1" "$out" "$rc"
+    RES_OUT="$out"; RES_RC="$rc"
+}
+resolve_case 'F3 GREEN python3 PATH link canonicalises to the pin' python3 "$Q/bin/python3" "python3=$Q/bin/python3.12"
+req_eq  RESOLVE_PY_RC "$RES_RC" 0
+req_in  RESOLVE_PY_MODE "$RES_OUT" "python3=pinned_absolute_via_canonicalized_path_symlink"
+req_in  RESOLVE_PY_PATH "$RES_OUT" "python3=$Q/bin/python3.12"
+resolve_case 'F3 RED   shadowing python3 earlier in PATH still STOPs' python3 "$Q/decoy/python3" "python3=$Q/bin/python3.12"
+req_eq  RESOLVE_SHADOW_RC "$RES_RC" 3
+req_in  RESOLVE_SHADOW_STOP "$RES_OUT" "P0_STOP reason=tool_pin_mismatch tool=python3 pinned=$Q/bin/python3.12 resolved=$Q/decoy/python3 canonical=[$Q/decoy/python3.9]"
+resolve_case 'F3 CONTROL the allowance is python3-only: stat still needs exact equality' stat "$Q/bin/stat" "stat=$Q/bin/other"
+req_eq  RESOLVE_OTHER_RC "$RES_RC" 3
+req_in  RESOLVE_OTHER_STOP "$RES_OUT" "P0_STOP reason=tool_pin_mismatch tool=stat pinned=$Q/bin/other resolved=$Q/bin/stat"
+req_out RESOLVE_OTHER_NO_CANON "$RES_OUT" 'canonical='
+
+# ===========================================================================
+# F4 (LOW/MED) - exported resolver status + exact-LINE grammar assertions.
+# ===========================================================================
+printf '\n=== F4 getent status export and exact-line grammar ===\n'
+cat > "$Q/getent_shim.sh" <<'SHIMEOF'
+#!/usr/bin/env bash
+key="${2:-}"
+case "$key" in
+    gatea)
+        case "${SHIM_MODE:-}" in
+            gatea_rc2_diag) printf 'getent: nss module returned SERVBUSY for gatea\n' >&2; exit 2 ;;
+            gatea_nomatch)  exit 2 ;;
+            gatea_rc5)      printf 'gatea backend unavailable\n' >&2; exit 5 ;;
+            *) printf 'gatea:x:%s:%s:gatea route login:/home/gatea:/bin/bash\n' "$(id -u)" "$(id -g)"; exit 0 ;;
+        esac ;;
+    mtc-bridge)
+        case "${SHIM_MODE:-}" in
+            mtc_nomatch)    exit 2 ;;
+            mtc_rc2_diag)   printf 'getent: sss_nss: connection to the name service timed out\n' >&2; exit 2 ;;
+            mtc_rc0_parse)  printf 'mtc-bridge:x:999:988:svc\n'; exit 0 ;;
+            mtc_rc5)        printf 'mtc backend unavailable\n' >&2; exit 5 ;;
+            mtc_nul)        printf 'mtc-bridge\0:x:999\n'; exit 2 ;;
+            *) printf 'mtc-bridge:x:999:988:mtc-bridge service:/var/lib/mtc-bridge:/usr/sbin/nologin\n'; exit 0 ;;
+        esac ;;
+esac
+exit 2
+SHIMEOF
+chmod +x "$Q/getent_shim.sh"
+extract_accounts() {
+    {
+        sed -n '/^p0_stop() {/p'                "$1"
+        sed -n '/^p0_sanitize()/,/^}/p'         "$1"
+        sed -n '/^p0_count_substr()/,/^}/p'     "$1"
+        sed -n '/^p0_capture_numeric()/,/^}/p'  "$1"
+        sed -n '/^p0_resolve_passwd()/,/^}/p'   "$1"
+        sed -n '/^p0_resolve_accounts()/,/^}/p' "$1"
+        awk '$0=="printf '\''P0_SECTION accounts\\n'\''" || $0=="p0_resolve_accounts"' "$1"
+    } > "$2"
+}
+extract_accounts "$Q/pre.sh"  "$Q/acc_pre.sh"
+extract_accounts "$Q/post.sh" "$Q/acc_post.sh"
+acc_out() { # variant mode
+    SHIM_MODE="$2" P0_GETENT="$Q/getent_shim.sh" P0_ID="$(command -v id)" \
+    P0_EXPECT_UID="$(id -u)" P0_STATE_UID=999 P0_STATE_GID=988 \
+    bash --noprofile --norc -c 'set -Eeuo pipefail; . "$1"' _ "$Q/acc_$1.sh"
+}
+acc_case() { # label variant mode
+    local rc=0 out
+    set +e
+    out="$(acc_out "$2" "$3")"; rc=$?
+    set -e
+    printf -- '--- %s (variant=%s mode=%s)\n%s\nARM_RC=%s\n' "$1" "$2" "$3" "$out" "$rc"
+    ACC_OUT="$out"; ACC_RC="$rc"
+}
+# Every case below is an EXACT WHOLE-LINE assertion, not a substring test: the
+# audit's finding was a MISSING field, and a substring assertion is exactly what
+# let the old harness pass while the field was absent.
+exact_pair() { # label mode want_rc want_line red_expected(yes|no)
+    acc_case "F4 GREEN $1" post "$2"
+    req_eq "F4_${1}_RC" "$ACC_RC" "$3"
+    req_line "F4_${1}_LINE" "$ACC_OUT" "$4"
+    acc_case "F4 RED   $1 on the audited pre-fix bytes" pre "$2"
+    if [ "$5" = yes ]; then req_line "F4_${1}_PRE_LINE" "$ACC_OUT" "$4"
+    else req_noline "F4_${1}_PRE_LINE" "$ACC_OUT" "$4"; fi
+}
+exact_pair RC0_PARSE_ERROR mtc_rc0_parse 3 'P0_STOP reason=identity_unresolvable account=mtc-bridge rc=0 detail=[mtc-bridge:x:999:988:svc]' no
+exact_pair RC2_NOMATCH_STATE mtc_nomatch 3 'P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match' yes
+exact_pair RC2_NOMATCH_GATEA gatea_nomatch 3 'P0_STOP reason=identity_unresolvable account=gatea rc=2 detail=getent_valid_no_match_for_route_login' yes
+exact_pair RC2_DIAGNOSTIC_MTC mtc_rc2_diag 3 'P0_STOP reason=identity_unresolvable account=mtc-bridge rc=2 detail=[getent: sss_nss: connection to the name service timed out]' no
+exact_pair RC2_DIAGNOSTIC_GATEA gatea_rc2_diag 3 'P0_STOP reason=identity_unresolvable account=gatea rc=2 detail=[getent: nss module returned SERVBUSY for gatea]' no
+exact_pair OTHER_NONZERO_MTC mtc_rc5 3 'P0_STOP reason=identity_unresolvable account=mtc-bridge rc=5 detail=[mtc backend unavailable]' no
+exact_pair OTHER_NONZERO_GATEA gatea_rc5 3 'P0_STOP reason=identity_unresolvable account=gatea rc=5 detail=[gatea backend unavailable]' no
+exact_pair NUL_CAPTURE_KEEPS_RC mtc_nul 3 'P0_STOP reason=identity_unresolvable account=mtc-bridge rc=2 detail=[nul_byte_in_merged_capture]' no
+acc_case 'F4 REGRESSION healthy resolution still admits' post ''
+req_eq  F4_HEALTHY_RC "$ACC_RC" 0
+req_line F4_HEALTHY_LINE "$ACC_OUT" 'P0_account_admitted account=mtc-bridge numeric=999:988 matches=prereg_state_uid_gid name=diagnostic_only'
+# The audit's own rc-5 reproduction markers, both directions.
+for v in pre post; do
+    for m in gatea_rc5 mtc_rc5; do
+        acc_case "F4 PROBE $v/$m (auditor marker)" "$v" "$m"
+        f=0; case "$ACC_OUT" in *' rc=5 '*) f=1 ;; esac
+        printf 'GETENT_ERROR_%s variant=%s contains_rc_field=%s\n' "$(printf '%s' "$m" | tr 'a-z' 'A-Z')" "$v" "$f"
+        if [ "$v" = pre ]; then req_eq "F4_MARKER_${v}_${m}" "$f" 0; else req_eq "F4_MARKER_${v}_${m}" "$f" 1; fi
+    done
+done
+
+printf '\n'
+if [ "$FAILED" -eq 0 ]; then
+    printf 'RP6_R4_D026_SUMMARY findings=4 pth_forge=real_venv manager_bound=real_timeout inventory_basis=%s@%s result=PASS\n' "${ro_sha_expected:0:8}" "$ro_rev"
+else
+    printf 'RP6_R4_D026_SUMMARY findings=4 result=FAIL\n'
+    exit 1
+fi
+```
+
+### R4 — D026 fence, real captured output
+
+```text
+RED_SOURCE rev=bbb40ab6 sha256=2d9b166eacfc39ebe0d8d89edb5860876ccc4d9f0ff97f9e10a228dbcf96289e bytes=71743
+RO_FROZEN_BASIS rev=d6a976aa sha256=23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad bytes=70941
+
+=== F1 executable .pth forge ===
+F1_FIXTURE venv=tmp.NzY2z73cI6/venv interpreter=python.exe site_packages=site-packages pth=zzforge.pth
+F1_PTH_LINE import os; open('C:/Users/BARSEM~1/AppData/Local/Temp/tmp.NzY2z73cI6/pth_marker.txt','w').write('PTH_EXECUTED')
+--- F1 RED  pre-fix bytes, -I only, forged .pth
+P0_interpreter_object path=/tmp/tmp.NzY2z73cI6/venv/Scripts/python.exe kind=regular target_kind=regular mode=755 owner_numeric=4096:4096
+P0_interpreter path=/tmp/tmp.NzY2z73cI6/venv/Scripts/python.exe exec=ok env=cleared isolated=yes reported_version=3.14 adjudication=recorded_not_compared
+ARM_RC=0 MARKER_CREATED=yes MARKER_CONTENT=[PTH_EXECUTED]
+--- F1 GREEN repaired bytes, -I -S, same forged .pth
+P0_interpreter_object path=/tmp/tmp.NzY2z73cI6/venv/Scripts/python.exe kind=regular target_kind=regular mode=755 owner_numeric=4096:4096
+P0_interpreter path=/tmp/tmp.NzY2z73cI6/venv/Scripts/python.exe exec=ok env=cleared isolated=yes site_startup=disabled startup_flags=self_verified_isolated_and_no_site venv_pth_and_sitecustomize=not_executed reported_version=3.14 adjudication=recorded_not_compared interpreter_binary_behaviour=not_attested
+ARM_RC=0 MARKER_CREATED=no MARKER_CONTENT=[]
+--- F1 RED  repaired bytes with " -S" deleted (mutant)
+P0_interpreter_object path=/tmp/tmp.NzY2z73cI6/venv/Scripts/python.exe kind=regular target_kind=regular mode=755 owner_numeric=4096:4096
+P0_STOP reason=interpreter_startup_not_isolated path=/tmp/tmp.NzY2z73cI6/venv/Scripts/python.exe detail=[P0PY_STARTUP_UNPROVEN isolated=1 no_site=0] expected=isolated_and_no_site
+ARM_RC=3 MARKER_CREATED=yes MARKER_CONTENT=[PTH_EXECUTED]
+--- F1 CONTROL pre-fix bytes, .pth removed
+P0_interpreter_object path=/tmp/tmp.NzY2z73cI6/venv/Scripts/python.exe kind=regular target_kind=regular mode=755 owner_numeric=4096:4096
+P0_interpreter path=/tmp/tmp.NzY2z73cI6/venv/Scripts/python.exe exec=ok env=cleared isolated=yes reported_version=3.14 adjudication=recorded_not_compared
+ARM_RC=0 MARKER_CREATED=no MARKER_CONTENT=[]
+ASSERT_MET label=F1_PRE_MARKER_CREATED value=[yes]
+ASSERT_MET label=F1_PRE_RC value=[0]
+ASSERT_MET label=F1_PRE_STILL_ACCEPTED token=[P0_interpreter path=]
+ASSERT_MET label=F1_PRE_STILL_ACCEPTED2 token=[exec=ok env=cleared isolated=yes]
+ASSERT_MET label=F1_POST_MARKER_ABSENT value=[no]
+ASSERT_MET label=F1_POST_RC value=[0]
+ASSERT_MET label=F1_POST_ACCEPTED token=[exec=ok env=cleared isolated=yes site_startup=disabled startup_flags=self_verified_isolated_and_no_site venv_pth_and_sitecustomize=not_executed]
+ASSERT_MET label=F1_MUTANT_MARKER value=[yes]
+ASSERT_MET label=F1_MUTANT_RC value=[3]
+ASSERT_MET label=F1_MUTANT_STOP token=[P0_STOP reason=interpreter_startup_not_isolated]
+ASSERT_MET label=F1_MUTANT_FLAGS token=[P0PY_STARTUP_UNPROVEN isolated=1 no_site=0]
+ASSERT_MET label=F1_CONTROL_MARKER value=[no]
+ASSERT_MET label=F1_CONTROL_RC value=[0]
+ASSERT_MET label=F1_CLAIM_RED token=[mutation=none_in_this_block]
+ASSERT_MET label=F1_CLAIM_GREEN_NO_FALSE forbidden_token_absent=[mutation=none_in_this_block]
+ASSERT_MET label=F1_CLAIM_GREEN token=[mutation=no_filesystem_write_primitive_in_this_shell_source]
+ASSERT_MET label=F1_CLAIM_GREEN_CHILD token=[child_side_effects=not_attested_except_venv_startup_which_is_disabled]
+ASSERT_MET label=F1_CLAIM_GREEN_LAUNCH token=[interpreter_launch=isolated_and_no_site]
+ASSERT_MET label=F1_CLAIM_RESIDUAL token=[behaviour_inside_any_executed_tool_binary]
+ASSERT_MET label=F1_SOURCE_RED_COMMENT token=[nothing is written and nothing is installed]
+ASSERT_MET label=F1_SOURCE_GREEN_COMMENT forbidden_token_absent=[nothing is written and nothing is installed]
+
+=== F2 bounded manager query ===
+--- F2 REGRESSION pre-fix bytes, responsive manager
+P0_system_manager_ready bus=system query=show_property_Version response_key=Version response_value=[252] env=cleared binary=/tmp/tmp.NzY2z73cI6/systemctl-fast scope=this_login_pid_and_mount_namespaces manager_identity=not_established
+EXTERNAL_WATCHDOG_RC=0 ELAPSED_S=0 P0_STOP_LINES=0
+--- F2 GREEN repaired bytes, responsive manager
+P0_system_manager_ready bus=system query=show_property_Version response_key=Version response_value=[252] env=cleared bound=pinned_timeout_inside_cleared_env budget_s=10 kill_after_s=5 elapsed_s=0 binary=/tmp/tmp.NzY2z73cI6/systemctl-fast bounding_binary=/usr/bin/timeout scope=this_login_pid_and_mount_namespaces manager_identity=not_established
+EXTERNAL_WATCHDOG_RC=0 ELAPSED_S=0 P0_STOP_LINES=0
+--- F2 RED  pre-fix bytes, stalled manager (needs the EXTERNAL kill)
+
+EXTERNAL_WATCHDOG_RC=124 ELAPSED_S=6 P0_STOP_LINES=0
+--- F2 GREEN repaired bytes, stalled manager (own bounded STOP)
+P0_STOP reason=system_manager_unreachable rc=124 detail=manager_query_deadline_exceeded budget_s=10 elapsed_s=10 text=[]
+EXTERNAL_WATCHDOG_RC=3 ELAPSED_S=10 P0_STOP_LINES=1
+--- F2 RED  repaired bytes, budget literal raised to 600s (mutant)
+
+EXTERNAL_WATCHDOG_RC=124 ELAPSED_S=6 P0_STOP_LINES=0
+ASSERT_MET label=F2_PRE_FAST_RC value=[0]
+ASSERT_MET label=F2_PRE_FAST_ANSWER token=[P0_system_manager_ready bus=system query=show_property_Version response_key=Version response_value=[252]]
+ASSERT_MET label=F2_PRE_FAST_UNBOUND forbidden_token_absent=[bound=pinned_timeout_inside_cleared_env]
+ASSERT_MET label=F2_POST_FAST_RC value=[0]
+ASSERT_MET label=F2_POST_FAST_ANSWER token=[response_value=[252] env=cleared bound=pinned_timeout_inside_cleared_env budget_s=10 kill_after_s=5 elapsed_s=]
+ASSERT_MET label=F2_PRE_STALL_EXTKILL value=[124]
+ASSERT_MET label=F2_PRE_STALL_NO_STOP value=[0]
+ASSERT_MET label=F2_PRE_STALL_SILENT value=[]
+ASSERT_MET label=F2_POST_STALL_RC value=[3]
+ASSERT_MET label=F2_POST_STALL_ONE_STOP value=[1]
+ASSERT_MET label=F2_POST_STALL_REASON token=[P0_STOP reason=system_manager_unreachable rc=124 detail=manager_query_deadline_exceeded budget_s=10 elapsed_s=]
+ASSERT_MET label=F2_POST_STALL_TEXT token=[text=[]]
+ASSERT_MET label=F2_POST_STALL_NO_EXTERNAL_KILL elapsed_s=10 watchdog_s=40
+ASSERT_MET label=F2_BUDGET_IS_LOADBEARING value=[124]
+ASSERT_MET label=F2_BUDGET_MUTANT_NO_STOP value=[0]
+ASSERT_MET label=F2_ORDER_ENV_FIRST token=["$P0_ENV" -i LC_ALL=C "$P0_TIMEOUT" \]
+ASSERT_MET label=F2_PRE_HAS_NO_BOUND forbidden_token_absent=[P0_TIMEOUT]
+
+=== F3 RO inventory drift ===
+ASSERT_MET label=RO_BASIS_SHA value=[23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad]
+ASSERT_MET label=RO_BASIS_BYTES value=[70941]
+RO_FROZEN_VALIDATOR_SET   [stat readlink env find sha256sum systemctl ss curl timeout python3]
+RO_FROZEN_BINDING_SET     [stat readlink env find sha256sum systemctl ss curl timeout python3]
+RO_FROZEN_DECLARED_COUNT  10
+P0_RO_HALF                [stat readlink env find sha256sum systemctl ss curl timeout python3]
+P0_ONLY_HALF              [id getent]
+P0_FULL_INVENTORY         [stat readlink env find sha256sum systemctl ss curl timeout python3 id getent]
+ASSERT_MET label=DRIFT_P0_VS_RO_VALIDATOR value=[curl env find python3 readlink sha256sum ss stat systemctl timeout ]
+ASSERT_MET label=DRIFT_P0_VS_RO_BINDING value=[curl env find python3 readlink sha256sum ss stat systemctl timeout ]
+ASSERT_MET label=DRIFT_RO_HALF_COUNT value=[10]
+ASSERT_MET label=DRIFT_FULL_COUNT value=[12]
+ASSERT_MET label=DRIFT_PRESENT_timeout token=[ timeout ]
+ASSERT_MET label=DRIFT_PRESENT_python3 token=[ python3 ]
+ASSERT_MET label=DRIFT_PRESENT_id token=[ id ]
+ASSERT_MET label=DRIFT_PRESENT_getent token=[ getent ]
+ASSERT_MET label=DRIFT_DROPPED_grep forbidden_token_absent=[ grep ]
+ASSERT_MET label=DRIFT_DROPPED_awk forbidden_token_absent=[ awk ]
+PRE_FULL_INVENTORY        [stat readlink id env find grep sha256sum awk systemctl ss curl getent]
+ASSERT_MET label=DRIFT_RED_PRE_FAILS value=[FAIL]
+--- F3 RED  pre-fix pin validator, complete RP7 pin set
+P0_STOP reason=input_pin_unknown_tool name=P0_TOOL_PINS tool=timeout inventory=[stat readlink id env find grep sha256sum awk systemctl ss curl getent]
+ARM_RC=3
+ASSERT_MET label=PIN_RED_RC value=[3]
+ASSERT_MET label=PIN_RED_EXACT exact_line=[P0_STOP reason=input_pin_unknown_tool name=P0_TOOL_PINS tool=timeout inventory=[stat readlink id env find grep sha256sum awk systemctl ss curl getent]]
+--- F3 GREEN repaired pin validator, complete RP7 pin set, frozen python filled
+P0_PINS_ACCEPTED count=10 trusted_python_pin=yes
+ARM_RC=0
+ASSERT_MET label=PIN_GREEN_RC value=[0]
+ASSERT_MET label=PIN_GREEN_EXACT exact_line=[P0_PINS_ACCEPTED count=10 trusted_python_pin=yes]
+--- F3 GREEN repaired validator, python3 pin present, freeze pin unfilled
+P0_STOP reason=input_pin_freeze_unfilled tool=python3 name=P0_FIXED_TRUSTED_PYTHON detail=deploy_channel_value_never_derived_here
+ARM_RC=3
+ASSERT_MET label=PIN_FREEZE_RC value=[3]
+ASSERT_MET label=PIN_FREEZE_EXACT exact_line=[P0_STOP reason=input_pin_freeze_unfilled tool=python3 name=P0_FIXED_TRUSTED_PYTHON detail=deploy_channel_value_never_derived_here]
+--- F3 GREEN repaired validator, python3 pin disagrees with the frozen value
+P0_STOP reason=input_pin_not_frozen_trusted_python tool=python3 pinned=/usr/bin/python3.13 frozen=/usr/bin/python3.12
+ARM_RC=3
+ASSERT_MET label=PIN_WRONGPY_RC value=[3]
+ASSERT_MET label=PIN_WRONGPY_EXACT exact_line=[P0_STOP reason=input_pin_not_frozen_trusted_python tool=python3 pinned=/usr/bin/python3.13 frozen=/usr/bin/python3.12]
+--- F3 GREEN repaired validator, a pin for the DROPPED grep is now unknown
+P0_STOP reason=input_pin_unknown_tool name=P0_TOOL_PINS tool=grep inventory=[stat readlink env find sha256sum systemctl ss curl timeout python3 id getent]
+ARM_RC=3
+ASSERT_MET label=PIN_GREP_RC value=[3]
+ASSERT_MET label=PIN_GREP_EXACT exact_line=[P0_STOP reason=input_pin_unknown_tool name=P0_TOOL_PINS tool=grep inventory=[stat readlink env find sha256sum systemctl ss curl timeout python3 id getent]]
+--- F3 REGRESSION repaired validator, pre-fix P0 pin set containing grep/awk
+P0_PINS_ACCEPTED count=2 trusted_python_pin=absent
+ARM_RC=0
+ASSERT_MET label=PIN_PRE_ACCEPTS_GREP_RC value=[0]
+ASSERT_MET label=F3_TIMEOUT_RESOLVED token=[p0_lookup "$P0_TOOLS_RESOLVED" timeout   || p0_stop "missing_tool tool=timeout detail=absent_from_resolved_map"]
+ASSERT_MET label=F3_TIMEOUT_ABSENT_PRE forbidden_token_absent=[P0_TIMEOUT=]
+--- F3 GREEN python3 PATH link canonicalises to the pin
+RESOLVED_MAP [ readlink=/tmp/tmp.NzY2z73cI6/readlink-canon python3=/tmp/tmp.NzY2z73cI6/bin/python3.12]
+RESOLUTION_MAP [ python3=pinned_absolute_via_canonicalized_path_symlink]
+ARM_RC=0
+ASSERT_MET label=RESOLVE_PY_RC value=[0]
+ASSERT_MET label=RESOLVE_PY_MODE token=[python3=pinned_absolute_via_canonicalized_path_symlink]
+ASSERT_MET label=RESOLVE_PY_PATH token=[python3=/tmp/tmp.NzY2z73cI6/bin/python3.12]
+--- F3 RED   shadowing python3 earlier in PATH still STOPs
+P0_STOP reason=tool_pin_mismatch tool=python3 pinned=/tmp/tmp.NzY2z73cI6/bin/python3.12 resolved=/tmp/tmp.NzY2z73cI6/decoy/python3 canonical=[/tmp/tmp.NzY2z73cI6/decoy/python3.9]
+ARM_RC=3
+ASSERT_MET label=RESOLVE_SHADOW_RC value=[3]
+ASSERT_MET label=RESOLVE_SHADOW_STOP token=[P0_STOP reason=tool_pin_mismatch tool=python3 pinned=/tmp/tmp.NzY2z73cI6/bin/python3.12 resolved=/tmp/tmp.NzY2z73cI6/decoy/python3 canonical=[/tmp/tmp.NzY2z73cI6/decoy/python3.9]]
+--- F3 CONTROL the allowance is python3-only: stat still needs exact equality
+P0_STOP reason=tool_pin_mismatch tool=stat pinned=/tmp/tmp.NzY2z73cI6/bin/other resolved=/tmp/tmp.NzY2z73cI6/bin/stat
+ARM_RC=3
+ASSERT_MET label=RESOLVE_OTHER_RC value=[3]
+ASSERT_MET label=RESOLVE_OTHER_STOP token=[P0_STOP reason=tool_pin_mismatch tool=stat pinned=/tmp/tmp.NzY2z73cI6/bin/other resolved=/tmp/tmp.NzY2z73cI6/bin/stat]
+ASSERT_MET label=RESOLVE_OTHER_NO_CANON forbidden_token_absent=[canonical=]
+
+=== F4 getent status export and exact-line grammar ===
+--- F4 GREEN RC0_PARSE_ERROR (variant=post mode=mtc_rc0_parse)
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge rc=0 detail=[mtc-bridge:x:999:988:svc]
+ARM_RC=3
+ASSERT_MET label=F4_RC0_PARSE_ERROR_RC value=[3]
+ASSERT_MET label=F4_RC0_PARSE_ERROR_LINE exact_line=[P0_STOP reason=identity_unresolvable account=mtc-bridge rc=0 detail=[mtc-bridge:x:999:988:svc]]
+--- F4 RED   RC0_PARSE_ERROR on the audited pre-fix bytes (variant=pre mode=mtc_rc0_parse)
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge detail=[mtc-bridge:x:999:988:svc]
+ARM_RC=3
+ASSERT_MET label=F4_RC0_PARSE_ERROR_PRE_LINE exact_line_absent_as_required=[P0_STOP reason=identity_unresolvable account=mtc-bridge rc=0 detail=[mtc-bridge:x:999:988:svc]]
+--- F4 GREEN RC2_NOMATCH_STATE (variant=post mode=mtc_nomatch)
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_MET label=F4_RC2_NOMATCH_STATE_RC value=[3]
+ASSERT_MET label=F4_RC2_NOMATCH_STATE_LINE exact_line=[P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match]
+--- F4 RED   RC2_NOMATCH_STATE on the audited pre-fix bytes (variant=pre mode=mtc_nomatch)
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_MET label=F4_RC2_NOMATCH_STATE_PRE_LINE exact_line=[P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match]
+--- F4 GREEN RC2_NOMATCH_GATEA (variant=post mode=gatea_nomatch)
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea rc=2 detail=getent_valid_no_match_for_route_login
+ARM_RC=3
+ASSERT_MET label=F4_RC2_NOMATCH_GATEA_RC value=[3]
+ASSERT_MET label=F4_RC2_NOMATCH_GATEA_LINE exact_line=[P0_STOP reason=identity_unresolvable account=gatea rc=2 detail=getent_valid_no_match_for_route_login]
+--- F4 RED   RC2_NOMATCH_GATEA on the audited pre-fix bytes (variant=pre mode=gatea_nomatch)
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea rc=2 detail=getent_valid_no_match_for_route_login
+ARM_RC=3
+ASSERT_MET label=F4_RC2_NOMATCH_GATEA_PRE_LINE exact_line=[P0_STOP reason=identity_unresolvable account=gatea rc=2 detail=getent_valid_no_match_for_route_login]
+--- F4 GREEN RC2_DIAGNOSTIC_MTC (variant=post mode=mtc_rc2_diag)
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge rc=2 detail=[getent: sss_nss: connection to the name service timed out]
+ARM_RC=3
+ASSERT_MET label=F4_RC2_DIAGNOSTIC_MTC_RC value=[3]
+ASSERT_MET label=F4_RC2_DIAGNOSTIC_MTC_LINE exact_line=[P0_STOP reason=identity_unresolvable account=mtc-bridge rc=2 detail=[getent: sss_nss: connection to the name service timed out]]
+--- F4 RED   RC2_DIAGNOSTIC_MTC on the audited pre-fix bytes (variant=pre mode=mtc_rc2_diag)
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge detail=[getent: sss_nss: connection to the name service timed out]
+ARM_RC=3
+ASSERT_MET label=F4_RC2_DIAGNOSTIC_MTC_PRE_LINE exact_line_absent_as_required=[P0_STOP reason=identity_unresolvable account=mtc-bridge rc=2 detail=[getent: sss_nss: connection to the name service timed out]]
+--- F4 GREEN RC2_DIAGNOSTIC_GATEA (variant=post mode=gatea_rc2_diag)
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea rc=2 detail=[getent: nss module returned SERVBUSY for gatea]
+ARM_RC=3
+ASSERT_MET label=F4_RC2_DIAGNOSTIC_GATEA_RC value=[3]
+ASSERT_MET label=F4_RC2_DIAGNOSTIC_GATEA_LINE exact_line=[P0_STOP reason=identity_unresolvable account=gatea rc=2 detail=[getent: nss module returned SERVBUSY for gatea]]
+--- F4 RED   RC2_DIAGNOSTIC_GATEA on the audited pre-fix bytes (variant=pre mode=gatea_rc2_diag)
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea detail=[getent: nss module returned SERVBUSY for gatea]
+ARM_RC=3
+ASSERT_MET label=F4_RC2_DIAGNOSTIC_GATEA_PRE_LINE exact_line_absent_as_required=[P0_STOP reason=identity_unresolvable account=gatea rc=2 detail=[getent: nss module returned SERVBUSY for gatea]]
+--- F4 GREEN OTHER_NONZERO_MTC (variant=post mode=mtc_rc5)
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge rc=5 detail=[mtc backend unavailable]
+ARM_RC=3
+ASSERT_MET label=F4_OTHER_NONZERO_MTC_RC value=[3]
+ASSERT_MET label=F4_OTHER_NONZERO_MTC_LINE exact_line=[P0_STOP reason=identity_unresolvable account=mtc-bridge rc=5 detail=[mtc backend unavailable]]
+--- F4 RED   OTHER_NONZERO_MTC on the audited pre-fix bytes (variant=pre mode=mtc_rc5)
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge detail=[mtc backend unavailable]
+ARM_RC=3
+ASSERT_MET label=F4_OTHER_NONZERO_MTC_PRE_LINE exact_line_absent_as_required=[P0_STOP reason=identity_unresolvable account=mtc-bridge rc=5 detail=[mtc backend unavailable]]
+--- F4 GREEN OTHER_NONZERO_GATEA (variant=post mode=gatea_rc5)
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea rc=5 detail=[gatea backend unavailable]
+ARM_RC=3
+ASSERT_MET label=F4_OTHER_NONZERO_GATEA_RC value=[3]
+ASSERT_MET label=F4_OTHER_NONZERO_GATEA_LINE exact_line=[P0_STOP reason=identity_unresolvable account=gatea rc=5 detail=[gatea backend unavailable]]
+--- F4 RED   OTHER_NONZERO_GATEA on the audited pre-fix bytes (variant=pre mode=gatea_rc5)
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea detail=[gatea backend unavailable]
+ARM_RC=3
+ASSERT_MET label=F4_OTHER_NONZERO_GATEA_PRE_LINE exact_line_absent_as_required=[P0_STOP reason=identity_unresolvable account=gatea rc=5 detail=[gatea backend unavailable]]
+--- F4 GREEN NUL_CAPTURE_KEEPS_RC (variant=post mode=mtc_nul)
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge rc=2 detail=[nul_byte_in_merged_capture]
+ARM_RC=3
+ASSERT_MET label=F4_NUL_CAPTURE_KEEPS_RC_RC value=[3]
+ASSERT_MET label=F4_NUL_CAPTURE_KEEPS_RC_LINE exact_line=[P0_STOP reason=identity_unresolvable account=mtc-bridge rc=2 detail=[nul_byte_in_merged_capture]]
+--- F4 RED   NUL_CAPTURE_KEEPS_RC on the audited pre-fix bytes (variant=pre mode=mtc_nul)
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge detail=[nul_byte_in_merged_capture]
+ARM_RC=3
+ASSERT_MET label=F4_NUL_CAPTURE_KEEPS_RC_PRE_LINE exact_line_absent_as_required=[P0_STOP reason=identity_unresolvable account=mtc-bridge rc=2 detail=[nul_byte_in_merged_capture]]
+--- F4 REGRESSION healthy resolution still admits (variant=post mode=)
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_account account=mtc-bridge outcome=resolved uid=999 gid=988 name_diag=[mtc-bridge] via=pinned_getent_passwd
+P0_account_admitted account=mtc-bridge numeric=999:988 matches=prereg_state_uid_gid name=diagnostic_only
+ARM_RC=0
+ASSERT_MET label=F4_HEALTHY_RC value=[0]
+ASSERT_MET label=F4_HEALTHY_LINE exact_line=[P0_account_admitted account=mtc-bridge numeric=999:988 matches=prereg_state_uid_gid name=diagnostic_only]
+--- F4 PROBE pre/gatea_rc5 (auditor marker) (variant=pre mode=gatea_rc5)
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea detail=[gatea backend unavailable]
+ARM_RC=3
+GETENT_ERROR_GATEA_RC5 variant=pre contains_rc_field=0
+ASSERT_MET label=F4_MARKER_pre_gatea_rc5 value=[0]
+--- F4 PROBE pre/mtc_rc5 (auditor marker) (variant=pre mode=mtc_rc5)
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge detail=[mtc backend unavailable]
+ARM_RC=3
+GETENT_ERROR_MTC_RC5 variant=pre contains_rc_field=0
+ASSERT_MET label=F4_MARKER_pre_mtc_rc5 value=[0]
+--- F4 PROBE post/gatea_rc5 (auditor marker) (variant=post mode=gatea_rc5)
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea rc=5 detail=[gatea backend unavailable]
+ARM_RC=3
+GETENT_ERROR_GATEA_RC5 variant=post contains_rc_field=1
+ASSERT_MET label=F4_MARKER_post_gatea_rc5 value=[1]
+--- F4 PROBE post/mtc_rc5 (auditor marker) (variant=post mode=mtc_rc5)
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge rc=5 detail=[mtc backend unavailable]
+ARM_RC=3
+GETENT_ERROR_MTC_RC5 variant=post contains_rc_field=1
+ASSERT_MET label=F4_MARKER_post_mtc_rc5 value=[1]
+
+RP6_R4_D026_SUMMARY findings=4 pth_forge=real_venv manager_bound=real_timeout inventory_basis=23e55667@d6a976aa result=PASS
+```
+
+**Reproducibility of this transcript.** The fence was re-extracted from this
+markdown and re-run; the extraction is byte-identical to the file that ran, the
+re-run ended `RP6_R4_D026_SUMMARY … result=PASS` at rc 0, and the transcripts are
+identical after normalising the random `/tmp/tmp.*` scratch root — except for two
+fields on the F2 deadline arm, `ELAPSED_S` and the matching
+`F2_POST_STALL_NO_EXTERNAL_KILL elapsed_s=`, which read `10` and `11` on the two
+runs. That is an outer wall-clock measurement of a 10-second deadline at
+whole-second resolution; it is recorded as a diagnostic and no assertion reads its
+value, which is why both runs pass. The assertion that matters — the block's own
+`rc=124 detail=manager_query_deadline_exceeded budget_s=10` STOP — is identical
+in both.
+
+### What each arm establishes
+
+- **F1.** The pre-fix bytes created `pth_marker.txt` with content `PTH_EXECUTED`
+  **and still printed the accepted `P0_interpreter … exec=ok` line at rc 0** —
+  arbitrary code from the judged venv ran with this block's authority while the
+  block reported success. The repaired bytes print the accepted line with
+  `site_startup=disabled … venv_pth_and_sitecustomize=not_executed` and create no
+  marker. Deleting ` -S` from the repaired bytes recreates the marker *and* is
+  killed by the child's own startup guard (`P0PY_STARTUP_UNPROVEN isolated=1
+  no_site=0` → rc 3), so the fix cannot be undone silently. The `.pth`-removed
+  control proves the marker comes from the forged line and from nothing else.
+- **F2.** The pre-fix stalled arm produced **zero** `P0_STOP` lines, zero output
+  and required `EXTERNAL_WATCHDOG_RC=124`. The repaired stalled arm returned its
+  own `P0_STOP reason=system_manager_unreachable rc=124
+  detail=manager_query_deadline_exceeded budget_s=10 elapsed_s=10 text=[]` at rc
+  3, inside a 40 s watchdog that never fired. Raising only the budget literal to
+  600 s puts the external kill back, so the recorded literal — not something else
+  — is what bounds the query. Both fast arms still answer at rc 0, so the bound
+  did not convert a healthy manager into a STOP.
+- **F3.** The frozen RO validator set, the frozen RO binding loop and the frozen
+  declared count all read `stat readlink env find sha256sum systemctl ss curl
+  timeout python3` / `10`, and P0's RO half is identical. Driving the REAL pin
+  validator with a complete RP7 pin set reproduces the auditor's own line on the
+  pre-fix bytes — `input_pin_unknown_tool … tool=timeout inventory=[stat readlink
+  id env find grep sha256sum awk systemctl ss curl getent]` — and returns
+  `P0_PINS_ACCEPTED count=10 trusted_python_pin=yes` on the repaired bytes. The
+  inverse also holds: a `grep` pin is now the unknown tool. The freeze gate and the
+  wrong-python3 gate each STOP with their own exact line, the canonicalised
+  `python3` link is admitted, a shadowing `python3` is not, and the allowance does
+  not leak to `stat`.
+- **F4.** Eight EXACT WHOLE-LINE assertions (not substrings — a substring
+  assertion is exactly what let the old harness pass while the field was missing)
+  over rc-0 parse error, rc-2 valid no-match for both accounts, rc-2 diagnostic
+  for both accounts, other-nonzero (rc 5) for both accounts, and a NUL-corrupted
+  capture that still records `rc=2`. Each has its RED twin on the pre-fix bytes,
+  where the same line is emitted **without** the `rc=` field. The auditor's own
+  marker is reproduced in both directions: `contains_rc_field=0` pre, `1` post.
+
+## R4 — superseding C13 arm harness (27 cases, corrected grammar)
+
+The C13 R4 fence verbatim, with the twelve `run_case` assertion strings that
+asserted the pre-R4 `identity_unresolvable` grammar updated to carry `rc=2`, and
+the scratch directory and summary label renamed so it cannot be confused with the
+superseded run. The one `prer4 mtc_rc2_diag … GREEN` case deliberately KEEPS the
+old string, because its whole purpose is to assert what the R3 bytes emit.
+
+```bash
+set -Eeuo pipefail
+cd /c/LAB/Tradingview_LAB_CLEAN
+blk=MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh
+pre_rev=cbaf3ec8    # the C13 commit  = PRE-R3 bytes cfdb23b8..., 54109 B
+r3_rev=8d2f25a5     # the R3 commit   = PRE-R4 bytes ef205e20..., 55467 B
+w=/tmp/rp6qa_c13r4b; rm -rf "$w"; mkdir -p "$w"
+
+# ---- QA-only getent fixture (production pins an absolute getent from the inventory).
+cat > "$w/getent_shim.sh" <<'SHIMEOF'
+#!/usr/bin/env bash
+key="${2:-}"
+case "$key" in
+    gatea)
+        case "${SHIM_MODE:-}" in
+            wrong_gatea_uid) printf 'gatea:x:4242:%s:a:/h:/s\n' "$(id -g)"; exit 0 ;;
+            dup_gatea) printf 'gatea:x:%s:%s:a:/h:/s\ngatea:x:%s:%s:b:/h:/s\n' "$(id -u)" "$(id -g)" "$(id -u)" "$(id -g)"; exit 0 ;;
+            gatea_rc2_diag) printf 'getent: nss module returned SERVBUSY for gatea\n' >&2; exit 2 ;;
+            gatea_rc2_newline) printf '\n' >&2; exit 2 ;;
+            *) printf 'gatea:x:%s:%s:gatea route login:/home/gatea:/bin/bash\n' "$(id -u)" "$(id -g)"; exit 0 ;;
+        esac ;;
+    mtc-bridge)
+        case "${SHIM_MODE:-}" in
+            wrong_mtc_gid) printf 'mtc-bridge:x:999:989:svc:/var/lib/mtc-bridge:/usr/sbin/nologin\n'; exit 0 ;;
+            mtc_nomatch) exit 2 ;;
+            mtc_rc2_diag) printf 'getent: sss_nss: connection to the name service timed out\n' >&2; exit 2 ;;
+            mtc_rc2_partial) printf 'mtc-bridge:x:999\n'; exit 2 ;;
+            mtc_rc2_newline) printf '\n' >&2; exit 2 ;;
+            mtc_rc2_newlines3) printf '\n\n\n'; exit 2 ;;
+            *) printf 'mtc-bridge:x:999:988:mtc-bridge service:/var/lib/mtc-bridge:/usr/sbin/nologin\n'; exit 0 ;;
+        esac ;;
+esac
+exit 2
+SHIMEOF
+chmod +x "$w/getent_shim.sh"
+
+# ---- the four source variants under test --------------------------------------
+cp "$blk" "$w/src_repaired.sh"                                   # R4-repaired bytes
+git show "$pre_rev:$blk" > "$w/src_prerepair.sh"                 # pre-R3 bytes  (F1 unfixed)
+git show "$r3_rev:$blk"  > "$w/src_prer4.sh"                     # pre-R4 bytes  (newline gap unfixed)
+awk '$0!="p0_resolve_accounts"' "$blk" > "$w/src_nocall.sh"      # MUTATION: production integration call deleted
+
+# ---- extract the arm AND the block's own top-level driver ---------------------
+# The driver lines are taken from the source bytes by exact whole-line match, so
+# the block - not this harness - decides whether the arm runs at all. Nothing
+# here calls p0_resolve_accounts.
+extract() {
+    {
+        sed -n '/^p0_stop() {/p'                "$1"
+        sed -n '/^p0_sanitize()/,/^}/p'         "$1"
+        sed -n '/^p0_count_substr()/,/^}/p'     "$1"
+        sed -n '/^p0_capture_numeric()/,/^}/p'  "$1"
+        sed -n '/^p0_resolve_passwd()/,/^}/p'   "$1"
+        sed -n '/^p0_resolve_accounts()/,/^}/p' "$1"
+        awk '$0=="printf '\''P0_SECTION accounts\\n'\''" || $0=="p0_resolve_accounts"' "$1"
+    } > "$2"
+}
+for v in repaired prerepair prer4 nocall; do extract "$w/src_$v.sh" "$w/funcs_$v.sh"; done
+printf 'DRIVER_LINES repaired=%s prerepair=%s prer4=%s nocall=%s\n' \
+    "$(grep -c '^p0_resolve_accounts$' "$w/funcs_repaired.sh")" \
+    "$(grep -c '^p0_resolve_accounts$' "$w/funcs_prerepair.sh")" \
+    "$(grep -c '^p0_resolve_accounts$' "$w/funcs_prer4.sh")" \
+    "$(grep -c '^p0_resolve_accounts$' "$w/funcs_nocall.sh")"
+
+arm_out() {   # variant mode -> stdout = arm output, rc = arm rc
+    SHIM_MODE="$2" \
+    P0_GETENT="$w/getent_shim.sh" \
+    P0_ID="$(command -v id)" \
+    P0_EXPECT_UID="$(id -u)" \
+    P0_STATE_UID=999 \
+    P0_STATE_GID=988 \
+    bash --noprofile --norc -c '
+        set -Eeuo pipefail
+        . "$1"
+    ' _ "$w/funcs_$1.sh"
+}
+
+CASES=0
+run_case() {  # variant mode want_rc want_subst polarity
+    local variant="$1" mode="$2" want_rc="$3" want_subst="$4" polarity="$5" out rc=0 ok=0
+    CASES=$(( CASES + 1 ))
+    out="$(arm_out "$variant" "$mode")" || rc=$?
+    printf -- '--- variant=%s mode=%s\n%s\nARM_RC=%s\n' "$variant" "${mode:-<none>}" "$out" "$rc"
+    if [ "$rc" = "$want_rc" ] && case "$out" in *"$want_subst"*) true ;; *) false ;; esac; then ok=1; fi
+    if [ "$ok" -eq 1 ]; then
+        printf 'ASSERT_MET variant=%s mode=%s expected_rc=%s subst=[%s] polarity=%s\n' \
+            "$variant" "${mode:-<none>}" "$want_rc" "$want_subst" "$polarity"
+    else
+        printf 'ASSERT_UNMET variant=%s mode=%s expected_rc=%s subst=[%s] polarity=%s\n' \
+            "$variant" "${mode:-<none>}" "$want_rc" "$want_subst" "$polarity"
+    fi
+    # GREEN cases must meet the assertion; RED cases (mutated/older bytes) must NOT.
+    case "$polarity:$ok" in
+        GREEN:1|RED:0) printf 'CASE_OK\n'; return 0 ;;
+        *)             printf 'CASE_BAD\n'; return 1 ;;
+    esac
+}
+
+probe() {  # variant mode want_false_nomatch want_required_error -- the re-audit's own markers
+    local variant="$1" mode="$2" want_f="$3" want_r="$4" out rc=0 f=no r=no
+    CASES=$(( CASES + 1 ))
+    out="$(arm_out "$variant" "$mode")" || rc=$?
+    case "$out" in *"observed_numeric=absent"*) f=yes ;; esac
+    case "$out" in *"identity_unresolvable account=mtc-bridge"*) r=yes ;; esac
+    printf -- '--- probe variant=%s mode=%s\nFIXTURE=mtc-bridge_rc2_stderr_single_newline_byte\n%s\nARM_RC=%s\nFALSE_NOMATCH_REPRODUCED=%s\nREQUIRED_ERROR_OUTCOME_PRESENT=%s\n' \
+        "$variant" "$mode" "$out" "$rc" "$f" "$r"
+    if [ "$f" = "$want_f" ] && [ "$r" = "$want_r" ]; then
+        printf 'PROBE_OK variant=%s expected_false_nomatch=%s expected_required_error=%s\n' "$variant" "$want_f" "$want_r"
+        return 0
+    fi
+    printf 'PROBE_BAD variant=%s expected_false_nomatch=%s expected_required_error=%s\n' "$variant" "$want_f" "$want_r"
+    return 1
+}
+
+overall=0
+set +e
+# === A. R4 bytes, block-driven: the pre-existing five cases (regression) =======
+run_case repaired ''               0 'P0_account_admitted account=mtc-bridge numeric=999:988'            GREEN || overall=1
+run_case repaired wrong_mtc_gid    3 'identity_unexpected observed_numeric=999:989 expected_numeric=999:988 account=mtc-bridge' GREEN || overall=1
+run_case repaired mtc_nomatch      3 'state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent' GREEN || overall=1
+run_case repaired wrong_gatea_uid  3 'identity_unexpected observed_numeric=4096:4096 expected_numeric=4242:4096 account=gatea' GREEN || overall=1
+run_case repaired dup_gatea        3 'identity_unresolvable account=gatea'                               GREEN || overall=1
+
+# === B. the production integration call is deleted -> every arm assertion must fail
+run_case nocall   ''               0 'P0_account_admitted account=mtc-bridge numeric=999:988'            RED   || overall=1
+run_case nocall   wrong_mtc_gid    3 'identity_unexpected observed_numeric=999:989 expected_numeric=999:988 account=mtc-bridge' RED || overall=1
+run_case nocall   mtc_rc2_diag     3 'identity_unresolvable account=mtc-bridge'                          RED   || overall=1
+run_case nocall   mtc_rc2_newline  3 'identity_unresolvable account=mtc-bridge'                          RED   || overall=1
+
+# === C. F1: rc 2 carrying text is a lookup error, not a valid no-match ========
+run_case repaired mtc_rc2_diag     3 'identity_unresolvable account=mtc-bridge rc=2 detail=[getent: sss_nss: connection to the name service timed out]' GREEN || overall=1
+run_case repaired mtc_rc2_partial  3 'identity_unresolvable account=mtc-bridge rc=2 detail=[mtc-bridge:x:999]'                                          GREEN || overall=1
+run_case repaired gatea_rc2_diag   3 'identity_unresolvable account=gatea rc=2 detail=[getent: nss module returned SERVBUSY for gatea]'                 GREEN || overall=1
+run_case prerepair mtc_rc2_diag    3 'identity_unresolvable account=mtc-bridge rc=2 detail=[getent: sss_nss: connection to the name service timed out]' RED || overall=1
+run_case prerepair mtc_rc2_partial 3 'identity_unresolvable account=mtc-bridge rc=2 detail=[mtc-bridge:x:999]'                                          RED || overall=1
+run_case prerepair gatea_rc2_diag  3 'identity_unresolvable account=gatea rc=2 detail=[getent: nss module returned SERVBUSY for gatea]'                 RED || overall=1
+run_case prerepair mtc_rc2_diag    3 'state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent' GREEN || overall=1
+
+# === D. the valid no-match arm still works after both narrowings (regression) ==
+run_case repaired mtc_nomatch      3 'state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match' GREEN || overall=1
+
+# === E. R4 finding 1: a newline-only rc-2 capture is an error, not a no-match ==
+#  GREEN on R4 bytes ...
+run_case repaired mtc_rc2_newline   3 'identity_unresolvable account=mtc-bridge rc=2 detail=[newline_only_capture_at_rc2]' GREEN || overall=1
+run_case repaired mtc_rc2_newlines3 3 'identity_unresolvable account=mtc-bridge rc=2 detail=[newline_only_capture_at_rc2]' GREEN || overall=1
+run_case repaired gatea_rc2_newline 3 'identity_unresolvable account=gatea rc=2 detail=[newline_only_capture_at_rc2]'      GREEN || overall=1
+#  ... and RED on the committed R3 bytes the re-audit falsified.
+run_case prer4    mtc_rc2_newline   3 'identity_unresolvable account=mtc-bridge rc=2 detail=[newline_only_capture_at_rc2]' RED || overall=1
+run_case prer4    mtc_rc2_newlines3 3 'identity_unresolvable account=mtc-bridge rc=2 detail=[newline_only_capture_at_rc2]' RED || overall=1
+run_case prer4    gatea_rc2_newline 3 'identity_unresolvable account=gatea rc=2 detail=[newline_only_capture_at_rc2]'      RED || overall=1
+#  What the R3 bytes emit instead, recorded positively as the defect:
+run_case prer4    mtc_rc2_newline   3 'state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent' GREEN || overall=1
+#  The R3 bytes remain sound on the text-bearing rc-2 cases (the R3 repair is not
+#  being undone by this round):
+run_case prer4    mtc_rc2_diag      3 'identity_unresolvable account=mtc-bridge detail=[getent: sss_nss: connection to the name service timed out]' GREEN || overall=1
+
+# === F. the re-audit's own reproduction markers, both directions ===============
+probe prer4    mtc_rc2_newline yes no  || overall=1
+probe repaired mtc_rc2_newline no  yes || overall=1
+set -e
+
+if [ "$overall" -eq 0 ]; then
+    printf 'C13_R4B_ARM_QA_SUMMARY cases=%s result=PASS\n' "$CASES"
+else
+    printf 'C13_R4B_ARM_QA_SUMMARY cases=%s result=FAIL\n' "$CASES"
+    exit 1
+fi
+```
+
+### R4 — superseding C13 arm harness, real captured output
+
+```text
+DRIVER_LINES repaired=1 prerepair=1 prer4=1 nocall=0
+--- variant=repaired mode=<none>
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_account account=mtc-bridge outcome=resolved uid=999 gid=988 name_diag=[mtc-bridge] via=pinned_getent_passwd
+P0_account_admitted account=mtc-bridge numeric=999:988 matches=prereg_state_uid_gid name=diagnostic_only
+ARM_RC=0
+ASSERT_MET variant=repaired mode=<none> expected_rc=0 subst=[P0_account_admitted account=mtc-bridge numeric=999:988] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=wrong_mtc_gid
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_account account=mtc-bridge outcome=resolved uid=999 gid=989 name_diag=[mtc-bridge] via=pinned_getent_passwd
+P0_STOP reason=identity_unexpected observed_numeric=999:989 expected_numeric=999:988 account=mtc-bridge
+ARM_RC=3
+ASSERT_MET variant=repaired mode=wrong_mtc_gid expected_rc=3 subst=[identity_unexpected observed_numeric=999:989 expected_numeric=999:988 account=mtc-bridge] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=mtc_nomatch
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_MET variant=repaired mode=mtc_nomatch expected_rc=3 subst=[state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=wrong_gatea_uid
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4242 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_STOP reason=identity_unexpected observed_numeric=4096:4096 expected_numeric=4242:4096 account=gatea
+ARM_RC=3
+ASSERT_MET variant=repaired mode=wrong_gatea_uid expected_rc=3 subst=[identity_unexpected observed_numeric=4096:4096 expected_numeric=4242:4096 account=gatea] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=dup_gatea
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea rc=0 detail=[gatea:x:4096:4096:a:/h:/s gatea:x:4096:4096:b:/h:/s]
+ARM_RC=3
+ASSERT_MET variant=repaired mode=dup_gatea expected_rc=3 subst=[identity_unresolvable account=gatea] polarity=GREEN
+CASE_OK
+--- variant=nocall mode=<none>
+P0_SECTION accounts
+ARM_RC=0
+ASSERT_UNMET variant=nocall mode=<none> expected_rc=0 subst=[P0_account_admitted account=mtc-bridge numeric=999:988] polarity=RED
+CASE_OK
+--- variant=nocall mode=wrong_mtc_gid
+P0_SECTION accounts
+ARM_RC=0
+ASSERT_UNMET variant=nocall mode=wrong_mtc_gid expected_rc=3 subst=[identity_unexpected observed_numeric=999:989 expected_numeric=999:988 account=mtc-bridge] polarity=RED
+CASE_OK
+--- variant=nocall mode=mtc_rc2_diag
+P0_SECTION accounts
+ARM_RC=0
+ASSERT_UNMET variant=nocall mode=mtc_rc2_diag expected_rc=3 subst=[identity_unresolvable account=mtc-bridge] polarity=RED
+CASE_OK
+--- variant=nocall mode=mtc_rc2_newline
+P0_SECTION accounts
+ARM_RC=0
+ASSERT_UNMET variant=nocall mode=mtc_rc2_newline expected_rc=3 subst=[identity_unresolvable account=mtc-bridge] polarity=RED
+CASE_OK
+--- variant=repaired mode=mtc_rc2_diag
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge rc=2 detail=[getent: sss_nss: connection to the name service timed out]
+ARM_RC=3
+ASSERT_MET variant=repaired mode=mtc_rc2_diag expected_rc=3 subst=[identity_unresolvable account=mtc-bridge rc=2 detail=[getent: sss_nss: connection to the name service timed out]] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=mtc_rc2_partial
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge rc=2 detail=[mtc-bridge:x:999]
+ARM_RC=3
+ASSERT_MET variant=repaired mode=mtc_rc2_partial expected_rc=3 subst=[identity_unresolvable account=mtc-bridge rc=2 detail=[mtc-bridge:x:999]] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=gatea_rc2_diag
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea rc=2 detail=[getent: nss module returned SERVBUSY for gatea]
+ARM_RC=3
+ASSERT_MET variant=repaired mode=gatea_rc2_diag expected_rc=3 subst=[identity_unresolvable account=gatea rc=2 detail=[getent: nss module returned SERVBUSY for gatea]] polarity=GREEN
+CASE_OK
+--- variant=prerepair mode=mtc_rc2_diag
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_UNMET variant=prerepair mode=mtc_rc2_diag expected_rc=3 subst=[identity_unresolvable account=mtc-bridge rc=2 detail=[getent: sss_nss: connection to the name service timed out]] polarity=RED
+CASE_OK
+--- variant=prerepair mode=mtc_rc2_partial
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_UNMET variant=prerepair mode=mtc_rc2_partial expected_rc=3 subst=[identity_unresolvable account=mtc-bridge rc=2 detail=[mtc-bridge:x:999]] polarity=RED
+CASE_OK
+--- variant=prerepair mode=gatea_rc2_diag
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea rc=2 detail=getent_valid_no_match_for_route_login
+ARM_RC=3
+ASSERT_UNMET variant=prerepair mode=gatea_rc2_diag expected_rc=3 subst=[identity_unresolvable account=gatea rc=2 detail=[getent: nss module returned SERVBUSY for gatea]] polarity=RED
+CASE_OK
+--- variant=prerepair mode=mtc_rc2_diag
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_MET variant=prerepair mode=mtc_rc2_diag expected_rc=3 subst=[state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=mtc_nomatch
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_MET variant=repaired mode=mtc_nomatch expected_rc=3 subst=[state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=mtc_rc2_newline
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge rc=2 detail=[newline_only_capture_at_rc2]
+ARM_RC=3
+ASSERT_MET variant=repaired mode=mtc_rc2_newline expected_rc=3 subst=[identity_unresolvable account=mtc-bridge rc=2 detail=[newline_only_capture_at_rc2]] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=mtc_rc2_newlines3
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge rc=2 detail=[newline_only_capture_at_rc2]
+ARM_RC=3
+ASSERT_MET variant=repaired mode=mtc_rc2_newlines3 expected_rc=3 subst=[identity_unresolvable account=mtc-bridge rc=2 detail=[newline_only_capture_at_rc2]] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=gatea_rc2_newline
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea rc=2 detail=[newline_only_capture_at_rc2]
+ARM_RC=3
+ASSERT_MET variant=repaired mode=gatea_rc2_newline expected_rc=3 subst=[identity_unresolvable account=gatea rc=2 detail=[newline_only_capture_at_rc2]] polarity=GREEN
+CASE_OK
+--- variant=prer4 mode=mtc_rc2_newline
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_UNMET variant=prer4 mode=mtc_rc2_newline expected_rc=3 subst=[identity_unresolvable account=mtc-bridge rc=2 detail=[newline_only_capture_at_rc2]] polarity=RED
+CASE_OK
+--- variant=prer4 mode=mtc_rc2_newlines3
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_UNMET variant=prer4 mode=mtc_rc2_newlines3 expected_rc=3 subst=[identity_unresolvable account=mtc-bridge rc=2 detail=[newline_only_capture_at_rc2]] polarity=RED
+CASE_OK
+--- variant=prer4 mode=gatea_rc2_newline
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea rc=2 detail=getent_valid_no_match_for_route_login
+ARM_RC=3
+ASSERT_UNMET variant=prer4 mode=gatea_rc2_newline expected_rc=3 subst=[identity_unresolvable account=gatea rc=2 detail=[newline_only_capture_at_rc2]] polarity=RED
+CASE_OK
+--- variant=prer4 mode=mtc_rc2_newline
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_MET variant=prer4 mode=mtc_rc2_newline expected_rc=3 subst=[state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent] polarity=GREEN
+CASE_OK
+--- variant=prer4 mode=mtc_rc2_diag
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge detail=[getent: sss_nss: connection to the name service timed out]
+ARM_RC=3
+ASSERT_MET variant=prer4 mode=mtc_rc2_diag expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[getent: sss_nss: connection to the name service timed out]] polarity=GREEN
+CASE_OK
+--- probe variant=prer4 mode=mtc_rc2_newline
+FIXTURE=mtc-bridge_rc2_stderr_single_newline_byte
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+FALSE_NOMATCH_REPRODUCED=yes
+REQUIRED_ERROR_OUTCOME_PRESENT=no
+PROBE_OK variant=prer4 expected_false_nomatch=yes expected_required_error=no
+--- probe variant=repaired mode=mtc_rc2_newline
+FIXTURE=mtc-bridge_rc2_stderr_single_newline_byte
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge rc=2 detail=[newline_only_capture_at_rc2]
+ARM_RC=3
+FALSE_NOMATCH_REPRODUCED=no
+REQUIRED_ERROR_OUTCOME_PRESENT=yes
+PROBE_OK variant=repaired expected_false_nomatch=no expected_required_error=yes
+C13_R4B_ARM_QA_SUMMARY cases=27 result=PASS
+```
+
+## R4 — the three unchanged fences, re-run against the round-4 bytes
+
+All three pass unmodified. None of them was edited by this round.
+
+```text
+sed -n '952,1035p'  SELF_QA_RP6.md | bash --noprofile --norc
+  -> rc 0, C13_R3_BACKSTOP_QA_SUMMARY inputs=2 mutations=2 cases=4 result=PASS
+sed -n '1678,2068p' SELF_QA_RP6.md | bash --noprofile --norc
+  -> rc 0, 39 ASSERT_MET, 0 ASSERT_UNMET,
+     RP6_FULLBLOCK_D026_SUMMARY findings=7 round3_residuals=3 real_lstat_arms=2
+     execution_domain_cases=9 readlink_stop_arms=3 result=PASS
+sed -n '2286,2319p' SELF_QA_RP6.md | bash --noprofile --norc
+  -> rc 0, F2_FREEZE_GATE_QA_SUMMARY placeholder_rc=3 filled_fixture_rc=0 result=PASS
+```
+
+The full-block fence matters twice here: it also re-greps the prereg draft, so the
+round-4 §8.1 amendments did not disturb the row-1 `rc=<n|na>` anchor or the row-3
+unified `identity_unexpected` anchor that two of its assertions depend on (each
+still `grep -c` = 1).
+
+## R4 — mandated harness set after this round
+
+```text
+sed -n '952,1035p'   SELF_QA_RP6.md   backstop, 4 cases
+sed -n '1678,2068p'  SELF_QA_RP6.md   full-block D026, 39 assertions
+sed -n '2286,2319p'  SELF_QA_RP6.md   freeze-literal gate
+sed -n '2545,2989p'  SELF_QA_RP6.md   R4 D026 findings 1-4, 102 assertions
+sed -n '3353,3518p'  SELF_QA_RP6.md   R4b C13 arm, 27 cases
+```
+
+The two superseded C13 fences (lines 664-787 and 1181-1346) are retained as round
+records and are NOT part of the mandated set.
+
+## R4 artefact measurements (real, computed in-session)
+
+- Repaired `RP6-P0.sh` SHA-256:
+  `e93d07adcc9ae03ad15e0b0f10c76be54517251ab461c8fe789d160072d253c6`
+- Repaired `RP6-P0.sh` byte count: `85540`, lines `1523`, CR bytes `0`, no BOM
+- Audited pre-R4 baseline (commit `bbb40ab6`) SHA-256:
+  `2d9b166eacfc39ebe0d8d89edb5860876ccc4d9f0ff97f9e10a228dbcf96289e`, 71743 B —
+  verified against the kickoff hash BEFORE the first edit and again from
+  `git show` inside the fence
+- Frozen RO basis (commit `d6a976aa`) SHA-256:
+  `23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad`, 70941 B —
+  verified inside the fence before any inventory comparison
+- `bash -n MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh` → rc 0,
+  `BASH_N=PASS`
+- `git diff --numstat` for the R4 repair: block 253 insertions / 58 deletions.
+  The prereg-draft change made HERE is four modified §8.1 table rows (rows 1, 2,
+  3, 9; `git diff -U0` hunks `@@ -514,3 +623,3 @@` and `@@ -522 +631 @@`). The
+  draft's raw numstat is larger because a CONCURRENT session extended §4-§6 while
+  this round ran; that work is not this round's and was not touched
+- `shellcheck` is not installed in this environment and was not run
+
+## R4 freeze-gate inputs (six, one new this round)
+
+`P0_FIXED_ATTESTED_USER_NS`, `…MNT_NS`, `…PID_NS`, `…NET_NS`,
+`…ROOT_MOUNT_ID` and — new in round 4 — **`P0_FIXED_TRUSTED_PYTHON`**, the
+resolved non-symlink leaf behind `/usr/bin/python3`, the same deploy-channel value
+RP7 carries as `WPI_FIXED_TRUSTED_PYTHON`. All six must arrive from the deploy
+channel. Until they do, P0 necessarily STOPs and no end-to-end PASS can or should
+exist. `P0_MANAGER_QUERY_BUDGET_S` / `P0_MANAGER_QUERY_KILL_AFTER_S` are NOT
+freeze-gate inputs: they are frozen design literals with real values already.
+
+## R4 explicit local limit
+
+The complete P0 block still was not run, for the reasons recorded in every earlier
+round: it needs the accepted RP0 library and bootstrap, Linux `/proc` namespace
+objects, the preregistered per-SHA venv, `getent`/`systemctl` on the host, and a
+reachable system manager, none of which exist in this Git Bash environment. What
+IS real this round and was not simulated: a `python -m venv` environment, its
+interpreter, its `site` startup path, an executable `.pth`, `env -i`, GNU
+`timeout` 8.32 and its deadline, GNU `stat`, and the frozen RP7 bytes. The `.pth`
+behaviour was observed on local CPython 3.14.2; the same startup contract is
+documented for the target Python 3.12 in the primary sources the audit cites, and
+the block's own `sys.flags.isolated`/`sys.flags.no_site` guard makes the
+requirement self-checking on the target rather than assumed. `systemctl` and
+`getent` are shims; what is proved about them is the block's adjudication of the
+shapes they produce, not that any particular host tool produces those shapes. All
+scratch files are under `/tmp`, outside the repository, and are removed by the
+fences. No host was contacted, no network command was run, no host file content
+was printed, and nothing was committed.

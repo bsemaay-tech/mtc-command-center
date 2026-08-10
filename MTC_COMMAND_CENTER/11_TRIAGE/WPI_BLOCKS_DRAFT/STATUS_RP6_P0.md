@@ -1,27 +1,74 @@
-# RP6-P0 — status: ROUND-3-REPAIRED-PENDING-T0-REAUDIT
+# RP6-P0 — status: ROUND-4-REPAIRED-PENDING-T0-REAUDIT
 
-Updated 2026-08-10 by the round-3 implementer (`claude-opus-5` xhigh, fresh
-session). Audit tier: **T0** (host/execution-domain preflight). Round 2's Claude
-flagship re-audit (`RP6_CLAUDE_REAUDIT_R2_2026-08-10.md`) confirmed all seven
-original findings CLOSED and returned REQUEST_CHANGES on three residuals; those
-three plus both nits are repaired here. **This is round 3 of 3 — the T0 cap is
-now exhausted**, so the next verdict is terminal for this cycle: an accepting
-verdict finishes the loop, and a non-accepting one must be reported to Barış
-rather than opening a fourth round. Acceptance still requires fresh independent
-`claude-opus-5` xhigh and `gpt-5.6-sol` xhigh verdicts. The block remains a draft:
-not frozen, accepted, dispatchable, or authorised for host execution.
+Updated 2026-08-10 by the round-4 implementer (`claude-opus-5` xhigh, fresh
+session). Audit tier: **T0** (host/execution-domain preflight). The second-flagship
+Codex T0 audit of the round-3 bytes (`RP6_CODEX_T0_AUDIT_2026-08-10.md`) returned
+**BLOCK on 4** — one executed security failure (the "read-only" interpreter probe
+ran unverified venv startup code), one executed availability failure (row 9 could
+hang with no reasoned STOP), and two exact frozen-contract mismatches. **Round 4
+exceeds the recorded T0 cap under explicit owner authorisation**, granted for the
+identical venv site-startup security class already resolved on RP7 (2026-08-10
+~17:15) and extended to RP6-P0 by the Lead. Acceptance still requires fresh
+independent `claude-opus-5` xhigh and `gpt-5.6-sol` xhigh verdicts. The block
+remains a draft: not frozen, accepted, dispatchable, or authorised for host
+execution.
 
 Current executable identity:
 
 ```text
-sha256=2d9b166eacfc39ebe0d8d89edb5860876ccc4d9f0ff97f9e10a228dbcf96289e
-bytes=71743
+sha256=e93d07adcc9ae03ad15e0b0f10c76be54517251ab461c8fe789d160072d253c6
+bytes=85540
 bash_n=PASS
 line_endings=LF_only
 bom=none
-superseded_round2_sha256=041c9da9769e36638c9785b54afc638fa8e7b475a6d24238fc10388916c048db
-superseded_round2_bytes=66381
+superseded_round3_sha256=2d9b166eacfc39ebe0d8d89edb5860876ccc4d9f0ff97f9e10a228dbcf96289e
+superseded_round3_bytes=71743
+frozen_ro_basis=RP7-WPI-RO.sh@d6a976aa sha256=23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad bytes=70941
 ```
+
+Round-4 disposition (Codex T0 findings 1-4) — full record in
+`RP6_REPAIR_R4_REPORT.md`, evidence in `SELF_QA_RP6.md`:
+
+- **F1 (HIGH) — CLOSED.** The interpreter probe runs `-I -S`, not `-I`. `-I`
+  implies `-E`/`-P`/`-s` but not `-S`, so the previous bytes imported `site` and
+  executed the judged venv's `*.pth` `import` lines before the `-c` body. The
+  child now also refuses to report a version unless `sys.flags.isolated` and
+  `sys.flags.no_site` are both set, so deleting ` -S` yields a named
+  `interpreter_startup_not_isolated` STOP instead of a silent hole. Every false
+  sentence is corrected: the `MUTATION SURFACE` header, the "nothing is written"
+  comment, and `P0_claim … mutation=none_in_this_block`, which becomes
+  `mutation=no_filesystem_write_primitive_in_this_shell_source`, with
+  `behaviour_inside_any_executed_tool_binary` added to `does_not_establish`.
+  Falsified on a REAL venv with a REAL executable `.pth`: pre-fix bytes create the
+  marker and still print the accepted line; repaired bytes do not.
+- **F2 (MEDIUM) — CLOSED.** Row 9 is bounded by the pinned `timeout` placed INSIDE
+  the cleared environment (`env -i LC_ALL=C <timeout> --signal=TERM
+  --kill-after=5s 10s <systemctl> …`). rc 124/137/125 map to
+  `manager_query_deadline_exceeded` / `manager_query_killed_after_deadline` /
+  `bounding_wrapper_failed`, all under `system_manager_unreachable` at exit 3, with
+  `budget_s` and a diagnostic-only `elapsed_s` recorded. Falsified with a real
+  stalling shim: the pre-fix arm needed an external kill and emitted zero
+  `P0_STOP` lines; the repaired arm returns its own bounded STOP with no external
+  kill.
+- **F3 (MEDIUM) — CLOSED.** The RO inventory is regenerated from the FROZEN RP7
+  executable: the ten tools it pins (`stat readlink env find sha256sum systemctl
+  ss curl timeout python3`) plus the P0-only `id` and `getent`. `grep` and `awk`
+  are dropped — neither stage invokes them. `timeout` is now a resolved
+  first-class tool; `python3` is inventoried, never executed by P0, and its pin is
+  bound to the new `P0_FIXED_TRUSTED_PYTHON` freeze-gate literal with a
+  python3-only canonicalisation allowance for the `/usr/bin/python3` symlink. A
+  drift test re-derives the RO half from the frozen bytes; the auditor's own
+  `input_pin_unknown_tool … tool=timeout` line is reproduced on the pre-fix bytes
+  and a complete RP7 pin set is now accepted (`count=10 trusted_python_pin=yes`).
+- **F4 (LOW/MED) — CLOSED.** `p0_resolve_passwd` exports `P0_PW_RC`, read from the
+  last capture field so even a NUL-corrupted capture keeps the resolver's real
+  status; both `identity_unresolvable` callers emit `rc=<n|na>`. The
+  valid-no-match token was aligned by preregistering
+  `state_account_resolution_unexpected` verbatim in §8.1 row 3 rather than
+  changing the block, because positive absence of a dynamically allocated account
+  is a host observation, not an inability to evaluate. Eight exact-WHOLE-LINE
+  assertions (not substrings) cover rc-0 parse error, rc-2 no-match, rc-2
+  diagnostic and other-nonzero for both accounts, each with its RED twin.
 
 Round-3 disposition (re-audit R2 findings 1-3, nits 1-2) — full record in
 `RP6_REPAIR_R3_REPORT.md`:
@@ -86,32 +133,51 @@ Full-block repair disposition:
   `observed_numeric=<u:g> expected_numeric=<u:g> account=<a>`; §8.1 row 3 was
   aligned without changing row 9.
 
-**Freeze gate — mandatory, same class as RP7.** The following embedded literals
-remain `<PIN-AT-FREEZE>` and deliberately prevent an end-to-end `P0 PASS`:
+**Freeze gate — mandatory, same class as RP7. SIX literals after round 4.** The
+following embedded literals remain `<PIN-AT-FREEZE>` and deliberately prevent an
+end-to-end `P0 PASS`:
 
 - `P0_FIXED_ATTESTED_USER_NS`
 - `P0_FIXED_ATTESTED_MNT_NS`
 - `P0_FIXED_ATTESTED_PID_NS`
 - `P0_FIXED_ATTESTED_NET_NS`
 - `P0_FIXED_ATTESTED_ROOT_MOUNT_ID`
+- `P0_FIXED_TRUSTED_PYTHON` — **new in round 4**, the same deploy-channel value
+  RP7 carries as `WPI_FIXED_TRUSTED_PYTHON`: the resolved non-symlink leaf behind
+  `/usr/bin/python3`, because no symlinked object is admissible as a bound RO tool
+  and both RO accepting adjudicators execute that exact object.
 
 Before freeze/dispatch, the root-authorised deploy channel must mint the four exact
-`readlink /proc/<attested-host-pid>/ns/<kind>` tokens and the exact
-`stat -c '%d:%i' /` identity, embed each literal, supply identical prelude values,
-and re-run the whole block on the intended guest. No value may be learned or
-re-pinned from the login session being tested.
+`readlink /proc/<attested-host-pid>/ns/<kind>` tokens, the exact
+`stat -c '%d:%i' /` identity and the resolved trusted-python leaf, embed each
+literal, supply identical prelude values, and re-run the whole block on the
+intended guest. No value may be learned or re-pinned from the login session being
+tested. `P0_MANAGER_QUERY_BUDGET_S=10` and `P0_MANAGER_QUERY_KILL_AFTER_S=5` are
+NOT freeze-gate inputs — they are frozen design literals with real values, held in
+the block precisely so the environment under test cannot raise its own deadline.
 
-Local evidence, all re-executed in round 3 against `2d9b166e…` / 71743 B: the
-literal full-block fence in `SELF_QA_RP6.md` ends
-`RP6_FULLBLOCK_D026_SUMMARY findings=7 round3_residuals=3 real_lstat_arms=2
-execution_domain_cases=9 readlink_stop_arms=3 result=PASS` at process rc 0, and its
-normalized re-run transcript matches the recorded output. The separate
-freeze-literal fence passes with placeholder rc 3 and filled-fixture rc 0. The
-16-case C13 R3 arm harness, the 27-case C13 R4 arm harness and the four-case
-backstop harness all pass at rc 0, and each of those three recorded transcripts is
-now byte-identical to a fresh re-run (`cmp` clean) from the line range the document
-cites. No host, SSH, network, deployment, backtest, broker, or trading action
-occurred, and no commit was made.
+Local evidence, all executed in round 4 against `e93d07ad…` / 85540 B. The five
+mandated fences and their results:
+
+```text
+sed -n '952,1035p'   SELF_QA_RP6.md  -> rc 0, backstop cases=4 PASS
+sed -n '1678,2068p'  SELF_QA_RP6.md  -> rc 0, 39 ASSERT_MET, full-block PASS
+sed -n '2286,2319p'  SELF_QA_RP6.md  -> rc 0, freeze-literal gate PASS
+sed -n '2545,2989p'  SELF_QA_RP6.md  -> rc 0, 102 ASSERT_MET / 0 UNMET, R4 D026 PASS
+sed -n '3353,3518p'  SELF_QA_RP6.md  -> rc 0, C13_R4B cases=27 PASS
+```
+
+The two older C13 fences (lines 664-787 and 1181-1346) assert the pre-round-4
+`identity_unresolvable` grammar and are therefore RED against these bytes ON
+PURPOSE — the exact assertions that break are the lines that lacked the mandatory
+`rc=` field. They are retained as round records, their failing output is recorded
+in `SELF_QA_RP6.md`, and they are superseded by the R4b harness, which carries all
+27 of their cases with the corrected grammar. Both new fences were re-extracted
+from the document and re-run: extraction byte-identical, both green, transcripts
+reproduce after normalising the random `mktemp` root, with the single documented
+exception of the F2 deadline arm's diagnostic-only `elapsed_s` (10 vs 11 s), which
+no assertion reads. No host, SSH, network, deployment, backtest, broker, or trading
+action occurred, and no commit was made.
 
 ---
 

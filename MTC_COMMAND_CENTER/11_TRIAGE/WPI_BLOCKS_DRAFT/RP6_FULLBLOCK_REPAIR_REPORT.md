@@ -7,6 +7,32 @@ Audit tier: T0 — host/execution-domain preflight
 Cycle: Claude flagship full-block audit round 1 → bounded repair  
 Current state: repaired, locally verified, pending the two fresh T0 re-audits
 
+> **Round-4 supersession (2026-08-10).** The second-flagship Codex T0 audit
+> (`RP6_CODEX_T0_AUDIT_2026-08-10.md`) returned BLOCK on four findings against the
+> round-3 bytes, and round 4 repaired all four under explicit owner authorisation
+> to exceed the T0 cap for the venv site-startup security class. **The executable
+> identity in this report and in the round-3 note below is again superseded**: the
+> current block is
+> `e93d07adcc9ae03ad15e0b0f10c76be54517251ab461c8fe789d160072d253c6`, 85540 B.
+> Two of the seven findings recorded below have their *sentences* amended by round
+> 4, while their repairs stand:
+> - the F1 classifier repair is untouched, but the terminal
+>   `P0_claim … mutation=none_in_this_block` it left in place was FALSE while the
+>   interpreter probe ran under `-I` alone, and now reads
+>   `mutation=no_filesystem_write_primitive_in_this_shell_source
+>   child_side_effects=not_attested_except_venv_startup_which_is_disabled`;
+> - the terminal claim's RO-tool sentence no longer names a stale twelve-tool
+>   list; the inventory is regenerated from the frozen `RP7-WPI-RO.sh@d6a976aa`
+>   (`23e55667…`, 70941 B) as its ten pinned tools plus P0-only `id`/`getent`.
+>
+> The full-block D026 fence in `SELF_QA_RP6.md` was re-executed unmodified against
+> the round-4 bytes and still ends
+> `RP6_FULLBLOCK_D026_SUMMARY findings=7 round3_residuals=3 real_lstat_arms=2
+> execution_domain_cases=9 readlink_stop_arms=3 result=PASS` at rc 0 with 39
+> `ASSERT_MET` and 0 `ASSERT_UNMET`, including its two prereg-draft greps, so the
+> round-4 §8.1 amendments did not disturb the anchors it depends on. Round-4
+> finding-by-finding disposition is in `RP6_REPAIR_R4_REPORT.md`.
+
 > **Round-3 supersession (2026-08-10).** Claude re-audit R2 confirmed all seven
 > findings below CLOSED and returned REQUEST_CHANGES on three residuals. Those
 > were repaired in round 3 — the last round of the T0 cap — by a fresh

@@ -65,20 +65,35 @@
 # fail-closed - P0 refuses instead of mis-ruling, and the shape must be re-pinned
 # before such a host is preregistered.
 #
-# MUTATION SURFACE. This block creates no file, no directory and no temporary
-# file, opens nothing for writing, and changes no mode, owner, ACL, group,
-# service or network state. It duplicates its own stdout onto fd 8 and closes it
-# again, which is a descriptor operation, not a filesystem one. The evidence
-# directory and the evidence leaf are created by the ACCEPTED RP0-BOOTSTRAP
-# before this block runs; that allocation is the bootstrap's mutation and is not
-# claimed here as none. This block asserts the allocation happened and that its
-# own stdout is bound to that leaf, and refuses to run otherwise.
+# MUTATION SURFACE. The SHELL source of this block creates no file, no directory
+# and no temporary file, opens nothing for writing, and changes no mode, owner,
+# ACL, group, service or network state. It duplicates its own stdout onto fd 8
+# and closes it again, which is a descriptor operation, not a filesystem one. The
+# evidence directory and the evidence leaf are created by the ACCEPTED
+# RP0-BOOTSTRAP before this block runs; that allocation is the bootstrap's
+# mutation and is not claimed here as none. This block asserts the allocation
+# happened and that its own stdout is bound to that leaf, and refuses to run
+# otherwise.
+# "No write primitive in the shell source" is NOT the same sentence as "this
+# block wrote nothing" (audit-3 F1). Every external child this block starts runs
+# with this login's authority, and P0 has no attestation channel for any of those
+# binaries, so what a tool does INSIDE its own process is disclosed as
+# unestablished rather than claimed as none. One channel is closed positively
+# because it was executed and shown open: the per-SHA venv interpreter is launched
+# with `-I -S`, so the venv's own `site` startup - `site-packages/*.pth` executable
+# `import` lines and any `sitecustomize`/`usercustomize` module in that tree - is
+# not read and not executed before the intended `-c` body. Under `-I` alone it was,
+# and a forged one-line `.pth` really did write a marker file while the block still
+# emitted its accepted `P0PY` line.
 # The external-child surface is not a fixed count. Metadata, evidence-binding,
 # identity and namespace probes execute the recorded absolute stat/readlink/id
 # paths with the caller environment inherited and LC_ALL forced to C. Only the
 # Manager-level `systemctl show` query and the isolated interpreter invocation
-# use `env -i`. Every launch keeps the caller working directory; TMPDIR is
-# caller-inherited for stat/readlink/id and absent from the two cleared launches.
+# use `env -i`, and the manager query additionally carries the pinned `timeout`
+# INSIDE that cleared environment, so the process that decides whether the query
+# was bounded runs under the same cleared environment as the query it bounds.
+# Every launch keeps the caller working directory; TMPDIR is caller-inherited for
+# stat/readlink/id and absent from the two cleared launches.
 # This is an honest record of the current bounded P0 block, not compliance with
 # round 1.4's stronger probe-execution-environment rule; satisfying that rule
 # needs preregistered cwd/TMPDIR and helper target chains before a future freeze.
@@ -236,35 +251,72 @@ P0_FIXED_ATTESTED_MNT_NS='<PIN-AT-FREEZE>'
 P0_FIXED_ATTESTED_PID_NS='<PIN-AT-FREEZE>'
 P0_FIXED_ATTESTED_NET_NS='<PIN-AT-FREEZE>'
 P0_FIXED_ATTESTED_ROOT_MOUNT_ID='<PIN-AT-FREEZE>'
+# The trusted system interpreter the RO stage's two accepting adjudicators run
+# under (RP7 `WPI_TRUSTED_PYTHON`). It is a freeze-gate input for exactly the
+# reason the namespace pins above are: `/usr/bin/python3` is a symlink on the
+# target family and no symlinked object is admissible as a bound RO tool, so the
+# resolved non-symlink leaf is supplied by the deploy channel and frozen here.
+# P0 does not execute it; P0 refuses to admit a pin for it that disagrees with
+# the frozen value, so the tool the RO stage will trust is the tool P0 checked.
+P0_FIXED_TRUSTED_PYTHON='<PIN-AT-FREEZE>'
+# Row-9 deadline. Preregistered block literals, not operator inputs and not
+# learned at run time: a bound supplied by the environment under test could be
+# raised to infinity by that same environment.
+P0_MANAGER_QUERY_BUDGET_S=10
+P0_MANAGER_QUERY_KILL_AFTER_S=5
 
-# --- the RO-stage tool inventory, derived ONLY from the prereg and the
-# --- feasibility ledger -----------------------------------------------------
+# --- the RO-stage tool inventory, regenerated from the FROZEN RO block -------
+# Audit-3 F3. This list is no longer written from the prereg prose: its RO half
+# is a mirror of the tool set the frozen RO executable actually validates and
+# invokes, and its second half is the P0-only remainder. The frozen basis is
+#   RP7-WPI-RO.sh, commit d6a976aa,
+#   sha256 23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad,
+#   70941 bytes, `WPI_TOOL_PINS` validator (RP7-WPI-RO.sh:594, count gate :610,
+#   binding loop :611).
+# A stale inventory is executable, not documentary: RP6 previously omitted
+# `timeout` - which the RO stage really runs - and so could PASS without ever
+# checking it, could REJECT a complete RP7 pin set as an unknown tool, and could
+# STOP on a missing `grep`/`awk` that neither stage invokes. The drift test in
+# SELF_QA_RP6.md re-derives the RO half from the frozen RP7 bytes and fails if
+# the two ever disagree again.
+#
+# RO half - every tool the frozen RO block pins, in its order:
 # stat, readlink, find  - B3 scoped walks, terminal metadata stat, and the
-#                         literal-canonical predicate (feasibility B3; the
-#                         accepted RP1-B3 uses exactly these three).
-# id                    - prereg 8.1 rows 1-2, and the caller-identity and
-#                         group predicates of RP1-B3.
-# grep                  - B2 direct fragment half ("Grep rc outside {0,1} ...
-#                         STOP before stdout comparison").
+#                         literal-canonical predicate.
+# env                   - pinned, cleared-environment launch of every RO
+#                         evidence-producing child (pattern 4).
 # sha256sum             - B1a installed-lock digest, B2 fragment digest.
-# awk                   - the monotonic clock of the budgeted B3 sweep
-#                         (RP0-LIB:21), which every walk row depends on.
-# env                   - pinned, cleared-environment launch of the B1 verifier
-#                         interpreter and of manager queries (pattern 4).
-# systemctl             - prereg 8.1 rows 6-7; B2/B4 manager-backed rows.
-# ss                    - prereg 8.1 row 3; B6 listener set.
-# curl                  - prereg 8.1 row 4; B5 loopback control-endpoint GET.
+# systemctl             - prereg 8.1 rows 7 and 9; B2/B4 manager-backed rows.
+# ss                    - B6 listener set.
+# curl                  - B5 loopback control-endpoint GET.
+# timeout               - the bounding wrapper of every RO capture
+#                         (RP7-WPI-RO.sh:212), and of this block's own row-9
+#                         manager query below.
+# python3               - the pinned trusted interpreter both RO accepting
+#                         adjudicators run under with `-I -S` (RP7-WPI-RO.sh:907
+#                         and :1074). P0 never executes it; P0 establishes that
+#                         it resolves, is executable by this login, and agrees
+#                         with the frozen trusted-python pin.
+# P0-only half - required by this block and by no RO row:
+# id                    - prereg 8.1 rows 1-2 numeric caller identity.
 # getent                - prereg 8.1 rows 1-3 (repair C13): unique complete
 #                         passwd-record resolution of the `gatea` and
 #                         `mtc-bridge` names to numeric uid/gid. Names are
 #                         diagnostic only; only the numerics are compared.
+# DROPPED this round, because neither the frozen RO block nor this block
+# invokes them: `grep` (this block counts literal substrings with builtins -
+# `p0_count_substr`, audit-1 F6) and `awk` (the budgeted-sweep clock it was
+# listed for is not reachable from any tool the frozen RO block pins).
 # `stat` is listed first only so that the metadata pass has a resolved absolute
 # `stat` to use; resolution and executability themselves are decided by shell
 # builtins alone, so the order carries no privilege.
 # NOT in this list, deliberately: the root-side pinned python3 of RPD-VERIFY
 # (root-side, out of P0 scope), and the per-SHA venv interpreter, which has its
-# own preregistered absolute path and its own arm below.
-P0_RO_TOOLS="stat readlink id env find grep sha256sum awk systemctl ss curl getent"
+# own preregistered absolute path and its own arm below - and which is a
+# different object from the trusted `python3` above, on purpose.
+P0_RP7_RO_TOOLS="stat readlink env find sha256sum systemctl ss curl timeout python3"
+P0_P0_ONLY_TOOLS="id getent"
+P0_RO_TOOLS="$P0_RP7_RO_TOOLS $P0_P0_ONLY_TOOLS"
 
 # ---------------------------------------------------------------------------
 # SECTION: prerequisites
@@ -385,6 +437,7 @@ esac
 P0_TOOL_PINS="${P0_TOOL_PINS:-}"
 P0_PIN_COUNT=0
 P0_PIN_SEEN=" "
+P0_TRUSTED_PYTHON_BOUND=no
 for p0_pin in $P0_TOOL_PINS; do
     case "$p0_pin" in
         *=*) : ;;
@@ -410,6 +463,18 @@ for p0_pin in $P0_TOOL_PINS; do
         *[![:print:]]*|*[[:space:]]*)
             p0_stop "input_pin_charset tool=$p0_pin_name expected=printable_without_whitespace" ;;
     esac
+    # `python3` is the one pinned tool whose VALUE is itself a freeze-gate
+    # identity, because the RO stage's two accepting adjudicators execute that
+    # exact object. A P0 that admitted some other python3 would have checked a
+    # different tool from the one the RO stage will trust, and the premise this
+    # block exists to establish would be about the wrong binary.
+    if [ "$p0_pin_name" = python3 ]; then
+        [ "$P0_FIXED_TRUSTED_PYTHON" != '<PIN-AT-FREEZE>' ] \
+            || p0_stop "input_pin_freeze_unfilled tool=python3 name=P0_FIXED_TRUSTED_PYTHON detail=deploy_channel_value_never_derived_here"
+        [ "$p0_pin_path" = "$P0_FIXED_TRUSTED_PYTHON" ] \
+            || p0_stop "input_pin_not_frozen_trusted_python tool=python3 pinned=$p0_pin_path frozen=$P0_FIXED_TRUSTED_PYTHON"
+        P0_TRUSTED_PYTHON_BOUND=yes
+    fi
     P0_PIN_SEEN="$P0_PIN_SEEN$p0_pin_name "
     P0_PIN_COUNT=$(( P0_PIN_COUNT + 1 ))
 done
@@ -497,6 +562,8 @@ printf 'P0_input name=P0_FORBIDDEN_GIDS value=[%s] count=%s\n' \
     "$P0_FORBIDDEN_GIDS" "$P0_FORBIDDEN_GID_COUNT"
 printf 'P0_input name=P0_VENV_ROOT value=%s\n' "$P0_VENV_ROOT"
 printf 'P0_input name=P0_TOOL_PINS value=[%s] count=%s\n' "$P0_TOOL_PINS" "$P0_PIN_COUNT"
+printf 'P0_input name=P0_MANAGER_QUERY_BOUND budget_s=%s kill_after_s=%s source=frozen_block_literal\n' \
+    "$P0_MANAGER_QUERY_BUDGET_S" "$P0_MANAGER_QUERY_KILL_AFTER_S"
 printf 'P0_input name=P0_EXECUTION_DOMAIN_ATTESTATION fields=user_namespace,mount_namespace,pid_namespace,network_namespace,root_mount_identity source=deploy_channel_frozen_literals\n'
 printf 'P0_input name=P0_INTERPRETER value=%s derived_from=P0_VENV_ROOT\n' "$P0_PY"
 
@@ -514,7 +581,7 @@ printf 'P0_input name=P0_INTERPRETER value=%s derived_from=P0_VENV_ROOT\n' "$P0_
 # one; unpinned entries are recorded as `path_resolved_absolute` precisely so
 # the successor can pin them.
 p0_resolve_tool() {
-    local t="$1" resolved rc=0 pin
+    local t="$1" resolved rc=0 pin canon crc=0 rl
     resolved="$(command -v "$t" 2>&1)" || rc=$?
     if [ "$rc" -ne 0 ] || [ -z "$resolved" ]; then
         p0_sanitize "$resolved"
@@ -532,9 +599,40 @@ p0_resolve_tool() {
     esac
     if p0_lookup "$P0_TOOL_PINS" "$t"; then
         pin="$P0_LOOKUP"
-        [ "$resolved" = "$pin" ] \
-            || p0_stop "tool_pin_mismatch tool=$t pinned=$pin resolved=$resolved"
-        P0_RESOLUTION="pinned_absolute"
+        if [ "$resolved" = "$pin" ]; then
+            P0_RESOLUTION="pinned_absolute"
+        elif [ "$t" = python3 ]; then
+            # The ONE preregistered divergence between a pin and its PATH
+            # spelling, and not a relaxation for anything else. `/usr/bin/python3`
+            # is a symlink on the target family and the RO stage may bind only a
+            # non-symlink object, so its pin is the RESOLVED leaf while PATH still
+            # spells the link. The pin is admitted only if the object this login's
+            # PATH really reaches canonicalises to EXACTLY the frozen pin, so a
+            # shadowing `python3` earlier in PATH - which canonicalises somewhere
+            # else - still STOPs. `readlink` precedes `python3` in the inventory
+            # order, and its absence from the resolved map is a STOP rather than
+            # an assumption.
+            p0_lookup "$P0_TOOLS_RESOLVED" readlink \
+                || p0_stop "tool_pin_uncanonicalizable tool=$t pinned=$pin resolved=$resolved detail=readlink_not_resolved_before_python3"
+            rl="$P0_LOOKUP"
+            canon="$(LC_ALL=C "$rl" -v -f -- "$resolved" 2>&1)" || crc=$?
+            if [ "$crc" -ne 0 ]; then
+                p0_sanitize "$canon"
+                [ -n "$P0_SAFE" ] || P0_SAFE="readlink_diagnostic_absent"
+                p0_stop "tool_pin_uncanonicalizable tool=$t pinned=$pin resolved=$resolved rc=$crc detail=[$P0_SAFE]"
+            fi
+            if [ "$canon" != "$pin" ]; then
+                p0_sanitize "$canon"
+                p0_stop "tool_pin_mismatch tool=$t pinned=$pin resolved=$resolved canonical=[$P0_SAFE]"
+            fi
+            # The object the RO stage will invoke is the pin, so the pin - not the
+            # link spelling - is what gets recorded, metadata-probed and access(2)
+            # tested below. The link spelling stays on the resolution token.
+            resolved="$pin"
+            P0_RESOLUTION="pinned_absolute_via_canonicalized_path_symlink"
+        else
+            p0_stop "tool_pin_mismatch tool=$t pinned=$pin resolved=$resolved"
+        fi
     else
         P0_RESOLUTION="path_resolved_absolute"
     fi
@@ -605,6 +703,8 @@ p0_lookup "$P0_TOOLS_RESOLVED" env       || p0_stop "missing_tool tool=env detai
 P0_ENV="$P0_LOOKUP"
 p0_lookup "$P0_TOOLS_RESOLVED" systemctl || p0_stop "missing_tool tool=systemctl detail=absent_from_resolved_map"
 P0_SYSTEMCTL="$P0_LOOKUP"
+p0_lookup "$P0_TOOLS_RESOLVED" timeout   || p0_stop "missing_tool tool=timeout detail=absent_from_resolved_map"
+P0_TIMEOUT="$P0_LOOKUP"
 p0_lookup "$P0_TOOLS_RESOLVED" getent    || p0_stop "missing_tool tool=getent detail=absent_from_resolved_map"
 P0_GETENT="$P0_LOOKUP"
 
@@ -619,8 +719,9 @@ for p0_t in $P0_RO_TOOLS; do
         "$p0_t" "$p0_path" "$P0_META_KIND" "$P0_META_MODE" "$P0_META_OWNER" "$p0_res"
     P0_TOOL_COUNT=$(( P0_TOOL_COUNT + 1 ))
 done
-printf 'P0_tool_inventory count=%s pinned=%s provenance=not_established\n' \
-    "$P0_TOOL_COUNT" "$P0_PIN_COUNT"
+printf 'P0_tool_inventory count=%s pinned=%s ro_half=[%s] p0_only_half=[%s] ro_basis=RP7-WPI-RO.sh@d6a976aa:23e55667:70941 trusted_python_pin=%s provenance=not_established\n' \
+    "$P0_TOOL_COUNT" "$P0_PIN_COUNT" "$P0_RP7_RO_TOOLS" "$P0_P0_ONLY_TOOLS" \
+    "$P0_TRUSTED_PYTHON_BOUND"
 
 # ---------------------------------------------------------------------------
 # SECTION: evidence binding
@@ -771,14 +872,23 @@ p0_record_identity
 #                rc 3 (the F2 polarity ruling: an identity wider/different than
 #                preregistered is re-adjudication, never a silent run).
 #   mtc-bridge - uid:gid must equal the preregistered P0_STATE_UID:P0_STATE_GID
-#                (999:988). A valid no-match (getent rc 2 AND an empty merged
-#                capture) OR a numeric mismatch is
-#                state_account_resolution_unexpected rc 3.
+#                (999:988). A numeric mismatch on a complete record is
+#                identity_unexpected (the one grammar both accounts share). A
+#                VALID NO-MATCH - getent rc 2 AND a completely empty merged
+#                capture, so positive absence really was established - is the
+#                distinct outcome state_account_resolution_unexpected: the
+#                dynamically allocated account is absent, which is a host
+#                observation about the allocation and not an inability to
+#                evaluate. Both exit 3 (audit-3 F4: that token is now
+#                preregistered verbatim in row 3 rather than left unregistered).
 # A getent that is missing/unpinnable, or a lookup error, or an rc 2 that
 # carries ANY byte - a diagnostic, a partial record, or a bare newline -
 # (positive absence not established), or
 # an unparsable or duplicate record, is an inability to evaluate:
-# identity_unresolvable rc 3.
+# identity_unresolvable, exit 3, carrying the resolver's OWN recorded status in
+# `rc=` (audit-3 F4). The status is exported by the parser rather than kept
+# local, and `rc=na` appears only on the two capture shapes that fail before any
+# status can be read - never as a stand-in for a status that was available.
 # Names, gecos, home and shell are captured as DIAGNOSTIC fields only; no name
 # is ever asserted or compared.
 #
@@ -793,9 +903,11 @@ p0_record_identity
 # re-asserted here.
 
 # Parse one `getent passwd <name>` record into globals, without ever asserting
-# a name. Sets P0_PW_OUTCOME to one of: found | nomatch | error. On `found` it
-# also sets P0_PW_NAME, P0_PW_UID, P0_PW_GID (numerics, validated) and
-# P0_PW_DIAG (sanitized remaining fields). On `nomatch`/`error` it sets only
+# a name. Sets P0_PW_OUTCOME to one of: found | nomatch | error, and ALWAYS sets
+# P0_PW_RC to the resolver's own exit status, or to the literal `na` on the two
+# shapes that fail before any status can be read. On `found` it also sets
+# P0_PW_NAME, P0_PW_UID, P0_PW_GID (numerics, validated) and P0_PW_DIAG
+# (sanitized remaining fields). On `nomatch`/`error` it sets P0_PW_RC and
 # P0_PW_DIAG. No branch here decides an admission - the caller adjudicates the
 # outcome. getent rc convention (Linux getent(1)): 0 = found, 2 = key absent,
 # anything else = lookup/service error. rc 2 is treated as a VALID NO-MATCH only
@@ -817,11 +929,33 @@ p0_resolve_passwd() {
     local -a p0_pw_parts=()
     P0_PW_OUTCOME="error"
     P0_PW_NAME=""; P0_PW_UID=""; P0_PW_GID=""; P0_PW_DIAG=""
+    # The resolver status is EXPORTED, not kept local (audit-3 F4). Rows 2 and 3
+    # make `rc=<n>` mandatory on every `identity_unresolvable` divergence, and a
+    # status the caller cannot see is a status the evidence leaf never records.
+    # `na` is the honest value for the two shapes that fail BEFORE a status can
+    # be read, and only for those; it is never a stand-in for a status that was
+    # available.
+    P0_PW_RC="na"
     mapfile -d '' -t p0_pw_parts < <(
         getent_rc=0
         LC_ALL=C "$P0_GETENT" passwd "$acct" 2>&1 || getent_rc=$?
         printf '\0P0_GETENT_RC=%s\0' "$getent_rc"
     )
+    # The status sentinel is the LAST field the producer wrote, so it survives a
+    # NUL emitted by getent itself: that NUL adds fields at the FRONT. Reading it
+    # even in the malformed-capture arm is what lets an ambiguous capture still
+    # carry the tool's real status instead of `na`.
+    if [ "${#p0_pw_parts[@]}" -ge 1 ]; then
+        rc_record="${p0_pw_parts[$(( ${#p0_pw_parts[@]} - 1 ))]}"
+        case "$rc_record" in
+            P0_GETENT_RC=*)
+                rc="${rc_record#P0_GETENT_RC=}"
+                case "$rc" in
+                    ''|*[!0-9]*) : ;;
+                    *) P0_PW_RC="$rc" ;;
+                esac ;;
+        esac
+    fi
     if [ "${#p0_pw_parts[@]}" -ne 2 ]; then
         P0_PW_DIAG="nul_byte_in_merged_capture"
         P0_PW_OUTCOME="error"
@@ -836,6 +970,7 @@ p0_resolve_passwd() {
     case "$rc" in
         ''|*[!0-9]*) P0_PW_DIAG="capture_status_unparseable"; P0_PW_OUTCOME="error"; return 0 ;;
     esac
+    P0_PW_RC="$rc"
     # Decided on the PRESERVED capture, before any normalization: did the tool
     # emit a single byte of anything at all?
     [ -z "$raw" ] || had_bytes=yes
@@ -910,10 +1045,10 @@ p0_resolve_accounts() {
                 "$P0_PW_UID" "$P0_PW_GID"
             ;;
         nomatch)
-            p0_stop "identity_unresolvable account=gatea rc=2 detail=getent_valid_no_match_for_route_login"
+            p0_stop "identity_unresolvable account=gatea rc=$P0_PW_RC detail=getent_valid_no_match_for_route_login"
             ;;
         error)
-            p0_stop "identity_unresolvable account=gatea detail=[$P0_PW_DIAG]"
+            p0_stop "identity_unresolvable account=gatea rc=$P0_PW_RC detail=[$P0_PW_DIAG]"
             ;;
     esac
 
@@ -934,7 +1069,7 @@ p0_resolve_accounts() {
             p0_stop "state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=$P0_STATE_UID:$P0_STATE_GID detail=getent_valid_no_match"
             ;;
         error)
-            p0_stop "identity_unresolvable account=mtc-bridge detail=[$P0_PW_DIAG]"
+            p0_stop "identity_unresolvable account=mtc-bridge rc=$P0_PW_RC detail=[$P0_PW_DIAG]"
             ;;
     esac
 }
@@ -1088,17 +1223,44 @@ p0_assert_execution_domain
 # Everything short of a complete, single-line, exactly-shaped `Version=` answer
 # is `system_manager_unreachable`, the prereg row-7 token, with rc and a detail
 # class. Fail closed in every direction.
+# THE QUERY IS BOUNDED (audit-3 F2). Row 9 explicitly assigns `timeout` to
+# `system_manager_unreachable`, and an unbounded query cannot honour that: a
+# stalled D-Bus or system-manager response never reaches the rc/diagnostic
+# adjudicator at all, so the block emits no reason line, no rc and no verdict -
+# it simply never returns, and whatever eventually kills it is an external
+# actor's status, not this block's ruling (pattern 1: a STOP that is never
+# reached is not a STOP). The bound is the pinned `timeout`, placed INSIDE the
+# cleared environment as the round-1.4 probe-execution-environment rule requires:
+# `env -i` execs first and `timeout` is its argument, so the process that decides
+# whether the query was bounded runs under the same cleared environment as the
+# query it bounds - not under an operator-controlled one that could redirect or
+# neuter it. `--kill-after` escalates if the manager ignores SIGTERM, so the
+# deadline holds even against a child that traps it.
+# Elapsed seconds are recorded from the `SECONDS` shell builtin: no clock tool is
+# invoked, so there is no additional status to adjudicate. It is DIAGNOSTIC only
+# - whole-second resolution and subject to wall-clock adjustment - and no branch
+# below reads it. `timeout`'s own exit status, not the elapsed value, decides.
 p0_assert_system_manager_ready() {
-    local raw rc=0 value detail
-    raw="$(LC_ALL=C "$P0_ENV" -i LC_ALL=C "$P0_SYSTEMCTL" --system --no-pager show --property=Version 2>&1)" || rc=$?
+    local raw rc=0 value detail started elapsed
+    started="$SECONDS"
+    raw="$(LC_ALL=C "$P0_ENV" -i LC_ALL=C "$P0_TIMEOUT" \
+        --signal=TERM --kill-after="${P0_MANAGER_QUERY_KILL_AFTER_S}s" \
+        "${P0_MANAGER_QUERY_BUDGET_S}s" \
+        "$P0_SYSTEMCTL" --system --no-pager show --property=Version 2>&1)" || rc=$?
+    elapsed=$(( SECONDS - started ))
     if [ "$rc" -ne 0 ]; then
+        # With the bound in place these statuses are the BOUNDING wrapper's, and
+        # they are classified as such rather than re-narrated as the manager's.
         case "$rc" in
+            124) detail="manager_query_deadline_exceeded" ;;
+            137) detail="manager_query_killed_after_deadline" ;;
+            125) detail="bounding_wrapper_failed" ;;
             126) detail="invocation_found_but_not_executable" ;;
             127) detail="invocation_command_not_found" ;;
             *)   detail="manager_query_nonzero_status" ;;
         esac
         p0_sanitize "$raw"
-        p0_stop "system_manager_unreachable rc=$rc detail=$detail text=[$P0_SAFE]"
+        p0_stop "system_manager_unreachable rc=$rc detail=$detail budget_s=$P0_MANAGER_QUERY_BUDGET_S elapsed_s=$elapsed text=[$P0_SAFE]"
     fi
     case "$raw" in
         *$'\r'*|*$'\n'*)
@@ -1115,8 +1277,9 @@ p0_assert_system_manager_ready() {
             p0_stop "system_manager_unreachable rc=$rc detail=response_unprintable_value" ;;
     esac
     p0_sanitize "$value"
-    printf 'P0_system_manager_ready bus=system query=show_property_Version response_key=Version response_value=[%s] env=cleared binary=%s scope=this_login_pid_and_mount_namespaces manager_identity=not_established\n' \
-        "$P0_SAFE" "$P0_SYSTEMCTL"
+    printf 'P0_system_manager_ready bus=system query=show_property_Version response_key=Version response_value=[%s] env=cleared bound=pinned_timeout_inside_cleared_env budget_s=%s kill_after_s=%s elapsed_s=%s binary=%s bounding_binary=%s scope=this_login_pid_and_mount_namespaces manager_identity=not_established\n' \
+        "$P0_SAFE" "$P0_MANAGER_QUERY_BUDGET_S" "$P0_MANAGER_QUERY_KILL_AFTER_S" \
+        "$elapsed" "$P0_SYSTEMCTL" "$P0_TIMEOUT"
 }
 
 printf 'P0_SECTION system_manager\n'
@@ -1262,11 +1425,30 @@ p0_assert_interpreter_executable() {
     [ -x "$py" ] \
         || p0_stop "interpreter_not_executable path=$py mechanism=access_builtin_x detail=exec_permission_denied_to_this_login"
     # Then a real execution, with the environment cleared and the interpreter in
-    # isolated mode: PYTHONPATH, PYTHONSTARTUP, PYTHONHOME and a current-working
-    # -directory shadow are all removed as channels (pattern 4, audit-2 A2-F1).
-    # `-I` also implies -E and -s. Only `sys` is imported and only two integers
-    # are printed; nothing is written and nothing is installed.
-    raw="$(LC_ALL=C "$P0_ENV" -i LC_ALL=C "$py" -I -c 'import sys; print("P0PY %d.%d" % sys.version_info[:2])' 2>&1)" || rc=$?
+    # isolated mode AND with `site` startup disabled: PYTHONPATH, PYTHONSTARTUP,
+    # PYTHONHOME and a current-working-directory shadow are removed as channels by
+    # `-I` (pattern 4, audit-2 A2-F1), and the venv's own startup code is removed
+    # as a channel by `-S` (audit-3 F1).
+    # `-I` alone was NOT enough and the claim that it was is the defect this line
+    # repairs. `-I` implies `-E`, `-P` and `-s`; it does NOT imply `-S`. Without
+    # `-S` the interpreter imports `site` during startup, processes this venv's
+    # `site-packages`, and EXECUTES every `import` line in its `*.pth` files -
+    # plus any `sitecustomize`/`usercustomize` module in that tree - before the
+    # `-c` body is compiled. That is arbitrary code from the very object this
+    # block is testing, running with this login's authority, and it can write
+    # anywhere this login can write and still let the accepted `P0PY` line be
+    # printed afterwards. A forged one-line `.pth` in a real venv did exactly
+    # that under the previous bytes (SELF_QA_RP6.md, R4 F1 fence).
+    # The child also verifies its OWN startup rather than trusting that the flag
+    # words survived: if `sys.flags.isolated` and `sys.flags.no_site` are not both
+    # set it refuses to report a version and says so. Deleting ` -S` from this
+    # line therefore cannot silently restore the hole - it produces a named STOP.
+    # Only `sys` is imported and only one line is written to stdout.
+    raw="$(LC_ALL=C "$P0_ENV" -i LC_ALL=C "$py" -I -S -c 'import sys
+if not (sys.flags.isolated and sys.flags.no_site):
+    sys.stdout.write("P0PY_STARTUP_UNPROVEN isolated=%d no_site=%d" % (sys.flags.isolated, sys.flags.no_site))
+    raise SystemExit(0)
+sys.stdout.write("P0PY %d.%d" % sys.version_info[:2])' 2>&1)" || rc=$?
     if [ "$rc" -ne 0 ]; then
         p0_sanitize "$raw"
         case "$rc" in
@@ -1279,6 +1461,15 @@ p0_assert_interpreter_executable() {
         *$'\r'*|*$'\n'*)
             p0_sanitize "$raw"
             p0_stop "interpreter_probe_multiline path=$py detail=$P0_SAFE" ;;
+    esac
+    # The child's own startup verdict is read BEFORE its result is parsed. This
+    # is an inability to evaluate, never a host-state FAIL: the interpreter ran,
+    # but it could not prove the launch was isolated and site-free, so nothing
+    # this block would say about read-only scope would be established.
+    case "$raw" in
+        "P0PY_STARTUP_UNPROVEN "*)
+            p0_sanitize "$raw"
+            p0_stop "interpreter_startup_not_isolated path=$py detail=[$P0_SAFE] expected=isolated_and_no_site" ;;
     esac
     case "$raw" in
         "P0PY "?*) version="${raw#P0PY }" ;;
@@ -1294,8 +1485,12 @@ p0_assert_interpreter_executable() {
     # The version is RECORDED, never compared. The 3.12 predicate and the
     # 56-entry lock parity are RO-stage rows (feasibility B1); asserting either
     # here would be a parity claim resting on a premise this section exists to
-    # establish.
-    printf 'P0_interpreter path=%s exec=ok env=cleared isolated=yes reported_version=%s.%s adjudication=recorded_not_compared\n' \
+    # establish. Recording rather than comparing is also why running the venv's
+    # own interpreter here does not violate "no process may adjudicate its own
+    # state": this arm accepts nothing the venv said about itself - it observes
+    # that the preregistered object executes - and the two RO-stage adjudicators
+    # that DO accept a result run under the separately pinned trusted python3.
+    printf 'P0_interpreter path=%s exec=ok env=cleared isolated=yes site_startup=disabled startup_flags=self_verified_isolated_and_no_site venv_pth_and_sitecustomize=not_executed reported_version=%s.%s adjudication=recorded_not_compared interpreter_binary_behaviour=not_attested\n' \
         "$py" "$major" "$minor"
 }
 
@@ -1322,7 +1517,7 @@ printf 'P0_out_of_scope class=RO_STAGE item=every_prereg_8.2_row stage=ro implem
 # Written by stating the claim and then deleting every word the executed
 # predicates cannot establish. What survives is the log line.
 printf 'P0_SECTION done\n'
-printf 'P0_claim establishes=executing_numeric_identity_of_this_login,name_to_numeric_resolution_of_gatea_and_mtc_bridge_via_getent,forbidden_gid_non_membership,resolution_and_executability_of_the_12_listed_RO_tools,evidence_stdout_bound_to_create_once_leaf,deploy_attested_user_mount_pid_network_namespaces_and_root_mount_identity,system_manager_answered_a_Manager_property_query_over_the_system_bus_after_execution_domain_binding,venv_interpreter_leaf_kind_and_executability\n'
-printf 'P0_claim does_not_establish=any_RO_row_host_state,tool_provenance_or_distribution_identity,nss_source_identity_of_getent_resolution,round1_4_probe_execution_environment_binding,identity_of_the_manager_that_answered,binding_of_these_namespaces_to_any_service,accepted_mount_topology_for_every_preregistered_host_path,interpreter_intermediate_component_or_symlink_target_binding,interpreter_version_or_package_parity,anything_under_the_protected_metadata_directories,anything_about_group_C,procfs_mount_identity_of_the_namespace_links\n'
-printf 'P0_claim scope=this_login_only identity=numeric_only mutation=none_in_this_block evidence_leaf=allocated_by_RP0-BOOTSTRAP child_env=mixed coreutils_launch=recorded_absolute_after_PATH_resolution inherited_env=stat_readlink_id_getent cleared_env=systemctl_and_interpreter_only cwd=caller_inherited tmpdir=caller_inherited_or_unset\n'
+printf 'P0_claim establishes=executing_numeric_identity_of_this_login,name_to_numeric_resolution_of_gatea_and_mtc_bridge_via_getent,forbidden_gid_non_membership,resolution_and_executability_of_the_12_preregistered_tools_being_the_10_frozen_RP7_RO_tools_plus_id_and_getent,evidence_stdout_bound_to_create_once_leaf,deploy_attested_user_mount_pid_network_namespaces_and_root_mount_identity,system_manager_answered_a_Manager_property_query_over_the_system_bus_within_a_bounded_deadline_after_execution_domain_binding,venv_interpreter_leaf_kind_and_executability_under_isolated_site_disabled_startup\n'
+printf 'P0_claim does_not_establish=any_RO_row_host_state,tool_provenance_or_distribution_identity,behaviour_inside_any_executed_tool_binary,nss_source_identity_of_getent_resolution,round1_4_probe_execution_environment_binding,identity_of_the_manager_that_answered,binding_of_these_namespaces_to_any_service,accepted_mount_topology_for_every_preregistered_host_path,interpreter_intermediate_component_or_symlink_target_binding,interpreter_version_or_package_parity,persistence_of_any_checked_object_between_this_preflight_and_the_RO_stage,anything_under_the_protected_metadata_directories,anything_about_group_C,procfs_mount_identity_of_the_namespace_links\n'
+printf 'P0_claim scope=this_login_only identity=numeric_only mutation=no_filesystem_write_primitive_in_this_shell_source child_side_effects=not_attested_except_venv_startup_which_is_disabled interpreter_launch=isolated_and_no_site manager_query=bounded_by_pinned_timeout_inside_cleared_env evidence_leaf=allocated_by_RP0-BOOTSTRAP child_env=mixed coreutils_launch=recorded_absolute_after_PATH_resolution inherited_env=stat_readlink_id_getent cleared_env=systemctl_timeout_and_interpreter_only cwd=caller_inherited tmpdir=caller_inherited_or_unset\n'
 printf 'P0 PASS\n'
