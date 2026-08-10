@@ -49,6 +49,39 @@ connecting is in scope. Do not commit. Write shell files with UNIX LF only; keep
 Also address, from the Claude report, anything it raised as a nit that these repairs
 touch anyway; list the rest as deferred with reasons.
 
+## Four additional required items from the successor-skeleton review (2026-08-10 ~20:50)
+
+Source: `WPI_PREREG_DRAFT_ROUND1/SKELETON_REVIEW_CODEX_2026-08-10.md`, gaps 1, 10, 11, 12.
+These are transport-side and must be closed in this round, not deferred to a later one.
+
+- **T5 (CRITICAL) — `run_p0.sh` wires none of the `P0_ATTESTED_*` inputs.** `RP6-P0.sh`
+  requires five `P0_ATTESTED_*` values; current `run_p0.sh` defines and exports none of
+  them. As composed today the run STOPs before any host observation even if the five
+  embedded `P0_FIXED_ATTESTED_*` literals are filled. Wire them, and prove the composition
+  by executing the wrapper against the real block with placeholder-but-present values so
+  the failure mode is observed rather than assumed.
+- **T6 — the derived close-script contract does not match its own bytes.** The draft says
+  `remote_close_tree_wpi.sh` has derivation classes 5 and 6, a cleared launch domain, and a
+  run-owned `WORK_ROOT`. The bytes accept only `<EV_DIR> <RUNID>`, explicitly inherit login
+  `TMPDIR`, and state class 2 is the only semantic delta; the plan passes two arguments.
+  Both cannot be the execution contract. Either implement classes 5 and 6 and pass the
+  run-owned work root from the plan, or drop those claims from the report and the draft and
+  surface the weaker contract explicitly for T0 adjudication. This also interacts with F2 —
+  fix them together, not twice.
+- **T7 — remove the inert `WPI_INTERPRETER_TARGET` pin.** `run_ro.sh` marks and exports it;
+  `RP7-WPI-RO.sh` never reads it and deliberately refuses a symlinked venv interpreter
+  instead of following a target chain. A filled but unread value is not a preregistered
+  check. Remove it from the wrapper and from the fill ledger, or give it an explicit
+  predicate and consumer in an accepted block. Do not touch RP7 — another session owns it.
+- **T8 — the preregistered transport summary is stale.** Update the draft's §6 sentence to
+  the current semantics: first-*mismatch* sequencing (not first-FAIL); after the first
+  mismatching or not-evaluable `sequence_ok` operation later `sequence_ok` operations are
+  skipped while all `always` operations still run; results classified by operation kind and
+  provenance rather than rc alone; ssh rc 255, any nonzero scp rc, an rc outside a kind's
+  grammar, and an ssh rc without a remote-program marker are all not-evaluable; an `always`
+  failure caused by an earlier broken sequence is not-evaluable, not a new host FAIL.
+  This is consistent with the F4 adjudication above — state it once, correctly.
+
 ## Deliverables
 
 Repaired transport files + `SELF_QA_TRANSPORT.md` (REAL RED/GREEN for each fix — F4's
