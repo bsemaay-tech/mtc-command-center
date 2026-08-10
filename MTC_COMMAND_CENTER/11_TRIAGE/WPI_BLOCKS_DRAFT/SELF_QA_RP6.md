@@ -1901,14 +1901,53 @@ build_f3_arm "$Q/post.sh" "$Q/f3-post.sh"; run_capture 'F3 POST doubled separato
 # F4: same contradictory duplicate table; pre-repair silently accepts it,
 # repaired bytes reject before first-wins lookup can occur.
 build_f4_arm() {
-    local src="$1" arm="$2"
+    local src="$1" arm="$2" slice missing=0 ref
+    slice="$(sed -n '/^P0_TOOL_PINS="${P0_TOOL_PINS:-}"/,/^# This derives the literal leaf name only/p' "$src" | sed '$d')"
     {
         printf '%s\n' 'set -Eeuo pipefail' \
             'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }' \
             'P0_RO_TOOLS="stat readlink id env find grep sha256sum awk systemctl ss curl getent"' \
             'P0_TOOL_PINS="stat=/usr/bin/stat stat=/decoy/stat"'
-        sed -n '/^P0_TOOL_PINS="${P0_TOOL_PINS:-}"/,/^# This derives the literal leaf name only/p' "$src" | sed '$d'
+        # ROUND 8 (correction 7). The landmark slice above binds every pin against
+        # a frozen P0_FIXED_* deploy-channel literal under `set -u`, and those
+        # literals are defined further up the block (RP6-P0.sh:266-299), OUTSIDE
+        # the slice. The first `stat=/usr/bin/stat` pin reaches p0_frozen_tool_path
+        # (line 609) BEFORE the second `stat` pin hits the duplicate check (578),
+        # so P0_FIXED_STAT must be the real `/usr/bin/stat`; the rest are defined
+        # too so the slice is self-contained and the build-time assertion below
+        # holds. The five ATTESTED literals are inert here: this arm STOPs at the
+        # duplicate pin and never reaches the execution-domain checks that read
+        # them, so their value is irrelevant - they are present only so the
+        # slice's own references are all defined.
+        printf '%s\n' \
+            'P0_FIXED_STAT=/usr/bin/stat' \
+            'P0_FIXED_READLINK=/usr/bin/readlink' \
+            'P0_FIXED_ENV=/usr/bin/env' \
+            'P0_FIXED_FIND=/usr/bin/find' \
+            'P0_FIXED_SHA256SUM=/usr/bin/sha256sum' \
+            'P0_FIXED_SYSTEMCTL=/usr/bin/systemctl' \
+            'P0_FIXED_SS=/usr/bin/ss' \
+            'P0_FIXED_CURL=/usr/bin/curl' \
+            'P0_FIXED_TIMEOUT=/usr/bin/timeout' \
+            'P0_FIXED_ID=/usr/bin/id' \
+            'P0_FIXED_GETENT=/usr/bin/getent' \
+            'P0_FIXED_TRUSTED_PYTHON=/usr/bin/python3.12' \
+            "P0_FIXED_ATTESTED_USER_NS='<PIN-AT-FREEZE>'" \
+            "P0_FIXED_ATTESTED_MNT_NS='<PIN-AT-FREEZE>'" \
+            "P0_FIXED_ATTESTED_PID_NS='<PIN-AT-FREEZE>'" \
+            "P0_FIXED_ATTESTED_NET_NS='<PIN-AT-FREEZE>'" \
+            "P0_FIXED_ATTESTED_ROOT_MOUNT_ID='<PIN-AT-FREEZE>'"
+        printf '%s\n' "$slice"
     } > "$arm"
+    # Build-time completeness (round 8): every P0_FIXED_* the slice references
+    # must be defined above. A miss means the block grew a frozen literal the
+    # fixture does not yet carry - fail LOUDLY here, never emit a silently-broken
+    # arm that aborts rc 1 under `set -u` at run time (the round-7 defect class).
+    for ref in $(printf '%s\n' "$slice" | grep -oE 'P0_FIXED_[A-Z0-9_]+' | sort -u); do
+        grep -q "^${ref}=" "$arm" \
+            || { printf 'ARM_BUILD_INCOMPLETE fence=RP6_FULLBLOCK_D026(F4) missing_frozen_literal=%s\n' "$ref" >&2; missing=1; }
+    done
+    [ "$missing" -eq 0 ] || return 1
 }
 build_f4_arm "$Q/pre.sh" "$Q/f4-pre.sh"; run_capture 'F4 PRE duplicate pins' "$Q/f4-pre.sh"; f4p=$QA_LAST_RC
 build_f4_arm "$Q/post.sh" "$Q/f4-post.sh"; run_capture 'F4 POST duplicate pins' "$Q/f4-post.sh"; f4g=$QA_LAST_RC; f4go=$QA_LAST_OUT
@@ -1980,9 +2019,23 @@ chmod 0644 "$Q/nonexec-tool"
 build_f7_tool_arm() {
     local src="$1" arm="$2"
     {
-        printf '%s\n' 'set -Eeuo pipefail' 'P0_SAFE=""; P0_LOOKUP=""; P0_RESOLUTION=""; P0_TOOL_PINS=""; P0_TOOLS_RESOLVED=""; P0_TOOLS_RESOLUTION=""' \
+        printf '%s\n' 'set -Eeuo pipefail' 'P0_SAFE=""; P0_LOOKUP=""; P0_RESOLUTION=""; P0_TOOLS_RESOLVED=""; P0_TOOLS_RESOLUTION=""' \
             'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }'
         printf 'FIXTURE_TOOL=%q\n' "$Q/nonexec-tool"
+        # ROUND 8 / F7_TOOL_POST. Correction 7 DELETED the unpinned
+        # `path_resolved_absolute` fallback (RP6-P0.sh:807-811), so an UNPINNED
+        # tool now STOPs at `tool_pin_unpinned` BEFORE the `[ -x "$resolved" ]`
+        # executability check (line 820-821) that emits the R2-F1
+        # `tool_not_evaluable ... rc=na detail=access_builtin_x_denied` token this
+        # arm exists to exercise. Pin getent to the fixture path (which the
+        # overridden `command -v` also resolves to) so resolution reaches `[ -x ]`,
+        # where the non-executable fixture (mode 0644) reproduces that exact token.
+        # The block's `tool_not_evaluable` classification is UNCHANGED - correction
+        # 7 only moved the unpinned case upstream - so this is a stale FIXTURE, not
+        # a block defect. The PRE arm is unaffected: the pre-repair resolver kept
+        # the unpinned fallback (RP6-P0.sh@0bbc3591:419), so it reaches `[ -x ]`
+        # and emits `tool_not_executable` whether getent is pinned or not.
+        printf 'P0_TOOL_PINS=%q\n' "getent=$Q/nonexec-tool"
         printf '%s\n' 'command(){ if [ "$1" = -v ]; then printf "%s\n" "$FIXTURE_TOOL"; return 0; fi; builtin command "$@"; }'
         exfn "$src" p0_sanitize
         exfn "$src" p0_lookup
@@ -2824,16 +2877,55 @@ for t in timeout python3; do case " $pre_inv " in *" $t "*) : ;; *) drift_pre=FA
 for t in grep awk;         do case " $pre_inv " in *" $t "*) drift_pre=FAIL ;; esac; done
 req_eq DRIFT_RED_PRE_FAILS "$drift_pre" FAIL
 # the executable half: drive the REAL pin validator with a COMPLETE RP7 pin set.
-RP7PINS='stat=/usr/bin/stat readlink=/usr/bin/readlink env=/usr/bin/env find=/usr/bin/find sha256sum=/usr/bin/sha256sum systemctl=/usr/bin/systemctl ss=/usr/bin/ss curl=/usr/bin/curl timeout=/usr/bin/timeout python3=/usr/bin/python3.12'
+# ROUND 8 (correction 7). A valid prelude now pins ALL twelve preregistered
+# tools: the ten RP7 RO-shared tools PLUS the P0-only `id` and `getent`. The
+# block's omission loop (RP6-P0.sh:628-633) and count check (:634-635) reject a
+# 10-pin set as `input_pin_omitted tool=id`, so the GREEN validator case must
+# supply the full twelve. id/getent are appended (order is irrelevant: the
+# omission loop tests presence, not sequence).
+RP7PINS='stat=/usr/bin/stat readlink=/usr/bin/readlink env=/usr/bin/env find=/usr/bin/find sha256sum=/usr/bin/sha256sum systemctl=/usr/bin/systemctl ss=/usr/bin/ss curl=/usr/bin/curl timeout=/usr/bin/timeout python3=/usr/bin/python3.12 id=/usr/bin/id getent=/usr/bin/getent'
 build_pin_arm() {
-    local src="$1" arm="$2" trusted="$3"
+    local src="$1" arm="$2" trusted="$3" slice missing=0 ref
+    slice="$(sed -n '/^P0_TOOL_PINS="${P0_TOOL_PINS:-}"/,/^# Row 8 deploy-channel attestation inputs/p' "$src" | sed '$d')"
     {
         printf '%s\n' 'set -Eeuo pipefail' 'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }'
         grep -E '^P0_(RP7_RO_TOOLS|P0_ONLY_TOOLS|RO_TOOLS)=' "$src"
+        # ROUND 8 (correction 7). The count check inside the extracted slice
+        # (RP6-P0.sh:634) reads P0_TOOL_COUNT_EXPECTED, which is derived further
+        # up the block (:362-363) and therefore absent from the slice. Mirror the
+        # block's own derivation (a count of $P0_RO_TOOLS) so it tracks the
+        # inventory instead of drifting to a hard-coded constant.
+        printf '%s\n' 'P0_TOOL_COUNT_EXPECTED=0' 'for p0_t in $P0_RO_TOOLS; do P0_TOOL_COUNT_EXPECTED=$(( P0_TOOL_COUNT_EXPECTED + 1 )); done'
         printf 'P0_FIXED_TRUSTED_PYTHON=%q\n' "$trusted"
-        sed -n '/^P0_TOOL_PINS="${P0_TOOL_PINS:-}"/,/^# Row 8 deploy-channel attestation inputs/p' "$src" | sed '$d'
+        # Correction 7 froze a deploy-channel literal for every tool; the pin loop
+        # extracted below binds each pin against its P0_FIXED_* under `set -u`,
+        # and those literals sit above the slice in the block. Define each one
+        # (values mirror $RP7PINS, the complete valid 12-tool pin set) so the arm
+        # is self-contained rather than aborting rc 1 on the first pin.
+        printf '%s\n' \
+            'P0_FIXED_STAT=/usr/bin/stat' \
+            'P0_FIXED_READLINK=/usr/bin/readlink' \
+            'P0_FIXED_ENV=/usr/bin/env' \
+            'P0_FIXED_FIND=/usr/bin/find' \
+            'P0_FIXED_SHA256SUM=/usr/bin/sha256sum' \
+            'P0_FIXED_SYSTEMCTL=/usr/bin/systemctl' \
+            'P0_FIXED_SS=/usr/bin/ss' \
+            'P0_FIXED_CURL=/usr/bin/curl' \
+            'P0_FIXED_TIMEOUT=/usr/bin/timeout' \
+            'P0_FIXED_ID=/usr/bin/id' \
+            'P0_FIXED_GETENT=/usr/bin/getent'
+        printf '%s\n' "$slice"
         printf '%s\n' 'printf "P0_PINS_ACCEPTED count=%s trusted_python_pin=%s\n" "$P0_PIN_COUNT" "${P0_TRUSTED_PYTHON_BOUND:-absent}"'
     } > "$arm"
+    # Build-time completeness (round 8): every P0_FIXED_* the slice references
+    # must be defined above (P0_FIXED_TRUSTED_PYTHON via the `trusted` arg, the
+    # eleven tool literals here). A miss fails LOUDLY here instead of producing an
+    # arm that aborts rc 1 under `set -u` at run time.
+    for ref in $(printf '%s\n' "$slice" | grep -oE 'P0_FIXED_[A-Z0-9_]+' | sort -u); do
+        grep -q "^${ref}=" "$arm" \
+            || { printf 'ARM_BUILD_INCOMPLETE fence=RP6_R4_D026(pin) missing_frozen_literal=%s\n' "$ref" >&2; missing=1; }
+    done
+    [ "$missing" -eq 0 ] || return 1
 }
 pin_case() { # label src trusted pins
     local arm="$Q/pin-$$.sh" rc=0 out
@@ -2849,7 +2941,7 @@ req_eq PIN_RED_RC "$PIN_RC" 3
 req_line PIN_RED_EXACT "$PIN_OUT" 'P0_STOP reason=input_pin_unknown_tool name=P0_TOOL_PINS tool=timeout inventory=[stat readlink id env find grep sha256sum awk systemctl ss curl getent]'
 pin_case 'F3 GREEN repaired pin validator, complete RP7 pin set, frozen python filled' "$Q/post.sh" '/usr/bin/python3.12' "$RP7PINS"
 req_eq PIN_GREEN_RC "$PIN_RC" 0
-req_line PIN_GREEN_EXACT "$PIN_OUT" 'P0_PINS_ACCEPTED count=10 trusted_python_pin=yes'
+req_line PIN_GREEN_EXACT "$PIN_OUT" 'P0_PINS_ACCEPTED count=12 trusted_python_pin=yes'
 pin_case 'F3 GREEN repaired validator, python3 pin present, freeze pin unfilled' "$Q/post.sh" '<PIN-AT-FREEZE>' "$RP7PINS"
 req_eq PIN_FREEZE_RC "$PIN_RC" 3
 req_line PIN_FREEZE_EXACT "$PIN_OUT" 'P0_STOP reason=input_pin_freeze_unfilled tool=python3 name=P0_FIXED_TRUSTED_PYTHON detail=deploy_channel_value_never_derived_here'
@@ -3362,7 +3454,10 @@ in both.
   validator with a complete RP7 pin set reproduces the auditor's own line on the
   pre-fix bytes — `input_pin_unknown_tool … tool=timeout inventory=[stat readlink
   id env find grep sha256sum awk systemctl ss curl getent]` — and returns
-  `P0_PINS_ACCEPTED count=10 trusted_python_pin=yes` on the repaired bytes. The
+  `P0_PINS_ACCEPTED count=12 trusted_python_pin=yes` on the repaired bytes (round 8:
+correction 7 requires all twelve tools pinned, so the GREEN case now supplies the
+P0-only `id` and `getent` pins as well — the count moved 10 → 12; the round-6
+transcript below still reads `count=10` because that capture predates correction 7). The
   inverse also holds: a `grep` pin is now the unknown tool. The freeze gate and the
   wrong-python3 gate each STOP with their own exact line, the canonicalised
   `python3` link is admitted, a shadowing `python3` is not, and the allowance does
@@ -5010,3 +5105,162 @@ The three R7 harnesses isolate just the repaired predicates (the prerequisite
 adjudication), which is exactly the surface the three code corrections concern.
 No host was contacted, no network command was run, no host file content was
 printed, and nothing was committed.
+
+---
+
+# ROUND 8 (2026-08-11) — repair the two failing legacy fences (evidence only)
+
+Implementer: Claude (fresh session). Audit tier unchanged: **T0**. Round 8 is an
+**evidence-only** round. It writes only `SELF_QA_RP6.md`, `STATUS_RP6_P0.md` and
+`RP6_REPAIR_R8_REPORT.md`. **`RP6-P0.sh` is frozen this round** and is confirmed
+byte-identical below. No host, no network, no commit. Full disposition in
+`RP6_REPAIR_R8_REPORT.md`.
+
+## What round 7 left open
+
+The Lead ran every fence by anchored marker after round 7
+(`RP6_R7_LEAD_QA_EXECUTION_2026-08-10.md`): the three R7 harnesses and three
+legacy fences PASS; **`RP6_FULLBLOCK_D026` and `RP6_R4_D026` FAIL (rc 1)**. Both
+failures trace to one root cause in the fences' own arm construction:
+
+```text
+…/pin-$$$.sh: line 17: P0_FIXED_STAT: unbound variable
+…/f4-post.sh: line 15: P0_FIXED_STAT: unbound variable
+```
+
+Both fences synthesise a test arm by `sed`-slicing `RP6-P0.sh` between two source
+landmarks. Correction 7 added twelve frozen `P0_FIXED_*` deploy-channel literals
+at `RP6-P0.sh:266-299`, OUTSIDE those slices; the extracted pin loop references
+them under `set -u`, so the arm aborts rc 1.
+
+This session cannot execute `bash` (see QA status), so the analysis below is by
+reading the source, not running it. It localises the defect to exactly the two
+landmark-slice arms and surfaces two further consequences the unbound abort had
+masked:
+
+| arm (fence) | slice | references outside the slice | disposition |
+|---|---|---|---|
+| `build_f4_arm` (FULLBLOCK) | `RP6-P0.sh:528-720` | `P0_FIXED_*` (incl. the attested literals at 700-718, though the duplicate arm never reaches them) | define + assert |
+| `build_pin_arm` (R4) | `RP6-P0.sh:528-652` | `P0_FIXED_*` AND `P0_TOOL_COUNT_EXPECTED` (the count check at :634, also correction 7, also above the slice) | define + assert |
+
+Every other arm in both fences extracts whole FUNCTIONS (`exfn`), and the
+functions it extracts (`p0_resolve_tool`, `p0_assert_execution_domain`,
+`p0_resolve_accounts`, `p0_capture_numeric`, `p0_record_metadata`, …) read ENV
+inputs (`P0_ATTESTED_*`, `P0_TOOL_PINS`) or the `P0_TOOL_PINS` map, NOT the
+`P0_FIXED_*` literals — so they are unaffected. `P0_FIXED_*` is referenced only
+by top-level pin-loop code (`p0_frozen_tool_path` :535-552, the python3 gate) and
+the top-level execution-domain frozen-pin checks (:700-718), which is why only
+the landmark slices that carry that top-level code break.
+
+## F7_TOOL_POST — classified: block correct, fence fixture stale (fixed)
+
+`RP6_FULLBLOCK_D026` also reported `ASSERT_UNMET label=F7_TOOL_POST`. That
+assertion is the line whose `set -e` abort (a `require_contains` returning 1 as
+the command following the final `&&`) stops the fence before its summary, so "no
+summary emitted" is this abort; the F4 unbound above is a soft-fail one line
+earlier (its `[ ]` is false, so `require_contains` never runs). The F7 tool arm
+resolves `getent` against a non-executable fixture (mode 0644) and asserts the
+R2-F1 token `tool_not_evaluable tool=getent path=… rc=na
+detail=access_builtin_x_denied mechanism=access_builtin_x`. After correction 7 it
+instead emits `tool_pin_unpinned tool=getent detail=every_tool_requires_a_frozen_pin`,
+because the arm set `P0_TOOL_PINS=""` and correction 7 DELETED the unpinned
+`path_resolved_absolute` fallback (`RP6-P0.sh:807-811`): an unpinned tool now
+STOPs BEFORE the `[ -x "$resolved" ]` check (`:820-821`) that emits
+`tool_not_evaluable`.
+
+**Classification — the block is correct, the fence fixture is stale.** Against
+the preregistered row-1 grammar (`WPI_PREREGISTRATION_DRAFT.md` §8.1 row 1), which
+round 7 itself amended:
+
+- Row 1 still carries `tool_not_evaluable tool=getent path=<p> rc=<n|na>
+  detail=<d> mechanism=<m>` as the divergence "when the resolved object cannot be
+  evaluated as executable", with "`rc=na` is mandatory for the
+  `mechanism=access_builtin_x` arm". So the token is still intended and the block
+  still emits it (`:820-821`) for a PINNED tool that resolves to a non-executable
+  path. Correction 7 did NOT change that classification.
+- Row 1's round-7 amendment states the unpinned fallback "is deleted, so a tool
+  that resolves on PATH but was not pinned is `P0_STOP reason=tool_pin_unpinned
+  tool=<t>`". So `tool_pin_unpinned` is the CORRECT token for the arm's old
+  fixture; the fixture simply no longer reaches the arm it was written for.
+
+**Fix (fixture only):** `build_f7_tool_arm` now pins `getent` to the fixture path,
+so resolution passes the pin lookup and reaches `[ -x ]`, where the
+non-executable fixture reproduces `tool_not_evaluable … rc=na
+detail=access_builtin_x_denied mechanism=access_builtin_x`. The PRE arm is
+unaffected: the pre-repair resolver (`RP6-P0.sh@0bbc3591:419`) kept the unpinned
+fallback, so it reaches `[ -x ]` and emits `tool_not_executable` whether getent
+is pinned or not (verified by reading the pre-repair source). This is not
+"changing an expectation to make a test pass": the block side is correct per the
+prereg grammar and the fixture is updated to exercise the SAME preregistered token
+under correction 7's pin requirement.
+
+## R4 GREEN count — also stale under correction 7 (block correct, fence stale)
+
+Once the unbound is fixed, the R4 pin arm's GREEN case reveals a second masked
+staleness: `$RP7PINS` supplied ten pins (no `id`, no `getent`) and asserted
+`count=10`, but correction 7's omission loop (`:628-633`) and count check
+(`:634-635`, `expected=12`) require all twelve, so the GREEN case would STOP at
+`input_pin_omitted tool=id`. Row 1's round-7 amendment is explicit: "exactly one
+frozen pin is required for each of the twelve tools … A missing pin is
+`input_pin_omitted …`; a pin count other than twelve is `input_pin_count_unexpected
+count=<n> expected=12`." So the block is correct and the fixture is stale. **Fix:**
+`$RP7PINS` now carries the full twelve-tool set (id/getent appended) and the GREEN
+assertion reads `count=12`; `build_pin_arm` also defines `P0_TOOL_COUNT_EXPECTED`
+by mirroring the block's own derivation (a count of `$P0_RO_TOOLS`).
+
+## Repairs applied this round (in this file)
+
+1. `build_f4_arm` (FULLBLOCK) — defines all `P0_FIXED_*` the slice references
+   (only `P0_FIXED_STAT=/usr/bin/stat` is reached, by the first stat pin before
+   the duplicate check; the rest are inert) + a build-time completeness assertion.
+2. `build_f7_tool_arm` (FULLBLOCK) — pins `getent` to the fixture path.
+3. `build_pin_arm` (R4) — defines the eleven tool `P0_FIXED_*` (mirroring
+   `$RP7PINS`), mirrors the `P0_TOOL_COUNT_EXPECTED` derivation, + the assertion.
+4. `$RP7PINS` (R4) — full twelve-tool set; GREEN assertion `count=10 → 12`.
+
+The two build-time assertions are the robustness mechanism the round-7 defect
+class demands: a future round that adds a new `P0_FIXED_*` reference inside either
+slice makes the arm build fail LOUDLY (`ARM_BUILD_INCOMPLETE …
+missing_frozen_literal=…`) instead of emitting a silently-broken arm that aborts
+rc 1 at run time.
+
+## Block identity — UNCHANGED
+
+Round 8 writes nothing to `RP6-P0.sh`. Re-derived this session by read-only tools:
+
+```text
+sha256=fa852d7e0a984f977a489bd565834c1ced32eab4fd81221388a25a6bad6483cd
+bytes=103071
+cr_bytes=0   (tr -cd '\r' < RP6-P0.sh | wc -c)
+```
+
+Byte-identical to the round-7 bytes (commit `d9d7420f`). No byte of the block was
+touched, so its round-7 `bash -n` rc 0 stands.
+
+## QA execution status — PENDING-LEAD-EXECUTION (no fabricated transcripts)
+
+This session gates the `bash` interpreter: every `bash <script>`, `bash -n`,
+`bash -c` and `sed … | bash` returned *requires approval* and was not approved
+(same blocker the round-7 Claude and GLM sessions recorded). Per the kickoff's
+PENDING-LEAD-EXECUTION clause and AGENTS.md D026, the round-8 re-run is recorded
+as PENDING, not fabricated. The recorded transcripts already in this file
+(FULLBLOCK §, R4 §) are the **round-6** captures — they predate correction 7, so
+they still read `count=10` (R4 GREEN) and predate the F4/F7 round-7 breakage; they
+are the SHAPE the round-8 repair restores, not the round-8 run.
+
+The Lead must, in an unhindered Git Bash against the unchanged round-7 bytes,
+re-run the two repaired fences by anchored marker and record, per fence, the exact
+command, rc, summary line and stderr:
+
+```text
+sed -n '/^# RP6_FULLBLOCK_D026_HARNESS_BEGIN$/,/^# RP6_FULLBLOCK_D026_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# RP6_R4_D026_HARNESS_BEGIN$/,/^# RP6_R4_D026_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+```
+
+Expected (round 8): both rc 0; `RP6_FULLBLOCK_D026_SUMMARY … result=PASS` with F4
+POST → `prereg_input_malformed … duplicate=stat` and F7_TOOL_POST →
+`tool_not_evaluable tool=getent … rc=na detail=access_builtin_x_denied
+mechanism=access_builtin_x`; `RP6_R4_D026_SUMMARY findings=4 … result=PASS` with
+GREEN → `count=12 trusted_python_pin=yes`, still returning within its ~41 s bound.
+Neither arm build prints `ARM_BUILD_INCOMPLETE`. Until the Lead runs these, the
+round-8 evidence is supplemental.

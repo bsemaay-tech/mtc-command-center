@@ -1,4 +1,68 @@
-# RP6-P0 — status: ROUND-7-REPAIRED-PENDING-T0-REAUDIT
+# RP6-P0 — status: ROUND-8-REPAIRED-PENDING-T0-REAUDIT (evidence-only round)
+
+Updated 2026-08-11 by the round-8 implementer (Claude, fresh session). Round 8 is
+an **evidence-only** round: it repairs the two legacy fences that failed the Lead's
+round-7 QA execution (`RP6_R7_LEAD_QA_EXECUTION_2026-08-10.md`) and writes no
+block byte. Audit tier unchanged: **T0** (host/execution-domain preflight). The
+block remains a draft: not frozen, accepted, dispatchable, or authorised for host
+execution. Full disposition: `RP6_REPAIR_R8_REPORT.md`; harnesses + R8 section in
+`SELF_QA_RP6.md`.
+
+**`RP6-P0.sh` is UNCHANGED this round** — SHA-256
+`fa852d7e0a984f977a489bd565834c1ced32eab4fd81221388a25a6bad6483cd`, 103071 B, 0 CR
+bytes (re-derived this session by read-only tools; byte-identical to the round-7
+commit `d9d7420f`). `bash -n` was not re-run (this session gates `bash`), but no
+block byte was touched, so the round-7 `bash -n` rc 0 stands. If the block itself
+were believed to need a change, this round would stop and report rather than
+change it; it does not.
+
+**Round-7 Lead QA result (the input to this round).** The Lead ran every fence by
+anchored marker after round 7: the three R7 harnesses (4/4, 4/4, 8/8) and three
+legacy fences (`C13_R3_BACKSTOP`, `F2_FREEZE_GATE`, `C13_R4B`) PASS. Two legacy
+fences FAIL (rc 1) — `RP6_FULLBLOCK_D026` (7 s, no summary) and `RP6_R4_D026`
+(41 s, `findings=4`) — both from `P0_FIXED_STAT: unbound variable` in their
+landmark-sliced test arms: correction 7's frozen `P0_FIXED_*` literals
+(`RP6-P0.sh:266-299`) fall outside the slices, and the extracted pin loop
+references them under `set -u`.
+
+**Round-8 repairs (`SELF_QA_RP6.md` only).**
+
+- **Repair 1 — arm construction that survives block growth.** `build_f4_arm`
+  (FULLBLOCK) and `build_pin_arm` (R4) now define every `P0_FIXED_*` literal their
+  slices reference (the pin arm also mirrors the block's `P0_TOOL_COUNT_EXPECTED`
+  derivation, another correction-7 value the slice reads), and each carries a
+  build-time assertion that every `P0_FIXED_*` the slice references is defined —
+  so a future round that adds a new frozen literal fails the build LOUDLY instead
+  of emitting a silently-broken arm. Not a hand-widened slice.
+- **F7_TOOL_POST — classified: block correct, fence fixture stale (fixed).**
+  Correction 7 deleted the unpinned `command -v` fallback, so the F7 tool arm's
+  empty `P0_TOOL_PINS` now STOPs at `tool_pin_unpinned` before the `[ -x ]` check
+  that emits the R2-F1 `tool_not_evaluable … rc=na` token. Prereg §8.1 row 1 still
+  carries `tool_not_evaluable tool=getent path=<p> rc=<n|na> detail=<d>
+  mechanism=<m>` and its round-7 amendment defines `tool_pin_unpinned` for the
+  unpinned case — so the block is right and the fixture is stale. The arm now pins
+  `getent` to the fixture path; the PRE arm is unaffected (the pre-repair resolver
+  kept the fallback).
+- **R4 GREEN count — stale under correction 7 (fixed).** `$RP7PINS` supplied ten
+  pins and asserted `count=10`; correction 7 requires twelve (row 1: `input_pin_omitted`,
+  `input_pin_count_unexpected … expected=12`). `$RP7PINS` now carries all twelve
+  (`id`/`getent` appended) and the GREEN assertion reads `count=12`. Block correct,
+  fence stale.
+
+**QA execution is PENDING-LEAD-EXECUTION.** This session gates the `bash`
+interpreter (every `bash <script>`, `bash -n`, `bash -c`, `sed … | bash` returned
+*requires approval* — same blocker the round-7 Claude and GLM sessions recorded),
+so the round-8 re-run of the two repaired fences is recorded PENDING, not
+fabricated (per the kickoff clause and AGENTS.md D026). Expected: both rc 0 / PASS.
+Until the Lead re-runs them, the round-8 evidence is supplemental.
+
+The freeze gate still has seventeen `<PIN-AT-FREEZE>` literals, so no end-to-end
+`P0 PASS` is possible and nothing here is dispatchable regardless of this round's
+verdict.
+
+---
+
+## Round-7 block change (the current bytes — round 8 changed no block byte)
 
 Updated 2026-08-10 by the round-7 implementer (Claude, fresh session) for the
 five Codex round-6 audit required corrections (`RP6_CODEX_AUDIT_R6_2026-08-10.md`,
