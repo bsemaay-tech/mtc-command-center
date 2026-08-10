@@ -31,3 +31,22 @@ xhigh — accepting verdicts on the FINAL bytes; max 3 repair/re-audit rounds pe
 
 Earlier non-flagship rounds (GLM reviews) are supplemental detection per the roster
 rules, never acceptance.
+
+## Update ~15:00 — owner directed heavy Max use inside the current 5h window
+
+Owner (in-session): use Claude Max heavily for ~90 min until its window resets, then
+revert to Codex Pro + Claude Pro with Max reserved. Dispatched on Max
+(`Invoke-ClaudeMax.ps1`, `claude-opus-5`, xhigh, `--no-session-persistence`, fresh):
+
+- RP7 round-3 repair (implementer; final T0 round — Codex xhigh audits the result as
+  second flagship after green self-QA).
+- RP6-P0 Claude flagship T0 audit slot on final bytes `bff3c86e…` (kickoff
+  `KICKOFF_CLAUDE_T0_AUDIT_RP6.md`; instructed to be extra adversarial on the
+  opus-implemented R3/R4 arms).
+- Transport-set Claude flagship T0 audit slot (same contract as the Codex slot
+  kickoff, independent report).
+
+Concurrent: Codex `gpt-5.6-sol` xhigh transport-set audit (dispatched earlier).
+Claude RP7 audit rounds 1–2 confirmed fresh + xhigh by dispatch-command evidence —
+they fill the Claude slot per the owner's counting rule. GLM/DeepSeek: no further
+audit slots unless a recorded tier contract requires them (owner instruction).
