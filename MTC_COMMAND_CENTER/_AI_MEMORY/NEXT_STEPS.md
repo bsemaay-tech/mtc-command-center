@@ -1,5 +1,42 @@
 # NEXT_STEPS
 
+## READ FIRST — fresh-session handoff (2026-08-10 evening)
+
+**`11_TRIAGE/NEW_SESSION_KICKOFF_2026-08-10_EVENING.md` is self-contained and current.**
+It carries owner grants #1–#7, the binding routing policy (Max emergency-only; Claude Pro
+fills the T0 Claude flagship slot; Codex Pro `-Account fourth`; parallel dispatch and tier
+classification mandatory), per-artifact state with exact hashes, the six freeze-gate pins,
+the open items, and the traps that cost time today. Everything below is background.
+
+**Immediate pick-up, in order:**
+
+1. **[AI: Lead]** Dispatch RP6-P0 round 7 — implementer must NOT be Codex (GLM or Claude
+   Pro). Scope = the five required corrections in `RP6_CODEX_AUDIT_R6_2026-08-10.md`,
+   spelled out in the handoff file's RP6 section: `builtin type -t` so an overridden
+   `type` cannot forge the prerequisite check; disable pathname expansion around the
+   OUTER pin parse before the first split; adjudicate producer SHAPE before any rc-1
+   object verdict in `p0_probe_kind` and `p0_assert_venv_root`; narrow five printed
+   claims to what is established; and replace ALL fence line ranges with anchored
+   markers, repair the R4 fence so it closes its descendants, then re-run every command
+   from a clean Git Bash. Also fix the stale retracted-`-S` claim at
+   `RP6_REPAIR_R4_REPORT.md:88` (left out of round 6's allowlist).
+2. **[AI: Lead]** Transport round 4 — NOT started. Kickoff ready at
+   `WPI_BLOCKS_DRAFT/KICKOFF_TRANSPORT_REPAIR_R4.md` with the F4 Lead adjudication
+   (per-branch prerequisites, Codex prevails). GLM hit its window mid-run; its partial
+   edits were restored to the committed blobs and verified byte-identical, so the round is
+   un-started, not half-done.
+3. **[AI: flagships]** RP7 final pair on `23e55667…` — the only artifact ready for its
+   acceptance audits right now. Kickoff:
+   `WPI_BLOCKS_DRAFT/KICKOFF_CODEX_T0_AUDIT_RP7_FINAL.md`.
+4. **[AI: Any]** §10.1 allowlist reconciliation against the new prover's output, and the
+   prover's own T1 audit.
+5. **[AI: Lead]** Successor preregistration from the skeleton → Stage 1 freeze → host
+   execution under grants #1/#2/#3/#6 → WP-I closure → Audit 2.
+
+**Owner ask (plain language):** today's work booked ~4.4 hours of the 50-hour plan,
+bringing it to ~29.3 used and ~20.7 left. That figure is an estimate made at the time, as
+the rules require — please confirm it looks right, or adjust it.
+
 ## PERMANENT AUDIT TIERS — apply immediately to active RP7/WP-I work (2026-08-10)
 
 **[AI: Claude Lead]** Re-read `AGENTS.md` §AUDIT TIER POLICY — PERMANENT DEFAULT and record the

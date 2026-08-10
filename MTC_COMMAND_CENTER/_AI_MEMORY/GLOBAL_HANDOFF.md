@@ -1,5 +1,45 @@
 # GLOBAL_HANDOFF
 
+## [Claude Fable 5] 2026-08-10 DAY — WP-I run-kit built; venv site-startup hole found and closed in both blocks
+
+**Fresh-session handoff: `11_TRIAGE/NEW_SESSION_KICKOFF_2026-08-10_EVENING.md` (self-contained).**
+
+Day session, ~45 commits, ~20k lines, 09:16→23:00. Built the entire WP-I run kit from
+nothing and drove all three artifacts through two-flagship T0 adversarial cycles.
+
+**The finding that justified the whole contract.** The Codex flagship discovered —
+independently in `RP7-WPI-RO.sh` and then in `RP6-P0.sh` — that each block used the venv
+it was auditing as the interpreter producing its own verdict, and `python -I` does NOT
+disable `site`. A `.pth` or `sitecustomize.py` in that venv executes arbitrary
+`gatea`-authority code before the check runs, so a tampered candidate could forge the exact
+accepted line and mutate the host while the block reported clean. Proven by execution in
+both blocks; three Claude flagship rounds had missed it in each. Both are now repaired onto
+a pinned system interpreter under `-I -S` that refuses to emit a result unless isolation
+actually holds. Owner lifted the T0 round cap for this block set (grant #7) so rounds
+continue until both flagships accept.
+
+**Artifact state (all committed + pushed):** RP7 round 4 done, `23e55667…` 70941 B at
+`d6a976aa`, awaiting its final flagship pair. RP6-P0 round 6 done, `75db028e…` 93421 B at
+`8fcab4d4`, neither flagship accepting yet (slowest artifact; Codex audit of R6 returned
+non-accepting with 4 more). Transport set round 3 at `78173bfd` — Claude PASS-WITH-NITS,
+Codex REQUEST_CHANGES 4; round 4 not started (GLM hit its window mid-run; its partial edits
+were restored to the committed blobs and verified byte-identical).
+
+**Other deliverables:** the §10.2 path-scope prover now exists (`WPI_PREREG_DRAFT_ROUND1/
+pathscope_prover.py`) and honestly reports 37 unresolved paths in RP6 and 65 in RP7 plus
+three outside the §10.1 allowlist — reconciliation is an open freeze-gate item. Successor
+preregistration skeleton written. Owner routing policy recorded
+(`11_TRIAGE/ROUTING_POLICY_CREDIT_CONSERVATION_2026-08-10.md`): Claude Max is
+EMERGENCY-ONLY, the T0 Claude flagship slot runs on Claude Pro (which does
+`claude-opus-5 --effort xhigh`), weight on Codex Pro + GLM + DeepSeek + NVIDIA, parallel
+dispatch and tier classification mandatory. Max was not spent once after the policy landed.
+
+**Ledger: ~29.3 h of 50** — 24.9 h ratified plus ~4.4 h booked prospectively for today,
+pending owner ratification.
+
+**No host contact, no RUNID minted, no freeze, no credential, ARM, broker or trading action
+occurred. Six freeze-gate pins remain unfilled by design, so nothing is dispatchable.**
+
 ## [Codex GPT-5] 2026-08-10 — Audit-tier policy promoted to permanent repo default
 
 Owner extended `11_TRIAGE/OWNER_DECISION_AUDIT_TIERS_2026-08-09.md` from the 50-hour programme
