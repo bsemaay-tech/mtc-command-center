@@ -93,6 +93,40 @@ window is never assumed — it is measured.
 
 ---
 
+## 5a. Running log — actuals
+
+| Time | Result | Commit |
+|---|---|---|
+| 19:31 | Codex T0, RP7 round-4 → **BLOCK: 3** (`python3` never bound in the real `wpi_main` loop) | `2f635ae7` |
+| 20:15 | Lead independently reproduced the F1 RED on the real bytes | `c66be333` |
+| 20:33 | §10.1 reconciliation → 20 families: 8 covered, 11 EXTEND, 1 CHANGE-BLOCK, **3 unresolved** | `89eaf253` |
+| 20:45 | Lead re-ran the prover; handoff figures now backed; both existing "run logs" are junk | `2cb87c29` |
+| 20:37 | Codex T1, path-scope prover → **REQUEST_CHANGES: 9**, four CRITICAL silent-sink classes | `53659d45` |
+| 20:47 | Defect-pattern re-review → **AMEND: 7**, two new patterns | `42093b41` |
+| 20:46 | Successor skeleton review → **NEEDS-WORK: 13**; rows 1–9 unimplemented; circular attestation order | `6d27d18f` |
+| 21:11 | RP6-P0 round 7 dispatched to GLM (9 corrections) | — |
+| 21:2x | **RP7 round 5 landed**, all five items closed; Lead verified F1 GREEN | `1143a9ff` |
+| 21:19 | Audit-2 readiness package → **NEEDS-UPDATE: 20**; honest-start condition far off | `89dc9cff` |
+| 21:35 | Codex T0 re-audit of RP7 round-5 bytes dispatched; transport R4 dispatched to Claude Pro | `7be414e7` |
+
+## 5b. Freeze blocker map as it now stands
+
+Everything below must close before Stage-1 freeze. Nothing here was known this morning.
+
+1. Both flagships accept RP6-P0, RP7 and the transport set. *(in progress)*
+2. **§8.2 rows 1–9 are implemented by no executable — owner decision required.** Build the
+   five cheap rows and formally defer four, or defer all nine and narrow every downstream
+   claim. Analysis with a plain-language page: `ROWS_1_9_OPTIONS_CODEX_2026-08-10.md`.
+3. The §10.2 prover is unsound (4 CRITICAL silent-sink classes) — repair kickoff banked.
+4. §10.2 cannot close per-block anyway; it needs the composite
+   wrapper + RP0-LIB + RP0-BOOTSTRAP + block input.
+5. §10.1 needs 11 extensions plus an access-qualifier grammar; 3 families unresolved.
+6. The attestation/preregistration/commit order is circular — needs the two-commit fix.
+7. `run_p0.sh` wires none of the five `P0_ATTESTED_*` inputs. *(transport R4)*
+8. The close-script's preregistered contract and its actual bytes disagree. *(transport R4)*
+9. `REMOTE_BASE` must be allocated **before** the RO block is frozen (new R5 pin).
+10. The Audit-2 readiness package is an obsolete assembly aid, not a dispatchable bundle.
+
 ## 6. Two things held for the owner
 
 1. **Host execution stays parked.** The owner's earlier grants authorise it, but the
