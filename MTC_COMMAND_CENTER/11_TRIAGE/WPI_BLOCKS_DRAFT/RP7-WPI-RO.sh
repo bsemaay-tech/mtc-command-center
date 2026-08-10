@@ -40,6 +40,17 @@ WPI_PATH_FIELD=""
 WPI_PATH_RENDERABLE=yes
 WPI_MOUNT_SNAPSHOT_SEQ=0
 WPI_FIXED_ATTESTED_MOUNT_PROJECTION_SHA256='<PIN-AT-FREEZE>'
+# The trusted adjudicating interpreter. Neither accepting adjudicator (the status
+# JSON parser, the lock-parity verifier) may run under the venv being judged: on
+# the target Python 3.12, -I implies -E/-P/-s but NOT -S, so site still imports and
+# an executable line in <venv>/lib/python3.12/site-packages/*.pth, or a
+# sitecustomize/usercustomize module in that same tree, runs with this process's
+# authority before the intended child body. Both adjudicators therefore run under
+# this pinned system interpreter with -I -S. /usr/bin/python3 is a symlink on the
+# target family and no symlinked object is admissible as a bound tool, so the
+# resolved non-symlink leaf is a freeze-gate input, exactly like the mount
+# attestation below it.
+WPI_FIXED_TRUSTED_PYTHON='<PIN-AT-FREEZE>'
 WPI_VENV_WALK_COMPLETE=no
 WPI_INTERPRETER_RAN=no
 WPI_METADATA_READABLE=no
@@ -235,13 +246,17 @@ wpi_single_record() {
     WPI_LINE="$first"
 }
 
+# The third argument is the CALLER's row-specific inability-to-evaluate reason.
+# Rows 17, 19 and 19a preregister `installed_lock_unreadable`, `metadata_unreadable`
+# and `verifier_unreadable` respectively; only callers with no row-specific token of
+# their own fall back to the generic `path_not_evaluable`.
 wpi_lstat() {
-    local prefix="$1" path="$2" raw rest path_field
+    local prefix="$1" path="$2" unreadable="${3:-path_not_evaluable}" raw rest path_field
     wpi_render_path "$path"; path_field="$WPI_PATH_FIELD"
     wpi_capture lstat "$WPI_STAT" -c '%F|%a|%u:%g|%d:%i|%s' -- "$path"
     if [ "$WPI_CAP_RC" -ne 0 ]; then
-        wpi_require_empty_file "$prefix" "path_not_evaluable $path_field rc=$WPI_CAP_RC" "$WPI_CAP_OUT"
-        wpi_single_record "$prefix" "path_not_evaluable $path_field rc=$WPI_CAP_RC" "$WPI_CAP_ERR"
+        wpi_require_empty_file "$prefix" "$unreadable $path_field rc=$WPI_CAP_RC" "$WPI_CAP_OUT"
+        wpi_single_record "$prefix" "$unreadable $path_field rc=$WPI_CAP_RC" "$WPI_CAP_ERR"
         # Only the diagnostic forms the pinned absolute argv[0] can itself produce
         # are accepted as proof of absence. A basename-prefixed diagnostic did not
         # come from the invocation this block controls.
@@ -249,21 +264,21 @@ wpi_lstat() {
             "$WPI_STAT: cannot statx '$path': No such file or directory"|"$WPI_STAT: cannot stat '$path': No such file or directory"|\
             "$WPI_STAT: cannot stat '$path': No such file or directory (os error 2)")
                 WPI_META_KIND=absent; WPI_META_MODE=""; WPI_META_OWNER=""; WPI_META_ID=""; WPI_META_SIZE=""; return 0 ;;
-            *) wpi_stop "$prefix" "path_not_evaluable $path_field rc=$WPI_CAP_RC detail=unclassified_diagnostic diagnostic_file=$WPI_CAP_ERR" ;;
+            *) wpi_stop "$prefix" "$unreadable $path_field rc=$WPI_CAP_RC detail=unclassified_diagnostic diagnostic_file=$WPI_CAP_ERR" ;;
         esac
     fi
-    wpi_require_empty_file "$prefix" "path_not_evaluable $path_field rc=0" "$WPI_CAP_ERR"
-    wpi_single_record "$prefix" "path_not_evaluable $path_field rc=0" "$WPI_CAP_OUT"
+    wpi_require_empty_file "$prefix" "$unreadable $path_field rc=0" "$WPI_CAP_ERR"
+    wpi_single_record "$prefix" "$unreadable $path_field rc=0" "$WPI_CAP_OUT"
     raw="$WPI_LINE"
-    case "$raw" in *'|'*'|'*'|'*'|'*) : ;; *) wpi_stop "$prefix" "path_not_evaluable $path_field rc=0 detail=metadata_grammar" ;; esac
+    case "$raw" in *'|'*'|'*'|'*'|'*) : ;; *) wpi_stop "$prefix" "$unreadable $path_field rc=0 detail=metadata_grammar" ;; esac
     WPI_META_KIND="${raw%%|*}"; rest="${raw#*|}"
     WPI_META_MODE="${rest%%|*}"; rest="${rest#*|}"
     WPI_META_OWNER="${rest%%|*}"; rest="${rest#*|}"
     WPI_META_ID="${rest%%|*}"; WPI_META_SIZE="${rest#*|}"
-    case "$WPI_META_MODE" in ''|*[!0-7]*) wpi_stop "$prefix" "path_not_evaluable $path_field rc=0 detail=mode_grammar" ;; esac
-    case "$WPI_META_OWNER" in *[!0-9:]*|*:*:*|:*|*:|'') wpi_stop "$prefix" "path_not_evaluable $path_field rc=0 detail=owner_grammar" ;; *:*) : ;; *) wpi_stop "$prefix" "path_not_evaluable $path_field rc=0 detail=owner_grammar" ;; esac
-    case "$WPI_META_ID" in *[!0-9:]*|*:*:*|:*|*:|'') wpi_stop "$prefix" "path_not_evaluable $path_field rc=0 detail=object_id_grammar" ;; *:*) : ;; *) wpi_stop "$prefix" "path_not_evaluable $path_field rc=0 detail=object_id_grammar" ;; esac
-    case "$WPI_META_SIZE" in ''|*[!0-9]*) wpi_stop "$prefix" "path_not_evaluable $path_field rc=0 detail=size_grammar" ;; esac
+    case "$WPI_META_MODE" in ''|*[!0-7]*) wpi_stop "$prefix" "$unreadable $path_field rc=0 detail=mode_grammar" ;; esac
+    case "$WPI_META_OWNER" in *[!0-9:]*|*:*:*|:*|*:|'') wpi_stop "$prefix" "$unreadable $path_field rc=0 detail=owner_grammar" ;; *:*) : ;; *) wpi_stop "$prefix" "$unreadable $path_field rc=0 detail=owner_grammar" ;; esac
+    case "$WPI_META_ID" in *[!0-9:]*|*:*:*|:*|*:|'') wpi_stop "$prefix" "$unreadable $path_field rc=0 detail=object_id_grammar" ;; *:*) : ;; *) wpi_stop "$prefix" "$unreadable $path_field rc=0 detail=object_id_grammar" ;; esac
+    case "$WPI_META_SIZE" in ''|*[!0-9]*) wpi_stop "$prefix" "$unreadable $path_field rc=0 detail=size_grammar" ;; esac
 }
 
 wpi_kind_token() {
@@ -282,32 +297,41 @@ wpi_walk_deviation() {
     wpi_fail "$prefix" "$message"
 }
 
+# Arguments 10-12 carry the row-specific evidence grammar of the caller:
+#   10 unreadable_reason  - the row's inability-to-evaluate token (see wpi_lstat)
+#   11 leaf_owner_reason  - the row's own numeric-ownership deviation FAIL for the
+#                           bound LEAF; empty keeps the generic path_metadata_mismatch
+#   12 leaf_field_style   - `kind_only` emits the leaf object/owner deviation without
+#                           a path= field (row 17 records `kind=<k>` only); the
+#                           default `with_path` keeps it (row 19a records path=<p>).
 wpi_walk_components() {
     local prefix="$1" path="$2" leaf_kind="$3" leaf_mode="$4" leaf_owner="$5"
     local leaf_absent_reason="${6:-path_absent}" leaf_object_reason="${7:-path_metadata_mismatch}"
     local outcome="${8:-fail}" stop_context="${9:-path_binding_not_evaluable}"
-    local rest component current="" expected_kind expected_owner expected_mode kind_token deviation_reason walk_path_field
+    local unreadable="${10:-path_not_evaluable}" leaf_owner_reason="${11:-}" leaf_field_style="${12:-with_path}"
+    local rest component current="" expected_kind expected_owner expected_mode kind_token deviation_reason walk_path_field leaf_fields
     wpi_require_path_structure "$prefix" "$path" component_walk
     wpi_render_path "$path"; walk_path_field="$WPI_PATH_FIELD"
-    wpi_lstat "$prefix" /
+    wpi_lstat "$prefix" / "$unreadable"
     if [ "$WPI_META_KIND" != directory ]; then
         wpi_kind_token "$WPI_META_KIND"
-        wpi_stop "$prefix" "path_not_evaluable path=/ detail=root_kind_$WPI_LINE"
+        wpi_stop "$prefix" "$unreadable path=/ detail=root_kind_$WPI_LINE"
     fi
-    [ "$WPI_META_OWNER" = 0:0 ] || wpi_stop "$prefix" "path_not_evaluable path=/ owner_numeric=$WPI_META_OWNER expected=0:0"
+    [ "$WPI_META_OWNER" = 0:0 ] || wpi_stop "$prefix" "$unreadable path=/ owner_numeric=$WPI_META_OWNER expected=0:0"
     rest="${path#/}"
     IFS='/' read -r -a WPI_COMPONENTS <<< "$rest"
-    [ "${#WPI_COMPONENTS[@]}" -ge 1 ] || wpi_stop "$prefix" "path_not_evaluable $walk_path_field detail=no_components"
+    [ "${#WPI_COMPONENTS[@]}" -ge 1 ] || wpi_stop "$prefix" "$unreadable $walk_path_field detail=no_components"
     for component in "${WPI_COMPONENTS[@]}"; do
-        [ -n "$component" ] || wpi_stop "$prefix" "path_not_evaluable $walk_path_field detail=empty_component"
-        [ "$component" != "." ] && [ "$component" != ".." ] || wpi_stop "$prefix" "path_not_evaluable $walk_path_field detail=dot_component"
+        [ -n "$component" ] || wpi_stop "$prefix" "$unreadable $walk_path_field detail=empty_component"
+        [ "$component" != "." ] && [ "$component" != ".." ] || wpi_stop "$prefix" "$unreadable $walk_path_field detail=dot_component"
         current="$current/$component"
         expected_kind="directory"; expected_owner="0:0"; expected_mode=any
         if [ "$current" = "$path" ]; then
             expected_kind="$leaf_kind"; expected_owner="$leaf_owner"
             [ -n "$leaf_mode" ] && expected_mode="${leaf_mode#0}"
         fi
-        wpi_lstat "$prefix" "$current"
+        wpi_lstat "$prefix" "$current" "$unreadable"
+        if [ "$leaf_field_style" = kind_only ]; then leaf_fields=""; else leaf_fields=" $WPI_PATH_FIELD"; fi
         if [ "$WPI_META_KIND" = absent ]; then
             if [ "$outcome" = stop ]; then
                 wpi_stop "$prefix" "$stop_context detail=path_absent $WPI_PATH_FIELD"
@@ -320,12 +344,15 @@ wpi_walk_components() {
             *) if [ "$outcome" = stop ]; then
                    wpi_stop "$prefix" "$stop_context detail=path_metadata_mismatch $WPI_PATH_FIELD kind=$kind_token mode=$WPI_META_MODE owner_numeric=$WPI_META_OWNER expected=$expected_kind,$expected_mode,$expected_owner"
                elif [ "$current" = "$path" ] && [ "$leaf_object_reason" != path_metadata_mismatch ]; then
-                   wpi_fail "$prefix" "$leaf_object_reason $WPI_PATH_FIELD kind=$kind_token"
+                   wpi_fail "$prefix" "$leaf_object_reason$leaf_fields kind=$kind_token"
                else
                    wpi_fail "$prefix" "path_metadata_mismatch $WPI_PATH_FIELD kind=$kind_token mode=$WPI_META_MODE owner_numeric=$WPI_META_OWNER expected=$expected_kind,$expected_mode,$expected_owner"
                fi ;;
         esac
         if [ "$WPI_META_OWNER" != "$expected_owner" ]; then
+            if [ "$outcome" != stop ] && [ "$current" = "$path" ] && [ -n "$leaf_owner_reason" ]; then
+                wpi_fail "$prefix" "$leaf_owner_reason$leaf_fields owner_numeric=$WPI_META_OWNER expected=$expected_owner"
+            fi
             if [ "$outcome" = stop ]; then deviation_reason="$stop_context detail=path_metadata_mismatch"
             else deviation_reason=path_metadata_mismatch; fi
             wpi_walk_deviation "$outcome" "$prefix" "$deviation_reason $WPI_PATH_FIELD kind=$kind_token mode=$WPI_META_MODE owner_numeric=$WPI_META_OWNER expected=$expected_kind,$expected_mode,$expected_owner"
@@ -415,7 +442,7 @@ wpi_build_mount_projection() {
     local r rprefix subtree_records seen_roots=" "
     local -a points=(
         "$WPI_STAT" "$WPI_READLINK" "$WPI_ENV" "$WPI_FIND" "$WPI_SHA256SUM"
-        "$WPI_SYSTEMCTL" "$WPI_SS" "$WPI_CURL" "$WPI_TIMEOUT"
+        "$WPI_SYSTEMCTL" "$WPI_SS" "$WPI_CURL" "$WPI_TIMEOUT" "$WPI_PYTHON3"
         "$WPI_RELEASE_ROOT" "$WPI_VENV_ROOT" "$WPI_UNIT_FRAGMENT"
         "$WPI_STATE_DIR" "$WPI_LOG_DIR" "$WPI_CONF_DIR"
         "$WPI_RELEASE_ROOT/IBKR_PAPER_BRIDGE/requirements.lock"
@@ -426,7 +453,7 @@ wpi_build_mount_projection() {
         "$WPI_RELEASE_ROOT" "$WPI_VENV_ROOT" "$WPI_CONF_DIR" "$WPI_STATE_DIR" "$WPI_LOG_DIR"
         "${WPI_STAT%/*}" "${WPI_READLINK%/*}" "${WPI_ENV%/*}" "${WPI_FIND%/*}"
         "${WPI_SHA256SUM%/*}" "${WPI_SYSTEMCTL%/*}" "${WPI_SS%/*}" "${WPI_CURL%/*}"
-        "${WPI_TIMEOUT%/*}"
+        "${WPI_TIMEOUT%/*}" "${WPI_PYTHON3%/*}"
     )
     local -a roots=()
     for r in "${root_candidates[@]}"; do
@@ -526,7 +553,8 @@ wpi_bind_tool() {
     # Truthfulness of the binding claim: stat, env, sha256sum and timeout are the
     # instruments the mount projection and this very binding are built from, so
     # they are exercised before any RP7_tool line exists. They attest themselves;
-    # the remaining five are bound by already-attested instruments.
+    # the remaining six - including the trusted adjudicating python3 - are bound by
+    # already-attested instruments.
     case "$name" in
         stat|env|sha256sum|timeout) attestation=self ;;
         *) attestation=bound_instrument ;;
@@ -563,14 +591,24 @@ wpi_validate_inputs() {
     wpi_require_set WPI_TOOL_PINS "${WPI_TOOL_PINS:-}"
     for entry in $WPI_TOOL_PINS; do
         case "$entry" in *=*) pin_name="${entry%%=*}"; pin_path="${entry#*=}" ;; *) wpi_stop RP7 "prereg_input_malformed name=WPI_TOOL_PINS entry=missing_equals" ;; esac
-        case "$pin_name" in stat|readlink|env|find|sha256sum|systemctl|ss|curl|timeout) : ;; *) wpi_stop RP7 "prereg_input_malformed name=WPI_TOOL_PINS unknown_tool=$pin_name" ;; esac
+        case "$pin_name" in stat|readlink|env|find|sha256sum|systemctl|ss|curl|timeout|python3) : ;; *) wpi_stop RP7 "prereg_input_malformed name=WPI_TOOL_PINS unknown_tool=$pin_name" ;; esac
         case "$pin_seen" in *" $pin_name "*) wpi_stop RP7 "prereg_input_malformed name=WPI_TOOL_PINS duplicate=$pin_name" ;; esac
         wpi_require_absolute "WPI_TOOL_PINS.$pin_name" "$pin_path"
-        [ "$pin_path" = "/usr/bin/$pin_name" ] || wpi_stop RP7 "prereg_input_malformed name=WPI_TOOL_PINS.$pin_name expected=/usr/bin/$pin_name"
+        if [ "$pin_name" = python3 ]; then
+            # The one pin whose leaf name is a freeze-gate input. /usr/bin/python3 is
+            # a symlink on the target family and wpi_bind_tool admits no symlinked
+            # object, so the resolved /usr/bin/python3.<minor> is pinned at freeze.
+            case "$pin_path" in /usr/bin/python3|/usr/bin/python3.[0-9]|/usr/bin/python3.[0-9][0-9]) : ;;
+                *) wpi_stop RP7 "prereg_input_malformed name=WPI_TOOL_PINS.python3 expected=/usr/bin/python3_or_python3.MINOR" ;;
+            esac
+            wpi_expect_literal WPI_TOOL_PINS.python3 "$pin_path" "$WPI_FIXED_TRUSTED_PYTHON"
+        else
+            [ "$pin_path" = "/usr/bin/$pin_name" ] || wpi_stop RP7 "prereg_input_malformed name=WPI_TOOL_PINS.$pin_name expected=/usr/bin/$pin_name"
+        fi
         pin_seen="$pin_seen$pin_name "; pin_count=$(( pin_count + 1 ))
     done
-    [ "$pin_count" -eq 9 ] || wpi_stop RP7 "prereg_input_malformed name=WPI_TOOL_PINS observed_count=$pin_count expected_count=9"
-    for name in stat readlink env find sha256sum systemctl ss curl timeout; do
+    [ "$pin_count" -eq 10 ] || wpi_stop RP7 "prereg_input_malformed name=WPI_TOOL_PINS observed_count=$pin_count expected_count=10"
+    for name in stat readlink env find sha256sum systemctl ss curl timeout python3; do
         wpi_map_get "$WPI_TOOL_PINS" "$name"; path="$WPI_LINE"
         printf -v "WPI_${name^^}" '%s' "$path"
     done
@@ -682,10 +720,17 @@ wpi_assert_metadata_dir() {
     printf 'B3_metadata_dir path=%s kind=directory mode=750 owner_numeric=%s binding=component_and_mount\n' "$path" "$owner"
 }
 
+# The unreadable and numeric-ownership deviation tokens are derived from the row's
+# own label, so every form this helper can emit for rows 17 and 19a is one the row
+# preregisters: <label>_unreadable for an inability to evaluate any component or the
+# leaf, and <label>_owner_unexpected for a bound leaf whose numeric ownership
+# deviates. `field_style` selects row 17's `kind=<k>`-only rendering against row 19a's
+# `path=<p> kind=<k>`.
 wpi_assert_regular_digest() {
-    local prefix="$1" absent_reason="$2" mismatch_reason="$3" path="$4" bytes="$5" digest="$6" label="$7" object_reason="${8:-path_metadata_mismatch}" observed_size
+    local prefix="$1" absent_reason="$2" mismatch_reason="$3" path="$4" bytes="$5" digest="$6" label="$7" object_reason="${8:-path_metadata_mismatch}" field_style="${9:-with_path}" observed_size
     wpi_mount_guard_begin
-    wpi_walk_components "$prefix" "$path" regular "" 0:0 "$absent_reason" "$object_reason"
+    wpi_walk_components "$prefix" "$path" regular "" 0:0 "$absent_reason" "$object_reason" fail path_binding_not_evaluable \
+        "${label}_unreadable" "${label}_owner_unexpected" "$field_style"
     observed_size="$WPI_META_SIZE"
     wpi_sha_file "$prefix" "${label}_unreadable" "$path"
     WPI_OBSERVED_DIGEST="$WPI_LINE"
@@ -737,13 +782,26 @@ wpi_assert_interpreter() {
     printf 'B1_interpreter path=%s object=non_symlink_regular preexec_binding=component_and_mount_window_closed exec_binding=separate_bounded_exec version_family=3.12 env=cleared isolated=yes\n' "$py"
 }
 
+# ONE explicit discovery universe, shared verbatim with the trusted verifier driver
+# in wpi_assert_lock_parity (Codex F1 + F3). The round-3 enumeration filtered on
+# `-name '*.dist-info'` and therefore could not observe the other formats and
+# locations importlib.metadata accepts, so it never established complete readability
+# of the verifier's input universe. The enumeration is now UNFILTERED: every direct
+# child of site-packages is classified, the only admissible metadata object is a
+# `*.dist-info` DIRECTORY carrying METADATA and RECORD, and every other discovery
+# format or location the verifier would accept - egg-info, egg-link, egg, zip/whl
+# archive routes - plus the `.pth` and sitecustomize/usercustomize startup hooks that
+# can ADD locations or execute, is a STOP rather than a silently unenumerated object.
+# The trusted driver re-derives the same universe from its own scan and rejects the
+# same set, so no accepting result can rest on a format only one side enumerated.
 wpi_assert_metadata_readable() {
     local site="$WPI_VENV_ROOT/lib/python3.12/site-packages" out fd path="" rc=0 count=0 member diag
+    local entries=0 ignored=0 base fmt
     [ "$WPI_VENV_WALK_COMPLETE" = yes ] || wpi_stop B1 "verifier_not_evaluable rc=3 detail=venv_walk_not_complete"
     [ "$WPI_INTERPRETER_RAN" = yes ] || wpi_stop B1 "verifier_not_evaluable rc=3 detail=interpreter_not_run"
     wpi_mount_guard_begin
-    wpi_walk_components B1 "$site" directory "" 0:0
-    wpi_run_find B1 metadata_enumeration "$site" -mindepth 1 -maxdepth 1 -name '*.dist-info' -print0
+    wpi_walk_components B1 "$site" directory "" 0:0 path_absent path_metadata_mismatch fail path_binding_not_evaluable metadata_unreadable
+    wpi_run_find B1 metadata_enumeration "$site" -mindepth 1 -maxdepth 1 -print0
     out="$WPI_CAP_OUT"
     wpi_alloc_read_diag metadata_paths; diag="$WPI_READ_DIAG"
     exec {fd}<"$out" || wpi_stop B1 "metadata_unreadable path=$site detail=enumeration_open_failed"
@@ -755,17 +813,37 @@ wpi_assert_metadata_readable() {
             [ -z "$path" ] || wpi_stop B1 "metadata_unreadable path=$site detail=unterminated_nul_record"
             break
         fi
-        count=$(( count + 1 ))
+        entries=$(( entries + 1 ))
         wpi_require_observed_path_grammar B1 "$path" metadata_enumeration
-        wpi_lstat B1 "$path"
+        base="${path##*/}"; fmt=""
+        case "$base" in
+            *.dist-info) fmt=dist_info ;;
+            *.egg-info) fmt=egg_info ;;
+            *.egg-link) fmt=egg_link ;;
+            *.egg) fmt=egg ;;
+            *.pth) fmt=pth ;;
+            *.zip) fmt=zip ;;
+            *.whl) fmt=whl ;;
+            sitecustomize.py|usercustomize.py) fmt=startup_hook ;;
+        esac
+        if [ -z "$fmt" ]; then ignored=$(( ignored + 1 )); continue; fi
+        [ "$fmt" = dist_info ] || wpi_stop B1 "metadata_universe_unexpected stage=preflight $WPI_PATH_FIELD format=$fmt"
+        wpi_lstat B1 "$path" metadata_unreadable
         [ "$WPI_META_KIND" != absent ] || wpi_stop B1 "metadata_unreadable $WPI_PATH_FIELD detail=object_disappeared_after_complete_enumeration"
-        [ "$WPI_META_KIND" = directory ] || wpi_stop B1 "metadata_unreadable $WPI_PATH_FIELD detail=dist_info_kind_$WPI_META_KIND"
+        if [ "$WPI_META_KIND" != directory ]; then
+            wpi_kind_token "$WPI_META_KIND"
+            wpi_stop B1 "metadata_universe_unexpected stage=preflight $WPI_PATH_FIELD format=dist_info_kind_$WPI_LINE"
+        fi
         [ "$WPI_META_OWNER" = 0:0 ] || wpi_stop B1 "metadata_unreadable $WPI_PATH_FIELD owner_numeric=$WPI_META_OWNER expected=0:0"
-        wpi_walk_components B1 "$path" directory "" 0:0
+        count=$(( count + 1 ))
+        wpi_walk_components B1 "$path" directory "" 0:0 path_absent path_metadata_mismatch fail path_binding_not_evaluable metadata_unreadable
         for member in METADATA RECORD; do
-            wpi_lstat B1 "$path/$member"
+            wpi_lstat B1 "$path/$member" metadata_unreadable
             [ "$WPI_META_KIND" != absent ] || wpi_fail B1 "distribution_metadata_absent $WPI_PATH_FIELD"
-            case "$WPI_META_KIND" in 'regular file'|'regular empty file') : ;; *) wpi_stop B1 "metadata_unreadable $WPI_PATH_FIELD detail=kind_$WPI_META_KIND" ;; esac
+            case "$WPI_META_KIND" in
+                'regular file'|'regular empty file') : ;;
+                *) wpi_kind_token "$WPI_META_KIND"; wpi_stop B1 "metadata_unreadable $WPI_PATH_FIELD detail=kind_$WPI_LINE" ;;
+            esac
             [ "$WPI_META_OWNER" = 0:0 ] || wpi_stop B1 "metadata_unreadable $WPI_PATH_FIELD owner_numeric=$WPI_META_OWNER expected=0:0"
             wpi_sha_file B1 metadata_unreadable "$path/$member"
             WPI_MEMBER_DIGEST="$WPI_LINE"
@@ -776,6 +854,8 @@ wpi_assert_metadata_readable() {
     wpi_mount_guard_end
     [ "$count" -ge 1 ] || wpi_stop B1 "metadata_unreadable path=$site detail=no_dist_info_directories"
     WPI_METADATA_READABLE=yes
+    printf 'B1_metadata_universe root=%s entries=%s dist_info_dirs=%s non_metadata_entries=%s enumeration=unfiltered_maxdepth_1 universe=explicit_dist_info_only\n' \
+        "$site" "$entries" "$count" "$ignored"
     printf 'B1_metadata_preflight root=%s dist_info_dirs=%s complete=yes readable=yes\n' "$site" "$count"
 }
 
@@ -804,23 +884,94 @@ wpi_is_structured_parity_mismatch() {
     return 0
 }
 
+# The subject venv never arbitrates its own package state (Codex F1). Round 3 ran
+# `<venv>/bin/python -I verify_lock.py`; -I does not imply -S, so `site` still
+# imported and one executable line in that venv's own site-packages/*.pth - or a
+# sitecustomize.py beside it - ran with this process's authority, could print
+# `verify_lock: PASS: lock+installed; packages=56` and exit 0 before the digest-bound
+# verifier was ever compiled, and could write anywhere `gatea` can write.
+#
+# The adjudicator is now the pinned system interpreter under -I -S. The venv
+# contributes exactly one thing: an explicit metadata DIRECTORY passed as argv. It is
+# never on sys.path, so no venv module is importable and no venv startup
+# configuration is read. The driver refuses to proceed unless its own startup is
+# provably isolated and site-free, replaces importlib.metadata's implicit sys.path
+# discovery with the one explicit universe defined by the row-19 preflight, and only
+# then compiles and runs the digest-bound verifier source under __main__.
 wpi_assert_lock_parity() {
     local verifier="$WPI_RELEASE_ROOT/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py"
-    local lock="$WPI_RELEASE_ROOT/IBKR_PAPER_BRIDGE/requirements.lock" out err
+    local lock="$WPI_RELEASE_ROOT/IBKR_PAPER_BRIDGE/requirements.lock"
+    local site="$WPI_VENV_ROOT/lib/python3.12/site-packages" err fields ufmt udigest
     [ "$WPI_METADATA_READABLE" = yes ] || wpi_stop B1 "verifier_not_evaluable rc=3 detail=metadata_preflight_not_complete"
-    wpi_assert_regular_digest B1 verifier_absent verifier_digest_mismatch "$verifier" 3735 "$WPI_VERIFY_LOCK_SHA256" verifier verifier_object_unexpected
-    wpi_capture lock_parity "$WPI_VENV_ROOT/bin/python" -I "$verifier" --lock "$lock" --check-installed
+    wpi_assert_regular_digest B1 verifier_absent verifier_digest_mismatch "$verifier" 3735 "$WPI_VERIFY_LOCK_SHA256" verifier verifier_object_unexpected with_path
+    wpi_capture lock_parity "$WPI_PYTHON3" -I -S -c '
+import hashlib,os,sys
+def die(code,token,extra=""):
+ sys.stderr.write("verify_lock_driver: "+token+extra+chr(10)); sys.exit(code)
+if not (sys.flags.isolated and sys.flags.no_site): die(4,"trusted_startup_unproven")
+for m in ("site","sitecustomize","usercustomize"):
+ if m in sys.modules: die(4,"trusted_startup_unproven")
+site_dir=sys.argv[1]; verifier=sys.argv[2]; lock=sys.argv[3]
+import importlib.metadata as M
+import importlib.machinery as MM
+from pathlib import Path
+REJECT=((".egg-info","egg_info"),(".egg-link","egg_link"),(".egg","egg"),(".pth","pth"),(".zip","zip"),(".whl","whl"))
+accepted=[]
+try:
+ names=sorted(os.listdir(site_dir))
+except OSError:
+ die(4,"universe_unreadable")
+for n in names:
+ h=hashlib.sha256(n.encode("utf-8","surrogateescape")).hexdigest()
+ if n in ("sitecustomize.py","usercustomize.py"): die(5,"universe_unexpected"," format=startup_hook name_sha256="+h)
+ if n.endswith(".dist-info"):
+  p=os.path.join(site_dir,n)
+  if os.path.islink(p) or not os.path.isdir(p): die(5,"universe_unexpected"," format=dist_info_not_directory name_sha256="+h)
+  accepted.append(Path(p)); continue
+ for suf,tok in REJECT:
+  if n.endswith(suf): die(5,"universe_unexpected"," format="+tok+" name_sha256="+h)
+if not accepted: die(4,"universe_empty")
+D=[M.PathDistribution(p) for p in accepted]
+M.distributions=lambda **kw: iter(list(D))
+M.Distribution.discover=staticmethod(lambda **kw: iter(list(D)))
+MM.PathFinder.find_distributions=staticmethod(lambda *a,**k: iter(()))
+with open(verifier,"rb") as f: src=f.read()
+sys.argv=[verifier,"--lock",lock,"--check-installed"]
+exec(compile(src,verifier,"exec"),{"__name__":"__main__","__file__":verifier})
+' "$site" "$verifier" "$lock"
     if [ "$WPI_CAP_RC" -eq 0 ]; then
         wpi_require_empty_file B1 "verifier_not_evaluable rc=0" "$WPI_CAP_ERR"
         wpi_single_record B1 "verifier_not_evaluable rc=0" "$WPI_CAP_OUT"
         [ "$WPI_LINE" = "verify_lock: PASS: lock+installed; packages=$WPI_EXPECTED_PACKAGES" ] \
             || wpi_stop B1 "verifier_not_evaluable rc=0 detail=pass_grammar"
-        printf 'B1_lock_parity result=pass packages=%s output=structurally_parsed verifier_preexec_binding=component_mount_digest_window_closed exec_binding=separate_bounded_exec\n' "$WPI_EXPECTED_PACKAGES"
+        printf 'B1_lock_parity result=pass packages=%s output=structurally_parsed verifier_preexec_binding=component_mount_digest_window_closed exec_binding=separate_bounded_exec adjudicator=pinned_system_interpreter isolation=isolated_no_site discovery=explicit_dist_info_universe\n' "$WPI_EXPECTED_PACKAGES"
         return 0
     fi
     wpi_require_empty_file B1 "verifier_not_evaluable rc=$WPI_CAP_RC detail=unexpected_stdout" "$WPI_CAP_OUT"
     wpi_single_record B1 "verifier_not_evaluable rc=$WPI_CAP_RC" "$WPI_CAP_ERR"
     err="$WPI_LINE"
+    if [ "$WPI_CAP_RC" -eq 5 ]; then
+        case "$err" in
+            'verify_lock_driver: universe_unexpected format='*' name_sha256='*)
+                # The driver is trusted, but its two rendered fields are still parsed
+                # under their exact grammar before they enter an evidence line.
+                fields="${err#verify_lock_driver: universe_unexpected }"
+                ufmt="${fields%% *}"; udigest="${fields#* }"
+                case "$ufmt" in format=[a-z][a-z_0-9]*) : ;; *) wpi_stop B1 "verifier_not_evaluable rc=5 detail=driver_grammar diagnostic_file=$WPI_CAP_ERR" ;; esac
+                case "$udigest" in name_sha256=?*) : ;; *) wpi_stop B1 "verifier_not_evaluable rc=5 detail=driver_grammar diagnostic_file=$WPI_CAP_ERR" ;; esac
+                case "${udigest#name_sha256=}" in ''|*[!0-9a-f]*) wpi_stop B1 "verifier_not_evaluable rc=5 detail=driver_grammar diagnostic_file=$WPI_CAP_ERR" ;; esac
+                [ "${#udigest}" -eq 76 ] || wpi_stop B1 "verifier_not_evaluable rc=5 detail=driver_grammar diagnostic_file=$WPI_CAP_ERR"
+                wpi_stop B1 "metadata_universe_unexpected stage=verifier $ufmt $udigest" ;;
+            *) wpi_stop B1 "verifier_not_evaluable rc=5 detail=driver_grammar diagnostic_file=$WPI_CAP_ERR" ;;
+        esac
+    fi
+    if [ "$WPI_CAP_RC" -eq 4 ]; then
+        case "$err" in
+            'verify_lock_driver: trusted_startup_unproven'|'verify_lock_driver: universe_unreadable'|'verify_lock_driver: universe_empty')
+                wpi_stop B1 "verifier_not_evaluable rc=4 detail=${err#verify_lock_driver: }" ;;
+            *) wpi_stop B1 "verifier_not_evaluable rc=4 detail=driver_grammar diagnostic_file=$WPI_CAP_ERR" ;;
+        esac
+    fi
     if [ "$WPI_CAP_RC" -eq 1 ] && wpi_is_structured_parity_mismatch "$err"; then
         wpi_fail B1 "lock_installed_parity observed=positively_distinguished_named_set_mismatch"
     fi
@@ -843,8 +994,17 @@ wpi_assert_netns_binding() {
     printf 'B6_netns caller=%s service=%s mainpid=%s binding=equal\n' "$caller" "$service" "$WPI_MAINPID"
 }
 
+# Two phases, and the boundary between them is the finding (Codex F2). Round 3 called
+# wpi_fail from inside the read loop, so an early wildcard row produced a host-state
+# FAIL while a later malformed row was never read: reversing two records changed rc 1
+# to rc 3 although neither ordering was evaluable. Phase 1 now reads to clean EOF and
+# records only sanitised counters and flags; a grammar, read or termination failure is
+# still an immediate STOP, because that is an inability to evaluate rather than an
+# observation. Phase 2 applies the wildcard, unexpected-address and count FAILs only
+# after reader diagnostics, record termination and table grammar have all held.
 wpi_assert_listener_set() {
     local fd line="" rc=0 count=0 total=0 state recvq sendq localaddr peer extra addr port peer_addr peer_port diag
+    local port_rows=0 wildcard_seen=no wildcard_addr="" unexpected_seen=no
     wpi_capture listeners "$WPI_SS" -H -ltn
     [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=$WPI_CAP_RC detail=ss_failed"
     wpi_require_empty_file B6 "listener_inventory_unreadable_or_unparseable rc=0" "$WPI_CAP_ERR"
@@ -873,12 +1033,25 @@ wpi_assert_listener_set() {
         [ -n "$addr" ] && [ -n "$peer_addr" ] || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=empty_address"
         total=$(( total + 1 ))
         [ "$port" = 8790 ] || continue
-        case "$addr" in '*'|0.0.0.0|'[::]'|'::'|"172.24.55.233") wpi_fail B6 "nonloopback_listener addr=$addr" ;; esac
-        [ "$addr" = 127.0.0.1 ] || wpi_fail B6 "listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790"
+        port_rows=$(( port_rows + 1 ))
+        # Sanitised counters only. No semantic verdict may leave this loop: the table
+        # is not yet proven complete, so no row seen so far is yet evidence of state.
+        case "$addr" in
+            '*'|0.0.0.0|'[::]'|'::'|"172.24.55.233")
+                if [ "$wildcard_seen" = no ]; then wildcard_seen=yes; wildcard_addr="$addr"; fi
+                continue ;;
+        esac
+        if [ "$addr" != 127.0.0.1 ]; then unexpected_seen=yes; continue; fi
         count=$(( count + 1 ))
     done
+    # Phase 2. Reader diagnostics, record termination and table grammar have all held
+    # for every row, so the inventory is a complete observation and the recorded
+    # counters may now be adjudicated.
+    printf 'B6_listener_inventory rows=%s port_8790_rows=%s evidence_file=%s content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes\n' \
+        "$total" "$port_rows" "$WPI_CAP_OUT"
+    [ "$wildcard_seen" = no ] || wpi_fail B6 "nonloopback_listener addr=$wildcard_addr"
+    [ "$unexpected_seen" = no ] || wpi_fail B6 "listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790"
     [ "$count" -eq 1 ] || wpi_fail B6 "listener_set_unexpected observed_count=$count expected=1x127.0.0.1:8790"
-    printf 'B6_listener_inventory rows=%s evidence_file=%s content=not_printed table=complete scope_applied_in_block=yes\n' "$total" "$WPI_CAP_OUT"
     printf 'B6_listener_set port=8790 count=1 local=127.0.0.1 wildcard=none table=complete\n'
 }
 
@@ -892,8 +1065,17 @@ wpi_assert_status() {
     wpi_single_record B5 "status_endpoint_not_evaluable rc=0" "$WPI_CAP_OUT"
     case "$WPI_LINE" in 401|403) wpi_stop B5 "status_endpoint_access_denied code=$WPI_LINE" ;; 200) : ;; [0-9][0-9][0-9]) wpi_fail B5 "status_endpoint_unexpected_http code=$WPI_LINE" ;; *) wpi_stop B5 "status_endpoint_not_evaluable rc=0 detail=http_code_grammar" ;; esac
     wpi_sha_file B5 status_body_unreadable_or_unparseable "$body"; WPI_BODY_SHA="$WPI_LINE"
-    wpi_capture status_json "$WPI_VENV_ROOT/bin/python" -I -c '
+    # The status parser needs no venv context whatever - it opens one file and parses
+    # JSON with the standard library - so it runs under the pinned system interpreter
+    # with -I -S. Under round 3's `<venv>/bin/python -I`, `site` still imported and a
+    # single executable line in that venv's site-packages/*.pth could print exactly
+    # `OK fields=8` and exit 0 before this source was compiled. The guard below makes
+    # the isolation a checked precondition of the parse rather than a claim.
+    wpi_capture status_json "$WPI_PYTHON3" -I -S -c '
 import hashlib,json,sys
+if not (sys.flags.isolated and sys.flags.no_site): print("PARSE startup_not_isolated"); sys.exit(3)
+for _m in ("site","sitecustomize","usercustomize"):
+ if _m in sys.modules: print("PARSE startup_hook_present"); sys.exit(3)
 class Dup(Exception): pass
 def pairs(xs):
  d={}
@@ -920,7 +1102,7 @@ except (OSError,UnicodeError,json.JSONDecodeError,Dup,ValueError) as e:
     wpi_require_empty_file B5 "status_body_unreadable_or_unparseable detail=parser_stderr" "$WPI_CAP_ERR"
     wpi_single_record B5 "status_body_unreadable_or_unparseable" "$WPI_CAP_OUT"
     case "$WPI_CAP_RC:$WPI_LINE" in
-        '0:OK fields=8') printf 'B5_status http=200 json=strict required_fields=8 flags=expected body_sha256=%s content=not_printed\n' "$WPI_BODY_SHA" ;;
+        '0:OK fields=8') printf 'B5_status http=200 json=strict required_fields=8 flags=expected body_sha256=%s content=not_printed parser=pinned_system_interpreter isolation=isolated_no_site\n' "$WPI_BODY_SHA" ;;
         4:'MISSING '*) wpi_stop B5 "schema_unexpected field=${WPI_LINE#MISSING }" ;;
         5:'TYPE '*)
             read -r _ WPI_JSON_FIELD WPI_JSON_TYPE WPI_JSON_EXPECTED_TYPE <<< "$WPI_LINE"
@@ -971,7 +1153,7 @@ wpi_main() {
     printf 'RP7_SECTION B1a_row_17\n'
     wpi_assert_regular_digest B1a installed_lock_absent installed_lock_digest_mismatch \
         "$WPI_RELEASE_ROOT/IBKR_PAPER_BRIDGE/requirements.lock" \
-        "$WPI_EXPECTED_LOCK_BYTES" "$WPI_EXPECTED_LOCK_SHA256" installed_lock installed_lock_object_unexpected
+        "$WPI_EXPECTED_LOCK_BYTES" "$WPI_EXPECTED_LOCK_SHA256" installed_lock installed_lock_object_unexpected kind_only
 
     printf 'RP7_SECTION B1_rows_18_19\n'
     wpi_assert_interpreter
@@ -979,11 +1161,16 @@ wpi_main() {
     wpi_assert_lock_parity
 
     printf 'RP7_SECTION B5_B6_rows_20_24\n'
-    # Binding order is intentional: row 22 preflight precedes every curl/ss
-    # interpretation even though its display number is later.
+    # ONE inversion is preregistered and it is only the row-22 service-netns
+    # PREFLIGHT: that binding precedes every curl and ss interpretation even though
+    # its display number is later. Round 3 also moved the whole listener adjudication
+    # ahead of rows 20-21, which is not preregistered and made a listener FAIL
+    # pre-empt an independently present endpoint or flag deviation (Codex F4). The
+    # preregistered first-divergence order is restored below: netns binding, then
+    # B5 rows 20-21, then B6 rows 22-23.
     wpi_assert_netns_binding
-    wpi_assert_listener_set
     wpi_assert_status
+    wpi_assert_listener_set
     wpi_record_external_probe_boundary
 
     printf 'RP7_claim establishes=rows_10_23_read_only_predicates_with_attested_preexec_objects_and_service_network_domain;executed_objects_use_separate_bounded_exec_after_preexec_mount_window\n'
