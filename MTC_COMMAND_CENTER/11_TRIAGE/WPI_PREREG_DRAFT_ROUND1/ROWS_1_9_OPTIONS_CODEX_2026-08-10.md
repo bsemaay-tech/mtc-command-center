@@ -6,12 +6,6 @@ edit. This file is the only path this session created or changed. Every "AFTER" 
 section E is a **proposal for the Lead**, not an applied edit: the preregistration draft, both
 blocks, the Audit-2 package, the gap matrix and the roadmap are untouched.
 
-Note on this file: the path already carried a counterpart flagship's analysis, committed. This
-is the independently derived second reading the Lead asked for at the same path; the earlier
-text remains in git history and the two should be compared, not merged blind. Where I reached
-the same conclusion I re-derived it from the bytes; where I did not, section C and section D.3
-say so.
-
 ---
 
 ## A. Decision frame, and exactly what is covered today
@@ -143,12 +137,12 @@ is the ten-tool set RP7 binds inside its mount window (`RP7-WPI-RO.sh:1220`):
 | 1 | The unit is `active` | One bounded manager query returning a parseable unit state, adjudicated so a valid `inactive` (a result) is separable from "could not ask" (a STOP) | Yes | No | Yes (`systemctl`, `timeout`, `env`) | **MEDIUM** | Mechanically trivial, but `is-active` returns nonzero both for a genuine `inactive` and for a failed invocation, so the rc must be decoded through an exhaustively preregistered table or the row collapses STOP and FAIL into one branch. |
 | 2 | `NRestarts` is `0` | One `show` record for `NRestarts`, proven present, then integer-parsed | Yes | No | Yes | **LOW** | A single scalar with an unambiguous grammar; the only discipline needed is that an unknown property must not render as an empty value. |
 | 3 | `Restart` is `no` | One `show` record for `Restart`, proven present, then token-compared | Yes | No | Yes | **LOW** | Same shape as row 2 over a small closed token set. |
-| 4 | `MainPID` is `189813` | One `show` record for `MainPID`, proven present, integer-parsed, compared to the preregistered value | Yes | No | Yes | **LOW to read, MEDIUM in consequence** | The read is trivial; a mismatch is named risk R3 and routes to Lead adjudication, and this is the only row that would justify RP7's existing production use of PID 189813 in the netns binding. |
+| 4 | `MainPID` is `189813` | One `show` record for `MainPID`, proven present, integer-parsed, compared to the preregistered value | Yes | No | Yes | **MEDIUM** | The read is trivial, but a mismatch is named risk R3 and routes to Lead adjudication, and this is the only row that would justify RP7's existing production use of PID 189813 in the netns binding. |
 | 5 | The loaded unit is bound to candidate `2ce41e34...321b` with no unpreregistered override | One complete `show` result, structurally parsed: effective `ExecStart` (compound `path=` / `argv[]=` / flags record), `FragmentPath`, `DropInPaths`, `LoadState` | Yes | No | Yes for capture; the parser must be the pinned trusted `python3` under `-I -S` | **HIGH** | Binding "the executable and the release argument" is real argv parsing of a compound multi-valued record, plus enumeration of the drop-in set against an expected-empty set - not field extraction, and explicitly not substring matching. |
 | 6 | The fragment contains no `[Install]` section | A complete byte read of the fragment, parsed under the systemd unit-file line grammar (sections, comments, continuations, encoding) | Yes | **No - and no manager either** | Yes (`stat`/`sha256sum` for binding, trusted `python3` for the grammar) | **MEDIUM** | The read is unprivileged over a `0644` world-readable object already in the section-10.1 allowlist, but the row forbids substring matching, so a real line-grammar parser must be authored and falsified. |
 | 7 | The fragment is byte-identical to the accepted unit (3736 B, `538c1c60...279bd`) | Component-and-mount-bound `lstat` plus `sha256sum` of the literal fragment path | Yes | **No - and no manager either** | Yes | **LOW** | `wpi_assert_regular_digest` already does exactly this for rows 17 and 19a; path, byte count and digest are already validated block inputs and the path is already a projection-v2 point. |
 | 8 | Ten sandbox properties equal their template-declared values | One bounded `show` with explicit per-property selection, each record proven present before comparison | Yes | No | Yes | **HIGH** | The query is easy; the expected values are not. The gap matrix's B4 entry records only that "the template declares them (A4)" - no effective-property capture has ever been taken - and systemd's rendered forms for the enum, list and capability-set properties are not the template's text, so ten new expected literals must be derived and pinned before freeze. |
-| 9 | Exactly one effective `MTC_BRIDGE_START_MODE=credential_free_disarmed` | One complete `show` record for `Environment`, tokenized under systemd's environment grammar | Yes | No | Yes for capture; parser must be the trusted `python3` | **MEDIUM-HIGH** | The row rejects duplicate, shadowed and substring-only occurrences, which is a tokenizer requirement including quoting and escaping - one assignment appearing twice must be distinguishable from one appearing once. |
+| 9 | Exactly one effective `MTC_BRIDGE_START_MODE=credential_free_disarmed` | One complete `show` record for `Environment`, tokenized under systemd's environment grammar | Yes | No | Yes for capture; parser must be the trusted `python3` | **HIGH** | The row rejects duplicate, shadowed and substring-only occurrences, which is a tokenizer requirement including quoting and escaping - one assignment appearing twice must be distinguishable from one appearing once. |
 
 ### C.1 Testing the required conclusion: read-only, and root
 
@@ -302,11 +296,12 @@ reached a two-flagship acceptance and both anchors are lower bounds, not settled
 2. **Row 8 is unpinnable at freeze.** If the ten rendered values cannot be derived from
    committed records, the block ships with ten more `<PIN-AT-FREEZE>` literals and the row can
    only STOP. Paying several rounds for a row that can only STOP is the worst outcome
-   available. Mitigation: split row 8 into the subset whose rendering is stable and
-   preregisterable (`PrivateTmp`, `NoNewPrivileges`, `KillSignal`, `KillMode`,
-   `TimeoutStopSec`, `FinalKillSignal`) and route the enum, list and capability-set properties
-   (`ProtectSystem`, `RestrictAddressFamilies`, `CapabilityBoundingSet`, `ReadWritePaths`) to
-   RPD-VERIFY.
+   available. The scalar properties (`PrivateTmp`, `NoNewPrivileges`, `KillSignal`, `KillMode`,
+   `TimeoutStopSec`, `FinalKillSignal`) render predictably; the enum, list and capability-set
+   properties (`ProtectSystem`, `RestrictAddressFamilies`, `CapabilityBoundingSet`,
+   `ReadWritePaths`) are where the derivation risk sits. Deriving and defending those four
+   renderings from committed records is the first task of the rows-1-9 round, not the last, so
+   that the risk is known before the rounds are spent.
 3. **Row 1's designed STOP/FAIL collision.** `is-active` uses exit status as a result channel.
    An implementer who writes a bare rc test reproduces the catalogue's Pattern-1 defect
    exactly. Either preregister the exit-code table exhaustively, or read `ActiveState` as a
@@ -376,6 +371,13 @@ This section is that narrowing, written out as replaceable sentences so the defe
 falsifiable form - either these exact strings appear downstream, or the deferral was not
 applied.
 
+**No owner decision exists as of this writing.** Every AFTER sentence below is a conditional
+template for a deferral that has not been chosen. Where a template needs to name the authority
+for the deferral, it says so as an instruction to the drafter - *cite the resulting owner
+decision record and date* - and never asserts a decision, a record or a date of its own. A
+drafter who applies these sentences with that placeholder left unfilled has not applied the
+narrowing.
+
 Throughout: the sequence `WP-L Phase 2 closed -> WP-I closed -> freeze SHA and ledger
 ratified -> Audit 2 accepted -> WP-A begins` is **preserved unchanged**. Only the meaning of
 the second step is renamed, from closure to **limited-scope closure**.
@@ -395,8 +397,8 @@ the second step is renamed, from closure to **limited-scope closure**.
 
 **AFTER:**
 
-> **Scope of the WP-I claim, preregistered (limited scope: section-8.2 rows 1-9 deferred
-> by owner scope change 2026-08-10).** A clean RO stage admits exactly this: the complete
+> **Scope of the WP-I claim, preregistered (limited scope: section-8.2 rows 1-9 deferred;
+> cite the resulting owner decision record and date).** A clean RO stage admits exactly this: the complete
 > release and venv walks found no DAC write bits, the installed lock bytes match the
 > preregistered lock digest and the completely readable installed-distribution set matches
 > that lock, an endpoint answering on the preregistered loopback control port - in a network
@@ -406,7 +408,8 @@ the second step is renamed, from closure to **limited-scope closure**.
 > that the running unit is the accepted first-start unit, that it is bound to the frozen
 > candidate, that it is active, that it has not been restarted, that its fragment is
 > unmodified or free of an `[Install]` section, or that its sandboxing and start-mode pins are
-> effective. Those are rows 1-9, deferred, implemented by no block, and routed to RPD-VERIFY.
+> effective. Those are rows 1-9: deferred, implemented by no block, and observed by no
+> executable in this run.
 > A credential-free DISARMED report from the application's own status endpoint is the
 > application describing itself; it is not evidence of how the system manager started the
 > process, from which unit definition, or under which sandbox.**
@@ -428,16 +431,18 @@ WP-A or Audit-2 completion") is retained unchanged and extended by the sentence 
 
 > - B2 rows 1-7 and B4 rows 8-9, **unconditionally**. No block implements them and none will
 >   be authored for this run. The conditional readiness argument is superseded: these rows are
->   not deferred *because* readiness might fail, they are deferred *by owner scope decision
->   2026-08-10*, and readiness is therefore never tested for them. All nine route to
->   RPD-VERIFY. Rows 6-7 remain unprivileged file reads and may be re-admitted without any new
->   authority if the scope decision is revisited.
+>   not deferred *because* readiness might fail, they are deferred by owner scope decision
+>   (cite the resulting owner decision record and date), and readiness is therefore never
+>   tested for them. None of the nine is executed by this run, and this deferral schedules no
+>   later execution of them: any future evidence for them requires its own authorization and
+>   its own record. Rows 6-7 remain unprivileged file reads and may be re-admitted without any
+>   new authority if the scope decision is revisited.
 
 ### E.3 Section 8.2 heading, and the RP7/RP6 evidence lines
 
 **BEFORE:** `### 8.2 RO stage - one row per admitted check`
 
-**AFTER:** `### 8.2 RO stage - one row per admitted check (rows 1-9 are DEFERRED by owner scope change 2026-08-10: they are retained for the record and are NOT admitted checks - see section 9)`
+**AFTER:** `### 8.2 RO stage - one row per admitted check (rows 1-9 are DEFERRED by owner scope change <cite the resulting owner decision record and date>: they are retained for the record and are NOT admitted checks - see section 9)`
 
 **BEFORE** (`RP7-WPI-RO.sh:1263`):
 `printf 'RP7_claim does_not_establish=row_24_operator_side_result,ACL_or_capability_immutability,whole_tree_byte_identity,root_deferred_checks,group_C,host_authority\n'`
@@ -455,8 +460,9 @@ re-bound to the unit):
 **BEFORE** (`RP6-P0.sh:1626`): the existing out-of-scope line, which is true for P0 but leaves
 no single line anywhere in the evidence saying rows 1-9 are covered by nobody.
 
-**AFTER:** keep it, and add immediately after it:
-`printf 'P0_out_of_scope class=RO_STAGE item=prereg_8.2_rows_1_9 stage=ro implemented=no implemented_by_any_block=no disposition=deferred_owner_scope_change_2026-08-10 channel=RPD-VERIFY\n'`
+**AFTER:** keep it, and add immediately after it - the `decision=` token is filled from the
+resulting owner decision record and date, and the line may not be emitted while it is unfilled:
+`printf 'P0_out_of_scope class=RO_STAGE item=prereg_8.2_rows_1_9 stage=ro implemented=no implemented_by_any_block=no disposition=deferred_owner_scope_change decision=<OWNER-DECISION-RECORD-AND-DATE>\n'`
 
 ### E.4 Closure criterion - gap 8's coverage gate
 
@@ -465,8 +471,9 @@ those nine rows in the preregistered first-divergence order, or the successor ex
 removes/defers them under an owner-approved scope change and narrows every claim and closure
 criterion accordingly."
 
-**AFTER:** "Freeze is blocked until either condition is met. **The second was taken on
-2026-08-10:** rows 1-9 are deferred by owner scope change, and the freeze gate is satisfied
+**AFTER:** "Freeze is blocked until either condition is met. **If the owner chooses deferral,
+cite the resulting owner decision record and date here:** rows 1-9 are deferred by that owner
+scope change, and the freeze gate is then satisfied
 only when every narrowing in `ROWS_1_9_OPTIONS_CODEX_2026-08-10.md` section E is applied
 verbatim to the successor preregistration, both blocks, the Audit-2 handoff package, the
 Audit-2 evidence checklist, the auditor session inputs, the freeze prerequisites and the
@@ -481,10 +488,11 @@ scope, close it with evidence, and preserve all exclusions. Audit 2 cannot start
 happens."
 
 **AFTER:** "Obtain both authorities, execute only the authorized WP-I scope, close it with
-evidence, and preserve all exclusions - **including the section-8.2 rows 1-9 deferral, which
-must appear in the WP-I closure record's open-item registry with the owner's own words and
-date, and be carried unsoftened into the Audit-2 handoff. This gate is satisfied by a
-limited-scope closure, not a full one.** Audit 2 cannot start before this happens."
+evidence, and preserve all exclusions - **including, if the owner chooses deferral, the
+section-8.2 rows 1-9 deferral, which must appear in the WP-I closure record's open-item
+registry with the owner's own words and the date of that decision, and be carried unsoftened
+into the Audit-2 handoff. This gate is then satisfied by a limited-scope closure, not a full
+one.** Audit 2 cannot start before this happens."
 
 **BEFORE (sequencing stop rule):**
 `WP-L Phase 2 closed -> WP-I closed -> freeze SHA and ledger ratified -> Audit 2 accepted -> WP-A begins`
@@ -499,8 +507,8 @@ byte count" / "After authority and execution, verify each no-clobber log path, b
 SHA-256, command, output, rc, and RUNID against the WP-I close record."
 
 **AFTER (I2):** "Executed read-only WP-I host-check logs with no-clobber path, SHA-256, and
-byte count, **for the limited scope only (section-8.2 rows 10-24; rows 1-9 deferred
-2026-08-10)**" / "After authority and execution, verify each no-clobber log path, byte count,
+byte count, **for the limited scope only (section-8.2 rows 10-24; rows 1-9 deferred - cite the
+resulting owner decision record and date)**" / "After authority and execution, verify each no-clobber log path, byte count,
 SHA-256, command, output, rc, and RUNID against the WP-I close record. **Then verify the
 converse: no log, line or claim in the package asserts unit active state, restart count,
 restart policy, MainPID continuity, unit-to-candidate binding, `[Install]` absence, fragment
@@ -516,7 +524,8 @@ to access the recorded evidence must not infer the state."
 credentials loaded. **`Restart=no` is REMOVED from this item.** Restart policy, restart count,
 active state, MainPID continuity, unit-to-candidate binding, `[Install]` absence, fragment
 identity, sandbox effectiveness and start mode are section-8.2 rows 1-9, deferred by owner
-scope change 2026-08-10, produced by no WP-I evidence" / "Reproduce each remaining named
+scope change (cite the resulting owner decision record and date), produced by no WP-I
+evidence" / "Reproduce each remaining named
 read-only proof from the authorized host-check record and compare output, rc, hash, and byte
 count. An auditor unable to access the recorded evidence must not infer the state. **The
 deferred properties must not be inferred from the DISARMED status reading, from the release
@@ -551,14 +560,15 @@ makes "actually run" auditable.
 venv trees, installed lock byte identity, installed-distribution parity, the reported
 credential-free DISARMED status, and the loopback listener set. Unit runtime identity,
 restart policy and count, MainPID continuity, unit-to-candidate binding, fragment integrity,
-sandbox effectiveness and start mode are OUT of this scope by owner scope change 2026-08-10
-and must not be accepted, inferred, or treated as missing evidence;**"
+sandbox effectiveness and start mode are OUT of this scope by owner scope change (cite the
+resulting owner decision record and date) and must not be accepted, inferred, or treated as
+missing evidence;**"
 
 **BEFORE (section 3 input-bundle row):**
 `| WP-I closure and evidence index | `BLOCKED-UPSTREAM: no exact paths recorded in the permitted inputs` |`
 
 **AFTER:**
-`| WP-I closure and evidence index (limited scope; 8.2 rows 1-9 deferred 2026-08-10 - the scope-change record is a required member of this bundle) | `PRODUCED-AT-WP-I-CLOSE` |`
+`| WP-I closure and evidence index (limited scope; 8.2 rows 1-9 deferred - cite the resulting owner decision record and date; that scope-change record is a required member of this bundle) | `PRODUCED-AT-WP-I-CLOSE` |`
 
 The section-3 preamble sentence "Each session must receive only the frozen scope contract..."
 gains: "**and the section-8.2 rows 1-9 scope-change record.** An auditor who does not receive
@@ -574,13 +584,13 @@ retained Gate-A-authorised staging host, including capture of all required stagi
 staging host, including capture of all required staging evidence. **WP-A begins from an
 unverified premise: WP-I did not observe the unit's active state, restart policy or count,
 MainPID continuity, unit-to-candidate binding, fragment integrity, sandbox effectiveness or
-start mode (8.2 rows 1-9 deferred 2026-08-10). WP-A may still test behaviour, and its results
-remain valid as behavioural evidence, but no WP-A result may be read as establishing which
-unit definition started the process, whether the process is the one the frozen candidate
-installs, or that its hardening is in force. If WP-A needs that premise, it must be discharged
-by a root-side RPD-VERIFY read BEFORE the first authorized restart - rows 2 and 4 are
-perishable: after any restart, `NRestarts=0` and `MainPID=189813` can never be observed on
-this host again, and after host discard nothing can.**"
+start mode (8.2 rows 1-9 deferred; cite the resulting owner decision record and date). WP-A
+may still test behaviour, and its results remain valid as behavioural evidence, but no WP-A
+result may be read as establishing which unit definition started the process, whether the
+process is the one the frozen candidate installs, or that its hardening is in force. If WP-A
+needs that premise, it must come from separate evidence obtained BEFORE the first authorized
+restart - rows 2 and 4 are perishable: after any restart, `NRestarts=0` and `MainPID=189813`
+can never be observed on this host again, and after host discard nothing can.**"
 
 Group E's preamble gains the same two sentences, since E1/E2 measure restart invariants
 against a pre-restart state that would otherwise be a document rather than an observation.
@@ -594,17 +604,17 @@ evidence (from the Gate-A-authorised staging action) is a prerequisite."
 **AFTER:** "...is a prerequisite. **The systemd portion of that prerequisite cannot cite the
 WP-I run for unit runtime identity, restart policy or count, unit-to-candidate binding,
 `[Install]` absence, fragment integrity, sandbox effectiveness or start mode: those are 8.2
-rows 1-9, deferred 2026-08-10 and observed by no executable. Each such property needs separate
-evidence from WP-A or from a root-side RPD-VERIFY discharge captured before host discard, or
-the corresponding criterion is narrowed in writing or BLOCKED.**"
+rows 1-9, deferred (cite the resulting owner decision record and date) and observed by no
+executable. Each such property needs separate evidence captured before host discard, or the
+corresponding criterion is narrowed in writing or BLOCKED.**"
 
 **BEFORE (line 1017):** "- [ ] systemd start / reboot / SIGTERM verified on the expendable
 staging host."
 
 **AFTER:** "- [ ] systemd start / reboot / SIGTERM verified on the expendable staging host.
 **WP-I contributes nothing to this item: start mode, unit identity, restart policy and sandbox
-effectiveness were deferred 2026-08-10. Evidence must come from WP-A or a root-side
-RPD-VERIFY discharge, captured before the host is discarded.**"
+effectiveness were deferred (cite the resulting owner decision record and date). Evidence must
+come from a separate source, captured before the host is discarded.**"
 
 **BEFORE (line 1021):** "- [ ] Every COVERED/SMALL-GAP invariant required for DISARMED VPS
 readiness has passing Ubuntu evidence from WP-A on the retained staging host (per WP-A
@@ -618,7 +628,7 @@ were a runtime observation.**"
 
 ### E.11 What the run still proves, and what it stops proving
 
-**Still proved** - rows 10-24, exactly as RP7 claims them:
+**Still proved** - rows 10-23 through RP7, plus operator-side row 24 through transport operation 06:
 
 - the release and venv roots are non-symlink directories at numeric `0555 0:0`, completely
   walkable inside a 120 s bound with clean diagnostics, containing no DAC-writable path
@@ -687,82 +697,66 @@ Downstream, that single missing bridge is what each consumer inherits:
   hard: after WP-A's first authorized restart, rows 2 and 4 are unobservable forever, and
   after host discard there is no channel for any of the nine.
 
-### E.13 The mitigation deferral should not skip
-
-A root-side session is already authorized and already scheduled: grant #3 covers running
-`RPD-VERIFY.sh` as root, the owner extended it on 2026-08-10 to one additional preregistered
-read-only root command set, and the successor's post-run sequence already ends with an
-RPD-VERIFY execution closing the B3-deferred checks. **All nine rows are read-only.** If
-deferral is chosen, the cheapest correct mitigation is to preregister the deferred manager
-reads and fragment reads into that same root session rather than writing them off. It costs no
-new authority class. It must be decided before that session runs, because a second root
-session is a new owner interaction.
-
 ---
 
 ## F. Recommendation
 
-**Build rows 6, 7, 2, 3 and 4 in one scoped round after the current RP7 round is accepted.
-Defer rows 1, 5, 8 and 9 under the full section-E narrowing, and preregister them into the
-already-authorized root-side session.**
+**Option A. Build all nine rows, in one scoped round opened after the current RP7 bytes have
+finished their existing acceptance cycle.** The decision in A.1 is binary and this
+recommendation takes one side of it: all nine, not a subset.
 
 Grounds:
 
-1. **Rows 6 and 7 are nearly free and carry no readiness risk.** They need no manager, no bus,
-   no polkit and no root; the path is a `0644` world-readable object already in the
-   unprivileged allowlist and already a projection-v2 point; its expected digest and byte count
-   are already validated block inputs with R1 resolved; and row 7's implementation function
-   already exists and has been audited twice over. They also retire a live asymmetry: the block
-   currently validates three inputs and attests a mount point for rows that do not exist.
-   Together they answer the persistence question - a unit with no `[Install]` cannot be enabled
-   into a boot target - without touching the manager at all.
-2. **Rows 2, 3 and 4 are LOW difficulty and perishable.** They are three scalars from one
-   capture. They are also the only facts in the whole set that expire: after WP-A's first
-   restart, `NRestarts=0` and `MainPID=189813` can never be observed again, and after host
-   discard nothing can. Row 4 additionally repairs the `service=` token in RP7's existing netns
-   evidence line, which today rests on an unverified PID.
-3. **Rows 5, 8 and 9 are where the 3-6 round spread lives.** Three new grammars, plus ten
-   expected values for row 8 that do not exist in any committed record. On this cycle's
-   documented base rate, each new parser has produced at least one further finding, and neither
-   block has yet earned a two-flagship acceptance. Deferring these three plus row 1 removes
-   most of the cost and none of the cheap coverage.
-4. **Row 1 goes with them, deliberately.** Alone it is not expensive, but it is the highest
-   probability source of a required finding in the set, and its value without row 5 is small:
-   knowing that *a* unit is active is worth little when nothing binds that unit to the
-   candidate.
-5. **Sequencing is not optional.** No rows may be added to RP7 until its current round's bytes
-   hold two flagship acceptances. Adding scope to bytes under audit produces an acceptance of
-   superseded bytes.
-6. **Whatever is deferred must be preregistered into the root session, not written off** - see
-   E.13. That decision has to be made before the session runs.
+1. **Row 5 is the only running-process-to-frozen-candidate bridge** (E.12). It is the single
+   row that joins "the right bits are on the disk" to "something healthy is listening". No
+   cheaper row buys that bridge back, so it cannot be the row dropped for cost.
+2. **Rows 8 and 9 are the runtime hardening and startup proof.** Row 8 is the only observation
+   of effective sandbox properties; without it the posture reverts to a declaration in a
+   template file. Row 9 is the only check on the pinned start-mode assignment that is supposed
+   to *cause* the credential-free DISARMED report - and that report is the application
+   describing itself. Dropping either leaves the hardening claim resting on text nobody ran.
+3. **Deferral makes Audit 2, WP-A and Gate B inherit weaker premises** (E.12). All three
+   inherit the same unproven premise, and the window closes: after WP-A's first authorized
+   restart, rows 2 and 4 are unobservable forever, and after host discard so is everything else.
+4. **The rows are authored, the tooling exists, and no new authority is needed.** Section C
+   confirms all nine are read-only, none needs root by construction, and the ten pinned tools
+   suffice. D.1 shows the smallest correct shape is two new sections inside RP7 - not a new
+   block, not a new transport op, no RUNID or archive churn.
+5. **Sequencing is a hard constraint, not a preference.** No rows may be added to RP7 until its
+   current round's bytes hold two flagship acceptances; adding scope to bytes under audit
+   produces an acceptance of superseded bytes.
 
-If the owner instead wants full coverage, Option A as scoped in section D is correct and
-buildable; the honest price is 3-6 more repair-plus-two-flagship-review rounds, most likely 4,
-on top of two blocks that have not yet been accepted once. If the owner wants the cheapest
-path, Option B is legitimate, but only if every sentence in section E is actually applied
-before Audit 2 is dispatched.
+**The honest price: 3 to 6 additional repair-plus-two-flagship-review rounds, most likely 4**
+(D.3), on top of two blocks not yet accepted once. That cost is real and is not minimised here.
+It buys a WP-I closure whose premises are observed rather than assumed. On this cycle, the
+stronger premise is worth the rounds.
+
+The two Option-A risks in D.4 stay named: row 8's ten rendered values may not be derivable
+before freeze, and the seven manager-backed rows can STOP on the day if readiness fails.
+Neither is a reason to build less; both are reasons to schedule the round deliberately rather
+than fold it into an open one.
+
+If the owner instead chooses deferral, that choice is legitimate, but only if every sentence in
+section E is actually applied before Audit 2 is dispatched - Option B is not "skip nine checks",
+it is "skip nine checks and narrow every downstream claim to match".
 
 ---
 
 ## For the owner, in plain language
 
-There is one decision, and it is yours.
+There is one decision, and it is yours. It is all nine or none.
 
-The checks we are preparing look at the program files on the rented test machine, at the one
-network door it answers on, and at what the program says about itself. Nine further checks
-would look at something different: how the machine's own start-up manager is running that
-program - whether it is running, whether it was restarted, whether it was started from exactly
-the copy we approved, and whether its safety restraints are switched on. Nobody has built
-those nine.
+Today's checks look at the program files on the rented test machine, the one network door it
+answers on, and what the program says about itself. Nine further checks would look at how the
+machine's own start-up manager is running the program: whether it is running, whether it was
+restarted, whether it was started from exactly the copy we approved, and whether its safety
+settings are switched on. Nobody has built those nine.
 
-Building them: two are nearly free and three more are quick. The last four need new code that
-reads the start-up manager's own formats, and that kind of work has taken three to six more
-build-and-check cycles.
+My recommendation is to build all nine, starting once the work now under review is signed off.
+The honest cost is three to six more rounds of building and checking. That cost is real.
 
-Skipping them: faster today, but we must then write plainly, wherever we later state results,
-that we never checked how the program was started or whether its restraints work. The test
-machine gets wiped after the next stage, and some of these facts can never be checked
-afterwards.
-
-My recommendation: build the five cheap ones, record the other four as deliberately not
-checked, and fold them into the administrator-level session we already have.
+Skipping them is quicker, but it costs two things. We lose the only check tying the running
+program to the copy we approved, so we would know the right files are there and that something
+is answering, but not that they are the same thing. And we lose any proof that its safety
+settings and start-up mode actually work. The test machine is wiped after the next stage, and
+some of these facts can never be checked later.
