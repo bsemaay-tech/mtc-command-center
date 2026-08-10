@@ -1,4 +1,73 @@
-# RP6-P0 — status: REPAIRED-PENDING-AUDIT, do not treat as accepted
+# RP6-P0 — status: FULL-BLOCK-REPAIRED-PENDING-T0-REAUDIT
+
+Updated by Codex on 2026-08-10 under owner amendment A2/A2a. Audit tier: **T0**
+(host/execution-domain preflight). The seven findings in
+`RP6_CLAUDE_T0_AUDIT_2026-08-10.md` have executable repairs and local D026
+RED/GREEN evidence. Acceptance still requires fresh independent
+`claude-opus-5` xhigh and `gpt-5.6-sol` xhigh verdicts. The block remains a draft:
+not frozen, accepted, dispatchable, or authorised for host execution.
+
+Current executable identity:
+
+```text
+sha256=041c9da9769e36638c9785b54afc638fa8e7b475a6d24238fc10388916c048db
+bytes=66381
+bash_n=PASS
+line_endings=LF_only
+bom=none
+```
+
+Full-block repair disposition:
+
+- F1: the filesystem diagnostic classifier now accepts only the exact absolute
+  `$P0_STAT` argv[0] prefix and the controlled GNU forms, including the observed
+  `(os error 2)` ENOENT form. Both real-lstat missing-object arms flip from
+  unclassified STOP rc 3 to the required host FAIL rc 1.
+- F2: P0 now requires frozen deploy-channel pins for user/mount/PID/network
+  namespaces plus `stat -c '%d:%i' /`, validates the prelude values with reasoned
+  rc-3 pre-checks and `:?` backstops, compares every live identity, and gates the
+  manager query behind the comparison. Missing/unreadable input is
+  `execution_domain_unattested`; mismatch is `execution_domain_mismatch`.
+- F3: repeated separators in `P0_VENV_ROOT` STOP as
+  `input_not_canonical_spelling` before any host object verdict.
+- F4: duplicate/conflicting tool pins STOP as
+  `prereg_input_malformed name=P0_TOOL_PINS duplicate=<tool>`; the count is now
+  the count of distinct accepted tools.
+- F5: every readlink producer uses `-v`; failed captures have nonempty bracketed
+  `detail=` plus an explicit diagnostic-shape token.
+- F6: getent capture uses NUL-delimited `mapfile` records with an out-of-band rc
+  record; NUL emitted by the producer creates an extra record and becomes
+  `identity_unresolvable` via `nul_byte_in_merged_capture`, never no-match.
+- F7: `tool_not_evaluable` and `group_query_not_evaluable` are executable reason
+  tokens. Every `identity_unexpected` line now uses
+  `observed_numeric=<u:g> expected_numeric=<u:g> account=<a>`; §8.1 row 3 was
+  aligned without changing row 9.
+
+**Freeze gate — mandatory, same class as RP7.** The following embedded literals
+remain `<PIN-AT-FREEZE>` and deliberately prevent an end-to-end `P0 PASS`:
+
+- `P0_FIXED_ATTESTED_USER_NS`
+- `P0_FIXED_ATTESTED_MNT_NS`
+- `P0_FIXED_ATTESTED_PID_NS`
+- `P0_FIXED_ATTESTED_NET_NS`
+- `P0_FIXED_ATTESTED_ROOT_MOUNT_ID`
+
+Before freeze/dispatch, the root-authorised deploy channel must mint the four exact
+`readlink /proc/<attested-host-pid>/ns/<kind>` tokens and the exact
+`stat -c '%d:%i' /` identity, embed each literal, supply identical prelude values,
+and re-run the whole block on the intended guest. No value may be learned or
+re-pinned from the login session being tested.
+
+Local evidence: the literal full-block fence in `SELF_QA_RP6.md` ends
+`RP6_FULLBLOCK_D026_SUMMARY … result=PASS`; its normalized re-run transcript matches
+the recorded output. The separate freeze-literal fence passes with placeholder rc 3
+and filled-fixture rc 0. The updated 27-case C13 harness and unchanged four-case
+backstop harness both pass. No host, SSH, network, deployment, backtest, broker, or
+trading action occurred.
+
+---
+
+# Prior status history — REPAIRED-PENDING-AUDIT, do not treat as accepted
 
 Updated by the Codex implementer on 2026-08-10 under owner amendment A2/A2a. The
 repair and its local falsification evidence are ready for independent Lead review;

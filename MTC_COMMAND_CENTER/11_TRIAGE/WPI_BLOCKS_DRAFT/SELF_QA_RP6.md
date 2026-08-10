@@ -753,14 +753,14 @@ overall=0
 set +e
 # === A. repaired bytes, block-driven: the pre-existing five cases ==============
 run_case repaired ''               0 'P0_account_admitted account=mtc-bridge numeric=999:988'            GREEN || overall=1
-run_case repaired wrong_mtc_gid    3 'state_account_resolution_unexpected account=mtc-bridge'            GREEN || overall=1
+run_case repaired wrong_mtc_gid    3 'identity_unexpected observed_numeric=999:989 expected_numeric=999:988 account=mtc-bridge' GREEN || overall=1
 run_case repaired mtc_nomatch      3 'state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent' GREEN || overall=1
-run_case repaired wrong_gatea_uid  3 'identity_unexpected account=gatea'                                 GREEN || overall=1
+run_case repaired wrong_gatea_uid  3 'identity_unexpected observed_numeric=4096:4096 expected_numeric=4242:4096 account=gatea' GREEN || overall=1
 run_case repaired dup_gatea        3 'identity_unresolvable account=gatea'                               GREEN || overall=1
 
 # === B. F2(a): the production integration call is deleted -> every arm assertion must fail
 run_case nocall   ''               0 'P0_account_admitted account=mtc-bridge numeric=999:988'            RED   || overall=1
-run_case nocall   wrong_mtc_gid    3 'state_account_resolution_unexpected account=mtc-bridge'            RED   || overall=1
+run_case nocall   wrong_mtc_gid    3 'identity_unexpected observed_numeric=999:989 expected_numeric=999:988 account=mtc-bridge' RED || overall=1
 run_case nocall   mtc_rc2_diag     3 'identity_unresolvable account=mtc-bridge'                          RED   || overall=1
 
 # === C. F2(c)/F1: rc 2 carrying bytes is a lookup error, not a valid no-match ==
@@ -1273,14 +1273,14 @@ overall=0
 set +e
 # === A. R4 bytes, block-driven: the pre-existing five cases (regression) =======
 run_case repaired ''               0 'P0_account_admitted account=mtc-bridge numeric=999:988'            GREEN || overall=1
-run_case repaired wrong_mtc_gid    3 'state_account_resolution_unexpected account=mtc-bridge'            GREEN || overall=1
+run_case repaired wrong_mtc_gid    3 'identity_unexpected observed_numeric=999:989 expected_numeric=999:988 account=mtc-bridge' GREEN || overall=1
 run_case repaired mtc_nomatch      3 'state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent' GREEN || overall=1
-run_case repaired wrong_gatea_uid  3 'identity_unexpected account=gatea'                                 GREEN || overall=1
+run_case repaired wrong_gatea_uid  3 'identity_unexpected observed_numeric=4096:4096 expected_numeric=4242:4096 account=gatea' GREEN || overall=1
 run_case repaired dup_gatea        3 'identity_unresolvable account=gatea'                               GREEN || overall=1
 
 # === B. the production integration call is deleted -> every arm assertion must fail
 run_case nocall   ''               0 'P0_account_admitted account=mtc-bridge numeric=999:988'            RED   || overall=1
-run_case nocall   wrong_mtc_gid    3 'state_account_resolution_unexpected account=mtc-bridge'            RED   || overall=1
+run_case nocall   wrong_mtc_gid    3 'identity_unexpected observed_numeric=999:989 expected_numeric=999:988 account=mtc-bridge' RED || overall=1
 run_case nocall   mtc_rc2_diag     3 'identity_unresolvable account=mtc-bridge'                          RED   || overall=1
 run_case nocall   mtc_rc2_newline  3 'identity_unresolvable account=mtc-bridge'                          RED   || overall=1
 
@@ -1612,3 +1612,576 @@ as current evidence by the extended harness 1 in this R4 section, which contains
 every R3 case verbatim plus the newline-only fixture and runs against the R4 bytes.
 The two pre-R3 C13 fences stay labelled SUPPLEMENTAL. Neither earlier section was
 edited by this round.
+
+---
+
+## Full-block repair after Claude T0 BLOCK: 7 — executable D026 fence
+
+Run by the Codex implementer on 2026-08-10 under owner amendment A2/A2a in local
+Git Bash 5.2.37. This section supersedes earlier artefact measurements only; the
+older sections remain the exact evidence of their own rounds. `git show HEAD:<path>`
+is the audited pre-repair block (`bff3c86e…`, 57441 B), while the working-tree path
+is the repaired block. The execution-domain comparison uses deterministic local
+readlink/stat shims because the Windows-hosted session is not the staging guest;
+F1 deliberately uses real GNU `stat` against real absent local objects. All scratch
+files are under a fresh `/tmp` directory removed by the fence. No host contact,
+network operation, deployment, backtest, broker action, or protected trading surface
+is involved.
+
+The exact command below covers every required finding. For F2, whose pre-fix bytes
+contain no gate to execute, the RED side is the explicit call-removal mutation required
+by D026. All other RED sides execute the audited pre-repair bytes.
+
+```bash
+set -Eeuo pipefail
+cd /c/LAB/Tradingview_LAB_CLEAN
+target='MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh'
+draft='MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/WPI_PREREGISTRATION_DRAFT.md'
+Q="$(mktemp -d)"
+trap 'rm -rf -- "$Q"' EXIT
+git show "HEAD:$target" > "$Q/pre.sh"
+cp -- "$target" "$Q/post.sh"
+
+exfn() {
+    local src="$1" fn="$2"
+    sed -n "/^$fn() {$/,/^}$/p" "$src"
+}
+
+run_capture() {
+    local label="$1" arm="$2" out rc=0
+    out="$(bash --noprofile --norc "$arm" 2>&1)" || rc=$?
+    printf '%s\n%s\nRC=%s\n' "=== $label ===" "$out" "$rc"
+    QA_LAST_OUT="$out"
+    QA_LAST_RC="$rc"
+}
+
+require_contains() {
+    local label="$1" haystack="$2" needle="$3"
+    case "$haystack" in
+        *"$needle"*) printf 'ASSERT_MET label=%s token=[%s]\n' "$label" "$needle" ;;
+        *) printf 'ASSERT_UNMET label=%s token=[%s]\n' "$label" "$needle"; return 1 ;;
+    esac
+}
+
+# F1: real-lstat missing-root and missing-interpreter arms. The pre-repair
+# classifier expects a basename prefix although the invocation controls absolute
+# argv[0]; repaired bytes require the exact resolved prefix.
+build_f1_arm() {
+    local src="$1" arm="$2" call="$3" missing="$4"
+    {
+        printf '%s\n' 'set -Eeuo pipefail' \
+            'P0_SAFE=""; P0_COUNT=0; P0_KIND=""; P0_FKIND=""; P0_SHAPE=""' \
+            'P0_EACCES_TEXT="Permission denied"; P0_ENOENT_TEXT="No such file or directory"'
+        printf 'P0_STAT=%q\n' "$(command -v stat)"
+        printf '%s\n' 'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }' \
+            'p0_fail(){ printf "P0_FAIL reason=%s\n" "$*"; exit 1; }'
+        exfn "$src" p0_sanitize
+        exfn "$src" p0_count_substr
+        exfn "$src" p0_classify_stat_shape
+        exfn "$src" p0_probe_kind
+        exfn "$src" p0_assert_venv_root
+        exfn "$src" p0_assert_interpreter_executable
+        printf '%s %q\n' "$call" "$missing"
+    } > "$arm"
+}
+
+missing_root="$Q/real-lstat-missing-root"
+missing_py="$Q/real-lstat-missing-venv/bin/python"
+build_f1_arm "$Q/pre.sh" "$Q/f1-pre-root.sh" p0_assert_venv_root "$missing_root"
+run_capture 'F1 PRE root real-lstat' "$Q/f1-pre-root.sh"; f1pr=$QA_LAST_RC; f1pro=$QA_LAST_OUT
+build_f1_arm "$Q/post.sh" "$Q/f1-post-root.sh" p0_assert_venv_root "$missing_root"
+run_capture 'F1 POST root real-lstat' "$Q/f1-post-root.sh"; f1gr=$QA_LAST_RC; f1gro=$QA_LAST_OUT
+build_f1_arm "$Q/pre.sh" "$Q/f1-pre-py.sh" p0_assert_interpreter_executable "$missing_py"
+run_capture 'F1 PRE interpreter real-lstat' "$Q/f1-pre-py.sh"; f1pp=$QA_LAST_RC; f1ppo=$QA_LAST_OUT
+build_f1_arm "$Q/post.sh" "$Q/f1-post-py.sh" p0_assert_interpreter_executable "$missing_py"
+run_capture 'F1 POST interpreter real-lstat' "$Q/f1-post-py.sh"; f1gp=$QA_LAST_RC; f1gpo=$QA_LAST_OUT
+[ "$f1pr" -eq 3 ] && require_contains F1_PRE_ROOT "$f1pro" 'path_probe_unclassified'
+[ "$f1gr" -eq 1 ] && require_contains F1_POST_ROOT "$f1gro" 'venv_root_absent'
+[ "$f1pp" -eq 3 ] && require_contains F1_PRE_PY "$f1ppo" 'path_probe_unclassified'
+[ "$f1gp" -eq 1 ] && require_contains F1_POST_PY "$f1gpo" 'interpreter_absent'
+
+# F2: input pre-check/backstop, frozen-placeholder gate, live comparison, and
+# manager-order mutation. The shim emits exact kernel-token grammar and root
+# dev:inode identity; mode=mismatch changes only the network namespace.
+printf '%s\n' '#!/usr/bin/env bash' \
+    'verbose=no; for a in "$@"; do [ "$a" = -v ] && verbose=yes; done' \
+    'p="${@: -1}"' \
+    'if [ "${DOMAIN_MODE:-match}" = unreadable ] && [ "$p" = /proc/self/ns/user ]; then [ "$verbose" = yes ] && printf "%s: %s: Permission denied\n" "$0" "$p" >&2; exit 1; fi' \
+    'case "$p" in' \
+    '  /proc/self/ns/user) printf "user:[101]\n" ;;' \
+    '  /proc/self/ns/mnt) printf "mnt:[102]\n" ;;' \
+    '  /proc/self/ns/pid) printf "pid:[103]\n" ;;' \
+    '  /proc/self/ns/net) if [ "${DOMAIN_MODE:-match}" = mismatch ]; then printf "net:[999]\n"; else printf "net:[104]\n"; fi ;;' \
+    '  /) printf "/\n" ;;' \
+    '  *) [ "$verbose" = yes ] && printf "%s: %s: No such file or directory\n" "$0" "$p" >&2; exit 1 ;;' \
+    'esac' > "$Q/readlink-domain"
+printf '%s\n' '#!/usr/bin/env bash' 'printf "2049:2\n"' > "$Q/stat-domain"
+chmod +x "$Q/readlink-domain" "$Q/stat-domain"
+
+build_f2_domain_arm() {
+    local src="$1" arm="$2" mutate="${3:-no}"
+    {
+        printf '%s\n' 'set -Eeuo pipefail' \
+            'P0_SAFE=""; P0_RESOLUTION=""; P0_NS_VALUE=""' \
+            'P0_NS_USER_PATH=/proc/self/ns/user; P0_NS_MNT_PATH=/proc/self/ns/mnt' \
+            'P0_NS_PID_PATH=/proc/self/ns/pid; P0_NS_NET_PATH=/proc/self/ns/net' \
+            'P0_ATTESTED_USER_NS="user:[101]"; P0_ATTESTED_MNT_NS="mnt:[102]"' \
+            'P0_ATTESTED_PID_NS="pid:[103]"; P0_ATTESTED_NET_NS="net:[104]"' \
+            'P0_ATTESTED_ROOT_MOUNT_ID=2049:2'
+        printf 'P0_READLINK=%q\nP0_STAT=%q\n' "$Q/readlink-domain" "$Q/stat-domain"
+        printf '%s\n' 'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }'
+        exfn "$src" p0_sanitize
+        exfn "$src" p0_prepare_readlink_detail
+        if [ "$mutate" = yes ]; then
+            exfn "$src" p0_read_domain_ns | sed '/^    \[ "$raw" = "$attested" \] \\/,+1d'
+        else
+            exfn "$src" p0_read_domain_ns
+        fi
+        exfn "$src" p0_assert_execution_domain
+        printf '%s\n' 'p0_assert_execution_domain'
+    } > "$arm"
+}
+
+build_f2_domain_arm "$Q/post.sh" "$Q/f2-match.sh"
+DOMAIN_MODE=match run_capture 'F2 POST matching attestation' "$Q/f2-match.sh"; f2match=$QA_LAST_RC; f2matcho=$QA_LAST_OUT
+DOMAIN_MODE=mismatch run_capture 'F2 POST mismatched attestation' "$Q/f2-match.sh"; f2mis=$QA_LAST_RC; f2miso=$QA_LAST_OUT
+DOMAIN_MODE=unreadable run_capture 'F2 POST unreadable identity' "$Q/f2-match.sh"; f2un=$QA_LAST_RC; f2uno=$QA_LAST_OUT
+build_f2_domain_arm "$Q/post.sh" "$Q/f2-mutant.sh" yes
+DOMAIN_MODE=mismatch run_capture 'F2 RED comparison-removed mutant' "$Q/f2-mutant.sh"; f2mut=$QA_LAST_RC; f2muto=$QA_LAST_OUT
+[ "$f2match" -eq 0 ] && require_contains F2_MATCH "$f2matcho" 'binding=deploy_attested_exact'
+[ "$f2mis" -eq 3 ] && require_contains F2_MISMATCH "$f2miso" 'execution_domain_mismatch field=network_namespace'
+[ "$f2un" -eq 3 ] && require_contains F2_UNREADABLE "$f2uno" 'execution_domain_unattested field=user_namespace'
+[ "$f2mut" -eq 0 ] && require_contains F2_MUTANT "$f2muto" 'binding=deploy_attested_exact'
+
+{
+    printf '%s\n' 'set -Eeuo pipefail' 'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }'
+    sed -n '/^\[ -n "${P0_ATTESTED_USER_NS:-}" \] \\/,/^: "${P0_ATTESTED_ROOT_MOUNT_ID:/p' "$Q/post.sh"
+} > "$Q/f2-input.sh"
+set +e
+f2_input_out="$(P0_ATTESTED_MNT_NS='mnt:[102]' P0_ATTESTED_PID_NS='pid:[103]' \
+    P0_ATTESTED_NET_NS='net:[104]' P0_ATTESTED_ROOT_MOUNT_ID=2049:2 \
+    bash --noprofile --norc "$Q/f2-input.sh" 2>&1)"; f2_input_rc=$?
+sed '/^\[ -n "${P0_ATTESTED_USER_NS:-}" \] \\/,+1d' "$Q/f2-input.sh" > "$Q/f2-input-mutant.sh"
+f2_backstop_out="$(P0_ATTESTED_MNT_NS='mnt:[102]' P0_ATTESTED_PID_NS='pid:[103]' \
+    P0_ATTESTED_NET_NS='net:[104]' P0_ATTESTED_ROOT_MOUNT_ID=2049:2 \
+    bash --noprofile --norc "$Q/f2-input-mutant.sh" 2>&1)"; f2_backstop_rc=$?
+set -e
+printf '%s\n%s\nRC=%s\n' '=== F2 POST missing-input precheck ===' "$f2_input_out" "$f2_input_rc"
+printf '%s\n%s\nRC=%s\n' '=== F2 RED precheck-removed backstop ===' "$f2_backstop_out" "$f2_backstop_rc"
+[ "$f2_input_rc" -eq 3 ] && require_contains F2_INPUT "$f2_input_out" 'execution_domain_unattested field=user_namespace'
+[ "$f2_backstop_rc" -ne 0 ] && require_contains F2_BACKSTOP "$f2_backstop_out" 'P0_ATTESTED_USER_NS:'
+
+{
+    printf '%s\n' 'set -Eeuo pipefail' \
+        'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }' \
+        'p0_assert_execution_domain(){ p0_stop "execution_domain_mismatch field=fixture observed=bad attested=good"; }' \
+        'p0_assert_system_manager_ready(){ printf "MANAGER_RAN\n"; }'
+    grep -E '^p0_assert_(execution_domain|system_manager_ready)$' "$Q/post.sh"
+} > "$Q/f2-order.sh"
+run_capture 'F2 POST manager gated' "$Q/f2-order.sh"; f2ord=$QA_LAST_RC; f2ordo=$QA_LAST_OUT
+sed '/^p0_assert_execution_domain$/d' "$Q/f2-order.sh" > "$Q/f2-order-mutant.sh"
+run_capture 'F2 RED domain-call-removed manager reachable' "$Q/f2-order-mutant.sh"; f2ordm=$QA_LAST_RC; f2ordmo=$QA_LAST_OUT
+[ "$f2ord" -eq 3 ] && require_contains F2_ORDER "$f2ordo" 'execution_domain_mismatch'
+[ "$f2ordm" -eq 0 ] && require_contains F2_ORDER_MUTANT "$f2ordmo" 'MANAGER_RAN'
+
+# F3: identical healthy candidate spelling except for a doubled separator.
+build_f3_arm() {
+    local src="$1" arm="$2"
+    {
+        printf '%s\n' 'set -Eeuo pipefail' \
+            'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }' \
+            'P0_CAND=2ce41e34bceb599d80af24c5c33d835820ec321b' \
+            'P0_VENV_ROOT=/opt/mtc-bridge//venvs/2ce41e34bceb599d80af24c5c33d835820ec321b'
+        sed -n '/^\[ -n "${P0_VENV_ROOT:-}" \] \\/,/^# P0_TOOL_PINS/p' "$src" | sed '$d'
+    } > "$arm"
+}
+build_f3_arm "$Q/pre.sh" "$Q/f3-pre.sh"; run_capture 'F3 PRE doubled separator' "$Q/f3-pre.sh"; f3p=$QA_LAST_RC; f3po=$QA_LAST_OUT
+build_f3_arm "$Q/post.sh" "$Q/f3-post.sh"; run_capture 'F3 POST doubled separator' "$Q/f3-post.sh"; f3g=$QA_LAST_RC; f3go=$QA_LAST_OUT
+[ "$f3p" -eq 0 ]
+[ "$f3g" -eq 3 ] && require_contains F3_POST "$f3go" 'input_not_canonical_spelling'
+
+# F4: same contradictory duplicate table; pre-repair silently accepts it,
+# repaired bytes reject before first-wins lookup can occur.
+build_f4_arm() {
+    local src="$1" arm="$2"
+    {
+        printf '%s\n' 'set -Eeuo pipefail' \
+            'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }' \
+            'P0_RO_TOOLS="stat readlink id env find grep sha256sum awk systemctl ss curl getent"' \
+            'P0_TOOL_PINS="stat=/usr/bin/stat stat=/decoy/stat"'
+        sed -n '/^P0_TOOL_PINS="${P0_TOOL_PINS:-}"/,/^# This derives the literal leaf name only/p' "$src" | sed '$d'
+    } > "$arm"
+}
+build_f4_arm "$Q/pre.sh" "$Q/f4-pre.sh"; run_capture 'F4 PRE duplicate pins' "$Q/f4-pre.sh"; f4p=$QA_LAST_RC
+build_f4_arm "$Q/post.sh" "$Q/f4-post.sh"; run_capture 'F4 POST duplicate pins' "$Q/f4-post.sh"; f4g=$QA_LAST_RC; f4go=$QA_LAST_OUT
+[ "$f4p" -eq 0 ]
+[ "$f4g" -eq 3 ] && require_contains F4_POST "$f4go" 'prereg_input_malformed name=P0_TOOL_PINS duplicate=stat'
+
+# F5: parameter-sensitive readlink shim emits a real diagnostic only when -v
+# is present. Drive all three audited STOP producers.
+printf '%s\n' '#!/usr/bin/env bash' \
+    'verbose=no; for a in "$@"; do [ "$a" = -v ] && verbose=yes; done' \
+    '[ "$verbose" = yes ] && printf "%s: fixture: Permission denied\n" "$0" >&2' \
+    'exit 1' > "$Q/readlink-diag"
+chmod +x "$Q/readlink-diag"
+
+build_f5_arm() {
+    local src="$1" arm="$2" which="$3"
+    {
+        printf '%s\n' 'set -Eeuo pipefail' 'P0_SAFE=""; P0_RESOLUTION=""' \
+            'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }'
+        printf 'P0_READLINK=%q\nP0_FD_SELF=/fixture/fd8\nEV_LOG=/fixture/log\n' "$Q/readlink-diag"
+        exfn "$src" p0_sanitize
+        exfn "$src" p0_prepare_readlink_detail
+        case "$which:$src" in
+            evidence:*) exfn "$src" p0_assert_evidence_leaf_bound; printf '%s\n' 'p0_assert_evidence_leaf_bound' ;;
+            namespace:*pre.sh) exfn "$src" p0_read_ns; printf '%s\n' 'p0_read_ns net /fixture/ns' ;;
+            namespace:*) exfn "$src" p0_read_domain_ns; printf '%s\n' 'p0_read_domain_ns network_namespace net /fixture/ns "net:[104]"' ;;
+            venv:*) printf '%s\n' 'p0_probe_kind(){ P0_KIND=dir; }'; exfn "$src" p0_assert_venv_root; printf '%s\n' 'p0_assert_venv_root /fixture/venv' ;;
+        esac
+    } > "$arm"
+}
+for which in evidence namespace venv; do
+    build_f5_arm "$Q/pre.sh" "$Q/f5-pre-$which.sh" "$which"
+    run_capture "F5 PRE $which" "$Q/f5-pre-$which.sh"; eval "f5p_${which}=\$QA_LAST_RC"; eval "f5po_${which}=\$QA_LAST_OUT"
+    build_f5_arm "$Q/post.sh" "$Q/f5-post-$which.sh" "$which"
+    run_capture "F5 POST $which" "$Q/f5-post-$which.sh"; eval "f5g_${which}=\$QA_LAST_RC"; eval "f5go_${which}=\$QA_LAST_OUT"
+done
+for which in evidence namespace venv; do
+    eval "prc=\$f5p_${which}; pout=\$f5po_${which}; grc=\$f5g_${which}; gout=\$f5go_${which}"
+    [ "$prc" -eq 3 ] && require_contains "F5_PRE_$which" "$pout" 'detail='
+    case "$pout" in *'Permission denied'*) printf 'ASSERT_UNMET label=F5_PRE_%s unexpected_diagnostic\n' "$which"; exit 1 ;; esac
+    [ "$grc" -eq 3 ] && require_contains "F5_POST_$which" "$gout" 'Permission denied'
+    require_contains "F5_POST_${which}_GRAMMAR" "$gout" 'diagnostic_shape=single_printable_record'
+done
+
+# F6: NUL-only rc-2 output. The old command substitution drops the bytes and
+# reports nomatch; the repaired NUL-delimited capture reports error.
+printf '%s\n' '#!/usr/bin/env bash' 'printf "\0\0"' 'exit 2' > "$Q/getent-nul"
+chmod +x "$Q/getent-nul"
+build_f6_arm() {
+    local src="$1" arm="$2"
+    {
+        printf '%s\n' 'set -Eeuo pipefail' 'P0_SAFE=""; P0_COUNT=0'
+        printf 'P0_GETENT=%q\n' "$Q/getent-nul"
+        exfn "$src" p0_sanitize
+        exfn "$src" p0_count_substr
+        exfn "$src" p0_resolve_passwd
+        printf '%s\n' 'p0_resolve_passwd mtc-bridge' \
+            'printf "OUTCOME=%s DIAG=[%s]\n" "$P0_PW_OUTCOME" "$P0_PW_DIAG"'
+    } > "$arm"
+}
+build_f6_arm "$Q/pre.sh" "$Q/f6-pre.sh"; run_capture 'F6 PRE NUL-only rc2' "$Q/f6-pre.sh"; f6p=$QA_LAST_RC; f6po=$QA_LAST_OUT
+build_f6_arm "$Q/post.sh" "$Q/f6-post.sh"; run_capture 'F6 POST NUL-only rc2' "$Q/f6-post.sh"; f6g=$QA_LAST_RC; f6go=$QA_LAST_OUT
+[ "$f6p" -eq 0 ] && require_contains F6_PRE "$f6po" 'OUTCOME=nomatch'
+[ "$f6g" -eq 0 ] && require_contains F6_POST "$f6go" 'OUTCOME=error DIAG=[nul_byte_in_merged_capture]'
+
+# F7a tool token.
+: > "$Q/nonexec-tool"
+chmod 0644 "$Q/nonexec-tool"
+build_f7_tool_arm() {
+    local src="$1" arm="$2"
+    {
+        printf '%s\n' 'set -Eeuo pipefail' 'P0_SAFE=""; P0_LOOKUP=""; P0_RESOLUTION=""; P0_TOOL_PINS=""; P0_TOOLS_RESOLVED=""; P0_TOOLS_RESOLUTION=""' \
+            'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }'
+        printf 'FIXTURE_TOOL=%q\n' "$Q/nonexec-tool"
+        printf '%s\n' 'command(){ if [ "$1" = -v ]; then printf "%s\n" "$FIXTURE_TOOL"; return 0; fi; builtin command "$@"; }'
+        exfn "$src" p0_sanitize
+        exfn "$src" p0_lookup
+        exfn "$src" p0_resolve_tool
+        printf '%s\n' 'p0_resolve_tool getent'
+    } > "$arm"
+}
+build_f7_tool_arm "$Q/pre.sh" "$Q/f7-tool-pre.sh"; run_capture 'F7 PRE tool invocation token' "$Q/f7-tool-pre.sh"; f7tp=$QA_LAST_RC; f7tpo=$QA_LAST_OUT
+build_f7_tool_arm "$Q/post.sh" "$Q/f7-tool-post.sh"; run_capture 'F7 POST tool invocation token' "$Q/f7-tool-post.sh"; f7tg=$QA_LAST_RC; f7tgo=$QA_LAST_OUT
+[ "$f7tp" -eq 3 ] && require_contains F7_TOOL_PRE "$f7tpo" 'tool_not_executable'
+[ "$f7tg" -eq 3 ] && require_contains F7_TOOL_POST "$f7tgo" 'tool_not_evaluable tool=getent rc=126 detail=access_builtin_x_denied'
+
+# F7b group token.
+printf '%s\n' '#!/usr/bin/env bash' 'printf "group backend unavailable\n" >&2' 'exit 7' > "$Q/id-fail"
+chmod +x "$Q/id-fail"
+build_f7_group_arm() {
+    local src="$1" arm="$2"
+    {
+        printf '%s\n' 'set -Eeuo pipefail' 'P0_SAFE=""; P0_CAPTURE=""' \
+            'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }'
+        printf 'P0_ID=%q\n' "$Q/id-fail"
+        exfn "$src" p0_sanitize
+        exfn "$src" p0_capture_numeric
+        printf '%s\n' 'p0_capture_numeric gids -G'
+    } > "$arm"
+}
+build_f7_group_arm "$Q/pre.sh" "$Q/f7-group-pre.sh"; run_capture 'F7 PRE group token' "$Q/f7-group-pre.sh"; f7gp=$QA_LAST_RC; f7gpo=$QA_LAST_OUT
+build_f7_group_arm "$Q/post.sh" "$Q/f7-group-post.sh"; run_capture 'F7 POST group token' "$Q/f7-group-post.sh"; f7gg=$QA_LAST_RC; f7ggo=$QA_LAST_OUT
+[ "$f7gp" -eq 3 ] && require_contains F7_GROUP_PRE "$f7gpo" 'identity_probe_failed field=gids'
+[ "$f7gg" -eq 3 ] && require_contains F7_GROUP_POST "$f7ggo" 'group_query_not_evaluable rc=7 detail=[group backend unavailable]'
+
+# F7c one identity_unexpected grammar for both accounts.
+build_f7_identity_arm() {
+    local src="$1" arm="$2" mode="$3"
+    {
+        printf '%s\n' 'set -Eeuo pipefail' \
+            'P0_EXPECT_UID=1000; P0_STATE_UID=999; P0_STATE_GID=988; P0_CAPTURE=""' \
+            'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }' \
+            'p0_capture_numeric(){ case "$1" in uid) P0_CAPTURE=1000 ;; gid) P0_CAPTURE=1000 ;; esac; }'
+        printf 'IDENTITY_CASE=%q\n' "$mode"
+        printf '%s\n' \
+            'p0_resolve_passwd(){' \
+            '  P0_PW_OUTCOME=found; P0_PW_NAME="$1"' \
+            '  if [ "$1" = gatea ]; then' \
+            '    if [ "$IDENTITY_CASE" = gatea ]; then P0_PW_UID=1001; else P0_PW_UID=1000; fi' \
+            '    P0_PW_GID=1000' \
+            '  else P0_PW_UID=1001; P0_PW_GID=988; fi' \
+            '}'
+        exfn "$src" p0_resolve_accounts
+        printf '%s\n' 'p0_resolve_accounts'
+    } > "$arm"
+}
+for mode in gatea mtc; do
+    build_f7_identity_arm "$Q/pre.sh" "$Q/f7-id-pre-$mode.sh" "$mode"
+    run_capture "F7 PRE identity grammar $mode" "$Q/f7-id-pre-$mode.sh"; eval "f7ip_${mode}=\$QA_LAST_RC"; eval "f7ipo_${mode}=\$QA_LAST_OUT"
+    build_f7_identity_arm "$Q/post.sh" "$Q/f7-id-post-$mode.sh" "$mode"
+    run_capture "F7 POST identity grammar $mode" "$Q/f7-id-post-$mode.sh"; eval "f7ig_${mode}=\$QA_LAST_RC"; eval "f7igo_${mode}=\$QA_LAST_OUT"
+done
+[ "$f7ip_gatea" -eq 3 ] && require_contains F7_ID_PRE_GATEA "$f7ipo_gatea" 'identity_unexpected account=gatea'
+[ "$f7ig_gatea" -eq 3 ] && require_contains F7_ID_POST_GATEA "$f7igo_gatea" 'identity_unexpected observed_numeric=1000:1000 expected_numeric=1001:1000 account=gatea'
+[ "$f7ip_mtc" -eq 3 ] && require_contains F7_ID_PRE_MTC "$f7ipo_mtc" 'state_account_resolution_unexpected account=mtc-bridge'
+[ "$f7ig_mtc" -eq 3 ] && require_contains F7_ID_POST_MTC "$f7igo_mtc" 'identity_unexpected observed_numeric=1001:988 expected_numeric=999:988 account=mtc-bridge'
+
+pre_draft_row="$(git show "HEAD:$draft" | grep 'identity_unexpected account=mtc-bridge observed_numeric')"
+post_draft_row="$(grep 'identity_unexpected observed_numeric=<u:g> expected_numeric=999:988 account=mtc-bridge' "$draft")"
+[ -n "$pre_draft_row" ] && [ -n "$post_draft_row" ]
+printf 'F7_DRAFT_RED old_order_present=yes\nF7_DRAFT_GREEN unified_order_present=yes\n'
+
+printf 'RP6_FULLBLOCK_D026_SUMMARY findings=7 real_lstat_arms=2 execution_domain_cases=7 readlink_stop_arms=3 result=PASS\n'
+```
+
+Real captured output is recorded immediately below after literal extraction and
+execution of this fence.
+
+```text
+=== F1 PRE root real-lstat ===
+P0_STOP reason=path_probe_unclassified path=/tmp/tmp.mBlLjsCsFC/real-lstat-missing-root rc=1 detail=/usr/bin/stat: cannot stat '/tmp/tmp.mBlLjsCsFC/real-lstat-missing-root': No such file or directory
+RC=3
+=== F1 POST root real-lstat ===
+P0_FAIL reason=venv_root_absent path=/tmp/tmp.mBlLjsCsFC/real-lstat-missing-root detail=preregistered_path_observed_missing
+RC=1
+=== F1 PRE interpreter real-lstat ===
+P0_STOP reason=path_probe_unclassified path=/tmp/tmp.mBlLjsCsFC/real-lstat-missing-venv/bin/python rc=1 detail=/usr/bin/stat: cannot stat '/tmp/tmp.mBlLjsCsFC/real-lstat-missing-venv/bin/python': No such file or directory
+RC=3
+=== F1 POST interpreter real-lstat ===
+P0_FAIL reason=interpreter_absent path=/tmp/tmp.mBlLjsCsFC/real-lstat-missing-venv/bin/python detail=preregistered_path_observed_missing_parent_search_succeeded
+RC=1
+ASSERT_MET label=F1_PRE_ROOT token=[path_probe_unclassified]
+ASSERT_MET label=F1_POST_ROOT token=[venv_root_absent]
+ASSERT_MET label=F1_PRE_PY token=[path_probe_unclassified]
+ASSERT_MET label=F1_POST_PY token=[interpreter_absent]
+=== F2 POST matching attestation ===
+P0_execution_domain user_ns=user:[101] mnt_ns=mnt:[102] pid_ns=pid:[103] net_ns=net:[104] root_mount_id=2049:2 binding=deploy_attested_exact visible_pid1_comparison=not_used
+RC=0
+=== F2 POST mismatched attestation ===
+P0_STOP reason=execution_domain_mismatch field=network_namespace observed=net:[999] attested=net:[104]
+RC=3
+=== F2 POST unreadable identity ===
+P0_STOP reason=execution_domain_unattested field=user_namespace rc=1 detail=[/tmp/tmp.mBlLjsCsFC/readlink-domain: /proc/self/ns/user: Permission denied] diagnostic_shape=single_printable_record
+RC=3
+=== F2 RED comparison-removed mutant ===
+P0_execution_domain user_ns=user:[101] mnt_ns=mnt:[102] pid_ns=pid:[103] net_ns=net:[999] root_mount_id=2049:2 binding=deploy_attested_exact visible_pid1_comparison=not_used
+RC=0
+ASSERT_MET label=F2_MATCH token=[binding=deploy_attested_exact]
+ASSERT_MET label=F2_MISMATCH token=[execution_domain_mismatch field=network_namespace]
+ASSERT_MET label=F2_UNREADABLE token=[execution_domain_unattested field=user_namespace]
+ASSERT_MET label=F2_MUTANT token=[binding=deploy_attested_exact]
+=== F2 POST missing-input precheck ===
+P0_STOP reason=execution_domain_unattested field=user_namespace detail=preregistered_value_missing
+RC=3
+=== F2 RED precheck-removed backstop ===
+/tmp/tmp.mBlLjsCsFC/f2-input-mutant.sh: line 11: P0_ATTESTED_USER_NS: deploy-attested user namespace identity is required
+RC=1
+ASSERT_MET label=F2_INPUT token=[execution_domain_unattested field=user_namespace]
+ASSERT_MET label=F2_BACKSTOP token=[P0_ATTESTED_USER_NS:]
+=== F2 POST manager gated ===
+P0_STOP reason=execution_domain_mismatch field=fixture observed=bad attested=good
+RC=3
+=== F2 RED domain-call-removed manager reachable ===
+MANAGER_RAN
+RC=0
+ASSERT_MET label=F2_ORDER token=[execution_domain_mismatch]
+ASSERT_MET label=F2_ORDER_MUTANT token=[MANAGER_RAN]
+=== F3 PRE doubled separator ===
+
+RC=0
+=== F3 POST doubled separator ===
+P0_STOP reason=input_not_canonical_spelling name=P0_VENV_ROOT value=[/opt/mtc-bridge//venvs/2ce41e34bceb599d80af24c5c33d835820ec321b] detail=repeated_separator
+RC=3
+ASSERT_MET label=F3_POST token=[input_not_canonical_spelling]
+=== F4 PRE duplicate pins ===
+
+RC=0
+=== F4 POST duplicate pins ===
+P0_STOP reason=prereg_input_malformed name=P0_TOOL_PINS duplicate=stat
+RC=3
+ASSERT_MET label=F4_POST token=[prereg_input_malformed name=P0_TOOL_PINS duplicate=stat]
+=== F5 PRE evidence ===
+P0_STOP reason=evidence_binding_unprobeable path=/fixture/fd8 rc=1 detail=
+RC=3
+=== F5 POST evidence ===
+P0_STOP reason=evidence_binding_unprobeable path=/fixture/fd8 rc=1 detail=[/tmp/tmp.mBlLjsCsFC/readlink-diag: fixture: Permission denied] diagnostic_shape=single_printable_record
+RC=3
+=== F5 PRE namespace ===
+P0_STOP reason=namespace_unreadable ns=net path=/fixture/ns rc=1 detail=
+RC=3
+=== F5 POST namespace ===
+P0_STOP reason=execution_domain_unattested field=network_namespace rc=1 detail=[/tmp/tmp.mBlLjsCsFC/readlink-diag: fixture: Permission denied] diagnostic_shape=single_printable_record
+RC=3
+=== F5 PRE venv ===
+P0_STOP reason=venv_root_canonicalization_failed path=/fixture/venv rc=1 detail=
+RC=3
+=== F5 POST venv ===
+P0_STOP reason=venv_root_canonicalization_failed path=/fixture/venv rc=1 detail=[/tmp/tmp.mBlLjsCsFC/readlink-diag: fixture: Permission denied] diagnostic_shape=single_printable_record
+RC=3
+ASSERT_MET label=F5_PRE_evidence token=[detail=]
+ASSERT_MET label=F5_POST_evidence token=[Permission denied]
+ASSERT_MET label=F5_POST_evidence_GRAMMAR token=[diagnostic_shape=single_printable_record]
+ASSERT_MET label=F5_PRE_namespace token=[detail=]
+ASSERT_MET label=F5_POST_namespace token=[Permission denied]
+ASSERT_MET label=F5_POST_namespace_GRAMMAR token=[diagnostic_shape=single_printable_record]
+ASSERT_MET label=F5_PRE_venv token=[detail=]
+ASSERT_MET label=F5_POST_venv token=[Permission denied]
+ASSERT_MET label=F5_POST_venv_GRAMMAR token=[diagnostic_shape=single_printable_record]
+=== F6 PRE NUL-only rc2 ===
+/tmp/tmp.mBlLjsCsFC/f6-pre.sh: line 31: warning: command substitution: ignored null byte in input
+OUTCOME=nomatch DIAG=[empty_capture_at_rc2]
+RC=0
+=== F6 POST NUL-only rc2 ===
+OUTCOME=error DIAG=[nul_byte_in_merged_capture]
+RC=0
+ASSERT_MET label=F6_PRE token=[OUTCOME=nomatch]
+ASSERT_MET label=F6_POST token=[OUTCOME=error DIAG=[nul_byte_in_merged_capture]]
+=== F7 PRE tool invocation token ===
+P0_STOP reason=tool_not_executable tool=getent path=/tmp/tmp.mBlLjsCsFC/nonexec-tool mechanism=access_builtin_x
+RC=3
+=== F7 POST tool invocation token ===
+P0_STOP reason=tool_not_evaluable tool=getent rc=126 detail=access_builtin_x_denied
+RC=3
+ASSERT_MET label=F7_TOOL_PRE token=[tool_not_executable]
+ASSERT_MET label=F7_TOOL_POST token=[tool_not_evaluable tool=getent rc=126 detail=access_builtin_x_denied]
+=== F7 PRE group token ===
+P0_STOP reason=identity_probe_failed field=gids flag=-G rc=7 detail=group backend unavailable
+RC=3
+=== F7 POST group token ===
+P0_STOP reason=group_query_not_evaluable rc=7 detail=[group backend unavailable]
+RC=3
+ASSERT_MET label=F7_GROUP_PRE token=[identity_probe_failed field=gids]
+ASSERT_MET label=F7_GROUP_POST token=[group_query_not_evaluable rc=7 detail=[group backend unavailable]]
+=== F7 PRE identity grammar gatea ===
+P0_account account=gatea outcome=resolved uid=1001 gid=1000 name_diag=[gatea] via=pinned_getent_passwd
+P0_STOP reason=identity_unexpected account=gatea observed_numeric=1001:1000 expected_numeric=1000:1000,prereg_uid=1000
+RC=3
+=== F7 POST identity grammar gatea ===
+P0_account account=gatea outcome=resolved uid=1001 gid=1000 name_diag=[gatea] via=pinned_getent_passwd
+P0_STOP reason=identity_unexpected observed_numeric=1000:1000 expected_numeric=1001:1000 account=gatea
+RC=3
+=== F7 PRE identity grammar mtc ===
+P0_account account=gatea outcome=resolved uid=1000 gid=1000 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=1000:1000 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_account account=mtc-bridge outcome=resolved uid=1001 gid=988 name_diag=[mtc-bridge] via=pinned_getent_passwd
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=1001:988 expected_numeric=999:988
+RC=3
+=== F7 POST identity grammar mtc ===
+P0_account account=gatea outcome=resolved uid=1000 gid=1000 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=1000:1000 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_account account=mtc-bridge outcome=resolved uid=1001 gid=988 name_diag=[mtc-bridge] via=pinned_getent_passwd
+P0_STOP reason=identity_unexpected observed_numeric=1001:988 expected_numeric=999:988 account=mtc-bridge
+RC=3
+ASSERT_MET label=F7_ID_PRE_GATEA token=[identity_unexpected account=gatea]
+ASSERT_MET label=F7_ID_POST_GATEA token=[identity_unexpected observed_numeric=1000:1000 expected_numeric=1001:1000 account=gatea]
+ASSERT_MET label=F7_ID_PRE_MTC token=[state_account_resolution_unexpected account=mtc-bridge]
+ASSERT_MET label=F7_ID_POST_MTC token=[identity_unexpected observed_numeric=1001:988 expected_numeric=999:988 account=mtc-bridge]
+F7_DRAFT_RED old_order_present=yes
+F7_DRAFT_GREEN unified_order_present=yes
+RP6_FULLBLOCK_D026_SUMMARY findings=7 real_lstat_arms=2 execution_domain_cases=7 readlink_stop_arms=3 result=PASS
+```
+
+### Full-block repair verification record
+
+- Literal fence extraction: `sed -n '1636,1956p' SELF_QA_RP6.md | bash
+  --noprofile --norc` under Git Bash 5.2.37 — rc 0.
+- Normalized transcript comparison (only the random `/tmp/tmp.*` root replaced
+  with `<Q>` on each side) — `NORMALIZED_TRANSCRIPT_MATCH=True`.
+- Existing C13 R4 arm harness, updated only for the F7 reason grammar and re-run:
+  `C13_R4_ARM_QA_SUMMARY cases=27 result=PASS`, process rc 0.
+- Existing C13 backstop harness re-run unchanged:
+  `C13_R3_BACKSTOP_QA_SUMMARY inputs=2 mutations=2 cases=4 result=PASS`, process
+  rc 0.
+- `bash -n RP6-P0.sh` — rc 0, `BASH_N=PASS`.
+- Repaired executable SHA-256:
+  `041c9da9769e36638c9785b54afc638fa8e7b475a6d24238fc10388916c048db`.
+- Repaired executable byte count: `66381`.
+- Byte form: `CR_BYTES=0`, `LF_BYTES=1248`, `BOM=False`.
+- Audited pre-repair identity: SHA-256
+  `bff3c86e6e9b565c55da34580284f22c80253d9e931d879fd749459bac85b7cf`,
+  57441 bytes.
+
+The five `<PIN-AT-FREEZE>` execution-domain literals intentionally prevent a
+whole-block `P0 PASS` in draft form. This is a freeze gate, not a missing GREEN:
+the isolated input gate, comparison function, mismatch/unreadable branches, and
+manager ordering all have executable RED/GREEN evidence above. End-to-end GREEN
+becomes admissible only after the deploy channel supplies and the freeze embeds the
+five real staging values.
+
+### F2 freeze-literal gate — executable placeholder RED / filled-fixture GREEN
+
+This separate fence exercises the embedded-literal half of row 8. The RED side
+uses the delivered `<PIN-AT-FREEZE>` bytes. The GREEN side changes only those five
+literals to deterministic, grammar-valid fixture identities; it does not claim
+that the fixture values are staging attestations.
+
+```bash
+set -Eeuo pipefail
+cd /c/LAB/Tradingview_LAB_CLEAN
+target='MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh'
+Q="$(mktemp -d)"
+trap 'rm -rf -- "$Q"' EXIT
+{
+    printf '%s\n' 'set -Eeuo pipefail' \
+        'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }'
+    grep '^P0_FIXED_ATTESTED_.*=' "$target"
+    sed -n '/^# Row 8 deploy-channel attestation inputs/,/^# This derives the literal leaf name only/p' "$target" | sed '$d'
+} > "$Q/freeze-red.sh"
+sed \
+    -e "s|^P0_FIXED_ATTESTED_USER_NS=.*|P0_FIXED_ATTESTED_USER_NS='user:[101]'|" \
+    -e "s|^P0_FIXED_ATTESTED_MNT_NS=.*|P0_FIXED_ATTESTED_MNT_NS='mnt:[102]'|" \
+    -e "s|^P0_FIXED_ATTESTED_PID_NS=.*|P0_FIXED_ATTESTED_PID_NS='pid:[103]'|" \
+    -e "s|^P0_FIXED_ATTESTED_NET_NS=.*|P0_FIXED_ATTESTED_NET_NS='net:[104]'|" \
+    -e "s|^P0_FIXED_ATTESTED_ROOT_MOUNT_ID=.*|P0_FIXED_ATTESTED_ROOT_MOUNT_ID='2049:2'|" \
+    "$Q/freeze-red.sh" > "$Q/freeze-green.sh"
+run_one() {
+    local label="$1" arm="$2" out rc=0
+    out="$(P0_ATTESTED_USER_NS='user:[101]' P0_ATTESTED_MNT_NS='mnt:[102]' \
+        P0_ATTESTED_PID_NS='pid:[103]' P0_ATTESTED_NET_NS='net:[104]' \
+        P0_ATTESTED_ROOT_MOUNT_ID='2049:2' \
+        bash --noprofile --norc "$arm" 2>&1)" || rc=$?
+    printf '=== %s ===\n%s\nRC=%s\n' "$label" "$out" "$rc"
+    case "$label:$rc:$out" in
+        RED:3:*'execution_domain_unattested field=user_namespace detail=freeze_pin_unfilled'*) : ;;
+        GREEN:0:*) : ;;
+        *) return 1 ;;
+    esac
+}
+run_one RED "$Q/freeze-red.sh"
+run_one GREEN "$Q/freeze-green.sh"
+printf 'F2_FREEZE_GATE_QA_SUMMARY placeholder_rc=3 filled_fixture_rc=0 result=PASS\n'
+```
+
+Real captured output follows.
+
+```text
+=== RED ===
+P0_STOP reason=execution_domain_unattested field=user_namespace detail=freeze_pin_unfilled
+RC=3
+=== GREEN ===
+
+RC=0
+F2_FREEZE_GATE_QA_SUMMARY placeholder_rc=3 filled_fixture_rc=0 result=PASS
+```

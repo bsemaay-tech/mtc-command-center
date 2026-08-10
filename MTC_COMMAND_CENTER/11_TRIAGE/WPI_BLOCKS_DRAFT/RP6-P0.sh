@@ -9,10 +9,11 @@
 # WHAT P0 IS FOR. P0 establishes, from the login the run actually gets: who the
 # process is numerically, that every tool the RO stage will invoke resolves and
 # is executable by this login, that the system manager answers a Manager-level
-# query over the system bus from this login's PID and mount namespaces, that the
-# per-SHA venv interpreter can actually be executed, and what this login's net,
-# pid and mnt namespace identities are. The RO stage is admissible only if P0
-# held. Folding the two together would let a run assert a result whose
+# query over the system bus from the externally attested execution domain, that
+# the per-SHA venv interpreter can actually be executed, and that this login's
+# user, mount, PID and network namespaces plus root object identity match the
+# deploy-channel values frozen into this block. The RO stage is admissible only
+# if P0 held. Folding the two together would let a run assert a result whose
 # precondition it never checked.
 #
 # rc contract, identical to the accepted blocks:
@@ -153,6 +154,31 @@ p0_sanitize() {
     P0_SAFE="${s:0:400}"
 }
 
+# `readlink -v` is used at every readlink call so a nonzero status has a real
+# diagnostic. This formatter keeps `detail=` nonempty and records whether the
+# merged diagnostic was one printable record; malformed diagnostic streams are
+# still STOP, but are never emitted as an empty or ambiguous key=value field.
+p0_prepare_readlink_detail() {
+    local raw="${1-}"
+    P0_RESOLUTION="single_printable_record"
+    if [ -z "$raw" ]; then
+        P0_SAFE="readlink_diagnostic_absent"
+        P0_RESOLUTION="absent"
+        return 0
+    fi
+    case "$raw" in
+        *$'\r'*|*$'\n'*)
+            P0_SAFE="readlink_diagnostic_multiline_suppressed"
+            P0_RESOLUTION="multiline"
+            return 0 ;;
+        *[![:print:]]*)
+            P0_SAFE="readlink_diagnostic_nonprintable_suppressed"
+            P0_RESOLUTION="nonprintable"
+            return 0 ;;
+    esac
+    p0_sanitize "$raw"
+}
+
 # --- literal substring counter, builtins only (A2-F6) -----------------------
 # Sets P0_COUNT to the number of non-overlapping occurrences of a LITERAL
 # needle. No `grep -c`, no pipeline, no subshell: nothing here has an exit
@@ -188,12 +214,18 @@ p0_lookup() {
 # The candidate SHA is the frozen candidate of prereg section 2 and is never
 # derived at run time.
 P0_CAND="2ce41e34bceb599d80af24c5c33d835820ec321b"
+P0_NS_USER_PATH="/proc/self/ns/user"
 P0_NS_NET_PATH="/proc/self/ns/net"
 P0_NS_PID_PATH="/proc/self/ns/pid"
 P0_NS_MNT_PATH="/proc/self/ns/mnt"
 P0_FD_SELF="/proc/self/fd/8"
 P0_EACCES_TEXT="Permission denied"
 P0_ENOENT_TEXT="No such file or directory"
+P0_FIXED_ATTESTED_USER_NS='<PIN-AT-FREEZE>'
+P0_FIXED_ATTESTED_MNT_NS='<PIN-AT-FREEZE>'
+P0_FIXED_ATTESTED_PID_NS='<PIN-AT-FREEZE>'
+P0_FIXED_ATTESTED_NET_NS='<PIN-AT-FREEZE>'
+P0_FIXED_ATTESTED_ROOT_MOUNT_ID='<PIN-AT-FREEZE>'
 
 # --- the RO-stage tool inventory, derived ONLY from the prereg and the
 # --- feasibility ledger -----------------------------------------------------
@@ -324,6 +356,9 @@ case "/$P0_VENV_ROOT/" in
     *"/../"*|*"/./"*)
         p0_stop "input_path_traversal name=P0_VENV_ROOT value=[$P0_VENV_ROOT]" ;;
 esac
+case "$P0_VENV_ROOT" in
+    *'//'*) p0_stop "input_not_canonical_spelling name=P0_VENV_ROOT value=[$P0_VENV_ROOT] detail=repeated_separator" ;;
+esac
 # The venv root must be bound to the frozen candidate. A P0 that validated some
 # other interpreter would establish a premise about the wrong object.
 case "$P0_VENV_ROOT" in
@@ -339,6 +374,7 @@ esac
 # claim line says so.
 P0_TOOL_PINS="${P0_TOOL_PINS:-}"
 P0_PIN_COUNT=0
+P0_PIN_SEEN=" "
 for p0_pin in $P0_TOOL_PINS; do
     case "$p0_pin" in
         *=*) : ;;
@@ -352,6 +388,10 @@ for p0_pin in $P0_TOOL_PINS; do
     done
     [ "$p0_lookup_hit" = "yes" ] \
         || p0_stop "input_pin_unknown_tool name=P0_TOOL_PINS tool=$p0_pin_name inventory=[$P0_RO_TOOLS]"
+    case "$P0_PIN_SEEN" in
+        *" $p0_pin_name "*)
+            p0_stop "prereg_input_malformed name=P0_TOOL_PINS duplicate=$p0_pin_name" ;;
+    esac
     case "$p0_pin_path" in
         /*) : ;;
         *) p0_stop "input_pin_not_absolute tool=$p0_pin_name path=[$p0_pin_path]" ;;
@@ -360,8 +400,77 @@ for p0_pin in $P0_TOOL_PINS; do
         *[![:print:]]*|*[[:space:]]*)
             p0_stop "input_pin_charset tool=$p0_pin_name expected=printable_without_whitespace" ;;
     esac
+    P0_PIN_SEEN="$P0_PIN_SEEN$p0_pin_name "
     P0_PIN_COUNT=$(( P0_PIN_COUNT + 1 ))
 done
+
+# Row 8 deploy-channel attestation inputs. The prelude supplies each value and
+# the frozen block carries an identical literal. Missing input, an unfilled
+# freeze placeholder, or malformed grammar means the execution domain is not
+# attested; none is learned from the login being tested. The `:?` checks are
+# fail-closed backstops after the reasoned rc-3 pre-checks.
+[ -n "${P0_ATTESTED_USER_NS:-}" ] \
+    || p0_stop "execution_domain_unattested field=user_namespace detail=preregistered_value_missing"
+[ -n "${P0_ATTESTED_MNT_NS:-}" ] \
+    || p0_stop "execution_domain_unattested field=mount_namespace detail=preregistered_value_missing"
+[ -n "${P0_ATTESTED_PID_NS:-}" ] \
+    || p0_stop "execution_domain_unattested field=pid_namespace detail=preregistered_value_missing"
+[ -n "${P0_ATTESTED_NET_NS:-}" ] \
+    || p0_stop "execution_domain_unattested field=network_namespace detail=preregistered_value_missing"
+[ -n "${P0_ATTESTED_ROOT_MOUNT_ID:-}" ] \
+    || p0_stop "execution_domain_unattested field=root_mount_identity detail=preregistered_value_missing"
+: "${P0_ATTESTED_USER_NS:?deploy-attested user namespace identity is required}"
+: "${P0_ATTESTED_MNT_NS:?deploy-attested mount namespace identity is required}"
+: "${P0_ATTESTED_PID_NS:?deploy-attested PID namespace identity is required}"
+: "${P0_ATTESTED_NET_NS:?deploy-attested network namespace identity is required}"
+: "${P0_ATTESTED_ROOT_MOUNT_ID:?deploy-attested canonical root-mount identity is required}"
+
+p0_validate_attested_ns_input() {
+    local field="$1" label="$2" value="$3" inner
+    [ "$value" != '<PIN-AT-FREEZE>' ] \
+        || p0_stop "execution_domain_unattested field=$field detail=freeze_pin_unfilled"
+    case "$value" in
+        "$label":'['*']') inner="${value#*:\[}"; inner="${inner%\]}" ;;
+        *) p0_stop "execution_domain_unattested field=$field detail=namespace_identity_grammar" ;;
+    esac
+    case "$inner" in
+        ''|*[!0-9]*) p0_stop "execution_domain_unattested field=$field detail=namespace_identity_grammar" ;;
+    esac
+}
+
+p0_validate_attested_ns_input user_namespace user "$P0_ATTESTED_USER_NS"
+p0_validate_attested_ns_input mount_namespace mnt "$P0_ATTESTED_MNT_NS"
+p0_validate_attested_ns_input pid_namespace pid "$P0_ATTESTED_PID_NS"
+p0_validate_attested_ns_input network_namespace net "$P0_ATTESTED_NET_NS"
+[ "$P0_ATTESTED_ROOT_MOUNT_ID" != '<PIN-AT-FREEZE>' ] \
+    || p0_stop "execution_domain_unattested field=root_mount_identity detail=freeze_pin_unfilled"
+case "$P0_ATTESTED_ROOT_MOUNT_ID" in
+    *[!0-9:]*|*:*:*|:*|*:|'')
+        p0_stop "execution_domain_unattested field=root_mount_identity detail=dev_inode_grammar" ;;
+    *:*) : ;;
+    *) p0_stop "execution_domain_unattested field=root_mount_identity detail=dev_inode_grammar" ;;
+esac
+
+[ "$P0_FIXED_ATTESTED_USER_NS" != '<PIN-AT-FREEZE>' ] \
+    || p0_stop "execution_domain_unattested field=user_namespace detail=freeze_pin_unfilled"
+[ "$P0_FIXED_ATTESTED_MNT_NS" != '<PIN-AT-FREEZE>' ] \
+    || p0_stop "execution_domain_unattested field=mount_namespace detail=freeze_pin_unfilled"
+[ "$P0_FIXED_ATTESTED_PID_NS" != '<PIN-AT-FREEZE>' ] \
+    || p0_stop "execution_domain_unattested field=pid_namespace detail=freeze_pin_unfilled"
+[ "$P0_FIXED_ATTESTED_NET_NS" != '<PIN-AT-FREEZE>' ] \
+    || p0_stop "execution_domain_unattested field=network_namespace detail=freeze_pin_unfilled"
+[ "$P0_FIXED_ATTESTED_ROOT_MOUNT_ID" != '<PIN-AT-FREEZE>' ] \
+    || p0_stop "execution_domain_unattested field=root_mount_identity detail=freeze_pin_unfilled"
+[ "$P0_ATTESTED_USER_NS" = "$P0_FIXED_ATTESTED_USER_NS" ] \
+    || p0_stop "execution_domain_unattested field=user_namespace detail=prelude_value_differs_from_frozen_pin"
+[ "$P0_ATTESTED_MNT_NS" = "$P0_FIXED_ATTESTED_MNT_NS" ] \
+    || p0_stop "execution_domain_unattested field=mount_namespace detail=prelude_value_differs_from_frozen_pin"
+[ "$P0_ATTESTED_PID_NS" = "$P0_FIXED_ATTESTED_PID_NS" ] \
+    || p0_stop "execution_domain_unattested field=pid_namespace detail=prelude_value_differs_from_frozen_pin"
+[ "$P0_ATTESTED_NET_NS" = "$P0_FIXED_ATTESTED_NET_NS" ] \
+    || p0_stop "execution_domain_unattested field=network_namespace detail=prelude_value_differs_from_frozen_pin"
+[ "$P0_ATTESTED_ROOT_MOUNT_ID" = "$P0_FIXED_ATTESTED_ROOT_MOUNT_ID" ] \
+    || p0_stop "execution_domain_unattested field=root_mount_identity detail=prelude_value_differs_from_frozen_pin"
 
 # This derives the literal leaf name only. P0 has no preregistered value for a
 # resolved `bin` component or interpreter-symlink target chain, so it cannot
@@ -378,6 +487,7 @@ printf 'P0_input name=P0_FORBIDDEN_GIDS value=[%s] count=%s\n' \
     "$P0_FORBIDDEN_GIDS" "$P0_FORBIDDEN_GID_COUNT"
 printf 'P0_input name=P0_VENV_ROOT value=%s\n' "$P0_VENV_ROOT"
 printf 'P0_input name=P0_TOOL_PINS value=[%s] count=%s\n' "$P0_TOOL_PINS" "$P0_PIN_COUNT"
+printf 'P0_input name=P0_EXECUTION_DOMAIN_ATTESTATION fields=user_namespace,mount_namespace,pid_namespace,network_namespace,root_mount_identity source=deploy_channel_frozen_literals\n'
 printf 'P0_input name=P0_INTERPRETER value=%s derived_from=P0_VENV_ROOT\n' "$P0_PY"
 
 # ---------------------------------------------------------------------------
@@ -419,7 +529,7 @@ p0_resolve_tool() {
         P0_RESOLUTION="path_resolved_absolute"
     fi
     [ -x "$resolved" ] \
-        || p0_stop "tool_not_executable tool=$t path=$resolved mechanism=access_builtin_x"
+        || p0_stop "tool_not_evaluable tool=$t rc=126 detail=access_builtin_x_denied"
     P0_TOOLS_RESOLVED="$P0_TOOLS_RESOLVED $t=$resolved"
     P0_TOOLS_RESOLUTION="$P0_TOOLS_RESOLUTION $t=$P0_RESOLUTION"
 }
@@ -508,11 +618,11 @@ printf 'P0_tool_inventory count=%s pinned=%s provenance=not_established\n' \
 p0_assert_evidence_leaf_bound() {
     local rawpath fdid logid rc=0
     exec 8>&1
-    rawpath="$(LC_ALL=C "$P0_READLINK" -- "$P0_FD_SELF" 2>&1)" || rc=$?
+    rawpath="$(LC_ALL=C "$P0_READLINK" -v -- "$P0_FD_SELF" 2>&1)" || rc=$?
     if [ "$rc" -ne 0 ]; then
-        p0_sanitize "$rawpath"
+        p0_prepare_readlink_detail "$rawpath"
         exec 8>&-
-        p0_stop "evidence_binding_unprobeable path=$P0_FD_SELF rc=$rc detail=$P0_SAFE"
+        p0_stop "evidence_binding_unprobeable path=$P0_FD_SELF rc=$rc detail=[$P0_SAFE] diagnostic_shape=$P0_RESOLUTION"
     fi
     rc=0
     fdid="$(LC_ALL=C "$P0_STAT" -L -c '%d:%i' -- "$P0_FD_SELF" 2>&1)" || rc=$?
@@ -565,14 +675,26 @@ p0_capture_numeric() {
     raw="$(LC_ALL=C "$P0_ID" "$flag" 2>&1)" || rc=$?
     if [ "$rc" -ne 0 ]; then
         p0_sanitize "$raw"
-        p0_stop "identity_probe_failed field=$label flag=$flag rc=$rc detail=$P0_SAFE"
+        [ -n "$P0_SAFE" ] || P0_SAFE="producer_diagnostic_absent"
+        if [ "$label" = gids ]; then
+            p0_stop "group_query_not_evaluable rc=$rc detail=[$P0_SAFE]"
+        fi
+        p0_stop "identity_probe_failed field=$label flag=$flag rc=$rc detail=[$P0_SAFE]"
     fi
     case "$raw" in
         *$'\r'*|*$'\n'*)
             p0_sanitize "$raw"
-            p0_stop "identity_probe_multiline field=$label flag=$flag detail=$P0_SAFE" ;;
+            if [ "$label" = gids ]; then
+                p0_stop "group_query_not_evaluable rc=0 detail=[response_multiline:$P0_SAFE]"
+            fi
+            p0_stop "identity_probe_multiline field=$label flag=$flag detail=[$P0_SAFE]" ;;
     esac
-    [ -n "$raw" ] || p0_stop "identity_probe_empty field=$label flag=$flag"
+    if [ -z "$raw" ]; then
+        if [ "$label" = gids ]; then
+            p0_stop "group_query_not_evaluable rc=0 detail=[response_empty]"
+        fi
+        p0_stop "identity_probe_empty field=$label flag=$flag"
+    fi
     P0_CAPTURE="$raw"
 }
 
@@ -589,15 +711,15 @@ p0_record_identity() {
     p0_capture_numeric gids -G; gids="$P0_CAPTURE"
     for g in $gids; do
         case "$g" in
-            *[!0-9]*) p0_stop "identity_probe_unparsable field=gids value=[$gids] expected=decimal_digits" ;;
+            *[!0-9]*) p0_stop "group_query_not_evaluable rc=0 detail=[response_not_decimal_gid_list]" ;;
         esac
         count=$(( count + 1 ))
     done
-    [ "$count" -ge 1 ] || p0_stop "identity_probe_empty field=gids value=[$gids]"
+    [ "$count" -ge 1 ] || p0_stop "group_query_not_evaluable rc=0 detail=[response_empty]"
     printf 'P0_identity uid=%s gid=%s gids=[%s] gid_count=%s form=numeric_only\n' \
         "$uid" "$gid" "$gids" "$count"
-    [ "$uid" = "$P0_EXPECT_UID" ] \
-        || p0_stop "identity_unexpected uid=$uid expected=$P0_EXPECT_UID"
+    # The preregistered login comparison is made after the unique `gatea`
+    # record is available, so every `identity_unexpected` line has one grammar.
     # Whole-word match on the space-padded list, so gid 0 does not match gid 10.
     for f in $P0_FORBIDDEN_GIDS; do
         case " $gids " in
@@ -667,29 +789,35 @@ p0_record_identity
 # established and the only truthful outcome is `error` (Pattern 1: an inability
 # to evaluate is not a result). The merged capture makes this decidable with no
 # temp file: stderr text destroys the empty shape (Pattern 6).
-# ANY byte includes a bare newline. Plain command substitution deletes trailing
-# newlines, so `$(...)` alone cannot tell a truly empty rc-2 capture from one
-# carrying only newline bytes, and the latter was falsely admitted as a valid
-# no-match (C13 re-audit finding 1). The capture below appends a sentinel byte
-# INSIDE the substitution and strips it afterwards, so the complete merged
-# stream survives and the emptiness question is decided on the real bytes.
+# ANY byte includes a bare newline or NUL. Bash variables cannot contain NUL,
+# so an ordinary command substitution cannot distinguish NUL-only output from
+# an empty stream. The capture below uses NUL as an out-of-band record delimiter:
+# the producer appends a textual rc record after its stream, and `mapfile -d ''`
+# must receive exactly two fields. Any NUL produced by getent creates an extra
+# field and is therefore an error before positive absence can be asserted.
 p0_resolve_passwd() {
-    local acct="$1" raw rc=0 had_bytes=no n_colon rest f1 f2 f3 f4 f5 f6 f7
+    local acct="$1" raw rc=0 had_bytes=no n_colon rest f1 f2 f3 f4 f5 f6 f7 rc_record
+    local -a p0_pw_parts=()
     P0_PW_OUTCOME="error"
     P0_PW_NAME=""; P0_PW_UID=""; P0_PW_GID=""; P0_PW_DIAG=""
-    # The sentinel `x` protects the trailing bytes; the tool's own rc is carried
-    # out by re-exiting the substitution subshell with it, so `printf`'s status
-    # never masks getent's (a plain `; printf x` would always yield rc 0). getent
-    # is placed on the left of `||` so that an inherited `set -e` is guaranteed
-    # to be ignored for it and cannot kill the subshell before the sentinel is
-    # written.
-    raw="$(LC_ALL=C "$P0_GETENT" passwd "$acct" 2>&1 || getent_rc=$?; printf x; exit "${getent_rc:-0}")" || rc=$?
-    # If the sentinel is missing the capture was truncated by something other
-    # than getent, so its trailing bytes are unknown and no emptiness claim can
-    # be made from it (Pattern 1). Fail closed rather than re-open the defect.
-    case "$raw" in
-        *x) raw="${raw%x}" ;;
-        *)  P0_PW_DIAG="capture_sentinel_lost"; P0_PW_OUTCOME="error"; return 0 ;;
+    mapfile -d '' -t p0_pw_parts < <(
+        getent_rc=0
+        LC_ALL=C "$P0_GETENT" passwd "$acct" 2>&1 || getent_rc=$?
+        printf '\0P0_GETENT_RC=%s\0' "$getent_rc"
+    )
+    if [ "${#p0_pw_parts[@]}" -ne 2 ]; then
+        P0_PW_DIAG="nul_byte_in_merged_capture"
+        P0_PW_OUTCOME="error"
+        return 0
+    fi
+    raw="${p0_pw_parts[0]}"
+    rc_record="${p0_pw_parts[1]}"
+    case "$rc_record" in
+        P0_GETENT_RC=*) rc="${rc_record#P0_GETENT_RC=}" ;;
+        *) P0_PW_DIAG="capture_sentinel_lost"; P0_PW_OUTCOME="error"; return 0 ;;
+    esac
+    case "$rc" in
+        ''|*[!0-9]*) P0_PW_DIAG="capture_status_unparseable"; P0_PW_OUTCOME="error"; return 0 ;;
     esac
     # Decided on the PRESERVED capture, before any normalization: did the tool
     # emit a single byte of anything at all?
@@ -755,9 +883,11 @@ p0_resolve_accounts() {
         found)
             printf 'P0_account account=gatea outcome=resolved uid=%s gid=%s name_diag=[%s] via=pinned_getent_passwd\n' \
                 "$P0_PW_UID" "$P0_PW_GID" "$P0_PW_NAME"
-            if [ "$P0_PW_UID" != "$live_uid" ] || [ "$P0_PW_UID" != "$P0_EXPECT_UID" ] \
-               || [ "$P0_PW_GID" != "$live_gid" ]; then
-                p0_stop "identity_unexpected account=gatea observed_numeric=$P0_PW_UID:$P0_PW_GID expected_numeric=$live_uid:$live_gid,prereg_uid=$P0_EXPECT_UID"
+            if [ "$live_uid" != "$P0_PW_UID" ] || [ "$live_gid" != "$P0_PW_GID" ]; then
+                p0_stop "identity_unexpected observed_numeric=$live_uid:$live_gid expected_numeric=$P0_PW_UID:$P0_PW_GID account=gatea"
+            fi
+            if [ "$P0_PW_UID" != "$P0_EXPECT_UID" ]; then
+                p0_stop "identity_unexpected observed_numeric=$P0_PW_UID:$P0_PW_GID expected_numeric=$P0_EXPECT_UID:$P0_PW_GID account=gatea"
             fi
             printf 'P0_account_admitted account=gatea numeric=%s:%s matches=live_id_and_prereg_uid name=diagnostic_only\n' \
                 "$P0_PW_UID" "$P0_PW_GID"
@@ -778,7 +908,7 @@ p0_resolve_accounts() {
             printf 'P0_account account=mtc-bridge outcome=resolved uid=%s gid=%s name_diag=[%s] via=pinned_getent_passwd\n' \
                 "$P0_PW_UID" "$P0_PW_GID" "$P0_PW_NAME"
             if [ "$P0_PW_UID" != "$P0_STATE_UID" ] || [ "$P0_PW_GID" != "$P0_STATE_GID" ]; then
-                p0_stop "state_account_resolution_unexpected account=mtc-bridge observed_numeric=$P0_PW_UID:$P0_PW_GID expected_numeric=$P0_STATE_UID:$P0_STATE_GID"
+                p0_stop "identity_unexpected observed_numeric=$P0_PW_UID:$P0_PW_GID expected_numeric=$P0_STATE_UID:$P0_STATE_GID account=mtc-bridge"
             fi
             printf 'P0_account_admitted account=mtc-bridge numeric=%s:%s matches=prereg_state_uid_gid name=diagnostic_only\n' \
                 "$P0_PW_UID" "$P0_PW_GID"
@@ -796,45 +926,74 @@ printf 'P0_SECTION accounts\n'
 p0_resolve_accounts
 
 # ---------------------------------------------------------------------------
-# SECTION: namespace identity (WP-I audit F2)
+# SECTION: execution-domain binding (prereg 8.1 row 8; WP-I audit F2)
 # ---------------------------------------------------------------------------
-# RECORD ONLY. This block observes the net, pid and mount namespace identities
-# of ITS OWN process and prints them. It does not compare them with any
-# service's, does not read /proc/1/ns/* and does not claim that they are the
-# host's initial namespaces - labelling a local observation `bound=initial` was
-# exactly audit-2 A2-F2. The value of the record is that a later listener or
-# unit claim can be shown to have been made from these namespaces, or shown not
-# to have been. Unreadable is STOP, never a silent omission.
-p0_read_ns() {
-    local label="$1" path="$2" raw rc=0
-    raw="$(LC_ALL=C "$P0_READLINK" -- "$path" 2>&1)" || rc=$?
+# Every identity is compared with a value supplied by the deploy channel and
+# frozen into this block. Visible PID 1 is never consulted. Namespace equality
+# plus the root dev:inode binds the login's kernel domain and chroot-visible root;
+# the successor's mount projection separately binds the preregistered path set.
+p0_read_domain_ns() {
+    local field="$1" label="$2" path="$3" attested="$4" raw rc=0 inner
+    raw="$(LC_ALL=C "$P0_READLINK" -v -- "$path" 2>&1)" || rc=$?
     if [ "$rc" -ne 0 ]; then
-        p0_sanitize "$raw"
-        p0_stop "namespace_unreadable ns=$label path=$path rc=$rc detail=$P0_SAFE"
+        p0_prepare_readlink_detail "$raw"
+        p0_stop "execution_domain_unattested field=$field rc=$rc detail=[$P0_SAFE] diagnostic_shape=$P0_RESOLUTION"
     fi
-    [ -n "$raw" ] || p0_stop "namespace_identity_empty ns=$label path=$path"
+    [ -n "$raw" ] || p0_stop "execution_domain_unattested field=$field detail=namespace_identity_empty"
     case "$raw" in
         *[![:print:]]*|*[[:space:]]*)
-            p0_stop "namespace_identity_unprintable ns=$label path=$path" ;;
+            p0_stop "execution_domain_unattested field=$field detail=namespace_identity_unprintable" ;;
     esac
+    case "$raw" in
+        "$label":'['*']') inner="${raw#*:\[}"; inner="${inner%\]}" ;;
+        *) p0_stop "execution_domain_unattested field=$field detail=namespace_identity_grammar" ;;
+    esac
+    case "$inner" in
+        ''|*[!0-9]*) p0_stop "execution_domain_unattested field=$field detail=namespace_identity_grammar" ;;
+    esac
+    [ "$raw" = "$attested" ] \
+        || p0_stop "execution_domain_mismatch field=$field observed=$raw attested=$attested"
     P0_NS_VALUE="$raw"
 }
 
-p0_record_namespaces() {
-    local net pid mnt
-    p0_read_ns net "$P0_NS_NET_PATH"; net="$P0_NS_VALUE"
-    p0_read_ns pid "$P0_NS_PID_PATH"; pid="$P0_NS_VALUE"
-    p0_read_ns mnt "$P0_NS_MNT_PATH"; mnt="$P0_NS_VALUE"
-    printf 'P0_namespace net=%s pid=%s mnt=%s scope=self_only claim=record_only binding=not_established\n' \
-        "$net" "$pid" "$mnt"
+p0_assert_execution_domain() {
+    local user mnt pid net root_canon root_id rc=0
+    p0_read_domain_ns user_namespace user "$P0_NS_USER_PATH" "$P0_ATTESTED_USER_NS"; user="$P0_NS_VALUE"
+    p0_read_domain_ns mount_namespace mnt "$P0_NS_MNT_PATH" "$P0_ATTESTED_MNT_NS"; mnt="$P0_NS_VALUE"
+    p0_read_domain_ns pid_namespace pid "$P0_NS_PID_PATH" "$P0_ATTESTED_PID_NS"; pid="$P0_NS_VALUE"
+    p0_read_domain_ns network_namespace net "$P0_NS_NET_PATH" "$P0_ATTESTED_NET_NS"; net="$P0_NS_VALUE"
+    root_canon="$(LC_ALL=C "$P0_READLINK" -v -f -- / 2>&1)" || rc=$?
+    if [ "$rc" -ne 0 ]; then
+        p0_prepare_readlink_detail "$root_canon"
+        p0_stop "execution_domain_unattested field=root_mount_identity rc=$rc detail=[$P0_SAFE] diagnostic_shape=$P0_RESOLUTION"
+    fi
+    [ "$root_canon" = / ] \
+        || p0_stop "execution_domain_unattested field=root_mount_identity detail=root_not_literal_canonical"
+    rc=0
+    root_id="$(LC_ALL=C "$P0_STAT" -L -c '%d:%i' -- / 2>&1)" || rc=$?
+    if [ "$rc" -ne 0 ]; then
+        p0_sanitize "$root_id"; [ -n "$P0_SAFE" ] || P0_SAFE="stat_diagnostic_absent"
+        p0_stop "execution_domain_unattested field=root_mount_identity rc=$rc detail=[$P0_SAFE]"
+    fi
+    case "$root_id" in
+        *[!0-9:]*|*:*:*|:*|*:|'')
+            p0_stop "execution_domain_unattested field=root_mount_identity detail=dev_inode_grammar" ;;
+        *:*) : ;;
+        *) p0_stop "execution_domain_unattested field=root_mount_identity detail=dev_inode_grammar" ;;
+    esac
+    [ "$root_id" = "$P0_ATTESTED_ROOT_MOUNT_ID" ] \
+        || p0_stop "execution_domain_mismatch field=root_mount_identity observed=$root_id attested=$P0_ATTESTED_ROOT_MOUNT_ID"
+    printf 'P0_execution_domain user_ns=%s mnt_ns=%s pid_ns=%s net_ns=%s root_mount_id=%s binding=deploy_attested_exact visible_pid1_comparison=not_used\n' \
+        "$user" "$mnt" "$pid" "$net" "$root_id"
 }
 
-printf 'P0_SECTION namespaces\n'
-p0_record_namespaces
+printf 'P0_SECTION execution_domain\n'
+p0_assert_execution_domain
 
 # ---------------------------------------------------------------------------
 # SECTION: system-manager readiness (prereg 8.1 row 7)
 # ---------------------------------------------------------------------------
+# This row is unreachable until the execution-domain gate above has passed.
 # Presence of `systemctl` proves nothing about the manager: a denied bus, an
 # isolated PID or mount namespace, or a polkit refusal all make the query fail
 # BEFORE any unit state is returned, and a later run would then read "could not
@@ -911,9 +1070,10 @@ p0_classify_stat_shape() {
     local p="$1" raw="$2"
     P0_SHAPE=""
     case "$raw" in
-        "stat: cannot statx '$p': $P0_EACCES_TEXT"|"stat: cannot stat '$p': $P0_EACCES_TEXT")
+        "$P0_STAT: cannot statx '$p': $P0_EACCES_TEXT"|"$P0_STAT: cannot stat '$p': $P0_EACCES_TEXT")
             P0_SHAPE="eacces" ;;
-        "stat: cannot statx '$p': $P0_ENOENT_TEXT"|"stat: cannot stat '$p': $P0_ENOENT_TEXT")
+        "$P0_STAT: cannot statx '$p': $P0_ENOENT_TEXT"|"$P0_STAT: cannot stat '$p': $P0_ENOENT_TEXT"|\
+        "$P0_STAT: cannot stat '$p': $P0_ENOENT_TEXT (os error 2)")
             P0_SHAPE="enoent" ;;
     esac
 }
@@ -984,10 +1144,10 @@ p0_assert_venv_root() {
             p0_fail "venv_root_is_symlink kind=$P0_KIND path=$d" ;;
         *) p0_fail "venv_root_kind_unexpected kind=$P0_KIND path=$d expected=dir" ;;
     esac
-    canon="$(LC_ALL=C "$P0_READLINK" -f -- "$d" 2>&1)" || rc=$?
+    canon="$(LC_ALL=C "$P0_READLINK" -v -f -- "$d" 2>&1)" || rc=$?
     if [ "$rc" -ne 0 ]; then
-        p0_sanitize "$canon"
-        p0_stop "venv_root_canonicalization_failed path=$d rc=$rc detail=$P0_SAFE"
+        p0_prepare_readlink_detail "$canon"
+        p0_stop "venv_root_canonicalization_failed path=$d rc=$rc detail=[$P0_SAFE] diagnostic_shape=$P0_RESOLUTION"
     fi
     p0_sanitize "$canon"
     [ "$canon" = "$d" ] \
@@ -1082,7 +1242,7 @@ printf 'P0_out_of_scope class=RO_STAGE item=every_prereg_8.2_row stage=ro implem
 # Written by stating the claim and then deleting every word the executed
 # predicates cannot establish. What survives is the log line.
 printf 'P0_SECTION done\n'
-printf 'P0_claim establishes=executing_numeric_identity_of_this_login,name_to_numeric_resolution_of_gatea_and_mtc_bridge_via_getent,forbidden_gid_non_membership,resolution_and_executability_of_the_12_listed_RO_tools,evidence_stdout_bound_to_create_once_leaf,system_manager_answered_a_Manager_property_query_over_the_system_bus_from_this_login_namespaces,venv_interpreter_leaf_kind_and_executability,self_namespace_identities_recorded\n'
-printf 'P0_claim does_not_establish=any_RO_row_host_state,tool_provenance_or_distribution_identity,nss_source_identity_of_getent_resolution,round1_4_probe_execution_environment_binding,identity_of_the_manager_that_answered,binding_of_these_namespaces_to_any_service_or_to_the_host_initial_namespaces,interpreter_intermediate_component_or_symlink_target_binding,interpreter_version_or_package_parity,anything_under_the_protected_metadata_directories,anything_about_group_C\n'
+printf 'P0_claim establishes=executing_numeric_identity_of_this_login,name_to_numeric_resolution_of_gatea_and_mtc_bridge_via_getent,forbidden_gid_non_membership,resolution_and_executability_of_the_12_listed_RO_tools,evidence_stdout_bound_to_create_once_leaf,deploy_attested_user_mount_pid_network_namespaces_and_root_mount_identity,system_manager_answered_a_Manager_property_query_over_the_system_bus_after_execution_domain_binding,venv_interpreter_leaf_kind_and_executability\n'
+printf 'P0_claim does_not_establish=any_RO_row_host_state,tool_provenance_or_distribution_identity,nss_source_identity_of_getent_resolution,round1_4_probe_execution_environment_binding,identity_of_the_manager_that_answered,binding_of_these_namespaces_to_any_service,accepted_mount_topology_for_every_preregistered_host_path,interpreter_intermediate_component_or_symlink_target_binding,interpreter_version_or_package_parity,anything_under_the_protected_metadata_directories,anything_about_group_C\n'
 printf 'P0_claim scope=this_login_only identity=numeric_only mutation=none_in_this_block evidence_leaf=allocated_by_RP0-BOOTSTRAP child_env=mixed coreutils_launch=recorded_absolute_after_PATH_resolution inherited_env=stat_readlink_id_getent cleared_env=systemctl_and_interpreter_only cwd=caller_inherited tmpdir=caller_inherited_or_unset\n'
 printf 'P0 PASS\n'
