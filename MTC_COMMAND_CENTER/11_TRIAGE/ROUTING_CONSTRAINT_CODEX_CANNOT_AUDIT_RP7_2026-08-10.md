@@ -32,6 +32,25 @@ read-only, negative result, and exactly the kind of content that trips the class
 
 Narrower bands do not fix this. They just move the death later.
 
+## CORRECTION, ~22:05 — Part B completed, so the constraint is narrower than first stated
+
+`RP7_CODEX_T0_AUDIT_R5_PART_B_2026-08-10.md` — rows 20–24 plus the evidence contract —
+**completed normally and returned `BLOCK: 4`**, with executed fixtures of its own. The title
+of this file overstates the case and is kept only so the constraint stays findable.
+
+The accurate statement: **the kills correlate with the fixture-heavy bands**, not with RP7
+as a whole. The full review and Part A both centred on the five repairs and rows 10–19,
+whose falsifications require interpreter replacement, namespace and symlink probing. Part B
+centred on record grammar, ordering and evidence re-runs, and produced its findings from
+parsing and structural tests that trip nothing.
+
+So the routing rule is: **give the Codex slot the grammar, ordering, conservation and
+evidence-contract bands, and give the interpreter/namespace/filesystem-escape bands to a
+Claude flagship.** That split is not ideal — the family that found the venv hole is the one
+now excluded from exactly that kind of work — but it is honest and it keeps Codex
+contributing real findings. Part B alone produced two HIGH findings the Claude rounds had
+not raised.
+
 ## What this means for the T0 contract
 
 The two-flagship contract exists because the two families have different blind spots — the
