@@ -205,13 +205,17 @@ P0_ENOENT_TEXT="No such file or directory"
 # systemctl             - prereg 8.1 rows 6-7; B2/B4 manager-backed rows.
 # ss                    - prereg 8.1 row 3; B6 listener set.
 # curl                  - prereg 8.1 row 4; B5 loopback control-endpoint GET.
+# getent                - prereg 8.1 rows 1-3 (repair C13): unique complete
+#                         passwd-record resolution of the `gatea` and
+#                         `mtc-bridge` names to numeric uid/gid. Names are
+#                         diagnostic only; only the numerics are compared.
 # `stat` is listed first only so that the metadata pass has a resolved absolute
 # `stat` to use; resolution and executability themselves are decided by shell
 # builtins alone, so the order carries no privilege.
 # NOT in this list, deliberately: the root-side pinned python3 of RPD-VERIFY
 # (root-side, out of P0 scope), and the per-SHA venv interpreter, which has its
 # own preregistered absolute path and its own arm below.
-P0_RO_TOOLS="stat readlink id env find grep sha256sum awk systemctl ss curl"
+P0_RO_TOOLS="stat readlink id env find grep sha256sum awk systemctl ss curl getent"
 
 # ---------------------------------------------------------------------------
 # SECTION: prerequisites
@@ -264,6 +268,20 @@ p0_require_uint() {
 # model is unprivileged, so a preregistration naming uid 0 is a plumbing error.
 p0_require_uint P0_EXPECT_UID "${P0_EXPECT_UID:-}" 1
 : "${P0_EXPECT_UID:?preregistered numeric uid of the route login is required}"
+
+# P0_STATE_UID / P0_STATE_GID - the preregistered NUMERIC uid/gid of the
+# dynamically allocated mtc-bridge service account (prereg section 2,
+# WPI_STATE_UID=999 / WPI_STATE_GID=988; repair C13). Deliberately not equal
+# to the route login's identity and, by design, NOT assumed uid==gid
+# (999 != 988). Same mechanism as P0_EXPECT_UID: an rc-3 pre-check, then a
+# `:?` fail-closed backstop that fires only if the pre-check is removed (the
+# F4 pattern). Zero is refused as an INPUT for the same reason P0_EXPECT_UID
+# refuses it: the service account is unprivileged, so a preregistration naming
+# uid/gid 0 is a plumbing error, not a host observation.
+p0_require_uint P0_STATE_UID "${P0_STATE_UID:-}" 1
+: "${P0_STATE_UID:?preregistered numeric uid of the mtc-bridge service account is required}"
+p0_require_uint P0_STATE_GID "${P0_STATE_GID:-}" 1
+: "${P0_STATE_GID:?preregistered numeric gid of the mtc-bridge service account is required}"
 
 # P0_FORBIDDEN_GIDS - the preregistered NUMERIC gids the feasibility ledger
 # asserts this login is NOT in (prereg 8.1 row 2: the root group and the
@@ -347,6 +365,8 @@ P0_PY="$P0_VENV_ROOT/bin/python"
 
 printf 'P0_SECTION preregistered_inputs\n'
 printf 'P0_input name=P0_EXPECT_UID value=%s\n' "$P0_EXPECT_UID"
+printf 'P0_input name=P0_STATE_UID value=%s\n' "$P0_STATE_UID"
+printf 'P0_input name=P0_STATE_GID value=%s\n' "$P0_STATE_GID"
 printf 'P0_input name=P0_FORBIDDEN_GIDS value=[%s] count=%s\n' \
     "$P0_FORBIDDEN_GIDS" "$P0_FORBIDDEN_GID_COUNT"
 printf 'P0_input name=P0_VENV_ROOT value=%s\n' "$P0_VENV_ROOT"
@@ -451,6 +471,8 @@ p0_lookup "$P0_TOOLS_RESOLVED" env       || p0_stop "missing_tool tool=env detai
 P0_ENV="$P0_LOOKUP"
 p0_lookup "$P0_TOOLS_RESOLVED" systemctl || p0_stop "missing_tool tool=systemctl detail=absent_from_resolved_map"
 P0_SYSTEMCTL="$P0_LOOKUP"
+p0_lookup "$P0_TOOLS_RESOLVED" getent    || p0_stop "missing_tool tool=getent detail=absent_from_resolved_map"
+P0_GETENT="$P0_LOOKUP"
 
 P0_TOOL_COUNT=0
 for p0_t in $P0_RO_TOOLS; do
@@ -581,6 +603,144 @@ p0_record_identity() {
 
 printf 'P0_SECTION identity\n'
 p0_record_identity
+
+# ---------------------------------------------------------------------------
+# SECTION: account resolution (prereg 8.1 rows 1-3, repair C13)
+# ---------------------------------------------------------------------------
+# The identity section above proved WHO this process is numerically and that
+# the live numerics agree with P0_EXPECT_UID and the forbidden-gid ledger. It
+# did NOT confirm that the NAMES `gatea` (the route login) and `mtc-bridge`
+# (the dynamically allocated service account) resolve to those numerics. C13
+# closed that gap: the names are the resolver contract, but the ADMISSION is
+# numeric only (Pattern 8 - the name is not the identity).
+#
+# This arm resolves `getent passwd gatea` and `getent passwd mtc-bridge` with
+# the PINNED absolute getent from the inventory (row 1), parses each record
+# whole under the passwd grammar (Pattern 5 - full-record parse; duplicate,
+# multiline or structurally malformed records are ambiguous and STOP; a valid
+# no-match is a distinct outcome from a lookup error), and adjudicates the
+# numerics:
+#   gatea      - uid must equal the live `id -u` AND P0_EXPECT_UID; primary gid
+#                must equal the live `id -g`. A mismatch is identity_unexpected
+#                rc 3 (the F2 polarity ruling: an identity wider/different than
+#                preregistered is re-adjudication, never a silent run).
+#   mtc-bridge - uid:gid must equal the preregistered P0_STATE_UID:P0_STATE_GID
+#                (999:988). A valid no-match (getent rc 2) OR a numeric mismatch
+#                is state_account_resolution_unexpected rc 3.
+# A getent that is missing/unpinnable, or a lookup error, or an unparsable or
+# duplicate record, is an inability to evaluate: identity_unresolvable rc 3.
+# Names, gecos, home and shell are captured as DIAGNOSTIC fields only; no name
+# is ever asserted or compared.
+#
+# The live id -u/-g are recaptured here via the same adjudicated
+# p0_capture_numeric path the identity section uses, so this arm is
+# self-contained and the existing identity section stays byte-for-byte
+# untouched. getent runs with the caller environment inherited and LC_ALL
+# forced to C, exactly like the `id` probe it mirrors; it is NOT a cleared-env
+# launch (those are reserved for the manager query and the interpreter
+# execution). The row-3 group half - numeric `id -G` excluding gids 0 and 988
+# - remains the identity section's P0_FORBIDDEN_GIDS responsibility and is not
+# re-asserted here.
+
+# Parse one `getent passwd <name>` record into globals, without ever asserting
+# a name. Sets P0_PW_OUTCOME to one of: found | nomatch | error. On `found` it
+# also sets P0_PW_NAME, P0_PW_UID, P0_PW_GID (numerics, validated) and
+# P0_PW_DIAG (sanitized remaining fields). On `nomatch`/`error` it sets only
+# P0_PW_DIAG. No branch here decides an admission - the caller adjudicates the
+# outcome. getent rc convention (Linux getent(1)): 0 = found, 2 = key absent
+# (valid no-match), anything else = lookup/service error.
+p0_resolve_passwd() {
+    local acct="$1" raw rc=0 n_colon rest f1 f2 f3 f4 f5 f6 f7
+    P0_PW_OUTCOME="error"
+    P0_PW_NAME=""; P0_PW_UID=""; P0_PW_GID=""; P0_PW_DIAG=""
+    raw="$(LC_ALL=C "$P0_GETENT" passwd "$acct" 2>&1)" || rc=$?
+    case "$rc" in
+        0) : ;;
+        2) P0_PW_OUTCOME="nomatch"; p0_sanitize "$raw"; P0_PW_DIAG="$P0_SAFE"; return 0 ;;
+        *) p0_sanitize "$raw"; P0_PW_DIAG="$P0_SAFE"; P0_PW_OUTCOME="error"; return 0 ;;
+    esac
+    # rc 0: status adjudicated before any byte is interpreted (Pattern 6).
+    case "$raw" in
+        *$'\r'*|*$'\n'*)
+            p0_sanitize "$raw"; P0_PW_DIAG="$P0_SAFE"
+            P0_PW_OUTCOME="error"; return 0 ;;
+    esac
+    [ -n "$raw" ] || { P0_PW_OUTCOME="error"; P0_PW_DIAG="empty_record_at_rc0"; return 0; }
+    # Exactly seven colon-separated fields (Pattern 5 full-record parse). gecos,
+    # home and shell contain no colon in a valid passwd record, so a colon count
+    # other than six is structural ambiguity, never a record.
+    p0_count_substr "$raw" ":"; n_colon="$P0_COUNT"
+    if [ "$n_colon" -ne 6 ]; then
+        p0_sanitize "$raw"; P0_PW_DIAG="$P0_SAFE"
+        P0_PW_OUTCOME="error"; return 0
+    fi
+    f1="${raw%%:*}"; rest="${raw#*:}"    # name
+    f2="${rest%%:*}"; rest="${rest#*:}"  # passwd placeholder
+    f3="${rest%%:*}"; rest="${rest#*:}"  # uid
+    f4="${rest%%:*}"; rest="${rest#*:}"  # gid
+    f5="${rest%%:*}"; rest="${rest#*:}"  # gecos
+    f6="${rest%%:*}"; rest="${rest#*:}"  # home
+    f7="$rest"                           # shell
+    case "$f3" in ''|*[!0-9]*)
+        p0_sanitize "$raw"; P0_PW_DIAG="$P0_SAFE"; P0_PW_OUTCOME="error"; return 0 ;; esac
+    case "$f4" in ''|*[!0-9]*)
+        p0_sanitize "$raw"; P0_PW_DIAG="$P0_SAFE"; P0_PW_OUTCOME="error"; return 0 ;; esac
+    P0_PW_NAME="$f1"; P0_PW_UID="$f3"; P0_PW_GID="$f4"
+    p0_sanitize "$f2:$f5:$f6:$f7"; P0_PW_DIAG="$P0_SAFE"
+    P0_PW_OUTCOME="found"; return 0
+}
+
+p0_resolve_accounts() {
+    local live_uid live_gid
+    p0_capture_numeric uid -u; live_uid="$P0_CAPTURE"
+    p0_capture_numeric gid -g; live_gid="$P0_CAPTURE"
+
+    # gatea: the named route login. A complete unique record must map the name
+    # to numerics equal to BOTH the live id -u/-g and the preregistered uid.
+    p0_resolve_passwd gatea
+    case "$P0_PW_OUTCOME" in
+        found)
+            printf 'P0_account account=gatea outcome=resolved uid=%s gid=%s name_diag=[%s] via=pinned_getent_passwd\n' \
+                "$P0_PW_UID" "$P0_PW_GID" "$P0_PW_NAME"
+            if [ "$P0_PW_UID" != "$live_uid" ] || [ "$P0_PW_UID" != "$P0_EXPECT_UID" ] \
+               || [ "$P0_PW_GID" != "$live_gid" ]; then
+                p0_stop "identity_unexpected account=gatea observed_numeric=$P0_PW_UID:$P0_PW_GID expected_numeric=$live_uid:$live_gid,prereg_uid=$P0_EXPECT_UID"
+            fi
+            printf 'P0_account_admitted account=gatea numeric=%s:%s matches=live_id_and_prereg_uid name=diagnostic_only\n' \
+                "$P0_PW_UID" "$P0_PW_GID"
+            ;;
+        nomatch)
+            p0_stop "identity_unresolvable account=gatea rc=2 detail=getent_valid_no_match_for_route_login"
+            ;;
+        error)
+            p0_stop "identity_unresolvable account=gatea detail=[$P0_PW_DIAG]"
+            ;;
+    esac
+
+    # mtc-bridge: the dynamically allocated service account. A complete unique
+    # record must map the name to the preregistered P0_STATE_UID:P0_STATE_GID.
+    p0_resolve_passwd mtc-bridge
+    case "$P0_PW_OUTCOME" in
+        found)
+            printf 'P0_account account=mtc-bridge outcome=resolved uid=%s gid=%s name_diag=[%s] via=pinned_getent_passwd\n' \
+                "$P0_PW_UID" "$P0_PW_GID" "$P0_PW_NAME"
+            if [ "$P0_PW_UID" != "$P0_STATE_UID" ] || [ "$P0_PW_GID" != "$P0_STATE_GID" ]; then
+                p0_stop "state_account_resolution_unexpected account=mtc-bridge observed_numeric=$P0_PW_UID:$P0_PW_GID expected_numeric=$P0_STATE_UID:$P0_STATE_GID"
+            fi
+            printf 'P0_account_admitted account=mtc-bridge numeric=%s:%s matches=prereg_state_uid_gid name=diagnostic_only\n' \
+                "$P0_PW_UID" "$P0_PW_GID"
+            ;;
+        nomatch)
+            p0_stop "state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=$P0_STATE_UID:$P0_STATE_GID detail=getent_valid_no_match"
+            ;;
+        error)
+            p0_stop "identity_unresolvable account=mtc-bridge detail=[$P0_PW_DIAG]"
+            ;;
+    esac
+}
+
+printf 'P0_SECTION accounts\n'
+p0_resolve_accounts
 
 # ---------------------------------------------------------------------------
 # SECTION: namespace identity (WP-I audit F2)
@@ -869,7 +1029,7 @@ printf 'P0_out_of_scope class=RO_STAGE item=every_prereg_8.2_row stage=ro implem
 # Written by stating the claim and then deleting every word the executed
 # predicates cannot establish. What survives is the log line.
 printf 'P0_SECTION done\n'
-printf 'P0_claim establishes=executing_numeric_identity_of_this_login,forbidden_gid_non_membership,resolution_and_executability_of_the_11_listed_RO_tools,evidence_stdout_bound_to_create_once_leaf,system_manager_answered_a_Manager_property_query_over_the_system_bus_from_this_login_namespaces,venv_interpreter_leaf_kind_and_executability,self_namespace_identities_recorded\n'
-printf 'P0_claim does_not_establish=any_RO_row_host_state,tool_provenance_or_distribution_identity,round1_4_probe_execution_environment_binding,identity_of_the_manager_that_answered,binding_of_these_namespaces_to_any_service_or_to_the_host_initial_namespaces,interpreter_intermediate_component_or_symlink_target_binding,interpreter_version_or_package_parity,anything_under_the_protected_metadata_directories,anything_about_group_C\n'
-printf 'P0_claim scope=this_login_only identity=numeric_only mutation=none_in_this_block evidence_leaf=allocated_by_RP0-BOOTSTRAP child_env=mixed coreutils_launch=recorded_absolute_after_PATH_resolution inherited_env=stat_readlink_id cleared_env=systemctl_and_interpreter_only cwd=caller_inherited tmpdir=caller_inherited_or_unset\n'
+printf 'P0_claim establishes=executing_numeric_identity_of_this_login,name_to_numeric_resolution_of_gatea_and_mtc_bridge_via_getent,forbidden_gid_non_membership,resolution_and_executability_of_the_12_listed_RO_tools,evidence_stdout_bound_to_create_once_leaf,system_manager_answered_a_Manager_property_query_over_the_system_bus_from_this_login_namespaces,venv_interpreter_leaf_kind_and_executability,self_namespace_identities_recorded\n'
+printf 'P0_claim does_not_establish=any_RO_row_host_state,tool_provenance_or_distribution_identity,nss_source_identity_of_getent_resolution,round1_4_probe_execution_environment_binding,identity_of_the_manager_that_answered,binding_of_these_namespaces_to_any_service_or_to_the_host_initial_namespaces,interpreter_intermediate_component_or_symlink_target_binding,interpreter_version_or_package_parity,anything_under_the_protected_metadata_directories,anything_about_group_C\n'
+printf 'P0_claim scope=this_login_only identity=numeric_only mutation=none_in_this_block evidence_leaf=allocated_by_RP0-BOOTSTRAP child_env=mixed coreutils_launch=recorded_absolute_after_PATH_resolution inherited_env=stat_readlink_id_getent cleared_env=systemctl_and_interpreter_only cwd=caller_inherited tmpdir=caller_inherited_or_unset\n'
 printf 'P0 PASS\n'

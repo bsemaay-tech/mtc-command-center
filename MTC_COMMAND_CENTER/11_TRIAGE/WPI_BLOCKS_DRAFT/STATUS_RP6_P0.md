@@ -20,3 +20,55 @@ the block is not frozen, accepted, dispatchable, or authorised for host executio
 
 `SELF_QA_RP6.md` records literal local commands and real RED/GREEN output. No host
 was contacted; no ssh, network, backtest, deployment, or trading action was run.
+
+## C13 round — getent resolution arm (GLM-5.2 implementer, 2026-08-10)
+
+Added by GLM-5.2 as IMPLEMENTER under the bounded C13 kickoff (round-1.4
+section 8.1 rows 1–3, repair C13; Lead-adjudicated real conformance gap). Status
+stays **REPAIRED-PENDING-AUDIT** — the Codex (G5) audit is outstanding, so the
+block remains not frozen, not accepted, not dispatchable, and not authorised for
+host execution.
+
+- **C13 — IMPLEMENTED; QA EXECUTION PENDING.** Added one arm to `RP6-P0.sh`: a
+  pinned-absolute `getent` (added to the inventory as the 12th RO tool) resolves
+  `gatea` and `mtc-bridge`, each record parsed whole under the passwd grammar
+  (Pattern 5; duplicate/multiline/malformed → ambiguous → STOP), admitting on
+  NUMERIC uid/gid only (Pattern 8) with names as diagnostics. rc contract per
+  the kickoff and the F2 polarity: getent missing/error/unparsable/duplicate →
+  `identity_unresolvable` rc 3; `gatea` numeric mismatch → `identity_unexpected`
+  rc 3; `mtc-bridge` valid no-match (rc 2) or numeric mismatch →
+  `state_account_resolution_unexpected` rc 3. Two new preregistered inputs
+  `P0_STATE_UID` (999) / `P0_STATE_GID` (988) use the same `p0_require_uint`
+  rc-3 pre-check + `:?` backstop as `P0_EXPECT_UID` (F4 pattern). Claim lines
+  updated honestly (11→12 tools; adds
+  `name_to_numeric_resolution_of_gatea_and_mtc_bridge_via_getent`; discloses
+  `nss_source_identity_of_getent_resolution`; `getent` joins the inherited-env
+  set). Read-only scope, the 0/1/3 contract, STOP-vs-FAIL truthfulness, and all
+  existing arms are preserved.
+- **QA NOT YET EXECUTED — concrete harness blocker.** The GLM-5.2 implementer
+  session's Bash tool gates interpreter/script execution (every `bash -n`,
+  `bash -c`, path-script run, process substitution, brace heredoc, and
+  off-tree write returned *requires approval* and was not approved this turn).
+  `SELF_QA_RP6.md` therefore contains the paste-and-run RED/GREEN + backstop
+  commands and the real final SHA-256/byte count, but the RED/GREEN real output
+  and `bash -n` are marked **PENDING**, not fabricated. Per AGENTS.md the
+  implementer reports this blocker rather than silently substituting fake
+  evidence (D026 / Pattern 10; the GLM known-failure-mode of AGENTS.md rule 4).
+- **Artefact (real, computed in-session).** Repaired `RP6-P0.sh` SHA-256
+  `cfdb23b8834a783638723c54cf632973c1cc20c5fb676cb6d310a9d43b9acf1c`, 54109
+  bytes (baseline `6c5b8945…766f7`, 44979 bytes). Three files touched only
+  (`RP6-P0.sh`, `SELF_QA_RP6.md`, this file); nothing committed.
+
+**Required to close C13:** run the C13 commands in `SELF_QA_RP6.md` in an
+unhindered Git Bash process (or have Codex run them at G5), paste the real
+RED/GREEN output, and confirm `bash -n` PASS — then the Codex G5 audit.
+
+**Lead QA execution, 2026-08-10 — the blocker above is CLEARED.** The Lead ran
+the full C13 QA in an unhindered Git Bash: arm RED/GREEN 5/5 CASE_OK (GREEN
+rc 0; four REDs rc 3 with the exact preregistered reason tokens); backstop
+2/2 GREEN after a Lead harness correction (the drafted C13 backstop caller fed
+`sed` no input and its summary was ungated — both defects recorded with the
+as-drafted failing run in `SELF_QA_RP6.md`, then fixed); `bash -n` PASS; hash
+and byte count re-verified identical to the implementer's record
+(`cfdb23b8…`, 54109 B). Real outputs pasted into `SELF_QA_RP6.md`. Remaining
+to close: the independent Codex G5 audit of the C13 arm.
