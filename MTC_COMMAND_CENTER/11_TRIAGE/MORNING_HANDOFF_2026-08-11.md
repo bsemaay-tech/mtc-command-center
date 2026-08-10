@@ -10,17 +10,32 @@ Last update: ~22:20 local.
 **Nothing was touched on the rented test machine.** All work stayed on this computer. No
 credentials, no orders, no merges to master.
 
-**One decision is waiting for you.** There are nine checks nobody has built. They would look
-at how the machine's own start-up manager runs our program: whether it is running, whether it
-was restarted, whether it was started from exactly the copy we approved, and whether its
-safety restraints are switched on. Two are nearly free to build, three more are quick, and
-the last four need real new code.
+**One decision is waiting for you, and it is all nine or none.** There are nine checks nobody
+has built. They would look at how the machine's own start-up manager runs our program:
+whether it is running, whether it was restarted, whether it was started from exactly the copy
+we approved, and whether its safety settings are switched on.
 
-Why it matters now: **the test machine gets wiped after the next stage, and some of these
-facts can never be checked afterwards.** The recommendation in the analysis is to build the
-five cheap ones, record the other four as deliberately not checked, and fold them into the
-administrator session we already have permission for. Full analysis, ending in a page written
-for you: `WPI_PREREG_DRAFT_ROUND1/ROWS_1_9_OPTIONS_CODEX_2026-08-10.md`.
+The finished analysis recommends **building all nine**, and explains why a cheap subset does
+not work: one of them is the only check that ties the *running* program to the copy we
+approved. Without it we would know the right files are on the disk, and that something is
+answering — but not that they are the same thing. Two others are the only proof that the
+safety settings and start-up mode actually do anything rather than just being written in a
+template.
+
+**Honest price: three to six more build-and-check rounds, most likely four.** That is on top
+of two files that have not yet been accepted even once.
+
+Why it cannot wait: **the test machine is wiped after the next stage, and some of these facts
+can never be checked afterwards.** After the next authorized restart, two of them become
+unobservable forever.
+
+Full analysis, ending in a page written for you:
+`WPI_PREREG_DRAFT_ROUND1/ROWS_1_9_OPTIONS_CODEX_2026-08-10.md`.
+
+> **Correction, 01:45.** An earlier version of this handoff said the recommendation was to
+> build five cheap rows and defer four. That came from a partial copy of the analysis this
+> session committed before the writer had finished. The finished analysis reaches the
+> opposite conclusion — the decision is binary — and it is the one above.
 
 **A second thing you should know.** Another agent session was working in this repository at
 the same time as this one, on the transport files. Nothing was lost — this session detected
