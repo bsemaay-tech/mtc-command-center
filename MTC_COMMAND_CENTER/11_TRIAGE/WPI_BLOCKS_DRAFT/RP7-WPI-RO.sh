@@ -7,7 +7,11 @@
 # RUNID, budget, service, credential, trading, or deployment authority.
 #
 # Runtime mutation is confined to create-once capture leaves inside EV_DIR,
-# which RP0-BOOTSTRAP allocated before this block. No host object is changed.
+# which RP0-BOOTSTRAP allocated before this block. EV_DIR is itself proven, at
+# the first predicate and before any leaf is allocated, to be a strict
+# descendant of the frozen evidence root below <REMOTE_BASE>; every leaf is then
+# proven to be inside EV_DIR. No host object outside that tree is changed, and
+# no path outside it is opened for writing - including /dev/null.
 # File content is never printed: result lines contain paths, metadata, counts,
 # classifications, and digests only.
 #
@@ -51,6 +55,15 @@ WPI_FIXED_ATTESTED_MOUNT_PROJECTION_SHA256='<PIN-AT-FREEZE>'
 # resolved non-symlink leaf is a freeze-gate input, exactly like the mount
 # attestation below it.
 WPI_FIXED_TRUSTED_PYTHON='<PIN-AT-FREEZE>'
+# The only tree this block may write into. RP0-BOOTSTRAP allocates EV_DIR as
+# <REMOTE_BASE>/evidence/runkit/<RUNID>, and the block proved EV_LOG below EV_DIR
+# and every capture leaf below EV_DIR - but nothing proved EV_DIR itself descends
+# from the run's own base, so the whole create-once chain hung from an unattested
+# root supplied by the same channel it was meant to bound. The frozen prefix below
+# closes that, and is a freeze-gate input exactly like the two pins above it:
+# <REMOTE_BASE> is allocated, so Stage 1 must allocate it BEFORE it freezes these
+# bytes. Until the pin is filled the block STOPs rather than claiming provenance.
+WPI_FIXED_EVIDENCE_ROOT='<PIN-AT-FREEZE>'
 WPI_VENV_WALK_COMPLETE=no
 WPI_INTERPRETER_RAN=no
 WPI_METADATA_READABLE=no
@@ -180,7 +193,11 @@ wpi_clock_ms() {
 wpi_alloc_leaf() {
     local leaf="$1"
     case "$leaf" in "$EV_DIR"/*) : ;; *) wpi_stop RP7 "capture_path_outside_evidence leaf=$leaf ev_dir=$EV_DIR" ;; esac
-    if ! ( set -o noclobber; : > "$leaf" ) 2>/dev/null; then
+    # stderr is CLOSED, not redirected to /dev/null: /dev/null is outside both the
+    # run evidence tree and the section-10.1 allowlist, so opening it for writing
+    # would be an unpreregistered write open. Closing fd 2 discards the noclobber
+    # diagnostic with no open at all and leaves the noclobber test itself intact.
+    if ! ( set -o noclobber; : > "$leaf" ) 2>&-; then
         wpi_stop RP7 "capture_leaf_not_create_once leaf=$leaf"
     fi
 }
@@ -621,13 +638,29 @@ wpi_validate_inputs() {
 }
 
 wpi_assert_prerequisites() {
-    command -v rp0_require_safe_component >/dev/null 2>&1 || wpi_stop RP7 "rp0_lib_not_sourced predicate=rp0_require_safe_component"
-    command -v rp0_allocate_evidence_dir >/dev/null 2>&1 || wpi_stop RP7 "rp0_lib_not_sourced predicate=rp0_allocate_evidence_dir"
+    # `builtin type -t` is the non-overridable form and needs no redirection: with
+    # -t an undefined name prints nothing on either stream and returns 1, so no
+    # /dev/null write open is required to silence it, and `builtin` bypasses any
+    # function named `type`. It is also strictly narrower than `command -v`, which
+    # would have been satisfied by an executable of the same name on PATH.
+    [ "$(builtin type -t rp0_require_safe_component)" = function ] || wpi_stop RP7 "rp0_lib_not_sourced predicate=rp0_require_safe_component"
+    [ "$(builtin type -t rp0_allocate_evidence_dir)" = function ] || wpi_stop RP7 "rp0_lib_not_sourced predicate=rp0_allocate_evidence_dir"
     wpi_require_set RUNID "${RUNID:-}"; wpi_require_set EV_STAGE_ID "${EV_STAGE_ID:-}"
     wpi_require_set EV_DIR "${EV_DIR:-}"; wpi_require_set EV_LOG "${EV_LOG:-}"
     rp0_require_safe_component RUNID "$RUNID" || wpi_stop RP7 "evidence_identifier_refused name=RUNID"
     rp0_require_safe_component EV_STAGE_ID "$EV_STAGE_ID" || wpi_stop RP7 "evidence_identifier_refused name=EV_STAGE_ID"
     [ "$EV_STAGE_ID" = ro ] || wpi_stop RP7 "prereg_input_malformed name=EV_STAGE_ID expected=ro"
+    # Evidence-root provenance, established BEFORE any leaf can be allocated. The
+    # two existing containments (EV_LOG below EV_DIR, every capture leaf below
+    # EV_DIR) are relative; this is the absolute one they hang from.
+    wpi_require_absolute EV_DIR "$EV_DIR"
+    [ "$WPI_FIXED_EVIDENCE_ROOT" != '<PIN-AT-FREEZE>' ] || \
+        wpi_stop RP7 "evidence_root_unattested detail=freeze_gate_pin_unfilled name=WPI_FIXED_EVIDENCE_ROOT"
+    wpi_require_absolute WPI_FIXED_EVIDENCE_ROOT "$WPI_FIXED_EVIDENCE_ROOT"
+    case "$EV_DIR" in
+        "$WPI_FIXED_EVIDENCE_ROOT"/*) : ;;
+        *) wpi_stop RP7 "evidence_root_unattested ev_dir=$EV_DIR expected_root=$WPI_FIXED_EVIDENCE_ROOT" ;;
+    esac
     case "$EV_LOG" in "$EV_DIR"/*) : ;; *) wpi_stop RP7 "evidence_leaf_not_bound ev_log=$EV_LOG ev_dir=$EV_DIR" ;; esac
 }
 
@@ -660,7 +693,7 @@ wpi_assert_evidence_leaf_bound() {
     case "$logid" in *[!0-9:]*|*:*:*|:*|*:|'') wpi_stop RP7 "evidence_binding_unparsable subject=ev_log" ;; *:*) : ;; *) wpi_stop RP7 "evidence_binding_unparsable subject=ev_log" ;; esac
     [ "$fdid" = "$logid" ] || wpi_stop RP7 "evidence_leaf_not_bound ev_log=$EV_LOG ev_log_id=$logid stdout_id=$fdid"
     wpi_sanitize "$rawpath"
-    printf 'RP7_evidence_bound leaf=%s object_id=%s stdout_path=[%s] mechanism=dev_inode_identity\n' "$EV_LOG" "$logid" "$WPI_SAFE"
+    printf 'RP7_evidence_bound leaf=%s object_id=%s stdout_path=[%s] mechanism=dev_inode_identity evidence_root=%s root_binding=frozen_prefix_descent\n' "$EV_LOG" "$logid" "$WPI_SAFE" "$WPI_FIXED_EVIDENCE_ROOT"
 }
 
 wpi_run_find() {
@@ -898,6 +931,18 @@ wpi_is_structured_parity_mismatch() {
 # provably isolated and site-free, replaces importlib.metadata's implicit sys.path
 # discovery with the one explicit universe defined by the row-19 preflight, and only
 # then compiles and runs the digest-bound verifier source under __main__.
+#
+# Admission is not adjudication (Codex round-4 finding 2). The row-19 preflight and
+# the driver's own scan prove object kind, ownership, byte readability and format -
+# none of which is the object's package IDENTITY. verify_lock.py:68-74 skips every
+# distribution whose METADATA carries no Name and overwrites duplicate canonical
+# names in a dict, so an admitted-but-malformed object silently leaves the universe
+# it was admitted into and parity can print the accepting line for a set it never
+# adjudicated. The driver therefore establishes exactly one grammar-valid Name and
+# Version per admitted object, and a unique canonical name across them, BEFORE any
+# distribution object is handed to the verifier. Absent, ambiguous, unparseable or
+# duplicate identity is an inability to evaluate: rc 6, STOP - never a silent
+# omission and never a named-mismatch FAIL.
 wpi_assert_lock_parity() {
     local verifier="$WPI_RELEASE_ROOT/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py"
     local lock="$WPI_RELEASE_ROOT/IBKR_PAPER_BRIDGE/requirements.lock"
@@ -905,7 +950,7 @@ wpi_assert_lock_parity() {
     [ "$WPI_METADATA_READABLE" = yes ] || wpi_stop B1 "verifier_not_evaluable rc=3 detail=metadata_preflight_not_complete"
     wpi_assert_regular_digest B1 verifier_absent verifier_digest_mismatch "$verifier" 3735 "$WPI_VERIFY_LOCK_SHA256" verifier verifier_object_unexpected with_path
     wpi_capture lock_parity "$WPI_PYTHON3" -I -S -c '
-import hashlib,os,sys
+import email,hashlib,os,re,sys
 def die(code,token,extra=""):
  sys.stderr.write("verify_lock_driver: "+token+extra+chr(10)); sys.exit(code)
 if not (sys.flags.isolated and sys.flags.no_site): die(4,"trusted_startup_unproven")
@@ -931,6 +976,27 @@ for n in names:
  for suf,tok in REJECT:
   if n.endswith(suf): die(5,"universe_unexpected"," format="+tok+" name_sha256="+h)
 if not accepted: die(4,"universe_empty")
+NAME_RE=re.compile("[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?")
+VER_RE=re.compile("[0-9][0-9A-Za-z.!+_-]*")
+canon={}
+for p in accepted:
+ h=hashlib.sha256(p.name.encode("utf-8","surrogateescape")).hexdigest()
+ t=" name_sha256="+h
+ try:
+  raw=(p/"METADATA").read_bytes()
+ except OSError:
+  die(6,"distribution_identity_unestablished"," detail=metadata_unreadable"+t)
+ msg=email.message_from_string(raw.decode("utf-8","surrogateescape"))
+ nm=msg.get_all("Name") or []
+ vs=msg.get_all("Version") or []
+ if len(nm)!=1: die(6,"distribution_identity_unestablished"," detail=name_"+("absent" if not nm else "ambiguous")+t)
+ if len(vs)!=1: die(6,"distribution_identity_unestablished"," detail=version_"+("absent" if not vs else "ambiguous")+t)
+ nv=str(nm[0]).strip(); vv=str(vs[0]).strip()
+ if not NAME_RE.fullmatch(nv): die(6,"distribution_identity_unestablished"," detail=name_grammar"+t)
+ if not VER_RE.fullmatch(vv): die(6,"distribution_identity_unestablished"," detail=version_grammar"+t)
+ c=re.sub("[-_.]+","-",nv).lower()
+ if c in canon: die(6,"distribution_identity_unestablished"," detail=canonical_name_duplicate"+t)
+ canon[c]=h
 D=[M.PathDistribution(p) for p in accepted]
 M.distributions=lambda **kw: iter(list(D))
 M.Distribution.discover=staticmethod(lambda **kw: iter(list(D)))
@@ -963,6 +1029,19 @@ exec(compile(src,verifier,"exec"),{"__name__":"__main__","__file__":verifier})
                 [ "${#udigest}" -eq 76 ] || wpi_stop B1 "verifier_not_evaluable rc=5 detail=driver_grammar diagnostic_file=$WPI_CAP_ERR"
                 wpi_stop B1 "metadata_universe_unexpected stage=verifier $ufmt $udigest" ;;
             *) wpi_stop B1 "verifier_not_evaluable rc=5 detail=driver_grammar diagnostic_file=$WPI_CAP_ERR" ;;
+        esac
+    fi
+    if [ "$WPI_CAP_RC" -eq 6 ]; then
+        case "$err" in
+            'verify_lock_driver: distribution_identity_unestablished detail='*' name_sha256='*)
+                fields="${err#verify_lock_driver: distribution_identity_unestablished }"
+                ufmt="${fields%% *}"; udigest="${fields#* }"
+                case "$ufmt" in detail=[a-z][a-z_0-9]*) : ;; *) wpi_stop B1 "verifier_not_evaluable rc=6 detail=driver_grammar diagnostic_file=$WPI_CAP_ERR" ;; esac
+                case "$udigest" in name_sha256=?*) : ;; *) wpi_stop B1 "verifier_not_evaluable rc=6 detail=driver_grammar diagnostic_file=$WPI_CAP_ERR" ;; esac
+                case "${udigest#name_sha256=}" in ''|*[!0-9a-f]*) wpi_stop B1 "verifier_not_evaluable rc=6 detail=driver_grammar diagnostic_file=$WPI_CAP_ERR" ;; esac
+                [ "${#udigest}" -eq 76 ] || wpi_stop B1 "verifier_not_evaluable rc=6 detail=driver_grammar diagnostic_file=$WPI_CAP_ERR"
+                wpi_stop B1 "metadata_identity_unestablished stage=verifier $ufmt $udigest" ;;
+            *) wpi_stop B1 "verifier_not_evaluable rc=6 detail=driver_grammar diagnostic_file=$WPI_CAP_ERR" ;;
         esac
     fi
     if [ "$WPI_CAP_RC" -eq 4 ]; then
@@ -1131,7 +1210,14 @@ wpi_main() {
     # probe. Keep the window open through tool, evidence-leaf and manager
     # preflight binding; any FAIL closes it through wpi_fail first.
     wpi_mount_guard_begin
-    for wpi_tool in stat readlink env find sha256sum systemctl ss curl timeout; do
+    # ALL TEN pins are bound here, inside that window, and the tenth is the
+    # trusted adjudicating python3. Round 4 accepted the tenth pin, added it to
+    # projection v2 and defined its binding, but never passed it through this
+    # loop: the executable ran at both adjudicators while `-I -S`, the startup
+    # guards and every `pinned_system_interpreter` token rested on an object no
+    # production line had ever bound (Codex round-4 finding 1). Those flags are
+    # only meaningful once the program that interprets them is the bound one.
+    for wpi_tool in stat readlink env find sha256sum systemctl ss curl timeout python3; do
         wpi_map_get "$WPI_TOOL_PINS" "$wpi_tool"
         wpi_bind_tool "$wpi_tool" "$WPI_LINE"
     done

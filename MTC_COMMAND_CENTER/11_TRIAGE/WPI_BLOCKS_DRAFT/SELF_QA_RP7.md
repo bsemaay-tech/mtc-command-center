@@ -1,77 +1,508 @@
-# SELF-QA - RP7-WPI-RO repair round 4
+# SELF-QA - RP7-WPI-RO repair round 5
 
 Status: `SELF-QA-EXECUTED-PENDING-INDEPENDENT-REAUDIT`
 
-The exact fence below ran locally in **Git Bash (MSYS2)** on the workstation. It made no
-SSH/SCP call, opened no network connection, contacted no staging host, minted no RUNID,
-and changed no repository file. Fixture writes were confined to one `mktemp` directory
-under `/tmp`, whose prefix was checked before recursive removal.
+Round 5 answers the second-flagship Codex T0 audit `RP7_CODEX_T0_AUDIT_R4_2026-08-10.md`
+(BLOCK, three findings) together with the two Lead-verified items carried from the
+section-10.1 reconciliation. Everything below ran locally in **Git Bash (MSYS2)** on the
+workstation. It made no SSH/SCP call, opened no network connection, contacted no staging
+host, minted no RUNID, and changed no repository file. Fixture writes were confined to
+`mktemp` directories under `/tmp` whose prefix was checked before recursive removal.
 
-Round 4 answers the second-flagship Codex T0 audit (`RP7_CODEX_T0_AUDIT_2026-08-10.md`),
-which returned BLOCK on five findings. Every round-3 arm is carried forward and still
-holds; the new arms are marked in the fence by their finding number.
+Three things about this round's evidence contract, because round 4 failed it:
 
-The load-bearing new fixtures are **two real virtual environments**, built by the real
-`python -m venv`. One carries an executable `*.pth` line, the other a `sitecustomize.py`.
-Each writes a marker file and prints the exact accepted result line before the intended
-child body can run. They are not simulations of the finding-1 attack; they are the
-attack, executed, against the round-3 bytes and against the repaired bytes.
-
-Round 3's fence ran against GNU coreutils 8.32, and so does this one. The round-3
-transcript is deliberately **not** carried forward: round-4 edits (the tenth tool pin,
-the projection point set, the two-phase listener parse, the unfiltered metadata
-enumeration, the row-specific reason tokens) change many of its recorded lines, so
-republishing it would be stale evidence.
+1. **Both subjects are byte-identified inside the fence itself.** Every round-5 arm runs
+   twice - once against the frozen round-4 blob, materialised by
+   `git cat-file blob d6a976aa:...` and re-derived to 70941 B /
+   `23e55667...01aad`, and once against the repaired worktree file. The fence asserts both
+   identities, both CR counts and both `bash -n` results before any arm runs, so a RED
+   transcript cannot silently be a GREEN one.
+2. **No arm redeclares a production loop.** Codex found finding 1 precisely because the
+   round-4 QA declared its own ten-name loop and called `wpi_bind_tool` directly instead of
+   instrumenting `wpi_main` (catalogue pattern 10). Every round-5 arm drives the real
+   caller and stubs only the callee it is measuring, so the arm fails if the caller stops
+   calling it.
+3. **Every published command is literal, bounded and content-anchored.** No line numbers,
+   no placeholders, no undeclared shell state.
 
 ## Exact command
 
-The fence text below was written verbatim to a file and executed as a fresh child shell
-from Git Bash:
+The command selects each fenced body by the unique markers that open and close that body,
+and stops at the closing marker. The marker text inside the command cannot re-open either
+range: a marker only matches at the start of a line, and these lines start with `sed`.
 
-```
-bash <fence-file>            # exit status 0, terminal line QA_PASS all_assertions=yes
+```bash
+# RP7_EXACT_COMMAND_BEGIN
+cd /c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT
+sed -n '/^# RP7_QA_FENCE_BEGIN$/,/^# RP7_QA_FENCE_END$/p' SELF_QA_RP7.md > /tmp/rp7-r5-fence-body.sh
+sed -n '/^# RP7_R4_FENCE_BEGIN$/,/^# RP7_R4_FENCE_END$/p' SELF_QA_RP7.md > /tmp/rp7-r4-fence-body.sh
+sha256sum /tmp/rp7-r5-fence-body.sh /tmp/rp7-r4-fence-body.sh
+wc -c /tmp/rp7-r5-fence-body.sh /tmp/rp7-r4-fence-body.sh
+bash --noprofile --norc /tmp/rp7-r5-fence-body.sh; printf 'R5_FENCE_RC=%s\n' "$?"
+bash --noprofile --norc /tmp/rp7-r4-fence-body.sh; printf 'R4_FENCE_RC=%s\n' "$?"
+# RP7_EXACT_COMMAND_END
 ```
 
-It is equally paste-and-run: open `bash` from Git Bash and paste the fence into it. It
-aborts with `QA_ASSERT_FAIL` and a nonzero exit on any unexpected result, so `QA_PASS`
-is reachable only when every assertion below held.
+That block is extractable and runnable by the same mechanism, so a third party never has
+to retype it:
+
+```bash
+sed -n '/^# RP7_EXACT_COMMAND_BEGIN$/,/^# RP7_EXACT_COMMAND_END$/p' SELF_QA_RP7.md | bash --noprofile --norc
+```
+
+It was executed exactly that way, from a fresh `bash --noprofile --norc`, and produced:
+
+```text
+0263067e4bb41d8c4c6bbfd96bd35b8a83cc48d1eedc14c1acdc886ee7a5b62f */tmp/rp7-r5-fence-body.sh
+94101ef7fdf70d0f4628685811160389227cbba3c10e999e1942e8eb82bb56e0 */tmp/rp7-r4-fence-body.sh
+20050 /tmp/rp7-r5-fence-body.sh
+76710 /tmp/rp7-r4-fence-body.sh
+96760 total
+R5_FENCE_RC=0
+R4_FENCE_RC=0
+```
+
+Both fences abort with `QA_ASSERT_FAIL` and a nonzero exit on any unexpected result, so
+`QA_PASS all_assertions=yes` is reachable only when every assertion in them held.
 
 ## What this environment can and cannot represent (disclosed in full)
 
 MSYS2 has no root, and its NTFS mounts are `noacl`, so `chown 0:0` and `chmod 0555` are
-silent no-ops; it also cannot create a POSIX symlink or a character device at an
-arbitrary path. These fixture classes exist for exactly those gaps, and nothing else is
-substituted anywhere in this suite:
+silent no-ops; it also cannot create a POSIX symlink or a character device at an arbitrary
+path. These fixture classes exist for exactly those gaps, and nothing else is substituted
+anywhere in this suite:
 
 | Fixture | Substitutes only | Everything else is real |
 |---|---|---|
-| `stat-shim` + variants | numeric ownership (rendered `0:0`), and for one named path per variant the `%F` kind or the `%u:%g` pair | the real GNU `stat` result for the real object: mode, `dev:inode`, size, exit status, ENOENT classification, stream discipline, and the wrapper's own `argv[0]` in its diagnostic |
-| `stat-eacces-*` | nothing about the object | a real nonzero `stat` exit with a real `Permission denied` diagnostic for one named path, delegating every other path to `stat-shim` |
-| `readlink-plain`, `readlink-cr` | the target string a real `readlink` would print for a symlink MSYS2 cannot create | the production symlink branch, the single-record reader and `wpi_sanitize` run unmodified |
-| `forge_capture` | the MSYS `env -i`/`timeout` exec plumbing, which rewrites POSIX-looking argv for a native Windows child, plus the Windows CRLF record terminator normalised to the LF a Debian CPython emits | the interpreter the production or mutant body **chose** (`a[0]`), the flag words it chose, real CPython, the real embedded parser source, the real digest-bound `verify_lock.py`, real exit codes |
+| `stat-shim` + variants (round-4 fence) | numeric ownership (rendered `0:0`), and for one named path per variant the `%F` kind or the `%u:%g` pair | the real GNU `stat` result for the real object: mode, `dev:inode`, size, exit status, ENOENT classification, stream discipline, and the wrapper's own `argv[0]` in its diagnostic |
+| `stat-eacces-*` (round-4 fence) | nothing about the object | a real nonzero `stat` exit with a real `Permission denied` diagnostic for one named path, delegating every other path to `stat-shim` |
+| `readlink-plain`, `readlink-cr` (round-4 fence) | the target string a real `readlink` would print for a symlink MSYS2 cannot create | the production symlink branch, the single-record reader and `wpi_sanitize` run unmodified |
+| `forge_capture` (both fences) | the MSYS `env -i`/`timeout` exec plumbing, which rewrites POSIX-looking argv for a native Windows child, plus the Windows CRLF record terminator normalised to the LF a Debian CPython emits | the interpreter the production body **chose** (`a[0]`), the flag words it chose, real CPython, the real embedded driver source, the real digest-bound `verify_lock.py`, real exit codes |
+| `wpi_lstat` shim in the finding-2 arms | numeric ownership and object kind, which NTFS cannot express | the production row-19 preflight, the production trusted driver, the production result grammar and the real verifier bytes |
+| `rp0_require_safe_component` / `rp0_allocate_evidence_dir` in the finding-5 arms | the two RP0-LIB predicates, which are not present on this workstation, defined as no-op shell **functions** | the whole of `wpi_assert_prerequisites`, including the type check finding 4 introduced and the evidence-root descent check finding 5 introduced |
 
-Production functions are replaced in only three places, each stated where it occurs and
-each with its subject elsewhere: `wpi_walk_components` in the write-bit arms (whose
-subject is `find`-stdout classification and the FAIL-through-guard path),
-`wpi_assert_regular_digest` in the parity arms (whose subject is row 19a and which has
-its own arms under finding 5), and `wpi_capture` where a child must really execute
-(above). No mount-guard stub exists anywhere in this file: every arm that opens a mount
-window runs the real `wpi_mount_guard_begin`/`wpi_mount_guard_end` against an
-attestation computed from the live table by the real projector.
+Production functions are replaced in only four places, each stated where it occurs and each
+with its own subject elsewhere: `wpi_walk_components` in the write-bit arms (subject:
+`find`-stdout classification and the FAIL-through-guard path), `wpi_assert_regular_digest`
+in the parity arms (subject: row 19a, which has its own arms), `wpi_capture` where a child
+must really execute, and `wpi_bind_tool`/`wpi_mount_guard_*` in the finding-1 arm - where
+the *stub is the instrument*: it records what the real `wpi_main` asked it to bind and in
+which window, and STOPs if and only if production asks it to bind `python3`.
 
-Not reproducible here, and not claimed: a real bind or overlay mount. As in round 3, the
-mount findings are falsified by appending to a real captured `mountinfo` table the exact
-record such a mount would produce.
+Two production predicates really call `exit`, so the finding-1, finding-2, finding-4 and
+finding-5 arms invoke them inside a subshell. Without that, an arm could not survive its
+own STOP to report the STOP.
 
-**The `verify_lock.py` used by the finding-1 and finding-3 arms is the real candidate
-artifact.** The fence LF-normalises the worktree copy and asserts its identity before
-use; `VERIFIER_IDENTITY` in the transcript records 3735 bytes and
-`d951e0ee…a451e5`, which is exactly `WPI_VERIFY_LOCK_SHA256`. The parity arms therefore
-drive the digest-bound verifier itself, not a stand-in.
+Not reproducible here, and not claimed: a real bind or overlay mount, and a real
+`/proc/<MainPID>/ns/net`. As in rounds 3 and 4, those are falsified by appending to a real
+captured `mountinfo` table the exact record such a mount would produce.
 
-## The fence
+**The `verify_lock.py` driven by every parity arm is the real candidate artifact.** The
+round-4 fence LF-normalises the worktree copy and asserts its identity before use;
+`VERIFIER_IDENTITY` in its transcript records 3735 bytes and `d951e0ee...a451e5`, which is
+exactly `WPI_VERIFY_LOCK_SHA256`. The round-5 finding-2 arms feed the same file to the same
+production driver.
+
+## The round-5 fence
+
+Ten arm groups, each a real RED against the round-4 blob and a real GREEN against the
+repaired bytes:
+
+| Arm | RED on round-4 bytes | GREEN on repaired bytes |
+|---|---|---|
+| F1 main-path binding | `python3_bound=no`, deviant pin ran, marker written, `RP7 PASS` | `python3_bound=yes`, real binding STOPs, no marker, no accepting line, no PASS |
+| F1 window ordering | window opened and closed with nine tools bound | binding STOP occurs with the window still open |
+| F2 clean universe | parity PASS | parity PASS (no regression) |
+| F2 `Name` absent | accepting parity line for a universe never adjudicated | `B1_STOP ... detail=name_absent` |
+| F2 `Version` absent | `B1_FAIL reason=lock_installed_parity` - a host finding for an unevaluable object | `B1_STOP ... detail=version_absent` |
+| F2 duplicate canonical name | two distributions collapse to one, parity PASSes | `B1_STOP ... detail=canonical_name_duplicate` |
+| F4 static | 3 non-comment `/dev/null` occurrences | 0 |
+| F4 predicate check | satisfied by an *executable* named `rp0_require_safe_component` on PATH | refused; only a real shell function passes |
+| F4 create-once | (unchanged) | second allocation STOPs, out-of-tree leaf STOPs, stderr stays empty with fd 2 closed |
+| F5 evidence root | any `EV_DIR` accepted, constant absent | unfilled pin STOPs; descent accepted; outside and prefix-lookalike STOP |
 
 ```bash
+# RP7_QA_FENCE_BEGIN
+# Round-5 D026 fence for RP7-WPI-RO. Every arm drives the REAL production caller
+# in a FRESH bash process against two byte sets whose identity is asserted first:
+#   RED   = the frozen round-4 blob at commit d6a976aa (70941 B, 23e55667...01aad)
+#   GREEN = the repaired worktree file
+# No arm redeclares a production loop or a production predicate. Where an arm
+# needs a stub it stubs the CALLEE and drives the real CALLER, so the arm fails
+# if the caller stops calling it.
+REPO=/c/LAB/Tradingview_LAB_CLEAN
+BLOCK=$REPO/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh
+REPO_VERIFIER=$REPO/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py
+PYEXE=/c/Python314/python.exe
+Q=$(mktemp -d /tmp/rp7-r5-qa.XXXXXX)
+RED=$Q/RP7-WPI-RO.round4.sh
+GREEN=$BLOCK
+
+expect_rc(){ [ "$2" -eq "$3" ] || { printf 'QA_ASSERT_FAIL name=%s got=%s expected=%s\n' "$1" "$2" "$3"; exit 90; }; }
+expect_eq(){ [ "$2" = "$3" ] || { printf 'QA_ASSERT_FAIL name=%s got=[%s] expected=[%s]\n' "$1" "$2" "$3"; exit 90; }; }
+expect_has(){ grep -q -- "$2" "$3" || { printf 'QA_ASSERT_FAIL name=%s missing=[%s] file=%s\n' "$1" "$2" "$3"; exit 90; }; }
+expect_hasnt(){ grep -q -- "$2" "$3" && { printf 'QA_ASSERT_FAIL name=%s unexpected=[%s] file=%s\n' "$1" "$2" "$3"; exit 90; }; return 0; }
+
+printf 'QA_ROOT=%s\n' "$Q"
+printf 'QA_ENV bash=%s coreutils_stat=%s python=%s git=%s uid_gid=%s:%s\n' \
+    "$BASH_VERSION" "$(/usr/bin/stat --version | head -1 | sed 's/.* //')" \
+    "$("$PYEXE" -V | sed 's/.* //')" "$(git --version | sed 's/.* //')" "$(id -u)" "$(id -g)"
+
+# --- byte identity of both subjects -----------------------------------------
+git -C "$REPO" cat-file blob d6a976aa:MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh > "$RED"
+RED_SHA=$(sha256sum < "$RED" | cut -d' ' -f1);   RED_BYTES=$(wc -c < "$RED")
+GREEN_SHA=$(sha256sum < "$GREEN" | cut -d' ' -f1); GREEN_BYTES=$(wc -c < "$GREEN")
+RED_CR=$(tr -cd '\r' < "$RED" | wc -c);  GREEN_CR=$(tr -cd '\r' < "$GREEN" | wc -c)
+bash --noprofile --norc -n "$RED";   RED_N=$?
+bash --noprofile --norc -n "$GREEN"; GREEN_N=$?
+printf 'BYTE_IDENTITY red_bytes=%s red_sha256=%s red_cr=%s red_bash_n=%s green_bytes=%s green_sha256=%s green_cr=%s green_bash_n=%s\n' \
+    "$RED_BYTES" "$RED_SHA" "$RED_CR" "$RED_N" "$GREEN_BYTES" "$GREEN_SHA" "$GREEN_CR" "$GREEN_N"
+expect_eq red_sha256 "$RED_SHA" 23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad
+expect_eq red_bytes "$RED_BYTES" 70941
+expect_eq green_sha256 "$GREEN_SHA" 393a16ce264b467bec180a2106390e6dcee4dc2605fd019871270fda11d3b0ee
+expect_eq green_bytes "$GREEN_BYTES" 77179
+expect_rc red_cr "$RED_CR" 0
+expect_rc green_cr "$GREEN_CR" 0
+expect_rc red_bash_n "$RED_N" 0
+expect_rc green_bash_n "$GREEN_N" 0
+
+# ===========================================================================
+# FINDING 1 (BLOCK) - python3 is never bound in the production main path.
+# The arm drives the REAL wpi_main. wpi_bind_tool is replaced by a recorder that
+# STOPs if and only if production asks it to bind python3, and the mount guard is
+# replaced by markers so the ORDER of the binding relative to the initial window
+# is read out of the production body rather than asserted. The deviant pin writes
+# a marker and forges `OK fields=8` over an ARMED body.
+# ===========================================================================
+cat > "$Q/f1_arm.sh" <<'ARM'
+S="$1"; W="$2"
+mkdir -p "$W"
+source <(sed '/^wpi_main "\$@"$/d' "$S")
+trap - ERR
+set +E; set +e; set +u; set +o pipefail
+cat > "$W/bad-python" <<EOF
+#!/usr/bin/env bash
+printf x > "$W/marker"
+printf 'OK fields=8\n'
+EOF
+chmod +x "$W/bad-python"
+cat > "$W/curl" <<'EOF'
+#!/usr/bin/env bash
+out=
+while [ "$#" -gt 0 ]; do
+  if [ "$1" = --output ]; then out="$2"; shift 2; else shift; fi
+done
+printf '{"state":"ARMED"}\n' > "$out"
+printf '200\n'
+EOF
+chmod +x "$W/curl"
+: > "$W/bound"
+wpi_validate_inputs(){
+  EV_DIR="$W/ev"; mkdir -p "$EV_DIR"; EV_LOG="$EV_DIR/log"; : > "$EV_LOG"
+  WPI_ENV=/usr/bin/env; WPI_TIMEOUT=/usr/bin/timeout; WPI_SWEEP_BUDGET_S=5
+  WPI_SHA256SUM=/usr/bin/sha256sum; WPI_CURL="$W/curl"; WPI_PYTHON3="$W/bad-python"
+  WPI_CONTROL_ENDPOINT=http://127.0.0.1:8790/api/status; WPI_TOOL_PINS=dummy
+  WPI_PROBE_SEQ=0; WPI_MOUNT_SNAPSHOT_SEQ=0; WPI_MOUNT_GUARD_ACTIVE=no
+}
+wpi_map_get(){ WPI_LINE="/usr/bin/$2"; }
+wpi_bind_tool(){ printf '%s\n' "$1" >> "$W/bound"; [ "$1" != python3 ] || { printf 'BINDING_WOULD_STOP_python3\n'; exit 3; }; }
+wpi_mount_guard_begin(){ printf 'MOUNT_WINDOW_OPEN\n'; }
+wpi_mount_guard_end(){ printf 'MOUNT_WINDOW_CLOSED\n'; }
+for f in wpi_assert_prerequisites wpi_assert_evidence_leaf_bound wpi_assert_manager_ready \
+  wpi_assert_tree wpi_assert_metadata_dir wpi_assert_regular_digest wpi_assert_interpreter \
+  wpi_assert_metadata_readable wpi_assert_lock_parity wpi_assert_netns_binding \
+  wpi_assert_listener_set wpi_record_external_probe_boundary; do eval "$f(){ :; }"; done
+( wpi_main ) > "$W/main.log" 2>&1
+rc=$?
+BOUND=$(tr '\n' ',' < "$W/bound")
+printf 'MAIN_BIND rc=%s bound=[%s] python3_bound=%s malicious_marker=%s accepted_status=%s rp7_pass=%s window_open=%s window_closed=%s binding_stop=%s\n' \
+  "$rc" "$BOUND" "$(case ",$BOUND" in *,python3,*) echo yes;; *) echo no;; esac)" \
+  "$([ -e "$W/marker" ] && echo present || echo absent)" \
+  "$(grep -c '^B5_status .*parser=pinned_system_interpreter' "$W/main.log")" \
+  "$(grep -c '^RP7 PASS$' "$W/main.log")" \
+  "$(grep -c '^MOUNT_WINDOW_OPEN$' "$W/main.log")" \
+  "$(grep -c '^MOUNT_WINDOW_CLOSED$' "$W/main.log")" \
+  "$(grep -c '^BINDING_WOULD_STOP_python3$' "$W/main.log")"
+ARM
+
+bash --noprofile --norc "$Q/f1_arm.sh" "$RED"   "$Q/f1-red"   > "$Q/f1-red.txt" 2>&1;   f1red=$?
+bash --noprofile --norc "$Q/f1_arm.sh" "$GREEN" "$Q/f1-green" > "$Q/f1-green.txt" 2>&1; f1green=$?
+cat "$Q/f1-red.txt" "$Q/f1-green.txt"
+printf 'F1_ARM_RCS red=%s green=%s\n' "$f1red" "$f1green"
+expect_has f1_red_false_pass  'MAIN_BIND rc=0 bound=\[stat,readlink,env,find,sha256sum,systemctl,ss,curl,timeout,\] python3_bound=no malicious_marker=present accepted_status=1 rp7_pass=1 window_open=1 window_closed=1 binding_stop=0' "$Q/f1-red.txt"
+expect_has f1_green_stop      'MAIN_BIND rc=3 bound=\[stat,readlink,env,find,sha256sum,systemctl,ss,curl,timeout,python3,\] python3_bound=yes malicious_marker=absent accepted_status=0 rp7_pass=0 window_open=1 window_closed=0 binding_stop=1' "$Q/f1-green.txt"
+expect_hasnt f1_green_no_pass '^RP7 PASS$' "$Q/f1-green/main.log"
+
+# ===========================================================================
+# FINDING 2 (HIGH) - an admitted *.dist-info object whose package identity cannot
+# be established is silently dropped (or dishonestly named) by the verifier.
+# Each arm runs the production row-19 preflight AND the production trusted driver
+# over the REAL digest-bound verify_lock.py. Only the MSYS-to-native argv plumbing
+# and numeric ownership are substituted, exactly as disclosed for round 4.
+# ===========================================================================
+cat > "$Q/f2_arm.sh" <<'ARM'
+S="$1"; W="$2"; CASE="$3"; REPO_VERIFIER="$4"; PYEXE="$5"
+mkdir -p "$W"
+source <(sed '/^wpi_main "\$@"$/d' "$S")
+trap - ERR
+set +E; set +e; set +u; set +o pipefail
+EV_DIR="$W/ev"; mkdir -p "$EV_DIR"
+WPI_ENV=/usr/bin/env; WPI_TIMEOUT=/usr/bin/timeout; WPI_SWEEP_BUDGET_S=10
+WPI_FIND=/usr/bin/find; WPI_SHA256SUM=/usr/bin/sha256sum; WPI_PYTHON3="$PYEXE"
+WPI_VENV_ROOT="$W/venv"; WPI_RELEASE_ROOT="$W/release"; WPI_EXPECTED_PACKAGES=1
+WPI_VERIFY_LOCK_SHA256=d951e0eea01ec1a89bcfbe9d9630949b31bb316faae2ba6bcae39be794a451e5
+WPI_VENV_WALK_COMPLETE=yes; WPI_INTERPRETER_RAN=yes; WPI_PROBE_SEQ=0
+WPI_MOUNT_SNAPSHOT_SEQ=0; WPI_MOUNT_GUARD_ACTIVE=no
+SITE="$WPI_VENV_ROOT/lib/python3.12/site-packages"
+VERDIR="$WPI_RELEASE_ROOT/IBKR_PAPER_BRIDGE/deploy/linux"
+mkdir -p "$SITE/a-demo-1.0.dist-info" "$VERDIR"
+tr -d '\r' < "$REPO_VERIFIER" > "$VERDIR/verify_lock.py"
+cat > "$WPI_RELEASE_ROOT/IBKR_PAPER_BRIDGE/requirements.lock" <<'EOF'
+demo-pkg==1.0 \
+    --hash=sha256:0000000000000000000000000000000000000000000000000000000000000000
+EOF
+printf 'Metadata-Version: 2.1\nName: demo-pkg\nVersion: 1.0\n' > "$SITE/a-demo-1.0.dist-info/METADATA"
+printf '\n' > "$SITE/a-demo-1.0.dist-info/RECORD"
+SUBJECT=none
+case "$CASE" in
+  name_absent)
+    SUBJECT=z-ghost-9.0.dist-info; mkdir -p "$SITE/$SUBJECT"
+    printf 'Metadata-Version: 2.1\nVersion: 9.0\n' > "$SITE/$SUBJECT/METADATA" ;;
+  version_absent)
+    SUBJECT=z-noversion-1.0.dist-info; mkdir -p "$SITE/$SUBJECT"
+    printf 'Metadata-Version: 2.1\nName: ghost-pkg\n' > "$SITE/$SUBJECT/METADATA" ;;
+  duplicate)
+    SUBJECT=b-demo-1.0.dist-info; mkdir -p "$SITE/$SUBJECT"
+    printf 'Metadata-Version: 2.1\nName: Demo_Pkg\nVersion: 1.0\n' > "$SITE/$SUBJECT/METADATA" ;;
+esac
+[ "$SUBJECT" = none ] || printf '\n' > "$SITE/$SUBJECT/RECORD"
+eval "$(declare -f wpi_capture | sed '1s/^wpi_capture/prod_capture/')"
+CALL=0
+forge_capture(){
+  local label="$1"; shift; local -a a=("$@"); local i exe
+  CALL=$((CALL+1)); WPI_CAP_OUT="$EV_DIR/forge.$CALL.out"; WPI_CAP_ERR="$EV_DIR/forge.$CALL.err"
+  WPI_CAP_RC=0; : > "$WPI_CAP_OUT"; : > "$WPI_CAP_ERR"
+  exe="${a[0]}"; [ -x "$exe" ] || exe="$exe.exe"
+  for ((i=1; i<${#a[@]}; i++)); do
+    case "${a[$i]}" in /*) [ ! -e "${a[$i]}" ] || a[$i]="$(cygpath -w "${a[$i]}")";; esac
+  done
+  /usr/bin/timeout 30 "$exe" "${a[@]:1}" > "$EV_DIR/raw.out" 2> "$EV_DIR/raw.err" || WPI_CAP_RC=$?
+  tr -d '\r' < "$EV_DIR/raw.out" > "$WPI_CAP_OUT"; tr -d '\r' < "$EV_DIR/raw.err" > "$WPI_CAP_ERR"
+}
+wpi_capture(){ if [ "$1" = lock_parity ]; then forge_capture "$@"; else prod_capture "$@"; fi; }
+wpi_mount_guard_begin(){ :; }; wpi_mount_guard_end(){ :; }; wpi_walk_components(){ :; }
+wpi_lstat(){
+  local p="$2"; wpi_render_path "$p"
+  if [ ! -e "$p" ]; then WPI_META_KIND=absent; WPI_META_MODE=; WPI_META_OWNER=; WPI_META_ID=; WPI_META_SIZE=
+  elif [ -d "$p" ]; then WPI_META_KIND=directory; WPI_META_MODE=755; WPI_META_OWNER=0:0; WPI_META_ID=1:1; WPI_META_SIZE=0
+  else WPI_META_KIND='regular file'; WPI_META_MODE=644; WPI_META_OWNER=0:0; WPI_META_ID=1:2; WPI_META_SIZE=$(wc -c < "$p"); fi
+}
+wpi_assert_metadata_readable > "$W/preflight.log" 2>&1; preflight_rc=$?
+wpi_assert_regular_digest(){ :; }
+# Subshell: the production predicate really exits the process on FAIL/STOP, so an
+# arm that called it directly could not survive to report its own result.
+( wpi_assert_lock_parity ) > "$W/parity.log" 2>&1; parity_rc=$?
+SUBJ_SHA=none
+[ "$SUBJECT" = none ] || SUBJ_SHA=$(printf '%s' "$SUBJECT" | sha256sum | cut -d' ' -f1)
+printf 'META_IDENTITY case=%s rc_preflight=%s rc_parity=%s dist_info_dirs=%s accepted_parity=%s parity_fail=%s identity_stop=%s subject_name_sha256=%s\n' \
+  "$CASE" "$preflight_rc" "$parity_rc" \
+  "$(find "$SITE" -maxdepth 1 -type d -name '*.dist-info' | wc -l)" \
+  "$(grep -c '^B1_lock_parity result=pass packages=1 ' "$W/parity.log")" \
+  "$(grep -c '^B1_FAIL reason=lock_installed_parity' "$W/parity.log")" \
+  "$(grep -c '^B1_STOP reason=metadata_identity_unestablished stage=verifier ' "$W/parity.log")" \
+  "$SUBJ_SHA"
+grep '^B1_STOP reason=metadata_identity_unestablished' "$W/parity.log" || true
+ARM
+
+for c in clean name_absent version_absent duplicate; do
+  bash --noprofile --norc "$Q/f2_arm.sh" "$RED"   "$Q/f2-red-$c"   "$c" "$REPO_VERIFIER" "$PYEXE" > "$Q/f2-red-$c.txt" 2>&1
+  bash --noprofile --norc "$Q/f2_arm.sh" "$GREEN" "$Q/f2-green-$c" "$c" "$REPO_VERIFIER" "$PYEXE" > "$Q/f2-green-$c.txt" 2>&1
+  sed 's/^/RED   /'   "$Q/f2-red-$c.txt"
+  sed 's/^/GREEN /' "$Q/f2-green-$c.txt"
+done
+GHOST_SHA=$(printf '%s' 'z-ghost-9.0.dist-info' | sha256sum | cut -d' ' -f1)
+NOVER_SHA=$(printf '%s' 'z-noversion-1.0.dist-info' | sha256sum | cut -d' ' -f1)
+DUP_SHA=$(printf '%s' 'b-demo-1.0.dist-info' | sha256sum | cut -d' ' -f1)
+expect_has f2_red_clean_pass        'META_IDENTITY case=clean rc_preflight=0 rc_parity=0 dist_info_dirs=1 accepted_parity=1 parity_fail=0 identity_stop=0' "$Q/f2-red-clean.txt"
+expect_has f2_green_clean_pass      'META_IDENTITY case=clean rc_preflight=0 rc_parity=0 dist_info_dirs=1 accepted_parity=1 parity_fail=0 identity_stop=0' "$Q/f2-green-clean.txt"
+expect_has f2_red_name_false_pass   'META_IDENTITY case=name_absent rc_preflight=0 rc_parity=0 dist_info_dirs=2 accepted_parity=1 parity_fail=0 identity_stop=0' "$Q/f2-red-name_absent.txt"
+expect_has f2_green_name_stop       'META_IDENTITY case=name_absent rc_preflight=0 rc_parity=3 dist_info_dirs=2 accepted_parity=0 parity_fail=0 identity_stop=1' "$Q/f2-green-name_absent.txt"
+expect_has f2_green_name_line       "^B1_STOP reason=metadata_identity_unestablished stage=verifier detail=name_absent name_sha256=$GHOST_SHA$" "$Q/f2-green-name_absent.txt"
+expect_has f2_red_dup_false_pass    'META_IDENTITY case=duplicate rc_preflight=0 rc_parity=0 dist_info_dirs=2 accepted_parity=1 parity_fail=0 identity_stop=0' "$Q/f2-red-duplicate.txt"
+expect_has f2_green_dup_stop        'META_IDENTITY case=duplicate rc_preflight=0 rc_parity=3 dist_info_dirs=2 accepted_parity=0 parity_fail=0 identity_stop=1' "$Q/f2-green-duplicate.txt"
+expect_has f2_green_dup_line        "^B1_STOP reason=metadata_identity_unestablished stage=verifier detail=canonical_name_duplicate name_sha256=$DUP_SHA$" "$Q/f2-green-duplicate.txt"
+expect_has f2_red_version_bad_fail  'META_IDENTITY case=version_absent rc_preflight=0 rc_parity=1 dist_info_dirs=2 accepted_parity=0 parity_fail=1 identity_stop=0' "$Q/f2-red-version_absent.txt"
+expect_has f2_green_version_stop    'META_IDENTITY case=version_absent rc_preflight=0 rc_parity=3 dist_info_dirs=2 accepted_parity=0 parity_fail=0 identity_stop=1' "$Q/f2-green-version_absent.txt"
+expect_has f2_green_version_line    "^B1_STOP reason=metadata_identity_unestablished stage=verifier detail=version_absent name_sha256=$NOVER_SHA$" "$Q/f2-green-version_absent.txt"
+
+# ===========================================================================
+# FINDING 4 (LOW) - the three /dev/null write opens.
+# (a) static: no non-comment /dev/null occurrence survives in GREEN.
+# (b) executed: the prerequisite check is no longer satisfiable by an EXECUTABLE
+#     of the predicate name on PATH - only by a real shell function.
+# (c) executed: wpi_alloc_leaf keeps create-once semantics and still leaks no
+#     diagnostic, with stderr CLOSED instead of redirected to /dev/null.
+# ===========================================================================
+RED_DEVNULL=$(grep -v '^[[:space:]]*#' "$RED" | grep -c '/dev/null')
+GREEN_DEVNULL=$(grep -v '^[[:space:]]*#' "$GREEN" | grep -c '/dev/null')
+printf 'DEVNULL_STATIC red_non_comment=%s green_non_comment=%s\n' "$RED_DEVNULL" "$GREEN_DEVNULL"
+expect_rc red_devnull "$RED_DEVNULL" 3
+expect_rc green_devnull "$GREEN_DEVNULL" 0
+
+cat > "$Q/f4_path_arm.sh" <<'ARM'
+S="$1"; W="$2"
+mkdir -p "$W/bin" "$W/ev"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$W/bin/rp0_require_safe_component"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$W/bin/rp0_allocate_evidence_dir"
+chmod +x "$W/bin/rp0_require_safe_component" "$W/bin/rp0_allocate_evidence_dir"
+PATH="$W/bin:$PATH"
+source <(sed '/^wpi_main "\$@"$/d' "$S")
+trap - ERR
+set +E; set +e; set +u; set +o pipefail
+RUNID=r5probe; EV_STAGE_ID=ro; EV_DIR="$W/ev"; EV_LOG="$W/ev/ro.log"
+WPI_FIXED_EVIDENCE_ROOT="$W"
+( wpi_assert_prerequisites ) > "$W/prereq.out" 2> "$W/prereq.err"; rc=$?
+printf 'PREREQ_PATH_SHADOW rc=%s stdout=[%s] stderr_bytes=%s\n' "$rc" "$(cat "$W/prereq.out")" "$(wc -c < "$W/prereq.err")"
+ARM
+bash --noprofile --norc "$Q/f4_path_arm.sh" "$RED"   "$Q/f4-red"   > "$Q/f4-red.txt" 2>&1
+bash --noprofile --norc "$Q/f4_path_arm.sh" "$GREEN" "$Q/f4-green" > "$Q/f4-green.txt" 2>&1
+cat "$Q/f4-red.txt" "$Q/f4-green.txt"
+expect_has f4_red_path_accepted 'PREREQ_PATH_SHADOW rc=0 stdout=\[\] stderr_bytes=0' "$Q/f4-red.txt"
+expect_has f4_green_path_refused 'PREREQ_PATH_SHADOW rc=3 stdout=\[RP7_STOP reason=rp0_lib_not_sourced predicate=rp0_require_safe_component\] stderr_bytes=0' "$Q/f4-green.txt"
+
+cat > "$Q/f4_leaf_arm.sh" <<'ARM'
+S="$1"; W="$2"
+mkdir -p "$W/ev"
+source <(sed '/^wpi_main "\$@"$/d' "$S")
+trap - ERR
+set +E; set +e; set +u; set +o pipefail
+EV_DIR="$W/ev"
+( wpi_alloc_leaf "$EV_DIR/leaf" ) > "$W/a1.out" 2> "$W/a1.err"; rc1=$?
+( wpi_alloc_leaf "$EV_DIR/leaf" ) > "$W/a2.out" 2> "$W/a2.err"; rc2=$?
+( wpi_alloc_leaf "$W/outside" )   > "$W/a3.out" 2> "$W/a3.err"; rc3=$?
+printf 'ALLOC_LEAF rc_first=%s rc_second=%s rc_outside=%s err1=%s err2=%s err3=%s second_stdout=[%s] outside_stdout=[%s]\n' \
+  "$rc1" "$rc2" "$rc3" "$(wc -c < "$W/a1.err")" "$(wc -c < "$W/a2.err")" "$(wc -c < "$W/a3.err")" \
+  "$(cat "$W/a2.out")" "$(cat "$W/a3.out")"
+ARM
+bash --noprofile --norc "$Q/f4_leaf_arm.sh" "$GREEN" "$Q/f4-leaf" > "$Q/f4-leaf.txt" 2>&1
+cat "$Q/f4-leaf.txt"
+expect_has f4_leaf_create_once 'ALLOC_LEAF rc_first=0 rc_second=3 rc_outside=3 err1=0 err2=0 err3=0' "$Q/f4-leaf.txt"
+expect_has f4_leaf_stop_text 'second_stdout=\[RP7_STOP reason=capture_leaf_not_create_once leaf=' "$Q/f4-leaf.txt"
+expect_has f4_leaf_outside_text 'outside_stdout=\[RP7_STOP reason=capture_path_outside_evidence leaf=' "$Q/f4-leaf.txt"
+
+# ===========================================================================
+# FINDING 5 (MEDIUM) - evidence-root provenance is never proved.
+# The arm drives the real wpi_assert_prerequisites. rp0_require_safe_component and
+# rp0_allocate_evidence_dir are real shell FUNCTIONS here (RP0-LIB is not present
+# on this workstation), which is the only substitution.
+# ===========================================================================
+cat > "$Q/f5_arm.sh" <<'ARM'
+S="$1"; W="$2"; PIN="$3"; EVD="$4"
+mkdir -p "$W"
+source <(sed '/^wpi_main "\$@"$/d' "$S")
+trap - ERR
+set +E; set +e; set +u; set +o pipefail
+rp0_require_safe_component(){ :; }
+rp0_allocate_evidence_dir(){ :; }
+RUNID=r5probe; EV_STAGE_ID=ro; EV_DIR="$EVD"; EV_LOG="$EVD/ro.log"
+[ "$PIN" = keep ] || WPI_FIXED_EVIDENCE_ROOT="$PIN"
+( wpi_assert_prerequisites ) > "$W/out" 2> "$W/err"; rc=$?
+printf 'EV_ROOT pin=[%s] ev_dir=[%s] rc=%s stderr_bytes=%s stdout=[%s]\n' \
+  "$PIN" "$EVD" "$rc" "$(wc -c < "$W/err")" "$(cat "$W/out")"
+ARM
+mkdir -p "$Q/base/evidence/runkit/RUN-RO" "$Q/base-evil/x" "$Q/other/x"
+HAS_CONST_RED=$(grep -c '^WPI_FIXED_EVIDENCE_ROOT=' "$RED")
+HAS_CONST_GREEN=$(grep -c '^WPI_FIXED_EVIDENCE_ROOT=' "$GREEN")
+printf 'EV_ROOT_CONSTANT red=%s green=%s\n' "$HAS_CONST_RED" "$HAS_CONST_GREEN"
+expect_rc ev_root_const_red "$HAS_CONST_RED" 0
+expect_rc ev_root_const_green "$HAS_CONST_GREEN" 1
+bash --noprofile --norc "$Q/f5_arm.sh" "$RED"   "$Q/f5-red"      keep         "$Q/other/x"                       > "$Q/f5-red.txt" 2>&1
+bash --noprofile --norc "$Q/f5_arm.sh" "$GREEN" "$Q/f5-unfilled" keep         "$Q/other/x"                       > "$Q/f5-unfilled.txt" 2>&1
+bash --noprofile --norc "$Q/f5_arm.sh" "$GREEN" "$Q/f5-inside"   "$Q/base"    "$Q/base/evidence/runkit/RUN-RO"   > "$Q/f5-inside.txt" 2>&1
+bash --noprofile --norc "$Q/f5_arm.sh" "$GREEN" "$Q/f5-outside"  "$Q/base"    "$Q/other/x"                       > "$Q/f5-outside.txt" 2>&1
+bash --noprofile --norc "$Q/f5_arm.sh" "$GREEN" "$Q/f5-lookalike" "$Q/base"   "$Q/base-evil/x"                   > "$Q/f5-lookalike.txt" 2>&1
+cat "$Q/f5-red.txt" "$Q/f5-unfilled.txt" "$Q/f5-inside.txt" "$Q/f5-outside.txt" "$Q/f5-lookalike.txt"
+expect_has f5_red_unbound     " rc=0 stderr_bytes=0 stdout=\[\]$" "$Q/f5-red.txt"
+expect_has f5_green_unfilled  ' rc=3 stderr_bytes=0 stdout=\[RP7_STOP reason=evidence_root_unattested detail=freeze_gate_pin_unfilled name=WPI_FIXED_EVIDENCE_ROOT\]$' "$Q/f5-unfilled.txt"
+expect_has f5_green_inside    " rc=0 stderr_bytes=0 stdout=\[\]$" "$Q/f5-inside.txt"
+expect_has f5_green_outside   " rc=3 stderr_bytes=0 stdout=\[RP7_STOP reason=evidence_root_unattested ev_dir=$Q/other/x expected_root=$Q/base\]$" "$Q/f5-outside.txt"
+expect_has f5_green_lookalike " rc=3 stderr_bytes=0 stdout=\[RP7_STOP reason=evidence_root_unattested ev_dir=$Q/base-evil/x expected_root=$Q/base\]$" "$Q/f5-lookalike.txt"
+
+case "$Q" in /tmp/rp7-r5-qa.*) rm -rf -- "$Q" ;; *) printf 'QA_SCRATCH_UNSAFE=%s\n' "$Q"; exit 97 ;; esac
+printf 'QA_PASS all_assertions=yes\n'
+# RP7_QA_FENCE_END
+```
+
+### Round-5 transcript
+
+```text
+QA_ROOT=/tmp/rp7-r5-qa.tJYRqc
+QA_ENV bash=5.2.37(1)-release coreutils_stat=8.32 python=3.14.2 git=2.52.0.windows.1 uid_gid=4096:4096
+BYTE_IDENTITY red_bytes=70941 red_sha256=23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad red_cr=0 red_bash_n=0 green_bytes=77179 green_sha256=393a16ce264b467bec180a2106390e6dcee4dc2605fd019871270fda11d3b0ee green_cr=0 green_bash_n=0
+MAIN_BIND rc=0 bound=[stat,readlink,env,find,sha256sum,systemctl,ss,curl,timeout,] python3_bound=no malicious_marker=present accepted_status=1 rp7_pass=1 window_open=1 window_closed=1 binding_stop=0
+MAIN_BIND rc=3 bound=[stat,readlink,env,find,sha256sum,systemctl,ss,curl,timeout,python3,] python3_bound=yes malicious_marker=absent accepted_status=0 rp7_pass=0 window_open=1 window_closed=0 binding_stop=1
+F1_ARM_RCS red=0 green=0
+RED   META_IDENTITY case=clean rc_preflight=0 rc_parity=0 dist_info_dirs=1 accepted_parity=1 parity_fail=0 identity_stop=0 subject_name_sha256=none
+GREEN META_IDENTITY case=clean rc_preflight=0 rc_parity=0 dist_info_dirs=1 accepted_parity=1 parity_fail=0 identity_stop=0 subject_name_sha256=none
+RED   META_IDENTITY case=name_absent rc_preflight=0 rc_parity=0 dist_info_dirs=2 accepted_parity=1 parity_fail=0 identity_stop=0 subject_name_sha256=15bf31c7b03eb9c11445f7328f389f86f3cd1e0cdfc928adcfbf021f6566a1d6
+GREEN META_IDENTITY case=name_absent rc_preflight=0 rc_parity=3 dist_info_dirs=2 accepted_parity=0 parity_fail=0 identity_stop=1 subject_name_sha256=15bf31c7b03eb9c11445f7328f389f86f3cd1e0cdfc928adcfbf021f6566a1d6
+GREEN B1_STOP reason=metadata_identity_unestablished stage=verifier detail=name_absent name_sha256=15bf31c7b03eb9c11445f7328f389f86f3cd1e0cdfc928adcfbf021f6566a1d6
+RED   META_IDENTITY case=version_absent rc_preflight=0 rc_parity=1 dist_info_dirs=2 accepted_parity=0 parity_fail=1 identity_stop=0 subject_name_sha256=e399457a916a7494816a42e7374d8b8065b91f0e85695cf2810a2a56c684d764
+GREEN META_IDENTITY case=version_absent rc_preflight=0 rc_parity=3 dist_info_dirs=2 accepted_parity=0 parity_fail=0 identity_stop=1 subject_name_sha256=e399457a916a7494816a42e7374d8b8065b91f0e85695cf2810a2a56c684d764
+GREEN B1_STOP reason=metadata_identity_unestablished stage=verifier detail=version_absent name_sha256=e399457a916a7494816a42e7374d8b8065b91f0e85695cf2810a2a56c684d764
+RED   META_IDENTITY case=duplicate rc_preflight=0 rc_parity=0 dist_info_dirs=2 accepted_parity=1 parity_fail=0 identity_stop=0 subject_name_sha256=13f2bc04e1b33fad9e8b0fab8b135e214120329fd63b87d6226a2c2b44455750
+GREEN META_IDENTITY case=duplicate rc_preflight=0 rc_parity=3 dist_info_dirs=2 accepted_parity=0 parity_fail=0 identity_stop=1 subject_name_sha256=13f2bc04e1b33fad9e8b0fab8b135e214120329fd63b87d6226a2c2b44455750
+GREEN B1_STOP reason=metadata_identity_unestablished stage=verifier detail=canonical_name_duplicate name_sha256=13f2bc04e1b33fad9e8b0fab8b135e214120329fd63b87d6226a2c2b44455750
+DEVNULL_STATIC red_non_comment=3 green_non_comment=0
+PREREQ_PATH_SHADOW rc=0 stdout=[] stderr_bytes=0
+PREREQ_PATH_SHADOW rc=3 stdout=[RP7_STOP reason=rp0_lib_not_sourced predicate=rp0_require_safe_component] stderr_bytes=0
+ALLOC_LEAF rc_first=0 rc_second=3 rc_outside=3 err1=0 err2=0 err3=0 second_stdout=[RP7_STOP reason=capture_leaf_not_create_once leaf=/tmp/rp7-r5-qa.tJYRqc/f4-leaf/ev/leaf] outside_stdout=[RP7_STOP reason=capture_path_outside_evidence leaf=/tmp/rp7-r5-qa.tJYRqc/f4-leaf/outside ev_dir=/tmp/rp7-r5-qa.tJYRqc/f4-leaf/ev]
+EV_ROOT_CONSTANT red=0 green=1
+EV_ROOT pin=[keep] ev_dir=[/tmp/rp7-r5-qa.tJYRqc/other/x] rc=0 stderr_bytes=0 stdout=[]
+EV_ROOT pin=[keep] ev_dir=[/tmp/rp7-r5-qa.tJYRqc/other/x] rc=3 stderr_bytes=0 stdout=[RP7_STOP reason=evidence_root_unattested detail=freeze_gate_pin_unfilled name=WPI_FIXED_EVIDENCE_ROOT]
+EV_ROOT pin=[/tmp/rp7-r5-qa.tJYRqc/base] ev_dir=[/tmp/rp7-r5-qa.tJYRqc/base/evidence/runkit/RUN-RO] rc=0 stderr_bytes=0 stdout=[]
+EV_ROOT pin=[/tmp/rp7-r5-qa.tJYRqc/base] ev_dir=[/tmp/rp7-r5-qa.tJYRqc/other/x] rc=3 stderr_bytes=0 stdout=[RP7_STOP reason=evidence_root_unattested ev_dir=/tmp/rp7-r5-qa.tJYRqc/other/x expected_root=/tmp/rp7-r5-qa.tJYRqc/base]
+EV_ROOT pin=[/tmp/rp7-r5-qa.tJYRqc/base] ev_dir=[/tmp/rp7-r5-qa.tJYRqc/base-evil/x] rc=3 stderr_bytes=0 stdout=[RP7_STOP reason=evidence_root_unattested ev_dir=/tmp/rp7-r5-qa.tJYRqc/base-evil/x expected_root=/tmp/rp7-r5-qa.tJYRqc/base]
+QA_PASS all_assertions=yes
+R5_FENCE_RC=0
+```
+
+Reading the load-bearing lines:
+
+- `BYTE_IDENTITY` proves the RED subject is the audited round-4 blob and the GREEN subject
+  is the repaired file, both LF-only and both `bash -n` clean.
+- `MAIN_BIND rc=0 ... python3_bound=no malicious_marker=present accepted_status=1
+  rp7_pass=1 window_open=1 window_closed=1 binding_stop=0` is Codex's finding 1 reproduced
+  on the audited bytes: the deviant executable ran, wrote a marker, forged `OK fields=8`
+  over an `ARMED` body, and the block still reached `RP7 PASS`.
+- `MAIN_BIND rc=3 ... python3_bound=yes malicious_marker=absent accepted_status=0
+  rp7_pass=0 window_open=1 window_closed=0 binding_stop=1` is the repair: the real
+  `wpi_main` loop asks for the tenth binding, the arm STOPs there, nothing was executed,
+  and the mount window was still open - which is the ordering the kickoff required.
+- The three `B1_STOP reason=metadata_identity_unestablished stage=verifier detail=<tok>
+  name_sha256=<h>` lines are the finding-2 repair. Each `name_sha256` equals the SHA-256 of
+  the offending directory's own name, which the arm re-derives independently and asserts.
+- `META_IDENTITY case=version_absent ... rc_parity=1 parity_fail=1` on the round-4 bytes is
+  the second half of finding 2 and a pattern-1 defect in its own right: an object whose
+  version cannot be established was reported as a package-parity host finding. The repaired
+  bytes STOP instead.
+- `PREREQ_PATH_SHADOW rc=0` versus `rc=3 stdout=[RP7_STOP reason=rp0_lib_not_sourced ...]`
+  shows the finding-4 replacement is not only redirection-free but strictly narrower than
+  the `command -v` it replaces.
+- Every `stderr_bytes=0` / `err1=0 err2=0 err3=0` field is the evidence that closing fd 2
+  discards the `noclobber` diagnostic without opening anything.
+
+## The carried round-4 fence, re-run as a regression gate
+
+The round-4 fence is reproduced below **unchanged except for the two anchor comments**, and
+was re-executed against the repaired bytes. It is the no-weakening gate for this round:
+every round-3 and round-4 arm - the two real `python -m venv` forging environments, the
+projection-v2 attacks, the two-phase listener parse, the row grammar, the `-S` guard, the
+tool-attestation disclosure, the timeout-inside-cleared-environment ordering - must still
+reach `QA_PASS` on the round-5 bytes, and does.
+
+```bash
+# RP7_R4_FENCE_BEGIN
 SCRIPT=/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh
 REPO_VERIFIER=/c/LAB/Tradingview_LAB_CLEAN/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py
 Q=$(mktemp -d /tmp/rp7-r4-qa.XXXXXX)
@@ -1220,25 +1651,23 @@ printf 'BASH_N_RC=%s BYTES=%s SHA256=%s\n' "$syntax" "$(wc -c < "$SCRIPT")" "$(s
 expect_rc bash_n "$syntax" 0
 case "$Q" in /tmp/rp7-r4-qa.*) rm -rf -- "$Q" ;; *) printf 'QA_ASSERT_FAIL unsafe_cleanup=%s\n' "$Q"; exit 93 ;; esac
 printf 'QA_PASS all_assertions=yes\n'
+# RP7_R4_FENCE_END
 ```
 
-## Real captured output
-
-The fence above was run verbatim. Its complete stdout/stderr transcript is recorded
-below from the final run; no line is reconstructed from prose.
+### Round-4 regression transcript (repaired bytes)
 
 ```text
-QA_ROOT=/tmp/rp7-r4-qa.TeVl1o
+QA_ROOT=/tmp/rp7-r4-qa.JNbQNz
 QA_ENV bash=5.2.37(1)-release coreutils_stat=8.32 python=3.14.2 uid_gid=4096:4096 live_mountinfo_records=4 symlinks=not_representable_msys2
-REAL_GNU_DIAGNOSTIC=[/usr/bin/stat: cannot stat '/tmp/rp7-r4-qa.TeVl1o/absent-leaf': No such file or directory]
+REAL_GNU_DIAGNOSTIC=[/usr/bin/stat: cannot stat '/tmp/rp7-r4-qa.JNbQNz/absent-leaf': No such file or directory]
 REAL_GNU_ABSENT kind=absent child_rc=1
 DIAG_ACCEPTED id=abs_statx kind=absent
 DIAG_ACCEPTED id=abs_stat kind=absent
 DIAG_ACCEPTED id=abs_oserr kind=absent
-B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.TeVl1o/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.TeVl1o/ev-diag-base_statx/ro.0001.lstat.stderr
-B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.TeVl1o/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.TeVl1o/ev-diag-base_stat/ro.0001.lstat.stderr
-B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.TeVl1o/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.TeVl1o/ev-diag-base_oserr/ro.0001.lstat.stderr
-B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.TeVl1o/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.TeVl1o/ev-diag-foreign/ro.0001.lstat.stderr
+B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.JNbQNz/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/ev-diag-base_statx/ro.0001.lstat.stderr
+B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.JNbQNz/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/ev-diag-base_stat/ro.0001.lstat.stderr
+B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.JNbQNz/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/ev-diag-base_oserr/ro.0001.lstat.stderr
+B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.JNbQNz/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/ev-diag-foreign/ro.0001.lstat.stderr
 STAT_DIAGNOSTIC_RCS real_gnu_absent=0 abs_statx=0 abs_stat=0 abs_oserr=0 base_statx=3 base_stat=3 base_oserr=3 foreign=3
 N1_REAL_MOUNTINFO records=4 captured_by=wpi_capture_mountinfo_snapshot
 N1_V2 clean=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 decoy_bind_under_release=74a1831126d71500bb26b663bc0923e5714679858bcb3d8c8bfa6898897a23e2 decoy_overlay_under_venv=7cb133713b58ce45a82b8180809b07e1f97032763f730e5ab578b3fc7657c6de repeat_clean=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359
@@ -1251,49 +1680,49 @@ V2_TRUSTED_PYTHON_POINT kind=point path=/usr/bin/python3 device=0:97 root=/ moun
 V2_SUBTREE_USR_BIN kind=subtree_count subtree_root=/usr/bin records=2
 COMPUTED_ATTESTATION sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 format=normalised_path_projection_v2
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.TeVl1o/ev-fail-mutant/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.TeVl1o/ev-fail-mutant/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/ev-fail-mutant/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.JNbQNz/ev-fail-mutant/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 B3_FAIL reason=fixture_deviation
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.TeVl1o/ev-fail-green/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.TeVl1o/ev-fail-green/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/ev-fail-green/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.JNbQNz/ev-fail-green/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.TeVl1o/ev-fail-green/ro.mountinfo.0002.snapshot projection=/tmp/rp7-r4-qa.TeVl1o/ev-fail-green/ro.0008.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/ev-fail-green/ro.mountinfo.0002.snapshot projection=/tmp/rp7-r4-qa.JNbQNz/ev-fail-green/ro.0008.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 MOUNT_WINDOW_CLOSED
 B3_FAIL reason=fixture_deviation
 FAIL_GUARD_CLOSE mutant_rc=1 mutant_window_closed=0 production_rc=1 production_window_closed=1
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.TeVl1o/ev-guard-attest/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.TeVl1o/ev-guard-changed/ro.0002.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/ev-guard-attest/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.JNbQNz/ev-guard-changed/ro.0002.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 RP7_mount_table parsed=yes records=5 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=5 raw_snapshot=/tmp/rp7-r4-qa.TeVl1o/n1-decoy projection=/tmp/rp7-r4-qa.TeVl1o/ev-guard-changed/ro.0006.mount_projection.tsv sha256=74a1831126d71500bb26b663bc0923e5714679858bcb3d8c8bfa6898897a23e2 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=5 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/n1-decoy projection=/tmp/rp7-r4-qa.JNbQNz/ev-guard-changed/ro.0006.mount_projection.tsv sha256=74a1831126d71500bb26b663bc0923e5714679858bcb3d8c8bfa6898897a23e2 content=not_printed
 RP7_STOP reason=mount_topology_changed before=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 after=74a1831126d71500bb26b663bc0923e5714679858bcb3d8c8bfa6898897a23e2 format=normalised_path_projection_v2
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.TeVl1o/ev-guard-mismatch/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.TeVl1o/ev-guard-mismatch/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/ev-guard-mismatch/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.JNbQNz/ev-guard-mismatch/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 RP7_STOP reason=mount_topology_mismatch observed=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 attested=0000000000000000000000000000000000000000000000000000000000000000 format=normalised_path_projection_v2
 MOUNT_GUARD_RCS changed_downgrade=3 attestation_mismatch=3
 B3_STOP reason=structured_path_unparseable source=find_stdout detail=unsafe_character
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.TeVl1o/ev-space/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.TeVl1o/ev-space/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/ev-space/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.JNbQNz/ev-space/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.TeVl1o/ev-space/ro.mountinfo.0002.snapshot projection=/tmp/rp7-r4-qa.TeVl1o/ev-space/ro.0012.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/ev-space/ro.mountinfo.0002.snapshot projection=/tmp/rp7-r4-qa.JNbQNz/ev-space/ro.0012.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 B3_FAIL reason=writable_path_inside_immutable_tree path=[unrenderable] path_sha256=565603d319c5019948e7655e2da5b2f006639a9ad9d087d2ed6cba5a41948f2e count=1
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.TeVl1o/ev-realfind/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.TeVl1o/ev-realfind/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/ev-realfind/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.JNbQNz/ev-realfind/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.TeVl1o/ev-realfind/ro.mountinfo.0002.snapshot projection=/tmp/rp7-r4-qa.TeVl1o/ev-realfind/ro.0013.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
-B3_FAIL reason=writable_path_inside_immutable_tree path=/tmp/rp7-r4-qa.TeVl1o/imm/sub count=2
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/ev-realfind/ro.mountinfo.0002.snapshot projection=/tmp/rp7-r4-qa.JNbQNz/ev-realfind/ro.0013.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+B3_FAIL reason=writable_path_inside_immutable_tree path=/tmp/rp7-r4-qa.JNbQNz/imm/sub count=2
 UNSAFE_PATH_RCS mutant_stop=3 suppressed_render_fail=1 real_find_fail=1
-MUTANT_RP7_tool name=stat path=/tmp/rp7-r4-qa.TeVl1o/tools/stat owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute
-RP7_tool name=stat path=/tmp/rp7-r4-qa.TeVl1o/tools/stat owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
-RP7_tool name=readlink path=/tmp/rp7-r4-qa.TeVl1o/tools/readlink owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
-RP7_tool name=env path=/tmp/rp7-r4-qa.TeVl1o/tools/env owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
-RP7_tool name=find path=/tmp/rp7-r4-qa.TeVl1o/tools/find owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
-RP7_tool name=sha256sum path=/tmp/rp7-r4-qa.TeVl1o/tools/sha256sum owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
-RP7_tool name=systemctl path=/tmp/rp7-r4-qa.TeVl1o/tools/systemctl owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
-RP7_tool name=ss path=/tmp/rp7-r4-qa.TeVl1o/tools/ss owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
-RP7_tool name=curl path=/tmp/rp7-r4-qa.TeVl1o/tools/curl owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
-RP7_tool name=timeout path=/tmp/rp7-r4-qa.TeVl1o/tools/timeout owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
-RP7_tool name=python3 path=/tmp/rp7-r4-qa.TeVl1o/tools/python3 owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
+MUTANT_RP7_tool name=stat path=/tmp/rp7-r4-qa.JNbQNz/tools/stat owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute
+RP7_tool name=stat path=/tmp/rp7-r4-qa.JNbQNz/tools/stat owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
+RP7_tool name=readlink path=/tmp/rp7-r4-qa.JNbQNz/tools/readlink owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
+RP7_tool name=env path=/tmp/rp7-r4-qa.JNbQNz/tools/env owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
+RP7_tool name=find path=/tmp/rp7-r4-qa.JNbQNz/tools/find owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
+RP7_tool name=sha256sum path=/tmp/rp7-r4-qa.JNbQNz/tools/sha256sum owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
+RP7_tool name=systemctl path=/tmp/rp7-r4-qa.JNbQNz/tools/systemctl owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
+RP7_tool name=ss path=/tmp/rp7-r4-qa.JNbQNz/tools/ss owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
+RP7_tool name=curl path=/tmp/rp7-r4-qa.JNbQNz/tools/curl owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
+RP7_tool name=timeout path=/tmp/rp7-r4-qa.JNbQNz/tools/timeout owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
+RP7_tool name=python3 path=/tmp/rp7-r4-qa.JNbQNz/tools/python3 owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
 TOOL_ATTESTATION mutant_rc=0 mutant_attestation_fields=0 production_rc=0 self=4 bound_instrument=6 self_names=stat,env,sha256sum,timeout,
-RP7_STOP reason=tool_not_evaluable tool=python3 detail=path_metadata_mismatch path=/tmp/rp7-r4-qa.TeVl1o/tools/python3 kind=symlink mode=755 owner_numeric=0:0 expected=regular,any,0:0
+RP7_STOP reason=tool_not_evaluable tool=python3 detail=path_metadata_mismatch path=/tmp/rp7-r4-qa.JNbQNz/tools/python3 kind=symlink mode=755 owner_numeric=0:0 expected=regular,any,0:0
 TRUSTED_PYTHON_PIN symlinked_pin_rc=3 symlink_rejected=1
 REAL_CHARDEV raw=[character special file] token=[other]
 MUTANT_B3_STOP reason=path_not_evaluable path=/ detail=root_kind_character special file
@@ -1301,15 +1730,15 @@ MUTANT_B1_STOP reason=interpreter_object_unbound kind=character special file tar
 B3_STOP reason=path_not_evaluable path=/ detail=root_kind_other
 B1_STOP reason=interpreter_object_unbound kind=other target=none
 KIND_TOKEN_RCS real_chardev=0 root_kind_stop=3 interpreter_kind_stop=3 root_token_ok=1 interpreter_token_ok=1
-TIMEOUT_ENV mutant_marker=1 mutant_vars=104 production_marker=0 production_vars=10
-B3_STOP reason=sweep_budget_exceeded root=/fixture elapsed_s=8 elapsed_ms=8060 budget_s=2
-B3_STOP reason=sweep_budget_exceeded root=/fixture elapsed_s=2 elapsed_ms=2050 budget_s=2
-TIMEOUT_RCS mutant=3 production=3 mutant_wall_s=8 production_wall_s=3 budget_s=2 child_sleep_s=8
-B1_interpreter path=/tmp/rp7-r4-qa.TeVl1o/venv/bin/python object=non_symlink_regular preexec_binding=component_and_mount_window_closed exec_binding=separate_bounded_exec version_family=3.12 env=cleared isolated=yes
+TIMEOUT_ENV mutant_marker=1 mutant_vars=103 production_marker=0 production_vars=10
+B3_STOP reason=sweep_budget_exceeded root=/fixture elapsed_s=8 elapsed_ms=8070 budget_s=2
+B3_STOP reason=sweep_budget_exceeded root=/fixture elapsed_s=2 elapsed_ms=2040 budget_s=2
+TIMEOUT_RCS mutant=3 production=3 mutant_wall_s=8 production_wall_s=2 budget_s=2 child_sleep_s=8
+B1_interpreter path=/tmp/rp7-r4-qa.JNbQNz/venv/bin/python object=non_symlink_regular preexec_binding=component_and_mount_window_closed exec_binding=separate_bounded_exec version_family=3.12 env=cleared isolated=yes
 B1_STOP reason=interpreter_object_unbound kind=symlink target=/decoy/target
 B1_STOP reason=interpreter_object_unbound kind=symlink target=/decoy B1_interpreter path=spoofed exec=ok
 INTERPRETER_RCS regular_pass=0 symlink_stop=3 cr_stop=3 cr_forged_lines=0 cr_single_sanitised_line=1
-FORGE_FIXTURES venv_rc=0,0 pth=[import os,sys; open(r"C:\Users\BARSEM~1\AppData\Local\Temp\rp7-r4-qa.TeVl1o\pth.marker","w").write("1"); sys.stdout.write("OK fields=8"+chr(10)); sys.stdout.flush(); os._exit(0)] sitecustomize_lines=5
+FORGE_FIXTURES venv_rc=0,0 pth=[import os,sys; open(r"C:\Users\BARSEM~1\AppData\Local\Temp\rp7-r4-qa.JNbQNz\pth.marker","w").write("1"); sys.stdout.write("OK fields=8"+chr(10)); sys.stdout.flush(); os._exit(0)] sitecustomize_lines=5
 B5_status http=200 json=strict required_fields=8 flags=expected body_sha256=0000000000000000000000000000000000000000000000000000000000000000 content=not_printed
 B5_FAIL reason=flag_mismatch field=state observed_sha256=b30c3a9662f46e65f2b937b628583be2bff0e37e7466aa3b4bd988740310a913 expected=preregistered_typed_value
 B5_FAIL reason=flag_mismatch field=state observed_sha256=b30c3a9662f46e65f2b937b628583be2bff0e37e7466aa3b4bd988740310a913 expected=preregistered_typed_value
@@ -1329,26 +1758,26 @@ B6_FAIL reason=nonloopback_listener addr=0.0.0.0
 B6_STOP reason=listener_inventory_unreadable_or_unparseable rc=0 detail=table_grammar
 B6_STOP reason=listener_inventory_unreadable_or_unparseable rc=0 detail=table_grammar
 B6_STOP reason=listener_inventory_unreadable_or_unparseable rc=0 detail=table_grammar
-B6_listener_inventory rows=2 port_8790_rows=1 evidence_file=/tmp/rp7-r4-qa.TeVl1o/ss-wccomplete-green/ss.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
+B6_listener_inventory rows=2 port_8790_rows=1 evidence_file=/tmp/rp7-r4-qa.JNbQNz/ss-wccomplete-green/ss.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
 B6_FAIL reason=nonloopback_listener addr=0.0.0.0
-B6_listener_inventory rows=2 port_8790_rows=1 evidence_file=/tmp/rp7-r4-qa.TeVl1o/ss-good-green/ss.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
+B6_listener_inventory rows=2 port_8790_rows=1 evidence_file=/tmp/rp7-r4-qa.JNbQNz/ss-good-green/ss.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
 B6_listener_set port=8790 count=1 local=127.0.0.1 wildcard=none table=complete
 LISTENER_ORDER red_wildcard_first_rc=1 red_malformed_first_rc=3 green_wildcard_first_rc=3 green_malformed_first_rc=3 expected_both_stop=3
 LISTENER_COMPLETE_TABLE wildcard_fail_rc=1 good_rc=0 inventory_before_verdict=1
-B1_metadata_universe root=/tmp/rp7-r4-qa.TeVl1o/f3-clean/venv/lib/python3.12/site-packages entries=3 dist_info_dirs=2 non_metadata_entries=1 enumeration=unfiltered_maxdepth_1 universe=explicit_dist_info_only
-B1_metadata_preflight root=/tmp/rp7-r4-qa.TeVl1o/f3-clean/venv/lib/python3.12/site-packages dist_info_dirs=2 complete=yes readable=yes
-B1_metadata_preflight root=/tmp/rp7-r4-qa.TeVl1o/f3-egg/venv/lib/python3.12/site-packages dist_info_dirs=2 complete=yes readable=yes
-B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.TeVl1o/f3-egg/venv/lib/python3.12/site-packages/ghost.egg-info format=egg_info
-B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.TeVl1o/f3-pth/venv/lib/python3.12/site-packages/evil.pth format=pth
-B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.TeVl1o/f3-hook/venv/lib/python3.12/site-packages/sitecustomize.py format=startup_hook
-B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.TeVl1o/f3-zip/venv/lib/python3.12/site-packages/wheelhouse.zip format=zip
-B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.TeVl1o/f3-filedi/venv/lib/python3.12/site-packages/broken-1.0.dist-info format=dist_info_kind_regular
-B1_FAIL reason=distribution_metadata_absent path=/tmp/rp7-r4-qa.TeVl1o/f3-absent/venv/lib/python3.12/site-packages/gone-1.0.dist-info/METADATA
-B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.TeVl1o/f3-unread/venv/lib/python3.12/site-packages/demo_pkg-1.0.dist-info/METADATA rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.TeVl1o/f3-ev-t09/ro.0049.lstat.stderr
-B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.TeVl1o/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info detail=dist_info_kind_character special file
-B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.TeVl1o/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info format=dist_info_kind_other
-B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.TeVl1o/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info/METADATA detail=kind_character special file
-B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.TeVl1o/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info/METADATA detail=kind_other
+B1_metadata_universe root=/tmp/rp7-r4-qa.JNbQNz/f3-clean/venv/lib/python3.12/site-packages entries=3 dist_info_dirs=2 non_metadata_entries=1 enumeration=unfiltered_maxdepth_1 universe=explicit_dist_info_only
+B1_metadata_preflight root=/tmp/rp7-r4-qa.JNbQNz/f3-clean/venv/lib/python3.12/site-packages dist_info_dirs=2 complete=yes readable=yes
+B1_metadata_preflight root=/tmp/rp7-r4-qa.JNbQNz/f3-egg/venv/lib/python3.12/site-packages dist_info_dirs=2 complete=yes readable=yes
+B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.JNbQNz/f3-egg/venv/lib/python3.12/site-packages/ghost.egg-info format=egg_info
+B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.JNbQNz/f3-pth/venv/lib/python3.12/site-packages/evil.pth format=pth
+B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.JNbQNz/f3-hook/venv/lib/python3.12/site-packages/sitecustomize.py format=startup_hook
+B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.JNbQNz/f3-zip/venv/lib/python3.12/site-packages/wheelhouse.zip format=zip
+B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.JNbQNz/f3-filedi/venv/lib/python3.12/site-packages/broken-1.0.dist-info format=dist_info_kind_regular
+B1_FAIL reason=distribution_metadata_absent path=/tmp/rp7-r4-qa.JNbQNz/f3-absent/venv/lib/python3.12/site-packages/gone-1.0.dist-info/METADATA
+B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.JNbQNz/f3-unread/venv/lib/python3.12/site-packages/demo_pkg-1.0.dist-info/METADATA rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/f3-ev-t09/ro.0049.lstat.stderr
+B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.JNbQNz/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info detail=dist_info_kind_character special file
+B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.JNbQNz/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info format=dist_info_kind_other
+B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.JNbQNz/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info/METADATA detail=kind_character special file
+B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.JNbQNz/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info/METADATA detail=kind_other
 METADATA_UNIVERSE_RCS clean=0 egg_red=0 egg_green=3 pth=3 hook=3 zip=3 dist_info_file=3 member_absent=1 member_unreadable=3 chardev_dir_red=3 chardev_dir=3 chardev_member_red=3 chardev_member=3
 B1_STOP reason=metadata_universe_unexpected stage=verifier format=egg_info name_sha256=cf1057a30e78603c62e83b18e1c5697aca2bfeac81a18a4707b550f2e8b99132
 B1_STOP reason=metadata_universe_unexpected stage=verifier format=startup_hook name_sha256=1dc3332b767b1b60ea953e5dfdd81df90bf3449d9c313c945bbdb29e78f45ff8
@@ -1356,21 +1785,21 @@ B1_lock_parity result=pass packages=2 output=structurally_parsed verifier_preexe
 DRIVER_UNIVERSE egg_rc=3 hook_rc=3 clean_rc=0
 B5B6_DECLARED_ORDER wpi_assert_netns_binding,wpi_assert_status,wpi_assert_listener_set,
 B6_netns caller=net:[100] service=net:[100] mainpid=189813 binding=equal
-B6_listener_inventory rows=1 port_8790_rows=1 evidence_file=/tmp/rp7-r4-qa.TeVl1o/order-red/3.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
+B6_listener_inventory rows=1 port_8790_rows=1 evidence_file=/tmp/rp7-r4-qa.JNbQNz/order-red/3.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
 B6_FAIL reason=listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790
 B6_netns caller=net:[100] service=net:[100] mainpid=189813 binding=equal
 B5_FAIL reason=status_endpoint_unexpected_http code=500
 TWO_DEVIATION red_rc=1 red_first_result=[B6_FAIL reason=listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790] green_rc=1 green_first_result=[B5_FAIL reason=status_endpoint_unexpected_http code=500]
-B1a_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.TeVl1o/f5/release/IBKR_PAPER_BRIDGE/requirements.lock rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.TeVl1o/f5-ev-r17unread_red/ro.0023.lstat.stderr
-B1a_STOP reason=installed_lock_unreadable path=/tmp/rp7-r4-qa.TeVl1o/f5/release/IBKR_PAPER_BRIDGE/requirements.lock rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.TeVl1o/f5-ev-r17unread/ro.0023.lstat.stderr
-B1_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.TeVl1o/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.TeVl1o/f5-ev-r19aunread_red/ro.0027.lstat.stderr
-B1_STOP reason=verifier_unreadable path=/tmp/rp7-r4-qa.TeVl1o/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.TeVl1o/f5-ev-r19aunread/ro.0027.lstat.stderr
-B1a_FAIL reason=installed_lock_object_unexpected path=/tmp/rp7-r4-qa.TeVl1o/f5/release/IBKR_PAPER_BRIDGE/requirements.lock kind=directory
+B1a_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.JNbQNz/f5/release/IBKR_PAPER_BRIDGE/requirements.lock rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/f5-ev-r17unread_red/ro.0023.lstat.stderr
+B1a_STOP reason=installed_lock_unreadable path=/tmp/rp7-r4-qa.JNbQNz/f5/release/IBKR_PAPER_BRIDGE/requirements.lock rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/f5-ev-r17unread/ro.0023.lstat.stderr
+B1_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.JNbQNz/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/f5-ev-r19aunread_red/ro.0027.lstat.stderr
+B1_STOP reason=verifier_unreadable path=/tmp/rp7-r4-qa.JNbQNz/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/f5-ev-r19aunread/ro.0027.lstat.stderr
+B1a_FAIL reason=installed_lock_object_unexpected path=/tmp/rp7-r4-qa.JNbQNz/f5/release/IBKR_PAPER_BRIDGE/requirements.lock kind=directory
 B1a_FAIL reason=installed_lock_object_unexpected kind=directory
-B1a_FAIL reason=path_metadata_mismatch path=/tmp/rp7-r4-qa.TeVl1o/f5/release/IBKR_PAPER_BRIDGE/requirements.lock kind=regular mode=644 owner_numeric=1000:1000 expected=regular,any,0:0
+B1a_FAIL reason=path_metadata_mismatch path=/tmp/rp7-r4-qa.JNbQNz/f5/release/IBKR_PAPER_BRIDGE/requirements.lock kind=regular mode=644 owner_numeric=1000:1000 expected=regular,any,0:0
 B1a_FAIL reason=installed_lock_owner_unexpected owner_numeric=1000:1000 expected=0:0
-B1_FAIL reason=path_metadata_mismatch path=/tmp/rp7-r4-qa.TeVl1o/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py kind=regular mode=644 owner_numeric=1000:1000 expected=regular,any,0:0
-B1_FAIL reason=verifier_owner_unexpected path=/tmp/rp7-r4-qa.TeVl1o/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py owner_numeric=1000:1000 expected=0:0
+B1_FAIL reason=path_metadata_mismatch path=/tmp/rp7-r4-qa.JNbQNz/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py kind=regular mode=644 owner_numeric=1000:1000 expected=regular,any,0:0
+B1_FAIL reason=verifier_owner_unexpected path=/tmp/rp7-r4-qa.JNbQNz/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py owner_numeric=1000:1000 expected=0:0
 ROW_GRAMMAR_RCS r17_unread_red=3 r17_unread=3 r19a_unread_red=3 r19a_unread=3 r17_kind_red=1 r17_kind=1 r17_owner_red=1 r17_owner=1 r19a_owner_red=1 r19a_owner=1
 MUTANT_MOUNT_POINT=/mnt/*
 RP7_mount_table parsed=yes records=1 content=not_printed
@@ -1385,183 +1814,57 @@ B5_STOP reason=schema_unexpected field=state_version
 JSON_RCS mutant_wrong_type=3 good=0 nan=3 infinity=3 wrong_type=1 top_array=3 mismatch=1 missing=3
 MUTANT_SS_ARGV=listeners /usr/bin/ss -H -ltn sport = :8790
 PRODUCTION_SS_ARGV=listeners /usr/bin/ss -H -ltn
-B6_listener_inventory rows=2 port_8790_rows=1 evidence_file=/tmp/rp7-r4-qa.TeVl1o/ev-listener-green/ss.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
+B6_listener_inventory rows=2 port_8790_rows=1 evidence_file=/tmp/rp7-r4-qa.JNbQNz/ev-listener-green/ss.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
 B6_listener_set port=8790 count=1 local=127.0.0.1 wildcard=none table=complete
-B6_listener_inventory rows=1 port_8790_rows=1 evidence_file=/tmp/rp7-r4-qa.TeVl1o/ev-listener-addr/ss.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
+B6_listener_inventory rows=1 port_8790_rows=1 evidence_file=/tmp/rp7-r4-qa.JNbQNz/ev-listener-addr/ss.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
 B6_FAIL reason=listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790
 LISTENER_RCS mutant_filtered=0 production_full_inventory=0 non_preregistered_address=1
-RP7_STOP reason=system_manager_unreachable rc=5 detail=manager_query_nonzero diagnostic_file=/tmp/rp7-r4-qa.TeVl1o/ev-manager/ro.0001.system_manager.stderr
-B3_STOP reason=walk_incomplete root=/fixture rc=1 detail=diagnostic_captured diagnostic_file=/tmp/rp7-r4-qa.TeVl1o/ev-partial/ro.0001.partial.stderr partial_stdout_discarded=/tmp/rp7-r4-qa.TeVl1o/ev-partial/ro.0001.partial.stdout
+RP7_STOP reason=system_manager_unreachable rc=5 detail=manager_query_nonzero diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/ev-manager/ro.0001.system_manager.stderr
+B3_STOP reason=walk_incomplete root=/fixture rc=1 detail=diagnostic_captured diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/ev-partial/ro.0001.partial.stderr partial_stdout_discarded=/tmp/rp7-r4-qa.JNbQNz/ev-partial/ro.0001.partial.stdout
 B1_FAIL reason=lock_installed_parity observed=positively_distinguished_named_set_mismatch
-B1_STOP reason=verifier_not_evaluable rc=1 detail=unclassified_verifier_result diagnostic_file=/tmp/rp7-r4-qa.TeVl1o/ev-parity-stop/err
+B1_STOP reason=verifier_not_evaluable rc=1 detail=unclassified_verifier_result diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/ev-parity-stop/err
 B6_STOP reason=netns_mismatch caller=net:[100] service=net:[200]
 B5_FAIL reason=status_endpoint_unexpected_http code=500
 REGRESSION_RCS manager_stop=3 partial_walk_stop=3 parity_fail=1 parity_generic_stop=3 netns_stop=3 http_fail=1
-BASH_N_RC=0 BYTES=70941 SHA256=23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad
+BASH_N_RC=0 BYTES=77179 SHA256=393a16ce264b467bec180a2106390e6dcee4dc2605fd019871270fda11d3b0ee
 QA_PASS all_assertions=yes
+R4_FENCE_RC=0
 ```
 
-## Coverage interpretation - round-4 findings
+Its final line re-derives the round-5 identity from inside the round-4 fence:
+`BASH_N_RC=0 BYTES=77179 SHA256=393a16ce264b467bec180a2106390e6dcee4dc2605fd019871270fda11d3b0ee`.
 
-**Finding 1 (BLOCK) - venv `site` startup executes unbound code before both
-adjudicators.** Two real venvs, two real startup hooks, four executed arms.
+Two lines in that transcript now read differently from round 4 and are expected to:
+`TOOL_ATTESTATION ... self=4 bound_instrument=6` still holds because the attestation
+vocabulary did not change, and `V2_TRUSTED_PYTHON_POINT` still shows the trusted
+interpreter as a projection point. What changed in the block is *where* that interpreter is
+bound, which the round-4 fence never observed - that is what the round-5 F1 arm is for.
 
-*1(a) status parser.* The response body is deliberately **deviant** (`state` is `ARMED`),
-so the truthful adjudication is `B5_FAIL reason=flag_mismatch field=state` at rc 1. The
-round-3 body, carried verbatim as `mutant_assert_status_r3`, runs
-`<venv>/bin/python -I`; the venv's `site-packages/zzforge.pth` executes during startup,
-writes `pth.marker`, prints exactly `OK fields=8` and calls `os._exit(0)` before the
-embedded parser source is compiled. `PTH_FORGE_STATUS` records
-`red_rc=0 red_marker=1 red_false_pass=1`: a PASS line on a deviant host **and** a
-mutation, which is simultaneously the false-PASS route and the violation of the
-read-only claim. Production records `green_rc=1 green_marker=0 green_truthful_fail=1`.
+### Literal re-run of the published command against this document
 
-*1(b) lock parity.* The venv's metadata universe is deliberately **deviant** against the
-lock (one distribution pinned at the wrong version), so the truthful adjudication is
-`B1_FAIL reason=lock_installed_parity` at rc 1. `mutant_assert_lock_parity_r3` runs
-`<venv>/bin/python -I verify_lock.py`; `sitecustomize.py` writes `sitecustomize.marker`
-and prints exactly `verify_lock: PASS: lock+installed; packages=2`.
-`SITECUSTOMIZE_FORGE_PARITY` records `red_rc=0 red_marker=1 red_false_pass=1` against
-`green_rc=1 green_marker=0 green_truthful_fail=1`, plus `clean_rc=0 clean_marker=0
-clean_pass=1` - the repaired path still reaches a real PASS over a correct universe, so
-the fix is not "STOP on everything".
+After the transcripts above were pasted in, the published command was extracted from **this
+file, as committed** and executed again verbatim. It returned rc 0 with empty stderr, both
+fences printed `QA_PASS all_assertions=yes` (`R5_FENCE_RC=0`, `R4_FENCE_RC=0`), and both
+extracted bodies re-derived the same digests and byte counts as the recorded run
+(`0263067e...5b62f` / 20050 B and `94101ef7...56e0` / 76710 B). Pasting the transcripts
+changed no byte inside either marker range, which is why the digests are stable.
 
-*The isolated variable.* Both GREEN arms above also change the interpreter, so each has
-a third arm that changes **only** `-S`: production bytes pinned to the SAME venv
-interpreter the RED arm used. `PTH_FORGE_SAME_INTERPRETER` and
-`SITECUSTOMIZE_FORGE_SAME_INTERPRETER` both record
-`green_venv_interpreter_rc=1 green_venv_marker=0 green_venv_truthful_fail=1`. This is
-the auditor's `I_marker=True / I_S_marker=False` experiment, driven through the
-production block rather than beside it.
+A diff of the two runs, ignoring the `mktemp` scratch names, is confined to three lines and
+they are the only non-deterministic outputs in the suite - the measured wall clock of the
+budget arm: `elapsed_ms=8070` versus `8060`, `elapsed_ms=2040` versus `2200`, and
+`production_wall_s=2` versus `3`. Every rc, digest, reason token and result line is
+identical.
 
-*1(c) the guards are load-bearing.* `mutant_lock_parity_no_S` and `mutant_status_no_S`
-are production bytes with ` -S` deleted by `sed` - which is exactly the round-3 startup.
-`NO_SITE_GUARD` records `parity_rc=3 parity_refused=1 status_rc=3 status_refused=1`:
-the driver emits `verifier_not_evaluable rc=4 detail=trusted_startup_unproven` and the
-parser emits `PARSE startup_not_isolated` at parser rc 3. Neither adjudicator will
-produce a result unless `sys.flags.isolated` and `sys.flags.no_site` are both set and no
-`site`/`sitecustomize`/`usercustomize` module is present in `sys.modules`.
+## What this QA does not establish
 
-*The tenth pin.* `TOOL_ATTESTATION` now executes ten bindings (`self=4`,
-`bound_instrument=6`), `V2_TRUSTED_PYTHON_POINT` shows `/usr/bin/python3` carried as a
-projection point path (`V2_RECORD_SHAPE points=21`), and `TRUSTED_PYTHON_PIN` records
-that a symlinked pin is refused at binding
-(`tool_not_evaluable tool=python3 … kind=symlink`, rc 3). That refusal is *why* the
-resolved leaf is a freeze-gate input rather than a literal in these bytes.
-
-**Finding 2 (HIGH) - row 22 could FAIL before the table was parsed.** The two order
-permutations the auditor ran are executed against both bodies. Both fixtures contain the
-same two records - one wildcard `0.0.0.0:8790` row and one malformed row - so neither
-ordering is evaluable and the only truthful result in either order is rc 3.
-
-| order | round-3 body | round-4 body |
-|---|---|---|
-| wildcard first | `B6_FAIL reason=nonloopback_listener addr=0.0.0.0`, **rc 1** | `B6_STOP … detail=table_grammar`, **rc 3** |
-| malformed first | `B6_STOP … detail=table_grammar`, rc 3 | `B6_STOP … detail=table_grammar`, rc 3 |
-
-`LISTENER_ORDER` records `red_wildcard_first_rc=1 red_malformed_first_rc=3
-green_wildcard_first_rc=3 green_malformed_first_rc=3`. `LISTENER_COMPLETE_TABLE` proves
-the fix did not simply convert every FAIL into a STOP: a **complete** table containing a
-wildcard row still FAILs at rc 1, a complete correct table still PASSes at rc 0, and in
-both cases `B6_listener_inventory … parse=complete_before_semantics` is emitted *before*
-the verdict, so the evidence itself records that the whole table was parsed first.
-
-**Finding 3 (HIGH) - the preflight omitted formats its verifier consumes.** There is now
-ONE explicit discovery universe, enforced twice. The preflight enumeration is unfiltered
-(`-mindepth 1 -maxdepth 1 -print0`, no `-name`), and the trusted driver re-derives the
-same universe from its own `os.listdir` scan.
-
-`METADATA_UNIVERSE_RCS` drives the preflight over nine host states. The round-3 body over
-the auditor's own fixture - a `ghost.egg-info` beside two `*.dist-info` directories -
-returns `egg_red=0` and prints `B1_metadata_preflight … dist_info_dirs=2 complete=yes
-readable=yes`: it declares complete readability of a universe it never enumerated. The
-round-4 body returns rc 3 with
-`metadata_universe_unexpected stage=preflight … format=egg_info`. The same STOP covers
-`format=pth`, `format=startup_hook`, `format=zip` and `format=dist_info_kind_regular`.
-The readable case PASSes with
-`B1_metadata_universe … entries=3 dist_info_dirs=2 non_metadata_entries=1`; an absent
-member is the evaluable `B1_FAIL reason=distribution_metadata_absent` (rc 1); an
-unreadable member is `B1_STOP reason=metadata_unreadable … detail=unclassified_diagnostic`
-(rc 3) against a stat that really failed.
-
-`DRIVER_UNIVERSE` proves the second gate independently: the same `egg-info` and
-`sitecustomize.py` states reach the trusted driver as
-`metadata_universe_unexpected stage=verifier format=… name_sha256=…` at rc 3, while the
-clean state reaches rc 0. No accepting result can rest on a format only one side
-enumerated. Because `sys.path` never names the venv under `-I -S` and
-`PathFinder.find_distributions` is neutralised, the zip and extension-finder routes are
-structurally unreachable rather than merely unlisted; the name-based rejections above are
-the evidence layer over that.
-
-**Finding 4 (MEDIUM) - the semantic B5/B6 order was inverted beyond the authorised
-preflight.** `B5B6_DECLARED_ORDER` is not re-declared by the QA: it is **extracted from
-the frozen `wpi_main` body at run time**, so this arm cannot pass if the block's call
-order is wrong. It records
-`wpi_assert_netns_binding,wpi_assert_status,wpi_assert_listener_set,` - the preflight
-inversion preserved, the whole-listener move reverted.
-
-`TWO_DEVIATION` supplies a host state carrying **both** an independent row-20 deviation
-(HTTP 500) and an independent row-22 deviation (a `10.0.0.5:8790` listener), and runs the
-GREEN order through that same extracted call list:
-
-```text
-red_first_result=[B6_FAIL reason=listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790]
-green_first_result=[B5_FAIL reason=status_endpoint_unexpected_http code=500]
-```
-
-Both at rc 1. The predicted first divergence is now the preregistered one.
-
-**Finding 5 (LOW) - exact row/result grammar.** `ROW_GRAMMAR_RCS` drives five RED/GREEN
-pairs against a stat that really errors and against a multi-word object kind. RED is the
-round-3 call contract, in which no caller-specific reason was threaded through the walk
-and the leaf rendering carried a `path=` field.
-
-| item | round-3 line | round-4 line |
-|---|---|---|
-| row 17 unreadable | `B1a_STOP reason=path_not_evaluable …` | `B1a_STOP reason=installed_lock_unreadable …` |
-| row 19a unreadable | `B1_STOP reason=path_not_evaluable …` | `B1_STOP reason=verifier_unreadable …` |
-| row 19 unreadable | (generic, via the same helper) | `B1_STOP reason=metadata_unreadable …` (see `f3-unread`) |
-| row 17 object kind | `installed_lock_object_unexpected path=<p> kind=directory` | `installed_lock_object_unexpected kind=directory` |
-| row 17 leaf ownership | `path_metadata_mismatch path=<p> … owner_numeric=1000:1000 …` | `installed_lock_owner_unexpected owner_numeric=1000:1000 expected=0:0` |
-| row 19a leaf ownership | `path_metadata_mismatch path=<p> … owner_numeric=1000:1000 …` | `verifier_owner_unexpected path=<p> owner_numeric=1000:1000 expected=0:0` |
-
-The two remaining raw `%F` sites are closed under finding 3's arms: `f3-chardi-red` and
-`f3-charmeta-red` print `detail=dist_info_kind_character special file` and
-`detail=kind_character special file`, which break the space-delimited evidence grammar,
-while the round-4 bytes print `format=dist_info_kind_other` and `detail=kind_other`.
-`REAL_CHARDEV` shows the real `/dev/null` character device producing that raw `%F` value
-and mapping to token `other`.
-
-## Regression coverage carried through the round
-
-`STAT_DIAGNOSTIC_RCS` (real GNU absent branch plus seven wrapper forms), `N1_*`/`N2_*`
-(projection v2 versus the round-2 v1 body, both blind directions still blind),
-`FAIL_GUARD_CLOSE` and `MOUNT_GUARD_RCS` (FAIL closes the window; a moved table and a
-wrong attestation both STOP), `UNSAFE_PATH_RCS`, `TOOL_ATTESTATION`, `KIND_TOKEN_RCS`,
-`TIMEOUT_ENV`/`TIMEOUT_RCS` (the bounding wrapper inside the cleared environment, still
-bounding at 2 s against an 8 s child), `INTERPRETER_RCS`, `PRODUCTION_MOUNT_POINT`,
-`JSON_RCS` (eight arms, real CPython, now including the disclosure assertion on the
-`B5_status` line), `LISTENER_RCS` and `REGRESSION_RCS` all hold at the round-4 bytes.
-
-## Freeze-gate items (carried, not closed)
-
-1. `WPI_FIXED_ATTESTED_MOUNT_PROJECTION_SHA256` is still `<PIN-AT-FREEZE>`, so
-   `wpi_validate_inputs` necessarily STOPs and no accepting-input arm can exist yet.
-   Unchanged from round 3, and the v2 digest the deploy channel must supply now covers
-   **21** point paths rather than 20.
-2. `WPI_FIXED_TRUSTED_PYTHON` is new and also `<PIN-AT-FREEZE>`. `/usr/bin/python3` is a
-   symlink on the target family and `wpi_bind_tool` admits no symlinked object, so the
-   resolved `/usr/bin/python3.<minor>` must be pinned from the deploy channel before
-   dispatch. `TRUSTED_PYTHON_PIN` is the executed proof that an unresolved pin is
-   refused rather than silently followed.
-
-Both are inputs the run cannot learn from the session being tested. The block cannot be
-frozen on the strength of this QA alone.
-
-## Final-byte checks
-
-```text
-bash_n_rc=0
-bytes=70941
-sha256=23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad
-```
+- No accepting `wpi_validate_inputs` arm exists and none can exist before freeze: three
+  freeze-gate constants (`WPI_FIXED_ATTESTED_MOUNT_PROJECTION_SHA256`,
+  `WPI_FIXED_TRUSTED_PYTHON`, `WPI_FIXED_EVIDENCE_ROOT`) are still `<PIN-AT-FREEZE>` and
+  deliberately refuse the accepting arm until the deploy channel supplies them.
+- The `evidence_root=<root> root_binding=frozen_prefix_descent` fields on the
+  `RP7_evidence_bound` line are rendered from the constant that
+  `wpi_assert_prerequisites` proved; that proof is falsified above, the rendering is not
+  separately falsified here.
+- No real bind or overlay mount, no real staging host, no real `/proc/<MainPID>/ns/net`,
+  no root, no POSIX symlink, no character device at an arbitrary path.
+- `shellcheck` is not installed on this workstation; no ShellCheck result is claimed.
