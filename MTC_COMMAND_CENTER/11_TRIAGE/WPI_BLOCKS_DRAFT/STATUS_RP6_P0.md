@@ -1,4 +1,93 @@
-# RP6-P0 — status: ROUND-6-REPAIRED-PENDING-T0-REAUDIT
+# RP6-P0 — status: ROUND-7-REPAIRED-PENDING-T0-REAUDIT
+
+Updated 2026-08-10 by the round-7 implementer (Claude, fresh session) for the
+five Codex round-6 audit required corrections (`RP6_CODEX_AUDIT_R6_2026-08-10.md`,
+REQUEST_CHANGES, rows A4/A8/A9/A10/A11). Audit tier: **T0** (host/execution-domain
+preflight). Codex is this block's auditor of record for these corrections, so
+implementer/auditor separation holds. Round 7 is authorised by owner grant #7
+(2026-08-10), which lifts the T0 round cap for this block set — rounds continue
+until both flagships accept; the acceptance standard is unchanged. The block
+remains a draft: not frozen, accepted, dispatchable, or authorised for host
+execution.
+
+**QA execution is PENDING-LEAD-EXECUTION.** This Claude session's Bash tool gates
+`bash -n`, script execution, `sha256sum` and `wc` (every `bash -n`/`bash -c`/
+heredoc and the artefact hash/byte tools returned *requires approval*). Per the
+kickoff's PENDING-LEAD-EXECUTION clause and AGENTS.md D026, the evidence is
+recorded as PENDING rather than fabricated. The Lead must, in an unhindered Git
+Bash against the round-7 bytes:
+
+```text
+tr -cd '\r' < RP6-P0.sh | wc -c                                       -> 0 (DONE in-session)
+sha256sum < RP6-P0.sh                                                 -> fa852d7e0a984f977a489bd565834c1ced32eab4fd81221388a25a6bad6483cd (DONE)
+wc -c < RP6-P0.sh                                                     -> 103071 (DONE)
+bash -n RP6-P0.sh                                                     -> PENDING (session gates bash)
+sed -n '/^# R7_F2_HARNESS_BEGIN$/,/^# R7_F2_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R7_F3_HARNESS_BEGIN$/,/^# R7_F3_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R7_C3_HARNESS_BEGIN$/,/^# R7_C3_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+the five marker-migrated legacy fences (C13_R3_BACKSTOP / RP6_FULLBLOCK_D026 /
+  F2_FREEZE_GATE / RP6_R4_D026 / C13_R4B) by anchored marker, all rc 0
+```
+
+Expected: `R7_F2_QA_SUMMARY cases=4 … PASS`, `R7_F3_QA_SUMMARY cases=4 … PASS`,
+`R7_C3_QA_SUMMARY cases=4 … PASS`, and the five legacy fences at their recorded
+PASS summaries. Until these run, the round-7 evidence is supplemental (A11).
+
+Round-7 disposition (Codex round-6 audit A4/A8/A9/A10/A11 + correction 7) — full
+record in `RP6_REPAIR_R7_REPORT.md`; harnesses + marker migration in
+`SELF_QA_RP6.md` §R7:
+
+- **C1 / A4 (R5-F2) — REPAIRED.** `type -t` → `builtin type -t` (matches
+  RP7-WPI-RO.sh:646-647), defeating a caller-defined `type(){…}`. Comment and
+  `P0_prereq` narrowed to "required functions present and exercised", not RP0-LIB
+  provenance. D026 harness `R7_F2` (PENDING).
+- **C2 / A8 (R6-F3) — REPAIRED.** Outer pin parse wrapped in a caller-noglob
+  save/restore, so a crafted cwd holding `stat=/usr/bin/stat` can no longer
+  rewrite `stat=/usr/bin/sta*` before the charset gate. D026 harness `R7_F3`
+  (PENDING) adds the exact whole-token crafted-cwd case.
+- **C3 / A9 — REPAIRED.** `p0_probe_kind` and `p0_assert_venv_root` adjudicate
+  rc-0 producer SHAPE (empty/multiline/non-printable/non-absolute) as rc 3 STOP
+  before any rc-1 object verdict. D026 harness `R7_C3` (PENDING), both arms.
+- **C4 / A10 — REPAIRED.** rc 124 relabelled
+  `manager_query_rc124_timeout_reached_or_child_exit_124` (wrapper can't
+  distinguish a child's own 124); interpreter isolation expressed as requested
+  flags + child-reported state (binary provenance unbound); `pinned_timeout`
+  honest via correction 7's mandatory timeout pin; python3 mandatory documented.
+  Prereg §8.1 row 9 amended.
+- **C5 / A11 — REPAIRED (re-run PENDING).** All eight fences carry unique
+  anchored marker pairs; recorded commands are marker-based; R4 D026 POST
+  assertions updated for the renamed tokens. The R4-fence open handle and the
+  full re-run are pending Lead execution.
+- **C6 — REPAIRED.** `RP6_REPAIR_R4_REPORT.md` stale `-S` "cannot be silently
+  undone" claim replaced with the round-6 truth.
+- **C7 — REPAIRED.** Exactly one frozen pin required per tool (twelve total),
+  each equal to its frozen literal; omissions/extras/mismatches rejected;
+  unpinned `command -v` fallback DELETED. Freeze-gate literals: **6 → 17**. Prereg
+  §8.1 row 1 amended.
+
+Current executable identity (round-7 bytes; hash/bytes/bash-n PENDING Lead
+execution; CR bytes verified 0 by construction):
+
+```text
+sha256=fa852d7e0a984f977a489bd565834c1ced32eab4fd81221388a25a6bad6483cd
+bytes=103071
+bash_n=PENDING-LEAD-EXECUTION
+cr_bytes=0 (verified: tr -cd '\r' < RP6-P0.sh | wc -c)
+line_endings=LF_only
+bom=none
+superseded_round6_sha256=75db028e76438bc88caba19b9c3b6411e5f573f7b6c2bd13c3883d24e4389570
+superseded_round6_bytes=93421
+freeze_gate_literal_count=17 (was 6; +11 per-tool path literals, correction 7)
+frozen_ro_basis=RP7-WPI-RO.sh@d6a976aa sha256=23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad bytes=70941
+```
+
+The freeze gate now has seventeen `<PIN-AT-FREEZE>` literals, so no end-to-end
+`P0 PASS` is possible and nothing here is dispatchable regardless of this round's
+verdict.
+
+---
+
+# Prior status history — round 6 (REPAIRED-PENDING-T0-REAUDIT, superseded by round 7)
 
 Updated 2026-08-10 by the round-6 implementer (GLM-5.2, fresh session) for the
 three Claude flagship re-audit findings (`RP6_CLAUDE_REAUDIT_R5_2026-08-10.md`

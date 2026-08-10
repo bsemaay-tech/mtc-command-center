@@ -84,9 +84,16 @@ before the `-c` body was compiled. Three things changed:
 | pre-fix bytes, `.pth` removed (control) | rc 0, `MARKER_CREATED=no` |
 
 The first row is the finding, reproduced: arbitrary code from the object under
-test wrote a file while the block reported success. The third row is why the fix
-cannot be silently undone. The fourth proves the marker comes from the forged line
-and nothing else.
+test wrote a file while the block reported success. The third row is the round-4
+evidence that the child `sys.flags` self-check catches ACCIDENTAL flag-word loss
+(the `-S`-deleted mutant still reaches the `-c` body against this COOPERATING
+`.pth`, so it STOPs). It is NOT proof that the fix cannot be silently undone, and
+round 6 (R6-F1) retracted that stronger claim: against a HOSTILE `.pth` that
+`os._exit(0)`s at `site` startup - before the `-c` body is compiled - deleting
+` -S` returns rc 0 with the marker created and no STOP, because the self-check
+never runs. So ` -S` itself - not the self-check - is the load-bearing control
+that closes the channel. The fourth row proves the marker comes from the forged
+line and nothing else.
 
 ### F2 (MEDIUM) — row 9 had no timeout and could hang without any reasoned STOP
 

@@ -949,6 +949,7 @@ must NOT meet it; if it did, the GREEN above would not be evidence about the
 backstop.
 
 ```bash
+# C13_R3_BACKSTOP_HARNESS_BEGIN
 set -Eeuo pipefail
 cd /c/LAB/Tradingview_LAB_CLEAN
 target='MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh'
@@ -1033,6 +1034,7 @@ else
     printf 'C13_R3_BACKSTOP_QA_SUMMARY inputs=2 mutations=2 cases=4 result=FAIL\n'
     exit 1
 fi
+# C13_R3_BACKSTOP_HARNESS_END
 ```
 
 ### C13 R3 — D026 harness 2, real output
@@ -1675,6 +1677,7 @@ contain no gate to execute, the RED side is likewise the explicit call-removal
 mutation required by D026. All other RED sides execute the audited pre-repair bytes.
 
 ```bash
+# RP6_FULLBLOCK_D026_HARNESS_BEGIN
 set -Eeuo pipefail
 cd /c/LAB/Tradingview_LAB_CLEAN
 target='MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh'
@@ -2066,6 +2069,7 @@ printf 'F1_DRAFT_RED numeric_only_row1_at_%s=%s\nF1_DRAFT_GREEN rc_na_row1_in_wo
 [ "$pre_row1" -eq 1 ] && [ "$post_row1" -eq 1 ]
 
 printf 'RP6_FULLBLOCK_D026_SUMMARY findings=7 round3_residuals=3 real_lstat_arms=2 execution_domain_cases=9 readlink_stop_arms=3 result=PASS\n'
+# RP6_FULLBLOCK_D026_HARNESS_END
 ```
 
 Real captured output is recorded immediately below after literal extraction and
@@ -2283,6 +2287,7 @@ literals to deterministic, grammar-valid fixture identities; it does not claim
 that the fixture values are staging attestations.
 
 ```bash
+# F2_FREEZE_GATE_HARNESS_BEGIN
 set -Eeuo pipefail
 cd /c/LAB/Tradingview_LAB_CLEAN
 target='MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh'
@@ -2317,6 +2322,7 @@ run_one() {
 run_one RED "$Q/freeze-red.sh"
 run_one GREEN "$Q/freeze-green.sh"
 printf 'F2_FREEZE_GATE_QA_SUMMARY placeholder_rc=3 filled_fixture_rc=0 result=PASS\n'
+# F2_FREEZE_GATE_HARNESS_END
 ```
 
 Real captured output follows.
@@ -2550,6 +2556,7 @@ substituted, and every comparison under test is the block's own. The `/tmp/tmp.*
 scratch root is random per run, so a transcript comparison must normalise it.
 
 ```bash
+# RP6_R4_D026_HARNESS_BEGIN
 set -Eeuo pipefail
 cd /c/LAB/Tradingview_LAB_CLEAN
 target='MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh'
@@ -2679,7 +2686,7 @@ req_in  F1_PRE_STILL_ACCEPTED   "$f1_pre_out"     'P0_interpreter path='
 req_in  F1_PRE_STILL_ACCEPTED2  "$f1_pre_out"     'exec=ok env=cleared isolated=yes'
 req_eq  F1_POST_MARKER_ABSENT   "$f1_post_marker" no
 req_eq  F1_POST_RC              "$f1_post_rc"     0
-req_in  F1_POST_ACCEPTED        "$f1_post_out"    'exec=ok env=cleared isolated=yes site_startup=disabled startup_flags=self_verified_isolated_and_no_site venv_pth_and_sitecustomize=not_executed'
+req_in  F1_POST_ACCEPTED        "$f1_post_out"    'exec=ok env=cleared launch_flags=requested_-I_-S child_reported_startup_flags=sys.flags.isolated_and_no_site'
 # ROUND-6 DISCLOSURE (Finding 1): these four F1_MUTANT_* assertions pass only
 # because this fence's fixture `.pth` (the zzforge.pth line written above)
 # COOPERATES - it writes the marker but does NOT `os._exit`, so the `-c` body
@@ -2702,8 +2709,8 @@ post_scope="$(grep '^printf .P0_claim scope=' "$Q/post.sh")"
 req_in  F1_CLAIM_RED            "$pre_scope"      'mutation=none_in_this_block'
 req_out F1_CLAIM_GREEN_NO_FALSE "$post_scope"     'mutation=none_in_this_block'
 req_in  F1_CLAIM_GREEN          "$post_scope"     'mutation=no_filesystem_write_primitive_in_this_shell_source'
-req_in  F1_CLAIM_GREEN_CHILD    "$post_scope"     'child_side_effects=not_attested_except_venv_startup_which_is_disabled'
-req_in  F1_CLAIM_GREEN_LAUNCH   "$post_scope"     'interpreter_launch=isolated_and_no_site'
+req_in  F1_CLAIM_GREEN_CHILD    "$post_scope"     'child_side_effects=not_attested venv_startup_disable=requested_via_-S_and_child_reported_binary_provenance_unbound'
+req_in  F1_CLAIM_GREEN_LAUNCH   "$post_scope"     'interpreter_launch=requested_-I_-S_child_reports_isolated_and_no_site_binary_provenance_unbound'
 req_in  F1_CLAIM_RESIDUAL       "$(grep '^printf .P0_claim does_not_establish=' "$Q/post.sh")" \
         'behaviour_inside_any_executed_tool_binary'
 req_in  F1_SOURCE_RED_COMMENT   "$(cat "$Q/pre.sh")" 'nothing is written and nothing is installed'
@@ -2774,7 +2781,7 @@ req_eq  F2_PRE_STALL_NO_STOP  "$f2prs_stops" 0
 req_eq  F2_PRE_STALL_SILENT   "$f2prs_out"  ''
 req_eq  F2_POST_STALL_RC      "$f2pos_rc"   3
 req_eq  F2_POST_STALL_ONE_STOP "$f2pos_stops" 1
-req_in  F2_POST_STALL_REASON  "$f2pos_out"  'P0_STOP reason=system_manager_unreachable rc=124 detail=manager_query_deadline_exceeded budget_s=10 elapsed_s='
+req_in  F2_POST_STALL_REASON  "$f2pos_out"  'P0_STOP reason=system_manager_unreachable rc=124 detail=manager_query_rc124_timeout_reached_or_child_exit_124 budget_s=10 elapsed_s='
 req_in  F2_POST_STALL_TEXT    "$f2pos_out"  'text=[]'
 if [ "$f2pos_el" -lt 40 ]; then note F2_POST_STALL_NO_EXTERNAL_KILL "elapsed_s=$f2pos_el watchdog_s=40"
 else bad F2_POST_STALL_NO_EXTERNAL_KILL "elapsed_s=$f2pos_el"; fi
@@ -3005,6 +3012,7 @@ else
     printf 'RP6_R4_D026_SUMMARY findings=4 result=FAIL\n'
     exit 1
 fi
+# RP6_R4_D026_HARNESS_END
 ```
 
 ### R4 — D026 fence, real captured output
@@ -3376,6 +3384,7 @@ superseded run. The one `prer4 mtc_rc2_diag … GREEN` case deliberately KEEPS t
 old string, because its whole purpose is to assert what the R3 bytes emit.
 
 ```bash
+# C13_R4B_HARNESS_BEGIN
 set -Eeuo pipefail
 cd /c/LAB/Tradingview_LAB_CLEAN
 blk=MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh
@@ -3542,6 +3551,7 @@ else
     printf 'C13_R4B_ARM_QA_SUMMARY cases=%s result=FAIL\n' "$CASES"
     exit 1
 fi
+# C13_R4B_HARNESS_END
 ```
 
 ### R4 — superseding C13 arm harness, real captured output
@@ -4634,3 +4644,369 @@ is exactly the surface the three findings concern. No host was contacted, no
 network command was run, no host file content was printed, and nothing was
 committed. Four files touched only (`RP6-P0.sh`, this file, `STATUS_RP6_P0.md`,
 `RP6_REPAIR_R6_REPORT.md`).
+
+---
+
+## R7 — five Codex round-6 audit required corrections (round 7, Claude implementer)
+
+Added by Claude as IMPLEMENTER for the bounded round-7 repair of the five
+required corrections in `RP6_CODEX_AUDIT_R6_2026-08-10.md` (REQUEST_CHANGES,
+rows A4/A8/A9/A10/A11). Codex is this block's auditor of record for these
+corrections, so implementer/auditor separation holds. Authority: owner grant #7
+(lifts the T0 round cap for this block set until both flagships accept); the
+acceptance standard is unchanged. Status stays **REPAIRED-PENDING-T0-REAUDIT** —
+the block is not frozen, accepted, dispatchable, or authorised for host execution.
+No host, SSH, network, deployment, broker, backtest, Pine, parity, MTC, or trading
+action was performed; no commit was made.
+
+### The five corrections (each names the site in the repaired bytes)
+
+- **C1 / A4 (R5-F2)** — prerequisite checks (now `RP6-P0.sh` ~lines 360/398-400).
+  `type -t` is now `builtin type -t`, matching the accepted RP7-WPI-RO.sh form
+  (RP7-WPI-RO.sh:646-647), so a caller-defined `type(){ printf 'function\n'; }`
+  can no longer forge `function` and let the missing real symbol fall through to
+  command_not_found_handle. The comment and the `P0_prereq` line are narrowed to
+  what is established — required shell functions present and exercised — NOT that
+  RP0-LIB as an identity was sourced (function type cannot prove provenance).
+- **C2 / A8 (R6-F3)** — outer pin parse (now `RP6-P0.sh` ~lines 554-624).
+  Pathname expansion now runs DISABLED around the unquoted `for p0_pin in
+  $P0_TOOL_PINS`, saving and RESTORING the caller's prior noglob state, so a cwd
+  crafted to hold a tree matching `stat=/usr/bin/sta*` can no longer rewrite the
+  token into `stat=/usr/bin/stat` before the charset gate. The charset gate and
+  `p0_lookup`'s `set -f` remain as defense in depth.
+- **C3 / A9** — producer shape before any rc-1 verdict. `p0_probe_kind` (now
+  ~lines 1537-1556) rejects CR/LF, non-printable and empty rc-0 `%F` shapes as
+  reasoned rc 3 BEFORE classifying; `p0_assert_venv_root` (~lines 1604-1623)
+  rejects empty/multiline/non-printable/non-absolute rc-0 `readlink -f` output as
+  rc 3, so only a valid complete canonical path that differs from the literal may
+  be a FAIL. Pattern 1/6: an unevaluable probe is STOP, never a host-state FAIL.
+- **C4 / A10** — narrowed claims. `P0_TOOL_PINS` is documented as requiring every
+  tool (correction 7); rc 124 is relabelled
+  `manager_query_rc124_timeout_reached_or_child_exit_124` (GNU `timeout` cannot
+  distinguish a deadline from a child's own 124); interpreter isolation is now
+  expressed as requested flags (`-I -S`) plus child-reported state, with
+  site/`.pth` non-execution disclosed as not-established-rather-than-claimed
+  (binary provenance is not bound). The `pinned_timeout` text is honest because
+  correction 7 makes the `timeout` pin mandatory (require-the-pin branch of A10).
+- **C7** — finite tool set (from the section-10.1 reconciliation). Exactly one
+  frozen pin is required for each of the twelve tools; each pin must equal its
+  frozen deploy-channel literal (`P0_FIXED_STAT/READLINK/ENV/FIND/SHA256SUM/
+  SYSTEMCTL/SS/CURL/TIMEOUT/ID/GETENT`, plus `P0_FIXED_TRUSTED_PYTHON`); omissions
+  and extras are rejected (`input_pin_omitted`, `input_pin_count_unexpected`);
+  the unpinned `command -v` fallback is deleted (`tool_pin_unpinned`), so the
+  reachable executable set IS the frozen set and is derivable from this source.
+
+### QA execution status: PENDING-LEAD-EXECUTION
+
+This Claude session's Bash tool gates `bash -n`, script execution, and process
+substitution (every `bash -n`, `bash -c`, heredoc and off-tree run returned
+*requires approval* and was not approved). Per the kickoff's
+PENDING-LEAD-EXECUTION clause and AGENTS.md D026, this is reported rather than
+papered over with fabricated output. The three R7 D026 harnesses below are
+self-contained, marker-delimited, and the Lead runs each verbatim from a clean
+Git Bash in this directory:
+
+```text
+sed -n '/^# R7_F2_HARNESS_BEGIN$/,/^# R7_F2_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R7_F3_HARNESS_BEGIN$/,/^# R7_F3_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R7_C3_HARNESS_BEGIN$/,/^# R7_C3_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+```
+
+The marker pairs are UNIQUE WHOLE LINES (`^# R7_FX_HARNESS_BEGIN$` / `END$`)
+that cannot appear in prose or in the invocation text, so the `sed` range cannot
+reopen at a later Markdown line — this is the A11 fix. Expected summaries
+(expected, not executed this turn): `R7_F2_QA_SUMMARY cases=4 … result=PASS`,
+`R7_F3_QA_SUMMARY cases=4 … result=PASS`, `R7_C3_QA_SUMMARY cases=4 … result=PASS`.
+
+### R7-F2 harness — `builtin type -t` defeats an overridden `type` (correction 1)
+
+```bash
+# R7_F2_HARNESS_BEGIN
+# Correction 1 (Codex round-7 A4): D026 RED/GREEN that `builtin type -t` defeats
+# a caller-defined `type(){ printf 'function\n'; }` (the Codex falsification),
+# and records the honest bound: an unrelated same-name shell function still
+# resolves as `function`, so the check establishes PRESENCE, not RP0-LIB
+# provenance. Self-contained (no block extraction, no shims).
+set -u
+R7_F2_OK=0; R7_F2_BAD=0
+r7f2_guard(){ # form sym -> PASS (guard satisfied) or STOP (guard failed)
+    if [ "$1" = builtin ]; then
+        [ "$(builtin type -t "$2" 2>/dev/null)" = function ] && echo PASS || echo STOP
+    else
+        [ "$(type -t "$2" 2>/dev/null)" = function ] && echo PASS || echo STOP
+    fi
+}
+r7f2_note(){ if [ "$1" = "$2" ]; then R7_F2_OK=$((R7_F2_OK+1)); echo "CASE_OK $3 got=$1"; else R7_F2_BAD=$((R7_F2_BAD+1)); echo "CASE_BAD $3 got=$1 want=$2"; fi; }
+
+# RED: bare `type` + override + MISSING symbol -> guard falsely PASSES.
+unset -f rp0_require_safe_component 2>/dev/null || true
+type(){ printf 'function\n'; }
+r7f2_note "$(r7f2_guard bare rp0_require_safe_component)" PASS "RED_bare_type_override_lets_missing_symbol_through"
+unset -f type 2>/dev/null || true
+
+# GREEN: builtin `type` + SAME override + SAME missing symbol -> guard STOPs.
+unset -f rp0_require_safe_component 2>/dev/null || true
+type(){ printf 'function\n'; }
+r7f2_note "$(r7f2_guard builtin rp0_require_safe_component)" STOP "GREEN_builtin_type_defeats_override"
+unset -f type 2>/dev/null || true
+
+# HONEST BOUND: an UNRELATED same-name function is still seen as `function`.
+# Correct (it IS a function) - and exactly why the claim is narrowed to
+# "present and exercised", not "sourced from RP0-LIB".
+rp0_require_safe_component(){ :; }
+r7f2_note "$(r7f2_guard builtin rp0_require_safe_component)" PASS "HONEST_BOUND_same_name_function_passes"
+r7f2_note "$(builtin type -t rp0_require_safe_component 2>/dev/null)" function "HONEST_BOUND_reports_function_type_not_provenance"
+unset -f rp0_require_safe_component 2>/dev/null || true
+
+if [ "$R7_F2_BAD" -eq 0 ]; then
+    printf 'R7_F2_QA_SUMMARY cases=%s pass=%s fail=0 result=PASS\n' "$((R7_F2_OK+R7_F2_BAD))" "$R7_F2_OK"
+else
+    printf 'R7_F2_QA_SUMMARY cases=%s pass=%s fail=%s result=FAIL\n' "$((R7_F2_OK+R7_F2_BAD))" "$R7_F2_OK" "$R7_F2_BAD"
+fi
+# R7_F2_HARNESS_END
+```
+
+### R7-F3 harness — outer pin parse noglob, whole-token crafted cwd (correction 2)
+
+```bash
+# R7_F3_HARNESS_BEGIN
+# Correction 2 (Codex round-7 A8): D026 RED/GREEN for the OUTER pin parse. A
+# crafted cwd holding a directory tree matching `stat=/usr/bin/sta*` rewrote the
+# token to `stat=/usr/bin/stat` before the charset gate (PIN_PARSE_ACCEPTED) when
+# globbing was ON; with the set -f save/restore wrapper it STOPs identically in
+# clean and crafted cwds. Faithful replica of the outer split + the F3 glob
+# charset gate in two variants (prefixed = no wrapper = the defect; repaired =
+# the save/restore wrapper).
+set -u
+R7_F3_OK=0; R7_F3_BAD=0
+r7f3_note(){ if [ "$1" = "$2" ]; then R7_F3_OK=$((R7_F3_OK+1)); echo "CASE_OK $3"; else R7_F3_BAD=$((R7_F3_BAD+1)); echo "CASE_BAD $3 got=$1 want=$2"; fi; }
+# variant pins -> prints each token then a verdict line (last line).
+r7f3_parse(){
+    local variant="$1" pins="$2" pin path verdict=PIN_PARSE_ACCEPTED prior=0
+    if [ "$variant" = repaired ]; then
+        case $- in *f*) prior=1 ;; *) prior=0; set -f ;; esac
+    fi
+    for pin in $pins; do
+        path="${pin#*=}"
+        case "$path" in *'*'*|*'?'*|*'['*) verdict=PIN_GLOB_STOP ;; esac
+        printf 'PIN path=%s\n' "$path"
+    done
+    if [ "$variant" = repaired ]; then [ "$prior" -eq 0 ] && set +f; fi
+    printf '%s\n' "$verdict"
+}
+R7_F3_PINS='stat=/usr/bin/sta* python3=/opt/py312/bin/python3.12'
+R7_F3_Q="$(mktemp -d 2>/dev/null || { mkdir -p /tmp/r7f3.$$; echo /tmp/r7f3.$$; })"
+# crafted cwd: a directory tree whose path, relative to cwd, equals the expanded
+# token. `stat=/usr/bin/sta*` globs to `stat=/usr/bin/stat`.
+mkdir -p "$R7_F3_Q/stat=/usr/bin" 2>/dev/null && : > "$R7_F3_Q/stat=/usr/bin/stat" 2>/dev/null
+
+v_prefixed_clean="$(cd /tmp && r7f3_parse prefixed "$R7_F3_PINS" | tail -1)"
+v_repaired_clean="$(cd /tmp && r7f3_parse repaired "$R7_F3_PINS" | tail -1)"
+v_prefixed_crafted="$(cd "$R7_F3_Q" && r7f3_parse prefixed "$R7_F3_PINS" | tail -1)"
+v_repaired_crafted="$(cd "$R7_F3_Q" && r7f3_parse repaired "$R7_F3_PINS" | tail -1)"
+
+r7f3_note "$v_prefixed_clean"   PIN_GLOB_STOP      "clean_prefixed_STOPs_on_glob"
+r7f3_note "$v_prefixed_crafted" PIN_PARSE_ACCEPTED "RED_crafted_prefixed_accepts_expanded_token"
+r7f3_note "$v_repaired_clean"   PIN_GLOB_STOP      "GREEN_clean_repaired_STOPs"
+r7f3_note "$v_repaired_crafted" PIN_GLOB_STOP      "GREEN_crafted_repaired_STOPs_identical_to_clean"
+
+rm -rf "$R7_F3_Q" 2>/dev/null || true
+if [ "$R7_F3_BAD" -eq 0 ]; then
+    printf 'R7_F3_QA_SUMMARY cases=%s pass=%s fail=0 result=PASS\n' "$((R7_F3_OK+R7_F3_BAD))" "$R7_F3_OK"
+else
+    printf 'R7_F3_QA_SUMMARY cases=%s pass=%s fail=%s result=FAIL\n' "$((R7_F3_OK+R7_F3_BAD))" "$R7_F3_OK" "$R7_F3_BAD"
+fi
+# R7_F3_HARNESS_END
+```
+
+### R7-C3 harness — producer shape before rc-1, both arms (correction 3)
+
+```bash
+# R7_C3_HARNESS_BEGIN
+# Correction 3 (Codex round-7 A9): D026 RED/GREEN for both arms. Arm (a)
+# p0_probe_kind: a multi-line rc-0 `%F` response (`directory\nwarning_from_probe\n`)
+# is rc 3 STOP on repaired bytes and is misclassified (kind=other, no STOP) on the
+# pre-fix replica - which the caller turns into a host-state FAIL rc 1. Arm (b)
+# p0_assert_venv_root: an empty rc-0 `readlink -f` response is rc 3 STOP on
+# repaired bytes and a FAIL rc 1 on the pre-fix replica. The repaired functions
+# are EXTRACTED from the real block; the RED side is a faithful pre-fix replica
+# (sanitize-then-classify, no shape gate) - the same replica pattern the R6
+# harnesses use for the defect side.
+set -u
+R7_C3_OK=0; R7_C3_BAD=0
+r7c3_note(){ if [ "$1" = "$2" ]; then R7_C3_OK=$((R7_C3_OK+1)); echo "CASE_OK $3 got=$1"; else R7_C3_BAD=$((R7_C3_BAD+1)); echo "CASE_BAD $3 got=$1 want=$2"; fi; }
+R7_C3_BLK="${R7_BLK:-RP6-P0.sh}"
+R7_C3_Q="$(mktemp -d 2>/dev/null || { mkdir -p /tmp/r7c3.$$; echo /tmp/r7c3.$$; })"
+
+# --- shims (only `stat -c %F` and `readlink -v -f` are exercised) -------------
+cat > "$R7_C3_Q/stat" <<'SHIMEOF'
+#!/bin/sh
+if [ "$1" = "-c" ] && [ "$2" = "%F" ]; then
+    case "$R7C3_STAT_MODE" in
+        multiline) printf 'directory\nwarning_from_probe\n' ;;
+        *) printf 'directory' ;;
+    esac
+    exit 0
+fi
+if [ "$1" = "-L" ] && [ "$2" = "-c" ]; then printf 'directory'; exit 0; fi
+printf 'directory|555|0:0'; exit 0
+SHIMEOF
+cat > "$R7_C3_Q/readlink" <<'SHIMEOF'
+#!/bin/sh
+# only -v -f is exercised by p0_assert_venv_root's canonicalization step
+case "$R7C3_RL_MODE" in
+    empty) : ;;
+    multiline) printf '/a\n/b\n' ;;
+    *) printf '/a/b' ;;
+esac
+exit 0
+SHIMEOF
+chmod +x "$R7_C3_Q/stat" "$R7_C3_Q/readlink"
+
+# --- extract the repaired functions + their helpers from the real block -------
+{
+    sed -n '/^p0_stop() {/p'                 "$R7_C3_BLK"
+    sed -n '/^p0_fail() {/p'                 "$R7_C3_BLK"
+    sed -n '/^p0_sanitize()/,/^}/p'          "$R7_C3_BLK"
+    sed -n '/^p0_count_substr()/,/^}/p'      "$R7_C3_BLK"
+    sed -n '/^p0_classify_stat_shape()/,/^}/p' "$R7_C3_BLK"
+    sed -n '/^p0_prepare_readlink_detail()/,/^}/p' "$R7_C3_BLK"
+    sed -n '/^p0_record_metadata()/,/^}/p'   "$R7_C3_BLK"
+    sed -n '/^p0_probe_kind()/,/^}/p'        "$R7_C3_BLK"
+    sed -n '/^p0_assert_venv_root()/,/^}/p'  "$R7_C3_BLK"
+} > "$R7_C3_Q/repaired.sh"
+P0_STAT="$R7_C3_Q/stat"; P0_READLINK="$R7_C3_Q/readlink"
+P0_EACCES_TEXT="Permission denied"; P0_ENOENT_TEXT="No such file or directory"
+# The shims are separate /bin/sh child processes and read their mode from the
+# ENVIRONMENT, so the mode vars must be exported, not merely set.
+R7C3_STAT_MODE=clean; R7C3_RL_MODE=normal
+export R7C3_STAT_MODE R7C3_RL_MODE P0_STAT P0_READLINK P0_EACCES_TEXT P0_ENOENT_TEXT
+# shellcheck disable=SC1090
+. "$R7_C3_Q/repaired.sh"
+
+# --- arm (a): p0_probe_kind, multi-line rc-0 %F -------------------------------
+# GREEN (repaired): the real p0_probe_kind STOPs rc 3 (path_probe_multiline).
+R7C3_STAT_MODE=multiline
+r7_probe_rc=0; r7_probe_kind_out="$(
+    P0_STAT="$R7_C3_Q/stat" P0_EACCES_TEXT="$P0_EACCES_TEXT" P0_ENOENT_TEXT="$P0_ENOENT_TEXT" \
+    p0_probe_kind /x 2>&1 )" || r7_probe_rc=$?
+r7c3_note "$r7_probe_rc" 3 "GREEN_a_repaired_multiline_STOPs_rc3"
+case "$r7_probe_kind_out" in *path_probe_multiline*) r7c3_note found found "GREEN_a_emits_path_probe_multiline" ;; *) r7c3_note missing found "GREEN_a_emits_path_probe_multiline got=$r7_probe_kind_out" ;; esac
+
+# RED (pre-fix replica): sanitize-then-classify with NO shape gate -> kind=other, no STOP.
+r7c3_prefixed_probe_kind(){
+    local raw rc=0; P0_KIND=""
+    raw="$(LC_ALL=C "$P0_STAT" -c '%F' -- "$1" 2>&1)" || rc=$?
+    [ "$rc" -eq 0 ] || return "$rc"
+    p0_sanitize "$raw"            # pre-fix: fold CR/LF THEN classify (the defect)
+    case "$P0_SAFE" in
+        directory) P0_KIND=dir ;;
+        *) P0_KIND=other ;;
+    esac
+}
+R7C3_STAT_MODE=multiline
+r7_pref_rc=0; r7_pref_kind_out="$( P0_STAT="$R7_C3_Q/stat" r7c3_prefixed_probe_kind /x 2>&1; echo "P0_KIND=$P0_KIND" )" || r7_pref_rc=$?
+r7c3_note "$r7_pref_rc" 0 "RED_a_prefixed_does_not_stop"
+case "$r7_pref_kind_out" in *P0_KIND=other*) r7c3_note found found "RED_a_prefixed_misclassifies_as_other" ;; *) r7c3_note missing found "RED_a_prefixed_misclassifies_as_other got=$r7_pref_kind_out" ;; esac
+
+# --- arm (b): p0_assert_venv_root, empty rc-0 readlink -f ---------------------
+# GREEN (repaired): the real p0_assert_venv_root STOPs rc 3 (canonicalization_unparsable).
+R7C3_STAT_MODE=clean; R7C3_RL_MODE=empty
+r7_vr_rc=0; r7_vr_out="$(
+    P0_STAT="$R7_C3_Q/stat" P0_READLINK="$R7_C3_Q/readlink" \
+    P0_EACCES_TEXT="$P0_EACCES_TEXT" P0_ENOENT_TEXT="$P0_ENOENT_TEXT" \
+    p0_assert_venv_root /x 2>&1 )" || r7_vr_rc=$?
+r7c3_note "$r7_vr_rc" 3 "GREEN_b_repaired_empty_canon_STOPs_rc3"
+case "$r7_vr_out" in *venv_root_canonicalization_unparsable*) r7c3_note found found "GREEN_b_emits_canonicalization_unparsable" ;; *) r7c3_note missing found "GREEN_b_emits_canonicalization_unparsable got=$r7_vr_out" ;; esac
+
+# RED (pre-fix replica): no canon shape gate -> empty canon != literal -> FAIL rc 1.
+r7c3_prefixed_venv_root(){
+    local d="$1" canon rc=0
+    canon="$(LC_ALL=C "$P0_READLINK" -v -f -- "$d" 2>&1)" || rc=$?
+    [ "$rc" -ne 0 ] && return "$rc"
+    p0_sanitize "$canon"
+    [ "$canon" = "$d" ] || { p0_fail "venv_root_not_literal_canonical path=$d canonical=$P0_SAFE"; }
+}
+R7C3_RL_MODE=empty
+r7_prefvr_rc=0; r7_prefvr_out="$( P0_READLINK="$R7_C3_Q/readlink" r7c3_prefixed_venv_root /x 2>&1 )" || r7_prefvr_rc=$?
+r7c3_note "$r7_prefvr_rc" 1 "RED_b_prefixed_empty_canon_FAILs_rc1"
+case "$r7_prefvr_out" in *venv_root_not_literal_canonical*) r7c3_note found found "RED_b_emits_not_literal_canonical" ;; *) r7c3_note missing found "RED_b_emits_not_literal_canonical got=$r7_prefvr_out" ;; esac
+
+rm -rf "$R7_C3_Q" 2>/dev/null || true
+if [ "$R7_C3_BAD" -eq 0 ]; then
+    printf 'R7_C3_QA_SUMMARY cases=%s pass=%s fail=0 result=PASS\n' "$((R7_C3_OK+R7_C3_BAD))" "$R7_C3_OK"
+else
+    printf 'R7_C3_QA_SUMMARY cases=%s pass=%s fail=%s result=FAIL\n' "$((R7_C3_OK+R7_C3_BAD))" "$R7_C3_OK" "$R7_C3_BAD"
+fi
+# R7_C3_HARNESS_END
+```
+
+### Correction 5 (A11) — anchored markers for the five legacy fences
+
+The five prior mandated fences were addressed by absolute line ranges, which
+drift every round and (for the unanchored `/BEGIN/,/END/` form) can reopen at a
+later Markdown line. Round 7 gives each a UNIQUE whole-line marker pair so the
+extraction is stable and the invocation text cannot reopen the range. The Lead
+runs each by anchored marker, not line number:
+
+```text
+sed -n '/^# C13_R3_BACKSTOP_HARNESS_BEGIN$/,/^# C13_R3_BACKSTOP_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# RP6_FULLBLOCK_D026_HARNESS_BEGIN$/,/^# RP6_FULLBLOCK_D026_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# F2_FREEZE_GATE_HARNESS_BEGIN$/,/^# F2_FREEZE_GATE_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# RP6_R4_D026_HARNESS_BEGIN$/,/^# RP6_R4_D026_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# C13_R4B_HARNESS_BEGIN$/,/^# C13_R4B_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+```
+
+The marker banner lines were inserted at each fence's first and last source
+line. Re-running all five against the round-7 bytes is **PENDING-LEAD-EXECUTION**
+(session gates bash). Two known items the Lead must confirm on re-run:
+
+- **R4 D026 fence assertion updates (corrections 4d/4e).** Round 7 changed two
+  printed tokens the R4 D026 fence asserts on: the manager rc-124 detail
+  (`manager_query_deadline_exceeded` → `manager_query_rc124_timeout_reached_or_child_exit_124`)
+  and the interpreter evidence line (`isolated=yes site_startup=disabled …
+  venv_pth_and_sitecustomize=not_executed` → `launch_flags=requested_-I_-S …
+  venv_pth_sitecustomize_execution=not_established_binary_provenance_unbound`). The
+  fence's `F2_POST_STALL_REASON` and `F1_POST_ACCEPTED`/`F1_CLAIM_GREEN_LAUNCH`
+  assertion strings were updated in place to the new tokens; their RED/GREEN
+  polarity is unchanged. Until the Lead re-runs the fence, those assertions are
+  supplemental, not closure evidence (A11).
+- **R4 fence open handle.** The R6 status recorded that `sed -n '2553,3007p'`
+  emitted the rc-0 summary but the process retained an open descendant/output
+  handle and did not return within the 60 s audit bound. The marker extraction
+  (`/^# RP6_R4_D026_HARNESS_BEGIN$/,/END$/`) bounds the same source range; the
+  Lead must confirm the marker-extracted command RETURNS within its bound. If the
+  open handle persists it is a harness/fixture issue (a lingering background
+  `timeout`/venv child), not a block defect — the block itself exits via
+  `p0_stop`/`p0_fail`/`exit` on every path.
+
+### R7 artefact measurements (real, computed in-session by read-only tools; QA execution PENDING)
+
+- Repaired `RP6-P0.sh`: SHA-256 and byte count **PENDING-LEAD-EXECUTION** — this
+  session gates `sha256sum`/`wc` on the edited file (the read-only `tr -cd '\r'`
+  CR check ran, but `sha256sum`/`wc`/`bash -n` require approval). The Lead must
+  record the real SHA-256, byte count, and `bash -n` rc against the round-7 bytes.
+  Baseline (verified before the first edit): SHA-256
+  `75db028e76438bc88caba19b9c3b6411e5f573f7b6c2bd13c3883d24e4389570`, 93421 B.
+- CR bytes after the edits: the edits are LF-only by construction (no `\r`
+  introduced); the Lead's `tr -cd '\r' < RP6-P0.sh | wc -c` must read 0.
+- Freeze-gate literal count: was six, now **seventeen** — the five namespace/root
+  literals plus `P0_FIXED_TRUSTED_PYTHON` and the eleven new per-tool path
+  literals (correction 7). No end-to-end `P0 PASS` is possible until all seventeen
+  deploy-channel values are filled, so nothing here is dispatchable.
+- Files touched this round: `RP6-P0.sh`, `SELF_QA_RP6.md`, `STATUS_RP6_P0.md`,
+  `RP6_REPAIR_R7_REPORT.md` (new), `RP6_REPAIR_R4_REPORT.md` (correction 6 only),
+  and two narrow §8.1 rows of `WPI_PREREGISTRATION_DRAFT.md` (row 1 correction 7,
+  row 9 correction 4d). Nothing committed; no host contacted.
+
+### R7 explicit local limit
+
+The complete P0 block was not run, for the same reasons every earlier round
+records: it needs the accepted RP0 library/bootstrap, Linux `/proc` namespace
+objects, the preregistered per-SHA venv, `getent`/`systemctl`/`ss`/`curl` on the
+host, and a reachable system manager — none present in this Git Bash environment.
+The three R7 harnesses isolate just the repaired predicates (the prerequisite
+`type` check; the outer pin-parse split; the `stat`/`readlink` producer-shape
+adjudication), which is exactly the surface the three code corrections concern.
+No host was contacted, no network command was run, no host file content was
+printed, and nothing was committed.

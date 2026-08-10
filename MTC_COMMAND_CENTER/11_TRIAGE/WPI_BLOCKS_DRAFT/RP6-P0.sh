@@ -276,6 +276,27 @@ P0_FIXED_ATTESTED_ROOT_MOUNT_ID='<PIN-AT-FREEZE>'
 # P0 does not execute it; P0 refuses to admit a pin for it that disagrees with
 # the frozen value, so the tool the RO stage will trust is the tool P0 checked.
 P0_FIXED_TRUSTED_PYTHON='<PIN-AT-FREEZE>'
+# Correction 7 (Codex round-7, from the section-10.1 reconciliation, Lead-
+# verified): the frozen deploy-channel absolute path of every OTHER preregistered
+# tool. The nine RO-shared tools (stat readlink env find sha256sum systemctl ss
+# curl timeout) mirror the frozen WPI_TOOL_PINS of RP7-WPI-RO.sh@d6a976aa; id and
+# getent are P0-only. Each is a freeze-gate input for the same reason the
+# namespace pins and P0_FIXED_TRUSTED_PYTHON are: P0 refuses to admit a pin that
+# disagrees with its frozen literal, so the reachable executable set IS the frozen
+# set and is derivable from this source - the property the Stage-1 path-scope
+# proof needs. The unpinned `command -v` fallback is deleted in p0_resolve_tool,
+# so an unpinned tool is a STOP, not a PATH-resolved admission.
+P0_FIXED_STAT='<PIN-AT-FREEZE>'
+P0_FIXED_READLINK='<PIN-AT-FREEZE>'
+P0_FIXED_ENV='<PIN-AT-FREEZE>'
+P0_FIXED_FIND='<PIN-AT-FREEZE>'
+P0_FIXED_SHA256SUM='<PIN-AT-FREEZE>'
+P0_FIXED_SYSTEMCTL='<PIN-AT-FREEZE>'
+P0_FIXED_SS='<PIN-AT-FREEZE>'
+P0_FIXED_CURL='<PIN-AT-FREEZE>'
+P0_FIXED_TIMEOUT='<PIN-AT-FREEZE>'
+P0_FIXED_ID='<PIN-AT-FREEZE>'
+P0_FIXED_GETENT='<PIN-AT-FREEZE>'
 # Row-9 deadline. Preregistered block literals, not operator inputs and not
 # learned at run time: a bound supplied by the environment under test could be
 # raised to infinity by that same environment.
@@ -334,6 +355,12 @@ P0_MANAGER_QUERY_KILL_AFTER_S=5
 P0_RP7_RO_TOOLS="stat readlink env find sha256sum systemctl ss curl timeout python3"
 P0_P0_ONLY_TOOLS="id getent"
 P0_RO_TOOLS="$P0_RP7_RO_TOOLS $P0_P0_ONLY_TOOLS"
+# Expected pin count = the inventory size (correction 7). Derived once from the
+# frozen literal above so it cannot drift from the list; P0_RO_TOOLS contains no
+# glob metacharacter, so this unquoted split is word-splitting only and matches
+# the two existing $P0_RO_TOOLS iterations below.
+P0_TOOL_COUNT_EXPECTED=0
+for p0_t in $P0_RO_TOOLS; do P0_TOOL_COUNT_EXPECTED=$(( P0_TOOL_COUNT_EXPECTED + 1 )); done
 
 # ---------------------------------------------------------------------------
 # SECTION: prerequisites
@@ -345,20 +372,32 @@ P0_RO_TOOLS="$P0_RP7_RO_TOOLS $P0_P0_ONLY_TOOLS"
 printf 'P0_SECTION header candidate=%s block=RP6-P0 stage=p0\n' "$P0_CAND"
 printf 'P0_SECTION prerequisites\n'
 
-# F2 (Codex final-audit round-5): `command -v` only proves a name resolves; it
-# accepts a PATH executable (or alias) of the same name, and the block then
-# CALLS the first symbol below. That made the RP0-LIB "sourced" claim
+# F2 (Codex final-audit round-5; reworked round-7 A4): `command -v` only proves a
+# name resolves; it accepts a PATH executable (or alias) of the same name, and the
+# block then CALLS the first symbol below. That made the RP0-LIB "sourced" claim
 # satisfiable by an unrelated PATH file - a pre-inventory child-execution channel
-# before P0 has established any tool premise. The accepted RP0-LIB symbols are
-# sourced SHELL FUNCTIONS, so assert command TYPE with a builtin: an exact
-# `type -t ... = function` check for both symbols before either is called. A
-# PATH-shadow file or alias of either name no longer satisfies the source
-# precondition and is never executed; a genuinely sourced function still resolves
-# to `function`. (`command -v` is still correct inside p0_resolve_tool below,
-# where the intent IS to resolve a PATH tool to an absolute path.)
-[ "$(type -t rp0_require_safe_component 2>/dev/null)" = function ] \
+# before P0 has established any tool premise. The required symbols must be SHELL
+# FUNCTIONS, so assert command TYPE with the NON-OVERRIDABLE builtin: an exact
+# `builtin type -t ... = function` check for both symbols before either is called.
+# The `builtin` prefix defeats a caller-defined `type(){ printf 'function\n'; }`
+# that would otherwise forge `function` and let the missing real symbol fall
+# through to command_not_found_handle while both guards passed (Codex round-7 A4
+# falsification). This matches the accepted RP7-WPI-RO.sh form (RP7-WPI-RO.sh:646-
+# 647). A PATH-shadow file or alias of either name no longer satisfies this
+# precondition and is never executed. (`command -v` is still correct inside
+# p0_resolve_tool below, where the intent IS to resolve a PATH tool to an absolute
+# path.)
+# HONEST BOUND (Codex round-7 A4): function type proves only that the two names
+# resolve as shell functions IN THIS SHELL; it does NOT prove they came from
+# RP0-LIB, because a caller could source an unrelated same-name function first.
+# The block therefore claims only what is established - the required shell
+# functions were present and exercised (rp0_require_safe_component is called on
+# the evidence identifiers below) - and NOT that RP0-LIB as an identity was
+# sourced. Binding the definitions to the accepted RP0-LIB identity would require
+# a frozen hash of RP0-LIB.sh and is outside this round.
+[ "$(builtin type -t rp0_require_safe_component 2>/dev/null)" = function ] \
     || p0_stop "rp0_lib_not_sourced predicate=rp0_require_safe_component detail=not_a_shell_function"
-[ "$(type -t rp0_allocate_evidence_dir 2>/dev/null)" = function ] \
+[ "$(builtin type -t rp0_allocate_evidence_dir 2>/dev/null)" = function ] \
     || p0_stop "rp0_lib_not_sourced predicate=rp0_allocate_evidence_dir detail=not_a_shell_function"
 
 [ -n "${RUNID:-}" ]       || p0_stop "rp0_bootstrap_not_run detail=RUNID_unset"
@@ -372,7 +411,7 @@ rp0_require_safe_component RUNID "$RUNID" \
     || p0_stop "evidence_identifier_refused name=RUNID"
 rp0_require_safe_component EV_STAGE_ID "$EV_STAGE_ID" \
     || p0_stop "evidence_identifier_refused name=EV_STAGE_ID"
-printf 'P0_prereq lib=sourced bootstrap=ran run_id=%s stage=%s dir=%s leaf=%s\n' \
+printf 'P0_prereq required_functions=present_and_exercised bootstrap=ran run_id=%s stage=%s dir=%s leaf=%s\n' \
     "$RUNID" "$EV_STAGE_ID" "$EV_DIR" "$EV_LOG"
 
 # ---------------------------------------------------------------------------
@@ -475,16 +514,52 @@ case "$P0_VENV_ROOT" in
     *) p0_stop "input_not_candidate_bound name=P0_VENV_ROOT expected_basename=$P0_CAND" ;;
 esac
 
-# P0_TOOL_PINS - optional preregistered pin table, entries `name=/absolute/path`
-# separated by spaces. Where the design requires a pinned absolute path, the pin
-# is supplied here and PATH resolution must agree with it; a disagreement is a
-# shadowing signal and STOPs. Where no pin is preregistered the resolved
-# absolute path is RECORDED so the successor preregistration can pin it, and the
-# claim line says so.
+# P0_TOOL_PINS - the FROZEN pin table (correction 7, Codex round-7): exactly one
+# entry `name=/absolute/path` per preregistered tool, separated by spaces. Every
+# tool is pinned and every pin must equal that tool's frozen deploy-channel
+# path; `python3` must equal P0_FIXED_TRUSTED_PYTHON. There is NO unpinned
+# fallback (p0_resolve_tool), so the reachable executable set IS the frozen set
+# and is derivable from this source - the property the Stage-1 path-scope proof
+# needs. R5-F1 keeps the python3 pin load-bearing by construction; correction 7
+# makes the other eleven load-bearing too. Omitting any tool, pinning one to a
+# path that differs from its frozen literal, an unknown tool, a duplicate, a
+# non-absolute path, or a path carrying whitespace or a glob metacharacter, is a
+# STOP.
 P0_TOOL_PINS="${P0_TOOL_PINS:-}"
 P0_PIN_COUNT=0
 P0_PIN_SEEN=" "
 P0_TRUSTED_PYTHON_BOUND=no
+
+# p0_frozen_tool_path - the frozen deploy-channel literal for a tool name
+# (correction 7), or return 1 for a name not in the inventory. Sets P0_FROZEN_PIN.
+p0_frozen_tool_path() {
+    P0_FROZEN_PIN=""
+    case "$1" in
+        stat)      P0_FROZEN_PIN="$P0_FIXED_STAT" ;;
+        readlink)  P0_FROZEN_PIN="$P0_FIXED_READLINK" ;;
+        env)       P0_FROZEN_PIN="$P0_FIXED_ENV" ;;
+        find)      P0_FROZEN_PIN="$P0_FIXED_FIND" ;;
+        sha256sum) P0_FROZEN_PIN="$P0_FIXED_SHA256SUM" ;;
+        systemctl) P0_FROZEN_PIN="$P0_FIXED_SYSTEMCTL" ;;
+        ss)        P0_FROZEN_PIN="$P0_FIXED_SS" ;;
+        curl)      P0_FROZEN_PIN="$P0_FIXED_CURL" ;;
+        timeout)   P0_FROZEN_PIN="$P0_FIXED_TIMEOUT" ;;
+        id)        P0_FROZEN_PIN="$P0_FIXED_ID" ;;
+        getent)    P0_FROZEN_PIN="$P0_FIXED_GETENT" ;;
+        python3)   P0_FROZEN_PIN="$P0_FIXED_TRUSTED_PYTHON" ;;
+        *) return 1 ;;
+    esac
+}
+
+# R6-F3 (Codex round-7): pathname expansion ran on the unquoted $P0_TOOL_PINS
+# split BEFORE the pin-charset gate, so a cwd crafted to hold a whole token like
+# `stat=/usr/bin/stat` rewrote `stat=/usr/bin/sta*` into the clean pin and the
+# loop accepted it (PIN_PARSE_ACCEPTED count=2 trusted=yes). Disable pathname
+# expansion around this outer parse and RESTORE THE CALLER'S PRIOR noglob state
+# (not the block default the other set -f pairs restore - nit 1 stays open only
+# for those). The charset gate below and p0_lookup's set -f remain as depth.
+case $- in *f*) P0_PRIOR_NOGLOB=1 ;; *) P0_PRIOR_NOGLOB=0 ;; esac
+if [ "$P0_PRIOR_NOGLOB" -eq 0 ]; then set -f; fi
 for p0_pin in $P0_TOOL_PINS; do
     case "$p0_pin" in
         *=*) : ;;
@@ -517,26 +592,47 @@ for p0_pin in $P0_TOOL_PINS; do
     # could become a silently accepted `pinned_absolute`, contradicting the rule
     # that preregistered input must STOP rather than be laundered. Refuse the
     # three glob metacharacters here; `p0_lookup` additionally splits under
-    # `set -f`, so the defense holds even for a value that reached it.
+    # `set -f`, and round 7 wraps the OUTER parse in set -f (above), so a
+    # metacharacter-bearing token can no longer be rewritten by cwd before it
+    # reaches this gate.
     case "$p0_pin_path" in
         *'*'*|*'?'*|*'['*)
             p0_stop "input_pin_charset tool=$p0_pin_name expected=printable_without_glob_metacharacters" ;;
     esac
-    # `python3` is the one pinned tool whose VALUE is itself a freeze-gate
-    # identity, because the RO stage's two accepting adjudicators execute that
-    # exact object. A P0 that admitted some other python3 would have checked a
-    # different tool from the one the RO stage will trust, and the premise this
-    # block exists to establish would be about the wrong binary.
+    # Correction 7: bind EVERY pin to its frozen deploy-channel literal. The
+    # literal must be filled (not <PIN-AT-FREEZE>) and the pin must equal it
+    # exactly. python3 keeps its existing binding to P0_FIXED_TRUSTED_PYTHON
+    # (R5-F1); the other eleven tools bind to their own P0_FIXED_* literal. A
+    # disagreement means the prelude named a different object from the one the
+    # deploy channel froze for this tool, which is a STOP, never a silent
+    # acceptance.
+    p0_frozen_tool_path "$p0_pin_name" \
+        || p0_stop "input_pin_unknown_tool name=P0_TOOL_PINS tool=$p0_pin_name inventory=[$P0_RO_TOOLS]"
+    [ "$P0_FROZEN_PIN" != '<PIN-AT-FREEZE>' ] \
+        || p0_stop "input_pin_freeze_unfilled tool=$p0_pin_name detail=deploy_channel_value_never_derived_here"
     if [ "$p0_pin_name" = python3 ]; then
-        [ "$P0_FIXED_TRUSTED_PYTHON" != '<PIN-AT-FREEZE>' ] \
-            || p0_stop "input_pin_freeze_unfilled tool=python3 name=P0_FIXED_TRUSTED_PYTHON detail=deploy_channel_value_never_derived_here"
         [ "$p0_pin_path" = "$P0_FIXED_TRUSTED_PYTHON" ] \
             || p0_stop "input_pin_not_frozen_trusted_python tool=python3 pinned=$p0_pin_path frozen=$P0_FIXED_TRUSTED_PYTHON"
         P0_TRUSTED_PYTHON_BOUND=yes
+    else
+        [ "$p0_pin_path" = "$P0_FROZEN_PIN" ] \
+            || p0_stop "input_pin_not_frozen_path tool=$p0_pin_name pinned=$p0_pin_path frozen=$P0_FROZEN_PIN"
     fi
     P0_PIN_SEEN="$P0_PIN_SEEN$p0_pin_name "
     P0_PIN_COUNT=$(( P0_PIN_COUNT + 1 ))
 done
+if [ "$P0_PRIOR_NOGLOB" -eq 0 ]; then set +f; fi
+
+# Correction 7: reject omissions and extras. Exactly one pin per tool, every one
+# of the twelve preregistered tools pinned, and the count is exactly twelve.
+for p0_t in $P0_RO_TOOLS; do
+    case "$P0_PIN_SEEN" in
+        *" $p0_t "*) : ;;
+        *) p0_stop "input_pin_omitted tool=$p0_t detail=every_preregistered_tool_requires_one_frozen_pin" ;;
+    esac
+done
+[ "$P0_PIN_COUNT" -eq "$P0_TOOL_COUNT_EXPECTED" ] \
+    || p0_stop "input_pin_count_unexpected count=$P0_PIN_COUNT expected=$P0_TOOL_COUNT_EXPECTED detail=exactly_one_frozen_pin_per_preregistered_tool"
 
 # F1 (Codex final-audit round-5): the python3 freeze gate is load-bearing and
 # its polarity was backwards. Supplying a python3 pin engages the
@@ -549,6 +645,8 @@ done
 # distinguishes omission (this post-loop gate) from a still-unfilled deploy-
 # channel placeholder (the in-loop gate above): both are rc 3 under the same
 # freeze-gate reason, so every missing-python3 prelude now STOPs the same way.
+# Correction 7's omission-rejection loop above also forces a python3 entry; this
+# re-check stays as the named python3-binding assertion.
 [ "$P0_TRUSTED_PYTHON_BOUND" = yes ] \
     || p0_stop "input_pin_freeze_unfilled tool=python3 name=P0_FIXED_TRUSTED_PYTHON detail=trusted_python_pin_omitted_freeze_gate_load_bearing"
 
@@ -647,12 +745,12 @@ printf 'P0_input name=P0_INTERPRETER value=%s derived_from=P0_VENV_ROOT\n' "$P0_
 # and the access(2) predicate `[ -x ]` - so no external tool has to be trusted
 # before the inventory that establishes it. `stat` is used afterwards, for the
 # RECORD only; a failure there is could-not-evaluate, never a silent skip.
-# What this section establishes: the named tool resolves to an absolute path
-# that this login may execute, and that path's kind, mode and numeric owner are
-# recorded. What it does NOT establish: that the resolved object is the
-# distribution's tool. P0 has no attestation channel and does not pretend to
-# one; unpinned entries are recorded as `path_resolved_absolute` precisely so
-# the successor can pin them.
+# What this section establishes: every preregistered tool resolves to its FROZEN
+# deploy-channel pin (correction 7), this login may execute it, and that path's
+# kind, mode and numeric owner are recorded. What it does NOT establish: that the
+# resolved object is the distribution's tool. P0 has no attestation channel and
+# does not pretend to one; the pin is the object the deploy channel froze for
+# this tool, and a PATH resolution that disagrees with it STOPs.
 p0_resolve_tool() {
     local t="$1" resolved rc=0 pin canon crc=0 rl
     resolved="$(command -v "$t" 2>&1)" || rc=$?
@@ -707,7 +805,10 @@ p0_resolve_tool() {
             p0_stop "tool_pin_mismatch tool=$t pinned=$pin resolved=$resolved"
         fi
     else
-        P0_RESOLUTION="path_resolved_absolute"
+        # Correction 7: the unpinned `path_resolved_absolute` fallback is DELETED.
+        # Every tool is pinned (the pin loop rejects omissions), so an unpinned
+        # tool is a STOP and the reachable executable set is the frozen pin set.
+        p0_stop "tool_pin_unpinned tool=$t detail=every_tool_requires_a_frozen_pin"
     fi
     # `rc=na` is deliberate and is the reason prereg 8.1 row 1 carries `rc=<n|na>`:
     # nothing was invoked. The access(2) predicate refused, so there IS no
@@ -1352,8 +1453,15 @@ p0_assert_system_manager_ready() {
     if [ "$rc" -ne 0 ]; then
         # With the bound in place these statuses are the BOUNDING wrapper's, and
         # they are classified as such rather than re-narrated as the manager's.
+        # Correction 4 (Codex round-7 A10): GNU `timeout` returns 124 both when
+        # it kills the child for exceeding the deadline AND when the child itself
+        # exits 124 (e.g. `timeout 10s bash -c 'exit 124'` returns 124 at
+        # elapsed_s=0). The wrapper cannot distinguish those, so 124 is NOT
+        # labelled uniquely as a deadline; the honest token records the ambiguity.
+        # (systemctl does not use 124 in practice, but that is a note about the
+        # child, not something the bounding wrapper can prove from its own status.)
         case "$rc" in
-            124) detail="manager_query_deadline_exceeded" ;;
+            124) detail="manager_query_rc124_timeout_reached_or_child_exit_124" ;;
             137) detail="manager_query_killed_after_deadline" ;;
             125) detail="bounding_wrapper_failed" ;;
             126) detail="invocation_found_but_not_executable" ;;
@@ -1427,6 +1535,26 @@ p0_probe_kind() {
     P0_KIND=""; P0_FKIND=""
     raw="$(LC_ALL=C "$P0_STAT" -c '%F' -- "$p" 2>&1)" || rc=$?
     if [ "$rc" -eq 0 ]; then
+        # Correction 3 (Codex round-7 A9): adjudicate the rc-0 producer SHAPE
+        # before any classification. A multi-line, non-printable or empty rc-0
+        # `%F` response is unevaluable, not a host object kind: folding CR/LF to
+        # spaces first (what p0_sanitize does) let `directory\nwarning\n` sanitise
+        # to a token that fell through to the `*) other` arm and reached a
+        # host-state FAIL (venv_root_kind_unexpected) on a probe that never
+        # produced a single clean token (pattern 6: status good, shape not, STOP).
+        case "$raw" in
+            '') p0_stop "path_probe_empty path=$p rc=0" ;;
+        esac
+        case "$raw" in
+            *$'\r'*|*$'\n'*)
+                p0_sanitize "$raw"
+                p0_stop "path_probe_multiline path=$p rc=0 detail=$P0_SAFE" ;;
+        esac
+        case "$raw" in
+            *[![:print:]]*)
+                p0_sanitize "$raw"
+                p0_stop "path_probe_nonprintable path=$p rc=0 detail=$P0_SAFE" ;;
+        esac
         p0_sanitize "$raw"
         case "$P0_SAFE" in
             "symbolic link")
@@ -1493,6 +1621,29 @@ p0_assert_venv_root() {
         p0_prepare_readlink_detail "$canon"
         p0_stop "venv_root_canonicalization_failed path=$d rc=$rc detail=[$P0_SAFE] diagnostic_shape=$P0_RESOLUTION"
     fi
+    # Correction 3 (Codex round-7 A9): adjudicate the rc-0 readlink -f SHAPE
+    # before the comparison. An empty, multi-line, non-printable or non-absolute
+    # canonical response is unevaluable, not a venv-root divergence: only a valid
+    # complete canonical path that differs from the preregistered literal may be
+    # a FAIL (pattern 6: status good, shape not, so STOP).
+    case "$canon" in
+        '') p0_stop "venv_root_canonicalization_unparsable path=$d rc=0 detail=response_empty" ;;
+    esac
+    case "$canon" in
+        *$'\r'*|*$'\n'*)
+            p0_sanitize "$canon"
+            p0_stop "venv_root_canonicalization_unparsable path=$d rc=0 detail=[response_multiline:$P0_SAFE]" ;;
+    esac
+    case "$canon" in
+        *[![:print:]]*)
+            p0_sanitize "$canon"
+            p0_stop "venv_root_canonicalization_unparsable path=$d rc=0 detail=[response_nonprintable]" ;;
+    esac
+    case "$canon" in
+        /*) : ;;
+        *)  p0_sanitize "$canon"
+            p0_stop "venv_root_canonicalization_unparsable path=$d rc=0 detail=[response_not_absolute:$P0_SAFE]" ;;
+    esac
     p0_sanitize "$canon"
     [ "$canon" = "$d" ] \
         || p0_fail "venv_root_not_literal_canonical path=$d canonical=$P0_SAFE"
@@ -1604,7 +1755,16 @@ sys.stdout.write("P0PY %d.%d" % sys.version_info[:2])' 2>&1)" || rc=$?
     # state": this arm accepts nothing the venv said about itself - it observes
     # that the preregistered object executes - and the two RO-stage adjudicators
     # that DO accept a result run under the separately pinned trusted python3.
-    printf 'P0_interpreter path=%s exec=ok env=cleared isolated=yes site_startup=disabled startup_flags=self_verified_isolated_and_no_site venv_pth_and_sitecustomize=not_executed reported_version=%s.%s adjudication=recorded_not_compared interpreter_binary_behaviour=not_attested\n' \
+    # Correction 4 (Codex round-7 A10): the prior tokens (`isolated=yes`,
+    # `site_startup=disabled`, `venv_pth_and_sitecustomize=not_executed`) asserted
+    # startup behaviour the block cannot prove: it REQUESTED `-I -S` and the CHILD
+    # reported sys.flags.isolated/no_site, but the interpreter binary's provenance
+    # is not independently bound, so an arbitrary executable at that path could
+    # forge the output. The line now states only what is established: the
+    # requested launch flags plus the child-reported, self-verified flag state,
+    # with site/.pth non-execution disclosed as not-established-rather-than-claimed
+    # (pattern 9: the sentence must not outrun the probe).
+    printf 'P0_interpreter path=%s exec=ok env=cleared launch_flags=requested_-I_-S child_reported_startup_flags=sys.flags.isolated_and_no_site self_verified=yes site_startup_disable=requested_not_binary_attested venv_pth_sitecustomize_execution=not_established_binary_provenance_unbound reported_version=%s.%s adjudication=recorded_not_compared interpreter_binary_behaviour=not_attested\n' \
         "$py" "$major" "$minor"
 }
 
@@ -1631,7 +1791,7 @@ printf 'P0_out_of_scope class=RO_STAGE item=every_prereg_8.2_row stage=ro implem
 # Written by stating the claim and then deleting every word the executed
 # predicates cannot establish. What survives is the log line.
 printf 'P0_SECTION done\n'
-printf 'P0_claim establishes=executing_numeric_identity_of_this_login,name_to_numeric_resolution_of_gatea_and_mtc_bridge_via_getent,forbidden_gid_non_membership,resolution_and_executability_of_the_12_preregistered_tools_being_the_10_frozen_RP7_RO_tools_plus_id_and_getent,evidence_stdout_bound_to_create_once_leaf,deploy_attested_user_mount_pid_network_namespaces_and_root_mount_identity,system_manager_answered_a_Manager_property_query_over_the_system_bus_within_a_bounded_deadline_after_execution_domain_binding,venv_interpreter_leaf_kind_and_executability_under_isolated_site_disabled_startup\n'
+printf 'P0_claim establishes=executing_numeric_identity_of_this_login,name_to_numeric_resolution_of_gatea_and_mtc_bridge_via_getent,forbidden_gid_non_membership,resolution_and_executability_of_the_12_preregistered_tools_each_bound_to_its_frozen_deploy_channel_pin,evidence_stdout_bound_to_create_once_leaf,deploy_attested_user_mount_pid_network_namespaces_and_root_mount_identity,system_manager_answered_a_Manager_property_query_over_the_system_bus_within_a_bounded_deadline_after_execution_domain_binding,venv_interpreter_leaf_kind_and_executability_under_requested_-I_-S_startup_child_reports_isolated_no_site\n'
 printf 'P0_claim does_not_establish=any_RO_row_host_state,tool_provenance_or_distribution_identity,behaviour_inside_any_executed_tool_binary,nss_source_identity_of_getent_resolution,round1_4_probe_execution_environment_binding,identity_of_the_manager_that_answered,binding_of_these_namespaces_to_any_service,accepted_mount_topology_for_every_preregistered_host_path,interpreter_intermediate_component_or_symlink_target_binding,interpreter_version_or_package_parity,persistence_of_any_checked_object_between_this_preflight_and_the_RO_stage,anything_under_the_protected_metadata_directories,anything_about_group_C,procfs_mount_identity_of_the_namespace_links\n'
-printf 'P0_claim scope=this_login_only identity=numeric_only mutation=no_filesystem_write_primitive_in_this_shell_source child_side_effects=not_attested_except_venv_startup_which_is_disabled interpreter_launch=isolated_and_no_site manager_query=bounded_by_pinned_timeout_inside_cleared_env evidence_leaf=allocated_by_RP0-BOOTSTRAP child_env=mixed coreutils_launch=recorded_absolute_after_PATH_resolution inherited_env=stat_readlink_id_getent cleared_env=systemctl_timeout_and_interpreter_only cwd=caller_inherited tmpdir=caller_inherited_or_unset\n'
+printf 'P0_claim scope=this_login_only identity=numeric_only mutation=no_filesystem_write_primitive_in_this_shell_source child_side_effects=not_attested venv_startup_disable=requested_via_-S_and_child_reported_binary_provenance_unbound interpreter_launch=requested_-I_-S_child_reports_isolated_and_no_site_binary_provenance_unbound manager_query=bounded_by_pinned_timeout_inside_cleared_env evidence_leaf=allocated_by_RP0-BOOTSTRAP child_env=mixed coreutils_launch=recorded_absolute_after_PATH_resolution inherited_env=stat_readlink_id_getent cleared_env=systemctl_timeout_and_interpreter_only cwd=caller_inherited tmpdir=caller_inherited_or_unset\n'
 printf 'P0 PASS\n'
