@@ -20,6 +20,12 @@ invocation — the ordering is provable from git history.
 | 06 | scp evidence down | 0 | `b3b.log` retrieved |
 | 07 | local_bind | 0 | **TR_BIND_PASS**; remote set `d572afe7…` reproduced bit-identical locally |
 
+Evidence leaf identity, stated explicitly so the log can be re-verified without re-deriving
+the set: `b3b.log` = `7b383ab5194972fca9511ae7068509929fab652c980953864ae93aa3ae60fa16`,
+3329 bytes. The host computed that digest in op 05 (`CLOSE_DIGEST` line in
+`operator_record/ops/05.stdout`); the local copy reproduces it. Independently
+re-verified after the fact — see `../INTEGRITY_VERIFICATION_2026-08-10.md`.
+
 ## What B3 proved (from the bound `b3b.log`)
 
 - **Release and venv trees**: `owner_numeric=0:0` mode `555`; both `-perm /222` sweeps
