@@ -62,7 +62,9 @@ flagships. Committing the successor BEFORE any invocation is mandatory (draft §
 5. Successor document completed (this skeleton + draft) and COMMITTED. Only then
    op 01.
 
-## 5. OPEN DECISION for the owner — attestation production channel
+## 5. RESOLVED — owner granted option (a), 2026-08-10 ~16:45 ("Seçenek a")
+
+Gr
 
 The projection-v2 digest and the row-8 namespace/root-mount identities must be
 produced OUTSIDE the ssh login domain they attest (Pattern 2). Grant #3 covers running
@@ -82,8 +84,13 @@ Options:
 - **(c)** Run WP-I without row-8/projection attestation — NOT acceptable: reverts the
   catalogue C04 repair; listed only for completeness.
 
-Until (a) or (b) is chosen, freeze-gate item 2 cannot complete. Everything before it
-can.
+**OWNER CHOSE (a) 2026-08-10 ~16:45** ("Seçenek a"). Recorded as authorization #6 in
+`../NEW_SESSION_KICKOFF_PROMPT_2026-08-09_NIGHT.md`. Action: preregister the read-only
+attestation command set (`/proc/self/mountinfo` capture + `readlink /proc/1/ns/{user,
+mnt,pid,net}` + canonical root-mount identity, hashed at production) as part of the
+successor document; it runs inside the grant-#3 root session before the RO stage
+interprets any mount/namespace claim. Freeze-gate item 2 is now unblocked pending that
+preregistration.
 
 ## 6. Op list
 
