@@ -95,6 +95,29 @@ replace the placeholders with real output. That is the expected and accepted beh
    silently deleted. The truthful statement is the R6 one: the self-check catches only
    ACCIDENTAL loss, a hostile `.pth` defeats it, and `-S` is the load-bearing control.
 
+7. **Make the tool set finite (from the §10.1 reconciliation, Lead-verified).**
+   `P0_TOOL_PINS` defaults empty and only the Python entry is later mandatory (~478-553);
+   every other tool may stay unpinned, non-Python pins may name any absolute path
+   (~505-524), and a missing pin falls back to `command -v` with
+   `resolution=path_resolved_absolute` (~656-722, the fallback is at ~658). The reachable
+   executable set is therefore not derivable from the frozen source, which blocks the
+   Stage-1 path-scope proof. Require exactly one frozen pin for each of
+   `stat readlink env find sha256sum systemctl ss curl timeout python3 id getent`; reject
+   omissions; require the nine shared non-Python tools plus `id` and `getent` to equal
+   their exact preregistered paths; require Python to equal the preregistered trusted
+   interpreter; **delete the unpinned fallback**. Correction 4's "document that
+   `P0_TOOL_PINS` requires `python3`" is subsumed by this.
+8. **Bind the venv root exactly.** Lines ~453-476 require an absolute canonical path whose
+   basename is the candidate SHA but do **not** require the
+   `/opt/mtc-bridge/venvs/<SHA>` prefix; ~628 and ~1428-1565 then stat, canonicalize and
+   execute that arbitrary-prefix root and its `bin/python`. Compare `P0_VENV_ROOT` exactly
+   with `/opt/mtc-bridge/venvs/$P0_CAND` **before the first path probe**. Do not widen the
+   §10.1 venv subtree rule to accommodate a looser check.
+9. **Remove the `/dev/null` write opens** at ~359 and ~361. Correction 1 already moves
+   these to `builtin type -t`, which needs no redirection; drop the `2>/dev/null` rather
+   than carrying it over. `/dev/null` sits outside the run evidence tree and outside the
+   §10.1 allowlist, and it will not be added to the allowlist.
+
 ## Deliverables
 
 Repaired `RP6-P0.sh` + updated `SELF_QA_RP6.md` (RED/GREEN per correction, anchored

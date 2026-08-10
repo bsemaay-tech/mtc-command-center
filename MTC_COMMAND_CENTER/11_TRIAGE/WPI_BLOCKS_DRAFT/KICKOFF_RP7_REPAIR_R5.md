@@ -50,6 +50,23 @@ would rewrite it); if you must restore one, use `git cat-file blob HEAD:<path> >
   terminal `QA_PASS` from a fresh Git Bash. Codex's working form is shown in its baseline
   section and is one admissible answer.
 
+## Two additional required items from the §10.1 reconciliation (Lead-verified)
+
+- **F4 (LOW, cheap) — remove the `/dev/null` write opens.** `RP7-WPI-RO.sh:183` and
+  `:624-625` open `/dev/null` for writing, which is outside both the run evidence tree and
+  the §10.1 allowlist. Lead confirmed all three sites by inspection. Replace the two
+  prerequisite checks with a non-overridable `builtin type -t` function-type check (which
+  needs no redirection at all), and close stderr with `2>&-` or capture it into a
+  create-once evidence leaf in `wpi_alloc_leaf` instead of opening `/dev/null`. Keep the
+  `noclobber` semantics of `:183` intact.
+- **F5 (MEDIUM) — evidence-root provenance is never proved.** `:631` proves `EV_LOG` is
+  below `EV_DIR` and `:182` proves each new leaf is below `EV_DIR`, but nothing proves
+  `EV_DIR` itself descends from the frozen `<REMOTE_BASE>`. Add that check against the
+  frozen constant and STOP when it does not hold. If the constant genuinely is not
+  available to the block in isolation, do **not** paper over it: narrow the printed claim
+  to exactly what is established, and record the missing binding as a named freeze-gate
+  input in your report so Stage 1 must close it.
+
 **Standing rule this round makes explicit:** evidence a third party cannot re-run verbatim
 is not freeze-grade. Every evidence command in `SELF_QA_RP7.md` must be literal, bounded,
 and anchored by unique content markers (e.g. `^# RP7_F1_HARNESS_BEGIN$` /
