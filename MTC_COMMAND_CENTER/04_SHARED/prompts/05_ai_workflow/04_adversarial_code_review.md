@@ -2,14 +2,23 @@
 
 Use **after Gate 3 (impl) and Gate 4 (QA)**. **Run by the LEAD ORCHESTRATOR** — the model that is not the implementer (Codex impl → Claude lead reviews; Claude impl → Codex lead reviews). The lead independently inspects the actual diff/files; it does not merely accept the implementer's report. See `AGENTS.md` two-tier model.
 
-## Mandatory audit model/effort (AGENTS.md §CANONICAL AUDIT ROSTER)
+## Mandatory tier classification + audit matrix (AGENTS.md §AUDIT TIER POLICY — PERMANENT DEFAULT)
 
-**Claude auditor:** exact model `claude-opus-5`, effort `xhigh`. No Sonnet, no alias, no silent fallback.
+Gate 5 is driven by the **audit tier** recorded in the Gate 1 scope contract. The tier decides auditor count, effort, and round cap. The canonical roster (`AGENTS.md` §CANONICAL AUDIT ROSTER) controls the exact model identity/quality for the slots actually invoked; fresh independence remains mandatory for every invoked slot.
+
+| Tier | Auditors | Effort | Max rounds |
+|------|----------|--------|------------|
+| **T0** | Two flagships: `claude-opus-5` + `gpt-5.6-sol` | xhigh | 3 |
+| **T1** | One alternating flagship (Claude/Codex per round) `high`; **plus GLM-5.2 second opinion ONLY if the flagship raises findings or the diff exceeds ~300 lines** | high | 2 |
+| **T2** | Single reviewer, single round. GLM-5.2 preferred; DeepSeek acceptable; flagship at medium effort only if neither is available | medium | 1 |
+| **T3** | **No model audit.** Implementer self-verification only | — | 0 |
+
+**Claude auditor (T0/T1 flagship slot):** exact model `claude-opus-5`, effort `xhigh` (T0) / `high` (T1). No Sonnet, no alias, no silent fallback.
 Example fresh-session CLI: `claude -p --model claude-opus-5 --effort xhigh --no-session-persistence`
 
-**Codex auditor:** exact model `gpt-5.6-sol`. Effort `high` for ordinary Gate 5. Effort `xhigh` for: Gate 6 security review; Pine/parity/MTC/trading/protected surface; architecture/cross-cutting change; re-audit after REQUEST_CHANGES or BLOCK.
-Example fresh-session CLI (ordinary G5): `codex exec --ephemeral --sandbox read-only -m gpt-5.6-sol -c "model_reasoning_effort=high" <audit_prompt_file>`
-Example fresh-session CLI (protected/re-audit): `codex exec --ephemeral --sandbox read-only -m gpt-5.6-sol -c "model_reasoning_effort=xhigh" <audit_prompt_file>`
+**Codex auditor (T0/T1 flagship slot):** exact model `gpt-5.6-sol`. Effort `xhigh` for T0; `high` for T1. If Gate 6, Pine/parity/MTC/trading/protected, host-touching, architecture, or cross-cutting scope is discovered inside a T1 contract, stop and correct the Gate-1 classification to T0; do not silently raise effort while leaving the wrong tier recorded.
+Example fresh-session CLI (ordinary): `codex exec --ephemeral --sandbox read-only -m gpt-5.6-sol -c "model_reasoning_effort=high" <audit_prompt_file>`
+Example fresh-session CLI (T0/protected): `codex exec --ephemeral --sandbox read-only -m gpt-5.6-sol -c "model_reasoning_effort=xhigh" <audit_prompt_file>`
 
 **If exact model/effort unavailable: stop as BLOCK unless Barış explicitly waives.**
 
@@ -18,7 +27,7 @@ Example fresh-session CLI (protected/re-audit): `codex exec --ephemeral --sandbo
 ## Inputs to provide
 
 - The diff (or branch / PR reference).
-- Gate 1 scope contract.
+- Gate 1 scope contract (must include the **AUDIT TIER** classification).
 - Gate 2 plan, if produced.
 
 ## Prompt
@@ -35,9 +44,17 @@ concrete bug demands one.
 
 Read:
 - The diff.
-- The Gate 1 scope contract and Gate 2 plan (if any).
+- The Gate 1 scope contract (including its AUDIT TIER) and Gate 2 plan (if any).
 - MTC_COMMAND_CENTER/_AI_MEMORY/DO_NOT_TOUCH.md
 - MTC_COMMAND_CENTER/_AI_MEMORY/AI_RULES.md
+
+Tier gate: read the AUDIT TIER from the Gate 1 scope contract.
+- If the tier is **T3**, do NOT run a model audit. Record that the
+  implementer's self-verification replaces this Gate 5 model audit and
+  stop — do not invoke any auditor slot.
+- Otherwise, before reporting any findings, state the applied auditor
+  contract: `TIER: <T0/T1/T2>` and `APPLIED AUDITOR CONTRACT:
+  <auditor(s) + effort + max rounds>` per the matrix above.
 
 Check, in this exact order, and report findings as
 `path:line: <severity>: <problem>. <fix>.`:
@@ -69,4 +86,4 @@ Skip formatting nits. Skip praise. Stay adversarial.
 
 - No memory updates inside Gate 5.
 - If PASS or PASS-WITH-NITS: lead proceeds to Gate 6 (if applicable) or Gate 7. Only after Gate 7 may the lead perform repository hygiene and — where authorized — commit/push.
-- If REQUEST_CHANGES or BLOCK: lead sends a focused repair prompt to the same counterpart implementer (loop back to Gate 3). **Maximum 3 repair/re-audit rounds total.** After the third non-accepting verdict, stop and report the blocker to Barış.
+- If REQUEST_CHANGES or BLOCK: lead sends a focused repair prompt to the same counterpart implementer (loop back to Gate 3). **Repair/re-audit rounds are capped per audit tier: T0=3, T1=2, T2=1, T3=0.** After the cap is exhausted with no accepting verdict, stop and report the blocker to Barış.

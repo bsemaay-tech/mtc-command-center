@@ -10,10 +10,13 @@ canonical ones inside `MTC_COMMAND_CENTER/_AI_MEMORY/`.
 ```
 You are running Gate 7 (Memory Write-Back) for Tradingview_LAB_CLEAN.
 
-Actor: **Lead Orchestrator**, after Gate 5 PASS is verified. Do not
-execute this gate without a confirmed Gate 5 PASS. The implementer may
-supply factual inputs (commit hashes, test results, exact file lists) to
-the lead; final write-back content and authorized sequencing are
+Actor: **Lead Orchestrator**, after the required audit tier acceptance
+is verified. Do not execute this gate without the required tier
+acceptance: for T0/T1/T2, a confirmed Gate 5 PASS (or PASS-WITH-NITS)
+per the tier's auditor contract; for T3, the recorded implementer
+self-verification replaces the model Gate 5. The implementer may supply
+factual inputs (commit hashes, test results, exact file lists) to the
+lead; final write-back content and authorized sequencing are
 Lead-owned.
 
 Do NOT create new files. Update only the existing ones inside

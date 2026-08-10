@@ -1,5 +1,14 @@
 # NEXT_STEPS
 
+## PERMANENT AUDIT TIERS — apply immediately to active RP7/WP-I work (2026-08-10)
+
+**[AI: Claude Lead]** Re-read `AGENTS.md` §AUDIT TIER POLICY — PERMANENT DEFAULT and record the
+current Gate-1 tier before the next audit dispatch. `RP7-WPI-RO.sh` is T0 because it is a run-kit script
+intended for staging-host execution: two fresh flagships (`claude-opus-5` + `gpt-5.6-sol`) at xhigh,
+maximum three rounds. Count the existing Claude audit only if fresh-session + xhigh launch evidence is
+confirmed; its report currently omits effort. After repair/green evidence, run the fresh Codex xhigh slot.
+Do not add GLM/DeepSeek unless an explicit tier slot or later owner contract requires it.
+
 ## WP-I round 1.4: catalogue pass CLOSED; RP6-P0 repair in flight (2026-08-10 ~09:20)
 
 **Round 1.4 committed `6a8b0896`:** Codex applied all 10 defect patterns to the whole
@@ -460,8 +469,8 @@ only — reuse its immutable evidence where predicates overlap, but it is not WP
 56-entry hash-locked closure re-confirmed at the candidate checkout (56 entries, 1345 hashes).
 
 **Matrix groups:** A reusable immutable Gate-A evidence · B read-only post-start host checks · C
-mutating host checks · D Audit 2 (current `AGENTS.md` four-auditor D025 contract, **not** older plan
-wording) · E WP-A targeted Ubuntu verification. All host commands **NOT EXECUTED**; **COMMAND GAP**
+mutating host checks · D Audit 2 (**superseded 2026-08-10:** D028 permanent tier policy now controls
+auditor count/cadence; use the current `AGENTS.md`, not this historical four-auditor label) · E WP-A targeted Ubuntu verification. All host commands **NOT EXECUTED**; **COMMAND GAP**
 markers where an exact safe command is not yet specified. **Superseded by the accepted provenance
 repair above:** all 11 requested symbols exist at the candidate, including
 `test_kill_restart_after_request_commit_keeps_killed_and_resumes_once` at `:2765`; WP0 is correct and

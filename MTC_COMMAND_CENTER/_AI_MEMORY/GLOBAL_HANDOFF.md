@@ -1,5 +1,20 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5] 2026-08-10 — Audit-tier policy promoted to permanent repo default
+
+Owner extended `11_TRIAGE/OWNER_DECISION_AUDIT_TIERS_2026-08-09.md` from the 50-hour programme
+to the permanent repo default. Canonical operational policy now lives in `AGENTS.md` §AUDIT TIER
+POLICY — PERMANENT DEFAULT; `START_HERE.md`, `AI_RULES.md`, Gate-1/Gate-5/Gate-6/Gate-7 prompt
+templates, D028, and stale routing references were aligned. Every Gate-1 scope must record T0/T1/T2/T3
+before audit dispatch. Highest applicable tier wins; host-executed run-kit scripts are T0. Recent live
+Claude session logs contained no reference to the owner tier record, so the already-running session must
+be told to re-read the new canonical section. Current `RP7-WPI-RO.sh` is T0: two fresh flagships at xhigh.
+The existing `RP7_CLAUDEPRO_AUDIT_2026-08-10.md` may count as the Claude slot only after its fresh-session
+and xhigh launch evidence is confirmed; it currently records Opus 5 and independence but not effort.
+After repair/green evidence, require fresh Codex `gpt-5.6-sol` xhigh as the second flagship. Do not add
+GLM/DeepSeek merely by habit; tier-selected slots only. No runtime, host, credential, trading, or deployment
+action was authorized or performed by this policy change.
+
 ## [Codex GPT-5] 2026-08-10 — NVIDIA NIM and Claude Pro routes live-verified
 
 Restored the existing NVIDIA NIM path without spending Claude subscription tokens. New central helper:

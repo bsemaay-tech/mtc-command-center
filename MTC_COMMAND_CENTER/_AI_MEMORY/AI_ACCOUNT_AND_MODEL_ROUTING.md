@@ -124,7 +124,7 @@ Canonical GLM **model tiers and the cheapest-capable decision tree** live in `AG
 | First attempt (supplemental / audit) | `cline-pass/deepseek-v4-flash` |
 | Stronger reasoning | `cline-pass/deepseek-v4-pro` |
 
-Cline is **not a flagship substitute**. For audits it must run in an **isolated worktree** at the frozen SHA, and cleanliness must be proven afterwards (`git status --porcelain` empty). Implementation authority and the four-auditor acceptance rule remain as written in `AGENTS.md`.
+Cline is **not a flagship substitute**. It may fill only a tier-authorized secondary/T2 slot or an explicitly designated four-auditor slot. For audits it must run in an **isolated worktree** at the frozen SHA, and cleanliness must be proven afterwards (`git status --porcelain` empty). Auditor count/cadence and any explicit four-auditor contract remain as written in `AGENTS.md`.
 
 **Current state (2026-08-08):** the Cline CLI harness is installed and verified at version 3.0.51; it remains the first-choice sub-delegation harness per `AGENTS.md`. The separate ClinePass subscription is **PAUSED** because of an unpaid invoice and has 0 credits (owner-confirmed 2026-08-08), so it is not usable as capacity. Consequently D025 canonical auditor 3 (`cline-pass/deepseek-v4-flash`) is **BLOCKED** until the subscription is reactivated and a live probe passes. This does not mean the Cline harness itself is broken.
 

@@ -4,6 +4,12 @@ Authority: Barış, 2026-08-09, explicit chat authorization ("evet — varsayıl
 relayed by the Claude Lead session. This record is binding on all agents (Codex, Claude
 Lead/Max, GLM, DeepSeek) for the remainder of the 50-hour programme unless Barış revises it.
 
+## PERMANENCE ADDENDUM (2026-08-10)
+
+Barış explicitly extended this decision from the 50-hour programme to a **repo-wide permanent
+default** until revised. `AGENTS.md` § AUDIT TIER POLICY — PERMANENT DEFAULT is the canonical
+operational copy; this file remains the rationale/history record.
+
 ## 1. 50-hour ledger ratification (closes the budget-evidence blocker)
 
 `GATE_A_50H_LEDGER_RECONSTRUCTION_2026-08-09.md` concluded the exact used/remaining balance is
