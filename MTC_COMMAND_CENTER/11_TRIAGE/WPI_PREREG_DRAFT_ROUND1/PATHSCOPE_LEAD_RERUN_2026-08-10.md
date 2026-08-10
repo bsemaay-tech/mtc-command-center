@@ -40,9 +40,24 @@ PATH value=/proc/uptime verdict=FORBID rule=- sources=NONE uses=line=173:redirec
 rc=3
 ```
 
+## Amendment, ~20:40 — the tool is now under REQUEST_CHANGES
+
+`PATHSCOPE_CODEX_T1_AUDIT_2026-08-10.md` returned **REQUEST_CHANGES: 9**, four of them
+CRITICAL under-reporting: complete Bash fragments reach filesystem or network primitives
+while the prover emits no path, no `UNRESOLVED` marker, and `verdict=PASS rc=0`. Its
+independent re-run reproduced this file's numbers and lines exactly.
+
+Consequence for everything below: these counts are a **deterministic lower-bound
+diagnostic from a currently unsound analyzer**. A `FORBID` or `UNRESOLVED` it prints is
+real; a `PASS` or an absence of output proves nothing. They must not be used to freeze a
+block, to assert complete scope, or as the §10.1 reconciliation's primary basis — the
+reconciliation derived its table by reading the block sources and used the prover only as
+a cross-check, which is the correct order and remains valid.
+
 ## Lead conclusions
 
-1. The handoff figures are now backed by a reproducible run on the current bytes.
+1. The handoff figures are now backed by a reproducible run on the current bytes — as a
+   lower bound only; see the amendment above.
 2. The `/dev/null` `FORBID` verdicts land on **exactly** the lines the §10.1 reconciliation
    named (RP6 359/361, RP7 183/624/625). Two independent methods agree, and the Lead also
    confirmed those lines by inspection. The removal item in the R5 and R7 kickoffs is
