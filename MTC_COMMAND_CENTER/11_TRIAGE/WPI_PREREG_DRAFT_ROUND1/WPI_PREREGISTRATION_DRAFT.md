@@ -33,6 +33,20 @@ classification, status-before-output ordering, line-reader completeness and
 falsifiable acceptance evidence. It authorizes no host contact or new operation and
 does not fill or alter any existing PIN-BEFORE-DISPATCH placeholder.
 
+**Round 1.5 (transport-set contract repair — Lead adjudication of a Codex authoring
+STOP, 2026-08-10).** Authoring the transport set falsified the round-1.1 N1 claim that
+all three reused remote scripts fit the WP-I contract unchanged. Two do not:
+`remote_setup.sh` (4976 B, `faee3725…`) hardcodes the base prefix
+`/home/gatea/wpl_p2_staging_` and therefore cannot allocate the section-1
+`wpi_staging_` base (op 01 would always fail); `remote_extract_verify.sh` (8270 B,
+`ba0bef0e…`) pins the old nine-member 102400-byte archive **including `RP1-B3.sh`**,
+which section 3 excludes from the WP-I kit (op 03 would reject every valid WP-I
+archive). The implementer stopped without writing rather than author deliverables
+that could never run — the correct STOP. Section 4 is amended accordingly:
+WP-I-specific `remote_setup_wpi.sh` and `remote_extract_verify_wpi.sh` replace the
+two misfit rows as minimal derivations of the accepted bytes, and only
+`remote_close_tree.sh` (verified free of unit-specific constants) remains byte-reuse.
+
 Three things must happen before any successor of this document is dispatchable, and
 each is named at the point where it bites: Stage 1 must freeze and hash the blocks
 (sections 3 and 4), the values marked `<PIN-BEFORE-DISPATCH: ...>` must be filled
@@ -205,20 +219,24 @@ authored for WP-I and pinned at Stage 1.
 
 | File | Bytes | SHA-256 | Role |
 |---|---:|---|---|
-| `remote_setup.sh` | 4976 | `faee3725325d7155a6309e2371b85a4facba1980f0169c8268e47a75902821b5` | op 01 stdin - create-once remote allocation |
-| `remote_extract_verify.sh` | 8270 | `ba0bef0ef6ceb91c445e1d74e2c8d3b6fa7ac01e7e4e10216139b96b28c93db3` | op 03 stdin - archive/member/hash verification + extraction |
-| `remote_close_tree.sh` | 7470 | `87157f0ea454df7c1f826a8c76a38f3045dd38efdd8fa347644f79251d3f3f0e` | ops 07 and 08 stdin - closed-tree hashing |
+| `remote_setup_wpi.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 01 stdin - create-once remote allocation. Minimal derivation of the accepted `remote_setup.sh` (4976 B, `faee3725…`): the ONLY semantic change is the base-prefix constant `wpl_p2_staging_` → `wpi_staging_` (round 1.5); the derivation diff is recorded in self-QA and must show nothing else changed |
+| `remote_extract_verify_wpi.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 03 stdin - archive/member/hash verification + extraction. Minimal derivation of the accepted `remote_extract_verify.sh` (8270 B, `ba0bef0e…`): the ONLY semantic change is the pinned archive-constants block (bytes, member list, per-member digests = the WP-I kit of section 3, `RP1-B3.sh` excluded; concrete values enter at Stage 1 freeze); derivation diff recorded in self-QA |
+| `remote_close_tree.sh` | 7470 | `87157f0ea454df7c1f826a8c76a38f3045dd38efdd8fa347644f79251d3f3f0e` | ops 07 and 08 stdin - closed-tree hashing. Byte-identical reuse; verified free of unit-specific constants (round 1.5) |
 | `transport_runner.ps1` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | operator-side recorder (Stage 2 variants exist at 18095/`c5bdb47c...` and 17849/`a48ddc93...`; the WP-I op list differs, so the runner is re-pinned, not assumed) |
 | `run_p0.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 04 stdin - P0 wrapper |
 | `run_ro.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 05 stdin - RO wrapper |
 | `TRANSPORT_PLAN.tsv` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | the ordered op list; pinned inside the runner |
 
-Reused-script disposition (GLM review N1, mirroring the Stage 2 template section 10
-discipline): `remote_setup.sh`, `remote_extract_verify.sh` and `remote_close_tree.sh`
-are each **kept byte-identical** to the Stage-2-accepted artifacts at the digests
-above - reviewed for contract fit against the WP-I op list, unchanged contract, no
-edit; any future byte change to any of them voids this draft's section 4 and re-opens
-review.
+Reused-script disposition (round 1.5, superseding the round-1.1 N1 claim): only
+`remote_close_tree.sh` is kept byte-identical to the Stage-2-accepted artifact at the
+digest above. The N1 "contract fit, unchanged contract, no edit" claim was falsified
+for the other two at transport-set authoring (Codex STOP, 2026-08-10): both carry
+unit-specific constants incompatible with WP-I (see the round-1.5 note, section 0).
+`remote_setup_wpi.sh` and `remote_extract_verify_wpi.sh` are their minimal
+derivations; each derivation must be proven minimal by a recorded diff against the
+accepted bytes in self-QA, and each is a new artifact requiring Stage 1 adversarial
+acceptance and its own pinned digest. Any byte change to `remote_close_tree.sh`
+still voids this section and re-opens review.
 
 Both wrappers inherit the two repairs the Stage 2 wrappers needed: block paths are
 refused if they are symlinks (`-f` dereferences, so `-f` alone is not a refusal),
