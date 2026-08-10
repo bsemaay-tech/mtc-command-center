@@ -1,29 +1,79 @@
-# WP-L Phase 2 Stage 2 — remote base allocation (PREREGISTERED, create-once).
+# WP-I Stage 2 — remote base allocation (PREREGISTERED, create-once).
 #
 # Transport op 01. Delivered on ssh stdin to `bash -s -- <REMOTE_BASE>`.
 #
 # Creates exactly four directories and nothing else. It never deletes, never
 # renames, never chmods an existing object, never uses `mkdir -p`, never
-# touches a service, a unit, a credential, the network or the bridge. It runs
-# BEFORE the runkit exists on the host, so it deliberately depends on nothing
-# from the runkit: no proposal block is sourced or executed here.
+# creates a temporary file, never touches a service, a unit, a credential, the
+# network or the bridge. It runs BEFORE the runkit exists on the host, so it
+# deliberately depends on nothing from the runkit: no proposal block is sourced
+# or executed here.
+#
+# Round 2 repairs (Codex F3/F4/F5):
+#   * every executable is a verified absolute pin - nothing is selected by the
+#     inherited PATH, and no `mktemp`/`TMPDIR` object is created at all;
+#   * the ENTIRE parent chain is bound - non-symlink, canonical, searchable,
+#     numerically owned, not group/other writable - BEFORE the first mkdir;
+#   * identity is numeric (`%u:%g`); the rendered `%U:%G` name is diagnostic
+#     only;
+#   * a path probe that cannot be classified - multiline, mixed, unexpected
+#     prose, or a kernel answer that contradicts the diagnostic - is STOP, and
+#     STOP happens before any mutation.
 #
 # rc contract: 0 = allocated, 1 = FAIL (predicate refused), 3 = STOP (could not
 # evaluate — never re-read as "absent" or as success).
 set -Eeuo pipefail
+export LC_ALL=C
 
 EXPECT_PREFIX='/home/gatea/wpi_staging_'
-EXPECT_OWNER='gatea:gatea'
+EXPECT_PARENT='/home/gatea'
+EXPECT_UID='<PIN-AT-FREEZE>'
+EXPECT_GID='<PIN-AT-FREEZE>'
+EXPECT_OWNER_NAME='gatea:gatea'
 EXPECT_MODE='700'
 
 fail() { printf 'SETUP_FAIL reason=%s\n' "$*" >&2; exit 1; }
 stop() { printf 'SETUP_STOP reason=%s\n' "$*" >&2; exit 3; }
 note() { printf 'SETUP_NOTE %s\n' "$*"; }
 
-[ "$#" -eq 1 ] || fail "usage remote_setup.sh <REMOTE_BASE> argc=$#"
+# --- pinned program identities ----------------------------------------------
+# The absolute path IS the pin; the inherited PATH selects nothing. `stat` is
+# the bootstrap root of trust and is the first object verified, including
+# itself. Ownership is compared numerically.
+TOOL_STAT='/usr/bin/stat'
+TOOL_MKDIR='/usr/bin/mkdir'
+TOOL_READLINK='/usr/bin/readlink'
+
+require_tool() {
+    local t="$1" own mode g o
+    case "$t" in /*) : ;; *) stop "tool_path_not_absolute path=$t" ;; esac
+    [ ! -L "$t" ] || stop "tool_is_symlink path=$t"
+    [ -f "$t" ]   || stop "tool_missing_or_not_regular path=$t"
+    [ -x "$t" ]   || stop "tool_not_executable path=$t"
+    own="$("$TOOL_STAT" -c '%u:%g' -- "$t" </dev/null 2>/dev/null)" || stop "tool_owner_probe_failed path=$t"
+    mode="$("$TOOL_STAT" -c '%a' -- "$t" </dev/null 2>/dev/null)"   || stop "tool_mode_probe_failed path=$t"
+    [ "$own" = '0:0' ] || stop "tool_owner_numeric=$own expected=0:0 path=$t"
+    o="${mode#"${mode%?}"}"
+    g="${mode%?}"; g="${g#"${g%?}"}"
+    case "$o" in 2|3|6|7) stop "tool_other_writable mode=$mode path=$t" ;; esac
+    case "$g" in 2|3|6|7) stop "tool_group_writable mode=$mode path=$t" ;; esac
+    note "tool name=${t##*/} path=$t owner_numeric=$own mode=$mode resolution=pinned_absolute"
+}
+
+require_tool "$TOOL_STAT"
+require_tool "$TOOL_MKDIR"
+require_tool "$TOOL_READLINK"
+
+# --- the preregistered numeric identity must actually be pinned -------------
+case "$EXPECT_UID" in ''|*[!0-9]*) stop "identity_pin_unfilled field=EXPECT_UID" ;; esac
+case "$EXPECT_GID" in ''|*[!0-9]*) stop "identity_pin_unfilled field=EXPECT_GID" ;; esac
+[ "$EUID" = "$EXPECT_UID" ] || fail "login_euid=$EUID expected=$EXPECT_UID"
+note "identity euid=$EUID expected_numeric=$EXPECT_UID:$EXPECT_GID name_diagnostic=$EXPECT_OWNER_NAME"
+
+[ "$#" -eq 1 ] || fail "usage remote_setup_wpi.sh <REMOTE_BASE> argc=$#"
 BASE="$1"
 
-# --- the base must be EXACTLY /home/gatea/wpl_p2_staging_<one safe component>.
+# --- the base must be EXACTLY <EXPECT_PREFIX><one safe component>.
 # A separator, `.`, `..`, a leading `-` or any character outside
 # [A-Za-z0-9._-] in the suffix would place the whole evidence tree somewhere
 # other than the preregistered path while every later check still "passed".
@@ -38,76 +88,153 @@ case "$SUFFIX" in
 esac
 note "base_component_ok value=$SUFFIX"
 
-# --- lstat-fail-closed path classification ---------------------------------
-# `stat -c %F` does NOT dereference, so a DANGLING symlink is still classified
-# as a symlink and is never conflated with "absent". A probe error is STOP, not
-# "absent": creating on top of an unreadable path is exactly the failure this
-# script exists to prevent. Called as `kind="$(probe_path "$p")" || exit $?`
-# so a subshell STOP/FAIL propagates instead of being read as empty output.
-probe_path() {
-    local p="$1" kind rc=0 err detail
-    err="$(mktemp)" || stop "probe_tempfile_failed path=$p"
-    kind="$(LC_ALL=C stat -c '%F' -- "$p" 2>"$err")" || rc=$?
-    if [ "$rc" -eq 0 ]; then
-        rm -f "$err"
-        case "$kind" in
-            "symbolic link")                    printf 'link\n';    return 0 ;;
-            "regular file"|"regular empty file") printf 'regular\n'; return 0 ;;
-            "directory")                        printf 'dir\n';     return 0 ;;
-            *)                                  printf 'other\n';   return 0 ;;
-        esac
-    fi
-    detail="$(tr -d '\r\n' <"$err")"; rm -f "$err"
-    case "$detail" in
-        *"No such file or directory"*) printf 'absent\n'; return 0 ;;
+# --- bind every parent component BEFORE any mutation ------------------------
+# Pattern 3: the leaf is not the path. A live symlink, a non-canonical
+# component, or a group/other-writable ancestor lets the whole evidence tree be
+# relocated while every leaf check still passes. This runs before the first
+# mkdir, so a refusal costs no created directory.
+bind_component() {
+    local p="$1" want="$2" own name mode g o
+    [ ! -L "$p" ] || stop "parent_component_is_symlink path=$p"
+    [ -d "$p" ]   || stop "parent_component_not_a_directory path=$p"
+    [ -x "$p" ]   || stop "parent_component_not_searchable path=$p"
+    own="$("$TOOL_STAT" -c '%u:%g' -- "$p" </dev/null 2>/dev/null)"  || stop "parent_owner_probe_failed path=$p"
+    name="$("$TOOL_STAT" -c '%U:%G' -- "$p" </dev/null 2>/dev/null)" || stop "parent_owner_name_probe_failed path=$p"
+    mode="$("$TOOL_STAT" -c '%a' -- "$p" </dev/null 2>/dev/null)"    || stop "parent_mode_probe_failed path=$p"
+    [ "$own" = "$want" ] || fail "parent_owner_numeric=$own expected=$want path=$p owner_name=$name"
+    o="${mode#"${mode%?}"}"
+    g="${mode%?}"; g="${g#"${g%?}"}"
+    case "$o" in 2|3|6|7) fail "parent_other_writable mode=$mode path=$p" ;; esac
+    case "$g" in 2|3|6|7) fail "parent_group_writable mode=$mode path=$p" ;; esac
+    note "parent_bound path=$p owner_numeric=$own owner_name=$name mode=$mode"
+}
+
+bind_parent_chain() {
+    local dir="$1" rest comp acc canon
+    case "$dir" in /*) : ;; *) stop "parent_not_absolute path=$dir" ;; esac
+    canon="$("$TOOL_READLINK" -f -- "$dir" </dev/null 2>/dev/null)" || stop "parent_canonicalization_failed path=$dir"
+    [ "$canon" = "$dir" ] || fail "parent_not_canonical path=$dir canonical=$canon"
+    bind_component '/' '0:0'
+    acc=''
+    rest="${dir#/}"
+    while [ -n "$rest" ]; do
+        comp="${rest%%/*}"
+        if [ "$comp" = "$rest" ]; then rest=''; else rest="${rest#*/}"; fi
+        acc="$acc/$comp"
+        if [ "$acc" = "$dir" ]; then
+            bind_component "$acc" "$EXPECT_UID:$EXPECT_GID"
+        else
+            bind_component "$acc" '0:0'
+        fi
+    done
+}
+
+# --- calibrate the absence diagnostic against the pinned tool itself --------
+# Substring-matching `No such file or directory` is what let a mixed
+# ENOENT+EACCES diagnostic be read as absence. Instead the exact sentence this
+# pinned `stat` emits for an absent name under an already-bound parent is
+# measured once, in this run, and turned into a template. Every later
+# classification must match that template as a WHOLE string. This binds to the
+# pinned binary's real grammar rather than to prose guessed at authoring time,
+# and any wrapper, prefix, suffix or second diagnostic fails the comparison.
+ENOENT_TEMPLATE=''
+calibrate_absence() {
+    local probe="$1" diag rc=0
+    if [ -e "$probe" ] || [ -L "$probe" ]; then stop "enoent_calibration_path_present path=$probe" ; fi
+    diag="$("$TOOL_STAT" -c '%F' -- "$probe" </dev/null 2>&1)" || rc=$?
+    [ "$rc" -ne 0 ] || stop "enoent_calibration_probe_succeeded path=$probe"
+    case "$diag" in *$'\n'*|*$'\r'*) stop "enoent_calibration_multiline path=$probe" ;; esac
+    case "$diag" in
+        *"No such file or directory"*) : ;;
+        *) stop "enoent_calibration_unrecognised path=$probe rc=$rc detail=$diag" ;;
     esac
-    stop "path_probe_error path=$p rc=$rc detail=$detail"
+    ENOENT_TEMPLATE="${diag//"$probe"/@PATH@}"
+    [ "$ENOENT_TEMPLATE" != "$diag" ] || stop "enoent_calibration_no_path_in_diagnostic detail=$diag"
+    note "enoent_calibration rc=$rc template=$ENOENT_TEMPLATE"
+}
+
+# --- classify one path with the kernel, corroborated by the diagnostic -------
+# Preconditions: the parent chain is already bound, so the parent is a real,
+# canonical, searchable directory, and the absence template has been calibrated.
+# Under those preconditions the ONLY failure a leaf probe may be classified as
+# is absence, and even then three independent statements must agree: `stat`
+# failed, the kernel reports neither an object nor a link, and the diagnostic
+# equals the calibrated template exactly. Anything else - multiline, mixed,
+# wrapped, or unrecognised - is STOP, never "absent".
+probe_leaf() {
+    local p="$1" diag rc=0 expected
+    [ -n "$ENOENT_TEMPLATE" ] || stop "path_probe_before_calibration path=$p"
+    if [ -L "$p" ]; then printf 'link\n'; return 0; fi
+    diag="$("$TOOL_STAT" -c '%F' -- "$p" </dev/null 2>&1)" || rc=$?
+    case "$diag" in *$'\n'*|*$'\r'*) stop "path_probe_multiline path=$p rc=$rc" ;; esac
+    if [ "$rc" -eq 0 ]; then
+        case "$diag" in
+            "symbolic link")                    printf 'link\n' ;;
+            "regular file"|"regular empty file") printf 'regular\n' ;;
+            "directory")                        printf 'dir\n' ;;
+            *)                                  printf 'other\n' ;;
+        esac
+        return 0
+    fi
+    if [ -e "$p" ] || [ -L "$p" ]; then
+        stop "path_probe_error path=$p rc=$rc detail=$diag"
+    fi
+    expected="${ENOENT_TEMPLATE//@PATH@/$p}"
+    [ "$diag" = "$expected" ] || stop "path_probe_unclassified path=$p rc=$rc detail=$diag"
+    printf 'absent\n'
 }
 
 # --- allocate one directory with a plain, non-recursive mkdir --------------
 # `mkdir -m 0700` applies the mode explicitly, so a permissive umask cannot
 # widen it. No `-p`: a missing intermediate must fail loudly, never be
-# manufactured. Any non-zero rc is STOP.
+# manufactured. Any non-zero rc or any diagnostic at all is STOP.
 allocate() {
     local p="$1" out rc=0
-    out="$(mkdir -m 0700 -- "$p" 2>&1)" || rc=$?
+    out="$("$TOOL_MKDIR" -m 0700 -- "$p" </dev/null 2>&1)" || rc=$?
     [ "$rc" -eq 0 ] || stop "mkdir_failed path=$p rc=$rc detail=$out"
+    [ -z "$out" ]   || stop "mkdir_diagnostics path=$p detail=$out"
     note "allocated path=$p"
 }
 
-# --- prove the created directory is canonical, non-link, gatea:gatea 0700 ---
+# --- prove the created directory is canonical, non-link, numerically owned --
 assert_dir() {
-    local p="$1" kind canon own mode
-    kind="$(probe_path "$p")" || exit $?
+    local p="$1" kind canon own name mode
+    kind="$(probe_leaf "$p")" || exit $?
     [ "$kind" = "dir" ] || fail "created_kind=$kind path=$p"
-    canon="$(readlink -f -- "$p")" || stop "canonicalization_failed path=$p"
+    canon="$("$TOOL_READLINK" -f -- "$p" </dev/null 2>/dev/null)" || stop "canonicalization_failed path=$p"
     [ "$canon" = "$p" ] || fail "path_not_canonical path=$p canonical=$canon"
-    own="$(LC_ALL=C stat -c '%U:%G' -- "$p")" || stop "owner_probe_failed path=$p"
-    mode="$(LC_ALL=C stat -c '%a' -- "$p")"   || stop "mode_probe_failed path=$p"
-    [ "$own"  = "$EXPECT_OWNER" ] || fail "owner=$own expected=$EXPECT_OWNER path=$p"
+    own="$("$TOOL_STAT" -c '%u:%g' -- "$p" </dev/null 2>/dev/null)"  || stop "owner_probe_failed path=$p"
+    name="$("$TOOL_STAT" -c '%U:%G' -- "$p" </dev/null 2>/dev/null)" || stop "owner_name_probe_failed path=$p"
+    mode="$("$TOOL_STAT" -c '%a' -- "$p" </dev/null 2>/dev/null)"    || stop "mode_probe_failed path=$p"
+    [ "$own"  = "$EXPECT_UID:$EXPECT_GID" ] || fail "owner_numeric=$own expected=$EXPECT_UID:$EXPECT_GID path=$p owner_name=$name"
     [ "$mode" = "$EXPECT_MODE"  ] || fail "mode=$mode expected=$EXPECT_MODE path=$p"
-    note "dir_ok path=$p owner=$own mode=$mode"
+    note "dir_ok path=$p owner_numeric=$own owner_name=$name mode=$mode"
 }
 
 EV_PARENT="$BASE/evidence"
 EV_RUNKIT="$EV_PARENT/runkit"
 REMOTE_KIT="$BASE/kit"
 
+# The base's parent must be exactly the preregistered parent: the suffix charset
+# check above already forbids a separator, so this is a second, independent
+# statement of the same fact rather than a new trust assumption.
+[ "${BASE%/*}" = "$EXPECT_PARENT" ] || fail "base_parent=${BASE%/*} expected=$EXPECT_PARENT"
+bind_parent_chain "$EXPECT_PARENT"
+calibrate_absence "$EXPECT_PARENT/.wpi_enoent_calibration_probe"
+
 # --- the base must be ABSENT as an object AND as a link --------------------
 # `absent` here is the classified outcome, not "the test errored".
-KIND="$(probe_path "$BASE")" || exit $?
+KIND="$(probe_leaf "$BASE")" || exit $?
 [ "$KIND" = "absent" ] || fail "base_already_present kind=$KIND path=$BASE"
 note "base_absent path=$BASE"
 
-allocate "$BASE"
-allocate "$EV_PARENT"
-allocate "$EV_RUNKIT"
-allocate "$REMOTE_KIT"
+# Allocate and immediately bind each directory before the next one is created,
+# so no later object is ever created through an unverified parent.
+allocate "$BASE";       assert_dir "$BASE"
+allocate "$EV_PARENT";  assert_dir "$EV_PARENT"
+allocate "$EV_RUNKIT";  assert_dir "$EV_RUNKIT"
+allocate "$REMOTE_KIT"; assert_dir "$REMOTE_KIT"
 
-assert_dir "$BASE"
-assert_dir "$EV_PARENT"
-assert_dir "$EV_RUNKIT"
-assert_dir "$REMOTE_KIT"
-
-printf 'SETUP PASS base=%s evidence=%s runkit=%s kit=%s owner=%s mode=%s\n' \
-    "$BASE" "$EV_PARENT" "$EV_RUNKIT" "$REMOTE_KIT" "$EXPECT_OWNER" "$EXPECT_MODE"
+printf 'SETUP PASS base=%s evidence=%s runkit=%s kit=%s owner_numeric=%s:%s owner_name=%s mode=%s\n' \
+    "$BASE" "$EV_PARENT" "$EV_RUNKIT" "$REMOTE_KIT" \
+    "$EXPECT_UID" "$EXPECT_GID" "$EXPECT_OWNER_NAME" "$EXPECT_MODE"

@@ -35,7 +35,7 @@ WPI_EXPECTED_PACKAGES='56'
 WPI_STATE_DIR='/var/lib/mtc-bridge'
 WPI_STATE_UID='999'
 WPI_STATE_GID='988'
-WPI_LOG_DIR='<PIN-AT-FREEZE>'
+WPI_LOG_DIR='/var/log/mtc-bridge'
 WPI_CONF_DIR='/etc/mtc-bridge'
 WPI_CONTROL_ENDPOINT='http://127.0.0.1:8790/api/status'
 WPI_SWEEP_BUDGET_S='120'
@@ -47,11 +47,41 @@ WPI_VERIFY_LOCK_SHA256='d951e0eea01ec1a89bcfbe9d9630949b31bb316faae2ba6bcae39be7
 
 row_stop() { printf 'ROW_STOP reason=%s\n' "$*" >&2; exit 3; }
 
+# --- pinned program identities ----------------------------------------------
+# No executable this wrapper runs is selected by the inherited PATH: the
+# absolute path IS the pin. `stat` is the bootstrap root of trust and is the
+# first object it verifies, including itself. Ownership is compared numerically
+# (`%u:%g`); a resolver-rendered name is never an identity.
+TOOL_STAT='/usr/bin/stat'
+TOOL_SHA256SUM='/usr/bin/sha256sum'
+
+require_tool() {
+    local t="$1" own mode g o
+    case "$t" in /*) : ;; *) row_stop "tool_path_not_absolute path=$t" ;; esac
+    [ ! -L "$t" ] || row_stop "tool_is_symlink path=$t"
+    [ -f "$t" ]   || row_stop "tool_missing_or_not_regular path=$t"
+    [ -x "$t" ]   || row_stop "tool_not_executable path=$t"
+    own="$(LC_ALL=C "$TOOL_STAT" -c '%u:%g' -- "$t" </dev/null 2>/dev/null)" \
+        || row_stop "tool_owner_probe_failed path=$t"
+    mode="$(LC_ALL=C "$TOOL_STAT" -c '%a' -- "$t" </dev/null 2>/dev/null)" \
+        || row_stop "tool_mode_probe_failed path=$t"
+    [ "$own" = '0:0' ] || row_stop "tool_owner_numeric=$own expected=0:0 path=$t"
+    o="${mode#"${mode%?}"}"
+    g="${mode%?}"; g="${g#"${g%?}"}"
+    case "$o" in 2|3|6|7) row_stop "tool_other_writable mode=$mode path=$t" ;; esac
+    case "$g" in 2|3|6|7) row_stop "tool_group_writable mode=$mode path=$t" ;; esac
+    printf 'ROW_tool name=%s path=%s owner_numeric=%s mode=%s resolution=pinned_absolute\n' \
+        "${t##*/}" "$t" "$own" "$mode"
+}
+
+require_tool "$TOOL_STAT"
+require_tool "$TOOL_SHA256SUM"
+
 require_block() {
     local path="$1" want="$2" out rc=0 got rest
     [ ! -L "$path" ] || row_stop "block_is_symlink path=$path"
     [ -f "$path" ] || row_stop "block_missing_or_not_regular path=$path"
-    out="$(LC_ALL=C sha256sum -- "$path" </dev/null 2>&1)" || rc=$?
+    out="$(LC_ALL=C "$TOOL_SHA256SUM" -- "$path" </dev/null 2>&1)" || rc=$?
     [ "$rc" -eq 0 ] || row_stop "block_hash_failed path=$path rc=$rc"
     case "$out" in *$'\r'*|*$'\n'*) row_stop "block_hash_output_multiline path=$path" ;; esac
     got="${out%% *}"; rest="${out#*  }"
