@@ -1,29 +1,36 @@
-# SELF-QA - RP7-WPI-RO repair round 5
+# SELF-QA - RP7-WPI-RO repair round 6
 
 Status: `SELF-QA-EXECUTED-PENDING-INDEPENDENT-REAUDIT`
 
-Round 5 answers the second-flagship Codex T0 audit `RP7_CODEX_T0_AUDIT_R4_2026-08-10.md`
-(BLOCK, three findings) together with the two Lead-verified items carried from the
-section-10.1 reconciliation. Everything below ran locally in **Git Bash (MSYS2)** on the
-workstation. It made no SSH/SCP call, opened no network connection, contacted no staging
-host, minted no RUNID, and changed no repository file. Fixture writes were confined to
-`mktemp` directories under `/tmp` whose prefix was checked before recursive removal.
+Round 6 answers the Codex T0 part-B audit of the round-5 bytes
+(`RP7_CODEX_T0_AUDIT_R5_PART_B_2026-08-10.md`, BLOCK, four findings) together with the one
+executed test recovered from the review the provider interrupted
+(`RP7_R5_SALVAGE_FROM_INTERRUPTED_AUDIT_2026-08-10.md`). Everything below ran locally in
+**Git Bash (MSYS2)** on the workstation. It made no SSH/SCP call, opened no network
+connection, contacted no staging host, minted no RUNID, and changed no repository file
+outside the round-6 deliverables. Fixture writes were confined to `mktemp` directories under
+`/tmp` whose prefix was checked before recursive removal.
 
-Three things about this round's evidence contract, because round 4 failed it:
+Three findings out of four are byte-grammar defects in which a record the block could not
+parse was repaired into one it could, and then adjudicated as host state. Every round-6 arm
+therefore feeds the audit's own bytes to the real production predicate and reads the
+production result line:
 
-1. **Both subjects are byte-identified inside the fence itself.** Every round-5 arm runs
-   twice - once against the frozen round-4 blob, materialised by
-   `git cat-file blob d6a976aa:...` and re-derived to 70941 B /
-   `23e55667...01aad`, and once against the repaired worktree file. The fence asserts both
-   identities, both CR counts and both `bash -n` results before any arm runs, so a RED
-   transcript cannot silently be a GREEN one.
-2. **No arm redeclares a production loop.** Codex found finding 1 precisely because the
-   round-4 QA declared its own ten-name loop and called `wpi_bind_tool` directly instead of
-   instrumenting `wpi_main` (catalogue pattern 10). Every round-5 arm drives the real
-   caller and stubs only the callee it is measuring, so the arm fails if the caller stops
-   calling it.
-3. **Every published command is literal, bounded and content-anchored.** No line numbers,
-   no placeholders, no undeclared shell state.
+1. **The RED is the audited artefact.** Every arm runs twice - once against the frozen
+   round-5 blob, materialised by `git cat-file blob 1143a9ff:...` and re-derived inside the
+   fence to 77179 B / `393a16ce...b0ee`, and once against the repaired worktree file. The
+   fence asserts both identities, both CR counts and both `bash -n` results before any arm
+   runs.
+2. **Every finding carries its own no-weakening control.** A repair that turns malformed
+   input into a STOP is only correct if well-formed input still reaches the same verdict it
+   reached before: column-padded `ss` output must still parse, a real wildcard listener must
+   still be a host-state FAIL, `500` must still be a FAIL, `401` must still be a STOP, and
+   the four result records the status child really emits must keep their round-5
+   dispositions exactly. Those controls are arms, not assertions in prose.
+3. **The published command can now fail.** Round 5's could not: each fence invocation was
+   followed by a `printf`, so the command returned the `printf` status. That is repaired,
+   and the repair is falsified by running the published command over a scratch document
+   whose fence bodies exit nonzero.
 
 ## Exact command
 
@@ -31,15 +38,33 @@ The command selects each fenced body by the unique markers that open and close t
 and stops at the closing marker. The marker text inside the command cannot re-open either
 range: a marker only matches at the start of a line, and these lines start with `sed`.
 
+Each fence runs under an explicit `timeout` bound of **900 s**, and the command's own rc is
+the rc of the fences: any nonzero fence makes the whole command exit nonzero, and a fence
+killed at its bound is reported as a distinct `timeout` result rather than as a failure of
+the assertions. The **aggregate bound is 2700 s** - three fences at 900 s each, plus the
+`--kill-after=30s` grace per fence. The measured run below is far inside it; the bound is
+what the command enforces, not what it happened to take.
+
 ```bash
 # RP7_EXACT_COMMAND_BEGIN
 cd /c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT
+sed -n '/^# RP7_R6_FENCE_BEGIN$/,/^# RP7_R6_FENCE_END$/p' SELF_QA_RP7.md > /tmp/rp7-r6-fence-body.sh
 sed -n '/^# RP7_QA_FENCE_BEGIN$/,/^# RP7_QA_FENCE_END$/p' SELF_QA_RP7.md > /tmp/rp7-r5-fence-body.sh
 sed -n '/^# RP7_R4_FENCE_BEGIN$/,/^# RP7_R4_FENCE_END$/p' SELF_QA_RP7.md > /tmp/rp7-r4-fence-body.sh
-sha256sum /tmp/rp7-r5-fence-body.sh /tmp/rp7-r4-fence-body.sh
-wc -c /tmp/rp7-r5-fence-body.sh /tmp/rp7-r4-fence-body.sh
-bash --noprofile --norc /tmp/rp7-r5-fence-body.sh; printf 'R5_FENCE_RC=%s\n' "$?"
-bash --noprofile --norc /tmp/rp7-r4-fence-body.sh; printf 'R4_FENCE_RC=%s\n' "$?"
+sha256sum /tmp/rp7-r6-fence-body.sh /tmp/rp7-r5-fence-body.sh /tmp/rp7-r4-fence-body.sh
+wc -c /tmp/rp7-r6-fence-body.sh /tmp/rp7-r5-fence-body.sh /tmp/rp7-r4-fence-body.sh
+timeout --signal=TERM --kill-after=30s 900s bash --noprofile --norc /tmp/rp7-r6-fence-body.sh; R6=$?
+timeout --signal=TERM --kill-after=30s 900s bash --noprofile --norc /tmp/rp7-r5-fence-body.sh; R5=$?
+timeout --signal=TERM --kill-after=30s 900s bash --noprofile --norc /tmp/rp7-r4-fence-body.sh; R4=$?
+printf 'R6_FENCE_RC=%s\nR5_FENCE_RC=%s\nR4_FENCE_RC=%s\n' "$R6" "$R5" "$R4"
+for rc in "$R6" "$R5" "$R4"; do
+  case "$rc" in
+    0) ;;
+    124) printf 'PUBLISHED_COMMAND_RESULT=timeout per_fence_bound_s=900\n'; exit 124 ;;
+    *) printf 'PUBLISHED_COMMAND_RESULT=fence_failed\n'; exit 1 ;;
+  esac
+done
+printf 'PUBLISHED_COMMAND_RESULT=pass fences=3 per_fence_bound_s=900 aggregate_bound_s=2700\n'
 # RP7_EXACT_COMMAND_END
 ```
 
@@ -53,17 +78,28 @@ sed -n '/^# RP7_EXACT_COMMAND_BEGIN$/,/^# RP7_EXACT_COMMAND_END$/p' SELF_QA_RP7.
 It was executed exactly that way, from a fresh `bash --noprofile --norc`, and produced:
 
 ```text
-0263067e4bb41d8c4c6bbfd96bd35b8a83cc48d1eedc14c1acdc886ee7a5b62f */tmp/rp7-r5-fence-body.sh
+022607b81a89213953b01e5499aad4d2a1aaf4892023c32dc293b191fba0130a */tmp/rp7-r6-fence-body.sh
+719077959650f4b5ad4b94c3c122bfe9058ffa469b6c59161e5886271913c9e2 */tmp/rp7-r5-fence-body.sh
 94101ef7fdf70d0f4628685811160389227cbba3c10e999e1942e8eb82bb56e0 */tmp/rp7-r4-fence-body.sh
-20050 /tmp/rp7-r5-fence-body.sh
-76710 /tmp/rp7-r4-fence-body.sh
-96760 total
+ 26681 /tmp/rp7-r6-fence-body.sh
+ 20050 /tmp/rp7-r5-fence-body.sh
+ 76710 /tmp/rp7-r4-fence-body.sh
+123441 total
+...
+QA_PASS all_assertions=yes
+...
+QA_PASS all_assertions=yes
+...
+QA_PASS all_assertions=yes
+R6_FENCE_RC=0
 R5_FENCE_RC=0
 R4_FENCE_RC=0
+PUBLISHED_COMMAND_RESULT=pass fences=3 per_fence_bound_s=900 aggregate_bound_s=2700
 ```
 
-Both fences abort with `QA_ASSERT_FAIL` and a nonzero exit on any unexpected result, so
-`QA_PASS all_assertions=yes` is reachable only when every assertion in them held.
+All three fences abort with `QA_ASSERT_FAIL` and a nonzero exit on any unexpected result, so
+`QA_PASS all_assertions=yes` is reachable only when every assertion in them held - and the
+command now reports that failure in its own exit status.
 
 ## What this environment can and cannot represent (disclosed in full)
 
@@ -77,7 +113,9 @@ anywhere in this suite:
 | `stat-shim` + variants (round-4 fence) | numeric ownership (rendered `0:0`), and for one named path per variant the `%F` kind or the `%u:%g` pair | the real GNU `stat` result for the real object: mode, `dev:inode`, size, exit status, ENOENT classification, stream discipline, and the wrapper's own `argv[0]` in its diagnostic |
 | `stat-eacces-*` (round-4 fence) | nothing about the object | a real nonzero `stat` exit with a real `Permission denied` diagnostic for one named path, delegating every other path to `stat-shim` |
 | `readlink-plain`, `readlink-cr` (round-4 fence) | the target string a real `readlink` would print for a symlink MSYS2 cannot create | the production symlink branch, the single-record reader and `wpi_sanitize` run unmodified |
-| `forge_capture` (both fences) | the MSYS `env -i`/`timeout` exec plumbing, which rewrites POSIX-looking argv for a native Windows child, plus the Windows CRLF record terminator normalised to the LF a Debian CPython emits | the interpreter the production body **chose** (`a[0]`), the flag words it chose, real CPython, the real embedded driver source, the real digest-bound `verify_lock.py`, real exit codes |
+| `wpi_capture` in the round-6 F1/F2/F3 arms | the child that would have run `ss` or `curl` on a real host, replaced by the exact bytes the audit fed | the whole of `wpi_assert_listener_set` / `wpi_assert_status` from the capture result onward - the reader, the byte accounting, the grammar and the verdict, which is what these three findings are about |
+| `wpi_alloc_leaf` + `wpi_sha_file` in the round-6 F2 arms | leaf allocation for the status body, which the arm pre-writes, and the body digest, rendered as 64 zeroes | the real `wpi_open_leaf` for every diagnostic leaf, the real single-record reader, the real result grammar, and in the schema arm the real CPython child over the real production body |
+| `forge_capture` (all three fences) | the MSYS `env -i`/`timeout` exec plumbing, which rewrites POSIX-looking argv for a native Windows child, plus the Windows CRLF record terminator normalised to the LF a Debian CPython emits | the interpreter the production body **chose** (`a[0]`), the flag words it chose, real CPython, the real embedded driver source, the real digest-bound `verify_lock.py`, real exit codes |
 | `wpi_lstat` shim in the finding-2 arms | numeric ownership and object kind, which NTFS cannot express | the production row-19 preflight, the production trusted driver, the production result grammar and the real verifier bytes |
 | `rp0_require_safe_component` / `rp0_allocate_evidence_dir` in the finding-5 arms | the two RP0-LIB predicates, which are not present on this workstation, defined as no-op shell **functions** | the whole of `wpi_assert_prerequisites`, including the type check finding 4 introduced and the evidence-root descent check finding 5 introduced |
 
@@ -91,7 +129,15 @@ which window, and STOPs if and only if production asks it to bind `python3`.
 
 Two production predicates really call `exit`, so the finding-1, finding-2, finding-4 and
 finding-5 arms invoke them inside a subshell. Without that, an arm could not survive its
-own STOP to report the STOP.
+own STOP to report the STOP. Every round-6 arm does the same for the same reason.
+
+One round-6 arm executes a copy of a published artefact rather than the artefact itself:
+the F4 propagation arm runs the exact published command with two substitutions - its `cd`
+target, and the `/tmp` prefix of the three fence-body paths so that a nested run cannot
+overwrite the body of the run executing it. Both substitutions are asserted in the fence
+before the copy runs, and the arm exists precisely because the first version of it, which
+retargeted `cd` first and let the `/tmp` rule rewrite the new target, re-entered the real
+document and had to be killed. Nothing else about the command is altered.
 
 Not reproducible here, and not claimed: a real bind or overlay mount, and a real
 `/proc/<MainPID>/ns/net`. As in rounds 3 and 4, those are falsified by appending to a real
@@ -103,7 +149,519 @@ round-4 fence LF-normalises the worktree copy and asserts its identity before us
 exactly `WPI_VERIFY_LOCK_SHA256`. The round-5 finding-2 arms feed the same file to the same
 production driver.
 
-## The round-5 fence
+
+## The round-6 fence
+
+Five arm groups, each a real RED against the round-5 blob and a real GREEN against the
+repaired bytes, plus the no-weakening control in the same group as the repair it guards:
+
+| Arm | RED on round-5 bytes | GREEN on repaired bytes |
+|---|---|---|
+| F1 `nul` record | `read` drops the NUL, `LIS<NUL>TEN` becomes `LISTEN`, `parse=complete_before_semantics` and the accepting listener line print, rc 0 | `detail=nul_byte_in_inventory`, rc 3, no inventory line |
+| F1 `nonsense:8790` | rc 1 `listener_set_unexpected observed=non_preregistered_address` | `detail=local_address_grammar`, rc 3 |
+| F1 port `99999` / `08790` / octet `300.1.1.1` | rc 1 host-state FAILs derived from records that state no port and no address | `detail=local_port_range` / `local_port_grammar` / `local_address_grammar`, rc 3 |
+| F1 controls: padded columns, real wildcard | rc 0 accepting / rc 1 `nonloopback_listener` | unchanged, plus a `bytes=` field equal to an independent `wc -c` |
+| F2 truncated/invented result records | `TYPE state str` → rc 1 FAIL with `expected_type=` empty; `MISMATCH state abc` → rc 1 FAIL on a 3-character digest; `MISMATCH rogue <64hex>` → rc 1 FAIL naming a field outside the schema | one `detail=*_record_*` STOP each, rc 3 |
+| F2 controls: the four records the child can emit | `OK`/`TYPE`/`MISMATCH`/`MISSING` dispositions | identical |
+| F2 schema declaration | (no schema is passed in round 5) | the child refuses a declaration that differs from its own table: `PARSE schema_declaration_mismatch`, rc 3 |
+| F3 `000`, `099`, `600` | rc 1 `status_endpoint_unexpected_http` | `detail=http_code_no_response` / `http_code_grammar`, rc 3 |
+| F3 controls: `500`, `401` | rc 1 FAIL / rc 3 access-denied STOP | identical |
+| F4 published command | `bash; printf; bash; printf` returns 0 with inner rcs 7 and 9 | the published command returns 1 over failing fence bodies, carries three 900 s bounds, and turns a hanging body into rc 124 |
+| F5 recovered leaf-replacement test | the capture writes `CAPTURED` into a file outside the evidence tree, rc 0, no STOP | the outside file is untouched: `payload_left_the_tree=no` |
+
+The F5 arm is the recovered test, and its status has not changed: the replacement is
+injected through a hooked `wpi_clock_ms`, so it is not a route the block reaches on its own.
+What it measures is what the block *establishes*. Round 5 allocated a leaf with `noclobber`
+and then wrote to the name; the object written was never proven to be the object created.
+Round 6 keeps the descriptor the creating open returned and writes through it, so the write
+cannot land anywhere else. Two residuals survive and are stated under *What this QA does not
+establish*, not covered by the file header.
+
+```bash
+# RP7_R6_FENCE_BEGIN
+# Round-6 D026 fence for RP7-WPI-RO. Every arm drives the REAL production caller
+# in a FRESH bash process against two byte sets whose identity is asserted first:
+#   RED   = the frozen round-5 blob at commit 1143a9ff (77179 B, 393a16ce...b0ee)
+#   GREEN = the repaired worktree file
+# Findings 1-3 are byte-grammar defects, so every arm feeds the exact bytes the
+# audit fed and reads the production result line, not a reimplementation of it.
+REPO=/c/LAB/Tradingview_LAB_CLEAN
+DOC=$REPO/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/SELF_QA_RP7.md
+BLOCK=$REPO/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh
+PYEXE=/c/Python314/python.exe
+Q=$(mktemp -d /tmp/rp7-r6-qa.XXXXXX)
+RED=$Q/RP7-WPI-RO.round5.sh
+GREEN=$BLOCK
+
+expect_rc(){ [ "$2" -eq "$3" ] || { printf 'QA_ASSERT_FAIL name=%s got=%s expected=%s\n' "$1" "$2" "$3"; exit 90; }; }
+expect_eq(){ [ "$2" = "$3" ] || { printf 'QA_ASSERT_FAIL name=%s got=[%s] expected=[%s]\n' "$1" "$2" "$3"; exit 90; }; }
+expect_has(){ grep -q -- "$2" "$3" || { printf 'QA_ASSERT_FAIL name=%s missing=[%s] file=%s\n' "$1" "$2" "$3"; exit 90; }; }
+expect_hasnt(){ grep -q -- "$2" "$3" && { printf 'QA_ASSERT_FAIL name=%s unexpected=[%s] file=%s\n' "$1" "$2" "$3"; exit 90; }; return 0; }
+
+printf 'QA_ROOT=%s\n' "$Q"
+printf 'QA_ENV bash=%s coreutils_stat=%s python=%s git=%s uid_gid=%s:%s\n' \
+    "$BASH_VERSION" "$(/usr/bin/stat --version | head -1 | sed 's/.* //')" \
+    "$("$PYEXE" -V | sed 's/.* //')" "$(git --version | sed 's/.* //')" "$(id -u)" "$(id -g)"
+
+# --- byte identity of both subjects -----------------------------------------
+git -C "$REPO" cat-file blob 1143a9ff:MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh > "$RED"
+RED_SHA=$(sha256sum < "$RED" | cut -d' ' -f1);     RED_BYTES=$(wc -c < "$RED")
+GREEN_SHA=$(sha256sum < "$GREEN" | cut -d' ' -f1); GREEN_BYTES=$(wc -c < "$GREEN")
+RED_CR=$(tr -cd '\r' < "$RED" | wc -c);  GREEN_CR=$(tr -cd '\r' < "$GREEN" | wc -c)
+bash --noprofile --norc -n "$RED";   RED_N=$?
+bash --noprofile --norc -n "$GREEN"; GREEN_N=$?
+printf 'BYTE_IDENTITY red_bytes=%s red_sha256=%s red_cr=%s red_bash_n=%s green_bytes=%s green_sha256=%s green_cr=%s green_bash_n=%s\n' \
+    "$RED_BYTES" "$RED_SHA" "$RED_CR" "$RED_N" "$GREEN_BYTES" "$GREEN_SHA" "$GREEN_CR" "$GREEN_N"
+expect_eq red_sha256 "$RED_SHA" 393a16ce264b467bec180a2106390e6dcee4dc2605fd019871270fda11d3b0ee
+expect_eq red_bytes "$RED_BYTES" 77179
+expect_eq green_sha256 "$GREEN_SHA" 6586698c707601c70a3e99903dc789ee2ee71fd2bae1bc1763adc52f72a40709
+expect_eq green_bytes "$GREEN_BYTES" 88460
+expect_rc red_cr "$RED_CR" 0
+expect_rc green_cr "$GREEN_CR" 0
+expect_rc red_bash_n "$RED_N" 0
+expect_rc green_bash_n "$GREEN_N" 0
+
+# ===========================================================================
+# FINDING 1 (HIGH) - a malformed listener record is normalised into a
+# conformant one and reported as a complete PASS. The `nul` case is the audit's
+# own fixture byte for byte. `clean` and `wildcard` are the no-weakening
+# controls: real column-padded ss output must still parse, and a real wildcard
+# listener must still be a host-state FAIL rather than a new STOP.
+# ===========================================================================
+cat > "$Q/f1_arm.sh" <<'ARM'
+S="$1"; W="$2"; CASE="$3"
+mkdir -p "$W"
+source <(sed '/^wpi_main "\$@"$/d' "$S")
+trap - ERR
+set +E; set +e; set +u; set +o pipefail
+EV_DIR="$W/ev"; mkdir -p "$EV_DIR"; WPI_PROBE_SEQ=0; WPI_MOUNT_GUARD_ACTIVE=no; WPI_SS=/usr/bin/ss
+case "$CASE" in
+  nul)        printf 'LIS\0TEN 0 128 127.0.0.1:8790 0.0.0.0:*\n' > "$W/ss.out" ;;
+  address)    printf 'LISTEN 0 128 nonsense:8790 nonsense:*\n'   > "$W/ss.out" ;;
+  port_range) printf 'LISTEN 0 128 127.0.0.1:99999 0.0.0.0:*\n'  > "$W/ss.out" ;;
+  octet)      printf 'LISTEN 0 128 300.1.1.1:8790 0.0.0.0:*\n'   > "$W/ss.out" ;;
+  leading0)   printf 'LISTEN 0 128 127.0.0.1:08790 0.0.0.0:*\n'  > "$W/ss.out" ;;
+  clean)      printf 'LISTEN 0      128          127.0.0.1:8790       0.0.0.0:*\n' > "$W/ss.out" ;;
+  wildcard)   printf 'LISTEN 0 128 0.0.0.0:8790 0.0.0.0:*\n'     > "$W/ss.out" ;;
+esac
+wpi_capture(){ WPI_CAP_OUT="$W/ss.out"; WPI_CAP_ERR="$EV_DIR/capture.err"; WPI_CAP_RC=0; : > "$WPI_CAP_ERR"; }
+( wpi_assert_listener_set ) > "$W/out" 2> "$W/err"; rc=$?
+printf 'LISTENER_BYTES case=%s rc=%s accepting=%s parsed_complete=%s stop=[%s] fail=[%s] stderr_bytes=%s\n' \
+  "$CASE" "$rc" "$(grep -c '^B6_listener_set ' "$W/out")" \
+  "$(grep -c 'parse=complete_before_semantics' "$W/out")" \
+  "$(grep '^B6_STOP ' "$W/out" | head -1 | sed 's/^B6_STOP reason=//')" \
+  "$(grep '^B6_FAIL ' "$W/out" | head -1 | sed 's/^B6_FAIL reason=//')" \
+  "$(wc -c < "$W/err")"
+ARM
+for c in nul address port_range octet leading0 clean wildcard; do
+  bash --noprofile --norc "$Q/f1_arm.sh" "$RED"   "$Q/f1-red-$c"   "$c" > "$Q/f1-red-$c.txt" 2>&1
+  bash --noprofile --norc "$Q/f1_arm.sh" "$GREEN" "$Q/f1-green-$c" "$c" > "$Q/f1-green-$c.txt" 2>&1
+  sed 's/^/RED   /' "$Q/f1-red-$c.txt"; sed 's/^/GREEN /' "$Q/f1-green-$c.txt"
+done
+expect_has f1_red_nul_false_pass    'LISTENER_BYTES case=nul rc=0 accepting=1 parsed_complete=1 stop=\[\] fail=\[\] stderr_bytes=0' "$Q/f1-red-nul.txt"
+expect_has f1_green_nul_stop        'LISTENER_BYTES case=nul rc=3 accepting=0 parsed_complete=0 stop=\[listener_inventory_unreadable_or_unparseable rc=0 detail=nul_byte_in_inventory\] fail=\[\] stderr_bytes=0' "$Q/f1-green-nul.txt"
+expect_has f1_red_addr_fail         'LISTENER_BYTES case=address rc=1 accepting=0 parsed_complete=1 stop=\[\] fail=\[listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790\]' "$Q/f1-red-address.txt"
+expect_has f1_green_addr_stop       'LISTENER_BYTES case=address rc=3 accepting=0 parsed_complete=0 stop=\[listener_inventory_unreadable_or_unparseable rc=0 detail=local_address_grammar\] fail=\[\]' "$Q/f1-green-address.txt"
+expect_has f1_red_port_fail         'LISTENER_BYTES case=port_range rc=1 accepting=0 parsed_complete=1 stop=\[\] fail=\[listener_set_unexpected observed_count=0 expected=1x127.0.0.1:8790\]' "$Q/f1-red-port_range.txt"
+expect_has f1_green_port_stop       'LISTENER_BYTES case=port_range rc=3 accepting=0 parsed_complete=0 stop=\[listener_inventory_unreadable_or_unparseable rc=0 detail=local_port_range port=99999\] fail=\[\]' "$Q/f1-green-port_range.txt"
+expect_has f1_red_octet_fail        'LISTENER_BYTES case=octet rc=1 accepting=0 parsed_complete=1 stop=\[\] fail=\[listener_set_unexpected observed=non_preregistered_address' "$Q/f1-red-octet.txt"
+expect_has f1_green_octet_stop      'LISTENER_BYTES case=octet rc=3 accepting=0 parsed_complete=0 stop=\[listener_inventory_unreadable_or_unparseable rc=0 detail=local_address_grammar\]' "$Q/f1-green-octet.txt"
+expect_has f1_red_leading0_fail     'LISTENER_BYTES case=leading0 rc=1 accepting=0 parsed_complete=1 stop=\[\] fail=\[listener_set_unexpected observed_count=0' "$Q/f1-red-leading0.txt"
+expect_has f1_green_leading0_stop   'LISTENER_BYTES case=leading0 rc=3 accepting=0 parsed_complete=0 stop=\[listener_inventory_unreadable_or_unparseable rc=0 detail=local_port_grammar\]' "$Q/f1-green-leading0.txt"
+expect_has f1_red_clean_pass        'LISTENER_BYTES case=clean rc=0 accepting=1 parsed_complete=1 stop=\[\] fail=\[\]' "$Q/f1-red-clean.txt"
+expect_has f1_green_clean_pass      'LISTENER_BYTES case=clean rc=0 accepting=1 parsed_complete=1 stop=\[\] fail=\[\]' "$Q/f1-green-clean.txt"
+expect_has f1_red_wildcard_fail     'LISTENER_BYTES case=wildcard rc=1 accepting=0 parsed_complete=1 stop=\[\] fail=\[nonloopback_listener addr=0.0.0.0\]' "$Q/f1-red-wildcard.txt"
+expect_has f1_green_wildcard_fail   'LISTENER_BYTES case=wildcard rc=1 accepting=0 parsed_complete=1 stop=\[\] fail=\[nonloopback_listener addr=0.0.0.0\]' "$Q/f1-green-wildcard.txt"
+# The `bytes=` field on the inventory line is the block's own accounting of every
+# byte it consumed. It is compared here against an independent `wc -c` of the
+# captured file: equal counts are the conservation equation the NUL record broke,
+# measured rather than asserted.
+for c in clean wildcard; do
+  WC=$(wc -c < "$Q/f1-green-$c/ss.out")
+  FIELD=$(sed -n 's/.*B6_listener_inventory rows=[0-9]* port_8790_rows=[0-9]* bytes=\([0-9]*\) .*/\1/p' "$Q/f1-green-$c/out")
+  printf 'LISTENER_CONSERVATION case=%s independent_wc_c=%s block_bytes_field=%s\n' "$c" "$WC" "$FIELD"
+  expect_eq "listener_conservation_$c" "$FIELD" "$WC"
+done
+
+# ===========================================================================
+# FINDING 2 (HIGH) - truncated or invented status-parser result records become
+# semantic FAILs. The arm feeds one child result record and rc pair to the REAL
+# wpi_assert_status. `type_ok`, `mismatch_ok`, `missing_ok` and `ok` are the
+# no-weakening controls: the four records the child really can emit must keep
+# their round-5 dispositions exactly.
+# ===========================================================================
+cat > "$Q/f2_arm.sh" <<'ARM'
+S="$1"; W="$2"; REC="$3"; RC="$4"
+mkdir -p "$W"
+source <(sed '/^wpi_main "\$@"$/d' "$S")
+trap - ERR
+set +E; set +e; set +u; set +o pipefail
+EV_DIR="$W/ev"; mkdir -p "$EV_DIR"; WPI_PROBE_SEQ=0; WPI_MOUNT_GUARD_ACTIVE=no
+WPI_CURL=/usr/bin/curl; WPI_CONTROL_ENDPOINT=http://127.0.0.1:8790/api/status
+wpi_sha_file(){ WPI_LINE=0000000000000000000000000000000000000000000000000000000000000000; }
+wpi_capture(){
+  local label="$1"; WPI_CAP_OUT="$EV_DIR/$label.out"; WPI_CAP_ERR="$EV_DIR/$label.err"; : > "$WPI_CAP_ERR"
+  case "$label" in
+    status_get)  printf '200\n' > "$WPI_CAP_OUT"; WPI_CAP_RC=0 ;;
+    status_json) printf '%s\n' "$REC" > "$WPI_CAP_OUT"; WPI_CAP_RC="$RC" ;;
+  esac
+}
+( wpi_assert_status ) > "$W/out" 2> "$W/err"; rc=$?
+printf 'STATUS_RECORD rec=[%s] child_rc=%s rc=%s result=[%s] stderr_bytes=%s\n' \
+  "$REC" "$RC" "$rc" "$(grep -E '^B5_(FAIL|STOP|status) ' "$W/out" | head -1)" "$(wc -c < "$W/err")"
+ARM
+f2(){
+  bash --noprofile --norc "$Q/f2_arm.sh" "$RED"   "$Q/f2-red-$1"   "$2" "$3" > "$Q/f2-red-$1.txt" 2>&1
+  bash --noprofile --norc "$Q/f2_arm.sh" "$GREEN" "$Q/f2-green-$1" "$2" "$3" > "$Q/f2-green-$1.txt" 2>&1
+  sed 's/^/RED   /' "$Q/f2-red-$1.txt"; sed 's/^/GREEN /' "$Q/f2-green-$1.txt"
+}
+DIG=b30c3a9662f46e65f2b937b628583be2bff0e37e7466aa3b4bd988740310a913
+f2 type_short      'TYPE state str' 5
+f2 type_expected   'TYPE state str int' 5
+f2 type_selfsame   'TYPE state str str' 5
+f2 type_field      'TYPE rogue str str' 5
+f2 mismatch_short  'MISMATCH state abc' 1
+f2 mismatch_field  "MISMATCH rogue $DIG" 1
+f2 missing_field   'MISSING rogue' 4
+f2 type_ok         'TYPE state_version str int' 5
+f2 mismatch_ok     "MISMATCH state $DIG" 1
+f2 missing_ok      'MISSING state_version' 4
+f2 ok              'OK fields=8' 0
+expect_has f2_red_type_short_fail   'rc=1 result=\[B5_FAIL reason=flag_mismatch field=state observed_type=str expected_type=\]' "$Q/f2-red-type_short.txt"
+expect_has f2_green_type_short_stop 'rc=3 result=\[B5_STOP reason=status_body_unreadable_or_unparseable detail=type_record_grammar tokens=3\]' "$Q/f2-green-type_short.txt"
+expect_has f2_red_type_exp_fail     'rc=1 result=\[B5_FAIL reason=flag_mismatch field=state observed_type=str expected_type=int\]' "$Q/f2-red-type_expected.txt"
+expect_has f2_green_type_exp_stop   'rc=3 result=\[B5_STOP reason=status_body_unreadable_or_unparseable detail=type_record_expected_type field=state\]' "$Q/f2-green-type_expected.txt"
+expect_has f2_red_type_same_fail    'rc=1 result=\[B5_FAIL reason=flag_mismatch field=state observed_type=str expected_type=str\]' "$Q/f2-red-type_selfsame.txt"
+expect_has f2_green_type_same_stop  'rc=3 result=\[B5_STOP reason=status_body_unreadable_or_unparseable detail=type_record_not_a_deviation field=state\]' "$Q/f2-green-type_selfsame.txt"
+expect_has f2_red_type_field_fail   'rc=1 result=\[B5_FAIL reason=flag_mismatch field=rogue observed_type=str expected_type=str\]' "$Q/f2-red-type_field.txt"
+expect_has f2_green_type_field_stop 'rc=3 result=\[B5_STOP reason=status_body_unreadable_or_unparseable detail=type_record_field\]' "$Q/f2-green-type_field.txt"
+expect_has f2_red_mis_short_fail    'rc=1 result=\[B5_FAIL reason=flag_mismatch field=state observed_sha256=abc expected=preregistered_typed_value\]' "$Q/f2-red-mismatch_short.txt"
+expect_has f2_green_mis_short_stop  'rc=3 result=\[B5_STOP reason=status_body_unreadable_or_unparseable detail=mismatch_record_digest\]' "$Q/f2-green-mismatch_short.txt"
+expect_has f2_red_mis_field_fail    "rc=1 result=\[B5_FAIL reason=flag_mismatch field=rogue observed_sha256=$DIG expected=preregistered_typed_value\]" "$Q/f2-red-mismatch_field.txt"
+expect_has f2_green_mis_field_stop  'rc=3 result=\[B5_STOP reason=status_body_unreadable_or_unparseable detail=mismatch_record_field\]' "$Q/f2-green-mismatch_field.txt"
+expect_has f2_red_missing_field     'rc=3 result=\[B5_STOP reason=schema_unexpected field=rogue\]' "$Q/f2-red-missing_field.txt"
+expect_has f2_green_missing_field   'rc=3 result=\[B5_STOP reason=status_body_unreadable_or_unparseable detail=missing_record_field\]' "$Q/f2-green-missing_field.txt"
+expect_has f2_red_type_ok           'rc=1 result=\[B5_FAIL reason=flag_mismatch field=state_version observed_type=str expected_type=int\]' "$Q/f2-red-type_ok.txt"
+expect_has f2_green_type_ok         'rc=1 result=\[B5_FAIL reason=flag_mismatch field=state_version observed_type=str expected_type=int\]' "$Q/f2-green-type_ok.txt"
+expect_has f2_red_mismatch_ok       "rc=1 result=\[B5_FAIL reason=flag_mismatch field=state observed_sha256=$DIG expected=preregistered_typed_value\]" "$Q/f2-red-mismatch_ok.txt"
+expect_has f2_green_mismatch_ok     "rc=1 result=\[B5_FAIL reason=flag_mismatch field=state observed_sha256=$DIG expected=preregistered_typed_value\]" "$Q/f2-green-mismatch_ok.txt"
+expect_has f2_red_missing_ok        'rc=3 result=\[B5_STOP reason=schema_unexpected field=state_version\]' "$Q/f2-red-missing_ok.txt"
+expect_has f2_green_missing_ok      'rc=3 result=\[B5_STOP reason=schema_unexpected field=state_version\]' "$Q/f2-green-missing_ok.txt"
+expect_has f2_red_ok                'rc=0 result=\[B5_status http=200 json=strict required_fields=8 flags=expected ' "$Q/f2-red-ok.txt"
+expect_has f2_green_ok              'rc=0 result=\[B5_status http=200 json=strict required_fields=8 flags=expected ' "$Q/f2-green-ok.txt"
+
+# ---------------------------------------------------------------------------
+# The schema is declared ONCE. The parent's grammar and the child's table are
+# the same string, passed as argv[2], and the child refuses to answer if they
+# differ - so the parent cannot drift into checking a contract the child is not
+# executing (pattern 11). Real CPython, real production body; only the MSYS
+# argv/CRLF plumbing is substituted, exactly as disclosed for rounds 4 and 5.
+# ---------------------------------------------------------------------------
+cat > "$Q/f2_schema_arm.sh" <<'ARM'
+S="$1"; W="$2"; MUTATE="$3"; PYEXE="$4"
+mkdir -p "$W"
+source <(sed '/^wpi_main "\$@"$/d' "$S")
+trap - ERR
+set +E; set +e; set +u; set +o pipefail
+EV_DIR="$W/ev"; mkdir -p "$EV_DIR"; WPI_PROBE_SEQ=0; WPI_MOUNT_GUARD_ACTIVE=no
+WPI_CURL=/usr/bin/curl; WPI_CONTROL_ENDPOINT=http://127.0.0.1:8790/api/status; WPI_PYTHON3="$PYEXE"
+[ "$MUTATE" = no ] || WPI_STATUS_SCHEMA='state:int state_version:int mode:str network:str exchange_conn:str exchange_enabled:bool credential_lookup:str arm_enabled:bool'
+wpi_sha_file(){ WPI_LINE=0000000000000000000000000000000000000000000000000000000000000000; }
+CALL=0
+forge_capture(){
+  local label="$1"; shift; local -a a=("$@"); local i exe
+  CALL=$((CALL+1)); WPI_CAP_OUT="$EV_DIR/forge.$CALL.out"; WPI_CAP_ERR="$EV_DIR/forge.$CALL.err"
+  WPI_CAP_RC=0; : > "$WPI_CAP_OUT"; : > "$WPI_CAP_ERR"
+  exe="${a[0]}"; [ -x "$exe" ] || exe="$exe.exe"
+  for ((i=1; i<${#a[@]}; i++)); do
+    case "${a[$i]}" in /*) [ ! -e "${a[$i]}" ] || a[$i]="$(cygpath -w "${a[$i]}")";; esac
+  done
+  /usr/bin/timeout 30 "$exe" "${a[@]:1}" > "$EV_DIR/raw.out" 2> "$EV_DIR/raw.err" || WPI_CAP_RC=$?
+  tr -d '\r' < "$EV_DIR/raw.out" > "$WPI_CAP_OUT"; tr -d '\r' < "$EV_DIR/raw.err" > "$WPI_CAP_ERR"
+}
+wpi_capture(){
+  if [ "$1" = status_json ]; then forge_capture "$@"
+  else WPI_CAP_OUT="$EV_DIR/$1.out"; WPI_CAP_ERR="$EV_DIR/$1.err"; : > "$WPI_CAP_ERR"; printf '200\n' > "$WPI_CAP_OUT"; WPI_CAP_RC=0
+       printf '{"state":"DISARMED","state_version":1,"mode":"credential_free_disarmed","network":"disabled","exchange_conn":"disabled","exchange_enabled":false,"credential_lookup":"disabled","arm_enabled":false}' > "$EV_DIR/ro.status.body"; fi
+}
+wpi_alloc_leaf(){ :; }
+( wpi_assert_status ) > "$W/out" 2> "$W/err"; rc=$?
+printf 'STATUS_SCHEMA mutated=%s rc=%s result=[%s] child=[%s]\n' \
+  "$MUTATE" "$rc" "$(grep -E '^B5_(FAIL|STOP|status) ' "$W/out" | head -1 | cut -c1-120)" "$(cat "$EV_DIR/forge.1.out" 2>&1 | head -1)"
+ARM
+bash --noprofile --norc "$Q/f2_schema_arm.sh" "$GREEN" "$Q/f2-schema-clean" no  "$PYEXE" > "$Q/f2-schema-clean.txt" 2>&1
+bash --noprofile --norc "$Q/f2_schema_arm.sh" "$GREEN" "$Q/f2-schema-mut"   yes "$PYEXE" > "$Q/f2-schema-mut.txt" 2>&1
+cat "$Q/f2-schema-clean.txt" "$Q/f2-schema-mut.txt"
+expect_has f2_schema_clean 'STATUS_SCHEMA mutated=no rc=0 result=\[B5_status http=200 json=strict required_fields=8 flags=expected ' "$Q/f2-schema-clean.txt"
+expect_has f2_schema_mut   'STATUS_SCHEMA mutated=yes rc=3 result=\[B5_STOP reason=status_body_unreadable_or_unparseable detail=strict_json_or_parser_failure parser_rc=3' "$Q/f2-schema-mut.txt"
+expect_has f2_schema_mut_child 'child=\[PARSE schema_declaration_mismatch\]' "$Q/f2-schema-mut.txt"
+
+# ===========================================================================
+# FINDING 3 (MEDIUM) - invalid HTTP status tokens are reported as completed
+# endpoint deviations. 500 and 401 are the no-weakening controls.
+# ===========================================================================
+cat > "$Q/f3_arm.sh" <<'ARM'
+S="$1"; W="$2"; CODE="$3"
+mkdir -p "$W"
+source <(sed '/^wpi_main "\$@"$/d' "$S")
+trap - ERR
+set +E; set +e; set +u; set +o pipefail
+EV_DIR="$W/ev"; mkdir -p "$EV_DIR"; WPI_PROBE_SEQ=0; WPI_MOUNT_GUARD_ACTIVE=no
+WPI_CURL=/usr/bin/curl; WPI_CONTROL_ENDPOINT=http://127.0.0.1:8790/api/status
+wpi_capture(){ WPI_CAP_OUT="$EV_DIR/code.out"; WPI_CAP_ERR="$EV_DIR/code.err"; printf '%s\n' "$CODE" > "$WPI_CAP_OUT"; : > "$WPI_CAP_ERR"; WPI_CAP_RC=0; }
+( wpi_assert_status ) > "$W/out" 2> "$W/err"; rc=$?
+printf 'HTTP_CODE code=%s rc=%s result=[%s] stderr_bytes=%s\n' "$CODE" "$rc" "$(head -1 "$W/out")" "$(wc -c < "$W/err")"
+ARM
+for c in 000 099 600 500 401; do
+  bash --noprofile --norc "$Q/f3_arm.sh" "$RED"   "$Q/f3-red-$c"   "$c" > "$Q/f3-red-$c.txt" 2>&1
+  bash --noprofile --norc "$Q/f3_arm.sh" "$GREEN" "$Q/f3-green-$c" "$c" > "$Q/f3-green-$c.txt" 2>&1
+  sed 's/^/RED   /' "$Q/f3-red-$c.txt"; sed 's/^/GREEN /' "$Q/f3-green-$c.txt"
+done
+expect_has f3_red_000_fail    'HTTP_CODE code=000 rc=1 result=\[B5_FAIL reason=status_endpoint_unexpected_http code=000\]' "$Q/f3-red-000.txt"
+expect_has f3_green_000_stop  'HTTP_CODE code=000 rc=3 result=\[B5_STOP reason=status_endpoint_not_evaluable rc=0 detail=http_code_no_response code=000\]' "$Q/f3-green-000.txt"
+expect_has f3_red_099_fail    'HTTP_CODE code=099 rc=1 result=\[B5_FAIL reason=status_endpoint_unexpected_http code=099\]' "$Q/f3-red-099.txt"
+expect_has f3_green_099_stop  'HTTP_CODE code=099 rc=3 result=\[B5_STOP reason=status_endpoint_not_evaluable rc=0 detail=http_code_grammar\]' "$Q/f3-green-099.txt"
+expect_has f3_red_600_fail    'HTTP_CODE code=600 rc=1 result=\[B5_FAIL reason=status_endpoint_unexpected_http code=600\]' "$Q/f3-red-600.txt"
+expect_has f3_green_600_stop  'HTTP_CODE code=600 rc=3 result=\[B5_STOP reason=status_endpoint_not_evaluable rc=0 detail=http_code_grammar\]' "$Q/f3-green-600.txt"
+expect_has f3_red_500_fail    'HTTP_CODE code=500 rc=1 result=\[B5_FAIL reason=status_endpoint_unexpected_http code=500\]' "$Q/f3-red-500.txt"
+expect_has f3_green_500_fail  'HTTP_CODE code=500 rc=1 result=\[B5_FAIL reason=status_endpoint_unexpected_http code=500\]' "$Q/f3-green-500.txt"
+expect_has f3_red_401_stop    'HTTP_CODE code=401 rc=3 result=\[B5_STOP reason=status_endpoint_access_denied code=401\]' "$Q/f3-red-401.txt"
+expect_has f3_green_401_stop  'HTTP_CODE code=401 rc=3 result=\[B5_STOP reason=status_endpoint_access_denied code=401\]' "$Q/f3-green-401.txt"
+
+# ===========================================================================
+# FINDING 4 (MEDIUM) - the published command masked its own fence failures and
+# carried no bound. Three arms:
+#  (a) the round-5 `bash; printf; bash; printf` sequence, executed, returns 0
+#      while both fences fail - the audit's own structural falsification;
+#  (b) the CURRENT published command, extracted from this document and executed
+#      with exactly two mechanical substitutions (its `cd` target, and the
+#      /tmp fence-body prefix so a nested run cannot overwrite the bodies of
+#      the run that is executing it) over a scratch document whose three fence
+#      bodies are `exit 7`, `exit 9` and `exit 0`;
+#  (c) the bound: the extracted command carries three explicit timeout wrappers,
+#      and the same wrapper form with the bound scaled from 900s to 3s turns a
+#      hanging body into rc 124 - a result distinct from both PASS and failure.
+# ===========================================================================
+cat > "$Q/f4_red.sh" <<'RED4'
+Q="$1"
+printf 'exit 7\n' > "$Q/r5.sh"
+printf 'exit 9\n' > "$Q/r4.sh"
+bash --noprofile --norc "$Q/r5.sh"; printf 'R5_FENCE_RC=%s\n' "$?"
+bash --noprofile --norc "$Q/r4.sh"; printf 'R4_FENCE_RC=%s\n' "$?"
+RED4
+mkdir -p "$Q/f4red"
+bash --noprofile --norc "$Q/f4_red.sh" "$Q/f4red" > "$Q/f4-red.txt" 2>&1; f4red=$?
+sed 's/^/RED   /' "$Q/f4-red.txt"
+printf 'PUBLISHED_RC_MASK round5_sequence_rc=%s inner_rcs=[%s]\n' "$f4red" "$(tr '\n' ',' < "$Q/f4-red.txt")"
+expect_rc f4_red_masked "$f4red" 0
+
+mkdir -p "$Q/fake"
+{ printf '# RP7_R6_FENCE_BEGIN\nexit 7\n# RP7_R6_FENCE_END\n'
+  printf '# RP7_QA_FENCE_BEGIN\nexit 9\n# RP7_QA_FENCE_END\n'
+  printf '# RP7_R4_FENCE_BEGIN\nexit 0\n# RP7_R4_FENCE_END\n'; } > "$Q/fake/SELF_QA_RP7.md"
+sed -n '/^# RP7_EXACT_COMMAND_BEGIN$/,/^# RP7_EXACT_COMMAND_END$/p' "$DOC" > "$Q/published.txt"
+# The /tmp expression runs FIRST: sed applies every -e to the same line in order,
+# so retargeting `cd` first would let the /tmp rule rewrite the new cd target as
+# well - which leaves the command running in the real directory against the real
+# document, i.e. re-entering this fence. Both substitutions are then asserted.
+sed -e "s#/tmp/rp7-#$Q/fake/body-#g" -e "s#^cd /c/LAB/.*#cd $Q/fake#" "$Q/published.txt" > "$Q/f4_green.sh"
+expect_rc f4_green_cd_retargeted "$(grep -c "^cd $Q/fake\$" "$Q/f4_green.sh")" 1
+expect_rc f4_green_no_real_bodies "$(grep -c '/tmp/rp7-r6-fence-body.sh' "$Q/f4_green.sh")" 0
+timeout 120 bash --noprofile --norc "$Q/f4_green.sh" > "$Q/f4-green.txt" 2>&1; f4green=$?
+sed 's/^/GREEN /' "$Q/f4-green.txt"
+printf 'PUBLISHED_RC_PROPAGATION round6_command_rc=%s substitutions=2\n' "$f4green"
+expect_rc f4_green_propagates "$f4green" 1
+expect_has f4_green_reports_fail 'PUBLISHED_COMMAND_RESULT=fence_failed' "$Q/f4-green.txt"
+expect_has f4_green_rc6 'R6_FENCE_RC=7' "$Q/f4-green.txt"
+expect_has f4_green_rc5 'R5_FENCE_RC=9' "$Q/f4-green.txt"
+
+BOUNDS=$(grep -c 'timeout --signal=TERM --kill-after=30s 900s bash --noprofile --norc' "$Q/published.txt")
+DOCBOUND=$(grep -c 'aggregate bound' "$DOC")
+printf 'PUBLISHED_BOUND timeout_wrappers=%s documented_aggregate_bound_mentions=%s\n' "$BOUNDS" "$DOCBOUND"
+expect_rc f4_bound_wrappers "$BOUNDS" 3
+[ "$DOCBOUND" -ge 1 ] || { printf 'QA_ASSERT_FAIL name=f4_bound_documented got=%s\n' "$DOCBOUND"; exit 90; }
+printf '/usr/bin/sleep 30\n' > "$Q/hang.sh"
+t0=$SECONDS
+timeout --signal=TERM --kill-after=30s 3s bash --noprofile --norc "$Q/hang.sh"; hangrc=$?
+t1=$((SECONDS-t0))
+printf 'PUBLISHED_BOUND_ENFORCED scaled_bound_s=3 rc=%s wall_s=%s\n' "$hangrc" "$t1"
+expect_rc f4_bound_enforced "$hangrc" 124
+[ "$t1" -le 8 ] || { printf 'QA_ASSERT_FAIL name=f4_bound_wall got=%s\n' "$t1"; exit 90; }
+
+# ===========================================================================
+# RECOVERED TEST (salvage from the interrupted round-5 review) - the capture
+# leaf is replaced between allocation and write. The injection is through a
+# hooked wpi_clock_ms, so this is not a route the block reaches on its own; the
+# defensible statement is about what the block ESTABLISHES, and round 5
+# established nothing about the identity of the object it wrote to.
+# ===========================================================================
+cat > "$Q/f5_arm.sh" <<'ARM'
+S="$1"; W="$2"
+mkdir -p "$W"
+source <(sed '/^wpi_main "\$@"$/d' "$S")
+trap - ERR
+set +E; set +e; set +u; set +o pipefail
+EV_DIR="$W/ev"; mkdir -p "$EV_DIR"
+WPI_ENV=/usr/bin/env; WPI_TIMEOUT=/usr/bin/timeout; WPI_SWEEP_BUDGET_S=10; WPI_PROBE_SEQ=0
+OUTSIDE="$W/outside.txt"; printf 'ORIGINAL\n' > "$OUTSIDE"
+HOOK=0
+wpi_clock_ms(){
+  HOOK=$((HOOK+1))
+  if [ "$HOOK" -eq 1 ]; then rm -- "$WPI_CAP_OUT"; ln -- "$OUTSIDE" "$WPI_CAP_OUT"; fi
+  WPI_LINE="$HOOK"
+}
+wpi_capture leaf_race /usr/bin/printf 'CAPTURED\n'
+rc=$?
+printf 'LEAF_RACE rc=%s outside_text=%s outside_bytes=%s payload_left_the_tree=%s\n' \
+  "$rc" "$(tr -d '\n' < "$OUTSIDE")" "$(wc -c < "$OUTSIDE")" \
+  "$(grep -q CAPTURED "$OUTSIDE" && echo yes || echo no)"
+ARM
+bash --noprofile --norc "$Q/f5_arm.sh" "$RED"   "$Q/f5-red"   > "$Q/f5-red.txt" 2>&1
+bash --noprofile --norc "$Q/f5_arm.sh" "$GREEN" "$Q/f5-green" > "$Q/f5-green.txt" 2>&1
+sed 's/^/RED   /' "$Q/f5-red.txt"; sed 's/^/GREEN /' "$Q/f5-green.txt"
+expect_has f5_red_escapes    'LEAF_RACE rc=0 outside_text=CAPTURED outside_bytes=9 payload_left_the_tree=yes' "$Q/f5-red.txt"
+expect_has f5_green_confined 'LEAF_RACE rc=0 outside_text=ORIGINAL outside_bytes=9 payload_left_the_tree=no' "$Q/f5-green.txt"
+
+# Static: no shell-side write in the block re-opens a leaf by name. The status
+# body is the one disclosed exception, because curl is handed a path.
+GREEN_APPEND=$(grep -v '^[[:space:]]*#' "$GREEN" | grep -c '>>"\$')
+RED_APPEND=$(grep -v '^[[:space:]]*#' "$RED" | grep -c '>>"\$')
+GREEN_OPEN=$(grep -c '^wpi_open_leaf() {' "$GREEN")
+RED_OPEN=$(grep -c '^wpi_open_leaf() {' "$RED")
+printf 'LEAF_WRITE_STATIC red_name_appends=%s green_name_appends=%s red_open_leaf=%s green_open_leaf=%s\n' \
+  "$RED_APPEND" "$GREEN_APPEND" "$RED_OPEN" "$GREEN_OPEN"
+expect_rc f5_red_appends "$RED_APPEND" 12
+expect_rc f5_green_appends "$GREEN_APPEND" 0
+expect_rc f5_red_open_leaf "$RED_OPEN" 0
+expect_rc f5_green_open_leaf "$GREEN_OPEN" 1
+
+case "$Q" in /tmp/rp7-r6-qa.*) rm -rf -- "$Q" ;; *) printf 'QA_SCRATCH_UNSAFE=%s\n' "$Q"; exit 97 ;; esac
+printf 'QA_PASS all_assertions=yes\n'
+# RP7_R6_FENCE_END
+```
+
+### Round-6 transcript
+
+```text
+QA_ROOT=/tmp/rp7-r6-qa.HT8l8W
+QA_ENV bash=5.2.37(1)-release coreutils_stat=8.32 python=3.14.2 git=2.52.0.windows.1 uid_gid=4096:4096
+BYTE_IDENTITY red_bytes=77179 red_sha256=393a16ce264b467bec180a2106390e6dcee4dc2605fd019871270fda11d3b0ee red_cr=0 red_bash_n=0 green_bytes=88460 green_sha256=6586698c707601c70a3e99903dc789ee2ee71fd2bae1bc1763adc52f72a40709 green_cr=0 green_bash_n=0
+RED   LISTENER_BYTES case=nul rc=0 accepting=1 parsed_complete=1 stop=[] fail=[] stderr_bytes=0
+GREEN LISTENER_BYTES case=nul rc=3 accepting=0 parsed_complete=0 stop=[listener_inventory_unreadable_or_unparseable rc=0 detail=nul_byte_in_inventory] fail=[] stderr_bytes=0
+RED   LISTENER_BYTES case=address rc=1 accepting=0 parsed_complete=1 stop=[] fail=[listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790] stderr_bytes=0
+GREEN LISTENER_BYTES case=address rc=3 accepting=0 parsed_complete=0 stop=[listener_inventory_unreadable_or_unparseable rc=0 detail=local_address_grammar] fail=[] stderr_bytes=0
+RED   LISTENER_BYTES case=port_range rc=1 accepting=0 parsed_complete=1 stop=[] fail=[listener_set_unexpected observed_count=0 expected=1x127.0.0.1:8790] stderr_bytes=0
+GREEN LISTENER_BYTES case=port_range rc=3 accepting=0 parsed_complete=0 stop=[listener_inventory_unreadable_or_unparseable rc=0 detail=local_port_range port=99999] fail=[] stderr_bytes=0
+RED   LISTENER_BYTES case=octet rc=1 accepting=0 parsed_complete=1 stop=[] fail=[listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790] stderr_bytes=0
+GREEN LISTENER_BYTES case=octet rc=3 accepting=0 parsed_complete=0 stop=[listener_inventory_unreadable_or_unparseable rc=0 detail=local_address_grammar] fail=[] stderr_bytes=0
+RED   LISTENER_BYTES case=leading0 rc=1 accepting=0 parsed_complete=1 stop=[] fail=[listener_set_unexpected observed_count=0 expected=1x127.0.0.1:8790] stderr_bytes=0
+GREEN LISTENER_BYTES case=leading0 rc=3 accepting=0 parsed_complete=0 stop=[listener_inventory_unreadable_or_unparseable rc=0 detail=local_port_grammar] fail=[] stderr_bytes=0
+RED   LISTENER_BYTES case=clean rc=0 accepting=1 parsed_complete=1 stop=[] fail=[] stderr_bytes=0
+GREEN LISTENER_BYTES case=clean rc=0 accepting=1 parsed_complete=1 stop=[] fail=[] stderr_bytes=0
+RED   LISTENER_BYTES case=wildcard rc=1 accepting=0 parsed_complete=1 stop=[] fail=[nonloopback_listener addr=0.0.0.0] stderr_bytes=0
+GREEN LISTENER_BYTES case=wildcard rc=1 accepting=0 parsed_complete=1 stop=[] fail=[nonloopback_listener addr=0.0.0.0] stderr_bytes=0
+LISTENER_CONSERVATION case=clean independent_wc_c=58 block_bytes_field=58
+LISTENER_CONSERVATION case=wildcard independent_wc_c=36 block_bytes_field=36
+RED   STATUS_RECORD rec=[TYPE state str] child_rc=5 rc=1 result=[B5_FAIL reason=flag_mismatch field=state observed_type=str expected_type=] stderr_bytes=0
+GREEN STATUS_RECORD rec=[TYPE state str] child_rc=5 rc=3 result=[B5_STOP reason=status_body_unreadable_or_unparseable detail=type_record_grammar tokens=3] stderr_bytes=0
+RED   STATUS_RECORD rec=[TYPE state str int] child_rc=5 rc=1 result=[B5_FAIL reason=flag_mismatch field=state observed_type=str expected_type=int] stderr_bytes=0
+GREEN STATUS_RECORD rec=[TYPE state str int] child_rc=5 rc=3 result=[B5_STOP reason=status_body_unreadable_or_unparseable detail=type_record_expected_type field=state] stderr_bytes=0
+RED   STATUS_RECORD rec=[TYPE state str str] child_rc=5 rc=1 result=[B5_FAIL reason=flag_mismatch field=state observed_type=str expected_type=str] stderr_bytes=0
+GREEN STATUS_RECORD rec=[TYPE state str str] child_rc=5 rc=3 result=[B5_STOP reason=status_body_unreadable_or_unparseable detail=type_record_not_a_deviation field=state] stderr_bytes=0
+RED   STATUS_RECORD rec=[TYPE rogue str str] child_rc=5 rc=1 result=[B5_FAIL reason=flag_mismatch field=rogue observed_type=str expected_type=str] stderr_bytes=0
+GREEN STATUS_RECORD rec=[TYPE rogue str str] child_rc=5 rc=3 result=[B5_STOP reason=status_body_unreadable_or_unparseable detail=type_record_field] stderr_bytes=0
+RED   STATUS_RECORD rec=[MISMATCH state abc] child_rc=1 rc=1 result=[B5_FAIL reason=flag_mismatch field=state observed_sha256=abc expected=preregistered_typed_value] stderr_bytes=0
+GREEN STATUS_RECORD rec=[MISMATCH state abc] child_rc=1 rc=3 result=[B5_STOP reason=status_body_unreadable_or_unparseable detail=mismatch_record_digest] stderr_bytes=0
+RED   STATUS_RECORD rec=[MISMATCH rogue b30c3a9662f46e65f2b937b628583be2bff0e37e7466aa3b4bd988740310a913] child_rc=1 rc=1 result=[B5_FAIL reason=flag_mismatch field=rogue observed_sha256=b30c3a9662f46e65f2b937b628583be2bff0e37e7466aa3b4bd988740310a913 expected=preregistered_typed_value] stderr_bytes=0
+GREEN STATUS_RECORD rec=[MISMATCH rogue b30c3a9662f46e65f2b937b628583be2bff0e37e7466aa3b4bd988740310a913] child_rc=1 rc=3 result=[B5_STOP reason=status_body_unreadable_or_unparseable detail=mismatch_record_field] stderr_bytes=0
+RED   STATUS_RECORD rec=[MISSING rogue] child_rc=4 rc=3 result=[B5_STOP reason=schema_unexpected field=rogue] stderr_bytes=0
+GREEN STATUS_RECORD rec=[MISSING rogue] child_rc=4 rc=3 result=[B5_STOP reason=status_body_unreadable_or_unparseable detail=missing_record_field] stderr_bytes=0
+RED   STATUS_RECORD rec=[TYPE state_version str int] child_rc=5 rc=1 result=[B5_FAIL reason=flag_mismatch field=state_version observed_type=str expected_type=int] stderr_bytes=0
+GREEN STATUS_RECORD rec=[TYPE state_version str int] child_rc=5 rc=1 result=[B5_FAIL reason=flag_mismatch field=state_version observed_type=str expected_type=int] stderr_bytes=0
+RED   STATUS_RECORD rec=[MISMATCH state b30c3a9662f46e65f2b937b628583be2bff0e37e7466aa3b4bd988740310a913] child_rc=1 rc=1 result=[B5_FAIL reason=flag_mismatch field=state observed_sha256=b30c3a9662f46e65f2b937b628583be2bff0e37e7466aa3b4bd988740310a913 expected=preregistered_typed_value] stderr_bytes=0
+GREEN STATUS_RECORD rec=[MISMATCH state b30c3a9662f46e65f2b937b628583be2bff0e37e7466aa3b4bd988740310a913] child_rc=1 rc=1 result=[B5_FAIL reason=flag_mismatch field=state observed_sha256=b30c3a9662f46e65f2b937b628583be2bff0e37e7466aa3b4bd988740310a913 expected=preregistered_typed_value] stderr_bytes=0
+RED   STATUS_RECORD rec=[MISSING state_version] child_rc=4 rc=3 result=[B5_STOP reason=schema_unexpected field=state_version] stderr_bytes=0
+GREEN STATUS_RECORD rec=[MISSING state_version] child_rc=4 rc=3 result=[B5_STOP reason=schema_unexpected field=state_version] stderr_bytes=0
+RED   STATUS_RECORD rec=[OK fields=8] child_rc=0 rc=0 result=[B5_status http=200 json=strict required_fields=8 flags=expected body_sha256=0000000000000000000000000000000000000000000000000000000000000000 content=not_printed parser=pinned_system_interpreter isolation=isolated_no_site] stderr_bytes=0
+GREEN STATUS_RECORD rec=[OK fields=8] child_rc=0 rc=0 result=[B5_status http=200 json=strict required_fields=8 flags=expected body_sha256=0000000000000000000000000000000000000000000000000000000000000000 content=not_printed parser=pinned_system_interpreter isolation=isolated_no_site] stderr_bytes=0
+STATUS_SCHEMA mutated=no rc=0 result=[B5_status http=200 json=strict required_fields=8 flags=expected body_sha256=00000000000000000000000000000000000000000000] child=[OK fields=8]
+STATUS_SCHEMA mutated=yes rc=3 result=[B5_STOP reason=status_body_unreadable_or_unparseable detail=strict_json_or_parser_failure parser_rc=3 body_sha256=000000] child=[PARSE schema_declaration_mismatch]
+RED   HTTP_CODE code=000 rc=1 result=[B5_FAIL reason=status_endpoint_unexpected_http code=000] stderr_bytes=0
+GREEN HTTP_CODE code=000 rc=3 result=[B5_STOP reason=status_endpoint_not_evaluable rc=0 detail=http_code_no_response code=000] stderr_bytes=0
+RED   HTTP_CODE code=099 rc=1 result=[B5_FAIL reason=status_endpoint_unexpected_http code=099] stderr_bytes=0
+GREEN HTTP_CODE code=099 rc=3 result=[B5_STOP reason=status_endpoint_not_evaluable rc=0 detail=http_code_grammar] stderr_bytes=0
+RED   HTTP_CODE code=600 rc=1 result=[B5_FAIL reason=status_endpoint_unexpected_http code=600] stderr_bytes=0
+GREEN HTTP_CODE code=600 rc=3 result=[B5_STOP reason=status_endpoint_not_evaluable rc=0 detail=http_code_grammar] stderr_bytes=0
+RED   HTTP_CODE code=500 rc=1 result=[B5_FAIL reason=status_endpoint_unexpected_http code=500] stderr_bytes=0
+GREEN HTTP_CODE code=500 rc=1 result=[B5_FAIL reason=status_endpoint_unexpected_http code=500] stderr_bytes=0
+RED   HTTP_CODE code=401 rc=3 result=[B5_STOP reason=status_endpoint_access_denied code=401] stderr_bytes=0
+GREEN HTTP_CODE code=401 rc=3 result=[B5_STOP reason=status_endpoint_access_denied code=401] stderr_bytes=0
+RED   R5_FENCE_RC=7
+RED   R4_FENCE_RC=9
+PUBLISHED_RC_MASK round5_sequence_rc=0 inner_rcs=[R5_FENCE_RC=7,R4_FENCE_RC=9,]
+GREEN dc4eac6b791d148fe12b95e51bf31a92ead1c32f9dde48255f263a0d28dbcb4f */tmp/rp7-r6-qa.HT8l8W/fake/body-r6-fence-body.sh
+GREEN def46450e739e132ca3b14d87e783aec6d75a838316dc78d6d24fbecb302cb81 */tmp/rp7-r6-qa.HT8l8W/fake/body-r5-fence-body.sh
+GREEN 585c97d2fcbe0bc2e3fbca0f841e68a26934c5434ed00a8a691a4919dd85f82f */tmp/rp7-r6-qa.HT8l8W/fake/body-r4-fence-body.sh
+GREEN  47 /tmp/rp7-r6-qa.HT8l8W/fake/body-r6-fence-body.sh
+GREEN  47 /tmp/rp7-r6-qa.HT8l8W/fake/body-r5-fence-body.sh
+GREEN  47 /tmp/rp7-r6-qa.HT8l8W/fake/body-r4-fence-body.sh
+GREEN 141 total
+GREEN R6_FENCE_RC=7
+GREEN R5_FENCE_RC=9
+GREEN R4_FENCE_RC=0
+GREEN PUBLISHED_COMMAND_RESULT=fence_failed
+PUBLISHED_RC_PROPAGATION round6_command_rc=1 substitutions=2
+PUBLISHED_BOUND timeout_wrappers=3 documented_aggregate_bound_mentions=2
+PUBLISHED_BOUND_ENFORCED scaled_bound_s=3 rc=124 wall_s=3
+RED   LEAF_RACE rc=0 outside_text=CAPTURED outside_bytes=9 payload_left_the_tree=yes
+GREEN LEAF_RACE rc=0 outside_text=ORIGINAL outside_bytes=9 payload_left_the_tree=no
+LEAF_WRITE_STATIC red_name_appends=12 green_name_appends=0 red_open_leaf=0 green_open_leaf=1
+QA_PASS all_assertions=yes
+R6_FENCE_RC=0
+```
+
+Reading the load-bearing lines:
+
+- `BYTE_IDENTITY` proves the RED subject is the audited round-5 blob and the GREEN subject is
+  the repaired file, both LF-only and both `bash -n` clean.
+- `LISTENER_BYTES case=nul rc=0 accepting=1 parsed_complete=1` is Codex's finding 1
+  reproduced on the audited bytes: a record whose state field is `LIS<NUL>TEN` was normalised
+  into `LISTEN` and reported as a complete parse and an accepting listener set. The GREEN row
+  is `rc=3 ... detail=nul_byte_in_inventory` with no inventory line at all.
+- The `address`, `port_range`, `octet` and `leading0` rows are the same defect in its other
+  three shapes: each RED row is a host-state FAIL (`rc=1`) derived from a record that states
+  no address or no port, and each GREEN row is the corresponding grammar STOP.
+- `LISTENER_CONSERVATION case=<c> independent_wc_c=<n> block_bytes_field=<n>` is the
+  conservation equation: the block's own count of the bytes it consumed equals `wc -c` of the
+  file it consumed them from. That equality is what the NUL record broke.
+- `LISTENER_BYTES case=clean` and `case=wildcard` are identical in RED and GREEN. Column
+  padding still parses and a wildcard listener is still `B6_FAIL reason=nonloopback_listener`
+  - the repair added no new STOP over well-formed input.
+- The `STATUS_RECORD` pairs are finding 2. Every RED line for a malformed producer record is
+  `rc=1` with a `B5_FAIL`; every GREEN line is `rc=3` with a `detail=*_record_*` STOP naming
+  the grammar rule that failed. The four `*_ok` rows and the `ok` row are byte-identical
+  between RED and GREEN.
+- `STATUS_SCHEMA mutated=yes ... child=[PARSE schema_declaration_mismatch]` proves the schema
+  is one declaration and not two: the parent's grammar table and the child's typed table are
+  the same string, and the child refuses to answer if they differ.
+- The `HTTP_CODE` pairs are finding 3, with `500` and `401` unchanged.
+- `PUBLISHED_RC_MASK round5_sequence_rc=0 inner_rcs=[R5_FENCE_RC=7,R4_FENCE_RC=9,]` is
+  finding 4 reproduced, and `PUBLISHED_RC_PROPAGATION round6_command_rc=1` is the repair,
+  measured by executing the published command itself over a scratch document.
+- `PUBLISHED_BOUND_ENFORCED scaled_bound_s=3 rc=124` is the bound doing work. Only the number
+  differs from the published 900 s; the wrapper form is the published one.
+- `LEAF_RACE ... payload_left_the_tree=yes` versus `no` is the recovered test, and
+  `LEAF_WRITE_STATIC red_name_appends=12 green_name_appends=0` is the static half: no
+  shell-side write in the repaired block re-opens a leaf by name.
+
+## The carried round-5 fence, re-run as a regression gate
+
+The round-5 fence is reproduced below **unchanged except for the two GREEN identity
+constants**, which name the subject file by hash and byte count and therefore have to name
+the round-6 bytes. Everything else - every arm, every assertion, both anchor comments and
+the RED blob at `d6a976aa` - is byte-identical to round 5. It is one half of the
+no-weakening gate: every round-5 repair (the tenth tool binding, package identity, the
+three `/dev/null` opens, evidence-root provenance) must still hold on these bytes, and does.
 
 Ten arm groups, each a real RED against the round-4 blob and a real GREEN against the
 repaired bytes:
@@ -159,8 +717,8 @@ printf 'BYTE_IDENTITY red_bytes=%s red_sha256=%s red_cr=%s red_bash_n=%s green_b
     "$RED_BYTES" "$RED_SHA" "$RED_CR" "$RED_N" "$GREEN_BYTES" "$GREEN_SHA" "$GREEN_CR" "$GREEN_N"
 expect_eq red_sha256 "$RED_SHA" 23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad
 expect_eq red_bytes "$RED_BYTES" 70941
-expect_eq green_sha256 "$GREEN_SHA" 393a16ce264b467bec180a2106390e6dcee4dc2605fd019871270fda11d3b0ee
-expect_eq green_bytes "$GREEN_BYTES" 77179
+expect_eq green_sha256 "$GREEN_SHA" 6586698c707601c70a3e99903dc789ee2ee71fd2bae1bc1763adc52f72a40709
+expect_eq green_bytes "$GREEN_BYTES" 88460
 expect_rc red_cr "$RED_CR" 0
 expect_rc green_cr "$GREEN_CR" 0
 expect_rc red_bash_n "$RED_N" 0
@@ -436,9 +994,9 @@ printf 'QA_PASS all_assertions=yes\n'
 ### Round-5 transcript
 
 ```text
-QA_ROOT=/tmp/rp7-r5-qa.tJYRqc
+QA_ROOT=/tmp/rp7-r5-qa.tB0r92
 QA_ENV bash=5.2.37(1)-release coreutils_stat=8.32 python=3.14.2 git=2.52.0.windows.1 uid_gid=4096:4096
-BYTE_IDENTITY red_bytes=70941 red_sha256=23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad red_cr=0 red_bash_n=0 green_bytes=77179 green_sha256=393a16ce264b467bec180a2106390e6dcee4dc2605fd019871270fda11d3b0ee green_cr=0 green_bash_n=0
+BYTE_IDENTITY red_bytes=70941 red_sha256=23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad red_cr=0 red_bash_n=0 green_bytes=88460 green_sha256=6586698c707601c70a3e99903dc789ee2ee71fd2bae1bc1763adc52f72a40709 green_cr=0 green_bash_n=0
 MAIN_BIND rc=0 bound=[stat,readlink,env,find,sha256sum,systemctl,ss,curl,timeout,] python3_bound=no malicious_marker=present accepted_status=1 rp7_pass=1 window_open=1 window_closed=1 binding_stop=0
 MAIN_BIND rc=3 bound=[stat,readlink,env,find,sha256sum,systemctl,ss,curl,timeout,python3,] python3_bound=yes malicious_marker=absent accepted_status=0 rp7_pass=0 window_open=1 window_closed=0 binding_stop=1
 F1_ARM_RCS red=0 green=0
@@ -456,13 +1014,13 @@ GREEN B1_STOP reason=metadata_identity_unestablished stage=verifier detail=canon
 DEVNULL_STATIC red_non_comment=3 green_non_comment=0
 PREREQ_PATH_SHADOW rc=0 stdout=[] stderr_bytes=0
 PREREQ_PATH_SHADOW rc=3 stdout=[RP7_STOP reason=rp0_lib_not_sourced predicate=rp0_require_safe_component] stderr_bytes=0
-ALLOC_LEAF rc_first=0 rc_second=3 rc_outside=3 err1=0 err2=0 err3=0 second_stdout=[RP7_STOP reason=capture_leaf_not_create_once leaf=/tmp/rp7-r5-qa.tJYRqc/f4-leaf/ev/leaf] outside_stdout=[RP7_STOP reason=capture_path_outside_evidence leaf=/tmp/rp7-r5-qa.tJYRqc/f4-leaf/outside ev_dir=/tmp/rp7-r5-qa.tJYRqc/f4-leaf/ev]
+ALLOC_LEAF rc_first=0 rc_second=3 rc_outside=3 err1=0 err2=0 err3=0 second_stdout=[RP7_STOP reason=capture_leaf_not_create_once leaf=/tmp/rp7-r5-qa.tB0r92/f4-leaf/ev/leaf] outside_stdout=[RP7_STOP reason=capture_path_outside_evidence leaf=/tmp/rp7-r5-qa.tB0r92/f4-leaf/outside ev_dir=/tmp/rp7-r5-qa.tB0r92/f4-leaf/ev]
 EV_ROOT_CONSTANT red=0 green=1
-EV_ROOT pin=[keep] ev_dir=[/tmp/rp7-r5-qa.tJYRqc/other/x] rc=0 stderr_bytes=0 stdout=[]
-EV_ROOT pin=[keep] ev_dir=[/tmp/rp7-r5-qa.tJYRqc/other/x] rc=3 stderr_bytes=0 stdout=[RP7_STOP reason=evidence_root_unattested detail=freeze_gate_pin_unfilled name=WPI_FIXED_EVIDENCE_ROOT]
-EV_ROOT pin=[/tmp/rp7-r5-qa.tJYRqc/base] ev_dir=[/tmp/rp7-r5-qa.tJYRqc/base/evidence/runkit/RUN-RO] rc=0 stderr_bytes=0 stdout=[]
-EV_ROOT pin=[/tmp/rp7-r5-qa.tJYRqc/base] ev_dir=[/tmp/rp7-r5-qa.tJYRqc/other/x] rc=3 stderr_bytes=0 stdout=[RP7_STOP reason=evidence_root_unattested ev_dir=/tmp/rp7-r5-qa.tJYRqc/other/x expected_root=/tmp/rp7-r5-qa.tJYRqc/base]
-EV_ROOT pin=[/tmp/rp7-r5-qa.tJYRqc/base] ev_dir=[/tmp/rp7-r5-qa.tJYRqc/base-evil/x] rc=3 stderr_bytes=0 stdout=[RP7_STOP reason=evidence_root_unattested ev_dir=/tmp/rp7-r5-qa.tJYRqc/base-evil/x expected_root=/tmp/rp7-r5-qa.tJYRqc/base]
+EV_ROOT pin=[keep] ev_dir=[/tmp/rp7-r5-qa.tB0r92/other/x] rc=0 stderr_bytes=0 stdout=[]
+EV_ROOT pin=[keep] ev_dir=[/tmp/rp7-r5-qa.tB0r92/other/x] rc=3 stderr_bytes=0 stdout=[RP7_STOP reason=evidence_root_unattested detail=freeze_gate_pin_unfilled name=WPI_FIXED_EVIDENCE_ROOT]
+EV_ROOT pin=[/tmp/rp7-r5-qa.tB0r92/base] ev_dir=[/tmp/rp7-r5-qa.tB0r92/base/evidence/runkit/RUN-RO] rc=0 stderr_bytes=0 stdout=[]
+EV_ROOT pin=[/tmp/rp7-r5-qa.tB0r92/base] ev_dir=[/tmp/rp7-r5-qa.tB0r92/other/x] rc=3 stderr_bytes=0 stdout=[RP7_STOP reason=evidence_root_unattested ev_dir=/tmp/rp7-r5-qa.tB0r92/other/x expected_root=/tmp/rp7-r5-qa.tB0r92/base]
+EV_ROOT pin=[/tmp/rp7-r5-qa.tB0r92/base] ev_dir=[/tmp/rp7-r5-qa.tB0r92/base-evil/x] rc=3 stderr_bytes=0 stdout=[RP7_STOP reason=evidence_root_unattested ev_dir=/tmp/rp7-r5-qa.tB0r92/base-evil/x expected_root=/tmp/rp7-r5-qa.tB0r92/base]
 QA_PASS all_assertions=yes
 R5_FENCE_RC=0
 ```
@@ -1657,17 +2215,17 @@ printf 'QA_PASS all_assertions=yes\n'
 ### Round-4 regression transcript (repaired bytes)
 
 ```text
-QA_ROOT=/tmp/rp7-r4-qa.JNbQNz
+QA_ROOT=/tmp/rp7-r4-qa.vEBNeC
 QA_ENV bash=5.2.37(1)-release coreutils_stat=8.32 python=3.14.2 uid_gid=4096:4096 live_mountinfo_records=4 symlinks=not_representable_msys2
-REAL_GNU_DIAGNOSTIC=[/usr/bin/stat: cannot stat '/tmp/rp7-r4-qa.JNbQNz/absent-leaf': No such file or directory]
+REAL_GNU_DIAGNOSTIC=[/usr/bin/stat: cannot stat '/tmp/rp7-r4-qa.vEBNeC/absent-leaf': No such file or directory]
 REAL_GNU_ABSENT kind=absent child_rc=1
 DIAG_ACCEPTED id=abs_statx kind=absent
 DIAG_ACCEPTED id=abs_stat kind=absent
 DIAG_ACCEPTED id=abs_oserr kind=absent
-B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.JNbQNz/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/ev-diag-base_statx/ro.0001.lstat.stderr
-B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.JNbQNz/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/ev-diag-base_stat/ro.0001.lstat.stderr
-B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.JNbQNz/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/ev-diag-base_oserr/ro.0001.lstat.stderr
-B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.JNbQNz/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/ev-diag-foreign/ro.0001.lstat.stderr
+B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.vEBNeC/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.vEBNeC/ev-diag-base_statx/ro.0001.lstat.stderr
+B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.vEBNeC/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.vEBNeC/ev-diag-base_stat/ro.0001.lstat.stderr
+B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.vEBNeC/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.vEBNeC/ev-diag-base_oserr/ro.0001.lstat.stderr
+B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.vEBNeC/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.vEBNeC/ev-diag-foreign/ro.0001.lstat.stderr
 STAT_DIAGNOSTIC_RCS real_gnu_absent=0 abs_statx=0 abs_stat=0 abs_oserr=0 base_statx=3 base_stat=3 base_oserr=3 foreign=3
 N1_REAL_MOUNTINFO records=4 captured_by=wpi_capture_mountinfo_snapshot
 N1_V2 clean=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 decoy_bind_under_release=74a1831126d71500bb26b663bc0923e5714679858bcb3d8c8bfa6898897a23e2 decoy_overlay_under_venv=7cb133713b58ce45a82b8180809b07e1f97032763f730e5ab578b3fc7657c6de repeat_clean=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359
@@ -1680,49 +2238,49 @@ V2_TRUSTED_PYTHON_POINT kind=point path=/usr/bin/python3 device=0:97 root=/ moun
 V2_SUBTREE_USR_BIN kind=subtree_count subtree_root=/usr/bin records=2
 COMPUTED_ATTESTATION sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 format=normalised_path_projection_v2
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/ev-fail-mutant/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.JNbQNz/ev-fail-mutant/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.vEBNeC/ev-fail-mutant/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.vEBNeC/ev-fail-mutant/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 B3_FAIL reason=fixture_deviation
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/ev-fail-green/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.JNbQNz/ev-fail-green/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.vEBNeC/ev-fail-green/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.vEBNeC/ev-fail-green/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/ev-fail-green/ro.mountinfo.0002.snapshot projection=/tmp/rp7-r4-qa.JNbQNz/ev-fail-green/ro.0008.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.vEBNeC/ev-fail-green/ro.mountinfo.0002.snapshot projection=/tmp/rp7-r4-qa.vEBNeC/ev-fail-green/ro.0008.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 MOUNT_WINDOW_CLOSED
 B3_FAIL reason=fixture_deviation
 FAIL_GUARD_CLOSE mutant_rc=1 mutant_window_closed=0 production_rc=1 production_window_closed=1
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/ev-guard-attest/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.JNbQNz/ev-guard-changed/ro.0002.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.vEBNeC/ev-guard-attest/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.vEBNeC/ev-guard-changed/ro.0002.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 RP7_mount_table parsed=yes records=5 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=5 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/n1-decoy projection=/tmp/rp7-r4-qa.JNbQNz/ev-guard-changed/ro.0006.mount_projection.tsv sha256=74a1831126d71500bb26b663bc0923e5714679858bcb3d8c8bfa6898897a23e2 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=5 raw_snapshot=/tmp/rp7-r4-qa.vEBNeC/n1-decoy projection=/tmp/rp7-r4-qa.vEBNeC/ev-guard-changed/ro.0006.mount_projection.tsv sha256=74a1831126d71500bb26b663bc0923e5714679858bcb3d8c8bfa6898897a23e2 content=not_printed
 RP7_STOP reason=mount_topology_changed before=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 after=74a1831126d71500bb26b663bc0923e5714679858bcb3d8c8bfa6898897a23e2 format=normalised_path_projection_v2
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/ev-guard-mismatch/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.JNbQNz/ev-guard-mismatch/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.vEBNeC/ev-guard-mismatch/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.vEBNeC/ev-guard-mismatch/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 RP7_STOP reason=mount_topology_mismatch observed=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 attested=0000000000000000000000000000000000000000000000000000000000000000 format=normalised_path_projection_v2
 MOUNT_GUARD_RCS changed_downgrade=3 attestation_mismatch=3
 B3_STOP reason=structured_path_unparseable source=find_stdout detail=unsafe_character
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/ev-space/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.JNbQNz/ev-space/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.vEBNeC/ev-space/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.vEBNeC/ev-space/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/ev-space/ro.mountinfo.0002.snapshot projection=/tmp/rp7-r4-qa.JNbQNz/ev-space/ro.0012.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.vEBNeC/ev-space/ro.mountinfo.0002.snapshot projection=/tmp/rp7-r4-qa.vEBNeC/ev-space/ro.0012.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 B3_FAIL reason=writable_path_inside_immutable_tree path=[unrenderable] path_sha256=565603d319c5019948e7655e2da5b2f006639a9ad9d087d2ed6cba5a41948f2e count=1
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/ev-realfind/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.JNbQNz/ev-realfind/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.vEBNeC/ev-realfind/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.vEBNeC/ev-realfind/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.JNbQNz/ev-realfind/ro.mountinfo.0002.snapshot projection=/tmp/rp7-r4-qa.JNbQNz/ev-realfind/ro.0013.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
-B3_FAIL reason=writable_path_inside_immutable_tree path=/tmp/rp7-r4-qa.JNbQNz/imm/sub count=2
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.vEBNeC/ev-realfind/ro.mountinfo.0002.snapshot projection=/tmp/rp7-r4-qa.vEBNeC/ev-realfind/ro.0013.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+B3_FAIL reason=writable_path_inside_immutable_tree path=/tmp/rp7-r4-qa.vEBNeC/imm/sub count=2
 UNSAFE_PATH_RCS mutant_stop=3 suppressed_render_fail=1 real_find_fail=1
-MUTANT_RP7_tool name=stat path=/tmp/rp7-r4-qa.JNbQNz/tools/stat owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute
-RP7_tool name=stat path=/tmp/rp7-r4-qa.JNbQNz/tools/stat owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
-RP7_tool name=readlink path=/tmp/rp7-r4-qa.JNbQNz/tools/readlink owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
-RP7_tool name=env path=/tmp/rp7-r4-qa.JNbQNz/tools/env owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
-RP7_tool name=find path=/tmp/rp7-r4-qa.JNbQNz/tools/find owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
-RP7_tool name=sha256sum path=/tmp/rp7-r4-qa.JNbQNz/tools/sha256sum owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
-RP7_tool name=systemctl path=/tmp/rp7-r4-qa.JNbQNz/tools/systemctl owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
-RP7_tool name=ss path=/tmp/rp7-r4-qa.JNbQNz/tools/ss owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
-RP7_tool name=curl path=/tmp/rp7-r4-qa.JNbQNz/tools/curl owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
-RP7_tool name=timeout path=/tmp/rp7-r4-qa.JNbQNz/tools/timeout owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
-RP7_tool name=python3 path=/tmp/rp7-r4-qa.JNbQNz/tools/python3 owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
+MUTANT_RP7_tool name=stat path=/tmp/rp7-r4-qa.vEBNeC/tools/stat owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute
+RP7_tool name=stat path=/tmp/rp7-r4-qa.vEBNeC/tools/stat owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
+RP7_tool name=readlink path=/tmp/rp7-r4-qa.vEBNeC/tools/readlink owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
+RP7_tool name=env path=/tmp/rp7-r4-qa.vEBNeC/tools/env owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
+RP7_tool name=find path=/tmp/rp7-r4-qa.vEBNeC/tools/find owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
+RP7_tool name=sha256sum path=/tmp/rp7-r4-qa.vEBNeC/tools/sha256sum owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
+RP7_tool name=systemctl path=/tmp/rp7-r4-qa.vEBNeC/tools/systemctl owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
+RP7_tool name=ss path=/tmp/rp7-r4-qa.vEBNeC/tools/ss owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
+RP7_tool name=curl path=/tmp/rp7-r4-qa.vEBNeC/tools/curl owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
+RP7_tool name=timeout path=/tmp/rp7-r4-qa.vEBNeC/tools/timeout owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
+RP7_tool name=python3 path=/tmp/rp7-r4-qa.vEBNeC/tools/python3 owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
 TOOL_ATTESTATION mutant_rc=0 mutant_attestation_fields=0 production_rc=0 self=4 bound_instrument=6 self_names=stat,env,sha256sum,timeout,
-RP7_STOP reason=tool_not_evaluable tool=python3 detail=path_metadata_mismatch path=/tmp/rp7-r4-qa.JNbQNz/tools/python3 kind=symlink mode=755 owner_numeric=0:0 expected=regular,any,0:0
+RP7_STOP reason=tool_not_evaluable tool=python3 detail=path_metadata_mismatch path=/tmp/rp7-r4-qa.vEBNeC/tools/python3 kind=symlink mode=755 owner_numeric=0:0 expected=regular,any,0:0
 TRUSTED_PYTHON_PIN symlinked_pin_rc=3 symlink_rejected=1
 REAL_CHARDEV raw=[character special file] token=[other]
 MUTANT_B3_STOP reason=path_not_evaluable path=/ detail=root_kind_character special file
@@ -1732,13 +2290,13 @@ B1_STOP reason=interpreter_object_unbound kind=other target=none
 KIND_TOKEN_RCS real_chardev=0 root_kind_stop=3 interpreter_kind_stop=3 root_token_ok=1 interpreter_token_ok=1
 TIMEOUT_ENV mutant_marker=1 mutant_vars=103 production_marker=0 production_vars=10
 B3_STOP reason=sweep_budget_exceeded root=/fixture elapsed_s=8 elapsed_ms=8070 budget_s=2
-B3_STOP reason=sweep_budget_exceeded root=/fixture elapsed_s=2 elapsed_ms=2040 budget_s=2
-TIMEOUT_RCS mutant=3 production=3 mutant_wall_s=8 production_wall_s=2 budget_s=2 child_sleep_s=8
-B1_interpreter path=/tmp/rp7-r4-qa.JNbQNz/venv/bin/python object=non_symlink_regular preexec_binding=component_and_mount_window_closed exec_binding=separate_bounded_exec version_family=3.12 env=cleared isolated=yes
+B3_STOP reason=sweep_budget_exceeded root=/fixture elapsed_s=2 elapsed_ms=2180 budget_s=2
+TIMEOUT_RCS mutant=3 production=3 mutant_wall_s=9 production_wall_s=2 budget_s=2 child_sleep_s=8
+B1_interpreter path=/tmp/rp7-r4-qa.vEBNeC/venv/bin/python object=non_symlink_regular preexec_binding=component_and_mount_window_closed exec_binding=separate_bounded_exec version_family=3.12 env=cleared isolated=yes
 B1_STOP reason=interpreter_object_unbound kind=symlink target=/decoy/target
 B1_STOP reason=interpreter_object_unbound kind=symlink target=/decoy B1_interpreter path=spoofed exec=ok
 INTERPRETER_RCS regular_pass=0 symlink_stop=3 cr_stop=3 cr_forged_lines=0 cr_single_sanitised_line=1
-FORGE_FIXTURES venv_rc=0,0 pth=[import os,sys; open(r"C:\Users\BARSEM~1\AppData\Local\Temp\rp7-r4-qa.JNbQNz\pth.marker","w").write("1"); sys.stdout.write("OK fields=8"+chr(10)); sys.stdout.flush(); os._exit(0)] sitecustomize_lines=5
+FORGE_FIXTURES venv_rc=0,0 pth=[import os,sys; open(r"C:\Users\BARSEM~1\AppData\Local\Temp\rp7-r4-qa.vEBNeC\pth.marker","w").write("1"); sys.stdout.write("OK fields=8"+chr(10)); sys.stdout.flush(); os._exit(0)] sitecustomize_lines=5
 B5_status http=200 json=strict required_fields=8 flags=expected body_sha256=0000000000000000000000000000000000000000000000000000000000000000 content=not_printed
 B5_FAIL reason=flag_mismatch field=state observed_sha256=b30c3a9662f46e65f2b937b628583be2bff0e37e7466aa3b4bd988740310a913 expected=preregistered_typed_value
 B5_FAIL reason=flag_mismatch field=state observed_sha256=b30c3a9662f46e65f2b937b628583be2bff0e37e7466aa3b4bd988740310a913 expected=preregistered_typed_value
@@ -1758,26 +2316,26 @@ B6_FAIL reason=nonloopback_listener addr=0.0.0.0
 B6_STOP reason=listener_inventory_unreadable_or_unparseable rc=0 detail=table_grammar
 B6_STOP reason=listener_inventory_unreadable_or_unparseable rc=0 detail=table_grammar
 B6_STOP reason=listener_inventory_unreadable_or_unparseable rc=0 detail=table_grammar
-B6_listener_inventory rows=2 port_8790_rows=1 evidence_file=/tmp/rp7-r4-qa.JNbQNz/ss-wccomplete-green/ss.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
+B6_listener_inventory rows=2 port_8790_rows=1 bytes=70 evidence_file=/tmp/rp7-r4-qa.vEBNeC/ss-wccomplete-green/ss.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
 B6_FAIL reason=nonloopback_listener addr=0.0.0.0
-B6_listener_inventory rows=2 port_8790_rows=1 evidence_file=/tmp/rp7-r4-qa.JNbQNz/ss-good-green/ss.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
+B6_listener_inventory rows=2 port_8790_rows=1 bytes=72 evidence_file=/tmp/rp7-r4-qa.vEBNeC/ss-good-green/ss.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
 B6_listener_set port=8790 count=1 local=127.0.0.1 wildcard=none table=complete
 LISTENER_ORDER red_wildcard_first_rc=1 red_malformed_first_rc=3 green_wildcard_first_rc=3 green_malformed_first_rc=3 expected_both_stop=3
 LISTENER_COMPLETE_TABLE wildcard_fail_rc=1 good_rc=0 inventory_before_verdict=1
-B1_metadata_universe root=/tmp/rp7-r4-qa.JNbQNz/f3-clean/venv/lib/python3.12/site-packages entries=3 dist_info_dirs=2 non_metadata_entries=1 enumeration=unfiltered_maxdepth_1 universe=explicit_dist_info_only
-B1_metadata_preflight root=/tmp/rp7-r4-qa.JNbQNz/f3-clean/venv/lib/python3.12/site-packages dist_info_dirs=2 complete=yes readable=yes
-B1_metadata_preflight root=/tmp/rp7-r4-qa.JNbQNz/f3-egg/venv/lib/python3.12/site-packages dist_info_dirs=2 complete=yes readable=yes
-B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.JNbQNz/f3-egg/venv/lib/python3.12/site-packages/ghost.egg-info format=egg_info
-B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.JNbQNz/f3-pth/venv/lib/python3.12/site-packages/evil.pth format=pth
-B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.JNbQNz/f3-hook/venv/lib/python3.12/site-packages/sitecustomize.py format=startup_hook
-B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.JNbQNz/f3-zip/venv/lib/python3.12/site-packages/wheelhouse.zip format=zip
-B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.JNbQNz/f3-filedi/venv/lib/python3.12/site-packages/broken-1.0.dist-info format=dist_info_kind_regular
-B1_FAIL reason=distribution_metadata_absent path=/tmp/rp7-r4-qa.JNbQNz/f3-absent/venv/lib/python3.12/site-packages/gone-1.0.dist-info/METADATA
-B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.JNbQNz/f3-unread/venv/lib/python3.12/site-packages/demo_pkg-1.0.dist-info/METADATA rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/f3-ev-t09/ro.0049.lstat.stderr
-B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.JNbQNz/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info detail=dist_info_kind_character special file
-B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.JNbQNz/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info format=dist_info_kind_other
-B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.JNbQNz/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info/METADATA detail=kind_character special file
-B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.JNbQNz/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info/METADATA detail=kind_other
+B1_metadata_universe root=/tmp/rp7-r4-qa.vEBNeC/f3-clean/venv/lib/python3.12/site-packages entries=3 dist_info_dirs=2 non_metadata_entries=1 enumeration=unfiltered_maxdepth_1 universe=explicit_dist_info_only
+B1_metadata_preflight root=/tmp/rp7-r4-qa.vEBNeC/f3-clean/venv/lib/python3.12/site-packages dist_info_dirs=2 complete=yes readable=yes
+B1_metadata_preflight root=/tmp/rp7-r4-qa.vEBNeC/f3-egg/venv/lib/python3.12/site-packages dist_info_dirs=2 complete=yes readable=yes
+B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.vEBNeC/f3-egg/venv/lib/python3.12/site-packages/ghost.egg-info format=egg_info
+B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.vEBNeC/f3-pth/venv/lib/python3.12/site-packages/evil.pth format=pth
+B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.vEBNeC/f3-hook/venv/lib/python3.12/site-packages/sitecustomize.py format=startup_hook
+B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.vEBNeC/f3-zip/venv/lib/python3.12/site-packages/wheelhouse.zip format=zip
+B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.vEBNeC/f3-filedi/venv/lib/python3.12/site-packages/broken-1.0.dist-info format=dist_info_kind_regular
+B1_FAIL reason=distribution_metadata_absent path=/tmp/rp7-r4-qa.vEBNeC/f3-absent/venv/lib/python3.12/site-packages/gone-1.0.dist-info/METADATA
+B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.vEBNeC/f3-unread/venv/lib/python3.12/site-packages/demo_pkg-1.0.dist-info/METADATA rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.vEBNeC/f3-ev-t09/ro.0049.lstat.stderr
+B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.vEBNeC/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info detail=dist_info_kind_character special file
+B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.vEBNeC/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info format=dist_info_kind_other
+B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.vEBNeC/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info/METADATA detail=kind_character special file
+B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.vEBNeC/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info/METADATA detail=kind_other
 METADATA_UNIVERSE_RCS clean=0 egg_red=0 egg_green=3 pth=3 hook=3 zip=3 dist_info_file=3 member_absent=1 member_unreadable=3 chardev_dir_red=3 chardev_dir=3 chardev_member_red=3 chardev_member=3
 B1_STOP reason=metadata_universe_unexpected stage=verifier format=egg_info name_sha256=cf1057a30e78603c62e83b18e1c5697aca2bfeac81a18a4707b550f2e8b99132
 B1_STOP reason=metadata_universe_unexpected stage=verifier format=startup_hook name_sha256=1dc3332b767b1b60ea953e5dfdd81df90bf3449d9c313c945bbdb29e78f45ff8
@@ -1785,21 +2343,21 @@ B1_lock_parity result=pass packages=2 output=structurally_parsed verifier_preexe
 DRIVER_UNIVERSE egg_rc=3 hook_rc=3 clean_rc=0
 B5B6_DECLARED_ORDER wpi_assert_netns_binding,wpi_assert_status,wpi_assert_listener_set,
 B6_netns caller=net:[100] service=net:[100] mainpid=189813 binding=equal
-B6_listener_inventory rows=1 port_8790_rows=1 evidence_file=/tmp/rp7-r4-qa.JNbQNz/order-red/3.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
+B6_listener_inventory rows=1 port_8790_rows=1 bytes=37 evidence_file=/tmp/rp7-r4-qa.vEBNeC/order-red/3.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
 B6_FAIL reason=listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790
 B6_netns caller=net:[100] service=net:[100] mainpid=189813 binding=equal
 B5_FAIL reason=status_endpoint_unexpected_http code=500
 TWO_DEVIATION red_rc=1 red_first_result=[B6_FAIL reason=listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790] green_rc=1 green_first_result=[B5_FAIL reason=status_endpoint_unexpected_http code=500]
-B1a_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.JNbQNz/f5/release/IBKR_PAPER_BRIDGE/requirements.lock rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/f5-ev-r17unread_red/ro.0023.lstat.stderr
-B1a_STOP reason=installed_lock_unreadable path=/tmp/rp7-r4-qa.JNbQNz/f5/release/IBKR_PAPER_BRIDGE/requirements.lock rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/f5-ev-r17unread/ro.0023.lstat.stderr
-B1_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.JNbQNz/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/f5-ev-r19aunread_red/ro.0027.lstat.stderr
-B1_STOP reason=verifier_unreadable path=/tmp/rp7-r4-qa.JNbQNz/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/f5-ev-r19aunread/ro.0027.lstat.stderr
-B1a_FAIL reason=installed_lock_object_unexpected path=/tmp/rp7-r4-qa.JNbQNz/f5/release/IBKR_PAPER_BRIDGE/requirements.lock kind=directory
+B1a_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.vEBNeC/f5/release/IBKR_PAPER_BRIDGE/requirements.lock rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.vEBNeC/f5-ev-r17unread_red/ro.0023.lstat.stderr
+B1a_STOP reason=installed_lock_unreadable path=/tmp/rp7-r4-qa.vEBNeC/f5/release/IBKR_PAPER_BRIDGE/requirements.lock rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.vEBNeC/f5-ev-r17unread/ro.0023.lstat.stderr
+B1_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.vEBNeC/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.vEBNeC/f5-ev-r19aunread_red/ro.0027.lstat.stderr
+B1_STOP reason=verifier_unreadable path=/tmp/rp7-r4-qa.vEBNeC/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.vEBNeC/f5-ev-r19aunread/ro.0027.lstat.stderr
+B1a_FAIL reason=installed_lock_object_unexpected path=/tmp/rp7-r4-qa.vEBNeC/f5/release/IBKR_PAPER_BRIDGE/requirements.lock kind=directory
 B1a_FAIL reason=installed_lock_object_unexpected kind=directory
-B1a_FAIL reason=path_metadata_mismatch path=/tmp/rp7-r4-qa.JNbQNz/f5/release/IBKR_PAPER_BRIDGE/requirements.lock kind=regular mode=644 owner_numeric=1000:1000 expected=regular,any,0:0
+B1a_FAIL reason=path_metadata_mismatch path=/tmp/rp7-r4-qa.vEBNeC/f5/release/IBKR_PAPER_BRIDGE/requirements.lock kind=regular mode=644 owner_numeric=1000:1000 expected=regular,any,0:0
 B1a_FAIL reason=installed_lock_owner_unexpected owner_numeric=1000:1000 expected=0:0
-B1_FAIL reason=path_metadata_mismatch path=/tmp/rp7-r4-qa.JNbQNz/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py kind=regular mode=644 owner_numeric=1000:1000 expected=regular,any,0:0
-B1_FAIL reason=verifier_owner_unexpected path=/tmp/rp7-r4-qa.JNbQNz/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py owner_numeric=1000:1000 expected=0:0
+B1_FAIL reason=path_metadata_mismatch path=/tmp/rp7-r4-qa.vEBNeC/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py kind=regular mode=644 owner_numeric=1000:1000 expected=regular,any,0:0
+B1_FAIL reason=verifier_owner_unexpected path=/tmp/rp7-r4-qa.vEBNeC/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py owner_numeric=1000:1000 expected=0:0
 ROW_GRAMMAR_RCS r17_unread_red=3 r17_unread=3 r19a_unread_red=3 r19a_unread=3 r17_kind_red=1 r17_kind=1 r17_owner_red=1 r17_owner=1 r19a_owner_red=1 r19a_owner=1
 MUTANT_MOUNT_POINT=/mnt/*
 RP7_mount_table parsed=yes records=1 content=not_printed
@@ -1814,19 +2372,19 @@ B5_STOP reason=schema_unexpected field=state_version
 JSON_RCS mutant_wrong_type=3 good=0 nan=3 infinity=3 wrong_type=1 top_array=3 mismatch=1 missing=3
 MUTANT_SS_ARGV=listeners /usr/bin/ss -H -ltn sport = :8790
 PRODUCTION_SS_ARGV=listeners /usr/bin/ss -H -ltn
-B6_listener_inventory rows=2 port_8790_rows=1 evidence_file=/tmp/rp7-r4-qa.JNbQNz/ev-listener-green/ss.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
+B6_listener_inventory rows=2 port_8790_rows=1 bytes=72 evidence_file=/tmp/rp7-r4-qa.vEBNeC/ev-listener-green/ss.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
 B6_listener_set port=8790 count=1 local=127.0.0.1 wildcard=none table=complete
-B6_listener_inventory rows=1 port_8790_rows=1 evidence_file=/tmp/rp7-r4-qa.JNbQNz/ev-listener-addr/ss.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
+B6_listener_inventory rows=1 port_8790_rows=1 bytes=37 evidence_file=/tmp/rp7-r4-qa.vEBNeC/ev-listener-addr/ss.out content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes
 B6_FAIL reason=listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790
 LISTENER_RCS mutant_filtered=0 production_full_inventory=0 non_preregistered_address=1
-RP7_STOP reason=system_manager_unreachable rc=5 detail=manager_query_nonzero diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/ev-manager/ro.0001.system_manager.stderr
-B3_STOP reason=walk_incomplete root=/fixture rc=1 detail=diagnostic_captured diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/ev-partial/ro.0001.partial.stderr partial_stdout_discarded=/tmp/rp7-r4-qa.JNbQNz/ev-partial/ro.0001.partial.stdout
+RP7_STOP reason=system_manager_unreachable rc=5 detail=manager_query_nonzero diagnostic_file=/tmp/rp7-r4-qa.vEBNeC/ev-manager/ro.0001.system_manager.stderr
+B3_STOP reason=walk_incomplete root=/fixture rc=1 detail=diagnostic_captured diagnostic_file=/tmp/rp7-r4-qa.vEBNeC/ev-partial/ro.0001.partial.stderr partial_stdout_discarded=/tmp/rp7-r4-qa.vEBNeC/ev-partial/ro.0001.partial.stdout
 B1_FAIL reason=lock_installed_parity observed=positively_distinguished_named_set_mismatch
-B1_STOP reason=verifier_not_evaluable rc=1 detail=unclassified_verifier_result diagnostic_file=/tmp/rp7-r4-qa.JNbQNz/ev-parity-stop/err
+B1_STOP reason=verifier_not_evaluable rc=1 detail=unclassified_verifier_result diagnostic_file=/tmp/rp7-r4-qa.vEBNeC/ev-parity-stop/err
 B6_STOP reason=netns_mismatch caller=net:[100] service=net:[200]
 B5_FAIL reason=status_endpoint_unexpected_http code=500
 REGRESSION_RCS manager_stop=3 partial_walk_stop=3 parity_fail=1 parity_generic_stop=3 netns_stop=3 http_fail=1
-BASH_N_RC=0 BYTES=77179 SHA256=393a16ce264b467bec180a2106390e6dcee4dc2605fd019871270fda11d3b0ee
+BASH_N_RC=0 BYTES=88460 SHA256=6586698c707601c70a3e99903dc789ee2ee71fd2bae1bc1763adc52f72a40709
 QA_PASS all_assertions=yes
 R4_FENCE_RC=0
 ```
@@ -1842,18 +2400,24 @@ bound, which the round-4 fence never observed - that is what the round-5 F1 arm 
 
 ### Literal re-run of the published command against this document
 
-After the transcripts above were pasted in, the published command was extracted from **this
-file, as committed** and executed again verbatim. It returned rc 0 with empty stderr, both
-fences printed `QA_PASS all_assertions=yes` (`R5_FENCE_RC=0`, `R4_FENCE_RC=0`), and both
-extracted bodies re-derived the same digests and byte counts as the recorded run
-(`0263067e...5b62f` / 20050 B and `94101ef7...56e0` / 76710 B). Pasting the transcripts
-changed no byte inside either marker range, which is why the digests are stable.
+The published command was executed verbatim **three** times: once to produce the transcripts
+above (214 s), once after they had been pasted in (186 s), and once more against **this file
+as delivered**, after the last prose edit (179 s). Every run returned rc 0 with empty stderr
+and 38464 stdout bytes; all three fences printed `QA_PASS all_assertions=yes`
+(`R6_FENCE_RC=0`, `R5_FENCE_RC=0`, `R4_FENCE_RC=0`) followed by the command's own summary
+line `PUBLISHED_COMMAND_RESULT=pass fences=3 per_fence_bound_s=900 aggregate_bound_s=2700`;
+and every run re-derived the same three fence-body digests and byte counts
+(`022607b8...0130a` / 26681 B, `71907795...3c9e2` / 20050 B, `94101ef7...56e0` / 76710 B).
+Pasting transcripts and editing prose changed no byte inside any marker range, which is why
+the digests are stable across all three runs. The longest run is an order of magnitude inside
+the enforced 900 s per-fence bound.
 
-A diff of the two runs, ignoring the `mktemp` scratch names, is confined to three lines and
-they are the only non-deterministic outputs in the suite - the measured wall clock of the
-budget arm: `elapsed_ms=8070` versus `8060`, `elapsed_ms=2040` versus `2200`, and
-`production_wall_s=2` versus `3`. Every rc, digest, reason token and result line is
-identical.
+A diff of the recorded run against the final one, ignoring the `mktemp` scratch names, is
+confined to two lines, and they are the only non-deterministic outputs in the suite - the
+measured wall clock of the budget arm: `elapsed_ms=2180` versus `2050` and `mutant_wall_s=9`
+versus `8`. Every rc, digest, reason token and result line is identical. (The second run
+differed in one further line, a round-4 fixture path that embeds its own Windows scratch
+directory name.)
 
 ## What this QA does not establish
 
@@ -1861,10 +2425,35 @@ identical.
   freeze-gate constants (`WPI_FIXED_ATTESTED_MOUNT_PROJECTION_SHA256`,
   `WPI_FIXED_TRUSTED_PYTHON`, `WPI_FIXED_EVIDENCE_ROOT`) are still `<PIN-AT-FREEZE>` and
   deliberately refuse the accepting arm until the deploy channel supplies them.
+- **The status body leaf is written by name, not by descriptor.** Every other shell-side
+  write in the block goes through the descriptor its `O_CREAT|O_EXCL` open returned, which is
+  what the round-6 F5 arm measures. `curl --output <path>` is handed a name, so the one leaf
+  this block cannot bind that way is `ro.status.body`: it is create-once allocated and then
+  opened again, by name, by curl. Substituting that name between the two steps is the same
+  route the recovered test demonstrated for the capture leaves, and it is not closed for this
+  leaf. Closing it needs a curl invocation that writes to an inherited descriptor, which is a
+  design change, not a repair.
+- **Readers re-open by name.** The write side is bound to the created object; the read side
+  (`wpi_single_record`, the listener reader, `wpi_require_empty_file`, `wpi_sha_file`) opens
+  the leaf path again after the child has run. A concurrent writer with write access to
+  `EV_DIR` could therefore still present a different object to the reader. What the block
+  establishes about that content is only what its record grammar establishes - which is why
+  every reader STOPs on a record it cannot parse rather than adjudicating it. A per-capture
+  `/proc/self/fd` identity re-check was considered and rejected: it makes every capture spawn
+  a second capture to stat the first, which is recursive, and doubles both the child count
+  and the leaf count. Reading through a descriptor opened at creation is the real fix and is
+  a signature change to every reader in the block.
+- An ownership/mode precondition on `EV_DIR` (which would bound *who* could race) was also
+  considered and rejected: the mode of the evidence directory is not a preregistered input,
+  RP0-BOOTSTRAP allocates it, and a block that STOPs on a group-writable evidence directory
+  would fail the run for a condition no accepted document requires.
 - The `evidence_root=<root> root_binding=frozen_prefix_descent` fields on the
   `RP7_evidence_bound` line are rendered from the constant that
   `wpi_assert_prerequisites` proved; that proof is falsified above, the rendering is not
   separately falsified here.
+- The IPv6 address grammar admits any literal that satisfies the group/compression/zone
+  rules. It is a grammar check, not an assertion that the kernel would have produced that
+  particular rendering, and no arm feeds a real IPv6 listener from a real `ss`.
 - No real bind or overlay mount, no real staging host, no real `/proc/<MainPID>/ns/net`,
   no root, no POSIX symlink, no character device at an arbitrary path.
 - `shellcheck` is not installed on this workstation; no ShellCheck result is claimed.

@@ -12,6 +12,15 @@
 # descendant of the frozen evidence root below <REMOTE_BASE>; every leaf is then
 # proven to be inside EV_DIR. No host object outside that tree is changed, and
 # no path outside it is opened for writing - including /dev/null.
+# Every shell-side write goes to a descriptor returned by the O_CREAT|O_EXCL
+# open that created the leaf, and never to a re-resolved name: `noclobber`
+# proves only that the name did not exist at allocation, which is not the same
+# fact as "the object written is the object allocated". The one write this
+# block cannot bind that way is curl's `--output <path>` for the status body,
+# because curl is given a name, not a descriptor; that leaf is create-once
+# allocated and re-opened by name by curl. Readers re-open by name too. Both
+# residuals are stated in SELF_QA_RP7.md rather than covered by the sentence
+# above.
 # File content is never printed: result lines contain paths, metadata, counts,
 # classifications, and digests only.
 #
@@ -32,6 +41,10 @@ WPI_CAP_ERR=""
 WPI_CAP_RC=0
 WPI_CAP_ELAPSED_MS=0
 WPI_READ_DIAG=""
+WPI_READ_DIAG_FD=""
+WPI_LEAF_FD=""
+WPI_EP_ADDR=""
+WPI_EP_PORT=""
 WPI_META_KIND=""
 WPI_META_MODE=""
 WPI_META_OWNER=""
@@ -67,6 +80,16 @@ WPI_FIXED_EVIDENCE_ROOT='<PIN-AT-FREEZE>'
 WPI_VENV_WALK_COMPLETE=no
 WPI_INTERPRETER_RAN=no
 WPI_METADATA_READABLE=no
+# The row-21 response schema, declared exactly once. The parent needs it to
+# decide whether a result record its own child could have produced is being
+# adjudicated, and the child needs it to answer at all; declaring it twice would
+# let the two drift, so it is passed to the child as argv[2] and the child
+# refuses to answer unless its own table is equal to it (pattern 11). Round 5's
+# parent checked only that the record contained no disallowed characters, so a
+# truncated `TYPE state str` - a record naming no expected type, which the child
+# cannot emit - became an rc-1 host-state FAIL with an empty `expected_type=`
+# field (Codex round-5 part B finding 2).
+WPI_STATUS_SCHEMA='state:str state_version:int mode:str network:str exchange_conn:str exchange_enabled:bool credential_lookup:str arm_enabled:bool'
 
 wpi_stop() { printf '%s_STOP reason=%s\n' "$1" "${*:2}"; exit 3; }
 wpi_fail() {
@@ -138,11 +161,12 @@ wpi_require_path_structure() {
 }
 
 wpi_write_text_leaf() {
-    local value="$1" leaf
+    local value="$1" leaf fd
     WPI_PROBE_SEQ=$(( WPI_PROBE_SEQ + 1 ))
     leaf="$EV_DIR/ro.$(printf '%04d' "$WPI_PROBE_SEQ").suppressed_value.bin"
-    wpi_alloc_leaf "$leaf"
-    printf '%s' "$value" >>"$leaf" || wpi_stop RP7 "capture_leaf_write_failed leaf=$leaf"
+    wpi_open_leaf "$leaf"; fd="$WPI_LEAF_FD"
+    printf '%s' "$value" >&"$fd" || wpi_stop RP7 "capture_leaf_write_failed leaf=$leaf"
+    exec {fd}>&-
     wpi_sha_file RP7 suppressed_value_unreadable "$leaf"
 }
 
@@ -202,11 +226,33 @@ wpi_alloc_leaf() {
     fi
 }
 
+# Allocate a leaf and KEEP the descriptor the creating open returned. The
+# create-once test is the same `noclobber` test as above and STOPs with the same
+# reason, but the object is not let go of between the create and the write: the
+# recovered round-5 fixture replaced a freshly allocated leaf with a hard link to
+# a file outside the evidence tree in exactly that window, and the capture then
+# wrote its payload through the substituted name at rc 0 with no STOP. A name is
+# not an object. Every shell-side write in this block goes through the descriptor
+# this function returns, so the object written is the object created.
+# The redirection is guarded by `|| rc=$?` because a failed `exec` redirection is
+# a shell error, not a command failure, and would otherwise reach the ERR trap
+# as an unadjudicated status instead of this reason.
+wpi_open_leaf() {
+    local leaf="$1" rc=0
+    case "$leaf" in "$EV_DIR"/*) : ;; *) wpi_stop RP7 "capture_path_outside_evidence leaf=$leaf ev_dir=$EV_DIR" ;; esac
+    WPI_LEAF_FD=""
+    # stderr is CLOSED, not redirected to /dev/null, for the reason above.
+    set -o noclobber
+    { exec {WPI_LEAF_FD}>"$leaf"; } 2>&- || rc=$?
+    set +o noclobber
+    [ "$rc" -eq 0 ] && [ -n "$WPI_LEAF_FD" ] || wpi_stop RP7 "capture_leaf_not_create_once leaf=$leaf"
+}
+
 wpi_alloc_read_diag() {
     local label="$1"
     WPI_PROBE_SEQ=$(( WPI_PROBE_SEQ + 1 ))
     WPI_READ_DIAG="$EV_DIR/ro.$(printf '%04d' "$WPI_PROBE_SEQ").$label.read.stderr"
-    wpi_alloc_leaf "$WPI_READ_DIAG"
+    wpi_open_leaf "$WPI_READ_DIAG"; WPI_READ_DIAG_FD="$WPI_LEAF_FD"
 }
 
 # Run one evidence-producing child from EV_DIR, with a cleared environment,
@@ -216,18 +262,20 @@ wpi_alloc_read_diag() {
 # bounded - runs under the same cleared environment as the probe it bounds.
 wpi_capture() {
     local label="$1"; shift
-    local start end rc=0
+    local start end rc=0 ofd efd
     WPI_PROBE_SEQ=$(( WPI_PROBE_SEQ + 1 ))
     WPI_CAP_OUT="$EV_DIR/ro.$(printf '%04d' "$WPI_PROBE_SEQ").$label.stdout"
     WPI_CAP_ERR="$EV_DIR/ro.$(printf '%04d' "$WPI_PROBE_SEQ").$label.stderr"
-    wpi_alloc_leaf "$WPI_CAP_OUT"
-    wpi_alloc_leaf "$WPI_CAP_ERR"
+    wpi_open_leaf "$WPI_CAP_OUT"; ofd="$WPI_LEAF_FD"
+    wpi_open_leaf "$WPI_CAP_ERR"; efd="$WPI_LEAF_FD"
     wpi_clock_ms; start="$WPI_LINE"
     (
         cd "$EV_DIR" || exit 125
         exec "$WPI_ENV" -i LC_ALL=C PATH=/usr/bin:/bin HOME=/nonexistent TMPDIR="$EV_DIR" \
             "$WPI_TIMEOUT" --signal=TERM --kill-after=5s "${WPI_SWEEP_BUDGET_S}s" "$@"
-    ) >"$WPI_CAP_OUT" 2>"$WPI_CAP_ERR" || rc=$?
+    ) >&"$ofd" 2>&"$efd" || rc=$?
+    exec {ofd}>&-
+    exec {efd}>&-
     wpi_clock_ms; end="$WPI_LINE"
     WPI_CAP_RC="$rc"
     WPI_CAP_ELAPSED_MS=$(( end - start ))
@@ -244,19 +292,19 @@ wpi_require_empty_file() {
 # record only when newline-terminated, and requires clean EOF with no second
 # populated record. The source is already a regular create-once evidence leaf.
 wpi_single_record() {
-    local prefix="$1" reason="$2" file="$3" fd first="" extra="" rc=0 diag
-    wpi_alloc_read_diag single_record; diag="$WPI_READ_DIAG"
+    local prefix="$1" reason="$2" file="$3" fd first="" extra="" rc=0 diag dfd
+    wpi_alloc_read_diag single_record; diag="$WPI_READ_DIAG"; dfd="$WPI_READ_DIAG_FD"
     exec {fd}<"$file" || wpi_stop "$prefix" "$reason detail=open_failed source=$file"
-    IFS= read -r -u "$fd" first 2>>"$diag" || rc=$?
+    IFS= read -r -u "$fd" first 2>&"$dfd" || rc=$?
     if [ "$rc" -ne 0 ]; then
-        exec {fd}<&-
+        exec {fd}<&-; exec {dfd}>&-
         wpi_require_empty_file "$prefix" "$reason detail=hard_read_error source=$file" "$diag"
         [ -z "$first" ] && wpi_stop "$prefix" "$reason detail=empty_or_read_error source=$file read_rc=$rc"
         wpi_stop "$prefix" "$reason detail=unterminated_final_record source=$file read_rc=$rc"
     fi
     rc=0
-    IFS= read -r -u "$fd" extra 2>>"$diag" || rc=$?
-    exec {fd}<&-
+    IFS= read -r -u "$fd" extra 2>&"$dfd" || rc=$?
+    exec {fd}<&-; exec {dfd}>&-
     wpi_require_empty_file "$prefix" "$reason detail=hard_read_error source=$file" "$diag"
     [ "$rc" -ne 0 ] || wpi_stop "$prefix" "$reason detail=multiple_records source=$file"
     [ -z "$extra" ] || wpi_stop "$prefix" "$reason detail=unterminated_extra_record source=$file"
@@ -385,15 +433,15 @@ wpi_walk_components() {
 }
 
 wpi_parse_mountinfo() {
-    local file="$1" fd line="" rc=0 records=0 pre post diag seen_ids=" "
+    local file="$1" fd line="" rc=0 records=0 pre post diag dfd seen_ids=" "
     local device root mount_point fstype source
     WPI_MI_DEVICE=(); WPI_MI_ROOT=(); WPI_MI_POINT=(); WPI_MI_FSTYPE=(); WPI_MI_SOURCE=()
-    wpi_alloc_read_diag mount_table; diag="$WPI_READ_DIAG"
+    wpi_alloc_read_diag mount_table; diag="$WPI_READ_DIAG"; dfd="$WPI_READ_DIAG_FD"
     exec {fd}<"$file" || wpi_stop RP7 "mount_table_unreadable path=$file detail=open_failed"
     while true; do
-        line=""; rc=0; IFS= read -r -u "$fd" line 2>>"$diag" || rc=$?
+        line=""; rc=0; IFS= read -r -u "$fd" line 2>&"$dfd" || rc=$?
         if [ "$rc" -ne 0 ]; then
-            exec {fd}<&-
+            exec {fd}<&-; exec {dfd}>&-
             wpi_require_empty_file RP7 "mount_table_read_error path=$file records=$records" "$diag"
             [ -z "$line" ] || wpi_stop RP7 "mount_table_unterminated_final_record path=$file records=$records"
             break
@@ -422,22 +470,21 @@ wpi_parse_mountinfo() {
 }
 
 wpi_capture_mountinfo_snapshot() {
-    local snapshot infd outfd line="" rc=0 diag
+    local snapshot infd outfd line="" rc=0 diag dfd
     WPI_MOUNT_SNAPSHOT_SEQ=$(( WPI_MOUNT_SNAPSHOT_SEQ + 1 ))
     snapshot="$EV_DIR/ro.mountinfo.$(printf '%04d' "$WPI_MOUNT_SNAPSHOT_SEQ").snapshot"
-    wpi_alloc_leaf "$snapshot"
-    wpi_alloc_read_diag mountinfo_snapshot; diag="$WPI_READ_DIAG"
-    exec {infd}</proc/self/mountinfo || wpi_stop RP7 "mount_table_unreadable path=/proc/self/mountinfo detail=open_failed"
-    exec {outfd}>>"$snapshot" || { exec {infd}<&-; wpi_stop RP7 "mount_table_unreadable path=$snapshot detail=evidence_open_failed"; }
+    wpi_open_leaf "$snapshot"; outfd="$WPI_LEAF_FD"
+    wpi_alloc_read_diag mountinfo_snapshot; diag="$WPI_READ_DIAG"; dfd="$WPI_READ_DIAG_FD"
+    exec {infd}</proc/self/mountinfo || { exec {outfd}>&-; exec {dfd}>&-; wpi_stop RP7 "mount_table_unreadable path=/proc/self/mountinfo detail=open_failed"; }
     while true; do
-        line=""; rc=0; IFS= read -r -u "$infd" line 2>>"$diag" || rc=$?
+        line=""; rc=0; IFS= read -r -u "$infd" line 2>&"$dfd" || rc=$?
         if [ "$rc" -ne 0 ]; then
-            exec {infd}<&-; exec {outfd}>&-
+            exec {infd}<&-; exec {outfd}>&-; exec {dfd}>&-
             wpi_require_empty_file RP7 "mount_table_read_error path=/proc/self/mountinfo" "$diag"
             [ -z "$line" ] || wpi_stop RP7 "mount_table_unterminated_final_record path=/proc/self/mountinfo"
             break
         fi
-        printf '%s\n' "$line" >&"$outfd" || { exec {infd}<&-; exec {outfd}>&-; wpi_stop RP7 "mount_table_unreadable path=$snapshot detail=evidence_write_failed"; }
+        printf '%s\n' "$line" >&"$outfd" || { exec {infd}<&-; exec {outfd}>&-; exec {dfd}>&-; wpi_stop RP7 "mount_table_unreadable path=$snapshot detail=evidence_write_failed"; }
     done
     WPI_LINE="$snapshot"
 }
@@ -455,7 +502,7 @@ wpi_capture_mountinfo_snapshot() {
 #   kind=subtree_count one per root, the number of its subtree records.
 # v1 projected 18 point paths only and was therefore blind to both cases.
 wpi_build_mount_projection() {
-    local snapshot="$1" projection path mp best=-1 best_len=-1 i len shared
+    local snapshot="$1" projection pfd path mp best=-1 best_len=-1 i len shared
     local r rprefix subtree_records seen_roots=" "
     local -a points=(
         "$WPI_STAT" "$WPI_READLINK" "$WPI_ENV" "$WPI_FIND" "$WPI_SHA256SUM"
@@ -482,7 +529,7 @@ wpi_build_mount_projection() {
     wpi_parse_mountinfo "$snapshot"
     WPI_PROBE_SEQ=$(( WPI_PROBE_SEQ + 1 ))
     projection="$EV_DIR/ro.$(printf '%04d' "$WPI_PROBE_SEQ").mount_projection.tsv"
-    wpi_alloc_leaf "$projection"
+    wpi_open_leaf "$projection"; pfd="$WPI_LEAF_FD"
     for path in "${points[@]}"; do
         best=-1; best_len=-1
         for ((i=0; i<${#WPI_MI_POINT[@]}; i++)); do
@@ -503,7 +550,7 @@ wpi_build_mount_projection() {
         printf 'kind=point\tpath=%s\tdevice=%s\troot=%s\tmount_point=%s\tfstype=%s\tsource=%s\tshared_mount_point_records=%s\n' \
             "$path" "${WPI_MI_DEVICE[$best]}" "${WPI_MI_ROOT[$best]}" \
             "${WPI_MI_POINT[$best]}" "${WPI_MI_FSTYPE[$best]}" "${WPI_MI_SOURCE[$best]}" "$shared" \
-            >>"$projection" || wpi_stop RP7 "mount_projection_write_failed path=$projection"
+            >&"$pfd" || wpi_stop RP7 "mount_projection_write_failed path=$projection"
     done
     for r in "${roots[@]}"; do
         subtree_records=0
@@ -515,11 +562,12 @@ wpi_build_mount_projection() {
             printf 'kind=subtree\tsubtree_root=%s\tseq=%s\tdevice=%s\troot=%s\tmount_point=%s\tfstype=%s\tsource=%s\n' \
                 "$r" "$subtree_records" "${WPI_MI_DEVICE[$i]}" "${WPI_MI_ROOT[$i]}" \
                 "$mp" "${WPI_MI_FSTYPE[$i]}" "${WPI_MI_SOURCE[$i]}" \
-                >>"$projection" || wpi_stop RP7 "mount_projection_write_failed path=$projection"
+                >&"$pfd" || wpi_stop RP7 "mount_projection_write_failed path=$projection"
         done
         printf 'kind=subtree_count\tsubtree_root=%s\trecords=%s\n' "$r" "$subtree_records" \
-            >>"$projection" || wpi_stop RP7 "mount_projection_write_failed path=$projection"
+            >&"$pfd" || wpi_stop RP7 "mount_projection_write_failed path=$projection"
     done
+    exec {pfd}>&-
     wpi_sha_file RP7 mount_projection_unreadable "$projection"
     WPI_MOUNT_PROJECTION_DIGEST="$WPI_LINE"
     printf 'RP7_mount_projection format=normalised_path_projection_v2 points=%s roots=%s mount_records=%s raw_snapshot=%s projection=%s sha256=%s content=not_printed\n' \
@@ -713,19 +761,19 @@ wpi_run_find() {
 
 wpi_assert_tree() {
     local root="$1" label="$2" out fd path="" rc=0 writable_count=0 find_elapsed find_elapsed_s
-    local diag
+    local diag dfd
     wpi_mount_guard_begin
     wpi_walk_components B3 "$root" directory 0555 0:0
     wpi_run_find B3 "${label}_writable" "$root" -perm /222 -print0
     out="$WPI_CAP_OUT"; find_elapsed="$WPI_CAP_ELAPSED_MS"; find_elapsed_s=$(( find_elapsed / 1000 ))
     [ -r "$out" ] && [ -f "$out" ] || wpi_stop B3 "walk_incomplete root=$root detail=stdout_not_readable_regular"
     if [ -s "$out" ]; then
-        wpi_alloc_read_diag writable_paths; diag="$WPI_READ_DIAG"
+        wpi_alloc_read_diag writable_paths; diag="$WPI_READ_DIAG"; dfd="$WPI_READ_DIAG_FD"
         exec {fd}<"$out" || wpi_stop B3 "walk_incomplete root=$root detail=stdout_open_failed"
         while true; do
-            path=""; rc=0; IFS= read -r -d '' -u "$fd" path 2>>"$diag" || rc=$?
+            path=""; rc=0; IFS= read -r -d '' -u "$fd" path 2>&"$dfd" || rc=$?
             if [ "$rc" -ne 0 ]; then
-                exec {fd}<&-
+                exec {fd}<&-; exec {dfd}>&-
                 wpi_require_empty_file B3 "walk_incomplete root=$root detail=stdout_read_error" "$diag"
                 [ -z "$path" ] || wpi_stop B3 "walk_incomplete root=$root detail=unterminated_nul_record"
                 break
@@ -828,7 +876,7 @@ wpi_assert_interpreter() {
 # The trusted driver re-derives the same universe from its own scan and rejects the
 # same set, so no accepting result can rest on a format only one side enumerated.
 wpi_assert_metadata_readable() {
-    local site="$WPI_VENV_ROOT/lib/python3.12/site-packages" out fd path="" rc=0 count=0 member diag
+    local site="$WPI_VENV_ROOT/lib/python3.12/site-packages" out fd path="" rc=0 count=0 member diag dfd
     local entries=0 ignored=0 base fmt
     [ "$WPI_VENV_WALK_COMPLETE" = yes ] || wpi_stop B1 "verifier_not_evaluable rc=3 detail=venv_walk_not_complete"
     [ "$WPI_INTERPRETER_RAN" = yes ] || wpi_stop B1 "verifier_not_evaluable rc=3 detail=interpreter_not_run"
@@ -836,12 +884,12 @@ wpi_assert_metadata_readable() {
     wpi_walk_components B1 "$site" directory "" 0:0 path_absent path_metadata_mismatch fail path_binding_not_evaluable metadata_unreadable
     wpi_run_find B1 metadata_enumeration "$site" -mindepth 1 -maxdepth 1 -print0
     out="$WPI_CAP_OUT"
-    wpi_alloc_read_diag metadata_paths; diag="$WPI_READ_DIAG"
+    wpi_alloc_read_diag metadata_paths; diag="$WPI_READ_DIAG"; dfd="$WPI_READ_DIAG_FD"
     exec {fd}<"$out" || wpi_stop B1 "metadata_unreadable path=$site detail=enumeration_open_failed"
     while true; do
-        path=""; rc=0; IFS= read -r -d '' -u "$fd" path 2>>"$diag" || rc=$?
+        path=""; rc=0; IFS= read -r -d '' -u "$fd" path 2>&"$dfd" || rc=$?
         if [ "$rc" -ne 0 ]; then
-            exec {fd}<&-
+            exec {fd}<&-; exec {dfd}>&-
             wpi_require_empty_file B1 "metadata_unreadable path=$site detail=enumeration_read_error" "$diag"
             [ -z "$path" ] || wpi_stop B1 "metadata_unreadable path=$site detail=unterminated_nul_record"
             break
@@ -1081,35 +1129,143 @@ wpi_assert_netns_binding() {
 # still an immediate STOP, because that is an inability to evaluate rather than an
 # observation. Phase 2 applies the wildcard, unexpected-address and count FAILs only
 # after reader diagnostics, record termination and table grammar have all held.
+# One dotted quad, every octet complete and in range, no leading zeros. `ss -n`
+# emits canonical decimal, so a token that is not exactly that did not come from
+# the instrument this row claims to have read.
+wpi_ipv4_ok() {
+    local rest="$1" o n=0
+    case "$1" in ''|*[!0-9.]*|.*|*.|*..*) return 1 ;; esac
+    while : ; do
+        case "$rest" in *.*) o="${rest%%.*}"; rest="${rest#*.}" ;; *) o="$rest"; rest="" ;; esac
+        n=$(( n + 1 ))
+        [ "${#o}" -le 3 ] || return 1
+        case "$o" in 0|[1-9]*) : ;; *) return 1 ;; esac
+        [ "$o" -le 255 ] || return 1
+        [ "$n" -le 4 ] || return 1
+        [ -n "$rest" ] || break
+    done
+    [ "$n" -eq 4 ]
+}
+
+# The group count of one colon-separated IPv6 run, or rc 1 if any group is not
+# 1-4 hex digits (or, as the FINAL group only, a complete dotted quad worth two).
+wpi_ipv6_groups() {
+    local rest="$1" piece n=0
+    WPI_LINE=0
+    [ -n "$rest" ] || return 0
+    while : ; do
+        case "$rest" in *:*) piece="${rest%%:*}"; rest="${rest#*:}" ;; *) piece="$rest"; rest="" ;; esac
+        [ -n "$piece" ] || return 1
+        case "$piece" in
+            *.*) wpi_ipv4_ok "$piece" || return 1; n=$(( n + 2 )); [ -z "$rest" ] || return 1 ;;
+            *)   [ "${#piece}" -le 4 ] || return 1
+                 case "$piece" in *[!0-9A-Fa-f]*) return 1 ;; esac
+                 n=$(( n + 1 )) ;;
+        esac
+        [ "$n" -le 8 ] || return 1
+        [ -n "$rest" ] || break
+    done
+    WPI_LINE="$n"
+}
+
+# One IPv6 literal: at most one `::`, eight groups without it, fewer than eight
+# with it, an optional interface zone.
+wpi_ipv6_ok() {
+    local s="$1" zone head tail hn
+    case "$s" in
+        *%*) zone="${s##*%}"; s="${s%%%*}"
+             [ -n "$zone" ] || return 1
+             case "$zone" in *[!A-Za-z0-9_.-]*) return 1 ;; esac ;;
+    esac
+    case "$s" in *:*) : ;; *) return 1 ;; esac
+    case "$s" in *[!0-9A-Fa-f:.]*) return 1 ;; esac
+    case "$s" in *::*::*) return 1 ;; esac
+    case "$s" in
+        *::*)
+            head="${s%%::*}"; tail="${s#*::}"
+            wpi_ipv6_groups "$head" || return 1; hn="$WPI_LINE"
+            wpi_ipv6_groups "$tail" || return 1
+            [ $(( hn + WPI_LINE )) -le 7 ] || return 1 ;;
+        *)
+            wpi_ipv6_groups "$s" || return 1
+            [ "$WPI_LINE" -eq 8 ] || return 1 ;;
+    esac
+    return 0
+}
+
+# One `ss -n` endpoint token, split at the last colon and then validated on both
+# sides. Round 5 required only that the address half contain a colon and that the
+# port half be decimal digits, so `nonsense:8790` was adjudicated as an observed
+# non-preregistered listener and `127.0.0.1:99999` as an observed absence of the
+# preregistered one - two host-state FAILs derived from records that state no
+# address and no port (Codex round-5 part B finding 1). An endpoint the block
+# cannot parse is an inability to evaluate the row, never an observation.
+wpi_require_endpoint() {
+    local token="$1" role="$2" addr port inner
+    local reason="listener_inventory_unreadable_or_unparseable rc=0"
+    case "$token" in *:*) port="${token##*:}"; addr="${token%:*}" ;;
+        *) wpi_stop B6 "$reason detail=${role}_endpoint_grammar" ;; esac
+    case "$port" in
+        '*') [ "$role" = peer ] || wpi_stop B6 "$reason detail=${role}_port_grammar" ;;
+        ''|*[!0-9]*) wpi_stop B6 "$reason detail=${role}_port_grammar" ;;
+        *)  [ "${#port}" -le 5 ] || wpi_stop B6 "$reason detail=${role}_port_grammar"
+            case "$port" in 0|[1-9]*) : ;; *) wpi_stop B6 "$reason detail=${role}_port_grammar" ;; esac
+            [ "$port" -le 65535 ] || wpi_stop B6 "$reason detail=${role}_port_range port=$port" ;;
+    esac
+    case "$addr" in
+        '') wpi_stop B6 "$reason detail=${role}_address_grammar" ;;
+        '*') : ;;
+        '['*']') inner="${addr#[}"; inner="${inner%]}"
+                 wpi_ipv6_ok "$inner" || wpi_stop B6 "$reason detail=${role}_address_grammar" ;;
+        *:*) wpi_ipv6_ok "$addr" || wpi_stop B6 "$reason detail=${role}_address_grammar" ;;
+        *) wpi_ipv4_ok "$addr" || wpi_stop B6 "$reason detail=${role}_address_grammar" ;;
+    esac
+    WPI_EP_ADDR="$addr"; WPI_EP_PORT="$port"
+}
+
 wpi_assert_listener_set() {
-    local fd line="" rc=0 count=0 total=0 state recvq sendq localaddr peer extra addr port peer_addr peer_port diag
+    local fd rc=0 count=0 total=0 consumed=0 whole="" rest="" line
+    local state recvq sendq localaddr peer addr port diag dfd
     local port_rows=0 wildcard_seen=no wildcard_addr="" unexpected_seen=no
     wpi_capture listeners "$WPI_SS" -H -ltn
     [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=$WPI_CAP_RC detail=ss_failed"
     wpi_require_empty_file B6 "listener_inventory_unreadable_or_unparseable rc=0" "$WPI_CAP_ERR"
-    wpi_alloc_read_diag listener_rows; diag="$WPI_READ_DIAG"
+    wpi_alloc_read_diag listener_rows; diag="$WPI_READ_DIAG"; dfd="$WPI_READ_DIAG_FD"
+    # Phase 0, and it is the reason this reader was rewritten. `IFS= read -r line`
+    # silently DISCARDS NUL bytes, so the record `LIS<NUL>TEN ...` was consumed as
+    # `LISTEN ...`: the reader repaired a malformed record into a conformant one
+    # and the block printed both `parse=complete_before_semantics` and the
+    # accepting listener-set line (Codex round-5 part B finding 1). Normalising a
+    # record is not parsing it. The whole inventory is therefore taken in ONE
+    # NUL-delimited read: that read returns 0 only when it actually found a NUL -
+    # the single byte class the record reader cannot represent - and otherwise
+    # returns EOF with every captured byte in `whole`. Records are then split out
+    # of that one string in memory, so there is no second open, no second pass and
+    # no byte that can vanish between the capture and the grammar. The closing
+    # equation `consumed == ${#whole}` is the conservation check for that claim.
     exec {fd}<"$WPI_CAP_OUT" || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=open_failed"
-    while true; do
-        line=""; rc=0; IFS= read -r -u "$fd" line 2>>"$diag" || rc=$?
-        if [ "$rc" -ne 0 ]; then
-            exec {fd}<&-
-            wpi_require_empty_file B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=hard_read_error" "$diag"
-            [ -z "$line" ] || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=unterminated_final_record"
-            break
-        fi
+    IFS= read -r -d '' -u "$fd" whole 2>&"$dfd" || rc=$?
+    exec {fd}<&-; exec {dfd}>&-
+    wpi_require_empty_file B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=hard_read_error" "$diag"
+    [ "$rc" -ne 0 ] || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=nul_byte_in_inventory"
+    case "$whole" in *[![:print:]$'\t\n']*) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=inventory_charset" ;; esac
+    rest="$whole"
+    while [ -n "$rest" ]; do
+        case "$rest" in
+            *$'\n'*) line="${rest%%$'\n'*}"; rest="${rest#*$'\n'}" ;;
+            *) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=unterminated_final_record" ;;
+        esac
+        consumed=$(( consumed + ${#line} + 1 ))
         [ -n "$line" ] || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=blank_record"
-        state=""; recvq=""; sendq=""; localaddr=""; peer=""; extra=""
-        read -r state recvq sendq localaddr peer extra <<< "$line"
-        [ -n "$state" ] && [ -n "$recvq" ] && [ -n "$sendq" ] && [ -n "$localaddr" ] && [ -n "$peer" ] && [ -z "$extra" ] \
+        set -- $line
+        [ "$#" -eq 5 ] \
             || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=table_grammar"
+        state="$1"; recvq="$2"; sendq="$3"; localaddr="$4"; peer="$5"
         [ "$state" = LISTEN ] || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=state_grammar"
         case "$recvq:$sendq" in *[!0-9:]*) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=queue_grammar" ;; esac
         case "$localaddr:$peer" in *[![:graph:]]*) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=address_character_grammar" ;; esac
-        case "$localaddr" in *:*) port="${localaddr##*:}"; addr="${localaddr%:*}" ;; *) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=local_address_grammar" ;; esac
-        case "$peer" in *:*) peer_port="${peer##*:}"; peer_addr="${peer%:*}" ;; *) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=peer_address_grammar" ;; esac
-        case "$port" in ''|*[!0-9]*) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=local_port_grammar" ;; esac
-        case "$peer_port" in '*'|[0-9]|[0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9][0-9][0-9]|[0-9][0-9][0-9][0-9][0-9]) : ;; *) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=peer_port_grammar" ;; esac
-        [ -n "$addr" ] && [ -n "$peer_addr" ] || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=empty_address"
+        wpi_require_endpoint "$localaddr" local; addr="$WPI_EP_ADDR"; port="$WPI_EP_PORT"
+        wpi_require_endpoint "$peer" peer
         total=$(( total + 1 ))
         [ "$port" = 8790 ] || continue
         port_rows=$(( port_rows + 1 ))
@@ -1123,26 +1279,51 @@ wpi_assert_listener_set() {
         if [ "$addr" != 127.0.0.1 ]; then unexpected_seen=yes; continue; fi
         count=$(( count + 1 ))
     done
-    # Phase 2. Reader diagnostics, record termination and table grammar have all held
-    # for every row, so the inventory is a complete observation and the recorded
-    # counters may now be adjudicated.
-    printf 'B6_listener_inventory rows=%s port_8790_rows=%s evidence_file=%s content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes\n' \
-        "$total" "$port_rows" "$WPI_CAP_OUT"
+    [ "$consumed" -eq "${#whole}" ] || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=record_bytes_unaccounted consumed=$consumed captured=${#whole}"
+    # Phase 2. Reader diagnostics, record termination, byte conservation and table
+    # grammar have all held for every row, so the inventory is a complete
+    # observation and the recorded counters may now be adjudicated.
+    printf 'B6_listener_inventory rows=%s port_8790_rows=%s bytes=%s evidence_file=%s content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes\n' \
+        "$total" "$port_rows" "$consumed" "$WPI_CAP_OUT"
     [ "$wildcard_seen" = no ] || wpi_fail B6 "nonloopback_listener addr=$wildcard_addr"
     [ "$unexpected_seen" = no ] || wpi_fail B6 "listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790"
     [ "$count" -eq 1 ] || wpi_fail B6 "listener_set_unexpected observed_count=$count expected=1x127.0.0.1:8790"
     printf 'B6_listener_set port=8790 count=1 local=127.0.0.1 wildcard=none table=complete\n'
 }
 
+# The preregistered type of one row-21 field, from the single schema declaration
+# the child is also held to. rc 1 for any name that is not a member: a result
+# record naming a field outside the declared universe was produced by something
+# other than this block's own parser over this block's own schema.
+wpi_status_expected_type() {
+    local field="$1" entry
+    for entry in $WPI_STATUS_SCHEMA; do
+        case "$entry" in "$field":*) WPI_LINE="${entry#*:}"; return 0 ;; esac
+    done
+    return 1
+}
+
 wpi_assert_status() {
-    local body="$EV_DIR/ro.status.body" code_file json_out json_err
+    local body="$EV_DIR/ro.status.body" code_file json_out json_err record
     wpi_alloc_leaf "$body"
     wpi_capture status_get "$WPI_CURL" --silent --show-error --connect-timeout 5 --max-time 10 \
         --request GET --output "$body" --write-out '%{http_code}\n' -- "$WPI_CONTROL_ENDPOINT"
     [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop B5 "status_endpoint_not_evaluable rc=$WPI_CAP_RC detail=transport_error diagnostic_file=$WPI_CAP_ERR"
     wpi_require_empty_file B5 "status_endpoint_not_evaluable rc=0" "$WPI_CAP_ERR"
     wpi_single_record B5 "status_endpoint_not_evaluable rc=0" "$WPI_CAP_OUT"
-    case "$WPI_LINE" in 401|403) wpi_stop B5 "status_endpoint_access_denied code=$WPI_LINE" ;; 200) : ;; [0-9][0-9][0-9]) wpi_fail B5 "status_endpoint_unexpected_http code=$WPI_LINE" ;; *) wpi_stop B5 "status_endpoint_not_evaluable rc=0 detail=http_code_grammar" ;; esac
+    # Round 5 read every three-digit string as a completed HTTP response, so
+    # curl's no-response sentinel `000` and the out-of-range `600` were both
+    # reported as observed endpoint deviations at rc 1 (Codex round-5 part B
+    # finding 3). Section 8.2 permits FAIL only for a complete, valid non-200
+    # response; a token outside 100-599 is not a status line the endpoint sent,
+    # it is the absence of one.
+    case "$WPI_LINE" in
+        401|403) wpi_stop B5 "status_endpoint_access_denied code=$WPI_LINE" ;;
+        200) : ;;
+        000) wpi_stop B5 "status_endpoint_not_evaluable rc=0 detail=http_code_no_response code=000" ;;
+        [1-5][0-9][0-9]) wpi_fail B5 "status_endpoint_unexpected_http code=$WPI_LINE" ;;
+        *) wpi_stop B5 "status_endpoint_not_evaluable rc=0 detail=http_code_grammar" ;;
+    esac
     wpi_sha_file B5 status_body_unreadable_or_unparseable "$body"; WPI_BODY_SHA="$WPI_LINE"
     # The status parser needs no venv context whatever - it opens one file and parses
     # JSON with the standard library - so it runs under the pinned system interpreter
@@ -1168,6 +1349,7 @@ try:
  obj=json.loads(raw.decode("utf-8"),object_pairs_hook=pairs,parse_constant=bad_constant)
  if type(obj) is not dict: print("PARSE top_level"); sys.exit(3)
  expected={"state":(str,"DISARMED"),"state_version":(int,1),"mode":(str,"credential_free_disarmed"),"network":(str,"disabled"),"exchange_conn":(str,"disabled"),"exchange_enabled":(bool,False),"credential_lookup":(str,"disabled"),"arm_enabled":(bool,False)}
+ if dict(p.split(":",1) for p in sys.argv[2].split()) != dict((k,t.__name__) for k,(t,v) in expected.items()): print("PARSE schema_declaration_mismatch"); sys.exit(3)
  for k,(t,v) in expected.items():
   if k not in obj: print("MISSING "+k); sys.exit(4)
   if type(obj[k]) is not t: print("TYPE %s %s %s"%(k,type(obj[k]).__name__,t.__name__)); sys.exit(5)
@@ -1175,22 +1357,46 @@ try:
    h=hashlib.sha256(json.dumps(obj[k],sort_keys=True,separators=(",",":"),ensure_ascii=True).encode()).hexdigest()
    print("MISMATCH %s %s"%(k,h)); sys.exit(1)
  print("OK fields=8")
-except (OSError,UnicodeError,json.JSONDecodeError,Dup,ValueError) as e:
+except (OSError,UnicodeError,json.JSONDecodeError,Dup,ValueError,IndexError) as e:
  print("PARSE "+type(e).__name__); sys.exit(3)
-' "$body"
+' "$body" "$WPI_STATUS_SCHEMA"
     wpi_require_empty_file B5 "status_body_unreadable_or_unparseable detail=parser_stderr" "$WPI_CAP_ERR"
     wpi_single_record B5 "status_body_unreadable_or_unparseable" "$WPI_CAP_OUT"
-    case "$WPI_CAP_RC:$WPI_LINE" in
+    record="$WPI_LINE"
+    # Every result record is reconstructed from its own tokens and compared to the
+    # bytes the child actually emitted, so a record is admitted only in the exact
+    # shape one of the four `print` statements above can produce. Round 5 checked
+    # the character class and nothing else: `TYPE state str` - three tokens, no
+    # expected type - was classified as a completed flag deviation and returned
+    # rc 1 with `expected_type=` empty, and `MISMATCH state abc` did the same with
+    # a three-character digest (Codex round-5 part B finding 2). rc 1 means a
+    # completed probe established deviant host state; it must not be reachable
+    # from a producer result the producer could not have produced.
+    case "$WPI_CAP_RC:$record" in
         '0:OK fields=8') printf 'B5_status http=200 json=strict required_fields=8 flags=expected body_sha256=%s content=not_printed parser=pinned_system_interpreter isolation=isolated_no_site\n' "$WPI_BODY_SHA" ;;
-        4:'MISSING '*) wpi_stop B5 "schema_unexpected field=${WPI_LINE#MISSING }" ;;
+        4:'MISSING '*)
+            set -- $record
+            [ "$#" -eq 2 ] || wpi_stop B5 "status_body_unreadable_or_unparseable detail=missing_record_grammar tokens=$#"
+            [ "MISSING $2" = "$record" ] || wpi_stop B5 "status_body_unreadable_or_unparseable detail=missing_record_grammar"
+            wpi_status_expected_type "$2" || wpi_stop B5 "status_body_unreadable_or_unparseable detail=missing_record_field"
+            wpi_stop B5 "schema_unexpected field=$2" ;;
         5:'TYPE '*)
-            read -r _ WPI_JSON_FIELD WPI_JSON_TYPE WPI_JSON_EXPECTED_TYPE <<< "$WPI_LINE"
-            case "$WPI_JSON_FIELD:$WPI_JSON_TYPE:$WPI_JSON_EXPECTED_TYPE" in *[!A-Za-z0-9_:.-]*) wpi_stop B5 "status_body_unreadable_or_unparseable detail=type_grammar" ;; esac
-            wpi_fail B5 "flag_mismatch field=$WPI_JSON_FIELD observed_type=$WPI_JSON_TYPE expected_type=$WPI_JSON_EXPECTED_TYPE" ;;
+            set -- $record
+            [ "$#" -eq 4 ] || wpi_stop B5 "status_body_unreadable_or_unparseable detail=type_record_grammar tokens=$#"
+            [ "TYPE $2 $3 $4" = "$record" ] || wpi_stop B5 "status_body_unreadable_or_unparseable detail=type_record_grammar"
+            wpi_status_expected_type "$2" || wpi_stop B5 "status_body_unreadable_or_unparseable detail=type_record_field"
+            [ "$4" = "$WPI_LINE" ] || wpi_stop B5 "status_body_unreadable_or_unparseable detail=type_record_expected_type field=$2"
+            case "$3" in str|int|float|bool|list|dict|NoneType) : ;; *) wpi_stop B5 "status_body_unreadable_or_unparseable detail=type_record_observed_type" ;; esac
+            [ "$3" != "$4" ] || wpi_stop B5 "status_body_unreadable_or_unparseable detail=type_record_not_a_deviation field=$2"
+            wpi_fail B5 "flag_mismatch field=$2 observed_type=$3 expected_type=$4" ;;
         1:'MISMATCH '*)
-            read -r _ WPI_JSON_FIELD WPI_JSON_DIGEST <<< "$WPI_LINE"
-            case "$WPI_JSON_FIELD:$WPI_JSON_DIGEST" in *[!A-Za-z0-9_:.-]*) wpi_stop B5 "status_body_unreadable_or_unparseable detail=mismatch_grammar" ;; esac
-            wpi_fail B5 "flag_mismatch field=$WPI_JSON_FIELD observed_sha256=$WPI_JSON_DIGEST expected=preregistered_typed_value" ;;
+            set -- $record
+            [ "$#" -eq 3 ] || wpi_stop B5 "status_body_unreadable_or_unparseable detail=mismatch_record_grammar tokens=$#"
+            [ "MISMATCH $2 $3" = "$record" ] || wpi_stop B5 "status_body_unreadable_or_unparseable detail=mismatch_record_grammar"
+            wpi_status_expected_type "$2" || wpi_stop B5 "status_body_unreadable_or_unparseable detail=mismatch_record_field"
+            [ "${#3}" -eq 64 ] || wpi_stop B5 "status_body_unreadable_or_unparseable detail=mismatch_record_digest"
+            case "$3" in *[!0-9a-f]*) wpi_stop B5 "status_body_unreadable_or_unparseable detail=mismatch_record_digest" ;; esac
+            wpi_fail B5 "flag_mismatch field=$2 observed_sha256=$3 expected=preregistered_typed_value" ;;
         *) wpi_stop B5 "status_body_unreadable_or_unparseable detail=strict_json_or_parser_failure parser_rc=$WPI_CAP_RC body_sha256=$WPI_BODY_SHA" ;;
     esac
 }
