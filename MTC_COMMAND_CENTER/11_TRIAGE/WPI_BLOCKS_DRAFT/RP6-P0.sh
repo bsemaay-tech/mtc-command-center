@@ -56,10 +56,15 @@
 # before this block runs; that allocation is the bootstrap's mutation and is not
 # claimed here as none. This block asserts the allocation happened and that its
 # own stdout is bound to that leaf, and refuses to run otherwise.
-# Exactly two child processes are executed, both read-only and both with a
-# CLEARED environment: one Manager-level `systemctl show` query, and one
-# isolated interpreter invocation that imports only `sys` and prints two
-# integers.
+# The external-child surface is not a fixed count. Metadata, evidence-binding,
+# identity and namespace probes execute the recorded absolute stat/readlink/id
+# paths with the caller environment inherited and LC_ALL forced to C. Only the
+# Manager-level `systemctl show` query and the isolated interpreter invocation
+# use `env -i`. Every launch keeps the caller working directory; TMPDIR is
+# caller-inherited for stat/readlink/id and absent from the two cleared launches.
+# This is an honest record of the current bounded P0 block, not compliance with
+# round 1.4's stronger probe-execution-environment rule; satisfying that rule
+# needs preregistered cwd/TMPDIR and helper target chains before a future freeze.
 #
 # RP0-LIB helpers deliberately NOT used here, and why:
 #   - `rp0_probe_path` (RP0-LIB:29-55) allocates a temp file at RP0-LIB:31 and
@@ -258,6 +263,7 @@ p0_require_uint() {
 # refused as an INPUT, not merely as an observation: the accepted execution
 # model is unprivileged, so a preregistration naming uid 0 is a plumbing error.
 p0_require_uint P0_EXPECT_UID "${P0_EXPECT_UID:-}" 1
+: "${P0_EXPECT_UID:?preregistered numeric uid of the route login is required}"
 
 # P0_FORBIDDEN_GIDS - the preregistered NUMERIC gids the feasibility ledger
 # asserts this login is NOT in (prereg 8.1 row 2: the root group and the
@@ -265,6 +271,7 @@ p0_require_uint P0_EXPECT_UID "${P0_EXPECT_UID:-}" 1
 # allowed here.
 [ -n "${P0_FORBIDDEN_GIDS:-}" ] \
     || p0_stop "input_missing name=P0_FORBIDDEN_GIDS detail=preregistered_numeric_gid_list_never_derived_here"
+: "${P0_FORBIDDEN_GIDS:?preregistered numeric forbidden-gid list is required}"
 P0_FORBIDDEN_GID_COUNT=0
 for p0_g in $P0_FORBIDDEN_GIDS; do
     p0_require_uint P0_FORBIDDEN_GIDS_ENTRY "$p0_g" 0
@@ -279,6 +286,7 @@ done
 # probe it have been resolved.
 [ -n "${P0_VENV_ROOT:-}" ] \
     || p0_stop "input_missing name=P0_VENV_ROOT detail=preregistered_per_sha_venv_root_never_derived_here"
+: "${P0_VENV_ROOT:?preregistered per-SHA venv root is required}"
 case "$P0_VENV_ROOT" in
     *[![:print:]]*|*[[:space:]]*)
         p0_stop "input_charset name=P0_VENV_ROOT expected=printable_without_whitespace" ;;
@@ -330,6 +338,11 @@ for p0_pin in $P0_TOOL_PINS; do
     P0_PIN_COUNT=$(( P0_PIN_COUNT + 1 ))
 done
 
+# This derives the literal leaf name only. P0 has no preregistered value for a
+# resolved `bin` component or interpreter-symlink target chain, so it cannot
+# truthfully bind either one here; that residual is disclosed in the terminal
+# `does_not_establish` claim instead of learning and accepting a target at run
+# time contrary to prereg row 18.
 P0_PY="$P0_VENV_ROOT/bin/python"
 
 printf 'P0_SECTION preregistered_inputs\n'
@@ -856,7 +869,7 @@ printf 'P0_out_of_scope class=RO_STAGE item=every_prereg_8.2_row stage=ro implem
 # Written by stating the claim and then deleting every word the executed
 # predicates cannot establish. What survives is the log line.
 printf 'P0_SECTION done\n'
-printf 'P0_claim establishes=executing_numeric_identity_of_this_login,forbidden_gid_non_membership,resolution_and_executability_of_the_11_listed_RO_tools,evidence_stdout_bound_to_create_once_leaf,system_manager_answered_a_Manager_property_query_over_the_system_bus_from_this_login_namespaces,venv_interpreter_object_and_executability,self_namespace_identities_recorded\n'
-printf 'P0_claim does_not_establish=any_RO_row_host_state,tool_provenance_or_distribution_identity,identity_of_the_manager_that_answered,binding_of_these_namespaces_to_any_service_or_to_the_host_initial_namespaces,interpreter_version_or_package_parity,anything_under_the_protected_metadata_directories,anything_about_group_C\n'
-printf 'P0_claim scope=this_login_only identity=numeric_only mutation=none_in_this_block evidence_leaf=allocated_by_RP0-BOOTSTRAP children=2_readonly_cleared_env\n'
+printf 'P0_claim establishes=executing_numeric_identity_of_this_login,forbidden_gid_non_membership,resolution_and_executability_of_the_11_listed_RO_tools,evidence_stdout_bound_to_create_once_leaf,system_manager_answered_a_Manager_property_query_over_the_system_bus_from_this_login_namespaces,venv_interpreter_leaf_kind_and_executability,self_namespace_identities_recorded\n'
+printf 'P0_claim does_not_establish=any_RO_row_host_state,tool_provenance_or_distribution_identity,round1_4_probe_execution_environment_binding,identity_of_the_manager_that_answered,binding_of_these_namespaces_to_any_service_or_to_the_host_initial_namespaces,interpreter_intermediate_component_or_symlink_target_binding,interpreter_version_or_package_parity,anything_under_the_protected_metadata_directories,anything_about_group_C\n'
+printf 'P0_claim scope=this_login_only identity=numeric_only mutation=none_in_this_block evidence_leaf=allocated_by_RP0-BOOTSTRAP child_env=mixed coreutils_launch=recorded_absolute_after_PATH_resolution inherited_env=stat_readlink_id cleared_env=systemctl_and_interpreter_only cwd=caller_inherited tmpdir=caller_inherited_or_unset\n'
 printf 'P0 PASS\n'
