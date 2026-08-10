@@ -9,6 +9,64 @@ maximum three rounds. Count the existing Claude audit only if fresh-session + xh
 confirmed; its report currently omits effort. After repair/green evidence, run the fresh Codex xhigh slot.
 Do not add GLM/DeepSeek unless an explicit tier slot or later owner contract requires it.
 
+## WP-I: venv site-startup security hole found + closed in BOTH blocks (2026-08-10 ~18:30)
+
+**The headline of the day.** The Codex flagship slot found, independently in RP7 and then
+RP6-P0, that the blocks used the very venv they were auditing as the interpreter that
+produces their verdict — and `python -I` does NOT disable `site`, so a `.pth` or
+`sitecustomize.py` in that venv executes arbitrary `gatea`-authority code before the
+check runs. A tampered candidate could forge the exact accepted PASS line and mutate the
+host while the block reported clean. Executed proof both ways in both blocks. Three
+Claude flagship rounds had missed it in each — this is the two-flagship T0 contract
+paying for itself, and the single strongest argument in the repo for keeping it.
+
+Owner authorized exceeding the T0 3-round cap for this class (RP7 explicitly; the Lead
+extended it to RP6-P0 on the identical finding and logged it).
+
+State (all committed + pushed):
+
+- **RP7-WPI-RO** — round 4 done, `d6a976aa`, bytes `23e55667…`, 70941 B. Both
+  adjudicators moved onto a pinned system interpreter under `-I -S` that refuses to emit
+  a result unless isolation actually holds; `python3` is the 10th bound tool + 21st
+  projection point. Also: row-22 two-phase parse (both auditor orderings STOP), one
+  enforced metadata-discovery universe (`ghost.egg-info` now STOPs), preregistered B5/B6
+  order verified against frozen code at runtime, row-specific tokens. Needs its FINAL
+  flagship pair on these bytes.
+- **RP6-P0** — Claude flagship ACCEPTED at round 3 (`PASS-WITH-NITS`, `209babca`); Codex
+  flagship BLOCK 4 on the same bytes (`4f58e650`): same venv hole (F1), unbounded row-9
+  `systemctl` (F2), stale RO tool inventory that rejects RP7's pin set (F3), getent
+  divergence grammar (F4). **Round 4 IN FLIGHT**, gated on and pointed at RP7's frozen
+  10-tool set.
+- **Transport set** — round 2 closed all 16 findings from both flagships (`9ef4437d`,
+  incl. the `$Matches` clobber that meant ops 11/12 could never bind). Claude re-audit
+  `REQUEST_CHANGES 1` (`8ab686dd`): an rc outside `{0,1,3}` — ssh transport failure, dead
+  host, rejected key — is recorded as completed deviant state, so `TR_RUN FAIL` accuses
+  the host after the one-use RUNIDs burn. Codex re-audit IN FLIGHT; ONE combined round 3
+  will close both lists.
+- **Prereg** — skeleton ready (`WPI_PREREG_DRAFT_ROUND1/WPI_SUCCESSOR_PREREG_SKELETON_2026-08-10.md`),
+  owner grant #6 chose attestation option (a). Freeze-gate pins now enumerated: projection-v2
+  digest over 21 points, `WPI_FIXED_TRUSTED_PYTHON` (resolved non-symlink path), row-8
+  execution-domain attestation literals.
+- **Routing** — Codex `secondary` exhausted until 2026-08-16 → use `-Account fourth`.
+  Claude Pro default hit its 5h window mid-day. Max carried the surge. NVIDIA NIM via the
+  claude-CLI wrapper narrates but does NOT engage file-write tools — read/analysis only.
+- **Windows trap (matters at freeze):** never `git checkout` these block files — autocrlf
+  rewrites them to CRLF and breaks the frozen hash. Restore with
+  `git cat-file blob HEAD:<path> > <path>`.
+
+**PICK UP EXACTLY HERE:**
+
+1. **[AI: Lead]** Consume RP6 R4 + Codex transport re-audit; dispatch ONE combined
+   transport round 3.
+2. **[AI: flagships]** Final flagship pairs on final bytes: RP7 (`23e55667…`), RP6-P0
+   (post-R4), transport (post-R3). Both slots xhigh, fresh.
+3. **[AI: Lead]** Successor prereg from the skeleton: mint RUNIDs, fill all pins, Stage 1
+   freeze (incl. §10.2 parsed path-scope proof — the prover tool is still unwritten and
+   is the one piece of freeze tooling missing), commit BEFORE any invocation.
+4. **[AI: Lead]** Execute P0 → RO on GATEA-STAGING (grants #1/#2), attestation command set
+   + RPD-VERIFY as root (grants #3/#6). Evidence closed + bound.
+5. **[AI: Any]** WP-I closure record → Audit 2.
+
 ## WP-I block set built + in adversarial T0 cycles; re-audits in flight (2026-08-10 ~13:30)
 
 Day session progress (committed + pushed through `f503af55`). Tier classification for the

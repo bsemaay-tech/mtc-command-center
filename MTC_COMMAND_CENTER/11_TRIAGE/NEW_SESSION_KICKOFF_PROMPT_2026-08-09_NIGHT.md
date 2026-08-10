@@ -115,6 +115,23 @@ ordering is provable from git history. A check that cannot fail proves nothing. 
 
 ## Milestone log (newest first — update on every milestone)
 
+- 2026-08-10 ~18:30: **VENV SITE-STARTUP SECURITY HOLE FOUND AND CLOSED IN BOTH BLOCKS.**
+  The Codex flagship slot found — independently in RP7 (`cca349c2`) and RP6-P0
+  (`4f58e650`) — that each block used the venv it was auditing as the interpreter
+  producing its own verdict, and `python -I` does not disable `site`: a `.pth` or
+  `sitecustomize.py` in that venv runs arbitrary `gatea`-authority code before the check.
+  A tampered candidate could forge the accepted PASS line and mutate the host while the
+  block reported clean. Proven by execution both ways in both blocks; three Claude
+  flagship rounds had missed it in each. Owner authorized exceeding the T0 3-round cap
+  for this class. RP7 round 4 closed it (`d6a976aa`, bytes `23e55667…`) by moving both
+  adjudicators onto a pinned system interpreter under `-I -S` that refuses to emit a
+  result unless isolation holds. RP6-P0 round 4 in flight on the same finding + three
+  contract fixes. Transport set: 16/16 closed at round 2 (`9ef4437d`), Claude re-audit
+  `REQUEST_CHANGES 1` (`8ab686dd` — rc outside {0,1,3} misread as host deviation),
+  Codex re-audit in flight, one combined round 3 next. Next: final flagship pairs on all
+  three artifacts → successor prereg + Stage 1 freeze → host execution under grants
+  #1/#2/#3/#6.
+
 - 2026-08-10 ~09:20: **WP-I round 1.4 CLOSED** (`6a8b0896`) — retroactive catalogue pass
   (owner grant #4): Codex repaired 17 findings across all 10 patterns; GLM VERIFIED-CLOSED
   (V1–V6 PASS, 4/4 sample-attacks stopped). Lead pre-resolved both PIN values
