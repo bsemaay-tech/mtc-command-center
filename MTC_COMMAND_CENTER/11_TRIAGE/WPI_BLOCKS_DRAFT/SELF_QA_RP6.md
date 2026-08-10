@@ -789,9 +789,19 @@ fi
 
 ### C13 R3 — D026 harness 1, real output
 
-Captured 2026-08-10, Git Bash, against working-tree bytes
-`ef205e2064caa0cb1493abf037ce9d435f2bf8f6259c5bb3fc4964d1abb2b4b9`, 55467 B.
-Process rc 0.
+**RE-CAPTURED in repair round 3** (2026-08-10, Git Bash 5.2.37), run as
+`sed -n '664,787p' SELF_QA_RP6.md | bash --noprofile --norc` against the round-3
+working-tree bytes `2d9b166eacfc39ebe0d8d89edb5860876ccc4d9f0ff97f9e10a228dbcf96289e`,
+71743 B. Process rc 0, `cases=16 result=PASS`.
+
+The harness bytes are unchanged from the round the section documents; only the
+recorded output was regenerated, because re-audit R2 finding 2b showed it no
+longer matched the block. Five lines moved, all of them the F7 grammar
+unification carried out by the full-block repair: `wrong_mtc_gid` now reports
+`identity_unexpected observed_numeric=999:989 expected_numeric=999:988
+account=mtc-bridge` instead of `state_account_resolution_unexpected`, and
+`wrong_gatea_uid` uses the same single grammar. The case count, the polarities
+and every verdict are identical to the earlier capture.
 
 ```text
 DRIVER_LINES repaired=1 prerepair=1 nocall=0
@@ -809,9 +819,9 @@ P0_SECTION accounts
 P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
 P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
 P0_account account=mtc-bridge outcome=resolved uid=999 gid=989 name_diag=[mtc-bridge] via=pinned_getent_passwd
-P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=999:989 expected_numeric=999:988
+P0_STOP reason=identity_unexpected observed_numeric=999:989 expected_numeric=999:988 account=mtc-bridge
 ARM_RC=3
-ASSERT_MET variant=repaired mode=wrong_mtc_gid expected_rc=3 subst=[state_account_resolution_unexpected account=mtc-bridge] polarity=GREEN
+ASSERT_MET variant=repaired mode=wrong_mtc_gid expected_rc=3 subst=[identity_unexpected observed_numeric=999:989 expected_numeric=999:988 account=mtc-bridge] polarity=GREEN
 CASE_OK
 --- variant=repaired mode=mtc_nomatch
 P0_SECTION accounts
@@ -824,9 +834,9 @@ CASE_OK
 --- variant=repaired mode=wrong_gatea_uid
 P0_SECTION accounts
 P0_account account=gatea outcome=resolved uid=4242 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
-P0_STOP reason=identity_unexpected account=gatea observed_numeric=4242:4096 expected_numeric=4096:4096,prereg_uid=4096
+P0_STOP reason=identity_unexpected observed_numeric=4096:4096 expected_numeric=4242:4096 account=gatea
 ARM_RC=3
-ASSERT_MET variant=repaired mode=wrong_gatea_uid expected_rc=3 subst=[identity_unexpected account=gatea] polarity=GREEN
+ASSERT_MET variant=repaired mode=wrong_gatea_uid expected_rc=3 subst=[identity_unexpected observed_numeric=4096:4096 expected_numeric=4242:4096 account=gatea] polarity=GREEN
 CASE_OK
 --- variant=repaired mode=dup_gatea
 P0_SECTION accounts
@@ -842,7 +852,7 @@ CASE_OK
 --- variant=nocall mode=wrong_mtc_gid
 P0_SECTION accounts
 ARM_RC=0
-ASSERT_UNMET variant=nocall mode=wrong_mtc_gid expected_rc=3 subst=[state_account_resolution_unexpected account=mtc-bridge] polarity=RED
+ASSERT_UNMET variant=nocall mode=wrong_mtc_gid expected_rc=3 subst=[identity_unexpected observed_numeric=999:989 expected_numeric=999:988 account=mtc-bridge] polarity=RED
 CASE_OK
 --- variant=nocall mode=mtc_rc2_diag
 P0_SECTION accounts
@@ -1027,7 +1037,11 @@ fi
 
 ### C13 R3 — D026 harness 2, real output
 
-Captured 2026-08-10, Git Bash, same working-tree bytes. Process rc 0.
+**RE-CAPTURED in repair round 3** (2026-08-10, Git Bash 5.2.37), run as
+`sed -n '952,1035p' SELF_QA_RP6.md | bash --noprofile --norc` against the same
+round-3 bytes `2d9b166e…`, 71743 B. Process rc 0,
+`inputs=2 mutations=2 cases=4 result=PASS`. Harness bytes unchanged; output
+regenerated per re-audit R2 finding 2c, which reported four stale hunks.
 
 ```text
 === P0_STATE_UID / precheck_only / expect_GREEN ===
@@ -1035,7 +1049,7 @@ MUTATION_LINES_REMOVED input=P0_STATE_UID kind=precheck_only n=1
 P0_SECTION header candidate=2ce41e34bceb599d80af24c5c33d835820ec321b block=RP6-P0 stage=p0
 P0_SECTION prerequisites
 P0_prereq lib=sourced bootstrap=ran run_id=qa-rp6 stage=p0 dir=/qa-rp6 leaf=/qa-rp6/p0.log
-/dev/stdin: line 288: P0_STATE_UID: preregistered numeric uid of the mtc-bridge service account is required
+/dev/stdin: line 330: P0_STATE_UID: preregistered numeric uid of the mtc-bridge service account is required
 ASSERT_MET input=P0_STATE_UID mutation=precheck_only raw_rc=1 polarity=GREEN
 CASE_OK
 CHECK_RC=0
@@ -1044,10 +1058,8 @@ MUTATION_LINES_REMOVED input=P0_STATE_UID kind=precheck_and_backstop n=2
 P0_SECTION header candidate=2ce41e34bceb599d80af24c5c33d835820ec321b block=RP6-P0 stage=p0
 P0_SECTION prerequisites
 P0_prereq lib=sourced bootstrap=ran run_id=qa-rp6 stage=p0 dir=/qa-rp6 leaf=/qa-rp6/p0.log
-P0_SECTION preregistered_inputs
-P0_input name=P0_EXPECT_UID value=1000
-/dev/stdin: line 373: P0_STATE_UID: unbound variable
-ASSERT_UNMET input=P0_STATE_UID mutation=precheck_and_backstop raw_rc=1 polarity=RED
+P0_STOP reason=execution_domain_unattested field=user_namespace detail=preregistered_value_missing
+ASSERT_UNMET input=P0_STATE_UID mutation=precheck_and_backstop raw_rc=3 polarity=RED
 CASE_OK
 CHECK_RC=0
 === P0_STATE_GID / precheck_only / expect_GREEN ===
@@ -1055,7 +1067,7 @@ MUTATION_LINES_REMOVED input=P0_STATE_GID kind=precheck_only n=1
 P0_SECTION header candidate=2ce41e34bceb599d80af24c5c33d835820ec321b block=RP6-P0 stage=p0
 P0_SECTION prerequisites
 P0_prereq lib=sourced bootstrap=ran run_id=qa-rp6 stage=p0 dir=/qa-rp6 leaf=/qa-rp6/p0.log
-/dev/stdin: line 290: P0_STATE_GID: preregistered numeric gid of the mtc-bridge service account is required
+/dev/stdin: line 332: P0_STATE_GID: preregistered numeric gid of the mtc-bridge service account is required
 ASSERT_MET input=P0_STATE_GID mutation=precheck_only raw_rc=1 polarity=GREEN
 CASE_OK
 CHECK_RC=0
@@ -1064,11 +1076,8 @@ MUTATION_LINES_REMOVED input=P0_STATE_GID kind=precheck_and_backstop n=2
 P0_SECTION header candidate=2ce41e34bceb599d80af24c5c33d835820ec321b block=RP6-P0 stage=p0
 P0_SECTION prerequisites
 P0_prereq lib=sourced bootstrap=ran run_id=qa-rp6 stage=p0 dir=/qa-rp6 leaf=/qa-rp6/p0.log
-P0_SECTION preregistered_inputs
-P0_input name=P0_EXPECT_UID value=1000
-P0_input name=P0_STATE_UID value=999
-/dev/stdin: line 374: P0_STATE_GID: unbound variable
-ASSERT_UNMET input=P0_STATE_GID mutation=precheck_and_backstop raw_rc=1 polarity=RED
+P0_STOP reason=execution_domain_unattested field=user_namespace detail=preregistered_value_missing
+ASSERT_UNMET input=P0_STATE_GID mutation=precheck_and_backstop raw_rc=3 polarity=RED
 CASE_OK
 CHECK_RC=0
 C13_R3_BACKSTOP_QA_SUMMARY inputs=2 mutations=2 cases=4 result=PASS
@@ -1076,14 +1085,27 @@ C13_R3_BACKSTOP_QA_SUMMARY inputs=2 mutations=2 cases=4 result=PASS
 
 Reading, stated exactly: `MUTATION_LINES_REMOVED … n=1` / `n=2` proves each
 mutation removed the lines it claims to. With only the pre-check removed, the
-backstop fires at the block's own line with the named message. With the backstop
-removed as well, the block runs on past the missing input through two more
-sections and only dies later — at the first *use* of the variable — with
-`P0_STATE_UID: unbound variable`, an unnamed `set -u` error carrying no
-`P0_STOP reason=` and no adjudicated rc 3. The assertion is therefore unmet on
-message, not on rc: rc is 1 in both cases. That is precisely what the backstop
-buys — a named, early, reasoned refusal instead of a bare shell error several
-sections later — and it is why the GREEN case is evidence about the backstop.
+backstop fires at the block's own line with the named message — now line 330 /
+332 rather than 288 / 290, because the full-block repair inserted the row-8
+input section above it.
+
+**The double-mutant's kill mechanism changed in the full-block repair, and this
+capture records the mechanism that is now real** (re-audit R2 finding 2c). When
+the pre-check *and* the `:?` backstop are both removed, the block no longer
+reaches the first *use* of `P0_STATE_UID`: the row-8 attestation pre-check added
+by the F2 repair refuses first, at rc 3, with
+`execution_domain_unattested field=user_namespace detail=preregistered_value_missing`
+— this harness's prelude supplies no `P0_ATTESTED_*` values. The assertion is
+therefore unmet on both message *and* rc (3, not the earlier 1), so the mutant is
+still killed and the GREEN case is still evidence about the backstop: what the
+backstop buys is a refusal that names **this** input, at the point the input is
+read. Without it the run dies later on an unrelated complaint that tells the
+operator nothing about the missing `P0_STATE_UID` — previously a bare `set -u`
+`unbound variable`, now a reasoned STOP about a different field, which is if
+anything more misleading. No fabricated freeze literals were injected to force
+the older mechanism back into view: the five `<PIN-AT-FREEZE>` literals make the
+old path unreachable on draft bytes, and inventing values to reach it would put
+a fabrication inside a D026 harness.
 
 ## C13 R3 artefact measurements (real, computed in-session)
 
@@ -1326,10 +1348,17 @@ fi
 
 ### C13 R4 — D026 harness 1 (extended), real output
 
-Captured 2026-08-10, Git Bash, run as `sed -n '1159,1324p' SELF_QA_RP6.md | bash
---noprofile --norc` against working-tree bytes
-`bff3c86e6e9b565c55da34580284f22c80253d9e931d879fd749459bac85b7cf`, 57441 B.
-Process rc 0.
+**RE-CAPTURED in repair round 3** (2026-08-10, Git Bash 5.2.37), run as
+`sed -n '1181,1346p' SELF_QA_RP6.md | bash --noprofile --norc` against the
+round-3 working-tree bytes
+`2d9b166eacfc39ebe0d8d89edb5860876ccc4d9f0ff97f9e10a228dbcf96289e`, 71743 B.
+Process rc 0, `cases=27 result=PASS`.
+
+The previous capture was taken against `bff3c86e…`, 57441 B — the bytes that
+existed *before* the full-block repair — which is why re-audit R2 finding 2d
+found five stale lines in the section the document names as current evidence.
+The five are the same F7 grammar unification described in the R3 harness-1
+section above; case count, polarities and verdicts are unchanged.
 
 ```text
 DRIVER_LINES repaired=1 prerepair=1 prer4=1 nocall=0
@@ -1347,9 +1376,9 @@ P0_SECTION accounts
 P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
 P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
 P0_account account=mtc-bridge outcome=resolved uid=999 gid=989 name_diag=[mtc-bridge] via=pinned_getent_passwd
-P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=999:989 expected_numeric=999:988
+P0_STOP reason=identity_unexpected observed_numeric=999:989 expected_numeric=999:988 account=mtc-bridge
 ARM_RC=3
-ASSERT_MET variant=repaired mode=wrong_mtc_gid expected_rc=3 subst=[state_account_resolution_unexpected account=mtc-bridge] polarity=GREEN
+ASSERT_MET variant=repaired mode=wrong_mtc_gid expected_rc=3 subst=[identity_unexpected observed_numeric=999:989 expected_numeric=999:988 account=mtc-bridge] polarity=GREEN
 CASE_OK
 --- variant=repaired mode=mtc_nomatch
 P0_SECTION accounts
@@ -1362,9 +1391,9 @@ CASE_OK
 --- variant=repaired mode=wrong_gatea_uid
 P0_SECTION accounts
 P0_account account=gatea outcome=resolved uid=4242 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
-P0_STOP reason=identity_unexpected account=gatea observed_numeric=4242:4096 expected_numeric=4096:4096,prereg_uid=4096
+P0_STOP reason=identity_unexpected observed_numeric=4096:4096 expected_numeric=4242:4096 account=gatea
 ARM_RC=3
-ASSERT_MET variant=repaired mode=wrong_gatea_uid expected_rc=3 subst=[identity_unexpected account=gatea] polarity=GREEN
+ASSERT_MET variant=repaired mode=wrong_gatea_uid expected_rc=3 subst=[identity_unexpected observed_numeric=4096:4096 expected_numeric=4242:4096 account=gatea] polarity=GREEN
 CASE_OK
 --- variant=repaired mode=dup_gatea
 P0_SECTION accounts
@@ -1380,7 +1409,7 @@ CASE_OK
 --- variant=nocall mode=wrong_mtc_gid
 P0_SECTION accounts
 ARM_RC=0
-ASSERT_UNMET variant=nocall mode=wrong_mtc_gid expected_rc=3 subst=[state_account_resolution_unexpected account=mtc-bridge] polarity=RED
+ASSERT_UNMET variant=nocall mode=wrong_mtc_gid expected_rc=3 subst=[identity_unexpected observed_numeric=999:989 expected_numeric=999:988 account=mtc-bridge] polarity=RED
 CASE_OK
 --- variant=nocall mode=mtc_rc2_diag
 P0_SECTION accounts
@@ -1568,7 +1597,7 @@ What the output establishes, line by line:
 ## C13 R4 — harness 2 re-run (no regression in the `:?` backstop)
 
 Harness 2 was re-run unchanged against the R4 bytes:
-`sed -n '942,1025p' SELF_QA_RP6.md | bash --noprofile --norc`, process rc 0, final
+`sed -n '952,1035p' SELF_QA_RP6.md | bash --noprofile --norc`, process rc 0, final
 line `C13_R3_BACKSTOP_QA_SUMMARY inputs=2 mutations=2 cases=4 result=PASS` (both
 `precheck_only` cases `ASSERT_MET` GREEN, both `precheck_and_backstop` cases
 `ASSERT_UNMET` RED). The R4 edit is confined to the interior of
@@ -1617,30 +1646,51 @@ edited by this round.
 
 ## Full-block repair after Claude T0 BLOCK: 7 — executable D026 fence
 
-Run by the Codex implementer on 2026-08-10 under owner amendment A2/A2a in local
-Git Bash 5.2.37. This section supersedes earlier artefact measurements only; the
-older sections remain the exact evidence of their own rounds. `git show HEAD:<path>`
-is the audited pre-repair block (`bff3c86e…`, 57441 B), while the working-tree path
-is the repaired block. The execution-domain comparison uses deterministic local
-readlink/stat shims because the Windows-hosted session is not the staging guest;
-F1 deliberately uses real GNU `stat` against real absent local objects. All scratch
-files are under a fresh `/tmp` directory removed by the fence. No host contact,
-network operation, deployment, backtest, broker action, or protected trading surface
-is involved.
+Authored by the Codex implementer on 2026-08-10 under owner amendment A2/A2a;
+**re-executed and re-recorded in repair round 3** (Claude flagship implementer,
+`claude-opus-5` xhigh) after re-audit R2 finding 2. This section supersedes earlier
+artefact measurements only; the older sections remain the exact evidence of their
+own rounds.
 
-The exact command below covers every required finding. For F2, whose pre-fix bytes
-contain no gate to execute, the RED side is the explicit call-removal mutation required
-by D026. All other RED sides execute the audited pre-repair bytes.
+**Round-3 reproducibility fix (R2 finding 2a).** The RED side previously read
+`git show HEAD:<path>`, which stopped meaning "pre-repair" the moment the repair
+was committed as `90d8d447`: every PRE arm then executed repaired bytes and the
+fence aborted at `[ "$f3p" -eq 0 ]` without ever printing its summary. Both RED
+sources are now pinned to the **immutable revision `0bbc3591` (= `90d8d447^`)** —
+the audited pre-repair block (`bff3c86e…`, 57441 B) and the pre-repair prereg
+draft — the same `$pre_rev`/`$r3_rev` idiom the C13 sections at lines 667 and
+1184-1185 already use. The fence is therefore re-runnable at any future HEAD.
+
+The working-tree path is the repaired block. The execution-domain comparison uses
+deterministic local readlink/stat shims because the Windows-hosted session is not
+the staging guest; F1 deliberately uses real GNU `stat` against real absent local
+objects. All scratch files are under a fresh `/tmp` directory removed by the fence.
+No host contact, network operation, deployment, backtest, broker action, or
+protected trading surface is involved.
+
+The exact command below covers every required finding, plus the round-3 procfs
+discrimination (R2 finding 3), whose RED side is the call-removal mutation that
+makes the crafted-`/proc` fixture admissible again. For F2, whose pre-fix bytes
+contain no gate to execute, the RED side is likewise the explicit call-removal
+mutation required by D026. All other RED sides execute the audited pre-repair bytes.
 
 ```bash
 set -Eeuo pipefail
 cd /c/LAB/Tradingview_LAB_CLEAN
 target='MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh'
 draft='MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/WPI_PREREGISTRATION_DRAFT.md'
+# IMMUTABLE pre-repair revision. `90d8d447` is the full-block repair commit, so
+# `90d8d447^` = 0bbc3591 is the audited pre-repair tree for BOTH the block
+# (bff3c86e..., 57441 B) and the prereg draft. Never `HEAD`: after the repair was
+# committed, `HEAD:<path>` is the repaired object and every RED arm silently
+# becomes a second POST arm (re-audit R2 finding 2a).
+pre_rev=0bbc3591
 Q="$(mktemp -d)"
 trap 'rm -rf -- "$Q"' EXIT
-git show "HEAD:$target" > "$Q/pre.sh"
+git show "$pre_rev:$target" > "$Q/pre.sh"
 cp -- "$target" "$Q/post.sh"
+printf 'RED_SOURCE rev=%s sha256=%s bytes=%s\n' "$pre_rev" \
+    "$(sha256sum < "$Q/pre.sh" | cut -d' ' -f1)" "$(wc -c < "$Q/pre.sh")"
 
 exfn() {
     local src="$1" fn="$2"
@@ -1660,6 +1710,14 @@ require_contains() {
     case "$haystack" in
         *"$needle"*) printf 'ASSERT_MET label=%s token=[%s]\n' "$label" "$needle" ;;
         *) printf 'ASSERT_UNMET label=%s token=[%s]\n' "$label" "$needle"; return 1 ;;
+    esac
+}
+
+require_absent() {
+    local label="$1" haystack="$2" needle="$3"
+    case "$haystack" in
+        *"$needle"*) printf 'ASSERT_UNMET label=%s forbidden_token_present=[%s]\n' "$label" "$needle"; return 1 ;;
+        *) printf 'ASSERT_MET label=%s forbidden_token_absent=[%s]\n' "$label" "$needle" ;;
     esac
 }
 
@@ -1715,7 +1773,19 @@ printf '%s\n' '#!/usr/bin/env bash' \
     '  /) printf "/\n" ;;' \
     '  *) [ "$verbose" = yes ] && printf "%s: %s: No such file or directory\n" "$0" "$p" >&2; exit 1 ;;' \
     'esac' > "$Q/readlink-domain"
-printf '%s\n' '#!/usr/bin/env bash' 'printf "2049:2\n"' > "$Q/stat-domain"
+# stat shim: `-c %d:%i` answers the root object identity, `-c %d` answers an
+# object device. The root object is always device 2049; NS_DEVICE drives the
+# round-3 procfs discrimination from both sides - 77 is an nsfs-like device
+# distinct from the root filesystem, 2049 is the crafted-link case where the
+# fabricated namespace object was allocated on the root filesystem itself.
+printf '%s\n' '#!/usr/bin/env bash' \
+    'fmt=""; for a in "$@"; do case "$a" in "%d:%i"|"%d") fmt="$a" ;; esac; done' \
+    'p="${@: -1}"' \
+    'case "$fmt" in' \
+    '  "%d:%i") printf "2049:2\n" ;;' \
+    '  "%d") if [ "$p" = / ]; then printf "2049\n"; else printf "%s\n" "${NS_DEVICE:-77}"; fi ;;' \
+    '  *) printf "%s: unexpected format\n" "$0" >&2; exit 1 ;;' \
+    'esac' > "$Q/stat-domain"
 chmod +x "$Q/readlink-domain" "$Q/stat-domain"
 
 build_f2_domain_arm() {
@@ -1729,9 +1799,15 @@ build_f2_domain_arm() {
             'P0_ATTESTED_PID_NS="pid:[103]"; P0_ATTESTED_NET_NS="net:[104]"' \
             'P0_ATTESTED_ROOT_MOUNT_ID=2049:2'
         printf 'P0_READLINK=%q\nP0_STAT=%q\n' "$Q/readlink-domain" "$Q/stat-domain"
-        printf '%s\n' 'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }'
+        printf '%s\n' 'P0_SAFE=""' 'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }'
         exfn "$src" p0_sanitize
         exfn "$src" p0_prepare_readlink_detail
+        exfn "$src" p0_read_object_device
+        if [ "$mutate" = nodevice ]; then
+            exfn "$src" p0_assert_ns_link_off_root | sed '/^    \[ "$P0_DEVICE" != "$root_dev" \] \\/,+1d'
+        else
+            exfn "$src" p0_assert_ns_link_off_root
+        fi
         if [ "$mutate" = yes ]; then
             exfn "$src" p0_read_domain_ns | sed '/^    \[ "$raw" = "$attested" \] \\/,+1d'
         else
@@ -1752,6 +1828,25 @@ DOMAIN_MODE=mismatch run_capture 'F2 RED comparison-removed mutant' "$Q/f2-mutan
 [ "$f2mis" -eq 3 ] && require_contains F2_MISMATCH "$f2miso" 'execution_domain_mismatch field=network_namespace'
 [ "$f2un" -eq 3 ] && require_contains F2_UNREADABLE "$f2uno" 'execution_domain_unattested field=user_namespace'
 [ "$f2mut" -eq 0 ] && require_contains F2_MUTANT "$f2muto" 'binding=deploy_attested_exact'
+
+# R2 finding 3: crafted `/proc`. Every readlink token, its grammar and the root
+# dev:inode are PERFECT - only the device of the object the namespace link
+# resolves to betrays it, because a fabrication allocated on the root filesystem
+# cannot be on the anonymous nsfs superblock. The GREEN arm above already proves
+# the honest case is admitted (devices 77 vs root 2049); this arm proves the
+# crafted case is refused, and the call-removal mutant proves the refusal is the
+# new code and not something else in the gate. The mutation deletes ONLY the
+# device comparison, so the mutant still reads and prints the devices: its
+# evidence line shows all four namespace links on the root device 2049 while
+# still claiming `ns_link_devices_distinct_from_root=yes` - exactly the false
+# sentence the comparison exists to prevent.
+NS_DEVICE=2049 DOMAIN_MODE=match run_capture 'F3 POST crafted procfs on root filesystem' "$Q/f2-match.sh"; f3fake=$QA_LAST_RC; f3fakeo=$QA_LAST_OUT
+build_f2_domain_arm "$Q/post.sh" "$Q/f3-nodevice-mutant.sh" nodevice
+NS_DEVICE=2049 DOMAIN_MODE=match run_capture 'F3 RED device-check-removed mutant' "$Q/f3-nodevice-mutant.sh"; f3mut=$QA_LAST_RC; f3muto=$QA_LAST_OUT
+[ "$f3fake" -eq 3 ] && require_contains F3_FAKE_PROCFS "$f3fakeo" 'execution_domain_unattested field=user_namespace detail=namespace_link_on_root_filesystem device=2049 root_device=2049'
+[ "$f3mut" -eq 0 ] && require_contains F3_MUTANT "$f3muto" 'binding=deploy_attested_exact visible_pid1_comparison=not_used procfs_identity=not_established ns_link_devices=2049,2049,2049,2049 root_device=2049 ns_link_devices_distinct_from_root=yes'
+require_contains F3_DISCLOSURE "$f2matcho" 'procfs_identity=not_established ns_link_devices=77,77,77,77 root_device=2049 ns_link_devices_distinct_from_root=yes'
+require_contains F3_CLAIM_RESIDUAL "$(grep 'P0_claim does_not_establish=' "$Q/post.sh")" 'procfs_mount_identity_of_the_namespace_links'
 
 {
     printf '%s\n' 'set -Eeuo pipefail' 'p0_stop(){ printf "P0_STOP reason=%s\n" "$*"; exit 3; }'
@@ -1895,7 +1990,12 @@ build_f7_tool_arm() {
 build_f7_tool_arm "$Q/pre.sh" "$Q/f7-tool-pre.sh"; run_capture 'F7 PRE tool invocation token' "$Q/f7-tool-pre.sh"; f7tp=$QA_LAST_RC; f7tpo=$QA_LAST_OUT
 build_f7_tool_arm "$Q/post.sh" "$Q/f7-tool-post.sh"; run_capture 'F7 POST tool invocation token' "$Q/f7-tool-post.sh"; f7tg=$QA_LAST_RC; f7tgo=$QA_LAST_OUT
 [ "$f7tp" -eq 3 ] && require_contains F7_TOOL_PRE "$f7tpo" 'tool_not_executable'
-[ "$f7tg" -eq 3 ] && require_contains F7_TOOL_POST "$f7tgo" 'tool_not_evaluable tool=getent rc=126 detail=access_builtin_x_denied'
+# Round 3 (R2 finding 1): the required token, the RESTORED resolved path, and
+# `rc=na` - no invocation happened, so no invocation status may be asserted. The
+# forbidden-token check is the point of the repair: `rc=126` must be gone.
+[ "$f7tg" -eq 3 ] && require_contains F7_TOOL_POST "$f7tgo" "tool_not_evaluable tool=getent path=$Q/nonexec-tool rc=na detail=access_builtin_x_denied mechanism=access_builtin_x"
+require_absent F7_TOOL_POST_NO_FABRICATED_RC "$f7tgo" 'rc=126'
+require_contains F7_TOOL_PRE_PATH "$f7tpo" "path=$Q/nonexec-tool"
 
 # F7b group token.
 printf '%s\n' '#!/usr/bin/env bash' 'printf "group backend unavailable\n" >&2' 'exit 7' > "$Q/id-fail"
@@ -1948,55 +2048,78 @@ done
 [ "$f7ip_mtc" -eq 3 ] && require_contains F7_ID_PRE_MTC "$f7ipo_mtc" 'state_account_resolution_unexpected account=mtc-bridge'
 [ "$f7ig_mtc" -eq 3 ] && require_contains F7_ID_POST_MTC "$f7igo_mtc" 'identity_unexpected observed_numeric=1001:988 expected_numeric=999:988 account=mtc-bridge'
 
-pre_draft_row="$(git show "HEAD:$draft" | grep 'identity_unexpected account=mtc-bridge observed_numeric')"
+# Pinned to the same immutable revision, not HEAD: after the row-3 reorder was
+# committed the HEAD draft no longer carries the old order and this grep returned
+# nothing, which under `set -e` killed the fence outright (R2 finding 2a).
+pre_draft_row="$(git show "$pre_rev:$draft" | grep 'identity_unexpected account=mtc-bridge observed_numeric')"
 post_draft_row="$(grep 'identity_unexpected observed_numeric=<u:g> expected_numeric=999:988 account=mtc-bridge' "$draft")"
 [ -n "$pre_draft_row" ] && [ -n "$post_draft_row" ]
 printf 'F7_DRAFT_RED old_order_present=yes\nF7_DRAFT_GREEN unified_order_present=yes\n'
 
-printf 'RP6_FULLBLOCK_D026_SUMMARY findings=7 real_lstat_arms=2 execution_domain_cases=7 readlink_stop_arms=3 result=PASS\n'
+# R2 finding 1, draft half: row 1's divergence grammar must now admit `rc=na`,
+# because P0 decides executability with builtins and never invokes an inventory
+# tool. RED is the pinned pre-repair revision, which forces a numeric rc.
+pre_row1="$(git show "$pre_rev:$draft" | grep -c 'tool_not_evaluable tool=getent rc=<n> detail=<d>')"
+post_row1="$(grep -c 'tool_not_evaluable tool=getent path=<p> rc=<n|na> detail=<d> mechanism=<m>' "$draft")"
+printf 'F1_DRAFT_RED numeric_only_row1_at_%s=%s\nF1_DRAFT_GREEN rc_na_row1_in_worktree=%s\n' \
+    "$pre_rev" "$pre_row1" "$post_row1"
+[ "$pre_row1" -eq 1 ] && [ "$post_row1" -eq 1 ]
+
+printf 'RP6_FULLBLOCK_D026_SUMMARY findings=7 round3_residuals=3 real_lstat_arms=2 execution_domain_cases=9 readlink_stop_arms=3 result=PASS\n'
 ```
 
 Real captured output is recorded immediately below after literal extraction and
 execution of this fence.
 
 ```text
+RED_SOURCE rev=0bbc3591 sha256=bff3c86e6e9b565c55da34580284f22c80253d9e931d879fd749459bac85b7cf bytes=57441
 === F1 PRE root real-lstat ===
-P0_STOP reason=path_probe_unclassified path=/tmp/tmp.mBlLjsCsFC/real-lstat-missing-root rc=1 detail=/usr/bin/stat: cannot stat '/tmp/tmp.mBlLjsCsFC/real-lstat-missing-root': No such file or directory
+P0_STOP reason=path_probe_unclassified path=/tmp/tmp.mHxGJ79geT/real-lstat-missing-root rc=1 detail=/usr/bin/stat: cannot stat '/tmp/tmp.mHxGJ79geT/real-lstat-missing-root': No such file or directory
 RC=3
 === F1 POST root real-lstat ===
-P0_FAIL reason=venv_root_absent path=/tmp/tmp.mBlLjsCsFC/real-lstat-missing-root detail=preregistered_path_observed_missing
+P0_FAIL reason=venv_root_absent path=/tmp/tmp.mHxGJ79geT/real-lstat-missing-root detail=preregistered_path_observed_missing
 RC=1
 === F1 PRE interpreter real-lstat ===
-P0_STOP reason=path_probe_unclassified path=/tmp/tmp.mBlLjsCsFC/real-lstat-missing-venv/bin/python rc=1 detail=/usr/bin/stat: cannot stat '/tmp/tmp.mBlLjsCsFC/real-lstat-missing-venv/bin/python': No such file or directory
+P0_STOP reason=path_probe_unclassified path=/tmp/tmp.mHxGJ79geT/real-lstat-missing-venv/bin/python rc=1 detail=/usr/bin/stat: cannot stat '/tmp/tmp.mHxGJ79geT/real-lstat-missing-venv/bin/python': No such file or directory
 RC=3
 === F1 POST interpreter real-lstat ===
-P0_FAIL reason=interpreter_absent path=/tmp/tmp.mBlLjsCsFC/real-lstat-missing-venv/bin/python detail=preregistered_path_observed_missing_parent_search_succeeded
+P0_FAIL reason=interpreter_absent path=/tmp/tmp.mHxGJ79geT/real-lstat-missing-venv/bin/python detail=preregistered_path_observed_missing_parent_search_succeeded
 RC=1
 ASSERT_MET label=F1_PRE_ROOT token=[path_probe_unclassified]
 ASSERT_MET label=F1_POST_ROOT token=[venv_root_absent]
 ASSERT_MET label=F1_PRE_PY token=[path_probe_unclassified]
 ASSERT_MET label=F1_POST_PY token=[interpreter_absent]
 === F2 POST matching attestation ===
-P0_execution_domain user_ns=user:[101] mnt_ns=mnt:[102] pid_ns=pid:[103] net_ns=net:[104] root_mount_id=2049:2 binding=deploy_attested_exact visible_pid1_comparison=not_used
+P0_execution_domain user_ns=user:[101] mnt_ns=mnt:[102] pid_ns=pid:[103] net_ns=net:[104] root_mount_id=2049:2 binding=deploy_attested_exact visible_pid1_comparison=not_used procfs_identity=not_established ns_link_devices=77,77,77,77 root_device=2049 ns_link_devices_distinct_from_root=yes
 RC=0
 === F2 POST mismatched attestation ===
 P0_STOP reason=execution_domain_mismatch field=network_namespace observed=net:[999] attested=net:[104]
 RC=3
 === F2 POST unreadable identity ===
-P0_STOP reason=execution_domain_unattested field=user_namespace rc=1 detail=[/tmp/tmp.mBlLjsCsFC/readlink-domain: /proc/self/ns/user: Permission denied] diagnostic_shape=single_printable_record
+P0_STOP reason=execution_domain_unattested field=user_namespace rc=1 detail=[/tmp/tmp.mHxGJ79geT/readlink-domain: /proc/self/ns/user: Permission denied] diagnostic_shape=single_printable_record
 RC=3
 === F2 RED comparison-removed mutant ===
-P0_execution_domain user_ns=user:[101] mnt_ns=mnt:[102] pid_ns=pid:[103] net_ns=net:[999] root_mount_id=2049:2 binding=deploy_attested_exact visible_pid1_comparison=not_used
+P0_execution_domain user_ns=user:[101] mnt_ns=mnt:[102] pid_ns=pid:[103] net_ns=net:[999] root_mount_id=2049:2 binding=deploy_attested_exact visible_pid1_comparison=not_used procfs_identity=not_established ns_link_devices=77,77,77,77 root_device=2049 ns_link_devices_distinct_from_root=yes
 RC=0
 ASSERT_MET label=F2_MATCH token=[binding=deploy_attested_exact]
 ASSERT_MET label=F2_MISMATCH token=[execution_domain_mismatch field=network_namespace]
 ASSERT_MET label=F2_UNREADABLE token=[execution_domain_unattested field=user_namespace]
 ASSERT_MET label=F2_MUTANT token=[binding=deploy_attested_exact]
+=== F3 POST crafted procfs on root filesystem ===
+P0_STOP reason=execution_domain_unattested field=user_namespace detail=namespace_link_on_root_filesystem device=2049 root_device=2049
+RC=3
+=== F3 RED device-check-removed mutant ===
+P0_execution_domain user_ns=user:[101] mnt_ns=mnt:[102] pid_ns=pid:[103] net_ns=net:[104] root_mount_id=2049:2 binding=deploy_attested_exact visible_pid1_comparison=not_used procfs_identity=not_established ns_link_devices=2049,2049,2049,2049 root_device=2049 ns_link_devices_distinct_from_root=yes
+RC=0
+ASSERT_MET label=F3_FAKE_PROCFS token=[execution_domain_unattested field=user_namespace detail=namespace_link_on_root_filesystem device=2049 root_device=2049]
+ASSERT_MET label=F3_MUTANT token=[binding=deploy_attested_exact visible_pid1_comparison=not_used procfs_identity=not_established ns_link_devices=2049,2049,2049,2049 root_device=2049 ns_link_devices_distinct_from_root=yes]
+ASSERT_MET label=F3_DISCLOSURE token=[procfs_identity=not_established ns_link_devices=77,77,77,77 root_device=2049 ns_link_devices_distinct_from_root=yes]
+ASSERT_MET label=F3_CLAIM_RESIDUAL token=[procfs_mount_identity_of_the_namespace_links]
 === F2 POST missing-input precheck ===
 P0_STOP reason=execution_domain_unattested field=user_namespace detail=preregistered_value_missing
 RC=3
 === F2 RED precheck-removed backstop ===
-/tmp/tmp.mBlLjsCsFC/f2-input-mutant.sh: line 11: P0_ATTESTED_USER_NS: deploy-attested user namespace identity is required
+/tmp/tmp.mHxGJ79geT/f2-input-mutant.sh: line 11: P0_ATTESTED_USER_NS: deploy-attested user namespace identity is required
 RC=1
 ASSERT_MET label=F2_INPUT token=[execution_domain_unattested field=user_namespace]
 ASSERT_MET label=F2_BACKSTOP token=[P0_ATTESTED_USER_NS:]
@@ -2026,19 +2149,19 @@ ASSERT_MET label=F4_POST token=[prereg_input_malformed name=P0_TOOL_PINS duplica
 P0_STOP reason=evidence_binding_unprobeable path=/fixture/fd8 rc=1 detail=
 RC=3
 === F5 POST evidence ===
-P0_STOP reason=evidence_binding_unprobeable path=/fixture/fd8 rc=1 detail=[/tmp/tmp.mBlLjsCsFC/readlink-diag: fixture: Permission denied] diagnostic_shape=single_printable_record
+P0_STOP reason=evidence_binding_unprobeable path=/fixture/fd8 rc=1 detail=[/tmp/tmp.mHxGJ79geT/readlink-diag: fixture: Permission denied] diagnostic_shape=single_printable_record
 RC=3
 === F5 PRE namespace ===
 P0_STOP reason=namespace_unreadable ns=net path=/fixture/ns rc=1 detail=
 RC=3
 === F5 POST namespace ===
-P0_STOP reason=execution_domain_unattested field=network_namespace rc=1 detail=[/tmp/tmp.mBlLjsCsFC/readlink-diag: fixture: Permission denied] diagnostic_shape=single_printable_record
+P0_STOP reason=execution_domain_unattested field=network_namespace rc=1 detail=[/tmp/tmp.mHxGJ79geT/readlink-diag: fixture: Permission denied] diagnostic_shape=single_printable_record
 RC=3
 === F5 PRE venv ===
 P0_STOP reason=venv_root_canonicalization_failed path=/fixture/venv rc=1 detail=
 RC=3
 === F5 POST venv ===
-P0_STOP reason=venv_root_canonicalization_failed path=/fixture/venv rc=1 detail=[/tmp/tmp.mBlLjsCsFC/readlink-diag: fixture: Permission denied] diagnostic_shape=single_printable_record
+P0_STOP reason=venv_root_canonicalization_failed path=/fixture/venv rc=1 detail=[/tmp/tmp.mHxGJ79geT/readlink-diag: fixture: Permission denied] diagnostic_shape=single_printable_record
 RC=3
 ASSERT_MET label=F5_PRE_evidence token=[detail=]
 ASSERT_MET label=F5_POST_evidence token=[Permission denied]
@@ -2050,7 +2173,7 @@ ASSERT_MET label=F5_PRE_venv token=[detail=]
 ASSERT_MET label=F5_POST_venv token=[Permission denied]
 ASSERT_MET label=F5_POST_venv_GRAMMAR token=[diagnostic_shape=single_printable_record]
 === F6 PRE NUL-only rc2 ===
-/tmp/tmp.mBlLjsCsFC/f6-pre.sh: line 31: warning: command substitution: ignored null byte in input
+/tmp/tmp.mHxGJ79geT/f6-pre.sh: line 31: warning: command substitution: ignored null byte in input
 OUTCOME=nomatch DIAG=[empty_capture_at_rc2]
 RC=0
 === F6 POST NUL-only rc2 ===
@@ -2059,13 +2182,15 @@ RC=0
 ASSERT_MET label=F6_PRE token=[OUTCOME=nomatch]
 ASSERT_MET label=F6_POST token=[OUTCOME=error DIAG=[nul_byte_in_merged_capture]]
 === F7 PRE tool invocation token ===
-P0_STOP reason=tool_not_executable tool=getent path=/tmp/tmp.mBlLjsCsFC/nonexec-tool mechanism=access_builtin_x
+P0_STOP reason=tool_not_executable tool=getent path=/tmp/tmp.mHxGJ79geT/nonexec-tool mechanism=access_builtin_x
 RC=3
 === F7 POST tool invocation token ===
-P0_STOP reason=tool_not_evaluable tool=getent rc=126 detail=access_builtin_x_denied
+P0_STOP reason=tool_not_evaluable tool=getent path=/tmp/tmp.mHxGJ79geT/nonexec-tool rc=na detail=access_builtin_x_denied mechanism=access_builtin_x
 RC=3
 ASSERT_MET label=F7_TOOL_PRE token=[tool_not_executable]
-ASSERT_MET label=F7_TOOL_POST token=[tool_not_evaluable tool=getent rc=126 detail=access_builtin_x_denied]
+ASSERT_MET label=F7_TOOL_POST token=[tool_not_evaluable tool=getent path=/tmp/tmp.mHxGJ79geT/nonexec-tool rc=na detail=access_builtin_x_denied mechanism=access_builtin_x]
+ASSERT_MET label=F7_TOOL_POST_NO_FABRICATED_RC forbidden_token_absent=[rc=126]
+ASSERT_MET label=F7_TOOL_PRE_PATH token=[path=/tmp/tmp.mHxGJ79geT/nonexec-tool]
 === F7 PRE group token ===
 P0_STOP reason=identity_probe_failed field=gids flag=-G rc=7 detail=group backend unavailable
 RC=3
@@ -2100,25 +2225,45 @@ ASSERT_MET label=F7_ID_PRE_MTC token=[state_account_resolution_unexpected accoun
 ASSERT_MET label=F7_ID_POST_MTC token=[identity_unexpected observed_numeric=1001:988 expected_numeric=999:988 account=mtc-bridge]
 F7_DRAFT_RED old_order_present=yes
 F7_DRAFT_GREEN unified_order_present=yes
-RP6_FULLBLOCK_D026_SUMMARY findings=7 real_lstat_arms=2 execution_domain_cases=7 readlink_stop_arms=3 result=PASS
+F1_DRAFT_RED numeric_only_row1_at_0bbc3591=1
+F1_DRAFT_GREEN rc_na_row1_in_worktree=1
+RP6_FULLBLOCK_D026_SUMMARY findings=7 round3_residuals=3 real_lstat_arms=2 execution_domain_cases=9 readlink_stop_arms=3 result=PASS
 ```
 
 ### Full-block repair verification record
 
-- Literal fence extraction: `sed -n '1636,1956p' SELF_QA_RP6.md | bash
-  --noprofile --norc` under Git Bash 5.2.37 — rc 0.
+Re-derived in repair round 3 against the round-3 bytes. Every line below was
+executed in this session; nothing is carried forward from an earlier round.
+
+- Literal fence extraction: `sed -n '1678,2068p' SELF_QA_RP6.md | bash
+  --noprofile --norc` under Git Bash 5.2.37 — rc 0, summary
+  `RP6_FULLBLOCK_D026_SUMMARY findings=7 round3_residuals=3 real_lstat_arms=2
+  execution_domain_cases=9 readlink_stop_arms=3 result=PASS`.
 - Normalized transcript comparison (only the random `/tmp/tmp.*` root replaced
-  with `<Q>` on each side) — `NORMALIZED_TRANSCRIPT_MATCH=True`.
-- Existing C13 R4 arm harness, updated only for the F7 reason grammar and re-run:
-  `C13_R4_ARM_QA_SUMMARY cases=27 result=PASS`, process rc 0.
-- Existing C13 backstop harness re-run unchanged:
-  `C13_R3_BACKSTOP_QA_SUMMARY inputs=2 mutations=2 cases=4 result=PASS`, process
-  rc 0.
+  with `<Q>` on each side) — `NORMALIZED_TRANSCRIPT_MATCH=True`. The RED side is
+  the immutable `0bbc3591` (`= 90d8d447^`) blob, re-derived by the fence itself:
+  `RED_SOURCE rev=0bbc3591 sha256=bff3c86e… bytes=57441`, so the fence no longer
+  depends on where `HEAD` happens to be.
+- C13 R3 arm harness, `sed -n '664,787p'` — rc 0,
+  `C13_R3_ARM_QA_SUMMARY cases=16 result=PASS`, recorded transcript byte-identical
+  to the re-run (`cmp` clean).
+- C13 R3 `:?` backstop harness, `sed -n '952,1035p'` — rc 0,
+  `C13_R3_BACKSTOP_QA_SUMMARY inputs=2 mutations=2 cases=4 result=PASS`, recorded
+  transcript byte-identical to the re-run (`cmp` clean).
+- C13 R4 arm harness, `sed -n '1181,1346p'` — rc 0,
+  `C13_R4_ARM_QA_SUMMARY cases=27 result=PASS`, recorded transcript
+  byte-identical to the re-run (`cmp` clean).
+- F2 freeze-literal gate fence, `sed -n '2286,2319p'` — rc 0,
+  `F2_FREEZE_GATE_QA_SUMMARY placeholder_rc=3 filled_fixture_rc=0 result=PASS`,
+  recorded transcript byte-identical to the re-run.
 - `bash -n RP6-P0.sh` — rc 0, `BASH_N=PASS`.
-- Repaired executable SHA-256:
-  `041c9da9769e36638c9785b54afc638fa8e7b475a6d24238fc10388916c048db`.
-- Repaired executable byte count: `66381`.
-- Byte form: `CR_BYTES=0`, `LF_BYTES=1248`, `BOM=False`.
+- Round-3 executable SHA-256:
+  `2d9b166eacfc39ebe0d8d89edb5860876ccc4d9f0ff97f9e10a228dbcf96289e`.
+- Round-3 executable byte count: `71743`.
+- Byte form: `CR_BYTES=0`, `LF_BYTES=1328`, `BOM=False`, 0 non-ASCII bytes, 0
+  trailing-whitespace lines.
+- Round-2 (pre-round-3) identity, superseded: SHA-256
+  `041c9da9769e36638c9785b54afc638fa8e7b475a6d24238fc10388916c048db`, 66381 bytes.
 - Audited pre-repair identity: SHA-256
   `bff3c86e6e9b565c55da34580284f22c80253d9e931d879fd749459bac85b7cf`,
   57441 bytes.
@@ -2185,3 +2330,99 @@ RC=3
 RC=0
 F2_FREEZE_GATE_QA_SUMMARY placeholder_rc=3 filled_fixture_rc=0 result=PASS
 ```
+
+---
+
+## Repair round 3 — the three re-audit R2 residuals (FINAL T0 round)
+
+Implementer: `claude-opus-5` xhigh, fresh session, 2026-08-10, local Git Bash
+5.2.37 only. Contract: `RP6_CLAUDE_REAUDIT_R2_2026-08-10.md` findings 1-3 plus
+nits 1-2, via `KICKOFF_RP6_REPAIR_R3.md`. No host contact, no network command, no
+commit. Round-3 identity: `2d9b166eacfc39ebe0d8d89edb5860876ccc4d9f0ff97f9e10a228dbcf96289e`,
+71743 B, `bash -n` rc 0.
+
+### Repair decisions
+
+**Finding 1 — fabricated `rc=126`, lost resolved path.** `RP6-P0.sh` now emits
+`tool_not_evaluable tool=$t path=$resolved rc=na detail=access_builtin_x_denied
+mechanism=access_builtin_x`. `rc=na` was chosen over a numeric status *and*
+prereg §8.1 row 1 was amended, because the row's `rc=<n>` grammar cannot be
+honestly satisfied by any arm of this block: P0 decides resolution and
+executability with `command -v` and `[ -x ]` alone and deliberately never invokes
+an inventory tool, so there is no invocation status to report. The row now reads
+`path=<p> rc=<n|na> detail=<d> mechanism=<m>`, makes `rc=na` mandatory for the
+`access_builtin_x` arm, reserves `rc=<n>` for an arm that actually invoked
+something, and records why. Evidence: fence labels `F7_TOOL_POST` (full line with
+the restored path), `F7_TOOL_POST_NO_FABRICATED_RC` (the forbidden `rc=126` token
+is absent), `F7_TOOL_PRE_PATH` (the pre-repair bytes did carry `path=`, so the
+regression is closed on the same fixture), and `F1_DRAFT_RED` / `F1_DRAFT_GREEN`
+for the two draft revisions.
+
+**Finding 2 — the repair's own D026 evidence did not reproduce.** Two causes,
+both fixed at the source rather than by re-recording alone:
+
+1. The full-block fence took its RED side from `git show HEAD:<path>`, which
+   became the *repaired* object the moment the repair was committed. Both RED
+   sources — block and prereg draft — are now pinned to the immutable revision
+   `0bbc3591` (`= 90d8d447^`), the same `$pre_rev` idiom the C13 sections already
+   used, and the fence prints `RED_SOURCE rev=… sha256=… bytes=…` so a reader can
+   see which bytes the RED arms actually ran.
+2. All four recorded transcripts were re-executed and replaced. Three now
+   reproduce **byte-identically** (`cmp` clean) from the line ranges the document
+   itself cites; the fourth (the full-block fence) reproduces after normalizing
+   only its random `mktemp` root. The freeze-literal gate fence was re-run too
+   and still reproduces byte-identically, so all five recorded outputs in this
+   file are current.
+
+**Finding 3 — row 8 claimed a binding whose limits it did not disclose.** Both
+halves of the auditor's remedy were applied, because neither alone is honest:
+
+- *The discrimination.* `p0_assert_ns_link_off_root` compares the device of each
+  followed namespace link against the device of the root object, which the gate
+  already reads as the left field of `%d:%i` — so this costs one `stat` per link
+  and no new tool. A kernel namespace inode lives on the anonymous `nsfs`
+  superblock; a fabricated link, or the ordinary file a fabricated link resolves
+  to, allocated on the root filesystem fails the comparison even when its
+  readlink text, its grammar and the root `dev:inode` are all perfect.
+- *The disclosure.* The device test does **not** establish procfs identity — a
+  fabrication placed on any *other* filesystem would also carry a distinct
+  device. The evidence line therefore states `procfs_identity=not_established`
+  alongside the observed `ns_link_devices=…`/`root_device=…`, and
+  `procfs_mount_identity_of_the_namespace_links` is added to the terminal
+  `does_not_establish` claim.
+
+Evidence: fence labels `F3_FAKE_PROCFS` (crafted-`/proc` fixture refused rc 3
+with `namespace_link_on_root_filesystem device=2049 root_device=2049`),
+`F3_MUTANT` (deleting **only** the comparison admits the same fixture at rc 0 and
+prints the now-false `ns_link_devices=2049,2049,2049,2049 root_device=2049
+ns_link_devices_distinct_from_root=yes` — the check is load-bearing),
+`F3_DISCLOSURE` (the honest arm records devices `77,77,77,77` vs root `2049`),
+and `F3_CLAIM_RESIDUAL` (the residual is in the terminal claim).
+
+`stat -f -c '%t'` filesystem-magic discrimination (nsfs `6e736673`) would be
+strictly stronger and also needs no new tool, and was **not** used: its `-f`/`-L`
+semantics cannot be executed or falsified on this Windows workstation, and D026
+forbids offering an unexecuted mechanism as closure evidence for a T0 block. It
+is recorded as the successor's option.
+
+**Nit 1 — `(os error 2)`.** The attribution is corrected in
+`RP6_FULLBLOCK_REPAIR_REPORT.md` and `STATUS_RP6_P0.md`, and **the alternative
+was dropped, not kept**: `(os error N)` is a Rust `std::io::Error` rendering from
+uutils coreutils, uutils derives its prefix from the *basename* of `argv[0]`, and
+`$P0_STAT` is always absolute — so no producer can emit both halves and the arm
+could never match. A comment at the classifier records why it is gone.
+
+**Nit 2 — producer assumption.** A `STATED PRODUCER ASSUMPTION` paragraph in the
+block header names it: the FAIL arms depend on the GNU coreutils failure shape
+with the invoked absolute `argv[0]`; on a uutils host every object arm returns
+`path_probe_unclassified` at rc 3, so the audit-1 F1 class returns **fail-closed**
+and the shape must be re-pinned before such a host is preregistered.
+
+### What this round did NOT change
+
+The account/getent arms, the capture machinery, the evidence binding, the manager
+query, the interpreter arms and the five `<PIN-AT-FREEZE>` freeze literals are
+untouched. The block remains a DRAFT that cannot GREEN end-to-end until the
+deploy channel mints and embeds the five attestation literals. No repository file
+outside the five whitelisted paths plus the prereg draft's §8.1 row 1 was written,
+and no commit was made.

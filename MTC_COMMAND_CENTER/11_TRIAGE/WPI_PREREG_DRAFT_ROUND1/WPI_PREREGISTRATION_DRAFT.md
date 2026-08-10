@@ -219,9 +219,9 @@ authored for WP-I and pinned at Stage 1.
 
 | File | Bytes | SHA-256 | Role |
 |---|---:|---|---|
-| `remote_setup_wpi.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 01 stdin - create-once remote allocation. Minimal derivation of the accepted `remote_setup.sh` (4976 B, `faee3725…`): the ONLY semantic change is the base-prefix constant `wpl_p2_staging_` → `wpi_staging_` (round 1.5); the derivation diff is recorded in self-QA and must show nothing else changed |
-| `remote_extract_verify_wpi.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 03 stdin - archive/member/hash verification + extraction. Minimal derivation of the accepted `remote_extract_verify.sh` (8270 B, `ba0bef0e…`): the ONLY semantic change is the pinned archive-constants block (bytes, member list, per-member digests = the WP-I kit of section 3, `RP1-B3.sh` excluded; concrete values enter at Stage 1 freeze); derivation diff recorded in self-QA |
-| `remote_close_tree.sh` | 7470 | `87157f0ea454df7c1f826a8c76a38f3045dd38efdd8fa347644f79251d3f3f0e` | ops 07 and 08 stdin - closed-tree hashing. Byte-identical reuse; verified free of unit-specific constants (round 1.5) |
+| `remote_setup_wpi.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 01 stdin - create-once remote allocation. Derivation of the accepted `remote_setup.sh` (4976 B, `faee3725…`) whose permitted semantic changes are EXACTLY, and only, the four classes enumerated in the round-2 derivation contract below; the derivation diff is recorded in self-QA and must show nothing outside those four classes |
+| `remote_extract_verify_wpi.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 03 stdin - archive/member/hash verification + extraction. Derivation of the accepted `remote_extract_verify.sh` (8270 B, `ba0bef0e…`) whose permitted semantic changes are EXACTLY, and only, the four classes enumerated in the round-2 derivation contract below. No member-count literal may exist: every count is derived from the `MEMBERS` constant, so the archive-constants block remains the single source of the member set |
+| `remote_close_tree.sh` | 7470 | `87157f0ea454df7c1f826a8c76a38f3045dd38efdd8fa347644f79251d3f3f0e` | ops 07 and 08 stdin - closed-tree hashing. Byte-identical reuse; verified free of unit-specific constants (round 1.5). It is NOT copied into the WP-I draft directory: the plan names it with the `ACCEPTED` root token and the runner resolves that token to the frozen Stage-2 `02_PREREG` directory, so the bytes that travel are the accepted bytes at the digest above and nowhere else |
 | `transport_runner.ps1` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | operator-side recorder (Stage 2 variants exist at 18095/`c5bdb47c...` and 17849/`a48ddc93...`; the WP-I op list differs, so the runner is re-pinned, not assumed) |
 | `run_p0.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 04 stdin - P0 wrapper |
 | `run_ro.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 05 stdin - RO wrapper |
@@ -232,11 +232,55 @@ Reused-script disposition (round 1.5, superseding the round-1.1 N1 claim): only
 digest above. The N1 "contract fit, unchanged contract, no edit" claim was falsified
 for the other two at transport-set authoring (Codex STOP, 2026-08-10): both carry
 unit-specific constants incompatible with WP-I (see the round-1.5 note, section 0).
-`remote_setup_wpi.sh` and `remote_extract_verify_wpi.sh` are their minimal
-derivations; each derivation must be proven minimal by a recorded diff against the
+`remote_setup_wpi.sh` and `remote_extract_verify_wpi.sh` are their bounded
+derivations; each derivation must be proven bounded by a recorded diff against the
 accepted bytes in self-QA, and each is a new artifact requiring Stage 1 adversarial
 acceptance and its own pinned digest. Any byte change to `remote_close_tree.sh`
 still voids this section and re-opens review.
+
+**Round-2 derivation contract (amended 2026-08-10; Codex transport audit F3/F4/F6/F7,
+Claude transport audit F5).** Round 1 permitted only a constants change. Two required
+findings from the round-1 T0 audits cannot be satisfied inside a constants block —
+`remote_setup_wpi.sh` classified an ambiguous path diagnostic as absence and mutated
+through an unbound parent, and `remote_extract_verify_wpi.sh` consumed listing stdout
+before adjudicating status, diagnostics and record completion — and a third, the
+execution-environment rule below, is by construction executable. The permitted
+semantic changes for both derived scripts are therefore EXACTLY these four classes,
+and any delta outside them is still a finding:
+
+1. **Pinned archive/allocation constants** — the round-1 permission, unchanged: the
+   base-prefix constant for the setup script; the archive-constants block (bytes,
+   member list, per-member digests) for the extractor, plus the preregistered numeric
+   `EXPECT_UID`/`EXPECT_GID` the setup script compares against.
+2. **Program identity** — every executable either script invokes is resolved by a
+   frozen absolute path under the preregistered `/usr/bin/<tool>` set and admitted
+   only after a non-following kind check, numeric `0:0` ownership, and a
+   not-group/other-writable mode. The inherited `PATH` selects nothing, and no
+   `mktemp`/`TMPDIR` object is created at all.
+3. **STOP-before-mutation path classification** — the full parent chain is bound
+   (non-symlink, canonical, searchable, numerically owned, not group/other writable)
+   before the first `mkdir`; identity is compared numerically with the rendered
+   `%U:%G` name kept diagnostic only; and a path probe is classified `absent` only
+   when the probe failed, the kernel reports neither object nor link, and the
+   diagnostic equals — as a whole string — the template calibrated in the same run
+   from the pinned tool itself. Multiline, mixed or unrecognised diagnostics STOP.
+4. **Status-before-stdout adjudication** — every listing and tree walk has its exit
+   status, its complete diagnostic stream and its final-record termination adjudicated
+   before one byte of its stdout is parsed, and the archive is re-hashed after the
+   listings so a listing cannot describe different bytes from the ones hashed.
+
+Class 2 is not optional for either script: it is the same execution-environment rule
+the operator side obeys. `transport_runner.ps1` starts `ssh` and `scp` only from
+frozen absolute paths whose SHA-256, reparse state and full-chain write ACL (compared
+by numeric SID, never a rendered account name) are adjudicated first; it never
+consults `Get-Command` or the inherited `PATH`; and every child receives a
+deliberately constructed environment with a run-owned `TEMP` rather than the
+operator's. Both wrappers resolve `sha256sum` the same way.
+
+The frozen `runkit.tar` and the plan/runner live in **distinct** pinned directories —
+the kit in `01_RUNKIT` per section 5's op-02 working directory, the plan and runner in
+the preregistration directory — so an archive of the same name placed beside the
+runner cannot be selected.
 
 Both wrappers inherit the two repairs the Stage 2 wrappers needed: block paths are
 refused if they are symlinks (`-f` dereferences, so `-f` alone is not a refusal),
@@ -333,9 +377,9 @@ stdin** to `bash -s --`; no script is written to the host before it runs.
 
 | op | run_when | kind | remote/local argv after the pinned options |
 |---|---|---|---|
-| 01 | sequence_ok | ssh stdin `remote_setup.sh` | `gatea@172.24.55.233 bash -s -- <REMOTE_BASE>` |
-| 02 | sequence_ok | scp up | `runkit.tar gatea@172.24.55.233:<REMOTE_BASE>/kit/runkit.tar` (cwd `01_RUNKIT`) |
-| 03 | sequence_ok | ssh stdin `remote_extract_verify.sh` | `gatea@172.24.55.233 bash -s -- <REMOTE_BASE>/kit/runkit.tar <REMOTE_BASE>/kit/extracted <PIN-AT-STAGE-1 archive sha256>` |
+| 01 | sequence_ok | ssh stdin `remote_setup_wpi.sh` | `gatea@172.24.55.233 bash -s -- <REMOTE_BASE>` |
+| 02 | sequence_ok | scp up | `runkit.tar gatea@172.24.55.233:<REMOTE_BASE>/kit/runkit.tar` (cwd `01_RUNKIT`, a pinned directory distinct from the preregistration directory) |
+| 03 | sequence_ok | ssh stdin `remote_extract_verify_wpi.sh` | `gatea@172.24.55.233 bash -s -- <REMOTE_BASE>/kit/runkit.tar <REMOTE_BASE>/kit/extracted <PIN-AT-STAGE-1 archive sha256>` |
 | 04 | sequence_ok | ssh stdin `run_p0.sh` | `gatea@172.24.55.233 bash -s --` |
 | 05 | sequence_ok | ssh stdin `run_ro.sh` | `gatea@172.24.55.233 bash -s --` |
 | 06 | sequence_ok | operator-side probe, **host contact** | single TCP connect attempt to `172.24.55.233:8790`, no payload sent, no ssh (B6 external half) |
@@ -448,7 +492,7 @@ env-file naming risk remains *unresolved*, not *triggered*.
 
 | # | check | predicted outcome if it holds | exact predicted first divergence if it does not |
 |---|---|---|---|
-| 1 | `getent` present | `command -v getent` resolves and the resolved executable can run | `P0_STOP reason=missing_tool tool=getent` for absence, or `P0_STOP reason=tool_not_evaluable tool=getent rc=<n> detail=<d>` for invocation failure |
+| 1 | `getent` present | `command -v getent` resolves and the resolved executable can run | `P0_STOP reason=missing_tool tool=getent` for absence, or `P0_STOP reason=tool_not_evaluable tool=getent path=<p> rc=<n|na> detail=<d> mechanism=<m>` when the resolved object cannot be evaluated as executable. **`rc=na` is mandatory for the `mechanism=access_builtin_x` arm and `rc=<n>` is reserved for an arm that actually invoked something** (amended round 3, RP6-P0 re-audit R2 finding 1): P0 decides resolution and executability with shell builtins only — `command -v` and the access(2) predicate `[ -x ]` — and deliberately never invokes an inventory tool, so no P0 arm can carry an honest invocation status, and a numeric `rc` here would assert a probe that never ran. `path=<p>` is required because the `P0_tool name=… path=…` inventory lines are printed only after every tool has resolved, so this STOP is the sole place the rejected object is named |
 | 2 | executing identity | a complete, uniquely parsed `getent passwd gatea` entry defines the named login contract; numeric `id -u` and `id -g` equal that entry's uid and primary gid, while `id -un=gatea` and rendered names are diagnostic only | `P0_STOP reason=identity_unresolvable account=gatea rc=<n> detail=<d>` for resolver/invocation/parse ambiguity; after successful resolution, `P0_STOP reason=identity_unexpected observed_numeric=<u:g> expected_numeric=<u:g> account=gatea` for a mismatch |
 | 3 | service-account identity and login groups | because `install.sh` allocates the named account dynamically, a complete unique `getent passwd mtc-bridge` result must map that name to the preregistered numeric `WPI_STATE_UID:WPI_STATE_GID=999:988`; then complete numeric `id -G` output for `gatea` contains neither gid `0` nor gid `988`; rendered names are diagnostic only | `P0_STOP reason=identity_unresolvable account=mtc-bridge rc=<n> detail=<d>` for resolver/invocation/parse ambiguity; `P0_STOP reason=identity_unexpected observed_numeric=<u:g> expected_numeric=999:988 account=mtc-bridge` if the named allocation moved; `P0_STOP reason=group_query_not_evaluable rc=<n> detail=<d>` before group interpretation; after a complete parse, `P0_STOP reason=capability_wider_than_ledger gid=<g>` if 0 or 988 is present |
 | 4 | `ss` present | `command -v ss` resolves | `P0_STOP reason=missing_tool tool=ss` |

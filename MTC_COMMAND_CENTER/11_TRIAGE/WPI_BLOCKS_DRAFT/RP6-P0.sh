@@ -56,6 +56,15 @@
 # audit-1 F5 ruling: a PATH-resolved tool has no preregistered path, so its
 # absence is not an observation about a named host object.
 #
+# STATED PRODUCER ASSUMPTION (audit-2 R2 nit 2). The two FAIL arms are reached
+# only by matching the exact C-locale GNU coreutils `stat`/`statx` failure shape,
+# which carries the INVOKED absolute argv[0] as its prefix. That is an assumption
+# about the producer, not a universal: uutils coreutils renders the BASENAME of
+# argv[0], so on a uutils-coreutils host no shape matches, every object arm
+# returns `path_probe_unclassified` at rc 3, and the audit-1 F1 class returns
+# fail-closed - P0 refuses instead of mis-ruling, and the shape must be re-pinned
+# before such a host is preregistered.
+#
 # MUTATION SURFACE. This block creates no file, no directory and no temporary
 # file, opens nothing for writing, and changes no mode, owner, ACL, group,
 # service or network state. It duplicates its own stdout onto fd 8 and closes it
@@ -116,6 +125,7 @@ P0_RESOLUTION=""
 P0_TOOLS_RESOLVED=""
 P0_TOOLS_RESOLUTION=""
 P0_NS_VALUE=""
+P0_DEVICE=""
 P0_META_KIND=""
 P0_META_MODE=""
 P0_META_OWNER=""
@@ -528,8 +538,15 @@ p0_resolve_tool() {
     else
         P0_RESOLUTION="path_resolved_absolute"
     fi
+    # `rc=na` is deliberate and is the reason prereg 8.1 row 1 carries `rc=<n|na>`:
+    # nothing was invoked. The access(2) predicate refused, so there IS no
+    # invocation status, and printing the conventional 126 would put a status no
+    # probe produced into the evidence leaf (pattern 9). The resolved path stays
+    # on the line because the `P0_tool name=... path=...` inventory lines are
+    # printed by a later loop that this STOP never reaches, so this is the only
+    # place the rejected object can be named.
     [ -x "$resolved" ] \
-        || p0_stop "tool_not_evaluable tool=$t rc=126 detail=access_builtin_x_denied"
+        || p0_stop "tool_not_evaluable tool=$t path=$resolved rc=na detail=access_builtin_x_denied mechanism=access_builtin_x"
     P0_TOOLS_RESOLVED="$P0_TOOLS_RESOLVED $t=$resolved"
     P0_TOOLS_RESOLUTION="$P0_TOOLS_RESOLUTION $t=$P0_RESOLUTION"
 }
@@ -932,6 +949,10 @@ p0_resolve_accounts
 # frozen into this block. Visible PID 1 is never consulted. Namespace equality
 # plus the root dev:inode binds the login's kernel domain and chroot-visible root;
 # the successor's mount projection separately binds the preregistered path set.
+# Nothing in the comparisons alone establishes that `/proc` is a procfs mount, so
+# the crafted-link case this row exists to refuse is discriminated separately
+# below by object device, and the residual is disclosed rather than implied
+# (audit-2 R2 finding 3).
 p0_read_domain_ns() {
     local field="$1" label="$2" path="$3" attested="$4" raw rc=0 inner
     raw="$(LC_ALL=C "$P0_READLINK" -v -- "$path" 2>&1)" || rc=$?
@@ -956,8 +977,46 @@ p0_read_domain_ns() {
     P0_NS_VALUE="$raw"
 }
 
+# Device of the object a path resolves to, `-L` so a namespace link is followed
+# to the namespace inode itself rather than described as a link. Adjudicated like
+# every other capture: status first, then grammar, then value.
+p0_read_object_device() {
+    local field="$1" path="$2" raw rc=0
+    P0_DEVICE=""
+    raw="$(LC_ALL=C "$P0_STAT" -L -c '%d' -- "$path" 2>&1)" || rc=$?
+    if [ "$rc" -ne 0 ]; then
+        p0_sanitize "$raw"; [ -n "$P0_SAFE" ] || P0_SAFE="stat_diagnostic_absent"
+        p0_stop "execution_domain_unattested field=$field subject=namespace_link_device rc=$rc detail=[$P0_SAFE]"
+    fi
+    case "$raw" in
+        ''|*[!0-9]*)
+            p0_stop "execution_domain_unattested field=$field subject=namespace_link_device detail=device_grammar" ;;
+    esac
+    P0_DEVICE="$raw"
+}
+
+# Procfs discrimination for one namespace link. A kernel namespace inode does not
+# live on the root filesystem: it lives on the anonymous `nsfs` superblock, which
+# always carries a different st_dev from the root object. A fabricated link - or
+# the ordinary file a fabricated link resolves to - allocated on the root
+# filesystem therefore fails this comparison even though its readlink text and
+# grammar are perfect. This is the case prereg row 8 exists to refuse and the one
+# the equality comparisons alone cannot see.
+p0_assert_ns_link_off_root() {
+    local field="$1" path="$2" root_dev="$3"
+    p0_read_object_device "$field" "$path"
+    [ "$P0_DEVICE" != "$root_dev" ] \
+        || p0_stop "execution_domain_unattested field=$field detail=namespace_link_on_root_filesystem device=$P0_DEVICE root_device=$root_dev"
+}
+
 p0_assert_execution_domain() {
     local user mnt pid net root_canon root_id rc=0
+    # Initialised so that the D026 mutation which deletes the four
+    # `p0_assert_ns_link_off_root` calls reaches the evidence line and visibly
+    # ADMITS a crafted-procfs fixture, instead of dying on `set -u` for an
+    # unrelated reason. On every production path each one is assigned by a call
+    # that otherwise STOPs, so an empty value can never be printed.
+    local root_dev="" dev_user="" dev_mnt="" dev_pid="" dev_net=""
     p0_read_domain_ns user_namespace user "$P0_NS_USER_PATH" "$P0_ATTESTED_USER_NS"; user="$P0_NS_VALUE"
     p0_read_domain_ns mount_namespace mnt "$P0_NS_MNT_PATH" "$P0_ATTESTED_MNT_NS"; mnt="$P0_NS_VALUE"
     p0_read_domain_ns pid_namespace pid "$P0_NS_PID_PATH" "$P0_ATTESTED_PID_NS"; pid="$P0_NS_VALUE"
@@ -983,8 +1042,24 @@ p0_assert_execution_domain() {
     esac
     [ "$root_id" = "$P0_ATTESTED_ROOT_MOUNT_ID" ] \
         || p0_stop "execution_domain_mismatch field=root_mount_identity observed=$root_id attested=$P0_ATTESTED_ROOT_MOUNT_ID"
-    printf 'P0_execution_domain user_ns=%s mnt_ns=%s pid_ns=%s net_ns=%s root_mount_id=%s binding=deploy_attested_exact visible_pid1_comparison=not_used\n' \
-        "$user" "$mnt" "$pid" "$net" "$root_id"
+    # The root object's device is the left field of the identity already read, so
+    # the discrimination below costs one `stat` per namespace link and no new
+    # tool. It runs after the equality comparisons so that a genuine divergence
+    # still reports as `execution_domain_mismatch`, and before the evidence line
+    # and the row-9 manager query, which both remain unreachable until it holds.
+    root_dev="${root_id%%:*}"
+    p0_assert_ns_link_off_root user_namespace    "$P0_NS_USER_PATH" "$root_dev"; dev_user="$P0_DEVICE"
+    p0_assert_ns_link_off_root mount_namespace   "$P0_NS_MNT_PATH"  "$root_dev"; dev_mnt="$P0_DEVICE"
+    p0_assert_ns_link_off_root pid_namespace     "$P0_NS_PID_PATH"  "$root_dev"; dev_pid="$P0_DEVICE"
+    p0_assert_ns_link_off_root network_namespace "$P0_NS_NET_PATH"  "$root_dev"; dev_net="$P0_DEVICE"
+    # `procfs_identity=not_established` is stated, not implied. The device
+    # comparison refuses a fabrication allocated on the ROOT filesystem; it does
+    # not establish that these objects are procfs/nsfs, because a fabrication
+    # placed on any other filesystem would carry a different device too. The same
+    # residual is carried in the terminal `does_not_establish` claim.
+    printf 'P0_execution_domain user_ns=%s mnt_ns=%s pid_ns=%s net_ns=%s root_mount_id=%s binding=deploy_attested_exact visible_pid1_comparison=not_used procfs_identity=not_established ns_link_devices=%s,%s,%s,%s root_device=%s ns_link_devices_distinct_from_root=yes\n' \
+        "$user" "$mnt" "$pid" "$net" "$root_id" \
+        "$dev_user" "$dev_mnt" "$dev_pid" "$dev_net" "$root_dev"
 }
 
 printf 'P0_SECTION execution_domain\n'
@@ -1066,14 +1141,19 @@ p0_assert_system_manager_ready
 # because coreutils changed producers; nothing else is. Sets globals rather than
 # printing, so that a STOP raised inside it cannot be captured into a caller's
 # variable by a command substitution.
+# A third alternative, `... No such file or directory (os error 2)`, was carried
+# here from RP7-WPI-RO.sh and is DELETED (audit-2 R2 nit 1). `(os error N)` is a
+# Rust std::io::Error rendering emitted by uutils coreutils, and uutils derives
+# its message prefix from the BASENAME of argv[0], while `$P0_STAT` is always
+# absolute - so no producer can emit both halves and the alternative could never
+# match. Keeping it would imply an observation this package never made.
 p0_classify_stat_shape() {
     local p="$1" raw="$2"
     P0_SHAPE=""
     case "$raw" in
         "$P0_STAT: cannot statx '$p': $P0_EACCES_TEXT"|"$P0_STAT: cannot stat '$p': $P0_EACCES_TEXT")
             P0_SHAPE="eacces" ;;
-        "$P0_STAT: cannot statx '$p': $P0_ENOENT_TEXT"|"$P0_STAT: cannot stat '$p': $P0_ENOENT_TEXT"|\
-        "$P0_STAT: cannot stat '$p': $P0_ENOENT_TEXT (os error 2)")
+        "$P0_STAT: cannot statx '$p': $P0_ENOENT_TEXT"|"$P0_STAT: cannot stat '$p': $P0_ENOENT_TEXT")
             P0_SHAPE="enoent" ;;
     esac
 }
@@ -1243,6 +1323,6 @@ printf 'P0_out_of_scope class=RO_STAGE item=every_prereg_8.2_row stage=ro implem
 # predicates cannot establish. What survives is the log line.
 printf 'P0_SECTION done\n'
 printf 'P0_claim establishes=executing_numeric_identity_of_this_login,name_to_numeric_resolution_of_gatea_and_mtc_bridge_via_getent,forbidden_gid_non_membership,resolution_and_executability_of_the_12_listed_RO_tools,evidence_stdout_bound_to_create_once_leaf,deploy_attested_user_mount_pid_network_namespaces_and_root_mount_identity,system_manager_answered_a_Manager_property_query_over_the_system_bus_after_execution_domain_binding,venv_interpreter_leaf_kind_and_executability\n'
-printf 'P0_claim does_not_establish=any_RO_row_host_state,tool_provenance_or_distribution_identity,nss_source_identity_of_getent_resolution,round1_4_probe_execution_environment_binding,identity_of_the_manager_that_answered,binding_of_these_namespaces_to_any_service,accepted_mount_topology_for_every_preregistered_host_path,interpreter_intermediate_component_or_symlink_target_binding,interpreter_version_or_package_parity,anything_under_the_protected_metadata_directories,anything_about_group_C\n'
+printf 'P0_claim does_not_establish=any_RO_row_host_state,tool_provenance_or_distribution_identity,nss_source_identity_of_getent_resolution,round1_4_probe_execution_environment_binding,identity_of_the_manager_that_answered,binding_of_these_namespaces_to_any_service,accepted_mount_topology_for_every_preregistered_host_path,interpreter_intermediate_component_or_symlink_target_binding,interpreter_version_or_package_parity,anything_under_the_protected_metadata_directories,anything_about_group_C,procfs_mount_identity_of_the_namespace_links\n'
 printf 'P0_claim scope=this_login_only identity=numeric_only mutation=none_in_this_block evidence_leaf=allocated_by_RP0-BOOTSTRAP child_env=mixed coreutils_launch=recorded_absolute_after_PATH_resolution inherited_env=stat_readlink_id_getent cleared_env=systemctl_and_interpreter_only cwd=caller_inherited tmpdir=caller_inherited_or_unset\n'
 printf 'P0 PASS\n'

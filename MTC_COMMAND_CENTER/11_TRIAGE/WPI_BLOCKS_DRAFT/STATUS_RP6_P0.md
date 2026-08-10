@@ -1,28 +1,71 @@
-# RP6-P0 — status: FULL-BLOCK-REPAIRED-PENDING-T0-REAUDIT
+# RP6-P0 — status: ROUND-3-REPAIRED-PENDING-T0-REAUDIT
 
-Updated by Codex on 2026-08-10 under owner amendment A2/A2a. Audit tier: **T0**
-(host/execution-domain preflight). The seven findings in
-`RP6_CLAUDE_T0_AUDIT_2026-08-10.md` have executable repairs and local D026
-RED/GREEN evidence. Acceptance still requires fresh independent
+Updated 2026-08-10 by the round-3 implementer (`claude-opus-5` xhigh, fresh
+session). Audit tier: **T0** (host/execution-domain preflight). Round 2's Claude
+flagship re-audit (`RP6_CLAUDE_REAUDIT_R2_2026-08-10.md`) confirmed all seven
+original findings CLOSED and returned REQUEST_CHANGES on three residuals; those
+three plus both nits are repaired here. **This is round 3 of 3 — the T0 cap is
+now exhausted**, so the next verdict is terminal for this cycle: an accepting
+verdict finishes the loop, and a non-accepting one must be reported to Barış
+rather than opening a fourth round. Acceptance still requires fresh independent
 `claude-opus-5` xhigh and `gpt-5.6-sol` xhigh verdicts. The block remains a draft:
 not frozen, accepted, dispatchable, or authorised for host execution.
 
 Current executable identity:
 
 ```text
-sha256=041c9da9769e36638c9785b54afc638fa8e7b475a6d24238fc10388916c048db
-bytes=66381
+sha256=2d9b166eacfc39ebe0d8d89edb5860876ccc4d9f0ff97f9e10a228dbcf96289e
+bytes=71743
 bash_n=PASS
 line_endings=LF_only
 bom=none
+superseded_round2_sha256=041c9da9769e36638c9785b54afc638fa8e7b475a6d24238fc10388916c048db
+superseded_round2_bytes=66381
 ```
+
+Round-3 disposition (re-audit R2 findings 1-3, nits 1-2) — full record in
+`RP6_REPAIR_R3_REPORT.md`:
+
+- **R2-F1 (MEDIUM):** the non-executable-tool STOP no longer asserts an
+  invocation status it never observed. It now emits
+  `tool_not_evaluable tool=<t> path=<resolved> rc=na
+  detail=access_builtin_x_denied mechanism=access_builtin_x` — required token
+  kept, resolved path restored, fabricated `rc=126` gone. Prereg §8.1 row 1 was
+  amended to `rc=<n|na>` because P0 decides executability with shell builtins
+  only and never invokes an inventory tool, so no arm of this block can carry an
+  honest invocation status.
+- **R2-F2 (MEDIUM):** the repair's own D026 evidence reproduces again. The
+  full-block fence's RED side is pinned to the immutable `0bbc3591`
+  (`= 90d8d447^`) instead of the moving `HEAD`, for both the block and the prereg
+  draft, and all four recorded transcripts were re-executed and replaced. Three
+  reproduce byte-identically; the fence matches after normalizing only its random
+  `mktemp` root.
+- **R2-F3 (LOW/MED):** row 8 now discriminates a crafted `/proc`. Each namespace
+  link's followed device is compared against the root object's device — a
+  namespace inode lives on the anonymous `nsfs` superblock, so a fabrication
+  allocated on the root filesystem is refused as
+  `namespace_link_on_root_filesystem`. Because a fabrication on any *other*
+  filesystem would still pass, the evidence line states
+  `procfs_identity=not_established` and the terminal claim carries
+  `procfs_mount_identity_of_the_namespace_links` in `does_not_establish`.
+- **Nit 1:** the `(os error 2)` classifier alternative was **dropped**, not kept,
+  and its provenance corrected (see F1 below).
+- **Nit 2:** the block header now names the GNU-producer assumption explicitly.
 
 Full-block repair disposition:
 
 - F1: the filesystem diagnostic classifier now accepts only the exact absolute
-  `$P0_STAT` argv[0] prefix and the controlled GNU forms, including the observed
-  `(os error 2)` ENOENT form. Both real-lstat missing-object arms flip from
-  unclassified STOP rc 3 to the required host FAIL rc 1.
+  `$P0_STAT` argv[0] prefix and the controlled C-locale GNU coreutils
+  `stat`/`statx` forms. Both real-lstat missing-object arms flip from unclassified
+  STOP rc 3 to the required host FAIL rc 1. **Corrected in round 3 (R2 nit 1):**
+  the `(os error 2)` alternative this bullet used to call "the observed ENOENT
+  form" was never observed here. `(os error N)` is a Rust `std::io::Error`
+  rendering from uutils coreutils, and uutils prefixes its messages with the
+  *basename* of `argv[0]`, so an absolute prefix combined with that suffix is
+  unreachable. Round 3 deleted the alternative. The residual is stated in the
+  block header: on a uutils host the whole class returns fail-closed at rc 3
+  `path_probe_unclassified` rather than FAIL, and the shape must be re-pinned
+  before such a host is preregistered.
 - F2: P0 now requires frozen deploy-channel pins for user/mount/PID/network
   namespaces plus `stat -c '%d:%i' /`, validates the prelude values with reasoned
   rc-3 pre-checks and `:?` backstops, compares every live identity, and gates the
@@ -58,12 +101,17 @@ Before freeze/dispatch, the root-authorised deploy channel must mint the four ex
 and re-run the whole block on the intended guest. No value may be learned or
 re-pinned from the login session being tested.
 
-Local evidence: the literal full-block fence in `SELF_QA_RP6.md` ends
-`RP6_FULLBLOCK_D026_SUMMARY … result=PASS`; its normalized re-run transcript matches
-the recorded output. The separate freeze-literal fence passes with placeholder rc 3
-and filled-fixture rc 0. The updated 27-case C13 harness and unchanged four-case
-backstop harness both pass. No host, SSH, network, deployment, backtest, broker, or
-trading action occurred.
+Local evidence, all re-executed in round 3 against `2d9b166e…` / 71743 B: the
+literal full-block fence in `SELF_QA_RP6.md` ends
+`RP6_FULLBLOCK_D026_SUMMARY findings=7 round3_residuals=3 real_lstat_arms=2
+execution_domain_cases=9 readlink_stop_arms=3 result=PASS` at process rc 0, and its
+normalized re-run transcript matches the recorded output. The separate
+freeze-literal fence passes with placeholder rc 3 and filled-fixture rc 0. The
+16-case C13 R3 arm harness, the 27-case C13 R4 arm harness and the four-case
+backstop harness all pass at rc 0, and each of those three recorded transcripts is
+now byte-identical to a fresh re-run (`cmp` clean) from the line range the document
+cites. No host, SSH, network, deployment, backtest, broker, or trading action
+occurred, and no commit was made.
 
 ---
 

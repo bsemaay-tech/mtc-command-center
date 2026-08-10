@@ -7,6 +7,17 @@ Audit tier: T0 — host/execution-domain preflight
 Cycle: Claude flagship full-block audit round 1 → bounded repair  
 Current state: repaired, locally verified, pending the two fresh T0 re-audits
 
+> **Round-3 supersession (2026-08-10).** Claude re-audit R2 confirmed all seven
+> findings below CLOSED and returned REQUEST_CHANGES on three residuals. Those
+> were repaired in round 3 — the last round of the T0 cap — by a fresh
+> `claude-opus-5` xhigh implementer. **The executable identity in this report is
+> superseded**: the current block is
+> `2d9b166eacfc39ebe0d8d89edb5860876ccc4d9f0ff97f9e10a228dbcf96289e`, 71743 B.
+> The D026 result recorded below was re-executed and re-recorded in round 3; the
+> `RP6_FULLBLOCK_D026_SUMMARY` line now carries `round3_residuals=3` and
+> `execution_domain_cases=9`. Finding-by-finding disposition for round 3 is in
+> `RP6_REPAIR_R3_REPORT.md`.
+
 ## Scope contract
 
 The repair closes the seven required findings in
@@ -26,7 +37,7 @@ Concurrent work outside this whitelist was preserved. No commit was made.
 
 | Finding | Disposition | Executed closure evidence |
 |---|---|---|
-| F1 — absolute argv[0] made filesystem FAIL arms unreachable | Repaired. `p0_classify_stat_shape` is parameterized by the exact `$P0_STAT` prefix and accepts only the controlled `stat`/`statx` forms, including GNU's observed `os error 2` suffix. Basename-prefixed diagnostics remain unclassified, preserving the RP7 R3 narrowing. | Two real GNU-lstat pairs: pre-repair missing venv root and interpreter both `path_probe_unclassified`, rc 3; repaired bytes emit `venv_root_absent` and `interpreter_absent`, rc 1. |
+| F1 — absolute argv[0] made filesystem FAIL arms unreachable | Repaired. `p0_classify_stat_shape` is parameterized by the exact `$P0_STAT` prefix and accepts only the controlled C-locale GNU coreutils `stat`/`statx` forms. Basename-prefixed diagnostics remain unclassified, preserving the RP7 R3 narrowing. **Attribution corrected in round 3 (re-audit R2 nit 1):** the third alternative carrying an `(os error 2)` suffix was never "GNU's observed" form — `(os error N)` is a Rust `std::io::Error` rendering from uutils coreutils, and uutils derives its message prefix from the *basename* of `argv[0]`, so the absolute-prefix + `os error 2` combination no producer emits was unreachable. **Round 3 dropped that alternative** rather than keeping dead code that implied an observation this package never made. | Two real GNU-lstat pairs: pre-repair missing venv root and interpreter both `path_probe_unclassified`, rc 3; repaired bytes emit `venv_root_absent` and `interpreter_absent`, rc 1. Round-3 re-run: both pairs unchanged (fence labels `F1_PRE_ROOT`/`F1_POST_ROOT`/`F1_PRE_PY`/`F1_POST_PY`). |
 | F2 — row-8 execution domain absent; row 9 ungated | Implemented, not reduced. Five runtime prereg inputs are validated against five embedded freeze literals: user/mount/PID/network namespace tokens and root dev:inode. Missing/unfilled/unreadable → `execution_domain_unattested`; unequal live identity → `execution_domain_mismatch`; all rc 3. `p0_assert_execution_domain` is the top-level predecessor of `p0_assert_system_manager_ready`. | Matching fixture rc 0; network mismatch rc 3; unreadable user namespace rc 3 with real diagnostic; comparison-removed mutant falsely passes rc 0; missing-input precheck rc 3; precheck-removed mutation reaches the `:?` backstop; domain-call-removed mutation reaches `MANAGER_RAN`, whereas production stops first. |
 | F3 — noncanonical prereg input accused host | Repaired in input validation. A doubled separator in `P0_VENV_ROOT` emits `input_not_canonical_spelling … detail=repeated_separator`, rc 3 before any filesystem probe. | Audited pre-repair bytes accept the doubled spelling, rc 0 in the isolated validator; repaired bytes STOP rc 3 with the exact input-error token. |
 | F4 — conflicting tool pins were first-wins | Repaired. `P0_PIN_SEEN` rejects a repeated name as `prereg_input_malformed name=P0_TOOL_PINS duplicate=<tool>`. `P0_PIN_COUNT` advances only after uniqueness holds, so it is a distinct-tool count. | The same `stat=/usr/bin/stat stat=/decoy/stat` table: pre-repair validator rc 0; repaired validator rc 3 with `duplicate=stat`. |
@@ -40,18 +51,34 @@ The literal executable fence in `SELF_QA_RP6.md` ran under Git Bash 5.2.37 and
 ended:
 
 ```text
-RP6_FULLBLOCK_D026_SUMMARY findings=7 real_lstat_arms=2 execution_domain_cases=7 readlink_stop_arms=3 result=PASS
+RP6_FULLBLOCK_D026_SUMMARY findings=7 round3_residuals=3 real_lstat_arms=2 execution_domain_cases=9 readlink_stop_arms=3 result=PASS
 ```
 
 Process rc was 0. A second literal run was normalized only for the randomized
 `/tmp/tmp.*` directory and matched the recorded transcript exactly:
 `NORMALIZED_TRANSCRIPT_MATCH=True`.
 
-Regression evidence:
+**Round-3 correction (re-audit R2 finding 2).** The summary above is the
+re-executed round-3 result. The round-2 fence took its RED side from
+`git show HEAD:<path>`, which stopped meaning "pre-repair" once the repair was
+committed as `90d8d447`; it is now pinned to the immutable `0bbc3591`
+(`= 90d8d447^`) for both the block and the prereg draft, and the fence prints
+`RED_SOURCE rev=0bbc3591 sha256=bff3c86e… bytes=57441` so the RED bytes are
+visible in the transcript. All four recorded transcripts were re-executed and
+replaced; three now reproduce byte-identically (`cmp` clean) from the line ranges
+the document cites, and the fourth matches after normalizing only its random
+`mktemp` root.
 
-- Freeze-literal gate: placeholder rc 3 / filled fixture rc 0, result PASS.
-- C13 R4 arm harness: `cases=27 result=PASS`, rc 0.
-- C13 backstop harness: `inputs=2 mutations=2 cases=4 result=PASS`, rc 0.
+Regression evidence (all re-run in round 3, all rc 0):
+
+- Freeze-literal gate: placeholder rc 3 / filled fixture rc 0, result PASS;
+  transcript byte-identical.
+- C13 R3 arm harness: `cases=16 result=PASS`; transcript byte-identical.
+- C13 R4 arm harness: `cases=27 result=PASS`; transcript byte-identical.
+- C13 backstop harness: `inputs=2 mutations=2 cases=4 result=PASS`; transcript
+  byte-identical. Its double-mutant is now killed at rc 3 by the row-8 input
+  pre-check rather than at rc 1 by `set -u`, which is the mechanism the repaired
+  bytes really produce; the reading in `SELF_QA_RP6.md` was rewritten to match.
 - `bash -n RP6-P0.sh`: PASS, rc 0.
 - `git diff --check` over the repair package: PASS.
 
@@ -60,10 +87,12 @@ Regression evidence:
 ```text
 audited_pre_repair_sha256=bff3c86e6e9b565c55da34580284f22c80253d9e931d879fd749459bac85b7cf
 audited_pre_repair_bytes=57441
-repaired_sha256=041c9da9769e36638c9785b54afc638fa8e7b475a6d24238fc10388916c048db
-repaired_bytes=66381
+round2_sha256_superseded=041c9da9769e36638c9785b54afc638fa8e7b475a6d24238fc10388916c048db
+round2_bytes_superseded=66381
+repaired_sha256=2d9b166eacfc39ebe0d8d89edb5860876ccc4d9f0ff97f9e10a228dbcf96289e
+repaired_bytes=71743
 cr_bytes=0
-lf_bytes=1248
+lf_bytes=1328
 bom=false
 ```
 
