@@ -18,6 +18,7 @@
 # Required same-shell order:
 #   . RP0-LIB.sh ; . RP0-BOOTSTRAP.sh ; . RP7-WPI-RO.sh
 set -Eeuo pipefail
+set -f
 export LC_ALL=C
 
 WPI_SAFE=""
@@ -34,12 +35,24 @@ WPI_META_ID=""
 WPI_META_SIZE=""
 WPI_PROBE_SEQ=0
 WPI_MOUNT_BEFORE=""
+WPI_MOUNT_GUARD_ACTIVE=no
+WPI_PATH_FIELD=""
+WPI_PATH_RENDERABLE=yes
+WPI_MOUNT_SNAPSHOT_SEQ=0
+WPI_FIXED_ATTESTED_MOUNT_PROJECTION_SHA256='<PIN-AT-FREEZE>'
 WPI_VENV_WALK_COMPLETE=no
 WPI_INTERPRETER_RAN=no
 WPI_METADATA_READABLE=no
 
 wpi_stop() { printf '%s_STOP reason=%s\n' "$1" "${*:2}"; exit 3; }
-wpi_fail() { printf '%s_FAIL reason=%s\n' "$1" "${*:2}"; exit 1; }
+wpi_fail() {
+    local prefix="$1"; shift
+    if [ "$WPI_MOUNT_GUARD_ACTIVE" = yes ]; then
+        wpi_mount_guard_end
+    fi
+    printf '%s_FAIL reason=%s\n' "$prefix" "$*"
+    exit 1
+}
 
 wpi_on_err() {
     local rc=$?
@@ -90,15 +103,46 @@ wpi_expect_literal() {
     [ "$observed" = "$expected" ] || wpi_stop RP7 "prereg_input_malformed name=$name expected=$expected"
 }
 
-wpi_require_observed_path_grammar() {
+wpi_require_path_structure() {
     local prefix="$1" path="$2" source="$3"
     case "$path" in
         /*) : ;;
         *) wpi_stop "$prefix" "structured_path_unparseable source=$source detail=not_absolute" ;;
     esac
+    case "$path" in *'//'*) wpi_stop "$prefix" "structured_path_unparseable source=$source detail=empty_component" ;; esac
+    case "/$path/" in *'/../'*|*'/./'*) wpi_stop "$prefix" "structured_path_unparseable source=$source detail=dot_component" ;; esac
+}
+
+wpi_write_text_leaf() {
+    local value="$1" leaf
+    WPI_PROBE_SEQ=$(( WPI_PROBE_SEQ + 1 ))
+    leaf="$EV_DIR/ro.$(printf '%04d' "$WPI_PROBE_SEQ").suppressed_value.bin"
+    wpi_alloc_leaf "$leaf"
+    printf '%s' "$value" >>"$leaf" || wpi_stop RP7 "capture_leaf_write_failed leaf=$leaf"
+    wpi_sha_file RP7 suppressed_value_unreadable "$leaf"
+}
+
+wpi_render_path() {
+    local path="$1"
     case "$path" in
-        *[![:print:]]*|*[[:space:]]*) wpi_stop "$prefix" "structured_path_unparseable source=$source detail=unsafe_character" ;;
+        *[![:print:]]*|*[[:space:]]*)
+            wpi_write_text_leaf "$path"
+            WPI_PATH_FIELD="path=[unrenderable] path_sha256=$WPI_LINE"
+            WPI_PATH_RENDERABLE=no
+            ;;
+        *)
+            WPI_PATH_FIELD="path=$path"
+            WPI_PATH_RENDERABLE=yes
+            ;;
     esac
+}
+
+wpi_require_observed_path_grammar() {
+    local prefix="$1" path="$2" source="$3"
+    wpi_require_path_structure "$prefix" "$path" "$source"
+    # Bash variables cannot contain NUL. Any absolute NUL-delimited record that
+    # reached this point is a path; unsafe display bytes are content-suppressed.
+    wpi_render_path "$path"
 }
 
 wpi_map_get() {
@@ -150,7 +194,8 @@ wpi_capture() {
     wpi_clock_ms; start="$WPI_LINE"
     (
         cd "$EV_DIR" || exit 125
-        exec "$WPI_ENV" -i LC_ALL=C PATH=/usr/bin:/bin HOME=/nonexistent TMPDIR="$EV_DIR" "$@"
+        exec "$WPI_TIMEOUT" --signal=TERM --kill-after=5s "${WPI_SWEEP_BUDGET_S}s" \
+            "$WPI_ENV" -i LC_ALL=C PATH=/usr/bin:/bin HOME=/nonexistent TMPDIR="$EV_DIR" "$@"
     ) >"$WPI_CAP_OUT" 2>"$WPI_CAP_ERR" || rc=$?
     wpi_clock_ms; end="$WPI_LINE"
     WPI_CAP_RC="$rc"
@@ -188,72 +233,108 @@ wpi_single_record() {
 }
 
 wpi_lstat() {
-    local prefix="$1" path="$2" raw rest
+    local prefix="$1" path="$2" raw rest path_field
+    wpi_render_path "$path"; path_field="$WPI_PATH_FIELD"
     wpi_capture lstat "$WPI_STAT" -c '%F|%a|%u:%g|%d:%i|%s' -- "$path"
     if [ "$WPI_CAP_RC" -ne 0 ]; then
-        wpi_require_empty_file "$prefix" "path_not_evaluable path=$path rc=$WPI_CAP_RC" "$WPI_CAP_OUT"
-        wpi_single_record "$prefix" "path_not_evaluable path=$path rc=$WPI_CAP_RC" "$WPI_CAP_ERR"
+        wpi_require_empty_file "$prefix" "path_not_evaluable $path_field rc=$WPI_CAP_RC" "$WPI_CAP_OUT"
+        wpi_single_record "$prefix" "path_not_evaluable $path_field rc=$WPI_CAP_RC" "$WPI_CAP_ERR"
         case "$WPI_LINE" in
-            "stat: cannot statx '$path': No such file or directory"|"stat: cannot stat '$path': No such file or directory")
+            "$WPI_STAT: cannot statx '$path': No such file or directory"|"$WPI_STAT: cannot stat '$path': No such file or directory"|\
+            "${WPI_STAT##*/}: cannot statx '$path': No such file or directory"|"${WPI_STAT##*/}: cannot stat '$path': No such file or directory"|\
+            "$WPI_STAT: cannot stat '$path': No such file or directory (os error 2)"|"${WPI_STAT##*/}: cannot stat '$path': No such file or directory (os error 2)")
                 WPI_META_KIND=absent; WPI_META_MODE=""; WPI_META_OWNER=""; WPI_META_ID=""; WPI_META_SIZE=""; return 0 ;;
-            *) wpi_stop "$prefix" "path_not_evaluable path=$path rc=$WPI_CAP_RC detail=unclassified_diagnostic diagnostic_file=$WPI_CAP_ERR" ;;
+            *) wpi_stop "$prefix" "path_not_evaluable $path_field rc=$WPI_CAP_RC detail=unclassified_diagnostic diagnostic_file=$WPI_CAP_ERR" ;;
         esac
     fi
-    wpi_require_empty_file "$prefix" "path_not_evaluable path=$path rc=0" "$WPI_CAP_ERR"
-    wpi_single_record "$prefix" "path_not_evaluable path=$path rc=0" "$WPI_CAP_OUT"
+    wpi_require_empty_file "$prefix" "path_not_evaluable $path_field rc=0" "$WPI_CAP_ERR"
+    wpi_single_record "$prefix" "path_not_evaluable $path_field rc=0" "$WPI_CAP_OUT"
     raw="$WPI_LINE"
-    case "$raw" in *'|'*'|'*'|'*'|'*) : ;; *) wpi_stop "$prefix" "path_not_evaluable path=$path rc=0 detail=metadata_grammar" ;; esac
+    case "$raw" in *'|'*'|'*'|'*'|'*) : ;; *) wpi_stop "$prefix" "path_not_evaluable $path_field rc=0 detail=metadata_grammar" ;; esac
     WPI_META_KIND="${raw%%|*}"; rest="${raw#*|}"
     WPI_META_MODE="${rest%%|*}"; rest="${rest#*|}"
     WPI_META_OWNER="${rest%%|*}"; rest="${rest#*|}"
     WPI_META_ID="${rest%%|*}"; WPI_META_SIZE="${rest#*|}"
-    case "$WPI_META_MODE" in ''|*[!0-7]*) wpi_stop "$prefix" "path_not_evaluable path=$path rc=0 detail=mode_grammar" ;; esac
-    case "$WPI_META_OWNER" in *[!0-9:]*|*:*:*|:*|*:|'') wpi_stop "$prefix" "path_not_evaluable path=$path rc=0 detail=owner_grammar" ;; *:*) : ;; *) wpi_stop "$prefix" "path_not_evaluable path=$path rc=0 detail=owner_grammar" ;; esac
-    case "$WPI_META_ID" in *[!0-9:]*|*:*:*|:*|*:|'') wpi_stop "$prefix" "path_not_evaluable path=$path rc=0 detail=object_id_grammar" ;; *:*) : ;; *) wpi_stop "$prefix" "path_not_evaluable path=$path rc=0 detail=object_id_grammar" ;; esac
-    case "$WPI_META_SIZE" in ''|*[!0-9]*) wpi_stop "$prefix" "path_not_evaluable path=$path rc=0 detail=size_grammar" ;; esac
+    case "$WPI_META_MODE" in ''|*[!0-7]*) wpi_stop "$prefix" "path_not_evaluable $path_field rc=0 detail=mode_grammar" ;; esac
+    case "$WPI_META_OWNER" in *[!0-9:]*|*:*:*|:*|*:|'') wpi_stop "$prefix" "path_not_evaluable $path_field rc=0 detail=owner_grammar" ;; *:*) : ;; *) wpi_stop "$prefix" "path_not_evaluable $path_field rc=0 detail=owner_grammar" ;; esac
+    case "$WPI_META_ID" in *[!0-9:]*|*:*:*|:*|*:|'') wpi_stop "$prefix" "path_not_evaluable $path_field rc=0 detail=object_id_grammar" ;; *:*) : ;; *) wpi_stop "$prefix" "path_not_evaluable $path_field rc=0 detail=object_id_grammar" ;; esac
+    case "$WPI_META_SIZE" in ''|*[!0-9]*) wpi_stop "$prefix" "path_not_evaluable $path_field rc=0 detail=size_grammar" ;; esac
+}
+
+wpi_kind_token() {
+    case "$1" in
+        directory) WPI_LINE=directory ;;
+        'regular file'|'regular empty file') WPI_LINE=regular ;;
+        'symbolic link') WPI_LINE=symlink ;;
+        *) WPI_LINE=other ;;
+    esac
+}
+
+wpi_walk_deviation() {
+    local outcome="$1" prefix="$2" message="$3"
+    if [ "$outcome" = stop ]; then wpi_stop "$prefix" "$message"; fi
+    wpi_fail "$prefix" "$message"
 }
 
 wpi_walk_components() {
     local prefix="$1" path="$2" leaf_kind="$3" leaf_mode="$4" leaf_owner="$5"
     local leaf_absent_reason="${6:-path_absent}" leaf_object_reason="${7:-path_metadata_mismatch}"
-    local rest component current="" expected_kind expected_owner
-    wpi_require_absolute path "$path"
+    local outcome="${8:-fail}" stop_context="${9:-path_binding_not_evaluable}"
+    local rest component current="" expected_kind expected_owner expected_mode kind_token deviation_reason walk_path_field
+    wpi_require_path_structure "$prefix" "$path" component_walk
+    wpi_render_path "$path"; walk_path_field="$WPI_PATH_FIELD"
     wpi_lstat "$prefix" /
     [ "$WPI_META_KIND" = directory ] || wpi_stop "$prefix" "path_not_evaluable path=/ detail=root_kind_$WPI_META_KIND"
     [ "$WPI_META_OWNER" = 0:0 ] || wpi_stop "$prefix" "path_not_evaluable path=/ owner_numeric=$WPI_META_OWNER expected=0:0"
     rest="${path#/}"
     IFS='/' read -r -a WPI_COMPONENTS <<< "$rest"
-    [ "${#WPI_COMPONENTS[@]}" -ge 1 ] || wpi_stop "$prefix" "path_not_evaluable path=$path detail=no_components"
+    [ "${#WPI_COMPONENTS[@]}" -ge 1 ] || wpi_stop "$prefix" "path_not_evaluable $walk_path_field detail=no_components"
     for component in "${WPI_COMPONENTS[@]}"; do
-        [ -n "$component" ] || wpi_stop "$prefix" "path_not_evaluable path=$path detail=empty_component"
-        [ "$component" != "." ] && [ "$component" != ".." ] || wpi_stop "$prefix" "path_not_evaluable path=$path detail=dot_component"
+        [ -n "$component" ] || wpi_stop "$prefix" "path_not_evaluable $walk_path_field detail=empty_component"
+        [ "$component" != "." ] && [ "$component" != ".." ] || wpi_stop "$prefix" "path_not_evaluable $walk_path_field detail=dot_component"
         current="$current/$component"
-        expected_kind="directory"; expected_owner="0:0"
-        if [ "$current" = "$path" ]; then expected_kind="$leaf_kind"; expected_owner="$leaf_owner"; fi
+        expected_kind="directory"; expected_owner="0:0"; expected_mode=any
+        if [ "$current" = "$path" ]; then
+            expected_kind="$leaf_kind"; expected_owner="$leaf_owner"
+            [ -n "$leaf_mode" ] && expected_mode="${leaf_mode#0}"
+        fi
         wpi_lstat "$prefix" "$current"
         if [ "$WPI_META_KIND" = absent ]; then
-            if [ "$current" = "$path" ]; then wpi_fail "$prefix" "$leaf_absent_reason path=$current"
-            else wpi_fail "$prefix" "path_absent path=$current"; fi
+            if [ "$outcome" = stop ]; then
+                wpi_stop "$prefix" "$stop_context detail=path_absent $WPI_PATH_FIELD"
+            elif [ "$current" = "$path" ]; then wpi_fail "$prefix" "$leaf_absent_reason $WPI_PATH_FIELD"
+            else wpi_fail "$prefix" "path_absent $WPI_PATH_FIELD"; fi
         fi
-        case "$WPI_META_KIND" in
-            'symbolic link')
-                if [ "$current" = "$path" ]; then wpi_fail "$prefix" "$leaf_object_reason kind=symlink path=$current"
-                else wpi_fail "$prefix" "path_metadata_mismatch path=$current kind=symlink expected=directory"; fi ;;
-        esac
+        wpi_kind_token "$WPI_META_KIND"; kind_token="$WPI_LINE"
         case "$expected_kind:$WPI_META_KIND" in
             directory:directory|regular:'regular file'|regular:'regular empty file') : ;;
-            *) if [ "$current" = "$path" ]; then wpi_fail "$prefix" "$leaf_object_reason kind=$WPI_META_KIND path=$current expected=$expected_kind"
-               else wpi_fail "$prefix" "path_metadata_mismatch path=$current kind=$WPI_META_KIND expected=directory"; fi ;;
+            *) if [ "$outcome" = stop ]; then
+                   wpi_stop "$prefix" "$stop_context detail=path_metadata_mismatch $WPI_PATH_FIELD kind=$kind_token mode=$WPI_META_MODE owner_numeric=$WPI_META_OWNER expected=$expected_kind,$expected_mode,$expected_owner"
+               elif [ "$current" = "$path" ] && [ "$leaf_object_reason" != path_metadata_mismatch ]; then
+                   wpi_fail "$prefix" "$leaf_object_reason $WPI_PATH_FIELD kind=$kind_token"
+               else
+                   wpi_fail "$prefix" "path_metadata_mismatch $WPI_PATH_FIELD kind=$kind_token mode=$WPI_META_MODE owner_numeric=$WPI_META_OWNER expected=$expected_kind,$expected_mode,$expected_owner"
+               fi ;;
         esac
-        [ "$WPI_META_OWNER" = "$expected_owner" ] || wpi_fail "$prefix" "path_metadata_mismatch path=$current owner_numeric=$WPI_META_OWNER expected_owner_numeric=$expected_owner"
+        if [ "$WPI_META_OWNER" != "$expected_owner" ]; then
+            if [ "$outcome" = stop ]; then deviation_reason="$stop_context detail=path_metadata_mismatch"
+            else deviation_reason=path_metadata_mismatch; fi
+            wpi_walk_deviation "$outcome" "$prefix" "$deviation_reason $WPI_PATH_FIELD kind=$kind_token mode=$WPI_META_MODE owner_numeric=$WPI_META_OWNER expected=$expected_kind,$expected_mode,$expected_owner"
+        fi
         if [ "$current" = "$path" ] && [ -n "$leaf_mode" ]; then
-            [ "$WPI_META_MODE" = "${leaf_mode#0}" ] || wpi_fail "$prefix" "path_metadata_mismatch path=$current mode=$WPI_META_MODE expected_mode=${leaf_mode#0}"
+            if [ "$WPI_META_MODE" != "${leaf_mode#0}" ]; then
+                if [ "$outcome" = stop ]; then deviation_reason="$stop_context detail=path_metadata_mismatch"
+                else deviation_reason=path_metadata_mismatch; fi
+                wpi_walk_deviation "$outcome" "$prefix" "$deviation_reason $WPI_PATH_FIELD kind=$kind_token mode=$WPI_META_MODE owner_numeric=$WPI_META_OWNER expected=$expected_kind,$expected_mode,$expected_owner"
+            fi
         fi
     done
 }
 
 wpi_parse_mountinfo() {
     local file="$1" fd line="" rc=0 records=0 pre post diag seen_ids=" "
+    local device root mount_point fstype source
+    WPI_MI_DEVICE=(); WPI_MI_ROOT=(); WPI_MI_POINT=(); WPI_MI_FSTYPE=(); WPI_MI_SOURCE=()
     wpi_alloc_read_diag mount_table; diag="$WPI_READ_DIAG"
     exec {fd}<"$file" || wpi_stop RP7 "mount_table_unreadable path=$file detail=open_failed"
     while true; do
@@ -274,43 +355,113 @@ wpi_parse_mountinfo() {
         seen_ids="$seen_ids$1 "
         [[ "$3" =~ ^[0-9]+:[0-9]+$ ]] || wpi_stop RP7 "mount_table_malformed path=$file record=$((records+1)) detail=device_id"
         case "$4:$5" in /*:/*) : ;; *) wpi_stop RP7 "mount_table_malformed path=$file record=$((records+1)) detail=root_or_mountpoint" ;; esac
+        device="$3"; root="$4"; mount_point="$5"
         set -- $post
         [ "$#" -ge 3 ] || wpi_stop RP7 "mount_table_malformed path=$file record=$((records+1)) detail=post_fields"
+        fstype="$1"; source="$2"
+        case "$fstype:$source" in *[[:space:]]*) wpi_stop RP7 "mount_table_malformed path=$file record=$((records+1)) detail=post_field_whitespace" ;; esac
+        WPI_MI_DEVICE+=("$device"); WPI_MI_ROOT+=("$root"); WPI_MI_POINT+=("$mount_point")
+        WPI_MI_FSTYPE+=("$fstype"); WPI_MI_SOURCE+=("$source")
         records=$(( records + 1 ))
     done
     [ "$records" -ge 1 ] || wpi_stop RP7 "mount_table_unreadable path=$file detail=no_records"
     printf 'RP7_mount_table parsed=yes records=%s content=not_printed\n' "$records"
 }
 
+wpi_capture_mountinfo_snapshot() {
+    local snapshot infd outfd line="" rc=0 diag
+    WPI_MOUNT_SNAPSHOT_SEQ=$(( WPI_MOUNT_SNAPSHOT_SEQ + 1 ))
+    snapshot="$EV_DIR/ro.mountinfo.$(printf '%04d' "$WPI_MOUNT_SNAPSHOT_SEQ").snapshot"
+    wpi_alloc_leaf "$snapshot"
+    wpi_alloc_read_diag mountinfo_snapshot; diag="$WPI_READ_DIAG"
+    exec {infd}</proc/self/mountinfo || wpi_stop RP7 "mount_table_unreadable path=/proc/self/mountinfo detail=open_failed"
+    exec {outfd}>>"$snapshot" || { exec {infd}<&-; wpi_stop RP7 "mount_table_unreadable path=$snapshot detail=evidence_open_failed"; }
+    while true; do
+        line=""; rc=0; IFS= read -r -u "$infd" line 2>>"$diag" || rc=$?
+        if [ "$rc" -ne 0 ]; then
+            exec {infd}<&-; exec {outfd}>&-
+            wpi_require_empty_file RP7 "mount_table_read_error path=/proc/self/mountinfo" "$diag"
+            [ -z "$line" ] || wpi_stop RP7 "mount_table_unterminated_final_record path=/proc/self/mountinfo"
+            break
+        fi
+        printf '%s\n' "$line" >&"$outfd" || { exec {infd}<&-; exec {outfd}>&-; wpi_stop RP7 "mount_table_unreadable path=$snapshot detail=evidence_write_failed"; }
+    done
+    WPI_LINE="$snapshot"
+}
+
+wpi_build_mount_projection() {
+    local snapshot="$1" projection path mp best=-1 best_len=-1 i len
+    local -a paths=(
+        "$WPI_STAT" "$WPI_READLINK" "$WPI_ENV" "$WPI_FIND" "$WPI_SHA256SUM"
+        "$WPI_SYSTEMCTL" "$WPI_SS" "$WPI_CURL" "$WPI_TIMEOUT"
+        "$WPI_RELEASE_ROOT" "$WPI_VENV_ROOT" "$WPI_UNIT_FRAGMENT"
+        "$WPI_STATE_DIR" "$WPI_LOG_DIR" "$WPI_CONF_DIR"
+        /proc/self/mountinfo /proc/self/ns/net "/proc/$WPI_MAINPID/ns/net"
+    )
+    wpi_parse_mountinfo "$snapshot"
+    WPI_PROBE_SEQ=$(( WPI_PROBE_SEQ + 1 ))
+    projection="$EV_DIR/ro.$(printf '%04d' "$WPI_PROBE_SEQ").mount_projection.tsv"
+    wpi_alloc_leaf "$projection"
+    for path in "${paths[@]}"; do
+        best=-1; best_len=-1
+        for ((i=0; i<${#WPI_MI_POINT[@]}; i++)); do
+            mp="${WPI_MI_POINT[$i]}"
+            if [ "$mp" = / ] || [ "$path" = "$mp" ] || [[ "$path" == "$mp/"* ]]; then
+                len=${#mp}
+                if [ "$len" -gt "$best_len" ]; then best="$i"; best_len="$len"; fi
+            fi
+        done
+        [ "$best" -ge 0 ] || wpi_stop RP7 "mount_projection_unbound path=$path"
+        printf 'path=%s\tdevice=%s\troot=%s\tmount_point=%s\tfstype=%s\tsource=%s\n' \
+            "$path" "${WPI_MI_DEVICE[$best]}" "${WPI_MI_ROOT[$best]}" \
+            "${WPI_MI_POINT[$best]}" "${WPI_MI_FSTYPE[$best]}" "${WPI_MI_SOURCE[$best]}" \
+            >>"$projection" || wpi_stop RP7 "mount_projection_write_failed path=$projection"
+    done
+    wpi_sha_file RP7 mount_projection_unreadable "$projection"
+    WPI_MOUNT_PROJECTION_DIGEST="$WPI_LINE"
+    printf 'RP7_mount_projection paths=%s raw_snapshot=%s projection=%s sha256=%s content=not_printed\n' \
+        "${#paths[@]}" "$snapshot" "$projection" "$WPI_MOUNT_PROJECTION_DIGEST"
+}
+
 wpi_sha_file() {
-    local prefix="$1" reason="$2" path="$3" digest rendered
+    local prefix="$1" reason="$2" path="$3" digest rendered path_field
+    case "$path" in *[![:print:]]*|*[[:space:]]*) path_field='path=[unrenderable]' ;; *) path_field="path=$path" ;; esac
     wpi_capture sha256 "$WPI_SHA256SUM" -- "$path"
-    [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop "$prefix" "$reason path=$path rc=$WPI_CAP_RC detail=sha256sum_failed diagnostic_file=$WPI_CAP_ERR"
-    wpi_require_empty_file "$prefix" "$reason path=$path rc=0" "$WPI_CAP_ERR"
-    wpi_single_record "$prefix" "$reason path=$path rc=0" "$WPI_CAP_OUT"
+    [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop "$prefix" "$reason $path_field rc=$WPI_CAP_RC detail=sha256sum_failed diagnostic_file=$WPI_CAP_ERR"
+    wpi_require_empty_file "$prefix" "$reason $path_field rc=0" "$WPI_CAP_ERR"
+    wpi_single_record "$prefix" "$reason $path_field rc=0" "$WPI_CAP_OUT"
     rendered="$WPI_LINE"; digest="${rendered%% *}"
-    [ "${#digest}" -eq 64 ] || wpi_stop "$prefix" "$reason path=$path rc=0 detail=digest_grammar"
-    case "$digest" in *[!0-9a-f]*) wpi_stop "$prefix" "$reason path=$path rc=0 detail=digest_grammar" ;; esac
+    [ "${#digest}" -eq 64 ] || wpi_stop "$prefix" "$reason $path_field rc=0 detail=digest_grammar"
+    case "$digest" in *[!0-9a-f]*) wpi_stop "$prefix" "$reason $path_field rc=0 detail=digest_grammar" ;; esac
     WPI_LINE="$digest"
 }
 
 wpi_mount_guard_begin() {
-    wpi_parse_mountinfo /proc/self/mountinfo
-    wpi_sha_file RP7 mount_table_unreadable /proc/self/mountinfo
-    [ "$WPI_LINE" = "$WPI_ATTESTED_MOUNTINFO_SHA256" ] || wpi_stop RP7 "mount_topology_mismatch observed=$WPI_LINE attested=$WPI_ATTESTED_MOUNTINFO_SHA256"
-    WPI_MOUNT_BEFORE="$WPI_LINE"
+    local snapshot
+    [ "$WPI_MOUNT_GUARD_ACTIVE" = no ] || wpi_stop RP7 "mount_guard_nested"
+    wpi_capture_mountinfo_snapshot; snapshot="$WPI_LINE"
+    wpi_build_mount_projection "$snapshot"
+    [ "$WPI_MOUNT_PROJECTION_DIGEST" = "$WPI_ATTESTED_MOUNTINFO_SHA256" ] || \
+        wpi_stop RP7 "mount_topology_mismatch observed=$WPI_MOUNT_PROJECTION_DIGEST attested=$WPI_ATTESTED_MOUNTINFO_SHA256 format=normalised_path_projection_v1"
+    WPI_MOUNT_BEFORE="$WPI_MOUNT_PROJECTION_DIGEST"
+    WPI_MOUNT_GUARD_ACTIVE=yes
 }
 
 wpi_mount_guard_end() {
-    wpi_sha_file RP7 mount_table_unreadable /proc/self/mountinfo
-    [ "$WPI_LINE" = "$WPI_MOUNT_BEFORE" ] || wpi_stop RP7 "mount_topology_changed before=$WPI_MOUNT_BEFORE after=$WPI_LINE"
+    local snapshot before="$WPI_MOUNT_BEFORE"
+    [ "$WPI_MOUNT_GUARD_ACTIVE" = yes ] || wpi_stop RP7 "mount_guard_not_open"
+    wpi_capture_mountinfo_snapshot; snapshot="$WPI_LINE"
+    wpi_build_mount_projection "$snapshot"
+    WPI_MOUNT_GUARD_ACTIVE=no
+    [ "$WPI_MOUNT_PROJECTION_DIGEST" = "$before" ] || \
+        wpi_stop RP7 "mount_topology_changed before=$before after=$WPI_MOUNT_PROJECTION_DIGEST format=normalised_path_projection_v1"
 }
 
 wpi_bind_tool() {
     local name="$1" path="$2"
     wpi_require_absolute "WPI_TOOL_PINS.$name" "$path"
     [ -x "$path" ] || wpi_stop RP7 "tool_not_evaluable tool=$name path=$path detail=not_executable"
-    wpi_walk_components RP7 "$path" regular "" 0:0
+    wpi_walk_components RP7 "$path" regular "" 0:0 path_absent path_metadata_mismatch stop "tool_not_evaluable tool=$name"
     case "$WPI_META_MODE" in ???) : ;; *) wpi_stop RP7 "tool_not_evaluable tool=$name path=$path detail=mode_grammar" ;; esac
     [ $(( 8#$WPI_META_MODE & 8#022 )) -eq 0 ] || wpi_stop RP7 "tool_not_evaluable tool=$name path=$path mode=$WPI_META_MODE detail=group_or_world_writable"
     printf 'RP7_tool name=%s path=%s owner_numeric=0:0 mode=%s kind=regular resolution=pinned_absolute\n' "$name" "$path" "$WPI_META_MODE"
@@ -337,7 +488,7 @@ wpi_validate_inputs() {
     wpi_expect_literal WPI_STATE_DIR "$WPI_STATE_DIR" /var/lib/mtc-bridge
     wpi_expect_literal WPI_STATE_UID "$WPI_STATE_UID" 999
     wpi_expect_literal WPI_STATE_GID "$WPI_STATE_GID" 988
-    wpi_require_absolute WPI_LOG_DIR "$WPI_LOG_DIR"
+    wpi_expect_literal WPI_LOG_DIR "$WPI_LOG_DIR" /var/log/mtc-bridge
     wpi_expect_literal WPI_CONF_DIR "$WPI_CONF_DIR" /etc/mtc-bridge
     wpi_expect_literal WPI_CONTROL_ENDPOINT "$WPI_CONTROL_ENDPOINT" http://127.0.0.1:8790/api/status
     wpi_expect_literal WPI_SWEEP_BUDGET_S "$WPI_SWEEP_BUDGET_S" 120
@@ -345,21 +496,21 @@ wpi_validate_inputs() {
     wpi_require_set WPI_TOOL_PINS "${WPI_TOOL_PINS:-}"
     for entry in $WPI_TOOL_PINS; do
         case "$entry" in *=*) pin_name="${entry%%=*}"; pin_path="${entry#*=}" ;; *) wpi_stop RP7 "prereg_input_malformed name=WPI_TOOL_PINS entry=missing_equals" ;; esac
-        case "$pin_name" in stat|readlink|env|find|sha256sum|systemctl|ss|curl) : ;; *) wpi_stop RP7 "prereg_input_malformed name=WPI_TOOL_PINS unknown_tool=$pin_name" ;; esac
+        case "$pin_name" in stat|readlink|env|find|sha256sum|systemctl|ss|curl|timeout) : ;; *) wpi_stop RP7 "prereg_input_malformed name=WPI_TOOL_PINS unknown_tool=$pin_name" ;; esac
         case "$pin_seen" in *" $pin_name "*) wpi_stop RP7 "prereg_input_malformed name=WPI_TOOL_PINS duplicate=$pin_name" ;; esac
         wpi_require_absolute "WPI_TOOL_PINS.$pin_name" "$pin_path"
+        [ "$pin_path" = "/usr/bin/$pin_name" ] || wpi_stop RP7 "prereg_input_malformed name=WPI_TOOL_PINS.$pin_name expected=/usr/bin/$pin_name"
         pin_seen="$pin_seen$pin_name "; pin_count=$(( pin_count + 1 ))
     done
-    [ "$pin_count" -eq 8 ] || wpi_stop RP7 "prereg_input_malformed name=WPI_TOOL_PINS observed_count=$pin_count expected_count=8"
-    for name in stat readlink env find sha256sum systemctl ss curl; do
+    [ "$pin_count" -eq 9 ] || wpi_stop RP7 "prereg_input_malformed name=WPI_TOOL_PINS observed_count=$pin_count expected_count=9"
+    for name in stat readlink env find sha256sum systemctl ss curl timeout; do
         wpi_map_get "$WPI_TOOL_PINS" "$name"; path="$WPI_LINE"
         printf -v "WPI_${name^^}" '%s' "$path"
     done
-    WPI_SHA256SUM="$WPI_SHA256SUM"
     wpi_require_sha256 WPI_ATTESTED_MOUNTINFO_SHA256 "${WPI_ATTESTED_MOUNTINFO_SHA256:-}"
+    wpi_expect_literal WPI_ATTESTED_MOUNTINFO_SHA256 "$WPI_ATTESTED_MOUNTINFO_SHA256" "$WPI_FIXED_ATTESTED_MOUNT_PROJECTION_SHA256"
     wpi_require_uint WPI_MAINPID "${WPI_MAINPID:-}" 2
     wpi_expect_literal WPI_MAINPID "$WPI_MAINPID" 189813
-    wpi_require_absolute WPI_INTERPRETER_TARGET "${WPI_INTERPRETER_TARGET:-}"
     wpi_require_set WPI_VERIFY_LOCK_SHA256 "${WPI_VERIFY_LOCK_SHA256:-}"
     wpi_expect_literal WPI_VERIFY_LOCK_SHA256 "${WPI_VERIFY_LOCK_SHA256:-}" d951e0eea01ec1a89bcfbe9d9630949b31bb316faae2ba6bcae39be794a451e5
 }
@@ -408,10 +559,11 @@ wpi_assert_evidence_leaf_bound() {
 }
 
 wpi_run_find() {
-    local prefix="$1" label="$2" root="$3"; shift 3
+    local prefix="$1" label="$2" root="$3" elapsed_s; shift 3
     wpi_capture "$label" "$WPI_FIND" "$root" "$@"
-    if [ "$WPI_CAP_ELAPSED_MS" -gt $(( WPI_SWEEP_BUDGET_S * 1000 )) ]; then
-        wpi_stop "$prefix" "sweep_budget_exceeded root=$root elapsed_ms=$WPI_CAP_ELAPSED_MS budget_s=$WPI_SWEEP_BUDGET_S"
+    elapsed_s=$(( (WPI_CAP_ELAPSED_MS + 999) / 1000 ))
+    if [ "$WPI_CAP_RC" -eq 124 ] || [ "$WPI_CAP_ELAPSED_MS" -gt $(( WPI_SWEEP_BUDGET_S * 1000 )) ]; then
+        wpi_stop "$prefix" "sweep_budget_exceeded root=$root elapsed_s=$elapsed_s elapsed_ms=$WPI_CAP_ELAPSED_MS budget_s=$WPI_SWEEP_BUDGET_S"
     fi
     if [ "$WPI_CAP_RC" -ne 0 ]; then
         wpi_stop "$prefix" "walk_incomplete root=$root rc=$WPI_CAP_RC detail=diagnostic_captured diagnostic_file=$WPI_CAP_ERR partial_stdout_discarded=$WPI_CAP_OUT"
@@ -420,13 +572,12 @@ wpi_run_find() {
 }
 
 wpi_assert_tree() {
-    local root="$1" label="$2" out fd path="" rc=0 writable_count=0 find_elapsed
+    local root="$1" label="$2" out fd path="" rc=0 writable_count=0 find_elapsed find_elapsed_s
     local diag
     wpi_mount_guard_begin
     wpi_walk_components B3 "$root" directory 0555 0:0
-    printf 'B3_path path=%s kind=directory mode=555 owner_numeric=0:0 binding=component_and_mount\n' "$root"
     wpi_run_find B3 "${label}_writable" "$root" -perm /222 -print0
-    out="$WPI_CAP_OUT"; find_elapsed="$WPI_CAP_ELAPSED_MS"
+    out="$WPI_CAP_OUT"; find_elapsed="$WPI_CAP_ELAPSED_MS"; find_elapsed_s=$(( (find_elapsed + 999) / 1000 ))
     [ -r "$out" ] && [ -f "$out" ] || wpi_stop B3 "walk_incomplete root=$root detail=stdout_not_readable_regular"
     if [ -s "$out" ]; then
         wpi_alloc_read_diag writable_paths; diag="$WPI_READ_DIAG"
@@ -442,13 +593,14 @@ wpi_assert_tree() {
             wpi_require_observed_path_grammar B3 "$path" find_stdout
             writable_count=$(( writable_count + 1 ))
             [ "$writable_count" -eq 1 ] || continue
-            WPI_FIRST_WRITABLE="$path"
+            WPI_FIRST_WRITABLE_FIELD="$WPI_PATH_FIELD"
         done
         [ "$writable_count" -ge 1 ] || wpi_stop B3 "walk_incomplete root=$root detail=nonempty_unparseable_stdout"
-        wpi_fail B3 "writable_path_inside_immutable_tree path=$WPI_FIRST_WRITABLE"
+        wpi_fail B3 "writable_path_inside_immutable_tree $WPI_FIRST_WRITABLE_FIELD count=$writable_count"
     fi
     wpi_mount_guard_end
-    printf 'B3_sweep root=%s complete=yes elapsed_ms=%s writable_paths=0\n' "$root" "$find_elapsed"
+    printf 'B3_path path=%s kind=directory mode=555 owner_numeric=0:0 binding=component_and_mount_window_closed\n' "$root"
+    printf 'B3_sweep root=%s complete=yes elapsed_s=%s elapsed_ms=%s writable_paths=0\n' "$root" "$find_elapsed_s" "$find_elapsed"
     if [ "$label" = venv ]; then WPI_VENV_WALK_COMPLETE=yes; fi
     return 0
 }
@@ -475,23 +627,22 @@ wpi_assert_regular_digest() {
 }
 
 wpi_assert_interpreter() {
-    local py="$WPI_VENV_ROOT/bin/python" resolved kind
+    local py="$WPI_VENV_ROOT/bin/python" resolved
     wpi_mount_guard_begin
     wpi_walk_components B1 "$WPI_VENV_ROOT/bin" directory "" 0:0
     wpi_lstat B1 "$py"
     [ "$WPI_META_KIND" != absent ] || wpi_fail B1 "interpreter_absent path=$py"
     case "$WPI_META_KIND" in
         'symbolic link')
-            [ "$WPI_META_OWNER" = 0:0 ] || wpi_stop B1 "interpreter_object_unbound kind=symlink owner_numeric=$WPI_META_OWNER expected=0:0"
-            wpi_capture interpreter_target "$WPI_READLINK" -f -- "$py"
+            wpi_capture interpreter_target "$WPI_READLINK" -- "$py"
             [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop B1 "interpreter_object_unbound kind=symlink target=unreadable"
             wpi_require_empty_file B1 "interpreter_object_unbound kind=symlink" "$WPI_CAP_ERR"
             wpi_single_record B1 "interpreter_object_unbound kind=symlink" "$WPI_CAP_OUT"; resolved="$WPI_LINE"
-            [ "$resolved" = "$WPI_INTERPRETER_TARGET" ] || wpi_stop B1 "interpreter_object_unbound kind=symlink target=$resolved"
-            wpi_walk_components B1 "$resolved" regular "" 0:0 ;;
+            wpi_sanitize "$resolved"
+            wpi_stop B1 "interpreter_object_unbound kind=symlink target=$WPI_SAFE" ;;
         'regular file'|'regular empty file')
             [ "$WPI_META_OWNER" = 0:0 ] || wpi_stop B1 "interpreter_object_unbound kind=regular owner_numeric=$WPI_META_OWNER expected=0:0"
-            [ "$py" = "$WPI_INTERPRETER_TARGET" ] || wpi_stop B1 "interpreter_object_unbound kind=regular target=$py expected=$WPI_INTERPRETER_TARGET" ;;
+            : ;;
         *) wpi_stop B1 "interpreter_object_unbound kind=$WPI_META_KIND target=none" ;;
     esac
     [ -x "$py" ] || wpi_stop B1 "interpreter_not_executable path=$py mechanism=access_builtin_x"
@@ -513,7 +664,7 @@ wpi_assert_interpreter() {
     wpi_single_record B1 "interpreter_not_executable path=$py" "$version_file"
     [[ "$WPI_LINE" =~ ^Python\ 3\.12\.[0-9]+$ ]] || wpi_fail B1 "interpreter_version observed=unpreregistered_version expected=3.12.*"
     WPI_INTERPRETER_RAN=yes
-    printf 'B1_interpreter path=%s target=%s exec=ok version_family=3.12 env=cleared isolated=yes\n' "$py" "$WPI_INTERPRETER_TARGET"
+    printf 'B1_interpreter path=%s object=non_symlink_regular preexec_binding=component_and_mount_window_closed exec_binding=separate_bounded_exec version_family=3.12 env=cleared isolated=yes\n' "$py"
 }
 
 wpi_assert_metadata_readable() {
@@ -537,17 +688,19 @@ wpi_assert_metadata_readable() {
         count=$(( count + 1 ))
         wpi_require_observed_path_grammar B1 "$path" metadata_enumeration
         wpi_lstat B1 "$path"
-        [ "$WPI_META_KIND" != absent ] || wpi_stop B1 "metadata_unreadable path=$path detail=object_disappeared_after_complete_enumeration"
-        [ "$WPI_META_KIND" = directory ] || wpi_stop B1 "metadata_unreadable path=$path detail=dist_info_kind_$WPI_META_KIND"
-        [ "$WPI_META_OWNER" = 0:0 ] || wpi_stop B1 "metadata_unreadable path=$path owner_numeric=$WPI_META_OWNER expected=0:0"
+        [ "$WPI_META_KIND" != absent ] || wpi_stop B1 "metadata_unreadable $WPI_PATH_FIELD detail=object_disappeared_after_complete_enumeration"
+        [ "$WPI_META_KIND" = directory ] || wpi_stop B1 "metadata_unreadable $WPI_PATH_FIELD detail=dist_info_kind_$WPI_META_KIND"
+        [ "$WPI_META_OWNER" = 0:0 ] || wpi_stop B1 "metadata_unreadable $WPI_PATH_FIELD owner_numeric=$WPI_META_OWNER expected=0:0"
         wpi_walk_components B1 "$path" directory "" 0:0
         for member in METADATA RECORD; do
             wpi_lstat B1 "$path/$member"
-            [ "$WPI_META_KIND" != absent ] || wpi_fail B1 "distribution_metadata_absent path=$path/$member"
-            case "$WPI_META_KIND" in 'regular file'|'regular empty file') : ;; *) wpi_stop B1 "metadata_unreadable path=$path/$member detail=kind_$WPI_META_KIND" ;; esac
-            [ "$WPI_META_OWNER" = 0:0 ] || wpi_stop B1 "metadata_unreadable path=$path/$member owner_numeric=$WPI_META_OWNER expected=0:0"
+            [ "$WPI_META_KIND" != absent ] || wpi_fail B1 "distribution_metadata_absent $WPI_PATH_FIELD"
+            case "$WPI_META_KIND" in 'regular file'|'regular empty file') : ;; *) wpi_stop B1 "metadata_unreadable $WPI_PATH_FIELD detail=kind_$WPI_META_KIND" ;; esac
+            [ "$WPI_META_OWNER" = 0:0 ] || wpi_stop B1 "metadata_unreadable $WPI_PATH_FIELD owner_numeric=$WPI_META_OWNER expected=0:0"
             wpi_sha_file B1 metadata_unreadable "$path/$member"
-            printf 'B1_metadata_readable path=%s bytes_digest=sha256:%s content=not_printed\n' "$path/$member" "$WPI_LINE"
+            WPI_MEMBER_DIGEST="$WPI_LINE"
+            wpi_render_path "$path/$member"
+            printf 'B1_metadata_readable %s bytes_digest=sha256:%s content=not_printed binding=window_open_pending_close\n' "$WPI_PATH_FIELD" "$WPI_MEMBER_DIGEST"
         done
     done
     wpi_mount_guard_end
@@ -592,7 +745,7 @@ wpi_assert_lock_parity() {
         wpi_single_record B1 "verifier_not_evaluable rc=0" "$WPI_CAP_OUT"
         [ "$WPI_LINE" = "verify_lock: PASS: lock+installed; packages=$WPI_EXPECTED_PACKAGES" ] \
             || wpi_stop B1 "verifier_not_evaluable rc=0 detail=pass_grammar"
-        printf 'B1_lock_parity result=pass packages=%s output=structurally_parsed\n' "$WPI_EXPECTED_PACKAGES"
+        printf 'B1_lock_parity result=pass packages=%s output=structurally_parsed verifier_preexec_binding=component_mount_digest_window_closed exec_binding=separate_bounded_exec\n' "$WPI_EXPECTED_PACKAGES"
         return 0
     fi
     wpi_require_empty_file B1 "verifier_not_evaluable rc=$WPI_CAP_RC detail=unexpected_stdout" "$WPI_CAP_OUT"
@@ -621,8 +774,8 @@ wpi_assert_netns_binding() {
 }
 
 wpi_assert_listener_set() {
-    local fd line="" rc=0 count=0 state recvq sendq localaddr peer extra addr diag
-    wpi_capture listeners "$WPI_SS" -H -ltn 'sport = :8790'
+    local fd line="" rc=0 count=0 total=0 state recvq sendq localaddr peer extra addr port peer_addr peer_port diag
+    wpi_capture listeners "$WPI_SS" -H -ltn
     [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=$WPI_CAP_RC detail=ss_failed"
     wpi_require_empty_file B6 "listener_inventory_unreadable_or_unparseable rc=0" "$WPI_CAP_ERR"
     wpi_alloc_read_diag listener_rows; diag="$WPI_READ_DIAG"
@@ -642,12 +795,20 @@ wpi_assert_listener_set() {
             || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=table_grammar"
         [ "$state" = LISTEN ] || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=state_grammar"
         case "$recvq:$sendq" in *[!0-9:]*) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=queue_grammar" ;; esac
-        case "$localaddr" in *:8790) addr="${localaddr%:8790}" ;; *) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=local_address_grammar" ;; esac
+        case "$localaddr:$peer" in *[![:graph:]]*) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=address_character_grammar" ;; esac
+        case "$localaddr" in *:*) port="${localaddr##*:}"; addr="${localaddr%:*}" ;; *) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=local_address_grammar" ;; esac
+        case "$peer" in *:*) peer_port="${peer##*:}"; peer_addr="${peer%:*}" ;; *) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=peer_address_grammar" ;; esac
+        case "$port" in ''|*[!0-9]*) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=local_port_grammar" ;; esac
+        case "$peer_port" in '*'|[0-9]|[0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9][0-9][0-9]|[0-9][0-9][0-9][0-9][0-9]) : ;; *) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=peer_port_grammar" ;; esac
+        [ -n "$addr" ] && [ -n "$peer_addr" ] || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=empty_address"
+        total=$(( total + 1 ))
+        [ "$port" = 8790 ] || continue
         case "$addr" in '*'|0.0.0.0|'[::]'|'::'|"172.24.55.233") wpi_fail B6 "nonloopback_listener addr=$addr" ;; esac
         [ "$addr" = 127.0.0.1 ] || wpi_fail B6 "listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790"
         count=$(( count + 1 ))
     done
     [ "$count" -eq 1 ] || wpi_fail B6 "listener_set_unexpected observed_count=$count expected=1x127.0.0.1:8790"
+    printf 'B6_listener_inventory rows=%s evidence_file=%s content=not_printed table=complete scope_applied_in_block=yes\n' "$total" "$WPI_CAP_OUT"
     printf 'B6_listener_set port=8790 count=1 local=127.0.0.1 wildcard=none table=complete\n'
 }
 
@@ -678,7 +839,7 @@ try:
  expected={"state":(str,"DISARMED"),"state_version":(int,1),"mode":(str,"credential_free_disarmed"),"network":(str,"disabled"),"exchange_conn":(str,"disabled"),"exchange_enabled":(bool,False),"credential_lookup":(str,"disabled"),"arm_enabled":(bool,False)}
  for k,(t,v) in expected.items():
   if k not in obj: print("MISSING "+k); sys.exit(4)
-  if type(obj[k]) is not t: print("TYPE "+k); sys.exit(5)
+  if type(obj[k]) is not t: print("TYPE %s %s %s"%(k,type(obj[k]).__name__,t.__name__)); sys.exit(5)
   if obj[k] != v:
    h=hashlib.sha256(json.dumps(obj[k],sort_keys=True,separators=(",",":"),ensure_ascii=True).encode()).hexdigest()
    print("MISMATCH %s %s"%(k,h)); sys.exit(1)
@@ -691,7 +852,10 @@ except (OSError,UnicodeError,json.JSONDecodeError,Dup,ValueError) as e:
     case "$WPI_CAP_RC:$WPI_LINE" in
         '0:OK fields=8') printf 'B5_status http=200 json=strict required_fields=8 flags=expected body_sha256=%s content=not_printed\n' "$WPI_BODY_SHA" ;;
         4:'MISSING '*) wpi_stop B5 "schema_unexpected field=${WPI_LINE#MISSING }" ;;
-        5:'TYPE '*) wpi_stop B5 "schema_unexpected field=${WPI_LINE#TYPE } detail=type" ;;
+        5:'TYPE '*)
+            read -r _ WPI_JSON_FIELD WPI_JSON_TYPE WPI_JSON_EXPECTED_TYPE <<< "$WPI_LINE"
+            case "$WPI_JSON_FIELD:$WPI_JSON_TYPE:$WPI_JSON_EXPECTED_TYPE" in *[!A-Za-z0-9_:.-]*) wpi_stop B5 "status_body_unreadable_or_unparseable detail=type_grammar" ;; esac
+            wpi_fail B5 "flag_mismatch field=$WPI_JSON_FIELD observed_type=$WPI_JSON_TYPE expected_type=$WPI_JSON_EXPECTED_TYPE" ;;
         1:'MISMATCH '*)
             read -r _ WPI_JSON_FIELD WPI_JSON_DIGEST <<< "$WPI_LINE"
             case "$WPI_JSON_FIELD:$WPI_JSON_DIGEST" in *[!A-Za-z0-9_:.-]*) wpi_stop B5 "status_body_unreadable_or_unparseable detail=mismatch_grammar" ;; esac
@@ -711,9 +875,11 @@ wpi_main() {
     wpi_assert_prerequisites
     wpi_validate_inputs
 
-    # Bootstrap the tool table from the preregistered stat/env paths, then bind
-    # every helper before its first evidence-producing use.
-    for wpi_tool in stat readlink env find sha256sum systemctl ss curl; do
+    # Establish the deploy-attested projection before the first tool/object
+    # probe. Keep the window open through tool, evidence-leaf and manager
+    # preflight binding; any FAIL closes it through wpi_fail first.
+    wpi_mount_guard_begin
+    for wpi_tool in stat readlink env find sha256sum systemctl ss curl timeout; do
         wpi_map_get "$WPI_TOOL_PINS" "$wpi_tool"
         wpi_bind_tool "$wpi_tool" "$WPI_LINE"
     done
@@ -723,6 +889,7 @@ wpi_main() {
     # STOP-first preflight: no filesystem, parity, curl, or ss comparison is
     # reachable until the intended system manager has answered.
     wpi_assert_manager_ready
+    wpi_mount_guard_end
 
     printf 'RP7_SECTION B3_rows_10_15\n'
     wpi_assert_tree "$WPI_RELEASE_ROOT" release
@@ -749,7 +916,7 @@ wpi_main() {
     wpi_assert_status
     wpi_record_external_probe_boundary
 
-    printf 'RP7_claim establishes=rows_10_23_read_only_predicates_in_attested_mount_and_service_network_domains\n'
+    printf 'RP7_claim establishes=rows_10_23_read_only_predicates_with_attested_preexec_objects_and_service_network_domain;executed_objects_use_separate_bounded_exec_after_preexec_mount_window\n'
     printf 'RP7_claim does_not_establish=row_24_operator_side_result,ACL_or_capability_immutability,whole_tree_byte_identity,root_deferred_checks,group_C,host_authority\n'
     printf 'RP7 PASS\n'
 }
