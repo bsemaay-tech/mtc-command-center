@@ -100,6 +100,31 @@ Note the consequence for adversarial cycles: when Codex implements, the auditor 
 a different agent (GLM, or Max only if unavoidable) so implementation and audit are
 never the same model instance. Record the routing choice in each unit's record.
 
+### A2a. Routing conflict discovered 2026-08-10 ~04:15 — A2 overrides the two-tier default
+
+Symptom: a Codex dispatch to build a draft block did not implement it. Codex instead
+sub-delegated the implementation to Claude Opus 5 — correctly, under the repo's standing
+two-tier rule (`_AI_MEMORY/START_HERE.md`: the Lead orchestrates and delegates
+*implementation* to the counterpart flagship CLI) — and Claude Max then hit its account
+session limit mid-task, resetting 06:20. The result was one partial, unaudited file and
+two missing deliverables. Codex refused to silently finish the counterpart's work and
+reported blocked rather than printing a false DONE; that behaviour was right and should
+be preserved.
+
+The conflict: the two-tier rule assumes both flagships are freely available. Owner
+amendment A2 says the opposite for this period — Max credits are nearly spent and Codex
+is the default for BOTH implementation and audit. A2 is the later and more specific
+instruction, so **A2 wins**.
+
+Operational fix, binding on every dispatch while A2 is in force: state in the dispatch
+prompt itself that the counterpart-implementer requirement is suspended by owner
+amendment A2, that the receiving agent must implement directly, and that sub-delegating
+to Claude Max is not permitted without the Lead's explicit say-so. A dispatch that omits
+this will silently spend Max credits.
+
+Separation of implementer and auditor is unaffected: it is still preserved across
+*rounds* by alternating Codex and GLM, not by sub-delegation inside a single dispatch.
+
 ### A3. Owner asleep — no questions
 
 Continue fully autonomously. Do not ask anything; choose the recommended default, log
