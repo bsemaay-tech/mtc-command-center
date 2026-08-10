@@ -68,5 +68,14 @@ lift — were granted this morning, and root for `RPD-VERIFY` was granted alongs
   budget for WP-A, Gate B or WP-V — those still sit inside the remaining 25.1 h unless
   separately lifted.
 - Hours measure plan consumption, not wall-clock or token spend. Last night's 4.4 h of plan
-  time ran across roughly eleven hours of real time and a large number of delegated agent
-  calls.
+  time ran across **13 h 11 min of wall clock** — first commit `7e9d1c4a` at 2026-08-09
+  18:05, last commit `4a1d2948` at 2026-08-10 07:16, 53 commits. (An earlier draft of this
+  file said "roughly eleven hours"; that was an unmeasured estimate and is corrected here
+  from git timestamps.)
+
+  **Ratio: about 3 hours of wall clock per 1 hour of plan credit.** That is not waste — the
+  plan hour measures the deliverable, while the wall clock includes the six adversarial
+  audit rounds, the failed first B3 attempt, and the waiting. The six largest idle gaps
+  were 111, 80, 60, 51, 47 and 38 minutes, almost all of them heartbeat waits while a
+  delegated agent was running or while the non-gated backlog was exhausted and everything
+  left needed owner authority.
