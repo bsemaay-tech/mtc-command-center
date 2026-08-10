@@ -819,3 +819,164 @@ fixed was the evidence contract — whether the recorded commands were literally
 that ran. Two full audit rounds were spent on that alone, which is the strongest available
 argument for Pattern 10: evidence that cannot be re-executed is not evidence, and proving
 it takes as much work as the code did.
+
+---
+
+# AMENDMENT — 2026-08-10 night (Lead), after a full re-review against the day's evidence
+
+Source: `DEFECT_PATTERNS_REVIEW_CODEX_2026-08-10.md`, verdict `AMEND: 7 changes`, produced
+by a fresh flagship session against the day's ten review rounds across RP6-P0, RP7, the
+transport set and the §10.2 path-scope prover.
+
+## Lead adjudication on the proposed changes
+
+The re-review recommended deleting standalone Pattern 7 and folding it into Pattern 6.
+**Rejected in that form, accepted in substance.** Dozens of committed audit reports cite
+these patterns by number; renumbering or deleting one silently invalidates every citation
+and makes older evidence unreadable. Numbering is therefore **frozen permanently**.
+
+Instead:
+
+- **Pattern 7 stays where it is** and is reclassified as the reader-completion subtype of
+  Pattern 6. Cite them together (`6/7`) when the defect is "semantics decided before the
+  read completed". Pattern 7 had no new primary hit today; that is a reason to subordinate
+  it, not to erase its falsifications.
+- **Pattern 5 narrows** to grammar completeness *inside a modeled input or argv contract*.
+  Coverage of unmodeled grammar is now Pattern 12's job.
+- **Pattern 9 narrows** to claim-to-predicate mismatch and is an **overlay**, not the
+  primary home of every false outcome. Almost any defect can be described as a sentence
+  outrunning its probe; when a more specific pattern fits, cite that one and use 9 only for
+  the wording defect itself.
+- **Pattern 10 narrows** to falsifiability and literal reproducibility of evidence.
+- **Patterns 2, 3 and 8 are kept** despite sparse hits today: 2 and 3 both caught the
+  prover's overclaim, and 8 exposed a name-based identity residual still carried in the
+  transport set.
+
+Three new patterns are added as **11, 12 and 13**. All three earned their place by
+appearing independently in more than one artifact on the same day.
+
+---
+
+## Pattern 11 — "The declared instrument is not the executed instrument"
+
+**The mistake.** A tool, interpreter, helper or prerequisite is pinned, validated,
+projected and documented, but the real accepting caller never passes that object through
+the binding gate. The claim is produced by an executable or function whose identity was
+never established.
+
+**Why it survives casual review.** Every component exists on the page: a pin parser, a
+binding function, a required-count check, an isolation flag, a QA loop. Reviewers verify
+each component independently. The missing fact is *reachability from the production
+caller*. A helper-level test can even prove the binder works while the real caller omits
+one member.
+
+**Concrete instances.**
+
+1. RP7 accepted, projected and required `python3`, but `wpi_main` bound only nine tools;
+   the unbound program forged `OK fields=8`, wrote a marker and reached `RP7 PASS`
+   (`RP7_CODEX_T0_AUDIT_R4_2026-08-10.md` F1; the Lead reproduced it independently in
+   `RP7_LEAD_VERIFICATION_R4_2026-08-10.md`).
+2. RP6 printed `pinned_timeout` although its accepted one-entry pin set required only
+   Python, so the object producing the bound was never required to be pinned
+   (`RP6_CODEX_AUDIT_R6_2026-08-10.md` A10).
+3. The transport plan pinned the local SSH client but invoked bare remote `bash`; a PATH
+   plant or `BASH_ENV` startup file outside the pinned program domain forged the remote
+   program marker (`TRANSPORT_CODEX_FINAL_AUDIT_2026-08-10.md` F1).
+
+**The falsification.** Replace exactly the declared instrument with a deviant executable
+that writes a marker and emits the accepted terminal grammar. **Drive the real top-level
+caller, not the helper.** If the marker appears, or the accepting line is reached before
+the binder rejects the object, the declaration is ornamental.
+
+**The rule.** For every accepting claim, trace the dynamic call path backward to a binding
+event for every executable, helper and function that can produce it. Derive the production
+instrument inventory *from the caller* once; never redeclare it in QA. Require an exact
+one-to-one comparison between declared, bound and executed instruments, and mutation-test
+the real caller by removing or replacing each member.
+
+---
+
+## Pattern 12 — "What the analyzer does not model must not disappear"
+
+**The mistake.** A static analyzer, policy engine or dispatcher meets a command, option,
+redirection or nested program form outside its model and emits neither a resolved fact nor
+an unresolved marker. Empty output is then read as proof that no sink or risk exists.
+
+**Why it survives casual review.** Modeled happy paths produce detailed, deterministic
+rows, so the tool looks comprehensive. The registry of known commands is mistaken for proof
+that the language is covered. Shortcuts such as "no-path command" or "ignore options" keep
+common fixtures quiet, and determinism merely reproduces the same omission every run.
+
+**Concrete instances.** All from `PATHSCOPE_CODEX_T1_AUDIT_2026-08-10.md` F1–F4 and F7:
+
+1. `pushd "$ROOT"` and a `trap` firing a reader at EXIT produced zero resolved paths, zero
+   unresolved issues, and `PATHSCOPE verdict=PASS rc=0`.
+2. `ssh "$HOST"` and `getent hosts "$HOST"` silently lost their endpoints.
+3. A `find … -exec <reader> ;` form reported only the allowed root; curl upload, tar output
+   and cp target paths supplied as `--name=value` likewise disappeared.
+4. The unsupported `<>` token produced an invented target rather than a coverage refusal.
+
+**The falsification.** For every registered command and shell construction, add one
+unmodeled-but-valid path or endpoint form and one nested sink. Delete an adapter, or insert
+an unknown option. The tool must emit a specific unresolved coverage record and rc 3.
+**Zero facts plus PASS is always red.**
+
+**The rule.** Coverage is a fail-closed property. Keep an explicit grammar matrix for
+commands, options, redirections, nesting and implicit endpoints. A recognised primitive
+with any unconsumed token or unsupported semantic form must STOP with a coverage reason.
+An unknown command capable of executing or opening anything is an opaque sink, not a no-op.
+Report modeled coverage separately from resolved-path counts, and never infer absence of
+risk from absence of analyzer output.
+
+---
+
+## Pattern 13 — "Every admitted member needs a terminal disposition"
+
+**The mistake.** A stage declares or enumerates a universe, and a later stage silently
+drops, overwrites, reinterprets or fails to bind one member. The reduced universe passes,
+so absence from the result is mistaken for absence from the subject.
+
+**Why it survives casual review.** Each stage is locally plausible: enumeration prints the
+right count, preflight proves the bytes readable, a library returns a convenient
+dictionary, and the comparison succeeds over whatever remains. Nobody checks conservation
+across stage boundaries. Dictionary overwrite and library skip behaviour are especially
+quiet because they return valid data structures at rc 0.
+
+**Concrete instances.**
+
+1. RP7 preflight admitted two readable `*.dist-info` directories; the verifier silently
+   skipped the one whose METADATA lacked `Name`, compared one package, and emitted parity
+   PASS (`RP7_CODEX_T0_AUDIT_R4_2026-08-10.md` F2).
+2. The same verifier overwrote duplicate canonical package names in a dictionary, so two
+   admitted objects could collapse into one compared identity.
+3. RP6 validated pathname-expanded `id -G` items but reconciled the raw string against the
+   forbidden-GID ledger, so a raw `0*` could be rendered `form=numeric_only` from the
+   expanded item while the forbidden numeric identity vanished from the later whole-word
+   intersection (`RP6_CLAUDE_REAUDIT_R5_2026-08-10.md` F2).
+
+**The falsification.** Add one malformed-but-readable member, two members that canonicalise
+to the same key, and one member whose representation changes between validation and
+comparison. The terminal accounting must show **one disposition per input member** and must
+STOP on missing identity, duplicate identity, representation drift or an unexplained count
+change. A final PASS over fewer members is red.
+
+**The rule.** Declare the universe once, assign every member a stable identity, and carry
+that identity unchanged through preflight, parse, normalisation and comparison. Enforce a
+conservation equation at every boundary: input members = accepted + rejected + explicitly
+unresolved, with no overwrite and no implicit filter. PASS requires every admitted member
+to reach exactly one terminal disposition.
+
+---
+
+## Standing note on numbering
+
+Pattern numbers are permanent. A pattern that stops earning its keep is **narrowed,
+subordinated or marked dormant in place** — never renumbered and never deleted. The cost of
+breaking every citation in the committed audit trail is far higher than the cost of
+carrying a quiet pattern.
+
+## Effective time
+
+This amendment landed at ~22:00 on 2026-08-10, while two RP7 round-5 reviews were already
+in flight against the pre-amendment text. Those two reviews are judged against the ten
+original patterns; every round dispatched after this commit is judged against thirteen.
