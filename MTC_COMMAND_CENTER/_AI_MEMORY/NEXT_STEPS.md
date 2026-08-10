@@ -9,6 +9,46 @@ maximum three rounds. Count the existing Claude audit only if fresh-session + xh
 confirmed; its report currently omits effort. After repair/green evidence, run the fresh Codex xhigh slot.
 Do not add GLM/DeepSeek unless an explicit tier slot or later owner contract requires it.
 
+## WP-I block set built + in adversarial T0 cycles; re-audits in flight (2026-08-10 ~13:30)
+
+Day session progress (committed + pushed through `f503af55`). Tier classification for the
+whole WP-I block set recorded per the policy above:
+`11_TRIAGE/WPI_BLOCKS_DRAFT/AUDIT_TIER_CLASSIFICATION_2026-08-10.md` — all executable
+transport/block artifacts are **T0** (two fresh flagships xhigh acceptance floor).
+
+- **Draft at round 1.6.** 1.4 catalogue pass (17 repairs, GLM VERIFIED-CLOSED at
+  `6a8b0896`); 1.5 transport-contract repair after a correct Codex authoring STOP (two
+  reused remote scripts carried WP-L-specific constants → `remote_setup_wpi.sh` /
+  `remote_extract_verify_wpi.sh` minimal derivations, `6f929112`); 1.6 RP7-audit
+  adjudications (row 19a verifier identity, row-21 STOP/FAIL split, non-symlink
+  interpreter, normalised mount projection v1, WPI_LOG_DIR pinned literal, `f503af55`).
+- **RP6-P0** through C13 rounds (GLM getent arm → Lead-executed QA `cbaf3ec8` → Codex
+  audit BLOCK 3 `4e3ab2c1` → Claude Pro repair `8d2f25a5`). Current `ef205e20…`,
+  55467 B. Codex cycle re-audit IN FLIGHT; both T0 xhigh flagship slots still to run on
+  final bytes.
+- **RP7-WPI-RO** round 1 (Codex, `3c929a3a`) → Claude Pro xhigh audit BLOCK 13
+  (`ee21369a`; F1: argv[0] prefix killed every *_absent FAIL) → Codex round-2 repair of
+  all 13 (`f503af55`). Current `ed9aa6b3…`, 54001 B. Claude Pro xhigh re-audit IN
+  FLIGHT; Codex xhigh T0 slot on green bytes next.
+- **Transport set** authored round 2 (8 files, `3c929a3a`). No audit yet — first audit
+  at the T0 contract.
+- **Routing:** GLM hit its 5h window (~19:56 reset); Claude Pro (default account,
+  owner-verified) is auditor 2 / relief implementer. NVIDIA NIM live
+  (`Invoke-NvidiaNim.ps1`, deepseek/minimax).
+
+**PICK UP EXACTLY HERE:**
+
+1. **[AI: Lead]** Consume both in-flight re-audits. On green: dispatch the missing T0
+   xhigh flagship slots (Codex xhigh for RP7; opus-5 xhigh + Codex xhigh for RP6-P0
+   final bytes). On narrow BLOCK: bounded rounds within the T0 cap of 3.
+2. **[AI: flagships]** Transport-set T0 audit (both flagships xhigh).
+3. **[AI: Lead]** Successor preregistration: mint RUNIDs + unit id, fill pins
+   (LEAD_PIN_RESOLUTION + empty-dropin-set + mount-projection-v1 attestation digest),
+   Stage 1 freeze incl. §10.2 parsed path-scope proof, commit BEFORE any invocation.
+4. **[AI: Lead]** Execute P0 → RO on GATEA-STAGING (owner grants #1/#2), then
+   RPD-VERIFY as root (grant #3). Evidence closed + bound.
+5. **[AI: Any]** WP-I closure record → Audit 2 dispatch.
+
 ## WP-I round 1.4: catalogue pass CLOSED; RP6-P0 repair in flight (2026-08-10 ~09:20)
 
 **Round 1.4 committed `6a8b0896`:** Codex applied all 10 defect patterns to the whole
