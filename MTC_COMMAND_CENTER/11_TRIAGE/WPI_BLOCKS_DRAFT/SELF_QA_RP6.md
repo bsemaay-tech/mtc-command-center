@@ -298,6 +298,15 @@ inside input validation before any external P0 probe; they print no host file co
 
 ## C13 getent arm — exact RED/GREEN command
 
+> **SUPPLEMENTAL under D026 (C13 audit finding 2, accepted).** This fence and the
+> next one call `p0_resolve_accounts` from the harness itself, so deleting the
+> block's production integration call would leave them green: their "RED" cases
+> are deviant-input cases against unmutated code, not implementation
+> falsification. They are retained as behavioural documentation of the arm. The
+> D026 closure evidence is the round-3 section
+> "C13 R3 — D026 harness 1", which drives the arm from the block's own call site
+> and runs the same assertions against mutated and pre-repair bytes.
+
 The command extracts the REAL arm and the helpers it calls from the repaired
 block (so the tested code is the block's code, not a transcription), sources
 them, and exercises the arm against a QA-only `getent` fixture. The production
@@ -425,6 +434,14 @@ preregistered reason tokens. (Local uid/gid 4096 stands in for the live
 identity; the fixture never asserts names.)
 
 ## C13 new-input backstop — exact command (P0_STATE_UID / P0_STATE_GID)
+
+> **SUPPLEMENTAL under D026 (C13 audit finding 2, accepted).** This fence mutates
+> away each rc-3 pre-check but never removes the `:?` backstop itself, so it does
+> not falsify the claim that the backstop is what produces the GREEN. The
+> retained as-drafted RED below is a harness defect (missing stdin), not an
+> implementation falsification. The D026 closure evidence is the round-3 section
+> "C13 R3 — D026 harness 2", which runs the same assertion against a mutation
+> that removes the pre-check AND the backstop.
 
 Same shape as the F4 mutation test: delete each new input's rc-3 pre-check,
 then source the block with that input unset and the rest supplied; the `:?`
@@ -585,3 +602,509 @@ system manager). The C13 tests above either source only the extracted arm
 function definitions (no block top-level execution) and exercise them against a
 local getent fixture, or abort inside input validation before any external P0
 probe. No host was contacted and no host file content was printed.
+
+---
+
+# C13 round 3 — repair of the Codex audit `RP6_C13_CODEX_AUDIT_2026-08-10.md`
+
+Implementer: Claude Opus 5 (GLM, the C13 implementer, is quota-blocked). All
+output below was captured in this session in a local Git Bash 5.2.37
+`--noprofile --norc` process. No host was contacted, no network command was run,
+and nothing outside the four kickoff deliverable files was modified.
+
+## C13 R3 — repair decisions
+
+- **F1 (HIGH), fixed in the block.** `p0_resolve_passwd` now accepts `rc 2` as
+  `nomatch` only when the complete merged capture is empty — this interface's
+  exact valid-no-match shape. `rc 2` carrying any byte (an NSS diagnostic on
+  stderr, a partial record, a module warning) sets `P0_PW_OUTCOME=error`, so the
+  caller emits `identity_unresolvable … rc 3` for both accounts instead of
+  asserting positive absence it never observed. `P0_PW_DIAG` on the surviving
+  no-match path records `empty_capture_at_rc2`, i.e. the reason the no-match was
+  accepted, rather than a sanitized empty string. Every other arm of the parser
+  and both caller `case` statements are byte-identical; the valid-no-match arm
+  (`mtc-bridge`, rc 2, empty capture → `state_account_resolution_unexpected
+  observed_numeric=absent`) is unchanged and is regression-tested below.
+- **F2 (MEDIUM), fixed in this QA.** The two earlier C13 fences are re-labelled
+  SUPPLEMENTAL in place and two D026 harnesses are added. Harness 1 no longer
+  calls the arm: it extracts the block's own top-level driver lines by exact
+  whole-line match and lets the block invoke `p0_resolve_accounts`, then runs one
+  assertion set across three source variants (R3-repaired bytes, pre-R3 bytes,
+  and bytes with the production integration call deleted). Harness 2 adds the
+  mutation that removes the `:?` backstop itself. Both harnesses check assertion
+  POLARITY: a case declared `RED` fails the run if its assertion is met, so a
+  mutation that is not killed is a harness failure, not a silent pass.
+- **F3 (MEDIUM), fixed in the block.** The "NUMERIC IDENTITY ONLY" header no
+  longer claims that no name is looked up or captured and that the block asks the
+  resolver database nothing. It now says what is true: admission is numeric only
+  and no name is ever compared or asserted, two names ARE queried via the pinned
+  `getent passwd`, the returned name/gecos/home/shell fields are recorded as
+  diagnostics that no verdict depends on, and which NSS source answered is not
+  established (already carried in `does_not_establish`).
+
+## C13 R3 — D026 harness 1 (arm driven by the block's own integration call)
+
+What makes this D026 rather than deviant-input testing:
+
+1. The harness never calls `p0_resolve_accounts`. It appends the block's two
+   top-level driver lines — matched as exact whole lines out of the source bytes
+   — after the extracted function definitions, so whether the arm runs at all is
+   decided by the block.
+2. Mutation `nocall` deletes the production integration call
+   (`p0_resolve_accounts` at the block's top level). Every arm assertion must
+   then fail; the run fails if any of them still passes.
+3. The F1 assertions are run against the **pre-repair bytes**
+   (`git show cbaf3ec8:<path>` — the C13 commit, SHA-256 `cfdb23b8…`, 54109 B),
+   which must fail them, and against the repaired bytes, which must pass them.
+   The defect itself is additionally recorded as a positive assertion: on
+   pre-repair bytes an rc-2-plus-diagnostic capture really does emit
+   `state_account_resolution_unexpected … observed_numeric=absent`.
+
+```bash
+set -Eeuo pipefail
+cd /c/LAB/Tradingview_LAB_CLEAN
+blk=MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh
+pre_rev=cbaf3ec8    # the C13 commit = the PRE-R3-repair bytes cfdb23b8..., 54109 B
+w=/tmp/rp6qa_c13r3; rm -rf "$w"; mkdir -p "$w"
+
+# ---- QA-only getent fixture (production pins an absolute getent from the inventory).
+cat > "$w/getent_shim.sh" <<'SHIMEOF'
+#!/usr/bin/env bash
+key="${2:-}"
+case "$key" in
+    gatea)
+        case "${SHIM_MODE:-}" in
+            wrong_gatea_uid) printf 'gatea:x:4242:%s:a:/h:/s\n' "$(id -g)"; exit 0 ;;
+            dup_gatea) printf 'gatea:x:%s:%s:a:/h:/s\ngatea:x:%s:%s:b:/h:/s\n' "$(id -u)" "$(id -g)" "$(id -u)" "$(id -g)"; exit 0 ;;
+            gatea_rc2_diag) printf 'getent: nss module returned SERVBUSY for gatea\n' >&2; exit 2 ;;
+            *) printf 'gatea:x:%s:%s:gatea route login:/home/gatea:/bin/bash\n' "$(id -u)" "$(id -g)"; exit 0 ;;
+        esac ;;
+    mtc-bridge)
+        case "${SHIM_MODE:-}" in
+            wrong_mtc_gid) printf 'mtc-bridge:x:999:989:svc:/var/lib/mtc-bridge:/usr/sbin/nologin\n'; exit 0 ;;
+            mtc_nomatch) exit 2 ;;
+            mtc_rc2_diag) printf 'getent: sss_nss: connection to the name service timed out\n' >&2; exit 2 ;;
+            mtc_rc2_partial) printf 'mtc-bridge:x:999\n'; exit 2 ;;
+            *) printf 'mtc-bridge:x:999:988:mtc-bridge service:/var/lib/mtc-bridge:/usr/sbin/nologin\n'; exit 0 ;;
+        esac ;;
+esac
+exit 2
+SHIMEOF
+chmod +x "$w/getent_shim.sh"
+
+# ---- the three source variants under test -------------------------------------
+cp "$blk" "$w/src_repaired.sh"                                   # R3-repaired bytes
+git show "$pre_rev:$blk" > "$w/src_prerepair.sh"                 # pre-R3 bytes (F1 unfixed)
+awk '$0!="p0_resolve_accounts"' "$blk" > "$w/src_nocall.sh"      # MUTATION: production integration call deleted
+
+# ---- extract the arm AND the block's own top-level driver ---------------------
+# The driver lines are taken from the source bytes by exact whole-line match, so
+# the block - not this harness - decides whether the arm runs at all. If the
+# integration call is deleted, nothing invokes the arm and every arm assertion
+# must fail. Nothing here calls p0_resolve_accounts.
+extract() {
+    {
+        sed -n '/^p0_stop() {/p'                "$1"
+        sed -n '/^p0_sanitize()/,/^}/p'         "$1"
+        sed -n '/^p0_count_substr()/,/^}/p'     "$1"
+        sed -n '/^p0_capture_numeric()/,/^}/p'  "$1"
+        sed -n '/^p0_resolve_passwd()/,/^}/p'   "$1"
+        sed -n '/^p0_resolve_accounts()/,/^}/p' "$1"
+        awk '$0=="printf '\''P0_SECTION accounts\\n'\''" || $0=="p0_resolve_accounts"' "$1"
+    } > "$2"
+}
+for v in repaired prerepair nocall; do extract "$w/src_$v.sh" "$w/funcs_$v.sh"; done
+printf 'DRIVER_LINES repaired=%s prerepair=%s nocall=%s\n' \
+    "$(grep -c '^p0_resolve_accounts$' "$w/funcs_repaired.sh")" \
+    "$(grep -c '^p0_resolve_accounts$' "$w/funcs_prerepair.sh")" \
+    "$(grep -c '^p0_resolve_accounts$' "$w/funcs_nocall.sh")"
+
+run_case() {  # variant mode want_rc want_subst polarity
+    local variant="$1" mode="$2" want_rc="$3" want_subst="$4" polarity="$5" out rc=0 ok=0
+    out="$(
+        SHIM_MODE="$mode" \
+        P0_GETENT="$w/getent_shim.sh" \
+        P0_ID="$(command -v id)" \
+        P0_EXPECT_UID="$(id -u)" \
+        P0_STATE_UID=999 \
+        P0_STATE_GID=988 \
+        bash --noprofile --norc -c '
+            set -Eeuo pipefail
+            . "$1"
+        ' _ "$w/funcs_$variant.sh"
+    )" || rc=$?
+    printf -- '--- variant=%s mode=%s\n%s\nARM_RC=%s\n' "$variant" "${mode:-<none>}" "$out" "$rc"
+    if [ "$rc" = "$want_rc" ] && case "$out" in *"$want_subst"*) true ;; *) false ;; esac; then ok=1; fi
+    if [ "$ok" -eq 1 ]; then
+        printf 'ASSERT_MET variant=%s mode=%s expected_rc=%s subst=[%s] polarity=%s\n' \
+            "$variant" "${mode:-<none>}" "$want_rc" "$want_subst" "$polarity"
+    else
+        printf 'ASSERT_UNMET variant=%s mode=%s expected_rc=%s subst=[%s] polarity=%s\n' \
+            "$variant" "${mode:-<none>}" "$want_rc" "$want_subst" "$polarity"
+    fi
+    # GREEN cases must meet the assertion; RED cases (mutated/pre-repair bytes) must NOT.
+    case "$polarity:$ok" in
+        GREEN:1|RED:0) printf 'CASE_OK\n'; return 0 ;;
+        *)             printf 'CASE_BAD\n'; return 1 ;;
+    esac
+}
+
+overall=0
+set +e
+# === A. repaired bytes, block-driven: the pre-existing five cases ==============
+run_case repaired ''               0 'P0_account_admitted account=mtc-bridge numeric=999:988'            GREEN || overall=1
+run_case repaired wrong_mtc_gid    3 'state_account_resolution_unexpected account=mtc-bridge'            GREEN || overall=1
+run_case repaired mtc_nomatch      3 'state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent' GREEN || overall=1
+run_case repaired wrong_gatea_uid  3 'identity_unexpected account=gatea'                                 GREEN || overall=1
+run_case repaired dup_gatea        3 'identity_unresolvable account=gatea'                               GREEN || overall=1
+
+# === B. F2(a): the production integration call is deleted -> every arm assertion must fail
+run_case nocall   ''               0 'P0_account_admitted account=mtc-bridge numeric=999:988'            RED   || overall=1
+run_case nocall   wrong_mtc_gid    3 'state_account_resolution_unexpected account=mtc-bridge'            RED   || overall=1
+run_case nocall   mtc_rc2_diag     3 'identity_unresolvable account=mtc-bridge'                          RED   || overall=1
+
+# === C. F2(c)/F1: rc 2 carrying bytes is a lookup error, not a valid no-match ==
+#  GREEN on repaired bytes ...
+run_case repaired mtc_rc2_diag     3 'identity_unresolvable account=mtc-bridge detail=[getent: sss_nss: connection to the name service timed out]' GREEN || overall=1
+run_case repaired mtc_rc2_partial  3 'identity_unresolvable account=mtc-bridge detail=[mtc-bridge:x:999]'                                          GREEN || overall=1
+run_case repaired gatea_rc2_diag   3 'identity_unresolvable account=gatea detail=[getent: nss module returned SERVBUSY for gatea]'                 GREEN || overall=1
+#  ... and RED on the pre-repair bytes, which classify the same capture as a valid no-match.
+run_case prerepair mtc_rc2_diag    3 'identity_unresolvable account=mtc-bridge detail=[getent: sss_nss: connection to the name service timed out]' RED || overall=1
+run_case prerepair mtc_rc2_partial 3 'identity_unresolvable account=mtc-bridge detail=[mtc-bridge:x:999]'                                          RED || overall=1
+run_case prerepair gatea_rc2_diag  3 'identity_unresolvable account=gatea detail=[getent: nss module returned SERVBUSY for gatea]'                 RED || overall=1
+#  What the pre-repair bytes emit instead, recorded positively as the defect:
+run_case prerepair mtc_rc2_diag    3 'state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent' GREEN || overall=1
+
+# === D. the valid no-match arm still works after the F1 narrowing (regression) =
+run_case repaired mtc_nomatch      3 'state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match' GREEN || overall=1
+set -e
+
+if [ "$overall" -eq 0 ]; then
+    printf 'C13_R3_ARM_QA_SUMMARY cases=16 result=PASS\n'
+else
+    printf 'C13_R3_ARM_QA_SUMMARY cases=16 result=FAIL\n'
+    exit 1
+fi
+```
+
+### C13 R3 — D026 harness 1, real output
+
+Captured 2026-08-10, Git Bash, against working-tree bytes
+`ef205e2064caa0cb1493abf037ce9d435f2bf8f6259c5bb3fc4964d1abb2b4b9`, 55467 B.
+Process rc 0.
+
+```text
+DRIVER_LINES repaired=1 prerepair=1 nocall=0
+--- variant=repaired mode=<none>
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_account account=mtc-bridge outcome=resolved uid=999 gid=988 name_diag=[mtc-bridge] via=pinned_getent_passwd
+P0_account_admitted account=mtc-bridge numeric=999:988 matches=prereg_state_uid_gid name=diagnostic_only
+ARM_RC=0
+ASSERT_MET variant=repaired mode=<none> expected_rc=0 subst=[P0_account_admitted account=mtc-bridge numeric=999:988] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=wrong_mtc_gid
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_account account=mtc-bridge outcome=resolved uid=999 gid=989 name_diag=[mtc-bridge] via=pinned_getent_passwd
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=999:989 expected_numeric=999:988
+ARM_RC=3
+ASSERT_MET variant=repaired mode=wrong_mtc_gid expected_rc=3 subst=[state_account_resolution_unexpected account=mtc-bridge] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=mtc_nomatch
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_MET variant=repaired mode=mtc_nomatch expected_rc=3 subst=[state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=wrong_gatea_uid
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4242 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_STOP reason=identity_unexpected account=gatea observed_numeric=4242:4096 expected_numeric=4096:4096,prereg_uid=4096
+ARM_RC=3
+ASSERT_MET variant=repaired mode=wrong_gatea_uid expected_rc=3 subst=[identity_unexpected account=gatea] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=dup_gatea
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea detail=[gatea:x:4096:4096:a:/h:/s gatea:x:4096:4096:b:/h:/s]
+ARM_RC=3
+ASSERT_MET variant=repaired mode=dup_gatea expected_rc=3 subst=[identity_unresolvable account=gatea] polarity=GREEN
+CASE_OK
+--- variant=nocall mode=<none>
+P0_SECTION accounts
+ARM_RC=0
+ASSERT_UNMET variant=nocall mode=<none> expected_rc=0 subst=[P0_account_admitted account=mtc-bridge numeric=999:988] polarity=RED
+CASE_OK
+--- variant=nocall mode=wrong_mtc_gid
+P0_SECTION accounts
+ARM_RC=0
+ASSERT_UNMET variant=nocall mode=wrong_mtc_gid expected_rc=3 subst=[state_account_resolution_unexpected account=mtc-bridge] polarity=RED
+CASE_OK
+--- variant=nocall mode=mtc_rc2_diag
+P0_SECTION accounts
+ARM_RC=0
+ASSERT_UNMET variant=nocall mode=mtc_rc2_diag expected_rc=3 subst=[identity_unresolvable account=mtc-bridge] polarity=RED
+CASE_OK
+--- variant=repaired mode=mtc_rc2_diag
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge detail=[getent: sss_nss: connection to the name service timed out]
+ARM_RC=3
+ASSERT_MET variant=repaired mode=mtc_rc2_diag expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[getent: sss_nss: connection to the name service timed out]] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=mtc_rc2_partial
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge detail=[mtc-bridge:x:999]
+ARM_RC=3
+ASSERT_MET variant=repaired mode=mtc_rc2_partial expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[mtc-bridge:x:999]] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=gatea_rc2_diag
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea detail=[getent: nss module returned SERVBUSY for gatea]
+ARM_RC=3
+ASSERT_MET variant=repaired mode=gatea_rc2_diag expected_rc=3 subst=[identity_unresolvable account=gatea detail=[getent: nss module returned SERVBUSY for gatea]] polarity=GREEN
+CASE_OK
+--- variant=prerepair mode=mtc_rc2_diag
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_UNMET variant=prerepair mode=mtc_rc2_diag expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[getent: sss_nss: connection to the name service timed out]] polarity=RED
+CASE_OK
+--- variant=prerepair mode=mtc_rc2_partial
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_UNMET variant=prerepair mode=mtc_rc2_partial expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[mtc-bridge:x:999]] polarity=RED
+CASE_OK
+--- variant=prerepair mode=gatea_rc2_diag
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea rc=2 detail=getent_valid_no_match_for_route_login
+ARM_RC=3
+ASSERT_UNMET variant=prerepair mode=gatea_rc2_diag expected_rc=3 subst=[identity_unresolvable account=gatea detail=[getent: nss module returned SERVBUSY for gatea]] polarity=RED
+CASE_OK
+--- variant=prerepair mode=mtc_rc2_diag
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_MET variant=prerepair mode=mtc_rc2_diag expected_rc=3 subst=[state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=mtc_nomatch
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_MET variant=repaired mode=mtc_nomatch expected_rc=3 subst=[state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match] polarity=GREEN
+CASE_OK
+C13_R3_ARM_QA_SUMMARY cases=16 result=PASS
+```
+
+What the output establishes, line by line:
+
+- `DRIVER_LINES … nocall=0` — the mutation really removed the integration call
+  from the extracted material; the other two variants keep exactly one.
+- Block B: with the call deleted, all three arm assertions go `ASSERT_UNMET` and
+  the arm produces nothing but the section header at rc 0. The harness is now
+  killed by the mutation the auditor named; it can no longer be green without the
+  block's own call site.
+- Block C: the identical rc-2-plus-bytes captures produce `identity_unresolvable`
+  rc 3 on repaired bytes and `state_account_resolution_unexpected …
+  observed_numeric=absent` on pre-repair bytes — the F1 defect reproduced and
+  then killed. `gatea` under pre-repair bytes emits `identity_unresolvable
+  account=gatea rc=2 detail=getent_valid_no_match_for_route_login`, i.e. the right
+  verdict for the wrong reason (a claimed valid no-match), which the assertion on
+  `detail=[…]` distinguishes.
+- Block D: the true valid no-match (rc 2, empty capture) still yields the exact
+  preregistered `observed_numeric=absent … detail=getent_valid_no_match` line, so
+  the narrowing did not collapse the row-3 arm.
+
+## C13 R3 — D026 harness 2 (the `:?` backstop itself removed)
+
+One assertion — rc 1 plus the named input message — run against two mutations per
+new input. `precheck_only` must meet it (the backstop fires). `precheck_and_backstop`
+must NOT meet it; if it did, the GREEN above would not be evidence about the
+backstop.
+
+```bash
+set -Eeuo pipefail
+cd /c/LAB/Tradingview_LAB_CLEAN
+target='MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh'
+cand='2ce41e34bceb599d80af24c5c33d835820ec321b'
+
+# Two mutations per new input, ONE assertion for both:
+#   precheck_only          - delete the rc-3 pre-check, keep the `:?` backstop.
+#                            The backstop must fire: rc 1 + the named message.
+#   precheck_and_backstop  - delete the pre-check AND the `:?` backstop itself.
+#                            The same assertion must now FAIL (the mutant is
+#                            killed); if it still passed, the recorded GREEN
+#                            above would not be evidence about the backstop.
+mutate() {  # $1 = input name, $2 = mutation kind; block bytes on stdout
+    case "$2" in
+        precheck_only)
+            awk -v n="$1" '$0 !~ "^p0_require_uint "n" " ' "$target" ;;
+        precheck_and_backstop)
+            awk -v n="$1" '$0 !~ "^p0_require_uint "n" " && index($0, ": \"${" n ":?") == 0' "$target" ;;
+        *) printf 'HARNESS_ERROR unknown_mutation=%s\n' "$2" >&2; return 2 ;;
+    esac
+}
+
+exercise() {  # $1 = input name, $2 = mutation kind, $3 = expected polarity
+    local input="$1" kind="$2" polarity="$3" expected raw probe_rc=0 met=0
+    local -a extra_env
+    case "$input" in
+        P0_STATE_UID)
+            extra_env=(P0_EXPECT_UID=1000 P0_STATE_GID=988 P0_FORBIDDEN_GIDS=0
+                       P0_VENV_ROOT="/opt/mtc-bridge/venvs/$cand")
+            expected='P0_STATE_UID: preregistered numeric uid of the mtc-bridge service account is required' ;;
+        P0_STATE_GID)
+            extra_env=(P0_EXPECT_UID=1000 P0_STATE_UID=999 P0_FORBIDDEN_GIDS=0
+                       P0_VENV_ROOT="/opt/mtc-bridge/venvs/$cand")
+            expected='P0_STATE_GID: preregistered numeric gid of the mtc-bridge service account is required' ;;
+        *) printf 'HARNESS_ERROR unknown_input=%s\n' "$input"; return 2 ;;
+    esac
+
+    # Sanity: the mutation must actually have removed lines from the block.
+    printf 'MUTATION_LINES_REMOVED input=%s kind=%s n=%s\n' "$input" "$kind" \
+        "$(( $(wc -l < "$target") - $(mutate "$input" "$kind" | wc -l) ))"
+
+    raw="$(
+        mutate "$input" "$kind" |
+        env -i \
+            PATH="$PATH" \
+            RUNID=qa-rp6 \
+            EV_STAGE_ID=p0 \
+            EV_DIR=/qa-rp6 \
+            EV_LOG=/qa-rp6/p0.log \
+            "${extra_env[@]}" \
+            bash --noprofile --norc -c '
+                rp0_require_safe_component() { return 0; }
+                rp0_allocate_evidence_dir() { return 0; }
+                . /dev/stdin
+            ' 2>&1
+    )" || probe_rc=$?
+
+    printf '%s\n' "$raw"
+    if [ "$probe_rc" -eq 1 ] && case "$raw" in *"$expected"*) true ;; *) false ;; esac; then met=1; fi
+    printf 'ASSERT_%s input=%s mutation=%s raw_rc=%s polarity=%s\n' \
+        "$( [ "$met" -eq 1 ] && echo MET || echo UNMET )" "$input" "$kind" "$probe_rc" "$polarity"
+    case "$polarity:$met" in
+        GREEN:1|RED:0) printf 'CASE_OK\n'; return 0 ;;
+        *)             printf 'CASE_BAD\n'; return 1 ;;
+    esac
+}
+
+overall=0
+for input in P0_STATE_UID P0_STATE_GID; do
+    for spec in precheck_only:GREEN precheck_and_backstop:RED; do
+        kind="${spec%%:*}"; polarity="${spec##*:}"
+        set +e
+        post="$(exercise "$input" "$kind" "$polarity" 2>&1)"; post_rc=$?
+        set -e
+        printf '%s\n' "=== $input / $kind / expect_$polarity ===" "$post" "CHECK_RC=$post_rc"
+        [ "$post_rc" -eq 0 ] || overall=1
+    done
+done
+if [ "$overall" -eq 0 ]; then
+    printf 'C13_R3_BACKSTOP_QA_SUMMARY inputs=2 mutations=2 cases=4 result=PASS\n'
+else
+    printf 'C13_R3_BACKSTOP_QA_SUMMARY inputs=2 mutations=2 cases=4 result=FAIL\n'
+    exit 1
+fi
+```
+
+### C13 R3 — D026 harness 2, real output
+
+Captured 2026-08-10, Git Bash, same working-tree bytes. Process rc 0.
+
+```text
+=== P0_STATE_UID / precheck_only / expect_GREEN ===
+MUTATION_LINES_REMOVED input=P0_STATE_UID kind=precheck_only n=1
+P0_SECTION header candidate=2ce41e34bceb599d80af24c5c33d835820ec321b block=RP6-P0 stage=p0
+P0_SECTION prerequisites
+P0_prereq lib=sourced bootstrap=ran run_id=qa-rp6 stage=p0 dir=/qa-rp6 leaf=/qa-rp6/p0.log
+/dev/stdin: line 288: P0_STATE_UID: preregistered numeric uid of the mtc-bridge service account is required
+ASSERT_MET input=P0_STATE_UID mutation=precheck_only raw_rc=1 polarity=GREEN
+CASE_OK
+CHECK_RC=0
+=== P0_STATE_UID / precheck_and_backstop / expect_RED ===
+MUTATION_LINES_REMOVED input=P0_STATE_UID kind=precheck_and_backstop n=2
+P0_SECTION header candidate=2ce41e34bceb599d80af24c5c33d835820ec321b block=RP6-P0 stage=p0
+P0_SECTION prerequisites
+P0_prereq lib=sourced bootstrap=ran run_id=qa-rp6 stage=p0 dir=/qa-rp6 leaf=/qa-rp6/p0.log
+P0_SECTION preregistered_inputs
+P0_input name=P0_EXPECT_UID value=1000
+/dev/stdin: line 373: P0_STATE_UID: unbound variable
+ASSERT_UNMET input=P0_STATE_UID mutation=precheck_and_backstop raw_rc=1 polarity=RED
+CASE_OK
+CHECK_RC=0
+=== P0_STATE_GID / precheck_only / expect_GREEN ===
+MUTATION_LINES_REMOVED input=P0_STATE_GID kind=precheck_only n=1
+P0_SECTION header candidate=2ce41e34bceb599d80af24c5c33d835820ec321b block=RP6-P0 stage=p0
+P0_SECTION prerequisites
+P0_prereq lib=sourced bootstrap=ran run_id=qa-rp6 stage=p0 dir=/qa-rp6 leaf=/qa-rp6/p0.log
+/dev/stdin: line 290: P0_STATE_GID: preregistered numeric gid of the mtc-bridge service account is required
+ASSERT_MET input=P0_STATE_GID mutation=precheck_only raw_rc=1 polarity=GREEN
+CASE_OK
+CHECK_RC=0
+=== P0_STATE_GID / precheck_and_backstop / expect_RED ===
+MUTATION_LINES_REMOVED input=P0_STATE_GID kind=precheck_and_backstop n=2
+P0_SECTION header candidate=2ce41e34bceb599d80af24c5c33d835820ec321b block=RP6-P0 stage=p0
+P0_SECTION prerequisites
+P0_prereq lib=sourced bootstrap=ran run_id=qa-rp6 stage=p0 dir=/qa-rp6 leaf=/qa-rp6/p0.log
+P0_SECTION preregistered_inputs
+P0_input name=P0_EXPECT_UID value=1000
+P0_input name=P0_STATE_UID value=999
+/dev/stdin: line 374: P0_STATE_GID: unbound variable
+ASSERT_UNMET input=P0_STATE_GID mutation=precheck_and_backstop raw_rc=1 polarity=RED
+CASE_OK
+CHECK_RC=0
+C13_R3_BACKSTOP_QA_SUMMARY inputs=2 mutations=2 cases=4 result=PASS
+```
+
+Reading, stated exactly: `MUTATION_LINES_REMOVED … n=1` / `n=2` proves each
+mutation removed the lines it claims to. With only the pre-check removed, the
+backstop fires at the block's own line with the named message. With the backstop
+removed as well, the block runs on past the missing input through two more
+sections and only dies later — at the first *use* of the variable — with
+`P0_STATE_UID: unbound variable`, an unnamed `set -u` error carrying no
+`P0_STOP reason=` and no adjudicated rc 3. The assertion is therefore unmet on
+message, not on rc: rc is 1 in both cases. That is precisely what the backstop
+buys — a named, early, reasoned refusal instead of a bare shell error several
+sections later — and it is why the GREEN case is evidence about the backstop.
+
+## C13 R3 artefact measurements (real, computed in-session)
+
+- Repaired `RP6-P0.sh` SHA-256: `ef205e2064caa0cb1493abf037ce9d435f2bf8f6259c5bb3fc4964d1abb2b4b9`
+- Repaired `RP6-P0.sh` byte count: `55467`
+- Pre-R3 baseline (the C13 commit `cbaf3ec8`, audited by Codex) SHA-256:
+  `cfdb23b8834a783638723c54cf632973c1cc20c5fb676cb6d310a9d43b9acf1c`, 54109 B —
+  re-derived in-session and matched the kickoff exactly before editing.
+- `bash -n MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh` → rc 0,
+  `BASH_N=PASS`.
+- `git diff --stat` for the R3 repair: 34 insertions, 12 deletions, one file.
+
+## C13 R3 explicit local limit
+
+The complete P0 block still was not run: it needs the accepted RP0
+library/bootstrap, Linux `/proc` namespace objects, the preregistered per-SHA
+venv, `getent`/`systemctl` on PATH, and a reachable system manager, none of which
+exist in this Git Bash environment. Harness 1 sources the extracted arm plus the
+block's own top-level driver lines, never the whole block; harness 2 sources the
+whole block but dies inside input validation, before any external P0 probe.
+Both harnesses write QA-only files under `/tmp` (a `getent` fixture and the
+extracted variants) — outside the repository, and no file the block itself
+creates. No host was contacted, no network command was run, and no host file
+content was printed.

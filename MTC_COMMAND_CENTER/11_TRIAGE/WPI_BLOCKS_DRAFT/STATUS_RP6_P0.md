@@ -72,3 +72,56 @@ as-drafted failing run in `SELF_QA_RP6.md`, then fixed); `bash -n` PASS; hash
 and byte count re-verified identical to the implementer's record
 (`cfdb23b8…`, 54109 B). Real outputs pasted into `SELF_QA_RP6.md`. Remaining
 to close: the independent Codex G5 audit of the C13 arm.
+
+## C13 round 3 — Codex audit repair (Claude Opus 5 implementer, 2026-08-10)
+
+The Codex G5 audit of the C13 arm returned **BLOCK, 3 findings**
+(`RP6_C13_CODEX_AUDIT_2026-08-10.md`: V2/V3/V5 FAIL, V1/V4/V6 PASS). GLM-5.2, the
+C13 implementer, is quota-blocked, so Claude Opus 5 executed this bounded repair
+round as implementer; it neither authored nor audited the C13 arm. Status stays
+**REPAIRED-PENDING-AUDIT** — the block is not frozen, not accepted, not
+dispatchable, and not authorised for host execution, and the Codex re-audit is
+outstanding.
+
+- **F1 (HIGH) — REPAIRED IN THE BLOCK.** `p0_resolve_passwd` accepts getent
+  `rc 2` as `nomatch` only when the complete merged capture is empty, this
+  interface's exact valid-no-match shape. `rc 2` carrying any byte (NSS
+  diagnostic, partial record, module warning) is now `error`, so the caller emits
+  `identity_unresolvable … rc 3` instead of asserting a positive absence it never
+  observed. `P0_PW_DIAG` on the surviving no-match path records
+  `empty_capture_at_rc2`. All other parser arms and both caller `case` statements
+  are byte-identical, and the genuine `mtc-bridge` valid no-match still yields
+  `state_account_resolution_unexpected observed_numeric=absent` (regression-tested).
+- **F2 (MEDIUM) — REPAIRED IN THE QA.** The two earlier C13 fences are re-labelled
+  SUPPLEMENTAL in place, and two D026 harnesses were added and executed locally.
+  Harness 1 (16 cases) no longer calls the arm: it appends the block's own
+  top-level driver lines, matched as exact whole lines out of the source bytes, so
+  the block decides whether the arm runs; it then runs one assertion set across
+  three variants — R3-repaired bytes, pre-R3 bytes (`cbaf3ec8`, `cfdb23b8…`), and
+  bytes with the production integration call deleted. Deleting that call takes all
+  three arm assertions to `ASSERT_UNMET`; the pre-repair bytes fail every F1
+  assertion and are separately recorded emitting the defective
+  `observed_numeric=absent` verdict. Harness 2 (4 cases) adds the mutation that
+  removes each new `:?` backstop itself. Both harnesses check assertion POLARITY,
+  so a surviving mutant fails the run.
+- **F3 (MEDIUM) — REPAIRED IN THE BLOCK.** The "NUMERIC IDENTITY ONLY" header no
+  longer claims that no name is looked up or captured and that the block asks the
+  resolver database nothing. It states the truth: admission is numeric only and no
+  name is ever compared or asserted; two names ARE queried via the pinned
+  `getent passwd`; the returned name/gecos/home/shell fields are diagnostics no
+  verdict depends on; NSS source identity is not established.
+- **Artefact (real, computed in-session, Git Bash).** Repaired `RP6-P0.sh`
+  SHA-256 `ef205e2064caa0cb1493abf037ce9d435f2bf8f6259c5bb3fc4964d1abb2b4b9`,
+  55467 bytes (pre-R3 `cfdb23b8…`, 54109 bytes; diff 34 insertions / 12
+  deletions, one file). `bash -n` rc 0, `BASH_N=PASS`. Harness 1 process rc 0,
+  `C13_R3_ARM_QA_SUMMARY cases=16 result=PASS`; harness 2 process rc 0,
+  `C13_R3_BACKSTOP_QA_SUMMARY … cases=4 result=PASS`. Both fenced commands in
+  `SELF_QA_RP6.md` were re-run from the document itself and diffed byte-for-byte
+  against the pasted output.
+- **Scope.** Four files touched (`RP6-P0.sh`, `SELF_QA_RP6.md`, this file,
+  `RP6_C13_REPAIR_R3_REPORT.md`); nothing committed; no host contacted and no
+  network command run. Read-only scope, the rc 0/1/3 contract, and every
+  pre-existing arm are preserved.
+
+**Required to close C13:** the independent Codex re-audit of the R3 bytes
+`ef205e20…` (55467 B) against `RP6_C13_CODEX_AUDIT_2026-08-10.md`.

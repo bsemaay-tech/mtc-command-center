@@ -1,0 +1,22 @@
+﻿C13 R3 repair done. Not committed.
+
+**F1 (HIGH) — fixed in block.** `p0_resolve_passwd` rc-2 arm now returns `nomatch` only when merged capture is empty. Any byte at rc 2 → `error` → caller emits `identity_unresolvable` rc 3. One executable line-group changed; all other parser arms and both caller `case` blocks byte-identical. Valid-no-match arm regression-tested intact.
+
+**F2 (MEDIUM) — fixed in QA, real local runs.** Two new D026 harnesses, both executed in Git Bash:
+- Harness 1 (16 cases, rc 0, PASS): stops calling the arm — it appends the block's *own* top-level driver lines matched byte-exact from source, so deleting the production call at `p0_resolve_accounts` kills it (`DRIVER_LINES … nocall=0`, all three assertions `ASSERT_UNMET`). Same assertions run GREEN on repaired bytes, RED on pre-repair bytes (`git show cbaf3ec8:…`), with the defect recorded positively.
+- Harness 2 (4 cases, rc 0, PASS): adds the mutation removing the `:?` backstop itself. Killed on message — block dies later at `P0_STATE_UID: unbound variable`, no `P0_STOP reason=`, rc 1 in both cases. Stated that way in the QA, not overstated.
+- Both check assertion *polarity*: a surviving mutant fails the run. Old two C13 fences re-labelled SUPPLEMENTAL in place.
+- Command fences re-extracted from the QA doc, re-run, diffed byte-for-byte against executed scripts and pasted output. One copy-slip line in the first pasted output was replaced mechanically from the captured run and re-diffed clean — disclosed in the report.
+
+**F3 (MEDIUM) — fixed in block.** Header now says: admission numeric only, no name compared/asserted, two names *are* queried via pinned `getent passwd`, name/gecos/home/shell recorded as diagnostics only, NSS source identity not established.
+
+**Artefact:** `ef205e2064caa0cb1493abf037ce9d435f2bf8f6259c5bb3fc4964d1abb2b4b9`, 55467 B (pre-R3 `cfdb23b8…`, 54109 B). `bash -n` rc 0. Diff 34+/12−, four hunks — three comment/claim, one executable. Read-only scope, rc 0/1/3 contract, all pre-existing arms preserved. No host contact, no network.
+
+**Files touched (exactly the four):** `RP6-P0.sh`, `SELF_QA_RP6.md`, `STATUS_RP6_P0.md`, new `RP6_C13_REPAIR_R3_REPORT.md`.
+
+**Flag, not mine:** `RP7-WPI-RO.sh` shows as modified (271 lines, mtime moved mid-session). I did not touch it — another session appears to be editing it concurrently. Do not attribute it to this repair when staging.
+
+Next steps:
+1. **(default)** Lead verifies the four files, then routes the Codex re-audit against `ef205e20…` / 55467 B.
+2. Resolve the concurrent `RP7-WPI-RO.sh` edit before staging anything in `WPI_BLOCKS_DRAFT/`.
+3. Commit only after Codex re-audit verdict.

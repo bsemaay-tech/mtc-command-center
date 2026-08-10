@@ -28,11 +28,18 @@
 # capture that must equal an exact expected shape is strictly stronger than
 # "rc 0 and stdout looks right", because any stderr text destroys the shape.
 #
-# NUMERIC IDENTITY ONLY (pattern 8). No name is looked up, captured or compared
-# anywhere in this block. `stat` is never asked for %U or %G; `id` is only ever
-# asked for -u, -g and -G; every preregistered identity input is numeric. A
-# rendered name is an answer from a database this run does not control, so this
-# block asks that database nothing.
+# NUMERIC IDENTITY ONLY (pattern 8). ADMISSION is numeric only: `stat` is never
+# asked for %U or %G; `id` is only ever asked for -u, -g and -G; every
+# preregistered identity input is numeric; and no name is ever compared or
+# asserted anywhere in this block. Two names ARE queried: the account-resolution
+# section below asks the resolver database for `gatea` and `mtc-bridge` via the
+# pinned `getent passwd` and captures the returned name, gecos, home and shell
+# fields, but those fields are RECORDED AS DIAGNOSTICS ONLY and no verdict
+# depends on them - the verdicts compare the record's uid/gid against the live
+# numerics and the preregistered numerics. A rendered name is an answer from a
+# database this run does not control: which NSS source answered is not
+# established here and is disclosed in the terminal claim's
+# does_not_establish list.
 #
 # STOP IS NOT A RESULT (pattern 1). Each branch below was written by first
 # writing the sentence it emits and then asking which of three things it
@@ -625,10 +632,13 @@ p0_record_identity
 #                rc 3 (the F2 polarity ruling: an identity wider/different than
 #                preregistered is re-adjudication, never a silent run).
 #   mtc-bridge - uid:gid must equal the preregistered P0_STATE_UID:P0_STATE_GID
-#                (999:988). A valid no-match (getent rc 2) OR a numeric mismatch
-#                is state_account_resolution_unexpected rc 3.
-# A getent that is missing/unpinnable, or a lookup error, or an unparsable or
-# duplicate record, is an inability to evaluate: identity_unresolvable rc 3.
+#                (999:988). A valid no-match (getent rc 2 AND an empty merged
+#                capture) OR a numeric mismatch is
+#                state_account_resolution_unexpected rc 3.
+# A getent that is missing/unpinnable, or a lookup error, or an rc 2 that
+# carries any diagnostic or partial byte (positive absence not established), or
+# an unparsable or duplicate record, is an inability to evaluate:
+# identity_unresolvable rc 3.
 # Names, gecos, home and shell are captured as DIAGNOSTIC fields only; no name
 # is ever asserted or compared.
 #
@@ -647,8 +657,15 @@ p0_record_identity
 # also sets P0_PW_NAME, P0_PW_UID, P0_PW_GID (numerics, validated) and
 # P0_PW_DIAG (sanitized remaining fields). On `nomatch`/`error` it sets only
 # P0_PW_DIAG. No branch here decides an admission - the caller adjudicates the
-# outcome. getent rc convention (Linux getent(1)): 0 = found, 2 = key absent
-# (valid no-match), anything else = lookup/service error.
+# outcome. getent rc convention (Linux getent(1)): 0 = found, 2 = key absent,
+# anything else = lookup/service error. rc 2 is treated as a VALID NO-MATCH only
+# when the complete merged capture is empty, which is this interface's exact
+# no-match shape (C13 audit F1). rc 2 carrying any byte - a diagnostic on
+# stderr, a partial record, a warning from an NSS module - means the tool both
+# failed to answer and said something about it, so positive absence was NOT
+# established and the only truthful outcome is `error` (Pattern 1: an inability
+# to evaluate is not a result). The merged capture makes this decidable with no
+# temp file: stderr text destroys the empty shape (Pattern 6).
 p0_resolve_passwd() {
     local acct="$1" raw rc=0 n_colon rest f1 f2 f3 f4 f5 f6 f7
     P0_PW_OUTCOME="error"
@@ -656,7 +673,12 @@ p0_resolve_passwd() {
     raw="$(LC_ALL=C "$P0_GETENT" passwd "$acct" 2>&1)" || rc=$?
     case "$rc" in
         0) : ;;
-        2) P0_PW_OUTCOME="nomatch"; p0_sanitize "$raw"; P0_PW_DIAG="$P0_SAFE"; return 0 ;;
+        2)
+            if [ -n "$raw" ]; then
+                p0_sanitize "$raw"; P0_PW_DIAG="$P0_SAFE"
+                P0_PW_OUTCOME="error"; return 0
+            fi
+            P0_PW_OUTCOME="nomatch"; P0_PW_DIAG="empty_capture_at_rc2"; return 0 ;;
         *) p0_sanitize "$raw"; P0_PW_DIAG="$P0_SAFE"; P0_PW_OUTCOME="error"; return 0 ;;
     esac
     # rc 0: status adjudicated before any byte is interpreted (Pattern 6).
