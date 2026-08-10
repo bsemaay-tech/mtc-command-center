@@ -20,6 +20,16 @@
 #     prose, or a kernel answer that contradicts the diagnostic - is STOP, and
 #     STOP happens before any mutation.
 #
+# Round 3 repair (Codex round-2 re-audit F4): the round-2 chain binding covered
+# the symlink half of "the leaf is not the path" and not the mount half. A bind
+# or overlay mount at the same literal canonical path presents the expected
+# owner, mode and canonicalisation, so every component predicate passed and all
+# four directories were created inside the substituted object. The allocation
+# parent's COVERING MOUNT is therefore projected from `/proc/self/mountinfo` and
+# compared, before the first mkdir, against an identity a root-authorised deploy
+# channel attested outside this login session (owner grant #6). It is never
+# learned from the session being tested; an unfilled pin or a mismatch is STOP.
+#
 # rc contract: 0 = allocated, 1 = FAIL (predicate refused), 3 = STOP (could not
 # evaluate — never re-read as "absent" or as success).
 set -Eeuo pipefail
@@ -31,6 +41,11 @@ EXPECT_UID='<PIN-AT-FREEZE>'
 EXPECT_GID='<PIN-AT-FREEZE>'
 EXPECT_OWNER_NAME='gatea:gatea'
 EXPECT_MODE='700'
+# The covering-mount identity of EXPECT_PARENT, attested by the deploy channel
+# before op 01 runs (owner grant #6). Rendered exactly as the projection below
+# renders it, one line, space-separated key=value fields in this fixed order.
+EXPECT_PARENT_MOUNT='<PIN-AT-FREEZE>'
+MOUNTINFO='/proc/self/mountinfo'
 
 fail() { printf 'SETUP_FAIL reason=%s\n' "$*" >&2; exit 1; }
 stop() { printf 'SETUP_STOP reason=%s\n' "$*" >&2; exit 3; }
@@ -67,6 +82,21 @@ require_tool "$TOOL_READLINK"
 # --- the preregistered numeric identity must actually be pinned -------------
 case "$EXPECT_UID" in ''|*[!0-9]*) stop "identity_pin_unfilled field=EXPECT_UID" ;; esac
 case "$EXPECT_GID" in ''|*[!0-9]*) stop "identity_pin_unfilled field=EXPECT_GID" ;; esac
+# The mount attestation is a missing INPUT, not a failed predicate, so an
+# unfilled or malformed pin is rc 3 and is refused here - before any path is
+# probed and long before any mutation.
+#
+# The marker is COMPOSED rather than written out, so that a Stage 1 fill which
+# replaces the placeholder text globally cannot also rewrite the guard that
+# detects it. A guard carrying the literal would be replaced by the real value
+# and would then STOP on a correctly frozen script - fail-closed in the wrong
+# place, which is still a defect.
+PIN_MARKER="$(printf '<PIN-%s>' 'AT-FREEZE')"
+case "$EXPECT_PARENT_MOUNT" in
+    ''|"$PIN_MARKER") stop "mount_pin_unfilled field=EXPECT_PARENT_MOUNT" ;;
+    device=*\ root=*\ mount_point=*\ fstype=*\ source=*\ shared_mount_point_records=*) : ;;
+    *) stop "mount_pin_malformed field=EXPECT_PARENT_MOUNT value=[$EXPECT_PARENT_MOUNT]" ;;
+esac
 [ "$EUID" = "$EXPECT_UID" ] || fail "login_euid=$EUID expected=$EXPECT_UID"
 note "identity euid=$EUID expected_numeric=$EXPECT_UID:$EXPECT_GID name_diagnostic=$EXPECT_OWNER_NAME"
 
@@ -127,6 +157,75 @@ bind_parent_chain() {
             bind_component "$acc" '0:0'
         fi
     done
+}
+
+# --- bind the covering MOUNT OBJECT of the allocation parent ----------------
+# Pattern 3, the half a canonical-path check cannot reach: `readlink -f` and
+# every component predicate are satisfied by a bind or overlay mount presenting
+# the expected metadata at the same literal path, and the four directories are
+# then created inside the substituted object. A later attestation cannot make an
+# earlier mutation retroactively target the accepted mount, so this runs BEFORE
+# the first mkdir.
+#
+# The projection is the section 4 `kind=point` record restricted to the one path
+# this script mutates. The effective mount is the LONGEST matching mount point;
+# among equally long matches the LAST record in `mountinfo` order, because a
+# later record at the same mount point shadows the earlier one.
+# `shared_mount_point_records` counts them, so a stacked mount is visible in the
+# projection rather than silently collapsed.
+#
+# The reader has three exit conditions, not one (Pattern 7): a clean
+# LF-terminated end, a populated final record carrying no trailing newline, and
+# a source that yields no record at all - the last of which is STOP, never an
+# empty projection read as "no mount covers this path".
+project_covering_mount() {
+    local path="$1"
+    local line records=0 best='' best_mp='' best_len=-1 shared=0
+    local dev root mp fstype src mplen covers
+    [ ! -L "$MOUNTINFO" ] || stop "mountinfo_is_symlink path=$MOUNTINFO"
+    [ -r "$MOUNTINFO" ]   || stop "mountinfo_unreadable path=$MOUNTINFO"
+    while IFS= read -r line || [ -n "$line" ]; do
+        [ -n "$line" ] || continue
+        records=$((records + 1))
+        # mountinfo escapes space, tab, newline and backslash as octal, so the
+        # fields are separator-free; noglob keeps a `*` in a source name from
+        # being expanded into filenames by the split.
+        set -f
+        set -- $line
+        set +f
+        [ "$#" -ge 10 ] || stop "mountinfo_record_short fields=$# record=[$line]"
+        dev="$3"; root="$4"; mp="$5"
+        shift 6
+        while [ "$#" -gt 0 ] && [ "$1" != '-' ]; do shift; done
+        [ "$#" -ge 4 ] || stop "mountinfo_record_no_separator record=[$line]"
+        fstype="$2"; src="$3"
+        covers=no
+        if   [ "$mp" = '/' ];     then covers=yes
+        elif [ "$mp" = "$path" ]; then covers=yes
+        else case "$path" in "$mp"/*) covers=yes ;; esac
+        fi
+        [ "$covers" = yes ] || continue
+        mplen="${#mp}"
+        if [ "$mplen" -gt "$best_len" ]; then
+            best_len="$mplen"; best_mp="$mp"; shared=1
+            best="device=$dev root=$root mount_point=$mp fstype=$fstype source=$src"
+        elif [ "$mplen" -eq "$best_len" ] && [ "$mp" = "$best_mp" ]; then
+            shared=$((shared + 1))
+            best="device=$dev root=$root mount_point=$mp fstype=$fstype source=$src"
+        fi
+    done < "$MOUNTINFO"
+    [ "$records" -gt 0 ]  || stop "mountinfo_no_records path=$MOUNTINFO"
+    [ "$best_len" -ge 0 ] || stop "mountinfo_no_covering_mount path=$path records=$records"
+    printf '%s shared_mount_point_records=%s\n' "$best" "$shared"
+}
+
+bind_parent_mount() {
+    local path="$1" observed
+    observed="$(project_covering_mount "$path")" || exit $?
+    note "parent_mount_observed path=$path $observed"
+    [ "$observed" = "$EXPECT_PARENT_MOUNT" ] \
+        || stop "parent_mount_differs path=$path observed=[$observed] attested=[$EXPECT_PARENT_MOUNT]"
+    note "parent_mount_bound path=$path attestation=deploy_channel_before_op_01"
 }
 
 # --- calibrate the absence diagnostic against the pinned tool itself --------
@@ -220,6 +319,7 @@ REMOTE_KIT="$BASE/kit"
 # statement of the same fact rather than a new trust assumption.
 [ "${BASE%/*}" = "$EXPECT_PARENT" ] || fail "base_parent=${BASE%/*} expected=$EXPECT_PARENT"
 bind_parent_chain "$EXPECT_PARENT"
+bind_parent_mount "$EXPECT_PARENT"
 calibrate_absence "$EXPECT_PARENT/.wpi_enoent_calibration_probe"
 
 # --- the base must be ABSENT as an object AND as a link --------------------

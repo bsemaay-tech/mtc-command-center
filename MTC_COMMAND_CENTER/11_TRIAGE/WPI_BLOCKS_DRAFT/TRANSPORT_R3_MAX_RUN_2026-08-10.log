@@ -1,0 +1,28 @@
+﻿# Transport set — repair round 3 complete
+
+All five items from `KICKOFF_TRANSPORT_REPAIR_R3.md` are closed, each with executed RED/GREEN against the audited round-2 bytes at `9ef4437d`. Nothing committed.
+
+## Findings
+
+**F1 (CRITICAL, both flagships) — classification by kind and provenance.** `transport_runner.ps1` no longer branches on the integer. `Get-OpOutcomeClass` decides per kind: ssh rc 255, any rc outside `{0,1,3}`, any failed scp transfer, and a capture carrying no preregistered remote-program marker are all not-evaluable → `TR_RUN STOP` exit 3. An `always` cleanup whose prerequisite sequence never completed can no longer manufacture a FAIL. Codex's whole-plan case, driven over all 12 rows: RED `deviant=4 → TR_RUN FAIL rc 1`; GREEN `deviant=0 not_evaluable=7 → TR_RUN STOP rc 3`. J5 confirms FAIL survives for a block that ran and returned 1.
+
+Arm J4 exposed a defect neither re-audit named: under round 2, an `ssh` returning 0 having produced *nothing* was a **match**, so the plan ran on and spent both one-use RUNIDs. Now it STOPs at op 01.
+
+**F2 (CRITICAL) — real OpenSSH.** Reproduced Codex's `rc=255, 0 bytes on both streams`, then bisected it: `PROGRAMDATA` is the *only* load-bearing variable. Took the second branch — `-F none` (refuses both per-user and system-wide `ssh_config`), run-owned empty `PROGRAMDATA`, pinned `UserKnownHostsFile`/`GlobalKnownHostsFile`, `ProxyCommand=none` and the forwarding refusals, **nothing carried** from the operator environment. The frozen option block lives in the runner; every plan row must carry it verbatim. Proven with the real pinned `ssh.exe` (`-G`, no connection) and a real local-to-local `scp.exe` transfer through the runner. A genuine hijack pair is recorded: ambient config supplying `proxycommand … SYSTEM_CONFIG_HIJACK`, gone under `-F none`.
+
+**F3 (CRITICAL) — derived, not edited.** New `remote_close_tree_wpi.sh`; the accepted 7470 B / `87157f0e…` original is untouched and stays the recorded derivation basis. The diff's deletion side is 17 non-comment lines — 16 bare tool invocations replaced by their pins, 1 `usage` string. Codex's PATH-attack: RED `MUTATED=yes` + `CLOSE PASS … wrote_into_evidence_tree=0`; GREEN plant never consulted. I pinned `rm` as well — the kickoff's enumeration omitted it but the accepted bytes invoke it three times.
+
+**F4 (HIGH) — bound, not waived.** Covering-mount projection from `/proc/self/mountinfo` before the first `mkdir`. RED: the decoy bind mount took **all four** allocations; GREEN: `parent_mount_differs`, zero directories. Reader arms N1–N5 drive all three exit conditions.
+
+**N1** — census re-derives to exactly 36/27 and 41/33.
+
+## Two things worth your attention
+
+- The census surfaced a real hazard I fixed in my own code and disclosed for yours: a guard comparing against the literal `<PIN-AT-FREEZE>` is destroyed by a Stage-1 global fill — it would hold the real value and STOP on a correctly frozen file. The new setup guard composes its marker. **`transport_runner.ps1`'s pre-existing `$UNFILLED_MARKERS` array has the same shape**; I left it unchanged (accepted in round 2, no finding against it) and flagged that Stage-1 fill must be per-constant, not a blind replace.
+- The `always`-cleanup rule is deliberately broad and is a design choice, not a derivation — flagged in the report for your ratification.
+
+Draft edits are narrow (§4 fourth derived script + mount clause + configuration-identity paragraph, §5 option block + observed-rc grammar table, §7). Five new freeze-gate inputs recorded, including the successor-ordering requirement that grant-#6 attestation precede **op 01**.
+
+`bash -n` passes on all five shell files plus the accepted original; PS 5.1 parses the runner with 0 errors; zero CR bytes; all scratch removed; `C:\WPI_ARTIFACTS` holds no `WPI_TRANSPORT_*` entry; `RP6-P0.sh`, `SELF_QA_RP6.md`, `STATUS_RP6_P0.md` neither read nor written.
+
+Delivered: `transport_runner.ps1` (57826, `13a57438…`), `TRANSPORT_PLAN.tsv` (7219, `2a1cd2a6…`), `remote_setup_wpi.sh` (17775, `c0b7caa7…`), **new** `remote_close_tree_wpi.sh` (12039, `fc183751…`), `SELF_QA_TRANSPORT.md` (100406), `STATUS_TRANSPORT.md` (7445), `TRANSPORT_REPAIR_R3_REPORT.md` (20015), plus the §4/§5/§7 draft edits. `run_p0.sh`, `run_ro.sh` and `remote_extract_verify_wpi.sh` are byte-identical to the rejected baseline.

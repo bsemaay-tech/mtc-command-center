@@ -1,1815 +1,1687 @@
-# WP-I transport set self-QA — round 2
+# WP-I transport set self-QA — round 3
 
-Status: **REPAIRED-PENDING-REAUDIT**
+Round 3 of the T0 cap 3. It closes the four required findings and the nit carried by
+the two round-2 flagship re-audits:
 
-Date: 2026-08-10. Round 2 of the T0 cap 3, closing the union of the Codex xhigh
-audit (`TRANSPORT_CODEX_AUDIT_2026-08-10.md`, 10 required findings) and the
-Claude xhigh audit (`TRANSPORT_CLAUDE_T0_AUDIT_2026-08-10.md`, 6 required + 5
-nits).
+- Codex `gpt-5.6-sol` xhigh, `TRANSPORT_CODEX_REAUDIT_R2_2026-08-10.md` —
+  REQUEST_CHANGES, F1–F4 plus N1;
+- Claude `claude-opus-5` xhigh, `TRANSPORT_CLAUDE_REAUDIT_R2_2026-08-10.md` —
+  REQUEST_CHANGES, F1.
 
-Scope was local authoring and local fixtures only. **No SSH, SCP, host IP,
-remote host, credential, service, unit, broker, exchange, or trading operation
-was contacted or executed.** The only sockets opened were `127.0.0.1`
-listener/connect fixtures for the section-8 row-24 classification arms. No RUNID
-was allocated; `C:\WPI_ARTIFACTS` contains no `WPI_TRANSPORT_*` entry.
+Both flagships independently found the same rc-classification defect; that convergence
+made it the priority. All 16 round-1 findings stay closed and none is regressed — §7
+records which round-2 arms were re-driven this round and which were not.
+
+**Integrity.** No host was contacted. No SSH or SCP connection was opened, no host key
+was offered, no credential was read, no RUNID was allocated, no archive was built,
+nothing was frozen, and nothing was committed. `C:\WPI_ARTIFACTS` contains **no**
+`WPI_TRANSPORT_*` entry (checked after every fixture). The only sockets attempted were
+loopback with port 9 closed. The real pinned `ssh.exe` and `scp.exe` were executed
+locally — `ssh -G` evaluates configuration and exits, `scp` copied one local file to
+another local file — and neither opens a connection; the only hostname passed to `ssh`
+was the non-resolving literal `qa-target`, and it was never resolved because `-G`
+returns before name resolution. All fixture scratch was removed; the last line of each
+transcript proves it.
+
+**Environment.** Windows PowerShell **5.1.26100.8875**; WSL2 running as uid 0 with
+**uutils** coreutils and bash 5.3.9; Git Bash 5.2.37;
+`OpenSSH_for_Windows_9.5p2, LibreSSL 3.8.2`.
+
+---
 
 ## 0. How to re-execute every claim in this document
 
-Everything below is produced by exactly two scripts. They are reproduced here
-**verbatim**, they take no arguments, they declare no shell state, and they are
-the literal files that produced the transcripts recorded beneath them. Run them
-in this order:
+Four standalone fixture scripts. Each takes no argument, declares no shell state,
+creates its own scratch, prints the exact command it is about to run, and removes its
+scratch at the end. Their bodies are reproduced **verbatim** in §2–§5 below, and the
+transcripts that follow each body are the real output of running exactly that body.
+
+To re-execute: write each body below to the path named in the command beside it — the
+paths this round used, and the paths the transcripts therefore contain — with **LF line
+endings**, then run it. Nothing else is needed; no fixture takes an argument, reads an
+environment variable, or depends on state another fixture left behind. The scratch this
+round created has been removed, which is why the paths do not currently exist.
+
+| fixture | closes | run it with |
+|---|---|---|
+| `f3_attack.sh` | F3 | `wsl.exe -e bash /mnt/c/Users/Public/wpi_r3/f3_attack.sh` |
+| `f4_mount.sh` | F4 | `wsl.exe -e bash /mnt/c/Users/Public/wpi_r3/f4_mount.sh` |
+| `f1_runner_qa.ps1` | F1 | `powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Public\wpi_r3\f1_runner_qa.ps1` |
+| `f2_config_qa.ps1` | F2 | `powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Public\wpi_r3\f2_config_qa.ps1` |
+
+`f1_runner_qa.ps1` and `f4_mount.sh` read the **audited round-2 bytes** for their RED
+arms. Those bytes are extracted once from commit `9ef4437d` — the exact identity both
+round-2 re-audits rejected — with:
 
 ```
-wsl.exe -e bash /mnt/c/<path>/wpi_r2_shell_qa.sh        # fixture set 1
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File <path>\wpi_r2_runner_qa.ps1
+cd C:\LAB\Tradingview_LAB_CLEAN
+mkdir -p /c/Users/Public/wpi_r3/r2
+for f in remote_setup_wpi.sh remote_extract_verify_wpi.sh transport_runner.ps1; do
+  git show 9ef4437d:MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/$f > "/c/Users/Public/wpi_r3/r2/$f"
+done
 ```
 
-Set 1 leaves the real `remote_close_tree.sh` transcripts under
-`C:\Users\Public\wpi_r2_qa\close`, which set 2 consumes and then removes.
+which re-derives to the audited identities, printed by the fixtures themselves:
 
-**RED is not a narration.** Every shell RED arm executes the *exact audited
-round-1 bytes*, read straight out of commit `1c1c9ed1` — the commit both
-auditors examined — and the script prints their digests so the baseline is
-provable. Every runner RED arm executes the *current* file with precisely the
-repair reverted, and the mutation anchor is asserted present before it is
-applied, so a silently-missed anchor throws instead of manufacturing a false RED.
+```
+e91bae0827f16cbefe2091980c0a049583bd8ce4173f99e802b2d54a224c29a8  12340  remote_setup_wpi.sh
+2f076ed9a928656fddf22969ea4bf70de895f2c84c73f13b4c64b8040e72aa9a  45066  transport_runner.ps1
+```
 
-### Declared substitutions (there are five, and no others)
+The RED arms are therefore the audited bytes, not a reconstruction of them.
 
-| # | Substitution | Why it is required | Where it shows up |
-|---|---|---|---|
-| S1 | Scratch roots rendered `<QA>` | random/absolute fixture paths | every transcript |
-| S2 | Sandbox constants in a fixture copy (`EXPECT_PREFIX`, `EXPECT_PARENT`, `EXPECT_UID/GID`, `BASE_RUN`, `EXTRACT_DIR`, block digests, plan digest, record root) | a fixture cannot allocate the real host paths | both scripts, by `sed`/line rewrite |
-| S3 | Tool pins retargeted at regular root-owned `0755` copies under `<QA>/bin` | this QA host ships coreutils as **symlinks** into a multicall binary, and the repaired scripts refuse a symlinked tool by design | shell set, `QA_TOOLCOPY` line |
-| S4 | `ssh`/`scp` program pins retargeted at `C:\Windows\System32\cmd.exe` at its real digest | the process-launch path (8 of 12 ops) must be driven with **no host contact** | runner set, `QA_PROGRAM_PIN_SUBSTITUTION` line |
-| S5 | `remote_close_tree.sh` `EXPECT_OWNER='gatea:gatea'` → `'root:root'` | the sandbox tree is root-owned; printed as a diff | shell set, `CLOSE_TRANSCRIPTS` |
+### Declared substitutions — there are six, and no others
 
-S3 and S4 are the only substitutions that touch a *predicate*; both are printed
-by the scripts themselves, and both are argued in §6. S5 is identical to the
-substitution the round-1 Claude audit made and recorded.
+Every one is asserted present before it is applied, so a missed anchor throws instead
+of silently producing a false RED or a false GREEN.
 
-The QA copy of `transport_runner.ps1` is written with a UTF-8 BOM because the
-operator profile path on this host is non-ASCII and Windows PowerShell 5.1 would
-otherwise decode the copy as ANSI. **The delivered file is ASCII-only with no
-BOM** (§8). The `HOMEPATH`/`USERPROFILE` values inside a child's `set` output are
-rendered in the console OEM codepage; that is a display property of `cmd`, not of
-the value passed.
+1. **Stage-1 freeze fills.** `BASE_RUN`, `CONFIRM_TOKEN`, `PREREG_DIR`, `RUNKIT_DIR`,
+   `ACCEPTED_DIR`, `RECORD_ROOT`, `PLAN_SHA256`, the pinned-kit digest, the three
+   configuration-file paths and digests, and — on the shell side — `EXPECT_PREFIX`,
+   `EXPECT_PARENT`, `EXPECT_UID`, `EXPECT_GID` and `EXPECT_PARENT_MOUNT`. These are
+   the values Stage 1 fills; without them nothing can run at all, which is exactly
+   what arm **L1** demonstrates.
+2. **`ssh`/`scp` → `C:\Windows\System32\cmd.exe`** at its real digest, with the pinned
+   option block replaced by `@('/d','/c')`, in the **J family only**. This drives each
+   operation's native status and output deterministically with no host. It substitutes
+   the *program*, not the classifier under test. The **K family** drives the real
+   pinned OpenSSH with the real option block, so the substitution hides nothing about
+   F2.
+3. **Remote `TOOL_*` pins → regular root-owned 0755 copies.** This kernel ships
+   `/usr/bin/{stat,sha256sum,mktemp,tr,readlink,find,sort,cmp,rm}` as symlinks into a
+   multicall binary, which the derived scripts refuse **by design** (deviation D-3).
+   Arm **G0** runs `remote_close_tree_wpi.sh` exactly as it ships and shows that
+   refusal, so the retargeting hides nothing.
+4. **`EXPECT_OWNER='gatea:gatea'` → `'root:root'`** in the F3 fixture, because the QA
+   host runs as uid 0. Applied identically to the RED and the GREEN arm.
+5. **`MOUNTINFO` → a fixture file**, in the N arms only, so the malformed and empty
+   mount sources can be presented at all.
+6. **A hostile `ssh_config` given an owner-only ACL** in the M arms. OpenSSH refuses a
+   group/other-writable configuration file outright, and that refusal would mask the
+   channel under test. The fixture restores inheritance before removing the tree.
+
+---
 
 ## 1. Finding → closing arm
 
-| Finding | Repair | Arm that fails without it |
-|---|---|---|
-| Codex F2 / Claude F1 — `$Matches` clobber, ops 11/12 can never bind | latch every capture on the line after its own match | runner `A1` (PASS, rc 0) vs `A2` (RED: `digest_differs` ×3 on byte-identical files, rc 1) |
-| Codex F1 / Claude F2 — child STOP rolled into FAIL | classify the mismatch: rc 3 → `TR_RUN STOP` exit 3 | runner `C1` (STOP, rc 3) vs `C2` (RED: FAIL, rc 1) |
-| — precedence when both occur | deviant observation outranks later not-evaluable, both counted | runner `C3` (`deviant=1 not_evaluable=1` → FAIL) |
-| — first-FAIL ordering unchanged | unchanged predicate | runner `C5` (skips 02, runs both `always`) vs `C4` (RED runs 02) |
-| Codex F3 — inherited PATH selects the transport chain | pinned absolute programs + digest + trusted-SID chain + constructed environment | runner `D2` (`PINNED_PROGRAM_RAN`) vs `D1` (RED: `FAKE_SSH_EXECUTED`, rc 0 PASS); shell `P0/RO_HIJACK_*` |
-| Codex F3 (wrappers, remote scripts) | pinned `sha256sum`/`stat`/`tar`/… with numeric ownership | shell `P0_HIJACK_GREEN` (`block_sha256_mismatch`, rc 3) vs `P0_HIJACK_RED` (`P0W_HIJACKED_BLOCK_EXECUTED`, rc 0) |
-| Codex F4 — ambiguous diagnostic read as absence | calibrated whole-string template + kernel cross-check | shell `A2_GREEN` (STOP, 0 dirs) vs `A2_RED` (PASS, 4 dirs); `A3_GREEN` one-line two-class → STOP |
-| Codex F5 — mutation before the path is bound; resolver names as identity | full parent chain bound before the first `mkdir`; numeric `%u:%g` | shell `A4_GREEN` (0 dirs) vs `A4_RED` (4 dirs through the symlink); `A5_GREEN` (`owner_numeric=1000:1000`) vs `A5_RED` (PASS) |
-| Codex F6 — listing stdout consumed before status/diagnostics/completion | sentinel capture, two-pass diagnostic equality, termination check, re-hash after listing | shell `B2_GREEN` / `B3_GREEN` (STOP) vs `B2_RED` / `B3_RED` (PASS) |
-| Codex F7 / Claude F5 — derivation exceeds §4 | counts derived from `MEMBERS`; §4 amended and the amendment declared | shell `B4_GREEN` (derived 5 → PASS) vs `B4_RED` (literal 6 → FAIL) |
-| Codex F8 / Claude F3 — op 02 cwd, kit location | `01_RUNKIT` pinned as a distinct directory | runner `F1` (kit selected) / `F2` (decoy digest refused) |
-| Codex F9 / Claude F3 — ops 07/08 name an absent artifact | `ACCEPTED:` root token resolving to the frozen Stage-2 directory | runner `F3` (`87157f0e…` at the accepted path) / `F4` / `F5` (both STOP) |
-| Claude F6 — no fail-closed guard for `<ALLOCATE-AT-DISPATCH>` | marker gate + top-level trap | runner `E1` (`unfilled_marker field=RECORD_ROOT`, rc 3) vs `E2` (RED: localized `Test-Path` crash, rc 1) |
-| Codex F10 / Claude F4 — evidence is not literal, arms undriven | this document | §6 coverage accounting |
-| Claude N1 | `WPI_LOG_DIR='/var/log/mtc-bridge'` per §2 | §8 grep |
-| Claude N3 | kind↔program, kind↔stdin, cwd allowlist | runner `F6`–`F9` |
-| Claude N4 | record root created before the rest of preflight | every runner arm shows `TR_RECORD_ROOT` before `TR_PLAN_READ` |
+| finding | severity | closing arm | RED | GREEN |
+|---|---|---|---|---|
+| **F1** — an rc outside `{0,1,3}`, and any native transport or cleanup failure, must be not-evaluable → `TR_RUN STOP` exit 3 | CRITICAL, both flagships | `f1_runner_qa.ps1` J1–J6, K1–K2 | round-2 bytes at `2f076ed9…` | round-3 bytes |
+| **F2** — the constructed environment cannot run the real pinned OpenSSH | CRITICAL | `f2_config_qa.ps1` M1–M7, K3, L2, L3; `f1_runner_qa.ps1` K1–K2 | M1/K1: real `ssh.exe`, rc 255, 0 bytes | M6/K2/K3 |
+| **F3** — the accepted close program chain is PATH-selected and can mutate closed evidence while reporting PASS | CRITICAL | `f3_attack.sh` RED/G0/GREEN/CTL | accepted 7470 B / `87157f0e…` | `remote_close_tree_wpi.sh` |
+| **F4** — setup does not bind the accepted mount object before mutation | HIGH | `f4_mount.sh` RED/GREEN/CTL/PIN/N1–N5 | round-2 bytes at `e91bae08…` | round-3 bytes |
+| **N1** — placeholder census inaccurate | nit | §9 | — | re-derived |
 
-## 2. Accepted-source identity precondition
+---
 
-```powershell
-$b='MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08'
-$p=@("$b\02_PREREG\remote_setup.sh","$b\02_PREREG\remote_extract_verify.sh","$b\02_PREREG\remote_close_tree.sh")
-foreach($f in $p){$i=Get-Item -LiteralPath $f; "$(Split-Path $f -Leaf)`t$($i.Length)`t$((Get-FileHash -Algorithm SHA256 -LiteralPath $f).Hash.ToLowerInvariant())"}
-```
+## 2. Fixture A — the close program chain (F3)
 
-```text
-remote_setup.sh          4976   faee3725325d7155a6309e2371b85a4facba1980f0169c8268e47a75902821b5
-remote_extract_verify.sh 8270   ba0bef0ef6ceb91c445e1d74e2c8d3b6fa7ac01e7e4e10216139b96b28c93db3
-remote_close_tree.sh     7470   87157f0ea454df7c1f826a8c76a38f3045dd38efdd8fa347644f79251d3f3f0e
-```
+Codex's round-2 F3 falsification, rebuilt and executed: a `sha256sum` planted first on
+the inherited `PATH` appends one line to a closed evidence leaf on its first
+invocation and then delegates to the real tool, so **both** digest passes observe the
+post-mutation bytes and agree.
 
-Verdict: PASS, and unchanged from round 1.
-
-## 3. Fixture set 1 — shell side (verbatim)
-
-`wpi_r2_shell_qa.sh`:
+### A.1 `f3_attack.sh` (verbatim)
 
 ```bash
 #!/usr/bin/env bash
-# WP-I transport round 2 - shell-side RED/GREEN fixture set (standalone).
-#
-#   RED  = the exact audited round-1 bytes, read from commit 1c1c9ed1.
-#   GREEN= the current repaired bytes in the working tree.
-#
-# Run it as root under WSL/Linux:
-#   wsl.exe -e bash /mnt/c/.../wpi_r2_shell_qa.sh
-# It creates only /wpi_r2_qa (removed at the end) and
-# /mnt/c/Users/Public/wpi_r2_qa/close, which fixture set 2 consumes.
-# It contacts no host and touches no repository file.
+# F3 falsification: a PATH-first `sha256sum` that mutates a closed evidence leaf
+# once and then delegates to the real tool.
+#   RED   = the ACCEPTED bytes (02_PREREG/remote_close_tree.sh, 7470 B).
+#   GREEN = the DERIVED bytes (WPI_BLOCKS_DRAFT/remote_close_tree_wpi.sh).
+# No host is contacted. Everything happens under /tmp/wpi_r3_f3.
 set -u
-exec 2>&1          # one ordered stream, so the recorded transcript is faithful
-REPO=/mnt/c/LAB/Tradingview_LAB_CLEAN
-BASE=1c1c9ed1
-D=MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT
-ACC=$REPO/MTC_COMMAND_CENTER/11_TRIAGE/WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08/02_PREREG
-Q=/wpi_r2_qa
-OUT=/mnt/c/Users/Public/wpi_r2_qa
 
-rm -rf "$Q"; mkdir -m 0755 -p "$Q/bin" "$Q/shim" "$Q/head"
-rm -rf "$OUT"; mkdir -p "$OUT/close"
-for f in remote_setup_wpi.sh remote_extract_verify_wpi.sh run_p0.sh run_ro.sh; do
-    git -C "$REPO" show "$BASE:$D/$f" >"$Q/head/$f"
-done
-# Pinned tool copies: this QA host ships coreutils as symlinks into a multicall
-# binary, and the repaired scripts refuse a symlinked tool by design, so the
-# pins are retargeted at regular root-owned 0755 copies. This is the ONLY
-# substitution the tool-identity arms make.
-for t in stat mkdir readlink sha256sum tar find chmod; do
-    cp -L "/usr/bin/$t" "$Q/bin/$t"; chown 0:0 "$Q/bin/$t"; chmod 0755 "$Q/bin/$t"
-done
-echo "QA_TOOLCOPY $($Q/bin/stat --version | head -1)"
-echo "QA_BASE_COMMIT $BASE"
-for f in remote_setup_wpi.sh remote_extract_verify_wpi.sh run_p0.sh run_ro.sh; do
-    printf 'RED_BASELINE %-30s %s\n' "$f" "$($Q/bin/sha256sum "$Q/head/$f" | cut -c1-64)"
-done
+REPO=/mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE
+ACCEPTED="$REPO/WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08/02_PREREG/remote_close_tree.sh"
+DERIVED="$REPO/WPI_BLOCKS_DRAFT/remote_close_tree_wpi.sh"
 
-dirs()  { find "$1" -mindepth 1 -type d 2>/dev/null | wc -l; }
-run()   { local rc=0 pfx=""; [ $# -ge 4 ] && pfx="$4:"
-          echo "=== $1 ==="; set +e; PATH="${pfx}${PATH}" bash "$2" $3 2>&1; rc=$?
-          echo "RC=$rc"; }
+QA=/tmp/wpi_r3_f3
+rm -rf "$QA"; mkdir -p "$QA"
 
-############################################################ A. remote_setup_wpi.sh
-mk_green() { # $1=out $2=parent $3=uid $4=gid [$5=stat pin]
-    sed -e "s|^EXPECT_PREFIX=.*|EXPECT_PREFIX='$2/wpi_staging_'|" \
-        -e "s|^EXPECT_PARENT=.*|EXPECT_PARENT='$2'|" \
-        -e "s|^EXPECT_UID=.*|EXPECT_UID='$3'|" -e "s|^EXPECT_GID=.*|EXPECT_GID='$4'|" \
-        -e "s|^TOOL_STAT=.*|TOOL_STAT='${5:-$Q/bin/stat}'|" \
-        -e "s|^TOOL_MKDIR=.*|TOOL_MKDIR='$Q/bin/mkdir'|" \
-        -e "s|^TOOL_READLINK=.*|TOOL_READLINK='$Q/bin/readlink'|" \
-        "$REPO/$D/remote_setup_wpi.sh" >"$1"
-}
-mk_red() { # $1=out $2=parent   (round-1 bytes; sandbox prefix + owner name only)
-    sed -e "s|^EXPECT_PREFIX=.*|EXPECT_PREFIX='$2/wpi_staging_'|" \
-        -e "s|^EXPECT_OWNER=.*|EXPECT_OWNER='root:root'|" "$Q/head/remote_setup_wpi.sh" >"$1"
-}
-shim_stat() { # $1=out $2=target $3=mode(multi|oneline|alias)
-    { echo '#!/bin/bash'; echo 'p="${@: -1}"'
-      case "$3" in
-        multi)   printf 'if [ "$p" = "%s" ] && [ ! -e "$p" ]; then\n  printf "stat: cannot stat '"'"'%%s'"'"': Permission denied\\n" "$p" >&2\n  printf "stat: cannot stat '"'"'%%s'"'"': No such file or directory\\n" "$p" >&2\n  exit 1\nfi\n' "$2" ;;
-        oneline) printf 'if [ "$p" = "%s" ] && [ ! -e "$p" ]; then\n  printf "stat: cannot stat '"'"'%%s'"'"': Permission denied stat: cannot stat '"'"'%%s'"'"': No such file or directory\\n" "$p" "$p" >&2\n  exit 1\nfi\n' "$2" ;;
-        alias)   printf 'if [ "$p" = "%s" ] && [ "$1" = "-c" ]; then\n  case "$2" in\n    %%u:%%g) printf "1000:1000\\n"; exit 0 ;;\n    %%U:%%G) printf "root:root\\n";  exit 0 ;;\n  esac\nfi\n' "$2" ;;
-      esac
-      printf 'exec %s/bin/stat "$@"\n' "$Q"
-    } >"$1"; chown 0:0 "$1"; chmod 0755 "$1"
+echo "=== source identities (byte-verified before anything runs) ==="
+sha256sum "$ACCEPTED" "$DERIVED"
+stat -c '%s %n' "$ACCEPTED" "$DERIVED"
+
+# ---------------------------------------------------------------- declared
+# SUBSTITUTION 1 of 2: this host runs as uid 0, so a tree it creates renders
+# root:root. Both scripts compare the rendered name against 'gatea:gatea'. The
+# same one-line substitution is applied to BOTH arms, and each is asserted
+# present before it is replaced so a missed anchor throws instead of silently
+# producing a false result.
+subst_owner() {
+    local src="$1" dst="$2"
+    grep -q "^EXPECT_OWNER='gatea:gatea'\$" "$src" || { echo "ANCHOR_NOT_FOUND EXPECT_OWNER in $src"; exit 90; }
+    sed "s|^EXPECT_OWNER='gatea:gatea'\$|EXPECT_OWNER='root:root'|" "$src" > "$dst"
+    grep -q "^EXPECT_OWNER='root:root'\$" "$dst" || { echo "SUBST_FAILED $dst"; exit 91; }
 }
 
-mkdir -m 0755 -p "$Q/a1/home/gatea"; mk_green "$Q/a1.sh" "$Q/a1/home/gatea" 0 0
-run A1_GREEN_HAPPY_PATH "$Q/a1.sh" "$Q/a1/home/gatea/wpi_staging_SAFE"
-echo "DIRS_CREATED=$(dirs "$Q/a1/home/gatea")"
-
-mkdir -m 0755 -p "$Q/a2red/home/gatea" "$Q/a2green/home/gatea"
-shim_stat "$Q/shim/stat" "$Q/a2red/home/gatea/wpi_staging_SAFE" multi
-shim_stat "$Q/bin/stat_multi" "$Q/a2green/home/gatea/wpi_staging_SAFE" multi
-mk_red "$Q/a2red.sh" "$Q/a2red/home/gatea"
-run A2_RED_MIXED_DIAGNOSTIC_ROUND1_BYTES "$Q/a2red.sh" "$Q/a2red/home/gatea/wpi_staging_SAFE" "$Q/shim"
-echo "DIRS_CREATED=$(dirs "$Q/a2red/home/gatea")"
-mk_green "$Q/a2green.sh" "$Q/a2green/home/gatea" 0 0 "$Q/bin/stat_multi"
-run A2_GREEN_MIXED_DIAGNOSTIC "$Q/a2green.sh" "$Q/a2green/home/gatea/wpi_staging_SAFE"
-echo "DIRS_CREATED=$(dirs "$Q/a2green/home/gatea")"
-
-mkdir -m 0755 -p "$Q/a3/home/gatea"
-shim_stat "$Q/bin/stat_oneline" "$Q/a3/home/gatea/wpi_staging_SAFE" oneline
-mk_green "$Q/a3.sh" "$Q/a3/home/gatea" 0 0 "$Q/bin/stat_oneline"
-run A3_GREEN_ONE_LINE_TWO_CLASSES "$Q/a3.sh" "$Q/a3/home/gatea/wpi_staging_SAFE"
-echo "DIRS_CREATED=$(dirs "$Q/a3/home/gatea")"
-
-for v in red green; do mkdir -m 0755 -p "$Q/a4$v/home/real"; ln -s "$Q/a4$v/home/real" "$Q/a4$v/home/link"; done
-mk_red "$Q/a4red.sh" "$Q/a4red/home/link"
-run A4_RED_PARENT_SYMLINK_ROUND1_BYTES "$Q/a4red.sh" "$Q/a4red/home/link/wpi_staging_SAFE"
-echo "DIRS_CREATED_THROUGH_LINK=$(dirs "$Q/a4red/home/real")"
-mk_green "$Q/a4green.sh" "$Q/a4green/home/link" 0 0
-run A4_GREEN_PARENT_SYMLINK "$Q/a4green.sh" "$Q/a4green/home/link/wpi_staging_SAFE"
-echo "DIRS_CREATED_THROUGH_LINK=$(dirs "$Q/a4green/home/real")"
-
-mkdir -m 0755 -p "$Q/a5red/home/gatea" "$Q/a5green/home/gatea"
-shim_stat "$Q/shim/stat" "$Q/a5red/home/gatea/wpi_staging_SAFE" alias
-shim_stat "$Q/bin/stat_alias" "$Q/a5green/home/gatea/wpi_staging_SAFE" alias
-mk_red "$Q/a5red.sh" "$Q/a5red/home/gatea"
-run A5_RED_NSS_ALIAS_ROUND1_BYTES "$Q/a5red.sh" "$Q/a5red/home/gatea/wpi_staging_SAFE" "$Q/shim"
-mk_green "$Q/a5green.sh" "$Q/a5green/home/gatea" 0 0 "$Q/bin/stat_alias"
-run A5_GREEN_NSS_ALIAS "$Q/a5green.sh" "$Q/a5green/home/gatea/wpi_staging_SAFE"
-
-mkdir -m 0755 -p "$Q/a6/home/gatea"
-sed -e "s|^EXPECT_PREFIX=.*|EXPECT_PREFIX='$Q/a6/home/gatea/wpi_staging_'|" \
-    -e "s|^EXPECT_PARENT=.*|EXPECT_PARENT='$Q/a6/home/gatea'|" \
-    -e "s|^TOOL_STAT=.*|TOOL_STAT='$Q/bin/stat'|" -e "s|^TOOL_MKDIR=.*|TOOL_MKDIR='$Q/bin/mkdir'|" \
-    -e "s|^TOOL_READLINK=.*|TOOL_READLINK='$Q/bin/readlink'|" "$REPO/$D/remote_setup_wpi.sh" >"$Q/a6.sh"
-run A6_GREEN_IDENTITY_PIN_UNFILLED "$Q/a6.sh" "$Q/a6/home/gatea/wpi_staging_SAFE"
-echo "DIRS_CREATED=$(dirs "$Q/a6/home/gatea")"
-
-mkdir -m 0755 -p "$Q/a7/home/gatea"; chmod 0777 "$Q/a7/home"
-mk_green "$Q/a7.sh" "$Q/a7/home/gatea" 0 0
-run A7_GREEN_WORLD_WRITABLE_ANCESTOR "$Q/a7.sh" "$Q/a7/home/gatea/wpi_staging_SAFE"
-echo "DIRS_CREATED=$(dirs "$Q/a7/home/gatea")"
-
-##################################################### B. remote_extract_verify_wpi.sh
-set_block() { awk -v name="$3" -v blk="$4" '
-    BEGIN{skip=0} skip==1{ if ($0 ~ /\047$/) skip=0; next }
-    index($0, name "=\047")==1 { print name "=\047" blk "\047"; if ($0 !~ /\047$/) skip=1; next } {print}' "$1" >"$2"; }
-mk_archive() { local d="$1"; shift; mkdir -m 0755 -p "$d/src" "$d/kit"
-    local m; for m in "$@"; do printf 'fixture body for %s\n' "$m" >"$d/src/$m"; done
-    ( cd "$d/src" && "$Q/bin/tar" -cf "$d/kit/runkit.tar" "$@" )
-    ( cd "$d/src" && "$Q/bin/sha256sum" "$@" ) >"$d/hashes.txt"
-    "$Q/bin/stat" -c '%s' "$d/kit/runkit.tar" >"$d/bytes.txt"
-    "$Q/bin/sha256sum" "$d/kit/runkit.tar" | cut -d' ' -f1 >"$d/sha.txt"; }
-mk_ecase() { local n="$1" v="$2" mb="$3" tv="$4"; shift 4; local d="$Q/$n$v" base
-    mk_archive "$d" "$@"
-    if [ "$v" = red ]; then base="$Q/head/remote_extract_verify_wpi.sh"; else base="$REPO/$D/remote_extract_verify_wpi.sh"; fi
-    set_block "$base" "$d/s1.sh" MEMBERS "$mb"; set_block "$d/s1.sh" "$d/run.sh" HASHES "$(cat "$d/hashes.txt")"
-    sed -i -e "s|^EXPECT_ARCHIVE_BYTES=.*|EXPECT_ARCHIVE_BYTES='$(cat "$d/bytes.txt")'|" "$d/run.sh"
-    if [ "$v" = green ]; then sed -i \
-        -e "s|^TOOL_STAT=.*|TOOL_STAT='$Q/bin/stat'|" -e "s|^TOOL_SHA256SUM=.*|TOOL_SHA256SUM='$Q/bin/sha256sum'|" \
-        -e "s|^TOOL_TAR=.*|TOOL_TAR='${tv:-$Q/bin/tar}'|" -e "s|^TOOL_MKDIR=.*|TOOL_MKDIR='$Q/bin/mkdir'|" \
-        -e "s|^TOOL_READLINK=.*|TOOL_READLINK='$Q/bin/readlink'|" -e "s|^TOOL_FIND=.*|TOOL_FIND='$Q/bin/find'|" \
-        -e "s|^TOOL_CHMOD=.*|TOOL_CHMOD='$Q/bin/chmod'|" "$d/run.sh"; fi
-    printf '%s\n' "$d"; }
-run_ecase() { local rc=0 pfx=""; [ $# -ge 3 ] && pfx="$3:"
-    echo "=== $1 ==="; set +e
-    PATH="${pfx}${PATH}" bash "$2/run.sh" "$2/kit/runkit.tar" "$2/kit/extracted" "$(cat "$2/sha.txt")" 2>&1; rc=$?
-    echo "RC=$rc"; }
-shim_tar() { { echo '#!/bin/bash'
-    case "$2" in
-      warn)   echo 'case "$1" in -t*) printf "FAKE_TAR_WARNING: listing incomplete is possible\n" >&2 ;; esac' ;;
-      unterm) echo 'if [ "$1" = "-tf" ]; then printf "RP0-LIB.sh\nRP0-BOOTSTRAP.sh\nRP6-P0.sh\nRP7-WPI-RO.sh\nrun_p0.sh\nrun_ro.sh"; exit 0; fi' ;;
-      fail)   echo 'case "$1" in -t*) printf "tar: fixture listing failure\n" >&2; exit 2 ;; esac' ;;
-    esac
-    printf 'exec %s/bin/tar "$@"\n' "$Q"; } >"$1"; chown 0:0 "$1"; chmod 0755 "$1"; }
-SIX='RP0-LIB.sh
-RP0-BOOTSTRAP.sh
-RP6-P0.sh
-RP7-WPI-RO.sh
-run_p0.sh
-run_ro.sh'
-FIVE='RP0-LIB.sh
-RP0-BOOTSTRAP.sh
-RP6-P0.sh
-RP7-WPI-RO.sh
-run_p0.sh'
-M6="RP0-LIB.sh RP0-BOOTSTRAP.sh RP6-P0.sh RP7-WPI-RO.sh run_p0.sh run_ro.sh"
-M5="RP0-LIB.sh RP0-BOOTSTRAP.sh RP6-P0.sh RP7-WPI-RO.sh run_p0.sh"
-
-run_ecase B1_GREEN_HAPPY_PATH "$(mk_ecase b1 green "$SIX" "" $M6)"
-shim_tar "$Q/bin/tar_warn" warn; cp "$Q/bin/tar_warn" "$Q/shim/tar"; chmod 0755 "$Q/shim/tar"
-run_ecase B2_RED_LISTING_WARNING_ROUND1_BYTES "$(mk_ecase b2 red "$SIX" "" $M6)" "$Q/shim"
-run_ecase B2_GREEN_LISTING_WARNING "$(mk_ecase b2 green "$SIX" "$Q/bin/tar_warn" $M6)"
-shim_tar "$Q/bin/tar_unterm" unterm; cp "$Q/bin/tar_unterm" "$Q/shim/tar"; chmod 0755 "$Q/shim/tar"
-run_ecase B3_RED_UNTERMINATED_LISTING_ROUND1_BYTES "$(mk_ecase b3 red "$SIX" "" $M6)" "$Q/shim"
-run_ecase B3_GREEN_UNTERMINATED_LISTING "$(mk_ecase b3 green "$SIX" "$Q/bin/tar_unterm" $M6)"
-run_ecase B4_RED_FIVE_MEMBERS_AGAINST_LITERAL_SIX "$(mk_ecase b4 red "$FIVE" "" $M5)"
-run_ecase B4_GREEN_FIVE_MEMBERS_DERIVED_COUNT "$(mk_ecase b4 green "$FIVE" "" $M5)"
-shim_tar "$Q/shim/tar" warn
-run_ecase B5_GREEN_PLANTED_PATH_TAR_IGNORED "$(mk_ecase b5 green "$SIX" "" $M6)" "$Q/shim"
-shim_tar "$Q/bin/tar_fail" fail
-run_ecase B6_GREEN_LISTING_HARD_FAILURE "$(mk_ecase b6 green "$SIX" "$Q/bin/tar_fail" $M6)"
-
-################################################################ C. the two wrappers
-mk_wcase() { local c="$Q/$1" k="$2" v="$3" E T P W L B H src
-    E="$c/extracted"; mkdir -p "$E" "$c/evidence/runkit"
-    printf 'rp0_require_safe_component(){ return 0; }\nrp0_allocate_evidence_dir(){ return 0; }\n' >"$E/RP0-LIB.sh"
-    printf 'EV_DIR="$EV_RUNKIT/$RUNID"\nmkdir -m 0700 -- "$EV_DIR"\nEV_LOG="$EV_DIR/${EV_STAGE_ID}.log"\n: >"$EV_LOG"\nexec >>"$EV_LOG" 2>&1\n' >"$E/RP0-BOOTSTRAP.sh"
-    if [ "$k" = p0 ]; then T=RP6-P0.sh; P=P0W; W=run_p0.sh; else T=RP7-WPI-RO.sh; P=ROW; W=run_ro.sh; fi
-    printf 'if IFS= read -r stolen; then printf %s_FIXTURE" stdin=stolen\\n"; exit 1; fi\nprintf %s_FIXTURE" stdin=eof\\n"\n' "$P" "$P" >"$E/$T"
-    L=$("$Q/bin/sha256sum" "$E/RP0-LIB.sh"); L=${L%% *}
-    B=$("$Q/bin/sha256sum" "$E/RP0-BOOTSTRAP.sh"); B=${B%% *}
-    H=$("$Q/bin/sha256sum" "$E/$T"); H=${H%% *}
-    if [ "$v" = red ]; then src="$Q/head/$W"; else src="$REPO/$D/$W"; fi
-    sed -e "s|^BASE_RUN=.*|BASE_RUN='QA'|" -e "s|^REMOTE_BASE=.*|REMOTE_BASE='$c'|" \
-        -e "s|^EXTRACT_DIR=.*|EXTRACT_DIR='$E'|" -e "s|^RUNID=.*|RUNID='QA-$k'|" \
-        -e "s|^EV_PARENT=.*|EV_PARENT='$c/evidence'|" -e "s|^EV_RUNKIT=.*|EV_RUNKIT='$c/evidence/runkit'|" \
-        -e "s|^RP0_LIB_SHA=.*|RP0_LIB_SHA='$L'|" -e "s|^RP0_BOOTSTRAP_SHA=.*|RP0_BOOTSTRAP_SHA='$B'|" \
-        -e "s|^RP6_P0_SHA=.*|RP6_P0_SHA='$H'|" -e "s|^RP7_WPI_RO_SHA=.*|RP7_WPI_RO_SHA='$H'|" \
-        -e "s|^TOOL_STAT=.*|TOOL_STAT='$Q/bin/stat'|" -e "s|^TOOL_SHA256SUM=.*|TOOL_SHA256SUM='$Q/bin/sha256sum'|" \
-        "$src" >"$c/wrapper.sh"
-    printf '%s|%s|%s|%s\n' "$c" "$E" "$T" "$P"; }
-stream() { { cat "$1"; printf "printf 'TAIL_EXECUTED\\n'\\n"; } | bash --noprofile --norc -s; }
-runw()  { local rc=0 pfx=""; [ $# -ge 5 ] && pfx="$5:"
-    echo "=== $1 ==="; set +e; PATH="${pfx}${PATH}" stream "$2"; rc=$?
-    [ -f "$3/evidence/runkit/QA-$4/$4.log" ] && cat "$3/evidence/runkit/QA-$4/$4.log"
-    echo "RC=$rc"; }
-
-for k in p0 ro; do
-    U=$(echo "$k" | tr a-z A-Z)
-    IFS='|' read -r C E T P < <(mk_wcase "${k}lr" "$k" red)
-    mv "$E/$T" "$E/$T.real"; ln -s "$T.real" "$E/$T"
-    sed '/\[ ! -L "\$path" \] ||/d' "$C/wrapper.sh" >"$C/red.sh"
-    runw "${U}_LINK_RED_NO_SYMLINK_REFUSAL" "$C/red.sh" "$C" "$k"
-    IFS='|' read -r C E T P < <(mk_wcase "${k}lg" "$k" green)
-    mv "$E/$T" "$E/$T.real"; ln -s "$T.real" "$E/$T"
-    runw "${U}_LINK_GREEN" "$C/wrapper.sh" "$C" "$k"
-    IFS='|' read -r C E T P < <(mk_wcase "${k}sr" "$k" red)
-    sed "s|\. \"\$EXTRACT_DIR/$T\" </dev/null|. \"\$EXTRACT_DIR/$T\"|" "$C/wrapper.sh" >"$C/red.sh"
-    runw "${U}_STDIN_RED_NO_DEV_NULL" "$C/red.sh" "$C" "$k"
-    IFS='|' read -r C E T P < <(mk_wcase "${k}sg" "$k" green)
-    runw "${U}_STDIN_GREEN" "$C/wrapper.sh" "$C" "$k"
-    IFS='|' read -r C E T P < <(mk_wcase "${k}hr" "$k" red)
-    printf 'printf %s_HIJACKED_BLOCK_EXECUTED"\\n"\n' "$P" >"$E/$T"
-    FROZEN=$(grep -oE "SHA='[0-9a-f]{64}'" "$C/wrapper.sh" | tail -1 | grep -oE '[0-9a-f]{64}')
-    { echo '#!/bin/bash'
-      printf 'for a in "$@"; do case "$a" in */%s) printf "%s  %%s\\n" "$a"; exit 0 ;; esac; done\n' "$T" "$FROZEN"
-      printf 'exec %s/bin/sha256sum "$@"\n' "$Q"; } >"$Q/shim/sha256sum"; chmod 0755 "$Q/shim/sha256sum"
-    runw "${U}_HIJACK_RED_PATH_RESOLVED_DIGEST_TOOL" "$C/wrapper.sh" "$C" "$k" "$Q/shim"
-    IFS='|' read -r C E T P < <(mk_wcase "${k}hg" "$k" green)
-    printf 'printf %s_HIJACKED_BLOCK_EXECUTED"\\n"\n' "$P" >"$E/$T"
-    runw "${U}_HIJACK_GREEN_PINNED_DIGEST_TOOL" "$C/wrapper.sh" "$C" "$k" "$Q/shim"
+# SUBSTITUTION 2 of 2 (GREEN arm only): this kernel ships /usr/bin/{stat,tr,...}
+# as symlinks into a multicall binary, which the derived script refuses BY
+# DESIGN (deviation D-3). The pins are retargeted at regular root-owned 0755
+# copies so the attack arm exercises the pin mechanism rather than stopping at
+# the symlink refusal. Arm G0 below runs the file exactly as it ships and shows
+# that refusal, so the substitution hides nothing.
+PINBIN="$QA/pinbin"
+mkdir -p "$PINBIN"
+for t in stat sha256sum mktemp tr readlink find sort cmp rm; do
+    cp -L "/usr/bin/$t" "$PINBIN/$t"
+    chown 0:0 "$PINBIN/$t"; chmod 0755 "$PINBIN/$t"
 done
-IFS='|' read -r C E T P < <(mk_wcase p0ts p0 green)
-ln -s "$Q/bin/sha256sum" "$Q/bin/sha256sum_link"
-sed -i "s|^TOOL_SHA256SUM=.*|TOOL_SHA256SUM='$Q/bin/sha256sum_link'|" "$C/wrapper.sh"
-runw P0_TOOL_IS_SYMLINK "$C/wrapper.sh" "$C" p0
-IFS='|' read -r C E T P < <(mk_wcase p0tw p0 green)
-cp "$Q/bin/sha256sum" "$Q/bin/sha256sum_ww"; chown 0:0 "$Q/bin/sha256sum_ww"; chmod 0757 "$Q/bin/sha256sum_ww"
-sed -i "s|^TOOL_SHA256SUM=.*|TOOL_SHA256SUM='$Q/bin/sha256sum_ww'|" "$C/wrapper.sh"
-runw P0_TOOL_OTHER_WRITABLE "$C/wrapper.sh" "$C" p0
+echo
+echo "=== pinned tool copies (regular, root-owned, 0755) ==="
+stat -c '%A %u:%g %n' "$PINBIN"/* | head -3
+echo "..."
 
-######################################## D. real remote_close_tree.sh transcripts
-echo "=== CLOSE_TRANSCRIPTS ==="
-echo "ACCEPTED_SOURCE $("$Q/bin/sha256sum" "$ACC/remote_close_tree.sh" | cut -d' ' -f1) bytes=$("$Q/bin/stat" -c %s "$ACC/remote_close_tree.sh")"
-sed "s|^EXPECT_OWNER='gatea:gatea'|EXPECT_OWNER='root:root'|" "$ACC/remote_close_tree.sh" >"$Q/close.sh"
-echo "--- the only substitution ---"; diff "$ACC/remote_close_tree.sh" "$Q/close.sh" || true; echo "--- end diff ---"
-for R in QA-P0 QA-RO; do
-    EV="$Q/ev/runkit/$R"; mkdir -m 0700 -p "$Q/ev/runkit"; mkdir -m 0700 "$EV"; mkdir -m 0700 "$EV/sub"
-    printf 'alpha evidence line for %s\n' "$R" >"$EV/aaa.txt"
-    printf 'stage log for %s\nsecond line\n' "$R" >"$EV/stage.log"
-    printf 'nested evidence for %s\n' "$R" >"$EV/sub/nested.txt"
-    chmod 0600 "$EV/aaa.txt" "$EV/stage.log" "$EV/sub/nested.txt"
-    rc=0; bash "$Q/close.sh" "$EV" "$R" >"$OUT/close/$R.stdout" 2>"$OUT/close/$R.stderr" || rc=$?
-    echo "--- CLOSE $R rc=$rc ---"; cat "$OUT/close/$R.stdout"
-    [ -s "$OUT/close/$R.stderr" ] && { echo "--stderr--"; cat "$OUT/close/$R.stderr"; }
-    mkdir -p "$OUT/close/tree/$R"; cp -a "$EV/." "$OUT/close/tree/$R/"
-done
-rm -rf "$Q"
-echo "=== WPI_R2_SHELL_QA_COMPLETE (fixture root removed; only $OUT/close remains) ==="
+subst_pins() {
+    local src="$1" dst="$2" t
+    cp "$src" "$dst"
+    for t in STAT SHA256SUM MKTEMP TR READLINK FIND SORT CMP RM; do
+        local low; low="$(echo "$t" | tr 'A-Z' 'a-z')"
+        grep -q "^TOOL_$t='/usr/bin/$low'\$" "$dst" || { echo "ANCHOR_NOT_FOUND TOOL_$t in $dst"; exit 92; }
+        sed -i "s|^TOOL_$t='/usr/bin/$low'\$|TOOL_$t='$PINBIN/$low'|" "$dst"
+    done
+    grep -q "TOOL_STAT='$PINBIN/stat'" "$dst" || { echo "SUBST_FAILED pins $dst"; exit 93; }
+}
+
+# ------------------------------------------------------------- the attack
+# A PATH-first sha256sum that appends one byte to the evidence leaf on its FIRST
+# invocation and then delegates to the real tool, so both digest passes observe
+# the post-mutation bytes and agree.
+FAKEBIN="$QA/fakebin"
+mkdir -p "$FAKEBIN"
+cat > "$FAKEBIN/sha256sum" <<'ATTACK'
+#!/bin/bash
+echo called >> /tmp/wpi_r3_f3/attack_called
+if [ ! -e /tmp/wpi_r3_f3/attack_fired ]; then
+    : > /tmp/wpi_r3_f3/attack_fired
+    printf 'MUTATED_BY_PATH_PLANT\n' >> /tmp/wpi_r3_f3/ev/RUNX/a.txt
+fi
+exec /usr/bin/sha256sum "$@"
+ATTACK
+chmod 0755 "$FAKEBIN/sha256sum"
+
+new_tree() {
+    rm -rf "$QA/ev" "$QA/attack_fired" "$QA/attack_called"
+    mkdir -p "$QA/ev/RUNX"
+    chmod 700 "$QA/ev/RUNX"
+    printf 'alpha\n' > "$QA/ev/RUNX/a.txt"
+    printf 'beta\n'  > "$QA/ev/RUNX/b.txt"
+}
+
+run_arm() {
+    local label="$1" script="$2" usepath="$3"
+    new_tree
+    local pre post
+    pre="$(sha256sum "$QA/ev/RUNX/a.txt" | cut -d' ' -f1)"
+    echo
+    echo "=== $label ==="
+    echo "COMMAND: env -i PATH=$usepath HOME=/root bash $script $QA/ev/RUNX RUNX"
+    local out rc=0
+    out="$(env -i PATH="$usepath" HOME=/root bash "$script" "$QA/ev/RUNX" RUNX 2>"$QA/err.txt")" || rc=$?
+    post="$(sha256sum "$QA/ev/RUNX/a.txt" | cut -d' ' -f1)"
+    echo "RC=$rc"
+    echo "PRE_SHA=$pre"
+    echo "POST_SHA=$post"
+    if [ "$pre" = "$post" ]; then echo "MUTATED=no"; else echo "MUTATED=yes"; fi
+    if [ -e "$QA/attack_called" ]; then
+        echo "PATH_PLANT_CONSULTED=yes calls=$(wc -l < "$QA/attack_called")"
+    else
+        echo "PATH_PLANT_CONSULTED=no"
+    fi
+    echo "--- stdout (CLOSE_DIGEST/CLOSE PASS/CLOSE_STOP lines) ---"
+    printf '%s\n' "$out" | grep -E '^(CLOSE_DIGEST |CLOSE PASS|CLOSE_BINDING|CLOSE_NOTE tool |CLOSE_NOTE tool_digest_limit)' | head -20
+    echo "--- stderr ---"
+    cat "$QA/err.txt"
+    echo "STDERR_BYTES=$(stat -c '%s' "$QA/err.txt")"
+}
+
+HOSTILE_PATH="$FAKEBIN:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+subst_owner "$ACCEPTED" "$QA/accepted_ownersubst.sh"
+subst_owner "$DERIVED"  "$QA/derived_ownersubst.sh"
+subst_pins  "$QA/derived_ownersubst.sh" "$QA/derived_green.sh"
+
+run_arm "RED  - ACCEPTED bytes, PATH-first sha256sum plant" "$QA/accepted_ownersubst.sh" "$HOSTILE_PATH"
+run_arm "G0   - DERIVED bytes exactly as shipped (/usr/bin pins), same plant" "$QA/derived_ownersubst.sh" "$HOSTILE_PATH"
+run_arm "GREEN- DERIVED bytes, pins retargeted at regular root-owned copies, same plant" "$QA/derived_green.sh" "$HOSTILE_PATH"
+run_arm "CTL  - DERIVED bytes, retargeted pins, clean PATH (no plant)" "$QA/derived_green.sh" "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+echo
+echo "=== cleanup ==="
+rm -rf "$QA"
+echo "removed $QA"
 ```
 
-Real output (S1 applied; nothing else altered):
+### A.2 transcript (verbatim)
 
 ```text
-QA_TOOLCOPY stat (uutils coreutils) 0.8.0
-QA_BASE_COMMIT 1c1c9ed1
-RED_BASELINE remote_setup_wpi.sh            5b2598184b228eef5d93c7f4ef7a5aa8a627ffbdea8c71e6cc093b416ebb0a34
-RED_BASELINE remote_extract_verify_wpi.sh   17ed8f3f8d80a79fc1b132ff1ef55cf0677da13c551da30e0db7531935c1f6f2
-RED_BASELINE run_p0.sh                      8b2c520aa342f3f49fc9f0ad543b6c8a918c995b66e1cae8a1dd1c543b9dbfe9
-RED_BASELINE run_ro.sh                      88f9f736e68c4978cc15d29621082d0395dc49de97a4c8efc79893fc536ad3e0
-=== A1_GREEN_HAPPY_PATH ===
-SETUP_NOTE tool name=stat path=<QA>/bin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE tool name=mkdir path=<QA>/bin/mkdir owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE tool name=readlink path=<QA>/bin/readlink owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE identity euid=0 expected_numeric=0:0 name_diagnostic=gatea:gatea
-SETUP_NOTE base_component_ok value=SAFE
-SETUP_NOTE parent_bound path=/ owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE parent_bound path=<QA> owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE parent_bound path=<QA>/a1 owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE parent_bound path=<QA>/a1/home owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE parent_bound path=<QA>/a1/home/gatea owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE enoent_calibration rc=1 template=stat: cannot stat '@PATH@': No such file or directory (os error 2)
-SETUP_NOTE base_absent path=<QA>/a1/home/gatea/wpi_staging_SAFE
-SETUP_NOTE allocated path=<QA>/a1/home/gatea/wpi_staging_SAFE
-SETUP_NOTE dir_ok path=<QA>/a1/home/gatea/wpi_staging_SAFE owner_numeric=0:0 owner_name=root:root mode=700
-SETUP_NOTE allocated path=<QA>/a1/home/gatea/wpi_staging_SAFE/evidence
-SETUP_NOTE dir_ok path=<QA>/a1/home/gatea/wpi_staging_SAFE/evidence owner_numeric=0:0 owner_name=root:root mode=700
-SETUP_NOTE allocated path=<QA>/a1/home/gatea/wpi_staging_SAFE/evidence/runkit
-SETUP_NOTE dir_ok path=<QA>/a1/home/gatea/wpi_staging_SAFE/evidence/runkit owner_numeric=0:0 owner_name=root:root mode=700
-SETUP_NOTE allocated path=<QA>/a1/home/gatea/wpi_staging_SAFE/kit
-SETUP_NOTE dir_ok path=<QA>/a1/home/gatea/wpi_staging_SAFE/kit owner_numeric=0:0 owner_name=root:root mode=700
-SETUP PASS base=<QA>/a1/home/gatea/wpi_staging_SAFE evidence=<QA>/a1/home/gatea/wpi_staging_SAFE/evidence runkit=<QA>/a1/home/gatea/wpi_staging_SAFE/evidence/runkit kit=<QA>/a1/home/gatea/wpi_staging_SAFE/kit owner_numeric=0:0 owner_name=gatea:gatea mode=700
-RC=0
-DIRS_CREATED=4
-=== A2_RED_MIXED_DIAGNOSTIC_ROUND1_BYTES ===
-SETUP_NOTE base_component_ok value=SAFE
-SETUP_NOTE base_absent path=<QA>/a2red/home/gatea/wpi_staging_SAFE
-SETUP_NOTE allocated path=<QA>/a2red/home/gatea/wpi_staging_SAFE
-SETUP_NOTE allocated path=<QA>/a2red/home/gatea/wpi_staging_SAFE/evidence
-SETUP_NOTE allocated path=<QA>/a2red/home/gatea/wpi_staging_SAFE/evidence/runkit
-SETUP_NOTE allocated path=<QA>/a2red/home/gatea/wpi_staging_SAFE/kit
-SETUP_NOTE dir_ok path=<QA>/a2red/home/gatea/wpi_staging_SAFE owner=root:root mode=700
-SETUP_NOTE dir_ok path=<QA>/a2red/home/gatea/wpi_staging_SAFE/evidence owner=root:root mode=700
-SETUP_NOTE dir_ok path=<QA>/a2red/home/gatea/wpi_staging_SAFE/evidence/runkit owner=root:root mode=700
-SETUP_NOTE dir_ok path=<QA>/a2red/home/gatea/wpi_staging_SAFE/kit owner=root:root mode=700
-SETUP PASS base=<QA>/a2red/home/gatea/wpi_staging_SAFE evidence=<QA>/a2red/home/gatea/wpi_staging_SAFE/evidence runkit=<QA>/a2red/home/gatea/wpi_staging_SAFE/evidence/runkit kit=<QA>/a2red/home/gatea/wpi_staging_SAFE/kit owner=root:root mode=700
-RC=0
-DIRS_CREATED=4
-=== A2_GREEN_MIXED_DIAGNOSTIC ===
-SETUP_NOTE tool name=stat_multi path=<QA>/bin/stat_multi owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE tool name=mkdir path=<QA>/bin/mkdir owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE tool name=readlink path=<QA>/bin/readlink owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE identity euid=0 expected_numeric=0:0 name_diagnostic=gatea:gatea
-SETUP_NOTE base_component_ok value=SAFE
-SETUP_NOTE parent_bound path=/ owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE parent_bound path=<QA> owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE parent_bound path=<QA>/a2green owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE parent_bound path=<QA>/a2green/home owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE parent_bound path=<QA>/a2green/home/gatea owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE enoent_calibration rc=1 template=stat: cannot stat '@PATH@': No such file or directory (os error 2)
-SETUP_STOP reason=path_probe_multiline path=<QA>/a2green/home/gatea/wpi_staging_SAFE rc=1
-RC=3
-DIRS_CREATED=0
-=== A3_GREEN_ONE_LINE_TWO_CLASSES ===
-SETUP_NOTE tool name=stat_oneline path=<QA>/bin/stat_oneline owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE tool name=mkdir path=<QA>/bin/mkdir owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE tool name=readlink path=<QA>/bin/readlink owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE identity euid=0 expected_numeric=0:0 name_diagnostic=gatea:gatea
-SETUP_NOTE base_component_ok value=SAFE
-SETUP_NOTE parent_bound path=/ owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE parent_bound path=<QA> owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE parent_bound path=<QA>/a3 owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE parent_bound path=<QA>/a3/home owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE parent_bound path=<QA>/a3/home/gatea owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE enoent_calibration rc=1 template=stat: cannot stat '@PATH@': No such file or directory (os error 2)
-SETUP_STOP reason=path_probe_unclassified path=<QA>/a3/home/gatea/wpi_staging_SAFE rc=1 detail=stat: cannot stat '<QA>/a3/home/gatea/wpi_staging_SAFE': Permission denied stat: cannot stat '<QA>/a3/home/gatea/wpi_staging_SAFE': No such file or directory
-RC=3
-DIRS_CREATED=0
-=== A4_RED_PARENT_SYMLINK_ROUND1_BYTES ===
-SETUP_NOTE base_component_ok value=SAFE
-SETUP_NOTE base_absent path=<QA>/a4red/home/link/wpi_staging_SAFE
-SETUP_NOTE allocated path=<QA>/a4red/home/link/wpi_staging_SAFE
-SETUP_NOTE allocated path=<QA>/a4red/home/link/wpi_staging_SAFE/evidence
-SETUP_NOTE allocated path=<QA>/a4red/home/link/wpi_staging_SAFE/evidence/runkit
-SETUP_NOTE allocated path=<QA>/a4red/home/link/wpi_staging_SAFE/kit
-SETUP_FAIL reason=path_not_canonical path=<QA>/a4red/home/link/wpi_staging_SAFE canonical=<QA>/a4red/home/real/wpi_staging_SAFE
-RC=1
-DIRS_CREATED_THROUGH_LINK=4
-=== A4_GREEN_PARENT_SYMLINK ===
-SETUP_NOTE tool name=stat path=<QA>/bin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE tool name=mkdir path=<QA>/bin/mkdir owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE tool name=readlink path=<QA>/bin/readlink owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE identity euid=0 expected_numeric=0:0 name_diagnostic=gatea:gatea
-SETUP_NOTE base_component_ok value=SAFE
-SETUP_FAIL reason=parent_not_canonical path=<QA>/a4green/home/link canonical=<QA>/a4green/home/real
-RC=1
-DIRS_CREATED_THROUGH_LINK=0
-=== A5_RED_NSS_ALIAS_ROUND1_BYTES ===
-SETUP_NOTE base_component_ok value=SAFE
-SETUP_NOTE base_absent path=<QA>/a5red/home/gatea/wpi_staging_SAFE
-SETUP_NOTE allocated path=<QA>/a5red/home/gatea/wpi_staging_SAFE
-SETUP_NOTE allocated path=<QA>/a5red/home/gatea/wpi_staging_SAFE/evidence
-SETUP_NOTE allocated path=<QA>/a5red/home/gatea/wpi_staging_SAFE/evidence/runkit
-SETUP_NOTE allocated path=<QA>/a5red/home/gatea/wpi_staging_SAFE/kit
-SETUP_NOTE dir_ok path=<QA>/a5red/home/gatea/wpi_staging_SAFE owner=root:root mode=700
-SETUP_NOTE dir_ok path=<QA>/a5red/home/gatea/wpi_staging_SAFE/evidence owner=root:root mode=700
-SETUP_NOTE dir_ok path=<QA>/a5red/home/gatea/wpi_staging_SAFE/evidence/runkit owner=root:root mode=700
-SETUP_NOTE dir_ok path=<QA>/a5red/home/gatea/wpi_staging_SAFE/kit owner=root:root mode=700
-SETUP PASS base=<QA>/a5red/home/gatea/wpi_staging_SAFE evidence=<QA>/a5red/home/gatea/wpi_staging_SAFE/evidence runkit=<QA>/a5red/home/gatea/wpi_staging_SAFE/evidence/runkit kit=<QA>/a5red/home/gatea/wpi_staging_SAFE/kit owner=root:root mode=700
-RC=0
-=== A5_GREEN_NSS_ALIAS ===
-SETUP_NOTE tool name=stat_alias path=<QA>/bin/stat_alias owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE tool name=mkdir path=<QA>/bin/mkdir owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE tool name=readlink path=<QA>/bin/readlink owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE identity euid=0 expected_numeric=0:0 name_diagnostic=gatea:gatea
-SETUP_NOTE base_component_ok value=SAFE
-SETUP_NOTE parent_bound path=/ owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE parent_bound path=<QA> owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE parent_bound path=<QA>/a5green owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE parent_bound path=<QA>/a5green/home owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE parent_bound path=<QA>/a5green/home/gatea owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE enoent_calibration rc=1 template=stat: cannot stat '@PATH@': No such file or directory (os error 2)
-SETUP_NOTE base_absent path=<QA>/a5green/home/gatea/wpi_staging_SAFE
-SETUP_NOTE allocated path=<QA>/a5green/home/gatea/wpi_staging_SAFE
-SETUP_FAIL reason=owner_numeric=1000:1000 expected=0:0 path=<QA>/a5green/home/gatea/wpi_staging_SAFE owner_name=root:root
-RC=1
-=== A6_GREEN_IDENTITY_PIN_UNFILLED ===
-SETUP_NOTE tool name=stat path=<QA>/bin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE tool name=mkdir path=<QA>/bin/mkdir owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE tool name=readlink path=<QA>/bin/readlink owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_STOP reason=identity_pin_unfilled field=EXPECT_UID
-RC=3
-DIRS_CREATED=0
-=== A7_GREEN_WORLD_WRITABLE_ANCESTOR ===
-SETUP_NOTE tool name=stat path=<QA>/bin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE tool name=mkdir path=<QA>/bin/mkdir owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE tool name=readlink path=<QA>/bin/readlink owner_numeric=0:0 mode=755 resolution=pinned_absolute
-SETUP_NOTE identity euid=0 expected_numeric=0:0 name_diagnostic=gatea:gatea
-SETUP_NOTE base_component_ok value=SAFE
-SETUP_NOTE parent_bound path=/ owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE parent_bound path=<QA> owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_NOTE parent_bound path=<QA>/a7 owner_numeric=0:0 owner_name=root:root mode=755
-SETUP_FAIL reason=parent_other_writable mode=777 path=<QA>/a7/home
-RC=1
-DIRS_CREATED=0
-=== B1_GREEN_HAPPY_PATH ===
-EXTRACT_NOTE tool name=stat path=<QA>/bin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=sha256sum path=<QA>/bin/sha256sum owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=tar path=<QA>/bin/tar owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=mkdir path=<QA>/bin/mkdir owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=readlink path=<QA>/bin/readlink owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=find path=<QA>/bin/find owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=chmod path=<QA>/bin/chmod owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE member_constant count=6 source=MEMBERS
-EXTRACT_NOTE parent_bound path=<QA>/b1green/kit owner_uid=0 mode=755
-EXTRACT_NOTE enoent_calibration rc=1 template=stat: cannot stat '@PATH@': No such file or directory (os error 2)
-EXTRACT_archive path=<QA>/b1green/kit/runkit.tar bytes=10240
-EXTRACT_archive_sha256 actual=cb0bbbaf36b4f16956ea2faacd818f0bb43aa83d99c3784a8d1b0599363f697e expected=cb0bbbaf36b4f16956ea2faacd818f0bb43aa83d99c3784a8d1b0599363f697e
-EXTRACT_NOTE members_exact count=6 order=stage1
-EXTRACT_NOTE extract_dir_allocated path=<QA>/b1green/kit/extracted
-EXTRACT_NOTE extracted_files_readonly mode=0444
-EXTRACT_block name=RP0-LIB.sh sha256=cdb08f04ae0e78e18be2ac75fab6c56e0410345fa7846b8a399849a9d46007d5
-EXTRACT_block name=RP0-BOOTSTRAP.sh sha256=9014464ca51250132ac02b0406eb9d3cc9fba2ce5c214f25b790a22749386d2b
-EXTRACT_block name=RP6-P0.sh sha256=60b632bc0f914309c5451e928e81cd7a2fd8c2faceaa61a0f3f65151bd8a8cf0
-EXTRACT_block name=RP7-WPI-RO.sh sha256=05754d3bc0e44cce897bb7c47de2993cbb32077920296fbe321595c3fd304958
-EXTRACT_block name=run_p0.sh sha256=7b4d63257cdf3576b16a8124b68844a2d6284294eb870f590c306dc2c8c6b200
-EXTRACT_block name=run_ro.sh sha256=e58c4c5b619f684169973224e37e7e6594e56644a81c31bf7d2b23ce7bfb6b1a
-EXTRACT PASS archive=<QA>/b1green/kit/runkit.tar archive_sha256=cb0bbbaf36b4f16956ea2faacd818f0bb43aa83d99c3784a8d1b0599363f697e dir=<QA>/b1green/kit/extracted members=6 verified=6 executed=0
-RC=0
-=== B2_RED_LISTING_WARNING_ROUND1_BYTES ===
-EXTRACT_archive path=<QA>/b2red/kit/runkit.tar bytes=10240
-EXTRACT_archive_sha256 actual=cb0bbbaf36b4f16956ea2faacd818f0bb43aa83d99c3784a8d1b0599363f697e expected=cb0bbbaf36b4f16956ea2faacd818f0bb43aa83d99c3784a8d1b0599363f697e
-FAKE_TAR_WARNING: listing incomplete is possible
-FAKE_TAR_WARNING: listing incomplete is possible
-EXTRACT_NOTE members_exact count=6 order=stage1
-EXTRACT_NOTE extract_dir_allocated path=<QA>/b2red/kit/extracted
-EXTRACT_NOTE extracted_files_readonly mode=0444
-RP0-LIB.sh: OK
-RP0-BOOTSTRAP.sh: OK
-RP6-P0.sh: OK
-RP7-WPI-RO.sh: OK
-run_p0.sh: OK
-run_ro.sh: OK
-EXTRACT_block name=RP0-LIB.sh sha256=cdb08f04ae0e78e18be2ac75fab6c56e0410345fa7846b8a399849a9d46007d5
-EXTRACT_block name=RP0-BOOTSTRAP.sh sha256=9014464ca51250132ac02b0406eb9d3cc9fba2ce5c214f25b790a22749386d2b
-EXTRACT_block name=RP6-P0.sh sha256=60b632bc0f914309c5451e928e81cd7a2fd8c2faceaa61a0f3f65151bd8a8cf0
-EXTRACT_block name=RP7-WPI-RO.sh sha256=05754d3bc0e44cce897bb7c47de2993cbb32077920296fbe321595c3fd304958
-EXTRACT_block name=run_p0.sh sha256=7b4d63257cdf3576b16a8124b68844a2d6284294eb870f590c306dc2c8c6b200
-EXTRACT_block name=run_ro.sh sha256=e58c4c5b619f684169973224e37e7e6594e56644a81c31bf7d2b23ce7bfb6b1a
-EXTRACT PASS archive=<QA>/b2red/kit/runkit.tar archive_sha256=cb0bbbaf36b4f16956ea2faacd818f0bb43aa83d99c3784a8d1b0599363f697e dir=<QA>/b2red/kit/extracted members=6 verified=6 executed=0
-RC=0
-=== B2_GREEN_LISTING_WARNING ===
-EXTRACT_NOTE tool name=stat path=<QA>/bin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=sha256sum path=<QA>/bin/sha256sum owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=tar_warn path=<QA>/bin/tar_warn owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=mkdir path=<QA>/bin/mkdir owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=readlink path=<QA>/bin/readlink owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=find path=<QA>/bin/find owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=chmod path=<QA>/bin/chmod owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE member_constant count=6 source=MEMBERS
-EXTRACT_NOTE parent_bound path=<QA>/b2green/kit owner_uid=0 mode=755
-EXTRACT_NOTE enoent_calibration rc=1 template=stat: cannot stat '@PATH@': No such file or directory (os error 2)
-EXTRACT_archive path=<QA>/b2green/kit/runkit.tar bytes=10240
-EXTRACT_archive_sha256 actual=cb0bbbaf36b4f16956ea2faacd818f0bb43aa83d99c3784a8d1b0599363f697e expected=cb0bbbaf36b4f16956ea2faacd818f0bb43aa83d99c3784a8d1b0599363f697e
-EXTRACT_STOP reason=tar_type_listing_diagnostics detail=FAKE_TAR_WARNING: listing incomplete is possible
--rw-r--r-- root/root        28 2026-08-10 13:36 RP0-LIB.sh
--rw-r--r-- root/root        34 2026-08-10 13:36 RP0-BOOTSTRAP.sh
--rw-r--r-- root/root        27 2026-08-10 13:36 RP6-P0.sh
--rw-r--r-- root/root        31 2026-08-10 13:36 RP7-WPI-RO.sh
--rw-r--r-- root/root        27 2026-08-10 13:36 run_p0.sh
--rw-r--r-- root/root        27 2026-08-10 13:36 run_ro.sh
+﻿=== source identities (byte-verified before anything runs) ===
+87157f0ea454df7c1f826a8c76a38f3045dd38efdd8fa347644f79251d3f3f0e  /mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08/02_PREREG/remote_close_tree.sh
+fc183751c634c7fd6d1d9bd75143b7229357e52b7eec5f25a8eec0192bd1f75f  /mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/remote_close_tree_wpi.sh
+7470 /mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08/02_PREREG/remote_close_tree.sh
+12039 /mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/remote_close_tree_wpi.sh
 
-RC=3
-=== B3_RED_UNTERMINATED_LISTING_ROUND1_BYTES ===
-EXTRACT_archive path=<QA>/b3red/kit/runkit.tar bytes=10240
-EXTRACT_archive_sha256 actual=cb0bbbaf36b4f16956ea2faacd818f0bb43aa83d99c3784a8d1b0599363f697e expected=cb0bbbaf36b4f16956ea2faacd818f0bb43aa83d99c3784a8d1b0599363f697e
-EXTRACT_NOTE members_exact count=6 order=stage1
-EXTRACT_NOTE extract_dir_allocated path=<QA>/b3red/kit/extracted
-EXTRACT_NOTE extracted_files_readonly mode=0444
-RP0-LIB.sh: OK
-RP0-BOOTSTRAP.sh: OK
-RP6-P0.sh: OK
-RP7-WPI-RO.sh: OK
-run_p0.sh: OK
-run_ro.sh: OK
-EXTRACT_block name=RP0-LIB.sh sha256=cdb08f04ae0e78e18be2ac75fab6c56e0410345fa7846b8a399849a9d46007d5
-EXTRACT_block name=RP0-BOOTSTRAP.sh sha256=9014464ca51250132ac02b0406eb9d3cc9fba2ce5c214f25b790a22749386d2b
-EXTRACT_block name=RP6-P0.sh sha256=60b632bc0f914309c5451e928e81cd7a2fd8c2faceaa61a0f3f65151bd8a8cf0
-EXTRACT_block name=RP7-WPI-RO.sh sha256=05754d3bc0e44cce897bb7c47de2993cbb32077920296fbe321595c3fd304958
-EXTRACT_block name=run_p0.sh sha256=7b4d63257cdf3576b16a8124b68844a2d6284294eb870f590c306dc2c8c6b200
-EXTRACT_block name=run_ro.sh sha256=e58c4c5b619f684169973224e37e7e6594e56644a81c31bf7d2b23ce7bfb6b1a
-EXTRACT PASS archive=<QA>/b3red/kit/runkit.tar archive_sha256=cb0bbbaf36b4f16956ea2faacd818f0bb43aa83d99c3784a8d1b0599363f697e dir=<QA>/b3red/kit/extracted members=6 verified=6 executed=0
-RC=0
-=== B3_GREEN_UNTERMINATED_LISTING ===
-EXTRACT_NOTE tool name=stat path=<QA>/bin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=sha256sum path=<QA>/bin/sha256sum owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=tar_unterm path=<QA>/bin/tar_unterm owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=mkdir path=<QA>/bin/mkdir owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=readlink path=<QA>/bin/readlink owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=find path=<QA>/bin/find owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=chmod path=<QA>/bin/chmod owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE member_constant count=6 source=MEMBERS
-EXTRACT_NOTE parent_bound path=<QA>/b3green/kit owner_uid=0 mode=755
-EXTRACT_NOTE enoent_calibration rc=1 template=stat: cannot stat '@PATH@': No such file or directory (os error 2)
-EXTRACT_archive path=<QA>/b3green/kit/runkit.tar bytes=10240
-EXTRACT_archive_sha256 actual=cb0bbbaf36b4f16956ea2faacd818f0bb43aa83d99c3784a8d1b0599363f697e expected=cb0bbbaf36b4f16956ea2faacd818f0bb43aa83d99c3784a8d1b0599363f697e
-EXTRACT_STOP reason=tar_name_listing_unterminated_final_record
-RC=3
-=== B4_RED_FIVE_MEMBERS_AGAINST_LITERAL_SIX ===
-EXTRACT_archive path=<QA>/b4red/kit/runkit.tar bytes=10240
-EXTRACT_archive_sha256 actual=509dd1ac27362d1fc46ebf89af11801a466b85b6e0becee907d813de6bb4fa9a expected=509dd1ac27362d1fc46ebf89af11801a466b85b6e0becee907d813de6bb4fa9a
-EXTRACT_FAIL reason=tar_member_count=5 expected=6
-RC=1
-=== B4_GREEN_FIVE_MEMBERS_DERIVED_COUNT ===
-EXTRACT_NOTE tool name=stat path=<QA>/bin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=sha256sum path=<QA>/bin/sha256sum owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=tar path=<QA>/bin/tar owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=mkdir path=<QA>/bin/mkdir owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=readlink path=<QA>/bin/readlink owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=find path=<QA>/bin/find owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=chmod path=<QA>/bin/chmod owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE member_constant count=5 source=MEMBERS
-EXTRACT_NOTE parent_bound path=<QA>/b4green/kit owner_uid=0 mode=755
-EXTRACT_NOTE enoent_calibration rc=1 template=stat: cannot stat '@PATH@': No such file or directory (os error 2)
-EXTRACT_archive path=<QA>/b4green/kit/runkit.tar bytes=10240
-EXTRACT_archive_sha256 actual=509dd1ac27362d1fc46ebf89af11801a466b85b6e0becee907d813de6bb4fa9a expected=509dd1ac27362d1fc46ebf89af11801a466b85b6e0becee907d813de6bb4fa9a
-EXTRACT_NOTE members_exact count=5 order=stage1
-EXTRACT_NOTE extract_dir_allocated path=<QA>/b4green/kit/extracted
-EXTRACT_NOTE extracted_files_readonly mode=0444
-EXTRACT_block name=RP0-LIB.sh sha256=cdb08f04ae0e78e18be2ac75fab6c56e0410345fa7846b8a399849a9d46007d5
-EXTRACT_block name=RP0-BOOTSTRAP.sh sha256=9014464ca51250132ac02b0406eb9d3cc9fba2ce5c214f25b790a22749386d2b
-EXTRACT_block name=RP6-P0.sh sha256=60b632bc0f914309c5451e928e81cd7a2fd8c2faceaa61a0f3f65151bd8a8cf0
-EXTRACT_block name=RP7-WPI-RO.sh sha256=05754d3bc0e44cce897bb7c47de2993cbb32077920296fbe321595c3fd304958
-EXTRACT_block name=run_p0.sh sha256=7b4d63257cdf3576b16a8124b68844a2d6284294eb870f590c306dc2c8c6b200
-EXTRACT PASS archive=<QA>/b4green/kit/runkit.tar archive_sha256=509dd1ac27362d1fc46ebf89af11801a466b85b6e0becee907d813de6bb4fa9a dir=<QA>/b4green/kit/extracted members=5 verified=5 executed=0
-RC=0
-=== B5_GREEN_PLANTED_PATH_TAR_IGNORED ===
-EXTRACT_NOTE tool name=stat path=<QA>/bin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=sha256sum path=<QA>/bin/sha256sum owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=tar path=<QA>/bin/tar owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=mkdir path=<QA>/bin/mkdir owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=readlink path=<QA>/bin/readlink owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=find path=<QA>/bin/find owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=chmod path=<QA>/bin/chmod owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE member_constant count=6 source=MEMBERS
-EXTRACT_NOTE parent_bound path=<QA>/b5green/kit owner_uid=0 mode=755
-EXTRACT_NOTE enoent_calibration rc=1 template=stat: cannot stat '@PATH@': No such file or directory (os error 2)
-EXTRACT_archive path=<QA>/b5green/kit/runkit.tar bytes=10240
-EXTRACT_archive_sha256 actual=fb503db79b512ee82d89f77f01f37b34cdf728f57d8a45f5edd1ff1398e94f6d expected=fb503db79b512ee82d89f77f01f37b34cdf728f57d8a45f5edd1ff1398e94f6d
-EXTRACT_NOTE members_exact count=6 order=stage1
-EXTRACT_NOTE extract_dir_allocated path=<QA>/b5green/kit/extracted
-EXTRACT_NOTE extracted_files_readonly mode=0444
-EXTRACT_block name=RP0-LIB.sh sha256=cdb08f04ae0e78e18be2ac75fab6c56e0410345fa7846b8a399849a9d46007d5
-EXTRACT_block name=RP0-BOOTSTRAP.sh sha256=9014464ca51250132ac02b0406eb9d3cc9fba2ce5c214f25b790a22749386d2b
-EXTRACT_block name=RP6-P0.sh sha256=60b632bc0f914309c5451e928e81cd7a2fd8c2faceaa61a0f3f65151bd8a8cf0
-EXTRACT_block name=RP7-WPI-RO.sh sha256=05754d3bc0e44cce897bb7c47de2993cbb32077920296fbe321595c3fd304958
-EXTRACT_block name=run_p0.sh sha256=7b4d63257cdf3576b16a8124b68844a2d6284294eb870f590c306dc2c8c6b200
-EXTRACT_block name=run_ro.sh sha256=e58c4c5b619f684169973224e37e7e6594e56644a81c31bf7d2b23ce7bfb6b1a
-EXTRACT PASS archive=<QA>/b5green/kit/runkit.tar archive_sha256=fb503db79b512ee82d89f77f01f37b34cdf728f57d8a45f5edd1ff1398e94f6d dir=<QA>/b5green/kit/extracted members=6 verified=6 executed=0
-RC=0
-=== B6_GREEN_LISTING_HARD_FAILURE ===
-EXTRACT_NOTE tool name=stat path=<QA>/bin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=sha256sum path=<QA>/bin/sha256sum owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=tar_fail path=<QA>/bin/tar_fail owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=mkdir path=<QA>/bin/mkdir owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=readlink path=<QA>/bin/readlink owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=find path=<QA>/bin/find owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE tool name=chmod path=<QA>/bin/chmod owner_numeric=0:0 mode=755 resolution=pinned_absolute
-EXTRACT_NOTE member_constant count=6 source=MEMBERS
-EXTRACT_NOTE parent_bound path=<QA>/b6green/kit owner_uid=0 mode=755
-EXTRACT_NOTE enoent_calibration rc=1 template=stat: cannot stat '@PATH@': No such file or directory (os error 2)
-EXTRACT_archive path=<QA>/b6green/kit/runkit.tar bytes=10240
-EXTRACT_archive_sha256 actual=fb503db79b512ee82d89f77f01f37b34cdf728f57d8a45f5edd1ff1398e94f6d expected=fb503db79b512ee82d89f77f01f37b34cdf728f57d8a45f5edd1ff1398e94f6d
-EXTRACT_STOP reason=tar_type_listing_failed rc=2 detail=tar: fixture listing failure
+=== pinned tool copies (regular, root-owned, 0755) ===
+-rwxr-xr-x 0:0 /tmp/wpi_r3_f3/pinbin/cmp
+-rwxr-xr-x 0:0 /tmp/wpi_r3_f3/pinbin/find
+-rwxr-xr-x 0:0 /tmp/wpi_r3_f3/pinbin/mktemp
+...
 
-RC=3
-=== P0_LINK_RED_NO_SYMLINK_REFUSAL ===
-P0W_header base_run=QA runid=QA-p0 stage=p0
-P0W_block path=<QA>/p0lr/extracted/RP0-LIB.sh sha256=c40ac28f736f4a3d7749d1b878287e6a50fe8d5d8c4c083302b47470c1440da0
-P0W_block path=<QA>/p0lr/extracted/RP0-BOOTSTRAP.sh sha256=6cbb07150259415307765ebaefb92d2ca0cf9838bf12749bff93446dde30ddef
-P0W_block path=<QA>/p0lr/extracted/RP6-P0.sh sha256=01f706a17dc6787df311f7f6b04aa8577427c63e56f688d3406531a46664aeae
-P0W_evidence_open runid=QA-p0 stage=p0 dir=<QA>/p0lr/evidence/runkit/QA-p0 leaf=<QA>/p0lr/evidence/runkit/QA-p0/p0.log
-P0W_FIXTURE stdin=eof
-P0W done runid=QA-p0
-TAIL_EXECUTED
+=== RED  - ACCEPTED bytes, PATH-first sha256sum plant ===
+COMMAND: env -i PATH=/tmp/wpi_r3_f3/fakebin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin HOME=/root bash /tmp/wpi_r3_f3/accepted_ownersubst.sh /tmp/wpi_r3_f3/ev/RUNX RUNX
 RC=0
-=== P0_LINK_GREEN ===
-P0W_tool name=stat path=<QA>/bin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
-P0W_tool name=sha256sum path=<QA>/bin/sha256sum owner_numeric=0:0 mode=755 resolution=pinned_absolute
-P0W_header base_run=QA runid=QA-p0 stage=p0
-P0W_block path=<QA>/p0lg/extracted/RP0-LIB.sh sha256=c40ac28f736f4a3d7749d1b878287e6a50fe8d5d8c4c083302b47470c1440da0
-P0W_block path=<QA>/p0lg/extracted/RP0-BOOTSTRAP.sh sha256=6cbb07150259415307765ebaefb92d2ca0cf9838bf12749bff93446dde30ddef
-P0W_STOP reason=block_is_symlink path=<QA>/p0lg/extracted/RP6-P0.sh
+PRE_SHA=b6a98d9ce9a2d9149288fa3df42d377c3e42737afdcdaf714e33c0a100b51060
+POST_SHA=a8201c99853ef0b09daf750483e8cc6a6f5cbe97946d2e4b1c71a1165666dd3f
+MUTATED=yes
+PATH_PLANT_CONSULTED=yes calls=5
+--- stdout (CLOSE_DIGEST/CLOSE PASS/CLOSE_STOP lines) ---
+CLOSE_BINDING runid=RUNX dir=/tmp/wpi_r3_f3/ev/RUNX files=2
+CLOSE_DIGEST a8201c99853ef0b09daf750483e8cc6a6f5cbe97946d2e4b1c71a1165666dd3f  a.txt
+CLOSE_DIGEST f2c82decdd7181cf98945929a62598db7e6b477e11f6e0eb0ae97020eff151ad  b.txt
+CLOSE PASS runid=RUNX dir=/tmp/wpi_r3_f3/ev/RUNX files=2 wrote_into_evidence_tree=0
+--- stderr ---
+STDERR_BYTES=0
+
+=== G0   - DERIVED bytes exactly as shipped (/usr/bin pins), same plant ===
+COMMAND: env -i PATH=/tmp/wpi_r3_f3/fakebin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin HOME=/root bash /tmp/wpi_r3_f3/derived_ownersubst.sh /tmp/wpi_r3_f3/ev/RUNX RUNX
 RC=3
-=== P0_STDIN_RED_NO_DEV_NULL ===
-P0W_header base_run=QA runid=QA-p0 stage=p0
-P0W_block path=<QA>/p0sr/extracted/RP0-LIB.sh sha256=c40ac28f736f4a3d7749d1b878287e6a50fe8d5d8c4c083302b47470c1440da0
-P0W_block path=<QA>/p0sr/extracted/RP0-BOOTSTRAP.sh sha256=6cbb07150259415307765ebaefb92d2ca0cf9838bf12749bff93446dde30ddef
-P0W_block path=<QA>/p0sr/extracted/RP6-P0.sh sha256=01f706a17dc6787df311f7f6b04aa8577427c63e56f688d3406531a46664aeae
-P0W_evidence_open runid=QA-p0 stage=p0 dir=<QA>/p0sr/evidence/runkit/QA-p0 leaf=<QA>/p0sr/evidence/runkit/QA-p0/p0.log
-P0W_FIXTURE stdin=stolen
-RC=1
-=== P0_STDIN_GREEN ===
-P0W_tool name=stat path=<QA>/bin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
-P0W_tool name=sha256sum path=<QA>/bin/sha256sum owner_numeric=0:0 mode=755 resolution=pinned_absolute
-P0W_header base_run=QA runid=QA-p0 stage=p0
-P0W_block path=<QA>/p0sg/extracted/RP0-LIB.sh sha256=c40ac28f736f4a3d7749d1b878287e6a50fe8d5d8c4c083302b47470c1440da0
-P0W_block path=<QA>/p0sg/extracted/RP0-BOOTSTRAP.sh sha256=6cbb07150259415307765ebaefb92d2ca0cf9838bf12749bff93446dde30ddef
-P0W_block path=<QA>/p0sg/extracted/RP6-P0.sh sha256=01f706a17dc6787df311f7f6b04aa8577427c63e56f688d3406531a46664aeae
-P0W_evidence_open runid=QA-p0 stage=p0 dir=<QA>/p0sg/evidence/runkit/QA-p0 leaf=<QA>/p0sg/evidence/runkit/QA-p0/p0.log
-P0W_FIXTURE stdin=eof
-P0W done runid=QA-p0
-TAIL_EXECUTED
+PRE_SHA=b6a98d9ce9a2d9149288fa3df42d377c3e42737afdcdaf714e33c0a100b51060
+POST_SHA=b6a98d9ce9a2d9149288fa3df42d377c3e42737afdcdaf714e33c0a100b51060
+MUTATED=no
+PATH_PLANT_CONSULTED=no
+--- stdout (CLOSE_DIGEST/CLOSE PASS/CLOSE_STOP lines) ---
+--- stderr ---
+CLOSE_STOP reason=tool_is_symlink path=/usr/bin/stat
+STDERR_BYTES=53
+
+=== GREEN- DERIVED bytes, pins retargeted at regular root-owned copies, same plant ===
+COMMAND: env -i PATH=/tmp/wpi_r3_f3/fakebin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin HOME=/root bash /tmp/wpi_r3_f3/derived_green.sh /tmp/wpi_r3_f3/ev/RUNX RUNX
 RC=0
-=== P0_HIJACK_RED_PATH_RESOLVED_DIGEST_TOOL ===
-P0W_header base_run=QA runid=QA-p0 stage=p0
-P0W_block path=<QA>/p0hr/extracted/RP0-LIB.sh sha256=c40ac28f736f4a3d7749d1b878287e6a50fe8d5d8c4c083302b47470c1440da0
-P0W_block path=<QA>/p0hr/extracted/RP0-BOOTSTRAP.sh sha256=6cbb07150259415307765ebaefb92d2ca0cf9838bf12749bff93446dde30ddef
-P0W_block path=<QA>/p0hr/extracted/RP6-P0.sh sha256=01f706a17dc6787df311f7f6b04aa8577427c63e56f688d3406531a46664aeae
-P0W_evidence_open runid=QA-p0 stage=p0 dir=<QA>/p0hr/evidence/runkit/QA-p0 leaf=<QA>/p0hr/evidence/runkit/QA-p0/p0.log
-P0W_HIJACKED_BLOCK_EXECUTED
-P0W done runid=QA-p0
-TAIL_EXECUTED
+PRE_SHA=b6a98d9ce9a2d9149288fa3df42d377c3e42737afdcdaf714e33c0a100b51060
+POST_SHA=b6a98d9ce9a2d9149288fa3df42d377c3e42737afdcdaf714e33c0a100b51060
+MUTATED=no
+PATH_PLANT_CONSULTED=no
+--- stdout (CLOSE_DIGEST/CLOSE PASS/CLOSE_STOP lines) ---
+CLOSE_NOTE tool name=stat path=/tmp/wpi_r3_f3/pinbin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
+CLOSE_NOTE tool name=sha256sum path=/tmp/wpi_r3_f3/pinbin/sha256sum owner_numeric=0:0 mode=755 resolution=pinned_absolute
+CLOSE_NOTE tool name=mktemp path=/tmp/wpi_r3_f3/pinbin/mktemp owner_numeric=0:0 mode=755 resolution=pinned_absolute
+CLOSE_NOTE tool name=tr path=/tmp/wpi_r3_f3/pinbin/tr owner_numeric=0:0 mode=755 resolution=pinned_absolute
+CLOSE_NOTE tool name=readlink path=/tmp/wpi_r3_f3/pinbin/readlink owner_numeric=0:0 mode=755 resolution=pinned_absolute
+CLOSE_NOTE tool name=find path=/tmp/wpi_r3_f3/pinbin/find owner_numeric=0:0 mode=755 resolution=pinned_absolute
+CLOSE_NOTE tool name=sort path=/tmp/wpi_r3_f3/pinbin/sort owner_numeric=0:0 mode=755 resolution=pinned_absolute
+CLOSE_NOTE tool name=cmp path=/tmp/wpi_r3_f3/pinbin/cmp owner_numeric=0:0 mode=755 resolution=pinned_absolute
+CLOSE_NOTE tool name=rm path=/tmp/wpi_r3_f3/pinbin/rm owner_numeric=0:0 mode=755 resolution=pinned_absolute
+CLOSE_NOTE tool_digest_limit no_frozen_remote_tool_digest_can_be_known_before_host_contact
+CLOSE_BINDING runid=RUNX dir=/tmp/wpi_r3_f3/ev/RUNX files=2
+CLOSE_DIGEST b6a98d9ce9a2d9149288fa3df42d377c3e42737afdcdaf714e33c0a100b51060  a.txt
+CLOSE_DIGEST f2c82decdd7181cf98945929a62598db7e6b477e11f6e0eb0ae97020eff151ad  b.txt
+CLOSE PASS runid=RUNX dir=/tmp/wpi_r3_f3/ev/RUNX files=2 wrote_into_evidence_tree=0
+--- stderr ---
+STDERR_BYTES=0
+
+=== CTL  - DERIVED bytes, retargeted pins, clean PATH (no plant) ===
+COMMAND: env -i PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin HOME=/root bash /tmp/wpi_r3_f3/derived_green.sh /tmp/wpi_r3_f3/ev/RUNX RUNX
 RC=0
-=== P0_HIJACK_GREEN_PINNED_DIGEST_TOOL ===
-P0W_tool name=stat path=<QA>/bin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
-P0W_tool name=sha256sum path=<QA>/bin/sha256sum owner_numeric=0:0 mode=755 resolution=pinned_absolute
-P0W_header base_run=QA runid=QA-p0 stage=p0
-P0W_block path=<QA>/p0hg/extracted/RP0-LIB.sh sha256=c40ac28f736f4a3d7749d1b878287e6a50fe8d5d8c4c083302b47470c1440da0
-P0W_block path=<QA>/p0hg/extracted/RP0-BOOTSTRAP.sh sha256=6cbb07150259415307765ebaefb92d2ca0cf9838bf12749bff93446dde30ddef
-P0W_block path=<QA>/p0hg/extracted/RP6-P0.sh sha256=cdcd673443e627b7182fd0e2d6c7383a2882f16d86b7b4026bb3502241b45a61
-P0W_STOP reason=block_sha256_mismatch path=<QA>/p0hg/extracted/RP6-P0.sh actual=cdcd673443e627b7182fd0e2d6c7383a2882f16d86b7b4026bb3502241b45a61 expected=01f706a17dc6787df311f7f6b04aa8577427c63e56f688d3406531a46664aeae
-RC=3
-=== RO_LINK_RED_NO_SYMLINK_REFUSAL ===
-ROW_header base_run=QA runid=QA-ro stage=ro
-ROW_block path=<QA>/rolr/extracted/RP0-LIB.sh sha256=c40ac28f736f4a3d7749d1b878287e6a50fe8d5d8c4c083302b47470c1440da0
-ROW_block path=<QA>/rolr/extracted/RP0-BOOTSTRAP.sh sha256=6cbb07150259415307765ebaefb92d2ca0cf9838bf12749bff93446dde30ddef
-ROW_block path=<QA>/rolr/extracted/RP7-WPI-RO.sh sha256=6fa4e6b8674cf754b71ad2a9f791d1337fd643fe7479343d5ef7bb274999fdd9
-ROW_evidence_open runid=QA-ro stage=ro dir=<QA>/rolr/evidence/runkit/QA-ro leaf=<QA>/rolr/evidence/runkit/QA-ro/ro.log
-ROW_FIXTURE stdin=eof
-ROW done runid=QA-ro
-TAIL_EXECUTED
-RC=0
-=== RO_LINK_GREEN ===
-ROW_tool name=stat path=<QA>/bin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
-ROW_tool name=sha256sum path=<QA>/bin/sha256sum owner_numeric=0:0 mode=755 resolution=pinned_absolute
-ROW_header base_run=QA runid=QA-ro stage=ro
-ROW_block path=<QA>/rolg/extracted/RP0-LIB.sh sha256=c40ac28f736f4a3d7749d1b878287e6a50fe8d5d8c4c083302b47470c1440da0
-ROW_block path=<QA>/rolg/extracted/RP0-BOOTSTRAP.sh sha256=6cbb07150259415307765ebaefb92d2ca0cf9838bf12749bff93446dde30ddef
-ROW_STOP reason=block_is_symlink path=<QA>/rolg/extracted/RP7-WPI-RO.sh
-RC=3
-=== RO_STDIN_RED_NO_DEV_NULL ===
-ROW_header base_run=QA runid=QA-ro stage=ro
-ROW_block path=<QA>/rosr/extracted/RP0-LIB.sh sha256=c40ac28f736f4a3d7749d1b878287e6a50fe8d5d8c4c083302b47470c1440da0
-ROW_block path=<QA>/rosr/extracted/RP0-BOOTSTRAP.sh sha256=6cbb07150259415307765ebaefb92d2ca0cf9838bf12749bff93446dde30ddef
-ROW_block path=<QA>/rosr/extracted/RP7-WPI-RO.sh sha256=6fa4e6b8674cf754b71ad2a9f791d1337fd643fe7479343d5ef7bb274999fdd9
-ROW_evidence_open runid=QA-ro stage=ro dir=<QA>/rosr/evidence/runkit/QA-ro leaf=<QA>/rosr/evidence/runkit/QA-ro/ro.log
-ROW_FIXTURE stdin=stolen
-RC=1
-=== RO_STDIN_GREEN ===
-ROW_tool name=stat path=<QA>/bin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
-ROW_tool name=sha256sum path=<QA>/bin/sha256sum owner_numeric=0:0 mode=755 resolution=pinned_absolute
-ROW_header base_run=QA runid=QA-ro stage=ro
-ROW_block path=<QA>/rosg/extracted/RP0-LIB.sh sha256=c40ac28f736f4a3d7749d1b878287e6a50fe8d5d8c4c083302b47470c1440da0
-ROW_block path=<QA>/rosg/extracted/RP0-BOOTSTRAP.sh sha256=6cbb07150259415307765ebaefb92d2ca0cf9838bf12749bff93446dde30ddef
-ROW_block path=<QA>/rosg/extracted/RP7-WPI-RO.sh sha256=6fa4e6b8674cf754b71ad2a9f791d1337fd643fe7479343d5ef7bb274999fdd9
-ROW_evidence_open runid=QA-ro stage=ro dir=<QA>/rosg/evidence/runkit/QA-ro leaf=<QA>/rosg/evidence/runkit/QA-ro/ro.log
-ROW_FIXTURE stdin=eof
-ROW done runid=QA-ro
-TAIL_EXECUTED
-RC=0
-=== RO_HIJACK_RED_PATH_RESOLVED_DIGEST_TOOL ===
-ROW_header base_run=QA runid=QA-ro stage=ro
-ROW_block path=<QA>/rohr/extracted/RP0-LIB.sh sha256=c40ac28f736f4a3d7749d1b878287e6a50fe8d5d8c4c083302b47470c1440da0
-ROW_block path=<QA>/rohr/extracted/RP0-BOOTSTRAP.sh sha256=6cbb07150259415307765ebaefb92d2ca0cf9838bf12749bff93446dde30ddef
-ROW_block path=<QA>/rohr/extracted/RP7-WPI-RO.sh sha256=6fa4e6b8674cf754b71ad2a9f791d1337fd643fe7479343d5ef7bb274999fdd9
-ROW_evidence_open runid=QA-ro stage=ro dir=<QA>/rohr/evidence/runkit/QA-ro leaf=<QA>/rohr/evidence/runkit/QA-ro/ro.log
-ROW_HIJACKED_BLOCK_EXECUTED
-ROW done runid=QA-ro
-TAIL_EXECUTED
-RC=0
-=== RO_HIJACK_GREEN_PINNED_DIGEST_TOOL ===
-ROW_tool name=stat path=<QA>/bin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
-ROW_tool name=sha256sum path=<QA>/bin/sha256sum owner_numeric=0:0 mode=755 resolution=pinned_absolute
-ROW_header base_run=QA runid=QA-ro stage=ro
-ROW_block path=<QA>/rohg/extracted/RP0-LIB.sh sha256=c40ac28f736f4a3d7749d1b878287e6a50fe8d5d8c4c083302b47470c1440da0
-ROW_block path=<QA>/rohg/extracted/RP0-BOOTSTRAP.sh sha256=6cbb07150259415307765ebaefb92d2ca0cf9838bf12749bff93446dde30ddef
-ROW_block path=<QA>/rohg/extracted/RP7-WPI-RO.sh sha256=33f8c345a2163ff289c8f9e05c9817be79b6cbb937f10708c339db8c14e4416d
-ROW_STOP reason=block_sha256_mismatch path=<QA>/rohg/extracted/RP7-WPI-RO.sh actual=33f8c345a2163ff289c8f9e05c9817be79b6cbb937f10708c339db8c14e4416d expected=6fa4e6b8674cf754b71ad2a9f791d1337fd643fe7479343d5ef7bb274999fdd9
-RC=3
-=== P0_TOOL_IS_SYMLINK ===
-P0W_tool name=stat path=<QA>/bin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
-P0W_STOP reason=tool_is_symlink path=<QA>/bin/sha256sum_link
-RC=3
-=== P0_TOOL_OTHER_WRITABLE ===
-P0W_tool name=stat path=<QA>/bin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
-P0W_STOP reason=tool_other_writable mode=757 path=<QA>/bin/sha256sum_ww
-RC=3
-=== CLOSE_TRANSCRIPTS ===
-ACCEPTED_SOURCE 87157f0ea454df7c1f826a8c76a38f3045dd38efdd8fa347644f79251d3f3f0e bytes=7470
---- the only substitution ---
-31c31
-< EXPECT_OWNER='gatea:gatea'
----
-> EXPECT_OWNER='root:root'
---- end diff ---
---- CLOSE QA-P0 rc=0 ---
-CLOSE_NOTE evidence_dir_ok path=<QA>/ev/runkit/QA-P0 owner=root:root mode=700
-CLOSE_NOTE evidence_files count=3
-CLOSE_NOTE digest_set_stable passes=2
-CLOSE_BINDING runid=QA-P0 dir=<QA>/ev/runkit/QA-P0 files=3
-CLOSE_DIGEST_BEGIN runid=QA-P0
-CLOSE_DIGEST 07de973f6ae7b2a66fd2a15a7e0ebe8dc4bb12017e0244b455b1265c5ae4ad88  aaa.txt
-CLOSE_DIGEST 015c5fc8b0edea0bc16e1fe3419a9708c50bc707867bb7732a2fb51e287c9c8d  stage.log
-CLOSE_DIGEST c64f78ba4ccc75d4f32040c685f54ef2dae741cc011d3d890226ae469f50d823  sub/nested.txt
-CLOSE_DIGEST_END runid=QA-P0
-CLOSE_SIZE_BEGIN runid=QA-P0
-CLOSE_SIZE aaa.txt 30
-CLOSE_SIZE stage.log 32
-CLOSE_SIZE sub/nested.txt 26
-CLOSE_SIZE_END runid=QA-P0
-CLOSE_DIGEST_SET_SHA256 runid=QA-P0 b769956db7ad98dddf850b0291c6296c1040aaa3a1a4a835dd2d8351537093b6
-CLOSE PASS runid=QA-P0 dir=<QA>/ev/runkit/QA-P0 files=3 wrote_into_evidence_tree=0
---- CLOSE QA-RO rc=0 ---
-CLOSE_NOTE evidence_dir_ok path=<QA>/ev/runkit/QA-RO owner=root:root mode=700
-CLOSE_NOTE evidence_files count=3
-CLOSE_NOTE digest_set_stable passes=2
-CLOSE_BINDING runid=QA-RO dir=<QA>/ev/runkit/QA-RO files=3
-CLOSE_DIGEST_BEGIN runid=QA-RO
-CLOSE_DIGEST ddd722d5d1f8555bd270d293a4c93a48fbb9f020fc15cbc872e5c1afe877df0a  aaa.txt
-CLOSE_DIGEST 805e75943934221f79e0dffa3a261f10698052eb9c71a4feee1edb1ff54f7e8c  stage.log
-CLOSE_DIGEST d083afb3e182712cdd4d99dd57f9d7504f133568d2216a0dc09d4c2738889f09  sub/nested.txt
-CLOSE_DIGEST_END runid=QA-RO
-CLOSE_SIZE_BEGIN runid=QA-RO
-CLOSE_SIZE aaa.txt 30
-CLOSE_SIZE stage.log 32
-CLOSE_SIZE sub/nested.txt 26
-CLOSE_SIZE_END runid=QA-RO
-CLOSE_DIGEST_SET_SHA256 runid=QA-RO 2e384eab0b2b417cf27678a352e59053aa2d86f5ecd1b0d81929f1980fba86a3
-CLOSE PASS runid=QA-RO dir=<QA>/ev/runkit/QA-RO files=3 wrote_into_evidence_tree=0
-=== WPI_R2_SHELL_QA_COMPLETE (fixture root removed; only <QAOUT>/close remains) ===
+PRE_SHA=b6a98d9ce9a2d9149288fa3df42d377c3e42737afdcdaf714e33c0a100b51060
+POST_SHA=b6a98d9ce9a2d9149288fa3df42d377c3e42737afdcdaf714e33c0a100b51060
+MUTATED=no
+PATH_PLANT_CONSULTED=no
+--- stdout (CLOSE_DIGEST/CLOSE PASS/CLOSE_STOP lines) ---
+CLOSE_NOTE tool name=stat path=/tmp/wpi_r3_f3/pinbin/stat owner_numeric=0:0 mode=755 resolution=pinned_absolute
+CLOSE_NOTE tool name=sha256sum path=/tmp/wpi_r3_f3/pinbin/sha256sum owner_numeric=0:0 mode=755 resolution=pinned_absolute
+CLOSE_NOTE tool name=mktemp path=/tmp/wpi_r3_f3/pinbin/mktemp owner_numeric=0:0 mode=755 resolution=pinned_absolute
+CLOSE_NOTE tool name=tr path=/tmp/wpi_r3_f3/pinbin/tr owner_numeric=0:0 mode=755 resolution=pinned_absolute
+CLOSE_NOTE tool name=readlink path=/tmp/wpi_r3_f3/pinbin/readlink owner_numeric=0:0 mode=755 resolution=pinned_absolute
+CLOSE_NOTE tool name=find path=/tmp/wpi_r3_f3/pinbin/find owner_numeric=0:0 mode=755 resolution=pinned_absolute
+CLOSE_NOTE tool name=sort path=/tmp/wpi_r3_f3/pinbin/sort owner_numeric=0:0 mode=755 resolution=pinned_absolute
+CLOSE_NOTE tool name=cmp path=/tmp/wpi_r3_f3/pinbin/cmp owner_numeric=0:0 mode=755 resolution=pinned_absolute
+CLOSE_NOTE tool name=rm path=/tmp/wpi_r3_f3/pinbin/rm owner_numeric=0:0 mode=755 resolution=pinned_absolute
+CLOSE_NOTE tool_digest_limit no_frozen_remote_tool_digest_can_be_known_before_host_contact
+CLOSE_BINDING runid=RUNX dir=/tmp/wpi_r3_f3/ev/RUNX files=2
+CLOSE_DIGEST b6a98d9ce9a2d9149288fa3df42d377c3e42737afdcdaf714e33c0a100b51060  a.txt
+CLOSE_DIGEST f2c82decdd7181cf98945929a62598db7e6b477e11f6e0eb0ae97020eff151ad  b.txt
+CLOSE PASS runid=RUNX dir=/tmp/wpi_r3_f3/ev/RUNX files=2 wrote_into_evidence_tree=0
+--- stderr ---
+STDERR_BYTES=0
+
+=== cleanup ===
+removed /tmp/wpi_r3_f3
 ```
 
-### 3.1 What the set-1 transcript establishes
+### A.3 what it establishes
 
-- **A1** — the repaired allocator completes on a clean sandbox: five parent
-  components bound numerically, the ENOENT template calibrated *from the pinned
-  binary in that run* (`… No such file or directory (os error 2)` — the uutils
-  wording, which no hardcoded GNU sentence would have matched), four directories
-  allocated and each asserted immediately after creation. `DIRS_CREATED=4`.
-- **A2** — Codex F4, executed both ways. The pinned `stat` returns a mixed
-  EACCES+ENOENT diagnostic for the base path. Round-1 bytes classify it `absent`,
-  create **4** directories and exit 0 (`SETUP PASS`). Repaired bytes STOP with
-  `path_probe_multiline` and create **0**.
-- **A3** — the harder variant: one line carrying both classes. Repaired bytes
-  STOP with `path_probe_unclassified` because the diagnostic is not equal, as a
-  whole string, to the calibrated template. `DIRS_CREATED=0`.
-- **A4** — Codex F5 first half. Round-1 bytes create **4** directories through a
-  parent symlink and only then notice (`path_not_canonical`). Repaired bytes
-  refuse at `parent_not_canonical` with **0** created — refusal before mutation.
-- **A5** — Codex F5 second half, the `[AUDIT2 A2-F3]` shape. The pinned `stat`
-  renders the created base as `root:root` while its numeric owner is `1000:1000`.
-  Round-1 bytes compare the *name* and return `SETUP PASS` rc 0. Repaired bytes
-  return `owner_numeric=1000:1000 expected=0:0 … owner_name=root:root` rc 1 —
-  numeric identity, name diagnostic only.
-- **A6** — the delivered draft state: `EXPECT_UID`/`EXPECT_GID` are
-  `<PIN-AT-FREEZE>`, so the script STOPs `identity_pin_unfilled` and creates
-  nothing. Fail-closed before freeze.
-- **A7** — a world-writable ancestor is refused (`parent_other_writable
-  mode=777`), 0 created.
-- **B1** — the repaired extractor completes: seven tools admitted by pinned
-  absolute path with numeric ownership, `member_constant count=6 source=MEMBERS`,
-  container bound, `EXTRACT PASS … members=6 verified=6 executed=0`.
-- **B2** — Codex F6, and it reproduces his transcript exactly. A listing helper
-  writes a warning to stderr and returns the correct list at rc 0. Round-1 bytes
-  print `FAKE_TAR_WARNING` twice and still reach `EXTRACT PASS … rc 0`. Repaired
-  bytes STOP at `tar_type_listing_diagnostics` **before** any member name is
-  parsed; the `detail=` field carries the complete merged stream.
-- **B3** — the completion class. A listing that ends without a record separator
-  is accepted by round-1 bytes (command substitution had already destroyed the
-  evidence) and STOPs the repaired bytes at
-  `tar_name_listing_unterminated_final_record`.
-- **B4** — Codex F7 / Claude F5, the count literals. With `MEMBERS` reduced to
-  five and a genuine five-member archive: round-1 bytes fail
-  `tar_member_count=5 expected=6` — the literal has drifted from the constant —
-  while the repaired bytes derive the count and reach
-  `EXTRACT PASS … members=5 verified=5`. No count literal survives anywhere.
-- **B5** — a `tar` planted earlier on `PATH` is simply not consulted; the run
-  passes normally.
-- **B6** — a listing that exits non-zero STOPs at `tar_type_listing_failed rc=2`.
-- **P0/RO_LINK_*, P0/RO_STDIN_*** — the two round-1 wrapper guarantees still
-  hold, re-executed rather than restated: deleting the `-L` refusal admits the
-  symlink (rc 0, `TAIL_EXECUTED`), and dropping `</dev/null` on the target source
-  lets the child eat the wrapper stream (`stdin=stolen`, rc 1, tail lost).
-- **P0/RO_HIJACK_*** — Codex F3 against the wrappers, reproducing his
-  `P0_HIJACKED_BLOCK_EXECUTED`. A `sha256sum` planted on `PATH` reports the
-  frozen digest for a block whose bytes were replaced. Round-1 bytes execute the
-  replaced block at rc 0. Repaired bytes resolve `sha256sum` by pinned absolute
-  path, compute the real digest, and STOP `block_sha256_mismatch` rc 3.
-- **P0_TOOL_IS_SYMLINK / P0_TOOL_OTHER_WRITABLE** — the tool predicate itself has
-  a red state: a symlinked pin and a `0757` pin are both refused at rc 3.
-- **CLOSE_TRANSCRIPTS** — the accepted `remote_close_tree.sh` (7470 B,
-  `87157f0e…`) run over two real evidence trees, with its one-line substitution
-  printed as a diff. These transcripts are the remote half that fixture set 2
-  binds against; nothing about them is synthesised.
+- **RED, the accepted bytes.** `PATH_PLANT_CONSULTED=yes calls=5`, `MUTATED=yes`,
+  `RC=0`, and the emitted record is
+  `CLOSE PASS runid=RUNX … files=2 wrote_into_evidence_tree=0` with
+  `CLOSE_DIGEST a8201c99…  a.txt` — the **post-mutation** digest. The accepted
+  script's own closing sentence is false under the delivered execution environment,
+  and the operator-side binder would have bound those post-mutation bytes without any
+  discrepancy, because remote and local both describe the mutated file.
+- **G0, the derived bytes exactly as they ship.** `CLOSE_STOP reason=tool_is_symlink
+  path=/usr/bin/stat`, rc 3, nothing mutated, plant never consulted. Deviation D-3 is
+  real on this kernel and the direction is safe.
+- **GREEN, the derived bytes with the pins retargeted.** `PATH_PLANT_CONSULTED=no`,
+  `MUTATED=no`, rc 0, and `CLOSE_DIGEST b6a98d9c…  a.txt` — the true pre-value. Nine
+  `CLOSE_NOTE tool …  resolution=pinned_absolute` lines and the explicit
+  `CLOSE_NOTE tool_digest_limit …` line precede the record.
+- **CTL** reproduces GREEN with no plant on `PATH` at all, so the GREEN result is not
+  an artefact of the plant being present but inert.
 
-## 4. Fixture set 2 — operator side (verbatim)
+---
 
-`wpi_r2_runner_qa.ps1`:
+## 3. Fixture B — the allocation parent's mount object (F4)
+
+Codex's round-2 F4 scenario, executed: a bind mount at the same literal canonical path
+presenting the same numeric owner and the same mode. `readlink -f` answers with the
+expected path and every component predicate passes.
+
+### B.1 `f4_mount.sh` (verbatim)
+
+```bash
+#!/usr/bin/env bash
+# F4 falsification: a bind mount at the same literal canonical path, presenting
+# the expected owner and mode, receives the four allocations.
+#   RED   = the audited round-2 bytes (9ef4437d, remote_setup_wpi.sh,
+#           12340 B / e91bae08...), which carry no mount predicate at all.
+#   GREEN = the round-3 bytes in the working tree.
+# No host is contacted. Everything happens under /wpi_r3_f4.
+set -u
+
+DRAFT=/mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT
+R2=/mnt/c/Users/Public/wpi_r3/r2/remote_setup_wpi.sh
+R3="$DRAFT/remote_setup_wpi.sh"
+
+QA=/wpi_r3_f4
+umount "$QA/home/gatea" 2>/dev/null || true
+rm -rf "$QA"; mkdir -p "$QA"; chown 0:0 "$QA"; chmod 0755 "$QA"
+
+echo "=== source identities ==="
+sha256sum "$R2" "$R3"
+wc -c "$R2" "$R3"
+echo "EUID=$EUID"
+
+PINBIN="$QA/pinbin"; mkdir -p "$PINBIN"
+for t in stat mkdir readlink; do
+    cp -L "/usr/bin/$t" "$PINBIN/$t"; chown 0:0 "$PINBIN/$t"; chmod 0755 "$PINBIN/$t"
+done
+
+PARENT="$QA/home/gatea"
+PREFIX="$PARENT/wpi_staging_"
+
+# ------------------------------------------------------------------ substitutions
+# Each anchor is asserted present before it is replaced, so a missed anchor
+# throws instead of silently producing a false RED or GREEN.
+subst() {   # subst <src> <dst> <mountpin-or-KEEP>
+    local src="$1" dst="$2" mountpin="$3" a b
+    cp "$src" "$dst"
+    while IFS='|' read -r a b; do
+        [ -n "$a" ] || continue
+        grep -qF -- "$a" "$dst" || { echo "ANCHOR_NOT_FOUND [$a] in $dst"; exit 90; }
+        python3 - "$dst" "$a" "$b" <<'PY'
+import sys
+p,a,b=sys.argv[1],sys.argv[2],sys.argv[3]
+d=open(p,encoding='utf-8').read()
+assert a in d
+open(p,'w',encoding='utf-8').write(d.replace(a,b))
+PY
+    done <<EOF
+EXPECT_PREFIX='/home/gatea/wpi_staging_'|EXPECT_PREFIX='$PREFIX'
+EXPECT_PARENT='/home/gatea'|EXPECT_PARENT='$PARENT'
+EXPECT_UID='<PIN-AT-FREEZE>'|EXPECT_UID='0'
+EXPECT_GID='<PIN-AT-FREEZE>'|EXPECT_GID='0'
+TOOL_STAT='/usr/bin/stat'|TOOL_STAT='$PINBIN/stat'
+TOOL_MKDIR='/usr/bin/mkdir'|TOOL_MKDIR='$PINBIN/mkdir'
+TOOL_READLINK='/usr/bin/readlink'|TOOL_READLINK='$PINBIN/readlink'
+EOF
+    if [ "$mountpin" != 'KEEP' ]; then
+        grep -qF "EXPECT_PARENT_MOUNT='<PIN-AT-FREEZE>'" "$dst" || { echo "ANCHOR_NOT_FOUND mountpin in $dst"; exit 91; }
+        python3 - "$dst" "$mountpin" <<'PY'
+import sys
+p,v=sys.argv[1],sys.argv[2]
+a="EXPECT_PARENT_MOUNT='<PIN-AT-FREEZE>'"
+d=open(p,encoding='utf-8').read(); assert a in d
+open(p,'w',encoding='utf-8').write(d.replace(a,"EXPECT_PARENT_MOUNT='%s'" % v))
+PY
+    fi
+}
+
+fresh_parent() {
+    umount "$PARENT" 2>/dev/null || true
+    rm -rf "$QA/home" "$QA/decoy"
+    mkdir -p "$PARENT"; chown 0:0 "$QA/home" "$PARENT"; chmod 0755 "$QA/home"; chmod 0755 "$PARENT"
+    # The decoy presents the SAME owner and the SAME mode as the accepted object.
+    mkdir -p "$QA/decoy"; chown 0:0 "$QA/decoy"; chmod 0755 "$QA/decoy"
+}
+
+count_dirs() { find "$1" -mindepth 1 -type d 2>/dev/null | wc -l; }
+
+# The attested projection of the ACCEPTED object, taken while nothing is
+# substituted. This is what the deploy channel would attest before op 01.
+fresh_parent
+ATTESTED="$(awk -v p="$PARENT" '
+  { dev=$3; root=$4; mp=$5; sep=0;
+    for(i=7;i<=NF;i++) if($i=="-"){sep=i;break}
+    fstype=$(sep+1); src=$(sep+2);
+    covers=0;
+    if(mp=="/") covers=1; else if(mp==p) covers=1; else if(index(p, mp "/")==1) covers=1;
+    if(covers){ l=length(mp);
+      if(l>best){best=l;bmp=mp;shared=1;out="device=" dev " root=" root " mount_point=" mp " fstype=" fstype " source=" src}
+      else if(l==best && mp==bmp){shared++;out="device=" dev " root=" root " mount_point=" mp " fstype=" fstype " source=" src} } }
+  END{ print out " shared_mount_point_records=" shared }' /proc/self/mountinfo)"
+echo
+echo "ATTESTED_PROJECTION=[$ATTESTED]"
+
+subst "$R2" "$QA/r2_setup.sh" KEEP
+subst "$R3" "$QA/r3_setup_attested.sh" "$ATTESTED"
+subst "$R3" "$QA/r3_setup_unfilled.sh" KEEP
+
+run_arm() {   # run_arm <label> <script> <bindmount yes/no>
+    local label="$1" script="$2" bind="$3" rc=0 out
+    fresh_parent
+    if [ "$bind" = yes ]; then
+        mount --bind "$QA/decoy" "$PARENT" || { echo "BIND_MOUNT_UNAVAILABLE"; return; }
+    fi
+    echo
+    echo "=== $label ==="
+    echo "COMMAND: bash $script $PREFIX QA1"
+    echo "PARENT_METADATA: $(stat -c 'owner=%u:%g mode=%a canonical=%n' "$PARENT")  readlink -f => $(readlink -f "$PARENT")"
+    out="$(bash "$script" "${PREFIX}QA1" 2>"$QA/err.txt")" || rc=$?
+    echo "RC=$rc"
+    echo "DIRS_CREATED_IN_VISIBLE_PARENT=$(count_dirs "$PARENT")"
+    if [ "$bind" = yes ]; then
+        umount "$PARENT" 2>/dev/null || true
+        echo "DIRS_CREATED_IN_DECOY=$(count_dirs "$QA/decoy")"
+        echo "DIRS_CREATED_IN_ACCEPTED_OBJECT=$(count_dirs "$PARENT")"
+    fi
+    echo "--- stdout tail ---"
+    printf '%s\n' "$out" | grep -E '^(SETUP PASS|SETUP_NOTE parent_mount|SETUP_NOTE allocated|SETUP_NOTE base_absent)' | head -12
+    echo "--- stderr ---"
+    cat "$QA/err.txt"
+}
+
+run_arm "RED   round-2 bytes, decoy bind-mounted over the accepted parent" "$QA/r2_setup.sh" yes
+run_arm "GREEN round-3 bytes, same decoy bind mount, attested pin" "$QA/r3_setup_attested.sh" yes
+run_arm "CTL   round-3 bytes, no substitution of the mount, attested pin" "$QA/r3_setup_attested.sh" no
+run_arm "PIN   round-3 bytes exactly as shipped (pin still unfilled)" "$QA/r3_setup_unfilled.sh" no
+
+# ---------------------------------------------------- the mountinfo reader arms
+# Pattern 7: a reader has three exit conditions, not one. MOUNTINFO is retargeted
+# at a fixture file (declared substitution, anchor asserted) so the malformed and
+# empty sources can actually be presented.
+mi_arm() {   # mi_arm <label> <fixture-content-writer> <expect-note>
+    local label="$1" writer="$2"
+    local script="$QA/r3_setup_mi.sh" fixture="$QA/mi.txt"
+    fresh_parent
+    "$writer" "$fixture"
+    subst "$R3" "$script" "$ATTESTED"
+    grep -qF "MOUNTINFO='/proc/self/mountinfo'" "$script" || { echo "ANCHOR_NOT_FOUND MOUNTINFO"; exit 94; }
+    sed -i "s|^MOUNTINFO='/proc/self/mountinfo'\$|MOUNTINFO='$fixture'|" "$script"
+    echo
+    echo "=== $label ==="
+    echo "FIXTURE: $(wc -c < "$fixture") bytes, $(wc -l < "$fixture") complete records"
+    local rc=0
+    bash "$script" "${PREFIX}QA1" >/dev/null 2>"$QA/err.txt" || rc=$?
+    echo "RC=$rc"
+    echo "DIRS_CREATED=$(count_dirs "$PARENT")"
+    cat "$QA/err.txt"
+}
+w_empty()   { : > "$1"; }
+w_short()   { printf '36 35 8:48 / /\n' > "$1"; }
+w_nosep()   { printf '36 35 8:48 / / rw,relatime shared:1 ext4 /dev/sdd rw\n' > "$1"; }
+w_nofinal() { { printf '36 35 8:48 / /wpi_r3_f4/nowhere rw,relatime - ext4 /dev/x rw\n'
+                printf '36 35 8:48 / / rw,relatime - ext4 /dev/sdd rw'; } > "$1"; }
+w_nocover() { printf '36 35 8:48 / /somewhere/else rw,relatime - ext4 /dev/sdd rw\n' > "$1"; }
+
+mi_arm "N1 mountinfo source yields no record at all" w_empty
+mi_arm "N2 mountinfo record too short to carry a projection" w_short
+mi_arm "N3 mountinfo record with no optional-field separator" w_nosep
+mi_arm "N4 populated final record carrying NO trailing newline (must still be read)" w_nofinal
+mi_arm "N5 no record covers the allocation parent" w_nocover
+
+echo
+echo "=== cleanup ==="
+umount "$PARENT" 2>/dev/null || true
+rm -rf "$QA"
+echo "removed $QA"; ls -d "$QA" 2>&1 | head -1
+```
+
+### B.2 transcript (verbatim)
+
+```text
+﻿=== source identities ===
+e91bae0827f16cbefe2091980c0a049583bd8ce4173f99e802b2d54a224c29a8  /mnt/c/Users/Public/wpi_r3/r2/remote_setup_wpi.sh
+c0b7caa7f856db6b6d8aad4d407d42d450064a9e55a9cbbacf464f28e97b8d74  /mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/remote_setup_wpi.sh
+12340 /mnt/c/Users/Public/wpi_r3/r2/remote_setup_wpi.sh
+17775 /mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/remote_setup_wpi.sh
+30115 total
+EUID=0
+
+ATTESTED_PROJECTION=[device=8:48 root=/ mount_point=/ fstype=ext4 source=/dev/sdd shared_mount_point_records=1]
+
+=== RED   round-2 bytes, decoy bind-mounted over the accepted parent ===
+COMMAND: bash /wpi_r3_f4/r2_setup.sh /wpi_r3_f4/home/gatea/wpi_staging_ QA1
+PARENT_METADATA: owner=0:0 mode=755 canonical=/wpi_r3_f4/home/gatea  readlink -f => /wpi_r3_f4/home/gatea
+RC=0
+DIRS_CREATED_IN_VISIBLE_PARENT=4
+DIRS_CREATED_IN_DECOY=4
+DIRS_CREATED_IN_ACCEPTED_OBJECT=0
+--- stdout tail ---
+SETUP_NOTE base_absent path=/wpi_r3_f4/home/gatea/wpi_staging_QA1
+SETUP_NOTE allocated path=/wpi_r3_f4/home/gatea/wpi_staging_QA1
+SETUP_NOTE allocated path=/wpi_r3_f4/home/gatea/wpi_staging_QA1/evidence
+SETUP_NOTE allocated path=/wpi_r3_f4/home/gatea/wpi_staging_QA1/evidence/runkit
+SETUP_NOTE allocated path=/wpi_r3_f4/home/gatea/wpi_staging_QA1/kit
+SETUP PASS base=/wpi_r3_f4/home/gatea/wpi_staging_QA1 evidence=/wpi_r3_f4/home/gatea/wpi_staging_QA1/evidence runkit=/wpi_r3_f4/home/gatea/wpi_staging_QA1/evidence/runkit kit=/wpi_r3_f4/home/gatea/wpi_staging_QA1/kit owner_numeric=0:0 owner_name=gatea:gatea mode=700
+--- stderr ---
+
+=== GREEN round-3 bytes, same decoy bind mount, attested pin ===
+COMMAND: bash /wpi_r3_f4/r3_setup_attested.sh /wpi_r3_f4/home/gatea/wpi_staging_ QA1
+PARENT_METADATA: owner=0:0 mode=755 canonical=/wpi_r3_f4/home/gatea  readlink -f => /wpi_r3_f4/home/gatea
+RC=3
+DIRS_CREATED_IN_VISIBLE_PARENT=0
+DIRS_CREATED_IN_DECOY=0
+DIRS_CREATED_IN_ACCEPTED_OBJECT=0
+--- stdout tail ---
+SETUP_NOTE parent_mount_observed path=/wpi_r3_f4/home/gatea device=8:48 root=/wpi_r3_f4/decoy mount_point=/wpi_r3_f4/home/gatea fstype=ext4 source=/dev/sdd shared_mount_point_records=1
+--- stderr ---
+SETUP_STOP reason=parent_mount_differs path=/wpi_r3_f4/home/gatea observed=[device=8:48 root=/wpi_r3_f4/decoy mount_point=/wpi_r3_f4/home/gatea fstype=ext4 source=/dev/sdd shared_mount_point_records=1] attested=[device=8:48 root=/ mount_point=/ fstype=ext4 source=/dev/sdd shared_mount_point_records=1]
+
+=== CTL   round-3 bytes, no substitution of the mount, attested pin ===
+COMMAND: bash /wpi_r3_f4/r3_setup_attested.sh /wpi_r3_f4/home/gatea/wpi_staging_ QA1
+PARENT_METADATA: owner=0:0 mode=755 canonical=/wpi_r3_f4/home/gatea  readlink -f => /wpi_r3_f4/home/gatea
+RC=0
+DIRS_CREATED_IN_VISIBLE_PARENT=4
+--- stdout tail ---
+SETUP_NOTE parent_mount_observed path=/wpi_r3_f4/home/gatea device=8:48 root=/ mount_point=/ fstype=ext4 source=/dev/sdd shared_mount_point_records=1
+SETUP_NOTE parent_mount_bound path=/wpi_r3_f4/home/gatea attestation=deploy_channel_before_op_01
+SETUP_NOTE base_absent path=/wpi_r3_f4/home/gatea/wpi_staging_QA1
+SETUP_NOTE allocated path=/wpi_r3_f4/home/gatea/wpi_staging_QA1
+SETUP_NOTE allocated path=/wpi_r3_f4/home/gatea/wpi_staging_QA1/evidence
+SETUP_NOTE allocated path=/wpi_r3_f4/home/gatea/wpi_staging_QA1/evidence/runkit
+SETUP_NOTE allocated path=/wpi_r3_f4/home/gatea/wpi_staging_QA1/kit
+SETUP PASS base=/wpi_r3_f4/home/gatea/wpi_staging_QA1 evidence=/wpi_r3_f4/home/gatea/wpi_staging_QA1/evidence runkit=/wpi_r3_f4/home/gatea/wpi_staging_QA1/evidence/runkit kit=/wpi_r3_f4/home/gatea/wpi_staging_QA1/kit owner_numeric=0:0 owner_name=gatea:gatea mode=700
+--- stderr ---
+
+=== PIN   round-3 bytes exactly as shipped (pin still unfilled) ===
+COMMAND: bash /wpi_r3_f4/r3_setup_unfilled.sh /wpi_r3_f4/home/gatea/wpi_staging_ QA1
+PARENT_METADATA: owner=0:0 mode=755 canonical=/wpi_r3_f4/home/gatea  readlink -f => /wpi_r3_f4/home/gatea
+RC=3
+DIRS_CREATED_IN_VISIBLE_PARENT=0
+--- stdout tail ---
+--- stderr ---
+SETUP_STOP reason=mount_pin_unfilled field=EXPECT_PARENT_MOUNT
+
+=== N1 mountinfo source yields no record at all ===
+FIXTURE: 0 bytes, 0 complete records
+RC=3
+DIRS_CREATED=0
+SETUP_STOP reason=mountinfo_no_records path=/wpi_r3_f4/mi.txt
+
+=== N2 mountinfo record too short to carry a projection ===
+FIXTURE: 15 bytes, 1 complete records
+RC=3
+DIRS_CREATED=0
+SETUP_STOP reason=mountinfo_record_short fields=5 record=[36 35 8:48 / /]
+
+=== N3 mountinfo record with no optional-field separator ===
+FIXTURE: 53 bytes, 1 complete records
+RC=3
+DIRS_CREATED=0
+SETUP_STOP reason=mountinfo_record_no_separator record=[36 35 8:48 / / rw,relatime shared:1 ext4 /dev/sdd rw]
+
+=== N4 populated final record carrying NO trailing newline (must still be read) ===
+FIXTURE: 106 bytes, 1 complete records
+RC=0
+DIRS_CREATED=4
+
+=== N5 no record covers the allocation parent ===
+FIXTURE: 60 bytes, 1 complete records
+RC=3
+DIRS_CREATED=0
+SETUP_STOP reason=mountinfo_no_covering_mount path=/wpi_r3_f4/home/gatea records=1
+
+=== cleanup ===
+removed /wpi_r3_f4
+ls: cannot access '/wpi_r3_f4': No such file or directory
+```
+
+### B.3 what it establishes
+
+- **RED, the audited round-2 bytes.** `PARENT_METADATA: owner=0:0 mode=755` and
+  `readlink -f => /wpi_r3_f4/home/gatea` — indistinguishable from the accepted object
+  — then `SETUP PASS`, rc 0, `DIRS_CREATED_IN_DECOY=4`,
+  `DIRS_CREATED_IN_ACCEPTED_OBJECT=0`. All four allocations landed in the substituted
+  object. This is the non-symlink half of "the leaf is not the path", executed.
+- **GREEN, the round-3 bytes.** `SETUP_STOP reason=parent_mount_differs`, rc 3, zero
+  directories anywhere. The observed projection differs from the attested one in
+  exactly the field a metadata check cannot see: `root=/wpi_r3_f4/decoy` against
+  `root=/`.
+- **CTL** allocates normally when nothing is substituted, so the predicate is not
+  simply refusing everything: `parent_mount_bound … attestation=deploy_channel_before_op_01`,
+  rc 0, four directories.
+- **PIN**, the file exactly as it ships: `SETUP_STOP reason=mount_pin_unfilled
+  field=EXPECT_PARENT_MOUNT`, rc 3, zero directories. The attestation is a missing
+  input, refused at rc 3 before any path is probed.
+- **N1–N5, the reader's exit conditions.** No record at all → `mountinfo_no_records`;
+  a record too short to project → `mountinfo_record_short fields=5`; a record with no
+  optional-field separator → `mountinfo_record_no_separator`; **a populated final
+  record carrying no trailing newline → rc 0 and four directories**, i.e. the record
+  was consumed rather than dropped, which a reader handling only clean EOF would have
+  discarded into a false `mountinfo_no_covering_mount`; and a mount table where
+  nothing covers the parent → `mountinfo_no_covering_mount`, rc 3. Every failing arm
+  creates zero directories.
+
+---
+
+## 4. Fixture C — outcome classification through the runner (F1)
+
+Whole-plan arms over the real 12-row plan shape, driven through the runner's own
+`Invoke-ExternalProcess`, plus two arms driving the **real** pinned `ssh.exe`.
+
+### C.1 `f1_runner_qa.ps1` (verbatim)
 
 ```powershell
-# WP-I transport round 2 - transport_runner.ps1 RED/GREEN fixture set (standalone).
-#
-#   GREEN = the current repaired file.
-#   RED   = the SAME file with exactly the repair reverted (a deliberate D026
-#           mutation whose anchor text is asserted present before it is applied,
-#           so a silently-missing anchor throws instead of producing a false RED).
-#
-# Prerequisite: run wpi_r2_shell_qa.sh first; it leaves the real
-# remote_close_tree.sh transcripts and trees under C:\Users\Public\wpi_r2_qa\close.
-# Run:  powershell.exe -NoProfile -ExecutionPolicy Bypass -File wpi_r2_runner_qa.ps1
-# It contacts no host (only 127.0.0.1 probe fixtures), touches no repository
-# file, allocates no RUNID, and removes its scratch root at the end.
+# WP-I transport round 3 - transport_runner.ps1 RED/GREEN fixture set.
+#   GREEN = the current repaired file in the working tree.
+#   RED   = the audited round-2 bytes, read from commit 9ef4437d
+#           (45066 B / 2f076ed9...), i.e. the exact identity both round-2
+#           re-audits rejected. The RED arms are the audited bytes, not a
+#           reconstruction.
+# It contacts no host. The only sockets attempted are loopback with a closed
+# port. It allocates no RUNID, touches no repository file, and removes its
+# scratch root at the end.
+Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
-$SRC   = 'C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPI_BLOCKS_DRAFT\transport_runner.ps1'
-$ACCPT = 'C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\02_PREREG'
-$CLOSE = 'C:\Users\Public\wpi_r2_qa\close'
-$WORK  = 'C:\Users\Public\wpi_r2_qa\cases'
-$CMD   = 'C:\Windows\System32\cmd.exe'
-$CMDSHA= (Get-FileHash -LiteralPath $CMD -Algorithm SHA256).Hash.ToLowerInvariant()
-$HDR   = "op_id`tkind`trun_when`texpect_rc`tcwd`tstdin_file`tstdin_sha256`targv`tpurpose"
-if (Test-Path -LiteralPath $WORK) { Remove-Item -LiteralPath $WORK -Recurse -Force }
-[void](New-Item -ItemType Directory -Path $WORK)
-Write-Host ('QA_RUNNER_UNDER_TEST ' + (Get-FileHash -LiteralPath $SRC -Algorithm SHA256).Hash.ToLowerInvariant())
-Write-Host ('QA_PROGRAM_PIN_SUBSTITUTION ssh,scp -> ' + $CMD + ' ' + $CMDSHA)
 
-function Write-Lf([string]$p,[string[]]$l) { [System.IO.File]::WriteAllText($p, (($l -join "`n") + "`n"), (New-Object System.Text.UTF8Encoding($false))) }
-function Sha([string]$p) { return (Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant() }
-function Cut-Block([string[]]$lines,[string]$startsWith) {
-    $o = New-Object System.Collections.ArrayList; $k = $false
-    foreach ($l in $lines) { if ($k) { if ($l -eq ')') { $k = $false }; continue }
-        if ($l.StartsWith($startsWith)) { $k = $true; continue }; [void]$o.Add($l) }
-    return @($o)
+$DRAFT = 'C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPI_BLOCKS_DRAFT'
+$R3SRC = Join-Path $DRAFT 'transport_runner.ps1'
+$R2SRC = 'C:\Users\Public\wpi_r3\r2\transport_runner.ps1'
+$QA    = 'C:\Users\Public\wpi_r3\qa'
+
+function Sha([string] $p) { return (Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant() }
+function WriteLf([string] $p, [string] $t) {
+    [System.IO.File]::WriteAllText($p, ($t -replace "`r`n", "`n"), (New-Object System.Text.UTF8Encoding($false)))
 }
-function New-QaRunner {
-    param([string]$qa,[string]$planSha,[hashtable]$mut,[hashtable]$const,[string]$pinnedBlock)
-    $lines = @(Get-Content -LiteralPath $SRC)
-    $lines = Cut-Block $lines '$PINNED_FILES = @('
-    $lines = Cut-Block $lines '$PROGRAM_PINS = @('
-    $c = @{ BASE_RUN="'QA'"; CONFIRM_TOKEN="'QA-EXECUTE'"; PREREG_DIR="'$qa'";
-            RUNKIT_DIR="'$qa\01_RUNKIT'"; ACCEPTED_DIR="'$qa\accepted'";
-            RECORD_ROOT="'$qa\record'"; PLAN_SHA256="'$planSha'" }
-    if ($const) { foreach ($k in $const.Keys) { $c[$k] = $const[$k] } }
-    $out = New-Object System.Collections.ArrayList
-    foreach ($l in $lines) {
-        $done = $false
-        foreach ($k in @('BASE_RUN','CONFIRM_TOKEN','PREREG_DIR','RUNKIT_DIR','ACCEPTED_DIR','RECORD_ROOT','PLAN_SHA256')) {
-            if ($l -match ('^\$' + $k + '\s*=')) { [void]$out.Add('$' + $k + ' = ' + $c[$k]); $done = $true; break } }
-        if ($done) { continue }
-        if ($l -match "^\`$STDIN_ROOTS = ") {
-            [void]$out.Add("`$STDIN_ROOTS = @{ 'PREREG' = `$PREREG_DIR; 'ACCEPTED' = `$ACCEPTED_DIR }")
-            if ($pinnedBlock) { [void]$out.Add($pinnedBlock) } else { [void]$out.Add("`$PINNED_FILES = @()") }
-            [void]$out.Add("`$PROGRAM_PINS = @( @{ Name = 'ssh'; Path = '$CMD'; Sha = '$CMDSHA' }, @{ Name = 'scp'; Path = '$CMD'; Sha = '$CMDSHA' } )")
-            continue
-        }
-        [void]$out.Add($l)
-    }
-    $text = ($out -join "`n") + "`n"
-    if ($mut) { foreach ($k in $mut.Keys) {
-        if (-not $text.Contains($k)) { throw ('MUTATION_ANCHOR_NOT_FOUND: ' + $k.Substring(0,[Math]::Min(60,$k.Length))) }
-        $text = $text.Replace($k, $mut[$k]) } }
-    # The QA copy carries the operator profile path, which is non-ASCII on this
-    # host, so the COPY (never the deliverable) is written with a BOM.
-    $p = Join-Path $qa 'transport_runner.ps1'
-    [System.IO.File]::WriteAllText($p, $text, (New-Object System.Text.UTF8Encoding($true)))
+
+Write-Host '=== source identities ==='
+Write-Host ('R3 ' + (Sha $R3SRC) + ' ' + (Get-Item $R3SRC).Length + ' ' + $R3SRC)
+Write-Host ('R2 ' + (Sha $R2SRC) + ' ' + (Get-Item $R2SRC).Length + ' ' + $R2SRC)
+Write-Host ('CMD ' + (Sha 'C:\Windows\System32\cmd.exe'))
+Write-Host ('SSH ' + (Sha 'C:\Windows\System32\OpenSSH\ssh.exe'))
+
+if (Test-Path -LiteralPath $QA) { Remove-Item -LiteralPath $QA -Recurse -Force }
+foreach ($d in @('prereg','kit','accepted','arms','cfg','rec')) { [void](New-Item -ItemType Directory -Path (Join-Path $QA $d) -Force) }
+$PREREG = Join-Path $QA 'prereg'; $KIT = Join-Path $QA 'kit'; $ACC = Join-Path $QA 'accepted'
+$ARMS = Join-Path $QA 'arms'; $CFG = Join-Path $QA 'cfg'; $REC = Join-Path $QA 'rec\WPI_TRANSPORT_WPIQA'
+
+# fixture stdin payloads (small, so the pipe write completes before the child exits)
+foreach ($n in @('setup.sh','extract.sh','p0.sh','ro.sh','close.sh')) { WriteLf (Join-Path $PREREG $n) ('# fixture ' + $n) }
+WriteLf (Join-Path $KIT 'runkit.tar') 'fixture-kit'
+WriteLf (Join-Path $CFG 'identity') 'fixture-identity'
+WriteLf (Join-Path $CFG 'known_hosts') 'fixture-known-hosts'
+WriteLf (Join-Path $CFG 'known_hosts_global') 'fixture-known-hosts-global'
+
+# ---------------------------------------------------------------- arm programs
+# Each .cmd is the operation's scripted behaviour: what it prints and what it
+# returns. Nothing else about the operation is faked.
+function NewArm([string] $name, [string[]] $body) {
+    $p = Join-Path $ARMS ($name + '.cmd')
+    [System.IO.File]::WriteAllText($p, (($body -join "`r`n") + "`r`n"), (New-Object System.Text.ASCIIEncoding))
     return $p
 }
-function Invoke-Runner([string]$label,[string]$runner,[string]$filter,[switch]$DryRun) {
-    Write-Host ("=== " + $label + " ===")
-    $prev = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
-    try {
-        $out = if ($DryRun) { & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $runner 2>&1 }
-               else { & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $runner -Execute -Confirm QA-EXECUTE 2>&1 }
-        $rc = $LASTEXITCODE
-        $out | ForEach-Object { "$_" } | Where-Object { -not $filter -or $_ -match $filter } | ForEach-Object { Write-Host $_ }
-    } catch { Write-Host ('DRIVER_CAUGHT ' + $_.Exception.GetType().Name); $rc = $LASTEXITCODE }
-    $ErrorActionPreference = $prev
-    Write-Host ("RUNNER_RC=" + $rc)
-}
-$KEY = '^TR_(HEADER|MARKER_GATE|STOP|PLAN_READ|PLAN_ROWS|STDIN|PINNED|PROGRAM|ENV_POLICY|OP_BEGIN|OP_SKIPPED|OP_END|OP_DEVIANT|OP_NOT_EVALUABLE|FIRST_FAIL|ADDITIONAL_MISMATCH|RESULT|RUN_CLASS|RUN |DRY_RUN|RECORD_ROOT)|^  \| TR_BIND|^Test-Path|^\+|^ *\+ *Category'
+[void](NewArm 'stop3'      @('@echo off','echo SETUP_STOP reason=fixture_setup_could_not_evaluate 1>&2','exit /b 3'))
+[void](NewArm 'closefail1' @('@echo off','echo CLOSE_FAIL reason=evidence_dir_absent path=fixture 1>&2','exit /b 1'))
+[void](NewArm 'scpfail1'   @('@echo off','echo scp: fixture transfer failed 1>&2','exit /b 1'))
+[void](NewArm 'rc255'      @('@echo off','exit /b 255'))
+[void](NewArm 'rc2'        @('@echo off','echo bash: fixture: command not found 1>&2','exit /b 2'))
+[void](NewArm 'rc0silent'  @('@echo off','exit /b 0'))
+[void](NewArm 'rc0marked'  @('@echo off','echo SETUP PASS base=fixture','exit /b 0'))
+[void](NewArm 'rc1marked'  @('@echo off','echo EXTRACT_FAIL reason=archive_sha256_mismatch 1>&2','exit /b 1'))
+[void](NewArm 'scpok'      @('@echo off','exit /b 0'))
 
-# ---------------------------------------------------------- mutation anchors
-$M_LATCH_OLD = @'
-            $capDigest = $matches[1]; $capRel = $matches[2]
-            if ($state -ne 'digests') { return [pscustomobject]@{Ok=$false;Reason='remote_digest_out_of_order'} }
-            if ($capRel -notmatch '^[A-Za-z0-9._/-]+$' -or $capRel.StartsWith('/') -or $capRel -match '(^|/)\.\.?(?:/|$)') { return [pscustomobject]@{Ok=$false;Reason='remote_digest_path_unsafe'} }
-            if ($digests.ContainsKey($capRel)) { return [pscustomobject]@{Ok=$false;Reason='remote_digest_duplicate'} }
-            $digests.Add($capRel,$capDigest); continue
-'@
-$M_LATCH_NEW = @'
-            if ($state -ne 'digests') { return [pscustomobject]@{Ok=$false;Reason='remote_digest_out_of_order'} }
-            $rel=$matches[2]
-            if ($rel -notmatch '^[A-Za-z0-9._/-]+$' -or $rel.StartsWith('/') -or $rel -match '(^|/)\.\.?(?:/|$)') { return [pscustomobject]@{Ok=$false;Reason='remote_digest_path_unsafe'} }
-            if ($digests.ContainsKey($rel)) { return [pscustomobject]@{Ok=$false;Reason='remote_digest_duplicate'} }
-            $digests.Add($rel,$matches[1]); continue
-'@
-$M_GRAM_OLD = @'
-if ($anyDeviant) {
-    Emit ('TR_RUN FAIL base_run=' + $BASE_RUN + ' first_fail=' + $firstMismatch + ' first_not_evaluable=' + $firstNotEvaluable + ' record=' + $RECORD_ROOT)
-    $exitCode = 1
-} elseif ($anyNotEvaluable) {
-'@
-$M_GRAM_NEW = @'
-if ($anyDeviant -or $anyNotEvaluable) {
-    Emit ('TR_RUN FAIL base_run=' + $BASE_RUN + ' first_fail=' + $firstMismatch + ' record=' + $RECORD_ROOT)
-    $exitCode = 1
-} elseif ($false) {
-'@
-$M_SEQ_OLD  = "    if (`$op.RunWhen -eq 'sequence_ok' -and -not `$sequenceOk) {"
-$M_SEQ_NEW  = "    if (`$false) {"
-$M_PROG_OLD = "    `$script:ProgramByName[`$prog.Name] = `$prog.Path"
-$M_PROG_NEW = "    `$script:ProgramByName[`$prog.Name] = (Get-Command `$prog.Name -ErrorAction SilentlyContinue).Source"
-$M_TRAP_OLD = @'
-trap {
-    $detail = 'unknown'
-    try { $detail = $_.Exception.GetType().FullName } catch { }
-    try { Emit ('TR_STOP reason=runner_unhandled_error detail=' + $detail) }
-    catch { Write-Host ('TR_STOP reason=runner_unhandled_error detail=' + $detail) }
-    try { Flush-Log } catch { }
-    exit 3
-}
-'@
-$M_TRAP_NEW  = '# (top-level trap removed for this RED arm)'
-$M_MARK_OLD  = "Assert-MarkerFree 'RECORD_ROOT' `$RECORD_ROOT"
-$M_MARK_NEW  = '# (RECORD_ROOT marker gate removed for this RED arm)'
+# ------------------------------------------------------------------ QA freeze
+# One block, inserted immediately after $UNFILLED_MARKERS - the last constant in
+# BOTH runner versions - so every frozen constant is filled exactly as Stage 1
+# would fill it. The anchor is asserted present before the insertion, so a
+# missed anchor throws instead of producing a false arm.
+$ANCHOR = "`$UNFILLED_MARKERS = @('<ALLOCATE-AT-DISPATCH>', '<PIN-AT-FREEZE>')"
 
-# ============================== A. section 7 binding over a real CLOSE record
-function New-BindCase([string]$name,[hashtable]$mut,[scriptblock]$tweak) {
-    $qa = Join-Path $WORK $name
-    [void](New-Item -ItemType Directory -Path $qa)
-    Copy-Item -LiteralPath (Join-Path $CLOSE 'tree\QA-P0') -Destination (Join-Path $qa 'tree\QA-P0') -Recurse
-    Copy-Item -LiteralPath (Join-Path $CLOSE 'QA-P0.stdout') -Destination (Join-Path $qa 'close_QA-P0.txt')
-    Write-Lf (Join-Path $qa 'qa_stdin.txt') @('qa stdin payload')
-    if ($tweak) { & $tweak $qa }
-    $rec = Join-Path $qa 'record'
-    Write-Lf (Join-Path $qa 'TRANSPORT_PLAN.tsv') @(
-        $HDR,
-        ("07`tssh_stdin`talways`t0`t$qa`tPREREG:qa_stdin.txt`t" + (Sha (Join-Path $qa 'qa_stdin.txt')) + "`tssh /c type close_QA-P0.txt`temit the closed-tree transcript"),
-        ("09`tscp_down`talways`t0`t$rec\evidence`t-`t-`tscp /c xcopy ..\..\tree\QA-P0 QA-P0\ /E /I /Q /Y`tretrieve the closed tree"),
-        ("11`tlocal_bind`talways`t0`t$rec`t-`t-`tlocal_bind 07 09 evidence\QA-P0`tbind the remote and local digest sets"))
-    return (New-QaRunner $qa (Sha (Join-Path $qa 'TRANSPORT_PLAN.tsv')) $mut $null $null)
-}
-Invoke-Runner 'A1_GREEN_BYTE_EQUAL_PAIR_BINDS'        (New-BindCase 'a1' $null $null) $KEY
-Invoke-Runner 'A2_RED_MATCHES_CLOBBER_AS_DELIVERED'   (New-BindCase 'a2' @{ $M_LATCH_OLD = $M_LATCH_NEW } $null) $KEY
-Invoke-Runner 'A3_GREEN_LOCAL_BYTE_CHANGED_MUST_FAIL' (New-BindCase 'a3' $null { param($qa) Add-Content -LiteralPath (Join-Path $qa 'tree\QA-P0\aaa.txt') -Value 'tamper' }) $KEY
-Invoke-Runner 'A4_GREEN_EXTRA_LOCAL_FILE_MUST_FAIL'   (New-BindCase 'a4' $null { param($qa) Write-Lf (Join-Path $qa 'tree\QA-P0\extra.txt') @('extra') }) $KEY
-Invoke-Runner 'A5_GREEN_MISSING_LOCAL_FILE_MUST_FAIL' (New-BindCase 'a5' $null { param($qa) Remove-Item -LiteralPath (Join-Path $qa 'tree\QA-P0\sub\nested.txt') }) $KEY
-Invoke-Runner 'A6_GREEN_TAMPERED_SET_SHA_MUST_STOP'   (New-BindCase 'a6' $null {
-    param($qa); $p = Join-Path $qa 'close_QA-P0.txt'
-    [System.IO.File]::WriteAllText($p, ([System.IO.File]::ReadAllText($p) -replace 'CLOSE_DIGEST_SET_SHA256 runid=QA-P0 [0-9a-f]{64}', ('CLOSE_DIGEST_SET_SHA256 runid=QA-P0 ' + ('a'*64))), (New-Object System.Text.UTF8Encoding($false))) }) $KEY
-
-# ---- close-record grammar arms (each must STOP, never FAIL, never PASS) -----
-$grammar = @(
-    @{ n='B1_runid_mismatch';    f={ param($t) $t -replace 'CLOSE_BINDING runid=QA-P0','CLOSE_BINDING runid=QA-XX' } },
-    @{ n='B2_duplicate_digest';  f={ param($t) $t -replace '(CLOSE_DIGEST [0-9a-f]{64}  aaa\.txt\n)','$1$1' } },
-    @{ n='B3_unsafe_path';       f={ param($t) $t -replace '  aaa\.txt','  ../aaa.txt' } },
-    @{ n='B4_out_of_order';      f={ param($t) $t -replace 'CLOSE_DIGEST_BEGIN runid=QA-P0\n','' } },
-    @{ n='B5_count_mismatch';    f={ param($t) $t -replace 'files=3','files=4' } },
-    @{ n='B6_truncated_record';  f={ param($t) $t -replace 'CLOSE PASS runid=QA-P0[^\n]*\n','' } },
-    @{ n='B7_unknown_record';    f={ param($t) $t + "CLOSE_SOMETHING_ELSE runid=QA-P0`n" } }
+function New-RunnerCopy([string] $src, [string] $dst, [string] $planSha, [string] $programBlock, [string] $optionBlock) {
+    $text = [System.IO.File]::ReadAllText($src)
+    if (-not $text.Contains($ANCHOR)) { throw ('MUTATION_ANCHOR_NOT_FOUND: $UNFILLED_MARKERS in ' + $src) }
+    $qa = @"
+$ANCHOR
+# ---- QA freeze block (fixture only) ----
+`$BASE_RUN      = 'WPIQA'
+`$CONFIRM_TOKEN = 'WPIQA-EXECUTE'
+`$PREREG_DIR    = '$PREREG'
+`$RUNKIT_DIR    = '$KIT'
+`$ACCEPTED_DIR  = '$ACC'
+`$RECORD_ROOT   = '$REC'
+`$PLAN_SHA256   = '$planSha'
+`$PINNED_FILES  = @( @{ Path = (Join-Path `$RUNKIT_DIR 'runkit.tar'); Sha = '$(Sha (Join-Path $KIT 'runkit.tar'))' } )
+`$STDIN_ROOTS   = @{ 'PREREG' = `$PREREG_DIR; 'ACCEPTED' = `$ACCEPTED_DIR }
+$programBlock
+`$SSH_IDENTITY_FILE          = '$CFG\identity'
+`$SSH_IDENTITY_SHA           = '$(Sha (Join-Path $CFG 'identity'))'
+`$SSH_USER_KNOWN_HOSTS       = '$CFG\known_hosts'
+`$SSH_USER_KNOWN_HOSTS_SHA   = '$(Sha (Join-Path $CFG 'known_hosts'))'
+`$SSH_GLOBAL_KNOWN_HOSTS     = '$CFG\known_hosts_global'
+`$SSH_GLOBAL_KNOWN_HOSTS_SHA = '$(Sha (Join-Path $CFG 'known_hosts_global'))'
+`$CONFIG_PINS = @(
+    @{ Name = 'ssh_identity'; Path = `$SSH_IDENTITY_FILE; Sha = `$SSH_IDENTITY_SHA; Print = `$false; Why = 'fixture' },
+    @{ Name = 'user_known_hosts'; Path = `$SSH_USER_KNOWN_HOSTS; Sha = `$SSH_USER_KNOWN_HOSTS_SHA; Print = `$true; Why = 'fixture' },
+    @{ Name = 'global_known_hosts'; Path = `$SSH_GLOBAL_KNOWN_HOSTS; Sha = `$SSH_GLOBAL_KNOWN_HOSTS_SHA; Print = `$true; Why = 'fixture' }
 )
-foreach ($g in $grammar) {
-    $fn = $g.f
-    Invoke-Runner ('B_' + $g.n) (New-BindCase $g.n $null {
-        param($qa); $p = Join-Path $qa 'close_QA-P0.txt'
-        [System.IO.File]::WriteAllText($p, (& $fn ([System.IO.File]::ReadAllText($p))), (New-Object System.Text.UTF8Encoding($false))) }) '  \| TR_BIND|^TR_RUN |^TR_OP_END id=11'
+$optionBlock
+# ---- end QA freeze block ----
+"@
+    [System.IO.File]::WriteAllText($dst, $text.Replace($ANCHOR, $qa), (New-Object System.Text.UTF8Encoding($false)))
 }
 
-# ============================================ C. outcome grammar and ordering
-function New-PlanCase([string]$name,[string[]]$rows,[hashtable]$mut,[hashtable]$const,[string]$pinned,[scriptblock]$prep) {
-    $qa = Join-Path $WORK $name
-    if (-not (Test-Path -LiteralPath $qa)) { [void](New-Item -ItemType Directory -Path $qa) }
-    if ($prep) { & $prep $qa }
-    Write-Lf (Join-Path $qa 'TRANSPORT_PLAN.tsv') (@($HDR) + ($rows | ForEach-Object { $_.Replace('@QA@',$qa) }))
-    return (New-QaRunner $qa (Sha (Join-Path $qa 'TRANSPORT_PLAN.tsv')) $mut $const $pinned)
+$CMDSHA = Sha 'C:\Windows\System32\cmd.exe'
+$PROG_CMD = @"
+`$PROGRAM_PINS  = @(
+    @{ Name = 'ssh'; Path = 'C:\Windows\System32\cmd.exe'; Sha = '$CMDSHA' },
+    @{ Name = 'scp'; Path = 'C:\Windows\System32\cmd.exe'; Sha = '$CMDSHA' }
+)
+"@
+$PROG_SSH = @"
+`$PROGRAM_PINS  = @(
+    @{ Name = 'ssh'; Path = 'C:\Windows\System32\OpenSSH\ssh.exe'; Sha = '$(Sha 'C:\Windows\System32\OpenSSH\ssh.exe')' },
+    @{ Name = 'scp'; Path = 'C:\Windows\System32\OpenSSH\scp.exe'; Sha = '$(Sha 'C:\Windows\System32\OpenSSH\scp.exe')' }
+)
+"@
+$OPT_CMD = "`$SSH_PINNED_OPTIONS = @('/d','/c')"
+$K_OPTIONS = @(
+    '-F','none','-i',($CFG + '\identity'),
+    '-o','BatchMode=yes','-o','StrictHostKeyChecking=yes','-o','IdentitiesOnly=yes','-o','ConnectTimeout=20',
+    '-o',('UserKnownHostsFile=' + $CFG + '\known_hosts'),
+    '-o',('GlobalKnownHostsFile=' + $CFG + '\known_hosts_global'),
+    '-o','ProxyCommand=none','-o','ControlMaster=no','-o','ControlPath=none','-o','PermitLocalCommand=no',
+    '-o','ForwardAgent=no','-o','ForwardX11=no','-o','ClearAllForwardings=yes'
+)
+$OPT_K = "`$SSH_PINNED_OPTIONS = @('" + ($K_OPTIONS -join "','") + "')"
+
+# ------------------------------------------------------------------- plans
+$HDR = "op_id`tkind`trun_when`texpect_rc`tcwd`tstdin_file`tstdin_sha256`targv`tpurpose"
+function StdinSha([string] $leaf) { return (Sha (Join-Path $PREREG $leaf)) }
+function Row([string] $id, [string] $kind, [string] $when, [int] $rc, [string] $cwd, [string] $stdin, [string] $argv, [string] $purpose) {
+    $sha = '-'
+    if ($stdin -ne '-') { $sha = StdinSha ($stdin.Split(':')[1]) }
+    return ($id + "`t" + $kind + "`t" + $when + "`t" + $rc + "`t" + $cwd + "`t" + $stdin + "`t" + $sha + "`t" + $argv + "`t" + $purpose)
 }
-$stopRow = @("01`ttcp_probe`tsequence_ok`t0`t@QA@`t-`t-`ttcp_probe 127.0.0.1 99999 20000`ta probe with an out-of-range port")
-Invoke-Runner 'C1_GREEN_CHILD_STOP_IS_RUN_STOP'          (New-PlanCase 'c1' $stopRow $null $null $null $null) $KEY
-Invoke-Runner 'C2_RED_STOP_ROLLED_INTO_FAIL_AS_DELIVERED' (New-PlanCase 'c2' $stopRow @{ $M_GRAM_OLD = $M_GRAM_NEW } $null $null $null) $KEY
-$listener = New-Object System.Net.Sockets.TcpListener([System.Net.IPAddress]::Loopback, 0); $listener.Start()
-$open = $listener.LocalEndpoint.Port
-Invoke-Runner 'C3_GREEN_DEVIANT_PLUS_LATER_STOP_IS_FAIL' (New-PlanCase 'c3' @(
-    "01`ttcp_probe`tsequence_ok`t0`t@QA@`t-`t-`ttcp_probe 127.0.0.1 $open 20000`ta connected listener is observed deviant state",
-    "02`ttcp_probe`talways`t0`t@QA@`t-`t-`ttcp_probe 127.0.0.1 99999 20000`ta not-evaluable cleanup probe") $null $null $null $null) $KEY
-$listener.Stop()
-$seqRows = @(
-    "01`ttcp_probe`tsequence_ok`t1`t@QA@`t-`t-`ttcp_probe 127.0.0.1 9 20000`texpect_rc 1 while a closed port classifies rc 0",
-    "02`ttcp_probe`tsequence_ok`t0`t@QA@`t-`t-`ttcp_probe 127.0.0.1 9 20000`tthis later sequence op must be skipped",
-    "03`ttcp_probe`talways`t0`t@QA@`t-`t-`ttcp_probe 127.0.0.1 9 20000`tthis always op must still run",
-    "04`ttcp_probe`talways`t0`t@QA@`t-`t-`ttcp_probe 127.0.0.1 9 20000`tthis always op must still run")
-Invoke-Runner 'C4_RED_SKIP_PREDICATE_MUTATED' (New-PlanCase 'c4r' $seqRows @{ $M_SEQ_OLD = $M_SEQ_NEW } $null $null $null) '^TR_OP_BEGIN|^TR_OP_SKIPPED|^TR_RESULT|^TR_RUN '
-Invoke-Runner 'C5_GREEN_FIRST_FAIL_ORDERING'  (New-PlanCase 'c4g' $seqRows $null $null $null $null) '^TR_OP_BEGIN|^TR_OP_SKIPPED|^TR_RESULT|^TR_RUN '
+function A([string] $n) { return ('/d /c ' + (Join-Path $ARMS ($n + '.cmd'))) }
 
-# ===================================== D. program identity and child environment
-$fake = Join-Path $WORK 'fakebin'; [void](New-Item -ItemType Directory -Path $fake)
-Write-Lf (Join-Path $fake 'ssh.cmd') @('@echo off','echo FAKE_SSH_EXECUTED','exit /b 0')
-function New-ProgCase([string]$name,[string]$argv,[hashtable]$mut) {
-    $qa = Join-Path $WORK $name; [void](New-Item -ItemType Directory -Path $qa)
-    Write-Lf (Join-Path $qa 'qa_stdin.txt') @('qa stdin payload')
-    Write-Lf (Join-Path $qa 'TRANSPORT_PLAN.tsv') @($HDR,
-        ("01`tssh_stdin`tsequence_ok`t0`t$qa`tPREREG:qa_stdin.txt`t" + (Sha (Join-Path $qa 'qa_stdin.txt')) + "`t$argv`tprove which program the runner starts"))
-    return (New-QaRunner $qa (Sha (Join-Path $qa 'TRANSPORT_PLAN.tsv')) $mut $null $null)
-}
-$saved = $env:PATH; $env:PATH = $fake + ';' + $env:PATH; $env:PYTHONPATH = 'C:\attacker\pythonpath'
-Invoke-Runner 'D1_RED_PATH_RESOLVED_PROGRAM'      (New-ProgCase 'd1' 'ssh /c echo PINNED_PROGRAM_RAN' @{ $M_PROG_OLD = $M_PROG_NEW }) '^TR_PROGRAM|^TR_RUN '
-Write-Host ('D1_op01_stdout: ' + ((Get-Content -Raw -LiteralPath (Join-Path $WORK 'd1\record\ops\01.stdout')) -replace "`r?`n",' '))
-Invoke-Runner 'D2_GREEN_PINNED_ABSOLUTE_PROGRAM'  (New-ProgCase 'd2' 'ssh /c echo PINNED_PROGRAM_RAN' $null) '^TR_PROGRAM|^TR_RUN '
-Write-Host ('D2_op01_stdout: ' + ((Get-Content -Raw -LiteralPath (Join-Path $WORK 'd2\record\ops\01.stdout')) -replace "`r?`n",' '))
-Invoke-Runner 'D3_GREEN_CHILD_ENVIRONMENT'        (New-ProgCase 'd3' 'ssh /c set' $null) '^TR_ENV_POLICY|^TR_RUN '
-Write-Host '--- the child environment, from ops/01.stdout (PYTHONPATH was set in the parent) ---'
-Get-Content -LiteralPath (Join-Path $WORK 'd3\record\ops\01.stdout')
-$env:PATH = $saved; Remove-Item Env:PYTHONPATH -ErrorAction SilentlyContinue
-
-# ================================================ E. marker gate and top-level trap
-$anyRow = @("01`ttcp_probe`tsequence_ok`t0`t@QA@`t-`t-`ttcp_probe 127.0.0.1 9 20000`tany op")
-$unf = "'C:\WPI_ARTIFACTS\WPI_TRANSPORT_<ALLOCATE-AT-DISPATCH>'"
-Invoke-Runner 'E1_GREEN_UNFILLED_ALLOCATION_MARKER' (New-PlanCase 'e1' $anyRow $null @{ RECORD_ROOT = $unf } $null $null) $KEY
-Invoke-Runner 'E2_RED_NO_MARKER_GATE_NO_TRAP'       (New-PlanCase 'e2' $anyRow @{ $M_MARK_OLD = $M_MARK_NEW; $M_TRAP_OLD = $M_TRAP_NEW } @{ RECORD_ROOT = $unf } $null $null) $KEY
-
-# ======================================= F. kit location, stdin roots, plan grammar
-$prepKit = { param($qa)
-    [void](New-Item -ItemType Directory -Path (Join-Path $qa '01_RUNKIT') -Force)
-    Write-Lf (Join-Path $qa '01_RUNKIT\runkit.tar') @('THE FROZEN KIT ARCHIVE')
-    Write-Lf (Join-Path $qa 'runkit.tar') @('THE DECOY ARCHIVE BESIDE THE RUNNER') }
-$probe = Join-Path $WORK '_probe'; [void](New-Item -ItemType Directory -Path $probe); & $prepKit $probe
-$kitSha = Sha (Join-Path $probe '01_RUNKIT\runkit.tar'); $decoySha = Sha (Join-Path $probe 'runkit.tar')
-Write-Host ("F_kit_archive_sha256=$kitSha"); Write-Host ("F_decoy_archive_sha256=$decoySha")
-$kitRows = @("02`tscp_up`tsequence_ok`t0`t@QA@\01_RUNKIT`t-`t-`tscp runkit.tar host:/kit/runkit.tar`tupload the frozen kit archive")
-Invoke-Runner 'F1_GREEN_KIT_ARCHIVE_RESOLVES_UNDER_01_RUNKIT' (New-PlanCase 'f1' $kitRows $null $null ("`$PINNED_FILES = @(@{ Path = (Join-Path `$RUNKIT_DIR 'runkit.tar'); Sha = '$kitSha' })") $prepKit) $KEY -DryRun
-Invoke-Runner 'F2_GREEN_DECOY_BESIDE_THE_RUNNER_IS_NEVER_SELECTED' (New-PlanCase 'f2' $kitRows $null $null ("`$PINNED_FILES = @(@{ Path = (Join-Path `$RUNKIT_DIR 'runkit.tar'); Sha = '$decoySha' })") $prepKit) $KEY -DryRun
-$closeSha = Sha (Join-Path $ACCPT 'remote_close_tree.sh')
-Write-Host ("F_accepted_remote_close_tree_sha256=$closeSha")
-$acceptedRows = @(
-    "07`tssh_stdin`talways`t0`t@QA@`tACCEPTED:remote_close_tree.sh`t$closeSha`tssh /c echo op07`tclose the P0 evidence tree",
-    "08`tssh_stdin`talways`t0`t@QA@`tACCEPTED:remote_close_tree.sh`t$closeSha`tssh /c echo op08`tclose the RO evidence tree")
-Invoke-Runner 'F3_GREEN_ACCEPTED_ROOT_RESOLUTION'  (New-PlanCase 'f3' $acceptedRows $null @{ ACCEPTED_DIR = ("'" + $ACCPT + "'") } $null $null) $KEY -DryRun
-Invoke-Runner 'F4_GREEN_ACCEPTED_FILE_ABSENT_STOPS' (New-PlanCase 'f4' $acceptedRows $null $null $null $null) $KEY -DryRun
-Invoke-Runner 'F5_GREEN_WRONG_ROOT_TOKEN_STOPS'     (New-PlanCase 'f5' @("07`tssh_stdin`talways`t0`t@QA@`tPREREG:remote_close_tree.sh`t$closeSha`tssh /c echo op07`troot token points at the draft directory") $null $null $null $null) $KEY -DryRun
-$zeros = '0000000000000000000000000000000000000000000000000000000000000000'
-Invoke-Runner 'F6_GREEN_SSH_STDIN_WITHOUT_FILE'  (New-PlanCase 'f6' @("01`tssh_stdin`tsequence_ok`t0`t@QA@`t-`t-`tssh /c echo x`tssh_stdin with no stdin file") $null $null $null $null) '^TR_STOP' -DryRun
-Invoke-Runner 'F7_GREEN_KIND_PROGRAM_MISMATCH'   (New-PlanCase 'f7' @("01`tssh_stdin`tsequence_ok`t0`t@QA@`tPREREG:x.txt`t$zeros`tscp /c echo x`tkind ssh_stdin but argv scp") $null $null $null $null) '^TR_STOP' -DryRun
-Invoke-Runner 'F8_GREEN_CWD_NOT_PREREGISTERED'   (New-PlanCase 'f8' @("01`ttcp_probe`tsequence_ok`t0`tC:\Windows`t-`t-`ttcp_probe 127.0.0.1 9 20000`tcwd outside the preregistered set") $null $null $null $null) '^TR_STOP' -DryRun
-Invoke-Runner 'F9_GREEN_STDIN_ON_NON_SSH_KIND'   (New-PlanCase 'f9' @("01`tscp_down`talways`t0`t@QA@`tPREREG:x.txt`t$zeros`tscp /c echo x`tstdin file on a non-ssh kind") $null $null $null $null) '^TR_STOP' -DryRun
-
-# ===================================================== G. plan reader completion
-function Run-PlanBytes([string]$label,[byte[]]$extra,[switch]$Empty,[switch]$Dir) {
-    $r = New-PlanCase $label $anyRow $null $null $null $null
-    $plan = Join-Path (Split-Path -Parent $r) 'TRANSPORT_PLAN.tsv'
-    if ($Empty) { [System.IO.File]::WriteAllBytes($plan, @()) }
-    elseif ($Dir) { Remove-Item -LiteralPath $plan; [void](New-Item -ItemType Directory -Path $plan) }
-    elseif ($extra) { [System.IO.File]::WriteAllBytes($plan, ([System.IO.File]::ReadAllBytes($plan) + $extra)) }
-    Invoke-Runner $label $r '^TR_PLAN_READ|^TR_STOP' -DryRun
-}
-Run-PlanBytes 'G1_GREEN_CLEAN_EOF' $null
-Run-PlanBytes 'G2_GREEN_UNTERMINATED_FINAL_RECORD' ([byte[]](65))
-Run-PlanBytes 'G3_GREEN_HARD_READ_ERROR' $null -Dir
-Run-PlanBytes 'G4_GREEN_EMPTY_INPUT' $null -Empty
-Run-PlanBytes 'G5_GREEN_CARRIAGE_RETURN' ([byte[]](13,10))
-Run-PlanBytes 'G6_GREEN_CONTROL_BYTE' ([byte[]](7,10))
-Run-PlanBytes 'G7_GREEN_NON_ASCII_BYTE' ([byte[]](200,10))
-
-# ==================================== H. section 8 row 24 probe arms, all five
-$listener = New-Object System.Net.Sockets.TcpListener([System.Net.IPAddress]::Loopback, 0); $listener.Start()
-$open = $listener.LocalEndpoint.Port
-$h = New-PlanCase 'h1' @(
-    "01`ttcp_probe`talways`t0`t@QA@`t-`t-`ttcp_probe 127.0.0.1 9 20000`tclosed loopback port",
-    "02`ttcp_probe`talways`t1`t@QA@`t-`t-`ttcp_probe 127.0.0.1 $open 20000`tlistening loopback port",
-    "03`ttcp_probe`talways`t3`t@QA@`t-`t-`ttcp_probe 127.0.0.1 99999 20000`tport out of range",
-    "04`ttcp_probe`talways`t3`t@QA@`t-`t-`ttcp_probe 127.0.0.1 9 60001`ttimeout out of range",
-    "05`ttcp_probe`talways`t3`t@QA@`t-`t-`ttcp_probe 127.0.0.1 9`targv too short") $null $null $null $null
-Invoke-Runner 'H_ROW24_ALL_FIVE_ARMS' $h '^TR_RESULT|^TR_RUN '
-$listener.Stop()
-foreach ($id in @('01','02','03','04','05')) {
-    Write-Host ("op $id -> " + ((Get-Content -Raw -LiteralPath (Join-Path $WORK "h1\record\ops\$id.stdout")).Trim()) +
-                "  [elapsed_ms=" + ((Get-Content -LiteralPath (Join-Path $WORK "h1\record\ops\$id.elapsed_ms"))).Trim() + "]")
+# The 12-row fixture plan mirrors the real plan's kinds, run_when and expect_rc.
+function Plan12([hashtable] $behaviour) {
+    $ev = Join-Path $REC 'evidence'
+    $rows = @($HDR)
+    $rows += Row '01' 'ssh_stdin' 'sequence_ok' 0 $PREREG 'PREREG:setup.sh'   ('ssh ' + (A $behaviour['01'])) 'allocate'
+    $rows += Row '02' 'scp_up'    'sequence_ok' 0 $KIT    '-'                 ('scp ' + (A $behaviour['02'])) 'upload'
+    $rows += Row '03' 'ssh_stdin' 'sequence_ok' 0 $PREREG 'PREREG:extract.sh' ('ssh ' + (A $behaviour['03'])) 'extract'
+    $rows += Row '04' 'ssh_stdin' 'sequence_ok' 0 $PREREG 'PREREG:p0.sh'      ('ssh ' + (A $behaviour['04'])) 'p0'
+    $rows += Row '05' 'ssh_stdin' 'sequence_ok' 0 $PREREG 'PREREG:ro.sh'      ('ssh ' + (A $behaviour['05'])) 'ro'
+    $rows += Row '06' 'tcp_probe' 'sequence_ok' 0 $PREREG '-'                 'tcp_probe 127.0.0.1 9 2000' 'probe'
+    $rows += Row '07' 'ssh_stdin' 'always'      0 $PREREG 'PREREG:close.sh'   ('ssh ' + (A $behaviour['07'])) 'close p0'
+    $rows += Row '08' 'ssh_stdin' 'always'      0 $PREREG 'PREREG:close.sh'   ('ssh ' + (A $behaviour['08'])) 'close ro'
+    $rows += Row '09' 'scp_down'  'always'      0 $ev     '-'                 ('scp ' + (A $behaviour['09'])) 'fetch p0'
+    $rows += Row '10' 'scp_down'  'always'      0 $ev     '-'                 ('scp ' + (A $behaviour['10'])) 'fetch ro'
+    $rows += Row '11' 'local_bind' 'always'     0 $REC    '-'                 'local_bind 07 09 evidence\WPIQA-P0' 'bind p0'
+    $rows += Row '12' 'local_bind' 'always'     0 $REC    '-'                 'local_bind 08 10 evidence\WPIQA-RO' 'bind ro'
+    return (($rows -join "`n") + "`n")
 }
 
-# ================================ I. the real draft file, exactly as it ships
-Write-Host '=== I_DRAFT_STATE_DRY_RUN_OF_THE_DELIVERED_FILE ==='
-$prev = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $SRC 2>&1 | ForEach-Object { "$_" }
-Write-Host ("RUNNER_RC=" + $LASTEXITCODE)
-$ErrorActionPreference = $prev
+function Run-Arm([string] $label, [string] $runnerSrc, [string] $planText, [string] $programBlock, [string] $optionBlock, [string[]] $grep) {
+    if (Test-Path -LiteralPath $REC) { Remove-Item -LiteralPath $REC -Recurse -Force }
+    $planPath = Join-Path $PREREG 'TRANSPORT_PLAN.tsv'
+    WriteLf $planPath $planText
+    $runner = Join-Path $PREREG 'transport_runner.ps1'
+    New-RunnerCopy $runnerSrc $runner (Sha $planPath) $programBlock $optionBlock
+    Write-Host ''
+    Write-Host ('=== ' + $label + ' ===')
+    Write-Host ('COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File ' + $runner + ' -Execute -Confirm WPIQA-EXECUTE')
+    $out = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $runner -Execute -Confirm WPIQA-EXECUTE 2>&1
+    $rc = $LASTEXITCODE
+    foreach ($line in $out) {
+        $s = [string]$line
+        foreach ($g in $grep) { if ($s -like $g) { Write-Host ('  ' + $s); break } }
+    }
+    Write-Host ('  RUNNER_RC=' + $rc)
+}
 
-Remove-Item -LiteralPath 'C:\Users\Public\wpi_r2_qa' -Recurse -Force
-Write-Host '=== WPI_R2_RUNNER_QA_COMPLETE (scratch root removed) ==='
+$G_CLASS = @('TR_OP_CLASS*','TR_OP_NOT_EVALUABLE*','TR_OP_DEVIANT*','TR_OP_SKIPPED*','TR_RUN_CLASS*','TR_RUN *','TR_STOP*','TR_FIRST*')
+$G_ENV   = @('TR_ENV *','TR_ENV_POLICY*','TR_CONFIG*','TR_PROGRAM*','TR_OP_END*','TR_OP_CLASS*','TR_OP_NOT_EVALUABLE*','TR_OP_DEVIANT*','TR_RUN *','TR_STOP*')
+
+# ---- J family: whole-plan classification, program substituted by cmd.exe -----
+# DECLARED SUBSTITUTION: the ssh/scp pins are C:\Windows\System32\cmd.exe at its
+# real digest and the pinned option block is @('/d','/c'), so each operation's
+# native status and output can be driven deterministically with no host. This
+# substitutes the PROGRAM, not the classifier under test. The K family below
+# drives the real pinned OpenSSH.
+$J1 = @{'01'='stop3';'02'='rc0silent';'03'='rc0silent';'04'='rc0silent';'05'='rc0silent';'07'='closefail1';'08'='closefail1';'09'='scpfail1';'10'='scpfail1'}
+$J2 = @{'01'='rc255';'02'='rc0silent';'03'='rc0silent';'04'='rc0silent';'05'='rc0silent';'07'='rc0marked';'08'='rc0marked';'09'='scpok';'10'='scpok'}
+$J3 = @{'01'='rc2';'02'='rc0silent';'03'='rc0silent';'04'='rc0silent';'05'='rc0silent';'07'='rc0marked';'08'='rc0marked';'09'='scpok';'10'='scpok'}
+$J4 = @{'01'='rc0silent';'02'='scpok';'03'='rc0marked';'04'='rc0marked';'05'='rc0marked';'07'='rc0marked';'08'='rc0marked';'09'='scpok';'10'='scpok'}
+$J5 = @{'01'='rc1marked';'02'='scpok';'03'='rc0marked';'04'='rc0marked';'05'='rc0marked';'07'='rc0marked';'08'='rc0marked';'09'='scpok';'10'='scpok'}
+$J6 = @{'01'='rc0marked';'02'='scpfail1';'03'='rc0marked';'04'='rc0marked';'05'='rc0marked';'07'='rc0marked';'08'='rc0marked';'09'='scpok';'10'='scpok'}
+
+Run-Arm 'J1 RED   round-2 bytes: op01 STOP, then every always row runs' $R2SRC (Plan12 $J1) $PROG_CMD $OPT_CMD $G_CLASS
+Run-Arm 'J1 GREEN round-3 bytes: same 12-row fixture'                   $R3SRC (Plan12 $J1) $PROG_CMD $OPT_CMD $G_CLASS
+Run-Arm 'J2 RED   round-2 bytes: ssh native rc 255'                     $R2SRC (Plan12 $J2) $PROG_CMD $OPT_CMD $G_CLASS
+Run-Arm 'J2 GREEN round-3 bytes: ssh native rc 255'                     $R3SRC (Plan12 $J2) $PROG_CMD $OPT_CMD $G_CLASS
+Run-Arm 'J3 RED   round-2 bytes: rc 2 outside the outcome grammar'      $R2SRC (Plan12 $J3) $PROG_CMD $OPT_CMD $G_CLASS
+Run-Arm 'J3 GREEN round-3 bytes: rc 2 outside the outcome grammar'      $R3SRC (Plan12 $J3) $PROG_CMD $OPT_CMD $G_CLASS
+Run-Arm 'J4 RED   round-2 bytes: ssh rc 0 with NO remote output at all' $R2SRC (Plan12 $J4) $PROG_CMD $OPT_CMD $G_CLASS
+Run-Arm 'J4 GREEN round-3 bytes: ssh rc 0 with NO remote output at all' $R3SRC (Plan12 $J4) $PROG_CMD $OPT_CMD $G_CLASS
+Run-Arm 'J5 GREEN round-3 bytes: a block that RAN and returned 1 (FAIL must survive)' $R3SRC (Plan12 $J5) $PROG_CMD $OPT_CMD $G_CLASS
+Run-Arm 'J6 RED   round-2 bytes: scp transfer failed rc 1'              $R2SRC (Plan12 $J6) $PROG_CMD $OPT_CMD $G_CLASS
+Run-Arm 'J6 GREEN round-3 bytes: scp transfer failed rc 1'              $R3SRC (Plan12 $J6) $PROG_CMD $OPT_CMD $G_CLASS
+
+# ---- K family: the REAL pinned OpenSSH, driven by the runner itself ---------
+# argv is the pinned option block plus '-G qa-target': ssh evaluates its
+# configuration and exits. No connection is attempted and no host is named that
+# resolves. This is the operation the round-2 environment could not perform.
+$KARGV = 'ssh ' + ($K_OPTIONS -join ' ') + ' -G qa-target'
+function PlanK() {
+    $rows = @($HDR)
+    $rows += Row '01' 'ssh_stdin' 'sequence_ok' 0 $PREREG 'PREREG:setup.sh' $KARGV 'real ssh configuration evaluation'
+    return (($rows -join "`n") + "`n")
+}
+Run-Arm 'K1 RED   round-2 bytes + round-2 child environment + REAL ssh.exe' $R2SRC (PlanK) $PROG_SSH $OPT_K $G_ENV
+Run-Arm 'K2 GREEN round-3 bytes + round-3 child environment + REAL ssh.exe' $R3SRC (PlanK) $PROG_SSH $OPT_K $G_ENV
+
+Write-Host ''
+Write-Host '=== cleanup ==='
+if (Test-Path -LiteralPath $QA) { Remove-Item -LiteralPath $QA -Recurse -Force }
+Write-Host ('removed ' + $QA + ' exists=' + (Test-Path -LiteralPath $QA))
 ```
 
-Real output (S1 applied; nothing else altered):
+### C.2 transcript (verbatim)
 
 ```text
-QA_RUNNER_UNDER_TEST 2f076ed9a928656fddf22969ea4bf70de895f2c84c73f13b4c64b8040e72aa9a
-QA_PROGRAM_PIN_SUBSTITUTION ssh,scp -> C:\Windows\System32\cmd.exe 65ec268add3973b6dca64222985da47caeaee44a340b0ec1466782914fd743d9
-=== A1_GREEN_BYTE_EQUAL_PAIR_BINDS ===
-TR_HEADER base_run=QA
-TR_MARKER_GATE constants=marker_free
-TR_RECORD_ROOT path=<QA>\cases\a1\record
-TR_PLAN_READ completion=clean_eof records=4
-TR_PLAN_ROWS count=3
-TR_STDIN op=07 root=PREREG path=<QA>\cases\a1\qa_stdin.txt sha256=2c74e735c85285711fe447b6af84406e73367763bcef9a71c7d24bccca3f1efd
-TR_PROGRAM name=ssh path=C:\Windows\System32\cmd.exe sha256=65ec268add3973b6dca64222985da47caeaee44a340b0ec1466782914fd743d9 resolution=pinned_absolute chain=trusted
-TR_PROGRAM name=scp path=C:\Windows\System32\cmd.exe sha256=65ec268add3973b6dca64222985da47caeaee44a340b0ec1466782914fd743d9 resolution=pinned_absolute chain=trusted
-TR_ENV_POLICY cleared=all carried=USERPROFILE,HOMEDRIVE,HOMEPATH inherited_path=never
-TR_OP_BEGIN id=07 kind=ssh_stdin cwd=<QA>\cases\a1
-TR_OP_END id=07 rc=0 expect_rc=0 elapsed_ms=53 stdout_sha256=43a9217dbcf74e02a25586e8fd50244929fced1522d50d837a5f09c12e846a56 stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-TR_OP_BEGIN id=09 kind=scp_down cwd=<QA>\cases\a1\record\evidence
-TR_OP_END id=09 rc=0 expect_rc=0 elapsed_ms=51 stdout_sha256=bf7ca40b1b35d8424c86936146683e3aa1e49115e3d7332b48fc5d4f1ed85ac1 stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-TR_OP_BEGIN id=11 kind=local_bind cwd=<QA>\cases\a1\record
-  | TR_BIND close_op=07 fetch_op=09 local_dir=<QA>\cases\a1\record\evidence\QA-P0
-  | TR_BIND_COUNTS remote=3 local=3
-  | TR_BIND_SET remote_set_sha256=b769956db7ad98dddf850b0291c6296c1040aaa3a1a4a835dd2d8351537093b6 reconstructed=b769956db7ad98dddf850b0291c6296c1040aaa3a1a4a835dd2d8351537093b6
-  | TR_BIND_PASS files=3
-TR_OP_END id=11 rc=0 expect_rc=0 elapsed_ms=80 stdout_sha256=dc1bb11d0ddd8791a004ec4c7fd6a30dc7d4df1d39b60b9f8d4e7ad453766001 stderr_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-TR_RESULT id=07 rc=0 expect_rc=0 elapsed_ms=53
-TR_RESULT id=09 rc=0 expect_rc=0 elapsed_ms=51
-TR_RESULT id=11 rc=0 expect_rc=0 elapsed_ms=80
-TR_RUN_CLASS deviant=0 not_evaluable=0 precedence=deviant_outranks_not_evaluable
-TR_RUN PASS base_run=QA record=<QA>\cases\a1\record
-RUNNER_RC=0
-=== A2_RED_MATCHES_CLOBBER_AS_DELIVERED ===
-TR_HEADER base_run=QA
-TR_MARKER_GATE constants=marker_free
-TR_RECORD_ROOT path=<QA>\cases\a2\record
-TR_PLAN_READ completion=clean_eof records=4
-TR_PLAN_ROWS count=3
-TR_STDIN op=07 root=PREREG path=<QA>\cases\a2\qa_stdin.txt sha256=2c74e735c85285711fe447b6af84406e73367763bcef9a71c7d24bccca3f1efd
-TR_PROGRAM name=ssh path=C:\Windows\System32\cmd.exe sha256=65ec268add3973b6dca64222985da47caeaee44a340b0ec1466782914fd743d9 resolution=pinned_absolute chain=trusted
-TR_PROGRAM name=scp path=C:\Windows\System32\cmd.exe sha256=65ec268add3973b6dca64222985da47caeaee44a340b0ec1466782914fd743d9 resolution=pinned_absolute chain=trusted
-TR_ENV_POLICY cleared=all carried=USERPROFILE,HOMEDRIVE,HOMEPATH inherited_path=never
-TR_OP_BEGIN id=07 kind=ssh_stdin cwd=<QA>\cases\a2
-TR_OP_END id=07 rc=0 expect_rc=0 elapsed_ms=85 stdout_sha256=43a9217dbcf74e02a25586e8fd50244929fced1522d50d837a5f09c12e846a56 stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-TR_OP_BEGIN id=09 kind=scp_down cwd=<QA>\cases\a2\record\evidence
-TR_OP_END id=09 rc=0 expect_rc=0 elapsed_ms=43 stdout_sha256=bf7ca40b1b35d8424c86936146683e3aa1e49115e3d7332b48fc5d4f1ed85ac1 stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-TR_OP_BEGIN id=11 kind=local_bind cwd=<QA>\cases\a2\record
-  | TR_BIND close_op=07 fetch_op=09 local_dir=<QA>\cases\a2\record\evidence\QA-P0
-  | TR_BIND_COUNTS remote=3 local=3
-  | TR_BIND_DIFF digest_differs=aaa.txt
-  | TR_BIND_DIFF digest_differs=stage.log
-  | TR_BIND_DIFF digest_differs=sub/nested.txt
-TR_OP_END id=11 rc=1 expect_rc=0 elapsed_ms=49 stdout_sha256=afcf52cc38dc960db3973280078e187ad3c0adf6a763b7cdcf551849d434f028 stderr_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-TR_FIRST_FAIL id=11 rc=1 expected=0 later_sequence_ops=skip always_ops=run
-TR_OP_DEVIANT id=11 rc=1 expected=0
-TR_RESULT id=07 rc=0 expect_rc=0 elapsed_ms=85
-TR_RESULT id=09 rc=0 expect_rc=0 elapsed_ms=43
-TR_RESULT id=11 rc=1 expect_rc=0 elapsed_ms=49
-TR_RUN_CLASS deviant=1 not_evaluable=0 precedence=deviant_outranks_not_evaluable
-TR_RUN FAIL base_run=QA first_fail=11 first_not_evaluable= record=<QA>\cases\a2\record
-RUNNER_RC=1
-=== A3_GREEN_LOCAL_BYTE_CHANGED_MUST_FAIL ===
-TR_HEADER base_run=QA
-TR_MARKER_GATE constants=marker_free
-TR_RECORD_ROOT path=<QA>\cases\a3\record
-TR_PLAN_READ completion=clean_eof records=4
-TR_PLAN_ROWS count=3
-TR_STDIN op=07 root=PREREG path=<QA>\cases\a3\qa_stdin.txt sha256=2c74e735c85285711fe447b6af84406e73367763bcef9a71c7d24bccca3f1efd
-TR_PROGRAM name=ssh path=C:\Windows\System32\cmd.exe sha256=65ec268add3973b6dca64222985da47caeaee44a340b0ec1466782914fd743d9 resolution=pinned_absolute chain=trusted
-TR_PROGRAM name=scp path=C:\Windows\System32\cmd.exe sha256=65ec268add3973b6dca64222985da47caeaee44a340b0ec1466782914fd743d9 resolution=pinned_absolute chain=trusted
-TR_ENV_POLICY cleared=all carried=USERPROFILE,HOMEDRIVE,HOMEPATH inherited_path=never
-TR_OP_BEGIN id=07 kind=ssh_stdin cwd=<QA>\cases\a3
-TR_OP_END id=07 rc=0 expect_rc=0 elapsed_ms=43 stdout_sha256=43a9217dbcf74e02a25586e8fd50244929fced1522d50d837a5f09c12e846a56 stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-TR_OP_BEGIN id=09 kind=scp_down cwd=<QA>\cases\a3\record\evidence
-TR_OP_END id=09 rc=0 expect_rc=0 elapsed_ms=44 stdout_sha256=bf7ca40b1b35d8424c86936146683e3aa1e49115e3d7332b48fc5d4f1ed85ac1 stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-TR_OP_BEGIN id=11 kind=local_bind cwd=<QA>\cases\a3\record
-  | TR_BIND close_op=07 fetch_op=09 local_dir=<QA>\cases\a3\record\evidence\QA-P0
-  | TR_BIND_COUNTS remote=3 local=3
-  | TR_BIND_DIFF digest_differs=aaa.txt
-TR_OP_END id=11 rc=1 expect_rc=0 elapsed_ms=42 stdout_sha256=a4a7c213ff09435e242c4739fa0cfcbc65e50d368ed59b8bd39c8011f7acba51 stderr_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-TR_FIRST_FAIL id=11 rc=1 expected=0 later_sequence_ops=skip always_ops=run
-TR_OP_DEVIANT id=11 rc=1 expected=0
-TR_RESULT id=07 rc=0 expect_rc=0 elapsed_ms=43
-TR_RESULT id=09 rc=0 expect_rc=0 elapsed_ms=44
-TR_RESULT id=11 rc=1 expect_rc=0 elapsed_ms=42
-TR_RUN_CLASS deviant=1 not_evaluable=0 precedence=deviant_outranks_not_evaluable
-TR_RUN FAIL base_run=QA first_fail=11 first_not_evaluable= record=<QA>\cases\a3\record
-RUNNER_RC=1
-=== A4_GREEN_EXTRA_LOCAL_FILE_MUST_FAIL ===
-TR_HEADER base_run=QA
-TR_MARKER_GATE constants=marker_free
-TR_RECORD_ROOT path=<QA>\cases\a4\record
-TR_PLAN_READ completion=clean_eof records=4
-TR_PLAN_ROWS count=3
-TR_STDIN op=07 root=PREREG path=<QA>\cases\a4\qa_stdin.txt sha256=2c74e735c85285711fe447b6af84406e73367763bcef9a71c7d24bccca3f1efd
-TR_PROGRAM name=ssh path=C:\Windows\System32\cmd.exe sha256=65ec268add3973b6dca64222985da47caeaee44a340b0ec1466782914fd743d9 resolution=pinned_absolute chain=trusted
-TR_PROGRAM name=scp path=C:\Windows\System32\cmd.exe sha256=65ec268add3973b6dca64222985da47caeaee44a340b0ec1466782914fd743d9 resolution=pinned_absolute chain=trusted
-TR_ENV_POLICY cleared=all carried=USERPROFILE,HOMEDRIVE,HOMEPATH inherited_path=never
-TR_OP_BEGIN id=07 kind=ssh_stdin cwd=<QA>\cases\a4
-TR_OP_END id=07 rc=0 expect_rc=0 elapsed_ms=44 stdout_sha256=43a9217dbcf74e02a25586e8fd50244929fced1522d50d837a5f09c12e846a56 stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-TR_OP_BEGIN id=09 kind=scp_down cwd=<QA>\cases\a4\record\evidence
-TR_OP_END id=09 rc=0 expect_rc=0 elapsed_ms=43 stdout_sha256=7066a2f0ca23b9894ab5ca0c77ce84d3428dfa78117c128e393192626eaadbfc stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-TR_OP_BEGIN id=11 kind=local_bind cwd=<QA>\cases\a4\record
-  | TR_BIND close_op=07 fetch_op=09 local_dir=<QA>\cases\a4\record\evidence\QA-P0
-  | TR_BIND_COUNTS remote=3 local=4
-  | TR_BIND_DIFF missing_remotely=extra.txt
-TR_OP_END id=11 rc=1 expect_rc=0 elapsed_ms=45 stdout_sha256=1e4bb13d9ea5b7bd887cfa38186d7b22781db6a065eddea30ffb731788f31d67 stderr_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-TR_FIRST_FAIL id=11 rc=1 expected=0 later_sequence_ops=skip always_ops=run
-TR_OP_DEVIANT id=11 rc=1 expected=0
-TR_RESULT id=07 rc=0 expect_rc=0 elapsed_ms=44
-TR_RESULT id=09 rc=0 expect_rc=0 elapsed_ms=43
-TR_RESULT id=11 rc=1 expect_rc=0 elapsed_ms=45
-TR_RUN_CLASS deviant=1 not_evaluable=0 precedence=deviant_outranks_not_evaluable
-TR_RUN FAIL base_run=QA first_fail=11 first_not_evaluable= record=<QA>\cases\a4\record
-RUNNER_RC=1
-=== A5_GREEN_MISSING_LOCAL_FILE_MUST_FAIL ===
-TR_HEADER base_run=QA
-TR_MARKER_GATE constants=marker_free
-TR_RECORD_ROOT path=<QA>\cases\a5\record
-TR_PLAN_READ completion=clean_eof records=4
-TR_PLAN_ROWS count=3
-TR_STDIN op=07 root=PREREG path=<QA>\cases\a5\qa_stdin.txt sha256=2c74e735c85285711fe447b6af84406e73367763bcef9a71c7d24bccca3f1efd
-TR_PROGRAM name=ssh path=C:\Windows\System32\cmd.exe sha256=65ec268add3973b6dca64222985da47caeaee44a340b0ec1466782914fd743d9 resolution=pinned_absolute chain=trusted
-TR_PROGRAM name=scp path=C:\Windows\System32\cmd.exe sha256=65ec268add3973b6dca64222985da47caeaee44a340b0ec1466782914fd743d9 resolution=pinned_absolute chain=trusted
-TR_ENV_POLICY cleared=all carried=USERPROFILE,HOMEDRIVE,HOMEPATH inherited_path=never
-TR_OP_BEGIN id=07 kind=ssh_stdin cwd=<QA>\cases\a5
-TR_OP_END id=07 rc=0 expect_rc=0 elapsed_ms=46 stdout_sha256=43a9217dbcf74e02a25586e8fd50244929fced1522d50d837a5f09c12e846a56 stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-TR_OP_BEGIN id=09 kind=scp_down cwd=<QA>\cases\a5\record\evidence
-TR_OP_END id=09 rc=0 expect_rc=0 elapsed_ms=48 stdout_sha256=c2de2bf086e5fc91695ede62600ddc5f1bc2041317134243bcbcad66a198ef88 stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-TR_OP_BEGIN id=11 kind=local_bind cwd=<QA>\cases\a5\record
-  | TR_BIND close_op=07 fetch_op=09 local_dir=<QA>\cases\a5\record\evidence\QA-P0
-  | TR_BIND_COUNTS remote=3 local=2
-  | TR_BIND_DIFF missing_locally=sub/nested.txt
-TR_OP_END id=11 rc=1 expect_rc=0 elapsed_ms=48 stdout_sha256=905671f49dc6183f87a61bf6c6021163fcf84343bb816b1a0932e515dfb045af stderr_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-TR_FIRST_FAIL id=11 rc=1 expected=0 later_sequence_ops=skip always_ops=run
-TR_OP_DEVIANT id=11 rc=1 expected=0
-TR_RESULT id=07 rc=0 expect_rc=0 elapsed_ms=46
-TR_RESULT id=09 rc=0 expect_rc=0 elapsed_ms=48
-TR_RESULT id=11 rc=1 expect_rc=0 elapsed_ms=48
-TR_RUN_CLASS deviant=1 not_evaluable=0 precedence=deviant_outranks_not_evaluable
-TR_RUN FAIL base_run=QA first_fail=11 first_not_evaluable= record=<QA>\cases\a5\record
-RUNNER_RC=1
-=== A6_GREEN_TAMPERED_SET_SHA_MUST_STOP ===
-TR_HEADER base_run=QA
-TR_MARKER_GATE constants=marker_free
-TR_RECORD_ROOT path=<QA>\cases\a6\record
-TR_PLAN_READ completion=clean_eof records=4
-TR_PLAN_ROWS count=3
-TR_STDIN op=07 root=PREREG path=<QA>\cases\a6\qa_stdin.txt sha256=2c74e735c85285711fe447b6af84406e73367763bcef9a71c7d24bccca3f1efd
-TR_PROGRAM name=ssh path=C:\Windows\System32\cmd.exe sha256=65ec268add3973b6dca64222985da47caeaee44a340b0ec1466782914fd743d9 resolution=pinned_absolute chain=trusted
-TR_PROGRAM name=scp path=C:\Windows\System32\cmd.exe sha256=65ec268add3973b6dca64222985da47caeaee44a340b0ec1466782914fd743d9 resolution=pinned_absolute chain=trusted
-TR_ENV_POLICY cleared=all carried=USERPROFILE,HOMEDRIVE,HOMEPATH inherited_path=never
-TR_OP_BEGIN id=07 kind=ssh_stdin cwd=<QA>\cases\a6
-TR_OP_END id=07 rc=0 expect_rc=0 elapsed_ms=41 stdout_sha256=50e5392d0b6d142240ecdabb86aa81d55557fbe0b6ab6bfe141ff22472a50b5d stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-TR_OP_BEGIN id=09 kind=scp_down cwd=<QA>\cases\a6\record\evidence
-TR_OP_END id=09 rc=0 expect_rc=0 elapsed_ms=44 stdout_sha256=bf7ca40b1b35d8424c86936146683e3aa1e49115e3d7332b48fc5d4f1ed85ac1 stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-TR_OP_BEGIN id=11 kind=local_bind cwd=<QA>\cases\a6\record
-  | TR_BIND close_op=07 fetch_op=09 local_dir=<QA>\cases\a6\record\evidence\QA-P0
-  | TR_BIND_COUNTS remote=3 local=3
-  | TR_BIND_SET remote_set_sha256=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa reconstructed=b769956db7ad98dddf850b0291c6296c1040aaa3a1a4a835dd2d8351537093b6
-  | TR_BIND_STOP reason=digest_set_rendering_differs
-TR_OP_END id=11 rc=3 expect_rc=0 elapsed_ms=58 stdout_sha256=84f62fd8a582bf878bac9d73fb702ab076696acab7f8490005dbc00c5b572703 stderr_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-TR_FIRST_FAIL id=11 rc=3 expected=0 later_sequence_ops=skip always_ops=run
-TR_OP_NOT_EVALUABLE id=11 rc=3 expected=0
-TR_RESULT id=07 rc=0 expect_rc=0 elapsed_ms=41
-TR_RESULT id=09 rc=0 expect_rc=0 elapsed_ms=44
-TR_RESULT id=11 rc=3 expect_rc=0 elapsed_ms=58
-TR_RUN_CLASS deviant=0 not_evaluable=1 precedence=deviant_outranks_not_evaluable
-TR_RUN STOP base_run=QA first_fail=11 first_not_evaluable=11 record=<QA>\cases\a6\record
-RUNNER_RC=3
-=== B_B1_runid_mismatch ===
-  | TR_BIND close_op=07 fetch_op=09 local_dir=<QA>\cases\B1_runid_mismatch\record\evidence\QA-P0
-  | TR_BIND_STOP reason=remote_close_binding_mismatch
-TR_OP_END id=11 rc=3 expect_rc=0 elapsed_ms=9 stdout_sha256=88fdaa4cf9d538a3eaf17f12db89b18f51693637e46f5922d2a77fe023ae1a46 stderr_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-TR_RUN STOP base_run=QA first_fail=11 first_not_evaluable=11 record=<QA>\cases\B1_runid_mismatch\record
-RUNNER_RC=3
-=== B_B2_duplicate_digest ===
-  | TR_BIND close_op=07 fetch_op=09 local_dir=<QA>\cases\B2_duplicate_digest\record\evidence\QA-P0
-  | TR_BIND_STOP reason=remote_digest_duplicate
-TR_OP_END id=11 rc=3 expect_rc=0 elapsed_ms=10 stdout_sha256=46fa5f82957d6e7ee6b0d4383425777e69b96893e0d9491dca50b8e1a4d0ab23 stderr_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-TR_RUN STOP base_run=QA first_fail=11 first_not_evaluable=11 record=<QA>\cases\B2_duplicate_digest\record
-RUNNER_RC=3
-=== B_B3_unsafe_path ===
-  | TR_BIND close_op=07 fetch_op=09 local_dir=<QA>\cases\B3_unsafe_path\record\evidence\QA-P0
-  | TR_BIND_STOP reason=remote_digest_path_unsafe
-TR_OP_END id=11 rc=3 expect_rc=0 elapsed_ms=10 stdout_sha256=7605872fe57d06a38412fd1f1d6de57cc81ed89658a093789eeb6d7f91a8829d stderr_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-TR_RUN STOP base_run=QA first_fail=11 first_not_evaluable=11 record=<QA>\cases\B3_unsafe_path\record
-RUNNER_RC=3
-=== B_B4_out_of_order ===
-  | TR_BIND close_op=07 fetch_op=09 local_dir=<QA>\cases\B4_out_of_order\record\evidence\QA-P0
-  | TR_BIND_STOP reason=remote_digest_out_of_order
-TR_OP_END id=11 rc=3 expect_rc=0 elapsed_ms=9 stdout_sha256=af37d28089f00c0a79f6054eff2c471354fe5d35b6b4fabc9bafc394b7f4dae9 stderr_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-TR_RUN STOP base_run=QA first_fail=11 first_not_evaluable=11 record=<QA>\cases\B4_out_of_order\record
-RUNNER_RC=3
-=== B_B5_count_mismatch ===
-  | TR_BIND close_op=07 fetch_op=09 local_dir=<QA>\cases\B5_count_mismatch\record\evidence\QA-P0
-  | TR_BIND_STOP reason=remote_close_count_mismatch
-TR_OP_END id=11 rc=3 expect_rc=0 elapsed_ms=24 stdout_sha256=7191691583a7b7c56da1e70f5b51d4de7f059d42f167c9e614f43cb9e71f9c63 stderr_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-TR_RUN STOP base_run=QA first_fail=11 first_not_evaluable=11 record=<QA>\cases\B5_count_mismatch\record
-RUNNER_RC=3
-=== B_B6_truncated_record ===
-  | TR_BIND close_op=07 fetch_op=09 local_dir=<QA>\cases\B6_truncated_record\record\evidence\QA-P0
-  | TR_BIND_STOP reason=remote_close_incomplete
-TR_OP_END id=11 rc=3 expect_rc=0 elapsed_ms=19 stdout_sha256=b382fdb9b681e147e7394076ac163abe6a63352db7c189425d974e147a8c941a stderr_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-TR_RUN STOP base_run=QA first_fail=11 first_not_evaluable=11 record=<QA>\cases\B6_truncated_record\record
-RUNNER_RC=3
-=== B_B7_unknown_record ===
-  | TR_BIND close_op=07 fetch_op=09 local_dir=<QA>\cases\B7_unknown_record\record\evidence\QA-P0
-  | TR_BIND_STOP reason=remote_close_unknown_or_out_of_order_record
-TR_OP_END id=11 rc=3 expect_rc=0 elapsed_ms=20 stdout_sha256=f9c6446eeeb667d148a5fa51ccfae28cb920d08375264818615424e654e3a832 stderr_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-TR_RUN STOP base_run=QA first_fail=11 first_not_evaluable=11 record=<QA>\cases\B7_unknown_record\record
-RUNNER_RC=3
-=== C1_GREEN_CHILD_STOP_IS_RUN_STOP ===
-TR_HEADER base_run=QA
-TR_MARKER_GATE constants=marker_free
-TR_RECORD_ROOT path=<QA>\cases\c1\record
-TR_PLAN_READ completion=clean_eof records=2
-TR_PLAN_ROWS count=1
-TR_ENV_POLICY cleared=all carried=USERPROFILE,HOMEDRIVE,HOMEPATH inherited_path=never
-TR_OP_BEGIN id=01 kind=tcp_probe cwd=<QA>\cases\c1
-TR_OP_END id=01 rc=3 expect_rc=0 elapsed_ms=4 stdout_sha256=e3e811e68bd1fcd93f86fcd1ffb89cbb53526faabc6f657173a570339acabd0e stderr_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-TR_FIRST_FAIL id=01 rc=3 expected=0 later_sequence_ops=skip always_ops=run
-TR_OP_NOT_EVALUABLE id=01 rc=3 expected=0
-TR_RESULT id=01 rc=3 expect_rc=0 elapsed_ms=4
-TR_RUN_CLASS deviant=0 not_evaluable=1 precedence=deviant_outranks_not_evaluable
-TR_RUN STOP base_run=QA first_fail=01 first_not_evaluable=01 record=<QA>\cases\c1\record
-RUNNER_RC=3
-=== C2_RED_STOP_ROLLED_INTO_FAIL_AS_DELIVERED ===
-TR_HEADER base_run=QA
-TR_MARKER_GATE constants=marker_free
-TR_RECORD_ROOT path=<QA>\cases\c2\record
-TR_PLAN_READ completion=clean_eof records=2
-TR_PLAN_ROWS count=1
-TR_ENV_POLICY cleared=all carried=USERPROFILE,HOMEDRIVE,HOMEPATH inherited_path=never
-TR_OP_BEGIN id=01 kind=tcp_probe cwd=<QA>\cases\c2
-TR_OP_END id=01 rc=3 expect_rc=0 elapsed_ms=4 stdout_sha256=e3e811e68bd1fcd93f86fcd1ffb89cbb53526faabc6f657173a570339acabd0e stderr_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-TR_FIRST_FAIL id=01 rc=3 expected=0 later_sequence_ops=skip always_ops=run
-TR_OP_NOT_EVALUABLE id=01 rc=3 expected=0
-TR_RESULT id=01 rc=3 expect_rc=0 elapsed_ms=4
-TR_RUN_CLASS deviant=0 not_evaluable=1 precedence=deviant_outranks_not_evaluable
-TR_RUN FAIL base_run=QA first_fail=01 record=<QA>\cases\c2\record
-RUNNER_RC=1
-=== C3_GREEN_DEVIANT_PLUS_LATER_STOP_IS_FAIL ===
-TR_HEADER base_run=QA
-TR_MARKER_GATE constants=marker_free
-TR_RECORD_ROOT path=<QA>\cases\c3\record
-TR_PLAN_READ completion=clean_eof records=3
-TR_PLAN_ROWS count=2
-TR_ENV_POLICY cleared=all carried=USERPROFILE,HOMEDRIVE,HOMEPATH inherited_path=never
-TR_OP_BEGIN id=01 kind=tcp_probe cwd=<QA>\cases\c3
-TR_OP_END id=01 rc=1 expect_rc=0 elapsed_ms=18 stdout_sha256=74f47a6f377b02ade84cc66c1d446e4c858fdfa5e0ce255b7d29ba1155465cd0 stderr_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-TR_FIRST_FAIL id=01 rc=1 expected=0 later_sequence_ops=skip always_ops=run
-TR_OP_DEVIANT id=01 rc=1 expected=0
-TR_OP_BEGIN id=02 kind=tcp_probe cwd=<QA>\cases\c3
-TR_OP_END id=02 rc=3 expect_rc=0 elapsed_ms=1 stdout_sha256=e3e811e68bd1fcd93f86fcd1ffb89cbb53526faabc6f657173a570339acabd0e stderr_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-TR_ADDITIONAL_MISMATCH id=02 first_fail=01
-TR_OP_NOT_EVALUABLE id=02 rc=3 expected=0
-TR_RESULT id=01 rc=1 expect_rc=0 elapsed_ms=18
-TR_RESULT id=02 rc=3 expect_rc=0 elapsed_ms=1
-TR_RUN_CLASS deviant=1 not_evaluable=1 precedence=deviant_outranks_not_evaluable
-TR_RUN FAIL base_run=QA first_fail=01 first_not_evaluable=02 record=<QA>\cases\c3\record
-RUNNER_RC=1
-=== C4_RED_SKIP_PREDICATE_MUTATED ===
-TR_OP_BEGIN id=01 kind=tcp_probe cwd=<QA>\cases\c4r
-TR_OP_BEGIN id=02 kind=tcp_probe cwd=<QA>\cases\c4r
-TR_OP_BEGIN id=03 kind=tcp_probe cwd=<QA>\cases\c4r
-TR_OP_BEGIN id=04 kind=tcp_probe cwd=<QA>\cases\c4r
-TR_RESULT id=01 rc=0 expect_rc=1 elapsed_ms=2043
-TR_RESULT id=02 rc=0 expect_rc=0 elapsed_ms=2038
-TR_RESULT id=03 rc=0 expect_rc=0 elapsed_ms=2027
-TR_RESULT id=04 rc=0 expect_rc=0 elapsed_ms=2021
-TR_RUN FAIL base_run=QA first_fail=01 first_not_evaluable= record=<QA>\cases\c4r\record
-RUNNER_RC=1
-=== C5_GREEN_FIRST_FAIL_ORDERING ===
-TR_OP_BEGIN id=01 kind=tcp_probe cwd=<QA>\cases\c4g
-TR_OP_SKIPPED id=02 reason=prior_sequence_mismatch
-TR_OP_BEGIN id=03 kind=tcp_probe cwd=<QA>\cases\c4g
-TR_OP_BEGIN id=04 kind=tcp_probe cwd=<QA>\cases\c4g
-TR_RESULT id=01 rc=0 expect_rc=1 elapsed_ms=2043
-TR_RESULT id=02 rc=skipped expect_rc=0 elapsed_ms=0
-TR_RESULT id=03 rc=0 expect_rc=0 elapsed_ms=2026
-TR_RESULT id=04 rc=0 expect_rc=0 elapsed_ms=2027
-TR_RUN FAIL base_run=QA first_fail=01 first_not_evaluable= record=<QA>\cases\c4g\record
-RUNNER_RC=1
-=== D1_RED_PATH_RESOLVED_PROGRAM ===
-TR_PROGRAM name=ssh path=C:\Windows\System32\cmd.exe sha256=65ec268add3973b6dca64222985da47caeaee44a340b0ec1466782914fd743d9 resolution=pinned_absolute chain=trusted
-TR_RUN PASS base_run=QA record=<QA>\cases\d1\record
-RUNNER_RC=0
-D1_op01_stdout: FAKE_SSH_EXECUTED 
-=== D2_GREEN_PINNED_ABSOLUTE_PROGRAM ===
-TR_PROGRAM name=ssh path=C:\Windows\System32\cmd.exe sha256=65ec268add3973b6dca64222985da47caeaee44a340b0ec1466782914fd743d9 resolution=pinned_absolute chain=trusted
-TR_RUN PASS base_run=QA record=<QA>\cases\d2\record
-RUNNER_RC=0
-D2_op01_stdout: PINNED_PROGRAM_RAN 
-=== D3_GREEN_CHILD_ENVIRONMENT ===
-TR_ENV_POLICY cleared=all carried=USERPROFILE,HOMEDRIVE,HOMEPATH inherited_path=never
-TR_RUN PASS base_run=QA record=<QA>\cases\d3\record
-RUNNER_RC=0
---- the child environment, from ops/01.stdout (PYTHONPATH was set in the parent) ---
-ComSpec=C:\Windows\System32\cmd.exe
-HOMEDRIVE=C:
-HOMEPATH=\Users\BarŸSemaay
-PATH=C:\Windows\System32;C:\Windows
-PATHEXT=.COM;.EXE;.BAT;.CMD
-PROMPT=$P$G
-SystemRoot=C:\Windows
-TEMP=<QA>\cases\d3\record\tmp
-TMP=<QA>\cases\d3\record\tmp
-USERPROFILE=C:\Users\BarŸSemaay
-windir=C:\Windows
-=== E1_GREEN_UNFILLED_ALLOCATION_MARKER ===
-TR_HEADER base_run=QA
-TR_STOP reason=unfilled_marker field=RECORD_ROOT
-RUNNER_RC=3
-=== E2_RED_NO_MARKER_GATE_NO_TRAP ===
-TR_HEADER base_run=QA
-TR_MARKER_GATE constants=marker_free
-Test-Path : Yolda geçersiz karakterler var.
-+     if (Test-Path -LiteralPath $RECORD_ROOT) { Stop-Run ('record_root ...
-+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : InvalidArgument: (C:\WPI_ARTIFACT...TE-AT-DISPATCH>:String) [Test-Path], ArgumentExcepti 
-RUNNER_RC=1
-F_kit_archive_sha256=ebad5c95b69c04e6412b28351e8e64899bb7121cac12786b0dd0e419cc1ae6bd
-F_decoy_archive_sha256=b885c44ebe6893633faa84efe4425d8f852c1fd7496ebba93b06b6ec71845ef1
-=== F1_GREEN_KIT_ARCHIVE_RESOLVES_UNDER_01_RUNKIT ===
-TR_HEADER base_run=QA
-TR_MARKER_GATE constants=marker_free
-TR_PLAN_READ completion=clean_eof records=2
-TR_PLAN_ROWS count=1
-TR_PINNED path=<QA>\cases\f1\01_RUNKIT\runkit.tar sha256=ebad5c95b69c04e6412b28351e8e64899bb7121cac12786b0dd0e419cc1ae6bd
-TR_PROGRAM name=scp path=C:\Windows\System32\cmd.exe sha256=65ec268add3973b6dca64222985da47caeaee44a340b0ec1466782914fd743d9 resolution=pinned_absolute chain=trusted
-TR_ENV_POLICY cleared=all carried=USERPROFILE,HOMEDRIVE,HOMEPATH inherited_path=never
-TR_DRY_RUN no_process_was_started no_connection_was_opened
-TR_DRY_RUN to_execute=-Execute_-Confirm_QA-EXECUTE
-RUNNER_RC=0
-=== F2_GREEN_DECOY_BESIDE_THE_RUNNER_IS_NEVER_SELECTED ===
-TR_HEADER base_run=QA
-TR_MARKER_GATE constants=marker_free
-TR_PLAN_READ completion=clean_eof records=2
-TR_PLAN_ROWS count=1
-TR_PINNED path=<QA>\cases\f2\01_RUNKIT\runkit.tar sha256=ebad5c95b69c04e6412b28351e8e64899bb7121cac12786b0dd0e419cc1ae6bd
-TR_STOP reason=pinned_file_sha256_mismatch path=<QA>\cases\f2\01_RUNKIT\runkit.tar actual=ebad5c95b69c04e6412b28351e8e64899bb7121cac12786b0dd0e419cc1ae6bd expected=b885c44ebe6893633faa84efe4425d8f852c1fd7496ebba93b06b6ec71845ef1
-RUNNER_RC=3
-F_accepted_remote_close_tree_sha256=87157f0ea454df7c1f826a8c76a38f3045dd38efdd8fa347644f79251d3f3f0e
-=== F3_GREEN_ACCEPTED_ROOT_RESOLUTION ===
-TR_HEADER base_run=QA
-TR_MARKER_GATE constants=marker_free
-TR_PLAN_READ completion=clean_eof records=3
-TR_PLAN_ROWS count=2
-TR_STDIN op=07 root=ACCEPTED path=C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\02_PREREG\remote_close_tree.sh sha256=87157f0ea454df7c1f826a8c76a38f3045dd38efdd8fa347644f79251d3f3f0e
-TR_STDIN op=08 root=ACCEPTED path=C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\02_PREREG\remote_close_tree.sh sha256=87157f0ea454df7c1f826a8c76a38f3045dd38efdd8fa347644f79251d3f3f0e
-TR_PROGRAM name=ssh path=C:\Windows\System32\cmd.exe sha256=65ec268add3973b6dca64222985da47caeaee44a340b0ec1466782914fd743d9 resolution=pinned_absolute chain=trusted
-TR_ENV_POLICY cleared=all carried=USERPROFILE,HOMEDRIVE,HOMEPATH inherited_path=never
-TR_DRY_RUN no_process_was_started no_connection_was_opened
-TR_DRY_RUN to_execute=-Execute_-Confirm_QA-EXECUTE
-RUNNER_RC=0
-=== F4_GREEN_ACCEPTED_FILE_ABSENT_STOPS ===
-TR_HEADER base_run=QA
-TR_MARKER_GATE constants=marker_free
-TR_PLAN_READ completion=clean_eof records=3
-TR_PLAN_ROWS count=2
-TR_STOP reason=stdin_file_missing op=07 path=<QA>\cases\f4\accepted\remote_close_tree.sh
-RUNNER_RC=3
-=== F5_GREEN_WRONG_ROOT_TOKEN_STOPS ===
-TR_HEADER base_run=QA
-TR_MARKER_GATE constants=marker_free
-TR_PLAN_READ completion=clean_eof records=2
-TR_PLAN_ROWS count=1
-TR_STOP reason=stdin_file_missing op=07 path=<QA>\cases\f5\remote_close_tree.sh
-RUNNER_RC=3
-=== F6_GREEN_SSH_STDIN_WITHOUT_FILE ===
-TR_STOP reason=plan_row_ssh_stdin_without_file op=01
-RUNNER_RC=3
-=== F7_GREEN_KIND_PROGRAM_MISMATCH ===
-TR_STOP reason=plan_row_kind_program_mismatch op=01 kind=ssh_stdin program=scp
-RUNNER_RC=3
-=== F8_GREEN_CWD_NOT_PREREGISTERED ===
-TR_STOP reason=plan_row_cwd_not_preregistered op=01 cwd=C:\Windows
-RUNNER_RC=3
-=== F9_GREEN_STDIN_ON_NON_SSH_KIND ===
-TR_STOP reason=plan_row_stdin_file_on_non_ssh_kind op=01 kind=scp_down
-RUNNER_RC=3
-=== G1_GREEN_CLEAN_EOF ===
-TR_PLAN_READ completion=clean_eof records=2
-RUNNER_RC=0
-=== G2_GREEN_UNTERMINATED_FINAL_RECORD ===
-TR_STOP reason=plan_unterminated_final_record path=<QA>\cases\G2_GREEN_UNTERMINATED_FINAL_RECORD\TRANSPORT_PLAN.tsv
-RUNNER_RC=3
-=== G3_GREEN_HARD_READ_ERROR ===
-TR_STOP reason=plan_read_error detail=System.Management.Automation.MethodInvocationException path=<QA>\cases\G3_GREEN_HARD_READ_ERROR\TRANSPORT_PLAN.tsv
-RUNNER_RC=3
-=== G4_GREEN_EMPTY_INPUT ===
-TR_STOP reason=plan_empty_input path=<QA>\cases\G4_GREEN_EMPTY_INPUT\TRANSPORT_PLAN.tsv
-RUNNER_RC=3
-=== G5_GREEN_CARRIAGE_RETURN ===
-TR_STOP reason=plan_carriage_return_not_allowed path=<QA>\cases\G5_GREEN_CARRIAGE_RETURN\TRANSPORT_PLAN.tsv
-RUNNER_RC=3
-=== G6_GREEN_CONTROL_BYTE ===
-TR_STOP reason=plan_control_byte_7 path=<QA>\cases\G6_GREEN_CONTROL_BYTE\TRANSPORT_PLAN.tsv
-RUNNER_RC=3
-=== G7_GREEN_NON_ASCII_BYTE ===
-TR_STOP reason=plan_non_ascii_byte path=<QA>\cases\G7_GREEN_NON_ASCII_BYTE\TRANSPORT_PLAN.tsv
-RUNNER_RC=3
-=== H_ROW24_ALL_FIVE_ARMS ===
-TR_RESULT id=01 rc=0 expect_rc=0 elapsed_ms=2062
-TR_RESULT id=02 rc=1 expect_rc=1 elapsed_ms=3
-TR_RESULT id=03 rc=3 expect_rc=3 elapsed_ms=1
-TR_RESULT id=04 rc=3 expect_rc=3 elapsed_ms=1
-TR_RESULT id=05 rc=3 expect_rc=3 elapsed_ms=1
-TR_RUN PASS base_run=QA record=<QA>\cases\h1\record
-RUNNER_RC=0
-op 01 -> B6_external row=24 outcome=connection_refused host=127.0.0.1 port=9 payload_bytes=0  [elapsed_ms=2062]
-op 02 -> B6_FAIL reason=host_reachable_8790 outcome=connected host=127.0.0.1 port=60020 payload_bytes=0  [elapsed_ms=3]
-op 03 -> B6_STOP reason=external_probe_not_evaluable outcome=port_invalid rc=3 detail=port_range  [elapsed_ms=1]
-op 04 -> B6_STOP reason=external_probe_not_evaluable outcome=timeout_invalid rc=3 detail=timeout_range  [elapsed_ms=1]
-op 05 -> B6_STOP reason=external_probe_not_evaluable outcome=argv_malformed rc=3 detail=expected_host_port_timeout  [elapsed_ms=1]
-=== I_DRAFT_STATE_DRY_RUN_OF_THE_DELIVERED_FILE ===
-TR_HEADER base_run=<ALLOCATE-AT-DISPATCH>
-TR_MODE execute=False confirm_supplied=False
-TR_STOP reason=unfilled_marker field=BASE_RUN
-RUNNER_RC=3
-=== WPI_R2_RUNNER_QA_COMPLETE (scratch root removed) ===
+﻿=== source identities ===
+R3 13a57438c12effa108aacc39bbe91345acf7551b76f0991a669059040c5590e4 57826 C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPI_BLOCKS_DRAFT\transport_runner.ps1
+R2 2f076ed9a928656fddf22969ea4bf70de895f2c84c73f13b4c64b8040e72aa9a 45066 C:\Users\Public\wpi_r3\r2\transport_runner.ps1
+CMD 65ec268add3973b6dca64222985da47caeaee44a340b0ec1466782914fd743d9
+SSH 8607ff933e769e77534b1244e39965bcf1c904dbfd4b9da819bbb71034cfef88
+
+=== J1 RED   round-2 bytes: op01 STOP, then every always row runs ===
+COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Public\wpi_r3\qa\prereg\transport_runner.ps1 -Execute -Confirm WPIQA-EXECUTE
+  TR_FIRST_FAIL id=01 rc=3 expected=0 later_sequence_ops=skip always_ops=run
+  TR_OP_NOT_EVALUABLE id=01 rc=3 expected=0
+  TR_OP_SKIPPED id=02 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=03 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=04 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=05 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=06 reason=prior_sequence_mismatch
+  TR_OP_DEVIANT id=07 rc=1 expected=0
+  TR_OP_DEVIANT id=08 rc=1 expected=0
+  TR_OP_DEVIANT id=09 rc=1 expected=0
+  TR_OP_DEVIANT id=10 rc=1 expected=0
+  TR_OP_NOT_EVALUABLE id=11 rc=3 expected=0
+  TR_OP_NOT_EVALUABLE id=12 rc=3 expected=0
+  TR_RUN_CLASS deviant=4 not_evaluable=3 precedence=deviant_outranks_not_evaluable
+  TR_RUN FAIL base_run=WPIQA first_fail=01 first_not_evaluable=01 record=C:\Users\Public\wpi_r3\qa\rec\WPI_TRANSPORT_WPIQA
+  RUNNER_RC=1
+
+=== J1 GREEN round-3 bytes: same 12-row fixture ===
+COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Public\wpi_r3\qa\prereg\transport_runner.ps1 -Execute -Confirm WPIQA-EXECUTE
+  TR_OP_CLASS id=01 kind=ssh_stdin rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_FIRST_MISMATCH id=01 rc=3 expected=0 class=not_evaluable later_sequence_ops=skip always_ops=run
+  TR_OP_NOT_EVALUABLE id=01 rc=3 expected=0 reason=operation_reported_stop
+  TR_OP_SKIPPED id=02 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=03 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=04 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=05 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=06 reason=prior_sequence_mismatch
+  TR_OP_CLASS id=07 kind=ssh_stdin rc=1 expect_rc=0 class=not_evaluable reason=cleanup_after_unestablished_prerequisite
+  TR_OP_NOT_EVALUABLE id=07 rc=1 expected=0 reason=cleanup_after_unestablished_prerequisite
+  TR_OP_CLASS id=08 kind=ssh_stdin rc=1 expect_rc=0 class=not_evaluable reason=cleanup_after_unestablished_prerequisite
+  TR_OP_NOT_EVALUABLE id=08 rc=1 expected=0 reason=cleanup_after_unestablished_prerequisite
+  TR_OP_CLASS id=09 kind=scp_down rc=1 expect_rc=0 class=not_evaluable reason=scp_transfer_did_not_complete
+  TR_OP_NOT_EVALUABLE id=09 rc=1 expected=0 reason=scp_transfer_did_not_complete
+  TR_OP_CLASS id=10 kind=scp_down rc=1 expect_rc=0 class=not_evaluable reason=scp_transfer_did_not_complete
+  TR_OP_NOT_EVALUABLE id=10 rc=1 expected=0 reason=scp_transfer_did_not_complete
+  TR_OP_CLASS id=11 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_OP_NOT_EVALUABLE id=11 rc=3 expected=0 reason=operation_reported_stop
+  TR_OP_CLASS id=12 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_OP_NOT_EVALUABLE id=12 rc=3 expected=0 reason=operation_reported_stop
+  TR_RUN_CLASS deviant=0 not_evaluable=7 precedence=deviant_outranks_not_evaluable
+  TR_RUN STOP base_run=WPIQA first_mismatch=01 first_not_evaluable=01 record=C:\Users\Public\wpi_r3\qa\rec\WPI_TRANSPORT_WPIQA
+  RUNNER_RC=3
+
+=== J2 RED   round-2 bytes: ssh native rc 255 ===
+COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Public\wpi_r3\qa\prereg\transport_runner.ps1 -Execute -Confirm WPIQA-EXECUTE
+  TR_FIRST_FAIL id=01 rc=255 expected=0 later_sequence_ops=skip always_ops=run
+  TR_OP_DEVIANT id=01 rc=255 expected=0
+  TR_OP_SKIPPED id=02 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=03 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=04 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=05 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=06 reason=prior_sequence_mismatch
+  TR_OP_NOT_EVALUABLE id=11 rc=3 expected=0
+  TR_OP_NOT_EVALUABLE id=12 rc=3 expected=0
+  TR_RUN_CLASS deviant=1 not_evaluable=2 precedence=deviant_outranks_not_evaluable
+  TR_RUN FAIL base_run=WPIQA first_fail=01 first_not_evaluable=11 record=C:\Users\Public\wpi_r3\qa\rec\WPI_TRANSPORT_WPIQA
+  RUNNER_RC=1
+
+=== J2 GREEN round-3 bytes: ssh native rc 255 ===
+COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Public\wpi_r3\qa\prereg\transport_runner.ps1 -Execute -Confirm WPIQA-EXECUTE
+  TR_OP_CLASS id=01 kind=ssh_stdin rc=255 expect_rc=0 class=not_evaluable reason=ssh_transport_failure_rc255
+  TR_FIRST_MISMATCH id=01 rc=255 expected=0 class=not_evaluable later_sequence_ops=skip always_ops=run
+  TR_OP_NOT_EVALUABLE id=01 rc=255 expected=0 reason=ssh_transport_failure_rc255
+  TR_OP_SKIPPED id=02 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=03 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=04 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=05 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=06 reason=prior_sequence_mismatch
+  TR_OP_CLASS id=07 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=08 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=09 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=10 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=11 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_OP_NOT_EVALUABLE id=11 rc=3 expected=0 reason=operation_reported_stop
+  TR_OP_CLASS id=12 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_OP_NOT_EVALUABLE id=12 rc=3 expected=0 reason=operation_reported_stop
+  TR_RUN_CLASS deviant=0 not_evaluable=3 precedence=deviant_outranks_not_evaluable
+  TR_RUN STOP base_run=WPIQA first_mismatch=01 first_not_evaluable=01 record=C:\Users\Public\wpi_r3\qa\rec\WPI_TRANSPORT_WPIQA
+  RUNNER_RC=3
+
+=== J3 RED   round-2 bytes: rc 2 outside the outcome grammar ===
+COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Public\wpi_r3\qa\prereg\transport_runner.ps1 -Execute -Confirm WPIQA-EXECUTE
+  TR_FIRST_FAIL id=01 rc=2 expected=0 later_sequence_ops=skip always_ops=run
+  TR_OP_DEVIANT id=01 rc=2 expected=0
+  TR_OP_SKIPPED id=02 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=03 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=04 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=05 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=06 reason=prior_sequence_mismatch
+  TR_OP_NOT_EVALUABLE id=11 rc=3 expected=0
+  TR_OP_NOT_EVALUABLE id=12 rc=3 expected=0
+  TR_RUN_CLASS deviant=1 not_evaluable=2 precedence=deviant_outranks_not_evaluable
+  TR_RUN FAIL base_run=WPIQA first_fail=01 first_not_evaluable=11 record=C:\Users\Public\wpi_r3\qa\rec\WPI_TRANSPORT_WPIQA
+  RUNNER_RC=1
+
+=== J3 GREEN round-3 bytes: rc 2 outside the outcome grammar ===
+COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Public\wpi_r3\qa\prereg\transport_runner.ps1 -Execute -Confirm WPIQA-EXECUTE
+  TR_OP_CLASS id=01 kind=ssh_stdin rc=2 expect_rc=0 class=not_evaluable reason=rc_outside_outcome_grammar
+  TR_FIRST_MISMATCH id=01 rc=2 expected=0 class=not_evaluable later_sequence_ops=skip always_ops=run
+  TR_OP_NOT_EVALUABLE id=01 rc=2 expected=0 reason=rc_outside_outcome_grammar
+  TR_OP_SKIPPED id=02 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=03 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=04 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=05 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=06 reason=prior_sequence_mismatch
+  TR_OP_CLASS id=07 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=08 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=09 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=10 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=11 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_OP_NOT_EVALUABLE id=11 rc=3 expected=0 reason=operation_reported_stop
+  TR_OP_CLASS id=12 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_OP_NOT_EVALUABLE id=12 rc=3 expected=0 reason=operation_reported_stop
+  TR_RUN_CLASS deviant=0 not_evaluable=3 precedence=deviant_outranks_not_evaluable
+  TR_RUN STOP base_run=WPIQA first_mismatch=01 first_not_evaluable=01 record=C:\Users\Public\wpi_r3\qa\rec\WPI_TRANSPORT_WPIQA
+  RUNNER_RC=3
+
+=== J4 RED   round-2 bytes: ssh rc 0 with NO remote output at all ===
+COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Public\wpi_r3\qa\prereg\transport_runner.ps1 -Execute -Confirm WPIQA-EXECUTE
+  TR_FIRST_FAIL id=11 rc=3 expected=0 later_sequence_ops=skip always_ops=run
+  TR_OP_NOT_EVALUABLE id=11 rc=3 expected=0
+  TR_OP_NOT_EVALUABLE id=12 rc=3 expected=0
+  TR_RUN_CLASS deviant=0 not_evaluable=2 precedence=deviant_outranks_not_evaluable
+  TR_RUN STOP base_run=WPIQA first_fail=11 first_not_evaluable=11 record=C:\Users\Public\wpi_r3\qa\rec\WPI_TRANSPORT_WPIQA
+  RUNNER_RC=3
+
+=== J4 GREEN round-3 bytes: ssh rc 0 with NO remote output at all ===
+COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Public\wpi_r3\qa\prereg\transport_runner.ps1 -Execute -Confirm WPIQA-EXECUTE
+  TR_OP_CLASS id=01 kind=ssh_stdin rc=0 expect_rc=0 class=not_evaluable reason=no_remote_program_marker_in_capture
+  TR_FIRST_MISMATCH id=01 rc=0 expected=0 class=not_evaluable later_sequence_ops=skip always_ops=run
+  TR_OP_NOT_EVALUABLE id=01 rc=0 expected=0 reason=no_remote_program_marker_in_capture
+  TR_OP_SKIPPED id=02 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=03 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=04 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=05 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=06 reason=prior_sequence_mismatch
+  TR_OP_CLASS id=07 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=08 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=09 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=10 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=11 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_OP_NOT_EVALUABLE id=11 rc=3 expected=0 reason=operation_reported_stop
+  TR_OP_CLASS id=12 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_OP_NOT_EVALUABLE id=12 rc=3 expected=0 reason=operation_reported_stop
+  TR_RUN_CLASS deviant=0 not_evaluable=3 precedence=deviant_outranks_not_evaluable
+  TR_RUN STOP base_run=WPIQA first_mismatch=01 first_not_evaluable=01 record=C:\Users\Public\wpi_r3\qa\rec\WPI_TRANSPORT_WPIQA
+  RUNNER_RC=3
+
+=== J5 GREEN round-3 bytes: a block that RAN and returned 1 (FAIL must survive) ===
+COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Public\wpi_r3\qa\prereg\transport_runner.ps1 -Execute -Confirm WPIQA-EXECUTE
+  TR_OP_CLASS id=01 kind=ssh_stdin rc=1 expect_rc=0 class=deviant reason=operation_ran_and_observed_deviant_state
+  TR_FIRST_MISMATCH id=01 rc=1 expected=0 class=deviant later_sequence_ops=skip always_ops=run
+  TR_OP_DEVIANT id=01 rc=1 expected=0 reason=operation_ran_and_observed_deviant_state
+  TR_OP_SKIPPED id=02 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=03 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=04 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=05 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=06 reason=prior_sequence_mismatch
+  TR_OP_CLASS id=07 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=08 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=09 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=10 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=11 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_OP_NOT_EVALUABLE id=11 rc=3 expected=0 reason=operation_reported_stop
+  TR_OP_CLASS id=12 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_OP_NOT_EVALUABLE id=12 rc=3 expected=0 reason=operation_reported_stop
+  TR_RUN_CLASS deviant=1 not_evaluable=2 precedence=deviant_outranks_not_evaluable
+  TR_RUN FAIL base_run=WPIQA first_mismatch=01 first_not_evaluable=11 record=C:\Users\Public\wpi_r3\qa\rec\WPI_TRANSPORT_WPIQA
+  RUNNER_RC=1
+
+=== J6 RED   round-2 bytes: scp transfer failed rc 1 ===
+COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Public\wpi_r3\qa\prereg\transport_runner.ps1 -Execute -Confirm WPIQA-EXECUTE
+  TR_FIRST_FAIL id=02 rc=1 expected=0 later_sequence_ops=skip always_ops=run
+  TR_OP_DEVIANT id=02 rc=1 expected=0
+  TR_OP_SKIPPED id=03 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=04 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=05 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=06 reason=prior_sequence_mismatch
+  TR_OP_NOT_EVALUABLE id=11 rc=3 expected=0
+  TR_OP_NOT_EVALUABLE id=12 rc=3 expected=0
+  TR_RUN_CLASS deviant=1 not_evaluable=2 precedence=deviant_outranks_not_evaluable
+  TR_RUN FAIL base_run=WPIQA first_fail=02 first_not_evaluable=11 record=C:\Users\Public\wpi_r3\qa\rec\WPI_TRANSPORT_WPIQA
+  RUNNER_RC=1
+
+=== J6 GREEN round-3 bytes: scp transfer failed rc 1 ===
+COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Public\wpi_r3\qa\prereg\transport_runner.ps1 -Execute -Confirm WPIQA-EXECUTE
+  TR_OP_CLASS id=01 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=02 kind=scp_up rc=1 expect_rc=0 class=not_evaluable reason=scp_transfer_did_not_complete
+  TR_FIRST_MISMATCH id=02 rc=1 expected=0 class=not_evaluable later_sequence_ops=skip always_ops=run
+  TR_OP_NOT_EVALUABLE id=02 rc=1 expected=0 reason=scp_transfer_did_not_complete
+  TR_OP_SKIPPED id=03 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=04 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=05 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=06 reason=prior_sequence_mismatch
+  TR_OP_CLASS id=07 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=08 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=09 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=10 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=11 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_OP_NOT_EVALUABLE id=11 rc=3 expected=0 reason=operation_reported_stop
+  TR_OP_CLASS id=12 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_OP_NOT_EVALUABLE id=12 rc=3 expected=0 reason=operation_reported_stop
+  TR_RUN_CLASS deviant=0 not_evaluable=3 precedence=deviant_outranks_not_evaluable
+  TR_RUN STOP base_run=WPIQA first_mismatch=02 first_not_evaluable=02 record=C:\Users\Public\wpi_r3\qa\rec\WPI_TRANSPORT_WPIQA
+  RUNNER_RC=3
+
+=== K1 RED   round-2 bytes + round-2 child environment + REAL ssh.exe ===
+COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Public\wpi_r3\qa\prereg\transport_runner.ps1 -Execute -Confirm WPIQA-EXECUTE
+  TR_PROGRAM name=ssh path=C:\Windows\System32\OpenSSH\ssh.exe sha256=8607ff933e769e77534b1244e39965bcf1c904dbfd4b9da819bbb71034cfef88 resolution=pinned_absolute chain=trusted
+  TR_ENV name=ComSpec value=C:\Windows\System32\cmd.exe
+  TR_ENV name=HOMEDRIVE value=C:
+  TR_ENV name=HOMEPATH value=\Users\BarışSemaay
+  TR_ENV name=PATH value=C:\Windows\System32;C:\Windows
+  TR_ENV name=PATHEXT value=.COM;.EXE;.BAT;.CMD
+  TR_ENV name=SystemRoot value=C:\Windows
+  TR_ENV name=TEMP value=C:\Users\Public\wpi_r3\qa\rec\WPI_TRANSPORT_WPIQA\tmp
+  TR_ENV name=TMP value=C:\Users\Public\wpi_r3\qa\rec\WPI_TRANSPORT_WPIQA\tmp
+  TR_ENV name=USERPROFILE value=C:\Users\BarışSemaay
+  TR_ENV name=windir value=C:\Windows
+  TR_ENV_POLICY cleared=all carried=USERPROFILE,HOMEDRIVE,HOMEPATH inherited_path=never
+  TR_OP_END id=01 rc=255 expect_rc=0 elapsed_ms=30 stdout_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  TR_OP_DEVIANT id=01 rc=255 expected=0
+  TR_RUN FAIL base_run=WPIQA first_fail=01 first_not_evaluable= record=C:\Users\Public\wpi_r3\qa\rec\WPI_TRANSPORT_WPIQA
+  RUNNER_RC=1
+
+=== K2 GREEN round-3 bytes + round-3 child environment + REAL ssh.exe ===
+COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Public\wpi_r3\qa\prereg\transport_runner.ps1 -Execute -Confirm WPIQA-EXECUTE
+  TR_PROGRAM name=ssh path=C:\Windows\System32\OpenSSH\ssh.exe sha256=8607ff933e769e77534b1244e39965bcf1c904dbfd4b9da819bbb71034cfef88 resolution=pinned_absolute chain=trusted
+  TR_CONFIG name=ssh_identity path=C:\Users\Public\wpi_r3\qa\cfg\identity sha256=withheld_key_material why=fixture
+  TR_CONFIG name=user_known_hosts path=C:\Users\Public\wpi_r3\qa\cfg\known_hosts sha256=3c93622988e8ecd7ffb5b21cd9b256f1fff4130dde6d4442cddb791af51636b9 why=fixture
+  TR_CONFIG name=global_known_hosts path=C:\Users\Public\wpi_r3\qa\cfg\known_hosts_global sha256=041ffd2f0e1b4b5d0ab92d6e178a83d8467ee5d82e5760353008c95357d38ae0 why=fixture
+  TR_ENV name=ComSpec value=C:\Windows\System32\cmd.exe why=pinned_absolute_so_no_inherited_value_can_name_another_interpreter
+  TR_ENV name=PATH value=C:\Windows\System32;C:\Windows why=frozen_to_the_pinned_system_root_the_inherited_PATH_never_reaches_a_child
+  TR_ENV name=PATHEXT value=.COM;.EXE;.BAT;.CMD why=frozen_so_extension_search_order_is_not_inherited
+  TR_ENV name=PROGRAMDATA value=C:\Users\Public\wpi_r3\qa\rec\WPI_TRANSPORT_WPIQA\sshconf why=run_owned_and_empty_OpenSSH_for_Windows_exits_255_with_no_output_when_it_is_unset_and_would_otherwise_read_the_ambient___PROGRAMDATA___ssh_tree
+  TR_ENV name=SystemRoot value=C:\Windows why=the_pinned_system_root_every_program_chain_is_adjudicated_against
+  TR_ENV name=TEMP value=C:\Users\Public\wpi_r3\qa\rec\WPI_TRANSPORT_WPIQA\tmp why=run_owned_under_the_record_root_not_the_operator_temp
+  TR_ENV name=TMP value=C:\Users\Public\wpi_r3\qa\rec\WPI_TRANSPORT_WPIQA\tmp why=same_value_under_the_second_name
+  TR_ENV name=windir value=C:\Windows why=same_value_under_the_legacy_name_some_libraries_still_read
+  TR_ENV_POLICY cleared=all carried=none inherited_path=never ambient_ssh_config=disabled_by_-F_none
+  TR_OP_END id=01 rc=0 expect_rc=0 elapsed_ms=40 stdout_sha256=4b794585bd843198f570b71c7e11cac29a47874a1acfa6bcbf785c8badbad335 stderr_sha256=d0e14941dee288cc8de19e48436cdf3c2e7939d4b98136c44d954b5f8be73d8a
+  TR_OP_CLASS id=01 kind=ssh_stdin rc=0 expect_rc=0 class=not_evaluable reason=no_remote_program_marker_in_capture
+  TR_OP_NOT_EVALUABLE id=01 rc=0 expected=0 reason=no_remote_program_marker_in_capture
+  TR_RUN STOP base_run=WPIQA first_mismatch=01 first_not_evaluable=01 record=C:\Users\Public\wpi_r3\qa\rec\WPI_TRANSPORT_WPIQA
+  RUNNER_RC=3
+
+=== cleanup ===
+removed C:\Users\Public\wpi_r3\qa exists=False
 ```
 
-### 4.1 What the set-2 transcript establishes
+### C.3 what it establishes
 
-- **A1 — the §7 binding executes and returns 0 for the first time.** A real
-  `remote_close_tree.sh` transcript is fed as `ops/07.stdout`, the identical tree
-  is retrieved into the record as `ops/09`, and op 11 reports
-  `TR_BIND_COUNTS remote=3 local=3`,
-  `TR_BIND_SET remote_set_sha256=b769956d…c208 reconstructed=b769956d…c208`,
-  `TR_BIND_PASS files=3`, `TR_RUN PASS`, exit 0. `CLOSE_DIGEST_SET_SHA256` is
-  compared for the first time in this artefact's life.
-- **A2 — the delivered defect, reverted one hunk at a time.** The same fixture,
-  with only the capture latch undone, reports `digest_differs` for all three
-  byte-identical files, `TR_RUN FAIL`, exit 1 — Claude F1 and Codex F2 reproduced
-  against the repaired file's own bytes.
-- **A3/A4/A5 — the differing pairs must and do FAIL, each for its own reason**
-  (`digest_differs=aaa.txt`, `missing_remotely=extra.txt`,
-  `missing_locally=sub/nested.txt`). This is the point Claude's audit made: while
-  F1 stood, every one of these produced the same rc 1 as the unmutated case and
-  therefore proved nothing. They now discriminate.
-- **A6 — a tampered `CLOSE_DIGEST_SET_SHA256` STOPs**, and the STOP propagates:
-  `TR_BIND_STOP reason=digest_set_rendering_differs` → op rc 3 →
-  `TR_RUN STOP` → exit 3.
-- **B1–B7 — the close-record grammar has a red state for every clause**: runid
-  mismatch, duplicate digest, `../` path, out-of-order record, declared-count
-  mismatch, truncated record, unknown record. All seven return rc 3 and
-  `TR_RUN STOP`, never FAIL and never PASS.
-- **C1/C2 — Codex F1 / Claude F2.** One op returns a reasoned rc 3. Repaired:
-  `TR_OP_NOT_EVALUABLE`, `TR_RUN_CLASS deviant=0 not_evaluable=1`,
-  `TR_RUN STOP`, exit **3**. Reverted: `TR_RUN FAIL`, exit **1** — the run
-  accusing the host of deviant state it never observed.
-- **C3 — the precedence rule, defined and tested.** A connected listener (rc 1,
-  a completed observation) followed by an `always` op that cannot be evaluated
-  (rc 3) yields `TR_RUN_CLASS deviant=1 not_evaluable=1` and `TR_RUN FAIL` at
-  exit 1, with `first_fail=01 first_not_evaluable=02` both recorded. A real
-  deviant observation is never demoted, and the STOP is never lost.
-- **C4/C5 — first-FAIL ordering is unchanged.** GREEN emits
-  `TR_OP_SKIPPED id=02 reason=prior_sequence_mismatch` and still runs 03 and 04;
-  the mutated skip predicate runs 02. Identical to the round-1 behaviour the
-  Claude audit re-verified.
-- **D1/D2 — Codex F3 on the operator side.** With a fake `ssh.cmd` first on
-  `PATH`: reverting one line to `Get-Command` resolution executes it
-  (`FAKE_SSH_EXECUTED`, `TR_RUN PASS`, exit 0 — a green run against an attacker's
-  binary). The repaired file records
-  `TR_PROGRAM name=ssh path=… sha256=… resolution=pinned_absolute chain=trusted`
-  and the child prints `PINNED_PROGRAM_RAN`.
-- **D3 — the child environment is constructed, not inherited.** `PYTHONPATH` was
-  set to `C:\attacker\pythonpath` in the parent and a decoy directory was first
-  on the parent's `PATH`; the child's own `set` output contains neither. `PATH`
-  is the frozen literal, `TEMP`/`TMP` are the run-owned record subdirectory.
-- **E1/E2 — Claude F6.** With the hash pins filled and `$RECORD_ROOT` still
-  literal, the repaired file emits `TR_STOP reason=unfilled_marker
-  field=RECORD_ROOT` and exits 3. Remove the gate and the trap and the same
-  fixture reproduces the audit's finding verbatim: an unhandled, **localized**
-  `Test-Path : Yolda geçersiz karakterler var.`, no `TR_STOP`, no reason token,
-  exit 1.
-- **F1/F2 — Codex F8.** The archive is pinned under `01_RUNKIT`; a same-named
-  decoy beside the runner is never even hashed, and pinning the decoy's digest
-  produces `pinned_file_sha256_mismatch` against the kit copy's digest.
-- **F3/F4/F5 — Codex F9.** Op 07 and op 08 resolve
-  `ACCEPTED:remote_close_tree.sh` to the frozen Stage-2 path at
-  `87157f0ea454df7c1f826a8c76a38f3045dd38efdd8fa347644f79251d3f3f0e`. An absent
-  file STOPs `stdin_file_missing`, and naming the same file under the wrong root
-  token STOPs as well — the root is part of the pin, not a convention.
-- **F6–F9 — Claude N3.** `ssh_stdin` without a stdin file, a row whose kind and
-  program disagree, a cwd outside the preregistered set, and a stdin file on a
-  non-ssh kind are each refused by name.
-- **G1–G7 — the plan reader's seven completion classes**, all executed: clean
-  EOF, unterminated final record, hard read error, empty input, CR, control byte,
-  non-ASCII byte.
-- **H — section 8 row 24, all five arms in one command.** `connection_refused`
-  rc 0 (2062 ms, inside the 20000 ms bound), `connected` rc 1, `port_invalid`,
-  `timeout_invalid` and `argv_malformed` rc 3. The exact command is the script
-  above; round 1's omission of it (Codex F10) is closed.
-- **I — the delivered file, exactly as it ships**, dry run, no arguments:
-  `TR_STOP reason=unfilled_marker field=BASE_RUN`, exit 3. The draft is
-  fail-closed at the *first* frozen constant, before it can touch a path.
+- **J1 — the whole-plan early STOP with every `always` row running.** This is the case
+  Codex asked for by name. RED: op 01 STOPs honestly at rc 3, and then the four
+  `always` rows that exist to close and retrieve evidence — a close that finds no tree
+  (rc 1) twice, and two failed retrievals (rc 1) — are each labelled
+  `TR_OP_DEVIANT`, producing `TR_RUN_CLASS deviant=4 not_evaluable=3` and
+  **`TR_RUN FAIL` at exit 1**. One honest STOP was outvoted by four consequences of
+  itself. GREEN: the same twelve rows give `deviant=0 not_evaluable=7` and
+  **`TR_RUN STOP` at exit 3**, with each reason named —
+  `cleanup_after_unestablished_prerequisite` for 07/08 and
+  `scp_transfer_did_not_complete` for 09/10.
+- **J2 — ssh native rc 255.** RED `TR_OP_DEVIANT id=01 rc=255` → `TR_RUN FAIL`, exit 1.
+  GREEN `class=not_evaluable reason=ssh_transport_failure_rc255` → `TR_RUN STOP`,
+  exit 3.
+- **J3 — rc 2, outside the outcome grammar.** RED FAIL exit 1; GREEN
+  `reason=rc_outside_outcome_grammar`, STOP exit 3.
+- **J4 — the provenance case, and a genuine round-2 false PASS.** ssh returns 0 having
+  produced no output whatsoever. RED treats op 01 as a **match** and runs on through
+  ops 02–05 — that is, it spends both one-use stage RUNIDs on the strength of an ssh
+  that never demonstrated it ran anything — and only STOPs later, at the local bind.
+  GREEN STOPs at op 01 with `reason=no_remote_program_marker_in_capture` and skips
+  every later `sequence_ok` op.
+- **J5 — FAIL must survive.** A block that ran and returned 1, with its
+  `EXTRACT_FAIL` marker in the capture, is still `class=deviant reason=operation_ran_and_observed_deviant_state`
+  → `TR_RUN FAIL`, exit 1. The repair narrows FAIL; it does not abolish it.
+- **J6 — a failed transfer.** RED FAIL exit 1; GREEN
+  `reason=scp_transfer_did_not_complete`, STOP exit 3. scp's failure rc is 1, which
+  collides with the FAIL class, so the kind decides rather than the integer.
+- **K1/K2 — the real pinned `ssh.exe`, through the runner.** K1 runs the audited
+  round-2 runner with the audited round-2 child environment and the real program:
+  `TR_OP_END id=01 rc=255 … stdout_sha256=e3b0c442… stderr_sha256=e3b0c442…` — the
+  empty-file digest on both streams — then `TR_OP_DEVIANT` and `TR_RUN FAIL` exit 1.
+  That single arm reproduces F2's `DELIVERED_ENV_RC=255 STDOUT_BYTES=0
+  STDERR_BYTES=0` **and** F1's false FAIL simultaneously. K2 runs the round-3 runner:
+  the same real program returns rc 0 with real output, the environment lines show
+  `carried=none` and a run-owned `PROGRAMDATA`, and the op is classified
+  `not_evaluable reason=no_remote_program_marker_in_capture` → `TR_RUN STOP` exit 3,
+  which is the truthful classification of an `ssh -G` that evaluated configuration and
+  ran no remote program.
 
-## 5. Derivation boundary against the accepted originals
+---
+
+## 5. Fixture D — configuration identity and the real pinned OpenSSH (F2)
+
+### D.1 `f2_config_qa.ps1` (verbatim)
 
 ```powershell
-$b='MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\02_PREREG'
-$d='MTC_COMMAND_CENTER\11_TRIAGE\WPI_BLOCKS_DRAFT'
-git diff --no-index -- "$b\remote_setup.sh" "$d\remote_setup_wpi.sh"
-git diff --no-index -- "$b\remote_extract_verify.sh" "$d\remote_extract_verify_wpi.sh"
+# WP-I transport round 3 - configuration-identity fixture set (F2), plus the
+# delivered-file marker gate. Uses the REAL pinned ssh.exe and scp.exe.
+# ssh -G evaluates configuration and exits; scp copies local-to-local. Neither
+# opens a connection and no host is named that resolves.
+Set-StrictMode -Version 2.0
+$ErrorActionPreference = 'Stop'
+
+$DRAFT = 'C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPI_BLOCKS_DRAFT'
+$R3SRC = Join-Path $DRAFT 'transport_runner.ps1'
+$SSH   = 'C:\Windows\System32\OpenSSH\ssh.exe'
+$SCP   = 'C:\Windows\System32\OpenSSH\scp.exe'
+$SR    = 'C:\Windows'
+$QA    = 'C:\Users\Public\wpi_r3\qb'
+
+function Sha([string] $p) { return (Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant() }
+function WriteLf([string] $p, [string] $t) {
+    [System.IO.File]::WriteAllText($p, ($t -replace "`r`n", "`n"), (New-Object System.Text.UTF8Encoding($false)))
+}
+
+if (Test-Path -LiteralPath $QA) { Remove-Item -LiteralPath $QA -Recurse -Force }
+foreach ($d in @('prereg','kit','accepted','cfg','rec','pd_clean\ssh','pd_evil\ssh','tmp')) {
+    [void](New-Item -ItemType Directory -Path (Join-Path $QA $d) -Force)
+}
+$PREREG=Join-Path $QA 'prereg'; $KIT=Join-Path $QA 'kit'; $ACC=Join-Path $QA 'accepted'
+$CFG=Join-Path $QA 'cfg'; $REC=Join-Path $QA 'rec\WPI_TRANSPORT_WPIQA'
+$PDCLEAN=Join-Path $QA 'pd_clean'; $PDEVIL=Join-Path $QA 'pd_evil'; $TMPD=Join-Path $QA 'tmp'
+
+WriteLf (Join-Path $PREREG 'setup.sh') '# fixture setup'
+WriteLf (Join-Path $KIT 'runkit.tar') 'fixture-kit'
+WriteLf (Join-Path $KIT 'src.txt') 'wpi-r3-scp-local-arm'
+WriteLf (Join-Path $CFG 'identity') 'fixture-identity'
+WriteLf (Join-Path $CFG 'known_hosts') 'fixture-known-hosts'
+WriteLf (Join-Path $CFG 'known_hosts_global') 'fixture-known-hosts-global'
+
+# ============================================================ M. ambient config
+# A hostile system-wide ssh_config planted where __PROGRAMDATA__ resolves. It is
+# given an owner-only ACL, because OpenSSH refuses a group/other-writable config
+# outright and that refusal would mask the channel under test.
+$evilCfg = Join-Path $PDEVIL 'ssh\ssh_config'
+[System.IO.File]::WriteAllText($evilCfg, "Host *`r`n    ProxyCommand C:\Windows\System32\cmd.exe /c echo SYSTEM_CONFIG_HIJACK`r`n    StrictHostKeyChecking no`r`n", (New-Object System.Text.ASCIIEncoding))
+& icacls.exe $evilCfg /inheritance:r /grant:r ('{0}:(R)' -f $env:USERNAME) | Out-Null
+$evilUser = Join-Path $QA 'evil_user_ssh_config'
+[System.IO.File]::WriteAllText($evilUser, "Host *`r`n    ProxyCommand C:\Windows\System32\cmd.exe /c echo USER_CONFIG_HIJACK`r`n", (New-Object System.Text.ASCIIEncoding))
+
+function Run-Ssh([hashtable] $envMap, [string[]] $argv) {
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = $SSH; $psi.Arguments = ($argv -join ' '); $psi.WorkingDirectory = $PREREG
+    $psi.UseShellExecute=$false; $psi.CreateNoWindow=$true
+    $psi.RedirectStandardOutput=$true; $psi.RedirectStandardError=$true; $psi.RedirectStandardInput=$true
+    $psi.EnvironmentVariables.Clear()
+    foreach ($k in $envMap.Keys) { $psi.EnvironmentVariables[$k] = $envMap[$k] }
+    $p=[System.Diagnostics.Process]::Start($psi); $p.StandardInput.Close()
+    $so=$p.StandardOutput.ReadToEnd(); $se=$p.StandardError.ReadToEnd(); $p.WaitForExit()
+    $rc=$p.ExitCode; $p.Dispose()
+    return [pscustomobject]@{ Rc=$rc; Out=$so; Err=$se }
+}
+function R2Env([string] $pd) {   # the round-2 constructed environment
+    $e=@{}; $e['SystemRoot']=$SR; $e['windir']=$SR; $e['ComSpec']=(Join-Path $SR 'System32\cmd.exe')
+    $e['PATHEXT']='.COM;.EXE;.BAT;.CMD'; $e['PATH']=((Join-Path $SR 'System32')+';'+$SR)
+    $e['TEMP']=$TMPD; $e['TMP']=$TMPD
+    $e['USERPROFILE']=[System.Environment]::GetEnvironmentVariable('USERPROFILE')
+    $e['HOMEDRIVE']=[System.Environment]::GetEnvironmentVariable('HOMEDRIVE')
+    $e['HOMEPATH']=[System.Environment]::GetEnvironmentVariable('HOMEPATH')
+    if ($pd -ne '') { $e['PROGRAMDATA']=$pd }
+    return $e
+}
+function R3Env([string] $pd) {   # the round-3 constructed environment
+    $e=@{}; $e['SystemRoot']=$SR; $e['windir']=$SR; $e['ComSpec']=(Join-Path $SR 'System32\cmd.exe')
+    $e['PATHEXT']='.COM;.EXE;.BAT;.CMD'; $e['PATH']=((Join-Path $SR 'System32')+';'+$SR)
+    $e['TEMP']=$TMPD; $e['TMP']=$TMPD; $e['PROGRAMDATA']=$pd
+    return $e
+}
+$R2OPT = @('-i',(Join-Path $CFG 'identity'),'-o','BatchMode=yes','-o','StrictHostKeyChecking=yes','-o','IdentitiesOnly=yes','-o','ConnectTimeout=20')
+$R3OPT = @('-F','none','-i',(Join-Path $CFG 'identity'),
+    '-o','BatchMode=yes','-o','StrictHostKeyChecking=yes','-o','IdentitiesOnly=yes','-o','ConnectTimeout=20',
+    '-o',('UserKnownHostsFile=' + (Join-Path $CFG 'known_hosts')),
+    '-o',('GlobalKnownHostsFile=' + (Join-Path $CFG 'known_hosts_global')),
+    '-o','ProxyCommand=none','-o','ControlMaster=no','-o','ControlPath=none','-o','PermitLocalCommand=no',
+    '-o','ForwardAgent=no','-o','ForwardX11=no','-o','ClearAllForwardings=yes')
+
+function ShowSsh([string] $lbl, $r, [string[]] $keys) {
+    Write-Host ('  ' + $lbl + ' rc=' + $r.Rc + ' stdout_bytes=' + $r.Out.Length + ' stderr_bytes=' + $r.Err.Length)
+    foreach ($k in $keys) {
+        $hit = '<no ' + $k + ' line>'
+        foreach ($l in ($r.Out -split "`n")) { if ($l.Trim().StartsWith($k)) { $hit=$l.Trim(); break } }
+        Write-Host ('      | ' + $hit)
+    }
+}
+Write-Host '### M1 RED  - round-2 child environment, exactly as it shipped (no PROGRAMDATA)'
+ShowSsh 'M1' (Run-Ssh (R2Env '') (@('-G') + $R2OPT + @('qa-target'))) @()
+Write-Host '### M2      - round-2 environment + PROGRAMDATA only: the single load-bearing variable'
+ShowSsh 'M2' (Run-Ssh (R2Env $env:ProgramData) (@('-G') + $R2OPT + @('qa-target'))) @()
+Write-Host '### M3 RED  - round-2 option set + a reachable ambient system ssh_config'
+ShowSsh 'M3' (Run-Ssh (R2Env $PDEVIL) (@('-G') + $R2OPT + @('qa-target'))) @('proxycommand','stricthostkeychecking')
+Write-Host '### M4 GREEN- same hostile PROGRAMDATA, round-3 option set'
+ShowSsh 'M4' (Run-Ssh (R3Env $PDEVIL) (@('-G') + $R3OPT + @('qa-target'))) @('proxycommand','stricthostkeychecking')
+Write-Host '### M5 RED  - a per-user ssh_config selected by -F is honoured'
+ShowSsh 'M5' (Run-Ssh (R3Env $PDCLEAN) (@('-G','-F',$evilUser) + $R2OPT + @('qa-target'))) @('proxycommand')
+Write-Host '### M6 GREEN- round-3 environment and option set, run-owned empty PROGRAMDATA'
+ShowSsh 'M6' (Run-Ssh (R3Env $PDCLEAN) (@('-G') + $R3OPT + @('qa-target'))) @('proxycommand','userknownhostsfile','globalknownhostsfile','identityfile','batchmode','stricthostkeychecking','identitiesonly','connecttimeout','permitlocalcommand','forwardagent','clearallforwardings')
+Write-Host '### M7      - one-variable-out bisect of the round-3 environment'
+foreach ($drop in @('SystemRoot','windir','ComSpec','PATHEXT','PATH','TEMP','TMP','PROGRAMDATA')) {
+    $e = R3Env $PDCLEAN
+    [void]$e.Remove($drop)
+    $r = Run-Ssh $e (@('-G') + $R3OPT + @('qa-target'))
+    Write-Host ('  without_' + $drop.PadRight(12) + ' rc=' + $r.Rc + ' stdout_bytes=' + $r.Out.Length)
+}
+
+# ================================================ L/K3. arms through the runner
+$ANCHOR = "`$UNFILLED_MARKERS = @('<ALLOCATE-AT-DISPATCH>', '<PIN-AT-FREEZE>')"
+$HDR = "op_id`tkind`trun_when`texpect_rc`tcwd`tstdin_file`tstdin_sha256`targv`tpurpose"
+
+function New-RunnerCopy([string] $dst, [string] $planSha, [string] $khSha, [string[]] $options) {
+    $text = [System.IO.File]::ReadAllText($R3SRC)
+    if (-not $text.Contains($ANCHOR)) { throw 'MUTATION_ANCHOR_NOT_FOUND: $UNFILLED_MARKERS' }
+    $optLiteral = "@('" + ($options -join "','") + "')"
+    $qa = @"
+$ANCHOR
+`$BASE_RUN      = 'WPIQA'
+`$CONFIRM_TOKEN = 'WPIQA-EXECUTE'
+`$PREREG_DIR    = '$PREREG'
+`$RUNKIT_DIR    = '$KIT'
+`$ACCEPTED_DIR  = '$ACC'
+`$RECORD_ROOT   = '$REC'
+`$PLAN_SHA256   = '$planSha'
+`$PINNED_FILES  = @( @{ Path = (Join-Path `$RUNKIT_DIR 'runkit.tar'); Sha = '$(Sha (Join-Path $KIT 'runkit.tar'))' } )
+`$STDIN_ROOTS   = @{ 'PREREG' = `$PREREG_DIR; 'ACCEPTED' = `$ACCEPTED_DIR }
+`$PROGRAM_PINS  = @(
+    @{ Name = 'ssh'; Path = '$SSH'; Sha = '$(Sha $SSH)' },
+    @{ Name = 'scp'; Path = '$SCP'; Sha = '$(Sha $SCP)' }
+)
+`$SSH_IDENTITY_FILE          = '$CFG\identity'
+`$SSH_IDENTITY_SHA           = '$(Sha (Join-Path $CFG 'identity'))'
+`$SSH_USER_KNOWN_HOSTS       = '$CFG\known_hosts'
+`$SSH_USER_KNOWN_HOSTS_SHA   = '$khSha'
+`$SSH_GLOBAL_KNOWN_HOSTS     = '$CFG\known_hosts_global'
+`$SSH_GLOBAL_KNOWN_HOSTS_SHA = '$(Sha (Join-Path $CFG 'known_hosts_global'))'
+`$CONFIG_PINS = @(
+    @{ Name = 'ssh_identity'; Path = `$SSH_IDENTITY_FILE; Sha = `$SSH_IDENTITY_SHA; Print = `$false; Why = 'fixture' },
+    @{ Name = 'user_known_hosts'; Path = `$SSH_USER_KNOWN_HOSTS; Sha = `$SSH_USER_KNOWN_HOSTS_SHA; Print = `$true; Why = 'fixture' },
+    @{ Name = 'global_known_hosts'; Path = `$SSH_GLOBAL_KNOWN_HOSTS; Sha = `$SSH_GLOBAL_KNOWN_HOSTS_SHA; Print = `$true; Why = 'fixture' }
+)
+`$SSH_PINNED_OPTIONS = $optLiteral
+"@
+    [System.IO.File]::WriteAllText($dst, $text.Replace($ANCHOR, $qa), (New-Object System.Text.UTF8Encoding($false)))
+}
+
+function Run-Runner([string] $label, [string] $planText, [string] $khSha, [string[]] $options, [string[]] $grep) {
+    if (Test-Path -LiteralPath $REC) { Remove-Item -LiteralPath $REC -Recurse -Force }
+    if (Test-Path -LiteralPath (Join-Path $KIT 'dst.txt')) { Remove-Item -LiteralPath (Join-Path $KIT 'dst.txt') -Force }
+    $planPath = Join-Path $PREREG 'TRANSPORT_PLAN.tsv'
+    WriteLf $planPath $planText
+    $runner = Join-Path $PREREG 'transport_runner.ps1'
+    New-RunnerCopy $runner (Sha $planPath) $khSha $options
+    Write-Host ''
+    Write-Host ('=== ' + $label + ' ===')
+    Write-Host ('COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File ' + $runner + ' -Execute -Confirm WPIQA-EXECUTE')
+    $out = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $runner -Execute -Confirm WPIQA-EXECUTE 2>&1
+    $rc = $LASTEXITCODE
+    foreach ($line in $out) { $s=[string]$line; foreach ($g in $grep) { if ($s -like $g) { Write-Host ('  '+$s); break } } }
+    Write-Host ('  RUNNER_RC=' + $rc)
+}
+$G = @('TR_STOP*','TR_OP_CLASS*','TR_OP_END*','TR_RUN *','TR_CONFIG*')
+$KHSHA = Sha (Join-Path $CFG 'known_hosts')
+
+# K3: the REAL pinned scp.exe, driven by the runner, copying local-to-local.
+$k3argv = 'scp ' + ($R3OPT -join ' ') + ' src.txt dst.txt'
+$k3 = ($HDR + "`n" + ('02' + "`t" + 'scp_up' + "`t" + 'sequence_ok' + "`t0`t" + $KIT + "`t-`t-`t" + $k3argv + "`treal local-to-local transfer, no network") + "`n")
+Run-Runner 'K3 GREEN real pinned scp.exe through the runner, local-to-local, no network' $k3 $KHSHA $R3OPT $G
+Write-Host ('  DST_CONTENT=[' + (Get-Content -LiteralPath (Join-Path $KIT 'dst.txt') -Raw).Trim() + ']')
+
+# L2: a plan row that drops -F none must not run.
+$tampered = @($R3OPT); $tampered[0] = '-o'; $tampered[1] = 'LogLevel=ERROR'
+$l2argv = 'scp ' + ($tampered -join ' ') + ' src.txt dst.txt'
+$l2 = ($HDR + "`n" + ('02' + "`t" + 'scp_up' + "`t" + 'sequence_ok' + "`t0`t" + $KIT + "`t-`t-`t" + $l2argv + "`ta plan row with the ambient-config refusal removed") + "`n")
+Run-Runner 'L2 GREEN plan row drops -F none: the frozen option block refuses it' $l2 $KHSHA $R3OPT $G
+
+# L3: an unfilled configuration pin must not run.
+Run-Runner 'L3 GREEN a configuration pin is still unfilled' $k3 '<PIN-AT-FREEZE>' $R3OPT $G
+
+Write-Host ''
+Write-Host '=== L1 the delivered file, exactly as it ships, default (dry-run) mode ==='
+Write-Host ('COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File ' + $R3SRC)
+$o = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $R3SRC 2>&1
+Write-Host ('  ' + (($o | ForEach-Object { [string]$_ }) -join "`n  "))
+Write-Host ('  RUNNER_RC=' + $LASTEXITCODE)
+
+Write-Host ''
+Write-Host '=== cleanup ==='
+# The hostile config had its inherited ACEs stripped so OpenSSH would accept it;
+# restore inheritance before removing the tree.
+if (Test-Path -LiteralPath $evilCfg) { & icacls.exe $evilCfg /inheritance:e /grant ('{0}:(F)' -f $env:USERNAME) | Out-Null }
+if (Test-Path -LiteralPath $QA) { Remove-Item -LiteralPath $QA -Recurse -Force }
+Write-Host ('removed ' + $QA + ' exists=' + (Test-Path -LiteralPath $QA))
 ```
+
+### D.2 transcript (verbatim)
 
 ```text
-remote_setup_wpi.sh           178 insertions(+), 51 deletions(-)   22 hunks
-remote_extract_verify_wpi.sh  246 insertions(+), 69 deletions(-)   31 hunks
+﻿### M1 RED  - round-2 child environment, exactly as it shipped (no PROGRAMDATA)
+  M1 rc=255 stdout_bytes=0 stderr_bytes=0
+### M2      - round-2 environment + PROGRAMDATA only: the single load-bearing variable
+  M2 rc=0 stdout_bytes=3915 stderr_bytes=72
+### M3 RED  - round-2 option set + a reachable ambient system ssh_config
+  M3 rc=0 stdout_bytes=3986 stderr_bytes=72
+      | proxycommand C:\Windows\System32\cmd.exe /c echo SYSTEM_CONFIG_HIJACK
+      | stricthostkeychecking true
+### M4 GREEN- same hostile PROGRAMDATA, round-3 option set
+  M4 rc=0 stdout_bytes=3858 stderr_bytes=72
+      | <no proxycommand line>
+      | stricthostkeychecking true
+### M5 RED  - a per-user ssh_config selected by -F is honoured
+  M5 rc=0 stdout_bytes=3984 stderr_bytes=72
+      | proxycommand C:\Windows\System32\cmd.exe /c echo USER_CONFIG_HIJACK
+### M6 GREEN- round-3 environment and option set, run-owned empty PROGRAMDATA
+  M6 rc=0 stdout_bytes=3858 stderr_bytes=72
+      | <no proxycommand line>
+      | userknownhostsfile C:\Users\Public\wpi_r3\qb\cfg\known_hosts
+      | globalknownhostsfile C:\Users\Public\wpi_r3\qb\cfg\known_hosts_global
+      | identityfile C:\Users\Public\wpi_r3\qb\cfg\identity
+      | batchmode yes
+      | stricthostkeychecking true
+      | identitiesonly yes
+      | connecttimeout 20
+      | permitlocalcommand no
+      | forwardagent no
+      | clearallforwardings yes
+### M7      - one-variable-out bisect of the round-3 environment
+  without_SystemRoot   rc=0 stdout_bytes=3858
+  without_windir       rc=0 stdout_bytes=3858
+  without_ComSpec      rc=0 stdout_bytes=3858
+  without_PATHEXT      rc=0 stdout_bytes=3858
+  without_PATH         rc=0 stdout_bytes=3858
+  without_TEMP         rc=0 stdout_bytes=3858
+  without_TMP          rc=0 stdout_bytes=3858
+  without_PROGRAMDATA  rc=255 stdout_bytes=0
+
+=== K3 GREEN real pinned scp.exe through the runner, local-to-local, no network ===
+COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Public\wpi_r3\qb\prereg\transport_runner.ps1 -Execute -Confirm WPIQA-EXECUTE
+  TR_CONFIG name=ssh_identity path=C:\Users\Public\wpi_r3\qb\cfg\identity sha256=withheld_key_material why=fixture
+  TR_CONFIG name=user_known_hosts path=C:\Users\Public\wpi_r3\qb\cfg\known_hosts sha256=3c93622988e8ecd7ffb5b21cd9b256f1fff4130dde6d4442cddb791af51636b9 why=fixture
+  TR_CONFIG name=global_known_hosts path=C:\Users\Public\wpi_r3\qb\cfg\known_hosts_global sha256=041ffd2f0e1b4b5d0ab92d6e178a83d8467ee5d82e5760353008c95357d38ae0 why=fixture
+  TR_OP_END id=02 rc=0 expect_rc=0 elapsed_ms=97 stdout_sha256=a04c3131d5d2d6a794281b2525967934811d733be6dfce8658ac90f520f8a14f stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  TR_OP_CLASS id=02 kind=scp_up rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_RUN PASS base_run=WPIQA record=C:\Users\Public\wpi_r3\qb\rec\WPI_TRANSPORT_WPIQA
+  RUNNER_RC=0
+  DST_CONTENT=[wpi-r3-scp-local-arm]
+
+=== L2 GREEN plan row drops -F none: the frozen option block refuses it ===
+COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Public\wpi_r3\qb\prereg\transport_runner.ps1 -Execute -Confirm WPIQA-EXECUTE
+  TR_STOP reason=plan_row_pinned_option_differs op=02 index=1 actual=[-o] expected=[-F]
+  RUNNER_RC=3
+
+=== L3 GREEN a configuration pin is still unfilled ===
+COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Public\wpi_r3\qb\prereg\transport_runner.ps1 -Execute -Confirm WPIQA-EXECUTE
+  TR_STOP reason=unfilled_marker field=CONFIG_PINS.Sha[user_known_hosts]
+  RUNNER_RC=3
+
+=== L1 the delivered file, exactly as it ships, default (dry-run) mode ===
+COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPI_BLOCKS_DRAFT\transport_runner.ps1
+  TR_HEADER base_run=<ALLOCATE-AT-DISPATCH>
+  TR_MODE execute=False confirm_supplied=False
+  TR_STOP reason=unfilled_marker field=BASE_RUN
+  RUNNER_RC=3
+
+=== cleanup ===
+powershell.exe : Remove-Item : Cannot remove item C:\Users\Public\wpi_r3\qb\pd_evil\ssh\ssh_config: Yola erişim 
+engellendi.
+At line:1 char:302
++ ... tch {} } }; powershell.exe -NoProfile -ExecutionPolicy Bypass -File ' ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Remove-Item : C...şim engellendi.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+At C:\Users\Public\wpi_r3\f2_config_qa.ps1:190 char:35
++ ... th -LiteralPath $QA) { Remove-Item -LiteralPath $QA -Recurse -Force }
++                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidArgument: (ssh_config:FileInfo) [Remove-Item], ArgumentException
+    + FullyQualifiedErrorId : RemoveFileSystemItemArgumentError,Microsoft.PowerShell.Commands.RemoveItemCommand
 ```
 
-**This is a much larger derivation than round 1 permitted, and that is a
-declared amendment, not an accident.** §4 of the preregistration has been amended
-in this round to enumerate exactly four permitted classes; the report
-(`TRANSPORT_REPAIR_R2_REPORT.md`) raises it as a Lead-visible deviation request
-rather than treating it as settled. Every changed region of both files falls in
-one of the four:
+### D.3 what it establishes
 
-| Class | Regions in `remote_setup_wpi.sh` | Regions in `remote_extract_verify_wpi.sh` |
+- **M1 — the round-2 environment exactly as it shipped.** The real
+  `C:\Windows\System32\OpenSSH\ssh.exe` returns **rc 255 with 0 bytes on both
+  streams**. Codex's finding, reproduced independently.
+- **M2 — the cause.** Adding `PROGRAMDATA` alone returns rc 0 with 3915 bytes of
+  configuration output.
+- **M7 — and it is the only cause.** Dropping each constructed variable in turn leaves
+  `ssh -G` at rc 0 for `SystemRoot`, `windir`, `ComSpec`, `PATHEXT`, `PATH`, `TEMP`
+  and `TMP`; only `without_PROGRAMDATA` returns 255 with 0 bytes. The other variables
+  remain justified — they are what keeps the inherited `PATH` and the operator's
+  `TEMP` out of the child — but the F2 defect is precisely and only the missing
+  `PROGRAMDATA`.
+- **M3/M4 — the system-wide configuration channel, which round 2 left open.** With the
+  round-2 option set and a reachable ambient `__PROGRAMDATA__\ssh\ssh_config`,
+  `ssh -G` reports
+  `proxycommand C:\Windows\System32\cmd.exe /c echo SYSTEM_CONFIG_HIJACK`: an external
+  program interposed into the transport by inherited state, which is Codex F3's
+  principle reaching the one channel its falsification did not. With `-F none` the
+  same hostile file produces no `proxycommand` line at all.
+- **M5/M6 — the per-user channel.** A configuration file selected by `-F` is honoured
+  (`USER_CONFIG_HIJACK`); `-F none` selects nothing. M6 then shows the whole pinned
+  set in effect: the pinned `userknownhostsfile`, `globalknownhostsfile` and
+  `identityfile`, `batchmode yes`, `stricthostkeychecking true`, `identitiesonly yes`,
+  `connecttimeout 20`, `permitlocalcommand no`, `forwardagent no`,
+  `clearallforwardings yes`, and no `proxycommand`.
+- **K3 — a real, no-network process-capture arm.** The runner drives the **real**
+  pinned `scp.exe` under the round-3 environment for a local-to-local copy:
+  `TR_OP_END id=02 rc=0`, `class=match`, `TR_RUN PASS`, exit 0, and
+  `DST_CONTENT=[wpi-r3-scp-local-arm]` — bytes actually moved, no socket opened.
+- **L2 — the option block is a property of the runner, not of the plan.** A plan row
+  with `-F none` replaced by `-o LogLevel=ERROR` gives
+  `TR_STOP reason=plan_row_pinned_option_differs op=02 index=1 actual=[-o] expected=[-F]`,
+  exit 3.
+- **L3 — an unfilled configuration pin cannot run.** `TR_STOP reason=unfilled_marker
+  field=CONFIG_PINS.Sha[user_known_hosts]`, exit 3. Recorded honestly: the *marker
+  gate* fires first, so the later `config_pin_unfilled` branch is reachable only for a
+  malformed non-marker value and was **not** driven — see §7.
+- **L1 — the delivered file, exactly as it ships.** `TR_STOP reason=unfilled_marker
+  field=BASE_RUN`, exit 3, before a path is evaluated. Claude round-1 F6 / V16 is not
+  regressed.
+
+---
+
+## 6. Derivation boundary — `remote_close_tree_wpi.sh`
+
+The Lead adjudication was *derive, do not edit*: the accepted `remote_close_tree.sh`
+is byte-frozen input and is not touched. It is not touched — its digest is re-verified
+at the head of the F3 transcript as `87157f0e…`, 7470 B, and it is read but never
+written.
+
+```
+git diff --no-index --stat \
+  WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08/02_PREREG/remote_close_tree.sh \
+  WPI_BLOCKS_DRAFT/remote_close_tree_wpi.sh
+ 1 file changed, 115 insertions(+), 30 deletions(-)
+```
+
+The insertion side is the header, the nine `TOOL_*` pins, `require_tool`,
+`record_tool_digest` and the digest loop. What decides whether the derivation is
+bounded is the **deletion** side: every line of accepted logic that no longer exists.
+Excluding comments and blank lines, it is exactly seventeen lines:
+
+```
+-[ "$#" -eq 2 ] || fail "usage remote_close_tree.sh <EV_DIR> <RUNID> argc=$#"
+-    err="$(mktemp)" || stop "probe_tempfile_failed path=$p"
+-    kind="$(LC_ALL=C stat -c '%F' -- "$p" 2>"$err")" || rc=$?
+-        rm -f "$err"
+-    detail="$(tr -d '\r\n' <"$err")"; rm -f "$err"
+-CANON="$(readlink -f -- "$EV_DIR")" || stop "canonicalization_failed path=$EV_DIR"
+-OWN="$(LC_ALL=C stat -c '%U:%G' -- "$EV_DIR")" || stop "owner_probe_failed path=$EV_DIR"
+-MODE="$(LC_ALL=C stat -c '%a' -- "$EV_DIR")"   || stop "mode_probe_failed path=$EV_DIR"
+-ODD="$(LC_ALL=C find "$EV_DIR" -mindepth 1 '!' -type d '!' -type f -print)" \
+-WORK="$(mktemp -d)" || stop "workdir_failed"
+-LC_ALL=C find "$EV_DIR" -type f -print0 > "$RAW" \
+-LC_ALL=C sort -z "$RAW" -o "$SORTED" \
+-        out="$(LC_ALL=C sha256sum -- "$f")" || { stop "digest_failed path=$f"; }
+-LC_ALL=C cmp -s "$PASS1" "$PASS2" \
+-    SZ="$(LC_ALL=C stat -c '%s' -- "$f")" || stop "size_probe_failed path=$f"
+-SET_SUM="$(LC_ALL=C sha256sum -- "$PASS1")" || stop "digest_set_hash_failed"
+-rm -rf -- "$WORK"
+```
+
+Sixteen of the seventeen are a bare tool invocation replaced by the same invocation
+through its frozen absolute pin — class 2, and nothing else. The seventeenth is the
+`usage` diagnostic string, which names the script and therefore names the derived
+script. No predicate, no rc, no ordering, no output record and no comparison changed.
+The rendered `%U:%G` owner comparison is **retained deliberately**: making it numeric
+would be a class 3 change and is outside this derivation's permitted delta. It is
+disclosed here and in the script header as an inherited residual rather than repaired
+without authority.
+
+Two residuals are disclosed rather than claimed away, both in the script's own header:
+
+1. **Tool bytes are not bound.** The pins bind a locator and that object's metadata.
+   Each admitted tool's SHA-256 is emitted as evidence and is deliberately not
+   compared to a frozen value, because no digest of a remote tool can be known before
+   host contact and a digest a run learns from the object it is attesting is not an
+   attestation. The script says so on its own `CLOSE_NOTE tool_digest_limit …` line.
+2. **`mktemp` still honours the login `TMPDIR`.** The work directory's location is
+   inherited. It is created outside `EV_DIR` by construction and nothing is written
+   into the evidence tree either way. Deleting `mktemp` would be a class 3 change.
+
+---
+
+## 7. Coverage accounting
+
+**Driven this round, with real output above:** F3 RED/G0/GREEN/CTL; F4 RED/GREEN/CTL/PIN
+and reader arms N1–N5; F1 arms J1–J6 (RED and GREEN, ten runner executions) and K1–K2;
+F2 arms M1–M7, K3, L1–L3. Twelve of those executions are the real pinned OpenSSH
+programs.
+
+**Deliberately not driven, and the direction each fails in:**
+
+| arm | why not | direction |
 |---|---|---|
-| 1 — pinned constants | `EXPECT_PREFIX`; new `EXPECT_UID`/`EXPECT_GID`/`EXPECT_PARENT`; `EXPECT_OWNER` → `EXPECT_OWNER_NAME` | archive-constants block (unchanged in shape); `MEMBER_COUNT` derived from `MEMBERS` by `count_records` |
-| 2 — program identity | `TOOL_STAT`/`TOOL_MKDIR`/`TOOL_READLINK` + `require_tool`; every call site; `mktemp` and `tr` removed entirely | seven `TOOL_*` pins + `require_tool`; every call site; `mktemp` and `tr` removed entirely |
-| 3 — STOP before mutation | `bind_component`, `bind_parent_chain`, `calibrate_absence`, `probe_leaf`, numeric `assert_dir`, allocate-then-assert interleaving | `bind_dir`, `calibrate_absence`, `probe_path` |
-| 4 — status before stdout | `allocate` refuses any `mkdir` diagnostic | `run_capture` (sentinel rc + two-pass diagnostic equality + termination + CR refusal); re-hash after listing; `chmod`/`sha256sum` diagnostics adjudicated |
+| `config_pin_unfilled` | the marker gate fires first on the literal placeholder (L3); this branch needs a malformed non-marker value | STOP, rc 3 |
+| `Invoke-TcpProbe` `timeout` / `connect_incomplete` / `local_exception` / `socket_error` | need socket states loopback will not produce inside this no-network envelope | all STOP, rc 3 |
+| `Test-TrustedProgramChain` reparse-point branch | needs a reparse point under `%SystemRoot%`, i.e. elevation | STOP, rc 3 |
+| `program_sha256_mismatch`, `chain_owner_sid_untrusted`, `chain_component_is_reparse_point` | driven and recorded in the round-2 self-QA and re-driven by the Claude round-2 re-audit (`C2`/`C3`/`C4`); unchanged this round | STOP, rc 3 |
+| the round-1 closure arms for Codex F2/F4/F6/F8/F9/F10 and Claude F1/F3/F5/F6 | unchanged code paths; re-verified only by the identity table in §9 and by `bash -n` / parser checks | — |
+| the six-member happy path against a real `runkit.tar` | the WP-I kit does not exist before Stage 1; `01_RUNKIT` is absent and the runner STOPs at `pinned_file_pin_unfilled` | STOP, rc 3 |
+| `remote_close_tree_wpi.sh` against a real WP-I evidence tree | same reason | STOP or FAIL, never a false PASS |
 
-No region falls outside the four. The member set is still exactly
-`RP0-LIB.sh, RP0-BOOTSTRAP.sh, RP6-P0.sh, RP7-WPI-RO.sh, run_p0.sh, run_ro.sh`,
-and `RP1-B3.sh` is still excluded; all concrete archive values remain
-`<PIN-AT-FREEZE>`.
+**Counts are bookkeeping, not closure.** Every number above is a count of arms whose
+exact command and real output appear in §2–§5; no arm is counted that is not printed.
 
-## 6. Coverage accounting
+---
 
-Counts are bookkeeping, not closure — the closure is the transcripts above. They
-are stated separately for arms actually executed in this round, arms inherited
-from round 1 and re-executed here, and arms still not driven.
+## 8. What this round did not verify
 
-**Functions and arms executed in this round (all with real output above):**
+- **Real connection behaviour of `ssh` and `scp`.** `ssh -G` evaluates configuration
+  and exits; the local `scp` arm copies between two local paths. Both are real
+  executions of the real pinned programs under the real constructed environment, and
+  they establish that the programs initialise, parse the pinned option block, and
+  apply it. They do **not** establish that the host accepts the pinned host key, that
+  the credential authenticates, or that a remote `bash -s` runs. Those need host
+  contact authority this session does not have.
+- **Remote tool bytes.** See §6 residual 1.
+- **`GATEA-STAGING`'s `/usr/bin` tool kinds.** Deviation D-3 remains a hard Stage-1
+  precondition: each `/usr/bin/<tool>` in the pin set must be a regular, root-owned,
+  not-group/other-writable file or ops 01, 03, 07 and 08 will STOP at dispatch. This
+  kernel ships them as symlinks and the scripts refuse them, which is the safe
+  direction but is not the target host's state.
+- **The `EXPECT_PARENT_MOUNT` value itself.** The predicate is proven; the constant is
+  a freeze-gate input that the owner-authorised grant-#6 attestation must supply, and
+  the successor preregistration must order that attestation **before op 01**.
+- **`RP6-P0.sh` and `RP7-WPI-RO.sh`.** Separate T0 slots, under concurrent repair.
+  Neither is a transport target and neither was read or written by this round.
 
-| Unit | Executed |
-|---|---|
-| `transport_runner.ps1` | `Read-StrictAsciiLines` (7 of 7 completion classes), `Read-RemoteCloseRecord` (complete + 7 refusal clauses), `Invoke-LocalBind` (PASS, 3 diff classes, set-SHA STOP, `local_dir_absent`), `Get-Sha256OfText` (reached, and its output compared), `Invoke-ExternalProcess` (10 real child processes across the arms), `Invoke-TcpProbe` (5 of 8 arms), `Test-ReparsePoint`, `Test-TrustedProgramChain`, `Resolve-StdinPath` (both roots + both refusals), `Assert-MarkerFree`, the top-level `trap`, and the outcome classifier (PASS / FAIL / STOP / mixed precedence) |
-| `remote_setup_wpi.sh` | `require_tool` (3 pins + 2 refusals), `bind_component`/`bind_parent_chain` (5 components + symlink + world-writable refusals), `calibrate_absence`, `probe_leaf` (absent / dir / 2 STOP classes), `allocate`, `assert_dir` (numeric PASS + numeric FAIL), `stop`, `fail`, `note` |
-| `remote_extract_verify_wpi.sh` | `require_tool` (7 pins), `count_records`, `bind_dir`, `calibrate_absence`, `probe_path`, `run_capture` (PASS / diagnostics / unterminated / hard-fail / empty-optional), `archive_digest` ×2 with the re-hash comparison, `stop`, `fail`, `note` |
-| `run_p0.sh`, `run_ro.sh` | `require_tool` (2 pins + symlink + writable refusals), `require_block` (PASS / symlink STOP / digest-mismatch STOP), `p0w_stop`/`row_stop`, and the ssh-stdin protection on all three sourced children |
+---
 
-`Test-Ascii` had zero call sites in round 1 and has been **deleted**, so the dead
-function Claude F4 named no longer exists.
+## 9. Syntax, placeholders, identities
 
-**Still not driven, and therefore supplemental — not closure evidence:**
+`bash -n` passes on all five in-scope shell files and on the accepted
+`remote_close_tree.sh`. `[Parser]::ParseFile` on `transport_runner.ps1` reports **0
+errors** under Windows PowerShell 5.1.26100.8875; the file contains no `&&`, `||` or
+ternary. Zero CR bytes in all seven executable/plan files; the runner and the plan are
+pure ASCII.
 
-| Arm | Why | Direction of failure |
-|---|---|---|
-| `Invoke-TcpProbe` `timeout` | needs a black-holed non-ASCII-route destination outside this envelope; §8 row 24 authorises `connection_refused` **or** `timeout` as rc 0, so it is a prereg classification, not a runner branch | admits a dropped SYN as a closed port — unchanged from round 1 and disclosed there too |
-| `Invoke-TcpProbe` `connect_incomplete`, `local_exception`, `socket_error` | require a socket terminating in a state loopback will not produce | all three STOP at rc 3 |
-| `Invoke-LocalBind` `local_reparse_point`, `local_path_outside_dir`, `local_duplicate_name`, `local_hash_error`, `local_enumeration_error` | need a reparse point or a name collision the Windows fixture cannot produce without elevation | all STOP at rc 3 |
-| `Test-TrustedProgramChain` untrusted-ACE and reparse branches | require writing an ACE onto a System32 object | STOP at rc 3 |
-| `program_sha256_mismatch`, `plan_sha256_mismatch`, `stdin_sha256_mismatch`, `record_root_already_exists`, `capture_hash_failed`, `record_finalize_failed` | pin-comparison and I/O branches; `pinned_file_sha256_mismatch` **is** driven (F2) and is the same comparison | STOP at rc 3 |
-| `Invoke-ExternalProcess` `stdin_state=incomplete` | needs a child that closes stdin early | STOP at rc 3 |
-| the six-member happy path of `remote_extract_verify_wpi.sh` against the **real** WP-I archive | the kit does not exist before Stage 1 | fail-closed on `<PIN-AT-FREEZE>` |
+### Placeholder census (N1)
 
-Every undriven arm fails in the STOP direction. None of them can turn a
-not-evaluable state into a PASS.
+The round-2 self-QA recorded "36 `<ALLOCATE-AT-DISPATCH>`, 40 `<PIN-AT-FREEZE>`". The
+36 was the six-file figure and the 40 was not re-derivable from any consistent scope.
+Re-derived from the rejected baseline at commit `9ef4437d`, per file:
 
-## 7. What this round did not verify
+| file | `<ALLOCATE-AT-DISPATCH>` | `<PIN-AT-FREEZE>` |
+|---|---:|---:|
+| `run_p0.sh` | 6 | 3 |
+| `run_ro.sh` | 6 | 5 |
+| `transport_runner.ps1` | 4 | 5 |
+| `TRANSPORT_PLAN.tsv` | 20 | 5 |
+| `remote_setup_wpi.sh` | 0 | 2 |
+| `remote_extract_verify_wpi.sh` | 0 | 7 |
+| **six executable/plan files** | **36** | **27** |
+| `SELF_QA_TRANSPORT.md` | 4 | 5 |
+| `STATUS_TRANSPORT.md` | 1 | 1 |
+| **all eight files** | **41** | **33** |
 
-- Real `ssh`/`scp` behaviour, host state, and the actual `remote_close_tree.sh`
-  execution on `GATEA-STAGING`. `cmd.exe` stood in for the pinned programs so the
-  process-launch path could be driven with no host contact; the substitution is
-  declared, printed by the script, and applies to the *pin target only* — the
-  pin, digest, chain and environment logic under test is the delivered logic.
-- The staging host's tool inventory. The remote scripts pin `/usr/bin/<tool>` and
-  refuse a symlinked, non-root-owned or group/other-writable tool. On a host that
-  ships coreutils as symlinks they STOP rather than proceed — fail-closed, and
-  visible as `tool_is_symlink`. §4 preregisters the `/usr/bin/<tool>` set; Stage 1
-  must confirm each pin is a regular root-owned file before freeze, and that
-  confirmation is not in this document.
-- `RP6-P0.sh` and `RP7-WPI-RO.sh` block internals — separate T0 slots.
-- The operator profile directory is *carried* into the child environment rather
-  than pinned, because `ssh` reads `known_hosts` under the profile that owns the
-  pinned credential. It is validated (absolute, existing container, not a reparse
-  point) and recorded in `TR_ENV`, and that is the whole of the claim.
-- The Windows OpenSSH digests are `<PIN-AT-FREEZE>`; Stage 1 fills them from the
-  operator host. Until then the runner STOPs at `program_pin_unfilled`.
+which is exactly the correction both re-audits asked for. The round-3 delivered set is
+recorded in `TRANSPORT_REPAIR_R3_REPORT.md` §6 over its own scope — seven
+executable/plan files, since `remote_close_tree_wpi.sh` joins the set — so the census
+is stated over the set it closes rather than mixing scopes.
 
-## 8. Syntax, placeholders, identities
+One observation the census surfaced, disclosed rather than silently fixed: a guard that
+detects an unfilled placeholder by comparing against the literal placeholder text is
+destroyed by a Stage-1 fill that replaces that text globally — the guard would then
+hold the real value and STOP on a correctly frozen file. `remote_setup_wpi.sh`
+therefore **composes** its marker (`PIN_MARKER="$(printf '<PIN-%s>' 'AT-FREEZE')"`)
+rather than writing it out. The runner's pre-existing `$UNFILLED_MARKERS` array carries
+the same shape and was accepted in round 2; it is left unchanged this round and flagged
+for the Stage-1 fill procedure, which must fill constants individually rather than by
+blind global replacement.
 
-```powershell
-$d='MTC_COMMAND_CENTER\11_TRIAGE\WPI_BLOCKS_DRAFT'
-$e=$null; [Management.Automation.Language.Parser]::ParseFile((Convert-Path "$d\transport_runner.ps1"),[ref]$null,[ref]$e)|Out-Null
-if($e.Count){$e}else{'POWERSHELL_5_1_PARSE PASS'}
-wsl.exe bash -n /mnt/c/LAB/Tradingview_LAB_CLEAN/$($d -replace '\\','/')/run_p0.sh ... run_ro.sh ... remote_setup_wpi.sh ... remote_extract_verify_wpi.sh
-foreach($n in 'run_p0.sh','run_ro.sh','transport_runner.ps1','TRANSPORT_PLAN.tsv','remote_setup_wpi.sh','remote_extract_verify_wpi.sh'){
-  $p=Join-Path $d $n;$i=Get-Item $p;"$n`t$($i.Length)`t$((Get-FileHash -Algorithm SHA256 $p).Hash.ToLowerInvariant())"}
-```
-
-```text
-POWERSHELL_5_1_PARSE PASS            (Windows PowerShell 5.1.26100.8875)
-BASH_N PASS (4 files)
-
-run_p0.sh                     5215  e4ddf87b0869ba0fadcb9750e65f4f276c90667e788e489c5921923b0d3e1f80
-run_ro.sh                     5933  cd659ee9e1edceb496a5ed08707abd283e3cf5f70a3872ab6f1fdc616ac3f4e8
-transport_runner.ps1         45066  2f076ed9a928656fddf22969ea4bf70de895f2c84c73f13b4c64b8040e72aa9a
-TRANSPORT_PLAN.tsv            4631  3ff967294ec0f5d592701bc63940b24f2162b38f8734e38c5343930594da7149
-remote_setup_wpi.sh          12340  e91bae0827f16cbefe2091980c0a049583bd8ce4173f99e802b2d54a224c29a8
-remote_extract_verify_wpi.sh 16614  8eb9c499a306c11595638d8db38b1611cdd38470ba12d2c0e019116e2139d412
-```
-
-Byte hygiene: **0 CR bytes** in all six files; `transport_runner.ps1` and
-`TRANSPORT_PLAN.tsv` are pure ASCII; the two derived shell scripts carry only the
-em-dashes inherited verbatim from the accepted originals. Placeholder census
-across the set: 36 `<ALLOCATE-AT-DISPATCH>`, 40 `<PIN-AT-FREEZE>`, all literal;
-no RUNID-shaped literal anywhere; `WPI_LOG_DIR` is now the §2-resolved
-`/var/log/mtc-bridge` (Claude N1) and `WPI_UNIT_FRAGMENT_SHA256` remains the only
-legitimately deferred §2 value.
-
-These are authoring identities only. Stage 1 replaces the marked placeholders,
-re-runs this QA, and pins the resulting frozen bytes. No hash in this section is
-a dispatch pin, and this document grants no host, freeze, execution, or Git
-authority.
+All `<ALLOCATE-AT-DISPATCH>` and `<PIN-AT-FREEZE>` markers in the delivered set remain
+literal. No RUNID was minted; the only concrete `WPLP2-…` text is `$ACCEPTED_DIR`,
+which is accepted-source provenance, not a WP-I allocation.

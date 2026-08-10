@@ -5,11 +5,33 @@
 # allocation-time confirmation token; those switches are technical interlocks,
 # not host-contact authority.
 #
-# Outcome grammar (round 2, Codex F1 / Claude F2):
+# Outcome grammar (round 3, Codex R2 F1 / Claude R2 F1):
 #   0 = every executed operation matched its preregistered rc;
-#   1 = at least one completed operation observed deviant state (FAIL);
+#   1 = at least one operation RAN and observed deviant state (FAIL);
 #   3 = the plan, an operation, or an evidence binding could not be evaluated
 #       (STOP). An operation rc 3 is NEVER rolled up into rc 1.
+#
+# FAIL is reserved for an operation that actually ran and returned the deviant
+# value its own contract defines. It is decided by operation KIND and by
+# PROVENANCE, never by the integer alone:
+#   * ssh_stdin  - the remote program's outcome grammar is {0,1,3}. ssh's own
+#                  rc 255 is a transport failure (host down, rejected key, DNS,
+#                  dropped route, refused configuration) in which NOTHING was
+#                  observed, and any other rc is outside the grammar; both are
+#                  not-evaluable. Even inside the grammar the rc is read as a
+#                  probe result only after the capture carries at least one
+#                  preregistered remote-program marker, which is the local
+#                  evidence that ssh really ran the delivered script.
+#   * scp_up/down- a transfer is pure transport: it observes no host state, so
+#                  ONLY rc 0 is a result and every non-zero rc is not-evaluable.
+#                  scp's failure rc is 1, which collides with the FAIL class and
+#                  cannot be separated by rc alone - hence the kind rule.
+#   * tcp_probe /
+#     local_bind - operator-side and runner-implemented, grammar {0,1,3}; rc 1
+#                  is a genuine completed observation.
+#   * an `always` cleanup op whose prerequisite sequence never completed is
+#     closing evidence of an already-broken run. Its failure is a consequence of
+#     that break, never an independent observation of deviant host state.
 # Precedence, when both classes occur in one run: a completed deviant
 # observation outranks a later inability to evaluate, so the run is FAIL - and
 # every not-evaluable operation is still enumerated by TR_OP_NOT_EVALUABLE and
@@ -20,6 +42,14 @@
 # are adjudicated before the first process starts. Inherited PATH is never
 # consulted. Every child runs with a deliberately constructed environment, a
 # run-owned TEMP, and a preregistered working directory.
+#
+# Configuration identity (Codex R2 F2): ambient OpenSSH configuration is
+# disabled outright rather than inherited - `-F none` refuses BOTH the per-user
+# and the system-wide ssh_config - and every configuration input is supplied as
+# a pinned argument or a pinned file that is bound before the first process
+# starts. PROGRAMDATA is set to a run-owned directory: OpenSSH for Windows
+# resolves __PROGRAMDATA__ and exits 255 with no output at all when it is unset,
+# so the round-2 environment could not run the real pinned program.
 #
 # ASCII-only and Windows PowerShell 5.1-compatible by construction.
 
@@ -68,6 +98,73 @@ $TRUSTED_WRITER_SIDS = @(
     'S-1-5-18',
     'S-1-5-32-544',
     'S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464'
+)
+
+# --- configuration identity: pinned inputs, no ambient configuration ---------
+# Codex R2 F2. Under the round-2 environment the real pinned ssh.exe exited 255
+# with zero bytes on both streams before evaluating anything, so the plan could
+# never have reached a remote block. The repair does not carry the operator's
+# ambient values: it disables ambient configuration and supplies every input the
+# program needs as a pinned argument or a pinned file, each bound below.
+$SSH_IDENTITY_FILE          = 'C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519'
+$SSH_IDENTITY_SHA           = '<PIN-AT-FREEZE>'
+$SSH_USER_KNOWN_HOSTS       = 'C:\HyperV\GATEA-STAGING\ssh\wpi_known_hosts'
+$SSH_USER_KNOWN_HOSTS_SHA   = '<PIN-AT-FREEZE>'
+$SSH_GLOBAL_KNOWN_HOSTS     = 'C:\HyperV\GATEA-STAGING\ssh\wpi_known_hosts_global'
+$SSH_GLOBAL_KNOWN_HOSTS_SHA = '<PIN-AT-FREEZE>'
+
+# Every ssh and scp op must carry exactly this block, immediately after the
+# program name. A plan row that drops '-F none', re-points a known_hosts file,
+# or reinstates ProxyCommand cannot run.
+$SSH_PINNED_OPTIONS = @(
+    '-F', 'none',
+    '-i', $SSH_IDENTITY_FILE,
+    '-o', 'BatchMode=yes',
+    '-o', 'StrictHostKeyChecking=yes',
+    '-o', 'IdentitiesOnly=yes',
+    '-o', 'ConnectTimeout=20',
+    '-o', ('UserKnownHostsFile=' + $SSH_USER_KNOWN_HOSTS),
+    '-o', ('GlobalKnownHostsFile=' + $SSH_GLOBAL_KNOWN_HOSTS),
+    '-o', 'ProxyCommand=none',
+    '-o', 'ControlMaster=no',
+    '-o', 'ControlPath=none',
+    '-o', 'PermitLocalCommand=no',
+    '-o', 'ForwardAgent=no',
+    '-o', 'ForwardX11=no',
+    '-o', 'ClearAllForwardings=yes'
+)
+$CONFIG_PINS = @(
+    @{ Name = 'ssh_identity'; Path = $SSH_IDENTITY_FILE; Sha = $SSH_IDENTITY_SHA; Print = $false;
+       Why = 'the_only_credential_-i_names_and_IdentitiesOnly=yes_admits' },
+    @{ Name = 'user_known_hosts'; Path = $SSH_USER_KNOWN_HOSTS; Sha = $SSH_USER_KNOWN_HOSTS_SHA; Print = $true;
+       Why = 'StrictHostKeyChecking=yes_decides_against_this_frozen_set_not_the_operator_profile' },
+    @{ Name = 'global_known_hosts'; Path = $SSH_GLOBAL_KNOWN_HOSTS; Sha = $SSH_GLOBAL_KNOWN_HOSTS_SHA; Print = $true;
+       Why = 'the_system_half_of_the_same_decision_so___PROGRAMDATA___supplies_nothing' }
+)
+
+# Why each constructed variable exists. Printed with the value, so the record
+# states the reason rather than leaving the reader to infer it (Codex R2 F2).
+$ENV_RATIONALE = @{
+    'SystemRoot'  = 'the_pinned_system_root_every_program_chain_is_adjudicated_against';
+    'windir'      = 'same_value_under_the_legacy_name_some_libraries_still_read';
+    'ComSpec'     = 'pinned_absolute_so_no_inherited_value_can_name_another_interpreter';
+    'PATHEXT'     = 'frozen_so_extension_search_order_is_not_inherited';
+    'PATH'        = 'frozen_to_the_pinned_system_root_the_inherited_PATH_never_reaches_a_child';
+    'TEMP'        = 'run_owned_under_the_record_root_not_the_operator_temp';
+    'TMP'         = 'same_value_under_the_second_name';
+    'PROGRAMDATA' = 'run_owned_and_empty_OpenSSH_for_Windows_exits_255_with_no_output_when_it_is_unset_and_would_otherwise_read_the_ambient___PROGRAMDATA___ssh_tree'
+}
+
+# --- observed-outcome grammar (Codex R2 F1 / Claude R2 F1) -------------------
+$REMOTE_OUTCOME_RCS = @(0, 1, 3)
+$SSH_TRANSPORT_RC   = 255
+# The result-line prefixes the five preregistered remote programs emit. At least
+# one must appear in a capture before an ssh op's rc is read as a probe result:
+# it is the local evidence that ssh actually ran the delivered script rather
+# than failing in transport.
+$REMOTE_MARKER_PREFIXES = @(
+    'SETUP_', 'SETUP ', 'EXTRACT_', 'EXTRACT ', 'P0W_', 'P0W ',
+    'ROW_', 'ROW ', 'CLOSE_', 'CLOSE '
 )
 
 $ALLOWED_KINDS    = @('ssh_stdin', 'scp_up', 'scp_down', 'tcp_probe', 'local_bind')
@@ -275,6 +372,13 @@ foreach ($prog in $PROGRAM_PINS) {
     Assert-MarkerFree ('PROGRAM_PINS.Path[' + $prog.Name + ']') $prog.Path
     Assert-MarkerFree ('PROGRAM_PINS.Sha[' + $prog.Name + ']') $prog.Sha
 }
+foreach ($cfg in $CONFIG_PINS) {
+    Assert-MarkerFree ('CONFIG_PINS.Path[' + $cfg.Name + ']') $cfg.Path
+    Assert-MarkerFree ('CONFIG_PINS.Sha[' + $cfg.Name + ']') $cfg.Sha
+}
+foreach ($optElement in $SSH_PINNED_OPTIONS) {
+    Assert-MarkerFree 'SSH_PINNED_OPTIONS' $optElement
+}
 Emit 'TR_MARKER_GATE constants=marker_free'
 
 $here = Split-Path -Parent $PSCommandPath
@@ -288,6 +392,9 @@ $executeMode = ($Execute.IsPresent -and $Confirm -eq $CONFIRM_TOKEN)
 # still leaves a TRANSPORT_RECORD.txt behind (section 6; Claude N4).
 $opsDir = Join-Path $RECORD_ROOT 'ops'
 $tmpDir = Join-Path $RECORD_ROOT 'tmp'
+# The child's PROGRAMDATA. It is created empty and run-owned, so even a code
+# path that still consults __PROGRAMDATA__ finds nothing ambient there.
+$sshConfDir = Join-Path $RECORD_ROOT 'sshconf'
 if ($executeMode) {
     if (Test-Path -LiteralPath $RECORD_ROOT) { Stop-Run ('record_root_already_exists path=' + $RECORD_ROOT) }
     try {
@@ -295,6 +402,8 @@ if ($executeMode) {
         [void](New-Item -ItemType Directory -Path $opsDir)
         [void](New-Item -ItemType Directory -Path (Join-Path $RECORD_ROOT 'evidence'))
         [void](New-Item -ItemType Directory -Path $tmpDir)
+        [void](New-Item -ItemType Directory -Path $sshConfDir)
+        [void](New-Item -ItemType Directory -Path (Join-Path $sshConfDir 'ssh'))
     } catch { Stop-Run ('record_root_creation_failed detail=' + $_.Exception.GetType().FullName) }
     $script:RecordReady = $true
     Emit ('TR_RECORD_ROOT path=' + $RECORD_ROOT)
@@ -360,6 +469,18 @@ for ($i = 1; $i -lt $planLines.Count; $i++) {
     if ($KIND_PROGRAM.ContainsKey($op.Kind)) {
         if ($ALLOWED_PROGRAMS -notcontains $op.Argv[0]) { Stop-Run ('plan_row_program_not_allowed=' + $op.Argv[0] + ' op=' + $op.Id) }
         if ($op.Argv[0] -ne $KIND_PROGRAM[$op.Kind]) { Stop-Run ('plan_row_kind_program_mismatch op=' + $op.Id + ' kind=' + $op.Kind + ' program=' + $op.Argv[0]) }
+        # The frozen configuration block must follow the program name verbatim
+        # (Codex R2 F2). This is what makes '-F none' and the pinned
+        # known_hosts files a property of the runner rather than of whichever
+        # plan happens to be present.
+        if ($op.Argv.Count -lt (1 + $SSH_PINNED_OPTIONS.Count)) {
+            Stop-Run ('plan_row_pinned_options_absent op=' + $op.Id + ' argc=' + $op.Argv.Count + ' required=' + (1 + $SSH_PINNED_OPTIONS.Count))
+        }
+        for ($k = 0; $k -lt $SSH_PINNED_OPTIONS.Count; $k++) {
+            if ($op.Argv[$k + 1] -ne $SSH_PINNED_OPTIONS[$k]) {
+                Stop-Run ('plan_row_pinned_option_differs op=' + $op.Id + ' index=' + ($k + 1) + ' actual=[' + $op.Argv[$k + 1] + '] expected=[' + $SSH_PINNED_OPTIONS[$k] + ']')
+            }
+        }
     }
     # Only ssh_stdin carries a stdin file; every other kind must declare none.
     if ($op.Kind -eq 'ssh_stdin') {
@@ -424,35 +545,54 @@ foreach ($needed in $requiredPrograms) {
     if (-not $script:ProgramByName.ContainsKey($needed)) { Stop-Run ('program_not_pinned name=' + $needed) }
 }
 
+# --- configuration identity: every input the pinned options name is bound -----
+# Each entry records WHY the transport needs it. The identity file's digest is
+# compared but never printed: it is the one bound input that is key material.
+# Scope, stated rather than implied: these three are bound by kind, reparse
+# state and frozen digest. They are deliberately NOT held to the program
+# chain's trusted-writer rule - they live in the operator's own credential
+# directory, which the operator must be able to manage, so a write-ACL
+# predicate there would assert something the deployment cannot honour.
+if ($requiredPrograms.Count -gt 0) {
+    foreach ($cfg in $CONFIG_PINS) {
+        if (-not (Test-HexSha256 $cfg.Sha)) { Stop-Run ('config_pin_unfilled name=' + $cfg.Name) }
+        if (-not (Test-Path -LiteralPath $cfg.Path -PathType Leaf)) { Stop-Run ('config_file_missing name=' + $cfg.Name + ' path=' + $cfg.Path) }
+        try {
+            if (Test-ReparsePoint $cfg.Path) { Stop-Run ('config_file_is_reparse_point name=' + $cfg.Name + ' path=' + $cfg.Path) }
+            $cfgSha = Get-Sha256 $cfg.Path
+        } catch { Stop-Run ('config_file_not_evaluable name=' + $cfg.Name + ' detail=' + $_.Exception.GetType().FullName) }
+        $shown = $cfgSha
+        if ($cfg.Print -ne $true) { $shown = 'withheld_key_material' }
+        Emit ('TR_CONFIG name=' + $cfg.Name + ' path=' + $cfg.Path + ' sha256=' + $shown + ' why=' + $cfg.Why)
+        if ($cfgSha -ne $cfg.Sha) {
+            if ($cfg.Print -eq $true) { Stop-Run ('config_file_sha256_mismatch name=' + $cfg.Name + ' actual=' + $cfgSha + ' expected=' + $cfg.Sha) }
+            Stop-Run ('config_file_sha256_mismatch name=' + $cfg.Name + ' actual=withheld expected=withheld')
+        }
+    }
+}
+
 # --- the environment every child receives, constructed rather than inherited --
-# PATH, TEMP and TMP are frozen or run-owned; PYTHONPATH, inherited PATH and
-# inherited TMPDIR cannot reach a child. USERPROFILE/HOMEDRIVE/HOMEPATH are
-# deliberately carried (ssh reads known_hosts under the operator profile that
-# owns the pinned credential) and are validated and recorded, not assumed.
+# NOTHING is carried from the operator's environment (Codex R2 F2). The round-2
+# runner carried USERPROFILE/HOMEDRIVE/HOMEPATH on the belief that ssh reads
+# known_hosts under the operator profile; measurement showed OpenSSH for Windows
+# resolves the home directory from the OS token, so carrying them never closed
+# that channel - only '-F none' plus the pinned UserKnownHostsFile does. Every
+# value below is a frozen constant or a run-owned path, and each carries the
+# reason it is present.
 $script:ChildEnv['SystemRoot'] = $SYSTEM_ROOT_PIN
 $script:ChildEnv['windir'] = $SYSTEM_ROOT_PIN
 $script:ChildEnv['ComSpec'] = (Join-Path $SYSTEM_ROOT_PIN 'System32\cmd.exe')
 $script:ChildEnv['PATHEXT'] = '.COM;.EXE;.BAT;.CMD'
 $script:ChildEnv['PATH'] = ((Join-Path $SYSTEM_ROOT_PIN 'System32') + ';' + $SYSTEM_ROOT_PIN)
-if ($executeMode) {
-    $script:ChildEnv['TEMP'] = $tmpDir
-    $script:ChildEnv['TMP'] = $tmpDir
-}
-$carried = @('USERPROFILE', 'HOMEDRIVE', 'HOMEPATH')
-$profileDir = [System.Environment]::GetEnvironmentVariable('USERPROFILE')
-if ([string]::IsNullOrEmpty($profileDir)) { Stop-Run 'operator_profile_absent' }
-if (-not (Test-Path -LiteralPath $profileDir -PathType Container)) { Stop-Run ('operator_profile_not_a_directory path=' + $profileDir) }
-try { if (Test-ReparsePoint $profileDir) { Stop-Run ('operator_profile_is_reparse_point path=' + $profileDir) } }
-catch { Stop-Run ('operator_profile_metadata_unreadable path=' + $profileDir) }
-foreach ($name in $carried) {
-    $value = [System.Environment]::GetEnvironmentVariable($name)
-    if ($null -eq $value) { $value = '' }
-    $script:ChildEnv[$name] = $value
-}
+$script:ChildEnv['TEMP'] = $tmpDir
+$script:ChildEnv['TMP'] = $tmpDir
+$script:ChildEnv['PROGRAMDATA'] = $sshConfDir
 foreach ($name in ($script:ChildEnv.Keys | Sort-Object)) {
-    Emit ('TR_ENV name=' + $name + ' value=' + $script:ChildEnv[$name])
+    $why = 'unstated'
+    if ($ENV_RATIONALE.ContainsKey($name)) { $why = $ENV_RATIONALE[$name] }
+    Emit ('TR_ENV name=' + $name + ' value=' + $script:ChildEnv[$name] + ' why=' + $why)
 }
-Emit ('TR_ENV_POLICY cleared=all carried=' + ($carried -join ',') + ' inherited_path=never')
+Emit ('TR_ENV_POLICY cleared=all carried=none inherited_path=never ambient_ssh_config=disabled_by_-F_none')
 
 foreach ($op in $ops) {
     Emit ('TR_OP_PLANNED id=' + $op.Id + ' kind=' + $op.Kind + ' run_when=' + $op.RunWhen + ' expect_rc=' + $op.ExpectRc + ' stdin=' + $op.StdinRel)
@@ -723,6 +863,64 @@ function Invoke-LocalBind($op, [string] $outFile, [string] $errFile) {
     }
 }
 
+# --- provenance: did the remote program actually run? -----------------------
+# ssh conveys the remote command's status faithfully EXCEPT when it never ran
+# one. The captures are therefore scanned for a preregistered remote result-line
+# prefix before an ssh op's rc is read as a probe result. Latin-1 keeps every
+# byte a distinct character, so a marker is still found in a capture that also
+# carries bytes the strict record reader would refuse - the test must not fail
+# open on odd content, and must not fail closed on a legitimate marker.
+function Test-RemoteProvenanceMarker([string] $outFile, [string] $errFile) {
+    foreach ($f in @($outFile, $errFile)) {
+        if (-not (Test-Path -LiteralPath $f -PathType Leaf)) { continue }
+        $bytes = $null
+        try { $bytes = [System.IO.File]::ReadAllBytes($f) } catch { continue }
+        if ($bytes.Length -eq 0) { continue }
+        $text = [System.Text.Encoding]::GetEncoding(28591).GetString($bytes)
+        foreach ($rawLine in $text.Split([char]10)) {
+            $line = $rawLine.TrimEnd([char]13)
+            foreach ($prefix in $REMOTE_MARKER_PREFIXES) {
+                if ($line.StartsWith($prefix, [System.StringComparison]::Ordinal)) { return $true }
+            }
+        }
+    }
+    return $false
+}
+
+# --- classify one observed outcome by KIND and PROVENANCE, not by integer ----
+# Returns 'match', 'deviant' or 'not_evaluable' with the reason it was reached.
+# 'deviant' - and therefore TR_RUN FAIL - is reachable only for an operation
+# that ran and returned the deviant value its own contract defines.
+function Get-OpOutcomeClass($op, $rc, [string] $outFile, [string] $errFile, [bool] $prerequisiteEstablished) {
+    if ($op.Kind -eq 'ssh_stdin') {
+        # ssh's own code for could-not-connect / could-not-authenticate /
+        # connection-closed. Nothing was observed, so nothing is deviant.
+        if ($rc -eq $SSH_TRANSPORT_RC) { return @{ Class = 'not_evaluable'; Reason = 'ssh_transport_failure_rc255' } }
+        if ($REMOTE_OUTCOME_RCS -notcontains $rc) { return @{ Class = 'not_evaluable'; Reason = 'rc_outside_outcome_grammar' } }
+        if (-not (Test-RemoteProvenanceMarker $outFile $errFile)) {
+            return @{ Class = 'not_evaluable'; Reason = 'no_remote_program_marker_in_capture' }
+        }
+    } elseif ($op.Kind -eq 'scp_up' -or $op.Kind -eq 'scp_down') {
+        # A transfer observes no host state. Its failure rc is 1, which collides
+        # with the FAIL class and cannot be separated by rc alone, so the kind
+        # decides: only a completed transfer is a result.
+        if ($rc -ne 0) { return @{ Class = 'not_evaluable'; Reason = 'scp_transfer_did_not_complete' } }
+    } else {
+        if ($REMOTE_OUTCOME_RCS -notcontains $rc) { return @{ Class = 'not_evaluable'; Reason = 'rc_outside_outcome_grammar' } }
+    }
+    if ($rc -eq $op.ExpectRc) { return @{ Class = 'match'; Reason = 'preregistered_rc' } }
+    if ($rc -eq 3) { return @{ Class = 'not_evaluable'; Reason = 'operation_reported_stop' } }
+    # An `always` op runs unconditionally so that a broken run's evidence is
+    # still closed, retrieved and bound. When the sequence that was supposed to
+    # CREATE that evidence never completed, this op's failure is a consequence
+    # of the earlier break - a cleanup with nothing to clean - and must not
+    # outvote the truthful earlier STOP with a manufactured host-state FAIL.
+    if ($op.RunWhen -eq 'always' -and -not $prerequisiteEstablished) {
+        return @{ Class = 'not_evaluable'; Reason = 'cleanup_after_unestablished_prerequisite' }
+    }
+    return @{ Class = 'deviant'; Reason = 'operation_ran_and_observed_deviant_state' }
+}
+
 foreach ($op in $ops) {
     $outFile=Join-Path $opsDir ($op.Id + '.stdout')
     $errFile=Join-Path $opsDir ($op.Id + '.stderr')
@@ -737,6 +935,10 @@ foreach ($op in $ops) {
         [void]$results.Add(@{Id=$op.Id;Rc='skipped';Expect=$op.ExpectRc;Elapsed=0})
         continue
     }
+
+    # Captured before this operation can change it: whether every operation the
+    # plan sequenced ahead of this one matched its preregistered rc.
+    $prerequisiteEstablished = $sequenceOk
 
     Emit ('TR_OP_BEGIN id=' + $op.Id + ' kind=' + $op.Kind + ' cwd=' + $op.Cwd)
     Emit ('TR_OP_SENT_ARGV id=' + $op.Id + ' argv=[' + ($op.Argv -join '] [') + ']')
@@ -761,18 +963,20 @@ foreach ($op in $ops) {
     Emit ('TR_OP_END id=' + $op.Id + ' rc=' + $rc + ' expect_rc=' + $op.ExpectRc + ' elapsed_ms=' + $script:LastElapsedMs + ' stdout_sha256=' + $outSha + ' stderr_sha256=' + $errSha)
     [void]$results.Add(@{Id=$op.Id;Rc=$rc;Expect=$op.ExpectRc;Elapsed=$script:LastElapsedMs})
 
-    if ($rc -ne $op.ExpectRc) {
-        if ($firstMismatch -eq '') { $firstMismatch=$op.Id; $sequenceOk=$false; Emit ('TR_FIRST_FAIL id=' + $op.Id + ' rc=' + $rc + ' expected=' + $op.ExpectRc + ' later_sequence_ops=skip always_ops=run') }
-        else { Emit ('TR_ADDITIONAL_MISMATCH id=' + $op.Id + ' first_fail=' + $firstMismatch) }
-        # Classify the mismatch itself: rc 3 is an inability to evaluate and is
-        # never re-labelled as an observation of deviant host state.
-        if ($rc -eq 3) {
+    # Classification is by operation kind and provenance, never by the integer
+    # alone (Codex R2 F1 / Claude R2 F1).
+    $outcome = Get-OpOutcomeClass $op $rc $outFile $errFile $prerequisiteEstablished
+    Emit ('TR_OP_CLASS id=' + $op.Id + ' kind=' + $op.Kind + ' rc=' + $rc + ' expect_rc=' + $op.ExpectRc + ' class=' + $outcome.Class + ' reason=' + $outcome.Reason)
+    if ($outcome.Class -ne 'match') {
+        if ($firstMismatch -eq '') { $firstMismatch=$op.Id; $sequenceOk=$false; Emit ('TR_FIRST_MISMATCH id=' + $op.Id + ' rc=' + $rc + ' expected=' + $op.ExpectRc + ' class=' + $outcome.Class + ' later_sequence_ops=skip always_ops=run') }
+        else { Emit ('TR_ADDITIONAL_MISMATCH id=' + $op.Id + ' first_mismatch=' + $firstMismatch) }
+        if ($outcome.Class -eq 'not_evaluable') {
             $anyNotEvaluable=$true; $notEvaluableCount++
             if ($firstNotEvaluable -eq '') { $firstNotEvaluable=$op.Id }
-            Emit ('TR_OP_NOT_EVALUABLE id=' + $op.Id + ' rc=3 expected=' + $op.ExpectRc)
+            Emit ('TR_OP_NOT_EVALUABLE id=' + $op.Id + ' rc=' + $rc + ' expected=' + $op.ExpectRc + ' reason=' + $outcome.Reason)
         } else {
             $anyDeviant=$true; $deviantCount++
-            Emit ('TR_OP_DEVIANT id=' + $op.Id + ' rc=' + $rc + ' expected=' + $op.ExpectRc)
+            Emit ('TR_OP_DEVIANT id=' + $op.Id + ' rc=' + $rc + ' expected=' + $op.ExpectRc + ' reason=' + $outcome.Reason)
         }
     }
 }
@@ -782,10 +986,10 @@ Emit ('TR_RUN_CLASS deviant=' + $deviantCount + ' not_evaluable=' + $notEvaluabl
 
 $exitCode = 0
 if ($anyDeviant) {
-    Emit ('TR_RUN FAIL base_run=' + $BASE_RUN + ' first_fail=' + $firstMismatch + ' first_not_evaluable=' + $firstNotEvaluable + ' record=' + $RECORD_ROOT)
+    Emit ('TR_RUN FAIL base_run=' + $BASE_RUN + ' first_mismatch=' + $firstMismatch + ' first_not_evaluable=' + $firstNotEvaluable + ' record=' + $RECORD_ROOT)
     $exitCode = 1
 } elseif ($anyNotEvaluable) {
-    Emit ('TR_RUN STOP base_run=' + $BASE_RUN + ' first_fail=' + $firstMismatch + ' first_not_evaluable=' + $firstNotEvaluable + ' record=' + $RECORD_ROOT)
+    Emit ('TR_RUN STOP base_run=' + $BASE_RUN + ' first_mismatch=' + $firstMismatch + ' first_not_evaluable=' + $firstNotEvaluable + ' record=' + $RECORD_ROOT)
     $exitCode = 3
 } else {
     Emit ('TR_RUN PASS base_run=' + $BASE_RUN + ' record=' + $RECORD_ROOT)

@@ -221,22 +221,24 @@ authored for WP-I and pinned at Stage 1.
 |---|---:|---|---|
 | `remote_setup_wpi.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 01 stdin - create-once remote allocation. Derivation of the accepted `remote_setup.sh` (4976 B, `faee3725…`) whose permitted semantic changes are EXACTLY, and only, the four classes enumerated in the round-2 derivation contract below; the derivation diff is recorded in self-QA and must show nothing outside those four classes |
 | `remote_extract_verify_wpi.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 03 stdin - archive/member/hash verification + extraction. Derivation of the accepted `remote_extract_verify.sh` (8270 B, `ba0bef0e…`) whose permitted semantic changes are EXACTLY, and only, the four classes enumerated in the round-2 derivation contract below. No member-count literal may exist: every count is derived from the `MEMBERS` constant, so the archive-constants block remains the single source of the member set |
-| `remote_close_tree.sh` | 7470 | `87157f0ea454df7c1f826a8c76a38f3045dd38efdd8fa347644f79251d3f3f0e` | ops 07 and 08 stdin - closed-tree hashing. Byte-identical reuse; verified free of unit-specific constants (round 1.5). It is NOT copied into the WP-I draft directory: the plan names it with the `ACCEPTED` root token and the runner resolves that token to the frozen Stage-2 `02_PREREG` directory, so the bytes that travel are the accepted bytes at the digest above and nowhere else |
+| `remote_close_tree_wpi.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | ops 07 and 08 stdin - closed-tree hashing. **Fourth derived script** (added round 3; Codex round-2 re-audit F3). Derivation of the accepted `remote_close_tree.sh` (7470 B, `87157f0e…`) whose ONLY permitted semantic change is derivation class 2, program identity: every executable it invokes (`mktemp`, `stat`, `tr`, `readlink`, `find`, `sort`, `sha256sum`, `cmp`, `rm`) is resolved from the frozen absolute `/usr/bin/<tool>` pin set under the same admission the other derived scripts use, and no inherited-`PATH` lookup remains anywhere. Every other behaviour - the RUNID/EV_DIR grammar, the lstat-fail-closed classification, the name-rendered owner comparison, the two-pass digest stability rule and the emitted record grammar - is the accepted logic unchanged |
+| `remote_close_tree.sh` | 7470 | `87157f0ea454df7c1f826a8c76a38f3045dd38efdd8fa347644f79251d3f3f0e` | **derivation basis only; it no longer travels.** Byte-frozen accepted input, verified free of unit-specific constants (round 1.5), and NOT edited. It stopped travelling in round 3 because, executed under the delivered environment, a `sha256sum` planted first on the inherited `PATH` appended to a closed evidence leaf and then delegated to the real tool: both digest passes observed the post-mutation bytes, agreed, and the script printed `CLOSE PASS … wrote_into_evidence_tree=0` at rc 0. The accepted bytes stay referenced here as the derivation basis and remain the object the derivation diff is recorded against |
 | `transport_runner.ps1` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | operator-side recorder (Stage 2 variants exist at 18095/`c5bdb47c...` and 17849/`a48ddc93...`; the WP-I op list differs, so the runner is re-pinned, not assumed) |
 | `run_p0.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 04 stdin - P0 wrapper |
 | `run_ro.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 05 stdin - RO wrapper |
 | `TRANSPORT_PLAN.tsv` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | the ordered op list; pinned inside the runner |
 
-Reused-script disposition (round 1.5, superseding the round-1.1 N1 claim): only
-`remote_close_tree.sh` is kept byte-identical to the Stage-2-accepted artifact at the
-digest above. The N1 "contract fit, unchanged contract, no edit" claim was falsified
-for the other two at transport-set authoring (Codex STOP, 2026-08-10): both carry
-unit-specific constants incompatible with WP-I (see the round-1.5 note, section 0).
-`remote_setup_wpi.sh` and `remote_extract_verify_wpi.sh` are their bounded
-derivations; each derivation must be proven bounded by a recorded diff against the
-accepted bytes in self-QA, and each is a new artifact requiring Stage 1 adversarial
-acceptance and its own pinned digest. Any byte change to `remote_close_tree.sh`
-still voids this section and re-opens review.
+Reused-script disposition (round 3, superseding the round-1.5 wording): **no accepted
+Stage-2 script travels unchanged any more.** The round-1.5 disposition kept
+`remote_close_tree.sh` byte-identical; that survived until the round-2 T0 re-audit
+executed it and found its evidence-producing helpers still selected from the inherited
+`PATH`. There are now **four derived scripts** — `remote_setup_wpi.sh`,
+`remote_extract_verify_wpi.sh` and `remote_close_tree_wpi.sh`, plus `run_p0.sh` and
+`run_ro.sh` as new wrappers — and each derivation must be proven bounded by a recorded
+diff against its accepted basis in self-QA. Each is a new artifact requiring Stage 1
+adversarial acceptance and its own pinned digest. The accepted originals remain
+byte-frozen inputs and derivation bases: **none of them is edited**, and any byte
+change to one of them voids this section and re-opens review.
 
 **Round-2 derivation contract (amended 2026-08-10; Codex transport audit F3/F4/F6/F7,
 Claude transport audit F5).** Round 1 permitted only a constants change. Two required
@@ -252,30 +254,89 @@ and any delta outside them is still a finding:
    base-prefix constant for the setup script; the archive-constants block (bytes,
    member list, per-member digests) for the extractor, plus the preregistered numeric
    `EXPECT_UID`/`EXPECT_GID` the setup script compares against.
-2. **Program identity** — every executable either script invokes is resolved by a
+2. **Program identity** — every executable any derived script invokes is resolved by a
    frozen absolute path under the preregistered `/usr/bin/<tool>` set and admitted
    only after a non-following kind check, numeric `0:0` ownership, and a
-   not-group/other-writable mode. The inherited `PATH` selects nothing, and no
-   `mktemp`/`TMPDIR` object is created at all.
+   not-group/other-writable mode. The inherited `PATH` selects nothing. For
+   `remote_setup_wpi.sh` and `remote_extract_verify_wpi.sh` no `mktemp`/`TMPDIR`
+   object is created at all; `remote_close_tree_wpi.sh` keeps the accepted original's
+   `mktemp` work directory, pinned, because deleting it would be a class 3 change,
+   and that residual inherited `TMPDIR` channel is disclosed in the script's own
+   header rather than silently carried. Each admitted tool's runtime SHA-256 is
+   emitted as evidence and is deliberately **not** compared to a frozen value: no
+   digest of a remote tool can be known before host contact, and a digest a run
+   learns from the object it is attesting is not an attestation. Binding remote tool
+   bytes stays a successor deploy-channel item, and the scripts say so in their
+   claim lines rather than implying more than the pins establish.
 3. **STOP-before-mutation path classification** — the full parent chain is bound
    (non-symlink, canonical, searchable, numerically owned, not group/other writable)
-   before the first `mkdir`; identity is compared numerically with the rendered
-   `%U:%G` name kept diagnostic only; and a path probe is classified `absent` only
-   when the probe failed, the kernel reports neither object nor link, and the
-   diagnostic equals — as a whole string — the template calibrated in the same run
-   from the pinned tool itself. Multiline, mixed or unrecognised diagnostics STOP.
+   **and the allocation parent's covering mount object is bound to the deploy-channel
+   attested identity** before the first `mkdir`; identity is compared numerically with
+   the rendered `%U:%G` name kept diagnostic only; and a path probe is classified
+   `absent` only when the probe failed, the kernel reports neither object nor link,
+   and the diagnostic equals — as a whole string — the template calibrated in the same
+   run from the pinned tool itself. Multiline, mixed or unrecognised diagnostics STOP.
+   The mount half was added in round 3 (Codex round-2 re-audit F4): a bind or overlay
+   mount at the same literal canonical path presents the expected owner, mode and
+   `readlink -f` answer, so every component predicate passed and all four directories
+   were created inside the substituted object. `remote_setup_wpi.sh` therefore
+   projects the covering mount of `EXPECT_PARENT` from `/proc/self/mountinfo` —
+   longest matching mount point, later record wins a tie, shared mount points counted
+   — and compares it with the `EXPECT_PARENT_MOUNT` constant. An unfilled pin is a
+   missing input at rc 3; a mismatch is STOP before any mutation. The value is a
+   **freeze-gate input**: it comes from the read-only attestation command set the
+   owner authorised as grant #6, which the successor preregistration must order
+   **before op 01**, and it is never learned from the login session being tested.
 4. **Status-before-stdout adjudication** — every listing and tree walk has its exit
    status, its complete diagnostic stream and its final-record termination adjudicated
    before one byte of its stdout is parsed, and the archive is re-hashed after the
    listings so a listing cannot describe different bytes from the ones hashed.
 
-Class 2 is not optional for either script: it is the same execution-environment rule
-the operator side obeys. `transport_runner.ps1` starts `ssh` and `scp` only from
+Class 2 is not optional for any derived script: it is the same execution-environment
+rule the operator side obeys. `transport_runner.ps1` starts `ssh` and `scp` only from
 frozen absolute paths whose SHA-256, reparse state and full-chain write ACL (compared
 by numeric SID, never a rendered account name) are adjudicated first; it never
 consults `Get-Command` or the inherited `PATH`; and every child receives a
 deliberately constructed environment with a run-owned `TEMP` rather than the
 operator's. Both wrappers resolve `sha256sum` the same way.
+
+**Operator-side configuration identity (round 3; Codex round-2 re-audit F2).** Program
+identity was not sufficient on the operator side, for two measured reasons. First, the
+round-2 child environment could not run the pinned program at all: OpenSSH for Windows
+resolves `__PROGRAMDATA__` and, with `PROGRAMDATA` unset, the real
+`C:\Windows\System32\OpenSSH\ssh.exe` exits **255 with zero bytes on both streams**
+before evaluating anything — measured, and measured to be the only load-bearing
+variable in the constructed set. Second, pinning the program does not pin the
+*configuration* that decides which program the transport ends up talking to: with the
+round-2 option set, an ambient `ssh_config` supplied a `ProxyCommand`, which is an
+external program interposed into the transport by inherited state. The runner
+therefore **disables ambient configuration rather than inheriting it**, and supplies
+every configuration input as a pinned argument or a pinned file:
+
+- `-F none` on every `ssh`/`scp` op, which refuses **both** the per-user and the
+  system-wide `ssh_config` (giving `-F` on the command line makes OpenSSH ignore the
+  system-wide file as well);
+- `PROGRAMDATA` set to a run-owned, freshly created, empty directory under the record
+  root, so nothing ambient is reachable even where `__PROGRAMDATA__` is still consulted;
+- `UserKnownHostsFile` and `GlobalKnownHostsFile` pinned to frozen files, so
+  `StrictHostKeyChecking=yes` decides against a preregistered host-key set rather than
+  the operator profile's;
+- `ProxyCommand=none`, `ControlMaster=no`, `ControlPath=none`, `PermitLocalCommand=no`,
+  `ForwardAgent=no`, `ForwardX11=no`, `ClearAllForwardings=yes`;
+- **nothing carried** from the operator environment — `USERPROFILE`, `HOMEDRIVE` and
+  `HOMEPATH` are no longer passed, because measurement showed OpenSSH for Windows
+  resolves the home directory from the OS token, so carrying them never closed that
+  channel and only `-F none` plus the pinned files does.
+
+The identity file, the two `known_hosts` files and the digests of all three are frozen
+inputs the runner binds before the first process starts; the identity file's digest is
+compared but never printed, being the one bound input that is key material. The option
+block is frozen **inside the runner**, and every `ssh`/`scp` plan row must carry it
+verbatim immediately after the program name, so a plan that drops `-F none` or
+re-points a `known_hosts` file cannot run. Scope, stated rather than implied: this is
+established by local configuration/argv evaluation of the real pinned programs
+(`ssh -G`, a real local-to-local `scp` transfer) with no connection attempted. Real
+connection behaviour remains unverified until dispatch.
 
 The frozen `runkit.tar` and the plan/runner live in **distinct** pinned directories —
 the kit in `01_RUNKIT` per section 5's op-02 working directory, the plan and runner in
@@ -377,18 +438,41 @@ The complete set, including the successor of this document, is checksummed in
 
 Route (recorded): `gatea@172.24.55.233`, identity
 `C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519`. Options are pinned fail-closed on every
-op, unchanged from the accepted Stage 2 set:
+op. The round-1 set was inherited from the accepted Stage 2 set; round 3 extends it,
+because the accepted set pinned the credential but left the *configuration* ambient
+(Codex round-2 re-audit F2). This exact block, in this order, is frozen inside
+`transport_runner.ps1` and every `ssh`/`scp` plan row must carry it verbatim
+immediately after the program name:
 
 ```
+-F none
 -i C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519
 -o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o ConnectTimeout=20
+-o UserKnownHostsFile=C:\HyperV\GATEA-STAGING\ssh\wpi_known_hosts
+-o GlobalKnownHostsFile=C:\HyperV\GATEA-STAGING\ssh\wpi_known_hosts_global
+-o ProxyCommand=none -o ControlMaster=no -o ControlPath=none -o PermitLocalCommand=no
+-o ForwardAgent=no -o ForwardX11=no -o ClearAllForwardings=yes
 ```
 
-`BatchMode=yes` refuses to prompt rather than hang. `StrictHostKeyChecking=yes`
-refuses an unknown or changed host key rather than trusting it: a changed key means
-the host identity is not the one this document describes, and silently accepting it
-would defeat the preregistration. `IdentitiesOnly=yes` stops any agent key being
-substituted for the named identity.
+`-F none` refuses both the per-user and the system-wide `ssh_config`; without it an
+ambient config can supply a `ProxyCommand`, which is an external program interposed
+into the transport by inherited state. `BatchMode=yes` refuses to prompt rather than
+hang. `StrictHostKeyChecking=yes` refuses an unknown or changed host key rather than
+trusting it: a changed key means the host identity is not the one this document
+describes, and silently accepting it would defeat the preregistration — and with
+`-F none` the host-key set it decides against is the pinned `UserKnownHostsFile` /
+`GlobalKnownHostsFile` pair, not whatever the operator profile happens to hold.
+`IdentitiesOnly=yes` stops any agent key being substituted for the named identity.
+`ProxyCommand=none`, `ControlMaster=no` and `ControlPath=none` refuse an interposed
+program and a reused or inherited multiplexed session; `PermitLocalCommand=no`,
+`ForwardAgent=no`, `ForwardX11=no` and `ClearAllForwardings=yes` refuse local command
+execution, agent/X11 forwarding and any port forwarding.
+
+**Freeze-gate inputs added by this block:** `wpi_known_hosts` and
+`wpi_known_hosts_global` must exist at the paths above and their SHA-256 values, plus
+the identity file's, must be pinned in the runner before it will start a process. The
+`known_hosts` content is preregistered host-key material, not something the run learns
+at dispatch.
 
 Every argv element must be free of spaces and shell metacharacters, so the remote
 login shell's re-parse of the command is a no-op. Scripts are delivered **on ssh
@@ -402,20 +486,43 @@ stdin** to `bash -s --`; no script is written to the host before it runs.
 | 04 | sequence_ok | ssh stdin `run_p0.sh` | `gatea@172.24.55.233 bash -s --` |
 | 05 | sequence_ok | ssh stdin `run_ro.sh` | `gatea@172.24.55.233 bash -s --` |
 | 06 | sequence_ok | operator-side probe, **host contact** | single TCP connect attempt to `172.24.55.233:8790`, no payload sent, no ssh (B6 external half) |
-| 07 | **always** | ssh stdin `remote_close_tree.sh` | `gatea@172.24.55.233 bash -s -- <EV_DIR P0> <RUNID P0>` |
-| 08 | **always** | ssh stdin `remote_close_tree.sh` | `gatea@172.24.55.233 bash -s -- <EV_DIR RO> <RUNID RO>` |
+| 07 | **always** | ssh stdin `remote_close_tree_wpi.sh` | `gatea@172.24.55.233 bash -s -- <EV_DIR P0> <RUNID P0>` |
+| 08 | **always** | ssh stdin `remote_close_tree_wpi.sh` | `gatea@172.24.55.233 bash -s -- <EV_DIR RO> <RUNID RO>` |
 | 09 | **always** | scp down | `-r gatea@172.24.55.233:<EV_DIR P0> .` (cwd `<record>\evidence`) |
 | 10 | **always** | scp down | `-r gatea@172.24.55.233:<EV_DIR RO> .` (cwd `<record>\evidence`) |
 | 11 | **always** | local only | `local_bind 07 09 evidence\<RUNID P0>` - no host contact |
 | 12 | **always** | local only | `local_bind 08 10 evidence\<RUNID RO>` - no host contact |
 
-Every op preregisters `expect_rc = 0`. On the first rc that differs, **first-FAIL
+Every op preregisters `expect_rc = 0`. On the first rc that differs, **first-mismatch
 stopping engages**: remaining `sequence_ok` ops are skipped, and only the `always`
 ops still run - because a failed stage is exactly when its evidence must be closed,
 bound and retrieved. The successor must demonstrate this behaviour with exact
 paste-and-run commands and real output: RED against a deliberate mutation that wrongly
 runs a later `sequence_ok` op, then GREEN with the accepted runner while all `always`
 ops still execute. A narrated plan or reconciled op count cannot satisfy this gate.
+
+**Observed-outcome grammar, per kind (round 3; Codex and Claude round-2 re-audit F1).**
+The plan side already refused any `expect_rc` outside `{0,1,3}`; the *observed* side
+did not, so a transport failure was recorded as an observation of deviant host state.
+An observed rc is a result only under the rules below, and everything else is
+not-evaluable — `TR_RUN STOP`, runner exit 3. FAIL is reserved for an operation that
+ran and returned the deviant value its own contract defines.
+
+| kind | ops | what counts as a result | everything else |
+|---|---|---|---|
+| `ssh_stdin` | 01, 03, 04, 05, 07, 08 | rc in `{0,1,3}` **and** the capture carries at least one preregistered remote result-line prefix (`SETUP_`/`SETUP `, `EXTRACT_`/`EXTRACT `, `P0W_`/`P0W `, `ROW_`/`ROW `, `CLOSE_`/`CLOSE `) | ssh's own rc **255** is transport failure — host down, rejected key, DNS, dropped route, refused configuration — in which nothing was observed; any other rc is outside the grammar; and rc `{0,1,3}` with no remote marker is not evidence that the delivered script ran at all |
+| `scp_up`, `scp_down` | 02, 09, 10 | rc 0 only | a transfer observes no host state, and scp's failure rc is **1**, which collides with the FAIL class and cannot be separated by rc alone — so the kind decides, and every non-zero rc is not-evaluable |
+| `tcp_probe` | 06 | rc in `{0,1,3}`; rc 1 is the genuine `host_reachable_8790` observation | rc outside the grammar |
+| `local_bind` | 11, 12 | rc in `{0,1,3}`; rc 1 is a genuine digest-set mismatch | rc outside the grammar |
+
+One further rule cuts across all kinds: an `always` op runs unconditionally so a
+broken run's evidence is still closed, retrieved and bound. When the sequence that was
+supposed to *create* that evidence never completed, the `always` op's failure is a
+consequence of the earlier break — a cleanup with nothing to clean — and is
+not-evaluable, never a host-state FAIL that outvotes the truthful earlier STOP. This
+is not hypothetical: with an early STOP, the close script returns rc 1 for the absent
+tree and both retrievals then fail, so four `always` rows previously manufactured a
+FAIL out of one honest STOP.
 
 Op 06 is the one op that touches the host without ssh. It is called out here and in
 section 12 rather than buried, because "no host contact" is a claim the record has
@@ -464,7 +571,9 @@ budgeted to do.
 ## 7. Closing and binding the evidence tree
 
 A process never hashes its own still-open evidence. Ops 07 and 08 run
-`remote_close_tree.sh` as **separate ssh invocations after the stage connection has
+`remote_close_tree_wpi.sh` - the section 4 derivation of the accepted
+`remote_close_tree.sh`, differing from it only in class 2 program identity - as
+**separate ssh invocations after the stage connection has
 already returned** - that is the structural guarantee the stage shell has exited.
 Because a structural guarantee is not a measurement, the script also computes the
 digest set **twice** and refuses if the two passes differ, so a tree that is still
@@ -475,7 +584,18 @@ read/hash error are discarded and STOP the close. Equality of two partial stdout
 streams is not closure evidence.
 
 It writes nothing into the evidence tree (writing a digest file into the directory
-being hashed would change the bytes being attested) and emits, on stdout only:
+being hashed would change the bytes being attested). That sentence is what the class 2
+derivation exists to make true: under the accepted bytes it was **false** in the
+delivered execution environment, because the script's own `sha256sum` was selected
+from the inherited `PATH`. An executed falsification planted a `sha256sum` that
+appended to a closed evidence leaf once and then delegated to the real tool; both
+digest passes observed the post-mutation bytes, agreed, and the accepted script
+printed `CLOSE PASS … wrote_into_evidence_tree=0` at rc 0 — and the operator-side
+binder would then have bound the retrieved post-mutation bytes without discrepancy,
+because remote and local both describe the mutated file. With every tool resolved from
+its frozen absolute pin the plant is never consulted and the claim is earned.
+
+It emits, on stdout only:
 
 - `CLOSE_DIGEST <sha256>  <path relative to EV_DIR>` per file, `LC_ALL=C` order;
 - `CLOSE_SIZE <relpath> <bytes>` per file;
@@ -511,15 +631,15 @@ env-file naming risk remains *unresolved*, not *triggered*.
 
 | # | check | predicted outcome if it holds | exact predicted first divergence if it does not |
 |---|---|---|---|
-| 1 | `getent` present | `command -v getent` resolves and the resolved executable can run | `P0_STOP reason=missing_tool tool=getent` for absence, or `P0_STOP reason=tool_not_evaluable tool=getent path=<p> rc=<n|na> detail=<d> mechanism=<m>` when the resolved object cannot be evaluated as executable. **`rc=na` is mandatory for the `mechanism=access_builtin_x` arm and `rc=<n>` is reserved for an arm that actually invoked something** (amended round 3, RP6-P0 re-audit R2 finding 1): P0 decides resolution and executability with shell builtins only — `command -v` and the access(2) predicate `[ -x ]` — and deliberately never invokes an inventory tool, so no P0 arm can carry an honest invocation status, and a numeric `rc` here would assert a probe that never ran. `path=<p>` is required because the `P0_tool name=… path=…` inventory lines are printed only after every tool has resolved, so this STOP is the sole place the rejected object is named |
-| 2 | executing identity | a complete, uniquely parsed `getent passwd gatea` entry defines the named login contract; numeric `id -u` and `id -g` equal that entry's uid and primary gid, while `id -un=gatea` and rendered names are diagnostic only | `P0_STOP reason=identity_unresolvable account=gatea rc=<n> detail=<d>` for resolver/invocation/parse ambiguity; after successful resolution, `P0_STOP reason=identity_unexpected observed_numeric=<u:g> expected_numeric=<u:g> account=gatea` for a mismatch |
-| 3 | service-account identity and login groups | because `install.sh` allocates the named account dynamically, a complete unique `getent passwd mtc-bridge` result must map that name to the preregistered numeric `WPI_STATE_UID:WPI_STATE_GID=999:988`; then complete numeric `id -G` output for `gatea` contains neither gid `0` nor gid `988`; rendered names are diagnostic only | `P0_STOP reason=identity_unresolvable account=mtc-bridge rc=<n> detail=<d>` for resolver/invocation/parse ambiguity; `P0_STOP reason=identity_unexpected observed_numeric=<u:g> expected_numeric=999:988 account=mtc-bridge` if the named allocation moved; `P0_STOP reason=group_query_not_evaluable rc=<n> detail=<d>` before group interpretation; after a complete parse, `P0_STOP reason=capability_wider_than_ledger gid=<g>` if 0 or 988 is present |
+| 1 | `getent` present | `command -v getent` resolves and the resolved executable can run | `P0_STOP reason=missing_tool tool=getent` for absence, or `P0_STOP reason=tool_not_evaluable tool=getent path=<p> rc=<n|na> detail=<d> mechanism=<m>` when the resolved object cannot be evaluated as executable. **`rc=na` is mandatory for the `mechanism=access_builtin_x` arm and `rc=<n>` is reserved for an arm that actually invoked something** (amended round 3, RP6-P0 re-audit R2 finding 1): P0 decides resolution and executability with shell builtins only — `command -v` and the access(2) predicate `[ -x ]` — and deliberately never invokes an inventory tool, so no P0 arm can carry an honest invocation status, and a numeric `rc` here would assert a probe that never ran. `path=<p>` is required because the `P0_tool name=… path=…` inventory lines are printed only after every tool has resolved, so this STOP is the sole place the rejected object is named. **The preregistered inventory is amended in round 4 (RP6-P0 Codex T0 audit finding 3):** it is the ten tools the FROZEN RO block pins - `stat readlink env find sha256sum systemctl ss curl timeout python3`, from `RP7-WPI-RO.sh` at commit `d6a976aa`, SHA-256 `23e55667…a0aad`, 70941 B - plus the P0-only `id` and `getent`, twelve in all. `grep` and `awk` are REMOVED: neither stage invokes them, so listing them let P0 STOP on a tool no row needs while omitting `timeout`, which the RO stage really runs. A pin naming a tool outside that inventory is `P0_STOP reason=input_pin_unknown_tool name=P0_TOOL_PINS tool=<t> inventory=[<inv>]`; a pin disagreeing with PATH resolution is `P0_STOP reason=tool_pin_mismatch tool=<t> pinned=<p> resolved=<r>`. For `python3` ALONE - whose pin is the resolved non-symlink leaf while PATH still spells `/usr/bin/python3` - the pin is admitted when the PATH-resolved object canonicalises to exactly the pin; otherwise the same STOP carries an added `canonical=<c>`. That pin value is additionally bound to the frozen `P0_FIXED_TRUSTED_PYTHON` freeze-gate input, so P0 admits only the interpreter the RO stage will trust: an unfilled placeholder is `P0_STOP reason=input_pin_freeze_unfilled tool=python3 name=P0_FIXED_TRUSTED_PYTHON detail=deploy_channel_value_never_derived_here`, a disagreement is `P0_STOP reason=input_pin_not_frozen_trusted_python tool=python3 pinned=<p> frozen=<f>` |
+| 2 | executing identity | a complete, uniquely parsed `getent passwd gatea` entry defines the named login contract; numeric `id -u` and `id -g` equal that entry's uid and primary gid, while `id -un=gatea` and rendered names are diagnostic only | `P0_STOP reason=identity_unresolvable account=gatea rc=<n|na> detail=<d>` for resolver/invocation/parse ambiguity — **the `rc=` field is mandatory on every arm of this reason (amended round 4, RP6-P0 Codex T0 audit finding 4):** the record parser EXPORTS the resolver's own exit status instead of keeping it local, so a real resolver error records the status it really returned; `na` is admissible only on the two capture shapes that fail before any status can be read (a lost status sentinel, an unparseable status record) and is never a stand-in for a status that was available. A valid no-match for the route login is `P0_STOP reason=identity_unresolvable account=gatea rc=2 detail=getent_valid_no_match_for_route_login`. After successful resolution, `P0_STOP reason=identity_unexpected observed_numeric=<u:g> expected_numeric=<u:g> account=gatea` for a mismatch |
+| 3 | service-account identity and login groups | because `install.sh` allocates the named account dynamically, a complete unique `getent passwd mtc-bridge` result must map that name to the preregistered numeric `WPI_STATE_UID:WPI_STATE_GID=999:988`; then complete numeric `id -G` output for `gatea` contains neither gid `0` nor gid `988`; rendered names are diagnostic only | `P0_STOP reason=identity_unresolvable account=mtc-bridge rc=<n|na> detail=<d>` for resolver/invocation/parse ambiguity, under the same mandatory-`rc` rule as row 2 (amended round 4, RP6-P0 Codex T0 audit finding 4); `P0_STOP reason=identity_unexpected observed_numeric=<u:g> expected_numeric=999:988 account=mtc-bridge` if the named allocation moved; **`P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match` when the resolver established POSITIVE ABSENCE** — getent rc 2 with a completely empty merged capture — which is preregistered here verbatim in round 4 because it is a reachable divergence and was previously an unregistered token; it is deliberately distinct from `identity_unresolvable` (the account really is not allocated, which is a host observation, not an inability to evaluate) and deliberately carries no `rc=` field because no error status was returned; `P0_STOP reason=group_query_not_evaluable rc=<n> detail=<d>` before group interpretation; after a complete parse, `P0_STOP reason=capability_wider_than_ledger gid=<g>` if 0 or 988 is present |
 | 4 | `ss` present | `command -v ss` resolves | `P0_STOP reason=missing_tool tool=ss` |
 | 5 | `curl` present | `command -v curl` resolves | `P0_STOP reason=missing_tool tool=curl` |
 | 6 | `sha256sum` present | `command -v sha256sum` resolves | `P0_STOP reason=missing_tool tool=sha256sum` |
 | 7 | `systemctl` present | `command -v systemctl` resolves | `P0_STOP reason=missing_tool tool=systemctl` |
 | 8 | execution-domain binding | the login's user, mount, PID and network namespace identities plus canonical root-mount identity exactly equal the values supplied by the external deploy-channel attestation frozen into `RP6-P0.sh` | `P0_STOP reason=execution_domain_unattested field=<f>` if the attestation is missing/unreadable/unparseable; `P0_STOP reason=execution_domain_mismatch field=<f> observed=<v> attested=<v>` on mismatch; comparison with visible PID 1 is not admissible |
-| 9 | system-manager query readiness | only after row 8, `systemctl` can execute, reach the intended system manager over its system bus, pass D-Bus/polkit authorization, and return a complete parseable manager response | `P0_STOP reason=system_manager_unreachable rc=<n> detail=<d>` for invocation, bus, namespace, authorization, timeout, incomplete-output or parse failure |
+| 9 | system-manager query readiness | only after row 8, `systemctl` can execute, reach the intended system manager over its system bus, pass D-Bus/polkit authorization, and return a complete parseable manager response **within a preregistered deadline** | `P0_STOP reason=system_manager_unreachable rc=<n> detail=<d>` for invocation, bus, namespace, authorization, timeout, incomplete-output or parse failure. **The deadline is executable, not aspirational (amended round 4, RP6-P0 Codex T0 audit finding 2):** the query is launched as `env -i LC_ALL=C <pinned timeout> --signal=TERM --kill-after=5s 10s <pinned systemctl> --system --no-pager show --property=Version`, with the cleared-environment exec FIRST and the pinned `timeout` as its argument, per the probe execution-environment rule. `P0_MANAGER_QUERY_BUDGET_S=10` and `P0_MANAGER_QUERY_KILL_AFTER_S=5` are frozen block literals, never operator inputs: a bound supplied by the environment under test could be raised to infinity by that same environment. A deadline hit is `P0_STOP reason=system_manager_unreachable rc=124 detail=manager_query_deadline_exceeded budget_s=10 elapsed_s=<e> text=<d>`, a SIGKILL escalation is `rc=137 detail=manager_query_killed_after_deadline`, and a wrapper that could not run the query at all is `rc=125 detail=bounding_wrapper_failed`. Without the bound a stalled manager produces NO reason line, NO rc and NO verdict — only an external actor's kill status, which is not this block's ruling |
 
 Row 3 is an inversion worth stating plainly: **more privilege than the ledger assumed
 is a STOP, not a bonus.** If `gatea` turns out to be in the state/log group, the
