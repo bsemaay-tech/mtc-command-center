@@ -636,7 +636,8 @@ p0_record_identity
 #                capture) OR a numeric mismatch is
 #                state_account_resolution_unexpected rc 3.
 # A getent that is missing/unpinnable, or a lookup error, or an rc 2 that
-# carries any diagnostic or partial byte (positive absence not established), or
+# carries ANY byte - a diagnostic, a partial record, or a bare newline -
+# (positive absence not established), or
 # an unparsable or duplicate record, is an inability to evaluate:
 # identity_unresolvable rc 3.
 # Names, gecos, home and shell are captured as DIAGNOSTIC fields only; no name
@@ -666,16 +667,46 @@ p0_record_identity
 # established and the only truthful outcome is `error` (Pattern 1: an inability
 # to evaluate is not a result). The merged capture makes this decidable with no
 # temp file: stderr text destroys the empty shape (Pattern 6).
+# ANY byte includes a bare newline. Plain command substitution deletes trailing
+# newlines, so `$(...)` alone cannot tell a truly empty rc-2 capture from one
+# carrying only newline bytes, and the latter was falsely admitted as a valid
+# no-match (C13 re-audit finding 1). The capture below appends a sentinel byte
+# INSIDE the substitution and strips it afterwards, so the complete merged
+# stream survives and the emptiness question is decided on the real bytes.
 p0_resolve_passwd() {
-    local acct="$1" raw rc=0 n_colon rest f1 f2 f3 f4 f5 f6 f7
+    local acct="$1" raw rc=0 had_bytes=no n_colon rest f1 f2 f3 f4 f5 f6 f7
     P0_PW_OUTCOME="error"
     P0_PW_NAME=""; P0_PW_UID=""; P0_PW_GID=""; P0_PW_DIAG=""
-    raw="$(LC_ALL=C "$P0_GETENT" passwd "$acct" 2>&1)" || rc=$?
+    # The sentinel `x` protects the trailing bytes; the tool's own rc is carried
+    # out by re-exiting the substitution subshell with it, so `printf`'s status
+    # never masks getent's (a plain `; printf x` would always yield rc 0). getent
+    # is placed on the left of `||` so that an inherited `set -e` is guaranteed
+    # to be ignored for it and cannot kill the subshell before the sentinel is
+    # written.
+    raw="$(LC_ALL=C "$P0_GETENT" passwd "$acct" 2>&1 || getent_rc=$?; printf x; exit "${getent_rc:-0}")" || rc=$?
+    # If the sentinel is missing the capture was truncated by something other
+    # than getent, so its trailing bytes are unknown and no emptiness claim can
+    # be made from it (Pattern 1). Fail closed rather than re-open the defect.
+    case "$raw" in
+        *x) raw="${raw%x}" ;;
+        *)  P0_PW_DIAG="capture_sentinel_lost"; P0_PW_OUTCOME="error"; return 0 ;;
+    esac
+    # Decided on the PRESERVED capture, before any normalization: did the tool
+    # emit a single byte of anything at all?
+    [ -z "$raw" ] || had_bytes=yes
+    # Normalize back to the shape plain command substitution used to produce, so
+    # every downstream branch - the rc-0 full-record parse and the diagnostics
+    # alike - sees exactly the audited value and no other behaviour changes.
+    while [ "${raw%$'\n'}" != "$raw" ]; do raw="${raw%$'\n'}"; done
     case "$rc" in
         0) : ;;
         2)
-            if [ -n "$raw" ]; then
-                p0_sanitize "$raw"; P0_PW_DIAG="$P0_SAFE"
+            if [ "$had_bytes" = yes ]; then
+                if [ -n "$raw" ]; then
+                    p0_sanitize "$raw"; P0_PW_DIAG="$P0_SAFE"
+                else
+                    P0_PW_DIAG="newline_only_capture_at_rc2"
+                fi
                 P0_PW_OUTCOME="error"; return 0
             fi
             P0_PW_OUTCOME="nomatch"; P0_PW_DIAG="empty_capture_at_rc2"; return 0 ;;

@@ -1,0 +1,29 @@
+﻿C13 round 4 done. Local Git Bash only, no host, no network, nothing committed.
+
+**Fix (RP6-P0.sh, `p0_resolve_passwd`)** — plain `$( … )` ate trailing newlines, so newline-only rc-2 read as empty → false no-match. Now:
+```bash
+raw="$(LC_ALL=C "$P0_GETENT" passwd "$acct" 2>&1 || getent_rc=$?; printf x; exit "${getent_rc:-0}")" || rc=$?
+case "$raw" in *x) raw="${raw%x}" ;; *) P0_PW_DIAG="capture_sentinel_lost"; P0_PW_OUTCOME="error"; return 0 ;; esac
+[ -z "$raw" ] || had_bytes=yes
+while [ "${raw%$'\n'}" != "$raw" ]; do raw="${raw%$'\n'}"; done
+```
+- getent rc carried out by re-exiting subshell (printf's rc would mask it — kickoff's warning).
+- getent on left of `||` so inherited `set -e` can't kill subshell before sentinel (that failure would be silent + fail-OPEN). Verified empirically under `set -Eeuo pipefail`.
+- Sentinel missing → `error`/`capture_sentinel_lost`, fail closed.
+- After the emptiness decision `raw` normalized back to the pre-repair value → rc-0 record parse and all diag strings byte-identical to R3.
+- Newline-only rc-2 → `error` / `newline_only_capture_at_rc2` → caller `identity_unresolvable` rc 3.
+
+**Same-pattern sweep:** only one rc-2-adjudicated site in the file (one `2)` arm). Other captures treat any non-zero rc as error; other emptiness tests fail CLOSED (`p0_capture_numeric` → `p0_stop identity_probe_empty`). No other site changed.
+
+**QA (harness 1 extended, not replaced):** all 16 R3 cases kept + variant `prer4` (R3 bytes `ef205e20…`) + modes `mtc_rc2_newline` / `mtc_rc2_newlines3` / `gatea_rc2_newline` + `nocall` mutation on the new case + marker probe. Real run from the doc: `C13_R4_ARM_QA_SUMMARY cases=27 result=PASS`, rc 0, 25 CASE_OK + 2 PROBE_OK, 0 CASE_BAD. Probe reproduces auditor's markers: `prer4` → `FALSE_NOMATCH_REPRODUCED=yes` / `REQUIRED_ERROR_OUTCOME_PRESENT=no`; repaired → `no` / `yes`. Harness 2 re-run unchanged: rc 0, `cases=4 result=PASS`.
+
+**Measurements:** `RP6-P0.sh` SHA-256 `bff3c86e6e9b565c55da34580284f22c80253d9e931d879fd749459bac85b7cf`, 57441 B (from `ef205e20…`, 55467 B; 36 insertions / 5 deletions). `bash -n` rc 0.
+
+**Finding 2:** no repair, Lead-adjudicated deviation, log untouched.
+
+**Files touched — exactly four:** `RP6-P0.sh`, `SELF_QA_RP6.md`, `STATUS_RP6_P0.md`, `RP6_C13_REPAIR_R3_REPORT.md`. The empty `C13_R4_CLAUDEPRO_RUN_2026-08-10.log` is Lead-created, not written by me.
+
+Next steps:
+1. **(default)** Lead stages the four files and dispatches the Codex re-audit of R4 bytes `bff3c86e…` (57441 B).
+2. Optionally verify the `set -e` capture behavior on the target host shell before host arming — not testable here.
+3. Nothing committed; commit is yours to trigger.

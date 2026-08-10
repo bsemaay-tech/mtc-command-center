@@ -161,3 +161,144 @@ appeared as modified in the working tree (271 changed lines, mtime moving during
 this session). This implementer did not touch that file and made no change to it;
 another session appears to be editing it concurrently. Flagged so the Lead does
 not attribute it to this repair when staging.
+
+
+# Round 4 — disposition of `RP6_C13_REAUDIT_CODEX_2026-08-10.md`
+
+Implementer: Claude Opus 5, bounded FINAL round under the T0 cap
+(`KICKOFF_C13_REPAIR_R4.md`). Same session type as round 3: local Git Bash only, no
+host contacted, no network command run, nothing committed.
+
+## Findings and what was done
+
+| Re-audit finding | Severity | Disposition |
+|---|---|---|
+| 1 — newline-only rc-2 capture falsely admitted as a valid no-match (`RP6-P0.sh:673`) | HIGH | **REPAIRED IN THE BLOCK** + RED/GREEN fixture added to harness 1 |
+| 2 — R3 package exceeds the four-file whitelist (extra provenance log) | MEDIUM | **NO REPAIR** — Lead adjudicated it as an accepted Lead-side deviation added at commit time; file untouched |
+
+## Finding 1 — the repair
+
+The defect was in the capture, not in the test. `raw="$(… 2>&1)"` deletes trailing
+newlines, so `[ -n "$raw" ]` at rc 2 could not distinguish an empty capture from one
+whose only bytes were newlines, and the newline-only case fell through to
+`P0_PW_OUTCOME="nomatch"` — contrary to the closure contract that ANY byte at rc 2
+means positive absence was not established.
+
+Repaired shape:
+
+```bash
+raw="$(LC_ALL=C "$P0_GETENT" passwd "$acct" 2>&1 || getent_rc=$?; printf x; exit "${getent_rc:-0}")" || rc=$?
+case "$raw" in
+    *x) raw="${raw%x}" ;;
+    *)  P0_PW_DIAG="capture_sentinel_lost"; P0_PW_OUTCOME="error"; return 0 ;;
+esac
+[ -z "$raw" ] || had_bytes=yes
+while [ "${raw%$'\n'}" != "$raw" ]; do raw="${raw%$'\n'}"; done
+```
+
+Four decisions behind that shape, each of which an auditor should be able to attack
+directly:
+
+1. **Sentinel inside the substitution.** `printf x` runs in the same subshell, so the
+   capture's last byte is always `x` and every byte getent emitted — trailing
+   newlines included — survives the substitution. Stripping the sentinel afterwards
+   restores the real stream.
+2. **rc semantics.** The kickoff warned about this. A bare `…; printf x` would make
+   the substitution exit with `printf`'s status, so `|| rc=$?` would never fire and
+   every rc-2 no-match would be misread as rc 0. getent's own rc is captured into
+   `getent_rc` and the subshell re-exits with it.
+3. **`set -e` safety.** getent is placed on the LEFT of `||`, where errexit is
+   guaranteed ignored, so an inherited `set -e` cannot kill the subshell at the
+   failing getent before the sentinel is written. This matters because that failure
+   mode would be silent and fail-OPEN — the capture would lose its trailing newlines
+   again and the defect would return. Verified empirically in this session under
+   `set -Eeuo pipefail` with an external rc-2 fixture; both the guarded and unguarded
+   forms produced the full 2-byte capture in Git Bash 5.2, and the guarded form is
+   the one kept because it does not depend on that behaviour.
+4. **Fail closed if the sentinel is lost.** If `raw` does not end in `x`, the capture
+   was truncated by something other than getent, its trailing bytes are unknown, and
+   no emptiness claim can be drawn from it. That is `error` /
+   `capture_sentinel_lost`, never a no-match (Pattern 1).
+
+Then `had_bytes` is decided on the preserved capture, and `raw` is normalized back to
+exactly what plain command substitution used to produce, so the rc-0 full-record
+parse and every diagnostic string are byte-identical to the R3-audited behaviour.
+A newline-only rc-2 capture normalizes to empty, so it gets its own honest diagnostic
+`newline_only_capture_at_rc2` rather than an empty `detail=[]`.
+
+## Same-pattern sweep (the kickoff's "list them")
+
+`p0_resolve_passwd` is the only site in the block that adjudicates rc 2 as a distinct
+outcome — the file contains exactly one `2)` case arm. The other thirteen capture
+sites treat any non-zero rc as an error, and the other emptiness tests fail CLOSED:
+`p0_capture_numeric` does `[ -n "$raw" ] || p0_stop identity_probe_empty`, so a
+newline-only capture there STOPs at rc 3 instead of being admitted. Newline stripping
+in those places cannot manufacture a false positive result, so no other site was
+changed. This is stated as a scope claim an auditor can falsify by grepping for
+rc-2-specific arms and for emptiness tests that lead to an ADMISSION rather than a
+STOP.
+
+## QA (D026, real local runs)
+
+`SELF_QA_RP6.md` harness 1 was EXTENDED, not replaced — all sixteen R3 cases are
+still there verbatim and still run, against the R4 bytes:
+
+- New source variant `prer4` = the committed R3 bytes `ef205e20…` (55467 B) that the
+  re-audit falsified, alongside the existing `repaired` / `prerepair` / `nocall`.
+- New shim modes `mtc_rc2_newline` (one newline on stderr, the auditor's exact
+  fixture), `mtc_rc2_newlines3` (three newlines on stdout), `gatea_rc2_newline`.
+- The `nocall` mutation is applied to the new case too, so the new assertion is
+  killed by deleting the block's own integration call — it is evidence about the
+  block, not about the harness.
+- A `probe` prints the re-audit's own markers from real runs.
+
+Result: `C13_R4_ARM_QA_SUMMARY cases=27 result=PASS`, process rc 0, 25 `CASE_OK` +
+2 `PROBE_OK`, zero `CASE_BAD`.
+
+RED/GREEN on the exact finding:
+
+```text
+--- probe variant=prer4 mode=mtc_rc2_newline
+FIXTURE=mtc-bridge_rc2_stderr_single_newline_byte
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+FALSE_NOMATCH_REPRODUCED=yes
+REQUIRED_ERROR_OUTCOME_PRESENT=no
+
+--- probe variant=repaired mode=mtc_rc2_newline
+FIXTURE=mtc-bridge_rc2_stderr_single_newline_byte
+P0_STOP reason=identity_unresolvable account=mtc-bridge detail=[newline_only_capture_at_rc2]
+ARM_RC=3
+FALSE_NOMATCH_REPRODUCED=no
+REQUIRED_ERROR_OUTCOME_PRESENT=yes
+```
+
+Harness 2 was re-run unchanged against the R4 bytes: process rc 0,
+`C13_R3_BACKSTOP_QA_SUMMARY inputs=2 mutations=2 cases=4 result=PASS`.
+
+## Measurements
+
+- `RP6-P0.sh` after R4: SHA-256
+  `bff3c86e6e9b565c55da34580284f22c80253d9e931d879fd749459bac85b7cf`, 57441 bytes.
+- Pre-R4 baseline (`8d2f25a5`): `ef205e20…`, 55467 bytes — re-derived in-session and
+  matched the re-audit before editing.
+- `git diff --stat` for the block: 36 insertions, 5 deletions, one file.
+- `bash -n RP6-P0.sh` → rc 0.
+- Files touched by this round, exactly four: `RP6-P0.sh`, `SELF_QA_RP6.md`,
+  `STATUS_RP6_P0.md`, this report. Nothing committed. The provenance log
+  `C13_R4_CLAUDEPRO_RUN_2026-08-10.log` was created by the Lead before this round
+  started and was not written to by this implementer.
+
+## Limits, stated plainly
+
+- The complete P0 block still was not run; the environment blockers recorded for R3
+  are unchanged.
+- The newline fixture is a QA shim. It proves how the block adjudicates an rc-2
+  capture whose bytes are newlines; it does not establish that any real NSS module
+  emits such output. The contract being enforced is "any byte at rc 2 is not a proven
+  absence", which does not depend on that.
+- `set -e` behaviour inside command substitution was verified in this Git Bash only.
+  The repair does not rely on it (point 3 above), and the `capture_sentinel_lost` arm
+  makes the failure mode fail-closed rather than silent — but no test on the target
+  host's shell was run, because no host was contacted.
+- QA files are written under `/tmp`, outside the repository.

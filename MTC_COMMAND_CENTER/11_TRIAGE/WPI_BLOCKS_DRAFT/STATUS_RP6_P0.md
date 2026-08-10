@@ -124,4 +124,69 @@ outstanding.
   pre-existing arm are preserved.
 
 **Required to close C13:** the independent Codex re-audit of the R3 bytes
-`ef205e20…` (55467 B) against `RP6_C13_CODEX_AUDIT_2026-08-10.md`.
+`ef205e20…` (55467 B) against `RP6_C13_CODEX_AUDIT_2026-08-10.md`. — DONE: that
+re-audit ran and returned BLOCK with 2 findings; see the round-4 section below,
+which supersedes this requirement.
+
+## C13 round 4 — Codex re-audit repair (Claude Opus 5 implementer, 2026-08-10)
+
+The Codex re-audit of the R3 bytes returned **BLOCK, 2 findings**
+(`RP6_C13_REAUDIT_CODEX_2026-08-10.md`: V1 and V4 FAIL, V2/V3/V5 PASS). This is the
+last bounded round under the T0 cap. Claude Opus 5 executed it as implementer; it
+neither authored nor audited the C13 arm. Status stays **REPAIRED-PENDING-AUDIT** —
+the block is not frozen, not accepted, not dispatchable, and not authorised for host
+execution.
+
+- **Finding 1 (HIGH) — REPAIRED IN THE BLOCK.** `p0_resolve_passwd` captured getent
+  with a plain `$( … )`, which deletes trailing newlines, so the `[ -n "$raw" ]`
+  emptiness test could not tell a truly empty rc-2 capture from a newline-only one
+  and admitted the latter as a valid no-match. The capture now appends a sentinel
+  byte INSIDE the substitution and strips it afterwards, so the complete merged
+  stream survives; `had_bytes` is decided on those preserved bytes before any
+  normalization. A newline-only rc-2 capture is now `error` with
+  `P0_PW_DIAG=newline_only_capture_at_rc2`, and the caller emits
+  `identity_unresolvable … rc 3` for both accounts. getent sits on the left of `||`
+  inside the substitution so an inherited `set -e` cannot kill the subshell before
+  the sentinel is written, and its own rc is carried out by re-exiting the subshell
+  with it. If the sentinel is missing anyway, the capture was truncated by something
+  other than getent and the outcome is `error` / `capture_sentinel_lost` — fail
+  closed, never a no-match. After the emptiness question is answered `raw` is
+  normalized back to the value plain command substitution used to produce, so the
+  rc-0 record parse and every diagnostic string are byte-identical to the
+  R3-audited behaviour.
+- **Finding 2 (MEDIUM) — NO REPAIR, LEAD-ADJUDICATED.** The extra committed
+  provenance log was added by the Lead at commit time, not by the round-3
+  implementer; the Lead recorded it as an accepted Lead-side deviation. Out of this
+  round's scope; the file was not touched.
+- **Same-pattern sweep.** `p0_resolve_passwd` is the only site in the block that
+  adjudicates rc 2 as its own outcome (one `2)` case arm in the file). Every other
+  capture site treats any non-zero rc as an error, and every other emptiness test —
+  e.g. `p0_capture_numeric`'s `[ -n "$raw" ] || p0_stop identity_probe_empty` —
+  fails CLOSED, so newline stripping there can only cause a STOP, never a false
+  admission. No other site was changed.
+- **QA (real, local Git Bash, D026).** `SELF_QA_RP6.md` harness 1 was extended, not
+  replaced: all sixteen R3 cases verbatim, plus a fourth source variant `prer4` (the
+  committed R3 bytes `ef205e20…`), three newline-only rc-2 shim modes
+  (`mtc_rc2_newline`, `mtc_rc2_newlines3`, `gatea_rc2_newline`), the `nocall`
+  mutation applied to the new case as well, and a probe that prints the auditor's own
+  markers. Result: `C13_R4_ARM_QA_SUMMARY cases=27 result=PASS`, process rc 0, 25
+  `CASE_OK` + 2 `PROBE_OK`, zero `CASE_BAD`. The new fixture is GREEN on R4 bytes
+  (`identity_unresolvable … detail=[newline_only_capture_at_rc2]` rc 3) and RED on
+  the R3 bytes, which are separately recorded emitting the defect
+  (`state_account_resolution_unexpected … observed_numeric=absent`). The probe
+  reproduces `FALSE_NOMATCH_REPRODUCED=yes` / `REQUIRED_ERROR_OUTCOME_PRESENT=no` on
+  R3 bytes and `no` / `yes` on R4 bytes. Harness 2 was re-run unchanged against the
+  R4 bytes: process rc 0, `C13_R3_BACKSTOP_QA_SUMMARY … cases=4 result=PASS`.
+- **Artefact (real, computed in-session, Git Bash).** Repaired `RP6-P0.sh` SHA-256
+  `bff3c86e6e9b565c55da34580284f22c80253d9e931d879fd749459bac85b7cf`, 57441 bytes
+  (pre-R4 `ef205e20…`, 55467 bytes; diff 36 insertions / 5 deletions, one file).
+  `bash -n RP6-P0.sh` rc 0, `BASH_N=PASS`. The extended harness was re-run from the
+  document itself (`sed -n '1159,1324p' SELF_QA_RP6.md | bash --noprofile --norc`)
+  and its pasted output is that run.
+- **Scope.** Four files touched (`RP6-P0.sh`, `SELF_QA_RP6.md`, this file,
+  `RP6_C13_REPAIR_R3_REPORT.md`); nothing committed; no host contacted and no network
+  command run. Read-only scope, the rc 0/1/3 contract, and every pre-existing arm are
+  preserved.
+
+**Required to close C13:** the independent Codex re-audit of the R4 bytes
+`bff3c86e…` (57441 B) against `RP6_C13_REAUDIT_CODEX_2026-08-10.md`.

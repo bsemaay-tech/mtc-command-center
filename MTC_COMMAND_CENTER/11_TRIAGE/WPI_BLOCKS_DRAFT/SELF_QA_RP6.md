@@ -1108,3 +1108,507 @@ Both harnesses write QA-only files under `/tmp` (a `getent` fixture and the
 extracted variants) — outside the repository, and no file the block itself
 creates. No host was contacted, no network command was run, and no host file
 content was printed.
+
+# C13 round 4 — repair of re-audit finding 1 (`RP6_C13_REAUDIT_CODEX_2026-08-10.md`)
+
+Implementer: Claude Opus 5, bounded final round under the T0 cap. All output below
+was captured in this session in a local Git Bash `--noprofile --norc` process. No
+host was contacted, no network command was run.
+
+## C13 R4 — repair decision
+
+- **Finding 1 (HIGH), fixed in the block.** `p0_resolve_passwd` no longer captures
+  getent with a plain `$( … )`, which deletes trailing newlines and therefore made
+  a newline-only rc-2 capture indistinguishable from a truly empty one. The capture
+  now appends a sentinel byte inside the substitution and strips it afterwards, so
+  the complete merged stream survives; `had_bytes` is decided on those preserved
+  bytes BEFORE any normalization. A newline-only rc-2 capture is now
+  `P0_PW_OUTCOME=error` with `P0_PW_DIAG=newline_only_capture_at_rc2`, so the caller
+  emits `identity_unresolvable … rc 3` for both accounts. Two supporting details:
+  getent sits on the left of `||` inside the substitution so an inherited `set -e`
+  cannot kill the subshell before the sentinel is written, and its own rc is carried
+  out by re-exiting the subshell with it (a bare `; printf x` would always yield
+  rc 0). If the sentinel is nevertheless absent, the capture was truncated by
+  something other than getent, its trailing bytes are unknown, and the outcome is
+  `error` / `capture_sentinel_lost` — fail closed, never a no-match.
+- **Behaviour preservation.** After the emptiness question is answered, `raw` is
+  normalized back to the value plain command substitution used to produce (trailing
+  newlines stripped), so the rc-0 full-record parse and every diagnostic string are
+  byte-identical to the R3-audited behaviour. Harness 1 below re-runs all sixteen R3
+  cases against the R4 bytes unchanged to prove that.
+- **Finding 2 (MEDIUM), no repair.** The Lead adjudicated the extra committed
+  provenance log as a Lead-side deviation added at commit time, not by the round-3
+  implementer; recorded as accepted, out of this round's scope, untouched.
+- **Scope of the same pattern elsewhere.** `p0_resolve_passwd` is the only site in
+  the block that adjudicates rc 2 as a distinct outcome (a `2)` case arm occurs
+  exactly once in the file). Every other capture site treats any non-zero rc as an
+  error, and every emptiness test elsewhere — e.g. `p0_capture_numeric`'s
+  `[ -n "$raw" ] || p0_stop identity_probe_empty` — fails CLOSED on an empty
+  capture, so newline stripping there can only produce a STOP, never a false
+  admission. No other site was changed.
+
+## C13 R4 — D026 harness 1, extended with the newline-only rc-2 fixture
+
+The R3 harness 1 verbatim, plus: a fourth source variant `prer4` (the committed R3
+bytes `ef205e20…`, 55467 B, which the re-audit falsified), three newline-only rc-2
+shim modes, and an explicit reproduction probe printing the auditor's own
+`FALSE_NOMATCH_REPRODUCED` / `REQUIRED_ERROR_OUTCOME_PRESENT` markers. Polarity
+still decides: a `RED` case fails the run if its assertion is MET.
+
+```bash
+set -Eeuo pipefail
+cd /c/LAB/Tradingview_LAB_CLEAN
+blk=MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh
+pre_rev=cbaf3ec8    # the C13 commit  = PRE-R3 bytes cfdb23b8..., 54109 B
+r3_rev=8d2f25a5     # the R3 commit   = PRE-R4 bytes ef205e20..., 55467 B
+w=/tmp/rp6qa_c13r4; rm -rf "$w"; mkdir -p "$w"
+
+# ---- QA-only getent fixture (production pins an absolute getent from the inventory).
+cat > "$w/getent_shim.sh" <<'SHIMEOF'
+#!/usr/bin/env bash
+key="${2:-}"
+case "$key" in
+    gatea)
+        case "${SHIM_MODE:-}" in
+            wrong_gatea_uid) printf 'gatea:x:4242:%s:a:/h:/s\n' "$(id -g)"; exit 0 ;;
+            dup_gatea) printf 'gatea:x:%s:%s:a:/h:/s\ngatea:x:%s:%s:b:/h:/s\n' "$(id -u)" "$(id -g)" "$(id -u)" "$(id -g)"; exit 0 ;;
+            gatea_rc2_diag) printf 'getent: nss module returned SERVBUSY for gatea\n' >&2; exit 2 ;;
+            gatea_rc2_newline) printf '\n' >&2; exit 2 ;;
+            *) printf 'gatea:x:%s:%s:gatea route login:/home/gatea:/bin/bash\n' "$(id -u)" "$(id -g)"; exit 0 ;;
+        esac ;;
+    mtc-bridge)
+        case "${SHIM_MODE:-}" in
+            wrong_mtc_gid) printf 'mtc-bridge:x:999:989:svc:/var/lib/mtc-bridge:/usr/sbin/nologin\n'; exit 0 ;;
+            mtc_nomatch) exit 2 ;;
+            mtc_rc2_diag) printf 'getent: sss_nss: connection to the name service timed out\n' >&2; exit 2 ;;
+            mtc_rc2_partial) printf 'mtc-bridge:x:999\n'; exit 2 ;;
+            mtc_rc2_newline) printf '\n' >&2; exit 2 ;;
+            mtc_rc2_newlines3) printf '\n\n\n'; exit 2 ;;
+            *) printf 'mtc-bridge:x:999:988:mtc-bridge service:/var/lib/mtc-bridge:/usr/sbin/nologin\n'; exit 0 ;;
+        esac ;;
+esac
+exit 2
+SHIMEOF
+chmod +x "$w/getent_shim.sh"
+
+# ---- the four source variants under test --------------------------------------
+cp "$blk" "$w/src_repaired.sh"                                   # R4-repaired bytes
+git show "$pre_rev:$blk" > "$w/src_prerepair.sh"                 # pre-R3 bytes  (F1 unfixed)
+git show "$r3_rev:$blk"  > "$w/src_prer4.sh"                     # pre-R4 bytes  (newline gap unfixed)
+awk '$0!="p0_resolve_accounts"' "$blk" > "$w/src_nocall.sh"      # MUTATION: production integration call deleted
+
+# ---- extract the arm AND the block's own top-level driver ---------------------
+# The driver lines are taken from the source bytes by exact whole-line match, so
+# the block - not this harness - decides whether the arm runs at all. Nothing
+# here calls p0_resolve_accounts.
+extract() {
+    {
+        sed -n '/^p0_stop() {/p'                "$1"
+        sed -n '/^p0_sanitize()/,/^}/p'         "$1"
+        sed -n '/^p0_count_substr()/,/^}/p'     "$1"
+        sed -n '/^p0_capture_numeric()/,/^}/p'  "$1"
+        sed -n '/^p0_resolve_passwd()/,/^}/p'   "$1"
+        sed -n '/^p0_resolve_accounts()/,/^}/p' "$1"
+        awk '$0=="printf '\''P0_SECTION accounts\\n'\''" || $0=="p0_resolve_accounts"' "$1"
+    } > "$2"
+}
+for v in repaired prerepair prer4 nocall; do extract "$w/src_$v.sh" "$w/funcs_$v.sh"; done
+printf 'DRIVER_LINES repaired=%s prerepair=%s prer4=%s nocall=%s\n' \
+    "$(grep -c '^p0_resolve_accounts$' "$w/funcs_repaired.sh")" \
+    "$(grep -c '^p0_resolve_accounts$' "$w/funcs_prerepair.sh")" \
+    "$(grep -c '^p0_resolve_accounts$' "$w/funcs_prer4.sh")" \
+    "$(grep -c '^p0_resolve_accounts$' "$w/funcs_nocall.sh")"
+
+arm_out() {   # variant mode -> stdout = arm output, rc = arm rc
+    SHIM_MODE="$2" \
+    P0_GETENT="$w/getent_shim.sh" \
+    P0_ID="$(command -v id)" \
+    P0_EXPECT_UID="$(id -u)" \
+    P0_STATE_UID=999 \
+    P0_STATE_GID=988 \
+    bash --noprofile --norc -c '
+        set -Eeuo pipefail
+        . "$1"
+    ' _ "$w/funcs_$1.sh"
+}
+
+CASES=0
+run_case() {  # variant mode want_rc want_subst polarity
+    local variant="$1" mode="$2" want_rc="$3" want_subst="$4" polarity="$5" out rc=0 ok=0
+    CASES=$(( CASES + 1 ))
+    out="$(arm_out "$variant" "$mode")" || rc=$?
+    printf -- '--- variant=%s mode=%s\n%s\nARM_RC=%s\n' "$variant" "${mode:-<none>}" "$out" "$rc"
+    if [ "$rc" = "$want_rc" ] && case "$out" in *"$want_subst"*) true ;; *) false ;; esac; then ok=1; fi
+    if [ "$ok" -eq 1 ]; then
+        printf 'ASSERT_MET variant=%s mode=%s expected_rc=%s subst=[%s] polarity=%s\n' \
+            "$variant" "${mode:-<none>}" "$want_rc" "$want_subst" "$polarity"
+    else
+        printf 'ASSERT_UNMET variant=%s mode=%s expected_rc=%s subst=[%s] polarity=%s\n' \
+            "$variant" "${mode:-<none>}" "$want_rc" "$want_subst" "$polarity"
+    fi
+    # GREEN cases must meet the assertion; RED cases (mutated/older bytes) must NOT.
+    case "$polarity:$ok" in
+        GREEN:1|RED:0) printf 'CASE_OK\n'; return 0 ;;
+        *)             printf 'CASE_BAD\n'; return 1 ;;
+    esac
+}
+
+probe() {  # variant mode want_false_nomatch want_required_error -- the re-audit's own markers
+    local variant="$1" mode="$2" want_f="$3" want_r="$4" out rc=0 f=no r=no
+    CASES=$(( CASES + 1 ))
+    out="$(arm_out "$variant" "$mode")" || rc=$?
+    case "$out" in *"observed_numeric=absent"*) f=yes ;; esac
+    case "$out" in *"identity_unresolvable account=mtc-bridge"*) r=yes ;; esac
+    printf -- '--- probe variant=%s mode=%s\nFIXTURE=mtc-bridge_rc2_stderr_single_newline_byte\n%s\nARM_RC=%s\nFALSE_NOMATCH_REPRODUCED=%s\nREQUIRED_ERROR_OUTCOME_PRESENT=%s\n' \
+        "$variant" "$mode" "$out" "$rc" "$f" "$r"
+    if [ "$f" = "$want_f" ] && [ "$r" = "$want_r" ]; then
+        printf 'PROBE_OK variant=%s expected_false_nomatch=%s expected_required_error=%s\n' "$variant" "$want_f" "$want_r"
+        return 0
+    fi
+    printf 'PROBE_BAD variant=%s expected_false_nomatch=%s expected_required_error=%s\n' "$variant" "$want_f" "$want_r"
+    return 1
+}
+
+overall=0
+set +e
+# === A. R4 bytes, block-driven: the pre-existing five cases (regression) =======
+run_case repaired ''               0 'P0_account_admitted account=mtc-bridge numeric=999:988'            GREEN || overall=1
+run_case repaired wrong_mtc_gid    3 'state_account_resolution_unexpected account=mtc-bridge'            GREEN || overall=1
+run_case repaired mtc_nomatch      3 'state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent' GREEN || overall=1
+run_case repaired wrong_gatea_uid  3 'identity_unexpected account=gatea'                                 GREEN || overall=1
+run_case repaired dup_gatea        3 'identity_unresolvable account=gatea'                               GREEN || overall=1
+
+# === B. the production integration call is deleted -> every arm assertion must fail
+run_case nocall   ''               0 'P0_account_admitted account=mtc-bridge numeric=999:988'            RED   || overall=1
+run_case nocall   wrong_mtc_gid    3 'state_account_resolution_unexpected account=mtc-bridge'            RED   || overall=1
+run_case nocall   mtc_rc2_diag     3 'identity_unresolvable account=mtc-bridge'                          RED   || overall=1
+run_case nocall   mtc_rc2_newline  3 'identity_unresolvable account=mtc-bridge'                          RED   || overall=1
+
+# === C. F1: rc 2 carrying text is a lookup error, not a valid no-match ========
+run_case repaired mtc_rc2_diag     3 'identity_unresolvable account=mtc-bridge detail=[getent: sss_nss: connection to the name service timed out]' GREEN || overall=1
+run_case repaired mtc_rc2_partial  3 'identity_unresolvable account=mtc-bridge detail=[mtc-bridge:x:999]'                                          GREEN || overall=1
+run_case repaired gatea_rc2_diag   3 'identity_unresolvable account=gatea detail=[getent: nss module returned SERVBUSY for gatea]'                 GREEN || overall=1
+run_case prerepair mtc_rc2_diag    3 'identity_unresolvable account=mtc-bridge detail=[getent: sss_nss: connection to the name service timed out]' RED || overall=1
+run_case prerepair mtc_rc2_partial 3 'identity_unresolvable account=mtc-bridge detail=[mtc-bridge:x:999]'                                          RED || overall=1
+run_case prerepair gatea_rc2_diag  3 'identity_unresolvable account=gatea detail=[getent: nss module returned SERVBUSY for gatea]'                 RED || overall=1
+run_case prerepair mtc_rc2_diag    3 'state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent' GREEN || overall=1
+
+# === D. the valid no-match arm still works after both narrowings (regression) ==
+run_case repaired mtc_nomatch      3 'state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match' GREEN || overall=1
+
+# === E. R4 finding 1: a newline-only rc-2 capture is an error, not a no-match ==
+#  GREEN on R4 bytes ...
+run_case repaired mtc_rc2_newline   3 'identity_unresolvable account=mtc-bridge detail=[newline_only_capture_at_rc2]' GREEN || overall=1
+run_case repaired mtc_rc2_newlines3 3 'identity_unresolvable account=mtc-bridge detail=[newline_only_capture_at_rc2]' GREEN || overall=1
+run_case repaired gatea_rc2_newline 3 'identity_unresolvable account=gatea detail=[newline_only_capture_at_rc2]'      GREEN || overall=1
+#  ... and RED on the committed R3 bytes the re-audit falsified.
+run_case prer4    mtc_rc2_newline   3 'identity_unresolvable account=mtc-bridge detail=[newline_only_capture_at_rc2]' RED || overall=1
+run_case prer4    mtc_rc2_newlines3 3 'identity_unresolvable account=mtc-bridge detail=[newline_only_capture_at_rc2]' RED || overall=1
+run_case prer4    gatea_rc2_newline 3 'identity_unresolvable account=gatea detail=[newline_only_capture_at_rc2]'      RED || overall=1
+#  What the R3 bytes emit instead, recorded positively as the defect:
+run_case prer4    mtc_rc2_newline   3 'state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent' GREEN || overall=1
+#  The R3 bytes remain sound on the text-bearing rc-2 cases (the R3 repair is not
+#  being undone by this round):
+run_case prer4    mtc_rc2_diag      3 'identity_unresolvable account=mtc-bridge detail=[getent: sss_nss: connection to the name service timed out]' GREEN || overall=1
+
+# === F. the re-audit's own reproduction markers, both directions ===============
+probe prer4    mtc_rc2_newline yes no  || overall=1
+probe repaired mtc_rc2_newline no  yes || overall=1
+set -e
+
+if [ "$overall" -eq 0 ]; then
+    printf 'C13_R4_ARM_QA_SUMMARY cases=%s result=PASS\n' "$CASES"
+else
+    printf 'C13_R4_ARM_QA_SUMMARY cases=%s result=FAIL\n' "$CASES"
+    exit 1
+fi
+```
+
+### C13 R4 — D026 harness 1 (extended), real output
+
+Captured 2026-08-10, Git Bash, run as `sed -n '1159,1324p' SELF_QA_RP6.md | bash
+--noprofile --norc` against working-tree bytes
+`bff3c86e6e9b565c55da34580284f22c80253d9e931d879fd749459bac85b7cf`, 57441 B.
+Process rc 0.
+
+```text
+DRIVER_LINES repaired=1 prerepair=1 prer4=1 nocall=0
+--- variant=repaired mode=<none>
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_account account=mtc-bridge outcome=resolved uid=999 gid=988 name_diag=[mtc-bridge] via=pinned_getent_passwd
+P0_account_admitted account=mtc-bridge numeric=999:988 matches=prereg_state_uid_gid name=diagnostic_only
+ARM_RC=0
+ASSERT_MET variant=repaired mode=<none> expected_rc=0 subst=[P0_account_admitted account=mtc-bridge numeric=999:988] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=wrong_mtc_gid
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_account account=mtc-bridge outcome=resolved uid=999 gid=989 name_diag=[mtc-bridge] via=pinned_getent_passwd
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=999:989 expected_numeric=999:988
+ARM_RC=3
+ASSERT_MET variant=repaired mode=wrong_mtc_gid expected_rc=3 subst=[state_account_resolution_unexpected account=mtc-bridge] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=mtc_nomatch
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_MET variant=repaired mode=mtc_nomatch expected_rc=3 subst=[state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=wrong_gatea_uid
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4242 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_STOP reason=identity_unexpected account=gatea observed_numeric=4242:4096 expected_numeric=4096:4096,prereg_uid=4096
+ARM_RC=3
+ASSERT_MET variant=repaired mode=wrong_gatea_uid expected_rc=3 subst=[identity_unexpected account=gatea] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=dup_gatea
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea detail=[gatea:x:4096:4096:a:/h:/s gatea:x:4096:4096:b:/h:/s]
+ARM_RC=3
+ASSERT_MET variant=repaired mode=dup_gatea expected_rc=3 subst=[identity_unresolvable account=gatea] polarity=GREEN
+CASE_OK
+--- variant=nocall mode=<none>
+P0_SECTION accounts
+ARM_RC=0
+ASSERT_UNMET variant=nocall mode=<none> expected_rc=0 subst=[P0_account_admitted account=mtc-bridge numeric=999:988] polarity=RED
+CASE_OK
+--- variant=nocall mode=wrong_mtc_gid
+P0_SECTION accounts
+ARM_RC=0
+ASSERT_UNMET variant=nocall mode=wrong_mtc_gid expected_rc=3 subst=[state_account_resolution_unexpected account=mtc-bridge] polarity=RED
+CASE_OK
+--- variant=nocall mode=mtc_rc2_diag
+P0_SECTION accounts
+ARM_RC=0
+ASSERT_UNMET variant=nocall mode=mtc_rc2_diag expected_rc=3 subst=[identity_unresolvable account=mtc-bridge] polarity=RED
+CASE_OK
+--- variant=nocall mode=mtc_rc2_newline
+P0_SECTION accounts
+ARM_RC=0
+ASSERT_UNMET variant=nocall mode=mtc_rc2_newline expected_rc=3 subst=[identity_unresolvable account=mtc-bridge] polarity=RED
+CASE_OK
+--- variant=repaired mode=mtc_rc2_diag
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge detail=[getent: sss_nss: connection to the name service timed out]
+ARM_RC=3
+ASSERT_MET variant=repaired mode=mtc_rc2_diag expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[getent: sss_nss: connection to the name service timed out]] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=mtc_rc2_partial
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge detail=[mtc-bridge:x:999]
+ARM_RC=3
+ASSERT_MET variant=repaired mode=mtc_rc2_partial expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[mtc-bridge:x:999]] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=gatea_rc2_diag
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea detail=[getent: nss module returned SERVBUSY for gatea]
+ARM_RC=3
+ASSERT_MET variant=repaired mode=gatea_rc2_diag expected_rc=3 subst=[identity_unresolvable account=gatea detail=[getent: nss module returned SERVBUSY for gatea]] polarity=GREEN
+CASE_OK
+--- variant=prerepair mode=mtc_rc2_diag
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_UNMET variant=prerepair mode=mtc_rc2_diag expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[getent: sss_nss: connection to the name service timed out]] polarity=RED
+CASE_OK
+--- variant=prerepair mode=mtc_rc2_partial
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_UNMET variant=prerepair mode=mtc_rc2_partial expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[mtc-bridge:x:999]] polarity=RED
+CASE_OK
+--- variant=prerepair mode=gatea_rc2_diag
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea rc=2 detail=getent_valid_no_match_for_route_login
+ARM_RC=3
+ASSERT_UNMET variant=prerepair mode=gatea_rc2_diag expected_rc=3 subst=[identity_unresolvable account=gatea detail=[getent: nss module returned SERVBUSY for gatea]] polarity=RED
+CASE_OK
+--- variant=prerepair mode=mtc_rc2_diag
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_MET variant=prerepair mode=mtc_rc2_diag expected_rc=3 subst=[state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=mtc_nomatch
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_MET variant=repaired mode=mtc_nomatch expected_rc=3 subst=[state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=mtc_rc2_newline
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge detail=[newline_only_capture_at_rc2]
+ARM_RC=3
+ASSERT_MET variant=repaired mode=mtc_rc2_newline expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[newline_only_capture_at_rc2]] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=mtc_rc2_newlines3
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge detail=[newline_only_capture_at_rc2]
+ARM_RC=3
+ASSERT_MET variant=repaired mode=mtc_rc2_newlines3 expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[newline_only_capture_at_rc2]] polarity=GREEN
+CASE_OK
+--- variant=repaired mode=gatea_rc2_newline
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea detail=[newline_only_capture_at_rc2]
+ARM_RC=3
+ASSERT_MET variant=repaired mode=gatea_rc2_newline expected_rc=3 subst=[identity_unresolvable account=gatea detail=[newline_only_capture_at_rc2]] polarity=GREEN
+CASE_OK
+--- variant=prer4 mode=mtc_rc2_newline
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_UNMET variant=prer4 mode=mtc_rc2_newline expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[newline_only_capture_at_rc2]] polarity=RED
+CASE_OK
+--- variant=prer4 mode=mtc_rc2_newlines3
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_UNMET variant=prer4 mode=mtc_rc2_newlines3 expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[newline_only_capture_at_rc2]] polarity=RED
+CASE_OK
+--- variant=prer4 mode=gatea_rc2_newline
+P0_SECTION accounts
+P0_STOP reason=identity_unresolvable account=gatea rc=2 detail=getent_valid_no_match_for_route_login
+ARM_RC=3
+ASSERT_UNMET variant=prer4 mode=gatea_rc2_newline expected_rc=3 subst=[identity_unresolvable account=gatea detail=[newline_only_capture_at_rc2]] polarity=RED
+CASE_OK
+--- variant=prer4 mode=mtc_rc2_newline
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+ASSERT_MET variant=prer4 mode=mtc_rc2_newline expected_rc=3 subst=[state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent] polarity=GREEN
+CASE_OK
+--- variant=prer4 mode=mtc_rc2_diag
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge detail=[getent: sss_nss: connection to the name service timed out]
+ARM_RC=3
+ASSERT_MET variant=prer4 mode=mtc_rc2_diag expected_rc=3 subst=[identity_unresolvable account=mtc-bridge detail=[getent: sss_nss: connection to the name service timed out]] polarity=GREEN
+CASE_OK
+--- probe variant=prer4 mode=mtc_rc2_newline
+FIXTURE=mtc-bridge_rc2_stderr_single_newline_byte
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match
+ARM_RC=3
+FALSE_NOMATCH_REPRODUCED=yes
+REQUIRED_ERROR_OUTCOME_PRESENT=no
+PROBE_OK variant=prer4 expected_false_nomatch=yes expected_required_error=no
+--- probe variant=repaired mode=mtc_rc2_newline
+FIXTURE=mtc-bridge_rc2_stderr_single_newline_byte
+P0_SECTION accounts
+P0_account account=gatea outcome=resolved uid=4096 gid=4096 name_diag=[gatea] via=pinned_getent_passwd
+P0_account_admitted account=gatea numeric=4096:4096 matches=live_id_and_prereg_uid name=diagnostic_only
+P0_STOP reason=identity_unresolvable account=mtc-bridge detail=[newline_only_capture_at_rc2]
+ARM_RC=3
+FALSE_NOMATCH_REPRODUCED=no
+REQUIRED_ERROR_OUTCOME_PRESENT=yes
+PROBE_OK variant=repaired expected_false_nomatch=no expected_required_error=yes
+C13_R4_ARM_QA_SUMMARY cases=27 result=PASS
+```
+
+What the output establishes, line by line:
+
+- `DRIVER_LINES repaired=1 prerepair=1 prer4=1 nocall=0` — the arm is still driven by
+  the block's own top-level call in all three real variants, and the `nocall`
+  mutation really removed it.
+- Block A + D: all six R3 cases (normal resolution, wrong gid, wrong uid, duplicate
+  record, and the true empty-capture valid no-match with its exact
+  `observed_numeric=absent … detail=getent_valid_no_match` line) are unchanged on R4
+  bytes. The byte-preserving capture did not disturb the rc-0 record parse — the
+  shim emits records with a trailing newline, which the R4 normalization strips back
+  to the audited shape.
+- Block B: with the block's integration call deleted, all four arm assertions —
+  including the new newline one — go `ASSERT_UNMET` at rc 0. The new case is killed
+  by the same mutation as the rest, so it is evidence about the block, not about the
+  harness.
+- Block C: the R3 F1 result is intact. Text-bearing rc-2 captures give
+  `identity_unresolvable … detail=[<the text>]` on R4 bytes and on the R3 bytes
+  (`prer4 mtc_rc2_diag` GREEN), and still fail on pre-R3 bytes, which instead emit
+  the false `observed_numeric=absent`.
+- Block E: the re-audit's gap is closed and its RED half is preserved. On R4 bytes a
+  one-newline stderr capture, a three-newline stdout capture, and the same fixture on
+  `gatea` all yield `identity_unresolvable … detail=[newline_only_capture_at_rc2]`
+  rc 3. On the committed R3 bytes the identical fixtures do NOT produce that outcome
+  (`ASSERT_UNMET … polarity=RED`), and the defect is recorded positively: they emit
+  `state_account_resolution_unexpected … observed_numeric=absent`.
+- Block F: the auditor's own two markers, reproduced in both directions from real
+  runs — R3 bytes `FALSE_NOMATCH_REPRODUCED=yes` /
+  `REQUIRED_ERROR_OUTCOME_PRESENT=no`, R4 bytes `no` / `yes`.
+- `C13_R4_ARM_QA_SUMMARY cases=27 result=PASS`, process rc 0.
+
+## C13 R4 — harness 2 re-run (no regression in the `:?` backstop)
+
+Harness 2 was re-run unchanged against the R4 bytes:
+`sed -n '942,1025p' SELF_QA_RP6.md | bash --noprofile --norc`, process rc 0, final
+line `C13_R3_BACKSTOP_QA_SUMMARY inputs=2 mutations=2 cases=4 result=PASS` (both
+`precheck_only` cases `ASSERT_MET` GREEN, both `precheck_and_backstop` cases
+`ASSERT_UNMET` RED). The R4 edit is confined to the interior of
+`p0_resolve_passwd`, so the input-validation section is untouched.
+
+## C13 R4 artefact measurements (real, computed in-session)
+
+- Repaired `RP6-P0.sh` SHA-256: `bff3c86e6e9b565c55da34580284f22c80253d9e931d879fd749459bac85b7cf`
+- Repaired `RP6-P0.sh` byte count: `57441`
+- Pre-R4 baseline (the R3 commit `8d2f25a5`) SHA-256:
+  `ef205e2064caa0cb1493abf037ce9d435f2bf8f6259c5bb3fc4964d1abb2b4b9`, 55467 B —
+  re-derived in-session and matched the re-audit exactly before editing.
+- Pre-R3 baseline (the C13 commit `cbaf3ec8`) SHA-256:
+  `cfdb23b8834a783638723c54cf632973c1cc20c5fb676cb6d310a9d43b9acf1c`, 54109 B.
+- `bash -n MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh` → rc 0,
+  `BASH_N=PASS`.
+- `git diff --stat` for the R4 repair of the block: 36 insertions, 5 deletions, one
+  file.
+
+## C13 R4 explicit local limit
+
+The complete P0 block still was not run, for the same reasons recorded for R3: it
+needs the accepted RP0 library/bootstrap, Linux `/proc` namespace objects, the
+preregistered per-SHA venv, `getent`/`systemctl` on PATH, and a reachable system
+manager, none of which exist in this Git Bash environment. The newline-only fixture
+is a QA shim, not the real `getent`; what is proved locally is the block's
+adjudication of an rc-2 capture whose bytes are a newline, not that any particular
+NSS module ever emits one. The `set -e`-safety of the capture was checked in this
+same Git Bash under `set -Eeuo pipefail`; other shells and other bash versions on
+the target host are covered structurally (getent on the left of `||`) and, if the
+sentinel is ever lost anyway, by the fail-closed `capture_sentinel_lost` arm rather
+than by a test. Harness files are written under `/tmp`, outside the repository. No
+host was contacted, no network command was run, and no host file content was
+printed.
+
+## C13 R4 — status of the earlier C13 records in this file
+
+The R3 harness-1 fence and its recorded output above were captured against the R3
+bytes `ef205e20…` and remain the honest record of that round; they are SUPERSEDED
+as current evidence by the extended harness 1 in this R4 section, which contains
+every R3 case verbatim plus the newline-only fixture and runs against the R4 bytes.
+The two pre-R3 C13 fences stay labelled SUPPLEMENTAL. Neither earlier section was
+edited by this round.
