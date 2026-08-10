@@ -1,5 +1,18 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5] 2026-08-10 — NVIDIA NIM and Claude Pro routes live-verified
+
+Restored the existing NVIDIA NIM path without spending Claude subscription tokens. New central helper:
+`C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-NvidiaNim.ps1`; it self-starts LiteLLM on
+`127.0.0.1:4000`, applies process-scoped UTF-8 to avoid the Turkish-codepage banner crash, health-checks,
+and restores all environment values. NVIDIA retired DeepSeek V4 Pro on Aug 7; the route now uses
+`deepseek-ai/deepseek-v4-flash-0731`. End-to-end Claude CLI markers passed for DeepSeek Flash and
+MiniMax M3. GLM-5.2 passed direct and translated probes but the translated call took about two minutes;
+prefer the existing Z.AI GLM helper. Kimi K2.6 returned HTTP 404 and is not exposed. Default Claude auth
+currently reports `bsemaay3@gmail.com` / Pro; exact `claude-opus-5 --effort xhigh` inference returned
+`CLAUDE_PRO_OK`. Isolated `.claude-max` auth reports the same email / Max. Canonical commands and status
+are recorded in `AI_ACCOUNT_AND_MODEL_ROUTING.md` and `C:\LAB\PROJECT_STARTER_KIT\TOOLBOX.md`.
+
 ## [Claude Fable 5] 2026-08-09 NIGHT — Stage 3/3B executed; B3 repair cycle; standing autonomy authority
 
 Overnight autonomous Lead run on `feature/donchian-crypto-ladder` (14+ commits, `7e9d1c4a`..`2d9ec6d6`+).

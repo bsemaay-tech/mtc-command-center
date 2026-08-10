@@ -167,16 +167,19 @@ Same driver as above.
 | Endpoint | `http://localhost:4000` (local LiteLLM translation layer) |
 | Proxy config | `C:\Users\BarışSemaay\nvidia-litellm\config.yaml` |
 | Credential **env name** | `NVIDIA_API_KEY` |
+| Self-starting launcher | `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-NvidiaNim.ps1` |
 
 Standalone TOML files — **templates / config snapshots**, recording the intended model per route. They live under the **desktop home**, which the launcher refuses:
 
 | File | Model |
 |---|---|
 | `C:\Users\BarışSemaay\.codex\nvidia.config.toml` | `z-ai/glm-5.2` |
-| `C:\Users\BarışSemaay\.codex\nvidia-deepseek.config.toml` | `deepseek-ai/deepseek-v4-pro` |
+| `C:\Users\BarışSemaay\.codex\nvidia-deepseek.config.toml` | `deepseek-ai/deepseek-v4-flash-0731` |
 | `C:\Users\BarışSemaay\.codex\nvidia-minimax.config.toml` | `minimaxai/minimax-m3` |
 
-> **⚠️ There is currently NO verified launch command for these routes.** Nothing below has been probed end to end; do not treat it as an invocation recipe.
+> **Verified Claude-compatible launch command (2026-08-10):**
+> `$a=@('--print','<PROMPT>','--no-session-persistence','--output-format','text'); & 'C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-NvidiaNim.ps1' -Route deepseek -ClaudeArguments $a`
+> Use `-Route minimax` for MiniMax M3. `-Route glm` works but the measured cold/translated response took about two minutes; prefer the separate Z.AI GLM helper for routine GLM work.
 >
 > Facts as observed 2026-08-02:
 >
@@ -184,9 +187,9 @@ Standalone TOML files — **templates / config snapshots**, recording the intend
 > - Current Codex help shows `-c, --config <key=value>` — a **key=value override**, parsed as TOML. There is **no path-taking config flag**; "point Codex at one of these TOML files with `--config <path>`" is not a thing.
 > - Current Codex help also shows `-p, --profile <CONFIG_PROFILE_V2>`, described as layering `$CODEX_HOME/<name>.config.toml` over the base user config — i.e. profiles v2 resolve to **files under the selected `CODEX_HOME`**, not to `[profiles.*]` sections. The files above sit in `C:\Users\BarışSemaay\.codex`, and that home is **not selectable from the mandatory launcher** (§1 hard rules), so this does not yield a usable route as things stand.
 >
-> **Consequence:** using NVIDIA NIM is a *setup* task, not a copy-paste task. A future route must be **configured separately** — the intended config placed under a launcher-selectable `CODEX_HOME`, or expressed as `-c` overrides — and then **freshly probed end to end** (LiteLLM listener up on `http://localhost:4000`, intended model id answering) before anything is dispatched to it. Do not invent or guess a command; record the one that is proven to work, once one exists.
+> **Codex-side consequence:** the TOML profiles remain configuration snapshots rather than the canonical invocation path. The verified operational route is the Claude-compatible helper above; a separate Codex-profile launch still requires its own fresh end-to-end proof.
 
-**Current state (2026-08-08):** NVIDIA NIM's direct API is **WORKING**; a 2026-08-08 probe listed approximately 100 models. The local LiteLLM proxy at `localhost:4000` is **DOWN**. The warning above remains controlling: there is still no verified end-to-end Codex-side launch command, so NIM use remains a setup task.
+**Current state (2026-08-10): WORKING through the self-starting Claude-compatible helper.** The launcher fixes the Windows Turkish-codepage LiteLLM crash with process-scoped UTF-8 settings, starts the proxy hidden when needed, verifies health, and restores all parent-process environment values. End-to-end Claude CLI probes passed for `deepseek-ai/deepseek-v4-flash-0731` and `minimaxai/minimax-m3`; direct and translated GLM-5.2 probes passed but the translated call was slow. NVIDIA retired `deepseek-ai/deepseek-v4-pro` on 2026-08-07, so it was replaced by Flash. Kimi K2.6 was listed by the model endpoint but returned HTTP 404 in a real completion and is deliberately not exposed by the launcher.
 
 ---
 
@@ -201,10 +204,10 @@ Standalone TOML files — **templates / config snapshots**, recording the intend
 
 ## 8. Claude accounts (Pro + Max)
 
-| Account | Subscription state (2026-08-08) | CLI profile / isolation | Operational status (2026-08-08) |
+| Account | Subscription state (2026-08-10) | CLI profile / isolation | Operational status (2026-08-10) |
 |---|---|---|---|
-| Claude Pro — `bsemaay@gmail.com` | Pro, approximately $20/mo; subscription active | Default profile at `%USERPROFILE%\.claude` is authenticated | Usable; its 5-hour quota window was exhausted at confirmation time and was expected to reopen within approximately two hours of the 2026-08-08 evening confirmation. |
-| Claude Max — `bsemaay3@gmail.com` | Separate Max account, approximately $100/mo; purchased 2026-08-08 | **Mandatory launcher:** `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-ClaudeMax.ps1`. It scopes `CLAUDE_CONFIG_DIR` to `C:\Users\BarışSemaay\.claude-max` for the child invocation and restores the prior value afterward; leak-restore fix applied 2026-08-08. | CLI verified usable through the isolated launcher on 2026-08-08. |
+| Claude Pro — `bsemaay3@gmail.com` | Pro, approximately $20/mo; live CLI status | Default profile at `%USERPROFILE%\.claude` is authenticated | `claude-opus-5` with `--effort xhigh` returned the exact smoke marker on 2026-08-10. |
+| Claude Max — `bsemaay3@gmail.com` | Max, approximately $100/mo; live CLI status | **Mandatory launcher:** `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-ClaudeMax.ps1`. It scopes `CLAUDE_CONFIG_DIR` to `C:\Users\BarışSemaay\.claude-max` for the child invocation and restores the prior value afterward. | Isolated helper authentication returned `subscriptionType: max` on 2026-08-10; no paid inference probe was needed for this refresh. |
 
 Never authenticate Max into the default `.claude` profile, and never log the Pro profile out. A purchased/active subscription, a configured isolated CLI profile, and a verified working CLI route are distinct states; the table records each separately.
 
@@ -217,7 +220,7 @@ Never authenticate Max into the default `.claude` profile, and never log the Pro
 - `cline` 3.0.51 (npm).
 - `opencode` (npm), installed but unvalidated as a worker harness.
 - `9router` (npm), installed but unconfigured.
-- `litellm` under `~\.local\bin`; its proxy is currently down.
+- `litellm` under `~\.local\bin`; NVIDIA helper self-starts its localhost proxy when needed.
 - Codex CLI and Claude CLI installed.
 - GLM wrapper at `C:\Users\BarışSemaay\bin\glm.ps1`; it is not on `PATH` as `glm`.
 - OmniRoute is **not installed**.
