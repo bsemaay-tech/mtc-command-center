@@ -114,6 +114,13 @@ ordering is provable from git history. A check that cannot fail proves nothing. 
 
 ## Milestone log (newest first — update on every milestone)
 
+- 2026-08-10 ~09:20: **WP-I round 1.4 CLOSED** (`6a8b0896`) — retroactive catalogue pass
+  (owner grant #4): Codex repaired 17 findings across all 10 patterns; GLM VERIFIED-CLOSED
+  (V1–V6 PASS, 4/4 sample-attacks stopped). Lead pre-resolved both PIN values
+  (`LEAD_PIN_RESOLUTION_2026-08-10.md`); GLM advisory = pin empty drop-in set as third
+  PIN item. RP6-P0 repair (F1/F3/F4) dispatched to Codex per grant #5 sequencing.
+  Next: GLM re-audit RP6 → RP7-WPI-RO authoring → successor prereg → host execution.
+
 - 2026-08-10 ~06:40: **Owner granted all four pending authorizations** (WP-I host contact,
   WP-I budget lift, root for RPD-VERIFY, retroactive catalogue pass) — recorded above, do
   not re-ask. Ledger status published: **24.9 h used / 25.1 h remaining**, last night cost

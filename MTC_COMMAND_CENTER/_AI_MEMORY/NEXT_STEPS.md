@@ -1,5 +1,35 @@
 # NEXT_STEPS
 
+## WP-I round 1.4: catalogue pass CLOSED; RP6-P0 repair in flight (2026-08-10 ~09:20)
+
+**Round 1.4 committed `6a8b0896`:** Codex applied all 10 defect patterns to the whole
+accepted WP-I draft — 17 findings repaired, 0 patterns clean. GLM independently verified
+**VERIFIED-CLOSED** (V1–V6 all PASS, 4/4 sample-attacks stopped). Pins untouched. Lead
+pre-resolved both pins in `WPI_PREREG_DRAFT_ROUND1/LEAD_PIN_RESOLUTION_2026-08-10.md`:
+R1 = full unit-fragment SHA `538c1c60…279bd`; R2 = `WPI_LOG_DIR=/var/log/mtc-bridge`
+(source-derived from the candidate's unit template, non-circular). GLM advisory (LOW):
+pin the drop-in allowlist as a third PIN item at finalization — install.sh at the
+candidate creates no drop-ins, so the source-derived expectation is an EMPTY drop-in set.
+
+**RP6-P0 repair dispatched to Codex** (F1/F3/F4 per `WPI_BLOCKS_DRAFT/
+LEAD_ADJUDICATION_RP6_2026-08-10.md`; F2 closed; draft-side Pattern 8 already fixed by
+round 1.4 C13/C14). GLM re-audit follows, then commit.
+
+**PICK UP EXACTLY HERE — remaining order:**
+
+1. **[AI: GLM]** Re-audit repaired RP6-P0 + SELF_QA_RP6; on PASS commit.
+2. **[AI: Codex]** Author RP7-WPI-RO.sh + run_p0.sh + run_ro.sh + transport_runner.ps1 +
+   TRANSPORT_PLAN.tsv per draft round 1.4 (section 4 acceptance rules). GLM/Codex
+   adversarial rounds until PASS.
+3. **[AI: Claude Lead]** Successor preregistration: allocate RUNIDs (`rp0_require_safe_component`
+   transcript in self-QA), fill pins from LEAD_PIN_RESOLUTION + empty drop-in set pin,
+   Stage 1 freeze (path-scope proof per round-1.4 §10.2 — parsed closed-set expansion,
+   not literal scan), commit BEFORE any invocation.
+4. **[AI: Claude Lead]** Execute WP-I: P0 stage → RO stage on GATEA-STAGING (owner grants
+   #1/#2), then RPD-VERIFY as root (grant #3). Evidence closed + bound.
+5. **[AI: Any]** Close WP-I with evidence → dispatch Audit 2 (readiness package at
+   `11_TRIAGE/AUDIT2_READINESS_PACKAGE/`).
+
 ## ALL FOUR OWNER GATES GRANTED — WP-I is the active workstream (2026-08-10 morning)
 
 Barış granted, and asked not to be asked again (recorded in
