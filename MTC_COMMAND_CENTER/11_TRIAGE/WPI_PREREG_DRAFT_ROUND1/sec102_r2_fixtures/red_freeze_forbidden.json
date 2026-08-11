@@ -3,8 +3,8 @@
   "composites": [{
     "id": "fixture-p0", "entrypoint": "entry",
     "members": [
-      {"id": "entry", "kind": "shell", "path": "entry_forbidden.sh"},
-      {"id": "library", "kind": "shell", "path": "library.sh"}
+      {"id": "entry", "kind": "shell", "path": "entry_forbidden.sh", "deploy_path": "/safe/fixture/entry.sh"},
+      {"id": "library", "kind": "shell", "path": "library.sh", "deploy_path": "/safe/fixture/library.sh"}
     ],
     "edges": [{"from": "entry", "to": "library", "kind": "source"}],
     "allocation_requirements": [

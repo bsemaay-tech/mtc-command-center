@@ -52,6 +52,10 @@ COMPOSITE_KEYS = frozenset(
 )
 COMPOSITE_PROOF_KEYS = COMPOSITE_KEYS | frozenset({"proof"})
 MEMBER_KEYS = frozenset({"id", "kind", "path"})
+# RENDER and FREEZE derive the graph from bytes, so each member must additionally
+# declare the absolute path it is deployed at and referenced by.  ALLOCATE derives
+# nothing from bytes and keeps the round-1 member contract unchanged.
+MEMBER_PROOF_KEYS = MEMBER_KEYS | frozenset({"deploy_path"})
 EDGE_KEYS = frozenset({"from", "to", "kind"})
 REQUIREMENT_KEYS = frozenset({"name", "kind", "consumers"})
 ALLOCATION_KEYS = frozenset({"name", "value"})
@@ -86,6 +90,8 @@ EXEC_COMMAND_RE = re.compile(
     r"((?:'[^']*'|\"[^\"]*\"|[^\s;|&()]+))",
     re.MULTILINE,
 )
+# Mirrors pathscope_prover.ASSIGN_RE over a stripped, non-comment, non-empty line.
+CONSTANT_ASSIGN_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)=(.*)$", re.S)
 
 ALLOCATE_CLAIMS = (
     ("A1", "plan_contract", "closed_schema_and_allocate_order"),
@@ -107,6 +113,11 @@ RENDER_CLAIMS = (
     ("R4", "derived_source_graph", "rendered_bytes_derive_the_declared_reachable_graph"),
     ("R5", "rendered_component_identity", "all_rendered_member_bytes_identified"),
     ("R6", "render_member_conservation", "every_input_member_has_one_terminal_disposition"),
+    (
+        "R7",
+        "deployed_identity_binding",
+        "every_derived_operand_equals_one_declared_member_deployed_path",
+    ),
 )
 
 FREEZE_CLAIMS = (
@@ -118,6 +129,16 @@ FREEZE_CLAIMS = (
     ("F6", "lexical_pathscope_disposition", "every_prover_result_terminal_and_fail_closed"),
     ("F7", "residual_disclosure", "symlink_and_mount_limits_carried_as_disclosures"),
     ("F8", "freeze_member_conservation", "every_input_member_has_one_terminal_disposition"),
+    (
+        "F9",
+        "deployed_identity_binding",
+        "every_derived_operand_equals_one_declared_member_deployed_path",
+    ),
+    (
+        "F10",
+        "allocation_constants_reconciliation",
+        "plan_allocations_and_pinned_constants_are_one_conserved_value_universe",
+    ),
 )
 
 class Verdict(enum.Enum):
@@ -164,6 +185,9 @@ class Member:
     member_id: str
     kind: str
     path: str
+    # Absolute canonical POSIX path the member is deployed at and referenced by.
+    # Empty only at ALLOCATE, which declares no deployed identity.
+    deploy_path: str
 
 
 @dataclasses.dataclass(frozen=True)
@@ -236,14 +260,32 @@ class Plan:
     composites: tuple[Composite, ...]
 
 
+@dataclasses.dataclass
+class ConstantBinding:
+    line: int
+    name: str
+    value: str | None
+    disposition: str = "UNRESOLVED"
+    reason: str = "unreconciled"
+
+
+@dataclasses.dataclass(frozen=True)
+class ShellMember:
+    member_id: str
+    logical_path: str
+    deploy_path: str
+    data: bytes
+
+
 @dataclasses.dataclass(frozen=True)
 class PathProofRequest:
     stage: Stage
     composite_id: str
-    shell_members: tuple[tuple[str, str, bytes], ...]
+    shell_members: tuple[ShellMember, ...]
     entrypoint: str
     edges: tuple[Edge, ...]
     allocations: tuple[Allocation, ...]
+    constants_values: tuple[tuple[str, str], ...]
     constants_data: bytes
     allowlist_data: bytes
     prover_data: bytes
@@ -397,12 +439,15 @@ def _expect_list(value: Any, context: str) -> list[Any]:
     return value
 
 
-def _parse_member(raw: Any, context: str) -> Member:
-    item = _expect_mapping(raw, context, MEMBER_KEYS)
+def _parse_member(raw: Any, context: str, allowed_keys: frozenset[str]) -> Member:
+    item = _expect_mapping(raw, context, allowed_keys)
     return Member(
         _expect_string(item["id"], f"{context}.id"),
         _expect_string(item["kind"], f"{context}.kind"),
         _expect_string(item["path"], f"{context}.path"),
+        _expect_string(item["deploy_path"], f"{context}.deploy_path")
+        if "deploy_path" in allowed_keys
+        else "",
     )
 
 
@@ -514,9 +559,10 @@ def load_plan(path: Path) -> Plan:
     for comp_index, raw_composite in enumerate(_expect_list(document["composites"], "plan.composites")):
         context = f"plan.composites[{comp_index}]"
         composite_keys = COMPOSITE_KEYS if stage is Stage.ALLOCATE else COMPOSITE_PROOF_KEYS
+        member_keys = MEMBER_KEYS if stage is Stage.ALLOCATE else MEMBER_PROOF_KEYS
         item = _expect_mapping(raw_composite, context, composite_keys)
         members = tuple(
-            _parse_member(value, f"{context}.members[{index}]")
+            _parse_member(value, f"{context}.members[{index}]", member_keys)
             for index, value in enumerate(_expect_list(item["members"], f"{context}.members"))
         )
         edges = tuple(
@@ -897,16 +943,124 @@ def _literal_shell_word(raw: str, allocations: dict[str, str] | None = None) -> 
     return parts[0]
 
 
-def _member_for_operand(operand: str, path_to_id: dict[str, str], basename_to_ids: dict[str, list[str]]) -> str | None:
-    normalized = posixpath.normpath(operand)
-    if normalized.startswith("./"):
-        normalized = normalized[2:]
-    if normalized in path_to_id:
-        return path_to_id[normalized]
-    candidates = basename_to_ids.get(posixpath.basename(normalized), [])
-    if len(candidates) == 1:
-        return candidates[0]
-    return None
+def _canonical_deployed_path(value: str) -> str | None:
+    """Return the value only if it is already an absolute canonical POSIX path.
+
+    Nothing is rewritten.  A `..` component is not collapsed, because collapsing it
+    lexically is unsound whenever any prefix is a symlink; such a value is simply not
+    a canonical deployed identity and the caller must STOP.
+    """
+
+    if value == "" or _is_placeholder(value) or CONTROL_RE.search(value):
+        return None
+    if "\\" in value or "//" in value:
+        return None
+    if not value.startswith("/") or value == "/":
+        return None
+    if posixpath.normpath(value) != value:
+        return None
+    return value
+
+
+def _deploy_path_verdict(value: str) -> tuple[Verdict, str]:
+    if value == "" or _is_placeholder(value):
+        return Verdict.STOP, "member_deploy_path_unresolved"
+    if _canonical_deployed_path(value) is None:
+        return Verdict.FAIL, "member_deploy_path_not_canonical_absolute"
+    return Verdict.PASS, "deployed_identity_declared"
+
+
+def _member_for_operand(operand: str, deploy_to_id: dict[str, str]) -> str | None:
+    """Bind an operand to a member by EXACT declared deployed-path identity.
+
+    There is deliberately no basename, suffix or in-bundle-path fallback: a file name
+    is a label, not a file identity (defect pattern 8).  An operand that does not equal
+    exactly one declared `deploy_path` binds to nothing and the caller must STOP.
+    """
+
+    identity = _canonical_deployed_path(operand)
+    if identity is None:
+        return None
+    return deploy_to_id.get(identity)
+
+
+def _parse_constants(data: bytes) -> tuple[tuple["ConstantBinding", ...], str | None]:
+    """Parse the pinned constants table with a deliberately narrower mirror of the
+    prover's own `parse_constants` grammar.
+
+    The mirror is narrower on purpose: the prover expands `$NAME` inside a constant
+    value against earlier constants, this parser does not model that and refuses the
+    value instead of guessing it.  Anything this parser cannot classify is a STOP, so
+    a divergence can never hide inside a form the composite silently skipped.
+    """
+
+    try:
+        text = data.decode("utf-8")
+    except UnicodeError:
+        return tuple(), "constants_not_utf8"
+    bindings: list[ConstantBinding] = []
+    seen: set[str] = set()
+    for line_number, original in enumerate(text.splitlines(), 1):
+        line = original.strip()
+        if not line or line.startswith("#"):
+            continue
+        match = CONSTANT_ASSIGN_RE.fullmatch(line)
+        if match is None:
+            return tuple(bindings), "constants_line_not_key_value"
+        name, raw = match.groups()
+        if name in seen:
+            return tuple(bindings), "constants_duplicate_name"
+        seen.add(name)
+        bindings.append(ConstantBinding(line_number, name, _literal_shell_word(raw)))
+    return tuple(bindings), None
+
+
+def _reconcile_constants(
+    composite: Composite, data: bytes
+) -> tuple[dict[str, str] | None, tuple["ConstantBinding", ...], tuple[str, ...]]:
+    """Reconcile the plan allocations against the pinned constants table.
+
+    The plan allocations decide which member a source operand binds to; the prover
+    re-resolves the same names from `constants.env`.  Those are two sources for one
+    value universe, so every name they share must be byte-equal or the composite STOPs
+    before the prover is invoked.
+    """
+
+    bindings, fatal = _parse_constants(data)
+    reasons: list[str] = []
+    if fatal is not None:
+        reasons.append(fatal)
+    allocation_counts: dict[str, int] = {}
+    allocation_values: dict[str, str] = {}
+    for allocation in composite.allocations:
+        allocation_counts[allocation.name] = allocation_counts.get(allocation.name, 0) + 1
+        allocation_values[allocation.name] = allocation.value
+    for binding in bindings:
+        if binding.value is None:
+            binding.disposition = "STOP"
+            binding.reason = "constants_value_not_literal"
+        elif binding.name not in allocation_values:
+            binding.disposition = "RUNTIME_ONLY"
+            binding.reason = "not_declared_by_plan_allocations"
+            continue
+        elif allocation_counts[binding.name] != 1:
+            binding.disposition = "STOP"
+            binding.reason = "allocation_duplicate_blocks_reconciliation"
+        elif binding.value != allocation_values[binding.name]:
+            binding.disposition = "STOP"
+            binding.reason = "allocation_constants_value_divergence"
+        else:
+            binding.disposition = "RECONCILED"
+            binding.reason = "allocation_and_constants_byte_equal"
+            continue
+        reasons.append(binding.reason)
+    if reasons:
+        return None, bindings, tuple(sorted(set(reasons)))
+    return (
+        {binding.name: binding.value for binding in bindings if binding.value is not None},
+        bindings,
+        tuple(),
+    )
 
 
 def _graph_opaque_reason(text: str) -> str | None:
@@ -942,7 +1096,7 @@ def _graph_opaque_reason(text: str) -> str | None:
 
 
 def _derive_graph(
-    composite: Composite, plan_root: Path, recorder: Recorder, claim_id: str
+    composite: Composite, plan_root: Path, recorder: Recorder, claim_id: str, identity_claim: str
 ) -> tuple[set[str], dict[str, str]]:
     id_counts: dict[str, int] = {}
     path_counts: dict[str, int] = {}
@@ -966,10 +1120,30 @@ def _derive_graph(
     if any(count != 1 for count in path_counts.values()):
         recorder.record(claim_id, Verdict.FAIL, "member_path_alias")
 
-    path_to_id = {member.path: member.member_id for member in composite.members if path_counts[member.path] == 1}
-    basename_to_ids: dict[str, list[str]] = {}
+    deploy_counts: dict[str, int] = {}
     for member in composite.members:
-        basename_to_ids.setdefault(posixpath.basename(member.path), []).append(member.member_id)
+        deploy_counts[member.deploy_path] = deploy_counts.get(member.deploy_path, 0) + 1
+    deploy_to_id: dict[str, str] = {}
+    identity_blocked = False
+    for index, member in enumerate(composite.members):
+        identity_verdict, identity_reason = _deploy_path_verdict(member.deploy_path)
+        if identity_verdict is Verdict.PASS and deploy_counts[member.deploy_path] != 1:
+            identity_verdict, identity_reason = Verdict.FAIL, "member_deploy_path_alias"
+        if identity_verdict is Verdict.PASS:
+            deploy_to_id[member.deploy_path] = member.member_id
+        else:
+            identity_blocked = True
+            recorder.record(identity_claim, identity_verdict, identity_reason)
+        recorder.add_row(
+            "DEPLOY_IDENTITY",
+            composite=composite.composite_id,
+            index=index,
+            member=member.member_id,
+            path=member.path,
+            deploy_path=member.deploy_path,
+            disposition="ACCEPT" if identity_verdict is Verdict.PASS else identity_verdict.value,
+            reason=identity_reason,
+        )
     allocation_counts: dict[str, int] = {}
     allocation_values: dict[str, str] = {}
     for allocation in composite.allocations:
@@ -980,9 +1154,14 @@ def _derive_graph(
     }
 
     derived: list[Edge] = []
-    derivation_blocked = False
+    derivation_blocked = identity_blocked
     for member in composite.members:
         if member.kind != "shell":
+            # A member whose outbound edges are not modeled must not disappear from the
+            # graph claim.  FREEZE already refuses non-shell members; RENDER now refuses
+            # to call the graph closed over them as well (defect pattern 12).
+            recorder.record(claim_id, Verdict.STOP, "member_kind_graph_derivation_not_modeled")
+            derivation_blocked = True
             continue
         verdict, reason, _, data = _read_relative_file(plan_root, member.path)
         if verdict is not Verdict.PASS or data is None:
@@ -1011,9 +1190,13 @@ def _derive_graph(
                 recorder.record(claim_id, Verdict.STOP, "source_operand_dynamic")
                 derivation_blocked = True
                 continue
-            target = _member_for_operand(operand, path_to_id, basename_to_ids)
+            target = _member_for_operand(operand, deploy_to_id)
             if target is None:
-                recorder.record(claim_id, Verdict.FAIL, "source_target_not_declared")
+                recorder.record(claim_id, Verdict.STOP, "source_operand_deploy_identity_unbound")
+                recorder.record(
+                    identity_claim, Verdict.STOP, "source_operand_deploy_identity_unbound"
+                )
+                derivation_blocked = True
                 recorder.add_row(
                     "DERIVED_EDGE",
                     composite=composite.composite_id,
@@ -1021,8 +1204,8 @@ def _derive_graph(
                     target="-",
                     kind="source",
                     operand=operand,
-                    disposition="FAIL",
-                    reason="source_target_not_declared",
+                    disposition="STOP",
+                    reason="source_operand_deploy_identity_unbound",
                 )
                 continue
             edge = Edge(member.member_id, target, "source")
@@ -1053,9 +1236,15 @@ def _derive_graph(
                 recorder.record(claim_id, Verdict.STOP, "execute_source_operand_dynamic_or_optioned")
                 derivation_blocked = True
                 continue
-            target = _member_for_operand(operand, path_to_id, basename_to_ids)
+            target = _member_for_operand(operand, deploy_to_id)
             if target is None:
-                recorder.record(claim_id, Verdict.FAIL, "execute_source_target_not_declared")
+                recorder.record(
+                    claim_id, Verdict.STOP, "execute_source_operand_deploy_identity_unbound"
+                )
+                recorder.record(
+                    identity_claim, Verdict.STOP, "execute_source_operand_deploy_identity_unbound"
+                )
+                derivation_blocked = True
                 recorder.add_row(
                     "DERIVED_EDGE",
                     composite=composite.composite_id,
@@ -1063,8 +1252,8 @@ def _derive_graph(
                     target="-",
                     kind="execute_source",
                     operand=operand,
-                    disposition="FAIL",
-                    reason="execute_source_target_not_declared",
+                    disposition="STOP",
+                    reason="execute_source_operand_deploy_identity_unbound",
                 )
                 continue
             edge = Edge(member.member_id, target, "execute_source")
@@ -1149,6 +1338,7 @@ def _derive_graph(
         composite=composite.composite_id,
         input_members=len(composite.members),
         terminal_member_graph_dispositions=len(composite.members),
+        terminal_deployed_identity_rows=len(composite.members),
         declared_edges=len(composite.edges),
         derived_edge_sites=len(derived),
         reachable_members=len(reachable),
@@ -1290,7 +1480,7 @@ def run_render(plan: Plan, plan_path: Path, recorder: Recorder) -> None:
                 reason=result[1],
             )
 
-        _, graph_dispositions = _derive_graph(composite, plan_path.parent, recorder, "R4")
+        _, graph_dispositions = _derive_graph(composite, plan_path.parent, recorder, "R4", "R7")
         terminal_rows = 0
         for index, member in enumerate(composite.members):
             verdict, reason, byte_count, sha256 = render_results.get(
@@ -1317,6 +1507,7 @@ def run_render(plan: Plan, plan_path: Path, recorder: Recorder) -> None:
                 id=member.member_id,
                 kind=member.kind,
                 path=member.path,
+                deploy_path=member.deploy_path,
                 graph=graph,
                 materialisation=verdict.value,
                 reason=reason,
@@ -1370,17 +1561,17 @@ class SubprocessPathProver:
         return ProverMemberResult(member_id, Verdict.STOP, reason, rc, 0, 0, 0, 0, 0, 0, 0, "-", tuple())
 
     def _build_analysis_unit(self, request: PathProofRequest) -> tuple[str | None, str]:
-        member_data = {member_id: data for member_id, _, data in request.shell_members}
-        basename_counts: dict[str, int] = {}
-        for _, logical_path, _ in request.shell_members:
-            basename = posixpath.basename(logical_path)
-            basename_counts[basename] = basename_counts.get(basename, 0) + 1
-        if any(count != 1 for count in basename_counts.values()):
-            return None, "analysis_unit_member_basename_ambiguous"
-        path_to_id = {
-            posixpath.basename(logical_path): member_id
-            for member_id, logical_path, _ in request.shell_members
-        }
+        member_data = {member.member_id: member.data for member in request.shell_members}
+        deploy_counts: dict[str, int] = {}
+        for member in request.shell_members:
+            identity = _canonical_deployed_path(member.deploy_path)
+            if identity is None:
+                return None, "analysis_unit_member_deploy_path_not_canonical_absolute"
+            deploy_counts[identity] = deploy_counts.get(identity, 0) + 1
+        if any(count != 1 for count in deploy_counts.values()):
+            return None, "analysis_unit_member_deploy_path_ambiguous"
+        deploy_to_id = {member.deploy_path: member.member_id for member in request.shell_members}
+        constants_values = dict(request.constants_values)
         allocation_counts: dict[str, int] = {}
         allocation_values: dict[str, str] = {}
         for allocation in request.allocations:
@@ -1423,8 +1614,22 @@ class SubprocessPathProver:
                 if operand is None:
                     stack.remove(member_id)
                     return None, "analysis_unit_source_operand_dynamic"
-                target = path_to_id.get(posixpath.basename(operand))
-                if target is None or (member_id, target, "source") not in declared:
+                # The operand stays raw in the emitted unit, so the prover re-resolves it
+                # from the pinned constants table.  Require the two sources to produce the
+                # same string here as well as globally, so the file whose identity this
+                # composite proved is the file the prover will reason about.
+                constants_operand = _literal_shell_word(raw_operand, constants_values)
+                if constants_operand is None:
+                    stack.remove(member_id)
+                    return None, "analysis_unit_source_operand_constants_unbound"
+                if constants_operand != operand:
+                    stack.remove(member_id)
+                    return None, "analysis_unit_source_operand_constants_divergent"
+                target = deploy_to_id.get(_canonical_deployed_path(operand) or "")
+                if target is None:
+                    stack.remove(member_id)
+                    return None, "analysis_unit_source_operand_deploy_identity_unbound"
+                if (member_id, target, "source") not in declared:
                     stack.remove(member_id)
                     return None, "analysis_unit_source_edge_unbound"
                 child, reason = expand(target)
@@ -1674,7 +1879,7 @@ def run_freeze(plan: Plan, plan_path: Path, recorder: Recorder, path_prover: Pat
             continue
         proof = composite.proof
         _process_allocations(composite, {member.member_id for member in composite.members}, recorder, "F1", "F1")
-        _, graph_dispositions = _derive_graph(composite, plan_path.parent, recorder, "F3")
+        _, graph_dispositions = _derive_graph(composite, plan_path.parent, recorder, "F3", "F9")
 
         pin_counts: dict[str, int] = {}
         for pin in proof.member_pins:
@@ -1762,19 +1967,63 @@ def run_freeze(plan: Plan, plan_path: Path, recorder: Recorder, path_prover: Pat
                 reason=reason,
             )
 
+        constants_map: dict[str, str] | None = None
+        constant_bindings: tuple[ConstantBinding, ...] = tuple()
+        reconciliation_reasons: tuple[str, ...] = ("constants_input_not_pinned",)
+        if proof_input_verdicts.get("constants") is Verdict.PASS and "constants" in proof_snapshots:
+            constants_map, constant_bindings, reconciliation_reasons = _reconcile_constants(
+                composite, proof_snapshots["constants"]
+            )
+        for reason in reconciliation_reasons:
+            recorder.record("F10", Verdict.STOP, reason)
+        for index, binding in enumerate(constant_bindings):
+            recorder.add_row(
+                "CONSTANT",
+                composite=composite.composite_id,
+                index=index,
+                line=binding.line,
+                name=binding.name,
+                value=binding.value if binding.value is not None else "-",
+                disposition=binding.disposition,
+                reason=binding.reason,
+            )
+        grammar_closed = not set(reconciliation_reasons) & {
+            "constants_not_utf8",
+            "constants_line_not_key_value",
+            "constants_duplicate_name",
+            "constants_input_not_pinned",
+        }
+        recorder.add_row(
+            "CONSTANTS_CONSERVATION",
+            composite=composite.composite_id,
+            grammar="closed" if grammar_closed else "not_closed",
+            plan_allocations=len(composite.allocations),
+            parsed_bindings=len(constant_bindings),
+            terminal_constant_rows=len(constant_bindings),
+            reconciled=sum(1 for item in constant_bindings if item.disposition == "RECONCILED"),
+            runtime_only=sum(1 for item in constant_bindings if item.disposition == "RUNTIME_ONLY"),
+            stopped=sum(1 for item in constant_bindings if item.disposition == "STOP"),
+        )
+
         invocable = (
             all(role in proof_snapshots for role in ("constants", "allowlist", "prover"))
             and all(proof_input_verdicts.get(role) is Verdict.PASS for role in ("constants", "allowlist", "prover"))
             and all(member.member_id in member_snapshots for member in composite.members)
             and all(result[0] is Verdict.PASS for result in member_identity.values())
             and all(value == "REACHABLE" for value in graph_dispositions.values())
+            and constants_map is not None
         )
         if any(member.kind != "shell" for member in composite.members):
             recorder.record("F6", Verdict.STOP, "non_shell_member_analyzer_not_integrated")
             invocable = False
-        if invocable:
+        if invocable and constants_map is not None:
             shell_members = tuple(
-                (member.member_id, member.path, member_snapshots[member.member_id])
+                ShellMember(
+                    member.member_id,
+                    member.path,
+                    member.deploy_path,
+                    member_snapshots[member.member_id],
+                )
                 for member in composite.members
             )
             result = path_prover.prove(
@@ -1785,6 +2034,7 @@ def run_freeze(plan: Plan, plan_path: Path, recorder: Recorder, path_prover: Pat
                     composite.entrypoint,
                     composite.edges,
                     composite.allocations,
+                    tuple(sorted(constants_map.items())),
                     proof_snapshots["constants"],
                     proof_snapshots["allowlist"],
                     proof_snapshots["prover"],
@@ -1838,6 +2088,17 @@ def run_freeze(plan: Plan, plan_path: Path, recorder: Recorder, path_prover: Pat
                 control=False,
                 reason="lexical_prover_does_not_establish_host_object_binding",
             )
+        # The deployed identity this stage compares is a declared, lexically canonical
+        # string.  No host was contacted, so nothing here establishes that the object
+        # living at that path is the pinned member.  Disclosed always, never a control.
+        recorder.add_row(
+            "RESIDUAL",
+            composite=composite.composite_id,
+            id="R2_DEPLOYED_PATH_HOST_OBJECT_NOT_ESTABLISHED",
+            disposition="DISCLOSURE",
+            control=False,
+            reason="deploy_path_is_declared_and_lexically_compared_not_host_verified",
+        )
 
         terminal_rows = 0
         for index, member in enumerate(composite.members):
@@ -1862,6 +2123,7 @@ def run_freeze(plan: Plan, plan_path: Path, recorder: Recorder, path_prover: Pat
                 index=index,
                 id=member.member_id,
                 path=member.path,
+                deploy_path=member.deploy_path,
                 graph=graph,
                 identity=identity_verdict.value,
                 identity_reason=identity_reason,
@@ -1876,9 +2138,10 @@ def run_freeze(plan: Plan, plan_path: Path, recorder: Recorder, path_prover: Pat
             input_members=len(composite.members),
             member_pins=len(proof.member_pins),
             terminal_member_pin_rows=terminal_pin_rows,
+            terminal_constant_rows=len(constant_bindings),
             prover_member_results=len(result.member_results),
             terminal_member_rows=terminal_rows,
-            residual_rows=len(required_residuals),
+            residual_rows=len(required_residuals) + 1,
         )
 
 

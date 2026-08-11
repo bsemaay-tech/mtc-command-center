@@ -1,12 +1,12 @@
 {
   "schema": "sec102-composite-plan-v1", "stage": "render",
   "composites": [{
-    "id": "fixture-p0", "entrypoint": "entry",
+    "id": "fixture-ro", "entrypoint": "entry",
     "members": [
-      {"id": "entry", "kind": "shell", "path": "entry_no_source.sh", "deploy_path": "/safe/fixture/entry.sh"},
-      {"id": "library", "kind": "shell", "path": "library.sh", "deploy_path": "/safe/fixture/library.sh"}
+      {"id": "entry", "kind": "shell", "path": "entry_python_absolute.sh", "deploy_path": "/safe/fixture/entry.sh"},
+      {"id": "verifier", "kind": "python_source", "path": "verifier.py", "deploy_path": "/safe/fixture/verifier.py"}
     ],
-    "edges": [{"from": "entry", "to": "library", "kind": "source"}],
+    "edges": [{"from": "entry", "to": "verifier", "kind": "execute_source"}],
     "allocation_requirements": [
       {"name": "REMOTE_BASE", "kind": "absolute_path", "consumers": ["entry"]},
       {"name": "RUNID", "kind": "safe_component", "consumers": ["entry"]}
@@ -16,8 +16,8 @@
       {"name": "RUNID", "value": "WPI-FIXTURE-FREEZE"}
     ],
     "proof": {"render_templates": [
-      {"member": "entry", "template": "entry_no_source.sh.in"},
-      {"member": "library", "template": "library.sh.in"}
+      {"member": "entry", "template": "entry_python_absolute.sh.in"},
+      {"member": "verifier", "template": "verifier.py.in"}
     ]}
   }]
 }

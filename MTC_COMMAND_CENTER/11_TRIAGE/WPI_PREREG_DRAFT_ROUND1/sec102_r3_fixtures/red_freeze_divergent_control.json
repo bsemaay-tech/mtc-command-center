@@ -1,10 +1,10 @@
 {
   "schema": "sec102-composite-plan-v1", "stage": "freeze",
   "composites": [{
-    "id": "fixture-p0", "entrypoint": "entry",
+    "id": "fixture-divergent-control", "entrypoint": "entry",
     "members": [
-      {"id": "entry", "kind": "shell", "path": "entry_coverage.sh", "deploy_path": "/safe/fixture/entry.sh"},
-      {"id": "library", "kind": "shell", "path": "library.sh", "deploy_path": "/safe/fixture/library.sh"}
+      {"id": "entry", "kind": "shell", "path": "entry_divergent_operand.sh", "deploy_path": "/safe/fixture/entry.sh"},
+      {"id": "library", "kind": "shell", "path": "evil/library.sh", "deploy_path": "/safe/fixture/evil/library.sh"}
     ],
     "edges": [{"from": "entry", "to": "library", "kind": "source"}],
     "allocation_requirements": [
@@ -15,14 +15,14 @@
     "allocations": [
       {"name": "REMOTE_BASE", "value": "/safe/fixture"},
       {"name": "RUNID", "value": "WPI-FIXTURE-FREEZE"},
-      {"name": "LIBRARY_PATH", "value": "/safe/fixture/library.sh"}
+      {"name": "LIBRARY_PATH", "value": "/safe/fixture/evil/library.sh"}
     ],
     "proof": {
       "member_pins": [
-        {"member": "entry", "bytes": 171, "sha256": "b6a9114b5845807657a4e2ea5d6998d3dcdee76f9892ca67782d7ea0353b1c6e"},
-        {"member": "library", "bytes": 43, "sha256": "b96bb4475e27d0767daf8f774ce92976eb1af1f1bbd937260682bfef7b8a4656"}
+        {"member": "entry", "bytes": 168, "sha256": "050932752bd79bb6aad7d3eb9362c8bae6c6b243461598da394f956f8eced894"},
+        {"member": "library", "bytes": 95, "sha256": "f6cc4eda916a64b2d445a0bf45b6af54e70a498c86ad2b0b6a3c639a47894fac"}
       ],
-      "constants": "constants.env", "constants_bytes": 126, "constants_sha256": "63d21caa85c6418449b3d5ccfba5b2990144709ece2ab2c2d0ddf2dfce35a572",
+      "constants": "constants_divergent_operand.env", "constants_bytes": 131, "constants_sha256": "dbf107854081d9e4e0c7f8ac6739e78fb97f29831668701040d2c4290ae6b2f7",
       "allowlist": "allowlist.txt", "allowlist_bytes": 17, "allowlist_sha256": "a011e924851560c9b91b92c2d3802a893b3d96fbff47efc2dd5db560f371a62b",
       "prover": "pathscope_prover.py", "prover_bytes": 122446, "prover_sha256": "890016f0b9a8cde4eed33f8733f69055471b07c6096f6bc07450457e6c52af1d"
     }

@@ -2,7 +2,7 @@
   "schema": "sec102-composite-plan-v1", "stage": "freeze",
   "composites": [{
     "id": "fixture-network", "entrypoint": "entry",
-    "members": [{"id": "entry", "kind": "shell", "path": "entry_network.sh"}],
+    "members": [{"id": "entry", "kind": "shell", "path": "entry_network.sh", "deploy_path": "/safe/fixture/entry.sh"}],
     "edges": [],
     "allocation_requirements": [
       {"name": "REMOTE_BASE", "kind": "absolute_path", "consumers": ["entry"]},

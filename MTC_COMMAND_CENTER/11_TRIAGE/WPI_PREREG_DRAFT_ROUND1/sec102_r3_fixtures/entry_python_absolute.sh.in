@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+ROOT='{{REMOTE_BASE}}'
+RUNID='{{RUNID}}'
+python /safe/fixture/verifier.py
+cat "$ROOT/$RUNID/input.txt"
