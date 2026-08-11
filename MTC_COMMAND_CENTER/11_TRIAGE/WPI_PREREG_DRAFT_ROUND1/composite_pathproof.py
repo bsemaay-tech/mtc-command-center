@@ -118,6 +118,14 @@ SHELL_SUBSCRIPT_PREFIX_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*\[")
 # redirection operator with no separating blank, which is what Bash requires.
 NUMERIC_FD_PREFIX_RE = re.compile(r"^[0-9]+$")
 NAMED_FD_PREFIX_RE = re.compile(r"^\{[A-Za-z_][A-Za-z0-9_]*\}$")
+# The function-definition NAME (round-7 R6-F1).  Only two constructs put a `(`
+# immediately after a word: a function definition, which Bash requires to be a NAME,
+# and an option-enabled pathname pattern, which Bash requires to carry an operator
+# character (`?`, `*`, `+`, `@`, `!`) immediately before the `(`.  A NAME can never
+# end in one of those, so the two are decidable apart without knowing which shell
+# options are set.  `_shell_words` uses this to decide whether an abutting `(` is a
+# word separator or a character of the word itself.
+SHELL_FUNCTION_NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 # --- independent command-word detection (round-4 R3-F1) ----------------------
 # SOURCE_COMMAND_RE / EXEC_COMMAND_RE above are the *derivation* grammar: what the
@@ -129,9 +137,9 @@ NAMED_FD_PREFIX_RE = re.compile(r"^\{[A-Za-z_][A-Za-z0-9_]*\}$")
 # matcher was equally invisible to its own coverage check (defect patterns 5/12).
 #
 # These sets decide which PROVEN-STATIC command words derive edges.  They are not
-# the fence: since round 6 an unrecognised word is a benign leaf only when its
-# spelling is already the name Bash looks up (see COMMAND_WORD_EXPANSION_RE), so a
-# word outside these sets can no longer hide an interpreter behind an expansion.
+# the fence: since round 7 an unrecognised word is a benign leaf only when every
+# character of it is in the safe set (see COMMAND_WORD_STATIC_RE), so a word outside
+# these sets can no longer hide an interpreter behind an expansion of any kind.
 # What the sets still bound is the disclosed residual: the VOCABULARY is a list of
 # recognised interpreters, not a proof that the list is exhaustive.
 GRAPH_SOURCE_WORDS = frozenset({"source", "."})
@@ -175,7 +183,7 @@ SHELL_CONTROL_WORDS = frozenset(
 # re-opens the command position before their body, so no command word is lost there.
 SHELL_NAME_BINDING_WORDS = frozenset({"function", "coproc"})
 
-# --- closed command-word admissibility (round-6 R5-F1) ------------------------
+# --- closed command-word admissibility (round-6 R5-F1, round-7 R6-F1) ---------
 # Rounds 4 and 5 each closed ONE command-word form after it was found: a numeric
 # file descriptor, then a named descriptor, then an indexed assignment.  The round-5
 # audit then found a fourth - a pathname-expanded command word that Bash can resolve
@@ -196,15 +204,68 @@ SHELL_NAME_BINDING_WORDS = frozenset({"function", "coproc"})
 # at the whole-text level, and the check below is deliberately redundant with it, so
 # no single fence carries the class alone.
 COMMAND_WORD_SUBSTITUTION_RE = re.compile(r"[$`]")
-# The remaining expansions Bash performs on a command word before looking it up:
-# pathname expansion (`*`, `?`, `[`...`]`), brace expansion (`{`, `}`) and tilde
-# expansion (`~`).  A backslash builds a name out of quoting rather than spelling it,
-# so it is refused for the same reason.  Applied to the raw word including quoted
-# regions: quoting suppresses some of these, but a proof that this particular
-# occurrence is suppressed is exactly the reasoning this policy refuses to do.
-# Reserved words (`{`, `}`, `[[`, `]]`) are matched before this fence and are
-# therefore unaffected.
-COMMAND_WORD_EXPANSION_RE = re.compile(r"[*?\[\]{}~\\]")
+# --- the safe set: a WHITELIST, not a blacklist (round-7 R6-F1) ---------------
+# Round 6 fenced the *remaining* expansions by listing their operator characters
+# (`*`, `?`, `[`, `]`, `{`, `}`, `~`, `\`).  The round-6 audit then found the
+# `extglob` family - one-or-more `+(`, exactly-one `@(`, zero-or-one `?(` and
+# negated `!(` - of which only `?(` and `*(` carry a listed character.  `ba+(s)h`,
+# `ba@(s)h` and `ba!(x)h` all pathname-resolve to `bash` with `extglob` enabled and
+# every one of them was admitted as a benign leaf.
+#
+# That is not a missing entry, it is the wrong direction of proof.  A blacklist of
+# operators is complete only if the list is complete, and the list is exactly what
+# nobody can close: `extglob` was missed, and any option-enabled or rarely-used
+# operator nobody has thought of would be missed the same way.  Round 7 inverts the
+# test.  A command word is PROVEN-STATIC only when EVERY character of the raw
+# (pre-expansion) word token is in the safe set below.  Any other character - known
+# operator, unknown operator, or a character with no shell meaning at all - makes the
+# word NOT proven-static, so it is UNMODELED and the stage STOPs.  The default for an
+# unrecognised character is refusal, which is what makes this a fixpoint: a form this
+# round never anticipated cannot be admitted by not having been listed.
+#
+# THE SAFE SET IS `[A-Za-z0-9._/:-]`, and each member is admitted because it cannot
+# introduce pathname, brace, tilde, parameter, command or arithmetic expansion,
+# process substitution, or quote-removal-driven resolution, in any position of a
+# command word, under any shell option:
+#
+#   A-Z a-z 0-9  Ordinary characters.  Not metacharacters, not expansion operators,
+#                not quoting characters; they can only spell a name.
+#   `.`          An ordinary pathname character.  The one-character word `.` is the
+#                source builtin and is classified by GRAPH_SOURCE_WORDS below, before
+#                any word can be admitted as a leaf.
+#   `_`          An ordinary pathname and NAME character.  Special only as the
+#                variable `_`, which requires a `$` that this set does not admit.
+#   `-`          Ordinary.  A leading `-` makes an option word, not an expansion.
+#                Special only inside `${var-alt}`, which requires `$` and `{`.
+#   `/`          The pathname separator.  It suppresses PATH, function and builtin
+#                lookup rather than introducing expansion, and the classifier already
+#                takes the last pathname component of any word containing one.
+#   `:`          Ordinary; the one-character word `:` is the null builtin.  Special
+#                only inside `${var:-alt}`, which requires `$` and `{`.
+#
+# Deliberately NOT in the safe set, and each exclusion is load-bearing rather than
+# cautious: `?`, `*`, `+`, `@` and `!` are the five `extglob` operator characters, so
+# excluding all five refuses the whole family in one rule instead of by enumeration -
+# this is the round-6 finding.  `%` introduces job-specification resolution when job
+# control is enabled, an option state the composite does not model.  `=` selects
+# `equals` expansion in shells that implement it, and every assignment word Bash does
+# recognise is classified before this test, so admitting `=` would buy nothing.  `'`
+# and `"` build a name out of quote removal rather than spelling it, and `,`, `^`,
+# `#`, `+` and every other printable character is refused simply because no proof was
+# offered that it cannot resolve - which is the entire point of the inversion.
+#
+# The kickoff's illustrative set `[A-Za-z0-9._/+=:@%-]` was tested against the
+# round-6 finding and does NOT close it: `+` and `@` are two of the five `extglob`
+# operators, so `ba+(s)h` and `ba@(s)h` stay benign leaves under it.  That
+# measurement is published as a mutation discriminator rather than argued.
+#
+# Applied to the raw word including quoted regions, for the round-6 reason: quoting
+# suppresses some expansions, but a proof that this particular occurrence is
+# suppressed is exactly the reasoning this policy refuses to do.  Reserved words
+# (`{`, `}`, `[[`, `]]`, `!`) and assignment prefixes are matched before this fence
+# and are therefore unaffected.
+COMMAND_WORD_SAFE_SET = "A-Z a-z 0-9 . _ - / :"
+COMMAND_WORD_STATIC_RE = re.compile(r"^[A-Za-z0-9._/:-]+$")
 
 ALLOCATE_CLAIMS = (
     ("A1", "plan_contract", "closed_schema_and_allocate_order"),
@@ -1285,6 +1346,13 @@ def _shell_words(text: str) -> tuple[tuple[ShellWord, ...] | None, str | None]:
     Every word this scanner marks as a command position is then adjudicated by
     `_command_word_class` under a closed admissibility policy, so reaching a command
     position is enough: the word is derived, refused, or proven static, never skipped.
+
+    Round 7 fixed the one place where the WORD BOUNDARY itself is not decidable from
+    the bytes alone: a `(` abutting a word is a separator in a default shell and part
+    of the word under `extglob`.  Rather than pick a reading, the scanner conserves
+    the `(` into the raw token (except for the NAME-shaped function-definition form)
+    and lets the admissibility policy refuse it.  The scanner decides nothing; it
+    only stops handing the classifier a fragment of a word instead of the word.
     """
 
     words: list[ShellWord] = []
@@ -1358,6 +1426,29 @@ def _shell_words(text: str) -> tuple[tuple[ShellWord, ...] | None, str | None]:
         raw = text[start:min(index, length)]
         if not raw:
             return None, "source_graph_word_scan_not_progressing"
+        if index < length and text[index] == "(" and not SHELL_FUNCTION_NAME_RE.fullmatch(raw):
+            # WORD-BOUNDARY CONSERVATION (round-7 R6-F1).  The word ended only because
+            # a `(` abuts it, and whether that `(` separates two words or lies INSIDE
+            # one word is not decidable from these bytes: with `extglob` enabled
+            # `ba+(s)h` is a single pathname pattern, and splitting it would hand the
+            # classifier the fragments `ba+`, `s`, `h` - three invented command words,
+            # none of which is the name Bash looks up.  Round 6 was blind here for
+            # exactly that reason.
+            #
+            # The `(` is therefore conserved INTO the raw token instead of being
+            # dropped, so the admissibility policy below adjudicates the token Bash
+            # would use rather than a fragment of it.  This is not a second fence and
+            # decides nothing on its own: it only stops the scanner from destroying
+            # the evidence.  The safe set is what refuses the token, because `(` is
+            # not in it - which is why restoring the round-6 blacklist puts every
+            # extglob RED back to PASS even with this conservation in place.
+            #
+            # A function definition is the one benign construct with this shape, and
+            # Bash requires a NAME for it; an extglob pattern requires `?`, `*`, `+`,
+            # `@` or `!` immediately before the `(`, and no NAME ends in one of those.
+            # So the NAME-shaped form keeps its round-6 treatment and nothing else does.
+            raw += "("
+            index += 1
         if redirect_target_pending:
             redirect_target_pending = False
             continue
@@ -1434,6 +1525,13 @@ def _command_word_class(raw: str) -> str:
     neither can degrade into a leaf, so no command-word form can disappear by being
     one nobody enumerated.
 
+    Since round 7 "proven-static" is decided by a WHITELIST: every character of the
+    raw word must be in the safe set (COMMAND_WORD_STATIC_RE).  The round-6 test
+    asked whether the word contained a listed expansion operator, which is complete
+    only if the list is, and it was not - it missed the `extglob` family.  Under the
+    whitelist an unrecognised character is a refusal by default, so no future or
+    rarely-used operator can be admitted by having been left off a list.
+
     The reserved-word test compares the RAW word, not its unquoted literal.  Bash
     only treats `if`/`{`/`[[` as reserved when they are written unquoted, so `"if"`
     is an ordinary command name; reading the literal would have promoted it to a
@@ -1446,7 +1544,11 @@ def _command_word_class(raw: str) -> str:
         return "control"
     if COMMAND_WORD_SUBSTITUTION_RE.search(raw):
         return "dynamic"
-    if COMMAND_WORD_EXPANSION_RE.search(raw):
+    if not COMMAND_WORD_STATIC_RE.fullmatch(raw):
+        # The round-7 whitelist.  Not "does this word contain an operator I listed"
+        # but "is every character of it one I proved cannot resolve".  A character
+        # outside the safe set is refused whether or not this round knows what it
+        # would do, so an operator family nobody enumerated cannot be admitted.
         return "unmodeled"
     literal = _literal_shell_word(raw)
     if literal is None:
@@ -1486,6 +1588,9 @@ def _graph_word_conservation(
     Since round 6 the difference is not enumerated form by form: every command-position
     word that is not a proven-static benign literal produces a reason here, so a form
     this round never anticipated STOPs by default rather than by having been listed.
+    Round 7 made "proven-static" a whitelist over the raw word's characters instead of
+    a blacklist of expansion operators, so the default now holds for a character
+    nobody enumerated, not only for a form nobody enumerated.
     """
 
     words, scan_reason = _shell_words(text)
@@ -1511,10 +1616,13 @@ def _graph_word_conservation(
         elif word_class == "dynamic":
             reasons.append("source_graph_dynamic_command_not_modeled")
         elif word_class == "unmodeled":
-            # A command word Bash expands before looking it up.  It is refused here
-            # rather than leafed, so whatever it would have expanded to - including a
-            # recognised interpreter with a script operand behind it - cannot pass
-            # through unanalysed.
+            # A command word that was not PROVEN static: some character of it is
+            # outside the safe set, so this module cannot show that the spelling is
+            # already the name Bash looks up.  It is refused here rather than leafed,
+            # so whatever it might resolve to - including a recognised interpreter
+            # with a script operand behind it - cannot pass through unanalysed.  Note
+            # the direction: the word is refused for lacking a proof, not for
+            # carrying an operator this round happened to recognise.
             reasons.append("source_graph_unmodeled_command_word")
     # The matcher must never claim an edge from something the scanner does not see
     # as a command word, nor bind an operand that is not a whole word.

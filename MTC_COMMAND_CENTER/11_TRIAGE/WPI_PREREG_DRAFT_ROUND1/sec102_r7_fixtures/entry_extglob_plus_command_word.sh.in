@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+ROOT='{{REMOTE_BASE}}'
+RUNID='{{RUNID}}'
+# interpreter identity={{LIBRARY_PATH}}
+/usr/bin/ba+(s)h {{LIBRARY_PATH}}
+cat "$ROOT/$RUNID/input.txt"
