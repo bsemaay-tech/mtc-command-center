@@ -1,5 +1,18 @@
 # RP7-WPI-RO repair round 7 - report
 
+> **CORRECTION APPENDED 2026-08-11 (round 8).** One sentence in this report was false when
+> it was written, and it was the justification for removing a regression control. In the
+> "Carried fences" section below, the round-6 fence's fourth change was described as moving
+> the F5 leaf-race arm into a subshell "with the rc no longer pinned in an assertion that
+> never measured it." **The old assertion did measure the rc.** The arm printed
+> `LEAF_RACE rc=%s ...` and the predecessor `grep` matched `LEAF_RACE rc=0 ...`, which pins
+> that field to zero; relaxing it to `rc=[0-9]*` therefore removed a control rather than
+> declining to add one. Codex round-7 part B finding 1 executed the consequence: an unrelated
+> `return 7` at the top of `wpi_capture` passes the relaxed assertion and fails the
+> predecessor. The sentence is struck through in place below, the assertion is repaired in
+> round 8, and both assertions are now run against the same three outputs inside the fence so
+> the difference is measured rather than asserted. See `RP7_REPAIR_R8_REPORT.md` finding 1.
+
 Implementer: Claude Opus 5, effort xhigh, authorised under owner grant #7.
 Auditor of record: Codex, who re-audits these bytes; separation holds.
 No host contact, network connection, SSH/SCP, RUNID minting, service, credential,
@@ -205,8 +218,18 @@ The round-6 fence's four changes: the two GREEN identity constants (they name th
 subject by hash and byte count); `expect_rc f4_bound_wrappers` from 3 to 4 (the
 published command now runs four fences); its F1 listener stub, which must allocate
 the read descriptor production allocates; and its F5 leaf-race arm, moved into a
-subshell so it survives the disclosed MSYS2 STOP, with the rc no longer pinned in
-an assertion that never measured it. No fixture byte and no other assertion moved.
+subshell so it survives the disclosed MSYS2 STOP, ~~with the rc no longer pinned in
+an assertion that never measured it~~. No fixture byte and no other assertion moved.
+
+**CORRECTION (round 8).** The struck-through clause is false. The old assertion DID
+measure the rc: the arm printed it and the old `grep` pinned it to `0`. The subshell
+was needed to survive the MSYS2 STOP; relaxing the status to `rc=[0-9]*` was not, and
+it made the arm accept an unrelated `return 7` regression that the predecessor
+rejected (Codex round-7 part B finding 1, executed). Round 8 restores an exact pin -
+rc 0 with an empty capture result, or rc 3 with exactly the documented
+`RP7_STOP reason=capture_stream_not_bindable label=leaf_race ...` - and keeps the
+subshell. Both properties were achievable together and this report should have said
+so instead of inventing a defect in the assertion it was replacing.
 
 A capture stub that sets `WPI_CAP_OUT` without allocating the read descriptor is
 no longer standing in for `wpi_capture`; the block STOPs with

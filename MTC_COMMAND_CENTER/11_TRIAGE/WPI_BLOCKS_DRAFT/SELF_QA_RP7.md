@@ -1,42 +1,59 @@
-# SELF-QA - RP7-WPI-RO repair round 7
+# SELF-QA - RP7-WPI-RO repair round 8
 
 Status: `SELF-QA-EXECUTED-PENDING-INDEPENDENT-REAUDIT`
 
-Round 7 answers the Codex T0 part-B re-audit of the round-6 bytes
-(`RP7_CODEX_T0_AUDIT_R6_PART_B_2026-08-11.md`, BLOCK, four findings). Everything below ran
+Round 8 answers the Codex T0 part-B re-audit of the round-7 bytes
+(`RP7_CODEX_T0_AUDIT_R7_PART_B_2026-08-11.md`, BLOCK, four findings). Everything below ran
 locally in **Git Bash (MSYS2)** on the workstation. It made no SSH/SCP call, opened no
 network connection, contacted no staging host, minted no RUNID, and changed no repository
-file outside the round-7 deliverables. Fixture writes were confined to `mktemp` directories
+file outside the round-8 deliverables. Fixture writes were confined to `mktemp` directories
 under `/tmp` whose prefix was checked before recursive removal.
 
-Three of the four findings are the same shape: **a value is admitted, transformed, or
-re-read, and the claim made about it is stronger than what survived the transformation.**
-F1 loses bytes to Bash's NUL handling, F2 validates a concatenation instead of its fields,
-F3 claims byte identity across a close-and-reopen. Every round-7 arm therefore feeds the
-audit's own bytes to the real production predicate and reads the production result line:
+**Read finding 1 first, because it is not about the block.** Round 7 repaired four real
+defects and, inside the same edit, relaxed a carried regression assertion from `rc=0` to
+the basic regex `rc=[0-9]*` - and justified the relaxation with a statement about the old
+assertion that was not true. Codex executed an unrelated `return 7` mutation of
+`wpi_capture` and showed the relaxed assertion passing where the predecessor failed. That
+is Pattern 10, *evidence that cannot fail*, arriving through the back door: the arm could
+fail yesterday and could not today. The other three findings are the round-7 shape again -
+**a value is admitted, transformed or re-read, and the claim made about it is stronger than
+what survived the transformation** - F2 binds one reader of a class and leaves the rest of
+the class on the name, F3 attributes an exit status to a cause the wrapper cannot observe
+and asserts an enforcement no wrapper performs, F4 preregisters a STOP the production path
+cannot emit.
 
-1. **The RED is the audited artefact.** Every arm runs twice - once against the frozen
-   round-6 blob, materialised by `git cat-file blob 3e2a976a:...` and re-derived inside the
-   fence to 88460 B / `6586698c...40709`, and once against the repaired worktree file. The
+Two rules are in force from this round on, and every arm below is built to them:
+
+1. **A carried fence changes only with a stated reason and a per-change discriminating-power
+   argument.** Every change to a carried body is named in the section that carries it, and
+   for each one the answer to "what input used to fail here, and does it still fail?" is
+   given. Where the answer needed executing rather than asserting, it was executed: the
+   round-8 fence runs the round-7 assertion and the round-8 assertion over the same three
+   outputs and prints which accepts which (`ASSERTION_POWER`).
+2. **Never justify a change by a claim about the old code without verifying it.** The false
+   sentence round 7 wrote is corrected in `RP7_REPAIR_R7_REPORT.md` and restated correctly
+   in the carried round-6 fence, and the executed matrix above is the verification the
+   original claim never had.
+
+The three standing disciplines from earlier rounds are unchanged:
+
+1. **The RED is the audited artefact.** Every block arm runs twice - once against the frozen
+   round-7 blob, materialised by `git cat-file blob c708511f:...` and re-derived inside the
+   fence to 92853 B / `e695a67b...07f32`, and once against the repaired worktree file. The
    fence asserts both identities, both CR counts and both `bash -n` results before any arm
-   runs. The F4 arms do the same for the published command *text*, RED being the round-6
+   runs. The F3 arms do the same for the published command *text*, RED being the round-7
    document's command extracted from the same commit.
-2. **Every finding carries its own no-weakening control.** A repair that turns malformed
-   input into a STOP is only correct if well-formed input still reaches the same verdict it
-   reached before: a clean `200`, a clean `OK fields=8` and a clean `net:[100]` must still
-   be accepting; the four record dispositions the reader already had
-   (`empty_or_read_error`, `unterminated_final_record`, `multiple_records`,
-   `unterminated_extra_record`) must keep the same reason token on both subjects;
-   column-padded `ss` output must still parse; a real wildcard listener must still be a
-   host-state FAIL; and a fence body that honours TERM must still be `124`. Those controls
-   are arms, not assertions in prose.
-3. **The published command can now classify what it bounds.** Round 6's repair made the
-   command propagate assertion failure, and that is carried unchanged and re-executed here.
-   Round 7 adds the outcome round 6 got wrong: a fence body that ignores TERM and is killed
-   after the grace exits `137`, which round 6 reported as `fence_failed`. Both the RED
-   misclassification and the GREEN classification are executed against the two command
-   texts themselves, and the documented aggregate bound is re-derived from the published
-   text rather than asserted in prose.
+2. **Every finding carries its own no-weakening control.** A repair that turns a
+   substitutable read into a bound one is only correct if unsubstituted input still reaches
+   the verdict it reached before: a clean `200`, a clean `OK fields=8` and a clean
+   `net:[100]` must still be accepting on both subjects; a real kill-after must still be
+   classified as a timeout; and a capture caller that preregisters no inability token of its
+   own must still fail closed on the generic one.
+3. **The published command can attribute what it reports.** Each of the five wrappers now
+   runs with `--verbose` and its stderr is captured and echoed back, so an rc of 137 is
+   called this command's own kill-after event only when that wrapper recorded sending KILL.
+   The bound the result line states is the one the wrappers actually enforce, and the line
+   says in as many words that the command as a whole is unbounded.
 
 ## Exact command
 
@@ -60,40 +77,64 @@ rather than claimed away: 137 is `SIGKILL`, so a fence body killed by something 
 this command's own kill-after grace is indistinguishable from inside the command and is
 reported the same way.
 
-The **aggregate bound is 3720 s**, and it is arithmetic over what the wrappers actually
-enforce: four fences run **sequentially**, each under `900 s` plus its own `30 s` grace, so
-`4 * (900 + 30) = 3720` is an upper bound no execution of this command can exceed. Round 6
-documented `2700`, which was neither the sum of its three bounds (`2700`) plus their graces
-(`2790`) nor enforced by any wrapper; the number is now the enforced one, it includes every
-grace, and `aggregate_enforced_by=sequential_per_fence_bounds` says on the result line
-exactly what enforces it. No outer wrapper is added: an outer `timeout` around the whole
-sequence would bound the same quantity a second time while discarding the per-fence rcs the
-command's own classification depends on. The measured run below is far inside the bound;
-the bound is what the command enforces, not what it happened to take.
+Round 7 said `3720` "is an upper bound no execution of this command can exceed" and put
+`aggregate_enforced_by=sequential_per_fence_bounds` on the result line. Codex round-7 part B
+finding 3 executed the counter-example: a FIFO in place of this document makes the command
+block in its own `sed` extraction, before the first wrapper starts, and an independent 3 s
+timeout had to stop it. The five `timeout` calls bound five fence CALLS; they do not bound
+the extractions, the `sha256sum`, the `wc -c` or the shell's own overhead, and no wrapper
+encloses the command as a whole. **This round states only what is enforced.** Each fence runs
+under `900 s` with a `30 s` kill grace; `5 * (900 + 30) = 4650` is therefore the
+**fence-timeout budget**, and the result line says `fence_timeout_budget_s=4650
+whole_command_bound=none prelude_bounded=no` instead of naming an enforcer that does not
+exist. No outer wrapper is added: it would bound the same quantity a second time while
+discarding the per-fence rcs the classification depends on, and the honest statement costs
+nothing. Renaming the field would not have been enough on its own - round 7's error was
+asserting enforcement, not choosing a poor word for it.
+
+**Rc 137 is now attributed rather than assumed.** Round 7 printed `kind=killed_after_grace`
+for every fence rc of 137, and Codex showed `timeout ... bash -c 'exit 137'` finishing in
+about a second and being labelled that way: the classifier saw only a number. Each wrapper
+now runs with `--verbose`, which makes GNU `timeout` announce its own signals, and each
+fence's stderr is captured to a file and echoed back unchanged. A 137 is called
+`killed_after_grace` only when that fence's own wrapper recorded `sending signal KILL to
+command`; a 137 with no such record is `kind=sigkill_not_from_this_wrapper`, is **not** a
+timeout, and exits 1. The wrapper's own diagnostic, not the exit status, is the evidence.
 
 ```bash
 # RP7_EXACT_COMMAND_BEGIN
 cd /c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT
+sed -n '/^# RP7_R8_FENCE_BEGIN$/,/^# RP7_R8_FENCE_END$/p' SELF_QA_RP7.md > /tmp/rp7-r8-fence-body.sh
 sed -n '/^# RP7_R7_FENCE_BEGIN$/,/^# RP7_R7_FENCE_END$/p' SELF_QA_RP7.md > /tmp/rp7-r7-fence-body.sh
 sed -n '/^# RP7_R6_FENCE_BEGIN$/,/^# RP7_R6_FENCE_END$/p' SELF_QA_RP7.md > /tmp/rp7-r6-fence-body.sh
 sed -n '/^# RP7_QA_FENCE_BEGIN$/,/^# RP7_QA_FENCE_END$/p' SELF_QA_RP7.md > /tmp/rp7-r5-fence-body.sh
 sed -n '/^# RP7_R4_FENCE_BEGIN$/,/^# RP7_R4_FENCE_END$/p' SELF_QA_RP7.md > /tmp/rp7-r4-fence-body.sh
-sha256sum /tmp/rp7-r7-fence-body.sh /tmp/rp7-r6-fence-body.sh /tmp/rp7-r5-fence-body.sh /tmp/rp7-r4-fence-body.sh
-wc -c /tmp/rp7-r7-fence-body.sh /tmp/rp7-r6-fence-body.sh /tmp/rp7-r5-fence-body.sh /tmp/rp7-r4-fence-body.sh
-timeout --signal=TERM --kill-after=30s 900s bash --noprofile --norc /tmp/rp7-r7-fence-body.sh; R7=$?
-timeout --signal=TERM --kill-after=30s 900s bash --noprofile --norc /tmp/rp7-r6-fence-body.sh; R6=$?
-timeout --signal=TERM --kill-after=30s 900s bash --noprofile --norc /tmp/rp7-r5-fence-body.sh; R5=$?
-timeout --signal=TERM --kill-after=30s 900s bash --noprofile --norc /tmp/rp7-r4-fence-body.sh; R4=$?
-printf 'R7_FENCE_RC=%s\nR6_FENCE_RC=%s\nR5_FENCE_RC=%s\nR4_FENCE_RC=%s\n' "$R7" "$R6" "$R5" "$R4"
-for rc in "$R7" "$R6" "$R5" "$R4"; do
+sha256sum /tmp/rp7-r8-fence-body.sh /tmp/rp7-r7-fence-body.sh /tmp/rp7-r6-fence-body.sh /tmp/rp7-r5-fence-body.sh /tmp/rp7-r4-fence-body.sh
+wc -c /tmp/rp7-r8-fence-body.sh /tmp/rp7-r7-fence-body.sh /tmp/rp7-r6-fence-body.sh /tmp/rp7-r5-fence-body.sh /tmp/rp7-r4-fence-body.sh
+timeout --verbose --signal=TERM --kill-after=30s 900s bash --noprofile --norc /tmp/rp7-r8-fence-body.sh 2>/tmp/rp7-r8-fence.err; R8=$?
+timeout --verbose --signal=TERM --kill-after=30s 900s bash --noprofile --norc /tmp/rp7-r7-fence-body.sh 2>/tmp/rp7-r7-fence.err; R7=$?
+timeout --verbose --signal=TERM --kill-after=30s 900s bash --noprofile --norc /tmp/rp7-r6-fence-body.sh 2>/tmp/rp7-r6-fence.err; R6=$?
+timeout --verbose --signal=TERM --kill-after=30s 900s bash --noprofile --norc /tmp/rp7-r5-fence-body.sh 2>/tmp/rp7-r5-fence.err; R5=$?
+timeout --verbose --signal=TERM --kill-after=30s 900s bash --noprofile --norc /tmp/rp7-r4-fence-body.sh 2>/tmp/rp7-r4-fence.err; R4=$?
+cat /tmp/rp7-r8-fence.err /tmp/rp7-r7-fence.err /tmp/rp7-r6-fence.err /tmp/rp7-r5-fence.err /tmp/rp7-r4-fence.err >&2
+printf 'R8_FENCE_RC=%s\nR7_FENCE_RC=%s\nR6_FENCE_RC=%s\nR5_FENCE_RC=%s\nR4_FENCE_RC=%s\n' "$R8" "$R7" "$R6" "$R5" "$R4"
+for spec in "r8:$R8" "r7:$R7" "r6:$R6" "r5:$R5" "r4:$R4"; do
+  f=${spec%%:*}; rc=${spec#*:}
+  sent_term=no; sent_kill=no
+  grep -q 'sending signal TERM to command' /tmp/rp7-$f-fence.err && sent_term=yes
+  grep -q 'sending signal KILL to command' /tmp/rp7-$f-fence.err && sent_kill=yes
   case "$rc" in
     0) ;;
-    124) printf 'PUBLISHED_COMMAND_RESULT=timeout kind=terminated_at_bound per_fence_bound_s=900\n'; exit 124 ;;
-    137) printf 'PUBLISHED_COMMAND_RESULT=timeout kind=killed_after_grace per_fence_bound_s=900 kill_grace_s=30\n'; exit 137 ;;
-    *) printf 'PUBLISHED_COMMAND_RESULT=fence_failed\n'; exit 1 ;;
+    124) printf 'PUBLISHED_COMMAND_RESULT=timeout fence=%s kind=terminated_at_bound wrapper_sent_term=%s per_fence_bound_s=900\n' "$f" "$sent_term"; exit 124 ;;
+    137) if [ "$sent_kill" = yes ]; then
+           printf 'PUBLISHED_COMMAND_RESULT=timeout fence=%s kind=killed_after_grace wrapper_sent_term=%s wrapper_sent_kill=yes per_fence_bound_s=900 kill_grace_s=30\n' "$f" "$sent_term"; exit 137
+         else
+           printf 'PUBLISHED_COMMAND_RESULT=fence_failed fence=%s rc=137 kind=sigkill_not_from_this_wrapper wrapper_sent_kill=no\n' "$f"; exit 1
+         fi ;;
+    *) printf 'PUBLISHED_COMMAND_RESULT=fence_failed fence=%s rc=%s\n' "$f" "$rc"; exit 1 ;;
   esac
 done
-printf 'PUBLISHED_COMMAND_RESULT=pass fences=4 per_fence_bound_s=900 kill_grace_s=30 aggregate_bound_s=3720 aggregate_enforced_by=sequential_per_fence_bounds\n'
+printf 'PUBLISHED_COMMAND_RESULT=pass fences=5 per_fence_bound_s=900 kill_grace_s=30 fence_timeout_budget_s=4650 whole_command_bound=none prelude_bounded=no\n'
 # RP7_EXACT_COMMAND_END
 ```
 
@@ -107,15 +148,17 @@ sed -n '/^# RP7_EXACT_COMMAND_BEGIN$/,/^# RP7_EXACT_COMMAND_END$/p' SELF_QA_RP7.
 It was executed exactly that way, from a fresh `bash --noprofile --norc`, and produced:
 
 ```text
-d4c730e5efb253a24ee0019a7eae9074f689233778f13a6248e42bf5cd100dbe */tmp/rp7-r7-fence-body.sh
-b080dad4315281d0447baff10dae26797ba04998bc7c9e32fb2bbbd15a570a06 */tmp/rp7-r6-fence-body.sh
-6a5a80fef963c6506af93891cec362ce8e74fd6bde64f01d81bcb54cbe6507a6 */tmp/rp7-r5-fence-body.sh
-ceb45f11f071bd61055a894deb72af229b253cb0eff3931c9ea46a0628028159 */tmp/rp7-r4-fence-body.sh
- 21450 /tmp/rp7-r7-fence-body.sh
- 27355 /tmp/rp7-r6-fence-body.sh
+dada2eaa8ce970c75ffec583ebff5fcb1d41d928fcce511dbc5b990322007f98 */tmp/rp7-r8-fence-body.sh
+2a2eb8932352ea865022daf8c4be566b50bde61977339cfac91a71020ff327ff */tmp/rp7-r7-fence-body.sh
+0dc6213799d422f0921b0742a28840334c7453697087b205ced56d48ecfd2fb1 */tmp/rp7-r6-fence-body.sh
+a3fb4b346d1fbb8785b20eefd7b6c96be1ae79adcf74ac4804e3323906d3fc56 */tmp/rp7-r5-fence-body.sh
+4ddfa8b51bf31c99db560b07aac8572579020c231682201add643ea1f07c4cd1 */tmp/rp7-r4-fence-body.sh
+ 28633 /tmp/rp7-r8-fence-body.sh
+ 22522 /tmp/rp7-r7-fence-body.sh
+ 32069 /tmp/rp7-r6-fence-body.sh
  20050 /tmp/rp7-r5-fence-body.sh
- 76873 /tmp/rp7-r4-fence-body.sh
-145728 total
+ 77408 /tmp/rp7-r4-fence-body.sh
+180682 total
 ...
 QA_PASS all_assertions=yes
 ...
@@ -124,11 +167,14 @@ QA_PASS all_assertions=yes
 QA_PASS all_assertions=yes
 ...
 QA_PASS all_assertions=yes
+...
+QA_PASS all_assertions=yes
+R8_FENCE_RC=0
 R7_FENCE_RC=0
 R6_FENCE_RC=0
 R5_FENCE_RC=0
 R4_FENCE_RC=0
-PUBLISHED_COMMAND_RESULT=pass fences=4 per_fence_bound_s=900 kill_grace_s=30 aggregate_bound_s=3720 aggregate_enforced_by=sequential_per_fence_bounds
+PUBLISHED_COMMAND_RESULT=pass fences=5 per_fence_bound_s=900 kill_grace_s=30 fence_timeout_budget_s=4650 whole_command_bound=none prelude_bounded=no
 ```
 
 All four fences abort with `QA_ASSERT_FAIL` and a nonzero exit on any unexpected result, so
@@ -155,6 +201,9 @@ anywhere in this suite:
 | `forge_capture` (the round-6, round-5 and round-4 fences) | the MSYS `env -i`/`timeout` exec plumbing, which rewrites POSIX-looking argv for a native Windows child, plus the Windows CRLF record terminator normalised to the LF a Debian CPython emits | the interpreter the production body **chose** (`a[0]`), the flag words it chose, real CPython, the real embedded driver source, the real digest-bound `verify_lock.py`, real exit codes |
 | `wpi_lstat` shim in the finding-2 arms | numeric ownership and object kind, which NTFS cannot express | the production row-19 preflight, the production trusted driver, the production result grammar and the real verifier bytes |
 | `rp0_require_safe_component` / `rp0_allocate_evidence_dir` in the finding-5 arms | the two RP0-LIB predicates, which are not present on this workstation, defined as no-op shell **functions** | the whole of `wpi_assert_prerequisites`, including the type check finding 4 introduced and the evidence-root descent check finding 5 introduced |
+| `wpi_capture` in the round-8 F1/F2 arms | the child that would have run `curl` or `readlink` on a real host, replaced by the exact bytes the audit fed; the stub allocates the two read descriptors the production capture allocates, and in the `unbound` variant deliberately allocates neither | the whole of `wpi_assert_status` / `wpi_assert_netns_binding` from the capture result onward - the descriptor resolution, the single-record reader, the diagnostic-stream emptiness check, the status and namespace grammar and the verdict |
+| the round-8 F1 and F4 arms | nothing about the capture: `wpi_capture` is the real one, running a real child under the real cleared environment and the real bounding wrapper. Only `wpi_clock_ms` is hooked - in F1 to replace the leaf with a hard link to a file outside the tree (the recovered round-5 fixture), in F4 to close the creating write descriptor through Bash's dynamic scoping, which is the deterministic way to make the `/dev/fd/<n>` re-open fail | real create-once leaf allocation, the real bind attempt, the real caller-declared inability token, and the real row adjudicator |
+| the round-8 F1 `return 7` mutant | one inserted statement at the top of `wpi_capture` in a COPY of the repaired block; the copy is never delivered and its `bash -n` is asserted | everything else about the block, and both assertions under test are the literal ones from the round-7 and round-8 documents |
 
 Production functions are replaced in only four places, each stated where it occurs and each
 with its own subject elsewhere: `wpi_walk_components` in the write-bit arms (subject:
@@ -168,10 +217,11 @@ Two production predicates really call `exit`, so the finding-1, finding-2, findi
 finding-5 arms invoke them inside a subshell. Without that, an arm could not survive its
 own STOP to report the STOP. Every round-6 arm does the same for the same reason.
 
-One round-6 arm executes a copy of a published artefact rather than the artefact itself:
-the F4 propagation arm runs the exact published command with two substitutions - its `cd`
-target, and the `/tmp` prefix of the three fence-body paths so that a nested run cannot
-overwrite the body of the run executing it. Both substitutions are asserted in the fence
+Two arms execute a copy of a published artefact rather than the artefact itself: the
+round-6 F4 propagation arm and the round-8 F3 provenance arms run the exact published
+command with substitutions - its `cd` target, the `/tmp` prefix of the fence-body paths so
+that a nested run cannot overwrite the body of the run executing it, and in the round-8 case
+the bound scaled from `900s`/`30s` to `1s`/`2s`. Both substitutions are asserted in the fence
 before the copy runs, and the arm exists precisely because the first version of it, which
 retargeted `cd` first and let the `/tmp` rule rewrite the new target, re-entered the real
 document and had to be killed. Nothing else about the command is altered.
@@ -197,10 +247,559 @@ exactly `WPI_VERIFY_LOCK_SHA256`. The round-5 finding-2 arms feed the same file 
 production driver.
 
 
-## The round-7 fence
+## The round-8 fence
+
+Four arm groups. Three of them take the block as their subject, with a real RED against the
+round-7 blob at `c708511f` and a real GREEN against the repaired bytes. The first takes an
+**assertion** as its subject, because that is what finding 1 is about, and its RED is a
+mutant block the assertion is supposed to reject.
+
+| Arm | RED | GREEN |
+|---|---|---|
+| F1 `return 7` at the top of `wpi_capture` | the round-7 assertion `rc=[0-9]*` **accepts** the mutant: `ASSERTION_POWER round7_on_mutant=accept` | the round-8 assertion **rejects** it: `round8_on_mutant=reject`, because the mutant's rc is neither 0 with an empty capture result nor 3 with the exact documented STOP |
+| F1 control: the repaired block itself | round-7 assertion accepts | round-8 assertion accepts - `green_kind=unlinked_leaf_not_rebindable_rc3` on this workstation, `descriptor_rebind_supported_rc0` on Linux, and nothing else |
+| F1 control: the round-5 block, whose payload really escapes | both assertions **reject** it (`round7_on_escaping=reject`, `round8_on_escaping=reject`) - the repair did not trade one blind spot for another |
+| F2 status leaf name replaced at the reader boundary | the name is re-opened: a child-observed `500` is adjudicated as `200` and `B5_status ... flags=expected` prints at rc 0 | the capture descriptor is read: `B5_FAIL reason=status_endpoint_unexpected_http code=500`, rc 1, unchanged by the substitution |
+| F2 namespace leaf name replaced at the reader boundary | `B6_netns ... binding=equal`, rc 0 | `B6_STOP reason=netns_mismatch caller=net:[100] service=net:[200]`, rc 3 |
+| F2 control: `swap=no` on both subjects | rc 1 `code=500` / rc 3 `netns_mismatch` | identical |
+| F2 control: clean `200` + `OK fields=8`, clean equal namespaces | rc 0 accepting | rc 0 accepting - identical |
+| F2 control: a stub that binds NO descriptor | reads the name and adjudicates it | `detail=capture_stream_unbound`, rc 3 - there is no fallback to a name |
+| F3 fence body that is an immediate `exit 137` | `kind=killed_after_grace`, command exits 137, one second after it started | `fence_failed ... kind=sigkill_not_from_this_wrapper wrapper_sent_kill=no`, command exits 1 |
+| F3 control: TERM-ignoring fence body | `kind=killed_after_grace`, exit 137 | `kind=killed_after_grace wrapper_sent_term=yes wrapper_sent_kill=yes`, exit 137 - the real event is still classified as one, now on the wrapper's own evidence |
+| F3 FIFO in place of the document | the prelude blocks outside every wrapper and an independent 3 s timeout stops it; the text claims `aggregate_enforced_by=sequential_per_fence_bounds` | the same behaviour, and the text says `whole_command_bound=none prelude_bounded=no` |
+| F3 budget arithmetic | `wrappers=4 computed_s=3720 claimed_s=3720` | `wrappers=5 computed_s=4650 claimed_s=4650`, re-derived from the published text |
+| F3 reader field label | the round-7 `READER_BINDING` printf emits an `adjudicated_name_<digest>=` field for bytes GREEN does not adjudicate | zero emissions of that field name; it is `name_at_read_time_sha256=` |
+| F4 production capture cannot bind its stdout descriptor | `RP7_STOP reason=capture_stream_not_bindable label=listeners`, which no row preregisters | `B6_STOP reason=listener_inventory_unreadable_or_unparseable rc=0 detail=capture_stream_unbound`, exactly as row 22 declares |
+| F4 control: a caller that declares no token of its own | - | still the generic `RP7_STOP ... label=undeclared_probe`: the repair adds a route, it does not widen one |
+
+Two injections are used and each is named where it occurs. The F2 substitution is injected at
+the `wpi_alloc_read_diag` reader-allocation boundary, which is the boundary the auditor used,
+so it is not a route the block reaches on its own; what it measures is what the block
+*establishes*. The F4 close of the creating write descriptor is injected through a hooked
+`wpi_clock_ms` and Bash's dynamic scoping, because it is the only way to make the bind fail
+deterministically here - unlinking the leaf, which the carried leaf-race arm does, sometimes
+still leaves `/dev/fd/<n>` resolvable on MSYS2, and an arm that reproduces its own
+precondition only sometimes is not a fence arm.
+
+```bash
+# RP7_R8_FENCE_BEGIN
+# Round-8 D026 fence for RP7-WPI-RO. Every arm drives the REAL production caller
+# in a FRESH bash process, or the REAL published command TEXT, against two byte
+# sets whose identity is asserted first:
+#   RED   = the frozen round-7 blob at commit c708511f (92853 B, e695a67b...07f32)
+#   GREEN = the repaired worktree file
+# One of the four findings is about this document rather than about the block: a
+# carried assertion that stopped discriminating. Its arm therefore runs an
+# ASSERTION against a mutant, not only a block against an input.
+REPO=/c/LAB/Tradingview_LAB_CLEAN
+DOC=$REPO/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/SELF_QA_RP7.md
+BLOCK=$REPO/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh
+Q=$(mktemp -d /tmp/rp7-r8-qa.XXXXXX)
+RED=$Q/RP7-WPI-RO.round7.sh
+GREEN=$BLOCK
+
+expect_rc(){ [ "$2" -eq "$3" ] || { printf 'QA_ASSERT_FAIL name=%s got=%s expected=%s\n' "$1" "$2" "$3"; exit 90; }; }
+expect_eq(){ [ "$2" = "$3" ] || { printf 'QA_ASSERT_FAIL name=%s got=[%s] expected=[%s]\n' "$1" "$2" "$3"; exit 90; }; }
+expect_has(){ grep -q -- "$2" "$3" || { printf 'QA_ASSERT_FAIL name=%s missing=[%s] file=%s\n' "$1" "$2" "$3"; exit 90; }; }
+expect_hasnt(){ grep -q -- "$2" "$3" && { printf 'QA_ASSERT_FAIL name=%s unexpected=[%s] file=%s\n' "$1" "$2" "$3"; exit 90; }; return 0; }
+
+printf 'QA_ROOT=%s\n' "$Q"
+printf 'QA_ENV bash=%s coreutils_timeout=%s git=%s uid_gid=%s:%s\n' \
+    "$BASH_VERSION" "$(/usr/bin/timeout --version | head -1 | sed 's/.* //')" \
+    "$(git --version | sed 's/.* //')" "$(id -u)" "$(id -g)"
+
+# --- byte identity of both subjects -----------------------------------------
+git -C "$REPO" cat-file blob c708511f:MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh > "$RED"
+RED_SHA=$(sha256sum < "$RED" | cut -d' ' -f1);     RED_BYTES=$(wc -c < "$RED")
+GREEN_SHA=$(sha256sum < "$GREEN" | cut -d' ' -f1); GREEN_BYTES=$(wc -c < "$GREEN")
+RED_CR=$(tr -cd '\r' < "$RED" | wc -c);  GREEN_CR=$(tr -cd '\r' < "$GREEN" | wc -c)
+bash --noprofile --norc -n "$RED";   RED_N=$?
+bash --noprofile --norc -n "$GREEN"; GREEN_N=$?
+printf 'BYTE_IDENTITY red_bytes=%s red_sha256=%s red_cr=%s red_bash_n=%s green_bytes=%s green_sha256=%s green_cr=%s green_bash_n=%s\n' \
+    "$RED_BYTES" "$RED_SHA" "$RED_CR" "$RED_N" "$GREEN_BYTES" "$GREEN_SHA" "$GREEN_CR" "$GREEN_N"
+expect_eq r8_red_sha256   "$RED_SHA"   e695a67b4b621558ef13879fad3f8a868f6eb9ac6ffeb97babc8776081e07f32
+expect_eq r8_red_bytes    "$RED_BYTES" 92853
+expect_eq r8_green_sha256 "$GREEN_SHA" 11621044d0adc21af93e1cfc7b88ef88de8aca4683a69ab16cbc542a124141a4
+expect_eq r8_green_bytes  "$GREEN_BYTES" 99903
+expect_rc r8_red_cr "$RED_CR" 0
+expect_rc r8_green_cr "$GREEN_CR" 0
+expect_rc r8_red_bash_n "$RED_N" 0
+expect_rc r8_green_bash_n "$GREEN_N" 0
+
+# ===========================================================================
+# FINDING 1 (HIGH) - a carried assertion was relaxed to `rc=[0-9]*` and stopped
+# rejecting an unrelated capture regression. The SUBJECT of this group is the
+# ASSERTION, so the RED is a MUTANT BLOCK - `return 7` inserted at the top of
+# `wpi_capture`, which never touches the leaf and is therefore invisible to any
+# assertion that only inspects the outside file. The same three outputs are fed
+# to both the round-7 assertion and the round-8 one. The round-6 fence carries
+# the repaired assertion itself; this group is the executed proof that the
+# repair restored power the round-7 edit removed.
+# ===========================================================================
+git -C "$REPO" cat-file blob 1143a9ff:MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh > "$Q/RP7-WPI-RO.round5.sh"
+sed '/^wpi_capture() {/a\    return 7' "$GREEN" > "$Q/mutant-return7.sh"
+bash --noprofile --norc -n "$Q/mutant-return7.sh"; MUT_N=$?
+cat > "$Q/f1_arm.sh" <<'ARM'
+S="$1"; W="$2"
+mkdir -p "$W"
+source <(sed '/^wpi_main "\$@"$/d' "$S")
+trap - ERR
+set +E; set +e; set +u; set +o pipefail
+EV_DIR="$W/ev"; mkdir -p "$EV_DIR"
+WPI_ENV=/usr/bin/env; WPI_TIMEOUT=/usr/bin/timeout; WPI_SWEEP_BUDGET_S=10; WPI_PROBE_SEQ=0
+OUTSIDE="$W/outside.txt"; printf 'ORIGINAL\n' > "$OUTSIDE"
+HOOK=0
+wpi_clock_ms(){
+  HOOK=$((HOOK+1))
+  if [ "$HOOK" -eq 1 ]; then rm -- "$WPI_CAP_OUT"; ln -- "$OUTSIDE" "$WPI_CAP_OUT"; fi
+  WPI_LINE="$HOOK"
+}
+( wpi_capture leaf_race /usr/bin/printf 'CAPTURED\n' ) > "$W/cap.out" 2>&1
+rc=$?
+printf 'LEAF_RACE rc=%s outside_text=%s outside_bytes=%s payload_left_the_tree=%s capture_result=[%s]\n' \
+  "$rc" "$(tr -d '\n' < "$OUTSIDE")" "$(wc -c < "$OUTSIDE")" \
+  "$(grep -q CAPTURED "$OUTSIDE" && echo yes || echo no)" \
+  "$(sed -e "s#$W#<scratch>#g" "$W/cap.out" | tr '\n' ' ' | sed 's/ *$//')"
+ARM
+r8_classify(){
+  if grep -q 'LEAF_RACE rc=0 outside_text=ORIGINAL outside_bytes=9 payload_left_the_tree=no capture_result=\[\]$' "$1"; then
+    printf 'descriptor_rebind_supported_rc0\n'
+  elif grep -q 'LEAF_RACE rc=3 outside_text=ORIGINAL outside_bytes=9 payload_left_the_tree=no capture_result=\[RP7_STOP reason=capture_stream_not_bindable label=leaf_race leaf=<scratch>/ev/ro\.0001\.leaf_race\.stdout\]$' "$1"; then
+    printf 'unlinked_leaf_not_rebindable_rc3\n'
+  else
+    printf 'unclassified\n'
+  fi
+}
+r8_new(){ case "$(r8_classify "$1")" in unclassified) printf 'reject\n' ;; *) printf 'accept\n' ;; esac; }
+r8_old(){ if grep -q 'LEAF_RACE rc=[0-9]* outside_text=ORIGINAL outside_bytes=9 payload_left_the_tree=no' "$1"; then printf 'accept\n'; else printf 'reject\n'; fi; }
+for subject in escaping_round5 green mutant_return7; do
+  case "$subject" in
+    escaping_round5) S=$Q/RP7-WPI-RO.round5.sh ;;
+    green)           S=$GREEN ;;
+    mutant_return7)  S=$Q/mutant-return7.sh ;;
+  esac
+  bash --noprofile --norc "$Q/f1_arm.sh" "$S" "$Q/f1-$subject" > "$Q/f1-$subject.txt" 2>&1
+  printf '%-16s %s\n' "$subject" "$(cat "$Q/f1-$subject.txt")"
+done
+printf 'ASSERTION_POWER mutant_bash_n=%s round7_on_green=%s round7_on_mutant=%s round7_on_escaping=%s round8_on_green=%s round8_on_mutant=%s round8_on_escaping=%s green_kind=%s\n' \
+  "$MUT_N" \
+  "$(r8_old "$Q/f1-green.txt")" "$(r8_old "$Q/f1-mutant_return7.txt")" "$(r8_old "$Q/f1-escaping_round5.txt")" \
+  "$(r8_new "$Q/f1-green.txt")" "$(r8_new "$Q/f1-mutant_return7.txt")" "$(r8_new "$Q/f1-escaping_round5.txt")" \
+  "$(r8_classify "$Q/f1-green.txt")"
+expect_rc f1_mutant_parses "$MUT_N" 0
+# The mutation is unrelated to what the arm is about, and the arm still shows the
+# payload confined - which is exactly why only a status pin can catch it.
+expect_has f1_mutant_confined 'payload_left_the_tree=no' "$Q/f1-mutant_return7.txt"
+expect_has f1_escaping_red 'LEAF_RACE rc=0 outside_text=CAPTURED outside_bytes=9 payload_left_the_tree=yes' "$Q/f1-escaping_round5.txt"
+expect_eq f1_round7_accepts_mutant "$(r8_old "$Q/f1-mutant_return7.txt")" accept
+expect_eq f1_round8_rejects_mutant "$(r8_new "$Q/f1-mutant_return7.txt")" reject
+expect_eq f1_round8_accepts_green  "$(r8_new "$Q/f1-green.txt")"          accept
+expect_eq f1_both_reject_escaping  "$(r8_old "$Q/f1-escaping_round5.txt")$(r8_new "$Q/f1-escaping_round5.txt")" rejectreject
+
+# ===========================================================================
+# FINDING 2 (HIGH) - the status and namespace child observations were still read
+# by NAME, so replacing the leaf name between the child's exit and the read
+# turned an observed HTTP 500 into an accepting 200 and two unequal namespaces
+# into an equal pair. The fixture is the auditor's: the ONLY hook is at the
+# `wpi_alloc_read_diag` reader-allocation boundary, and the capture stub binds
+# the same two descriptors production binds. `swap=no` is the control on every
+# subject, and the clean-input controls below are the no-weakening arms.
+# ===========================================================================
+cat > "$Q/f2_arm.sh" <<'ARM'
+S="$1"; W="$2"; mode="$3"; swap="$4"
+mkdir -p "$W"
+source <(sed '/^wpi_main "\$@"$/d' "$S")
+trap - ERR; set +E; set +e; set +u; set +o pipefail
+EV_DIR="$W/ev"; mkdir -p "$EV_DIR"; WPI_PROBE_SEQ=0; WPI_MOUNT_GUARD_ACTIVE=no
+WPI_CURL=/usr/bin/false; WPI_PYTHON3=/usr/bin/false; WPI_READLINK=/usr/bin/false; WPI_MAINPID=123
+WPI_CONTROL_ENDPOINT=http://127.0.0.1:8790/api/status
+wpi_sha_file(){ WPI_LINE=0000000000000000000000000000000000000000000000000000000000000000; }
+wpi_capture(){
+  local label="$1"
+  WPI_CAP_OUT="$W/$label.out"; WPI_CAP_ERR="$W/$label.err"; : > "$WPI_CAP_ERR"; WPI_CAP_RC=0
+  case "$label:$mode" in
+    status_get:status|status_get:status_clean) printf '500\n' > "$WPI_CAP_OUT"; printf '{}\n' > "$EV_DIR/ro.status.body" ;;
+    status_json:status|status_json:status_clean) printf 'OK fields=8\n' > "$WPI_CAP_OUT" ;;
+    caller_netns:netns|caller_netns:netns_clean) printf 'net:[100]\n' > "$WPI_CAP_OUT" ;;
+    service_netns:netns) printf 'net:[200]\n' > "$WPI_CAP_OUT" ;;
+    service_netns:netns_clean) printf 'net:[100]\n' > "$WPI_CAP_OUT" ;;
+    *) exit 96 ;;
+  esac
+  case "$mode" in
+    status_clean) [ "$label" != status_get ] || printf '200\n' > "$WPI_CAP_OUT" ;;
+  esac
+  # The stub allocates the two descriptors production allocates. A stub that sets
+  # only the NAMES is no longer standing in for `wpi_capture`, and GREEN STOPs on
+  # it with detail=capture_stream_unbound rather than falling back to a name.
+  case "$swap" in
+    unbound) : ;;
+    *) exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; exec {WPI_CAP_ERR_FD}<"$WPI_CAP_ERR" ;;
+  esac
+}
+wpi_alloc_read_diag(){
+  local label="$1"
+  if [ "$swap" = yes ] && [ ! -f "$W/child-observation.out" ]; then
+    case "$WPI_CAP_OUT" in
+      */status_get.out) cp "$WPI_CAP_OUT" "$W/child-observation.out"; rm -- "$WPI_CAP_OUT"; printf '200\n' > "$WPI_CAP_OUT" ;;
+      */service_netns.out) cp "$WPI_CAP_OUT" "$W/child-observation.out"; rm -- "$WPI_CAP_OUT"; printf 'net:[100]\n' > "$WPI_CAP_OUT" ;;
+    esac
+  fi
+  WPI_PROBE_SEQ=$((WPI_PROBE_SEQ+1))
+  WPI_READ_DIAG="$EV_DIR/ro.$(printf '%04d' "$WPI_PROBE_SEQ").$label.read.stderr"
+  wpi_open_leaf "$WPI_READ_DIAG"; WPI_READ_DIAG_FD="$WPI_LEAF_FD"
+}
+case "$mode" in
+  status|status_clean) wpi_assert_status ;;
+  netns|netns_clean)   wpi_assert_netns_binding ;;
+esac
+ARM
+for mode in status netns; do
+  for swap in no yes; do
+    for subject in red green; do
+      if [ "$subject" = red ]; then S="$RED"; else S="$GREEN"; fi
+      W=$Q/f2-$mode-$swap-$subject
+      bash --noprofile --norc "$Q/f2_arm.sh" "$S" "$W" "$mode" "$swap" > "$W.txt" 2>&1; rc=$?
+      case "$mode" in status) NAMEF="$W/status_get.out" ;; netns) NAMEF="$W/service_netns.out" ;; esac
+      if [ -f "$W/child-observation.out" ]; then CH=$(sha256sum < "$W/child-observation.out" | cut -d' ' -f1); else CH=not_replaced; fi
+      printf 'NAME_REOPEN mode=%s swap=%s subject=%s rc=%s child_sha256=%s name_at_read_time_sha256=%s result=[%s]\n' \
+        "$mode" "$swap" "$subject" "$rc" "$CH" "$(sha256sum < "$NAMEF" | cut -d' ' -f1)" \
+        "$(sed -e "s#$Q#<scratch>#g" "$W.txt" | tr '\n' ' ' | sed 's/ *$//')"
+    done
+  done
+done > "$Q/f2.txt"
+for mode in status_clean netns_clean; do
+  for subject in red green; do
+    if [ "$subject" = red ]; then S="$RED"; else S="$GREEN"; fi
+    W=$Q/f2-$mode-$subject
+    bash --noprofile --norc "$Q/f2_arm.sh" "$S" "$W" "$mode" no > "$W.txt" 2>&1; rc=$?
+    printf 'CLEAN_CONTROL mode=%s subject=%s rc=%s result=[%s]\n' "$mode" "$subject" "$rc" \
+      "$(sed -e "s#$Q#<scratch>#g" "$W.txt" | tr '\n' ' ' | sed 's/ *$//')"
+  done
+done >> "$Q/f2.txt"
+for mode in status netns; do
+  for subject in red green; do
+    if [ "$subject" = red ]; then S="$RED"; else S="$GREEN"; fi
+    W=$Q/f2-$mode-unbound-$subject
+    bash --noprofile --norc "$Q/f2_arm.sh" "$S" "$W" "$mode" unbound > "$W.txt" 2>&1; rc=$?
+    printf 'NO_NAME_FALLBACK mode=%s subject=%s rc=%s result=[%s]\n' "$mode" "$subject" "$rc" \
+      "$(sed -e "s#$Q#<scratch>#g" "$W.txt" | tr '\n' ' ' | sed 's/ *$//')"
+  done
+done >> "$Q/f2.txt"
+cat "$Q/f2.txt"
+# RED: the substitution is executed and it changes the verdict.
+expect_has f2_red_status_swapped  'NAME_REOPEN mode=status swap=yes subject=red rc=0 .* result=\[B5_status http=200 ' "$Q/f2.txt"
+expect_has f2_red_netns_swapped   'NAME_REOPEN mode=netns swap=yes subject=red rc=0 .* result=\[B6_netns caller=net:\[100\] service=net:\[100\] mainpid=123 binding=equal\]' "$Q/f2.txt"
+# GREEN: the same substitution changes nothing, because no name is resolved after
+# the child exits. The child's own observation is what the row adjudicates.
+expect_has f2_green_status_swapped 'NAME_REOPEN mode=status swap=yes subject=green rc=1 .* result=\[B5_FAIL reason=status_endpoint_unexpected_http code=500\]' "$Q/f2.txt"
+expect_has f2_green_netns_swapped  'NAME_REOPEN mode=netns swap=yes subject=green rc=3 .* result=\[B6_STOP reason=netns_mismatch caller=net:\[100\] service=net:\[200\]\]' "$Q/f2.txt"
+# swap=no controls: both subjects reach the same truthful verdict.
+expect_has f2_red_status_plain   'NAME_REOPEN mode=status swap=no subject=red rc=1 child_sha256=not_replaced .* result=\[B5_FAIL reason=status_endpoint_unexpected_http code=500\]' "$Q/f2.txt"
+expect_has f2_green_status_plain 'NAME_REOPEN mode=status swap=no subject=green rc=1 child_sha256=not_replaced .* result=\[B5_FAIL reason=status_endpoint_unexpected_http code=500\]' "$Q/f2.txt"
+expect_has f2_red_netns_plain    'NAME_REOPEN mode=netns swap=no subject=red rc=3 child_sha256=not_replaced .* result=\[B6_STOP reason=netns_mismatch caller=net:\[100\] service=net:\[200\]\]' "$Q/f2.txt"
+expect_has f2_green_netns_plain  'NAME_REOPEN mode=netns swap=no subject=green rc=3 child_sha256=not_replaced .* result=\[B6_STOP reason=netns_mismatch caller=net:\[100\] service=net:\[200\]\]' "$Q/f2.txt"
+# No-weakening: clean input still reaches the accepting line on BOTH subjects.
+expect_has f2_clean_status_red   'CLEAN_CONTROL mode=status_clean subject=red rc=0 result=\[B5_status http=200 json=strict required_fields=8 flags=expected ' "$Q/f2.txt"
+expect_has f2_clean_status_green 'CLEAN_CONTROL mode=status_clean subject=green rc=0 result=\[B5_status http=200 json=strict required_fields=8 flags=expected ' "$Q/f2.txt"
+expect_has f2_clean_netns_red    'CLEAN_CONTROL mode=netns_clean subject=red rc=0 result=\[B6_netns caller=net:\[100\] service=net:\[100\] mainpid=123 binding=equal\]' "$Q/f2.txt"
+expect_has f2_clean_netns_green  'CLEAN_CONTROL mode=netns_clean subject=green rc=0 result=\[B6_netns caller=net:\[100\] service=net:\[100\] mainpid=123 binding=equal\]' "$Q/f2.txt"
+# There is no fallback to a name: an unbound stream STOPs with the row's token.
+expect_has f2_unbound_status_green 'NO_NAME_FALLBACK mode=status subject=green rc=3 result=\[B5_STOP reason=status_endpoint_not_evaluable rc=0 detail=capture_stream_unbound\]' "$Q/f2.txt"
+expect_has f2_unbound_netns_green  'NO_NAME_FALLBACK mode=netns subject=green rc=3 result=\[B6_STOP reason=service_netns_unreadable path=/proc/self/ns/net rc=0 detail=capture_stream_unbound\]' "$Q/f2.txt"
+expect_has f2_unbound_status_red   'NO_NAME_FALLBACK mode=status subject=red rc=1 result=\[B5_FAIL reason=status_endpoint_unexpected_http code=500\]' "$Q/f2.txt"
+# The substitution really happened: the child's bytes and the bytes the NAME
+# resolved to at read time differ on both subjects. Only the subject that reads
+# the DESCRIPTOR is unaffected by that difference.
+SW_RED=$(sed -n 's/^NAME_REOPEN mode=status swap=yes subject=red rc=[0-9]* child_sha256=\([0-9a-f]*\) name_at_read_time_sha256=\([0-9a-f]*\) .*/\1 \2/p' "$Q/f2.txt")
+SW_GREEN=$(sed -n 's/^NAME_REOPEN mode=status swap=yes subject=green rc=[0-9]* child_sha256=\([0-9a-f]*\) name_at_read_time_sha256=\([0-9a-f]*\) .*/\1 \2/p' "$Q/f2.txt")
+printf 'READER_SUBSTITUTION red_child_ne_name=%s green_child_ne_name=%s\n' \
+  "$([ "${SW_RED% *}" != "${SW_RED#* }" ] && echo yes || echo no)" \
+  "$([ "${SW_GREEN% *}" != "${SW_GREEN#* }" ] && echo yes || echo no)"
+expect_eq f2_swap_effective_red   "$([ "${SW_RED% *}" != "${SW_RED#* }" ] && echo yes || echo no)" yes
+expect_eq f2_swap_effective_green "$([ "${SW_GREEN% *}" != "${SW_GREEN#* }" ] && echo yes || echo no)" yes
+
+# ===========================================================================
+# FINDING 3 (MEDIUM) - the published command called every rc 137 its own
+# kill-after event and claimed a bound over a command whose prelude no wrapper
+# encloses. Both subjects are the published command TEXT: RED from commit
+# c708511f, GREEN from this document. Each is retargeted into a scratch tree and
+# its bound scaled from `900s`/`30s` to `1s`/`2s`; nothing else is altered.
+# `ignore_term` is the control - a real kill-after must still be classified as
+# one, on both subjects.
+# ===========================================================================
+git -C "$REPO" cat-file blob c708511f:MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/SELF_QA_RP7.md > "$Q/SELF_QA_RP7.round7.md"
+sed -n '/^# RP7_EXACT_COMMAND_BEGIN$/,/^# RP7_EXACT_COMMAND_END$/p' "$Q/SELF_QA_RP7.round7.md" > "$Q/cmd-red.txt"
+sed -n '/^# RP7_EXACT_COMMAND_BEGIN$/,/^# RP7_EXACT_COMMAND_END$/p' "$DOC" > "$Q/cmd-green.txt"
+for body in direct_137 ignore_term; do
+  for subject in red green; do
+    T=$Q/f3-$body-$subject; mkdir -p "$T"
+    case "$body" in
+      direct_137) PAYLOAD="exit 137\n" ;;
+      ignore_term) PAYLOAD="trap '' TERM\n/usr/bin/sleep 30\n" ;;
+    esac
+    # The newest fence of each subject carries the payload; every other fence
+    # exits 0. RED has no round-8 fence, so its newest is the round-7 one.
+    { if [ "$subject" = green ]; then printf "# RP7_R8_FENCE_BEGIN\n${PAYLOAD}# RP7_R8_FENCE_END\n"
+                                       printf '# RP7_R7_FENCE_BEGIN\nexit 0\n# RP7_R7_FENCE_END\n'
+      else printf '# RP7_R8_FENCE_BEGIN\nexit 0\n# RP7_R8_FENCE_END\n'
+           printf "# RP7_R7_FENCE_BEGIN\n${PAYLOAD}# RP7_R7_FENCE_END\n"; fi
+      printf '# RP7_R6_FENCE_BEGIN\nexit 0\n# RP7_R6_FENCE_END\n'
+      printf '# RP7_QA_FENCE_BEGIN\nexit 0\n# RP7_QA_FENCE_END\n'
+      printf '# RP7_R4_FENCE_BEGIN\nexit 0\n# RP7_R4_FENCE_END\n'; } > "$T/SELF_QA_RP7.md"
+    # The /tmp expression runs FIRST for the reason the round-6 fence documents:
+    # this scratch tree is itself under /tmp/rp7-, so retargeting `cd` first
+    # would let the /tmp rule rewrite the new target as well.
+    sed -e "s#/tmp/rp7-#$T/body-#g" \
+        -e "s#^cd /c/LAB/.*#cd $T#" \
+        -e "s#--kill-after=30s 900s#--kill-after=2s 1s#g" \
+        "$Q/cmd-$subject.txt" > "$T/run.sh"
+    t0=$SECONDS
+    timeout 120 bash --noprofile --norc "$T/run.sh" > "$T/out.txt" 2> "$T/err.txt"; rc=$?
+    printf 'RC137_PROVENANCE body=%s subject=%s cd_retargeted=%s real_fence_bodies=%s scaled_wrappers=%s rc=%s wall_s=%s result=[%s]\n' \
+      "$body" "$subject" \
+      "$(grep -c "^cd $T\$" "$T/run.sh")" \
+      "$(grep -cE '/tmp/rp7-r[4-8]-fence-body\.sh' "$T/run.sh")" \
+      "$(grep -c -- '--kill-after=2s 1s' "$T/run.sh")" \
+      "$rc" "$((SECONDS-t0))" \
+      "$(grep '^PUBLISHED_COMMAND_RESULT=' "$T/out.txt" | head -1 | sed 's/^PUBLISHED_COMMAND_RESULT=//')"
+  done
+done > "$Q/f3.txt"
+cat "$Q/f3.txt"
+# RED calls an immediate `exit 137` its own kill-after event and exits 137.
+expect_has f3_red_misattributes_137 'RC137_PROVENANCE body=direct_137 subject=red cd_retargeted=1 real_fence_bodies=0 scaled_wrappers=4 rc=137 wall_s=[0-9] result=\[timeout kind=killed_after_grace per_fence_bound_s=900 kill_grace_s=30\]' "$Q/f3.txt"
+# GREEN calls it what it is: a 137 its own wrapper did not send, hence not a timeout.
+expect_has f3_green_attributes_137 'RC137_PROVENANCE body=direct_137 subject=green cd_retargeted=1 real_fence_bodies=0 scaled_wrappers=5 rc=1 wall_s=[0-9] result=\[fence_failed fence=r8 rc=137 kind=sigkill_not_from_this_wrapper wrapper_sent_kill=no\]' "$Q/f3.txt"
+# Control: a REAL kill-after is still classified as one, and GREEN now says so on
+# the evidence of the wrapper's own diagnostic rather than on the number alone.
+expect_has f3_red_real_kill   'RC137_PROVENANCE body=ignore_term subject=red .* rc=137 .* result=\[timeout kind=killed_after_grace per_fence_bound_s=900 kill_grace_s=30\]' "$Q/f3.txt"
+expect_has f3_green_real_kill 'RC137_PROVENANCE body=ignore_term subject=green .* rc=137 .* result=\[timeout fence=r8 kind=killed_after_grace wrapper_sent_term=yes wrapper_sent_kill=yes per_fence_bound_s=900 kill_grace_s=30\]' "$Q/f3.txt"
+
+# The prelude of BOTH texts is outside every wrapper - a FIFO in place of the
+# document blocks the first extraction and an INDEPENDENT timeout has to stop it.
+# The difference the repair makes is not in the behaviour, it is in what the text
+# CLAIMS about the behaviour.
+for subject in red green; do
+  T=$Q/f3-prelude-$subject; mkdir -p "$T"; mkfifo "$T/SELF_QA_RP7.md"
+  sed -e "s#/tmp/rp7-#$T/body-#g" -e "s#^cd /c/LAB/.*#cd $T#" "$Q/cmd-$subject.txt" > "$T/run.sh"
+  t0=$SECONDS
+  timeout --signal=TERM --kill-after=1s 3s bash --noprofile --norc "$T/run.sh" > "$T/out.txt" 2> "$T/err.txt"; rc=$?
+  printf 'UNBOUNDED_PRELUDE subject=%s outer_test_rc=%s elapsed_s=%s stdout_bytes=%s outer_wrapper_in_text=%s claims_whole_command_bound=%s states_prelude_unbounded=%s\n' \
+    "$subject" "$rc" "$((SECONDS-t0))" "$(wc -c < "$T/out.txt")" \
+    "$(grep -c 'RP7_AGGREGATE_WRAPPER' "$Q/cmd-$subject.txt")" \
+    "$(grep -c 'aggregate_enforced_by=sequential_per_fence_bounds' "$Q/cmd-$subject.txt")" \
+    "$(grep -c 'prelude_bounded=no' "$Q/cmd-$subject.txt")"
+done > "$Q/f3prelude.txt"
+cat "$Q/f3prelude.txt"
+# The gate is `outer_test_rc=124` with no stdout: an INDEPENDENT timeout had to stop the
+# command before it produced anything, which is the whole claim. The wall clock is bounded
+# to the outer 3 s window plus its 1 s grace and reported, not pinned to one integer - a
+# pinned second would be a flaky assertion with no discriminating power of its own.
+expect_has f3_red_claims_unenforced_bound 'UNBOUNDED_PRELUDE subject=red outer_test_rc=124 elapsed_s=[34] stdout_bytes=0 outer_wrapper_in_text=0 claims_whole_command_bound=1 states_prelude_unbounded=0' "$Q/f3prelude.txt"
+expect_has f3_green_states_the_truth      'UNBOUNDED_PRELUDE subject=green outer_test_rc=124 elapsed_s=[34] stdout_bytes=0 outer_wrapper_in_text=0 claims_whole_command_bound=0 states_prelude_unbounded=1' "$Q/f3prelude.txt"
+
+# The budget is re-derived from the published text, not read from prose.
+for subject in red green; do
+  W=$(grep -cE 'timeout (--verbose )?--signal=TERM --kill-after=30s 900s bash --noprofile --norc' "$Q/cmd-$subject.txt")
+  CLAIM=$(sed -n 's/.*\(aggregate_bound_s\|fence_timeout_budget_s\)=\([0-9]*\).*/\2/p' "$Q/cmd-$subject.txt" | head -1)
+  printf 'BUDGET_ARITHMETIC subject=%s wrappers=%s per_fence_nominal_s=900 kill_grace_s=30 computed_s=%s claimed_s=%s claim_true=%s\n' \
+    "$subject" "$W" "$((W*(900+30)))" "$CLAIM" "$([ "$((W*(900+30)))" = "$CLAIM" ] && echo yes || echo no)"
+done > "$Q/f3budget.txt"
+cat "$Q/f3budget.txt"
+expect_has f3_red_budget   'BUDGET_ARITHMETIC subject=red wrappers=4 per_fence_nominal_s=900 kill_grace_s=30 computed_s=3720 claimed_s=3720 claim_true=yes' "$Q/f3budget.txt"
+expect_has f3_green_budget 'BUDGET_ARITHMETIC subject=green wrappers=5 per_fence_nominal_s=900 kill_grace_s=30 computed_s=4650 claimed_s=4650 claim_true=yes' "$Q/f3budget.txt"
+
+# The mislabeled reader field: the round-7 fence printed `adjudicated_name_sha256`
+# for a digest of bytes GREEN expressly does NOT adjudicate.
+# The check is on EMISSIONS of the field - `<name>=` - not on mentions of it: this
+# fence and the round-8 report both have to name the old field to say what was
+# wrong with it, and a check that forbade the word would forbid the explanation.
+# The token is assembled from two pieces so that these two lines do not themselves
+# contain it: a self-counting pattern would make the check unfalsifiable.
+OLDF='adjudicated_name''_sha256='
+R7_FIELD=$(git -C "$REPO" cat-file blob c708511f:MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/SELF_QA_RP7.md | grep -c -- "$OLDF")
+R8_FIELD=$(grep -c -- "$OLDF" "$DOC")
+# The renamed field is counted at its EMISSION SITE - the round-7 fence's printf - not
+# across the document: a document-wide count would grow every time a transcript containing
+# the field is pasted back in, and a number that moves when the file is edited cannot be
+# reproduced by a third party running the same command.
+R8_RENAMED=$(sed -n '/^# RP7_R7_FENCE_BEGIN$/,/^# RP7_R7_FENCE_END$/p' "$DOC" | grep -c 'name_at_read_time_sha256=')
+printf 'READER_FIELD_LABEL round7_mislabeled_occurrences=%s round8_mislabeled_occurrences=%s round8_renamed_occurrences=%s\n' \
+  "$R7_FIELD" "$R8_FIELD" "$R8_RENAMED"
+expect_rc f3_r8_no_mislabel "$R8_FIELD" 0
+[ "$R7_FIELD" -ge 1 ] || { printf 'QA_ASSERT_FAIL name=f3_r7_had_mislabel got=%s\n' "$R7_FIELD"; exit 90; }
+[ "$R8_RENAMED" -ge 1 ] || { printf 'QA_ASSERT_FAIL name=f3_r8_renamed got=%s\n' "$R8_RENAMED"; exit 90; }
+
+# ===========================================================================
+# FINDING 4 (MEDIUM) - a PRODUCTION descriptor-bind inability exited inside
+# `wpi_capture` as a generic `RP7_STOP`, so the row-22 STOP the draft declares
+# was reachable only from a stub. This arm uses the REAL capture, the real
+# production caller, the real bounding wrapper and a real child.
+#
+# The injection is the CLOSE of the creating write descriptor, reached through
+# Bash's dynamic scoping from a hooked `wpi_clock_ms`, because that is the one
+# way to make `/dev/fd/<n>` unopenable DETERMINISTICALLY. The obvious
+# alternative - unlinking the leaf, which is what the carried leaf-race arm
+# does - is not deterministic on this workstation: MSYS2 sometimes still
+# resolves `/dev/fd/<n>` for a leaf whose name has just been removed, and an
+# arm that reproduces its own precondition only sometimes is not a fence arm.
+# Nothing else is stubbed, and the third subject is the no-weakening control: a
+# caller that declares NO row-specific token must still fail closed on the
+# generic STOP, so the repair adds a route rather than widening one.
+# ===========================================================================
+printf '#!/bin/sh\nprintf "LISTEN 0 128 127.0.0.1:8790 0.0.0.0:*\\n"\n' > "$Q/fake-ss.sh"
+chmod 755 "$Q/fake-ss.sh"
+cat > "$Q/f4_arm.sh" <<'ARM'
+S="$1"; W="$2"; SS="$3"; caller="$4"
+mkdir -p "$W"
+source <(sed '/^wpi_main "\$@"$/d' "$S")
+trap - ERR; set +E; set +e; set +u; set +o pipefail
+EV_DIR="$W/ev"; mkdir -p "$EV_DIR"; WPI_PROBE_SEQ=0; WPI_MOUNT_GUARD_ACTIVE=no
+WPI_ENV=/usr/bin/env; WPI_TIMEOUT=/usr/bin/timeout; WPI_SWEEP_BUDGET_S=10; WPI_SS="$SS"
+HOOK=0
+# `ofd` is a local of the production `wpi_capture`; Bash's scoping is dynamic, so
+# a function it calls sees it. Closing it makes the later `/dev/fd/<ofd>` open
+# fail with EBADF every time.
+wpi_clock_ms(){ HOOK=$((HOOK+1)); if [ "$HOOK" -eq 1 ]; then eval "exec ${ofd}>&-"; fi; WPI_LINE="$HOOK"; }
+case "$caller" in
+  listeners)  wpi_assert_listener_set ;;
+  undeclared) wpi_capture undeclared_probe /usr/bin/printf 'X\n' ;;
+esac
+ARM
+for spec in 'red|listeners' 'green|listeners' 'green|undeclared'; do
+  subject=${spec%%|*}; caller=${spec#*|}
+  if [ "$subject" = red ]; then S="$RED"; else S="$GREEN"; fi
+  W=$Q/f4-$subject-$caller
+  bash --noprofile --norc "$Q/f4_arm.sh" "$S" "$W" "$Q/fake-ss.sh" "$caller" > "$W.txt" 2>&1; rc=$?
+  printf 'ROW22_BIND_INABILITY subject=%s caller=%s rc=%s draft_declared_b6_token=%s generic_rp7_token=%s adjudicated_line=[%s]\n' \
+    "$subject" "$caller" "$rc" \
+    "$(grep -c 'B6_STOP reason=listener_inventory_unreadable_or_unparseable rc=0 detail=capture_stream_unbound' "$W.txt")" \
+    "$(grep -c '^RP7_STOP reason=capture_stream_not_bindable ' "$W.txt")" \
+    "$(grep -E '^(RP7|B6)_STOP ' "$W.txt" | head -1 | sed -e "s#$Q#<scratch>#g")"
+done > "$Q/f4.txt"
+cat "$Q/f4.txt"
+expect_has f4_red_generic 'ROW22_BIND_INABILITY subject=red caller=listeners rc=3 draft_declared_b6_token=0 generic_rp7_token=1 adjudicated_line=\[RP7_STOP reason=capture_stream_not_bindable label=listeners leaf=<scratch>/f4-red-listeners/ev/ro.0001.listeners.stdout\]' "$Q/f4.txt"
+expect_has f4_green_row_specific 'ROW22_BIND_INABILITY subject=green caller=listeners rc=3 draft_declared_b6_token=1 generic_rp7_token=0 adjudicated_line=\[B6_STOP reason=listener_inventory_unreadable_or_unparseable rc=0 detail=capture_stream_unbound\]' "$Q/f4.txt"
+expect_has f4_generic_still_reachable 'ROW22_BIND_INABILITY subject=green caller=undeclared rc=3 draft_declared_b6_token=0 generic_rp7_token=1 adjudicated_line=\[RP7_STOP reason=capture_stream_not_bindable label=undeclared_probe leaf=<scratch>/f4-green-undeclared/ev/ro.0001.undeclared_probe.stdout\]' "$Q/f4.txt"
+
+case "$Q" in /tmp/rp7-r8-qa.*) rm -rf -- "$Q" ;; *) printf 'QA_SCRATCH_UNSAFE=%s\n' "$Q"; exit 97 ;; esac
+printf 'QA_PASS all_assertions=yes\n'
+# RP7_R8_FENCE_END
+```
+
+### Round-8 transcript
+
+```text
+QA_ROOT=/tmp/rp7-r8-qa.5vhtxn
+QA_ENV bash=5.2.37(1)-release coreutils_timeout=8.32 git=2.52.0.windows.1 uid_gid=4096:4096
+BYTE_IDENTITY red_bytes=92853 red_sha256=e695a67b4b621558ef13879fad3f8a868f6eb9ac6ffeb97babc8776081e07f32 red_cr=0 red_bash_n=0 green_bytes=99903 green_sha256=11621044d0adc21af93e1cfc7b88ef88de8aca4683a69ab16cbc542a124141a4 green_cr=0 green_bash_n=0
+escaping_round5  LEAF_RACE rc=0 outside_text=CAPTURED outside_bytes=9 payload_left_the_tree=yes capture_result=[]
+green            LEAF_RACE rc=0 outside_text=ORIGINAL outside_bytes=9 payload_left_the_tree=no capture_result=[]
+mutant_return7   LEAF_RACE rc=7 outside_text=ORIGINAL outside_bytes=9 payload_left_the_tree=no capture_result=[]
+ASSERTION_POWER mutant_bash_n=0 round7_on_green=accept round7_on_mutant=accept round7_on_escaping=reject round8_on_green=accept round8_on_mutant=reject round8_on_escaping=reject green_kind=descriptor_rebind_supported_rc0
+NAME_REOPEN mode=status swap=no subject=red rc=1 child_sha256=not_replaced name_at_read_time_sha256=792376c209f338959be4cf00c54dbf82662b90516082e23106faec4c43c69e49 result=[B5_FAIL reason=status_endpoint_unexpected_http code=500]
+NAME_REOPEN mode=status swap=no subject=green rc=1 child_sha256=not_replaced name_at_read_time_sha256=792376c209f338959be4cf00c54dbf82662b90516082e23106faec4c43c69e49 result=[B5_FAIL reason=status_endpoint_unexpected_http code=500]
+NAME_REOPEN mode=status swap=yes subject=red rc=0 child_sha256=792376c209f338959be4cf00c54dbf82662b90516082e23106faec4c43c69e49 name_at_read_time_sha256=c11e3f4837efde2441e23a7b9da02131f53bf59fddeb7147c4ab81afe400460f result=[B5_status http=200 json=strict required_fields=8 flags=expected body_sha256=0000000000000000000000000000000000000000000000000000000000000000 content=not_printed parser=pinned_system_interpreter isolation=isolated_no_site]
+NAME_REOPEN mode=status swap=yes subject=green rc=1 child_sha256=792376c209f338959be4cf00c54dbf82662b90516082e23106faec4c43c69e49 name_at_read_time_sha256=c11e3f4837efde2441e23a7b9da02131f53bf59fddeb7147c4ab81afe400460f result=[B5_FAIL reason=status_endpoint_unexpected_http code=500]
+NAME_REOPEN mode=netns swap=no subject=red rc=3 child_sha256=not_replaced name_at_read_time_sha256=e7802787bd95105c8563387a8e49780d3e6c082b769bf1e09b476c45eaaa3722 result=[B6_STOP reason=netns_mismatch caller=net:[100] service=net:[200]]
+NAME_REOPEN mode=netns swap=no subject=green rc=3 child_sha256=not_replaced name_at_read_time_sha256=e7802787bd95105c8563387a8e49780d3e6c082b769bf1e09b476c45eaaa3722 result=[B6_STOP reason=netns_mismatch caller=net:[100] service=net:[200]]
+NAME_REOPEN mode=netns swap=yes subject=red rc=0 child_sha256=e7802787bd95105c8563387a8e49780d3e6c082b769bf1e09b476c45eaaa3722 name_at_read_time_sha256=48dc7f125f7cb9815afd6af30615b55fbdf17137a1128e4aec1ae9e4dd525c4b result=[B6_netns caller=net:[100] service=net:[100] mainpid=123 binding=equal]
+NAME_REOPEN mode=netns swap=yes subject=green rc=3 child_sha256=e7802787bd95105c8563387a8e49780d3e6c082b769bf1e09b476c45eaaa3722 name_at_read_time_sha256=48dc7f125f7cb9815afd6af30615b55fbdf17137a1128e4aec1ae9e4dd525c4b result=[B6_STOP reason=netns_mismatch caller=net:[100] service=net:[200]]
+CLEAN_CONTROL mode=status_clean subject=red rc=0 result=[B5_status http=200 json=strict required_fields=8 flags=expected body_sha256=0000000000000000000000000000000000000000000000000000000000000000 content=not_printed parser=pinned_system_interpreter isolation=isolated_no_site]
+CLEAN_CONTROL mode=status_clean subject=green rc=0 result=[B5_status http=200 json=strict required_fields=8 flags=expected body_sha256=0000000000000000000000000000000000000000000000000000000000000000 content=not_printed parser=pinned_system_interpreter isolation=isolated_no_site]
+CLEAN_CONTROL mode=netns_clean subject=red rc=0 result=[B6_netns caller=net:[100] service=net:[100] mainpid=123 binding=equal]
+CLEAN_CONTROL mode=netns_clean subject=green rc=0 result=[B6_netns caller=net:[100] service=net:[100] mainpid=123 binding=equal]
+NO_NAME_FALLBACK mode=status subject=red rc=1 result=[B5_FAIL reason=status_endpoint_unexpected_http code=500]
+NO_NAME_FALLBACK mode=status subject=green rc=3 result=[B5_STOP reason=status_endpoint_not_evaluable rc=0 detail=capture_stream_unbound]
+NO_NAME_FALLBACK mode=netns subject=red rc=3 result=[B6_STOP reason=netns_mismatch caller=net:[100] service=net:[200]]
+NO_NAME_FALLBACK mode=netns subject=green rc=3 result=[B6_STOP reason=service_netns_unreadable path=/proc/self/ns/net rc=0 detail=capture_stream_unbound]
+READER_SUBSTITUTION red_child_ne_name=yes green_child_ne_name=yes
+RC137_PROVENANCE body=direct_137 subject=red cd_retargeted=1 real_fence_bodies=0 scaled_wrappers=4 rc=137 wall_s=1 result=[timeout kind=killed_after_grace per_fence_bound_s=900 kill_grace_s=30]
+RC137_PROVENANCE body=direct_137 subject=green cd_retargeted=1 real_fence_bodies=0 scaled_wrappers=5 rc=1 wall_s=0 result=[fence_failed fence=r8 rc=137 kind=sigkill_not_from_this_wrapper wrapper_sent_kill=no]
+RC137_PROVENANCE body=ignore_term subject=red cd_retargeted=1 real_fence_bodies=0 scaled_wrappers=4 rc=137 wall_s=3 result=[timeout kind=killed_after_grace per_fence_bound_s=900 kill_grace_s=30]
+RC137_PROVENANCE body=ignore_term subject=green cd_retargeted=1 real_fence_bodies=0 scaled_wrappers=5 rc=137 wall_s=3 result=[timeout fence=r8 kind=killed_after_grace wrapper_sent_term=yes wrapper_sent_kill=yes per_fence_bound_s=900 kill_grace_s=30]
+UNBOUNDED_PRELUDE subject=red outer_test_rc=124 elapsed_s=3 stdout_bytes=0 outer_wrapper_in_text=0 claims_whole_command_bound=1 states_prelude_unbounded=0
+UNBOUNDED_PRELUDE subject=green outer_test_rc=124 elapsed_s=3 stdout_bytes=0 outer_wrapper_in_text=0 claims_whole_command_bound=0 states_prelude_unbounded=1
+BUDGET_ARITHMETIC subject=red wrappers=4 per_fence_nominal_s=900 kill_grace_s=30 computed_s=3720 claimed_s=3720 claim_true=yes
+BUDGET_ARITHMETIC subject=green wrappers=5 per_fence_nominal_s=900 kill_grace_s=30 computed_s=4650 claimed_s=4650 claim_true=yes
+READER_FIELD_LABEL round7_mislabeled_occurrences=5 round8_mislabeled_occurrences=0 round8_renamed_occurrences=1
+ROW22_BIND_INABILITY subject=red caller=listeners rc=3 draft_declared_b6_token=0 generic_rp7_token=1 adjudicated_line=[RP7_STOP reason=capture_stream_not_bindable label=listeners leaf=<scratch>/f4-red-listeners/ev/ro.0001.listeners.stdout]
+ROW22_BIND_INABILITY subject=green caller=listeners rc=3 draft_declared_b6_token=1 generic_rp7_token=0 adjudicated_line=[B6_STOP reason=listener_inventory_unreadable_or_unparseable rc=0 detail=capture_stream_unbound]
+ROW22_BIND_INABILITY subject=green caller=undeclared rc=3 draft_declared_b6_token=0 generic_rp7_token=1 adjudicated_line=[RP7_STOP reason=capture_stream_not_bindable label=undeclared_probe leaf=<scratch>/f4-green-undeclared/ev/ro.0001.undeclared_probe.stdout]
+QA_PASS all_assertions=yes
+```
+
+What that transcript shows, line by line:
+
+- `BYTE_IDENTITY` fixes both subjects before any arm runs: RED is exactly the audited 92853 B
+  / `e695a67b...07f32`, GREEN is the delivered file, both LF-only and both `bash -n` clean.
+- `ASSERTION_POWER` is finding 1, and it is the only line in this suite whose subject is an
+  assertion rather than a block. `round7_on_mutant=accept round8_on_mutant=reject` is the
+  executed statement that the round-7 edit removed discriminating power and that round 8
+  restored it. `round7_on_escaping=reject round8_on_escaping=reject` is the control that the
+  restoration did not trade one blind spot for another: the round-5 block, whose payload
+  really does leave the evidence tree, is rejected by both. `green_kind` records which of the
+  two legitimate outcomes this workstation produced, and the assertion accepts nothing else.
+- The three `LEAF_RACE` lines above it are the raw material both assertions were applied to.
+  The mutant's line is the important one: `payload_left_the_tree=no`, `outside_text=ORIGINAL`
+  - everything the arm was watching is unchanged, and only `rc=7` gives the regression away.
+  That is exactly why an assertion that does not pin the status cannot see it.
+- `NAME_REOPEN ... subject=red` is finding 2 reproduced on the audited bytes: with the leaf
+  name replaced at the reader boundary, a child-observed `500` is adjudicated as the
+  accepting `B5_status http=200`, and two unequal child-observed namespaces are adjudicated
+  as `binding=equal`. Both are rc 0 - the block reports success over an observation its child
+  never made. `subject=green` is the same fixture against the repaired bytes: `code=500` at
+  rc 1 and `netns_mismatch` at rc 3, unchanged by the substitution, because the descriptor
+  the capture created resolves no name after the child exits.
+- `READER_SUBSTITUTION red_child_ne_name=yes green_child_ne_name=yes` is the check that the
+  fixture did its job on both subjects. Without it, `subject=green` passing would be
+  consistent with the swap silently not happening.
+- `swap=no` and `CLEAN_CONTROL` are the no-weakening arms: with nothing substituted, and with
+  well-formed accepting input, RED and GREEN reach the same verdict token for token.
+- `NO_NAME_FALLBACK ... subject=green rc=3 ... detail=capture_stream_unbound` is the arm that
+  makes the repair a binding rather than a preference: given a capture that allocated no
+  descriptor, GREEN STOPs with the row's own inability token instead of falling back to the
+  name. RED reads the name and adjudicates it.
+- `RC137_PROVENANCE body=direct_137` is finding 3. An immediate `exit 137` finishes in about
+  a second; the round-7 command text calls it `kind=killed_after_grace` and exits 137, and
+  the round-8 text calls it `kind=sigkill_not_from_this_wrapper wrapper_sent_kill=no` and
+  exits 1. `body=ignore_term` is the control: a real kill-after is still a timeout on both
+  texts, and on GREEN it now carries the wrapper's own `wrapper_sent_term=yes
+  wrapper_sent_kill=yes` as its evidence.
+- `UNBOUNDED_PRELUDE` executes the auditor's FIFO on both texts. The behaviour is identical -
+  `outer_test_rc=124` after 3 s with no stdout, stopped by a timeout that is not part of
+  either command - and the difference is entirely in what the text claims:
+  `claims_whole_command_bound=1` on RED, `states_prelude_unbounded=1` on GREEN.
+- `BUDGET_ARITHMETIC` re-derives `wrappers * (900 + 30)` from each published text. Both texts
+  are arithmetically self-consistent; round 7's error was the enforcement claim, which is why
+  the arm above it is the one that matters and this one is bookkeeping.
+- `READER_FIELD_LABEL round8_mislabeled_occurrences=0` is the field rename. The token is
+  assembled from two pieces inside the fence so that the checking lines do not contain it and
+  cannot count themselves.
+- `ROW22_BIND_INABILITY` is finding 4, and all three lines are load-bearing. RED emits a
+  generic `RP7_STOP` that no row preregisters; GREEN emits the exact `B6_STOP ...
+  detail=capture_stream_unbound` the draft declares; and `caller=undeclared` shows that a
+  capture caller with no token of its own still gets the generic fail-closed STOP, so the
+  repair added a route rather than broadening a row-specific inability into a generic branch.
+
+
+## The carried round-7 fence, re-run as a regression gate
+
+The round-7 fence is reproduced below and re-executed against the round-8 bytes, so every
+round-7 repair - the three NUL record STOPs, the two queue-field STOPs, the descriptor-bound
+listener inventory and the kill-after classification - must still hold on these bytes, and
+does. It is **not** byte-identical to round 7. Four changes are named here rather than left
+to a diff, and each carries the argument the new rule demands: what input used to fail at
+that arm, and whether it still fails.
+
+| Change | Why | What used to fail here, and does it still? |
+|---|---|---|
+| 1. The two GREEN identity constants | They name the subject file by hash and byte count, so they have to name the round-8 bytes | A different subject file. **Still fails** - the assertion is still exact equality, and the fence aborts before any arm runs |
+| 2. `adjudicated_name_sha256` -> `name_at_read_time_sha256` in the `READER_BINDING` printf | The field hashed the bytes at the leaf NAME, which GREEN expressly does not adjudicate; the label asserted the opposite of what the arm proves (finding 3) | Nothing was asserted on the field's NAME; the four `expect_has` patterns match `.*` there and are unchanged. The arm's discrimination is `bytes_field` vs `independent_wc_c` and the result token, all untouched. **A wildcard capture read through a substituted loopback name still fails** |
+| 3. Both capture stubs allocate `WPI_CAP_ERR_FD` as well as `WPI_CAP_OUT_FD` | Production now binds both streams, so a stub that binds only stdout is no longer standing in for `wpi_capture` and the block STOPs on it | The stub feeds the same fixture bytes to the same production readers. **Every malformed record in this group still STOPs** - the three NUL cases and both queue cases are unchanged in the transcript below, token for token |
+| 4. The F4 group's GREEN command text is the `c708511f` blob, not `$DOC` | A carried regression fence must not re-adjudicate a moving subject; with `$DOC` it had to be re-edited whenever the command changed, which is how assertions drift | **The round-6 misclassification still fails** exactly as before: `body=ignore_term subject=red` is still `fence_failed` at rc 1. What this group no longer covers - the CURRENT command text - is covered by the round-8 F3 group with a strictly stronger assertion |
 
 Four arm groups, each a real RED against the round-6 blob at `3e2a976a` and a real GREEN
-against the repaired bytes, plus the no-weakening control in the same group as the repair it
+against the round-8 bytes, plus the no-weakening control in the same group as the repair it
 guards:
 
 | Arm | RED on round-6 bytes | GREEN on repaired bytes |
@@ -260,8 +859,8 @@ printf 'BYTE_IDENTITY red_bytes=%s red_sha256=%s red_cr=%s red_bash_n=%s green_b
     "$RED_BYTES" "$RED_SHA" "$RED_CR" "$RED_N" "$GREEN_BYTES" "$GREEN_SHA" "$GREEN_CR" "$GREEN_N"
 expect_eq r7_red_sha256 "$RED_SHA" 6586698c707601c70a3e99903dc789ee2ee71fd2bae1bc1763adc52f72a40709
 expect_eq r7_red_bytes "$RED_BYTES" 88460
-expect_eq r7_green_sha256 "$GREEN_SHA" e695a67b4b621558ef13879fad3f8a868f6eb9ac6ffeb97babc8776081e07f32
-expect_eq r7_green_bytes "$GREEN_BYTES" 92853
+expect_eq r7_green_sha256 "$GREEN_SHA" 11621044d0adc21af93e1cfc7b88ef88de8aca4683a69ab16cbc542a124141a4
+expect_eq r7_green_bytes "$GREEN_BYTES" 99903
 expect_rc r7_red_cr "$RED_CR" 0
 expect_rc r7_green_cr "$GREEN_CR" 0
 expect_rc r7_red_bash_n "$RED_N" 0
@@ -304,7 +903,7 @@ wpi_capture(){
     service_netns:*)          printf 'net:[100]\n'      > "$WPI_CAP_OUT" ;;
     *) exit 96 ;;
   esac
-  exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"
+  exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; exec {WPI_CAP_ERR_FD}<"$WPI_CAP_ERR"
 }
 case "$mode" in
   code_nul|record_nul|clean) wpi_assert_status ;;
@@ -359,7 +958,7 @@ EV_DIR="$W/ev"; mkdir -p "$EV_DIR"; WPI_PROBE_SEQ=0; WPI_MOUNT_GUARD_ACTIVE=no; 
 printf '%s\n' "$rec" > "$W/ss.out"
 wpi_capture(){
   WPI_CAP_OUT="$W/ss.out"; WPI_CAP_ERR="$W/ss.err"; : > "$WPI_CAP_ERR"; WPI_CAP_RC=0
-  exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"
+  exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; exec {WPI_CAP_ERR_FD}<"$WPI_CAP_ERR"
 }
 wpi_assert_listener_set
 ARM
@@ -431,7 +1030,7 @@ for swap in yes no; do
     if [ "$subject" = red ]; then S="$RED"; else S="$GREEN"; fi
     W=$Q/f3-$swap-$subject
     bash --noprofile --norc "$Q/f3_arm.sh" "$S" "$W" "$Q/fake-ss.sh" "$swap" > "$W.txt" 2>&1; rc=$?
-    printf 'READER_BINDING swap=%s subject=%s rc=%s child_captured_sha256=%s adjudicated_name_sha256=%s bytes_field=%s independent_wc_c=%s result=[%s]\n' \
+    printf 'READER_BINDING swap=%s subject=%s rc=%s child_captured_sha256=%s name_at_read_time_sha256=%s bytes_field=%s independent_wc_c=%s result=[%s]\n' \
       "$swap" "$subject" "$rc" \
       "$(sha256sum < "$W/child-captured.out" | cut -d' ' -f1)" \
       "$(cat "$W"/ev/ro.*.listeners.stdout | sha256sum | cut -d' ' -f1)" \
@@ -462,14 +1061,27 @@ expect_eq f3_swap_effective_green "$([ "$SWAP_GREEN_CHILD" != "$SWAP_GREEN_NAME"
 # FINDING 4 (MEDIUM) - the published command misclassified the kill-after
 # outcome and documented an aggregate no arithmetic supports. Both subjects are
 # the published command TEXT itself: RED is the round-6 document's command
-# extracted from commit 3e2a976a, GREEN is this document's. Each is retargeted
-# into a scratch tree and its bound scaled from `900s`/`30s` to `1s`/`2s`, and
-# nothing else is altered. `honour_term` is the control: the outcome round 6
-# already classified correctly must stay correct.
+# extracted from commit 3e2a976a, GREEN is the round-7 document's, extracted
+# from commit c708511f. Each is retargeted into a scratch tree and its bound
+# scaled from `900s`/`30s` to `1s`/`2s`, and nothing else is altered.
+# `honour_term` is the control: the outcome round 6 already classified correctly
+# must stay correct.
+#
+# ROUND-8 CHANGE, and the only one in this fence's F4 group: GREEN was `$DOC`,
+# the LIVE document. That made a carried regression fence re-adjudicate a moving
+# subject, so it had to be re-edited every time the published command changed -
+# and a fence that has to be re-edited every round is a fence whose assertions
+# drift. Both texts are now git blobs, so this group is byte-stable and pins the
+# historical claim it was written for: round 6's classifier called a fence killed
+# after its grace `fence_failed`, and round 7's called it a timeout. The CURRENT
+# command text is adjudicated by the round-8 fence, whose F3 group asserts the
+# strictly stronger property round 7's text does NOT have - that an rc of 137 is
+# called a kill-after event only when that wrapper itself recorded sending KILL.
 # ===========================================================================
 git -C "$REPO" cat-file blob 3e2a976a:MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/SELF_QA_RP7.md > "$Q/SELF_QA_RP7.round6.md"
+git -C "$REPO" cat-file blob c708511f:MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/SELF_QA_RP7.md > "$Q/SELF_QA_RP7.round7.md"
 sed -n '/^# RP7_EXACT_COMMAND_BEGIN$/,/^# RP7_EXACT_COMMAND_END$/p' "$Q/SELF_QA_RP7.round6.md" > "$Q/published-red.txt"
-sed -n '/^# RP7_EXACT_COMMAND_BEGIN$/,/^# RP7_EXACT_COMMAND_END$/p' "$DOC" > "$Q/published-green.txt"
+sed -n '/^# RP7_EXACT_COMMAND_BEGIN$/,/^# RP7_EXACT_COMMAND_END$/p' "$Q/SELF_QA_RP7.round7.md" > "$Q/published-green.txt"
 printf '#!/bin/sh\ntrap "" TERM\nexec /usr/bin/sleep 30\n' > "$Q/ignore-term.sh"
 printf '#!/bin/sh\nexec /usr/bin/sleep 30\n' > "$Q/honour-term.sh"
 for body in ignore_term honour_term; do
@@ -530,9 +1142,9 @@ printf 'QA_PASS all_assertions=yes\n'
 ### Round-7 transcript
 
 ```text
-QA_ROOT=/tmp/rp7-r7-qa.WbI6fY
+QA_ROOT=/tmp/rp7-r7-qa.CHJxo2
 QA_ENV bash=5.2.37(1)-release coreutils_timeout=8.32 git=2.52.0.windows.1 uid_gid=4096:4096
-BYTE_IDENTITY red_bytes=88460 red_sha256=6586698c707601c70a3e99903dc789ee2ee71fd2bae1bc1763adc52f72a40709 red_cr=0 red_bash_n=0 green_bytes=92853 green_sha256=e695a67b4b621558ef13879fad3f8a868f6eb9ac6ffeb97babc8776081e07f32 green_cr=0 green_bash_n=0
+BYTE_IDENTITY red_bytes=88460 red_sha256=6586698c707601c70a3e99903dc789ee2ee71fd2bae1bc1763adc52f72a40709 red_cr=0 red_bash_n=0 green_bytes=99903 green_sha256=11621044d0adc21af93e1cfc7b88ef88de8aca4683a69ab16cbc542a124141a4 green_cr=0 green_bash_n=0
 RECORD_BYTES mode=code_nul subject=red rc=0 result=[B5_status http=200 json=strict required_fields=8 flags=expected body_sha256=0000000000000000000000000000000000000000000000000000000000000000 content=not_printed parser=pinned_system_interpreter isolation=isolated_no_site]
 RECORD_BYTES mode=code_nul subject=green rc=3 result=[B5_STOP reason=status_endpoint_not_evaluable rc=0 detail=nul_byte_in_record source=<scratch>/status_get.out]
 RECORD_BYTES mode=record_nul subject=red rc=0 result=[B5_status http=200 json=strict required_fields=8 flags=expected body_sha256=0000000000000000000000000000000000000000000000000000000000000000 content=not_printed parser=pinned_system_interpreter isolation=isolated_no_site]
@@ -559,10 +1171,10 @@ QUEUE_FIELDS case=clean subject=red rc=0 accepting=1 bytes=58 result=[]
 QUEUE_FIELDS case=clean subject=green rc=0 accepting=1 bytes=58 result=[]
 QUEUE_FIELDS case=wildcard subject=red rc=1 accepting=0 bytes=36 result=[nonloopback_listener addr=0.0.0.0]
 QUEUE_FIELDS case=wildcard subject=green rc=1 accepting=0 bytes=36 result=[nonloopback_listener addr=0.0.0.0]
-READER_BINDING swap=yes subject=red rc=0 child_captured_sha256=97783a08dd5b7cc4ca2c11dcfcbf60e4604df8462292cad1a37b830564dfa2fc adjudicated_name_sha256=db4755ec151f8d59f9c069832b3b9ad602adfbb6d0a2c31e295e478e2378600d bytes_field=38 independent_wc_c=36 result=[accepting port=8790 count=1 local=127.0.0.1 wildcard=none table=complete]
-READER_BINDING swap=yes subject=green rc=1 child_captured_sha256=97783a08dd5b7cc4ca2c11dcfcbf60e4604df8462292cad1a37b830564dfa2fc adjudicated_name_sha256=db4755ec151f8d59f9c069832b3b9ad602adfbb6d0a2c31e295e478e2378600d bytes_field=36 independent_wc_c=36 result=[nonloopback_listener addr=0.0.0.0]
-READER_BINDING swap=no subject=red rc=1 child_captured_sha256=97783a08dd5b7cc4ca2c11dcfcbf60e4604df8462292cad1a37b830564dfa2fc adjudicated_name_sha256=97783a08dd5b7cc4ca2c11dcfcbf60e4604df8462292cad1a37b830564dfa2fc bytes_field=36 independent_wc_c=36 result=[nonloopback_listener addr=0.0.0.0]
-READER_BINDING swap=no subject=green rc=1 child_captured_sha256=97783a08dd5b7cc4ca2c11dcfcbf60e4604df8462292cad1a37b830564dfa2fc adjudicated_name_sha256=97783a08dd5b7cc4ca2c11dcfcbf60e4604df8462292cad1a37b830564dfa2fc bytes_field=36 independent_wc_c=36 result=[nonloopback_listener addr=0.0.0.0]
+READER_BINDING swap=yes subject=red rc=0 child_captured_sha256=97783a08dd5b7cc4ca2c11dcfcbf60e4604df8462292cad1a37b830564dfa2fc name_at_read_time_sha256=db4755ec151f8d59f9c069832b3b9ad602adfbb6d0a2c31e295e478e2378600d bytes_field=38 independent_wc_c=36 result=[accepting port=8790 count=1 local=127.0.0.1 wildcard=none table=complete]
+READER_BINDING swap=yes subject=green rc=1 child_captured_sha256=97783a08dd5b7cc4ca2c11dcfcbf60e4604df8462292cad1a37b830564dfa2fc name_at_read_time_sha256=db4755ec151f8d59f9c069832b3b9ad602adfbb6d0a2c31e295e478e2378600d bytes_field=36 independent_wc_c=36 result=[nonloopback_listener addr=0.0.0.0]
+READER_BINDING swap=no subject=red rc=1 child_captured_sha256=97783a08dd5b7cc4ca2c11dcfcbf60e4604df8462292cad1a37b830564dfa2fc name_at_read_time_sha256=97783a08dd5b7cc4ca2c11dcfcbf60e4604df8462292cad1a37b830564dfa2fc bytes_field=36 independent_wc_c=36 result=[nonloopback_listener addr=0.0.0.0]
+READER_BINDING swap=no subject=green rc=1 child_captured_sha256=97783a08dd5b7cc4ca2c11dcfcbf60e4604df8462292cad1a37b830564dfa2fc name_at_read_time_sha256=97783a08dd5b7cc4ca2c11dcfcbf60e4604df8462292cad1a37b830564dfa2fc bytes_field=36 independent_wc_c=36 result=[nonloopback_listener addr=0.0.0.0]
 READER_SUBSTITUTION red_child_ne_name=yes green_child_ne_name=yes
 TIMEOUT_CLASS body=ignore_term subject=red cd_retargeted=1 real_fence_bodies=0 scaled_wrappers=3 rc=1 fence_rcs=[R6_FENCE_RC=137 R5_FENCE_RC=0 R4_FENCE_RC=0] result=[fence_failed]
 TIMEOUT_CLASS body=ignore_term subject=green cd_retargeted=1 real_fence_bodies=0 scaled_wrappers=4 rc=137 fence_rcs=[R7_FENCE_RC=137 R6_FENCE_RC=0 R5_FENCE_RC=0 R4_FENCE_RC=0] result=[timeout kind=killed_after_grace per_fence_bound_s=900 kill_grace_s=30]
@@ -594,8 +1206,10 @@ Reading the load-bearing lines:
   the new `read_binding=capture_descriptor` field, which the last two assertions in the group
   check is present on GREEN and absent on RED.
 - `READER_BINDING swap=yes` is finding 3, and the two digests in it are the whole argument.
-  `child_captured_sha256` is what the real child wrote; `adjudicated_name_sha256` is what the
-  leaf NAME resolved to when the reader ran. They differ on both subjects, which
+  `child_captured_sha256` is what the real child wrote; `name_at_read_time_sha256` is what
+  the leaf NAME resolved to when the reader ran - **round 7 called that field
+  `adjudicated_name_sha256`, which named the one thing GREEN expressly does not adjudicate**
+  (Codex round-7 part B finding 3), and renaming it is round-8 change 2 to this fence. They differ on both subjects, which
   `READER_SUBSTITUTION` states explicitly. The round-6 bytes adjudicate the substituted
   record and PASS with `bytes_field=38`; the round-7 bytes adjudicate the child's own bytes
   and return `B6_FAIL reason=nonloopback_listener addr=0.0.0.0` with `bytes_field=36`, equal
@@ -613,29 +1227,49 @@ Reading the load-bearing lines:
 
 ## The carried round-6 fence, re-run as a regression gate
 
-The round-6 fence is reproduced below and re-executed against the round-7 bytes, so every
+The round-6 fence is reproduced below and re-executed against the round-8 bytes, so every
 round-6 repair - the listener NUL/address/port STOPs, the four status-result dispositions,
 `000`/`099`/`600`, the `500` FAIL, the `401` STOP, rc propagation from the published
 command, and the write-side leaf binding - must still hold on these bytes, and does. It is
-**not** byte-identical to round 6, and four changes are named here rather than left to a
-diff:
+**not** byte-identical to round 6. Six changes have now been made to it across rounds 7 and
+8; each is named here with the argument the new rule demands.
+
+**Round 7 made four changes, and one of them was wrong.** They were, and remain:
 
 1. the two GREEN identity constants, which name the subject file by hash and byte count and
-   therefore have to name the round-7 bytes;
-2. `expect_rc f4_bound_wrappers`, from `3` to `4`, because the published command now runs
-   four fences;
-3. the F1 listener stub, which allocates the read descriptor the production capture now
+   therefore have to name the current bytes;
+2. `expect_rc f4_bound_wrappers`, from `3` to `4`, because the published command grew a
+   fourth fence;
+3. the F1 listener stub, which allocates the read descriptor the production capture
    allocates - a stub that sets `WPI_CAP_OUT` without it is not standing in for
    `wpi_capture` any more, and the block STOPs on it rather than reading a name;
-4. the F5 leaf-race arm, where the capture now runs in a subshell so the arm survives the
-   environment-dependent STOP described above and can still report the outside file, and
-   the assertion no longer pins the rc it never measured.
+4. the F5 leaf-race arm, moved into a subshell so it survives the environment-dependent STOP
+   described above and can still report the outside file - **and, in the same edit, its
+   GREEN assertion relaxed from `rc=0` to `rc=[0-9]*`.**
+
+Change 4's second half is Codex round-7 part B finding 1, and the round-7 report justified it
+by saying the old assertion "never measured" the rc. **That statement was false.** The arm
+printed `rc=%s` and the old `grep` pinned that field to `0`; the subshell was needed to
+survive the STOP, and pinning the two legitimate statuses instead of any decimal string would
+have survived it just as well. The relaxed assertion accepts an unrelated `return 7` at the
+top of `wpi_capture` - a regression that never touches the leaf and is therefore invisible to
+an assertion that only inspects the outside file. `RP7_REPAIR_R7_REPORT.md` is corrected, and
+the round-8 fence executes the round-7 and round-8 assertions over the same three outputs so
+the difference is measured rather than asserted.
+
+**Round 8 makes two more changes, and repairs change 4:**
+
+| Change | Why | What input used to fail here, and does it still? |
+|---|---|---|
+| 5. `expect_rc f4_bound_wrappers` 4 -> 5, the pattern gains `--verbose`, `DOCBOUND` looks for "fence-timeout budget", and a new `expect_rc f4_every_body_wrapped` asserts wrappers == extracted fence bodies | The published command runs five fences and instruments each wrapper so it can attribute an rc of 137 (finding 3) | A fence body run without a `timeout` wrapper. **Still fails**, and now fails harder: the count is no longer a bare constant but is tied to the number of bodies the command extracts, so adding an unwrapped fence fails even if the constant is updated with it |
+| 6. The F5 GREEN assertion is an exact two-outcome classifier, and a `return 7` mutant of the block is added as a RED arm | Restore the discriminating power change 4 removed, without losing the subshell that made the MSYS2 STOP observable (finding 1) | The round-5 escape - `outside_text=CAPTURED payload_left_the_tree=yes` - **still fails**, under both the old and the new assertion (`f5_old_rejects_red`, `f5_new_rejects_red`). What newly fails is the mutant: `f5_old_accepts_mutant` and `f5_new_rejects_mutant` are both asserted, so the fence itself records that the old assertion was weaker |
+| 7. Every capture stub in this fence that feeds a B5 or B6 assertion allocates `WPI_CAP_ERR_FD` as well as `WPI_CAP_OUT_FD` | Production binds both capture streams as of round 8, and the emptiness of the diagnostic stream is as much a child observation as the record (finding 2) | The stubs feed the same fixture bytes to the same production readers. **Every malformed record in this fence still STOPs with the same token** - the transcript below is unchanged for all of F1, F2 and F3 |
 
 Everything else - every arm, every other assertion, and the RED blob at `1143a9ff` - is
 byte-identical to round 6.
 
 Five arm groups, each a real RED against the round-5 blob and a real GREEN against the
-repaired bytes, plus the no-weakening control in the same group as the repair it guards:
+round-8 bytes, plus the no-weakening control in the same group as the repair it guards:
 
 | Arm | RED on round-5 bytes | GREEN on repaired bytes |
 |---|---|---|
@@ -696,8 +1330,8 @@ printf 'BYTE_IDENTITY red_bytes=%s red_sha256=%s red_cr=%s red_bash_n=%s green_b
     "$RED_BYTES" "$RED_SHA" "$RED_CR" "$RED_N" "$GREEN_BYTES" "$GREEN_SHA" "$GREEN_CR" "$GREEN_N"
 expect_eq red_sha256 "$RED_SHA" 393a16ce264b467bec180a2106390e6dcee4dc2605fd019871270fda11d3b0ee
 expect_eq red_bytes "$RED_BYTES" 77179
-expect_eq green_sha256 "$GREEN_SHA" e695a67b4b621558ef13879fad3f8a868f6eb9ac6ffeb97babc8776081e07f32
-expect_eq green_bytes "$GREEN_BYTES" 92853
+expect_eq green_sha256 "$GREEN_SHA" 11621044d0adc21af93e1cfc7b88ef88de8aca4683a69ab16cbc542a124141a4
+expect_eq green_bytes "$GREEN_BYTES" 99903
 expect_rc red_cr "$RED_CR" 0
 expect_rc green_cr "$GREEN_CR" 0
 expect_rc red_bash_n "$RED_N" 0
@@ -727,7 +1361,7 @@ case "$CASE" in
   wildcard)   printf 'LISTEN 0 128 0.0.0.0:8790 0.0.0.0:*\n'     > "$W/ss.out" ;;
 esac
 wpi_capture(){ WPI_CAP_OUT="$W/ss.out"; WPI_CAP_ERR="$EV_DIR/capture.err"; WPI_CAP_RC=0; : > "$WPI_CAP_ERR"
-  exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; }
+  exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; exec {WPI_CAP_ERR_FD}<"$WPI_CAP_ERR"; }
 ( wpi_assert_listener_set ) > "$W/out" 2> "$W/err"; rc=$?
 printf 'LISTENER_BYTES case=%s rc=%s accepting=%s parsed_complete=%s stop=[%s] fail=[%s] stderr_bytes=%s\n' \
   "$CASE" "$rc" "$(grep -c '^B6_listener_set ' "$W/out")" \
@@ -788,6 +1422,7 @@ wpi_capture(){
     status_get)  printf '200\n' > "$WPI_CAP_OUT"; WPI_CAP_RC=0 ;;
     status_json) printf '%s\n' "$REC" > "$WPI_CAP_OUT"; WPI_CAP_RC="$RC" ;;
   esac
+  exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; exec {WPI_CAP_ERR_FD}<"$WPI_CAP_ERR"
 }
 ( wpi_assert_status ) > "$W/out" 2> "$W/err"; rc=$?
 printf 'STATUS_RECORD rec=[%s] child_rc=%s rc=%s result=[%s] stderr_bytes=%s\n' \
@@ -866,6 +1501,7 @@ wpi_capture(){
   if [ "$1" = status_json ]; then forge_capture "$@"
   else WPI_CAP_OUT="$EV_DIR/$1.out"; WPI_CAP_ERR="$EV_DIR/$1.err"; : > "$WPI_CAP_ERR"; printf '200\n' > "$WPI_CAP_OUT"; WPI_CAP_RC=0
        printf '{"state":"DISARMED","state_version":1,"mode":"credential_free_disarmed","network":"disabled","exchange_conn":"disabled","exchange_enabled":false,"credential_lookup":"disabled","arm_enabled":false}' > "$EV_DIR/ro.status.body"; fi
+  exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; exec {WPI_CAP_ERR_FD}<"$WPI_CAP_ERR"
 }
 wpi_alloc_leaf(){ :; }
 ( wpi_assert_status ) > "$W/out" 2> "$W/err"; rc=$?
@@ -891,7 +1527,7 @@ trap - ERR
 set +E; set +e; set +u; set +o pipefail
 EV_DIR="$W/ev"; mkdir -p "$EV_DIR"; WPI_PROBE_SEQ=0; WPI_MOUNT_GUARD_ACTIVE=no
 WPI_CURL=/usr/bin/curl; WPI_CONTROL_ENDPOINT=http://127.0.0.1:8790/api/status
-wpi_capture(){ WPI_CAP_OUT="$EV_DIR/code.out"; WPI_CAP_ERR="$EV_DIR/code.err"; printf '%s\n' "$CODE" > "$WPI_CAP_OUT"; : > "$WPI_CAP_ERR"; WPI_CAP_RC=0; }
+wpi_capture(){ WPI_CAP_OUT="$EV_DIR/code.out"; WPI_CAP_ERR="$EV_DIR/code.err"; printf '%s\n' "$CODE" > "$WPI_CAP_OUT"; : > "$WPI_CAP_ERR"; WPI_CAP_RC=0; exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; exec {WPI_CAP_ERR_FD}<"$WPI_CAP_ERR"; }
 ( wpi_assert_status ) > "$W/out" 2> "$W/err"; rc=$?
 printf 'HTTP_CODE code=%s rc=%s result=[%s] stderr_bytes=%s\n' "$CODE" "$rc" "$(head -1 "$W/out")" "$(wc -c < "$W/err")"
 ARM
@@ -958,10 +1594,20 @@ expect_has f4_green_reports_fail 'PUBLISHED_COMMAND_RESULT=fence_failed' "$Q/f4-
 expect_has f4_green_rc6 'R6_FENCE_RC=7' "$Q/f4-green.txt"
 expect_has f4_green_rc5 'R5_FENCE_RC=9' "$Q/f4-green.txt"
 
-BOUNDS=$(grep -c 'timeout --signal=TERM --kill-after=30s 900s bash --noprofile --norc' "$Q/published.txt")
-DOCBOUND=$(grep -c 'aggregate bound' "$DOC")
-printf 'PUBLISHED_BOUND timeout_wrappers=%s documented_aggregate_bound_mentions=%s\n' "$BOUNDS" "$DOCBOUND"
-expect_rc f4_bound_wrappers "$BOUNDS" 4
+# ROUND-8 CHANGE: the wrapper pattern gained `--verbose` and the count went 4 -> 5,
+# because the published command now runs five fences and instruments each wrapper so
+# it can attribute an rc of 137 rather than assume it. What this check DOES is
+# unchanged and is still why it exists: it counts bounded invocations, so a fence run
+# without a wrapper is caught. It is now also asserted equal to the number of fence
+# bodies the command extracts, which is strictly stronger than the fixed 4 it
+# replaced - adding a fence without a wrapper fails here even if the constant is
+# updated too.
+BOUNDS=$(grep -c 'timeout --verbose --signal=TERM --kill-after=30s 900s bash --noprofile --norc' "$Q/published.txt")
+BODIES=$(grep -c 'FENCE_BEGIN[$]/,/^# RP7_' "$Q/published.txt")
+DOCBOUND=$(grep -c 'fence-timeout budget' "$DOC")
+printf 'PUBLISHED_BOUND timeout_wrappers=%s extracted_fence_bodies=%s documented_budget_mentions=%s\n' "$BOUNDS" "$BODIES" "$DOCBOUND"
+expect_rc f4_bound_wrappers "$BOUNDS" 5
+expect_rc f4_every_body_wrapped "$BOUNDS" "$BODIES"
 [ "$DOCBOUND" -ge 1 ] || { printf 'QA_ASSERT_FAIL name=f4_bound_documented got=%s\n' "$DOCBOUND"; exit 90; }
 printf '/usr/bin/sleep 30\n' > "$Q/hang.sh"
 t0=$SECONDS
@@ -993,13 +1639,18 @@ wpi_clock_ms(){
   if [ "$HOOK" -eq 1 ]; then rm -- "$WPI_CAP_OUT"; ln -- "$OUTSIDE" "$WPI_CAP_OUT"; fi
   WPI_LINE="$HOOK"
 }
-# Round 7 note: the capture now runs in a SUBSHELL so the arm survives a STOP and
-# can still report the outside file, which is what this arm measures. On this
-# workstation the repaired block additionally STOPs here, because the round-7
-# read binding re-opens `/dev/fd/<n>` and MSYS2 cannot re-open the descriptor of
-# a leaf whose name has just been unlinked; Linux can, and would return rc 0.
-# Either way the payload never leaves the tree, so the rc is reported and the
-# outside file is the assertion.
+# Round 8 note: the capture runs in a SUBSHELL so the arm survives a STOP and can
+# still report the outside file, which is what this arm measures. On this
+# workstation the repaired block additionally STOPs here, because the read
+# binding re-opens `/dev/fd/<n>` and MSYS2 cannot re-open the descriptor of a
+# leaf whose name has just been unlinked; Linux can, and would return rc 0.
+# Round 7 introduced the subshell and, in the same edit, relaxed the GREEN
+# assertion from `rc=0` to the basic regex `rc=[0-9]*`, which accepts ANY decimal
+# status. That was not needed to survive the STOP and it removed a control: Codex
+# round-7 part B finding 1 inserted an unrelated `return 7` at the top of
+# `wpi_capture` and the relaxed assertion passed where the predecessor failed.
+# The status is pinned again below, to the exact set of two outcomes this arm can
+# legitimately produce, and the auditor's mutation is now an arm of this fence.
 ( wpi_capture leaf_race /usr/bin/printf 'CAPTURED\n' ) > "$W/cap.out" 2>&1
 rc=$?
 printf 'LEAF_RACE rc=%s outside_text=%s outside_bytes=%s payload_left_the_tree=%s capture_result=[%s]\n' \
@@ -1007,11 +1658,60 @@ printf 'LEAF_RACE rc=%s outside_text=%s outside_bytes=%s payload_left_the_tree=%
   "$(grep -q CAPTURED "$OUTSIDE" && echo yes || echo no)" \
   "$(sed -e "s#$W#<scratch>#g" "$W/cap.out" | tr '\n' ' ' | sed 's/ *$//')"
 ARM
-bash --noprofile --norc "$Q/f5_arm.sh" "$RED"   "$Q/f5-red"   > "$Q/f5-red.txt" 2>&1
-bash --noprofile --norc "$Q/f5_arm.sh" "$GREEN" "$Q/f5-green" > "$Q/f5-green.txt" 2>&1
-sed 's/^/RED   /' "$Q/f5-red.txt"; sed 's/^/GREEN /' "$Q/f5-green.txt"
-expect_has f5_red_escapes    'LEAF_RACE rc=0 outside_text=CAPTURED outside_bytes=9 payload_left_the_tree=yes' "$Q/f5-red.txt"
-expect_has f5_green_confined 'LEAF_RACE rc=[0-9]* outside_text=ORIGINAL outside_bytes=9 payload_left_the_tree=no' "$Q/f5-green.txt"
+# The no-weakening mutant for the assertion itself: an unrelated regression that
+# makes `wpi_capture` return 7 without ever touching the leaf. It leaves the
+# outside file alone, so it is invisible to any assertion that only looks at the
+# outside file - which is precisely why the round-7 regex accepted it.
+sed '/^wpi_capture() {/a\    return 7' "$GREEN" > "$Q/f5-mutant-return7.sh"
+bash --noprofile --norc -n "$Q/f5-mutant-return7.sh"; F5_MUT_N=$?
+bash --noprofile --norc "$Q/f5_arm.sh" "$RED"                    "$Q/f5-red"    > "$Q/f5-red.txt"    2>&1
+bash --noprofile --norc "$Q/f5_arm.sh" "$GREEN"                  "$Q/f5-green"  > "$Q/f5-green.txt"  2>&1
+bash --noprofile --norc "$Q/f5_arm.sh" "$Q/f5-mutant-return7.sh" "$Q/f5-mutant" > "$Q/f5-mutant.txt" 2>&1
+sed 's/^/RED    /' "$Q/f5-red.txt"; sed 's/^/GREEN  /' "$Q/f5-green.txt"; sed 's/^/MUTANT /' "$Q/f5-mutant.txt"
+expect_has f5_red_escapes 'LEAF_RACE rc=0 outside_text=CAPTURED outside_bytes=9 payload_left_the_tree=yes' "$Q/f5-red.txt"
+
+# The round-8 assertion. Exactly two outcomes are legitimate for a confined
+# capture whose leaf name was unlinked under it, and each pins its status:
+#   rc 0 with an EMPTY capture result - the /dev/fd re-open through the still-open
+#     creating descriptor succeeded although the name was gone (Linux); or
+#   rc 3 with EXACTLY the documented STOP and nothing else - MSYS2 cannot re-open
+#     the descriptor of an unlinked leaf, so the capture STOPs before returning.
+# Anything else - any other status, an empty status, or either status carrying
+# unexpected output - is `unclassified` and fails the fence.
+f5_classify(){
+  if grep -q 'LEAF_RACE rc=0 outside_text=ORIGINAL outside_bytes=9 payload_left_the_tree=no capture_result=\[\]$' "$1"; then
+    printf 'descriptor_rebind_supported_rc0\n'
+  elif grep -q 'LEAF_RACE rc=3 outside_text=ORIGINAL outside_bytes=9 payload_left_the_tree=no capture_result=\[RP7_STOP reason=capture_stream_not_bindable label=leaf_race leaf=<scratch>/ev/ro\.0001\.leaf_race\.stdout\]$' "$1"; then
+    printf 'unlinked_leaf_not_rebindable_rc3\n'
+  else
+    printf 'unclassified\n'
+  fi
+}
+f5_new_assert(){ case "$(f5_classify "$1")" in unclassified) printf 'reject\n' ;; *) printf 'accept\n' ;; esac; }
+# The round-7 assertion verbatim, kept as a MEASURING INSTRUMENT, never as a gate:
+# the fence asserts below that it accepts the mutant the round-8 assertion rejects,
+# which is the executed demonstration that the round-7 edit removed discriminating
+# power rather than a claim in prose that it did.
+f5_old_assert(){
+  if grep -q 'LEAF_RACE rc=[0-9]* outside_text=ORIGINAL outside_bytes=9 payload_left_the_tree=no' "$1"; then
+    printf 'accept\n'
+  else
+    printf 'reject\n'
+  fi
+}
+F5_GREEN_KIND=$(f5_classify "$Q/f5-green.txt")
+F5_MUT_KIND=$(f5_classify "$Q/f5-mutant.txt")
+F5_RED_KIND=$(f5_classify "$Q/f5-red.txt")
+printf 'LEAF_RACE_DISCRIMINATION mutant_bash_n=%s green_kind=%s mutant_kind=%s red_kind=%s new_on_green=%s new_on_mutant=%s new_on_red=%s old_on_green=%s old_on_mutant=%s old_on_red=%s\n' \
+  "$F5_MUT_N" "$F5_GREEN_KIND" "$F5_MUT_KIND" "$F5_RED_KIND" \
+  "$(f5_new_assert "$Q/f5-green.txt")" "$(f5_new_assert "$Q/f5-mutant.txt")" "$(f5_new_assert "$Q/f5-red.txt")" \
+  "$(f5_old_assert "$Q/f5-green.txt")" "$(f5_old_assert "$Q/f5-mutant.txt")" "$(f5_old_assert "$Q/f5-red.txt")"
+expect_rc f5_mutant_parses "$F5_MUT_N" 0
+expect_eq f5_green_confined     "$(f5_new_assert "$Q/f5-green.txt")"  accept
+expect_eq f5_new_rejects_mutant "$(f5_new_assert "$Q/f5-mutant.txt")" reject
+expect_eq f5_new_rejects_red    "$(f5_new_assert "$Q/f5-red.txt")"    reject
+expect_eq f5_old_accepts_mutant "$(f5_old_assert "$Q/f5-mutant.txt")" accept
+expect_eq f5_old_rejects_red    "$(f5_old_assert "$Q/f5-red.txt")"    reject
 
 # Static: no shell-side write in the block re-opens a leaf by name. The status
 # body is the one disclosed exception, because curl is handed a path.
@@ -1034,9 +1734,9 @@ printf 'QA_PASS all_assertions=yes\n'
 ### Round-6 transcript
 
 ```text
-QA_ROOT=/tmp/rp7-r6-qa.GnOeIL
+QA_ROOT=/tmp/rp7-r6-qa.NFCCbY
 QA_ENV bash=5.2.37(1)-release coreutils_stat=8.32 python=3.14.2 git=2.52.0.windows.1 uid_gid=4096:4096
-BYTE_IDENTITY red_bytes=77179 red_sha256=393a16ce264b467bec180a2106390e6dcee4dc2605fd019871270fda11d3b0ee red_cr=0 red_bash_n=0 green_bytes=92853 green_sha256=e695a67b4b621558ef13879fad3f8a868f6eb9ac6ffeb97babc8776081e07f32 green_cr=0 green_bash_n=0
+BYTE_IDENTITY red_bytes=77179 red_sha256=393a16ce264b467bec180a2106390e6dcee4dc2605fd019871270fda11d3b0ee red_cr=0 red_bash_n=0 green_bytes=99903 green_sha256=11621044d0adc21af93e1cfc7b88ef88de8aca4683a69ab16cbc542a124141a4 green_cr=0 green_bash_n=0
 RED   LISTENER_BYTES case=nul rc=0 accepting=1 parsed_complete=1 stop=[] fail=[] stderr_bytes=0
 GREEN LISTENER_BYTES case=nul rc=3 accepting=0 parsed_complete=0 stop=[listener_inventory_unreadable_or_unparseable rc=0 detail=nul_byte_in_inventory] fail=[] stderr_bytes=0
 RED   LISTENER_BYTES case=address rc=1 accepting=0 parsed_complete=1 stop=[] fail=[listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790] stderr_bytes=0
@@ -1090,25 +1790,30 @@ GREEN HTTP_CODE code=401 rc=3 result=[B5_STOP reason=status_endpoint_access_deni
 RED   R5_FENCE_RC=7
 RED   R4_FENCE_RC=9
 PUBLISHED_RC_MASK round5_sequence_rc=0 inner_rcs=[R5_FENCE_RC=7,R4_FENCE_RC=9,]
-GREEN e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 */tmp/rp7-r6-qa.GnOeIL/fake/body-r7-fence-body.sh
-GREEN dc4eac6b791d148fe12b95e51bf31a92ead1c32f9dde48255f263a0d28dbcb4f */tmp/rp7-r6-qa.GnOeIL/fake/body-r6-fence-body.sh
-GREEN def46450e739e132ca3b14d87e783aec6d75a838316dc78d6d24fbecb302cb81 */tmp/rp7-r6-qa.GnOeIL/fake/body-r5-fence-body.sh
-GREEN 585c97d2fcbe0bc2e3fbca0f841e68a26934c5434ed00a8a691a4919dd85f82f */tmp/rp7-r6-qa.GnOeIL/fake/body-r4-fence-body.sh
-GREEN   0 /tmp/rp7-r6-qa.GnOeIL/fake/body-r7-fence-body.sh
-GREEN  47 /tmp/rp7-r6-qa.GnOeIL/fake/body-r6-fence-body.sh
-GREEN  47 /tmp/rp7-r6-qa.GnOeIL/fake/body-r5-fence-body.sh
-GREEN  47 /tmp/rp7-r6-qa.GnOeIL/fake/body-r4-fence-body.sh
+GREEN e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 */tmp/rp7-r6-qa.NFCCbY/fake/body-r8-fence-body.sh
+GREEN e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 */tmp/rp7-r6-qa.NFCCbY/fake/body-r7-fence-body.sh
+GREEN dc4eac6b791d148fe12b95e51bf31a92ead1c32f9dde48255f263a0d28dbcb4f */tmp/rp7-r6-qa.NFCCbY/fake/body-r6-fence-body.sh
+GREEN def46450e739e132ca3b14d87e783aec6d75a838316dc78d6d24fbecb302cb81 */tmp/rp7-r6-qa.NFCCbY/fake/body-r5-fence-body.sh
+GREEN 585c97d2fcbe0bc2e3fbca0f841e68a26934c5434ed00a8a691a4919dd85f82f */tmp/rp7-r6-qa.NFCCbY/fake/body-r4-fence-body.sh
+GREEN   0 /tmp/rp7-r6-qa.NFCCbY/fake/body-r8-fence-body.sh
+GREEN   0 /tmp/rp7-r6-qa.NFCCbY/fake/body-r7-fence-body.sh
+GREEN  47 /tmp/rp7-r6-qa.NFCCbY/fake/body-r6-fence-body.sh
+GREEN  47 /tmp/rp7-r6-qa.NFCCbY/fake/body-r5-fence-body.sh
+GREEN  47 /tmp/rp7-r6-qa.NFCCbY/fake/body-r4-fence-body.sh
 GREEN 141 total
+GREEN R8_FENCE_RC=0
 GREEN R7_FENCE_RC=0
 GREEN R6_FENCE_RC=7
 GREEN R5_FENCE_RC=9
 GREEN R4_FENCE_RC=0
-GREEN PUBLISHED_COMMAND_RESULT=fence_failed
+GREEN PUBLISHED_COMMAND_RESULT=fence_failed fence=r6 rc=7
 PUBLISHED_RC_PROPAGATION round6_command_rc=1 substitutions=2
-PUBLISHED_BOUND timeout_wrappers=4 documented_aggregate_bound_mentions=3
-PUBLISHED_BOUND_ENFORCED scaled_bound_s=3 rc=124 wall_s=3
-RED   LEAF_RACE rc=0 outside_text=CAPTURED outside_bytes=9 payload_left_the_tree=yes capture_result=[]
-GREEN LEAF_RACE rc=3 outside_text=ORIGINAL outside_bytes=9 payload_left_the_tree=no capture_result=[RP7_STOP reason=capture_stream_not_bindable label=leaf_race leaf=<scratch>/ev/ro.0001.leaf_race.stdout]
+PUBLISHED_BOUND timeout_wrappers=5 extracted_fence_bodies=5 documented_budget_mentions=4
+PUBLISHED_BOUND_ENFORCED scaled_bound_s=3 rc=124 wall_s=4
+RED    LEAF_RACE rc=0 outside_text=CAPTURED outside_bytes=9 payload_left_the_tree=yes capture_result=[]
+GREEN  LEAF_RACE rc=0 outside_text=ORIGINAL outside_bytes=9 payload_left_the_tree=no capture_result=[]
+MUTANT LEAF_RACE rc=7 outside_text=ORIGINAL outside_bytes=9 payload_left_the_tree=no capture_result=[]
+LEAF_RACE_DISCRIMINATION mutant_bash_n=0 green_kind=descriptor_rebind_supported_rc0 mutant_kind=unclassified red_kind=unclassified new_on_green=accept new_on_mutant=reject new_on_red=reject old_on_green=accept old_on_mutant=accept old_on_red=reject
 LEAF_WRITE_STATIC red_name_appends=12 green_name_appends=0 red_open_leaf=0 green_open_leaf=1
 QA_PASS all_assertions=yes
 ```
@@ -1156,15 +1861,19 @@ Reading the load-bearing lines:
 
 The round-5 fence is reproduced below **unchanged except for the two GREEN identity
 constants**, which name the subject file by hash and byte count and therefore have to name
-the round-7 bytes. Everything else - every arm, every assertion, both anchor comments and
+the round-8 bytes. Everything else - every arm, every assertion, both anchor comments and
 the RED blob at `d6a976aa` - is byte-identical to round 5, and its extracted body is
 still exactly 20050 B, because the two substituted constants are the same length as the
-ones they replace. It is one half of the
-no-weakening gate: every round-5 repair (the tenth tool binding, package identity, the
-three `/dev/null` opens, evidence-root provenance) must still hold on these bytes, and does.
+ones they replace. Its one capture stub, `forge_capture`, drives only the `lock_parity`
+child, whose readers are outside the round-8 binding change, so it needed no adaptation. The
+discriminating-power argument for the one change is the same as it has always been: a
+different subject file still fails, because the assertion is still exact equality and the
+fence aborts before any arm runs. It is one half of the no-weakening gate: every round-5
+repair (the tenth tool binding, package identity, the three `/dev/null` opens, evidence-root
+provenance) must still hold on these bytes, and does.
 
 Ten arm groups, each a real RED against the round-4 blob and a real GREEN against the
-repaired bytes:
+round-8 bytes:
 
 | Arm | RED on round-4 bytes | GREEN on repaired bytes |
 |---|---|---|
@@ -1217,8 +1926,8 @@ printf 'BYTE_IDENTITY red_bytes=%s red_sha256=%s red_cr=%s red_bash_n=%s green_b
     "$RED_BYTES" "$RED_SHA" "$RED_CR" "$RED_N" "$GREEN_BYTES" "$GREEN_SHA" "$GREEN_CR" "$GREEN_N"
 expect_eq red_sha256 "$RED_SHA" 23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad
 expect_eq red_bytes "$RED_BYTES" 70941
-expect_eq green_sha256 "$GREEN_SHA" e695a67b4b621558ef13879fad3f8a868f6eb9ac6ffeb97babc8776081e07f32
-expect_eq green_bytes "$GREEN_BYTES" 92853
+expect_eq green_sha256 "$GREEN_SHA" 11621044d0adc21af93e1cfc7b88ef88de8aca4683a69ab16cbc542a124141a4
+expect_eq green_bytes "$GREEN_BYTES" 99903
 expect_rc red_cr "$RED_CR" 0
 expect_rc green_cr "$GREEN_CR" 0
 expect_rc red_bash_n "$RED_N" 0
@@ -1494,9 +2203,9 @@ printf 'QA_PASS all_assertions=yes\n'
 ### Round-5 transcript
 
 ```text
-QA_ROOT=/tmp/rp7-r5-qa.8swBFp
+QA_ROOT=/tmp/rp7-r5-qa.JmR87W
 QA_ENV bash=5.2.37(1)-release coreutils_stat=8.32 python=3.14.2 git=2.52.0.windows.1 uid_gid=4096:4096
-BYTE_IDENTITY red_bytes=70941 red_sha256=23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad red_cr=0 red_bash_n=0 green_bytes=92853 green_sha256=e695a67b4b621558ef13879fad3f8a868f6eb9ac6ffeb97babc8776081e07f32 green_cr=0 green_bash_n=0
+BYTE_IDENTITY red_bytes=70941 red_sha256=23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad red_cr=0 red_bash_n=0 green_bytes=99903 green_sha256=11621044d0adc21af93e1cfc7b88ef88de8aca4683a69ab16cbc542a124141a4 green_cr=0 green_bash_n=0
 MAIN_BIND rc=0 bound=[stat,readlink,env,find,sha256sum,systemctl,ss,curl,timeout,] python3_bound=no malicious_marker=present accepted_status=1 rp7_pass=1 window_open=1 window_closed=1 binding_stop=0
 MAIN_BIND rc=3 bound=[stat,readlink,env,find,sha256sum,systemctl,ss,curl,timeout,python3,] python3_bound=yes malicious_marker=absent accepted_status=0 rp7_pass=0 window_open=1 window_closed=0 binding_stop=1
 F1_ARM_RCS red=0 green=0
@@ -1514,13 +2223,13 @@ GREEN B1_STOP reason=metadata_identity_unestablished stage=verifier detail=canon
 DEVNULL_STATIC red_non_comment=3 green_non_comment=0
 PREREQ_PATH_SHADOW rc=0 stdout=[] stderr_bytes=0
 PREREQ_PATH_SHADOW rc=3 stdout=[RP7_STOP reason=rp0_lib_not_sourced predicate=rp0_require_safe_component] stderr_bytes=0
-ALLOC_LEAF rc_first=0 rc_second=3 rc_outside=3 err1=0 err2=0 err3=0 second_stdout=[RP7_STOP reason=capture_leaf_not_create_once leaf=/tmp/rp7-r5-qa.8swBFp/f4-leaf/ev/leaf] outside_stdout=[RP7_STOP reason=capture_path_outside_evidence leaf=/tmp/rp7-r5-qa.8swBFp/f4-leaf/outside ev_dir=/tmp/rp7-r5-qa.8swBFp/f4-leaf/ev]
+ALLOC_LEAF rc_first=0 rc_second=3 rc_outside=3 err1=0 err2=0 err3=0 second_stdout=[RP7_STOP reason=capture_leaf_not_create_once leaf=/tmp/rp7-r5-qa.JmR87W/f4-leaf/ev/leaf] outside_stdout=[RP7_STOP reason=capture_path_outside_evidence leaf=/tmp/rp7-r5-qa.JmR87W/f4-leaf/outside ev_dir=/tmp/rp7-r5-qa.JmR87W/f4-leaf/ev]
 EV_ROOT_CONSTANT red=0 green=1
-EV_ROOT pin=[keep] ev_dir=[/tmp/rp7-r5-qa.8swBFp/other/x] rc=0 stderr_bytes=0 stdout=[]
-EV_ROOT pin=[keep] ev_dir=[/tmp/rp7-r5-qa.8swBFp/other/x] rc=3 stderr_bytes=0 stdout=[RP7_STOP reason=evidence_root_unattested detail=freeze_gate_pin_unfilled name=WPI_FIXED_EVIDENCE_ROOT]
-EV_ROOT pin=[/tmp/rp7-r5-qa.8swBFp/base] ev_dir=[/tmp/rp7-r5-qa.8swBFp/base/evidence/runkit/RUN-RO] rc=0 stderr_bytes=0 stdout=[]
-EV_ROOT pin=[/tmp/rp7-r5-qa.8swBFp/base] ev_dir=[/tmp/rp7-r5-qa.8swBFp/other/x] rc=3 stderr_bytes=0 stdout=[RP7_STOP reason=evidence_root_unattested ev_dir=/tmp/rp7-r5-qa.8swBFp/other/x expected_root=/tmp/rp7-r5-qa.8swBFp/base]
-EV_ROOT pin=[/tmp/rp7-r5-qa.8swBFp/base] ev_dir=[/tmp/rp7-r5-qa.8swBFp/base-evil/x] rc=3 stderr_bytes=0 stdout=[RP7_STOP reason=evidence_root_unattested ev_dir=/tmp/rp7-r5-qa.8swBFp/base-evil/x expected_root=/tmp/rp7-r5-qa.8swBFp/base]
+EV_ROOT pin=[keep] ev_dir=[/tmp/rp7-r5-qa.JmR87W/other/x] rc=0 stderr_bytes=0 stdout=[]
+EV_ROOT pin=[keep] ev_dir=[/tmp/rp7-r5-qa.JmR87W/other/x] rc=3 stderr_bytes=0 stdout=[RP7_STOP reason=evidence_root_unattested detail=freeze_gate_pin_unfilled name=WPI_FIXED_EVIDENCE_ROOT]
+EV_ROOT pin=[/tmp/rp7-r5-qa.JmR87W/base] ev_dir=[/tmp/rp7-r5-qa.JmR87W/base/evidence/runkit/RUN-RO] rc=0 stderr_bytes=0 stdout=[]
+EV_ROOT pin=[/tmp/rp7-r5-qa.JmR87W/base] ev_dir=[/tmp/rp7-r5-qa.JmR87W/other/x] rc=3 stderr_bytes=0 stdout=[RP7_STOP reason=evidence_root_unattested ev_dir=/tmp/rp7-r5-qa.JmR87W/other/x expected_root=/tmp/rp7-r5-qa.JmR87W/base]
+EV_ROOT pin=[/tmp/rp7-r5-qa.JmR87W/base] ev_dir=[/tmp/rp7-r5-qa.JmR87W/base-evil/x] rc=3 stderr_bytes=0 stdout=[RP7_STOP reason=evidence_root_unattested ev_dir=/tmp/rp7-r5-qa.JmR87W/base-evil/x expected_root=/tmp/rp7-r5-qa.JmR87W/base]
 QA_PASS all_assertions=yes
 ```
 
@@ -1552,16 +2261,23 @@ Reading the load-bearing lines:
 ## The carried round-4 fence, re-run as a regression gate
 
 The round-4 fence is reproduced below **unchanged except for the two anchor comments and
-the four `wpi_capture` stubs that drive the listener reader**, and was re-executed against
-the repaired bytes. Each of those four stubs gained exactly one statement, `exec
-{WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"`, because the round-7 reader reads the capture descriptor
-rather than the leaf name; a stub that does not allocate it is no longer standing in for
-`wpi_capture`, and the block STOPs with `detail=capture_stream_unbound` rather than reading
-a name it was not given. No fixture byte, no arm and no assertion changed. It is the
-no-weakening gate for this round: every round-3 and round-4 arm - the two real
-`python -m venv` forging environments, the projection-v2 attacks, the two-phase listener
-parse, the row grammar, the `-S` guard, the tool-attestation disclosure, the
-timeout-inside-cleared-environment ordering - must still reach `QA_PASS` on the round-7
+the capture stubs that feed a B5 or B6 assertion**, and was re-executed against the round-8
+bytes. Round 7 gave four of those stubs one statement each, `exec
+{WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"`, because the listener reader had moved onto the capture
+descriptor. Round 8 extends the same adaptation to the stderr descriptor and to the stubs
+that feed the status and namespace rows, for the same reason and with the same consequence:
+production binds both streams of a capture, a stub that sets only the NAMES is no longer
+standing in for `wpi_capture`, and the block STOPs with `detail=capture_stream_unbound`
+rather than reading a name it was not given.
+
+No fixture byte, no arm and no assertion changed. That is the discriminating-power argument
+for every one of these stub edits, and the transcript below is where it is checked: each
+stub feeds the same bytes to the same production reader and the same result line comes back,
+so what these edits changed is how the fixture hands bytes over, not which observations the
+row accepts. It is the no-weakening gate for this round: every round-3 and round-4 arm - the
+two real `python -m venv` forging environments, the projection-v2 attacks, the two-phase
+listener parse, the row grammar, the `-S` guard, the tool-attestation disclosure, the
+timeout-inside-cleared-environment ordering - must still reach `QA_PASS` on the round-8
 bytes, and does.
 
 ```bash
@@ -2210,8 +2926,8 @@ forge_capture(){
     local label="$1"; shift; local -a a=("$@"); local i exe; CALL=$((CALL+1))
     WPI_CAP_OUT="$EV_DIR/$CALL.out"; WPI_CAP_ERR="$EV_DIR/$CALL.err"; WPI_CAP_RC=0; : > "$WPI_CAP_ERR"; : > "$WPI_CAP_OUT"
     case "$label" in
-        status_get) printf '200\n' > "$WPI_CAP_OUT"; printf '%s\n' "$BODY_JSON" > "$EV_DIR/ro.status.body"; return 0 ;;
-        sha256) printf '%064d  body\n' 0 > "$WPI_CAP_OUT"; return 0 ;;
+        status_get) printf '200\n' > "$WPI_CAP_OUT"; printf '%s\n' "$BODY_JSON" > "$EV_DIR/ro.status.body"; exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; exec {WPI_CAP_ERR_FD}<"$WPI_CAP_ERR"; return 0 ;;
+        sha256) printf '%064d  body\n' 0 > "$WPI_CAP_OUT"; exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; exec {WPI_CAP_ERR_FD}<"$WPI_CAP_ERR"; return 0 ;;
     esac
     exe="${a[0]}"; [ -x "$exe" ] || exe="$exe.exe"
     for ((i=1; i<${#a[@]}; i++)); do
@@ -2220,6 +2936,7 @@ forge_capture(){
     /usr/bin/timeout 30 "$exe" "${a[@]:1}" > "$EV_DIR/raw.out" 2> "$EV_DIR/raw.err" || WPI_CAP_RC=$?
     tr -d '\r' < "$EV_DIR/raw.out" > "$WPI_CAP_OUT"
     tr -d '\r' < "$EV_DIR/raw.err" > "$WPI_CAP_ERR"
+    exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; exec {WPI_CAP_ERR_FD}<"$WPI_CAP_ERR"
 }
 
 # --- 1(a) status parser. The body is DEVIANT (state=ARMED), so a truthful
@@ -2373,7 +3090,7 @@ run_listener(){
     local mode="$1" table="$2" d="$Q/ss-$3-$1"; mkdir -p "$d"
     (
         EV_DIR="$d"; WPI_SS=/usr/bin/ss
-        wpi_capture(){ WPI_CAP_OUT="$EV_DIR/ss.out"; WPI_CAP_ERR="$EV_DIR/ss.err"; WPI_CAP_RC=0; : > "$WPI_CAP_ERR"; cp "$table" "$WPI_CAP_OUT"; exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; }
+        wpi_capture(){ WPI_CAP_OUT="$EV_DIR/ss.out"; WPI_CAP_ERR="$EV_DIR/ss.err"; WPI_CAP_RC=0; : > "$WPI_CAP_ERR"; cp "$table" "$WPI_CAP_OUT"; exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; exec {WPI_CAP_ERR_FD}<"$WPI_CAP_ERR"; }
         if [ "$mode" = red ]; then mutant_assert_listener_set_r3; else wpi_assert_listener_set; fi
     )
     return $?
@@ -2527,7 +3244,7 @@ run_two_deviation(){
                 listeners) printf '%s\n' 'LISTEN 0 128 10.0.0.5:8790 0.0.0.0:*' > "$WPI_CAP_OUT" ;;
                 *) : > "$WPI_CAP_OUT" ;;
             esac
-            exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"
+            exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; exec {WPI_CAP_ERR_FD}<"$WPI_CAP_ERR"
         }
         if [ "$mode" = red ]; then
             wpi_assert_netns_binding; wpi_assert_listener_set; wpi_assert_status
@@ -2671,12 +3388,12 @@ expect_rc json_type "$jtype" 1; expect_rc json_top "$jtop" 3; expect_rc json_mis
 ); listenerred=$?
 (
     EV_DIR="$Q/ev-listener-green"; mkdir -p "$EV_DIR"; WPI_SS=/usr/bin/ss
-    wpi_capture(){ printf 'PRODUCTION_SS_ARGV=%s\n' "$*"; WPI_CAP_OUT="$EV_DIR/ss.out"; WPI_CAP_ERR="$EV_DIR/ss.err"; WPI_CAP_RC=0; : > "$WPI_CAP_ERR"; printf '%s\n' 'LISTEN 0 128 0.0.0.0:22 0.0.0.0:*' 'LISTEN 0 128 127.0.0.1:8790 0.0.0.0:*' > "$WPI_CAP_OUT"; exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; }
+    wpi_capture(){ printf 'PRODUCTION_SS_ARGV=%s\n' "$*"; WPI_CAP_OUT="$EV_DIR/ss.out"; WPI_CAP_ERR="$EV_DIR/ss.err"; WPI_CAP_RC=0; : > "$WPI_CAP_ERR"; printf '%s\n' 'LISTEN 0 128 0.0.0.0:22 0.0.0.0:*' 'LISTEN 0 128 127.0.0.1:8790 0.0.0.0:*' > "$WPI_CAP_OUT"; exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; exec {WPI_CAP_ERR_FD}<"$WPI_CAP_ERR"; }
     wpi_assert_listener_set
 ); listenergreen=$?
 (
     EV_DIR="$Q/ev-listener-addr"; mkdir -p "$EV_DIR"; WPI_SS=/usr/bin/ss
-    wpi_capture(){ WPI_CAP_OUT="$EV_DIR/ss.out"; WPI_CAP_ERR="$EV_DIR/ss.err"; WPI_CAP_RC=0; : > "$WPI_CAP_ERR"; printf '%s\n' 'LISTEN 0 128 10.0.0.5:8790 0.0.0.0:*' > "$WPI_CAP_OUT"; exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; }
+    wpi_capture(){ WPI_CAP_OUT="$EV_DIR/ss.out"; WPI_CAP_ERR="$EV_DIR/ss.err"; WPI_CAP_RC=0; : > "$WPI_CAP_ERR"; printf '%s\n' 'LISTEN 0 128 10.0.0.5:8790 0.0.0.0:*' > "$WPI_CAP_OUT"; exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; exec {WPI_CAP_ERR_FD}<"$WPI_CAP_ERR"; }
     wpi_assert_listener_set
 ); listeneraddr=$?
 printf 'LISTENER_RCS mutant_filtered=%s production_full_inventory=%s non_preregistered_address=%s\n' "$listenerred" "$listenergreen" "$listeneraddr"
@@ -2698,12 +3415,12 @@ printf '#!/bin/sh\nprintf "/fixture/writable\\0"\nprintf "find denied\\n" >&2\ne
 ); paritystop=$?
 (
     EV_DIR="$Q/ev-netns"; mkdir -p "$EV_DIR"; WPI_READLINK=/usr/bin/readlink; WPI_MAINPID=189813; CALL=0
-    wpi_capture(){ CALL=$((CALL+1)); WPI_CAP_OUT="$EV_DIR/$CALL.out"; WPI_CAP_ERR="$EV_DIR/$CALL.err"; WPI_CAP_RC=0; : > "$WPI_CAP_ERR"; if [ "$CALL" -eq 1 ]; then printf 'net:[100]\n' > "$WPI_CAP_OUT"; else printf 'net:[200]\n' > "$WPI_CAP_OUT"; fi; }
+    wpi_capture(){ CALL=$((CALL+1)); WPI_CAP_OUT="$EV_DIR/$CALL.out"; WPI_CAP_ERR="$EV_DIR/$CALL.err"; WPI_CAP_RC=0; : > "$WPI_CAP_ERR"; if [ "$CALL" -eq 1 ]; then printf 'net:[100]\n' > "$WPI_CAP_OUT"; else printf 'net:[200]\n' > "$WPI_CAP_OUT"; fi; exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; exec {WPI_CAP_ERR_FD}<"$WPI_CAP_ERR"; }
     wpi_assert_netns_binding
 ); netns=$?
 (
     EV_DIR="$Q/ev-http"; mkdir -p "$EV_DIR"; WPI_CURL=/usr/bin/curl; WPI_CONTROL_ENDPOINT=http://127.0.0.1:8790/api/status
-    wpi_capture(){ WPI_CAP_OUT="$EV_DIR/out"; WPI_CAP_ERR="$EV_DIR/err"; WPI_CAP_RC=0; printf '500\n' > "$WPI_CAP_OUT"; : > "$WPI_CAP_ERR"; }
+    wpi_capture(){ WPI_CAP_OUT="$EV_DIR/out"; WPI_CAP_ERR="$EV_DIR/err"; WPI_CAP_RC=0; printf '500\n' > "$WPI_CAP_OUT"; : > "$WPI_CAP_ERR"; exec {WPI_CAP_OUT_FD}<"$WPI_CAP_OUT"; exec {WPI_CAP_ERR_FD}<"$WPI_CAP_ERR"; }
     wpi_assert_status
 ); http=$?
 printf 'REGRESSION_RCS manager_stop=%s partial_walk_stop=%s parity_fail=%s parity_generic_stop=%s netns_stop=%s http_fail=%s\n' "$manager" "$partial" "$parityfail" "$paritystop" "$netns" "$http"
@@ -2721,17 +3438,17 @@ printf 'QA_PASS all_assertions=yes\n'
 ### Round-4 regression transcript (repaired bytes)
 
 ```text
-QA_ROOT=/tmp/rp7-r4-qa.BNVBTU
+QA_ROOT=/tmp/rp7-r4-qa.5zf60Y
 QA_ENV bash=5.2.37(1)-release coreutils_stat=8.32 python=3.14.2 uid_gid=4096:4096 live_mountinfo_records=4 symlinks=not_representable_msys2
-REAL_GNU_DIAGNOSTIC=[/usr/bin/stat: cannot stat '/tmp/rp7-r4-qa.BNVBTU/absent-leaf': No such file or directory]
+REAL_GNU_DIAGNOSTIC=[/usr/bin/stat: cannot stat '/tmp/rp7-r4-qa.5zf60Y/absent-leaf': No such file or directory]
 REAL_GNU_ABSENT kind=absent child_rc=1
 DIAG_ACCEPTED id=abs_statx kind=absent
 DIAG_ACCEPTED id=abs_stat kind=absent
 DIAG_ACCEPTED id=abs_oserr kind=absent
-B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.BNVBTU/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.BNVBTU/ev-diag-base_statx/ro.0001.lstat.stderr
-B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.BNVBTU/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.BNVBTU/ev-diag-base_stat/ro.0001.lstat.stderr
-B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.BNVBTU/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.BNVBTU/ev-diag-base_oserr/ro.0001.lstat.stderr
-B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.BNVBTU/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.BNVBTU/ev-diag-foreign/ro.0001.lstat.stderr
+B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.5zf60Y/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.5zf60Y/ev-diag-base_statx/ro.0001.lstat.stderr
+B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.5zf60Y/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.5zf60Y/ev-diag-base_stat/ro.0001.lstat.stderr
+B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.5zf60Y/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.5zf60Y/ev-diag-base_oserr/ro.0001.lstat.stderr
+B3_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.5zf60Y/absent-leaf rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.5zf60Y/ev-diag-foreign/ro.0001.lstat.stderr
 STAT_DIAGNOSTIC_RCS real_gnu_absent=0 abs_statx=0 abs_stat=0 abs_oserr=0 base_statx=3 base_stat=3 base_oserr=3 foreign=3
 N1_REAL_MOUNTINFO records=4 captured_by=wpi_capture_mountinfo_snapshot
 N1_V2 clean=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 decoy_bind_under_release=74a1831126d71500bb26b663bc0923e5714679858bcb3d8c8bfa6898897a23e2 decoy_overlay_under_venv=7cb133713b58ce45a82b8180809b07e1f97032763f730e5ab578b3fc7657c6de repeat_clean=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359
@@ -2744,49 +3461,49 @@ V2_TRUSTED_PYTHON_POINT kind=point path=/usr/bin/python3 device=0:97 root=/ moun
 V2_SUBTREE_USR_BIN kind=subtree_count subtree_root=/usr/bin records=2
 COMPUTED_ATTESTATION sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 format=normalised_path_projection_v2
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.BNVBTU/ev-fail-mutant/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.BNVBTU/ev-fail-mutant/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.5zf60Y/ev-fail-mutant/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.5zf60Y/ev-fail-mutant/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 B3_FAIL reason=fixture_deviation
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.BNVBTU/ev-fail-green/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.BNVBTU/ev-fail-green/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.5zf60Y/ev-fail-green/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.5zf60Y/ev-fail-green/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.BNVBTU/ev-fail-green/ro.mountinfo.0002.snapshot projection=/tmp/rp7-r4-qa.BNVBTU/ev-fail-green/ro.0008.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.5zf60Y/ev-fail-green/ro.mountinfo.0002.snapshot projection=/tmp/rp7-r4-qa.5zf60Y/ev-fail-green/ro.0008.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 MOUNT_WINDOW_CLOSED
 B3_FAIL reason=fixture_deviation
 FAIL_GUARD_CLOSE mutant_rc=1 mutant_window_closed=0 production_rc=1 production_window_closed=1
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.BNVBTU/ev-guard-attest/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.BNVBTU/ev-guard-changed/ro.0002.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.5zf60Y/ev-guard-attest/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.5zf60Y/ev-guard-changed/ro.0002.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 RP7_mount_table parsed=yes records=5 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=5 raw_snapshot=/tmp/rp7-r4-qa.BNVBTU/n1-decoy projection=/tmp/rp7-r4-qa.BNVBTU/ev-guard-changed/ro.0006.mount_projection.tsv sha256=74a1831126d71500bb26b663bc0923e5714679858bcb3d8c8bfa6898897a23e2 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=5 raw_snapshot=/tmp/rp7-r4-qa.5zf60Y/n1-decoy projection=/tmp/rp7-r4-qa.5zf60Y/ev-guard-changed/ro.0006.mount_projection.tsv sha256=74a1831126d71500bb26b663bc0923e5714679858bcb3d8c8bfa6898897a23e2 content=not_printed
 RP7_STOP reason=mount_topology_changed before=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 after=74a1831126d71500bb26b663bc0923e5714679858bcb3d8c8bfa6898897a23e2 format=normalised_path_projection_v2
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.BNVBTU/ev-guard-mismatch/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.BNVBTU/ev-guard-mismatch/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.5zf60Y/ev-guard-mismatch/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.5zf60Y/ev-guard-mismatch/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 RP7_STOP reason=mount_topology_mismatch observed=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 attested=0000000000000000000000000000000000000000000000000000000000000000 format=normalised_path_projection_v2
 MOUNT_GUARD_RCS changed_downgrade=3 attestation_mismatch=3
 B3_STOP reason=structured_path_unparseable source=find_stdout detail=unsafe_character
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.BNVBTU/ev-space/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.BNVBTU/ev-space/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.5zf60Y/ev-space/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.5zf60Y/ev-space/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.BNVBTU/ev-space/ro.mountinfo.0002.snapshot projection=/tmp/rp7-r4-qa.BNVBTU/ev-space/ro.0012.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.5zf60Y/ev-space/ro.mountinfo.0002.snapshot projection=/tmp/rp7-r4-qa.5zf60Y/ev-space/ro.0012.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 B3_FAIL reason=writable_path_inside_immutable_tree path=[unrenderable] path_sha256=565603d319c5019948e7655e2da5b2f006639a9ad9d087d2ed6cba5a41948f2e count=1
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.BNVBTU/ev-realfind/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.BNVBTU/ev-realfind/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.5zf60Y/ev-realfind/ro.mountinfo.0001.snapshot projection=/tmp/rp7-r4-qa.5zf60Y/ev-realfind/ro.0003.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
 RP7_mount_table parsed=yes records=4 content=not_printed
-RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.BNVBTU/ev-realfind/ro.mountinfo.0002.snapshot projection=/tmp/rp7-r4-qa.BNVBTU/ev-realfind/ro.0013.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
-B3_FAIL reason=writable_path_inside_immutable_tree path=/tmp/rp7-r4-qa.BNVBTU/imm/sub count=2
+RP7_mount_projection format=normalised_path_projection_v2 points=21 roots=6 mount_records=4 raw_snapshot=/tmp/rp7-r4-qa.5zf60Y/ev-realfind/ro.mountinfo.0002.snapshot projection=/tmp/rp7-r4-qa.5zf60Y/ev-realfind/ro.0013.mount_projection.tsv sha256=2e6b24b88ee4353f8eb93831f1ead7c2ef56b78e698c4c5cd47980680e91d359 content=not_printed
+B3_FAIL reason=writable_path_inside_immutable_tree path=/tmp/rp7-r4-qa.5zf60Y/imm/sub count=2
 UNSAFE_PATH_RCS mutant_stop=3 suppressed_render_fail=1 real_find_fail=1
-MUTANT_RP7_tool name=stat path=/tmp/rp7-r4-qa.BNVBTU/tools/stat owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute
-RP7_tool name=stat path=/tmp/rp7-r4-qa.BNVBTU/tools/stat owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
-RP7_tool name=readlink path=/tmp/rp7-r4-qa.BNVBTU/tools/readlink owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
-RP7_tool name=env path=/tmp/rp7-r4-qa.BNVBTU/tools/env owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
-RP7_tool name=find path=/tmp/rp7-r4-qa.BNVBTU/tools/find owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
-RP7_tool name=sha256sum path=/tmp/rp7-r4-qa.BNVBTU/tools/sha256sum owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
-RP7_tool name=systemctl path=/tmp/rp7-r4-qa.BNVBTU/tools/systemctl owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
-RP7_tool name=ss path=/tmp/rp7-r4-qa.BNVBTU/tools/ss owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
-RP7_tool name=curl path=/tmp/rp7-r4-qa.BNVBTU/tools/curl owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
-RP7_tool name=timeout path=/tmp/rp7-r4-qa.BNVBTU/tools/timeout owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
-RP7_tool name=python3 path=/tmp/rp7-r4-qa.BNVBTU/tools/python3 owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
+MUTANT_RP7_tool name=stat path=/tmp/rp7-r4-qa.5zf60Y/tools/stat owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute
+RP7_tool name=stat path=/tmp/rp7-r4-qa.5zf60Y/tools/stat owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
+RP7_tool name=readlink path=/tmp/rp7-r4-qa.5zf60Y/tools/readlink owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
+RP7_tool name=env path=/tmp/rp7-r4-qa.5zf60Y/tools/env owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
+RP7_tool name=find path=/tmp/rp7-r4-qa.5zf60Y/tools/find owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
+RP7_tool name=sha256sum path=/tmp/rp7-r4-qa.5zf60Y/tools/sha256sum owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
+RP7_tool name=systemctl path=/tmp/rp7-r4-qa.5zf60Y/tools/systemctl owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
+RP7_tool name=ss path=/tmp/rp7-r4-qa.5zf60Y/tools/ss owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
+RP7_tool name=curl path=/tmp/rp7-r4-qa.5zf60Y/tools/curl owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
+RP7_tool name=timeout path=/tmp/rp7-r4-qa.5zf60Y/tools/timeout owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=self
+RP7_tool name=python3 path=/tmp/rp7-r4-qa.5zf60Y/tools/python3 owner_numeric=0:0 mode=755 kind=regular resolution=pinned_absolute attestation=bound_instrument
 TOOL_ATTESTATION mutant_rc=0 mutant_attestation_fields=0 production_rc=0 self=4 bound_instrument=6 self_names=stat,env,sha256sum,timeout,
-RP7_STOP reason=tool_not_evaluable tool=python3 detail=path_metadata_mismatch path=/tmp/rp7-r4-qa.BNVBTU/tools/python3 kind=symlink mode=755 owner_numeric=0:0 expected=regular,any,0:0
+RP7_STOP reason=tool_not_evaluable tool=python3 detail=path_metadata_mismatch path=/tmp/rp7-r4-qa.5zf60Y/tools/python3 kind=symlink mode=755 owner_numeric=0:0 expected=regular,any,0:0
 TRUSTED_PYTHON_PIN symlinked_pin_rc=3 symlink_rejected=1
 REAL_CHARDEV raw=[character special file] token=[other]
 MUTANT_B3_STOP reason=path_not_evaluable path=/ detail=root_kind_character special file
@@ -2794,15 +3511,15 @@ MUTANT_B1_STOP reason=interpreter_object_unbound kind=character special file tar
 B3_STOP reason=path_not_evaluable path=/ detail=root_kind_other
 B1_STOP reason=interpreter_object_unbound kind=other target=none
 KIND_TOKEN_RCS real_chardev=0 root_kind_stop=3 interpreter_kind_stop=3 root_token_ok=1 interpreter_token_ok=1
-TIMEOUT_ENV mutant_marker=1 mutant_vars=103 production_marker=0 production_vars=10
-B3_STOP reason=sweep_budget_exceeded root=/fixture elapsed_s=8 elapsed_ms=8070 budget_s=2
-B3_STOP reason=sweep_budget_exceeded root=/fixture elapsed_s=2 elapsed_ms=2180 budget_s=2
+TIMEOUT_ENV mutant_marker=1 mutant_vars=104 production_marker=0 production_vars=10
+B3_STOP reason=sweep_budget_exceeded root=/fixture elapsed_s=8 elapsed_ms=8060 budget_s=2
+B3_STOP reason=sweep_budget_exceeded root=/fixture elapsed_s=2 elapsed_ms=2040 budget_s=2
 TIMEOUT_RCS mutant=3 production=3 mutant_wall_s=9 production_wall_s=2 budget_s=2 child_sleep_s=8
-B1_interpreter path=/tmp/rp7-r4-qa.BNVBTU/venv/bin/python object=non_symlink_regular preexec_binding=component_and_mount_window_closed exec_binding=separate_bounded_exec version_family=3.12 env=cleared isolated=yes
+B1_interpreter path=/tmp/rp7-r4-qa.5zf60Y/venv/bin/python object=non_symlink_regular preexec_binding=component_and_mount_window_closed exec_binding=separate_bounded_exec version_family=3.12 env=cleared isolated=yes
 B1_STOP reason=interpreter_object_unbound kind=symlink target=/decoy/target
 B1_STOP reason=interpreter_object_unbound kind=symlink target=/decoy B1_interpreter path=spoofed exec=ok
 INTERPRETER_RCS regular_pass=0 symlink_stop=3 cr_stop=3 cr_forged_lines=0 cr_single_sanitised_line=1
-FORGE_FIXTURES venv_rc=0,0 pth=[import os,sys; open(r"C:\Users\BARSEM~1\AppData\Local\Temp\rp7-r4-qa.BNVBTU\pth.marker","w").write("1"); sys.stdout.write("OK fields=8"+chr(10)); sys.stdout.flush(); os._exit(0)] sitecustomize_lines=5
+FORGE_FIXTURES venv_rc=0,0 pth=[import os,sys; open(r"C:\Users\BARSEM~1\AppData\Local\Temp\rp7-r4-qa.5zf60Y\pth.marker","w").write("1"); sys.stdout.write("OK fields=8"+chr(10)); sys.stdout.flush(); os._exit(0)] sitecustomize_lines=5
 B5_status http=200 json=strict required_fields=8 flags=expected body_sha256=0000000000000000000000000000000000000000000000000000000000000000 content=not_printed
 B5_FAIL reason=flag_mismatch field=state observed_sha256=b30c3a9662f46e65f2b937b628583be2bff0e37e7466aa3b4bd988740310a913 expected=preregistered_typed_value
 B5_FAIL reason=flag_mismatch field=state observed_sha256=b30c3a9662f46e65f2b937b628583be2bff0e37e7466aa3b4bd988740310a913 expected=preregistered_typed_value
@@ -2822,26 +3539,26 @@ B6_FAIL reason=nonloopback_listener addr=0.0.0.0
 B6_STOP reason=listener_inventory_unreadable_or_unparseable rc=0 detail=table_grammar
 B6_STOP reason=listener_inventory_unreadable_or_unparseable rc=0 detail=table_grammar
 B6_STOP reason=listener_inventory_unreadable_or_unparseable rc=0 detail=table_grammar
-B6_listener_inventory rows=2 port_8790_rows=1 bytes=70 evidence_file=/tmp/rp7-r4-qa.BNVBTU/ss-wccomplete-green/ss.out content=not_printed table=complete parse=complete_before_semantics read_binding=capture_descriptor scope_applied_in_block=yes
+B6_listener_inventory rows=2 port_8790_rows=1 bytes=70 evidence_file=/tmp/rp7-r4-qa.5zf60Y/ss-wccomplete-green/ss.out content=not_printed table=complete parse=complete_before_semantics read_binding=capture_descriptor scope_applied_in_block=yes
 B6_FAIL reason=nonloopback_listener addr=0.0.0.0
-B6_listener_inventory rows=2 port_8790_rows=1 bytes=72 evidence_file=/tmp/rp7-r4-qa.BNVBTU/ss-good-green/ss.out content=not_printed table=complete parse=complete_before_semantics read_binding=capture_descriptor scope_applied_in_block=yes
+B6_listener_inventory rows=2 port_8790_rows=1 bytes=72 evidence_file=/tmp/rp7-r4-qa.5zf60Y/ss-good-green/ss.out content=not_printed table=complete parse=complete_before_semantics read_binding=capture_descriptor scope_applied_in_block=yes
 B6_listener_set port=8790 count=1 local=127.0.0.1 wildcard=none table=complete
 LISTENER_ORDER red_wildcard_first_rc=1 red_malformed_first_rc=3 green_wildcard_first_rc=3 green_malformed_first_rc=3 expected_both_stop=3
 LISTENER_COMPLETE_TABLE wildcard_fail_rc=1 good_rc=0 inventory_before_verdict=1
-B1_metadata_universe root=/tmp/rp7-r4-qa.BNVBTU/f3-clean/venv/lib/python3.12/site-packages entries=3 dist_info_dirs=2 non_metadata_entries=1 enumeration=unfiltered_maxdepth_1 universe=explicit_dist_info_only
-B1_metadata_preflight root=/tmp/rp7-r4-qa.BNVBTU/f3-clean/venv/lib/python3.12/site-packages dist_info_dirs=2 complete=yes readable=yes
-B1_metadata_preflight root=/tmp/rp7-r4-qa.BNVBTU/f3-egg/venv/lib/python3.12/site-packages dist_info_dirs=2 complete=yes readable=yes
-B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.BNVBTU/f3-egg/venv/lib/python3.12/site-packages/ghost.egg-info format=egg_info
-B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.BNVBTU/f3-pth/venv/lib/python3.12/site-packages/evil.pth format=pth
-B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.BNVBTU/f3-hook/venv/lib/python3.12/site-packages/sitecustomize.py format=startup_hook
-B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.BNVBTU/f3-zip/venv/lib/python3.12/site-packages/wheelhouse.zip format=zip
-B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.BNVBTU/f3-filedi/venv/lib/python3.12/site-packages/broken-1.0.dist-info format=dist_info_kind_regular
-B1_FAIL reason=distribution_metadata_absent path=/tmp/rp7-r4-qa.BNVBTU/f3-absent/venv/lib/python3.12/site-packages/gone-1.0.dist-info/METADATA
-B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.BNVBTU/f3-unread/venv/lib/python3.12/site-packages/demo_pkg-1.0.dist-info/METADATA rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.BNVBTU/f3-ev-t09/ro.0049.lstat.stderr
-B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.BNVBTU/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info detail=dist_info_kind_character special file
-B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.BNVBTU/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info format=dist_info_kind_other
-B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.BNVBTU/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info/METADATA detail=kind_character special file
-B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.BNVBTU/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info/METADATA detail=kind_other
+B1_metadata_universe root=/tmp/rp7-r4-qa.5zf60Y/f3-clean/venv/lib/python3.12/site-packages entries=3 dist_info_dirs=2 non_metadata_entries=1 enumeration=unfiltered_maxdepth_1 universe=explicit_dist_info_only
+B1_metadata_preflight root=/tmp/rp7-r4-qa.5zf60Y/f3-clean/venv/lib/python3.12/site-packages dist_info_dirs=2 complete=yes readable=yes
+B1_metadata_preflight root=/tmp/rp7-r4-qa.5zf60Y/f3-egg/venv/lib/python3.12/site-packages dist_info_dirs=2 complete=yes readable=yes
+B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.5zf60Y/f3-egg/venv/lib/python3.12/site-packages/ghost.egg-info format=egg_info
+B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.5zf60Y/f3-pth/venv/lib/python3.12/site-packages/evil.pth format=pth
+B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.5zf60Y/f3-hook/venv/lib/python3.12/site-packages/sitecustomize.py format=startup_hook
+B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.5zf60Y/f3-zip/venv/lib/python3.12/site-packages/wheelhouse.zip format=zip
+B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.5zf60Y/f3-filedi/venv/lib/python3.12/site-packages/broken-1.0.dist-info format=dist_info_kind_regular
+B1_FAIL reason=distribution_metadata_absent path=/tmp/rp7-r4-qa.5zf60Y/f3-absent/venv/lib/python3.12/site-packages/gone-1.0.dist-info/METADATA
+B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.5zf60Y/f3-unread/venv/lib/python3.12/site-packages/demo_pkg-1.0.dist-info/METADATA rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.5zf60Y/f3-ev-t09/ro.0049.lstat.stderr
+B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.5zf60Y/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info detail=dist_info_kind_character special file
+B1_STOP reason=metadata_universe_unexpected stage=preflight path=/tmp/rp7-r4-qa.5zf60Y/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info format=dist_info_kind_other
+B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.5zf60Y/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info/METADATA detail=kind_character special file
+B1_STOP reason=metadata_unreadable path=/tmp/rp7-r4-qa.5zf60Y/f3-clean/venv/lib/python3.12/site-packages/other-2.5.dist-info/METADATA detail=kind_other
 METADATA_UNIVERSE_RCS clean=0 egg_red=0 egg_green=3 pth=3 hook=3 zip=3 dist_info_file=3 member_absent=1 member_unreadable=3 chardev_dir_red=3 chardev_dir=3 chardev_member_red=3 chardev_member=3
 B1_STOP reason=metadata_universe_unexpected stage=verifier format=egg_info name_sha256=cf1057a30e78603c62e83b18e1c5697aca2bfeac81a18a4707b550f2e8b99132
 B1_STOP reason=metadata_universe_unexpected stage=verifier format=startup_hook name_sha256=1dc3332b767b1b60ea953e5dfdd81df90bf3449d9c313c945bbdb29e78f45ff8
@@ -2849,21 +3566,21 @@ B1_lock_parity result=pass packages=2 output=structurally_parsed verifier_preexe
 DRIVER_UNIVERSE egg_rc=3 hook_rc=3 clean_rc=0
 B5B6_DECLARED_ORDER wpi_assert_netns_binding,wpi_assert_status,wpi_assert_listener_set,
 B6_netns caller=net:[100] service=net:[100] mainpid=189813 binding=equal
-B6_listener_inventory rows=1 port_8790_rows=1 bytes=37 evidence_file=/tmp/rp7-r4-qa.BNVBTU/order-red/3.out content=not_printed table=complete parse=complete_before_semantics read_binding=capture_descriptor scope_applied_in_block=yes
+B6_listener_inventory rows=1 port_8790_rows=1 bytes=37 evidence_file=/tmp/rp7-r4-qa.5zf60Y/order-red/3.out content=not_printed table=complete parse=complete_before_semantics read_binding=capture_descriptor scope_applied_in_block=yes
 B6_FAIL reason=listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790
 B6_netns caller=net:[100] service=net:[100] mainpid=189813 binding=equal
 B5_FAIL reason=status_endpoint_unexpected_http code=500
 TWO_DEVIATION red_rc=1 red_first_result=[B6_FAIL reason=listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790] green_rc=1 green_first_result=[B5_FAIL reason=status_endpoint_unexpected_http code=500]
-B1a_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.BNVBTU/f5/release/IBKR_PAPER_BRIDGE/requirements.lock rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.BNVBTU/f5-ev-r17unread_red/ro.0023.lstat.stderr
-B1a_STOP reason=installed_lock_unreadable path=/tmp/rp7-r4-qa.BNVBTU/f5/release/IBKR_PAPER_BRIDGE/requirements.lock rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.BNVBTU/f5-ev-r17unread/ro.0023.lstat.stderr
-B1_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.BNVBTU/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.BNVBTU/f5-ev-r19aunread_red/ro.0027.lstat.stderr
-B1_STOP reason=verifier_unreadable path=/tmp/rp7-r4-qa.BNVBTU/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.BNVBTU/f5-ev-r19aunread/ro.0027.lstat.stderr
-B1a_FAIL reason=installed_lock_object_unexpected path=/tmp/rp7-r4-qa.BNVBTU/f5/release/IBKR_PAPER_BRIDGE/requirements.lock kind=directory
+B1a_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.5zf60Y/f5/release/IBKR_PAPER_BRIDGE/requirements.lock rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.5zf60Y/f5-ev-r17unread_red/ro.0023.lstat.stderr
+B1a_STOP reason=installed_lock_unreadable path=/tmp/rp7-r4-qa.5zf60Y/f5/release/IBKR_PAPER_BRIDGE/requirements.lock rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.5zf60Y/f5-ev-r17unread/ro.0023.lstat.stderr
+B1_STOP reason=path_not_evaluable path=/tmp/rp7-r4-qa.5zf60Y/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.5zf60Y/f5-ev-r19aunread_red/ro.0027.lstat.stderr
+B1_STOP reason=verifier_unreadable path=/tmp/rp7-r4-qa.5zf60Y/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py rc=1 detail=unclassified_diagnostic diagnostic_file=/tmp/rp7-r4-qa.5zf60Y/f5-ev-r19aunread/ro.0027.lstat.stderr
+B1a_FAIL reason=installed_lock_object_unexpected path=/tmp/rp7-r4-qa.5zf60Y/f5/release/IBKR_PAPER_BRIDGE/requirements.lock kind=directory
 B1a_FAIL reason=installed_lock_object_unexpected kind=directory
-B1a_FAIL reason=path_metadata_mismatch path=/tmp/rp7-r4-qa.BNVBTU/f5/release/IBKR_PAPER_BRIDGE/requirements.lock kind=regular mode=644 owner_numeric=1000:1000 expected=regular,any,0:0
+B1a_FAIL reason=path_metadata_mismatch path=/tmp/rp7-r4-qa.5zf60Y/f5/release/IBKR_PAPER_BRIDGE/requirements.lock kind=regular mode=644 owner_numeric=1000:1000 expected=regular,any,0:0
 B1a_FAIL reason=installed_lock_owner_unexpected owner_numeric=1000:1000 expected=0:0
-B1_FAIL reason=path_metadata_mismatch path=/tmp/rp7-r4-qa.BNVBTU/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py kind=regular mode=644 owner_numeric=1000:1000 expected=regular,any,0:0
-B1_FAIL reason=verifier_owner_unexpected path=/tmp/rp7-r4-qa.BNVBTU/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py owner_numeric=1000:1000 expected=0:0
+B1_FAIL reason=path_metadata_mismatch path=/tmp/rp7-r4-qa.5zf60Y/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py kind=regular mode=644 owner_numeric=1000:1000 expected=regular,any,0:0
+B1_FAIL reason=verifier_owner_unexpected path=/tmp/rp7-r4-qa.5zf60Y/f5/release/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py owner_numeric=1000:1000 expected=0:0
 ROW_GRAMMAR_RCS r17_unread_red=3 r17_unread=3 r19a_unread_red=3 r19a_unread=3 r17_kind_red=1 r17_kind=1 r17_owner_red=1 r17_owner=1 r19a_owner_red=1 r19a_owner=1
 MUTANT_MOUNT_POINT=/mnt/*
 RP7_mount_table parsed=yes records=1 content=not_printed
@@ -2878,21 +3595,20 @@ B5_STOP reason=schema_unexpected field=state_version
 JSON_RCS mutant_wrong_type=3 good=0 nan=3 infinity=3 wrong_type=1 top_array=3 mismatch=1 missing=3
 MUTANT_SS_ARGV=listeners /usr/bin/ss -H -ltn sport = :8790
 PRODUCTION_SS_ARGV=listeners /usr/bin/ss -H -ltn
-B6_listener_inventory rows=2 port_8790_rows=1 bytes=72 evidence_file=/tmp/rp7-r4-qa.BNVBTU/ev-listener-green/ss.out content=not_printed table=complete parse=complete_before_semantics read_binding=capture_descriptor scope_applied_in_block=yes
+B6_listener_inventory rows=2 port_8790_rows=1 bytes=72 evidence_file=/tmp/rp7-r4-qa.5zf60Y/ev-listener-green/ss.out content=not_printed table=complete parse=complete_before_semantics read_binding=capture_descriptor scope_applied_in_block=yes
 B6_listener_set port=8790 count=1 local=127.0.0.1 wildcard=none table=complete
-B6_listener_inventory rows=1 port_8790_rows=1 bytes=37 evidence_file=/tmp/rp7-r4-qa.BNVBTU/ev-listener-addr/ss.out content=not_printed table=complete parse=complete_before_semantics read_binding=capture_descriptor scope_applied_in_block=yes
+B6_listener_inventory rows=1 port_8790_rows=1 bytes=37 evidence_file=/tmp/rp7-r4-qa.5zf60Y/ev-listener-addr/ss.out content=not_printed table=complete parse=complete_before_semantics read_binding=capture_descriptor scope_applied_in_block=yes
 B6_FAIL reason=listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790
 LISTENER_RCS mutant_filtered=0 production_full_inventory=0 non_preregistered_address=1
-RP7_STOP reason=system_manager_unreachable rc=5 detail=manager_query_nonzero diagnostic_file=/tmp/rp7-r4-qa.BNVBTU/ev-manager/ro.0001.system_manager.stderr
-B3_STOP reason=walk_incomplete root=/fixture rc=1 detail=diagnostic_captured diagnostic_file=/tmp/rp7-r4-qa.BNVBTU/ev-partial/ro.0001.partial.stderr partial_stdout_discarded=/tmp/rp7-r4-qa.BNVBTU/ev-partial/ro.0001.partial.stdout
+RP7_STOP reason=system_manager_unreachable rc=5 detail=manager_query_nonzero diagnostic_file=/tmp/rp7-r4-qa.5zf60Y/ev-manager/ro.0001.system_manager.stderr
+B3_STOP reason=walk_incomplete root=/fixture rc=1 detail=diagnostic_captured diagnostic_file=/tmp/rp7-r4-qa.5zf60Y/ev-partial/ro.0001.partial.stderr partial_stdout_discarded=/tmp/rp7-r4-qa.5zf60Y/ev-partial/ro.0001.partial.stdout
 B1_FAIL reason=lock_installed_parity observed=positively_distinguished_named_set_mismatch
-B1_STOP reason=verifier_not_evaluable rc=1 detail=unclassified_verifier_result diagnostic_file=/tmp/rp7-r4-qa.BNVBTU/ev-parity-stop/err
+B1_STOP reason=verifier_not_evaluable rc=1 detail=unclassified_verifier_result diagnostic_file=/tmp/rp7-r4-qa.5zf60Y/ev-parity-stop/err
 B6_STOP reason=netns_mismatch caller=net:[100] service=net:[200]
 B5_FAIL reason=status_endpoint_unexpected_http code=500
 REGRESSION_RCS manager_stop=3 partial_walk_stop=3 parity_fail=1 parity_generic_stop=3 netns_stop=3 http_fail=1
-BASH_N_RC=0 BYTES=92853 SHA256=e695a67b4b621558ef13879fad3f8a868f6eb9ac6ffeb97babc8776081e07f32
+BASH_N_RC=0 BYTES=99903 SHA256=11621044d0adc21af93e1cfc7b88ef88de8aca4683a69ab16cbc542a124141a4
 QA_PASS all_assertions=yes
-R4_FENCE_RC=0
 ```
 
 Its final line re-derives the round-5 identity from inside the round-4 fence:
@@ -2907,20 +3623,31 @@ bound, which the round-4 fence never observed - that is what the round-5 F1 arm 
 ### Literal re-run of the published command against this document
 
 The published command was executed verbatim **three** times: once to produce the transcripts
-above (206 s), once after they had been pasted in and the prose rewritten (207 s), and once
-more against **this file as delivered**. Its wall clock is not pinned here, because pinning
-it would mean editing the file after the run it describes; everything else about it is.
-Every run returned rc 0 with empty stderr and 46348 stdout bytes; all four fences printed
+above, once after they had been pasted in and the prose rewritten, and once more against
+**this file as delivered**. Its wall clock is not pinned here, because pinning it would mean
+editing the file after the run it describes; everything else about it is. Every run returned
+rc 0 with empty stderr and 54048 stdout bytes; all five fences printed
 `QA_PASS all_assertions=yes`
-(`R7_FENCE_RC=0`, `R6_FENCE_RC=0`, `R5_FENCE_RC=0`, `R4_FENCE_RC=0`) followed by the
-command's own summary line `PUBLISHED_COMMAND_RESULT=pass fences=4 per_fence_bound_s=900
-kill_grace_s=30 aggregate_bound_s=3720 aggregate_enforced_by=sequential_per_fence_bounds`;
-and every run re-derived the same four fence-body digests and byte counts
-(`d4c730e5...00dbe` / 21450 B, `b080dad4...70a06` / 27355 B, `6a5a80fe...507a6` / 20050 B,
-`ceb45f11...28159` / 76873 B). Pasting transcripts and editing prose changed no byte inside
-any marker range, which is why the digests are stable across all three runs. The longest run
-is an order of magnitude inside the enforced 900 s per-fence bound and well inside the
-3720 s the four bounds add up to.
+(`R8_FENCE_RC=0`, `R7_FENCE_RC=0`, `R6_FENCE_RC=0`, `R5_FENCE_RC=0`, `R4_FENCE_RC=0`)
+followed by the command's own summary line `PUBLISHED_COMMAND_RESULT=pass fences=5
+per_fence_bound_s=900 kill_grace_s=30 fence_timeout_budget_s=4650 whole_command_bound=none
+prelude_bounded=no`; and every run re-derived the same five fence-body digests and byte
+counts (`dada2eaa...07f98` / 28633 B, `2a2eb893...327ff` / 22522 B, `0dc62137...d2fb1` / 32069 B, `a3fb4b34...3fc56` / 20050 B, `4ddfa8b5...c4cd1` / 77408 B). Pasting transcripts and editing prose changed no byte inside any
+marker range, which is why the digests are stable across all three runs.
+
+**Two outputs had to be made fixed points for that to be true, and both changes are stated
+rather than assumed.** The round-8 `READER_FIELD_LABEL` line counts the renamed reader field
+inside the round-7 fence body rather than across the whole document, because a document-wide
+count grows every time a transcript containing the field is pasted back in - a number that
+moves when the file is edited is not reproducible by a third party. The round-8
+`UNBOUNDED_PRELUDE` assertion bounds its wall clock to the outer window rather than pinning
+one integer, because `SECONDS` rounding makes a 3 s window read as 3 or 4; the gate is
+`outer_test_rc=124` with no stdout, which is the claim, and the second is reported evidence.
+
+Each run took a little over four minutes, which is inside the enforced 900 s bound of any one
+fence by an order of magnitude. It is **not** compared against the 4650 s fence-timeout
+budget as though that were a bound on the command: nothing bounds this command as a whole,
+the result line says so, and the round-8 F3 arm demonstrates it.
 
 A diff of the recorded run against the final one, ignoring the `mktemp` scratch names, is
 confined to the handful of measured wall clocks and Windows scratch paths that are the only
@@ -2941,25 +3668,56 @@ identical.
   route the recovered test demonstrated for the capture leaves, and it is not closed for this
   leaf. Closing it needs a curl invocation that writes to an inherited descriptor, which is a
   design change, not a repair.
-- **Readers other than the listener inventory still open by name.** Round 7 bound the one
-  reader a preregistered row makes an identity claim about. `wpi_assert_listener_set` reads
-  the descriptor `wpi_capture` re-derived from its own creating write descriptor through
-  `/dev/fd/<n>`, so row 22's "the byte string adjudicated is the byte string captured" is
-  now true, and it is falsified above by an executed substitution that the round-6 bytes
-  adjudicate and the round-7 bytes do not. `wpi_single_record`, `wpi_require_empty_file`
-  and `wpi_sha_file` still open the leaf path again after the child has run, and a
-  concurrent writer with write access to `EV_DIR` could present a different object to them.
-  **No row claims byte identity for those**: what the block establishes about their content
-  is exactly what their record grammar establishes, which is why each of them STOPs on a
-  record it cannot represent byte for byte - including NUL, as of round 7 - rather than
-  adjudicating it. Binding them the same way is a signature change to every reader in the
-  block and to every carried regression arm that stands in for a capture, for claims no row
-  makes; it was weighed and deliberately not taken in this round.
-- The binding re-derives the read descriptor from the write descriptor **after** the child
+- **Readers outside rows 20-24 still open by name, and that boundary is now the residual.**
+  Round 7 bound one reader - the listener inventory - and left the rest of its class on the
+  name; an executed substitution then turned a child-observed HTTP 500 into an accepting 200
+  and two unequal namespaces into an equal pair (Codex round-7 part B finding 2). Round 8
+  closes the class **for this band**: the row-20 status code, the row-21 parser result, both
+  row-22 namespace identities, the row-22 inventory, and the emptiness of the diagnostic
+  stream each of those is conditioned on, are all read through the descriptor `wpi_capture`
+  re-derived from its own creating write descriptor. All five are falsified above by executed
+  substitutions the round-7 bytes adjudicate and the round-8 bytes do not, and by a stub that
+  binds nothing, which the round-8 bytes refuse rather than fall back on a name.
+  **What is still open, precisely:**
+  - the rows 10-19 readers - `wpi_lstat`, `wpi_sha_file`, `wpi_assert_manager_ready`,
+    `wpi_assert_evidence_leaf_bound`, the `find`-stdout walkers in `wpi_assert_tree` and the
+    metadata enumeration, the interpreter `-V` record and the verifier's stdout and stderr -
+    all still resolve the leaf name after the child has run. Rows 10-19 were out of scope for
+    the round-6 and round-7 audit bands, and no row among them states captured identity for
+    its bytes; what the block establishes about their content is exactly what their record
+    grammar establishes, which is why each STOPs on a record it cannot represent byte for
+    byte, including NUL, rather than adjudicating it. This is the obvious next candidate and
+    it is named here as such, not argued away: the mechanism now exists
+    (`wpi_captured_record`, `wpi_require_empty_captured`) and applying it is a matter of
+    scope, not of design.
+  - the read-diagnostic leaves. Every reader above redirects `read`'s own stderr into a
+    create-once leaf and then requires that leaf empty **by name**. Those bytes are not a
+    child observation - only this shell's `read` ever writes them - but the name is resolved
+    a second time, so the same substitution route exists for the hard-read-error check.
+  - `wpi_sha_file "$body"` for row 20's `body_sha256`. The digest is taken over a name curl
+    was handed, which is the write-side residual immediately above; binding the read would
+    not fix the write.
+- The binding re-derives each read descriptor from its write descriptor **after** the child
   exits and **before** the write descriptor is closed, so no name is resolved in between and
   the child never inherits the read side. What it does not establish is the window between
   the `O_CREAT|O_EXCL` open and the child's own writes: that window is covered by the write
   binding, not by this one, and the round-6 F5 arm is what measures it.
+- **The published command bounds five fence calls and nothing else.** `5 * (900 + 30) = 4650`
+  is a fence-timeout budget, not a bound on the command: the four `sed` extractions, the
+  `sha256sum`, the `wc -c`, the `cat` of the captured wrapper diagnostics and the shell's own
+  overhead are outside every wrapper, and the round-8 F3 arm demonstrates that with a FIFO
+  that blocks the first extraction before any wrapper starts. The result line states this in
+  as many words (`whole_command_bound=none prelude_bounded=no`). Round 7 claimed 3720 was
+  "an upper bound no execution of this command can exceed"; that claim is withdrawn, not
+  reworded.
+- **An rc of 137 is attributed from the wrapper's own diagnostic, and only that far.**
+  `--verbose` makes GNU `timeout` announce the signals it sends, so `kind=killed_after_grace`
+  now requires that fence's wrapper to have recorded `sending signal KILL to command`. What
+  this does **not** establish is that no other SIGKILL reached the fence: a body killed by
+  something else *while* the wrapper was also killing it is still reported as a kill-after
+  event. It does establish the case the audit executed - an immediate `exit 137` with no
+  wrapper signal at all is now `kind=sigkill_not_from_this_wrapper`, is not called a timeout,
+  and fails the command.
 - An ownership/mode precondition on `EV_DIR` (which would bound *who* could race) was also
   considered and rejected: the mode of the evidence directory is not a preregistered input,
   RP0-BOOTSTRAP allocates it, and a block that STOPs on a group-writable evidence directory

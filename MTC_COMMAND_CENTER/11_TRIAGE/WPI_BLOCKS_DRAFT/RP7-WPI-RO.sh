@@ -18,15 +18,25 @@
 # fact as "the object written is the object allocated". The one write this
 # block cannot bind that way is curl's `--output <path>` for the status body,
 # because curl is given a name, not a descriptor; that leaf is create-once
-# allocated and re-opened by name by curl. On the READ side, the one reader
-# whose bytes a preregistered row claims identity for - the row-22 listener
-# inventory - reads through a descriptor re-derived from the capture's own
-# descriptor rather than from the leaf name, so the byte string adjudicated is
-# the byte string the child wrote into the object the create-once open created.
-# Every other reader opens by name and claims nothing beyond what its record
-# grammar establishes; no row states captured/adjudicated identity for those.
-# Both residuals are stated in SELF_QA_RP7.md rather than covered by the
-# sentence above.
+# allocated and re-opened by name by curl. On the READ side, EVERY read of a
+# capture stream that a preregistered row in this band attributes to its child -
+# the row-20 status code, the row-21 parser result, both row-22 namespace
+# identities, the row-22 listener inventory, and the emptiness of the diagnostic
+# stream that each of those five results is conditioned on - goes through a
+# descriptor re-derived from that capture's own creating descriptor rather than
+# through the leaf name, so the byte string adjudicated is the byte string the
+# child wrote into the object the create-once open created. Round 7 bound the
+# listener inventory alone, and an executed fixture then turned a child-observed
+# HTTP 500 into an accepting 200 and two unequal child-observed namespaces into
+# an equal pair by replacing the leaf NAME at the reader boundary (Codex round-7
+# part B finding 2); binding one reader of a class does not close the class.
+# Readers OUTSIDE this band - the rows 10-19 metadata, digest, enumeration,
+# interpreter and verifier readers, and every read of a diagnostic leaf this
+# block wrote itself - still open by name and claim nothing beyond what their
+# record grammar establishes over whatever that name resolves to at read time;
+# no row states captured/adjudicated identity for those. Those residuals, and
+# curl's, are stated in SELF_QA_RP7.md rather than covered by the sentence
+# above.
 # File content is never printed: result lines contain paths, metadata, counts,
 # classifications, and digests only.
 #
@@ -45,6 +55,11 @@ WPI_LINE=""
 WPI_CAP_OUT=""
 WPI_CAP_ERR=""
 WPI_CAP_OUT_FD=""
+WPI_CAP_ERR_FD=""
+WPI_CAP_FD=""
+WPI_CAP_FD_SOURCE=""
+WPI_CAP_BIND_PREFIX=""
+WPI_CAP_BIND_REASON=""
 WPI_CAP_RC=0
 WPI_CAP_ELAPSED_MS=0
 WPI_READ_DIAG=""
@@ -267,10 +282,28 @@ wpi_alloc_read_diag() {
 # The bounding wrapper is inside the cleared environment, not outside it: env is
 # the first exec, so timeout - the process that decides whether a probe was
 # bounded - runs under the same cleared environment as the probe it bounds.
+# A caller that preregisters its OWN inability-to-evaluate token for an unbindable
+# capture stream declares it here, immediately before the capture it applies to.
+# Round 7 made every descriptor-bind failure the generic
+# `RP7_STOP reason=capture_stream_not_bindable`, which no row preregisters: row 22
+# declares `B6_STOP reason=listener_inventory_unreadable_or_unparseable rc=0
+# detail=capture_stream_unbound`, and the production capture exited before the row
+# adjudicator could ever emit it - the declared STOP was reachable only from a stub
+# (Codex round-7 part B finding 4). The declaration is consumed by exactly the next
+# capture and cleared at its entry, so a capture nested inside a caller cannot
+# inherit another row's token; a caller that declares nothing keeps the fail-closed
+# generic STOP rather than broadening a row-specific inability.
+wpi_capture_bind_stop() {
+    WPI_CAP_BIND_PREFIX="$1"; WPI_CAP_BIND_REASON="$2"
+}
+
 wpi_capture() {
     local label="$1"; shift
-    local start end rc=0 ofd efd brc=0
+    local start end rc=0 ofd efd brc=0 erc=0
+    local bind_prefix="$WPI_CAP_BIND_PREFIX" bind_reason="$WPI_CAP_BIND_REASON"
+    WPI_CAP_BIND_PREFIX=""; WPI_CAP_BIND_REASON=""
     if [ -n "$WPI_CAP_OUT_FD" ]; then exec {WPI_CAP_OUT_FD}<&-; WPI_CAP_OUT_FD=""; fi
+    if [ -n "$WPI_CAP_ERR_FD" ]; then exec {WPI_CAP_ERR_FD}<&-; WPI_CAP_ERR_FD=""; fi
     WPI_PROBE_SEQ=$(( WPI_PROBE_SEQ + 1 ))
     WPI_CAP_OUT="$EV_DIR/ro.$(printf '%04d' "$WPI_PROBE_SEQ").$label.stdout"
     WPI_CAP_ERR="$EV_DIR/ro.$(printf '%04d' "$WPI_PROBE_SEQ").$label.stderr"
@@ -293,9 +326,17 @@ wpi_capture() {
     # is opened after the child exits, so the child never inherits it. It is
     # closed at the next capture, which is also why exactly one capture's
     # streams are bound at a time.
+    # BOTH streams are bound, not only stdout. The five in-band results are each
+    # conditioned on "the child emitted no diagnostics", and that claim is as
+    # much a child observation as the record itself: a reader that establishes
+    # it by re-opening the stderr leaf name establishes only that whatever the
+    # name resolved to at read time was empty.
     { exec {WPI_CAP_OUT_FD}</dev/fd/"$ofd"; } 2>&- || brc=$?
-    [ "$brc" -eq 0 ] && [ -n "$WPI_CAP_OUT_FD" ] \
-        || wpi_stop RP7 "capture_stream_not_bindable label=$label leaf=$WPI_CAP_OUT"
+    { exec {WPI_CAP_ERR_FD}</dev/fd/"$efd"; } 2>&- || erc=$?
+    if [ "$brc" -ne 0 ] || [ -z "$WPI_CAP_OUT_FD" ] || [ "$erc" -ne 0 ] || [ -z "$WPI_CAP_ERR_FD" ]; then
+        [ -z "$bind_prefix" ] || wpi_stop "$bind_prefix" "$bind_reason"
+        wpi_stop RP7 "capture_stream_not_bindable label=$label leaf=$WPI_CAP_OUT"
+    fi
     exec {ofd}>&-
     exec {efd}>&-
     wpi_clock_ms; end="$WPI_LINE"
@@ -336,28 +377,93 @@ wpi_require_empty_file() {
 # which no finding asks for.
 #
 # The source is already a regular create-once evidence leaf.
-wpi_single_record() {
-    local prefix="$1" reason="$2" file="$3" fd whole="" first="" extra="" rc=0 diag dfd
-    wpi_alloc_read_diag single_record; diag="$WPI_READ_DIAG"; dfd="$WPI_READ_DIAG_FD"
-    exec {fd}<"$file" || wpi_stop "$prefix" "$reason detail=open_failed source=$file"
+#
+# The grammar itself is in `wpi_read_record_from`, over an ALREADY OPEN
+# descriptor, because round 8 needs the identical grammar over two different
+# bindings and a second copy of it would be a second thing to keep in step.
+# `wpi_single_record` resolves a NAME and reads whatever that name resolves to;
+# `wpi_captured_record` reads the descriptor `wpi_capture` re-derived from its
+# own creating write descriptor. Which one a caller uses is the whole of finding
+# 2: the name-based reader is correct only where no row attributes the parsed
+# bytes to the child that produced them.
+#
+# `source=` is the leaf's NAME in every disposition below. It is a LOCATION, not
+# an identity claim, exactly as row 22's `evidence_file` is; for a descriptor
+# read the bytes adjudicated did not come through it.
+wpi_read_record_from() {
+    local prefix="$1" reason="$2" source="$3" fd="$4" diag="$5" dfd="$6"
+    local whole="" first="" extra="" rc=0
     IFS= read -r -d '' -u "$fd" whole 2>&"$dfd" || rc=$?
-    exec {fd}<&-; exec {dfd}>&-
-    wpi_require_empty_file "$prefix" "$reason detail=hard_read_error source=$file" "$diag"
-    [ "$rc" -ne 0 ] || wpi_stop "$prefix" "$reason detail=nul_byte_in_record source=$file"
-    [ -n "$whole" ] || wpi_stop "$prefix" "$reason detail=empty_or_read_error source=$file read_rc=$rc"
+    exec {dfd}>&-
+    wpi_require_empty_file "$prefix" "$reason detail=hard_read_error source=$source" "$diag"
+    [ "$rc" -ne 0 ] || wpi_stop "$prefix" "$reason detail=nul_byte_in_record source=$source"
+    [ -n "$whole" ] || wpi_stop "$prefix" "$reason detail=empty_or_read_error source=$source read_rc=$rc"
     case "$whole" in
         *$'\n'*) first="${whole%%$'\n'*}"; extra="${whole#*$'\n'}" ;;
-        *) wpi_stop "$prefix" "$reason detail=unterminated_final_record source=$file read_rc=$rc" ;;
+        *) wpi_stop "$prefix" "$reason detail=unterminated_final_record source=$source read_rc=$rc" ;;
     esac
     if [ -n "$extra" ]; then
         case "$extra" in
-            *$'\n'*) wpi_stop "$prefix" "$reason detail=multiple_records source=$file" ;;
-            *) wpi_stop "$prefix" "$reason detail=unterminated_extra_record source=$file" ;;
+            *$'\n'*) wpi_stop "$prefix" "$reason detail=multiple_records source=$source" ;;
+            *) wpi_stop "$prefix" "$reason detail=unterminated_extra_record source=$source" ;;
         esac
     fi
     [ $(( ${#first} + 1 )) -eq "${#whole}" ] \
-        || wpi_stop "$prefix" "$reason detail=record_bytes_unaccounted source=$file consumed=$(( ${#first} + 1 )) captured=${#whole}"
+        || wpi_stop "$prefix" "$reason detail=record_bytes_unaccounted source=$source consumed=$(( ${#first} + 1 )) captured=${#whole}"
     WPI_LINE="$first"
+}
+
+wpi_single_record() {
+    local prefix="$1" reason="$2" file="$3" fd
+    wpi_alloc_read_diag single_record
+    exec {fd}<"$file" || wpi_stop "$prefix" "$reason detail=open_failed source=$file"
+    wpi_read_record_from "$prefix" "$reason" "$file" "$fd" "$WPI_READ_DIAG" "$WPI_READ_DIAG_FD"
+    exec {fd}<&-
+}
+
+# Resolve one capture stream to the descriptor `wpi_capture` bound for it. The
+# descriptor is CONSUMED: it is closed and cleared here, so a second read of the
+# same stream is `detail=capture_stream_unbound` rather than a silent EOF that a
+# caller could mistake for an empty or absent record.
+wpi_captured_fd() {
+    local prefix="$1" reason="$2" stream="$3"
+    case "$stream" in
+        out) WPI_CAP_FD="$WPI_CAP_OUT_FD"; WPI_CAP_FD_SOURCE="$WPI_CAP_OUT" ;;
+        err) WPI_CAP_FD="$WPI_CAP_ERR_FD"; WPI_CAP_FD_SOURCE="$WPI_CAP_ERR" ;;
+        *) wpi_stop RP7 "capture_stream_unknown stream=$stream" ;;
+    esac
+    [ -n "$WPI_CAP_FD" ] || wpi_stop "$prefix" "$reason detail=capture_stream_unbound"
+}
+
+wpi_release_captured_fd() {
+    case "$1" in
+        out) exec {WPI_CAP_OUT_FD}<&-; WPI_CAP_OUT_FD="" ;;
+        err) exec {WPI_CAP_ERR_FD}<&-; WPI_CAP_ERR_FD="" ;;
+    esac
+}
+
+wpi_captured_record() {
+    local prefix="$1" reason="$2" stream="$3" fd source
+    wpi_captured_fd "$prefix" "$reason" "$stream"; fd="$WPI_CAP_FD"; source="$WPI_CAP_FD_SOURCE"
+    wpi_alloc_read_diag single_record
+    wpi_read_record_from "$prefix" "$reason" "$source" "$fd" "$WPI_READ_DIAG" "$WPI_READ_DIAG_FD"
+    wpi_release_captured_fd "$stream"
+}
+
+# "The child emitted nothing on this stream", established over the descriptor the
+# capture created rather than over the leaf name. `read -d ''` returns 0 only when
+# it found a NUL, so rc 0 means at least one byte was present even when the string
+# it produced is empty; both that case and a nonempty string are a nonempty stream.
+wpi_require_empty_captured() {
+    local prefix="$1" reason="$2" stream="$3" fd source whole="" rc=0 diag dfd
+    wpi_captured_fd "$prefix" "$reason" "$stream"; fd="$WPI_CAP_FD"; source="$WPI_CAP_FD_SOURCE"
+    wpi_alloc_read_diag stream_empty; diag="$WPI_READ_DIAG"; dfd="$WPI_READ_DIAG_FD"
+    IFS= read -r -d '' -u "$fd" whole 2>&"$dfd" || rc=$?
+    exec {dfd}>&-
+    wpi_release_captured_fd "$stream"
+    wpi_require_empty_file "$prefix" "$reason detail=hard_read_error source=$source" "$diag"
+    [ "$rc" -ne 0 ] || wpi_stop "$prefix" "$reason detail=diagnostic_stream_nonempty diagnostic_file=$source"
+    [ -z "$whole" ] || wpi_stop "$prefix" "$reason detail=diagnostic_stream_nonempty diagnostic_file=$source"
 }
 
 # The third argument is the CALLER's row-specific inability-to-evaluate reason.
@@ -1156,14 +1262,16 @@ exec(compile(src,verifier,"exec"),{"__name__":"__main__","__file__":verifier})
 
 wpi_assert_netns_binding() {
     local caller service service_path="/proc/$WPI_MAINPID/ns/net"
+    wpi_capture_bind_stop B6 "service_netns_unreadable path=/proc/self/ns/net rc=0 detail=capture_stream_unbound"
     wpi_capture caller_netns "$WPI_READLINK" -- /proc/self/ns/net
     [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop B6 "service_netns_unreadable path=/proc/self/ns/net rc=$WPI_CAP_RC"
-    wpi_require_empty_file B6 "service_netns_unreadable path=/proc/self/ns/net rc=0" "$WPI_CAP_ERR"
-    wpi_single_record B6 "service_netns_unreadable path=/proc/self/ns/net rc=0" "$WPI_CAP_OUT"; caller="$WPI_LINE"
+    wpi_require_empty_captured B6 "service_netns_unreadable path=/proc/self/ns/net rc=0" err
+    wpi_captured_record B6 "service_netns_unreadable path=/proc/self/ns/net rc=0" out; caller="$WPI_LINE"
+    wpi_capture_bind_stop B6 "service_netns_unreadable path=$service_path rc=0 detail=capture_stream_unbound"
     wpi_capture service_netns "$WPI_READLINK" -- "$service_path"
     [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop B6 "service_netns_unreadable path=$service_path rc=$WPI_CAP_RC"
-    wpi_require_empty_file B6 "service_netns_unreadable path=$service_path rc=0" "$WPI_CAP_ERR"
-    wpi_single_record B6 "service_netns_unreadable path=$service_path rc=0" "$WPI_CAP_OUT"; service="$WPI_LINE"
+    wpi_require_empty_captured B6 "service_netns_unreadable path=$service_path rc=0" err
+    wpi_captured_record B6 "service_netns_unreadable path=$service_path rc=0" out; service="$WPI_LINE"
     [[ "$caller" =~ ^net:\[[0-9]+\]$ ]] || wpi_stop B6 "service_netns_unreadable path=/proc/self/ns/net rc=0 detail=identity_grammar"
     [[ "$service" =~ ^net:\[[0-9]+\]$ ]] || wpi_stop B6 "service_netns_unreadable path=$service_path rc=0 detail=identity_grammar"
     [ "$caller" = "$service" ] || wpi_stop B6 "netns_mismatch caller=$caller service=$service"
@@ -1276,9 +1384,10 @@ wpi_assert_listener_set() {
     local fd rc=0 count=0 total=0 consumed=0 whole="" rest="" line
     local state recvq sendq localaddr peer addr port diag dfd
     local port_rows=0 wildcard_seen=no wildcard_addr="" unexpected_seen=no
+    wpi_capture_bind_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=capture_stream_unbound"
     wpi_capture listeners "$WPI_SS" -H -ltn
     [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=$WPI_CAP_RC detail=ss_failed"
-    wpi_require_empty_file B6 "listener_inventory_unreadable_or_unparseable rc=0" "$WPI_CAP_ERR"
+    wpi_require_empty_captured B6 "listener_inventory_unreadable_or_unparseable rc=0" err
     wpi_alloc_read_diag listener_rows; diag="$WPI_READ_DIAG"; dfd="$WPI_READ_DIAG_FD"
     # Phase 0, and it is the reason this reader was rewritten. `IFS= read -r line`
     # silently DISCARDS NUL bytes, so the record `LIS<NUL>TEN ...` was consumed as
@@ -1299,9 +1408,19 @@ wpi_assert_listener_set() {
     # fixture swapped a wildcard capture for a loopback one and this row PASSed
     # (Codex round-6 part B finding 3). The read is therefore bound to the
     # descriptor `wpi_capture` re-derived from its own creating write
-    # descriptor, which resolved no name after the child ran. This is the one
-    # reader whose bytes row 22 claims identity for, which is why it is the one
-    # reader bound this way.
+    # descriptor, which resolved no name after the child ran. Round 7 bound this
+    # reader and left the status and namespace readers on the name, and the same
+    # substitution then flipped an HTTP 500 to an accepting 200 and two unequal
+    # namespaces to an equal pair (Codex round-7 part B finding 2); as of round 8
+    # every in-band capture read is bound this way, and the inventory reader is
+    # simply the one that also has to account for its bytes.
+    #
+    # `wpi_captured_fd` is not used for the multi-record inventory only because
+    # this reader owns the descriptor for the whole parse loop and reports the
+    # byte count it consumed; the unbound disposition below is the same token
+    # `wpi_captured_fd` emits, and `wpi_capture_bind_stop` above makes a
+    # production bind inability reach exactly this token rather than the generic
+    # `RP7_STOP` (Codex round-7 part B finding 4).
     fd="$WPI_CAP_OUT_FD"
     [ -n "$fd" ] || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=capture_stream_unbound"
     IFS= read -r -d '' -u "$fd" whole 2>&"$dfd" || rc=$?
@@ -1373,11 +1492,12 @@ wpi_status_expected_type() {
 wpi_assert_status() {
     local body="$EV_DIR/ro.status.body" code_file json_out json_err record
     wpi_alloc_leaf "$body"
+    wpi_capture_bind_stop B5 "status_endpoint_not_evaluable rc=0 detail=capture_stream_unbound"
     wpi_capture status_get "$WPI_CURL" --silent --show-error --connect-timeout 5 --max-time 10 \
         --request GET --output "$body" --write-out '%{http_code}\n' -- "$WPI_CONTROL_ENDPOINT"
     [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop B5 "status_endpoint_not_evaluable rc=$WPI_CAP_RC detail=transport_error diagnostic_file=$WPI_CAP_ERR"
-    wpi_require_empty_file B5 "status_endpoint_not_evaluable rc=0" "$WPI_CAP_ERR"
-    wpi_single_record B5 "status_endpoint_not_evaluable rc=0" "$WPI_CAP_OUT"
+    wpi_require_empty_captured B5 "status_endpoint_not_evaluable rc=0" err
+    wpi_captured_record B5 "status_endpoint_not_evaluable rc=0" out
     # Round 5 read every three-digit string as a completed HTTP response, so
     # curl's no-response sentinel `000` and the out-of-range `600` were both
     # reported as observed endpoint deviations at rc 1 (Codex round-5 part B
@@ -1398,6 +1518,7 @@ wpi_assert_status() {
     # single executable line in that venv's site-packages/*.pth could print exactly
     # `OK fields=8` and exit 0 before this source was compiled. The guard below makes
     # the isolation a checked precondition of the parse rather than a claim.
+    wpi_capture_bind_stop B5 "status_body_unreadable_or_unparseable detail=capture_stream_unbound"
     wpi_capture status_json "$WPI_PYTHON3" -I -S -c '
 import hashlib,json,sys
 if not (sys.flags.isolated and sys.flags.no_site): print("PARSE startup_not_isolated"); sys.exit(3)
@@ -1427,8 +1548,8 @@ try:
 except (OSError,UnicodeError,json.JSONDecodeError,Dup,ValueError,IndexError) as e:
  print("PARSE "+type(e).__name__); sys.exit(3)
 ' "$body" "$WPI_STATUS_SCHEMA"
-    wpi_require_empty_file B5 "status_body_unreadable_or_unparseable detail=parser_stderr" "$WPI_CAP_ERR"
-    wpi_single_record B5 "status_body_unreadable_or_unparseable" "$WPI_CAP_OUT"
+    wpi_require_empty_captured B5 "status_body_unreadable_or_unparseable detail=parser_stderr" err
+    wpi_captured_record B5 "status_body_unreadable_or_unparseable" out
     record="$WPI_LINE"
     # Every result record is reconstructed from its own tokens and compared to the
     # bytes the child actually emitted, so a record is admitted only in the exact

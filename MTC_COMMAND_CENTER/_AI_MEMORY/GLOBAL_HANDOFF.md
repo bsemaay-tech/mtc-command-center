@@ -1,5 +1,34 @@
 # GLOBAL_HANDOFF
 
+## [Claude] 2026-08-11 — RP6-P0 round 9 (9b): grammar-drift second emit site closed
+
+Narrow T0 implementer round, picks up the 9a fragment (`ab53a012`, which closed the
+generic in-loop `input_pin_freeze_unfilled` site and got all eight fences green on
+`e7ca9ff1…`). 9a left the second emit site, the emit-site sweep, and the report/QA/
+status layer open; 9b closes all three. No host, no network, no commit.
+
+- **The repair.** The post-loop python3-binding backstop (block `:668`) emitted an
+  undeclared second shape of `input_pin_freeze_unfilled`
+  (`detail=trusted_python_pin_omitted_freeze_gate_load_bearing`, a round-5 relic).
+  Round 7's correction-7 omission loop (`:632-637`) already detects a missing pin
+  (python3 included) with the **declared** `input_pin_omitted` token and fires
+  first, making the post-loop gate unreachable — which is why the relic survived
+  three reviews. The backstop now emits the declared `input_pin_omitted
+  tool=python3 detail=every_preregistered_tool_requires_one_frozen_pin`, matching
+  the omission loop verbatim. `input_pin_freeze_unfilled` now has exactly one
+  declared shape at one live site. F1 comment rewritten to match. No control-flow/
+  variable/structural change; **no draft byte touched.**
+- **Adjudication.** Distinct conditions, but the second site's condition is already
+  declared under `input_pin_omitted` — so NOT "declare a second form" (redundant +
+  unreachable → unprovable per D026) and NOT "emit the :616 line" (would be a lie).
+  Full reasoning + 174-site sweep table in `11_TRIAGE/WPI_BLOCKS_DRAFT/RP6_REPAIR_R9_REPORT.md`.
+- **Artefact:** `RP6-P0.sh` `08e0a93562bb04f4f78bac77d973a26da5b609aa305491d3bfa51743adbcf10c`,
+  104683 B, 0 CR bytes (was `e7ca9ff1…` 103808 B). `bash -n` + the new `R9_GRAMMAR`
+  harness (GREEN/RED falsifiable) + the eight 9a fences are **PENDING-LEAD-EXECUTION**
+  (session gates `bash`). Status layer updated in
+  `WPI_BLOCKS_DRAFT/STATUS_RP6_P0.md`; harness in `SELF_QA_RP6.md` §R9. Next: Lead
+  runs the fences, then Codex (`gpt-5.6-sol` xhigh) T0 re-audit of `08e0a935…`.
+
 ## [Claude Fable 5] 2026-08-10 DAY — WP-I run-kit built; venv site-startup hole found and closed in both blocks
 
 **Fresh-session handoff: `11_TRIAGE/NEW_SESSION_KICKOFF_2026-08-10_EVENING.md` (self-contained).**
