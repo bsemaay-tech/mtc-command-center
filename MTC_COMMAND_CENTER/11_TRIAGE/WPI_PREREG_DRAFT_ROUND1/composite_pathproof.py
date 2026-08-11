@@ -92,6 +92,48 @@ EXEC_COMMAND_RE = re.compile(
 )
 # Mirrors pathscope_prover.ASSIGN_RE over a stripped, non-comment, non-empty line.
 CONSTANT_ASSIGN_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)=(.*)$", re.S)
+SHELL_ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*\+?=")
+
+# --- independent command-word detection (round-4 R3-F1) ----------------------
+# SOURCE_COMMAND_RE / EXEC_COMMAND_RE above are the *derivation* grammar: what the
+# composite can turn into an edge.  The three sets below are the *detection*
+# vocabulary, and detection is deliberately strictly broader than derivation.  A
+# command word this vocabulary recognises but the derivation grammar did not match
+# is a STOP, never a silent absence.  Round 3 counted coverage with a second regex
+# built from the same narrow grammar as the matcher, so any form invisible to the
+# matcher was equally invisible to its own coverage check (defect patterns 5/12).
+GRAPH_SOURCE_WORDS = frozenset({"source", "."})
+GRAPH_INTERPRETER_WORDS = frozenset(
+    {
+        "sh", "bash", "rbash", "dash", "ash", "ksh", "ksh88", "ksh93", "mksh",
+        "pdksh", "posh", "yash", "zsh", "csh", "tcsh", "fish", "busybox",
+        "python", "python2", "python3", "perl", "ruby", "node", "nodejs",
+        "php", "lua", "tclsh", "wish", "expect", "awk", "gawk", "mawk", "nawk",
+    }
+)
+GRAPH_INTERPRETER_VERSION_RE = re.compile(
+    r"^(?:python|perl|ruby|node|php|lua|tclsh)\d+(?:\.\d+)*$"
+)
+# Words that run a command supplied as one of their own operands.  The composite
+# does not model any of them, so their mere presence at a command position is a STOP.
+GRAPH_WRAPPER_WORDS = frozenset(
+    {
+        "command", "builtin", "exec", "eval", "alias", "unalias", "trap", "env",
+        "nohup", "nice", "ionice", "setsid", "stdbuf", "time", "timeout", "xargs",
+        "sudo", "doas", "su", "runuser", "chroot", "unbuffer", "flock", "watch",
+        "script", "parallel", "find",
+    }
+)
+# Reserved words that end one command and re-open a command position on the same
+# line.  They are not commands themselves, so they are not classified; what matters
+# is that the word after them is still scanned as a command word.
+SHELL_CONTROL_WORDS = frozenset(
+    {
+        "if", "then", "elif", "else", "fi", "while", "until", "do", "done",
+        "case", "esac", "in", "for", "select", "function", "coproc",
+        "{", "}", "!", "[[", "]]",
+    }
+)
 
 ALLOCATE_CLAIMS = (
     ("A1", "plan_contract", "closed_schema_and_allocate_order"),
@@ -137,7 +179,12 @@ FREEZE_CLAIMS = (
     (
         "F10",
         "allocation_constants_reconciliation",
-        "plan_allocations_and_pinned_constants_are_one_conserved_value_universe",
+        # Narrowed in round 4 to exactly what the predicate proves: every declared
+        # allocation is byte-equal to a pinned constant, and every pinned constant is
+        # either reconciled or explicitly carried as a runtime-only disclosure.  The
+        # round-3 wording claimed one conserved universe while a plan-only allocation
+        # could have no constants-side disposition at all.
+        "every_plan_allocation_reconciled_and_every_pinned_constant_dispositioned",
     ),
 )
 
@@ -267,6 +314,36 @@ class ConstantBinding:
     value: str | None
     disposition: str = "UNRESOLVED"
     reason: str = "unreconciled"
+
+
+@dataclasses.dataclass
+class AllocationBinding:
+    """One terminal constants-side disposition for one declared plan allocation.
+
+    Round 3 created rows only while walking the constants table, so a plan
+    allocation the table never mentions had no row and no F10 failure while F10
+    still claimed the two inputs were one conserved universe (defect patterns 9/13).
+    """
+
+    index: int
+    name: str
+    value: str
+    disposition: str = "UNRESOLVED"
+    reason: str = "unreconciled"
+
+
+@dataclasses.dataclass(frozen=True)
+class ShellWord:
+    """One unquoted, comment-free word of a rendered shell member.
+
+    `command_position` is True when the shell would look this word up as a command
+    name: at the start of a line or list, after a separator or a reserved word, and
+    after any run of variable assignments.
+    """
+
+    offset: int
+    text: str
+    command_position: bool
 
 
 @dataclasses.dataclass(frozen=True)
@@ -1015,15 +1092,42 @@ def _parse_constants(data: bytes) -> tuple[tuple["ConstantBinding", ...], str | 
     return tuple(bindings), None
 
 
+def _allocation_rows(composite: Composite, disposition: str, reason: str) -> tuple[AllocationBinding, ...]:
+    """One terminal row per declared allocation for a whole-table refusal."""
+
+    return tuple(
+        AllocationBinding(index, allocation.name, allocation.value, disposition, reason)
+        for index, allocation in enumerate(composite.allocations)
+    )
+
+
+# An allocation the constants table never mentions is a conservation defect in F10's
+# own domain, but it corrupts no value the prover re-resolves, and the analysis-unit
+# builder independently refuses any operand it cannot resolve from the pinned table.
+# Every other reason means the table itself is unusable, so the prover is not invoked.
+NON_BLOCKING_RECONCILIATION_REASONS = frozenset({"allocation_absent_from_pinned_constants"})
+
+
 def _reconcile_constants(
     composite: Composite, data: bytes
-) -> tuple[dict[str, str] | None, tuple["ConstantBinding", ...], tuple[str, ...]]:
+) -> tuple[
+    dict[str, str] | None,
+    tuple["ConstantBinding", ...],
+    tuple["AllocationBinding", ...],
+    tuple[str, ...],
+]:
     """Reconcile the plan allocations against the pinned constants table.
 
     The plan allocations decide which member a source operand binds to; the prover
     re-resolves the same names from `constants.env`.  Those are two sources for one
     value universe, so every name they share must be byte-equal or the composite STOPs
     before the prover is invoked.
+
+    Both directions are walked and both produce terminal rows.  Round 3 walked the
+    constants table only, so a plan allocation the table never mentions produced no
+    row and no F10 failure while F10 still claimed the two inputs were one conserved
+    universe.  Every declared allocation now gets exactly one disposition, and an
+    absent one is a STOP rather than an absence.
     """
 
     bindings, fatal = _parse_constants(data)
@@ -1054,13 +1158,196 @@ def _reconcile_constants(
             binding.reason = "allocation_and_constants_byte_equal"
             continue
         reasons.append(binding.reason)
-    if reasons:
-        return None, bindings, tuple(sorted(set(reasons)))
+
+    constants_by_name = {binding.name: binding for binding in bindings}
+    allocation_bindings: list[AllocationBinding] = []
+    for index, allocation in enumerate(composite.allocations):
+        binding = constants_by_name.get(allocation.name)
+        if allocation_counts[allocation.name] != 1:
+            disposition, reason = "STOP", "allocation_duplicate_blocks_reconciliation"
+        elif fatal is not None:
+            # The table was refused before this name could be reached, so the
+            # allocation has no honest constants-side disposition.
+            disposition, reason = "STOP", "constants_grammar_not_closed_for_allocation"
+        elif binding is None:
+            disposition, reason = "STOP", "allocation_absent_from_pinned_constants"
+        elif binding.value is None:
+            disposition, reason = "STOP", "constants_value_not_literal"
+        elif binding.value != allocation.value:
+            disposition, reason = "STOP", "allocation_constants_value_divergence"
+        else:
+            disposition, reason = "RECONCILED", "allocation_and_constants_byte_equal"
+        allocation_bindings.append(
+            AllocationBinding(index, allocation.name, allocation.value, disposition, reason)
+        )
+        if disposition == "STOP":
+            reasons.append(reason)
+
+    unique_reasons = tuple(sorted(set(reasons)))
+    if set(unique_reasons) - NON_BLOCKING_RECONCILIATION_REASONS:
+        return None, bindings, tuple(allocation_bindings), unique_reasons
     return (
         {binding.name: binding.value for binding in bindings if binding.value is not None},
         bindings,
-        tuple(),
+        tuple(allocation_bindings),
+        unique_reasons,
     )
+
+
+def _shell_words(text: str) -> tuple[tuple[ShellWord, ...] | None, str | None]:
+    """Split rendered shell bytes into words, marking every command position.
+
+    This scanner shares no expression with SOURCE_COMMAND_RE or EXEC_COMMAND_RE.  It
+    is the independent side of the coverage check required after round 3: the
+    matcher says which command words became edges, this says which command words
+    exist at all, and `_derive_graph` STOPs on the difference.
+
+    It runs only over text `_graph_opaque_reason` already accepted, so here-documents,
+    line continuations, substitutions and multi-line quotes are gone before it starts.
+    """
+
+    words: list[ShellWord] = []
+    index = 0
+    length = len(text)
+    command_position = True
+    redirect_target_pending = False
+    while index < length:
+        character = text[index]
+        if character in " \t":
+            index += 1
+            continue
+        if character in "\r\n":
+            command_position = True
+            redirect_target_pending = False
+            index += 1
+            continue
+        if character == "#":
+            while index < length and text[index] != "\n":
+                index += 1
+            continue
+        if character in ";&|":
+            while index < length and text[index] in ";&|":
+                index += 1
+            command_position = True
+            redirect_target_pending = False
+            continue
+        if character in "()":
+            index += 1
+            command_position = True
+            redirect_target_pending = False
+            continue
+        if character in "<>":
+            # A redirection consumes its target word without opening or closing a
+            # command position, so `> out bash evil.sh` still scans `bash`.
+            while index < length and text[index] in "<>&|":
+                index += 1
+            redirect_target_pending = True
+            continue
+        start = index
+        quote: str | None = None
+        while index < length:
+            current = text[index]
+            if quote is None:
+                if current in " \t\r\n;&|()<>":
+                    break
+                if current == "\\":
+                    index += 2
+                    continue
+                if current in "'\"":
+                    quote = current
+                index += 1
+                continue
+            if quote == "'":
+                if current == "'":
+                    quote = None
+                index += 1
+                continue
+            if current == "\\":
+                index += 2
+                continue
+            if current == '"':
+                quote = None
+            index += 1
+        if quote is not None:
+            return None, "source_graph_unterminated_quote"
+        raw = text[start:min(index, length)]
+        if not raw:
+            return None, "source_graph_word_scan_not_progressing"
+        if redirect_target_pending:
+            redirect_target_pending = False
+            continue
+        if raw.isdigit() and index < length and text[index] in "<>":
+            # `2>` — the file descriptor belongs to the redirection, not to argv.
+            continue
+        words.append(ShellWord(start, raw, command_position))
+        # Assignment prefixes, reserved words and command wrappers all leave the
+        # command position open, so `A=1 env bash x` scans `bash` as a command word
+        # too and reports every unmodelled layer rather than only the outermost one.
+        if _command_word_class(raw) not in {"assignment", "control", "wrapper"}:
+            command_position = False
+    return tuple(words), None
+
+
+def _command_word_class(raw: str) -> str:
+    """Classify one command-position word without consulting the edge matcher."""
+
+    if SHELL_ASSIGNMENT_RE.match(raw):
+        return "assignment"
+    literal = _literal_shell_word(raw)
+    if literal is None:
+        return "dynamic"
+    if literal in SHELL_CONTROL_WORDS:
+        return "control"
+    name = posixpath.basename(literal) if literal.startswith("/") else literal
+    if name in GRAPH_SOURCE_WORDS:
+        return "graph"
+    if name in GRAPH_INTERPRETER_WORDS or GRAPH_INTERPRETER_VERSION_RE.fullmatch(name):
+        return "graph"
+    if name in GRAPH_WRAPPER_WORDS:
+        return "wrapper"
+    return "leaf"
+
+
+def _graph_word_conservation(
+    text: str, source_matches: list[re.Match[str]], exec_matches: list[re.Match[str]]
+) -> tuple[str, ...]:
+    """Reconcile scanned command words against the edges the matcher derived.
+
+    Returns every reason the two sides disagree.  Detection is broader than
+    derivation on purpose, so `zsh script`, `command source lib`, `\\source lib`,
+    `if source lib; then` and every other unmodelled command form reach a STOP
+    instead of leaving the graph silently short an edge.
+    """
+
+    words, scan_reason = _shell_words(text)
+    if words is None:
+        return (scan_reason,) if scan_reason is not None else ("source_graph_word_scan_failed",)
+    reasons: list[str] = []
+    matched_commands = {match.start(1) for match in source_matches} | {
+        match.start(1) for match in exec_matches
+    }
+    matched_operands = {match.start(2) for match in source_matches} | {
+        match.start(2) for match in exec_matches
+    }
+    command_offsets = {word.offset for word in words if word.command_position}
+    word_offsets = {word.offset for word in words}
+    for word in words:
+        if not word.command_position:
+            continue
+        word_class = _command_word_class(word.text)
+        if word_class == "graph" and word.offset not in matched_commands:
+            reasons.append("source_graph_command_word_not_modeled")
+        elif word_class == "wrapper":
+            reasons.append("source_graph_command_wrapper_not_modeled")
+        elif word_class == "dynamic":
+            reasons.append("source_graph_dynamic_command_not_modeled")
+    # The matcher must never claim an edge from something the scanner does not see
+    # as a command word, nor bind an operand that is not a whole word.
+    if matched_commands - command_offsets:
+        reasons.append("source_graph_derived_edge_not_at_command_word")
+    if matched_operands - word_offsets:
+        reasons.append("source_graph_derived_operand_not_a_shell_word")
+    return tuple(sorted(set(reasons)))
 
 
 def _graph_opaque_reason(text: str) -> str | None:
@@ -1180,6 +1467,15 @@ def _derive_graph(
             derivation_blocked = True
 
         source_matches = list(SOURCE_COMMAND_RE.finditer(text))
+        exec_matches = list(EXEC_COMMAND_RE.finditer(text))
+        if opaque_reason is None:
+            # Coverage is decided by the independent word scanner, not by a second
+            # copy of the matcher's own grammar.  Opaque text has already STOPped and
+            # cannot be tokenised line-wise, so it is not scanned twice.
+            for reason in _graph_word_conservation(text, source_matches, exec_matches):
+                recorder.record(claim_id, Verdict.STOP, reason)
+                derivation_blocked = True
+
         source_sites = re.findall(r"(?:^|[;|&()])\s*(?:source\b|\.(?=\s))", text, re.MULTILINE)
         if len(source_matches) != len(source_sites):
             recorder.record(claim_id, Verdict.STOP, "source_syntax_not_covered")
@@ -1221,7 +1517,6 @@ def _derive_graph(
                 reason="rendered_source_site",
             )
 
-        exec_matches = list(EXEC_COMMAND_RE.finditer(text))
         exec_sites = re.findall(
             r"(?:^|[;|&()])\s*(?:(?:/[^\s;|&()]+/)?(?:bash|sh|python(?:3(?:\.\d+)?)?))\b",
             text,
@@ -1325,6 +1620,12 @@ def _derive_graph(
             graph_valid = False
     else:
         recorder.record(claim_id, Verdict.STOP if derivation_blocked else Verdict.FAIL, "derived_graph_not_traversable")
+
+    if derivation_blocked:
+        # "every derived operand equals one declared deployed path" must not PASS over
+        # a domain the derivation never closed.  The round-3 wrapper blind spot left
+        # R7/F9 green precisely because no operand was derived at all (pattern 9).
+        recorder.record(identity_claim, Verdict.STOP, "deployed_identity_domain_not_derived")
 
     for member in composite.members:
         if derivation_blocked:
@@ -1970,10 +2271,16 @@ def run_freeze(plan: Plan, plan_path: Path, recorder: Recorder, path_prover: Pat
         constants_map: dict[str, str] | None = None
         constant_bindings: tuple[ConstantBinding, ...] = tuple()
         reconciliation_reasons: tuple[str, ...] = ("constants_input_not_pinned",)
+        allocation_bindings: tuple[AllocationBinding, ...] = _allocation_rows(
+            composite, "STOP", "constants_input_not_pinned"
+        )
         if proof_input_verdicts.get("constants") is Verdict.PASS and "constants" in proof_snapshots:
-            constants_map, constant_bindings, reconciliation_reasons = _reconcile_constants(
-                composite, proof_snapshots["constants"]
-            )
+            (
+                constants_map,
+                constant_bindings,
+                allocation_bindings,
+                reconciliation_reasons,
+            ) = _reconcile_constants(composite, proof_snapshots["constants"])
         for reason in reconciliation_reasons:
             recorder.record("F10", Verdict.STOP, reason)
         for index, binding in enumerate(constant_bindings):
@@ -1984,6 +2291,16 @@ def run_freeze(plan: Plan, plan_path: Path, recorder: Recorder, path_prover: Pat
                 line=binding.line,
                 name=binding.name,
                 value=binding.value if binding.value is not None else "-",
+                disposition=binding.disposition,
+                reason=binding.reason,
+            )
+        for binding in allocation_bindings:
+            recorder.add_row(
+                "ALLOCATION_RECONCILIATION",
+                composite=composite.composite_id,
+                index=binding.index,
+                name=binding.name,
+                value=binding.value,
                 disposition=binding.disposition,
                 reason=binding.reason,
             )
@@ -2000,9 +2317,16 @@ def run_freeze(plan: Plan, plan_path: Path, recorder: Recorder, path_prover: Pat
             plan_allocations=len(composite.allocations),
             parsed_bindings=len(constant_bindings),
             terminal_constant_rows=len(constant_bindings),
+            terminal_allocation_rows=len(allocation_bindings),
             reconciled=sum(1 for item in constant_bindings if item.disposition == "RECONCILED"),
             runtime_only=sum(1 for item in constant_bindings if item.disposition == "RUNTIME_ONLY"),
             stopped=sum(1 for item in constant_bindings if item.disposition == "STOP"),
+            allocations_reconciled=sum(
+                1 for item in allocation_bindings if item.disposition == "RECONCILED"
+            ),
+            allocations_stopped=sum(
+                1 for item in allocation_bindings if item.disposition == "STOP"
+            ),
         )
 
         invocable = (
@@ -2138,6 +2462,8 @@ def run_freeze(plan: Plan, plan_path: Path, recorder: Recorder, path_prover: Pat
             input_members=len(composite.members),
             member_pins=len(proof.member_pins),
             terminal_member_pin_rows=terminal_pin_rows,
+            input_allocations=len(composite.allocations),
+            terminal_allocation_rows=len(allocation_bindings),
             terminal_constant_rows=len(constant_bindings),
             prover_member_results=len(result.member_results),
             terminal_member_rows=terminal_rows,
