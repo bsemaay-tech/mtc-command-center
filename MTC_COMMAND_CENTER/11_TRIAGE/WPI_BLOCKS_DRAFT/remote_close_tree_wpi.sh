@@ -1,7 +1,8 @@
 # WP-I Stage 2 - closed evidence-tree hashing, remote side (PREREGISTERED).
 #
-# Transport ops 07 and 08. Delivered on ssh stdin to the pinned remote launch
-# domain frozen in `transport_runner.ps1` and carried verbatim by the plan:
+# Transport ops 07 and 08. Delivered on ssh stdin to the frozen remote launch
+# domain, which `transport_runner.ps1` holds as a constant and every plan row
+# must carry verbatim:
 #   /usr/bin/env -i PATH=/usr/bin:/bin LC_ALL=C HOME=/home/gatea \
 #     /usr/bin/bash --noprofile --norc -s -- <EV_DIR> <RUNID> <WORK_ROOT>
 #
@@ -28,8 +29,8 @@
 #     directory; Permission denied` diagnostic became `CLOSE_FAIL reason=
 #     evidence_dir_absent` at rc 1 - a completed observation of missing evidence
 #     manufactured out of an inability to evaluate. The absence sentence this
-#     pinned `stat` emits is now calibrated ONCE in this run under an already
-#     bound parent and every later classification must match that template as a
+#     pinned `stat` emits is now calibrated ONCE in this run, under an already
+#     bound parent, and every later classification must match that template as a
 #     WHOLE string, corroborated by the kernel reporting neither object nor
 #     link. Multiline, mixed, wrapped or unrecognised diagnostics STOP.
 #     Directory identity is compared NUMERICALLY (`%u:%g`) against the
@@ -37,25 +38,38 @@
 #     diagnostic only: a resolver-rendered name is not an identity (Pattern 8).
 #
 #   class 5 - LAUNCH-DOMAIN ATTESTATION (Codex final audit F1). Before any
-#     external program runs, and using shell builtins only, the script attests
-#     that it is running under the pinned absolute interpreter, that the
-#     environment is the explicitly constructed one and nothing else, that
-#     BASH_ENV/ENV are unset, that no shell function was inherited, and that no
-#     TMPDIR was inherited. Under the accepted bytes a `bash` first on PATH, or
-#     an inherited BASH_ENV, ran a plant that ignored the delivered script and
-#     forged its rc/marker pair.
+#     external program runs, and using shell builtins and one /proc read only,
+#     the script attests that it is running under the pinned absolute
+#     interpreter, that the exec environment is EXACTLY the three constructed
+#     entries and nothing else - so BASH_ENV, ENV, LD_PRELOAD, an exported
+#     shell function and an inherited TMPDIR are all refused by name - and that
+#     no shell function was inherited by any other route. Under the accepted
+#     bytes a `bash` first on PATH, or an inherited BASH_ENV, ran a plant that
+#     ignored the delivered script and forged its rc/marker pair.
 #
 #   class 6 - RUN-OWNED SCRATCH (Codex final audit F2). The accepted original
 #     called `mktemp`, which honours an inherited TMPDIR: with TMPDIR set to the
 #     evidence directory the script created and hashed its own files inside the
 #     tree it was measuring while printing `wrote_into_evidence_tree=0`. There is
 #     now no `mktemp` and no inherited scratch location at all. The script takes
-#     a WORK_ROOT argument, proves canonical non-overlap with the evidence tree
-#     BEFORE creating a create-once work directory under it, exports TMPDIR to
+#     a WORK_ROOT argument - allocated by op 01 as `<REMOTE_BASE>/work` and
+#     passed by the plan - proves canonical non-overlap with the evidence tree
+#     BEFORE creating a create-once work directory under it, points TMPDIR at
 #     that proven directory, and removes it on every exit path.
 #
 # Everything else - the RUNID and EV_DIR grammar, the two-pass digest stability
 # rule and the emitted record grammar - is the accepted logic unchanged.
+#
+# WHAT IS A HOST FINDING AND WHAT IS NOT. The three argv values are operator-side
+# composition inputs: this program cannot observe the host through them, so a
+# missing third argument, an argument-count disagreement, a RUNID outside the
+# safe-component grammar, or an EV_DIR whose basename disagrees with the RUNID is
+# an inability to evaluate (rc 3), never `CLOSE_FAIL`. The accepted original
+# returned rc 1 for those arms; under the round-3 runner that integer would have
+# been counted as a deviant HOST observation, which is exactly the class of
+# manufactured FAIL this round exists to remove. The state of the evidence tree
+# itself - absent, a symlink, wrong numeric owner or mode, non-regular entries,
+# empty, or not quiescent - remains a genuine completed observation at rc 1.
 #
 # SCOPE LIMIT, STATED RATHER THAN IMPLIED (Pattern 9). The pins bind a locator
 # and that object's metadata, NOT its bytes. Each admitted tool's SHA-256 is
@@ -66,12 +80,17 @@
 # covers `/usr/bin/bash` and `/usr/bin/env` too: the launch-domain attestation
 # establishes that THIS interpreter was reached by absolute path through a
 # constructed environment, not that its bytes are the ones a deploy channel
-# approved. Binding remote tool bytes requires a deploy-channel attestation and
-# is a successor preregistration item, not a claim this script makes.
+# approved. It also does not reach the remote login shell that sshd runs the
+# command string with: `env -i` clears what that shell exports, and the sweep
+# below refuses anything it added, but the login shell's own integrity is a
+# deploy-channel property. Binding remote tool bytes and that shell requires a
+# deploy-channel attestation and is a successor preregistration item, not a
+# claim this script makes.
 #
 # It is READ-ONLY with respect to the evidence tree, and after class 6 that
 # sentence is earned rather than asserted: the only directory this script
-# creates is proven, before creation, to be canonically disjoint from EV_DIR.
+# creates is proven, before creation and again on the object `mkdir` produced,
+# to be canonically disjoint from EV_DIR in both directions.
 #
 # No service, unit, credential, port, network, broker/exchange/order/TESTNET/
 # mainnet or economic action. No deletion, rename, truncation or chmod of any
@@ -81,52 +100,72 @@
 #              3 = STOP (could not evaluate -- never re-read as a binding).
 set -Eeuo pipefail
 
-# --- class 5: launch-domain attestation, shell builtins only -----------------
+# --- class 5: launch-domain attestation --------------------------------------
 # This block runs BEFORE the first external program, so a plant that replaced
 # the interpreter or injected a startup file is refused rather than measured.
 # A launch-domain violation is an inability to evaluate, never a host finding:
 # every arm here is rc 3.
 EXPECT_INTERPRETER='/usr/bin/bash'
-EXPECT_PATH='/usr/bin:/bin'
-EXPECT_LC_ALL='C'
+EXPECT_LAUNCH_PATH='/usr/bin:/bin'
+EXPECT_LAUNCH_LC_ALL='C'
+EXPECT_LAUNCH_HOME='/home/gatea'
+LD_ENVIRON='/proc/self/environ'
 
+# The inherited-function sweep runs BEFORE this script defines a function of its
+# own, so `declare -F` describes only what the launch domain delivered rather
+# than this program's own names. `declare -F` exits 1 when there is nothing to
+# list, which under `set -e` would end the run with no marker at all, so its
+# status is consumed deliberately and the emptiness is tested afterwards.
+LD_FUNCS="$(declare -F 2>/dev/null || :)"
+if [ -n "$LD_FUNCS" ]; then
+    printf 'CLOSE_STOP reason=launch_domain_inherited_shell_function detail=[%s]\n' "$LD_FUNCS" >&2
+    exit 3
+fi
+
+# MEASURED SCOPE LIMIT (round 4, recorded rather than implied). `bash` reads
+# `$BASH_ENV` before the first byte of a stdin-delivered script, and
+# `--norc`/`--noprofile` do not disable that channel, so a startup plant that
+# EXITS forges the record before anything here runs. No in-script attestation
+# can close that. It is closed on the operator side, by the frozen `env -i`
+# launch domain with an explicit complete variable list that
+# `transport_runner.ps1` enforces verbatim on every plan row, so no plan row can
+# introduce `BASH_ENV` at all - which is why the domain is stated on both sides.
+# A plant that lets the script RUN, the only kind that could forge a
+# real-looking record, is refused by the sweep below: `BASH_ENV` is still in the
+# exec environment the kernel recorded. Both cases are executed in self-QA.
 ld_stop() { printf 'CLOSE_STOP reason=%s\n' "$*" >&2; exit 3; }
 
 [ "${BASH:-}" = "$EXPECT_INTERPRETER" ] \
     || ld_stop "launch_domain_interpreter=${BASH:-unset} expected=$EXPECT_INTERPRETER"
-[ "${BASH_ENV+set}" != 'set' ] || ld_stop "launch_domain_bash_env_inherited"
-[ "${ENV+set}" != 'set' ]      || ld_stop "launch_domain_env_variable_inherited"
-[ "${TMPDIR+set}" != 'set' ]   || ld_stop "launch_domain_tmpdir_inherited"
-[ "${PATH:-}" = "$EXPECT_PATH" ] \
-    || ld_stop "launch_domain_path=${PATH:-unset} expected=$EXPECT_PATH"
-[ "${LC_ALL:-}" = "$EXPECT_LC_ALL" ] \
-    || ld_stop "launch_domain_lc_all=${LC_ALL:-unset} expected=$EXPECT_LC_ALL"
-[ -n "${HOME:-}" ] || ld_stop "launch_domain_home_absent"
-case "${HOME:-}" in /*) : ;; *) ld_stop "launch_domain_home_not_absolute value=${HOME:-}" ;; esac
+if shopt -q login_shell; then ld_stop "launch_domain_login_shell_startup_files_were_read"; fi
 
-# An exported shell function arrives as an ordinary environment entry, so the
-# name sweep below already refuses it; this refuses a function defined by any
-# other route as well. `declare -F` is a builtin and the command substitution is
-# a subshell of this same interpreter - no external program is involved.
-LD_FUNCS="$(declare -F)"
-[ -z "$LD_FUNCS" ] || ld_stop "launch_domain_inherited_shell_function"
-
-# The environment must be exactly the constructed set. Anything else - an
-# inherited LD_PRELOAD, a BASH_FUNC_x%% entry, a stray TMPDIR spelling - is a
-# name this sweep does not recognise, and it STOPs naming the offender.
-LD_SEEN_HOME=0; LD_SEEN_PATH=0; LD_SEEN_LC_ALL=0
-for LD_NAME in $(compgen -e); do
-    case "$LD_NAME" in
-        HOME)   LD_SEEN_HOME=1 ;;
-        PATH)   LD_SEEN_PATH=1 ;;
-        LC_ALL) LD_SEEN_LC_ALL=1 ;;
-        PWD|SHLVL|OLDPWD|_) : ;;
-        *) ld_stop "launch_domain_unexpected_environment_name=$LD_NAME" ;;
+# The exec environment is read from the kernel's own copy rather than from the
+# shell's exported-name list: `/proc/self/environ` is what `execve` received, so
+# names the shell adds for its children (PWD, SHLVL, _) cannot mask an entry the
+# launch domain actually delivered. Each expected entry is matched as a WHOLE
+# `name=value` string and must appear exactly once; anything else - BASH_ENV,
+# ENV, LD_PRELOAD, a BASH_FUNC_x%% exported function, a stray TMPDIR spelling -
+# is a name this sweep does not recognise, and it STOPs naming the offender.
+# The read is a redirection, not an external program.
+[ ! -L "$LD_ENVIRON" ] || ld_stop "launch_domain_environ_is_symlink path=$LD_ENVIRON"
+[ -r "$LD_ENVIRON" ]   || ld_stop "launch_domain_environ_unreadable path=$LD_ENVIRON"
+LD_SEEN_PATH=0; LD_SEEN_LC_ALL=0; LD_SEEN_HOME=0; LD_ENTRIES=0
+LD_ENTRY=''
+while IFS= read -r -d '' LD_ENTRY || [ -n "$LD_ENTRY" ]; do
+    [ -n "$LD_ENTRY" ] || continue
+    LD_ENTRIES=$((LD_ENTRIES + 1))
+    case "$LD_ENTRY" in
+        "PATH=$EXPECT_LAUNCH_PATH")     LD_SEEN_PATH=$((LD_SEEN_PATH + 1)) ;;
+        "LC_ALL=$EXPECT_LAUNCH_LC_ALL") LD_SEEN_LC_ALL=$((LD_SEEN_LC_ALL + 1)) ;;
+        "HOME=$EXPECT_LAUNCH_HOME")     LD_SEEN_HOME=$((LD_SEEN_HOME + 1)) ;;
+        *) ld_stop "launch_domain_unexpected_environment_entry name=[${LD_ENTRY%%=*}]" ;;
     esac
-done
-[ "$LD_SEEN_HOME" -eq 1 ]   || ld_stop "launch_domain_home_not_exported"
-[ "$LD_SEEN_PATH" -eq 1 ]   || ld_stop "launch_domain_path_not_exported"
-[ "$LD_SEEN_LC_ALL" -eq 1 ] || ld_stop "launch_domain_lc_all_not_exported"
+    LD_ENTRY=''
+done < "$LD_ENVIRON"
+[ "$LD_ENTRIES" -eq 3 ]     || ld_stop "launch_domain_environment_size=$LD_ENTRIES expected=3"
+[ "$LD_SEEN_PATH" -eq 1 ]   || ld_stop "launch_domain_path_entries=$LD_SEEN_PATH expected=1 value=$EXPECT_LAUNCH_PATH"
+[ "$LD_SEEN_LC_ALL" -eq 1 ] || ld_stop "launch_domain_lc_all_entries=$LD_SEEN_LC_ALL expected=1 value=$EXPECT_LAUNCH_LC_ALL"
+[ "$LD_SEEN_HOME" -eq 1 ]   || ld_stop "launch_domain_home_entries=$LD_SEEN_HOME expected=1 value=$EXPECT_LAUNCH_HOME"
 
 # --- preregistered identities ------------------------------------------------
 # Numeric, because a rendered owner name is a resolver answer and not an
@@ -139,7 +178,7 @@ fail() { printf 'CLOSE_FAIL reason=%s\n' "$*" >&2; exit 1; }
 stop() { printf 'CLOSE_STOP reason=%s\n' "$*" >&2; exit 3; }
 note() { printf 'CLOSE_NOTE %s\n' "$*"; }
 
-note "launch_domain interpreter=$BASH path=$PATH lc_all=$LC_ALL bash_env=unset env=unset tmpdir=unset inherited_functions=0 attestation=builtins_only"
+note "launch_domain interpreter=$BASH path=$PATH lc_all=$LC_ALL home=$HOME exec_environment_entries=$LD_ENTRIES inherited_functions=0 bash_env=absent env=absent tmpdir=absent attestation=builtins_and_proc_self_environ"
 
 # --- pinned program identities (derivation class 2) --------------------------
 # The absolute path IS the pin; the inherited PATH selects nothing. `stat` is
@@ -188,7 +227,7 @@ require_tool "$TOOL_MKDIR"
 require_tool "$TOOL_ENV"
 require_tool "$TOOL_BASH"
 
-# The attested interpreter must be the pinned object, not merely a path that
+# The attested interpreter must be the pinned OBJECT, not merely a path that
 # spells the same characters: `$BASH` was compared as a string above, and the
 # pin admitted `/usr/bin/bash` as a non-symlink root-owned regular file here.
 [ "$BASH" = "$TOOL_BASH" ] || stop "launch_domain_interpreter_outside_pinned_set value=$BASH"
@@ -211,7 +250,8 @@ for TOOL_PATH in "$TOOL_STAT" "$TOOL_SHA256SUM" "$TOOL_TR" "$TOOL_READLINK" \
 done
 note "tool_digest_limit no_frozen_remote_tool_digest_can_be_known_before_host_contact"
 
-[ "$#" -eq 3 ] || fail "usage remote_close_tree_wpi.sh <EV_DIR> <RUNID> <WORK_ROOT> argc=$#"
+# --- operator-supplied argv: an inability to evaluate, never a host finding ---
+[ "$#" -eq 3 ] || stop "argv_count=$# expected=3 usage=remote_close_tree_wpi.sh_EV_DIR_RUNID_WORK_ROOT detail=operator_side_composition_input_not_a_host_observation"
 EV_DIR="$1"
 RUNID="$2"
 WORK_ROOT="$3"
@@ -222,17 +262,19 @@ case "$EXPECT_UID" in ''|*[!0-9]*) stop "expect_uid_unfilled_or_not_numeric valu
 case "$EXPECT_GID" in ''|*[!0-9]*) stop "expect_gid_unfilled_or_not_numeric value=[$EXPECT_GID]" ;; esac
 
 # --- the run identifier must still be ONE safe path component ---------------
+# Grammar, not host state: the value arrives in argv from the plan.
 case "$RUNID" in
-    ""|"."|"..")       fail "runid_reserved value=[$RUNID]" ;;
-    -*)                fail "runid_leading_dash value=[$RUNID]" ;;
-    *[!A-Za-z0-9._-]*) fail "runid_charset value=[$RUNID]" ;;
+    ""|"."|"..")       stop "runid_reserved value=[$RUNID]" ;;
+    -*)                stop "runid_leading_dash value=[$RUNID]" ;;
+    *[!A-Za-z0-9._-]*) stop "runid_charset value=[$RUNID]" ;;
 esac
 
 # --- EV_DIR must be spelled as a direct child leaf named exactly RUNID -------
 # The binding is recorded against RUNID, so the directory being hashed must be
-# the one the run allocated, not a sibling that merely looks similar.
+# the one the run allocated, not a sibling that merely looks similar. Two argv
+# values disagreeing with each other is an operator-side composition error.
 EV_BASE="${EV_DIR##*/}"
-[ "$EV_BASE" = "$RUNID" ] || fail "evdir_basename=$EV_BASE runid=$RUNID"
+[ "$EV_BASE" = "$RUNID" ] || stop "evdir_basename=$EV_BASE runid=$RUNID detail=argv_values_disagree"
 
 # --- WORK_ROOT grammar, before anything is created under it -----------------
 case "$WORK_ROOT" in
@@ -257,7 +299,7 @@ WR_MODE="$(LC_ALL=C "$TOOL_STAT" -c '%a' -- "$WORK_ROOT")" || stop "work_root_mo
 [ "$WR_OWN_NUM" = "$EXPECT_UID:$EXPECT_GID" ] \
     || stop "work_root_owner_numeric=$WR_OWN_NUM expected=$EXPECT_UID:$EXPECT_GID rendered=$WR_OWN_NAME path=$WORK_ROOT"
 [ "$WR_MODE" = "$EXPECT_MODE" ] || stop "work_root_mode=$WR_MODE expected=$EXPECT_MODE path=$WORK_ROOT"
-note "work_root_ok path=$WORK_ROOT owner_numeric=$WR_OWN_NUM owner_rendered=$WR_OWN_NAME mode=$WR_MODE"
+note "work_root_ok path=$WORK_ROOT owner_numeric=$WR_OWN_NUM owner_rendered=$WR_OWN_NAME mode=$WR_MODE allocator=op_01_remote_setup_wpi.sh"
 
 # --- calibrate the absence diagnostic against the pinned tool itself --------
 # Class 3. Substring-matching `No such file or directory` is what let a mixed
@@ -282,7 +324,7 @@ calibrate_absence() {
     note "enoent_calibration rc=$rc template=$ENOENT_TEMPLATE"
 }
 
-calibrate_absence "$WORK_ROOT/.wpi_close_enoent_calibration_$RUNID"
+calibrate_absence "$WORK_ROOT_CANON/.wpi_close_enoent_calibration_$RUNID"
 
 # --- classify one path with the kernel, corroborated by the diagnostic -------
 # Three independent statements must agree before a probe is called absence:
@@ -359,8 +401,27 @@ WORK_KIND="$(probe_path "$WORK")" || exit $?
 MKDIR_OUT="$(LC_ALL=C "$TOOL_MKDIR" -m 0700 -- "$WORK" </dev/null 2>&1)" || stop "work_dir_mkdir_failed path=$WORK"
 [ -z "$MKDIR_OUT" ] || stop "work_dir_mkdir_diagnostics path=$WORK detail=$MKDIR_OUT"
 
-# From here on the work directory exists, so every exit path removes it.
-trap '[ -z "${WORK:-}" ] || "$TOOL_RM" -rf -- "$WORK" || :' EXIT
+# From here on the work directory exists, so every exit path removes it. The
+# removal's own status is adjudicated rather than ignored: a work directory that
+# could not be removed is residue this run created, and the operator record has
+# to carry that fact instead of the accepted original's silent `|| :`. It writes
+# nothing to stdout on success, because §7's record grammar admits `CLOSE_NOTE`
+# only before `CLOSE_BINDING` and this runs after the record has been emitted; a
+# removal that did not complete is a STOP on stderr, which the runner reads.
+close_work_cleanup() {
+    local rc="$1" target out='' crc=0
+    [ -n "${WORK:-}" ] || return "$rc"
+    target="$WORK"
+    WORK=''
+    out="$(LC_ALL=C "$TOOL_RM" -rf -- "$target" </dev/null 2>&1)" || crc=$?
+    if [ "$crc" -ne 0 ] || [ -n "$out" ] || [ -e "$target" ] || [ -L "$target" ]; then
+        printf 'CLOSE_STOP reason=work_dir_removal_failed path=%s rc=%s detail=[%s]\n' \
+            "$target" "$crc" "$out" >&2
+        exit 3
+    fi
+    return "$rc"
+}
+trap 'close_work_cleanup $?' EXIT
 
 [ ! -L "$WORK" ] || stop "work_dir_is_symlink path=$WORK"
 [ -d "$WORK" ]   || stop "work_dir_not_a_directory path=$WORK"
@@ -377,7 +438,7 @@ WORK_MODE="$(LC_ALL=C "$TOOL_STAT" -c '%a' -- "$WORK")" || stop "work_dir_mode_p
 # every scratch name below is composed explicitly - but any future child that
 # did would land in the proven directory rather than in an inherited location.
 export TMPDIR="$WORK"
-note "scratch work_dir=$WORK owner_numeric=$WORK_OWN_NUM mode=$WORK_MODE created=once tmpdir=run_owned canonical_non_overlap=proven_before_and_after_create removal=on_every_exit_path"
+note "scratch work_dir=$WORK owner_numeric=$WORK_OWN_NUM mode=$WORK_MODE created=once tmpdir=run_owned canonical_non_overlap=proven_before_and_after_create removal=adjudicated_on_every_exit_path"
 
 # --- the tree may contain ordinary directories and regular files only --------
 # A symlink inside the tree would make the digest set attest to bytes that live
@@ -452,6 +513,8 @@ printf 'CLOSE_SIZE_END runid=%s\n' "$RUNID"
 SET_SUM="$(LC_ALL=C "$TOOL_SHA256SUM" -- "$PASS1")" || stop "digest_set_hash_failed"
 printf 'CLOSE_DIGEST_SET_SHA256 runid=%s %s\n' "$RUNID" "${SET_SUM%% *}"
 
-"$TOOL_RM" -rf -- "$WORK"
+# The PASS line's field list is the operator-side record grammar and is frozen:
+# `transport_runner.ps1` matches it as a whole line. The scratch location is
+# reported in the CLOSE_NOTE above rather than appended here.
 printf 'CLOSE PASS runid=%s dir=%s files=%s wrote_into_evidence_tree=0\n' \
     "$RUNID" "$EV_DIR" "$COUNT"

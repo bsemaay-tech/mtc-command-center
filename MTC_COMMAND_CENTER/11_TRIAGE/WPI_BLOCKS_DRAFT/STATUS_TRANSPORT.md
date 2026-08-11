@@ -1,15 +1,14 @@
 # WP-I transport set status
 
-**REPAIRED-PENDING-REAUDIT** (round 3 of the T0 cap 3 — the last round of the cap)
+**REPAIRED-PENDING-REAUDIT** (round 4, under owner grant #7 — the T0 cap is lifted
+for this block set until both flagships accept)
 
 No host contact, RUNID allocation, archive build, freeze, execution, or Git commit was
 performed. `C:\WPI_ARTIFACTS` contains no `WPI_TRANSPORT_*` entry.
 
-The real pinned `ssh.exe` and `scp.exe` were executed locally without connecting —
-`ssh -G` evaluates configuration and exits, and `scp` copied one local file to another
-— because round-2 Codex F2 required exactly that and it cannot be established any
-other way. No socket was opened to any host; the only hostname passed to `ssh` was the
-non-resolving literal `qa-target`, and `-G` returns before name resolution.
+Round 4 ran its shell fixtures against a **local WSL2 Ubuntu kernel**; every path they
+touch is under `/root/wpi_r4*` on that local filesystem. The operator-side fixtures
+start no process at all. No socket was opened to any host in this round.
 
 `<ALLOCATE-AT-DISPATCH>` and `<PIN-AT-FREEZE>` remain literal, and that is enforced
 rather than incidental: a preflight marker gate STOPs the runner on the first unfilled
@@ -19,98 +18,158 @@ constant. Run exactly as it ships, the delivered file emits
 
 Op → implementation: 01 `remote_setup_wpi.sh`; 02 pinned `runkit.tar` SCP up from
 `01_RUNKIT`; 03 `remote_extract_verify_wpi.sh`; 04 `run_p0.sh`; 05 `run_ro.sh`;
-06 bounded operator-side `tcp_probe`; **07/08 `remote_close_tree_wpi.sh`** — new this
-round, the fourth derived script, resolved through the plan's `PREREG` root token;
+06 bounded operator-side `tcp_probe`; 07/08 `remote_close_tree_wpi.sh`;
 09/10 SCP down; 11/12 local-only remote/local digest-set binding in
 `transport_runner.ps1`.
 
-## What changed in round 3
+## What changed in round 4
 
-Both round-2 T0 re-audits returned REQUEST_CHANGES. Four required findings and one nit
-are addressed, each with an executed RED/GREEN pair.
+Both round-3 T0 audits are addressed: Codex returned REQUEST_CHANGES with four
+required findings (F1–F4), Claude returned an accepting verdict with nits, and the Lead
+adjudicated F4 in Codex's favour. Four further items (T5–T8) came from the
+successor-skeleton review. Every item below has an executed RED/GREEN pair in
+`SELF_QA_TRANSPORT.md` §R4; nothing is credited on the strength of a comment.
 
-- **FAIL is now reserved for an operation that ran.** The round-2 classifier branched
-  on the integer alone, so `ssh` exit 255 — its own code for a host that is down, a
-  rejected key, a DNS failure or a dropped route, in which nothing was observed — was
-  recorded as a completed observation of deviant host state. Classification is now by
-  operation **kind** and by **provenance**: ssh rc 255, any rc outside `{0,1,3}`, any
-  failed `scp` transfer, and a capture carrying no preregistered remote-program marker
-  are all not-evaluable → `TR_RUN STOP`, exit 3. A cleanup row whose prerequisite
-  sequence never completed can no longer manufacture a FAIL out of an honest STOP:
-  driven over the whole 12-row plan, an early STOP that round 2 reported as
-  `TR_RUN FAIL` (deviant=4) now reports `TR_RUN STOP` (deviant=0, not_evaluable=7).
-- **The plan can now reach a remote block at all.** Under the round-2 child
-  environment the real pinned OpenSSH exited **255 with zero bytes on both streams**
-  before evaluating anything, because OpenSSH for Windows resolves `__PROGRAMDATA__`
-  and has no fallback when `PROGRAMDATA` is unset. Measurement showed that is the only
-  load-bearing variable in the constructed set. Ambient configuration is now disabled
-  outright rather than inherited: `-F none` on every op refuses both the per-user and
-  the system-wide `ssh_config`, `PROGRAMDATA` points at a run-owned empty directory
-  under the record root, `UserKnownHostsFile`/`GlobalKnownHostsFile` are pinned files,
-  `ProxyCommand`/`ControlMaster`/`ControlPath`/forwarding/local-command are all
-  refused, and **nothing** is carried from the operator environment. The frozen option
-  block lives inside the runner and every `ssh`/`scp` plan row must carry it verbatim.
-- **The close operation is no longer PATH-selected.** The accepted
-  `remote_close_tree.sh` invoked `mktemp`, `stat`, `tr`, `readlink`, `find`, `sort`,
-  `sha256sum`, `cmp` and `rm` from the inherited `PATH`. Executed, a planted
-  `sha256sum` appended to a closed evidence leaf and then delegated to the real tool;
-  both digest passes observed the mutation, agreed, and the script printed
-  `CLOSE PASS … wrote_into_evidence_tree=0` at rc 0. The accepted bytes are **not
-  edited** — `remote_close_tree_wpi.sh` is a derivation whose only semantic delta is
-  program identity, and under it the plant is never consulted.
-- **The allocation parent's mount object is bound before the first `mkdir`.** A bind
-  mount at the same literal canonical path with the same owner and mode satisfied
-  `readlink -f` and every component predicate, and took all four allocations. The
-  setup script now projects the covering mount from `/proc/self/mountinfo` and compares
-  it with a preregistered constant; a mismatch STOPs before any mutation.
+- **The remote interpreter is inside the pinned program domain (F1).** Rounds 1–3 sent
+  every stdin script to bare `bash -s --`. Re-executed here with the delivered bytes: a
+  fake `bash` first on `PATH` returned rc 0, ignored the delivered script and printed a
+  forged `CLOSE PASS`; under an absolute interpreter an inherited `BASH_ENV` did the
+  same. All six `ssh_stdin` rows now carry one frozen launch domain —
+  `/usr/bin/env -i PATH=/usr/bin:/bin LC_ALL=C HOME=/home/gatea /usr/bin/bash
+  --noprofile --norc -s --` — which `transport_runner.ps1` holds as a constant and
+  requires verbatim, and **each delivered script re-attests that same domain from the
+  inside** before its first external program (derivation class 5). With both plants
+  still in place the frozen argv produced the real record and neither plant ran.
+- **Provenance is bound per operation, not to a global marker union (F1).** Round 3
+  accepted any of the five programs' prefixes for any ssh row, so a close operation
+  accepted `SETUP PASS` from an unrelated program as its own provenance and the run
+  reported PASS. Each row's expected family is now bound to the stdin artifact it
+  sends; the same fixture is now `not_evaluable … expected_family=remote_close_tree_wpi.sh`
+  and the run STOPs. An `ssh_stdin` row whose stdin leaf has no registered family is a
+  plan STOP before execution.
+- **The close script no longer inherits a scratch location (F2).** Round 3 kept
+  `mktemp` and *disclosed* the inherited-`TMPDIR` residual in its header. Executed, that
+  disclosure cost evidence: with `TMPDIR` set to the tree being measured the script
+  created and hashed its own file inside evidence and printed
+  `wrote_into_evidence_tree=0` at rc 0. A disclosure is not a control. `mktemp` is gone;
+  op 01 now allocates a fifth directory, `<REMOTE_BASE>/work`, and the plan passes it to
+  ops 07/08 as a third argument. The close script proves canonical two-way non-overlap
+  with the evidence tree before creating `close_work_<RUNID>` at mode 0700, proves it
+  again on the object `mkdir` produced, and adjudicates the removal's own status on
+  every exit path instead of ignoring it. The read-only claim is now earned.
+- **An ambiguous close probe STOPs (F3).** With a mixed `No such file or directory;
+  Permission denied` diagnostic the round-3 script returned `CLOSE_FAIL
+  reason=evidence_dir_absent` rc 1 — a completed observation of missing evidence
+  manufactured out of an inability to evaluate. The absence sentence is now calibrated
+  once, in-run, from the pinned `stat` itself and matched as a whole string with the
+  kernel corroborating; the same fixture now returns `CLOSE_STOP` rc 3.
+- **Cleanup prerequisites are per branch and per operation (F4, Lead adjudication).**
+  The single global `$sequenceOk` snapshot is gone. The runner freezes the dependency
+  graph (07←04, 08←05, 09←07, 10←08, 11←07+09, 12←08+10), binds it to the plan before
+  execution, and resolves each edge against the class that operation actually received.
+  Codex's decisive fixture now goes GREEN: ops 01–06 match, op 07 `CLOSE_STOP` rc 3, op
+  08 a genuine marked `CLOSE_FAIL` rc 1 → `deviant=1`, `TR_RUN FAIL` rc 1, where round 3
+  reported `deviant=0`, `TR_RUN STOP`. Claude's scenario still holds: a cleanup after a
+  genuinely unestablished prerequisite stays not-evaluable. The two cases now carry
+  distinct reasons — `cleanup_after_unestablished_prerequisite` and
+  `cleanup_after_earlier_deviation` — with the resolved prerequisite classes in the
+  record.
+- **`run_p0.sh` wires the five `P0_ATTESTED_*` values (T5).** Round 3 defined and
+  exported none of them, so the composition STOPped at
+  `execution_domain_unattested … detail=preregistered_value_missing` before any host
+  observation. Proved by execution, not assertion: the real wrapper was launched under
+  the frozen launch domain with the connection stubbed and its exported environment
+  captured at the block position (0 names before, 5 after), and the **real
+  `RP6-P0.sh` row-8 gate bytes** were then driven with exactly that environment —
+  `preregistered_value_missing` before, `P0_GATE_PASSED` after with both sides filled,
+  and `prelude_value_differs_from_frozen_pin` when one value is changed.
+- **The close contract, its bytes and the plan now agree (T6).** The draft claimed
+  classes 5 and 6, a cleared launch domain and a run-owned `WORK_ROOT`; the bytes took
+  two arguments and inherited `TMPDIR`; the plan passed two arguments. All three now
+  state the same three-argument contract, and an argv-count, RUNID-grammar or
+  `EV_DIR`/`RUNID` disagreement is rc 3 rather than the rc 1 that would have reached the
+  runner as a deviant *host* observation.
+- **The inert `WPI_INTERPRETER_TARGET` pin is removed (T7).** `RP7-WPI-RO.sh` never read
+  it; it derives `<venv>/bin/python` itself and refuses a symlink. A filled but unread
+  value costs a deploy-channel answer and establishes no preregistered check. It is gone
+  from the wrapper and absent from the draft's input table. RP7 was not touched.
+- **The transport summary is stated once, correctly (T8).** §6 of the preregistration
+  draft now carries first-*mismatch* sequencing, per-kind and per-provenance
+  classification, the not-evaluable set, and the per-branch cleanup rule with its two
+  distinct reasons; the successor draft R3's §6 sentence was extended to match.
 
-## Corrections to the round-2 status text
+## The superseded concurrent edit
 
-The round-2 entry led with "**A not-evaluable operation is no longer a FAIL**" and only
-then narrowed to rc 3. That sentence outran the code and both flagships said so. It is
-replaced above by a statement of what the classifier actually decides, per kind.
+Commit `cf049b6b` preserved an unverified close-script edit from another session. Per
+the Lead's addendum it is **superseded**, and round 4 restarted from the round-3 bytes
+at `78173bfd`. Driven exactly as its own header prescribed, that edit refuses its own
+clean execution: it sweeps `declare -F` *after* defining `ld_stop`, so a clean launch
+emits `CLOSE_STOP reason=launch_domain_inherited_shell_function` at rc 3. A second
+latent defect in the same two lines was found while re-deriving them and is recorded in
+`TRANSPORT_R4_REPORT_2026-08-11.md`. Its substantive ideas — a launch-domain
+attestation, an exact absence template, numeric identity, and a run-owned `WORK_ROOT` —
+were re-derived and kept; each is now reachable from a plan-passed invocation and each
+carries executed evidence. Its argv-count arm, which returned rc 1, was dropped.
 
-The round-2 self-QA placeholder census ("36 / 40") is corrected: the rejected baseline
-carries 36 / 27 over the six executable/plan files and 41 / 33 over all eight
-(`SELF_QA_TRANSPORT.md` §9).
+## Corrections to the round-3 status text
 
-## Freeze-gate inputs this round adds
+The round-3 entry said program identity was the close script's only semantic delta. That
+is superseded: the permitted deltas are classes 2, 3, 5 and 6, and the round-3 sentence
+is withdrawn rather than quietly widened. The round-3 header's `mktemp` disclosure
+paragraph is withdrawn with it.
 
-Each must be supplied before the set can be frozen; until then the runner or the
-script STOPs at rc 3, which is the intended fail-closed direction.
+## Freeze-gate inputs
+
+Each must be supplied before the set can be frozen; until then the runner or the script
+STOPs at rc 3, which is the intended fail-closed direction.
 
 | input | consumer | source |
 |---|---|---|
-| `EXPECT_PARENT_MOUNT` | `remote_setup_wpi.sh` | the read-only attestation command set authorised as **owner grant #6**, run in the grant-#3 root session |
+| `EXPECT_PARENT_MOUNT` | `remote_setup_wpi.sh` | the read-only attestation command set authorised as **owner grant #6**, run in the grant-#3 root session, ordered **before op 01** |
+| `EXPECT_UID` / `EXPECT_GID` | `remote_setup_wpi.sh`, `remote_close_tree_wpi.sh` | the recorded numeric identity of `gatea` |
+| `P0_ATTESTED_USER_NS` / `MNT_NS` / `PID_NS` / `NET_NS` / `ROOT_MOUNT_ID` | `run_p0.sh` → `RP6-P0.sh` row 8 | **new this round** (T5): deploy channel, owner grant #6, never learned from the login under test. `RP6-P0.sh`'s own `P0_FIXED_ATTESTED_*` literals must be filled to the same values, or the gate STOPs |
 | `wpi_known_hosts` + its SHA-256 | `transport_runner.ps1`, every ssh/scp op | preregistered host-key material for `172.24.55.233` |
 | `wpi_known_hosts_global` + its SHA-256 | same | the system half of the same decision |
 | SHA-256 of `gatea_ed25519` | same | the pinned credential; compared, never printed |
-| SHA-256 + bytes of `remote_close_tree_wpi.sh` | `TRANSPORT_PLAN.tsv` ops 07/08 | Stage 1, like every other derived script |
+| SHA-256 + bytes of all five delivered shell files | `TRANSPORT_PLAN.tsv` stdin pins | Stage 1 |
 
-### Successor-ordering requirement (F4)
-
-`EXPECT_PARENT_MOUNT` is the covering-mount identity of `/home/gatea` **as attested
-from outside the login session being tested**. The successor preregistration must
-therefore order the grant-#6 attestation **before op 01**, not merely before the RO
-stage: op 01 is the operation that mutates, and an attestation taken afterwards cannot
-make an earlier mutation retroactively target the accepted mount. The attested value is
-embedded as a frozen constant and is never learned or re-pinned from the run.
+Placeholder census over the seven executable/plan targets: **37** `<ALLOCATE-AT-DISPATCH>`
+and **38** `<PIN-AT-FREEZE>`, against 36 / 33 in round 3. The delta is exactly
++2 allocation (the work root in plan rows 07/08), +5 pin (`P0_ATTESTED_*`), +2 pin
+(the close script's numeric `EXPECT_UID`/`EXPECT_GID`), −1 pin
+(`WPI_INTERPRETER_TARGET`, removed) and −1/−1 (the runner's `$UNFILLED_MARKERS`
+guard is now composed rather than a literal, so the only markers left in that file
+are consumers).
 
 ## Open, and deliberately visible to the Lead
 
-Section 4 of the preregistration draft was amended again this round: a **fourth**
-derived script (`remote_close_tree_wpi.sh`), a mount-object clause added to derivation
-class 3, and an operator-side configuration-identity rule added under class 2. Round 2
-amended §4 to permit a four-class derivation of two scripts; round 3 extends that
-permission to the close script and records that **no accepted Stage-2 script travels
-unchanged any more**. The accepted originals are untouched and remain derivation bases.
-This is the Lead's call to ratify, not a settled fact.
-
-Deviation D-3 stands and is a hard Stage-1 precondition: `GATEA-STAGING` must carry
-each `/usr/bin/<tool>` in the pin set as a regular, root-owned, not-group/other-writable
-file, or ops 01, 03, 07 and 08 will STOP at dispatch. The QA kernel ships them as
-symlinks and the scripts refuse them, which is the safe direction but is not the target
-host's state.
+1. **Derivation classes 5 and 6 are new permissions.** §4 of the draft now enumerates
+   six classes rather than four. Round 4 wrote them into the contract because F1 and F2
+   cannot be satisfied inside the existing four. This is the Lead's call to ratify.
+2. **One measured residual on F1, disclosed rather than papered over.** `bash` reads
+   `$BASH_ENV` before the first byte of a stdin-delivered script, and
+   `--norc`/`--noprofile` do not disable that channel, so a startup plant that *exits*
+   forges the record before any in-script attestation can run. Nothing inside a
+   delivered script can close it. It is closed by the operator side — the runner refuses
+   any plan row that does not carry the `env -i` domain verbatim, and that domain
+   supplies an explicit complete variable list — so the case is unreachable from the
+   frozen plan. A plant that lets the script run is refused by the class 5 sweep at
+   rc 3. Both cases are executed in self-QA.
+3. **The remote login shell is outside the attestation.** `sshd` runs the command string
+   with the account's login shell. `env -i` clears what that shell exports and both
+   launch programs are absolute, so the shell cannot select or influence what runs — but
+   its own integrity is a deploy-channel property, not something this set establishes.
+4. **Deviation D-3 stands** and is a hard Stage-1 precondition: `GATEA-STAGING` must
+   carry each `/usr/bin/<tool>` in the pin set — now including `/usr/bin/env` and
+   `/usr/bin/bash` — as a regular, root-owned, not-group/other-writable file, or ops 01,
+   03, 04, 05, 07 and 08 will STOP at dispatch. The QA kernel ships them as symlinks and
+   the scripts refuse them, which is the safe direction but is not the target host's
+   state.
+5. **`run_p0.sh` and `run_ro.sh` now run under `env -i`.** The wrappers export what the
+   blocks need, but neither block has been executed end to end under this domain — that
+   cannot be done without the host. If a block turns out to require an environment name
+   the launch domain does not deliver, it will STOP at rc 3, which is the fail-closed
+   direction, and the domain or the wrapper's export set is what changes.
 
 The set remains authority- and budget-blocked by the preregistration's own dispatch
 gates (§0 F6 amendment, §12). Nothing here is dispatch authority.

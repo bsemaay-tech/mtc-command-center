@@ -1,7 +1,11 @@
 # WP-I Stage 2 — runkit archive verification + extraction (PREREGISTERED).
 #
-# Transport op 03. Delivered on ssh stdin to:
-#   bash -s -- <REMOTE_ARCHIVE> <EXTRACT_DIR> <EXPECTED_ARCHIVE_SHA256>
+# Transport op 03. Delivered on ssh stdin to the frozen remote launch domain,
+# which `transport_runner.ps1` holds as a constant and every plan row must carry
+# verbatim:
+#   /usr/bin/env -i PATH=/usr/bin:/bin LC_ALL=C HOME=/home/gatea \
+#     /usr/bin/bash --noprofile --norc -s -- \
+#       <REMOTE_ARCHIVE> <EXTRACT_DIR> <EXPECTED_ARCHIVE_SHA256>
 #
 # It re-hashes the archive BEFORE reading its member list, refuses any member
 # that is not one of the preregistered basenames, extracts into a fresh
@@ -26,9 +30,82 @@
 #     MEMBERS constant, which is inside the permitted archive-constants block,
 #     so there is no second constant that can drift out of step with it.
 #
+# Round 4 repair (Codex final audit F1, derivation class 5): the remote
+# interpreter and its startup environment are now inside the pinned program
+# domain rather than selected by the login shell's PATH, and this script attests
+# that domain before its first external program.
+#
 # rc contract: 0 = PASS, 1 = FAIL (predicate refused), 3 = STOP (could not
 # evaluate — never re-read as PASS).
 set -Eeuo pipefail
+
+# --- class 5: launch-domain attestation --------------------------------------
+# This block runs BEFORE the first external program, so a plant that replaced
+# the interpreter or injected a startup file is refused rather than measured. A
+# launch-domain violation is an inability to evaluate, never a host finding:
+# every arm here is rc 3.
+EXPECT_INTERPRETER='/usr/bin/bash'
+EXPECT_LAUNCH_PATH='/usr/bin:/bin'
+EXPECT_LAUNCH_LC_ALL='C'
+EXPECT_LAUNCH_HOME='/home/gatea'
+LD_ENVIRON='/proc/self/environ'
+
+# The inherited-function sweep runs BEFORE this script defines a function of its
+# own, so `declare -F` describes only what the launch domain delivered rather
+# than this program's own names. `declare -F` exits 1 when there is nothing to
+# list, which under `set -e` would end the run with no marker at all, so its
+# status is consumed deliberately and the emptiness is tested afterwards.
+LD_FUNCS="$(declare -F 2>/dev/null || :)"
+if [ -n "$LD_FUNCS" ]; then
+    printf 'EXTRACT_STOP reason=launch_domain_inherited_shell_function detail=[%s]\n' "$LD_FUNCS" >&2
+    exit 3
+fi
+
+# MEASURED SCOPE LIMIT (round 4, recorded rather than implied). `bash` reads
+# `$BASH_ENV` before the first byte of a stdin-delivered script, and
+# `--norc`/`--noprofile` do not disable that channel, so a startup plant that
+# EXITS forges the record before anything here runs. No in-script attestation
+# can close that. It is closed on the operator side, by the frozen `env -i`
+# launch domain with an explicit complete variable list that
+# `transport_runner.ps1` enforces verbatim on every plan row, so no plan row can
+# introduce `BASH_ENV` at all - which is why the domain is stated on both sides.
+# A plant that lets the script RUN, the only kind that could forge a
+# real-looking record, is refused by the sweep below: `BASH_ENV` is still in the
+# exec environment the kernel recorded. Both cases are executed in self-QA.
+ld_stop() { printf 'EXTRACT_STOP reason=%s\n' "$*" >&2; exit 3; }
+
+[ "${BASH:-}" = "$EXPECT_INTERPRETER" ] \
+    || ld_stop "launch_domain_interpreter=${BASH:-unset} expected=$EXPECT_INTERPRETER"
+if shopt -q login_shell; then ld_stop "launch_domain_login_shell_startup_files_were_read"; fi
+
+# The exec environment is read from the kernel's own copy rather than from the
+# shell's exported-name list: `/proc/self/environ` is what `execve` received, so
+# names the shell adds for its children (PWD, SHLVL, _) cannot mask an entry the
+# launch domain actually delivered. Each expected entry is matched as a WHOLE
+# `name=value` string and must appear exactly once; anything else — BASH_ENV,
+# ENV, LD_PRELOAD, a BASH_FUNC_x%% exported function, an inherited TMPDIR — is a
+# name this sweep does not recognise, and it STOPs naming the offender. The read
+# is a redirection, not an external program.
+[ ! -L "$LD_ENVIRON" ] || ld_stop "launch_domain_environ_is_symlink path=$LD_ENVIRON"
+[ -r "$LD_ENVIRON" ]   || ld_stop "launch_domain_environ_unreadable path=$LD_ENVIRON"
+LD_SEEN_PATH=0; LD_SEEN_LC_ALL=0; LD_SEEN_HOME=0; LD_ENTRIES=0
+LD_ENTRY=''
+while IFS= read -r -d '' LD_ENTRY || [ -n "$LD_ENTRY" ]; do
+    [ -n "$LD_ENTRY" ] || continue
+    LD_ENTRIES=$((LD_ENTRIES + 1))
+    case "$LD_ENTRY" in
+        "PATH=$EXPECT_LAUNCH_PATH")     LD_SEEN_PATH=$((LD_SEEN_PATH + 1)) ;;
+        "LC_ALL=$EXPECT_LAUNCH_LC_ALL") LD_SEEN_LC_ALL=$((LD_SEEN_LC_ALL + 1)) ;;
+        "HOME=$EXPECT_LAUNCH_HOME")     LD_SEEN_HOME=$((LD_SEEN_HOME + 1)) ;;
+        *) ld_stop "launch_domain_unexpected_environment_entry name=[${LD_ENTRY%%=*}]" ;;
+    esac
+    LD_ENTRY=''
+done < "$LD_ENVIRON"
+[ "$LD_ENTRIES" -eq 3 ]     || ld_stop "launch_domain_environment_size=$LD_ENTRIES expected=3"
+[ "$LD_SEEN_PATH" -eq 1 ]   || ld_stop "launch_domain_path_entries=$LD_SEEN_PATH expected=1 value=$EXPECT_LAUNCH_PATH"
+[ "$LD_SEEN_LC_ALL" -eq 1 ] || ld_stop "launch_domain_lc_all_entries=$LD_SEEN_LC_ALL expected=1 value=$EXPECT_LAUNCH_LC_ALL"
+[ "$LD_SEEN_HOME" -eq 1 ]   || ld_stop "launch_domain_home_entries=$LD_SEEN_HOME expected=1 value=$EXPECT_LAUNCH_HOME"
+
 export LC_ALL=C
 
 fail() { printf 'EXTRACT_FAIL reason=%s\n' "$*" >&2; exit 1; }
@@ -43,6 +120,11 @@ TOOL_MKDIR='/usr/bin/mkdir'
 TOOL_READLINK='/usr/bin/readlink'
 TOOL_FIND='/usr/bin/find'
 TOOL_CHMOD='/usr/bin/chmod'
+# The launch domain's own two programs are admitted under the same rule, so the
+# interpreter this script attested above is inside the pinned program domain
+# rather than beside it (derivation class 5).
+TOOL_ENV='/usr/bin/env'
+TOOL_BASH='/usr/bin/bash'
 
 require_tool() {
     local t="$1" own mode g o
@@ -67,6 +149,15 @@ require_tool "$TOOL_MKDIR"
 require_tool "$TOOL_READLINK"
 require_tool "$TOOL_FIND"
 require_tool "$TOOL_CHMOD"
+require_tool "$TOOL_ENV"
+require_tool "$TOOL_BASH"
+
+# The attested interpreter must be the pinned OBJECT, not merely a path that
+# spells the same characters: `$BASH` was compared as a string in the class 5
+# block, and the pin admitted `/usr/bin/bash` as a non-symlink root-owned
+# regular file here.
+[ "$BASH" = "$TOOL_BASH" ] || stop "launch_domain_interpreter_outside_pinned_set value=$BASH"
+note "launch_domain interpreter=$BASH path=$PATH lc_all=$EXPECT_LAUNCH_LC_ALL home=$HOME exec_environment_entries=$LD_ENTRIES inherited_functions=0 bash_env=absent env=absent tmpdir=absent attestation=builtins_and_proc_self_environ"
 
 [ "$#" -eq 3 ] || fail "usage remote_extract_verify_wpi.sh <archive> <extract_dir> <archive_sha256> argc=$#"
 ARCHIVE="$1"

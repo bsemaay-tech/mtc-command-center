@@ -1,8 +1,16 @@
 # WP-I Stage 2 — remote base allocation (PREREGISTERED, create-once).
 #
-# Transport op 01. Delivered on ssh stdin to `bash -s -- <REMOTE_BASE>`.
+# Transport op 01. Delivered on ssh stdin to the frozen remote launch domain,
+# which `transport_runner.ps1` holds as a constant and every plan row must carry
+# verbatim:
+#   /usr/bin/env -i PATH=/usr/bin:/bin LC_ALL=C HOME=/home/gatea \
+#     /usr/bin/bash --noprofile --norc -s -- <REMOTE_BASE>
 #
-# Creates exactly four directories and nothing else. It never deletes, never
+# Creates exactly five directories and nothing else — the base, the evidence
+# parent, the evidence runkit directory, the kit directory, and `<BASE>/work`,
+# the run-owned scratch root that ops 07/08 receive as their third argument so
+# the close script never inherits a TMPDIR location (Codex final audit F2,
+# derivation class 6). It never deletes, never
 # renames, never chmods an existing object, never uses `mkdir -p`, never
 # creates a temporary file, never touches a service, a unit, a credential, the
 # network or the bridge. It runs BEFORE the runkit exists on the host, so it
@@ -30,9 +38,83 @@
 # channel attested outside this login session (owner grant #6). It is never
 # learned from the session being tested; an unfilled pin or a mismatch is STOP.
 #
+# Round 4 repairs (Codex final audit F1, derivation classes 5 and 6): the remote
+# interpreter and its startup environment are now inside the pinned program
+# domain rather than selected by the login shell's PATH, and this script attests
+# that domain before its first external program; and it allocates the run-owned
+# scratch root that removes the close script's inherited-TMPDIR channel.
+#
 # rc contract: 0 = allocated, 1 = FAIL (predicate refused), 3 = STOP (could not
 # evaluate — never re-read as "absent" or as success).
 set -Eeuo pipefail
+
+# --- class 5: launch-domain attestation --------------------------------------
+# This block runs BEFORE the first external program, so a plant that replaced
+# the interpreter or injected a startup file is refused rather than measured. A
+# launch-domain violation is an inability to evaluate, never a host finding:
+# every arm here is rc 3.
+EXPECT_INTERPRETER='/usr/bin/bash'
+EXPECT_LAUNCH_PATH='/usr/bin:/bin'
+EXPECT_LAUNCH_LC_ALL='C'
+EXPECT_LAUNCH_HOME='/home/gatea'
+LD_ENVIRON='/proc/self/environ'
+
+# The inherited-function sweep runs BEFORE this script defines a function of its
+# own, so `declare -F` describes only what the launch domain delivered rather
+# than this program's own names. `declare -F` exits 1 when there is nothing to
+# list, which under `set -e` would end the run with no marker at all, so its
+# status is consumed deliberately and the emptiness is tested afterwards.
+LD_FUNCS="$(declare -F 2>/dev/null || :)"
+if [ -n "$LD_FUNCS" ]; then
+    printf 'SETUP_STOP reason=launch_domain_inherited_shell_function detail=[%s]\n' "$LD_FUNCS" >&2
+    exit 3
+fi
+
+# MEASURED SCOPE LIMIT (round 4, recorded rather than implied). `bash` reads
+# `$BASH_ENV` before the first byte of a stdin-delivered script, and
+# `--norc`/`--noprofile` do not disable that channel, so a startup plant that
+# EXITS forges the record before anything here runs. No in-script attestation
+# can close that. It is closed on the operator side, by the frozen `env -i`
+# launch domain with an explicit complete variable list that
+# `transport_runner.ps1` enforces verbatim on every plan row, so no plan row can
+# introduce `BASH_ENV` at all - which is why the domain is stated on both sides.
+# A plant that lets the script RUN, the only kind that could forge a
+# real-looking record, is refused by the sweep below: `BASH_ENV` is still in the
+# exec environment the kernel recorded. Both cases are executed in self-QA.
+ld_stop() { printf 'SETUP_STOP reason=%s\n' "$*" >&2; exit 3; }
+
+[ "${BASH:-}" = "$EXPECT_INTERPRETER" ] \
+    || ld_stop "launch_domain_interpreter=${BASH:-unset} expected=$EXPECT_INTERPRETER"
+if shopt -q login_shell; then ld_stop "launch_domain_login_shell_startup_files_were_read"; fi
+
+# The exec environment is read from the kernel's own copy rather than from the
+# shell's exported-name list: `/proc/self/environ` is what `execve` received, so
+# names the shell adds for its children (PWD, SHLVL, _) cannot mask an entry the
+# launch domain actually delivered. Each expected entry is matched as a WHOLE
+# `name=value` string and must appear exactly once; anything else — BASH_ENV,
+# ENV, LD_PRELOAD, a BASH_FUNC_x%% exported function, an inherited TMPDIR — is a
+# name this sweep does not recognise, and it STOPs naming the offender. The read
+# is a redirection, not an external program.
+[ ! -L "$LD_ENVIRON" ] || ld_stop "launch_domain_environ_is_symlink path=$LD_ENVIRON"
+[ -r "$LD_ENVIRON" ]   || ld_stop "launch_domain_environ_unreadable path=$LD_ENVIRON"
+LD_SEEN_PATH=0; LD_SEEN_LC_ALL=0; LD_SEEN_HOME=0; LD_ENTRIES=0
+LD_ENTRY=''
+while IFS= read -r -d '' LD_ENTRY || [ -n "$LD_ENTRY" ]; do
+    [ -n "$LD_ENTRY" ] || continue
+    LD_ENTRIES=$((LD_ENTRIES + 1))
+    case "$LD_ENTRY" in
+        "PATH=$EXPECT_LAUNCH_PATH")     LD_SEEN_PATH=$((LD_SEEN_PATH + 1)) ;;
+        "LC_ALL=$EXPECT_LAUNCH_LC_ALL") LD_SEEN_LC_ALL=$((LD_SEEN_LC_ALL + 1)) ;;
+        "HOME=$EXPECT_LAUNCH_HOME")     LD_SEEN_HOME=$((LD_SEEN_HOME + 1)) ;;
+        *) ld_stop "launch_domain_unexpected_environment_entry name=[${LD_ENTRY%%=*}]" ;;
+    esac
+    LD_ENTRY=''
+done < "$LD_ENVIRON"
+[ "$LD_ENTRIES" -eq 3 ]     || ld_stop "launch_domain_environment_size=$LD_ENTRIES expected=3"
+[ "$LD_SEEN_PATH" -eq 1 ]   || ld_stop "launch_domain_path_entries=$LD_SEEN_PATH expected=1 value=$EXPECT_LAUNCH_PATH"
+[ "$LD_SEEN_LC_ALL" -eq 1 ] || ld_stop "launch_domain_lc_all_entries=$LD_SEEN_LC_ALL expected=1 value=$EXPECT_LAUNCH_LC_ALL"
+[ "$LD_SEEN_HOME" -eq 1 ]   || ld_stop "launch_domain_home_entries=$LD_SEEN_HOME expected=1 value=$EXPECT_LAUNCH_HOME"
+
 export LC_ALL=C
 
 EXPECT_PREFIX='/home/gatea/wpi_staging_'
@@ -58,6 +140,11 @@ note() { printf 'SETUP_NOTE %s\n' "$*"; }
 TOOL_STAT='/usr/bin/stat'
 TOOL_MKDIR='/usr/bin/mkdir'
 TOOL_READLINK='/usr/bin/readlink'
+# The launch domain's own two programs are admitted under the same rule, so the
+# interpreter this script attested above is inside the pinned program domain
+# rather than beside it (derivation class 5).
+TOOL_ENV='/usr/bin/env'
+TOOL_BASH='/usr/bin/bash'
 
 require_tool() {
     local t="$1" own mode g o
@@ -78,6 +165,15 @@ require_tool() {
 require_tool "$TOOL_STAT"
 require_tool "$TOOL_MKDIR"
 require_tool "$TOOL_READLINK"
+require_tool "$TOOL_ENV"
+require_tool "$TOOL_BASH"
+
+# The attested interpreter must be the pinned OBJECT, not merely a path that
+# spells the same characters: `$BASH` was compared as a string in the class 5
+# block, and the pin admitted `/usr/bin/bash` as a non-symlink root-owned
+# regular file here.
+[ "$BASH" = "$TOOL_BASH" ] || stop "launch_domain_interpreter_outside_pinned_set value=$BASH"
+note "launch_domain interpreter=$BASH path=$PATH lc_all=$EXPECT_LAUNCH_LC_ALL home=$HOME exec_environment_entries=$LD_ENTRIES inherited_functions=0 bash_env=absent env=absent tmpdir=absent attestation=builtins_and_proc_self_environ"
 
 # --- the preregistered numeric identity must actually be pinned -------------
 case "$EXPECT_UID" in ''|*[!0-9]*) stop "identity_pin_unfilled field=EXPECT_UID" ;; esac
@@ -313,6 +409,15 @@ assert_dir() {
 EV_PARENT="$BASE/evidence"
 EV_RUNKIT="$EV_PARENT/runkit"
 REMOTE_KIT="$BASE/kit"
+# Derivation class 6 (Codex final audit F2). The close script's scratch root.
+# It is a sibling of the evidence parent, never a descendant of it, so the
+# canonical two-way non-overlap ops 07/08 prove before creating anything under
+# it is a property of this allocation rather than of an inherited TMPDIR. It is
+# allocated here, by the same create-once/bind-immediately discipline as the
+# other four directories, because the close script must not create its own
+# scratch root: a program that allocates the root it is about to trust proves
+# nothing about where that root is.
+REMOTE_WORK="$BASE/work"
 
 # The base's parent must be exactly the preregistered parent: the suffix charset
 # check above already forbids a separator, so this is a second, independent
@@ -330,11 +435,24 @@ note "base_absent path=$BASE"
 
 # Allocate and immediately bind each directory before the next one is created,
 # so no later object is ever created through an unverified parent.
-allocate "$BASE";       assert_dir "$BASE"
-allocate "$EV_PARENT";  assert_dir "$EV_PARENT"
-allocate "$EV_RUNKIT";  assert_dir "$EV_RUNKIT"
-allocate "$REMOTE_KIT"; assert_dir "$REMOTE_KIT"
+allocate "$BASE";        assert_dir "$BASE"
+allocate "$EV_PARENT";   assert_dir "$EV_PARENT"
+allocate "$EV_RUNKIT";   assert_dir "$EV_RUNKIT"
+allocate "$REMOTE_KIT";  assert_dir "$REMOTE_KIT"
+allocate "$REMOTE_WORK"; assert_dir "$REMOTE_WORK"
 
-printf 'SETUP PASS base=%s evidence=%s runkit=%s kit=%s owner_numeric=%s:%s owner_name=%s mode=%s\n' \
-    "$BASE" "$EV_PARENT" "$EV_RUNKIT" "$REMOTE_KIT" \
+# The work root is proven disjoint from the evidence parent here as well as in
+# the close script: this side states it at allocation time, so a plan that later
+# passes some other path as WORK_ROOT is contradicting a recorded fact rather
+# than merely failing a downstream check.
+case "$REMOTE_WORK" in
+    "$EV_PARENT"|"$EV_PARENT"/*) stop "work_root_inside_evidence_parent path=$REMOTE_WORK evidence=$EV_PARENT" ;;
+esac
+case "$EV_PARENT" in
+    "$REMOTE_WORK"/*) stop "evidence_parent_inside_work_root path=$REMOTE_WORK evidence=$EV_PARENT" ;;
+esac
+note "work_root_allocated path=$REMOTE_WORK consumer=ops_07_08_remote_close_tree_wpi.sh disjoint_from=$EV_PARENT"
+
+printf 'SETUP PASS base=%s evidence=%s runkit=%s kit=%s work=%s owner_numeric=%s:%s owner_name=%s mode=%s\n' \
+    "$BASE" "$EV_PARENT" "$EV_RUNKIT" "$REMOTE_KIT" "$REMOTE_WORK" \
     "$EXPECT_UID" "$EXPECT_GID" "$EXPECT_OWNER_NAME" "$EXPECT_MODE"

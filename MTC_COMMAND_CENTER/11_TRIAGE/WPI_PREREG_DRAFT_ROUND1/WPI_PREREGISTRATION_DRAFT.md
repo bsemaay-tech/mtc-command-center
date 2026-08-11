@@ -181,6 +181,24 @@ different path in it.
 | `WPI_CONF_DIR` | `/etc/mtc-bridge` | matrix B3; adjudication (numeric `0:0`, `0750`; `root:root` diagnostic only) |
 | `WPI_CONTROL_ENDPOINT` | `http://127.0.0.1:8790/api/status` | matrix B5, B6 |
 | `WPI_SWEEP_BUDGET_S` | `120` | per-tree budget for the `find ... -perm /222` sweep, carried over unchanged from the accepted Stage 2 rationale: `-quit` only shortens a *failing* sweep, so a clean walk is a full walk, and exceeding the budget is STOP, never a pass |
+| `P0_ATTESTED_USER_NS` | `<PIN-AT-FREEZE>`, grammar `user:[<digits>]` | deploy channel, owner grant #6; **never** learned from the login under test |
+| `P0_ATTESTED_MNT_NS` | `<PIN-AT-FREEZE>`, grammar `mnt:[<digits>]` | same |
+| `P0_ATTESTED_PID_NS` | `<PIN-AT-FREEZE>`, grammar `pid:[<digits>]` | same |
+| `P0_ATTESTED_NET_NS` | `<PIN-AT-FREEZE>`, grammar `net:[<digits>]` | same |
+| `P0_ATTESTED_ROOT_MOUNT_ID` | `<PIN-AT-FREEZE>`, grammar `<dev>:<inode>` | same |
+
+The five `P0_ATTESTED_*` values are the RP6 row-8 execution-domain attestation.
+`RP6-P0.sh` requires all five before it observes anything about the login, and
+additionally requires each to equal its own frozen `P0_FIXED_ATTESTED_*` literal,
+so filling one side only is a STOP rather than a pass. **They are wired by
+`run_p0.sh`** (round 4, item T5): the round-3 wrapper defined and exported none of
+them, so the composition STOPped at
+`execution_domain_unattested … detail=preregistered_value_missing` before any host
+observation even with every other pin filled. Both halves — the wrapper's export
+set and the block's own gate bytes — are executed in self-QA rather than asserted.
+`WPI_INTERPRETER_TARGET` is deliberately **absent** from this table and from
+`run_ro.sh` (item T7): the accepted `RP7-WPI-RO.sh` never reads it, and a filled
+but unread value is a freeze-gate cost that establishes no preregistered check.
 
 `WPI_EXPECTED_LOCK_SHA256` is the **expected** value, source-derived
 (`git cat-file blob 47f53fa2... | sha256sum`). It has never been observed on the
@@ -276,12 +294,14 @@ EXACTLY these six classes, and any delta outside them is still a finding:
 2. **Program identity** — every executable any derived script invokes is resolved by a
    frozen absolute path under the preregistered `/usr/bin/<tool>` set and admitted
    only after a non-following kind check, numeric `0:0` ownership, and a
-   not-group/other-writable mode. The inherited `PATH` selects nothing. For
-   `remote_setup_wpi.sh` and `remote_extract_verify_wpi.sh` no `mktemp`/`TMPDIR`
-   object is created at all; `remote_close_tree_wpi.sh` keeps the accepted original's
-   `mktemp` work directory, pinned, because deleting it would be a class 3 change,
-   and that residual inherited `TMPDIR` channel is disclosed in the script's own
-   header rather than silently carried. Each admitted tool's runtime SHA-256 is
+   not-group/other-writable mode. The inherited `PATH` selects nothing. **No
+   delivered script creates a `mktemp`/`TMPDIR` object at all** — round 3 let
+   `remote_close_tree_wpi.sh` keep the accepted original's `mktemp` work directory
+   and merely *disclosed* the inherited-`TMPDIR` residual in its header; the round-4
+   T0 audit executed that disclosure and found the script writing and hashing its
+   own files inside the evidence tree while printing `wrote_into_evidence_tree=0`
+   (F2). A disclosure is not a control. `mktemp` is now removed and replaced by
+   class 6 below. Each admitted tool's runtime SHA-256 is
    emitted as evidence and is deliberately **not** compared to a frozen value: no
    digest of a remote tool can be known before host contact, and a digest a run
    learns from the object it is attesting is not an attestation. Binding remote tool
@@ -310,6 +330,37 @@ EXACTLY these six classes, and any delta outside them is still a finding:
    status, its complete diagnostic stream and its final-record termination adjudicated
    before one byte of its stdout is parsed, and the archive is re-hashed after the
    listings so a listing cannot describe different bytes from the ones hashed.
+5. **Launch-domain attestation** (round 4; Codex final audit F1) — the remote
+   interpreter and its startup environment are part of the pinned program domain,
+   not something the login shell's `PATH` selects. Every `ssh_stdin` row carries the
+   frozen launch argv of section 5 verbatim, and **each delivered script re-attests
+   that same domain from the inside**, before its first external program, using
+   shell builtins and one `/proc/self/environ` read: the interpreter is the pinned
+   absolute object, no startup files were read, and the exec environment is exactly
+   the three constructed entries, so `BASH_ENV`, `ENV`, `LD_PRELOAD`, an exported
+   shell function and an inherited `TMPDIR` are each refused **by name**. Every arm
+   is rc 3 — a launch-domain violation is an inability to evaluate, never a host
+   finding. Measured scope, stated rather than implied: `bash` reads `$BASH_ENV`
+   before the first byte of a stdin-delivered script and `--norc`/`--noprofile` do
+   not disable that channel, so a startup plant that *exits* forges the record
+   before any in-script check can run. Nothing inside a delivered script can close
+   that; it is closed by the operator side, which is exactly why the domain is
+   stated on both sides and enforced verbatim by the runner. A plant that lets the
+   script run — the only kind that could forge a real-looking record — is refused by
+   the sweep. The remote login shell `sshd` uses to run the command string is
+   likewise outside this attestation: `env -i` clears what it exports, but its own
+   integrity is a deploy-channel property.
+6. **Run-owned scratch** (round 4; Codex final audit F2) — `remote_close_tree_wpi.sh`
+   takes a third argument, `WORK_ROOT`, which **op 01 allocates** as
+   `<REMOTE_BASE>/work` under the same create-once/bind-immediately discipline as the
+   other four directories. The close script proves canonical two-way non-overlap with
+   the evidence tree *before* creating a create-once `close_work_<RUNID>` directory
+   under it at mode 0700, proves it again on the object `mkdir` actually produced,
+   points `TMPDIR` at that proven directory, and removes it on every exit path with
+   the removal's own status adjudicated rather than ignored. The close script may not
+   allocate its own scratch root: a program that allocates the root it is about to
+   trust proves nothing about where that root is. This is what makes the read-only
+   claim earned rather than asserted.
 
 Class 2 is not optional for any derived script: it is the same execution-environment
 rule the operator side obeys. `transport_runner.ps1` starts `ssh` and `scp` only from
@@ -495,18 +546,41 @@ at dispatch.
 
 Every argv element must be free of spaces and shell metacharacters, so the remote
 login shell's re-parse of the command is a no-op. Scripts are delivered **on ssh
-stdin** to `bash -s --`; no script is written to the host before it runs.
+stdin**; no script is written to the host before it runs.
+
+**Remote launch domain (round 4; Codex final audit F1).** Round 1–3 sent every
+stdin script to bare `bash -s --`, so the remote interpreter was whatever the login
+shell's `PATH` resolved and its startup environment was inherited. Both were
+falsified with the exact delivered bytes: a fake `bash` first on `PATH` returned 0,
+ignored the delivered script and printed a forged marker; and under an absolute
+interpreter an inherited `BASH_ENV` did the same. Pinning only the local `ssh`
+client does not make the remote program identity closed. Every `ssh_stdin` row now
+carries this block verbatim, immediately after the route and before the script's own
+arguments, and it is frozen inside `transport_runner.ps1` as `$REMOTE_LAUNCH_DOMAIN`
+so a plan row that reverts to bare `bash` cannot run:
+
+```
+/usr/bin/env -i PATH=/usr/bin:/bin LC_ALL=C HOME=/home/gatea
+  /usr/bin/bash --noprofile --norc -s --
+```
+
+`env -i` clears everything the login shell exported — `BASH_ENV`, `ENV`,
+`LD_PRELOAD`, exported shell functions, `TMPDIR` — and supplies an explicit,
+complete variable list; `--noprofile --norc` refuses startup files; both programs
+are named by absolute path. Each delivered script re-attests the same domain from
+the inside (derivation class 5), so the operator side and the remote side state the
+same contract independently and a disagreement is rc 3, not a host finding.
 
 | op | run_when | kind | remote/local argv after the pinned options |
 |---|---|---|---|
-| 01 | sequence_ok | ssh stdin `remote_setup_wpi.sh` | `gatea@172.24.55.233 bash -s -- <REMOTE_BASE>` |
+| 01 | sequence_ok | ssh stdin `remote_setup_wpi.sh` | `gatea@172.24.55.233 <launch domain> <REMOTE_BASE>` — allocates **five** directories: base, `evidence`, `evidence/runkit`, `kit`, and `work` (the run-owned scratch root ops 07/08 receive) |
 | 02 | sequence_ok | scp up | `runkit.tar gatea@172.24.55.233:<REMOTE_BASE>/kit/runkit.tar` (cwd `01_RUNKIT`, a pinned directory distinct from the preregistration directory) |
-| 03 | sequence_ok | ssh stdin `remote_extract_verify_wpi.sh` | `gatea@172.24.55.233 bash -s -- <REMOTE_BASE>/kit/runkit.tar <REMOTE_BASE>/kit/extracted <PIN-AT-STAGE-1 archive sha256>` |
-| 04 | sequence_ok | ssh stdin `run_p0.sh` | `gatea@172.24.55.233 bash -s --` |
-| 05 | sequence_ok | ssh stdin `run_ro.sh` | `gatea@172.24.55.233 bash -s --` |
+| 03 | sequence_ok | ssh stdin `remote_extract_verify_wpi.sh` | `gatea@172.24.55.233 <launch domain> <REMOTE_BASE>/kit/runkit.tar <REMOTE_BASE>/kit/extracted <PIN-AT-STAGE-1 archive sha256>` |
+| 04 | sequence_ok | ssh stdin `run_p0.sh` | `gatea@172.24.55.233 <launch domain>` |
+| 05 | sequence_ok | ssh stdin `run_ro.sh` | `gatea@172.24.55.233 <launch domain>` |
 | 06 | sequence_ok | operator-side probe, **host contact** | single TCP connect attempt to `172.24.55.233:8790`, no payload sent, no ssh (B6 external half) |
-| 07 | **always** | ssh stdin `remote_close_tree_wpi.sh` | `gatea@172.24.55.233 bash -s -- <EV_DIR P0> <RUNID P0>` |
-| 08 | **always** | ssh stdin `remote_close_tree_wpi.sh` | `gatea@172.24.55.233 bash -s -- <EV_DIR RO> <RUNID RO>` |
+| 07 | **always** | ssh stdin `remote_close_tree_wpi.sh` | `gatea@172.24.55.233 <launch domain> <EV_DIR P0> <RUNID P0> <REMOTE_BASE>/work` |
+| 08 | **always** | ssh stdin `remote_close_tree_wpi.sh` | `gatea@172.24.55.233 <launch domain> <EV_DIR RO> <RUNID RO> <REMOTE_BASE>/work` |
 | 09 | **always** | scp down | `-r gatea@172.24.55.233:<EV_DIR P0> .` (cwd `<record>\evidence`) |
 | 10 | **always** | scp down | `-r gatea@172.24.55.233:<EV_DIR RO> .` (cwd `<record>\evidence`) |
 | 11 | **always** | local only | `local_bind 07 09 evidence\<RUNID P0>` - no host contact |
@@ -529,19 +603,45 @@ ran and returned the deviant value its own contract defines.
 
 | kind | ops | what counts as a result | everything else |
 |---|---|---|---|
-| `ssh_stdin` | 01, 03, 04, 05, 07, 08 | rc in `{0,1,3}` **and** the capture carries at least one preregistered remote result-line prefix (`SETUP_`/`SETUP `, `EXTRACT_`/`EXTRACT `, `P0W_`/`P0W `, `ROW_`/`ROW `, `CLOSE_`/`CLOSE `) | ssh's own rc **255** is transport failure — host down, rejected key, DNS, dropped route, refused configuration — in which nothing was observed; any other rc is outside the grammar; and rc `{0,1,3}` with no remote marker is not evidence that the delivered script ran at all |
+| `ssh_stdin` | 01, 03, 04, 05, 07, 08 | rc in `{0,1,3}` **and** the capture carries a result-line prefix from **this operation's own marker family**, bound to the stdin artifact the row sends: `remote_setup_wpi.sh`→`SETUP_`/`SETUP `, `remote_extract_verify_wpi.sh`→`EXTRACT_`/`EXTRACT `, `run_p0.sh`→`P0W_`/`P0W `, `run_ro.sh`→`ROW_`/`ROW `, `remote_close_tree_wpi.sh`→`CLOSE_`/`CLOSE ` | ssh's own rc **255** is transport failure — host down, rejected key, DNS, dropped route, refused configuration — in which nothing was observed; any other rc is outside the grammar; and rc `{0,1,3}` with no marker **of that row's own family** is not evidence that the delivered script ran at all. Round 3 tested one global union of all five families, so a close operation accepted `SETUP PASS` from an unrelated program as its own provenance (Codex final audit F1); an `ssh_stdin` row whose stdin leaf has no registered family is a plan STOP |
 | `scp_up`, `scp_down` | 02, 09, 10 | rc 0 only | a transfer observes no host state, and scp's failure rc is **1**, which collides with the FAIL class and cannot be separated by rc alone — so the kind decides, and every non-zero rc is not-evaluable |
 | `tcp_probe` | 06 | rc in `{0,1,3}`; rc 1 is the genuine `host_reachable_8790` observation | rc outside the grammar |
 | `local_bind` | 11, 12 | rc in `{0,1,3}`; rc 1 is a genuine digest-set mismatch | rc outside the grammar |
 
-One further rule cuts across all kinds: an `always` op runs unconditionally so a
-broken run's evidence is still closed, retrieved and bound. When the sequence that was
-supposed to *create* that evidence never completed, the `always` op's failure is a
-consequence of the earlier break — a cleanup with nothing to clean — and is
-not-evaluable, never a host-state FAIL that outvotes the truthful earlier STOP. This
-is not hypothetical: with an early STOP, the close script returns rc 1 for the absent
-tree and both retrievals then fail, so four `always` rows previously manufactured a
-FAIL out of one honest STOP.
+One further rule cuts across all kinds, and it is **per branch and per operation**
+(round 4; Codex final audit F4, Lead adjudication — the round-3 global rule is not
+ratified). An `always` op runs unconditionally so a broken run's evidence is still
+closed, retrieved and bound. When the operations that were supposed to *create the
+evidence that op closes* never completed, its failure is a consequence of that break
+— a cleanup with nothing to clean — and is not-evaluable, never a host-state FAIL
+that outvotes the truthful earlier STOP. This is not hypothetical: with an early
+STOP, the close script returns rc 1 for the absent tree and both retrievals then
+fail, so four `always` rows previously manufactured a FAIL out of one honest STOP.
+
+"Always run" is an execution policy, not a declaration that every cleanup row shares
+one prerequisite. Each `always` op depends only on its own branch:
+
+| op | depends on | branch |
+|---|---|---|
+| 07 P0 close | 04 | P0 |
+| 08 RO close | 05 | RO |
+| 09 P0 fetch | 07 | P0 |
+| 10 RO fetch | 08 | RO |
+| 11 P0 bind | 07, 09 | P0 |
+| 12 RO bind | 08, 10 | RO |
+
+The runner freezes this graph, binds it to the plan before execution — every
+`always` row must have an entry, every entry must name a real, earlier op, or the
+run STOPs — and resolves each dependency against the class that operation actually
+received. An unrelated branch's failure therefore can no longer demote a genuine
+marked rc 1 to not-evaluable: with ops 01–06 matching, a P0 close `CLOSE_STOP` rc 3
+and an independent RO close `CLOSE_FAIL` rc 1, the RO deviation is **counted**
+(`deviant>=1`, run FAIL). Two distinct reasons are emitted, because they are two
+different facts: `cleanup_after_unestablished_prerequisite` (the evidence this op
+exists to close was never created) and `cleanup_after_earlier_deviation` (the
+prerequisite ran and observed deviant state, so this op's own failure is downstream
+of a finding already counted). Both carry the resolved prerequisite classes in the
+record.
 
 Op 06 is the one op that touches the host without ssh. It is called out here and in
 section 12 rather than buried, because "no host contact" is a claim the record has
@@ -578,6 +678,24 @@ example: the STOP line reached the log because the leaf was already open, but th
 `stat` rc that caused it is only interpretable against the operator-side record of
 what was sent.
 
+**Transport semantics, stated once (round 4; supersedes every earlier summary).**
+The runner executes exactly `TRANSPORT_PLAN.tsv` ops 01–12 with **first-mismatch**
+sequencing, not first-FAIL: after the first mismatching *or* not-evaluable
+`sequence_ok` operation, later `sequence_ok` operations are skipped while all
+`always` operations still run. Results are classified by operation **kind** and
+**provenance**, never by rc alone. `ssh` rc 255, any nonzero `scp` rc, an rc outside
+a kind's grammar, and an `ssh` rc whose capture carries no marker **from that
+operation's own family** are all not-evaluable. An `always` failure caused by an
+earlier break on **its own branch** is not-evaluable rather than a new host FAIL,
+and it names which of the two cases it is —
+`cleanup_after_unestablished_prerequisite` or `cleanup_after_earlier_deviation`;
+a failure on an unrelated branch does not demote it. A completed deviant
+observation outranks a later inability to evaluate, so a run with both is FAIL, and
+every not-evaluable operation is still enumerated and counted. The per-op record
+therefore also carries `TR_REMOTE_LAUNCH_DOMAIN`, one `TR_OP_PREREQ` line per
+`always` op naming its frozen dependency edges, and a `TR_OP_PREREQ_STATE` line per
+executed `always` op naming the resolved class of each edge.
+
 Default mode is a dry run. Execution requires **both** `-Execute` and
 `-Confirm <ALLOCATE-AT-DISPATCH>-EXECUTE`; anything else prints the plan and opens
 nothing. Both switches are **technical interlocks on the runner, not authority**
@@ -591,9 +709,16 @@ budgeted to do.
 
 A process never hashes its own still-open evidence. Ops 07 and 08 run
 `remote_close_tree_wpi.sh` - the section 4 derivation of the accepted
-`remote_close_tree.sh`, differing from it only in class 2 program identity - as
+`remote_close_tree.sh`, differing from it in derivation classes 2 (program
+identity), 3 (exact absence classification), 5 (launch-domain attestation) and 6
+(run-owned scratch), and in nothing else - as
 **separate ssh invocations after the stage connection has
 already returned** - that is the structural guarantee the stage shell has exited.
+Each invocation receives three arguments, `<EV_DIR> <RUNID> <WORK_ROOT>`, and the
+work root is the `<REMOTE_BASE>/work` directory op 01 allocated: the close script
+never chooses or creates its own scratch location. An argv count, RUNID grammar or
+`EV_DIR`/`RUNID` disagreement is an operator-side composition error and is rc 3;
+only the state of the evidence tree itself is a completed observation at rc 1.
 Because a structural guarantee is not a measurement, the script also computes the
 digest set **twice** and refuses if the two passes differ, so a tree that is still
 being written is never bound as closed. Each pass is independently complete only

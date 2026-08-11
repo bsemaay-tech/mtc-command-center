@@ -19,9 +19,12 @@
 #                  dropped route, refused configuration) in which NOTHING was
 #                  observed, and any other rc is outside the grammar; both are
 #                  not-evaluable. Even inside the grammar the rc is read as a
-#                  probe result only after the capture carries at least one
-#                  preregistered remote-program marker, which is the local
-#                  evidence that ssh really ran the delivered script.
+#                  probe result only after the capture carries a marker from
+#                  THIS operation's own family - the one belonging to the stdin
+#                  artifact this row sends (Codex final audit F1). A global
+#                  union of every program's prefixes established only that some
+#                  preregistered program spoke, so a close operation accepted
+#                  `SETUP PASS` as its own provenance.
 #   * scp_up/down- a transfer is pure transport: it observes no host state, so
 #                  ONLY rc 0 is a result and every non-zero rc is not-evaluable.
 #                  scp's failure rc is 1, which collides with the FAIL class and
@@ -29,9 +32,20 @@
 #   * tcp_probe /
 #     local_bind - operator-side and runner-implemented, grammar {0,1,3}; rc 1
 #                  is a genuine completed observation.
-#   * an `always` cleanup op whose prerequisite sequence never completed is
-#     closing evidence of an already-broken run. Its failure is a consequence of
-#     that break, never an independent observation of deviant host state.
+#   * an `always` cleanup op whose OWN prerequisites never completed is closing
+#     evidence of an already-broken branch. Its failure is a consequence of that
+#     break, never an independent observation of deviant host state. Those
+#     prerequisites are modelled PER BRANCH and PER OPERATION (Codex final audit
+#     F4, Lead adjudication): P0 close depends on the P0 stage, RO close on the
+#     RO stage, each fetch on its own close, each local bind on its own
+#     close/fetch pair. One global "did everything before this match" snapshot
+#     erased a genuine marked RO cleanup FAIL because an unrelated P0 close had
+#     stopped first. Two distinct reasons are emitted, because they are two
+#     different facts: `cleanup_after_unestablished_prerequisite` (the evidence
+#     this op exists to close was never created) and
+#     `cleanup_after_earlier_deviation` (the prerequisite ran and observed
+#     deviant state, so this op's own failure is downstream of a finding that is
+#     already counted).
 # Precedence, when both classes occur in one run: a completed deviant
 # observation outranks a later inability to evaluate, so the run is FAIL - and
 # every not-evaluable operation is still enumerated by TR_OP_NOT_EVALUABLE and
@@ -85,6 +99,11 @@ $PINNED_FILES = @(
 
 # Every stdin file resolves against exactly one frozen absolute root, named by
 # the plan row itself. There is no implicit "the directory I happen to be in".
+# `ACCEPTED` is registered but NOT live (Claude round-3 nit N-f): since round 3 no
+# accepted Stage-2 script travels, so no plan row names it and ops 07/08 resolve
+# through `PREREG`. It is retained because the accepted directory remains the
+# recorded derivation basis, and a row that named it would still have to satisfy
+# the stdin digest pin - but a reader should not mistake it for a live path.
 $STDIN_ROOTS = @{ 'PREREG' = $PREREG_DIR; 'ACCEPTED' = $ACCEPTED_DIR }
 
 $SYSTEM_ROOT_PIN = 'C:\Windows'
@@ -133,6 +152,33 @@ $SSH_PINNED_OPTIONS = @(
     '-o', 'ForwardX11=no',
     '-o', 'ClearAllForwardings=yes'
 )
+# --- remote launch domain (Codex final audit F1) -----------------------------
+# Pinning the local ssh client did not pin the program the transport ends up
+# talking to. Round 3 sent every stdin script to bare `bash -s --`, so the
+# remote interpreter was whatever the login shell's PATH resolved, and an
+# inherited BASH_ENV ran a startup plant that ignored the delivered script and
+# forged its rc/marker pair. The remote command is therefore an absolute,
+# explicitly constructed launch domain, frozen HERE and required verbatim in
+# every ssh_stdin plan row immediately after the route: `env -i` clears the
+# login shell's exported state (including BASH_ENV, ENV, LD_PRELOAD and any
+# exported shell function), `--noprofile --norc` refuses startup files, and both
+# programs are named by absolute path. Each delivered script re-attests this
+# same domain from the inside before it runs its first external program, so the
+# operator side and the remote side state the same contract independently.
+#
+# Scope, stated rather than implied: this binds the interpreter's LOCATOR and
+# its environment, not its bytes, and it does not reach the login shell sshd
+# uses to run the command string. Binding those is a deploy-channel attestation
+# and a successor item.
+$SSH_TARGET = 'gatea@172.24.55.233'
+$REMOTE_LAUNCH_DOMAIN = @(
+    '/usr/bin/env', '-i',
+    'PATH=/usr/bin:/bin',
+    'LC_ALL=C',
+    'HOME=/home/gatea',
+    '/usr/bin/bash', '--noprofile', '--norc', '-s', '--'
+)
+
 $CONFIG_PINS = @(
     @{ Name = 'ssh_identity'; Path = $SSH_IDENTITY_FILE; Sha = $SSH_IDENTITY_SHA; Print = $false;
        Why = 'the_only_credential_-i_names_and_IdentitiesOnly=yes_admits' },
@@ -158,20 +204,55 @@ $ENV_RATIONALE = @{
 # --- observed-outcome grammar (Codex R2 F1 / Claude R2 F1) -------------------
 $REMOTE_OUTCOME_RCS = @(0, 1, 3)
 $SSH_TRANSPORT_RC   = 255
-# The result-line prefixes the five preregistered remote programs emit. At least
-# one must appear in a capture before an ssh op's rc is read as a probe result:
-# it is the local evidence that ssh actually ran the delivered script rather
-# than failing in transport.
-$REMOTE_MARKER_PREFIXES = @(
-    'SETUP_', 'SETUP ', 'EXTRACT_', 'EXTRACT ', 'P0W_', 'P0W ',
-    'ROW_', 'ROW ', 'CLOSE_', 'CLOSE '
-)
+# The result-line prefixes each preregistered remote program emits, bound to the
+# stdin artifact that carries it (Codex final audit F1). A marker from THIS
+# operation's family must appear in its capture before its rc is read as a probe
+# result: that is the local evidence that ssh ran THE DELIVERED SCRIPT, not
+# merely that something preregistered spoke. Round 3 tested one global union of
+# all five families, and the exact runner fixture consequently accepted
+# `SETUP PASS` from a generic stub as provenance for close operations 07/08.
+# Every ssh_stdin row's stdin leaf must appear as a key here or the plan STOPs,
+# so adding an operation cannot silently reintroduce an unbound marker set.
+$MARKER_FAMILY_BY_STDIN = @{
+    'remote_setup_wpi.sh'          = @('SETUP_', 'SETUP ');
+    'remote_extract_verify_wpi.sh' = @('EXTRACT_', 'EXTRACT ');
+    'run_p0.sh'                    = @('P0W_', 'P0W ');
+    'run_ro.sh'                    = @('ROW_', 'ROW ');
+    'remote_close_tree_wpi.sh'     = @('CLOSE_', 'CLOSE ')
+}
+
+# --- per-branch, per-operation prerequisites (Codex final audit F4) ----------
+# "Always run" is an execution policy, not a declaration that every cleanup row
+# shares one prerequisite. Each `always` op names the operations whose success it
+# actually depends on:
+#   07 P0 close   <- 04 P0 stage        08 RO close   <- 05 RO stage
+#   09 P0 fetch   <- 07 P0 close        10 RO fetch   <- 08 RO close
+#   11 P0 bind    <- 07 and 09          12 RO bind    <- 08 and 10
+# An unrelated branch's failure can no longer demote a genuine marked rc 1 to
+# not-evaluable. Every `always` op in the plan must have an entry, and every
+# entry must name a real, earlier op, or the plan STOPs before execution.
+$ALWAYS_PREREQUISITES = @{
+    '07' = @('04');
+    '08' = @('05');
+    '09' = @('07');
+    '10' = @('08');
+    '11' = @('07', '09');
+    '12' = @('08', '10')
+}
 
 $ALLOWED_KINDS    = @('ssh_stdin', 'scp_up', 'scp_down', 'tcp_probe', 'local_bind')
 $ALLOWED_RUN_WHEN = @('sequence_ok', 'always')
 $ALLOWED_PROGRAMS = @('ssh', 'scp')
 $KIND_PROGRAM     = @{ 'ssh_stdin' = 'ssh'; 'scp_up' = 'scp'; 'scp_down' = 'scp' }
-$UNFILLED_MARKERS = @('<ALLOCATE-AT-DISPATCH>', '<PIN-AT-FREEZE>')
+# COMPOSED, never written out (Claude round-3 nit N-g / Codex round-3 nit 2, and
+# the same discipline `remote_setup_wpi.sh` already uses). A Stage-1 fill that
+# replaced the placeholder text file-wide would otherwise rewrite this guard into
+# the real values, and the guard would then STOP a correctly frozen runner with
+# `unfilled_marker` - fail-closed in the wrong place, at the cost of a one-use
+# RUNID and with a diagnostic that contradicts itself. Composing the sentinels
+# also keeps the placeholder census honest: the only literals left in this file
+# are consumers.
+$UNFILLED_MARKERS = @(('<ALLOCATE-' + 'AT-DISPATCH>'), ('<PIN-' + 'AT-FREEZE>'))
 
 # --------------------------------------------------------------------- output
 $script:Log = New-Object System.Collections.ArrayList
@@ -379,7 +460,12 @@ foreach ($cfg in $CONFIG_PINS) {
 foreach ($optElement in $SSH_PINNED_OPTIONS) {
     Assert-MarkerFree 'SSH_PINNED_OPTIONS' $optElement
 }
+Assert-MarkerFree 'SSH_TARGET' $SSH_TARGET
+foreach ($ldElement in $REMOTE_LAUNCH_DOMAIN) {
+    Assert-MarkerFree 'REMOTE_LAUNCH_DOMAIN' $ldElement
+}
 Emit 'TR_MARKER_GATE constants=marker_free'
+Emit ('TR_REMOTE_LAUNCH_DOMAIN route=' + $SSH_TARGET + ' argv=[' + ($REMOTE_LAUNCH_DOMAIN -join '] [') + ']')
 
 $here = Split-Path -Parent $PSCommandPath
 if ($here -ne $PREREG_DIR) { Stop-Run ('runner_not_in_preregistered_directory here=' + $here + ' expected=' + $PREREG_DIR) }
@@ -459,7 +545,8 @@ for ($i = 1; $i -lt $planLines.Count; $i++) {
     }
     $op = @{
         Id = $f[0]; Kind = $f[1]; RunWhen = $f[2]; ExpectRc = $expectRc;
-        Cwd = $f[4]; StdinRel = $f[5]; StdinSha = $f[6]; Argv = $argv; Purpose = $f[8]
+        Cwd = $f[4]; StdinRel = $f[5]; StdinSha = $f[6]; Argv = $argv; Purpose = $f[8];
+        StdinLeaf = ''
     }
     if ($ALLOWED_KINDS -notcontains $op.Kind) { Stop-Run ('plan_row_bad_kind=' + $op.Kind + ' op=' + $op.Id) }
     if ($ALLOWED_RUN_WHEN -notcontains $op.RunWhen) { Stop-Run ('plan_row_bad_run_when=' + $op.RunWhen + ' op=' + $op.Id) }
@@ -485,12 +572,66 @@ for ($i = 1; $i -lt $planLines.Count; $i++) {
     # Only ssh_stdin carries a stdin file; every other kind must declare none.
     if ($op.Kind -eq 'ssh_stdin') {
         if ($op.StdinRel -eq '-') { Stop-Run ('plan_row_ssh_stdin_without_file op=' + $op.Id) }
+        # The stdin artifact names the operation's marker family. A row whose
+        # leaf is not a preregistered program cannot be classified by provenance
+        # at all, so it never reaches execution (Codex final audit F1).
+        $leafIdx = $op.StdinRel.LastIndexOf(':')
+        if ($leafIdx -lt 1) { Stop-Run ('plan_row_stdin_spec_no_root_token op=' + $op.Id) }
+        $op.StdinLeaf = $op.StdinRel.Substring($leafIdx + 1)
+        if (-not $MARKER_FAMILY_BY_STDIN.ContainsKey($op.StdinLeaf)) {
+            Stop-Run ('plan_row_stdin_has_no_marker_family op=' + $op.Id + ' leaf=' + $op.StdinLeaf)
+        }
+        # The frozen route and the frozen remote launch domain must follow the
+        # pinned option block verbatim, before the script's own arguments. This
+        # is what makes `env -i ... /usr/bin/bash --noprofile --norc -s --` a
+        # property of the runner rather than of whichever plan happens to be
+        # present: a row that reverts to bare `bash -s --` cannot run.
+        $routeIdx = 1 + $SSH_PINNED_OPTIONS.Count
+        $launchIdx = $routeIdx + 1
+        if ($op.Argv.Count -lt ($launchIdx + $REMOTE_LAUNCH_DOMAIN.Count)) {
+            Stop-Run ('plan_row_launch_domain_absent op=' + $op.Id + ' argc=' + $op.Argv.Count + ' required=' + ($launchIdx + $REMOTE_LAUNCH_DOMAIN.Count))
+        }
+        if ($op.Argv[$routeIdx] -ne $SSH_TARGET) {
+            Stop-Run ('plan_row_route_differs op=' + $op.Id + ' actual=[' + $op.Argv[$routeIdx] + '] expected=[' + $SSH_TARGET + ']')
+        }
+        for ($k = 0; $k -lt $REMOTE_LAUNCH_DOMAIN.Count; $k++) {
+            if ($op.Argv[$launchIdx + $k] -ne $REMOTE_LAUNCH_DOMAIN[$k]) {
+                Stop-Run ('plan_row_launch_domain_differs op=' + $op.Id + ' index=' + ($launchIdx + $k) + ' actual=[' + $op.Argv[$launchIdx + $k] + '] expected=[' + $REMOTE_LAUNCH_DOMAIN[$k] + ']')
+            }
+        }
     } elseif ($op.StdinRel -ne '-') {
         Stop-Run ('plan_row_stdin_file_on_non_ssh_kind op=' + $op.Id + ' kind=' + $op.Kind)
     }
     [void] $ops.Add($op)
 }
 Emit ('TR_PLAN_ROWS count=' + $ops.Count)
+
+# --- the prerequisite graph is bound to THIS plan before anything runs -------
+# Codex final audit F4. The dependency model is only as good as its agreement
+# with the op list: an `always` row with no entry would silently fall back to
+# "no prerequisite" and a stale entry would name an op that does not exist. Both
+# are plan/runner disagreements, so both STOP here rather than at classification
+# time, and every edge is printed into the record.
+$opIdSet = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::Ordinal)
+$opRunWhenById = @{}
+foreach ($op in $ops) { [void]$opIdSet.Add($op.Id); $opRunWhenById[$op.Id] = $op.RunWhen }
+foreach ($op in $ops) {
+    if ($op.RunWhen -ne 'always') { continue }
+    if (-not $ALWAYS_PREREQUISITES.ContainsKey($op.Id)) {
+        Stop-Run ('always_op_has_no_prerequisite_entry op=' + $op.Id)
+    }
+    $edges = @($ALWAYS_PREREQUISITES[$op.Id])
+    if ($edges.Count -lt 1) { Stop-Run ('always_op_prerequisite_entry_empty op=' + $op.Id) }
+    foreach ($edge in $edges) {
+        if (-not $opIdSet.Contains($edge)) { Stop-Run ('prerequisite_names_unknown_op op=' + $op.Id + ' prerequisite=' + $edge) }
+        if ([int]$edge -ge [int]$op.Id) { Stop-Run ('prerequisite_not_earlier op=' + $op.Id + ' prerequisite=' + $edge) }
+    }
+    Emit ('TR_OP_PREREQ id=' + $op.Id + ' requires=[' + ($edges -join ',') + ']')
+}
+foreach ($declaredId in $ALWAYS_PREREQUISITES.Keys) {
+    if (-not $opIdSet.Contains($declaredId)) { Stop-Run ('prerequisite_entry_for_unknown_op=' + $declaredId) }
+    if ($opRunWhenById[$declaredId] -ne 'always') { Stop-Run ('prerequisite_entry_on_non_always_op=' + $declaredId) }
+}
 
 foreach ($op in $ops) {
     if ($op.StdinRel -eq '-') {
@@ -592,7 +733,15 @@ foreach ($name in ($script:ChildEnv.Keys | Sort-Object)) {
     if ($ENV_RATIONALE.ContainsKey($name)) { $why = $ENV_RATIONALE[$name] }
     Emit ('TR_ENV name=' + $name + ' value=' + $script:ChildEnv[$name] + ' why=' + $why)
 }
-Emit ('TR_ENV_POLICY cleared=all carried=none inherited_path=never ambient_ssh_config=disabled_by_-F_none')
+# A record line states what it MEASURED (Claude round-3 nit N-e). The round-3
+# line asserted `ambient_ssh_config=disabled_by_-F_none` as a fixed string that
+# nothing checked, so a later edit of the option block could have left the
+# sentence true-looking and false. The claim is now derived from the frozen block.
+$ambientConfig = 'not_disabled'
+if ($SSH_PINNED_OPTIONS.Count -ge 2 -and $SSH_PINNED_OPTIONS[0] -eq '-F' -and $SSH_PINNED_OPTIONS[1] -eq 'none') {
+    $ambientConfig = 'disabled_by_-F_none'
+}
+Emit ('TR_ENV_POLICY cleared=all carried=none inherited_path=never ambient_ssh_config=' + $ambientConfig + ' derived_from=SSH_PINNED_OPTIONS[0..1]')
 
 foreach ($op in $ops) {
     Emit ('TR_OP_PLANNED id=' + $op.Id + ' kind=' + $op.Kind + ' run_when=' + $op.RunWhen + ' expect_rc=' + $op.ExpectRc + ' stdin=' + $op.StdinRel)
@@ -614,6 +763,11 @@ $notEvaluableCount = 0
 $firstMismatch = ''
 $firstNotEvaluable = ''
 $results = New-Object System.Collections.ArrayList
+# The recorded outcome class of every operation that has already been decided,
+# by op id. It is what the per-branch prerequisite resolver reads, so a
+# dependency is answered with the class that operation actually received rather
+# than with a single global snapshot (Codex final audit F4).
+$classById = @{}
 
 function Invoke-ExternalProcess($op, [string] $outFile, [string] $errFile) {
     $exe = $script:ProgramByName[$op.Argv[0]]
@@ -863,14 +1017,17 @@ function Invoke-LocalBind($op, [string] $outFile, [string] $errFile) {
     }
 }
 
-# --- provenance: did the remote program actually run? -----------------------
+# --- provenance: did THIS operation's remote program actually run? ----------
 # ssh conveys the remote command's status faithfully EXCEPT when it never ran
-# one. The captures are therefore scanned for a preregistered remote result-line
-# prefix before an ssh op's rc is read as a probe result. Latin-1 keeps every
-# byte a distinct character, so a marker is still found in a capture that also
-# carries bytes the strict record reader would refuse - the test must not fail
-# open on odd content, and must not fail closed on a legitimate marker.
-function Test-RemoteProvenanceMarker([string] $outFile, [string] $errFile) {
+# one. The captures are therefore scanned, before an ssh op's rc is read as a
+# probe result, for a result-line prefix from the family belonging to the stdin
+# artifact THIS row sends (Codex final audit F1). Latin-1 keeps every byte a
+# distinct character, so a marker is still found in a capture that also carries
+# bytes the strict record reader would refuse - the test must not fail open on
+# odd content, and must not fail closed on a legitimate marker.
+function Test-RemoteProvenanceMarkerForOp($op, [string] $outFile, [string] $errFile) {
+    if (-not $MARKER_FAMILY_BY_STDIN.ContainsKey($op.StdinLeaf)) { return $false }
+    $prefixes = @($MARKER_FAMILY_BY_STDIN[$op.StdinLeaf])
     foreach ($f in @($outFile, $errFile)) {
         if (-not (Test-Path -LiteralPath $f -PathType Leaf)) { continue }
         $bytes = $null
@@ -879,7 +1036,7 @@ function Test-RemoteProvenanceMarker([string] $outFile, [string] $errFile) {
         $text = [System.Text.Encoding]::GetEncoding(28591).GetString($bytes)
         foreach ($rawLine in $text.Split([char]10)) {
             $line = $rawLine.TrimEnd([char]13)
-            foreach ($prefix in $REMOTE_MARKER_PREFIXES) {
+            foreach ($prefix in $prefixes) {
                 if ($line.StartsWith($prefix, [System.StringComparison]::Ordinal)) { return $true }
             }
         }
@@ -887,18 +1044,42 @@ function Test-RemoteProvenanceMarker([string] $outFile, [string] $errFile) {
     return $false
 }
 
+# --- per-branch prerequisite resolution (Codex final audit F4) --------------
+# Answers two separate questions about the operations THIS op depends on, using
+# the classes already recorded for them: did every one of them match, and if not,
+# did any of them observe deviant state? A prerequisite that was skipped, was
+# not evaluable, or was never reached is 'unestablished'; one that ran and was
+# deviant makes this op's own failure downstream of a finding already counted.
+function Resolve-AlwaysPrerequisite($op, $classById) {
+    $established = $true
+    $anyDeviant = $false
+    $detail = @()
+    if ($ALWAYS_PREREQUISITES.ContainsKey($op.Id)) {
+        foreach ($edge in @($ALWAYS_PREREQUISITES[$op.Id])) {
+            $cls = 'not_reached'
+            if ($classById.ContainsKey($edge)) { $cls = [string]$classById[$edge] }
+            $detail += ($edge + '=' + $cls)
+            if ($cls -ne 'match') {
+                $established = $false
+                if ($cls -eq 'deviant') { $anyDeviant = $true }
+            }
+        }
+    }
+    return @{ Established = $established; AnyDeviant = $anyDeviant; Detail = ($detail -join ',') }
+}
+
 # --- classify one observed outcome by KIND and PROVENANCE, not by integer ----
 # Returns 'match', 'deviant' or 'not_evaluable' with the reason it was reached.
 # 'deviant' - and therefore TR_RUN FAIL - is reachable only for an operation
 # that ran and returned the deviant value its own contract defines.
-function Get-OpOutcomeClass($op, $rc, [string] $outFile, [string] $errFile, [bool] $prerequisiteEstablished) {
+function Get-OpOutcomeClass($op, $rc, [string] $outFile, [string] $errFile, $prerequisite) {
     if ($op.Kind -eq 'ssh_stdin') {
         # ssh's own code for could-not-connect / could-not-authenticate /
         # connection-closed. Nothing was observed, so nothing is deviant.
         if ($rc -eq $SSH_TRANSPORT_RC) { return @{ Class = 'not_evaluable'; Reason = 'ssh_transport_failure_rc255' } }
         if ($REMOTE_OUTCOME_RCS -notcontains $rc) { return @{ Class = 'not_evaluable'; Reason = 'rc_outside_outcome_grammar' } }
-        if (-not (Test-RemoteProvenanceMarker $outFile $errFile)) {
-            return @{ Class = 'not_evaluable'; Reason = 'no_remote_program_marker_in_capture' }
+        if (-not (Test-RemoteProvenanceMarkerForOp $op $outFile $errFile)) {
+            return @{ Class = 'not_evaluable'; Reason = ('no_remote_program_marker_in_capture expected_family=' + $op.StdinLeaf) }
         }
     } elseif ($op.Kind -eq 'scp_up' -or $op.Kind -eq 'scp_down') {
         # A transfer observes no host state. Its failure rc is 1, which collides
@@ -911,12 +1092,17 @@ function Get-OpOutcomeClass($op, $rc, [string] $outFile, [string] $errFile, [boo
     if ($rc -eq $op.ExpectRc) { return @{ Class = 'match'; Reason = 'preregistered_rc' } }
     if ($rc -eq 3) { return @{ Class = 'not_evaluable'; Reason = 'operation_reported_stop' } }
     # An `always` op runs unconditionally so that a broken run's evidence is
-    # still closed, retrieved and bound. When the sequence that was supposed to
-    # CREATE that evidence never completed, this op's failure is a consequence
-    # of the earlier break - a cleanup with nothing to clean - and must not
-    # outvote the truthful earlier STOP with a manufactured host-state FAIL.
-    if ($op.RunWhen -eq 'always' -and -not $prerequisiteEstablished) {
-        return @{ Class = 'not_evaluable'; Reason = 'cleanup_after_unestablished_prerequisite' }
+    # still closed, retrieved and bound. When the operations that were supposed
+    # to CREATE the evidence THIS op closes never completed, its failure is a
+    # consequence of that break - a cleanup with nothing to clean - and must not
+    # outvote the truthful earlier STOP with a manufactured host-state FAIL. The
+    # test is now against this op's OWN prerequisites, so an unrelated branch
+    # cannot erase a genuine marked deviation (Codex final audit F4).
+    if ($op.RunWhen -eq 'always' -and -not $prerequisite.Established) {
+        if ($prerequisite.AnyDeviant) {
+            return @{ Class = 'not_evaluable'; Reason = ('cleanup_after_earlier_deviation prerequisites=[' + $prerequisite.Detail + ']') }
+        }
+        return @{ Class = 'not_evaluable'; Reason = ('cleanup_after_unestablished_prerequisite prerequisites=[' + $prerequisite.Detail + ']') }
     }
     return @{ Class = 'deviant'; Reason = 'operation_ran_and_observed_deviant_state' }
 }
@@ -932,13 +1118,22 @@ foreach ($op in $ops) {
     if ($op.RunWhen -eq 'sequence_ok' -and -not $sequenceOk) {
         Write-TextFile $outFile ''; Write-TextFile $errFile ''; Write-TextFile $rcFile 'skipped'; Write-TextFile $elapsedFile '0'
         Emit ('TR_OP_SKIPPED id=' + $op.Id + ' reason=prior_sequence_mismatch')
+        $classById[$op.Id] = 'skipped'
         [void]$results.Add(@{Id=$op.Id;Rc='skipped';Expect=$op.ExpectRc;Elapsed=0})
         continue
     }
 
-    # Captured before this operation can change it: whether every operation the
-    # plan sequenced ahead of this one matched its preregistered rc.
-    $prerequisiteEstablished = $sequenceOk
+    # Resolved before this operation can change anything: for an `always` op,
+    # the recorded classes of the operations IT depends on; for a `sequence_ok`
+    # op, the ordinary first-mismatch sequence state, which is what decides
+    # whether it runs at all. A `sequence_ok` op that reaches this point has an
+    # established prerequisite by construction (Codex final audit F4).
+    if ($op.RunWhen -eq 'always') {
+        $prerequisite = Resolve-AlwaysPrerequisite $op $classById
+        Emit ('TR_OP_PREREQ_STATE id=' + $op.Id + ' established=' + $prerequisite.Established + ' any_deviant=' + $prerequisite.AnyDeviant + ' prerequisites=[' + $prerequisite.Detail + ']')
+    } else {
+        $prerequisite = @{ Established = $sequenceOk; AnyDeviant = $false; Detail = 'sequence_ok_branch' }
+    }
 
     Emit ('TR_OP_BEGIN id=' + $op.Id + ' kind=' + $op.Kind + ' cwd=' + $op.Cwd)
     Emit ('TR_OP_SENT_ARGV id=' + $op.Id + ' argv=[' + ($op.Argv -join '] [') + ']')
@@ -965,7 +1160,8 @@ foreach ($op in $ops) {
 
     # Classification is by operation kind and provenance, never by the integer
     # alone (Codex R2 F1 / Claude R2 F1).
-    $outcome = Get-OpOutcomeClass $op $rc $outFile $errFile $prerequisiteEstablished
+    $outcome = Get-OpOutcomeClass $op $rc $outFile $errFile $prerequisite
+    $classById[$op.Id] = $outcome.Class
     Emit ('TR_OP_CLASS id=' + $op.Id + ' kind=' + $op.Kind + ' rc=' + $rc + ' expect_rc=' + $op.ExpectRc + ' class=' + $outcome.Class + ' reason=' + $outcome.Reason)
     if ($outcome.Class -ne 'match') {
         if ($firstMismatch -eq '') { $firstMismatch=$op.Id; $sequenceOk=$false; Emit ('TR_FIRST_MISMATCH id=' + $op.Id + ' rc=' + $rc + ' expected=' + $op.ExpectRc + ' class=' + $outcome.Class + ' later_sequence_ops=skip always_ops=run') }

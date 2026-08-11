@@ -1,7 +1,84 @@
 #!/usr/bin/env bash
 # WP-I RO ssh-stdin wrapper (DRAFT - authoring only, not dispatchable).
 # Stage 1 fills every marked pin and hashes the resulting exact bytes.
+#
+# Transport op 05. Delivered on ssh stdin to the frozen remote launch domain,
+# which `transport_runner.ps1` holds as a constant and every plan row must carry
+# verbatim:
+#   /usr/bin/env -i PATH=/usr/bin:/bin LC_ALL=C HOME=/home/gatea \
+#     /usr/bin/bash --noprofile --norc -s --
 set -Eeuo pipefail
+
+# --- class 5: launch-domain attestation --------------------------------------
+# This block runs BEFORE the first external program, so a plant that replaced
+# the interpreter or injected a startup file is refused rather than measured. A
+# launch-domain violation is an inability to evaluate, never a host finding:
+# every arm here is rc 3.
+EXPECT_INTERPRETER='/usr/bin/bash'
+EXPECT_LAUNCH_PATH='/usr/bin:/bin'
+EXPECT_LAUNCH_LC_ALL='C'
+EXPECT_LAUNCH_HOME='/home/gatea'
+LD_ENVIRON='/proc/self/environ'
+
+# The inherited-function sweep runs BEFORE this script defines a function of its
+# own, so `declare -F` describes only what the launch domain delivered rather
+# than this program's own names. `declare -F` exits 1 when there is nothing to
+# list, which under `set -e` would end the run with no marker at all, so its
+# status is consumed deliberately and the emptiness is tested afterwards.
+LD_FUNCS="$(declare -F 2>/dev/null || :)"
+if [ -n "$LD_FUNCS" ]; then
+    printf 'ROW_STOP reason=launch_domain_inherited_shell_function detail=[%s]\n' "$LD_FUNCS" >&2
+    exit 3
+fi
+
+# MEASURED SCOPE LIMIT (round 4, recorded rather than implied). `bash` reads
+# `$BASH_ENV` before the first byte of a stdin-delivered script, and
+# `--norc`/`--noprofile` do not disable that channel, so a startup plant that
+# EXITS forges the record before anything here runs. No in-script attestation
+# can close that. It is closed on the operator side, by the frozen `env -i`
+# launch domain with an explicit complete variable list that
+# `transport_runner.ps1` enforces verbatim on every plan row, so no plan row can
+# introduce `BASH_ENV` at all - which is why the domain is stated on both sides.
+# A plant that lets the script RUN, the only kind that could forge a
+# real-looking record, is refused by the sweep below: `BASH_ENV` is still in the
+# exec environment the kernel recorded. Both cases are executed in self-QA.
+ld_stop() { printf 'ROW_STOP reason=%s\n' "$*" >&2; exit 3; }
+
+[ "${BASH:-}" = "$EXPECT_INTERPRETER" ] \
+    || ld_stop "launch_domain_interpreter=${BASH:-unset} expected=$EXPECT_INTERPRETER"
+if shopt -q login_shell; then ld_stop "launch_domain_login_shell_startup_files_were_read"; fi
+
+# The exec environment is read from the kernel's own copy rather than from the
+# shell's exported-name list: `/proc/self/environ` is what `execve` received, so
+# names the shell adds for its children (PWD, SHLVL, _) cannot mask an entry the
+# launch domain actually delivered. Each expected entry is matched as a WHOLE
+# `name=value` string and must appear exactly once; anything else - BASH_ENV,
+# ENV, LD_PRELOAD, a BASH_FUNC_x%% exported function, an inherited TMPDIR - is a
+# name this sweep does not recognise, and it STOPs naming the offender. The read
+# is a redirection, not an external program. The wrapper's own later exports are
+# not covered by this sweep and are not meant to be: it describes the domain the
+# operator delivered, not the environment this wrapper deliberately constructs
+# for the block it sources.
+[ ! -L "$LD_ENVIRON" ] || ld_stop "launch_domain_environ_is_symlink path=$LD_ENVIRON"
+[ -r "$LD_ENVIRON" ]   || ld_stop "launch_domain_environ_unreadable path=$LD_ENVIRON"
+LD_SEEN_PATH=0; LD_SEEN_LC_ALL=0; LD_SEEN_HOME=0; LD_ENTRIES=0
+LD_ENTRY=''
+while IFS= read -r -d '' LD_ENTRY || [ -n "$LD_ENTRY" ]; do
+    [ -n "$LD_ENTRY" ] || continue
+    LD_ENTRIES=$((LD_ENTRIES + 1))
+    case "$LD_ENTRY" in
+        "PATH=$EXPECT_LAUNCH_PATH")     LD_SEEN_PATH=$((LD_SEEN_PATH + 1)) ;;
+        "LC_ALL=$EXPECT_LAUNCH_LC_ALL") LD_SEEN_LC_ALL=$((LD_SEEN_LC_ALL + 1)) ;;
+        "HOME=$EXPECT_LAUNCH_HOME")     LD_SEEN_HOME=$((LD_SEEN_HOME + 1)) ;;
+        *) ld_stop "launch_domain_unexpected_environment_entry name=[${LD_ENTRY%%=*}]" ;;
+    esac
+    LD_ENTRY=''
+done < "$LD_ENVIRON"
+[ "$LD_ENTRIES" -eq 3 ]     || ld_stop "launch_domain_environment_size=$LD_ENTRIES expected=3"
+[ "$LD_SEEN_PATH" -eq 1 ]   || ld_stop "launch_domain_path_entries=$LD_SEEN_PATH expected=1 value=$EXPECT_LAUNCH_PATH"
+[ "$LD_SEEN_LC_ALL" -eq 1 ] || ld_stop "launch_domain_lc_all_entries=$LD_SEEN_LC_ALL expected=1 value=$EXPECT_LAUNCH_LC_ALL"
+[ "$LD_SEEN_HOME" -eq 1 ]   || ld_stop "launch_domain_home_entries=$LD_SEEN_HOME expected=1 value=$EXPECT_LAUNCH_HOME"
+
 export LC_ALL=C
 
 # --- allocation constants --------------------------------------------------
@@ -42,8 +119,17 @@ WPI_SWEEP_BUDGET_S='120'
 WPI_TOOL_PINS='<PIN-AT-FREEZE>'
 WPI_ATTESTED_MOUNTINFO_SHA256='<PIN-AT-FREEZE>'
 WPI_MAINPID='189813'
-WPI_INTERPRETER_TARGET='<PIN-AT-FREEZE>'
 WPI_VERIFY_LOCK_SHA256='d951e0eea01ec1a89bcfbe9d9630949b31bb316faae2ba6bcae39be794a451e5'
+# NO INERT PINS (successor-skeleton review gap 12 / round-4 item T7). Round 3
+# defined `WPI_INTERPRETER_TARGET` as a freeze pin here and exported it. The
+# accepted `RP7-WPI-RO.sh` never reads that name: `wpi_assert_interpreter`
+# derives `<WPI_VENV_ROOT>/bin/python` itself and refuses a symlinked object
+# rather than following a target chain. A filled but unread value is not a
+# preregistered check - it is a freeze-gate input that costs a deploy-channel
+# answer and establishes nothing - so it is removed from this wrapper rather
+# than carried. Reintroducing it requires an accepted block that gives it an
+# explicit predicate and a production consumer, plus its own section 10.1 allowlist row
+# for the resolved path it would put `stat` on.
 
 row_stop() { printf 'ROW_STOP reason=%s\n' "$*" >&2; exit 3; }
 
@@ -54,6 +140,11 @@ row_stop() { printf 'ROW_STOP reason=%s\n' "$*" >&2; exit 3; }
 # (`%u:%g`); a resolver-rendered name is never an identity.
 TOOL_STAT='/usr/bin/stat'
 TOOL_SHA256SUM='/usr/bin/sha256sum'
+# The launch domain's own two programs are admitted under the same rule, so the
+# interpreter attested above is inside the pinned program domain rather than
+# beside it (derivation class 5).
+TOOL_ENV='/usr/bin/env'
+TOOL_BASH='/usr/bin/bash'
 
 require_tool() {
     local t="$1" own mode g o
@@ -76,6 +167,14 @@ require_tool() {
 
 require_tool "$TOOL_STAT"
 require_tool "$TOOL_SHA256SUM"
+require_tool "$TOOL_ENV"
+require_tool "$TOOL_BASH"
+
+# The attested interpreter must be the pinned OBJECT, not merely a path that
+# spells the same characters.
+[ "$BASH" = "$TOOL_BASH" ] || row_stop "launch_domain_interpreter_outside_pinned_set value=$BASH"
+printf 'ROW_launch_domain interpreter=%s path=%s lc_all=%s home=%s exec_environment_entries=%s inherited_functions=0 bash_env=absent env=absent tmpdir=absent attestation=builtins_and_proc_self_environ\n' \
+    "$BASH" "$PATH" "$EXPECT_LAUNCH_LC_ALL" "$HOME" "$LD_ENTRIES"
 
 require_block() {
     local path="$1" want="$2" out rc=0 got rest
@@ -115,7 +214,7 @@ export WPI_CANDIDATE_SHA WPI_RELEASE_ROOT WPI_VENV_ROOT WPI_UNIT_FRAGMENT \
        WPI_EXPECTED_LOCK_SHA256 WPI_EXPECTED_LOCK_BYTES WPI_EXPECTED_PACKAGES \
        WPI_STATE_DIR WPI_STATE_UID WPI_STATE_GID WPI_LOG_DIR WPI_CONF_DIR \
        WPI_CONTROL_ENDPOINT WPI_SWEEP_BUDGET_S WPI_TOOL_PINS \
-       WPI_ATTESTED_MOUNTINFO_SHA256 WPI_MAINPID WPI_INTERPRETER_TARGET \
+       WPI_ATTESTED_MOUNTINFO_SHA256 WPI_MAINPID \
        WPI_VERIFY_LOCK_SHA256
 # shellcheck source=/dev/null
 . "$EXTRACT_DIR/RP7-WPI-RO.sh" </dev/null

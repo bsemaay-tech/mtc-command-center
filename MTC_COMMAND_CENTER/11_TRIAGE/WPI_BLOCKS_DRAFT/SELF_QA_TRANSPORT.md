@@ -1668,7 +1668,7 @@ Re-derived from the rejected baseline at commit `9ef4437d`, per file:
 | **all eight files** | **41** | **33** |
 
 which is exactly the correction both re-audits asked for. The round-3 delivered set is
-recorded in `TRANSPORT_REPAIR_R3_REPORT.md` §6 over its own scope — seven
+recorded in `TRANSPORT_REPAIR_R3_REPORT.md` §4 (`Delivered identities`) over its own scope — seven
 executable/plan files, since `remote_close_tree_wpi.sh` joins the set — so the census
 is stated over the set it closes rather than mixing scopes.
 
@@ -1685,3 +1685,682 @@ blind global replacement.
 All `<ALLOCATE-AT-DISPATCH>` and `<PIN-AT-FREEZE>` markers in the delivered set remain
 literal. No RUNID was minted; the only concrete `WPLP2-…` text is `$ACCEPTED_DIR`,
 which is accepted-source provenance, not a WP-I allocation.
+
+
+---
+
+# ROUND 4 - 2026-08-11 - F1-F4 and T5-T8, executed RED/GREEN
+
+Implementer session: Claude Opus 5 xhigh (Max account), under
+`KICKOFF_TRANSPORT_REPAIR_R4.md` plus `KICKOFF_TRANSPORT_R4_MAX_ADDENDUM.md`.
+Everything below was produced by running code on this machine. Nothing in this
+section is narrated: each block is the literal transcript of the harness named
+above it, and the harnesses are committed beside the targets so a re-auditor can
+re-run them.
+
+**No host was contacted and no network connection was opened.** The Linux
+fixtures run against a local WSL2 Ubuntu kernel; every path they touch is under
+`/root/wpi_r4*` on that local filesystem. The operator-side fixtures start no
+process at all: they inject per-operation `(rc, capture)` pairs into the runner's
+own extracted bytes.
+
+## R4-0. The three harnesses and what each proves
+
+| Harness | Executes | Proves |
+|---|---|---|
+| `_r4_runner_probe.ps1` | named regions of `transport_runner.ps1` extracted **verbatim** and `Invoke-Expression`-ed: the outcome grammar, the marker-family map, the prerequisite map, the provenance test, the prerequisite resolver, the classifier, the per-op classification/counter block and the run rollup | F1 wrong-family, F4 decisive fixture, the Claude scenario, the two distinct cleanup reasons |
+| `_r4_wsl_fixtures.sh` | the delivered shell bytes, with declared pin retargeting only | F1 PATH/`BASH_ENV`/launch domain, F2 `TMPDIR`-into-evidence, F3 mixed diagnostic, T6 composition and argv arity |
+| `_r4_t5_compose.sh` | the real `run_p0.sh` under the frozen launch domain, and the real `RP6-P0.sh` row-8 gate bytes | T5 wiring of the five `P0_ATTESTED_*` values |
+
+RED is never a description of what round 3 "would have" done. The runner probe
+extracts the same regions from the **round-3 blob at commit `78173bfd`**, and the
+shell fixtures run the round-3 and superseded close scripts themselves.
+
+The probe's region extractor prints the line range and SHA-256 of every region it
+lifts, so the reader can confirm the code under test is the file's own bytes
+rather than a paraphrase. Two regions are lifted by unique start/end anchors and
+three by brace balance; every slice is brace-balance-checked before execution.
+
+### Declared fixture retargeting, and nothing else
+
+On this kernel the `/usr/bin` coreutils names are symlinks to a multicall binary,
+and the delivered `require_tool` correctly refuses a symlink. The fixtures
+therefore retarget the declared `TOOL_*` pins to regular, root-owned, mode-0755
+copies under `/root/wpi_r4/tools`, fill `EXPECT_UID`/`EXPECT_GID` with this
+login's numeric identity, and fill `EXPECT_LAUNCH_HOME` with this login's `HOME`.
+`TOOL_BASH` and the attested interpreter stay `/usr/bin/bash`, which IS a regular
+root-owned file here. The op-01 allocation case additionally retargets
+`EXPECT_PREFIX`/`EXPECT_PARENT` and fills `EXPECT_PARENT_MOUNT` from the observed
+projection - which would be **illegitimate in production**, is labelled as such in
+the transcript, and proves the allocation shape only, never the mount binding. No
+predicate, classification, ordering or emitted record was altered anywhere.
+
+## R4-1. Finding index: which block below is the evidence
+
+| Item | RED | GREEN | Verdict |
+|---|---|---|---|
+| F1 remote interpreter outside the pinned domain | `F1 RED - a fake bash first on PATH` (rc 0, plant ran, forged marker); `F1 RED - inherited BASH_ENV` (rc 0, plant ran, forged marker) | `F1 GREEN - the frozen launch domain neutralises both plants` (rc 0, `PATH_HIT=no STARTUP_HIT=no`, real record) | closed on the composition; one residual measured and disclosed below |
+| F1 unrelated marker family accepted | probe `FIXTURE D [round3]`: op 07 `class=match` from a `SETUP` marker, run PASS | probe `FIXTURE D [round4]`: `not_evaluable reason=no_remote_program_marker_in_capture expected_family=remote_close_tree_wpi.sh`, run STOP | closed |
+| F2 inherited `TMPDIR` writes inside evidence | `F2 RED` - rc 0, a `tmp.*/raw.0` member hashed inside the tree, `wrote_into_evidence_tree=0` | `F2 GREEN` - rc 3 `launch_domain_unexpected_environment_entry name=[TMPDIR]`; the clean run leaves no residue; the class-6 overlap case is refused before `mkdir` | closed |
+| F3 mixed probe diagnostic read as absence | `F3 RED` - rc 1 `CLOSE_FAIL reason=evidence_dir_absent` | `F3 GREEN` - rc 3 `CLOSE_STOP reason=path_probe_error ... No such file or directory; Permission denied` | closed |
+| F4 global `always` prerequisite | probe `FIXTURE A [round3]`: `deviant=0`, `TR_RUN STOP` - the RO deviation erased | probe `FIXTURE A [round4]`: `deviant=1`, `TR_RUN FAIL` - the RO deviation counted | closed |
+| F4 Claude scenario must still hold | - | probe `FIXTURE B [round4]`: `TR_RUN STOP`, cleanup stays not-evaluable | held |
+| F4 distinct cleanup reasons | probe `FIXTURE C [round3]`: op 08 `cleanup_after_unestablished_prerequisite` | probe `FIXTURE C [round4]`: op 08 `cleanup_after_earlier_deviation prerequisites=[05=deviant]` | closed |
+| T5 `P0_ATTESTED_*` wiring | `A-RED` 0 names exported; `B-RED` the real gate STOPs `preregistered_value_missing` | `A-GREEN` 5 names exported; `B-GREEN2` the real gate prints `P0_GATE_PASSED` | closed |
+| T6 close contract vs bytes vs plan | the superseded edit self-STOPs on its own clean launch; its two-argument call returns `CLOSE_FAIL` rc 1 | op 01 allocates `<BASE>/work`; the exact plan argv shape closes the tree at rc 0; the two-argument call is now `CLOSE_STOP` rc 3 | closed |
+| T7 inert `WPI_INTERPRETER_TARGET` | round-3 `run_ro.sh:45,118` defined and exported it | static gate: 0 assignments, 0 exports, the block reads it 0 times | closed |
+| T8 stale transport summary | - | documentation only; no executable predicate exists and none is claimed | closed as a draft edit |
+
+## R4-2. `_r4_runner_probe.ps1` - round 3 (RED)
+
+```text
+RUNNER path=C:\Users\BARSEM~1\AppData\Local\Temp\claude\C--LAB-Tradingview-LAB-CLEAN\8ec0dbac-0511-4a3e-968b-7fe9ff2eebce\scratchpad\r3\transport_runner.ps1
+RUNNER sha256=13a57438c12effa108aacc39bbe91345acf7551b76f0991a669059040c5590e4
+VARIANT round3
+=== FIXTURE A - F4 decisive: independent RO close FAIL after unrelated P0 close STOP [round3] ===
+  TR_OP_CLASS id=01 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=02 kind=scp_up rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=03 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=04 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=05 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=06 kind=tcp_probe rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=07 kind=ssh_stdin rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_FIRST_MISMATCH id=07 rc=3 expected=0 class=not_evaluable later_sequence_ops=skip always_ops=run
+  TR_OP_NOT_EVALUABLE id=07 rc=3 expected=0 reason=operation_reported_stop
+  TR_OP_CLASS id=08 kind=ssh_stdin rc=1 expect_rc=0 class=not_evaluable reason=cleanup_after_unestablished_prerequisite
+  TR_ADDITIONAL_MISMATCH id=08 first_mismatch=07
+  TR_OP_NOT_EVALUABLE id=08 rc=1 expected=0 reason=cleanup_after_unestablished_prerequisite
+  TR_OP_CLASS id=09 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=10 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=11 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_ADDITIONAL_MISMATCH id=11 first_mismatch=07
+  TR_OP_NOT_EVALUABLE id=11 rc=3 expected=0 reason=operation_reported_stop
+  TR_OP_CLASS id=12 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_ADDITIONAL_MISMATCH id=12 first_mismatch=07
+  TR_OP_NOT_EVALUABLE id=12 rc=3 expected=0 reason=operation_reported_stop
+  TR_RUN_CLASS deviant=0 not_evaluable=4 precedence=deviant_outranks_not_evaluable
+  TR_RUN STOP base_run=PROBE-BASE-RUN first_mismatch=07 first_not_evaluable=07 record=C:\Users\BARSEM~1\AppData\Local\Temp\claude\C--LAB-Tradingview-LAB-CLEAN\8ec0dbac-0511-4a3e-968b-7fe9ff2eebce\scratchpad\probe_round3
+  PROBE_EXIT_CODE=3
+
+=== FIXTURE B - genuinely unestablished prerequisite stays not-evaluable [round3] ===
+  TR_OP_CLASS id=01 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=02 kind=scp_up rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=03 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=04 kind=ssh_stdin rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_FIRST_MISMATCH id=04 rc=3 expected=0 class=not_evaluable later_sequence_ops=skip always_ops=run
+  TR_OP_NOT_EVALUABLE id=04 rc=3 expected=0 reason=operation_reported_stop
+  TR_OP_SKIPPED id=05 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=06 reason=prior_sequence_mismatch
+  TR_OP_CLASS id=07 kind=ssh_stdin rc=1 expect_rc=0 class=not_evaluable reason=cleanup_after_unestablished_prerequisite
+  TR_ADDITIONAL_MISMATCH id=07 first_mismatch=04
+  TR_OP_NOT_EVALUABLE id=07 rc=1 expected=0 reason=cleanup_after_unestablished_prerequisite
+  TR_OP_CLASS id=08 kind=ssh_stdin rc=1 expect_rc=0 class=not_evaluable reason=cleanup_after_unestablished_prerequisite
+  TR_ADDITIONAL_MISMATCH id=08 first_mismatch=04
+  TR_OP_NOT_EVALUABLE id=08 rc=1 expected=0 reason=cleanup_after_unestablished_prerequisite
+  TR_OP_CLASS id=09 kind=scp_down rc=1 expect_rc=0 class=not_evaluable reason=scp_transfer_did_not_complete
+  TR_ADDITIONAL_MISMATCH id=09 first_mismatch=04
+  TR_OP_NOT_EVALUABLE id=09 rc=1 expected=0 reason=scp_transfer_did_not_complete
+  TR_OP_CLASS id=10 kind=scp_down rc=1 expect_rc=0 class=not_evaluable reason=scp_transfer_did_not_complete
+  TR_ADDITIONAL_MISMATCH id=10 first_mismatch=04
+  TR_OP_NOT_EVALUABLE id=10 rc=1 expected=0 reason=scp_transfer_did_not_complete
+  TR_OP_CLASS id=11 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_ADDITIONAL_MISMATCH id=11 first_mismatch=04
+  TR_OP_NOT_EVALUABLE id=11 rc=3 expected=0 reason=operation_reported_stop
+  TR_OP_CLASS id=12 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_ADDITIONAL_MISMATCH id=12 first_mismatch=04
+  TR_OP_NOT_EVALUABLE id=12 rc=3 expected=0 reason=operation_reported_stop
+  TR_RUN_CLASS deviant=0 not_evaluable=7 precedence=deviant_outranks_not_evaluable
+  TR_RUN STOP base_run=PROBE-BASE-RUN first_mismatch=04 first_not_evaluable=04 record=C:\Users\BARSEM~1\AppData\Local\Temp\claude\C--LAB-Tradingview-LAB-CLEAN\8ec0dbac-0511-4a3e-968b-7fe9ff2eebce\scratchpad\probe_round3
+  PROBE_EXIT_CODE=3
+
+=== FIXTURE C - cleanup after an earlier deviation on its own branch [round3] ===
+  TR_OP_CLASS id=01 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=02 kind=scp_up rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=03 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=04 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=05 kind=ssh_stdin rc=1 expect_rc=0 class=deviant reason=operation_ran_and_observed_deviant_state
+  TR_FIRST_MISMATCH id=05 rc=1 expected=0 class=deviant later_sequence_ops=skip always_ops=run
+  TR_OP_DEVIANT id=05 rc=1 expected=0 reason=operation_ran_and_observed_deviant_state
+  TR_OP_SKIPPED id=06 reason=prior_sequence_mismatch
+  TR_OP_CLASS id=07 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=08 kind=ssh_stdin rc=1 expect_rc=0 class=not_evaluable reason=cleanup_after_unestablished_prerequisite
+  TR_ADDITIONAL_MISMATCH id=08 first_mismatch=05
+  TR_OP_NOT_EVALUABLE id=08 rc=1 expected=0 reason=cleanup_after_unestablished_prerequisite
+  TR_OP_CLASS id=09 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=10 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=11 kind=local_bind rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=12 kind=local_bind rc=1 expect_rc=0 class=not_evaluable reason=cleanup_after_unestablished_prerequisite
+  TR_ADDITIONAL_MISMATCH id=12 first_mismatch=05
+  TR_OP_NOT_EVALUABLE id=12 rc=1 expected=0 reason=cleanup_after_unestablished_prerequisite
+  TR_RUN_CLASS deviant=1 not_evaluable=2 precedence=deviant_outranks_not_evaluable
+  TR_RUN FAIL base_run=PROBE-BASE-RUN first_mismatch=05 first_not_evaluable=08 record=C:\Users\BARSEM~1\AppData\Local\Temp\claude\C--LAB-Tradingview-LAB-CLEAN\8ec0dbac-0511-4a3e-968b-7fe9ff2eebce\scratchpad\probe_round3
+  PROBE_EXIT_CODE=1
+
+=== FIXTURE D - F1 wrong marker family on a close operation [round3] ===
+  TR_OP_CLASS id=01 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=02 kind=scp_up rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=03 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=04 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=05 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=06 kind=tcp_probe rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=07 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=08 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=09 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=10 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=11 kind=local_bind rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=12 kind=local_bind rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_RUN_CLASS deviant=0 not_evaluable=0 precedence=deviant_outranks_not_evaluable
+  TR_RUN PASS base_run=PROBE-BASE-RUN record=C:\Users\BARSEM~1\AppData\Local\Temp\claude\C--LAB-Tradingview-LAB-CLEAN\8ec0dbac-0511-4a3e-968b-7fe9ff2eebce\scratchpad\probe_round3
+  PROBE_EXIT_CODE=0
+```
+
+## R4-3. `_r4_runner_probe.ps1` - round 4 (GREEN)
+
+```text
+RUNNER path=C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPI_BLOCKS_DRAFT\transport_runner.ps1
+RUNNER sha256=45123de489ec48dfe7d4318dad7db547bcc03114fe886be16c7f4c616fc45fed
+VARIANT round4
+=== FIXTURE A - F4 decisive: independent RO close FAIL after unrelated P0 close STOP [round4] ===
+  TR_OP_CLASS id=01 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=02 kind=scp_up rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=03 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=04 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=05 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=06 kind=tcp_probe rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_PREREQ_STATE id=07 established=True any_deviant=False prerequisites=[04=match]
+  TR_OP_CLASS id=07 kind=ssh_stdin rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_FIRST_MISMATCH id=07 rc=3 expected=0 class=not_evaluable later_sequence_ops=skip always_ops=run
+  TR_OP_NOT_EVALUABLE id=07 rc=3 expected=0 reason=operation_reported_stop
+  TR_OP_PREREQ_STATE id=08 established=True any_deviant=False prerequisites=[05=match]
+  TR_OP_CLASS id=08 kind=ssh_stdin rc=1 expect_rc=0 class=deviant reason=operation_ran_and_observed_deviant_state
+  TR_ADDITIONAL_MISMATCH id=08 first_mismatch=07
+  TR_OP_DEVIANT id=08 rc=1 expected=0 reason=operation_ran_and_observed_deviant_state
+  TR_OP_PREREQ_STATE id=09 established=False any_deviant=False prerequisites=[07=not_evaluable]
+  TR_OP_CLASS id=09 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_PREREQ_STATE id=10 established=False any_deviant=True prerequisites=[08=deviant]
+  TR_OP_CLASS id=10 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_PREREQ_STATE id=11 established=False any_deviant=False prerequisites=[07=not_evaluable,09=match]
+  TR_OP_CLASS id=11 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_ADDITIONAL_MISMATCH id=11 first_mismatch=07
+  TR_OP_NOT_EVALUABLE id=11 rc=3 expected=0 reason=operation_reported_stop
+  TR_OP_PREREQ_STATE id=12 established=False any_deviant=True prerequisites=[08=deviant,10=match]
+  TR_OP_CLASS id=12 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_ADDITIONAL_MISMATCH id=12 first_mismatch=07
+  TR_OP_NOT_EVALUABLE id=12 rc=3 expected=0 reason=operation_reported_stop
+  TR_RUN_CLASS deviant=1 not_evaluable=3 precedence=deviant_outranks_not_evaluable
+  TR_RUN FAIL base_run=PROBE-BASE-RUN first_mismatch=07 first_not_evaluable=07 record=C:\Users\BARSEM~1\AppData\Local\Temp\claude\C--LAB-Tradingview-LAB-CLEAN\8ec0dbac-0511-4a3e-968b-7fe9ff2eebce\scratchpad\probe_round4
+  PROBE_EXIT_CODE=1
+
+=== FIXTURE B - genuinely unestablished prerequisite stays not-evaluable [round4] ===
+  TR_OP_CLASS id=01 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=02 kind=scp_up rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=03 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=04 kind=ssh_stdin rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_FIRST_MISMATCH id=04 rc=3 expected=0 class=not_evaluable later_sequence_ops=skip always_ops=run
+  TR_OP_NOT_EVALUABLE id=04 rc=3 expected=0 reason=operation_reported_stop
+  TR_OP_SKIPPED id=05 reason=prior_sequence_mismatch
+  TR_OP_SKIPPED id=06 reason=prior_sequence_mismatch
+  TR_OP_PREREQ_STATE id=07 established=False any_deviant=False prerequisites=[04=not_evaluable]
+  TR_OP_CLASS id=07 kind=ssh_stdin rc=1 expect_rc=0 class=not_evaluable reason=cleanup_after_unestablished_prerequisite prerequisites=[04=not_evaluable]
+  TR_ADDITIONAL_MISMATCH id=07 first_mismatch=04
+  TR_OP_NOT_EVALUABLE id=07 rc=1 expected=0 reason=cleanup_after_unestablished_prerequisite prerequisites=[04=not_evaluable]
+  TR_OP_PREREQ_STATE id=08 established=False any_deviant=False prerequisites=[05=skipped]
+  TR_OP_CLASS id=08 kind=ssh_stdin rc=1 expect_rc=0 class=not_evaluable reason=cleanup_after_unestablished_prerequisite prerequisites=[05=skipped]
+  TR_ADDITIONAL_MISMATCH id=08 first_mismatch=04
+  TR_OP_NOT_EVALUABLE id=08 rc=1 expected=0 reason=cleanup_after_unestablished_prerequisite prerequisites=[05=skipped]
+  TR_OP_PREREQ_STATE id=09 established=False any_deviant=False prerequisites=[07=not_evaluable]
+  TR_OP_CLASS id=09 kind=scp_down rc=1 expect_rc=0 class=not_evaluable reason=scp_transfer_did_not_complete
+  TR_ADDITIONAL_MISMATCH id=09 first_mismatch=04
+  TR_OP_NOT_EVALUABLE id=09 rc=1 expected=0 reason=scp_transfer_did_not_complete
+  TR_OP_PREREQ_STATE id=10 established=False any_deviant=False prerequisites=[08=not_evaluable]
+  TR_OP_CLASS id=10 kind=scp_down rc=1 expect_rc=0 class=not_evaluable reason=scp_transfer_did_not_complete
+  TR_ADDITIONAL_MISMATCH id=10 first_mismatch=04
+  TR_OP_NOT_EVALUABLE id=10 rc=1 expected=0 reason=scp_transfer_did_not_complete
+  TR_OP_PREREQ_STATE id=11 established=False any_deviant=False prerequisites=[07=not_evaluable,09=not_evaluable]
+  TR_OP_CLASS id=11 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_ADDITIONAL_MISMATCH id=11 first_mismatch=04
+  TR_OP_NOT_EVALUABLE id=11 rc=3 expected=0 reason=operation_reported_stop
+  TR_OP_PREREQ_STATE id=12 established=False any_deviant=False prerequisites=[08=not_evaluable,10=not_evaluable]
+  TR_OP_CLASS id=12 kind=local_bind rc=3 expect_rc=0 class=not_evaluable reason=operation_reported_stop
+  TR_ADDITIONAL_MISMATCH id=12 first_mismatch=04
+  TR_OP_NOT_EVALUABLE id=12 rc=3 expected=0 reason=operation_reported_stop
+  TR_RUN_CLASS deviant=0 not_evaluable=7 precedence=deviant_outranks_not_evaluable
+  TR_RUN STOP base_run=PROBE-BASE-RUN first_mismatch=04 first_not_evaluable=04 record=C:\Users\BARSEM~1\AppData\Local\Temp\claude\C--LAB-Tradingview-LAB-CLEAN\8ec0dbac-0511-4a3e-968b-7fe9ff2eebce\scratchpad\probe_round4
+  PROBE_EXIT_CODE=3
+
+=== FIXTURE C - cleanup after an earlier deviation on its own branch [round4] ===
+  TR_OP_CLASS id=01 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=02 kind=scp_up rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=03 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=04 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=05 kind=ssh_stdin rc=1 expect_rc=0 class=deviant reason=operation_ran_and_observed_deviant_state
+  TR_FIRST_MISMATCH id=05 rc=1 expected=0 class=deviant later_sequence_ops=skip always_ops=run
+  TR_OP_DEVIANT id=05 rc=1 expected=0 reason=operation_ran_and_observed_deviant_state
+  TR_OP_SKIPPED id=06 reason=prior_sequence_mismatch
+  TR_OP_PREREQ_STATE id=07 established=True any_deviant=False prerequisites=[04=match]
+  TR_OP_CLASS id=07 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_PREREQ_STATE id=08 established=False any_deviant=True prerequisites=[05=deviant]
+  TR_OP_CLASS id=08 kind=ssh_stdin rc=1 expect_rc=0 class=not_evaluable reason=cleanup_after_earlier_deviation prerequisites=[05=deviant]
+  TR_ADDITIONAL_MISMATCH id=08 first_mismatch=05
+  TR_OP_NOT_EVALUABLE id=08 rc=1 expected=0 reason=cleanup_after_earlier_deviation prerequisites=[05=deviant]
+  TR_OP_PREREQ_STATE id=09 established=True any_deviant=False prerequisites=[07=match]
+  TR_OP_CLASS id=09 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_PREREQ_STATE id=10 established=False any_deviant=False prerequisites=[08=not_evaluable]
+  TR_OP_CLASS id=10 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_PREREQ_STATE id=11 established=True any_deviant=False prerequisites=[07=match,09=match]
+  TR_OP_CLASS id=11 kind=local_bind rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_PREREQ_STATE id=12 established=False any_deviant=False prerequisites=[08=not_evaluable,10=match]
+  TR_OP_CLASS id=12 kind=local_bind rc=1 expect_rc=0 class=not_evaluable reason=cleanup_after_unestablished_prerequisite prerequisites=[08=not_evaluable,10=match]
+  TR_ADDITIONAL_MISMATCH id=12 first_mismatch=05
+  TR_OP_NOT_EVALUABLE id=12 rc=1 expected=0 reason=cleanup_after_unestablished_prerequisite prerequisites=[08=not_evaluable,10=match]
+  TR_RUN_CLASS deviant=1 not_evaluable=2 precedence=deviant_outranks_not_evaluable
+  TR_RUN FAIL base_run=PROBE-BASE-RUN first_mismatch=05 first_not_evaluable=08 record=C:\Users\BARSEM~1\AppData\Local\Temp\claude\C--LAB-Tradingview-LAB-CLEAN\8ec0dbac-0511-4a3e-968b-7fe9ff2eebce\scratchpad\probe_round4
+  PROBE_EXIT_CODE=1
+
+=== FIXTURE D - F1 wrong marker family on a close operation [round4] ===
+  TR_OP_CLASS id=01 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=02 kind=scp_up rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=03 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=04 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=05 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_CLASS id=06 kind=tcp_probe rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_PREREQ_STATE id=07 established=True any_deviant=False prerequisites=[04=match]
+  TR_OP_CLASS id=07 kind=ssh_stdin rc=0 expect_rc=0 class=not_evaluable reason=no_remote_program_marker_in_capture expected_family=remote_close_tree_wpi.sh
+  TR_FIRST_MISMATCH id=07 rc=0 expected=0 class=not_evaluable later_sequence_ops=skip always_ops=run
+  TR_OP_NOT_EVALUABLE id=07 rc=0 expected=0 reason=no_remote_program_marker_in_capture expected_family=remote_close_tree_wpi.sh
+  TR_OP_PREREQ_STATE id=08 established=True any_deviant=False prerequisites=[05=match]
+  TR_OP_CLASS id=08 kind=ssh_stdin rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_PREREQ_STATE id=09 established=False any_deviant=False prerequisites=[07=not_evaluable]
+  TR_OP_CLASS id=09 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_PREREQ_STATE id=10 established=True any_deviant=False prerequisites=[08=match]
+  TR_OP_CLASS id=10 kind=scp_down rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_PREREQ_STATE id=11 established=False any_deviant=False prerequisites=[07=not_evaluable,09=match]
+  TR_OP_CLASS id=11 kind=local_bind rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_OP_PREREQ_STATE id=12 established=True any_deviant=False prerequisites=[08=match,10=match]
+  TR_OP_CLASS id=12 kind=local_bind rc=0 expect_rc=0 class=match reason=preregistered_rc
+  TR_RUN_CLASS deviant=0 not_evaluable=1 precedence=deviant_outranks_not_evaluable
+  TR_RUN STOP base_run=PROBE-BASE-RUN first_mismatch=07 first_not_evaluable=07 record=C:\Users\BARSEM~1\AppData\Local\Temp\claude\C--LAB-Tradingview-LAB-CLEAN\8ec0dbac-0511-4a3e-968b-7fe9ff2eebce\scratchpad\probe_round4
+  PROBE_EXIT_CODE=3
+```
+
+## R4-4. `_r4_wsl_fixtures.sh` - the delivered shell bytes on a real Linux kernel
+
+```text
+
+########## FIXTURE ENVIRONMENT
+$ uname -sr; id -u; id -g
+Linux 6.18.33.2-microsoft-standard-WSL2
+0
+0
+$ ls -l /usr/bin/bash /usr/bin/stat /usr/bin/env
+-rwxr-xr-x 1 root root 1540520 Feb 13 14:16 /usr/bin/bash
+lrwxrwxrwx 1 root root      30 Mar 30 19:50 /usr/bin/env -> ../lib/cargo/bin/coreutils/env
+lrwxrwxrwx 1 root root      31 Mar 30 19:50 /usr/bin/stat -> ../lib/cargo/bin/coreutils/stat
+$ ls -l /root/wpi_r4/tools | head -4
+total 89024
+-rwxr-xr-x 1 root root    43592 Aug 11 13:30 cmp
+-rwxr-xr-x 1 root root 11352352 Aug 11 13:30 env
+-rwxr-xr-x 1 root root   216632 Aug 11 13:30 find
+superseded_selfstop_lines_deleted=2
+
+########## F2 RED - round-3 bytes, TMPDIR pointed at the evidence tree
+# The accepted round-3 close script inherits TMPDIR and calls mktemp. With
+# TMPDIR set to the tree it is measuring it writes and hashes its own files
+# inside evidence while printing wrote_into_evidence_tree=0.
+$ TMPDIR=$EV bash close_r3.sh $EV WPIR4-FIXTURE-P0
+RC=0
+--- CLOSE_DIGEST lines (note the tmp.* member inside the evidence tree):
+CLOSE_DIGEST b6a98d9ce9a2d9149288fa3df42d377c3e42737afdcdaf714e33c0a100b51060  a.txt
+CLOSE_DIGEST f2c82decdd7181cf98945929a62598db7e6b477e11f6e0eb0ae97020eff151ad  b.txt
+CLOSE_DIGEST a22098326ecf89256b460105223d67c696c557096bc5e3afc6d83de2328949a4  tmp.eYE6juigfb/raw.0
+CLOSE PASS runid=WPIR4-FIXTURE-P0 dir=/root/wpi_r4/f2red/evidence/runkit/WPIR4-FIXTURE-P0 files=3 wrote_into_evidence_tree=0
+--- stderr:
+
+########## F2 GREEN - round-4 bytes, same TMPDIR injection
+# TMPDIR is not an entry the frozen launch domain delivers, so the class 5
+# sweep refuses it by name before any external program runs. Independently,
+# the round-4 bytes contain no mktemp at all.
+$ env -i PATH=... LC_ALL=C HOME=... TMPDIR=$EV /usr/bin/bash --noprofile --norc close_r4.sh $EV WPIR4-FIXTURE-P0 $WORK
+RC=3
+CLOSE_STOP reason=launch_domain_unexpected_environment_entry name=[TMPDIR]
+$ grep -cE '^[^#]*mktemp' close_r4.sh ; grep -cE '^[^#]*mktemp' close_r3.sh   # code lines only
+round4_mktemp_code_lines=0
+round3_mktemp_code_lines=1
+
+########## F2/T6 GREEN - clean run under the frozen launch domain and plan argv
+$ env -i ... /usr/bin/bash --noprofile --norc close_r4.sh /root/wpi_r4/clean/evidence/runkit/WPIR4-FIXTURE-P0 WPIR4-FIXTURE-P0 /root/wpi_r4/clean/work
+RC=0
+CLOSE_NOTE launch_domain interpreter=/usr/bin/bash path=/usr/bin:/bin lc_all=C home=/root exec_environment_entries=3 inherited_functions=0 bash_env=absent env=absent tmpdir=absent attestation=builtins_and_proc_self_environ
+CLOSE_NOTE work_root_ok path=/root/wpi_r4/clean/work owner_numeric=0:0 owner_rendered=root:root mode=700 allocator=op_01_remote_setup_wpi.sh
+CLOSE_NOTE scratch work_dir=/root/wpi_r4/clean/work/close_work_WPIR4-FIXTURE-P0 owner_numeric=0:0 mode=700 created=once tmpdir=run_owned canonical_non_overlap=proven_before_and_after_create removal=adjudicated_on_every_exit_path
+CLOSE_NOTE evidence_files count=2
+CLOSE_NOTE digest_set_stable passes=2
+CLOSE_BINDING runid=WPIR4-FIXTURE-P0 dir=/root/wpi_r4/clean/evidence/runkit/WPIR4-FIXTURE-P0 files=2
+CLOSE_DIGEST b6a98d9ce9a2d9149288fa3df42d377c3e42737afdcdaf714e33c0a100b51060  a.txt
+CLOSE_DIGEST f2c82decdd7181cf98945929a62598db7e6b477e11f6e0eb0ae97020eff151ad  b.txt
+CLOSE PASS runid=WPIR4-FIXTURE-P0 dir=/root/wpi_r4/clean/evidence/runkit/WPIR4-FIXTURE-P0 files=2 wrote_into_evidence_tree=0
+--- stderr:
+--- the evidence tree after the run (no scratch residue, no new member):
+/root/wpi_r4/clean/evidence/runkit/WPIR4-FIXTURE-P0
+/root/wpi_r4/clean/evidence/runkit/WPIR4-FIXTURE-P0/a.txt
+/root/wpi_r4/clean/evidence/runkit/WPIR4-FIXTURE-P0/b.txt
+--- the work root after the run (the run-owned work directory was removed):
+/root/wpi_r4/clean/work
+
+########## F3 RED - round-3 bytes, mixed ENOENT+EACCES probe diagnostic
+# A stat wrapper that answers the evidence-directory probe with a combined
+# diagnostic. Round 3 substring-matches "No such file or directory" and
+# reports a completed observation of MISSING EVIDENCE at rc 1.
+$ bash close_r3_mixed.sh $EV WPIR4-FIXTURE-P0
+RC=1
+CLOSE_FAIL reason=evidence_dir_absent path=/root/wpi_r4/f3/evidence/runkit/WPIR4-FIXTURE-P0
+
+########## F3 GREEN - round-4 bytes, same mixed diagnostic
+# The absence template is calibrated once from this run own pinned stat and
+# compared as a whole string, corroborated by the kernel. A mixed diagnostic
+# is an inability to evaluate: CLOSE_STOP at rc 3.
+$ env -i ... close_r4_mixed.sh $EV WPIR4-FIXTURE-P0 $WORK
+RC=3
+CLOSE_STOP reason=path_probe_error path=/root/wpi_r4/f3/evidence/runkit/WPIR4-FIXTURE-P0 rc=1 detail=/root/wpi_r4/f3/evidence/runkit/WPIR4-FIXTURE-P0: No such file or directory; Permission denied
+
+########## F1 RED - a fake bash first on PATH under the round-3 launch (bare `bash -s --`)
+$ PATH=$FIX/plant:$PATH bash -s -- <EV_DIR> <RUNID>   # the round-3 plan argv
+PATH_RC=0
+PATH_HIT=yes
+CLOSE PASS runid=WPIR4-FIXTURE-P0 dir=/forged files=2 wrote_into_evidence_tree=0
+
+########## F1 RED - inherited BASH_ENV under an absolute interpreter, no env -i
+$ BASH_ENV=$FIX/plant/startup.sh /usr/bin/bash -s -- <EV_DIR> <RUNID>
+BASH_ENV_RC=0
+BASH_ENV_HIT=yes
+CLOSE PASS runid=WPIR4-FIXTURE-P0 dir=/forged files=2 wrote_into_evidence_tree=0
+
+########## F1 GREEN - the frozen launch domain neutralises both plants
+$ the frozen argv, with the plant still first on the OUTER PATH and BASH_ENV still set
+RC=0
+PATH_HIT=no STARTUP_HIT=no
+CLOSE_NOTE launch_domain interpreter=/usr/bin/bash path=/usr/bin:/bin lc_all=C home=/root exec_environment_entries=3 inherited_functions=0 bash_env=absent env=absent tmpdir=absent attestation=builtins_and_proc_self_environ
+CLOSE PASS runid=WPIR4-FIXTURE-P0 dir=/root/wpi_r4/f1/evidence/runkit/WPIR4-FIXTURE-P0 files=2 wrote_into_evidence_tree=0
+
+########## F1 RESIDUAL - a launch domain that CARRIES BASH_ENV, with an exiting plant
+# MEASURED LIMIT, not a repair. bash reads $BASH_ENV before the first byte
+# of the delivered script; --norc/--noprofile do not disable that channel.
+# A startup plant that exits therefore forges the record before any
+# in-script attestation can run. NOTHING inside a stdin-delivered script
+# can close this - it is closed on the plan/runner side, by env -i with an
+# explicit complete variable list that the runner enforces verbatim, so no
+# plan row can introduce BASH_ENV at all. This case is unreachable from the
+# frozen plan; it is recorded because the claim must be scoped honestly.
+$ env -i PATH=... LC_ALL=C HOME=... BASH_ENV=<exiting plant> /usr/bin/bash --noprofile --norc close_r4.sh ...
+CLOSE PASS runid=WPIR4-FIXTURE-P0 dir=/forged files=2 wrote_into_evidence_tree=0
+RC=0
+
+########## F1 GREEN - a launch domain that carries BASH_ENV, with a NON-exiting plant
+# The stealthier plant - one that mutates state and lets the delivered
+# script run so the real record is produced - IS refused: BASH_ENV is still
+# in the exec environment the kernel recorded, and the class 5 sweep names
+# it. Only the plant that destroys the run outright escapes the sweep, and
+# it destroys the very output it was trying to forge into.
+$ env -i PATH=... LC_ALL=C HOME=... BASH_ENV=<non-exiting plant> ... close_r4.sh ...
+CLOSE_STOP reason=launch_domain_unexpected_environment_entry name=[BASH_ENV]
+RC=3
+QUIET_PLANT_HIT=yes
+
+########## F1 GREEN - the same script refuses an inherited exported shell function
+$ env -i ... BASH_FUNC_a_plant%%=() { :; } /usr/bin/bash --noprofile --norc close_r4.sh ...
+CLOSE_STOP reason=launch_domain_inherited_shell_function detail=[declare -fx a_plant]
+RC=3
+
+########## T6 - the superseded cf049b6b close script under its own clean launch
+# The addendum records this edit as SUPERSEDED. Driven exactly as its own
+# header prescribes, it refuses its own clean execution.
+$ env -i ... /usr/bin/bash --noprofile --norc close_super.sh <EV_DIR> <RUNID> <WORK_ROOT>
+CLOSE_STOP reason=launch_domain_inherited_shell_function
+RC=3
+
+########## T6 - argv arity: two arguments against a three-argument contract
+# The superseded edit called fail() for a wrong argument count, so an
+# operator-side composition error arrived at the runner as a HOST deviation
+# at rc 1. The round-4 bytes classify it as an inability to evaluate.
+$ close_super.sh <EV_DIR> <RUNID>    (no work root)
+CLOSE_FAIL reason=usage remote_close_tree_wpi.sh <EV_DIR> <RUNID> <WORK_ROOT> argc=2
+RC=1
+$ close_r4.sh <EV_DIR> <RUNID>       (no work root)
+CLOSE_STOP reason=argv_count=2 expected=3 usage=remote_close_tree_wpi.sh_EV_DIR_RUNID_WORK_ROOT detail=operator_side_composition_input_not_a_host_observation
+RC=3
+
+########## F2/class 6 - a work root inside the evidence tree is refused before mkdir
+$ close_r4.sh <EV_DIR> <RUNID> <EV_DIR>/inner
+CLOSE_STOP reason=work_dir_inside_evidence_tree phase=before_create path=/root/wpi_r4/overlap/evidence/runkit/WPIR4-FIXTURE-P0/inner/close_work_WPIR4-FIXTURE-P0 evidence=/root/wpi_r4/overlap/evidence/runkit/WPIR4-FIXTURE-P0
+RC=3
+--- the evidence tree is unchanged (no work directory was created in it):
+/root/wpi_r4/overlap/evidence/runkit/WPIR4-FIXTURE-P0
+/root/wpi_r4/overlap/evidence/runkit/WPIR4-FIXTURE-P0/a.txt
+/root/wpi_r4/overlap/evidence/runkit/WPIR4-FIXTURE-P0/b.txt
+/root/wpi_r4/overlap/evidence/runkit/WPIR4-FIXTURE-P0/inner
+
+########## T6 - op 01 allocates the work root the plan passes to ops 07/08
+# Two further FIXTURE-ONLY retargetings are declared here, because op 01 is
+# path- and mount-bound to the real host: EXPECT_PREFIX/EXPECT_PARENT are
+# moved under $FIX, and EXPECT_PARENT_MOUNT is filled from the projection
+# this kernel reports. Filling that pin from an observation would be
+# ILLEGITIMATE in production - the value is a deploy-channel attestation
+# (owner grant #6) and must never be learned from the session under test -
+# so this step proves the allocation shape ONLY, not the mount binding.
+# Pass 1 carries a grammar-valid DECOY projection, because the unfilled-pin
+# gate runs before the projection is taken; the STOP then reports what this
+# kernel actually projects.
+$ setup_fix.sh <BASE>   # first pass: decoy mount pin
+RC=3
+SETUP_STOP reason=parent_mount_differs path=/root/wpi_r4/alloc observed=[device=8:48 root=/ mount_point=/ fstype=ext4 source=/dev/sdd shared_mount_point_records=1] attested=[device=0:0 root=/decoy mount_point=/decoy fstype=decoy source=decoy shared_mount_point_records=1]
+OBSERVED_PROJECTION=[device=8:48 root=/ mount_point=/ fstype=ext4 source=/dev/sdd shared_mount_point_records=1]
+--- nothing was created by the refused pass (STOP precedes the first mkdir):
+$ setup_fix2.sh <BASE>  # second pass: mount pin filled from the first pass
+RC=0
+SETUP_NOTE launch_domain interpreter=/usr/bin/bash path=/usr/bin:/bin lc_all=C home=/root exec_environment_entries=3 inherited_functions=0 bash_env=absent env=absent tmpdir=absent attestation=builtins_and_proc_self_environ
+SETUP_NOTE allocated path=/root/wpi_r4/alloc/wpi_staging_FIXTURE
+SETUP_NOTE allocated path=/root/wpi_r4/alloc/wpi_staging_FIXTURE/evidence
+SETUP_NOTE allocated path=/root/wpi_r4/alloc/wpi_staging_FIXTURE/evidence/runkit
+SETUP_NOTE allocated path=/root/wpi_r4/alloc/wpi_staging_FIXTURE/kit
+SETUP_NOTE allocated path=/root/wpi_r4/alloc/wpi_staging_FIXTURE/work
+SETUP_NOTE work_root_allocated path=/root/wpi_r4/alloc/wpi_staging_FIXTURE/work consumer=ops_07_08_remote_close_tree_wpi.sh disjoint_from=/root/wpi_r4/alloc/wpi_staging_FIXTURE/evidence
+SETUP PASS base=/root/wpi_r4/alloc/wpi_staging_FIXTURE evidence=/root/wpi_r4/alloc/wpi_staging_FIXTURE/evidence runkit=/root/wpi_r4/alloc/wpi_staging_FIXTURE/evidence/runkit kit=/root/wpi_r4/alloc/wpi_staging_FIXTURE/kit work=/root/wpi_r4/alloc/wpi_staging_FIXTURE/work owner_numeric=0:0 owner_name=gatea:gatea mode=700
+--- what op 01 actually created:
+/root/wpi_r4/alloc/wpi_staging_FIXTURE
+/root/wpi_r4/alloc/wpi_staging_FIXTURE/evidence
+/root/wpi_r4/alloc/wpi_staging_FIXTURE/evidence/runkit
+/root/wpi_r4/alloc/wpi_staging_FIXTURE/kit
+/root/wpi_r4/alloc/wpi_staging_FIXTURE/work
+
+########## T6 - the allocated work root is exactly what the plan passes to ops 07/08
+$ close_r4.sh <BASE>/evidence/runkit/<RUNID> <RUNID> <BASE>/work
+RC=0
+CLOSE_NOTE work_root_ok path=/root/wpi_r4/alloc/wpi_staging_FIXTURE/work owner_numeric=0:0 owner_rendered=root:root mode=700 allocator=op_01_remote_setup_wpi.sh
+CLOSE_NOTE scratch work_dir=/root/wpi_r4/alloc/wpi_staging_FIXTURE/work/close_work_WPIR4-FIXTURE-P0 owner_numeric=0:0 mode=700 created=once tmpdir=run_owned canonical_non_overlap=proven_before_and_after_create removal=adjudicated_on_every_exit_path
+CLOSE PASS runid=WPIR4-FIXTURE-P0 dir=/root/wpi_r4/alloc/wpi_staging_FIXTURE/evidence/runkit/WPIR4-FIXTURE-P0 files=1 wrote_into_evidence_tree=0
+--- the plan row the runner will send (argv tail after the launch domain):
+/home/gatea/wpi_staging_<ALLOCATE-AT-DISPATCH>/evidence/runkit/<ALLOCATE-AT-DISPATCH>-P0 <ALLOCATE-AT-DISPATCH>-P0 /home/gatea/wpi_staging_<ALLOCATE-AT-DISPATCH>/work
+```
+
+### The one residual this section measures rather than repairs
+
+The block titled `F1 RESIDUAL` is a **measured limit, recorded because the claim
+has to be scoped honestly**. `bash` reads `$BASH_ENV` before the first byte of a
+stdin-delivered script, and `--norc`/`--noprofile` do not disable that channel, so
+a startup plant that EXITS forges the record before any in-script attestation can
+run. Nothing inside a delivered script can close this. It is closed on the
+operator side: the runner freezes `$REMOTE_LAUNCH_DOMAIN` and refuses any plan row
+that does not carry it verbatim, and that domain is `env -i` with an explicit,
+complete variable list - so no plan row can introduce `BASH_ENV` at all. The case
+in the transcript is therefore unreachable from the frozen plan, and it is the
+reason the domain is stated and enforced on both sides rather than only inside the
+scripts. The stealthier plant - the one that lets the script run, and so is the
+only kind that could forge a REAL-looking record - is refused by the class 5 sweep
+at rc 3, which the block after it shows.
+
+## R4-5. `_r4_t5_compose.sh` - the `run_p0.sh` -> `RP6-P0.sh` composition
+
+```text
+
+########## A. probe stubs standing in for the three sourced artifacts
+total 12
+-rw-r--r-- 1 root root  72 Aug 11 13:30 RP0-BOOTSTRAP.sh
+-rw-r--r-- 1 root root  20 Aug 11 13:30 RP0-LIB.sh
+-rw-r--r-- 1 root root 209 Aug 11 13:30 RP6-P0.sh
+
+########## A-RED. round-3 wrapper: which P0_* names reach the block?
+$ env -i ... /usr/bin/bash --noprofile --norc run_p0_r3.sh
+RC=0
+P0W_PROBE sourced_with_P0_names=6
+P0W done runid=T5FIXTURE-P0
+--- P0_* environment the round-3 wrapper handed to the block:
+  P0_EXPECT_UID=1001
+  P0_FORBIDDEN_GIDS=0 988
+  P0_STATE_GID=988
+  P0_STATE_UID=999
+  P0_TOOL_PINS=placeholder
+  P0_VENV_ROOT=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b
+P0_ATTESTED_names_exported=0
+
+########## A-GREEN. round-4 wrapper, deploy-channel values present
+$ env -i ... /usr/bin/bash --noprofile --norc run_p0_r4.sh
+RC=0
+P0W_launch_domain interpreter=/usr/bin/bash path=/usr/bin:/bin lc_all=C home=/root exec_environment_entries=3 inherited_functions=0 bash_env=absent env=absent tmpdir=absent attestation=builtins_and_proc_self_environ
+P0W_attested_inputs user_ns=user:[4026531837] mnt_ns=mnt:[4026531841] pid_ns=pid:[4026531836] net_ns=net:[4026531840] root_mount_id=2049:2 origin=deploy_channel_grant_6_never_learned_from_this_login
+P0W_PROBE sourced_with_P0_names=11
+P0W done runid=T5FIXTURE-P0
+--- P0_* environment the round-4 wrapper handed to the block:
+  P0_ATTESTED_MNT_NS=mnt:[4026531841]
+  P0_ATTESTED_NET_NS=net:[4026531840]
+  P0_ATTESTED_PID_NS=pid:[4026531836]
+  P0_ATTESTED_ROOT_MOUNT_ID=2049:2
+  P0_ATTESTED_USER_NS=user:[4026531837]
+  P0_EXPECT_UID=1001
+  P0_FORBIDDEN_GIDS=0 988
+  P0_STATE_GID=988
+  P0_STATE_UID=999
+  P0_TOOL_PINS=placeholder
+  P0_VENV_ROOT=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b
+P0_ATTESTED_names_exported=5
+
+########## B. the REAL RP6-P0.sh row-8 gate, extracted verbatim
+BLOCK path=/mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh sha256=a090ae736cbecd9973e8ae948b052504b21cbe8b61602f4b5ac592394fad0617
+GATE_REGION lines=683-744
+FIXED_LITERAL_LINES=266,267,268,269,270,
+GATE_EXTRACT sha256=c0cf53b14b90342f903c2b433655e3b3d92729689476d73854900ccb9c8be866 bytes=4362
+
+########## B-RED. the real gate, driven with the round-3 wrapper environment
+
+$ env -i P0_ATTESTED_*=... bash gate.sh   # round-3: no P0_ATTESTED_* exported
+P0_STOP reason=execution_domain_unattested field=user_namespace detail=preregistered_value_missing
+RC=3
+
+########## B-GREEN. the real gate, driven with the round-4 wrapper environment
+
+$ env -i P0_ATTESTED_*=... bash gate.sh   # round-4: five values exported
+P0_STOP reason=execution_domain_unattested field=user_namespace detail=freeze_pin_unfilled
+RC=3
+# The frozen P0_FIXED_ATTESTED_* literals in the block are still
+# <PIN-AT-FREEZE>, so the gate now reaches the freeze-pin arm instead of
+# the missing-input arm. That is the correct draft-stage state: the block
+# side is a Stage-1 fill, not a wrapper defect. The next case fills both.
+
+########## B-GREEN2. both sides filled - the gate passes end to end
+
+$ env -i P0_ATTESTED_*=... bash gate.sh   # round-4 environment, block literals filled to match
+P0_GATE_PASSED all_five_attested_inputs_accepted
+RC=0
+
+$ env -i P0_ATTESTED_*=... bash gate.sh   # round-3 environment, block literals filled: still missing input
+P0_STOP reason=execution_domain_unattested field=user_namespace detail=preregistered_value_missing
+RC=3
+
+########## B-GREEN3. a wrapper value that disagrees with the frozen literal
+
+$ env -i P0_ATTESTED_*=... bash gate.sh   # one value differs from the frozen pin
+P0_STOP reason=execution_domain_unattested field=pid_namespace detail=prelude_value_differs_from_frozen_pin
+RC=3
+```
+
+## R4-6. Static gates
+
+```text
+########## bash -n on every delivered shell file
+$ bash -n remote_setup_wpi.sh ; echo rc=$?
+rc=0
+$ bash -n remote_extract_verify_wpi.sh ; echo rc=$?
+rc=0
+$ bash -n remote_close_tree_wpi.sh ; echo rc=$?
+rc=0
+$ bash -n run_p0.sh ; echo rc=$?
+rc=0
+$ bash -n run_ro.sh ; echo rc=$?
+rc=0
+
+########## per-file identity, marker census and byte-counted CR check
+FILE                              BYTES  SHA256                                                           ALOC  PIN  CR NONASCII
+run_p0.sh                         12063  6646770f6884dc3e918e87c65f4c097af25b71e2612f67165662825d58709202    6    8   0        0
+run_ro.sh                         11925  9ab8fa715f553f743bd23c2d177842d5c32c0c2bf074c9564861f0506f55cf12    6    4   0        0
+transport_runner.ps1              69932  45123de489ec48dfe7d4318dad7db547bcc03114fe886be16c7f4c616fc45fed    3    7   0        0
+TRANSPORT_PLAN.tsv                 7970  e3c11218a9c70ef5454d8db25c7c9965ebed3ae07bc97a766240429685c50e3c   22    7   0        0
+remote_setup_wpi.sh               24938  2176448e710511ca0a7fa0b01c0c630012f0281691b36bf2b8c7bfe49531d8f4    0    3   0       15
+remote_extract_verify_wpi.sh      22047  fa57065b85b45fb652d7ef31f4fbc6a13970b7fed763d309daedb8df18323e41    0    7   0       15
+remote_close_tree_wpi.sh          28756  29b6412a466c10854ddf09effc8d5216317738a012235ce563c9764a9e0c40ef    0    2   0        4
+
+$ # census over the seven executable/plan targets only (round 3 was 36 alloc / 33 pin)
+ALLOCATE-AT-DISPATCH=37  PIN-AT-FREEZE=38
+$ grep -c "UNFILLED_MARKERS = @((" transport_runner.ps1   # the guard is composed, not a literal
+1
+$ # no marker literal may sit on a COMMENT line of a delivered shell file
+remote_setup_wpi.sh              comment_line_markers=0
+remote_extract_verify_wpi.sh     comment_line_markers=0
+remote_close_tree_wpi.sh         comment_line_markers=0
+run_p0.sh                        comment_line_markers=0
+run_ro.sh                        comment_line_markers=0
+
+########## T7 - the inert pin no longer exists as an assignment or an export
+$ grep -cE "^[[:space:]]*WPI_INTERPRETER_TARGET=" run_ro.sh
+0
+$ grep -cE "^[[:space:]]*export[[:space:]].*WPI_INTERPRETER_TARGET" run_ro.sh
+0
+$ grep -n "WPI_INTERPRETER_TARGET" run_ro.sh   # what remains is the removal note only
+124:# defined `WPI_INTERPRETER_TARGET` as a freeze pin here and exported it. The
+$ grep -c "WPI_INTERPRETER_TARGET" RP7-WPI-RO.sh   # the accepted block never read it
+0
+$ grep -n "WPI_INTERPRETER_TARGET" ../WPI_PREREG_DRAFT_ROUND1/WPI_PREREGISTRATION_DRAFT.md
+199:`WPI_INTERPRETER_TARGET` is deliberately **absent** from this table and from
+$ grep -n "wpi_assert_interpreter()" RP7-WPI-RO.sh   # the predicate that actually exists
+979:wpi_assert_interpreter() {
+
+########## plan structure and launch-domain composition
+$ awk -F TAB "{print NR": fields="NF}" TRANSPORT_PLAN.tsv
+1: fields=9 2: fields=9 3: fields=9 4: fields=9 5: fields=9 6: fields=9 7: fields=9 8: fields=9 9: fields=9 10: fields=9 11: fields=9 12: fields=9 13: fields=9 
+$ grep -c "/usr/bin/env -i PATH=/usr/bin:/bin LC_ALL=C HOME=/home/gatea /usr/bin/bash --noprofile --norc -s --" TRANSPORT_PLAN.tsv
+6
+$ grep -c " bash -s -- " TRANSPORT_PLAN.tsv   # bare-bash launches remaining
+0
+0
+$ awk -F TAB rows 07/08: argc and the argv tail
+07 argc=45 tail=/home/gatea/wpi_staging_<ALLOCATE-AT-DISPATCH>/work
+08 argc=45 tail=/home/gatea/wpi_staging_<ALLOCATE-AT-DISPATCH>/work
+
+########## Windows PowerShell 5.1 parse of the runner
+$ $PSVersionTable.PSVersion.ToString()
+5.1.26100.8875
+$ [System.Management.Automation.Language.Parser]::ParseFile(transport_runner.ps1, [ref]$t, [ref]$e); $e.Count
+PARSE_ERRORS=0
+$ # byte-counted CR check on the runner
+CR_BYTES=0 BYTES=69932
+
+########## plan/runner composition: every ssh_stdin row checked against the
+########## runner's OWN frozen constants, lifted out of transport_runner.ps1
+$ # constants as the runner defines them
+SSH_PINNED_OPTIONS_COUNT=30 REMOTE_LAUNCH_DOMAIN_COUNT=10 SSH_TARGET=gatea@172.24.55.233
+REMOTE_LAUNCH_DOMAIN=[/usr/bin/env] [-i] [PATH=/usr/bin:/bin] [LC_ALL=C] [HOME=/home/gatea] [/usr/bin/bash] [--noprofile] [--norc] [-s] [--]
+op=01 stdin=PREREG:remote_setup_wpi.sh argc=43 options_verbatim=True route_ok=True launch_domain_verbatim=True script_args=1
+op=03 stdin=PREREG:remote_extract_verify_wpi.sh argc=45 options_verbatim=True route_ok=True launch_domain_verbatim=True script_args=3
+op=04 stdin=PREREG:run_p0.sh argc=42 options_verbatim=True route_ok=True launch_domain_verbatim=True script_args=0
+op=05 stdin=PREREG:run_ro.sh argc=42 options_verbatim=True route_ok=True launch_domain_verbatim=True script_args=0
+op=07 stdin=PREREG:remote_close_tree_wpi.sh argc=45 options_verbatim=True route_ok=True launch_domain_verbatim=True script_args=3
+op=08 stdin=PREREG:remote_close_tree_wpi.sh argc=45 options_verbatim=True route_ok=True launch_domain_verbatim=True script_args=3
+```

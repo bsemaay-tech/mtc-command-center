@@ -79,15 +79,23 @@ Dispatch patterns (verbatim):
 - **NEXT: round 10b** — kickoff `KICKOFF_RP6_REPAIR_R10.md`. Confirm the F1 fix by running
   the published command VERBATIM, write the missing report, confirm F2/F3/F4. GLM at 13:50.
 
-### Transport set — round 4 is ~1/5 done and NON-OPERATIONAL
-- Assessment: `TRANSPORT_STATE_ASSESSMENT_2026-08-11.md`. Eight of nine files at round-3
-  bytes. The one edited file (`remote_close_tree_wpi.sh`, from the dead concurrent session)
-  requires a third `WORK_ROOT` arg no plan byte passes, and its clean launch self-STOPs, so
-  its new STOP path is unreachable. F4/T5/T7/T8 not started; F1/F2/T6 partial; F3 unreachable.
-- `run_p0.sh` exports NONE of the five `P0_ATTESTED_*` values RP6 requires → composition
-  STOPs before any host observation. `run_ro.sh` carries inert `WPI_INTERPRETER_TARGET`.
-- **NEXT: a near-full round-4 rebuild** using the assessment's ordered resumption list. Needs
-  a strong implementer lane — do NOT give this to DeepSeek. Largest single remaining block.
+### Transport set — round 4 REBUILT, awaiting Codex re-audit (updated 2026-08-11, Max lane)
+- Round 4 is complete: report `TRANSPORT_R4_REPORT_2026-08-11.md`, status
+  `STATUS_TRANSPORT.md`, evidence `SELF_QA_TRANSPORT.md` §R4. All eight items (F1–F4,
+  T5–T8) implemented with executed RED/GREEN; no `PENDING-LEAD-EXECUTION` item.
+- The `cf049b6b` close-script edit was treated as SUPERSEDED per the Lead addendum; the
+  rebuild started from the round-3 bytes at `78173bfd`. Its pieces are dispositioned
+  individually in §3 of the report (kept/dropped, with a second latent defect recorded).
+- Six `ssh_stdin` rows now carry a frozen `env -i` launch domain the runner enforces
+  verbatim; ops 07/08 take the run-owned `<BASE>/work` root op 01 allocates; provenance is
+  bound per operation; cleanup prerequisites are per branch, and Codex's decisive fixture
+  goes GREEN (`deviant=1`, `TR_RUN FAIL`). `run_p0.sh` wires the five `P0_ATTESTED_*`
+  values — proved against the real `RP6-P0.sh` gate bytes. `WPI_INTERPRETER_TARGET` is gone.
+- **NEXT: Codex T0 re-audit** against the identities in §4 of the report. Two Lead items:
+  ratify derivation classes 5 and 6, and accept the F1 residual scoping (a `BASH_ENV`
+  startup plant that exits is closed on the plan/runner side, not inside a script).
+- Nothing was committed; nothing was dispatched. `TRANSPORT_R4_MAX_RUN_2026-08-11.log` was
+  held open by the dispatcher and could not be written by the session.
 
 ### §10.2 path-scope prover — unsound, repair banked
 - Codex T1 → **REQUEST_CHANGES ×9** (4 CRITICAL silent-sink classes). Repair kickoff
