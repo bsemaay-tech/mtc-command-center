@@ -7720,7 +7720,9 @@ R11_GRAMMAR:R11G_BAD:
 R11_F3:R11F3_BAD:
 R11_F1_RED:R11RED_BAD:
 R12_GRAMMAR:R12G_BAD:
-R12_F1_RED:R12RED_BAD:"
+R12_F1_RED:R12RED_BAD:
+R13_GRAMMAR:R13G_BAD:
+R13_F1_RED:R13RED_BAD:"
 
 printf '%s\n' "$FENCES" | while IFS=: read -r name ctr argv; do
     [ -n "$name" ] || continue
@@ -7793,13 +7795,18 @@ CASE_OK R11_F3 guard_at_line=206 injections=1 forced R11F3_BAD=7 -> rc=1 GUARD_H
 CASE_OK R11_F1_RED guard_at_line=114 injections=1 forced R11RED_BAD=7 -> rc=1 GUARD_HOLDS
 CASE_OK R12_GRAMMAR guard_at_line=794 injections=1 forced R12G_BAD=7 -> rc=1 GUARD_HOLDS
 CASE_OK R12_F1_RED guard_at_line=136 injections=1 forced R12RED_BAD=7 -> rc=1 GUARD_HOLDS
-R11_GUARDS_SUMMARY fences=17 pass=17 fail=0 result=PASS
+CASE_OK R13_GRAMMAR guard_at_line=1057 injections=1 forced R13G_BAD=7 -> rc=1 GUARD_HOLDS
+CASE_OK R13_F1_RED guard_at_line=139 injections=1 forced R13RED_BAD=7 -> rc=1 GUARD_HOLDS
+R11_GUARDS_SUMMARY fences=19 pass=19 fail=0 result=PASS
 ```
 
 `R10_F4`'s row still reads `guard_at_line=162`. That is not a stale copy: round
 12's F2 repair replaced exactly six comment lines with exactly six comment lines,
-so the offset inside the extracted fence is unchanged, and this transcript is the
-round-12 re-run.
+so the offset inside the extracted fence is unchanged. This transcript is the
+ROUND-13 re-run: round 13 added the two rows `R13_GRAMMAR:R13G_BAD:` and
+`R13_F1_RED:R13RED_BAD:` to the `FENCES` table above, so the count is now
+nineteen. Adding a row only widens what this fence falsifies; no guard was
+weakened, and every earlier row's `guard_at_line` is unchanged.
 
 ## F4 — the prose narrowed to the executed predicate, claim by claim
 
@@ -9357,6 +9364,1583 @@ establishes:
 - `R10_F4`'s reachability result covers the three input classes it executes on
   this control flow — the wording F2 corrected — not every early-stop class and
   not every future edit.
+- The `P0_STATE_UID` / `P0_STATE_GID` / `P0_EXPECT_UID` input-integrity residual
+  is still named, not closed.
+- `shellcheck` is not installed in this environment and was not run.
+
+# ROUND 13 (2026-08-11) — the Codex round-12 T0 audit, three findings
+
+Implementer: Claude Max (`claude-opus-5`), xhigh, fresh session. Auditor of
+record: Codex `gpt-5.6-sol` (T0). Input: `RP6_CODEX_T0_AUDIT_R12_2026-08-11.md`,
+**REQUEST_CHANGES ×3**, all against the QA layer (`SELF_QA_RP6.md`). `RP6-P0.sh`
+is UNCHANGED this round — not one byte (re-verified this session:
+sha256 `5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330`,
+110817 B, 0 CR bytes). The census lives in the QA layer, so the repair is QA-only.
+
+Every transcript in this section is **real captured output from this session**,
+produced by running the published invocation verbatim from `WPI_BLOCKS_DRAFT` in
+a clean `bash --noprofile --norc` (GNU bash 5.2.37 msys). Nothing here is
+`PENDING`, and nothing here is invented.
+
+Execution earned its keep twice. The first run of the round-13 fence returned
+**FAIL**: assertion 14's admissible set was written many-tokens-per-line while
+its membership test is `grep -x -F -f`, a whole-line match, so every bash builtin
+the block invokes (`:`, `[`, `exit`, `export`, `local`, `mapfile`, `return`,
+`set`, `type`) was reported unbound. The second run returned FAIL again, on the
+`shadow` mutant: the wrapper-redefinition count had been taken from the
+`sort -u` name set, and `sort -u` collapses the second `p0_stop` definition that
+is the entire point of the check. Both were repaired before publication; the
+bytes below are the bytes that produced the transcripts.
+
+The block's bare-command-word surface was enumerated by reading `RP6-P0.sh` in
+full (1896 lines), and the tokenizer's own records confirm that enumeration
+exactly: 34 distinct BARE command words — 24 block functions, the one
+sourced-library function, and nine builtins — plus two prefix operands, both
+`type` behind `builtin` at lines 398 and 400.
+
+## Findings 1+2 (HIGH) — alias/function-indirection and command/builtin-prefix
+
+Both are UPHELD and both are CLOSED IN CODE, QA-only, by `R13_GRAMMAR`
+(supersedes `R12_GRAMMAR`). The residuals the round-12 audit named are:
+
+- **alias** — closed statically. The block enables no `shopt -s expand_aliases`
+  and defines no `alias` (verified: no `shopt` at all; the word `alias` appears
+  only in comments). Non-interactive bash has aliases OFF by default, so alias
+  indirection is impossible by construction. Assertion 13 asserts both facts and
+  fails closed if either appears. An alias whose value is an emitter puts the
+  emitter text in the line census regardless, so the text path was already
+  covered; the only uncovered concern was the mechanism's availability, which
+  the static assertion removes.
+- **function** — closed by binding. The tokenizer now records every BARE command
+  word it cannot otherwise classify (`CMDBARE`); assertion 14 requires each to
+  resolve to a declared block function (enumerated from `FUNCDEF`), a bash
+  builtin/keyword (a fixed, over-complete list — no builtin is an emitter, so an
+  over-complete list can only admit, never conceal), or the one declared
+  sourced-library function (`rp0_require_safe_component`). An unbound bare
+  invocation — one the fence can never tie to a definition — fails closed. A
+  word that binds to a block function is sound transitively: that function's body
+  is source in this same file, so its own emitters are already censused.
+- **shadow** — closed by naming, in three parts, because assertion 14's
+  admissible set is only worth what the names in it are still bound to.
+  Assertion 15 requires (a) `p0_stop` and `p0_fail` each defined **exactly
+  once**, so no later redefinition can silence or replace the emitter; (b) no
+  definition carrying a **builtin or keyword** name, so "it is a builtin" in
+  assertion 14 cannot be a claim about a name the block rebound underneath it;
+  and (c) no definition carrying one of the block's **own RO-tool names**, read
+  out of the block's own `P0_RP7_RO_TOOLS`/`P0_P0_ONLY_TOOLS` literals so the
+  check cannot drift from the inventory. This is the kickoff's "no function may
+  shadow a wrapper/emitter/tool name", stated as a fence.
+- **prefix** — closed by stripping. `cmdword` recognises `command`/`builtin`/
+  `exec` at command position and classifies the EFFECTIVE operand
+  (`prefix_classify`): `command -v/-V` is a lookup that executes nothing,
+  redirection-only `exec` executes nothing, any option this does not model fails
+  closed, and the first remaining word is classified as the command word under
+  the same policy. On the real bytes this reaches the two `builtin type` sites
+  and the `command -v "$t"` lookup at line 789, and no others.
+
+`R13_F1_RED` proves the distinction: it extracts the published `R12_GRAMMAR` and
+`R13_GRAMMAR` fences, inserts each of the four new mutants (alias,
+wrapper-shadow, tool-name-shadow, command/builtin-prefix) after
+`p0_probe_kind() {`, and records RED (R12 certifies the mutated bytes) versus
+GREEN (R13 refuses them and names the assertion that kills it). The
+command/builtin-prefix mutant is additionally proven to really emit when its
+concealed operand is `printf`.
+
+### R13_GRAMMAR harness
+
+`R13_GRAMMAR` carries all twelve round-12 assertions and all eleven round-12
+mutants forward unchanged, adds assertions 13–15 and four new mutants, and
+extends the tokenizer with `CMDBARE` emission and `prefix_classify`. Nothing R12
+killed is now survivable.
+
+```bash
+# R13_GRAMMAR_HARNESS_BEGIN
+#!/usr/bin/env bash
+# ===========================================================================
+# Round 13, findings 1+2 - the R12 tokenizer extended to bind every bare command
+# word and to strip the command/builtin/exec prefix.
+#
+# The round-12 fence (R12_GRAMMAR, superseded by this one) put a tokenizer in
+# front of the grep census and made a command word admissible only as BARE, a
+# single QUOTED_LITERAL, or a whole-word PURE_EXPANSION handle. The round-12 T0
+# audit (Codex) upheld that closure for CONSTRUCTED command words but recorded
+# two residuals the line census could not see:
+#
+#   finding 1 (alias/function-indirection): a BARE command word was admitted
+#     without binding its runtime resolution, so a name that resolves via an
+#     alias or a shadowing function to an emitter was not caught.
+#   finding 2 (command/builtin-prefix): `command`/`builtin`/`exec` consume
+#     command position, so the EFFECTIVE operand was never passed to cmdword.
+#
+# This fence keeps every round-12 mechanism unchanged and closes both residuals:
+#
+#   alias    - closed STATICALLY. Non-interactive bash has aliases OFF unless
+#              `shopt -s expand_aliases` enables them, and this block defines no
+#              `alias`. Assertion 13 checks both and fails closed if either
+#              appears, so alias indirection is impossible by construction. (An
+#              alias whose value is an emitter puts the emitter text in the
+#              line census regardless, so the text path is already covered; the
+#              only uncovered concern was the mechanism's availability, which
+#              the static assertion removes.)
+#   function - closed by BINDING. The tokenizer now records every BARE command
+#              word it cannot otherwise classify (CMDBARE); assertion 14 requires
+#              each to be a declared block function, a bash builtin/keyword, or
+#              the one declared sourced-library function (rp0_require_safe_
+#              component). An unbound bare invocation - one the fence can never
+#              tie to a definition - fails closed.
+#   shadow   - closed by NAMING. Assertion 15 requires p0_stop and p0_fail each
+#              to be defined exactly once (the canonical wrappers), so no later
+#              redefinition can silence or replace the emitter, AND forbids any
+#              definition from carrying a builtin/keyword name or one of the
+#              block's own RO-tool names - which is what makes assertion 14's
+#              admissible set mean what it says.
+#   prefix   - closed by STRIPPING. cmdword recognises command/builtin/exec at
+#              command position and classifies the EFFECTIVE operand under the
+#              same policy (prefix_classify): `command -v/-V` is a lookup that
+#              executes nothing, redirection-only `exec` executes nothing, any
+#              option this does not model fails closed, and the first remaining
+#              word is classified as the command word - so `builtin <operand>`
+#              can no longer hide an emitter or an undeclared handle.
+#
+# What this buys, stated exactly: it does not change what the DERIVATION reads.
+# It makes the fence refuse to certify a block whose command-word resolution it
+# cannot bind, and it makes the prefix path classify the operand bash actually
+# executes. R13_F1_RED proves both distinctions on executed bytes.
+#
+# D026: GREEN on the round-12 bytes; FIFTEEN RED mutants - the eleven carried
+# from round 12 plus the four new classes (alias, wrapper-shadow, tool-name-
+# shadow, command/builtin-prefix) - each of which must make the whole verdict
+# nonzero, with the sub-check that killed it recorded.
+# ===========================================================================
+set -u
+BLOCK="${1:-RP6-P0.sh}"
+DRAFT="${2:-../WPI_PREREG_DRAFT_ROUND1/WPI_PREREGISTRATION_DRAFT.md}"
+R13G_OK=0; R13G_BAD=0
+gok()  { printf 'ASSERT_MET %s\n'   "$1"; R13G_OK=$((R13G_OK+1)); }
+gbad() { printf 'ASSERT_UNMET %s\n' "$1"; R13G_BAD=$((R13G_BAD+1)); }
+
+# ---- carried from R11/R12 UNCHANGED: one line per CORRELATED site tuple ------
+p0_derive_grammar() {
+  local b="$1"
+  {
+    grep -n 'p0_stop "\|p0_fail "' "$b" \
+      | grep -v '^[0-9]*:p0_stop() {\|^[0-9]*:p0_fail() {' \
+      | sed -e 's/^\([0-9]*\):.*p0_stop "/\1\tP0_STOP\t/' \
+            -e 's/^\([0-9]*\):.*p0_fail "/\1\tP0_FAIL\t/' \
+            -e 's/".*$//'
+    grep -n "printf 'P0_STOP reason=\|printf 'P0_FAIL reason=" "$b" \
+      | grep -v '^[0-9]*:p0_stop() {\|^[0-9]*:p0_fail() {' \
+      | sed -e "s/^\([0-9]*\):.*printf 'P0_STOP reason=/\1\tP0_STOP\t/" \
+            -e "s/^\([0-9]*\):.*printf 'P0_FAIL reason=/\1\tP0_FAIL\t/" \
+            -e 's/[\][n].*$//'
+  } | awk -F'\t' '
+  function classify(v,   out) {
+    out = v
+    gsub(/\$\{[A-Za-z_][A-Za-z_0-9]*\}/, "<&>", out)
+    gsub(/\$[A-Za-z_][A-Za-z_0-9]*/,     "<&>", out)
+    gsub(/<\$\{/, "<", out); gsub(/\}>/, ">", out)
+    gsub(/<\$/,   "<", out)
+    gsub(/%s/,    "<printf_arg>", out)
+    return out
+  }
+  {
+    n = split($3, toks, " ")
+    reason = toks[1]
+    tuple = $2 " " reason
+    for (i = 2; i <= n; i++) {
+      if (toks[i] == "") continue
+      eq = index(toks[i], "=")
+      if (eq == 0) { print "UNPARSEABLE_EMITTER line=" $1 " tok=" toks[i]; continue }
+      tuple = tuple " " substr(toks[i], 1, eq-1) "={" classify(substr(toks[i], eq+1)) "}"
+    }
+    TUPLE[tuple]++
+  }
+  END { for (t in TUPLE) print TUPLE[t] " " t }' | sort -k2,2 -k3,3 -k1,1n
+}
+
+p0_declared_grammar() {
+  sed -n '/^# P0_RESULT_GRAMMAR_BEGIN$/,/^# P0_RESULT_GRAMMAR_END$/p' "$1" \
+    | sed -e '1d' -e '$d'
+}
+
+# ---- carried from R11/R12 UNCHANGED: the line-oriented census ----------------
+p0_census_emitters() {
+  grep -nE '(^|[^A-Za-z0-9_])p0_(stop|fail)([^A-Za-z0-9_]|$)|P0_STOP|P0_FAIL' "$1" \
+    | grep -vE '^[0-9]+:[[:space:]]*#' \
+    | grep -vE '^[0-9]+:p0_(stop|fail)\(\) \{'
+}
+p0_census_unmodeled() {
+  p0_census_emitters "$1" \
+    | grep -vE ':.*p0_(stop|fail) "' \
+    | grep -vE ":.*printf 'P0_(STOP|FAIL) reason="
+}
+
+# ---- the tokenizer (R12's, with R13 binding + prefix extensions) -------------
+p0_r13_tokenize() {           # $1 = bytes to tokenize; records on stdout
+  local a rc
+  a="$(mktemp)"
+  cat > "$a" <<'P0_R13_AWK_EOF'
+  # =======================================================================
+  # P0 R13 fail-closed shell command-word tokenizer.
+  # Output records:
+  #   EMIT line=<n> word=<p0_stop|p0_fail|printf_direct>
+  #   RUNTIME_CMDWORD line=<n> raw=[<word>]
+  #   CMDBARE line=<n> word=<word>            (R13: every BARE fallthrough word)
+  #   PREFIX_OPERAND line=<n> prefix=<p> word=<w>  (R13: classified prefix operand)
+  #   FUNCDEF line=<n> name=<name>
+  #   EMIT_EXCLUDED_WRAPPER_DEF line=<n>
+  #   UNMODELED kind=<k> line=<n> raw=[<word>]      <- any of these FAILS
+  #   SCAN_ERROR ...                                <- so does any of these
+  #   TOKENIZER_FRAGMENTS <n> / TOKENIZER_UNMODELED <n>
+  # =======================================================================
+  function nlc(s,   t) { t = s; return gsub(/\n/, "\n", t) }
+
+  function unmodeled(kind, line, raw) {
+      gsub(/\n/, "<NL>", raw)
+      gsub(EXP, "<EXP>", raw)
+      printf "UNMODELED kind=%s line=%d raw=[%s]\n", kind, line, raw
+      NUNMOD++
+  }
+
+  function skipdq(s, i,   n, c, d, j) {
+      n = length(s); i++
+      while (i <= n) {
+          c = substr(s, i, 1)
+          if (c == "\"") return i
+          if (c == "\\") { i += 2; continue }
+          if (c == "`")  return -1
+          if (c == "$") {
+              d = substr(s, i+1, 1)
+              if (d == "{") { j = matchbrace(s, i+2); if (j < 0) return -1; i = j; continue }
+              if (d == "(") {
+                  if (substr(s, i+2, 1) == "(") { j = matchpar(s, i+3, 2) } else { j = matchpar(s, i+2, 1) }
+                  if (j < 0) return -1; i = j; continue
+              }
+              i++; continue
+          }
+          i++
+      }
+      return -1
+  }
+
+  function matchbrace(s, i,   n, c, d, j, depth) {
+      n = length(s); depth = 1
+      while (i <= n) {
+          c = substr(s, i, 1)
+          if (c == "\\") { i += 2; continue }
+          if (c == "'")  { j = index(substr(s, i+1), "'"); if (j == 0) return -1; i += j + 1; continue }
+          if (c == "\"") { j = skipdq(s, i); if (j < 0) return -1; i = j + 1; continue }
+          if (c == "`")  return -1
+          if (c == "$") {
+              d = substr(s, i+1, 1)
+              if (d == "{") { j = matchbrace(s, i+2); if (j < 0) return -1; i = j; continue }
+              if (d == "(") {
+                  if (substr(s, i+2, 1) == "(") { j = matchpar(s, i+3, 2) }
+                  else { NESTED_CMDSUB++; j = matchpar(s, i+2, 1) }
+                  if (j < 0) return -1; i = j; continue
+              }
+              if (d == "'") { j = skipansi(s, i+2); if (j < 0) return -1; i = j; continue }
+              i++; continue
+          }
+          if (c == "{") { depth++; i++; continue }
+          if (c == "}") { depth--; i++; if (depth == 0) return i; continue }
+          i++
+      }
+      return -1
+  }
+
+  function matchpar(s, i, depth,   n, c, d, j) {
+      n = length(s)
+      while (i <= n) {
+          c = substr(s, i, 1)
+          if (c == "\\") { i += 2; continue }
+          if (c == "'")  { j = index(substr(s, i+1), "'"); if (j == 0) return -1; i += j + 1; continue }
+          if (c == "\"") { j = skipdq(s, i); if (j < 0) return -1; i = j + 1; continue }
+          if (c == "`")  return -1
+          if (c == "#")  { j = index(substr(s, i), "\n"); if (j == 0) return -1; i += j - 1; continue }
+          if (c == "$") {
+              d = substr(s, i+1, 1)
+              if (d == "{") { j = matchbrace(s, i+2); if (j < 0) return -1; i = j; continue }
+              if (d == "(") {
+                  if (substr(s, i+2, 1) == "(") { j = matchpar(s, i+3, 2) } else { j = matchpar(s, i+2, 1) }
+                  if (j < 0) return -1; i = j; continue
+              }
+              if (d == "'") { j = skipansi(s, i+2); if (j < 0) return -1; i = j; continue }
+              i++; continue
+          }
+          if (c == "(") { depth++; i++; continue }
+          if (c == ")") { depth--; i++; if (depth == 0) return i; continue }
+          i++
+      }
+      return -1
+  }
+
+  function skipansi(s, i,   n, c) {      # i just past the quote of $'...'
+      n = length(s)
+      while (i <= n) {
+          c = substr(s, i, 1)
+          if (c == "\\") { i += 2; continue }
+          if (c == "'")  return i + 1
+          i++
+      }
+      return -1
+  }
+
+  function scandollar(s, st, ln,   n, d, j, chunk) {
+      DLRAW = ""; DLW = ""; DLE = 0; DLLIT = 0; DLNL = 0
+      n = length(s); d = substr(s, st+1, 1)
+      if (d == "'") {
+          j = skipansi(s, st+2)
+          if (j < 0) { unmodeled("unterminated_ansi_c_quote", ln, ""); return -1 }
+          chunk = substr(s, st, j - st)
+          DLRAW = chunk; DLW = EXP; DLE = 1; DLNL = nlc(chunk)
+          return j
+      }
+      if (d == "{") {
+          j = matchbrace(s, st+2)
+          if (j < 0) { unmodeled("unparseable_parameter_expansion", ln, substr(s, st, 40)); return -1 }
+          chunk = substr(s, st, j - st)
+          DLRAW = chunk; DLW = EXP; DLE = 1; DLNL = nlc(chunk)
+          return j
+      }
+      if (d == "(") {
+          if (substr(s, st+2, 1) == "(") {
+              j = matchpar(s, st+3, 2)
+              if (j < 0) { unmodeled("unparseable_arithmetic_expansion", ln, substr(s, st, 40)); return -1 }
+          } else {
+              j = matchpar(s, st+2, 1)
+              if (j < 0) { unmodeled("unparseable_command_substitution", ln, substr(s, st, 40)); return -1 }
+              pushq(substr(s, st+2, j - 1 - (st+2)), ln, "cmdsub")
+          }
+          chunk = substr(s, st, j - st)
+          DLRAW = chunk; DLW = EXP; DLE = 1; DLNL = nlc(chunk)
+          return j
+      }
+      if (d ~ /[A-Za-z_]/) {
+          j = st + 1
+          while (j <= n && substr(s, j, 1) ~ /[A-Za-z0-9_]/) j++
+          if (substr(s, j, 1) == "[") {
+              chunk = index(substr(s, j), "]")
+              if (chunk == 0) { unmodeled("unparseable_array_subscript", ln, substr(s, st, 40)); return -1 }
+              j += chunk
+          }
+          DLRAW = substr(s, st, j - st); DLW = EXP; DLE = 1
+          return j
+      }
+      if (d ~ /[0-9@*#?$!-]/) { DLRAW = substr(s, st, 2); DLW = EXP; DLE = 1; return st + 2 }
+      DLRAW = "$"; DLW = "$"; DLLIT = 1
+      return st + 1
+  }
+
+  function scandq(s, st, ln,   n, i, c, d, k) {
+      DQRAW = "\""; DQW = ""; DQE = 0; DQLIT = 0; DQNL = 0
+      n = length(s); i = st + 1
+      while (i <= n) {
+          c = substr(s, i, 1)
+          if (c == "\"") { DQRAW = DQRAW "\""; return i }
+          if (c == "\\") {
+              d = substr(s, i+1, 1)
+              if (d == "\n") { DQRAW = DQRAW c d; DQNL++; i += 2; continue }
+              if (d == "$" || d == "`" || d == "\"" || d == "\\") {
+                  DQRAW = DQRAW c d; DQW = DQW d; DQLIT++; i += 2; continue
+              }
+              DQRAW = DQRAW c; DQW = DQW c; DQLIT++; i++; continue
+          }
+          if (c == "`") { unmodeled("backtick_command_substitution", ln, ""); return -1 }
+          if (c == "$") {
+              k = scandollar(s, i, ln)
+              if (k < 0) return -1
+              DQRAW = DQRAW DLRAW; DQW = DQW DLW; DQE += DLE; DQLIT += DLLIT; DQNL += DLNL
+              i = k; continue
+          }
+          if (c == "\n") DQNL++
+          DQRAW = DQRAW c; DQW = DQW c; DQLIT++; i++
+      }
+      return -1
+  }
+
+  function addtok(ty, nrm, raw, line, adj) {
+      NT++
+      TT[NT] = ty; TN[NT] = nrm; TR[NT] = raw; TL[NT] = line; TADJ[NT] = adj
+      TQ[NT] = 0; TE[NT] = 0; TX[NT] = 0; TLIT[NT] = 0
+  }
+
+  function pushq(src, line, tag) { QN++; QS[QN] = src; QL[QN] = line; QT[QN] = tag }
+
+  function isredir(op) {
+      return (op == "<" || op == ">" || op == ">>" || op == "<<<" ||
+              op == "<&" || op == ">&" || op == "<>" || op == ">|")
+  }
+
+  function isreserved(w) {
+      return (w == "if" || w == "then" || w == "elif" || w == "else" || w == "fi" ||
+              w == "while" || w == "until" || w == "do" || w == "done" ||
+              w == "{" || w == "}" || w == "!" || w == "time" || w == "function" ||
+              w == "[[" || w == "]]" || w == "coproc")
+  }
+
+  function scanfrag(s, base,   i, n, c, d, j, k, op, adj, prevend, ln, wln, w, raw, q, e, x, lit) {
+      NT = 0
+      delete TT; delete TN; delete TR; delete TL; delete TADJ
+      delete TQ; delete TE; delete TX; delete TLIT
+      n = length(s); i = 1; ln = base; prevend = 0
+      while (i <= n) {
+          c = substr(s, i, 1)
+          if (c == " " || c == "\t") { i++; continue }
+          if (c == "\\" && substr(s, i+1, 1) == "\n") { i += 2; ln++; continue }
+          if (c == "\n") { addtok("OP", "\n", "\n", ln, (i == prevend)); ln++; i++; prevend = i; continue }
+          if (c == "#") { while (i <= n && substr(s, i, 1) != "\n") i++; continue }
+          if (index(";&|<>()", c) > 0) {
+              op = c; d = substr(s, i+1, 1)
+              if ((c == ";" && d == ";") || (c == "&" && d == "&") || (c == "|" && d == "|") ||
+                  (c == ">" && d == ">") || (c == "<" && d == "<") || (c == "<" && d == "&") ||
+                  (c == ">" && d == "&") || (c == "<" && d == ">") || (c == ">" && d == "|") ||
+                  (c == "|" && d == "&")) op = c d
+              if (op == "<<") {
+                  if (substr(s, i+2, 1) == "<") op = "<<<"
+                  else { unmodeled("here_document", ln, "<<"); return -1 }
+              }
+              adj = (i == prevend)
+              addtok("OP", op, op, ln, adj)
+              i += length(op); prevend = i
+              continue
+          }
+          wln = ln; w = ""; raw = ""; q = 0; e = 0; x = 0; lit = 0
+          adj = (i == prevend)
+          while (i <= n) {
+              c = substr(s, i, 1)
+              if (c == " " || c == "\t" || c == "\n") break
+              if (index(";&|<>()", c) > 0) break
+              if (c == "\\") {
+                  d = substr(s, i+1, 1)
+                  if (d == "\n") { raw = raw c d; x++; ln++; i += 2; continue }
+                  raw = raw c d; w = w d; lit++; x++; i += 2; continue
+              }
+              if (c == "'") {
+                  j = index(substr(s, i+1), "'")
+                  if (j == 0) { unmodeled("unterminated_single_quote", ln, raw); return -1 }
+                  d = substr(s, i+1, j-1)
+                  raw = raw "'" d "'"; w = w d; lit += length(d); q++
+                  ln += nlc(d); i += j + 1; continue
+              }
+              if (c == "\"") {
+                  k = scandq(s, i, ln)
+                  if (k < 0) { unmodeled("unterminated_double_quote", ln, raw); return -1 }
+                  raw = raw DQRAW; w = w DQW; e += DQE; lit += DQLIT; q++; ln += DQNL
+                  i = k + 1; continue
+              }
+              if (c == "$") {
+                  k = scandollar(s, i, ln)
+                  if (k < 0) return -1
+                  raw = raw DLRAW; w = w DLW; e += DLE; lit += DLLIT; ln += DLNL
+                  i = k; continue
+              }
+              if (c == "`") { unmodeled("backtick_command_substitution", ln, raw); return -1 }
+              raw = raw c; w = w c; lit++; i++
+          }
+          addtok("WORD", w, raw, wln, adj)
+          TQ[NT] = q; TE[NT] = e; TX[NT] = x; TLIT[NT] = lit
+          prevend = i
+      }
+      return NT
+  }
+
+  function analyze(tag,   t, cmdpos, mode, cstack, w, r, redir) {
+      cmdpos = 1; mode = "NORMAL"; cstack = 0; redir = 0
+      for (t = 1; t <= NT; t++) {
+          if (TT[t] == "OP") {
+              w = TN[t]
+              if (isredir(w)) { redir = 1; continue }
+              redir = 0
+              if (w == ";" || w == "\n" || w == "&") {
+                  if (mode == "FORLIST" || mode == "FORIN") mode = (cstack > 0 ? "CASEBODY" : "NORMAL")
+              }
+              if (w == ";;") { if (cstack > 0) mode = "CASEPAT"; cmdpos = 1; continue }
+              if (w == ")")  { if (mode == "CASEPAT") mode = "CASEBODY"; cmdpos = 1; continue }
+              cmdpos = 1
+              continue
+          }
+          if (redir) { redir = 0; continue }
+          w = TN[t]; r = TR[t]
+          policy_b(t)
+          if (mode == "CASEEXPR") { mode = "CASEIN"; continue }
+          if (mode == "CASEIN")   { if (w == "in") mode = "CASEPAT"; continue }
+          if (mode == "CASEPAT")  {
+              if (w == "esac") { cstack--; mode = (cstack > 0 ? "CASEBODY" : "NORMAL"); cmdpos = 1 }
+              continue
+          }
+          if (mode == "FORNAME")  { mode = "FORIN"; continue }
+          if (mode == "FORIN")    {
+              if (w == "in") mode = "FORLIST"
+              else { mode = (cstack > 0 ? "CASEBODY" : "NORMAL"); if (w == "do") cmdpos = 1 }
+              continue
+          }
+          if (mode == "FORLIST")  {
+              if (w == "do") { mode = (cstack > 0 ? "CASEBODY" : "NORMAL"); cmdpos = 1 }
+              continue
+          }
+          if (!cmdpos) continue
+          if (w == "case")  { cstack++; mode = "CASEEXPR"; continue }
+          if (w == "esac")  { cstack--; mode = (cstack > 0 ? "CASEBODY" : "NORMAL"); continue }
+          if (w == "for" || w == "select") { mode = "FORNAME"; continue }
+          if (isreserved(w)) continue
+          if (r ~ /^[0-9]+$/ && TT[t+1] == "OP" && isredir(TN[t+1]) && TADJ[t+1]) continue
+          if (r ~ /^[A-Za-z_][A-Za-z0-9_]*(\[[^]]*\])?\+?=/) continue
+          if (TT[t+1] == "OP" && TN[t+1] == "(" && TT[t+2] == "OP" && TN[t+2] == ")") {
+              printf "FUNCDEF line=%d name=%s\n", TL[t], w
+              if (w == "p0_stop" || w == "p0_fail") WRAPDEF[TL[t]] = 1
+              cmdpos = 0
+              continue
+          }
+          cmdword(t, tag)
+          cmdpos = 0
+      }
+  }
+
+  function policy_b(t,   tk, i, nn, rr) {
+      for (i = 1; i <= 4; i++) {
+          tk = EMTOK[i]
+          nn = cnttok(TN[t], tk); rr = cnttok(TR[t], tk)
+          if (nn > rr) unmodeled("spliced_emitter_token:" tk, TL[t], TR[t])
+      }
+  }
+
+  function cnttok(s, tok,   arr, n, i, c) {
+      n = split(s, arr, /[^A-Za-z0-9_]+/); c = 0
+      for (i = 1; i <= n; i++) if (arr[i] == tok) c++
+      return c
+  }
+
+  # R13 finding 2: classify the EFFECTIVE operand of a command/builtin/exec
+  # prefix. Scans past the prefix's own options and redirections; the first
+  # remaining word is the effective command word and is classified through
+  # cmdword. `command -v/-V` is a lookup that executes nothing; redirection-only
+  # exec executes nothing; any option this does not model fails closed.
+  function prefix_classify(t, tag,   p, w2) {
+      p = t + 1
+      while (p <= NT) {
+          if (TT[p] == "OP") {
+              if (isredir(TN[p])) {
+                  p++
+                  if (p <= NT && TT[p] == "WORD") p++   # redirection target
+                  continue
+              }
+              return                                # a non-redir OP ends this command
+          }
+          w2 = TN[p]
+          # an fd-number prefix of an immediately adjacent redirection is not an operand
+          if (w2 ~ /^[0-9]+$/ && (p+1) <= NT && TT[p+1] == "OP" && isredir(TN[p+1]) && TADJ[p+1]) {
+              p++; continue
+          }
+          if (TN[t] == "command") {
+              if (w2 == "-p") { p++; continue }
+              if (w2 == "-v" || w2 == "-V") return    # lookup form: operand not executed
+              if (w2 ~ /^-/) { unmodeled("command_prefix_option_unmodeled:" w2, TL[p], TR[p]); return }
+          } else if (TN[t] == "exec") {
+              if (w2 ~ /^-/) { unmodeled("exec_prefix_option_unmodeled:" w2, TL[p], TR[p]); return }
+          }
+          # builtin takes no prefix options; the first word is the effective builtin name
+          printf "PREFIX_OPERAND line=%d prefix=%s word=%s\n", TL[p], TN[t], w2
+          cmdword(p, tag ":prefix")
+          return
+      }
+  }
+
+  function cmdword(t, tag,   r, w, kind, a) {
+      r = TR[t]; w = TN[t]
+      if (TQ[t] == 0 && TE[t] == 0 && TX[t] == 0) kind = "BARE"
+      else if (TE[t] == 1 && TLIT[t] == 0 && TQ[t] <= 1 && TX[t] == 0) kind = "PURE_EXPANSION"
+      else if (TQ[t] == 1 && TE[t] == 0 && TX[t] == 0 && (r ~ /^'.*'$/ || r ~ /^".*"$/)) kind = "QUOTED_LITERAL"
+      else kind = "CONSTRUCTED"
+      if (kind == "CONSTRUCTED") { unmodeled("constructed_command_word", TL[t], r); return }
+      if (kind == "PURE_EXPANSION") { printf "RUNTIME_CMDWORD line=%d raw=[%s]\n", TL[t], r; return }
+      if (w == "eval" || w == "source" || w == ".") {
+          unmodeled("indirect_execution_builtin:" w, TL[t], r); return
+      }
+      # R13 finding 2: command/builtin/exec consume command position. Strip the
+      # prefix and classify the EFFECTIVE operand under the same policy.
+      if (w == "command" || w == "builtin" || w == "exec") {
+          prefix_classify(t, tag)
+          return
+      }
+      if (w == "p0_stop" || w == "p0_fail") {
+          if (TL[t] in WRAPDEF) { printf "EMIT_EXCLUDED_WRAPPER_DEF line=%d\n", TL[t]; return }
+          printf "EMIT line=%d word=%s\n", TL[t], w
+          return
+      }
+      if (w == "trap") {
+          a = nextword(t)
+          if (a > 0 && TE[a] == 0 && TX[a] == 0) pushq(TN[a], TL[a], "trap")
+          else if (a > 0) unmodeled("unmodeled_trap_action", TL[a], TR[a])
+          return
+      }
+      if (w == "printf") {
+          a = nextword(t)
+          if (a > 0 && (TN[a] ~ /^P0_STOP reason=/ || TN[a] ~ /^P0_FAIL reason=/)) {
+              if (TL[t] in WRAPDEF) { printf "EMIT_EXCLUDED_WRAPPER_DEF line=%d\n", TL[t]; return }
+              printf "EMIT line=%d word=printf_direct\n", TL[t]
+          }
+          return
+      }
+      # R13 finding 1: a BARE command word that is none of the special cases is
+      # admissible only if it binds to a declared block function, a bash
+      # builtin/keyword, or a declared sourced-library function. The harness
+      # checks every CMDBARE record against that set; an unbound bare invocation
+      # is one whose runtime resolution the fence never sees.
+      if (kind == "BARE") printf "CMDBARE line=%d word=%s\n", TL[t], w
+  }
+
+  function nextword(t,   k) {
+      for (k = t + 1; k <= NT; k++) {
+          if (TT[k] == "OP") { if (isredir(TN[k])) { k++; continue } ; return 0 }
+          return k
+      }
+      return 0
+  }
+
+  BEGIN {
+      EXP = sprintf("%c", 1)
+      EMTOK[1] = "p0_stop"; EMTOK[2] = "p0_fail"
+      EMTOK[3] = "P0_STOP"; EMTOK[4] = "P0_FAIL"
+      NUNMOD = 0; NESTED_CMDSUB = 0
+      if (FILE == "") { print "SCAN_ERROR no_FILE"; exit 2 }
+      src = ""
+      while ((getline line < FILE) > 0) src = src line "\n"
+      close(FILE)
+      if (src == "") { print "SCAN_ERROR empty_source"; exit 2 }
+      QN = 0
+      pushq(src, 1, "main")
+      qi = 0
+      while (++qi <= QN) {
+          if (scanfrag(QS[qi], QL[qi]) < 0) { printf "SCAN_ERROR fragment=%s aborted\n", QT[qi]; continue }
+          analyze(QT[qi])
+      }
+      if (NESTED_CMDSUB > 0)
+          unmodeled("command_substitution_inside_parameter_expansion", 0, NESTED_CMDSUB "")
+      printf "TOKENIZER_FRAGMENTS %d\n", QN
+      printf "TOKENIZER_UNMODELED %d\n", NUNMOD
+  }
+P0_R13_AWK_EOF
+  awk -v FILE="$1" -f "$a" /dev/null
+  rc=$?
+  rm -f "$a"
+  return "$rc"
+}
+
+Q13G="$(mktemp -d)"
+trap 'rm -rf "$Q13G"' EXIT
+
+# The DECLARED runtime-valued command words: the resolved read-only tool
+# handles this block is allowed to invoke through a variable. Assertion 12
+# rejects any other whole-word-expansion command word, so a new indirect
+# invocation cannot enter the block silently.
+cat > "$Q13G/handles.txt" <<'P0_R13_HANDLES_EOF'
+"$P0_STAT"
+"$P0_READLINK"
+"$P0_ID"
+"$P0_GETENT"
+"$P0_ENV"
+"$rl"
+P0_R13_HANDLES_EOF
+
+# The admissible set for BARE command words (assertion 14): every bash 5.2
+# builtin and reserved word, plus the one sourced-library function this block
+# calls. Block functions are added at run time from the tokenizer's FUNCDEF
+# records. No builtin/keyword is an emitter, so an over-complete list is SAFE
+# here (it can only admit, never conceal an emitter); the only block-specific
+# entries are the FUNCDEF names and rp0_require_safe_component. The colon `:`
+# is included because this block uses it as a command word (`: "${VAR:?...}"`).
+# ONE TOKEN PER LINE - the membership test is `grep -x -F -f`, a WHOLE-LINE
+# match, so a multi-token line would admit nothing and fail every builtin.
+cat > "$Q13G/admissible_bare.txt" <<'P0_R13_ADMISSIBLE_EOF'
+.
+:
+[
+{
+}
+!
+[[
+]]
+coproc
+alias
+bg
+bind
+break
+builtin
+caller
+cd
+command
+compgen
+complete
+compopt
+continue
+declare
+dirs
+disown
+echo
+enable
+eval
+exec
+exit
+export
+false
+fc
+fg
+getopts
+hash
+help
+history
+jobs
+kill
+let
+local
+logout
+mapfile
+popd
+printf
+pushd
+pwd
+read
+readarray
+readonly
+return
+set
+shift
+shopt
+source
+suspend
+test
+times
+trap
+true
+type
+typeset
+ulimit
+umask
+unalias
+unset
+wait
+case
+do
+done
+elif
+else
+esac
+fi
+for
+if
+in
+select
+then
+until
+while
+function
+time
+rp0_require_safe_component
+P0_R13_ADMISSIBLE_EOF
+
+# The RO-tool NAMES this block may resolve and invoke through a handle, derived
+# from the block's OWN frozen inventory literals so the shadow check below
+# cannot drift from the block. Assertion 15 forbids a block function from
+# carrying one of these names.
+p0_r13_tool_names() {   # $1 = bytes file
+  sed -n 's/^P0_RP7_RO_TOOLS="\(.*\)"$/\1/p; s/^P0_P0_ONLY_TOOLS="\(.*\)"$/\1/p' "$1" \
+    | tr ' ' '\n' | grep -E '^[A-Za-z_][A-Za-z0-9_.-]*$' | sort -u
+}
+
+# The builtin/keyword half of the admissible set, used by assertion 15 as the
+# set of names a block function is forbidden to shadow. It is the admissible
+# list minus the one sourced-library function, which IS a legitimate definition
+# site elsewhere and is therefore not a shadow.
+grep -vxF 'rp0_require_safe_component' "$Q13G/admissible_bare.txt" | sort -u > "$Q13G/builtin_names.txt"
+
+# ---- one verdict over one set of bytes, reusable by the mutants -------------
+# Sets R13G_WHY to the comma-separated list of sub-checks that failed.
+p0_r13_alias_bad() {  # $1 = bytes file; echoes reason if alias mechanism present
+  if grep -vE '^[[:space:]]*#' "$1" | grep -qE 'expand_aliases'; then
+    echo "alias_expand_aliases_enabled"; return
+  fi
+  if grep -vE '^[[:space:]]*#' "$1" | grep -qE '(^|[;|&()])[[:space:]]*alias[[:space:]]+(-[a-zA-Z][[:space:]]+)*[A-Za-z_][A-Za-z0-9_]*[[:space:]]*='; then
+    echo "alias_definition_present"; return
+  fi
+}
+
+p0_grammar_verdict() {
+  local b="$1" decl="$2" tag="$3" bad=0 why="" n_cen n_sit n_unmod n_emit n_hand whyA whyB whyS
+  R13G_WHY=""
+  p0_derive_grammar  "$b" > "$Q13G/$tag.derived"
+  p0_census_unmodeled "$b" > "$Q13G/$tag.unmodeled"
+  p0_r13_tokenize    "$b" > "$Q13G/$tag.tok"
+  if grep -q 'UNPARSEABLE_EMITTER' "$Q13G/$tag.derived"; then
+    bad=1; why="$why,no_unparseable_emitter"; fi
+  if [ -s "$Q13G/$tag.unmodeled" ]; then
+    bad=1; why="$why,census_no_unmodeled_syntax"; fi
+  n_cen=$(p0_census_emitters "$b" | wc -l)
+  n_sit=$(awk '{s+=$1} END{printf "%d", s+0}' "$Q13G/$tag.derived")
+  if [ "$n_cen" != "$n_sit" ]; then
+    bad=1; why="$why,census_covers_every_emitter($n_cen!=$n_sit)"; fi
+  if ! diff -q "$decl" "$Q13G/$tag.derived" > /dev/null 2>&1; then
+    bad=1; why="$why,grammar_closed"; fi
+  n_unmod=$(grep -cE '^(UNMODELED|SCAN_ERROR)' "$Q13G/$tag.tok" || true)
+  if [ "$n_unmod" != 0 ]; then
+    bad=1; why="$why,tokenizer_no_unmodeled_syntax($n_unmod)"; fi
+  n_emit=$(grep -c '^EMIT ' "$Q13G/$tag.tok" || true)
+  if [ "$n_emit" != "$n_sit" ]; then
+    bad=1; why="$why,tokenizer_sites_match_derivation($n_emit!=$n_sit)"; fi
+  grep '^EMIT ' "$Q13G/$tag.tok" | sed 's/^EMIT line=\([0-9]*\).*$/\1/' | sort -n | uniq > "$Q13G/$tag.toklines"
+  p0_census_emitters "$b" | cut -d: -f1 | sort -n | uniq > "$Q13G/$tag.cenlines"
+  if ! cmp -s "$Q13G/$tag.toklines" "$Q13G/$tag.cenlines"; then
+    bad=1; why="$why,tokenizer_and_census_same_lines"; fi
+  n_hand=$(grep '^RUNTIME_CMDWORD' "$Q13G/$tag.tok" | sed 's/^.*raw=\[\(.*\)\]$/\1/' | sort -u \
+             | grep -c -v -x -F -f "$Q13G/handles.txt" || true)
+  if [ "$n_hand" != 0 ]; then
+    bad=1; why="$why,runtime_command_words_declared($n_hand)"; fi
+  # R13 finding 1 (alias): alias indirection must be impossible by construction.
+  whyA=$(p0_r13_alias_bad "$b")
+  if [ -n "$whyA" ]; then bad=1; why="$why,alias_indirection_impossible($whyA)"; fi
+  # R13 finding 1 (binding): every BARE command word must bind to a declared
+  # function / builtin / keyword / sourced-library function. FUNCDEF records are
+  # `FUNCDEF line=N name=X`; the name is the text after `name=`.
+  sed -n 's/^FUNCDEF line=[0-9]* name=//p' "$Q13G/$tag.tok" | sort -u > "$Q13G/$tag.funcs"
+  cat "$Q13G/admissible_bare.txt" "$Q13G/$tag.funcs" | sort -u > "$Q13G/$tag.admit"
+  grep '^CMDBARE' "$Q13G/$tag.tok" | sed 's/^CMDBARE line=[0-9]* word=//' | sort -u > "$Q13G/$tag.bare"
+  n_unbound=$(grep -c -v -x -F -f "$Q13G/$tag.admit" "$Q13G/$tag.bare" || true)
+  if [ "$n_unbound" != 0 ]; then
+    bad=1; why="$why,bare_command_words_bound($n_unbound)"; fi
+  # R13 finding 1 (shadow): no function may shadow a wrapper, a builtin/keyword,
+  # or an RO-tool name. Without this, assertion 14's "it is a builtin" branch
+  # would be a claim about a name the block could have rebound underneath it.
+  # counted from the RAW records, not the sorted-unique name set: two definitions
+  # of one name collapse to one line under `sort -u`, which is exactly the
+  # redefinition this check exists to see.
+  n_pstop=$(sed -n 's/^FUNCDEF line=[0-9]* name=//p' "$Q13G/$tag.tok" | grep -cFx 'p0_stop' || true)
+  n_pfail=$(sed -n 's/^FUNCDEF line=[0-9]* name=//p' "$Q13G/$tag.tok" | grep -cFx 'p0_fail' || true)
+  n_shb=$(grep -c -x -F -f "$Q13G/builtin_names.txt" "$Q13G/$tag.funcs" || true)
+  p0_r13_tool_names "$b" > "$Q13G/$tag.tools"
+  if [ -s "$Q13G/$tag.tools" ]; then
+    n_sht=$(grep -c -x -F -f "$Q13G/$tag.tools" "$Q13G/$tag.funcs" || true)
+  else
+    n_sht=0
+  fi
+  if [ "$n_pstop" != 1 ] || [ "$n_pfail" != 1 ] || [ "$n_shb" != 0 ] || [ "$n_sht" != 0 ]; then
+    bad=1
+    why="$why,no_wrapper_shadow(p0_stop=$n_pstop,p0_fail=$n_pfail,builtin_shadow=$n_shb,tool_shadow=$n_sht)"
+  fi
+  R13G_WHY="${why#,}"
+  return "$bad"
+}
+
+[ -f "$BLOCK" ] || gbad "block_missing path=$BLOCK"
+[ -f "$DRAFT" ] || gbad "draft_missing path=$DRAFT"
+
+p0_declared_grammar "$DRAFT" > "$Q13G/declared.txt"
+p0_derive_grammar   "$BLOCK" > "$Q13G/derived.txt"
+p0_census_unmodeled "$BLOCK" > "$Q13G/unmodeled.txt"
+p0_r13_tokenize     "$BLOCK" > "$Q13G/tok.txt"
+n_decl=$(wc -l < "$Q13G/declared.txt")
+n_der=$(wc -l  < "$Q13G/derived.txt")
+sites_decl=$(awk '{s+=$1} END{printf "%d", s+0}' "$Q13G/declared.txt")
+sites_der=$(awk  '{s+=$1} END{printf "%d", s+0}' "$Q13G/derived.txt")
+n_census=$(p0_census_emitters "$BLOCK" | wc -l)
+n_tok_emit=$(grep -c '^EMIT ' "$Q13G/tok.txt" || true)
+n_tok_unmod=$(grep -cE '^(UNMODELED|SCAN_ERROR)' "$Q13G/tok.txt" || true)
+n_tok_frag=$(awk '$1=="TOKENIZER_FRAGMENTS"{print $2}' "$Q13G/tok.txt")
+n_tok_rt=$(grep -c '^RUNTIME_CMDWORD' "$Q13G/tok.txt" || true)
+n_tok_fdef=$(grep -c '^FUNCDEF' "$Q13G/tok.txt" || true)
+n_tok_pre=$(grep -c '^PREFIX_OPERAND' "$Q13G/tok.txt" || true)
+n_tok_bare=$(grep -c '^CMDBARE' "$Q13G/tok.txt" || true)
+printf 'R13_GRAMMAR_DECLARED tuples=%s sites=%s source=%s\n' "$n_decl" "$sites_decl" "$DRAFT"
+printf 'R13_GRAMMAR_DERIVED  tuples=%s sites=%s source=%s\n'  "$n_der"  "$sites_der"  "$BLOCK"
+printf 'R13_GRAMMAR_CENSUS   emitter_lines=%s unmodeled=%s\n' "$n_census" "$(wc -l < "$Q13G/unmodeled.txt")"
+printf 'R13_TOKENIZER        fragments=%s emit_sites=%s unmodeled=%s runtime_cmdwords=%s funcdefs=%s prefix_operands=%s bare_cmdwords=%s\n' \
+  "$n_tok_frag" "$n_tok_emit" "$n_tok_unmod" "$n_tok_rt" "$n_tok_fdef" "$n_tok_pre" "$n_tok_bare"
+
+# 1. the declaration must not be empty. [carried, assertion 1]
+[ "$n_decl" -gt 0 ] && gok "declaration_present tuples=$n_decl" \
+  || gbad "declaration_present tuples=$n_decl (section 8.1.1 marker pair not found)"
+
+# 2. TOTAL closure, both directions. [carried, assertion 2]
+if diff -u "$Q13G/declared.txt" "$Q13G/derived.txt" > "$Q13G/diff.txt" 2>&1; then
+  gok "grammar_closed declared==derived tuples=$n_decl sites=$sites_decl"
+else
+  gbad "grammar_closed declared!=derived diff_lines=$(grep -c '^[+-][^+-]' "$Q13G/diff.txt")"
+  sed -n '1,60p' "$Q13G/diff.txt"
+fi
+
+# 3. the round-10 narrow site total, carried UNCHANGED. [carried, assertion 3]
+n_wrap=$(grep 'p0_stop "\|p0_fail "' "$BLOCK" | grep -vc '^p0_stop() {\|^p0_fail() {' || true)
+n_direct=$(grep "printf 'P0_STOP reason=\|printf 'P0_FAIL reason=" "$BLOCK" | grep -vc '^p0_stop() {\|^p0_fail() {' || true)
+n_expect=$(( n_wrap + n_direct ))
+[ "$sites_der" = "$n_expect" ] \
+  && gok "site_total_independent expected=$n_expect derived=$sites_der wrapper_sites=$n_wrap direct_sites=$n_direct" \
+  || gbad "site_total_independent expected=$n_expect derived=$sites_der wrapper_sites=$n_wrap direct_sites=$n_direct"
+
+# 4. no emitter token defeated the parser. [carried, assertion 4]
+if grep -q 'UNPARSEABLE_EMITTER' "$Q13G/derived.txt"; then
+  gbad "no_unparseable_emitter"; grep 'UNPARSEABLE_EMITTER' "$Q13G/derived.txt"
+else
+  gok "no_unparseable_emitter"
+fi
+
+# 5. the ERR-trap emitter's three %s arguments. [carried, 5]
+if grep -qxF '        "$rc" "${BASH_LINENO[0]}" "$BASH_COMMAND"' "$BLOCK"; then
+  gok "err_trap_printf_arguments=rc,BASH_LINENO0,BASH_COMMAND"
+else
+  gbad "err_trap_printf_arguments=rc,BASH_LINENO0,BASH_COMMAND MISSING"
+fi
+
+# 6. the line-oriented census must not find a line the parser cannot read. [carried, 6]
+if [ -s "$Q13G/unmodeled.txt" ]; then
+  gbad "census_no_unmodeled_syntax count=$(wc -l < "$Q13G/unmodeled.txt")"
+  sed -n '1,20p' "$Q13G/unmodeled.txt"
+else
+  gok "census_no_unmodeled_syntax"
+fi
+
+# 7. the line-oriented census total must equal the derived site total. [carried, 7]
+[ "$n_census" = "$sites_der" ] \
+  && gok "census_covers_every_emitter census_lines=$n_census derived_sites=$sites_der" \
+  || gbad "census_covers_every_emitter census_lines=$n_census derived_sites=$sites_der"
+
+# 8. the declaration is correlation-preserving by construction. [carried, 8]
+if grep -q '{[^}]*,[^}]*}' "$Q13G/declared.txt"; then
+  gbad "correlation_preserved_one_value_per_field"
+  grep -n '{[^}]*,[^}]*}' "$Q13G/declared.txt" | sed -n '1,10p'
+else
+  gok "correlation_preserved_one_value_per_field"
+fi
+
+# 9. the fail-closed source-style policy. [carried from R12, assertion 9]
+if [ "$n_tok_unmod" != 0 ]; then
+  gbad "tokenizer_no_unmodeled_syntax count=$n_tok_unmod"
+  grep -E '^(UNMODELED|SCAN_ERROR)' "$Q13G/tok.txt" | sed -n '1,20p'
+else
+  gok "tokenizer_no_unmodeled_syntax fragments=$n_tok_frag"
+fi
+
+# 10. the tokenizer's emitter-site total must equal the derived site total. [carried, 10]
+[ "$n_tok_emit" = "$sites_der" ] \
+  && gok "tokenizer_sites_match_derivation tokenizer_sites=$n_tok_emit derived_sites=$sites_der" \
+  || gbad "tokenizer_sites_match_derivation tokenizer_sites=$n_tok_emit derived_sites=$sites_der"
+
+# 11. the two mechanisms must agree LINE FOR LINE. [carried, 11]
+grep '^EMIT ' "$Q13G/tok.txt" | sed 's/^EMIT line=\([0-9]*\).*$/\1/' | sort -n | uniq > "$Q13G/toklines.txt"
+p0_census_emitters "$BLOCK" | cut -d: -f1 | sort -n | uniq > "$Q13G/cenlines.txt"
+if cmp -s "$Q13G/toklines.txt" "$Q13G/cenlines.txt"; then
+  gok "tokenizer_and_census_same_lines lines=$(wc -l < "$Q13G/toklines.txt")"
+else
+  gbad "tokenizer_and_census_same_lines diff=$(diff "$Q13G/toklines.txt" "$Q13G/cenlines.txt" | grep -c '^[<>]')"
+  diff "$Q13G/toklines.txt" "$Q13G/cenlines.txt" | sed -n '1,10p'
+fi
+
+# 12. every runtime-valued command word must be a DECLARED handle. [carried, 12]
+grep '^RUNTIME_CMDWORD' "$Q13G/tok.txt" | sed 's/^.*raw=\[\(.*\)\]$/\1/' | sort -u > "$Q13G/rt.txt"
+if grep -q -v -x -F -f "$Q13G/handles.txt" "$Q13G/rt.txt"; then
+  gbad "runtime_command_words_declared undeclared=$(grep -c -v -x -F -f "$Q13G/handles.txt" "$Q13G/rt.txt")"
+  grep -v -x -F -f "$Q13G/handles.txt" "$Q13G/rt.txt" | sed -n '1,10p'
+else
+  gok "runtime_command_words_declared sites=$n_tok_rt distinct=$(wc -l < "$Q13G/rt.txt")"
+fi
+
+# 13. NEW R13 finding 1 (alias) - alias indirection is impossible by construction.
+whyA=$(p0_r13_alias_bad "$BLOCK")
+if [ -n "$whyA" ]; then
+  gbad "alias_indirection_impossible_by_construction reason=$whyA"
+else
+  gok "alias_indirection_impossible_by_construction (no_expand_aliases_no_alias_definition)"
+fi
+
+# 14. NEW R13 finding 1 (binding) - every BARE command word binds to a declared
+#     function, builtin, keyword, or the one sourced-library function.
+sed -n 's/^FUNCDEF line=[0-9]* name=//p' "$Q13G/tok.txt" | sort -u > "$Q13G/funcs.txt"
+cat "$Q13G/admissible_bare.txt" "$Q13G/funcs.txt" | sort -u > "$Q13G/admit.txt"
+grep '^CMDBARE' "$Q13G/tok.txt" | sed 's/^CMDBARE line=[0-9]* word=//' | sort -u > "$Q13G/bare.txt"
+if grep -q -v -x -F -f "$Q13G/admit.txt" "$Q13G/bare.txt"; then
+  gbad "bare_command_words_bound undeclared=$(grep -c -v -x -F -f "$Q13G/admit.txt" "$Q13G/bare.txt")"
+  grep -v -x -F -f "$Q13G/admit.txt" "$Q13G/bare.txt" | sed -n '1,10p'
+else
+  gok "bare_command_words_bound distinct=$(wc -l < "$Q13G/bare.txt") funcs=$(wc -l < "$Q13G/funcs.txt")"
+fi
+
+# 15. NEW R13 finding 1 (shadow) - no definition may shadow a wrapper, a
+#     builtin/keyword, or an RO-tool name. The wrapper half stops a later
+#     redefinition from silencing the emitter (a column-1 redefinition is
+#     excluded from BOTH the census and the derivation exactly as the canonical
+#     wrapper is, so nothing else would see it). The builtin/keyword and
+#     RO-tool halves are what make assertion 14's admissible set MEAN what it
+#     says: a bare word admitted as a builtin, or a handle resolved to a tool
+#     name, cannot have been rebound to a block function underneath.
+n_pstop=$(sed -n 's/^FUNCDEF line=[0-9]* name=//p' "$Q13G/tok.txt" | grep -cFx 'p0_stop' || true)
+n_pfail=$(sed -n 's/^FUNCDEF line=[0-9]* name=//p' "$Q13G/tok.txt" | grep -cFx 'p0_fail' || true)
+n_shb=$(grep -c -x -F -f "$Q13G/builtin_names.txt" "$Q13G/funcs.txt" || true)
+p0_r13_tool_names "$BLOCK" > "$Q13G/tools.txt"
+if [ -s "$Q13G/tools.txt" ]; then
+  n_sht=$(grep -c -x -F -f "$Q13G/tools.txt" "$Q13G/funcs.txt" || true)
+else
+  n_sht=0
+fi
+if [ "$n_pstop" != 1 ] || [ "$n_pfail" != 1 ] || [ "$n_shb" != 0 ] || [ "$n_sht" != 0 ]; then
+  gbad "no_wrapper_shadow p0_stop_defs=$n_pstop p0_fail_defs=$n_pfail builtin_shadow=$n_shb tool_shadow=$n_sht (want 1/1/0/0)"
+  grep -x -F -f "$Q13G/builtin_names.txt" "$Q13G/funcs.txt" | sed -n '1,10p'
+  [ -s "$Q13G/tools.txt" ] && grep -x -F -f "$Q13G/tools.txt" "$Q13G/funcs.txt" | sed -n '1,10p'
+else
+  gok "no_wrapper_shadow p0_stop_defs=1 p0_fail_defs=1 builtin_shadow=0 tool_shadow=0 tool_names=$(wc -l < "$Q13G/tools.txt")"
+fi
+
+# ---- D026: fourteen mutants. Each must make the WHOLE verdict nonzero. -------
+mutate_and_expect_fail() {
+  local label="$1" sedexpr="$2"
+  local m="$Q13G/mut_$label.sh"
+  sed "$sedexpr" "$BLOCK" > "$m"
+  if cmp -s "$m" "$BLOCK"; then
+    gbad "mutant=$label NOT_APPLIED (the sed expression matched nothing, so the mutant is not a mutant)"
+    return
+  fi
+  if p0_grammar_verdict "$m" "$Q13G/declared.txt" "mut_$label"; then
+    gbad "mutant=$label SURVIVED (the fence still returns closed on mutated bytes)"
+  else
+    gok "mutant=$label killed_by=$R13G_WHY"
+  fi
+}
+# (a) a reason relabelled.                            [carried]
+mutate_and_expect_fail relabel_f4_site \
+  's|p0_stop "internal_invariant_unmet invariant=trusted_python_pin_bound.*"|p0_stop "input_pin_omitted tool=python3 detail=every_preregistered_tool_requires_one_frozen_pin"|'
+# (b) a field dropped from an emitter.               [carried]
+mutate_and_expect_fail drop_field \
+  's|p0_stop "tool_pin_unpinned tool=$t detail=every_tool_requires_a_frozen_pin"|p0_stop "tool_pin_unpinned tool=$t"|'
+# (c) a literal detail token changed.                [carried]
+mutate_and_expect_fail retoken_detail \
+  's|detail=access_builtin_x_denied|detail=x_denied|'
+# (d) a brand-new undeclared emitter added.          [carried]
+mutate_and_expect_fail new_emitter \
+  '/^p0_probe_kind() {/a\    [ -z "${P0_R11_MUTANT_D:-}" ] || p0_stop "r11_mutant_reason path=$1 detail=undeclared_form"'
+# (f) an executable emitter in an ALTERNATE VALID QUOTING FORM. [carried]
+mutate_and_expect_fail alt_quoting \
+  '/^p0_probe_kind() {/a\    [ -z "${P0_R11_ALT_SYNTAX_MUTANT:-}" ] || p0_stop '"'"'r11_alt_syntax detail=single_quoted'"'"''
+# (g) the CORRELATION-PRESERVING RELABEL.            [carried]
+mutate_and_expect_fail correlated_relabel \
+  's|\(p0_stop "identity_unexpected observed_numeric=\$live_uid:\$live_gid .*\)account=gatea"|\1account=mtc-bridge"|'
+# (e) the draft side: one declaration line removed must also break closure. [carried]
+sed '/^1 P0_STOP link_target_probe_multiline /d' "$Q13G/declared.txt" > "$Q13G/decl_short.txt"
+if cmp -s "$Q13G/decl_short.txt" "$Q13G/declared.txt"; then
+  gbad "mutant=declaration_line_removed NOT_APPLIED"
+elif diff -q "$Q13G/decl_short.txt" "$Q13G/derived.txt" > /dev/null 2>&1; then
+  gbad "mutant=declaration_line_removed SURVIVED"
+else
+  gok "mutant=declaration_line_removed killed"
+fi
+
+# ---- the four command-word-fragmentation mutants carried from round 12 -------
+cat > "$Q13G/ins_cmdquote.txt" <<'P0_R13_M_CMDQUOTE'
+    [ -z "${P0_R11_CMDQUOTE_MUTANT:-}" ] || p0_s""top "r11_cmdquote detail=quoted_command_word"
+P0_R13_M_CMDQUOTE
+cat > "$Q13G/ins_expand.txt" <<'P0_R13_M_EXPAND'
+    P0_R12_EXPHEAD=p0_s
+    [ -z "${P0_R12_EXPAND_MUTANT:-}" ] || ${P0_R12_EXPHEAD}top "r12_expand detail=expansion_constructed_command_word"
+P0_R13_M_EXPAND
+cat > "$Q13G/ins_continuation.txt" <<'P0_R13_M_CONT'
+    [ -z "${P0_R12_CONT_MUTANT:-}" ] || p0_s\
+top "r12_continuation detail=line_continuation_split"
+P0_R13_M_CONT
+cat > "$Q13G/ins_handle.txt" <<'P0_R13_M_HANDLE'
+    [ -z "${P0_R12_HANDLE_MUTANT:-}" ] || "$P0_R12_UNDECLARED_HANDLE" "r12_handle detail=undeclared_runtime_valued_command_word"
+P0_R13_M_HANDLE
+
+insert_and_expect_fail() {
+  local label="$1" m="$Q13G/mut_$1.sh"
+  awk -v ins="$Q13G/ins_$label.txt" '
+    BEGIN { while ((getline l < ins) > 0) I[++n] = l }
+    { print }
+    /^p0_probe_kind\(\) \{$/ { for (k = 1; k <= n; k++) print I[k] }
+  ' "$BLOCK" > "$m"
+  if cmp -s "$m" "$BLOCK"; then
+    gbad "mutant=$label NOT_APPLIED (anchor line p0_probe_kind not found)"; return
+  fi
+  if ! bash -n "$m" 2> "$Q13G/$label.syn"; then
+    gbad "mutant=$label NOT_VALID_SHELL ($(sed -n '1p' "$Q13G/$label.syn"))"; return
+  fi
+  if p0_grammar_verdict "$m" "$Q13G/declared.txt" "mut_$label"; then
+    gbad "mutant=$label SURVIVED (the fence still returns closed on mutated bytes)"
+  else
+    gok "mutant=$label bash_n=0 killed_by=$R13G_WHY"
+  fi
+}
+# (h) the audit's own counterexample, byte for byte.            [carried]
+insert_and_expect_fail cmdquote
+# (i) the command word built by parameter expansion.            [carried]
+insert_and_expect_fail expand
+# (j) the command word split across a line continuation.        [carried]
+insert_and_expect_fail continuation
+# (k) an UNDECLARED runtime-valued command word (source-syntax). [carried]
+insert_and_expect_fail handle
+
+# ---- the three NEW round-13 mutants -----------------------------------------
+# (l) alias: enabling alias expansion. The block must never do this; the static
+#     assertion is the closure. R12 has no such check, so R12 certifies (RED).
+cat > "$Q13G/ins_alias.txt" <<'P0_R13_M_ALIAS'
+    shopt -s expand_aliases
+P0_R13_M_ALIAS
+# (m) function-shadow: a second p0_stop definition at column 1, so the line
+#     census and the derivation both still exclude it exactly as they exclude
+#     the canonical wrapper. R12 has no redefinition check, so R12 certifies.
+cat > "$Q13G/ins_shadow.txt" <<'P0_R13_M_SHADOW'
+p0_stop() { :; }
+P0_R13_M_SHADOW
+# (n) command/builtin-prefix: a runtime-valued operand concealed behind the
+#     prefix. The emitter text is absent, so the line census is blind; the
+#     prefix consumes command position so R12 classifies only `builtin` and
+#     skips the operand. R13 strips the prefix and classifies the operand as a
+#     RUNTIME_CMDWORD, which assertion 12 rejects (not a declared handle).
+cat > "$Q13G/ins_cmdprefix.txt" <<'P0_R13_M_CMDPREFIX'
+    [ -z "${P0_R13_CMDPREFIX_MUTANT:-}" ] || builtin "$P0_R13_CMDPREFIX_CMD" "$P0_R13_CMDPREFIX_ARG"
+P0_R13_M_CMDPREFIX
+# (o) tool-name shadow: a definition carrying one of the block's OWN RO-tool
+#     names. This is the second half of finding 1's function form - it is the
+#     shape that would make assertion 14's admissible set a lie - and nothing
+#     before round 13 looks at what a definition is NAMED.
+cat > "$Q13G/ins_toolshadow.txt" <<'P0_R13_M_TOOLSHADOW'
+stat() { :; }
+P0_R13_M_TOOLSHADOW
+
+insert_and_expect_fail alias
+insert_and_expect_fail shadow
+insert_and_expect_fail cmdprefix
+insert_and_expect_fail toolshadow
+
+printf 'R13_GRAMMAR_SUMMARY cases=%s pass=%s fail=%s result=%s\n' \
+  "$((R13G_OK+R13G_BAD))" "$R13G_OK" "$R13G_BAD" \
+  "$([ "$R13G_BAD" -eq 0 ] && echo PASS || echo FAIL)"
+[ "$R13G_BAD" -eq 0 ] || exit 1
+# R13_GRAMMAR_HARNESS_END
+```
+
+Invocation (from `WPI_BLOCKS_DRAFT`):
+
+```text
+sed -n '/^# R13_GRAMMAR_HARNESS_BEGIN$/,/^# R13_GRAMMAR_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+```
+
+Real captured output (rc 0):
+
+```text
+R13_GRAMMAR_DECLARED tuples=149 sites=163 source=../WPI_PREREG_DRAFT_ROUND1/WPI_PREREGISTRATION_DRAFT.md
+R13_GRAMMAR_DERIVED  tuples=149 sites=163 source=RP6-P0.sh
+R13_GRAMMAR_CENSUS   emitter_lines=163 unmodeled=0
+R13_TOKENIZER        fragments=20 emit_sites=163 unmodeled=0 runtime_cmdwords=16 funcdefs=26 prefix_operands=2 bare_cmdwords=294
+ASSERT_MET declaration_present tuples=149
+ASSERT_MET grammar_closed declared==derived tuples=149 sites=163
+ASSERT_MET site_total_independent expected=163 derived=163 wrapper_sites=162 direct_sites=1
+ASSERT_MET no_unparseable_emitter
+ASSERT_MET err_trap_printf_arguments=rc,BASH_LINENO0,BASH_COMMAND
+ASSERT_MET census_no_unmodeled_syntax
+ASSERT_MET census_covers_every_emitter census_lines=163 derived_sites=163
+ASSERT_MET correlation_preserved_one_value_per_field
+ASSERT_MET tokenizer_no_unmodeled_syntax fragments=20
+ASSERT_MET tokenizer_sites_match_derivation tokenizer_sites=163 derived_sites=163
+ASSERT_MET tokenizer_and_census_same_lines lines=163
+ASSERT_MET runtime_command_words_declared sites=16 distinct=6
+ASSERT_MET alias_indirection_impossible_by_construction (no_expand_aliases_no_alias_definition)
+ASSERT_MET bare_command_words_bound distinct=34 funcs=26
+ASSERT_MET no_wrapper_shadow p0_stop_defs=1 p0_fail_defs=1 builtin_shadow=0 tool_shadow=0 tool_names=12
+ASSERT_MET mutant=relabel_f4_site killed_by=grammar_closed
+ASSERT_MET mutant=drop_field killed_by=grammar_closed
+ASSERT_MET mutant=retoken_detail killed_by=grammar_closed
+ASSERT_MET mutant=new_emitter killed_by=grammar_closed
+ASSERT_MET mutant=alt_quoting killed_by=census_no_unmodeled_syntax,census_covers_every_emitter(164!=163),tokenizer_sites_match_derivation(164!=163)
+ASSERT_MET mutant=correlated_relabel killed_by=grammar_closed
+ASSERT_MET mutant=declaration_line_removed killed
+ASSERT_MET mutant=cmdquote bash_n=0 killed_by=tokenizer_no_unmodeled_syntax(2)
+ASSERT_MET mutant=expand bash_n=0 killed_by=tokenizer_no_unmodeled_syntax(1)
+ASSERT_MET mutant=continuation bash_n=0 killed_by=tokenizer_no_unmodeled_syntax(2)
+ASSERT_MET mutant=handle bash_n=0 killed_by=runtime_command_words_declared(1)
+ASSERT_MET mutant=alias bash_n=0 killed_by=alias_indirection_impossible(alias_expand_aliases_enabled)
+ASSERT_MET mutant=shadow bash_n=0 killed_by=no_wrapper_shadow(p0_stop=2,p0_fail=1,builtin_shadow=0,tool_shadow=0)
+ASSERT_MET mutant=cmdprefix bash_n=0 killed_by=runtime_command_words_declared(1)
+ASSERT_MET mutant=toolshadow bash_n=0 killed_by=no_wrapper_shadow(p0_stop=1,p0_fail=1,builtin_shadow=0,tool_shadow=1)
+R13_GRAMMAR_SUMMARY cases=30 pass=30 fail=0 result=PASS
+```
+
+Read the three new `ASSERT_MET` lines against the finding they answer.
+`alias_indirection_impossible_by_construction` is the mechanism closure.
+`bare_command_words_bound distinct=34 funcs=26` is the binding: 34 distinct BARE
+command words, every one of them tied to one of the 26 `FUNCDEF` names, the nine
+builtins, or `rp0_require_safe_component`. `no_wrapper_shadow ...
+builtin_shadow=0 tool_shadow=0 tool_names=12` is the naming closure over the
+twelve RO-tool names the block declares for itself. `prefix_operands=2` on the
+`R13_TOKENIZER` line is finding 2's surface, now classified rather than skipped.
+
+### R13_F1_RED — the discriminating-power proof (findings 1+2)
+
+`R13_F1_RED` mirrors `R12_F1_RED`: it extracts the published `R12_GRAMMAR` and
+`R13_GRAMMAR` fences and the four new mutant insertions from `R13_GRAMMAR`'s
+own heredocs, then runs both fences over the same mutated bytes. For each new
+class it records RED (R12 returns rc 0 and its summary says PASS — it certifies
+the mutant, because R12 has no alias/binding/shadow/prefix closure) and GREEN
+(R13 returns nonzero and the named assertion kills it). The
+command/builtin-prefix mutant is additionally driven with its operand set to
+`printf` and its argument set to a `P0_STOP` line, to show the concealed
+emitter really reaches the leaf when the prefix is not stripped.
+
+```bash
+# R13_F1_RED_HARNESS_BEGIN
+#!/usr/bin/env bash
+# ===========================================================================
+# Round 13, findings 1+2 - the DISCRIMINATING-POWER proof, executed.
+#
+# D026 requires the new mutants to be shown RED against the mechanism they
+# replace, not merely GREEN against the new one. This fence does not paraphrase
+# either mechanism: it extracts the WHOLE PUBLISHED `R12_GRAMMAR` fence and the
+# WHOLE PUBLISHED `R13_GRAMMAR` fence from this file by their marker pairs, and
+# the four new mutant insertions from the R13 fence's own heredocs, then runs
+# both fences over the same mutated bytes.
+#
+# For each of the four new construct classes it records, in order: that the
+# insertion came from the published R13 fence; that the mutant applied; that it
+# is valid shell; the RED half (the round-12 fence returns rc 0 - it CERTIFIES
+# the mutated bytes, because R12 has no alias-closure, no bare-word binding, no
+# shadow count, and no prefix-strip); and the GREEN half (the round-13 fence
+# returns nonzero and names the assertion that kills it).
+#
+# The command/builtin-prefix mutant is additionally proven to REALLY EMIT: the
+# operand is set to `printf` and its argument to a `P0_STOP` line, and `builtin
+# printf` is driven, so the concealed emitter is shown to reach the evidence
+# leaf when the prefix is not stripped. (Alias, wrapper-shadow and tool-name
+# shadow are mechanism/redefinition closures, not emit evasions, so no
+# executed-emit half applies to them; that distinction is stated, not implied.)
+# ===========================================================================
+set -u
+BLK="${1:-RP6-P0.sh}"
+QA="${2:-SELF_QA_RP6.md}"
+DRAFT="${3:-../WPI_PREREG_DRAFT_ROUND1/WPI_PREREGISTRATION_DRAFT.md}"
+R13RED_OK=0; R13RED_BAD=0
+rnote(){ if [ "$1" = "$2" ]; then R13RED_OK=$((R13RED_OK+1)); printf 'CASE_OK %s got=[%s]\n' "$3" "$1"; else R13RED_BAD=$((R13RED_BAD+1)); printf 'CASE_BAD %s got=[%s] want=[%s]\n' "$3" "$1" "$2"; fi; }
+Q="$(mktemp -d)"
+trap 'rm -rf "$Q"' EXIT
+
+# ---- the two fences, extracted whole from their own marker pairs ------------
+sed -n '/^# R12_GRAMMAR_HARNESS_BEGIN$/,/^# R12_GRAMMAR_HARNESS_END$/p' "$QA" > "$Q/r12_fence.sh"
+sed -n '/^# R13_GRAMMAR_HARNESS_BEGIN$/,/^# R13_GRAMMAR_HARNESS_END$/p' "$QA" > "$Q/r13_fence.sh"
+grep -qxF '# R12_GRAMMAR_HARNESS_END' "$Q/r12_fence.sh" \
+  && rnote extracted extracted "BUILD_[R12_GRAMMAR_fence]" || rnote missing extracted "BUILD_[R12_GRAMMAR_fence]"
+grep -qxF '# R13_GRAMMAR_HARNESS_END' "$Q/r13_fence.sh" \
+  && rnote extracted extracted "BUILD_[R13_GRAMMAR_fence]" || rnote missing extracted "BUILD_[R13_GRAMMAR_fence]"
+
+# ---- the mutant insertions, extracted from the R13 fence's own heredocs ------
+getins() {            # $1 = heredoc tag, $2 = output file
+  awk -v tag="$1" '
+    $0 ~ ("<<\047" tag "\047$") { on = 1; next }
+    on && $0 == tag { on = 0; next }
+    on { print }
+  ' "$Q/r13_fence.sh" > "$2"
+}
+getins P0_R13_M_ALIAS      "$Q/ins_alias.txt"
+getins P0_R13_M_SHADOW     "$Q/ins_shadow.txt"
+getins P0_R13_M_TOOLSHADOW "$Q/ins_toolshadow.txt"
+getins P0_R13_M_CMDPREFIX  "$Q/ins_cmdprefix.txt"
+
+mkmut() {             # $1 = label
+  awk -v ins="$Q/ins_$1.txt" '
+    BEGIN { while ((getline l < ins) > 0) I[++n] = l }
+    { print }
+    /^p0_probe_kind\(\) \{$/ { for (k = 1; k <= n; k++) print I[k] }
+  ' "$BLK" > "$Q/mut_$1.sh"
+}
+
+# label : the R13 assertion token that must kill it : whether it has an exec half
+# alias     -> killed by alias_indirection_impossible_by_construction
+# shadow    -> killed by no_wrapper_shadow (a SECOND p0_stop definition)
+# toolshadow-> killed by no_wrapper_shadow (a definition named for an RO tool)
+# cmdprefix -> killed by runtime_command_words_declared (via prefix-strip)
+CASES="alias:alias_indirection_impossible:no
+shadow:no_wrapper_shadow:no
+toolshadow:no_wrapper_shadow:no
+cmdprefix:runtime_command_words_declared:yes"
+
+while IFS=: read -r label kill exec; do
+    [ -n "$label" ] || continue
+    [ -s "$Q/ins_$label.txt" ] \
+      && rnote nonempty nonempty "INS_[$label]_extracted_from_R13_fence" \
+      || rnote empty nonempty "INS_[$label]_extracted_from_R13_fence"
+    mkmut "$label"
+    m="$Q/mut_$label.sh"
+    cmp -s "$m" "$BLK" && rnote not_applied applied "M_[$label]_applied" || rnote applied applied "M_[$label]_applied"
+    bash -n "$m" 2>/dev/null && rnote syntax_ok syntax_ok "M_[$label]_is_valid_shell" \
+                             || rnote syntax_bad syntax_ok "M_[$label]_is_valid_shell"
+
+    # RED: the published round-12 fence CERTIFIES the mutated bytes (it has no
+    # alias/binding/shadow/prefix closure).
+    r12rc=0
+    bash --noprofile --norc "$Q/r12_fence.sh" "$m" "$DRAFT" > "$Q/r12_$label.out" 2>&1 || r12rc=$?
+    rnote "$r12rc" 0 "RED_[$label]_r12_fence_certifies_the_mutant"
+    rnote "$(awk '$1=="R12_GRAMMAR_SUMMARY"{print $NF}' "$Q/r12_$label.out")" "result=PASS" \
+          "RED_[$label]_r12_summary_certifies"
+
+    # GREEN: the published round-13 fence refuses the same bytes.
+    r13rc=0
+    bash --noprofile --norc "$Q/r13_fence.sh" "$m" "$DRAFT" > "$Q/r13_$label.out" 2>&1 || r13rc=$?
+    rnote "$([ "$r13rc" -ne 0 ] && echo nonzero || echo zero)" nonzero "GREEN_[$label]_r13_fence_refuses_the_mutant"
+    rnote "$(grep -c "^ASSERT_UNMET.*$kill" "$Q/r13_$label.out" || true)" 1 \
+          "GREEN_[$label]_killed_by_$kill"
+
+    # The command/builtin-prefix mutant really emits when its operand is `printf`
+    # and its argument is a P0_STOP line: the prefix conceals a direct emitter.
+    if [ "$exec" = yes ]; then
+        emithope='P0_STOP reason=r13_cmdprefix detail=prefix_conceals_printf_direct_emitter'
+        emitline=$(grep 'P0_R13_CMDPREFIX_MUTANT' "$m" | head -1)
+        emitout=$(env P0_R13_CMDPREFIX_MUTANT=1 P0_R13_CMDPREFIX_CMD=printf \
+            "P0_R13_CMDPREFIX_ARG=$emithope" \
+            bash --noprofile --norc -c "$emitline" 2>/dev/null) || true
+        rnote "$emitout" "$emithope" "EXEC_[$label]_prefix_conceals_an_emitter"
+    fi
+done <<EOF
+$CASES
+EOF
+
+# GREEN on the real bytes: the round-13 fence certifies them.
+r13base=0
+bash --noprofile --norc "$Q/r13_fence.sh" "$BLK" "$DRAFT" > "$Q/r13_base.out" 2>&1 || r13base=$?
+rnote "$r13base" 0 "GREEN_r13_fence_passes_on_the_real_bytes"
+rnote "$(awk '$1=="R13_GRAMMAR_SUMMARY"{print $NF}' "$Q/r13_base.out")" "result=PASS" "GREEN_r13_summary_on_the_real_bytes"
+
+# The honest boundary: the round-12 DERIVATION is exactly as blind to these
+# classes as round 11's was to constructed words. The R13 TOKENIZER extensions
+# (binding + prefix-strip + alias/shadow assertions) are what refuse to certify;
+# the derivation still reads `p0_stop "` and `printf 'P0_STOP`.
+sed -n '/^p0_derive_grammar() {$/,/^}$/p' "$Q/r13_fence.sh" > "$Q/r13derive.sh"
+grep -qxF 'p0_derive_grammar() {' "$Q/r13derive.sh" \
+  && rnote extracted extracted "BUILD_[r13_derive]" || rnote missing extracted "BUILD_[r13_derive]"
+# shellcheck disable=SC1090
+. "$Q/r13derive.sh"
+p0_derive_grammar "$BLK"               > "$Q/der_base.txt"
+p0_derive_grammar "$Q/mut_cmdprefix.sh" > "$Q/der_mut.txt"
+cmp -s "$Q/der_base.txt" "$Q/der_mut.txt" \
+  && rnote invariant invariant "BOUNDARY_r13_parser_alone_still_blind_tokenizer_is_what_catches_it" \
+  || rnote differs invariant "BOUNDARY_r13_parser_alone_still_blind_tokenizer_is_what_catches_it"
+
+printf 'R13_F1_RED_SUMMARY cases=%s pass=%s fail=%s result=%s\n' \
+  "$((R13RED_OK+R13RED_BAD))" "$R13RED_OK" "$R13RED_BAD" \
+  "$([ "$R13RED_BAD" -eq 0 ] && echo PASS || echo FAIL)"
+[ "$R13RED_BAD" -eq 0 ] || exit 1
+# R13_F1_RED_HARNESS_END
+```
+
+Invocation (from `WPI_BLOCKS_DRAFT`):
+
+```text
+sed -n '/^# R13_F1_RED_HARNESS_BEGIN$/,/^# R13_F1_RED_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+```
+
+Real captured output (rc 0):
+
+```text
+CASE_OK BUILD_[R12_GRAMMAR_fence] got=[extracted]
+CASE_OK BUILD_[R13_GRAMMAR_fence] got=[extracted]
+CASE_OK INS_[alias]_extracted_from_R13_fence got=[nonempty]
+CASE_OK M_[alias]_applied got=[applied]
+CASE_OK M_[alias]_is_valid_shell got=[syntax_ok]
+CASE_OK RED_[alias]_r12_fence_certifies_the_mutant got=[0]
+CASE_OK RED_[alias]_r12_summary_certifies got=[result=PASS]
+CASE_OK GREEN_[alias]_r13_fence_refuses_the_mutant got=[nonzero]
+CASE_OK GREEN_[alias]_killed_by_alias_indirection_impossible got=[1]
+CASE_OK INS_[shadow]_extracted_from_R13_fence got=[nonempty]
+CASE_OK M_[shadow]_applied got=[applied]
+CASE_OK M_[shadow]_is_valid_shell got=[syntax_ok]
+CASE_OK RED_[shadow]_r12_fence_certifies_the_mutant got=[0]
+CASE_OK RED_[shadow]_r12_summary_certifies got=[result=PASS]
+CASE_OK GREEN_[shadow]_r13_fence_refuses_the_mutant got=[nonzero]
+CASE_OK GREEN_[shadow]_killed_by_no_wrapper_shadow got=[1]
+CASE_OK INS_[toolshadow]_extracted_from_R13_fence got=[nonempty]
+CASE_OK M_[toolshadow]_applied got=[applied]
+CASE_OK M_[toolshadow]_is_valid_shell got=[syntax_ok]
+CASE_OK RED_[toolshadow]_r12_fence_certifies_the_mutant got=[0]
+CASE_OK RED_[toolshadow]_r12_summary_certifies got=[result=PASS]
+CASE_OK GREEN_[toolshadow]_r13_fence_refuses_the_mutant got=[nonzero]
+CASE_OK GREEN_[toolshadow]_killed_by_no_wrapper_shadow got=[1]
+CASE_OK INS_[cmdprefix]_extracted_from_R13_fence got=[nonempty]
+CASE_OK M_[cmdprefix]_applied got=[applied]
+CASE_OK M_[cmdprefix]_is_valid_shell got=[syntax_ok]
+CASE_OK RED_[cmdprefix]_r12_fence_certifies_the_mutant got=[0]
+CASE_OK RED_[cmdprefix]_r12_summary_certifies got=[result=PASS]
+CASE_OK GREEN_[cmdprefix]_r13_fence_refuses_the_mutant got=[nonzero]
+CASE_OK GREEN_[cmdprefix]_killed_by_runtime_command_words_declared got=[1]
+CASE_OK EXEC_[cmdprefix]_prefix_conceals_an_emitter got=[P0_STOP reason=r13_cmdprefix detail=prefix_conceals_printf_direct_emitter]
+CASE_OK GREEN_r13_fence_passes_on_the_real_bytes got=[0]
+CASE_OK GREEN_r13_summary_on_the_real_bytes got=[result=PASS]
+CASE_OK BUILD_[r13_derive] got=[extracted]
+CASE_OK BOUNDARY_r13_parser_alone_still_blind_tokenizer_is_what_catches_it got=[invariant]
+R13_F1_RED_SUMMARY cases=35 pass=35 fail=0 result=PASS
+```
+
+The four `RED_[…]_r12_fence_certifies_the_mutant got=[0]` lines are the finding,
+reproduced mechanically: the round-12 fence — the one this repo published as
+fail-closed over command words — returns rc 0 and `result=PASS` on bytes that
+enable alias expansion, that redefine the `p0_stop` wrapper, that define a
+function named for one of the block's own RO tools, and that hide a
+runtime-valued operand behind `builtin`. The matching `GREEN_[…]` lines are the
+closure.
+
+The four new mutants, verbatim as the fence inserts them after
+`p0_probe_kind() {`:
+
+```bash
+# (l) alias — enabling the mechanism the static assertion forbids
+    shopt -s expand_aliases
+
+# (m) wrapper-shadow — a second p0_stop definition at column 1, excluded by the
+#     line census and the derivation exactly as the canonical wrapper is
+p0_stop() { :; }
+
+# (o) tool-name-shadow — a definition carrying one of the block's own RO-tool
+#     names, which is what would make assertion 14's admissible set a lie
+stat() { :; }
+
+# (n) command/builtin-prefix — a runtime-valued operand concealed behind builtin
+    [ -z "${P0_R13_CMDPREFIX_MUTANT:-}" ] || builtin "$P0_R13_CMDPREFIX_CMD" "$P0_R13_CMDPREFIX_ARG"
+```
+
+## Finding 3 (MEDIUM) — the fail-closed wording, narrowed to what is proved
+
+UPHELD. `STATUS_RP6_P0.md:35` and `STATUS_RP6_P0.md:166` said every other or
+unmodeled command-word syntax fails and that Pattern 12 is closed for command
+words. With findings 1 and 2 open those sentences were false. They are now
+rewritten in place — not to the round-12 claim, and not to a bigger one, but to
+the boundary the transcripts above actually establish:
+
+> Every command word is BARE, a single complete QUOTED_LITERAL, or a whole-word
+> PURE_EXPANSION drawn from the declared RO-tool handle set; each BARE word binds
+> to a declared block function, a bash builtin/keyword, or the one declared
+> sourced-library function; `command`/`builtin`/`exec` do not consume command
+> position, because the effective operand is classified under the same policy;
+> alias indirection is impossible by construction; and no definition shadows a
+> wrapper, a builtin/keyword, or an RO-tool name. Any other command-word syntax,
+> any prefix option the fence does not model, and any construct the tokenizer
+> does not model make the fence FAIL rather than pass silently.
+
+What that sentence still does **not** say is as important as what it says. It is
+a claim about **source syntax and static binding**, not about run time: a
+declared handle's value, and what a declared function's body does when it runs,
+are outside it. It is a claim about **this fence's model of bash**, not about
+bash — an unmodelled construct stops the fence instead of disappearing from it,
+which is the fail-closed direction, but "modelled" is not "proved equivalent".
+`shellcheck` is not installed here and was not run.
+
+## Superseded in round 13 — stated, not hidden
+
+`R12_GRAMMAR` is **no longer in the mandated set**; `R13_GRAMMAR` replaces it and
+supersedes every one of its assertions and mutants. Its bytes stay in this file
+unchanged for the same three reasons round 12 gave for keeping `R11_GRAMMAR`: it
+is the round-12 record, `R12_F1_RED` extracts the whole fence to prove what
+round 11 could not see, and `R13_F1_RED` extracts it to prove what round 12 could
+not see. Run against the round-13 bytes it still returns **rc 0** — it is
+insufficient for the new classes, not broken. `R12_F1_RED` stays in the mandated
+set unchanged: it is the round-12 discriminating-power record and its GREEN
+baseline is the published R12 fence, which is retained verbatim. The
+augmentations R13 adds (binding, prefix-strip, alias/shadow assertions) only ADD
+discrimination; they never weaken a carried check, so no discriminating-power
+proof is owed for a weakening — there is none.
+
+`R11_GUARDS` was edited in place this round, and only by adding the two rows
+`R13_GRAMMAR:R13G_BAD:` and `R13_F1_RED:R13RED_BAD:` to its `FENCES` table, so
+that the round-13 fences' own-status guards are falsified by the same mechanism
+as every earlier fence. Its count is now nineteen and its transcript in the
+round-11 section above is this session's re-run, not a stale copy. No guard was
+weakened, so no discriminating-power proof is owed.
+
+## Mandated harness set after round 13
+
+**This list supersedes the round-12 list above.** `R13_GRAMMAR` and `R13_F1_RED`
+join the mandated set; `R12_GRAMMAR` leaves it (superseded, retained). Run each
+verbatim from `WPI_BLOCKS_DRAFT` in a clean `bash --noprofile --norc`. All return
+0 except `R11_R9RED` (rc 1, its PASS condition).
+
+```text
+bash -n RP6-P0.sh
+sed -n '/^# C13_R3_BACKSTOP_HARNESS_BEGIN$/,/^# C13_R3_BACKSTOP_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# RP6_FULLBLOCK_D026_HARNESS_BEGIN$/,/^# RP6_FULLBLOCK_D026_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# F2_FREEZE_GATE_HARNESS_BEGIN$/,/^# F2_FREEZE_GATE_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# RP6_R4_D026_HARNESS_BEGIN$/,/^# RP6_R4_D026_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# C13_R4B_HARNESS_BEGIN$/,/^# C13_R4B_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R5_F1_HARNESS_BEGIN$/,/^# R5_F1_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R5_F2_HARNESS_BEGIN$/,/^# R5_F2_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R5_F3_HARNESS_BEGIN$/,/^# R5_F3_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R6_F1_HARNESS_BEGIN$/,/^# R6_F1_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R6_F2_HARNESS_BEGIN$/,/^# R6_F2_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R6_F3_HARNESS_BEGIN$/,/^# R6_F3_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R7_F2_HARNESS_BEGIN$/,/^# R7_F2_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R7_F3_HARNESS_BEGIN$/,/^# R7_F3_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R7_C3_HARNESS_BEGIN$/,/^# R7_C3_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R9_GRAMMAR_HARNESS_BEGIN$/,/^# R9_GRAMMAR_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc -s -- RP6-P0.sh
+sed -n '/^# R10_F3_HARNESS_BEGIN$/,/^# R10_F3_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R10_F4_HARNESS_BEGIN$/,/^# R10_F4_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R11_F1_RED_HARNESS_BEGIN$/,/^# R11_F1_RED_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R11_F3_HARNESS_BEGIN$/,/^# R11_F3_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R12_F1_RED_HARNESS_BEGIN$/,/^# R12_F1_RED_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R13_GRAMMAR_HARNESS_BEGIN$/,/^# R13_GRAMMAR_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R13_F1_RED_HARNESS_BEGIN$/,/^# R13_F1_RED_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R11_GUARDS_HARNESS_BEGIN$/,/^# R11_GUARDS_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R11_R9RED_HARNESS_BEGIN$/,/^# R11_R9RED_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+```
+
+The four fences this round touches or adds were re-run from the published bytes
+in this session, verbatim, in that order:
+
+```text
+$ bash -n RP6-P0.sh                                                    -> rc=0
+$ sed -n '/^# R13_GRAMMAR_HARNESS_BEGIN$/,/^# R13_GRAMMAR_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+    R13_GRAMMAR_SUMMARY cases=30 pass=30 fail=0 result=PASS            -> rc=0
+$ sed -n '/^# R13_F1_RED_HARNESS_BEGIN$/,/^# R13_F1_RED_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+    R13_F1_RED_SUMMARY cases=35 pass=35 fail=0 result=PASS             -> rc=0
+$ sed -n '/^# R12_F1_RED_HARNESS_BEGIN$/,/^# R12_F1_RED_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+    R12_F1_RED_SUMMARY cases=33 pass=33 fail=0 result=PASS             -> rc=0
+$ sed -n '/^# R11_GUARDS_HARNESS_BEGIN$/,/^# R11_GUARDS_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+    R11_GUARDS_SUMMARY fences=19 pass=19 fail=0 result=PASS            -> rc=0
+```
+
+## Files written this round
+
+`SELF_QA_RP6.md`, `STATUS_RP6_P0.md`, `RP6_R13_REPORT_2026-08-11.md` (new).
+
+**`RP6-P0.sh` was NOT written** — no block byte changed this round, the
+preregistration draft was not touched (read only, as the declaration source),
+and the concurrent lanes' files (`composite_pathproof.py` and the SEC102
+fixtures under `WPI_PREREG_DRAFT_ROUND1`, and the RP7 lane) were not read for
+writing and not touched. No `git checkout`/`reset`/`stash` was run on any tracked
+file, nothing was committed, no host was contacted, and no network command was
+run.
+
+## Explicit local limits (round 13)
+
+- The complete P0 block was still not run end to end. All seventeen frozen
+  deploy-channel literals remain `<PIN-AT-FREEZE>`, so no end-to-end `P0 PASS`
+  is reachable and nothing here is dispatchable.
+- `R13_GRAMMAR` is a static source fence. Its prefix/binding model covers the
+  shell dialect this block is written in and fails closed on what it does not
+  model; that is a refusal to certify, not a proof of equivalence to bash's own
+  parser. `command -v/-V` is treated as a non-executing lookup; other
+  `command`/`exec` option shapes this fence does not model fail closed.
+- Assertion 14's admissible set is over-complete on bash builtins/keywords by
+  design (safe: a builtin is never an emitter, and assertion 15 forbids a
+  definition from rebinding one of those names). The block-specific admissible
+  entries are the `FUNCDEF` names and `rp0_require_safe_component`. If a future
+  block edit introduces a new bare command word that is neither a builtin nor a
+  declared function, assertion 14 will fail closed — which is the intended
+  direction, and is why the assertion exists.
+- Assertion 15 binds the wrapper *names* (`p0_stop`/`p0_fail` each once, and no
+  definition shadowing a builtin/keyword or RO-tool name); it does not bind the
+  wrapper *bodies* to a frozen hash. A caller could still source an unrelated
+  same-name `p0_stop` function before this block (the round-7 A4 residual this
+  block already discloses). Closing that needs a frozen hash of the wrapper
+  bodies and is outside this round.
+- The tool-name half of assertion 15 reads the inventory out of the block's own
+  `P0_RP7_RO_TOOLS`/`P0_P0_ONLY_TOOLS` literals. If a future edit moves that
+  inventory to a construct those two `sed` patterns do not match, the tool list
+  goes empty and that half silently covers nothing. It is pinned to the current
+  shape, not to any possible shape.
+- The QUOTED_LITERAL command-word class (`"foo"` as a command word) is admitted
+  without a `CMDBARE` binding record: its name is contiguous in the source so the
+  line census sees it, and an emitter in that class (`"p0_stop"`) is caught by
+  the existing EMIT path. This block has no QUOTED_LITERAL command word, so the
+  residual is named, not closed.
 - The `P0_STATE_UID` / `P0_STATE_GID` / `P0_EXPECT_UID` input-integrity residual
   is still named, not closed.
 - `shellcheck` is not installed in this environment and was not run.

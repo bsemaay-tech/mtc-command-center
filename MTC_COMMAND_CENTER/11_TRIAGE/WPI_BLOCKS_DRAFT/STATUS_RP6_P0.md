@@ -1,4 +1,180 @@
-# RP6-P0 — status: ROUND-12-REPAIRED-PENDING-T0-REAUDIT (two R11 findings closed, executed; no block byte changed)
+# RP6-P0 — status: ROUND-13-REPAIRED-PENDING-T0-REAUDIT (three R12 findings closed, executed; no block byte changed)
+
+Updated 2026-08-11 by the round-13 implementer (Claude Max, `claude-opus-5`,
+xhigh, fresh session). Audit tier unchanged: **T0** (host/execution-domain
+preflight). Codex `gpt-5.6-sol` is this block's auditor of record; the T0
+re-audit of these bytes is pending. The block remains a draft: not frozen, not
+accepted, not dispatchable, and not authorised for host execution.
+
+Full disposition: `RP6_R13_REPORT_2026-08-11.md`. Evidence: `SELF_QA_RP6.md`
+§ROUND 13.
+
+**`RP6-P0.sh` is UNCHANGED this round — not one byte.** All three round-12
+findings are QA-layer: two are residual construct classes the round-12 census
+could not bind, and the third is wording in this file. The block contains no
+alias, no shadowing definition and no concealed prefix emitter; the defect was
+that the fence could not *refuse* one. The block's identity is re-derived below
+and is byte-identical to the audited subject `5132bacd…`.
+
+**The three round-12 findings, all UPHELD and all closed:**
+
+- **F1** (HIGH) — Pattern 12 residual, alias/function-indirection. The round-12
+  tokenizer admitted a BARE command word without binding what that name resolves
+  to. **Repaired by binding, in three parts.** `R13_GRAMMAR` supersedes
+  `R12_GRAMMAR`, carries all twelve round-12 assertions and all eleven round-12
+  mutants forward unchanged, and adds: **assertion 13**, alias indirection is
+  impossible by construction — the block enables no `shopt -s expand_aliases` and
+  defines no `alias`, and either appearing fails the fence closed; **assertion
+  14**, every BARE command word the tokenizer cannot otherwise classify is
+  emitted as a `CMDBARE` record and must bind to a declared block function, a
+  bash builtin/keyword, or the one declared sourced-library function
+  (`rp0_require_safe_component`) — 34 distinct words on the current bytes, all
+  bound; **assertion 15**, no definition may shadow a wrapper (`p0_stop` and
+  `p0_fail` each defined exactly once), a builtin/keyword, or one of the block's
+  own RO-tool names, the last read out of the block's own inventory literals so
+  it cannot drift.
+- **F2** (HIGH) — Pattern 12 residual, command/builtin-prefix. `command`,
+  `builtin` and `exec` consume command position, and round 12 never classified
+  the operand bash actually executes. **Repaired by stripping**
+  (`prefix_classify`): the prefix's own options and redirections are scanned
+  past, `command -v/-V` is recognised as a lookup that executes nothing,
+  redirection-only `exec` executes nothing, any option not modelled fails closed,
+  and the first remaining word is classified as the effective command word under
+  the same policy. Two prefix operands on the current bytes, both `type` behind
+  `builtin`, both bound by assertion 14.
+- **F3** (MEDIUM) — the round-12 fail-closed wording outran the policy. **Wording
+  corrected in place** in the round-12 section below, and restated for round 13
+  under "What the census property now is, exactly" — narrowed to the boundary the
+  transcripts establish, not to the claim the fences would have been nicer to
+  have.
+
+`R13_F1_RED` is the discriminating-power proof and it is executed, not narrated:
+it extracts the whole published `R12_GRAMMAR` fence and the whole published
+`R13_GRAMMAR` fence from `SELF_QA_RP6.md` by their marker pairs, inserts each of
+the four new mutants — alias, wrapper-shadow, tool-name-shadow,
+command/builtin-prefix — and runs both fences over the same bytes. For all four,
+round 12 returns **rc 0** with `result=PASS` (it certifies them) and round 13
+returns nonzero naming the assertion that kills it. The prefix mutant is
+additionally driven with its concealed operand set to `printf` and its argument
+to a `P0_STOP` line, so the emitter it hides is shown really reaching the leaf.
+
+**What the census property now is, exactly:** every command word in the block is
+BARE, a single complete QUOTED_LITERAL, or a whole-word PURE_EXPANSION drawn from
+the declared RO-tool handle set; every BARE word binds to a declared block
+function, a bash builtin/keyword, or the one declared sourced-library function;
+`command`/`builtin`/`exec` no longer consume command position, because the
+effective operand is classified under the same policy; alias indirection is
+impossible by construction; and no definition shadows a wrapper, a
+builtin/keyword, or an RO-tool name. Any other command-word syntax, any prefix
+option this fence does not model, and any construct the tokenizer does not model
+make the fence FAIL rather than pass silently.
+
+That sentence is about **source syntax and static binding**. It is not about run
+time — what a declared handle holds, and what a declared function's body does
+when it runs, are outside it — and it is not a claim that this tokenizer is
+equivalent to bash's parser. It does **not** make the derivation understand new
+syntax: `R13_F1_RED`'s boundary case asserts that the round-13 derivation alone
+is exactly as blind to these classes as round 12's was, so the next round cannot
+mistake the tokenizer's reach for the parser's.
+
+**Artefact identity — all executed in the round-13 session:**
+
+```text
+sha256=5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330   (UNCHANGED)
+bytes=110817                                                              (UNCHANGED)
+bash_n=0                      (GNU bash 5.2.37(1)-release, x86_64-pc-msys; GNU Awk 5.3.2)
+cr_bytes=0                    (RP6-P0.sh, SELF_QA_RP6.md, STATUS_RP6_P0.md, the prereg draft)
+line_endings=LF_only
+emit_sites=163                (162 p0_stop/p0_fail wrapper sites + 1 direct ERR-trap printf)
+line_census=163               (round-11 contiguous-text rule; unmodeled=0)
+token_census=163              (command-position rule; unmodeled=0, 20 scanned fragments)
+census_line_sets=IDENTICAL    (asserted by cmp, not by comparing totals)
+runtime_cmdwords=16 sites / 6 distinct, all in the declared RO-tool handle set
+bare_cmdwords=294 sites / 34 distinct   (24 block functions + rp0_require_safe_component + 9 builtins)
+funcdefs=26                   (p0_stop and p0_fail exactly once each; 0 builtin or tool-name shadows)
+prefix_operands=2             (both `type`, behind `builtin`, at RP6-P0.sh:398 and :400)
+ro_tool_names=12              (read from the block's own P0_RP7_RO_TOOLS/P0_P0_ONLY_TOOLS literals)
+declared_tuples=149           (prereg §8.1.1, UNCHANGED; closed against the block by R13_GRAMMAR)
+decl_block_sha256=31f8315c5028f5ee3a7ada2a2690000e7b490685c6fe0e9c6117ab33b6da59e5   (markers included, as round 11 quoted it — identical)
+freeze_gate_literal_count=17  (unchanged; 12 tool pins + 5 attestation values, all <PIN-AT-FREEZE>)
+frozen_ro_basis=RP7-WPI-RO.sh@d6a976aa sha256=23e55667…9aa01aad bytes=70941
+```
+
+**QA execution status: EXECUTED — nothing PENDING, nothing fabricated.** All
+twenty-five published commands of the round-13 mandated set were run verbatim in
+this session in a local Git Bash `--noprofile --norc` process, against the final
+bytes.
+
+```text
+25 published commands             -> 24 at rc 0, R11_R9RED at rc 1 (its PASS condition)
+R13_GRAMMAR_SUMMARY  cases=30 pass=30 fail=0 result=PASS   (15 mutants: 11 carried + 4 new)
+R13_F1_RED_SUMMARY   cases=35 pass=35 fail=0 result=PASS   (4 classes, each RED on R12 / GREEN on R13)
+R11_GUARDS_SUMMARY   fences=19 pass=19 fail=0 result=PASS  (17 -> 19: the two round-13 fences added)
+R12_F1_RED_SUMMARY   cases=33 pass=33 fail=0 result=PASS   (carried unchanged; R12_GRAMMAR retained as its baseline)
+R10_F4 / R11_F1_RED / R11_F3 / R10_F3 / R9_GRAMMAR and every legacy fence -> carried unchanged, all PASS
+R12_GRAMMAR (SUPERSEDED)          -> rc 0, still passes; insufficient for the two new classes, not broken. Out of the mandated set
+```
+
+Two defects in the round-13 fence were found by running it and were repaired
+before publication: assertion 14's admissible set was written many-tokens-per-line
+under a whole-line membership test, and the wrapper-redefinition count was taken
+from a `sort -u` name set that collapses the very duplicate it looks for. Both
+are recorded in `SELF_QA_RP6.md` §ROUND 13 rather than quietly fixed.
+
+**Residuals carried into the re-audit, named not closed:**
+
+1. `R13_GRAMMAR` is a *static source* fence. Its tokenizer models the shell
+   dialect this block is written in and fails closed on what it does not model.
+   That is a refusal to certify, not a proof of equivalence to bash's own parser.
+   `shellcheck` is not installed here and was not run.
+2. Assertion 12 pins **which** variables may be invoked as command words, and
+   assertion 14 pins **which** names may be invoked bare. Neither can establish
+   **what** a handle holds, or what a bound function body does, at run time.
+3. Assertion 15 binds the wrapper *names*, not the wrapper *bodies*. A caller
+   could still source an unrelated same-name `p0_stop` before this block — the
+   round-7 A4 residual this block already discloses. Closing that needs a frozen
+   hash of the wrapper bodies.
+4. The tool-name half of assertion 15 reads the RO-tool inventory out of the
+   block's own `P0_RP7_RO_TOOLS`/`P0_P0_ONLY_TOOLS` literals. If a future edit
+   moves that inventory to a shape those patterns do not match, the list goes
+   empty and that half silently covers nothing.
+5. The QUOTED_LITERAL command-word class is admitted without a binding record.
+   Its name is contiguous in the source so the line census sees it, and an
+   emitter in that class is caught by the existing EMIT path; this block has no
+   such command word, so the residual is named, not closed.
+6. The `%F` token set pinned by the round-11 F2 repair is GNU coreutils' complete
+   `file_type()` return set. On a non-GNU producer an out-of-set token STOPs at
+   rc 3 instead of being reported as host deviation — the intended fail-closed
+   direction, but not a claim that this block can classify another producer's
+   vocabulary.
+7. `P0_STATE_UID` / `P0_STATE_GID` / `P0_EXPECT_UID` input integrity. The block
+   constrains these to positive decimals and cannot establish that the prelude
+   carried the preregistered numerics; §2 preregisters no numeric for
+   `P0_EXPECT_UID` at all. Freeze-gate/owner band.
+8. `R10_F4`'s reachability result covers the **three** input classes it executes
+   on *this* control flow — not every early-stop class and not every future edit.
+9. `RP6_R10_REPORT_2026-08-11.md:362-369`, `RP6_R11_REPORT_2026-08-11.md:86-90`
+   and `RP6_R12_REPORT_2026-08-11.md:169,314` carry superseded wordings. All are
+   corrected in `RP6_R13_REPORT_2026-08-11.md` rather than rewritten: a delivered
+   audit-round report records what that round claimed, and the kickoff scope
+   fence does not list any of them as writable.
+
+The freeze gate still has seventeen `<PIN-AT-FREEZE>` literals, so no end-to-end
+`P0 PASS` is possible and nothing here is dispatchable regardless of this round's
+verdict.
+
+---
+
+## Prior status — round 12 (two R11 findings closed; superseded by round 13)
+
+**Round-13 correction.** Two sentences in this section claimed more than the
+round-12 policy proved, and the round-12 T0 audit was right to name them
+(`STATUS_RP6_P0.md:35` and `:166` as it read them). Round 12 closed CONSTRUCTED
+command words; it did **not** bind a bare word's runtime resolution and it did
+**not** classify the operand of a `command`/`builtin`/`exec` prefix. Both
+sentences are marked below at the point of claim and the true property is the
+round-13 statement above. The section is otherwise left as the record of what
+round 12 claimed.
 
 Updated 2026-08-11 by the round-12 implementer (Claude Max, `claude-opus-5`,
 xhigh, fresh session). Audit tier unchanged: **T0** (host/execution-domain
@@ -32,8 +208,12 @@ subject `5132bacd…`.
   into every `$( )` and into the `trap` action, locates command POSITIONS, and
   applies a fail-closed source-style policy that admits a command word only as
   BARE, a single complete QUOTED_LITERAL, or a whole-word PURE_EXPANSION drawn
-  from a declared six-handle RO-tool set. Every other command-word syntax, and
-  every construct it does not model, makes the fence FAIL. Four new assertions
+  from a declared six-handle RO-tool set. Every other command-word *shape* it
+  models makes the fence FAIL. **Round-13 correction:** as written this said
+  "every other command-word syntax, and every construct it does not model" — it
+  did not, because a BARE word's runtime resolution was never bound and a
+  `command`/`builtin`/`exec` prefix consumed command position without its operand
+  being classified. Those two classes are closed in round 13, not here. Four new assertions
   carry it, including one that requires the tokenizer's emitter line set to equal
   the grep census's line set **line for line**. `R12_F1_RED` runs the whole
   published round-11 fence and the whole published round-12 fence over the same
@@ -66,7 +246,10 @@ invocable variables is pinned instead of the value. Any other command-word
 syntax, and any construct the tokenizer does not model, makes the fence FAIL
 rather than pass silently. It does **not** make the derivation understand new
 syntax, and `R12_F1_RED`'s last case asserts that the round-12 parser alone is
-exactly as blind as round 11's.
+exactly as blind as round 11's. **Round-13 correction:** this paragraph is the
+round-12 claim and it was too broad — alias/function-indirection and the
+command/builtin-prefix were both outside it. The property that holds is the
+round-13 statement at the top of this file.
 
 **Artefact identity — all executed in the round-12 session:**
 
@@ -163,8 +346,10 @@ Full disposition: `RP6_R11_REPORT_2026-08-11.md`. Evidence: `SELF_QA_RP6.md`
   cannot read *that a contiguous text search still finds*; a command word
   assembled from adjacent quoted and unquoted segments (`p0_s""top`) was valid,
   reachable, emitted `P0_STOP`, and disappeared from the census entirely. The
-  fail-closed property is real only from round 12, where a tokenizer decides it
-  over command POSITIONS — see the round-12 section at the top of this file.
+  fail-closed property is real only from round 13: round 12 put a tokenizer over
+  command POSITIONS, and round 13 bound each bare word's resolution and
+  classified the operand behind a `command`/`builtin`/`exec` prefix — see the
+  round-13 section at the top of this file.
   `R11_GRAMMAR` carries all
   ten round-10 assertions and all five round-10 mutants forward unchanged and
   adds four assertions and the two mutants the audit named. `R11_F1_RED` executes
