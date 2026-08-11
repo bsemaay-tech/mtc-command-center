@@ -1,5 +1,9 @@
 # 50-hour plan — where we actually are (2026-08-10 morning)
 
+> **RATIFIED 2026-08-11 (Barış, in chat).** The previously unratified time below is now
+> owner-signed. See the running total at the bottom. Booking continues prospectively; the
+> next owner flag is due only when the remaining balance drops below 10 h.
+
 ## The numbers
 
 | Line | Hours | Basis |
@@ -79,3 +83,26 @@ lift — were granted this morning, and root for `RPD-VERIFY` was granted alongs
   were 111, 80, 60, 51, 47 and 38 minutes, almost all of them heartbeat waits while a
   delegated agent was running or while the non-gated backlog was exhausted and everything
   left needed owner authority.
+
+---
+
+## RATIFICATION UPDATE — 2026-08-11 morning (owner-signed in chat)
+
+| Line | Hours | Basis |
+|---|---:|---|
+| Ratified total at 2026-08-10 morning | 24.9 | above, owner-ratified |
+| 2026-08-10 daytime WP-I work (RP6/RP7/transport draft rounds, prereg, tier/routing/tooling) | ~4.4 | booked 2026-08-10, **now ratified** |
+| Overnight + morning 2026-08-10 19:00 → 2026-08-11 ~11:40 (RP6 r7–r10a, RP7 r5–r8, prover audit, §10.1/§10.2/skeleton/RUNID/transport analyses, defect-pattern amendment, ~55 commits) | ~5.5 | booked here, **now ratified** |
+| **Total used, owner-ratified 2026-08-11** | **~34.8** | Barış, in chat 2026-08-11 |
+| **Remaining against the 50 h ceiling** | **~15.2** | |
+
+**Booking note.** The overnight figure is prospective per the standing rule — no retroactive
+per-minute reconstruction. It covers ~16.5 h of wall clock at the usual ~3:1 wall-to-credit
+ratio (dominated by adversarial audit rounds and account-window waits), which lands at ~5.5 h
+of plan credit. Owner adjusts at any later ratification if it reads high or low.
+
+**Next flag:** the standing rule says surface the ledger to the owner when the remaining
+balance drops below 10 h. At ~15.2 h remaining, that flag is not yet due — but WP-I is not
+close to freeze (see the freeze blocker map), so the sub-10 h flag is likely the next major
+owner checkpoint. Rows 1–9 (owner chose BUILD ALL NINE, 2026-08-11) adds 3–6 rounds and will
+consume a meaningful part of the remaining balance.
