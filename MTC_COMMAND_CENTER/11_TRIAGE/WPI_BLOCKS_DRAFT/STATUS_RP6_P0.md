@@ -1,4 +1,97 @@
-# RP6-P0 — status: ROUND-9-REPAIRED-PENDING-T0-REAUDIT (grammar-drift close)
+# RP6-P0 — status: ROUND-10-REPAIRED-PENDING-T0-REAUDIT (four R9 findings closed, executed)
+
+Updated 2026-08-11 by the round-10b implementer (Claude Max, `claude-opus-5`,
+xhigh, fresh session). Audit tier unchanged: **T0** (host/execution-domain
+preflight). Codex `gpt-5.6-sol` is this block's auditor of record; the T0
+re-audit of these bytes is pending. The block remains a draft: not frozen, not
+accepted, not dispatchable, and not authorised for host execution.
+
+Full disposition: `RP6_R10_REPORT_2026-08-11.md`. Evidence: `SELF_QA_RP6.md`
+rounds 10 and 10B.
+
+**Round 10 ran in two sittings.** Round 10a (Claude Pro) wrote the repairs and
+died on its weekly cap before recording any output, leaving twelve `@…@`
+placeholders, no report and no status update — preserved as commit `da78d99c`,
+explicitly not round 10. Round 10b (Claude Max, this sitting) confirmed each
+repair by execution, filled all twelve placeholders with real captured output,
+wrote the report and this file. **No `RP6-P0.sh` byte was changed in 10b**: F1–F4
+are closed on the 10a bytes.
+
+**The four round-9 findings, all UPHELD and all closed:**
+
+- **F1** (HIGH) — the published `R9_GRAMMAR` command did not run the harness. Fixed
+  with `-s --`; the mandated sweep then found six more published commands with an
+  unanchored `sed` range and ten fences that printed `result=FAIL` while exiting 0.
+  All repaired. All 19 published commands plus the RED twin now run **verbatim and
+  as an extracted body with identical rc and identical summary line**, and all ten
+  own-status guards were **falsified** (fail counter forced nonzero → rc 1), not
+  merely grepped.
+- **F2** (HIGH) — declared and executable grammar not closed. Preregistration
+  §8.1.1 now declares the complete P0 result grammar (**89 forms, 161 emit sites**);
+  the new `R10_GRAMMAR` fence re-derives it from the block bytes and diffs both
+  directions, with five mutants that each kill it.
+- **F3** (HIGH) — a malformed followed-target `%F` response reached rc 1.
+  `p0_probe_kind` now adjudicates the raw response for empty / multi-line /
+  non-printable shape **before** `P0_FKIND` is assigned. `R10_F3`: GREEN rc 3 on the
+  real bytes, RED reproduces the audit's exact rc-1 line.
+- **F4** (MEDIUM) — the round-9b relabelling was convenient, not established. The
+  round-9 claim is **withdrawn**. The line now carries `internal_invariant_unmet`,
+  naming the predicate it actually tests; `R10_F4` proves unreachability on the
+  unmutated bytes and reaches the line on a mutant whose two consuming gates are
+  neutralised.
+
+**Artefact identity — all executed in the round-10b session:**
+
+```text
+sha256=a090ae736cbecd9973e8ae948b052504b21cbe8b61602f4b5ac592394fad0617
+bytes=107252
+bash_n=0                      (GNU bash 5.2.37(1)-release, x86_64-pc-msys)
+cr_bytes=0                    (tr -cd '\r' < RP6-P0.sh | wc -c)
+line_endings=LF_only
+emit_sites=161                (160 p0_stop/p0_fail wrapper sites + 1 direct ERR-trap printf)
+declared_forms=89             (prereg §8.1.1, closed against the block by R10_GRAMMAR)
+entry_sha256=08e0a935…adbcf10c / 104683 B (round 9, commit 9bc25721)
+freeze_gate_literal_count=17  (unchanged; 12 tool pins + 5 attestation values, all <PIN-AT-FREEZE>)
+frozen_ro_basis=RP7-WPI-RO.sh@d6a976aa sha256=23e55667…9aa01aad bytes=70941
+```
+
+**QA execution status: EXECUTED — nothing PENDING, nothing fabricated.** Every
+published command was run in this session in a local Git Bash `--noprofile --norc`
+process, in both the verbatim and the extracted form, with `BASH_ENV`/`ENV`
+confirmed unset. The per-command evidence is in `SELF_QA_RP6.md` §1e; the
+guard-falsification transcript and the round-9 reproductions are in §ROUND 10B.
+
+```text
+19 published commands + RED twin   -> all forms agree on rc and summary line
+R10_GRAMMAR_SUMMARY cases=10 pass=10 fail=0 result=PASS
+R10_F3_QA_SUMMARY   cases=14 pass=14 fail=0 result=PASS
+R10_F4_QA_SUMMARY   cases=16 pass=16 fail=0 result=PASS
+R9_GRAMMAR_SUMMARY  cases=5  pass=5  fail=0 result=PASS   (GREEN)
+R9_GRAMMAR_SUMMARY  cases=5  pass=2  fail=3 result=FAIL   (RED twin, rc 1)
+```
+
+**Residuals carried into the re-audit, named not closed:**
+
+1. `R10_GRAMMAR` is a *static source* grammar. It constrains prefixes, reasons,
+   field names, field order and every literal value and `detail=` token; it cannot
+   constrain what a `<name>` class evaluates to at run time.
+2. `P0_STATE_UID` / `P0_STATE_GID` / `P0_EXPECT_UID` input integrity. The block
+   constrains these to positive decimals and cannot establish that the prelude
+   carried the preregistered numerics; §2 preregisters no numeric for
+   `P0_EXPECT_UID` at all. Freeze-gate/owner band.
+3. `R10_F4`'s reachability result is about *this* control flow, not about every
+   future edit — which is why the assertion is kept rather than deleted.
+4. The round-9 report's "174 call sites" figure is withdrawn; the entry-state
+   figure is 159 (the auditor's count, confirmed), and the round-10 figure is 161.
+
+The freeze gate still has seventeen `<PIN-AT-FREEZE>` literals, so no end-to-end
+`P0 PASS` is possible and nothing here is dispatchable regardless of this round's
+verdict.
+
+---
+
+## Prior status — round 9 (grammar-drift close, superseded by round 10)
+
 
 Updated 2026-08-11 by the round-9 implementer (Claude, fresh session). Audit tier
 unchanged: **T0** (host/execution-domain preflight). Codex is this block's
