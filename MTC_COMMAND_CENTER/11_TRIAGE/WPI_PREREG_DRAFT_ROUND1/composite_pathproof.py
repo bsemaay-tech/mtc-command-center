@@ -127,6 +127,13 @@ NAMED_FD_PREFIX_RE = re.compile(r"^\{[A-Za-z_][A-Za-z0-9_]*\}$")
 # is a STOP, never a silent absence.  Round 3 counted coverage with a second regex
 # built from the same narrow grammar as the matcher, so any form invisible to the
 # matcher was equally invisible to its own coverage check (defect patterns 5/12).
+#
+# These sets decide which PROVEN-STATIC command words derive edges.  They are not
+# the fence: since round 6 an unrecognised word is a benign leaf only when its
+# spelling is already the name Bash looks up (see COMMAND_WORD_EXPANSION_RE), so a
+# word outside these sets can no longer hide an interpreter behind an expansion.
+# What the sets still bound is the disclosed residual: the VOCABULARY is a list of
+# recognised interpreters, not a proof that the list is exhaustive.
 GRAPH_SOURCE_WORDS = frozenset({"source", "."})
 GRAPH_INTERPRETER_WORDS = frozenset(
     {
@@ -167,6 +174,37 @@ SHELL_CONTROL_WORDS = frozenset(
 # `for`/`select`/`case` also bind a name, but a separator, newline or `)` always
 # re-opens the command position before their body, so no command word is lost there.
 SHELL_NAME_BINDING_WORDS = frozenset({"function", "coproc"})
+
+# --- closed command-word admissibility (round-6 R5-F1) ------------------------
+# Rounds 4 and 5 each closed ONE command-word form after it was found: a numeric
+# file descriptor, then a named descriptor, then an indexed assignment.  The round-5
+# audit then found a fourth - a pathname-expanded command word that Bash can resolve
+# to a recognised interpreter, leafed, with the following script operand scanned by
+# nothing.  Closing forms one at a time is not a fixpoint, because the classifier's
+# default was "benign leaf" and every form nobody had thought of inherited it.
+#
+# The default is now inverted.  A command word is admissible as a benign non-edge
+# leaf ONLY when it is a PROVEN-STATIC literal that is not a recognised interpreter
+# or source builtin: one word whose spelling is exactly the name Bash will look up,
+# with no expansion of any kind between the two.  Every command word that is
+# dynamic, expandable or substituted is UNMODELED and the stage STOPs; it can never
+# become a leaf, whatever it would have expanded to.  This is the same fail-closed
+# principle round 5 applied to command PREFIXES, extended to the command word itself.
+#
+# `$` and backtick introduce parameter, command and arithmetic expansion; a word
+# carrying either is dynamic.  `_graph_opaque_reason` already STOPs on most of these
+# at the whole-text level, and the check below is deliberately redundant with it, so
+# no single fence carries the class alone.
+COMMAND_WORD_SUBSTITUTION_RE = re.compile(r"[$`]")
+# The remaining expansions Bash performs on a command word before looking it up:
+# pathname expansion (`*`, `?`, `[`...`]`), brace expansion (`{`, `}`) and tilde
+# expansion (`~`).  A backslash builds a name out of quoting rather than spelling it,
+# so it is refused for the same reason.  Applied to the raw word including quoted
+# regions: quoting suppresses some of these, but a proof that this particular
+# occurrence is suppressed is exactly the reasoning this policy refuses to do.
+# Reserved words (`{`, `}`, `[[`, `]]`) are matched before this fence and are
+# therefore unaffected.
+COMMAND_WORD_EXPANSION_RE = re.compile(r"[*?\[\]{}~\\]")
 
 ALLOCATE_CLAIMS = (
     ("A1", "plan_contract", "closed_schema_and_allocate_order"),
@@ -1243,6 +1281,10 @@ def _shell_words(text: str) -> tuple[tuple[ShellWord, ...] | None, str | None]:
     name bound by `function`/`coproc`.  A prefix shape outside that model returns a
     STOP reason instead of degrading into a leaf, because a leaf closes the command
     position and the command word behind it would then be classified by nothing.
+
+    Every word this scanner marks as a command position is then adjudicated by
+    `_command_word_class` under a closed admissibility policy, so reaching a command
+    position is enough: the word is derived, refused, or proven static, never skipped.
     """
 
     words: list[ShellWord] = []
@@ -1350,9 +1392,7 @@ def _shell_words(text: str) -> tuple[tuple[ShellWord, ...] | None, str | None]:
             # too and reports every unmodelled layer rather than only the outermost one.
             command_position = False
         name_binding_pending = (
-            command_position
-            and word_class == "control"
-            and _literal_shell_word(raw) in SHELL_NAME_BINDING_WORDS
+            command_position and word_class == "control" and raw in SHELL_NAME_BINDING_WORDS
         )
     return tuple(words), None
 
@@ -1385,16 +1425,45 @@ def _assignment_prefix_class(raw: str) -> str:
 
 
 def _command_word_class(raw: str) -> str:
-    """Classify one command-position word without consulting the edge matcher."""
+    """Classify one command-position word under a CLOSED admissibility policy.
+
+    `leaf` - and only `leaf` - means "this command word is benign and derives no
+    edge", so it is the one answer that must be earned.  It is returned only for a
+    proven-static literal that is not a recognised interpreter or source builtin.
+    `dynamic` and `unmodeled` are the two refusals; both STOP at the caller and
+    neither can degrade into a leaf, so no command-word form can disappear by being
+    one nobody enumerated.
+
+    The reserved-word test compares the RAW word, not its unquoted literal.  Bash
+    only treats `if`/`{`/`[[` as reserved when they are written unquoted, so `"if"`
+    is an ordinary command name; reading the literal would have promoted it to a
+    reserved word and kept a command position open that Bash had already closed.
+    """
 
     if SHELL_ASSIGNMENT_RE.match(raw):
         return "assignment"
+    if raw in SHELL_CONTROL_WORDS:
+        return "control"
+    if COMMAND_WORD_SUBSTITUTION_RE.search(raw):
+        return "dynamic"
+    if COMMAND_WORD_EXPANSION_RE.search(raw):
+        return "unmodeled"
     literal = _literal_shell_word(raw)
     if literal is None:
-        return "dynamic"
-    if literal in SHELL_CONTROL_WORDS:
-        return "control"
-    name = posixpath.basename(literal) if literal.startswith("/") else literal
+        # Degenerate quoting or an empty word: the spelling is static but it names
+        # nothing this classifier can adjudicate.
+        return "unmodeled"
+    # Bash looks up the last pathname component of any command word that contains a
+    # slash, whether the path is absolute or relative.  Round 5 took the basename
+    # only for an absolute path, so `bin/bash script.sh` was a leaf while
+    # `/bin/bash script.sh` was recognised - the same interpreter, the same operand,
+    # hidden by a spelling.
+    if "/" in literal:
+        name = posixpath.basename(literal)
+        if name == "":
+            return "unmodeled"
+    else:
+        name = literal
     if name in GRAPH_SOURCE_WORDS:
         return "graph"
     if name in GRAPH_INTERPRETER_WORDS or GRAPH_INTERPRETER_VERSION_RE.fullmatch(name):
@@ -1413,6 +1482,10 @@ def _graph_word_conservation(
     derivation on purpose, so `zsh script`, `command source lib`, `\\source lib`,
     `if source lib; then` and every other unmodelled command form reach a STOP
     instead of leaving the graph silently short an edge.
+
+    Since round 6 the difference is not enumerated form by form: every command-position
+    word that is not a proven-static benign literal produces a reason here, so a form
+    this round never anticipated STOPs by default rather than by having been listed.
     """
 
     words, scan_reason = _shell_words(text)
@@ -1437,6 +1510,12 @@ def _graph_word_conservation(
             reasons.append("source_graph_command_wrapper_not_modeled")
         elif word_class == "dynamic":
             reasons.append("source_graph_dynamic_command_not_modeled")
+        elif word_class == "unmodeled":
+            # A command word Bash expands before looking it up.  It is refused here
+            # rather than leafed, so whatever it would have expanded to - including a
+            # recognised interpreter with a script operand behind it - cannot pass
+            # through unanalysed.
+            reasons.append("source_graph_unmodeled_command_word")
     # The matcher must never claim an edge from something the scanner does not see
     # as a command word, nor bind an operand that is not a whole word.
     if matched_commands - command_offsets:

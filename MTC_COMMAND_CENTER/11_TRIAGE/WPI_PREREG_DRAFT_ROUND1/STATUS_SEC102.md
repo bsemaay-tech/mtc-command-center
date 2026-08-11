@@ -1,56 +1,71 @@
 # Section 10.2 composite path-proof status
 
 Date: 2026-08-11
-Status: `ROUND-5-AUTHORED-SELF-QA-PASS-PENDING-INDEPENDENT-ACCEPTANCE`
+Status: `ROUND-6-AUTHORED-SELF-QA-PASS-PENDING-INDEPENDENT-ACCEPTANCE`
 Audit tier: T1 - local-only non-economic Python tooling and fixtures. Round 2 was audited by
 the Claude flagship (verdict **BLOCK**, two CRITICAL). Round 3 repaired that BLOCK and was
 audited by Codex `gpt-5.6-sol` (`SEC102_CODEX_T1_AUDIT_R3_2026-08-11.md`, verdict
 **REQUEST_CHANGES**: both CRITICALs confirmed closed, three MEDIUM findings raised). Round 4
 repaired those three MEDIUMs and was audited by Codex (`SEC102_CODEX_T1_AUDIT_R4_2026-08-11.md`,
-verdict **REQUEST_CHANGES**: R3-F2 and R3-F3 CLOSED and independently verified, **R3-F1
-reopened as CRITICAL**). Round 5 is the repair of that CRITICAL, implemented by `claude-opus-5`
-xhigh. No audit or acceptance is claimed by the implementer.
+verdict **REQUEST_CHANGES**: R3-F2 and R3-F3 CLOSED, **R3-F1 reopened as CRITICAL**). Round 5
+repaired that CRITICAL and was audited by Codex (`SEC102_CODEX_T1_AUDIT_R5_2026-08-11.md`,
+verdict **REQUEST_CHANGES**: named-fd, indexed-assign and unmodeled-prefix confirmed closed,
+**R5-F1 raised as CRITICAL** - a pathname-expanded command word still leafed a hidden
+interpreter). Round 6 is the repair of that CRITICAL, implemented by `claude-opus-5` xhigh.
+No audit or acceptance is claimed by the implementer.
 
-## Round 5 - what changed and why
+## Round 6 - what changed and why
 
-### R4-F1 (the reopened R3-F1 CRITICAL) - command position is now conserved across every prefix
+### R5-F1 - the command-word policy is now closed, not enumerated
 
-Round 4 built an independent command-word scanner, but that scanner conserved the command
-position across only two of Bash's prefix forms: scalar assignment words and **numeric** file
-descriptors. Bash's command grammar allows a simple command to carry any number of assignment
-words and redirections before its command word, in any order, and none of them opens or closes
-a command position.
+Rounds 4 and 5 each closed one command-word or prefix form *after it was found*: a numeric file
+descriptor, then a named descriptor, then an indexed assignment. The round-5 audit then found a
+fourth of the same shape - `_command_word_class` classified a pathname-expanded word such as
+`/usr/bin/ba*h` as a benign leaf, so the script operand behind a runtime-resolved interpreter
+was scanned by nothing and RENDER returned `PASS rc 0` over an unanalysed program.
 
-The consequence Codex reproduced on the committed module: a valid named-descriptor prefix
-(`{fd}>...`) or an indexed assignment prefix (`arr[0]=...`) was emitted as a benign leaf word,
-that leaf closed the command position, and a `source`/interpreter operand behind it was then
-classified by nothing. The matcher's regexes do not anchor through a prefix either, so
-`_graph_word_conservation` saw no uncovered graph word - RENDER returned `PASS rc 0` over an
-unanalysed program. Pattern 12 primary, Pattern 5 grammar incompleteness, Pattern 9 overlay.
+The defect was not any one missing form. It was the classifier's **default**: an unrecognised
+command word became a leaf, so every form nobody had enumerated inherited "benign". Closing
+forms one per round cannot reach a fixpoint against that default.
 
-* `SHELL_ASSIGNMENT_RE` now models the whole Bash assignment-word grammar: `NAME=`, `NAME+=`,
-  `NAME[subscript]=`, `NAME[subscript]+=`. Bash requires the name to be unquoted and to start
-  the word, so `2a=b`, `a-b=c`, `"a"=b` and `--opt=val` remain command names - leaving them as
-  leaves is exact, not an approximation.
-* New `_redirection_prefix_class` replaces the `raw.isdigit()` test. A word abutting `<`/`>`
-  is a descriptor prefix only if it is all-ASCII-digits or `{name}` - the only two forms Bash
-  accepts - and both conserve the command position. An ordinary word that merely touches the
-  operator (`echo>out`) is still an ordinary word, because in Bash it is.
-* New `_assignment_prefix_class` is the **fail-closed fence**: a command-position word that
-  opens a subscript the model cannot close and carries an `=` (`arr[idx[0]]=1`) STOPs with
-  `source_graph_unmodeled_assignment_prefix` **before** it can become a leaf. A brace word in
-  the exact syntactic slot of a named descriptor whose interior is not a plain name (`{1}>...`)
-  STOPs with `source_graph_unmodeled_redirection_prefix`.
-* **Found while probing the same boundary, not named in the audit:** `function foo { source
-  lib; }` and `coproc log { source lib; }` lost the body's first command word by the identical
-  mechanism, reached through a reserved word instead of a prefix. New
-  `SHELL_NAME_BINDING_WORDS = {function, coproc}` conserves the command position across the
-  bound name. `for`/`select`/`case` also bind a name but a separator, newline or `)` re-opens
-  the command position before their body, so nothing is lost there; they are unchanged and the
-  argument is measured, not assumed.
+Round 6 inverts the default. A command word is admissible as a benign non-edge leaf **only**
+when it is a PROVEN-STATIC literal that is not a recognised interpreter or source builtin -
+one word whose spelling is already the name Bash will look up, with no expansion of any kind
+between the two. Every command word that is dynamic, expandable or substituted is UNMODELED
+and the stage STOPs; it can never become a leaf, whatever it would have expanded to.
 
-Nothing else moved. **All four GREEN transcripts are byte-identical to the audited commit
-`bb02c25a`**, so no fence was weakened and no output surface was added.
+* New `COMMAND_WORD_SUBSTITUTION_RE` (`$`, backtick) - parameter, command and arithmetic
+  expansion. Deliberately redundant with `_graph_opaque_reason`, so no single fence carries
+  this class alone.
+* New `COMMAND_WORD_EXPANSION_RE` (`*`, `?`, `[`, `]`, `{`, `}`, `~`, `\`) - pathname
+  expansion, brace expansion, tilde expansion, and backslash-constructed names. Applied to the
+  raw word including quoted regions: quoting suppresses some of these, but a proof that this
+  particular occurrence is suppressed is exactly the reasoning the policy refuses to do.
+* `_command_word_class` now returns the new `unmodeled` class for every such word plus for a
+  degenerate/empty word, and `_graph_word_conservation` reports it as
+  `source_graph_unmodeled_command_word`. Reserved words (`{`, `}`, `[[`, `]]`, `!`, `if` …)
+  and assignment prefixes are matched **before** the fence and are unaffected.
+* The reserved-word test now compares the RAW word instead of its unquoted literal. Bash only
+  treats `if`/`{`/`[[` as reserved when written unquoted, so `"if"` is an ordinary command
+  name; reading the literal promoted it to a reserved word and kept a command position open
+  that Bash had already closed.
+* **Found while probing the same boundary, not named in the audit:** interpreter recognition
+  took the basename only for an *absolute* path, so `bin/bash script.sh` and `./bash script.sh`
+  were leaves while `/bin/bash script.sh` was recognised - the same interpreter, the same
+  operand, hidden by a spelling. Recognition now takes the last pathname component of any
+  command word containing a slash. This is measured, not assumed: it is a separate RED fixture
+  and a separate mutation discriminator.
+
+Nothing else moved. **All four carried GREEN transcripts are byte-identical to the audited
+commit `e3906cec`**, so no fence was weakened and no output surface was added.
+
+### What round 6 does NOT close
+
+The recognised-interpreter **vocabulary** is still a list, not a proof that the list is
+exhaustive. A proven-static literal that names an executable-capable program the list does not
+contain is still a benign leaf. Round 6 closed *how a command word is admitted*; it did not
+close *which names are recognised*. That remains the disclosed production blocker Codex
+restated in the round-5 audit, and no claim here weakens it.
 
 ## Stage coverage
 
@@ -61,56 +76,59 @@ Unchanged from round 1. Six RED fixtures and one GREEN, same rc and reason token
 
 ### RENDER
 
-Everything round 4 implemented, plus command-position conservation across every accepted Bash
-assignment word and redirection prefix and across `function`/`coproc` name binding, with a
-named STOP for any prefix shape outside that model.
+Everything round 5 implemented, plus the closed command-word admissibility policy and
+slash-relative interpreter recognition, with a named STOP for every command word that is not a
+proven-static benign literal.
 
 ### FREEZE
 
-Everything round 4 implemented. FREEZE inherits the round-5 repair unchanged through the shared
+Everything round 5 implemented. FREEZE inherits the round-6 repair unchanged through the shared
 `_derive_graph`, so `F3`/`F9` gain the same conservation; no FREEZE-specific code changed.
 
 ## Self-QA result
 
-- 44 cases, `FAILED_COUNT=0`. **All 40 round-4 cases carried unchanged in rc and reason
-  token**; 4 are round-5 additions. No carried fixture file was edited.
-- 7 ALLOCATE regression cases: unchanged. 14 RENDER cases: 10 carried, 4 new. 23 FREEZE cases:
+- 52 cases, `FAILED_COUNT=0`. **All 44 round-5 cases carried unchanged in rc and reason token**;
+  8 are round-6 additions. No carried fixture file was edited.
+- 7 ALLOCATE regression cases: unchanged. 22 RENDER cases: 14 carried, 8 new. 23 FREEZE cases:
   unchanged.
-- D026 behavioural pre-feature: each new fixture runs over byte-identical inputs against the
-  round-4 code streamed from `bb02c25a` and against round-5 code. **All four are rc-level REDs**
-  - `PASS rc 0` with `R4`, `R6` and `R7` all PASS, to `STOP rc 3`.
-- D026 mutations: 5 discriminators run against all 4 new REDs - a 20-cell matrix that asserts
-  its own expectation table (`OFF_EXPECTATION=0`). M1 restores the numeric-only descriptor
-  handling and returns only the named-fd RED to PASS; M4 removes the name binding and returns
-  only the function-body RED; M3 removes the fail-closed fence and returns only the unmodelled
-  RED; M2 restores round 4's full assignment handling and returns two REDs, which is correct
-  and stated. M5 narrows the model but keeps the fence, and the indexed RED stays STOP with a
-  different reason token - proving the two fences are independent.
-- The five carried round-3 and round-4 discriminators were re-run against round-5 code and all
-  five still restore their defective PASS. Ten discriminators now exist across rounds 3-5.
-- Prefix grammar battery: 16 blind forms, each an independently executed round-4 `PASS rc 0`,
-  all 16 killed, 0 survived; 9 benign controls `rc 0` on both sides, four of which exercise the
-  repaired paths directly; 1 disclosed conservative false stop.
-- The round-4 grammar battery was re-run as a regression: 32 of 32 forms still `rc 3`, 5 of 5
-  controls still `rc 0`.
-- Scanner-boundary probe, both sides in one command: 7 forms where Bash reaches another program
-  were silent on `bb02c25a` and are not silent now; 4 forms Bash does **not** reach remain
-  correctly silent, which is what distinguishes a repair from a blanket STOP.
-- Python AST parse PASS; 49 JSON plans parse; all fixture bytes LF-only; deterministic repeated
-  stdout for two GREENs and two new REDs; `git diff --check` rc 0 over the two modified files.
-- **Every PowerShell block in `SELF_QA_SEC102_R5.md` was extracted byte-for-byte and re-executed
-  from a working directory outside the repository; 12 of 12 reproduce their published output.**
-  The first such run failed 12 of 12 and exposed five real defects in the evidence document,
-  including one published output line that had not been obtained by running the command. All
-  five are fixed and the failure is recorded rather than removed.
+- D026 behavioural pre-feature: **5 of the 7 new RED fixtures are rc-level REDs** - `PASS rc 0`
+  on `e3906cec` to `STOP rc 3` under round-6 code (glob, bracket-glob, brace, tilde,
+  relative-path interpreter). The remaining two (parameter expansion, command substitution)
+  were **already `STOP rc 3` at `e3906cec`** and are carried as controls, not claimed as new
+  REDs; the kickoff's expectation that they leafed into a PASS is not what the tool does, and
+  the measured before-state is published rather than the expectation.
+- Scanner boundary, both sides in one command: 32 probes, `OFF_EXPECTATION=0`. **12 forms where
+  Bash reaches another program were silent on `e3906cec` and are not silent now.** 8 benign
+  forms remain correctly silent and 3 modelled interpreter/source forms still derive their
+  edge, which is what distinguishes a repair from a blanket STOP. 4 forms are asserted as
+  disclosed conservative stops so they cannot drift unnoticed.
+- D026 mutations: 6 new discriminators run against **all 11 REDs** (7 round-6 + 4 round-5) - a
+  66-cell matrix asserting its own expectation table, `OFF_EXPECTATION=0`. **Every mutation that
+  removes a round-6 fence leaves all four round-5 REDs intact**, which is the discriminator the
+  round-5 audit required.
+- Command-word grammar battery: 59 declared forms plus a generative closure sweep of 180
+  variants (10 expansion characters x 6 bases x 3 positions). `SWEEP_LEAKS=0`: no word carrying
+  an expansion or substitution character is admitted as a leaf or promoted to a graph word.
+- The round-5 prefix battery was re-run as a round-6 regression: 16 of 16 blind forms still
+  `rc 3`, 8 of 9 controls still `rc 0`, and **one round-5 control moved to a disclosed
+  conservative stop** (`SEEN[0] "$ROOT/in.txt"`, a bracket-expression token in command
+  position). The move is published, not tuned away.
+- The five carried round-3/round-4 discriminators were re-run against round-6 code and all five
+  still restore their defective PASS. **Three of the five round-5 discriminators no longer
+  discriminate**, because the round-6 fence independently catches their forms; each is re-probed
+  and its remaining role measured - `M4` (name binding) is still solely load-bearing, and `M1`,
+  `M2`, `M5` still carry precision for benign controls that flip to STOP without them.
+- Python AST parse PASS; all r6 JSON plans parse; all r6 fixture bytes LF-only; deterministic
+  repeated stdout over three runs for two new REDs and one new GREEN.
 - `pathscope_prover.py` has no worktree diff; its pin is unchanged and the FREEZE GREEN
-  transcript is the running proof.
+  transcript is the running proof. `sec102_r1..r5_fixtures` have no worktree diff.
 
-Literal commands and real output are in `SELF_QA_SEC102_R5.md`.
+Literal commands and real output are in `SELF_QA_SEC102_R6.md`.
 
 ## What remains - every item is a limitation
 
-Items 1-23 below carry forward from round 4. Items 24-27 are round-5 additions.
+Items 1-27 carry forward from round 5, with items 8 and 12 corrected as the round-5 audit
+required. Items 28-31 are round-6 additions.
 
 1. These are synthetic fixture proofs. The production P0 and RO entrypoints, RP0 library and
    bootstrap, RP6, RP7, inline Python bodies, and exact candidate `verify_lock.py` blob have
@@ -129,12 +147,15 @@ Items 1-23 below carry forward from round 4. Items 24-27 are round-5 additions.
    exemption.** A plan that legitimately declares a render-only allocation which is never a
    runtime constant will STOP. This is a chosen false stop, taken over a second modelled
    grammar.
-8. **The command-word detection vocabulary is a list, and a list can be short.** An
-   interpreter absent from it, invoked at a genuinely conserved command position under a
-   literal name, is classified a benign leaf and derives no edge. **Round 5 repaired how the
-   scanner reaches a command word, not which names it recognises**, so this half of R3-F1 is
-   unchanged. Executing an arbitrary program (`./child.sh`) is outside every modelled edge kind
-   and always was.
+8. **CORRECTED IN ROUND 6. The command-word recognition vocabulary is a list, and a list can be
+   short.** An executable-capable program absent from that list, written as a proven-static
+   literal at a conserved command position, is still classified a benign leaf and derives no
+   edge. What round 6 changed is the *exposure* of that residual: a word can now only reach
+   the vocabulary test if its spelling is already the name Bash will look up, so an unknown
+   name can no longer be smuggled in behind an expansion. Round 5's statement that it "repaired
+   how the scanner reaches a command word, not which names it recognises" is still true and
+   still the residual. Executing an arbitrary program (`./child.sh`) is outside every modelled
+   edge kind and always was.
 9. Wrapper detection produces safe false stops by design: `find`, `time`, `env`, `xargs` and
    similar STOP even with harmless operands, because the composite does not model what they
    run.
@@ -142,10 +163,15 @@ Items 1-23 below carry forward from round 4. Items 24-27 are round-5 additions.
     FREEZE and STOPs graph derivation at RENDER. The actual RO composite cannot yet PASS.
 11. The analysis-unit builder supports only standalone direct `source`/`.` edges. It STOPs on
     `execute_source` and `inline_source`.
-12. RENDER graph analysis is intentionally incomplete and fail-closed: here-documents, line
-    continuations, multiline quotes, command/process substitutions, `eval`, `alias`, dynamic
-    command positions, every unmodelled command form, and now every unmodelled prefix form, all
-    STOP.
+12. **CORRECTED IN ROUND 6.** RENDER graph analysis is intentionally incomplete and fail-closed.
+    The round-5 wording said "dynamic command positions … STOP", which outran the predicate:
+    a pathname-expanded command word did not STOP, it leafed. The accurate statement is now:
+    here-documents, line continuations, multiline quotes, command/process substitutions,
+    `eval`, `alias`, every unmodelled prefix form, and **every command-position word that is
+    not a proven-static literal** - parameter/command/arithmetic expansion, pathname
+    expansion, brace expansion, tilde expansion, backslash-constructed names, degenerate
+    quoting - all STOP. The residual is item 8: a proven-static literal outside the recognised
+    vocabulary is still a leaf, and that is a vocabulary limit, not a command-position limit.
 13. The generated analysis unit uses a synthetic `test -r` to preserve each bound source
     operand while substituting exact child bytes. It is not an executable or frozen
     deployment artifact.
@@ -153,7 +179,7 @@ Items 1-23 below carry forward from round 4. Items 24-27 are round-5 additions.
     allocation/constants value conservation plus exact deployed-path operand binding. It is
     not full semantic shell dataflow.
 15. `sys.executable`, used to launch the pinned prover locally, is an external-runtime
-    dependency not pinned by the plan. **Round 5 ran under Python 3.14.2**; 3.12 is no longer
+    dependency not pinned by the plan. **Round 6 ran under Python 3.14.2**; 3.12 is no longer
     installed on this machine, so the round-4 3.12 parse is not reproduced and nothing here
     establishes behaviour under 3.12.
 16. The analysis unit and the prover/constants/allowlist snapshots are temporary local files
@@ -165,10 +191,10 @@ Items 1-23 below carry forward from round 4. Items 24-27 are round-5 additions.
     opens, and RP6 exact venv binding remain production blockers from the design.
 19. A prover input-read or constants/allowlist parse error does not emit seven counters; the
     composite STOPs on that incomplete output grammar rather than inventing zeros.
-20. **28 of 33 prover-adapter arms remain undriven** by published fixtures. Round 5 drove no
+20. **28 of 33 prover-adapter arms remain undriven** by published fixtures. Round 6 drove no
     new arm; the count and classification are unchanged from round 4.
 21. **The `.gitattributes` repair is inert until the Lead commits it**, because Git reads
-    checkout attributes from the committed tree. Round 5 adds `sec102_r5_fixtures/** -text` to
+    checkout attributes from the committed tree. Round 6 adds `sec102_r6_fixtures/** -text` to
     the same scoped file; the round-4 demonstration of the mechanism is not re-run.
 22. The `.gitattributes` covers this directory only. Every other byte-pinned artifact in the
     repository - RP6, RP7, the block files, the preregistration drafts - carries the same
@@ -179,25 +205,43 @@ Items 1-23 below carry forward from round 4. Items 24-27 are round-5 additions.
     claim is exactly as strong as one reading of the Bash grammar.** The accepted vocabulary is
     `NAME=`, `NAME+=`, `NAME[sub]=`, `NAME[sub]+=` with a bracket-free subscript, plus numeric
     and `{name}` descriptors abutting a redirection operator. Anything outside it that
-    *resembles* either shape STOPs by name. A prefix form that is neither enumerated nor
-    resembling would still degrade to a leaf. None is known; that is a statement about the
-    implementer's knowledge, not a proof.
+    *resembles* either shape STOPs by name. Round 6 adds a second, independent net under this
+    one: a prefix that degrades into a command-position word now also faces the closed
+    admissibility policy, which is measured in the round-5-fence redundancy probe.
 25. **`for` / `select` / `case` are argued safe, not repaired.** They bind a name like
     `function`/`coproc`, but a separator, newline or `)` re-opens the command position before
     any body command. Two probes measure this; it is not an exhaustive enumeration of
     reserved-word syntax.
-26. **New conservative false stops, deliberately taken.** `{1}>...` and any brace word abutting
-    a redirection whose interior is not a plain name STOP although Bash would treat them as
-    ordinary words. An `arr[...` word carrying an `=` whose subscript the model cannot close
-    STOPs although a user may have meant a command name. Both are disclosed rather than tuned
-    away.
-27. **`raw.isdigit()` was narrowed to `^[0-9]+$`.** The old test accepted Unicode digits, so
-    `2>`-shaped words such as `<superscript-two>>out` were swallowed as descriptor prefixes.
-    Bash does not do that. The narrowing matches Bash and loses no edge, but it is a behaviour
-    change and is recorded as one.
+26. **Round-5 conservative false stops, carried unchanged.** `{1}>...` and any brace word
+    abutting a redirection whose interior is not a plain name STOP although Bash would treat
+    them as ordinary words. An `arr[...` word carrying an `=` whose subscript the model cannot
+    close STOPs although a user may have meant a command name.
+27. **`raw.isdigit()` was narrowed to `^[0-9]+$` in round 5.** The old test accepted Unicode
+    digits. The narrowing matches Bash and loses no edge, but it is a behaviour change and is
+    recorded as one.
+28. **New conservative false stops, deliberately taken and larger than round 5's.** Every
+    command-position word carrying `*`, `?`, `[`, `]`, `{`, `}`, `~` or `\` now STOPs, whether
+    or not Bash would actually expand that occurrence. Concretely: the `[` test builtin
+    (`[ -f x ]`) STOPs, `\cat` STOPs, `~/bin/mytool` STOPs, and a subscript word without an
+    `=` (`SEEN[0] "$ROOT/in.txt"`) STOPs - the last was a published round-5 control at `rc 0`.
+    These are refusals, not detections, and the policy prefers a visible refusal to a proof
+    that a particular occurrence was safe.
+29. **Quoted occurrences are not excused.** `'*'` is a literal star to Bash but STOPs here. The
+    fence reads the raw word, because deciding that quoting suppressed a specific expansion is
+    the class of reasoning that produced R5-F1.
+30. **The expansion character set is itself a list.** It covers the expansions Bash performs on
+    a command word before lookup as the implementer reads the grammar. `extglob`, `globstar`
+    and similar option-enabled patterns are built from the same characters and are therefore
+    covered by construction, but no proof is offered that the character set is complete for
+    every shell option. This is a strictly smaller residual than round 5's, not zero.
+31. **Three round-5 discriminators became non-discriminating.** `M1`, `M2` and `M3` no longer
+    return their round-5 REDs to PASS, because the round-6 command-word fence catches those
+    forms independently. This is defence in depth, not a lost guard: each is re-probed, and the
+    round-5 mechanisms are shown to still carry precision for benign controls. It does mean the
+    round-5 REDs no longer test only one mechanism, and that is recorded rather than hidden.
 
 ## Artifact identity record
 
-The complete per-artifact byte-count and SHA-256 table is in `SEC102_R5_REPORT_2026-08-11.md`
-section 6, and in `SELF_QA_SEC102_R5.md` section 9, both re-derivable by the published command.
+The complete per-artifact byte-count and SHA-256 table is in `SEC102_R6_REPORT_2026-08-11.md`
+section 6, and in `SELF_QA_SEC102_R6.md` section 9, both re-derivable by the published command.
 No commit was made.
