@@ -15,10 +15,23 @@
 # Every shell-side write goes to a descriptor returned by the O_CREAT|O_EXCL
 # open that created the leaf, and never to a re-resolved name: `noclobber`
 # proves only that the name did not exist at allocation, which is not the same
-# fact as "the object written is the object allocated". The one write this
-# block cannot bind that way is curl's `--output <path>` for the status body,
-# because curl is given a name, not a descriptor; that leaf is create-once
-# allocated and re-opened by name by curl. On the READ side, EVERY read of a
+# fact as "the object written is the object allocated". The one write this block
+# does not issue itself is curl's response body, and it is bound the same way:
+# curl is handed no evidence-tree name at all. The creating descriptor is
+# duplicated into the child at fd 3, curl is given `--output /dev/fd/3`, and that
+# path resolves through this process's descriptor table rather than through the
+# evidence directory - so the object curl truncates and fills is the object the
+# create-once open created, whatever the leaf NAME resolves to by then. The
+# matching READ descriptor is derived from that same creating descriptor AT
+# CREATION TIME, before any window exists, so the digest and the parser also
+# adjudicate the created object and no name is resolved after the child runs.
+# Round 8 handed curl the leaf name and let the digest and the parser re-open it:
+# an executed fixture made curl overwrite a hard-linked object OUTSIDE the
+# evidence tree, and a second turned a child-produced ARMED body into an
+# accepting DISARMED result whose line carried the ARMED body's digest (Codex
+# round-8 part B finding 1). Round 8 disclosed that accurately and left it
+# standing; a disclosure is not a control, so round 9 changes the probe.
+# On the READ side, EVERY read of a
 # capture stream that a preregistered row in this band attributes to its child -
 # the row-20 status code, the row-21 parser result, both row-22 namespace
 # identities, the row-22 listener inventory, and the emptiness of the diagnostic
@@ -34,9 +47,8 @@
 # interpreter and verifier readers, and every read of a diagnostic leaf this
 # block wrote itself - still open by name and claim nothing beyond what their
 # record grammar establishes over whatever that name resolves to at read time;
-# no row states captured/adjudicated identity for those. Those residuals, and
-# curl's, are stated in SELF_QA_RP7.md rather than covered by the sentence
-# above.
+# no row states captured/adjudicated identity for those. Those residuals are
+# stated in SELF_QA_RP7.md rather than covered by the sentence above.
 # File content is never printed: result lines contain paths, metadata, counts,
 # classifications, and digests only.
 #
@@ -60,6 +72,9 @@ WPI_CAP_FD=""
 WPI_CAP_FD_SOURCE=""
 WPI_CAP_BIND_PREFIX=""
 WPI_CAP_BIND_REASON=""
+WPI_CAP_BIND_RC_STYLE=""
+WPI_CAP_CHILD_FD=""
+WPI_CAP_CHILD_SLOT=""
 WPI_CAP_RC=0
 WPI_CAP_ELAPSED_MS=0
 WPI_READ_DIAG=""
@@ -236,26 +251,19 @@ wpi_clock_ms() {
     WPI_LINE=$(( 10#$whole * 1000 + 10#$frac ))
 }
 
-wpi_alloc_leaf() {
-    local leaf="$1"
-    case "$leaf" in "$EV_DIR"/*) : ;; *) wpi_stop RP7 "capture_path_outside_evidence leaf=$leaf ev_dir=$EV_DIR" ;; esac
-    # stderr is CLOSED, not redirected to /dev/null: /dev/null is outside both the
-    # run evidence tree and the section-10.1 allowlist, so opening it for writing
-    # would be an unpreregistered write open. Closing fd 2 discards the noclobber
-    # diagnostic with no open at all and leaves the noclobber test itself intact.
-    if ! ( set -o noclobber; : > "$leaf" ) 2>&-; then
-        wpi_stop RP7 "capture_leaf_not_create_once leaf=$leaf"
-    fi
-}
-
-# Allocate a leaf and KEEP the descriptor the creating open returned. The
-# create-once test is the same `noclobber` test as above and STOPs with the same
-# reason, but the object is not let go of between the create and the write: the
+# Allocate a leaf under `noclobber` and KEEP the descriptor the creating open
+# returned, so the object is not let go of between the create and the write: the
 # recovered round-5 fixture replaced a freshly allocated leaf with a hard link to
 # a file outside the evidence tree in exactly that window, and the capture then
 # wrote its payload through the substituted name at rc 0 with no STOP. A name is
 # not an object. Every shell-side write in this block goes through the descriptor
-# this function returns, so the object written is the object created.
+# this function returns, so the object written is the object created. Round 8
+# still had one allocate-then-release caller - the status body, which was created
+# by name-only allocation and re-opened by name by curl, by the digest and by the
+# parser (Codex round-8 part B finding 1). That caller now takes this descriptor
+# too, and the name-only allocator it used has been deleted rather than left
+# available: there is no longer any way in this block to create a leaf and then
+# address it by name.
 # The redirection is guarded by `|| rc=$?` because a failed `exec` redirection is
 # a shell error, not a command failure, and would otherwise reach the ERR trap
 # as an unadjudicated status instead of this reason.
@@ -263,7 +271,10 @@ wpi_open_leaf() {
     local leaf="$1" rc=0
     case "$leaf" in "$EV_DIR"/*) : ;; *) wpi_stop RP7 "capture_path_outside_evidence leaf=$leaf ev_dir=$EV_DIR" ;; esac
     WPI_LEAF_FD=""
-    # stderr is CLOSED, not redirected to /dev/null, for the reason above.
+    # stderr is CLOSED, not redirected to /dev/null: /dev/null is outside both the
+    # run evidence tree and the section-10.1 allowlist, so opening it for writing
+    # would be an unpreregistered write open. Closing fd 2 discards the noclobber
+    # diagnostic with no open at all and leaves the noclobber test itself intact.
     set -o noclobber
     { exec {WPI_LEAF_FD}>"$leaf"; } 2>&- || rc=$?
     set +o noclobber
@@ -293,15 +304,43 @@ wpi_alloc_read_diag() {
 # capture and cleared at its entry, so a capture nested inside a caller cannot
 # inherit another row's token; a caller that declares nothing keeps the fail-closed
 # generic STOP rather than broadening a row-specific inability.
+#
+# The rc field is NOT part of the declared reason, because round 8 let the caller
+# supply it as a literal: every declaration said `rc=0`, and the token was emitted
+# with that literal whatever the child had actually returned. An executed fixture
+# ran a real child that exited 7 and made the bind fail after it; the block still
+# printed `rc=0 detail=capture_stream_unbound` (Codex round-8 part B finding 2).
+# The caller now declares the reason and whether its row's grammar carries an rc
+# field at all - row 22 and row 20 declare `rc=<n>`, row 21 declares no rc - and
+# `wpi_capture` fills the field from the status the child really returned.
 wpi_capture_bind_stop() {
-    WPI_CAP_BIND_PREFIX="$1"; WPI_CAP_BIND_REASON="$2"
+    WPI_CAP_BIND_PREFIX="$1"; WPI_CAP_BIND_REASON="$2"; WPI_CAP_BIND_RC_STYLE="${3:-with_rc}"
+}
+
+# Place one already-open descriptor of the CALLER's into the next capture's child,
+# so a child can be given an object instead of a name. `in` binds it to the child's
+# stdin; `w3`/`r3` bind it to the child's fd 3 for a tool whose interface takes a
+# path and can be given `/dev/fd/3`, which resolves through this process's
+# descriptor table rather than through the evidence directory. Consumed by exactly
+# the next capture and cleared at its entry, like the bind-stop declaration.
+# The slot is adjudicated HERE, in the parent, and not inside the capture child: a
+# child that exited on an unknown slot would report a status through the same
+# variable `timeout` reports its own through, and this block already has one
+# finding about a value that meant two things.
+wpi_capture_bind_child() {
+    case "$2" in in|r3|w3) : ;; *) wpi_stop RP7 "capture_child_slot_unknown slot=$2" ;; esac
+    [ -n "$1" ] || wpi_stop RP7 "capture_child_fd_absent slot=$2"
+    WPI_CAP_CHILD_FD="$1"; WPI_CAP_CHILD_SLOT="$2"
 }
 
 wpi_capture() {
     local label="$1"; shift
     local start end rc=0 ofd efd brc=0 erc=0
     local bind_prefix="$WPI_CAP_BIND_PREFIX" bind_reason="$WPI_CAP_BIND_REASON"
-    WPI_CAP_BIND_PREFIX=""; WPI_CAP_BIND_REASON=""
+    local bind_rc_style="$WPI_CAP_BIND_RC_STYLE"
+    local child_fd="$WPI_CAP_CHILD_FD" child_slot="$WPI_CAP_CHILD_SLOT"
+    WPI_CAP_BIND_PREFIX=""; WPI_CAP_BIND_REASON=""; WPI_CAP_BIND_RC_STYLE=""
+    WPI_CAP_CHILD_FD=""; WPI_CAP_CHILD_SLOT=""
     if [ -n "$WPI_CAP_OUT_FD" ]; then exec {WPI_CAP_OUT_FD}<&-; WPI_CAP_OUT_FD=""; fi
     if [ -n "$WPI_CAP_ERR_FD" ]; then exec {WPI_CAP_ERR_FD}<&-; WPI_CAP_ERR_FD=""; fi
     WPI_PROBE_SEQ=$(( WPI_PROBE_SEQ + 1 ))
@@ -312,6 +351,15 @@ wpi_capture() {
     wpi_clock_ms; start="$WPI_LINE"
     (
         cd "$EV_DIR" || exit 125
+        # The caller's descriptor is installed in the forked child before the exec,
+        # so the object reaches the tool through the descriptor table. fd 3 is a
+        # plain numeric duplicate and therefore survives the exec; `env` and
+        # `timeout` pass it through untouched.
+        case "$child_slot" in
+            in) exec <&"$child_fd" ;;
+            r3) exec 3<&"$child_fd" ;;
+            w3) exec 3>&"$child_fd" ;;
+        esac
         exec "$WPI_ENV" -i LC_ALL=C PATH=/usr/bin:/bin HOME=/nonexistent TMPDIR="$EV_DIR" \
             "$WPI_TIMEOUT" --signal=TERM --kill-after=5s "${WPI_SWEEP_BUDGET_S}s" "$@"
     ) >&"$ofd" 2>&"$efd" || rc=$?
@@ -334,7 +382,15 @@ wpi_capture() {
     { exec {WPI_CAP_OUT_FD}</dev/fd/"$ofd"; } 2>&- || brc=$?
     { exec {WPI_CAP_ERR_FD}</dev/fd/"$efd"; } 2>&- || erc=$?
     if [ "$brc" -ne 0 ] || [ -z "$WPI_CAP_OUT_FD" ] || [ "$erc" -ne 0 ] || [ -z "$WPI_CAP_ERR_FD" ]; then
-        [ -z "$bind_prefix" ] || wpi_stop "$bind_prefix" "$bind_reason"
+        # `$rc` is the status the child really returned, adjudicated here before any
+        # caller-specific token is emitted. A row whose grammar has no rc field gets
+        # none; a row that declares `rc=<n>` gets the measured one, never a literal.
+        if [ -n "$bind_prefix" ]; then
+            case "$bind_rc_style" in
+                no_rc) wpi_stop "$bind_prefix" "$bind_reason detail=capture_stream_unbound" ;;
+                *) wpi_stop "$bind_prefix" "$bind_reason rc=$rc detail=capture_stream_unbound" ;;
+            esac
+        fi
         wpi_stop RP7 "capture_stream_not_bindable label=$label leaf=$WPI_CAP_OUT"
     fi
     exec {ofd}>&-
@@ -1262,14 +1318,22 @@ exec(compile(src,verifier,"exec"),{"__name__":"__main__","__file__":verifier})
 
 wpi_assert_netns_binding() {
     local caller service service_path="/proc/$WPI_MAINPID/ns/net"
-    wpi_capture_bind_stop B6 "service_netns_unreadable path=/proc/self/ns/net rc=0 detail=capture_stream_unbound"
+    # Draft row 22 declares `B6_STOP reason=service_netns_unreadable
+    # path=/proc/<pid>/ns/net rc=<n> detail=<d>`: the detail field is mandatory on
+    # every disposition of this reason. The capture-bind, record, grammar and
+    # read-diagnostic branches all carried one; these two nonzero-child branches
+    # emitted `rc=<n>` and stopped there, so the block emitted a line the draft does
+    # not declare (Codex round-8 part B finding 5). The block was the wrong side: a
+    # child that could not read the link is an inability with a name, and the
+    # diagnostic leaf that names it is already captured.
+    wpi_capture_bind_stop B6 "service_netns_unreadable path=/proc/self/ns/net" with_rc
     wpi_capture caller_netns "$WPI_READLINK" -- /proc/self/ns/net
-    [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop B6 "service_netns_unreadable path=/proc/self/ns/net rc=$WPI_CAP_RC"
+    [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop B6 "service_netns_unreadable path=/proc/self/ns/net rc=$WPI_CAP_RC detail=identity_read_child_failed diagnostic_file=$WPI_CAP_ERR"
     wpi_require_empty_captured B6 "service_netns_unreadable path=/proc/self/ns/net rc=0" err
     wpi_captured_record B6 "service_netns_unreadable path=/proc/self/ns/net rc=0" out; caller="$WPI_LINE"
-    wpi_capture_bind_stop B6 "service_netns_unreadable path=$service_path rc=0 detail=capture_stream_unbound"
+    wpi_capture_bind_stop B6 "service_netns_unreadable path=$service_path" with_rc
     wpi_capture service_netns "$WPI_READLINK" -- "$service_path"
-    [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop B6 "service_netns_unreadable path=$service_path rc=$WPI_CAP_RC"
+    [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop B6 "service_netns_unreadable path=$service_path rc=$WPI_CAP_RC detail=identity_read_child_failed diagnostic_file=$WPI_CAP_ERR"
     wpi_require_empty_captured B6 "service_netns_unreadable path=$service_path rc=0" err
     wpi_captured_record B6 "service_netns_unreadable path=$service_path rc=0" out; service="$WPI_LINE"
     [[ "$caller" =~ ^net:\[[0-9]+\]$ ]] || wpi_stop B6 "service_netns_unreadable path=/proc/self/ns/net rc=0 detail=identity_grammar"
@@ -1384,7 +1448,7 @@ wpi_assert_listener_set() {
     local fd rc=0 count=0 total=0 consumed=0 whole="" rest="" line
     local state recvq sendq localaddr peer addr port diag dfd
     local port_rows=0 wildcard_seen=no wildcard_addr="" unexpected_seen=no
-    wpi_capture_bind_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=capture_stream_unbound"
+    wpi_capture_bind_stop B6 "listener_inventory_unreadable_or_unparseable" with_rc
     wpi_capture listeners "$WPI_SS" -H -ltn
     [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=$WPI_CAP_RC detail=ss_failed"
     wpi_require_empty_captured B6 "listener_inventory_unreadable_or_unparseable rc=0" err
@@ -1489,12 +1553,41 @@ wpi_status_expected_type() {
     return 1
 }
 
+# Rows 20-21. The response body is the one object in this band that a foreign
+# program writes, and round 8 addressed it three times by NAME: `--output "$body"`
+# for curl, `wpi_sha_file "$body"` for the digest, and `sys.argv[1]` for the
+# parser. Nothing bound those three to the create-once leaf or to each other, and
+# two executed fixtures showed what that costs - one made curl overwrite a
+# hard-linked object outside the evidence tree at capture rc 0, and one replaced
+# the name between the digest and the parser so a child-produced ARMED body
+# reached `B5_status ... flags=expected` at rc 0 carrying the ARMED body's digest
+# (Codex round-8 part B finding 1). Round 6 called closing this a design change to
+# the row-20 probe rather than a repair; round 8 restated the disclosure instead,
+# and a disclosure is not a control.
+#
+# The design change: the leaf is opened create-once and BOTH ends are derived from
+# that one descriptor before the child exists.
+#   write  curl is given `--output /dev/fd/3`, where fd 3 is a duplicate of the
+#          creating descriptor installed in the child. It resolves through this
+#          process's descriptor table, so curl truncates and fills the object the
+#          create-once open created, whatever the leaf name resolves to by then.
+#   read   the parser's stdin is a descriptor re-derived from the same creating
+#          descriptor AT CREATION TIME - before the child runs, so there is no
+#          window in which a name could be resolved - and the parser digests
+#          exactly the bytes it parses and reports that digest, so `body_sha256`
+#          is the digest of the adjudicated bytes rather than of a second read.
+# There is exactly one reader and one writer and they are the same object. No
+# `--output <name>`, no `wpi_sha_file` over the body, no `argv[1]` path.
 wpi_assert_status() {
-    local body="$EV_DIR/ro.status.body" code_file json_out json_err record
-    wpi_alloc_leaf "$body"
-    wpi_capture_bind_stop B5 "status_endpoint_not_evaluable rc=0 detail=capture_stream_unbound"
+    local body="$EV_DIR/ro.status.body" bodyfd="" pfd="" record sha
+    wpi_open_leaf "$body"; bodyfd="$WPI_LEAF_FD"
+    { exec {pfd}</dev/fd/"$bodyfd"; } 2>&- || wpi_stop B5 "status_body_unreadable_or_unparseable detail=body_stream_not_bindable"
+    [ -n "$pfd" ] || wpi_stop B5 "status_body_unreadable_or_unparseable detail=body_stream_not_bindable"
+    wpi_capture_bind_child "$bodyfd" w3
+    wpi_capture_bind_stop B5 "status_endpoint_not_evaluable" with_rc
     wpi_capture status_get "$WPI_CURL" --silent --show-error --connect-timeout 5 --max-time 10 \
-        --request GET --output "$body" --write-out '%{http_code}\n' -- "$WPI_CONTROL_ENDPOINT"
+        --request GET --output /dev/fd/3 --write-out '%{http_code}\n' -- "$WPI_CONTROL_ENDPOINT"
+    exec {bodyfd}>&-
     [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop B5 "status_endpoint_not_evaluable rc=$WPI_CAP_RC detail=transport_error diagnostic_file=$WPI_CAP_ERR"
     wpi_require_empty_captured B5 "status_endpoint_not_evaluable rc=0" err
     wpi_captured_record B5 "status_endpoint_not_evaluable rc=0" out
@@ -1511,14 +1604,17 @@ wpi_assert_status() {
         [1-5][0-9][0-9]) wpi_fail B5 "status_endpoint_unexpected_http code=$WPI_LINE" ;;
         *) wpi_stop B5 "status_endpoint_not_evaluable rc=0 detail=http_code_grammar" ;;
     esac
-    wpi_sha_file B5 status_body_unreadable_or_unparseable "$body"; WPI_BODY_SHA="$WPI_LINE"
-    # The status parser needs no venv context whatever - it opens one file and parses
-    # JSON with the standard library - so it runs under the pinned system interpreter
-    # with -I -S. Under round 3's `<venv>/bin/python -I`, `site` still imported and a
-    # single executable line in that venv's site-packages/*.pth could print exactly
-    # `OK fields=8` and exit 0 before this source was compiled. The guard below makes
-    # the isolation a checked precondition of the parse rather than a claim.
-    wpi_capture_bind_stop B5 "status_body_unreadable_or_unparseable detail=capture_stream_unbound"
+    # The status parser needs no venv context whatever - it reads one descriptor and
+    # parses JSON with the standard library - so it runs under the pinned system
+    # interpreter with -I -S. Under round 3's `<venv>/bin/python -I`, `site` still
+    # imported and a single executable line in that venv's site-packages/*.pth could
+    # print exactly `OK fields=8` and exit 0 before this source was compiled. The
+    # guard below makes the isolation a checked precondition of the parse rather
+    # than a claim. It is given no path: its stdin IS the bound body descriptor, so
+    # it cannot be pointed at a different object, and it reports the digest of the
+    # bytes it read so the digest and the parse are one act over one object.
+    wpi_capture_bind_child "$pfd" in
+    wpi_capture_bind_stop B5 "status_body_unreadable_or_unparseable" no_rc
     wpi_capture status_json "$WPI_PYTHON3" -I -S -c '
 import hashlib,json,sys
 if not (sys.flags.isolated and sys.flags.no_site): print("PARSE startup_not_isolated"); sys.exit(3)
@@ -1533,21 +1629,23 @@ def pairs(xs):
  return d
 def bad_constant(x): raise ValueError("non_json_constant")
 try:
- with open(sys.argv[1],"rb") as f: raw=f.read()
+ raw=sys.stdin.buffer.read()
+ body_sha=hashlib.sha256(raw).hexdigest()
  obj=json.loads(raw.decode("utf-8"),object_pairs_hook=pairs,parse_constant=bad_constant)
  if type(obj) is not dict: print("PARSE top_level"); sys.exit(3)
  expected={"state":(str,"DISARMED"),"state_version":(int,1),"mode":(str,"credential_free_disarmed"),"network":(str,"disabled"),"exchange_conn":(str,"disabled"),"exchange_enabled":(bool,False),"credential_lookup":(str,"disabled"),"arm_enabled":(bool,False)}
- if dict(p.split(":",1) for p in sys.argv[2].split()) != dict((k,t.__name__) for k,(t,v) in expected.items()): print("PARSE schema_declaration_mismatch"); sys.exit(3)
+ if dict(p.split(":",1) for p in sys.argv[1].split()) != dict((k,t.__name__) for k,(t,v) in expected.items()): print("PARSE schema_declaration_mismatch"); sys.exit(3)
  for k,(t,v) in expected.items():
   if k not in obj: print("MISSING "+k); sys.exit(4)
   if type(obj[k]) is not t: print("TYPE %s %s %s"%(k,type(obj[k]).__name__,t.__name__)); sys.exit(5)
   if obj[k] != v:
    h=hashlib.sha256(json.dumps(obj[k],sort_keys=True,separators=(",",":"),ensure_ascii=True).encode()).hexdigest()
    print("MISMATCH %s %s"%(k,h)); sys.exit(1)
- print("OK fields=8")
+ print("OK fields=8 sha256="+body_sha)
 except (OSError,UnicodeError,json.JSONDecodeError,Dup,ValueError,IndexError) as e:
  print("PARSE "+type(e).__name__); sys.exit(3)
-' "$body" "$WPI_STATUS_SCHEMA"
+' "$WPI_STATUS_SCHEMA"
+    exec {pfd}<&-
     wpi_require_empty_captured B5 "status_body_unreadable_or_unparseable detail=parser_stderr" err
     wpi_captured_record B5 "status_body_unreadable_or_unparseable" out
     record="$WPI_LINE"
@@ -1561,7 +1659,22 @@ except (OSError,UnicodeError,json.JSONDecodeError,Dup,ValueError,IndexError) as 
     # completed probe established deviant host state; it must not be reachable
     # from a producer result the producer could not have produced.
     case "$WPI_CAP_RC:$record" in
-        '0:OK fields=8') printf 'B5_status http=200 json=strict required_fields=8 flags=expected body_sha256=%s content=not_printed parser=pinned_system_interpreter isolation=isolated_no_site\n' "$WPI_BODY_SHA" ;;
+        '0:OK fields=8 sha256='*)
+            # The accepting record now carries the digest of the bytes the parser
+            # itself read, and it is reconstructed from its own tokens like every
+            # other record here. Round 8 rendered `body_sha256` from a SEPARATE
+            # `sha256sum` over the leaf name; the audit's fixture made that field
+            # report the child's ARMED body while the parser had accepted different
+            # DISARMED bytes. One reader means the field cannot disagree with the
+            # verdict beside it.
+            set -- $record
+            [ "$#" -eq 3 ] || wpi_stop B5 "status_body_unreadable_or_unparseable detail=ok_record_grammar tokens=$#"
+            [ "OK $2 $3" = "$record" ] || wpi_stop B5 "status_body_unreadable_or_unparseable detail=ok_record_grammar"
+            [ "$2" = "fields=8" ] || wpi_stop B5 "status_body_unreadable_or_unparseable detail=ok_record_grammar"
+            sha="${3#sha256=}"
+            [ "${#sha}" -eq 64 ] || wpi_stop B5 "status_body_unreadable_or_unparseable detail=ok_record_digest"
+            case "$sha" in *[!0-9a-f]*) wpi_stop B5 "status_body_unreadable_or_unparseable detail=ok_record_digest" ;; esac
+            printf 'B5_status http=200 json=strict required_fields=8 flags=expected body_sha256=%s content=not_printed parser=pinned_system_interpreter isolation=isolated_no_site\n' "$sha" ;;
         4:'MISSING '*)
             set -- $record
             [ "$#" -eq 2 ] || wpi_stop B5 "status_body_unreadable_or_unparseable detail=missing_record_grammar tokens=$#"
@@ -1585,7 +1698,12 @@ except (OSError,UnicodeError,json.JSONDecodeError,Dup,ValueError,IndexError) as 
             [ "${#3}" -eq 64 ] || wpi_stop B5 "status_body_unreadable_or_unparseable detail=mismatch_record_digest"
             case "$3" in *[!0-9a-f]*) wpi_stop B5 "status_body_unreadable_or_unparseable detail=mismatch_record_digest" ;; esac
             wpi_fail B5 "flag_mismatch field=$2 observed_sha256=$3 expected=preregistered_typed_value" ;;
-        *) wpi_stop B5 "status_body_unreadable_or_unparseable detail=strict_json_or_parser_failure parser_rc=$WPI_CAP_RC body_sha256=$WPI_BODY_SHA" ;;
+        # No `body_sha256` here, and its absence is the point: the only digest this
+        # block now has is the one the parser reports for the bytes it accepted, so
+        # a result the parser did not accept has no adjudicated bytes to digest.
+        # Round 8 printed a digest on this branch from a separate read of the leaf
+        # NAME - a number about an object the block had established nothing about.
+        *) wpi_stop B5 "status_body_unreadable_or_unparseable detail=strict_json_or_parser_failure parser_rc=$WPI_CAP_RC" ;;
     esac
 }
 
