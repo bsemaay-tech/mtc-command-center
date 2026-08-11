@@ -131,3 +131,10 @@ silent-sink classes closed, Lead-reproduced); process-invariant + SESSION_LOCK a
 **Flag status:** ~13.4 h remaining - the sub-10 h flag is NOT yet due but is now within one
 more work burst. Expect to cross it overnight; the morning report will carry the exact figure
 and an explicit owner flag if it lands below 10 h. Owner adjusts at any ratification.
+
+**OWNER DECISION 2026-08-11 ~18:30 (in chat, binding): the 50 h plan budget is NOT a stopping
+limit for this overnight run — pre-approved to continue past the 10 h flag and past the 50 h
+line without stopping to ask.** Honest booking continues for the record; the morning report
+still states the exact consumed figure. The stop-and-ask gate at sub-10 h is WAIVED for this
+autonomous session. Hard safety gates (credential/ARM/orders/broker/TESTNET/mainnet/master
+merge/host mutation) are unchanged — this waiver covers plan-hour budget only, nothing else.
