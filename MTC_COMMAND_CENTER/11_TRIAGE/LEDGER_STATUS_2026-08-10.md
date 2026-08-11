@@ -106,3 +106,28 @@ balance drops below 10 h. At ~15.2 h remaining, that flag is not yet due — but
 close to freeze (see the freeze blocker map), so the sub-10 h flag is likely the next major
 owner checkpoint. Rows 1–9 (owner chose BUILD ALL NINE, 2026-08-11) adds 3–6 rounds and will
 consume a meaningful part of the remaining balance.
+
+---
+
+## BOOKING — 2026-08-11 afternoon burst (Fable overnight Lead, prospective)
+
+| Line | Hours | Basis |
+|---|---:|---|
+| Ratified total at 2026-08-11 morning | ~34.8 | owner-signed above |
+| 2026-08-11 ~12:00-15:20 WP-I burst | ~1.8 | booked here, prospective |
+| **Total used (prospective)** | **~36.6** | |
+| **Remaining against the 50 h ceiling** | **~13.4** | |
+
+**What the ~1.8 h bought** (~3.3 h wall clock, unusually dense - 14 delegated agent runs
+completed, ~20 commits, little idle): prereg successor draft R2->R3 (13 skeleton gaps + 6
+RUNID changes + section 10.1 11-EXTEND application + two-commit attestation ordering, merged,
+34/34 conserved, MC-01..03 collapsed to one owner ratification ask); SEC102 composite
+pathproof round 1 (scaffold + allocate stage, Lead-reproduced); transport round 4 built +
+two-band Codex audit (both REQUEST_CHANGES) + round 5 repair (F1->OPEN, BA-1/BA-2/BA-3) +
+draft edits applied; RP6 round 10b (10a bytes confirmed, harnesses Lead-run verbatim) +
+Codex r10 audit (REQUEST_CHANGES x4) + round 11 dispatched; pathscope prover round 2 (9+5
+silent-sink classes closed, Lead-reproduced); process-invariant + SESSION_LOCK adoption.
+
+**Flag status:** ~13.4 h remaining - the sub-10 h flag is NOT yet due but is now within one
+more work burst. Expect to cross it overnight; the morning report will carry the exact figure
+and an explicit owner flag if it lands below 10 h. Owner adjusts at any ratification.
