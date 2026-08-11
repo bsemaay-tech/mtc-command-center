@@ -18,9 +18,15 @@
 # fact as "the object written is the object allocated". The one write this
 # block cannot bind that way is curl's `--output <path>` for the status body,
 # because curl is given a name, not a descriptor; that leaf is create-once
-# allocated and re-opened by name by curl. Readers re-open by name too. Both
-# residuals are stated in SELF_QA_RP7.md rather than covered by the sentence
-# above.
+# allocated and re-opened by name by curl. On the READ side, the one reader
+# whose bytes a preregistered row claims identity for - the row-22 listener
+# inventory - reads through a descriptor re-derived from the capture's own
+# descriptor rather than from the leaf name, so the byte string adjudicated is
+# the byte string the child wrote into the object the create-once open created.
+# Every other reader opens by name and claims nothing beyond what its record
+# grammar establishes; no row states captured/adjudicated identity for those.
+# Both residuals are stated in SELF_QA_RP7.md rather than covered by the
+# sentence above.
 # File content is never printed: result lines contain paths, metadata, counts,
 # classifications, and digests only.
 #
@@ -38,6 +44,7 @@ WPI_SAFE=""
 WPI_LINE=""
 WPI_CAP_OUT=""
 WPI_CAP_ERR=""
+WPI_CAP_OUT_FD=""
 WPI_CAP_RC=0
 WPI_CAP_ELAPSED_MS=0
 WPI_READ_DIAG=""
@@ -262,7 +269,8 @@ wpi_alloc_read_diag() {
 # bounded - runs under the same cleared environment as the probe it bounds.
 wpi_capture() {
     local label="$1"; shift
-    local start end rc=0 ofd efd
+    local start end rc=0 ofd efd brc=0
+    if [ -n "$WPI_CAP_OUT_FD" ]; then exec {WPI_CAP_OUT_FD}<&-; WPI_CAP_OUT_FD=""; fi
     WPI_PROBE_SEQ=$(( WPI_PROBE_SEQ + 1 ))
     WPI_CAP_OUT="$EV_DIR/ro.$(printf '%04d' "$WPI_PROBE_SEQ").$label.stdout"
     WPI_CAP_ERR="$EV_DIR/ro.$(printf '%04d' "$WPI_PROBE_SEQ").$label.stderr"
@@ -274,6 +282,20 @@ wpi_capture() {
         exec "$WPI_ENV" -i LC_ALL=C PATH=/usr/bin:/bin HOME=/nonexistent TMPDIR="$EV_DIR" \
             "$WPI_TIMEOUT" --signal=TERM --kill-after=5s "${WPI_SWEEP_BUDGET_S}s" "$@"
     ) >&"$ofd" 2>&"$efd" || rc=$?
+    # A reader that opens the leaf NAME again adjudicates whatever object that
+    # name resolves to at read time, which is not necessarily the object the
+    # child wrote (Codex round-6 part B finding 3). The read side is therefore
+    # bound the same way the write side already is: while the creating write
+    # descriptor is still open, `/dev/fd/<n>` is opened for reading, which
+    # resolves THROUGH that descriptor instead of through the evidence
+    # directory, so no name lookup happens after the child ran and a later
+    # replacement of the leaf name cannot change the bytes read. The descriptor
+    # is opened after the child exits, so the child never inherits it. It is
+    # closed at the next capture, which is also why exactly one capture's
+    # streams are bound at a time.
+    { exec {WPI_CAP_OUT_FD}</dev/fd/"$ofd"; } 2>&- || brc=$?
+    [ "$brc" -eq 0 ] && [ -n "$WPI_CAP_OUT_FD" ] \
+        || wpi_stop RP7 "capture_stream_not_bindable label=$label leaf=$WPI_CAP_OUT"
     exec {ofd}>&-
     exec {efd}>&-
     wpi_clock_ms; end="$WPI_LINE"
@@ -288,26 +310,53 @@ wpi_require_empty_file() {
     [ ! -s "$file" ] || wpi_stop "$prefix" "$reason detail=diagnostic_stream_nonempty diagnostic_file=$file"
 }
 
-# Builtin-only exact single-record reader. It opens once, accepts the first
-# record only when newline-terminated, and requires clean EOF with no second
-# populated record. The source is already a regular create-once evidence leaf.
+# Builtin-only exact single-record reader.
+#
+# Round 6 read this record with `IFS= read -r`, which SILENTLY DISCARDS NUL, so
+# `2<NUL>00` was consumed as the completed HTTP status `200`, `O<NUL>K fields=8`
+# as the parser's accepting result, and `ne<NUL>t:[100]` as a valid namespace
+# identity - three malformed records normalised into accepting observations
+# (Codex round-6 part B finding 1). The listener reader had already been
+# rewritten for exactly this reason; this reader now uses the same discipline,
+# so no caller of it can lose a byte before grammar.
+#
+# The whole stream is taken in ONE NUL-delimited read. That read returns 0 only
+# when it actually found a NUL - the single byte class this reader cannot
+# represent - and otherwise returns EOF with EVERY captured byte in `whole`.
+# The record is then split out of that one string in memory, and
+# `${#first} + 1 == ${#whole}` is the conservation equation that accounts for
+# every captured byte against the one record and its terminator. LC_ALL=C is
+# pinned at the top of this block, so `${#...}` is a byte count.
+#
+# There is deliberately no additional charset gate here, unlike the listener
+# inventory reader: with `-r`, an empty IFS and a NUL delimiter, NUL is the only
+# class `read` can drop, and every caller of this function already adjudicates
+# the record against an exact grammar of its own. A gate that STOPped on, say,
+# CR would silently change the accepted row-18 symlink-target disposition,
+# which no finding asks for.
+#
+# The source is already a regular create-once evidence leaf.
 wpi_single_record() {
-    local prefix="$1" reason="$2" file="$3" fd first="" extra="" rc=0 diag dfd
+    local prefix="$1" reason="$2" file="$3" fd whole="" first="" extra="" rc=0 diag dfd
     wpi_alloc_read_diag single_record; diag="$WPI_READ_DIAG"; dfd="$WPI_READ_DIAG_FD"
     exec {fd}<"$file" || wpi_stop "$prefix" "$reason detail=open_failed source=$file"
-    IFS= read -r -u "$fd" first 2>&"$dfd" || rc=$?
-    if [ "$rc" -ne 0 ]; then
-        exec {fd}<&-; exec {dfd}>&-
-        wpi_require_empty_file "$prefix" "$reason detail=hard_read_error source=$file" "$diag"
-        [ -z "$first" ] && wpi_stop "$prefix" "$reason detail=empty_or_read_error source=$file read_rc=$rc"
-        wpi_stop "$prefix" "$reason detail=unterminated_final_record source=$file read_rc=$rc"
-    fi
-    rc=0
-    IFS= read -r -u "$fd" extra 2>&"$dfd" || rc=$?
+    IFS= read -r -d '' -u "$fd" whole 2>&"$dfd" || rc=$?
     exec {fd}<&-; exec {dfd}>&-
     wpi_require_empty_file "$prefix" "$reason detail=hard_read_error source=$file" "$diag"
-    [ "$rc" -ne 0 ] || wpi_stop "$prefix" "$reason detail=multiple_records source=$file"
-    [ -z "$extra" ] || wpi_stop "$prefix" "$reason detail=unterminated_extra_record source=$file"
+    [ "$rc" -ne 0 ] || wpi_stop "$prefix" "$reason detail=nul_byte_in_record source=$file"
+    [ -n "$whole" ] || wpi_stop "$prefix" "$reason detail=empty_or_read_error source=$file read_rc=$rc"
+    case "$whole" in
+        *$'\n'*) first="${whole%%$'\n'*}"; extra="${whole#*$'\n'}" ;;
+        *) wpi_stop "$prefix" "$reason detail=unterminated_final_record source=$file read_rc=$rc" ;;
+    esac
+    if [ -n "$extra" ]; then
+        case "$extra" in
+            *$'\n'*) wpi_stop "$prefix" "$reason detail=multiple_records source=$file" ;;
+            *) wpi_stop "$prefix" "$reason detail=unterminated_extra_record source=$file" ;;
+        esac
+    fi
+    [ $(( ${#first} + 1 )) -eq "${#whole}" ] \
+        || wpi_stop "$prefix" "$reason detail=record_bytes_unaccounted source=$file consumed=$(( ${#first} + 1 )) captured=${#whole}"
     WPI_LINE="$first"
 }
 
@@ -1243,9 +1292,20 @@ wpi_assert_listener_set() {
     # of that one string in memory, so there is no second open, no second pass and
     # no byte that can vanish between the capture and the grammar. The closing
     # equation `consumed == ${#whole}` is the conservation check for that claim.
-    exec {fd}<"$WPI_CAP_OUT" || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=open_failed"
+    #
+    # Round 6 still opened `$WPI_CAP_OUT` by NAME here, so "the byte string
+    # adjudicated is the byte string captured" was false the moment anything
+    # replaced that name between the child's exit and this open: an executed
+    # fixture swapped a wildcard capture for a loopback one and this row PASSed
+    # (Codex round-6 part B finding 3). The read is therefore bound to the
+    # descriptor `wpi_capture` re-derived from its own creating write
+    # descriptor, which resolved no name after the child ran. This is the one
+    # reader whose bytes row 22 claims identity for, which is why it is the one
+    # reader bound this way.
+    fd="$WPI_CAP_OUT_FD"
+    [ -n "$fd" ] || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=capture_stream_unbound"
     IFS= read -r -d '' -u "$fd" whole 2>&"$dfd" || rc=$?
-    exec {fd}<&-; exec {dfd}>&-
+    exec {dfd}>&-
     wpi_require_empty_file B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=hard_read_error" "$diag"
     [ "$rc" -ne 0 ] || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=nul_byte_in_inventory"
     case "$whole" in *[![:print:]$'\t\n']*) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=inventory_charset" ;; esac
@@ -1262,7 +1322,14 @@ wpi_assert_listener_set() {
             || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=table_grammar"
         state="$1"; recvq="$2"; sendq="$3"; localaddr="$4"; peer="$5"
         [ "$state" = LISTEN ] || wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=state_grammar"
-        case "$recvq:$sendq" in *[!0-9:]*) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=queue_grammar" ;; esac
+        # Each queue field separately, and each nonempty decimal digits. Round 6
+        # validated the CONCATENATION `"$recvq:$sendq"` against a class that
+        # permits the separator itself, so `recvq=:` and `sendq=12:34` were both
+        # admitted as structurally complete and reached the accepting listener
+        # line (Codex round-6 part B finding 2). Validating a joined string is
+        # not validating its fields.
+        case "$recvq" in ''|*[!0-9]*) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=queue_grammar" ;; esac
+        case "$sendq" in ''|*[!0-9]*) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=queue_grammar" ;; esac
         case "$localaddr:$peer" in *[![:graph:]]*) wpi_stop B6 "listener_inventory_unreadable_or_unparseable rc=0 detail=address_character_grammar" ;; esac
         wpi_require_endpoint "$localaddr" local; addr="$WPI_EP_ADDR"; port="$WPI_EP_PORT"
         wpi_require_endpoint "$peer" peer
@@ -1283,7 +1350,7 @@ wpi_assert_listener_set() {
     # Phase 2. Reader diagnostics, record termination, byte conservation and table
     # grammar have all held for every row, so the inventory is a complete
     # observation and the recorded counters may now be adjudicated.
-    printf 'B6_listener_inventory rows=%s port_8790_rows=%s bytes=%s evidence_file=%s content=not_printed table=complete parse=complete_before_semantics scope_applied_in_block=yes\n' \
+    printf 'B6_listener_inventory rows=%s port_8790_rows=%s bytes=%s evidence_file=%s content=not_printed table=complete parse=complete_before_semantics read_binding=capture_descriptor scope_applied_in_block=yes\n' \
         "$total" "$port_rows" "$consumed" "$WPI_CAP_OUT"
     [ "$wildcard_seen" = no ] || wpi_fail B6 "nonloopback_listener addr=$wildcard_addr"
     [ "$unexpected_seen" = no ] || wpi_fail B6 "listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790"
