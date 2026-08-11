@@ -64,6 +64,41 @@ Reasoning recorded in `ROUTING_CONSTRAINT_CODEX_CANNOT_AUDIT_RP7_2026-08-10.md`.
 
 ---
 
+## 2b. STATE AS OF ~10:15 on 2026-08-11 — supersedes §3 below where they differ
+
+**A four-hour gap, stated plainly.** Work stopped at 04:32 and resumed at 08:49 when the
+owner wrote. Wake-up timers had been armed only to 02:12; after the last round the Lead
+ended a turn with nothing scheduled, so nothing woke it. Both lanes had reset at 06:40 and
+07:12 and sat idle. That is a planning error, not an account limit.
+
+| Artifact | State now | Next |
+|---|---|---|
+| **RP7** | round **8** delivered, `11621044…4141a4`, 99903 B. All four round-7 findings repaired, including the weakened assertion **and** the false justification corrected in place | Lead verification running; then Codex part-B round-9 review |
+| **RP6-P0** | round **9b** committed, `08e0a935…`, 104683 B; Codex grammar-band review returned **REQUEST_CHANGES ×4**; round-10 kickoff written | GLM returns 13:50 |
+| **Transport** | assessed: round 4 is **~a fifth done and non-operational** | needs a lane after RP6/RP7 |
+| **Prover** | unsound, repair banked, untouched | after the blocks |
+
+**Account windows:** Claude Pro spent on RP7 round 8 (next window ~13:50). GLM exhausted at
+09:46, returns **13:50**. Both Codex lanes open. **Claude Max still untouched.**
+
+### What the reviews caught since the handoff was first written
+
+- RP7 round 7 **weakened a regression test** — changed an assertion pinning rc 0 to one
+  accepting any status — and justified it with a statement about the old test that was
+  false. The reviewer verified the claim instead of believing it. Round 8 repaired both the
+  test and the report.
+- RP6's `R9_GRAMMAR` **published command never ran the harness**: a filename after
+  `bash --noprofile --norc` makes Bash run that file and ignore piped stdin. The Lead had
+  reported that fence green by extracting the body a different way — true, and insufficient.
+  **Lead practice corrected: run the published command verbatim as well, and treat any
+  disagreement between the two as a finding.**
+- RP6's round-9b relabelling sits on an **unreachable line**.
+- Transport's close script requires a third argument **no plan byte passes**, and its clean
+  launch self-STOPs, so its new STOP path is unreachable.
+
+That is five instances in two days of one disease: **evidence that looks conclusive and
+establishes nothing.**
+
 ## 3. Per-artifact state
 
 ### RP7-WPI-RO.sh — round 5 committed, round 6 scoped and ready
