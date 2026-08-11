@@ -25,11 +25,11 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 
 | Workstream | Files (primary home) | Owner | Since |
 |---|---|---|---|
-| RP6-P0 block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP6* | UNCLAIMED | — |
-| RP7-WPI-RO block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP7* | UNCLAIMED | — |
-| Transport set | `11_TRIAGE/WPI_BLOCKS_DRAFT/` transport/run_p0/run_ro/remote_* | UNCLAIMED | — |
-| §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | UNCLAIMED | — |
-| Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | UNCLAIMED | — |
+| RP6-P0 block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP6* | Fable overnight Lead `7e05aabf` (delegate: Claude Max) | 2026-08-11 14:15 |
+| RP7-WPI-RO block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP7* | Fable overnight Lead `7e05aabf` (queued: GLM at 18:50) | 2026-08-11 14:15 |
+| Transport set | `11_TRIAGE/WPI_BLOCKS_DRAFT/` transport/run_p0/run_ro/remote_* | Fable overnight Lead `7e05aabf` (r4 committed `99f33c33`; Codex audit read-only in flight) | 2026-08-11 14:15 |
+| §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | Fable overnight Lead `7e05aabf` (delegate: Claude Max on pathscope R2) | 2026-08-11 14:15 |
+| Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | Fable overnight Lead `7e05aabf` (R3 merged `17280e28`) | 2026-08-11 14:15 |
 | Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | UNCLAIMED | — |
 
 Workstreams not listed: add a row before writing.
@@ -39,3 +39,7 @@ Workstreams not listed: add a row before writing.
 - 2026-08-11: file rewritten from stub to ownership mechanism after the 2026-08-10
   transport collision (two sessions writing the same artifact family; detected, work
   dropped by one session, no data lost — see the concurrent-session notice).
+- 2026-08-11 14:15: Fable overnight Lead `7e05aabf` (session "Sabaha kadar otonom çalışma
+  planı" successor) claimed all five WP-I rows. Verified via session listing that the rule
+  author ("Codex gece çalışması değerlendirmesi" session) committed `15d48088` at 13:46:53
+  as its final act and is no longer running — exactly one active Lead loop exists.
