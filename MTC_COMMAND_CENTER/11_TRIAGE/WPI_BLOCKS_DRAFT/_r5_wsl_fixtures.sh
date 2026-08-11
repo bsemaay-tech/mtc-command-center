@@ -6,9 +6,19 @@
 # network connection is made: every path is under $FIX on the local filesystem.
 #
 # D026. RED is the PRE-REPAIR close script read from the repository commit, not
-# a reconstruction; GREEN is the working-tree file. Both arms are driven through
-# the SAME deliberately mutated `mkdir` instrument, so the only variable is the
-# delivered bytes.
+# a reconstruction; GREEN is the working-tree file.
+#
+# ONE SUBJECT PATHNAME, ONE ARGUMENT VECTOR (round-6 repair of R5-F2). Every BA-1
+# arm is launched from the single pathname $BA1_SUBJECT with the single argument
+# vector <$BA1_EV> <$RUNID> <$BA1_WORK>, through the same declared instrument,
+# with the common tree reset immediately before the arm runs. The ONLY thing
+# that differs between two arms is the bytes installed at that one pathname.
+# Round 5 gave each arm its own subject path and its own base directory, so its
+# recorded refusals differed in their path field and its "same instrument, same
+# launch, same argv" claim was false - Codex round-5 audit, R5-F2. Each arm now
+# prints the pathname it launched, the argv it passed and the SHA-256 of the
+# bytes installed there, and the BA-1 LAUNCH IDENTITY banner asserts that all
+# arms recorded exactly ONE distinct pathname+argv line.
 #
 # DECLARED FIXTURE RETARGETING, and nothing else, is applied to the delivered
 # bytes to make them executable here - identical to round 4:
@@ -33,7 +43,7 @@ banner() { printf '\n########## %s\n' "$*"; }
 run()    { printf '$ %s\n' "$*"; }
 
 rm -rf "$FIX"
-mkdir -p "$FIX/tools"
+mkdir -p "$FIX/tools" "$FIX/build"
 for t in stat sha256sum tr readlink find sort cmp rm mkdir env; do
     cp -L "/usr/bin/$t" "$FIX/tools/$t"
     chown 0:0 "$FIX/tools/$t"
@@ -42,6 +52,16 @@ done
 MYUID="$(id -u)"; MYGID="$(id -g)"; MYHOME="$HOME"
 LAUNCH_ENV="$FIX/tools/env"
 RUNID='WPIR5-FIXTURE-P0'
+
+# The ONE subject pathname and the ONE argument vector shared by every BA-1 arm.
+# Instrumented variants are BUILT under $FIX/build and are never launched from
+# there; the arm copies the chosen build to $BA1_SUBJECT and launches THAT.
+BA1_SUBJECT="$FIX/close_subject.sh"
+BA1_BASE="$FIX/ba1"
+BA1_EV="$BA1_BASE/evidence/runkit/$RUNID"
+BA1_WORK="$BA1_BASE/work"
+BA1_IDENT="$FIX/ba1_launch_identity.txt"
+: > "$BA1_IDENT"
 
 banner 'FIXTURE ENVIRONMENT'
 run 'uname -sr; id -u; id -g; bash --version | head -1'
@@ -122,70 +142,102 @@ launch() {   # launch <script> <args...> : the frozen round-4/5 launch domain
         /usr/bin/bash --noprofile --norc "$s" "$@"
 }
 
-# arm <label> <script> <base>  -- runs one arm and reports rc + residue
+# arm <label> <built-bytes>  -- runs ONE BA-1 arm and reports rc + residue.
+#
+# The arm resets THE common tree, installs <built-bytes> at THE common subject
+# pathname and launches THAT pathname with THE common argv. <label> names only
+# this harness's own capture files, and SUBJECT_BUILT_FROM is a printed
+# provenance label; neither is passed to the subject or forms part of its argv,
+# so two arms differ in nothing but the installed bytes. The pathname, the argv
+# and the SHA-256 actually installed are printed per arm, and the pathname+argv
+# are appended to $BA1_IDENT for the launch-identity assertion.
+#
+# SUBJECT_SHA256 is the hash of what is installed at that pathname - the
+# fixture-RETARGETED (and, where an instrument is declared, instrumented) form
+# of the delivered bytes - not the hash of the delivered file itself. The two
+# delivered identities under test, 29b6412a... (RED, pre-repair) and
+# 8892574f... (GREEN, repaired), are printed once by the FIXTURE ENVIRONMENT
+# banner; SUBJECT_BUILT_FROM names which of them each arm's bytes derive from.
 arm() {
-    local label="$1" script="$2" base="$3"
-    local ev="$base/evidence/runkit/$RUNID" work="$base/work" rc=0
-    launch "$script" "$ev" "$RUNID" "$work" > "$FIX/$label.out" 2> "$FIX/$label.err" || rc=$?
+    local label="$1" built="$2" rc=0
+    mk_tree "$BA1_BASE"
+    cp -- "$built" "$BA1_SUBJECT"
+    chmod 0755 "$BA1_SUBJECT"
+    printf 'SUBJECT_BUILT_FROM=%s\n' "$built"
+    printf 'SUBJECT_PATH=%s\n'   "$BA1_SUBJECT"
+    printf 'SUBJECT_SHA256=%s\n' "$(sha256sum < "$BA1_SUBJECT" | cut -d' ' -f1)"
+    printf 'ARGV=[%s] [%s] [%s]\n' "$BA1_EV" "$RUNID" "$BA1_WORK"
+    printf '%s|%s|%s|%s\n' "$BA1_SUBJECT" "$BA1_EV" "$RUNID" "$BA1_WORK" >> "$BA1_IDENT"
+    launch "$BA1_SUBJECT" "$BA1_EV" "$RUNID" "$BA1_WORK" \
+        > "$FIX/$label.out" 2> "$FIX/$label.err" || rc=$?
     printf 'SCRIPT_RC=%s\n' "$rc"
     grep -E '^CLOSE_STOP |^CLOSE_FAIL ' "$FIX/$label.err" || printf '(no CLOSE_STOP/CLOSE_FAIL on stderr)\n'
-    if [ -e "$work/close_work_$RUNID" ] || [ -L "$work/close_work_$RUNID" ]; then
-        printf 'RESIDUE_PRESENT=yes path=%s\n' "$work/close_work_$RUNID"
-        printf 'RESIDUE_LISTING:\n'; find "$work" | sort | sed 's/^/  /'
+    if [ -e "$BA1_WORK/close_work_$RUNID" ] || [ -L "$BA1_WORK/close_work_$RUNID" ]; then
+        printf 'RESIDUE_PRESENT=yes path=%s\n' "$BA1_WORK/close_work_$RUNID"
+        printf 'RESIDUE_LISTING:\n'; find "$BA1_WORK" | sort | sed 's/^/  /'
     else
         printf 'RESIDUE_PRESENT=no\n'
     fi
-    printf 'EVIDENCE_TREE_AFTER:\n'; find "$ev" | sort | sed 's/^/  /'
+    printf 'EVIDENCE_TREE_AFTER:\n'; find "$BA1_EV" | sort | sed 's/^/  /'
 }
 
 banner 'BA-1 RED - PRE-REPAIR bytes + INSTRUMENT 1 (mkdir creates, warns, rc 0)'
 echo '# Codex round-4 Band A reproduced SCRIPT_RC=3 ... RESIDUE_PRESENT=yes here:'
 echo '# the directory is created at :401, the diagnostic branch stops at :402, and'
 echo '# the cleanup trap is not installed until :424.'
-with_tool "$FIX/close_red.sh" MKDIR mkdir_diag "$FIX/red_diag.sh"
-mk_tree "$FIX/red_diag"
-run 'env -i PATH=... LC_ALL=C HOME=... /usr/bin/bash --noprofile --norc close_red.sh <EV_DIR> <RUNID> <WORK_ROOT>'
-arm red_diag "$FIX/red_diag.sh" "$FIX/red_diag"
+with_tool "$FIX/close_red.sh" MKDIR mkdir_diag "$FIX/build/red_diag.sh"
+run 'env -i PATH=... LC_ALL=C HOME=... /usr/bin/bash --noprofile --norc $BA1_SUBJECT $BA1_EV $RUNID $BA1_WORK'
+arm red_diag "$FIX/build/red_diag.sh"
 
 banner 'BA-1 GREEN - REPAIRED bytes + THE SAME INSTRUMENT 1'
-echo '# Same deviant tool output, same launch, same argv. The reasoned STOP is'
-echo '# retained byte-for-byte (reason=work_dir_mkdir_diagnostics with the same'
-echo '# detail), and the directory is gone because the cleanup is armed on the'
-echo '# zero status BEFORE the diagnostic is adjudicated.'
-with_tool "$FIX/close_green.sh" MKDIR mkdir_diag "$FIX/green_diag.sh"
-mk_tree "$FIX/green_diag"
-run 'env -i PATH=... LC_ALL=C HOME=... /usr/bin/bash --noprofile --norc close_green.sh <EV_DIR> <RUNID> <WORK_ROOT>'
-arm green_diag "$FIX/green_diag.sh" "$FIX/green_diag"
+echo '# Same deviant tool output, and literally the same subject pathname, launch'
+echo '# and argv as the RED arm above - the tree is reset and only the bytes at'
+echo '# $BA1_SUBJECT are replaced, so SUBJECT_SHA256 is the one field that moves.'
+echo '# The reasoned STOP is retained byte-for-byte (reason=work_dir_mkdir_diagnostics'
+echo '# with the same path and the same detail), and the directory is gone because'
+echo '# the cleanup is armed on the zero status BEFORE the diagnostic is adjudicated.'
+with_tool "$FIX/close_green.sh" MKDIR mkdir_diag "$FIX/build/green_diag.sh"
+run 'env -i PATH=... LC_ALL=C HOME=... /usr/bin/bash --noprofile --norc $BA1_SUBJECT $BA1_EV $RUNID $BA1_WORK'
+arm green_diag "$FIX/build/green_diag.sh"
 
 banner 'BA-1 FENCE DISCRIMINATING POWER - old and new assertion, same deviant output'
 echo '# The carried fence is `[ -z "$MKDIR_OUT" ] || stop work_dir_mkdir_diagnostics`.'
 echo '# It was NOT weakened: the predicate and the reason token are unchanged, and'
 echo '# both the pre-repair and the repaired assertion refuse the same injected'
-echo '# diagnostic. Quoted from the two arms above:'
+echo '# diagnostic. Quoted from the two arms above. Because both arms ran from one'
+echo '# subject pathname against one tree, the two refusals are compared as whole'
+echo '# lines with nothing symbolised away:'
 printf 'OLD_ASSERTION_LINE : %s\n' "$(grep -n 'MKDIR_OUT" \] || stop' "$PRE/remote_close_tree_wpi.sh")"
 printf 'NEW_ASSERTION_LINE : %s\n' "$(grep -n 'MKDIR_OUT" \] || stop' "$CUR/remote_close_tree_wpi.sh")"
-printf 'OLD_REFUSAL        : %s\n' "$(grep -h '^CLOSE_STOP ' "$FIX/red_diag.err" | tail -1)"
-printf 'NEW_REFUSAL        : %s\n' "$(grep -h '^CLOSE_STOP ' "$FIX/green_diag.err" | tail -1)"
+OLD_REFUSAL="$(grep -h '^CLOSE_STOP ' "$FIX/red_diag.err" | tail -1)"
+NEW_REFUSAL="$(grep -h '^CLOSE_STOP ' "$FIX/green_diag.err" | tail -1)"
+printf 'OLD_REFUSAL        : %s\n' "$OLD_REFUSAL"
+printf 'NEW_REFUSAL        : %s\n' "$NEW_REFUSAL"
+if [ "$OLD_REFUSAL" = "$NEW_REFUSAL" ]; then
+    printf 'REFUSAL_BYTE_IDENTICAL=yes\n'
+else
+    printf 'REFUSAL_BYTE_IDENTICAL=no\n'
+fi
 
 banner 'BA-1 REGRESSION - clean run, PRE-REPAIR bytes, no instrument'
-mk_tree "$FIX/red_clean"
-arm red_clean "$FIX/close_red.sh" "$FIX/red_clean"
+arm red_clean "$FIX/close_red.sh"
 grep -E '^CLOSE_NOTE scratch |^CLOSE PASS ' "$FIX/red_clean.out"
 
 banner 'BA-1 REGRESSION - clean run, REPAIRED bytes, no instrument'
 echo '# rc 0, the same record, no residue: the repair did not change the happy path.'
-mk_tree "$FIX/green_clean"
-arm green_clean "$FIX/close_green.sh" "$FIX/green_clean"
+echo '# Same subject pathname and same argv as the arm above, so the two records are'
+echo '# comparable line for line and the one moved field is visible on its own.'
+arm green_clean "$FIX/close_green.sh"
 grep -E '^CLOSE_NOTE scratch |^CLOSE PASS ' "$FIX/green_clean.out"
 
 banner 'BA-1 - a nonzero mkdir that created NOTHING: PRE-REPAIR vs REPAIRED'
 echo '# Both STOP. The repaired arm additionally records the tool rc, the captured'
 echo '# diagnostic, and whether an object is present - the round-4 message carried'
 echo '# only the path.'
-with_tool "$FIX/close_red.sh"   MKDIR mkdir_fail_clean "$FIX/red_failclean.sh"
-with_tool "$FIX/close_green.sh" MKDIR mkdir_fail_clean "$FIX/green_failclean.sh"
-mk_tree "$FIX/red_failclean";   arm red_failclean   "$FIX/red_failclean.sh"   "$FIX/red_failclean"
-mk_tree "$FIX/green_failclean"; arm green_failclean "$FIX/green_failclean.sh" "$FIX/green_failclean"
+with_tool "$FIX/close_red.sh"   MKDIR mkdir_fail_clean "$FIX/build/red_failclean.sh"
+with_tool "$FIX/close_green.sh" MKDIR mkdir_fail_clean "$FIX/build/green_failclean.sh"
+arm red_failclean   "$FIX/build/red_failclean.sh"
+arm green_failclean "$FIX/build/green_failclean.sh"
 
 banner 'BA-1 - THE DECLARED UNCOVERED CASE: a nonzero mkdir that DID create'
 echo '# The repaired bytes deliberately do NOT arm cleanup here: a nonzero status'
@@ -194,38 +246,45 @@ echo '# and `rm -rf` on an object it cannot prove it created is the wrong answer
 echo '# The header, the create block and the CLOSE_NOTE scratch field all say so.'
 echo '# Residue in this arm is the honest scope of the claim, not a hidden failure:'
 echo '# the record now NAMES it (object_after_failed_create=present).'
-with_tool "$FIX/close_green.sh" MKDIR mkdir_fail_dirty "$FIX/green_faildirty.sh"
-mk_tree "$FIX/green_faildirty"; arm green_faildirty "$FIX/green_faildirty.sh" "$FIX/green_faildirty"
+with_tool "$FIX/close_green.sh" MKDIR mkdir_fail_dirty "$FIX/build/green_faildirty.sh"
+arm green_faildirty "$FIX/build/green_faildirty.sh"
 
 banner 'BA-1 - the removal adjudication is LIVE on the newly covered path'
 echo '# Instrument 1 (create + diagnostic + rc 0) plus an `rm` that reports success'
 echo '# and removes nothing. The newly armed cleanup must not accept that.'
-with_tool "$FIX/green_diag.sh" RM rm_noop "$FIX/green_diag_rmnoop.sh"
-mk_tree "$FIX/green_rmnoop"; arm green_rmnoop "$FIX/green_diag_rmnoop.sh" "$FIX/green_rmnoop"
+with_tool "$FIX/build/green_diag.sh" RM rm_noop "$FIX/build/green_diag_rmnoop.sh"
+arm green_rmnoop "$FIX/build/green_diag_rmnoop.sh"
 
 banner 'BA-1 - cleanup still covers a later refusal after a clean create'
 echo '# A work-directory mode disagreement STOPs well after the create. Both arms'
 echo '# had cleanup armed by then, so this is a control showing the repair did not'
 echo '# move an exit path that round 4 already covered.'
-for A in red green; do
-    mk_tree "$FIX/${A}_mode"
-    chmod 0755 "$FIX/${A}_mode/work"
-    chmod 0700 "$FIX/${A}_mode/work"
-    cp "$FIX/close_$A.sh" "$FIX/${A}_mode.sh"
-    # The delivered `-m 0700` is honoured, so the refusal is driven by a wrapper
-    # that widens the mode immediately after the real create returns 0.
-    cat > "$FIX/tools/mkdir_wide_$A" <<EOF
+# The delivered `-m 0700` is honoured, so the refusal is driven by a wrapper that
+# widens the mode immediately after the real create returns 0. ONE instrument at
+# ONE pathname serves both arms - round 5 built a per-arm copy of identical bytes
+# at two names, which was one more difference between the arms than the claim
+# allowed.
+cat > "$FIX/tools/mkdir_wide" <<EOF
 #!/usr/bin/bash
 $FIX/tools/mkdir "\$@"
 rc=\$?
 for a in "\$@"; do case "\$a" in /*) /usr/bin/chmod 0750 "\$a" 2>/dev/null ;; esac; done
 exit \$rc
 EOF
-    chown 0:0 "$FIX/tools/mkdir_wide_$A"; chmod 0755 "$FIX/tools/mkdir_wide_$A"
-    with_tool "$FIX/${A}_mode.sh" MKDIR "mkdir_wide_$A" "$FIX/${A}_mode_run.sh"
+chown 0:0 "$FIX/tools/mkdir_wide"; chmod 0755 "$FIX/tools/mkdir_wide"
+for A in red green; do
+    with_tool "$FIX/close_$A.sh" MKDIR mkdir_wide "$FIX/build/${A}_mode.sh"
     printf '\n--- arm=%s\n' "$A"
-    arm "${A}_mode" "$FIX/${A}_mode_run.sh" "$FIX/${A}_mode"
+    arm "${A}_mode" "$FIX/build/${A}_mode.sh"
 done
+
+banner 'BA-1 LAUNCH IDENTITY - every arm above used ONE pathname and ONE argv'
+echo '# R5-F2. Each arm appended the subject pathname and the three arguments it'
+echo '# actually launched with. If the arms had differed in either, the distinct'
+echo '# count below would exceed 1 and the same-argv claim would be false.'
+printf 'BA1_ARMS_RECORDED=%s\n'            "$(wc -l < "$BA1_IDENT" | tr -d ' ')"
+printf 'DISTINCT_SUBJECT_ARGV_LINES=%s\n'  "$(sort -u "$BA1_IDENT" | wc -l | tr -d ' ')"
+printf 'THE_LINE=%s\n'                     "$(sort -u "$BA1_IDENT" | head -1)"
 
 banner 'F1 OPEN - the outer account-shell boundary, reproduced locally'
 echo '# SCOPE OF THIS ARM, STATED FIRST. This is NOT closure evidence and is NOT'

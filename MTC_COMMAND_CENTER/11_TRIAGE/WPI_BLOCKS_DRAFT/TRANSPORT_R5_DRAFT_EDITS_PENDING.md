@@ -1,5 +1,30 @@
 # Transport round 5 — draft edits NOT applied by this session (2026-08-11)
 
+> # SUPERSEDED — HISTORICAL RECORD ONLY (marked 2026-08-11, round 6)
+>
+> **All four edits below were APPLIED BY THE LEAD and are present in commit
+> `37a87046`.** This file is *not* a pending-work list any more and nothing in it is
+> outstanding. It is retained, deliberately undeleted, as the historical specification
+> of what the round-5 implementer session handed over, so a re-auditor can check that
+> what landed is what was specified.
+>
+> Codex's round-5 re-audit recorded the pending framing as **R5-F3 (MEDIUM)**: the
+> statements were true of the implementer session's boundary and false as the final
+> status of the frozen commit. Verified read-only on the committed bytes in round 6 —
+> `grep -c 'The reason recorded is the'` = 1 in `WPI_PREREGISTRATION_DRAFT.md`
+> (edit 1), `grep -c 'first applicable reason recorded'` = **2** in
+> `WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md` (edits 2 and 3, both present and
+> byte-identical as Band A requires), and `grep -c
+> 'object_after_failed_create=present|absent'` = 1 in `WPI_PREREGISTRATION_DRAFT.md`
+> (edit 4). Bound blob identities and the per-edit table: `SELF_QA_TRANSPORT.md` §R6-3.
+>
+> The F1 sweep listed at the end of this file was also performed — the Lead applied the
+> F1 draft wording as **R5-F1** in commit `008d2dde`, and the round-6 re-run of the
+> sweep over both drafts returns no F1-related hit (`SELF_QA_TRANSPORT.md` §R6-4).
+>
+> Everything below this box is the round-5 text, unchanged, and describes a state that
+> no longer holds.
+
 ## Why these are not applied
 
 `KICKOFF_TRANSPORT_REPAIR_R5.md` requires the F1 wording and the BA-3 narrowing to be
@@ -15,8 +40,10 @@ from other sessions, and a concurrent writer plus an uncommitted tree is exactly
 work gets destroyed. This session therefore **read** the target lines and did not write to
 that directory. Nothing was staged, reverted, checked out, reset or stashed anywhere.
 
-**Status: BA-3 is NOT fully closed, and F1's draft mirror is NOT yet aligned, until the
-four edits below are applied.** They are stated here as exact old → new text so the Lead
+~~**Status: BA-3 is NOT fully closed, and F1's draft mirror is NOT yet aligned, until the
+four edits below are applied.**~~ **[SUPERSEDED — the four edits were applied in
+`37a87046`; BA-3 is fully closed and the F1 mirror is aligned. See the box above.]**
+They are stated here as exact old → new text so the Lead
 (or whichever session owns that directory next) can apply them mechanically and a
 re-auditor can verify them without re-deriving the wording.
 

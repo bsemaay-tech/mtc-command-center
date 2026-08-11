@@ -2408,7 +2408,7 @@ is under `/root/wpi_r5` on that local filesystem.
 | **F1** (Band B) | comments only, in all five delivered scripts and `transport_runner.ps1` | verdict corrected to OPEN; the boundary reproduced locally in §R5-2 |
 | **BA-1** (HIGH) | `remote_close_tree_wpi.sh` create block restructured | D026 RED/GREEN in §R5-1, on the exact pre-repair blob |
 | **BA-2** (MEDIUM) | comments only, in all five delivered scripts | the claimed RED executed and falsified in §R5-3 |
-| **BA-3** (MEDIUM) | none in this directory — the overstatement lives in the two draft files | §R5-4; the edits are specified in `TRANSPORT_R5_DRAFT_EDITS_PENDING.md` |
+| **BA-3** (MEDIUM) | none in this directory — the overstatement lives in the two draft files | §R5-4; the edits were specified in `TRANSPORT_R5_DRAFT_EDITS_PENDING.md` and **applied by the Lead in commit `37a87046`** — §R6-3 |
 
 One harness ships beside the targets: `_r5_wsl_fixtures.sh`. It takes two
 arguments — this directory (the repaired working-tree bytes) and a directory
@@ -2442,14 +2442,37 @@ was altered by the fixture.
 
 ## R5-1. BA-1 — the RED and the GREEN
 
-The RED arm is the pre-repair blob; the GREEN arm is the repaired file; **both are
+> **ROUND-6 CORRECTION (Codex round-5 audit, R5-F2 — HIGH).** The two sentences
+> struck below were **false of the harness that produced them**. Round 5's
+> `_r5_wsl_fixtures.sh` ran the RED bytes from `$FIX/red_diag.sh` against
+> `$FIX/red_diag`, and the GREEN bytes from `$FIX/green_diag.sh` against
+> `$FIX/green_diag`, so the two arms differed in their subject pathname **and** in
+> their `EV_DIR`/`WORK_ROOT` arguments, and the two recorded refusals differed in
+> their `path=` field. "Same argv" and "byte-identical refusal" were therefore
+> claims the published evidence did not support, whatever the code did. **The
+> harness is repaired and re-run in round 6** — one subject pathname, one argument
+> vector, the common tree reset between arms, only the subject bytes replaced. The
+> corrected statement and the real transcript are §R6-1 and §R6-2. The repair's
+> *substance* is unaffected: RED still retains the residue, GREEN still removes it,
+> and the refusals are now byte-identical as whole lines.
+
+~~The RED arm is the pre-repair blob; the GREEN arm is the repaired file; **both are
 driven through the same `mkdir_diag` instrument, the same launch domain and the
-same argv**, so the only variable is the delivered bytes.
+same argv**, so the only variable is the delivered bytes.~~
+
+**Corrected (round 6, executed).** The RED arm is the pre-repair blob; the GREEN arm
+is the repaired file. Both are installed, in turn, at **one** subject pathname
+(`/root/wpi_r5/close_subject.sh`) and launched with **one** argument vector
+(`/root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0 WPIR5-FIXTURE-P0
+/root/wpi_r5/ba1/work`) through the same `mkdir_diag` instrument, with the common
+tree reset immediately before each arm — so the only variable is the delivered
+bytes. The transcript prints the pathname, the argv and the installed SHA-256 per
+arm and asserts `DISTINCT_SUBJECT_ARGV_LINES=1` across all ten BA-1 arms.
 
 | | pre-repair bytes (RED) | repaired bytes (GREEN) |
 |---|---|---|
 | `SCRIPT_RC` | 3 | 3 |
-| refusal | `CLOSE_STOP reason=work_dir_mkdir_diagnostics … detail=injected_success_diagnostic` | **identical** |
+| refusal | `CLOSE_STOP reason=work_dir_mkdir_diagnostics path=/root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0 detail=injected_success_diagnostic` | **byte-identical** (`REFUSAL_BYTE_IDENTICAL=yes`) |
 | `RESIDUE_PRESENT` | **yes** | **no** |
 
 That reproduces Codex's Band A result (`SCRIPT_RC=3 … RESIDUE_PRESENT=yes`) on the
@@ -2583,11 +2606,21 @@ would require re-proving F4's decisive fixture for no gain.
 The overstatement is in three places and **none of them is in this directory**:
 `WPI_PREREGISTRATION_DRAFT.md:688-691` and
 `WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md:570,678`, all under
-`WPI_PREREG_DRAFT_ROUND1/`, which this session was instructed not to touch because
-a parallel session owns it. The exact replacement text for all three, byte-
-semantically identical across the two successor copies as Band A requires, is in
-`TRANSPORT_R5_DRAFT_EDITS_PENDING.md`. The round-4 report's own T8 disposition is
-corrected in place, in this directory.
+`WPI_PREREG_DRAFT_ROUND1/`, which the round-5 session was instructed not to touch
+because a parallel session owned it. The exact replacement text for all three,
+byte-semantically identical across the two successor copies as Band A requires, was
+recorded in `TRANSPORT_R5_DRAFT_EDITS_PENDING.md`. The round-4 report's own T8
+disposition is corrected in place, in this directory.
+
+> **ROUND-6 STATUS UPDATE (Codex round-5 audit, R5-F3 — MEDIUM).** Those three
+> edits are no longer outstanding. **The Lead applied all three, plus the BA-1
+> draft mirror, and they are present in commit `37a87046`** — the same commit
+> Codex froze for the round-5 audit. Verified in round 6 on the committed bytes:
+> `grep -c 'The reason recorded is the' WPI_PREREGISTRATION_DRAFT.md` = 1, and
+> `grep -c 'first applicable reason recorded'
+> WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md` = **2** (the two successor copies
+> Band A requires to stay identical). **BA-3 is therefore fully closed.** The
+> per-edit record and the bound blob identities are §R6-3.
 
 ## R5-5. Static gates on the repaired bytes
 
@@ -2603,16 +2636,132 @@ corrected in place, in this directory.
 The census is unchanged because every round-5 edit outside the close script's
 create block is comment text, and the create block introduces no placeholder.
 
-## R5-6. `_r5_wsl_fixtures.sh` — transcript (verbatim)
+## R5-6. `_r5_wsl_fixtures.sh` — transcript (WITHDRAWN; superseded by §R6-2)
 
-Exact command:
+> **ROUND-6 WITHDRAWAL (Codex round-5 audit, R5-F2).** The transcript that stood
+> here was the real output of the round-5 harness, but that harness's BA-1 arms did
+> not use the common subject pathname and common argv this file claimed for them,
+> so it could not be reproduced against the claim it was published to support, and
+> its two recorded refusals were not byte-identical. It is **withdrawn** rather than
+> kept beside a corrected copy: D026 makes the published transcript the
+> reproducibility target, and two transcripts for one harness would give a
+> re-auditor two targets, one of them wrong. The harness is repaired; its verbatim
+> output is **§R6-2**, and what the repair did and did not move is **§R6-1**.
+
+---
+
+# ROUND 6 - 2026-08-11 - the three Codex round-5 re-audit findings
+
+Implementer session: Claude Opus 5 xhigh (Max account), under
+`KICKOFF_TRANSPORT_REPAIR_R6.md`. Input: `TRANSPORT_CODEX_R5_AUDIT_2026-08-11.md`
+(**REQUEST_CHANGES**, frozen commit `37a87046`), read in full; its text binds.
+
+**No host was contacted and no network connection was opened.** No socket of any
+kind was created; no `ssh.exe`, `scp.exe` or `sshd` process was started. The fixture
+re-run is on the same local WSL2 Ubuntu kernel rounds 4 and 5 used
+(`6.18.33.2-microsoft-standard-WSL2`, GNU Bash 5.3.9), and every path it touches is
+under `/root/wpi_r5` on that local filesystem.
+
+**No byte of the nine-file transport set changed in round 6.** All seven
+executable/plan targets hash exactly as round-5 §4 recorded them (§R6-5). The only
+executable change is to the harness that ships beside them,
+`_r5_wsl_fixtures.sh` — the object R5-F2 is about.
+
+| finding | disposition |
+|---|---|
+| **R5-F1** (HIGH) — the main draft still closed the open outer boundary | **applied by the Lead**, commit `008d2dde`; not re-done here, verified read-only — §R6-4 |
+| **R5-F2** (HIGH) — the published BA-1 arms did not use the claimed same argv | **REPAIRED, re-run** — §R6-1, §R6-2 |
+| **R5-F3** (MEDIUM) — status/evidence still called committed draft edits pending | **CORRECTED** — §R6-3 |
+
+## R6-1. R5-F2 — one subject pathname, one argument vector
+
+**The finding is accepted in full.** Round 5 wrote that the BA-1 RED and GREEN arms
+used "the same instrument, the same launch domain and the same argv, so the only
+variable is the delivered bytes", and that the GREEN refusal was byte-identical to
+the RED one. The harness it shipped did neither: `arm` took a per-arm script path
+and a per-arm base directory, so RED ran `$FIX/red_diag.sh` against `$FIX/red_diag`
+while GREEN ran `$FIX/green_diag.sh` against `$FIX/green_diag`, and the two recorded
+`CLOSE_STOP` lines differed in their `path=` field. Codex's own supplemental
+common-argv control returned the same RED/GREEN answer, but that does not repair the
+delivered evidence: under D026 the implementer's recorded RED/GREEN and its literal
+reproducibility are part of the closure evidence, and a provenance claim the harness
+contradicts is a false evidence claim regardless of what the code does.
+
+What changed in `_r5_wsl_fixtures.sh`:
+
+| round 5 | round 6 |
+|---|---|
+| `arm <label> <script> <base>` — each arm passed its own subject path and its own tree | `arm <label> <built-bytes>` — every arm resets the one tree `$BA1_BASE`, installs the bytes at the one pathname `$BA1_SUBJECT`, and launches **that** with the one argv `<$BA1_EV> <$RUNID> <$BA1_WORK>` |
+| instrumented variants were built at the path they were then launched from | variants are built under `$FIX/build/` and are **never launched from there**; the arm copies the chosen build to `$BA1_SUBJECT` |
+| the late-refusal control built `mkdir_wide_red` and `mkdir_wide_green` — two instrument pathnames holding identical bytes | one `mkdir_wide` instrument at one pathname serves both arms |
+| the two refusals were quoted and compared by eye | `REFUSAL_BYTE_IDENTICAL` is computed on the two whole lines |
+| nothing asserted that the arms shared a launch | every arm appends `<subject>\|<ev>\|<runid>\|<work>` to `$BA1_IDENT`, and the **BA-1 LAUNCH IDENTITY** banner asserts the distinct count is 1 |
+
+Executed, round 6 (§R6-2, verbatim):
+
+```text
+BA1_ARMS_RECORDED=10
+DISTINCT_SUBJECT_ARGV_LINES=1
+THE_LINE=/root/wpi_r5/close_subject.sh|/root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0|WPIR5-FIXTURE-P0|/root/wpi_r5/ba1/work
+```
+
+and the D026 pair itself:
+
+| | pre-repair bytes (RED) | repaired bytes (GREEN) |
+|---|---|---|
+| `SUBJECT_BUILT_FROM` | `/root/wpi_r5/build/red_diag.sh` | `/root/wpi_r5/build/green_diag.sh` |
+| `SUBJECT_PATH` | `/root/wpi_r5/close_subject.sh` | **the same pathname** |
+| `SUBJECT_SHA256` | `a61ac611fd8da95338ff9467f81a27f1097d1bd28b7a0da806f7bc79c048b2cf` | `e48e1a07e3ef4e2a4a6f48c830cf0389bb883f42f4a33922008f3fd5957758b4` |
+| `ARGV` | `[…/ba1/evidence/runkit/WPIR5-FIXTURE-P0] [WPIR5-FIXTURE-P0] […/ba1/work]` | **the same vector** |
+| `SCRIPT_RC` | 3 | 3 |
+| refusal | `CLOSE_STOP reason=work_dir_mkdir_diagnostics path=/root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0 detail=injected_success_diagnostic` | **byte-identical** — `REFUSAL_BYTE_IDENTICAL=yes` |
+| `RESIDUE_PRESENT` | **yes** | **no** |
+
+`SUBJECT_SHA256` is the hash of what is installed at that pathname — the
+fixture-retargeted, and where declared instrumented, form of the delivered bytes —
+**not** the hash of a delivered file. All ten arms print a different
+`SUBJECT_SHA256`, which is the point: the pathname and the argv are constant and the
+bytes are the variable. The two delivered identities under test are printed once by
+the `FIXTURE ENVIRONMENT` banner —
+`29b6412a466c10854ddf09effc8d5216317738a012235ce563c9764a9e0c40ef` (RED, the
+pre-repair blob read with `git cat-file blob`) and
+`8892574f253ab26d6d48bba270f84ef2da4458a5bca93f2b3c9723991a3732cf` (GREEN, the
+working-tree file) — and `SUBJECT_BUILT_FROM` names which of the two each arm's
+bytes derive from.
+
+**What the repair did not move.** Every arm reached the same disposition it reached
+in round 5: 10 arms, the same `SCRIPT_RC` per arm, the same residue answer per arm,
+the same reason tokens. The carried fence is untouched and still refuses in both
+arms, exactly as Codex found — `[ -z "$MKDIR_OUT" ] || stop
+"work_dir_mkdir_diagnostics …"`, at line 402 in the pre-repair bytes and 483 in the
+repaired bytes, with the predicate and the reason token unchanged. The two clean-run
+regression arms now differ in exactly one field, visible line-for-line because they
+share the tree and the argv:
+`removal=adjudicated_on_every_exit_path` → `removal=adjudicated_on_every_exit_path_after_a_zero_status_create`.
+
+The harness's own process rc is 0 and it wrote **0 bytes** to its own stderr.
+
+## R6-2. `_r5_wsl_fixtures.sh` — transcript (verbatim, round-6 re-run)
+
+Exact command (the driver runs the harness under the same launch shape round 5 used;
+`FIXTURE_RC` is the harness's own process status):
 
 ```text
 wsl.exe -u root -- /usr/bin/bash --noprofile --norc \
   /mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/_r5_wsl_fixtures.sh \
   /mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT \
-  <scratch>/r5/pre
+  <scratch>/r6/pre
+
+FIXTURE_RC=0
+FIXTURE_STDERR_LINES=0
+FIXTURE_STDERR_BYTES=0
+FIXTURE_STDOUT_LINES=280
 ```
+
+`<scratch>/r6/pre/remote_close_tree_wpi.sh` is
+`git cat-file blob 61696132a5f2fce97aad4054d41a780297ff21a1`, the close-script blob
+frozen at round 4 and named by the round-5 kickoff; its SHA-256 is printed in the
+transcript below and is `29b6412a…`.
 
 ```text
 
@@ -2624,90 +2773,121 @@ Linux 6.18.33.2-microsoft-standard-WSL2
 GNU bash, version 5.3.9(1)-release (x86_64-pc-linux-gnu)
 $ sha256sum <the two close scripts under test>
 8892574f253ab26d6d48bba270f84ef2da4458a5bca93f2b3c9723991a3732cf  /mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/remote_close_tree_wpi.sh
-29b6412a466c10854ddf09effc8d5216317738a012235ce563c9764a9e0c40ef  /mnt/c/Users/BARSEM~1/AppData/Local/Temp/claude/C--LAB-Tradingview-LAB-CLEAN/6b278702-a841-44d7-bad9-46dc412852f7/scratchpad/r5/pre/remote_close_tree_wpi.sh
+29b6412a466c10854ddf09effc8d5216317738a012235ce563c9764a9e0c40ef  /mnt/c/Users/BARSEM~1/AppData/Local/Temp/claude/C--LAB-Tradingview-LAB-CLEAN/d99e3b8e-1ade-4486-9408-0cee0036ce6d/scratchpad/r6/pre/remote_close_tree_wpi.sh
 RETARGET_ANCHORS=hit_in_both_arms
 
 ########## BA-1 RED - PRE-REPAIR bytes + INSTRUMENT 1 (mkdir creates, warns, rc 0)
 # Codex round-4 Band A reproduced SCRIPT_RC=3 ... RESIDUE_PRESENT=yes here:
 # the directory is created at :401, the diagnostic branch stops at :402, and
 # the cleanup trap is not installed until :424.
-$ env -i PATH=... LC_ALL=C HOME=... /usr/bin/bash --noprofile --norc close_red.sh <EV_DIR> <RUNID> <WORK_ROOT>
+$ env -i PATH=... LC_ALL=C HOME=... /usr/bin/bash --noprofile --norc $BA1_SUBJECT $BA1_EV $RUNID $BA1_WORK
+SUBJECT_BUILT_FROM=/root/wpi_r5/build/red_diag.sh
+SUBJECT_PATH=/root/wpi_r5/close_subject.sh
+SUBJECT_SHA256=a61ac611fd8da95338ff9467f81a27f1097d1bd28b7a0da806f7bc79c048b2cf
+ARGV=[/root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0] [WPIR5-FIXTURE-P0] [/root/wpi_r5/ba1/work]
 SCRIPT_RC=3
-CLOSE_STOP reason=work_dir_mkdir_diagnostics path=/root/wpi_r5/red_diag/work/close_work_WPIR5-FIXTURE-P0 detail=injected_success_diagnostic
-RESIDUE_PRESENT=yes path=/root/wpi_r5/red_diag/work/close_work_WPIR5-FIXTURE-P0
+CLOSE_STOP reason=work_dir_mkdir_diagnostics path=/root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0 detail=injected_success_diagnostic
+RESIDUE_PRESENT=yes path=/root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0
 RESIDUE_LISTING:
-  /root/wpi_r5/red_diag/work
-  /root/wpi_r5/red_diag/work/close_work_WPIR5-FIXTURE-P0
+  /root/wpi_r5/ba1/work
+  /root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0
 EVIDENCE_TREE_AFTER:
-  /root/wpi_r5/red_diag/evidence/runkit/WPIR5-FIXTURE-P0
-  /root/wpi_r5/red_diag/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
-  /root/wpi_r5/red_diag/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
 
 ########## BA-1 GREEN - REPAIRED bytes + THE SAME INSTRUMENT 1
-# Same deviant tool output, same launch, same argv. The reasoned STOP is
-# retained byte-for-byte (reason=work_dir_mkdir_diagnostics with the same
-# detail), and the directory is gone because the cleanup is armed on the
-# zero status BEFORE the diagnostic is adjudicated.
-$ env -i PATH=... LC_ALL=C HOME=... /usr/bin/bash --noprofile --norc close_green.sh <EV_DIR> <RUNID> <WORK_ROOT>
+# Same deviant tool output, and literally the same subject pathname, launch
+# and argv as the RED arm above - the tree is reset and only the bytes at
+# $BA1_SUBJECT are replaced, so SUBJECT_SHA256 is the one field that moves.
+# The reasoned STOP is retained byte-for-byte (reason=work_dir_mkdir_diagnostics
+# with the same path and the same detail), and the directory is gone because
+# the cleanup is armed on the zero status BEFORE the diagnostic is adjudicated.
+$ env -i PATH=... LC_ALL=C HOME=... /usr/bin/bash --noprofile --norc $BA1_SUBJECT $BA1_EV $RUNID $BA1_WORK
+SUBJECT_BUILT_FROM=/root/wpi_r5/build/green_diag.sh
+SUBJECT_PATH=/root/wpi_r5/close_subject.sh
+SUBJECT_SHA256=e48e1a07e3ef4e2a4a6f48c830cf0389bb883f42f4a33922008f3fd5957758b4
+ARGV=[/root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0] [WPIR5-FIXTURE-P0] [/root/wpi_r5/ba1/work]
 SCRIPT_RC=3
-CLOSE_STOP reason=work_dir_mkdir_diagnostics path=/root/wpi_r5/green_diag/work/close_work_WPIR5-FIXTURE-P0 detail=injected_success_diagnostic
+CLOSE_STOP reason=work_dir_mkdir_diagnostics path=/root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0 detail=injected_success_diagnostic
 RESIDUE_PRESENT=no
 EVIDENCE_TREE_AFTER:
-  /root/wpi_r5/green_diag/evidence/runkit/WPIR5-FIXTURE-P0
-  /root/wpi_r5/green_diag/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
-  /root/wpi_r5/green_diag/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
 
 ########## BA-1 FENCE DISCRIMINATING POWER - old and new assertion, same deviant output
 # The carried fence is `[ -z "$MKDIR_OUT" ] || stop work_dir_mkdir_diagnostics`.
 # It was NOT weakened: the predicate and the reason token are unchanged, and
 # both the pre-repair and the repaired assertion refuse the same injected
-# diagnostic. Quoted from the two arms above:
+# diagnostic. Quoted from the two arms above. Because both arms ran from one
+# subject pathname against one tree, the two refusals are compared as whole
+# lines with nothing symbolised away:
 OLD_ASSERTION_LINE : 402:[ -z "$MKDIR_OUT" ] || stop "work_dir_mkdir_diagnostics path=$WORK detail=$MKDIR_OUT"
 NEW_ASSERTION_LINE : 483:[ -z "$MKDIR_OUT" ] || stop "work_dir_mkdir_diagnostics path=$WORK detail=$MKDIR_OUT"
-OLD_REFUSAL        : CLOSE_STOP reason=work_dir_mkdir_diagnostics path=/root/wpi_r5/red_diag/work/close_work_WPIR5-FIXTURE-P0 detail=injected_success_diagnostic
-NEW_REFUSAL        : CLOSE_STOP reason=work_dir_mkdir_diagnostics path=/root/wpi_r5/green_diag/work/close_work_WPIR5-FIXTURE-P0 detail=injected_success_diagnostic
+OLD_REFUSAL        : CLOSE_STOP reason=work_dir_mkdir_diagnostics path=/root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0 detail=injected_success_diagnostic
+NEW_REFUSAL        : CLOSE_STOP reason=work_dir_mkdir_diagnostics path=/root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0 detail=injected_success_diagnostic
+REFUSAL_BYTE_IDENTICAL=yes
 
 ########## BA-1 REGRESSION - clean run, PRE-REPAIR bytes, no instrument
+SUBJECT_BUILT_FROM=/root/wpi_r5/close_red.sh
+SUBJECT_PATH=/root/wpi_r5/close_subject.sh
+SUBJECT_SHA256=030d8d44f9958d1c13a3025f1573b6a45aeab5124f598f33af978c61dd6b76aa
+ARGV=[/root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0] [WPIR5-FIXTURE-P0] [/root/wpi_r5/ba1/work]
 SCRIPT_RC=0
 (no CLOSE_STOP/CLOSE_FAIL on stderr)
 RESIDUE_PRESENT=no
 EVIDENCE_TREE_AFTER:
-  /root/wpi_r5/red_clean/evidence/runkit/WPIR5-FIXTURE-P0
-  /root/wpi_r5/red_clean/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
-  /root/wpi_r5/red_clean/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
-CLOSE_NOTE scratch work_dir=/root/wpi_r5/red_clean/work/close_work_WPIR5-FIXTURE-P0 owner_numeric=0:0 mode=700 created=once tmpdir=run_owned canonical_non_overlap=proven_before_and_after_create removal=adjudicated_on_every_exit_path
-CLOSE PASS runid=WPIR5-FIXTURE-P0 dir=/root/wpi_r5/red_clean/evidence/runkit/WPIR5-FIXTURE-P0 files=2 wrote_into_evidence_tree=0
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+CLOSE_NOTE scratch work_dir=/root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0 owner_numeric=0:0 mode=700 created=once tmpdir=run_owned canonical_non_overlap=proven_before_and_after_create removal=adjudicated_on_every_exit_path
+CLOSE PASS runid=WPIR5-FIXTURE-P0 dir=/root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0 files=2 wrote_into_evidence_tree=0
 
 ########## BA-1 REGRESSION - clean run, REPAIRED bytes, no instrument
 # rc 0, the same record, no residue: the repair did not change the happy path.
+# Same subject pathname and same argv as the arm above, so the two records are
+# comparable line for line and the one moved field is visible on its own.
+SUBJECT_BUILT_FROM=/root/wpi_r5/close_green.sh
+SUBJECT_PATH=/root/wpi_r5/close_subject.sh
+SUBJECT_SHA256=80b43c7196e884beef9ae2638b8fdbfcd27394e41b18f5c6dc705f29c3713147
+ARGV=[/root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0] [WPIR5-FIXTURE-P0] [/root/wpi_r5/ba1/work]
 SCRIPT_RC=0
 (no CLOSE_STOP/CLOSE_FAIL on stderr)
 RESIDUE_PRESENT=no
 EVIDENCE_TREE_AFTER:
-  /root/wpi_r5/green_clean/evidence/runkit/WPIR5-FIXTURE-P0
-  /root/wpi_r5/green_clean/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
-  /root/wpi_r5/green_clean/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
-CLOSE_NOTE scratch work_dir=/root/wpi_r5/green_clean/work/close_work_WPIR5-FIXTURE-P0 owner_numeric=0:0 mode=700 created=once tmpdir=run_owned canonical_non_overlap=proven_before_and_after_create removal=adjudicated_on_every_exit_path_after_a_zero_status_create
-CLOSE PASS runid=WPIR5-FIXTURE-P0 dir=/root/wpi_r5/green_clean/evidence/runkit/WPIR5-FIXTURE-P0 files=2 wrote_into_evidence_tree=0
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+CLOSE_NOTE scratch work_dir=/root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0 owner_numeric=0:0 mode=700 created=once tmpdir=run_owned canonical_non_overlap=proven_before_and_after_create removal=adjudicated_on_every_exit_path_after_a_zero_status_create
+CLOSE PASS runid=WPIR5-FIXTURE-P0 dir=/root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0 files=2 wrote_into_evidence_tree=0
 
 ########## BA-1 - a nonzero mkdir that created NOTHING: PRE-REPAIR vs REPAIRED
 # Both STOP. The repaired arm additionally records the tool rc, the captured
 # diagnostic, and whether an object is present - the round-4 message carried
 # only the path.
+SUBJECT_BUILT_FROM=/root/wpi_r5/build/red_failclean.sh
+SUBJECT_PATH=/root/wpi_r5/close_subject.sh
+SUBJECT_SHA256=83704938a96f680600a4c64016255f4dc979d4d442a3e8345538ad2b0a7bef63
+ARGV=[/root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0] [WPIR5-FIXTURE-P0] [/root/wpi_r5/ba1/work]
 SCRIPT_RC=3
-CLOSE_STOP reason=work_dir_mkdir_failed path=/root/wpi_r5/red_failclean/work/close_work_WPIR5-FIXTURE-P0
+CLOSE_STOP reason=work_dir_mkdir_failed path=/root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0
 RESIDUE_PRESENT=no
 EVIDENCE_TREE_AFTER:
-  /root/wpi_r5/red_failclean/evidence/runkit/WPIR5-FIXTURE-P0
-  /root/wpi_r5/red_failclean/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
-  /root/wpi_r5/red_failclean/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+SUBJECT_BUILT_FROM=/root/wpi_r5/build/green_failclean.sh
+SUBJECT_PATH=/root/wpi_r5/close_subject.sh
+SUBJECT_SHA256=99f93e2af27de3423ed48cdcd2d7686e094e8b9e5715bf65d0120ac6cdcec063
+ARGV=[/root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0] [WPIR5-FIXTURE-P0] [/root/wpi_r5/ba1/work]
 SCRIPT_RC=3
-CLOSE_STOP reason=work_dir_mkdir_failed path=/root/wpi_r5/green_failclean/work/close_work_WPIR5-FIXTURE-P0 rc=1 object_after_failed_create=absent cleanup=not_armed_for_a_nonzero_create detail=[injected_failure_no_object_created]
+CLOSE_STOP reason=work_dir_mkdir_failed path=/root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0 rc=1 object_after_failed_create=absent cleanup=not_armed_for_a_nonzero_create detail=[injected_failure_no_object_created]
 RESIDUE_PRESENT=no
 EVIDENCE_TREE_AFTER:
-  /root/wpi_r5/green_failclean/evidence/runkit/WPIR5-FIXTURE-P0
-  /root/wpi_r5/green_failclean/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
-  /root/wpi_r5/green_failclean/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
 
 ########## BA-1 - THE DECLARED UNCOVERED CASE: a nonzero mkdir that DID create
 # The repaired bytes deliberately do NOT arm cleanup here: a nonzero status
@@ -2716,31 +2896,39 @@ EVIDENCE_TREE_AFTER:
 # The header, the create block and the CLOSE_NOTE scratch field all say so.
 # Residue in this arm is the honest scope of the claim, not a hidden failure:
 # the record now NAMES it (object_after_failed_create=present).
+SUBJECT_BUILT_FROM=/root/wpi_r5/build/green_faildirty.sh
+SUBJECT_PATH=/root/wpi_r5/close_subject.sh
+SUBJECT_SHA256=df32c8ef8c08b5a9a0ed5e74ab6207891791729f2ade9d9ea224bff99ad0fbcf
+ARGV=[/root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0] [WPIR5-FIXTURE-P0] [/root/wpi_r5/ba1/work]
 SCRIPT_RC=3
-CLOSE_STOP reason=work_dir_mkdir_failed path=/root/wpi_r5/green_faildirty/work/close_work_WPIR5-FIXTURE-P0 rc=1 object_after_failed_create=present cleanup=not_armed_for_a_nonzero_create detail=[injected_failure_after_object_created]
-RESIDUE_PRESENT=yes path=/root/wpi_r5/green_faildirty/work/close_work_WPIR5-FIXTURE-P0
+CLOSE_STOP reason=work_dir_mkdir_failed path=/root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0 rc=1 object_after_failed_create=present cleanup=not_armed_for_a_nonzero_create detail=[injected_failure_after_object_created]
+RESIDUE_PRESENT=yes path=/root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0
 RESIDUE_LISTING:
-  /root/wpi_r5/green_faildirty/work
-  /root/wpi_r5/green_faildirty/work/close_work_WPIR5-FIXTURE-P0
+  /root/wpi_r5/ba1/work
+  /root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0
 EVIDENCE_TREE_AFTER:
-  /root/wpi_r5/green_faildirty/evidence/runkit/WPIR5-FIXTURE-P0
-  /root/wpi_r5/green_faildirty/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
-  /root/wpi_r5/green_faildirty/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
 
 ########## BA-1 - the removal adjudication is LIVE on the newly covered path
 # Instrument 1 (create + diagnostic + rc 0) plus an `rm` that reports success
 # and removes nothing. The newly armed cleanup must not accept that.
+SUBJECT_BUILT_FROM=/root/wpi_r5/build/green_diag_rmnoop.sh
+SUBJECT_PATH=/root/wpi_r5/close_subject.sh
+SUBJECT_SHA256=aea905f4e72f2ff34dc2b294a2289d7a55afaa2e22dcb7304d2df103774f7c88
+ARGV=[/root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0] [WPIR5-FIXTURE-P0] [/root/wpi_r5/ba1/work]
 SCRIPT_RC=3
-CLOSE_STOP reason=work_dir_mkdir_diagnostics path=/root/wpi_r5/green_rmnoop/work/close_work_WPIR5-FIXTURE-P0 detail=injected_success_diagnostic
-CLOSE_STOP reason=work_dir_removal_failed path=/root/wpi_r5/green_rmnoop/work/close_work_WPIR5-FIXTURE-P0 rc=0 detail=[]
-RESIDUE_PRESENT=yes path=/root/wpi_r5/green_rmnoop/work/close_work_WPIR5-FIXTURE-P0
+CLOSE_STOP reason=work_dir_mkdir_diagnostics path=/root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0 detail=injected_success_diagnostic
+CLOSE_STOP reason=work_dir_removal_failed path=/root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0 rc=0 detail=[]
+RESIDUE_PRESENT=yes path=/root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0
 RESIDUE_LISTING:
-  /root/wpi_r5/green_rmnoop/work
-  /root/wpi_r5/green_rmnoop/work/close_work_WPIR5-FIXTURE-P0
+  /root/wpi_r5/ba1/work
+  /root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0
 EVIDENCE_TREE_AFTER:
-  /root/wpi_r5/green_rmnoop/evidence/runkit/WPIR5-FIXTURE-P0
-  /root/wpi_r5/green_rmnoop/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
-  /root/wpi_r5/green_rmnoop/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
 
 ########## BA-1 - cleanup still covers a later refusal after a clean create
 # A work-directory mode disagreement STOPs well after the create. Both arms
@@ -2748,22 +2936,38 @@ EVIDENCE_TREE_AFTER:
 # move an exit path that round 4 already covered.
 
 --- arm=red
+SUBJECT_BUILT_FROM=/root/wpi_r5/build/red_mode.sh
+SUBJECT_PATH=/root/wpi_r5/close_subject.sh
+SUBJECT_SHA256=3dcf4c7cd2de33c9dd5f386a8ab3949cde6f9a657c50511009f4c26476b3011d
+ARGV=[/root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0] [WPIR5-FIXTURE-P0] [/root/wpi_r5/ba1/work]
 SCRIPT_RC=3
-CLOSE_STOP reason=work_dir_mode=750 expected=700 path=/root/wpi_r5/red_mode/work/close_work_WPIR5-FIXTURE-P0
+CLOSE_STOP reason=work_dir_mode=750 expected=700 path=/root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0
 RESIDUE_PRESENT=no
 EVIDENCE_TREE_AFTER:
-  /root/wpi_r5/red_mode/evidence/runkit/WPIR5-FIXTURE-P0
-  /root/wpi_r5/red_mode/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
-  /root/wpi_r5/red_mode/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
 
 --- arm=green
+SUBJECT_BUILT_FROM=/root/wpi_r5/build/green_mode.sh
+SUBJECT_PATH=/root/wpi_r5/close_subject.sh
+SUBJECT_SHA256=e2ea8c91430d3deceba220d8d926921152039c21dae10d807d1483bba50e8968
+ARGV=[/root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0] [WPIR5-FIXTURE-P0] [/root/wpi_r5/ba1/work]
 SCRIPT_RC=3
-CLOSE_STOP reason=work_dir_mode=750 expected=700 path=/root/wpi_r5/green_mode/work/close_work_WPIR5-FIXTURE-P0
+CLOSE_STOP reason=work_dir_mode=750 expected=700 path=/root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0
 RESIDUE_PRESENT=no
 EVIDENCE_TREE_AFTER:
-  /root/wpi_r5/green_mode/evidence/runkit/WPIR5-FIXTURE-P0
-  /root/wpi_r5/green_mode/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
-  /root/wpi_r5/green_mode/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+
+########## BA-1 LAUNCH IDENTITY - every arm above used ONE pathname and ONE argv
+# R5-F2. Each arm appended the subject pathname and the three arguments it
+# actually launched with. If the arms had differed in either, the distinct
+# count below would exceed 1 and the same-argv claim would be false.
+BA1_ARMS_RECORDED=10
+DISTINCT_SUBJECT_ARGV_LINES=1
+THE_LINE=/root/wpi_r5/close_subject.sh|/root/wpi_r5/ba1/evidence/runkit/WPIR5-FIXTURE-P0|WPIR5-FIXTURE-P0|/root/wpi_r5/ba1/work
 
 ########## F1 OPEN - the outer account-shell boundary, reproduced locally
 # SCOPE OF THIS ARM, STATED FIRST. This is NOT closure evidence and is NOT
@@ -2841,3 +3045,78 @@ RC=3
 
 ########## DONE
 ```
+
+## R6-3. R5-F3 — the four draft edits are applied, committed, and bound
+
+**The finding is accepted in full.** The round-5 evidence chain recorded the four
+cross-directory draft edits as outstanding, and that record was true of the
+implementer session's boundary but **false as the final status of the frozen
+commit**: the Lead applied all four before freezing, and `37a87046` already
+contained them when Codex audited it. Round 6 verified this read-only, on the
+committed bytes, without writing to `WPI_PREREG_DRAFT_ROUND1/`.
+
+| edit | site | verification on the current committed bytes |
+|---|---|---|
+| 1 — BA-3 | `WPI_PREREGISTRATION_DRAFT.md` §6 | `grep -c 'The reason recorded is the'` = **1** |
+| 2 — BA-3 | `WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md` §6 | see below |
+| 3 — BA-3 | `WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md` Gap 10 | `grep -c 'first applicable reason recorded'` = **2** across the file — the two copies Band A requires to stay identical, both present |
+| 4 — BA-1 | `WPI_PREREGISTRATION_DRAFT.md` §4, derivation class 6 | `grep -c 'object_after_failed_create=present\|absent'` = **1** |
+
+Bound identities — the two draft blobs and the commits that carry them:
+
+| file | blob at `37a87046` (BA-3 ×3 + BA-1 mirror) | blob at `008d2dde` = current `HEAD` (R5-F1 applied) |
+|---|---|---|
+| `WPI_PREREGISTRATION_DRAFT.md` | `f2bc8f682f054d9283922d17501ea0dfa94d0bfc` | `35936fe464c8b1d7faf892bcc809aac38da48b1e` |
+| `WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md` | `0c6e8030eaf0b5858f1af34fb6fd29fc65cff2a2` | `1aad4f61a76085605cf3a2664f012d4e3d7407ba` |
+
+Neither file is modified in the working tree relative to `HEAD`, so the bytes
+verified above are the committed bytes.
+
+**Consequences for the status text.** `STATUS_TRANSPORT.md`'s "until those three
+edits land, BA-3 is not fully closed" sentence, the round-5 report's four
+NOT APPLIED / outstanding labels, and `TRANSPORT_R5_DRAFT_EDITS_PENDING.md`'s
+pending framing are all corrected. **BA-3 is fully closed** and **F1's draft mirror
+is aligned.** `TRANSPORT_R5_DRAFT_EDITS_PENDING.md` is **not deleted** — it is
+marked superseded and kept as the historical specification of what was handed over,
+which is the record a re-auditor needs to check that what landed is what was
+specified.
+
+## R6-4. R5-F1 — Lead-applied; verified read-only, not re-done
+
+R5-F1 was applied by the Lead in commit `008d2dde` and this session did **not**
+touch `WPI_PREREG_DRAFT_ROUND1/`. Verified read-only on the committed bytes:
+
+| site | disposition now recorded |
+|---|---|
+| `WPI_PREREGISTRATION_DRAFT.md:343-344` (derivation class 5) | "**Disposition: inner child closed; outer SSH account-shell boundary OPEN.**" |
+| `WPI_PREREGISTRATION_DRAFT.md:585-586` (remote-launch domain) | "**This closes the inner child only; the outer SSH account-shell boundary is OPEN.**" |
+| `WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md:408` and `:697` | the inherited "cleared launch domain" clause now ends "…closes the inner child only; the outer SSH account-shell boundary (a server-supplied `BASH_ENV`/`ENV` acting before `env -i`) remains OPEN, and no successor text may present the cleared inner-child domain as an end-to-end F1 closure" — the two occurrences carry the same sentence |
+
+The scoped sweep R5-F1 asked for was repeated read-only over both drafts:
+`grep -n -i "unreachable\|closed on the composition\|closed by the operator
+side\|cannot select or influence"` returns **no F1-related hit**. The seven
+`unreachable` matches are the RP6-P0 `system_manager_unreachable` reason token
+(`:813`, `:1063-1066`, `:1089`) and two unrelated sentences (`:91` "a block that
+contains an unreachable path will reach it"; `:1206` "structurally unreachable
+rather than merely unenumerated"). No hit asserts F1 closure or residual
+unreachability.
+
+**F1 remains OPEN.** Nothing in round 6 narrows it: the round changed one harness's
+launch provenance and three documents' status text.
+
+## R6-5. Static gates, round 6
+
+| gate | result |
+|---|---|
+| the seven executable/plan targets, SHA-256 vs round-5 §4 | **7/7 identical — no target byte changed** |
+| `bash -n` on all five delivered shell files | rc 0 for each |
+| `bash -n _r5_wsl_fixtures.sh` | rc 0 |
+| CR bytes per file (`tr -cd '\r' \| wc -c`) | 0 for all seven targets and the harness |
+| Windows PowerShell 5.1.26100.8875 parse of `transport_runner.ps1` | `PARSE_ERRORS=0` |
+| placeholder census over the seven executable/plan targets | `alloc=37 pin=38` — unchanged from rounds 4 and 5 |
+| `_r5_wsl_fixtures.sh` process rc / own stderr | 0 / **0 bytes** |
+| BA-1 arms recorded / distinct subject+argv lines | 10 / **1** |
+| RED vs GREEN refusal | `REFUSAL_BYTE_IDENTICAL=yes` |
+
+`_r5_wsl_fixtures.sh` after the repair: 21,221 bytes,
+`a2bb6f6e3c0022aa001db7adb58189649acab9b23b522dc0544b018f9ce7971b`, 0 CR.

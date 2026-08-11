@@ -6,6 +6,24 @@ work. Inputs: `TRANSPORT_CODEX_R4_AUDIT_BAND_A_2026-08-11.md` (BA-1, BA-2, BA-3)
 `TRANSPORT_CODEX_R4_AUDIT_BAND_B_2026-08-11.md` (F1), both **REQUEST_CHANGES**, read in
 full; their text binds.
 
+## ROUND-6 CORRECTIONS — READ FIRST
+
+Codex's round-5 re-audit (`TRANSPORT_CODEX_R5_AUDIT_2026-08-11.md`, REQUEST_CHANGES,
+frozen commit `37a87046`) returned three findings against **this report and its
+evidence**, not against the repaired bytes. It confirmed the BA-1 code repair works by
+rerunning both blobs through one common subject and one common argv itself. Two
+statements in this report were wrong and are struck and corrected in place below;
+the third is a wording gap the Lead closed directly.
+
+| finding | what this report got wrong | where it is corrected |
+|---|---|---|
+| **R5-F2** (HIGH) | §BA-1 claimed the RED and GREEN arms used the same argv and produced a byte-identical refusal. The delivered `_r5_wsl_fixtures.sh` gave each arm its own subject pathname and its own tree, so the two refusals differed in their `path=` field. | §BA-1 below; the repaired harness and its verbatim re-run are `SELF_QA_TRANSPORT.md` §R6-1/§R6-2 |
+| **R5-F3** (MEDIUM) | §0, §BA-1, §BA-3, §4 and §5 labelled four cross-directory draft edits unapplied. The Lead had applied all four **before** freezing; they are in `37a87046`. | §0, §BA-1, §BA-3, §5, §7 below |
+| **R5-F1** (HIGH) | §F1's sweep table said every closure claim outside the drafts was corrected and named the draft mirror as the one unswept location; the main draft still read "closed by the operator side". | applied by the **Lead** in commit `008d2dde`, verified read-only in `SELF_QA_TRANSPORT.md` §R6-4 |
+
+Round 6 changed **no** transport target byte. The full round-6 account is
+`TRANSPORT_R6_REPORT_2026-08-11.md`.
+
 ## 0. Scope, method, and what was not done
 
 - Working directory `C:\LAB\Tradingview_LAB_CLEAN`. **No commit** — the Lead commits.
@@ -32,12 +50,16 @@ full; their text binds.
   runner change is comment text).
 - Evidence is in `SELF_QA_TRANSPORT.md` §R5, produced by one committed harness,
   `_r5_wsl_fixtures.sh`, which ships beside the targets.
-- **One deliverable is not applied and is reported as such**, not quietly dropped: three
-  BA-3 draft sentences and the F1 draft mirror live under `WPI_PREREG_DRAFT_ROUND1/`,
-  which this session was instructed at dispatch not to touch because a parallel Max
-  session owns it. Exact old → new text for all four edits, with anchors verified
-  byte-exact and unique against the current draft bytes, is in
-  `TRANSPORT_R5_DRAFT_EDITS_PENDING.md`. See §BA-3 and §5.
+- ~~**One deliverable is not applied and is reported as such**, not quietly dropped:~~
+  **[R5-F3 — CORRECTED IN ROUND 6: the four edits were APPLIED BY THE LEAD before the
+  freeze and are in commit `37a87046`.]** Three BA-3 draft sentences and the F1 draft
+  mirror live under `WPI_PREREG_DRAFT_ROUND1/`, which this session was instructed at
+  dispatch not to touch because a parallel Max session owned it. Exact old → new text
+  for all four edits, with anchors verified byte-exact and unique against the draft
+  bytes as read, is in `TRANSPORT_R5_DRAFT_EDITS_PENDING.md` — now marked SUPERSEDED and
+  kept as the historical hand-over specification. The statement above describes this
+  **implementer session's** boundary correctly and was false as the final status of the
+  frozen commit. See §BA-3 and §5.
 
 ## 1. Finding → disposition → evidence
 
@@ -128,16 +150,31 @@ fi
 [ -z "$MKDIR_OUT" ] || stop "work_dir_mkdir_diagnostics path=$WORK detail=$MKDIR_OUT"
 ```
 
-**D026 RED/GREEN** (`SELF_QA_TRANSPORT.md` §R5-1). RED is the **pre-repair blob**
-(`git cat-file blob HEAD:…`, SHA-256 `29b6412a466c…`, printed in the transcript), not a
-reconstruction. Both arms are driven through the **same** declared instrument — a `mkdir`
-that creates the directory, emits one diagnostic and returns 0 — the same launch domain
-and the same argv, so the only variable is the delivered bytes:
+**D026 RED/GREEN** (`SELF_QA_TRANSPORT.md` §R5-1, corrected and re-executed in §R6-1 and
+§R6-2). RED is the **pre-repair blob** (`git cat-file blob HEAD:…`, SHA-256
+`29b6412a466c…`, printed in the transcript), not a reconstruction.
+
+> **R5-F2 — HIGH — CORRECTED IN ROUND 6.** ~~Both arms are driven through the **same**
+> declared instrument — a `mkdir` that creates the directory, emits one diagnostic and
+> returns 0 — the same launch domain and the same argv, so the only variable is the
+> delivered bytes.~~ The instrument and the launch-domain **shape** were the same, but
+> the round-5 harness ran RED from `$FIX/red_diag.sh` against `$FIX/red_diag` and GREEN
+> from `$FIX/green_diag.sh` against `$FIX/green_diag`, so the subject pathname and the
+> `EV_DIR`/`WORK_ROOT` arguments differed and the two recorded refusals were **not**
+> byte-identical — they differed in their `path=` field. The claim was false of the
+> published evidence whatever the code did, which is what D026 makes it about.
+> **Repaired and re-run in round 6:** every BA-1 arm resets one tree, installs its bytes
+> at one subject pathname and launches with one argument vector, and the harness asserts
+> it — `BA1_ARMS_RECORDED=10`, `DISTINCT_SUBJECT_ARGV_LINES=1`,
+> `REFUSAL_BYTE_IDENTICAL=yes`. The table below is the **round-6** result; every arm's
+> disposition is unchanged from round 5.
 
 | | pre-repair (RED) | repaired (GREEN) |
 |---|---|---|
+| `SUBJECT_PATH` | `/root/wpi_r5/close_subject.sh` | **the same pathname** |
+| `ARGV` | `[…/ba1/evidence/runkit/WPIR5-FIXTURE-P0] [WPIR5-FIXTURE-P0] […/ba1/work]` | **the same vector** |
 | `SCRIPT_RC` | 3 | 3 |
-| refusal | `CLOSE_STOP reason=work_dir_mkdir_diagnostics … detail=injected_success_diagnostic` | **byte-identical** |
+| refusal | `CLOSE_STOP reason=work_dir_mkdir_diagnostics path=/root/wpi_r5/ba1/work/close_work_WPIR5-FIXTURE-P0 detail=injected_success_diagnostic` | **byte-identical** (asserted, not eyeballed) |
 | `RESIDUE_PRESENT` | **yes** | **no** |
 
 **No carried fence was weakened, and the transcript proves it rather than asserting it.**
@@ -177,7 +214,7 @@ would trade a residue for a destructive action, so the claim is narrowed instead
 | `remote_close_tree_wpi.sh:404-410` (create/cleanup comments) | rewritten; states the BA-1 defect, the fix, and the uncovered case |
 | `remote_close_tree_wpi.sh:441` (`CLOSE_NOTE scratch`) | `removal=adjudicated_on_every_exit_path` → `removal=adjudicated_on_every_exit_path_after_a_zero_status_create` (both values visible side by side in the two clean-run transcripts) |
 | `TRANSPORT_R4_REPORT_2026-08-11.md:126-130` | struck and corrected in place |
-| `WPI_PREREGISTRATION_DRAFT.md:357-360` | **NOT APPLIED** — exact text in `TRANSPORT_R5_DRAFT_EDITS_PENDING.md`, edit 4. See §5 |
+| `WPI_PREREGISTRATION_DRAFT.md:357-360` | ~~**NOT APPLIED**~~ → **APPLIED BY THE LEAD**, commit `37a87046` (R5-F3, corrected in round 6). Specification: `TRANSPORT_R5_DRAFT_EDITS_PENDING.md`, edit 4; verification: `SELF_QA_TRANSPORT.md` §R6-3 |
 
 ### BA-2 (MEDIUM) — the claimed second `declare -F` defect is FALSE → **CLAIM WITHDRAWN; guard kept as no-op hardening**
 
@@ -213,7 +250,7 @@ Corrected in all six places Band A listed:
 `STATUS_TRANSPORT.md`'s "second latent defect" sentence is corrected too — Band A did not
 list it, but it carried the same false claim.
 
-### BA-3 (MEDIUM) — T8 overstates the two prerequisite reason tokens → **PROSE NARROWED; three of four sites NOT YET APPLIED**
+### BA-3 (MEDIUM) — T8 overstates the two prerequisite reason tokens → **PROSE NARROWED; ~~three of four sites NOT YET APPLIED~~ ALL FOUR SITES APPLIED (R5-F3, round 6)**
 
 **Branch taken: narrow the prose, not the classifier — per file, as required.**
 
@@ -234,9 +271,9 @@ Band A itself classifies this as a claim-to-predicate mismatch, not a false PASS
 | site | disposition |
 |---|---|
 | `TRANSPORT_R4_REPORT_2026-08-11.md`, T8 | **APPLIED** — clause struck, correction states the reachability facts and the chosen branch |
-| `WPI_PREREGISTRATION_DRAFT.md:688-691` | **NOT APPLIED** — `TRANSPORT_R5_DRAFT_EDITS_PENDING.md`, edit 1 |
-| `WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md:570` | **NOT APPLIED** — edit 2 |
-| `WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md:678` | **NOT APPLIED** — edit 3, byte-identical to edit 2 as Band A requires |
+| `WPI_PREREGISTRATION_DRAFT.md:688-691` | ~~**NOT APPLIED**~~ → **APPLIED BY THE LEAD**, commit `37a87046` — spec: edit 1 |
+| `WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md:570` | ~~**NOT APPLIED**~~ → **APPLIED**, same commit — spec: edit 2 |
+| `WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md:678` | ~~**NOT APPLIED**~~ → **APPLIED**, same commit — spec: edit 3; the two successor occurrences are both present, as Band A requires |
 
 The narrowed sentence keeps the two tokens for the rc-1 outcomes, names
 `scp_transfer_did_not_complete` and `operation_reported_stop` as the earlier reasons, and
@@ -244,7 +281,9 @@ records that `TR_OP_PREREQ_STATE` still carries every edge's resolved class in a
 so the prerequisite state stays auditable from the record even where the reason token is
 not a prerequisite token.
 
-**BA-3 is therefore not fully closed by this session.** See §5.
+~~**BA-3 is therefore not fully closed by this session.**~~ **[R5-F3, round 6: the Lead
+applied all three draft edits before freezing — BA-3 IS FULLY CLOSED in commit
+`37a87046`.]** See §5.
 
 ## 2. What was NOT changed, and why
 
@@ -300,7 +339,22 @@ Beside the frozen set, and not part of it:
 Only `remote_close_tree_wpi.sh` changed executable behaviour. The other five code changes
 are comment text; `transport_runner.ps1`'s change is comment text only.
 
-## 5. Not applied — stated plainly
+> **ROUND-6 NOTE on this table.** The seven executable/plan target rows are still exact —
+> **round 6 changed no target byte**, and their SHA-256 values were re-verified against
+> this table. Four rows are round-5 identities that round 6 moved and this table
+> deliberately does not chase: `SELF_QA_TRANSPORT.md` and `STATUS_TRANSPORT.md` (R5-F2 and
+> R5-F3 corrections), `_r5_wsl_fixtures.sh` (the R5-F2 harness repair), and
+> `TRANSPORT_R5_DRAFT_EDITS_PENDING.md` (marked SUPERSEDED). Current identities for all of
+> them are in `TRANSPORT_R6_REPORT_2026-08-11.md` §4.
+
+## 5. ~~Not applied~~ Handed to the Lead — and APPLIED before the freeze
+
+> **R5-F3 — CORRECTED IN ROUND 6.** This section described the **implementer session's**
+> boundary, and it described it accurately. It was nevertheless false as the *final
+> status* of commit `37a87046`: the Lead applied all four edits before freezing, so the
+> commit Codex audited already contained them. The account below is kept as the
+> historical hand-over record; the terminal disposition is stated at the end of the
+> section and verified read-only in `SELF_QA_TRANSPORT.md` §R6-3.
 
 `KICKOFF_TRANSPORT_REPAIR_R5.md` requires the F1 wording and the BA-3 narrowing to reach
 the preregistration drafts. This session's dispatch instruction was:
@@ -311,7 +365,9 @@ the preregistration drafts. This session's dispatch instruction was:
 That is the `AGENTS.md` **PARALLEL AGENT SAFETY** case, and the directory does carry
 uncommitted work. The files were **read** and not written.
 
-Four edits are therefore outstanding, specified as exact old → new text in
+~~Four edits are therefore outstanding~~ **[four edits were therefore handed over, and
+the Lead applied all four before the freeze — see TERMINAL DISPOSITION below]**,
+specified as exact old → new text in
 `TRANSPORT_R5_DRAFT_EDITS_PENDING.md`, with every anchor verified byte-exact and unique
 against the current draft bytes (`grep -c -F` returns 1, 1, 1 and **2** respectively — the
 successor draft's clause occurs exactly twice, as Band A requires):
@@ -328,11 +384,24 @@ unreachability. The `grep` to run is given in the pending-edits file.
 **This is not a `PENDING-LEAD-EXECUTION` item in the usual sense** — nothing about it
 needs the Lead's host, credentials or authority. It is a session-boundary hold, and it is
 the Lead's call whether to apply the four edits directly or hand them to whichever session
-owns that directory next. Until they land:
+owns that directory next.
 
-- **BA-3 is NOT fully closed.**
-- **F1's draft mirror is NOT yet aligned**, though every occurrence inside
-  `WPI_BLOCKS_DRAFT/` is.
+**TERMINAL DISPOSITION (round 6, R5-F3).** The Lead took the first option and applied all
+four edits directly. They are present in commit **`37a87046`** — the same commit Codex
+froze for the round-5 audit — and the F1 draft wording followed in **`008d2dde`** as
+R5-F1. Verified read-only on the committed bytes, without writing to that directory:
+
+- **BA-3 is FULLY CLOSED.** `grep -c 'The reason recorded is the'` = 1 in the main draft;
+  `grep -c 'first applicable reason recorded'` = **2** in the successor draft — the two
+  copies Band A requires to stay identical, both present.
+- **F1's draft mirror IS aligned.** Both drafts state *inner child closed; outer SSH
+  account-shell boundary OPEN*, and the scoped sweep for closure or unreachability claims
+  returns no F1-related hit.
+- `TRANSPORT_R5_DRAFT_EDITS_PENDING.md` is marked **SUPERSEDED** and kept as the
+  historical specification, so a re-auditor can check that what landed is what was
+  handed over.
+
+Bound draft blob identities are in `SELF_QA_TRANSPORT.md` §R6-3.
 
 There is no other `PENDING-LEAD-EXECUTION` item in this round: BA-1's D026 RED/GREEN and
 BA-2's falsification were both executed in this session.
@@ -349,8 +418,10 @@ BA-2's falsification were both executed in this session.
   marked OPEN because the transport **cannot establish** that it does not — not because a
   plant was observed on that host.
 - Any part of `RP6-P0.sh` or `RP7-WPI-RO.sh`; neither was read or modified this round.
-- The four unapplied draft edits, which by definition have not been executed against the
-  draft bytes beyond anchor verification.
+- ~~The four unapplied draft edits, which by definition have not been executed against
+  the draft bytes beyond anchor verification.~~ **[Round 6: the Lead applied all four in
+  `37a87046`; round 6 verified the applied anchors read-only — `SELF_QA_TRANSPORT.md`
+  §R6-3.]**
 
 ## 7. Required next action
 
@@ -366,9 +437,17 @@ round most needs adversarial attention on:
    genuinely need every broken-branch `always` failure to name a prerequisite case — in
    which case the classifier, not the prose, is what must change?
 
-Two items need the Lead rather than the auditor: applying (or reassigning) the four draft
-edits in §5, and re-confirming the round-4 open items that F1's status change touches —
-derivation classes 5 and 6 are still new permissions, and class 5 now buys an
-inner-child guarantee rather than the end-to-end one round 4 implied.
+~~Two items need the Lead rather than the auditor: applying (or reassigning) the four
+draft edits in §5, and re-confirming~~ **[Round 6: the first is done — the Lead applied
+all four in `37a87046`. What remains for the Lead is]** re-confirming the round-4 open
+items that F1's status change touches — derivation classes 5 and 6 are still new
+permissions, and class 5 now buys an inner-child guarantee rather than the end-to-end one
+round 4 implied.
+
+**Round 6 supersedes the "identities in §4" instruction above for three rows.** Codex's
+round-5 audit returned REQUEST_CHANGES on this report; the round-6 repair changed
+`_r5_wsl_fixtures.sh`, `SELF_QA_TRANSPORT.md` and `STATUS_TRANSPORT.md`, and the current
+identities for the whole set are in `TRANSPORT_R6_REPORT_2026-08-11.md` §4. The seven
+executable/plan targets are unchanged and still match §4 below.
 
 This report grants no host, freeze, allocation, execution, dispatch, or Git authority.
