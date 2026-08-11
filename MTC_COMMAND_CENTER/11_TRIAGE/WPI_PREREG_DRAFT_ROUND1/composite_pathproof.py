@@ -92,7 +92,32 @@ EXEC_COMMAND_RE = re.compile(
 )
 # Mirrors pathscope_prover.ASSIGN_RE over a stripped, non-comment, non-empty line.
 CONSTANT_ASSIGN_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)=(.*)$", re.S)
-SHELL_ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*\+?=")
+
+# --- command-prefix conservation (round-5 R4-F1) ------------------------------
+# Bash's command grammar lets a simple command carry a prefix before its command
+# word: any number of assignment words and redirections, in any order.  A prefix
+# does NOT open or close a command position - `A=1 2>err arr[0]=2 {fd}<in source lib`
+# still looks up `source` as the command name.  Round 4 conserved the command
+# position across scalar assignments and numeric file descriptors only, so a valid
+# named-descriptor or indexed-assignment prefix was emitted as a benign leaf that
+# closed the command position and hid the command word behind it (defect patterns
+# 5/9/12).  The three expressions below model the whole accepted prefix vocabulary,
+# and `_redirection_prefix_class` / `_assignment_prefix_class` STOP on any prefix
+# shape outside it rather than letting it degrade into a leaf.
+#
+# An assignment word is `NAME=`, `NAME+=`, `NAME[subscript]=` or `NAME[subscript]+=`.
+# Bash requires the NAME to be unquoted and to start the word, so a word that does
+# not start that way (`2a=b`, `a-b=c`, `"a"=b`, `--opt=val`) is exactly a command
+# name, not an assignment - those stay leaves and that is not an approximation.
+SHELL_ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(?:\[[^][]*\])?\+?=")
+# A word that opens a subscript the expression above could not close - a nested or
+# otherwise unmodelled subscript such as `arr[idx[0]]=1`.  Only a word that also
+# carries an `=` can be an assignment at all, so requiring one costs no soundness.
+SHELL_SUBSCRIPT_PREFIX_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*\[")
+# The two file-descriptor prefix forms, recognised only when the word abuts the
+# redirection operator with no separating blank, which is what Bash requires.
+NUMERIC_FD_PREFIX_RE = re.compile(r"^[0-9]+$")
+NAMED_FD_PREFIX_RE = re.compile(r"^\{[A-Za-z_][A-Za-z0-9_]*\}$")
 
 # --- independent command-word detection (round-4 R3-F1) ----------------------
 # SOURCE_COMMAND_RE / EXEC_COMMAND_RE above are the *derivation* grammar: what the
@@ -134,6 +159,14 @@ SHELL_CONTROL_WORDS = frozenset(
         "{", "}", "!", "[[", "]]",
     }
 )
+# Reserved words whose next word binds a NAME rather than running as a command:
+# `function foo { source lib; }` and `coproc foo { source lib; }`.  Round 4 let that
+# name close the command position, so the first command word of the body was never
+# scanned - the same silent loss as an unconserved prefix, reached through a
+# reserved word instead.  The command position survives the bound name instead.
+# `for`/`select`/`case` also bind a name, but a separator, newline or `)` always
+# re-opens the command position before their body, so no command word is lost there.
+SHELL_NAME_BINDING_WORDS = frozenset({"function", "coproc"})
 
 ALLOCATE_CLAIMS = (
     ("A1", "plan_contract", "closed_schema_and_allocate_order"),
@@ -1204,6 +1237,12 @@ def _shell_words(text: str) -> tuple[tuple[ShellWord, ...] | None, str | None]:
 
     It runs only over text `_graph_opaque_reason` already accepted, so here-documents,
     line continuations, substitutions and multi-line quotes are gone before it starts.
+
+    Command position is *conserved* across every accepted command prefix — scalar and
+    indexed assignment words, numeric and named file-descriptor redirections, and the
+    name bound by `function`/`coproc`.  A prefix shape outside that model returns a
+    STOP reason instead of degrading into a leaf, because a leaf closes the command
+    position and the command word behind it would then be classified by nothing.
     """
 
     words: list[ShellWord] = []
@@ -1211,6 +1250,7 @@ def _shell_words(text: str) -> tuple[tuple[ShellWord, ...] | None, str | None]:
     length = len(text)
     command_position = True
     redirect_target_pending = False
+    name_binding_pending = False
     while index < length:
         character = text[index]
         if character in " \t":
@@ -1219,6 +1259,7 @@ def _shell_words(text: str) -> tuple[tuple[ShellWord, ...] | None, str | None]:
         if character in "\r\n":
             command_position = True
             redirect_target_pending = False
+            name_binding_pending = False
             index += 1
             continue
         if character == "#":
@@ -1230,11 +1271,13 @@ def _shell_words(text: str) -> tuple[tuple[ShellWord, ...] | None, str | None]:
                 index += 1
             command_position = True
             redirect_target_pending = False
+            name_binding_pending = False
             continue
         if character in "()":
             index += 1
             command_position = True
             redirect_target_pending = False
+            name_binding_pending = False
             continue
         if character in "<>":
             # A redirection consumes its target word without opening or closing a
@@ -1276,16 +1319,69 @@ def _shell_words(text: str) -> tuple[tuple[ShellWord, ...] | None, str | None]:
         if redirect_target_pending:
             redirect_target_pending = False
             continue
-        if raw.isdigit() and index < length and text[index] in "<>":
-            # `2>` — the file descriptor belongs to the redirection, not to argv.
-            continue
+        if index < length and text[index] in "<>":
+            # The word abuts a redirection operator with no separating blank, so it
+            # may be that redirection's file-descriptor prefix rather than an argv
+            # word.  A prefix belongs to the redirection and must leave the command
+            # position exactly as it found it: `2>err source lib`, `{fd}>err source
+            # lib` and `{fd}<in source lib` all still run `source`.
+            descriptor = _redirection_prefix_class(raw)
+            if descriptor == "file_descriptor":
+                continue
+            if descriptor == "unmodeled":
+                return None, "source_graph_unmodeled_redirection_prefix"
+        if command_position and _assignment_prefix_class(raw) == "unmodeled":
+            # Fail closed here rather than one line further down.  Once an unmodelled
+            # prefix is emitted as a leaf it closes the command position, and the
+            # command word behind it is never classified by anything - the matcher
+            # does not anchor through the prefix either, so the composite would pass
+            # over an unanalysed program with no uncovered word to report.
+            return None, "source_graph_unmodeled_assignment_prefix"
         words.append(ShellWord(start, raw, command_position))
-        # Assignment prefixes, reserved words and command wrappers all leave the
-        # command position open, so `A=1 env bash x` scans `bash` as a command word
-        # too and reports every unmodelled layer rather than only the outermost one.
-        if _command_word_class(raw) not in {"assignment", "control", "wrapper"}:
+        word_class = _command_word_class(raw)
+        if name_binding_pending and word_class == "leaf":
+            # `function foo`/`coproc foo`: the word names a definition, it does not
+            # run, so the command position survives it and the body's first command
+            # word is still scanned.
+            pass
+        elif word_class not in {"assignment", "control", "wrapper"}:
+            # Assignment prefixes, reserved words and command wrappers all leave the
+            # command position open, so `A=1 env bash x` scans `bash` as a command word
+            # too and reports every unmodelled layer rather than only the outermost one.
             command_position = False
+        name_binding_pending = (
+            command_position
+            and word_class == "control"
+            and _literal_shell_word(raw) in SHELL_NAME_BINDING_WORDS
+        )
     return tuple(words), None
+
+
+def _redirection_prefix_class(raw: str) -> str:
+    """Classify a word that abuts a redirection operator.
+
+    `file_descriptor` — a modelled prefix that belongs to the redirection and must
+    not touch the command position.  `word` — an ordinary argv word that merely
+    happens to touch the operator (`echo>out` runs `echo`).  `unmodeled` — a
+    brace-opening word in the exact syntactic slot of a named descriptor whose
+    interior is not a plain name, which the scanner refuses to guess about.
+    """
+
+    if NUMERIC_FD_PREFIX_RE.fullmatch(raw) or NAMED_FD_PREFIX_RE.fullmatch(raw):
+        return "file_descriptor"
+    if raw.startswith("{"):
+        return "unmodeled"
+    return "word"
+
+
+def _assignment_prefix_class(raw: str) -> str:
+    """Classify a command-position word against the accepted assignment forms."""
+
+    if SHELL_ASSIGNMENT_RE.match(raw):
+        return "assignment"
+    if SHELL_SUBSCRIPT_PREFIX_RE.match(raw) and "=" in raw:
+        return "unmodeled"
+    return "word"
 
 
 def _command_word_class(raw: str) -> str:

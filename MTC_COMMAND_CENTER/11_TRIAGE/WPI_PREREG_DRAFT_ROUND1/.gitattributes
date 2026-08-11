@@ -1,4 +1,5 @@
-# SEC102 composite path proof - evidence durability (round-4 repair of R3-F3).
+# SEC102 composite path proof - evidence durability (round-4 repair of R3-F3,
+# extended in round 5 with the round-5 fixture tree).
 #
 # The repository root sets `* text=auto`, and a Windows clone with
 # core.autocrlf=true therefore materialises these blobs as CRLF.  Every file
@@ -17,6 +18,7 @@ sec102_r1_fixtures/** -text
 sec102_r2_fixtures/** -text
 sec102_r3_fixtures/** -text
 sec102_r4_fixtures/** -text
+sec102_r5_fixtures/** -text
 
 # Pinned tools.  `text eol=lf` also fixes the checked-out bytes to the committed
 # LF blob, but keeps both files textually diffable so the Lead can still review a
