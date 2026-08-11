@@ -2662,10 +2662,12 @@ re-run is on the same local WSL2 Ubuntu kernel rounds 4 and 5 used
 (`6.18.33.2-microsoft-standard-WSL2`, GNU Bash 5.3.9), and every path it touches is
 under `/root/wpi_r5` on that local filesystem.
 
-**No byte of the nine-file transport set changed in round 6.** All seven
-executable/plan targets hash exactly as round-5 §4 recorded them (§R6-5). The only
-executable change is to the harness that ships beside them,
-`_r5_wsl_fixtures.sh` — the object R5-F2 is about.
+**No byte of the seven executable/plan transport targets changed in round 6.** All
+seven hash exactly as round-5 §4 recorded them (§R6-5). The QA and status documents
+in the nine-file set (this file and `STATUS_TRANSPORT.md`) did change — they carry
+the R5-F2/R5-F3 corrections — so the unchanged claim is scoped to the seven targets,
+not the whole nine-file set. The only *executable* change is to the harness that
+ships beside them, `_r5_wsl_fixtures.sh` — the object R5-F2 is about.
 
 | finding | disposition |
 |---|---|
