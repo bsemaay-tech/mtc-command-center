@@ -5648,6 +5648,19 @@ executable fixtures in this file. §8.1.1 states this in the same words.
 
 ### R10_GRAMMAR harness
 
+> **SUPERSEDED IN ROUND 11 — not in the mandated set, and it no longer returns
+> 0.** The Codex round-10 audit showed this fence is fail-open twice over: an
+> executable emitter in another valid quoting form is invisible to both its
+> derivation and its "independent" site total, and its per-field value unions
+> destroy the correlation between the fields of one site, so a semantic relabel
+> of a single site leaves it GREEN. Its successor is `R11_GRAMMAR`, which carries
+> every one of the assertions and mutants below forward unchanged and adds the
+> fail-closed census and the correlated-tuple derivation. These bytes stay in the
+> file on purpose: they are the round-10 record, and `R11_F1_RED` extracts the
+> derivation below in order to execute what it could not see. Run today it
+> returns **rc 1** against the round-11 declaration — recorded in §"Superseded in
+> round 11" of the round-11 section.
+
 ```bash
 # R10_GRAMMAR_HARNESS_BEGIN
 #!/usr/bin/env bash
@@ -6142,15 +6155,23 @@ between two unique landmark lines, with a build-completeness guard that fails
 loudly if the slice references a frozen literal the preamble does not define. It
 then:
 
-- runs every input class that leaves the binding unset through the **unmutated**
-  parser and records which upstream gate consumes it — omission by the omission
-  loop, an unfilled deploy literal by the freeze gate, a disagreeing pin by the
-  frozen-python gate — and records that a complete valid twelve-pin set reaches
-  the end of the parser at rc 0 with `bound=yes`;
-- confirms no such run reaches the invariant;
+- runs **three** input classes that leave the binding unset through the
+  **unmutated** parser and records which upstream gate consumes each — an omitted
+  pin by the omission loop, an unfilled deploy literal by the freeze gate, a
+  disagreeing pin by the frozen-python gate — and records that a complete valid
+  twelve-pin set reaches the end of the parser at rc 0 with `bound=yes`;
+- confirms none of those three runs reaches the invariant;
 - then **neutralises the two gates that consume the omission input** in a mutant,
   runs the same input, reaches the line, and records its exact emitted result line
   and rc 3.
+
+> **ROUND 11 F4 (Codex round-10 finding 4).** The first bullet said "every input
+> class that leaves the binding unset". It is narrowed above to the three classes
+> the harness actually runs. The pin parser has further early-stop classes that
+> `R10_F4` does **not** execute — malformed entry, unknown tool, duplicate entry,
+> non-absolute path, whitespace, glob metacharacter, and a non-python frozen-path
+> mismatch. They are consumed upstream in the same way by inspection, and that is
+> inspection, not evidence. The evidence claim is the three executed classes.
 
 That is reachability established by execution rather than asserted, and it also
 demonstrates the branch is live code rather than dead text.
@@ -6354,6 +6375,11 @@ PUBLISHED_COMMAND_RC=0
 
 ## Mandated harness set after round 10
 
+> **SUPERSEDED IN ROUND 11.** The authoritative list is "Mandated harness set
+> after round 11" at the end of this file: `R10_GRAMMAR` leaves the set, four
+> round-11 fences join it, and the RED twin below is replaced by `R11_R9RED`.
+> This block is the round-10 record.
+
 Nineteen published commands (round 10a's header said seventeen; the block below
 has always listed nineteen — corrected in round 10b by counting it). The
 `R9_GRAMMAR` RED twin published immediately after is a twentieth. Run each
@@ -6385,6 +6411,15 @@ sed -n '/^# R10_F4_HARNESS_BEGIN$/,/^# R10_F4_HARNESS_END$/p' SELF_QA_RP6.md | b
 
 The `R9_GRAMMAR` RED twin is published in full — mutant construction included — so
 that a third party can run it verbatim:
+
+> **SUPERSEDED IN ROUND 11 — this recipe masks its own failing status.** Codex
+> round-10 finding 3: `rm -f "$mutant"` is the LAST command, `rm` succeeds, and
+> so the recipe's process status is **0** while the harness it exists to
+> demonstrate failed with **1**. The round-10 claim that "every command's status
+> agrees with its verdict" was false of this recipe and is withdrawn. Its
+> replacement is the marker-delimited `R11_R9RED` fence in the round-11 section:
+> cleanup moved into an EXIT trap and the fence exits WITH the RED harness's
+> status. Run `R11_R9RED`, not the lines below.
 
 ```text
 mutant="$(mktemp)"
@@ -6631,3 +6666,1298 @@ working-tree draft as it stands, not against a private copy. No file owned by
 another session was opened for writing, no `git checkout`/`reset`/`stash` was run on
 any tracked file, nothing was committed, no host was contacted, and no network
 command was run.
+
+---
+
+# ROUND 11 (2026-08-11) — the four findings of the Codex round-10 T0 audit
+
+Implementer: Claude Max, `claude-opus-5`, effort xhigh. Auditor of record
+unchanged: Codex `gpt-5.6-sol`. Tier unchanged: **T0**. Dispatched by
+`KICKOFF_RP6_REPAIR_R11.md`.
+
+## Entry identity, re-derived before the first edit
+
+```text
+RP6-P0.sh sha256 = a090ae736cbecd9973e8ae948b052504b21cbe8b61602f4b5ac592394fad0617
+bytes            = 107252
+CR bytes         = 0
+bash -n rc       = 0   (GNU bash 5.2.37(1)-release, x86_64-pc-msys)
+```
+
+Both match the kickoff's stated input bytes exactly, so the repairs below start
+from the audited artefact and not from something adjacent to it.
+
+## The four findings and what each one got
+
+| # | audit finding | disposition |
+|---|---|---|
+| 1 | HIGH — grammar coverage is fail-OPEN and the 89/161 normalisation is lossy | **repaired.** Coverage is censused by a broader independent mechanism and fails closed on any syntax the parser cannot read; the declaration is now one line per CORRELATED SITE TUPLE. Both named mutants execute and both make the fence nonzero, with the round-10 mechanism executed alongside to show it does not |
+| 2 | HIGH — F3 maps an unrecognised producer token to a host-state FAIL | **repaired at BOTH sites.** The complete GNU `%F` token set is pinned; a recognised non-regular kind still FAILs at rc 1, an unrecognised token STOPs at rc 3. RED reproduces the audit's rc-1 line; 85 executed cases |
+| 3 | HIGH — the published R9 RED recipe masks its own failing status; the ten guards are prose + transcript only | **repaired.** The RED twin is now a marker-delimited fence that cleans up in an EXIT trap and exits WITH the RED status (rc 1). The guard falsification is now an executable self-checking fence over fifteen fences, not a transcript |
+| 4 | MEDIUM — F4 evidence prose outruns the executed predicate | **narrowed, claim by claim** — see the table in §F4. No claim was extended by widening the harness; every one was narrowed to what executes |
+
+Round-10 finding 1's own accepted part is carried forward untouched: the three
+round-10 pipelines still run verbatim and still pass, and their round-10
+transcripts above remain valid. `R10_F3`, `R10_F4` and `R9_GRAMMAR` were re-run
+against the round-11 bytes before anything was written here, and all three pass
+unchanged; they stay in the mandated set.
+
+## F1 — coverage that fails closed, and a declaration that keeps its correlations
+
+### The two ways round 10 was fail-open
+
+**(a) Coverage was measured with the same restriction it was supposed to check.**
+The derivation reads `p0_stop "…"` / `p0_fail "…"` and one exact single-quoted
+direct-`printf` spelling. The "independent" site total at
+`SELF_QA_RP6.md:5782-5787` used that same lexical restriction. So an executable
+emitter written in another valid shell spelling vanished from the declaration AND
+from the check meant to notice the vanishing. The audit inserted one reachable
+`p0_stop 'r10_alt_syntax detail=single_quoted'` and the fence returned all ten
+assertions PASS at rc 0.
+
+**(b) Normalisation destroyed field correlation.** Round 10 emitted one line per
+*form* — prefix, reason, field order — and gave each field an independent sorted
+union of values. The three `identity_unexpected` sites collapsed into one line
+whose three fields admitted a Cartesian product; twelve forms admitted 65
+combinations no site emits. Relabelling `account=gatea` to `account=mtc-bridge`
+at one site left the union byte-identical, so the semantic relabel was invisible.
+
+### The repair
+
+**Correlated tuples.** The derivation now emits one line per distinct
+`<PREFIX, reason, field₁=value₁, field₂=value₂, …>` tuple, with the number of
+sites emitting exactly that tuple as its count. Every `{}` holds exactly one
+value class. Assertion 8 fails the fence if any `{}` ever contains a comma, so
+per-field unions cannot come back silently. §8.1.1 of the preregistration draft
+carries the regenerated declaration — **149 tuples, 163 emit sites** — and the
+paragraph describing the rule was rewritten to match.
+
+**Fail-closed census.** Coverage is now measured by a rule that does not mention
+the modelled quoting at all: every line that uses `p0_stop`/`p0_fail` as a shell
+word, or writes the `P0_STOP`/`P0_FAIL` result literal, minus exactly two
+declared exclusions — the two wrapper definitions and whole-line comments. Any
+censused line the parser cannot read is a coverage error and the fence FAILS. The
+census total must also equal the derived site total. An unmodelled future syntax
+now breaks the fence instead of disappearing from it.
+
+**What that does and does not buy.** It does not make the parser understand new
+syntax — it makes the fence refuse to certify a block containing syntax it does
+not understand. That distinction is asserted executably in `R11_F1_RED`'s last
+case rather than left to the reader.
+
+### R11_GRAMMAR harness
+
+```bash
+# R11_GRAMMAR_HARNESS_BEGIN
+#!/usr/bin/env bash
+# ===========================================================================
+# Round 11, finding 1 - FAIL-CLOSED, CORRELATION-PRESERVING grammar closure.
+#
+# The round-10 fence (R10_GRAMMAR, superseded by this one) was fail-OPEN in two
+# independent ways, both demonstrated by the round-10 audit:
+#
+#   (a) Coverage was defined by the same lexical restriction on both sides. It
+#       modelled only `p0_stop "..."` / `p0_fail "..."` and one exact
+#       single-quoted direct-printf spelling, and its "independent" site total
+#       used that same restriction. An executable emitter written in ANY other
+#       valid shell spelling - `p0_stop '...'` for instance - vanished from both
+#       counts and the fence stayed GREEN.
+#   (b) Normalisation was lossy. It grouped sites by prefix+reason+field-order
+#       and then stored an INDEPENDENT value set per field, destroying the
+#       correlation between fields of the same site. Twelve forms admitted 65
+#       synthetic field-value combinations that no site emits, so a
+#       correlation-preserving relabel (`account=gatea` -> `account=mtc-bridge`
+#       at one of the three `identity_unexpected` sites) left the union - and
+#       the fence - unchanged.
+#
+# This fence repairs both and carries every round-10 assertion and mutant
+# forward unchanged, so nothing the old fence killed is now survivable:
+#
+#   * DERIVATION preserves each site's CORRELATED tuple. One output line per
+#     distinct <PREFIX, reason, field1=value1, field2=value2, ...>, with the
+#     number of sites emitting exactly that tuple as its count. Every `{}` holds
+#     exactly ONE value class, which assertion 8 checks, so a union can never
+#     reappear silently.
+#   * COVERAGE is censused by a BROADER, independent mechanism: every line that
+#     mentions an emit wrapper as a shell word, or the `P0_STOP`/`P0_FAIL`
+#     result literal, minus the two wrapper definitions and whole-line comments.
+#     Any such line the modelled parser cannot read is a COVERAGE ERROR and the
+#     fence FAILS CLOSED - it does not silently skip the site. An unmodelled
+#     future syntax therefore breaks the fence instead of disappearing from it.
+#
+# D026: GREEN on the round-11 bytes; SEVEN RED mutants - the five carried from
+# round 10 plus the two the audit named - each of which must make the whole
+# verdict nonzero, with the sub-check that killed it recorded.
+# ===========================================================================
+set -u
+BLOCK="${1:-RP6-P0.sh}"
+DRAFT="${2:-../WPI_PREREG_DRAFT_ROUND1/WPI_PREREGISTRATION_DRAFT.md}"
+R11G_OK=0; R11G_BAD=0
+gok()  { printf 'ASSERT_MET %s\n'   "$1"; R11G_OK=$((R11G_OK+1)); }
+gbad() { printf 'ASSERT_UNMET %s\n' "$1"; R11G_BAD=$((R11G_BAD+1)); }
+
+# ---- the derivation: one line per CORRELATED site tuple ---------------------
+p0_derive_grammar() {
+  local b="$1"
+  {
+    grep -n 'p0_stop "\|p0_fail "' "$b" \
+      | grep -v '^[0-9]*:p0_stop() {\|^[0-9]*:p0_fail() {' \
+      | sed -e 's/^\([0-9]*\):.*p0_stop "/\1\tP0_STOP\t/' \
+            -e 's/^\([0-9]*\):.*p0_fail "/\1\tP0_FAIL\t/' \
+            -e 's/".*$//'
+    grep -n "printf 'P0_STOP reason=\|printf 'P0_FAIL reason=" "$b" \
+      | grep -v '^[0-9]*:p0_stop() {\|^[0-9]*:p0_fail() {' \
+      | sed -e "s/^\([0-9]*\):.*printf 'P0_STOP reason=/\1\tP0_STOP\t/" \
+            -e "s/^\([0-9]*\):.*printf 'P0_FAIL reason=/\1\tP0_FAIL\t/" \
+            -e 's/[\][n].*$//'
+  } | awk -F'\t' '
+  function classify(v,   out) {
+    out = v
+    gsub(/\$\{[A-Za-z_][A-Za-z_0-9]*\}/, "<&>", out)
+    gsub(/\$[A-Za-z_][A-Za-z_0-9]*/,     "<&>", out)
+    gsub(/<\$\{/, "<", out); gsub(/\}>/, ">", out)
+    gsub(/<\$/,   "<", out)
+    gsub(/%s/,    "<printf_arg>", out)
+    return out
+  }
+  {
+    n = split($3, toks, " ")
+    reason = toks[1]
+    tuple = $2 " " reason
+    for (i = 2; i <= n; i++) {
+      if (toks[i] == "") continue
+      eq = index(toks[i], "=")
+      if (eq == 0) { print "UNPARSEABLE_EMITTER line=" $1 " tok=" toks[i]; continue }
+      tuple = tuple " " substr(toks[i], 1, eq-1) "={" classify(substr(toks[i], eq+1)) "}"
+    }
+    TUPLE[tuple]++
+  }
+  END { for (t in TUPLE) print TUPLE[t] " " t }' | sort -k2,2 -k3,3 -k1,1n
+}
+
+p0_declared_grammar() {
+  sed -n '/^# P0_RESULT_GRAMMAR_BEGIN$/,/^# P0_RESULT_GRAMMAR_END$/p' "$1" \
+    | sed -e '1d' -e '$d'
+}
+
+# ---- the INDEPENDENT, BROADER census ---------------------------------------
+# Deliberately NOT keyed on the modelled quoting. It finds every line that uses
+# an emit wrapper as a shell word or writes a result literal, then removes only
+# two DECLARED exclusions: the two wrapper definitions, and whole-line comments.
+p0_census_emitters() {
+  grep -nE '(^|[^A-Za-z0-9_])p0_(stop|fail)([^A-Za-z0-9_]|$)|P0_STOP|P0_FAIL' "$1" \
+    | grep -vE '^[0-9]+:[[:space:]]*#' \
+    | grep -vE '^[0-9]+:p0_(stop|fail)\(\) \{'
+}
+# Every censused line the modelled parser cannot read. Non-empty => FAIL CLOSED.
+p0_census_unmodeled() {
+  p0_census_emitters "$1" \
+    | grep -vE ':.*p0_(stop|fail) "' \
+    | grep -vE ":.*printf 'P0_(STOP|FAIL) reason="
+}
+
+# ---- one verdict over one set of bytes, reusable by the mutants -------------
+# Sets R11G_WHY to the comma-separated list of sub-checks that failed.
+p0_grammar_verdict() {
+  local b="$1" decl="$2" tag="$3" bad=0 why="" n_cen n_sit
+  R11G_WHY=""
+  p0_derive_grammar "$b" > "$Q11G/$tag.derived"
+  p0_census_unmodeled "$b" > "$Q11G/$tag.unmodeled"
+  if grep -q 'UNPARSEABLE_EMITTER' "$Q11G/$tag.derived"; then
+    bad=1; why="$why,no_unparseable_emitter"; fi
+  if [ -s "$Q11G/$tag.unmodeled" ]; then
+    bad=1; why="$why,census_no_unmodeled_syntax"; fi
+  n_cen=$(p0_census_emitters "$b" | wc -l)
+  n_sit=$(awk '{s+=$1} END{printf "%d", s+0}' "$Q11G/$tag.derived")
+  if [ "$n_cen" != "$n_sit" ]; then
+    bad=1; why="$why,census_covers_every_emitter($n_cen!=$n_sit)"; fi
+  if ! diff -q "$decl" "$Q11G/$tag.derived" > /dev/null 2>&1; then
+    bad=1; why="$why,grammar_closed"; fi
+  R11G_WHY="${why#,}"
+  return "$bad"
+}
+
+Q11G="$(mktemp -d)"
+trap 'rm -rf "$Q11G"' EXIT
+
+[ -f "$BLOCK" ] || gbad "block_missing path=$BLOCK"
+[ -f "$DRAFT" ] || gbad "draft_missing path=$DRAFT"
+
+p0_declared_grammar "$DRAFT" > "$Q11G/declared.txt"
+p0_derive_grammar   "$BLOCK" > "$Q11G/derived.txt"
+p0_census_unmodeled "$BLOCK" > "$Q11G/unmodeled.txt"
+n_decl=$(wc -l < "$Q11G/declared.txt")
+n_der=$(wc -l  < "$Q11G/derived.txt")
+sites_decl=$(awk '{s+=$1} END{printf "%d", s+0}' "$Q11G/declared.txt")
+sites_der=$(awk  '{s+=$1} END{printf "%d", s+0}' "$Q11G/derived.txt")
+n_census=$(p0_census_emitters "$BLOCK" | wc -l)
+printf 'R11_GRAMMAR_DECLARED tuples=%s sites=%s source=%s\n' "$n_decl" "$sites_decl" "$DRAFT"
+printf 'R11_GRAMMAR_DERIVED  tuples=%s sites=%s source=%s\n'  "$n_der"  "$sites_der"  "$BLOCK"
+printf 'R11_GRAMMAR_CENSUS   emitter_lines=%s unmodeled=%s\n' "$n_census" "$(wc -l < "$Q11G/unmodeled.txt")"
+
+# 1. the declaration must not be empty - a missing marker pair would otherwise
+#    make an empty-vs-empty comparison pass. [carried from R10, assertion 1]
+[ "$n_decl" -gt 0 ] && gok "declaration_present tuples=$n_decl" \
+  || gbad "declaration_present tuples=$n_decl (section 8.1.1 marker pair not found)"
+
+# 2. TOTAL closure, both directions, in one comparison. [carried, assertion 2]
+if diff -u "$Q11G/declared.txt" "$Q11G/derived.txt" > "$Q11G/diff.txt" 2>&1; then
+  gok "grammar_closed declared==derived tuples=$n_decl sites=$sites_decl"
+else
+  gbad "grammar_closed declared!=derived diff_lines=$(grep -c '^[+-][^+-]' "$Q11G/diff.txt")"
+  sed -n '1,60p' "$Q11G/diff.txt"
+fi
+
+# 3. the round-10 narrow site total, carried UNCHANGED so nothing it caught is
+#    lost. It is no longer the only coverage check - see 6 and 7.
+n_wrap=$(grep 'p0_stop "\|p0_fail "' "$BLOCK" | grep -vc '^p0_stop() {\|^p0_fail() {' || true)
+n_direct=$(grep "printf 'P0_STOP reason=\|printf 'P0_FAIL reason=" "$BLOCK" | grep -vc '^p0_stop() {\|^p0_fail() {' || true)
+n_expect=$(( n_wrap + n_direct ))
+[ "$sites_der" = "$n_expect" ] \
+  && gok "site_total_independent expected=$n_expect derived=$sites_der wrapper_sites=$n_wrap direct_sites=$n_direct" \
+  || gbad "site_total_independent expected=$n_expect derived=$sites_der wrapper_sites=$n_wrap direct_sites=$n_direct"
+
+# 4. no emitter token defeated the parser. [carried, assertion 4]
+if grep -q 'UNPARSEABLE_EMITTER' "$Q11G/derived.txt"; then
+  gbad "no_unparseable_emitter"; grep 'UNPARSEABLE_EMITTER' "$Q11G/derived.txt"
+else
+  gok "no_unparseable_emitter"
+fi
+
+# 5. the ERR-trap emitter's three %s arguments, asserted as an exact whole line,
+#    because the derivation can only see the format string. [carried, 5]
+if grep -qxF '        "$rc" "${BASH_LINENO[0]}" "$BASH_COMMAND"' "$BLOCK"; then
+  gok "err_trap_printf_arguments=rc,BASH_LINENO0,BASH_COMMAND"
+else
+  gbad "err_trap_printf_arguments=rc,BASH_LINENO0,BASH_COMMAND MISSING"
+fi
+
+# 6. NEW - fail closed on coverage. Every line the broad census finds must be a
+#    line the modelled parser can read. A single unmodelled spelling FAILS here.
+if [ -s "$Q11G/unmodeled.txt" ]; then
+  gbad "census_no_unmodeled_syntax count=$(wc -l < "$Q11G/unmodeled.txt")"
+  sed -n '1,20p' "$Q11G/unmodeled.txt"
+else
+  gok "census_no_unmodeled_syntax"
+fi
+
+# 7. NEW - the broad census and the derivation must agree on the site total, so
+#    a site that is censused but not parsed (or parsed but not censused) is a
+#    failure rather than a silent difference.
+[ "$n_census" = "$sites_der" ] \
+  && gok "census_covers_every_emitter census_lines=$n_census derived_sites=$sites_der" \
+  || gbad "census_covers_every_emitter census_lines=$n_census derived_sites=$sites_der"
+
+# 8. NEW - the declaration is correlation-preserving by construction: no `{}`
+#    may hold more than one value class. This is what makes a per-site relabel
+#    visible; if a future edit reintroduced per-field unions, this fails.
+if grep -q '{[^}]*,[^}]*}' "$Q11G/declared.txt"; then
+  gbad "correlation_preserved_one_value_per_field"
+  grep -n '{[^}]*,[^}]*}' "$Q11G/declared.txt" | sed -n '1,10p'
+else
+  gok "correlation_preserved_one_value_per_field"
+fi
+
+# ---- D026: seven mutants. Each must make the WHOLE verdict nonzero. ---------
+mutate_and_expect_fail() {
+  local label="$1" sedexpr="$2"
+  local m="$Q11G/mut_$label.sh"
+  sed "$sedexpr" "$BLOCK" > "$m"
+  if cmp -s "$m" "$BLOCK"; then
+    gbad "mutant=$label NOT_APPLIED (the sed expression matched nothing, so the mutant is not a mutant)"
+    return
+  fi
+  if p0_grammar_verdict "$m" "$Q11G/declared.txt" "mut_$label"; then
+    gbad "mutant=$label SURVIVED (the fence still returns closed on mutated bytes)"
+  else
+    gok "mutant=$label killed_by=$R11G_WHY"
+  fi
+}
+# (a) a reason relabelled - the round-9b move round 10 withdrew   [carried]
+mutate_and_expect_fail relabel_f4_site \
+  's|p0_stop "internal_invariant_unmet invariant=trusted_python_pin_bound.*"|p0_stop "input_pin_omitted tool=python3 detail=every_preregistered_tool_requires_one_frozen_pin"|'
+# (b) a field dropped from an emitter                             [carried]
+mutate_and_expect_fail drop_field \
+  's|p0_stop "tool_pin_unpinned tool=$t detail=every_tool_requires_a_frozen_pin"|p0_stop "tool_pin_unpinned tool=$t"|'
+# (c) a literal detail token changed                              [carried]
+mutate_and_expect_fail retoken_detail \
+  's|detail=access_builtin_x_denied|detail=x_denied|'
+# (d) a brand-new undeclared emitter added                        [carried]
+mutate_and_expect_fail new_emitter \
+  '/^p0_probe_kind() {/a\    [ -z "${P0_R11_MUTANT_D:-}" ] || p0_stop "r11_mutant_reason path=$1 detail=undeclared_form"'
+# (f) NEW - an executable emitter in an ALTERNATE VALID QUOTING FORM. Round 10
+#     could not see this at all: it is invisible to `p0_stop "`, so both the
+#     derivation and the old "independent" total ignored it and the fence stayed
+#     GREEN. Here it must be caught by the census, fail-closed.
+mutate_and_expect_fail alt_quoting \
+  '/^p0_probe_kind() {/a\    [ -z "${P0_R11_ALT_SYNTAX_MUTANT:-}" ] || p0_stop '"'"'r11_alt_syntax detail=single_quoted'"'"''
+# (g) NEW - the CORRELATION-PRESERVING RELABEL the audit demonstrated. Only the
+#     `account=` field of ONE of the three `identity_unexpected` sites changes,
+#     and the other two sites keep both account values, so the round-10 per-field
+#     union was byte-identical and the old fence stayed GREEN. Against correlated
+#     tuples it is one changed tuple and two diff lines.
+mutate_and_expect_fail correlated_relabel \
+  's|\(p0_stop "identity_unexpected observed_numeric=\$live_uid:\$live_gid .*\)account=gatea"|\1account=mtc-bridge"|'
+# (e) the draft side: one declaration line removed must also break closure [carried]
+sed '/^1 P0_STOP link_target_probe_multiline /d' "$Q11G/declared.txt" > "$Q11G/decl_short.txt"
+if cmp -s "$Q11G/decl_short.txt" "$Q11G/declared.txt"; then
+  gbad "mutant=declaration_line_removed NOT_APPLIED"
+elif diff -q "$Q11G/decl_short.txt" "$Q11G/derived.txt" > /dev/null 2>&1; then
+  gbad "mutant=declaration_line_removed SURVIVED"
+else
+  gok "mutant=declaration_line_removed killed"
+fi
+
+printf 'R11_GRAMMAR_SUMMARY cases=%s pass=%s fail=%s result=%s\n' \
+  "$((R11G_OK+R11G_BAD))" "$R11G_OK" "$R11G_BAD" \
+  "$([ "$R11G_BAD" -eq 0 ] && echo PASS || echo FAIL)"
+[ "$R11G_BAD" -eq 0 ] || exit 1
+# R11_GRAMMAR_HARNESS_END
+```
+
+Invocation (from `WPI_BLOCKS_DRAFT`):
+
+```text
+sed -n '/^# R11_GRAMMAR_HARNESS_BEGIN$/,/^# R11_GRAMMAR_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+```
+
+Real captured output:
+
+```text
+R11_GRAMMAR_DECLARED tuples=149 sites=163 source=../WPI_PREREG_DRAFT_ROUND1/WPI_PREREGISTRATION_DRAFT.md
+R11_GRAMMAR_DERIVED  tuples=149 sites=163 source=RP6-P0.sh
+R11_GRAMMAR_CENSUS   emitter_lines=163 unmodeled=0
+ASSERT_MET declaration_present tuples=149
+ASSERT_MET grammar_closed declared==derived tuples=149 sites=163
+ASSERT_MET site_total_independent expected=163 derived=163 wrapper_sites=162 direct_sites=1
+ASSERT_MET no_unparseable_emitter
+ASSERT_MET err_trap_printf_arguments=rc,BASH_LINENO0,BASH_COMMAND
+ASSERT_MET census_no_unmodeled_syntax
+ASSERT_MET census_covers_every_emitter census_lines=163 derived_sites=163
+ASSERT_MET correlation_preserved_one_value_per_field
+ASSERT_MET mutant=relabel_f4_site killed_by=grammar_closed
+ASSERT_MET mutant=drop_field killed_by=grammar_closed
+ASSERT_MET mutant=retoken_detail killed_by=grammar_closed
+ASSERT_MET mutant=new_emitter killed_by=grammar_closed
+ASSERT_MET mutant=alt_quoting killed_by=census_no_unmodeled_syntax,census_covers_every_emitter(164!=163)
+ASSERT_MET mutant=correlated_relabel killed_by=grammar_closed
+ASSERT_MET mutant=declaration_line_removed killed
+R11_GRAMMAR_SUMMARY cases=15 pass=15 fail=0 result=PASS
+```
+
+### The discriminating-power proof, executed
+
+D026 requires the two new mutants to be shown RED against the mechanism they
+replace, not merely GREEN against the new one. `R11_F1_RED` does that without
+paraphrasing either mechanism: it EXTRACTS the round-10 derivation from the
+superseded `R10_GRAMMAR` harness in this file and the round-11 derivation and
+census from the live `R11_GRAMMAR` harness, then runs both over the same mutated
+bytes. It also records the honest boundary — the round-11 *parser* is as blind to
+the alternate quoting form as round 10's was, and the *census* is what fails
+closed on it.
+
+```bash
+# R11_F1_RED_HARNESS_BEGIN
+#!/usr/bin/env bash
+# ===========================================================================
+# Round 11, finding 1 - the DISCRIMINATING-POWER proof, executed.
+#
+# D026 requires the two new mutants to be shown RED against the mechanism they
+# replace, not merely GREEN against the new one. This fence does exactly that,
+# and it does not paraphrase either mechanism: it EXTRACTS the round-10
+# derivation from the superseded `R10_GRAMMAR` harness in this same file, and
+# the round-11 derivation and census from the live `R11_GRAMMAR` harness, then
+# runs both over the same mutated bytes.
+#
+#   RED  : the round-10 normalisation is INVARIANT under both mutants, and its
+#          "independent" site total is invariant under the alternate quoting
+#          form. That is why the round-10 fence returned PASS on both - the
+#          audit's finding, reproduced here mechanically.
+#   GREEN: the round-11 census sees the alternate quoting form, and the
+#          round-11 correlated tuples see the relabel.
+#
+# It also records the honest boundary: the round-11 DERIVATION is as blind to
+# the alternate quoting form as round 10's was - the census, not the parser, is
+# what makes that mutant fail closed.
+# ===========================================================================
+set -u
+BLK="${1:-RP6-P0.sh}"
+QA="${2:-SELF_QA_RP6.md}"
+R11RED_OK=0; R11RED_BAD=0
+rnote(){ if [ "$1" = "$2" ]; then R11RED_OK=$((R11RED_OK+1)); printf 'CASE_OK %s got=[%s]\n' "$3" "$1"; else R11RED_BAD=$((R11RED_BAD+1)); printf 'CASE_BAD %s got=[%s] want=[%s]\n' "$3" "$1" "$2"; fi; }
+Q="$(mktemp -d)"
+trap 'rm -rf "$Q"' EXIT
+
+# ---- the two mechanisms, extracted from their own published harnesses -------
+sed -n '/^# R10_GRAMMAR_HARNESS_BEGIN$/,/^# R10_GRAMMAR_HARNESS_END$/p' "$QA" \
+  | sed -n '/^p0_derive_grammar() {$/,/^}$/p' \
+  | sed '1s/^p0_derive_grammar() {$/r10_derive() {/' > "$Q/r10.sh"
+sed -n '/^# R11_GRAMMAR_HARNESS_BEGIN$/,/^# R11_GRAMMAR_HARNESS_END$/p' "$QA" \
+  | sed -n '/^p0_derive_grammar() {$/,/^}$/p' \
+  | sed '1s/^p0_derive_grammar() {$/r11_derive() {/' > "$Q/r11.sh"
+sed -n '/^# R11_GRAMMAR_HARNESS_BEGIN$/,/^# R11_GRAMMAR_HARNESS_END$/p' "$QA" \
+  | sed -n '/^p0_census_emitters() {$/,/^}$/p' >> "$Q/r11.sh"
+sed -n '/^# R11_GRAMMAR_HARNESS_BEGIN$/,/^# R11_GRAMMAR_HARNESS_END$/p' "$QA" \
+  | sed -n '/^p0_census_unmodeled() {$/,/^}$/p' >> "$Q/r11.sh"
+for want in 'r10_derive() {:'"$Q/r10.sh" 'r11_derive() {:'"$Q/r11.sh" \
+            'p0_census_emitters() {:'"$Q/r11.sh" 'p0_census_unmodeled() {:'"$Q/r11.sh"; do
+    fn="${want%%:*}"; f="${want#*:}"
+    if grep -qxF "$fn" "$f"; then rnote extracted extracted "BUILD_[${fn%%(*}]"
+    else rnote missing extracted "BUILD_[${fn%%(*}]"; fi
+done
+# shellcheck disable=SC1090
+. "$Q/r10.sh"
+# shellcheck disable=SC1090
+. "$Q/r11.sh"
+# round-10's own "independent" site total, verbatim from the R10 fence
+r10_sites() {
+  local w d
+  w=$(grep 'p0_stop "\|p0_fail "' "$1" | grep -vc '^p0_stop() {\|^p0_fail() {' || true)
+  d=$(grep "printf 'P0_STOP reason=\|printf 'P0_FAIL reason=" "$1" | grep -vc '^p0_stop() {\|^p0_fail() {' || true)
+  printf '%s' "$(( w + d ))"
+}
+
+# ---- the two mutants the audit named ---------------------------------------
+sed '/^p0_probe_kind() {/a\    [ -z "${P0_R11_ALT_SYNTAX_MUTANT:-}" ] || p0_stop '"'"'r11_alt_syntax detail=single_quoted'"'"'' \
+    "$BLK" > "$Q/mut_alt.sh"
+sed 's|\(p0_stop "identity_unexpected observed_numeric=\$live_uid:\$live_gid .*\)account=gatea"|\1account=mtc-bridge"|' \
+    "$BLK" > "$Q/mut_relabel.sh"
+cmp -s "$Q/mut_alt.sh"     "$BLK" && rnote not_applied applied "M1_alt_quoting_applied"     || rnote applied applied "M1_alt_quoting_applied"
+cmp -s "$Q/mut_relabel.sh" "$BLK" && rnote not_applied applied "M2_correlated_relabel_applied" || rnote applied applied "M2_correlated_relabel_applied"
+# the alternate-quoting mutant must be EXECUTABLE shell, not dead text
+bash -n "$Q/mut_alt.sh" && rnote syntax_ok syntax_ok "M1_alt_quoting_is_valid_shell" || rnote syntax_bad syntax_ok "M1_alt_quoting_is_valid_shell"
+rnote "$(grep -c "p0_stop 'r11_alt_syntax" "$Q/mut_alt.sh")" 1 "M1_alt_quoting_inserted_once"
+rnote "$(diff <(grep -c '' "$BLK") <(grep -c '' "$Q/mut_relabel.sh") > /dev/null && echo same_length || echo differs)" \
+      same_length "M2_relabel_changes_no_line_count"
+
+r10_derive "$BLK"             > "$Q/r10_base.txt"
+r10_derive "$Q/mut_alt.sh"    > "$Q/r10_alt.txt"
+r10_derive "$Q/mut_relabel.sh"> "$Q/r10_rel.txt"
+r11_derive "$BLK"             > "$Q/r11_base.txt"
+r11_derive "$Q/mut_alt.sh"    > "$Q/r11_alt.txt"
+r11_derive "$Q/mut_relabel.sh"> "$Q/r11_rel.txt"
+
+# ---- RED: the round-10 mechanism cannot see either mutant -------------------
+cmp -s "$Q/r10_base.txt" "$Q/r10_alt.txt" \
+  && rnote invariant invariant "RED_r10_derivation_blind_to_alt_quoting" \
+  || rnote differs invariant "RED_r10_derivation_blind_to_alt_quoting"
+rnote "$(r10_sites "$BLK")" "$(r10_sites "$Q/mut_alt.sh")" "RED_r10_independent_total_blind_to_alt_quoting"
+cmp -s "$Q/r10_base.txt" "$Q/r10_rel.txt" \
+  && rnote invariant invariant "RED_r10_normalisation_blind_to_correlated_relabel" \
+  || rnote differs invariant "RED_r10_normalisation_blind_to_correlated_relabel"
+
+# ---- GREEN: the round-11 mechanisms do see them ----------------------------
+rnote "$(p0_census_unmodeled "$Q/mut_alt.sh" | wc -l)" 1 "GREEN_r11_census_flags_alt_quoting"
+rnote "$(p0_census_emitters "$Q/mut_alt.sh" | wc -l)" \
+      "$(( $(p0_census_emitters "$BLK" | wc -l) + 1 ))" "GREEN_r11_census_total_moves"
+rnote "$(p0_census_unmodeled "$BLK" | wc -l)" 0 "GREEN_r11_census_clean_on_real_bytes"
+if cmp -s "$Q/r11_base.txt" "$Q/r11_rel.txt"; then
+  rnote invariant differs "GREEN_r11_tuples_see_correlated_relabel"
+else
+  rnote differs differs "GREEN_r11_tuples_see_correlated_relabel"
+  printf 'RELABEL_DIFF %s\n' "$(diff "$Q/r11_base.txt" "$Q/r11_rel.txt" | grep -c '^[<>]')"
+  diff "$Q/r11_base.txt" "$Q/r11_rel.txt" | sed -n '1,6p'
+fi
+
+# ---- the honest boundary, asserted rather than left implicit ---------------
+# The round-11 PARSER is as blind to the alternate quoting form as round 10's
+# was - both read `p0_stop "`. It is the CENSUS that fails closed on it. Saying
+# so here stops the next round from believing the parser got broader.
+cmp -s "$Q/r11_base.txt" "$Q/r11_alt.txt" \
+  && rnote invariant invariant "BOUNDARY_r11_parser_alone_still_blind_census_is_what_catches_it" \
+  || rnote differs invariant "BOUNDARY_r11_parser_alone_still_blind_census_is_what_catches_it"
+
+printf 'R11_F1_RED_SUMMARY cases=%s pass=%s fail=%s result=%s\n' \
+  "$((R11RED_OK+R11RED_BAD))" "$R11RED_OK" "$R11RED_BAD" \
+  "$([ "$R11RED_BAD" -eq 0 ] && echo PASS || echo FAIL)"
+[ "$R11RED_BAD" -eq 0 ] || exit 1
+# R11_F1_RED_HARNESS_END
+```
+
+Invocation (from `WPI_BLOCKS_DRAFT`):
+
+```text
+sed -n '/^# R11_F1_RED_HARNESS_BEGIN$/,/^# R11_F1_RED_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+```
+
+Real captured output:
+
+```text
+CASE_OK BUILD_[r10_derive] got=[extracted]
+CASE_OK BUILD_[r11_derive] got=[extracted]
+CASE_OK BUILD_[p0_census_emitters] got=[extracted]
+CASE_OK BUILD_[p0_census_unmodeled] got=[extracted]
+CASE_OK M1_alt_quoting_applied got=[applied]
+CASE_OK M2_correlated_relabel_applied got=[applied]
+CASE_OK M1_alt_quoting_is_valid_shell got=[syntax_ok]
+CASE_OK M1_alt_quoting_inserted_once got=[1]
+CASE_OK M2_relabel_changes_no_line_count got=[same_length]
+CASE_OK RED_r10_derivation_blind_to_alt_quoting got=[invariant]
+CASE_OK RED_r10_independent_total_blind_to_alt_quoting got=[163]
+CASE_OK RED_r10_normalisation_blind_to_correlated_relabel got=[invariant]
+CASE_OK GREEN_r11_census_flags_alt_quoting got=[1]
+CASE_OK GREEN_r11_census_total_moves got=[164]
+CASE_OK GREEN_r11_census_clean_on_real_bytes got=[0]
+CASE_OK GREEN_r11_tuples_see_correlated_relabel got=[differs]
+RELABEL_DIFF 2
+58c58
+< 1 P0_STOP identity_unexpected observed_numeric={<live_uid>:<live_gid>} expected_numeric={<P0_PW_UID>:<P0_PW_GID>} account={gatea}
+---
+> 1 P0_STOP identity_unexpected observed_numeric={<live_uid>:<live_gid>} expected_numeric={<P0_PW_UID>:<P0_PW_GID>} account={mtc-bridge}
+CASE_OK BOUNDARY_r11_parser_alone_still_blind_census_is_what_catches_it got=[invariant]
+R11_F1_RED_SUMMARY cases=17 pass=17 fail=0 result=PASS
+```
+
+### What `R11_GRAMMAR` still does not establish
+
+Unchanged from round 10 and repeated because it bounds the claim: this is a
+**static source** grammar. It constrains prefixes, reasons, field names, field
+order, every literal value, every literal `detail=` token, and now the
+correlation between the fields of one site. It does not constrain what a `<name>`
+class evaluates to at run time. Runtime shape is evidenced only by the executable
+fixtures — `R11_F3`, `R10_F3`, `R10_F4` and the earlier round fences — and only
+for the forms those fixtures drive.
+
+## F2 — an unrecognised `%F` token is rc 3, at both classification sites
+
+### What was still wrong after round 10
+
+Round 10 adjudicated the SHAPE of the followed-target response (empty,
+multi-line, non-printable) but then sent every remaining printable token through
+`*) P0_FKIND="other"`. Arbitrary producer text is a printable single line, so it
+reached `P0_FAIL reason=interpreter_target_kind_unexpected kind=other` at rc 1 —
+a completed observation of deviant host state asserted from an answer the block
+could not read. That is Pattern 1: an inability to evaluate must STOP.
+
+The audit named the followed-target site. The **leaf** classifier carried the
+identical catch-all, one `case` block below, feeding
+`venv_root_kind_unexpected` / `interpreter_kind_unexpected` at rc 1 from the same
+unreadable input. Repairing one and leaving the other would have left the finding
+live under a different reason token, so both are repaired.
+
+### The repair
+
+The accepted token set is the complete return set of GNU coreutils `file_type()`
+(`src/stat.c`) — the pinned producer this block already depends on for its
+C-locale failure shapes in `p0_classify_stat_shape`:
+
+```text
+regular file · regular empty file · directory · symbolic link · block special file
+character special file · contiguous data · door · fifo · message queue
+multiplexed file · named file · network special file · port · semaphore
+shared memory object · socket · typed memory object · weird file · whiteout
+```
+
+* a **recognised** kind that is not a regular file stays `other` and stays a
+  caller FAIL at rc 1 — that is a real host-state divergence and the repair must
+  not move it;
+* an **unrecognised** printable token STOPs at rc 3 under its own declared
+  reason: `link_target_kind_unrecognized` (followed target) or
+  `path_probe_kind_unrecognized` (leaf). Both are declared in §8.1.1.
+
+`symbolic link` is inside the followed-target set (a `-L` answer is not required
+to be link-free) and outside the leaf set (the arm above already consumed it).
+
+### R11_F3 harness
+
+```bash
+# R11_F3_HARNESS_BEGIN
+#!/usr/bin/env bash
+# ===========================================================================
+# Round 11, finding 2 - an UNRECOGNISED printable `%F` token is rc 3, not rc 1.
+#
+# Round 10 gated the SHAPE of the followed-target response (empty, multi-line,
+# non-printable) but then sent every remaining printable token through
+# `*) P0_FKIND="other"`, including text that is no GNU `%F` kind at all. The
+# caller published that as `interpreter_target_kind_unexpected ... kind=other`
+# at rc 1 - a completed observation of deviant host state asserted from a
+# producer answer the block could not read. The leaf classifier carried the
+# identical catch-all. Round 11 pins the producer's COMPLETE `%F` vocabulary at
+# both sites: a recognised non-regular kind is still a real observation and
+# stays rc 1; an unrecognised token STOPs at rc 3 under its own declared reason.
+#
+# GREEN drives the REAL round-11 functions, extracted by function anchor and
+# called through the REAL `p0_assert_interpreter_executable`, so the verdict
+# under test is the block's own. RED is a faithful replica of the round-10
+# catch-all at BOTH sites and reproduces the audit's rc-1 observation. Every
+# result assertion is an EXACT WHOLE LINE.
+# ===========================================================================
+set -u
+R11F3_OK=0; R11F3_BAD=0
+f3note(){ if [ "$1" = "$2" ]; then R11F3_OK=$((R11F3_OK+1)); printf 'CASE_OK %s got=[%s]\n' "$3" "$1"; else R11F3_BAD=$((R11F3_BAD+1)); printf 'CASE_BAD %s got=[%s] want=[%s]\n' "$3" "$1" "$2"; fi; }
+R11F3_BLK="${1:-RP6-P0.sh}"
+Q="$(mktemp -d)"
+trap 'rm -rf "$Q"' EXIT
+
+# --- the stat shim. BOTH `%F` probes are now variables under test: the leaf
+# answer and the followed answer. The metadata probe (`%F|%a|%u:%g`) is not
+# matched by either arm and keeps its fixed record.
+cat > "$Q/stat" <<'SHIMEOF'
+#!/bin/sh
+if [ "$1" = "-L" ] && [ "$2" = "-c" ] && [ "$3" = "%F" ]; then
+    printf '%s' "$R11F3_FOLLOW"; exit 0
+fi
+if [ "$1" = "-c" ] && [ "$2" = "%F" ]; then printf '%s' "$R11F3_LEAF"; exit 0; fi
+printf 'regular file|755|0:0'; exit 0
+SHIMEOF
+chmod +x "$Q/stat"
+
+# --- the REAL round-11 functions, by function anchor --------------------------
+{
+    sed -n '/^p0_stop() {/p'                  "$R11F3_BLK"
+    sed -n '/^p0_fail() {/p'                  "$R11F3_BLK"
+    sed -n '/^p0_sanitize()/,/^}/p'           "$R11F3_BLK"
+    sed -n '/^p0_count_substr()/,/^}/p'       "$R11F3_BLK"
+    sed -n '/^p0_classify_stat_shape()/,/^}/p' "$R11F3_BLK"
+    sed -n '/^p0_record_metadata()/,/^}/p'    "$R11F3_BLK"
+    sed -n '/^p0_probe_kind()/,/^}/p'         "$R11F3_BLK"
+    sed -n '/^p0_assert_interpreter_executable()/,/^}/p' "$R11F3_BLK"
+} > "$Q/real.sh"
+for fn in p0_stop p0_fail p0_sanitize p0_count_substr p0_classify_stat_shape \
+          p0_record_metadata p0_probe_kind p0_assert_interpreter_executable; do
+    grep -q "^$fn() {" "$Q/real.sh" \
+        || { printf 'ARM_BUILD_INCOMPLETE missing_function=%s\n' "$fn"; R11F3_BAD=$((R11F3_BAD+1)); }
+done
+
+P0_STAT="$Q/stat"
+P0_EACCES_TEXT="Permission denied"
+P0_ENOENT_TEXT="No such file or directory"
+R11F3_LEAF="symbolic link"
+R11F3_FOLLOW="regular file"
+export P0_STAT P0_EACCES_TEXT P0_ENOENT_TEXT R11F3_LEAF R11F3_FOLLOW
+# shellcheck disable=SC1090
+. "$Q/real.sh"
+
+run_real() {  # $1 = leaf token, $2 = followed token
+    R11F3_LEAF="$1"; R11F3_FOLLOW="$2"; export R11F3_LEAF R11F3_FOLLOW
+    RC=0
+    OUT="$(p0_assert_interpreter_executable /fixture/python 2>&1)" || RC=$?
+    LAST="$(printf '%s\n' "$OUT" | tail -1)"
+}
+run_probe() { # $1 = leaf token, $2 = followed token -> KIND/FKIND binding only
+    R11F3_LEAF="$1"; R11F3_FOLLOW="$2"; export R11F3_LEAF R11F3_FOLLOW
+    PRC=0
+    POUT="$( p0_probe_kind /fixture/python 2>&1; printf 'KIND=%s FKIND=%s' "$P0_KIND" "$P0_FKIND" )" || PRC=$?
+}
+
+# --- GREEN 1: an unrecognised FOLLOWED-target token -> declared STOP, rc 3 ----
+run_real "symbolic link" "made up stat kind"
+f3note "$RC" 3 "GREEN_followed_unrecognised_rc"
+f3note "$LAST" \
+  'P0_STOP reason=link_target_kind_unrecognized path=/fixture/python rc=0 detail=made up stat kind expected=complete_gnu_stat_percent_F_token' \
+  "GREEN_followed_unrecognised_exact_line"
+
+# --- GREEN 2: an unrecognised LEAF token -> declared STOP, rc 3 ---------------
+run_real "made up stat kind" "regular file"
+f3note "$RC" 3 "GREEN_leaf_unrecognised_rc"
+f3note "$LAST" \
+  'P0_STOP reason=path_probe_kind_unrecognized path=/fixture/python rc=0 detail=made up stat kind expected=complete_gnu_stat_percent_F_token' \
+  "GREEN_leaf_unrecognised_exact_line"
+
+# --- GREEN 3 (regression): a RECOGNISED non-regular followed kind is still a
+# completed observation and still FAILs at rc 1. The repair moves unreadable
+# producer output off rc 1; it must not move host-state divergence off rc 1.
+for k in "block special file" "character special file" "contiguous data" door \
+         fifo "message queue" "multiplexed file" "named file" \
+         "network special file" port semaphore "shared memory object" socket \
+         "symbolic link" "typed memory object" "weird file" whiteout; do
+    run_real "symbolic link" "$k"
+    f3note "$RC" 1 "GREEN_regression_followed_[$k]_rc"
+    f3note "$LAST" \
+      'P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular' \
+      "GREEN_regression_followed_[$k]_exact_line"
+done
+run_real "symbolic link" directory
+f3note "$RC" 1 "GREEN_regression_followed_[directory]_rc"
+f3note "$LAST" \
+  'P0_FAIL reason=interpreter_target_kind_unexpected kind=dir path=/fixture/python expected=regular' \
+  "GREEN_regression_followed_[directory]_exact_line"
+
+# --- GREEN 4 (regression): a RECOGNISED non-regular LEAF kind still binds
+# P0_KIND=other and still reaches the caller's rc-1 FAIL.
+for k in "block special file" "character special file" "contiguous data" door \
+         fifo "message queue" "multiplexed file" "named file" \
+         "network special file" port semaphore "shared memory object" socket \
+         "typed memory object" "weird file" whiteout; do
+    run_real "$k" "regular file"
+    f3note "$RC" 1 "GREEN_regression_leaf_[$k]_rc"
+    f3note "$LAST" \
+      'P0_FAIL reason=interpreter_kind_unexpected kind=other path=/fixture/python expected=regular_or_live_symlink' \
+      "GREEN_regression_leaf_[$k]_exact_line"
+done
+
+# --- GREEN 5 (regression): honest regular/dir answers still bind as before ----
+run_probe "symbolic link" "regular file"
+f3note "$PRC" 0 "GREEN_regression_regular_target_rc"
+f3note "$POUT" 'KIND=link_live FKIND=regular' "GREEN_regression_regular_target_binding"
+run_probe "symbolic link" "regular empty file"
+f3note "$POUT" 'KIND=link_live FKIND=regular' "GREEN_regression_regular_empty_target_binding"
+run_probe "regular file" "regular file"
+f3note "$PRC" 0 "GREEN_regression_regular_leaf_rc"
+f3note "$POUT" 'KIND=regular FKIND=regular' "GREEN_regression_regular_leaf_binding"
+run_probe directory "regular file"
+f3note "$POUT" 'KIND=dir FKIND=dir' "GREEN_regression_directory_leaf_binding"
+
+# --- RED: the round-10 catch-all at BOTH sites, replicated faithfully --------
+# Everything round 10 already had is kept - the leaf shape gate and the followed
+# shape gates - and ONLY the two classification catch-alls are restored. Driven
+# with the same unrecognised token, both must reach a caller rc-1 FAIL.
+r11f3_prefix_probe_kind() {
+    local p="$1" raw rc=0 sub subrc=0
+    P0_KIND=""; P0_FKIND=""
+    raw="$(LC_ALL=C "$P0_STAT" -c '%F' -- "$p" 2>&1)" || rc=$?
+    [ "$rc" -eq 0 ] || return "$rc"
+    p0_sanitize "$raw"
+    case "$P0_SAFE" in
+        "symbolic link")
+            sub="$(LC_ALL=C "$P0_STAT" -L -c '%F' -- "$p" 2>&1)" || subrc=$?
+            if [ "$subrc" -eq 0 ]; then
+                case "$sub" in '') p0_stop "link_target_probe_empty path=$p rc=0" ;; esac
+                p0_sanitize "$sub"
+                case "$P0_SAFE" in
+                    "regular file"|"regular empty file") P0_FKIND="regular" ;;
+                    "directory")                        P0_FKIND="dir" ;;
+                    *)   P0_FKIND="other" ;;            # <- the round-10 catch-all
+                esac
+                P0_KIND="link_live"
+                return 0
+            fi
+            return "$subrc" ;;
+        "regular file"|"regular empty file") P0_KIND="regular"; P0_FKIND="regular"; return 0 ;;
+        "directory")                         P0_KIND="dir";     P0_FKIND="dir";     return 0 ;;
+        *)                                   P0_KIND="other";   P0_FKIND="other";   return 0 ;;
+    esac                                     # <- the round-10 leaf catch-all
+}
+r11f3_prefix_assert() {   # the caller half, unchanged from the block
+    r11f3_prefix_probe_kind "$1"
+    case "$P0_KIND" in
+        regular) : ;;
+        link_live)
+            [ "$P0_FKIND" = "regular" ] \
+                || p0_fail "interpreter_target_kind_unexpected kind=$P0_FKIND path=$1 expected=regular" ;;
+        *)  p0_fail "interpreter_kind_unexpected kind=$P0_KIND path=$1 expected=regular_or_live_symlink" ;;
+    esac
+}
+red_run() { # $1 leaf, $2 followed
+    R11F3_LEAF="$1"; R11F3_FOLLOW="$2"; export R11F3_LEAF R11F3_FOLLOW
+    RRC=0
+    RED_OUT="$( r11f3_prefix_assert /fixture/python 2>&1 )" || RRC=$?
+    RED_LAST="$(printf '%s\n' "$RED_OUT" | tail -1)"
+}
+red_run "symbolic link" "made up stat kind"
+f3note "$RRC" 1 "RED_followed_unrecognised_reaches_rc1"
+f3note "$RED_LAST" \
+  'P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular' \
+  "RED_followed_unrecognised_exact_line"
+red_run "made up stat kind" "regular file"
+f3note "$RRC" 1 "RED_leaf_unrecognised_reaches_rc1"
+f3note "$RED_LAST" \
+  'P0_FAIL reason=interpreter_kind_unexpected kind=other path=/fixture/python expected=regular_or_live_symlink' \
+  "RED_leaf_unrecognised_exact_line"
+
+# --- C: the repaired sites are singular and the catch-alls are gone ----------
+n_lt=$(grep -c 'p0_stop "link_target_kind_unrecognized ' "$R11F3_BLK" || true)
+f3note "$n_lt" 1 "C1_single_link_target_unrecognized_site"
+n_pp=$(grep -c 'p0_stop "path_probe_kind_unrecognized ' "$R11F3_BLK" || true)
+f3note "$n_pp" 1 "C2_single_path_probe_unrecognized_site"
+n_catch=$(grep -cE '^\s*\*\)\s*P0_(F?KIND)="other"' "$R11F3_BLK" || true)
+f3note "$n_catch" 0 "C3_no_catch_all_binds_other"
+
+printf 'R11_F3_QA_SUMMARY cases=%s pass=%s fail=%s result=%s\n' \
+  "$((R11F3_OK+R11F3_BAD))" "$R11F3_OK" "$R11F3_BAD" \
+  "$([ "$R11F3_BAD" -eq 0 ] && echo PASS || echo FAIL)"
+[ "$R11F3_BAD" -eq 0 ] || exit 1
+# R11_F3_HARNESS_END
+```
+
+Invocation (from `WPI_BLOCKS_DRAFT`):
+
+```text
+sed -n '/^# R11_F3_HARNESS_BEGIN$/,/^# R11_F3_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+```
+
+Real captured output:
+
+```text
+CASE_OK GREEN_followed_unrecognised_rc got=[3]
+CASE_OK GREEN_followed_unrecognised_exact_line got=[P0_STOP reason=link_target_kind_unrecognized path=/fixture/python rc=0 detail=made up stat kind expected=complete_gnu_stat_percent_F_token]
+CASE_OK GREEN_leaf_unrecognised_rc got=[3]
+CASE_OK GREEN_leaf_unrecognised_exact_line got=[P0_STOP reason=path_probe_kind_unrecognized path=/fixture/python rc=0 detail=made up stat kind expected=complete_gnu_stat_percent_F_token]
+CASE_OK GREEN_regression_followed_[block special file]_rc got=[1]
+CASE_OK GREEN_regression_followed_[block special file]_exact_line got=[P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular]
+CASE_OK GREEN_regression_followed_[character special file]_rc got=[1]
+CASE_OK GREEN_regression_followed_[character special file]_exact_line got=[P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular]
+CASE_OK GREEN_regression_followed_[contiguous data]_rc got=[1]
+CASE_OK GREEN_regression_followed_[contiguous data]_exact_line got=[P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular]
+CASE_OK GREEN_regression_followed_[door]_rc got=[1]
+CASE_OK GREEN_regression_followed_[door]_exact_line got=[P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular]
+CASE_OK GREEN_regression_followed_[fifo]_rc got=[1]
+CASE_OK GREEN_regression_followed_[fifo]_exact_line got=[P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular]
+CASE_OK GREEN_regression_followed_[message queue]_rc got=[1]
+CASE_OK GREEN_regression_followed_[message queue]_exact_line got=[P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular]
+CASE_OK GREEN_regression_followed_[multiplexed file]_rc got=[1]
+CASE_OK GREEN_regression_followed_[multiplexed file]_exact_line got=[P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular]
+CASE_OK GREEN_regression_followed_[named file]_rc got=[1]
+CASE_OK GREEN_regression_followed_[named file]_exact_line got=[P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular]
+CASE_OK GREEN_regression_followed_[network special file]_rc got=[1]
+CASE_OK GREEN_regression_followed_[network special file]_exact_line got=[P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular]
+CASE_OK GREEN_regression_followed_[port]_rc got=[1]
+CASE_OK GREEN_regression_followed_[port]_exact_line got=[P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular]
+CASE_OK GREEN_regression_followed_[semaphore]_rc got=[1]
+CASE_OK GREEN_regression_followed_[semaphore]_exact_line got=[P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular]
+CASE_OK GREEN_regression_followed_[shared memory object]_rc got=[1]
+CASE_OK GREEN_regression_followed_[shared memory object]_exact_line got=[P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular]
+CASE_OK GREEN_regression_followed_[socket]_rc got=[1]
+CASE_OK GREEN_regression_followed_[socket]_exact_line got=[P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular]
+CASE_OK GREEN_regression_followed_[symbolic link]_rc got=[1]
+CASE_OK GREEN_regression_followed_[symbolic link]_exact_line got=[P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular]
+CASE_OK GREEN_regression_followed_[typed memory object]_rc got=[1]
+CASE_OK GREEN_regression_followed_[typed memory object]_exact_line got=[P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular]
+CASE_OK GREEN_regression_followed_[weird file]_rc got=[1]
+CASE_OK GREEN_regression_followed_[weird file]_exact_line got=[P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular]
+CASE_OK GREEN_regression_followed_[whiteout]_rc got=[1]
+CASE_OK GREEN_regression_followed_[whiteout]_exact_line got=[P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular]
+CASE_OK GREEN_regression_followed_[directory]_rc got=[1]
+CASE_OK GREEN_regression_followed_[directory]_exact_line got=[P0_FAIL reason=interpreter_target_kind_unexpected kind=dir path=/fixture/python expected=regular]
+CASE_OK GREEN_regression_leaf_[block special file]_rc got=[1]
+CASE_OK GREEN_regression_leaf_[block special file]_exact_line got=[P0_FAIL reason=interpreter_kind_unexpected kind=other path=/fixture/python expected=regular_or_live_symlink]
+CASE_OK GREEN_regression_leaf_[character special file]_rc got=[1]
+CASE_OK GREEN_regression_leaf_[character special file]_exact_line got=[P0_FAIL reason=interpreter_kind_unexpected kind=other path=/fixture/python expected=regular_or_live_symlink]
+CASE_OK GREEN_regression_leaf_[contiguous data]_rc got=[1]
+CASE_OK GREEN_regression_leaf_[contiguous data]_exact_line got=[P0_FAIL reason=interpreter_kind_unexpected kind=other path=/fixture/python expected=regular_or_live_symlink]
+CASE_OK GREEN_regression_leaf_[door]_rc got=[1]
+CASE_OK GREEN_regression_leaf_[door]_exact_line got=[P0_FAIL reason=interpreter_kind_unexpected kind=other path=/fixture/python expected=regular_or_live_symlink]
+CASE_OK GREEN_regression_leaf_[fifo]_rc got=[1]
+CASE_OK GREEN_regression_leaf_[fifo]_exact_line got=[P0_FAIL reason=interpreter_kind_unexpected kind=other path=/fixture/python expected=regular_or_live_symlink]
+CASE_OK GREEN_regression_leaf_[message queue]_rc got=[1]
+CASE_OK GREEN_regression_leaf_[message queue]_exact_line got=[P0_FAIL reason=interpreter_kind_unexpected kind=other path=/fixture/python expected=regular_or_live_symlink]
+CASE_OK GREEN_regression_leaf_[multiplexed file]_rc got=[1]
+CASE_OK GREEN_regression_leaf_[multiplexed file]_exact_line got=[P0_FAIL reason=interpreter_kind_unexpected kind=other path=/fixture/python expected=regular_or_live_symlink]
+CASE_OK GREEN_regression_leaf_[named file]_rc got=[1]
+CASE_OK GREEN_regression_leaf_[named file]_exact_line got=[P0_FAIL reason=interpreter_kind_unexpected kind=other path=/fixture/python expected=regular_or_live_symlink]
+CASE_OK GREEN_regression_leaf_[network special file]_rc got=[1]
+CASE_OK GREEN_regression_leaf_[network special file]_exact_line got=[P0_FAIL reason=interpreter_kind_unexpected kind=other path=/fixture/python expected=regular_or_live_symlink]
+CASE_OK GREEN_regression_leaf_[port]_rc got=[1]
+CASE_OK GREEN_regression_leaf_[port]_exact_line got=[P0_FAIL reason=interpreter_kind_unexpected kind=other path=/fixture/python expected=regular_or_live_symlink]
+CASE_OK GREEN_regression_leaf_[semaphore]_rc got=[1]
+CASE_OK GREEN_regression_leaf_[semaphore]_exact_line got=[P0_FAIL reason=interpreter_kind_unexpected kind=other path=/fixture/python expected=regular_or_live_symlink]
+CASE_OK GREEN_regression_leaf_[shared memory object]_rc got=[1]
+CASE_OK GREEN_regression_leaf_[shared memory object]_exact_line got=[P0_FAIL reason=interpreter_kind_unexpected kind=other path=/fixture/python expected=regular_or_live_symlink]
+CASE_OK GREEN_regression_leaf_[socket]_rc got=[1]
+CASE_OK GREEN_regression_leaf_[socket]_exact_line got=[P0_FAIL reason=interpreter_kind_unexpected kind=other path=/fixture/python expected=regular_or_live_symlink]
+CASE_OK GREEN_regression_leaf_[typed memory object]_rc got=[1]
+CASE_OK GREEN_regression_leaf_[typed memory object]_exact_line got=[P0_FAIL reason=interpreter_kind_unexpected kind=other path=/fixture/python expected=regular_or_live_symlink]
+CASE_OK GREEN_regression_leaf_[weird file]_rc got=[1]
+CASE_OK GREEN_regression_leaf_[weird file]_exact_line got=[P0_FAIL reason=interpreter_kind_unexpected kind=other path=/fixture/python expected=regular_or_live_symlink]
+CASE_OK GREEN_regression_leaf_[whiteout]_rc got=[1]
+CASE_OK GREEN_regression_leaf_[whiteout]_exact_line got=[P0_FAIL reason=interpreter_kind_unexpected kind=other path=/fixture/python expected=regular_or_live_symlink]
+CASE_OK GREEN_regression_regular_target_rc got=[0]
+CASE_OK GREEN_regression_regular_target_binding got=[KIND=link_live FKIND=regular]
+CASE_OK GREEN_regression_regular_empty_target_binding got=[KIND=link_live FKIND=regular]
+CASE_OK GREEN_regression_regular_leaf_rc got=[0]
+CASE_OK GREEN_regression_regular_leaf_binding got=[KIND=regular FKIND=regular]
+CASE_OK GREEN_regression_directory_leaf_binding got=[KIND=dir FKIND=dir]
+CASE_OK RED_followed_unrecognised_reaches_rc1 got=[1]
+CASE_OK RED_followed_unrecognised_exact_line got=[P0_FAIL reason=interpreter_target_kind_unexpected kind=other path=/fixture/python expected=regular]
+CASE_OK RED_leaf_unrecognised_reaches_rc1 got=[1]
+CASE_OK RED_leaf_unrecognised_exact_line got=[P0_FAIL reason=interpreter_kind_unexpected kind=other path=/fixture/python expected=regular_or_live_symlink]
+CASE_OK C1_single_link_target_unrecognized_site got=[1]
+CASE_OK C2_single_path_probe_unrecognized_site got=[1]
+CASE_OK C3_no_catch_all_binds_other got=[0]
+R11_F3_QA_SUMMARY cases=85 pass=85 fail=0 result=PASS
+```
+
+## F3 — a RED recipe that returns its own status, and guards falsified executably
+
+### The recipe
+
+Round 10 published the `R9_GRAMMAR` RED twin as loose shell lines ending in
+`rm -f "$mutant"`. `rm` succeeds, so the recipe's process status was 0 while the
+harness it exists to demonstrate had failed with 1 — while the same file claimed
+"every command's status agrees with its verdict". That claim was false of this
+recipe and is withdrawn. Cleanup now happens in an EXIT trap, and the fence exits
+with the RED harness's own status.
+
+**This fence's PASS condition is rc 1, not rc 0.** It is the only member of the
+mandated set with that property, and it is self-checking in both directions: rc 9
+means the RED twin went GREEN, rc 2 means the mutation did not apply.
+
+```bash
+# R11_R9RED_HARNESS_BEGIN
+#!/usr/bin/env bash
+# ===========================================================================
+# Round 11, finding 3 (first half) - the R9_GRAMMAR RED twin, with its OWN
+# status preserved across cleanup.
+#
+# The round-10 publication of this recipe ran the failing harness, printed
+# `R9_RED_RC=$?`, and then ran `rm -f "$mutant"` LAST. `rm` succeeds, so the
+# recipe's process status was 0 while the harness it exists to demonstrate had
+# failed with 1 - the same Pattern-10 defect (a status that disagrees with its
+# verdict) that this package has now found at three different levels. Round 10
+# also recorded, in the same file, that "every command's status agrees with its
+# verdict". That was false OF THIS RECIPE and is withdrawn.
+#
+# Two changes: cleanup moves into an EXIT trap so it can no longer be the last
+# command, and the recipe exits WITH the RED harness's status.
+#
+# EXPECTED PROCESS STATUS OF THIS FENCE IS 1, NOT 0. It is the one published
+# command in the mandated set whose PASS condition is a nonzero exit: rc 1 means
+# the mutant made R9_GRAMMAR fail, which is what makes R9_GRAMMAR evidence under
+# D026. rc 0 is impossible by construction; rc 9 means the RED twin went GREEN
+# (the fence stopped discriminating) and rc 2 means the mutation did not apply.
+# ===========================================================================
+set -u
+BLK="${1:-RP6-P0.sh}"
+QA="${2:-SELF_QA_RP6.md}"
+mutant="$(mktemp)"
+trap 'rm -f "$mutant"' EXIT
+
+# The mutation: the internal-binding invariant is relabelled back to the
+# input-deficiency token round 9b used. R9_GRAMMAR case 5 asserts the invariant
+# token, so this must break it.
+sed 's|p0_stop "internal_invariant_unmet invariant=trusted_python_pin_bound.*"|p0_stop "input_pin_freeze_unfilled tool=python3 name=P0_FIXED_TRUSTED_PYTHON detail=trusted_python_pin_omitted_freeze_gate_load_bearing"|' \
+    "$BLK" > "$mutant"
+if cmp -s "$mutant" "$BLK"; then
+    printf 'R9_RED_MUTANT_NOT_APPLIED path=%s\n' "$BLK"
+    exit 2
+fi
+printf 'R9_RED_MUTANT_APPLIED delta_lines=%s\n' "$(diff "$BLK" "$mutant" | grep -c '^[<>]')"
+
+red_rc=0
+sed -n '/^# R9_GRAMMAR_HARNESS_BEGIN$/,/^# R9_GRAMMAR_HARNESS_END$/p' "$QA" \
+    | bash --noprofile --norc -s -- "$mutant" || red_rc=$?
+printf 'R9_RED_RC=%s\n' "$red_rc"
+
+# The RED twin is evidence only if it FAILED. Say so executably.
+if [ "$red_rc" -eq 0 ]; then
+    printf 'R9_RED_DID_NOT_FAIL rc=0 detail=the_fence_no_longer_discriminates\n'
+    exit 9
+fi
+printf 'R9_RED_VERDICT status_preserved_across_cleanup exit=%s\n' "$red_rc"
+exit "$red_rc"
+# R11_R9RED_HARNESS_END
+```
+
+Invocation (from `WPI_BLOCKS_DRAFT`):
+
+```text
+sed -n '/^# R11_R9RED_HARNESS_BEGIN$/,/^# R11_R9RED_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+```
+
+Real captured output:
+
+```text
+R9_RED_MUTANT_APPLIED delta_lines=2
+ASSERT_UNMET freeze_emit_site_count=1 observed=2
+ASSERT_MET freeze_site_detail=declared observed=1
+ASSERT_MET freeze_site_name=generic_P0_FROZEN_CONST_NAME
+ASSERT_UNMET relic_detail_count=0 observed=1
+ASSERT_UNMET post_loop_gate=internal_binding_invariant MISSING
+R9_GRAMMAR_SUMMARY cases=5 pass=2 fail=3 result=FAIL
+R9_RED_RC=1
+R9_RED_VERDICT status_preserved_across_cleanup exit=1
+```
+
+### The guards
+
+Round 10b's own-status guard claim was a prose algorithm plus a transcript. Under
+D026 that is supplemental until the exact command is in the file. It now is, and
+it covers fifteen fences rather than the ten round 10b described — the three
+round-10 fences and the two new round-11 counting fences are included, so a
+guard added this round is falsified by the same mechanism.
+
+`R11_R9RED` is deliberately outside the table: it has no pass/fail counter,
+because its entire purpose is to exit with a RED harness's status, and its
+self-check lives inside it.
+
+```bash
+# R11_GUARDS_HARNESS_BEGIN
+#!/usr/bin/env bash
+# ===========================================================================
+# Round 11, finding 3 (second half) - the own-status guards, FALSIFIED by an
+# executable fence instead of a transcript.
+#
+# Round 10b claimed each fence carries a guard that turns a nonzero failure
+# counter into a nonzero process status, and published a prose algorithm plus a
+# transcript. Under D026 a transcript is supplemental: the exact command has to
+# be in the file. This is that command. For every fence below it:
+#
+#   1. extracts the fence from this file by its unique marker pair;
+#   2. locates the own-status guard line by EXACT whole-line text;
+#   3. asserts there is exactly ONE such line (an ambiguous match is a failure,
+#      not a coin flip);
+#   4. forces the failure counter nonzero on the line IMMEDIATELY BEFORE it;
+#   5. asserts where the injection landed - the round-10b generator was once
+#      wrong in exactly this way and produced ten false results;
+#   6. runs the mutant and requires a NONZERO status.
+#
+# `R11_R9RED` is deliberately absent from the table: it has no pass/fail counter
+# because its whole purpose is to exit with a RED harness's status, and its own
+# self-check is inside it.
+# ===========================================================================
+set -u
+QA="${1:-SELF_QA_RP6.md}"
+Q="$(mktemp -d)"
+trap 'rm -rf "$Q"' EXIT
+
+# fence marker prefix : own-status counter : argv the fence needs
+FENCES="R5_F1:R5_F1_FAIL:
+R5_F2:R5_F2_FAIL:
+R5_F3:R5_F3_FAIL:
+R6_F1:R6_F1_FAIL:
+R6_F2:R6_F2_FAIL:
+R6_F3:R6_F3_FAIL:
+R7_F2:R7_F2_BAD:
+R7_F3:R7_F3_BAD:
+R7_C3:R7_C3_BAD:
+R9_GRAMMAR:R9_FAIL:RP6-P0.sh
+R10_F3:R10F3_BAD:
+R10_F4:R10F4_BAD:
+R11_GRAMMAR:R11G_BAD:
+R11_F3:R11F3_BAD:
+R11_F1_RED:R11RED_BAD:"
+
+printf '%s\n' "$FENCES" | while IFS=: read -r name ctr argv; do
+    [ -n "$name" ] || continue
+    f="$Q/$name.sh"
+    sed -n "/^# ${name}_HARNESS_BEGIN\$/,/^# ${name}_HARNESS_END\$/p" "$QA" > "$f"
+    if ! grep -qxF "# ${name}_HARNESS_END" "$f"; then
+        printf 'CASE_BAD %s_extracted got=[no] want=[yes]\n' "$name"; printf 'GUARDFAIL\n' >> "$Q/fail"; continue
+    fi
+    guard_re="^\\[ \"\\\$${ctr}\" (=|-eq) 0 \\] \\|\\| exit 1\$"
+    hits=$(grep -cE "$guard_re" "$f" || true)
+    if [ "$hits" != 1 ]; then
+        printf 'CASE_BAD %s_guard_line_unique got=[%s] want=[1]\n' "$name" "$hits"; printf 'GUARDFAIL\n' >> "$Q/fail"; continue
+    fi
+    gl=$(grep -nE "$guard_re" "$f" | cut -d: -f1)
+    gtext=$(sed -n "${gl}p" "$f")
+    m="$Q/${name}_mut.sh"
+    awk -v n="$gl" -v c="$ctr" 'NR==n{print c"=7"} {print}' "$f" > "$m"
+    inj=$(grep -cxF "$ctr=7" "$m" || true)
+    landed_at=$(sed -n "${gl}p" "$m")
+    guard_now=$(sed -n "$((gl+1))p" "$m")
+    if [ "$inj" != 1 ] || [ "$landed_at" != "$ctr=7" ] || [ "$guard_now" != "$gtext" ]; then
+        printf 'CASE_BAD %s_injection_adjacent got=[injections=%s at=%s next=%s] want=[1 %s=7 %s]\n' \
+            "$name" "$inj" "$landed_at" "$guard_now" "$ctr" "$gtext"
+        printf 'GUARDFAIL\n' >> "$Q/fail"; continue
+    fi
+    rc=0
+    # shellcheck disable=SC2086
+    bash --noprofile --norc "$m" $argv > "$Q/${name}.out" 2>&1 || rc=$?
+    if [ "$rc" -ne 0 ]; then
+        printf 'CASE_OK %s guard_at_line=%s injections=1 forced %s=7 -> rc=%s GUARD_HOLDS\n' "$name" "$gl" "$ctr" "$rc"
+    else
+        printf 'CASE_BAD %s guard_at_line=%s forced %s=7 -> rc=0 GUARD_ABSENT_OR_UNREACHED\n' "$name" "$gl" "$ctr"
+        printf 'GUARDFAIL\n' >> "$Q/fail"
+    fi
+done
+
+n_fence=$(printf '%s\n' "$FENCES" | grep -c '[^[:space:]]')
+n_fail=$( [ -f "$Q/fail" ] && grep -c '' "$Q/fail" || printf '0' )
+n_ok=$(( n_fence - n_fail ))
+printf 'R11_GUARDS_SUMMARY fences=%s pass=%s fail=%s result=%s\n' \
+  "$n_fence" "$n_ok" "$n_fail" \
+  "$([ "$n_fail" -eq 0 ] && echo PASS || echo FAIL)"
+[ "$n_fail" -eq 0 ] || exit 1
+# R11_GUARDS_HARNESS_END
+```
+
+Invocation (from `WPI_BLOCKS_DRAFT`):
+
+```text
+sed -n '/^# R11_GUARDS_HARNESS_BEGIN$/,/^# R11_GUARDS_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+```
+
+Real captured output:
+
+```text
+CASE_OK R5_F1 guard_at_line=59 injections=1 forced R5_F1_FAIL=7 -> rc=1 GUARD_HOLDS
+CASE_OK R5_F2 guard_at_line=71 injections=1 forced R5_F2_FAIL=7 -> rc=1 GUARD_HOLDS
+CASE_OK R5_F3 guard_at_line=63 injections=1 forced R5_F3_FAIL=7 -> rc=1 GUARD_HOLDS
+CASE_OK R6_F1 guard_at_line=75 injections=1 forced R6_F1_FAIL=7 -> rc=1 GUARD_HOLDS
+CASE_OK R6_F2 guard_at_line=107 injections=1 forced R6_F2_FAIL=7 -> rc=1 GUARD_HOLDS
+CASE_OK R6_F3 guard_at_line=81 injections=1 forced R6_F3_FAIL=7 -> rc=1 GUARD_HOLDS
+CASE_OK R7_F2 guard_at_line=43 injections=1 forced R7_F2_BAD=7 -> rc=1 GUARD_HOLDS
+CASE_OK R7_F3 guard_at_line=48 injections=1 forced R7_F3_BAD=7 -> rc=1 GUARD_HOLDS
+CASE_OK R7_C3 guard_at_line=117 injections=1 forced R7_C3_BAD=7 -> rc=1 GUARD_HOLDS
+CASE_OK R9_GRAMMAR guard_at_line=31 injections=1 forced R9_FAIL=7 -> rc=1 GUARD_HOLDS
+CASE_OK R10_F3 guard_at_line=171 injections=1 forced R10F3_BAD=7 -> rc=1 GUARD_HOLDS
+CASE_OK R10_F4 guard_at_line=162 injections=1 forced R10F4_BAD=7 -> rc=1 GUARD_HOLDS
+CASE_OK R11_GRAMMAR guard_at_line=264 injections=1 forced R11G_BAD=7 -> rc=1 GUARD_HOLDS
+CASE_OK R11_F3 guard_at_line=206 injections=1 forced R11F3_BAD=7 -> rc=1 GUARD_HOLDS
+CASE_OK R11_F1_RED guard_at_line=114 injections=1 forced R11RED_BAD=7 -> rc=1 GUARD_HOLDS
+R11_GUARDS_SUMMARY fences=15 pass=15 fail=0 result=PASS
+```
+
+## F4 — the prose narrowed to the executed predicate, claim by claim
+
+The audit's disposition is accepted in full: the byte repair at `RP6-P0.sh:675`
+is sound and is not reopened; only the surrounding claims were too broad. Each is
+resolved by **narrowing the prose**, not by widening the harness. That choice is
+stated per claim because the audit asked which, and because widening `R10_F4` to
+cover the parser's other early-stop classes would be a new control this round was
+not asked to add.
+
+| claim | where | what executes | resolution |
+|---|---|---|---|
+| the fence "deletes the three upstream gates" | `RP6-P0.sh:671-674` (round-10 text) | the mutant at `SELF_QA_RP6.md` neutralises **two** sites — the omission loop and the pin-count check — and leaves the freeze-unfilled and disagreement gates standing | **narrowed** in the block comment to the two gates actually neutralised, and the two that are not is now stated |
+| "every input class that leaves the binding unset" | `SELF_QA_RP6.md:6145-6153` (round-10 text) | three classes: an omitted pin, an unfilled deploy placeholder, a disagreeing pin | **narrowed** to "the three input classes it runs". The parser's other early-stop classes — malformed entry, unknown tool, duplicate, non-absolute, whitespace, glob metacharacter, non-python frozen path — are named as not executed |
+| the same phrasing in the status layer | `STATUS_RP6_P0.md` | as above | **checked and not found.** The round-10 status text never carried the "every input class" wording — its F4 bullet already said "a mutant whose two consuming gates are neutralised". Recorded rather than assumed: `grep -in 'input class\|binding unset' STATUS_RP6_P0.md` returns nothing on the round-10 bytes. The round-11 status states the three-classes bound explicitly anyway |
+| the same phrasing in `RP6_R10_REPORT_2026-08-11.md:362-369` | round-10 report | as above | **corrected in the round-11 report rather than rewritten.** A delivered audit-round report is a record of what that round claimed; the correction is published in `RP6_R11_REPORT_2026-08-11.md` and named here. The kickoff scope fence does not list the round-10 report as writable |
+| "`R10_F4` shows the invariant is unreachable" | `SELF_QA_RP6.md` round-10 limits | it shows the three executed classes are each consumed upstream | already bounded correctly in the round-10 limits paragraph ("about *this* control flow"); the narrowed wording above makes the same bound explicit at the point of claim |
+
+The block comment at `RP6-P0.sh:653-662` is unchanged and remains accurate: it
+describes which gate consumes which condition in the live control flow, which is
+a statement about the code, not about the mutant.
+
+## Mandated harness set after round 11
+
+**This list supersedes the round-10 list above.** Twenty-three published commands (counted from the block, not from memory).
+Run each verbatim, from `WPI_BLOCKS_DRAFT`, in a clean `bash --noprofile --norc`.
+Every marker pair is a UNIQUE WHOLE LINE, so no range can reopen on prose or on
+the invocation text. All return 0 except `R11_R9RED`, whose PASS condition is
+rc 1 and which is listed last for that reason.
+
+```text
+bash -n RP6-P0.sh
+sed -n '/^# C13_R3_BACKSTOP_HARNESS_BEGIN$/,/^# C13_R3_BACKSTOP_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# RP6_FULLBLOCK_D026_HARNESS_BEGIN$/,/^# RP6_FULLBLOCK_D026_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# F2_FREEZE_GATE_HARNESS_BEGIN$/,/^# F2_FREEZE_GATE_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# RP6_R4_D026_HARNESS_BEGIN$/,/^# RP6_R4_D026_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# C13_R4B_HARNESS_BEGIN$/,/^# C13_R4B_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R5_F1_HARNESS_BEGIN$/,/^# R5_F1_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R5_F2_HARNESS_BEGIN$/,/^# R5_F2_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R5_F3_HARNESS_BEGIN$/,/^# R5_F3_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R6_F1_HARNESS_BEGIN$/,/^# R6_F1_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R6_F2_HARNESS_BEGIN$/,/^# R6_F2_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R6_F3_HARNESS_BEGIN$/,/^# R6_F3_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R7_F2_HARNESS_BEGIN$/,/^# R7_F2_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R7_F3_HARNESS_BEGIN$/,/^# R7_F3_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R7_C3_HARNESS_BEGIN$/,/^# R7_C3_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R9_GRAMMAR_HARNESS_BEGIN$/,/^# R9_GRAMMAR_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc -s -- RP6-P0.sh
+sed -n '/^# R10_F3_HARNESS_BEGIN$/,/^# R10_F3_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R10_F4_HARNESS_BEGIN$/,/^# R10_F4_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R11_GRAMMAR_HARNESS_BEGIN$/,/^# R11_GRAMMAR_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R11_F1_RED_HARNESS_BEGIN$/,/^# R11_F1_RED_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R11_F3_HARNESS_BEGIN$/,/^# R11_F3_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R11_GUARDS_HARNESS_BEGIN$/,/^# R11_GUARDS_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+sed -n '/^# R11_R9RED_HARNESS_BEGIN$/,/^# R11_R9RED_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+```
+
+Every one of those was run verbatim from a clean shell in this sitting. The
+per-command rc sweep:
+
+```text
+bash -n RP6-P0.sh                       -> rc=0
+C13_R3_BACKSTOP                    -> rc=0  C13_R3_BACKSTOP_QA_SUMMARY inputs=2 mutations=2 cases=4 result=PASS
+RP6_FULLBLOCK_D026                 -> rc=0  RP6_FULLBLOCK_D026_SUMMARY findings=7 round3_residuals=3 real_lstat_arms=2 execution_domain_cases=9 readlink_stop_arms=3 result=PASS
+F2_FREEZE_GATE                     -> rc=0  F2_FREEZE_GATE_QA_SUMMARY placeholder_rc=3 filled_fixture_rc=0 result=PASS
+RP6_R4_D026                        -> rc=0  RP6_R4_D026_SUMMARY findings=4 pth_forge=real_venv manager_bound=real_timeout inventory_basis=23e55667@d6a976aa result=PASS
+C13_R4B                            -> rc=0  C13_R4B_ARM_QA_SUMMARY cases=27 result=PASS
+R5_F1                              -> rc=0  R5_F1_QA_SUMMARY cases=6 pass=6 fail=0 result=PASS
+R5_F2                              -> rc=0  R5_F2_QA_SUMMARY cases=4 pass=4 fail=0 result=PASS
+R5_F3                              -> rc=0  R5_F3_QA_SUMMARY cases=5 pass=5 fail=0 result=PASS
+R6_F1                              -> rc=0  R6_F1_QA_SUMMARY cases=3 pass=3 fail=0 result=PASS
+R6_F2                              -> rc=0  R6_F2_QA_SUMMARY cases=10 pass=10 fail=0 result=PASS
+R6_F3                              -> rc=0  R6_F3_QA_SUMMARY cases=7 pass=7 fail=0 result=PASS
+R7_F2                              -> rc=0  R7_F2_QA_SUMMARY cases=4 pass=4 fail=0 result=PASS
+R7_F3                              -> rc=0  R7_F3_QA_SUMMARY cases=4 pass=4 fail=0 result=PASS
+R7_C3                              -> rc=0  R7_C3_QA_SUMMARY cases=8 pass=8 fail=0 result=PASS
+R9_GRAMMAR (-s -- RP6-P0.sh)       -> rc=0  R9_GRAMMAR_SUMMARY cases=5 pass=5 fail=0 result=PASS
+R10_F3                             -> rc=0  R10_F3_QA_SUMMARY cases=14 pass=14 fail=0 result=PASS
+R10_F4                             -> rc=0  R10_F4_QA_SUMMARY cases=16 pass=16 fail=0 result=PASS
+R11_GRAMMAR                        -> rc=0  R11_GRAMMAR_SUMMARY cases=15 pass=15 fail=0 result=PASS
+R11_F1_RED                         -> rc=0  R11_F1_RED_SUMMARY cases=17 pass=17 fail=0 result=PASS
+R11_F3                             -> rc=0  R11_F3_QA_SUMMARY cases=85 pass=85 fail=0 result=PASS
+R11_GUARDS                         -> rc=0  R11_GUARDS_SUMMARY fences=15 pass=15 fail=0 result=PASS
+R11_R9RED                          -> rc=1  R9_RED_VERDICT status_preserved_across_cleanup exit=1
+```
+
+## Superseded in round 11 — stated, not hidden
+
+`R10_GRAMMAR` is **no longer in the mandated set**. Its bytes stay in this file
+for two reasons: it is the round-10 record, and `R11_F1_RED` extracts its
+derivation from it in order to prove what it could not see. Run against the
+round-11 declaration it now returns **rc 1**, because the declaration it diffs
+was replaced by the correlated-tuple text. That is recorded rather than tidied
+away, and it is itself evidence that the two declarations are not the same
+artefact:
+
+```text
+R10_GRAMMAR_DECLARED forms=149 sites=163 source=../WPI_PREREG_DRAFT_ROUND1/WPI_PREREGISTRATION_DRAFT.md
+R10_GRAMMAR_DERIVED  forms=91 sites=163 source=RP6-P0.sh
+ASSERT_MET declaration_present forms=149
+ASSERT_UNMET grammar_closed declared!=derived diff_lines=106
+--- /tmp/tmp.4oXa7NDisD/declared.txt	2026-08-11 15:15:10.376178400 +0300
++++ /tmp/tmp.4oXa7NDisD/derived.txt	2026-08-11 15:15:10.713480000 +0300
+R10_GRAMMAR_SUMMARY cases=10 pass=9 fail=1 result=FAIL
+SUPERSEDED_R10_GRAMMAR_RC=1
+```
+
+The round-10 R9-RED recipe at the end of the round-10 section is superseded by
+`R11_R9RED` for the reason in §F3, and its block there now says so.
+
+## Files written this round
+
+`RP6-P0.sh`, `SELF_QA_RP6.md`, `STATUS_RP6_P0.md`,
+`RP6_R11_REPORT_2026-08-11.md` (new), and
+`WPI_PREREG_DRAFT_ROUND1/WPI_PREREGISTRATION_DRAFT.md`.
+
+The draft edit is required by finding 1 — a correlation-preserving fence needs a
+correlation-preserving declaration to diff against — and is enumerated
+line-by-line in the report. It is confined to §8.1.1: two prose paragraphs
+rewritten, one added, the section header line rewritten, and the marker-delimited
+declaration regenerated from 89 lines to 149. `WPI_PREREG_DRAFT_ROUND1/` carries
+uncommitted edits from the parallel session that owns `pathscope_prover.py`;
+those sit outside §8.1.1 and were neither read for writing nor touched. No
+`git checkout`/`reset`/`stash` was run on any tracked file, nothing was
+committed, no host was contacted, and no network command was run.
+
+## Artefact measurements — real, computed in this session
+
+```text
+subject on entry   sha256=a090ae736cbecd9973e8ae948b052504b21cbe8b61602f4b5ac592394fad0617  bytes=107252  (commit 71a62cc8, matches the kickoff)
+subject after R11  sha256=5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330  bytes=110817
+bash -n RP6-P0.sh  rc=0   (GNU bash 5.2.37(1)-release, x86_64-pc-msys)
+cr_bytes RP6-P0.sh                                = 0
+cr_bytes SELF_QA_RP6.md                           = 0
+cr_bytes STATUS_RP6_P0.md                         = 0
+cr_bytes WPI_PREREGISTRATION_DRAFT.md             = 0
+emit sites  R10   = 160 wrapper + 1 ERR trap = 161
+emit sites  R11   = 162 wrapper + 1 ERR trap = 163
+broad census R11 (independent of quoting)  = 163 lines, unmodeled = 0
+declared in prereg 8.1.1: round 10 = 89 forms / 161 sites -> round 11 = 149 tuples / 163 sites
+sha256 of the 8.1.1 declaration BLOCK ONLY  = 31f8315c5028f5ee3a7ada2a2690000e7b490685c6fe0e9c6117ab33b6da59e5
+
+The draft is a SHARED file. Its whole-file sha256 is deliberately NOT quoted as
+a round-11 identity: the parallel transport lane wrote lines 343-359 and 580-591
+of the same file at 15:14 local, between this session's splice and this
+measurement. Those edits are outside 8.1.1 (declaration block at lines 932-1082)
+and R11_GRAMMAR was re-run afterwards and still closes. The block-only hash above
+is the stable identity for what this round wrote.
+```
+
+## Explicit local limits
+
+Unchanged in kind from round 10, restated because they bound what round 11
+establishes:
+
+- The complete P0 block still was not run end to end. It needs the accepted RP0
+  library and bootstrap, Linux `/proc` namespace objects, the preregistered
+  per-SHA venv, `getent`/`systemctl`/`ss`/`curl` on the host, and a reachable
+  system manager. All seventeen frozen deploy-channel literals remain
+  `<PIN-AT-FREEZE>`, so no end-to-end `P0 PASS` is reachable and nothing here is
+  dispatchable.
+- `R11_GRAMMAR` is a static source grammar (see §F1). The census makes coverage
+  fail closed over emitter SYNTAX; it does not evaluate runtime values.
+- The `%F` token set pinned by F2 is GNU coreutils' complete `file_type()` return
+  set. On a producer that is not GNU coreutils — uutils, say — an out-of-set
+  token now STOPs at rc 3 instead of being reported as host deviation, which is
+  the intended fail-closed direction but is not a claim that this block can
+  classify a non-GNU producer's vocabulary.
+- `R11_F3` drives the block's real functions through a `stat` shim. It
+  establishes what the block does with a given producer answer; it does not
+  establish which answers a real host produces.
+- The `P0_STATE_UID` / `P0_STATE_GID` / `P0_EXPECT_UID` input-integrity residual
+  is still named, not closed.
+- `shellcheck` is not installed in this environment and was not run.

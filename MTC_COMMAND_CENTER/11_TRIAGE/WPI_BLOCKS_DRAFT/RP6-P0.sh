@@ -669,9 +669,17 @@ done
 # which is a defect in this block and not a statement about the prelude. The
 # reason token says exactly that, and no input-deficiency token is borrowed for
 # it. Reachability is established executably, not asserted: the R10-F4 fence
-# deletes the three upstream gates in a mutant, reaches this line, and records
-# the emitted token and rc 3; the same fence records that the unmutated bytes
-# never reach it.
+# neutralises the TWO gates that consume an omitted python3 pin - the omission
+# loop and the pin-count check - runs an eleven-pin input through the block's own
+# parser, reaches this line, and records the emitted token and rc 3. The
+# freeze-unfilled and disagreement gates are NOT neutralised by that mutant.
+# ROUND 11 F4 (Codex round-10 finding 4): the previous wording here said the
+# fence "deletes the three upstream gates", which outran what it executes; the
+# narrowed sentence above is what the mutant at SELF_QA_RP6.md does. On the
+# unmutated bytes the same fence records that each of the THREE input classes it
+# runs - an omitted pin, an unfilled deploy placeholder, a disagreeing pin - is
+# consumed by its own upstream gate and never reaches this line. Those three are
+# the classes executed, not every class the parser can early-stop on.
 [ "$P0_TRUSTED_PYTHON_BOUND" = yes ] \
     || p0_stop "internal_invariant_unmet invariant=trusted_python_pin_bound predicate=P0_TRUSTED_PYTHON_BOUND_eq_yes observed=$P0_TRUSTED_PYTHON_BOUND detail=an_upstream_input_gate_stopped_detecting_its_condition"
 
@@ -1610,16 +1618,41 @@ p0_probe_kind() {
                             p0_sanitize "$sub"
                             p0_stop "link_target_probe_nonprintable path=$p rc=0 detail=$P0_SAFE" ;;
                     esac
-                    # What remains is one complete printable line. A recognised kind
-                    # binds P0_FKIND; any OTHER recognised `%F` kind (character
-                    # special file, fifo, socket, ...) is a complete observation of a
-                    # target that is not a regular file, which is a real host-state
-                    # divergence and stays a caller FAIL - it is not unevaluable.
+                    # What remains is one complete printable line, and round 10
+                    # stopped adjudicating there: every remaining token - including
+                    # arbitrary producer text that is no `%F` kind at all - fell
+                    # through `*)` to P0_FKIND=other, and the caller turned that
+                    # into `interpreter_target_kind_unexpected ... kind=other` at
+                    # rc 1 (Codex round-10 finding 2).
+                    #
+                    # ROUND 11 F2. rc 1 asserts a COMPLETED observation of deviant
+                    # host state. A token outside the pinned producer's own `%F`
+                    # vocabulary is not an observation of any kind: it is an
+                    # inability to evaluate, which is rc 3 (patterns 1, 5 and 6).
+                    # The set below is the complete return set of GNU coreutils
+                    # `file_type()` (`src/stat.c`) - the same pinned producer this
+                    # block already depends on for its C-locale failure shapes in
+                    # p0_classify_stat_shape - with "symbolic link" included
+                    # because `-L` output is not required to be link-free.
+                    # A RECOGNISED kind that is not a regular file (socket, fifo,
+                    # character special file, ...) remains a complete observation
+                    # of a target that is not a regular file: it keeps
+                    # P0_FKIND=other and stays a caller FAIL at rc 1, which is the
+                    # regression the repair must not move. Anything OUTSIDE the set
+                    # STOPs under its own declared reason, so a producer whose
+                    # vocabulary this block does not model can no longer be
+                    # reported as host deviation.
                     p0_sanitize "$sub"
                     case "$P0_SAFE" in
                         "regular file"|"regular empty file") P0_FKIND="regular" ;;
                         "directory")                        P0_FKIND="dir" ;;
-                        *)   P0_FKIND="other" ;;
+                        "block special file"|"character special file"|\
+                        "contiguous data"|"door"|"fifo"|"message queue"|\
+                        "multiplexed file"|"named file"|"network special file"|\
+                        "port"|"semaphore"|"shared memory object"|"socket"|\
+                        "symbolic link"|"typed memory object"|"weird file"|\
+                        "whiteout")                         P0_FKIND="other" ;;
+                        *)   p0_stop "link_target_kind_unrecognized path=$p rc=0 detail=$P0_SAFE expected=complete_gnu_stat_percent_F_token" ;;
                     esac
                     P0_KIND="link_live"
                     return 0
@@ -1633,7 +1666,19 @@ p0_probe_kind() {
             "regular file"|"regular empty file") P0_KIND="regular"; P0_FKIND="regular"; return 0 ;;
             "directory")                         P0_KIND="dir";     P0_FKIND="dir";     return 0 ;;
             "")                                  p0_stop "path_probe_empty path=$p rc=0" ;;
-            *)                                   P0_KIND="other";   P0_FKIND="other";   return 0 ;;
+            # ROUND 11 F2, leaf side. The catch-all here carried the identical
+            # defect to the followed-target one repaired above: an unrecognised
+            # printable token became P0_KIND=other and reached a caller FAIL at
+            # rc 1 (`venv_root_kind_unexpected` / `interpreter_kind_unexpected`).
+            # Same producer vocabulary, same rule - "symbolic link" is absent
+            # because the arm above already consumed it.
+            "block special file"|"character special file"|\
+            "contiguous data"|"door"|"fifo"|"message queue"|\
+            "multiplexed file"|"named file"|"network special file"|\
+            "port"|"semaphore"|"shared memory object"|"socket"|\
+            "typed memory object"|"weird file"|"whiteout")
+                                                 P0_KIND="other";   P0_FKIND="other";   return 0 ;;
+            *)                                   p0_stop "path_probe_kind_unrecognized path=$p rc=0 detail=$P0_SAFE expected=complete_gnu_stat_percent_F_token" ;;
         esac
     fi
     case "$raw" in

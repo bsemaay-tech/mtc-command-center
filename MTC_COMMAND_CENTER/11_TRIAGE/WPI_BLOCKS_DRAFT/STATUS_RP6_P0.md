@@ -1,13 +1,114 @@
-# RP6-P0 — status: ROUND-10-REPAIRED-PENDING-T0-REAUDIT (four R9 findings closed, executed)
+# RP6-P0 — status: ROUND-11-REPAIRED-PENDING-T0-REAUDIT (four R10 findings closed, executed)
 
-Updated 2026-08-11 by the round-10b implementer (Claude Max, `claude-opus-5`,
+Updated 2026-08-11 by the round-11 implementer (Claude Max, `claude-opus-5`,
 xhigh, fresh session). Audit tier unchanged: **T0** (host/execution-domain
 preflight). Codex `gpt-5.6-sol` is this block's auditor of record; the T0
 re-audit of these bytes is pending. The block remains a draft: not frozen, not
 accepted, not dispatchable, and not authorised for host execution.
 
-Full disposition: `RP6_R10_REPORT_2026-08-11.md`. Evidence: `SELF_QA_RP6.md`
-rounds 10 and 10B.
+Full disposition: `RP6_R11_REPORT_2026-08-11.md`. Evidence: `SELF_QA_RP6.md`
+§ROUND 11.
+
+**The four round-10 findings, all UPHELD and all closed:**
+
+- **F1** (HIGH) — the grammar fence was fail-OPEN twice over. Coverage was
+  measured with the same lexical restriction it was meant to check, so an
+  executable emitter in another valid quoting form vanished from both counts;
+  and per-field value unions destroyed each site's field correlation, so a
+  semantic relabel of one site was invisible. **Repaired:** the declaration is
+  now one line per **correlated site tuple** (149 tuples / 163 sites in prereg
+  §8.1.1), and coverage is censused by a broader independent rule that FAILS
+  CLOSED on any emitter syntax the parser cannot read. `R11_GRAMMAR` carries all
+  ten round-10 assertions and all five round-10 mutants forward unchanged and
+  adds four assertions and the two mutants the audit named. `R11_F1_RED` executes
+  the **round-10** mechanism on the same mutants and records that it is invariant
+  under both — the RED half D026 requires.
+- **F2** (HIGH) — an unrecognised printable `%F` token became a host-state FAIL at
+  rc 1. **Repaired at both classification sites** (followed target and leaf): the
+  complete GNU coreutils `file_type()` token set is pinned; a recognised
+  non-regular kind still FAILs at rc 1, an unrecognised token STOPs at rc 3 under
+  `link_target_kind_unrecognized` / `path_probe_kind_unrecognized`. `R11_F3`: 85
+  cases, RED reproduces the audit's exact rc-1 line at both sites.
+- **F3** (HIGH) — the published R9 RED recipe returned rc 0 because cleanup ran
+  last, and the ten own-status guards were prose plus a transcript. **Repaired:**
+  `R11_R9RED` cleans up in an EXIT trap and exits WITH the RED harness's status
+  (**its PASS condition is rc 1**); `R11_GUARDS` is an executable, self-checking
+  falsification fence over **fifteen** fences, replacing the transcript.
+- **F4** (MEDIUM) — the F4 evidence prose outran the executed predicate. **Every
+  claim narrowed, none extended**, claim by claim in `SELF_QA_RP6.md` §F4. The
+  block comment now says the mutant neutralises **two** gates (not three) and
+  that the harness runs **three** input classes (not "every input class that
+  leaves the binding unset"). The pin parser's other early-stop classes —
+  malformed entry, unknown tool, duplicate, non-absolute, whitespace, glob
+  metacharacter, non-python frozen path — are named as NOT executed.
+
+**Artefact identity — all executed in the round-11 session:**
+
+```text
+sha256=5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330
+bytes=110817
+bash_n=0                      (GNU bash 5.2.37(1)-release, x86_64-pc-msys)
+cr_bytes=0                    (tr -cd '\r' < RP6-P0.sh | wc -c)
+line_endings=LF_only
+emit_sites=163                (162 p0_stop/p0_fail wrapper sites + 1 direct ERR-trap printf)
+broad_census=163              (round-11 rule, independent of quoting; unmodeled=0)
+declared_tuples=149           (prereg §8.1.1, closed against the block by R11_GRAMMAR)
+decl_block_sha256=31f8315c5028f5ee3a7ada2a2690000e7b490685c6fe0e9c6117ab33b6da59e5
+entry_sha256=a090ae73…4fad0617 / 107252 B (round 10, commit 71a62cc8, matches the kickoff)
+freeze_gate_literal_count=17  (unchanged; 12 tool pins + 5 attestation values, all <PIN-AT-FREEZE>)
+frozen_ro_basis=RP7-WPI-RO.sh@d6a976aa sha256=23e55667…9aa01aad bytes=70941
+```
+
+**QA execution status: EXECUTED — nothing PENDING, nothing fabricated.** All
+twenty-three published commands of the round-11 mandated set were run verbatim in
+this session in a local Git Bash `--noprofile --norc` process. Every round-11
+transcript in `SELF_QA_RP6.md` was re-run against the final bytes and reproduces
+byte-for-byte.
+
+```text
+23 published commands             -> 22 at rc 0, R11_R9RED at rc 1 (its PASS condition)
+R11_GRAMMAR_SUMMARY  cases=15 pass=15 fail=0 result=PASS
+R11_F1_RED_SUMMARY   cases=17 pass=17 fail=0 result=PASS
+R11_F3_QA_SUMMARY    cases=85 pass=85 fail=0 result=PASS
+R11_GUARDS_SUMMARY   fences=15 pass=15 fail=0 result=PASS
+R11_R9RED            R9_GRAMMAR cases=5 pass=2 fail=3 result=FAIL -> recipe exit=1
+R10_F3 / R10_F4 / R9_GRAMMAR      -> carried unchanged, all PASS on the round-11 bytes
+R10_GRAMMAR (SUPERSEDED)          -> rc 1, recorded not hidden; out of the mandated set
+```
+
+**Residuals carried into the re-audit, named not closed:**
+
+1. `R11_GRAMMAR` is a *static source* grammar. The census makes coverage fail
+   closed over emitter **syntax**; it still cannot constrain what a `<name>`
+   class evaluates to at run time.
+2. The `%F` token set pinned by F2 is GNU coreutils' complete `file_type()`
+   return set. On a non-GNU producer an out-of-set token now STOPs at rc 3
+   instead of being reported as host deviation — the intended fail-closed
+   direction, but not a claim that this block can classify another producer's
+   vocabulary.
+3. `P0_STATE_UID` / `P0_STATE_GID` / `P0_EXPECT_UID` input integrity. The block
+   constrains these to positive decimals and cannot establish that the prelude
+   carried the preregistered numerics; §2 preregisters no numeric for
+   `P0_EXPECT_UID` at all. Freeze-gate/owner band.
+4. `R10_F4`'s reachability result covers the **three** input classes it executes
+   on *this* control flow — not every early-stop class and not every future edit,
+   which is why the assertion is kept rather than deleted.
+5. `RP6_R10_REPORT_2026-08-11.md:362-369` carries the same "every input class"
+   overclaim. It is corrected in `RP6_R11_REPORT_2026-08-11.md` rather than
+   rewritten: a delivered audit-round report records what that round claimed, and
+   the kickoff scope fence does not list it as writable.
+
+The freeze gate still has seventeen `<PIN-AT-FREEZE>` literals, so no end-to-end
+`P0 PASS` is possible and nothing here is dispatchable regardless of this round's
+verdict.
+
+---
+
+## Prior status — round 10 (four R9 findings closed; superseded by round 11)
+
+Block bytes at that round: `a090ae73…4fad0617`, 107252 B, commit `71a62cc8`.
+Prereg §8.1.1 then declared 89 forms / 161 emit sites. Full disposition:
+`RP6_R10_REPORT_2026-08-11.md`; evidence in `SELF_QA_RP6.md` rounds 10 and 10B.
 
 **Round 10 ran in two sittings.** Round 10a (Claude Pro) wrote the repairs and
 died on its weekly cap before recording any output, leaving twelve `@…@`
@@ -233,7 +334,7 @@ verdict.
 
 ---
 
-## Round-7 block change (the current bytes — round 8 changed no block byte)
+## Round-7 block change (superseded — rounds 9, 10 and 11 changed block bytes)
 
 Updated 2026-08-10 by the round-7 implementer (Claude, fresh session) for the
 five Codex round-6 audit required corrections (`RP6_CODEX_AUDIT_R6_2026-08-10.md`,
