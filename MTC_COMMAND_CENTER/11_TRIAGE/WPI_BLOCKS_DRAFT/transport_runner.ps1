@@ -166,10 +166,25 @@ $SSH_PINNED_OPTIONS = @(
 # same domain from the inside before it runs its first external program, so the
 # operator side and the remote side state the same contract independently.
 #
-# Scope, stated rather than implied: this binds the interpreter's LOCATOR and
-# its environment, not its bytes, and it does not reach the login shell sshd
-# uses to run the command string. Binding those is a deploy-channel attestation
-# and a successor item.
+# SCOPE - F1 IS OPEN (round 5; Codex round-4 Band B). This binds the INNER
+# child: the interpreter's locator and the environment `env -i` constructs for
+# it, not its bytes. It does NOT reach the account shell `sshd` uses to run the
+# command string, and round 4's claim that the residual `BASH_ENV` case is
+# "unreachable from the frozen plan" IS WITHDRAWN. This runner starts local
+# `ssh.exe` with a remote command STRING; `sshd` gives that string to the
+# account's shell, which processes its own startup environment before the
+# string's first token - `/usr/bin/env` - runs at all. A server-supplied
+# `BASH_ENV`/`ENV` therefore acts one interpreter earlier than anything frozen
+# here, and can print a line carrying this row's registered marker prefix and
+# exit 0 without the delivered script ever running. Test-RemoteProvenanceMarker-
+# ForOp binds marker SHAPE to a plan row, not the process that produced it, so
+# it cannot separate that output from the intended program. Enforcing an argv
+# from the client side cannot fix this: no element of the command string can act
+# before the shell that interprets the string. Closure requires an enforcement
+# point ahead of account-shell startup processing - a deploy-channel-attested
+# forced command / execution contract, or a transport path with no unbound shell
+# - plus D026 evidence at that boundary. Successor item; not claimed here.
+# Status: inner child closed, outer SSH account-shell boundary OPEN.
 $SSH_TARGET = 'gatea@172.24.55.233'
 $REMOTE_LAUNCH_DOMAIN = @(
     '/usr/bin/env', '-i',

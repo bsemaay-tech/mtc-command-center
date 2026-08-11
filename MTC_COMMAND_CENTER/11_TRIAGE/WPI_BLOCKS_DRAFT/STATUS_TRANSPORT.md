@@ -1,14 +1,20 @@
 # WP-I transport set status
 
-**REPAIRED-PENDING-REAUDIT** (round 4, under owner grant #7 — the T0 cap is lifted
+**REPAIRED-PENDING-REAUDIT** (round 5, under owner grant #7 — the T0 cap is lifted
 for this block set until both flagships accept)
+
+**F1 is OPEN: inner child closed; outer SSH account-shell boundary open.** Round 4
+recorded F1 as closed on the composition with one disclosed residual. Codex's round-4
+Band B audit rejected that, and round 5 accepts the finding: see "What changed in
+round 5" below. No other finding is open on these bytes.
 
 No host contact, RUNID allocation, archive build, freeze, execution, or Git commit was
 performed. `C:\WPI_ARTIFACTS` contains no `WPI_TRANSPORT_*` entry.
 
-Round 4 ran its shell fixtures against a **local WSL2 Ubuntu kernel**; every path they
-touch is under `/root/wpi_r4*` on that local filesystem. The operator-side fixtures
-start no process at all. No socket was opened to any host in this round.
+Rounds 4 and 5 ran their shell fixtures against a **local WSL2 Ubuntu kernel**; every
+path they touch is under `/root/wpi_r4*` or `/root/wpi_r5` on that local filesystem.
+The operator-side fixtures start no process at all. No socket was opened to any host in
+either round, and no `ssh.exe`, `scp.exe` or `sshd` process was started.
 
 `<ALLOCATE-AT-DISPATCH>` and `<PIN-AT-FREEZE>` remain literal, and that is enforced
 rather than incidental: a preflight marker gate STOPs the runner on the first unfilled
@@ -40,6 +46,8 @@ successor-skeleton review. Every item below has an executed RED/GREEN pair in
   requires verbatim, and **each delivered script re-attests that same domain from the
   inside** before its first external program (derivation class 5). With both plants
   still in place the frozen argv produced the real record and neither plant ran.
+  **Scope corrected in round 5:** that result is about the *inner child*. It does not
+  close F1 — see "What changed in round 5" and open item 2.
 - **Provenance is bound per operation, not to a global marker union (F1).** Round 3
   accepted any of the five programs' prefixes for any ssh row, so a close operation
   accepted `SETUP PASS` from an unrelated program as its own provenance and the run
@@ -56,7 +64,8 @@ successor-skeleton review. Every item below has an executed RED/GREEN pair in
   ops 07/08 as a third argument. The close script proves canonical two-way non-overlap
   with the evidence tree before creating `close_work_<RUNID>` at mode 0700, proves it
   again on the object `mkdir` produced, and adjudicates the removal's own status on
-  every exit path instead of ignoring it. The read-only claim is now earned.
+  every exit path taken after the create returned 0 — **narrowed in round 5**, see
+  BA-1 below. The read-only claim is now earned.
 - **An ambiguous close probe STOPs (F3).** With a mixed `No such file or directory;
   Permission denied` diagnostic the round-3 script returned `CLOSE_FAIL
   reason=evidence_dir_absent` rc 1 — a completed observation of missing evidence
@@ -98,15 +107,71 @@ successor-skeleton review. Every item below has an executed RED/GREEN pair in
   classification, the not-evaluable set, and the per-branch cleanup rule with its two
   distinct reasons; the successor draft R3's §6 sentence was extended to match.
 
+## What changed in round 5
+
+Codex's two round-4 T0 audits both returned REQUEST_CHANGES: Band B on F1, Band A on
+BA-1/BA-2/BA-3. All four are addressed. Every byte change has an executed RED/GREEN or
+an executed falsification in `SELF_QA_TRANSPORT.md` §R5; the placeholder census and all
+static gates are unchanged.
+
+- **F1 is OPEN — the verdict, not the code, was wrong (Band B).** Round 4 said the
+  exiting-`BASH_ENV` residual was *unreachable from the frozen plan* because the runner
+  enforces the `env -i` domain verbatim on every plan row. That reasons about the wrong
+  interpreter: the runner starts local `ssh.exe` and supplies a remote command *string*,
+  and `sshd` gives that string to the account's shell, which processes its own startup
+  environment **before** the string's first token — no plan row required. Reproduced
+  locally against the **repaired** bytes: rc 0, a forged `CLOSE PASS`, and zero record
+  lines from the real program, which the runner's provenance test would accept because
+  it binds marker *shape* to a plan row rather than to the producing process. What the
+  domain still does close is the inner child, and the stealthier plant that lets the
+  script run is still refused by name at rc 3. No client-side control was invented; a
+  command inside the same shell string cannot act before the shell that runs it. The
+  claim is now stated identically in the report, this file, the self-QA, the runner and
+  all five wrappers: **inner child closed; outer SSH account-shell boundary open**.
+- **The close script no longer leaves residue on a post-creation STOP (BA-1, HIGH).**
+  `mkdir` created the work directory, the next line STOPped on any diagnostic, and the
+  cleanup trap was not installed until twenty lines later, so that branch exited at rc 3
+  with the directory still there — Codex reproduced `SCRIPT_RC=3 … RESIDUE_PRESENT=yes`.
+  The create now captures rc and diagnostics without refusing; on rc 0 the cleanup is
+  armed **before** the diagnostic is adjudicated and before every later check. Same
+  instrument, same launch, same argv, only the bytes differ: pre-repair
+  `RESIDUE_PRESENT=yes`, repaired `RESIDUE_PRESENT=no`, with the reasoned STOP retained
+  byte-for-byte. A **nonzero** `mkdir` is deliberately *not* covered — a nonzero status
+  is no evidence the object at that path is the one this run created — so that arm STOPs
+  while recording `object_after_failed_create=present|absent`, and the header, the create
+  block and the `CLOSE_NOTE scratch` field all state the narrowed scope instead of the
+  old every-exit-path sentence.
+- **The claimed second `declare -F` defect was FALSE and is withdrawn (BA-2).** Bare
+  no-argument `declare -F` returns 0 in a function-free shell; the unguarded assignment
+  under `set -Eeuo pipefail` runs straight through. Only a *named* lookup of a missing
+  function returns 1. A control in the identical shell shape confirms `set -e` is armed,
+  so this is a falsification and not an inactive-option artefact. The `2>/dev/null || :`
+  guard is **kept as explicit no-op hardening** — the guarded and unguarded forms list an
+  inherited exported function identically, so keeping it removes no detection — and the
+  false explanation is corrected in the round-4 report and in all five delivered scripts.
+  An overclaimed *defect* is still a false evidence claim.
+- **T8's two prerequisite reason tokens are overstated (BA-3).** The classifier returns
+  `scp_transfer_did_not_complete` and `operation_reported_stop` before the
+  prerequisite-based rc-1 branch is reachable, so only rc-1 cleanups actually yield
+  `cleanup_after_unestablished_prerequisite` / `cleanup_after_earlier_deviation`. Round 5
+  narrows the prose rather than widening the classifier: an operation whose own kind or
+  status already explains why it is not evaluable should report *that*. The round-4
+  report's T8 disposition is corrected here; the three mirrored draft sentences live
+  under `WPI_PREREG_DRAFT_ROUND1/`, which a parallel session owns, and their exact
+  replacement text is specified in `TRANSPORT_R5_DRAFT_EDITS_PENDING.md` for the Lead to
+  apply. **Until those three edits land, BA-3 is not fully closed.**
+
 ## The superseded concurrent edit
 
 Commit `cf049b6b` preserved an unverified close-script edit from another session. Per
 the Lead's addendum it is **superseded**, and round 4 restarted from the round-3 bytes
 at `78173bfd`. Driven exactly as its own header prescribed, that edit refuses its own
 clean execution: it sweeps `declare -F` *after* defining `ld_stop`, so a clean launch
-emits `CLOSE_STOP reason=launch_domain_inherited_shell_function` at rc 3. A second
-latent defect in the same two lines was found while re-deriving them and is recorded in
-`TRANSPORT_R4_REPORT_2026-08-11.md`. Its substantive ideas — a launch-domain
+emits `CLOSE_STOP reason=launch_domain_inherited_shell_function` at rc 3. Round 4 also
+claimed a *second, independent* latent defect in the same two lines — that bare
+`declare -F` exits 1 with no functions defined and would end the run under `set -e`.
+**That claim was FALSE and is withdrawn in round 5** (Codex Band A, BA-2); the executed
+falsification is in `SELF_QA_TRANSPORT.md` §R5-3. Its substantive ideas — a launch-domain
 attestation, an exact absence template, numeric identity, and a run-owned `WORK_ROOT` —
 were re-derived and kept; each is now reachable from a plan-passed invocation and each
 carries executed evidence. Its argv-count arm, which returned rc 1, was dropped.
@@ -146,19 +211,29 @@ are consumers).
 1. **Derivation classes 5 and 6 are new permissions.** §4 of the draft now enumerates
    six classes rather than four. Round 4 wrote them into the contract because F1 and F2
    cannot be satisfied inside the existing four. This is the Lead's call to ratify.
-2. **One measured residual on F1, disclosed rather than papered over.** `bash` reads
-   `$BASH_ENV` before the first byte of a stdin-delivered script, and
-   `--norc`/`--noprofile` do not disable that channel, so a startup plant that *exits*
-   forges the record before any in-script attestation can run. Nothing inside a
-   delivered script can close it. It is closed by the operator side — the runner refuses
-   any plan row that does not carry the `env -i` domain verbatim, and that domain
-   supplies an explicit complete variable list — so the case is unreachable from the
-   frozen plan. A plant that lets the script run is refused by the class 5 sweep at
-   rc 3. Both cases are executed in self-QA.
-3. **The remote login shell is outside the attestation.** `sshd` runs the command string
-   with the account's login shell. `env -i` clears what that shell exports and both
-   launch programs are absolute, so the shell cannot select or influence what runs — but
-   its own integrity is a deploy-channel property, not something this set establishes.
+2. **F1 IS OPEN — inner child closed, outer SSH account-shell boundary open.** This is
+   the one unrepaired finding on these bytes, and it is a finding rather than a
+   disclosure. `sshd` does not execute the remote command string itself: it hands the
+   string to the account's shell, and that shell processes its own startup environment
+   (`BASH_ENV`/`ENV`, or whatever startup controls that shell honours) **before** the
+   string's first token, `/usr/bin/env`, runs. An exiting startup file can therefore
+   emit a line carrying the row's registered marker prefix, return rc 0, and never let
+   the delivered script run — and the runner's provenance test cannot separate that from
+   the intended program, because it binds marker *shape* to a plan row rather than to the
+   producing process. **No command inside the same shell string, on either side, can act
+   before that shell.** What the frozen `env -i` domain and the class 5 sweep do
+   establish is the inner child: its exec environment is exactly the three constructed
+   entries, so the stealthier plant that lets the script run is refused by name at rc 3.
+   Closure requires an enforcement point ahead of account-shell startup processing — a
+   deploy-channel-attested forced command / execution contract, or a transport path with
+   no unbound shell — plus D026 evidence driven through the real top-level path. That is
+   a successor item and is **not** claimed here. A disclosure is not a control.
+3. **The remote account shell is outside the attestation, and acts first.** Round 4 said
+   `env -i` clears what that shell exports and both launch programs are absolute, so the
+   shell "cannot select or influence what runs". **That sentence is withdrawn** — it does
+   not compose with item 2. `env -i` constrains that shell's *child*, not the shell, and
+   the shell runs first. Its integrity, and whether it processes a startup file at all,
+   are deploy-channel properties this set does not establish.
 4. **Deviation D-3 stands** and is a hard Stage-1 precondition: `GATEA-STAGING` must
    carry each `/usr/bin/<tool>` in the pin set — now including `/usr/bin/env` and
    `/usr/bin/bash` — as a regular, root-owned, not-group/other-writable file, or ops 01,

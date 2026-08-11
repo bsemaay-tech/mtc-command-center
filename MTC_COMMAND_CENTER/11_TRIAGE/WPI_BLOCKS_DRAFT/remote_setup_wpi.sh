@@ -61,26 +61,48 @@ LD_ENVIRON='/proc/self/environ'
 
 # The inherited-function sweep runs BEFORE this script defines a function of its
 # own, so `declare -F` describes only what the launch domain delivered rather
-# than this program's own names. `declare -F` exits 1 when there is nothing to
-# list, which under `set -e` would end the run with no marker at all, so its
-# status is consumed deliberately and the emptiness is tested afterwards.
+# than this program's own names.
+#
+# CORRECTION, round 5 (Codex round-4 Band A, BA-2). An earlier comment here said
+# that `declare -F` exits 1 when there is nothing to list and would therefore end
+# the run under `set -e`. That is FALSE for the no-argument enumeration form used
+# below, and it was never executed: in a function-free `--noprofile --norc` child
+# on GNU Bash 5.3.9 the bare form returns 0 and the unguarded assignment under
+# `set -Eeuo pipefail` runs straight through. Only a NAMED lookup of a missing
+# function returns 1. The `2>/dev/null || :` is therefore explicit no-op
+# hardening covering the named/errored forms, kept because it costs nothing - it
+# is NOT a repair for an observed defect, and it does not weaken the sweep: an
+# inherited exported function is listed identically with and without it. An
+# overclaimed DEFECT is still a false evidence claim, so the claim is withdrawn
+# rather than softened.
 LD_FUNCS="$(declare -F 2>/dev/null || :)"
 if [ -n "$LD_FUNCS" ]; then
     printf 'SETUP_STOP reason=launch_domain_inherited_shell_function detail=[%s]\n' "$LD_FUNCS" >&2
     exit 3
 fi
 
-# MEASURED SCOPE LIMIT (round 4, recorded rather than implied). `bash` reads
-# `$BASH_ENV` before the first byte of a stdin-delivered script, and
-# `--norc`/`--noprofile` do not disable that channel, so a startup plant that
-# EXITS forges the record before anything here runs. No in-script attestation
-# can close that. It is closed on the operator side, by the frozen `env -i`
-# launch domain with an explicit complete variable list that
-# `transport_runner.ps1` enforces verbatim on every plan row, so no plan row can
-# introduce `BASH_ENV` at all - which is why the domain is stated on both sides.
-# A plant that lets the script RUN, the only kind that could forge a
-# real-looking record, is refused by the sweep below: `BASH_ENV` is still in the
-# exec environment the kernel recorded. Both cases are executed in self-QA.
+# F1 IS OPEN - INNER CHILD CLOSED, OUTER SSH ACCOUNT-SHELL BOUNDARY OPEN
+# (round 5; Codex round-4 Band B). `bash` reads `$BASH_ENV` before the first
+# byte of a stdin-delivered script, and `--norc`/`--noprofile` do not disable
+# that channel, so a startup plant that EXITS forges the record before anything
+# here runs. Round 4 called that case unreachable, on the ground that the frozen
+# `env -i` domain lists every variable the CHILD receives and no plan row can
+# add `BASH_ENV`. THAT CLAIM IS WITHDRAWN. `sshd` does not execute the command
+# string itself: it hands the string to the account's shell, and that shell
+# processes its own startup environment BEFORE the string's first token,
+# `/usr/bin/env`, ever runs. A server-supplied `BASH_ENV`/`ENV` therefore acts
+# one interpreter EARLIER than the domain attested here; it can emit this
+# program's record and exit with the delivered bytes never running at all, and
+# no command inside the same shell string - here or in `transport_runner.ps1` -
+# can act before it. What the frozen domain and the sweep below DO establish is
+# narrower and still load-bearing: the inner `/usr/bin/bash` child's exec
+# environment is exactly the three constructed entries, so the stealthier plant
+# - the only kind that lets this script run and could forge a REAL-looking
+# record - is refused by name, executed in self-QA. Closing the outer boundary
+# needs an enforcement point that acts before account-shell startup processing
+# (a deploy-channel-attested forced-command or execution contract, or a
+# transport path with no unbound shell); that is a successor item, not a claim
+# made here. A DISCLOSURE IS NOT A CONTROL.
 ld_stop() { printf 'SETUP_STOP reason=%s\n' "$*" >&2; exit 3; }
 
 [ "${BASH:-}" = "$EXPECT_INTERPRETER" ] \

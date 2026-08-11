@@ -356,8 +356,13 @@ EXACTLY these six classes, and any delta outside them is still a finding:
    other four directories. The close script proves canonical two-way non-overlap with
    the evidence tree *before* creating a create-once `close_work_<RUNID>` directory
    under it at mode 0700, proves it again on the object `mkdir` actually produced,
-   points `TMPDIR` at that proven directory, and removes it on every exit path with
-   the removal's own status adjudicated rather than ignored. The close script may not
+   points `TMPDIR` at that proven directory, and removes it on every exit path taken
+   after the create returned 0, with the removal's own status adjudicated rather than
+   ignored. The coverage is stated at that width deliberately: a **nonzero** `mkdir`
+   result is not covered, because a nonzero status is no evidence that the object at
+   that path is the one this run created, and removing an object the run cannot prove
+   it created is the wrong answer. That arm STOPs and records whether an object is
+   present (`object_after_failed_create=present|absent`) instead of claiming coverage. The close script may not
    allocate its own scratch root: a program that allocates the root it is about to
    trust proves nothing about where that root is. This is what makes the read-only
    claim earned rather than asserted.
@@ -686,10 +691,18 @@ sequencing, not first-FAIL: after the first mismatching *or* not-evaluable
 **provenance**, never by rc alone. `ssh` rc 255, any nonzero `scp` rc, an rc outside
 a kind's grammar, and an `ssh` rc whose capture carries no marker **from that
 operation's own family** are all not-evaluable. An `always` failure caused by an
-earlier break on **its own branch** is not-evaluable rather than a new host FAIL,
-and it names which of the two cases it is —
-`cleanup_after_unestablished_prerequisite` or `cleanup_after_earlier_deviation`;
-a failure on an unrelated branch does not demote it. A completed deviant
+earlier break on **its own branch** is not-evaluable rather than a new host FAIL;
+a failure on an unrelated branch does not demote it. The reason recorded is the
+**first** one that applies, so an operation whose own kind or status already
+explains the inability reports that: a nonzero `scp` reports
+`scp_transfer_did_not_complete` and an rc 3 reports `operation_reported_stop`,
+whatever its prerequisites. Only an **rc-1** `always` failure reaches
+prerequisite adjudication, and only there does the record name which of the two
+prerequisite cases applies —
+`cleanup_after_unestablished_prerequisite` or `cleanup_after_earlier_deviation`.
+Every `always` operation still emits `TR_OP_PREREQ_STATE` with the resolved
+class of each edge, so the prerequisite state is auditable from the record in
+all cases, including the ones whose reason token is not a prerequisite token. A completed deviant
 observation outranks a later inability to evaluate, so a run with both is FAIL, and
 every not-evaluable operation is still enumerated and counted. The per-op record
 therefore also carries `TR_REMOTE_LAUNCH_DOMAIN`, one `TR_OP_PREREQ` line per

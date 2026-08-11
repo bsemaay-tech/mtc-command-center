@@ -1739,7 +1739,7 @@ predicate, classification, ordering or emitted record was altered anywhere.
 
 | Item | RED | GREEN | Verdict |
 |---|---|---|---|
-| F1 remote interpreter outside the pinned domain | `F1 RED - a fake bash first on PATH` (rc 0, plant ran, forged marker); `F1 RED - inherited BASH_ENV` (rc 0, plant ran, forged marker) | `F1 GREEN - the frozen launch domain neutralises both plants` (rc 0, `PATH_HIT=no STARTUP_HIT=no`, real record) | closed on the composition; one residual measured and disclosed below |
+| F1 remote interpreter outside the pinned domain | `F1 RED - a fake bash first on PATH` (rc 0, plant ran, forged marker); `F1 RED - inherited BASH_ENV` (rc 0, plant ran, forged marker) | `F1 GREEN - the frozen launch domain neutralises both plants` (rc 0, `PATH_HIT=no STARTUP_HIT=no`, real record) | **OPEN — verdict corrected in round 5.** Inner child closed; outer SSH account-shell boundary open. The round-4 entry read "closed on the composition; one residual measured and disclosed below" and is WITHDRAWN — see §R5-2 |
 | F1 unrelated marker family accepted | probe `FIXTURE D [round3]`: op 07 `class=match` from a `SETUP` marker, run PASS | probe `FIXTURE D [round4]`: `not_evaluable reason=no_remote_program_marker_in_capture expected_family=remote_close_tree_wpi.sh`, run STOP | closed |
 | F2 inherited `TMPDIR` writes inside evidence | `F2 RED` - rc 0, a `tmp.*/raw.0` member hashed inside the tree, `wrote_into_evidence_tree=0` | `F2 GREEN` - rc 3 `launch_domain_unexpected_environment_entry name=[TMPDIR]`; the clean run leaves no residue; the class-6 overlap case is refused before `mkdir` | closed |
 | F3 mixed probe diagnostic read as absence | `F3 RED` - rc 1 `CLOSE_FAIL reason=evidence_dir_absent` | `F3 GREEN` - rc 3 `CLOSE_STOP reason=path_probe_error ... No such file or directory; Permission denied` | closed |
@@ -2184,7 +2184,27 @@ CLOSE PASS runid=WPIR4-FIXTURE-P0 dir=/root/wpi_r4/alloc/wpi_staging_FIXTURE/evi
 
 ### The one residual this section measures rather than repairs
 
-The block titled `F1 RESIDUAL` is a **measured limit, recorded because the claim
+> **WITHDRAWN IN ROUND 5 (Codex round-4 Band B).** The paragraph below is kept
+> verbatim as the record of what round 4 claimed, and is **struck**: its
+> conclusion — that the residual is *unreachable from the frozen plan* and that
+> F1 is therefore closed on the composition — is FALSE. The plan is not the only
+> way a startup variable can reach the transport: `sshd` hands the remote command
+> string to the account's shell, and that shell processes its own startup
+> environment before the string's first token runs, so no plan row is needed. F1
+> is **OPEN**: inner child closed, outer SSH account-shell boundary open. The
+> corrected statement and its executed reproduction are in **§R5-2**. Everything
+> the paragraph says about the *inner* child, and the `F1 GREEN` block that
+> follows it, remain true and are unaffected.
+>
+> **Two other places carry the same withdrawn claim as a literal record and were
+> deliberately NOT edited**, because editing them would make a transcript disagree
+> with the bytes that produced it: the `F1 RESIDUAL` commentary inside the §R4-4
+> transcript above (it is the harness's own stdout), and the `echo` lines at
+> `_r4_wsl_fixtures.sh:210-222` that emitted it. That harness is round 4's, is
+> frozen as evidence, and is superseded for this claim by `_r5_wsl_fixtures.sh`.
+> Read both through this withdrawal.
+
+~~The block titled `F1 RESIDUAL` is a **measured limit, recorded because the claim
 has to be scoped honestly**. `bash` reads `$BASH_ENV` before the first byte of a
 stdin-delivered script, and `--norc`/`--noprofile` do not disable that channel, so
 a startup plant that EXITS forges the record before any in-script attestation can
@@ -2194,9 +2214,10 @@ that does not carry it verbatim, and that domain is `env -i` with an explicit,
 complete variable list - so no plan row can introduce `BASH_ENV` at all. The case
 in the transcript is therefore unreachable from the frozen plan, and it is the
 reason the domain is stated and enforced on both sides rather than only inside the
-scripts. The stealthier plant - the one that lets the script run, and so is the
+scripts.~~ The stealthier plant - the one that lets the script run, and so is the
 only kind that could forge a REAL-looking record - is refused by the class 5 sweep
-at rc 3, which the block after it shows.
+at rc 3, which the block after it shows. **That last sentence stands; the struck
+text does not.**
 
 ## R4-5. `_r4_t5_compose.sh` - the `run_p0.sh` -> `RP6-P0.sh` composition
 
@@ -2363,4 +2384,460 @@ op=04 stdin=PREREG:run_p0.sh argc=42 options_verbatim=True route_ok=True launch_
 op=05 stdin=PREREG:run_ro.sh argc=42 options_verbatim=True route_ok=True launch_domain_verbatim=True script_args=0
 op=07 stdin=PREREG:remote_close_tree_wpi.sh argc=45 options_verbatim=True route_ok=True launch_domain_verbatim=True script_args=3
 op=08 stdin=PREREG:remote_close_tree_wpi.sh argc=45 options_verbatim=True route_ok=True launch_domain_verbatim=True script_args=3
+```
+
+---
+
+# ROUND 5 - 2026-08-11 - BA-1, BA-2, BA-3 and the F1 verdict correction
+
+Implementer session: Claude Opus 5 xhigh (Max account), under
+`KICKOFF_TRANSPORT_REPAIR_R5.md`. Inputs: the two Codex round-4 T0 audits,
+`TRANSPORT_CODEX_R4_AUDIT_BAND_A_2026-08-11.md` (BA-1, BA-2, BA-3) and
+`TRANSPORT_CODEX_R4_AUDIT_BAND_B_2026-08-11.md` (F1), both REQUEST_CHANGES.
+
+**No host was contacted and no network connection was opened.** No socket of any
+kind was created; no `ssh.exe`, `scp.exe` or `sshd` process was started. The
+Linux fixtures run against the same local WSL2 Ubuntu kernel round 4 used
+(`6.18.33.2-microsoft-standard-WSL2`, GNU Bash 5.3.9), and every path they touch
+is under `/root/wpi_r5` on that local filesystem.
+
+## R5-0. What round 5 changed, and what it did not
+
+| Finding | Byte change | Evidence |
+|---|---|---|
+| **F1** (Band B) | comments only, in all five delivered scripts and `transport_runner.ps1` | verdict corrected to OPEN; the boundary reproduced locally in §R5-2 |
+| **BA-1** (HIGH) | `remote_close_tree_wpi.sh` create block restructured | D026 RED/GREEN in §R5-1, on the exact pre-repair blob |
+| **BA-2** (MEDIUM) | comments only, in all five delivered scripts | the claimed RED executed and falsified in §R5-3 |
+| **BA-3** (MEDIUM) | none in this directory — the overstatement lives in the two draft files | §R5-4; the edits are specified in `TRANSPORT_R5_DRAFT_EDITS_PENDING.md` |
+
+One harness ships beside the targets: `_r5_wsl_fixtures.sh`. It takes two
+arguments — this directory (the repaired working-tree bytes) and a directory
+holding the **pre-repair** close script. The pre-repair copy is not a
+reconstruction: it is `git cat-file blob HEAD:…/remote_close_tree_wpi.sh`, and the
+transcript prints its SHA-256 as `29b6412a466c10854ddf09effc8d5216317738a012235ce563c9764a9e0c40ef`,
+which is the frozen round-4 identity named in both the round-4 report §4 and the
+Band A audit.
+
+### Declared fixture retargeting, and the declared per-arm mutations
+
+The retargeting is identical to round 4 and is asserted rather than assumed —
+`RETARGET_ANCHORS=hit_in_both_arms` in the transcript is a hard check that throws
+instead of producing a false RED or GREEN: the `TOOL_*` pins except `TOOL_BASH`
+are moved to regular root-owned 0755 copies under `/root/wpi_r5/tools` (this
+kernel ships `/usr/bin` coreutils as symlinks, which `require_tool` correctly
+refuses), `EXPECT_UID`/`EXPECT_GID` are filled with this login's numeric identity,
+and `EXPECT_LAUNCH_HOME` with this login's `HOME`.
+
+Beyond that, four instruments are declared and each is named in its own banner:
+
+| Instrument | Behaviour |
+|---|---|
+| `mkdir_diag` | creates the requested directory, emits **one** diagnostic, returns **0** — BA-1's exact case |
+| `mkdir_fail_clean` | creates nothing, emits a diagnostic, returns 1 |
+| `mkdir_fail_dirty` | **creates** the directory, emits a diagnostic, returns 1 |
+| `rm_noop` | reports success and removes nothing |
+
+No predicate, classification, ordering or emitted record of the delivered bytes
+was altered by the fixture.
+
+## R5-1. BA-1 — the RED and the GREEN
+
+The RED arm is the pre-repair blob; the GREEN arm is the repaired file; **both are
+driven through the same `mkdir_diag` instrument, the same launch domain and the
+same argv**, so the only variable is the delivered bytes.
+
+| | pre-repair bytes (RED) | repaired bytes (GREEN) |
+|---|---|---|
+| `SCRIPT_RC` | 3 | 3 |
+| refusal | `CLOSE_STOP reason=work_dir_mkdir_diagnostics … detail=injected_success_diagnostic` | **identical** |
+| `RESIDUE_PRESENT` | **yes** | **no** |
+
+That reproduces Codex's Band A result (`SCRIPT_RC=3 … RESIDUE_PRESENT=yes`) on the
+pre-repair bytes and removes it on the repaired bytes, while keeping the reasoned
+STOP byte-for-byte.
+
+**The carried fence was not weakened**, and the transcript proves it rather than
+asserting it. The fence is `[ -z "$MKDIR_OUT" ] || stop "work_dir_mkdir_diagnostics …"`.
+The predicate and the reason token are unchanged (only the line number moved,
+402 → 483), and the block `BA-1 FENCE DISCRIMINATING POWER` quotes **both** the old
+and the new assertion together with the refusal each produced **against the same
+injected diagnostic**. Both refuse.
+
+Five further arms bound the claim rather than widening it:
+
+- two clean runs, one per arm, both rc 0 with the same `CLOSE PASS` and no
+  residue — the happy path did not move;
+- a nonzero `mkdir` that created nothing: both arms STOP, and the repaired arm
+  additionally records `rc=1 object_after_failed_create=absent
+  cleanup=not_armed_for_a_nonzero_create detail=[…]` where round 4 printed only
+  the path;
+- **the declared uncovered case** — a nonzero `mkdir` that *did* create. The
+  repaired bytes deliberately do not arm cleanup there, so residue remains, and
+  the record now **names** it (`object_after_failed_create=present`). A nonzero
+  status is not evidence that the object at that path is the one this run
+  created, and `rm -rf` on an object it cannot prove it created is the wrong
+  answer. The header, the create block and the `CLOSE_NOTE scratch` field all say
+  so; nothing claims coverage there;
+- `rm_noop` on the newly covered path: the cleanup does **not** accept a removal
+  that removed nothing — `CLOSE_STOP reason=work_dir_removal_failed`;
+- a late refusal after a clean create (work-directory mode 750): both arms
+  `RESIDUE_PRESENT=no`, a control showing the repair did not move an exit path
+  round 4 already covered.
+
+The `CLOSE_NOTE scratch` field changed with the code, visible side by side in the
+two clean-run arms:
+`removal=adjudicated_on_every_exit_path` → `removal=adjudicated_on_every_exit_path_after_a_zero_status_create`.
+
+## R5-2. F1 — the verdict is corrected to OPEN
+
+Round 4 wrote that the exiting-`BASH_ENV` case is *unreachable from the frozen
+plan*, because the runner enforces the `env -i` domain verbatim on every plan row
+and that domain's variable list is explicit and complete. Band B's finding is that
+this reasons about the wrong interpreter. The runner does not execute remote
+`/usr/bin/env`; it starts local `ssh.exe` and supplies a remote **command string**.
+`sshd` hands that string to the account's shell, and that shell processes its own
+startup environment **before** the string's first token. No plan row is involved,
+so enforcing the plan row cannot close it, and no command *inside* the same shell
+string can act before the shell that interprets the string.
+
+The block `F1 OPEN - the outer account-shell boundary, reproduced locally` executes
+that composition step. **Its scope is stated in the transcript before its result:
+it is not closure evidence, it is not the real transport path, and no host, socket
+or ssh/sshd process is involved.** It is a local model —
+`BASH_ENV=<exiting plant> /usr/bin/bash -c "<the frozen command string>" < <the delivered script>` —
+in which the command string is byte-identical to the frozen `$REMOTE_LAUNCH_DOMAIN`
+and the delivered script is the **repaired round-5 file**. Result: `RC=0`,
+`OUTER_PLANT_RAN=yes`, a forged `CLOSE PASS … wrote_into_evidence_tree=0` on
+stdout, and `DELIVERED_SCRIPT_RECORD_LINES=0` — the real program never ran. The
+runner would accept that capture: `$MARKER_FAMILY_BY_STDIN` registers `CLOSE_` and
+`CLOSE ` for the `remote_close_tree_wpi.sh` leaf, the forged line starts with one
+of them, and rc 0 is in the grammar. Marker **shape** is bound to the plan row,
+not to the process that produced it.
+
+Two controls separate what is still closed from what is not:
+
+- **still closed** — a plant that lets the delivered script *run* (the only kind
+  that could forge a *real-looking* record) is refused by name inside the child:
+  `CLOSE_STOP reason=launch_domain_unexpected_environment_entry name=[BASH_ENV]`
+  at rc 3, with `QUIET_PLANT_RAN=yes` confirming the plant did execute;
+- **not closed** — the same exiting plant delivered *inside* the domain still
+  forges at rc 0. Round 4 recorded that case and was right that the frozen plan
+  cannot introduce `BASH_ENV` into the `env -i` list; what it got wrong is that
+  the plan is not the only way in.
+
+**Status wording, used identically everywhere it now appears:** *inner child
+closed; outer SSH account-shell boundary open.* No client-side control was
+invented. Closure requires an enforcement point that acts before account-shell
+startup processing — a deploy-channel-attested forced command / execution
+contract, or a transport path with no unbound shell — plus D026 evidence driven
+through the real top-level path. That is a successor item. A disclosure is not a
+control.
+
+## R5-3. BA-2 — the claimed second `declare -F` defect, falsified
+
+The round-4 report and five delivered scripts said that bare `declare -F` exits 1
+when no function exists and would therefore terminate the assignment under
+`set -Eeuo pipefail`. Executed on this kernel:
+
+| arm | what it drives | result |
+|---|---|---|
+| A | bare `declare -F` in a function-free `--noprofile --norc` child | `DIRECT_RC=0` |
+| **B** | **the unguarded assignment under `set -Eeuo pipefail` — the claimed RED** | `AFTER_ASSIGN len=0`, `STILL_RUNNING=yes`, `PROCESS_RC=0` |
+| C | control: a **named** lookup of a missing function | `PROCESS_RC=1` |
+| D | control: `LD_FUNCS="$(false)"` in the identical shell shape | `PROCESS_RC=1` |
+| E | the delivered guarded form | `PROCESS_RC=0` |
+| F | discriminating power of keeping the guard | `UNGUARDED=[declare -fx foo]` = `GUARDED=[declare -fx foo]` |
+| G | the delivered script against a real inherited exported function | `CLOSE_STOP reason=launch_domain_inherited_shell_function detail=[declare -fx a_plant]` rc 3 |
+
+Arm D is what makes arm B a falsification rather than an inactive-option artefact:
+`set -e` **is** armed in that exact shell shape and does kill the process for a
+genuinely failing command. The claimed RED is therefore not producible by the
+command the delivered code actually runs.
+
+**Disposition: the guard is KEPT as explicit no-op hardening and the claim is
+withdrawn.** Arm F is the discriminating-power evidence for keeping it — the
+guarded and unguarded forms list an inherited exported function identically, so
+retaining it removes no detection — and arm G shows the sweep it feeds is live.
+The comment in all five scripts now states the executed facts and labels the guard
+as hardening rather than a repair. An overclaimed **defect** is still a false
+evidence claim.
+
+## R5-4. BA-3 — no executable change; prose narrowed
+
+`transport_runner.ps1`'s classifier returns kind- and status-specific reasons
+before the prerequisite-based rc-1 branch is reachable:
+`scp_transfer_did_not_complete` for any nonzero `scp` (line 1103 in the round-5
+file), `operation_reported_stop` for rc 3 (line 1108), and only the rc-1 fallthrough
+at 1116–1120 produces `cleanup_after_unestablished_prerequisite` or
+`cleanup_after_earlier_deviation`. Codex's round-4 Fixture B execution shows ops
+09/10 reporting `scp_transfer_did_not_complete` and 11/12 reporting
+`operation_reported_stop` with prerequisites genuinely unestablished.
+
+Round 5 takes the **narrow-the-prose** branch, not the change-the-classifier
+branch, and says so per file. The classifier is correct as written: an operation
+whose own kind or status already explains why it is not evaluable should report
+that reason, not a prerequisite reason it did not reach. Widening the two tokens
+to every broken-branch `always` failure would make the record *less* precise, and
+would require re-proving F4's decisive fixture for no gain.
+
+The overstatement is in three places and **none of them is in this directory**:
+`WPI_PREREGISTRATION_DRAFT.md:688-691` and
+`WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md:570,678`, all under
+`WPI_PREREG_DRAFT_ROUND1/`, which this session was instructed not to touch because
+a parallel session owns it. The exact replacement text for all three, byte-
+semantically identical across the two successor copies as Band A requires, is in
+`TRANSPORT_R5_DRAFT_EDITS_PENDING.md`. The round-4 report's own T8 disposition is
+corrected in place, in this directory.
+
+## R5-5. Static gates on the repaired bytes
+
+| gate | result |
+|---|---|
+| `bash -n` on all five delivered shell files | rc 0 for each |
+| `bash -n _r5_wsl_fixtures.sh` | rc 0 |
+| CR bytes (`tr -cd '\r' \| wc -c`) per file | 0 for all seven targets and the harness |
+| Windows PowerShell 5.1.26100.8875 parse of `transport_runner.ps1` | `PARSE_ERRORS=0` |
+| placeholder census over the seven targets | `alloc=37 pin=38` — **unchanged** from round 4 |
+| harness process rc | 0 |
+
+The census is unchanged because every round-5 edit outside the close script's
+create block is comment text, and the create block introduces no placeholder.
+
+## R5-6. `_r5_wsl_fixtures.sh` — transcript (verbatim)
+
+Exact command:
+
+```text
+wsl.exe -u root -- /usr/bin/bash --noprofile --norc \
+  /mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/_r5_wsl_fixtures.sh \
+  /mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT \
+  <scratch>/r5/pre
+```
+
+```text
+
+########## FIXTURE ENVIRONMENT
+$ uname -sr; id -u; id -g; bash --version | head -1
+Linux 6.18.33.2-microsoft-standard-WSL2
+0
+0
+GNU bash, version 5.3.9(1)-release (x86_64-pc-linux-gnu)
+$ sha256sum <the two close scripts under test>
+8892574f253ab26d6d48bba270f84ef2da4458a5bca93f2b3c9723991a3732cf  /mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/remote_close_tree_wpi.sh
+29b6412a466c10854ddf09effc8d5216317738a012235ce563c9764a9e0c40ef  /mnt/c/Users/BARSEM~1/AppData/Local/Temp/claude/C--LAB-Tradingview-LAB-CLEAN/6b278702-a841-44d7-bad9-46dc412852f7/scratchpad/r5/pre/remote_close_tree_wpi.sh
+RETARGET_ANCHORS=hit_in_both_arms
+
+########## BA-1 RED - PRE-REPAIR bytes + INSTRUMENT 1 (mkdir creates, warns, rc 0)
+# Codex round-4 Band A reproduced SCRIPT_RC=3 ... RESIDUE_PRESENT=yes here:
+# the directory is created at :401, the diagnostic branch stops at :402, and
+# the cleanup trap is not installed until :424.
+$ env -i PATH=... LC_ALL=C HOME=... /usr/bin/bash --noprofile --norc close_red.sh <EV_DIR> <RUNID> <WORK_ROOT>
+SCRIPT_RC=3
+CLOSE_STOP reason=work_dir_mkdir_diagnostics path=/root/wpi_r5/red_diag/work/close_work_WPIR5-FIXTURE-P0 detail=injected_success_diagnostic
+RESIDUE_PRESENT=yes path=/root/wpi_r5/red_diag/work/close_work_WPIR5-FIXTURE-P0
+RESIDUE_LISTING:
+  /root/wpi_r5/red_diag/work
+  /root/wpi_r5/red_diag/work/close_work_WPIR5-FIXTURE-P0
+EVIDENCE_TREE_AFTER:
+  /root/wpi_r5/red_diag/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/red_diag/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/red_diag/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+
+########## BA-1 GREEN - REPAIRED bytes + THE SAME INSTRUMENT 1
+# Same deviant tool output, same launch, same argv. The reasoned STOP is
+# retained byte-for-byte (reason=work_dir_mkdir_diagnostics with the same
+# detail), and the directory is gone because the cleanup is armed on the
+# zero status BEFORE the diagnostic is adjudicated.
+$ env -i PATH=... LC_ALL=C HOME=... /usr/bin/bash --noprofile --norc close_green.sh <EV_DIR> <RUNID> <WORK_ROOT>
+SCRIPT_RC=3
+CLOSE_STOP reason=work_dir_mkdir_diagnostics path=/root/wpi_r5/green_diag/work/close_work_WPIR5-FIXTURE-P0 detail=injected_success_diagnostic
+RESIDUE_PRESENT=no
+EVIDENCE_TREE_AFTER:
+  /root/wpi_r5/green_diag/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/green_diag/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/green_diag/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+
+########## BA-1 FENCE DISCRIMINATING POWER - old and new assertion, same deviant output
+# The carried fence is `[ -z "$MKDIR_OUT" ] || stop work_dir_mkdir_diagnostics`.
+# It was NOT weakened: the predicate and the reason token are unchanged, and
+# both the pre-repair and the repaired assertion refuse the same injected
+# diagnostic. Quoted from the two arms above:
+OLD_ASSERTION_LINE : 402:[ -z "$MKDIR_OUT" ] || stop "work_dir_mkdir_diagnostics path=$WORK detail=$MKDIR_OUT"
+NEW_ASSERTION_LINE : 483:[ -z "$MKDIR_OUT" ] || stop "work_dir_mkdir_diagnostics path=$WORK detail=$MKDIR_OUT"
+OLD_REFUSAL        : CLOSE_STOP reason=work_dir_mkdir_diagnostics path=/root/wpi_r5/red_diag/work/close_work_WPIR5-FIXTURE-P0 detail=injected_success_diagnostic
+NEW_REFUSAL        : CLOSE_STOP reason=work_dir_mkdir_diagnostics path=/root/wpi_r5/green_diag/work/close_work_WPIR5-FIXTURE-P0 detail=injected_success_diagnostic
+
+########## BA-1 REGRESSION - clean run, PRE-REPAIR bytes, no instrument
+SCRIPT_RC=0
+(no CLOSE_STOP/CLOSE_FAIL on stderr)
+RESIDUE_PRESENT=no
+EVIDENCE_TREE_AFTER:
+  /root/wpi_r5/red_clean/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/red_clean/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/red_clean/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+CLOSE_NOTE scratch work_dir=/root/wpi_r5/red_clean/work/close_work_WPIR5-FIXTURE-P0 owner_numeric=0:0 mode=700 created=once tmpdir=run_owned canonical_non_overlap=proven_before_and_after_create removal=adjudicated_on_every_exit_path
+CLOSE PASS runid=WPIR5-FIXTURE-P0 dir=/root/wpi_r5/red_clean/evidence/runkit/WPIR5-FIXTURE-P0 files=2 wrote_into_evidence_tree=0
+
+########## BA-1 REGRESSION - clean run, REPAIRED bytes, no instrument
+# rc 0, the same record, no residue: the repair did not change the happy path.
+SCRIPT_RC=0
+(no CLOSE_STOP/CLOSE_FAIL on stderr)
+RESIDUE_PRESENT=no
+EVIDENCE_TREE_AFTER:
+  /root/wpi_r5/green_clean/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/green_clean/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/green_clean/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+CLOSE_NOTE scratch work_dir=/root/wpi_r5/green_clean/work/close_work_WPIR5-FIXTURE-P0 owner_numeric=0:0 mode=700 created=once tmpdir=run_owned canonical_non_overlap=proven_before_and_after_create removal=adjudicated_on_every_exit_path_after_a_zero_status_create
+CLOSE PASS runid=WPIR5-FIXTURE-P0 dir=/root/wpi_r5/green_clean/evidence/runkit/WPIR5-FIXTURE-P0 files=2 wrote_into_evidence_tree=0
+
+########## BA-1 - a nonzero mkdir that created NOTHING: PRE-REPAIR vs REPAIRED
+# Both STOP. The repaired arm additionally records the tool rc, the captured
+# diagnostic, and whether an object is present - the round-4 message carried
+# only the path.
+SCRIPT_RC=3
+CLOSE_STOP reason=work_dir_mkdir_failed path=/root/wpi_r5/red_failclean/work/close_work_WPIR5-FIXTURE-P0
+RESIDUE_PRESENT=no
+EVIDENCE_TREE_AFTER:
+  /root/wpi_r5/red_failclean/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/red_failclean/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/red_failclean/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+SCRIPT_RC=3
+CLOSE_STOP reason=work_dir_mkdir_failed path=/root/wpi_r5/green_failclean/work/close_work_WPIR5-FIXTURE-P0 rc=1 object_after_failed_create=absent cleanup=not_armed_for_a_nonzero_create detail=[injected_failure_no_object_created]
+RESIDUE_PRESENT=no
+EVIDENCE_TREE_AFTER:
+  /root/wpi_r5/green_failclean/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/green_failclean/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/green_failclean/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+
+########## BA-1 - THE DECLARED UNCOVERED CASE: a nonzero mkdir that DID create
+# The repaired bytes deliberately do NOT arm cleanup here: a nonzero status
+# is not evidence that the object at that path is the one this run created,
+# and `rm -rf` on an object it cannot prove it created is the wrong answer.
+# The header, the create block and the CLOSE_NOTE scratch field all say so.
+# Residue in this arm is the honest scope of the claim, not a hidden failure:
+# the record now NAMES it (object_after_failed_create=present).
+SCRIPT_RC=3
+CLOSE_STOP reason=work_dir_mkdir_failed path=/root/wpi_r5/green_faildirty/work/close_work_WPIR5-FIXTURE-P0 rc=1 object_after_failed_create=present cleanup=not_armed_for_a_nonzero_create detail=[injected_failure_after_object_created]
+RESIDUE_PRESENT=yes path=/root/wpi_r5/green_faildirty/work/close_work_WPIR5-FIXTURE-P0
+RESIDUE_LISTING:
+  /root/wpi_r5/green_faildirty/work
+  /root/wpi_r5/green_faildirty/work/close_work_WPIR5-FIXTURE-P0
+EVIDENCE_TREE_AFTER:
+  /root/wpi_r5/green_faildirty/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/green_faildirty/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/green_faildirty/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+
+########## BA-1 - the removal adjudication is LIVE on the newly covered path
+# Instrument 1 (create + diagnostic + rc 0) plus an `rm` that reports success
+# and removes nothing. The newly armed cleanup must not accept that.
+SCRIPT_RC=3
+CLOSE_STOP reason=work_dir_mkdir_diagnostics path=/root/wpi_r5/green_rmnoop/work/close_work_WPIR5-FIXTURE-P0 detail=injected_success_diagnostic
+CLOSE_STOP reason=work_dir_removal_failed path=/root/wpi_r5/green_rmnoop/work/close_work_WPIR5-FIXTURE-P0 rc=0 detail=[]
+RESIDUE_PRESENT=yes path=/root/wpi_r5/green_rmnoop/work/close_work_WPIR5-FIXTURE-P0
+RESIDUE_LISTING:
+  /root/wpi_r5/green_rmnoop/work
+  /root/wpi_r5/green_rmnoop/work/close_work_WPIR5-FIXTURE-P0
+EVIDENCE_TREE_AFTER:
+  /root/wpi_r5/green_rmnoop/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/green_rmnoop/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/green_rmnoop/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+
+########## BA-1 - cleanup still covers a later refusal after a clean create
+# A work-directory mode disagreement STOPs well after the create. Both arms
+# had cleanup armed by then, so this is a control showing the repair did not
+# move an exit path that round 4 already covered.
+
+--- arm=red
+SCRIPT_RC=3
+CLOSE_STOP reason=work_dir_mode=750 expected=700 path=/root/wpi_r5/red_mode/work/close_work_WPIR5-FIXTURE-P0
+RESIDUE_PRESENT=no
+EVIDENCE_TREE_AFTER:
+  /root/wpi_r5/red_mode/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/red_mode/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/red_mode/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+
+--- arm=green
+SCRIPT_RC=3
+CLOSE_STOP reason=work_dir_mode=750 expected=700 path=/root/wpi_r5/green_mode/work/close_work_WPIR5-FIXTURE-P0
+RESIDUE_PRESENT=no
+EVIDENCE_TREE_AFTER:
+  /root/wpi_r5/green_mode/evidence/runkit/WPIR5-FIXTURE-P0
+  /root/wpi_r5/green_mode/evidence/runkit/WPIR5-FIXTURE-P0/a.txt
+  /root/wpi_r5/green_mode/evidence/runkit/WPIR5-FIXTURE-P0/b.txt
+
+########## F1 OPEN - the outer account-shell boundary, reproduced locally
+# SCOPE OF THIS ARM, STATED FIRST. This is NOT closure evidence and is NOT
+# the real transport path. No host is contacted, no socket is opened and no
+# ssh/sshd process is started. It is a LOCAL MODEL of one composition step
+# that Codex round-4 Band B judged on the bytes: sshd does not execute the
+# remote command string itself - it hands the string to the account shell,
+# which processes its own startup environment BEFORE the string first token
+# runs. The model is `BASH_ENV=<plant> /usr/bin/bash -c "<the frozen command
+# string>" < <the delivered script>`. The command string is byte-identical to
+# the frozen $REMOTE_LAUNCH_DOMAIN, and the delivered script is the REPAIRED
+# round-5 file - so this shows the boundary is not closed BY the repair.
+$ BASH_ENV=<exiting plant> /usr/bin/bash -c '<frozen command string>' < close_green.sh
+COMMAND_STRING=/usr/bin/env -i PATH=/usr/bin:/bin LC_ALL=C HOME=/root /usr/bin/bash --noprofile --norc -s -- /root/wpi_r5/f1outer/evidence/runkit/WPIR5-FIXTURE-P0 WPIR5-FIXTURE-P0 /root/wpi_r5/f1outer/work
+RC=0
+OUTER_PLANT_RAN=yes
+STDOUT:
+  CLOSE PASS runid=WPIR5-FIXTURE-P0 dir=/root/wpi_r5/f1outer/evidence/runkit/WPIR5-FIXTURE-P0 files=2 wrote_into_evidence_tree=0
+STDERR:
+DELIVERED_SCRIPT_RECORD_LINES=0   (CLOSE_NOTE emitted by the real program)
+# The runner would ACCEPT this capture: transport_runner.ps1 registers the
+# prefixes CLOSE_ and "CLOSE " for the stdin leaf remote_close_tree_wpi.sh,
+# and the forged line starts with one of them at an in-grammar rc 0. Marker
+# SHAPE is bound to the plan row, not the process that produced it.
+# CONTROL 1 - what the inner-child domain DOES still close. A plant that lets
+# the delivered script RUN - the only kind that could forge a REAL-looking
+# record rather than a bare line - is refused by name, because BASH_ENV is
+# still in the exec environment the kernel recorded for the inner child:
+CLOSE_STOP reason=launch_domain_unexpected_environment_entry name=[BASH_ENV]
+RC=3  QUIET_PLANT_RAN=yes
+# CONTROL 2 - and what it does NOT close, even when BASH_ENV is delivered
+# INSIDE the domain: an EXITING plant still forges, at rc 0. Round 4 recorded
+# this case and (correctly) noted the frozen plan cannot introduce BASH_ENV
+# into the env -i list. What round 4 got wrong, and Band B caught, is that
+# the plan is not the only way in: the OUTER account shell above needs no
+# plan row at all.
+CLOSE PASS runid=WPIR5-FIXTURE-P0 dir=/root/wpi_r5/f1outer/evidence/runkit/WPIR5-FIXTURE-P0 files=2 wrote_into_evidence_tree=0
+RC=0
+
+########## BA-2 - the claimed second `declare -F` defect, executed
+# The round-4 report and five delivered scripts said bare `declare -F` exits 1
+# when no function exists and would end the run under `set -Eeuo pipefail`.
+# Arm D proves set -e IS armed in the same shell shape, so arm B falsifies
+# the claim rather than merely failing to trigger it. Arm F is the
+# discriminating-power check for KEEPING the guard as no-op hardening.
+BASH_VERSION=5.3.9(1)-release
+
+===== A. DIRECT no-argument declare -F in a function-free shell =====
+DIRECT_RC=0
+PROCESS_RC=0
+
+===== B. UNGUARDED assignment under set -Eeuo pipefail (the claimed RED) =====
+AFTER_ASSIGN len=0
+STILL_RUNNING=yes
+PROCESS_RC=0
+
+===== C. CONTROL: a NAMED lookup of a missing function DOES exit 1 =====
+PROCESS_RC=1
+
+===== D. CONTROL: set -e really is armed in arm B (deliberate rc-1 command) =====
+PROCESS_RC=1
+
+===== E. The delivered guarded form, same function-free shell =====
+AFTER_ASSIGN len=0
+PROCESS_RC=0
+
+===== F. DISCRIMINATING POWER: both forms still SEE an inherited function =====
+UNGUARDED=[declare -fx foo]
+GUARDED=[declare -fx foo]
+PROCESS_RC=0
+
+===== G. the delivered scripts still refuse an inherited exported function =====
+CLOSE_STOP reason=launch_domain_inherited_shell_function detail=[declare -fx a_plant]
+RC=3
+
+########## DONE
 ```

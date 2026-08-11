@@ -55,7 +55,12 @@
 #     a WORK_ROOT argument - allocated by op 01 as `<REMOTE_BASE>/work` and
 #     passed by the plan - proves canonical non-overlap with the evidence tree
 #     BEFORE creating a create-once work directory under it, points TMPDIR at
-#     that proven directory, and removes it on every exit path.
+#     that proven directory, and removes it on every exit path taken after the
+#     create returned 0. SCOPE, NARROWED IN ROUND 5 (Codex round-4 Band A,
+#     BA-1): a NONZERO `mkdir` result is NOT covered by that removal and does
+#     not claim to be - see the create block below, which arms the cleanup on a
+#     zero status before it adjudicates anything else, and STOPs on a nonzero
+#     status while recording whether an object is present.
 #
 # Everything else - the RUNID and EV_DIR grammar, the two-pass digest stability
 # rule and the emitted record grammar - is the accepted logic unchanged.
@@ -80,12 +85,14 @@
 # covers `/usr/bin/bash` and `/usr/bin/env` too: the launch-domain attestation
 # establishes that THIS interpreter was reached by absolute path through a
 # constructed environment, not that its bytes are the ones a deploy channel
-# approved. It also does not reach the remote login shell that sshd runs the
-# command string with: `env -i` clears what that shell exports, and the sweep
-# below refuses anything it added, but the login shell's own integrity is a
-# deploy-channel property. Binding remote tool bytes and that shell requires a
-# deploy-channel attestation and is a successor preregistration item, not a
-# claim this script makes.
+# approved. It also does not reach the remote account shell that sshd runs the
+# command string with, and round 5 corrects how that limit was stated: the
+# account shell runs BEFORE the command string's first token, so `env -i`
+# cannot clear anything that shell did on the way past - it constrains that
+# shell's CHILD, not the shell. Whether the account shell processes a startup
+# file at all is a deploy-channel property. Binding remote tool bytes and that
+# shell requires a deploy-channel attestation and is a successor preregistration
+# item, not a claim this script makes.
 #
 # It is READ-ONLY with respect to the evidence tree, and after class 6 that
 # sentence is earned rather than asserted: the only directory this script
@@ -113,26 +120,48 @@ LD_ENVIRON='/proc/self/environ'
 
 # The inherited-function sweep runs BEFORE this script defines a function of its
 # own, so `declare -F` describes only what the launch domain delivered rather
-# than this program's own names. `declare -F` exits 1 when there is nothing to
-# list, which under `set -e` would end the run with no marker at all, so its
-# status is consumed deliberately and the emptiness is tested afterwards.
+# than this program's own names.
+#
+# CORRECTION, round 5 (Codex round-4 Band A, BA-2). An earlier comment here said
+# that `declare -F` exits 1 when there is nothing to list and would therefore end
+# the run under `set -e`. That is FALSE for the no-argument enumeration form used
+# below, and it was never executed: in a function-free `--noprofile --norc` child
+# on GNU Bash 5.3.9 the bare form returns 0 and the unguarded assignment under
+# `set -Eeuo pipefail` runs straight through. Only a NAMED lookup of a missing
+# function returns 1. The `2>/dev/null || :` is therefore explicit no-op
+# hardening covering the named/errored forms, kept because it costs nothing - it
+# is NOT a repair for an observed defect, and it does not weaken the sweep: an
+# inherited exported function is listed identically with and without it. An
+# overclaimed DEFECT is still a false evidence claim, so the claim is withdrawn
+# rather than softened.
 LD_FUNCS="$(declare -F 2>/dev/null || :)"
 if [ -n "$LD_FUNCS" ]; then
     printf 'CLOSE_STOP reason=launch_domain_inherited_shell_function detail=[%s]\n' "$LD_FUNCS" >&2
     exit 3
 fi
 
-# MEASURED SCOPE LIMIT (round 4, recorded rather than implied). `bash` reads
-# `$BASH_ENV` before the first byte of a stdin-delivered script, and
-# `--norc`/`--noprofile` do not disable that channel, so a startup plant that
-# EXITS forges the record before anything here runs. No in-script attestation
-# can close that. It is closed on the operator side, by the frozen `env -i`
-# launch domain with an explicit complete variable list that
-# `transport_runner.ps1` enforces verbatim on every plan row, so no plan row can
-# introduce `BASH_ENV` at all - which is why the domain is stated on both sides.
-# A plant that lets the script RUN, the only kind that could forge a
-# real-looking record, is refused by the sweep below: `BASH_ENV` is still in the
-# exec environment the kernel recorded. Both cases are executed in self-QA.
+# F1 IS OPEN - INNER CHILD CLOSED, OUTER SSH ACCOUNT-SHELL BOUNDARY OPEN
+# (round 5; Codex round-4 Band B). `bash` reads `$BASH_ENV` before the first
+# byte of a stdin-delivered script, and `--norc`/`--noprofile` do not disable
+# that channel, so a startup plant that EXITS forges the record before anything
+# here runs. Round 4 called that case unreachable, on the ground that the frozen
+# `env -i` domain lists every variable the CHILD receives and no plan row can
+# add `BASH_ENV`. THAT CLAIM IS WITHDRAWN. `sshd` does not execute the command
+# string itself: it hands the string to the account's shell, and that shell
+# processes its own startup environment BEFORE the string's first token,
+# `/usr/bin/env`, ever runs. A server-supplied `BASH_ENV`/`ENV` therefore acts
+# one interpreter EARLIER than the domain attested here; it can emit this
+# program's record and exit with the delivered bytes never running at all, and
+# no command inside the same shell string - here or in `transport_runner.ps1` -
+# can act before it. What the frozen domain and the sweep below DO establish is
+# narrower and still load-bearing: the inner `/usr/bin/bash` child's exec
+# environment is exactly the three constructed entries, so the stealthier plant
+# - the only kind that lets this script run and could forge a REAL-looking
+# record - is refused by name, executed in self-QA. Closing the outer boundary
+# needs an enforcement point that acts before account-shell startup processing
+# (a deploy-channel-attested forced-command or execution contract, or a
+# transport path with no unbound shell); that is a successor item, not a claim
+# made here. A DISCLOSURE IS NOT A CONTROL.
 ld_stop() { printf 'CLOSE_STOP reason=%s\n' "$*" >&2; exit 3; }
 
 [ "${BASH:-}" = "$EXPECT_INTERPRETER" ] \
@@ -397,17 +426,26 @@ WORK_KIND="$(probe_path "$WORK")" || exit $?
 
 # `mkdir -m 0700`, no `-p`: the mode is applied explicitly so a permissive umask
 # cannot widen it, and a missing intermediate fails loudly instead of being
-# manufactured. Any diagnostic at all is STOP.
-MKDIR_OUT="$(LC_ALL=C "$TOOL_MKDIR" -m 0700 -- "$WORK" </dev/null 2>&1)" || stop "work_dir_mkdir_failed path=$WORK"
-[ -z "$MKDIR_OUT" ] || stop "work_dir_mkdir_diagnostics path=$WORK detail=$MKDIR_OUT"
+# manufactured.
+#
+# BA-1 (Codex round-4 Band A). The status AND the diagnostics are CAPTURED here
+# and adjudicated further down, with no refusal in between. Round 4 refused on
+# the diagnostic first - `stop` at the second line - while the cleanup trap was
+# still unarmed twenty lines below, so a `mkdir` that CREATED the directory,
+# emitted a diagnostic and returned 0 exited at rc 3 and left the directory
+# behind. Codex reproduced exactly that: `SCRIPT_RC=3 ... RESIDUE_PRESENT=yes`.
+# Reading a producer's status is not the same as safely handling its result.
+MKDIR_RC=0
+MKDIR_OUT="$(LC_ALL=C "$TOOL_MKDIR" -m 0700 -- "$WORK" </dev/null 2>&1)" || MKDIR_RC=$?
 
-# From here on the work directory exists, so every exit path removes it. The
-# removal's own status is adjudicated rather than ignored: a work directory that
-# could not be removed is residue this run created, and the operator record has
-# to carry that fact instead of the accepted original's silent `|| :`. It writes
-# nothing to stdout on success, because §7's record grammar admits `CLOSE_NOTE`
-# only before `CLOSE_BINDING` and this runs after the record has been emitted; a
-# removal that did not complete is a STOP on stderr, which the runner reads.
+# The cleanup is DEFINED before the create is adjudicated, so it can be ARMED
+# between the two. The removal's own status is adjudicated rather than ignored:
+# a work directory that could not be removed is residue this run created, and
+# the operator record has to carry that fact instead of the accepted original's
+# silent `|| :`. It writes nothing to stdout on success, because §7's record
+# grammar admits `CLOSE_NOTE` only before `CLOSE_BINDING` and this can run after
+# the record has been emitted; a removal that did not complete is a STOP on
+# stderr, which the runner reads.
 close_work_cleanup() {
     local rc="$1" target out='' crc=0
     [ -n "${WORK:-}" ] || return "$rc"
@@ -421,7 +459,28 @@ close_work_cleanup() {
     fi
     return "$rc"
 }
-trap 'close_work_cleanup $?' EXIT
+
+# COVERAGE, NARROWED RATHER THAN ASSERTED (BA-1). A zero status is this
+# program's only evidence that the object at $WORK is the one IT created, so
+# cleanup is armed for exactly that case - and armed BEFORE the diagnostic is
+# adjudicated and before every later check, so every exit path from this point
+# on removes the directory. A NONZERO `mkdir` is a tool result this program
+# cannot interpret: it may have created nothing, or it may have lost a race for
+# the name with something else, and `rm -rf` on an object this run cannot prove
+# it created is the wrong answer. That arm therefore STOPs WITHOUT arming
+# cleanup, and records whether an object is now present so the operator record
+# carries the fact instead of leaving it silent. Coverage is not claimed there.
+if [ "$MKDIR_RC" -eq 0 ]; then
+    trap 'close_work_cleanup $?' EXIT
+else
+    MKDIR_OBJ='absent'
+    if [ -e "$WORK" ] || [ -L "$WORK" ]; then MKDIR_OBJ='present'; fi
+    stop "work_dir_mkdir_failed path=$WORK rc=$MKDIR_RC object_after_failed_create=$MKDIR_OBJ cleanup=not_armed_for_a_nonzero_create detail=[$MKDIR_OUT]"
+fi
+
+# Any diagnostic at all is STOP - unchanged predicate, unchanged reason token.
+# What changed is that the cleanup above is already armed when it fires.
+[ -z "$MKDIR_OUT" ] || stop "work_dir_mkdir_diagnostics path=$WORK detail=$MKDIR_OUT"
 
 [ ! -L "$WORK" ] || stop "work_dir_is_symlink path=$WORK"
 [ -d "$WORK" ]   || stop "work_dir_not_a_directory path=$WORK"
@@ -438,7 +497,7 @@ WORK_MODE="$(LC_ALL=C "$TOOL_STAT" -c '%a' -- "$WORK")" || stop "work_dir_mode_p
 # every scratch name below is composed explicitly - but any future child that
 # did would land in the proven directory rather than in an inherited location.
 export TMPDIR="$WORK"
-note "scratch work_dir=$WORK owner_numeric=$WORK_OWN_NUM mode=$WORK_MODE created=once tmpdir=run_owned canonical_non_overlap=proven_before_and_after_create removal=adjudicated_on_every_exit_path"
+note "scratch work_dir=$WORK owner_numeric=$WORK_OWN_NUM mode=$WORK_MODE created=once tmpdir=run_owned canonical_non_overlap=proven_before_and_after_create removal=adjudicated_on_every_exit_path_after_a_zero_status_create"
 
 # --- the tree may contain ordinary directories and regular files only --------
 # A symlink inside the tree would make the digest set attest to bytes that live
