@@ -1,0 +1,30 @@
+{
+  "schema": "sec102-composite-plan-v1", "stage": "freeze",
+  "composites": [{
+    "id": "fixture-p0", "entrypoint": "entry",
+    "members": [
+      {"id": "entry", "kind": "shell", "path": "entry.sh"},
+      {"id": "library", "kind": "shell", "path": "library.sh"}
+    ],
+    "edges": [{"from": "entry", "to": "library", "kind": "source"}],
+    "allocation_requirements": [
+      {"name": "REMOTE_BASE", "kind": "absolute_path", "consumers": ["entry"]},
+      {"name": "RUNID", "kind": "safe_component", "consumers": ["entry"]},
+      {"name": "LIBRARY_PATH", "kind": "absolute_path", "consumers": ["entry"]}
+    ],
+    "allocations": [
+      {"name": "REMOTE_BASE", "value": "/safe/fixture"},
+      {"name": "RUNID", "value": "WPI-FIXTURE-FREEZE"},
+      {"name": "LIBRARY_PATH", "value": "/safe/fixture/library.sh"}
+    ],
+    "proof": {
+      "member_pins": [
+        {"member": "entry", "bytes": 163, "sha256": "8618ccad69b8e4df4b3c232cff3ab1324fcf84fac970aafa876b09e9feb2a340"},
+        {"member": "library", "bytes": 43, "sha256": "b96bb4475e27d0767daf8f774ce92976eb1af1f1bbd937260682bfef7b8a4656"}
+      ],
+      "constants": "constants_bad.env", "constants_bytes": 28, "constants_sha256": "fa6970520866b6e6b57034e3138cded52de47db431fc3e39e1713026033c3db7",
+      "allowlist": "allowlist.txt", "allowlist_bytes": 17, "allowlist_sha256": "a011e924851560c9b91b92c2d3802a893b3d96fbff47efc2dd5db560f371a62b",
+      "prover": "pathscope_prover.py", "prover_bytes": 122446, "prover_sha256": "890016f0b9a8cde4eed33f8733f69055471b07c6096f6bc07450457e6c52af1d"
+    }
+  }]
+}

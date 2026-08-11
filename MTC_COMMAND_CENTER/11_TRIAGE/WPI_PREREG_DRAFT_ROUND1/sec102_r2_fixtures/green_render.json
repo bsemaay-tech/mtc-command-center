@@ -1,0 +1,27 @@
+{
+  "schema": "sec102-composite-plan-v1",
+  "stage": "render",
+  "composites": [{
+    "id": "fixture-p0",
+    "entrypoint": "entry",
+    "members": [
+      {"id": "entry", "kind": "shell", "path": "entry.sh"},
+      {"id": "library", "kind": "shell", "path": "library.sh"}
+    ],
+    "edges": [{"from": "entry", "to": "library", "kind": "source"}],
+    "allocation_requirements": [
+      {"name": "REMOTE_BASE", "kind": "absolute_path", "consumers": ["entry"]},
+      {"name": "RUNID", "kind": "safe_component", "consumers": ["entry"]},
+      {"name": "LIBRARY_PATH", "kind": "absolute_path", "consumers": ["entry"]}
+    ],
+    "allocations": [
+      {"name": "REMOTE_BASE", "value": "/safe/fixture"},
+      {"name": "RUNID", "value": "WPI-FIXTURE-FREEZE"},
+      {"name": "LIBRARY_PATH", "value": "/safe/fixture/library.sh"}
+    ],
+    "proof": {"render_templates": [
+      {"member": "entry", "template": "entry.sh.in"},
+      {"member": "library", "template": "library.sh.in"}
+    ]}
+  }]
+}

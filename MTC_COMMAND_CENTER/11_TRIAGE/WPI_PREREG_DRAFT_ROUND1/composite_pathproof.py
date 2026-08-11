@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Fail-closed scaffold for the Section 10.2 composite path proof.
+"""Fail-closed Section 10.2 composite path proof.
 
-Round 1 implements only the ALLOCATE stage.  It proves conservation and
-identity properties of an allocation plan without executing any subject file.
-RENDER, FREEZE, and path-prover integration deliberately return STOP (rc 3).
+The three ordered stages are deliberately separate:
 
-The existing pathscope_prover.py is intentionally neither imported nor read.
-It is represented only by the swappable PathProver interface below.
+* ALLOCATE closes allocation values and declared component identities.
+* RENDER proves byte-exact materialisation and derives the source graph.
+* FREEZE verifies frozen identities and invokes the separately repaired lexical
+  path-scope prover for every reachable shell member.
+
+The tool reads subject bytes as data.  It never executes a subject shell file.
 """
 
 from __future__ import annotations
@@ -18,7 +20,10 @@ import hashlib
 import json
 import posixpath
 import re
+import shlex
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any, Protocol, Sequence
 
@@ -27,6 +32,8 @@ SCHEMA = "sec102-composite-plan-v1"
 RC_PASS = 0
 RC_FAIL = 1
 RC_STOP = 3
+APPROVED_PROVER_BYTES = 122446
+APPROVED_PROVER_SHA256 = "890016f0b9a8cde4eed33f8733f69055471b07c6096f6bc07450457e6c52af1d"
 
 SAFE_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 PLACEHOLDER_RE = re.compile(r"<[^>]*>|\{\{[^}]*\}\}|\$\{[^}]*\}")
@@ -43,15 +50,44 @@ COMPOSITE_KEYS = frozenset(
         "allocations",
     }
 )
+COMPOSITE_PROOF_KEYS = COMPOSITE_KEYS | frozenset({"proof"})
 MEMBER_KEYS = frozenset({"id", "kind", "path"})
 EDGE_KEYS = frozenset({"from", "to", "kind"})
 REQUIREMENT_KEYS = frozenset({"name", "kind", "consumers"})
 ALLOCATION_KEYS = frozenset({"name", "value"})
+RENDER_PROOF_KEYS = frozenset({"render_templates"})
+RENDER_TEMPLATE_KEYS = frozenset({"member", "template"})
+FREEZE_PROOF_KEYS = frozenset(
+    {
+        "member_pins",
+        "constants",
+        "constants_bytes",
+        "constants_sha256",
+        "allowlist",
+        "allowlist_bytes",
+        "allowlist_sha256",
+        "prover",
+        "prover_bytes",
+        "prover_sha256",
+    }
+)
+MEMBER_PIN_KEYS = frozenset({"member", "bytes", "sha256"})
 MEMBER_KINDS = frozenset({"shell", "python_source"})
 EDGE_KINDS = frozenset({"source", "execute_source", "inline_source"})
 ALLOCATION_KINDS = frozenset({"safe_component", "absolute_path"})
+RENDER_TOKEN_RE = re.compile(r"\{\{([A-Za-z_][A-Za-z0-9_]*)\}\}")
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+SOURCE_COMMAND_RE = re.compile(
+    r"(?:^|[;|&()])\s*(source|\.)\s+((?:'[^']*'|\"[^\"]*\"|[^\s;|&()]+))",
+    re.MULTILINE,
+)
+EXEC_COMMAND_RE = re.compile(
+    r"(?:^|[;|&()])\s*((?:/[^\s;|&()]+/)?(?:bash|sh|python(?:3(?:\.\d+)?)?))\s+"
+    r"((?:'[^']*'|\"[^\"]*\"|[^\s;|&()]+))",
+    re.MULTILINE,
+)
 
-CLAIMS = (
+ALLOCATE_CLAIMS = (
     ("A1", "plan_contract", "closed_schema_and_allocate_order"),
     ("A2", "declared_entrypoint_discovery", "one_declared_entrypoint_per_composite"),
     (
@@ -64,6 +100,25 @@ CLAIMS = (
     ("A6", "component_identity", "all_member_bytes_locally_identified"),
 )
 
+RENDER_CLAIMS = (
+    ("R1", "render_plan_contract", "closed_schema_and_render_order"),
+    ("R2", "render_template_conservation", "one_template_per_input_member"),
+    ("R3", "allocation_materialisation", "every_declared_consumer_materialised_byte_exact"),
+    ("R4", "derived_source_graph", "rendered_bytes_derive_the_declared_reachable_graph"),
+    ("R5", "rendered_component_identity", "all_rendered_member_bytes_identified"),
+    ("R6", "render_member_conservation", "every_input_member_has_one_terminal_disposition"),
+)
+
+FREEZE_CLAIMS = (
+    ("F1", "freeze_plan_contract", "closed_schema_and_freeze_order"),
+    ("F2", "frozen_component_identity", "all_member_and_proof_input_pins_match"),
+    ("F3", "derived_whole_program_graph", "all_members_reachable_in_derived_graph"),
+    ("F4", "prover_component_identity", "repaired_prover_identity_pinned"),
+    ("F5", "prover_output_conservation", "seven_counts_and_records_reconciled"),
+    ("F6", "lexical_pathscope_disposition", "every_prover_result_terminal_and_fail_closed"),
+    ("F7", "residual_disclosure", "symlink_and_mount_limits_carried_as_disclosures"),
+    ("F8", "freeze_member_conservation", "every_input_member_has_one_terminal_disposition"),
+)
 
 class Verdict(enum.Enum):
     PASS = "PASS"
@@ -82,6 +137,13 @@ class Stage(enum.Enum):
     ALLOCATE = "allocate"
     RENDER = "render"
     FREEZE = "freeze"
+
+
+CLAIMS_BY_STAGE = {
+    Stage.ALLOCATE: ALLOCATE_CLAIMS,
+    Stage.RENDER: RENDER_CLAIMS,
+    Stage.FREEZE: FREEZE_CLAIMS,
+}
 
 
 class InputStop(Exception):
@@ -125,6 +187,38 @@ class Allocation:
 
 
 @dataclasses.dataclass(frozen=True)
+class RenderTemplate:
+    member_id: str
+    template_path: str
+
+
+@dataclasses.dataclass(frozen=True)
+class MemberPin:
+    member_id: str
+    byte_count: int
+    sha256: str
+
+
+@dataclasses.dataclass(frozen=True)
+class RenderProof:
+    templates: tuple[RenderTemplate, ...]
+
+
+@dataclasses.dataclass(frozen=True)
+class FreezeProof:
+    member_pins: tuple[MemberPin, ...]
+    constants_path: str
+    constants_bytes: int
+    constants_sha256: str
+    allowlist_path: str
+    allowlist_bytes: int
+    allowlist_sha256: str
+    prover_path: str
+    prover_bytes: int
+    prover_sha256: str
+
+
+@dataclasses.dataclass(frozen=True)
 class Composite:
     composite_id: str
     entrypoint: str
@@ -132,6 +226,7 @@ class Composite:
     edges: tuple[Edge, ...]
     requirements: tuple[AllocationRequirement, ...]
     allocations: tuple[Allocation, ...]
+    proof: RenderProof | FreezeProof | None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -145,13 +240,38 @@ class Plan:
 class PathProofRequest:
     stage: Stage
     composite_id: str
-    component_identities: tuple[tuple[str, int, str], ...]
+    shell_members: tuple[tuple[str, str, bytes], ...]
+    entrypoint: str
+    edges: tuple[Edge, ...]
+    allocations: tuple[Allocation, ...]
+    constants_data: bytes
+    allowlist_data: bytes
+    prover_data: bytes
 
 
 @dataclasses.dataclass(frozen=True)
 class PathProofResult:
     verdict: Verdict
     reason: str
+    member_results: tuple["ProverMemberResult", ...]
+    residuals: tuple[str, ...]
+
+
+@dataclasses.dataclass(frozen=True)
+class ProverMemberResult:
+    member_id: str
+    verdict: Verdict
+    reason: str
+    process_rc: int | None
+    resolved_fs_path_count: int
+    resolved_net_endpoint_count: int
+    unresolved_path_count: int
+    unresolved_endpoint_count: int
+    coverage_issue_count: int
+    provenance_issue_count: int
+    parse_issue_count: int
+    terminal_record: str
+    records: tuple[str, ...]
 
 
 class PathProver(Protocol):
@@ -159,14 +279,6 @@ class PathProver(Protocol):
 
     def prove(self, request: PathProofRequest) -> PathProofResult:
         ...
-
-
-class StubPathProver:
-    """Round-1 fail-closed adapter used until a separately accepted component exists."""
-
-    def prove(self, request: PathProofRequest) -> PathProofResult:
-        del request
-        return PathProofResult(Verdict.STOP, "path_prover_component_not_integrated")
 
 
 @dataclasses.dataclass
@@ -222,8 +334,12 @@ class Row:
 
 
 class Recorder:
-    def __init__(self) -> None:
-        self.claims = {claim_id: ClaimState(claim_id, name, reason) for claim_id, name, reason in CLAIMS}
+    def __init__(self, stage: Stage) -> None:
+        self.claim_order = tuple(claim_id for claim_id, _, _ in CLAIMS_BY_STAGE[stage])
+        self.claims = {
+            claim_id: ClaimState(claim_id, name, reason)
+            for claim_id, name, reason in CLAIMS_BY_STAGE[stage]
+        }
         self.rows: list[Row] = []
 
     def record(self, claim_id: str, verdict: Verdict, reason: str) -> None:
@@ -250,11 +366,18 @@ def _object_without_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, An
     return result
 
 
-def _expect_mapping(value: Any, context: str, allowed_keys: frozenset[str]) -> dict[str, Any]:
+def _expect_mapping(
+    value: Any,
+    context: str,
+    allowed_keys: frozenset[str],
+    required_keys: frozenset[str] | None = None,
+) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise InputStop("plan_schema_type_error", f"{context}:expected_object")
+    if required_keys is None:
+        required_keys = allowed_keys
     unknown = sorted(set(value) - allowed_keys)
-    missing = sorted(allowed_keys - set(value))
+    missing = sorted(required_keys - set(value))
     if unknown:
         raise InputStop("plan_schema_unknown_key", f"{context}:{','.join(unknown)}")
     if missing:
@@ -313,6 +436,60 @@ def _parse_allocation(raw: Any, context: str) -> Allocation:
     )
 
 
+def _expect_nonnegative_int(value: Any, context: str) -> int:
+    if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+        raise InputStop("plan_schema_type_error", f"{context}:expected_nonnegative_integer")
+    return value
+
+
+def _parse_render_template(raw: Any, context: str) -> RenderTemplate:
+    item = _expect_mapping(raw, context, RENDER_TEMPLATE_KEYS)
+    return RenderTemplate(
+        _expect_string(item["member"], f"{context}.member"),
+        _expect_string(item["template"], f"{context}.template"),
+    )
+
+
+def _parse_member_pin(raw: Any, context: str) -> MemberPin:
+    item = _expect_mapping(raw, context, MEMBER_PIN_KEYS)
+    return MemberPin(
+        _expect_string(item["member"], f"{context}.member"),
+        _expect_nonnegative_int(item["bytes"], f"{context}.bytes"),
+        _expect_string(item["sha256"], f"{context}.sha256"),
+    )
+
+
+def _parse_proof(raw: Any, stage: Stage, context: str) -> RenderProof | FreezeProof:
+    if stage is Stage.RENDER:
+        item = _expect_mapping(raw, context, RENDER_PROOF_KEYS)
+        templates = tuple(
+            _parse_render_template(value, f"{context}.render_templates[{index}]")
+            for index, value in enumerate(
+                _expect_list(item["render_templates"], f"{context}.render_templates")
+            )
+        )
+        return RenderProof(templates)
+    if stage is Stage.FREEZE:
+        item = _expect_mapping(raw, context, FREEZE_PROOF_KEYS)
+        pins = tuple(
+            _parse_member_pin(value, f"{context}.member_pins[{index}]")
+            for index, value in enumerate(_expect_list(item["member_pins"], f"{context}.member_pins"))
+        )
+        return FreezeProof(
+            pins,
+            _expect_string(item["constants"], f"{context}.constants"),
+            _expect_nonnegative_int(item["constants_bytes"], f"{context}.constants_bytes"),
+            _expect_string(item["constants_sha256"], f"{context}.constants_sha256"),
+            _expect_string(item["allowlist"], f"{context}.allowlist"),
+            _expect_nonnegative_int(item["allowlist_bytes"], f"{context}.allowlist_bytes"),
+            _expect_string(item["allowlist_sha256"], f"{context}.allowlist_sha256"),
+            _expect_string(item["prover"], f"{context}.prover"),
+            _expect_nonnegative_int(item["prover_bytes"], f"{context}.prover_bytes"),
+            _expect_string(item["prover_sha256"], f"{context}.prover_sha256"),
+        )
+    raise InputStop("plan_stage_unknown", stage.value)
+
+
 def load_plan(path: Path) -> Plan:
     try:
         text = path.read_text(encoding="utf-8")
@@ -336,7 +513,8 @@ def load_plan(path: Path) -> Plan:
     composites: list[Composite] = []
     for comp_index, raw_composite in enumerate(_expect_list(document["composites"], "plan.composites")):
         context = f"plan.composites[{comp_index}]"
-        item = _expect_mapping(raw_composite, context, COMPOSITE_KEYS)
+        composite_keys = COMPOSITE_KEYS if stage is Stage.ALLOCATE else COMPOSITE_PROOF_KEYS
+        item = _expect_mapping(raw_composite, context, composite_keys)
         members = tuple(
             _parse_member(value, f"{context}.members[{index}]")
             for index, value in enumerate(_expect_list(item["members"], f"{context}.members"))
@@ -363,6 +541,7 @@ def load_plan(path: Path) -> Plan:
                 edges,
                 requirements,
                 allocations,
+                None if stage is Stage.ALLOCATE else _parse_proof(item["proof"], stage, f"{context}.proof"),
             )
         )
     return Plan(schema, stage, tuple(composites))
@@ -414,7 +593,9 @@ def _has_cycle(entrypoint: str, adjacency: dict[str, list[str]]) -> bool:
     return visit(entrypoint)
 
 
-def _member_file_identity(plan_root: Path, relative: str) -> tuple[Verdict, str, int | None, str | None]:
+def _read_relative_file(
+    plan_root: Path, relative: str
+) -> tuple[Verdict, str, Path | None, bytes | None]:
     if relative == "" or CONTROL_RE.search(relative) or _is_placeholder(relative):
         return Verdict.STOP, "member_path_unresolved", None, None
     if "\\" in relative or relative.startswith("/") or re.match(r"^[A-Za-z]:", relative):
@@ -437,10 +618,23 @@ def _member_file_identity(plan_root: Path, relative: str) -> tuple[Verdict, str,
         data = candidate.read_bytes()
     except OSError as exc:
         return Verdict.STOP, f"member_read_error_{type(exc).__name__}", None, None
-    return Verdict.PASS, "identified", len(data), hashlib.sha256(data).hexdigest()
+    return Verdict.PASS, "identified", candidate.absolute(), data
 
 
-def _process_allocations(composite: Composite, member_ids: set[str], recorder: Recorder) -> None:
+def _member_file_identity(plan_root: Path, relative: str) -> tuple[Verdict, str, int | None, str | None]:
+    verdict, reason, _, data = _read_relative_file(plan_root, relative)
+    if data is None:
+        return verdict, reason, None, None
+    return verdict, reason, len(data), hashlib.sha256(data).hexdigest()
+
+
+def _process_allocations(
+    composite: Composite,
+    member_ids: set[str],
+    recorder: Recorder,
+    conservation_claim: str,
+    value_claim: str,
+) -> None:
     requirement_counts: dict[str, int] = {}
     allocation_counts: dict[str, int] = {}
     for requirement in composite.requirements:
@@ -455,36 +649,36 @@ def _process_allocations(composite: Composite, member_ids: set[str], recorder: R
         if not _valid_identifier(requirement.name):
             disposition = "STOP"
             reasons.append("requirement_name_invalid")
-            recorder.record("A3", Verdict.STOP, "requirement_name_invalid")
+            recorder.record(conservation_claim, Verdict.STOP, "requirement_name_invalid")
         if requirement_counts[requirement.name] != 1:
             disposition = "FAIL"
             reasons.append("duplicate_requirement")
-            recorder.record("A3", Verdict.FAIL, "duplicate_requirement")
+            recorder.record(conservation_claim, Verdict.FAIL, "duplicate_requirement")
         if requirement.kind not in ALLOCATION_KINDS:
             disposition = "STOP"
             reasons.append("allocation_kind_not_implemented")
-            recorder.record("A4", Verdict.STOP, "allocation_kind_not_implemented")
+            recorder.record(value_claim, Verdict.STOP, "allocation_kind_not_implemented")
         if allocation_counts.get(requirement.name, 0) == 0:
             disposition = "STOP"
             reasons.append("allocation_missing")
-            recorder.record("A3", Verdict.STOP, "allocation_missing")
+            recorder.record(conservation_claim, Verdict.STOP, "allocation_missing")
         elif allocation_counts[requirement.name] != 1:
             disposition = "FAIL"
             reasons.append("allocation_not_one_to_one")
-            recorder.record("A3", Verdict.FAIL, "allocation_not_one_to_one")
+            recorder.record(conservation_claim, Verdict.FAIL, "allocation_not_one_to_one")
         if not requirement.consumers:
             disposition = "FAIL"
             reasons.append("consumer_set_empty")
-            recorder.record("A3", Verdict.FAIL, "consumer_set_empty")
+            recorder.record(conservation_claim, Verdict.FAIL, "consumer_set_empty")
         if len(set(requirement.consumers)) != len(requirement.consumers):
             disposition = "FAIL"
             reasons.append("consumer_duplicate")
-            recorder.record("A3", Verdict.FAIL, "consumer_duplicate")
+            recorder.record(conservation_claim, Verdict.FAIL, "consumer_duplicate")
         unknown_consumers = sorted(set(requirement.consumers) - member_ids)
         if unknown_consumers:
             disposition = "FAIL"
             reasons.append("consumer_unknown")
-            recorder.record("A3", Verdict.FAIL, "consumer_unknown")
+            recorder.record(conservation_claim, Verdict.FAIL, "consumer_unknown")
         recorder.add_row(
             "REQUIREMENT",
             composite=composite.composite_id,
@@ -520,18 +714,18 @@ def _process_allocations(composite: Composite, member_ids: set[str], recorder: R
         if allocation.name not in requirement_names:
             disposition = "FAIL"
             reasons.append("allocation_undeclared")
-            recorder.record("A3", Verdict.FAIL, "allocation_undeclared")
+            recorder.record(conservation_claim, Verdict.FAIL, "allocation_undeclared")
         if allocation_counts[allocation.name] != 1:
             disposition = "FAIL"
             reasons.append("allocation_duplicate")
-            recorder.record("A3", Verdict.FAIL, "allocation_duplicate")
+            recorder.record(conservation_claim, Verdict.FAIL, "allocation_duplicate")
         matching = [requirement for requirement in composite.requirements if requirement.name == allocation.name]
         if len(matching) == 1:
             value_verdict, value_reason = _allocation_value_verdict(matching[0].kind, allocation.value)
             if value_verdict is not Verdict.PASS:
                 disposition = value_verdict.value
                 reasons.append(value_reason)
-                recorder.record("A4", value_verdict, value_reason)
+                recorder.record(value_claim, value_verdict, value_reason)
         elif matching:
             disposition = "FAIL"
             reasons.append("requirement_not_one_to_one")
@@ -668,7 +862,7 @@ def _process_graph_and_identity(composite: Composite, plan_root: Path, recorder:
             disposition=state.disposition,
         )
 
-    _process_allocations(composite, member_ids, recorder)
+    _process_allocations(composite, member_ids, recorder, "A3", "A4")
     consumer_count = sum(len(requirement.consumers) for requirement in composite.requirements)
     recorder.add_row(
         "CONSERVATION",
@@ -685,6 +879,1007 @@ def _process_graph_and_identity(composite: Composite, plan_root: Path, recorder:
         input_consumer_references=consumer_count,
         terminal_consumer_rows=consumer_count,
     )
+
+
+def _literal_shell_word(raw: str, allocations: dict[str, str] | None = None) -> str | None:
+    allocations = allocations or {}
+    variable = re.fullmatch(r"['\"]?\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))['\"]?", raw)
+    if variable is not None:
+        return allocations.get(variable.group(1) or variable.group(2))
+    if any(marker in raw for marker in ("$", "`", "$(", "${")):
+        return None
+    try:
+        parts = shlex.split(raw, posix=True)
+    except ValueError:
+        return None
+    if len(parts) != 1 or parts[0] == "":
+        return None
+    return parts[0]
+
+
+def _member_for_operand(operand: str, path_to_id: dict[str, str], basename_to_ids: dict[str, list[str]]) -> str | None:
+    normalized = posixpath.normpath(operand)
+    if normalized.startswith("./"):
+        normalized = normalized[2:]
+    if normalized in path_to_id:
+        return path_to_id[normalized]
+    candidates = basename_to_ids.get(posixpath.basename(normalized), [])
+    if len(candidates) == 1:
+        return candidates[0]
+    return None
+
+
+def _graph_opaque_reason(text: str) -> str | None:
+    if re.search(r"<<-?", text):
+        return "source_graph_heredoc_not_modeled"
+    if re.search(r"\\\r?\n", text):
+        return "source_graph_line_continuation_not_modeled"
+    if "$(" in text or "`" in text or "<(" in text or ">(" in text:
+        return "source_graph_nested_execution_not_modeled"
+    if re.search(r"(?:^|[;|&()])\s*(?:eval|alias)\b", text, re.MULTILINE):
+        return "source_graph_indirect_execution_not_modeled"
+    if re.search(r"(?:^|[;|&()])\s*['\"]?\$(?:\{|[A-Za-z_])", text, re.MULTILINE):
+        return "source_graph_dynamic_command_not_modeled"
+    quote: str | None = None
+    escaped = False
+    for character in text:
+        if escaped:
+            escaped = False
+            continue
+        if character == "\\" and quote != "'":
+            escaped = True
+            continue
+        if character in {"'", '"'}:
+            if quote is None:
+                quote = character
+            elif quote == character:
+                quote = None
+        if character == "\n" and quote is not None:
+            return "source_graph_multiline_quote_not_modeled"
+    if quote is not None:
+        return "source_graph_unterminated_quote"
+    return None
+
+
+def _derive_graph(
+    composite: Composite, plan_root: Path, recorder: Recorder, claim_id: str
+) -> tuple[set[str], dict[str, str]]:
+    id_counts: dict[str, int] = {}
+    path_counts: dict[str, int] = {}
+    for member in composite.members:
+        id_counts[member.member_id] = id_counts.get(member.member_id, 0) + 1
+        path_counts[member.path] = path_counts.get(member.path, 0) + 1
+    member_ids = set(id_counts)
+    graph_disposition = {member.member_id: "UNRESOLVED" for member in composite.members}
+
+    if not composite.members:
+        recorder.record(claim_id, Verdict.STOP, "composite_has_no_members")
+        return set(), graph_disposition
+    if not _valid_identifier(composite.entrypoint):
+        recorder.record(claim_id, Verdict.STOP, "entrypoint_identifier_invalid")
+    if id_counts.get(composite.entrypoint, 0) == 0:
+        recorder.record(claim_id, Verdict.FAIL, "entrypoint_not_declared")
+    elif id_counts[composite.entrypoint] != 1:
+        recorder.record(claim_id, Verdict.FAIL, "entrypoint_not_unique")
+    if any(count != 1 for count in id_counts.values()):
+        recorder.record(claim_id, Verdict.FAIL, "member_id_duplicate")
+    if any(count != 1 for count in path_counts.values()):
+        recorder.record(claim_id, Verdict.FAIL, "member_path_alias")
+
+    path_to_id = {member.path: member.member_id for member in composite.members if path_counts[member.path] == 1}
+    basename_to_ids: dict[str, list[str]] = {}
+    for member in composite.members:
+        basename_to_ids.setdefault(posixpath.basename(member.path), []).append(member.member_id)
+    allocation_counts: dict[str, int] = {}
+    allocation_values: dict[str, str] = {}
+    for allocation in composite.allocations:
+        allocation_counts[allocation.name] = allocation_counts.get(allocation.name, 0) + 1
+        allocation_values[allocation.name] = allocation.value
+    unique_allocations = {
+        name: value for name, value in allocation_values.items() if allocation_counts.get(name) == 1
+    }
+
+    derived: list[Edge] = []
+    derivation_blocked = False
+    for member in composite.members:
+        if member.kind != "shell":
+            continue
+        verdict, reason, _, data = _read_relative_file(plan_root, member.path)
+        if verdict is not Verdict.PASS or data is None:
+            recorder.record(claim_id, verdict, reason)
+            derivation_blocked = True
+            continue
+        try:
+            text = data.decode("utf-8")
+        except UnicodeError:
+            recorder.record(claim_id, Verdict.STOP, "shell_member_not_utf8")
+            derivation_blocked = True
+            continue
+        opaque_reason = _graph_opaque_reason(text)
+        if opaque_reason is not None:
+            recorder.record(claim_id, Verdict.STOP, opaque_reason)
+            derivation_blocked = True
+
+        source_matches = list(SOURCE_COMMAND_RE.finditer(text))
+        source_sites = re.findall(r"(?:^|[;|&()])\s*(?:source\b|\.(?=\s))", text, re.MULTILINE)
+        if len(source_matches) != len(source_sites):
+            recorder.record(claim_id, Verdict.STOP, "source_syntax_not_covered")
+            derivation_blocked = True
+        for match in source_matches:
+            operand = _literal_shell_word(match.group(2), unique_allocations)
+            if operand is None:
+                recorder.record(claim_id, Verdict.STOP, "source_operand_dynamic")
+                derivation_blocked = True
+                continue
+            target = _member_for_operand(operand, path_to_id, basename_to_ids)
+            if target is None:
+                recorder.record(claim_id, Verdict.FAIL, "source_target_not_declared")
+                recorder.add_row(
+                    "DERIVED_EDGE",
+                    composite=composite.composite_id,
+                    source=member.member_id,
+                    target="-",
+                    kind="source",
+                    operand=operand,
+                    disposition="FAIL",
+                    reason="source_target_not_declared",
+                )
+                continue
+            edge = Edge(member.member_id, target, "source")
+            derived.append(edge)
+            recorder.add_row(
+                "DERIVED_EDGE",
+                composite=composite.composite_id,
+                source=edge.source,
+                target=edge.target,
+                kind=edge.kind,
+                operand=operand,
+                disposition="DERIVED",
+                reason="rendered_source_site",
+            )
+
+        exec_matches = list(EXEC_COMMAND_RE.finditer(text))
+        exec_sites = re.findall(
+            r"(?:^|[;|&()])\s*(?:(?:/[^\s;|&()]+/)?(?:bash|sh|python(?:3(?:\.\d+)?)?))\b",
+            text,
+            re.MULTILINE,
+        )
+        if len(exec_matches) != len(exec_sites):
+            recorder.record(claim_id, Verdict.STOP, "execute_source_syntax_not_covered")
+            derivation_blocked = True
+        for match in exec_matches:
+            operand = _literal_shell_word(match.group(2), unique_allocations)
+            if operand is None or operand.startswith("-"):
+                recorder.record(claim_id, Verdict.STOP, "execute_source_operand_dynamic_or_optioned")
+                derivation_blocked = True
+                continue
+            target = _member_for_operand(operand, path_to_id, basename_to_ids)
+            if target is None:
+                recorder.record(claim_id, Verdict.FAIL, "execute_source_target_not_declared")
+                recorder.add_row(
+                    "DERIVED_EDGE",
+                    composite=composite.composite_id,
+                    source=member.member_id,
+                    target="-",
+                    kind="execute_source",
+                    operand=operand,
+                    disposition="FAIL",
+                    reason="execute_source_target_not_declared",
+                )
+                continue
+            edge = Edge(member.member_id, target, "execute_source")
+            derived.append(edge)
+            recorder.add_row(
+                "DERIVED_EDGE",
+                composite=composite.composite_id,
+                source=edge.source,
+                target=edge.target,
+                kind=edge.kind,
+                operand=operand,
+                disposition="DERIVED",
+                reason="rendered_execute_site",
+            )
+
+    derived_keys = [(edge.source, edge.target, edge.kind) for edge in derived]
+    declared_keys = [(edge.source, edge.target, edge.kind) for edge in composite.edges]
+    if len(set(derived_keys)) != len(derived_keys):
+        recorder.record(claim_id, Verdict.FAIL, "derived_edge_duplicate")
+    if len(set(declared_keys)) != len(declared_keys):
+        recorder.record(claim_id, Verdict.FAIL, "declared_edge_duplicate")
+    if any(edge.kind not in EDGE_KINDS for edge in composite.edges):
+        recorder.record(claim_id, Verdict.STOP, "edge_kind_not_implemented")
+    if set(derived_keys) != set(declared_keys):
+        recorder.record(claim_id, Verdict.FAIL, "derived_declared_graph_mismatch")
+    for index, edge in enumerate(composite.edges):
+        edge_key = (edge.source, edge.target, edge.kind)
+        if edge.kind not in EDGE_KINDS:
+            disposition, reason = "STOP", "edge_kind_not_implemented"
+        elif edge.source not in member_ids or edge.target not in member_ids:
+            disposition, reason = "FAIL", "edge_endpoint_unknown"
+        elif edge_key not in set(derived_keys):
+            disposition, reason = "FAIL", "declared_edge_not_derived"
+        else:
+            disposition, reason = "MATCH", "derived_from_rendered_bytes"
+        recorder.add_row(
+            "DECLARED_EDGE",
+            composite=composite.composite_id,
+            index=index,
+            source=edge.source,
+            target=edge.target,
+            kind=edge.kind,
+            disposition=disposition,
+            reason=reason,
+        )
+
+    adjacency: dict[str, list[str]] = {member_id: [] for member_id in member_ids}
+    graph_valid = not derivation_blocked and set(derived_keys) == set(declared_keys)
+    for edge in derived:
+        if edge.source not in member_ids or edge.target not in member_ids:
+            graph_valid = False
+            recorder.record(claim_id, Verdict.FAIL, "edge_endpoint_unknown")
+        else:
+            adjacency[edge.source].append(edge.target)
+    reachable: set[str] = set()
+    if graph_valid and id_counts.get(composite.entrypoint, 0) == 1:
+        queue = [composite.entrypoint]
+        while queue:
+            node = queue.pop(0)
+            if node in reachable:
+                continue
+            reachable.add(node)
+            queue.extend(adjacency.get(node, []))
+        if _has_cycle(composite.entrypoint, adjacency):
+            recorder.record(claim_id, Verdict.FAIL, "derived_graph_cycle")
+            graph_valid = False
+        if reachable != member_ids:
+            recorder.record(claim_id, Verdict.FAIL, "derived_member_unreachable")
+            graph_valid = False
+    else:
+        recorder.record(claim_id, Verdict.STOP if derivation_blocked else Verdict.FAIL, "derived_graph_not_traversable")
+
+    for member in composite.members:
+        if derivation_blocked:
+            graph_disposition[member.member_id] = "STOP"
+        elif graph_valid and member.member_id in reachable:
+            graph_disposition[member.member_id] = "REACHABLE"
+        else:
+            graph_disposition[member.member_id] = "FAIL"
+    recorder.add_row(
+        "GRAPH_CONSERVATION",
+        composite=composite.composite_id,
+        input_members=len(composite.members),
+        terminal_member_graph_dispositions=len(composite.members),
+        declared_edges=len(composite.edges),
+        derived_edge_sites=len(derived),
+        reachable_members=len(reachable),
+    )
+    return reachable, graph_disposition
+
+
+def _render_member(
+    composite: Composite,
+    member: Member,
+    template: RenderTemplate,
+    plan_root: Path,
+    recorder: Recorder,
+) -> tuple[Verdict, str, int | None, str | None]:
+    template_verdict, template_reason, _, template_data = _read_relative_file(plan_root, template.template_path)
+    if template_verdict is not Verdict.PASS or template_data is None:
+        recorder.record("R2", template_verdict, f"template_{template_reason}")
+        return template_verdict, f"template_{template_reason}", None, None
+    member_verdict, member_reason, _, rendered_data = _read_relative_file(plan_root, member.path)
+    if member_verdict is not Verdict.PASS or rendered_data is None:
+        recorder.record("R5", member_verdict, member_reason)
+        return member_verdict, member_reason, None, None
+    try:
+        template_text = template_data.decode("utf-8")
+    except UnicodeError:
+        recorder.record("R2", Verdict.STOP, "template_not_utf8")
+        return Verdict.STOP, "template_not_utf8", len(rendered_data), hashlib.sha256(rendered_data).hexdigest()
+
+    allocation_counts: dict[str, int] = {}
+    allocation_values: dict[str, str] = {}
+    for allocation in composite.allocations:
+        allocation_counts[allocation.name] = allocation_counts.get(allocation.name, 0) + 1
+        allocation_values[allocation.name] = allocation.value
+    expected_consumers = {
+        requirement.name for requirement in composite.requirements if member.member_id in requirement.consumers
+    }
+    token_names = RENDER_TOKEN_RE.findall(template_text)
+    token_set = set(token_names)
+    if "{{" in RENDER_TOKEN_RE.sub("", template_text) or "}}" in RENDER_TOKEN_RE.sub("", template_text):
+        recorder.record("R3", Verdict.STOP, "render_token_malformed")
+        return Verdict.STOP, "render_token_malformed", len(rendered_data), hashlib.sha256(rendered_data).hexdigest()
+    if token_set - set(allocation_values):
+        recorder.record("R3", Verdict.STOP, "render_token_allocation_unknown")
+        return Verdict.STOP, "render_token_allocation_unknown", len(rendered_data), hashlib.sha256(rendered_data).hexdigest()
+    if token_set != expected_consumers:
+        recorder.record("R3", Verdict.FAIL, "render_consumer_token_mismatch")
+        return Verdict.FAIL, "render_consumer_token_mismatch", len(rendered_data), hashlib.sha256(rendered_data).hexdigest()
+    if any(allocation_counts[name] != 1 for name in token_set):
+        recorder.record("R3", Verdict.STOP, "render_allocation_not_unique")
+        return Verdict.STOP, "render_allocation_not_unique", len(rendered_data), hashlib.sha256(rendered_data).hexdigest()
+
+    rendered_text = RENDER_TOKEN_RE.sub(lambda match: allocation_values[match.group(1)], template_text)
+    expected = rendered_text.encode("utf-8")
+    if RENDER_TOKEN_RE.search(rendered_text):
+        recorder.record("R3", Verdict.STOP, "render_token_survived")
+        return Verdict.STOP, "render_token_survived", len(rendered_data), hashlib.sha256(rendered_data).hexdigest()
+    if expected != rendered_data:
+        recorder.record("R3", Verdict.FAIL, "rendered_bytes_mismatch")
+        return Verdict.FAIL, "rendered_bytes_mismatch", len(rendered_data), hashlib.sha256(rendered_data).hexdigest()
+    return Verdict.PASS, "materialised_byte_exact", len(rendered_data), hashlib.sha256(rendered_data).hexdigest()
+
+
+def run_render(plan: Plan, plan_path: Path, recorder: Recorder) -> None:
+    if plan.schema != SCHEMA:
+        recorder.stop_all("schema_version_unsupported")
+        return
+    if plan.stage is not Stage.RENDER:
+        recorder.stop_all("stage_order_violation")
+        return
+    if not plan.composites:
+        recorder.stop_all("composite_set_empty")
+        return
+    composite_counts: dict[str, int] = {}
+    for composite in plan.composites:
+        composite_counts[composite.composite_id] = composite_counts.get(composite.composite_id, 0) + 1
+    for composite in plan.composites:
+        if not _valid_identifier(composite.composite_id):
+            recorder.record("R1", Verdict.STOP, "composite_identifier_invalid")
+        if composite_counts[composite.composite_id] != 1:
+            recorder.record("R1", Verdict.FAIL, "composite_identifier_duplicate")
+        if not isinstance(composite.proof, RenderProof):
+            recorder.stop_all("render_proof_contract_unavailable")
+            continue
+        member_ids = {member.member_id for member in composite.members}
+        _process_allocations(composite, member_ids, recorder, "R2", "R3")
+        binding_counts: dict[str, int] = {}
+        for binding in composite.proof.templates:
+            binding_counts[binding.member_id] = binding_counts.get(binding.member_id, 0) + 1
+        if set(binding_counts) != member_ids or any(count != 1 for count in binding_counts.values()):
+            recorder.record("R2", Verdict.FAIL, "render_template_member_not_one_to_one")
+        template_path_counts: dict[str, int] = {}
+        for binding in composite.proof.templates:
+            template_path_counts[binding.template_path] = template_path_counts.get(binding.template_path, 0) + 1
+        if any(count != 1 for count in template_path_counts.values()):
+            recorder.record("R2", Verdict.FAIL, "render_template_path_alias")
+        terminal_template_rows = 0
+        for index, binding in enumerate(composite.proof.templates):
+            reasons: list[str] = []
+            if binding.member_id not in member_ids:
+                reasons.append("template_member_unknown")
+            if binding_counts.get(binding.member_id) != 1:
+                reasons.append("template_member_not_unique")
+            if template_path_counts.get(binding.template_path) != 1:
+                reasons.append("template_path_alias")
+            disposition = "FAIL" if reasons else "ACCEPT"
+            terminal_template_rows += 1
+            recorder.add_row(
+                "RENDER_BINDING",
+                composite=composite.composite_id,
+                index=index,
+                member=binding.member_id,
+                template=binding.template_path,
+                disposition=disposition,
+                reasons=sorted(set(reasons)) or ["one_to_one"],
+            )
+
+        binding_by_member = {
+            binding.member_id: binding
+            for binding in composite.proof.templates
+            if binding_counts.get(binding.member_id) == 1
+        }
+        render_results: dict[str, tuple[Verdict, str, int | None, str | None]] = {}
+        for member in composite.members:
+            if member.kind not in MEMBER_KINDS:
+                recorder.record("R5", Verdict.STOP, "member_kind_not_implemented")
+            binding = binding_by_member.get(member.member_id)
+            if binding is None:
+                render_results[member.member_id] = (Verdict.FAIL, "render_template_missing", None, None)
+                continue
+            result = _render_member(composite, member, binding, plan_path.parent, recorder)
+            render_results[member.member_id] = result
+            recorder.add_row(
+                "RENDER_TEMPLATE",
+                composite=composite.composite_id,
+                member=member.member_id,
+                template=binding.template_path,
+                rendered=member.path,
+                disposition=result[0].value,
+                reason=result[1],
+            )
+
+        _, graph_dispositions = _derive_graph(composite, plan_path.parent, recorder, "R4")
+        terminal_rows = 0
+        for index, member in enumerate(composite.members):
+            verdict, reason, byte_count, sha256 = render_results.get(
+                member.member_id, (Verdict.STOP, "render_result_missing", None, None)
+            )
+            graph = graph_dispositions.get(member.member_id, "STOP")
+            if graph == "STOP":
+                disposition = "STOP"
+            elif verdict is Verdict.STOP:
+                disposition = "STOP"
+            elif graph == "FAIL" or verdict is Verdict.FAIL:
+                disposition = "FAIL"
+            else:
+                disposition = "ACCEPT"
+            if disposition == "STOP":
+                recorder.record("R6", Verdict.STOP, "render_member_stopped")
+            elif disposition == "FAIL":
+                recorder.record("R6", Verdict.FAIL, "render_member_rejected")
+            terminal_rows += 1
+            recorder.add_row(
+                "RENDER_MEMBER",
+                composite=composite.composite_id,
+                index=index,
+                id=member.member_id,
+                kind=member.kind,
+                path=member.path,
+                graph=graph,
+                materialisation=verdict.value,
+                reason=reason,
+                bytes=byte_count if byte_count is not None else "-",
+                sha256=sha256 if sha256 is not None else "-",
+                disposition=disposition,
+            )
+        recorder.add_row(
+            "RENDER_CONSERVATION",
+            composite=composite.composite_id,
+            input_members=len(composite.members),
+            input_templates=len(composite.proof.templates),
+            terminal_template_rows=terminal_template_rows,
+            terminal_member_rows=terminal_rows,
+        )
+
+
+def _pinned_file(
+    plan_root: Path,
+    relative: str,
+    expected_bytes: int,
+    expected_sha256: str,
+) -> tuple[Verdict, str, Path | None, int | None, str | None, bytes | None]:
+    if not SHA256_RE.fullmatch(expected_sha256):
+        return Verdict.STOP, "pin_sha256_malformed", None, None, None, None
+    verdict, reason, path, data = _read_relative_file(plan_root, relative)
+    if verdict is not Verdict.PASS or path is None or data is None:
+        return verdict, reason, path, None, None, None
+    actual_sha256 = hashlib.sha256(data).hexdigest()
+    if len(data) != expected_bytes or actual_sha256 != expected_sha256:
+        return Verdict.FAIL, "frozen_identity_mismatch", path, len(data), actual_sha256, data
+    return Verdict.PASS, "frozen_identity_match", path, len(data), actual_sha256, data
+
+
+class SubprocessPathProver:
+    """Pinned-file adapter for the repaired pathscope prover output grammar."""
+
+    _resolved_re = re.compile(
+        r"^PATHSCOPE resolved_fs_path_count=(\d+) resolved_net_endpoint_count=(\d+)$"
+    )
+    _issue_re = re.compile(
+        r"^PATHSCOPE unresolved_path_count=(\d+) unresolved_endpoint_count=(\d+) "
+        r"coverage_issue_count=(\d+) provenance_issue_count=(\d+) parse_issue_count=(\d+)$"
+    )
+    _terminal_re = re.compile(r"^PATHSCOPE verdict=(PASS|REJECT) rc=([013]) reason=([^\s]+)$")
+    _unresolved_re = re.compile(
+        r"^UNRESOLVED line=\d+ kind=(parse|coverage|unresolved_path|unresolved_endpoint|provenance) "
+    )
+
+    def _stop_result(self, member_id: str, reason: str, rc: int | None = None) -> ProverMemberResult:
+        return ProverMemberResult(member_id, Verdict.STOP, reason, rc, 0, 0, 0, 0, 0, 0, 0, "-", tuple())
+
+    def _build_analysis_unit(self, request: PathProofRequest) -> tuple[str | None, str]:
+        member_data = {member_id: data for member_id, _, data in request.shell_members}
+        basename_counts: dict[str, int] = {}
+        for _, logical_path, _ in request.shell_members:
+            basename = posixpath.basename(logical_path)
+            basename_counts[basename] = basename_counts.get(basename, 0) + 1
+        if any(count != 1 for count in basename_counts.values()):
+            return None, "analysis_unit_member_basename_ambiguous"
+        path_to_id = {
+            posixpath.basename(logical_path): member_id
+            for member_id, logical_path, _ in request.shell_members
+        }
+        allocation_counts: dict[str, int] = {}
+        allocation_values: dict[str, str] = {}
+        for allocation in request.allocations:
+            allocation_counts[allocation.name] = allocation_counts.get(allocation.name, 0) + 1
+            allocation_values[allocation.name] = allocation.value
+        unique_allocations = {
+            name: value for name, value in allocation_values.items() if allocation_counts.get(name) == 1
+        }
+        declared = {(edge.source, edge.target, edge.kind) for edge in request.edges}
+        visited: set[str] = set()
+        stack: set[str] = set()
+
+        def expand(member_id: str) -> tuple[str | None, str]:
+            if member_id in stack:
+                return None, "analysis_unit_source_cycle"
+            data = member_data.get(member_id)
+            if data is None:
+                return None, "analysis_unit_member_path_missing"
+            try:
+                text = data.decode("utf-8")
+            except UnicodeError:
+                return None, "analysis_unit_member_read_error"
+            stack.add(member_id)
+            visited.add(member_id)
+            output: list[str] = []
+            for line in text.splitlines(keepends=True):
+                sites = list(SOURCE_COMMAND_RE.finditer(line))
+                if not sites:
+                    output.append(line)
+                    continue
+                full = re.fullmatch(
+                    r"(\s*)(?:source|\.)\s+((?:'[^']*'|\"[^\"]*\"|[^\s;|&()]+))\s*(?:#.*)?(?:\r?\n)?",
+                    line,
+                )
+                if full is None or len(sites) != 1:
+                    stack.remove(member_id)
+                    return None, "analysis_unit_source_site_not_standalone"
+                raw_operand = full.group(2)
+                operand = _literal_shell_word(raw_operand, unique_allocations)
+                if operand is None:
+                    stack.remove(member_id)
+                    return None, "analysis_unit_source_operand_dynamic"
+                target = path_to_id.get(posixpath.basename(operand))
+                if target is None or (member_id, target, "source") not in declared:
+                    stack.remove(member_id)
+                    return None, "analysis_unit_source_edge_unbound"
+                child, reason = expand(target)
+                if child is None:
+                    stack.remove(member_id)
+                    return None, reason
+                indent = full.group(1)
+                output.append(f"{indent}test -r {raw_operand}\n")
+                output.append(f"{indent}# SEC102_BEGIN_SOURCE member={target}\n")
+                output.append(child)
+                if child and not child.endswith("\n"):
+                    output.append("\n")
+                output.append(f"{indent}# SEC102_END_SOURCE member={target}\n")
+            stack.remove(member_id)
+            return "".join(output), "analysis_unit_closed"
+
+        if any(edge.kind != "source" for edge in request.edges):
+            return None, "analysis_unit_non_source_edge_not_integrated"
+        rendered, reason = expand(request.entrypoint)
+        if rendered is None:
+            return None, reason
+        if visited != set(member_data):
+            return None, "analysis_unit_member_conservation_mismatch"
+        return rendered, "analysis_unit_closed"
+
+    def _invoke_member(
+        self,
+        member_id: str,
+        shell_path: Path,
+        prover_path: Path,
+        constants_path: Path,
+        allowlist_path: Path,
+    ) -> ProverMemberResult:
+        try:
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-B",
+                    str(prover_path),
+                    str(shell_path),
+                    str(constants_path),
+                    str(allowlist_path),
+                ],
+                cwd=shell_path.parent,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                errors="strict",
+                timeout=30,
+                check=False,
+            )
+        except (OSError, UnicodeError, subprocess.TimeoutExpired) as exc:
+            return self._stop_result(member_id, f"prover_invocation_{type(exc).__name__}")
+        if completed.stderr:
+            return self._stop_result(member_id, "prover_stderr_nonempty", completed.returncode)
+        lines = completed.stdout.splitlines()
+        shell_headers = [line for line in lines if line.startswith("PATHSCOPE shell=")]
+        semantics_headers = [line for line in lines if line.startswith("PATHSCOPE semantics=")]
+        resolved_headers = [line for line in lines if line.startswith("PATHSCOPE resolved_")]
+        issue_headers = [line for line in lines if line.startswith("PATHSCOPE unresolved_")]
+        verdict_headers = [line for line in lines if line.startswith("PATHSCOPE verdict=")]
+        semantics = [line for line in lines if line == (
+            "PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established "
+            "mount_boundary=not_established host_probe=none"
+        )]
+        resolved_lines = [match for line in lines if (match := self._resolved_re.fullmatch(line))]
+        issue_lines = [match for line in lines if (match := self._issue_re.fullmatch(line))]
+        terminal_lines = [match for line in lines if (match := self._terminal_re.fullmatch(line))]
+        known_lines = [
+            line
+            for line in lines
+            if line.startswith(("PATHSCOPE shell=", "PATHSCOPE semantics=", "PATHSCOPE resolved_", "PATHSCOPE unresolved_", "PATH ", "ENDPOINT ", "UNRESOLVED ", "PATHSCOPE verdict="))
+        ]
+        if len(known_lines) != len(lines):
+            return self._stop_result(member_id, "prover_output_unknown_record", completed.returncode)
+        if (
+            len(shell_headers) != 1
+            or len(semantics_headers) != 1
+            or len(resolved_headers) != 1
+            or len(issue_headers) != 1
+            or len(verdict_headers) != 1
+            or len(semantics) != 1
+            or len(resolved_lines) != 1
+            or len(issue_lines) != 1
+            or len(terminal_lines) != 1
+        ):
+            return self._stop_result(member_id, "prover_output_grammar_incomplete", completed.returncode)
+        resolved_fs, resolved_net = (int(value) for value in resolved_lines[0].groups())
+        unresolved_path, unresolved_endpoint, coverage, provenance, parse = (
+            int(value) for value in issue_lines[0].groups()
+        )
+        path_records = [line for line in lines if line.startswith("PATH ")]
+        endpoint_records = [line for line in lines if line.startswith("ENDPOINT ")]
+        unresolved_records = [line for line in lines if line.startswith("UNRESOLVED ")]
+        if len(path_records) != resolved_fs or len(endpoint_records) != resolved_net:
+            return self._stop_result(member_id, "prover_resolved_count_mismatch", completed.returncode)
+        unresolved_by_kind = {
+            "unresolved_path": 0,
+            "unresolved_endpoint": 0,
+            "coverage": 0,
+            "provenance": 0,
+            "parse": 0,
+        }
+        for line in unresolved_records:
+            if line.count(" kind=") != 1:
+                return self._stop_result(member_id, "prover_unresolved_kind_ambiguous", completed.returncode)
+            match = self._unresolved_re.match(line)
+            if match is None:
+                return self._stop_result(member_id, "prover_unresolved_kind_missing", completed.returncode)
+            unresolved_by_kind[match.group(1)] += 1
+        if (
+            unresolved_by_kind["unresolved_path"] != unresolved_path
+            or unresolved_by_kind["unresolved_endpoint"] != unresolved_endpoint
+            or unresolved_by_kind["coverage"] != coverage
+            or unresolved_by_kind["provenance"] != provenance
+            or unresolved_by_kind["parse"] != parse
+        ):
+            return self._stop_result(member_id, "prover_issue_count_mismatch", completed.returncode)
+        for line in path_records:
+            if line.count(" verdict=") != 1:
+                return self._stop_result(member_id, "prover_path_disposition_ambiguous", completed.returncode)
+            disposition = line.split(" verdict=", 1)[1].split(" ", 1)[0]
+            if disposition not in {"ALLOW-LEXICAL", "FORBID"}:
+                return self._stop_result(member_id, "prover_path_disposition_missing", completed.returncode)
+        for line in endpoint_records:
+            if line.count(" verdict=") != 1:
+                return self._stop_result(member_id, "prover_endpoint_disposition_ambiguous", completed.returncode)
+            disposition = line.split(" verdict=", 1)[1].split(" ", 1)[0]
+            if disposition not in {"ALLOW", "FORBID"}:
+                return self._stop_result(member_id, "prover_endpoint_disposition_missing", completed.returncode)
+
+        terminal_verdict, terminal_rc_text, terminal_reason = terminal_lines[0].groups()
+        terminal_rc = int(terminal_rc_text)
+        if completed.returncode != terminal_rc:
+            return self._stop_result(member_id, "prover_process_terminal_rc_mismatch", completed.returncode)
+        total_issues = unresolved_path + unresolved_endpoint + coverage + provenance + parse
+        has_forbid = any(" verdict=FORBID " in line for line in path_records + endpoint_records)
+        if total_issues:
+            verdict = Verdict.STOP
+            reason = "prover_static_resolution_incomplete"
+            if terminal_verdict != "REJECT" or terminal_rc != RC_STOP:
+                return self._stop_result(member_id, "prover_issue_terminal_mismatch", completed.returncode)
+            if terminal_reason != "static_resolution_incomplete":
+                return self._stop_result(member_id, "prover_issue_reason_mismatch", completed.returncode)
+        elif has_forbid:
+            verdict = Verdict.FAIL
+            reason = "prover_forbidden_operand"
+            if terminal_verdict != "REJECT" or terminal_rc != RC_FAIL:
+                return self._stop_result(member_id, "prover_forbid_terminal_mismatch", completed.returncode)
+            if terminal_reason != "path_outside_allowlist":
+                return self._stop_result(member_id, "prover_forbid_reason_mismatch", completed.returncode)
+        else:
+            verdict = Verdict.PASS
+            reason = "prover_closed_and_allowlisted_lexical_scope"
+            if terminal_verdict != "PASS" or terminal_rc != RC_PASS:
+                return self._stop_result(member_id, "prover_pass_terminal_mismatch", completed.returncode)
+            if terminal_reason != "closed_and_allowlisted_lexical_argv_scope":
+                return self._stop_result(member_id, "prover_pass_reason_mismatch", completed.returncode)
+        return ProverMemberResult(
+            member_id,
+            verdict,
+            reason,
+            completed.returncode,
+            resolved_fs,
+            resolved_net,
+            unresolved_path,
+            unresolved_endpoint,
+            coverage,
+            provenance,
+            parse,
+            f"{terminal_verdict}:{terminal_rc}:{terminal_reason}",
+            tuple(path_records + endpoint_records + unresolved_records),
+        )
+
+    def prove(self, request: PathProofRequest) -> PathProofResult:
+        if not request.shell_members:
+            return PathProofResult(Verdict.STOP, "prover_shell_member_set_empty", tuple(), tuple())
+        analysis_text, analysis_reason = self._build_analysis_unit(request)
+        if analysis_text is None:
+            result = self._stop_result(request.composite_id, analysis_reason)
+            return PathProofResult(Verdict.STOP, analysis_reason, (result,), tuple())
+        try:
+            with tempfile.TemporaryDirectory(prefix="sec102-pathproof-") as temporary:
+                temporary_root = Path(temporary)
+                analysis_path = temporary_root / "whole_program.sh"
+                constants_path = temporary_root / "constants.env"
+                allowlist_path = temporary_root / "allowlist.txt"
+                prover_path = temporary_root / "pathscope_prover.py"
+                analysis_path.write_text(analysis_text, encoding="utf-8", newline="")
+                constants_path.write_bytes(request.constants_data)
+                allowlist_path.write_bytes(request.allowlist_data)
+                prover_path.write_bytes(request.prover_data)
+                results = (
+                    self._invoke_member(
+                        request.composite_id,
+                        analysis_path,
+                        prover_path,
+                        constants_path,
+                        allowlist_path,
+                    ),
+                )
+        except OSError as exc:
+            result = self._stop_result(request.composite_id, f"analysis_unit_{type(exc).__name__}")
+            return PathProofResult(Verdict.STOP, result.reason, (result,), tuple())
+        verdict = max((result.verdict for result in results), key=VERDICT_PRIORITY.__getitem__)
+        total_resolved = sum(
+            result.resolved_fs_path_count + result.resolved_net_endpoint_count for result in results
+        )
+        if verdict is Verdict.PASS and total_resolved == 0:
+            verdict = Verdict.STOP
+            reason = "prover_zero_facts_pass"
+        elif verdict is Verdict.STOP:
+            reason = "prover_member_stopped"
+        elif verdict is Verdict.FAIL:
+            reason = "prover_member_rejected"
+        else:
+            reason = "prover_members_closed_and_allowlisted_lexical_scope"
+        residuals = (
+            "R1_SYMLINK_RESOLUTION_NOT_ESTABLISHED",
+            "R1_MOUNT_BOUNDARY_NOT_ESTABLISHED",
+        ) if all(result.terminal_record != "-" for result in results) else tuple()
+        return PathProofResult(verdict, reason, results, residuals)
+
+
+def run_freeze(plan: Plan, plan_path: Path, recorder: Recorder, path_prover: PathProver) -> None:
+    if plan.schema != SCHEMA:
+        recorder.stop_all("schema_version_unsupported")
+        return
+    if plan.stage is not Stage.FREEZE:
+        recorder.stop_all("stage_order_violation")
+        return
+    if not plan.composites:
+        recorder.stop_all("composite_set_empty")
+        return
+    composite_counts: dict[str, int] = {}
+    for composite in plan.composites:
+        composite_counts[composite.composite_id] = composite_counts.get(composite.composite_id, 0) + 1
+    for composite in plan.composites:
+        if not _valid_identifier(composite.composite_id):
+            recorder.record("F1", Verdict.STOP, "composite_identifier_invalid")
+        if composite_counts[composite.composite_id] != 1:
+            recorder.record("F1", Verdict.FAIL, "composite_identifier_duplicate")
+        if not isinstance(composite.proof, FreezeProof):
+            recorder.stop_all("freeze_proof_contract_unavailable")
+            continue
+        proof = composite.proof
+        _process_allocations(composite, {member.member_id for member in composite.members}, recorder, "F1", "F1")
+        _, graph_dispositions = _derive_graph(composite, plan_path.parent, recorder, "F3")
+
+        pin_counts: dict[str, int] = {}
+        for pin in proof.member_pins:
+            pin_counts[pin.member_id] = pin_counts.get(pin.member_id, 0) + 1
+        member_ids = {member.member_id for member in composite.members}
+        if set(pin_counts) != member_ids or any(count != 1 for count in pin_counts.values()):
+            recorder.record("F2", Verdict.FAIL, "member_pin_not_one_to_one")
+        terminal_pin_rows = 0
+        for index, pin in enumerate(proof.member_pins):
+            reasons: list[str] = []
+            if pin.member_id not in member_ids:
+                reasons.append("pin_member_unknown")
+            if pin_counts.get(pin.member_id) != 1:
+                reasons.append("pin_member_not_unique")
+            if not SHA256_RE.fullmatch(pin.sha256):
+                reasons.append("pin_sha256_malformed")
+                recorder.record("F2", Verdict.STOP, "pin_sha256_malformed")
+            terminal_pin_rows += 1
+            recorder.add_row(
+                "MEMBER_PIN",
+                composite=composite.composite_id,
+                index=index,
+                member=pin.member_id,
+                bytes=pin.byte_count,
+                sha256=pin.sha256,
+                disposition="STOP" if "pin_sha256_malformed" in reasons else "FAIL" if reasons else "ACCEPT",
+                reasons=sorted(set(reasons)) or ["one_to_one_well_formed"],
+            )
+        pin_by_member = {
+            pin.member_id: pin for pin in proof.member_pins if pin_counts.get(pin.member_id) == 1
+        }
+        member_snapshots: dict[str, bytes] = {}
+        member_identity: dict[str, tuple[Verdict, str, int | None, str | None]] = {}
+        for member in composite.members:
+            pin = pin_by_member.get(member.member_id)
+            if pin is None:
+                member_identity[member.member_id] = (Verdict.FAIL, "member_pin_missing", None, None)
+                continue
+            verdict, reason, _, actual_bytes, actual_sha256, data = _pinned_file(
+                plan_path.parent, member.path, pin.byte_count, pin.sha256
+            )
+            recorder.record("F2", verdict, reason)
+            member_identity[member.member_id] = (verdict, reason, actual_bytes, actual_sha256)
+            if data is not None:
+                member_snapshots[member.member_id] = data
+
+        if (
+            proof.prover_path != "pathscope_prover.py"
+            or proof.prover_bytes != APPROVED_PROVER_BYTES
+            or proof.prover_sha256 != APPROVED_PROVER_SHA256
+        ):
+            recorder.record("F4", Verdict.FAIL, "approved_prover_identity_not_declared")
+        proof_inputs = (
+            ("constants", plan_path.parent, proof.constants_path, proof.constants_bytes, proof.constants_sha256, "F2"),
+            ("allowlist", plan_path.parent, proof.allowlist_path, proof.allowlist_bytes, proof.allowlist_sha256, "F2"),
+            (
+                "prover",
+                Path(__file__).resolve().parent,
+                proof.prover_path,
+                proof.prover_bytes,
+                proof.prover_sha256,
+                "F4",
+            ),
+        )
+        proof_snapshots: dict[str, bytes] = {}
+        proof_input_verdicts: dict[str, Verdict] = {}
+        for role, input_root, relative, expected_bytes, expected_sha256, claim_id in proof_inputs:
+            verdict, reason, _, actual_bytes, actual_sha256, data = _pinned_file(
+                input_root, relative, expected_bytes, expected_sha256
+            )
+            recorder.record(claim_id, verdict, reason)
+            proof_input_verdicts[role] = verdict
+            if data is not None:
+                proof_snapshots[role] = data
+            recorder.add_row(
+                "FREEZE_INPUT",
+                composite=composite.composite_id,
+                role=role,
+                path=relative,
+                expected_bytes=expected_bytes,
+                actual_bytes=actual_bytes if actual_bytes is not None else "-",
+                expected_sha256=expected_sha256,
+                actual_sha256=actual_sha256 if actual_sha256 is not None else "-",
+                disposition=verdict.value,
+                reason=reason,
+            )
+
+        invocable = (
+            all(role in proof_snapshots for role in ("constants", "allowlist", "prover"))
+            and all(proof_input_verdicts.get(role) is Verdict.PASS for role in ("constants", "allowlist", "prover"))
+            and all(member.member_id in member_snapshots for member in composite.members)
+            and all(result[0] is Verdict.PASS for result in member_identity.values())
+            and all(value == "REACHABLE" for value in graph_dispositions.values())
+        )
+        if any(member.kind != "shell" for member in composite.members):
+            recorder.record("F6", Verdict.STOP, "non_shell_member_analyzer_not_integrated")
+            invocable = False
+        if invocable:
+            shell_members = tuple(
+                (member.member_id, member.path, member_snapshots[member.member_id])
+                for member in composite.members
+            )
+            result = path_prover.prove(
+                PathProofRequest(
+                    Stage.FREEZE,
+                    composite.composite_id,
+                    shell_members,
+                    composite.entrypoint,
+                    composite.edges,
+                    composite.allocations,
+                    proof_snapshots["constants"],
+                    proof_snapshots["allowlist"],
+                    proof_snapshots["prover"],
+                )
+            )
+        else:
+            result = PathProofResult(Verdict.STOP, "prover_prerequisite_not_closed", tuple(), tuple())
+        recorder.record("F5", result.verdict, result.reason)
+        recorder.record("F6", result.verdict, result.reason)
+
+        for member_result in result.member_results:
+            recorder.add_row(
+                "PROVER_MEMBER",
+                composite=composite.composite_id,
+                member=member_result.member_id,
+                process_rc=member_result.process_rc if member_result.process_rc is not None else "-",
+                resolved_fs_path_count=member_result.resolved_fs_path_count,
+                resolved_net_endpoint_count=member_result.resolved_net_endpoint_count,
+                unresolved_path_count=member_result.unresolved_path_count,
+                unresolved_endpoint_count=member_result.unresolved_endpoint_count,
+                coverage_issue_count=member_result.coverage_issue_count,
+                provenance_issue_count=member_result.provenance_issue_count,
+                parse_issue_count=member_result.parse_issue_count,
+                terminal=member_result.terminal_record,
+                disposition=member_result.verdict.value,
+                reason=member_result.reason,
+            )
+            for index, record in enumerate(member_result.records):
+                recorder.add_row(
+                    "PROVER_RECORD",
+                    composite=composite.composite_id,
+                    member=member_result.member_id,
+                    index=index,
+                    record=record,
+                    disposition="ACCOUNTED",
+                )
+
+        required_residuals = {
+            "R1_SYMLINK_RESOLUTION_NOT_ESTABLISHED",
+            "R1_MOUNT_BOUNDARY_NOT_ESTABLISHED",
+        }
+        if set(result.residuals) != required_residuals:
+            recorder.record("F7", Verdict.STOP, "prover_residual_disclosure_missing")
+        for residual in sorted(required_residuals):
+            disclosed = residual in result.residuals
+            recorder.add_row(
+                "RESIDUAL",
+                composite=composite.composite_id,
+                id=residual,
+                disposition="DISCLOSURE" if disclosed else "STOP",
+                control=False,
+                reason="lexical_prover_does_not_establish_host_object_binding",
+            )
+
+        terminal_rows = 0
+        for index, member in enumerate(composite.members):
+            identity_verdict, identity_reason, actual_bytes, actual_sha256 = member_identity.get(
+                member.member_id, (Verdict.STOP, "member_identity_missing", None, None)
+            )
+            graph = graph_dispositions.get(member.member_id, "STOP")
+            prover_verdict = result.verdict
+            disposition = max(
+                (
+                    identity_verdict,
+                    Verdict.PASS if graph == "REACHABLE" else Verdict.STOP if graph == "STOP" else Verdict.FAIL,
+                    prover_verdict,
+                ),
+                key=VERDICT_PRIORITY.__getitem__,
+            )
+            recorder.record("F8", disposition, f"freeze_member_{disposition.value.lower()}")
+            terminal_rows += 1
+            recorder.add_row(
+                "FREEZE_MEMBER",
+                composite=composite.composite_id,
+                index=index,
+                id=member.member_id,
+                path=member.path,
+                graph=graph,
+                identity=identity_verdict.value,
+                identity_reason=identity_reason,
+                prover=prover_verdict.value,
+                bytes=actual_bytes if actual_bytes is not None else "-",
+                sha256=actual_sha256 if actual_sha256 is not None else "-",
+                disposition=disposition.value,
+            )
+        recorder.add_row(
+            "FREEZE_CONSERVATION",
+            composite=composite.composite_id,
+            input_members=len(composite.members),
+            member_pins=len(proof.member_pins),
+            terminal_member_pin_rows=terminal_pin_rows,
+            prover_member_results=len(result.member_results),
+            terminal_member_rows=terminal_rows,
+            residual_rows=len(required_residuals),
+        )
 
 
 def run_allocate(plan: Plan, plan_path: Path, recorder: Recorder) -> None:
@@ -712,29 +1907,9 @@ def run_allocate(plan: Plan, plan_path: Path, recorder: Recorder) -> None:
 
     recorder.add_row(
         "PATH_PROVER",
-        adapter="stub",
+        adapter="not_applicable",
         disposition="NOT_INVOKED",
         reason="allocate_stage_has_no_path_proof_claim",
-    )
-
-
-def _run_unimplemented(stage: Stage, recorder: Recorder, path_prover: PathProver) -> None:
-    if stage is Stage.RENDER:
-        recorder.stop_all("render_stage_not_implemented_round1")
-        recorder.add_row(
-            "STAGE",
-            stage=stage.value,
-            disposition="STOP",
-            reason="render_stage_not_implemented_round1",
-        )
-        return
-    result = path_prover.prove(PathProofRequest(stage, "-", tuple()))
-    recorder.stop_all(result.reason)
-    recorder.add_row(
-        "PATH_PROVER",
-        adapter="stub",
-        disposition=result.verdict.value,
-        reason=result.reason,
     )
 
 
@@ -749,7 +1924,7 @@ def output_report(plan_argument: str, requested_stage: Stage, recorder: Recorder
         recorder.stop_all(input_stop.reason)
         recorder.add_row("INPUT", disposition="STOP", reason=input_stop.reason, detail=input_stop.detail)
 
-    for claim_id, _, _ in CLAIMS:
+    for claim_id in recorder.claim_order:
         claim = recorder.claims[claim_id]
         print(
             "CLAIM "
@@ -781,7 +1956,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     requested_stage = Stage(args.stage)
     plan_argument = args.plan
     plan_path = Path(plan_argument)
-    recorder = Recorder()
+    recorder = Recorder(requested_stage)
     input_stop: InputStop | None = None
     plan: Plan | None = None
     try:
@@ -794,8 +1969,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             recorder.stop_all("requested_stage_plan_stage_mismatch")
         elif requested_stage is Stage.ALLOCATE:
             run_allocate(plan, plan_path, recorder)
+        elif requested_stage is Stage.RENDER:
+            run_render(plan, plan_path, recorder)
         else:
-            _run_unimplemented(requested_stage, recorder, StubPathProver())
+            run_freeze(plan, plan_path, recorder, SubprocessPathProver())
     return output_report(plan_argument, requested_stage, recorder, input_stop)
 
 

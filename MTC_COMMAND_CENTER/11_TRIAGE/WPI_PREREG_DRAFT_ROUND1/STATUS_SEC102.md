@@ -1,132 +1,135 @@
 # Section 10.2 composite path-proof status
 
 Date: 2026-08-11  
-Status: `ROUND-1-AUTHORED-PENDING-CLAUDE-T1-AUDIT`  
-Audit tier: T1 - local-only non-economic Python tooling and fixtures; no host, network,
-deployment, runtime, broker, trading, Pine, parity, MTC, or protected-schema action.
+Status: `ROUND-2-AUTHORED-SELF-QA-PASS-PENDING-INDEPENDENT-ACCEPTANCE`
+Audit tier: T1 - local-only non-economic Python tooling and fixtures. The implementation
+diff exceeds 300 lines; the permanent T1 policy therefore requires the Claude flagship
+review named in the kickoff plus the conditional GLM-5.2 second opinion. No audit or
+acceptance is claimed by the implementer.
 
-## Round 1 coverage
+## Round 2 coverage
 
-`composite_pathproof.py` provides the scaffold for the design's
-allocate -> render -> freeze sequence and implements only ALLOCATE end to end.
+`composite_pathproof.py` now implements all three ordered stages.
 
-The ALLOCATE stage currently enforces:
+### ALLOCATE
 
-1. A strict `sec102-composite-plan-v1` JSON envelope, including duplicate-key refusal,
-   closed key sets, exact types, and stage agreement.
-2. One declared entrypoint member per composite.
-3. One-to-one declared allocation requirements and supplied allocations; duplicate,
-   missing, and undeclared allocations cannot pass.
-4. Placeholder-free lexical validation for `safe_component` and `absolute_path` values.
-   An absent or unresolved value is STOP, not PASS or FAIL.
-5. Entrypoint-driven traversal of the declared component graph, with duplicate IDs,
-   invalid edges, cycles, and unreachable members rejected.
-6. One terminal row per declared member, edge, requirement, allocation, and consumer
-   reference. Conservation counts are emitted in the report.
-7. Local byte identity for every declared member: relative canonical in-bundle path,
-   no symlink in its path chain, regular file, byte count, and SHA-256.
-8. A deterministic line report with explicit claim rows and the fixed verdict contract:
-   PASS rc 0, observed deviance FAIL rc 1, inability to evaluate STOP rc 3, with STOP
-   taking precedence.
-9. A swappable `PathProver` protocol and fail-closed stub. The existing unrepaired
-   `pathscope_prover.py` is not imported, read, or executed by this tool.
+The round-1 ALLOCATE implementation is retained. Its six RED fixtures and common GREEN
+still return the same rc and reason tokens. It remains a declaration-conservation and
+local-identity stage, not a Section 10.2 proof by itself.
 
-The six claimed ALLOCATE properties each have an executable RED fixture, followed by one
-common GREEN fixture that proves all six. Render and freeze have executable STOP fixtures.
-Exact commands, rc values, real output, syntax/import checks, deterministic-output proof,
-and artifact identities are in `SELF_QA_SEC102_R1.md`.
+### RENDER
 
-## Later rounds required
+RENDER now:
 
-Round 2 must implement RENDER:
+1. Requires one distinct template binding per input member and emits a terminal row for
+   every binding and member.
+2. Revalidates the allocation requirements, allocations, and consumer references.
+3. Substitutes only exact `{{NAME}}` allocation tokens, requires the token set for each
+   member to equal its declared consumer set, refuses malformed/unknown tokens, and
+   compares the result to the rendered member bytes exactly.
+4. Re-identifies every rendered member by byte count and SHA-256.
+5. Derives direct `source`/`.` and simple file-backed interpreter edges from rendered
+   bytes, compares them one-for-one with the declared edge set, traverses from the entrypoint,
+   and rejects cycles, unknown targets, omitted edges, and unreachable members.
+6. STOPs rather than guessing on dynamic source operands and deliberately unmodeled graph
+   grammar. The here-document falsification proves that text inside a here-document cannot
+   manufacture a passing source edge.
 
-- consume an accepted allocation record and materialize every allocated/fill value into
-  the stage entrypoint, wrapper, block pins, and other consumers;
-- prove no placeholder/default survives and no value changes representation;
-- derive source, execute-source, and nested-source edges from the rendered bytes rather
-  than trusting the plan's declared graph;
-- cover inline programs and the exact file-backed `verify_lock.py` source;
-- re-identify the resulting rendered bytes and conserve producer/consumer bindings.
+The common GREEN is `green_render.json`; six claim REDs plus the here-document
+falsification precede it in `SELF_QA_SEC102_R2.md`.
 
-Round 3 or later must implement FREEZE and prover-component integration:
+### FREEZE
 
-- bind the entry interpreter, argv, environment, cwd, shell options, startup behavior,
-  bootstrap helpers, and exact executed-tool inventory;
-- build the final ordered component manifest from the rendered bytes and freeze all
-  identities before analysis or invocation;
-- integrate only a separately repaired and T1-accepted path-prover component through the
-  `PathProver` interface;
-- prove complete command/option/redirection/nested-program coverage, exact lexical
-  filesystem/network operands, and named closed runtime families;
-- apply the Section 10.1 allowlist without confusing lexical scope with host-object,
-  symlink, mount, namespace, or runtime-descendant proof;
-- add D026 mutation/falsification evidence for each production claim and run a fresh T1
-  audit of the integrated local tool.
+FREEZE now:
 
-No archive may be frozen on the strength of round 1.
+1. Revalidates allocation closure and re-derives the graph from the frozen member bytes.
+2. Requires one member pin per member and exact byte-count/SHA-256 pins for every member,
+   the constants file, and the allowlist file.
+3. Requires the repaired prover identity exactly: `pathscope_prover.py`, 122446 bytes,
+   SHA-256 `890016f0b9a8cde4eed33f8733f69055471b07c6096f6bc07450457e6c52af1d`.
+4. Carries the exact verified member, constants, allowlist, and prover byte snapshots into
+   the adapter, so the bytes analyzed and executed as the prover are the bytes that passed
+   the pins rather than a later path re-read.
+5. Builds one entrypoint-driven static analysis unit. Each mechanically bound standalone
+   source edge becomes a modeled readability operand plus the exact pinned child bytes.
+   The generated unit is parser input only and is never executed.
+6. Invokes the pinned prover snapshot and consumes its current output grammar:
+   `resolved_fs_path_count`, `resolved_net_endpoint_count`, `unresolved_path_count`,
+   `unresolved_endpoint_count`, `coverage_issue_count`, `provenance_issue_count`, and
+   `parse_issue_count`, plus `kind=` on every `UNRESOLVED` record.
+7. Reconciles count lines against every `PATH`, `ENDPOINT`, and `UNRESOLVED` record; checks
+   stdout grammar, stderr, process rc, terminal verdict, terminal rc, and terminal reason;
+   and refuses zero-fact PASS.
+8. Maps any unresolved or coverage record to composite STOP rc 3, an outside-allowlist
+   prover REJECT to composite FAIL rc 1, and only fully reconciled lexical scope to PASS
+   rc 0.
+9. Carries `ALLOW-LEXICAL` forward without upgrading it to host-object proof. Every valid
+   prover result emits both residuals as `DISCLOSURE control=false`:
+   symlink resolution not established and mount boundary not established.
+10. Emits one terminal row for every input member, member pin, declared edge, proof input,
+   prover record, and residual.
 
-## Known limitations - each is a limitation, not a control
+The primary GREEN `green_freeze.json` produces three allowed filesystem records. The
+second GREEN `green_freeze_network.json` produces one allowed filesystem record and one
+allowed endpoint record, proving both resolved counters and both record grammars are
+consumed. Coverage STOP, forbidden FAIL, malformed prover grammar STOP, pin mismatch,
+graph mismatch, missing residual, and member-conservation REDs are all executable.
 
-1. Round 1 is not a Section 10.2 proof and is not dispatch, freeze, or host evidence.
-2. The fixtures are synthetic. No current RP6, RP7, wrapper, bootstrap, candidate blob,
-   or real preregistration plan was analyzed.
-3. `entrypoint` is selected from a plan field. Round 1 does not discover the production
-   entrypoint from transport or executable source semantics.
-4. Graph edges are declared plan data. Their presence is checked for conservation but is
-   not mechanically derived from `source`, `.`, interpreter, inline-code, or exec sites.
-5. Consumer references are declared plan data. Round 1 checks their uniqueness and member
-   existence but does not prove that source producers and consumers use those values.
-6. Shell and Python files are opaque bytes. Round 1 performs no language parse, dataflow,
-   function reachability, option grammar, redirection, endpoint, or path-sink analysis.
-7. Only the allocation kinds `safe_component` and `absolute_path` are implemented. Any
-   other allocation kind STOPs.
-8. Only declared member kinds `shell` and `python_source`, and edge kinds `source`,
-   `execute_source`, and `inline_source`, are recognized. Recognition does not establish
-   source semantics.
-9. The safe-component and absolute-path predicates are lexical only. They do not allocate
-   remote objects, prove uniqueness on a host, establish create-once behavior, or inspect
-   symlink/mount/namespace state.
-10. Member identities describe local fixture bytes at read time. They are not Git-object,
-    candidate-archive, transport, host, or immutable freeze identities.
-11. Local symlink paths are refused, but no host-object identity, intermediate mount, or
-    time-of-check/time-of-use claim is made.
-12. Render is unimplemented and always STOPs with
-    `render_stage_not_implemented_round1`.
-13. Freeze is unimplemented and always STOPs through
-    `path_prover_component_not_integrated`.
-14. The `PathProver` interface is only a boundary. The stub never returns PASS and no
-    repaired path prover is integrated.
-15. No exact source-derived path, network operand, allowlist disposition, runtime family,
-    external-runtime boundary, or grammar-coverage record is produced.
-16. Bash startup sources, imported functions, aliases, PATH, TMPDIR, cwd, interpreter
-    identity, executable bindings, and launch namespaces are not evaluated.
-17. The report is stdout only. It does not create, render, hash, bind, or freeze a manifest
-    artifact.
-18. No subject file is executed. A clean fixture result says only that the bounded
-    allocation-plan checks passed.
+## Self-QA result
 
-## Artifact identities
+- 7 ALLOCATE regression cases: all expected rc/token assertions PASS.
+- 8 RENDER cases: 6 claim REDs, 1 Pattern-12 RED, and 1 GREEN all PASS assertions.
+- 11 FREEZE cases: 9 REDs and 2 GREENs all PASS assertions.
+- D026 exact pre-feature run: both new GREEN plans are RED against commit `73e92844`.
+- D026 render mutation: disabling the exact byte comparison changes the materialisation
+  RED from rc 1 to an incorrect PASS rc 0.
+- D026 coverage mutation: disabling issue/terminal enforcement changes a prover rc-3
+  coverage record into an incorrect composite PASS rc 0.
+- Python 3.12 AST parse PASS; 19 JSON plans parse; deterministic full stdout+rc PASS for
+  both common GREENs; `git diff --check` PASS.
+- `pathscope_prover.py` has no worktree diff and its kickoff identity was re-derived.
 
-The following identities were re-derived after code/fixture QA. The `SELF_QA` identity was
-derived before this status file was created. This status file cannot contain its own final
-hash; its final size/SHA-256 is recorded in the implementer completion transcript supplied
-to the Lead.
+Literal commands and real output are in `SELF_QA_SEC102_R2.md`.
 
-| Artifact | Bytes | SHA-256 |
-|---|---:|---|
-| `composite_pathproof.py` | 29640 | `77f1076163310f331cac3effd91ccc60aaaee841757eaea54288ca5b40472c90` |
-| `SELF_QA_SEC102_R1.md` | 17290 | `e6fef1656db5ab516ae0deccf60998f1dd9cbfbb2d4b533ccc406ba1f057b572` |
-| `sec102_r1_fixtures/entry.sh` | 126 | `0d20505106e238a717a6b0729deeae093a06bc700c3bfbfac8748c6f213e13fc` |
-| `sec102_r1_fixtures/green.json` | 852 | `2804bf9c831b41fd1fa6e713f72530747a8fb72836072de7cece0bc5ae35fe79` |
-| `sec102_r1_fixtures/library.sh` | 140 | `35958de1f651dc3d511d0ce56360e4add762add9e93e563c0ac55a64a61d70ec` |
-| `sec102_r1_fixtures/red_allocation_conservation.json` | 529 | `f9fd2a1d563d53e8345b0e76794eab6c6c258a2763511ce45a548d808c3a02eb` |
-| `sec102_r1_fixtures/red_allocation_value.json` | 499 | `3270e71e8c8695e05ca907b096dbc0a5ddf7b04262baca6f5e4f256ca1af415f` |
-| `sec102_r1_fixtures/red_component_identity.json` | 470 | `b8d52e58a3434e98df92a1a8a66f888f40ab4f21a9e92990d37f5e6481f15ba0` |
-| `sec102_r1_fixtures/red_entrypoint.json` | 609 | `09aac79fb10e77e173739a281fcd7000a07a615a487ca6e8793cda7c2ce66ccf` |
-| `sec102_r1_fixtures/red_freeze_unimplemented.json` | 466 | `cd5cd7c9f9d4f6e184be80b52b9b4b1d63f56fb7ac1ff1ef3fd9916b31806df5` |
-| `sec102_r1_fixtures/red_graph_conservation.json` | 534 | `4aafd94a1c80b2d5fcc16f9aae37781bf20c64666bceae43bdeeac76075f1655` |
-| `sec102_r1_fixtures/red_plan_contract.json` | 115 | `9a37645d3e7e9ea03cf12c91d26c5c28062b537f54460407a95ff6ae4c8594f2` |
-| `sec102_r1_fixtures/red_render_unimplemented.json` | 466 | `c30c5d0e5e9d1d84c2903f8bdc72a3b4ccfa54fa0d2afcad7c1c65a5ae3b4e78` |
+## What remains - every item is a limitation
 
-Round-1 acceptance remains with the Claude Lead's fresh T1 flagship audit. No commit,
-network, host contact, or authority expansion occurred.
+1. These are synthetic fixture proofs. The production P0 and RO entrypoints, RP0 library
+   and bootstrap, RP6, RP7, inline Python bodies, and exact candidate `verify_lock.py` blob
+   have not been supplied in an R2 plan and have not passed this tool.
+2. FREEZE currently accepts only all-shell reachable composites. A `python_source` member
+   STOPs. The actual RO composite therefore cannot yet PASS.
+3. The analysis-unit builder supports only standalone direct `source`/`.` edges. It STOPs
+   on `execute_source` and `inline_source`. The actual RO composite therefore cannot yet
+   PASS.
+4. RENDER graph analysis is intentionally incomplete and fail-closed. It STOPs on
+   here-documents, line continuations, multiline quotes, command/process substitutions,
+   `eval`, `alias`, and dynamic command positions.
+5. The generated static analysis unit uses a synthetic `test -r` to preserve each bound
+   source operand while substituting exact child bytes. It is not an executable or frozen
+   deployment artifact.
+6. Allocation-consumer checking is exact template-token conservation, not full semantic
+   shell dataflow across every later use.
+7. `sys.executable`, used to launch the pinned prover locally, is an external-runtime
+   dependency not pinned by the plan.
+8. The analysis unit and exact prover/constants/allowlist snapshots are temporary local
+   files removed at adapter exit. They are not frozen artifacts; inability to create,
+   write, or read them is STOP.
+9. The implemented proof covers exact lexical filesystem/network operands. No closed
+   runtime-descendant family or exact descendant manifest is implemented.
+10. Symlink resolution and mount-boundary identity remain residual R1. Their disclosures
+    are not controls and cannot support an unconditional host-path claim.
+11. Bash startup sources, imported functions, inherited environment, interpreter identity,
+    cwd, shell options, bootstrap PATH tools, temporary-path behavior, wrapper `/dev/null`
+    opens, and RP6 exact venv binding remain production blockers from the design.
+12. A prover input-read or constants/allowlist parse error does not emit seven counters;
+    the composite correctly STOPs on that incomplete output grammar rather than inventing
+    zeros.
+13. No archive was created or frozen. No host, dispatch, execution, deployment, or
+    production Section 10.2 acceptance follows from a fixture PASS.
+
+## Artifact identity record
+
+The complete per-artifact byte-count and SHA-256 table is in
+`SEC102_R2_REPORT_2026-08-11.md`. The report cannot contain its own final hash without a
+self-reference; its final identity is recorded in the implementer completion transcript
+provided to the Lead. No commit was made.
