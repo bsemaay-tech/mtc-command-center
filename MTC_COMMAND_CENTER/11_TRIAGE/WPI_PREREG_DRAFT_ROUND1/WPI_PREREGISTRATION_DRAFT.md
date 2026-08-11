@@ -650,15 +650,15 @@ env-file naming risk remains *unresolved*, not *triggered*.
 
 | # | check | predicted outcome if it holds | exact predicted first divergence if it does not |
 |---|---|---|---|
-| 1 | `getent` present | `command -v getent` resolves and the resolved executable can run | `P0_STOP reason=missing_tool tool=getent` for absence, or `P0_STOP reason=tool_not_evaluable tool=getent path=<p> rc=<n|na> detail=<d> mechanism=<m>` when the resolved object cannot be evaluated as executable. **`rc=na` is mandatory for the `mechanism=access_builtin_x` arm and `rc=<n>` is reserved for an arm that actually invoked something** (amended round 3, RP6-P0 re-audit R2 finding 1): P0 decides resolution and executability with shell builtins only — `command -v` and the access(2) predicate `[ -x ]` — and deliberately never invokes an inventory tool, so no P0 arm can carry an honest invocation status, and a numeric `rc` here would assert a probe that never ran. `path=<p>` is required because the `P0_tool name=… path=…` inventory lines are printed only after every tool has resolved, so this STOP is the sole place the rejected object is named. **The preregistered inventory is amended in round 4 (RP6-P0 Codex T0 audit finding 3):** it is the ten tools the FROZEN RO block pins - `stat readlink env find sha256sum systemctl ss curl timeout python3`, from `RP7-WPI-RO.sh` at commit `d6a976aa`, SHA-256 `23e55667…a0aad`, 70941 B - plus the P0-only `id` and `getent`, twelve in all. `grep` and `awk` are REMOVED: neither stage invokes them, so listing them let P0 STOP on a tool no row needs while omitting `timeout`, which the RO stage really runs. A pin naming a tool outside that inventory is `P0_STOP reason=input_pin_unknown_tool name=P0_TOOL_PINS tool=<t> inventory=[<inv>]`; a pin disagreeing with PATH resolution is `P0_STOP reason=tool_pin_mismatch tool=<t> pinned=<p> resolved=<r>`. For `python3` ALONE - whose pin is the resolved non-symlink leaf while PATH still spells `/usr/bin/python3` - the pin is admitted when the PATH-resolved object canonicalises to exactly the pin; otherwise the same STOP carries an added `canonical=<c>`. That pin value is additionally bound to the frozen `P0_FIXED_TRUSTED_PYTHON` freeze-gate input, so P0 admits only the interpreter the RO stage will trust: an unfilled placeholder is `P0_STOP reason=input_pin_freeze_unfilled tool=python3 name=P0_FIXED_TRUSTED_PYTHON detail=deploy_channel_value_never_derived_here`, a disagreement is `P0_STOP reason=input_pin_not_frozen_trusted_python tool=python3 pinned=<p> frozen=<f>`. **The pin table is finite (amended round 7, RP6-P0 Codex audit correction 7, from the section-10.1 reconciliation):** exactly one frozen pin is required for each of the twelve tools, and each pin must equal that tool's frozen deploy-channel path literal (`P0_FIXED_STAT/READLINK/ENV/FIND/SHA256SUM/SYSTEMCTL/SS/CURL/TIMEOUT/ID/GETENT`, and `P0_FIXED_TRUSTED_PYTHON` for python3), so the reachable executable set IS the frozen set and is derivable from this source - the property the Stage-1 path-scope proof needs. A missing pin is `P0_STOP reason=input_pin_omitted tool=<t> detail=every_preregistered_tool_requires_one_frozen_pin`; a non-python pin that differs from its frozen literal is `P0_STOP reason=input_pin_not_frozen_path tool=<t> pinned=<p> frozen=<f>`; a pin count other than twelve is `P0_STOP reason=input_pin_count_unexpected count=<n> expected=12`; and the unpinned `command -v` fallback is deleted, so a tool that resolves on PATH but was not pinned is `P0_STOP reason=tool_pin_unpinned tool=<t>` |
+| 1 | `getent` present | `command -v getent` resolves and the resolved executable can run | `P0_STOP reason=missing_tool tool=getent` for absence, or `P0_STOP reason=tool_not_evaluable tool=getent path=<p> rc=<n|na> detail=<d> mechanism=<m>` when the resolved object cannot be evaluated as executable. **`rc=na` is mandatory for the `mechanism=access_builtin_x` arm and `rc=<n>` is reserved for an arm that actually invoked something** (amended round 3, RP6-P0 re-audit R2 finding 1): P0 decides resolution and executability with shell builtins only — `command -v` and the access(2) predicate `[ -x ]` — and deliberately never invokes an inventory tool, so no P0 arm can carry an honest invocation status, and a numeric `rc` here would assert a probe that never ran. `path=<p>` is required because the `P0_tool name=… path=…` inventory lines are printed only after every tool has resolved, so this STOP is the sole place the rejected object is named. **The preregistered inventory is amended in round 4 (RP6-P0 Codex T0 audit finding 3):** it is the ten tools the FROZEN RO block pins - `stat readlink env find sha256sum systemctl ss curl timeout python3`, from `RP7-WPI-RO.sh` at commit `d6a976aa`, SHA-256 `23e55667…a0aad`, 70941 B - plus the P0-only `id` and `getent`, twelve in all. `grep` and `awk` are REMOVED: neither stage invokes them, so listing them let P0 STOP on a tool no row needs while omitting `timeout`, which the RO stage really runs. A pin naming a tool outside that inventory is `P0_STOP reason=input_pin_unknown_tool name=P0_TOOL_PINS tool=<t> inventory=[<inv>]`; a pin disagreeing with PATH resolution is `P0_STOP reason=tool_pin_mismatch tool=<t> pinned=<p> resolved=<r>`. For `python3` ALONE - whose pin is the resolved non-symlink leaf while PATH still spells `/usr/bin/python3` - the pin is admitted when the PATH-resolved object canonicalises to exactly the pin; otherwise the same STOP carries an added `canonical=<c>`. That pin value is additionally bound to the frozen `P0_FIXED_TRUSTED_PYTHON` freeze-gate input, so P0 admits only the interpreter the RO stage will trust; a disagreement is `P0_STOP reason=input_pin_not_frozen_trusted_python tool=python3 pinned=<p> frozen=<f>`. **The unfilled-placeholder form is generic over all twelve tools (amended round 10, RP6-P0 Codex T0 audit R9 finding 2):** it is `P0_STOP reason=input_pin_freeze_unfilled tool=<t> name=<P0_FIXED_*> detail=deploy_channel_value_never_derived_here`, emitted at one site for whichever of the twelve frozen literals is still `<PIN-AT-FREEZE>`. Correction 7 deliberately made all twelve literals load-bearing, so the draft's earlier python3-only wording was the side that was wrong: the block is correct and this row is corrected to match it. Round 9 tried to close the same divergence by asserting the emitter's generic *variable name* (`name=$P0_FROZEN_CONST_NAME`) and calling that a declaration; it is not, and that claim is withdrawn. The complete field/value grammar of this and every other P0 result is §8.1.1. **The pin table is finite (amended round 7, RP6-P0 Codex audit correction 7, from the section-10.1 reconciliation):** exactly one frozen pin is required for each of the twelve tools, and each pin must equal that tool's frozen deploy-channel path literal (`P0_FIXED_STAT/READLINK/ENV/FIND/SHA256SUM/SYSTEMCTL/SS/CURL/TIMEOUT/ID/GETENT`, and `P0_FIXED_TRUSTED_PYTHON` for python3), so the reachable executable set IS the frozen set and is derivable from this source - the property the Stage-1 path-scope proof needs. A missing pin is `P0_STOP reason=input_pin_omitted tool=<t> detail=every_preregistered_tool_requires_one_frozen_pin`; a non-python pin that differs from its frozen literal is `P0_STOP reason=input_pin_not_frozen_path tool=<t> pinned=<p> frozen=<f>`; a pin count other than twelve is `P0_STOP reason=input_pin_count_unexpected count=<n> expected=12 detail=exactly_one_frozen_pin_per_preregistered_tool`; and the unpinned `command -v` fallback is deleted, so a tool that resolves on PATH but was not pinned is `P0_STOP reason=tool_pin_unpinned tool=<t> detail=every_tool_requires_a_frozen_pin` (both `detail=` tokens added to this row in round 10: the block emitted them and the row did not declare them) |
 | 2 | executing identity | a complete, uniquely parsed `getent passwd gatea` entry defines the named login contract; numeric `id -u` and `id -g` equal that entry's uid and primary gid, while `id -un=gatea` and rendered names are diagnostic only | `P0_STOP reason=identity_unresolvable account=gatea rc=<n|na> detail=<d>` for resolver/invocation/parse ambiguity — **the `rc=` field is mandatory on every arm of this reason (amended round 4, RP6-P0 Codex T0 audit finding 4):** the record parser EXPORTS the resolver's own exit status instead of keeping it local, so a real resolver error records the status it really returned; `na` is admissible only on the two capture shapes that fail before any status can be read (a lost status sentinel, an unparseable status record) and is never a stand-in for a status that was available. A valid no-match for the route login is `P0_STOP reason=identity_unresolvable account=gatea rc=2 detail=getent_valid_no_match_for_route_login`. After successful resolution, `P0_STOP reason=identity_unexpected observed_numeric=<u:g> expected_numeric=<u:g> account=gatea` for a mismatch |
-| 3 | service-account identity and login groups | because `install.sh` allocates the named account dynamically, a complete unique `getent passwd mtc-bridge` result must map that name to the preregistered numeric `WPI_STATE_UID:WPI_STATE_GID=999:988`; then complete numeric `id -G` output for `gatea` contains neither gid `0` nor gid `988`; rendered names are diagnostic only | `P0_STOP reason=identity_unresolvable account=mtc-bridge rc=<n|na> detail=<d>` for resolver/invocation/parse ambiguity, under the same mandatory-`rc` rule as row 2 (amended round 4, RP6-P0 Codex T0 audit finding 4); `P0_STOP reason=identity_unexpected observed_numeric=<u:g> expected_numeric=999:988 account=mtc-bridge` if the named allocation moved; **`P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=999:988 detail=getent_valid_no_match` when the resolver established POSITIVE ABSENCE** — getent rc 2 with a completely empty merged capture — which is preregistered here verbatim in round 4 because it is a reachable divergence and was previously an unregistered token; it is deliberately distinct from `identity_unresolvable` (the account really is not allocated, which is a host observation, not an inability to evaluate) and deliberately carries no `rc=` field because no error status was returned; `P0_STOP reason=group_query_not_evaluable rc=<n> detail=<d>` before group interpretation; after a complete parse, `P0_STOP reason=capability_wider_than_ledger gid=<g>` if 0 or 988 is present |
+| 3 | service-account identity and login groups | because `install.sh` allocates the named account dynamically, a complete unique `getent passwd mtc-bridge` result must map that name to the preregistered numeric `WPI_STATE_UID:WPI_STATE_GID=999:988`; then complete numeric `id -G` output for `gatea` contains neither gid `0` nor gid `988`; rendered names are diagnostic only | `P0_STOP reason=identity_unresolvable account=mtc-bridge rc=<n|na> detail=<d>` for resolver/invocation/parse ambiguity, under the same mandatory-`rc` rule as row 2 (amended round 4, RP6-P0 Codex T0 audit finding 4); `P0_STOP reason=identity_unexpected observed_numeric=<u:g> expected_numeric=<P0_STATE_UID>:<P0_STATE_GID> account=mtc-bridge` if the named allocation moved — **amended round 10 (RP6-P0 Codex T0 audit R9 finding 2): the expected half is the operator-supplied preregistered input, not a literal the block carries.** The §2 preregistered values are `999` and `988`, but `RP6-P0.sh` constrains `P0_STATE_UID`/`P0_STATE_GID` only to positive decimals, so the emitted line can carry any positive decimal pair. The draft was the side that was wrong (it declared a value the block never emits), and it is corrected here rather than closed by freezing new literals into the block, which would be a new control this round was not asked to add. **Named residual, freeze-gate/owner band:** neither this row nor the block establishes that the prelude carried the preregistered numerics — that binding is visible only in the operator record. The same residual applies to `P0_EXPECT_UID` in row 2, for which §2 preregisters no numeric value at all; **`P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=<P0_STATE_UID>:<P0_STATE_GID> detail=getent_valid_no_match` when the resolver established POSITIVE ABSENCE** (same round-10 amendment and same named residual as the line above: the expected half is the preregistered input, §2 value `999:988`) — getent rc 2 with a completely empty merged capture — which is preregistered here verbatim in round 4 because it is a reachable divergence and was previously an unregistered token; it is deliberately distinct from `identity_unresolvable` (the account really is not allocated, which is a host observation, not an inability to evaluate) and deliberately carries no `rc=` field because no error status was returned; `P0_STOP reason=group_query_not_evaluable rc=<n> detail=<d>` before group interpretation; after a complete parse, `P0_STOP reason=capability_wider_than_ledger gid=<g>` if 0 or 988 is present |
 | 4 | `ss` present | `command -v ss` resolves | `P0_STOP reason=missing_tool tool=ss` |
 | 5 | `curl` present | `command -v curl` resolves | `P0_STOP reason=missing_tool tool=curl` |
 | 6 | `sha256sum` present | `command -v sha256sum` resolves | `P0_STOP reason=missing_tool tool=sha256sum` |
 | 7 | `systemctl` present | `command -v systemctl` resolves | `P0_STOP reason=missing_tool tool=systemctl` |
-| 8 | execution-domain binding | the login's user, mount, PID and network namespace identities plus canonical root-mount identity exactly equal the values supplied by the external deploy-channel attestation frozen into `RP6-P0.sh` | `P0_STOP reason=execution_domain_unattested field=<f>` if the attestation is missing/unreadable/unparseable; `P0_STOP reason=execution_domain_mismatch field=<f> observed=<v> attested=<v>` on mismatch; comparison with visible PID 1 is not admissible |
-| 9 | system-manager query readiness | only after row 8, `systemctl` can execute, reach the intended system manager over its system bus, pass D-Bus/polkit authorization, and return a complete parseable manager response **within a preregistered deadline** | `P0_STOP reason=system_manager_unreachable rc=<n> detail=<d>` for invocation, bus, namespace, authorization, timeout, incomplete-output or parse failure. **The deadline is executable, not aspirational (amended round 4, RP6-P0 Codex T0 audit finding 2):** the query is launched as `env -i LC_ALL=C <pinned timeout> --signal=TERM --kill-after=5s 10s <pinned systemctl> --system --no-pager show --property=Version`, with the cleared-environment exec FIRST and the pinned `timeout` as its argument, per the probe execution-environment rule. `P0_MANAGER_QUERY_BUDGET_S=10` and `P0_MANAGER_QUERY_KILL_AFTER_S=5` are frozen block literals, never operator inputs: a bound supplied by the environment under test could be raised to infinity by that same environment. A status 124 is `P0_STOP reason=system_manager_unreachable rc=124 detail=manager_query_rc124_timeout_reached_or_child_exit_124 budget_s=10 elapsed_s=<e> text=<d>` — GNU `timeout` returns 124 both when it kills the child for exceeding the deadline and when the child itself exits 124 (`timeout 10s bash -c 'exit 124'` returns 124 at elapsed_s=0), so the wrapper cannot distinguish the two and 124 is NOT labelled uniquely as a deadline (amended round 7, RP6-P0 Codex audit A10); a SIGKILL escalation is `rc=137 detail=manager_query_killed_after_deadline`, and a wrapper that could not run the query at all is `rc=125 detail=bounding_wrapper_failed`. Without the bound a stalled manager produces NO reason line, NO rc and NO verdict — only an external actor's kill status, which is not this block's ruling |
+| 8 | execution-domain binding | the login's user, mount, PID and network namespace identities plus canonical root-mount identity exactly equal the values supplied by the external deploy-channel attestation frozen into `RP6-P0.sh` | `P0_STOP reason=execution_domain_unattested field=<f> detail=<d>` if the attestation is missing/unreadable/unparseable; `P0_STOP reason=execution_domain_mismatch field=<f> observed=<v> attested=<v>` on mismatch; comparison with visible PID 1 is not admissible. **Amended round 10 (RP6-P0 Codex T0 audit R9 finding 2): the `field=<f>`-only form declared here was never emitted.** All 34 `execution_domain_unattested` sites carry a `detail=`, and the probe-backed ones additionally carry `rc=`, `subject=`, `diagnostic_shape=`, or `device=`/`root_device=`. The block is correct — a bare `field=` would not say why the domain is unattested — and the draft was too narrow. The five `field=` values, the eight literal `detail=` tokens and the four extended field shapes are declared exhaustively in §8.1.1 |
+| 9 | system-manager query readiness | only after row 8, `systemctl` can execute, reach the intended system manager over its system bus, pass D-Bus/polkit authorization, and return a complete parseable manager response **within a preregistered deadline** | `P0_STOP reason=system_manager_unreachable rc=<n> detail=<d>` for invocation, bus, namespace, authorization, timeout, incomplete-output or parse failure. **The deadline is executable, not aspirational (amended round 4, RP6-P0 Codex T0 audit finding 2):** the query is launched as `env -i LC_ALL=C <pinned timeout> --signal=TERM --kill-after=5s 10s <pinned systemctl> --system --no-pager show --property=Version`, with the cleared-environment exec FIRST and the pinned `timeout` as its argument, per the probe execution-environment rule. `P0_MANAGER_QUERY_BUDGET_S=10` and `P0_MANAGER_QUERY_KILL_AFTER_S=5` are frozen block literals, never operator inputs: a bound supplied by the environment under test could be raised to infinity by that same environment. A status 124 is `P0_STOP reason=system_manager_unreachable rc=124 detail=manager_query_rc124_timeout_reached_or_child_exit_124 budget_s=10 elapsed_s=<e> text=<d>` — GNU `timeout` returns 124 both when it kills the child for exceeding the deadline and when the child itself exits 124 (`timeout 10s bash -c 'exit 124'` returns 124 at elapsed_s=0), so the wrapper cannot distinguish the two and 124 is NOT labelled uniquely as a deadline (amended round 7, RP6-P0 Codex audit A10); a SIGKILL escalation is `rc=137 detail=manager_query_killed_after_deadline`, and a wrapper that could not run the query at all is `rc=125 detail=bounding_wrapper_failed`. **Amended round 10 (RP6-P0 Codex T0 audit R9 finding 2): the `budget_s=`/`elapsed_s=`/`text=` fields are carried on EVERY nonzero wrapper status, not only rc 124.** The block classifies 124/137/125/126/127 by token and everything else as `detail=manager_query_nonzero_status`, and prints the bound and the measured elapsed time in all of those cases; the draft declared the extended fields for 124 alone. The block is correct — the bound is what makes any nonzero wrapper status readable — and the draft is corrected. The rc-0 shape errors (`response_multiline`, `response_unparseable`) carry `text=` but no `budget_s=`/`elapsed_s=`, and `response_unprintable_value` carries neither; all four forms are declared in §8.1.1. Without the bound a stalled manager produces NO reason line, NO rc and NO verdict — only an external actor's kill status, which is not this block's ruling |
 
 Row 3 is an inversion worth stating plainly: **more privilege than the ledger assumed
 is a STOP, not a bonus.** If `gatea` turns out to be in the state/log group, the
@@ -673,6 +673,174 @@ is STOP, not host evidence. Row 9 is not inferred from tool presence. It must ex
 and distinguish a valid manager response from an invocation, D-Bus, polkit, PID/mount
 namespace or parse error. If row 9 cannot hold as `gatea`, manager-backed B2/B4 checks
 move to RPD-VERIFY; they do not accuse the host from an empty or error result.
+
+**P0 also emits `P0_FAIL` (rc 1), which this section declared nowhere before round
+10.** The nine rows above are STOP-shaped because they are *premises*: a premise
+that cannot be evaluated stops the run. But P0 additionally observes two host
+objects it can evaluate completely — the preregistered per-SHA venv root and the
+interpreter inside it — and a complete observation of deviant state there is a
+FAIL, not a STOP. Those are the eight `P0_FAIL` forms (`venv_root_absent`,
+`venv_root_is_symlink`, `venv_root_kind_unexpected`,
+`venv_root_not_literal_canonical`, `interpreter_absent`,
+`interpreter_symlink_dangling`, `interpreter_kind_unexpected`,
+`interpreter_target_kind_unexpected`), declared with their exact fields in §8.1.1.
+The dividing line is the one this package keeps testing itself against: a producer
+answer that cannot be read as one complete result is rc 3 even when its exit
+status was 0 — which is why round 10 moved the followed-symlink target's malformed
+`%F` response off `interpreter_target_kind_unexpected` (rc 1) and onto
+`link_target_probe_multiline` / `link_target_probe_nonprintable` (rc 3).
+
+### 8.1.1 P0 result grammar - the exhaustive machine-result declaration
+
+Round 10 (RP6-P0 Codex T0 audit R9 finding 2) adds this subsection because §8.1
+above declares divergence tokens **per expectation row**, and an expectation row
+is not a grammar. The round-9 emit-site sweep found that only 23 of 159 machine
+results matched a form declared for P0: the draft declared **zero** `P0_FAIL`
+forms while the block emitted eight, fifty reason tokens appeared nowhere under a
+P0 prefix (several only under `B1_*`/`B3_*`, which cannot be borrowed by changing
+the prefix), declared reasons carried fields the exact form did not permit, and
+the ERR-trap emitter was absent entirely. §8.1 is unchanged as the *expectation*
+contract; this subsection is the *result grammar* contract, and it is exhaustive
+by construction.
+
+**What a declared form is.** One line per distinct emitted form:
+
+```text
+<site_count> <PREFIX> <reason> <field>={<value-class>[,<value-class>...]} ...
+```
+
+`<PREFIX>` is `P0_STOP` (rc 3) or `P0_FAIL` (rc 1). Fields appear in **emission
+order**, which is part of the form. A *value class* is either a source literal
+(the emitter writes that exact text) or `<name>` for a `$name`/`${name}`
+expansion, with surrounding literal text preserved - so `[$P0_SAFE]` is the class
+`[<P0_SAFE>]`, and `$P0_STATE_UID:$P0_STATE_GID` is the class
+`<P0_STATE_UID>:<P0_STATE_GID>`. `<printf_arg>` is a `%s` in a direct `printf`
+emitter. The value set of a field is the sorted union over every site sharing the
+form, and `<site_count>` is how many source sites emit it.
+
+**The derivation is deterministic and total.** The declaration below is the exact
+text produced from `RP6-P0.sh` by the rule above: both emit wrappers
+(`p0_stop "..."`, `p0_fail "..."`) and every direct `printf 'P0_STOP ...'` /
+`printf 'P0_FAIL ...'` emitter, with the two wrapper *definitions* excluded. It
+therefore closes in both directions: a block that gains an undeclared form, loses
+a declared one, adds a field, reorders fields, or introduces a new literal
+`detail=` token no longer matches this text. The `R10_GRAMMAR` fence in
+`SELF_QA_RP6.md` re-derives it from the block bytes and diffs it against this
+block, so the fence is driven by this declaration and not by hand-picked source
+substrings; a repair round that changes any emitter must update this declaration
+in the same round.
+
+**What it does not establish.** This is a *static source* grammar. It constrains
+prefixes, reasons, field names, field order, every literal value and every literal
+`detail=` token. It does **not** constrain what a `<name>` class evaluates to at
+run time - that is decided by the code path that reaches the site, and is
+evidenced only by the executable fixtures in `SELF_QA_RP6.md`. Two consequences
+are named rather than hidden: `identity_unexpected ... account=mtc-bridge` and
+`state_account_resolution_unexpected` carry
+`expected_numeric=<P0_STATE_UID>:<P0_STATE_GID>`, the operator-supplied
+preregistered inputs whose §2 values are `999` and `988` and which the block
+constrains only to positive decimals; and `identity_unexpected ... account=gatea`
+carries `<P0_EXPECT_UID>`, for which §2 preregisters no numeric value at all. A
+prelude that supplies numerics other than the preregistered ones is a
+preregistration violation visible in the operator record, **not** something these
+blocks detect - see the residual named in §8.1 row 3.
+
+**P0 result grammar, exhaustive** - 89 forms, 161 emit sites, derived
+from `RP6-P0.sh` at the round-10 bytes:
+
+```text
+# P0_RESULT_GRAMMAR_BEGIN
+1 P0_FAIL interpreter_absent path={<py>} detail={preregistered_path_observed_missing_parent_search_succeeded}
+1 P0_FAIL interpreter_kind_unexpected kind={<P0_KIND>} path={<py>} expected={regular_or_live_symlink}
+1 P0_FAIL interpreter_symlink_dangling path={<py>}
+1 P0_FAIL interpreter_target_kind_unexpected kind={<P0_FKIND>} path={<py>} expected={regular}
+1 P0_FAIL venv_root_absent path={<d>} detail={preregistered_path_observed_missing}
+1 P0_FAIL venv_root_is_symlink kind={<P0_KIND>} path={<d>}
+1 P0_FAIL venv_root_kind_unexpected kind={<P0_KIND>} path={<d>} expected={dir}
+1 P0_FAIL venv_root_not_literal_canonical path={<d>} canonical={<P0_SAFE>}
+1 P0_STOP capability_wider_than_ledger gid={<f>} caller_gids={[<gids>]}
+4 P0_STOP evidence_binding_unparsable subject={ev_log,fd8} value={[<fdid>],[<logid>]}
+1 P0_STOP evidence_binding_unprobeable path={<P0_FD_SELF>} rc={<rc>} detail={[<P0_SAFE>]} diagnostic_shape={<P0_RESOLUTION>}
+2 P0_STOP evidence_binding_unprobeable path={<EV_LOG>,<P0_FD_SELF>} rc={<rc>} detail={<P0_SAFE>}
+2 P0_STOP evidence_identifier_refused name={EV_STAGE_ID,RUNID}
+1 P0_STOP evidence_leaf_not_bound ev_log={<EV_LOG>} ev_log_id={<logid>} stdout_id={<fdid>} stdout_path={[<P0_SAFE>]}
+2 P0_STOP execution_domain_mismatch field={<field>,root_mount_identity} observed={<raw>,<root_id>} attested={<P0_ATTESTED_ROOT_MOUNT_ID>,<attested>}
+1 P0_STOP execution_domain_unattested field={<field>} detail={namespace_link_on_root_filesystem} device={<P0_DEVICE>} root_device={<root_dev>}
+1 P0_STOP execution_domain_unattested field={<field>} subject={namespace_link_device} detail={device_grammar}
+1 P0_STOP execution_domain_unattested field={<field>} subject={namespace_link_device} rc={<rc>} detail={[<P0_SAFE>]}
+1 P0_STOP execution_domain_unattested field={root_mount_identity} rc={<rc>} detail={[<P0_SAFE>]}
+2 P0_STOP execution_domain_unattested field={<field>,root_mount_identity} rc={<rc>} detail={[<P0_SAFE>]} diagnostic_shape={<P0_RESOLUTION>}
+28 P0_STOP execution_domain_unattested field={<field>,mount_namespace,network_namespace,pid_namespace,root_mount_identity,user_namespace} detail={dev_inode_grammar,freeze_pin_unfilled,namespace_identity_empty,namespace_identity_grammar,namespace_identity_unprintable,prelude_value_differs_from_frozen_pin,preregistered_value_missing,root_not_literal_canonical}
+6 P0_STOP group_query_not_evaluable rc={0,<rc>} detail={[<P0_SAFE>],[response_empty],[response_multiline:<P0_SAFE>],[response_not_decimal_gid_list]}
+1 P0_STOP identity_probe_empty field={<label>} flag={<flag>}
+1 P0_STOP identity_probe_failed field={<label>} flag={<flag>} rc={<rc>} detail={[<P0_SAFE>]}
+1 P0_STOP identity_probe_multiline field={<label>} flag={<flag>} detail={[<P0_SAFE>]}
+2 P0_STOP identity_probe_unparsable field={gid,uid} value={[<gid>],[<uid>]} expected={decimal_digits}
+3 P0_STOP identity_unexpected observed_numeric={<P0_PW_UID>:<P0_PW_GID>,<live_uid>:<live_gid>} expected_numeric={<P0_EXPECT_UID>:<P0_PW_GID>,<P0_PW_UID>:<P0_PW_GID>,<P0_STATE_UID>:<P0_STATE_GID>} account={gatea,mtc-bridge}
+3 P0_STOP identity_unresolvable account={gatea,mtc-bridge} rc={<P0_PW_RC>} detail={[<P0_PW_DIAG>],getent_valid_no_match_for_route_login}
+1 P0_STOP input_charset name={P0_FORBIDDEN_GIDS} value={[<P0_FORBIDDEN_GIDS>]} expected={decimal_digits_and_separators_only}
+2 P0_STOP input_charset name={<name>,P0_VENV_ROOT} expected={decimal_digits,printable_without_whitespace}
+3 P0_STOP input_missing name={<name>,P0_FORBIDDEN_GIDS,P0_VENV_ROOT} detail={preregistered_numeric_gid_list_never_derived_here,preregistered_numeric_value_never_derived_here,preregistered_per_sha_venv_root_never_derived_here}
+1 P0_STOP input_not_absolute name={P0_VENV_ROOT} value={[<P0_VENV_ROOT>]}
+1 P0_STOP input_not_candidate_bound name={P0_VENV_ROOT} expected_basename={<P0_CAND>}
+1 P0_STOP input_not_canonical_spelling name={P0_VENV_ROOT} value={[<P0_VENV_ROOT>]} detail={repeated_separator}
+1 P0_STOP input_path_traversal name={P0_VENV_ROOT} value={[<P0_VENV_ROOT>]}
+2 P0_STOP input_pin_charset tool={<p0_pin_name>} expected={printable_without_glob_metacharacters,printable_without_whitespace}
+1 P0_STOP input_pin_count_unexpected count={<P0_PIN_COUNT>} expected={<P0_TOOL_COUNT_EXPECTED>} detail={exactly_one_frozen_pin_per_preregistered_tool}
+1 P0_STOP input_pin_freeze_unfilled tool={<p0_pin_name>} name={<P0_FROZEN_CONST_NAME>} detail={deploy_channel_value_never_derived_here}
+1 P0_STOP input_pin_malformed name={P0_TOOL_PINS} entry={[<p0_pin>]} expected={tool=absolute_path}
+1 P0_STOP input_pin_not_absolute tool={<p0_pin_name>} path={[<p0_pin_path>]}
+1 P0_STOP input_pin_not_frozen_path tool={<p0_pin_name>} pinned={<p0_pin_path>} frozen={<P0_FROZEN_PIN>}
+1 P0_STOP input_pin_not_frozen_trusted_python tool={python3} pinned={<p0_pin_path>} frozen={<P0_FIXED_TRUSTED_PYTHON>}
+1 P0_STOP input_pin_omitted tool={<p0_t>} detail={every_preregistered_tool_requires_one_frozen_pin}
+2 P0_STOP input_pin_unknown_tool name={P0_TOOL_PINS} tool={<p0_pin_name>} inventory={[<P0_RO_TOOLS>]}
+1 P0_STOP input_range name={<name>} value={<val>} expected_min={<min>}
+1 P0_STOP input_range name={P0_FORBIDDEN_GIDS} value={[<P0_FORBIDDEN_GIDS>]} expected={at_least_one_numeric_gid}
+1 P0_STOP internal_invariant_unmet invariant={trusted_python_pin_bound} predicate={P0_TRUSTED_PYTHON_BOUND_eq_yes} observed={<P0_TRUSTED_PYTHON_BOUND>} detail={an_upstream_input_gate_stopped_detecting_its_condition}
+1 P0_STOP interpreter_exec_denied path={<py>} rc={126} detail={found_but_could_not_be_executed_by_this_login} text={[<P0_SAFE>]}
+2 P0_STOP interpreter_exec_failed path={<py>} rc={127,<rc>} detail={interpreter_or_its_loader_not_found,nonzero_interpreter_status} text={[<P0_SAFE>]}
+1 P0_STOP interpreter_not_executable path={<py>} mechanism={access_builtin_x} detail={exec_permission_denied_to_this_login}
+1 P0_STOP interpreter_probe_multiline path={<py>} detail={<P0_SAFE>}
+2 P0_STOP interpreter_probe_unparsable path={<py>} detail={[<P0_SAFE>],[<version>]} expected={P0PY_major.minor}
+2 P0_STOP interpreter_probe_unparsable path={<py>} field={major,minor} value={[<major>],[<minor>]}
+1 P0_STOP interpreter_startup_not_isolated path={<py>} detail={[<P0_SAFE>]} expected={isolated_and_no_site}
+1 P0_STOP link_target_probe_empty path={<p>} rc={0}
+1 P0_STOP link_target_probe_error path={<p>} rc={<subrc>} detail={<P0_SAFE>}
+1 P0_STOP link_target_probe_multiline path={<p>} rc={0} detail={<P0_SAFE>}
+1 P0_STOP link_target_probe_nonprintable path={<p>} rc={0} detail={<P0_SAFE>}
+1 P0_STOP metadata_multiline subject={<label>} path={<p>} detail={<P0_SAFE>}
+1 P0_STOP metadata_unparsable subject={<label>} path={<p>} detail={[<P0_SAFE>]} expected={kind|mode|uid:gid}
+1 P0_STOP metadata_unparsable subject={<label>} path={<p>} field={kind}
+3 P0_STOP metadata_unparsable subject={<label>} path={<p>} field={mode,owner_numeric} value={[<P0_META_MODE>],[<P0_META_OWNER>]}
+1 P0_STOP metadata_unreadable subject={<label>} path={<p>} rc={<rc>} detail={<P0_SAFE>}
+1 P0_STOP missing_tool tool={<t>} rc={<rc>} detail={[<P0_SAFE>]}
+8 P0_STOP missing_tool tool={<p0_t>,env,getent,id,readlink,stat,systemctl,timeout} detail={absent_from_resolved_map}
+1 P0_STOP path_probe_ambiguous path={<p>} rc={<rc>} classes={<classes>} eacces={<n_eacces>} enoent={<n_enoent>} detail={<P0_SAFE>}
+1 P0_STOP path_probe_denied path={<p>} rc={<rc>} detail={<P0_SAFE>}
+2 P0_STOP path_probe_empty path={<p>} rc={0}
+2 P0_STOP path_probe_multiline path={<p>} rc={0,<rc>} detail={<P0_SAFE>}
+1 P0_STOP path_probe_nonprintable path={<p>} rc={0} detail={<P0_SAFE>}
+1 P0_STOP path_probe_unclassified path={<p>} rc={<rc>} detail={<P0_SAFE>}
+1 P0_STOP prereg_input_malformed name={P0_TOOL_PINS} duplicate={<p0_pin_name>}
+4 P0_STOP rp0_bootstrap_not_run detail={EV_DIR_unset,EV_LOG_unset,EV_STAGE_ID_unset,RUNID_unset}
+2 P0_STOP rp0_lib_not_sourced predicate={rp0_allocate_evidence_dir,rp0_require_safe_component} detail={not_a_shell_function}
+1 P0_STOP state_account_resolution_unexpected account={mtc-bridge} observed_numeric={absent} expected_numeric={<P0_STATE_UID>:<P0_STATE_GID>} detail={getent_valid_no_match}
+1 P0_STOP system_manager_unreachable rc={<rc>} detail={<detail>} budget_s={<P0_MANAGER_QUERY_BUDGET_S>} elapsed_s={<elapsed>} text={[<P0_SAFE>]}
+1 P0_STOP system_manager_unreachable rc={<rc>} detail={response_unprintable_value}
+2 P0_STOP system_manager_unreachable rc={<rc>} detail={response_multiline,response_unparseable} text={[<P0_SAFE>]}
+1 P0_STOP tool_not_evaluable tool={<t>} path={<resolved>} rc={na} detail={access_builtin_x_denied} mechanism={access_builtin_x}
+1 P0_STOP tool_pin_mismatch tool={<t>} pinned={<pin>} resolved={<resolved>}
+1 P0_STOP tool_pin_mismatch tool={<t>} pinned={<pin>} resolved={<resolved>} canonical={[<P0_SAFE>]}
+1 P0_STOP tool_pin_uncanonicalizable tool={<t>} pinned={<pin>} resolved={<resolved>} detail={readlink_not_resolved_before_python3}
+1 P0_STOP tool_pin_uncanonicalizable tool={<t>} pinned={<pin>} resolved={<resolved>} rc={<crc>} detail={[<P0_SAFE>]}
+1 P0_STOP tool_pin_unpinned tool={<t>} detail={every_tool_requires_a_frozen_pin}
+1 P0_STOP tool_resolution_unparsable tool={<p0_t>} detail={resolution_mode_lost}
+2 P0_STOP tool_resolution_unparsable tool={<t>} resolved={[<P0_SAFE>]} expected={absolute_path,printable_without_whitespace}
+1 P0_STOP unadjudicated_command_status rc={<printf_arg>} line={<printf_arg>} cmd={[<printf_arg>]}
+1 P0_STOP venv_root_canonicalization_failed path={<d>} rc={<rc>} detail={[<P0_SAFE>]} diagnostic_shape={<P0_RESOLUTION>}
+4 P0_STOP venv_root_canonicalization_unparsable path={<d>} rc={0} detail={[response_multiline:<P0_SAFE>],[response_nonprintable],[response_not_absolute:<P0_SAFE>],response_empty}
+# P0_RESULT_GRAMMAR_END
+```
 
 ### 8.2 RO stage - one row per admitted check
 

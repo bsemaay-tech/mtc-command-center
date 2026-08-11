@@ -648,24 +648,32 @@ done
 # P0_FIXED_TRUSTED_PYTHON before any host observation below.
 # Correction 7's omission-rejection loop above is now the canonical detector for
 # a missing pin and fires first: it emits the declared input_pin_omitted token
-# for any preregistered tool absent from P0_PIN_SEEN, python3 included. This
-# post-loop gate is therefore a defense-in-depth backstop that is unreachable
-# while that loop stands - any input leaving P0_TRUSTED_PYTHON_BOUND=no is
-# already caught, by the loop's input_pin_omitted, by the in-loop
-# input_pin_freeze_unfilled (a still-unfilled deploy-channel placeholder), or by
-# input_pin_not_frozen_trusted_python (a disagreement). Round 9 grammar-drift
-# close: this backstop previously emitted an undeclared second shape of
-# input_pin_freeze_unfilled (a round-5 relic detail= value) for what is, after
-# correction 7, the omission condition. It now emits the declared
-# input_pin_omitted token, matching the omission loop verbatim, so every emit
-# site carries only a reason the draft declares. The omission-vs-unfilled-
-# placeholder distinction is now between two reason tokens
-# (input_pin_omitted vs input_pin_freeze_unfilled), not two detail= values of a
-# single token. The backstop stays as the named python3-binding assertion: it
-# still STOPs at rc 3 if a future change ever lets an unbound python3 slip past
-# the earlier gates.
+# for any preregistered tool absent from P0_PIN_SEEN, python3 included.
+#
+# ROUND 10 F4 (Codex R9 audit finding 4). What this line tests is NOT omission.
+# Its predicate is `P0_TRUSTED_PYTHON_BOUND != yes`, which is true for omission,
+# for a still-unfilled deploy-channel placeholder, and for a frozen-path
+# disagreement alike - and under the current control flow all three are already
+# consumed upstream (the omission loop at :632-637, the freeze-unfilled gate at
+# :615-616, the disagreement gate at :617-619), so the line is UNREACHABLE. Round
+# 9b relabelled it `input_pin_omitted` and cited a static grep as evidence. That
+# was wrong twice: a reason token must name the condition its predicate actually
+# establishes, and a static grep is not D026 evidence for a branch nothing can
+# reach. The relabelling is withdrawn.
+#
+# The line is retained, because deleting a fail-closed assertion on a
+# load-bearing binding is a weakening, but it is retained under its true
+# character: an INTERNAL-BINDING INVARIANT, not an observation of operator input.
+# It asserts that no path through the pin parser may leave python3 unbound; if it
+# ever fires, an earlier input gate has stopped detecting its own condition,
+# which is a defect in this block and not a statement about the prelude. The
+# reason token says exactly that, and no input-deficiency token is borrowed for
+# it. Reachability is established executably, not asserted: the R10-F4 fence
+# deletes the three upstream gates in a mutant, reaches this line, and records
+# the emitted token and rc 3; the same fence records that the unmutated bytes
+# never reach it.
 [ "$P0_TRUSTED_PYTHON_BOUND" = yes ] \
-    || p0_stop "input_pin_omitted tool=python3 detail=every_preregistered_tool_requires_one_frozen_pin"
+    || p0_stop "internal_invariant_unmet invariant=trusted_python_pin_bound predicate=P0_TRUSTED_PYTHON_BOUND_eq_yes observed=$P0_TRUSTED_PYTHON_BOUND detail=an_upstream_input_gate_stopped_detecting_its_condition"
 
 # Row 8 deploy-channel attestation inputs. The prelude supplies each value and
 # the frozen block carries an identical literal. Missing input, an unfilled
@@ -1577,11 +1585,40 @@ p0_probe_kind() {
             "symbolic link")
                 sub="$(LC_ALL=C "$P0_STAT" -L -c '%F' -- "$p" 2>&1)" || subrc=$?
                 if [ "$subrc" -eq 0 ]; then
+                    # Round 10 F3 (Codex R9 audit finding 3): correction 3 gated the
+                    # shape of the LEAF rc-0 response (above) but not the FOLLOWED
+                    # target's. This branch sanitised first and classified second, so
+                    # a multi-line or non-printable rc-0 `-L %F` answer folded its
+                    # CR/LF to spaces, missed every recognised-kind arm, fell through
+                    # to `other`, and the caller turned that into a host-state FAIL
+                    # rc 1 (`interpreter_target_kind_unexpected kind=other`). rc 1
+                    # asserts a completed observation of deviant state; a producer
+                    # answer that cannot be read as one kind is an INABILITY TO
+                    # EVALUATE and is rc 3 (pattern 6: status good, shape not, STOP).
+                    # Adjudicate the RAW response - empty, multi-line, non-printable -
+                    # before P0_FKIND is assigned, identically to the leaf gate.
+                    case "$sub" in
+                        '') p0_stop "link_target_probe_empty path=$p rc=0" ;;
+                    esac
+                    case "$sub" in
+                        *$'\r'*|*$'\n'*)
+                            p0_sanitize "$sub"
+                            p0_stop "link_target_probe_multiline path=$p rc=0 detail=$P0_SAFE" ;;
+                    esac
+                    case "$sub" in
+                        *[![:print:]]*)
+                            p0_sanitize "$sub"
+                            p0_stop "link_target_probe_nonprintable path=$p rc=0 detail=$P0_SAFE" ;;
+                    esac
+                    # What remains is one complete printable line. A recognised kind
+                    # binds P0_FKIND; any OTHER recognised `%F` kind (character
+                    # special file, fifo, socket, ...) is a complete observation of a
+                    # target that is not a regular file, which is a real host-state
+                    # divergence and stays a caller FAIL - it is not unevaluable.
                     p0_sanitize "$sub"
                     case "$P0_SAFE" in
                         "regular file"|"regular empty file") P0_FKIND="regular" ;;
                         "directory")                        P0_FKIND="dir" ;;
-                        "")  p0_stop "link_target_probe_empty path=$p rc=0" ;;
                         *)   P0_FKIND="other" ;;
                     esac
                     P0_KIND="link_live"
