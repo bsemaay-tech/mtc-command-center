@@ -645,14 +645,27 @@ done
 # <PIN-AT-FREEZE> gate could be defeated by omission (a PIN_NONE or
 # PIN_NO_PYTHON prelude reached the tool inventory at rc 0). After parsing every
 # pin, REQUIRE that an explicit python3 entry was bound to
-# P0_FIXED_TRUSTED_PYTHON before any host observation below. The detail field
-# distinguishes omission (this post-loop gate) from a still-unfilled deploy-
-# channel placeholder (the in-loop gate above): both are rc 3 under the same
-# freeze-gate reason, so every missing-python3 prelude now STOPs the same way.
-# Correction 7's omission-rejection loop above also forces a python3 entry; this
-# re-check stays as the named python3-binding assertion.
+# P0_FIXED_TRUSTED_PYTHON before any host observation below.
+# Correction 7's omission-rejection loop above is now the canonical detector for
+# a missing pin and fires first: it emits the declared input_pin_omitted token
+# for any preregistered tool absent from P0_PIN_SEEN, python3 included. This
+# post-loop gate is therefore a defense-in-depth backstop that is unreachable
+# while that loop stands - any input leaving P0_TRUSTED_PYTHON_BOUND=no is
+# already caught, by the loop's input_pin_omitted, by the in-loop
+# input_pin_freeze_unfilled (a still-unfilled deploy-channel placeholder), or by
+# input_pin_not_frozen_trusted_python (a disagreement). Round 9 grammar-drift
+# close: this backstop previously emitted an undeclared second shape of
+# input_pin_freeze_unfilled (a round-5 relic detail= value) for what is, after
+# correction 7, the omission condition. It now emits the declared
+# input_pin_omitted token, matching the omission loop verbatim, so every emit
+# site carries only a reason the draft declares. The omission-vs-unfilled-
+# placeholder distinction is now between two reason tokens
+# (input_pin_omitted vs input_pin_freeze_unfilled), not two detail= values of a
+# single token. The backstop stays as the named python3-binding assertion: it
+# still STOPs at rc 3 if a future change ever lets an unbound python3 slip past
+# the earlier gates.
 [ "$P0_TRUSTED_PYTHON_BOUND" = yes ] \
-    || p0_stop "input_pin_freeze_unfilled tool=python3 name=P0_FIXED_TRUSTED_PYTHON detail=trusted_python_pin_omitted_freeze_gate_load_bearing"
+    || p0_stop "input_pin_omitted tool=python3 detail=every_preregistered_tool_requires_one_frozen_pin"
 
 # Row 8 deploy-channel attestation inputs. The prelude supplies each value and
 # the frozen block carries an identical literal. Missing input, an unfilled

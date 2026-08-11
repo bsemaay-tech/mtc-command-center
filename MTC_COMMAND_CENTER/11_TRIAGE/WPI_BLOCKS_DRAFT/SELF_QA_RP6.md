@@ -3993,6 +3993,19 @@ marker range so the invocation is line-offset independent.
 
 ### R5-F1 harness — python3 freeze-gate polarity (omission must STOP)
 
+> **Superseded as a block-grammar proof by the R9_GRAMMAR harness (round 9).**
+> This harness is a self-contained round-5 *replica*: its `run_f1()` does NOT
+> carry correction 7's omission-rejection loop, so in the replica the post-loop
+> gate is reachable and is the omission detector. It still proves the round-5
+> polarity lesson (omission STOPs, presence passes) and is retained as historical
+> evidence of the round-5 fix. It is **not** a model of the current block's
+> post-loop gate: round 9 changed that gate (block `:668`) to emit the declared
+> `input_pin_omitted` token, so the replica's `trusted_python_pin_omitted_…`
+> spelling is the round-5 shape, not the current block shape. The current
+> block-grammar proof — which reads the real block bytes, not a replica — is the
+> `R9_GRAMMAR` harness at the end of this file. The replica below is left
+> byte-unchanged; do not read its asserted token as a claim about the live block.
+
 ```text
 # R5_F1_HARNESS_BEGIN
 #!/usr/bin/env bash
@@ -5264,3 +5277,104 @@ mechanism=access_builtin_x`; `RP6_R4_D026_SUMMARY findings=4 … result=PASS` wi
 GREEN → `count=12 trusted_python_pin=yes`, still returning within its ~41 s bound.
 Neither arm build prints `ARM_BUILD_INCOMPLETE`. Until the Lead runs these, the
 round-8 evidence is supplemental.
+
+---
+
+## R9 — grammar-drift close, the second emit site (round 9, Claude implementer)
+
+Added by Claude (fresh session) as IMPLEMENTER for the round-9 grammar-drift
+repair. Round 9a (commit `ab53a012`, GLM-5.2 fragment executed by the Lead)
+already closed the generic in-loop site (`:616` now emits
+`name=$P0_FROZEN_CONST_NAME`); the `RP6_R4_D026` `PIN_FREEZE_EXACT` assert then
+matched the preregistered line character for character and all eight fences went
+green on `e7ca9ff1…`. 9a left the second emit site, the emit-site sweep, and the
+report/QA/status layer open. **This section closes the second site and supplies
+the sweep + QA.** Auditor of record: Codex (`gpt-5.6-sol`, T0). The block is
+still a draft: not frozen, accepted, dispatchable, or authorised for host
+execution.
+
+### The repair
+
+The post-loop python3-binding backstop (`:668`) previously emitted an undeclared
+second shape of `input_pin_freeze_unfilled` (`detail=
+trusted_python_pin_omitted_freeze_gate_load_bearing`) — a round-5 relic. Round 7's
+correction-7 omission loop (`:632-637`) already detects a missing pin (python3
+included) with the **declared** `input_pin_omitted` token and fires first, so the
+post-loop gate is an unreachable defense-in-depth backstop; the relic detail
+survived only because no executable fence could reach it. The backstop now emits
+the declared `input_pin_omitted tool=python3
+detail=every_preregistered_tool_requires_one_frozen_pin` token, matching the
+omission loop verbatim. `input_pin_freeze_unfilled` now has exactly one declared
+shape, at exactly one live site (`:616`). The preceding F1 comment (`:641-666`)
+was rewritten to state this. No control-flow, variable, or structural change;
+no draft byte touched (the draft already declares `input_pin_omitted`). Full
+adjudication + sweep table in `RP6_REPAIR_R9_REPORT.md`.
+
+### QA execution status — PENDING-LEAD-EXECUTION (no fabricated transcripts)
+
+This session gates `bash` (`bash -n` and `sed … | bash` returned *requires
+approval* and were not approved — the identical blocker rounds 5-8 recorded).
+Per the kickoff's PENDING-LEAD-EXECUTION clause and AGENTS.md D026, the R9 run is
+recorded PENDING, not fabricated. What IS real and was computed in-session by
+read-only tools (sha256sum / wc / tr / grep are not gated):
+
+```text
+pre_9b (9a commit ab53a012): sha256=e7ca9ff1e6d44b838b6d8bfddbb24bb68e2642b9f65abfc941f9482e465a0839  bytes=103808
+post_9b (this round):        sha256=08e0a93562bb04f4f78bac77d973a26da5b609aa305491d3bfa51743adbcf10c  bytes=104683
+cr_bytes=0   (tr -cd '\r' < RP6-P0.sh | wc -c)
+relic_residual=0   (grep -c trusted_python_pin_omitted_freeze_gate_load_bearing RP6-P0.sh)
+post_loop_backstop_now=declared_input_pin_omitted   (grep -n 'input_pin_omitted tool=python3' RP6-P0.sh  ->  :668)
+```
+
+### R9_GRAMMAR harness — the closed invariant (reads the real block bytes)
+
+```text
+# R9_GRAMMAR_HARNESS_BEGIN
+#!/usr/bin/env bash
+# Round-9 grammar-drift close. Proves input_pin_freeze_unfilled has exactly one
+# declared shape at one live site, and the post-loop python3 backstop emits the
+# declared input_pin_omitted token. Reads the REAL block (not a replica), so it
+# tests the bytes, not a model. D026: GREEN on round-9 bytes; RED on a mutant
+# that restores the round-5 relic at the post-loop gate (the pre-9b shape).
+# Invocation examples are kept BELOW the END marker (outside this range) so the
+# sed extractor does not terminate early on an END string inside a comment.
+set +e
+BLOCK="${1:-RP6-P0.sh}"
+R9_PASS=0; R9_FAIL=0
+ok()  { printf 'ASSERT_MET %s\n'   "$1"; R9_PASS=$((R9_PASS+1)); }
+bad() { printf 'ASSERT_UNMET %s\n' "$1"; R9_FAIL=$((R9_FAIL+1)); }
+
+[ -f "$BLOCK" ] || { bad "file_missing path=$BLOCK"; printf 'R9_GRAMMAR_SUMMARY cases=5 pass=%s fail=%s result=BLOCK\n' "$R9_PASS" "$R9_FAIL"; exit 2; }
+
+n_freeze=$(grep -c 'p0_stop "input_pin_freeze_unfilled' "$BLOCK")
+n_freeze_declared=$(grep -c 'p0_stop "input_pin_freeze_unfilled.*detail=deploy_channel_value_never_derived_here' "$BLOCK")
+[ "$n_freeze" = 1 ] && ok "freeze_emit_site_count=1 observed=$n_freeze" || bad "freeze_emit_site_count=1 observed=$n_freeze"
+[ "$n_freeze_declared" = 1 ] && ok "freeze_site_detail=declared observed=$n_freeze_declared" || bad "freeze_site_detail=declared observed=$n_freeze_declared (expected the sole site to carry deploy_channel_value_never_derived_here)"
+grep 'p0_stop "input_pin_freeze_unfilled' "$BLOCK" | grep -q 'name=$P0_FROZEN_CONST_NAME' && ok "freeze_site_name=generic_P0_FROZEN_CONST_NAME" || bad "freeze_site_name=generic_P0_FROZEN_CONST_NAME MISSING"
+n_relic=$(grep -c 'trusted_python_pin_omitted_freeze_gate_load_bearing' "$BLOCK")
+[ "$n_relic" = 0 ] && ok "relic_detail_count=0 observed=$n_relic" || bad "relic_detail_count=0 observed=$n_relic"
+n_back=$(grep -c 'p0_stop "input_pin_omitted tool=python3 detail=every_preregistered_tool_requires_one_frozen_pin"' "$BLOCK")
+[ "$n_back" -ge 1 ] && ok "post_loop_backstop=declared_input_pin_omitted observed=$n_back" || bad "post_loop_backstop=declared_input_pin_omitted MISSING"
+printf 'R9_GRAMMAR_SUMMARY cases=5 pass=%s fail=%s result=%s\n' "$R9_PASS" "$R9_FAIL" "$([ "$R9_FAIL" = 0 ] && echo PASS || echo FAIL)"
+# R9_GRAMMAR_HARNESS_END
+```
+
+Invocation (run from `WPI_BLOCKS_DRAFT`, line-offset independent):
+
+```text
+sed -n '/R9_GRAMMAR_HARNESS_BEGIN/,/R9_GRAMMAR_HARNESS_END/p' SELF_QA_RP6.md | bash --noprofile --norc
+# D026 RED twin: restore the relic line at the post-loop gate in a temp copy, then:
+sed -n '/R9_GRAMMAR_HARNESS_BEGIN/,/R9_GRAMMAR_HARNESS_END/p' SELF_QA_RP6.md | bash --noprofile --norc /tmp/mutant_RP6-P0.sh
+```
+
+Expected polarity (PENDING real Lead run — design intent, not executed output):
+
+| variant | freeze sites | relic | backstop token | result |
+|---|---:|---:|---|---|
+| round-9 bytes (`08e0a935…`) | 1 | 0 | `input_pin_omitted tool=python3` | GREEN (PASS) |
+| mutant (relic restored at post-loop gate) | 2 | 1 | absent | RED (FAIL) |
+
+The eight 9a fences are unchanged by this edit (comment expansion + one token
+label at an unreachable site; none of them asserts the post-loop gate's token).
+Their re-run is PENDING-LEAD-EXECUTION alongside `bash -n` and the R9_GRAMMAR
+run above. Until the Lead runs these, the round-9 evidence is supplemental.

@@ -1,4 +1,82 @@
-# RP6-P0 — status: ROUND-8-REPAIRED-PENDING-T0-REAUDIT (evidence-only round)
+# RP6-P0 — status: ROUND-9-REPAIRED-PENDING-T0-REAUDIT (grammar-drift close)
+
+Updated 2026-08-11 by the round-9 implementer (Claude, fresh session). Audit tier
+unchanged: **T0** (host/execution-domain preflight). Codex is this block's
+auditor of record; the T0 re-audit of these bytes is pending. The block remains a
+draft: not frozen, accepted, dispatchable, or authorised for host execution.
+Full disposition + sweep table: `RP6_REPAIR_R9_REPORT.md`; R9 harness in
+`SELF_QA_RP6.md` §R9.
+
+**Round 9 closed the grammar drift at the second emit site.** The post-loop
+python3-binding backstop (`:668`) previously emitted an undeclared second shape
+of `input_pin_freeze_unfilled` (`detail=
+trusted_python_pin_omitted_freeze_gate_load_bearing`) — a round-5 relic left
+undeclared because round 7's correction-7 omission loop (`:632-637`) made that
+gate unreachable. The backstop now emits the **declared** `input_pin_omitted
+tool=python3 detail=every_preregistered_tool_requires_one_frozen_pin` token
+(matching the omission loop verbatim). `input_pin_freeze_unfilled` now has
+exactly one declared shape, at one live site (`:616`, fixed in 9a). The preceding
+F1 comment was rewritten to match. No control-flow/variable/structural change;
+**no draft byte touched** (the draft already declares `input_pin_omitted`). The
+closure is NOT "declare a second form" (the condition is already declared, and
+the site is unreachable so a second form could not be RED/GREEN-proven) and NOT
+"emit the :616 line" (the deploy-channel value is filled when the backstop is
+reached, so that would be a lie). See the report for the full adjudication.
+
+**Round 9a (commit `ab53a012`, already applied)** closed the generic in-loop
+site (`:616` emits `name=$P0_FROZEN_CONST_NAME`); the `RP6_R4_D026`
+`PIN_FREEZE_EXACT` assert then matched the preregistered line character for
+character and all eight fences went green for the first time on `e7ca9ff1…`
+(103808 B). 9a left the second site, the sweep, and the report/QA/status layer
+open; 9b closes all three.
+
+**Emit-site sweep:** every `p0_stop`/`p0_fail` site (174, lines `:399`-`:1753`)
+cross-checked against `WPI_PREREGISTRATION_DRAFT.md` §8.1 rows 1-9. Exactly one
+deviation found — the post-loop backstop — fixed this round. No other site emits
+an undeclared reason or `detail=`, and no site where the draft looks wrong.
+
+**Artefact identity (round-9 bytes; bash -n / harness re-run PENDING Lead execution;
+CR bytes verified 0 in-session):**
+
+```text
+sha256=08e0a93562bb04f4f78bac77d973a26da5b609aa305491d3bfa51743adbcf10c
+bytes=104683
+bash_n=PENDING-LEAD-EXECUTION   (session gates bash; change is comment + one string literal at an unreachable site)
+cr_bytes=0 (verified: tr -cd '\r' < RP6-P0.sh | wc -c)
+line_endings=LF_only
+relic_residual=0 (grep -c trusted_python_pin_omitted_freeze_gate_load_bearing RP6-P0.sh)
+pre_9b_sha256=e7ca9ff1e6d44b838b6d8bfddbb24bb68e2642b9f65abfc941f9482e465a0839 (9a commit ab53a012, 103808 B)
+freeze_gate_literal_count=17 (unchanged)
+frozen_ro_basis=RP7-WPI-RO.sh@d6a976aa sha256=23e55667bec2453e21605b3551d5802b9cc28a82040789f3ead988b69aa01aad bytes=70941
+```
+
+**QA execution is PENDING-LEAD-EXECUTION.** This session gates `bash` (every
+`bash -n`/`sed … | bash` returned *requires approval* — the same blocker rounds
+5-8 recorded), so the round-9 run is recorded PENDING, not fabricated (kickoff
+PENDING clause + AGENTS.md D026). The Lead must, in an unhindered Git Bash
+against `08e0a935…` / 104683 B:
+
+```text
+bash -n RP6-P0.sh                                                          -> expect rc 0
+sed -n '/R9_GRAMMAR_HARNESS_BEGIN/,/R9_GRAMMAR_HARNESS_END/p' SELF_QA_RP6.md | bash --noprofile --norc
+  -> expect R9_GRAMMAR_SUMMARY cases=5 pass=5 fail=0 result=PASS   (GREEN)
+# D026 RED twin: restore the relic at the post-loop gate in a temp copy, re-run the harness with $1=that copy
+  -> expect result=FAIL   (RED)
+# the eight 9a fences by anchored marker, all rc 0 (unchanged by this edit):
+#   RP6_R4_D026 / RP6_FULLBLOCK_D026 / R7_F2 / R7_F3 / R7_C3 / C13_R3_BACKSTOP / F2_FREEZE_GATE / C13_R4B
+```
+
+Expected: `bash -n` rc 0; `R9_GRAMMAR_SUMMARY … result=PASS`; the eight fences at
+their recorded green summaries. Until the Lead runs these, the round-9 evidence
+is supplemental.
+
+The freeze gate still has seventeen `<PIN-AT-FREEZE>` literals, so no end-to-end
+`P0 PASS` is possible and nothing here is dispatchable regardless of this round's
+verdict.
+
+---
+
+## Prior status — round 8 (evidence-only, superseded by round 9)
 
 Updated 2026-08-11 by the round-8 implementer (Claude, fresh session). Round 8 is
 an **evidence-only** round: it repairs the two legacy fences that failed the Lead's
