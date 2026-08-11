@@ -405,7 +405,7 @@ Operations 04 and 05 currently do not establish rows 1–9, and P0's `Manager.Ve
 
 Freeze is blocked until the actual `remote_close_tree_wpi.sh`, plan rows 07/08, derivation contract, launch-domain claim, scratch-location semantics, and RED/GREEN evidence describe one byte-identical executable contract and the script reaches its RUNID/`EV_DIR` validation rather than failing earlier on argv shape.
 
-If derivation classes 5 and 6 remain preregistered, the accepted script must implement the cleared launch domain and run-owned scratch semantics and the plan must pass the required `WORK_ROOT`; if final accepted bytes retain a two-argument inherited-TMPDIR contract, the successor must delete those claims and surface the weaker contract for T0 adjudication.
+If derivation classes 5 and 6 remain preregistered, the accepted script must implement the cleared launch domain and run-owned scratch semantics and the plan must pass the required `WORK_ROOT`; if final accepted bytes retain a two-argument inherited-TMPDIR contract, the successor must delete those claims and surface the weaker contract for T0 adjudication. The cleared launch domain closes the inner child only; the outer SSH account-shell boundary (a server-supplied `BASH_ENV`/`ENV` acting before `env -i`) remains OPEN, and no successor text may present the cleared inner-child domain as an end-to-end F1 closure.
 
 Hash agreement with a report whose prose or plan argv describes different behavior is not closure evidence. Ops 07 and 08 remain separate close invocations; no retrieval or local bind substitutes for this boundary.
 
@@ -694,7 +694,7 @@ R2 contained three literal Lane-B sites representing two semantic insertions: th
 4. **Item 4 — literal acceptance/refusal evidence.**
    > The finite negative cases are called **refusal representatives**, never “the refusal set,” and are executed as follows against the exact pinned function:
 5. **Item 5 — close argv reconciliation.**
-   > If derivation classes 5 and 6 remain preregistered, the accepted script must implement the cleared launch domain and run-owned scratch semantics and the plan must pass the required `WORK_ROOT`; if final accepted bytes retain a two-argument inherited-TMPDIR contract, the successor must delete those claims and surface the weaker contract for T0 adjudication.
+   > If derivation classes 5 and 6 remain preregistered, the accepted script must implement the cleared launch domain and run-owned scratch semantics and the plan must pass the required `WORK_ROOT`; if final accepted bytes retain a two-argument inherited-TMPDIR contract, the successor must delete those claims and surface the weaker contract for T0 adjudication. The cleared launch domain closes the inner child only; the outer SSH account-shell boundary (a server-supplied `BASH_ENV`/`ENV` acting before `env -i`) remains OPEN, and no successor text may present the cleared inner-child domain as an end-to-end F1 closure.
 6. **Item 6 — durable global uniqueness.**
    > Stage 1 uses the committed append-only ledger `WPI_RUNID_ALLOCATION_BURN_LEDGER.md`; the candidate base and both derived RUNIDs must be absent from the complete ledger history and all retained operator/remote-root records before allocation can proceed.
 

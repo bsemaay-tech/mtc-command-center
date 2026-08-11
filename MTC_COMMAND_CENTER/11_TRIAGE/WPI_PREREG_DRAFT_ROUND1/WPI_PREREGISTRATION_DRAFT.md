@@ -340,16 +340,23 @@ EXACTLY these six classes, and any delta outside them is still a finding:
    the three constructed entries, so `BASH_ENV`, `ENV`, `LD_PRELOAD`, an exported
    shell function and an inherited `TMPDIR` are each refused **by name**. Every arm
    is rc 3 — a launch-domain violation is an inability to evaluate, never a host
-   finding. Measured scope, stated rather than implied: `bash` reads `$BASH_ENV`
+   finding. **Disposition: inner child closed; outer SSH account-shell boundary
+   OPEN.** Measured scope, stated rather than implied: `bash` reads `$BASH_ENV`
    before the first byte of a stdin-delivered script and `--norc`/`--noprofile` do
    not disable that channel, so a startup plant that *exits* forges the record
-   before any in-script check can run. Nothing inside a delivered script can close
-   that; it is closed by the operator side, which is exactly why the domain is
-   stated on both sides and enforced verbatim by the runner. A plant that lets the
-   script run — the only kind that could forge a real-looking record — is refused by
-   the sweep. The remote login shell `sshd` uses to run the command string is
-   likewise outside this attestation: `env -i` clears what it exports, but its own
-   integrity is a deploy-channel property.
+   before any in-script check can run. Nothing inside a delivered script closes
+   that, and this block does not close it on the operator side either: the remote
+   login shell that `sshd` runs the command string with processes its own startup
+   environment before `env -i` ever executes, so a server-supplied `BASH_ENV`/`ENV`
+   can act before the frozen inner child exists. That outer boundary is therefore
+   **not closed by these bytes** — closing it would require a mechanism that acts
+   before account-shell startup (an independently attested server-side execution
+   contract, or a transport path that runs the pinned helper without an unbound
+   shell), which is out of scope for this block and recorded as an open residual. A
+   plant that lets the delivered script run — the only kind the in-script sweep can
+   see — is refused by the sweep; a plant that *exits first* is not reached by it.
+   The integrity of the outer login/account shell `sshd` uses is a deploy-channel
+   property this block neither observes nor attests.
 6. **Run-owned scratch** (round 4; Codex final audit F2) — `remote_close_tree_wpi.sh`
    takes a third argument, `WORK_ROOT`, which **op 01 allocates** as
    `<REMOTE_BASE>/work` under the same create-once/bind-immediately discipline as the
@@ -570,11 +577,18 @@ so a plan row that reverts to bare `bash` cannot run:
 ```
 
 `env -i` clears everything the login shell exported — `BASH_ENV`, `ENV`,
-`LD_PRELOAD`, exported shell functions, `TMPDIR` — and supplies an explicit,
-complete variable list; `--noprofile --norc` refuses startup files; both programs
-are named by absolute path. Each delivered script re-attests the same domain from
-the inside (derivation class 5), so the operator side and the remote side state the
-same contract independently and a disagreement is rc 3, not a host finding.
+`LD_PRELOAD`, exported shell functions, `TMPDIR` — for the frozen inner child, and
+supplies an explicit, complete variable list; `--noprofile --norc` refuses startup
+files; both programs are named by absolute path. Each delivered script re-attests
+the same domain from the inside (derivation class 5), so the operator side and the
+remote side state the same **inner-child** contract independently and a disagreement
+is rc 3, not a host finding. **This closes the inner child only; the outer SSH
+account-shell boundary is OPEN.** The login shell that `sshd` runs the whole command
+string with processes its own startup environment *before* `env -i` executes, so a
+server-supplied `BASH_ENV`/`ENV` that exits can forge the record before the frozen
+child exists. No text in this block closes that outer boundary, and none should
+claim to: closing it needs a mechanism acting before account-shell startup, which is
+out of scope for these bytes (see derivation class 5, launch-domain attestation).
 
 | op | run_when | kind | remote/local argv after the pinned options |
 |---|---|---|---|
@@ -841,20 +855,31 @@ the ERR-trap emitter was absent entirely. §8.1 is unchanged as the *expectation
 contract; this subsection is the *result grammar* contract, and it is exhaustive
 by construction.
 
-**What a declared form is.** One line per distinct emitted form:
+**What a declared tuple is.** One line per distinct emitted **correlated tuple**:
 
 ```text
-<site_count> <PREFIX> <reason> <field>={<value-class>[,<value-class>...]} ...
+<site_count> <PREFIX> <reason> <field>={<value-class>} ...
 ```
 
 `<PREFIX>` is `P0_STOP` (rc 3) or `P0_FAIL` (rc 1). Fields appear in **emission
-order**, which is part of the form. A *value class* is either a source literal
+order**, which is part of the tuple. A *value class* is either a source literal
 (the emitter writes that exact text) or `<name>` for a `$name`/`${name}`
 expansion, with surrounding literal text preserved - so `[$P0_SAFE]` is the class
 `[<P0_SAFE>]`, and `$P0_STATE_UID:$P0_STATE_GID` is the class
 `<P0_STATE_UID>:<P0_STATE_GID>`. `<printf_arg>` is a `%s` in a direct `printf`
-emitter. The value set of a field is the sorted union over every site sharing the
-form, and `<site_count>` is how many source sites emit it.
+emitter.
+
+**Round 11 (RP6-P0 Codex T0 audit R10 finding 1): one value class per field,
+never a union.** Round 10 declared one line per *form* - prefix, reason and field
+order - and gave each field an independent sorted union of the values seen across
+every site sharing that form. That destroyed the correlation between the fields
+of one site: twelve forms admitted 65 field-value combinations no site emits, and
+a correlation-preserving relabel of a single site (`account=gatea` ->
+`account=mtc-bridge` at one of the three `identity_unexpected` sites) left every
+union byte-identical and the closure fence GREEN. Each `{}` now holds exactly ONE
+value class, `<site_count>` is how many sites emit that exact tuple, and the
+`R11_GRAMMAR` fence asserts that no `{}` ever contains a comma - so per-field
+unions cannot reappear without failing the fence.
 
 **The derivation is deterministic and total.** The declaration below is the exact
 text produced from `RP6-P0.sh` by the rule above: both emit wrappers
@@ -867,6 +892,19 @@ a declared one, adds a field, reorders fields, or introduces a new literal
 block, so the fence is driven by this declaration and not by hand-picked source
 substrings; a repair round that changes any emitter must update this declaration
 in the same round.
+
+**Coverage is fail-closed (round 11).** The derivation reads one modelled
+spelling of each emitter. Round 10 measured its own coverage with that same
+lexical restriction on both sides, so an executable emitter written in another
+valid shell spelling - `p0_stop '...'` for instance - disappeared from the
+declaration AND from the check that was supposed to detect the disappearance.
+`R11_GRAMMAR` now censuses emit sites by a broader, independent rule: every line
+that uses `p0_stop`/`p0_fail` as a shell word, or writes the `P0_STOP`/`P0_FAIL`
+result literal, minus exactly two declared exclusions - the two wrapper
+definitions and whole-line comments. Any censused line the modelled parser cannot
+read is a coverage error and the fence fails; it is never skipped. This
+declaration is therefore complete for the modelled spellings **and** the fence
+refuses to certify a block that contains an unmodelled one.
 
 **What it does not establish.** This is a *static source* grammar. It constrains
 prefixes, reasons, field names, field order, every literal value and every literal
@@ -883,8 +921,12 @@ prelude that supplies numerics other than the preregistered ones is a
 preregistration violation visible in the operator record, **not** something these
 blocks detect - see the residual named in §8.1 row 3.
 
-**P0 result grammar, exhaustive** - 89 forms, 161 emit sites, derived
-from `RP6-P0.sh` at the round-10 bytes:
+**P0 result grammar, exhaustive** - 149 correlated tuples, 163 emit sites,
+derived from `RP6-P0.sh` at the round-11 bytes. The round-11 block adds the two
+`*_kind_unrecognized` STOP tuples (finding 2: an unrecognised printable `%F`
+token is an inability to evaluate, not a host-state observation), and the
+remaining growth from 89 declared lines is the round-10 per-field unions being
+split into the correlated tuples that actually exist:
 
 ```text
 # P0_RESULT_GRAMMAR_BEGIN
@@ -897,33 +939,70 @@ from `RP6-P0.sh` at the round-10 bytes:
 1 P0_FAIL venv_root_kind_unexpected kind={<P0_KIND>} path={<d>} expected={dir}
 1 P0_FAIL venv_root_not_literal_canonical path={<d>} canonical={<P0_SAFE>}
 1 P0_STOP capability_wider_than_ledger gid={<f>} caller_gids={[<gids>]}
-4 P0_STOP evidence_binding_unparsable subject={ev_log,fd8} value={[<fdid>],[<logid>]}
+2 P0_STOP evidence_binding_unparsable subject={ev_log} value={[<logid>]}
+2 P0_STOP evidence_binding_unparsable subject={fd8} value={[<fdid>]}
+1 P0_STOP evidence_binding_unprobeable path={<EV_LOG>} rc={<rc>} detail={<P0_SAFE>}
+1 P0_STOP evidence_binding_unprobeable path={<P0_FD_SELF>} rc={<rc>} detail={<P0_SAFE>}
 1 P0_STOP evidence_binding_unprobeable path={<P0_FD_SELF>} rc={<rc>} detail={[<P0_SAFE>]} diagnostic_shape={<P0_RESOLUTION>}
-2 P0_STOP evidence_binding_unprobeable path={<EV_LOG>,<P0_FD_SELF>} rc={<rc>} detail={<P0_SAFE>}
-2 P0_STOP evidence_identifier_refused name={EV_STAGE_ID,RUNID}
+1 P0_STOP evidence_identifier_refused name={EV_STAGE_ID}
+1 P0_STOP evidence_identifier_refused name={RUNID}
 1 P0_STOP evidence_leaf_not_bound ev_log={<EV_LOG>} ev_log_id={<logid>} stdout_id={<fdid>} stdout_path={[<P0_SAFE>]}
-2 P0_STOP execution_domain_mismatch field={<field>,root_mount_identity} observed={<raw>,<root_id>} attested={<P0_ATTESTED_ROOT_MOUNT_ID>,<attested>}
+1 P0_STOP execution_domain_mismatch field={<field>} observed={<raw>} attested={<attested>}
+1 P0_STOP execution_domain_mismatch field={root_mount_identity} observed={<root_id>} attested={<P0_ATTESTED_ROOT_MOUNT_ID>}
+1 P0_STOP execution_domain_unattested field={<field>} detail={freeze_pin_unfilled}
+1 P0_STOP execution_domain_unattested field={<field>} detail={namespace_identity_empty}
+1 P0_STOP execution_domain_unattested field={<field>} detail={namespace_identity_unprintable}
 1 P0_STOP execution_domain_unattested field={<field>} detail={namespace_link_on_root_filesystem} device={<P0_DEVICE>} root_device={<root_dev>}
+1 P0_STOP execution_domain_unattested field={<field>} rc={<rc>} detail={[<P0_SAFE>]} diagnostic_shape={<P0_RESOLUTION>}
 1 P0_STOP execution_domain_unattested field={<field>} subject={namespace_link_device} detail={device_grammar}
 1 P0_STOP execution_domain_unattested field={<field>} subject={namespace_link_device} rc={<rc>} detail={[<P0_SAFE>]}
+1 P0_STOP execution_domain_unattested field={mount_namespace} detail={freeze_pin_unfilled}
+1 P0_STOP execution_domain_unattested field={mount_namespace} detail={prelude_value_differs_from_frozen_pin}
+1 P0_STOP execution_domain_unattested field={mount_namespace} detail={preregistered_value_missing}
+1 P0_STOP execution_domain_unattested field={network_namespace} detail={freeze_pin_unfilled}
+1 P0_STOP execution_domain_unattested field={network_namespace} detail={prelude_value_differs_from_frozen_pin}
+1 P0_STOP execution_domain_unattested field={network_namespace} detail={preregistered_value_missing}
+1 P0_STOP execution_domain_unattested field={pid_namespace} detail={freeze_pin_unfilled}
+1 P0_STOP execution_domain_unattested field={pid_namespace} detail={prelude_value_differs_from_frozen_pin}
+1 P0_STOP execution_domain_unattested field={pid_namespace} detail={preregistered_value_missing}
+1 P0_STOP execution_domain_unattested field={root_mount_identity} detail={prelude_value_differs_from_frozen_pin}
+1 P0_STOP execution_domain_unattested field={root_mount_identity} detail={preregistered_value_missing}
+1 P0_STOP execution_domain_unattested field={root_mount_identity} detail={root_not_literal_canonical}
 1 P0_STOP execution_domain_unattested field={root_mount_identity} rc={<rc>} detail={[<P0_SAFE>]}
-2 P0_STOP execution_domain_unattested field={<field>,root_mount_identity} rc={<rc>} detail={[<P0_SAFE>]} diagnostic_shape={<P0_RESOLUTION>}
-28 P0_STOP execution_domain_unattested field={<field>,mount_namespace,network_namespace,pid_namespace,root_mount_identity,user_namespace} detail={dev_inode_grammar,freeze_pin_unfilled,namespace_identity_empty,namespace_identity_grammar,namespace_identity_unprintable,prelude_value_differs_from_frozen_pin,preregistered_value_missing,root_not_literal_canonical}
-6 P0_STOP group_query_not_evaluable rc={0,<rc>} detail={[<P0_SAFE>],[response_empty],[response_multiline:<P0_SAFE>],[response_not_decimal_gid_list]}
+1 P0_STOP execution_domain_unattested field={root_mount_identity} rc={<rc>} detail={[<P0_SAFE>]} diagnostic_shape={<P0_RESOLUTION>}
+1 P0_STOP execution_domain_unattested field={user_namespace} detail={freeze_pin_unfilled}
+1 P0_STOP execution_domain_unattested field={user_namespace} detail={prelude_value_differs_from_frozen_pin}
+1 P0_STOP execution_domain_unattested field={user_namespace} detail={preregistered_value_missing}
+2 P0_STOP execution_domain_unattested field={root_mount_identity} detail={freeze_pin_unfilled}
+4 P0_STOP execution_domain_unattested field={<field>} detail={namespace_identity_grammar}
+4 P0_STOP execution_domain_unattested field={root_mount_identity} detail={dev_inode_grammar}
+1 P0_STOP group_query_not_evaluable rc={0} detail={[response_multiline:<P0_SAFE>]}
+1 P0_STOP group_query_not_evaluable rc={<rc>} detail={[<P0_SAFE>]}
+2 P0_STOP group_query_not_evaluable rc={0} detail={[response_empty]}
+2 P0_STOP group_query_not_evaluable rc={0} detail={[response_not_decimal_gid_list]}
 1 P0_STOP identity_probe_empty field={<label>} flag={<flag>}
 1 P0_STOP identity_probe_failed field={<label>} flag={<flag>} rc={<rc>} detail={[<P0_SAFE>]}
 1 P0_STOP identity_probe_multiline field={<label>} flag={<flag>} detail={[<P0_SAFE>]}
-2 P0_STOP identity_probe_unparsable field={gid,uid} value={[<gid>],[<uid>]} expected={decimal_digits}
-3 P0_STOP identity_unexpected observed_numeric={<P0_PW_UID>:<P0_PW_GID>,<live_uid>:<live_gid>} expected_numeric={<P0_EXPECT_UID>:<P0_PW_GID>,<P0_PW_UID>:<P0_PW_GID>,<P0_STATE_UID>:<P0_STATE_GID>} account={gatea,mtc-bridge}
-3 P0_STOP identity_unresolvable account={gatea,mtc-bridge} rc={<P0_PW_RC>} detail={[<P0_PW_DIAG>],getent_valid_no_match_for_route_login}
+1 P0_STOP identity_probe_unparsable field={gid} value={[<gid>]} expected={decimal_digits}
+1 P0_STOP identity_probe_unparsable field={uid} value={[<uid>]} expected={decimal_digits}
+1 P0_STOP identity_unexpected observed_numeric={<P0_PW_UID>:<P0_PW_GID>} expected_numeric={<P0_EXPECT_UID>:<P0_PW_GID>} account={gatea}
+1 P0_STOP identity_unexpected observed_numeric={<P0_PW_UID>:<P0_PW_GID>} expected_numeric={<P0_STATE_UID>:<P0_STATE_GID>} account={mtc-bridge}
+1 P0_STOP identity_unexpected observed_numeric={<live_uid>:<live_gid>} expected_numeric={<P0_PW_UID>:<P0_PW_GID>} account={gatea}
+1 P0_STOP identity_unresolvable account={gatea} rc={<P0_PW_RC>} detail={[<P0_PW_DIAG>]}
+1 P0_STOP identity_unresolvable account={gatea} rc={<P0_PW_RC>} detail={getent_valid_no_match_for_route_login}
+1 P0_STOP identity_unresolvable account={mtc-bridge} rc={<P0_PW_RC>} detail={[<P0_PW_DIAG>]}
+1 P0_STOP input_charset name={<name>} expected={decimal_digits}
 1 P0_STOP input_charset name={P0_FORBIDDEN_GIDS} value={[<P0_FORBIDDEN_GIDS>]} expected={decimal_digits_and_separators_only}
-2 P0_STOP input_charset name={<name>,P0_VENV_ROOT} expected={decimal_digits,printable_without_whitespace}
-3 P0_STOP input_missing name={<name>,P0_FORBIDDEN_GIDS,P0_VENV_ROOT} detail={preregistered_numeric_gid_list_never_derived_here,preregistered_numeric_value_never_derived_here,preregistered_per_sha_venv_root_never_derived_here}
+1 P0_STOP input_charset name={P0_VENV_ROOT} expected={printable_without_whitespace}
+1 P0_STOP input_missing name={<name>} detail={preregistered_numeric_value_never_derived_here}
+1 P0_STOP input_missing name={P0_FORBIDDEN_GIDS} detail={preregistered_numeric_gid_list_never_derived_here}
+1 P0_STOP input_missing name={P0_VENV_ROOT} detail={preregistered_per_sha_venv_root_never_derived_here}
 1 P0_STOP input_not_absolute name={P0_VENV_ROOT} value={[<P0_VENV_ROOT>]}
 1 P0_STOP input_not_candidate_bound name={P0_VENV_ROOT} expected_basename={<P0_CAND>}
 1 P0_STOP input_not_canonical_spelling name={P0_VENV_ROOT} value={[<P0_VENV_ROOT>]} detail={repeated_separator}
 1 P0_STOP input_path_traversal name={P0_VENV_ROOT} value={[<P0_VENV_ROOT>]}
-2 P0_STOP input_pin_charset tool={<p0_pin_name>} expected={printable_without_glob_metacharacters,printable_without_whitespace}
+1 P0_STOP input_pin_charset tool={<p0_pin_name>} expected={printable_without_glob_metacharacters}
+1 P0_STOP input_pin_charset tool={<p0_pin_name>} expected={printable_without_whitespace}
 1 P0_STOP input_pin_count_unexpected count={<P0_PIN_COUNT>} expected={<P0_TOOL_COUNT_EXPECTED>} detail={exactly_one_frozen_pin_per_preregistered_tool}
 1 P0_STOP input_pin_freeze_unfilled tool={<p0_pin_name>} name={<P0_FROZEN_CONST_NAME>} detail={deploy_channel_value_never_derived_here}
 1 P0_STOP input_pin_malformed name={P0_TOOL_PINS} entry={[<p0_pin>]} expected={tool=absolute_path}
@@ -936,12 +1015,16 @@ from `RP6-P0.sh` at the round-10 bytes:
 1 P0_STOP input_range name={P0_FORBIDDEN_GIDS} value={[<P0_FORBIDDEN_GIDS>]} expected={at_least_one_numeric_gid}
 1 P0_STOP internal_invariant_unmet invariant={trusted_python_pin_bound} predicate={P0_TRUSTED_PYTHON_BOUND_eq_yes} observed={<P0_TRUSTED_PYTHON_BOUND>} detail={an_upstream_input_gate_stopped_detecting_its_condition}
 1 P0_STOP interpreter_exec_denied path={<py>} rc={126} detail={found_but_could_not_be_executed_by_this_login} text={[<P0_SAFE>]}
-2 P0_STOP interpreter_exec_failed path={<py>} rc={127,<rc>} detail={interpreter_or_its_loader_not_found,nonzero_interpreter_status} text={[<P0_SAFE>]}
+1 P0_STOP interpreter_exec_failed path={<py>} rc={127} detail={interpreter_or_its_loader_not_found} text={[<P0_SAFE>]}
+1 P0_STOP interpreter_exec_failed path={<py>} rc={<rc>} detail={nonzero_interpreter_status} text={[<P0_SAFE>]}
 1 P0_STOP interpreter_not_executable path={<py>} mechanism={access_builtin_x} detail={exec_permission_denied_to_this_login}
 1 P0_STOP interpreter_probe_multiline path={<py>} detail={<P0_SAFE>}
-2 P0_STOP interpreter_probe_unparsable path={<py>} detail={[<P0_SAFE>],[<version>]} expected={P0PY_major.minor}
-2 P0_STOP interpreter_probe_unparsable path={<py>} field={major,minor} value={[<major>],[<minor>]}
+1 P0_STOP interpreter_probe_unparsable path={<py>} detail={[<P0_SAFE>]} expected={P0PY_major.minor}
+1 P0_STOP interpreter_probe_unparsable path={<py>} detail={[<version>]} expected={P0PY_major.minor}
+1 P0_STOP interpreter_probe_unparsable path={<py>} field={major} value={[<major>]}
+1 P0_STOP interpreter_probe_unparsable path={<py>} field={minor} value={[<minor>]}
 1 P0_STOP interpreter_startup_not_isolated path={<py>} detail={[<P0_SAFE>]} expected={isolated_and_no_site}
+1 P0_STOP link_target_kind_unrecognized path={<p>} rc={0} detail={<P0_SAFE>} expected={complete_gnu_stat_percent_F_token}
 1 P0_STOP link_target_probe_empty path={<p>} rc={0}
 1 P0_STOP link_target_probe_error path={<p>} rc={<subrc>} detail={<P0_SAFE>}
 1 P0_STOP link_target_probe_multiline path={<p>} rc={0} detail={<P0_SAFE>}
@@ -949,23 +1032,38 @@ from `RP6-P0.sh` at the round-10 bytes:
 1 P0_STOP metadata_multiline subject={<label>} path={<p>} detail={<P0_SAFE>}
 1 P0_STOP metadata_unparsable subject={<label>} path={<p>} detail={[<P0_SAFE>]} expected={kind|mode|uid:gid}
 1 P0_STOP metadata_unparsable subject={<label>} path={<p>} field={kind}
-3 P0_STOP metadata_unparsable subject={<label>} path={<p>} field={mode,owner_numeric} value={[<P0_META_MODE>],[<P0_META_OWNER>]}
+1 P0_STOP metadata_unparsable subject={<label>} path={<p>} field={mode} value={[<P0_META_MODE>]}
+2 P0_STOP metadata_unparsable subject={<label>} path={<p>} field={owner_numeric} value={[<P0_META_OWNER>]}
 1 P0_STOP metadata_unreadable subject={<label>} path={<p>} rc={<rc>} detail={<P0_SAFE>}
+1 P0_STOP missing_tool tool={<p0_t>} detail={absent_from_resolved_map}
 1 P0_STOP missing_tool tool={<t>} rc={<rc>} detail={[<P0_SAFE>]}
-8 P0_STOP missing_tool tool={<p0_t>,env,getent,id,readlink,stat,systemctl,timeout} detail={absent_from_resolved_map}
+1 P0_STOP missing_tool tool={env} detail={absent_from_resolved_map}
+1 P0_STOP missing_tool tool={getent} detail={absent_from_resolved_map}
+1 P0_STOP missing_tool tool={id} detail={absent_from_resolved_map}
+1 P0_STOP missing_tool tool={readlink} detail={absent_from_resolved_map}
+1 P0_STOP missing_tool tool={stat} detail={absent_from_resolved_map}
+1 P0_STOP missing_tool tool={systemctl} detail={absent_from_resolved_map}
+1 P0_STOP missing_tool tool={timeout} detail={absent_from_resolved_map}
 1 P0_STOP path_probe_ambiguous path={<p>} rc={<rc>} classes={<classes>} eacces={<n_eacces>} enoent={<n_enoent>} detail={<P0_SAFE>}
 1 P0_STOP path_probe_denied path={<p>} rc={<rc>} detail={<P0_SAFE>}
 2 P0_STOP path_probe_empty path={<p>} rc={0}
-2 P0_STOP path_probe_multiline path={<p>} rc={0,<rc>} detail={<P0_SAFE>}
+1 P0_STOP path_probe_kind_unrecognized path={<p>} rc={0} detail={<P0_SAFE>} expected={complete_gnu_stat_percent_F_token}
+1 P0_STOP path_probe_multiline path={<p>} rc={0} detail={<P0_SAFE>}
+1 P0_STOP path_probe_multiline path={<p>} rc={<rc>} detail={<P0_SAFE>}
 1 P0_STOP path_probe_nonprintable path={<p>} rc={0} detail={<P0_SAFE>}
 1 P0_STOP path_probe_unclassified path={<p>} rc={<rc>} detail={<P0_SAFE>}
 1 P0_STOP prereg_input_malformed name={P0_TOOL_PINS} duplicate={<p0_pin_name>}
-4 P0_STOP rp0_bootstrap_not_run detail={EV_DIR_unset,EV_LOG_unset,EV_STAGE_ID_unset,RUNID_unset}
-2 P0_STOP rp0_lib_not_sourced predicate={rp0_allocate_evidence_dir,rp0_require_safe_component} detail={not_a_shell_function}
+1 P0_STOP rp0_bootstrap_not_run detail={EV_DIR_unset}
+1 P0_STOP rp0_bootstrap_not_run detail={EV_LOG_unset}
+1 P0_STOP rp0_bootstrap_not_run detail={EV_STAGE_ID_unset}
+1 P0_STOP rp0_bootstrap_not_run detail={RUNID_unset}
+1 P0_STOP rp0_lib_not_sourced predicate={rp0_allocate_evidence_dir} detail={not_a_shell_function}
+1 P0_STOP rp0_lib_not_sourced predicate={rp0_require_safe_component} detail={not_a_shell_function}
 1 P0_STOP state_account_resolution_unexpected account={mtc-bridge} observed_numeric={absent} expected_numeric={<P0_STATE_UID>:<P0_STATE_GID>} detail={getent_valid_no_match}
 1 P0_STOP system_manager_unreachable rc={<rc>} detail={<detail>} budget_s={<P0_MANAGER_QUERY_BUDGET_S>} elapsed_s={<elapsed>} text={[<P0_SAFE>]}
+1 P0_STOP system_manager_unreachable rc={<rc>} detail={response_multiline} text={[<P0_SAFE>]}
+1 P0_STOP system_manager_unreachable rc={<rc>} detail={response_unparseable} text={[<P0_SAFE>]}
 1 P0_STOP system_manager_unreachable rc={<rc>} detail={response_unprintable_value}
-2 P0_STOP system_manager_unreachable rc={<rc>} detail={response_multiline,response_unparseable} text={[<P0_SAFE>]}
 1 P0_STOP tool_not_evaluable tool={<t>} path={<resolved>} rc={na} detail={access_builtin_x_denied} mechanism={access_builtin_x}
 1 P0_STOP tool_pin_mismatch tool={<t>} pinned={<pin>} resolved={<resolved>}
 1 P0_STOP tool_pin_mismatch tool={<t>} pinned={<pin>} resolved={<resolved>} canonical={[<P0_SAFE>]}
@@ -973,10 +1071,14 @@ from `RP6-P0.sh` at the round-10 bytes:
 1 P0_STOP tool_pin_uncanonicalizable tool={<t>} pinned={<pin>} resolved={<resolved>} rc={<crc>} detail={[<P0_SAFE>]}
 1 P0_STOP tool_pin_unpinned tool={<t>} detail={every_tool_requires_a_frozen_pin}
 1 P0_STOP tool_resolution_unparsable tool={<p0_t>} detail={resolution_mode_lost}
-2 P0_STOP tool_resolution_unparsable tool={<t>} resolved={[<P0_SAFE>]} expected={absolute_path,printable_without_whitespace}
+1 P0_STOP tool_resolution_unparsable tool={<t>} resolved={[<P0_SAFE>]} expected={absolute_path}
+1 P0_STOP tool_resolution_unparsable tool={<t>} resolved={[<P0_SAFE>]} expected={printable_without_whitespace}
 1 P0_STOP unadjudicated_command_status rc={<printf_arg>} line={<printf_arg>} cmd={[<printf_arg>]}
 1 P0_STOP venv_root_canonicalization_failed path={<d>} rc={<rc>} detail={[<P0_SAFE>]} diagnostic_shape={<P0_RESOLUTION>}
-4 P0_STOP venv_root_canonicalization_unparsable path={<d>} rc={0} detail={[response_multiline:<P0_SAFE>],[response_nonprintable],[response_not_absolute:<P0_SAFE>],response_empty}
+1 P0_STOP venv_root_canonicalization_unparsable path={<d>} rc={0} detail={[response_multiline:<P0_SAFE>]}
+1 P0_STOP venv_root_canonicalization_unparsable path={<d>} rc={0} detail={[response_nonprintable]}
+1 P0_STOP venv_root_canonicalization_unparsable path={<d>} rc={0} detail={[response_not_absolute:<P0_SAFE>]}
+1 P0_STOP venv_root_canonicalization_unparsable path={<d>} rc={0} detail={response_empty}
 # P0_RESULT_GRAMMAR_END
 ```
 
