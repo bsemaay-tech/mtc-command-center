@@ -109,6 +109,44 @@ Every completed task must update:
 
 Prompt: `04_SHARED/prompts/05_ai_workflow/07_handoff_update.md`
 
+## Autonomous Session Invariants — added 2026-08-11
+
+Distilled from the 2026-08-10/11 overnight cycle (four-hour idle gap; concurrent-session
+collision on the transport set; RP6 `R9_GRAMMAR` QA that ran the wrong program; RP7
+carried-fence weakening; transport "nearly done" turning out ~20% done; RP6 round 10
+killed mid-write by a provider cap). Binding for every Lead/agent session in this repo,
+autonomous or not. Process-level rules only — content-level review rules live in the
+defect catalogue `11_TRIAGE/DESIGN_DEFECT_PATTERNS_2026-08-10.md` (13 patterns, numbering
+frozen permanently).
+
+1. **Wake invariant.** An autonomous session may not end a turn with neither running
+   delegated work nor an armed wake condition (timer, monitor, or task notification).
+   Before ending any turn, name what will wake the session and when. Idle-until-the-owner-
+   writes is a protocol violation, not a rest state.
+2. **Workstream write-lock.** One writable owner per workstream. Claim before the first
+   write, release at handoff — mechanism and current table in `SESSION_LOCK.md`. Other
+   sessions are read-only on that workstream's files (auditing is allowed). On detecting a
+   foreign uncommitted edit inside an owned workstream: stop writing there, preserve the
+   edit, record a dated notice — never adjudicate ownership silently.
+3. **Evidence harness gate.** An artifact may not be dispatched to a flagship audit until
+   its published QA command has been executed VERBATIM by someone other than the author —
+   happy path plus at least one RED/mutant arm. Extraction-based verification does not
+   substitute. If the verbatim run and an extraction disagree, that disagreement is itself
+   a finding.
+4. **Carried-fence immutability.** A regression fence carried from a prior round may change
+   only with a per-change discriminating-power proof in the repair report: old and new
+   assertion executed against the same deviant output, both outcomes quoted. A silently
+   changed carried fence is an automatic BLOCK-class finding. Any claim about old code's
+   behaviour must be established by executing the old code, not by reading it.
+5. **State assessment before a repair lane.** Work that was inherited, produced by another
+   session, or dormant across a session boundary gets a read-only state assessment first —
+   per scope item: implemented? evidenced? both? — before any repair round is dispatched on
+   it. Comments and reports claiming completion are not evidence.
+6. **Quota preflight and resumable rounds.** Before dispatching to a window-capped provider,
+   measure the remaining window and record it in the kickoff. Structure long rounds so a
+   mid-round kill preserves committed partial state (incremental writes; partials committed
+   and labelled as partial, as RP6 round 10a was).
+
 ## Hard Safety Rules
 
 - No changes to Pine logic, MTC strategy behavior, or parity files

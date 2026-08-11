@@ -132,6 +132,12 @@ WP-I closure → Audit 2.
 
 ## 5. LESSONS THIS CYCLE PAID FOR — binding on the Lead
 
+> **Promoted to the permanent rule layer 2026-08-11:** the durable process rules below now
+> live as `_AI_MEMORY/AI_RULES.md` § Autonomous Session Invariants (wake invariant,
+> workstream write-lock, evidence harness gate, carried-fence immutability, state
+> assessment before a repair lane, quota preflight). `_AI_MEMORY/SESSION_LOCK.md` is the
+> write-lock mechanism. This kickoff file gets superseded; those files do not — read them.
+
 - **A disclosure is not a control.** A truthful note beside an unqualified claim leaves the
   claim false. RP7's `ro.status.body` residual proved this across three rounds.
 - **Run the published command VERBATIM**, not a convenient extraction. RP6's `R9_GRAMMAR`
@@ -172,6 +178,8 @@ WP-I closure → Audit 2.
 
 ## 7. IMMEDIATE NEXT ACTIONS for the fresh session
 
+0. Claim your workstream rows in `_AI_MEMORY/SESSION_LOCK.md` before the first write
+   (one writable owner per workstream — see `AI_RULES.md` § Autonomous Session Invariants).
 1. At 13:50, dispatch **RP6 round 10b** to GLM (`KICKOFF_RP6_REPAIR_R10.md`).
 2. Then **RP7 round 9** — needs an implementer; if GLM is busy on RP6 and Claude Pro is still
    capped, this waits, or DeepSeek takes it as a narrow last resort with full Lead verification.
