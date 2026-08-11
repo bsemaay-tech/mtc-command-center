@@ -1,4 +1,214 @@
-# RP6-P0 — status: ROUND-13-REPAIRED-PENDING-T0-REAUDIT (three R12 findings closed, executed; no block byte changed)
+# RP6-P0 — status: ROUND-14-REPAIRED-PENDING-T0-REAUDIT (three R13 census-extractor findings closed, executed; no block byte changed)
+
+Updated 2026-08-11 by the round-14 implementer (Claude Max, `claude-opus-5`,
+xhigh, fresh session). Audit tier unchanged: **T0** (host/execution-domain
+preflight). Codex `gpt-5.6-sol` is this block's auditor of record; the T0
+re-audit of these bytes is pending. The block remains a draft: not frozen, not
+accepted, not dispatchable, and not authorised for host execution.
+
+Full disposition: `RP6_R14_REPORT_2026-08-11.md`. Evidence: `SELF_QA_RP6.md`
+§ROUND 14.
+
+**`RP6-P0.sh` is UNCHANGED this round — not one byte.** All three round-13
+findings are QA-layer, and all three are the SAME defect one level deeper than
+round 13's: the census's own EXTRACTORS — the function-definition inventory, the
+RO-tool-name inventory, and the alias check — were not fail-closed against a
+shape they do not model. The block contains no `function`-keyword definition, no
+alias construct and no drifted inventory; the defect was that the census could
+not have *refused* one. Round 13 answered all three by disclosure, and disclosure
+is not a control. The block's identity is re-derived below and is byte-identical
+to the audited subject `5132bacd…`.
+
+**The unifying principle:** Pattern 1 plus Pattern 13 applied to the census
+itself — every declaration or definition must reach EXACTLY ONE disposition, and
+any inventory shape the extractor does not model must produce an UNMODELED
+FAILURE, never a silent pass and never a `count=0`.
+
+**The three round-13 findings, all UPHELD and all closed:**
+
+- **F1** (HIGH) — function-definition recognition was not complete. `FUNCDEF` was
+  recorded only for the parenthesised declarator, so the valid non-parenthesised
+  `function NAME` class produced **no record at all** and its name never reached
+  assertion 15. `function printf { :; }` and `function command { :; }` are both
+  certified rc 0 / `result=PASS` by the round-13 fence, and both really work:
+  the first silences the direct emitter, the second captures the block's own
+  `command -v "$t"` tool resolution. **Repaired by completeness plus
+  conservation** — the tokenizer models both shapes (`form=paren`/`form=keyword`)
+  and refuses a declarator or a `function` operand it cannot read; the three
+  prefix words are bound by name (`prefix_shadow`); and **assertion 16** requires
+  a raw, tokenizer-independent definition census and the `FUNCDEF` record set to
+  name the same lines, compared with `cmp`. Exactly one disposition per
+  definition. 26 definitions, 26 records, 26 raw lines.
+- **F2** (HIGH) — the tool-shadow universe could go empty without failing closed.
+  Twelve names came from two exact line-shape `sed` patterns with no required
+  count, no reconciliation and no unresolved disposition. **Repaired by
+  conservation-binding (assertion 17):** each declared half assigned exactly once
+  by a shape the extractor reads; the consumed variable composed from exactly
+  those halves; no member dropped by the name grammar and none duplicated; the
+  set non-empty; and every declared runtime handle bound — from the block's own
+  bytes — to a member of it (`P0_STAT=stat P0_READLINK=readlink P0_ID=id
+  P0_GETENT=getent P0_ENV=env rl=readlink`). The branch that assigned `n_sht=0`
+  is gone; an empty set now reads `UNDEFINED_EMPTY_INVENTORY`, which is not `0`.
+- **F3** (HIGH) — alias absence was checked lexically, not semantically.
+  `shopt -s "${x}aliases"` and `alias "${n}"=…` defeat a text search and both
+  really work (bash enables alias expansion; the alias really replaces a bare
+  word). **Repaired by classifying the operands, not the text:** the `alias`
+  builtin is recognised at the command position bash would resolve — including
+  behind a `command`/`builtin` prefix and inside a command substitution — and
+  `shopt` gets a fail-closed operand grammar in which any unmodelled option and
+  any operand carrying an expansion or an escape is `UNMODELED`. The round-13
+  lexical check is carried unchanged and still runs first.
+
+`R14_F1_RED` is the discriminating-power proof and it is executed, not narrated:
+it extracts the whole published `R13_GRAMMAR` fence and the whole published
+`R14_GRAMMAR` fence from `SELF_QA_RP6.md` by their marker pairs, builds the six
+new mutants from `R14_GRAMMAR`'s own heredocs and mutant table, and runs both
+fences over the same bytes. Five of the six are certified by round 13 at **rc 0**
+with `result=PASS`. The sixth — the empty-inventory drift — is recorded exactly:
+round 13 goes nonzero there, but its assertion 15 still prints `tool_shadow=0` on
+bytes that define `stat()`, and what failed was round 13's own D026 mutant whose
+hard-coded `stat` name no longer kills anything. Every class also carries an
+EXECUTED half showing bash doing the thing the fence could not see.
+
+**What the census property now is, exactly:** every command word in the block is
+BARE, a single complete QUOTED_LITERAL, or a whole-word PURE_EXPANSION drawn from
+the declared RO-tool handle set; each BARE word binds to a declared block
+function, a bash builtin/keyword, or the one declared sourced-library function;
+`command`/`builtin`/`exec` do not consume command position, because the effective
+operand is classified under the same policy. Every function definition in the
+block — in either the parenthesised or the `function`-keyword shape — reaches
+exactly one `FUNCDEF` disposition, reconciled line-for-line against an
+independent raw census, and no definition carries a wrapper, builtin/keyword,
+prefix-word or RO-tool name. The RO-tool name set those checks stand on is
+conserved against the block's own declaration sites and bound to the declared
+runtime-handle set. Alias indirection is refused both lexically and
+semantically: no `alias` builtin is invoked at any classified command position,
+and no `shopt` operand — literal or constructed — can enable alias expansion
+without failing the fence. Any other command-word syntax, any prefix or `shopt`
+option the fence does not model, any definition shape it cannot read, and any
+inventory shape it cannot conserve make the fence FAIL rather than pass silently.
+
+That sentence is about **source syntax, static binding and inventory
+conservation**. It is not about run time — what a declared handle holds, and what
+a declared function's body does when it runs, are outside it — and it is not a
+claim that this tokenizer is equivalent to bash's parser. `R14_F1_RED`'s boundary
+cases assert both halves of that honestly: the derivation alone is exactly as
+blind to the new classes as it was, and the round-13 fence run over the unchanged
+block bytes still returns rc 0 — insufficient, not broken.
+
+**Artefact identity — all executed in the round-14 session:**
+
+```text
+sha256=5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330   (UNCHANGED)
+bytes=110817                                                              (UNCHANGED)
+bash_n=0                      (GNU bash 5.2.37(1)-release, x86_64-pc-msys; GNU Awk 5.3.2)
+cr_bytes=0                    (RP6-P0.sh, SELF_QA_RP6.md, STATUS_RP6_P0.md, the prereg draft)
+line_endings=LF_only
+emit_sites=163                (162 p0_stop/p0_fail wrapper sites + 1 direct ERR-trap printf)
+line_census=163               (round-11 contiguous-text rule; unmodeled=0)
+token_census=163              (command-position rule; unmodeled=0, 20 scanned fragments)
+census_line_sets=IDENTICAL    (asserted by cmp, not by comparing totals)
+runtime_cmdwords=16 sites / 6 distinct, all in the declared RO-tool handle set
+bare_cmdwords=294 sites / 34 distinct   (24 block functions + rp0_require_safe_component + 9 builtins)
+funcdefs=26                   (26 paren-form, 0 keyword-form; reconciled line-for-line with the raw census)
+funcdef_dispositions=26/26    (raw line census == FUNCDEF record set, compared with cmp)
+wrapper_defs=1 p0_stop / 1 p0_fail ; builtin_shadow=0 tool_shadow=0 prefix_shadow=0
+prefix_operands=2             (both `type`, behind `builtin`, at RP6-P0.sh:398 and :400)
+ro_tool_names=12              (conserved: 2 halves x 1 assignment each, composed into P0_RO_TOOLS)
+handles_bound=6/6             (P0_STAT=stat P0_READLINK=readlink P0_ID=id P0_GETENT=getent P0_ENV=env rl=readlink)
+alias_builtins=0 shopt_invocations=0 expand_aliases_enabled=0   (semantic, at classified command positions)
+declared_tuples=149           (prereg §8.1.1, UNCHANGED; closed against the block by R14_GRAMMAR)
+decl_block_sha256=31f8315c5028f5ee3a7ada2a2690000e7b490685c6fe0e9c6117ab33b6da59e5   (markers included, as round 11 quoted it — identical)
+freeze_gate_literal_count=17  (unchanged; 12 tool pins + 5 attestation values, all <PIN-AT-FREEZE>)
+frozen_ro_basis=RP7-WPI-RO.sh@d6a976aa sha256=23e55667…9aa01aad bytes=70941
+```
+
+**QA execution status: EXECUTED — nothing PENDING, nothing fabricated.** All
+twenty-six published commands of the round-14 mandated set were run verbatim in
+this session in a local Git Bash `--noprofile --norc` process, against the final
+bytes.
+
+```text
+26 published commands             -> 25 at rc 0, R11_R9RED at rc 1 (its PASS condition)
+R14_GRAMMAR_SUMMARY  cases=38 pass=38 fail=0 result=PASS   (17 assertions + 21 mutants: 15 carried + 6 new)
+R14_F1_RED_SUMMARY   cases=57 pass=57 fail=0 result=PASS   (6 classes, each RED on R13 / GREEN on R14, each with an executed half)
+R11_GUARDS_SUMMARY   fences=21 pass=21 fail=0 result=PASS  (19 -> 21: the two round-14 fences added)
+R13_F1_RED_SUMMARY   cases=35 pass=35 fail=0 result=PASS   (carried unchanged; R13_GRAMMAR retained as its baseline)
+R12_F1_RED_SUMMARY   cases=33 pass=33 fail=0 result=PASS   (carried unchanged)
+R11_F3 / R10_F4 / R11_F1_RED / R10_F3 / R9_GRAMMAR and every legacy fence -> carried unchanged, all PASS
+R13_GRAMMAR (SUPERSEDED)          -> rc 0, still passes; insufficient for the six new classes, not broken. Out of the mandated set
+```
+
+One defect in the round-14 fence was found by running it and repaired before
+publication: `local label="$1" … m="$Q14G/mut_$label.sh"` is expanded before the
+`local` builtin assigns anything, so `$label` was unbound under `set -u`. It is
+recorded in `SELF_QA_RP6.md` §ROUND 14 rather than quietly fixed.
+
+**Residuals carried into the re-audit, named not closed:**
+
+1. `R14_GRAMMAR` is a *static source* fence. Its tokenizer models the shell
+   dialect this block is written in and fails closed on what it does not model.
+   That is a refusal to certify, not a proof of equivalence to bash's own parser.
+   `shellcheck` is not installed here and was not run.
+2. Assertion 16's raw definition census is anchored at line start or after
+   `;`/`&`/`|`/`(`/`)`/`{`/`}`. A definition at some other intra-line position
+   would be missed by that mechanism but recorded by the tokenizer, and the two
+   sets are compared with `cmp`, so the disagreement fails the assertion. What
+   the pair cannot do is invent a shape NEITHER mechanism models.
+3. Assertion 17 conserves the inventory over the DECLARED shape — two halves and
+   one consumed variable, bound by name and by composition. It is a proof that
+   the inventory this block resolves is the one the shadow census reads, not a
+   proof that no other variable anywhere could carry tool names.
+4. The alias closure is a statement about this block's bytes on the published
+   clean non-interactive launch path (`env -i`, `bash --noprofile --norc`). It is
+   not a claim about what a caller's environment could have done before the block
+   was parsed.
+5. Assertion 12 pins **which** variables may be invoked as command words, and
+   assertion 14 pins **which** names may be invoked bare. Neither can establish
+   **what** a handle holds, or what a bound function body does, at run time.
+6. Assertion 15 binds the wrapper *names*, not the wrapper *bodies*. A caller
+   could still source an unrelated same-name `p0_stop` before this block — the
+   round-7 A4 residual this block already discloses. Closing that needs a frozen
+   hash of the wrapper bodies.
+7. The QUOTED_LITERAL command-word class is admitted without a binding record.
+   Its name is contiguous in the source so the line census sees it, and an
+   emitter in that class is caught by the existing EMIT path; this block has no
+   such command word, so the residual is named, not closed.
+8. The `%F` token set pinned by the round-11 F2 repair is GNU coreutils' complete
+   `file_type()` return set. On a non-GNU producer an out-of-set token STOPs at
+   rc 3 instead of being reported as host deviation — the intended fail-closed
+   direction, but not a claim that this block can classify another producer's
+   vocabulary.
+9. `P0_STATE_UID` / `P0_STATE_GID` / `P0_EXPECT_UID` input integrity. The block
+   constrains these to positive decimals and cannot establish that the prelude
+   carried the preregistered numerics; §2 preregisters no numeric for
+   `P0_EXPECT_UID` at all. Freeze-gate/owner band.
+10. `R10_F4`'s reachability result covers the **three** input classes it executes
+    on *this* control flow — not every early-stop class and not every future
+    edit.
+11. `RP6_R10_REPORT_2026-08-11.md:362-369`, `RP6_R11_REPORT_2026-08-11.md:86-90`,
+    `RP6_R12_REPORT_2026-08-11.md:169,314` and the round-13 report's completeness
+    sentences carry superseded wordings. All are corrected in
+    `RP6_R14_REPORT_2026-08-11.md` rather than rewritten: a delivered audit-round
+    report records what that round claimed, and the kickoff scope fence does not
+    list any of them as writable.
+
+The freeze gate still has seventeen `<PIN-AT-FREEZE>` literals, so no end-to-end
+`P0 PASS` is possible and nothing here is dispatchable regardless of this round's
+verdict.
+
+---
+
+## Prior status — round 13 (three R12 findings closed; superseded by round 14)
+
+**Round-14 correction.** The round-13 property below — alias indirection
+impossible, no definition shadowing a builtin/tool name, every unmodeled
+construct failing — outran what the round-13 census could refuse. Its three
+extractors were not fail-closed: the `FUNCDEF` inventory missed the
+non-parenthesised definition shape, the tool-name inventory could go empty or
+partial without failing, and the alias check was a text search. The true property
+is the round-14 statement above. This section is otherwise left as the record of
+what round 13 claimed.
 
 Updated 2026-08-11 by the round-13 implementer (Claude Max, `claude-opus-5`,
 xhigh, fresh session). Audit tier unchanged: **T0** (host/execution-domain
