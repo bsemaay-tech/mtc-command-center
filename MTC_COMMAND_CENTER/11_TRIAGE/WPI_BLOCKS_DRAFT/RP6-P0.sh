@@ -531,22 +531,26 @@ P0_PIN_SEEN=" "
 P0_TRUSTED_PYTHON_BOUND=no
 
 # p0_frozen_tool_path - the frozen deploy-channel literal for a tool name
-# (correction 7), or return 1 for a name not in the inventory. Sets P0_FROZEN_PIN.
+# (correction 7), or return 1 for a name not in the inventory. Sets P0_FROZEN_PIN
+# to the literal's value and P0_FROZEN_CONST_NAME to the literal's identifier
+# (R9): the freeze-unfilled STOP must carry the name= of the constant it names, so
+# the emit site stays grammared for every tool, not just python3.
 p0_frozen_tool_path() {
     P0_FROZEN_PIN=""
+    P0_FROZEN_CONST_NAME=""
     case "$1" in
-        stat)      P0_FROZEN_PIN="$P0_FIXED_STAT" ;;
-        readlink)  P0_FROZEN_PIN="$P0_FIXED_READLINK" ;;
-        env)       P0_FROZEN_PIN="$P0_FIXED_ENV" ;;
-        find)      P0_FROZEN_PIN="$P0_FIXED_FIND" ;;
-        sha256sum) P0_FROZEN_PIN="$P0_FIXED_SHA256SUM" ;;
-        systemctl) P0_FROZEN_PIN="$P0_FIXED_SYSTEMCTL" ;;
-        ss)        P0_FROZEN_PIN="$P0_FIXED_SS" ;;
-        curl)      P0_FROZEN_PIN="$P0_FIXED_CURL" ;;
-        timeout)   P0_FROZEN_PIN="$P0_FIXED_TIMEOUT" ;;
-        id)        P0_FROZEN_PIN="$P0_FIXED_ID" ;;
-        getent)    P0_FROZEN_PIN="$P0_FIXED_GETENT" ;;
-        python3)   P0_FROZEN_PIN="$P0_FIXED_TRUSTED_PYTHON" ;;
+        stat)      P0_FROZEN_PIN="$P0_FIXED_STAT"; P0_FROZEN_CONST_NAME=P0_FIXED_STAT ;;
+        readlink)  P0_FROZEN_PIN="$P0_FIXED_READLINK"; P0_FROZEN_CONST_NAME=P0_FIXED_READLINK ;;
+        env)       P0_FROZEN_PIN="$P0_FIXED_ENV"; P0_FROZEN_CONST_NAME=P0_FIXED_ENV ;;
+        find)      P0_FROZEN_PIN="$P0_FIXED_FIND"; P0_FROZEN_CONST_NAME=P0_FIXED_FIND ;;
+        sha256sum) P0_FROZEN_PIN="$P0_FIXED_SHA256SUM"; P0_FROZEN_CONST_NAME=P0_FIXED_SHA256SUM ;;
+        systemctl) P0_FROZEN_PIN="$P0_FIXED_SYSTEMCTL"; P0_FROZEN_CONST_NAME=P0_FIXED_SYSTEMCTL ;;
+        ss)        P0_FROZEN_PIN="$P0_FIXED_SS"; P0_FROZEN_CONST_NAME=P0_FIXED_SS ;;
+        curl)      P0_FROZEN_PIN="$P0_FIXED_CURL"; P0_FROZEN_CONST_NAME=P0_FIXED_CURL ;;
+        timeout)   P0_FROZEN_PIN="$P0_FIXED_TIMEOUT"; P0_FROZEN_CONST_NAME=P0_FIXED_TIMEOUT ;;
+        id)        P0_FROZEN_PIN="$P0_FIXED_ID"; P0_FROZEN_CONST_NAME=P0_FIXED_ID ;;
+        getent)    P0_FROZEN_PIN="$P0_FIXED_GETENT"; P0_FROZEN_CONST_NAME=P0_FIXED_GETENT ;;
+        python3)   P0_FROZEN_PIN="$P0_FIXED_TRUSTED_PYTHON"; P0_FROZEN_CONST_NAME=P0_FIXED_TRUSTED_PYTHON ;;
         *) return 1 ;;
     esac
 }
@@ -609,7 +613,7 @@ for p0_pin in $P0_TOOL_PINS; do
     p0_frozen_tool_path "$p0_pin_name" \
         || p0_stop "input_pin_unknown_tool name=P0_TOOL_PINS tool=$p0_pin_name inventory=[$P0_RO_TOOLS]"
     [ "$P0_FROZEN_PIN" != '<PIN-AT-FREEZE>' ] \
-        || p0_stop "input_pin_freeze_unfilled tool=$p0_pin_name detail=deploy_channel_value_never_derived_here"
+        || p0_stop "input_pin_freeze_unfilled tool=$p0_pin_name name=$P0_FROZEN_CONST_NAME detail=deploy_channel_value_never_derived_here"
     if [ "$p0_pin_name" = python3 ]; then
         [ "$p0_pin_path" = "$P0_FIXED_TRUSTED_PYTHON" ] \
             || p0_stop "input_pin_not_frozen_trusted_python tool=python3 pinned=$p0_pin_path frozen=$P0_FIXED_TRUSTED_PYTHON"
