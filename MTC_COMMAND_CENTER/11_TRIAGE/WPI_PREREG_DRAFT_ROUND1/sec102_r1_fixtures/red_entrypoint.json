@@ -1,0 +1,23 @@
+{
+  "schema": "sec102-composite-plan-v1",
+  "stage": "allocate",
+  "composites": [
+    {
+      "id": "fixture-p0",
+      "entrypoint": "not-declared",
+      "members": [
+        {"id": "entry", "kind": "shell", "path": "entry.sh"},
+        {"id": "library", "kind": "shell", "path": "library.sh"}
+      ],
+      "edges": [
+        {"from": "entry", "to": "library", "kind": "source"}
+      ],
+      "allocation_requirements": [
+        {"name": "RUNID", "kind": "safe_component", "consumers": ["entry"]}
+      ],
+      "allocations": [
+        {"name": "RUNID", "value": "WPI-FIXTURE-P0"}
+      ]
+    }
+  ]
+}
