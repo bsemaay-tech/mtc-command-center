@@ -1,7 +1,64 @@
 # Section 10.2 composite path-proof status
 
 Date: 2026-08-12
-Status: `ROUND-11-AUTHORED-SELF-QA-PASS-PENDING-INDEPENDENT-ACCEPTANCE`
+Status: `ACCEPTED-WITH-DISCLOSURE (owner decision 2026-08-12 ~13:10)`
+
+## OWNER DECISION 2026-08-12 ~13:10 — ACCEPT WITH DISCLOSURE (binding)
+
+The owner was presented with three options in
+`SEC102_ACCEPT_WITH_DISCLOSURE_RECOMMENDATION_2026-08-12.md` and **chose Option 1, the Lead
+recommendation: ACCEPT WITH DISCLOSURE.** Harness hardening is CLOSED as a work item; no round
+12 is authorized. This decision was reached with Codex's explicit concurrence — its round-11
+verdict states "do not open a round-12 harness-hardening cycle; the Lead should take the
+accept-with-disclosure boundary to the owner for adjudication."
+
+**What is accepted.** The production module `composite_pathproof.py` — byte-identical across
+rounds 8, 9, 10, 11 and HEAD (129658 B, SHA-256
+`adbf27fd908439e1d48e6c95a4eecba956c0607c42ae5a3bfa9cb210b636c05a`), Codex-re-derived at every
+round — together with its evidence harness at round 11. All rounds 9-11 were harness-only; not
+one module byte changed while the harness was hardened.
+
+**Closed and cross-model verified:** both original CRITICALs (basename member-binding → exact
+deploy-path matching; allocation ↔ constants reconciliation); the command-word WHITELIST
+fixpoint (a command word is a benign leaf only if every character is in a proven-safe set —
+closes extglob and every future operator at once); R3-F2/R3-F3; and the evidence-harness chain
+r7 child-completion → r8 byte-identity → r9 direct-object binding → r10 transient-rebind and
+mixed-chain → r11 nameless-channel construction. The 58-case module matrix and the eleven
+published evidence blocks reproduce verbatim at every round.
+
+**Accepted TRUSTED-BASE assumptions (disclosed, NOT proven — this is what "with disclosure"
+means).** Each is a property of the developer machine, not of the security logic; all four
+require an actor who already controls this host:
+
+1. **The outer Python runtime** (Codex R11-F1, 2026-08-12): the `python` that runs the §13
+   evidence harness, its startup mode, import graph, startup environment and standard library
+   are trusted, not bound. The published launch is bare `python -B`
+   (`isolated=0 safe_path=0 no_site=0 ignore_environment=0`), so an actor controlling the
+   wrapper directory or the Python startup/import environment could shadow `subprocess` and
+   fabricate transport or completion.
+2. **The interpreter image** (residual 51): `powershell.exe` is located by name from `PATH`; a
+   different program could receive the intended bytes. Codex adjudicated this disclosure
+   HONEST as written — labelled out-of-model, presented as neither prevention nor detection.
+3. **On-disk document vs a fresh clone** (residual 41): byte identity is asserted against the
+   document as materialized on this disk, not a pinned checkout. A CRLF-materializing fresh
+   clone changes the published LF/CRLF/SHA cross-check and makes block 11 fail **LOUDLY**; it
+   does not pass silently.
+4. **Interpreter vocabulary**: the recognized-interpreter name set is a production-gate item to
+   be pinned at production-gate time, not a static-tool defect — **already owner-ratified
+   2026-08-12 as decision C**.
+
+**Consequences.** WP-I freeze blocker #4 (SEC102) is CLEARED subject to the GLM-5.2 T1
+second-opinion evidence being attached (dispatched 2026-08-12; the model-diverse check does not
+gate the owner's boundary decision, which is already made). The four assumptions above must be
+carried into the successor preregistration as explicit trusted-base statements, and no successor
+text may present any of them as a control. If the owner later wants assumption 1 or 2 bound, that
+is separately authorized design work (an exact trusted interpreter route with isolated/no-site
+startup and no user-controlled import root) — **not** a continuation of this harness cycle.
+
+---
+
+Prior status line (superseded by the decision above):
+`ROUND-11-AUTHORED-SELF-QA-PASS-PENDING-INDEPENDENT-ACCEPTANCE`
 Audit tier: T1 - local-only non-economic Python tooling and fixtures. Round 2 was audited by
 the Claude flagship (verdict **BLOCK**, two CRITICAL). Round 3 repaired that BLOCK and was
 audited by Codex `gpt-5.6-sol` (`SEC102_CODEX_T1_AUDIT_R3_2026-08-11.md`, verdict
