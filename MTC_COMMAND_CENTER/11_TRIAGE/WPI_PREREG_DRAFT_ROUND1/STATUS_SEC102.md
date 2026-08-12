@@ -1,7 +1,7 @@
 # Section 10.2 composite path-proof status
 
 Date: 2026-08-12
-Status: `ROUND-8-AUTHORED-SELF-QA-PASS-PENDING-INDEPENDENT-ACCEPTANCE`
+Status: `ROUND-9-AUTHORED-SELF-QA-PASS-PENDING-INDEPENDENT-ACCEPTANCE`
 Audit tier: T1 - local-only non-economic Python tooling and fixtures. Round 2 was audited by
 the Claude flagship (verdict **BLOCK**, two CRITICAL). Round 3 repaired that BLOCK and was
 audited by Codex `gpt-5.6-sol` (`SEC102_CODEX_T1_AUDIT_R3_2026-08-11.md`, verdict
@@ -21,8 +21,97 @@ again): **the command-word whitelist was CONFIRMED a FIXPOINT for its class - th
 command-word regress that ran from round 4 to round 7 is over** - the interpreter-vocabulary
 residual was **ACCEPTED** as an honestly disclosed production-gate decision, the conservative
 false stops were **ACCEPTED** as fail-closed behaviour, and one finding was raised: **R7-F1**, in
-the SELF-QA EVIDENCE HARNESS rather than in the module. Round 8 is the repair of R7-F1,
-implemented by `claude-opus-5` xhigh. No audit or acceptance is claimed by the implementer.
+the SELF-QA EVIDENCE HARNESS rather than in the module. Round 8 is the repair of R7-F1. Round 8
+was audited by Codex (`SEC102_CODEX_T1_AUDIT_R8_2026-08-12.md`, verdict **REQUEST_CHANGES**,
+narrowed again): **R7-F1 was CONFIRMED CLOSED** - the harness proves child status and adjudicates
+stderr before it interprets stdout - both original CRITICALs, R3-F2/F3, and the command-word
+fixpoint all stay closed, the interpreter-vocabulary limitation remains the sole disclosed
+production-gate decision, and one finding was raised: **R8-F1**, again in the SELF-QA EVIDENCE
+HARNESS rather than in the module. Round 9 is the repair of R8-F1, implemented by `claude-opus-5`
+xhigh. No audit or acceptance is claimed by the implementer.
+
+## Round 9 - what changed and why
+
+### R8-F1 - the harness executed different bytes from the ones it published, CLOSED in round 9
+
+The section-13 paste-and-run wrapper published in `SELF_QA_SEC102_R8.md` read the self-QA through
+newline-translating text I/O and wrote every temporary `.ps1` through
+`NamedTemporaryFile("w", encoding="utf-8")` without disabling newline translation. On this
+Windows host a published block containing **110 LF and zero CRLF** reached the interpreter as a
+file containing **110 CRLF**: the written bytes were not the extracted bytes, while sections 0
+and 13 claimed byte-for-byte extraction and execution. Design Defect Pattern 10 (the declared
+evidence is not the executed evidence) overlaid by Pattern 11 (the instrument under test is not
+the instrument on the page).
+
+Codex re-ran all eleven blocks from their exact bytes and obtained the same accepted results, so
+**no round-8 measurement is retracted** and none of the current blocks is line-ending sensitive.
+The defect is in the INSTRUMENT: a reusable verifier that certifies a byte sequence it did not
+run can certify a modified, line-ending-sensitive block instead of the block on the page.
+
+Round 9 adds a **fourth test, ahead of the other three**:
+
+0. the temporary script's bytes, **read back from the real file**, must equal the fence's bytes -
+   otherwise the block is REJECTED with `SCRIPT_BYTES_MISMATCH` and **the child is never
+   launched**;
+1. the child's process status must be `0` - round 8, conserved verbatim;
+2. the child's stderr must be empty, or the block must be named in `STDERR_CONTRACT` with a
+   written reason - round 8, conserved verbatim;
+3. **only then** is stdout read and compared with the published transcript - round 8, conserved
+   verbatim.
+
+The mechanism is `read_bytes` in, a bytes regex in the middle and `write_bytes` out, but **the
+mechanism is not the evidence**: the file is read back off the disk and compared with the fence,
+because *"I called the API that does not translate"* is exactly the class of claim round 8 made
+and could not support. Each block's SHA-256, byte count, LF count, CRLF count and non-ASCII count
+are printed for every block, so the identity and the composition of the executed instrument are
+published rather than merely tested.
+
+### The repair is measured, not asserted - the finding at rc level, in both directions
+
+`SELF_QA_SEC102_R9.md` section 13b runs the **published round-8 wrapper** (extracted
+byte-for-byte from the frozen `SELF_QA_SEC102_R8.md`) and the **published round-9 wrapper**
+(extracted byte-for-byte from the round-9 self-QA) over six synthetic documents written outside
+the repository. Both are extracted **as bytes**, because reading the instrument through
+translating I/O would be the round-8 defect one level up, and the SHA-256 of the exact bytes
+executed is printed. What decides the two new cases is a harmless **sentinel child that reads its
+own script file and prints how many CR bytes it contains** - the only way to measure the bytes
+the interpreter was actually handed rather than the bytes the wrapper intended to hand it.
+
+| Case | The child | Round 8 | Round 9 |
+|---|---|---|---|
+| `well_behaved_child` | prints the published summary, exits `0` | ACCEPTED | ACCEPTED |
+| `fails_after_summary` | prints the published summary, then `exit 7` | REJECTED | REJECTED |
+| `stderr_after_summary` | prints the published summary, then writes one diagnostic to stderr | REJECTED | REJECTED |
+| `published_line_absent` | prints a different line | REJECTED | REJECTED |
+| `crlf_transcript_certified` | sentinel; LF-only fence bytes, transcript only the **rewrite** produces | **ACCEPTED - the finding** | **REJECTED** |
+| `lf_exact_bytes` | sentinel; LF-only fence bytes, transcript those bytes **really** produce | **REJECTED - the finding, inverted** | **ACCEPTED** |
+
+`FALSE_ACCEPT_UNDER_R8=1`, `FALSE_REJECT_UNDER_R8=1`, `CONSERVED_R8_GATES=4`, `M1_GATE_FIRED=1`,
+`D026_OFF_EXPECTATION=0`. Row 5 is Codex's finding at rc level: round 8 certifies a transcript
+its published bytes cannot produce. Row 6 is the same defect from the other side: round 8 cannot
+reproduce a document whose transcript is honest about its own bytes. Rows 1-4 are round 8's own
+cases and they conserve its repair - the wrapper is not a blanket reject, and the status, stderr
+and subset gates all survive unchanged.
+
+`M1` is the published round-9 wrapper with its one repair line - `path.write_bytes(command)` -
+textually replaced by the round-8 write path, applied to the published bytes rather than to a
+re-typed copy, so the new gate is shown **firing** (`SCRIPT_BYTES_MISMATCH`,
+`CHILD_NOT_LAUNCHED`, `SCRIPT_BYTES_IDENTICAL=0`) rather than published as a branch nothing ever
+took. The block also reproduces the write path difference directly on the self-QA's own first
+`powershell` fence: `SOURCE_LF=110 SOURCE_CRLF=0 WRITTEN_LF=110 WRITTEN_CRLF=110
+BYTE_IDENTICAL=0` under the round-8 path, `WRITTEN_CRLF=0 BYTE_IDENTICAL=1` under the round-9
+path. The children are harmless: they print a line, exit non-zero, write one diagnostic, or read
+their own script file and print a count. No attack fixture was authored.
+
+### Round 9 changed no code
+
+`composite_pathproof.py` is **untouched**: same `129658` B / `adbf27fd…c05a` as rounds 7 and 8,
+and the round-9 hygiene block asserts `CARRIED_CLEAN=composite_pathproof.py WORKTREE_CHANGES=0`.
+No fixture was added, so `.gitattributes` is unchanged at `1630` B / `40e356f8…5077` and is also
+asserted worktree-clean. Every `powershell` block in sections 2-10 of the round-9 self-QA is
+byte-identical to the round-8 self-QA - including the round-8 wording in the section-9 comments,
+because a re-typed carried block is not a carried block. Every classification, rc, reason token
+and transcript is the round-7 record re-executed by the repaired harness, not a new claim.
 
 ## Round 8 - what changed and why
 
@@ -211,9 +300,9 @@ at this stage, and no claim here weakens it.
 
 ## Stage coverage
 
-**Round 8 changed no stage.** The three subsections below are the round-7 record; round 8 touched
-only the self-QA evidence harness, and the hygiene block asserts `composite_pathproof.py` has no
-worktree modification.
+**Rounds 8 and 9 changed no stage.** The three subsections below are the round-7 record; both
+later rounds touched only the self-QA evidence harness, and the hygiene block asserts
+`composite_pathproof.py` has no worktree modification.
 
 ### ALLOCATE
 
@@ -231,7 +320,37 @@ a proven-static safe-set literal reaches a named STOP.
 Everything round 6 implemented. FREEZE inherits the round-7 repair unchanged through the shared
 `_derive_graph`, so `F3`/`F9` gain the same conservation; no FREEZE-specific code changed.
 
-## Self-QA result (round 8)
+## Self-QA result (round 9)
+
+- **The harness's own D026: 6 synthetic children x 2 published wrappers, plus the M1 mutant.**
+  `FALSE_ACCEPT_UNDER_R8=1`, `FALSE_REJECT_UNDER_R8=1`, `CONSERVED_R8_GATES=4`,
+  `M1_GATE_FIRED=1`, `D026_OFF_EXPECTATION=0`. Each wrapper is extracted **as bytes** from the
+  document that publishes it and its SHA-256 printed, so no re-typed instrument can pass for the
+  published one. Every case also reports `R9_BYTES_ASSERTED=1`.
+- **The write-path difference reproduced on the real artifact:**
+  `D026_WRITEPATH=R8_TEXTMODE SOURCE_LF=110 SOURCE_CRLF=0 WRITTEN_LF=110 WRITTEN_CRLF=110
+  BYTE_IDENTICAL=0` against `D026_WRITEPATH=R9_BYTEMODE ... WRITTEN_CRLF=0 BYTE_IDENTICAL=1`, on
+  the self-QA's own first `powershell` fence - the block Codex measured.
+- **All eleven blocks re-run from outside the repository with their REAL byte identity and status
+  published:** `BLOCKS=11 SCRIPT_BYTES_IDENTICAL_ALL=11 REJECTED_ON_BYTES=0
+  STATUS_PROVED_COMPLETE=11 REJECTED_ON_STATUS=0 REJECTED_ON_STDERR=0 COMPARED=11 MISMATCHED=0
+  REJECTED=0`. Every child was launched over a file proved byte-identical to its fence, returned
+  `RC=0` with `STDERR_BYTES=0`, and only then had its output compared. Every block reports
+  `CRLF=0` and `NONASCII=0`, and every block's SHA-256 is published.
+- **The outer wrapper's own status, witnessed by the shell that launched it, not by itself:**
+  `OUTER_WRAPPER_RC=0`, `OUTER_WRAPPER_STDERR_BYTES=0`.
+- **No code changed.** `CARRIED_CLEAN=composite_pathproof.py WORKTREE_CHANGES=0` and
+  `CARRIED_CLEAN=.gitattributes WORKTREE_CHANGES=0`, alongside `pathscope_prover.py` and
+  `sec102_r1..r7_fixtures`. `HYGIENE_OFF_EXPECTATION=0`.
+- Every round-7/8 measurement was re-executed by the repaired harness and reproduced: the 58-case
+  matrix (`CASES=58 FAILED_COUNT=0`), the scanner-boundary probe, the D026 pre-feature block, the
+  112-cell mutation matrix, the grammar battery, the 1919-variant fixpoint sweep, the round-5
+  prefix battery, the five round-3/round-4 discriminators, hygiene and artifact identity.
+- Round 9 added no fixture, no reason token, no output surface and no module behaviour.
+
+Literal commands and real output are in `SELF_QA_SEC102_R9.md`.
+
+## Self-QA result (round 8, carried record)
 
 - **The harness's own D026: 4 synthetic children x 2 published wrappers.**
   `RED_UNDER_R7_GREEN_UNDER_R8=2`, `D026_OFF_EXPECTATION=0`, both REDs with `UNREAD_STDOUT=1`.
@@ -342,8 +461,11 @@ Literal commands and real output are in `SELF_QA_SEC102_R6.md`.
 
 Items 1-27 carry forward from round 5, with items 8 and 12 corrected as the round-5 audit
 required. Items 28-31 are round-6 additions; items 30 and 31 are corrected below for round 7.
-Items 32-36 are round-7 additions. Items 37-40 are round-8 additions and are all about the
-EVIDENCE HARNESS. **Item 8 is the production-gate blocker.**
+Items 32-36 are round-7 additions. Items 37-40 are round-8 additions and items 41-44 are round-9
+additions; both groups are about the EVIDENCE HARNESS. **Item 8 is the production-gate blocker,
+and it is the interpreter-vocabulary limitation the round-6/7/8 audits accepted as an honestly
+disclosed, owner-ratified production-gate decision - rounds 8 and 9 neither close it nor worsen
+it.**
 
 1. These are synthetic fixture proofs. The production P0 and RO entrypoints, RP0 library and
    bootstrap, RP6, RP7, inline Python bodies, and exact candidate `verify_lock.py` blob have
@@ -503,10 +625,34 @@ EVIDENCE HARNESS. **Item 8 is the production-gate blocker.**
     about the module, round 8 does not detect that; it guarantees only that a block which *fails*
     can no longer be reported as reproduced. The command-word whitelist that Codex r7 judged a
     fixpoint is unchanged, and so is the item-8 residual underneath it.
+41. **Byte identity is asserted against the self-QA as it exists on disk, not against a pinned
+    checkout.** The repository root sets `* text=auto` and this clone has `core.autocrlf=true`,
+    so a *fresh* Windows clone would materialise `SELF_QA_SEC102_R9.md` with CRLF line endings;
+    the round-9 wrapper would then faithfully execute those CRLF bytes and its assertion would
+    still hold - about different bytes. Every block's `LF` count, `CRLF` count and SHA-256 are
+    therefore published in section 13d, so a checkout that differs prints different numbers
+    rather than passing silently. Pinning the self-QA documents in `.gitattributes` would close
+    it; **round 9 did not, because the round-9 scope fence limits `.gitattributes` to fixture
+    pins.** It is recorded here for the Lead to decide, not deferred quietly.
+42. **The proof is byte identity, not interpretation identity.** All eleven blocks are pure ASCII
+    (`NONASCII=0` on every block), so nothing published turns on how `powershell.exe` decodes a
+    UTF-8 file with no BOM. A future block carrying a non-ASCII byte would be written exactly and
+    could still be *decoded* differently by the interpreter - the item-4/Pattern-4 interpreter
+    boundary, unchanged and not narrowed by round 9. The sentinel likewise measures the file the
+    interpreter was handed, not what the interpreter did with it.
+43. **`M1` is a mutation of the published instrument, not an independent implementation.** It
+    shows the byte gate is load-bearing - restore the round-8 write path and the gate fires
+    before the child is launched - but a mutation cannot show that no other write path exists
+    that would defeat it.
+44. **Round 9 measures no new property of `composite_pathproof.py`.** Every classification claim
+    in the round-9 self-QA is the round-7 claim re-executed. Round 9 guarantees only that the
+    block being re-executed is the block on the page, and that a block which fails cannot be
+    reported as reproduced. Items 37-40 carry unchanged.
 
 ## Artifact identity record
 
-The complete per-artifact byte-count and SHA-256 table is in `SEC102_R8_REPORT_2026-08-11.md`
-section 6, and in `SELF_QA_SEC102_R8.md` section 10, both re-derivable by the published command.
-**Every entry is byte-identical to the round-7 table**, because round 8 changed no code and added
-no fixture. No commit was made.
+The complete per-artifact byte-count and SHA-256 table is in `SEC102_R9_REPORT_2026-08-12.md`
+section 6, and in `SELF_QA_SEC102_R9.md` section 10, both re-derivable by the published command.
+**Every entry is byte-identical to the round-7 table**, because rounds 8 and 9 changed no code
+and added no fixture. Round 9 additionally publishes the SHA-256 of every executed `powershell`
+block in `SELF_QA_SEC102_R9.md` section 13d. No commit was made.
