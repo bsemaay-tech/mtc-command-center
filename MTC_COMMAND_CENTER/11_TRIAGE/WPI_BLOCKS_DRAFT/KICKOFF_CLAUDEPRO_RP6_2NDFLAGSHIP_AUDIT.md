@@ -76,8 +76,18 @@ against a full-document audit that read all 18,799 lines and checked 1,863 outpu
 - `:18645` — `@@R11_GUARDS_TRANSCRIPT@@`
 - `:18690` — `@@RERUN_BLOCK@@`
 - `STATUS_RP6_P0.md:284` — `@@STATUS_EXEC_BLOCK@@`
+- `RP6_R15_REPORT_2026-08-11.md:180` — same shape
+- `RP6_R16_REPORT_2026-08-11.md:277` — same shape
 
 (Other `@@…@@` occurrences are prose *describing* the placeholders — do not count those.)
+
+**A package-wide sweep bounds this precisely.** All **737 tracked markdown files** were checked
+for placeholder tokens, `PENDING` markers and empty fenced blocks
+(`WPI_UNFILLED_SLOT_SWEEP_2026-08-12.md`): **zero** empty fenced blocks anywhere, and every
+same-shape defect is confined to the **RP6 evidence lane** — the eight self-QA slots plus these
+three. **Outside RP6 the package is clean on this rule.** So this is a property of one lane's
+authoring, not of the project's practice — which is relevant to how much weight it should carry
+in your verdict.
 
 **These are not peripheral slots.** They are the transcripts for the round-15 closure, the
 **round-16 discriminating-power proof**, the guard census, and the mandated rerun vector — i.e.
