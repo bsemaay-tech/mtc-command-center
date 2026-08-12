@@ -8,7 +8,7 @@ before Stage-1 freeze. Status as of this write; tonight's Claude Pro second-flag
 
 | # | Blocker | 2026-08-11 state | NOW (2026-08-12 13:45) |
 |---|---|---|---|
-| 1a | RP6-P0 dual-flagship acceptance | open | **Codex PASS-WITH-NITS** (r16 byte-span census fixpoint); Claude Pro audit **PENDING 23:00** |
+| 1a | RP6-P0 dual-flagship acceptance | open | **Codex PASS-WITH-NITS** (r16 byte-span census fixpoint); Claude Pro audit **PENDING 23:00**, now carrying the **RP6-11** priority target (see below) |
 | 1b | RP7-WPI-RO dual-flagship acceptance | open | **Codex PASS** (r9 descriptor-bound status body); Claude Pro audit **PENDING 23:00** |
 | 1c | Transport set dual-flagship acceptance | open | **Codex PASS** (r6b confirm); F1 owner-ratified accept-with-disclosure, NOT a blocker; Claude Pro audit **PENDING 23:00** |
 | 2 | §8.2 rows 1–9 implemented by no executable | owner decision needed | **DECIDED: BUILD ALL NINE**, applied only AFTER RP7 dual acceptance. Not yet built — still a blocker, now with a decided path |
@@ -57,6 +57,37 @@ GLM-5.2 second-opinion evidence is being attached separately; it is evidence, no
 **We are not close to freeze, but the shape has changed:** yesterday's blockers were mostly
 "the proof tools are unsound"; today's are mostly "the wiring and the run have not happened yet."
 The remaining proof-tool question is item 3, and it has a scheduled auditor tonight.
+
+## NEW 2026-08-12 ~14:40 — one open D026 gap, and the freeze-input picture
+
+**RP6-11 — the single OPEN freeze-relevant D026 finding in the whole current cycle.**
+`AUDIT2_READINESS_PACKAGE/AUDIT2_D026_MAP_CURRENT_CYCLE_2026-08-12.md` mapped 39 closure rows
+(28 fully closed, 11 supplemental/unlocated, 15 disclosed residuals) and surfaced exactly one
+current-audit RED with no repaired GREEN: the round-15 F3 **dynamically-resolved
+inventory-mutation target**. Round 16 asserts `inventory_variable_targets … dynamic_targets=0`
+over clean bytes but never executed a falsification for the class. Added as a PRIORITY TARGET to
+tonight's Claude Pro RP6 kickoff. **Do not treat RP6's Codex PASS-WITH-NITS as covering this
+row.**
+
+**Freeze-input ledger findings** (`WPI_FREEZE_INPUT_LEDGER_2026-08-12.md`, 45 rows: FILLED 2,
+LITERAL-MARKER 29, MISSING-CONSUMER 0, CONTRADICTED 1, REQUIRES-HOST 13):
+
+- **Item 7 sharpened.** `run_p0.sh` defines, exports and logs all five `P0_ATTESTED_*` values as
+  `<PIN-AT-FREEZE>` literals while RP6 requires and cross-checks them. With 17 remaining freeze
+  literals **RP6 cannot produce an end-to-end P0 PASS** — the Codex r16 acceptance is a
+  source/audit acceptance, not a host end-to-end PASS. That distinction must be carried into
+  Audit 2 and never blurred.
+- **Item 8 materially narrowed.** Plan rows 07/08 and `remote_close_tree_wpi.sh` now AGREE on the
+  three-argument contract (`EV_DIR RUNID WORK_ROOT`); the inherited-TMPDIR question is settled in
+  the bytes (run-owned `close_work_$RUNID`, disjointness proven, `TMPDIR` exported to it). The
+  residual contradiction is **documentary**: `RUNID_MINTING_REVIEW_CODEX_2026-08-11.md:167` still
+  records the stale two-arg mismatch. Execution currently stops earlier anyway, on unfilled
+  `EXPECT_UID`/`EXPECT_GID`.
+- **Item 9 has an exact ordering chain now:** allocate one burn-ledger base → derive
+  `REMOTE_BASE`/`EV_*`/transport paths → fill RP7's `WPI_FIXED_EVIDENCE_ROOT` **before** RP7
+  bytes are frozen (RP7 rejects a marker evidence root) → run the FAM-03 frozen-composite
+  conservation proof. Until that sequence runs, the RO evidence-root literal and the transport
+  retrieval/bind paths are not frozen inputs.
 
 ## Repo-wide durability item (open, freeze-time)
 

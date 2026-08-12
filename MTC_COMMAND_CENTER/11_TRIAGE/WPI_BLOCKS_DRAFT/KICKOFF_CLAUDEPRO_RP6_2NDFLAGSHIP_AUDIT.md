@@ -26,10 +26,28 @@ at different spans are arithmetically incapable of comparing equal
 cmdquote/expand/continuation, alias/function/tool-shadow/prefix, function-def shapes,
 empty inventory/definition-identity, append-assign, intra-body emitter + same-line decoy.
 
+## PRIORITY TARGET — one open D026 gap the Lead found after this kickoff was written
+`AUDIT2_READINESS_PACKAGE/AUDIT2_D026_MAP_CURRENT_CYCLE_2026-08-12.md` row **RP6-11** is the
+single OPEN freeze-relevant finding in the whole current cycle: the round-15 audit (F3) named a
+**dynamically-resolved inventory-mutation target** — an admitted variable-mutating builtin whose
+target is resolved at runtime and contains no literal protected inventory name — and **no
+executed RED/GREEN pair was ever located for it.** Round 16 reports only the clean-byte
+structural assertion `inventory_variable_targets … dynamic_targets=0`, and `R16_F1_RED` offers
+only the `inbody` and `spandecoy` closures. So the claim rests on an assertion over clean bytes,
+not on a demonstrated falsification.
+
+**Make this your first-class question:** does the r16 exact-byte-span census actually close the
+dynamic-target class, or does `dynamic_targets=0` merely report that the clean block happens to
+contain none? Construct the missing RED — a harmless variable-mutating builtin whose target
+resolves at runtime to a protected inventory name — and determine whether the census catches it
+or silently reports zero. If it is caught, say so and the row closes. If it is not, that is a
+finding at the same level as the r10→r15 evasion classes.
+
 ## Audit contract
 1. Confirm the block identity (size + SHA-256) and that no block byte changed r10a→r16.
 2. Run `R16_GRAMMAR` VERBATIM — the Lead's run was 50/50 (wrapline + spandecoy killed, all
    r15 mutants carried). Record real counts.
+2b. Resolve **RP6-11** above, with executed evidence either way.
 3. Adversarially seek a census evasion the fixpoint still admits — you are auditing the
    claim that exact-byte-span granularity is STRUCTURALLY closed, not one more class. If
    you find a hiding place (encoding tricks, here-docs, eval-constructed producers,
