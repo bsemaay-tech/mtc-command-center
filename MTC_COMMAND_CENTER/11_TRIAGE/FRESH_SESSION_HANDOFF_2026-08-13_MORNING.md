@@ -1,9 +1,12 @@
 # FRESH-SESSION HANDOFF — WP-I, 2026-08-13 morning
 
-**DRAFT IN PROGRESS.** Sections 1–6 are complete as of 2026-08-12 ~16:40. Section 7 (the
-overnight Claude Pro results) and section 8 (ledger) are filled after the 23:00 audits run.
-Paste this whole file as the first message of a new session. Self-contained. Supersedes
-`FRESH_SESSION_HANDOFF_2026-08-12_MORNING.md`.
+**READY TO USE.** Sections 0–6 and 9 are complete as of 2026-08-12 ~17:45. Section 7 (overnight
+Claude Pro results) and section 8 (ledger) are filled after the 23:00 audits run — if you are
+starting a session **before** those audits, §7/§8 are simply not yet written and §6 tells you
+what is in flight. Paste this whole file as the first message of a new session. Self-contained.
+Supersedes `FRESH_SESSION_HANDOFF_2026-08-12_MORNING.md`.
+
+**Read §0 first — it is the binding operating contract, not background.**
 
 Repo `C:\LAB\Tradingview_LAB_CLEAN`, branch `feature/donchian-crypto-ladder`. You are the LEAD:
 orchestrate, verify verbatim, adjudicate, commit exact file sets. You do NOT author or audit the
@@ -11,6 +14,76 @@ heavy artifacts yourself. Read: this file, then `AGENTS.md`, `_AI_MEMORY/START_H
 routing + defect-pattern files.
 
 ---
+
+## 0. AUTONOMOUS OPERATING RULES — BINDING, owner-set 2026-08-12
+
+These are not suggestions. The owner corrected the Lead on rules 1 and 2 **three times** during
+the 08-12 session. Read them before dispatching anything.
+
+**RULE 1 — NEVER IDLE. Not for one minute, not for one hour.**
+When a lane finishes, **start the next backlog item in the same turn**. Do not defer work to
+"the next wakeup." Do not wait for a model's window to open. Do not schedule a long sleep because
+"the next milestone is at 23:00." If there is no queued task, pull from the fallback backlog
+(§6). If the backlog is empty, create useful work: cross-check a claim produced by a single lane,
+re-derive a count nobody has re-derived, or sweep records against bytes. There is always
+verification work.
+
+**RULE 2 — RUN AS MANY PARALLEL LANES AS THE ACCOUNTS ALLOW.**
+Two lanes is too few. Target **4+ concurrent lanes.** Available slots: Codex `-Account fourth`
+(gpt-5.6-sol), Codex `-Account free` (gpt-5.5), and GLM — GLM tolerates concurrent dispatches.
+Each lane must own a **disjoint output file set**; name the owned files in every kickoff so
+concurrent lanes cannot collide. Never let two lanes write the same file.
+
+**RULE 3 — CREDIT DISCIPLINE, in priority order.**
+1. **Codex carries the weight.** It is the primary implementer *and* auditor. Prefer it for
+   everything it can do. `secondary` is exhausted until 08-16; use `fourth` and `free`.
+2. **GLM is the second auditor while the Claude Pro window is closed.** The owner authorized this
+   explicitly. GLM is source-level only (see Rule 5) and its verdicts are `ADVANCE-SUPPLEMENTAL`,
+   but it does real work: on 08-12 it produced four advance audits and caught a second staleness
+   a stronger model had missed.
+3. **Claude Max is RESERVE — protect the credit.** Its weekly limit was nearly exhausted on
+   08-12. Use it only when a task is acceptance-critical AND Codex and GLM genuinely cannot do
+   it. Record the justification in the commit when you do.
+4. **Claude Pro** is the flagship auditor and the only thing that closes a second-flagship slot.
+   Spend its window on audits, not on work Codex could do.
+
+**RULE 4 — THE TWO-FLAGSHIP GUARANTEE IS NOT NEGOTIABLE.**
+GLM and Max **cannot** fill a second-flagship slot. Dual acceptance requires Codex **and** Claude
+Pro (`claude-opus-5` xhigh) on the **same bytes**. Putting GLM in that slot would forge the
+guarantee that Audit 2 exists to check. GLM's advance audits reduce risk and save time; they
+never convert a PENDING row to accepted.
+
+**RULE 5 — GLM IS EXECUTION-GATED WHEN UNATTENDED.**
+It cannot run harnesses on this host. Dispatch with `-PermissionMode acceptEdits` **plus** an
+explicit "you are unattended, do not ask for approval" clause **plus** "never fabricate a green
+run." Expect source-level verdicts with execution steps marked `PENDING-LEAD-EXECUTION`. Two
+dispatches were lost on 08-12 before this was learned (one API death mid-response, one plan-mode
+stall). Always check the report is substantive — a tiny file is a red flag; delete partials
+rather than committing them.
+
+**RULE 6 — THE LEAD'S VERBATIM RUN IS THE EVIDENCE OF RECORD.**
+Extract published fences **as bytes**, run them from outside the repo, and diff the transcript
+against what the document publishes. Never accept an implementer's claimed green.
+
+**RULE 7 — VERIFY WHAT MODELS TELL YOU, INCLUDING THE MODEL'S OWN IDENTITY.**
+On 08-12: a GLM finding was **false** and the Lead half-confirmed it (§3); Codex wrote
+`gpt-5.6-sol` into two records when the run log said `gpt-5.5`. **Read the run-log session header
+and name the actual model in every commit.** And confirming a claim's *premises* is not
+confirming the *claim*.
+
+**RULE 8 — STOP THE GRIND, ESCALATE THE BOUNDARY.**
+When an auditor keeps finding "one more class," look for the structural inversion. If a round
+still reopens after the inversion, do **not** open another round — write an
+accept-with-disclosure recommendation and put the boundary decision to the owner. That is how
+SEC102 closed on 08-12, with Codex's own verdict endorsing the stop.
+
+**RULE 9 — COMMIT EXACT FILE SETS, NEVER `git add .`** The repo hook flips HEAD to master
+between calls; use inline `git checkout <branch> && git add <paths> && git commit`.
+
+**RULE 10 — SURFACE, DO NOT DECIDE, ON OWNER-CLASS QUESTIONS.** Freeze, merge to master, host
+execution, broker/live/paper, credential use, force-push, and accept-vs-harden boundary calls are
+the owner's. Everything else — dispatch, verify, commit, push, correct the record — proceed
+without asking.
 
 ## 1. ROUTING — owner-corrected 2026-08-12, BINDING
 
@@ -103,13 +176,39 @@ working-tree bytes. Codex recommends treating the application as **T0, not T2**,
 behaviour of host-touching scripts changes. Deliberately deferred past the 23:00 audits, which
 re-run harnesses verbatim against current checkout identities.
 
-## 6. HELD AND READY TO DISPATCH
+## 6. HELD, IN FLIGHT, AND THE FALLBACK BACKLOG
 
+**HELD — dispatch only when its condition is met:**
 - `WPI_BLOCKS_DRAFT/KICKOFF_CODEX_RP7_ROWS_1_9_BUILD.md` — the rows 1–9 build. **Dispatch only
   after RP7 holds dual flagship acceptance.** Design of record is §D of
   `ROWS_1_9_OPTIONS_CODEX_2026-08-10.md`: extend RP7 with two bounded `show` captures, do not
   author a new block or transport stage, keep the r9 descriptor discipline (`wpi_alloc_leaf` is
   deleted and must not return).
+
+**IN FLIGHT at handoff time (2026-08-12 ~17:45) — check these first:**
+| Lane | Model | Output | Log |
+|---|---|---|---|
+| Audit-2 packets 9/10/11 scoping | Codex fourth | `AUDIT2_READINESS_PACKAGE/AUDIT2_PACKETS_9_10_11_SCOPE_2026-08-12.md` | `PACKETS_9_10_11_SCOPE_CODEX_RUN_2026-08-12.log` |
+| Freeze-input ledger RP6 cross-check | GLM | `LEDGER_RP6_CLAIMS_GLM_CROSSCHECK_2026-08-12.md` | `LEDGER_RP6_CROSSCHECK_GLM_RUN_2026-08-12.log` |
+| D026 map count re-derivation | Codex free | `AUDIT2_READINESS_PACKAGE/AUDIT2_D026_MAP_COUNT_RECHECK_2026-08-12.md` | `D026_COUNT_RECHECK_CODEX_RUN_2026-08-12.log` |
+| STATUS-vs-BYTES sweep | GLM | `WPI_STATUS_VS_BYTES_SWEEP_GLM_2026-08-12.md` | `STATUS_SWEEP_GLM_RUN_2026-08-12.log` |
+
+For each: confirm the report exists and is substantive, spot-check its claims against real bytes,
+commit the exact file, and fold any correction into the blocker map / ledger / D026 map. The
+RP6 cross-check specifically must resolve a discrepancy the Lead found: the ledger says **17**
+`<PIN-AT-FREEZE>` literals, a direct count of `RP6-P0.sh` found **27** occurrences.
+
+**FALLBACK BACKLOG — pull from here rather than idling (Rule 1):**
+1. Apply the `.gitattributes` durability rules — analysis is complete
+   (`WPI_GITATTRIBUTES_DURABILITY_ANALYSIS_2026-08-12.md`), application was deferred past the
+   23:00 audits, and Codex recommends treating it as **T0, not T2**. Proposed rules change zero
+   working-tree bytes; verify that before and after.
+2. Draft the packet 9/10/11 skeletons — but only for whichever packets the scoping lane says can
+   honestly carry `<PENDING-STAGE-1>` markers.
+3. Cross-check any claim currently resting on a single lane. Today's pattern: single-lane claims
+   have a real error rate, and every cross-check so far has either confirmed with a correction or
+   found something new.
+4. Sweep the older WP-L/B3 records the same way the STATUS sweep does the current ones.
 
 ## 7. OVERNIGHT CLAUDE PRO RESULTS — **TO BE FILLED AFTER 23:00**
 
