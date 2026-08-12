@@ -47,9 +47,13 @@ name-based leaf addressing anywhere in the new sections; that was a BLOCK-level 
 
 ## Claims and pins that must move with the code (§D.2)
 - RP7 terminal claim: `establishes=rows_10_23…` becomes `rows_1_23…`. The `does_not_establish`
-  list must keep `identity_of_the_manager_that_answered` **in substance** — every claim sentence
-  stays about *the manager that answered in the attested execution domain*, never about "the
-  host". Row 24 stays operator-side.
+  list must keep the **substance** of `identity_of_the_manager_that_answered` — every claim
+  sentence stays about *the manager that answered in the attested execution domain*, never about
+  "the host". **Do NOT copy that literal token across:** the GLM advance read-audit
+  (`RP7_GLM_ADVANCE_READ_AUDIT_2026-08-12.md`, nit 1) established that the token itself is an RP6
+  element, and RP7 already carries the substance via `establishes=…service_network_domain` and
+  `does_not_establish=…host_authority`. Extend that existing wording to cover rows 1–9 rather
+  than importing RP6's string. Row 24 stays operator-side.
 - One new pin class: ten **rendered** expected sandbox values for row 8, plus the expected
   `FragmentPath` and an expected-empty drop-in set for row 5. Rows 6, 7, 9 need no new pin.
 - `TRANSPORT_PLAN.tsv` op 05 argv is UNCHANGED; `run_ro.sh` shape unchanged (its
