@@ -143,6 +143,35 @@ Ordering note carried from the ledger: freeze blockers 7 and 9 (the `P0_ATTESTED
 `REMOTE_BASE` allocation ordering) sit **upstream of packet 9**, so packet 9's producing steps
 cannot begin until those close.
 
+## RP6 self-QA carries EIGHT unpasted transcript slots — isolated to RP6
+
+A full-coverage claim audit of `SELF_QA_RP6.md` (all 18,799 lines, 1,863 output lines checked)
+found **eight placeholder transcript slots still unresolved**, while the document states at
+`:13492-13505` and `:15995-16000` that they were resolved and are real captured output:
+
+`:15341` `@@R15_GRAMMAR_TRANSCRIPT@@` · `:15651` `@@R15_F1_RED_TRANSCRIPT@@` · `:15763`
+`@@R11_GUARDS_TRANSCRIPT@@` · `:15807` `@@RERUN_BLOCK@@` · `:18241` `@@R16_GRAMMAR_TRANSCRIPT@@`
+· `:18524` `@@R16_F1_RED_TRANSCRIPT@@` · `:18645` `@@R11_GUARDS_TRANSCRIPT@@` · `:18690`
+`@@RERUN_BLOCK@@` — plus `STATUS_RP6_P0.md:284` `@@STATUS_EXEC_BLOCK@@`.
+
+These hold the round-15 closure, the **round-16 discriminating-power proof**, the guard census
+and the mandated rerun vector — the document-local support for the fixpoint claim itself.
+
+**Two things that bound this correctly:**
+
+1. **The evidence exists; it is not pasted.** The Lead ran `R16_GRAMMAR` verbatim (50/50) and
+   `R17_DYNAMIC_TARGETS` verbatim (15/15, carried r16 grammar 50/50) from outside the repo, and
+   the Codex r16 audit independently reproduced its run. The live question is whether the
+   document carries its own proof, not whether the proof was ever obtained.
+2. **The defect is isolated to RP6.** A Lead sweep of every other self-QA and STATUS file —
+   RP7, transport, pathscope, SEC102 r11, and all four STATUS documents — found **zero**
+   standalone placeholders. This is not a package-wide practice.
+
+*Lead-accuracy note: an earlier Lead grep reported three, not eight — the pattern omitted digits
+and silently missed every slot with a round number in its name. The corrected figure was
+re-derived and matches the audit exactly. Fourth time today a narrower check missed what a wider
+one found, and the first time the narrow check was the Lead's own.*
+
 ## Record-quality findings 2026-08-12 evening — a pattern worth naming
 
 Four record defects were found today, and **none of them was found by an auditor**. Three came
