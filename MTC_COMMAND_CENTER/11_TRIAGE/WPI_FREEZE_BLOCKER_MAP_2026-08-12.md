@@ -17,7 +17,7 @@ before Stage-1 freeze. Status as of this write; tonight's Claude Pro second-flag
 | 5 | §10.1 needs 11 extensions + access grammar; 3 families unresolved | open | **CLOSED** — prereg R3 merges all 11 EXTEND items + the capability-qualified grammar; FAM-01/02/03 owner-RATIFIED 2026-08-12, MERGE-CONFLICT register MC-01..03 RESOLVED. Implementation of the three closures in the frozen composite remains part of item 8 |
 | 6 | Attestation / preregistration / commit order circular | two-commit fix drafted | **CLOSED in the draft** — two-commit capture-then-consume procedure merged into prereg R3 (§5.2) with the mechanical order-violation check. Execution of the procedure is item 9 |
 | 7 | `run_p0.sh` wires none of the five `P0_ATTESTED_*` inputs | open | **OPEN** — unchanged. A freeze-input wiring item |
-| 8 | Close-script preregistered contract vs actual bytes disagree | open | **OPEN** — unchanged (prereg §4.7 states the gate; bytes not yet reconciled) |
+| 8 | Close-script preregistered contract vs actual bytes disagree | open | **RECLASSIFIED 2026-08-12** — the contract disagreement is GONE (plan and script both three-arg; the stale record is corrected). What remains is a freeze-input fill: `EXPECT_UID`/`EXPECT_GID` are `<PIN-AT-FREEZE>`, so the close boundary cannot yet be exercised. Merges into item 7's class |
 | 9 | `REMOTE_BASE` must be allocated before the RO block is frozen | open | **OPEN** — ordering understood and preregistered; the allocation + targeted fills are Stage-1 execution work |
 | 10 | Audit-2 readiness package obsolete (NEEDS-UPDATE: 20) | open | **15/20 CLOSED 2026-08-12** (all 9 stale claim groups + packets 1–6, new acceptance matrix). Packets 7–11 honestly OPEN: D026 consolidation, freeze-input ledger, WP-I execution evidence, frozen-SHA bundle, authority/ledger record |
 
@@ -80,9 +80,14 @@ LITERAL-MARKER 29, MISSING-CONSUMER 0, CONTRADICTED 1, REQUIRES-HOST 13):
 - **Item 8 materially narrowed.** Plan rows 07/08 and `remote_close_tree_wpi.sh` now AGREE on the
   three-argument contract (`EV_DIR RUNID WORK_ROOT`); the inherited-TMPDIR question is settled in
   the bytes (run-owned `close_work_$RUNID`, disjointness proven, `TMPDIR` exported to it). The
-  residual contradiction is **documentary**: `RUNID_MINTING_REVIEW_CODEX_2026-08-11.md:167` still
-  records the stale two-arg mismatch. Execution currently stops earlier anyway, on unfilled
-  `EXPECT_UID`/`EXPECT_GID`.
+  residual contradiction was **documentary** — and it is now **CORRECTED** (2026-08-12 ~15:05).
+  GLM's advance transport read-audit cross-checked the ledger and found
+  `RUNID_MINTING_REVIEW_CODEX_2026-08-11.md:167` stale in **two** respects, not one: the two-arg
+  claim *and* the "exits FAIL on argc" claim (an argv-count violation returns **rc 3 STOP**, not
+  rc 1 FAIL — operator-side composition input is never a host finding). Both are struck and
+  corrected in place with sources. What actually blocks the close boundary today is the unfilled
+  `EXPECT_UID`/`EXPECT_GID` pins, which STOP execution before the RUNID/`EV_DIR` grammar checks —
+  i.e. item 8 is now a **freeze-input fill** problem, not a contract disagreement.
 - **Item 9 has an exact ordering chain now:** allocate one burn-ledger base → derive
   `REMOTE_BASE`/`EV_*`/transport paths → fill RP7's `WPI_FIXED_EVIDENCE_ROOT` **before** RP7
   bytes are frozen (RP7 rejects a marker evidence root) → run the FAM-03 frozen-composite
