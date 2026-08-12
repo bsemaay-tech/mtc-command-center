@@ -53,13 +53,23 @@ Pro (`claude-opus-5` xhigh) on the **same bytes**. Putting GLM in that slot woul
 guarantee that Audit 2 exists to check. GLM's advance audits reduce risk and save time; they
 never convert a PENDING row to accepted.
 
-**RULE 5 — GLM IS EXECUTION-GATED WHEN UNATTENDED.**
+**RULE 5 — GLM IS EXECUTION-GATED *AND* SCOPE-LIMITED.**
 It cannot run harnesses on this host. Dispatch with `-PermissionMode acceptEdits` **plus** an
 explicit "you are unattended, do not ask for approval" clause **plus** "never fabricate a green
-run." Expect source-level verdicts with execution steps marked `PENDING-LEAD-EXECUTION`. Two
-dispatches were lost on 08-12 before this was learned (one API death mid-response, one plan-mode
-stall). Always check the report is substantive — a tiny file is a red flag; delete partials
-rather than committing them.
+run." Expect source-level verdicts with execution steps marked `PENDING-LEAD-EXECUTION`.
+
+**Scope limit, measured on 08-12: GLM is reliable for SMALL and MEDIUM reads and fails on LARGE
+ones.** Four medium-scope advance audits succeeded and produced real value. Then **four
+dispatches failed**: an API death mid-response, a plan-mode stall, a four-document SELF_QA audit
+(1.5 MB total) that hit a connection close plus a 600s background ceiling while spawning
+sub-auditors, and a 198-path WP-L sweep that returned only `API Error: The operation timed out.`
+**Route large-scope work to Codex.** If a task must go to GLM and might be large, split it by
+document or by directory and say in the kickoff that a partial with honest coverage boundaries
+beats a timeout that produces nothing.
+
+**Always check the report is substantive before committing** — a tiny file is a red flag. Delete
+partials; never commit them. Also check both the `-OutputReport` path *and* wherever the model
+says it wrote, because GLM sometimes writes its real verdict elsewhere.
 
 **RULE 6 — THE LEAD'S VERBATIM RUN IS THE EVIDENCE OF RECORD.**
 Extract published fences **as bytes**, run them from outside the repo, and diff the transcript

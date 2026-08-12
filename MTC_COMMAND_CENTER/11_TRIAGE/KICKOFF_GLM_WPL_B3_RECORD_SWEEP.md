@@ -1,9 +1,17 @@
-# KICKOFF — GLM-5.2: sweep the closed WP-L/B3 evidence records against their own bytes
+# KICKOFF — sweep the closed WP-L/B3 evidence records against their own bytes
 
-You are GLM-5.2 via the Z.AI route. **You are running UNATTENDED — do not ask for approval, do
-not write a plan and stop. Execute directly and write your verdict file.** Working dir
-`C:\LAB\Tradingview_LAB_CLEAN`. Read-only: create nothing except your verdict file, no git
-mutation, no host, no network.
+**RE-ROUTED TO CODEX 2026-08-12 ~17:50.** A GLM dispatch of this kickoff returned only
+`API Error: The operation timed out.` — the second consecutive GLM failure on a large-scope
+task the same evening (the four-document SELF_QA audit died on a connection close plus a 600s
+background ceiling). GLM remains useful for small and medium scoped reads; this sweep touches
+198 indexed paths and is too large for it. Run this as Codex.
+
+You are the ANALYST. Working dir `C:\LAB\Tradingview_LAB_CLEAN`. Read-only: create nothing
+except your verdict file, no git mutation, no host, no network.
+
+**If the full sweep is too large for one run, sweep in a stated order and report exactly how far
+you got** — a partial sweep with honest coverage boundaries is worth far more than a timeout that
+produces nothing. Say which paths you covered and which you did not reach.
 
 ## Why this exists
 The `.gitattributes` durability analysis (`WPI_GITATTRIBUTES_DURABILITY_ANALYSIS_2026-08-12.md`)
