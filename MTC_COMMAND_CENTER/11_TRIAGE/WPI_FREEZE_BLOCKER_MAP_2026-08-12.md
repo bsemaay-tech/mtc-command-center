@@ -10,7 +10,7 @@ before Stage-1 freeze. Status as of this write; tonight's Claude Pro second-flag
 |---|---|---|---|
 | 1a | RP6-P0 dual-flagship acceptance | open | **Codex PASS-WITH-NITS** (r16 byte-span census fixpoint); Claude Pro audit **PENDING 23:00**, now carrying the **RP6-11** priority target (see below) |
 | 1b | RP7-WPI-RO dual-flagship acceptance | open | **Codex PASS** (r9 descriptor-bound status body); Claude Pro audit **PENDING 23:00** |
-| 1c | Transport set dual-flagship acceptance | open | **Codex PASS** (r6b confirm); F1 owner-ratified accept-with-disclosure, NOT a blocker; Claude Pro audit **PENDING 23:00** |
+| 1c | Transport set dual-flagship acceptance | open | **Codex PASS** (`TRANSPORT_CODEX_R6B_CONFIRM`, commit `7e4b5e9f`, Codex slot CLOSED); F1 owner-ratified accept-with-disclosure, NOT a blocker; Claude Pro audit **PENDING 23:00**. *STATUS_TRANSPORT.md header corrected 2026-08-12 ~18:20 — it had never recorded the r6 cycle at all* |
 | 2 | §8.2 rows 1–9 implemented by no executable | owner decision needed | **DECIDED: BUILD ALL NINE**, applied only AFTER RP7 dual acceptance. Not yet built — still a blocker, now with a decided path |
 | 3 | §10.2 prover unsound | repair banked | pathscope r2 repaired (9+5 silent-sink classes closed; finding-6 honest `ALLOW-LEXICAL` + residual R1). Codex FILTER-BLOCKED on the source; GLM read favorable but supplemental. **Claude Pro EXECUTION-audit PENDING 23:00** |
 | 4 | §10.2 needs a composite whole-program proof | design accepted | **CLOSED 2026-08-12** — SEC102 composite pathproof ACCEPTED-WITH-DISCLOSURE by owner decision (see below) |
@@ -119,6 +119,35 @@ LITERAL-MARKER 29, MISSING-CONSUMER 0, CONTRADICTED 1, REQUIRES-HOST 13):
   bytes are frozen (RP7 rejects a marker evidence root) → run the FAM-03 frozen-composite
   conservation proof. Until that sequence runs, the RO evidence-root literal and the transport
   retrieval/bind paths are not frozen inputs.
+
+## Record-quality findings 2026-08-12 evening — a pattern worth naming
+
+Four record defects were found today, and **none of them was found by an auditor**. Three came
+from Lead spot-checks or independently-dispatched cross-checks; one came from a systematic sweep
+dispatched because of the first three. Listed because the pattern, not the individual defects, is
+the finding:
+
+1. **False implementer attribution** — both r17 records named `gpt-5.6-sol`; the run log recorded
+   `gpt-5.5`. Corrected in both files.
+2. **Summary updated, detail left stale** — the D026 map's `RP6-11` table row still read
+   `UNLOCATED`/`OPEN` after the Lead updated only the summary for round 17. Corrected; counts
+   moved to 39 rows / 29 closed / 10 supplemental / 15 residuals / 0 open, which also dissolved
+   the map's only double-count.
+3. **Stale line citation** — the freeze-input ledger cited `STATUS_RP6_P0.md:311-312`; round 17
+   and the attribution fix had shifted it to `:396-397`. Claim content was true throughout.
+4. **A whole audit cycle missing from a status file** — `STATUS_TRANSPORT.md` never recorded the
+   round-6 Codex cycle, including a REQUEST_CHANGES on a false "nine-file unchanged" byte-identity
+   claim and the r6b PASS that closed the Codex slot. The file had been edited the same day for
+   the owner's F1 ratification, and that edit went in without the audit history. State was
+   **understated**, not overstated.
+
+**Verified clean in the same sweeps:** 14 artifact identities re-derived and all matching; the
+17-vs-27 freeze-literal figures reconciled (distinct definitions vs raw occurrences, both
+correct); all eleven RP6 consumer citations still accurate; the R15:180 citation accurate.
+
+**Honest limitation recorded:** Claude/Max run logs carry no model header and
+`RP6_R16_MAX_RUN_2026-08-12.log` is 0 bytes, so implementer attribution can be machine-verified
+only for Codex-implemented rounds. Max-implemented rounds rest on the dispatch record alone.
 
 ## Repo-wide durability item (open, freeze-time)
 
