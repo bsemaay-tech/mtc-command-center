@@ -61,7 +61,35 @@ leaf that re-consumes a declared member's deploy path as a literal operand is mi
 orphan-only reachability gate — carry as successor-preregistration wording.
 
 **Consequences.** WP-I freeze blocker #4 (SEC102) is **CLEARED** — the owner's boundary decision
-is made and the model-diverse second-opinion evidence is attached. The four assumptions above must be
+is made and the model-diverse second-opinion evidence is attached.
+
+## EVIDENCE-DOCUMENT ACCURACY — disclosed 2026-08-12 ~20:00, does NOT reopen the acceptance
+
+`SELF_QA_SEC102_R11.md` was claim-audited for the first time after acceptance
+(`WPI_SELFQA_CLAIM_AUDIT_SEC102_2026-08-12.md`, 375 pasted output lines checked). Result: **6
+false, 6 unsupported, 1 scope-wrong.** Stated here because the owner accepted this block and is
+entitled to know what a later check found in its evidence document.
+
+**What these findings ARE:** prose-versus-transcript accuracy defects in the self-QA document —
+counts stated in prose that the pasted transcript reports differently, and claims whose
+supporting evidence lives in **external** audit files while the wording implies local proof. The
+most consequential (S-1) is a scope word: the top-level prose says every block was run both ways,
+while the transcript proves a 10/11 contract plus one **self-excluded** block — and that
+self-exclusion **is honestly disclosed later in the same document**, so it is an overreaching
+summary sentence, not a hidden harness defect.
+
+**What these findings are NOT.** They do not touch the module. `composite_pathproof.py` remains
+byte-identical (129658 B, `adbf27fd…c05a`) across rounds 8–11 and HEAD. Both original CRITICALs,
+the command-word whitelist fixpoint and R3-F2/F3 remain closed and Codex-verified. The audit
+checked all 375 published output lines for constants formatted to look like measurements and
+found **none** — SEC102 does not carry the defect found in RP6. The Lead's verbatim runs and the
+Codex reproductions of them are unaffected, because those were executed against the module and
+the harness rather than read out of the prose.
+
+**Disposition:** the acceptance **stands**. This is queued as a **documentation-repair** item,
+not a reopened round. Audit 2 would find these, so they are recorded now rather than discovered
+later. The four owner-accepted trusted-base assumptions above are unaffected and were correctly
+excluded from the finding count as honest disclosures. The four assumptions above must be
 carried into the successor preregistration as explicit trusted-base statements, and no successor
 text may present any of them as a control. If the owner later wants assumption 1 or 2 bound, that
 is separately authorized design work (an exact trusted interpreter route with isolated/no-site
