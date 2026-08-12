@@ -107,19 +107,24 @@ Full record: `LEDGER_STATUS_2026-08-10.md`.
 6. Then the **10-item freeze-blocker map** → Stage-1 freeze → host run (P0→RO→attestation→
    RPD-VERIFY as root) → WP-I closure → Audit 2. **We are NOT close to freeze.**
 
-## 9. OWNER DECISIONS (fill in the owner's answers before executing §6.3)
+## 9. OWNER DECISIONS — RATIFIED 2026-08-12 ~09:35 (in chat, binding)
 
-- **A. MC-01..03 / §10.1 three families** — the R2 binding text and the lane-B proposals AGREE, so
-  one YES ratifies all three closures (MC-01 twelve exact P0 tool pins no PATH fallback; MC-02
-  venv root `= /opt/mtc-bridge/venvs/$P0_CAND`; MC-03 evidence-root full frozen-composite
-  derivation). Doc: `WPI_PREREG_DRAFT_ROUND1/LEAD_MC_ADJUDICATION_2026-08-11.md`. **Lead rec: YES.**
-  → OWNER ANSWER: _______
-- **B. Transport F1 (outer SSH account-shell boundary, honestly OPEN)** — (1) accept-with-disclosure
-  as an inherent SSH-trust-model limit, freeze not blocked [Lead rec]; or (2) require closure before
-  freeze (new server-side-contract design round). → OWNER ANSWER: _______
-- **C. SEC102 interpreter-vocabulary residual** — (1) accept as a disclosed production-gate decision,
-  SEC102 acceptable now [Lead rec, Codex concurs]; or (2) pin/decide the recognized-interpreter set
-  before SEC102 counts as accepted (separate round). → OWNER ANSWER: _______
+Owner noted these are technical and trusted the Lead recommendations; all three ratified as
+recommended. Execute accordingly in §6.
+
+- **A. MC-01..03 / §10.1 three families — RATIFIED: YES.** All three closures adopted (MC-01 twelve
+  exact P0 tool pins, no PATH fallback; MC-02 venv root `= /opt/mtc-bridge/venvs/$P0_CAND`; MC-03
+  evidence-root full frozen-composite derivation). ACTION: in the successor prereg, delete the
+  three `PROPOSED — LEAD/OWNER DECISION REQUIRED` qualifiers on FAM-01/02/03, cite this
+  ratification + `LEAD_MC_ADJUDICATION_2026-08-11.md`, and clear the §4.5.4 MERGE-CONFLICT register.
+- **B. Transport F1 (outer SSH account-shell boundary) — RATIFIED: Option 1, ACCEPT-WITH-DISCLOSURE.**
+  F1 stays honestly OPEN as an inherent SSH-trust-model limit; it does NOT block freeze. ACTION:
+  ensure the prereg + transport STATUS carry the F1-OPEN disclosure as an accepted residual (not a
+  blocker); the block is freezable with F1 disclosed.
+- **C. SEC102 interpreter-vocabulary residual — RATIFIED: Option 1, accept as a disclosed
+  production-gate decision.** SEC102 is acceptable now with the recognized-interpreter set as a
+  disclosed production-gate item (to be pinned at production-gate time, not a static-tool defect).
+  ACTION: keep the vocabulary residual disclosed in STATUS; do not open a round to "close" it.
 - Already decided (reminder): rows 1–9 = BUILD ALL NINE, applied only AFTER RP7 dual acceptance.
 - Owner action item (not a decision): disable Windows Update auto-reboot / set active hours so
   overnight runs are not interrupted (a reboot at 01:32 killed two lanes this cycle).
