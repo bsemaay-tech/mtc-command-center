@@ -2,7 +2,8 @@
 
 You are `claude-opus-5` xhigh via the default Claude Pro account, AUDITOR — the second
 flagship. Codex `gpt-5.6-sol` already holds flagship PASS on these bytes
-(`RP7_CODEX_T0_AUDIT_R9`: all five r8 findings closed, including the F1 `ro.status.body`
+(`MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7_CODEX_T0_AUDIT_R9_2026-08-11.md`: all five
+r8 findings closed, including the F1 `ro.status.body`
 BLOCK — the fetched body is now bound to the created leaf by descriptor, `wpi_alloc_leaf`
 deleted). Claude MAX implemented r9, so YOU (a fresh Claude Pro session that implemented
 nothing on this block) are the required independent second flagship. Working dir
@@ -11,9 +12,24 @@ file, no git mutation, no remote host, no network. Local fixture execution exact
 published harness does it is permitted.
 
 ## Bytes under audit
-`RP7-WPI-RO.sh` as committed on `feature/donchian-crypto-ladder`. Start from
-`STATUS_RP7.md` (this directory), then `SELF_QA_RP7.md` (§ROUND 9) and
-`RP7_R9_REPORT` for the published harness and evidence, then the Codex r9 verdict.
+`MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh` as committed on
+`feature/donchian-crypto-ladder` — **108301 B**, SHA-256
+`0e93f90de7fcefe86fee4137f3ba11ea34b69b120d6a06c304fdde0e9b921e62`. Re-derive and confirm this
+identity first; it is also the identity the r9 transcripts record, which is the crux of the
+documentary defects below.
+
+*External evidence: that size and digest were re-derived on 2026-08-12 from the current repository
+bytes of `MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh` (repo root
+`C:\LAB\Tradingview_LAB_CLEAN`, branch `feature/donchian-crypto-ladder`); the matching transcript
+record is the `BYTE_IDENTITY` line at
+`MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/SELF_QA_RP7.md:1725`
+(`green_bytes=108301 green_sha256=0e93f90d…921e62`). No line of this kickoff proves it locally.*
+
+Start from `MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/STATUS_RP7.md`, then
+`MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/SELF_QA_RP7.md` (§ROUND 9) and
+`MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7_REPAIR_R9_REPORT.md` for the published
+harness and evidence, then the Codex r9 verdict at
+`MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7_CODEX_T0_AUDIT_R9_2026-08-11.md`.
 Verify the narrative against the bytes — do not inherit Codex's conclusions.
 
 ## The r9 headline you must independently re-establish
@@ -26,10 +42,11 @@ open; parser reads the same descriptor as stdin and digests exactly what it pars
 caller literal; row-22 `detail` field emitted on both nonzero namespace-read branches.
 
 ## KNOWN DOCUMENTARY DEFECTS — found 2026-08-12 evening, NOT yet repaired
-A prose-vs-transcript audit (`WPI_SELFQA_CLAIM_AUDIT_RP7_2026-08-12.md`, 461 output lines
-checked) found that **`SELF_QA_RP7.md`'s narration of WHICH BYTES its fences ran against is
-stale, while the pasted transcripts themselves are correct.** Disclosed so you judge rather than
-rediscover:
+A prose-vs-transcript audit
+(`MTC_COMMAND_CENTER/11_TRIAGE/WPI_SELFQA_CLAIM_AUDIT_RP7_2026-08-12.md`, 461 output lines
+checked) found that **`MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/SELF_QA_RP7.md`'s narration
+of WHICH BYTES its fences ran against is stale, while the pasted transcripts themselves are
+correct.** Disclosed so you judge rather than rediscover:
 
 - **FALSE — `:1768-1769`** says the round-7 fence proves the GREEN subject is `92853 B /
   e695a67b…`. The transcript at `:1725` records `green_bytes=108301
@@ -56,8 +73,23 @@ gate genuinely ran against older bytes, then that gate does not cover the artifa
 and that is a real finding that changes the acceptance answer.
 
 ## Audit contract
-1. Run the published SELF-QA harness VERBATIM (record real rc/summary lines). No
-   extract-and-run.
+1. Run the published SELF-QA harness VERBATIM (record real rc/summary lines).
+   **Use the published `sed|bash` extractor exactly; do not retype or invent an ad-hoc
+   extractor.** The published invocation is at
+   `MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/SELF_QA_RP7.md:177-182`, and extraction is how
+   that document intends the fence to be run — a third party is explicitly not meant to retype
+   it:
+
+   ```
+   sed -n '/^# RP7_EXACT_COMMAND_BEGIN$/,/^# RP7_EXACT_COMMAND_END$/p' SELF_QA_RP7.md | bash --noprofile --norc
+   ```
+
+   The bare basename in that command is published as shown and must stay as shown. Run it with
+   `MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT` as the working directory — that is the directory
+   holding `MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/SELF_QA_RP7.md`, so the published
+   argument resolves unmodified — or substitute that same full repo-relative path into the `sed`
+   argument. What is forbidden is a hand-built substitute for that extractor, not extraction
+   itself.
 2. Adversarially attack the descriptor binding: is there ANY remaining site where an
    evidence leaf is created and later addressed by a rebindable name? Any second reader of
    a name? Any caller-declared rc literal surviving?

@@ -13,12 +13,17 @@ repo: edit nothing except your verdict file, no git mutation, no host, no networ
 local execution of the published harness.
 
 ## Bytes under audit
-`pathscope_prover.py` 122446 B, SHA-256
+`MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/pathscope_prover.py` 122446 B, SHA-256
 `890016f0b9a8cde4eed33f8733f69055471b07c6096f6bc07450457e6c52af1d` — re-derive and confirm
-first. Context files: `SELF_QA_PATHSCOPE.md`, `STATUS_PATHSCOPE.md`,
-`PATHSCOPE_REPAIR_R2_REPORT.md`, round-1 Codex findings
-(`PATHSCOPE_CODEX_T1_AUDIT_2026-08-10.md`), GLM read-audit
-(`PATHSCOPE_GLM_T1_AUDIT_R2_2026-08-11.md`).
+first. Context files:
+
+- `MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/SELF_QA_PATHSCOPE.md`
+- `MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/STATUS_PATHSCOPE.md`
+- `MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_REPAIR_R2_REPORT.md`
+- round-1 Codex findings
+  `MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_CODEX_T1_AUDIT_2026-08-10.md`
+- GLM read-audit
+  `MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_GLM_T1_AUDIT_R2_2026-08-11.md`
 
 ## Round-2 state you must independently re-establish
 9+5 silent-sink classes closed. Structural change: `NO_PATH_COMMANDS`/`nonoption_operands()`
@@ -29,10 +34,40 @@ value role; unlisted option or unregistered command → a specific rc-3 coverage
 mount binding) honestly out of reach for a static reader. The Lead ran the harness verbatim:
 RED 511 / GREEN 644, determinism `equal=True` (find_exec, RP6-P0, RP7-WPI-RO).
 
+**MATERIAL DISCLOSURE — the four real-block runs are HISTORICAL PINNED REGRESSIONS, and are
+explicitly NOT current RP6/RP7 coverage.** The harness itself is current, embedded and
+self-contained, and it **intentionally** reconstructs historical blobs — that is a deliberate
+reproducibility design, not a defect: pinned blobs keep the RED column reproducible after the
+repair is committed, and a Stage-1 proof must be taken over frozen bytes rather than a live file
+that a concurrent session owns
+(`MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/SELF_QA_PATHSCOPE.md:19-320`, published
+command at `:29-34`). The consequence you must not lose: the blocks it runs against are
+
+| Block in the harness | Pinned identity it runs | Current identity |
+|---|---|---|
+| `RP6-P0.sh` | 107252 B, `A090AE73…`, blob `3c7b7d26` | **110817 B, `5132bacd…`** |
+| `RP7-WPI-RO.sh` | 99903 B, `11621044…`, blob `5c9a2f59` | **108301 B, `0e93f90d…`** |
+
+*External evidence: the pinned column is the harness's own pinned-identity table at
+`MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/SELF_QA_PATHSCOPE.md:19-20`, whose two rows
+name those sizes, digests and blob IDs, and whose reconstruction commands are at `:173-174`. The
+current column was re-derived on 2026-08-12 from the current repository bytes of
+`MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh` and
+`MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh`. No line of this kickoff proves
+either column locally — re-derive both before citing the comparison.*
+
+Two blocks × two provers = the four real-block runs. **Neither pinned identity is the current
+block.** So those runs establish determinism and RED-vs-GREEN discrimination for the prover; they
+establish **nothing** about the prover's behaviour on today's RP6/RP7 bytes, and no result from
+them may be cited as current-block coverage. Say so explicitly in your verdict.
+
 ## KNOWN DOCUMENTARY DEFECTS — found 2026-08-12 evening, NOT yet repaired
-A prose-vs-transcript audit (`WPI_SELFQA_CLAIM_AUDIT_TRANSPORT_PATHSCOPE_2026-08-12.md`) found
-two claims in `SELF_QA_PATHSCOPE.md` its own evidence does not support. Disclosed so you do not
-spend your slot rediscovering them:
+A prose-vs-transcript audit
+(`MTC_COMMAND_CENTER/11_TRIAGE/WPI_SELFQA_CLAIM_AUDIT_TRANSPORT_PATHSCOPE_2026-08-12.md`) found
+two claims in `MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/SELF_QA_PATHSCOPE.md` its own
+evidence does not support — they are that audit's `F-3` and `U-3`; its `F-1`, `F-2`, `U-1` and
+`U-2` are Transport findings and are not part of this lane. Disclosed so you do not spend your
+slot rediscovering them:
 
 - **FALSE — `:325-327` says the RED rows reading `rc 0 - (no row)` are "the four CRITICAL
   findings".** The table actually contains **sixteen** such rows — `pushd`, `pushd_forbidden`,
@@ -55,10 +90,14 @@ spend your slot rediscovering them:
    measured facts or into findings.
 
 ## Audit contract
-1. EXECUTE the published harness VERBATIM (`SELF_QA_PATHSCOPE.md` §"How to reproduce"):
-   62 fixtures + 4 real-block runs + RED-before-GREEN (D026). Record real counts. This
-   execution is the point of your slot — a read-only opinion here is supplemental, and we
-   already have one.
+1. EXECUTE the published harness VERBATIM
+   (`MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/SELF_QA_PATHSCOPE.md` §"How to
+   reproduce", command at `:29-34`): 62 fixtures + 4 real-block runs + RED-before-GREEN (D026).
+   Record real counts. This execution is the point of your slot — a read-only opinion here is
+   supplemental, and we already have one. **Record the 4 real-block runs as historical pinned
+   regressions** (see the disclosure above): they run RP6-P0 at 107252 B / `A090AE73…` and
+   RP7-WPI-RO at 99903 B / `11621044…`, neither of which is the current block, so do not report
+   them as current RP6/RP7 coverage.
 2. Adversarially construct NEW Bash fragments that reach a filesystem/network primitive
    while the prover emits no path, no coverage record, and `PASS rc=0`. Any surviving
    silent sink is CRITICAL. (Local, harmless fixtures only; keep bodies symbolic.)
