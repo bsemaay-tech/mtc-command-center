@@ -120,6 +120,28 @@ LITERAL-MARKER 29, MISSING-CONSUMER 0, CONTRADICTED 1, REQUIRES-HOST 13):
   conservation proof. Until that sequence runs, the RO evidence-root literal and the transport
   retrieval/bind paths are not frozen inputs.
 
+## NEW BLOCKER-CLASS 2026-08-12 evening — four Audit-2 components with NO producing step
+
+`AUDIT2_READINESS_PACKAGE/AUDIT2_PACKETS_9_10_11_SCOPE_2026-08-12.md` scoped the three
+NOT-YET-AVAILABLE packets to 42 components and asked which have no defined producing step at all.
+**Five do.** These are not documents that can be written later from existing material — each
+needs a **procedure to be decided first**, and four of them are technical:
+
+| ID | Component | Why it is a gap |
+|---|---|---|
+| **P9-15** | Frozen-SHA static minimum-security / secret-scan / egress inventory | The checklist *requires* the record but names no command, author, output contract, or point between Commit 2 and WP-I closure that produces it. Requirement exists; executable contract does not |
+| **P10-10** | Mandated-suite **definition** — `MANDATED_COMMAND`, `EXPECTED_EXIT_CODE`, pass/fail counts, accepted-failure IDs and signatures, skip/xfail counts, `BASELINE_SOURCE` | No authoritative command or baseline source has ever been selected. **This is a decision, not a document** |
+| **P10-11** | Frozen-SHA suite **execution record** | Undefined *because* P10-10 is unresolved — you cannot specify how to record a run whose command is not chosen. Cascades from P10-10 |
+| **P10-12** | Accepted **anomaly register** | The current anomaly set is wholly unresolved, and the refreshed package forbids inferring the old two-failure example. Codex's requirement is exact: **an empty anomaly set must be an observed and adjudicated result, never a hardcoded count** — the same defect class as RP6's `dynamic_targets=0` |
+| P11-08 | Owner ratification of the freeze-time ledger | **Deliberately not automatable** — an owner action. Naming it as a gap is correct, not a failure |
+
+**P10-10 is the root of a three-component cascade and is the highest-value item here**: deciding
+what the mandated suite actually *is* unblocks P10-11 and P10-12 together.
+
+Ordering note carried from the ledger: freeze blockers 7 and 9 (the `P0_ATTESTED_*` fills and the
+`REMOTE_BASE` allocation ordering) sit **upstream of packet 9**, so packet 9's producing steps
+cannot begin until those close.
+
 ## Record-quality findings 2026-08-12 evening — a pattern worth naming
 
 Four record defects were found today, and **none of them was found by an auditor**. Three came
