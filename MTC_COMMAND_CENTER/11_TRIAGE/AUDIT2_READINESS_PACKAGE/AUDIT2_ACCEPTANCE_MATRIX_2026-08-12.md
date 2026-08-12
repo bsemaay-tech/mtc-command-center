@@ -36,6 +36,14 @@ every PENDING row below remains PENDING.
 
 ## Exact transport nine-file identity
 
+**[added 2026-08-12 ~18:20] Seven of these nine are TARGETS; two are DOCUMENTS.** The first seven
+(`run_p0.sh` through `remote_close_tree_wpi.sh`) are the frozen target set. `SELF_QA_TRANSPORT.md`
+and `STATUS_TRANSPORT.md` are evidence/status documents that legitimately change as rounds land.
+This table is a list of **current identities**, not a claim that all nine are unchanged — the
+round-6 Codex audit returned REQUEST_CHANGES on exactly that false "nine-file unchanged" claim,
+and the self-QA now correctly scopes its unchanged claim to the seven targets. Do not restate the
+nine-file version.
+
 | File | Bytes | SHA-256 |
 |---|---:|---|
 | `run_p0.sh` | 13608 | `4f608ad546402ad9587eeac237c16c7c3c3e707ebf4e6cb589e9459f08413c0c` [refreshed 2026-08-12] |

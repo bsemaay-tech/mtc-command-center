@@ -1,7 +1,32 @@
 # WP-I transport set status
 
-**REPAIRED-PENDING-REAUDIT** (round 6, under owner grant #7 — the T0 cap is lifted
-for this block set until both flagships accept)
+**CODEX-FLAGSHIP-ACCEPTED — PENDING SECOND FLAGSHIP** (round 6b, under owner grant #7 —
+the T0 cap is lifted for this block set until both flagships accept)
+
+*Header corrected 2026-08-12 ~18:20. It read `REPAIRED-PENDING-REAUDIT` and the body never
+recorded the round-6 audit cycle at all, even though this file was edited earlier the same day
+for the owner's F1 ratification. The omission was found by a systematic STATUS-versus-bytes
+sweep (`WPI_STATUS_VS_BYTES_SWEEP_GLM_2026-08-12.md`), not by an auditor. The state was
+understated, not overstated.*
+
+**The round-6 Codex cycle, now recorded:**
+
+1. `TRANSPORT_CODEX_R6_AUDIT` returned **REQUEST_CHANGES** on a real defect: `SELF_QA_TRANSPORT.md`
+   claimed the **nine-file** set was byte-unchanged, when two of those nine — this status file and
+   the self-QA itself — had in fact changed, carrying the R5-F2/R5-F3 corrections. A byte-identity
+   claim that covers files which actually moved is exactly the defect class this project keeps
+   finding.
+2. **That claim is already repaired in the bytes.** `SELF_QA_TRANSPORT.md:2667-2668` now scopes
+   the unchanged claim to the **seven targets**, and the placeholder census and CR-byte checks at
+   `:2631-2633` are stated over those seven.
+3. `TRANSPORT_CODEX_R6B_CONFIRM` then returned **PASS** (commit `7e4b5e9f`), **closing the Codex
+   flagship slot** for this set.
+
+**What is therefore still pending is only the second flagship** — the Claude `claude-opus-5`
+audit, scheduled for the 23:00 window via
+`KICKOFF_CLAUDEPRO_TRANSPORT_2NDFLAGSHIP_AUDIT.md`. A GLM advance read-audit
+(`TRANSPORT_GLM_ADVANCE_READ_AUDIT_2026-08-12.md`) returned PASS-WITH-NITS with zero required
+repairs, but is ADVANCE-SUPPLEMENTAL and closes no slot.
 
 **F1 is OPEN: inner child closed; outer SSH account-shell boundary open.** Round 4
 recorded F1 as closed on the composition with one disclosed residual. Codex's round-4
