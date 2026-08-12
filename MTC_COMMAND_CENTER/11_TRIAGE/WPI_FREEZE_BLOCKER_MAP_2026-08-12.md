@@ -60,14 +60,40 @@ The remaining proof-tool question is item 3, and it has a scheduled auditor toni
 
 ## NEW 2026-08-12 ~14:40 — one open D026 gap, and the freeze-input picture
 
-**RP6-11 — the single OPEN freeze-relevant D026 finding in the whole current cycle.**
+**RP6-11 — RESOLVED 2026-08-12 ~15:40 by round 17, with one claim corrected on the way.**
 `AUDIT2_READINESS_PACKAGE/AUDIT2_D026_MAP_CURRENT_CYCLE_2026-08-12.md` mapped 39 closure rows
 (28 fully closed, 11 supplemental/unlocated, 15 disclosed residuals) and surfaced exactly one
 current-audit RED with no repaired GREEN: the round-15 F3 **dynamically-resolved
-inventory-mutation target**. Round 16 asserts `inventory_variable_targets … dynamic_targets=0`
-over clean bytes but never executed a falsification for the class. Added as a PRIORITY TARGET to
-tonight's Claude Pro RP6 kickoff. **Do not treat RP6's Codex PASS-WITH-NITS as covering this
-row.**
+inventory-mutation target**.
+
+The GLM advance read-audit answered it with a claim that turned out to be **half right**:
+
+- **WRONG — "the r16 fence admits a variable-mutating `eval` and certifies it CLEAN."** The
+  checked-in fence already refuses `eval`, `source` and `.` as
+  `UNMODELED kind=indirect_execution_builtin:*` (`SELF_QA_RP6.md:16763-16765`). Codex found this
+  and said so in its own r17 report rather than building on a bad premise. **The Lead's earlier
+  "confirmed by direct source read" was partial** — it verified that `eval` is in
+  `admissible_bare` and absent from the enumerated mutating-builtin list (both true) and then
+  accepted the conclusion without checking whether another branch catches it. It does.
+  Membership in `admissible_bare` only suppresses the unbound-invocation check; classification
+  happens elsewhere.
+- **RIGHT — `dynamic_targets=0` was a hardcoded literal presented as a measurement**
+  (`:17571`), beside a genuinely measured `variable_targets=$n_vt`. R17's pass-format audit found
+  **six** such literal-zero fields across three r16 success lines.
+
+**Round 17 (Codex, `gpt-5.5` xhigh) closes the real half by inversion, not enumeration:** a
+closed effect model over the tokenizer stream where any bare word outside the modelled set is an
+opaque execution surface that fails with an unmodeled record, and `dynamic_targets` is now
+measured as `dynamic_variable_target + indirect_execution_builtin + effect_model_unmodeled`.
+Because the shipped fence already refuses these constructs, the RED side uses a temporary r16
+fence with **only** the indirect-execution refusal removed — labelled explicitly, not implied as
+a live defect. Two structurally different class members (`eval` by name concatenation,
+`dot_source` via a constructed runtime file).
+
+**Lead verbatim run:** `R17_DYNAMIC_TARGETS_SUMMARY cases=15 pass=15 fail=0 result=PASS`, outer
+rc 0, carried r16 grammar `50/50` with no previously-killed mutant surviving,
+`r17_literal_zero_measurements=0`, block identity unchanged (110817 B, `5132bacd…`).
+`RP6-P0.sh` is byte-identical — QA-layer round like r10→r16.
 
 **Freeze-input ledger findings** (`WPI_FREEZE_INPUT_LEDGER_2026-08-12.md`, 45 rows: FILLED 2,
 LITERAL-MARKER 29, MISSING-CONSUMER 0, CONTRADICTED 1, REQUIRES-HOST 13):

@@ -26,28 +26,47 @@ at different spans are arithmetically incapable of comparing equal
 cmdquote/expand/continuation, alias/function/tool-shadow/prefix, function-def shapes,
 empty inventory/definition-identity, append-assign, intra-body emitter + same-line decoy.
 
-## PRIORITY TARGET — one open D026 gap the Lead found after this kickoff was written
-`AUDIT2_READINESS_PACKAGE/AUDIT2_D026_MAP_CURRENT_CYCLE_2026-08-12.md` row **RP6-11** is the
-single OPEN freeze-relevant finding in the whole current cycle: the round-15 audit (F3) named a
-**dynamically-resolved inventory-mutation target** — an admitted variable-mutating builtin whose
-target is resolved at runtime and contains no literal protected inventory name — and **no
-executed RED/GREEN pair was ever located for it.** Round 16 reports only the clean-byte
-structural assertion `inventory_variable_targets … dynamic_targets=0`, and `R16_F1_RED` offers
-only the `inbody` and `spandecoy` closures. So the claim rests on an assertion over clean bytes,
-not on a demonstrated falsification.
+## THE SUBJECT IS NOW ROUND 17, NOT ROUND 16 — read this first
+Since this kickoff was first written, RP6 advanced to **round 17** (commit `671d9b40`). Audit the
+**r17** bytes. `RP6-P0.sh` is still byte-identical (110817 B, `5132bacd…`) — r17 is a QA/census
+round like r10→r16.
 
-**Make this your first-class question:** does the r16 exact-byte-span census actually close the
-dynamic-target class, or does `dynamic_targets=0` merely report that the clean block happens to
-contain none? Construct the missing RED — a harmless variable-mutating builtin whose target
-resolves at runtime to a protected inventory name — and determine whether the census catches it
-or silently reports zero. If it is caught, say so and the row closes. If it is not, that is a
-finding at the same level as the r10→r15 evasion classes.
+**Why r17 exists, including a correction you should scrutinise.** The D026 consolidation map
+flagged row **RP6-11** — the r15 F3 dynamically-resolved inventory-mutation class never got an
+executed RED/GREEN pair. A GLM advance read-audit then claimed the r16 fence *admits* a
+variable-mutating `eval` and certifies it CLEAN. **That claim was false** and Codex said so in
+its own r17 report: the checked-in fence already refuses `eval`, `source` and `.` as
+`UNMODELED kind=indirect_execution_builtin:*` (`SELF_QA_RP6.md:16763-16765`). The Lead's own
+intermediate confirmation was partial and is corrected in the blocker map.
+
+What *was* real: `dynamic_targets=0` at `:17571` was a **hardcoded literal presented as a
+measurement**, beside a genuinely measured `variable_targets=$n_vt`; r17's pass-format audit
+found six such literal-zero fields across three r16 success lines.
+
+**Your first-class questions:**
+1. **Is the correction itself correct?** Verify independently that the r16 fence really does
+   refuse `eval`/`source`/`.`, and that no *other* admissible construct can mutate a variable
+   through a target the fence cannot resolve. Two models have now disagreed about this file; you
+   are the tiebreaker with execution available.
+2. **Is r17's effect model genuinely closed, or is it another enumeration in disguise?** It
+   claims a bare command word is accepted only if it is a span-dispositioned block function,
+   `rp0_require_safe_component`, a builtin with no named-variable target surface, or a
+   variable-mutating builtin with modelled target grammar — everything else being an opaque
+   execution surface that fails. Try to find an admissible word that slips between those cases.
+3. **Is the weakened-r16 RED honest?** r17 could not produce a RED against the shipped fence
+   (it already refuses these), so it removed *only* the indirect-execution refusal from a
+   temporary extracted fence. Judge whether that is a legitimate D026 equivalent or whether it
+   proves less than it appears to.
+4. **Are all six literal-zero fields really gone?** `r17_literal_zero_measurements=0` is itself a
+   claim — check it, and sweep for any other value presented as a measurement that is not one.
 
 ## Audit contract
 1. Confirm the block identity (size + SHA-256) and that no block byte changed r10a→r16.
-2. Run `R16_GRAMMAR` VERBATIM — the Lead's run was 50/50 (wrapline + spandecoy killed, all
-   r15 mutants carried). Record real counts.
-2b. Resolve **RP6-11** above, with executed evidence either way.
+2. Run **`R17_DYNAMIC_TARGETS`** VERBATIM (published command in
+   `RP6_R17_REPORT_2026-08-12.md`); the Lead's run was `cases=15 pass=15 fail=0`, outer rc 0,
+   with the carried r16 grammar `50/50` inside it and block identity unchanged. Record real
+   counts. Also run `R16_GRAMMAR` itself if you want the r16 baseline independently.
+2b. Resolve the four questions above, with executed evidence either way.
 3. Adversarially seek a census evasion the fixpoint still admits — you are auditing the
    claim that exact-byte-span granularity is STRUCTURALLY closed, not one more class. If
    you find a hiding place (encoding tricks, here-docs, eval-constructed producers,
