@@ -62,9 +62,10 @@ The remaining proof-tool question is item 3, and it has a scheduled auditor toni
 
 **RP6-11 — RESOLVED 2026-08-12 ~15:40 by round 17, with one claim corrected on the way.**
 `AUDIT2_READINESS_PACKAGE/AUDIT2_D026_MAP_CURRENT_CYCLE_2026-08-12.md` mapped 39 closure rows
-(28 fully closed, 11 supplemental/unlocated, 15 disclosed residuals) and surfaced exactly one
-current-audit RED with no repaired GREEN: the round-15 F3 **dynamically-resolved
-inventory-mutation target**.
+(**as first written**: 28 fully closed, 11 supplemental/unlocated, 15 disclosed residuals —
+**superseded, the current figures are 29 / 10 / 15 with 0 open**, see the correction section
+below) and surfaced exactly one current-audit RED with no repaired GREEN: the round-15 F3
+**dynamically-resolved inventory-mutation target**.
 
 The GLM advance read-audit answered it with a claim that turned out to be **half right**:
 
