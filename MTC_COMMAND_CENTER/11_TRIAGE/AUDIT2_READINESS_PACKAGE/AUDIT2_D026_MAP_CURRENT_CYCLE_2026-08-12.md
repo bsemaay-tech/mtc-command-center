@@ -10,7 +10,9 @@ The final worktree identities below are unchanged from the cited accepted/audite
 
 ## RP6-P0
 
-Final GREEN subject: `MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh`, 110817 B, SHA-256 `5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330`. The accepted round-16 evidence document is `MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/SELF_QA_RP6.md`, 1024538 B, SHA-256 `897a5a4d92b71ca626e73a75700f60db714e5b100339205b0d40d4c36431597b`; it is byte-identical to the round-16 audit anchor `753894ba`. The block bytes are unchanged throughout the r11-r16 census hardening sequence.
+Final GREEN subject: `MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6-P0.sh`, 110817 B, SHA-256 `5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330`. The block bytes are unchanged throughout the r11-r17 census hardening sequence.
+
+**Evidence-document identity — UPDATED 2026-08-12 ~15:45 (round 17).** `SELF_QA_RP6.md` is now **1038848 B, SHA-256 `07cf843d5f00bef7f980017cbe01e0dc63ddb95dce5c7253d9e9a351b0d449ac`** at commit `671d9b40`. The previously recorded round-16 identity (1024538 B, `897a5a4d92b71ca626e73a75700f60db714e5b100339205b0d40d4c36431597b`, byte-identical to the r16 audit anchor `753894ba`) is retained here as history: it is the document Codex accepted in `RP6_CODEX_T0_AUDIT_R16`, and no r16-anchored claim carries forward to the new bytes without re-audit. Round 17 added §ROUND 17 only; the block is untouched. This discrepancy was surfaced independently by `WPI_GITATTRIBUTES_DURABILITY_ANALYSIS_2026-08-12.md` while r17 was being committed.
 
 For marker `X`, the exact invocation is `sed -n '/^# X_HARNESS_BEGIN$/,/^# X_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc`, from `WPI_BLOCKS_DRAFT`.
 
@@ -128,10 +130,46 @@ Pathscope's seven disclosed residuals remain outside the closure-test count: R1 
 
 - Total closure/evidence rows mapped: **39**.
 - Fully closed with located RED + GREEN on the stated final bytes: **28**.
-- OPEN, RED finding without a qualifying repaired GREEN: **1** — `RP6-11`, dynamic inventory-mutation target.
+- OPEN, RED finding without a qualifying repaired GREEN: ~~**1** — `RP6-11`, dynamic inventory-mutation target.~~ **RESOLVED 2026-08-12 ~15:45 by round 17 → 0 open.** See the RP6-11 disposition note below.
 - Unlocated/supplemental rows: **11 evidence-quality flags**. Ten are non-open supplemental rows (transport 9 + pathscope F9); the eleventh is the same `RP6-11` row already counted OPEN, because its RED is also unlocated. This overlap is stated so the numbers are not falsely additive.
 - Disclosed residuals/limitations with no closure test by design: **15** (RP6 1, RP7 2, transport 1, SEC102 4, pathscope 7).
 - Execution provenance: RP6 and RP7 closure rows are auditor-reproduced; transport rows were helper-driven even where auditor-reproduced; SEC102 rows were Lead-run verbatim and auditor-reproduced; pathscope rows are author-claimed with a non-executing GLM read audit.
 - Freeze-relevant D026 result: **one open current-audit finding** remains (`RP6-11`); transport F1 is separately owner-ratified ACCEPT-WITH-DISCLOSURE and is not counted as open.
 
-Packet 7 can now be marked CLOSED in `AUDIT2_HANDOFF_PACKAGE.md` as a completed, honest map packet; that packet closure does not close `RP6-11`, upgrade any supplemental row, or authorize freeze.
+Packet 7 can now be marked CLOSED in `AUDIT2_HANDOFF_PACKAGE.md` as a completed, honest map packet; that packet closure does not upgrade any supplemental row or authorize freeze.
+
+## RP6-11 disposition — resolved same day, with one claim corrected
+
+This row is the map's one real catch, and its resolution is worth recording precisely because
+half of the follow-up analysis was wrong.
+
+A GLM-5.2 advance read-audit answered the open question by claiming the r16 fence *admits* a
+variable-mutating `eval` with a runtime-resolved target and certifies it CLEAN. **That claim is
+false for the checked-in bytes**: `SELF_QA_RP6.md:16763-16765` already refuses `eval`, `source`
+and `.` as `UNMODELED kind=indirect_execution_builtin:*`. Codex found this while implementing and
+said so in its own round-17 report rather than building on the bad premise. The Lead's
+intermediate "confirmed by direct source read" was **partial** — it verified that `eval` appears
+in `admissible_bare` and is absent from the enumerated mutating-builtin list (both true) and then
+accepted the conclusion without checking whether a different branch catches it. Membership in
+`admissible_bare` only suppresses the unbound-invocation check; classification happens elsewhere.
+
+The other half was real and Lead-verified: `dynamic_targets=0` at `:17571` was a hardcoded
+literal presented as a measurement, beside a genuinely measured `variable_targets=$n_vt`. Round
+17's pass-format audit found **six** such literal-zero fields across three r16 success lines.
+
+**Round 17 closes it by inversion rather than enumeration:** a closed effect model over the
+tokenizer stream in which any bare word outside the modelled set is an opaque execution surface
+that fails with an unmodeled record, and `dynamic_targets` becomes
+`dynamic_variable_target + indirect_execution_builtin + effect_model_unmodeled`. Because the
+shipped fence already refuses these constructs, the RED side uses a temporary r16 fence with
+**only** the indirect-execution refusal removed — labelled explicitly rather than implied as a
+live defect. Two structurally different class members were exercised (`eval` by name
+concatenation; `dot_source` via a constructed runtime file).
+
+**Lead verbatim run (evidence of record):** `R17_DYNAMIC_TARGETS_SUMMARY cases=15 pass=15 fail=0
+result=PASS`, outer rc 0, carried r16 grammar `50/50` with no previously-killed mutant surviving,
+`r17_literal_zero_measurements=0`, block identity unchanged.
+
+**Still required:** the r17 bytes have no independent audit. Tonight's Claude Pro second-flagship
+RP6 audit is repointed at r17 and is asked to verify the correction itself, since two models have
+now disagreed about this file.
