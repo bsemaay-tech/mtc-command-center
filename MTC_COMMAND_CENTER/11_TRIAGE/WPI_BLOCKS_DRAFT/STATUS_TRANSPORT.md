@@ -8,6 +8,13 @@ recorded F1 as closed on the composition with one disclosed residual. Codex's ro
 Band B audit rejected that, and round 5 accepts the finding: see "What changed in
 round 5" below. No other finding is open on these bytes.
 
+**OWNER RATIFICATION 2026-08-12 (in chat, recorded at handoff commit `6fcafe39`):
+F1 is ACCEPTED-WITH-DISCLOSURE.** F1 stays honestly OPEN as an inherent limit of the
+SSH trust model; it is carried as an accepted, explicitly disclosed residual and is
+**not a freeze blocker** — the block set is freezable with F1 disclosed. Closure (an
+enforcement point ahead of account-shell startup processing) remains a successor item;
+no text may present the cleared inner-child domain as an end-to-end F1 closure.
+
 **The three findings of Codex's round-5 re-audit are closed** — see "What changed in
 round 6". They were an evidence-provenance defect in the fixture (R5-F2), a stale
 pending status for draft edits that had already landed (R5-F3), and a draft-side F1
@@ -263,7 +270,10 @@ are consumers).
 1. **Derivation classes 5 and 6 are new permissions.** §4 of the draft now enumerates
    six classes rather than four. Round 4 wrote them into the contract because F1 and F2
    cannot be satisfied inside the existing four. This is the Lead's call to ratify.
-2. **F1 IS OPEN — inner child closed, outer SSH account-shell boundary open.** This is
+2. **F1 IS OPEN — inner child closed, outer SSH account-shell boundary open.**
+   *Owner ratification 2026-08-12: accepted-with-disclosure, not a freeze blocker (see
+   header). The finding stays OPEN and honestly described; only its freeze-gating status
+   changed.* This is
    the one unrepaired finding on these bytes, and it is a finding rather than a
    disclosure. `sshd` does not execute the remote command string itself: it hands the
    string to the account's shell, and that shell processes its own startup environment

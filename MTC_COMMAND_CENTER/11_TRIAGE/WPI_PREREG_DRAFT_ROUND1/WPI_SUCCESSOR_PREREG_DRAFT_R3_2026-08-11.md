@@ -7,7 +7,7 @@ Merged input: `SEC101_ATTESTATION_APPLICATION_2026-08-11.md` (commit `c0dea12d`)
 
 This is a successor **draft**, not a dispatch record. It mints no identifier, fills no attestation, runs no block, contacts no host, and authorizes no operation. Every allocation remains `<ALLOCATE-AT-DISPATCH>` and every not-yet-accepted identity remains `<PIN-AT-FREEZE>`.
 
-The accepted content of `WPI_PREREGISTRATION_DRAFT.md` remains the baseline except where this document explicitly supersedes it. This draft merges the accepted Lane-B application for section 10.1 and attestation ordering. The three Lane-B family decisions remain proposed, and the three explicit `MERGE-CONFLICT` items in section 4.5.4 remain Lead/owner decision gates; until those decisions are made, this draft is not complete and freeze must STOP.
+The accepted content of `WPI_PREREGISTRATION_DRAFT.md` remains the baseline except where this document explicitly supersedes it. This draft merges the accepted Lane-B application for section 10.1 and attestation ordering. The three Lane-B family decisions were **RATIFIED by the owner on 2026-08-12** (in chat, recorded in the handoff at commit `6fcafe39`; adjudication basis `LEAD_MC_ADJUDICATION_2026-08-11.md`): all three closures are adopted, and the three `MERGE-CONFLICT` items in section 4.5.4 are RESOLVED. Implementation of the three closures in the frozen composite remains a freeze gate; until they are implemented and proven, freeze must STOP.
 
 ## 0. Scope and immutability
 
@@ -310,14 +310,16 @@ creates no new path authority.
 #### 4.5.2 Proposed decisions for the three unresolved families
 
 The three source families that cannot be closed by section 4.5.1 alone are decided proposals, not
-silent assumptions. Each is marked `PROPOSED — LEAD/OWNER DECISION REQUIRED`. Until all
-three are accepted and implemented in the frozen composite, Stage 1 STOPs and no archive or
+silent assumptions. Each was marked `PROPOSED — LEAD/OWNER DECISION REQUIRED` at merge time;
+all three were **RATIFIED by the owner on 2026-08-12** as recommended (handoff commit `6fcafe39`,
+adjudication `LEAD_MC_ADJUDICATION_2026-08-11.md`) and are adopted as written below. Until all
+three are implemented in the frozen composite and proven, Stage 1 STOPs and no archive or
 successor preregistration is dispatchable.
 
 <a id="decision-f1"></a>
 ##### Decision F1 — RP6 executable family
 
-**PROPOSED — LEAD/OWNER DECISION REQUIRED.** Require exactly one frozen pin for each of
+**RATIFIED — OWNER DECISION 2026-08-12 (adopted as written; see §4.5.4).** Require exactly one frozen pin for each of
 `stat`, `readlink`, `env`, `find`, `sha256sum`, `systemctl`, `ss`, `curl`, `timeout`,
 `python3`, `id`, and `getent`. The first eleven non-Python names must equal their exact
 preregistered `/usr/bin/<name>` paths; `python3` must equal the exact resolved non-symlink
@@ -340,7 +342,7 @@ STOP rather than disappear or overwrite.
 <a id="decision-f2"></a>
 ##### Decision F2 — RP6 venv-root prefix
 
-**PROPOSED — LEAD/OWNER DECISION REQUIRED.** Before the first path probe, require
+**RATIFIED — OWNER DECISION 2026-08-12 (adopted as written; see §4.5.4).** Before the first path probe, require
 `P0_VENV_ROOT` to equal exactly
 `/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b`. Basename equality,
 canonicality, and an absolute spelling are necessary but not sufficient. Do not widen the
@@ -360,7 +362,7 @@ path use.
 <a id="decision-f3"></a>
 ##### Decision F3 — evidence-root provenance
 
-**PROPOSED — LEAD/OWNER DECISION REQUIRED.** Make the entrypoint-driven section-4.4 composite
+**RATIFIED — OWNER DECISION 2026-08-12 (adopted as written; see §4.5.4).** Make the entrypoint-driven section-4.4 composite
 proof the only acceptance route. Allocate the exact `REMOTE_BASE` and the P0/RO RUNIDs,
 render them into the wrappers and the RO frozen evidence-root constant, then analyze the
 final hash-bound wrapper + reachable RP0 library + bootstrap + selected block + inline or
@@ -387,13 +389,15 @@ The admitted Lane-B application universe is exactly 15 members: 11 `EXTEND` item
 
 Conservation equation: `15 admitted = 11 INCLUDE extensions + 3 explicit proposed decisions + 1 INCLUDE ordering fix`; terminal dispositions = 15; omitted/overwritten members = 0.
 
-#### 4.5.4 MERGE-CONFLICT register — no adjudication
+#### 4.5.4 MERGE-CONFLICT register — RESOLVED by owner ratification 2026-08-12
 
-The following contradictions are preserved rather than silently resolved:
+The register originally preserved three contradictions rather than silently resolving them. The Lead adjudication (`LEAD_MC_ADJUDICATION_2026-08-11.md`) established that in each case the R2 binding text and the Lane-B family proposal AGREE on substance — the conflict was one of status labels, not content — so a single owner ratification closes all three. The owner **RATIFIED YES on 2026-08-12** (in chat, recorded in the handoff at commit `6fcafe39`). The register is now CLEARED:
 
-1. **MERGE-CONFLICT MC-01 — RP6 executable family.** R2 sections 2.1 and 4.2 already require the exact 12-entry `P0_TOOL_PINS` map with no PATH fallback, while Lane-B Decision F1 keeps that same closure `PROPOSED — LEAD/OWNER DECISION REQUIRED`. This draft makes no decision; Lead/owner resolution is required before freeze.
-2. **MERGE-CONFLICT MC-02 — RP6 venv-root family.** R2 section 4.2 already requires `P0_VENV_ROOT` to equal `/opt/mtc-bridge/venvs/$P0_CAND` exactly, while Lane-B Decision F2 keeps the exact-root closure `PROPOSED — LEAD/OWNER DECISION REQUIRED`. This draft makes no decision; Lead/owner resolution is required before freeze.
-3. **MERGE-CONFLICT MC-03 — evidence-root provenance.** R2 section 4.4 already makes the complete frozen composite proof the acceptance route and classifies block-only results as supplemental, while Lane-B Decision F3 keeps that route `PROPOSED — LEAD/OWNER DECISION REQUIRED`. This draft makes no decision; Lead/owner resolution is required before freeze.
+1. **MC-01 — RP6 executable family: RESOLVED.** The closure is adopted: the exact 12-entry `P0_TOOL_PINS` map with no PATH fallback (R2 §2.1/§4.2 = Decision F1). The former `PROPOSED` qualifier on F1 is deleted.
+2. **MC-02 — RP6 venv-root family: RESOLVED.** The closure is adopted: `P0_VENV_ROOT` must equal `/opt/mtc-bridge/venvs/$P0_CAND` exactly (R2 §4.2 = Decision F2). The former `PROPOSED` qualifier on F2 is deleted.
+3. **MC-03 — evidence-root provenance: RESOLVED.** The closure is adopted: the complete frozen-composite proof is the only acceptance route; block-only results are supplemental (R2 §4.4 = Decision F3). The former `PROPOSED` qualifier on F3 is deleted.
+
+Implementation of all three closures in the frozen composite remains a freeze gate (§4.5.2).
 
 ### 4.6 Section 8.2 rows 1–9 coverage gate
 
@@ -603,7 +607,7 @@ The R2 universe has 19 members and the Lane-B application universe has 15 member
 | LB-01 | EXT-01 — `/` | INCLUDE as `read-exact` | [§10.1-E01](#sec101-e01) |
 | LB-02 | EXT-02 — `/opt`, `/opt/mtc-bridge`, `/opt/mtc-bridge/releases`, `/opt/mtc-bridge/venvs` | INCLUDE as finite `read-exact` set | [§10.1-E02](#sec101-e02) |
 | LB-03 | EXT-05 — `/usr`, `/usr/bin` | INCLUDE as finite `read-exact` set | [§10.1-E05](#sec101-e05) |
-| LB-04 | EXT-06 — frozen RP6/RP7 executable objects | INCLUDE as finite `read-execute-exact` set, conditional on FAM-01 closure | [§10.1-E06](#sec101-e06) |
+| LB-04 | EXT-06 — frozen RP6/RP7 executable objects | INCLUDE as finite `read-execute-exact` set, conditional on FAM-01 closure (RATIFIED 2026-08-12) | [§10.1-E06](#sec101-e06) |
 | LB-05 | EXT-08 — `/etc` | INCLUDE as `read-exact` | [§10.1-E08](#sec101-e08) |
 | LB-06 | EXT-10 — `/var`, `/var/lib`, `/var/log` | INCLUDE as finite `read-exact` set | [§10.1-E10](#sec101-e10) |
 | LB-07 | EXT-13 — `/proc/uptime` | INCLUDE as `read-exact` | [§10.1-E13](#sec101-e13) |
@@ -611,9 +615,9 @@ The R2 universe has 19 members and the Lane-B application universe has 15 member
 | LB-09 | EXT-15 — `/proc/self/ns/{user,mnt,pid,net}` | INCLUDE as finite `read-exact` set | [§10.1-E15](#sec101-e15) |
 | LB-10 | EXT-16 — exact `/proc/<WPI_MAINPID>/ns/net` | INCLUDE as `read-exact`; freeze to the preregistered PID | [§10.1-E16](#sec101-e16) |
 | LB-11 | EXT-17 — `/proc/self/fd/8` | INCLUDE as `read-exact` | [§10.1-E17](#sec101-e17) |
-| LB-12 | FAM-01 — RP6 inherited-PATH/optional-pin executable family | `PROPOSED — LEAD/OWNER DECISION REQUIRED`: close to twelve exact pins and delete fallback | [Decision F1](#decision-f1); [MERGE-CONFLICT MC-01](#454-merge-conflict-register--no-adjudication) |
-| LB-13 | FAM-02 — RP6 arbitrary-prefix venv-root family | `PROPOSED — LEAD/OWNER DECISION REQUIRED`: bind the one exact per-candidate venv root | [Decision F2](#decision-f2); [MERGE-CONFLICT MC-02](#454-merge-conflict-register--no-adjudication) |
-| LB-14 | FAM-03 — evidence-root provenance | `PROPOSED — LEAD/OWNER DECISION REQUIRED`: require a complete frozen-composite derivation | [Decision F3](#decision-f3); [MERGE-CONFLICT MC-03](#454-merge-conflict-register--no-adjudication) |
+| LB-12 | FAM-01 — RP6 inherited-PATH/optional-pin executable family | `RATIFIED 2026-08-12`: close to twelve exact pins and delete fallback | [Decision F1](#decision-f1); [MC-01 RESOLVED](#454-merge-conflict-register--resolved-by-owner-ratification-2026-08-12) |
+| LB-13 | FAM-02 — RP6 arbitrary-prefix venv-root family | `RATIFIED 2026-08-12`: bind the one exact per-candidate venv root | [Decision F2](#decision-f2); [MC-02 RESOLVED](#454-merge-conflict-register--resolved-by-owner-ratification-2026-08-12) |
+| LB-14 | FAM-03 — evidence-root provenance | `RATIFIED 2026-08-12`: require a complete frozen-composite derivation | [Decision F3](#decision-f3); [MC-03 RESOLVED](#454-merge-conflict-register--resolved-by-owner-ratification-2026-08-12) |
 | LB-15 | ORDER-01 — circular attestation/preregistration/commit order | INCLUDE the two-commit capture-then-consume procedure | [§5.2 Ordering fix](#52-attestation-ordering-fix--two-commits-capture-first-and-consume-second) |
 
 Conservation equation: `34 admitted = 19 R2 members + 15 Lane-B members`; terminal dispositions = 34; omitted/overwritten members = 0.
@@ -713,12 +717,12 @@ R2 contained three literal Lane-B sites representing two semantic insertions: th
 | EXT-15 | ``| `read-exact` | `/proc/self/ns/user`, `/proc/self/ns/mnt`, `/proc/self/ns/pid`, `/proc/self/ns/net` | … |`` |
 | EXT-16 | ``| `read-exact` | exact `/proc/<WPI_MAINPID>/ns/net` … | … |`` |
 | EXT-17 | ``| `read-exact` | `/proc/self/fd/8` | Read only to prove … |`` |
-| FAM-01 | “Require exactly one frozen pin for each of `stat` … `getent` … and delete every unpinned `command -v`/inherited-PATH fallback.” The decision remains `PROPOSED — LEAD/OWNER DECISION REQUIRED`. |
-| FAM-02 | “Before the first path probe, require `P0_VENV_ROOT` to equal exactly `/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b`.” The decision remains `PROPOSED — LEAD/OWNER DECISION REQUIRED`. |
-| FAM-03 | “Make the entrypoint-driven section-4.4 composite proof the only acceptance route.” The decision remains `PROPOSED — LEAD/OWNER DECISION REQUIRED`. |
+| FAM-01 | “Require exactly one frozen pin for each of `stat` … `getent` … and delete every unpinned `command -v`/inherited-PATH fallback.” The decision was `PROPOSED — LEAD/OWNER DECISION REQUIRED` at merge time; RATIFIED by the owner 2026-08-12 (§4.5.4). |
+| FAM-02 | “Before the first path probe, require `P0_VENV_ROOT` to equal exactly `/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b`.” The decision was `PROPOSED — LEAD/OWNER DECISION REQUIRED` at merge time; RATIFIED by the owner 2026-08-12 (§4.5.4). |
+| FAM-03 | “Make the entrypoint-driven section-4.4 composite proof the only acceptance route.” The decision was `PROPOSED — LEAD/OWNER DECISION REQUIRED` at merge time; RATIFIED by the owner 2026-08-12 (§4.5.4). |
 | ORDER-01 | “The procedure that produces an observation is committed before the observation; the value of that observation is committed before any operation consumes it.” |
 
-Disposition recount: 11 extension lines present; 3 proposed-family lines present and each marked `PROPOSED — LEAD/OWNER DECISION REQUIRED`; 1 ordering line present; total 15/15.
+Disposition recount: 11 extension lines present; 3 proposed-family lines present and each marked `PROPOSED — LEAD/OWNER DECISION REQUIRED` at merge time (all three RATIFIED 2026-08-12, §4.5.4); 1 ordering line present; total 15/15.
 
 ### 9.4 Two-commit sequence walk
 
@@ -736,5 +740,5 @@ Therefore no value is needed before it exists: Commit 1 needs zero attestation o
 - R2 disposition conservation: 19/19.
 - Lane-B member conservation: 15/15.
 - Combined conservation: `19 + 15 = 34`; terminal dispositions: 34; silently dropped: 0.
-- Proposed family decisions preserved without adjudication: FAM-01, FAM-02, FAM-03.
-- MERGE-CONFLICT items: MC-01, MC-02, MC-03. None was resolved by the author.
+- Proposed family decisions preserved without adjudication at merge time: FAM-01, FAM-02, FAM-03. All three RATIFIED by the owner 2026-08-12 (§4.5.4).
+- MERGE-CONFLICT items: MC-01, MC-02, MC-03. None was resolved by the author; all three RESOLVED by owner ratification 2026-08-12 (§4.5.4), adjudication `LEAD_MC_ADJUDICATION_2026-08-11.md`.
