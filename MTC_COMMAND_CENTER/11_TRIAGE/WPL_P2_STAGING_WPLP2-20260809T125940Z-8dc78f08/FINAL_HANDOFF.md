@@ -1,5 +1,11 @@
 # WP-L Phase 2 staging — first-FAIL handoff
 
+**[SUPERSEDED 2026-08-12]** This is a first-FAIL snapshot preserved as history. The unit closed
+the same night: see `UNIT_CLOSURE_RECORD.md` in this directory (executable scope CLOSED, B3
+repaired = PASS on host). Found stale by the GLM status-vs-bytes sweep
+(`MTC_COMMAND_CENTER/11_TRIAGE/WPL_STATUS_VS_BYTES_SWEEP_GLM_2026-08-12.md`); every byte-level
+claim below still verifies — only the verdict lines were overtaken.
+
 Unit result: **BLOCKED before remote contact**
 
 ## Completed checkpoint
