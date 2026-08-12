@@ -63,14 +63,32 @@ found six such literal-zero fields across three r16 success lines.
 ## SECOND PRIORITY TARGET — unresolved evidence placeholders, and a report that says otherwise
 A round-report claim audit (`WPI_ROUND_REPORT_CLAIM_AUDIT_2026-08-12.md`) found that the **r16
 report states the evidence placeholders were resolved, while the files still contain them.**
-Lead-verified by direct grep — three real unresolved placeholders survive:
+**EIGHT** unresolved placeholder slots survive in `SELF_QA_RP6.md`, plus one in the status file.
+*(The Lead's first grep reported three — the pattern omitted digits and missed five. Corrected
+against a full-document audit that read all 18,799 lines and checked 1,863 output lines.)*
 
-- `SELF_QA_RP6.md:15807` — `@@RERUN_BLOCK@@`
-- `SELF_QA_RP6.md:18690` — `@@RERUN_BLOCK@@`
+- `:15341` — `@@R15_GRAMMAR_TRANSCRIPT@@`
+- `:15651` — `@@R15_F1_RED_TRANSCRIPT@@`
+- `:15763` — `@@R11_GUARDS_TRANSCRIPT@@`
+- `:15807` — `@@RERUN_BLOCK@@`
+- `:18241` — `@@R16_GRAMMAR_TRANSCRIPT@@`
+- `:18524` — `@@R16_F1_RED_TRANSCRIPT@@`
+- `:18645` — `@@R11_GUARDS_TRANSCRIPT@@`
+- `:18690` — `@@RERUN_BLOCK@@`
 - `STATUS_RP6_P0.md:284` — `@@STATUS_EXEC_BLOCK@@`
 
-(Other `@@…@@` occurrences in those files are prose *describing* the placeholders, not unresolved
-ones — do not count those.)
+(Other `@@…@@` occurrences are prose *describing* the placeholders — do not count those.)
+
+**These are not peripheral slots.** They are the transcripts for the round-15 closure, the
+**round-16 discriminating-power proof**, the guard census, and the mandated rerun vector — i.e.
+the document-local execution support for the very fixpoint claim you are auditing. Meanwhile
+`:13492-13505` and `:15995-16000` state that these transcripts are real captured output and that
+the placeholders were resolved.
+
+**Important counterweight — the evidence exists, just not in this document.** The Lead ran
+`R16_GRAMMAR` verbatim (50/50) and `R17_DYNAMIC_TARGETS` verbatim (15/15, carried r16 grammar
+50/50) from outside the repo, and the Codex r16 audit independently reproduced its run. So the
+question is not "was this ever proven" but "does the self-QA document carry its own proof".
 
 These are positions where a transcript should be pasted and **nothing is**. The GLM advance
 read-audit characterised them as recovered-session artefacts and "a LOW documentary nit"; the
