@@ -1,7 +1,11 @@
 # RP6-P0 - status: ROUND-17-REPAIRED-PENDING-T0-AUDIT (RP6-11 dynamic-target census evidence closed; no block byte changed)
 
-Updated 2026-08-12 by the round-17 implementer (Codex `gpt-5.6-sol`,
-xhigh, fresh session). Audit tier unchanged: **T0** (host/execution-domain
+Updated 2026-08-12 by the round-17 implementer (Codex **`gpt-5.5`**, xhigh, fresh
+session — *corrected by the Lead 2026-08-12 ~17:30: the round-17 text as authored claimed
+`gpt-5.6-sol`, but the dispatch ran on `-Account free`, whose session header records
+`model: gpt-5.5`. Implementer identity is load-bearing for the implementer≠auditor rule
+and for tier policy, so it is corrected here against the run log
+`RP6_R17_CODEX_RUN_2026-08-12.log` rather than left as authored.*). Audit tier unchanged: **T0** (host/execution-domain
 preflight). The next auditor is a different flagship, Claude Pro
 `claude-opus-5` xhigh, per the kickoff. The block remains a draft: not frozen,
 not accepted, not dispatchable, and not authorised for host execution.
