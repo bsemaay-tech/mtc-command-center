@@ -254,17 +254,100 @@ RP6 cross-check specifically must resolve a discrepancy the Lead found: the ledg
    found something new.
 4. Sweep the older WP-L/B3 records the same way the STATUS sweep does the current ones.
 
-## 7. OVERNIGHT CLAUDE PRO RESULTS — **TO BE FILLED AFTER 23:00**
+## 7. THE 23:00 RUN — **NOT YET EXECUTED. THIS IS YOUR FIRST JOB.**
 
-<!-- Fill: probe result; per-block verdicts for transport → RP7 → RP6(r17) → pathscope;
-     which blocks reached dual acceptance; any repair rounds dispatched to Codex; whether the
-     rows 1-9 build was released. -->
+The 2026-08-12 session **stopped at ~20:45** on the owner's instruction (context exhausted). The
+23:00 window had not opened. **Nothing about it has run.**
 
-## 8. LEDGER — **TO BE FILLED**
+**All four kickoffs are written, preflighted, and corrected.** A dedicated preflight lane found
+**dispatch-blocking errors in all four** and they were fixed at `d4a07438`:
 
-<!-- Fill: honest hours booked for the 08-12 day + overnight, running total against the 50h
-     plan, and the note that the owner waived the 10h-remaining stop gate on 08-11 with honest
-     booking required. Last estimate was ~40h used. -->
+- **The universal blocker:** every kickoff gated its verdict on a *globally clean* `git status`.
+  This worktree carries ~100 pre-existing untracked run logs, so that gate **can never pass** —
+  all four would have self-blocked and the window would have been lost. Replaced in all four
+  with a **delta gate**: capture porcelain before, run, capture after, prove the delta contains
+  **only** that lane's exact verdict path, plus a path-scoped confirmation.
+- **RP6 was still titled and scoped to r16** despite the body having been repointed to r17 —
+  now fully r17, with the r16 identity explicitly marked history that carries no acceptance.
+- **Pathscope declared T1/xhigh**, mixing a T1 audit with the T0 effort setting — now T1/high.
+
+**Dispatch procedure.** Probe first:
+`claude --print "reply PROBE-OK" --model claude-opus-5 --no-session-persistence`
+(**DEFAULT account — NOT `Invoke-ClaudeMax.ps1`**). If still capped, retry every ~20 min. Then
+run **sequentially**, each with
+`claude --print "Read <kickoff> and execute it fully and exactly. Working dir C:\LAB\Tradingview_LAB_CLEAN. Read-only except your verdict file. No git mutation." --model claude-opus-5 --effort xhigh --no-session-persistence`
+(pathscope uses `--effort high`), redirecting to a RUN log:
+
+1. `WPI_BLOCKS_DRAFT/KICKOFF_CLAUDEPRO_TRANSPORT_2NDFLAGSHIP_AUDIT.md`
+2. `WPI_BLOCKS_DRAFT/KICKOFF_CLAUDEPRO_RP7_2NDFLAGSHIP_AUDIT.md`
+3. `WPI_BLOCKS_DRAFT/KICKOFF_CLAUDEPRO_RP6_2NDFLAGSHIP_AUDIT.md`
+4. `WPI_PREREG_DRAFT_ROUND1/KICKOFF_CLAUDEPRO_PATHSCOPE_EXECUTION_AUDIT.md`
+
+Keep Codex/GLM lanes running in parallel throughout. Adjudicate and commit each verdict; append
+to `AUDIT2_READINESS_PACKAGE/AUDIT2_ACCEPTANCE_MATRIX_2026-08-12.md` and update
+`WPI_FREEZE_BLOCKER_MAP_2026-08-12.md` items 1a/1b/1c/3. **Any REQUEST_CHANGES → dispatch a
+Codex repair lane immediately, do not wait for morning.** **If RP7 reaches dual acceptance →
+dispatch the HELD rows 1-9 build** (`WPI_BLOCKS_DRAFT/KICKOFF_CODEX_RP7_ROWS_1_9_BUILD.md`).
+
+**What each auditor is being asked to settle** (all already disclosed in their kickoffs, so they
+judge rather than rediscover): transport — whether the failed-cleanup contradiction is only prose
+or left state affecting a later arm; RP7 — whether stale byte-identity narration means a carried
+gate ran on older bytes (which would change the verdict) or is documentation only; RP6 — three
+targets: the dynamic-target class, eight unpasted transcript placeholders, and r17's
+self-certifying hardcoded literal; pathscope — the sixteen-vs-four CRITICAL characterisation, and
+three Python assertions it can measure directly.
+
+## 8. LEDGER — booked honestly, needs owner ratification
+
+- Last **ratified** balance: ~24.9 h of the 50 h plan.
+- Prospective bookings since, still **unratified**: ~4.4 h (08-10 daytime) + the 08-11 overnight
+  run + **~11 h for the 08-12 day run** (09:50→20:45, ~45 commits).
+- **Running estimate: ~51 h used of 50.** The plan total is reached and passed.
+- The owner **waived the 10h-remaining stop gate on 2026-08-11 18:30** ("continue past 10h/50h,
+  honest booking, hard safety gates unchanged"), so this is **not a blocker** — but it does mean
+  **every hour from here is over the original plan**, and the ledger needs one owner-ratified
+  freeze-time figure before Audit 2 (that is Audit-2 packet component **P11-08**, which is
+  explicitly an owner action no automation can produce).
+
+## 8b. WAITING ON THE OWNER — surface these, do not decide them
+
+1. **P10-10 — what IS the mandated test suite?** This is the highest-value open decision: three
+   Audit-2 components cascade from it. `AUDIT2_READINESS_PACKAGE/AUDIT2_MANDATED_SUITE_OPTIONS_2026-08-12.md`
+   lays out the options. **Every historical baseline is disqualified** — "1359 passed" was a
+   different SHA, the two gc-referent failures were Linux-specific, a later candidate recorded
+   1360, and later records name a different two-failure set. **No CI workflow exists** to inherit
+   from. Codex recommends the full Bridge suite at the frozen SHA, with the exact command settled
+   only after reconciling README/cwd/ACL/plugin requirements.
+2. **P11-08 — ledger ratification** (see §8). No automation can produce this.
+3. **SEC102 documentation-repair round.** The acceptance **stands**; its evidence document has
+   13 accuracy findings recorded in `STATUS_SEC102.md` directly under the acceptance so the two
+   travel together. Queued as a repair, not a reopened round — but the owner should know it
+   exists before Audit 2 finds it.
+
+## 8c. WHAT THE 2026-08-12 DAY RUN ACTUALLY PRODUCED
+
+**One freeze blocker fully cleared** (SEC102, by owner decision) and **three more closed**
+(§10.1 grammar, attestation ordering, most of the Audit-2 package). Blocker 8 reclassified — the
+contract disagreement was gone, only a freeze-input fill remains. Blocker 7 **corrected**: it
+claimed the five `P0_ATTESTED_*` inputs were unwired; they are fully wired, only the *values* are
+markers, so it is a fill problem and the old wording would have sent an implementer to write code
+that already exists.
+
+**A new blocker class was found:** five Audit-2 components have **no producing step at all**
+(`AUDIT2_PACKETS_9_10_11_SCOPE_2026-08-12.md`) — four technical, one owner-only.
+
+**All five evidence documents were claim-audited** for the first time: **38 findings** (16 false,
+18 unsupported, 4 scope-wrong), one named systemic cause, and only **three** capable of affecting
+an acceptance — all three already in tonight's kickoffs. Three mechanical authoring rules came out
+of it and are now §0 Rule 9b.
+
+**Bounding results that matter as much as the findings:** the unpasted-placeholder defect is
+confined to the RP6 lane (737 files swept, zero elsewhere); the stale-identity defect is confined
+to RP6/RP7; WP-L's closed evidence is intact at 197/198 with the one change documented; the
+prereg's conservation accounting recounts correctly; and **no owner decision was overstated**.
+
+**One finding was RETRACTED** on cross-check — an earlier SEC102 "false" claim turned out
+consistent (95 printable ASCII + 6 non-ASCII = 101). Cross-checks pull both ways.
 
 ## 9. STANDING LESSONS THIS CYCLE PAID FOR
 

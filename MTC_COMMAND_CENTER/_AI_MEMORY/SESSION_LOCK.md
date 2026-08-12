@@ -25,12 +25,19 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 
 | Workstream | Files (primary home) | Owner | Since |
 |---|---|---|---|
-| RP6-P0 block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP6* | Fable overnight Lead `7e05aabf` (delegate: Claude Max) | 2026-08-11 14:15 |
-| RP7-WPI-RO block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP7* | Fable overnight Lead `7e05aabf` (queued: GLM at 18:50) | 2026-08-11 14:15 |
-| Transport set | `11_TRIAGE/WPI_BLOCKS_DRAFT/` transport/run_p0/run_ro/remote_* | Fable overnight Lead `7e05aabf` (r4 committed `99f33c33`; Codex audit read-only in flight) | 2026-08-11 14:15 |
-| §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | Fable overnight Lead `7e05aabf` (delegate: Claude Max on pathscope R2) | 2026-08-11 14:15 |
-| Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | Fable overnight Lead `7e05aabf` (R3 merged `17280e28`) | 2026-08-11 14:15 |
+| RP6-P0 block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP6* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
+| RP7-WPI-RO block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP7* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
+| Transport set | `11_TRIAGE/WPI_BLOCKS_DRAFT/` transport/run_p0/run_ro/remote_* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
+| §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
+| Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
+| Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | UNCLAIMED | — |
+
+**All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
+clean stop (Gate 7). Everything it produced is committed and pushed through `d4a07438`. **The
+next session should claim the rows it intends to write before its first write** — and note that
+tonight's four Claude Pro audit lanes are READ-ONLY on the block workstreams (each writes only
+its own verdict file), so they do not require ownership of RP6/RP7/transport/pathscope.
 
 Workstreams not listed: add a row before writing.
 
@@ -39,6 +46,14 @@ Workstreams not listed: add a row before writing.
 - 2026-08-11: file rewritten from stub to ownership mechanism after the 2026-08-10
   transport collision (two sessions writing the same artifact family; detected, work
   dropped by one session, no data lost — see the concurrent-session notice).
+- **2026-08-12 20:45: all rows RELEASED** by the Fable session "sabaha kadar çalışma planı" at
+  its clean stop. That session held every WP-I row for the 2026-08-12 day run (~11 hours,
+  ~45 commits). No foreign uncommitted edits were found in any owned workstream at release.
+  One process note worth carrying: **two dispatched lanes independently refused Lead
+  instructions that would have overwritten a prior lane's committed record** — once on the
+  D026 recheck file, once on a GLM verdict path. Both surfaced instead of overwriting. That is
+  the ownership discipline working, and it argues for keeping the "write exactly one NEW file"
+  convention rather than naming existing paths in kickoffs.
 - 2026-08-11 14:15: Fable overnight Lead `7e05aabf` (session "Sabaha kadar otonom çalışma
   planı" successor) claimed all five WP-I rows. Verified via session listing that the rule
   author ("Codex gece çalışması değerlendirmesi" session) committed `15d48088` at 13:46:53
