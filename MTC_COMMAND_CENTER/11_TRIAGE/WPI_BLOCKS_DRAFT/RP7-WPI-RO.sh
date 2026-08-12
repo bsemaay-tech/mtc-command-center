@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ===== BLOCK-ID: RP7-WPI-RO ===== [EXECUTABLE PROPOSAL BLOCK]
-# WP-I read-only rows 10-24 (PROPOSED DESIGN, DRAFT).
+# WP-I read-only rows 1-24 (PROPOSED DESIGN, DRAFT).
 # Candidate: 2ce41e34bceb599d80af24c5c33d835820ec321b.
 #
 # AUTHORITY: authoring only. These bytes grant no host contact, transport,
@@ -94,6 +94,8 @@ WPI_PATH_FIELD=""
 WPI_PATH_RENDERABLE=yes
 WPI_MOUNT_SNAPSHOT_SEQ=0
 WPI_FIXED_ATTESTED_MOUNT_PROJECTION_SHA256='<PIN-AT-FREEZE>'
+WPI_UNIT_NAME='mtc-bridge-first-start.service'
+WPI_EXPECTED_DROPIN_PATHS=''
 # The trusted adjudicating interpreter. Neither accepting adjudicator (the status
 # JSON parser, the lock-parity verifier) may run under the venv being judged: on
 # the target Python 3.12, -I implies -E/-P/-s but NOT -S, so site still imports and
@@ -520,6 +522,311 @@ wpi_require_empty_captured() {
     wpi_require_empty_file "$prefix" "$reason detail=hard_read_error source=$source" "$diag"
     [ "$rc" -ne 0 ] || wpi_stop "$prefix" "$reason detail=diagnostic_stream_nonempty diagnostic_file=$source"
     [ -z "$whole" ] || wpi_stop "$prefix" "$reason detail=diagnostic_stream_nonempty diagnostic_file=$source"
+}
+
+declare -gA WPI_SHOW_VALUES=()
+declare -gA WPI_SHOW_SEEN=()
+
+wpi_parse_show_capture() {
+    local prefix="$1" reason="$2" allowed="$3"
+    local fd source diag dfd whole="" rest="" line key value rc=0 consumed=0
+    WPI_SHOW_VALUES=()
+    WPI_SHOW_SEEN=()
+    wpi_captured_fd "$prefix" "$reason" out; fd="$WPI_CAP_FD"; source="$WPI_CAP_FD_SOURCE"
+    wpi_alloc_read_diag show_rows; diag="$WPI_READ_DIAG"; dfd="$WPI_READ_DIAG_FD"
+    IFS= read -r -d '' -u "$fd" whole 2>&"$dfd" || rc=$?
+    exec {dfd}>&-
+    wpi_release_captured_fd out
+    wpi_require_empty_file "$prefix" "$reason detail=hard_read_error source=$source" "$diag"
+    [ "$rc" -ne 0 ] || wpi_stop "$prefix" "$reason detail=nul_byte_in_show_output source=$source"
+    [ -n "$whole" ] || wpi_stop "$prefix" "$reason detail=empty_show_output source=$source"
+    case "$whole" in *[![:print:]$'\n']*) wpi_stop "$prefix" "$reason detail=show_output_charset source=$source" ;; esac
+    rest="$whole"
+    while [ -n "$rest" ]; do
+        case "$rest" in
+            *$'\n'*) line="${rest%%$'\n'*}"; rest="${rest#*$'\n'}" ;;
+            *) wpi_stop "$prefix" "$reason detail=unterminated_final_record source=$source" ;;
+        esac
+        consumed=$(( consumed + ${#line} + 1 ))
+        [ -n "$line" ] || wpi_stop "$prefix" "$reason detail=blank_record source=$source"
+        case "$line" in *=*) key="${line%%=*}"; value="${line#*=}" ;;
+            *) wpi_stop "$prefix" "$reason detail=property_record_grammar source=$source" ;;
+        esac
+        case "$key" in ''|*[!A-Za-z0-9]*) wpi_stop "$prefix" "$reason detail=property_name_grammar source=$source" ;; esac
+        case " $allowed " in *" $key "*) : ;;
+            *) wpi_stop "$prefix" "$reason detail=unexpected_property prop=$key source=$source" ;;
+        esac
+        [ -z "${WPI_SHOW_SEEN[$key]+x}" ] || wpi_stop "$prefix" "$reason detail=duplicate_property prop=$key source=$source"
+        WPI_SHOW_SEEN[$key]=yes
+        WPI_SHOW_VALUES[$key]="$value"
+    done
+    [ "$consumed" -eq "${#whole}" ] || wpi_stop "$prefix" "$reason detail=record_bytes_unaccounted consumed=$consumed captured=${#whole}"
+}
+
+wpi_show_get() {
+    local prefix="$1" reason="$2" query="$3"
+    [ -n "${WPI_SHOW_SEEN[$query]+x}" ] || wpi_stop "$prefix" "$reason rc=0 detail=property_record_absent query=$query"
+    WPI_LINE="${WPI_SHOW_VALUES[$query]}"
+}
+
+wpi_require_show_value_grammar() {
+    local prefix="$1" reason="$2" prop="$3" value="$4"
+    case "$value" in *[![:print:]]*) wpi_stop "$prefix" "$reason prop=$prop rc=0 detail=value_charset" ;; esac
+}
+
+wpi_assert_unit_execstart() {
+    local value="$1" expected_path="$WPI_VENV_ROOT/bin/python"
+    local expected_argv="$WPI_VENV_ROOT/bin/python -m bridge.app"
+    local body part trimmed key val path="" argv="" ignore_errors="" seen_path=no seen_argv=no seen_ignore=no
+    [[ "$value" == \{*\} ]] || wpi_stop B2 "unit_definition_unreadable operation=show rc=0 detail=execstart_grammar"
+    body="${value#\{}"; body="${body%\}}"
+    IFS=';' read -r -a WPI_EXECSTART_PARTS <<< "$body"
+    for part in "${WPI_EXECSTART_PARTS[@]}"; do
+        trimmed="${part#"${part%%[![:space:]]*}"}"
+        trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
+        [ -n "$trimmed" ] || continue
+        case "$trimmed" in *=*) key="${trimmed%%=*}"; val="${trimmed#*=}" ;;
+            *) wpi_stop B2 "unit_definition_unreadable operation=show rc=0 detail=execstart_field_grammar" ;;
+        esac
+        case "$key" in
+            path) [ "$seen_path" = no ] || wpi_stop B2 "unit_definition_unreadable operation=show rc=0 detail=execstart_duplicate_path"; path="$val"; seen_path=yes ;;
+            argv\[\]) [ "$seen_argv" = no ] || wpi_stop B2 "unit_definition_unreadable operation=show rc=0 detail=execstart_duplicate_argv"; argv="$val"; seen_argv=yes ;;
+            ignore_errors) [ "$seen_ignore" = no ] || wpi_stop B2 "unit_definition_unreadable operation=show rc=0 detail=execstart_duplicate_ignore_errors"; ignore_errors="$val"; seen_ignore=yes ;;
+        esac
+    done
+    [ "$seen_path" = yes ] || wpi_stop B2 "unit_definition_unreadable operation=show rc=0 detail=execstart_path_absent"
+    [ "$seen_argv" = yes ] || wpi_stop B2 "unit_definition_unreadable operation=show rc=0 detail=execstart_argv_absent"
+    [ "$seen_ignore" = yes ] || wpi_stop B2 "unit_definition_unreadable operation=show rc=0 detail=execstart_ignore_errors_absent"
+    if [ "$path" != "$expected_path" ]; then
+        wpi_sanitize "$path"; wpi_fail B2 "unit_not_bound_to_candidate field=ExecStart.path observed=[$WPI_SAFE] expected=$expected_path"
+    fi
+    if [ "$argv" != "$expected_argv" ]; then
+        wpi_sanitize "$argv"; wpi_fail B2 "unit_not_bound_to_candidate field=ExecStart.argv observed=[$WPI_SAFE] expected=[$expected_argv]"
+    fi
+    [ "$ignore_errors" = no ] || wpi_fail B2 "unit_not_bound_to_candidate field=ExecStart.ignore_errors observed=$ignore_errors expected=no"
+}
+
+wpi_assert_fragment_has_no_install_section() {
+    local record fragfd="" frc=0 parser_rc
+    wpi_mount_guard_begin
+    wpi_walk_components B2 "$WPI_UNIT_FRAGMENT" regular "" 0:0 unit_fragment_absent unit_fragment_object_unexpected fail path_binding_not_evaluable \
+        fragment_unreadable_or_unparseable fragment_owner_unexpected with_path
+    { exec {fragfd}<"$WPI_UNIT_FRAGMENT"; } 2>&- || frc=$?
+    if [ "$frc" -ne 0 ] || [ -z "$fragfd" ]; then
+        wpi_mount_guard_end
+        wpi_stop B2 "fragment_unreadable_or_unparseable rc=$frc path=$WPI_UNIT_FRAGMENT detail=open_failed"
+    fi
+    wpi_capture_bind_child "$fragfd" in
+    wpi_capture_bind_stop B2 "fragment_unreadable_or_unparseable rc=0 path=$WPI_UNIT_FRAGMENT" no_rc
+    wpi_capture fragment_unit_grammar "$WPI_PYTHON3" -I -S -c '
+import re,sys
+if not (sys.flags.isolated and sys.flags.no_site):
+ print("PARSE startup_not_isolated"); sys.exit(3)
+for _m in ("site","sitecustomize","usercustomize"):
+ if _m in sys.modules:
+  print("PARSE startup_hook_present"); sys.exit(3)
+try:
+ raw=sys.stdin.buffer.read()
+ if b"\0" in raw:
+  print("PARSE nul_byte"); sys.exit(3)
+ text=raw.decode("utf-8")
+except (OSError,UnicodeError):
+ print("PARSE unreadable_or_encoding"); sys.exit(3)
+section_re=re.compile(r"^\s*\[([A-Za-z][A-Za-z0-9_-]*)\]\s*(?:[#;].*)?$")
+continued=False
+sections=0
+for physical in text.splitlines():
+ line=physical.rstrip("\r")
+ stripped=line.lstrip()
+ if continued:
+  continued=line.endswith("\\")
+  continue
+ if not stripped or stripped.startswith("#") or stripped.startswith(";"):
+  continued=line.endswith("\\")
+  continue
+ m=section_re.match(line)
+ if m:
+  sections+=1
+  if m.group(1)=="Install":
+   print("INSTALL section=Install"); sys.exit(1)
+ elif stripped.startswith("["):
+  print("PARSE section_header_grammar"); sys.exit(3)
+ continued=line.endswith("\\")
+print("OK install_section=absent sections=%d"%sections)
+'
+    parser_rc="$WPI_CAP_RC"
+    exec {fragfd}<&-
+    wpi_require_empty_captured B2 "fragment_unreadable_or_unparseable rc=0 path=$WPI_UNIT_FRAGMENT detail=parser_stderr" err
+    wpi_captured_record B2 "fragment_unreadable_or_unparseable rc=0 path=$WPI_UNIT_FRAGMENT" out
+    record="$WPI_LINE"
+    wpi_mount_guard_end
+    case "$parser_rc:$record" in
+        0:OK\ install_section=absent\ sections=*) printf 'B2_fragment_install_section path=%s install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed\n' "$WPI_UNIT_FRAGMENT" ;;
+        1:INSTALL\ section=Install) wpi_fail B2 "install_section_present path=$WPI_UNIT_FRAGMENT" ;;
+        3:PARSE\ *) wpi_stop B2 "fragment_unreadable_or_unparseable rc=0 path=$WPI_UNIT_FRAGMENT detail=${record#PARSE }" ;;
+        *) wpi_stop B2 "fragment_unreadable_or_unparseable rc=$parser_rc path=$WPI_UNIT_FRAGMENT detail=parser_result_grammar" ;;
+    esac
+}
+
+wpi_expected_sandbox_value() {
+    case "$1" in
+        PrivateTmp) WPI_LINE=yes ;;
+        ProtectSystem) WPI_LINE=strict ;;
+        NoNewPrivileges) WPI_LINE=yes ;;
+        RestrictAddressFamilies) WPI_LINE='AF_INET AF_INET6 AF_UNIX' ;;
+        CapabilityBoundingSet) WPI_LINE='' ;;
+        ReadWritePaths) WPI_LINE='/var/lib/mtc-bridge /var/log/mtc-bridge' ;;
+        KillSignal) WPI_LINE=15 ;;
+        KillMode) WPI_LINE=mixed ;;
+        TimeoutStopSec) WPI_LINE=45s ;;
+        FinalKillSignal) WPI_LINE=9 ;;
+        *) wpi_stop RP7 "sandbox_pin_unknown prop=$1" ;;
+    esac
+}
+
+wpi_query_for_sandbox_prop() {
+    case "$1" in
+        TimeoutStopSec) WPI_LINE=TimeoutStopUSec ;;
+        *) WPI_LINE="$1" ;;
+    esac
+}
+
+wpi_assert_environment_start_mode() {
+    local env_value="$1" record
+    wpi_capture_bind_stop B4 "unit_property_unreadable prop=Environment" no_rc
+    wpi_capture environment_tokenizer "$WPI_PYTHON3" -I -S -c '
+import hashlib,shlex,sys
+if not (sys.flags.isolated and sys.flags.no_site):
+ print("PARSE startup_not_isolated"); sys.exit(3)
+for _m in ("site","sitecustomize","usercustomize"):
+ if _m in sys.modules:
+  print("PARSE startup_hook_present"); sys.exit(3)
+target="MTC_BRIDGE_START_MODE"; expected="credential_free_disarmed"
+raw=sys.argv[1]
+try:
+ lex=shlex.shlex(raw,posix=True)
+ lex.whitespace_split=True
+ lex.commenters=""
+ tokens=list(lex)
+except ValueError as e:
+ print("PARSE "+type(e).__name__); sys.exit(3)
+count=0
+observed=[]
+for tok in tokens:
+ if "=" not in tok:
+  continue
+ name,value=tok.split("=",1)
+ if name==target:
+  count+=1
+  observed.append(value)
+if count==1 and observed[0]==expected:
+ print("OK target=%s value=%s tokens=%d"%(target,expected,len(tokens))); sys.exit(0)
+h=hashlib.sha256("\n".join(observed).encode()).hexdigest()
+print("BAD count=%d observed_sha256=%s"%(count,h)); sys.exit(1)
+' "$env_value"
+    wpi_require_empty_captured B4 "unit_property_unreadable prop=Environment detail=parser_stderr" err
+    wpi_captured_record B4 "unit_property_unreadable prop=Environment" out
+    record="$WPI_LINE"
+    case "$WPI_CAP_RC:$record" in
+        0:OK\ target=MTC_BRIDGE_START_MODE\ value=credential_free_disarmed\ tokens=*) printf 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1\n' ;;
+        1:BAD\ count=*\ observed_sha256=*) wpi_fail B4 "start_mode_missing_or_altered observed=${record#BAD }" ;;
+        3:PARSE\ *) wpi_stop B4 "unit_property_unreadable prop=Environment rc=0 detail=${record#PARSE }" ;;
+        *) wpi_stop B4 "unit_property_unreadable prop=Environment rc=$WPI_CAP_RC detail=tokenizer_result_grammar" ;;
+    esac
+}
+
+wpi_assert_b2_rows_1_7() {
+    local active nrestarts restart mainpid load_state fragment dropins execstart workdir expected_workdir
+    local b2_allowed="ActiveState NRestarts Restart MainPID LoadState FragmentPath DropInPaths ExecStart WorkingDirectory"
+    expected_workdir="$WPI_RELEASE_ROOT/IBKR_PAPER_BRIDGE"
+    wpi_capture_bind_stop B2 "system_manager_unreachable operation=show" with_rc
+    wpi_capture b2_unit_show "$WPI_SYSTEMCTL" --system --no-pager show "$WPI_UNIT_NAME" \
+        --property=ActiveState --property=NRestarts --property=Restart --property=MainPID \
+        --property=LoadState --property=FragmentPath --property=DropInPaths \
+        --property=ExecStart --property=WorkingDirectory
+    [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop B2 "system_manager_unreachable operation=show rc=$WPI_CAP_RC detail=unit_query_nonzero diagnostic_file=$WPI_CAP_ERR"
+    wpi_require_empty_captured B2 "system_manager_unreachable operation=show rc=0" err
+    wpi_parse_show_capture B2 "system_manager_unreachable operation=show rc=0" "$b2_allowed"
+
+    wpi_show_get B2 "system_manager_unreachable prop=ActiveState" ActiveState; active="$WPI_LINE"
+    wpi_require_show_value_grammar B2 unit_property_unreadable ActiveState "$active"
+    [ "$active" = active ] || wpi_fail B2 "unit_not_active state=$active expected=active"
+    printf 'B2_active state=active source=system_manager_show property=ActiveState\n'
+
+    wpi_show_get B2 "unit_property_unreadable prop=NRestarts" NRestarts; nrestarts="$WPI_LINE"
+    case "$nrestarts" in ''|*[!0-9]*) wpi_stop B2 "unit_property_unreadable prop=NRestarts rc=0 detail=value_grammar" ;; esac
+    [ "$nrestarts" = 0 ] || wpi_fail B2 "nrestarts_nonzero value=$nrestarts expected=0"
+    printf 'B2_restart_count prop=NRestarts value=0\n'
+
+    wpi_show_get B2 "unit_property_unreadable prop=Restart" Restart; restart="$WPI_LINE"
+    wpi_require_show_value_grammar B2 unit_property_unreadable Restart "$restart"
+    [ "$restart" = no ] || wpi_fail B2 "restart_policy value=$restart expected=no"
+    printf 'B2_restart_policy prop=Restart value=no\n'
+
+    wpi_show_get B2 "unit_property_unreadable prop=MainPID" MainPID; mainpid="$WPI_LINE"
+    case "$mainpid" in ''|*[!0-9]*) wpi_stop B2 "unit_property_unreadable prop=MainPID rc=0 detail=value_grammar" ;; esac
+    [ "$mainpid" = "$WPI_MAINPID" ] || wpi_fail B2 "mainpid_changed value=$mainpid expected=$WPI_MAINPID"
+    printf 'B2_mainpid prop=MainPID value=%s continuity=preregistered\n' "$mainpid"
+
+    wpi_show_get B2 "unit_definition_unreadable operation=show prop=LoadState" LoadState; load_state="$WPI_LINE"
+    wpi_require_show_value_grammar B2 unit_definition_unreadable LoadState "$load_state"
+    [ "$load_state" != not-found ] || wpi_fail B2 "unit_not_loaded"
+    [ "$load_state" = loaded ] || wpi_fail B2 "unit_not_bound_to_candidate field=LoadState observed=$load_state expected=loaded"
+
+    wpi_show_get B2 "unit_definition_unreadable operation=show prop=FragmentPath" FragmentPath; fragment="$WPI_LINE"
+    wpi_require_show_value_grammar B2 unit_definition_unreadable FragmentPath "$fragment"
+    [ "$fragment" = "$WPI_UNIT_FRAGMENT" ] || { wpi_sanitize "$fragment"; wpi_fail B2 "unit_not_bound_to_candidate field=FragmentPath observed=[$WPI_SAFE] expected=$WPI_UNIT_FRAGMENT"; }
+
+    wpi_show_get B2 "unit_definition_unreadable operation=show prop=DropInPaths" DropInPaths; dropins="$WPI_LINE"
+    wpi_require_show_value_grammar B2 unit_definition_unreadable DropInPaths "$dropins"
+    [ "$dropins" = "$WPI_EXPECTED_DROPIN_PATHS" ] || { wpi_sanitize "$dropins"; wpi_fail B2 "unit_not_bound_to_candidate field=DropInPaths observed=[$WPI_SAFE] expected=empty"; }
+
+    wpi_show_get B2 "unit_definition_unreadable operation=show prop=WorkingDirectory" WorkingDirectory; workdir="$WPI_LINE"
+    wpi_require_show_value_grammar B2 unit_definition_unreadable WorkingDirectory "$workdir"
+    [ "$workdir" = "$expected_workdir" ] || { wpi_sanitize "$workdir"; wpi_fail B2 "unit_not_bound_to_candidate field=WorkingDirectory observed=[$WPI_SAFE] expected=$expected_workdir"; }
+
+    wpi_show_get B2 "unit_definition_unreadable operation=show prop=ExecStart" ExecStart; execstart="$WPI_LINE"
+    wpi_require_show_value_grammar B2 unit_definition_unreadable ExecStart "$execstart"
+    wpi_assert_unit_execstart "$execstart"
+    printf 'B2_unit_binding unit=%s load_state=loaded fragment=%s dropins=empty working_directory=%s exec_path=%s argv_sha_bound=yes\n' \
+        "$WPI_UNIT_NAME" "$WPI_UNIT_FRAGMENT" "$expected_workdir" "$WPI_VENV_ROOT/bin/python"
+
+    wpi_assert_fragment_has_no_install_section
+    wpi_assert_regular_digest B2 unit_fragment_absent unit_fragment_digest_mismatch \
+        "$WPI_UNIT_FRAGMENT" "$WPI_UNIT_FRAGMENT_BYTES" "$WPI_UNIT_FRAGMENT_SHA256" \
+        fragment unit_fragment_object_unexpected with_path
+}
+
+wpi_assert_b4_rows_8_9() {
+    local b4_allowed="PrivateTmp ProtectSystem NoNewPrivileges RestrictAddressFamilies CapabilityBoundingSet ReadWritePaths KillSignal KillMode TimeoutStopUSec FinalKillSignal Environment"
+    local prop query expected observed
+    wpi_capture_bind_stop B4 "unit_property_unreadable prop=PrivateTmp" with_rc
+    wpi_capture b4_unit_show "$WPI_SYSTEMCTL" --system --no-pager show "$WPI_UNIT_NAME" \
+        --property=PrivateTmp --property=ProtectSystem --property=NoNewPrivileges \
+        --property=RestrictAddressFamilies --property=CapabilityBoundingSet \
+        --property=ReadWritePaths --property=KillSignal --property=KillMode \
+        --property=TimeoutStopUSec --property=FinalKillSignal --property=Environment
+    [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop B4 "unit_property_unreadable prop=PrivateTmp rc=$WPI_CAP_RC detail=unit_query_nonzero diagnostic_file=$WPI_CAP_ERR"
+    wpi_require_empty_captured B4 "unit_property_unreadable prop=PrivateTmp rc=0" err
+    wpi_parse_show_capture B4 "unit_property_unreadable prop=PrivateTmp rc=0" "$b4_allowed"
+
+    for prop in PrivateTmp ProtectSystem NoNewPrivileges RestrictAddressFamilies CapabilityBoundingSet ReadWritePaths KillSignal KillMode TimeoutStopSec FinalKillSignal; do
+        wpi_query_for_sandbox_prop "$prop"; query="$WPI_LINE"
+        wpi_show_get B4 "unit_property_unreadable prop=$prop" "$query"; observed="$WPI_LINE"
+        wpi_require_show_value_grammar B4 unit_property_unreadable "$prop" "$observed"
+        wpi_expected_sandbox_value "$prop"; expected="$WPI_LINE"
+        if [ "$observed" != "$expected" ]; then
+            wpi_sanitize "$observed"; WPI_OBSERVED_SAFE="$WPI_SAFE"
+            wpi_sanitize "$expected"; WPI_EXPECTED_SAFE="$WPI_SAFE"
+            wpi_fail B4 "property_mismatch prop=$prop observed=[$WPI_OBSERVED_SAFE] expected=[$WPI_EXPECTED_SAFE]"
+        fi
+        wpi_sanitize "$observed"
+        printf 'B4_property prop=%s query=%s observed=[%s] expected_pin=rendered_systemctl_show value=matches\n' "$prop" "$query" "$WPI_SAFE"
+    done
+
+    wpi_show_get B4 "unit_property_unreadable prop=Environment" Environment; observed="$WPI_LINE"
+    wpi_require_show_value_grammar B4 unit_property_unreadable Environment "$observed"
+    wpi_assert_environment_start_mode "$observed"
 }
 
 # The third argument is the CALLER's row-specific inability-to-evaluate reason.
@@ -1741,6 +2048,12 @@ wpi_main() {
     wpi_assert_manager_ready
     wpi_mount_guard_end
 
+    printf 'RP7_SECTION B2_rows_1_7\n'
+    wpi_assert_b2_rows_1_7
+
+    printf 'RP7_SECTION B4_rows_8_9\n'
+    wpi_assert_b4_rows_8_9
+
     printf 'RP7_SECTION B3_rows_10_15\n'
     wpi_assert_tree "$WPI_RELEASE_ROOT" release
     wpi_assert_tree "$WPI_VENV_ROOT" venv
@@ -1771,8 +2084,8 @@ wpi_main() {
     wpi_assert_listener_set
     wpi_record_external_probe_boundary
 
-    printf 'RP7_claim establishes=rows_10_23_read_only_predicates_with_attested_preexec_objects_and_service_network_domain;executed_objects_use_separate_bounded_exec_after_preexec_mount_window\n'
-    printf 'RP7_claim does_not_establish=row_24_operator_side_result,ACL_or_capability_immutability,whole_tree_byte_identity,root_deferred_checks,group_C,host_authority\n'
+    printf 'RP7_claim establishes=rows_1_23_read_only_predicates_with_attested_preexec_objects_manager_reported_unit_state_candidate_binding_sandbox_start_mode_and_service_network_domain;executed_objects_use_separate_bounded_exec_after_preexec_mount_window\n'
+    printf 'RP7_claim does_not_establish=row_24_operator_side_result,ACL_or_capability_immutability,whole_tree_byte_identity,group_C,host_authority_or_any_manager_identity_beyond_the_attested_execution_domain_that_answered\n'
     printf 'RP7 PASS\n'
 }
 
