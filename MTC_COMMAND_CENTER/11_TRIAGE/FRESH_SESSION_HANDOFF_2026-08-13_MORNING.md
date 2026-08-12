@@ -199,7 +199,7 @@ effect model, with `dynamic_targets` now genuinely computed. Lead ran the fence 
 
 | Block | Codex flagship | Second flagship (Claude Pro) | Notes |
 |---|---|---|---|
-| RP6-P0 | PASS-WITH-NITS on **r16** | see §7 | Block byte-identical `5132bacd…` since r10a. Evidence doc moved to **r17** (1038848 B, `07cf843d…`) — **the r16 acceptance does not carry to those bytes** |
+| RP6-P0 | PASS-WITH-NITS on **r16**; **fresh r17 audit 2026-08-12 ~21:50: REQUEST_CHANGES** (`wait -p` effect-model gap F1 + 3 evidence repairs; r18 repair dispatched same night) | HELD until r18 lands | Block byte-identical `5132bacd…` **since r11** (the r10a span claim was false — r10 blob is 107252 B / `3c7b7d26`; Codex r17 audit finding, Lead-verified). Evidence doc at **r17** (1038848 B, `07cf843d…`) — **neither the r16 acceptance nor any r16-anchored claim carries to those bytes** |
 | RP7-WPI-RO | PASS (r9) | see §7 | GLM advance: PASS-WITH-NITS, zero required repairs |
 | Transport set | PASS (r6b) | see §7 | GLM advance: PASS-WITH-NITS, zero required repairs. F1 owner-ratified accept-with-disclosure, NOT a blocker |
 | SEC102 | — | — | **ACCEPTED-WITH-DISCLOSURE** by owner decision |

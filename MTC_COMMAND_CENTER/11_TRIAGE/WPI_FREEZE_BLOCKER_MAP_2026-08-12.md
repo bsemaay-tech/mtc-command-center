@@ -94,7 +94,7 @@ a live defect. Two structurally different class members (`eval` by name concaten
 **Lead verbatim run:** `R17_DYNAMIC_TARGETS_SUMMARY cases=15 pass=15 fail=0 result=PASS`, outer
 rc 0, carried r16 grammar `50/50` with no previously-killed mutant surviving,
 `r17_literal_zero_measurements=0`, block identity unchanged (110817 B, `5132bacd…`).
-`RP6-P0.sh` is byte-identical — QA-layer round like r10→r16.
+`RP6-P0.sh` is byte-identical — QA-layer round like r11→r16 (r10→r11 changed block bytes: 107252→110817 B; the wider `r10a` stability claim was corrected 2026-08-12 per `WPI_BLOCKS_DRAFT/RP6_CODEX_T0_AUDIT_R17_2026-08-12.md`).
 
 **Freeze-input ledger findings** (`WPI_FREEZE_INPUT_LEDGER_2026-08-12.md`, 45 rows: FILLED 2,
 LITERAL-MARKER 29, MISSING-CONSUMER 0, CONTRADICTED 1, REQUIRES-HOST 13):
