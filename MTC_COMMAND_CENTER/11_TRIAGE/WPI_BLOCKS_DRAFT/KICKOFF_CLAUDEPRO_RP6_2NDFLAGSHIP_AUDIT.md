@@ -60,6 +60,28 @@ found six such literal-zero fields across three r16 success lines.
 4. **Are all six literal-zero fields really gone?** `r17_literal_zero_measurements=0` is itself a
    claim — check it, and sweep for any other value presented as a measurement that is not one.
 
+## SECOND PRIORITY TARGET — unresolved evidence placeholders, and a report that says otherwise
+A round-report claim audit (`WPI_ROUND_REPORT_CLAIM_AUDIT_2026-08-12.md`) found that the **r16
+report states the evidence placeholders were resolved, while the files still contain them.**
+Lead-verified by direct grep — three real unresolved placeholders survive:
+
+- `SELF_QA_RP6.md:15807` — `@@RERUN_BLOCK@@`
+- `SELF_QA_RP6.md:18690` — `@@RERUN_BLOCK@@`
+- `STATUS_RP6_P0.md:284` — `@@STATUS_EXEC_BLOCK@@`
+
+(Other `@@…@@` occurrences in those files are prose *describing* the placeholders, not unresolved
+ones — do not count those.)
+
+These are positions where a transcript should be pasted and **nothing is**. The GLM advance
+read-audit characterised them as recovered-session artefacts and "a LOW documentary nit"; the
+round-report audit says the r16 report claims they were resolved. Both cannot be right.
+
+**What the Lead needs from you:** decide whether these are cosmetic or load-bearing. Specifically —
+does any acceptance claim in the r16/r17 chain depend on evidence that should have been pasted at
+those three positions? If yes, that evidence does not exist in the record and a gate is
+unsupported. If no, this is a documentation repair and should be stated as one rather than left
+as a contradiction between the report and the files.
+
 ## Audit contract
 1. Confirm the block identity (size + SHA-256) and that no block byte changed r10a→r16.
 2. Run **`R17_DYNAMIC_TARGETS`** VERBATIM (published command in
