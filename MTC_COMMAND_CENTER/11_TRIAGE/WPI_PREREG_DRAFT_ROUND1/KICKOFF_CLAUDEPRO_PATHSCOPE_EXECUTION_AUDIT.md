@@ -27,6 +27,31 @@ value role; unlisted option or unregistered command → a specific rc-3 coverage
 mount binding) honestly out of reach for a static reader. The Lead ran the harness verbatim:
 RED 511 / GREEN 644, determinism `equal=True` (find_exec, RP6-P0, RP7-WPI-RO).
 
+## KNOWN DOCUMENTARY DEFECTS — found 2026-08-12 evening, NOT yet repaired
+A prose-vs-transcript audit (`WPI_SELFQA_CLAIM_AUDIT_TRANSPORT_PATHSCOPE_2026-08-12.md`) found
+two claims in `SELF_QA_PATHSCOPE.md` its own evidence does not support. Disclosed so you do not
+spend your slot rediscovering them:
+
+- **FALSE — `:325-327` says the RED rows reading `rc 0 - (no row)` are "the four CRITICAL
+  findings".** The table actually contains **sixteen** such rows — `pushd`, `pushd_forbidden`,
+  `popd_stack`, `trap`, `ssh`, `ssh_command`, `getent`, `python_c`, `alias`, `hash_p`,
+  `mapfile_cb`, `systemctl_link`, `jobs_x`, `fddup`, `herestring`, `nc_client` — and the
+  transcript confirms the same `PASS rc=0` zero-record pattern across them
+  (`:427-461`, `:505-534`, `:583-587`, `:632-636`, `:729-733`).
+- **UNSUPPORTED — `:8-10`** asserts every run used CPython 3.14.2 with `-B`, that the repaired
+  source parses with `ast.parse(..., feature_version=(3,12))`, and that Python 3.12 is not
+  installed. The harness stdout at `:43-51` prints artefact identities, line counts and
+  determinism lines — none of those three facts.
+
+**Two questions for you, since you can execute:**
+1. Does the sixteen-vs-four discrepancy mean the round-1 CRITICAL count was understated in the
+   document, or is "four CRITICAL" correct and the `rc 0 — (no row)` pattern simply broader than
+   the CRITICAL subset? The distinction decides whether this is a wording defect or a coverage
+   claim that overstates what was closed.
+2. **U-3 is directly checkable by you.** Record the actual Python version, the `ast.parse`
+   result, and whether 3.12 is present — that converts three unsupported assertions into
+   measured facts or into findings.
+
 ## Audit contract
 1. EXECUTE the published harness VERBATIM (`SELF_QA_PATHSCOPE.md` §"How to reproduce"):
    62 fixtures + 4 real-block runs + RED-before-GREEN (D026). Record real counts. This

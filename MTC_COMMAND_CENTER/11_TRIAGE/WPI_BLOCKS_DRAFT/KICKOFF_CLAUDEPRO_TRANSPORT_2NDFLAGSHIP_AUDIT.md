@@ -23,6 +23,32 @@ narrative: verify it against the bytes.
 2. `<ALLOCATE-AT-DISPATCH>`/`<PIN-AT-FREEZE>` stay literal with the preflight marker STOP.
 3. No host contact, no RUNID allocation, no archive build — confirm the round performed none.
 
+## KNOWN DOCUMENTARY DEFECTS — found 2026-08-12 evening, NOT yet repaired
+A prose-vs-transcript audit (`WPI_SELFQA_CLAIM_AUDIT_TRANSPORT_PATHSCOPE_2026-08-12.md`) found
+five claims in `SELF_QA_TRANSPORT.md` that its own transcripts do not support. **They are
+disclosed here so you do not spend your slot rediscovering them — and so you can judge whether
+they change any acceptance conclusion:**
+
+- **FALSE — `:23` and `:35-43` claim all fixture scratch was removed** and that each transcript's
+  last line proves it. The Fixture D cleanup tail at `:1475-1488` shows `Remove-Item` failing
+  **access-denied** on `C:\Users\Public\wpi_r3\qb\pd_evil\ssh\ssh_config`, with no closing
+  `removed … exists=False` line. The integrity envelope asserts a cleanup the evidence shows did
+  not complete.
+- **FALSE — `:1598-1600` says J1–J6 are "RED and GREEN, ten runner executions".** The J-family
+  banners number **eleven** (`:910`…`:1096`) and J5 appears only as GREEN at `:1060`.
+- **UNSUPPORTED — `:1598-1601` "Twelve of those executions are the real pinned OpenSSH
+  programs."** No transcript line prints 12, and neither reading of M7's eight rows yields it.
+- **UNSUPPORTED — `:15-18` says `C:\WPI_ARTIFACTS` was checked after every fixture.** No
+  transcript line shows that listing or check.
+
+**Your judgement is wanted on one question:** are these documentary defects only, or does F-1's
+incomplete cleanup mean a fixture left state behind that could affect a later arm's result? The
+first is a repair-the-prose matter; the second would be a real finding.
+
+**Already checked and NOT a defect:** the round-6 byte-identity language at `:2665-2669` is now
+correctly scoped to the seven executable/plan targets and explicitly excludes the two QA/status
+documents that legitimately changed. Do not re-flag it.
+
 ## Audit contract
 1. Run the published fixture harness VERBATIM from `SELF_QA_TRANSPORT.md` (local WSL2 only);
    record real rc/stdout summary lines. Extract-and-run is forbidden — run the published
