@@ -1,4 +1,72 @@
-# RP6-P0 - status: ROUND-17-REPAIRED-PENDING-T0-AUDIT (RP6-11 dynamic-target census evidence closed; no block byte changed)
+# RP6-P0 - status: ROUND-18-REPAIRED-PENDING-SECOND-FLAGSHIP-T0-AUDIT
+
+Updated 2026-08-12 by the round-18 implementer, Codex `gpt-5.6-sol`, xhigh.
+Audit tier remains **T0** because this is a host-targeting run-kit evidence
+surface. The block remains a draft: not frozen, not accepted, not dispatchable,
+and not authorised for host execution. The next action is the fresh Claude Pro
+`claude-opus-5` xhigh second-flagship audit repointed to these round-18 bytes.
+
+Full disposition: `RP6_R18_REPORT_2026-08-12.md`. Evidence:
+`SELF_QA_RP6.md` section ROUND 18.
+
+**`RP6-P0.sh` remains byte-identical from round 11 through round 18:** 110817
+bytes, SHA-256
+`5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330`.
+Round 10/10a is not the stability boundary: commit `71a62cc8` carried 107252
+bytes and SHA-256
+`a090ae736cbecd9973e8ae948b052504b21cbe8b61602f4b5ac592394fad0617`;
+round 11 changed the block to the current identity.
+
+The round-17 T0 audit returned **REQUEST_CHANGES** with four required repairs.
+Round 18 settles them as follows:
+
+1. **F1 - closed by structural inversion.** The delivered round-17 fence from
+   commit `671d9b40` is bound at 1038848 bytes / SHA-256
+   `07cf843d5f00bef7f980017cbe01e0dc63ddb95dce5c7253d9e9a351b0d449ac`.
+   With only its fixture identity rebound, it certified a real `wait -p`
+   assignment mutant at rc 0 / `15/15 PASS` and measured
+   `dynamic_targets=0`. The repaired policy makes the same bytes non-accepting
+   with `UNMODELED kind=dynamic_variable_target:wait_p`. The complete 37-member
+   effect universe conserves exactly into 13 target grammars, three recursive
+   prefixes, one action grammar, and 20 no-named-target members. The assigning-
+   option audit covers `printf -v`, `wait -p`, and `read -a`; unknown options
+   fail closed.
+2. **Pass-format evidence - closed.** The three chosen constants are removed.
+   A source-derived scan measured 28 result producers and zero uncomputed
+   numeric fields. Its deliberate mutant assigns a numeric literal once and
+   publishes `unsupported_count=$P0_R17_FORMAT_MUTANT_COUNT`; the same scan
+   measures one and the assertion changes state. The current fence is
+   `16/16 PASS`.
+3. **Eleven transcript contradictions - closed documentarily.** Eight positions
+   in `SELF_QA_RP6.md`, one in this status, and one in each historical round
+   report now say the local transcript is absent and cite the exact independent
+   Codex execution record. No output was reconstructed or invented.
+4. **Claim scope/provenance - closed.** The opening no-temp sentence is narrowed
+   to the original fences; later scratch use is stated. Historical whole-session
+   negatives are labelled author attestations unless a local transcript proves
+   the narrower claim. The block stability boundary is corrected to round 11.
+
+Executed round-18 summary, from the published command:
+
+```text
+R18_ASSERT_MET D026_RED_DELIVERED_R17 mutant=wait_p rc=0 summary=[R17_DYNAMIC_TARGETS_SUMMARY cases=15 pass=15 fail=0 result=PASS] target=[R17_ASSERT_MET r17_dynamic_targets_measured variable_targets=113 inventory_targets=0 dynamic_targets=0 dynamic_variable_targets=0 opaque_mutators=0 effect_unmodeled=0 nonfunction_bare=11]
+R18_ASSERT_MET wait_p_bash_semantics target=P0_R18_WAIT_TARGET changed=yes numeric=yes rc=0
+R18_ASSERT_MET GREEN_CLEAN_R18_POLICY rc=0 summary=[R17_DYNAMIC_TARGETS_SUMMARY cases=16 pass=16 fail=0 result=PASS] pass_format=measured_and_falsified
+R18_ASSERT_MET D026_GREEN_R18 mutant=wait_p rc=1 record=[UNMODELED kind=dynamic_variable_target:wait_p line=1567 raw=["$P0_R18_WAIT_NAME"]] summary=[R17_DYNAMIC_TARGETS_SUMMARY cases=15 pass=11 fail=4 result=FAIL]
+R18_ASSERT_MET assigning_option_matrix_executed rc=1 printf_v=dynamic_target_refused read_a=option_refused wait_p_literal=target_recorded wait_unknown=option_refused wait_p_missing=target_refused
+R18_ASSERT_MET effect_partition_conserved admitted=37 target_grammar=13 prefix_recursive=3 action_grammar=1 no_named_target=20
+R18_ASSERT_MET assigning_option_matrix entries=3 printf_v=target_grammar wait_p=target_grammar read_a=fail_closed_unmodeled_option
+R18_ASSIGNING_EFFECT_SUMMARY cases=14 pass=14 fail=0 result=PASS
+```
+
+**Round-18 author attestation:** no host, SSH, network, deployment, backtest,
+broker, exchange, ARM, order, trading, or Git mutation occurred. This is a
+whole-session attestation, not a transcript-proved negative. The path-scoped
+Git delta gate is recorded separately in the round-18 report.
+
+---
+
+# Prior status: ROUND-17-REPAIRED-PENDING-T0-AUDIT (superseded; r17 audit returned REQUEST_CHANGES)
 
 Updated 2026-08-12 by the round-17 implementer (Codex **`gpt-5.5`**, xhigh, fresh
 session — *corrected by the Lead 2026-08-12 ~17:30: the round-17 text as authored claimed
@@ -92,8 +160,9 @@ bytes accept those mutants. The R17 harness removes only that refusal from a
 temporary extracted R16 fence; that weakened fence certifies both dynamic-target
 mutants CLEAN, and R17 refuses the same bytes with explicit `UNMODELED` records.
 
-No host, SSH, network, deployment, backtest, broker, trading, or Git mutation
-occurred. Scope was limited to `SELF_QA_RP6.md`, this status file, and
+**Round-17 author attestation:** no host, SSH, network, deployment, backtest,
+broker, trading, or Git mutation occurred. This whole-session negative is not
+transcript-proved. Scope was limited to `SELF_QA_RP6.md`, this status file, and
 `RP6_R17_REPORT_2026-08-12.md`.
 
 ---
@@ -175,19 +244,18 @@ inverting a blacklist into a whitelist.
   dynamic targets, not a resolution of them, and it is listed that way in the
   residuals.
 
+  **Round-18 correction:** "every admitted variable-mutating builtin" was false;
+  `wait -p TARGET` was omitted and survived round 17. The round-18 37-member
+  effect partition and `waittarget` grammar above supersede this claim.
+
 **The fourth round-15 finding, on the evidence record:**
 
 - **F4** (MEDIUM, Patterns 9/10) — the round-15 report and this file claimed
-  embedded complete execution evidence while `@@…@@` transcript placeholders were
-  still unresolved, which made both claims literally false. In this file the
-  execution block below is real captured output and the round-15 section's claim
-  paragraph carries an explicit correction; in `SELF_QA_RP6.md` all four
-  placeholders are resolved and the round-15 "from this session / nothing is
-  PENDING" sentence is corrected in place. `RP6_R15_REPORT_2026-08-11.md:180`
-  carries the same defect and is **outside the round-16 scope fence** (which
-  permits only `SELF_QA_RP6.md`, `STATUS_RP6_P0.md` and the new round-16 report);
-  it is reported as an open Lead item in `RP6_R16_REPORT_2026-08-11.md` rather
-  than silently edited.
+  embedded complete execution evidence while transcript slots were empty, which
+  made both claims literally false. **Round-18 correction:** all eleven affected
+  positions across the four owned evidence files now carry truthful local-
+  absence markers and cite the independent round-15 or round-16 Codex execution
+  record. No output was reconstructed.
 
 `R16_F1_RED` is the discriminating-power proof and it is executed, not narrated:
 it extracts the whole published `R15_GRAMMAR` fence and the whole published
@@ -291,12 +359,14 @@ frozen_ro_basis=RP7-WPI-RO.sh@d6a976aa sha256=23e55667…9aa01aad bytes=70941
 R16_GRAMMAR=50 cases (21 assertions + 29 mutants), pass=50, fail=0, rc 0
 ```
 
-**QA execution status.** The commands below are the ones this round executed
-verbatim, with their real captured output or their real return codes. Anything
-not run in this session says so in those words. Nothing here is fabricated.
+**Round-18 evidence correction.** The local round-16 execution transcript was
+not embedded. External evidence: the independent Codex T0 audit
+`RP6_CODEX_T0_AUDIT_R16_2026-08-12.md:23-25` records the executed
+`R16_GRAMMAR`, `R16_F1_RED`, and `R11_GUARDS` summaries. No output is
+reconstructed here.
 
 ```text
-@@STATUS_EXEC_BLOCK@@
+LOCAL_TRANSCRIPT_ABSENT block=round16_status_execution external_evidence=RP6_CODEX_T0_AUDIT_R16_2026-08-12.md:23-25
 ```
 
 Two things in this round were found by running, not by reading. The first
@@ -397,16 +467,11 @@ RED.
 17. `R10_F4`'s reachability result covers the **three** input classes it executes
     on *this* control flow — not every early-stop class and not every future edit.
 18. `RP6_R10_REPORT_2026-08-11.md:362-369`, `RP6_R11_REPORT_2026-08-11.md:86-90`,
-    `RP6_R12_REPORT_2026-08-11.md:169,314`, the round-13 and round-14 reports'
-    completeness sentences, and `RP6_R15_REPORT_2026-08-11.md`'s
-    wrapper-exclusion and embedded-evidence sentences (including its unresolved
-    `@@REPORT_EXEC_BLOCK@@` placeholder at line 180) carry superseded or
-    literally false statements. All are corrected in
-    `RP6_R16_REPORT_2026-08-11.md` rather than rewritten: a delivered audit-round
-    report records what that round claimed, and the round-16 kickoff scope fence
-    does not list any of them as writable. The round-15 section of THIS file
-    carries a round-16 correction note at its head, which is the same discipline
-    every prior round applied here.
+    `RP6_R12_REPORT_2026-08-11.md:169,314`, and the round-13/14 completeness
+    sentences remain historical claims corrected by later records. The
+    round-15/16 empty transcript positions are different: round 18 owns those
+    exact files and replaces the empty slots with truthful local-absence markers
+    plus external independent execution citations.
 
 The freeze gate still has seventeen `<PIN-AT-FREEZE>` literals, so no end-to-end
 `P0 PASS` is possible and nothing here is dispatchable regardless of this round's
@@ -592,15 +657,16 @@ frozen_ro_basis=RP7-WPI-RO.sh@d6a976aa sha256=23e55667…9aa01aad bytes=70941
 This paragraph originally read *"EXECUTED — nothing PENDING, nothing fabricated.
 All twenty-seven published commands of the round-15 mandated set were run
 verbatim in this session…"* and was followed by an unresolved
-`@@STATUS_EXEC_BLOCK@@` placeholder. The round-15 implementer session ended
+an empty transcript slot. The round-15 implementer session ended
 during transcript insertion, so as delivered the claim was **literally false**:
 no transcript was embedded here. What is true, and what the round-15 evidence of
 record actually is: the round-15 mandated set was run verbatim by the Lead, and
 the round-15 T0 auditor independently reproduced all five published harnesses and
 published their output (`RP6_CODEX_T0_AUDIT_R15_2026-08-12.md`, §"Published
 harness execution", `R15_GRAMMAR_SUMMARY cases=44 pass=44 fail=0 result=PASS`).
-The round-16 execution block at the head of this file is real captured output and
-is the evidence of record for these bytes.
+The round-16 local execution block was also not embedded. The independent Codex
+T0 audits are the external evidence of record; round 18 labels both absences
+instead of reconstructing output.
 
 Two things in this round were found by running, not by reading, and both are
 recorded in `SELF_QA_RP6.md` §ROUND 15 rather than quietly fixed. The first

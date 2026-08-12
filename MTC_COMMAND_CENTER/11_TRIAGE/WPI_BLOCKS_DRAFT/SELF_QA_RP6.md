@@ -1,10 +1,14 @@
 # SELF-QA — RP6-P0 bounded repair (F1, F3, F4)
 
-Run by the Codex implementer on 2026-08-10 in a fresh Git Bash 5.2.37
-`--noprofile --norc` process. `git show HEAD:<path>` is the committed pre-fix
-`RP6-P0.sh`; the path in the working tree is the repaired file. Every fence below is
-literal paste-and-run Bash with its complete working-directory setup. No host was
-contacted, no ssh/network command was run, and no temp file was created.
+The original 2026-08-10 fences were run by the Codex implementer in a fresh Git
+Bash 5.2.37 `--noprofile --norc` process. `git show HEAD:<path>` in those fences
+is the committed pre-fix `RP6-P0.sh`; the path in the working tree is the repaired
+file. The original fences are literal paste-and-run Bash with complete working-
+directory setup. Later round-specific fences use local temporary directories and
+remove them through their published traps. Whole-session statements in this
+cumulative file that no host/network/Git action occurred are **author
+attestations**, not transcript-proved negatives, unless an adjacent delta or
+transport transcript explicitly proves the narrower claim.
 
 ## Repair decisions
 
@@ -13117,7 +13121,446 @@ nothing was committed, no host was contacted, and no network command was run.
   is still named, not closed.
 - `shellcheck` is not installed in this environment and was not run.
 
+# ROUND 18 - assigning-effect grammar closes the `wait -p` gap
+
+Round 18 is a QA/evidence-layer repair only. `RP6-P0.sh` remains the round-11
+block: 110817 bytes, SHA-256
+`5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330`.
+No block byte is changed by this section.
+
+The round-17 T0 audit supplied an executed counterexample to the phrase "closed
+effect model": Bash `wait -p NAME` assigns to `NAME`, but round 17 admitted
+`wait` as a safe bare builtin and produced no target disposition. The repair is
+one effect partition, not a `wait` blacklist. Every member of round 17's 37-word
+non-function effect universe is placed exactly once into one of four terminal
+classes: 13 named-target grammars, three recursively classified command
+prefixes, the `trap` action grammar, or 20 members with no caller-selected named
+variable target. The target class includes the already-modeled `printf -v`
+path, the eleven generic variable-mutating builtins, and the new `wait -p`
+grammar. A `wait` option outside `-n`, `-f`, and `-p TARGET`, a missing `-p`
+target, or any expanded/escaped/non-identifier target is `UNMODELED`; it never
+disappears as a zero count.
+
+The published harness below executes all of these checks in one run:
+
+1. It extracts the exact delivered round-17 evidence bytes from commit
+   `671d9b40`, verifies their 1038848-byte / `07cf843d...` identity, rebinds only
+   the block fixture identity, and records the full round-17 fence accepting a
+   real `wait -p "$name"` mutant. That is D026 RED against delivered bytes.
+2. It executes Bash's `wait -p` assignment with a symbolic target and proves the
+   target changed.
+3. It patches only the temporary extracted R16 tokenizer with the fail-closed
+   `waittarget` grammar, runs the current round-17/R18 policy over the same
+   mutant, and requires the exact
+   `UNMODELED kind=dynamic_variable_target:wait_p` record. That is GREEN.
+4. It runs the same repaired temporary policy over the unchanged block and
+   requires the current fence to remain green, including the measured
+   pass-format scan and its falsification mutant.
+5. It derives and reconciles the complete 37-member effect partition and the
+   three assigning-option dispositions (`printf -v`, `wait -p`, `read -a`).
+
+## R18 assigning-effect harness
+
+```bash
+# R18_ASSIGNING_EFFECT_HARNESS_BEGIN
+#!/usr/bin/env bash
+set -u
+
+BLOCK="${1:-RP6-P0.sh}"
+QA="${2:-SELF_QA_RP6.md}"
+DRAFT="${3:-../WPI_PREREG_DRAFT_ROUND1/WPI_PREREGISTRATION_DRAFT.md}"
+HIST_COMMIT="671d9b40"
+HIST_PATH="MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/SELF_QA_RP6.md"
+HIST_QA_SHA="07cf843d5f00bef7f980017cbe01e0dc63ddb95dce5c7253d9e9a351b0d449ac"
+HIST_QA_BYTES="1038848"
+BLOCK_SHA="5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330"
+BLOCK_BYTES="110817"
+
+R18_OK=0
+R18_BAD=0
+r18_ok() { printf 'R18_ASSERT_MET %s\n' "$1"; R18_OK=$((R18_OK+1)); }
+r18_bad() { printf 'R18_ASSERT_UNMET %s\n' "$1"; R18_BAD=$((R18_BAD+1)); }
+
+Q18="$(mktemp -d)"
+trap 'rm -rf "$Q18"' EXIT
+
+r18_count() {
+  grep -c '' "$1" 2>/dev/null || true
+}
+
+r18_r17_summary() {
+  awk '$1=="R17_DYNAMIC_TARGETS_SUMMARY"{line=$0} END{print line}' "$1"
+}
+
+r18_r17_target_report() {
+  awk '$1=="R17_ASSERT_MET" && $2=="r17_dynamic_targets_measured"{line=$0}
+       $1=="R17_ASSERT_UNMET" && $2=="r17_clean_verdict_failed"{line=$0}
+       END{print line}' "$1"
+}
+
+r18_rebind_r17() {
+  local src="$1" out="$2" sha="$3" bytes="$4" normalized_before normalized_after
+  sed -e "s/^EXPECTED_SHA=\"[0-9a-f]*\"$/EXPECTED_SHA=\"$sha\"/" \
+      -e "s/^EXPECTED_BYTES=\"[0-9]*\"$/EXPECTED_BYTES=\"$bytes\"/" \
+      "$src" > "$out"
+  normalized_before=$(sed -e 's/^EXPECTED_SHA=.*/EXPECTED_SHA=<BOUND>/' \
+                          -e 's/^EXPECTED_BYTES=.*/EXPECTED_BYTES=<BOUND>/' "$src" | sha256sum | awk '{print $1}')
+  normalized_after=$(sed -e 's/^EXPECTED_SHA=.*/EXPECTED_SHA=<BOUND>/' \
+                         -e 's/^EXPECTED_BYTES=.*/EXPECTED_BYTES=<BOUND>/' "$out" | sha256sum | awk '{print $1}')
+  [ "$normalized_before" = "$normalized_after" ] &&
+  [ "$(grep -c '^EXPECTED_SHA=' "$out")" -eq 1 ] &&
+  [ "$(grep -c '^EXPECTED_BYTES=' "$out")" -eq 1 ]
+}
+
+r18_insert_after_probe() {
+  local insert="$1" out="$2"
+  awk -v ins="$insert" '
+    BEGIN { while ((getline line < ins) > 0) body[++n] = line }
+    { print }
+    /^p0_probe_kind\(\) \{$/ { for (i = 1; i <= n; i++) print body[i] }
+  ' "$BLOCK" > "$out"
+}
+
+r18_patch_wait_policy() {
+  local src="$1" out="$2" dispatch_anchors function_anchors
+  dispatch_anchors=$(sed -n '/^# R16_GRAMMAR_HARNESS_BEGIN$/,/^# R16_GRAMMAR_HARNESS_END$/p' "$src" |
+    grep -cF '# R14 finding 3: the two alias-control builtins' || true)
+  function_anchors=$(sed -n '/^# R16_GRAMMAR_HARNESS_BEGIN$/,/^# R16_GRAMMAR_HARNESS_END$/p' "$src" |
+    grep -cF '  function vartarget(t, w, single,' || true)
+  if [ "$dispatch_anchors" -ne 1 ] || [ "$function_anchors" -ne 1 ]; then
+    return 1
+  fi
+
+  awk '
+    /^# R16_GRAMMAR_HARNESS_BEGIN$/ { in_r16 = 1 }
+    in_r16 && index($0, "# R14 finding 3: the two alias-control builtins") {
+      print "      # R18: wait is assignment-capable only through -p TARGET."
+      print "      if (w == \"wait\") waittarget(t)"
+    }
+    in_r16 && index($0, "  function vartarget(t, w, single,") {
+      print "  function waittarget(t,   p, r2, w2, need_target, operands) {"
+      print "      need_target = 0; operands = 0"
+      print "      for (p = t + 1; p <= NT; p++) {"
+      print "          if (TT[p] == \"OP\") {"
+      print "              if (isredir(TN[p])) { p++; continue }"
+      print "              break"
+      print "          }"
+      print "          r2 = TR[p]; w2 = TN[p]"
+      print "          if (need_target) {"
+      print "              if (TE[p] > 0 || TX[p] > 0 || w2 !~ /^[A-Za-z_][A-Za-z0-9_]*$/) {"
+      print "                  unmodeled(\"dynamic_variable_target:wait_p\", TL[p], r2)"
+      print "              } else {"
+      print "                  printf \"VARTARGET line=%d col=%d builtin=wait_p name=%s\\n\", TL[p], TC[p], w2"
+      print "              }"
+      print "              need_target = 0"
+      print "              continue"
+      print "          }"
+      print "          if (r2 ~ /^-/) {"
+      print "              if (operands > 0) { unmodeled(\"wait_option_after_operand:\" r2, TL[p], r2); return }"
+      print "              if (w2 == \"-n\" || w2 == \"-f\") continue"
+      print "              if (w2 == \"-p\") { need_target = 1; continue }"
+      print "              unmodeled(\"variable_builtin_option_unmodeled:wait:\" r2, TL[p], r2)"
+      print "              return"
+      print "          }"
+      print "          operands++"
+      print "      }"
+      print "      if (need_target) unmodeled(\"dynamic_variable_target:wait_p\", TL[t], \"missing_target\")"
+      print "  }"
+      print ""
+    }
+    { print }
+    /^# R16_GRAMMAR_HARNESS_END$/ { in_r16 = 0 }
+  ' "$src" > "$out"
+}
+
+r18_instrument_r17() {
+  local src="$1" out="$2" anchors
+  anchors=$(grep -cF '    r17_target_report "$Q/$tag.tok" "$tag"' "$src" || true)
+  [ "$anchors" -eq 1 ] || return 1
+  awk '
+    { print }
+    index($0, "    r17_target_report \"$Q/$tag.tok\" \"$tag\"") {
+      print "    grep -E '\''^(UNMODELED kind=(dynamic_variable_target|variable_builtin_option_unmodeled|wait_option_after_operand):|VARTARGET .* builtin=wait_p )'\'' \"$Q/$tag.tok\" 2>/dev/null || true"
+    }
+  ' "$src" > "$out"
+}
+
+r18_effect_partition() {
+  local effect_count target_count prefix_count action_count no_target_count union_count
+  awk '
+    /<<'\''P0_R17_EFFECT_MODEL_EOF'\''/ { inside = 1; next }
+    inside && $0 == "P0_R17_EFFECT_MODEL_EOF" { exit }
+    inside { print }
+  ' "$QA" | LC_ALL=C sort -u > "$Q18/effect_all.txt"
+
+  cat > "$Q18/effect_target.txt" <<'P0_R18_TARGET_EOF'
+printf
+wait
+declare
+typeset
+local
+readonly
+export
+read
+mapfile
+readarray
+getopts
+unset
+let
+P0_R18_TARGET_EOF
+  cat > "$Q18/effect_prefix.txt" <<'P0_R18_PREFIX_EOF'
+builtin
+command
+exec
+P0_R18_PREFIX_EOF
+  printf '%s\n' trap > "$Q18/effect_action.txt"
+  cat > "$Q18/effect_no_target.txt" <<'P0_R18_NO_TARGET_EOF'
+:
+[
+exit
+return
+break
+continue
+set
+shift
+type
+test
+true
+false
+echo
+hash
+pwd
+cd
+umask
+ulimit
+jobs
+rp0_require_safe_component
+P0_R18_NO_TARGET_EOF
+
+  cat "$Q18/effect_target.txt" "$Q18/effect_prefix.txt" \
+      "$Q18/effect_action.txt" "$Q18/effect_no_target.txt" |
+    LC_ALL=C sort > "$Q18/effect_union.txt"
+  effect_count=$(r18_count "$Q18/effect_all.txt")
+  target_count=$(r18_count "$Q18/effect_target.txt")
+  prefix_count=$(r18_count "$Q18/effect_prefix.txt")
+  action_count=$(r18_count "$Q18/effect_action.txt")
+  no_target_count=$(r18_count "$Q18/effect_no_target.txt")
+  union_count=$(r18_count "$Q18/effect_union.txt")
+
+  if cmp -s "$Q18/effect_all.txt" "$Q18/effect_union.txt" &&
+     [ "$effect_count" -eq "$union_count" ]; then
+    r18_ok "effect_partition_conserved admitted=$effect_count target_grammar=$target_count prefix_recursive=$prefix_count action_grammar=$action_count no_named_target=$no_target_count"
+  else
+    r18_bad "effect_partition_conserved admitted=$effect_count union=$union_count"
+    diff "$Q18/effect_all.txt" "$Q18/effect_union.txt" | sed -n '1,12p'
+  fi
+}
+
+if [ -f "$BLOCK" ]; then
+  block_sha=$(sha256sum "$BLOCK" | awk '{print $1}')
+  block_bytes=$(wc -c < "$BLOCK" | tr -d ' ')
+  printf 'R18_BLOCK_IDENTITY before bytes=%s sha256=%s\n' "$block_bytes" "$block_sha"
+  [ "$block_sha" = "$BLOCK_SHA" ] && [ "$block_bytes" = "$BLOCK_BYTES" ] &&
+    r18_ok "block_identity_before unchanged bytes=$block_bytes sha256=$block_sha" ||
+    r18_bad "block_identity_before changed bytes=$block_bytes sha256=$block_sha"
+else
+  r18_bad "block_identity_before missing path=$BLOCK"
+fi
+
+if git show "$HIST_COMMIT:$HIST_PATH" > "$Q18/r17_selfqa.md"; then
+  hist_sha=$(sha256sum "$Q18/r17_selfqa.md" | awk '{print $1}')
+  hist_bytes=$(wc -c < "$Q18/r17_selfqa.md" | tr -d ' ')
+  [ "$hist_sha" = "$HIST_QA_SHA" ] && [ "$hist_bytes" = "$HIST_QA_BYTES" ] &&
+    r18_ok "delivered_r17_selfqa_bound commit=$HIST_COMMIT bytes=$hist_bytes sha256=$hist_sha" ||
+    r18_bad "delivered_r17_selfqa_bound commit=$HIST_COMMIT bytes=$hist_bytes sha256=$hist_sha"
+else
+  r18_bad "delivered_r17_selfqa_unavailable commit=$HIST_COMMIT path=$HIST_PATH"
+fi
+
+sed -n '/^# R17_DYNAMIC_TARGETS_HARNESS_BEGIN$/,/^# R17_DYNAMIC_TARGETS_HARNESS_END$/p' \
+  "$Q18/r17_selfqa.md" > "$Q18/r17_delivered.sh"
+sed -n '/^# R17_DYNAMIC_TARGETS_HARNESS_BEGIN$/,/^# R17_DYNAMIC_TARGETS_HARNESS_END$/p' \
+  "$QA" > "$Q18/r17_current.sh"
+
+cat > "$Q18/ins_wait.txt" <<'P0_R18_WAIT_MUTANT_EOF'
+    [ -z "${P0_R18_WAIT_MUTANT:-}" ] || { P0_R18_WAIT_NAME=P0_R18_WAIT_TARGET; ( : ) & wait -n -p "$P0_R18_WAIT_NAME"; }
+P0_R18_WAIT_MUTANT_EOF
+r18_insert_after_probe "$Q18/ins_wait.txt" "$Q18/mut_wait.sh"
+wait_sha=$(sha256sum "$Q18/mut_wait.sh" | awk '{print $1}')
+wait_bytes=$(wc -c < "$Q18/mut_wait.sh" | tr -d ' ')
+if ! cmp -s "$Q18/mut_wait.sh" "$BLOCK" && bash -n "$Q18/mut_wait.sh"; then
+  r18_ok "wait_mutant_applied bytes=$wait_bytes sha256=$wait_sha bash_n=$?"
+else
+  r18_bad "wait_mutant_invalid_or_not_applied"
+fi
+
+if r18_rebind_r17 "$Q18/r17_delivered.sh" "$Q18/r17_delivered_wait.sh" "$wait_sha" "$wait_bytes"; then
+  r18_ok "delivered_r17_rebind_only fields=2 normalized_bytes_unchanged=yes"
+else
+  r18_bad "delivered_r17_rebind_only failed"
+fi
+
+bash --noprofile --norc "$Q18/r17_delivered_wait.sh" \
+  "$Q18/mut_wait.sh" "$Q18/r17_selfqa.md" "$DRAFT" > "$Q18/red.out" 2> "$Q18/red.err"
+red_rc=$?
+red_summary=$(r18_r17_summary "$Q18/red.out")
+red_target=$(r18_r17_target_report "$Q18/red.out")
+if [ "$red_rc" -eq 0 ] &&
+   printf '%s\n' "$red_summary" | grep -q 'cases=15 pass=15 fail=0 result=PASS' &&
+   printf '%s\n' "$red_target" | grep -q 'dynamic_targets=0'; then
+  r18_ok "D026_RED_DELIVERED_R17 mutant=wait_p rc=$red_rc summary=[$red_summary] target=[$red_target]"
+else
+  r18_bad "D026_RED_DELIVERED_R17 mutant=wait_p rc=$red_rc summary=[$red_summary] target=[$red_target]"
+fi
+
+unset P0_R18_WAIT_TARGET
+P0_R18_WAIT_NAME=P0_R18_WAIT_TARGET
+( : ) &
+wait -n -p "$P0_R18_WAIT_NAME"
+wait_rc=$?
+wait_value="${P0_R18_WAIT_TARGET-}"
+if [ "$wait_rc" -eq 0 ] && [ -n "$wait_value" ] && [[ "$wait_value" =~ ^[0-9]+$ ]]; then
+  r18_ok "wait_p_bash_semantics target=$P0_R18_WAIT_NAME changed=yes numeric=yes rc=$wait_rc"
+else
+  r18_bad "wait_p_bash_semantics target=$P0_R18_WAIT_NAME changed=no_or_nonnumeric rc=$wait_rc"
+fi
+
+if r18_patch_wait_policy "$QA" "$Q18/r18_qa.md"; then
+  wait_functions=$(sed -n '/^# R16_GRAMMAR_HARNESS_BEGIN$/,/^# R16_GRAMMAR_HARNESS_END$/p' "$Q18/r18_qa.md" |
+    grep -cF '  function waittarget(' || true)
+  wait_dispatches=$(sed -n '/^# R16_GRAMMAR_HARNESS_BEGIN$/,/^# R16_GRAMMAR_HARNESS_END$/p' "$Q18/r18_qa.md" |
+    grep -cF '      if (w == "wait") waittarget(t)' || true)
+  [ "$wait_functions" -eq 1 ] && [ "$wait_dispatches" -eq 1 ] &&
+    r18_ok "wait_target_grammar_injected functions=$wait_functions dispatches=$wait_dispatches" ||
+    r18_bad "wait_target_grammar_injected functions=$wait_functions dispatches=$wait_dispatches"
+else
+  r18_bad "wait_target_grammar_injected anchor_failure"
+fi
+
+if r18_instrument_r17 "$Q18/r17_current.sh" "$Q18/r18_policy_clean.sh"; then
+  r18_ok "r18_policy_instrumentation target_record_channel=present"
+else
+  r18_bad "r18_policy_instrumentation target_record_channel=missing"
+fi
+
+bash --noprofile --norc "$Q18/r18_policy_clean.sh" \
+  "$BLOCK" "$Q18/r18_qa.md" "$DRAFT" > "$Q18/green_clean.out" 2> "$Q18/green_clean.err"
+clean_rc=$?
+clean_summary=$(r18_r17_summary "$Q18/green_clean.out")
+if [ "$clean_rc" -eq 0 ] &&
+   printf '%s\n' "$clean_summary" | grep -q 'fail=0 result=PASS' &&
+   grep -q 'r17_pass_format_measured .*uncomputed_numeric_fields=0' "$Q18/green_clean.out" &&
+   grep -q 'D026_RED_PASS_FORMAT .*detected=1' "$Q18/green_clean.out"; then
+  r18_ok "GREEN_CLEAN_R18_POLICY rc=$clean_rc summary=[$clean_summary] pass_format=measured_and_falsified"
+else
+  r18_bad "GREEN_CLEAN_R18_POLICY rc=$clean_rc summary=[$clean_summary]"
+fi
+
+if r18_rebind_r17 "$Q18/r18_policy_clean.sh" "$Q18/r18_policy_wait.sh" "$wait_sha" "$wait_bytes"; then
+  bash --noprofile --norc "$Q18/r18_policy_wait.sh" \
+    "$Q18/mut_wait.sh" "$Q18/r18_qa.md" "$DRAFT" > "$Q18/green_wait.out" 2> "$Q18/green_wait.err"
+  green_wait_rc=$?
+  green_wait_summary=$(r18_r17_summary "$Q18/green_wait.out")
+  green_wait_record=$(grep '^UNMODELED kind=dynamic_variable_target:wait_p' "$Q18/green_wait.out" | sed -n '1p')
+  if [ "$green_wait_rc" -ne 0 ] && [ -n "$green_wait_record" ] &&
+     grep -q 'dynamic_targets=1 dynamic_variable_targets=1' "$Q18/green_wait.out"; then
+    r18_ok "D026_GREEN_R18 mutant=wait_p rc=$green_wait_rc record=[$green_wait_record] summary=[$green_wait_summary]"
+  else
+    r18_bad "D026_GREEN_R18 mutant=wait_p rc=$green_wait_rc record=[$green_wait_record] summary=[$green_wait_summary]"
+  fi
+else
+  r18_bad "D026_GREEN_R18 mutant=wait_p rebind_failed"
+fi
+
+cat > "$Q18/ins_assigning_matrix.txt" <<'P0_R18_ASSIGNING_MATRIX_EOF'
+    [ -z "${P0_R18_ASSIGNING_MATRIX_MUTANT:-}" ] || { P0_R18_PRINTF_NAME=P0_R18_PRINTF_TARGET; printf -v "$P0_R18_PRINTF_NAME" '%s' x; P0_R18_READ_NAME=P0_R18_READ_TARGET; read -a "$P0_R18_READ_NAME" <<< "x"; ( : ) & wait -n -p P0_R18_LITERAL_TARGET; ( : ) & wait --future -p P0_R18_OTHER_TARGET; wait -p; }
+P0_R18_ASSIGNING_MATRIX_EOF
+r18_insert_after_probe "$Q18/ins_assigning_matrix.txt" "$Q18/mut_assigning_matrix.sh"
+matrix_sha=$(sha256sum "$Q18/mut_assigning_matrix.sh" | awk '{print $1}')
+matrix_bytes=$(wc -c < "$Q18/mut_assigning_matrix.sh" | tr -d ' ')
+if ! cmp -s "$Q18/mut_assigning_matrix.sh" "$BLOCK" &&
+   bash -n "$Q18/mut_assigning_matrix.sh" &&
+   r18_rebind_r17 "$Q18/r18_policy_clean.sh" "$Q18/r18_policy_matrix.sh" "$matrix_sha" "$matrix_bytes"; then
+  bash --noprofile --norc "$Q18/r18_policy_matrix.sh" \
+    "$Q18/mut_assigning_matrix.sh" "$Q18/r18_qa.md" "$DRAFT" > "$Q18/green_matrix.out" 2> "$Q18/green_matrix.err"
+  matrix_rc=$?
+  if [ "$matrix_rc" -ne 0 ] &&
+     grep -q '^UNMODELED kind=dynamic_variable_target:printf_v ' "$Q18/green_matrix.out" &&
+     grep -q '^UNMODELED kind=variable_builtin_option_unmodeled:read:-a ' "$Q18/green_matrix.out" &&
+     grep -q '^VARTARGET .* builtin=wait_p name=P0_R18_LITERAL_TARGET$' "$Q18/green_matrix.out" &&
+     grep -q '^UNMODELED kind=variable_builtin_option_unmodeled:wait:--future ' "$Q18/green_matrix.out" &&
+     grep -q '^UNMODELED kind=dynamic_variable_target:wait_p .*raw=\[missing_target\]$' "$Q18/green_matrix.out"; then
+    r18_ok "assigning_option_matrix_executed rc=$matrix_rc printf_v=dynamic_target_refused read_a=option_refused wait_p_literal=target_recorded wait_unknown=option_refused wait_p_missing=target_refused"
+  else
+    r18_bad "assigning_option_matrix_executed rc=$matrix_rc expected_records=missing"
+    grep -E '^(UNMODELED kind=(dynamic_variable_target|variable_builtin_option_unmodeled|wait_option_after_operand):|VARTARGET .* builtin=wait_p )' "$Q18/green_matrix.out" | sed -n '1,12p'
+  fi
+else
+  r18_bad "assigning_option_matrix_executed mutant_invalid_or_rebind_failed"
+fi
+
+r18_effect_partition
+
+r16_body="$Q18/r16_patched.sh"
+sed -n '/^# R16_GRAMMAR_HARNESS_BEGIN$/,/^# R16_GRAMMAR_HARNESS_END$/p' "$Q18/r18_qa.md" > "$r16_body"
+printf_route=$(grep -cF 'if (a > 0 && TN[a] == "-v") vartarget(a, "printf_v", 1)' "$r16_body" || true)
+wait_route=$(grep -cF 'if (w == "wait") waittarget(t)' "$r16_body" || true)
+read_refusal=$(grep -cF 'unmodeled("variable_builtin_option_unmodeled:" w ":" r2' "$r16_body" || true)
+if [ "$printf_route" -eq 1 ] && [ "$wait_route" -eq 1 ] && [ "$read_refusal" -eq 1 ]; then
+  r18_ok "assigning_option_matrix entries=3 printf_v=target_grammar wait_p=target_grammar read_a=fail_closed_unmodeled_option"
+else
+  r18_bad "assigning_option_matrix printf_v=$printf_route wait_p=$wait_route read_a_refusal=$read_refusal"
+fi
+
+if [ -f "$BLOCK" ]; then
+  block_sha_after=$(sha256sum "$BLOCK" | awk '{print $1}')
+  block_bytes_after=$(wc -c < "$BLOCK" | tr -d ' ')
+  printf 'R18_BLOCK_IDENTITY after bytes=%s sha256=%s\n' "$block_bytes_after" "$block_sha_after"
+  [ "$block_sha_after" = "$BLOCK_SHA" ] && [ "$block_bytes_after" = "$BLOCK_BYTES" ] &&
+    r18_ok "block_identity_after unchanged bytes=$block_bytes_after sha256=$block_sha_after" ||
+    r18_bad "block_identity_after changed bytes=$block_bytes_after sha256=$block_sha_after"
+fi
+
+printf 'R18_ASSIGNING_EFFECT_SUMMARY cases=%s pass=%s fail=%s result=%s\n' \
+  "$((R18_OK+R18_BAD))" "$R18_OK" "$R18_BAD" \
+  "$([ "$R18_BAD" -eq 0 ] && echo PASS || echo FAIL)"
+[ "$R18_BAD" -eq 0 ] || exit 1
+# R18_ASSIGNING_EFFECT_HARNESS_END
+```
+
+Published command, from `WPI_BLOCKS_DRAFT`:
+
+```bash
+sed -n '/^# R18_ASSIGNING_EFFECT_HARNESS_BEGIN$/,/^# R18_ASSIGNING_EFFECT_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+```
+
+Exact summary transcript from the published command (outer rc 0, stderr bytes 0):
+
+```text
+R18_BLOCK_IDENTITY before bytes=110817 sha256=5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330
+R18_ASSERT_MET delivered_r17_selfqa_bound commit=671d9b40 bytes=1038848 sha256=07cf843d5f00bef7f980017cbe01e0dc63ddb95dce5c7253d9e9a351b0d449ac
+R18_ASSERT_MET wait_mutant_applied bytes=110938 sha256=0e893287ad64e6f6117a13c9c864fa56288b7e0e208ab79847402fe3f9382b9b bash_n=0
+R18_ASSERT_MET delivered_r17_rebind_only fields=2 normalized_bytes_unchanged=yes
+R18_ASSERT_MET D026_RED_DELIVERED_R17 mutant=wait_p rc=0 summary=[R17_DYNAMIC_TARGETS_SUMMARY cases=15 pass=15 fail=0 result=PASS] target=[R17_ASSERT_MET r17_dynamic_targets_measured variable_targets=113 inventory_targets=0 dynamic_targets=0 dynamic_variable_targets=0 opaque_mutators=0 effect_unmodeled=0 nonfunction_bare=11]
+R18_ASSERT_MET wait_p_bash_semantics target=P0_R18_WAIT_TARGET changed=yes numeric=yes rc=0
+R18_ASSERT_MET wait_target_grammar_injected functions=1 dispatches=1
+R18_ASSERT_MET GREEN_CLEAN_R18_POLICY rc=0 summary=[R17_DYNAMIC_TARGETS_SUMMARY cases=16 pass=16 fail=0 result=PASS] pass_format=measured_and_falsified
+R18_ASSERT_MET D026_GREEN_R18 mutant=wait_p rc=1 record=[UNMODELED kind=dynamic_variable_target:wait_p line=1567 raw=["$P0_R18_WAIT_NAME"]] summary=[R17_DYNAMIC_TARGETS_SUMMARY cases=15 pass=11 fail=4 result=FAIL]
+R18_ASSERT_MET effect_partition_conserved admitted=37 target_grammar=13 prefix_recursive=3 action_grammar=1 no_named_target=20
+R18_ASSERT_MET assigning_option_matrix_executed rc=1 printf_v=dynamic_target_refused read_a=option_refused wait_p_literal=target_recorded wait_unknown=option_refused wait_p_missing=target_refused
+R18_ASSERT_MET assigning_option_matrix entries=3 printf_v=target_grammar wait_p=target_grammar read_a=fail_closed_unmodeled_option
+R18_BLOCK_IDENTITY after bytes=110817 sha256=5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330
+R18_ASSIGNING_EFFECT_SUMMARY cases=14 pass=14 fail=0 result=PASS
+```
+
 # ROUND 17 - RP6-11 dynamic target census closure
+
+> **ROUND-18 CORRECTION.** The round-17 phrase "closed effect model" below is
+> superseded. The r17 T0 audit proved that `wait -p` survived. Round 18 narrows
+> the property to caller-selected named-variable assignment effects and closes
+> that property through the executed partition and target grammar above. The
+> round-17 pass-format producer is also repaired in place below with a measured
+> scan and a falsification that adds one unsupported numeric result field.
 
 Round 17 is a QA/census-layer repair only. `RP6-P0.sh` remains byte-identical to
 the round-16 subject: 110817 bytes, SHA-256
@@ -13325,6 +13768,87 @@ r17_insert_after_probe() {
   ' "$BLOCK" > "$out"
 }
 
+r17_uncomputed_result_fields() {
+  local src="$1"
+  awk '
+    NR == FNR {
+      s = $0
+      sub(/^[[:space:]]+/, "", s)
+      if (s ~ /^[A-Za-z_][A-Za-z0-9_]*=/) {
+        v = s
+        sub(/=.*/, "", v)
+        assignments[v]++
+        if (s ~ /^[A-Za-z_][A-Za-z0-9_]*=[0-9]+[[:space:]]*$/) literal[v] = 1
+      }
+      next
+    }
+    {
+      s = $0
+      sub(/^[[:space:]]+/, "", s)
+      if (s ~ /^(rok|rbad) "/ || s ~ /^printf '\''R17_/) {
+        while (match(s, /[A-Za-z_][A-Za-z0-9_]*=[0-9]+/)) {
+          print substr(s, RSTART, RLENGTH)
+          s = substr(s, RSTART + RLENGTH)
+        }
+        s = $0
+        while (match(s, /[A-Za-z_][A-Za-z0-9_]*=[$][{]?[A-Za-z_][A-Za-z0-9_]*[}]?/)) {
+          field = substr(s, RSTART, RLENGTH)
+          v = field
+          sub(/^.*=[$][{]?/, "", v)
+          sub(/[}]$/, "", v)
+          if (literal[v] && assignments[v] == 1) print field
+          s = substr(s, RSTART + RLENGTH)
+        }
+      }
+    }
+  ' "$src" "$src"
+}
+
+r17_result_producer_count() {
+  awk '
+    {
+      s = $0
+      sub(/^[[:space:]]+/, "", s)
+      if (s ~ /^(rok|rbad) "/ || s ~ /^printf '\''R17_/) n++
+    }
+    END { print n + 0 }
+  ' "$1"
+}
+
+r17_pass_format_scan() {
+  local current_count mutant_count producer_count expected_mutant_count
+  sed -n '/^# R17_DYNAMIC_TARGETS_HARNESS_BEGIN$/,/^# R17_DYNAMIC_TARGETS_HARNESS_END$/p' "$QA" > "$Q/r17_format_current.sh"
+  r17_uncomputed_result_fields "$Q/r17_format_current.sh" > "$Q/r17_format_current.fields"
+  current_count=$(r17_count_lines "$Q/r17_format_current.fields")
+  producer_count=$(r17_result_producer_count "$Q/r17_format_current.sh")
+
+  awk '
+    /^# R17_DYNAMIC_TARGETS_HARNESS_END$/ {
+      print "P0_R17_FORMAT_MUTANT_COUNT=0"
+      print "rok \"FORMAT_MUTANT unsupported_count=$P0_R17_FORMAT_MUTANT_COUNT\""
+    }
+    { print }
+  ' "$Q/r17_format_current.sh" > "$Q/r17_format_mutant.sh"
+  r17_uncomputed_result_fields "$Q/r17_format_mutant.sh" > "$Q/r17_format_mutant.fields"
+  mutant_count=$(r17_count_lines "$Q/r17_format_mutant.fields")
+  expected_mutant_count=$((current_count + 1))
+
+  if [ "$current_count" -eq 0 ]; then
+    rok "r17_pass_format_measured scanned_producers=$producer_count uncomputed_numeric_fields=$current_count"
+  else
+    rbad "r17_pass_format_measured scanned_producers=$producer_count uncomputed_numeric_fields=$current_count"
+    sed -n '1,12p' "$Q/r17_format_current.fields"
+  fi
+
+  if [ "$mutant_count" -eq "$expected_mutant_count" ] &&
+     grep -qxF 'unsupported_count=$P0_R17_FORMAT_MUTANT_COUNT' "$Q/r17_format_mutant.fields"; then
+    rok "D026_RED_PASS_FORMAT mutant=variable_backed_literal_numeric_field baseline=$current_count detected=$mutant_count expected=$expected_mutant_count"
+  else
+    rbad "D026_RED_PASS_FORMAT mutant=variable_backed_literal_numeric_field baseline=$current_count detected=$mutant_count expected=$expected_mutant_count"
+    sed -n '1,12p' "$Q/r17_format_mutant.fields"
+  fi
+}
+
 r17_prepare_mutants() {
   cat > "$Q/ins_eval.txt" <<'P0_R17_EVAL_MUTANT_EOF'
     [ -z "${P0_R17_EVAL_MUTANT:-}" ] || { P0_R17_DYN_A=P0_RO; P0_R17_DYN_B=_TOOLS; eval "${P0_R17_DYN_A}${P0_R17_DYN_B}=p0_r17_bad"; }
@@ -13337,13 +13861,15 @@ P0_R17_DOT_SOURCE_MUTANT_EOF
 }
 
 r17_check_mutant() {
-  local label="$1" subject="$2" expected_unmodeled="$3" red_rc red_summary green_rc
+  local label="$1" subject="$2" expected_unmodeled="$3" red_rc red_summary green_rc syntax_rc
   if cmp -s "$subject" "$BLOCK"; then
     rbad "mutant=$label applied=no"
     return
   fi
-  if bash -n "$subject" 2> "$Q/$label.syntax.err"; then
-    rok "mutant=$label bash_n=0"
+  bash -n "$subject" 2> "$Q/$label.syntax.err"
+  syntax_rc=$?
+  if [ "$syntax_rc" -eq 0 ]; then
+    rok "mutant=$label bash_n=$syntax_rc"
   else
     rbad "mutant=$label bash_n=nonzero detail=$(sed -n '1p' "$Q/$label.syntax.err")"
     return
@@ -13353,7 +13879,7 @@ r17_check_mutant() {
   red_rc=$(cat "$Q/red_$label.rc")
   red_summary=$(r17_summary_result "$Q/red_$label.out")
   if [ "$red_rc" = 0 ] && printf '%s\n' "$red_summary" | grep -q 'cases=50 pass=50 fail=0 result=PASS'; then
-    rok "D026_RED_WEAKENED_R16 mutant=$label rc=0 summary=PASS"
+    rok "D026_RED_WEAKENED_R16 mutant=$label rc=$red_rc summary=[$red_summary]"
   else
     rbad "D026_RED_WEAKENED_R16 mutant=$label rc=$red_rc summary=[$red_summary]"
     sed -n '1,12p' "$Q/red_$label.out"
@@ -13397,15 +13923,16 @@ r17_run_plain "$Q/r16.sh" "$BLOCK" carried_r16
 carried_rc=$(cat "$Q/carried_r16.rc")
 carried_summary=$(r17_summary_result "$Q/carried_r16.out")
 if [ "$carried_rc" = 0 ] && printf '%s\n' "$carried_summary" | grep -q 'cases=50 pass=50 fail=0 result=PASS'; then
-  rok "carried_r16_grammar cases=50 pass=50 fail=0 rc=0"
+  rok "carried_r16_grammar $carried_summary rc=$carried_rc"
 else
   rbad "carried_r16_grammar rc=$carried_rc summary=[$carried_summary]"
 fi
 
 if r17_verdict_subject "$BLOCK" clean; then
   rok "r17_dynamic_targets_measured $(cat "$Q/clean.target_report")"
-  if [ "$(r17_count_lines "$Q/clean.effect_unmodeled")" = 0 ]; then
-    rok "r17_bare_effect_model_closed nonfunction_bare=$(r17_count_lines "$Q/clean.nonfunc_bare") unmodeled=0"
+  n_effect=$(r17_count_lines "$Q/clean.effect_unmodeled")
+  if [ "$n_effect" = 0 ]; then
+    rok "r17_bare_effect_model_closed nonfunction_bare=$(r17_count_lines "$Q/clean.nonfunc_bare") unmodeled=$n_effect"
   else
     rbad "r17_bare_effect_model_closed unmodeled=$(r17_count_lines "$Q/clean.effect_unmodeled")"
     cat "$Q/clean.effect_records"
@@ -13414,9 +13941,7 @@ else
   rbad "r17_clean_verdict_failed rc=$(cat "$Q/clean.rc" 2>/dev/null || echo missing) report=[$(cat "$Q/clean.target_report" 2>/dev/null || echo missing)]"
 fi
 
-literal_zero_fields=6
-literal_zero_lines=3
-rok "r17_pass_format_audit r16_literal_zero_fields=$literal_zero_fields r16_lines=3 r17_literal_zero_measurements=0"
+r17_pass_format_scan
 
 r17_prepare_mutants
 r17_check_mutant eval "$Q/mut_eval.sh" 'UNMODELED kind=indirect_execution_builtin:eval'
@@ -13452,23 +13977,24 @@ R17_ASSERT_MET block_identity_before unchanged bytes=110817 sha256=5132bacde24cb
 R17_ASSERT_MET extracted_r16_fence marker_pair=present
 R17_ASSERT_MET instrumented_r16_tokenizer_copy hook=present
 R17_ASSERT_MET weakened_r16_control mutation=indirect_refusal_removed
-R17_ASSERT_MET carried_r16_grammar cases=50 pass=50 fail=0 rc=0
+R17_ASSERT_MET carried_r16_grammar R16_GRAMMAR_SUMMARY cases=50 pass=50 fail=0 result=PASS rc=0
 R17_ASSERT_MET r17_dynamic_targets_measured variable_targets=113 inventory_targets=0 dynamic_targets=0 dynamic_variable_targets=0 opaque_mutators=0 effect_unmodeled=0 nonfunction_bare=10
 R17_ASSERT_MET r17_bare_effect_model_closed nonfunction_bare=10 unmodeled=0
-R17_ASSERT_MET r17_pass_format_audit r16_literal_zero_fields=6 r16_lines=3 r17_literal_zero_measurements=0
+R17_ASSERT_MET r17_pass_format_measured scanned_producers=28 uncomputed_numeric_fields=0
+R17_ASSERT_MET D026_RED_PASS_FORMAT mutant=variable_backed_literal_numeric_field baseline=0 detected=1 expected=1
 R17_ASSERT_MET mutant=eval bash_n=0
-R17_ASSERT_MET D026_RED_WEAKENED_R16 mutant=eval rc=0 summary=PASS
+R17_ASSERT_MET D026_RED_WEAKENED_R16 mutant=eval rc=0 summary=[R16_GRAMMAR_SUMMARY cases=50 pass=50 fail=0 result=PASS]
 R17_ASSERT_MET D026_GREEN_R17 mutant=eval refused rc=1 report=[variable_targets=113 inventory_targets=0 dynamic_targets=1 dynamic_variable_targets=0 opaque_mutators=1 effect_unmodeled=0 nonfunction_bare=10]
 UNMODELED kind=indirect_execution_builtin:eval line=1567 raw=[eval]
 UNMODELED kind=indirect_execution_builtin:eval line=1567 raw=[eval]
 R17_ASSERT_MET mutant=dot_source bash_n=0
-R17_ASSERT_MET D026_RED_WEAKENED_R16 mutant=dot_source rc=0 summary=PASS
+R17_ASSERT_MET D026_RED_WEAKENED_R16 mutant=dot_source rc=0 summary=[R16_GRAMMAR_SUMMARY cases=50 pass=50 fail=0 result=PASS]
 R17_ASSERT_MET D026_GREEN_R17 mutant=dot_source refused rc=1 report=[variable_targets=113 inventory_targets=0 dynamic_targets=1 dynamic_variable_targets=0 opaque_mutators=1 effect_unmodeled=0 nonfunction_bare=10]
 UNMODELED kind=indirect_execution_builtin:. line=1567 raw=[.]
 UNMODELED kind=indirect_execution_builtin:. line=1567 raw=[.]
 R17_BLOCK_IDENTITY after bytes=110817 sha256=5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330
 R17_ASSERT_MET block_identity_after unchanged bytes=110817 sha256=5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330
-R17_DYNAMIC_TARGETS_SUMMARY cases=15 pass=15 fail=0 result=PASS
+R17_DYNAMIC_TARGETS_SUMMARY cases=16 pass=16 fail=0 result=PASS
 ```
 
 # ROUND 15 — the conservation laws, made to conserve the right quantity
@@ -13499,15 +14025,11 @@ invented.
 > `PENDING`". That was **false as written**: the round-15 implementer session
 > ended during transcript insertion and four `@@…@@` placeholders were left in
 > this file — one of them inside this section — beside that claim. The
-> placeholders are resolved in round 16, and each transcript below now carries an
-> explicit line saying **which session captured it**. A transcript captured in the
-> round-16 session from the *unchanged, published* round-15 bytes is still real
-> captured output of the round-15 fence; it is not output from the round-15
-> session, and it is no longer described as such. `RP6_R15_REPORT_2026-08-11.md`
-> carries the same defect at its line 180 and is **outside the round-16 scope
-> fence** (which permits only `SELF_QA_RP6.md`, `STATUS_RP6_P0.md` and the new
-> round-16 report); it is left for the Lead and is recorded as an open item in
-> `RP6_R16_REPORT_2026-08-11.md`.
+> round-16 write ended before those transcripts were embedded. Round 18 resolves
+> the contradiction with truthful local-absence markers, not reconstructed
+> output. External independent execution evidence is cited at every marker. The
+> same repair is applied to the historical round-15 and round-16 reports under
+> the round-18 six-file scope.
 
 Execution earned its keep again, twice. The first RED candidate for finding 1 —
 `function \` + newline + `printf { :; }` on its own — turned out to be **killed**
@@ -15335,10 +15857,12 @@ Invocation (from `WPI_BLOCKS_DRAFT`):
 sed -n '/^# R15_GRAMMAR_HARNESS_BEGIN$/,/^# R15_GRAMMAR_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
 ```
 
-Real captured output (rc 0):
+Local transcript absent. External evidence: the independent Codex T0 audit
+`RP6_CODEX_T0_AUDIT_R15_2026-08-12.md` records the executed summary at its
+lines 146-148; no output is reconstructed here.
 
 ```text
-@@R15_GRAMMAR_TRANSCRIPT@@
+LOCAL_TRANSCRIPT_ABSENT fence=R15_GRAMMAR external_evidence=RP6_CODEX_T0_AUDIT_R15_2026-08-12.md:146
 ```
 
 Read the three changed or new `ASSERT_MET` lines against the finding they answer.
@@ -15645,10 +16169,12 @@ Invocation (from `WPI_BLOCKS_DRAFT`):
 sed -n '/^# R15_F1_RED_HARNESS_BEGIN$/,/^# R15_F1_RED_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
 ```
 
-Real captured output (rc 0):
+Local transcript absent. External evidence: the independent Codex T0 audit
+`RP6_CODEX_T0_AUDIT_R15_2026-08-12.md` records the executed summary at its
+lines 146-148; no output is reconstructed here.
 
 ```text
-@@R15_F1_RED_TRANSCRIPT@@
+LOCAL_TRANSCRIPT_ABSENT fence=R15_F1_RED external_evidence=RP6_CODEX_T0_AUDIT_R15_2026-08-12.md:147
 ```
 
 The `RED_[…]_r14_fence_certifies_the_mutant got=[0]` lines are the three findings
@@ -15759,8 +16285,12 @@ that the round-15 fences' own-status guards are falsified by the same mechanism
 as every earlier fence. Its count is now twenty-three and its round-15 transcript
 is below. No guard was weakened, so no discriminating-power proof is owed.
 
+Local transcript absent. External evidence: the independent Codex T0 audit
+`RP6_CODEX_T0_AUDIT_R15_2026-08-12.md:148` records
+`R11_GUARDS_SUMMARY fences=23 pass=23 fail=0 result=PASS`.
+
 ```text
-@@R11_GUARDS_TRANSCRIPT@@
+LOCAL_TRANSCRIPT_ABSENT fence=R11_GUARDS_round15 external_evidence=RP6_CODEX_T0_AUDIT_R15_2026-08-12.md:148
 ```
 
 ## Mandated harness set after round 15
@@ -15800,11 +16330,12 @@ sed -n '/^# R11_GUARDS_HARNESS_BEGIN$/,/^# R11_GUARDS_HARNESS_END$/p' SELF_QA_RP
 sed -n '/^# R11_R9RED_HARNESS_BEGIN$/,/^# R11_R9RED_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
 ```
 
-The fences this round touches or adds were re-run from the published bytes in
-this session, verbatim, in that order:
+The local roll-up transcript was not embedded. External evidence: the
+independent Codex T0 audit `RP6_CODEX_T0_AUDIT_R15_2026-08-12.md:146-148`
+records the three executed summaries; no output is reconstructed here.
 
 ```text
-@@RERUN_BLOCK@@
+LOCAL_TRANSCRIPT_ABSENT block=round15_rerun external_evidence=RP6_CODEX_T0_AUDIT_R15_2026-08-12.md:146-148
 ```
 
 ## Files written this round
@@ -15816,8 +16347,10 @@ still `5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330`. The
 preregistration draft was not touched (read only, as the declaration source), and
 the concurrent lanes' files (the SEC102 pathproof and its fixtures under
 `WPI_PREREG_DRAFT_ROUND1`, and the RP7 lane) were not read for writing and not
-touched. No `git checkout`/`reset`/`stash` was run on any tracked file, nothing
-was committed, no host was contacted, and no network command was run.
+touched. **Round-15 author attestation:** no `git checkout`/`reset`/`stash` was
+run on any tracked file, nothing was committed, no host was contacted, and no
+network command was run; those whole-session negatives are not
+transcript-proved.
 
 ## Explicit local limits (round 15)
 
@@ -15911,11 +16444,12 @@ added, but because the identity is arithmetically incapable of colliding. It is
 the same fail-closed-by-construction move that ended the SEC102 command-word
 regress by inverting a blacklist into a whitelist.
 
-Every transcript in this section is **real captured output from the round-16
-session**, produced by running the published invocation verbatim from
-`WPI_BLOCKS_DRAFT` in a clean `bash --noprofile --norc` (GNU bash 5.2.37 msys,
-GNU Awk 5.3.2). Where a transcript is not yet captured it says so in those words
-and is marked `PENDING-LEAD-EXECUTION`; nothing here is invented.
+> **ROUND-18 EVIDENCE CORRECTION.** The original paragraph here claimed every
+> transcript was locally embedded. That was false: four round-16 slots remained
+> empty. The slots below now carry truthful local-absence markers and cite the
+> independent executed summaries in `RP6_CODEX_T0_AUDIT_R16_2026-08-12.md`.
+> Nothing is reconstructed, and none of those sections claims locally
+> transcript-proved closure.
 
 ## The two structural findings, both UPHELD and both closed
 
@@ -15990,18 +16524,21 @@ and is marked `PENDING-LEAD-EXECUTION`; nothing here is invented.
   one of the three inventory variables. This is a refusal of dynamic targets, not
   a resolution of them, and it is stated that way in the limits below.
 
+  **Round-18 correction:** "every admitted variable-mutating builtin" was false.
+  The list omitted `wait -p TARGET`; the delivered round-17 fence certified that
+  executed assignment class clean. The round-18 harness above supersedes this
+  claim with the 37-member conserved effect partition and the fail-closed
+  `waittarget` grammar.
+
 ## The fourth finding — the evidence record
 
 - **F4** (MEDIUM, Patterns 9/10) — the round-15 report and status claimed
-  embedded complete execution evidence while four `@@…@@` transcript
-  placeholders were still unresolved. The claim was literally false. In
-  `SELF_QA_RP6.md` the placeholders are resolved in this round and the round-15
-  claim sentence carries an explicit correction; in `STATUS_RP6_P0.md` the
-  execution-evidence block is replaced with real captured output and the claim is
-  narrowed to what is actually present. `RP6_R15_REPORT_2026-08-11.md` carries
-  the same defect at its line 180 and is **outside the round-16 scope fence**;
-  it is recorded as an open Lead item in `RP6_R16_REPORT_2026-08-11.md` rather
-  than silently edited.
+  embedded complete execution evidence while four transcript slots were empty.
+  The claim was literally false. **Round-18 correction:** the interrupted
+  round-16 write also left four slots empty and both historical reports retained
+  one empty slot each. All eleven positions now carry truthful local-absence
+  markers with external independent execution citations; no output was invented
+  or reconstructed.
 
 ## What round 16 changes, mechanism by mechanism
 
@@ -18235,10 +18772,12 @@ Invocation (from `WPI_BLOCKS_DRAFT`):
 sed -n '/^# R16_GRAMMAR_HARNESS_BEGIN$/,/^# R16_GRAMMAR_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
 ```
 
-Real captured output, round-16 session (rc 0):
+Local transcript absent. External evidence: the independent Codex T0 audit
+`RP6_CODEX_T0_AUDIT_R16_2026-08-12.md` records the executed summaries at its
+lines 23-25; no output is reconstructed here.
 
 ```text
-@@R16_GRAMMAR_TRANSCRIPT@@
+LOCAL_TRANSCRIPT_ABSENT fence=R16_GRAMMAR external_evidence=RP6_CODEX_T0_AUDIT_R16_2026-08-12.md:23
 ```
 
 ### R16_F1_RED harness
@@ -18518,10 +19057,12 @@ Invocation (from `WPI_BLOCKS_DRAFT`):
 sed -n '/^# R16_F1_RED_HARNESS_BEGIN$/,/^# R16_F1_RED_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
 ```
 
-Real captured output, round-16 session (rc 0):
+Local transcript absent. External evidence: the independent Codex T0 audit
+`RP6_CODEX_T0_AUDIT_R16_2026-08-12.md` records the executed summaries at its
+lines 23-25; no output is reconstructed here.
 
 ```text
-@@R16_F1_RED_TRANSCRIPT@@
+LOCAL_TRANSCRIPT_ABSENT fence=R16_F1_RED external_evidence=RP6_CODEX_T0_AUDIT_R16_2026-08-12.md:24
 ```
 
 The `RED_[…]_r15_fence_certifies_the_mutant got=[0]` lines are the two structural
@@ -18641,8 +19182,12 @@ that the round-16 fences' own-status guards are falsified by the same mechanism
 as every earlier fence. Its count is now twenty-five. No guard was weakened, so
 no discriminating-power proof is owed.
 
+Local transcript absent. External evidence: the independent Codex T0 audit
+`RP6_CODEX_T0_AUDIT_R16_2026-08-12.md:25` records
+`R11_GUARDS_SUMMARY fences=25 pass=25 fail=0 result=PASS`.
+
 ```text
-@@R11_GUARDS_TRANSCRIPT@@
+LOCAL_TRANSCRIPT_ABSENT fence=R11_GUARDS_round16 external_evidence=RP6_CODEX_T0_AUDIT_R16_2026-08-12.md:25
 ```
 
 ## Mandated harness set after round 16
@@ -18683,11 +19228,12 @@ sed -n '/^# R11_GUARDS_HARNESS_BEGIN$/,/^# R11_GUARDS_HARNESS_END$/p' SELF_QA_RP
 sed -n '/^# R11_R9RED_HARNESS_BEGIN$/,/^# R11_R9RED_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
 ```
 
-The fences this round touches or adds were re-run from the published bytes, in
-that order:
+The local roll-up transcript was not embedded. External evidence: the
+independent Codex T0 audit `RP6_CODEX_T0_AUDIT_R16_2026-08-12.md:23-25`
+records the three executed summaries; no output is reconstructed here.
 
 ```text
-@@RERUN_BLOCK@@
+LOCAL_TRANSCRIPT_ABSENT block=round16_rerun external_evidence=RP6_CODEX_T0_AUDIT_R16_2026-08-12.md:23-25
 ```
 
 ## Files written this round
@@ -18699,11 +19245,13 @@ still `5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330`. The
 preregistration draft was not touched (read only, as the declaration source), and
 the concurrent lanes' files (the SEC102 pathproof and its fixtures under
 `WPI_PREREG_DRAFT_ROUND1`, and the RP7 lane) were not read for writing and not
-touched. `RP6_R15_REPORT_2026-08-11.md` was NOT written — it is outside this
-round's scope fence, and its unresolved `@@REPORT_EXEC_BLOCK@@` placeholder is
-reported to the Lead rather than edited here. No `git checkout`/`reset`/`stash`
-was run on any tracked file, nothing was committed, no host was contacted, and no
-network command was run.
+touched. `RP6_R15_REPORT_2026-08-11.md` was NOT written — it was outside the
+round-16 scope fence, and its then-unresolved report slot was reported to the
+Lead rather than edited in round 16. Round 18 later replaced it with a truthful
+local-absence marker. **Round-16 author attestation:** no `git
+checkout`/`reset`/`stash` was run on any tracked file, nothing was committed, no
+host was contacted, and no network command was run; those whole-session
+negatives are not transcript-proved.
 
 ## Explicit local limits (round 16)
 
