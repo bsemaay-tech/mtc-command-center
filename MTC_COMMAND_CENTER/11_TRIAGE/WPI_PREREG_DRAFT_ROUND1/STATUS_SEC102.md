@@ -47,9 +47,21 @@ require an actor who already controls this host:
    be pinned at production-gate time, not a static-tool defect — **already owner-ratified
    2026-08-12 as decision C**.
 
-**Consequences.** WP-I freeze blocker #4 (SEC102) is CLEARED subject to the GLM-5.2 T1
-second-opinion evidence being attached (dispatched 2026-08-12; the model-diverse check does not
-gate the owner's boundary decision, which is already made). The four assumptions above must be
+**GLM-5.2 second-opinion evidence — ATTACHED 2026-08-12 ~14:05.**
+`SEC102_GLM_T1_2ND_OPINION_2026-08-12.md`: **PASS-WITH-NITS (source-level; honestly
+SUPPLEMENTAL on execution).** GLM independently re-derived the module identity and could not
+defeat the command-word whitelist by adversarial source read; it confirmed both original
+CRITICALs closed in code, the fail-closed direction real, exactly one execution sink, and all
+four disclosed residuals honest and not dressed as controls (including Codex R11-F1). It could
+not execute the harness — unattended GLM dispatch is approval-gated on this host — and it
+refused to fabricate a green run, marking its execution opinion `PENDING-LEAD-EXECUTION`; the
+Lead has run every published harness verbatim at each round, and Codex reproduced them
+independently. One NIT, not a required repair and already inside disclosed item 8: a safe-set
+leaf that re-consumes a declared member's deploy path as a literal operand is missed by the
+orphan-only reachability gate — carry as successor-preregistration wording.
+
+**Consequences.** WP-I freeze blocker #4 (SEC102) is **CLEARED** — the owner's boundary decision
+is made and the model-diverse second-opinion evidence is attached. The four assumptions above must be
 carried into the successor preregistration as explicit trusted-base statements, and no successor
 text may present any of them as a control. If the owner later wants assumption 1 or 2 bound, that
 is separately authorized design work (an exact trusted interpreter route with isolated/no-site
