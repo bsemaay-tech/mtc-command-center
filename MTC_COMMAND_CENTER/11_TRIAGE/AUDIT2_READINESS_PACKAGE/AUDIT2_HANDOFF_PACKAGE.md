@@ -20,15 +20,25 @@ underlying WP-I freeze gate is closed.
 | Missing material 4 - section 10.2 prover status | **CLOSED AS A PACKET; EXECUTION ACCEPTANCE OPEN** [refreshed 2026-08-12] | Pathscope r2 identity and honest residual are recorded; GLM is supplemental and Claude execution audit is pending. |
 | Missing material 5 - successor-preregistration review | **CLOSED AS A PACKET; FINAL SUCCESSOR OPEN** [refreshed 2026-08-12] | R3 merged the 13 skeleton gaps and Lead reports 34/34 conservation; final fills/freeze/review do not yet exist. |
 | Missing material 6 - two-commit Stage-1/attestation order | **CLOSED AS A PACKET; EXECUTION OPEN** [refreshed 2026-08-12] | R3 section 5.2 contains the binding capture-first, consume-second procedure. Neither commit exists yet. |
-| Missing material 7 - D026 map for current WP-I work | **OPEN** [refreshed 2026-08-12] | Partial exact sources are indexed, but a final per-test map across RP6, RP7, transport, SEC102, pathscope, and rows 1-9 cannot exist until final accepted bytes and GREENs exist. |
-| Missing material 8 - final freeze-input ledger | **OPEN - NOT-YET-AVAILABLE** [refreshed 2026-08-12] | Final pins, allocations, duplicate-consumer reconciliation, frozen composite, and accepting-input evidence do not exist. |
+| Missing material 7 - D026 map for current WP-I work | **CLOSED AS A PACKET; ROWS 1-9 STILL UNBUILT** [updated 2026-08-12 ~16:35] | `AUDIT2_D026_MAP_CURRENT_CYCLE_2026-08-12.md` maps 39 closure rows across RP6/RP7/transport/SEC102/pathscope with exact RED/GREEN, mutation identity and accepted bytes, splits execution provenance three ways (Lead-run verbatim / auditor-reproduced / author-claimed), and does not silently upgrade unlocated rows. Its one OPEN row, `RP6-11`, was resolved the same day by round 17 — **open current-audit findings are now zero.** Rows 1-9 remain absent from the map because they are not built yet; that is the packet's stated residual, not a gap in the map. |
+| Missing material 8 - final freeze-input ledger | **PARTIAL — analysis delivered, final ledger NOT-YET-AVAILABLE** [updated 2026-08-12 ~16:35] | `WPI_FREEZE_INPUT_LEDGER_2026-08-12.md` reconciles 45 duplicate-consumer rows (FILLED 2, LITERAL-MARKER 29, MISSING-CONSUMER 0, CONTRADICTED 1, REQUIRES-HOST 13) and answers freeze blockers 7, 8 and 9 with file:line evidence. It establishes that RP6 cannot produce an end-to-end P0 PASS while 17 freeze literals remain — so the Codex r16 acceptance is a source/audit acceptance, not a host end-to-end PASS. The FINAL ledger still cannot exist: it needs the actual fills, allocations and accepting-input evidence, none of which exist before the Stage-1 run. |
 | Missing material 9 - WP-I execution/closure evidence | **OPEN - NOT-YET-AVAILABLE** [refreshed 2026-08-12] | No host run, concrete RUNID, immutable evidence tree, rows 1-24 results, or closure index exists. |
 | Missing material 10 - authoritative frozen-SHA bundle | **OPEN - NOT-YET-AVAILABLE** [refreshed 2026-08-12] | WP-I has not closed, so the pre-WP-A SHA/diff/baseline bundle cannot yet be produced. |
 | Missing material 11 - final authority and ledger closure | **OPEN** [refreshed 2026-08-12] | Existing grants/decisions are known, but one consolidated final authority record and owner-ratified freeze-time ledger do not exist. |
 
-[refreshed 2026-08-12] Result: **15 of the 20 package-coherence items are closed by
-this refresh; 5 remain open for evidence that cannot yet exist.** The package is still not
-dispatchable because WP-I is not closed.
+~~[refreshed 2026-08-12] Result: **15 of the 20 package-coherence items are closed by
+this refresh; 5 remain open for evidence that cannot yet exist.**~~
+
+**[updated 2026-08-12 ~16:35] Result: 16 of the 20 items are CLOSED, 1 is PARTIAL, and 3
+remain open for evidence that cannot yet exist.** Packet 7 closed later the same day when
+the current-cycle D026 map was produced and its single open finding (`RP6-11`) was resolved
+by RP6 round 17 — **open current-audit D026 findings are now zero.** Packet 8 moved to
+PARTIAL: the duplicate-consumer reconciliation now exists and answers freeze blockers 7, 8
+and 9, but the final ledger needs fills and allocations that only the Stage-1 run produces.
+Packets 9, 10 and 11 (WP-I execution evidence, the frozen-SHA bundle, the consolidated
+authority record) remain genuinely NOT-YET-AVAILABLE and no document can change that.
+
+The package is still **not dispatchable** because WP-I is not closed.
 
 ## State meanings
 
