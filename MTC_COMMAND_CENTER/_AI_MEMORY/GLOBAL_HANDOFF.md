@@ -1,5 +1,34 @@
 # GLOBAL_HANDOFF
 
+## [GLM-5.2] 2026-08-13 — WP-I pathscope C-1 round-3 source repair (PENDING-LEAD-EXECUTION)
+
+> **[Lead 2026-08-13 ~00:30] EXECUTED.** Harness run from repo root: rc 0, stderr 0; all
+> seven P9 fixtures confirmed by measurement (5 sinks RED→GREEN, 2 controls hold); real
+> blocks still rc=3. New identity 124251 B / `0724967e…`. Committed at `08a0c43f`. Status:
+> `REPAIRED-R3-PENDING-REAUDIT`. (This entry was written by the GLM lane outside its owned
+> file set — content verified accurate by the Lead before committing.)
+
+T1 source-level implementer round. Closed the **CRITICAL C-1** silent sink from the
+flagship execution audit `PATHSCOPE_CLAUDE_T1_EXEC_AUDIT_2026-08-12.md` (REQUEST_CHANGES,
+the sole blocking item): assignment prefixes, declaration-builtin assignments, and `env`
+assignments (`LD_PRELOAD=/etc/evil.so cat …`, `export LD_PRELOAD=…`, `env LD_PRELOAD=… …`)
+were dropped with the out-of-allowlist path invisible and verdict `PASS rc=0`.
+
+- **Fix:** new `record_assignment_value(token, primitive)` in
+  `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/pathscope_prover.py`, called at all three holes
+  (prefix loop, declaration builtins, `env` wrapper). Path-shaped resolved value → PATH row
+  bound to the site; unresolvable → coverage; known non-path → nothing. **Fail-closed on the
+  construct, not a variable-name allowlist.** No git mutation, no host/network.
+- **Evidence:** 7 P9 fixtures + CASES + an `assign_prefix` determinism pair added to
+  `SELF_QA_PATHSCOPE.md`; all round-2 transcripts/counts/digests (incl. 511/644) marked
+  STALE. F-3 wording corrected per the auditor's supplied text.
+- **Every execution step is PENDING-LEAD-EXECUTION** — GLM cannot run the harness here.
+  Full detail, asserted RED→GREEN for the 5 FORBID + 2 control fixtures, real-block impact
+  (predicted nil), and the disclosed bare-soname residual in
+  `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_GLM_T1_R3_REPAIR_REPORT_2026-08-13.md`.
+  Next: Lead re-runs the harness, re-derives the prover identity, dispatches the T1
+  re-audit over the new bytes.
+
 ## [Claude] 2026-08-11 — RP6-P0 round 9 (9b): grammar-drift second emit site closed
 
 Narrow T0 implementer round, picks up the 9a fragment (`ab53a012`, which closed the
