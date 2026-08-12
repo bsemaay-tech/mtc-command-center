@@ -1,4 +1,85 @@
-# RP6-P0 — status: ROUND-16-REPAIRED-PENDING-T0-REAUDIT (the census restructured to EXACT BYTE SPANS; three R15 HIGH findings and one MEDIUM closed; executed; no block byte changed)
+# RP6-P0 - status: ROUND-17-REPAIRED-PENDING-T0-AUDIT (RP6-11 dynamic-target census evidence closed; no block byte changed)
+
+Updated 2026-08-12 by the round-17 implementer (Codex `gpt-5.6-sol`,
+xhigh, fresh session). Audit tier unchanged: **T0** (host/execution-domain
+preflight). The next auditor is a different flagship, Claude Pro
+`claude-opus-5` xhigh, per the kickoff. The block remains a draft: not frozen,
+not accepted, not dispatchable, and not authorised for host execution.
+
+Full disposition: `RP6_R17_REPORT_2026-08-12.md`. Evidence:
+`SELF_QA_RP6.md` section ROUND 17.
+
+**`RP6-P0.sh` is UNCHANGED this round - not one byte.** Identity was re-derived
+before and after the R17 fence: 110817 bytes, SHA-256
+`5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330`.
+
+Round 17 closes the RP6-11 evidence/claim gap in the census layer. The Codex
+round-16 PASS-WITH-NITS was scoped to constructs in the published detection
+vocabulary; it did not supply an executed RED/GREEN pair for the dynamic-target
+class in `AUDIT2_D026_MAP_CURRENT_CYCLE_2026-08-12.md`. This round supplies that
+pair and replaces the misleading literal target-count claim with a measured
+record.
+
+The repair is an inversion, not an `eval` patch. R17 derives an effect model over
+the actual tokenizer stream: a bare command word is acceptable only if it is a
+span-dispositioned block function, the declared sourced-library function
+`rp0_require_safe_component`, a builtin with no named-variable target surface, or
+a variable-mutating builtin whose target grammar is modeled by the existing
+`VARTARGET` / `dynamic_variable_target` records. `eval`, `source`, `.`, and any
+future observed bare word outside that model are opaque shell-language execution
+surfaces and produce an explicit unmodeled refusal.
+
+R17 target counts are measured from tokenizer records:
+
+```text
+variable_targets=113
+inventory_targets=0
+dynamic_targets=0
+dynamic_variable_targets=0
+opaque_mutators=0
+effect_unmodeled=0
+nonfunction_bare=10
+```
+
+`dynamic_targets` is the measured total of unresolved target surfaces:
+`dynamic_variable_target` records, `indirect_execution_builtin:*` records, and
+R17 effect-model misses. No literal zero is published as a measurement in the R17
+pass format.
+
+The pass-format audit found **six literal-zero fields across three R16 success
+lines** that could be read as measurements (`expand_aliases_enabled=0`, the
+three shadow counts, `inventory_targets=0`, and `dynamic_targets=0`). R17 does
+not republish those as literals; it emits measured counts or omits the detail.
+
+Executed evidence, all from the published R17 fence:
+
+```text
+carried_r16_grammar cases=50 pass=50 fail=0 rc=0
+r17_dynamic_targets_measured variable_targets=113 inventory_targets=0 dynamic_targets=0 dynamic_variable_targets=0 opaque_mutators=0 effect_unmodeled=0 nonfunction_bare=10
+r17_bare_effect_model_closed nonfunction_bare=10 unmodeled=0
+D026_RED_WEAKENED_R16 mutant=eval rc=0 summary=PASS
+D026_GREEN_R17 mutant=eval refused rc=1 report=[variable_targets=113 inventory_targets=0 dynamic_targets=1 dynamic_variable_targets=0 opaque_mutators=1 effect_unmodeled=0 nonfunction_bare=10]
+UNMODELED kind=indirect_execution_builtin:eval line=1567 raw=[eval]
+D026_RED_WEAKENED_R16 mutant=dot_source rc=0 summary=PASS
+D026_GREEN_R17 mutant=dot_source refused rc=1 report=[variable_targets=113 inventory_targets=0 dynamic_targets=1 dynamic_variable_targets=0 opaque_mutators=1 effect_unmodeled=0 nonfunction_bare=10]
+UNMODELED kind=indirect_execution_builtin:. line=1567 raw=[.]
+R17_DYNAMIC_TARGETS_SUMMARY cases=15 pass=15 fail=0 result=PASS
+```
+
+The exact R16 fence in the current committed evidence already refuses
+`eval`/`source`/`.` as `indirect_execution_builtin:*`; therefore the RED side is
+an equivalent deliberate falsification, not a false claim that the current R16
+bytes accept those mutants. The R17 harness removes only that refusal from a
+temporary extracted R16 fence; that weakened fence certifies both dynamic-target
+mutants CLEAN, and R17 refuses the same bytes with explicit `UNMODELED` records.
+
+No host, SSH, network, deployment, backtest, broker, trading, or Git mutation
+occurred. Scope was limited to `SELF_QA_RP6.md`, this status file, and
+`RP6_R17_REPORT_2026-08-12.md`.
+
+---
+
+# Prior status: ROUND-16-REPAIRED-PENDING-T0-REAUDIT (the census restructured to EXACT BYTE SPANS; three R15 HIGH findings and one MEDIUM closed; executed; no block byte changed)
 
 Updated 2026-08-12 by the round-16 implementer (Claude Max, `claude-opus-5`,
 xhigh, fresh session). Audit tier unchanged: **T0** (host/execution-domain

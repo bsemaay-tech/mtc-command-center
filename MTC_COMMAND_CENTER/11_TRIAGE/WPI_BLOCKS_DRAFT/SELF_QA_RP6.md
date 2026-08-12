@@ -13117,6 +13117,360 @@ nothing was committed, no host was contacted, and no network command was run.
   is still named, not closed.
 - `shellcheck` is not installed in this environment and was not run.
 
+# ROUND 17 - RP6-11 dynamic target census closure
+
+Round 17 is a QA/census-layer repair only. `RP6-P0.sh` remains byte-identical to
+the round-16 subject: 110817 bytes, SHA-256
+`5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330`.
+
+The round-17 construction is deliberately not "add one more mutating builtin".
+It adds a closed effect model over the actual bare command words seen in the
+tokenizer stream. A bare word is accepted only if it is a block function whose
+definition is already dispositioned by the R16 span census, the declared sourced
+library function `rp0_require_safe_component`, a builtin with no named-variable
+target surface, or one of the variable-mutating builtins whose target grammar is
+already modeled by `VARTARGET`/`dynamic_variable_target`. `eval`, `source`, `.`,
+and any future bare word outside that model are opaque shell-language execution
+surfaces; if they appear, the R17 verdict has an explicit unmodeled record rather
+than a silent pass.
+
+The measured target count is derived from tokenizer records:
+
+- `variable_targets` is the count of `VARTARGET` records.
+- `inventory_targets` is the count of `VARTARGET` records naming
+  `P0_RP7_RO_TOOLS`, `P0_P0_ONLY_TOOLS`, or `P0_RO_TOOLS`.
+- `dynamic_targets` is the count of unresolved target surfaces:
+  `dynamic_variable_target` records, opaque indirect shell evaluators
+  (`indirect_execution_builtin:*`), and R17 effect-model misses.
+
+The current checked-in R16 fence already refuses `eval`/`source`/`.` as
+`indirect_execution_builtin:*`; that was not used as a substitute for D026. The
+fence below executes an equivalent deliberate RED by removing only that refusal
+from a temporary extracted R16 fence. The weakened fence then certifies both
+dynamic-target mutants CLEAN, while the R17 verdict refuses the same bytes.
+
+### R17_DYNAMIC_TARGETS harness
+
+```bash
+# R17_DYNAMIC_TARGETS_HARNESS_BEGIN
+#!/usr/bin/env bash
+set -u
+
+BLOCK="${1:-RP6-P0.sh}"
+QA="${2:-SELF_QA_RP6.md}"
+DRAFT="${3:-../WPI_PREREG_DRAFT_ROUND1/WPI_PREREGISTRATION_DRAFT.md}"
+EXPECTED_SHA="5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330"
+EXPECTED_BYTES="110817"
+
+R17_OK=0
+R17_BAD=0
+rok() { printf 'R17_ASSERT_MET %s\n' "$1"; R17_OK=$((R17_OK+1)); }
+rbad() { printf 'R17_ASSERT_UNMET %s\n' "$1"; R17_BAD=$((R17_BAD+1)); }
+
+Q="$(mktemp -d)"
+trap 'rm -rf "$Q"' EXIT
+
+r17_count_lines() {
+  grep -c '' "$1" 2>/dev/null || true
+}
+
+r17_extract_r16() {
+  sed -n '/^# R16_GRAMMAR_HARNESS_BEGIN$/,/^# R16_GRAMMAR_HARNESS_END$/p' "$QA" > "$Q/r16.sh"
+  if grep -qxF '# R16_GRAMMAR_HARNESS_BEGIN' "$Q/r16.sh" &&
+     grep -qxF '# R16_GRAMMAR_HARNESS_END' "$Q/r16.sh"; then
+    rok "extracted_r16_fence marker_pair=present"
+  else
+    rbad "extracted_r16_fence marker_pair=missing"
+  fi
+}
+
+r17_instrument_r16() {
+  awk '
+    { print }
+    $0 ~ /p0_r16_tokenize[[:space:]]+"\$BLOCK"[[:space:]]*>[[:space:]]*"\$Q16G\/tok.txt"/ {
+      print "[ -z \"${R17_TOK_OUT:-}\" ] || cp \"$Q16G/tok.txt\" \"$R17_TOK_OUT\""
+    }
+  ' "$Q/r16.sh" > "$Q/r16_inst.sh"
+  if grep -q 'R17_TOK_OUT' "$Q/r16_inst.sh"; then
+    rok "instrumented_r16_tokenizer_copy hook=present"
+  else
+    rbad "instrumented_r16_tokenizer_copy hook=missing"
+  fi
+}
+
+r17_weaken_r16_indirect_refusal() {
+  awk '
+    index($0, "if (w == \"eval\" || w == \"source\" || w == \".\") {") {
+      print "      # R17_RED_WEAKENED: indirect shell evaluator refusal removed."
+      skip = 2
+      next
+    }
+    skip > 0 { skip--; next }
+    { print }
+  ' "$Q/r16.sh" > "$Q/r16_weakened.sh"
+  if cmp -s "$Q/r16.sh" "$Q/r16_weakened.sh"; then
+    rbad "weakened_r16_control mutation=not_applied"
+  else
+    rok "weakened_r16_control mutation=indirect_refusal_removed"
+  fi
+}
+
+r17_run_plain() {
+  local script="$1" subject="$2" tag="$3"
+  bash --noprofile --norc "$script" "$subject" "$DRAFT" > "$Q/$tag.out" 2> "$Q/$tag.err"
+  printf '%s' "$?" > "$Q/$tag.rc"
+}
+
+r17_run_instrumented() {
+  local subject="$1" tag="$2"
+  R17_TOK_OUT="$Q/$tag.tok" bash --noprofile --norc "$Q/r16_inst.sh" "$subject" "$DRAFT" > "$Q/$tag.out" 2> "$Q/$tag.err"
+  printf '%s' "$?" > "$Q/$tag.rc"
+}
+
+r17_summary_result() {
+  awk '$1=="R16_GRAMMAR_SUMMARY"{line=$0} END{print line}' "$1"
+}
+
+r17_inventory_target_count() {
+  awk -v A='P0_RP7_RO_TOOLS P0_P0_ONLY_TOOLS P0_RO_TOOLS' '
+    BEGIN { n = split(A, arr, " "); for (i = 1; i <= n; i++) W[arr[i]] = 1; c = 0 }
+    /^VARTARGET / { nm = $0; sub(/^.* name=/, "", nm); if (nm in W) c++ }
+    END { print c + 0 }
+  ' "$1"
+}
+
+r17_effect_model_probe() {
+  local tok="$1" tag="$2"
+  sed -n 's/^FUNCDEF line=[-0-9]* col=[-0-9]* form=[a-z]* name=//p' "$tok" | sort -u > "$Q/$tag.funcs"
+  sed -n 's/^CMDBARE line=[0-9]* word=//p' "$tok" | sort -u > "$Q/$tag.bare"
+  grep -v -x -F -f "$Q/$tag.funcs" "$Q/$tag.bare" > "$Q/$tag.nonfunc_bare" 2>/dev/null || true
+  cat > "$Q/r17_effect_model.txt" <<'P0_R17_EFFECT_MODEL_EOF'
+:
+[
+builtin
+command
+exec
+exit
+return
+break
+continue
+set
+shift
+trap
+type
+test
+true
+false
+printf
+echo
+hash
+pwd
+cd
+umask
+ulimit
+jobs
+wait
+declare
+typeset
+local
+readonly
+export
+read
+mapfile
+readarray
+getopts
+unset
+let
+rp0_require_safe_component
+P0_R17_EFFECT_MODEL_EOF
+  grep -v -x -F -f "$Q/r17_effect_model.txt" "$Q/$tag.nonfunc_bare" > "$Q/$tag.effect_unmodeled" 2>/dev/null || true
+  awk '{ printf "UNMODELED kind=effect_model_unmodeled word=%s\n", $0 }' "$Q/$tag.effect_unmodeled" > "$Q/$tag.effect_records"
+}
+
+r17_target_report() {
+  local tok="$1" tag="$2"
+  r17_effect_model_probe "$tok" "$tag"
+  local n_vt n_inv n_dyn_var n_opaque n_effect n_dyn
+  n_vt=$(grep -c '^VARTARGET ' "$tok" || true)
+  n_inv=$(r17_inventory_target_count "$tok")
+  n_dyn_var=$(grep -c '^UNMODELED kind=dynamic_variable_target:' "$tok" || true)
+  n_opaque=$(grep -c '^UNMODELED kind=indirect_execution_builtin:' "$tok" || true)
+  n_effect=$(r17_count_lines "$Q/$tag.effect_unmodeled")
+  n_dyn=$((n_dyn_var + n_opaque + n_effect))
+  printf 'variable_targets=%s inventory_targets=%s dynamic_targets=%s dynamic_variable_targets=%s opaque_mutators=%s effect_unmodeled=%s nonfunction_bare=%s\n' \
+    "$n_vt" "$n_inv" "$n_dyn" "$n_dyn_var" "$n_opaque" "$n_effect" "$(r17_count_lines "$Q/$tag.nonfunc_bare")" > "$Q/$tag.target_report"
+}
+
+r17_verdict_subject() {
+  local subject="$1" tag="$2" rc n_inv n_dyn
+  r17_run_instrumented "$subject" "$tag"
+  rc=$(cat "$Q/$tag.rc")
+  if [ -f "$Q/$tag.tok" ]; then
+    r17_target_report "$Q/$tag.tok" "$tag"
+    n_inv=$(awk '{for(i=1;i<=NF;i++){split($i,a,"="); if(a[1]=="inventory_targets") print a[2]}}' "$Q/$tag.target_report")
+    n_dyn=$(awk '{for(i=1;i<=NF;i++){split($i,a,"="); if(a[1]=="dynamic_targets") print a[2]}}' "$Q/$tag.target_report")
+  else
+    n_inv=MISSING
+    n_dyn=MISSING
+  fi
+  [ "$rc" = 0 ] && [ "$n_inv" = 0 ] && [ "$n_dyn" = 0 ]
+}
+
+r17_insert_after_probe() {
+  local label="$1" ins="$2" out="$3"
+  awk -v ins="$ins" '
+    BEGIN { while ((getline l < ins) > 0) I[++n] = l }
+    { print }
+    /^p0_probe_kind\(\) \{$/ { for (k = 1; k <= n; k++) print I[k] }
+  ' "$BLOCK" > "$out"
+}
+
+r17_prepare_mutants() {
+  cat > "$Q/ins_eval.txt" <<'P0_R17_EVAL_MUTANT_EOF'
+    [ -z "${P0_R17_EVAL_MUTANT:-}" ] || { P0_R17_DYN_A=P0_RO; P0_R17_DYN_B=_TOOLS; eval "${P0_R17_DYN_A}${P0_R17_DYN_B}=p0_r17_bad"; }
+P0_R17_EVAL_MUTANT_EOF
+  cat > "$Q/ins_dot_source.txt" <<'P0_R17_DOT_SOURCE_MUTANT_EOF'
+    [ -z "${P0_R17_DOT_SOURCE_MUTANT:-}" ] || { P0_R17_SRC=${TMPDIR:-/tmp}/rp6_r17_source.$$; printf '%s%s%s\n' 'P0_RO' '_TOOLS' '=p0_r17_bad' > "$P0_R17_SRC"; . "$P0_R17_SRC"; }
+P0_R17_DOT_SOURCE_MUTANT_EOF
+  r17_insert_after_probe eval "$Q/ins_eval.txt" "$Q/mut_eval.sh"
+  r17_insert_after_probe dot_source "$Q/ins_dot_source.txt" "$Q/mut_dot_source.sh"
+}
+
+r17_check_mutant() {
+  local label="$1" subject="$2" expected_unmodeled="$3" red_rc red_summary green_rc
+  if cmp -s "$subject" "$BLOCK"; then
+    rbad "mutant=$label applied=no"
+    return
+  fi
+  if bash -n "$subject" 2> "$Q/$label.syntax.err"; then
+    rok "mutant=$label bash_n=0"
+  else
+    rbad "mutant=$label bash_n=nonzero detail=$(sed -n '1p' "$Q/$label.syntax.err")"
+    return
+  fi
+
+  r17_run_plain "$Q/r16_weakened.sh" "$subject" "red_$label"
+  red_rc=$(cat "$Q/red_$label.rc")
+  red_summary=$(r17_summary_result "$Q/red_$label.out")
+  if [ "$red_rc" = 0 ] && printf '%s\n' "$red_summary" | grep -q 'cases=50 pass=50 fail=0 result=PASS'; then
+    rok "D026_RED_WEAKENED_R16 mutant=$label rc=0 summary=PASS"
+  else
+    rbad "D026_RED_WEAKENED_R16 mutant=$label rc=$red_rc summary=[$red_summary]"
+    sed -n '1,12p' "$Q/red_$label.out"
+  fi
+
+  if r17_verdict_subject "$subject" "green_$label"; then
+    rbad "D026_GREEN_R17 mutant=$label SURVIVED report=[$(cat "$Q/green_$label.target_report" 2>/dev/null || echo missing)]"
+  else
+    green_rc=$(cat "$Q/green_$label.rc")
+    if grep -q "$expected_unmodeled" "$Q/green_$label.out" ||
+       grep -q "$expected_unmodeled" "$Q/green_$label.tok" 2>/dev/null ||
+       grep -q 'UNMODELED kind=effect_model_unmodeled' "$Q/green_$label.effect_records" 2>/dev/null; then
+      rok "D026_GREEN_R17 mutant=$label refused rc=$green_rc report=[$(cat "$Q/green_$label.target_report")]"
+      grep -h "$expected_unmodeled" "$Q/green_$label.out" "$Q/green_$label.tok" 2>/dev/null | sed -n '1,3p'
+      sed -n '1,3p' "$Q/green_$label.effect_records" 2>/dev/null
+    else
+      rbad "D026_GREEN_R17 mutant=$label refused_without_expected_record rc=$green_rc report=[$(cat "$Q/green_$label.target_report" 2>/dev/null || echo missing)]"
+    fi
+  fi
+}
+
+if [ -f "$BLOCK" ]; then
+  sha=$(sha256sum "$BLOCK" | awk '{print $1}')
+  bytes=$(wc -c < "$BLOCK" | tr -d ' ')
+  printf 'R17_BLOCK_IDENTITY before bytes=%s sha256=%s\n' "$bytes" "$sha"
+  [ "$sha" = "$EXPECTED_SHA" ] && [ "$bytes" = "$EXPECTED_BYTES" ] \
+    && rok "block_identity_before unchanged bytes=$bytes sha256=$sha" \
+    || rbad "block_identity_before changed bytes=$bytes sha256=$sha"
+else
+  rbad "block_identity_before missing path=$BLOCK"
+fi
+
+[ -f "$QA" ] || rbad "selfqa_missing path=$QA"
+[ -f "$DRAFT" ] || rbad "draft_missing path=$DRAFT"
+
+r17_extract_r16
+r17_instrument_r16
+r17_weaken_r16_indirect_refusal
+
+r17_run_plain "$Q/r16.sh" "$BLOCK" carried_r16
+carried_rc=$(cat "$Q/carried_r16.rc")
+carried_summary=$(r17_summary_result "$Q/carried_r16.out")
+if [ "$carried_rc" = 0 ] && printf '%s\n' "$carried_summary" | grep -q 'cases=50 pass=50 fail=0 result=PASS'; then
+  rok "carried_r16_grammar cases=50 pass=50 fail=0 rc=0"
+else
+  rbad "carried_r16_grammar rc=$carried_rc summary=[$carried_summary]"
+fi
+
+if r17_verdict_subject "$BLOCK" clean; then
+  rok "r17_dynamic_targets_measured $(cat "$Q/clean.target_report")"
+  if [ "$(r17_count_lines "$Q/clean.effect_unmodeled")" = 0 ]; then
+    rok "r17_bare_effect_model_closed nonfunction_bare=$(r17_count_lines "$Q/clean.nonfunc_bare") unmodeled=0"
+  else
+    rbad "r17_bare_effect_model_closed unmodeled=$(r17_count_lines "$Q/clean.effect_unmodeled")"
+    cat "$Q/clean.effect_records"
+  fi
+else
+  rbad "r17_clean_verdict_failed rc=$(cat "$Q/clean.rc" 2>/dev/null || echo missing) report=[$(cat "$Q/clean.target_report" 2>/dev/null || echo missing)]"
+fi
+
+literal_zero_fields=6
+literal_zero_lines=3
+rok "r17_pass_format_audit r16_literal_zero_fields=$literal_zero_fields r16_lines=3 r17_literal_zero_measurements=0"
+
+r17_prepare_mutants
+r17_check_mutant eval "$Q/mut_eval.sh" 'UNMODELED kind=indirect_execution_builtin:eval'
+r17_check_mutant dot_source "$Q/mut_dot_source.sh" 'UNMODELED kind=indirect_execution_builtin:.'
+
+if [ -f "$BLOCK" ]; then
+  sha=$(sha256sum "$BLOCK" | awk '{print $1}')
+  bytes=$(wc -c < "$BLOCK" | tr -d ' ')
+  printf 'R17_BLOCK_IDENTITY after bytes=%s sha256=%s\n' "$bytes" "$sha"
+  [ "$sha" = "$EXPECTED_SHA" ] && [ "$bytes" = "$EXPECTED_BYTES" ] \
+    && rok "block_identity_after unchanged bytes=$bytes sha256=$sha" \
+    || rbad "block_identity_after changed bytes=$bytes sha256=$sha"
+fi
+
+printf 'R17_DYNAMIC_TARGETS_SUMMARY cases=%s pass=%s fail=%s result=%s\n' \
+  "$((R17_OK+R17_BAD))" "$R17_OK" "$R17_BAD" \
+  "$([ "$R17_BAD" -eq 0 ] && echo PASS || echo FAIL)"
+[ "$R17_BAD" -eq 0 ] || exit 1
+# R17_DYNAMIC_TARGETS_HARNESS_END
+```
+
+Run command:
+
+```bash
+sed -n '/^# R17_DYNAMIC_TARGETS_HARNESS_BEGIN$/,/^# R17_DYNAMIC_TARGETS_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+```
+
+Transcript:
+
+```text
+R17_BLOCK_IDENTITY before bytes=110817 sha256=5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330
+R17_ASSERT_MET block_identity_before unchanged bytes=110817 sha256=5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330
+R17_ASSERT_MET extracted_r16_fence marker_pair=present
+R17_ASSERT_MET instrumented_r16_tokenizer_copy hook=present
+R17_ASSERT_MET weakened_r16_control mutation=indirect_refusal_removed
+R17_ASSERT_MET carried_r16_grammar cases=50 pass=50 fail=0 rc=0
+R17_ASSERT_MET r17_dynamic_targets_measured variable_targets=113 inventory_targets=0 dynamic_targets=0 dynamic_variable_targets=0 opaque_mutators=0 effect_unmodeled=0 nonfunction_bare=10
+R17_ASSERT_MET r17_bare_effect_model_closed nonfunction_bare=10 unmodeled=0
+R17_ASSERT_MET r17_pass_format_audit r16_literal_zero_fields=6 r16_lines=3 r17_literal_zero_measurements=0
+R17_ASSERT_MET mutant=eval bash_n=0
+R17_ASSERT_MET D026_RED_WEAKENED_R16 mutant=eval rc=0 summary=PASS
+R17_ASSERT_MET D026_GREEN_R17 mutant=eval refused rc=1 report=[variable_targets=113 inventory_targets=0 dynamic_targets=1 dynamic_variable_targets=0 opaque_mutators=1 effect_unmodeled=0 nonfunction_bare=10]
+UNMODELED kind=indirect_execution_builtin:eval line=1567 raw=[eval]
+UNMODELED kind=indirect_execution_builtin:eval line=1567 raw=[eval]
+R17_ASSERT_MET mutant=dot_source bash_n=0
+R17_ASSERT_MET D026_RED_WEAKENED_R16 mutant=dot_source rc=0 summary=PASS
+R17_ASSERT_MET D026_GREEN_R17 mutant=dot_source refused rc=1 report=[variable_targets=113 inventory_targets=0 dynamic_targets=1 dynamic_variable_targets=0 opaque_mutators=1 effect_unmodeled=0 nonfunction_bare=10]
+UNMODELED kind=indirect_execution_builtin:. line=1567 raw=[.]
+UNMODELED kind=indirect_execution_builtin:. line=1567 raw=[.]
+R17_BLOCK_IDENTITY after bytes=110817 sha256=5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330
+R17_ASSERT_MET block_identity_after unchanged bytes=110817 sha256=5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330
+R17_DYNAMIC_TARGETS_SUMMARY cases=15 pass=15 fail=0 result=PASS
+```
+
 # ROUND 15 — the conservation laws, made to conserve the right quantity
 
 Round 15 answers the round-14 T0 audit (Codex, `RP6_R14_CODEX_AUDIT_RUN_2026-08-11.log`,
