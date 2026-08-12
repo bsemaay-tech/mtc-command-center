@@ -1,7 +1,7 @@
 # Section 10.2 composite path-proof status
 
 Date: 2026-08-12
-Status: `ROUND-10-AUTHORED-SELF-QA-PASS-PENDING-INDEPENDENT-ACCEPTANCE`
+Status: `ROUND-11-AUTHORED-SELF-QA-PASS-PENDING-INDEPENDENT-ACCEPTANCE`
 Audit tier: T1 - local-only non-economic Python tooling and fixtures. Round 2 was audited by
 the Claude flagship (verdict **BLOCK**, two CRITICAL). Round 3 repaired that BLOCK and was
 audited by Codex `gpt-5.6-sol` (`SEC102_CODEX_T1_AUDIT_R3_2026-08-11.md`, verdict
@@ -33,8 +33,136 @@ CLOSED and independently reproduced** - byte-mode extraction, write and read-bac
 directions, the M1 gate, all eleven blocks byte-identical, the 58-case matrix - the disclosed
 round-9 residual was judged **honest**, and one finding was raised: **R9-F1**, for the third
 consecutive round in the SELF-QA EVIDENCE HARNESS rather than in the module. Round 10 is the
-repair of R9-F1, implemented by `claude-opus-5` xhigh. No audit or acceptance is claimed by the
-implementer.
+repair of R9-F1. Round 10 was audited by Codex
+(`SEC102_CODEX_T1_AUDIT_R10_2026-08-12.md`, verdict **REQUEST_CHANGES**): **direct same-object
+modification and replacement under the pin was CONFIRMED CLOSED and independently reproduced** -
+the real `ERROR_SHARING_VIOLATION`, both D026 directions, M1/M2/M3, all eleven blocks pinned and
+byte-identical, the 58-case matrix, the section-13d transcript exact - every earlier SEC102
+verdict was conserved, and **two** findings were raised: **R10-F1** (a transient DOS-device rebind
+applied after the pre-launch sample and restored before the post-run sample escapes a two-sample
+detector) and **R10-F2** (the leaf-to-root loop counts handles without proving one coherent
+current chain) - for the fourth consecutive round in the SELF-QA EVIDENCE HARNESS rather than in
+the module. Round 11 is the repair of R10-F1 and R10-F2, implemented by `claude-opus-5` xhigh. No
+audit or acceptance is claimed by the implementer.
+
+## Round 11 - what changed and why
+
+### R10-F1 and R10-F2 - the proof was still bound to a NAME the child re-resolved, CLOSED in round 11 by removing the name
+
+Both round-10 findings are the same defect at two depths. Round 10 handed
+`powershell.exe -File <pathname>` a name and then worked to make the name trustworthy: it pinned
+the leaf, pinned every component, measured the exclusion, bound the name to the pinned object, and
+re-sampled the binding after the child exited. Codex r10 showed that a *transient* re-pointing of
+the DOS-device/volume mapping - applied after the pre-launch sample, restored before the post-run
+sample - passes both samples while the child resolves the same pathname to different bytes
+(R10-F1), and that `PATH_PIN_HELD=7` records seven opens rather than one coherent current chain
+(R10-F2). Design Defect Pattern 11 with Patterns 3, 6 and 9 overlays.
+
+This was the **fourth** consecutive harness finding of one shape: round 7's harness never
+established that the child *completed*; round 8's never that it was handed *this document's
+bytes*; round 9's never that those bytes were *still there when the interpreter opened them*;
+round 10's never that *nothing re-pointed the name between the two samples meant to notice*. Round
+11 therefore does not add a third temporal sample. It removes the layer the class lives in -
+**mutable name resolution** - from the only place that decides anything, the channel the
+interpreter consumes. This is the same inversion that ended RP6's line-granularity regress and
+SEC102's own command-word regress: replace the thing that can always be refined once more with a
+construction that has no such dimension.
+
+**The construction.** The wrapper runs
+`powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command
+"& ([scriptblock]::Create([Console]::In.ReadToEnd()))"` and writes to that child's standard input
+the byte string it read **through the pinned handle** and compared with the fence - the identical
+Python object (`EXEC_BUFFER_IS_PINNED_READ=1`), not a re-read and not a file. The child's whole
+argument vector contains **no path separator** (`ARGV_PATH_SEPARATORS=0`, printed per block).
+Between the compared bytes and the executed bytes there is no directory entry, no pathname, no
+drive letter, no DOS device, no mount point, no junction and no volume. **Executed-byte binding is
+now a property of the construction rather than the output of a detector**, so no post-run sample
+is load-bearing and there is no interval for a same-session actor to occupy.
+
+**The chain is built rather than counted** (R10-F2). The work directory is pinned first; the
+wrapper then MEASURES, in both directions on a throwaway subtree of its own, the NTFS property the
+chain rests on - `ANCESTOR_RENAME_NOTHING_HELD=PERMITTED/0`,
+`ANCESTOR_RENAME_DESCENDANT_HELD=DENIED/5`, `HELD_DIR_ENTRY_RENAME=DENIED/32`. It derives the
+stable volume-GUID path **from the held handle** (`GetFinalPathNameByHandleW`, `VOLUME_NAME_GUID`),
+opens the volume root, and opens every component below it **relative to its already-pinned parent**
+with `NtOpenFile` and `FILE_OPEN_REPARSE_POINT`, recording an identity per link and requiring the
+descent to terminate at the pinned object: `CHAIN_LINKS=7 CHAIN_RELATIVE_OPENS=6
+CHAIN_IDENTITIES_RECORDED=7 CHAIN_ADJACENT_PAIRS_DISTINCT=6 CHAIN_TERMINATES_AT_PINNED_DIR=1
+CHAIN_COHERENT=1`, with a per-link disposition line. A chain that is not coherent launches no
+child at all.
+
+Every round-10 gate is **conserved behind** the new channel: the pin, the read-through-pin, the
+measured `ERROR_SHARING_VIOLATION` twice per block, the name-to-object binding, and both post-run
+re-measurements. Their standing changed - under round 11 they can only reject, never admit - and
+that is stated rather than glossed.
+
+### The repair is measured, not asserted - both findings reproduced against the published round-10 wrapper first
+
+`SELF_QA_SEC102_R11.md` section 13b extracts the published round-8, round-9, round-10 and round-11
+wrappers **as bytes** from the documents that publish them, prints the SHA-256 of every instrument
+and every mutant, and then:
+
+- **R10-F1, deterministic.** The work tree of the wrapper under test is addressed through a **free
+  drive letter** defined with `DefineDosDevice` (no privilege - it is what `subst` does) by scoping
+  `TMP`/`TEMP` for that child process only. Three declared, counted substitutions route the child
+  launch through a helper that re-points the letter at a mirrored shadow tree **after** the
+  pre-launch sample and restores it **before** the post-run sample; the third substitution removes
+  `.resolve()`, which would canonicalise the stand-in letter back to `C:` and would not have
+  protected the real `C:`-rooted pathname either. Nothing is raced.
+
+| Case | Round 10 + TRANSIENT | Round 11 + TRANSIENT |
+|---|---|---|
+| `transient_certified` - publishes the marker only the shadow tree can produce | **ACCEPTED - the finding** | **REJECTED** |
+| `transient_honest` - publishes the marker its own bytes produce | **REJECTED - the finding, inverted** | **ACCEPTED** |
+
+  `FALSE_ACCEPT_UNDER_R10=1`, `FALSE_REJECT_UNDER_R10=1`, `TRANSIENT_CLOSED_UNDER_R11=2`, and
+  `R10_TWO_SAMPLE_DETECTOR=CLEAN/1` - round 10 printing `POST_NAME_BOUND=1 POST_BYTES_UNCHANGED=1`
+  in the very run in which it certified a transcript its compared bytes cannot produce. That line
+  is R10-F1 in the detector's own words.
+- **`M4_named_channel` is the control experiment.** Same remap, same round-11 wrapper, same pin,
+  same chain, same post-run samples - **one constant** flipped back to `-File <pathname>`. The
+  false acceptance returns (`M4_CHANNEL_LOAD_BEARING=1`), which is what makes the channel the
+  repair rather than a description of one.
+- **R10-F2, deterministic.** One ordinary junction (`mklink /J`, no privilege) is re-pointed at the
+  exact moment round 10's leaf-to-root loop has taken the leaf and has not yet reached the
+  ancestor: `R10_PATH_PIN_COMPLETE=1` with `R10_CHAIN_MIXED=1` and `R10_LIVE_LEAF_UNPINNED=1` -
+  a complete-looking set spanning two chains - against `R11_ANCHOR=OBJECT_VOLUME_GUID/1` and
+  `R11_UNAFFECTED_BY_SWAP=1`. Both constructions are asserted to appear **verbatim** in the
+  published wrapper bytes (`CONSTRUCTIONS_VERBATIM=1`).
+- **The channel contract is proved, not assumed.** Every published block is run through both
+  channels and must return the same rc, the same stderr length and byte-identical stdout:
+  `CHANNEL_CONTRACT_CONSERVED=10 CHANNEL_CONTRACT_SELF_EXCLUDED=1` (the block containing the arm
+  cannot run inside itself; its own conservation is measured by the section-13c run).
+- **Round 10's arms are carried behind the new channel.** `CONSERVED_R10_VERDICTS=6`,
+  `REBIND_DENIED_UNDER_R11=2` with `INPLACE_WRITE=DENIED WINERROR=32` and `ENTRY_REPLACE=DENIED`,
+  `M1_GATE_FIRED=1`, `M2_EXCLUSION_MEASURED=1`, `M3_POST_RUN_GATE_FIRED=1`,
+  `D026_PIN_PRECONDITION ... PIN_TAKEN=0 WINERROR=32`, `D026_OFF_EXPECTATION=0`. `M3` is the
+  clearest statement of the new standing of the old gates: the rewrite succeeds, the child still
+  executes the compared buffer, and gate 4 refuses the block anyway.
+
+No attack fixture was authored. The drive letter is released and measured released
+(`D026_DEVICE RELEASED=1`); the junction is removed; every child prints one line, exits non-zero,
+writes one diagnostic, or counts CR bytes in text it carries itself.
+
+### The one thing round 11 does NOT close, stated for the Lead's stop rule
+
+The interpreter **image** is still located by name (`powershell.exe` from `PATH`), exactly as in
+rounds 7-10. A same-session actor who can change what that name resolves to can arrange for a
+different program to receive the bytes, and that program could print any transcript. This is
+**neither prevented nor detected**, and it is deliberately not presented as either. It is outside
+the model every round of this work has used - *"were the compared bytes the bytes that were
+executed"* rather than *"which program executed them"* - but it has the same accepted-divergence
+shape, so it is named here and in `SEC102_R11_REPORT_2026-08-12.md` rather than left for an audit
+to find. It is item 51 below.
+
+### Round 11 changed no code
+
+`composite_pathproof.py` is **untouched**: same `129658` B / `adbf27fd…c05a` as rounds 7-10, and
+the round-11 hygiene block asserts `CARRIED_CLEAN=composite_pathproof.py WORKTREE_CHANGES=0`. No
+fixture was added, so `.gitattributes` is unchanged at `1630` B / `40e356f8…5077` and is also
+asserted worktree-clean. Every `powershell` block in sections 2-10 of the round-11 self-QA is
+byte-identical to the round-10 self-QA. Every classification, rc, reason token and transcript is
+the round-7 record re-executed by the repaired harness, not a new claim.
 
 ## Round 10 - what changed and why
 
@@ -432,7 +560,55 @@ a proven-static safe-set literal reaches a named STOP.
 Everything round 6 implemented. FREEZE inherits the round-7 repair unchanged through the shared
 `_derive_graph`, so `F3`/`F9` gain the same conservation; no FREEZE-specific code changed.
 
-## Self-QA result (round 10)
+## Self-QA result (round 11)
+
+- **Both round-10 findings reproduced against the published round-10 wrapper, then closed.**
+  `FALSE_ACCEPT_UNDER_R10=1`, `FALSE_REJECT_UNDER_R10=1`, `TRANSIENT_CLOSED_UNDER_R11=2`,
+  `R10_TWO_SAMPLE_DETECTOR=CLEAN/1`, `M4_CHANNEL_LOAD_BEARING=1`, `R10_PATH_PIN_COMPLETE=1` with
+  `R10_CHAIN_MIXED=1` against `R11_UNAFFECTED_BY_SWAP=1` and `CONSTRUCTIONS_VERBATIM=1`.
+  `D026_OFF_EXPECTATION=0`, `D026_HARNESS_BLOCK_RC=0`.
+- **The nameless channel's precondition proved block by block:** `CHANNEL_CONTRACT_CONSERVED=10
+  CHANNEL_CONTRACT_SELF_EXCLUDED=1` - identical rc, identical stderr length and byte-identical
+  stdout under `-File <pathname>` and under the pipe, for every published block that can be run
+  inside the arm.
+- **Round 10's evidence carried behind the new channel:** `CONSERVED_R10_VERDICTS=6`,
+  `REBIND_DENIED_UNDER_R11=2` with `INPLACE_WRITE=DENIED WINERROR=32` and `ENTRY_REPLACE=DENIED`,
+  `M1_GATE_FIRED=1`, `M2_EXCLUSION_MEASURED=1`, `M3_POST_RUN_GATE_FIRED=1`,
+  `D026_PIN_PRECONDITION EXISTING_WRITER=1 PIN_TAKEN=0 WINERROR=32`. Each wrapper and each mutant
+  is extracted **as bytes** with its SHA-256 printed, so no re-typed instrument can pass for the
+  published one.
+- **The write-path difference reproduced on the real artifact, carried from round 9:**
+  `D026_WRITEPATH=R8_TEXTMODE SOURCE_LF=110 SOURCE_CRLF=0 WRITTEN_LF=110 WRITTEN_CRLF=110
+  BYTE_IDENTICAL=0` against `D026_WRITEPATH=R11_BYTEMODE ... WRITTEN_CRLF=0 BYTE_IDENTICAL=1`.
+- **One coherent current component chain, with a disposition per link:** `CHAIN_LINKS=7
+  CHAIN_RELATIVE_OPENS=6 CHAIN_IDENTITIES_RECORDED=7 CHAIN_ADJACENT_PAIRS_DISTINCT=6
+  CHAIN_TERMINATES_AT_PINNED_DIR=1 CHAIN_COHERENT=1 CHAIN_ANCHOR=VOLUME_GUID`, with the platform
+  property it rests on measured in both directions: `ANCESTOR_RENAME_NOTHING_HELD=PERMITTED/0
+  ANCESTOR_RENAME_DESCENDANT_HELD=DENIED/5 HELD_DIR_ENTRY_RENAME=DENIED/32
+  ANCESTOR_CHAIN_FROZEN=1 DIR_ENTRIES_FROZEN=1`.
+- **All eleven blocks re-run from outside the repository, executed from the compared buffer with
+  no pathname:** `BLOCKS=11 SCRIPT_BYTES_IDENTICAL_ALL=11 PINNED_ALL=11 LEAF_ON_CHAIN_ALL=11
+  NAME_BOUND_ALL=11 NAMELESS_EXEC_ALL=11 POST_NAME_BOUND_ALL=11 POST_BYTES_UNCHANGED_ALL=11
+  REJECTED_ON_BYTES=0 REJECTED_ON_BINDING=0 STATUS_PROVED_COMPLETE=11 REJECTED_ON_STATUS=0
+  REJECTED_ON_STDERR=0 COMPARED=11 MISMATCHED=0 REJECTED=0`, with `ARGV_PATH_SEPARATORS=0
+  EXEC_BUFFER_IS_PINNED_READ=1` and `WRITE_OPEN_DENIED=1 DELETE_OPEN_DENIED=1 WINERROR=32/32` on
+  every block, and `EXEC_SHA256` equal to the digest of the bytes read through the pin. Every
+  block reports `CRLF=0` and `NONASCII=0`, and every block's SHA-256 is published.
+- **The outer wrapper's own status, witnessed by the shell that launched it, not by itself:**
+  `OUTER_WRAPPER_RC=0`, `OUTER_WRAPPER_STDERR_BYTES=0`. The published section-13d transcript was
+  re-derived on the final document bytes and is byte-identical across runs.
+- **No code changed.** `CARRIED_CLEAN=composite_pathproof.py WORKTREE_CHANGES=0` and
+  `CARRIED_CLEAN=.gitattributes WORKTREE_CHANGES=0`, alongside `pathscope_prover.py` and
+  `sec102_r1..r7_fixtures`. `HYGIENE_OFF_EXPECTATION=0`.
+- Every round-7/8/9/10 measurement was re-executed by the repaired harness and reproduced: the
+  58-case matrix (`CASES=58 FAILED_COUNT=0`), the scanner-boundary probe, the D026 pre-feature
+  block, the 112-cell mutation matrix, the grammar battery, the 1919-variant fixpoint sweep, the
+  round-5 prefix battery, the five round-3/round-4 discriminators, hygiene and artifact identity.
+- Round 11 added no fixture, no reason token, no output surface and no module behaviour.
+
+Literal commands and real output are in `SELF_QA_SEC102_R11.md`.
+
+## Self-QA result (round 10, carried record)
 
 - **The harness's own D026: 2 rebinding children x 2 published wrappers under a deterministic
   hold, 6 carried children x 2 published wrappers, plus three mutants and the pin precondition.**
@@ -799,31 +975,37 @@ rounds 8, 9 and 10 neither close it nor worsen it.**
     exclusion measurement fires before the child is launched, `M3` opens it *and* drops the
     pre-launch requirement and the post-run re-measurement fires with the child's stdout unread -
     but a mutation cannot show that no other defeating path exists.
-    **The class this item failed to name in round 9 is TEMPORAL REBINDING**, and it is named here
-    now: a check bound to a *name* while the interpreter resolves that name again. Codex r9 found
-    it (R9-F1) in exactly the gap this item's round-9 wording left open, and **round 10 closed the
-    class** - the object is pinned before it is verified, verified through the pin, proved to be
-    what the name reaches, and held until the child is dead, with every path component pinned too.
-    Items 45-48 state what that closure does not reach.
+    **The class this item failed to name in round 9 is TEMPORAL REBINDING**, and its root is
+    MUTABLE NAME RESOLUTION: a check bound to a *name* while the interpreter resolves that name
+    again. Round 10 claimed the class closed by pinning the object and every component of its
+    name; Codex r10 showed that was still a claim about a *name* and produced two more instances
+    of it (R10-F1 transient rebind, R10-F2 counted chain). **Round 11 closes the class by removing
+    the layer rather than the instance**: the interpreter is handed the compared buffer itself on
+    a pipe, its argument vector contains no path separator, and no name is resolved between the
+    comparison and the execution - so the class has no surface left to rotate onto. Round 11 adds
+    `M4_named_channel`, which flips that one constant back and shows the false acceptance return.
+    Items 50-52 state what the new construction does not reach; items 45, 46 and 48 are retired or
+    rewritten below to say what round 11 changed about them.
 44. **Round 9 measures no new property of `composite_pathproof.py`.** Every classification claim
     in the round-9 self-QA is the round-7 claim re-executed. Round 9 guarantees only that the
     block being re-executed is the block on the page, and that a block which fails cannot be
     reported as reproduced. Items 37-40 carry unchanged.
-45. **The pin binds every FILE and DIRECTORY on the path; it does not bind the VOLUME.** Windows
-    share modes are enforced on file and directory objects, so while the handles are held nothing
-    can modify, replace, rename or delete the script or any component of its name. A rebinding one
-    level below that - a per-session DOS-device or mount redefinition that re-points the drive
-    letter itself - is not prevented by any share mode. It is **detected**: after the child exits,
-    the name is resolved again and its volume serial number and file index must still equal the
-    pinned object's, and a block that fails is terminal with its stdout never interpreted
-    (`SCRIPT_REBOUND_UNDER_PIN`). Prevention where the operating system gives a lock, detection
-    where it does not - and the two are not the same strength and are not presented as if they
-    were.
-46. **The pinned object is the SCRIPT; the interpreter binary is not pinned.** `powershell.exe` is
-    resolved by name from `PATH` by `subprocess.run`, and round 10 makes no claim about the
-    identity of the executable that opens the script. Every round of this work has been about the
-    instrument the self-QA publishes; the toolchain that runs it is outside that boundary and is
-    named here rather than left to be discovered.
+45. **RETIRED IN ROUND 11 - it was false as written, and the construction that replaced it does
+    not need it.** Round 10 wrote: *"a per-session DOS-device or mount redefinition is not
+    prevented by any share mode; it is detected by the post-run re-resolution."* Codex r10 (R10-F1)
+    showed the detection claim was false for a **transient** redefinition applied after the
+    pre-launch sample and restored before the post-run one, and round 11 reproduces that
+    false acceptance against the published round-10 wrapper
+    (`FALSE_ACCEPT_UNDER_R10=1`, `R10_TWO_SAMPLE_DETECTOR=CLEAN/1`). The item is retired rather
+    than reworded because under round 11 the child resolves **no name at all**: a volume or
+    drive-letter redefinition, transient or persistent, cannot change which bytes it executes.
+    Section 13b applies and restores exactly such a redefinition around the child and round 11's
+    verdicts do not move (`TRANSIENT_CLOSED_UNDER_R11=2`). The post-run re-resolution is kept, and
+    kept honest: it is now a conservative refusal, not a detection anything relies on.
+46. **RETIRED AS WRITTEN AND RESTATED AS ITEM 51.** Round 10's wording - *"the interpreter binary
+    is not pinned"* - understated it. The problem is not that the image is unpinned but that it is
+    **located by name**, which is the one mutable resolution round 11 does not remove. See item 51,
+    which states it as an out-of-model disclosure with its consequence spelled out.
 47. **A concurrent writer cannot get past the pin, but it can stop the run.** If another process
     already holds a writable handle on the temporary name, the pin cannot be taken at all
     (`ERROR_SHARING_VIOLATION`) and the block is refused before the child exists (`PIN_HELD=0`,
@@ -840,13 +1022,45 @@ rounds 8, 9 and 10 neither close it nor worsen it.**
     in the round-10 self-QA is the round-7 claim re-executed. Round 10 guarantees only that the
     block being re-executed is the block on the page, that it is still that block while the
     interpreter runs it, and that a block which fails cannot be reported as reproduced. Items
-    37-44 carry unchanged, and item 41's checkout residual is explicitly still open.
+    37-44 carry unchanged, and item 41's checkout residual is explicitly still open. **Round 11
+    carries this item verbatim for itself**: it measures no new property of the module either.
+50. **The round-10 gates are conserved but one-directional, and that is a demotion, not a
+    strengthening.** The pin, the measured `ERROR_SHARING_VIOLATION`, the name-to-object binding
+    and both post-run re-measurements are all still present and still terminal, but under round 11
+    none of them can admit a block - the pathname they are about is not the channel the bytes
+    travelled. `M3` shows this directly: the rewrite succeeds, the child still executes the
+    compared buffer, and gate 4 refuses the block anyway. A conservative refusal is the right
+    failure direction and it is published as that, not as a control that closes anything.
+51. **The interpreter IMAGE is still located by name, and this is neither prevented nor detected.**
+    `powershell.exe` is resolved from `PATH` by `subprocess.run`, exactly as in rounds 7-10. A
+    same-session actor who can change what that name resolves to can arrange for a different
+    program to receive the bytes, and that program could emit any transcript, including a published
+    one. **Round 11 makes no claim about it and does not dress it as a control.** It is outside the
+    model every round of this work has used - *"were the compared bytes the bytes that were
+    executed"*, not *"which program executed them"* - but it has the same accepted-divergence shape
+    as R9-F1, R10-F1 and R10-F2, so it is stated here, in the self-QA (section 11, round-11
+    statement 2) and in `SEC102_R11_REPORT_2026-08-12.md` for the Lead's stop rule, rather than
+    left for an audit to discover. Closing it would need the image consumed without name resolution
+    too (a section handle from an already-open image), which is a different and much larger change
+    than this round's scope fence permits.
+52. **The nameless channel changes one contract, measured rather than hidden, and the change is
+    proved harmless for every published block.** `$PSCommandPath` does not exist when there is no
+    script file; no published block uses it, and the two line-ending sentinels now carry their own
+    text in a here-string, which measures the same property in both channels and in both
+    directions. Every other contract is proved conserved block by block
+    (`CHANNEL_CONTRACT_CONSERVED=10 CHANNEL_CONTRACT_SELF_EXCLUDED=1`; the excluded block's own
+    conservation is measured by the section-13c run). Also carried from round 10 and now measured:
+    the run holds read handles from the volume root down to its temporary directory for the length
+    of the run, which denies other processes a rename or delete of those directories and of entries
+    in its work directory - an availability side effect on a shared machine, named rather than left
+    to be noticed.
 
 ## Artifact identity record
 
-The complete per-artifact byte-count and SHA-256 table is in `SEC102_R10_REPORT_2026-08-12.md`
-section 6, and in `SELF_QA_SEC102_R10.md` section 10, both re-derivable by the published command.
-**Every entry is byte-identical to the round-7 table**, because rounds 8, 9 and 10 changed no code
-and added no fixture. Round 10 additionally publishes the SHA-256 of every executed `powershell`
-block in `SELF_QA_SEC102_R10.md` section 13d, together with each block's pin state and
-name-to-object binding, before and after the child ran. No commit was made.
+The complete per-artifact byte-count and SHA-256 table is in `SEC102_R11_REPORT_2026-08-12.md`
+section 6, and in `SELF_QA_SEC102_R11.md` section 10, both re-derivable by the published command.
+**Every entry is byte-identical to the round-7 table**, because rounds 8, 9, 10 and 11 changed no
+code and added no fixture. Round 11 publishes the SHA-256 of every executed `powershell` block in
+`SELF_QA_SEC102_R11.md` section 13d, together with each block's pin state, chain membership,
+channel state and the digest of the exact buffer the interpreter received - which is the same
+digest, because it is the same buffer. No commit was made.
