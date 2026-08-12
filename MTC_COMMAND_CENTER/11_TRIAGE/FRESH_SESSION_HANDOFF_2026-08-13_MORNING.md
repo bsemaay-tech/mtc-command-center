@@ -114,6 +114,16 @@ repair: the RP6 placeholder cluster, the SEC102 channel-contract scope word, and
 cleanup contradiction. **All three are already folded into tonight's kickoffs** for the
 second-flagship auditors to settle.
 
+**RULE 9c — A KICKOFF IS A CLAIM AND DECAYS LIKE ONE.** Before re-dispatching any existing
+kickoff, **re-read its premise against current state and update it.** On 08-12 the Lead
+re-dispatched a recount kickoff whose opening line read "nobody has re-derived them" — true when
+written at 17:00, false by 19:50 because two re-derivations had landed in between. The lane
+detected the stale premise, reconstructed the history from commits, and **refused to write the
+file the kickoff named**, because doing so would have overwritten a committed artefact recording
+an earlier lane's finding. That is the **second** time a lane protected a prior lane's record
+from a Lead instruction that would have destroyed it. So also: **never instruct a lane to "write
+exactly one file" at a path that already exists** unless overwriting is genuinely intended.
+
 **RULE 10 — SURFACE, DO NOT DECIDE, ON OWNER-CLASS QUESTIONS.** Freeze, merge to master, host
 execution, broker/live/paper, credential use, force-push, and accept-vs-harden boundary calls are
 the owner's. Everything else — dispatch, verify, commit, push, correct the record — proceed
