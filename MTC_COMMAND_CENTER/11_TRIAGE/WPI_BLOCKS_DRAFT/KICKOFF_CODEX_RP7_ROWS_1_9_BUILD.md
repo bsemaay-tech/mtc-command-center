@@ -1,12 +1,15 @@
 # KICKOFF — Codex: build §8.2 rows 1–9 into RP7-WPI-RO.sh (owner-decided BUILD ALL NINE)
 
-**DO NOT DISPATCH THIS UNTIL RP7 HOLDS DUAL FLAGSHIP ACCEPTANCE.** The owner's decision is
-explicit: all nine rows are bound into `RP7-WPI-RO.sh` **only after the currently reviewed RP7
-bytes receive their dual flagship acceptance** (prereg R3 §4.6). Codex holds `RP7_CODEX_T0_AUDIT_R9`
-PASS; the second flagship (Claude Pro) audit is scheduled 2026-08-12 23:00. If that audit returns
-anything non-accepting, this kickoff waits for the repair and its re-audit.
+**DISPATCH CONDITION MET 2026-08-13 ~00:00.** RP7 holds dual flagship acceptance on
+108301 B / `0e93f90d…`: Codex `RP7_CODEX_T0_AUDIT_R9` PASS + Claude Pro
+`RP7_CLAUDE_T0_2NDFLAG_AUDIT_2026-08-12.md` PASS-WITH-NITS (same bytes, fresh session,
+implemented nothing). The owner's decision (BUILD ALL NINE, prereg R3 §4.6) is therefore live.
 
-You are Codex `gpt-5.6-sol` xhigh, IMPLEMENTER. Working dir `C:\LAB\Tradingview_LAB_CLEAN`.
+You are Codex `-Account free` — the session model is **gpt-5.5-class** (Codex `fourth`
+`gpt-5.6-sol` hit its usage limit 2026-08-12 ~23:20, resets Aug 18; the owner's routing makes
+Codex primary implementer and r17 set the precedent for a gpt-5.5 implementer on this chain).
+**State your actual session-header model in your report and design for the stronger auditor who
+will re-review the changed bytes.** IMPLEMENTER. Working dir `C:\LAB\Tradingview_LAB_CLEAN`.
 No host, no network, no commit. **`RP7-WPI-RO.sh` is a protected-scope block file** — you are
 authorized to edit it ONLY for this owner-decided extension, and for nothing else. Do not touch
 `RP6-P0.sh`, the transport set, `composite_pathproof.py`, `pathscope_prover.py`, or the prereg
@@ -76,10 +79,36 @@ environment token that must not be present.
 Read §D.4 and design against each. Above all: a `show` record that is ABSENT must never read as
 a passing value — presence is proven first, and an absent record is a STOP, not a default.
 
+## ADDED 2026-08-13 — documentary repairs folded into this round (same owned file, no separate lane)
+
+The Claude verdict (`RP7_CLAUDE_T0_2NDFLAG_AUDIT_2026-08-12.md` §4 and §5) requires, before
+freeze, six documentary repairs to `SELF_QA_RP7.md` plus one disclosure restatement. Since this
+build owns `SELF_QA_RP7.md`, apply them in this round — locate by quoted content:
+
+1. `:1768-1769` — the round-7 GREEN identity sentence pastes the round-8 fence's RED
+   (`92853 / e695a67b…`) into a GREEN slot; the GREEN is `108301 / 0e93f90d…`.
+2. `:2552-2556` — round-5 fence body is `21263 B` (per `:197` and `:4391`), not `20050 B`, and
+   the "same length" justification is void.
+3. `:4353-4354` — the round-4 final identity sentence carries the round-6 fence's RED
+   (`77179 / 393a16ce…`); the actual final line at `:4349` is `108301 / 0e93f90d…`.
+4. Six sites (`:1354`, `:1368-1369`, `:1808`, `:1849-1850`, `:2565-2566`, `:2970-2972`) say
+   carried fences "re-executed against the round-8 bytes" — correct to round-9 bytes.
+5. `:4421-4429` — paste the static proof (a `wpi_alloc_leaf` occurrence count over the block
+   plus the single-write-open citation) beside the claim, per the verdict.
+6. `:4375-4380` — paste the six `WRAPPER_STREAM … bytes=0 []` lines beside
+   `RUN_ONE_STDERR_BYTES=210`.
+7. **C1 disclosure** (`:4447-4457`): carve the mount-projection digest out of the rows-10-19
+   justification and state the residual on its own terms — the mount-guard gate compares a
+   digest computed over a re-resolved name. **Do NOT change the mount-projection code in this
+   round** — that repair is scoped to the next round with the rows-10-19 reader class.
+
+After every changed identity value: grep it repo-wide and list every remaining echo in your
+report (fix echoes only in files you own).
+
 ## Deliverables
 Modified `RP7-WPI-RO.sh`; `SELF_QA_RP7.md` extended with the new sections' evidence and the
 complete D026 matrix; `STATUS_RP7.md` updated (status becomes rows-1-9-EXTENDED-PENDING-REAUDIT,
-new pin class named, terminal claim change recorded); `RP7_ROWS_1_9_REPORT_<date>.md`. Re-derive
+new pin class named, terminal claim change recorded); `RP7_ROWS_1_9_REPORT_2026-08-13.md`. Re-derive
 `RP7-WPI-RO.sh` size + SHA-256 and state that the identity CHANGED (it must — this is the one
 authorized byte change) so the freeze-gate and Audit-2 acceptance matrix can be updated. No
 commit — the Lead commits and reproduces the harness verbatim, then routes the audit to a
