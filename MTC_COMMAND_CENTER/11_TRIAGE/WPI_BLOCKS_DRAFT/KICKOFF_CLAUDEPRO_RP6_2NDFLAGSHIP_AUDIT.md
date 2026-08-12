@@ -1,4 +1,4 @@
-# KICKOFF — Claude Pro T0 audit: RP6-P0.sh + r16 census, SECOND FLAGSHIP (dual-acceptance gate)
+# KICKOFF — Claude Pro T0 audit: RP6-P0.sh + **r17** census, SECOND FLAGSHIP (dual-acceptance gate)
 
 You are `claude-opus-5` xhigh via the default Claude Pro account, AUDITOR — the second
 flagship. Codex `gpt-5.6-sol` closed its flagship slot on these bytes
@@ -13,8 +13,16 @@ Local execution of the published QA harness is permitted.
 `RP6-P0.sh` — UNCHANGED since r10a: 110817 B, SHA-256
 `5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330`. Re-derive and confirm
 this identity first. The audited work is the census QA harness in `SELF_QA_RP6.md`
-(§ROUND 16) proving the block's result-grammar admits no smuggled emitter. Start from
-`STATUS_RP6_P0.md`, then the r16 report and the Codex r16 verdict. Verify against bytes.
+**(§ROUND 17 — the current round; §ROUND 16 is context only)** proving the block's
+result-grammar admits no smuggled emitter. **Reading order:** `STATUS_RP6_P0.md`, then
+`MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6_R17_REPORT_2026-08-12.md`, then treat the
+Codex **r16** verdict as background rather than the subject. The r17 published command is at
+`RP6_R17_REPORT_2026-08-12.md:71`. Verify everything against bytes.
+
+**Current evidence identity:** `SELF_QA_RP6.md` is **1038848 B**, SHA-256
+`07cf843d5f00bef7f980017cbe01e0dc63ddb95dce5c7253d9e9a351b0d449ac`. The r16 identity
+(1024538 B / `897a5a4d…`) is what Codex accepted and is **history** — no r16-anchored acceptance
+carries to these bytes.
 
 ## What the census now claims (your target)
 Every function definition and every result producer is dispositioned by its EXACT SOURCE
@@ -140,7 +148,7 @@ Do not assume the answer either way. The dynamic-target measurement itself was L
 is narrower and concerns only the pass-format audit's self-certification.
 
 ## Audit contract
-1. Confirm the block identity (size + SHA-256) and that no block byte changed r10a→r16.
+1. Confirm the block identity (size + SHA-256) and that no block byte changed **r10a→r17**.
 2. Run **`R17_DYNAMIC_TARGETS`** VERBATIM (published command in
    `RP6_R17_REPORT_2026-08-12.md`); the Lead's run was `cases=15 pass=15 fail=0`, outer rc 0,
    with the carried r16 grammar `50/50` inside it and block identity unchanged. Record real
@@ -155,4 +163,13 @@ is narrower and concerns only the pass-format audit's self-certification.
    BLOCK. If accepting, state that RP6 reaches DUAL FLAGSHIP ACCEPTANCE.
 
 Write ONE new file: `RP6_CLAUDE_T0_2NDFLAG_AUDIT_2026-08-12.md` (this directory).
-Prove `git status --porcelain` shows only that file at the end.
+**Delta gate (corrected 2026-08-12 ~20:35 — a global clean-status gate CANNOT pass in this
+worktree, which carries ~100 pre-existing untracked run logs, and would have self-blocked this
+lane).** Instead:
+1. **Before execution** capture `git status --porcelain` → `before`.
+2. Run the lane.
+3. **At the end** capture `git status --porcelain` → `after`, and prove `after` minus `before`
+   contains **only** `MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6_CLAUDE_T0_2NDFLAG_AUDIT_2026-08-12.md`
+   and nothing else. Any other entry in the delta **fails** the gate.
+4. Also run `git status --porcelain -- MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP6_CLAUDE_T0_2NDFLAG_AUDIT_2026-08-12.md`
+   and record its output as the path-scoped confirmation.

@@ -1,6 +1,8 @@
 # KICKOFF — Claude Pro T1 EXECUTION-audit: pathscope_prover.py round 2 (flagship slot)
 
-You are `claude-opus-5` xhigh via the default Claude Pro account, AUDITOR. This tool has no
+You are `claude-opus-5` **high** (T1 tier — corrected 2026-08-12 ~20:35; this kickoff previously
+said `xhigh`, which is the T0 setting and is not the correct value for a T1 tool audit) via the
+default Claude Pro account, AUDITOR. This tool has no
 Codex flagship audit and cannot get one: the Codex provider content filter terminates the
 run while merely READING `pathscope_prover.py` (its sink-detection source carries attack
 grammar as data — forbidden-path tables, exfil URL patterns, ssh/nss host grammar). GLM-5.2
@@ -68,4 +70,13 @@ spend your slot rediscovering them:
    unavailability on record + GLM supplemental favorable).
 
 Write ONE new file: `PATHSCOPE_CLAUDE_T1_EXEC_AUDIT_2026-08-12.md` (this directory).
-Prove `git status --porcelain` shows only that file at the end.
+**Delta gate (corrected 2026-08-12 ~20:35 — a global clean-status gate CANNOT pass in this
+worktree, which carries ~100 pre-existing untracked run logs, and would have self-blocked this
+lane).** Instead:
+1. **Before execution** capture `git status --porcelain` → `before`.
+2. Run the lane.
+3. **At the end** capture `git status --porcelain` → `after`, and prove `after` minus `before`
+   contains **only** `MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_CLAUDE_T1_EXEC_AUDIT_2026-08-12.md`
+   and nothing else. Any other entry in the delta **fails** the gate.
+4. Also run `git status --porcelain -- MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_CLAUDE_T1_EXEC_AUDIT_2026-08-12.md`
+   and record its output as the path-scoped confirmation.

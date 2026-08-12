@@ -69,4 +69,13 @@ and that is a real finding that changes the acceptance answer.
    acceptance).
 
 Write ONE new file: `RP7_CLAUDE_T0_2NDFLAG_AUDIT_2026-08-12.md` (this directory).
-Prove `git status --porcelain` shows only that file at the end.
+**Delta gate (corrected 2026-08-12 ~20:35 — a global clean-status gate CANNOT pass in this
+worktree, which carries ~100 pre-existing untracked run logs, and would have self-blocked this
+lane).** Instead:
+1. **Before execution** capture `git status --porcelain` → `before`.
+2. Run the lane.
+3. **At the end** capture `git status --porcelain` → `after`, and prove `after` minus `before`
+   contains **only** `MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7_CLAUDE_T0_2NDFLAG_AUDIT_2026-08-12.md`
+   and nothing else. Any other entry in the delta **fails** the gate.
+4. Also run `git status --porcelain -- MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7_CLAUDE_T0_2NDFLAG_AUDIT_2026-08-12.md`
+   and record its output as the path-scoped confirmation.
