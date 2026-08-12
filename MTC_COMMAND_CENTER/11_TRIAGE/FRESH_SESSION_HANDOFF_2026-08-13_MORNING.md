@@ -90,6 +90,30 @@ SEC102 closed on 08-12, with Codex's own verdict endorsing the stop.
 **RULE 9 — COMMIT EXACT FILE SETS, NEVER `git add .`** The repo hook flips HEAD to master
 between calls; use inline `git checkout <branch> && git add <paths> && git commit`.
 
+**RULE 9b — THREE AUTHORING RULES FOR EVIDENCE DOCUMENTS.** All five WP-I evidence documents
+were claim-audited on 08-12: **38 findings — 16 false, 18 unsupported, 4 scope-wrong**
+(`WPI_CLAIM_AUDIT_SYNTHESIS_2026-08-12.md`). The named systemic cause is **local-evidence
+overclaiming after late, carried-forward, or externally-evidenced authoring** — prose written
+before or apart from the final run, then not re-derived. Put these in every implementer kickoff:
+
+1. **No unfilled slot may sit under a "resolved" claim.** Before publishing, grep the document
+   for `@@`, `PENDING`, and empty transcript fences. Every hit must either be filled with pasted
+   output, or the prose must say `PENDING` and **exclude that section from closure**.
+2. **Line-evidence rule for absolutes and numbers.** Any sentence containing `all`, `every`,
+   `no`, `none`, `unchanged`, `byte-identical`, a count, `bytes`, `sha`, `rc`, or a run count
+   must point to the exact pasted transcript line proving it. If the support is outside the
+   document, label it `External evidence:` and cite the file — **never phrase it as locally
+   transcript-proved**.
+3. **Carry-forward re-derivation rule.** Any carried-forward section must be re-derived after the
+   final artifact edit: replace old bytes, hashes, round labels and denominators from a current
+   identity table. Scope wording must use the **exact denominator the transcript shows** —
+   `10/11 plus one self-exclusion`, `seven targets plus the harness` — not `every block`.
+
+Only three findings could plausibly affect an *acceptance* rather than needing a documentation
+repair: the RP6 placeholder cluster, the SEC102 channel-contract scope word, and the transport
+cleanup contradiction. **All three are already folded into tonight's kickoffs** for the
+second-flagship auditors to settle.
+
 **RULE 10 — SURFACE, DO NOT DECIDE, ON OWNER-CLASS QUESTIONS.** Freeze, merge to master, host
 execution, broker/live/paper, credential use, force-push, and accept-vs-harden boundary calls are
 the owner's. Everything else — dispatch, verify, commit, push, correct the record — proceed
